@@ -229,506 +229,679 @@
     },
     "measurements": {
       "heightCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 176,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "weightKg": {
-        "value": null,
-        "status": "unknown"
+        "value": 62,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "headBodyRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 7.25,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "shoulderWidthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 42,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "chestCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 90,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "waistCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 72,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "hipCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 88,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "torsoLengthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 52,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "armSpanCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 178,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "inseamCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 82,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "shoeSize": {
-        "value": null,
-        "status": "unknown"
+        "value": "CN 42／脚长约26cm，皮鞋版型略长",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "bodyBuild": {
-        "value": null,
-        "status": "unknown"
+        "value": "高挑、薄肌肉、骨架偏窄但肩宽明显大于腰宽",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "bodyMassDescription": {
-        "value": null,
-        "status": "unknown"
+        "value": "低至中等肌肉量；不是健身房练出的夸张胸肌和肱二头肌",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "posture": {
-        "value": null,
-        "status": "unknown"
+        "value": "头微向前，下巴略收，双肩松、轻微驼背；一手插兜",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "handDominance": {
-        "value": null,
-        "status": "unknown"
+        "value": "右手惯用；插兜默认左手可按角色母版固定",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "gait": {
-        "value": null,
-        "status": "unknown"
+        "value": "步幅偏长，速度不急，重心略低，脚跟先着地",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "upperArmCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 27,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "forearmCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 24,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "wristCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 16,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "thighCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 49,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "calfCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 34,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "kneeCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 35,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "ankleCircumferenceCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 21,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "upperArmLengthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 31,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "forearmLengthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 27,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "handLengthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 19,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "palmWidthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 8.6,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "upperLegLengthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 45,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "lowerLegLengthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 43,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "kneeHeightCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 50,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "hipBreadthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 32,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "shoulderBreadthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 42,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "waistHeightCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 106,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "ribcageDepthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 21,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "hipDepthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 20,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "headWidthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 15.2,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "faceLengthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 21.5,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "faceWidthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 14.6,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "footLengthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 26,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "footWidthCm": {
-        "value": null,
-        "status": "unknown"
+        "value": 9.8,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       }
     },
     "anatomy": {
       "headShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏长的倒卵形头骨，颞部不过分鼓起",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "shoulderSlope": {
-        "value": null,
-        "status": "unknown"
+        "value": "肩峰清楚但肩线下沉约7°，体现散漫而非畏缩",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "torsoDepth": {
-        "value": null,
-        "status": "unknown"
+        "value": "胸背厚度中等偏薄；侧面肋弓体积可辨",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "ribcageContour": {
-        "value": null,
-        "status": "unknown"
+        "value": "上胸相对平直，胸廓向腰收束，不夸张胸肌",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "waistContour": {
-        "value": null,
-        "status": "unknown"
+        "value": "腰部直线感强，轻收但不沙漏形",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "pelvisAndHips": {
-        "value": null,
-        "status": "unknown"
+        "value": "男性偏窄骨盆，髋骨自然承重，不画夸张臀部",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "backContour": {
-        "value": null,
-        "status": "unknown"
+        "value": "微微驼背，肩胛骨不凸出，背部外套自然折痕",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "bustThroughClothing": {
-        "value": null,
-        "status": "unknown"
+        "value": "男学生平坦胸部轮廓，衬衫在胸骨前有少量自然空气层",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "limbProportions": {
-        "value": null,
-        "status": "unknown"
+        "value": "手臂长，指尖约落大腿中部；双腿较长，小腿与大腿长度接近",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "handShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "细长手掌，指节略突出，指甲干净但不修饰",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "skinUndertone": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏冷的浅肤色，红润很弱",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "skinTexture": {
-        "value": null,
-        "status": "unknown"
+        "value": "干净的动画式皮肤，面颊细纹和淡阴影即可",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "scars": {
-        "value": null,
-        "status": "unknown"
+        "value": "右手无名指近节有约0.5cm旧浅疤（剧情可删，平时不显眼）",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "birthmarks": {
-        "value": null,
-        "status": "unknown"
+        "value": "左肩后侧浅褐色小胎记，默认制服遮盖",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "moles": {
-        "value": null,
-        "status": "unknown"
+        "value": "右颌角靠近耳下有一粒极淡小痣；不同于女主左眼下泪痣",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "freckles": {
-        "value": null,
-        "status": "unknown"
+        "value": "脸上无雀斑；不画随机散点",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "postureAsymmetry": {
-        "value": null,
-        "status": "unknown"
+        "value": "插兜侧肩略低1.5°，重心偏右腿",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "mobilityNeeds": {
-        "value": null,
-        "status": "unknown"
+        "value": "四肢活动正常；暂无行动辅助需求",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "upperArmShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "上臂呈长而偏细的梭形，肘部收窄",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "forearmShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "前臂靠肘处略粗，到腕部渐细",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "wristShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "腕骨存在感略明显，手腕纤而有骨感",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "thighShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "修长、略有股四头肌量感；不画筷子腿",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "calfShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "小腿上半略丰满，跟腱段迅速收束",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "kneeShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "膝盖轮廓清楚但不过分突兀，膝窝合理",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "ankleShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "踝骨轻微突出，鞋袜交接不糊成一团",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "legAxis": {
-        "value": null,
-        "status": "unknown"
+        "value": "双腿自然竖直微分开，无明显内八或O/X腿",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "upperLimbTaper": {
-        "value": null,
-        "status": "unknown"
+        "value": "上臂至前臂顺畅渐细，袖口不应贴成皮筋",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "lowerLimbTaper": {
-        "value": null,
-        "status": "unknown"
+        "value": "膝上下体积自然衔接，裤管能表现腿部体积但不紧身",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "legMuscleDistribution": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏瘦但有长期步行产生的自然小腿线条",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "armMuscleDistribution": {
-        "value": null,
-        "status": "unknown"
+        "value": "无明显大块肌肉；前臂稍紧实，日常搬物的轻度肌肉",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "pelvisTilt": {
-        "value": null,
-        "status": "unknown"
+        "value": "骨盆中性略后倾约2°，配合轻微后仰的站姿",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "spinalCurve": {
-        "value": null,
-        "status": "unknown"
+        "value": "胸椎轻前屈6°、颈项补偿使视线仍朝镜头",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "handFingerLengthRatios": {
-        "value": null,
-        "status": "unknown"
+        "value": "中指1.0，食指0.92，无名指0.96，小指0.72，拇指0.68（归一化长度目标）",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "bodySilhouetteType": {
-        "value": null,
-        "status": "unknown"
+        "value": "瘦长倒梯形，宽肩窄腰但非肌肉型",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "shoulderToHipWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 1.31,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "waistToHipWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.83,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "headToShoulderWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.36,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       }
     },
     "face": {
       "faceShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏长的窄椭圆脸，面颊轻微内收、下颌比女主更方",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "forehead": {
-        "value": null,
-        "status": "unknown"
+        "value": "额头中等高度，常被凌乱刘海覆盖约三分之一",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "cheekbones": {
-        "value": null,
-        "status": "unknown"
+        "value": "颧骨略高但不明显外突，侧脸颊有干净折线",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "jawline": {
-        "value": null,
-        "status": "unknown"
+        "value": "两侧下颌骨线条清楚，有轻微男性棱角",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "chin": {
-        "value": null,
-        "status": "unknown"
+        "value": "窄而平的下巴末端，不尖锐也不过宽",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "noseBridge": {
-        "value": null,
-        "status": "unknown"
+        "value": "细直鼻梁，侧面少量棱线与鼻骨明暗",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "noseTip": {
-        "value": null,
-        "status": "unknown"
+        "value": "鼻头小而略有鼻尖，不用圆鼻头萌化",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "mouthShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏薄的平直嘴，嘴角自然略压低",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "lips": {
-        "value": null,
-        "status": "unknown"
+        "value": "上唇薄，下唇稍丰满，色彩接近肤色",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "teeth": {
-        "value": null,
-        "status": "unknown"
+        "value": "默认闭口不露牙；微笑时仅露自然少量上齿",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "ears": {
-        "value": null,
-        "status": "unknown"
+        "value": "耳朵窄长，左耳因头发偶尔只露下半部分",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyebrows": {
-        "value": null,
-        "status": "unknown"
+        "value": "slightly raised",
+        "status": "user_confirmed",
+        "source": "User's male protagonist Anima prompt, 2026-11-02"
       },
       "eyelidShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "上眼睑半垂，外眼角边缘清晰，下眼睑细线",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyeShape": {
-        "value": null,
-        "status": "unknown"
+        "value": "narrow, sharp",
+        "status": "user_confirmed",
+        "source": "User's male protagonist Anima prompt, 2026-11-02"
       },
       "eyeSpacing": {
-        "value": null,
-        "status": "unknown"
+        "value": "眼间距约一只眼宽的0.52，避免过密或偶像式大眼",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyeCornerAngle": {
-        "value": null,
-        "status": "unknown"
+        "value": "外眼角相对内眼角上挑约4°",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyeColor": {
-        "value": null,
-        "status": "unknown"
+        "value": "grey",
+        "status": "user_confirmed",
+        "source": "User's male protagonist Anima prompt, 2026-11-02"
       },
       "eyeHex": {
-        "value": null,
-        "status": "unknown"
+        "value": "#777B83",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "pupilColor": {
-        "value": null,
-        "status": "unknown"
+        "value": "#252830",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyeHighlights": {
-        "value": null,
-        "status": "unknown"
+        "value": "小而稀疏的单点高光，非闪闪发亮多点瞳",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyelashes": {
-        "value": null,
-        "status": "unknown"
+        "value": "上睫毛少量加粗，男性细长眼型，不画夸张长睫",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "defaultExpression": {
-        "value": null,
-        "status": "unknown"
+        "value": "无聊、不耐烦、闭嘴、半垂眼，眉微抬",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "facialLandmarkSystem": {
-        "value": null,
-        "status": "unknown"
+        "value": "头骨正面标准化：x=0为头部左边缘、x=1为右边缘；y=0头顶、y=1下巴，正视眼平摄影；造型初稿而非实际图像测量",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "facialLandmarksNormalized": {
-        "value": null,
-        "status": "unknown"
+        "value": {
+          "leftEyeCenter": [
+            0.35,
+            0.47
+          ],
+          "rightEyeCenter": [
+            0.65,
+            0.47
+          ],
+          "leftBrowCenter": [
+            0.35,
+            0.39
+          ],
+          "rightBrowCenter": [
+            0.65,
+            0.39
+          ],
+          "noseBridgeStart": [
+            0.5,
+            0.48
+          ],
+          "noseTip": [
+            0.5,
+            0.69
+          ],
+          "mouthCenter": [
+            0.5,
+            0.8
+          ],
+          "leftEarTop": [
+            0.065,
+            0.45
+          ],
+          "rightEarTop": [
+            0.935,
+            0.45
+          ],
+          "chin": [
+            0.5,
+            1
+          ],
+          "leftMouthCorner": [
+            0.4,
+            0.8
+          ],
+          "rightMouthCorner": [
+            0.6,
+            0.8
+          ]
+        },
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "faceLengthToWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 1.47,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "foreheadToFaceHeightRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.34,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "jawWidthToFaceWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.7,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "cheekboneWidthToFaceWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.91,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyeCenterHeightRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.47,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "interocularSpacingRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.09,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyeWidthToFaceWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.21,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyebrowEyeGapRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.08,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "noseTopHeightRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.48,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "noseTipHeightRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.69,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "noseWidthToFaceWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.18,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "mouthCenterHeightRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.8,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "mouthWidthToFaceWidthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.2,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "philtrumLengthRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.075,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "earTopHeightRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.45,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "earBottomHeightRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.72,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyeTailSlantDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 4,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "eyelidOpennessBaseline": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.6,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "lipCornerSlopeDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": -2,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "browAngleDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 3,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "expressionLandmarkVariants": {
-        "value": null,
-        "status": "unknown"
+        "value": "惊讶：上眼睑+0.10、眉心上移0.06；愤怒：眉内侧下移0.05、眼距不变；嘴角变化不改变鼻尖、耳根与脸型",
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       },
       "noseToMouthDistanceRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.11,
+        "status": "proposed",
+        "source": "Creative anatomy and appearance specification for CHAR-003 v1.0; must be confirmed against the master illustration"
       }
     },
     "hair": {
       "hairBaseColor": {
-        "value": null,
-        "status": "unknown"
+        "value": "black",
+        "status": "user_confirmed",
+        "source": "User's male protagonist Anima prompt, 2026-11-02"
       },
       "hairHex": {
         "value": null,
