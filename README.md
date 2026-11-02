@@ -1,24 +1,34 @@
-# PIXEL ATELIER — 像素创作工作室
+# Paperchalk World｜GitHub 托管游戏与像素工作室
 
-根据用户要求，仓库当前分支移除了恐怖房间、酒吧经营、PAPERWORLD 游戏主页、城市与体感 3D 原型，以及旧游戏 Android WebView 工程、游戏测试与游戏部署流水线。
+当前 main 仓库同时包含横屏叙事场景、自动场景发布系统与独立美术工具；场景实验并不是完整的剧情游戏。
 
-保留的独立工具：
+[打开托管游戏](https://g2066203208-beep.github.io/paperchalk-world/) · [GitHub Actions 自动发布](https://github.com/g2066203208-beep/paperchalk-world/actions)
+
+## 新增场景：只上传一张图片
+
+把 WebP、PNG 或 JPEG 图片上传到 **[site/assets/scenes/](https://github.com/g2066203208-beep/paperchalk-world/tree/main/site/assets/scenes)**；推荐尺寸 1024×576，也可以使用其他清晰尺寸。比如新增 basement.webp 后只需提交到 main。
+
+自动流水线：图片解码及校验 → 场景数据生成 → 场景预览和游戏内切换自动注册 → 共用主角背面、黑雾、鼠标/手机倾斜、黑色转场 → 浏览器测试 → GitHub Pages 发布。可以用 ?scene=basement 直接打开。图片内容不被自动裁切、重画或重新压缩。
+
+**[详细使用说明：模块契约、命名、设置保留、验收与故障处理](docs/SCENE_AUTOMATION.md)**
+
+## 现有游戏内容
+
+- 场景：教室、卧室、客厅、玄关，后续图片自动注册。
+- 主角：site/assets/characters/protagonist-front.webp 和 protagonist-back.webp 两张独立图；游戏场景使用透明背面前景。
+- 分层：背景 3D 倾斜、固定屏幕空间实时黑雾、背景边缘全黑遮挡、深黑转场、手机和电脑兼容。
+- 沿用已调好的浏览器设置、黑雾和 DEV 景深参数；新场景不重建效果。
+- 废弃恐怖角色、动态黑斑、单独“主角立绘”场景已经从当前游戏中移除。
+
+## 独立工具
 
 - [PixelLab](https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/)
 - [像素绘画编辑器](https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/editor.html)
 - [像素材质工作室](https://g2066203208-beep.github.io/paperchalk-world/world-builder/materials.html)
 - [美术参考资料库](https://g2066203208-beep.github.io/paperchalk-world/learning-library/)
 
-**清理范围：当前分支与公开网站。** 历史 Git 提交、旧 Releases、Actions 归档及用户设备中曾经安装的 APK 不会因删除源码而自动消失。
+## 自动构建
 
+本地可运行 python3 scripts/build_scene_catalog.py （需要 Pillow），随后运行 node tests/scene-modules.test.cjs。正式发布由 .github/workflows/studio-pages.yml 执行 Chromium 回归测试后上线。
 
-## 目前托管的教室场景实验
-
-- [在线体验：横屏教室与独立流体黑雾](https://g2066203208-beep.github.io/paperchalk-world/)
-- 电脑：鼠标相对屏幕中心的位移控制教室背景的 3D 倾斜。
-- 手机浏览器：优先请求横屏；允许后读取设备方向传感器，相对首次握持角度校准，并把相同的归一化倾斜值用于背景。页面有“重置中心”和无传感器时的触摸拖动备用方案。
-- 普通浏览器未必允许网页强制横屏，通常需要用户点击按钮进入全屏，或手动旋转手机；Android 应用使用 `sensorLandscape` 实现系统级横屏。
-- 黑雾始终在独立的屏幕空间持续模拟，原图片边缘有随背景旋转的固定黑色渐变遮盖。
-- [Android 横屏版本（构建成功后下载）](https://github.com/g2066203208-beep/paperchalk-world/releases/tag/classroom-apk-latest)，每次冷启动读取最新托管网页；原生 APK 修改需重新安装。
-
-**当前交付性质：** 单场景交互技术演示，尚不等于有男女主角剧情、对话、存档、关卡的完整《错位日常》游戏。
+备注：浏览器本地保存的个人参数不会被新图片覆盖，但 GitHub 无法从用户浏览器读取这些参数并自动备份到仓库。
