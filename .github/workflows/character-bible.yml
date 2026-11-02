@@ -1,0 +1,51 @@
+name: Character Bible - integrity and identity
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/PROTAGONIST_CANON.md'
+      - 'docs/CHARACTER_BIBLE_INDEX.md'
+      - 'docs/characters/**'
+      - 'site/data/characters/**'
+      - 'site/assets/characters/**'
+      - 'scripts/validate_character_identity.py'
+      - '.github/workflows/character-bible.yml'
+  pull_request:
+    paths:
+      - 'docs/PROTAGONIST_CANON.md'
+      - 'docs/CHARACTER_BIBLE_INDEX.md'
+      - 'docs/characters/**'
+      - 'site/data/characters/**'
+      - 'site/assets/characters/**'
+      - 'scripts/validate_character_identity.py'
+      - '.github/workflows/character-bible.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: One identity, reference assets, supported canon
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate machine character data and character bible
+        run: |
+          python3 scripts/validate_character_identity.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('.')
+          data=json.loads((root/'site/data/characters/registry.json').read_text())
+          ids=[c['id'] for c in data['characters']]
+          assert len(ids)==len(set(ids))
+          assert ids.count('protagonist')==1
+          assert (root/'docs/CHARACTER_BIBLE_INDEX.md').is_file()
+          for char in data['characters']:
+              for key in ('front','back'):
+                  asset=char.get('assets',{}).get(key)
+                  if asset: assert (root/asset).is_file(),(char['id'],key)
+              doc=char.get('profileDocument') or char.get('designDocument')
+              assert doc and (root/doc).is_file(),char['id']
+          print('PASS:',len(ids),'distinct character identities and docs')
+          PY
