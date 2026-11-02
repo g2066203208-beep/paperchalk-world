@@ -325,7 +325,21 @@ jobs:
                 await page.waitForURL('**/character-editor/**',{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-002' &&
                   window.PaperchalkStudio?.isV4 &&
-                  window.PaperchalkStudio?.countSourceParts?.()===7,{timeout:30000});
+                  window.PaperchalkStudio?.countSourceParts?.()===7,{timeout:30000})
+                  .catch(async error=>{
+                    console.error('CHAR002 STUDIO STATUS',await page.evaluate(()=>({
+                      id:window.PaperchalkStudio?.current,
+                      side:window.PaperchalkStudio?.editSide,
+                      edition:window.PaperchalkStudio?.edition,
+                      parts:window.PaperchalkStudio?.countSourceParts?.(),
+                      frontLayers:window.characterEditor?.S.layers.front.map(x=>({name:x.name,sourcePart:x.sourcePart})),
+                      status:document.querySelector('#studio-status')?.textContent,
+                      editorStatus:document.querySelector('#status')?.textContent,
+                      loading:document.body.classList.contains('studio-loading'),
+                      zip:performance.getEntriesByType('resource').filter(x=>/char-002|regions|front.webp/.test(x.name)).map(x=>({name:x.name,duration:x.duration}))
+                    })));
+                    throw error;
+                  });
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true,
                   'CHAR-002 studio MUST use the same V4 source as the game');
                 assert.equal(await page.locator('#studio-side option[value="back"]').isDisabled(),true,
