@@ -115,9 +115,15 @@ jobs:
           assert 'id="scene-switcher-toggle"' in h
           assert 'scene-catalog.generated.js' in h
           assert '(?:webp|png|jpe?g)' in h
-          assert 'uniform float u_blotches' in h
-          assert 'float inkStains(' in h and 'function inkCPUAmount(' in h
-          assert 'id="ink-toggle"' in h and 'id="ink-toggle-game"' in h
+          # Black blotches were intentionally DELETED, not merely turned off.
+          forbidden=('u_blotches','u_burns','burnUniform','blotchesEnabled',
+                     'inkCPUAmount','inkStains','ink-toggle','advanceBurns',
+                     'paperchalk-ink-blotches')
+          for marker in forbidden:
+              assert marker not in h,'old black-blotch logic survived: '+marker
+          assert "const hasPlayer=isStory||def.type==='environment'" in h
+          assert "view.classList.toggle('environment-scene'" in h
+          assert '#view.environment-scene #camera-player-root #actor-player' in h
           assert 'id="protagonist-front"' in h
           assert "type:'portrait'" in h
           assert 'protagonistPreview.hidden=def.type' in h
@@ -350,7 +356,8 @@ jobs:
                 }));
                 assert.ok(room.src.endsWith('/assets/scenes/living-room.webp'));
                 assert.deepEqual(room.natural,[1024,576]);
-                assert.deepEqual(room.cast.slice(1),[true,true]);
+                assert.deepEqual(room.cast.slice(1),[true,false],
+                  'home scene should hide enemy but show the separate back-facing protagonist');
                 assert.equal(room.dialogueHidden,true);
                 assert.equal(room.fog,true,'fog recreated on entering home');
                 await page.screenshot({path:'artifacts/classroom/'+
@@ -376,32 +383,30 @@ jobs:
                 const zeroPitch=bedroomRotation.match(/rotateX\((-?[\d.]+)deg\)/);
                 assert.ok(zeroYaw&&zeroPitch&&Math.abs(Number(zeroYaw[1]))<.02&&Math.abs(Number(zeroPitch[1]))<.02,
                   'new bedroom retained unwanted tilt from the mouse on the previous room: '+bedroomRotation);
-                assert.equal(bedroomCheck.enemyHidden&&bedroomCheck.playerHidden&&bedroomCheck.dialogueHidden,true);
+                assert.equal(bedroomCheck.enemyHidden&&bedroomCheck.dialogueHidden,true);
+                assert.equal(bedroomCheck.playerHidden,false,
+                  'back-facing protagonist must be visible in bedroom');
                 assert.equal(bedroomCheck.originalFog,true);
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-BEDROOM.png'});
+                const roomProtagonist=await page.locator('#actor-player').evaluate(async el=>{
+                  await el.decode();
+                  const bounds=el.getBoundingClientRect();
+                  const viewport=document.getElementById('view').getBoundingClientRect();
+                  return {
+                    src:el.getAttribute('src'),w:el.naturalWidth,h:el.naturalHeight,
+                    rect:{top:bounds.top,bottom:bounds.bottom,left:bounds.left,right:bounds.right},
+                    view:{top:viewport.top,bottom:viewport.bottom}
+                  };
+                });
+                assert.ok(roomProtagonist.src.endsWith('/assets/battle/player-back.webp'));
+                assert.ok(roomProtagonist.w>=150&&roomProtagonist.h>=500,
+                  'original protagonist back image is missing');
                 if(!cfg.mobile){
-                  await page.waitForTimeout(550);
-                  const inkOn=PNG.sync.read(await page.screenshot({path:'artifacts/classroom/bedroom-ink-on.png'}));
-                  await page.locator('#menu-toggle').click();
-                  await page.locator('#ink-toggle-game').click();
-                  await page.locator('#menu-toggle').click();
-                  assert.equal(await page.evaluate(()=>localStorage.getItem('paperchalk-ink-blotches-v1')),'off');
-                  await page.waitForTimeout(250);
-                  const inkOff=PNG.sync.read(await page.screenshot({path:'artifacts/classroom/bedroom-ink-off.png'}));
-                  let distinctInkPixels=0;
-                  for(let y=Math.floor(cfg.height*.24);y<cfg.height*.77;y+=2){
-                    for(let x=Math.floor(cfg.width*.12);x<cfg.width*.87;x+=2){
-                      const index=(y*inkOn.width+x)*4;
-                      if(inkOff.data[index]-inkOn.data[index]>15)distinctInkPixels++;
-                    }
-                  }
-                  assert.ok(distinctInkPixels>150,'moving black blotches are visually imperceptible: '+distinctInkPixels);
-                  await page.locator('#menu-toggle').click();
-                  await page.locator('#ink-toggle-game').click();
-                  await page.locator('#menu-toggle').click();
-                  assert.equal(await page.evaluate(()=>localStorage.getItem('paperchalk-ink-blotches-v1')),'on');
-                  console.log('PASS: in-scene moving ink blotches visible, optional & switchable, '+distinctInkPixels+' distinct pixels');
+                  assert.ok(roomProtagonist.rect.top>=roomProtagonist.view.top-4,
+                    'back-facing protagonist head was cropped');
+                  assert.ok(roomProtagonist.rect.bottom<=roomProtagonist.view.bottom+4,
+                    'back-facing protagonist feet were cropped');
                 }
                 if(!cfg.mobile){
                   // Compare same fixed camera twice. Any changes in this
@@ -446,17 +451,7 @@ jobs:
                 assert.ok(portrait.enemyHidden&&portrait.playerHidden&&portrait.fogOriginal);
                 assert.ok(portrait.src.endsWith('/assets/characters/protagonist-front.webp'));
                 await page.screenshot({path:'artifacts/classroom/'+
-                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-PROTAGONIST-INK-ON.png'});
-                if(!cfg.mobile){
-                  await page.locator('#menu-toggle').click();
-                  await page.locator('#ink-toggle-game').click();
-                  await page.locator('#menu-toggle').click();
-                  await page.waitForTimeout(400);
-                  await page.screenshot({path:'artifacts/classroom/desktop-PROTAGONIST-INK-OFF.png'});
-                  await page.locator('#menu-toggle').click();
-                  await page.locator('#ink-toggle-game').click();
-                  await page.locator('#menu-toggle').click();
-                }
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-PROTAGONIST-PORTRAIT.png'});
                 await page.locator('#menu-toggle').click();
                 await page.locator('#scene-switcher-toggle').click();
                 await page.locator('#scene-switcher [data-scene-target="classroom"]').click();
