@@ -21,7 +21,7 @@ section.innerHTML=[
  '<label class="mlabel">呼吸幅度 <output id="l2d-strength-value"></output></label><input id="l2d-strength" type="range" min="0" max="400" step="5">',
  '<label class="mlabel">呼吸周期 <output id="l2d-period-value"></output></label><input id="l2d-period" type="range" min="2" max="12" step=".1">',
  '<label class="mlabel">软硬变形 <output id="l2d-softness-value"></output></label><input id="l2d-softness" type="range" min="0" max="240" step="5">',
- '<p class="tip">独立动态预览始终播放。左侧大画布保持静止供你精准擦画；呼吸幅度可拉到 400%，点击顶部「保存并应用到游戏」即可在游戏使用。</p>'
+ '<p class="tip">中央大画布默认实时播放动画，右侧为辅助预览。直接在大画布绘画时自动切回原坐标精修；可按 P 暂停、放大画布，并将呼吸幅度调到 400%。</p>'
 ].join('');
 document.querySelector('aside.right')?.prepend(section);
 function sync(){
@@ -44,7 +44,9 @@ function schedule(){
    }
    const arr=S.layers[S.side];
    const genuine=arr.filter(p=>p.sourcePart);
-   const sources=genuine.length?genuine:arr.filter(p=>!/^V4 ·/.test(p.name));
+   const sources=genuine.length
+    ?arr.filter(p=>p.sourcePart||(!/^V4 ·/.test(p.name)&&!/^原始角色合成参考|^原始素材|^原网站合成参考/.test(p.name)))
+    :arr.filter(p=>!/^V4 ·/.test(p.name));
    await rig.setLayers(sources.map(p=>({
     canvas:p.canvas,name:p.name,x:p.x,y:p.y,visible:p.visible,opacity:p.opacity
    })),[1024,1024]);
@@ -65,7 +67,14 @@ for(const [id,field,scale] of [
   schedule();
  });
 }
-$('l2d-play').onclick=()=>{paused=!paused;$('l2d-play').textContent=paused?'播放':'暂停';rig?.setPaused(paused)};
+function setMotionPaused(value){
+ paused=!!value;
+ $('l2d-play').textContent=paused?'播放':'暂停';
+ rig?.setPaused(paused);
+ window.dispatchEvent(new CustomEvent('paperchalk:rig-play-changed',{detail:{paused}}));
+}
+$('l2d-play').onclick=()=>setMotionPaused(!paused);
+ed.setMotionPaused=setMotionPaused;
 $('l2d-bones').onclick=()=>{bones=!bones;$('l2d-bones').textContent=bones?'隐藏骨骼':'显示骨骼';rig?.setBones(bones)};
 function hook(name,after){
  const orig=window[name];if(typeof orig!=='function')return;
