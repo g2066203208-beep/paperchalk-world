@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 2,
-  "description": "A complete field inventory for fictional characters. Unknown fields are represented as null; no invented facts.",
+  "schemaVersion": 3,
+  "description": "Comprehensive character profile field catalog, including limb thickness, precise facial landmarks, facial style, gaze and facing direction. A field's presence does not imply its value is known.",
   "statuses": [
     "user_confirmed",
     "approved_art_reference",
@@ -51,14 +51,28 @@
     "measurements.hipCircumferenceCm",
     "temperament.coreConfirmedTraits",
     "visualProduction.frontReference",
-    "visualProduction.backReference"
+    "visualProduction.backReference",
+    "measurements.upperArmCircumferenceCm",
+    "measurements.forearmCircumferenceCm",
+    "measurements.thighCircumferenceCm",
+    "measurements.calfCircumferenceCm",
+    "face.facialLandmarksNormalized",
+    "face.eyeCenterHeightRatio",
+    "face.interocularSpacingRatio",
+    "visualProduction.bodyFacingYawDeg",
+    "visualProduction.headFacingYawDeg",
+    "visualProduction.visualStyleCategory",
+    "visualProduction.lineWeightStyle",
+    "temperament.defaultMicroExpression"
   ],
   "rules": [
     "Only confirmed details may be labeled user_confirmed.",
     "Aesthetic or precise body values not visibly measurable are proposals until approved.",
     "B/W/H measurements when used describe neutral clothed character construction and are not a request for sexualized body depiction.",
     "Do not create an approved game actor from a draft with missing art.",
-    "Do not overwrite an approved visual master with a guessed rendering."
+    "Do not overwrite an approved visual master with a guessed rendering.",
+    "Upper-arm/forearm/thigh/calf dimensions and facial landmark placements must be explicitly represented, but remain null until grounded or designed and approved.",
+    "Every character must record visual production styles, expression baseline, body/head yaw and gaze; these are art-production fields rather than new biography."
   ],
   "sections": [
     {
@@ -136,7 +150,31 @@
         "bodyMassDescription",
         "posture",
         "handDominance",
-        "gait"
+        "gait",
+        "upperArmCircumferenceCm",
+        "forearmCircumferenceCm",
+        "wristCircumferenceCm",
+        "thighCircumferenceCm",
+        "calfCircumferenceCm",
+        "kneeCircumferenceCm",
+        "ankleCircumferenceCm",
+        "upperArmLengthCm",
+        "forearmLengthCm",
+        "handLengthCm",
+        "palmWidthCm",
+        "upperLegLengthCm",
+        "lowerLegLengthCm",
+        "kneeHeightCm",
+        "hipBreadthCm",
+        "shoulderBreadthCm",
+        "waistHeightCm",
+        "ribcageDepthCm",
+        "hipDepthCm",
+        "headWidthCm",
+        "faceLengthCm",
+        "faceWidthCm",
+        "footLengthCm",
+        "footWidthCm"
       ]
     },
     {
@@ -160,7 +198,26 @@
         "moles",
         "freckles",
         "postureAsymmetry",
-        "mobilityNeeds"
+        "mobilityNeeds",
+        "upperArmShape",
+        "forearmShape",
+        "wristShape",
+        "thighShape",
+        "calfShape",
+        "kneeShape",
+        "ankleShape",
+        "legAxis",
+        "upperLimbTaper",
+        "lowerLimbTaper",
+        "legMuscleDistribution",
+        "armMuscleDistribution",
+        "pelvisTilt",
+        "spinalCurve",
+        "handFingerLengthRatios",
+        "bodySilhouetteType",
+        "shoulderToHipWidthRatio",
+        "waistToHipWidthRatio",
+        "headToShoulderWidthRatio"
       ]
     },
     {
@@ -188,7 +245,31 @@
         "pupilColor",
         "eyeHighlights",
         "eyelashes",
-        "defaultExpression"
+        "defaultExpression",
+        "facialLandmarkSystem",
+        "facialLandmarksNormalized",
+        "faceLengthToWidthRatio",
+        "foreheadToFaceHeightRatio",
+        "jawWidthToFaceWidthRatio",
+        "cheekboneWidthToFaceWidthRatio",
+        "eyeCenterHeightRatio",
+        "interocularSpacingRatio",
+        "eyeWidthToFaceWidthRatio",
+        "eyebrowEyeGapRatio",
+        "noseTopHeightRatio",
+        "noseTipHeightRatio",
+        "noseWidthToFaceWidthRatio",
+        "mouthCenterHeightRatio",
+        "mouthWidthToFaceWidthRatio",
+        "philtrumLengthRatio",
+        "earTopHeightRatio",
+        "earBottomHeightRatio",
+        "eyeTailSlantDeg",
+        "eyelidOpennessBaseline",
+        "lipCornerSlopeDeg",
+        "browAngleDeg",
+        "expressionLandmarkVariants",
+        "noseToMouthDistanceRatio"
       ]
     },
     {
@@ -260,7 +341,14 @@
         "publicPersona",
         "privatePersona",
         "emotionalBaseline",
-        "expressionRange"
+        "expressionRange",
+        "defaultMicroExpression",
+        "signatureMicroExpressions",
+        "eyesExpression",
+        "eyebrowsExpression",
+        "mouthExpression",
+        "bodyLanguageMood",
+        "composureLevel"
       ]
     },
     {
@@ -428,7 +516,33 @@
         "sampler",
         "resolution",
         "sourceFileHash",
-        "assetApproval"
+        "assetApproval",
+        "bodyFacingYawDeg",
+        "headFacingYawDeg",
+        "headPitchDeg",
+        "headRollDeg",
+        "shoulderYawDeg",
+        "pelvisYawDeg",
+        "gazeHorizontalDeg",
+        "gazeVerticalDeg",
+        "cameraAngle",
+        "cameraFocalStyle",
+        "projectionOrthoPerspective",
+        "visualStyleCategory",
+        "lineWeightStyle",
+        "lineColor",
+        "shadingMethod",
+        "shadowDensity",
+        "highlightTreatment",
+        "textureComplexity",
+        "anatomicalStylization",
+        "facialFeatureStylization",
+        "characterIdentityEmbeddingNotes",
+        "frontPosePoseCode",
+        "poseSilhouetteNotes",
+        "framingHeadroomRatio",
+        "framingFootroomRatio",
+        "bodyAlignmentRule"
       ]
     },
     {
@@ -456,7 +570,15 @@
         "actionStates",
         "runtimePreview",
         "occlusionRepair",
-        "qaAnimation"
+        "qaAnimation",
+        "armRotationBoundsDeg",
+        "hipRotationBoundsDeg",
+        "kneeFlexBoundsDeg",
+        "eyelidOpennessChannel",
+        "browDeformationChannels",
+        "mouthCornerChannels",
+        "expressionLandmarkMotion",
+        "frontSideBackProportionsQa"
       ]
     },
     {
@@ -532,6 +654,20 @@
         "permissions",
         "historyNotes"
       ]
+    }
+  ],
+  "measurementProtocol": {
+    "units": "cm for circumferences/lengths, degrees for rotation, dimensionless for ratios; use null when unknown",
+    "faceNormalizedCoordinates": "facial landmarks use x=0 left, x=1 right, y=0 top of head, y=1 chin, defined in the SAME approved front-view portrait reference; 0-1 values must never be fabricated",
+    "measurementStatuses": "user_confirmed / approved_art_reference / approved_story_reference / proposed / unknown / not_applicable / rejected",
+    "crossView": "front, three-quarter, profile and back must share body proportions and face identity; perspective foreshortening is not a physical circumference change",
+    "approval": "numerical details from proposals cannot overwrite approved artwork"
+  },
+  "changeLog": [
+    {
+      "version": 3,
+      "date": "2026-11-02",
+      "note": "Added body segment circumferences, limb shapes, precise facial positioning, production style, expressions and camera/body orientation."
     }
   ]
 }
