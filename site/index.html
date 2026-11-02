@@ -148,7 +148,7 @@ body.mobile-mode.virtual-landscape #view{
 #enemy-depth-root #actor-enemy[hidden]{display:none!important}
 #enemy-depth-root #actor-enemy{
   position:absolute;display:block;left:46%;bottom:16%;height:34%;
-  width:auto;max-width:none;object-fit:contain;object-position:bottom center;
+  width:auto;aspect-ratio:1 / 1;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
 #fog{z-index:3}
@@ -162,14 +162,14 @@ body.mobile-mode.virtual-landscape #view{
 }
 #camera-player-root #actor-player{
   position:absolute;display:block;left:19cqw;bottom:3cqh;height:76cqh;
-  width:auto;max-width:none;object-fit:contain;object-position:bottom center;
+  width:auto;aspect-ratio:1 / 1;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
 /* The same saved protagonist transform is used in classrooms and all rooms.
    Do not override the DEV-authored inline x/y/size on environment scenes. */
 @container (max-height:445px){
-  #enemy-depth-root #actor-enemy{height:34%;left:46%;bottom:16%}
-  #camera-player-root #actor-player{height:76cqh;left:19cqw;bottom:3cqh}
+  #enemy-depth-root #actor-enemy{height:34%;width:19.125%;left:46%;bottom:16%}
+  #camera-player-root #actor-player{height:76cqh;width:76cqh;left:19cqw;bottom:3cqh}
 }
 
 /* BLACK-only scene transition, independent of the original running fluid fog */
@@ -1328,9 +1328,13 @@ void main(){
     document.getElementById('actor-enemy').style.left=enemy.x+'%';
     document.getElementById('actor-enemy').style.bottom=enemy.y+'%';
     document.getElementById('actor-enemy').style.height=enemy.size+'%';
+    // Square L2D canvas in a 16:9 depth plane (width% = height% * 9/16).
+    document.getElementById('actor-enemy').style.width=(enemy.size*9/16)+'%';
     document.getElementById('actor-player').style.left=player.x+'cqw';
     document.getElementById('actor-player').style.bottom=player.y+'cqh';
     document.getElementById('actor-player').style.height=player.size+'cqh';
+    // Replacing the protagonist must retain her 1024x1024 layout and foot position.
+    document.getElementById('actor-player').style.width=player.size+'cqh';
     for(const name of ['bg','enemy','fog','player','ground']){
       devRig.style.setProperty('--dev-depth-'+name,editorConfig[name].z+'px');
     }
