@@ -163,8 +163,11 @@ body.mobile-mode.virtual-landscape #view{
 #fog{z-index:3}
 #camera-player-root{
   position:absolute;inset:0;z-index:4;pointer-events:none;
-  /* This node stays attached to the CAMERA, never stage perspective. */
-  transform:none!important;
+  /* The player stays camera-near but responds subtly to view direction.
+     Its plane tilts independently; it never inherits the background tilt. */
+  transform-origin:18% 74%;
+  transform:rotateY(0deg) rotateX(0deg);
+  will-change:transform;
 }
 #camera-player-root #actor-player{
   position:absolute;display:block;left:8cqw;bottom:-3cqh;height:82cqh;
@@ -242,6 +245,51 @@ body.mobile-mode.virtual-landscape #view{
   position:absolute;inset:0;transform:translateZ(var(--dev-depth-fog));
   border:1px dashed rgba(186,186,203,.75);pointer-events:none;
 }
+
+/* DEV ONLY: an actual horizontal 3D floor, not a second flat background.
+   Positive local Y becomes positive world Z after rotateX(90deg);
+   perspective/grid convergence comes from the same camera as the scene planes. */
+#dev-ground{
+  position:absolute;left:50%;top:var(--dev-floor-y,77%);
+  width:172cqw;height:230cqh;box-sizing:border-box;
+  transform-origin:50% 0%;transform-style:preserve-3d;
+  transform:translateX(-50%) translateZ(var(--dev-depth-ground,-215px)) rotateX(90deg);
+  backface-visibility:visible;pointer-events:none;
+  border:2px solid rgba(118,208,175,.8);
+  background:
+    linear-gradient(90deg,transparent calc(50% - 1px),rgba(239,189,104,.95) 50%,transparent calc(50% + 1px)),
+    repeating-linear-gradient(90deg,rgba(110,204,180,.65) 0 1px,transparent 1px 66px),
+    repeating-linear-gradient(0deg,rgba(110,204,180,.65) 0 1px,transparent 1px 66px),
+    linear-gradient(0deg,rgba(10,51,48,.12),rgba(11,58,48,.24));
+  box-shadow:inset 0 0 70px rgba(26,100,79,.15);
+}
+#dev-ground[hidden]{display:none!important}
+#dev-ground::before{
+  content:"地板 / 水平XZ参照平面";position:absolute;top:10px;left:calc(50% + 8px);
+  color:#d4ffed;background:rgba(5,21,20,.8);padding:3px 6px;
+  font:15px var(--font-ui);white-space:nowrap;transform:translateZ(2px);
+}
+#dev-ground::after{
+  content:"后墙 / 地面参考线";position:absolute;top:0;left:8px;
+  color:#adffe0;background:rgba(4,20,17,.8);font:12px var(--font-ui);
+  padding:3px 5px;transform:translateZ(2px);
+}
+#dev-ground-contact{
+  position:absolute;top:var(--dev-foot-distance,25px);
+  left:calc(50% + var(--dev-foot-x,0px));
+  width:17px;height:17px;margin:-8px 0 0 -8px;
+  border:3px solid #ffbd67;background:#131b14;border-radius:50%;
+  transform:translateZ(3px);box-shadow:0 0 0 6px rgba(255,189,103,.16);
+}
+#dev-ground-contact::after{
+  content:"敌人脚点Z";position:absolute;left:14px;top:-11px;
+  white-space:nowrap;color:#ffce9b;background:#101411bd;
+  padding:2px 5px;font:12px var(--font-ui);
+}
+#dev-floor-controls[hidden]{display:none!important}
+#dev-tools .dev-floor-toggle{display:flex;align-items:center;gap:7px;margin:7px 0}
+#dev-tools .dev-floor-toggle input{width:16px;height:16px;accent-color:#9ce6c8}
+
 /* Never reparent the original WebGL canvas: some browsers lose their WebGL
    context when a live canvas moves into a 3D stacking context. The preview
    mirrors the actual flowing fog after each render, at a cheap low resolution. */
@@ -338,6 +386,9 @@ body.mobile-mode.virtual-landscape #view{
   <button id="dev-trigger" type="button" aria-label="打开分层开发者模式">分层 DEV</button>
   <div id="dev-stage" hidden aria-label="三维场景分层检查器">
     <div id="dev-rig">
+      <div id="dev-ground" aria-label="水平三维参考地板与敌人脚点">
+        <div id="dev-ground-contact" aria-hidden="true"></div>
+      </div>
       <canvas id="dev-fog-preview" width="384" height="216" aria-label="实时黑雾图层的缩小镜像"></canvas>
       <div id="dev-fog-guide" aria-hidden="true"></div>
     </div>
@@ -349,13 +400,18 @@ body.mobile-mode.virtual-landscape #view{
       <button id="dev-front" type="button">正视角</button>
       <button id="dev-side" type="button">侧视角</button>
       <button id="dev-camera-reset" type="button">重置镜头</button>
+      <button id="dev-top" type="button">俯视地板</button>
     </div>
+    <label class="dev-floor-toggle" for="dev-ground-toggle">
+      <input id="dev-ground-toggle" type="checkbox" checked>显示 3D 透视地板
+    </label>
     <label for="dev-layer">正在编辑图层</label>
     <select id="dev-layer">
       <option value="enemy">02 / 敌人</option>
       <option value="player">04 / 主角</option>
       <option value="bg">01 / 背景</option>
       <option value="fog">03 / 黑雾</option>
+      <option value="ground">05 / 地板（DEV参照）</option>
     </select>
     <div id="dev-actor-controls">
       <label for="dev-x">水平位置 <output id="dev-x-value" class="dev-value"></output></label>
@@ -364,6 +420,12 @@ body.mobile-mode.virtual-landscape #view{
       <input id="dev-y" type="range" min="-40" max="85" step=".5">
       <label for="dev-size">角色大小 <output id="dev-size-value" class="dev-value"></output></label>
       <input id="dev-size" type="range" min="12" max="120" step=".5">
+    </div>
+    <div id="dev-floor-controls" hidden>
+      <label for="dev-ground-y">地板高度 / 画面Y <output id="dev-ground-y-value" class="dev-value"></output></label>
+      <input id="dev-ground-y" type="range" min="40" max="96" step=".5">
+      <output id="dev-ground-delta" class="dev-value"></output>
+      <p>绿色网格是真实水平面；橙色圈是敌人的参考脚点，用来观察是否悬空或穿地。</p>
     </div>
     <label for="dev-z">图层深度（Z）<output id="dev-z-value" class="dev-value"></output></label>
     <input id="dev-z" type="range" min="-420" max="350" step="5">
@@ -446,7 +508,13 @@ void main(){
  float curl=sin(uv.x*23.+u_time*.68+sin(uv.y*19.-u_time*.47)*1.7);
  float width=min(93.,u_viewSize.y*.16);
  float smokeZone=1.-smoothstep(7.,width,d+curl*11.);
- float alpha=clamp(pow(max(density,0.),.80)*.66*smokeZone,0.,.72);
+ // Guaranteed fully opaque BLACK safety envelope on the outside edges.
+ // It encloses the worst-case tilted background and enemy silhouettes.
+ // Keep the original flowing fog INSIDE; never introduce gray fog.
+ float safetyD=min((u_half.x-.025-abs(uv.x-.5))*u_viewSize.x,
+                   (u_half.y-.037-abs(uv.y-.5))*u_viewSize.y);
+ float safetyBlack=1.-smoothstep(0.,min(32.,u_viewSize.y*.065),safetyD);
+ float alpha=max(clamp(pow(max(density,0.),.80)*.66*smokeZone,0.,.72),safetyBlack);
  gl_FragColor=vec4(0.,0.,0.,alpha);
 }
 </script>
@@ -991,7 +1059,11 @@ void main(){
       const width=Math.min(93,sizes.h*.16);
       const v=clamp((distance+curl*11-7)/Math.max(1,width-7),0,1);
       const smokeZone=1-v*v*(3-2*v);
-      const alpha=clamp(d**.80*.66*smokeZone,0,.72);
+      const safetyD=Math.min((sceneHalf.x-.025-Math.abs(uvx-.5))*sizes.w,
+                             (sceneHalf.y-.037-Math.abs(uvy-.5))*sizes.h);
+      const blackT=clamp(safetyD/Math.min(32,sizes.h*.065),0,1);
+      const safetyBlack=1-blackT*blackT*(3-2*blackT);
+      const alpha=Math.max(clamp(d**.80*.66*smokeZone,0,.72),safetyBlack);
       image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
     }
     s.a=b;s.b=a;fallback.putImageData(image,0,0);
@@ -1005,19 +1077,25 @@ void main(){
   const devSelect=document.getElementById('dev-layer');
   const devActorControls=document.getElementById('dev-actor-controls');
   const devStatus=document.getElementById('dev-status');
+  const devGround=document.getElementById('dev-ground');
+  const devFloorControls=document.getElementById('dev-floor-controls');
+  const devFootprint=document.getElementById('dev-ground-contact');
+  const devGroundToggle=document.getElementById('dev-ground-toggle');
+  const enemyImage=document.getElementById('actor-enemy');
   const editorDefaults=Object.freeze({
     bg:{z:-235},enemy:{x:61.5,y:18,size:64,z:-190},
-    fog:{z:0},player:{x:8,y:-3,size:82,z:160}
+    fog:{z:0},player:{x:8,y:-3,size:82,z:160},
+    ground:{y:77,z:-215,visible:1}
   });
   const EDITOR_KEY='paperchalk-layer-editor-v1';
   const editorBounds={
-    x:[-20,110],y:[-40,85],size:[12,120],z:[-420,350]
+    x:[-20,110],y:[-40,96],size:[12,120],z:[-420,350],visible:[0,1]
   };
   const copyDefaults=()=>JSON.parse(JSON.stringify(editorDefaults));
   function sanitizeEditor(data){
     const next=copyDefaults();
     if(!data||typeof data!=='object')return next;
-    for(const id of ['bg','enemy','fog','player']){
+    for(const id of ['bg','enemy','fog','player','ground']){
       const item=data[id];
       if(!item||typeof item!=='object')continue;
       for(const key of Object.keys(next[id])){
@@ -1033,7 +1111,7 @@ void main(){
   }
   let editorConfig=readEditor(),editorActive=false;
   let selectedLayer='enemy';
-  const devCamera={yaw:-36,pitch:-11,zoom:.68,panX:-45,panY:12};
+  const devCamera={yaw:-36,pitch:-23,zoom:.68,panX:-45,panY:-12};
   // Fog stays attached to its original view; only its live texture is mirrored.
   const devPlanes=[stage,enemyDepth,cameraPlayer];
   const devFogPreview=document.getElementById('dev-fog-preview');
@@ -1048,9 +1126,29 @@ void main(){
     document.getElementById('actor-player').style.left=player.x+'cqw';
     document.getElementById('actor-player').style.bottom=player.y+'cqh';
     document.getElementById('actor-player').style.height=player.size+'cqh';
-    for(const name of ['bg','enemy','fog','player']){
+    for(const name of ['bg','enemy','fog','player','ground']){
       devRig.style.setProperty('--dev-depth-'+name,editorConfig[name].z+'px');
     }
+    const ground=editorConfig.ground;
+    devRig.style.setProperty('--dev-floor-y',ground.y+'%');
+    devGround.hidden=ground.visible===0;
+    devGroundToggle.checked=ground.visible!==0;
+    // Contact marker is placed on the HORIZONTAL floor in the same 3D
+    // X/Z coordinates as the enemy billboard's shoe centre. A 2D cutout
+    // alone cannot determine feet height, so show the vertical mismatch.
+    const naturalRatio=enemyImage.naturalWidth&&enemyImage.naturalHeight
+      ?enemyImage.naturalWidth/enemyImage.naturalHeight:.625;
+    const shoeX=enemyDepth.offsetWidth*(enemy.x/100-.5)
+      +enemyDepth.offsetHeight*(enemy.size/100)*naturalRatio*.5;
+    devRig.style.setProperty('--dev-foot-x',shoeX.toFixed(1)+'px');
+    devRig.style.setProperty('--dev-foot-distance',(enemy.z-ground.z)+'px');
+    const floorY=devRig.offsetHeight*ground.y/100;
+    const shoeY=(devRig.offsetHeight-enemyDepth.offsetHeight)*.5+
+      enemyDepth.offsetHeight*(1-enemy.y/100);
+    const delta=shoeY-floorY;
+    const info=document.getElementById('dev-ground-delta');
+    if(info)info.textContent='敌人脚点相对地板：'+
+      (delta>=0?'+':'')+delta.toFixed(1)+'px（正数=脚点偏低）';
   }
   function applyDevCamera(){
     devRig.style.transform='translate3d('+devCamera.panX.toFixed(1)+'px,'+
@@ -1064,6 +1162,10 @@ void main(){
     const config=editorConfig[selectedLayer];
     devSelect.value=selectedLayer;
     devActorControls.hidden=!(selectedLayer==='enemy'||selectedLayer==='player');
+    devFloorControls.hidden=selectedLayer!=='ground';
+    document.getElementById('dev-ground-y').value=String(editorConfig.ground.y);
+    document.getElementById('dev-ground-y-value').textContent=editorConfig.ground.y+'%';
+    devGroundToggle.checked=editorConfig.ground.visible!==0;
     for(const field of ['x','y','size','z']){
       const input=document.getElementById('dev-'+field);
       const output=document.getElementById('dev-'+field+'-value');
@@ -1106,6 +1208,16 @@ void main(){
   document.getElementById('dev-trigger').addEventListener('click',enterDeveloper);
   document.getElementById('dev-exit').addEventListener('click',exitDeveloper);
   devSelect.addEventListener('change',()=>selectEditorLayer(devSelect.value));
+  devGroundToggle.addEventListener('change',()=>{
+    editorConfig.ground.visible=devGroundToggle.checked?1:0;
+    applyEditorVisuals();
+    setDevStatus(devGroundToggle.checked?'已显示水平3D地板':'已隐藏地板辅助线');
+  });
+  document.getElementById('dev-ground-y').addEventListener('input',event=>{
+    editorConfig.ground.y=Number(event.target.value);
+    applyEditorVisuals();refreshEditorControls();
+    setDevStatus('地板参考高度已调整；保存位置可保留设置');
+  });
   for(const field of ['x','y','size','z']){
     document.getElementById('dev-'+field).addEventListener('input',event=>{
       if(editorConfig[selectedLayer][field]===undefined)return;
@@ -1140,9 +1252,11 @@ void main(){
   document.getElementById('dev-front').addEventListener('click',
     ()=>setDevView(0,0,.77,-70,0));
   document.getElementById('dev-side').addEventListener('click',
-    ()=>setDevView(-69,-8,.65,-85,5));
+    ()=>setDevView(-69,-14,.65,-85,5));
+  document.getElementById('dev-top').addEventListener('click',
+    ()=>setDevView(-38,-48,.63,-65,-64));
   document.getElementById('dev-camera-reset').addEventListener('click',
-    ()=>setDevView(-36,-11,.68,-45,12));
+    ()=>setDevView(-36,-23,.68,-45,-12));
   devStage.addEventListener('contextmenu',e=>e.preventDefault());
   let cameraDrag=null;
   devStage.addEventListener('pointerdown',e=>{
@@ -1212,6 +1326,7 @@ void main(){
     }else if(e.key==='Escape'&&editorActive){e.preventDefault();exitDeveloper()}
   },true);
   applyEditorVisuals();
+  enemyImage.addEventListener('load',applyEditorVisuals);
   if(new URLSearchParams(location.search).get('dev')==='1'){
     enterDeveloper();
   }
@@ -1222,6 +1337,8 @@ void main(){
     if(reduced.matches||!tiltEnabled||editorActive){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    cameraPlayer.style.transform='rotateY('+(currentX*3.2).toFixed(3)+
+      'deg) rotateX('+(-currentY*2.6).toFixed(3)+'deg)';
     // Enemy is only slightly nearer than the classroom back wall.
     // The player stays camera-pinned; black fog remains screen-space.
     // Editor Z gap changes the in-game enemy parallax without ever moving

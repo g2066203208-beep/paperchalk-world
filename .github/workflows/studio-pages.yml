@@ -68,6 +68,10 @@ jobs:
           assert 'depthFactor=clamp(' in h
           assert 'id="dev-trigger"' in h and 'id="dev-tools"' in h
           assert 'function enterDeveloper()' in h and 'function exitDeveloper()' in h
+          assert 'id="dev-ground"' in h and 'rotateX(90deg)' in h
+          assert 'ground:{y:77,z:-215,visible:1}' in h
+          assert 'cameraPlayer.style.transform=' in h
+          assert 'float safetyBlack=' in h and 'const safetyBlack=' in h
           assert '#fog{z-index:3}' in h and '#scene{z-index:1}' in h
           assert 'id="scene-transition"' in h and "async function changeScene(name)" in h
           assert "shade.dataset.phase='covered'" in h
@@ -178,6 +182,7 @@ jobs:
                     enemy:document.getElementById('actor-enemy').getBoundingClientRect().toJSON(),
                     fog:document.getElementById('fog').getBoundingClientRect().toJSON(),
                     enemyStyle:document.getElementById('enemy-depth-root').style.transform,
+                    playerStyle:document.getElementById('camera-player-root').style.transform,
                     stageStyle:document.getElementById('scene').style.transform
                   }));
                   await page.mouse.move(cfg.width-50,cfg.height-50);
@@ -187,10 +192,13 @@ jobs:
                     enemy:document.getElementById('actor-enemy').getBoundingClientRect().toJSON(),
                     fog:document.getElementById('fog').getBoundingClientRect().toJSON(),
                     enemyStyle:document.getElementById('enemy-depth-root').style.transform,
+                    playerStyle:document.getElementById('camera-player-root').style.transform,
                     stageStyle:document.getElementById('scene').style.transform
                   }));
-                  assert.ok(Math.abs(a.player.x-b.player.x)<1&&Math.abs(a.player.y-b.player.y)<1,
-                    'foreground player moved relative to camera');
+                  assert.notEqual(a.playerStyle,b.playerStyle,
+                    'foreground player must now tilt subtly with the camera');
+                  assert.ok(Math.abs(a.player.x-b.player.x)<28&&Math.abs(a.player.y-b.player.y)<28,
+                    'camera-near player shifted too far rather than only tilting');
                   assert.ok(Math.abs(a.enemy.x-b.enemy.x)>5||Math.abs(a.enemy.y-b.enemy.y)>5,
                     'enemy did not visibly parallax across mouse tilt');
                   assert.notEqual(a.enemyStyle,b.enemyStyle,'enemy plane never tilts');
@@ -208,6 +216,19 @@ jobs:
                       'enemy pitch too far from classroom');
                   }
                   assert.deepEqual(a.fog,b.fog,'black fog moved with the world');
+                }
+                // The real GPU/CPU fog has an opaque pure-black perimeter
+                // around the maximum tilt envelope. No gray edge can peek out.
+                const edgeShot=PNG.sync.read(await page.screenshot());
+                for(const [x,y] of [
+                  [3,Math.floor(cfg.height/2)],
+                  [cfg.width-4,Math.floor(cfg.height/2)],
+                  [Math.floor(cfg.width/2),3],
+                  [Math.floor(cfg.width/2),cfg.height-4]
+                ]){
+                  const ix=(y*edgeShot.width+x)*4;
+                  assert.ok(edgeShot.data[ix]<4&&edgeShot.data[ix+1]<4&&edgeShot.data[ix+2]<4,
+                    'safety rim not solid black at '+x+','+y);
                 }
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-CHARACTERS-DEPTH.png'});
@@ -229,10 +250,32 @@ jobs:
                 assert.deepEqual(inspection.parents,['dev-rig','dev-rig','view','dev-rig'],
                   'developer camera must detach three image planes without detaching WebGL canvas');
                 assert.ok(inspection.hasFogGuide);
+                assert.equal(await page.locator('#dev-ground').isVisible(),true,
+                  'horizontal debug floor is missing');
+                const groundTransform=await page.locator('#dev-ground').evaluate(el=>
+                  getComputedStyle(el).transform);
+                assert.ok(groundTransform.startsWith('matrix3d('),
+                  'floor is not a real horizontal 3D plane');
                 assert.equal(await page.locator('#dev-fog-preview').count(),1,
                   '4th plane must mirror the actual flowing fog');
                 await page.locator('#dev-side').click();
                 assert.equal(await page.locator('#dev-stage').getAttribute('data-yaw'),'-69');
+                await page.locator('#dev-layer').selectOption('ground');
+                assert.equal(await page.locator('#dev-floor-controls').isVisible(),true);
+                await page.locator('#dev-ground-y').evaluate(el=>{
+                  el.value='73.5';el.dispatchEvent(new Event('input',{bubbles:true}));
+                });
+                assert.equal(await page.locator('#dev-ground').evaluate(el=>
+                  getComputedStyle(el).top),String(Math.round(
+                  await page.locator('#dev-rig').evaluate(el=>el.offsetHeight)*.735))+'px');
+                await page.locator('#dev-ground-toggle').uncheck();
+                assert.equal(await page.locator('#dev-ground').isVisible(),false);
+                await page.locator('#dev-ground-toggle').check();
+                assert.equal(await page.locator('#dev-ground').isVisible(),true);
+                await page.locator('#dev-top').click();
+                await page.screenshot({path:'artifacts/classroom/'+
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-DEV-FLOOR-TOP.png'});
+                await page.locator('#dev-side').click();
                 await page.waitForFunction(()=>Number(
                   document.getElementById('dev-fog-preview').dataset.mirrorFrames)>0,
                   null,{timeout:4000});
