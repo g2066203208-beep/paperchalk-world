@@ -64,7 +64,7 @@ async function setLayers(slot,parts,canvasSize){
  // Source parts are decoded independently, with the exact full-canvas
  // x/y coordinates supplied by the character's PSD / editing project.
  const layers=await Promise.all(parts.map(async p=>{
-  if(p.canvas instanceof HTMLCanvasElement)return {image:p.canvas,x:Number(p.x)||0,y:Number(p.y)||0,opacity:Number(p.opacity??1),visible:p.visible!==false,name:String(p.name||'')};
+  if(p.canvas&&typeof p.canvas.getContext==='function')return {image:p.canvas,x:Number(p.x)||0,y:Number(p.y)||0,opacity:Number(p.opacity??1),visible:p.visible!==false,name:String(p.name||'')};
   if(typeof p.image!=='string'||!p.image.startsWith('data:image/'))return null;
   const im=new Image();
   await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;im.src=p.image;});
