@@ -558,6 +558,7 @@ function applyGameMotion(ctx){
 const frameImageCache=new Map();
 async function drawFrame(index){
  const clip=v4;
+ if(clip)index=Math.max(0,Math.min(Math.max(0,clip.count-1),Number.isFinite(index)?Math.trunc(index):0));
  if(!clip||clip.busy)return;
  clip.busy=true;
  try{
@@ -680,7 +681,7 @@ async function persistCorrections(){
 function frameLoop(t){
  if(v4&&!document.hidden){
   if(playing){
-   const idx=Math.floor((t-playingSince)/50)%v4.count;
+   const idx=Math.floor(Math.max(0,t-playingSince)/50)%Math.max(1,v4.count);
    if(frameIndex!==idx&&!v4.busy){
     frameIndex=idx;$('studio-frame').value=String(idx);
     $('studio-frame-label').textContent=idx+' / '+(v4.count-1);
