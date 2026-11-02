@@ -69,12 +69,12 @@ jobs:
                     shoeA:rig.motionAt(462,965,.4),shoeB:rig.motionAt(462,965,1.8)};
                 });
                 await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dEdition==='V4-official',{timeout:20000});
-                assert.equal(motion.mode==='v4-clip'||await page.evaluate(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dMode==='v4-clip'),true);
+                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dMode==='v4-decoder',{timeout:15000});
                 const clipState=await page.evaluate(()=>{
                   const a=window.PaperchalkL2D.get('player');
-                  return {w:a.clip?.img?.naturalWidth,h:a.clip?.img?.naturalHeight,mode:a.root.dataset.l2dMode};
+                  return {type:a.clip?.type,count:a.clip?.count,w:a.clip?.w,h:a.clip?.h,mode:a.root.dataset.l2dMode};
                 });
-                assert.deepEqual(clipState,{w:335,h:1013,mode:'v4-clip'});
+                assert.deepEqual(clipState,{type:'decoder',count:128,w:335,h:1013,mode:'v4-decoder'});
                 // The DEV query starts on the menu, which intentionally
                 // hides gameplay actors; expose only the test actor while
                 // sampling renderer frames. Scene visibility is tested by
@@ -85,32 +85,23 @@ jobs:
                 // The actual visible V4 <img> is the runtime output, not the
                 // hidden legacy rig.source; read animated frames from that
                 // visible image to confirm the browser decoder advances.
+                await page.waitForFunction(()=>Number(document.querySelector('#camera-player-root')?.dataset.l2dFrame)>=0,{timeout:16000});
                 const inspect=()=>page.evaluate(()=>{
-                  const a=window.PaperchalkL2D.get('player'),clip=a.clip?.img;
-                  if(!clip)throw Error('approved V4 image not mounted');
-                  const bounds=clip.getBoundingClientRect(),style=getComputedStyle(clip);
-                  const img=document.createElement('canvas');
-                  img.width=335;img.height=1013;
-                  const ctx=img.getContext('2d',{willReadFrequently:true});
-                  ctx.drawImage(clip,0,0,335,1013);
-                  const pix=ctx.getImageData(0,0,335,1013).data;
+                  const a=window.PaperchalkL2D.get('player'),
+                    pix=a.canvas.getContext('2d',{willReadFrequently:true}).getImageData(352,70,332,860).data;
                   let hash=2166136261;
                   for(let k=0;k<pix.length;k+=8){
                     hash=Math.imul(hash^pix[k],16777619)>>>0;
                     hash=Math.imul(hash^pix[k+3],16777619)>>>0;
                   }
-                  return {hash,w:bounds.width,h:bounds.height,
-                    visibility:style.visibility,opacity:Number(style.opacity),
-                    canvasHidden:getComputedStyle(a.canvas).visibility};
+                  return {hash,frame:a.root.dataset.l2dFrame,canvasHidden:getComputedStyle(a.canvas).visibility};
                 });
                 const firstFrame=await inspect();
                 await page.waitForTimeout(750);
                 const secondFrame=await inspect();
-                assert.ok(firstFrame.w>0&&firstFrame.h>0,'approved V4 must have visible actor geometry');
-                assert.equal(secondFrame.visibility,'visible');
-                assert.equal(secondFrame.opacity,1);
-                assert.equal(secondFrame.canvasHidden,'hidden','simple breathing canvas must be hidden');
-                assert.notEqual(firstFrame.hash,secondFrame.hash,'official V4 WebP must animate its visible decoded pixels');
+                assert.equal(secondFrame.canvasHidden,'visible','approved V4 must render into visible actor canvas');
+                assert.notEqual(firstFrame.frame,secondFrame.frame,'V4 playback timeline must advance');
+                assert.notEqual(firstFrame.hash,secondFrame.hash,'official V4 must change actual rendered Canvas pixels');
 
                 assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)>1,'hair tip must physically sway');
                 assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)>1,'skirt hem must physically sway');
@@ -153,7 +144,7 @@ jobs:
                 await page.locator('#studio-back').click({force:true});
                 await page.waitForURL('**/?dev=1',{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
-                await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.img?.complete,{timeout:16000});
+                await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.type==='decoder',{timeout:16000});
                 const count=await page.locator('#dev-character-library option').count();
                 assert.equal(count,2,'Game DEV must see characters imported from studio');
                 assert.deepEqual(errors,[],'No browser errors');
