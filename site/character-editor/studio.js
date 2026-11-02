@@ -229,6 +229,24 @@ async function persistSkeleton(face){
  }));
  await put('skeletal:'+currentId+':'+face,parts);
 }
+// The experimental editable PartRig is deliberately a separate, versioned
+// draft. It MUST NOT replace the user's approved V4 clips or overwrite PNGs.
+async function readPartRig(id=currentId,face=side){
+ if(!id||!['front','back'].includes(face))return null;
+ return await get('part-rig:'+id+':'+face);
+}
+async function storePartRig(rig){
+ if(!rig||rig.format!=='paperchalk-part-rig-v1'||rig.characterId!==currentId||
+    !['front','back'].includes(rig.face)||!rig.parts||typeof rig.parts!=='object')
+  throw Error('绑定工程人物或方向不一致，拒绝覆盖');
+ const layers=ed.S.layers[rig.face].filter(p=>p.sourcePart);
+ const ids=new Set(layers.map(p=>String(p.partId||p.name)));
+ const keys=Object.keys(rig.parts);
+ if(!keys.length||keys.some(k=>!ids.has(k)))
+  throw Error('绑定工程部件与真实源图层不一致，拒绝覆盖');
+ await put('part-rig:'+currentId+':'+rig.face,JSON.parse(JSON.stringify(rig)));
+ return true;
+}
 async function saveToGame(){
  if(!currentId)return;
  clearTimeout(correctionTimer);
@@ -828,6 +846,6 @@ $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
 $('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,drawFrameCorrection,drawComposedV4,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&showOriginalV4&&!hasNativePSD(),get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
+window.PaperchalkStudio={list,change,saveToGame,readPartRig,storePartRig,drawBackdrop,drawFrameCorrection,drawComposedV4,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&showOriginalV4&&!hasNativePSD(),get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
