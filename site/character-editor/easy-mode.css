@@ -101,3 +101,10 @@ body.easy-mode :is(button,summary,select,input):focus-visible{outline:2px solid 
  body.easy-mode .right .mlabel{margin-top:8px}
  body.easy-mode #tools{display:none}
 }
+
+@media(max-width:710px){
+ body.easy-mode #easy-quickbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(2,auto);gap:3px;width:calc(100% - 12px);overflow:hidden}
+ body.easy-mode #easy-quickbar button{white-space:normal;min-width:0;min-height:38px;padding:5px 2px;font-size:10px;line-height:1.2}
+ body.easy-mode #easy-quickbar #easy-edit,
+ body.easy-mode #easy-quickbar #easy-animate{font-size:10px}
+}
