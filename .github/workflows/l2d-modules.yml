@@ -138,6 +138,48 @@ jobs:
             await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===2,{timeout:20000});
             assert.equal(await page.evaluate(()=>window.PaperchalkL2DLibrary.get('player')),null,
               'switching to V4 must unload the old independent texture renderer');
+            // This is the ACTUAL heroine's original 25-layer ZIP, not a
+            // synthetic QA bitmap or a full-image sinusoidal distortion.
+            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','front'));
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===17,{timeout:20000});
+            const physical=await page.evaluate(()=>{
+              const core=window.PaperchalkPartRigCore;
+              const m=window.PaperchalkL2DLibrary.get('player').model.parts;
+              const check=(name,u,v)=>{
+                const p=m[name];
+                const a=core.warpPoint(p,u,v,0),b=core.warpPoint(p,u,v,1.4);
+                return {joints:p.bones.length,moved:Math.hypot(a.x-b.x,a.y-b.y)};
+              };
+              const arms=m.sleeves_and_hands;
+              const before=core.warpPoint(arms,.82,.92,1.4);
+              const left=arms.bones.find(b=>b.id==='left-elbow');
+              const original=left.amplitude;left.amplitude=35;
+              const after=core.warpPoint(arms,.82,.92,1.4);
+              left.amplitude=original;
+              return {hair:check('rear_hair',.2,.95),
+                frontHair:check('front_hair',.8,.92),
+                skirt:check('skirt',.22,.95),
+                jacket:check('jacket',.18,.95),
+                arms:check('sleeves_and_hands',.2,.92),
+                rightArmCrossTalk:Math.hypot(before.x-after.x,before.y-after.y)};
+            });
+            assert.deepEqual(Object.fromEntries(Object.entries(physical)
+              .filter(([key])=>key!=='rightArmCrossTalk').map(([k,v])=>[k,v.joints])),
+              {hair:6,frontHair:6,skirt:6,jacket:4,arms:4},
+              'real protagonist source PNG parts must have independent authored joint chains');
+            for(const [kind,part] of Object.entries(physical)){
+              if(kind==='rightArmCrossTalk')continue;
+              assert.ok(part.moved>.3,kind+' real source pixels must articulate between animation frames');
+            }
+            assert.ok(physical.rightArmCrossTalk<1,
+              'right arm must not move from editing left elbow within the same real PNG');
+            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','back'));
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===8,{timeout:20000});
+            const backBones=await page.evaluate(()=>{
+              const p=window.PaperchalkL2DLibrary.get('player').model.parts;
+              return [p.back_hair.bones.length,p.skirt.bones.length,p.sleeve_left.bones.length,p.sleeve_right.bones.length];
+            });
+            assert.deepEqual(backBones,[6,6,2,2],'back hair, skirt and separate sleeves are actual independent articulated source parts');
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','back'));
             await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===128,{timeout:20000});
             assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player').root.dataset.l2dEdition),'V4-official');
