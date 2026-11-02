@@ -28,7 +28,7 @@ async function refresh(obj){
     featurePreset:obj.img.dataset.characterId==='protagonist'&&obj.img.dataset.characterSide==='front'?'heroine-front':'generic'
    });
    await obj.rig.ready;
-   obj.rig.start();
+   if(!obj.clip)obj.rig.start();
   }else{
    await obj.rig.setImage(obj.img);
   }
@@ -37,6 +37,7 @@ async function refresh(obj){
   obj.rig.featurePreset=obj.img.dataset.characterId==='protagonist'&&obj.img.dataset.characterSide==='front'?'heroine-front':'generic';
   obj.rig.blinkEnabled=obj.rig.featurePreset==='heroine-front';
   obj.rig.animatedFrames=!!obj.animated;
+  if(obj.clip)obj.rig.stop();
   obj.root.dataset.l2dState='ready';
   if(!obj.clip)obj.root.dataset.l2dMode='procedural-multinode';
   obj.lastSource=obj.img.currentSrc||obj.img.src;
