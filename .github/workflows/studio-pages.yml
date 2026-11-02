@@ -73,7 +73,7 @@ jobs:
           assert image[:4]==b'RIFF' and image[8:12]==b'WEBP'
           h=Path('site/index.html').read_text()
           for key in ('id="scene"','id="fog"','object-fit:contain',
-                      '#scene::after','linear-gradient(to right','linear-gradient(to bottom',
+                      '#scene::after','border-radius:16px','box-shadow:inset 0 0',
                       'pointer-events:none','uniform sampler2D u_previous',
                       'Semi-Lagrangian transport','framebufferTexture2D',
                       'requestAnimationFrame(tick)','fog.dataset.frames',
