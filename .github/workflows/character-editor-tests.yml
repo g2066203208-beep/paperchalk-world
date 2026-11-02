@@ -45,7 +45,18 @@ jobs:
                 assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio?.state.active),false,
                   'original V4 preview is the default; opt-in editable rig stays off');
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist'&&
-                  window.PaperchalkStudio?.countSourceParts?.()===17,null,{timeout:30000});
+                  window.PaperchalkStudio?.countSourceParts?.()===17,null,{timeout:30000}).catch(async error=>{
+                  console.error('Original layer audit',await page.evaluate(()=>({
+                    status:document.querySelector('#studio-status')?.textContent,
+                    editor:document.querySelector('#status')?.textContent,
+                    current:window.PaperchalkStudio?.current,
+                    side:window.PaperchalkStudio?.editSide,
+                    count:window.PaperchalkStudio?.countSourceParts?.(),
+                    parts:window.characterEditor?.S.layers.front.map(p=>[p.partId,p.role,p.sourcePart])
+                  })));
+                  console.error('Browser JS errors',errors);
+                  throw error;
+                });
                 await page.evaluate(()=>{
                   window.__partRigArtBackup=window.characterEditor.S.layers.front
                     .find(p=>p.partId==='jacket').canvas.toDataURL();
