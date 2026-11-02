@@ -163,13 +163,14 @@ jobs:
           # Exactly TWO layers: scene-attached rounded tiny feather + solid
           # black outside the centered safe region with live smoke at its edge.
           for marker in (
-              '--rim-solid:8px', '--rim-feather:9px',
-              'box-shadow:inset 0 0 var(--rim-feather) var(--rim-solid) #000',
+              '--rim-solid:12px', '--rim-feather:7px',
+              'border:var(--rim-solid) solid #000',
+              'box-shadow:inset 0 0 var(--rim-feather) 0 #000',
               'border-radius:16px', 'uniform vec4 u_fogSettings',
               'float safeDistance=', 'float alpha=safeDistance<=0.?1.:',
               'const safeDistance=', 'const alpha=safeDistance<=0?1:',
               "const FOG_KEY='paperchalk-fog-two-step-v2'",
-              'width:3,opacity:82,offset:0,safe:96,solid:8,feather:9',
+              'width:3,opacity:82,offset:0,safe:96,solid:12,feather:7',
               'id="menu-dev"', 'id="game-dev"', 'id="dev-fog-tools"',
               'id="fog-safe-guide"', 'id="fog-width"',
               'id="fog-offset"', 'id="fog-safe"', 'id="fog-opacity"',
