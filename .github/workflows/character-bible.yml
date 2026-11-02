@@ -12,6 +12,7 @@ on:
       - 'site/assets/characters/**'
       - 'scripts/validate_character_identity.py'
       - 'scripts/validate_character_profiles.py'
+      - 'scripts/validate_character_art_crops.py'
       - 'scripts/validate_human_cast_plan.py'
       - '.github/workflows/character-bible.yml'
   pull_request:
@@ -25,6 +26,7 @@ on:
       - 'site/assets/characters/**'
       - 'scripts/validate_character_identity.py'
       - 'scripts/validate_character_profiles.py'
+      - 'scripts/validate_character_art_crops.py'
       - 'scripts/validate_human_cast_plan.py'
       - '.github/workflows/character-bible.yml'
   workflow_dispatch:
@@ -41,6 +43,7 @@ jobs:
         run: |
           python3 scripts/validate_character_identity.py
           python3 scripts/validate_character_profiles.py
+          python3 scripts/validate_character_art_crops.py
           python3 scripts/validate_human_cast_plan.py
           python3 - <<'PY'
           import json
