@@ -137,6 +137,27 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
                 assert.equal(await page.locator('#l2d-live-canvas').count(),1);
                 await page.waitForFunction(()=>window.PaperchalkStudio?.edition==='V4-official'&&window.PaperchalkStudio?.useV4?.(),{timeout:18000});
+                await page.waitForFunction(()=>window.PaperchalkNeckCollar?.ready,{timeout:18000});
+                const collarReady=await page.evaluate(()=>{
+                  const ed=window.characterEditor,S=ed.S;
+                  const neck=S.layers.front.find(x=>x.name==='PSD · 原版脖子（锁定）');
+                  const collar=S.layers.front.find(x=>x.name==='PSD · 外套衣领（可擦除）');
+                  if(!neck||!collar)throw Error('Original PSD neck/collar parts not loaded');
+                  const original=neck.canvas.toDataURL();
+                  const ctx=collar.canvas.getContext('2d');
+                  const b=ctx.getImageData(0,0,collar.canvas.width,collar.canvas.height);
+                  return {neck:[neck.x,neck.y,neck.canvas.width,neck.canvas.height,neck.locked],
+                    collar:[collar.x,collar.y,collar.canvas.width,collar.canvas.height,collar.locked],
+                    tool:S.tool,selected:S.layers.front[S.sel]?.name,alpha:b.data.reduce((n,v,i)=>n+(i%4===3&&v>0),0),
+                    untouched:original.length>100};
+                });
+                assert.deepEqual(collarReady.neck,[496,160,57,74,true]);
+                assert.deepEqual(collarReady.collar,[474,190,106,95,false]);
+                assert.equal(collarReady.tool,'eraser');
+                assert.equal(collarReady.selected,'PSD · 外套衣领（可擦除）');
+                assert.ok(collarReady.alpha>100,'original collar has real nontransparent paint');
+                assert.ok(collarReady.untouched);
+
 
                 assert.equal(await page.locator('#studio-character option').count(),3,'whole GitHub character library including concept profiles');
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true);
