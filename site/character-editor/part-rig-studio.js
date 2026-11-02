@@ -128,7 +128,7 @@ async function exportGameModule(newId){
  const add=(path,data)=>files.push({path,data});
  let hasMotion=false;
  for(const face of ['front','back']){
-  const layers=(S.layers[face]||[]).filter(p=>p.sourcePart&&p.canvas&&p.visible);
+  const layers=(S.layers[face]||[]).filter(p=>p.sourcePart&&p.canvas);
   if(!layers.length)continue;
   const seen=new Set(),origin=face===S.side?state.model:await studio.readPartRig(sourceId,face);
   const model=core.project(layers,sourceId,face,origin);
@@ -139,16 +139,19 @@ async function exportGameModule(newId){
    const id=String(layer.partId||layer.name);
    if(!/^[a-z][a-z0-9_-]{0,79}$/.test(id)||seen.has(id))
     throw Error('当前层 ID 不符合可安装 L2D 规范或重复：'+id);
+   if(layer.role==='derived-source-region')
+    throw Error('这个人物当前只是合成图分区，不是真实独立 PSD；不能冒充完整 L2D 模块。请先导入原始 PSD。');
    seen.add(id);
    const p=model.parts[id];
    if(!p)throw Error('缺少源部件的绑定：'+id);
+   p.enabled=layer.visible!==false;
    if(Object.values(p.motion||{}).some((v,i)=>i<3&&Math.abs(v)>0.001))hasMotion=true;
    const file='parts/'+face+'/'+id+'.png';
    textures[id]=file;
    const blob=await ed.toBlob(layer.canvas);
    add(newId+'/'+file,new Uint8Array(await blob.arrayBuffer()));
-   g.globalAlpha=layer.opacity??1;
-   g.drawImage(layer.canvas,layer.x,layer.y);
+   if(layer.visible){g.globalAlpha=layer.opacity??1;
+   g.drawImage(layer.canvas,layer.x,layer.y);}
   }
   g.globalAlpha=1;
   if(model.characterId!==newId||Object.keys(textures).length!==Object.keys(model.parts).length)
@@ -168,7 +171,7 @@ async function exportGameModule(newId){
  const url=URL.createObjectURL(file),a=document.createElement('a');
  a.href=url;a.download=newId+'.zip';document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),10000);
- info('✓ 已打包 '+Object.keys(views).join('/')+' 真正独立部件。将 '+newId+
+ info('✓ 已打包 '+Object.keys(views).join('/')+' 原始独立部件。将 '+newId+
    '.zip 上传到 GitHub site/assets/l2d/inbox/，即可自动进入游戏人物库。旧 V4 未改。');
  return {id:newId,views:Object.keys(views),files:files.length,blob:file};
 }
