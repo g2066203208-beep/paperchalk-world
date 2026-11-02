@@ -11,6 +11,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from zipfile import ZipFile, BadZipFile
 from PIL import Image, UnidentifiedImageError
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -156,6 +157,23 @@ def inspect_view(folder, value, face):
         archive = within(folder,source.get("file"))
         if archive.suffix.lower() != ".zip" or archive.stat().st_size > MAX_CLIP:
             fail(archive,"sourceParts must be a <=72MB ZIP archive")
+        try:
+            with ZipFile(archive) as z:
+                names=z.namelist()
+                if len(names)!=len(set(names)) or len(names)>256:
+                    fail(archive,"duplicate members or too many parts in ZIP")
+                if any(n.startswith("/") or "\\\\" in n or ".." in Path(n).parts for n in names):
+                    fail(archive,"unsafe member path")
+                manifest='layers.json' if 'layers.json' in names else 'assets.json'
+                if manifest not in names:
+                    fail(archive,"missing source parts manifest")
+                definition=json.loads(z.read(manifest).decode("utf-8"))
+                if not isinstance(definition,dict):
+                    fail(archive,"invalid archive part manifest")
+                if z.testzip() is not None:
+                    fail(archive,"source ZIP CRC check failed")
+        except (BadZipFile,OSError,UnicodeError,ValueError) as exc:
+            fail(archive,f"invalid source ZIP ({exc})")
         result["sourceParts"] = {"url":url(archive), "provenance":source["provenance"]}
     return result
 
@@ -177,9 +195,15 @@ def inspect_module(folder):
         fail(folder,"back-only characters need a front portrait for game catalog (no faked back)")
     faces = {side: inspect_view(folder,v,side) for side,v in views.items()}
     # No coercion of blank/corrupt/missing assets into a playable character.
+    digest=hashlib.sha256()
+    for f in sorted(folder.rglob("*")):
+        if f.is_file():
+            digest.update(f.relative_to(folder).as_posix().encode("utf-8"))
+            with f.open("rb") as stream:
+                for chunk in iter(lambda:stream.read(1024*1024),b""):
+                    digest.update(chunk)
     return {"id":ident, "label":label.strip(), "views":faces,
-            "module":True, "version":hashlib.sha256(
-                (folder / "module.json").read_bytes()).hexdigest()[:12]}
+            "module":True, "version":digest.hexdigest()[:12]}
 
 
 def build():
