@@ -28,6 +28,8 @@ jobs:
           const html=fs.readFileSync('site/character-editor/index.html','utf8');
           const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];new Function(script);
           new Function(fs.readFileSync('site/character-editor/stage-motion.js','utf8'));
+          new Function(fs.readFileSync('site/character-editor/easy-mode.js','utf8'));
+          assert.ok(fs.readFileSync('site/character-editor/index.html','utf8').includes('easy-mode.css'),'responsive simplified style must load');
           (async()=>{
             const browser=await chromium.launch({headless:true});
             try {
@@ -38,6 +40,13 @@ jobs:
                 await page.waitForFunction(()=>window.characterEditor&&window.characterEditor.S.ready,{timeout:10000});
                 await page.waitForFunction(()=>!!window.PaperchalkStageMotion,{timeout:10000});
                 assert.ok(await page.locator('#main-play').isVisible(),'full viewport playback control must be visible');
+                assert.ok(await page.locator('#easy-quickbar').isVisible(),'large-screen and phone quick edit tools must exist');
+                assert.ok(await page.locator('body.easy-mode').count()===1,'simple mode is the default');
+                assert.ok(await page.locator('#easy-save-note').textContent().then(x=>x.includes('浏览器')),'save must disclose browser-only persistence');
+                await page.locator('#easy-mode-switch').click();
+                assert.ok(await page.locator('body.expert-mode').count()===1,'expert mode reveals full controls');
+                await page.locator('#easy-mode-switch').click();
+                assert.ok(await page.locator('body.easy-mode').count()===1,'simple mode can be restored');
                 assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),true);
                 await page.locator('#main-preview').click();
                 assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),false,'precision mode shows original coordinates');
@@ -58,7 +67,7 @@ jobs:
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-initial.png',fullPage:true});
                 await page.locator('#add').click();
                 assert.equal(await page.locator('#layers .layer').count(),initialLayerCount+1);
-                await page.locator('[data-tool="brush"]').click();
+                await page.locator('[data-easy-tool="brush"]').click();
                 await page.locator('#view').scrollIntoViewIfNeeded();
                 const rect=await page.locator('#view').boundingBox(),x=rect.x+rect.width/2,y=rect.y+rect.height/2;
                 await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+9,y+9,{steps:3});await page.mouse.up();
@@ -70,13 +79,15 @@ jobs:
                 });
                 console.log('Draw diagnostic',painted);
                 assert.ok(painted.count>0,'brush stroke produced no pixels');
-                await page.locator('#btnUndo').click();
-                await page.locator('#btnRedo').click();
+                await page.locator('#easy-undo').click();
+                await page.locator('#easy-redo').click();
                 await page.locator('#btnSave').click();
                 await page.waitForFunction(()=>document.getElementById('status').textContent.includes('已保存'),null,{timeout:12000});
                 const dl=page.waitForEvent('download');await page.locator('#btnExport').click();const downloaded=await dl;
                 assert.ok(downloaded.suggestedFilename().endsWith('.zip'));
-                await page.locator('#backTab').click();
+                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:12000});
+                await page.locator('#studio-side').selectOption('back');
+                await page.waitForFunction(()=>window.PaperchalkStudio?.editSide==='back',{timeout:15000});
                 assert.ok(await page.locator('#layers .layer').count()>=1);
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-back.png',fullPage:true});
                 assert.deepEqual(errors,[],'JavaScript errors');
