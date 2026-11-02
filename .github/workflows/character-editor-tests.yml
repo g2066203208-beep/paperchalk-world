@@ -66,6 +66,7 @@ jobs:
                 });
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true);
                 await page.locator('#part-rig-toggle').click();
+                await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:10000});
                 assert.ok(await page.locator('#part-rig-panel').isVisible());
                 assert.equal(await page.locator('#rig-part option').count(),17);
                 await page.locator('#rig-part').selectOption('rear_hair');
