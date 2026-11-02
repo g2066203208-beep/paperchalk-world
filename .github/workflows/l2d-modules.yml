@@ -6,6 +6,7 @@ on:
       - 'site/assets/l2d/library/**'
       - 'site/l2d/library-player.js'
       - 'site/l2d/part-rig.js'
+      - 'scripts/build_protagonist_part_rig.py'
       - 'site/dev/character-bridge.js'
       - 'site/character-editor/studio.js'
       - 'site/character-editor/part-rig-studio.js'
@@ -43,6 +44,7 @@ jobs:
       - name: Rebuild existing original L2D safely
         run: |
           python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
           python3 scripts/build_char002_v4.py
           python3 scripts/build_scene_catalog.py
       - name: Generate disposable complete V4 + ArtMesh modules in CI only
