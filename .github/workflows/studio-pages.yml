@@ -136,7 +136,7 @@ jobs:
           assert 'assets/battle/player-back.webp' not in h
           assert 'assets/battle/enemy-front.webp' not in h
           assert 'protagonist-back.webp' in h
-          assert not Path('site/assets/characters/protagonist-back.webp').exists()
+          assert not Path('site/assets/battle/player-back.webp').exists()
           assert not Path('site/assets/battle/enemy-front.webp').exists()
           assert Path('site/assets/characters/protagonist-front.webp').read_bytes()[:4]==b'RIFF'
           assert Path('scripts/matte_character.py').is_file()
@@ -302,8 +302,8 @@ jobs:
                     'foreground player must now tilt subtly with the camera');
                   assert.ok(Math.abs(a.player.x-b.player.x)<28&&Math.abs(a.player.y-b.player.y)<28,
                     'camera-near player shifted too far rather than only tilting');
-                  assert.ok(Math.abs(a.enemy.x-b.enemy.x)>5||Math.abs(a.enemy.y-b.enemy.y)>5,
-                    'enemy did not visibly parallax across mouse tilt');
+                  assert.equal(await page.locator('#actor-enemy').isVisible(),false,
+                    'deleted enemy picture became visible during camera tilt');
                   assert.notEqual(a.enemyStyle,b.enemyStyle,'enemy plane never tilts');
                   const angles=(style,axis)=>{
                     const part=style.match(new RegExp(axis+'\\((-?[\\d.]+)deg\\)'));
