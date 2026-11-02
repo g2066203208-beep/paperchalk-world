@@ -530,20 +530,29 @@ uniform vec2 u_viewSize;
 uniform vec2 u_half;
 uniform float u_time;
 uniform float u_blotches;
-// 2D ink wash, organically warped silhouette, no gray particles or textures.
-float inkShape(vec2 uv, vec2 center, vec2 radius, float phase){
-  vec2 q=(uv-center)/radius;
-  float theta=atan(q.y,q.x);
-  float wobble=.13*sin(theta*5.+phase)+.08*sin(theta*9.-phase*.7)
-              +.07*sin(q.x*7.+q.y*5.+phase*.9);
-  return 1.-smoothstep(.66,1.14,length(q)+wobble);
+// Old projector film-burn: nine independent evolving emulsion wounds.
+// Every cell is advanced in real time by JS; no looping pre-rendered frames.
+uniform vec4 u_burns[9]; // center xy, radius in viewport-height units, opacity
+float burnShape(vec2 uv,vec4 burn,float phase){
+  if(burn.w<.001||burn.z<.0001)return 0.;
+  vec2 q=(uv-burn.xy)*vec2(u_viewSize.x/u_viewSize.y,1.)/burn.z;
+  float d2=dot(q,q);
+  if(d2>2.3)return 0.;
+  float angle=atan(q.y,q.x);
+  float rag=.13*sin(angle*5.+phase)+.075*sin(angle*11.-phase*.73)
+           +.046*sin(q.x*12.+q.y*7.+phase*1.8);
+  float radius=sqrt(d2)*(1.+rag);
+  float core=1.-smoothstep(.72,1.02,radius);
+  float soot=1.-smoothstep(.98,1.34,radius);
+  return clamp(burn.w*(.94*core+.16*soot),0.,1.);
 }
 float inkStains(vec2 uv,float t){
-  float a=inkShape(uv,vec2(.20+.037*sin(t*.38),.39+.041*cos(t*.43)),vec2(.112,.140),t*.91)*.42;
-  float b=inkShape(uv,vec2(.79+.038*cos(t*.33),.57+.045*sin(t*.37)),vec2(.124,.153),t*.77+1.9)*.41;
-  float c=inkShape(uv,vec2(.49+.046*sin(t*.29+2.),.17+.023*cos(t*.31)),vec2(.072,.092),t*1.06+4.7)*.29;
-  float d=inkShape(uv,vec2(.58+.027*cos(t*.36+1.),.82+.028*sin(t*.42)),vec2(.089,.106),t*.82+3.4)*.33;
-  return clamp(a+b+c+d,0.,.57);
+  float transmittance=1.;
+  for(int i=0;i<9;i++){
+    float phase=float(i)*2.399+.14*sin(t*.17+float(i));
+    transmittance*=1.-burnShape(uv,u_burns[i],phase);
+  }
+  return 1.-transmittance;
 }
 void main(){
  vec2 uv=v_uv;
@@ -584,6 +593,50 @@ void main(){
   let sizes={w:1,h:1,sw:1,sh:1},fluidTime=0;
   let fallback=null,fallbackState=null;
   let sceneHalf={x:.4,y:.4};
+  // Film burn uses screen-space uniforms, shared by WebGL and CPU fallback.
+  const BURN_COUNT=9;
+  const burnUniforms=new Float32Array(BURN_COUNT*4);
+  const burnCells=[];
+  let burnGeneration=0,burnUniformLocation=null;
+  function spawnBurn(index,initial){
+    const life=4.3+Math.random()*4.5;
+    burnGeneration++;
+    return {
+      x:.13+Math.random()*.74,y:.16+Math.random()*.67,
+      radius:(.026+Math.random()*.067)*(index%3===0?1.22:1),
+      life,age:initial
+        ?(index<6?life*(.19+Math.random()*.52):-Math.random()*2.1)
+        :-Math.random()*1.3,
+      opacity:.89+Math.random()*.10
+    };
+  }
+  function smooth01(v){
+    const x=clamp(v,0,1);
+    return x*x*(3-2*x);
+  }
+  function advanceBurns(dt){
+    let active=0;
+    for(let i=0;i<BURN_COUNT;i++){
+      let b=burnCells[i];
+      if(!b)b=burnCells[i]=spawnBurn(i,true);
+      b.age+=dt;
+      if(b.age>=b.life)b=burnCells[i]=spawnBurn(i,false);
+      const p=b.age/b.life,k=i*4;
+      if(p<=0){
+        burnUniforms[k]=b.x;burnUniforms[k+1]=b.y;
+        burnUniforms[k+2]=0;burnUniforms[k+3]=0;
+        continue;
+      }
+      const grow=smooth01(p/.37),erode=smooth01((p-.73)/.27);
+      const radius=b.radius*(.14+.86*grow)*(1-.22*erode);
+      const alpha=b.opacity*smooth01(p/.12)*(1-smooth01((p-.72)/.28));
+      burnUniforms[k]=b.x;burnUniforms[k+1]=b.y;
+      burnUniforms[k+2]=radius;burnUniforms[k+3]=alpha;
+      if(alpha>.03)active++;
+    }
+    fog.dataset.burnActive=String(active);
+    fog.dataset.burnGeneration=String(burnGeneration);
+  }
   function logicalSize(){
     const rotated=document.body.classList.contains('virtual-landscape');
     return rotated ? {w:innerHeight,h:innerWidth} : {w:innerWidth,h:innerHeight};
@@ -1101,6 +1154,8 @@ void main(){
       gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
       const vertex=shader(gl.VERTEX_SHADER,document.getElementById('vertex').textContent);
       simulate=program('fluid',vertex);composite=program('display',vertex);
+      burnUniformLocation=gl.getUniformLocation(composite,'u_burns[0]');
+      if(burnUniformLocation===null)throw Error('Film burn shader uniform missing');
       fog.dataset.renderer='gpu-advected-fluid';
       return true;
     }catch(e){console.warn('GPU fluid unavailable; using CPU fluid fallback:',e);gl=null;return false;}
@@ -1157,6 +1212,7 @@ void main(){
     gl.bindTexture(gl.TEXTURE_2D,simTargets[simIndex].tex);
     gl.uniform1f(gl.getUniformLocation(composite,'u_time'),t);
     gl.uniform1f(gl.getUniformLocation(composite,'u_blotches'),blotchesEnabled?1:0);
+    gl.uniform4fv(burnUniformLocation,burnUniforms);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   }
   function sample(arr,fx,fy,w,h){
@@ -1166,19 +1222,27 @@ void main(){
     return (arr[y*w+x]*(1-u)+arr[y*w+x1]*u)*(1-v)
        +(arr[y1*w+x]*(1-u)+arr[y1*w+x1]*u)*v;
   }
-  function inkCPU(uvx,uvy,cx,cy,rx,ry,phase){
-    const qx=(uvx-cx)/rx,qy=(uvy-cy)/ry,angle=Math.atan2(qy,qx);
-    const wobble=.13*Math.sin(angle*5+phase)+.08*Math.sin(angle*9-phase*.7)
-      +.07*Math.sin(qx*7+qy*5+phase*.9);
-    const v=clamp((Math.hypot(qx,qy)+wobble-.66)/.48,0,1);
-    return 1-v*v*(3-2*v);
-  }
   function inkCPUAmount(x,y,t){
-    return Math.min(.57,
-      inkCPU(x,y,.20+.037*Math.sin(t*.38),.39+.041*Math.cos(t*.43),.112,.140,t*.91)*.42+
-      inkCPU(x,y,.79+.038*Math.cos(t*.33),.57+.045*Math.sin(t*.37),.124,.153,t*.77+1.9)*.41+
-      inkCPU(x,y,.49+.046*Math.sin(t*.29+2),.17+.023*Math.cos(t*.31),.072,.092,t*1.06+4.7)*.29+
-      inkCPU(x,y,.58+.027*Math.cos(t*.36+1),.82+.028*Math.sin(t*.42),.089,.106,t*.82+3.4)*.33);
+    // Matching procedural burn contour and alpha in the CPU fallback.
+    let transmittance=1;
+    for(let i=0;i<BURN_COUNT;i++){
+      const k=i*4,cx=burnUniforms[k],cy=burnUniforms[k+1];
+      const size=burnUniforms[k+2],opacity=burnUniforms[k+3];
+      if(opacity<.001||size<.0001)continue;
+      const qx=(x-cx)*sizes.w/sizes.h/size,qy=(y-cy)/size;
+      const d2=qx*qx+qy*qy;
+      if(d2>2.3)continue;
+      const phase=i*2.399+.14*Math.sin(t*.17+i);
+      const angle=Math.atan2(qy,qx);
+      const rag=.13*Math.sin(angle*5+phase)+.075*Math.sin(angle*11-phase*.73)
+        +.046*Math.sin(qx*12+qy*7+phase*1.8);
+      const radius=Math.sqrt(d2)*(1+rag);
+      const core=1-smooth01((radius-.72)/.30);
+      const soot=1-smooth01((radius-.98)/.36);
+      const burnAlpha=clamp(opacity*(.94*core+.16*soot),0,1);
+      transmittance*=1-burnAlpha;
+    }
+    return 1-transmittance;
   }
   function drawCPU(dt,t){
     const s=fallbackState;if(!s)return;
@@ -1515,6 +1579,7 @@ void main(){
       (currentX*(6.0+.3*depthFactor)).toFixed(3)+'deg) rotateX('+
       (-currentY*(4.6+.22*depthFactor)).toFixed(3)+'deg)';
     fluidTime+=reduced.matches?0:dt;
+    advanceBurns(reduced.matches?0:dt);
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
     fog.dataset.frames=String(++frameNumber);
