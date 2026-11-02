@@ -90,13 +90,14 @@ function drawChecker(){const step=20;ctx.fillStyle='#29323f';ctx.fillRect(0,0,W,
 function drawAll(g,side=S.side,only=S.only){const arr=S.layers[side];if(only){const p=current();if(side===S.side&&p&&p.visible&&window.PaperchalkStudio?.shouldDrawLayer?.(p)!==false){g.globalAlpha=p.opacity;g.drawImage(p.canvas,p.x,p.y)}g.globalAlpha=1;return}for(const p of arr){if(!p.visible||window.PaperchalkStudio?.shouldDrawLayer?.(p)===false)continue;g.globalAlpha=p.opacity;g.drawImage(p.canvas,p.x,p.y)}g.globalAlpha=1}
 function render(){if(!S.ready)return;const d=dpr();ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,stage.clientWidth,stage.clientHeight);ctx.fillStyle='#0f1722';ctx.fillRect(0,0,stage.clientWidth,stage.clientHeight);ctx.save();ctx.translate(S.px,S.py);ctx.scale(S.zoom,S.zoom);if(S.checker)drawChecker();else{ctx.fillStyle='#202935';ctx.fillRect(0,0,W,H)}ctx.imageSmoothingEnabled=true;const movingFrame=window.PaperchalkStageMotion?.frame(S);
 if(movingFrame){ctx.drawImage(movingFrame,0,0,W,H)}else{
-  // Studio previews the exact V4 resource and composite order used in game.
-  const useRealV4=window.PaperchalkStudio?.useV4?.();
-  if(useRealV4){ctx.save();window.PaperchalkStudio.applyGameMotion(ctx)}
-  window.PaperchalkStudio?.drawBackdrop?.(ctx,S);
-  ctx.imageSmoothingEnabled=false;drawAll(ctx);
-  window.PaperchalkStudio?.drawFrameCorrection?.(ctx,S);
-  if(useRealV4)ctx.restore();
+  // V4 preview uses the SAME composed layers as game, with a local chest
+  // deformation applied after the pixel edits. Source inspection stays static.
+  const composed=window.PaperchalkStudio?.drawComposedV4?.(ctx,S);
+  if(!composed){
+   window.PaperchalkStudio?.drawBackdrop?.(ctx,S);
+   ctx.imageSmoothingEnabled=false;drawAll(ctx);
+   window.PaperchalkStudio?.drawFrameCorrection?.(ctx,S);
+  }
  }if(S.grid&&S.zoom>=5){ctx.strokeStyle='#ffffff25';ctx.lineWidth=1/S.zoom;ctx.beginPath();for(let i=0;i<=W;i++){ctx.moveTo(i,0);ctx.lineTo(i,H)}for(let i=0;i<=H;i++){ctx.moveTo(0,i);ctx.lineTo(W,i)}ctx.stroke()}if(S.selection){let a=S.selection;ctx.strokeStyle='#fff';ctx.lineWidth=1.4/S.zoom;ctx.setLineDash([7/S.zoom,4/S.zoom]);ctx.beginPath();if(a.type==='rect'){ctx.rect(a.x,a.y,a.w,a.h)}else if(a.points?.length){ctx.moveTo(a.points[0].x,a.points[0].y);for(const p of a.points.slice(1))ctx.lineTo(p.x,p.y);if(a.done)ctx.closePath()}ctx.stroke();ctx.setLineDash([])}ctx.restore();const p=current();$('hud').textContent=(S.side==='front'?'正面':'背面')+' · '+Math.round(S.zoom*100)+'% · '+S.tool+(p?' · '+p.name:'')}
 function zoom(cx,cy,mul){const wp=world({x:cx,y:cy});S.zoom=Math.max(.1,Math.min(20,S.zoom*mul));S.px=cx-wp.x*S.zoom;S.py=cy-wp.y*S.zoom;render()}
 function snapshot(){const arr=S.layers[S.side];return {side:S.side,sel:S.sel,arr:arr.map(p=>({name:p.name,x:p.x,y:p.y,visible:p.visible,locked:p.locked,opacity:p.opacity,sourcePart:!!p.sourcePart,partId:p.partId||'',role:p.role||'',img:p.canvas.toDataURL('image/png')}))}}
@@ -260,9 +261,10 @@ window.characterEditor={S,cut,undo,redo,exportAll,importZip,importPsd,composite,
 if(embedded)sendParent({type:'PAPERCHALK_EDITOR_READY'});
 
 </script>
-<script src="../l2d/rig.js?v=psd-skeletal-20261102f"></script>
+<script src="../l2d/breath.js?v=chest-breath-20261103"></script>
+<script src="../l2d/rig.js?v=chest-breath-20261103"></script>
 <script src="./l2d-mode.js?v=char-002-universal-motion-20261102"></script>
-<script src="./studio.js?v=char-002-viewport-20261102"></script>
+<script src="./studio.js?v=chest-breath-20261103"></script>
 <script src="./stage-motion.js?v=easy-20261102b"></script>
 <script src="./easy-mode.js?v=easy-20261102b"></script>
 
