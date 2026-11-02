@@ -404,6 +404,10 @@ jobs:
                     studioStatus:document.getElementById('studio-status')?.textContent
                   })));throw error;
                 });
+                assert.equal(await page.evaluate(()=>!!window.PaperchalkStageMotion?.frame()),true,
+                  'when original PSD16 is loaded the CENTRAL viewport must use its real live skeletal rig');
+                assert.equal(await page.evaluate(()=>window.characterEditor?.S?.layers?.front?.filter(x=>x.role==='psd-part').length),16,
+                  'source editor retains the 16 independent bitmaps');
                 await page.screenshot({path:'artifacts/l2d-studio/'+
                   (phone?'mobile':'desktop')+'-char-002-real-psd16-rig.png',fullPage:true});
                 await page.locator('#studio-back').click();
