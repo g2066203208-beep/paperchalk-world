@@ -20,7 +20,7 @@ permissions:
 # New changes should queue, not interrupt an active browser QA / Pages publish.
 concurrency:
   group: paperchalk-world-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   deploy:
     runs-on: ubuntu-latest
