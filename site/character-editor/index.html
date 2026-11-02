@@ -216,7 +216,7 @@ window.addEventListener('message',event=>{
  if(m.type==='PAPERCHALK_EDITOR_REQUEST_EXPORT')exportAll().catch(e=>status('导出失败：'+e.message));
 });
 $('btnApplyGame').onclick=applyToGame;
-$('btnCloseInGame').onclick=()=>sendParent({type:'PAPERCHALK_EDITOR_CLOSE'});
+$('btnCloseInGame').onclick=async()=>{await applyToGame();sendParent({type:'PAPERCHALK_EDITOR_CLOSE'});};
 new ResizeObserver(()=>resize()).observe(stage);
 window.characterEditor={S,cut,undo,redo,exportAll,importZip,importPsd,composite,switchCharacter,applyToGame};
 if(embedded)sendParent({type:'PAPERCHALK_EDITOR_READY'});
