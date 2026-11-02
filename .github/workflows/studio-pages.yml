@@ -365,6 +365,22 @@ jobs:
                 });
                 assert.ok(dimensions[0]>=250&&dimensions[1]>=900,'new protagonist back not loaded');
                 assert.equal(dimensions[2],'classroom');
+                // Preserve the user's existing DEV x/y/size in every room.
+                // Read COMPUTED pixels, not inline styles, so an !important
+                // CSS override cannot evade this regression test.
+                const playerPlacement=()=>page.locator('#actor-player').evaluate(el=>{
+                  const s=getComputedStyle(el);
+                  return {left:s.left,bottom:s.bottom,height:s.height};
+                });
+                const classroomPlacement=await playerPlacement();
+                const fontFamilies=await page.evaluate(()=>({
+                  menu:getComputedStyle(document.getElementById('scene-menu')).fontFamily,
+                  speaker:getComputedStyle(document.getElementById('speaker')).fontFamily,
+                  dialogue:getComputedStyle(document.getElementById('dialogue-text')).fontFamily,
+                  button:getComputedStyle(document.getElementById('auto-button')).fontFamily
+                }));
+                for(const key of ['speaker','dialogue','button'])
+                  assert.equal(fontFamilies[key],fontFamilies.menu,'All in-game text must use the menu font');
                 assert.equal(await art.evaluate(el=>el.closest('#scene')===null),true,
                   'hero must be on a separate depth plane');
                 const layerAudit=await page.evaluate(()=>{
@@ -461,6 +477,8 @@ jobs:
                   'home scene should hide enemy but show the separate back-facing protagonist');
                 assert.equal(room.dialogueHidden,true);
                 assert.equal(room.fog,true,'fog recreated on entering home');
+                assert.deepEqual(await playerPlacement(),classroomPlacement,
+                  'living room replaced the saved protagonist position or size');
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-LIVING-ROOM.png'});
                 // Entryway was supplied by the artist and auto-registers as
@@ -481,6 +499,8 @@ jobs:
                 assert.equal(entranceScene.enemyHidden,true);
                 assert.equal(entranceScene.heroHidden,false);
                 assert.equal(entranceScene.fogOriginal,true);
+                assert.deepEqual(await playerPlacement(),classroomPlacement,
+                  'entryway replaced the saved protagonist position or size');
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-ENTRANCE.png'});
                 // The newly added bedroom WebP must self-register without a
@@ -508,6 +528,8 @@ jobs:
                 assert.equal(bedroomCheck.playerHidden,false,
                   'back-facing protagonist must be visible in bedroom');
                 assert.equal(bedroomCheck.originalFog,true);
+                assert.deepEqual(await playerPlacement(),classroomPlacement,
+                  'bedroom replaced the saved protagonist position or size');
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-BEDROOM.png'});
                 const roomProtagonist=await page.locator('#actor-player').evaluate(async el=>{
