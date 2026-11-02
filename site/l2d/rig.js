@@ -101,7 +101,7 @@ class HeroineBreathRig{
   if(this.playing)this.frozen=now-this.t0;
   const phase=TWO*elapsed/this.period;
   const lung=Math.sin(phase),lag=Math.sin(phase-.65);
-  const A=this.amplitude*this.softness;
+  const A=this.amplitude,flex=this.softness;
   if(A<.001){c.drawImage(this.source,0,0,W,H);if(this.drawBones)this.drawSkeleton(now,lung);return;}
   // Vertex mapping shared by neighboring rows: each band uses the same
   // boundary transform so there are no cracks or independent part offsets.
@@ -109,7 +109,7 @@ class HeroineBreathRig{
    const v=y/sh,thorax=bell(v,.37,.15),skirt=bell(v,.60,.072);
    const head=bell(v,.15,.10);
    const fixed=smooth(.69,.82,v);
-   return y-((2.8*thorax*lung+.55*head*lag+.44*skirt*lag)*A)*(1-fixed);
+   return y-((2.8*thorax*lung+.30*head*lag+.44*skirt*lag*flex)*A)*(1-fixed);
   };
   const xInfo=y=>{
    const v=y/sh,thorax=bell(v,.39,.14)*(1-smooth(.59,.70,v));
@@ -117,8 +117,8 @@ class HeroineBreathRig{
    const face=bell(v,.18,.095)*(1-smooth(.31,.43,v));
    const lock=1-smooth(.68,.8,v);
    return {
-    widen:(.0055*thorax*lung+.0012*fabric*lag)*A,
-    shift:(.44*face*lag+.55*fabric*lag)*A*lock
+    widen:(.0055*thorax*lung+.0012*fabric*lag*flex)*A,
+    shift:(.18*face*lag+.55*fabric*lag*flex)*A*lock
    };
   };
   const step=Math.max(5,Math.floor(sh/128));
