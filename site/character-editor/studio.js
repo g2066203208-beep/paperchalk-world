@@ -306,16 +306,18 @@ const partLabels={rear_hair:'后发',front_hair:'前发',hair_clip:'发夹',
  brows:'眉毛',ears:'双耳',face:'脸',nose:'鼻子',mouth:'嘴',
  eye_white:'眼白',irises:'虹膜',lashes:'睫毛',back_hair:'背面头发',hair_over_jacket:'衣服前头发'};
 function countSourceParts(){return ed.S.layers[side].filter(p=>p.sourcePart).length;}
+function hasNativePSD(face=side){return (ed.S.layers[face]||[]).filter(p=>p.sourcePart&&p.role==='psd-part').length>=12;}
 function updatePartStatus(){
  const count=countSourceParts(),output=$('studio-parts-status');
  if(output)output.textContent=count?
-  (currentId==='char-002'?'本方向已有 '+count+' 个从女二正式原画划分的可编辑区域（非原生PSD），可逐个选择编辑。':
+  (hasNativePSD()?'已载入 '+count+' 个真实 PSD 独立纹理：后发、刘海、校服、手臂、裙摆、眼睛、嘴等采用实时关节及网格驱动。':currentId==='char-002'?'本方向已有 '+count+' 个从女二静态原画划分的编辑区域（非PSD），尚需导入原始分层。':
    '本方向已有 '+count+' 个原位分层部件，可在左侧逐个选择编辑。'):
   '该方向没有独立分层。烘焙 V4 WebP 不能直接拆成部件，请导入 PSD 或原始分层 ZIP。';
  const button=$('studio-v4-mode');
- if(button)button.textContent=showOriginalV4?'查看原始分层（静态精修）':'返回游戏实际 V4 动画';
+ if(button){button.disabled=hasNativePSD();button.textContent=hasNativePSD()?'正在显示 PSD 实时骨骼':'切换到原始分层 / V4';}
 }
 function shouldDrawLayer(part){
+ if(hasNativePSD())return !!part.sourcePart&&part.role==='psd-part';
  if(!v4)return true;
  if(originalLayer(part))return false;
  // Real V4 remains visible at rest even when 25 source PSD parts exist.
@@ -375,7 +377,7 @@ async function importComponentFiles(files,options={}){
   if(!options.missingOnly||!await get('baseline:'+currentId+':'+face))
    await put('baseline:'+currentId+':'+face,pristine[face]);
  }
- showOriginalV4=true;
+ showOriginalV4=!hasNativePSD();
  await loadCorrectionLayers();
  ed.renderList();ed.render();
  await ed.save();
@@ -508,6 +510,7 @@ async function showClip(info){
  await drawFrame(0);
 }
 function sourceInspect(){
+ if(hasNativePSD())return true;
  const selected=ed.S.layers[side]?.[ed.S.sel];
  const stage=window.PaperchalkStageMotion?.state;
  return !showOriginalV4 || (!!selected?.sourcePart &&
@@ -592,7 +595,7 @@ async function loadCorrectionLayers(){
  if(!v4){globalLayer=null;frameLayer=null;frameFrames={};return;}
  const arr=ed.S.layers[side];
  const hasSources=arr.some(p=>p.sourcePart);
- showOriginalV4=true;
+ showOriginalV4=!hasNativePSD();
  for(const part of arr)if(originalLayer(part))part.visible=false;
  globalLayer=arr.find(x=>x.name==='V4 · 全帧修补');
  if(!globalLayer){
@@ -795,6 +798,6 @@ $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
 $('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,drawFrameCorrection,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
+window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,drawFrameCorrection,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&showOriginalV4&&!hasNativePSD(),get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
