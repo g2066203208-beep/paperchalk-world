@@ -62,6 +62,14 @@ function draw(ctx,source,profile={},now=performance.now(),width=ctx.canvas.width
  }
  ctx.imageSmoothingEnabled=true;
  for(let j=0;j<Y.length-1;j++)for(let i=0;i<X.length-1;i++){
+  // Outside the ribcage envelope, draw the original rectangular segment:
+  // mathematically no deformation and much cheaper than two mesh triangles.
+  if(j===0||j===Y.length-2||i===0||i===X.length-2){
+   const x=X[i],y=Y[j],w=X[i+1]-x,h=Y[j+1]-y;
+   ctx.drawImage(source,x,y,w,h,x*width/1024,y*height/1024,
+     w*width/1024,h*height/1024);
+   continue;
+  }
   const A={x:X[i],y:Y[j]},B={x:X[i+1],y:Y[j]};
   const C={x:X[i],y:Y[j+1]},D={x:X[i+1],y:Y[j+1]};
   const a=pts[j][i],b=pts[j][i+1],c=pts[j+1][i],d=pts[j+1][i+1];
