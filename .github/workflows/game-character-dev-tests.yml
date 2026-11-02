@@ -229,8 +229,10 @@ jobs:
                 assert.equal(await page.locator('#studio-character option').count(),4);
                 await page.waitForFunction(()=>document.querySelectorAll('#layers .layer').length===1,{timeout:18000});
                 await page.locator('#studio-character').selectOption('protagonist');
+                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
                 await page.locator('#studio-side').selectOption('back');
-                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' && document.querySelector('#studio-side')?.value==='back' && document.querySelectorAll('#layers .layer').length>=3,{timeout:18000});
+                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' &&
+                  window.PaperchalkStudio?.editSide==='back' && window.PaperchalkStudio?.countSourceParts?.()===2,{timeout:18000});
                 await page.locator('#studio-v4zip').setInputFiles('/tmp/paperchalk-v4-smoke.zip');
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('V4 动态方向已导入'),{timeout:16000});
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true,'V4 frames must preview in the L2D studio');
