@@ -66,8 +66,9 @@ for name, number in (("heightCm",176),("weightKg",62),("chestCircumferenceCm",90
     item=male["fields"]["measurements"][name]
     assert item["value"] == number and item["status"] == "proposed", (name,item)
 assert all(item["status"] != "unknown" for group in male["fields"].values() for item in group.values()), "user requested complete 448 male character detail entries"
-for side in ("frontReference", "backReference"):
-    assert "尚未绘制" in male["fields"]["visualProduction"][side]["value"], "male visual art is not approved yet"
+assert male["fields"]["visualProduction"]["frontReference"]["value"] == "site/assets/characters/char-003/front.png"
+assert male["fields"]["visualProduction"]["frontReference"]["status"] == "approved_art_reference"
+assert "尚未绘制" in male["fields"]["visualProduction"]["backReference"]["value"], "male back portrait remains pending"
 
 assert hero["fields"]["temperament"]["coreConfirmedTraits"]["value"] == ["毒舌", "冷淡"]
 assert hero["fields"]["temperament"]["coreConfirmedTraits"]["status"] == "user_confirmed"
@@ -85,10 +86,11 @@ for profile in [hero, girl2]:
         assert profile["fields"]["face"][name]["status"] == "unknown", (
             "landmark measurements must reference approved artwork",profile["recordCode"],name
         )
-for side in ("frontReference","backReference"):
-    assert girl2["fields"]["visualProduction"][side]["value"] is None, (
-        "CHAR-002 has no approved image and must not use dummy assets"
-    )
+assert girl2["fields"]["visualProduction"]["frontReference"]["value"] == "site/assets/characters/char-002/front.png"
+assert girl2["fields"]["visualProduction"]["frontReference"]["status"] == "approved_art_reference"
+assert girl2["fields"]["visualProduction"]["backReference"]["value"] is None, (
+    "CHAR-002 back view has not been generated, do not fabricate it"
+)
 assert hero["fields"]["visualProduction"]["frontReference"]["value"].endswith("protagonist-front.webp")
 assert hero["fields"]["visualProduction"]["backReference"]["value"].endswith("protagonist-back.webp")
 registered = json.loads((ROOT / "site/data/characters/registry.json").read_text(encoding="utf-8"))
