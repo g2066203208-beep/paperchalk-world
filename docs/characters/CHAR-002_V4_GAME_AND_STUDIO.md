@@ -1,22 +1,33 @@
-# CHAR-002 女二号｜游戏 V4 动画及共用编辑工作室
+# CHAR-002 女二号｜真实 PSD 分层骨骼与游戏接入（2026-11-02）
 
-> 2026-11-02。唯一基准：`site/assets/characters/char-002/front.png`，来自用户认可的三人图中间人物。**不得重画或替换脸与姿势**。
+## 已核实源文件
 
-## 真实实现
+用户上传的 `女二-正面(1).psd` 是 **1024×1024，16 个真实 Photoshop 位图图层**，不是之前 `front.png` 的 7 块切割区域。层序（由后向前）：`back hair`、`legwear`、`footwear`、`bottomwear`、`neck`、`topwear`、`handwear`、`ears`、`face`、`nose`、`mouth`、`eyewhite`、`eyebrow`、`irides`、`eyelash`、`front hair`。仅存在真实正面；**不得伪造背面**。
 
-- `scripts/build_char002_v4.py` 从 303×1024 的原画中，只移除与外框连通的白背景，保留人物内部浅色的衬衣、眼白、面部与肤色。
-- 输出 `site/assets/l2d/char-002/front.webp`：**128 帧，20 FPS，335×1024**，轻微头肩摇摆及上身呼吸，鞋底基本固定；由 GitHub Actions 发布时生成，与女主角同样接入 `site/l2d/runtime.js` 的逐帧 WebP 播放链路。**这不是 Live2D Cubism .moc3 骨骼模型**；没有虚构口型、眨眼物理绑定。
-- 同时生成 `front-source-regions.zip`，共 7 个从已认可原画原位像素划分的可编辑区域：鞋、腿、裙、挥手手臂、垂手手臂、头发与面部、校服上身。**这些不是 Photoshop 原 PSD 分层，不含原画看不到的遮挡层**；组合后逐像素还原可见母版。
-- `manifest.json` 是唯一动画元数据，包含 `front` 裁切区 `x=344,y=0,w=335,h=1024`。构建 `scripts/build_character_catalog.py` 将它与原画路径一起注册到 `site/characters.catalog.json`。
-- 游戏 `site/dev/character-bridge.js` 和编辑器 `site/character-editor/studio.js` 都从这一 `clips.front` 元数据加载同一份动画，不再通过改造女主角 ID 的方式展示女二。
-- 工作室 `?character=char-002&side=front`，自动加载女二 7 个编辑区域；`frames:char-002:front`、`parts-patch:char-002:front`、`overlay:char-002:front` 等独立存储，绝不覆盖女主角的 `protagonist` 数据。
-- **背面没有源图，目前禁用。** 严禁左右镜像正面充当背面、复制女主背面、把用户尚未审核的人设变为正式资产。
-- 编辑修补发生在浏览器的 IndexedDB。游戏即时使用保存到本浏览器的修改；若要同步多个浏览器，需导出修补备份。GitHub Pages 不会替用户自动上传浏览器本地图片。
+## 新增：真正逐层驱动的网页版动画
 
-## 一致性验收
+- `site/l2d/rig.js` 的 `setLayers()` 不再将 PSD 位图永久合成为一张照片；它同时保存每层原始纹理，`psdTarget()` 和 `renderPSDParts()` 分别驱动关节及可弯曲网格。
+- 骨骼与独立物理：头颈细微转动、胸腔呼吸、上臂肩关节、后发末端惯性、刘海末端、裙摆褶边两段波动、虹膜视线、眼白/眼睫眨眼、嘴部微动。脚部保持原位。
+- `site/character-editor/studio.js` 导入真实 PSD 或含 `layers.json` 的分层 ZIP（必须有至少 12 个 `role=psd-part` 的独立源位图）。每个图层保留自身坐标、透明像素、层序和可编辑性，保存到 IndexedDB 键 `skeletal:char-002:front`。
+- `site/dev/character-bridge.js` 切换女二到 `player` 或 `enemy` 时，**优先**读取已保存的 `skeletal` 数据，调用 `PaperchalkL2D.setLayers()`，模式为 `psd-layer-skeletal`。若尚未导入，则旧的扁平 V4 WebP 仍是后备显示，不得称为真骨骼。
+- `site/character-editor/l2d-mode.js` 检测真实 PSD 16 层后恢复独立网格预览；没有真实 PSD 的女主仍使用她已经认可的 V4 帧动画。
+- `site/index.html` 将 `player` 和 `enemy` 角色显示画布强制设置为原始 **1:1** 比例，角色立绘宽高比不同也不会误改为细长占位，固定人物脚底与原站位。
+- `scripts/fix_protagonist_neck_v4.py` 从女主 PSD 的独立 `neck` 图层推导多余的前脖颈覆盖像素，逐帧修正女主 V4 正面 128 帧；不碰背面。
 
-发布 CI 检查 `front.webp` 恰有 128 帧、原画路径正确、7 个图层和背面为空。E2E 必须进一步覆盖：游戏加载 `char-002` 的解码帧 → 编辑器打开相同 ID/动画 → 可编辑区域数为 7 → 禁用背面 → 保存后回到游戏，仍使用 `char-002` 身份。
+**技术边界：** 这是以 PSD 原图为输入的真实 **Canvas 分层骨骼 + 仿射三角网格**，已经不是移动一张静态图；但不是 Live2D Cubism 官方的 `.moc3` / ArtMesh 编辑工程，不应虚称 Cubism 物理系统。对于未绘制的被遮挡画面，不虚构背部或侧面。
 
-## 后续美术边界
+## 原始图层交付和加载方式
 
-原图是单张合成 PNG，不能从中真实恢复被头发/袖子遮挡的皮肤及完整 Cubism 参数，也不能凭空创造可信背面。若需要真正 Cubism 变形器、眼球追踪、眼睑闭合、物理马尾、多个表情/动作和正背连续旋转，应在这份身份母版基础上制作真正的分层原画和 Cubism 原生工程，不能把现有逐帧 WebP 误写为已完成的骨骼动画。
+当前用户原始 PSD 及 16 层 PNG 存在本次任务的交付 ZIP **`女二_真实PSD分层骨骼L2D工作室_16层.zip`**，该二进制包**没有写入 Git 仓库**。它包含原 PSD、`assets/01.png`—`assets/16.png`、`layers.json`、本地实时动画预览 `index.html` / `rig.js`。
+
+第一次在 GitHub Pages 启用真人物分层动画：
+
+1. 打开 `https://g2066203208-beep.github.io/paperchalk-world/character-editor/?character=char-002&side=front`。
+2. 点击 **导入全部真实部件（PSD / V4 ZIP）**，选择上述整个 ZIP 文件，或选择原始 PSD（PSD 需要浏览器能加载 `ag-psd` 解析库）。
+3. 右侧 **角色实时动画** 预览应有独立运动的后发、裙摆和表情。点击 **返回游戏 DEV** 触发保存；角色选择 `player` 或 `enemy` 对应 `char-002`。
+4. 在游戏开发栏选择要替换的主角站位（`player`），选择女二，点击切换；查看实际 `data-l2d-mode=psd-layer-skeletal`。同一个浏览器的 IndexedDB 保留 16 层。
+5. 数据**不是自动上传 GitHub，也不跨浏览器同步**。换设备须重新导入；当前尚未实现源 PSD 到仓库的永久二进制提交。
+
+## 回归界限
+
+GitHub Pages 构建校验了 JS 可解析、女主正面 V4 128 帧、女二旧 fallback V4 128 帧、7 个后备区域。实际 PSD 16 层渲染在独立工作室通过节点/纹理比较（脚部不动、头发/裙摆都有变化）；**完整浏览器端「导入真实 PSD → 保存 → 游戏加载 16 层」自动化 E2E 尚未验收，不得把旧 WebP E2E 冒充为此项测试通过**。
