@@ -86,6 +86,15 @@ async function assign(target,id,face='front',save=true){
   const obj=window.PaperchalkL2D.get(target);
   if(obj){obj.root.dataset.l2dEdition='mesh';obj.root.dataset.l2dAnimated='true'}
  }
+ // V4 corrections are independent of the approved source animation.
+ // Sparse frame overlays are composited on top at the exact frame index.
+ if(source){
+  await window.PaperchalkL2D.setCorrections(target,
+   await get('overlay:'+id+':'+face),
+   await get('frames:'+id+':'+face)||{});
+ }else{
+  await window.PaperchalkL2D.setCorrections(target,null,{});
+ }
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
  note('正在 L2D 渲染 '+c.label+' · '+(face==='back'?'背面':'正面'));
