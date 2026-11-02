@@ -81,9 +81,13 @@ async function setLayers(slot,parts,canvasSize){
    1024x1024 crop origin used by the approved V4 render: (351,9). */
 async function setAnimationSource(slot,uri,opts={}){
  const obj=target(slot);if(!obj)return false;
+ if(obj.clip?.img?.parentElement)obj.clip.img.remove();
  if(!uri){obj.clip=null;if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}return true;}
  const img=new Image();
  await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=uri;});
+ img.setAttribute('aria-hidden','true');
+ img.style.cssText='position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;visibility:hidden';
+ obj.root.appendChild(img);
  obj.clip={img,x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w||img.naturalWidth),h:Number(opts.h||img.naturalHeight)};
  obj.clipFrame=0;
  if(obj.rig)obj.rig.stop();
