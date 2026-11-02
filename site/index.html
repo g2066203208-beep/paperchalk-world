@@ -242,6 +242,15 @@ body.mobile-mode.virtual-landscape #view{
   position:absolute;inset:0;transform:translateZ(var(--dev-depth-fog));
   border:1px dashed rgba(186,186,203,.75);pointer-events:none;
 }
+/* Never reparent the original WebGL canvas: some browsers lose their WebGL
+   context when a live canvas moves into a 3D stacking context. The preview
+   mirrors the actual flowing fog after each render, at a cheap low resolution. */
+#view.dev-mode > #fog{visibility:hidden}
+#dev-fog-preview{
+  position:absolute;inset:0;width:100%;height:100%;
+  transform:translateZ(var(--dev-depth-fog));
+  pointer-events:none;image-rendering:auto;
+}
 #dev-fog-guide::before{content:"03 / 实时黑雾";position:absolute;left:8px;top:6px;
   color:#c6c6d0;font:12px var(--font-ui);text-shadow:0 1px 5px #000}
 #view.dev-mode #dev-rig #actor-enemy,
@@ -329,6 +338,7 @@ body.mobile-mode.virtual-landscape #view{
   <button id="dev-trigger" type="button" aria-label="打开分层开发者模式">分层 DEV</button>
   <div id="dev-stage" hidden aria-label="三维场景分层检查器">
     <div id="dev-rig">
+      <canvas id="dev-fog-preview" width="384" height="216" aria-label="实时黑雾图层的缩小镜像"></canvas>
       <div id="dev-fog-guide" aria-hidden="true"></div>
     </div>
   </div>
@@ -1024,7 +1034,11 @@ void main(){
   let editorConfig=readEditor(),editorActive=false;
   let selectedLayer='enemy';
   const devCamera={yaw:-36,pitch:-11,zoom:.68,panX:-45,panY:12};
-  const devPlanes=[stage,enemyDepth,fog,cameraPlayer];
+  // Fog stays attached to its original view; only its live texture is mirrored.
+  const devPlanes=[stage,enemyDepth,cameraPlayer];
+  const devFogPreview=document.getElementById('dev-fog-preview');
+  const devFogContext=devFogPreview.getContext('2d',{alpha:true});
+  let lastFogMirror=0;
   const layerAnchors=new Map();
   function applyEditorVisuals(){
     const enemy=editorConfig.enemy,player=editorConfig.player;
@@ -1223,6 +1237,17 @@ void main(){
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
     fog.dataset.frames=String(++frameNumber);
+    if(editorActive && now-lastFogMirror>=85){
+      lastFogMirror=now;
+      try{
+        devFogContext.clearRect(0,0,devFogPreview.width,devFogPreview.height);
+        devFogContext.drawImage(fog,0,0,devFogPreview.width,devFogPreview.height);
+        devFogPreview.dataset.mirrorFrames=String(frameNumber);
+      }catch(error){
+        // Fog must never stop rendering because the preview is unavailable.
+        devFogPreview.dataset.mirrorError=String(error);
+      }
+    }
     // No 10/16/24 FPS steps: every browser animation frame advances the SAME
     // persistent fluid density and composites the independent screen fog.
     if(!reduced.matches||Math.abs(currentX)+Math.abs(currentY)>.001)raf=requestAnimationFrame(tick);

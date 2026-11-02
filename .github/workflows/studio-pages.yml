@@ -226,11 +226,16 @@ jobs:
                   hasFogGuide:!!document.getElementById('dev-fog-guide')
                 }));
                 assert.equal(inspection.mode,true);
-                assert.deepEqual(inspection.parents,['dev-rig','dev-rig','dev-rig','dev-rig'],
-                  'developer camera must display actual live image/fog planes');
+                assert.deepEqual(inspection.parents,['dev-rig','dev-rig','view','dev-rig'],
+                  'developer camera must detach three image planes without detaching WebGL canvas');
                 assert.ok(inspection.hasFogGuide);
+                assert.equal(await page.locator('#dev-fog-preview').count(),1,
+                  '4th plane must mirror the actual flowing fog');
                 await page.locator('#dev-side').click();
                 assert.equal(await page.locator('#dev-stage').getAttribute('data-yaw'),'-69');
+                await page.waitForFunction(()=>Number(
+                  document.getElementById('dev-fog-preview').dataset.mirrorFrames)>0,
+                  null,{timeout:4000});
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-DEV-FREE-CAMERA.png'});
                 await page.locator('#dev-layer').selectOption('enemy');
