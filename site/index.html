@@ -449,17 +449,17 @@ body.mobile-mode.virtual-landscape #view{
   <section id="dev-fog-tools" hidden aria-label="黑雾实时参数">
     <p>当前场景直接预览，不切换房间。绿框内没有动态黑雾。</p>
     <label for="fog-width">黑雾宽度 · 场景高度占比 <output id="fog-width-value"></output></label>
-    <input id="fog-width" type="range" min="0" max="14" step=".5">
+    <input id="fog-width" type="range" min="0" max="12" step=".5">
     <label for="fog-opacity">黑雾强度 <output id="fog-opacity-value"></output></label>
     <input id="fog-opacity" type="range" min="0" max="100" step="1">
     <label for="fog-offset">边缘距离 · 正值往里 / 负值往外 <output id="fog-offset-value"></output></label>
-    <input id="fog-offset" type="range" min="-30" max="45" step="1">
-    <label for="fog-safe">中央无雾安全区 <output id="fog-safe-value"></output></label>
-    <input id="fog-safe" type="range" min="65" max="98" step="1">
+    <input id="fog-offset" type="range" min="-18" max="18" step="1">
+    <label for="fog-safe">场景可见安全区 <output id="fog-safe-value"></output></label>
+    <input id="fog-safe" type="range" min="75" max="99" step="1">
     <label for="fog-solid">图片边缘纯黑保护 <output id="fog-solid-value"></output></label>
-    <input id="fog-solid" type="range" min="10" max="32" step="1">
+    <input id="fog-solid" type="range" min="2" max="24" step="1">
     <label for="fog-feather">边缘渐变过渡 <output id="fog-feather-value"></output></label>
-    <input id="fog-feather" type="range" min="0" max="35" step="1">
+    <input id="fog-feather" type="range" min="2" max="30" step="1">
     <div class="fog-actions">
       <button id="fog-save" type="button">保存设置</button>
       <button id="fog-reset" type="button">恢复轻雾默认</button>
