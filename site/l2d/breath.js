@@ -9,7 +9,7 @@ const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
 const bell=(x,c,r)=>Math.max(0,1-Math.abs(x-c)/r);
 const X=[0,300,345,385,415,445,475,505,535,565,595,625,655,690,735,1024];
 const Y=[0,50,95,135,175,215,255,300,345,390,435,480,520,565,610,650,690,740,820,1024];
-const defaults=Object.freeze({amplitude:1.4,period:3.6,softness:1.25,hairSwing:2.5,skirtSwing:2.2,armSwing:1.8,legSwing:0,swaySpeed:1});
+const defaults=Object.freeze({amplitude:1.4,period:3.6,softness:1.25,hairSwing:3,skirtSwing:2.8,armSwing:2.2,legSwing:0,swaySpeed:1});
 const profileOf=q=>{
  q=q||{};
  const p={};
