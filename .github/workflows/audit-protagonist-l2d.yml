@@ -1,0 +1,40 @@
+name: Audit original protagonist L2D parts
+on:
+  push:
+    paths:
+      - '.github/workflows/audit-protagonist-l2d.yml'
+  workflow_dispatch:
+jobs:
+  original-parts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report exact hosted original part manifest (read-only)
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from zipfile import ZipFile
+          p=Path('site/assets/l2d/v4/protagonist-original-parts.zip')
+          assert p.exists(),f'Missing original source ZIP: {p}'
+          with ZipFile(p) as z:
+              manifest=json.loads(z.read('layers.json').decode('utf-8'))
+              print('=== REAL HOSTED PROTAGONIST SOURCE PART MANIFEST ===',flush=True)
+              print('FORMAT KEYS',json.dumps(list(manifest.keys()),ensure_ascii=False),flush=True)
+              allParts=manifest.get('layers',{})
+              for side in ('front','back'):
+                  arr=allParts.get(side,[])
+                  print(f'=== {side.upper()} {len(arr)} LAYERS (back-to-front) ===',flush=True)
+                  for i,layer in enumerate(arr):
+                      f=layer.get('file')
+                      assert f in z.namelist(),f'Missing source bitmap {f}'
+                      metadata={k:layer.get(k) for k in ('id','name','partId','role','x','y','w','h','width','height','file','visible','opacity','locked','parentId','pivot','mesh','bones','weights','deformers','parameters')}
+                      metadata={k:v for k,v in metadata.items() if v is not None}
+                      info=z.getinfo(f)
+                      metadata['zipMemberBytes']=info.file_size
+                      metadata['ordinal']=i
+                      print('PART '+json.dumps(metadata,ensure_ascii=False,separators=(',',':')),flush=True)
+              assert len(allParts.get('front',[]))==17 and len(allParts.get('back',[]))==8
+              print('=== ARCHIVE MEMBER LIST ===',flush=True)
+              for n in z.namelist():print('MEMBER '+n,flush=True)
+          PY
