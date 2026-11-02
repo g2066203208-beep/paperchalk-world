@@ -54,6 +54,33 @@ jobs:
                   assert.deepEqual(breathing[part+'1'],breathing[part+'2'],part+' may not sway');
                 assert.notDeepEqual(breathing.chest1,breathing.chest2,'chest must inhale/exhale locally');
                 assert.ok(await page.locator('#easy-quickbar').isVisible(),'large-screen and phone quick edit tools must exist');
+                assert.equal(await page.locator('#l2d-secondary-controls input[type="range"]').count(),5,
+                  'hair, skirt, arms, legs and speed have independent real sliders');
+                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:15000});
+                await page.locator('#l2d-hair-swing').fill('450');
+                await page.waitForFunction(()=>window.characterEditor.motion().front.hairSwing===4.5,{timeout:12000});
+                assert.equal(await page.locator('#l2d-hair-swing-value').textContent(),'450%');
+                await page.locator('#l2d-skirt-swing').fill('410');
+                assert.equal(await page.evaluate(()=>window.characterEditor.motion().front.skirtSwing),4.1);
+                assert.equal(await page.evaluate(()=>window.characterEditor.motion().front.legSwing),0);
+                const secondary=await page.evaluate(()=>{
+                  const deform=window.PaperchalkLocalBreath.deform;
+                  const a={amplitude:0,period:3.6,softness:1.25,hairSwing:0,skirtSwing:0,armSwing:0,legSwing:0};
+                  const b={...a,hairSwing:5};
+                  const c={...a,skirtSwing:5};
+                  return {hairOff:deform(433,310,a,850),hairOn:deform(433,310,b,850),
+                    skirtOff:deform(495,615,a,850),skirtOn:deform(495,615,c,850),
+                    head:deform(520,110,b,850),feet:deform(460,963,c,850)};
+                });
+                assert.notDeepEqual(secondary.hairOff,secondary.hairOn,
+                  'hair slider must move hair pixels without requiring breathing');
+                assert.notDeepEqual(secondary.skirtOff,secondary.skirtOn,
+                  'skirt slider must move the hem independently');
+                assert.deepEqual(secondary.head,{x:520,y:110},'head remains fixed');
+                assert.deepEqual(secondary.feet,{x:460,y:963},'foot remains fixed');
+                await page.locator('#l2d-expressive').click();
+                assert.equal(await page.evaluate(()=>window.characterEditor.motion().front.armSwing),2.8);
+
                 assert.ok(await page.locator('body.easy-mode').count()===1,'simple mode is the default');
                 assert.ok(await page.locator('#easy-save-note').textContent().then(x=>x.includes('浏览器')),'save must disclose browser-only persistence');
                 await page.locator('#easy-mode-switch').click();
