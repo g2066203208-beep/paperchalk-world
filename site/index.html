@@ -45,20 +45,21 @@ body.mobile-mode.virtual-landscape #view{
   z-index:1;
   inset:0;
   pointer-events:none;
-  /* Fixed pure-black outer rim; the flowing fog handles the larger inner edge. */
+  /* Compact mask tied to scene geometry: all actual image edges remain black
+     through 3D camera tilt, without covering the center of the room. */
   background:
     linear-gradient(to right,
-      #000 0%,#000 2%,rgba(0,0,0,.92) 4%,
-      rgba(0,0,0,.56) 7%,rgba(0,0,0,.20) 10%,
-      transparent 15%,transparent 85%,
-      rgba(0,0,0,.20) 90%,rgba(0,0,0,.56) 93%,
-      rgba(0,0,0,.92) 96%,#000 98%,#000 100%),
+      #000 0%,#000 1.5%,rgba(0,0,0,.82) 2.5%,
+      rgba(0,0,0,.38) 4.5%,rgba(0,0,0,.10) 6.5%,
+      transparent 9%,transparent 91%,
+      rgba(0,0,0,.10) 93.5%,rgba(0,0,0,.38) 95.5%,
+      rgba(0,0,0,.82) 97.5%,#000 98.5%,#000 100%),
     linear-gradient(to bottom,
-      #000 0%,#000 2%,rgba(0,0,0,.92) 4%,
-      rgba(0,0,0,.58) 7%,rgba(0,0,0,.22) 11%,
-      transparent 17%,transparent 83%,
-      rgba(0,0,0,.22) 89%,rgba(0,0,0,.58) 93%,
-      rgba(0,0,0,.92) 96%,#000 98%,#000 100%);
+      #000 0%,#000 1.5%,rgba(0,0,0,.82) 3%,
+      rgba(0,0,0,.40) 5%,rgba(0,0,0,.10) 7%,
+      transparent 10%,transparent 90%,
+      rgba(0,0,0,.10) 93%,rgba(0,0,0,.40) 95%,
+      rgba(0,0,0,.82) 97%,#000 98.5%,#000 100%);
 }
 #fog{
   position:fixed;inset:0;display:block;width:100%;height:100%;
@@ -497,11 +498,11 @@ void main(){
                    texture2D(u_previous,back-b).r)*.25;
   float density=mix(transported,neighbors,clamp(u_dt*1.5,0.,.11));
   float d=edgeDistance(uv);
-  // Continuous injection on all four image edges, with turbulent wave fronts.
+  // Shallow continuous fluid injection confined to the room perimeter.
   float w1=sin(p.x*15.7+p.y*4.2+t*.82+sin(p.y*8.-t*.36)*1.8);
   float w2=sin(p.y*18.4-p.x*6.6-t*.61+sin(p.x*10.+t*.4));
   float envelope=.57+.25*w1+.18*w2;
-  float reach=191.+39.*w1+30.*w2+17.*sin(t*1.15+p.x*9.);
+  float reach=99.+22.*w1+15.*w2+10.*sin(t*1.15+p.x*9.);
   float inlet=1.-smoothstep(-24.,max(24.,reach),d);
   float injection=inlet*max(.06,envelope)*3.8;
   density=clamp(density*exp(-u_dt*.44)+u_dt*injection,0.,1.);
@@ -518,22 +519,20 @@ uniform float u_time;
 void main(){
  vec2 uv=v_uv;
  float density=texture2D(u_density,uv).r;
- // Fixed SCREEN-SPACE smoke zone; independent of the tilted classroom.
- // Smoke no longer has to hide picture edges: the picture's own CSS
- // gradient guarantees those are opaque black in every perspective pose.
+ // Compact SCREEN-SPACE smoke zone, independent of scene tilt.
+ // The independently rotating picture mask protects all actual image edges.
  float d=min((u_half.x-abs(uv.x-.5))*u_viewSize.x,
              (u_half.y-abs(uv.y-.5))*u_viewSize.y);
  float curl=sin(uv.x*22.+u_time*1.24+sin(uv.y*20.-u_time*.79)*1.8);
  float swirl=sin(uv.y*29.-u_time*1.03+sin(uv.x*19.+u_time*.67)*1.3);
- float width=min(318.,u_viewSize.y*.47);
- float smokeZone=1.-smoothstep(28.,width,d+curl*36.+swirl*21.);
- // Guaranteed fully opaque BLACK safety envelope on the outside edges.
- // It encloses the worst-case tilted background and enemy silhouettes.
- // Keep the original flowing fog INSIDE; never introduce gray fog.
- float safetyD=min((u_half.x-.025-abs(uv.x-.5))*u_viewSize.x,
-                   (u_half.y-.037-abs(uv.y-.5))*u_viewSize.y);
- float safetyBlack=1.-smoothstep(0.,min(32.,u_viewSize.y*.065),safetyD);
- float fluidAlpha=clamp((.13+1.02*pow(max(density,0.),.60))*smokeZone,0.,.94);
+ float width=min(112.,u_viewSize.y*.19);
+ float smokeZone=1.-smoothstep(8.,width,d+curl*11.+swirl*7.);
+ // Thin viewport safety rim only; the scene has its own solid-black edge mask.
+ // Keep the original flowing fog INSIDE, never introduce gray fog.
+ float safetyD=min((u_half.x-.008-abs(uv.x-.5))*u_viewSize.x,
+                   (u_half.y-.012-abs(uv.y-.5))*u_viewSize.y);
+ float safetyBlack=1.-smoothstep(0.,min(16.,u_viewSize.y*.03),safetyD);
+ float fluidAlpha=clamp((.025+.47*pow(max(density,0.),.75))*smokeZone,0.,.52);
  // Only persistent flowing black fog plus guaranteed opaque edge protection.
  float alpha=max(fluidAlpha,safetyBlack);
  gl_FragColor=vec4(0.,0.,0.,alpha);
@@ -1132,7 +1131,7 @@ void main(){
                               (sceneHalf.y-Math.abs(uvy-.5))*sizes.h);
       const w1=Math.sin(px*15.7+py*4.2+t*.82+Math.sin(py*8-t*.36)*1.8);
       const w2=Math.sin(py*18.4-px*6.6-t*.61+Math.sin(px*10+t*.4));
-      const reach=191+39*w1+30*w2+17*Math.sin(t*1.15+px*9);
+      const reach=99+22*w1+15*w2+10*Math.sin(t*1.15+px*9);
       const inletT=clamp((distance+24)/(Math.max(24,reach)+24),0,1);
       const inlet=1-inletT*inletT*(3-2*inletT);
       const source=inlet*Math.max(.06,.57+.25*w1+.18*w2)*3.8;
@@ -1140,14 +1139,14 @@ void main(){
       const p=(y*sx+x)*4;
       const curl=Math.sin(uvx*22+t*1.24+Math.sin(uvy*20-t*.79)*1.8);
       const swirl=Math.sin(uvy*29-t*1.03+Math.sin(uvx*19+t*.67)*1.3);
-      const width=Math.min(318,sizes.h*.47);
-      const v=clamp((distance+curl*36+swirl*21-28)/Math.max(1,width-28),0,1);
+      const width=Math.min(112,sizes.h*.19);
+      const v=clamp((distance+curl*11+swirl*7-8)/Math.max(1,width-8),0,1);
       const smokeZone=1-v*v*(3-2*v);
-      const safetyD=Math.min((sceneHalf.x-.025-Math.abs(uvx-.5))*sizes.w,
-                             (sceneHalf.y-.037-Math.abs(uvy-.5))*sizes.h);
-      const blackT=clamp(safetyD/Math.min(32,sizes.h*.065),0,1);
+      const safetyD=Math.min((sceneHalf.x-.008-Math.abs(uvx-.5))*sizes.w,
+                             (sceneHalf.y-.012-Math.abs(uvy-.5))*sizes.h);
+      const blackT=clamp(safetyD/Math.min(16,sizes.h*.03),0,1);
       const safetyBlack=1-blackT*blackT*(3-2*blackT);
-      const fluidAlpha=clamp((.13+1.02*d**.60)*smokeZone,0,.94);
+      const fluidAlpha=clamp((.025+.47*d**.75)*smokeZone,0,.52);
       const alpha=Math.max(fluidAlpha,safetyBlack);
       image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
     }
