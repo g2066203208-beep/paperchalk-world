@@ -36,8 +36,11 @@ def read_profile(filename):
                 assert isinstance(item.get("source"), str) and item["source"].strip(), (
                     filename, group, field, "missing evidence or proposal origin"
                 )
-    ref = result["readableDocument"]
-    assert (ROOT / ref).is_file(), f"missing human-readable dossier: {ref}"
+    ref = result.get("readableDocument")
+    if ref is not None:
+        assert (ROOT / ref).is_file(), f"missing human-readable dossier: {ref}"
+    else:
+        assert result["recordCode"] == "CHAR-XXX", "only blank templates may omit a readable document"
     return result
 
 
