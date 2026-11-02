@@ -92,29 +92,32 @@ async function setAnimationSource(slot,uri,opts={}){
  if(!uri){obj.clip=null;obj.root.dataset.l2dMode='procedural-multinode';if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}return true;}
  const img=new Image();
  await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=uri;});
+ // The WebP itself is now the visible actor. Never copy a hidden 1px
+ // animation to Canvas: browsers may suspend decoded frames of hidden media.
+ img.setAttribute('data-l2d-v4','');
  img.setAttribute('aria-hidden','true');
- img.style.cssText='position:absolute;left:0;top:0;width:1px;height:1px;opacity:.001;pointer-events:none;visibility:visible';
+ img.style.cssText='position:absolute;display:block;object-fit:fill;opacity:1;visibility:visible;pointer-events:none;user-select:none;image-rendering:auto;max-width:none;max-height:none;z-index:1;';
  obj.root.appendChild(img);
  obj.clip={img,x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w||img.naturalWidth),h:Number(opts.h||img.naturalHeight)};
  obj.clipFrame=0;
  if(obj.rig)obj.rig.stop();
+ placeClip(obj);
  obj.root.dataset.l2dState='ready';obj.root.dataset.l2dMode='v4-clip';
  return true;
 }
-function updateFrame(obj,now){
- if(!obj.clip||!obj.rig||document.hidden||obj.root.hidden)return;
- if(now-obj.clipFrame<32)return;
- obj.clipFrame=now;
- const {img,x,y,w,h}=obj.clip,source=obj.rig.source;
- if(!source||!img.complete||!img.naturalWidth)return;
- const g=source.getContext('2d',{alpha:true});
- g.clearRect(0,0,source.width,source.height);
- g.drawImage(img,x,y,w,h);
- // The original V4 clip already has the entire mesh animation baked in;
- // don't apply the simpler breathing model a second time.
- const before=obj.rig.amplitude;obj.rig.amplitude=0;
- obj.rig.render(now,true);obj.rig.amplitude=before;
+function placeClip(obj){
+ if(!obj.clip)return;
+ const {img,x,y,w,h}=obj.clip;
+ const W=obj.img.offsetWidth,H=obj.img.offsetHeight;
+ // The original composite is exactly 1024x1024. Crop coordinates retain the
+ // same origin and follow DEV offsets, player perspective and room scaling.
+ const left=obj.img.offsetLeft+x*W/1024;
+ const top=obj.img.offsetTop+y*H/1024;
+ const css={left:left+'px',top:top+'px',width:w*W/1024+'px',height:h*H/1024+'px'};
+ for(const [key,value] of Object.entries(css))
+  if(img.style[key]!==value)img.style[key]=value;
 }
+
 function markAnimation(slot,enabled){
  const a=target(slot);if(!a)return;
  a.animated=!!enabled;
@@ -130,7 +133,7 @@ function sync(t){
   if(a.canvas.style.width!==(w+'px'))a.canvas.style.width=w+'px';
   if(a.canvas.style.height!==(h+'px'))a.canvas.style.height=h+'px';
   if(a.rig&&!a.clip)a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
-  if(a.clip)updateFrame(a,t||performance.now());
+  if(a.clip)placeClip(a);
  }
  requestAnimationFrame(sync);
 }
