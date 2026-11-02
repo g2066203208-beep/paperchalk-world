@@ -1,4 +1,4 @@
-name: Classroom - independent continuous fog stage
+name: Classroom and fog regression QA
 on:
   push:
     branches: [main]
@@ -15,18 +15,14 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  pages: write
-  id-token: write
 # New changes should queue, not interrupt an active browser QA / Pages publish.
 concurrency:
-  group: paperchalk-world-pages
+  group: paperchalk-world-scene-qa
   cancel-in-progress: false
 jobs:
-  deploy:
+  browser-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    environment:
-      name: github-pages
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -1037,10 +1033,5 @@ jobs:
           path: artifacts/classroom
           retention-days: 7
           if-no-files-found: warn
-      - uses: actions/configure-pages@v5
-      - name: Rebuild and verify source-approved V4 clips
+      - name: Rebuild and verify original V4 clips (QA only; Pages publishes in canonical workflow)
         run: python3 scripts/build_v4_assets.py
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - uses: actions/deploy-pages@v4
