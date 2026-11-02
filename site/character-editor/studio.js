@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id), DB='paperchalk-dev-characters-v1';
 const list=new Map();
 const args=new URLSearchParams(location.search);
 const slot=args.get('slot')==='enemy'?'enemy':'player';
-let currentId='',side='front',v4=null,frameAt=0;
+let currentId='',side='front',v4=null,frameAt=0,showOriginalV4=true;
 const okId=v=>/^[\w-]{1,80}$/.test(v);
 const message=s=>$('studio-status').textContent=s;
 function openDB(){return new Promise((ok,no)=>{
@@ -33,7 +33,7 @@ section.innerHTML=[
  '<label class="studio-import">导入新人物<input id="studio-import" type="file" accept="image/png,image/webp,image/jpeg" multiple></label>',
  '<label class="studio-import">导入 V4 动态工程 ZIP<input id="studio-v4zip" type="file" accept=".zip,application/zip"></label>',
  '<output id="studio-status" role="status">读取人物资源库…</output></div>',
- '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024"></canvas><span>V4 原版动态预览（使用原始动画帧，不是后来的简化呼吸）。可在下方编辑各 PSD 分层。</span></div>'
+ '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024"></canvas><span>V4 原版 128 帧动态。默认主预览同步展示官方 V4；若要检查刚补画的图层，请切换至编辑网格视图。</span><button id="studio-v4-mode" type="button">切换到图层实时变形</button></div>'
 ].join('');
 const style=document.createElement('style');
 style.textContent=[
@@ -70,7 +70,10 @@ async function change(id,face='front'){
  await ed.switchCharacter({id:c.id,label:c.label,front:c.front||'',back:c.back||''},side);
  window.dispatchEvent(new CustomEvent('paperchalk:studio-character-loaded',{detail:{id,side}}));
  try{localStorage.setItem('paperchalk-studio-last',JSON.stringify({id,side}));}catch(e){}
- await showClip(await get('clip:'+id+':'+side));
+ const override=await get('clip:'+id+':'+side);
+ const builtin=id==='protagonist'?{url:new URL('../assets/l2d/v4/'+side+'.webp',location.href).href,
+   crop:{x:351,y:9,w:335,h:1013},edition:'V4-official'}:null;
+ await showClip(override||builtin);
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
  history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game');
 }
@@ -158,27 +161,46 @@ async function importV4(file){
  message('✓ '+count+' 个 V4 动态方向已导入当前人物；游戏使用原版动态帧，不再使用静态背面。');
 }
 async function showClip(info){
- v4=null;$('studio-v4-wrap').hidden=!info?.data;
- if(!info?.data)return;
+ v4=null;
+ const uri=info?.data||info?.url||'';
+ $('studio-v4-wrap').hidden=!uri;
+ if(!uri){ed.l2dRig?.()?.start();return;}
  const img=new Image();
- await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=info.data});
- v4={img,crop:info.crop||{x:351,y:9,w:335,h:1013}};
+ await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=uri});
+ v4={img,crop:info.crop||{x:351,y:9,w:335,h:1013},edition:info.edition||'V4-imported'};
+ if(showOriginalV4)ed.l2dRig?.()?.stop();
+ $('studio-v4-mode').textContent=showOriginalV4?'切换到图层实时变形':'切换到原版 V4 动画';
 }
 function loop(t){
- if(v4&&t-frameAt>42){
+ if(v4&&t-frameAt>=48){
   frameAt=t;
-  const canvas=$('studio-v4-canvas'),g=canvas.getContext('2d'),{img,crop}=v4;
-  g.clearRect(0,0,1024,1024);
-  if(img.complete&&img.naturalWidth)g.drawImage(img,crop.x,crop.y,crop.w,crop.h);
+  const {img,crop}=v4;
+  if(img.complete&&img.naturalWidth){
+   const draw=canvas=>{
+    if(!canvas)return;
+    const g=canvas.getContext('2d');
+    g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,1024,1024);
+    g.drawImage(img,crop.x,crop.y,crop.w,crop.h);
+   };
+   draw($('studio-v4-canvas'));
+   if(showOriginalV4)draw($('l2d-live-canvas'));
+  }
  }
  requestAnimationFrame(loop);
 }
+$('studio-v4-mode').onclick=()=>{
+ showOriginalV4=!showOriginalV4;
+ $('studio-v4-mode').textContent=showOriginalV4?'切换到图层实时变形':'切换到原版 V4 动画';
+ const rig=ed.l2dRig?.();
+ if(showOriginalV4)rig?.stop();else rig?.start();
+ window.dispatchEvent(new Event('paperchalk:studio-mode-changed'));
+};
 selector.onchange=()=>change(selector.value,direction.value).catch(e=>message(e.message));
 direction.onchange=()=>change(selector.value,direction.value).catch(e=>message(e.message));
 $('studio-save').onclick=()=>saveToGame().catch(e=>message('保存失败：'+e.message));
 $('studio-back').onclick=()=>location.assign(new URL('../?dev=1',location.href).href);
 $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='';importImages(files).catch(x=>message('导入失败：'+x.message));};
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,get current(){return currentId}};
+window.PaperchalkStudio={list,change,saveToGame,useV4:()=>!!v4&&showOriginalV4,get current(){return currentId},get edition(){return v4?.edition||'mesh'}};
 requestAnimationFrame(loop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
