@@ -32,3 +32,10 @@
 本地可运行 python3 scripts/build_scene_catalog.py （需要 Pillow），随后运行 node tests/scene-modules.test.cjs。正式发布由 .github/workflows/studio-pages.yml 执行 Chromium 回归测试后上线。
 
 备注：浏览器本地保存的个人参数不会被新图片覆盖，但 GitHub 无法从用户浏览器读取这些参数并自动备份到仓库。
+
+## 正式角色档案（唯一身份与素材锁定）
+
+- [女主角 CHAR-001：外貌、瞳色、性格与可修改的年龄/身高/体重草案](docs/PROTAGONIST_CANON.md)
+- [角色机器档案](site/data/characters/registry.json)：所有正背面与未来主角变体均复用 `protagonist`，不创建重复女主角。
+- 验证：`python3 scripts/validate_character_identity.py`，并接入现有 Pages GitHub Actions 部署检查。
+- 原有主角正面/背面 WebP 未修改；传入新场景图也不应生成独立的人物场景。

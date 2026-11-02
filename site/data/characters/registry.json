@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "project": "Paperchalk World / 错位日常",
+  "policy": {
+    "canonicalIdentityKey": "protagonist",
+    "sameCharacterAcrossAllViews": true,
+    "newIdentityRequiresDistinctStoryRole": true,
+    "renderAssetChangesRequireExplicitApproval": true,
+    "proposedBiographyIsNotConfirmed": true
+  },
+  "characters": [
+    {
+      "id": "protagonist",
+      "recordCode": "CHAR-001",
+      "role": "playable_protagonist",
+      "name": null,
+      "displayLabel": "女主角（姓名待定）",
+      "aliases": [
+        "主角",
+        "女主角",
+        "heroine",
+        "player"
+      ],
+      "status": {
+        "visual": "approved_reference_locked",
+        "biography": "proposed_not_approved",
+        "name": "pending"
+      },
+      "assets": {
+        "front": "site/assets/characters/protagonist-front.webp",
+        "back": "site/assets/characters/protagonist-back.webp",
+        "l2dModule": "site/l2d/rig.js",
+        "gameScene": "site/index.html"
+      },
+      "visualCanon": {
+        "genderPresentation": "female",
+        "hairColor": "near-black, dark cool highlights",
+        "hairStyle": "long straight black hair, forehead fringe; front side locks reach upper chest; back hair to shoulder blades",
+        "hairAccessory": "two thin silver clips on CHARACTER'S LEFT temple (VIEWER'S RIGHT in front portrait)",
+        "iris": "muted gray-brown / dark brown-gray",
+        "pupil": "near-black dark brown",
+        "eyeShape": "narrow relaxed almond-shaped, slightly heavy upper eyelids",
+        "face": "slender softly oval face, small tapered chin; small nose and minimal mouth",
+        "skinTone": "warm light skin, subtle natural blush",
+        "defaultExpression": "quiet neutral, slightly tired/guarded",
+        "silhouette": "naturally slim adolescent proportions; relaxed straight stance",
+        "outfit": "very dark navy school blazer with lapels and buttons; pale shirt; burgundy tie; gray pleated skirt; dark mid-calf socks; brown-black loafers",
+        "defaultAccessories": "none other than the two slim hair clips",
+        "viewContinuity": "front and back represent the same character, do not mirror front as back"
+      },
+      "proposedProfile": {
+        "ageYears": {
+          "value": 17,
+          "status": "proposed"
+        },
+        "heightCm": {
+          "value": 162,
+          "status": "proposed",
+          "measurementNote": "fictional design value, not measured from picture"
+        },
+        "weightKg": {
+          "value": 49,
+          "status": "proposed",
+          "measurementNote": "fictional design value, not measured from picture"
+        },
+        "occupation": {
+          "value": "高中二年级学生（暂无职业）",
+          "status": "proposed"
+        },
+        "personality": {
+          "value": [
+            "安静内敛",
+            "观察细致",
+            "谨慎",
+            "耐心",
+            "略有戒备心",
+            "情绪表达克制",
+            "熟悉后对人有细微关照"
+          ],
+          "status": "proposed"
+        },
+        "voice": {
+          "value": "中低音区，语速中等偏慢，靠停顿和呼吸表达情绪",
+          "status": "proposed"
+        }
+      },
+      "unknowns": [
+        "真实姓名",
+        "生日",
+        "学校及城市",
+        "家庭成员",
+        "与其他 NPC 的关系",
+        "剧情中的特殊能力",
+        "详细过去经历"
+      ],
+      "productionRules": [
+        "All protagonist variants reuse id protagonist",
+        "No re-generation or repaint of approved face without request",
+        "Never duplicate this character as a new NPC",
+        "No separate portrait-scene entry",
+        "Preserve original front/back assets and game layer positions"
+      ],
+      "designDocument": "docs/PROTAGONIST_CANON.md"
+    }
+  ]
+}
