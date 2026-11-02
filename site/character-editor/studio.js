@@ -398,7 +398,7 @@ async function showClip(info){
  document.body.classList.toggle('v4-authoring',!!uri);
  const legacyRig=document.getElementById('dev-l2d-preview-controls');
  if(legacyRig)legacyRig.hidden=false; // Static painting, dynamic preview stays live.
- if(!uri){globalLayer=null;frameLayer=null;ed.l2dRig?.()?.start();ed.render();return;}
+ if(!uri){playing=false;globalLayer=null;frameLayer=null;ed.l2dRig?.()?.start();ed.render();return;}
  const token=++switchNonce;
  const surface=ed.make(1024,1024),crop=info.crop||{x:351,y:9,w:335,h:1013};
  let decoder=null,img=null,count=128;
@@ -419,10 +419,11 @@ async function showClip(info){
  }
  if(token!==switchNonce){if(decoder)decoder.close();return;}
  v4={decoder,img,count,crop,surface,frame:-1,busy:false,edition:info.edition||'V4-imported'};
- frameIndex=0;activePaintFrame=0;playing=false;playingSince=0;
+ frameIndex=0;activePaintFrame=0;playing=true;playingSince=performance.now();
  $('studio-frame').max=String(Math.max(0,count-1));
  $('studio-frame').value='0';$('studio-frame-label').textContent='0 / '+(count-1);
- $('studio-play').textContent='播放';
+ $('studio-play').textContent='暂停';
+ window.dispatchEvent(new CustomEvent('paperchalk:studio-play-changed',{detail:{playing:true}}));
  // The preview rig continues running independently while V4 frames decode.
  await drawFrame(0);
 }
@@ -431,8 +432,14 @@ function drawBackdrop(ctx){
  ctx.drawImage(v4.surface,0,0);
  // During playback, paint corrections for the *actual* V4 frame.
  if(playing&&frameFrames[frameIndex]){
-  const cached=frameImageCache.get(frameIndex);
-  if(cached)ctx.drawImage(cached,0,0);
+  let cached=frameImageCache.get(frameIndex);
+  if(!cached){
+   cached=new Image();
+   cached.onload=()=>ed.render();
+   cached.src=frameFrames[frameIndex];
+   frameImageCache.set(frameIndex,cached);
+  }
+  if(cached.complete&&cached.naturalWidth)ctx.drawImage(cached,0,0);
  }
 }
 const frameImageCache=new Map();
@@ -563,23 +570,33 @@ function frameLoop(t){
  }
  requestAnimationFrame(frameLoop);
 }
-$('studio-frame').oninput=e=>{if(playing){playing=false;$('studio-play').textContent='播放';}
- seek(Number(e.target.value)).catch(err=>message(err.message));};
-$('studio-play').onclick=async()=>{
+async function setPlaying(next){
  if(!v4)return;
- if(!playing){
+ if(playing===!!next)return;
+ if(next){
   snapshotFrame();
-  playing=true;frameLayer.visible=false;
+  playing=true;
+  if(frameLayer)frameLayer.visible=false;
   playingSince=performance.now()-frameIndex*50;
-  $('studio-play').textContent='暂停';
  }else{
   playing=false;
-  frameLayer.visible=$('studio-edit-scope').value==='frame';
-  $('studio-play').textContent='播放';
-  await loadFrameImage(frameIndex);
+  if(frameLayer){
+   frameLayer.visible=$('studio-edit-scope').value==='frame';
+   await loadFrameImage(frameIndex);
+  }
  }
+ $('studio-play').textContent=playing?'暂停':'播放';
  ed.renderList();ed.render();
+ window.dispatchEvent(new CustomEvent('paperchalk:studio-play-changed',{detail:{playing}}));
+}
+$('studio-frame').oninput=e=>{
+ if(playing){
+  playing=false;$('studio-play').textContent='播放';
+  window.dispatchEvent(new CustomEvent('paperchalk:studio-play-changed',{detail:{playing:false}}));
+ }
+ seek(Number(e.target.value)).catch(err=>message(err.message));
 };
+$('studio-play').onclick=()=>setPlaying(!playing).catch(err=>message('播放控制异常：'+err.message));
 $('studio-edit-scope').onchange=()=>{
  if(!v4)return;
  if(!playing)snapshotFrame();
@@ -660,6 +677,6 @@ $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
 $('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'}};
+window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
