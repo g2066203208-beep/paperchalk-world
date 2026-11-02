@@ -28,7 +28,7 @@ body.mobile-mode.virtual-landscape #view{
   transform-origin:top left;transform:rotate(90deg);
 }
 #scene{
-  --rim-solid:8px;--rim-feather:9px;
+  --rim-solid:12px;--rim-feather:7px;
   position:relative;flex:none;margin:0;
   width:min(94vw,calc(94dvh * 16 / 9));
   width:min(94cqw,calc(94cqh * 16 / 9));
@@ -42,8 +42,12 @@ body.mobile-mode.virtual-landscape #view{
   /* STEP 1: A tiny photo-attached black feather with smoothly rounded
      corners. No intersecting horizontal/vertical dark gradients. */
   content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  /* Solid 12px edge plus 7px feather: ~1–2% of the original image.
+     This stays black even after the picture rotates behind the fog. */
+  box-sizing:border-box;
+  border:var(--rim-solid) solid #000;
   border-radius:16px;
-  box-shadow:inset 0 0 var(--rim-feather) var(--rim-solid) #000;
+  box-shadow:inset 0 0 var(--rim-feather) 0 #000;
 }
 #fog{
   position:fixed;inset:0;display:block;width:100%;height:100%;
@@ -574,7 +578,7 @@ void main(){
   // Live persisted fog controls, intentionally separate from 3D layer editor.
   // Large values remain user-adjustable, but the clear-zone hard-clips smoke.
   const FOG_KEY='paperchalk-fog-two-step-v2';
-  const fogDefaults=Object.freeze({width:3,opacity:82,offset:0,safe:96,solid:8,feather:9});
+  const fogDefaults=Object.freeze({width:3,opacity:82,offset:0,safe:96,solid:12,feather:7});
   const fogBounds=Object.freeze({width:[0,12],opacity:[0,100],offset:[-18,18],
                                  safe:[75,99],solid:[2,24],feather:[2,30]});
   function cleanFog(raw){
