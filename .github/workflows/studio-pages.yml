@@ -160,31 +160,36 @@ jobs:
           assert back.getpixel((round(bw*.5),round(bh*.74)))[3]<8,'Back leg gap still contains white'
           assert (cw,ch)==(1024,1024) and (bw,bh)==(1024,1024),'Original artwork was resized'
           # Original RGB and alpha are committed as immutable lossless WebP.
-          # Dynamic black fog is limited by REAL scene edges and a center safe zone.
+          # Exactly TWO layers: scene-attached rounded tiny feather + solid
+          # black outside the centered safe region with live smoke at its edge.
           for marker in (
-              '--rim-solid:24px', '--rim-feather:8px',
-              'uniform vec4 u_fogSettings', 'uniform vec2 u_rimSettings',
-              'float nearEdges=max(', 'float safetyBlack=',
-              "const FOG_KEY='paperchalk-fog-edge-v1'",
-              'width:4,opacity:40,offset:-3,safe:88,solid:24,feather:8',
-              'id="menu-dev"', 'id="game-dev"',
-              'id="dev-fog-tools"',
+              '--rim-solid:8px', '--rim-feather:9px',
+              'box-shadow:inset 0 0 var(--rim-feather) var(--rim-solid) #000',
+              'border-radius:16px', 'uniform vec4 u_fogSettings',
+              'float safeDistance=', 'float alpha=safeDistance<=0.?1.:',
+              'const safeDistance=', 'const alpha=safeDistance<=0?1:',
+              "const FOG_KEY='paperchalk-fog-two-step-v2'",
+              'width:3,opacity:82,offset:0,safe:96,solid:8,feather:9',
+              'id="menu-dev"', 'id="game-dev"', 'id="dev-fog-tools"',
               'id="fog-safe-guide"', 'id="fog-width"',
-              'id="fog-offset"', 'id="fog-safe"',
-              'id="fog-opacity"', 'id="fog-solid"', 'id="fog-feather"',
+              'id="fog-offset"', 'id="fog-safe"', 'id="fog-opacity"',
+              'id="fog-solid"', 'id="fog-feather"',
               "function enterDeveloper(layer='fog')", "function useRig(active)",
               "function applyFogSettings()", "function refreshFogEditor()",
-              "const m=fogMetrics()",
-              'sceneHalf.x*sizes.w*(1-m.safe*.01)',
+              'const m=fogMetrics()', 'safeHalfX=sceneHalf.x*sizes.w*m.safe*.01',
           ):
-              assert marker in h,'missing fog debug feature: '+marker
-          for obsolete in ('width=min(318.', 'width=Math.min(318',
-                           'float width=min(112.', 'const width=Math.min(112',
-                           'transparent 9%,transparent 91%',
-                           'id="dev-fog-trigger"', "event.key==='F3'"):
-              assert obsolete not in h,'old oversized fog survived: '+obsolete
+              assert marker in h,'missing two-step black fog: '+marker
+          for obsolete in (
+              "const FOG_KEY='paperchalk-fog-edge-v1'",
+              'uniform vec2 u_rimSettings', 'float nearEdges=max(',
+              'float safetyBlack=', 'const safetyBlack=',
+              'width=min(318.', 'width=Math.min(318',
+              'float width=min(112.', 'const width=Math.min(112',
+              'transparent 9%,transparent 91%', 'id="dev-fog-trigger"',
+              "event.key==='F3'", "event.key==='F2'"):
+              assert obsolete not in h,'obsolete overlapping fog mask: '+obsolete
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
-          assert 'reach=99.' in h and 'const reach=99+' in h
+          assert 'reach=40.' in h and 'const reach=40+' in h
           assert 'float wave=' in h and 'const wave=' in h
           assert 'aimX=0;aimY=0;currentX=0;currentY=0;' in h
           assert "importedScenes=Object.create(null)" in h
@@ -197,7 +202,7 @@ jobs:
           assert 'enemy:{x:46,y:16,size:34,z:-190}' in h
           assert 'left:46%;bottom:16%;height:34%' in h
           assert 'cameraPlayer.style.transform=' in h
-          assert 'float safetyBlack=' in h and 'const safetyBlack=' in h
+          assert 'safeDistance<=0.?1.' in h and 'safeDistance<=0?1:' in h
           assert '#fog{z-index:3}' in h and '#scene{z-index:1}' in h
           assert 'id="scene-transition"' in h and "async function changeScene(name)" in h
           assert "shade.dataset.phase='covered'" in h
@@ -486,13 +491,13 @@ jobs:
                     safe:document.getElementById('fog').dataset.safe,
                     opacity:document.getElementById('fog').dataset.opacity
                   }));
-                  assert.deepEqual(original,{width:'4',safe:'88',opacity:'40'});
+                  assert.deepEqual(original,{width:'3',safe:'96',opacity:'82'});
                   const setFog=async(id,value)=>page.locator('#'+id).evaluate((el,v)=>{
                     el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));
                   },value);
                   await setFog('fog-width',12);
                   await setFog('fog-opacity',90);
-                  await setFog('fog-offset',22);
+                  await setFog('fog-offset',12);
                   await setFog('fog-safe',94);
                   await setFog('fog-solid',12);
                   await setFog('fog-feather',19);
@@ -510,18 +515,18 @@ jobs:
                     };
                   });
                   assert.equal(fogDebug.width,'12');assert.equal(fogDebug.safe,'94');
-                  assert.equal(fogDebug.strength,'90');assert.equal(fogDebug.offset,'22');
+                  assert.equal(fogDebug.strength,'90');assert.equal(fogDebug.offset,'12');
                   assert.equal(fogDebug.solid,'12px');assert.equal(fogDebug.feather,'19px');
                   assert.ok(Math.abs(fogDebug.safeWidth-fogDebug.expected)<3,
                     'fog-free region did not resize with scene');
                   await page.screenshot({path:'artifacts/classroom/bedroom-FOG-DEV.png'});
                   await page.locator('#fog-save').click();
                   assert.equal(await page.evaluate(()=>
-                    JSON.parse(localStorage.getItem('paperchalk-fog-edge-v1')).safe),94);
+                    JSON.parse(localStorage.getItem('paperchalk-fog-two-step-v2')).safe),94);
                   await page.locator('#fog-reset').click();
-                  assert.equal(await page.locator('#fog').getAttribute('data-width'),'4');
+                  assert.equal(await page.locator('#fog').getAttribute('data-width'),'3');
                   assert.equal(await page.evaluate(()=>
-                    localStorage.getItem('paperchalk-fog-edge-v1')),null);
+                    localStorage.getItem('paperchalk-fog-two-step-v2')),null);
                   await page.locator('#dev-exit').click();
                   assert.equal(await page.locator('#dev-tools').isVisible(),false);
                   assert.equal(await page.locator('#fog-safe-guide').isVisible(),false);
@@ -594,6 +599,20 @@ jobs:
                     document.getElementById('test-fog-white-backing').remove();
                     document.getElementById('fog').style.removeProperty('z-index');
                   });
+                  // The viewport OUTSIDE the safe area must be pure black,
+                  // not the former translucent safetyBlack. The central area
+                  // must stay white over this test-only backing.
+                  const whiteAt=(img,fx,fy)=>{
+                    const x=Math.floor(img.width*fx),y=Math.floor(img.height*fy);
+                    const p=(y*img.width+x)*4;
+                    return Array.from(img.data.slice(p,p+3));
+                  };
+                  for(const point of [[.015,.5],[.985,.5],[.5,.015],[.5,.985]]){
+                    assert.ok(whiteAt(fogBefore,...point).every(v=>v<=3),
+                      'safe area exterior not pure black: '+point+' '+whiteAt(fogBefore,...point));
+                  }
+                  assert.ok(whiteAt(fogBefore,.5,.5).every(v=>v>=249),
+                    'opaque fog has reached the center of the room');
                   assert.ok(edgeDarkPixels>40,
                     'fog absent from scene edge when contrasted against white: '+edgeDarkPixels);
                   assert.equal(centerDarkPixels,0,
@@ -844,7 +863,7 @@ jobs:
                       const x=(a[0]+b[0])*.5,y=(a[1]+b[1])*.5;
                       const dx=cfg.width*.5-x,dy=cfg.height*.5-y;
                       const len=Math.hypot(dx,dy);
-                      const sx=Math.round(x+dx/len*7),sy=Math.round(y+dy/len*7);
+                      const sx=Math.round(x+dx/len*2),sy=Math.round(y+dy/len*2);
                       assert.ok(sx>=0&&sx<snapshot.width&&sy>=0&&sy<snapshot.height,'edge test sample outside screen');
                       const off=(sy*snapshot.width+sx)*4;
                       const rgb=[snapshot.data[off],snapshot.data[off+1],snapshot.data[off+2]];
