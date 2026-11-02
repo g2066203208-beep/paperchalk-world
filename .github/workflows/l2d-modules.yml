@@ -181,6 +181,16 @@ jobs:
             });
             assert.deepEqual(backBones,[6,6,2,2],'back hair, skirt and separate sleeves are actual independent articulated source parts');
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','back'));
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===8,{timeout:20000});
+            assert.deepEqual(await page.evaluate(()=>{
+              const a=window.PaperchalkL2DLibrary.get('player');
+              const m=a.model.parts;
+              return [a.actor.root.dataset.l2dMode,
+                a.actor.root.dataset.l2dBreath,m.back_hair.bones.length,m.skirt.bones.length,
+                m.sleeve_left.bones.length,m.sleeve_right.bones.length];
+            }),['library-part-mesh','disabled',6,6,2,2],
+              'ORIGINAL heroine must have independent hair, skirt and left/right sleeve joints by default');
+            await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('v4'));
             await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===128,{timeout:20000});
             assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player').root.dataset.l2dEdition),'V4-official');
             assert.deepEqual(errors,[],'game page JavaScript errors');
