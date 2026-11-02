@@ -97,7 +97,9 @@ jobs:
                   return {hash,frame:a.root.dataset.l2dFrame,canvasHidden:getComputedStyle(a.canvas).visibility};
                 });
                 const firstFrame=await inspect();
-                await page.waitForTimeout(750);
+                // CI software WebP decoders can take much longer than 750 ms
+                // under parallel builds. Wait for actual frame evidence.
+                await page.waitForFunction(previous=>document.querySelector('#camera-player-root')?.dataset.l2dFrame!==previous,firstFrame.frame,{timeout:16000});
                 const secondFrame=await inspect();
                 assert.equal(secondFrame.canvasHidden,'visible','approved V4 must render into visible actor canvas');
                 assert.notEqual(firstFrame.frame,secondFrame.frame,'V4 playback timeline must advance');
