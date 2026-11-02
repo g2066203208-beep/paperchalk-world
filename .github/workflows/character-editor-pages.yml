@@ -8,6 +8,7 @@ on:
       - 'site/l2d/**'
       - 'site/assets/l2d/**'
       - 'scripts/build_v4_assets.py'
+      - 'scripts/fix_protagonist_neck_v4.py'
       - 'scripts/build_char002_v4.py'
       - 'site/dev/**'
       - 'site/characters.catalog.json'
@@ -37,6 +38,7 @@ jobs:
           python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/repair_character_masks.py
           python3 scripts/build_v4_assets.py
+          python3 scripts/fix_protagonist_neck_v4.py
           python3 scripts/build_char002_v4.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
@@ -46,6 +48,12 @@ jobs:
           test -s site/assets/characters/protagonist-back.webp
           test -s site/assets/l2d/v4/front.webp
           test -s site/assets/l2d/v4/back.webp
+          python3 - <<'PY'
+          from PIL import Image
+          with Image.open('site/assets/l2d/v4/front.webp') as im:
+              assert im.size==(335,1013) and im.n_frames==128
+          print('PASS protagonist revised neck animation: 128 frames')
+          PY
           test -s site/assets/l2d/char-002/front.webp
           test -s site/assets/l2d/char-002/front-source-regions.zip
           python3 - <<'PY'
