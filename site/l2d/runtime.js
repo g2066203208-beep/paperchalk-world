@@ -12,7 +12,7 @@ function install(root){
  const canvas=root.querySelector('[data-l2d-canvas]');
  if(!img||!canvas)return;
  const id=root.dataset.l2dActor;
- const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,overlayFrames:new Map(),profile:{amplitude:.55,period:4.8,softness:1}};
+ const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),profile:{amplitude:.55,period:4.8,softness:1}};
  rigs.set(root,obj);
  img.addEventListener('load',()=>refresh(obj));
  img.addEventListener('error',()=>{root.dataset.l2dState='error';});
@@ -175,7 +175,22 @@ function advanceV4(obj,now){
   ctx.drawImage(image,clip.x*sx,clip.y*sy,clip.w*sx,clip.h*sy);
   image.close();
   if(obj.overlay)ctx.drawImage(obj.overlay,0,0,canvas.width,canvas.height);
-  const correction=obj.overlayFrames.get(index);
+  let correction=obj.overlayFrames.get(index);
+  const correctionUrl=obj.overlayFrameUrls.get(index);
+  if(!correction&&correctionUrl){
+   const frameId=index,ref=obj.clip,im=new Image();
+   im.onload=()=>{
+    if(obj.clip!==ref)return;
+    obj.overlayFrames.set(frameId,im);
+    // Bound the decoded correction cache on mobile; keep raw PNG data in
+    // IndexedDB, but never retain 128 full-size RGBA images in RAM.
+    while(obj.overlayFrames.size>6)obj.overlayFrames.delete(obj.overlayFrames.keys().next().value);
+    ref.frame=-1;
+   };
+   im.onerror=()=>obj.overlayFrameUrls.delete(frameId);
+   obj.overlayFrameUrls.delete(frameId);
+   im.src=correctionUrl;
+  }
   if(correction)ctx.drawImage(correction,0,0,canvas.width,canvas.height);
   clip.frame=index;
   obj.root.dataset.l2dFrame=String(index);
@@ -187,17 +202,18 @@ async function setCorrections(slot,general,frames={}){
  const obj=target(slot);if(!obj)return false;
  const decode=src=>new Promise((ok,no)=>{
   if(!src)return ok(null);
-  const im=new Image();
-  im.onload=()=>ok(im);im.onerror=()=>no(Error('修正图层解码失败'));im.src=src;
+  const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(Error('修正图层解码失败'));im.src=src;
  });
  const generalImg=await decode(general);
- const frameEntries=Object.entries(frames||{}).filter(([k,url])=>/^\d{1,3}$/.test(k)&&typeof url==='string'&&url.startsWith('data:image/'));
- const corrections=new Map();
- for(const [key,data] of frameEntries)corrections.set(Number(key),await decode(data));
- obj.overlay=generalImg;obj.overlayFrames=corrections;
+ const list=Object.entries(frames||{})
+  .filter(([k,url])=>/^\d{1,3}$/.test(k)&&Number(k)<256&&typeof url==='string'&&url.startsWith('data:image/'));
+ obj.overlay=generalImg;
+ obj.overlayFrames.clear();
+ obj.overlayFrameUrls=new Map(list.map(([k,url])=>[Number(k),url]));
  if(obj.clip?.type==='decoder')obj.clip.frame=-1;
  return true;
 }
+
 function markAnimation(slot,enabled){
  const a=target(slot);if(!a)return;
  a.animated=!!enabled;
