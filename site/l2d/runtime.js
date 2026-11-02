@@ -93,7 +93,7 @@ async function setAnimationSource(slot,uri,opts={}){
  const img=new Image();
  await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=uri;});
  img.setAttribute('aria-hidden','true');
- img.style.cssText='position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;visibility:hidden';
+ img.style.cssText='position:absolute;left:0;top:0;width:1px;height:1px;opacity:.001;pointer-events:none;visibility:visible';
  obj.root.appendChild(img);
  obj.clip={img,x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w||img.naturalWidth),h:Number(opts.h||img.naturalHeight)};
  obj.clipFrame=0;
