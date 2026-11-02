@@ -1,4 +1,4 @@
-/* Heroine idle mesh, v1.0 - reusable in game and online studio.
+/* Universal multi-node idle mesh, v2.0 - reusable in game and all-character studio.
    Original 1024x1024 coordinates are NEVER reassembled or re-positioned.
    This is a smooth piecewise raster deformation, not a Cubism .moc3. */
 (function(root){
@@ -38,6 +38,7 @@ class HeroineBreathRig{
   this.period=opts.period||4.6;this.playing=opts.playing!==false;
   this.drawBones=!!opts.drawBones;this.cleanup=opts.cleanup!==false;
   this.softness=Math.max(0,Math.min(2,Number(opts.softness??1)));this.animatedFrames=!!opts.animatedFrames;
+  this.featurePreset=opts.featurePreset||'generic';this.blinkEnabled=this.featurePreset==='heroine-front';
   this.t0=performance.now();this.frozen=0;this.last=0;this._raf=0;
   this.source=null;
   this.ready=this.setImage(image);
@@ -49,6 +50,17 @@ class HeroineBreathRig{
    await new Promise((resolve,reject)=>{im.addEventListener('load',resolve,{once:true});im.addEventListener('error',reject,{once:true});});
   }
   this.source=preprocess(im,this.cleanup);this.animatedFrames=!!this.animatedFrames && !(im instanceof HTMLCanvasElement);
+  this.bounds={left:0,right:this.source.width,top:0,bottom:this.source.height};
+  try{
+   const k=this.source.getContext('2d',{willReadFrequently:true}),
+     {width:ww,height:hh}=this.source,img=k.getImageData(0,0,ww,hh).data;
+   let left=ww,right=0,top=hh,bottom=0;
+   for(let y=0;y<hh;y+=3)for(let x=0;x<ww;x+=3){
+    if(img[(y*ww+x)*4+3]>22){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}
+   }
+   if(left<=right)this.bounds={left,right,top,bottom};
+  }catch(e){console.warn('L2D bounds unavailable',e)}
+  this.blinkEnabled=this.featurePreset==='heroine-front';
   this.render(performance.now(),true);
   return this;
  }
@@ -87,52 +99,148 @@ class HeroineBreathRig{
   }
   c.restore();
  }
+ /* Multi-node original-coordinate mesh: head/neck rigid, long hair tips,
+    sleeves, skirt hems, knees and breath have independent inertia phases.
+    This is a procedural fallback; imported V4 clips take priority and bypass it.
+    The full V4 asset is NOT synthesized here. */
+ motionAt(x,y,t){
+  const sw=this.source.width,sh=this.source.height;
+  const u=x/sw,v=y/sh,top=this.bounds?.top??.015;
+  const TWO=Math.PI*2,p=TWO*t/this.period;
+  const resp=Math.sin(p),slow=Math.sin(p-.42),lag=Math.sin(p-.86),float=Math.sin(p*.66+1.2);
+  const amp=this.amplitude,flex=this.softness;
+  const head=bell(v,.165,.125)*(1-smooth(.29,.41,v));
+  const chest=bell(v,.37,.095)*(1-smooth(.48,.60,v));
+  const arm=smooth(.30,.39,v)*(1-smooth(.55,.69,v));
+  const skirt=smooth(.50,.56,v)*(1-smooth(.64,.72,v));
+  const standing=1-smooth(.70,.82,v);
+  const leftHair=bell(u,.459,.040)*smooth(.16,.30,v)*(1-smooth(.34,.43,v));
+  const rightHair=bell(u,.558,.042)*smooth(.16,.29,v)*(1-smooth(.34,.43,v));
+  const fringe=bell(v,.075,.035)*bell(u,.50,.10);
+  const leftHem=bell(u,.434,.064)*skirt,rightHem=bell(u,.574,.064)*skirt;
+  const leftSleeve=bell(u,.378,.046)*arm,rightSleeve=bell(u,.633,.047)*arm;
+  // Femur/knee motion is microscopic relative to the rooted shoes.
+  const knee=bell(v,.76,.045)*Math.sin(p-.92)*.20*amp;
+  const breathLift=-2.0*resp*chest*amp;
+  const headNod=-.65*slow*head*amp;
+  const sway=(.95*float*head+.62*lag*chest)*amp*standing;
+  const hairTip=(leftHair*(4.2*Math.sin(p-.65)+1.2*Math.sin(p*1.55))
+    +rightHair*(4.7*Math.sin(p-.95)+1.3*Math.sin(p*1.48+.7)))*flex*amp;
+  const hem=(-3.6*leftHem*Math.sin(p-.95)+3.2*rightHem*Math.sin(p-.73))*flex*amp;
+  const sleeve=(leftSleeve*-1.25*Math.sin(p-.48)+rightSleeve*1.15*Math.sin(p-.67))*flex*amp;
+  const shiftX=sway+hairTip+hem+sleeve+knee;
+  const shiftY=breathLift+headNod
+    +(1.45*leftHair+1.15*rightHair)*Math.sin(p-.9)*flex*amp
+    +.7*skirt*Math.sin(p-.8)*flex*amp
+    +.25*fringe*Math.sin(p-.25)*flex*amp;
+  const widen=chest*.0062*resp*amp;
+  return {x:x+shiftX+(x-sw*.5)*widen,y:y+shiftY};
+ }
+ blinkAmount(t){
+  // Sparse asymmetric blinks, smooth 100-150 ms closure; idle loop 6.4 s.
+  const x=((t%6.4)+6.4)%6.4;
+  const k=(where,width)=>Math.exp(-Math.pow((x-where)/width,4));
+  return Math.max(k(2.21,.10),k(5.41,.12));
+ }
+ drawBlink(t){
+  if(!this.blinkEnabled||this.blinkAmount(t)<.006)return;
+  const w=this.source.width,h=this.source.height;
+  if(w!==1024||h!==1024)return;
+  const a=this.blinkAmount(t),g=this.ctx;
+  const sx=this.canvas.width/w,sy=this.canvas.height/h;
+  // Positions match the original PSD eye locations, not image center guesses.
+  // Skin sample beneath the eye avoids a black rectangle or hard mask.
+  g.save();g.scale(sx,sy);
+  for(const eye of [{x:483,y:143,rx:20,ry:7},{x:548,y:142,rx:20,ry:7}]){
+   const sample=this.source.getContext('2d',{willReadFrequently:true})
+     .getImageData(Math.round(eye.x),Math.round(eye.y+21),1,1).data;
+   const tint=sample[3]>90?`rgba(${sample[0]},${sample[1]},${sample[2]},${a*.98})`: `rgba(228,198,184,${a*.98})`;
+   g.fillStyle=tint;
+   g.beginPath();g.ellipse(eye.x,eye.y,eye.rx+2,eye.ry+2,0,0,TWO);g.fill();
+   g.strokeStyle=`rgba(69,51,49,${a*.86})`;
+   g.lineCap='round';g.lineWidth=1.85;
+   g.beginPath();g.moveTo(eye.x-eye.rx,eye.y);
+   g.quadraticCurveTo(eye.x,eye.y+4,eye.x+eye.rx,eye.y-1);g.stroke();
+  }
+  g.restore();
+ }
+ drawBoneRig(t){
+  if(!this.drawBones)return;
+  const g=this.ctx,sx=this.canvas.width/1024,sy=this.canvas.height/1024;
+  const joints=[[512,119],[512,210],[512,338],[512,518],[512,615],
+    [466,785],[464,1000],[555,785],[555,1000],[399,344],[391,532],
+    [627,344],[636,528],[470,245],[457,307],[560,246],[572,307],
+    [452,570],[456,625],[569,570],[566,625]];
+  const chains=[[0,1,2,3,4],[4,5,6],[4,7,8],[2,9,10],[2,11,12],[0,13,14],[0,15,16],[3,17,18],[3,19,20]];
+  g.save();g.lineWidth=1.8;g.strokeStyle='rgba(125,205,255,.9)';g.fillStyle='#e5f8ff';
+  for(const chain of chains){
+   g.beginPath();
+   chain.forEach((idx,j)=>{
+    const p=joints[idx],d=this.motionAt(p[0],p[1],t);
+    if(j)g.lineTo(d.x*sx,d.y*sy);else g.moveTo(d.x*sx,d.y*sy);
+   });g.stroke();
+  }
+  for(const p of joints){
+   const d=this.motionAt(p[0],p[1],t);
+   g.beginPath();g.arc(d.x*sx,d.y*sy,3.2,0,TWO);g.fill();
+  }
+  g.restore();
+ }
  render(now=performance.now(),force=false){
   if(!this.source)return;
-  if(!force&&now-this.last<31)return;
-  if(this.animatedFrames&&this.image&&this.image.complete&&this.image.naturalWidth){
-   const x=this.source.getContext('2d');x.clearRect(0,0,this.source.width,this.source.height);x.drawImage(this.image,0,0);
-  }
+  if(!force&&now-this.last<40)return;
   this.last=now;
-  const c=this.ctx,W=this.canvas.width,H=this.canvas.height;
-  c.clearRect(0,0,W,H);
-  const sw=this.source.width,sh=this.source.height;
-  const elapsed=this.playing?(now-this.t0)/1000:this.frozen/1000;
-  if(this.playing)this.frozen=now-this.t0;
-  const phase=TWO*elapsed/this.period;
-  const lung=Math.sin(phase),lag=Math.sin(phase-.65);
-  const A=this.amplitude,flex=this.softness;
-  if(A<.001){c.drawImage(this.source,0,0,W,H);if(this.drawBones)this.drawSkeleton(now,lung);return;}
-  // Vertex mapping shared by neighboring rows: each band uses the same
-  // boundary transform so there are no cracks or independent part offsets.
-  const yy=y=>{
-   const v=y/sh,thorax=bell(v,.37,.15),skirt=bell(v,.60,.072);
-   const head=bell(v,.15,.10);
-   const fixed=smooth(.69,.82,v);
-   return y-((2.8*thorax*lung+.30*head*lag+.44*skirt*lag*flex)*A)*(1-fixed);
-  };
-  const xInfo=y=>{
-   const v=y/sh,thorax=bell(v,.39,.14)*(1-smooth(.59,.70,v));
-   const fabric=bell(v,.59,.09);
-   const face=bell(v,.18,.095)*(1-smooth(.31,.43,v));
-   const lock=1-smooth(.68,.8,v);
-   return {
-    widen:(.0055*thorax*lung+.0012*fabric*lag*flex)*A,
-    shift:(.18*face*lag+.55*fabric*lag*flex)*A*lock
-   };
-  };
-  const step=Math.max(5,Math.floor(sh/128));
-  const sx=W/sw,sy=H/sh;
-  c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
-  for(let y=0;y<sh;y+=step){
-   const y2=Math.min(sh,y+step),ym=(y+y2)*.5,di=xInfo(ym);
-   const y0=yy(y)*sy, y1=yy(y2)*sy;
-   const destH=y1-y0;
-   const extra=1.0; // one display pixel overlap, avoids antialias row seams
-   const w=W*(1+di.widen),dx=(W-w)*.5+di.shift*sx;
-   c.drawImage(this.source,0,y,sw,y2-y,dx,y0,w,destH+extra);
+  if(this.animatedFrames&&this.image?.complete&&this.image?.naturalWidth){
+   const g=this.source.getContext('2d');g.clearRect(0,0,this.source.width,this.source.height);g.drawImage(this.image,0,0);
   }
-  if(this.drawBones)this.drawSkeleton(now,lung);
+  const W=this.canvas.width,H=this.canvas.height,sw=this.source.width,sh=this.source.height;
+  const g=this.ctx;
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);
+  const t=(this.playing?(now-this.t0):this.frozen)/1000;
+  if(this.playing)this.frozen=now-this.t0;
+  if(this.amplitude<.0001){
+   g.drawImage(this.source,0,0,W,H);
+   this.drawBoneRig(t);return;
+  }
+  const bounds=this.bounds||{left:0,right:sw,top:0,bottom:sh};
+  // Mesh only covers actual opaque character width; avoid wasting time on
+  // transparent margins. Two affine triangles per cell, no row-slice flicker.
+  const x0=Math.max(0,bounds.left-8),x1=Math.min(sw,bounds.right+8);
+  const y0=Math.max(0,bounds.top-8),y1=Math.min(sh,bounds.bottom+8);
+  const cols=Math.max(8,Math.ceil((x1-x0)/38)),rows=Math.max(30,Math.ceil((y1-y0)/19));
+  const xs=Array.from({length:cols+1},(_,i)=>x0+(x1-x0)*i/cols);
+  const ys=Array.from({length:rows+1},(_,j)=>y0+(y1-y0)*j/rows);
+  const pts=ys.map(y=>xs.map(x=>this.motionAt(x,y,t)));
+  // For axis-aligned source triangles the affine mapping is closed form.
+  const tri=(sourceA,sourceB,sourceC,A,B,C)=>{
+   const ux=sourceB.x-sourceA.x,uy=sourceB.y-sourceA.y;
+   const vx=sourceC.x-sourceA.x,vy=sourceC.y-sourceA.y;
+   const det=ux*vy-uy*vx;
+   if(Math.abs(det)<1e-5)return;
+   const dx1=B.x-A.x,dy1=B.y-A.y,dx2=C.x-A.x,dy2=C.y-A.y;
+   const a=(dx1*vy-dx2*uy)/det,b=(dy1*vy-dy2*uy)/det;
+   const c=(dx2*ux-dx1*vx)/det,d=(dy2*ux-dy1*vx)/det;
+   const e=A.x-a*sourceA.x-c*sourceA.y;
+   const f=A.y-b*sourceA.x-d*sourceA.y;
+   g.save();g.setTransform(a*W/sw,b*H/sh,c*W/sw,d*H/sh,e*W/sw,f*H/sh);
+   g.beginPath();g.moveTo(sourceA.x,sourceA.y);
+   g.lineTo(sourceB.x,sourceB.y);g.lineTo(sourceC.x,sourceC.y);g.closePath();g.clip();
+   const minx=Math.max(0,Math.floor(Math.min(sourceA.x,sourceB.x,sourceC.x))-1);
+   const miny=Math.max(0,Math.floor(Math.min(sourceA.y,sourceB.y,sourceC.y))-1);
+   const maxx=Math.min(sw,Math.ceil(Math.max(sourceA.x,sourceB.x,sourceC.x))+1);
+   const maxy=Math.min(sh,Math.ceil(Math.max(sourceA.y,sourceB.y,sourceC.y))+1);
+   g.drawImage(this.source,minx,miny,maxx-minx,maxy-miny,minx,miny,maxx-minx,maxy-miny);
+   g.restore();
+  };
+  g.imageSmoothingEnabled=true;g.imageSmoothingQuality='medium';
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+   const A={x:xs[i],y:ys[j]},B={x:xs[i+1],y:ys[j]},
+     C={x:xs[i],y:ys[j+1]},D={x:xs[i+1],y:ys[j+1]};
+   const a=pts[j][i],b=pts[j][i+1],c=pts[j+1][i],d=pts[j+1][i+1];
+   tri(A,B,C,a,b,c);tri(B,D,C,b,d,c);
+  }
+  this.drawBlink(t);
+  this.drawBoneRig(t);
  }
  start(){
   if(this._raf)return;
