@@ -39,7 +39,7 @@ body.embedded #btnCloseInGame{background:#273244}
 }
 </style></head><body>
 <header><div><strong>✎ 全人物 L2D 编辑工作室</strong><small>在线编辑 · 所有部件可擦除 / 补画 / 拆分 / 调整 · 原坐标导出</small></div><div class="actions">
-<button id="btnApplyGame" type="button" hidden>✓ 应用到游戏</button><button id="btnCloseInGame" type="button" hidden>返回 DEV</button><button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnSave">保存到本机浏览器</button><button id="btnExport">↓ 完整分层 ZIP</button>
+<button id="btnApplyGame" type="button" hidden>✓ 应用到游戏</button><button id="btnCloseInGame" type="button" hidden>返回 DEV</button><button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnSave" style="background:#205e52;border-color:#4ba791;color:#e4fff4;font-weight:700">✓ 保存并应用到游戏</button><button id="btnExport">↓ 完整分层 ZIP</button>
 </div></header>
 <div class="layout">
 <aside class="left">
@@ -135,7 +135,20 @@ $('focusCurrent').onclick=()=>{
  focus(x,y,z);
 };
 $('add').onclick=addLayer;$('dup').onclick=dupe;$('del').onclick=removeLayer;$('up').onclick=()=>rearrange(1);$('down').onclick=()=>rearrange(-1);$('rename').onclick=()=>{const p=current();if(!p)return;const s=prompt('图层名称',p.name);if(s){check();p.name=s;renderList();autosave()}};
-$('btnUndo').onclick=undo;$('btnRedo').onclick=redo;$('btnSave').onclick=()=>save().catch(e=>status('保存失败：'+e.message));
+$('btnUndo').onclick=undo;$('btnRedo').onclick=redo;$('btnSave').onclick=async()=>{
+ const button=$('btnSave');if(button.disabled)return;
+ button.disabled=true;
+ const before=button.textContent;button.textContent='正在保存并应用…';
+ try{
+  if(window.PaperchalkStudio?.saveToGame){
+   await window.PaperchalkStudio.saveToGame();
+   button.textContent='✓ 已保存，游戏已更新';
+  }else{
+   await save();button.textContent='✓ 已保存到浏览器';
+  }
+ }catch(e){button.textContent=before;status('保存并应用失败：'+e.message)}
+ finally{button.disabled=false;}
+};
 $('btnExport').onclick=()=>exportAll().catch(e=>status('导出失败：'+e.message));$('exportPng').onclick=exportPng;$('exportLayer').onclick=exportLayer;
 $('cut').onclick=cut;$('clearSel').onclick=()=>{S.selection=null;render()};$('imgImport').onchange=e=>addImages([...e.target.files]).catch(err=>status(err.message));$('zipImport').onchange=e=>{if(e.target.files[0])importZip(e.target.files[0])};$('psdImport').onchange=e=>importPsd(e.target.files[0]);
 $('size').oninput=e=>{S.brush=+e.target.value;$('sizeText').textContent=S.brush+' px'};$('alpha').oninput=e=>{S.alpha=+e.target.value/100;$('alphaText').textContent=e.target.value+'%'};
