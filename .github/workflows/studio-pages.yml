@@ -152,15 +152,15 @@ jobs:
                 const composition=await page.evaluate(()=>{
                   const stage=document.getElementById('enemy-depth-root');
                   const art=document.getElementById('actor-enemy');
-                  const stageBox=stage.getBoundingClientRect();
-                  const artBox=art.getBoundingClientRect();
+                  // Use LOCAL plane coordinates, not projected bounding boxes:
+                  // CSS perspective skews box extents during mouse tilt.
                   return {
                     x:parseFloat(art.style.left),
                     bottom:parseFloat(art.style.bottom),
                     h:parseFloat(art.style.height),
-                    centerX:(artBox.left+artBox.width/2-stageBox.left)/stageBox.width,
-                    footY:(artBox.bottom-stageBox.top)/stageBox.height,
-                    heightRatio:artBox.height/stageBox.height
+                    centerX:(art.offsetLeft+art.offsetWidth/2)/stage.offsetWidth,
+                    footY:(art.offsetTop+art.offsetHeight)/stage.offsetHeight,
+                    heightRatio:art.offsetHeight/stage.offsetHeight
                   };
                 });
                 assert.deepEqual([composition.x,composition.bottom,composition.h],[46,16,34],
