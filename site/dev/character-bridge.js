@@ -44,7 +44,7 @@ function imageFor(id,side){
 async function renderedFor(id,side){
  const draft=pendingPreview.get(id+':'+side);
  if(draft)return draft;
- const edited=await kvGet('render:'+id+':'+side);
+ let edited='';try{edited=await kvGet('render:'+id+':'+side)}catch(err){console.warn('User edit cache unavailable',err)}
  return edited||imageFor(id,side);
 }
 function setCharacterImage(slot,url){
@@ -145,6 +145,7 @@ async function publishEdit(event){
  if(!message||!/^PAPERCHALK_EDITOR_/.test(message.type))return;
  if(message.type==='PAPERCHALK_EDITOR_READY'){frameReady=true;sendTarget();return;}
  if(message.type==='PAPERCHALK_EDITOR_LOADED'){note('正在编辑 '+message.label+'，图层修改按人物独立保存');return;}
+ if(message.type==='PAPERCHALK_EDITOR_CLOSE'){closeEditor();return;}
  if(message.id!==activeID)return;
  if(message.type==='PAPERCHALK_EDITOR_PREVIEW'){
   if(!['front','back'].includes(message.side)||typeof message.image!=='string')return;
@@ -168,7 +169,7 @@ async function publishEdit(event){
 }
 window.addEventListener('message',e=>{publishEdit(e).catch(error=>note('应用失败：'+error.message));});
 $('dev-character-open').addEventListener('click',openEditor);
-$('dev-character-close').addEventListener('click',closeEditor);
+$('dev-character-close').addEventListener('click',()=>{frame.contentWindow.postMessage({type:'PAPERCHALK_EDITOR_REQUEST_APPLY'},location.origin);closeEditor();});
 $('dev-character-apply').addEventListener('click',()=>frame.contentWindow.postMessage({type:'PAPERCHALK_EDITOR_REQUEST_APPLY'},location.origin));
 $('dev-character-export').addEventListener('click',()=>frame.contentWindow.postMessage({type:'PAPERCHALK_EDITOR_REQUEST_EXPORT'},location.origin));
 $('dev-character-reset').addEventListener('click',async()=>{
