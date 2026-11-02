@@ -5,6 +5,7 @@ on:
     paths:
       - 'site/**'
       - 'scripts/fetch-game-fonts.sh'
+      - 'scripts/build_scene_catalog.py'
       - '.github/workflows/studio-pages.yml'
   workflow_dispatch:
 permissions:
@@ -29,6 +30,25 @@ jobs:
         run: bash scripts/fetch-game-fonts.sh
       - name: Generate scene catalog from room images (auto publish)
         run: python3 scripts/build_scene_catalog.py
+      - name: Prove adding one WebP automatically registers a brand-new scene
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, shutil, subprocess, sys, tempfile
+          with tempfile.TemporaryDirectory() as folder:
+              root=pathlib.Path(folder)
+              script=root/'scripts'/'build_scene_catalog.py'
+              script.parent.mkdir(parents=True)
+              shutil.copyfile('scripts/build_scene_catalog.py',script)
+              scenes=root/'site'/'assets'/'scenes'
+              scenes.mkdir(parents=True)
+              shutil.copyfile('site/assets/scenes/bedroom.webp',scenes/'reading-nook.webp')
+              subprocess.run([sys.executable,str(script)],check=True)
+              generated=(root/'site'/'scene-catalog.generated.js').read_text()
+              assert '"id":"reading-nook"' in generated
+              assert '"file":"reading-nook.webp"' in generated
+              assert '"title":"Reading Nook"' in generated
+              print('PASS: brand-new room auto-registers from image alone')
+          PY
       - name: Assert original complete classroom and independent fluid layer
         run: |
           set -euo pipefail
@@ -79,6 +99,11 @@ jobs:
           assert 'id="menu-gallery-button"' in h
           assert 'id="scene-switcher-toggle"' in h
           assert 'scene-catalog.generated.js' in h
+          assert 'transparent 15%,transparent 85%' in h
+          assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
+          assert 'reach=191.' in h and 'const reach=191+' in h
+          assert 'float swirl=' in h and 'const swirl=' in h
+          assert 'aimX=0;aimY=0;currentX=0;currentY=0;' in h
           assert "importedScenes=Object.create(null)" in h
           assert 'function enterDeveloper()' in h and 'function exitDeveloper()' in h
           assert 'id="dev-ground"' in h and 'rotateX(90deg)' in h
@@ -313,10 +338,37 @@ jobs:
                 }));
                 assert.deepEqual(bedroomCheck.natural,[1024,576]);
                 assert.ok(bedroomCheck.src.endsWith('/assets/scenes/bedroom.webp'));
+                const bedroomRotation=await page.locator('#scene').evaluate(el=>el.style.transform);
+                assert.equal(bedroomRotation,'rotateY(0.000deg) rotateX(0.000deg)',
+                  'new bedroom retained unwanted tilt from the mouse on the previous room');
                 assert.equal(bedroomCheck.enemyHidden&&bedroomCheck.playerHidden&&bedroomCheck.dialogueHidden,true);
                 assert.equal(bedroomCheck.originalFog,true);
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-BEDROOM.png'});
+                if(!cfg.mobile){
+                  // Compare same fixed camera twice. Any changes in this
+                  // undecorated wall region are from LIVE black fog, not image tilt.
+                  await page.mouse.move(cfg.width/2,cfg.height/2);
+                  await page.waitForTimeout(1400);
+                  const fogBefore=PNG.sync.read(await page.screenshot({
+                    path:'artifacts/classroom/bedroom-smoke-before.png'}));
+                  await page.waitForTimeout(2300);
+                  const fogAfter=PNG.sync.read(await page.screenshot({
+                    path:'artifacts/classroom/bedroom-smoke-after.png'}));
+                  let animatedPixels=0;
+                  for(let y=Math.floor(cfg.height*.26);y<cfg.height*.70;y+=2){
+                    for(let x=Math.floor(cfg.width*.72);x<cfg.width*.85;x+=2){
+                      const index=(y*fogBefore.width+x)*4;
+                      const change=Math.abs(fogAfter.data[index]-fogBefore.data[index])+
+                        Math.abs(fogAfter.data[index+1]-fogBefore.data[index+1])+
+                        Math.abs(fogAfter.data[index+2]-fogBefore.data[index+2]);
+                      if(change>8)animatedPixels++;
+                    }
+                  }
+                  assert.ok(animatedPixels>65,
+                    'black fog invisible/static in inner room edge band: '+animatedPixels);
+                  console.log('PASS: independent cinematic fog moves visibly across bedroom, '+animatedPixels+' pixels changed');
+                }
                 await page.locator('#menu-toggle').click();
                 await page.locator('#scene-switcher-toggle').click();
                 await page.locator('#scene-switcher [data-scene-target="classroom"]').click();
@@ -468,8 +520,10 @@ jobs:
                   }
                   console.log('PASS: phone automatically opens full-viewport landscape scene without user input');
                 }
-                assert.ok(scene.width<=cfg.width*.92,'scene not fully visible horizontally');
-                assert.ok(scene.height<=cfg.height*.90,'scene not fully visible vertically');
+                assert.ok(scene.width<=cfg.width*.96,'scene not fully visible horizontally');
+                assert.ok(scene.height<=cfg.height*.96,'scene not fully visible vertically');
+                assert.ok(scene.width>=cfg.width*.89||cfg.width/cfg.height>2.1,
+                  'unused black margins too wide for ordinary 16:9 scene');
                 assert.ok(Math.abs(scene.x+scene.width/2-cfg.width/2)<3,'scene horizontally off-center');
                 assert.ok(Math.abs(scene.y+scene.height/2-cfg.height/2)<3,'scene vertically off-center');
                 assert.ok(Math.abs(fog.width-cfg.width)<2 && Math.abs(fog.height-cfg.height)<2,'fog must be viewport-fixed');

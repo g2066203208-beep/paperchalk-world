@@ -29,8 +29,8 @@ body.mobile-mode.virtual-landscape #view{
 }
 #scene{
   position:relative;flex:none;margin:0;
-  width:min(90vw,calc(88dvh * 16 / 9));
-  width:min(90cqw,calc(88cqh * 16 / 9));
+  width:min(94vw,calc(94dvh * 16 / 9));
+  width:min(94cqw,calc(94cqh * 16 / 9));
   max-width:100%;aspect-ratio:16/9;
   transform-origin:center center;
   transform:rotateX(0deg) rotateY(0deg);
@@ -45,19 +45,20 @@ body.mobile-mode.virtual-landscape #view{
   z-index:1;
   inset:0;
   pointer-events:none;
+  /* Fixed pure-black outer rim; the flowing fog handles the larger inner edge. */
   background:
     linear-gradient(to right,
-      #000 0%,#000 3%,rgba(0,0,0,.96) 6%,
-      rgba(0,0,0,.77) 11%,rgba(0,0,0,.34) 16%,
-      transparent 23%,transparent 77%,
-      rgba(0,0,0,.34) 84%,rgba(0,0,0,.77) 89%,
-      rgba(0,0,0,.96) 94%,#000 97%,#000 100%),
+      #000 0%,#000 2%,rgba(0,0,0,.92) 4%,
+      rgba(0,0,0,.56) 7%,rgba(0,0,0,.20) 10%,
+      transparent 15%,transparent 85%,
+      rgba(0,0,0,.20) 90%,rgba(0,0,0,.56) 93%,
+      rgba(0,0,0,.92) 96%,#000 98%,#000 100%),
     linear-gradient(to bottom,
-      #000 0%,#000 4%,rgba(0,0,0,.96) 8%,
-      rgba(0,0,0,.74) 13%,rgba(0,0,0,.35) 19%,
-      transparent 27%,transparent 73%,
-      rgba(0,0,0,.35) 81%,rgba(0,0,0,.74) 87%,
-      rgba(0,0,0,.96) 92%,#000 96%,#000 100%);
+      #000 0%,#000 2%,rgba(0,0,0,.92) 4%,
+      rgba(0,0,0,.58) 7%,rgba(0,0,0,.22) 11%,
+      transparent 17%,transparent 83%,
+      rgba(0,0,0,.22) 89%,rgba(0,0,0,.58) 93%,
+      rgba(0,0,0,.92) 96%,#000 98%,#000 100%);
 }
 #fog{
   position:fixed;inset:0;display:block;width:100%;height:100%;
@@ -146,8 +147,8 @@ body.mobile-mode.virtual-landscape #view{
 #scene{z-index:1}
 #enemy-depth-root{
   position:absolute;left:50%;top:50%;
-  width:min(90vw,calc(88dvh * 16 / 9));
-  width:min(90cqw,calc(88cqh * 16 / 9));
+  width:min(94vw,calc(94dvh * 16 / 9));
+  width:min(94cqw,calc(94cqh * 16 / 9));
   max-width:100%;aspect-ratio:16/9;
   z-index:2;pointer-events:none;
   transform-origin:center center;
@@ -491,11 +492,11 @@ void main(){
   // Continuous injection on all four image edges, with turbulent wave fronts.
   float w1=sin(p.x*15.7+p.y*4.2+t*.82+sin(p.y*8.-t*.36)*1.8);
   float w2=sin(p.y*18.4-p.x*6.6-t*.61+sin(p.x*10.+t*.4));
-  float envelope=.52+.26*w1+.19*w2;
-  float reach=63.+18.*w1+15.*w2+9.*sin(t*.73+p.x*8.);
-  float inlet=1.-smoothstep(-15.,max(12.,reach),d);
-  float injection=inlet*max(.04,envelope)*2.4;
-  density=clamp(density*exp(-u_dt*.55)+u_dt*injection,0.,1.);
+  float envelope=.57+.25*w1+.18*w2;
+  float reach=191.+39.*w1+30.*w2+17.*sin(t*1.15+p.x*9.);
+  float inlet=1.-smoothstep(-24.,max(24.,reach),d);
+  float injection=inlet*max(.06,envelope)*3.8;
+  density=clamp(density*exp(-u_dt*.44)+u_dt*injection,0.,1.);
   gl_FragColor=vec4(density,density,density,1.);
 }
 </script>
@@ -514,16 +515,17 @@ void main(){
  // gradient guarantees those are opaque black in every perspective pose.
  float d=min((u_half.x-abs(uv.x-.5))*u_viewSize.x,
              (u_half.y-abs(uv.y-.5))*u_viewSize.y);
- float curl=sin(uv.x*23.+u_time*.68+sin(uv.y*19.-u_time*.47)*1.7);
- float width=min(93.,u_viewSize.y*.16);
- float smokeZone=1.-smoothstep(7.,width,d+curl*11.);
+ float curl=sin(uv.x*22.+u_time*1.24+sin(uv.y*20.-u_time*.79)*1.8);
+ float swirl=sin(uv.y*29.-u_time*1.03+sin(uv.x*19.+u_time*.67)*1.3);
+ float width=min(318.,u_viewSize.y*.47);
+ float smokeZone=1.-smoothstep(28.,width,d+curl*36.+swirl*21.);
  // Guaranteed fully opaque BLACK safety envelope on the outside edges.
  // It encloses the worst-case tilted background and enemy silhouettes.
  // Keep the original flowing fog INSIDE; never introduce gray fog.
  float safetyD=min((u_half.x-.025-abs(uv.x-.5))*u_viewSize.x,
                    (u_half.y-.037-abs(uv.y-.5))*u_viewSize.y);
  float safetyBlack=1.-smoothstep(0.,min(32.,u_viewSize.y*.065),safetyD);
- float alpha=max(clamp(pow(max(density,0.),.80)*.66*smokeZone,0.,.72),safetyBlack);
+ float alpha=max(clamp((.13+1.02*pow(max(density,0.),.60))*smokeZone,0.,.94),safetyBlack);
  gl_FragColor=vec4(0.,0.,0.,alpha);
 }
 </script>
@@ -763,6 +765,9 @@ void main(){
     // Swapping only image and scene content NEVER recreates the fluid simulator.
     sourceImage.src=def.image;sourceImage.alt=def.alt;
     stage.dataset.scene=name;stage.setAttribute('aria-label',def.alt);
+    // Prevent stale mouse position in the previous scene from tilting this one.
+    aimX=0;aimY=0;currentX=0;currentY=0;
+    stage.style.transform='rotateY(0deg) rotateX(0deg)';
     const isStory=def.type==='story',isMenu=def.type==='menu';
     enemyDepth.hidden=!isStory;cameraPlayer.hidden=!isStory;
     sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=!isStory;
@@ -1111,20 +1116,22 @@ void main(){
                               (sceneHalf.y-Math.abs(uvy-.5))*sizes.h);
       const w1=Math.sin(px*15.7+py*4.2+t*.82+Math.sin(py*8-t*.36)*1.8);
       const w2=Math.sin(py*18.4-px*6.6-t*.61+Math.sin(px*10+t*.4));
-      const reach=63+18*w1+15*w2+9*Math.sin(t*.73+px*8);
-      const inlet=1-(clamp((distance+15)/(Math.max(12,reach)+15),0,1))**2;
-      const source=inlet*Math.max(.04,.52+.26*w1+.19*w2)*2.4;
-      const d=b[y*sx+x]=clamp(old*Math.exp(-dt*.55)+dt*source,0,1);
+      const reach=191+39*w1+30*w2+17*Math.sin(t*1.15+px*9);
+      const inletT=clamp((distance+24)/(Math.max(24,reach)+24),0,1);
+      const inlet=1-inletT*inletT*(3-2*inletT);
+      const source=inlet*Math.max(.06,.57+.25*w1+.18*w2)*3.8;
+      const d=b[y*sx+x]=clamp(old*Math.exp(-dt*.44)+dt*source,0,1);
       const p=(y*sx+x)*4;
-      const curl=Math.sin(uvx*23+t*.68+Math.sin(uvy*19-t*.47)*1.7);
-      const width=Math.min(93,sizes.h*.16);
-      const v=clamp((distance+curl*11-7)/Math.max(1,width-7),0,1);
+      const curl=Math.sin(uvx*22+t*1.24+Math.sin(uvy*20-t*.79)*1.8);
+      const swirl=Math.sin(uvy*29-t*1.03+Math.sin(uvx*19+t*.67)*1.3);
+      const width=Math.min(318,sizes.h*.47);
+      const v=clamp((distance+curl*36+swirl*21-28)/Math.max(1,width-28),0,1);
       const smokeZone=1-v*v*(3-2*v);
       const safetyD=Math.min((sceneHalf.x-.025-Math.abs(uvx-.5))*sizes.w,
                              (sceneHalf.y-.037-Math.abs(uvy-.5))*sizes.h);
       const blackT=clamp(safetyD/Math.min(32,sizes.h*.065),0,1);
       const safetyBlack=1-blackT*blackT*(3-2*blackT);
-      const alpha=Math.max(clamp(d**.80*.66*smokeZone,0,.72),safetyBlack);
+      const alpha=Math.max(clamp((.13+1.02*d**.60)*smokeZone,0,.94),safetyBlack);
       image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
     }
     s.a=b;s.b=a;fallback.putImageData(image,0,0);
