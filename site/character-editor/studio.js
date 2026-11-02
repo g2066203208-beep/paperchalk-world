@@ -657,10 +657,9 @@ function drawComposedV4(ctx,S){
    if(image.complete&&image.naturalWidth)g.drawImage(image,0,0);
   }
  }
- const profile=ed.motion?.()?.[side]||{amplitude:.55,period:4.8};
- if(playing&&window.PaperchalkLocalBreath)
-  window.PaperchalkLocalBreath.draw(ctx,breathComposite,profile,performance.now(),1024,1024);
- else ctx.drawImage(breathComposite,0,0);
+ // Never add a second synthetic breathing warp to any character.
+ // Actual strands/pleats/sleeves are animated by their own joint chains.
+ ctx.drawImage(breathComposite,0,0);
  return true;
 }
 function applyGameMotion(ctx){
