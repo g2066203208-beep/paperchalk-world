@@ -13,7 +13,7 @@ panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</stro
 <p id="rig-source">仅试验独立纹理；不修改原始 V4。</p>
 <label>部件<select id="rig-part"></select></label>
 <div id="rig-sliders"></div>
-<div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button></div>
+<div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button><button id="rig-module-export" type="button">↓ 一键打包游戏模块 ZIP</button></div>
 <p id="rig-status" role="status">绿色轴点、黄色末端均可在主画布直接拖动。</p>`;
 stage.append(panel);
 const sliders=$('rig-sliders');
@@ -115,6 +115,70 @@ sliders.addEventListener('input',e=>{
  p[group][prop]=Number(e.target.value)/(group==='tip'||group==='pivot'?100:1);
  values();changed();
 });
+async function exportGameModule(newId){
+ // A packaged module is a NEW explicit release. It cannot overwrite the
+ // protected published heroines or anyone's locally edited V4/corrections.
+ if(!state.active||!state.model)throw Error('请先进入逐件绑定并加载真实部件');
+ const sourceId=studio.current;
+ if(!/^[a-z][a-z0-9_-]{0,79}$/.test(String(newId||''))||
+    newId==='protagonist'||newId==='char-002')
+  throw Error('请设置新的小写角色 ID，例如 protagonist-rig-v1（禁止覆盖女主或女二）');
+ if(!ed.zip||!ed.toBlob||!ed.make)throw Error('工作室未提供 ZIP 导出功能');
+ const enc=new TextEncoder(),files=[],views={};
+ const add=(path,data)=>files.push({path,data});
+ let hasMotion=false;
+ for(const face of ['front','back']){
+  const layers=(S.layers[face]||[]).filter(p=>p.sourcePart&&p.canvas&&p.visible);
+  if(!layers.length)continue;
+  const seen=new Set(),origin=face===S.side?state.model:await studio.readPartRig(sourceId,face);
+  const model=core.project(layers,sourceId,face,origin);
+  model.characterId=newId;
+  const textures={},portrait=ed.make(1024,1024);
+  const g=portrait.getContext('2d',{alpha:true});
+  for(const layer of layers){
+   const id=String(layer.partId||layer.name);
+   if(!/^[a-z][a-z0-9_-]{0,79}$/.test(id)||seen.has(id))
+    throw Error('当前层 ID 不符合可安装 L2D 规范或重复：'+id);
+   seen.add(id);
+   const p=model.parts[id];
+   if(!p)throw Error('缺少源部件的绑定：'+id);
+   if(Object.values(p.motion||{}).some((v,i)=>i<3&&Math.abs(v)>0.001))hasMotion=true;
+   const file='parts/'+face+'/'+id+'.png';
+   textures[id]=file;
+   const blob=await ed.toBlob(layer.canvas);
+   add(newId+'/'+file,new Uint8Array(await blob.arrayBuffer()));
+   g.globalAlpha=layer.opacity??1;
+   g.drawImage(layer.canvas,layer.x,layer.y);
+  }
+  g.globalAlpha=1;
+  if(model.characterId!==newId||Object.keys(textures).length!==Object.keys(model.parts).length)
+   throw Error('游戏模块模型与贴图数量不一致');
+  add(newId+'/'+face+'.rig.json',enc.encode(JSON.stringify(model,null,2)));
+  const preview=await ed.toBlob(portrait);
+  add(newId+'/'+face+'.png',new Uint8Array(await preview.arrayBuffer()));
+  views[face]={portrait:face+'.png',rig:{
+   type:'part-mesh',file:face+'.rig.json',textures}};
+ }
+ if(!views.front)throw Error('游戏角色至少需要真实正面分层；不能假造正面');
+ if(!hasMotion)throw Error('全部部件形变量仍为零，请先调整至少一个部件的动作再发布');
+ const old=studio.list.get(sourceId);
+ const module={schema:1,id:newId,label:(old?.label||sourceId)+' · 独立 L2D',views};
+ add(newId+'/module.json',enc.encode(JSON.stringify(module,null,2)));
+ const file=ed.zip(files);
+ const url=URL.createObjectURL(file),a=document.createElement('a');
+ a.href=url;a.download=newId+'.zip';document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),10000);
+ info('✓ 已打包 '+Object.keys(views).join('/')+' 真正独立部件。将 '+newId+
+   '.zip 上传到 GitHub site/assets/l2d/inbox/，即可自动进入游戏人物库。旧 V4 未改。');
+ return {id:newId,views:Object.keys(views),files:files.length,blob:file};
+}
+$('rig-module-export').onclick=async()=>{
+ const suggestion=studio.current==='protagonist'?'protagonist-rig-v1':
+  studio.current==='char-002'?'char-002-rig-v1':studio.current+'-rig-v1';
+ const id=prompt('新模块 ID（新建独立角色，不覆盖现有游戏人物）',suggestion);
+ if(id===null)return;
+ try{await exportGameModule(id.trim());}catch(error){info('无法打包：'+error.message);}
+};
 function drawPreview(ctx){
  if(!state.active||!state.model)return false;
  core.draw(ctx,parts(),state.model,state.phase,state.selected);
@@ -174,6 +238,6 @@ function tick(now){
 window.addEventListener('paperchalk:studio-character-loaded',()=>{
  if(state.active)deactivate();state.model=null;state.selected='';
 });
-window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select};
+window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,exportGameModule};
 requestAnimationFrame(tick);
 })();
