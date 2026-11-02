@@ -11,6 +11,8 @@ const state={enabled:true,playing:true,editing:false,expanded:false};
 const play=$('main-play'),preview=$('main-preview'),expand=$('main-expand'),badge=$('main-motion-status');
 const activeV4=()=>!!window.PaperchalkStudio?.useV4?.();
 const clip=()=>window.PaperchalkStudio;
+const nativePSD=()=>!!clip()?.hasNativePSD?.();
+const bakedV4=()=>!!clip()?.isV4&&!nativePSD();
 function animationCanvas(){
  const rig=ed.l2dRig?.();
  return rig?.source&&rig.canvas.width&&rig.canvas.height?rig.canvas:null;
@@ -18,13 +20,14 @@ function animationCanvas(){
 function frame(){
  // A game V4 character must never be replaced with the simulated mesh,
  // even when the user temporarily inspects original PSD components.
- if(!state.enabled||state.editing||S.only||clip()?.isV4)return null;
+ if(!state.enabled||state.editing||S.only||bakedV4())return null;
  return animationCanvas();
 }
 function paintStageStatus(){
  if(!badge)return;
- const mode=clip()?.isV4?(activeV4()?'游戏实际 V4 逐帧':'静态 PSD 分层精修'):
-  animationCanvas()?'其他角色网格预览':'等待动画加载';
+ const mode=nativePSD()?(state.enabled?'PSD 独立图层实时骨骼':'PSD 原位精修'):
+  bakedV4()?(activeV4()?'游戏实际 V4 逐帧':'静态原始部件精修'):
+  animationCanvas()?'分层网格动画':'等待动画加载';
  badge.textContent=state.editing?'精修中 · 原始坐标':!state.enabled?'静态精修':(state.playing?'● 实时 · ':'❚❚ 暂停 · ')+mode;
  badge.setAttribute('aria-live','off');
 }
@@ -85,14 +88,21 @@ stage.addEventListener('pointerdown',e=>{
  if(e.target!==$('view')||e.button===1||S.space||e.altKey||S.tool==='pan')return;
  if(!['brush','eraser','restore','picker','fill','move','rect','lasso'].includes(S.tool))return;
  state.editing=true;
- if(clip()?.isPlaying)clip().setPlaying(false).catch(console.error);
+ state.resumeAfterEdit=!!(state.enabled&&bakedV4()&&clip()?.isPlaying);
+ if(state.resumeAfterEdit)clip().setPlaying(false).catch(console.error);
  paintStageStatus();
  ed.render();
 },true);
 function release(){
  if(!state.editing)return;
  // Let the editor finish the last stroke and update its original-coordinate image.
- requestAnimationFrame(()=>{state.editing=false;paintStageStatus();ed.render();});
+ requestAnimationFrame(()=>{
+  state.editing=false;
+  const resume=state.resumeAfterEdit;
+  state.resumeAfterEdit=false;
+  paintStageStatus();ed.render();
+  if(resume&&state.enabled)setPlaying(true).catch(e=>console.error('resume L2D',e));
+ });
 }
 stage.addEventListener('pointerup',release);
 stage.addEventListener('pointercancel',release);
@@ -115,7 +125,7 @@ window.addEventListener('paperchalk:rig-play-changed',e=>{
 let last=0;
 function tick(now){
  // V4 refreshes via its own decoded frame loop; only mesh preview needs this copy.
- if(now-last>=40&&state.enabled&&!state.editing&&state.playing&&!document.hidden&&S.ready&&!S.only&&!clip()?.isV4&&animationCanvas()){
+ if(now-last>=40&&state.enabled&&!state.editing&&state.playing&&!document.hidden&&S.ready&&!S.only&&!bakedV4()&&animationCanvas()){
   last=now;ed.render();
  }
  if(now-last>=400){paintStageStatus();}
