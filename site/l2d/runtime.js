@@ -10,7 +10,7 @@ function install(root){
  const canvas=root.querySelector('[data-l2d-canvas]');
  if(!img||!canvas)return;
  const id=root.dataset.l2dActor;
- const obj={id,root,img,canvas,rig:null,loading:0,hasParts:false,lastSource:'',profile:{amplitude:.55,period:4.8,softness:1}};
+ const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',profile:{amplitude:.55,period:4.8,softness:1}};
  rigs.set(root,obj);
  img.addEventListener('load',()=>refresh(obj));
  img.addEventListener('error',()=>{root.dataset.l2dState='error';});
@@ -76,12 +76,40 @@ async function setLayers(slot,parts,canvasSize){
  if(nonce!==a.loading)return false;
  a.hasParts=true;a.root.dataset.l2dState='ready';return true;
 }
+/* V4 source clips are animated transparent WebP generated from original
+   PSD parts, not a static rear image. They are positioned at the exact
+   1024x1024 crop origin used by the approved V4 render: (351,9). */
+async function setAnimationSource(slot,uri,opts={}){
+ const obj=target(slot);if(!obj)return false;
+ if(!uri){obj.clip=null;if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}return true;}
+ const img=new Image();
+ await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=uri;});
+ obj.clip={img,x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w||img.naturalWidth),h:Number(opts.h||img.naturalHeight)};
+ obj.clipFrame=0;
+ if(obj.rig)obj.rig.stop();
+ obj.root.dataset.l2dState='ready';
+ return true;
+}
+function updateFrame(obj,now){
+ if(!obj.clip||!obj.rig||document.hidden||obj.root.hidden)return;
+ if(now-obj.clipFrame<32)return;
+ obj.clipFrame=now;
+ const {img,x,y,w,h}=obj.clip,source=obj.rig.source;
+ if(!source||!img.complete||!img.naturalWidth)return;
+ const g=source.getContext('2d',{alpha:true});
+ g.clearRect(0,0,source.width,source.height);
+ g.drawImage(img,x,y,w,h);
+ // The original V4 clip already has the entire mesh animation baked in;
+ // don't apply the simpler breathing model a second time.
+ const before=obj.rig.amplitude;obj.rig.amplitude=0;
+ obj.rig.render(now,true);obj.rig.amplitude=before;
+}
 function markAnimation(slot,enabled){
  const a=target(slot);if(!a)return;
  a.animated=!!enabled;
  if(a.rig)a.rig.animatedFrames=!!enabled;
 }
-function sync(){
+function sync(t){
  for(const a of entries()){
   // Original invisible image remains authoritative for the layout and
   // current DEV drag handles; the animated canvas follows its geometry.
@@ -90,7 +118,8 @@ function sync(){
   if(a.canvas.style.top!==(a.img.offsetTop+'px'))a.canvas.style.top=a.img.offsetTop+'px';
   if(a.canvas.style.width!==(w+'px'))a.canvas.style.width=w+'px';
   if(a.canvas.style.height!==(h+'px'))a.canvas.style.height=h+'px';
-  if(a.rig)a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
+  if(a.rig&&!a.clip)a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
+  if(a.clip)updateFrame(a,t||performance.now());
  }
  requestAnimationFrame(sync);
 }
@@ -102,7 +131,7 @@ requestAnimationFrame(sync);
 window.PaperchalkL2D={
  get:slot=>target(slot),
  getLoaded:()=>entries().filter(a=>!!a.img.getAttribute('src')),
- setProfile,setLayers,markAnimation,
+ setProfile,setLayers,markAnimation,setAnimationSource,
  refresh:slot=>{const a=target(slot);return a?refresh(a):Promise.resolve(false)}
 };
 })();
