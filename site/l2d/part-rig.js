@@ -189,7 +189,8 @@ function cleanPart(part,face,id,characterId){
  return {id:String(id),name:String(p.name||id),x:finite(p.x,0),y:finite(p.y,0),w,h,
   parentId:def[0],kind:def[5],
   pivot:{x:def[1],y:def[2]},tip:{x:def[3],y:def[4]},
-  mesh:{columns:Math.max(4,Math.min(12,Math.ceil(w/25))),rows:Math.max(4,Math.min(16,Math.ceil(h/25)))},
+  mesh:{columns:Math.min(def[5]==='hair'?6:5,Math.max(4,Math.ceil(w/35))),
+        rows:Math.min(def[5]==='hair'?9:7,Math.max(4,Math.ceil(h/40)))},
   bones:defaultBones(def[5]),
   // The REST shape is always the original bitmap when preview is stopped.
   motion:{x:0,y:0,angle:0,frequency:1,phase:0},
@@ -259,7 +260,15 @@ function drawTri(ctx,image,A,B,C,D,E,F){
  ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.lineTo(r.x,r.y);ctx.closePath();ctx.clip();
  // transform() composes with the author's existing zoom/pan stage transform.
  ctx.transform(aa,bb,cc,dd,tx,ty);
- ctx.drawImage(image,0,0);
+ // Only sample the triangle's *own* source cell rather than uploading the
+ // entire RGBA part bitmap for every one of thousands of triangles.
+ // A 1px guard keeps edge filtering seamless while preserving exact UVs.
+ const minX=Math.max(0,Math.floor(Math.min(A.x,B.x,C.x))-1);
+ const minY=Math.max(0,Math.floor(Math.min(A.y,B.y,C.y))-1);
+ const maxX=Math.min(image.width,Math.ceil(Math.max(A.x,B.x,C.x))+1);
+ const maxY=Math.min(image.height,Math.ceil(Math.max(A.y,B.y,C.y))+1);
+ if(maxX>minX&&maxY>minY)
+  ctx.drawImage(image,minX,minY,maxX-minX,maxY-minY,minX,minY,maxX-minX,maxY-minY);
  ctx.restore();
 }
 function drawPart(ctx,source,part,phase=0,drawMesh=false){
