@@ -12,7 +12,7 @@ function install(root){
  const canvas=root.querySelector('[data-l2d-canvas]');
  if(!img||!canvas)return;
  const id=root.dataset.l2dActor;
- const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,partPatch:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),overlayPending:new Set(),profile:{amplitude:1.4,period:3.6,softness:1.25,hairSwing:2.5,skirtSwing:2.2,armSwing:1.8,legSwing:0,swaySpeed:1}};
+ const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,partPatch:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),overlayPending:new Set(),profile:{amplitude:1.4,period:3.6,softness:1.25,hairSwing:3,skirtSwing:2.8,armSwing:2.2,legSwing:0,swaySpeed:1}};
  rigs.set(root,obj);
  img.addEventListener('load',()=>refresh(obj));
  img.addEventListener('error',()=>{root.dataset.l2dState='error';});
