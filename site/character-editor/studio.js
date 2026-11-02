@@ -98,6 +98,7 @@ async function changeCore(id,face='front'){
  if(currentId){
   if(v4&&frameLayer)await persistCorrections();
   for(const f of ['front','back'])await persistEditedComponents(f);
+  for(const f of ['front','back'])await persistSkeleton(f);
   await ed.save();
  }
  if(!list.has(id))throw Error('角色不在已导入列表中：'+id);
@@ -209,12 +210,32 @@ async function persistEditedComponents(face){
   changes,updatedAt:Date.now(),mode:'v4-layer-delta'
  });
 }
+
+// Keep original PSD bitmaps independently editable AND animated in game.
+// A 7-region mask derived from a flat PNG is intentionally never promoted.
+async function persistSkeleton(face){
+ if(!currentId)return;
+ const original=ed.S.layers[face].filter(p=>p.sourcePart&&p.role==='psd-part');
+ if(original.length<12){
+  // A previous real rig must not survive a manual removal of its source layers.
+  if(await get('skeletal:'+currentId+':'+face))
+   await put('skeletal:'+currentId+':'+face,null);
+  return;
+ }
+ const parts=original.map(p=>({
+  name:String(p.partId||p.name),x:Number(p.x)||0,y:Number(p.y)||0,
+  opacity:Number(p.opacity??1),visible:p.visible!==false,
+  image:p.canvas.toDataURL('image/png')
+ }));
+ await put('skeletal:'+currentId+':'+face,parts);
+}
 async function saveToGame(){
  if(!currentId)return;
  clearTimeout(correctionTimer);
  await ed.save();
  if(v4)await persistCorrections();
  for(const f of ['front','back'])await persistEditedComponents(f);
+ for(const f of ['front','back'])await persistSkeleton(f);
  const motion=ed.motion?.()||{};
  for(const face of ['front','back']){
   // Rendering reference is separate from the V4 animation itself; do NOT
@@ -224,7 +245,8 @@ async function saveToGame(){
  }
  const binding=await get('slot:'+slot);
  if(binding?.id===currentId)await put('slot:'+slot,{id:currentId,side});
- message('✓ 游戏已更新：'+(list.get(currentId)?.label||currentId)+'，原始部件改动已生成 V4 像素修补；原版 128 帧保留。大幅变形需要重新烘焙动画。');
+ const native=await get('skeletal:'+currentId+':'+side);
+ message('✓ 游戏已更新：'+(list.get(currentId)?.label||currentId)+(native?.length>=12?'，'+native.length+' 个真正独立的 PSD 部件已接入游戏实时骨骼动画。':'，保留当前 V4 动画及像素修补。'));
 }
 async function importImages(files){
  await switchQueue;
@@ -356,7 +378,10 @@ async function importComponentFiles(files,options={}){
  showOriginalV4=true;
  await loadCorrectionLayers();
  ed.renderList();ed.render();
- await ed.save();updatePartStatus();
+ await ed.save();
+ if(ed.S.layers[side].filter(p=>p.sourcePart&&p.role==='psd-part').length>=12)
+  await persistSkeleton(side);
+ updatePartStatus();
  window.dispatchEvent(new Event('paperchalk:studio-source-parts-loaded'));
  if(!options.quiet)message('✓ 已载入 '+count+' 个真实部件，原始像素、原位坐标和图层顺序保留。可直接选任何部件编辑。');
  return count;
@@ -405,14 +430,20 @@ async function importComponentArchive(file){
  if(!file)return;
  await switchQueue; // Do not import into a half-loaded character or direction.
  if(/\.psd$/i.test(file.name)){
+  if(currentId==='char-002'&&side!=='front')throw Error('女二只有真实正面 PSD，尚无背面分层');
   await ed.importPsd(file);
+  if(currentId==='char-002'&&ed.S.layers[side].length!==16)
+   throw Error('女二 PSD 没有正确解析为 16 个图层；请检查文件或导入原位分层 ZIP');
   for(const part of ed.S.layers[side]){
    part.sourcePart=true;
    part.partId=part.name;part.role='psd-part';
   }
   showOriginalV4=true;
   await loadCorrectionLayers();
-  ed.renderList();ed.render();await ed.save();updatePartStatus();
+  ed.renderList();ed.render();await ed.save();
+  await persistSkeleton(side);updatePartStatus();
+  window.dispatchEvent(new Event('paperchalk:studio-source-parts-loaded'));
+  message('✓ 已按原 PSD 导入真实 '+ed.S.layers[side].filter(p=>p.sourcePart).length+' 层。保存并返回游戏后使用独立网格/骨骼，不再使用扁平 V4。');
   return;
  }
  message('读取原始分层工程所有部件…');
