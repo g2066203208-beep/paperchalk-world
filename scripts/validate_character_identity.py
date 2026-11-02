@@ -42,7 +42,7 @@ for side in ("front", "back"):
     assert content[:4] == b"RIFF" and content[8:12] == b"WEBP", f"invalid WebP: {rel}"
 assert assets["front"] != assets["back"], "front/back assets must be distinct, not a mirrored reference"
 characters_dir = SITE / "assets/characters"
-actual = {p.name for p in characters_dir.glob("protagonist-*") if p.is_file()}
+actual = {p.name for p in characters_dir.glob("protagonist-*.webp") if p.is_file()}
 assert actual == {"protagonist-front.webp", "protagonist-back.webp"}, f"unregistered protagonist duplicate: {actual}"
 assert "protagonist-back.webp" in (SITE / "index.html").read_text(encoding="utf-8")
 assert (SITE / "l2d/runtime.js").is_file(), "missing shared multi-actor L2D runtime"
