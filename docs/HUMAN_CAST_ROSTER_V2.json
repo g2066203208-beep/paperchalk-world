@@ -40,7 +40,17 @@
       "personality": "毒舌、冷淡",
       "storyFunction": "主视角／异常见证",
       "status": "proposed",
-      "artStatus": "approved_existing_reference"
+      "artStatus": "approved_existing_reference",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-002",
@@ -56,7 +66,17 @@
       "personality": "活泼",
       "storyFunction": "主动接近问题",
       "status": "proposed",
-      "artStatus": "user_accepted_candidate_crop_not_in_repo"
+      "artStatus": "user_accepted_candidate_crop_not_in_repo",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-003",
@@ -72,7 +92,17 @@
       "personality": "叛逆厌学",
       "storyFunction": "对照异常的行动者",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 4,
+        "classLabel": "高三（4）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-004",
@@ -88,7 +118,17 @@
       "personality": "安静谨慎、逻辑严密",
       "storyFunction": "记下相互矛盾的时间细节",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 1,
+        "classLabel": "高三（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-005",
@@ -104,7 +144,17 @@
       "personality": "严守程序、执拗",
       "storyFunction": "制服与校规秩序线索",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 4,
+        "classLabel": "高三（4）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-006",
@@ -216,7 +266,17 @@
       "personality": "实在、沉迷细节",
       "storyFunction": "观察广播线路和电路",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "C",
+        "school": "灰港工科高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-013",
@@ -232,7 +292,17 @@
       "personality": "敏锐、独立、较固执",
       "storyFunction": "对照不同日期图像",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "B",
+        "school": "灰港艺术高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-014",
@@ -283,7 +353,17 @@
       "artStatus": "concept_not_approved",
       "visualIdentity": "较宽上脸＋不完美的略重左眼睑＋微方短下巴＋不规则偏分碎发＋偏右轻抬嘴角；灰阶缩图也可认人",
       "visualAvoid": "标准对称V脸、完美中分奶油蓬松发、银白染发、夸张美瞳高光、柔光磨皮、统一网红双眼皮、笔直完美高鼻梁、宽肩窄腰模特身材、道具装饰凑人设",
-      "designNotes": "旧版高额头+灰褐标准中分+温柔下垂眼方案因用户反馈太像AI网红脸而替换。此版为原创美术方向候选，不代表真人或已批准母图；必须按实际Anima正面图片复审后锁定面相。"
+      "designNotes": "旧版高额头+灰褐标准中分+温柔下垂眼方案因用户反馈太像AI网红脸而替换。此版为原创美术方向候选，不代表真人或已批准母图；必须按实际Anima正面图片复审后锁定面相。",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-017",
@@ -299,7 +379,17 @@
       "personality": "好奇、严谨、脾气急",
       "storyFunction": "用重复实验验证异常",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "C",
+        "school": "灰港工科高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 1,
+        "classLabel": "高二（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-018",
@@ -315,7 +405,17 @@
       "personality": "能说会道、遇事胆小",
       "storyFunction": "音源、校内广播与静音",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 3,
+        "classLabel": "高二（3）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-019",
@@ -331,7 +431,17 @@
       "personality": "感受敏感、审美挑剔",
       "storyFunction": "通过绘画留住变化的场景",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "B",
+        "school": "灰港艺术高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 1,
+        "classLabel": "高二（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-020",
@@ -347,7 +457,17 @@
       "personality": "直接、好胜、讲义气",
       "storyFunction": "确认楼道距离和移动速度",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 1,
+        "classLabel": "高二（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-021",
@@ -379,7 +499,17 @@
       "personality": "耐心、较慢热",
       "storyFunction": "借阅时间核对",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-023",
@@ -395,7 +525,17 @@
       "personality": "热心、容易紧张",
       "storyFunction": "人声和声学校差别",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 3,
+        "classLabel": "高二（3）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-024",
@@ -411,7 +551,17 @@
       "personality": "外向、喜欢竞争",
       "storyFunction": "运动场空间尺度",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "C",
+        "school": "灰港工科高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 2,
+        "classLabel": "高二（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-025",
@@ -427,7 +577,17 @@
       "personality": "细致、节省",
       "storyFunction": "午餐人数记录",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-026",
@@ -443,7 +603,17 @@
       "personality": "安静、反应快",
       "storyFunction": "电子信息核对",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "C",
+        "school": "灰港工科高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 1,
+        "classLabel": "高二（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-027",
@@ -459,7 +629,17 @@
       "personality": "勤恳、畏惧迟到",
       "storyFunction": "教室清扫记录",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 4,
+        "classLabel": "高三（4）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-028",
@@ -475,7 +655,17 @@
       "personality": "好辩、冷静",
       "storyFunction": "空间计数线索",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 1,
+        "classLabel": "高三（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-029",
@@ -491,7 +681,17 @@
       "personality": "慢条斯理",
       "storyFunction": "节奏差异",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 3,
+        "classLabel": "高二（3）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-030",
@@ -507,7 +707,17 @@
       "personality": "善表演、直率",
       "storyFunction": "观众与表演真实性",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "B",
+        "school": "灰港艺术高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-031",
@@ -523,7 +733,17 @@
       "personality": "沉稳、少言",
       "storyFunction": "场景的形状证据",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "B",
+        "school": "灰港艺术高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 1,
+        "classLabel": "高二（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-032",
@@ -539,7 +759,17 @@
       "personality": "爱考据、略固执",
       "storyFunction": "校舍改建历史",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 1,
+        "classLabel": "高三（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-033",
@@ -555,7 +785,17 @@
       "personality": "负责、急性子",
       "storyFunction": "教室器材归属",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 4,
+        "classLabel": "高三（4）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-034",
@@ -571,7 +811,17 @@
       "personality": "易害羞、细心",
       "storyFunction": "阅读名单差异",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "B",
+        "school": "灰港艺术高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 1,
+        "classLabel": "高三（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-035",
@@ -587,7 +837,17 @@
       "personality": "嘴快、心软",
       "storyFunction": "比赛时间线",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "C",
+        "school": "灰港工科高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-036",
@@ -603,7 +863,17 @@
       "personality": "追问到底、正义感",
       "storyFunction": "校刊记载",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "B",
+        "school": "灰港艺术高中",
+        "grade": 3,
+        "gradeLabel": "高三",
+        "classNumber": 2,
+        "classLabel": "高三（2）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-037",
@@ -619,7 +889,17 @@
       "personality": "温柔、警觉",
       "storyFunction": "校门闭馆人流",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "concept_not_approved",
+      "educationProposal": {
+        "schoolCode": "A",
+        "school": "灰港市立第二高中",
+        "grade": 2,
+        "gradeLabel": "高二",
+        "classNumber": 1,
+        "classLabel": "高二（1）班",
+        "status": "proposed",
+        "source": "docs/SCHOOL_AND_STUDENT_STRUCTURE_V1.md"
+      }
     },
     {
       "id": "CHAR-038",
@@ -797,5 +1077,45 @@
       "status": "proposed",
       "artStatus": "concept_not_approved"
     }
-  ]
+  ],
+  "schoolDistributionProposal": {
+    "A": {
+      "name": "灰港市立第二高中",
+      "students": 17,
+      "important": 8,
+      "support": 9
+    },
+    "B": {
+      "name": "灰港艺术高中",
+      "students": 6,
+      "important": 2,
+      "support": 4
+    },
+    "C": {
+      "name": "灰港工科高中",
+      "students": 5,
+      "important": 2,
+      "support": 3
+    }
+  },
+  "productionPriorityProposal": {
+    "alreadyStarted": [
+      "CHAR-001",
+      "CHAR-002",
+      "CHAR-003",
+      "CHAR-016"
+    ],
+    "remainingImportant": [
+      "CHAR-004",
+      "CHAR-005",
+      "CHAR-012",
+      "CHAR-013",
+      "CHAR-017",
+      "CHAR-018",
+      "CHAR-019",
+      "CHAR-020"
+    ],
+    "importantStudentTotal": 12,
+    "supportingStudentTotal": 16
+  }
 }
