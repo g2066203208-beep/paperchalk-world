@@ -123,20 +123,28 @@ jobs:
                 assert.equal(await page.locator('#l2d-live-canvas').count(),1);
                 await page.waitForFunction(()=>window.PaperchalkStudio?.edition==='V4-official'&&window.PaperchalkStudio?.useV4?.(),{timeout:18000});
 
-                assert.equal(await page.locator('#studio-character option').count(),1);
+                assert.equal(await page.locator('#studio-character option').count(),3,'whole GitHub character library including concept profiles');
+                assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true);
+                assert.equal(await page.locator('#dev-l2d-preview-controls').isVisible(),false,'old generic breathing preview hidden for V4');
+                assert.equal(await page.locator('#studio-frame').getAttribute('max'),'127');
+                await page.locator('#studio-edit-scope').selectOption('frame');
+                await page.locator('#studio-frame').fill('12');
+                await page.waitForFunction(()=>window.PaperchalkStudio?.frame===12,{timeout:18000});
+                await page.locator('#studio-edit-scope').selectOption('all');
                 // Verify character-specific layer stacks, not a heroine-only static canvas.
+                const initialLayers=await page.locator('#layers .layer').count();
                 await page.locator('#add').click({force:true});
-                assert.equal(await page.locator('#layers .layer').count(),2);
+                assert.equal(await page.locator('#layers .layer').count(),initialLayers+1);
                 await page.locator('#studio-save').click({force:true});
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('已保存'),{timeout:18000});
                 const tiny=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+v0kQAAAAASUVORK5CYII=','base64');
                 await page.locator('#studio-import').setInputFiles({name:'sample-npc-front.png',mimeType:'image/png',buffer:tiny});
-                await page.waitForFunction(()=>window.PaperchalkStudio?.list.size===2 && window.PaperchalkStudio.current!=='protagonist',{timeout:18000});
-                assert.equal(await page.locator('#studio-character option').count(),2);
+                await page.waitForFunction(()=>window.PaperchalkStudio?.list.size===4 && window.PaperchalkStudio.current!=='protagonist',{timeout:18000});
+                assert.equal(await page.locator('#studio-character option').count(),4);
                 await page.waitForFunction(()=>document.querySelectorAll('#layers .layer').length===1,{timeout:18000});
                 await page.locator('#studio-character').selectOption('protagonist');
                 await page.locator('#studio-side').selectOption('back');
-                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' && document.querySelector('#studio-side')?.value==='back' && document.querySelectorAll('#layers .layer').length===2,{timeout:18000});
+                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' && document.querySelector('#studio-side')?.value==='back' && document.querySelectorAll('#layers .layer').length>=3,{timeout:18000});
                 await page.locator('#studio-v4zip').setInputFiles('/tmp/paperchalk-v4-smoke.zip');
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('V4 动态方向已导入'),{timeout:16000});
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true,'V4 frames must preview in the L2D studio');
@@ -146,7 +154,7 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.type==='decoder',{timeout:16000});
                 const count=await page.locator('#dev-character-library option').count();
-                assert.equal(count,2,'Game DEV must see characters imported from studio');
+                assert.equal(count,4,'Game DEV must see all GitHub profiles and locally imported characters');
                 assert.deepEqual(errors,[],'No browser errors');
                 await page.close();
               }
