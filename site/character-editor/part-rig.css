@@ -31,3 +31,10 @@
 #part-rig-panel #rig-export{grid-column:1/3;background:#233750;color:#dae7ff}
 
 #part-rig-panel #rig-module-export{grid-column:1/3;background:#20584b;border-color:#79c1a2;color:#e9fff1;font-weight:700}
+
+#part-rig-panel .rig-joints{border-top:1px solid #6689a6;margin:10px 0;padding:10px 0}
+#part-rig-panel .rig-joints[hidden]{display:none}
+#part-rig-panel .rig-joints>label{font-weight:700;color:#b2e7f7}
+#part-rig-panel #rig-bone{display:block;width:100%;min-height:34px;color:#e5f7ff;background:#1c3854;border:1px solid #6abddc;border-radius:6px;margin:7px 0}
+#part-rig-panel #rig-bone-tip{font-size:10px;line-height:1.5;color:#b1d8ee}
+#part-rig-panel #rig-bone-sliders .rig-field output{color:#76f4d2}
