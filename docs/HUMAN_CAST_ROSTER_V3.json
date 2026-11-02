@@ -394,18 +394,38 @@
       "id": "CHAR-020",
       "group": "student",
       "tier": "important",
-      "label": "田径女生",
+      "label": "男三／小正太少年型（448字段设计候选）",
       "visual": {
-        "face": "稍宽脸、上挑外眼角、平直短眉",
-        "hair": "深栗高束短马尾",
-        "build": "170cm参考、腿肌明显",
-        "gesture": "体重落前脚掌，肩背挺直"
+        "face": "柔和短鹅蛋脸、方圆短下巴、灰绿杏圆眼、浅酒窝（候选）",
+        "hair": "浅茶棕短层次碎发，一缕微翘额发（候选）",
+        "build": "16岁、158cm、46kg、6.4头身（全部候选）",
+        "gesture": "正面全身自然待机：重心偏左腿，手臂放松，两手清晰"
       },
-      "personality": "直接、好胜、讲义气",
-      "storyFunction": "确认楼道距离和移动速度",
+      "personality": "友善乖巧、略害羞、熟悉后机灵爱玩笑（候选）",
+      "storyFunction": "通过声音记录发现时间线错位（候选）",
       "status": "proposed",
-      "artStatus": "concept_not_approved",
-      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+      "artStatus": "448_field_profile_no_approved_art",
+      "schoolProposal": "主角同一所高中，高一（候选）",
+      "designProfile": "docs/characters/CHAR-020.profile.json",
+      "readableProfile": "docs/characters/CHAR-020_MALE_THIRD_PROFILE.md",
+      "reallocationHistory": [
+        {
+          "date": "2026-11-02",
+          "former": {
+            "label": "田径女生",
+            "visual": {
+              "face": "稍宽脸、上挑外眼角、平直短眉",
+              "hair": "深栗高束短马尾",
+              "build": "170cm参考、腿肌明显",
+              "gesture": "体重落前脚掌，肩背挺直"
+            },
+            "personality": "直接、好胜、讲义气",
+            "storyFunction": "确认楼道距离和移动速度",
+            "artStatus": "concept_not_approved"
+          },
+          "decision": "Unapproved track girl placeholder reassigned to male third. Original only in history; no accepted art or game role was overwritten."
+        }
+      ]
     },
     {
       "id": "CHAR-021",

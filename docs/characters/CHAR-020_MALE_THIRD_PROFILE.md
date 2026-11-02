@@ -30,7 +30,7 @@
 | 13 | `identity.era` | 当代架空都市 | 候选 |
 | 14 | `identity.occupation` | 高中生 | 候选 |
 | 15 | `identity.schoolYear` | 高一（提案） | 候选 |
-| 16 | `identity.storyRole` | 男三，少年感、可爱亲切，擅长发现声音线索 | 用户方向 |
+| 16 | `identity.storyRole` | 男三 | 用户方向 |
 | 17 | `identity.designStatus` | 仅448项创作候选，不代表原画、背面、PSD、L2D或游戏上线 | 候选 |
 | **家庭** | **family** | **10字段** | |
 | 18 | `family.parents` | 待定 | 未知 |
