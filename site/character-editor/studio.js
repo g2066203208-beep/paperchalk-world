@@ -278,6 +278,7 @@ async function importV4(file){
  if(!currentId)throw Error('先选择人物');
  message('读取 V4 原版动画工程…');
  const files=await zipFiles(file);
+ if(files.has('assets.json')||files.has('layers.json'))await importComponentFiles(files);
  let count=0;
  for(const face of ['front','back']){
   const bytes=files.get(face+'.webp');
@@ -376,6 +377,8 @@ function blankOrSaved(data){
 async function loadCorrectionLayers(){
  if(!v4){globalLayer=null;frameLayer=null;frameFrames={};return;}
  const arr=ed.S.layers[side];
+ const hasSources=arr.some(p=>p.sourcePart);
+ showOriginalV4=!hasSources;
  for(const part of arr)if(originalLayer(part))part.visible=false;
  globalLayer=arr.find(x=>x.name==='V4 · 全帧修补');
  if(!globalLayer){
@@ -392,7 +395,8 @@ async function loadCorrectionLayers(){
  frameLayer.canvas.getContext('2d').clearRect(0,0,1024,1024);
  const scope=$('studio-edit-scope').value||'all';
  frameLayer.visible=scope==='frame'&&!playing;
- ed.S.sel=Math.max(0,arr.indexOf(scope==='frame'?frameLayer:globalLayer));
+ const selected=hasSources?arr.findLast(p=>p.sourcePart):(scope==='frame'?frameLayer:globalLayer);
+ ed.S.sel=Math.max(0,arr.indexOf(selected));
  await loadFrameImage(0);
  ed.renderList();ed.render();
 }
@@ -435,7 +439,7 @@ async function seek(index){
 function collectGlobalOverlay(){
  const c=ed.make(),g=c.getContext('2d');
  for(const p of ed.S.layers[side]){
-  if(!p.visible||p===frameLayer||originalLayer(p))continue;
+  if(!p.visible||p===frameLayer||p.sourcePart||originalLayer(p))continue;
   g.globalAlpha=p.opacity;
   g.drawImage(p.canvas,p.x,p.y);
  }
@@ -487,9 +491,18 @@ $('studio-edit-scope').onchange=()=>{
  ed.renderList();ed.render();
 };
 $('studio-v4-mode').onclick=()=>{
+ if(showOriginalV4&&!countSourceParts()){
+  message('没有真实可编辑的部件。先导入带 PSD 图层或 assets.json/layers.json 的分层 ZIP。');
+  return;
+ }
  showOriginalV4=!showOriginalV4;
- $('studio-v4-mode').textContent=showOriginalV4?'隐藏 V4 背景':'显示 V4 背景';
- ed.render();
+ if(showOriginalV4){
+  ed.S.sel=Math.max(0,ed.S.layers[side].indexOf(
+   $('studio-edit-scope').value==='frame'?frameLayer:globalLayer));
+ }else{
+  ed.S.sel=Math.max(0,ed.S.layers[side].findLastIndex(p=>p.sourcePart));
+ }
+ ed.renderList();ed.render();updatePartStatus();
 };
 let suspendAutobackup=false;
 window.addEventListener('paperchalk:art-dirty',()=>{
@@ -533,6 +546,8 @@ $('studio-save').onclick=()=>saveToGame().catch(e=>message('保存失败：'+e.m
 $('studio-back').onclick=()=>location.assign(new URL('../?dev=1',location.href).href);
 $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='';importImages(files).catch(x=>message('导入失败：'+x.message));};
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'}};
+$('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
+$('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
+window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'}};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
