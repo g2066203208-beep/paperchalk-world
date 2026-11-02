@@ -355,32 +355,6 @@ body.mobile-mode.virtual-landscape #view{
 [data-l2d-actor]:not([data-l2d-state="ready"]) [data-l2d-canvas]{visibility:hidden}
 [data-l2d-actor][data-l2d-state="ready"] [data-l2d-canvas]{visibility:visible}
 
-/* Unified L2D character editor: topmost portal over 3D scene. */
-#dev-character-overlay[hidden]{display:none!important}
-#dev-character-overlay{
- position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;
- background:#090d13;color:#eef3fa;overflow:hidden;pointer-events:auto;
- font-family:var(--font-ui);
-}
-#dev-character-overlay .dev-character-toolbar{
- display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
- gap:7px;padding:7px 12px;background:#131a24;border-bottom:1px solid #405166;
-}
-#dev-character-overlay .dev-character-toolbar div{display:flex;flex-wrap:wrap;gap:6px}
-#dev-character-overlay button{
- color:#e5eefa;background:#263140;border:1px solid #4d6177;
- font:12px var(--font-ui);padding:7px 9px;border-radius:5px;cursor:pointer
-}
-#dev-character-overlay #dev-character-apply{background:#1e5249;border-color:#4fae97}
-#dev-character-frame{flex:1;min-height:0;width:100%;height:100%;border:0;background:#0c121c}
-body.character-editing #dev-tools{visibility:hidden;pointer-events:none}
-body.character-editing #dev-stage,body.character-editing #dev-stage *{pointer-events:none!important}
-@media(max-width:550px){
- #dev-character-overlay .dev-character-toolbar{padding:5px 8px}
- #dev-character-overlay button{padding:6px;font-size:11px}
-}
-
-
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
@@ -495,8 +469,6 @@ body.character-editing #dev-stage,body.character-editing #dev-stage *{pointer-ev
       </div>
       <label for="dev-character-import">导入新的游戏人物（PNG / WebP）</label>
       <input id="dev-character-import" type="file" accept="image/png,image/webp,image/jpeg" multiple style="width:100%;max-width:100%">
-      <label for="dev-character-archive">导入 L2D 动画工程 ZIP（应用于选中人物）</label>
-      <input id="dev-character-archive" type="file" accept=".zip,application/zip" style="width:100%;max-width:100%">
       <output id="dev-character-status" role="status" style="font-size:11px;color:#bde2ff;display:block;line-height:1.6;margin-top:8px">载入人物素材库…</output>
     </section>
     <div id="dev-floor-controls" hidden>
