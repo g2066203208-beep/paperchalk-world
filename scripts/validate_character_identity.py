@@ -52,4 +52,33 @@ for field in ("ageYears", "heightCm", "weightKg", "occupation", "personality"):
 assert len(hero["visualCanon"]["hairStyle"]) > 30
 assert len(hero["visualCanon"]["iris"]) > 8
 assert len(hero["visualCanon"]["hairAccessory"]) > 25
+# Detailed design data is linked to this SAME character, not an extra identity.
+profile=hero.get("productionProfile")
+assert isinstance(profile,dict) and profile.get("version")=="1.1", "missing detailed character production record"
+assert (ROOT/profile["designDocument"]).is_file(), "missing full heroine dossier"
+assert hero.get("profileDocument")==profile["designDocument"], "profile mismatch"
+assert (ROOT/"docs/CHARACTER_BIBLE_INDEX.md").is_file(), "missing cast index"
+assert (ROOT/"docs/characters/CHARACTER_PROFILE_TEMPLATE.md").is_file(), "missing NPC profile template"
+assert data["policy"]["sameCharacterAcrossAllViews"] is True
+assert data["policy"]["draftPhysicalValuesMustNotBeClaimedUserApproved"] is True
+sizing=profile["fictionalSizingProposal"]
+assert sizing["status"]=="proposed_not_approved"
+assert sizing["heightCm"]==hero["proposedProfile"]["heightCm"]["value"]
+assert sizing["weightKg"]==hero["proposedProfile"]["weightKg"]["value"]
+assert sizing["intimatesSizing"] is None
+assert sizing["bodyFatPercentage"] is None
+assert profile["personalityProposal"]["status"]=="proposed_not_approved"
+assert len(profile["appearance"])>=8 and len(profile["costumeBlueprint"])>=7
+assert len(profile["unresolved"])>=5
+assert len(profile["animationBoundaries"]["constraints"])>=2
+for character in chars:
+    # New characters must have their own identity notes and may NOT share
+    # either of the original protagonist's locked image files.
+    if character["id"]=="protagonist": continue
+    assert character.get("designDocument") or character.get("profileDocument"), f"missing new character design file: {character['id']}"
+    if character.get("designDocument"):
+        assert (ROOT/character["designDocument"]).is_file()
+    for field in ("front","back"):
+        p=character.get("assets",{}).get(field)
+        assert p not in (assets["front"],assets["back"]), f"new NPC reuses protagonist {field} asset"
 print(f"PASS identity: exactly one playable protagonist ({hero['id']}), two approved view assets, no duplicate IDs")
