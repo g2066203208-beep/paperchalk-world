@@ -2,7 +2,9 @@
    canvas; its <img> is an invisible asset/layout/DEV hit target, never the visual. */
 (function(){
 'use strict';
-const rigs=new Map(),profiles=new Map();
+const rigs=new Map();
+const MAX_DPR=2.5;
+const quality=()=>Math.min(MAX_DPR,Math.max(1,window.devicePixelRatio||1));
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
 function install(root){
  if(!root||rigs.has(root))return;
@@ -10,7 +12,7 @@ function install(root){
  const canvas=root.querySelector('[data-l2d-canvas]');
  if(!img||!canvas)return;
  const id=root.dataset.l2dActor;
- const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',profile:{amplitude:.55,period:4.8,softness:1}};
+ const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,overlayFrames:new Map(),profile:{amplitude:.55,period:4.8,softness:1}};
  rigs.set(root,obj);
  img.addEventListener('load',()=>refresh(obj));
  img.addEventListener('error',()=>{root.dataset.l2dState='error';});
@@ -163,17 +165,39 @@ function advanceV4(obj,now){
  clip.decoding=true;
  clip.decoder.decode({frameIndex:index}).then(({image})=>{
   if(obj.clip!==clip){image.close();return;}
-  const ctx=obj.canvas.getContext('2d',{alpha:true});
+  const canvas=obj.canvas,ctx=canvas.getContext('2d',{alpha:true});
   ctx.setTransform(1,0,0,1,0,0);
-  ctx.clearRect(0,0,obj.canvas.width,obj.canvas.height);
-  ctx.drawImage(image,clip.x,clip.y,clip.w,clip.h);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  // Draw from native 335×1013 directly to device pixels: no intermediate
+  // upsample to 1024 followed by CSS downsample.
+  const sx=canvas.width/1024,sy=canvas.height/1024;
+  ctx.drawImage(image,clip.x*sx,clip.y*sy,clip.w*sx,clip.h*sy);
   image.close();
+  if(obj.overlay)ctx.drawImage(obj.overlay,0,0,canvas.width,canvas.height);
+  const correction=obj.overlayFrames.get(index);
+  if(correction)ctx.drawImage(correction,0,0,canvas.width,canvas.height);
   clip.frame=index;
   obj.root.dataset.l2dFrame=String(index);
  }).catch(e=>{console.warn('[L2D] V4 frame decoding error',e)})
  .finally(()=>{clip.decoding=false;});
 }
 
+async function setCorrections(slot,general,frames={}){
+ const obj=target(slot);if(!obj)return false;
+ const decode=src=>new Promise((ok,no)=>{
+  if(!src)return ok(null);
+  const im=new Image();
+  im.onload=()=>ok(im);im.onerror=()=>no(Error('修正图层解码失败'));im.src=src;
+ });
+ const generalImg=await decode(general);
+ const frameEntries=Object.entries(frames||{}).filter(([k,url])=>/^\d{1,3}$/.test(k)&&typeof url==='string'&&url.startsWith('data:image/'));
+ const corrections=new Map();
+ for(const [key,data] of frameEntries)corrections.set(Number(key),await decode(data));
+ obj.overlay=generalImg;obj.overlayFrames=corrections;
+ if(obj.clip?.type==='decoder')obj.clip.frame=-1;
+ return true;
+}
 function markAnimation(slot,enabled){
  const a=target(slot);if(!a)return;
  a.animated=!!enabled;
@@ -184,6 +208,15 @@ function sync(t){
   // Original invisible image remains authoritative for the layout and
   // current DEV drag handles; the animated canvas follows its geometry.
   const w=a.img.offsetWidth,h=a.img.offsetHeight;
+  if(a.clip?.type==='decoder'&&w>0&&h>0){
+   const scale=quality();
+   const W=Math.min(2560,Math.max(1,Math.round(w*scale)));
+   const H=Math.min(2560,Math.max(1,Math.round(h*scale)));
+   if(a.canvas.width!==W||a.canvas.height!==H){
+    a.canvas.width=W;a.canvas.height=H;
+    if(a.clip)a.clip.frame=-1; // freshly resized buffer needs a new frame
+   }
+  }
   if(a.canvas.style.left!==(a.img.offsetLeft+'px'))a.canvas.style.left=a.img.offsetLeft+'px';
   if(a.canvas.style.top!==(a.img.offsetTop+'px'))a.canvas.style.top=a.img.offsetTop+'px';
   if(a.canvas.style.width!==(w+'px'))a.canvas.style.width=w+'px';
@@ -202,7 +235,7 @@ requestAnimationFrame(sync);
 window.PaperchalkL2D={
  get:slot=>target(slot),
  getLoaded:()=>entries().filter(a=>!!a.img.getAttribute('src')),
- setProfile,setLayers,markAnimation,setAnimationSource,
+ setProfile,setLayers,markAnimation,setAnimationSource,setCorrections,
  refresh:slot=>{const a=target(slot);return a?refresh(a):Promise.resolve(false)}
 };
 })();
