@@ -31,7 +31,7 @@ process.stdout.write(JSON.stringify(model));
 
 def build():
     if not SRC.is_file():
-        raise FileNotFoundError('The original protagonist's 25-layer archive is missing')
+        raise FileNotFoundError("Original protagonist 25-layer archive is missing")
     with ZipFile(SRC) as z:
         data=json.loads(z.read('layers.json'))
         sections=data.get('layers',{})
