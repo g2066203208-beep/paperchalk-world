@@ -10,7 +10,8 @@
 | **CHAR-002 正面已入库** | `pony-tail-girl-candidate`（暂未注册正式游戏角色） | 女二：栗棕单马尾、活泼、略矮 | **[已认可正面PNG](../site/assets/characters/char-002/front.png)**，三人图中间原像素裁剪303×1024；背面、PSD、L2D待制作 | 448项候选档案，正面视觉已定 | [女二详细档案](characters/CHAR-002_CANDIDATE.md) · [448字段](characters/CHAR-002.profile.json) |
 | **CHAR-003 正面已入库** | `male-lead-candidate`（暂未注册正式游戏角色） | 男主：18岁、凌乱黑中长发、灰眼、叛逆厌学 | **[已选正面PNG](../site/assets/characters/char-003/front.png)**，三人图中间原像素裁剪297×1024；背面、PSD、L2D待制作 | 448/448字段，服装体型数值仍为暂定 | [完整档案](characters/CHAR-003_MALE_LEAD_PROFILE.md) · [448字段](characters/CHAR-003.profile.json) |
 | **CHAR-016 正面已入库** | `male-second-transfer-candidate`（暂未注册为可玩演员） | 男二／插班生；自然茶棕眼与深暖黑发 | **[已验收全身正面PNG](../site/assets/characters/char-016/front.png)**，315×1024；[1024×1024原图及脸部特写](../site/assets/characters/char-016/reference-sheet.png)；背面PSD、L2D待制作 | 448项人物档案；**具体脸型眼色和双手姿势以原图优先**，身高173cm/体重64kg等数值仍暂定 | [人物设定、差异校验及提示词](characters/CHAR-016_MALE_SECOND_PROFILE.md) · [448字段机器档案](characters/CHAR-016.profile.json) |
-| CHAR-004～015、CHAR-017起 | 尚未分配正式身份 | 其余规划人物 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
+| **CHAR-004 视觉参考已入库** | 暂未注册正式游戏ID | 女三：可爱假小子、爽朗行动派 | **[第三版选中原图（全身＋脸部特写）](../site/assets/characters/char-004/reference-sheet.png)**，1024×1024；面相、发型、表情及服装参考已确认；不是透明单人图 | **视觉参考通过；演出站姿、单人透明素材、背面、PSD、L2D待制作** | [女三设计与素材档案](characters/CHAR-004_FEMALE_THIRD_PROFILE.md) |
+| CHAR-005～015、CHAR-017起 | 尚未分配正式身份 | 其余规划人物 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
 
 **重要：** “教室主角”“卧室主角”“正面主角”“背面主角”“L2D 主角”都不是新身份，只能引用 `protagonist`。旧临时恐怖敌人没有独立的正式人物身份，也不得因为历史素材名称而复活。
 
@@ -40,7 +41,7 @@
 
 ## 新人物与记录完整性
 
-**CHAR-002 女二已保存用户认可的正面原像素裁剪，CHAR-003 男主已保存用户指定的正面原像素裁剪，用于后续拆分。** 两人背面、真实PSD/L2D尚未制作，不作为游戏正式已加载演员；后续新角色从 CHAR-004 起以不重复的编码建立；同一角色的正面、背面、换装、表情和 L2D 不是不同身份。
+**CHAR-002 女二已保存用户认可的正面原像素裁剪，CHAR-003 男主已保存用户指定的正面原像素裁剪，用于后续拆分。** 两人背面、真实PSD/L2D尚未制作，不作为游戏正式已加载演员；后续新角色使用未占用的唯一CHAR编码；CHAR-004已分配给女三，不得重复建立新身份；同一角色的正面、背面、换装、表情和 L2D 不是不同身份。
 
 ## 当前人物制作结构 V3（优先，取代28学生旧案）
 
@@ -66,3 +67,7 @@
 - **[机器字段规范](characters/CHARACTER_FIELD_SCHEMA_V2.json)**：统一类型、状态及必备参数。无依据的值保持 `unknown`，不能跳过字段或伪造准确值。
 - **[女主 448 字段档案](characters/CHAR-001.profile.json)**与**[女二 448 字段档案](characters/CHAR-002.profile.json)**：已确认和暂定信息分开记录。女二正面原图已入库、背面尚未；**[男主 448 项逐条设计档案](characters/CHAR-003_MALE_LEAD_PROFILE.md)**与**[男主机器档案](characters/CHAR-003.profile.json)**同样仅是候选，原图未验收。
 - **版本冲突**：最新用户提供的女主母版提示词是 18 岁、灰紫眼；旧机器角色库仍有 17 岁、灰褐眼的提案。已在完整档案明确记录冲突，待比对原图或再次确认，不静默更改既有正式原画。
+
+## CHAR-004 2026-11-02 图像选择确认
+
+用户从三套候选中明确选定第三套作为女三视觉参考。已保存**完整未裁切 PNG** `site/assets/characters/char-004/reference-sheet.png`；左侧全身和右侧头像在同一张画布上存在重叠，不得声称它是一张透明、可直接导入游戏的单人立绘。已有认可的面相、发色、短发轮廓与校服风格不得擅自改换；双手提外套的展示姿势尚须变为自然站立的常驻演出姿势。角色未加入 `site/data/characters/registry.json` 或 `site/characters.catalog.json`，不表示L2D已完成。详见[女三档案](characters/CHAR-004_FEMALE_THIRD_PROFILE.md)。

@@ -81,17 +81,17 @@
       "id": "CHAR-004",
       "group": "student",
       "tier": "important",
-      "label": "女三／可爱假小子行动派（候选，上一张未通过）",
+      "label": "女三／可爱假小子、爽朗行动派（已选第三版视觉参考）",
       "visual": {
-        "face": "强调漂亮可爱的少女相：短而圆润的鹅蛋脸、轻微饱满的脸颊、小而柔软的下巴；清亮琥珀棕杏眼、稍浓的自然平直眉、带一点调皮和不服输的微笑。旧稿严肃男性化脸型被用户否决，禁止把她画成普通男生。",
-        "hair": "深栗棕轻盈短层次碎发，蓬松有空气感，刘海自然不规则，耳上有一处微翘碎发；不能再是厚重乌黑油亮的普通男生乱发",
+        "face": "以2026-11-02选定第三版原画为准：面颊柔和、略短的少女鹅蛋脸，琥珀棕杏眼、自然短下巴，活泼又不刻意卖萌的微笑；不可换成第二版严肃男学生脸，也不可仿照女二的脸。",
+        "hair": "以选定参考图为准：栗棕偏暖的短层次碎发，发束轻盈、自然偏分，耳畔与后颈有细碎的翘起发尾；实际轮廓优先于任何早期文字色值。",
         "build": "168cm、54kg自然匀称的年轻女性运动体态（未审批候选数字）；肩颈柔和，腿臂利落，避免男模宽肩和过分Q版",
-        "gesture": "轻松有活力，重心自然落一侧，一手自然搭在单肩上的校服外套，另一手插口袋；不要像旧稿一样僵直垂手和严肃苦脸"
+        "gesture": "已选参考图为双手提着/拉开校服外套的展示姿势；作为表情和服装参考有效，但正式GalGame常驻站姿需要改成落落大方的自然站立姿势，避免始终双手拉外套。修动作不得换脸、换发型。"
       },
       "personality": "直接讲义气、好奇、调皮、行动力强、有点嘴硬；表达方式可爱而不故作卖萌，性格不等于永远凶、永远冷淡",
       "storyFunction": "记下相互矛盾的时间细节",
       "status": "proposed",
-      "artStatus": "concept_not_approved",
+      "artStatus": "reference_image_approved_standalone_and_l2d_pending",
       "schoolProposal": "主角所在的一所普通高中（暂名未锁定）",
       "wardrobeProposal": {
         "status": "secondary_future_costume_ideas",
@@ -103,18 +103,34 @@
         "approvedArtPriority": "CHAR-001、002、003、016 已有的角色图片是实际视觉参考，不得修改其已认可的穿法；本条仅适用于CHAR-004新母版候选"
       },
       "artReview": {
-        "userFeedback": "用户指出2026-11-02上传图像女三不够可爱；偏男性化、严肃、标准男生短发和僵硬姿势需要全部调整",
-        "lastAttempt": "user_rejected_not_identity_master",
-        "decision": "remain candidate, do not import rejected image into game as character art",
-        "goal": "cute, distinctive tomboy female student, preserving approved game visual style"
+        "userFeedback": "2026-11-02 用户提供三版候选并选定第三版；第一版过于普通，第二版过于男性化严肃；第三版面相、短发、微笑、个性和画风获接受。",
+        "lastAttempt": "third_uploaded_reference_selected_2026-11-02",
+        "decision": "selected_reference_image_archived; standalone performance pose and layers still pending",
+        "goal": "preserve selected third version's unique face, hairstyle, friendly tomboy expression and same-school uniform while preparing a natural performance stance"
       },
       "visualDesignDirection": {
-        "face": "soft short oval face, subtle cheek fullness, naturally lively amber-brown eyes, expressive brows, small asymmetrical playful smile",
-        "hair": "airy dark chestnut pixie layers, irregular wispy bangs and a small flipped strand",
+        "face": "approved uploaded composite's female face: soft short oval cheeks, warm amber-brown eyes, easy playful smile",
+        "hair": "approved uploaded composite's short layered warm chestnut-brown hair and distinctive fringe",
         "identity": "distinctly female face with youthful boyish energy; not a male student face, no generic AI influencer face",
         "style": "docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md",
-        "wardrobe": "same-school navy uniform color/material, blazer hanging on one shoulder, white shirt sleeves rolled to forearms, short burgundy tie, charcoal straight trousers, black shoes",
-        "approval": "user has not approved an actual image for CHAR-004"
+        "wardrobe": "approved reference: navy blazer held around shoulders, white shirt, burgundy tie, charcoal straight trousers, black loafers; formal standing pose still to be derived",
+        "approval": "user selected 3rd image on 2026-11-02 as canonical look reference; not a standalone fully production-ready sprite"
+      },
+      "referenceAssets": {
+        "status": "user_selected_visual_reference",
+        "originalComposite": "site/assets/characters/char-004/reference-sheet.png",
+        "format": "PNG",
+        "canvasWidth": 1024,
+        "canvasHeight": 1024,
+        "sha256": "7140cdbe5cff3f7cde02e3de98590595a9bcd9e550713176ebdf44db4f67d919",
+        "source": "third of three uploaded images in conversation on 2026-11-02",
+        "layout": "left full-body + right face close-up with overlap; must not automatically crop as isolated sprite",
+        "immutable": true,
+        "standaloneFront": null,
+        "back": null,
+        "transparentParts": null,
+        "live2d": null,
+        "gameRegistered": false
       }
     },
     {
@@ -917,7 +933,7 @@
     "portrait": "one character, front view, complete hair to shoes, plain white background, faithful clean high-resolution image ready for eventual manual L2D splitting",
     "notNow": "no casual outfits, sportswear, battle costumes, custom workwear or alternate costume art until all primary student portraits have their approved canonical appearance",
     "source": "2026-11-02 user decision: now all students drawn in school uniforms, outfit changes later",
-    "individualStyling": "男主：既有原图敞开外套与松散领带；男二：已批准外套扣合、领带较整齐；女主/女二保持获批母版穿法；女三CHAR-004试做衬衫卷袖、领带稍短、宽松直筒校裤、深蓝校服外套搭肩的独特剪影。此穿法仅是候选，仍要等用户验收图。不能为了差异随意另造校徽、校服配色或外校衣服。",
+    "individualStyling": "男主：既有原图敞开外套与松散领带；男二：已批准外套扣合、领带较整齐；女主/女二保持获批母版穿法；女三CHAR-004试做衬衫卷袖、领带稍短、宽松直筒校裤、深蓝校服外套搭肩的独特剪影。女三第三版服装形象已随视觉参考获得认可，但展示姿势不等于常驻动画完成；以已选原图为准。不能为了差异随意另造校徽、校服配色或外校衣服。",
     "styleLockDocument": "docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md",
     "styleReference": "The front artwork of CHAR-001, CHAR-002, CHAR-003 and CHAR-016 must remain unchanged; new portraits should retain linework, color blocking, body proportion and common uniform system"
   }
