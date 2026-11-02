@@ -64,6 +64,20 @@ async function assign(target,id,face='front',save=true){
  const rig=await get('l2d:'+id+':'+face)||{amplitude:.55,period:4.8,softness:1};
  window.PaperchalkL2D.setProfile(target,rig);
  window.PaperchalkL2D.markAnimation(target,!!c.animated?.[face]);
+ const clip=await get('clip:'+id+':'+face);
+ if(clip?.data&&clip.data.startsWith('data:image/webp;base64,')){
+  const current=window.PaperchalkL2D.get(target);
+  if(current?.rig)await window.PaperchalkL2D.setAnimationSource(target,clip.data,clip.crop||{x:351,y:9,w:335,h:1013});
+  else {
+   const wait=setInterval(async()=>{
+    const obj=window.PaperchalkL2D.get(target);
+    if(obj?.rig){clearInterval(wait);await window.PaperchalkL2D.setAnimationSource(target,clip.data,clip.crop||{x:351,y:9,w:335,h:1013});}
+   },100);
+   setTimeout(()=>clearInterval(wait),8000);
+  }
+ }else{
+  await window.PaperchalkL2D.setAnimationSource(target,null);
+ }
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
  note('正在 L2D 渲染 '+c.label+' · '+(face==='back'?'背面':'正面'));
