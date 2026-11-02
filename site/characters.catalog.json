@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "characters": [
+    {
+      "id": "protagonist",
+      "label": "女主角",
+      "front": "./assets/characters/protagonist-front.webp",
+      "back": "./assets/characters/protagonist-back.webp"
+    }
+  ]
+}
