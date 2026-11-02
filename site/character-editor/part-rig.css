@@ -27,3 +27,5 @@
  #part-rig-panel #rig-part{min-height:39px}
  body.easy-mode #part-rig-toggle{font-size:11px;padding:8px 6px}
 }
+
+#part-rig-panel #rig-export{grid-column:1/3;background:#233750;color:#dae7ff}
