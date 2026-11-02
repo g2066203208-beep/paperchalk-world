@@ -1,50 +1,104 @@
 #!/usr/bin/env python3
-"""GitHub Pages scene catalog: drop an image into site/assets/scenes to publish it.
+"""Deterministic, zero-manual-registration game scene compiler.
 
-No sidecar, hand-maintained registry or external dependencies. The runtime
-reuses its existing scene image, dynamic fog, edge mask and dark transition.
+Drop a supported *image* into site/assets/scenes and run this script.
+No manual JS/UI edits, separate portrait stage or baked-in protagonist.
+Pillow verifies that the entire image decodes; no re-encoding or image edits.
 """
-from pathlib import Path
+from __future__ import annotations
+
+import hashlib
 import json
 import re
+from pathlib import Path
 
-ROOT=Path(__file__).resolve().parent.parent
-SCENES=ROOT/"site"/"assets"/"scenes"
-OUTPUT=ROOT/"site"/"scene-catalog.generated.js"
-SUPPORTED={".webp",".png",".jpg",".jpeg"}
-LABELS={
-    "living-room":"客厅", "bedroom":"卧室", "bathroom":"浴室",
-    "toilet":"卫生间", "kitchen":"厨房", "entrance":"玄关",
-    "hallway":"走廊", "balcony":"阳台", "study":"书房",
+from PIL import Image, UnidentifiedImageError
+
+ROOT = Path(__file__).resolve().parent.parent
+SCENES = ROOT / "site" / "assets" / "scenes"
+OUTPUT = ROOT / "site" / "scene-catalog.generated.js"
+MANIFEST = ROOT / "site" / "scene-catalog.generated.json"
+SUPPORTED = {".webp": "WEBP", ".png": "PNG", ".jpg": "JPEG", ".jpeg": "JPEG"}
+RESERVED = {"menu", "classroom", "protagonist"}
+LABELS = {
+    "living-room": "客厅", "bedroom": "卧室", "bathroom": "浴室",
+    "toilet": "卫生间", "kitchen": "厨房", "entrance": "玄关",
+    "hallway": "走廊", "balcony": "阳台", "study": "书房",
+    "dining-room": "餐厅", "laundry-room": "洗衣房", "storage-room": "储藏室",
+    "basement": "地下室", "attic": "阁楼", "stairwell": "楼梯间",
+    "corridor": "走廊", "guest-room": "客房", "livingroom": "客厅",
+    "school-hall": "学校走廊", "classroom-empty": "空教室",
+    "front-door": "入户门", "doorway": "门口", "foyer": "玄关",
 }
-def build():
-    entries=[]
-    SCENES.mkdir(parents=True,exist_ok=True)
-    used_ids=set()
-    for item in sorted(SCENES.iterdir()):
+
+
+def inspect_scene(path: Path) -> dict:
+    slug = path.stem
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
+        raise ValueError(f"{path.name}: use lowercase kebab-case, e.g. guest-room.webp")
+    if slug in RESERVED:
+        raise ValueError(f"{path.name}: reserved scene name {slug}; never create a portrait scene")
+    size = path.stat().st_size
+    if size < 32 or size > 25 * 1024 * 1024:
+        raise ValueError(f"{path.name}: image must be 32 B–25 MB (got {size} bytes)")
+    try:
+        with Image.open(path) as img:
+            width, height, fmt = img.width, img.height, img.format
+            frame_count = getattr(img, "n_frames", 1)
+            img.verify()  # catch truncated/corrupt bitstreams, not just header magic
+        with Image.open(path) as img:
+            img.load()
+    except (OSError, ValueError, UnidentifiedImageError) as exc:
+        raise ValueError(f"{path.name}: unreadable or incomplete image: {exc}") from exc
+    if fmt != SUPPORTED[path.suffix.lower()]:
+        raise ValueError(f"{path.name}: file content {fmt} does not match extension")
+    if frame_count != 1:
+        raise ValueError(f"{path.name}: animated images cannot be static scene backgrounds")
+    if width < 128 or height < 128 or width > 8192 or height > 8192:
+        raise ValueError(f"{path.name}: dimensions {width}x{height} outside 128–8192 px")
+    # Do not crop, stretch, alter or recompress user art. CSS object-fit:contain
+    # handles non-16:9 sources while the rest of the scene remains independent.
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+    return {
+        "id": slug, "file": path.name,
+        "title": LABELS.get(slug, slug.replace("-", " ").title()),
+        "width": width, "height": height, "version": digest,
+        "type": "environment",
+    }
+
+
+def build() -> list[dict]:
+    if not SCENES.is_dir():
+        raise FileNotFoundError(f"Scene image directory missing: {SCENES}")
+    entries: list[dict] = []
+    names: set[str] = set()
+    # Case-insensitive deterministic ordering on all operating systems.
+    for item in sorted(SCENES.iterdir(), key=lambda p: p.name.lower()):
         if not item.is_file() or item.suffix.lower() not in SUPPORTED:
             continue
-        slug=item.stem
-        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*",slug):
-            raise ValueError(f"Invalid scene filename (use kebab-case): {item.name}")
-        if slug in used_ids:
-            raise ValueError(f"Duplicate scene ID: {slug} (multiple extensions)")
-        used_ids.add(slug)
-        data=item.read_bytes()
-        if item.suffix.lower()==".webp":
-            valid=len(data)>=24 and data[:4]==b"RIFF" and data[8:12]==b"WEBP"
-        elif item.suffix.lower()==".png":
-            valid=len(data)>=24 and data[:8]==b"\x89PNG\r\n\x1a\n"
-        else:
-            valid=len(data)>=8 and data[:3]==b"\xff\xd8\xff" and data[-2:]==b"\xff\xd9"
-        if not valid:
-            raise ValueError(f"Invalid scene image: {item}")
-        entries.append({"id":slug,"file":item.name,
-                        "title":LABELS.get(slug,slug.replace("-"," ").title())})
-    js="/* Automatically generated by scripts/build_scene_catalog.py. Do not edit. */\n"
-    js+="window.PAPERWORLD_SCENE_CATALOG=Object.freeze("+json.dumps(
-        entries,ensure_ascii=False,separators=(",",":"))+");\n"
-    OUTPUT.write_text(js,encoding="utf-8")
-    print("AUTO REGISTERED:",len(entries),"rooms:",", ".join(e["id"] for e in entries))
-if __name__=="__main__":
+        entry = inspect_scene(item)
+        if entry["id"] in names:
+            raise ValueError(f"Duplicate scene ID: {entry['id']} (only one image extension per scene)")
+        names.add(entry["id"])
+        entries.append(entry)
+    if not entries:
+        raise ValueError("No scene images found in site/assets/scenes")
+    payload = json.dumps(entries, ensure_ascii=False, separators=(",", ":"))
+    js = (
+        "/* AUTO-GENERATED. Add images under assets/scenes; do not edit this file. */\n"
+        "window.PAPERWORLD_SCENE_CATALOG=Object.freeze(" + payload + ");\n"
+    )
+    # Generate into the Pages build, never mutate input assets or personal settings.
+    OUTPUT.write_text(js, encoding="utf-8")
+    MANIFEST.write_text(json.dumps({"schema": 2, "scenes": entries},
+                                  ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("AUTO REGISTERED:", len(entries), "rooms:",
+          ", ".join(entry["id"] for entry in entries))
+    for entry in entries:
+        print(f"  {entry['title']}: {entry['file']} "
+              f"({entry['width']}x{entry['height']}, sha256:{entry['version']})")
+    return entries
+
+
+if __name__ == "__main__":
     build()
