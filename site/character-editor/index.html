@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>角色分层修图工作室 · Pixel Atelier</title>
+<title>Paperchalk World · 全人物 L2D 编辑工作室</title>
 <style>
 :root{color-scheme:dark;--bg:#0e121a;--panel:#181f2a;--soft:#232d3b;--line:#354154;--txt:#f0f5fc;--muted:#a7b4c7;--blue:#7bbdff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px system-ui,"PingFang SC",sans-serif;color:var(--txt)}
@@ -38,12 +38,12 @@ body.embedded #btnCloseInGame{background:#273244}
  body.embedded .layout{height:auto;min-height:0}
 }
 </style></head><body>
-<header><div><strong>✎ 角色分层修图工作室</strong><small>在线编辑 · 所有部件可擦除 / 补画 / 拆分 / 调整 · 原坐标导出</small></div><div class="actions">
+<header><div><strong>✎ 全人物 L2D 编辑工作室</strong><small>在线编辑 · 所有部件可擦除 / 补画 / 拆分 / 调整 · 原坐标导出</small></div><div class="actions">
 <button id="btnApplyGame" type="button" hidden>✓ 应用到游戏</button><button id="btnCloseInGame" type="button" hidden>返回 DEV</button><button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnSave">保存到本机浏览器</button><button id="btnExport">↓ 完整分层 ZIP</button>
 </div></header>
 <div class="layout">
 <aside class="left">
-<section><h3>人物方向</h3><div class="row"><button id="frontTab" class="active">正面</button><button id="backTab">背面</button></div><p class="tip">内置原网站正背面角色合成图作参考。要恢复你 PSD 的每个独立部件，请导入之前导出的「完整分层工程 ZIP」；导入时保留原始坐标。</p></section>
+<section><h3>人物方向</h3><div class="row"><button id="frontTab" class="active">正面</button><button id="backTab">背面</button></div><p class="tip">当前人物及方向来自上方全人物列表。PSD/分层 ZIP 导入后保留原图层坐标，动画在 L2D 预览里实时检查。</p></section>
 <section><h3>图层（从上到下 = 前到后）</h3><div id="layers" class="layerlist"></div><div class="row" style="margin-top:7px"><button id="add">＋ 新图层</button><button id="dup">复制</button><button id="del">删除</button></div><div class="row" style="margin-top:6px"><button id="up">前移 ▲</button><button id="down">后移 ▼</button><button id="rename">重命名</button></div></section>
 <section><h3>导入你的素材</h3><div class="stack"><label class="tip">导入 PNG / WebP 到当前视角<input id="imgImport" type="file" accept="image/png,image/webp,image/jpeg" multiple></label><label class="tip">直接导入 Photoshop PSD（需要联网加载解析库）<input id="psdImport" type="file" accept=".psd,image/vnd.adobe.photoshop"></label><label class="tip">导入原位分层 ZIP（支持之前网页导出的包）<input id="zipImport" type="file" accept=".zip,application/zip"></label></div></section>
 </aside>
@@ -135,7 +135,7 @@ $('color').oninput=e=>S.color=e.target.value;$('opacity').oninput=e=>{if(current
 $('solo').onchange=e=>{S.only=e.target.checked;render()};$('grid').onchange=e=>{S.grid=e.target.checked;render()};$('checker').onchange=e=>{S.checker=e.target.checked;render()};
 $('fit').onclick=fit;$('face').onclick=()=>focus(510,160,Math.min(8,stage.clientWidth/250));$('collar').onclick=()=>focus(510,230,Math.min(10,stage.clientWidth/200));
 $('zoomIn').onclick=()=>zoom(stage.clientWidth/2,stage.clientHeight/2,1.3);$('zoomOut').onclick=()=>zoom(stage.clientWidth/2,stage.clientHeight/2,1/1.3);
-$('resetSide').onclick=async()=>{if(!confirm('将当前面还原为原网站的合成参考？请先导出 ZIP 备份！'))return;check();const im=await imgFrom('../assets/characters/protagonist-'+S.side+'.webp');S.layers[S.side]=[layer('原始角色合成参考',im,0,0,true)];S.sel=0;renderList();render();autosave()};
+$('resetSide').onclick=async()=>{if(!confirm('恢复当前角色此方向的原始参考素材？请先导出 ZIP！'))return;check();const c=window.PaperchalkStudio?.list?.get(window.PaperchalkStudio.current);const url=c?.[S.side];if(!url){status('当前人物此方向没有原图');return}const im=await imgFrom(url);S.layers[S.side]=[layer('原始角色 · '+S.side,im,0,0,true)];S.sel=0;renderList();render();autosave()};
 $('clearLayer').onclick=()=>{if(!editable())return;if(!confirm('清空当前图层全部像素？'))return;check();const p=current();p.canvas.getContext('2d').clearRect(0,0,p.canvas.width,p.canvas.height);render();autosave()};
 stage.addEventListener('pointerdown',down);stage.addEventListener('pointermove',move);stage.addEventListener('pointerup',upPointer);stage.addEventListener('pointercancel',upPointer);
 stage.addEventListener('wheel',e=>{e.preventDefault();const p=getP(e);zoom(p.x,p.y,Math.exp(-Math.sign(e.deltaY)*.17))},{passive:false});
@@ -224,4 +224,5 @@ if(embedded)sendParent({type:'PAPERCHALK_EDITOR_READY'});
 </script>
 <script src="../l2d/rig.js"></script>
 <script src="./l2d-mode.js"></script>
+<script src="./studio.js"></script>
 </body></html>
