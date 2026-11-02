@@ -1,0 +1,84 @@
+name: Game DEV character paint integration
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/dev/**'
+      - 'site/character-editor/**'
+      - 'site/index.html'
+      - 'site/characters.catalog.json'
+      - '.github/workflows/game-character-dev-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  game-editor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: python3 -m pip install --quiet 'Pillow>=10,<12'
+      - run: python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
+      - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Verify game DEV open, import, PSD editor, per-character live apply and persistence
+        run: |
+          mkdir -p artifacts/character-dev
+          python3 -m http.server 8129 --directory site >/tmp/character-dev-server.log 2>&1 &
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          const fs=require('fs');
+          const {chromium}=require('playwright');
+          new Function(fs.readFileSync('site/dev/character-bridge.js','utf8'));
+          const root=fs.readFileSync('site/index.html','utf8');
+          for(const id of ['dev-character-overlay','dev-character-open','dev-character-list','dev-character-angle','dev-character-import','dev-character-frame'])assert.ok(root.includes('id="'+id+'"'),id);
+          (async()=>{
+            const b=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
+            try {
+              for(const phone of [false,true]){
+                const page=await b.newPage({
+                  viewport:phone?{width:390,height:844}:{width:1280,height:800},
+                  isMobile:phone,hasTouch:phone
+                });
+                const errors=[];page.on('pageerror',e=>errors.push(e.message));
+                await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
+                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:16000});
+                await page.selectOption('#dev-layer','player');
+                assert.equal(await page.locator('#dev-character-controls').isVisible(),true);
+                await page.locator('#dev-character-open').click({force:phone});
+                await page.waitForFunction(()=>document.querySelector('#dev-character-frame').contentWindow?.characterEditor?.S?.ready,{timeout:15000});
+                const child=page.frameLocator('#dev-character-frame');
+                await child.locator('#status').filter({hasText:'游戏人物'}).waitFor({timeout:12000});
+                assert.equal(await child.locator('#layers .layer').count(),1);
+                await child.locator('#add').click();
+                assert.equal(await child.locator('#layers .layer').count(),2);
+                await child.locator('#btnApplyGame').click();
+                await page.waitForFunction(()=>document.querySelector('#actor-player')?.src?.startsWith('data:image/png;base64,'),{timeout:16000});
+                await page.screenshot({path:'artifacts/character-dev/'+(phone?'phone':'desktop')+'.png',fullPage:true});
+                // The editor is mounted in the in-game DEV; no new tab or external site.
+                assert.equal(await page.locator('#dev-character-overlay').isVisible(),true);
+                await page.locator('#dev-character-close').click({force:phone});
+                await page.waitForFunction(()=>document.querySelector('#dev-character-overlay').hidden===true);
+                // Import a new named image into the active player slot.
+                const tiny=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+v0kQAAAAASUVORK5CYII=','base64');
+                await page.locator('#dev-character-import').setInputFiles({name:'new-npc-front.png',mimeType:'image/png',buffer:tiny});
+                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.characters.some(c=>c.id.startsWith('local-')),{timeout:15000});
+                assert.ok(await page.locator('#dev-character-list option').count()>=2);
+                await page.locator('#dev-character-open').click({force:phone});
+                await child.locator('#status').filter({hasText:'游戏人物'}).waitFor({timeout:15000});
+                assert.equal(await child.locator('#layers .layer').count(),1,'different character has independent layers');
+                await page.locator('#dev-character-close').click({force:phone});
+                assert.deepEqual(errors,[],'uncaught browser exceptions');
+                await page.close();
+              }
+            } finally {await b.close();}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: game-dev-character-editor
+          path: artifacts/character-dev
+          retention-days: 7
