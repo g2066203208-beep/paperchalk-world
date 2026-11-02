@@ -9,7 +9,8 @@
     "proposedBiographyIsNotConfirmed": true,
     "fictionalAnatomyIsUnverified": true,
     "draftPhysicalValuesMustNotBeClaimedUserApproved": true,
-    "noAdditionalPortraitScene": true
+    "noAdditionalPortraitScene": true,
+    "confirmedCharacterPersonalityIsCanonical": true
   },
   "characters": [
     {
@@ -27,7 +28,8 @@
       "status": {
         "visual": "approved_reference_locked",
         "biography": "proposed_not_approved",
-        "name": "pending"
+        "name": "pending",
+        "personality": "approved_core_traits"
       },
       "assets": {
         "front": "site/assets/characters/protagonist-front.webp",
@@ -72,15 +74,11 @@
         },
         "personality": {
           "value": [
-            "安静内敛",
-            "观察细致",
-            "谨慎",
-            "耐心",
-            "略有戒备心",
-            "情绪表达克制",
-            "熟悉后对人有细微关照"
+            "毒舌",
+            "冷淡"
           ],
-          "status": "proposed"
+          "status": "user_confirmed",
+          "note": "These two core traits are directly confirmed by user; other psychological traits remain proposals"
         },
         "voice": {
           "value": "中低音区，语速中等偏慢，靠停顿和呼吸表达情绪",
@@ -112,7 +110,7 @@
           "docs/PROTAGONIST_CANON.md",
           "drafted production profile"
         ],
-        "provenanceNote": "Only visible visual properties and existing asset ownership are locked. Other character backstory and body numbers are unapproved creative proposals.",
+        "provenanceNote": "Visual properties are derived from approved reference art. Core personality '毒舌' and '冷淡' is directly user-confirmed. Other life history, body numbers and optional behavioral detail remain creative proposals.",
         "appearance": {
           "faceShape": {
             "value": "soft narrow oval, gently narrowing jaw and small chin",
@@ -189,39 +187,32 @@
         },
         "personalityProposal": {
           "status": "proposed_not_approved",
+          "coreCanonReference": "personalityCanon",
           "temperament": [
-            "reserved",
-            "quiet",
-            "watchful",
-            "self-contained",
-            "subtly empathetic when trust grows"
+            "aloof",
+            "emotionally restrained in outward expression",
+            "sharp-tongued in conversation"
           ],
           "cognition": [
             "notices minor inconsistencies",
-            "asks factual questions before drawing conclusions",
-            "memory of room arrangements"
+            "may challenge others' faulty logic with blunt remarks"
           ],
           "strengths": [
-            "patient",
-            "attentive",
-            "composed under uncertainty"
+            "direct",
+            "unafraid to point out contradictions"
           ],
           "weaknesses": [
-            "overthinks anomalies",
-            "hesitates to trust",
-            "internalizes worries"
+            "can unintentionally alienate others with sharp words"
           ],
           "goalsProposed": [
-            "understand contradictory ordinary events",
-            "protect relationships without abandoning evidence"
+            "understand contradictory ordinary events"
           ],
-          "conflict": "attachment to ordinary routines versus the pressure to acknowledge unsettling changes",
-          "dialogue": "brief, clear, deliberate pauses; no exaggerated screeching or infantile tics",
-          "voiceProposal": "mid-low soft tone with steady pace and subtle breath-related pauses",
+          "conflict": "whether her habit of keeping others at a distance complicates communication under pressure (proposal only)",
+          "dialogue": "sharp concise retorts; dry irony; low warmth in default voice; insult not required in every line",
+          "voiceProposal": "cool and restrained delivery with pointed stress and clean pauses",
           "habitsProposed": [
-            "eyes move before head when hearing noise",
-            "subtle shoulder tension and release",
-            "small hand adjustment when unsure"
+            "minimal outward reactions",
+            "dry sidelong glance after an absurd remark"
           ]
         },
         "animationBoundaries": {
@@ -253,7 +244,21 @@
           "exact shoe fit"
         ]
       },
-      "profileDocument": "docs/characters/CHAR-001_PROTAGONIST_PROFILE.md"
+      "profileDocument": "docs/characters/CHAR-001_PROTAGONIST_PROFILE.md",
+      "personalityCanon": {
+        "coreTraits": [
+          "毒舌",
+          "冷淡"
+        ],
+        "status": "user_confirmed",
+        "provenance": "Explicit user correction in conversation, 2026-11-02",
+        "chineseDirection": "冷淡疏离、不主动示好；说话犀利、直接、带尖锐反讽，但毒舌不等于无差别辱骂，冷淡不等于木讷。",
+        "writingConstraints": [
+          "Never replace cold sharp-tongued personality with gentle empathetic heroine",
+          "Keep distinction between explicitly confirmed traits and proposed behavioral details",
+          "Do not assume she is shy or warmhearted merely from reserved visual expression"
+        ]
+      }
     }
   ]
 }
