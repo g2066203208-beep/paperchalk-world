@@ -47,7 +47,7 @@ body.mobile-mode.virtual-landscape #view{
   pointer-events:none;
   /* Picture-attached solid rim is deliberately tiny, but still covers
      the image's true edges under 3D rotation. Sizes are developer-tunable. */
-  --rim-solid:7px;
+  --rim-solid:10px;
   --rim-feather:10px;
   background:
     linear-gradient(to right,
@@ -621,9 +621,9 @@ void main(){
   // Live persisted fog controls, intentionally separate from 3D layer editor.
   // Large values remain user-adjustable, but the clear-zone hard-clips smoke.
   const FOG_KEY='paperchalk-fog-edge-v1';
-  const fogDefaults=Object.freeze({width:4,opacity:40,offset:-3,safe:88,solid:7,feather:10});
+  const fogDefaults=Object.freeze({width:4,opacity:40,offset:-3,safe:88,solid:10,feather:10});
   const fogBounds=Object.freeze({width:[0,14],opacity:[0,100],offset:[-30,45],
-                                 safe:[65,98],solid:[7,24],feather:[0,35]});
+                                 safe:[65,98],solid:[10,24],feather:[0,35]});
   function cleanFog(raw){
     const result={...fogDefaults};
     if(!raw||typeof raw!=='object')return result;
