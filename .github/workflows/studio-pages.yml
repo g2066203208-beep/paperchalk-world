@@ -161,11 +161,11 @@ jobs:
           # Original RGB and alpha are committed as immutable lossless WebP.
           # Dynamic black fog is limited by REAL scene edges and a center safe zone.
           for marker in (
-              '--rim-solid:7px', '--rim-feather:10px',
+              '--rim-solid:10px', '--rim-feather:10px',
               'uniform vec4 u_fogSettings', 'uniform vec2 u_rimSettings',
               'float nearEdges=max(', 'float safetyBlack=',
               "const FOG_KEY='paperchalk-fog-edge-v1'",
-              'width:4,opacity:40,offset:-3,safe:88,solid:7,feather:10',
+              'width:4,opacity:40,offset:-3,safe:88,solid:10,feather:10',
               'id="dev-fog-trigger"', 'id="dev-fog-tools"',
               'id="fog-safe-guide"', 'id="fog-width"',
               'id="fog-offset"', 'id="fog-safe"',
