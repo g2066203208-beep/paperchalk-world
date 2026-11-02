@@ -24,7 +24,8 @@ async function refresh(obj){
   if(!obj.rig){
    obj.rig=new window.PaperchalkL2DRig(obj.img,obj.canvas,{
     amplitude:obj.profile.amplitude,period:obj.profile.period,
-    softness:obj.profile.softness,cleanup:true,playing:true
+    softness:obj.profile.softness,cleanup:true,playing:true,
+    featurePreset:obj.img.dataset.characterId==='protagonist'&&obj.img.dataset.characterSide==='front'?'heroine-front':'generic'
    });
    await obj.rig.ready;
    obj.rig.start();
@@ -33,8 +34,11 @@ async function refresh(obj){
   }
   if(n!==obj.loading)return;
   obj.hasParts=false;
+  obj.rig.featurePreset=obj.img.dataset.characterId==='protagonist'&&obj.img.dataset.characterSide==='front'?'heroine-front':'generic';
+  obj.rig.blinkEnabled=obj.rig.featurePreset==='heroine-front';
   obj.rig.animatedFrames=!!obj.animated;
   obj.root.dataset.l2dState='ready';
+  if(!obj.clip)obj.root.dataset.l2dMode='procedural-multinode';
   obj.lastSource=obj.img.currentSrc||obj.img.src;
  }catch(error){
   obj.root.dataset.l2dState='error';
@@ -55,6 +59,8 @@ function setProfile(slot,values){
   a.rig.setAmplitude(a.profile.amplitude);
   a.rig.setPeriod(a.profile.period);
   a.rig.setSoftness(a.profile.softness);
+  a.rig.featurePreset=a.img.dataset.characterId==='protagonist'&&a.img.dataset.characterSide==='front'?'heroine-front':'generic';
+  a.rig.blinkEnabled=a.rig.featurePreset==='heroine-front';
  }
  return true;
 }
@@ -82,7 +88,7 @@ async function setLayers(slot,parts,canvasSize){
 async function setAnimationSource(slot,uri,opts={}){
  const obj=target(slot);if(!obj)return false;
  if(obj.clip?.img?.parentElement)obj.clip.img.remove();
- if(!uri){obj.clip=null;if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}return true;}
+ if(!uri){obj.clip=null;obj.root.dataset.l2dMode='procedural-multinode';if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}return true;}
  const img=new Image();
  await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=uri;});
  img.setAttribute('aria-hidden','true');
@@ -91,7 +97,7 @@ async function setAnimationSource(slot,uri,opts={}){
  obj.clip={img,x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w||img.naturalWidth),h:Number(opts.h||img.naturalHeight)};
  obj.clipFrame=0;
  if(obj.rig)obj.rig.stop();
- obj.root.dataset.l2dState='ready';
+ obj.root.dataset.l2dState='ready';obj.root.dataset.l2dMode='v4-clip';
  return true;
 }
 function updateFrame(obj,now){
