@@ -94,7 +94,7 @@ async function setAnimationSource(slot,uri,opts={}){
  const nonce=++obj.loading;
  if(obj.clip?.decoder)try{obj.clip.decoder.close()}catch(_){}
  if(obj.clip?.img?.parentElement)obj.clip.img.remove();
- obj.clip=null;
+ obj.clip=null;obj.v4Composite=null;
  if(!uri){
   obj.root.dataset.l2dMode='procedural-multinode';
   if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}
@@ -165,25 +165,34 @@ function advanceV4(obj,now){
  clip.decoding=true;
  clip.decoder.decode({frameIndex:index}).then(({image})=>{
   if(obj.clip!==clip){image.close();return;}
-  const canvas=obj.canvas,ctx=canvas.getContext('2d',{alpha:true});
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+   const canvas=obj.canvas,ctx=canvas.getContext('2d',{alpha:true});
+  // Compose the authentic V4 frame + PSD pixel corrections in source
+  // coordinates. Only THEN skin the chest locally into the visible frame.
+  // Never apply a transform to the whole actor canvas.
+  let source=obj.v4Composite;
+  if(!source){source=document.createElement('canvas');obj.v4Composite=source;}
+  if(source.width!==canvas.width||source.height!==canvas.height){
+   source.width=canvas.width;source.height=canvas.height;
+  }
+  const paint=source.getContext('2d',{alpha:true});
+  paint.setTransform(1,0,0,1,0,0);
+  paint.clearRect(0,0,source.width,source.height);
+  paint.imageSmoothingEnabled=true;paint.imageSmoothingQuality='high';
   // Draw from native 335×1013 directly to device pixels: no intermediate
   // upsample to 1024 followed by CSS downsample.
   const sx=canvas.width/1024,sy=canvas.height/1024;
-  ctx.drawImage(image,clip.x*sx,clip.y*sy,clip.w*sx,clip.h*sy);
+  paint.drawImage(image,clip.x*sx,clip.y*sy,clip.w*sx,clip.h*sy);
   image.close();
   // Apply only pixels changed in the original PSD source. The approved
   // 128-frame V4 remains dynamic everywhere outside the edited region.
   if(obj.partPatch?.erase&&obj.partPatch.paint){
-   ctx.save();
-   ctx.globalCompositeOperation='destination-out';
-   ctx.drawImage(obj.partPatch.erase,0,0,canvas.width,canvas.height);
-   ctx.restore();
-   ctx.drawImage(obj.partPatch.paint,0,0,canvas.width,canvas.height);
+   paint.save();
+   paint.globalCompositeOperation='destination-out';
+   paint.drawImage(obj.partPatch.erase,0,0,canvas.width,canvas.height);
+   paint.restore();
+   paint.drawImage(obj.partPatch.paint,0,0,canvas.width,canvas.height);
   }
-  if(obj.overlay)ctx.drawImage(obj.overlay,0,0,canvas.width,canvas.height);
+  if(obj.overlay)paint.drawImage(obj.overlay,0,0,canvas.width,canvas.height);
   let correction=obj.overlayFrames.get(index);
   const correctionUrl=obj.overlayFrameUrls.get(index);
   if(!correction&&correctionUrl&&!obj.overlayPending.has(index)){
@@ -201,7 +210,12 @@ function advanceV4(obj,now){
    im.onerror=()=>obj.overlayPending.delete(frameId);
    im.src=correctionUrl;
   }
-  if(correction)ctx.drawImage(correction,0,0,canvas.width,canvas.height);
+  if(correction)paint.drawImage(correction,0,0,canvas.width,canvas.height);
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(window.PaperchalkLocalBreath)
+   window.PaperchalkLocalBreath.draw(ctx,source,obj.profile,now,canvas.width,canvas.height);
+  else ctx.drawImage(source,0,0,canvas.width,canvas.height);
   clip.frame=index;
   obj.root.dataset.l2dFrame=String(index);
  }).catch(e=>{console.warn('[L2D] V4 frame decoding error',e)})
@@ -260,27 +274,11 @@ function sync(t){
   if(a.canvas.style.top!==(a.img.offsetTop+'px'))a.canvas.style.top=a.img.offsetTop+'px';
   if(a.canvas.style.width!==(w+'px'))a.canvas.style.width=w+'px';
   if(a.canvas.style.height!==(h+'px'))a.canvas.style.height=h+'px';
-  // The approved baked V4 keeps all 128 animated frames; user-adjustable
-  // motion adds an inexpensive, smooth idle transform without re-encoding art.
-  // Anchor at the feet; keep static PSD edits and the game's decoder intact.
-  const animated=a.clip?.type==='decoder'||a.clip?.type==='native';
-  const amplitude=clamp(Number(a.profile?.amplitude)||0,0,4);
-  const moving=animated&&amplitude>0.001&&!document.hidden&&!a.root.hidden;
+  // Breathing is now a localized image-space deformation in advanceV4().
+  // Undo any old whole-image rocking transform left by a cached version.
   const surface=a.clip?.type==='native'?a.clip.img:a.canvas;
-  if(surface){
-   if(moving){
-    const seconds=(t||performance.now())/1000;
-    const theta=seconds*Math.PI*2/clamp(Number(a.profile?.period)||4.8,2,12);
-    const inhalation=Math.sin(theta);
-    const lag=Math.sin(theta-.55);
-    const sx=(1+.018*amplitude*inhalation).toFixed(4);
-    const sy=(1+.011*amplitude*inhalation).toFixed(4);
-    const deg=(.45*amplitude*lag).toFixed(3);
-    const transform='scale('+sx+','+sy+') rotate('+deg+'deg)';
-    if(surface.style.transform!==transform)surface.style.transform=transform;
-    if(surface.style.transformOrigin!=='50% 100%')surface.style.transformOrigin='50% 100%';
-   }else if(surface.style.transform)surface.style.transform='';
-  }
+  if(surface?.style.transform)surface.style.transform='';
+  if(surface?.style.transformOrigin)surface.style.transformOrigin='';
   if(a.rig&&!a.clip)a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
   if(a.clip?.type==='decoder')advanceV4(a,t||performance.now());
   if(a.clip?.type==='native')placeClip(a);
