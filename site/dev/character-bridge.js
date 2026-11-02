@@ -101,8 +101,21 @@ async function assign(target,id,face='front',save=true){
   const obj=window.PaperchalkL2D.get(target);
   if(obj){obj.root.dataset.l2dEdition='psd-layer-skeletal';obj.root.dataset.l2dMode='psd-layer-skeletal';obj.root.dataset.l2dAnimated='true';}
  }else if(publishedRig){
-  if(!window.PaperchalkL2DLibrary)throw Error('游戏未安装模块化 ArtMesh 播放器');
-  await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig);
+  try{
+   if(!window.PaperchalkL2DLibrary)throw Error('游戏未安装模块化 ArtMesh 播放器');
+   // PROTAGONIST: her original actor automatically renders independent
+   // animated hair, pleats and both arms. No separate experimental selection.
+   await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig);
+   if(id==='protagonist')actor.root.dataset.l2dBreath='disabled';
+  }catch(error){
+   // Fail safe: preserve the existing approved V4 when any PNG/rig is
+   // corrupted or unavailable, rather than removing the heroine from scene.
+   if(id!=='protagonist'||!source)throw error;
+   console.warn('[L2D] Original heroine joint rig unavailable, using existing unmodified V4',error);
+   await window.PaperchalkL2D.setAnimationSource(target,source,shape);
+   actor.root.dataset.l2dEdition='V4-fallback';
+   actor.root.dataset.l2dBreath='disabled';
+  }
  }else if(source){
   try{
    await window.PaperchalkL2D.setAnimationSource(target,source,shape);
@@ -133,7 +146,7 @@ async function assign(target,id,face='front',save=true){
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
  note('正在加载 '+c.label+' · '+(face==='back'?'背面':'正面')+
-   (usesPsdRig?' · 本机独立 PSD':publishedRig?' · 素材库独立 ArtMesh':source?' · V4 逐帧':' · 通用程序网格'));
+   (usesPsdRig?' · 本机独立 PSD':publishedRig?' · 真实部件头发/裙摆/手臂独立摆动（无呼吸）':source?' · V4 逐帧':' · 通用程序网格'));
 }
 async function openStudio(){
  // DEV always navigates to the ONE shared studio, no iframe and no
