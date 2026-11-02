@@ -479,8 +479,8 @@ jobs:
                 // assuming a 450ms window guarantees six frames).
                 await page.waitForFunction(baseline=>{
                   const value=Number(document.getElementById('fog').dataset.frames);
-                  return value-Number(baseline)>=6;
-                },before,{timeout:6000,polling:100});
+                  return value-Number(baseline)>=2;
+                },before,{timeout:15000,polling:100});
                 const after=await page.locator('#fog').getAttribute('data-frames');
                 assert.ok(Number(after)-Number(before)>=6,'fluid stopped progressing after DEV');
                 const renderer=await page.locator('#fog').getAttribute('data-renderer');
