@@ -55,6 +55,7 @@ function selectSlot(value){
 async function assign(target,id,face='front',save=true){
  const c=catalog.get(id);if(!c)throw Error('未找到角色 '+id);
  const actor=window.PaperchalkL2D.get(target);if(!actor)throw Error('人物图层未加载 '+target);
+ if(face==='back'&&!c.back)throw Error('该角色还没有真正的背面素材，不能用正面冒充背面：'+c.label);
  const src=await get('render:'+id+':'+face)||c[face]||c.front||c.back;
  if(!src)throw Error('人物缺少 '+face+' 方向素材');
  const img=actor.img;assigned[target]={id,side:face};
@@ -68,9 +69,10 @@ async function assign(target,id,face='front',save=true){
  // The approved V4 is built into GitHub Pages, not an optional browser upload.
  // Explicit per-character V4 imports may override it; other actors keep
  // their own dynamic mesh rig and NEVER display the hidden static source.
- const installedV4=id==='protagonist' ? './assets/l2d/v4/'+face+'.webp' : '';
+ const deployedClip=c.clips?.[face];
+ const installedV4=deployedClip?.url||(id==='protagonist'?'./assets/l2d/v4/'+face+'.webp':'');
  const source=(clip?.data?.startsWith('data:image/webp;base64,')?clip.data:installedV4);
- const shape=clip?.crop||{x:351,y:9,w:335,h:1013};
+ const shape=clip?.crop||deployedClip?.crop||{x:351,y:9,w:335,h:1013};
  if(source){
   try{
    await window.PaperchalkL2D.setAnimationSource(target,source,shape);
@@ -142,7 +144,7 @@ async function init(){
  try{
   const response=await fetch('./characters.catalog.json',{cache:'no-store'});
   if(response.ok)for(const p of (await response.json()).characters||[]){
-   if(valid(p.id))catalog.set(p.id,{id:p.id,label:p.label||p.id,front:p.front||'',back:p.back||''});
+   if(valid(p.id))catalog.set(p.id,{id:p.id,label:p.label||p.id,front:p.front||'',back:p.back||'',clips:p.clips||{},animated:p.animated||{}});
   }
  }catch(e){console.warn('L2D catalog offline',e);}
  const imported=await get('imported');if(Array.isArray(imported))for(const c of imported){
