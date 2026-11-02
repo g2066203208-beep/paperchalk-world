@@ -10,8 +10,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from zipfile import ZipFile, BadZipFile
+import stat
 from PIL import Image, UnidentifiedImageError
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -206,7 +207,85 @@ def inspect_module(folder):
             "module":True, "version":digest.hexdigest()[:12]}
 
 
+def install_inbox():
+    """Safe, idempotent single-ZIP installation in the disposable Pages checkout.
+
+    A ZIP is stored under site/assets/l2d/inbox/<id>.zip and contains
+    <id>/module.json and its sibling media. No source file in git is changed.
+    """
+    inbox=SITE / "assets/l2d/inbox"
+    if not inbox.exists():
+        return
+    for archive in sorted(inbox.glob("*.zip")):
+        ident=archive.stem
+        if not ID.fullmatch(ident):
+            fail(archive,"ZIP name must be a valid character ID")
+        if archive.stat().st_size > 90 * 1024 * 1024:
+            fail(archive,"compressed module exceeds 90MB")
+        try:
+            with ZipFile(archive) as z:
+                infos=z.infolist()
+                if not infos or len(infos)>256:
+                    fail(archive,"invalid number of module ZIP members")
+                names=set()
+                total=0
+                files=[]
+                for info in infos:
+                    name=info.filename
+                    path=PurePosixPath(name)
+                    if name in names:
+                        fail(archive,"duplicate member: "+name)
+                    names.add(name)
+                    if (name.startswith("/") or "\\\\" in name or ".." in path.parts
+                        or not path.parts or path.parts[0]!=ident):
+                        fail(archive,"unsafe member path: "+name)
+                    if stat.S_ISLNK(info.external_attr>>16):
+                        fail(archive,"symlink entries are forbidden")
+                    if info.is_dir():
+                        continue
+                    if info.file_size>75*1024*1024:
+                        fail(archive,"single packaged file too large")
+                    total+=info.file_size
+                    if total>140*1024*1024:
+                        fail(archive,"uncompressed module exceeds 140MB")
+                    if info.file_size>1024 and info.file_size/max(1,info.compress_size)>300:
+                        fail(archive,"suspected ZIP bomb")
+                    files.append(info)
+                if ident+"/module.json" not in names:
+                    fail(archive,"module.json must be inside top-level <id>/ directory")
+                dst=LIBRARY / ident
+                existing=dst.is_dir()
+                if existing:
+                    # Ignore repeated compilation of the same exact package,
+                    # but refuse to overwrite a tracked/modded directory.
+                    for info in files:
+                        rel=PurePosixPath(info.filename).parts[1:]
+                        out=dst.joinpath(*rel)
+                        if not out.is_file() or out.stat().st_size!=info.file_size:
+                            fail(archive,"conflicts with an installed module: "+ident)
+                        with z.open(info) as stream:
+                            digest=hashlib.sha256()
+                            for chunk in iter(lambda:stream.read(1024*1024),b""):
+                                digest.update(chunk)
+                        if hashlib.sha256(out.read_bytes()).digest()!=digest.digest():
+                            fail(archive,"conflicts with edited module: "+ident)
+                    continue
+                # Validate all names first; extract only into the contained ID.
+                dst.mkdir(parents=True)
+                for info in files:
+                    rel=PurePosixPath(info.filename).parts[1:]
+                    out=dst.joinpath(*rel)
+                    out.parent.mkdir(parents=True,exist_ok=True)
+                    with z.open(info) as stream, out.open("wb") as target:
+                        for chunk in iter(lambda:stream.read(1024*1024),b""):
+                            target.write(chunk)
+                print("AUTO INSTALLED L2D ZIP:",archive.name,"->",dst)
+        except (BadZipFile,OSError) as exc:
+            fail(archive,f"unreadable packaged module ({exc})")
+
+
 def build():
+    install_inbox()
     modules = []
     if LIBRARY.exists():
         for folder in sorted(LIBRARY.iterdir(),key=lambda f:f.name.lower()):
