@@ -361,6 +361,7 @@ body.mobile-mode.virtual-landscape #view{
 
 </style>
 <script src="./scene-catalog.generated.js"></script>
+<script src="./scene-modules.js"></script>
 </head>
 <body>
 <main id="view" aria-label="同一场景模板：背景和菜单随视角倾斜，纯黑流体雾固定在屏幕上">
@@ -809,20 +810,10 @@ void main(){
   ];
   // Scene assets/content are data; rendering, 3D tilt and black fog are shared.
   // Only add an image to site/assets/scenes; CI auto-registers new scenes.
-  const importedScenes=Object.create(null);
-  for(const entry of (window.PAPERWORLD_SCENE_CATALOG||[])){
-    if(!entry||!/^[-a-z0-9]+$/.test(entry.id)||!/^[-a-z0-9]+[.](?:webp|png|jpe?g)$/.test(entry.file))continue;
-    if(entry.id==='menu'||entry.id==='classroom'||entry.id==='protagonist')continue;
-    importedScenes[entry.id]=Object.freeze({
-      image:'./assets/scenes/'+entry.file,
-      alt:entry.title+'：空室内场景',title:entry.title,type:'environment'
-    });
-  }
-  const SCENES=Object.freeze({
-    menu:Object.freeze({image:'./assets/menu-wall.webp',alt:'一面旧墙、一扇门和一盏灯',type:'menu'}),
-    classroom:Object.freeze({image:'./assets/classroom.webp',alt:'空教室全景：黑板、课桌、左侧窗户',title:'教室',type:'story'}),
-    ...importedScenes
-  });
+  // New rooms are declared ONLY by the compiled scene image catalog.
+  const SCENES=Object.freeze(window.PAPERWORLD_SCENE_MODULES.buildRegistry(
+    window.PAPERWORLD_SCENE_CATALOG
+  ));
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
   const cameraPlayer=document.getElementById('camera-player-root');
@@ -868,9 +859,11 @@ void main(){
     aimX=0;aimY=0;currentX=0;currentY=0;
     stage.style.transform='rotateY(0deg) rotateX(0deg)';
     const isStory=def.type==='story',isMenu=def.type==='menu';
-    // Keep room bitmaps empty; actor is a reusable, independent foreground plane.
-    const hasPlayer=isStory||def.type==='environment';
-    enemyDepth.hidden=!isStory;cameraPlayer.hidden=!hasPlayer;
+    // Per-scene layer contract; image files remain actor-free and unmodified.
+    const hasPlayer=def.layers.player;
+    enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
+    stage.dataset.sceneTitle=def.title;
+    stage.dataset.sceneVersion=def.version||'built-in';
     view.classList.toggle('environment-scene',def.type==='environment');
     sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=!isStory;
     if(isMenu){
