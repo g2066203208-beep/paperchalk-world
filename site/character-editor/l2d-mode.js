@@ -3,13 +3,12 @@
 'use strict';
 const ed=window.characterEditor;if(!ed)return;
 const S=ed.S,$=id=>document.getElementById(id);
-const defaults=()=>({amplitude:1.4,period:3.6,softness:1.25,
- hairSwing:3,skirtSwing:2.8,armSwing:2.2,legSwing:0,swaySpeed:1});
+const defaults=()=>({amplitude:1.4,period:3.6,softness:1.25});
 let currentId='default',rig=null,timer=0,paused=false,bones=false;
 const key=()=> 'paperchalk-l2d:'+currentId;
 function loadMotion(){
  try{const v=JSON.parse(localStorage.getItem(key())||'null');
- if(v?.front&&v?.back)return {front:{...defaults(),...v.front},back:{...defaults(),...v.back}};}catch(e){}
+ if(v?.front&&v?.back)return v;}catch(e){}
  return {front:defaults(),back:defaults()};
 }
 let motion=loadMotion();
@@ -22,49 +21,9 @@ section.innerHTML=[
  '<label class="mlabel">呼吸幅度 <output id="l2d-strength-value"></output></label><input id="l2d-strength" type="range" min="0" max="400" step="5">',
  '<label class="mlabel">呼吸周期 <output id="l2d-period-value"></output></label><input id="l2d-period" type="range" min="2" max="12" step=".1">',
  '<label class="mlabel">软硬变形 <output id="l2d-softness-value"></output></label><input id="l2d-softness" type="range" min="0" max="240" step="5">',
- '<div id="l2d-secondary-controls"><h4>局部摆动控制 · 滑动立即预览</h4>',
- '<label class="mlabel" for="l2d-hair-swing">头发摆动 <output id="l2d-hair-swing-value">300%</output></label><input id="l2d-hair-swing" aria-label="头发摆动幅度" type="range" min="0" max="500" value="300" step="10">',
- '<label class="mlabel" for="l2d-skirt-swing">裙摆摆动 <output id="l2d-skirt-swing-value">280%</output></label><input id="l2d-skirt-swing" aria-label="裙摆摆动幅度" type="range" min="0" max="500" value="280" step="10">',
- '<label class="mlabel" for="l2d-arm-swing">手臂与衣袖 <output id="l2d-arm-swing-value">220%</output></label><input id="l2d-arm-swing" aria-label="手臂摆动幅度" type="range" min="0" max="500" value="220" step="10">',
- '<label class="mlabel" for="l2d-leg-swing">腿部活动 <output id="l2d-leg-swing-value">0%</output></label><input id="l2d-leg-swing" aria-label="腿部摆动幅度" type="range" min="0" max="500" value="0" step="10">',
- '<label class="mlabel" for="l2d-sway-speed">次级动作速度 <output id="l2d-sway-speed-value">100%</output></label><input id="l2d-sway-speed" aria-label="次级摆动速度" type="range" min="50" max="250" value="100" step="5">',
- '<div class="row tight l2d-motion-presets"><button type="button" id="l2d-natural">自然</button><button type="button" id="l2d-expressive">明显</button><button type="button" id="l2d-reset-dynamics">恢复默认</button></div>',
- '<p id="l2d-motion-help" class="tip">控制的是头发发梢、裙摆边缘、衣袖和膝部。头、腰、脚保持稳定；滑杆为 0 可关闭该部位的附加摆动。V4 使用局部区域形变，真正 PSD 可独立驱动部件。</p></div>',
- '<p class="tip">导入完整 PSD 后驱动真正独立的头发、衣服、四肢图层；原版 V4 则保留原有逐帧动画并叠加局部形变。</p>'
+ '<p class="tip">导入完整 PSD 后显示真正的独立图层骨骼/网格（后发、刘海、裙摆、手臂、眼睛、嘴）；未导入时沿用原版 V4。游戏与工作室使用同一套 PSD 驱动代码。</p>'
 ].join('');
 document.querySelector('aside.right')?.prepend(section);
-const stage=document.getElementById('stage');
-const stageToolbar=stage?.querySelector('.stage-toolbar');
-const motionControls=$('l2d-secondary-controls');
-if(stage&&stageToolbar&&motionControls){
- const toggle=document.createElement('button');
- toggle.id='main-dynamics';
- toggle.type='button';toggle.textContent='🎚 动作调节';
- toggle.title='调节头发、裙摆、手臂、腿部及速度 · 大画布直接预览';
- toggle.setAttribute('aria-expanded','false');
- toggle.setAttribute('aria-controls','l2d-motion-drawer');
- stageToolbar.append(toggle);
- const drawer=document.createElement('div');
- drawer.id='l2d-motion-drawer';
- drawer.hidden=true;
- drawer.setAttribute('role','region');
- drawer.setAttribute('aria-label','人物局部动作控制器');
- const close=document.createElement('button');
- close.type='button';close.id='l2d-close-drawer';close.textContent='× 收起';
- drawer.append(close,motionControls);
- stage.append(drawer);
- function showMotionDrawer(show){
-  drawer.hidden=!show;
-  toggle.setAttribute('aria-expanded',String(show));
-  toggle.textContent=show?'🎚 收起调节':'🎚 动作调节';
- }
- toggle.addEventListener('click',()=>showMotionDrawer(drawer.hidden));
- close.addEventListener('click',()=>showMotionDrawer(false));
- window.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&!drawer.hidden)showMotionDrawer(false);
- });
-}
-
 function sync(){
  const q=motion[S.side]||defaults();
  $('l2d-strength').value=Math.round(q.amplitude*100);
@@ -72,13 +31,6 @@ function sync(){
  $('l2d-strength-value').textContent=Math.round(q.amplitude*100)+'%';
  $('l2d-period-value').textContent=q.period.toFixed(1)+' 秒';
  $('l2d-softness-value').textContent=Math.round(q.softness*100)+'%';
- for(const [id,key] of [['l2d-hair-swing','hairSwing'],
-  ['l2d-skirt-swing','skirtSwing'],['l2d-arm-swing','armSwing'],
-  ['l2d-leg-swing','legSwing'],['l2d-sway-speed','swaySpeed']]){
-  const pct=Math.round((q[key]??defaults()[key])*100);
-  $(id).value=String(pct);
-  $(id+'-value').textContent=pct+'%';
- }
 }
 function schedule(){
  const nativeParts=S.layers[S.side]?.filter(p=>p.sourcePart&&p.role==='psd-part')||[];
@@ -112,7 +64,7 @@ function schedule(){
    rig.setAmplitude(q.amplitude);rig.setPeriod(q.period);
    rig.featurePreset=currentId==='protagonist'&&S.side==='front'?'heroine-front':'generic';
    rig.blinkEnabled=rig.featurePreset==='heroine-front';
-   rig.setSoftness(q.softness);rig.setDynamics(q);rig.setBones(bones);rig.setPaused(paused);
+   rig.setSoftness(q.softness);rig.setBones(bones);rig.setPaused(paused);
    if(paused){rig.stop();rig.render(performance.now(),true)}else rig.start();
   }catch(e){$('status').textContent='L2D 动态预览错误：'+e.message;}
  },125);
@@ -127,41 +79,6 @@ for(const [id,field,scale] of [
   schedule();
  });
 }
-// Independent, large-range controls. Update the same motion profile that
-// Studio.saveToGame() writes to IndexedDB for the game runtime.
-function previewDynamics(){
- const q=motion[S.side]||defaults();
- if(rig){
-  rig.setAmplitude(q.amplitude);rig.setPeriod(q.period);
-  rig.setSoftness(q.softness);rig.setDynamics(q);
- }
- ed.render();
- // Switching to live preview must not destroy current PSD/paint layers.
- const easy=window.PaperchalkEasyEditor;
- if(easy?.animatePart)easy.animatePart().catch(console.warn);
- else if(window.PaperchalkStageMotion){
-  window.PaperchalkStageMotion.setPreview(true).catch(console.warn);
-  window.PaperchalkStageMotion.setPlaying(true).catch(console.warn);
- }
- window.dispatchEvent(new CustomEvent('paperchalk:motion-updated',{detail:{side:S.side,profile:{...q}}}));
-}
-for(const [id,field] of [
- ['l2d-hair-swing','hairSwing'],['l2d-skirt-swing','skirtSwing'],
- ['l2d-arm-swing','armSwing'],['l2d-leg-swing','legSwing'],
- ['l2d-sway-speed','swaySpeed']
-]){
- $(id).addEventListener('input',e=>{
-  motion[S.side][field]=Number(e.target.value)/100;
-  sync();saveMotion();previewDynamics();
- });
-}
-function motionPreset(changes){
- Object.assign(motion[S.side],changes);
- sync();saveMotion();previewDynamics();
-}
-$('l2d-natural').onclick=()=>motionPreset({hairSwing:1,skirtSwing:.85,armSwing:.65,legSwing:0,swaySpeed:1});
-$('l2d-expressive').onclick=()=>motionPreset({hairSwing:3.7,skirtSwing:3.4,armSwing:2.8,legSwing:.5,swaySpeed:1.15});
-$('l2d-reset-dynamics').onclick=()=>motionPreset(defaults());
 function setMotionPaused(value){
  paused=!!value;
  $('l2d-play').textContent=paused?'播放':'暂停';
