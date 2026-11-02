@@ -1,9 +1,15 @@
-name: Publish character editor (fast Pages deploy)
+name: Publish game + all-character L2D DEV (fast Pages deploy)
 on:
   push:
     branches: [main]
     paths:
       - 'site/character-editor/**'
+      - 'site/index.html'
+      - 'site/l2d/**'
+      - 'site/dev/**'
+      - 'site/characters.catalog.json'
+      - 'site/assets/characters/**'
+      - 'scripts/build_character_catalog.py'
       - '.github/workflows/character-editor-pages.yml'
   workflow_dispatch:
 permissions:
@@ -19,7 +25,7 @@ jobs:
     timeout-minutes: 8
     environment:
       name: github-pages
-      url: https://g2066203208-beep.github.io/paperchalk-world/character-editor/
+      url: https://g2066203208-beep.github.io/paperchalk-world/
     steps:
       - uses: actions/checkout@v4
       - name: Preserve game assets and prepare existing site
@@ -36,7 +42,12 @@ jobs:
           const fs=require('fs');
           const s=fs.readFileSync('site/character-editor/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
           new Function(s);
-          console.log('PASS: editor JS parses; assets retained');
+          for(const file of ['site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js'])
+            new Function(fs.readFileSync(file,'utf8'));
+          const game=fs.readFileSync('site/index.html','utf8');
+          if(!game.includes('data-l2d-actor="player"')||!game.includes('data-l2d-actor="enemy"'))throw Error('universal L2D actor bindings missing');
+          if(game.includes('id="menu-character-breath"'))throw Error('legacy heroine-only link must be absent');
+          console.log('PASS: game + L2D DEV scripts parse; all actor canvases and site assets retained');
           JS
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
