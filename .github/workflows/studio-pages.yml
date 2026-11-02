@@ -834,7 +834,7 @@ jobs:
                 });
                 assert.ok(fonts.menu.includes('PaperSerif')&&fonts.name.includes('PaperSerif'),
                           'narrative serif not applied to menu/speaker');
-                assert.ok(fonts.dialogue.includes('PaperSans'),'readable sans dialogue missing');
+                assert.equal(fonts.dialogue,fonts.menu,'dialogue must use the same PaperSerif font as main menu');
                 assert.ok(fonts.serif&&fonts.sans,'self-hosted game fonts unavailable');
 
                 assert.equal(await page.locator('#motion-ui').count(),0,
