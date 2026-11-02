@@ -11,25 +11,30 @@ import re
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 ART=ROOT/'site'/'assets'/'characters'
 OUTPUT=ROOT/'site'/'characters.catalog.json'
-KNOWN={'protagonist':'女主角'}
+KNOWN={'protagonist':'女主角','char-002':'女二号'}
 
 def discover():
     entries={}
-    for f in sorted(ART.iterdir()):
+    for f in sorted(ART.rglob('*')):
         if not f.is_file() or f.suffix.lower() not in ('.png','.webp','.jpg','.jpeg'):
             continue
         stem=f.stem
-        match=re.match(r'^(.*?)[-_](front|back)$',stem,re.I)
-        if match:
-            char_id,face=match.group(1),match.group(2).lower()
+        if f.parent!=ART:
+            # Canonical nested art. Ignore reference sheets.
+            if stem.lower() not in ('front','back'):continue
+            char_id,face=f.parent.relative_to(ART).as_posix(),stem.lower()
         else:
-            char_id,face=stem,'front'
+            match=re.match(r'^(.*?)[-_](front|back)$',stem,re.I)
+            if match:
+                char_id,face=match.group(1),match.group(2).lower()
+            else:
+                char_id,face=stem,'front'
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',char_id):
             print('Skip unsupported filename:',f.name)
             continue
         row=entries.setdefault(char_id,{'id':char_id,'label':KNOWN.get(char_id,char_id),'front':'','back':''})
         # Paths must resolve from the main game page.
-        row[face]='./assets/characters/'+f.name
+        row[face]='./assets/characters/'+f.relative_to(ART).as_posix()
     # The registry includes character profiles with no approved image too.
     # Expose them to the unified authoring studio as named empty projects;
     # never hallucinate art or treat a concept-only profile as an NPC in game.
@@ -50,6 +55,25 @@ def discover():
     for row in entries.values():
         if not row.get('front') and not row.get('back'):
             row['draft']=True
+        ident=row['id']
+        movie_dir=ROOT/'site/assets/l2d'
+        clips={}
+        manifest=movie_dir/ident/'manifest.json'
+        if manifest.exists():
+            data=json.loads(manifest.read_text(encoding='utf-8'))
+            for face in ('front','back'):
+                info=data.get(face)
+                if info and (ROOT/'site'/info['file'].removeprefix('./')).exists():
+                    clips[face]={'url':info['file'],'crop':info['crop'],
+                                 'frames':info['frames'],'fps':info['fps']}
+        elif ident=='protagonist':
+            for face in ('front','back'):
+                if (movie_dir/'v4'/(face+'.webp')).exists():
+                    clips[face]={'url':'./assets/l2d/v4/'+face+'.webp',
+                      'crop':{'x':351,'y':9,'w':335,'h':1013},'frames':128,'fps':20}
+        if clips:
+            row['clips']=clips
+            row['animated']={face:True for face in clips}
     return {'version':2,'characters':list(entries.values())}
 
 if __name__=='__main__':
