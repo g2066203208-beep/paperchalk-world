@@ -1,0 +1,3043 @@
+{
+  "schemaVersion": 3,
+  "recordCode": "CHAR-008",
+  "canonicalId": "class-teacher-geography-candidate",
+  "recordState": "448_field_character_concept_no_approved_art",
+  "readableDocument": "docs/characters/CHAR-008_FEMALE_TEACHER_PROFILE.md",
+  "sourcePriority": [
+    "user_confirmed",
+    "approved_art_reference",
+    "approved_story_reference",
+    "proposed",
+    "unknown",
+    "not_applicable",
+    "rejected"
+  ],
+  "fields": {
+    "identity": {
+      "recordCode": {
+        "value": "CHAR-008",
+        "status": "user_confirmed",
+        "source": "用户指明下一个为老师并要求存GitHub；已有CHAR-008占位"
+      },
+      "canonicalId": {
+        "value": "class-teacher-geography-candidate",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "displayName": {
+        "value": "女教师／班主任（企划名：唐予安，待批准）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "legalName": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "nicknames": {
+        "value": [
+          "唐老师（候选）",
+          "予安（同龄友人称呼候选）"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "aliases": {
+        "value": [
+          "年轻女教师",
+          "班主任",
+          "CHAR-008"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "pronouns": {
+        "value": "她／she",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "genderPresentation": {
+        "value": "成年女性，职场成熟感，不是女学生",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ageYears": {
+        "value": 28,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "birthDate": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "birthplace": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "currentResidence": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "era": {
+        "value": "现代架空都市，城市和高中场景",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "occupation": {
+        "value": "公立普通高中地理教师兼班主任（科目候选）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "schoolYear": {
+        "value": "所带班级高二，具体班级未定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "storyRole": {
+        "value": "拥有独立职业生活的成年核心角色；课堂和城市空间异常的现实观察者",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "designStatus": {
+        "value": "448项设计初稿，职业人设未最终审批，无原画、PSD、L2D与游戏角色注册",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "family": {
+      "parents": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "guardians": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "siblings": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "relatives": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "familyStructure": {
+        "value": "候选：不把教师角色家庭写成严苛控制与创伤套路，保持普通现实亲缘关系",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "childhoodEvents": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "upbringing": {
+        "value": "在普通城市家庭成长，逐渐养成整理资料、独立生活和尊重他人观点的习惯",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "householdMembers": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "livingSituation": {
+        "value": "居住在城市普通公寓，独立工作与安排日常，位置待城市地图确定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "socioeconomicBackground": {
+        "value": "普通中等收入工薪阶层，教师薪酬依据虚构城市经济体系设定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "education": {
+      "school": {
+        "value": "主角就读的同一所高中（学校名称未正式锁定）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "className": {
+        "value": "所带班级：高二某班；不强制所有八位学生同班",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "club": {
+        "value": "可做城市观察/地图研习活动指导人，但不靠社团干部身份写人物",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "grades": {
+        "value": "教师本人高中成绩未设计；不把老师说成全知高分神人",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "subjectStrengths": {
+        "value": [
+          "高中地理",
+          "地图识读",
+          "空间关系",
+          "生活科学",
+          "城市交通"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "subjectWeaknesses": {
+        "value": [
+          "精密电气维修非专长",
+          "超自然现象缺乏先验知识"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "workplace": {
+        "value": "主角学校地理办公室、教室及城市相关公共空间（候选）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "jobTitle": {
+        "value": "地理教师／兼任某班班主任（学科为候选）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "salaryRange": {
+        "value": "没有确立虚构城市薪金标准，不捏造货币金额",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "experience": {
+        "value": "5年左右教学经历（候选）；有校外观察活动组织和家校沟通经验",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "professionalGoals": {
+        "value": "改进学生理解城市空间的方法，同时维护稳定的教学与个人生活",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "measurements": {
+      "heightCm": {
+        "value": 169,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "weightKg": {
+        "value": 57,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "headBodyRatio": {
+        "value": 7.3,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shoulderWidthCm": {
+        "value": 39,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "chestCircumferenceCm": {
+        "value": 87,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "waistCircumferenceCm": {
+        "value": 70,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hipCircumferenceCm": {
+        "value": 93,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "torsoLengthCm": {
+        "value": 48,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "armSpanCm": {
+        "value": 169,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "inseamCm": {
+        "value": 79,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shoeSize": {
+        "value": "中国码39（鞋头楦型待实际图像）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "bodyBuild": {
+        "value": "自然匀称、身形修长但不夸张，适合站立教学及城市步行",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "bodyMassDescription": {
+        "value": "普通健康成年人体态，有自然力量感，不画成高冷时装模特",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "posture": {
+        "value": "脊背舒展、身体面向交流对象，放松而挺拔",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "handDominance": {
+        "value": "右手（候选）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "gait": {
+        "value": "稳定、节奏略快，课堂中会自然走近学生而非一直站讲台",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "upperArmCircumferenceCm": {
+        "value": 26,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "forearmCircumferenceCm": {
+        "value": 22.5,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "wristCircumferenceCm": {
+        "value": 15.1,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "thighCircumferenceCm": {
+        "value": 51,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "calfCircumferenceCm": {
+        "value": 34,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "kneeCircumferenceCm": {
+        "value": 35,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ankleCircumferenceCm": {
+        "value": 20,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "upperArmLengthCm": {
+        "value": 30,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "forearmLengthCm": {
+        "value": 25.5,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "handLengthCm": {
+        "value": 18.2,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "palmWidthCm": {
+        "value": 7.9,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "upperLegLengthCm": {
+        "value": 43,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "lowerLegLengthCm": {
+        "value": 41,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "kneeHeightCm": {
+        "value": 49,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hipBreadthCm": {
+        "value": 34,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shoulderBreadthCm": {
+        "value": 39,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "waistHeightCm": {
+        "value": 104,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ribcageDepthCm": {
+        "value": 21,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hipDepthCm": {
+        "value": 20,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "headWidthCm": {
+        "value": 15.3,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "faceLengthCm": {
+        "value": 21.1,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "faceWidthCm": {
+        "value": 14.7,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "footLengthCm": {
+        "value": 24.5,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "footWidthCm": {
+        "value": 9.4,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "anatomy": {
+      "headShape": {
+        "value": "偏宽上脸与柔和方圆下庭的成人椭圆头型，区别学生稚气脸",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shoulderSlope": {
+        "value": "肩线自然向下5°左右，衣服贴合肩峰",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "torsoDepth": {
+        "value": "正常成人胸背厚度，穿外套有合理内部留白",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ribcageContour": {
+        "value": "自然胸廓结构，不靠夸张女性曲线塑造教师魅力",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "waistContour": {
+        "value": "轻收但不过紧，适合正式休闲着装",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "pelvisAndHips": {
+        "value": "自然成年人体型，站姿髋部不扭成时装S形",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "backContour": {
+        "value": "正常脊柱曲线，肩胛处衬衣与针织外套留褶",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "bustThroughClothing": {
+        "value": "正常得体的成年女教师服装体积，不作性化突出",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "limbProportions": {
+        "value": "自然成年人手腿比例，手指稍长且掌骨结构清楚",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "handShape": {
+        "value": "手掌修长但有实际关节与指腹厚度，正常自然放松",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "skinUndertone": {
+        "value": "暖中性浅肤色，面颊健康微红",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "skinTexture": {
+        "value": "干净动画式肤色，鼻翼下颚有克制块面阴影",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "scars": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "birthmarks": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "moles": {
+        "value": "候选：左颊靠近耳下非常淡的小痣，不作为一定要画的身份锁点",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "freckles": {
+        "value": "不默认添加AI随机雀斑",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "postureAsymmetry": {
+        "value": "右肩略低1°，身体重量自然偏左脚",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "mobilityNeeds": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "upperArmShape": {
+        "value": "自然柔和的成人上臂形体，袖面有体积",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "forearmShape": {
+        "value": "从肘部逐渐收至腕部，线条明确",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "wristShape": {
+        "value": "腕骨清楚但不过分纤细",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "thighShape": {
+        "value": "正常步行者肌肉体积，不夸张运动臀腿",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "calfShape": {
+        "value": "匀称小腿线条，裤管遮挡合理",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "kneeShape": {
+        "value": "膝盖稳定、膝部动作不会穿破裤面",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ankleShape": {
+        "value": "踝骨体积清楚，鞋袜过渡自然",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "legAxis": {
+        "value": "稳定站立，足尖自然微外转不内八",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "upperLimbTaper": {
+        "value": "上臂至肘、前臂至腕有真实厚薄变化",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "lowerLimbTaper": {
+        "value": "大腿到膝与小腿过渡柔和，裤装非贴身紧身裤",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "legMuscleDistribution": {
+        "value": "经常步行产生的中等下肢肌肉量",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "armMuscleDistribution": {
+        "value": "普通健康成年人的臂部肌肉，不以健身凸显人设",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "pelvisTilt": {
+        "value": "近中性骨盆倾角，约1°",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "spinalCurve": {
+        "value": "胸椎自然轻曲，头颈不僵硬",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "handFingerLengthRatios": {
+        "value": "中指1、食指0.93、无名指0.97、小指0.75、拇指0.69（示意归一值）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "bodySilhouetteType": {
+        "value": "中等身高、自然舒展的成熟女性直线偏柔和轮廓",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shoulderToHipWidthRatio": {
+        "value": 1.15,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "waistToHipWidthRatio": {
+        "value": 0.86,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "headToShoulderWidthRatio": {
+        "value": 0.392,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "face": {
+      "faceShape": {
+        "value": "成人感圆方鹅蛋脸，上半脸略宽、下颌圆方，避开女主的尖锐冷淡脸",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "forehead": {
+        "value": "额头自然饱满，有轻薄偏分刘海不全面遮住",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "cheekbones": {
+        "value": "颧骨稍有轮廓，笑时脸颊平面上扬",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "jawline": {
+        "value": "柔和而清晰的下颌转折，成熟不强硬",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "chin": {
+        "value": "短中等长度、圆方收束，不是瓜子尖V",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "noseBridge": {
+        "value": "平缓自然直鼻梁，和女四提案的小巧直鼻区别",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "noseTip": {
+        "value": "稍圆润，有真实软骨体积",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "mouthShape": {
+        "value": "嘴横宽适中偏宽，微笑时两边不完全对称",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "lips": {
+        "value": "自然薄至中等嘴唇，无鲜艳唇彩",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "teeth": {
+        "value": "讲话自然露齿，默认闭口浅笑",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ears": {
+        "value": "外耳大小普通，发侧露出少量耳廓",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyebrows": {
+        "value": "温和而清晰的略弯眉，眉尾自然落下",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyelidShape": {
+        "value": "上眼睑有一点成年人沉稳的厚度，不画下垂困眼",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeShape": {
+        "value": "中等大小的长杏眼，柔和下眼缘，观察时眼神集中",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeSpacing": {
+        "value": "自然稍宽，有亲和而从容的面部节奏",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeCornerAngle": {
+        "value": "外眼角几乎水平、微下落但不媚眼",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeColor": {
+        "value": "深雾青灰／低饱和石青灰绿（候选）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeHex": {
+        "value": "#596F73",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "pupilColor": {
+        "value": "#2E3F45",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeHighlights": {
+        "value": "单小主高光、少量副光，避免玻璃眼",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyelashes": {
+        "value": "上眼线精致而少量，成人日常面相不画夸张睫毛",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "defaultExpression": {
+        "value": "目光亲切且略带幽默的自然闭口微笑，像会认真听学生说话",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "facialLandmarkSystem": {
+        "value": "面部图像包围盒归一化[0,1]，草案坐标不等同已批准母图",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "facialLandmarksNormalized": {
+        "value": {
+          "leftEye": [
+            0.35,
+            0.46
+          ],
+          "rightEye": [
+            0.65,
+            0.46
+          ],
+          "browLeft": [
+            0.35,
+            0.365
+          ],
+          "browRight": [
+            0.65,
+            0.37
+          ],
+          "nose": [
+            0.5,
+            0.65
+          ],
+          "mouth": [
+            0.5,
+            0.755
+          ],
+          "chin": [
+            0.5,
+            0.975
+          ]
+        },
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "faceLengthToWidthRatio": {
+        "value": 1.44,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "foreheadToFaceHeightRatio": {
+        "value": 0.3,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "jawWidthToFaceWidthRatio": {
+        "value": 0.73,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "cheekboneWidthToFaceWidthRatio": {
+        "value": 0.96,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeCenterHeightRatio": {
+        "value": 0.46,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "interocularSpacingRatio": {
+        "value": 0.3,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeWidthToFaceWidthRatio": {
+        "value": 0.215,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyebrowEyeGapRatio": {
+        "value": 0.07,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "noseTopHeightRatio": {
+        "value": 0.53,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "noseTipHeightRatio": {
+        "value": 0.65,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "noseWidthToFaceWidthRatio": {
+        "value": 0.115,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "mouthCenterHeightRatio": {
+        "value": 0.755,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "mouthWidthToFaceWidthRatio": {
+        "value": 0.34,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "philtrumLengthRatio": {
+        "value": 0.072,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "earTopHeightRatio": {
+        "value": 0.405,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "earBottomHeightRatio": {
+        "value": 0.68,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeTailSlantDeg": {
+        "value": -1,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyelidOpennessBaseline": {
+        "value": 0.75,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "lipCornerSlopeDeg": {
+        "value": 2,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "browAngleDeg": {
+        "value": -1,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "expressionLandmarkVariants": {
+        "value": {
+          "neutral": "嘴角微扬，眉放松",
+          "teaching": "口型微张、眉稍高",
+          "concern": "眉中微收，目光下移",
+          "amused": "一边嘴角抬起，眼睑微收",
+          "resolute": "眉骨平稳、唇线收平"
+        },
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "noseToMouthDistanceRatio": {
+        "value": 0.115,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "hair": {
+      "hairBaseColor": {
+        "value": "深烟紫棕色，室内更接近棕黑而非纯黑（候选）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hairHex": {
+        "value": "#52464E",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hairHighlights": {
+        "value": "#78666E",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hairLength": {
+        "value": "锁骨附近的中长发，可自然低束于后脑，解开时落在肩周",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hairTexture": {
+        "value": "柔顺带自然细微弯度，少量发尾散束",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hairDensity": {
+        "value": "中等偏密，头顶不过分蓬松",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "parting": {
+        "value": "自然人物右侧偏分6:4",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "bangs": {
+        "value": "侧扫薄刘海，能看到眉眼，额前有短碎发而非齐刘海",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "sidelocks": {
+        "value": "两侧各一两束细长碎发，耳旁自然垂落",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ponytailCount": {
+        "value": 1,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ponytailPosition": {
+        "value": "后脑偏低位置、松束而非高马尾",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ponytailLength": {
+        "value": "从低扎点到肩胛中部的柔软小马尾（发长候选）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hairAccessories": {
+        "value": "小型深色发圈，非大型蝴蝶结",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "accessorySide": {
+        "value": "后中",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "accessoryPosition": {
+        "value": "后颈上方、低马尾根部",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "backSilhouette": {
+        "value": "低束发尾在肩后、两侧发束有轻微不对称",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "wardrobe": {
+      "outerwear": {
+        "value": "灰蓝色薄针织开衫／轻便短西装式外搭，非学生深蓝校服；开放前襟、袖口自然至腕部",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shirt": {
+        "value": "米白色立领或小翻领女士衬衫，无夸张领口和透视",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "blouse": {
+        "value": "米白衬衫轻量柔软，领部无额外饰带（同shirt的制版名称）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "neckwear": {
+        "value": "默认无领带领结；不模仿学生酒红领带",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "skirt": {
+        "value": "备用服装可为及膝直筒裙，当前全身母图首选长裤",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "trousers": {
+        "value": "墨灰蓝高腰直筒及踝长裤，方便校内及城市步行",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "socks": {
+        "value": "普通深灰短袜，默认只露少量",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "footwear": {
+        "value": "黑褐低跟乐福鞋或平底皮鞋，适合久站授课",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "garmentLayerOrder": {
+        "value": [
+          "米白衬衫",
+          "灰蓝薄外搭",
+          "墨灰蓝长裤",
+          "深灰袜",
+          "深色低跟校外皮鞋"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "paletteHex": {
+        "value": {
+          "hair": "#52464E",
+          "eyes": "#596F73",
+          "outer": "#667887",
+          "shirt": "#EBE7DB",
+          "trousers": "#454D57",
+          "shoes": "#2E3034",
+          "skin": "#C9AA98"
+        },
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "fabrics": {
+        "value": "细密羊毛混纺薄外套、棉衬衫、哑光直筒裤料、实用皮鞋",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "sewingDetails": {
+        "value": "外搭门襟与袖口干净，裤腰利落，真实口袋缝线",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "pleats": {
+        "value": "长裤膝与鞋上方自然少量折痕，非百褶裙",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "buttons": {
+        "value": "同色哑光小扣；不新增学校徽章、金边或夸张装饰",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "pockets": {
+        "value": "外搭浅口袋和长裤两侧口袋，双手不插兜",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "wearCondition": {
+        "value": "干净但有轻微工作日使用褶皱，避免豪华时装感",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "seasonalVariants": {
+        "value": "夏季去外搭保留米白衬衫与长裤，冬季加同调色外套",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "occasionVariants": {
+        "value": "教室、城市日常、家中私服分别做服装变体；当前仅标准工作服母图",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "permanentAccessories": {
+        "value": "仅可见小型普通耳钉（候选）；不靠眼镜/饰品决定身份",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "temporaryProps": {
+        "value": "**首张正面与待机立绘双手空着**，不拿文件夹、粉笔、教材、马克笔、包、手机、眼镜或武器。课堂临时道具单独动作资源。",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "temperament": {
+      "coreConfirmedTraits": {
+        "value": [
+          "职业方向：成年学校教师（用户同意接续设计教师）"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "proposedTraits": {
+        "value": [
+          "随和",
+          "有幽默感",
+          "温柔但有原则",
+          "办事负责",
+          "富于同理心",
+          "愿意承认不知道"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "strengths": {
+        "value": [
+          "课堂讲解清楚",
+          "愿意倾听",
+          "空间和地图观察力好",
+          "能组织学生安全活动",
+          "遇事愿意核查事实"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "weaknesses": {
+        "value": [
+          "太容易把工作带回家",
+          "对正式行政汇报有一点迟疑",
+          "会忽略自己的休息",
+          "不擅长直接拒绝额外工作"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "socialEnergy": {
+        "value": "课堂外亲切随和；面对复杂家长也能保持专业交流",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "humorStyle": {
+        "value": "干净轻快的观察式幽默，不捉弄学生",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "conflictStyle": {
+        "value": "先沟通与确认事实，涉及学生安全能明确立界限",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "fears": {
+        "value": "最怕自己的判断让学生陷入可预防的危险",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "angerTriggers": {
+        "value": "隐瞒学生安全风险、对弱者不尊重、伪造记录",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "stressResponse": {
+        "value": "先确认人员位置与安全，随后整理事实与时间线",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "defenseMechanism": {
+        "value": "用轻松语气减轻不安，私下会认真反省",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "moralLimits": {
+        "value": "不利用教师权力操控学生、不与未成年学生发展越界关系、不篡改证据",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "goals": {
+        "value": "让学生学会独立判断，同时维护自己的职业与生活边界",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "contradictions": {
+        "value": "平时轻松随和，遇到可能伤害学生的事会坚定不让步",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "publicPersona": {
+        "value": "能交流、会解释、懂安排的年轻老师",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "privatePersona": {
+        "value": "喜欢城市散步与热食，偶尔为工作过度操心",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "emotionalBaseline": {
+        "value": "平和、略带好奇、情绪稳定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "expressionRange": {
+        "value": [
+          "温柔微笑",
+          "若有所思",
+          "鼓励",
+          "生气",
+          "担忧",
+          "意外",
+          "松一口气",
+          "职业坚定"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "defaultMicroExpression": {
+        "value": "微微弯起嘴角、视线专注，眉头放松",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "signatureMicroExpressions": {
+        "value": [
+          "听到学生新想法会轻挑一侧眉",
+          "遇谎言会短暂收紧下眼睑",
+          "担心时嘴角收平"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyesExpression": {
+        "value": "注意力落在说话者而非文件，必要时会巡视环境",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyebrowsExpression": {
+        "value": "课堂解释时眉有自然起伏，严重时眉心微收",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "mouthExpression": {
+        "value": "常保持自然微笑，宣布安全要求时口型收紧",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "bodyLanguageMood": {
+        "value": "动作适度、有亲和力，避免夸张讲课挥臂",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "composureLevel": {
+        "value": "一般危机中能稳定行动，持续不确定性下也可能焦虑",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "psychology": {
+      "innerNeed": {
+        "value": "被当作有生活的普通成年人，而非学校里无所不能的服务工具",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "externalGoal": {
+        "value": "对学生负责、持续提高教学能力、避免工作吞没私人生活",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "secretGoal": {
+        "value": "想在繁忙教育工作之外完成一份属于自己的城市观察地图集（提案）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "belief": {
+        "value": "真实可靠的证据比未经核实的传闻重要",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "selfImage": {
+        "value": "愿意耐心解释的专业教师，但不是完美圣人",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "insecurities": {
+        "value": "担心自己处理复杂异常事件经验不足",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "regrets": {
+        "value": "曾因忙碌错过某位学生真实求助的早期信号（剧情提案）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "traumaIfStoryApproved": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "未知/暂不适用，未获用户审批或原画依据"
+      },
+      "attachmentStyle": {
+        "value": "对成年朋友和家人亲近自然，保持必要私人空间",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "trustPattern": {
+        "value": "对承认证据、讲清楚限制的人更信任",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "breakingPoint": {
+        "value": "学生安全受威胁，而管理层反复拖延处理时",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "growthArc": {
+        "value": "从习惯单独扛下班级事务到学会公开协调、寻求专业支援",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "values": {
+        "value": [
+          "尊重",
+          "事实",
+          "安全",
+          "自主",
+          "耐心",
+          "职业伦理"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "dialogue": {
+      "voicePitch": {
+        "value": "成熟自然的女声中音，不故意娃娃音或性感低语",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "voiceTimbre": {
+        "value": "清晰温暖、略带一点轻松沙哑的生活感",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "speechRate": {
+        "value": "中速，课堂说明条理清楚，紧急时短句",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "voiceVolume": {
+        "value": "课堂自然清晰，私下交流较轻",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "tone": {
+        "value": "亲切、有知识但不居高临下",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "accents": {
+        "value": "普通话为主，可带城市口音但不能暗示具体真实地区",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "diction": {
+        "value": "常用短停顿帮助听者理解，不故作高深",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "sentenceLength": {
+        "value": "一般中短句，解释抽象概念时分步",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "vocabulary": {
+        "value": "地理空间、城市交通、生活常识与教学语言结合",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "habitualPhrases": {
+        "value": [
+          "你先说说怎么想到的。",
+          "这个答案有意思，我们核对一下。",
+          "安全问题不靠猜，先点人数。"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "sarcasmLevel": {
+        "value": "轻微无害的玩笑，不以学生为笑柄",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "laughStyle": {
+        "value": "短而自然的轻笑，熟人前偶尔开怀",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "cryingStyle": {
+        "value": "成年人的克制情绪，关键时刻才会表现",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "speechUnderStress": {
+        "value": "优先明确安全撤离、地点、人数和下一步",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "dialogueExamples": {
+        "value": [
+          "城市地图画的是道路，但道路不一定告诉你人为什么绕路。",
+          "你说昨天楼梯比今天多一层？那我们先把时间和入口记下来。",
+          "别急着证明你勇敢，先确认大家都安全。"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "forbiddenVoicePatterns": {
+        "value": "教师说教长篇旁白、刻板女老师训话、娇媚配音、成人向学生暧昧、全知万能导师",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "behavior": {
+      "idlePose": {
+        "value": "白底单人全身，身体微正、重心自然在左腿，双臂放松在两侧、两手空着且可辨五指，方便未来独立装备与动画",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "signatureGesture": {
+        "value": "解释地图时掌心自然示意，日常空手基础状态不固定指向",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "greetingHabit": {
+        "value": "轻轻点头并微笑，尊重对方而非命令式点名",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "gazePattern": {
+        "value": "交谈看向对方眼睛，研究场景时沿路线扫描",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "blinkHabit": {
+        "value": "自然眨眼，思考复杂问题时眨眼频率略降低",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyebrowMotion": {
+        "value": "理解新信息时略抬单眉，担心时眉心微聚",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "headTilt": {
+        "value": "倾听时头自然轻侧2–4°，不长期歪头",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "walkCycle": {
+        "value": "成人步态舒展，步速偏快但能放慢陪同学生",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "runningCycle": {
+        "value": "普通成年人短距离跑动，不编造成体能超人",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "nervousTics": {
+        "value": "忙乱时轻呼气、短暂抿唇，不扯学生衣服",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "sleepRhythm": {
+        "value": "工作日较规律，但备课与异常事件可能偶尔侵占休息",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eatingStyle": {
+        "value": "普通家常饮食，忙时倾向简单热食而非不吃饭",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "favoriteFoods": {
+        "value": "候选：热汤面、烤南瓜与清淡茶饮",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hobbies": {
+        "value": [
+          "步行探访城市街巷",
+          "绘制手账地图",
+          "照顾小型盆栽",
+          "听访谈节目",
+          "做家常饭"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "dailyRoutine": {
+        "value": "工作日备课→授课→批改与班级事务→下班购物或休息；周末保留私人生活",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "timeManagement": {
+        "value": "能安排教学进度，但常为临时求助追加任务",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "transportation": {
+        "value": "以步行和公共交通为主；私人车与驾照未确定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "relationships": {
+      "familyRelations": {
+        "value": "普通亲人关系，是否有配偶及亲属身份待剧情决定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "schoolRelations": {
+        "value": "同事互相尊重，但对不合理的流程会理性提出意见",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "friendRelations": {
+        "value": "与校外成年朋友维持独立社交，不要求所有社交围绕学生",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "rivalRelations": {
+        "value": "可与保守行政流程发生职业分歧，不设邪恶校长模板",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "mentorRelations": {
+        "value": "曾有耐心的前辈教师给她授课与安全带队建议（提案）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "romancesIfStoryApproved": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "未知/暂不适用，未获用户审批或原画依据"
+      },
+      "relationshipToProtagonist": {
+        "value": "对女主保持教师与学生的尊重边界，支持其独立调查但阻止危险独行",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "relationshipToMaleLead": {
+        "value": "注意男主叛逆背后实际处境，不会单凭成绩或出勤直接贴恶人标签",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "trustFlags": {
+        "value": [
+          "真实说出观察提升信任",
+          "隐瞒风险或造假则降低互信"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "secretsShared": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "conflictHistory": {
+        "value": "候选：曾因拒绝走过场安全报告与同事意见不一致",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "relationProgression": {
+        "value": "普通师生→共同核实异常→安全责任冲突→建立成年人的专业信任",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "skills": {
+      "talents": {
+        "value": [
+          "地理空间解释",
+          "地图路线辨识",
+          "课堂组织",
+          "耐心倾听",
+          "多方协调"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "weaknesses": {
+        "value": [
+          "精密电路维修",
+          "紧急医疗处置只掌握基础",
+          "对超自然事件没有现成答案"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "learnedSkills": {
+        "value": [
+          "教案设计",
+          "城市地图阅读",
+          "普通基础急救",
+          "学生安全带队",
+          "记录证据和时间顺序"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "academicSkills": {
+        "value": [
+          "自然与人文地理",
+          "城市交通与空间分布",
+          "资料查证",
+          "基础统计"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "workSkills": {
+        "value": [
+          "教务协调",
+          "家校沟通",
+          "冲突调解",
+          "风险检查与事故记录"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "combatAbility": {
+        "value": "普通成年人体力；未经专门战斗训练，不应代替学生队伍去战斗",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "physicalEndurance": {
+        "value": "适合日常步行和久站，连续熬夜或奔跑会疲劳",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "agility": {
+        "value": "普通成人协调，能紧急避险但非超人",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "perception": {
+        "value": "对路线、教室座位与时间安排异常敏感，但需要多源验证",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "charisma": {
+        "value": "说话清楚、容易建立信任；不是对所有NPC施加万能魅力",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "supernaturalPowers": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "powerCosts": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "equipment": {
+        "value": "常规立绘双手空；课堂用具由交互情境独立生成，非永久手持装备",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "inventory": {
+        "value": "工作和私人物品属于情境清单，首张母版不手持任何物品",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "healthIfStoryApproved": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      }
+    },
+    "story": {
+      "firstAppearance": {
+        "value": "候选：正常授课结束后，发现学生提供的校园地形笔记与学校旧平面图不一致",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "locationEntrances": {
+        "value": [
+          "学校教室",
+          "教师办公室",
+          "校园楼梯间",
+          "城市公交路线",
+          "普通公寓楼"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "originStory": {
+        "value": "原本靠日常教书与城市散步维持生活平衡，渐渐注意到空间/时间异常证词",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "incitingEvent": {
+        "value": "某天学生都记得上过一节课，而她的备课记录与教室分配表却显示那间教室当时未开放",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "keyScenes": {
+        "value": [
+          "认真倾听学生描述怪事",
+          "用地图和时间表对照日常路线",
+          "为学生安全与校方流程提出异议",
+          "在城市生活中发现另一处相似错位"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "storyGoals": {
+        "value": "保障学生安全、弄清记录冲突，并逐渐确认事件影响不止学校",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "branchingChoices": {
+        "value": [
+          "选择公开讨论记录",
+          "先组织安全核验",
+          "请求成年专业人士协助"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "secrets": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "reveals": {
+        "value": "她只知道可重复的现实线索，不知道整个超自然世界真相",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "relationshipEvents": {
+        "value": "学生愿意讲述异常并信任老师将其认真记录",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "questEvents": {
+        "value": "候选支线：消失的教室编号／旧地图上的第六层",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "alternateEndings": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "chronologicalHistory": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      }
+    },
+    "environment": {
+      "home": {
+        "value": "候选：普通城市公寓私人住所，具体地段和家庭同住情况待定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "school": {
+        "value": "本作主角所在的唯一主要高中",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "workplace": {
+        "value": "地理教研室、普通课堂、班主任办公桌（校内）",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "roomOwnership": {
+        "value": "居住空间隐私与产权未确定；不预放可移动个人物品",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "itemOwnership": {
+        "value": "教具属于学校或本人，按实际场景和剧情分配",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "furnitureConditions": {
+        "value": "默认无人基础场景不摆放书包、杯子、外套等随着出勤变化的私人物品",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "weatherResponse": {
+        "value": "雨天优先关注校门湿滑和交通变化，户外活动需备安全预案",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "locationsVisited": {
+        "value": [
+          "校园",
+          "居住街区",
+          "公共交通线路",
+          "日常商店",
+          "城市公共图书馆（候选）"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "npcSchedule": {
+        "value": "教学周时段、会议、通勤、买菜及周末私人行程独立调度，不24小时困在学校",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "worldEra": {
+        "value": "现代城市社会生活与渐现异常事件并存",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "visualProduction": {
+      "frontReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "backReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "sideReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "threeQuarterReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "poseReference": {
+        "value": "工作装正面完整全身立绘，不设手持教具；身姿自然，双手空置",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "expressionReferences": {
+        "value": [
+          "亲切微笑",
+          "思考",
+          "鼓励",
+          "担心",
+          "惊讶",
+          "职业坚定",
+          "轻松大笑",
+          "疲惫"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "silhouetteLocked": {
+        "value": false,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "colorPalette": {
+        "value": {
+          "hair": "#52464E",
+          "eyes": "#596F73",
+          "outerwear": "#667887",
+          "blouse": "#EBE7DB",
+          "trousers": "#454D57",
+          "shoes": "#2E3034"
+        },
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "artStyle": {
+        "value": "沿用现有五位认可角色的原创2D GalGame人物风格、清晰墨线与克制硬边赛璐璐，不照搬设定页",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "imageAspectRatio": {
+        "value": "单人竖幅；构图可按已有游戏角色尺寸统一",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "whiteBackgroundRule": {
+        "value": "纯白背景，不画课堂场景、不添加文字、图标、人物设定集",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "fullBodyRule": {
+        "value": "完整头发、手指、两脚，不可裁剪",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "centeredRule": {
+        "value": "人体在中心，脚底同一站立基准线",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "occlusionRule": {
+        "value": "手掌、前臂、上臂、外套袖口、后发分层清晰，后续能独立变形",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "promptPositive": {
+        "value": "masterpiece, best quality, safe, 1woman, solo, original adult female high school geography teacher, 28-year-old natural beautiful approachable professional, distinct mature gently square-oval face with softly defined jaw and slightly wide upper cheeks, muted smoky teal-gray almond eyes with subtle warmth, naturally curved eyebrows, small relaxed closed-mouth smile with hint of quiet humor, dark smoky plum-brown medium hair tied in a low loose ponytail at the nape, slightly side-swept thin fringe and a few soft face-framing wisps, realistic modest adult proportions around 169 cm, clean ivory collared blouse, slate blue-gray thin cardigan or lightweight tailored jacket worn naturally open, charcoal slate straight ankle-length trousers, simple dark low-heeled loafers, understated comfortable urban teacher clothing, non-school-uniform, proper garment construction and believable folds, full body solo front view, one natural standing pose, shoulders relaxed, both arms down by sides with slight spacing away from torso, both hands completely EMPTY with fingers unobstructed, natural teacher composure, no handheld books or props, pure white background, entire head and both shoes included, professional visual novel character standing sprite, clean controlled angular linework matching previously approved original Japanese anime cast, matte cel shading with crisp shadow planes, restrained highlights, no extra layout, no caption, @akipekostyle<lora:akipekoanima_v1_1:1>",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "promptNegative": {
+        "value": "worst quality, low quality, child, teen, student, school uniform, navy student blazer, burgundy school tie, pleated mini skirt, teacher fetish, seductive posing, exaggerated adult figure, cleavage, transparent blouse, high heels, flashy jewelry, stiff serious lecturer, school disciplinarian, classroom blackboard, teacher desk, chalk, pointer, book, files, papers, bag, phone, microphone, weapon, holding any object, hands in pockets, arms crossed, fingers hidden by sleeves, hands clasped, cropped feet, cropped head, two women, face closeup, expression sheet, character dossier, turnaround panels, split screen, charts, titles, text, watermark, extreme bloom, airbrushed mobile game style, generic anime girl face, black long straight student hair, chestnut ponytail student, oversized eyes, unrealistic hands, six fingers",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "modelVersion": {
+        "value": "Anima模型及真实版本号待用户出图后填写",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "artistTag": {
+        "value": "@akipekostyle",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "lora": {
+        "value": "<lora:akipekoanima_v1_1:1>",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "seed": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "sampler": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "resolution": {
+        "value": "实际输出尺寸待记录；优先竖幅完整立绘",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "sourceFileHash": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "assetApproval": {
+        "value": "未生成、未由用户验收，不得冒充游戏可用母图",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "bodyFacingYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "headFacingYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "headPitchDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "headRollDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shoulderYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "pelvisYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "gazeHorizontalDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "gazeVerticalDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "cameraAngle": {
+        "value": "平视正面",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "cameraFocalStyle": {
+        "value": "正常全身人像距离，不特写透视",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "projectionOrthoPerspective": {
+        "value": "接近正投影的人像表演透视",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "visualStyleCategory": {
+        "value": "原创都市GalGame成年女性职业角色",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "lineWeightStyle": {
+        "value": "外轮廓较重，服装结构及五官内线适度细化",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "lineColor": {
+        "value": "#24262A",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shadingMethod": {
+        "value": "2–3段克制硬边赛璐璐阴影，尊重已有角色画风",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shadowDensity": {
+        "value": "中低阴影，能够显示真实衣褶",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "highlightTreatment": {
+        "value": "眼睛小高光与头发自然分束高光",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "textureComplexity": {
+        "value": "简单真实的针织与衬衫纹理，拒绝无信息噪点",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "anatomicalStylization": {
+        "value": "成年女性自然7.3头身、正常成人五官与体态，不美少女学生化",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "facialFeatureStylization": {
+        "value": "成熟温和但机灵，偏圆方的脸与深烟青眼，不复制已有女主、女二、女三、女四",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "characterIdentityEmbeddingNotes": {
+        "value": "没有批准的正面图，不得声称完成真实身份嵌入",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "frontPosePoseCode": {
+        "value": "T01_TEACHER_IDLE_EMPTY_HANDS",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "poseSilhouetteNotes": {
+        "value": "两手完全露出、松弛空手、双臂与躯干略分离、没有书本粉笔或包",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "framingHeadroomRatio": {
+        "value": 0.04,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "framingFootroomRatio": {
+        "value": 0.035,
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "bodyAlignmentRule": {
+        "value": "采用统一地面与身高比例，169cm为未审批参考",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "rigging": {
+      "layerSource": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "layerList": {
+        "value": [
+          "后低马尾",
+          "后发散束",
+          "头脸",
+          "眉左",
+          "眉右",
+          "上睑左",
+          "上睑右",
+          "眼球左",
+          "眼球右",
+          "鼻",
+          "嘴",
+          "前额偏分刘海",
+          "左侧发束",
+          "右侧发束",
+          "颈部",
+          "米白衬衫",
+          "灰蓝开衫后层",
+          "灰蓝开衫左前片",
+          "灰蓝开衫右前片",
+          "左上臂衣袖",
+          "右上臂衣袖",
+          "左前臂衣袖",
+          "右前臂衣袖",
+          "左手空掌",
+          "右手空掌",
+          "裤装腰臀",
+          "左裤腿",
+          "右裤腿",
+          "左鞋",
+          "右鞋"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "headJoint": {
+        "value": "头颈枢轴在颈根，需实际PSD定位",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "neckJoint": {
+        "value": "脖颈分段自然转动，不是整个人扭动",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "shoulderJoint": {
+        "value": "左右肩独立网格，外搭和内衬分别绑骨",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "elbowJoint": {
+        "value": "上臂与前臂独立，袖口弯曲留褶",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "wristJoint": {
+        "value": "左右空手掌独立，将来道具/武器动作另行建立",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hipJoint": {
+        "value": "自然骨盆小幅倾斜，鞋底锁地",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "kneeJoint": {
+        "value": "裤装左右膝独立变形且不出现断层",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ankleJoint": {
+        "value": "站立足底贴地，脚踝可微调",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyeTrack": {
+        "value": "两眼独立低幅视线追踪，瞳孔不压扁",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "blink": {
+        "value": "上眼睑主导自然眨眼，左右细微时间差",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "mouthShapes": {
+        "value": [
+          "闭口",
+          "微笑",
+          "A",
+          "I",
+          "U",
+          "E",
+          "惊讶"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hairPhysics": {
+        "value": "低马尾与耳侧碎发轻微迟滞，避免发束整团生硬摆动",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "clothPhysics": {
+        "value": "开衫衣襟及下摆轻摆，袖口不随呼吸大幅飘动",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "breathingPhysics": {
+        "value": "锁骨与胸背轻微呼吸，手和腿不跟着整个人左右摇",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "skinningLimits": {
+        "value": "头发、衬衫、开衫每个部件独立变形，不得整人一张图绑定呼吸",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "expressionStates": {
+        "value": [
+          "neutral",
+          "warm_smile",
+          "teaching",
+          "thinking",
+          "concerned",
+          "serious",
+          "amused"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "actionStates": {
+        "value": [
+          "idle_empty_hands",
+          "nod",
+          "listen",
+          "look_side",
+          "small_explaining_gesture",
+          "walk_short",
+          "point_at_map_contextual_future"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "runtimePreview": {
+        "value": "无可运行的教师L2D；需在游戏及编辑器大窗口真实验收",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "occlusionRepair": {
+        "value": "后发下颈、开衫遮挡内衬、胳膊后躯干与裤腿遮挡须完整补画",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "qaAnimation": {
+        "value": "尚未跑过真实动画，标记未验收",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "armRotationBoundsDeg": {
+        "value": "默认闲置约±10°，讲课手势另做动作，不视为已测试",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hipRotationBoundsDeg": {
+        "value": "待机±3°为初稿，实际网格测试后确定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "kneeFlexBoundsDeg": {
+        "value": "轻度弯曲，实际运动测试后确定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "eyelidOpennessChannel": {
+        "value": "0闭至1开，左右眼独立参数",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "browDeformationChannels": {
+        "value": [
+          "左眉高度",
+          "右眉高度",
+          "眉内聚程度"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "mouthCornerChannels": {
+        "value": [
+          "左口角",
+          "右口角",
+          "微笑幅度",
+          "张口"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "expressionLandmarkMotion": {
+        "value": "五官网格随表情微调，维持人物识别脸型",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "frontSideBackProportionsQa": {
+        "value": "正面批准后再做独立背面，不得镜像正面假装背面",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "audio": {
+      "voiceCasting": {
+        "value": "候选自然成熟女性中音，能流畅做课堂与私下语气转换",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "pronunciation": {
+        "value": "普通话清楚，空间名词发音稳定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "multilingualNotes": {
+        "value": "有其他语种的教学材料可按剧情设计，但现无正式外语配音",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "recordedVoices": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "footstepSfx": {
+        "value": "舒适低跟鞋步行声，因教室或柏油路地面变化",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "costumeSfx": {
+        "value": "开衫轻微针织摩擦，在手臂动作时触发",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "voiceVolume": {
+        "value": "课堂投射稳定、私下较柔和；紧急时安全指令清楚",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "ambienceRules": {
+        "value": "教室人声环境与广播分开混音，不用背景声淹没台词",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "gameplay": {
+      "npcSchedule": {
+        "value": "课堂-办公室-下班通勤-买菜-家中休息-周末城市生活；日程未实际实现",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "dialogueTree": {
+        "value": "正常教学交流→异样证词→记录核验→安全分歧→互相尊重的协作",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "affinity": {
+        "value": "师生关系通过尊重、事实与信赖建立；不做恋爱好感攻略",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "trust": {
+        "value": "无证据乱冒险下降信任；如实反映情况、顾及安全增加信任",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "playerControl": {
+        "value": "非默认玩家操纵；可作剧情重要NPC，是否加入战斗暂不决定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "interactRange": {
+        "value": "使用全局交谈距离与场景点击交互标准",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "characterSelection": {
+        "value": "不默认为战斗伙伴；教师身份以教学和调查更自然",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "sceneLayers": {
+        "value": "校园或城市背景层、人物立绘层、对话层、动画层，按既有系统组织",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "collisionBounds": {
+        "value": "角色真实出图以后依据像素和站位生成",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "saveFlags": {
+        "value": [
+          "met_teacher008",
+          "teacher008_report_open",
+          "teacher008_map_clue",
+          "teacher008_trust"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "choiceTriggers": {
+        "value": [
+          "report_stair_anomaly",
+          "compare_maps",
+          "ask_teacher_help",
+          "prioritize_safety"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "npcBrain": {
+        "value": "课程表、办公室事务、通勤、私人活动和事件响应状态机候选",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "flagsVariables": {
+        "value": {
+          "met": false,
+          "reportOpen": false,
+          "mapClue": false,
+          "trust": 0
+        },
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "inventoryRules": {
+        "value": "有职业道具但常规立绘空手，场景拿粉笔/地图/文件需单独动作和场景资源",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "quality": {
+      "originalityCheck": {
+        "value": "成年教师不是模板御姐或学校女神；面相与人格独立且真实",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "similarityCheck": {
+        "value": "与女主黑长直冷脸、女二栗棕马尾、女三短发假小子、女四烟茶金大小姐的头脸和气质保持差异",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "faceConsistency": {
+        "value": "尚未批准图像，无正反脸一致性已过声明",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "hairSideCheck": {
+        "value": "低束马尾、右侧偏分、两侧细碎发在正背面有一致结构",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "visualIdentityCheck": {
+        "value": "一眼看出28岁上下专业成年人，亲切且干练，不误认为高中生",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "handsCheck": {
+        "value": "默认两手空置，指尖完整可见，不握教具和道具",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "feetCheck": {
+        "value": "两只低跟鞋完整在统一地面线",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "fullBodyCheck": {
+        "value": "只有一人全身、不拼头像、不放表情、文字或设定页",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "measurementProvenanceCheck": {
+        "value": "所有人体精确数字均为创作制版占位，实际出图后重新核对",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "outfitCheck": {
+        "value": "成年教师个人便装，不穿学生制服；不乱加校徽徽章或奢侈装饰",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "sourceRightsCheck": {
+        "value": "实际使用Anima/LoRA及其他素材须核验使用许可，保留生成记录",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "rigCheck": {
+        "value": "真实PSD、独立部件、骨架/网格均尚未生成",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "poseCheck": {
+        "value": "正常GalGame待机动作，不能画成教室讲课插画",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "screenshotCheck": {
+        "value": "后续手机与桌面游戏场景、编辑器全屏需要真实截图核对",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "approvalRecord": {
+        "value": "用户已要求‘下一个老师’的448条设定入GitHub；具体女教师视觉、科目与剧情均待批准",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "rollbackReference": {
+        "value": "不修改现有CHAR-001/002/003/004/005/013/016/020已选母图和人物档案",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    },
+    "provenance": {
+      "createdAt": {
+        "value": "2026-11-03",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "updatedAt": {
+        "value": "2026-11-03",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "userConfirmedFields": {
+        "value": [
+          "当前制作对象：教师角色，要求448项角色档案保存到GitHub"
+        ],
+        "status": "user_confirmed",
+        "source": "用户指明下一个为老师并要求存GitHub；已有CHAR-008占位"
+      },
+      "sourceCitations": {
+        "value": [
+          "用户要求：那就先写人物信息448条到github",
+          "仓库已有CHAR-008班主任角色占位",
+          "原22组448字段标准模板和绘画风格锁定规则"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "proposedFields": {
+        "value": "女性、28岁、科目、姓名、体型、外貌、个性细节、教师作息、家庭城市剧情均为可修改建议",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "unknownFields": {
+        "value": "正式姓名生日、户籍家庭成员、伴侣与私密生活、图像原文件及实际生成参数尚无来源",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "rejectedFields": {
+        "value": [
+          "学生制服作为教师标准装",
+          "无能卖萌或刻板严厉老师",
+          "师生越界爱情线",
+          "随身固定手持教具",
+          "把教师当万能解谜器",
+          "多视图设定集代替单人原画"
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "revisionHistory": {
+        "value": [
+          {
+            "date": "2026-11-03",
+            "version": "0.1.0",
+            "note": "将CHAR-008班主任占位扩展为完整448字段的年轻成年女地理教师设计候选；没有声称已批准原画或游戏上线。"
+          }
+        ],
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "authorReviewer": {
+        "value": "AI设计起草，待用户确认具体设定",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "approvedBy": {
+        "value": null,
+        "status": "unknown",
+        "source": "未知/暂不适用，未获用户审批或原画依据",
+        "notes": "没有实际证据，保持空值"
+      },
+      "permissions": {
+        "value": "仅新增/修订CHAR-008人设及未批准的角色规划文字，不覆盖其他角色原画",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      },
+      "historyNotes": {
+        "value": "2026-11-03：尚未生成正/背图、PSD、Live2D，也没有注册成正式游戏NPC",
+        "status": "proposed",
+        "source": "CHAR-008 女教师角色设计提案 2026-11-03",
+        "notes": "设计建议，非用户定稿；年龄及测量数值为初始参考"
+      }
+    }
+  },
+  "recordVersion": "0.1.0",
+  "updatedAt": "2026-11-03",
+  "sourceNotes": {
+    "actualUserIntent": "用户在讨论完成学生后选择接下来制作教师，并要求448条人物资料写入GitHub。",
+    "explicitlyUnapproved": "女性、28岁、地理学科、名字、五官、衣装、身材、家庭、剧情、日程等仍是建议；无用户验收图片。",
+    "identityRule": "沿用已有CHAR-008班主任占位，不给另一个身份或注册游戏演员。"
+  },
+  "fieldCount": 448,
+  "statusSummary": {
+    "user_confirmed": 2,
+    "proposed": 414,
+    "unknown": 30,
+    "not_applicable": 2
+  }
+}
