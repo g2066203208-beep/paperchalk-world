@@ -1,0 +1,885 @@
+{
+  "version": "3.0",
+  "project": "错位日常 / Paperchalk World",
+  "date": "2026-11-02",
+  "description": "Rebalanced 48 proposed identifiable humans for original urban life and tactical deck-building RPG: 8 students, 12 other important, 28 city/support NPCs. All remain proposals, not completed actors.",
+  "supersedes": "docs/HUMAN_CAST_ROSTER_V2.json",
+  "policy": {
+    "oneIdentityPerCharacter": true,
+    "allNewAppearancesDesignProposals": true,
+    "doNotAlterExistingApprovedArt": true,
+    "officialCharacterRegistryNotTouched": true,
+    "importantHumanCount": 18,
+    "studentCount": 28,
+    "otherCount": 20,
+    "monsterCountUnchanged": "15 experimental placeholders awaiting originality review"
+  },
+  "counts": {
+    "student": {
+      "core": 3,
+      "important": 5,
+      "support": 0
+    },
+    "other": {
+      "important": 12,
+      "support": 28
+    }
+  },
+  "people": [
+    {
+      "id": "CHAR-001",
+      "group": "student",
+      "tier": "core",
+      "label": "女主角",
+      "visual": {
+        "face": "窄椭圆、锐利灰紫眼",
+        "hair": "黑色及腰长直发",
+        "build": "162cm参考、纤细",
+        "gesture": "正面克制，擅长观察"
+      },
+      "personality": "毒舌、冷淡",
+      "storyFunction": "主视角／异常见证",
+      "status": "proposed",
+      "artStatus": "approved_existing_reference",
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+    },
+    {
+      "id": "CHAR-002",
+      "group": "student",
+      "tier": "core",
+      "label": "女二号",
+      "visual": {
+        "face": "圆润椭圆、明亮暖棕眼",
+        "hair": "栗棕色单马尾",
+        "build": "155cm参考、娇小",
+        "gesture": "轻快挥手、善于接话"
+      },
+      "personality": "活泼",
+      "storyFunction": "主动接近问题",
+      "status": "proposed",
+      "artStatus": "user_accepted_candidate_crop_not_in_repo",
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+    },
+    {
+      "id": "CHAR-003",
+      "group": "student",
+      "tier": "core",
+      "label": "男主角",
+      "visual": {
+        "face": "窄长脸、细长冷灰眼",
+        "hair": "黑色凌乱中长发",
+        "build": "176cm参考、瘦长",
+        "gesture": "单手插兜，略驼背"
+      },
+      "personality": "叛逆厌学",
+      "storyFunction": "对照异常的行动者",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+    },
+    {
+      "id": "CHAR-004",
+      "group": "student",
+      "tier": "important",
+      "label": "女三／角色气质待重新设计",
+      "visual": {
+        "face": "暂不锁定此前平直细眼短发设计；重新寻求鲜明而不网红的独立骨相",
+        "hair": "冷茶色齐颌短发、左侧厚刘海",
+        "build": "163cm参考、偏直骨架",
+        "gesture": "习惯把手藏在袖口附近"
+      },
+      "personality": "作为重要女生待重做，已明确不沿用普通谨慎短发的模板设定",
+      "storyFunction": "记下相互矛盾的时间细节",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+    },
+    {
+      "id": "CHAR-005",
+      "group": "student",
+      "tier": "important",
+      "label": "纪律委员",
+      "visual": {
+        "face": "额头宽、方形下颌、深棕横长眼",
+        "hair": "黑发中短齐整偏分",
+        "build": "169cm参考、肩正",
+        "gesture": "总是抚平袖口褶皱"
+      },
+      "personality": "严守程序、执拗",
+      "storyFunction": "制服与校规秩序线索",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+    },
+    {
+      "id": "CHAR-006",
+      "group": "other",
+      "tier": "important",
+      "label": "夜间保安",
+      "visual": {
+        "face": "长方脸、下眼袋明显、浓平眉",
+        "hair": "灰黑短发、后发稍蓬",
+        "build": "181cm参考、壮实不过胖",
+        "gesture": "抬下巴看楼层牌"
+      },
+      "personality": "谨慎耐心、保守",
+      "storyFunction": "夜间巡查时间证词",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-007",
+      "group": "other",
+      "tier": "important",
+      "label": "隔壁住户",
+      "visual": {
+        "face": "瘦窄脸、眼距稍宽、眼尾微垂",
+        "hair": "深栗短卷发",
+        "build": "167cm参考、肩窄",
+        "gesture": "门缝前始终站得很正"
+      },
+      "personality": "礼貌而不善表达",
+      "storyFunction": "门外与住户证词冲突",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-008",
+      "group": "other",
+      "tier": "important",
+      "label": "班主任",
+      "visual": {
+        "face": "宽椭圆脸、厚上睑、鼻梁平缓",
+        "hair": "烟棕色盘发",
+        "build": "170cm参考、端庄",
+        "gesture": "两手拢住文件但不固定道具"
+      },
+      "personality": "克制负责、对制度有顾虑",
+      "storyFunction": "课程表与课室规则",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-009",
+      "group": "other",
+      "tier": "important",
+      "label": "公寓管理员",
+      "visual": {
+        "face": "颧骨明显、窄眼距、厚眉",
+        "hair": "深灰侧分短发",
+        "build": "174cm参考、偏矮壮",
+        "gesture": "说话前先看墙上编号"
+      },
+      "personality": "精打细算、守口如瓶",
+      "storyFunction": "楼层钥匙与住户名单",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-010",
+      "group": "other",
+      "tier": "important",
+      "label": "校医",
+      "visual": {
+        "face": "柔和长脸、杏眼间距稍大",
+        "hair": "深棕齐肩低发束",
+        "build": "166cm参考、匀称",
+        "gesture": "先检查光线再回答"
+      },
+      "personality": "冷静、细心、讲证据",
+      "storyFunction": "区分真实疲劳和异常现象",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-011",
+      "group": "other",
+      "tier": "support",
+      "label": "便利店店员",
+      "visual": {
+        "face": "圆脸、短眼裂",
+        "hair": "茶黑短碎发",
+        "build": "161cm参考、结实",
+        "gesture": "柜台前微微前倾"
+      },
+      "personality": "熟络、记忆强",
+      "storyFunction": "交易记录的时间线",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-012",
+      "group": "other",
+      "tier": "important",
+      "label": "电器维修技师",
+      "visual": {
+        "face": "细短深棕发，较宽颧骨，脖颈较厚，卷起袖口但不永久携带工具",
+        "hair": "深褐色短硬发",
+        "build": "171cm参考、肩较宽",
+        "gesture": "手腕常活动、站姿歪一点"
+      },
+      "personality": "实在、沉迷细节；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "从普通电路故障与建筑配线切入，协助调查异常用电与铃声；有自己的客户与工作日程",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 24,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-013",
+      "group": "student",
+      "tier": "important",
+      "label": "摄影兴趣女生／同校生",
+      "visual": {
+        "face": "窄下颌、眼距较宽、青灰圆杏眼",
+        "hair": "深暗紫棕中长发，与既有核心四人有不同的眼距和颧骨关系",
+        "build": "160cm参考、腿稍长",
+        "gesture": "单眼微眯观察取景"
+      },
+      "personality": "敏锐、独立、较固执",
+      "storyFunction": "用摄影记录城市与校内异常；不是必须设独立艺术高中",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+    },
+    {
+      "id": "CHAR-014",
+      "group": "other",
+      "tier": "support",
+      "label": "值班警员",
+      "visual": {
+        "face": "宽下颌、直眉、窄眼",
+        "hair": "黑色寸短发",
+        "build": "180cm参考、端正",
+        "gesture": "站姿警觉但不持武器"
+      },
+      "personality": "谨慎、按程序",
+      "storyFunction": "警情记录和现场证据",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-015",
+      "group": "other",
+      "tier": "support",
+      "label": "匿名证人",
+      "visual": {
+        "face": "细下颌、轻皱眉、眼形待面貌揭示",
+        "hair": "深棕中短发、覆盖耳部",
+        "build": "172cm参考、瘦削",
+        "gesture": "出现时略偏头，脸仍可辨"
+      },
+      "personality": "谨小慎微、记性好",
+      "storyFunction": "独立身份证词（未指定隐藏身份）",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-016",
+      "group": "student",
+      "tier": "important",
+      "label": "男二／插班生（设计候选）",
+      "visual": {
+        "face": "偏宽的上半脸、颧骨略显、脸颊收窄、短而微方的下巴；眉骨清楚，双眼横向偏长、左眼上睑略重、外眼角轻微下收；鼻梁自然微弯、嘴唇偏薄，右侧嘴角轻微上提。五官不完全对称，既好看又有真实少年辨识度；区别于男主的窄长锐眼脸",
+        "hair": "极深的暖茶黑短发，非标准中分；偏右的自然侧分、额前3束大小不同的碎刘海，人物左侧露耳、右侧耳前有一小束较长碎发，后脑和后颈收得干净",
+        "build": "173cm、约64kg候选；肩宽适中，颈肩衔接紧实，不是男主的瘦高长条形，也不画健身壮汉",
+        "gesture": "右手轻放在左手腕附近而不紧抓，左肩比右肩略低，安静直立但不僵硬；默认嘴唇闭合、视线略偏镜头旁"
+      },
+      "personality": "有礼貌但不讨好；表达克制、自尊心强、遇到不合理的事会追问，偶尔露出一点讽刺意味，而非千篇一律温柔暖男",
+      "storyFunction": "外来者对校园空间的第一印象",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "visualIdentity": "较宽上脸＋不完美的略重左眼睑＋微方短下巴＋不规则偏分碎发＋偏右轻抬嘴角；灰阶缩图也可认人",
+      "visualAvoid": "标准对称V脸、完美中分奶油蓬松发、银白染发、夸张美瞳高光、柔光磨皮、统一网红双眼皮、笔直完美高鼻梁、宽肩窄腰模特身材、道具装饰凑人设",
+      "designNotes": "旧版高额头+灰褐标准中分+温柔下垂眼方案因用户反馈太像AI网红脸而替换。此版为原创美术方向候选，不代表真人或已批准母图；必须按实际Anima正面图片复审后锁定面相。",
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+    },
+    {
+      "id": "CHAR-017",
+      "group": "other",
+      "tier": "important",
+      "label": "实验室数据分析员",
+      "visual": {
+        "face": "灰棕偏短发，颧骨结实、眼角紧，身材小巧利落，常穿普通城市便装",
+        "hair": "灰棕色短发、发尾向外",
+        "build": "158cm参考、紧凑",
+        "gesture": "竖起一根手指确认顺序"
+      },
+      "personality": "好奇、严谨、脾气急；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "帮忙验证环境数据是否可重复；有个人研究风险，不是万能解谜工具",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 26,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-018",
+      "group": "other",
+      "tier": "important",
+      "label": "广播电台主持人",
+      "visual": {
+        "face": "砂棕自然卷发，唇角稍翘、脸偏扁椭圆，穿舒适开领外套",
+        "hair": "砂棕色蓬松卷发",
+        "build": "177cm参考、薄肩",
+        "gesture": "嘴角常带半笑，双臂自然分开"
+      },
+      "personality": "能说会道、遇事胆小；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "夜间播报异常时序与城市事件，通过工作场所和录音证据连接线索",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 28,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-019",
+      "group": "other",
+      "tier": "important",
+      "label": "独立画家／美术教师",
+      "visual": {
+        "face": "乌蓝及肩发、长椭圆脸与沉静低眼角，松量较大的工作衬衣",
+        "hair": "乌蓝色及肩波波头",
+        "build": "165cm参考、四肢偏长",
+        "gesture": "手掌贴近胸前却不握道具"
+      },
+      "personality": "感受敏感、审美挑剔；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "通过速写和场景透视提供跨时段的视觉证词；有自己的工作与生活压力",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 27,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-020",
+      "group": "student",
+      "tier": "important",
+      "label": "田径女生",
+      "visual": {
+        "face": "稍宽脸、上挑外眼角、平直短眉",
+        "hair": "深栗高束短马尾",
+        "build": "170cm参考、腿肌明显",
+        "gesture": "体重落前脚掌，肩背挺直"
+      },
+      "personality": "直接、好胜、讲义气",
+      "storyFunction": "确认楼道距离和移动速度",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+    },
+    {
+      "id": "CHAR-021",
+      "group": "other",
+      "tier": "important",
+      "label": "夜间配送员",
+      "visual": {
+        "face": "长鼻梁、窄额头、短圆眼",
+        "hair": "亚麻深棕短发",
+        "build": "179cm参考、偏瘦",
+        "gesture": "常回头核对门牌"
+      },
+      "personality": "警觉、守时、沉默",
+      "storyFunction": "证明门牌编号与收件位置偏移",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-022",
+      "group": "other",
+      "tier": "support",
+      "label": "公共图书馆馆员",
+      "visual": {
+        "face": "黑茶齐耳短发，细下颌，普通工作衬衣",
+        "hair": "黑茶色齐耳短发",
+        "build": "157cm参考、匀称",
+        "gesture": "扶眼镜框（非固定手持道具）"
+      },
+      "personality": "耐心、较慢热；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "记录借阅与旧出版物的来源，允许玩家查证城市历史",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 30,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-023",
+      "group": "other",
+      "tier": "support",
+      "label": "夜间咖啡馆驻唱者",
+      "visual": {
+        "face": "深棕齐肩卷发、自然饱满脸，简朴私服",
+        "hair": "深棕色齐肩卷发",
+        "build": "162cm参考、圆润",
+        "gesture": "说话时抬下巴"
+      },
+      "personality": "热心、容易紧张；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "夜间人流与音频线索，形成居民熟识的生活场所",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 23,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-024",
+      "group": "other",
+      "tier": "important",
+      "label": "社区运动教练",
+      "visual": {
+        "face": "浅褐色短寸发、宽下颌、筋骨匀称，运动上衣和日常夹克换装",
+        "hair": "浅褐色短寸发",
+        "build": "183cm参考、肌肉均匀",
+        "gesture": "双脚自然大分开"
+      },
+      "personality": "外向、喜欢竞争；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "以训练路径和身体感知观察错位距离，也有职业伦理及个人事务",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 29,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-025",
+      "group": "other",
+      "tier": "support",
+      "label": "超市理货负责人",
+      "visual": {
+        "face": "黑发颌边中分、长脸，普通便利工作外套",
+        "hair": "黑色齐颌中分发",
+        "build": "168cm参考、稍瘦",
+        "gesture": "站姿笔直"
+      },
+      "personality": "细致、节省；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "货架物流与进货时间记录，提供平凡商业系统的证据",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 33,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-026",
+      "group": "other",
+      "tier": "important",
+      "label": "城市网络安全工程师",
+      "visual": {
+        "face": "深紫褐蓬松短发，小圆眼与微宽鼻，职业穿着自然、无科幻黑客道具",
+        "hair": "深紫褐蓬松短发",
+        "build": "159cm参考、偏矮",
+        "gesture": "手肘贴身"
+      },
+      "personality": "安静、反应快；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "从设备日志和城市互联信息入手；不应取代玩家调查而一键黑入一切",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 25,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-027",
+      "group": "other",
+      "tier": "support",
+      "label": "市政档案窗口职员",
+      "visual": {
+        "face": "棕黑低马尾、椭圆宽脸、平稳端正姿态",
+        "hair": "棕黑低马尾",
+        "build": "164cm参考、均衡",
+        "gesture": "掌心对齐"
+      },
+      "personality": "勤恳、畏惧迟到；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "居民文件与旧地图查询，有真实流程与时间限制",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 35,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-028",
+      "group": "other",
+      "tier": "support",
+      "label": "小企业会计",
+      "visual": {
+        "face": "齐整深灰黑短发、细下颌、稍显疲态的眼睛",
+        "hair": "深灰黑齐整短发",
+        "build": "175cm参考、瘦",
+        "gesture": "重心偏左腿"
+      },
+      "personality": "好辩、冷静；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "账目、发票与门牌对应关系，帮助核对异常收款记录",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 31,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-029",
+      "group": "other",
+      "tier": "support",
+      "label": "演出场地音响师",
+      "visual": {
+        "face": "浅栗长刘海，清瘦身形，轻便工作夹克",
+        "hair": "浅栗长刘海遮半侧额",
+        "build": "169cm参考、清瘦",
+        "gesture": "手指轻敲节奏"
+      },
+      "personality": "慢条斯理；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "音效异常与设备错误诊断，与广播主持人形成专业分歧",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 25,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-030",
+      "group": "other",
+      "tier": "support",
+      "label": "小剧场演员",
+      "visual": {
+        "face": "赤茶棕长波浪发、上宽下窄脸，善手势",
+        "hair": "赤茶棕长波浪发",
+        "build": "166cm参考、挺拔",
+        "gesture": "手势外放"
+      },
+      "personality": "善表演、直率；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "城市演出与社交线索，涉及正常表演和误解，不是模仿怪",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 26,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-031",
+      "group": "other",
+      "tier": "support",
+      "label": "建筑绘图员",
+      "visual": {
+        "face": "棕褐短卷发、宽短下巴，稳重日常服",
+        "hair": "棕褐卷短发",
+        "build": "172cm参考、壮实",
+        "gesture": "观察环境后说话"
+      },
+      "personality": "沉稳、少言；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "楼梯比例与建筑旧图对照，有责任边界和职业操守",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 28,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-032",
+      "group": "other",
+      "tier": "support",
+      "label": "街区历史资料员",
+      "visual": {
+        "face": "冷灰棕编发、鹅蛋脸，深色衬衣",
+        "hair": "冷灰棕及胸编发",
+        "build": "156cm参考、娇小",
+        "gesture": "微低头观察"
+      },
+      "personality": "爱考据、略固执；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "校舍和住宅楼改建的公开记录，调查不能跳过资料过程",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 37,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-033",
+      "group": "other",
+      "tier": "support",
+      "label": "道路养护工",
+      "visual": {
+        "face": "黑色硬短发、长方脸与宽肩，工作服只在值勤时穿",
+        "hair": "黑色硬短发",
+        "build": "178cm参考、宽肩",
+        "gesture": "习惯卷袖口"
+      },
+      "personality": "负责、急性子；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "夜间路段施工、封闭时间与通行路径证词",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 38,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-034",
+      "group": "other",
+      "tier": "support",
+      "label": "二手书店老板",
+      "visual": {
+        "face": "褐色低双辫、柔和脸型，暖色宽松便服",
+        "hair": "褐色低双辫",
+        "build": "158cm参考、瘦弱",
+        "gesture": "轻捏衣角"
+      },
+      "personality": "易害羞、细心；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "旧版地图与被遗漏的地方志线索，经营是首要生活",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 29,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-035",
+      "group": "other",
+      "tier": "support",
+      "label": "电竞馆夜班领班",
+      "visual": {
+        "face": "银灰棕短发、眼尾锐但不夸张，休闲夹克",
+        "hair": "银灰棕短发",
+        "build": "174cm参考、苗条",
+        "gesture": "稍前倾"
+      },
+      "personality": "嘴快、心软；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "夜间街区人流与营业记录，个人利益使证词不总可靠",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 24,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-036",
+      "group": "other",
+      "tier": "support",
+      "label": "社区新闻记者",
+      "visual": {
+        "face": "深棕齐眉短发、颧骨明显与直眼线，普通通勤装",
+        "hair": "深棕齐眉刘海短发",
+        "build": "167cm参考、肩宽",
+        "gesture": "手自然贴裤缝"
+      },
+      "personality": "追问到底、正义感；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "街区事件的采访与事实核对，也会因独家报道产生冲突",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 30,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-037",
+      "group": "other",
+      "tier": "support",
+      "label": "公交场站调度员",
+      "visual": {
+        "face": "蜂蜜棕及肩发、稍宽下颌与圆杏眼，朴素制服",
+        "hair": "蜂蜜棕色肩下发",
+        "build": "163cm参考、匀称",
+        "gesture": "微侧头"
+      },
+      "personality": "温柔、警觉；具体职业性格待新剧情与原画审美确认",
+      "storyFunction": "班次和末班车的时刻矛盾，需实际查表不能万能推理",
+      "status": "proposed",
+      "artStatus": "concept_not_approved",
+      "ageYearsProposal": 42,
+      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+    },
+    {
+      "id": "CHAR-038",
+      "group": "other",
+      "tier": "support",
+      "label": "末班公交司机",
+      "visual": {
+        "face": "额头宽、双眼狭窄",
+        "hair": "深灰短寸发",
+        "build": "175cm参考、厚实",
+        "gesture": "姿态稍前探"
+      },
+      "personality": "守时、稳定",
+      "storyFunction": "公交夜间线路",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-039",
+      "group": "other",
+      "tier": "support",
+      "label": "男主母亲",
+      "visual": {
+        "face": "长椭圆脸、深眼窝",
+        "hair": "深棕色及肩直发",
+        "build": "164cm参考、偏瘦",
+        "gesture": "拿起电话前迟疑"
+      },
+      "personality": "负责、疲惫",
+      "storyFunction": "男主家庭信息（提案）",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-040",
+      "group": "other",
+      "tier": "support",
+      "label": "楼道清洁工",
+      "visual": {
+        "face": "方圆脸、短浓眉",
+        "hair": "灰褐短卷发",
+        "build": "160cm参考、结实",
+        "gesture": "手腕自然外翻"
+      },
+      "personality": "爽快、观察细",
+      "storyFunction": "楼层工作时序",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-041",
+      "group": "other",
+      "tier": "support",
+      "label": "电器修理工",
+      "visual": {
+        "face": "鹰钩轻鼻、长细眼",
+        "hair": "黑灰后梳发",
+        "build": "173cm参考、瘦长",
+        "gesture": "下意识垂头看细节"
+      },
+      "personality": "认真、多疑",
+      "storyFunction": "线路故障信息",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-042",
+      "group": "other",
+      "tier": "support",
+      "label": "面馆老板",
+      "visual": {
+        "face": "宽颧骨、眼尾笑纹",
+        "hair": "暖棕低发髻",
+        "build": "162cm参考、圆润",
+        "gesture": "扶腰站立"
+      },
+      "personality": "热心、记人能力强",
+      "storyFunction": "街区日常人流",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-043",
+      "group": "other",
+      "tier": "support",
+      "label": "社区老人",
+      "visual": {
+        "face": "瘦长脸、眼角细纹",
+        "hair": "白灰短发",
+        "build": "153cm参考、瘦小",
+        "gesture": "慢步、站前休息"
+      },
+      "personality": "温和但警觉",
+      "storyFunction": "旧街区建筑记忆",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-044",
+      "group": "other",
+      "tier": "support",
+      "label": "楼宇维修负责人",
+      "visual": {
+        "face": "棱角宽脸、眉骨高",
+        "hair": "黑发偏分",
+        "build": "182cm参考、宽肩",
+        "gesture": "常往上看天花板"
+      },
+      "personality": "务实、守口如瓶",
+      "storyFunction": "建筑图纸真假",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-045",
+      "group": "other",
+      "tier": "support",
+      "label": "夜班收银员",
+      "visual": {
+        "face": "心形脸、圆眼、眼睑略厚",
+        "hair": "蜜棕短卷发",
+        "build": "159cm参考、匀称",
+        "gesture": "轻扶领口"
+      },
+      "personality": "疲惫但有礼",
+      "storyFunction": "夜间消费时间点",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-046",
+      "group": "other",
+      "tier": "support",
+      "label": "社区志愿者",
+      "visual": {
+        "face": "偏圆椭圆脸、自然高眉",
+        "hair": "灰棕低束发",
+        "build": "168cm参考、匀称",
+        "gesture": "双手自然打开"
+      },
+      "personality": "热情、讲原则",
+      "storyFunction": "街区行动路线",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-047",
+      "group": "other",
+      "tier": "support",
+      "label": "校门保洁员",
+      "visual": {
+        "face": "略方脸、垂眼角",
+        "hair": "深灰黑短直发",
+        "build": "171cm参考、偏壮",
+        "gesture": "放松弯肩"
+      },
+      "personality": "平和、细心",
+      "storyFunction": "校园门禁变化",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    },
+    {
+      "id": "CHAR-048",
+      "group": "other",
+      "tier": "support",
+      "label": "失物招领管理员",
+      "visual": {
+        "face": "窄三角脸、薄上唇",
+        "hair": "暗茶色齐颈短发",
+        "build": "166cm参考、瘦",
+        "gesture": "左臂贴身"
+      },
+      "personality": "警惕、条理强",
+      "storyFunction": "认领记录矛盾",
+      "status": "proposed",
+      "artStatus": "concept_not_approved"
+    }
+  ],
+  "schoolPolicy": {
+    "activeMainCampusOnly": true,
+    "name": "一所主角普通高中，校名暂不锁定",
+    "otherSchools": "剧情明确需要且有玩法/人物价值时再决定，不预先建三所"
+  },
+  "designPolicy": {
+    "firstFourDesigns": [
+      "CHAR-001",
+      "CHAR-002",
+      "CHAR-003",
+      "CHAR-016"
+    ],
+    "studentCandidatesRemaining": [
+      "CHAR-004",
+      "CHAR-005",
+      "CHAR-013",
+      "CHAR-020"
+    ],
+    "importantNonStudentIds": [
+      "CHAR-006",
+      "CHAR-007",
+      "CHAR-008",
+      "CHAR-009",
+      "CHAR-010",
+      "CHAR-012",
+      "CHAR-017",
+      "CHAR-018",
+      "CHAR-019",
+      "CHAR-021",
+      "CHAR-024",
+      "CHAR-026"
+    ],
+    "storyFirst": true,
+    "combatTeamNotEqualCast": true,
+    "backgroundCitizensDoNotRequireUniqueCharacterBibles": true
+  }
+}
