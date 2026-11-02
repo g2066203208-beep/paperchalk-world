@@ -69,7 +69,7 @@ jobs:
           const assert=require('node:assert/strict');
           const fs=require('node:fs');
           const {chromium}=require('playwright');
-          for(const file of ['site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js','site/character-editor/studio.js','site/character-editor/stage-motion.js']){
+          for(const file of ['site/l2d/breath.js','site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js','site/character-editor/studio.js','site/character-editor/stage-motion.js']){
             new Function(fs.readFileSync(file,'utf8'));
           }
           (async()=>{
@@ -141,6 +141,20 @@ jobs:
                 assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)>1,'hair tip must physically sway');
                 assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)>1,'skirt hem must physically sway');
                 assert.ok(Math.abs(motion.shoeA.x-motion.shoeB.x)<.9,'feet must remain anchored');
+                const anatomy=await page.evaluate(()=>{
+                  const breathe=window.PaperchalkLocalBreath;
+                  const sample=(x,y,time)=>breathe.point(x,y,3,4.8,time);
+                  return {headA:sample(515,120,1200),headB:sample(515,120,2800),
+                    waistA:sample(510,610,1200),waistB:sample(510,610,2800),
+                    footA:sample(465,963,1200),footB:sample(465,963,2800),
+                    chestA:sample(600,315,1200),chestB:sample(600,315,2800)};
+                });
+                for(const name of ['head','waist','foot']){
+                  assert.deepEqual(anatomy[name+'A'],anatomy[name+'B'],
+                    name+' must be immobile through a breathing cycle');
+                }
+                assert.ok(Math.abs(anatomy.chestA.x-anatomy.chestB.x)>5,
+                  'breathing should produce a real, visible local chest expansion');
                 await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
                 await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dEdition==='V4-official' && window.PaperchalkL2D.get('player')?.rig?.blinkEnabled===true,{timeout:15000});
                 const blink=await page.evaluate(()=>{
@@ -289,7 +303,9 @@ jobs:
                   'game must render the saved source-part eraser changes directly on top of real V4');
                 assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.overlayFrameUrls?.has(12)),true,'painted V4 frame must reload in game');
                 await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
-                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.canvas?.style?.transform?.includes('scale('),{timeout:18000});
+                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.canvas?.width>0,{timeout:18000});
+                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player').canvas.style.transform),'',
+                  'breathing must NEVER scale or rotate the whole character');
                 assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.profile?.amplitude),3,
                   'the one-click editor save applies 300% breathing amplitude to game V4 immediately');
                 const count=await page.locator('#dev-character-library option').count();
@@ -406,6 +422,8 @@ jobs:
                 });
                 assert.equal(await page.evaluate(()=>!!window.PaperchalkStageMotion?.frame()),true,
                   'when original PSD16 is loaded the CENTRAL viewport must use its real live skeletal rig');
+                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('enemy')?.canvas?.style?.transform||''),'',
+                  'independent PSD bones must not inherit a whole-body oscillation');
                 assert.equal(await page.evaluate(()=>window.characterEditor?.S?.layers?.front?.filter(x=>x.role==='psd-part').length),16,
                   'source editor retains the 16 independent bitmaps');
                 await page.screenshot({path:'artifacts/l2d-studio/'+
