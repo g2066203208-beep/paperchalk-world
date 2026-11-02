@@ -202,16 +202,21 @@ jobs:
                 assert.ok(partPatch.changes>0&&partPatch.erase>100&&partPatch.paint>100,
                   'editing an existing jacket must save a game-ready V4 patch, not merely editor artwork');
                 // Frame corrections remain an independent editing track, not duplicated source parts.
+                // PSD inspection is explicit and temporary; game V4 is the default
+                // and returns unchanged when the user finishes source inspection.
+                await page.locator('#studio-v4-mode').click();
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.useV4?.()),false);
                 await page.locator('#studio-v4-mode').click();
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.useV4?.()),true);
 
                 const originalCharacterCount=await page.locator('#studio-character option').count();
                 assert.ok(originalCharacterCount>=3,'full GitHub catalog, not only the protagonist');
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true);
-                assert.equal(await page.locator('#dev-l2d-preview-controls').isVisible(),true,'all-part live animation preview remains visible while painting V4');
+                assert.equal(await page.locator('#dev-l2d-preview-controls').isVisible(),true,'V4 game motion controls remain accessible');
+                assert.equal(await page.locator('#l2d-live-canvas').isVisible(),false,'fake L2D mesh must stay hidden for the real V4 character');
                 assert.equal(await page.locator('#l2d-strength').getAttribute('max'),'400');
                 await page.locator('#l2d-strength').fill('300');
-                await page.waitForFunction(()=>window.characterEditor?.l2dRig?.()?.amplitude===3,{timeout:20000});
+                await page.waitForFunction(()=>window.characterEditor?.motion?.()?.front?.amplitude===3,{timeout:20000});
                 assert.equal(await page.locator('#studio-frame').getAttribute('max'),'127');
                 const paintedSide=await page.locator('#studio-side').inputValue();
                 await page.locator('#studio-edit-scope').selectOption('frame');
