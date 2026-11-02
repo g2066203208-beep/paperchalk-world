@@ -37,7 +37,11 @@ class HeroineBreathRig{
   this.amplitude=opts.amplitude===undefined?.62:opts.amplitude;
   this.period=opts.period||4.6;this.playing=opts.playing!==false;
   this.drawBones=!!opts.drawBones;this.cleanup=opts.cleanup!==false;
-  this.softness=Math.max(0,Math.min(2,Number(opts.softness??1)));this.animatedFrames=!!opts.animatedFrames;
+  this.softness=Math.max(0,Math.min(2.4,Number(opts.softness??1)));this.animatedFrames=!!opts.animatedFrames;
+  this.hairSwing=clamp(Number(opts.hairSwing??2.5),0,5);
+  this.skirtSwing=clamp(Number(opts.skirtSwing??2.2),0,5);
+  this.armSwing=clamp(Number(opts.armSwing??1.8),0,5);
+  this.swaySpeed=clamp(Number(opts.swaySpeed??1),.5,2.5);
   this.featurePreset=opts.featurePreset||'generic';this.blinkEnabled=this.featurePreset==='heroine-front';
   this.t0=performance.now();this.frozen=0;this.last=0;this._raf=0;
   this.source=null;
@@ -67,7 +71,21 @@ class HeroineBreathRig{
  }
  setAmplitude(v){this.amplitude=clamp(Number(v)||0,0,4);this.render(performance.now(),true);}
  setPeriod(v){this.period=clamp(Number(v)||4.6,2,12);}
- setSoftness(v){this.softness=clamp(Number(v)||0,0,2);}
+ setSoftness(v){this.softness=clamp(Number(v)||0,0,2.4);}
+ setDynamics(values={}){
+  for(const key of ['hairSwing','skirtSwing','armSwing']){
+   if(values[key]!==undefined&&Number.isFinite(Number(values[key])))
+    this[key]=clamp(Number(values[key]),0,5);
+  }
+  if(values.swaySpeed!==undefined&&Number.isFinite(Number(values.swaySpeed)))
+   this.swaySpeed=clamp(Number(values.swaySpeed),.5,2.5);
+  this.render(performance.now(),true);
+ }
+ motionProfile(){
+  return {amplitude:this.amplitude,period:this.period,softness:this.softness,
+    hairSwing:this.hairSwing,skirtSwing:this.skirtSwing,armSwing:this.armSwing,
+    swaySpeed:this.swaySpeed};
+ }
  async setLayers(parts,canvasSize){
   const width=canvasSize?.[0]||1024,height=canvasSize?.[1]||1024;
   const surface=document.createElement('canvas');surface.width=width;surface.height=height;
@@ -111,20 +129,13 @@ class HeroineBreathRig{
     This is a procedural fallback; imported V4 clips take priority and bypass it.
     The full V4 asset is NOT synthesized here. */
  motionAt(x,y,t){
-  // Procedural fallback: breathe with the upper chest; never translate the
-  // entire skeleton. The head, waist, pelvis, legs and shoes stay planted.
+  // Shared local field used by the V4 renderer. Pelvis/feet stay fixed;
+  // hair, skirt and sleeve inertia are independent of breathing amplitude.
   const sw=this.source.width,sh=this.source.height;
-  const nx=x*1024/sw,ny=y*1024/sh;
-  const p=this.amplitude,period=this.period,now=t*1000;
-  const local=root.PaperchalkLocalBreath?.point(nx,ny,p,period,now)
-    ||{x:nx,y:ny};
-  const smooth=(a,b,v)=>{const q=clamp((v-a)/(b-a),0,1);return q*q*(3-2*q);};
-  const phase=Math.sin(t*Math.PI*2/period-.65);
-  const hair=Math.exp(-Math.pow((nx-520)/110,2))*smooth(175,310,ny)*
-    (1-smooth(335,475,ny));
-  const skirt=smooth(520,610,ny)*(1-smooth(680,730,ny));
-  const sx=(3.2*hair+2.4*skirt)*this.softness*p*phase;
-  return {x:(local.x+sx)*sw/1024,y:local.y*sh/1024};
+  const p=root.PaperchalkLocalBreath?.deform(
+   x*1024/sw,y*1024/sh,this.motionProfile(),t*1000)
+   ||{x:x*1024/sw,y:y*1024/sh};
+  return {x:p.x*sw/1024,y:p.y*sh/1024};
  }
  blinkAmount(t){
   // Sparse asymmetric blinks, smooth 100-150 ms closure; idle loop 6.4 s.
@@ -182,44 +193,15 @@ class HeroineBreathRig{
  // The foot artwork is absolutely fixed to the baseline ground position.
  psdTarget(x,y,part,t){
   const name=(part.name||'').toLowerCase().replace(/[\\s_-]/g,'');
-  const s=(v,a,b)=>{let n=clamp((v-a)/(b-a),0,1);return n*n*(3-2*n);};
-  const a=this.amplitude,period=this.period,now=t*1000;
-  const breath=root.PaperchalkLocalBreath?.point(x,y,a,period,now)||{x,y};
-  const theta=t*2*Math.PI/period;
-  const lag=Math.sin(theta-.65);
-  let X=x,Y=y;
-  // No body sway. An entirely unchanged anchor for grounded anatomy.
-  if(/footwear|鞋|legwear|双腿|裤|袜/.test(name))return {x,y};
-  if(/bottomwear|百褶裙|裙子/.test(name)){
-   const tip=s(y,520,660);
-   // A tiny cloth response, not a moving pelvis.
-   return {x:x+1.2*a*this.softness*lag*tip,y};
-  }
-  if(/topwear|上身|外套|校服|衬衫|衣服|jacket/.test(name))
-   return breath;
-  if(/handwear|手臂|挥手|袖子|sleeve/.test(name)){
-   // Move sleeve fabric near the clavicles only; the hands stay still.
-   const shoulder=(1-s(y,320,485))*(1-s(Math.abs(x-520),165,260));
-   return {x:x+(breath.x-x)*shoulder*.65,
-           y:y+(breath.y-y)*shoulder*.55};
-  }
-  if(/backhair|后发|马尾/.test(name)){
-   // The scalp is fixed. Only loose lower hair has delayed inertia.
-   const tip=s(y,165,330)*(1-s(y,475,550));
-   X+=1.8*a*this.softness*lag*tip;return {x:X,y:Y};
-  }
-  if(/fronthair|刘海|前发/.test(name))return {x,y};
-  if(/neck|脖颈|衣领|领带|collar|tie/.test(name)){
-   // Neck is practically fixed; cloth at the collar may lift slightly.
-   const collar=s(y,170,240)*(1-s(y,270,340));
-   return {x,y:y+(breath.y-y)*collar*.35};
-  }
-  // Face/eyes/eyebrows do not follow the chest. Keep blinking independent.
+  // Hands, hips and shoes are not carried around by a bogus body oscillation.
+  const moved=root.PaperchalkLocalBreath?.deform(x,y,this.motionProfile(),
+   t*1000,name)||{x,y};
+  // Blinks are a separate facial action, not part of breathing or hair swing.
   if(/irides|虹膜|瞳孔/.test(name))
    return {x,y:133+(y-133)*(1-.73*this.blinkAmount(t))};
   if(/eyewhite|眼白|eyelash|睫毛/.test(name))
    return {x,y:133+(y-133)*(1-.68*this.blinkAmount(t))};
-  return {x,y};
+  return moved;
  }
  renderPSDParts(t){
   const g=this.ctx,W=this.canvas.width,H=this.canvas.height,sx=W/1024,sy=H/1024;
@@ -249,7 +231,8 @@ class HeroineBreathRig{
    if(!w||!h)continue;
    // The jacket MUST be a mesh. A corner-only affine transform would
    // evaluate outside the chest envelope and silently show zero breathing.
-   const x=part.x,y=part.y,soft=/back.?hair|front.?hair|后发|刘海|bottomwear|裙|handwear|手臂|topwear|上身|外套|校服|jacket|衬衫|衣领|collar/i.test(part.name);
+   const x=part.x,y=part.y,
+    soft=/back.?hair|front.?hair|后发|马尾|刘海|bottomwear|裙|skirt|handwear|手臂|袖|sleeve|hand|topwear|上身|外套|校服|jacket|衬衫|衣领|collar/i.test(part.name);
    g.globalAlpha=part.opacity;
    if(!soft){
     const A=this.psdTarget(x,y,part,t),B=this.psdTarget(x+w,y,part,t),C=this.psdTarget(x,y+h,part,t);
