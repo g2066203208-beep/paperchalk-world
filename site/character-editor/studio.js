@@ -96,6 +96,10 @@ async function changeCore(id,face='front'){
  document.body.classList.add('studio-loading');
  try{
  if(currentId){
+  // Flush the current character's independent mesh draft BEFORE changing
+  // currentId/side, otherwise it could be written under the next character.
+  if(window.PaperchalkPartRigStudio?.state?.dirty)
+   await window.PaperchalkPartRigStudio.save();
   if(v4&&frameLayer)await persistCorrections();
   for(const f of ['front','back'])await persistEditedComponents(f);
   for(const f of ['front','back'])await persistSkeleton(f);
