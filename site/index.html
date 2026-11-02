@@ -28,7 +28,7 @@ body.mobile-mode.virtual-landscape #view{
   transform-origin:top left;transform:rotate(90deg);
 }
 #scene{
-  --rim-solid:24px;--rim-feather:8px;
+  --rim-solid:8px;--rim-feather:9px;
   position:relative;flex:none;margin:0;
   width:min(94vw,calc(94dvh * 16 / 9));
   width:min(94cqw,calc(94cqh * 16 / 9));
@@ -39,26 +39,11 @@ body.mobile-mode.virtual-landscape #view{
 }
 #scene img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none;-webkit-user-drag:none}
 #scene::after{
-  /* FIXED image-attached protection; rotating the scene also rotates this.
-     Four original picture edges are solid #000, with no dynamic exceptions. */
-  content:"";
-  position:absolute;
-  z-index:1;
-  inset:0;
-  pointer-events:none;
-  /* Picture-attached solid rim is deliberately tiny, but still covers
-     the image's true edges under 3D rotation. Sizes are developer-tunable. */
-  background:
-    linear-gradient(to right,
-      #000 0px,#000 var(--rim-solid),
-      transparent calc(var(--rim-solid) + var(--rim-feather)),
-      transparent calc(100% - var(--rim-solid) - var(--rim-feather)),
-      #000 calc(100% - var(--rim-solid)),#000 100%),
-    linear-gradient(to bottom,
-      #000 0px,#000 var(--rim-solid),
-      transparent calc(var(--rim-solid) + var(--rim-feather)),
-      transparent calc(100% - var(--rim-solid) - var(--rim-feather)),
-      #000 calc(100% - var(--rim-solid)),#000 100%);
+  /* STEP 1: A tiny photo-attached black feather with smoothly rounded
+     corners. No intersecting horizontal/vertical dark gradients. */
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  border-radius:16px;
+  box-shadow:inset 0 0 var(--rim-feather) var(--rim-solid) #000;
 }
 #fog{
   position:fixed;inset:0;display:block;width:100%;height:100%;
@@ -536,7 +521,7 @@ void main(){
   float w1=sin(p.x*15.7+p.y*4.2+t*.82+sin(p.y*8.-t*.36)*1.8);
   float w2=sin(p.y*18.4-p.x*6.6-t*.61+sin(p.x*10.+t*.4));
   float envelope=.57+.25*w1+.18*w2;
-  float reach=99.+22.*w1+15.*w2+10.*sin(t*1.15+p.x*9.);
+  float reach=40.+12.*w1+9.*w2+4.*sin(t*1.15+p.x*9.);
   float inlet=1.-smoothstep(-24.,max(24.,reach),d);
   float injection=inlet*max(.06,envelope)*3.8;
   density=clamp(density*exp(-u_dt*.44)+u_dt*injection,0.,1.);
@@ -551,30 +536,24 @@ uniform vec2 u_viewSize;
 uniform vec2 u_half;
 uniform float u_time;
 uniform vec4 u_fogSettings; // width in px, opacity 0..1, signed inset px, clear-zone %
-uniform vec2 u_rimSettings; // full-black protection px, feather px
 void main(){
  vec2 uv=v_uv;
  float density=texture2D(u_density,uv).r;
- // Geometry is relative to the ACTUAL centered scene rectangle, not the
- // display's width. Outside scene is black; inside central clear zone is clear.
- float dx=(u_half.x-abs(uv.x-.5))*u_viewSize.x;
- float dy=(u_half.y-abs(uv.y-.5))*u_viewSize.y;
- float d=min(dx,dy);
- float safeX=u_half.x*u_viewSize.x*(1.-u_fogSettings.w*.01);
- float safeY=u_half.y*u_viewSize.y*(1.-u_fogSettings.w*.01);
- // Union of four scene-edge bands; their inside boundaries feather to 0.
- float nearEdges=max(1.-smoothstep(max(0.,safeX-6.),safeX,dx),
-                     1.-smoothstep(max(0.,safeY-6.),safeY,dy));
- float wave=sin(uv.x*23.+u_time*.8+sin(uv.y*15.))*3.
-           +sin(uv.y*19.-u_time*.67)*2.;
- float distance=d-u_fogSettings.z+wave;
- float smokeZone=(1.-smoothstep(0.,max(1.,u_fogSettings.x),distance))*nearEdges;
- float safetyBlack=1.-smoothstep(u_rimSettings.x,
-                                u_rimSettings.x+max(1.,u_rimSettings.y),d);
- float fluidAlpha=clamp((.09+.53*pow(max(density,0.),.8))
-                    *smokeZone*u_fogSettings.y,0.,.56);
- // Only persistent flowing black fog plus guaranteed opaque edge protection.
- float alpha=max(fluidAlpha,safetyBlack);
+ // STEP 2: Rounded scene safe area in STATIC screen space.
+ // The entire area OUTSIDE this safe area is ALWAYS fully opaque black.
+ vec2 p=abs((uv-.5)*u_viewSize);
+ vec2 halfSafe=u_half*u_viewSize*clamp(u_fogSettings.w*.01,.01,1.);
+ float corner=min(16.,min(halfSafe.x,halfSafe.y)*.12);
+ vec2 q=p-(halfSafe-vec2(corner));
+ float safeDistance=corner-length(max(q,vec2(0.)))-min(max(q.x,q.y),0.);
+ // Narrow time-varying smoke lives along the INSIDE of the safe area only.
+ float wave=3.1*sin(uv.x*26.+u_time*.89+sin(uv.y*17.+u_time*.31))
+           +2.1*sin(uv.y*32.-u_time*.76);
+ float smokeDistance=safeDistance-u_fogSettings.z+wave;
+ float band=1.-smoothstep(0.,max(1.,u_fogSettings.x),smokeDistance);
+ float core=1.-smoothstep(0.,min(3.5,max(1.,u_fogSettings.x*.24)),safeDistance);
+ float smokeOpacity=clamp((.32+.68*pow(max(density,0.),.66))*u_fogSettings.y,0.,.94);
+ float alpha=safeDistance<=0.?1.:max(core,band*smokeOpacity);
  gl_FragColor=vec4(0.,0.,0.,alpha);
 }
 </script>
@@ -594,10 +573,10 @@ void main(){
   let sceneHalf={x:.4,y:.4};
   // Live persisted fog controls, intentionally separate from 3D layer editor.
   // Large values remain user-adjustable, but the clear-zone hard-clips smoke.
-  const FOG_KEY='paperchalk-fog-edge-v1';
-  const fogDefaults=Object.freeze({width:4,opacity:40,offset:-3,safe:88,solid:24,feather:8});
-  const fogBounds=Object.freeze({width:[0,14],opacity:[0,100],offset:[-30,45],
-                                 safe:[65,98],solid:[10,32],feather:[0,35]});
+  const FOG_KEY='paperchalk-fog-two-step-v2';
+  const fogDefaults=Object.freeze({width:3,opacity:82,offset:0,safe:96,solid:8,feather:9});
+  const fogBounds=Object.freeze({width:[0,12],opacity:[0,100],offset:[-18,18],
+                                 safe:[75,99],solid:[2,24],feather:[2,30]});
   function cleanFog(raw){
     const result={...fogDefaults};
     if(!raw||typeof raw!=='object')return result;
@@ -626,6 +605,7 @@ void main(){
     const guide=document.getElementById('fog-safe-guide');
     guide.style.width=(stage.offsetWidth*fogConfig.safe*.01)+'px';
     guide.style.height=(stage.offsetHeight*fogConfig.safe*.01)+'px';
+    guide.style.borderRadius='16px';
     fog.dataset.width=String(fogConfig.width);
     fog.dataset.opacity=String(fogConfig.opacity);
     fog.dataset.safe=String(fogConfig.safe);
@@ -635,7 +615,6 @@ void main(){
       const m=fogMetrics();
       gl.uniform4f(gl.getUniformLocation(composite,'u_fogSettings'),
         m.width,m.opacity,m.offset,m.safe);
-      gl.uniform2f(gl.getUniformLocation(composite,'u_rimSettings'),m.solid,m.feather);
     }
   }
 
@@ -1214,10 +1193,9 @@ void main(){
     // Avoid layout reads and callback allocation for every CPU pixel.
     const m=fogMetrics();
     const smooth=v=>{const q=clamp(v,0,1);return q*q*(3-2*q)};
-    const safeX=sceneHalf.x*sizes.w*(1-m.safe*.01);
-    const safeY=sceneHalf.y*sizes.h*(1-m.safe*.01);
-    const safeEdgeX=Math.max(0,safeX-6);
-    const safeEdgeY=Math.max(0,safeY-6);
+    const safeHalfX=sceneHalf.x*sizes.w*m.safe*.01;
+    const safeHalfY=sceneHalf.y*sizes.h*m.safe*.01;
+    const safeCorner=Math.min(16,Math.min(safeHalfX,safeHalfY)*.12);
     for(let y=0;y<sy;y++)for(let x=0;x<sx;x++){
       const uvx=(x+.5)/sx,uvy=(y+.5)/sy;
       const px=(uvx-.5)*sizes.w/sizes.h,py=(uvy-.5);
@@ -1229,23 +1207,24 @@ void main(){
                               (sceneHalf.y-Math.abs(uvy-.5))*sizes.h);
       const w1=Math.sin(px*15.7+py*4.2+t*.82+Math.sin(py*8-t*.36)*1.8);
       const w2=Math.sin(py*18.4-px*6.6-t*.61+Math.sin(px*10+t*.4));
-      const reach=99+22*w1+15*w2+10*Math.sin(t*1.15+px*9);
+      const reach=40+12*w1+9*w2+4*Math.sin(t*1.15+px*9);
       const inletT=clamp((distance+24)/(Math.max(24,reach)+24),0,1);
       const inlet=1-inletT*inletT*(3-2*inletT);
       const source=inlet*Math.max(.06,.57+.25*w1+.18*w2)*3.8;
       const d=b[y*sx+x]=clamp(old*Math.exp(-dt*.44)+dt*source,0,1);
       const p=(y*sx+x)*4;
-      const dx=(sceneHalf.x-Math.abs(uvx-.5))*sizes.w;
-      const dy=(sceneHalf.y-Math.abs(uvy-.5))*sizes.h;
-      const nearEdges=Math.max(1-smooth((dx-safeEdgeX)/Math.max(.001,safeX-safeEdgeX)),
-                               1-smooth((dy-safeEdgeY)/Math.max(.001,safeY-safeEdgeY)));
-      const wave=Math.sin(uvx*23+t*.8+Math.sin(uvy*15))*3+
-                 Math.sin(uvy*19-t*.67)*2;
-      const distanceToFog=distance-m.offset+wave;
-      const smokeZone=(1-smooth(distanceToFog/Math.max(1,m.width)))*nearEdges;
-      const safetyBlack=1-smooth((distance-m.solid)/Math.max(1,m.feather));
-      const fluidAlpha=clamp((.09+.53*d**.8)*smokeZone*m.opacity,0,.56);
-      const alpha=Math.max(fluidAlpha,safetyBlack);
+      // Same rounded-rectangle signed distance and opaque outside as WebGL.
+      const posX=Math.abs((uvx-.5)*sizes.w),posY=Math.abs((uvy-.5)*sizes.h);
+      const qx=posX-safeHalfX+safeCorner,qy=posY-safeHalfY+safeCorner;
+      const safeDistance=safeCorner-Math.hypot(Math.max(qx,0),Math.max(qy,0))
+                         -Math.min(Math.max(qx,qy),0);
+      const wave=3.1*Math.sin(uvx*26+t*.89+Math.sin(uvy*17+t*.31))
+                +2.1*Math.sin(uvy*32-t*.76);
+      const smokeDistance=safeDistance-m.offset+wave;
+      const band=1-smooth(smokeDistance/Math.max(1,m.width));
+      const core=1-smooth(safeDistance/Math.min(3.5,Math.max(1,m.width*.24)));
+      const smokeOpacity=clamp((.32+.68*d**.66)*m.opacity,0,.94);
+      const alpha=safeDistance<=0?1:Math.max(core,band*smokeOpacity);
       image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
     }
     s.a=b;s.b=a;fallback.putImageData(image,0,0);
