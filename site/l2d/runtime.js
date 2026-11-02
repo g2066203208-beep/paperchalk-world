@@ -213,9 +213,10 @@ function advanceV4(obj,now){
   if(correction)paint.drawImage(correction,0,0,canvas.width,canvas.height);
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(window.PaperchalkLocalBreath)
-   window.PaperchalkLocalBreath.draw(ctx,source,obj.profile,now,canvas.width,canvas.height);
-  else ctx.drawImage(source,0,0,canvas.width,canvas.height);
+  // No artificial chest breathing: render the original V4 pixels directly.
+  // The original heroine's hair/skirt/arms now articulate in the separate
+  // true-source-PartRig player, not by warping this composited frame.
+  ctx.drawImage(source,0,0,canvas.width,canvas.height);
   clip.frame=index;
   obj.root.dataset.l2dFrame=String(index);
  }).catch(e=>{console.warn('[L2D] V4 frame decoding error',e)})
