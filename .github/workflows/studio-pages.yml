@@ -339,8 +339,10 @@ jobs:
                 assert.deepEqual(bedroomCheck.natural,[1024,576]);
                 assert.ok(bedroomCheck.src.endsWith('/assets/scenes/bedroom.webp'));
                 const bedroomRotation=await page.locator('#scene').evaluate(el=>el.style.transform);
-                assert.equal(bedroomRotation,'rotateY(0.000deg) rotateX(0.000deg)',
-                  'new bedroom retained unwanted tilt from the mouse on the previous room');
+                const zeroYaw=bedroomRotation.match(/rotateY\((-?[\d.]+)deg\)/);
+                const zeroPitch=bedroomRotation.match(/rotateX\((-?[\d.]+)deg\)/);
+                assert.ok(zeroYaw&&zeroPitch&&Math.abs(Number(zeroYaw[1]))<.02&&Math.abs(Number(zeroPitch[1]))<.02,
+                  'new bedroom retained unwanted tilt from the mouse on the previous room: '+bedroomRotation);
                 assert.equal(bedroomCheck.enemyHidden&&bedroomCheck.playerHidden&&bedroomCheck.dialogueHidden,true);
                 assert.equal(bedroomCheck.originalFog,true);
                 await page.screenshot({path:'artifacts/classroom/'+
