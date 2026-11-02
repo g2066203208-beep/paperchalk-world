@@ -265,6 +265,7 @@ jobs:
                 assert.ok(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.partPatch?.changes>0),
                   'game must render the saved source-part eraser changes directly on top of real V4');
                 assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.overlayFrameUrls?.has(12)),true,'painted V4 frame must reload in game');
+                await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
                 await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.canvas?.style?.transform?.includes('scale('),{timeout:18000});
                 assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.profile?.amplitude),3,
                   'the one-click editor save applies 300% breathing amplitude to game V4 immediately');
