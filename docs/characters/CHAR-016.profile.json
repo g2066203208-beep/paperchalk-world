@@ -2,12 +2,12 @@
   "schemaVersion": 3,
   "recordCode": "CHAR-016",
   "canonicalId": "male-second-transfer-candidate",
-  "recordState": "design_candidate_original_face_no_approved_art_not_in_game",
+  "recordState": "front_art_baseline_selected_user_supplied_other_views_and_l2d_pending",
   "readableDocument": "docs/characters/CHAR-016_MALE_SECOND_PROFILE.md",
   "sourcePriority": [
-    "User-confirmed aesthetic: attractive distinctive original faces, not generic AI idol look",
-    "Character-specific proposed details from authored profile and cast roster",
-    "No approved image exists; all pixel-precise landmarks, source hashes and rig results remain unknown"
+    "User-supplied CHAR-016 sheet (site/assets/characters/char-016/reference-sheet.png), with pixel-exact left full-body crop front.png, is canonical visual source.",
+    "Art face and clothing supersede older written Anima prompt when differing, specifically warm tea-brown eyes, rounded tapering chin and hands overlapped in front.",
+    "Height, weight, body measurements, relationships and story details remain proposals; no back image, PSD layers or L2D animation exists."
   ],
   "fields": {
     "identity": {
@@ -438,9 +438,9 @@
         "status": "unknown"
       },
       "postureAsymmetry": {
-        "value": "左肩略低于右肩",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "肩部自然微不对称，双臂在胸廓两侧下垂，双手于小腹前交握",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "mobilityNeeds": {
         "value": null,
@@ -526,9 +526,9 @@
     },
     "face": {
       "faceShape": {
-        "value": "上半脸较宽、颧骨略显、下巴短而微方，非完美V脸",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "上半脸稍宽、脸颊往下自然收窄的长椭圆面，颌骨轮廓柔和",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "forehead": {
         "value": "额头中等偏宽，3束不等长刘海",
@@ -546,9 +546,9 @@
         "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
       },
       "chin": {
-        "value": "短微方形下巴",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "短而圆收的下巴，非原文字提案中的明确方颌；以右侧面部特写为准",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "noseBridge": {
         "value": "细窄、自然微弯，不是完全笔直高鼻",
@@ -589,9 +589,9 @@
         "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
       },
       "eyeShape": {
-        "value": "横向较长杏眼，眼尾平缓下收",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "横向偏长的松弛半垂杏眼，上睑自然稍重，克制略疲倦",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "eyeSpacing": {
         "value": "自然眼距，左右眼形有细微差异",
@@ -603,9 +603,9 @@
         "status": "unknown"
       },
       "eyeColor": {
-        "value": "茶灰色",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "暖茶棕色，原文茶灰色提案以实际获选原画修订",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "eyeHex": {
         "value": "#77736E",
@@ -735,9 +735,9 @@
     },
     "hair": {
       "hairBaseColor": {
-        "value": "极深暖茶黑",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "极深暖褐黑，发束宽窄自然，前额数束较长刘海",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "hairHex": {
         "value": "#25221F",
@@ -765,9 +765,9 @@
         "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
       },
       "parting": {
-        "value": "非对称自然偏右分缝，禁止标准中分",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "深色短发自然不规则偏分，整体接近中线但刘海位置左右并不完美对称",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "bangs": {
         "value": "额前3束不同长度刘海",
@@ -814,9 +814,9 @@
     },
     "wardrobe": {
       "outerwear": {
-        "value": "深蓝男式单排扣校服，扣合而比男主整齐",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "深海军蓝近炭色单排扣校服外套，两枚前襟深色纽扣和深色袖口纽扣，穿法较整齐",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "shirt": {
         "value": "白色翻领衬衫",
@@ -828,9 +828,9 @@
         "status": "unknown"
       },
       "neckwear": {
-        "value": "整齐的酒红色领带",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "白衬衫之上的酒红色领带，领口稍有自然松量",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "skirt": {
         "value": null,
@@ -1191,9 +1191,9 @@
     },
     "behavior": {
       "idlePose": {
-        "value": "双手在身前低位轻搭、双肩略不平",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "正面站立，双臂自然垂落，两手在小腹前自然交握，一只手稍覆另一只手",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "signatureGesture": {
         "value": "听到矛盾说法时先看旁边标志，再转回视线",
@@ -1516,8 +1516,9 @@
     },
     "visualProduction": {
       "frontReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "site/assets/characters/char-016/front.png",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "backReference": {
         "value": null,
@@ -1532,8 +1533,9 @@
         "status": "unknown"
       },
       "poseReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "site/assets/characters/char-016/reference-sheet.png (original 1024x1024 PNG; full-body left and face closeup right)",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "expressionReferences": {
         "value": null,
@@ -1614,13 +1616,14 @@
         "status": "unknown"
       },
       "sourceFileHash": {
-        "value": null,
-        "status": "unknown"
+        "value": "reference-sheet.png SHA256 87fdc19c61d067447fcd4322b65a53e2939ff52f7b3e957651fcc1394a5ac110; front.png SHA256 47f730a0584102ee0086240f70560e9e95be5c411d084f5f96c1fcff0f1d8ba3",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "assetApproval": {
-        "value": "尚无已验收立绘",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "2026-11-02 user supplied sheet accepted as CHAR-016 front visual baseline; exact pixel full-body crop at (75,0)-(390,1024) produces 315x1024 PNG; no back, PSD, Live2D or in-game actor registration",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "bodyFacingYawDeg": {
         "value": 0,
@@ -1711,9 +1714,9 @@
         "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
       },
       "characterIdentityEmbeddingNotes": {
-        "value": "微方短下巴、上脸宽、左上眼睑略重、右嘴角微扬、偏分3束碎发",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "Canonical user-approved face: deep warm brown-black imperfect center-offset short hair, elongated warm-brown relaxed eyes with slightly heavier upper eyelids, subtle tired seriousness, naturally soft-tapered rounded chin; burgundy tie, two-button dark blue blazer, hands loosely clasped low.",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "frontPosePoseCode": {
         "value": "FRONT_IDLE_A right hand near left wrist, slight shoulder asymmetry",
@@ -2013,9 +2016,9 @@
         "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
       },
       "faceConsistency": {
-        "value": "未来锁定认可原画的眼睑差、短微方下巴、眼距",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "Future artworks must use exact original user-provided reference-sheet.png facial landmarks, not the older imperfect text prompt.",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "hairSideCheck": {
         "value": "人物自己的左耳露出、右侧鬓发更长",
@@ -2073,9 +2076,9 @@
         "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
       },
       "approvalRecord": {
-        "value": "用户只要求审美方向，具体人物未审定",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "2026-11-02 user submitted 1024x1024 full-body + closeup art and requested GitHub storage if matching. Accepted as visual front baseline. Warm-brown eyes and softly rounded chin differ slightly from old concept; not grounds for redraw.",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       },
       "rollbackReference": {
         "value": "以当前V1.0和用户验收未来原画为准",
@@ -2156,9 +2159,9 @@
         "status": "unknown"
       },
       "historyNotes": {
-        "value": "448字段中未知保持unknown，不造假原画或故事事实",
-        "status": "proposed",
-        "source": "2026-11-02 CHAR-016 proposed original-character design; not approved artwork"
+        "value": "2026-11-02 uploaded original reference-sheet.png and exact unchanged 315x1024 crop front.png. Approved art appearance overrides tea-grey iris and square chin descriptions; dimensions and unshown body anatomy still unverified.",
+        "status": "approved_art_reference",
+        "source": "CHAR-016 user-supplied 2026-11-02 image: site/assets/characters/char-016/reference-sheet.png"
       }
     }
   }
