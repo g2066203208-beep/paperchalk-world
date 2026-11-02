@@ -37,21 +37,38 @@ class HeroineBreathRig{
   this.amplitude=opts.amplitude===undefined?.62:opts.amplitude;
   this.period=opts.period||4.6;this.playing=opts.playing!==false;
   this.drawBones=!!opts.drawBones;this.cleanup=opts.cleanup!==false;
+  this.softness=Math.max(0,Math.min(2,Number(opts.softness??1)));this.animatedFrames=!!opts.animatedFrames;
   this.t0=performance.now();this.frozen=0;this.last=0;this._raf=0;
   this.source=null;
   this.ready=this.setImage(image);
  }
  async setImage(im){
   this.image=im;
-  if(!im.complete||!im.naturalWidth){
+  if(!im)return this;
+  if(!(im instanceof HTMLCanvasElement)&&!(im instanceof ImageBitmap)&&(!im.complete||!im.naturalWidth)){
    await new Promise((resolve,reject)=>{im.addEventListener('load',resolve,{once:true});im.addEventListener('error',reject,{once:true});});
   }
-  this.source=preprocess(im,this.cleanup);
+  this.source=preprocess(im,this.cleanup);this.animatedFrames=!!this.animatedFrames && !(im instanceof HTMLCanvasElement);
   this.render(performance.now(),true);
   return this;
  }
  setAmplitude(v){this.amplitude=clamp(Number(v)||0,0,2);this.render(performance.now(),true);}
  setPeriod(v){this.period=clamp(Number(v)||4.6,2,12);}
+ setSoftness(v){this.softness=clamp(Number(v)||0,0,2);}
+ async setLayers(parts,canvasSize){
+  const width=canvasSize?.[0]||1024,height=canvasSize?.[1]||1024;
+  const surface=document.createElement('canvas');surface.width=width;surface.height=height;
+  const g=surface.getContext('2d',{alpha:true});
+  for(const part of parts){
+   if(part.visible===false)continue;
+   const im=part.canvas||part.image;
+   if(!im)continue;
+   g.globalAlpha=clamp(Number(part.opacity??1),0,1);
+   g.drawImage(im,Number(part.x)||0,Number(part.y)||0);
+  }
+  g.globalAlpha=1;
+  this.animatedFrames=false;return this.setImage(surface);
+ }
  setPaused(paused){if(paused===!this.playing)return;this.playing=!paused;if(!paused)this.t0=performance.now()-this.frozen;}
  setBones(show){this.drawBones=!!show;this.render(performance.now(),true);}
  drawSkeleton(t,pulse){
@@ -73,6 +90,9 @@ class HeroineBreathRig{
  render(now=performance.now(),force=false){
   if(!this.source)return;
   if(!force&&now-this.last<31)return;
+  if(this.animatedFrames&&this.image&&this.image.complete&&this.image.naturalWidth){
+   const x=this.source.getContext('2d');x.clearRect(0,0,this.source.width,this.source.height);x.drawImage(this.image,0,0);
+  }
   this.last=now;
   const c=this.ctx,W=this.canvas.width,H=this.canvas.height;
   c.clearRect(0,0,W,H);
@@ -81,7 +101,7 @@ class HeroineBreathRig{
   if(this.playing)this.frozen=now-this.t0;
   const phase=TWO*elapsed/this.period;
   const lung=Math.sin(phase),lag=Math.sin(phase-.65);
-  const A=this.amplitude;
+  const A=this.amplitude*this.softness;
   if(A<.001){c.drawImage(this.source,0,0,W,H);if(this.drawBones)this.drawSkeleton(now,lung);return;}
   // Vertex mapping shared by neighboring rows: each band uses the same
   // boundary transform so there are no cracks or independent part offsets.
@@ -124,5 +144,5 @@ class HeroineBreathRig{
  stop(){if(this._raf)cancelAnimationFrame(this._raf);this._raf=0;}
  destroy(){this.stop();this.source=null;}
 }
-root.HeroineBreathRig=HeroineBreathRig;
+root.HeroineBreathRig=HeroineBreathRig;root.PaperchalkL2DRig=HeroineBreathRig;
 })(window);
