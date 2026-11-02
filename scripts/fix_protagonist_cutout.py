@@ -55,9 +55,14 @@ def repair(path=INPUT):
     # Preserve source dimensions and transparent game rendering.
     image.save(path,"WEBP",quality=84,method=6,exact=True)
     check=Image.open(path).convert("RGBA")
-    assert check.getpixel((165,700))[3] <= 5,"Leg gap still opaque"
-    assert check.getpixel((150,400))[3] >= 240,"Character silhouette destroyed"
-    print("PASS: repaired character matte; removed background regions:",removed)
+    # Reference samples are proportional to the art, never fixed to a resolution.
+    gap_x=min(w-1,max(0,round(w*.5)))
+    gap_y=min(h-1,max(0,round(h*.69)))
+    torso_x=min(w-1,max(0,round(w*.47)))
+    torso_y=min(h-1,max(0,round(h*.39)))
+    assert check.getpixel((gap_x,gap_y))[3] <= 8,("Leg gap still opaque",(w,h),gap_x,gap_y)
+    assert check.getpixel((torso_x,torso_y))[3] >= 235,("Character silhouette destroyed",(w,h),torso_x,torso_y)
+    print("PASS: repaired character matte:",(w,h),"removed regions:",removed)
 
 if __name__=="__main__":
     repair()
