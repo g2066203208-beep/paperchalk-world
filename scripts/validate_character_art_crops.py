@@ -10,6 +10,10 @@ ARTS = [
      "a0365da4e63436093800516ee595f4f3e593618a8b48ca80f9b4ebb24356ebef"),
     ("CHAR-003", "site/assets/characters/char-003/front.png", 297, 1024,
      "ad832b27c9cbd5c3a33eb54dfa23b02d2511292fee998537e705873a9d9fb71d"),
+    ("CHAR-016", "site/assets/characters/char-016/front.png", 315, 1024,
+     "47f730a0584102ee0086240f70560e9e95be5c411d084f5f96c1fcff0f1d8ba3"),
+    ("CHAR-016-source", "site/assets/characters/char-016/reference-sheet.png", 1024, 1024,
+     "87fdc19c61d067447fcd4322b65a53e2939ff52f7b3e957651fcc1394a5ac110"),
 ]
 for name, rel, width, height, expected_sha256 in ARTS:
     data = (ROOT / rel).read_bytes()
@@ -20,4 +24,4 @@ for name, rel, width, height, expected_sha256 in ARTS:
     sha = hashlib.sha256(data).hexdigest()
     assert sha == expected_sha256, f"{name}: artwork was replaced or recompressed without approval"
     assert len(data) > 100_000, f"{name}: unexpectedly small placeholder artwork"
-    print(f"PASS {name}: unaltered selected center crop, {width}x{height} PNG, SHA256 verified")
+    print(f"PASS {name}: stored original source or unchanged pixel crop, {width}x{height} PNG, SHA256 verified")
