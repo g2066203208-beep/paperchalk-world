@@ -25,7 +25,9 @@ jobs:
       - name: Preserve game assets and prepare existing site
         run: |
           bash scripts/fetch-game-fonts.sh
+          python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/build_scene_catalog.py
+          python3 scripts/build_character_catalog.py
           test -s site/index.html
           test -s site/character-editor/index.html
           test -s site/assets/characters/protagonist-front.webp
