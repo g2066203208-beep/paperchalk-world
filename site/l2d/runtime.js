@@ -12,7 +12,7 @@ function install(root){
  const canvas=root.querySelector('[data-l2d-canvas]');
  if(!img||!canvas)return;
  const id=root.dataset.l2dActor;
- const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),profile:{amplitude:.55,period:4.8,softness:1}};
+ const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),overlayPending:new Set(),profile:{amplitude:.55,period:4.8,softness:1}};
  rigs.set(root,obj);
  img.addEventListener('load',()=>refresh(obj));
  img.addEventListener('error',()=>{root.dataset.l2dState='error';});
@@ -177,9 +177,11 @@ function advanceV4(obj,now){
   if(obj.overlay)ctx.drawImage(obj.overlay,0,0,canvas.width,canvas.height);
   let correction=obj.overlayFrames.get(index);
   const correctionUrl=obj.overlayFrameUrls.get(index);
-  if(!correction&&correctionUrl){
+  if(!correction&&correctionUrl&&!obj.overlayPending.has(index)){
+   obj.overlayPending.add(index);
    const frameId=index,ref=obj.clip,im=new Image();
    im.onload=()=>{
+    obj.overlayPending.delete(frameId);
     if(obj.clip!==ref)return;
     obj.overlayFrames.set(frameId,im);
     // Bound the decoded correction cache on mobile; keep raw PNG data in
@@ -187,8 +189,7 @@ function advanceV4(obj,now){
     while(obj.overlayFrames.size>6)obj.overlayFrames.delete(obj.overlayFrames.keys().next().value);
     ref.frame=-1;
    };
-   im.onerror=()=>obj.overlayFrameUrls.delete(frameId);
-   obj.overlayFrameUrls.delete(frameId);
+   im.onerror=()=>obj.overlayPending.delete(frameId);
    im.src=correctionUrl;
   }
   if(correction)ctx.drawImage(correction,0,0,canvas.width,canvas.height);
@@ -208,7 +209,7 @@ async function setCorrections(slot,general,frames={}){
  const list=Object.entries(frames||{})
   .filter(([k,url])=>/^\d{1,3}$/.test(k)&&Number(k)<256&&typeof url==='string'&&url.startsWith('data:image/'));
  obj.overlay=generalImg;
- obj.overlayFrames.clear();
+ obj.overlayFrames.clear();obj.overlayPending.clear();
  obj.overlayFrameUrls=new Map(list.map(([k,url])=>[Number(k),url]));
  if(obj.clip?.type==='decoder')obj.clip.frame=-1;
  return true;
