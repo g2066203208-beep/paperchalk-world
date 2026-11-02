@@ -1,0 +1,71 @@
+name: Character editor smoke tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/character-editor/**'
+      - '.github/workflows/character-editor-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Check syntax, desktop drawing and phone layout
+        run: |
+          mkdir -p artifacts/character-editor
+          python3 -m http.server 8123 --directory site >/tmp/character-server.log 2>&1 &
+          node - <<'JS'
+          const fs=require('fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+          const html=fs.readFileSync('site/character-editor/index.html','utf8');
+          const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];new Function(script);
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              for(const vp of [{width:1340,height:830},{width:390,height:844}]){
+                const page=await browser.newPage({viewport:vp,acceptDownloads:true,hasTouch:vp.width<500,isMobile:vp.width<500});
+                const errors=[];page.on('pageerror',e=>errors.push(e.message));
+                await page.goto('http://127.0.0.1:8123/character-editor/',{waitUntil:'load'});
+                await page.waitForFunction(()=>window.characterEditor&&window.characterEditor.S.ready,{timeout:10000});
+                assert.equal(await page.locator('#layers .layer').count(),1);
+                assert.equal(await page.locator('#status').textContent().then(x=>x.includes('载入')),true);
+                await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-initial.png',fullPage:true});
+                await page.locator('#add').click();
+                assert.equal(await page.locator('#layers .layer').count(),2);
+                await page.locator('[data-tool="brush"]').click();
+                const rect=await page.locator('#view').boundingBox(),x=rect.x+rect.width/2,y=rect.y+rect.height/2;
+                await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+9,y+9,{steps:3});await page.mouse.up();
+                const painted=await page.evaluate(()=>{
+                  const p=window.characterEditor.S.layers.front.at(-1);
+                  return p.canvas.getContext('2d').getImageData(510,510,1,1).data[3];
+                });
+                assert.ok(painted>0,'brush stroke produced no pixels');
+                await page.locator('#btnUndo').click();
+                await page.locator('#btnRedo').click();
+                await page.locator('#btnSave').click();
+                await page.waitForFunction(()=>document.getElementById('status').textContent.includes('已保存'),null,{timeout:12000});
+                const dl=page.waitForEvent('download');await page.locator('#btnExport').click();const downloaded=await dl;
+                assert.ok(downloaded.suggestedFilename().endsWith('.zip'));
+                await page.locator('#backTab').click();
+                assert.equal(await page.locator('#layers .layer').count(),1);
+                await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-back.png',fullPage:true});
+                assert.deepEqual(errors,[],'JavaScript errors');
+                await page.close();
+              }
+            }finally{await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: character-editor-screenshots
+          path: artifacts/character-editor
+          retention-days: 7
