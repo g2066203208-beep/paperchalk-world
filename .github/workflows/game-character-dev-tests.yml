@@ -254,7 +254,8 @@ jobs:
                 await page.waitForURL('**/?dev=1',{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.type==='decoder',{timeout:16000});
-                assert.equal(await page.evaluate(side=>window.PaperchalkCharacterDev.assigned.player.side===side,paintedSide),true,'game should restore the edited direction');
+                assert.equal(await page.evaluate(()=>window.PaperchalkCharacterDev.assigned.player.side),'back',
+                  'game must restore the most recently edited direction, not an earlier test frame direction');
                 await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
                 assert.ok(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.partPatch?.changes>0),
                   'game must render the saved source-part eraser changes directly on top of real V4');
