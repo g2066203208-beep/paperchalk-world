@@ -29,3 +29,5 @@
 }
 
 #part-rig-panel #rig-export{grid-column:1/3;background:#233750;color:#dae7ff}
+
+#part-rig-panel #rig-module-export{grid-column:1/3;background:#20584b;border-color:#79c1a2;color:#e9fff1;font-weight:700}
