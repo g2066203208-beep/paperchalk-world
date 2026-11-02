@@ -98,6 +98,7 @@ async function changeCore(id,face='front'){
    crop:{x:351,y:9,w:335,h:1013},edition:'V4-official'}:null;
  await showClip(override||builtin);
  await loadCorrectionLayers();
+ await ensureHostedParts(id);
  updatePartStatus();
  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{detail:{id,side}}));
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
@@ -208,7 +209,7 @@ function shouldDrawLayer(part){
  if(originalLayer(part))return false;
  return showOriginalV4?!part.sourcePart:!!part.sourcePart;
 }
-async function importComponentFiles(files){
+async function importComponentFiles(files,options={}){
  const manifestBytes=files.get('assets.json')||files.get('layers.json');
  if(!manifestBytes)throw Error('需要原始分层工程的 assets.json 或 layers.json；单独动画 WebP 不含独立部件');
  const meta=JSON.parse(new TextDecoder().decode(manifestBytes));
@@ -247,15 +248,47 @@ async function importComponentFiles(files){
  if(!count)throw Error('分层工程中没有可读取的真实 PNG 部件');
  // Replace only the source stack. Keep the two animation-correction
  // tracks separate. Never create neck/collar duplicate objects.
- for(const face of ['front','back'])
-  if(restored[face].length)ed.S.layers[face]=[
-   ...ed.S.layers[face].filter(p=>!p.sourcePart),...restored[face]];
+ for(const face of ['front','back']){
+  if(!restored[face].length||(options.missingOnly&&ed.S.layers[face].some(p=>p.sourcePart)))continue;
+  ed.S.layers[face]=[
+   ...ed.S.layers[face].filter(p=>!p.sourcePart&&!/^(PSD ·|原始角色 ·)/.test(p.name)),
+   ...restored[face]];
+ }
  showOriginalV4=false;
  await loadCorrectionLayers();
  ed.renderList();ed.render();
  await ed.save();updatePartStatus();
- message('✓ 已载入 '+count+' 个真实部件，原始像素、原位坐标和图层顺序保留。可直接选任何部件编辑。');
+ if(!options.quiet)message('✓ 已载入 '+count+' 个真实部件，原始像素、原位坐标和图层顺序保留。可直接选任何部件编辑。');
  return count;
+}
+const hostedPartsUrl=new URL('../assets/l2d/v4/protagonist-original-parts.zip',location.href).href;
+let hostedPartsPromise=null;
+async function hostedParts(){
+ if(!hostedPartsPromise)hostedPartsPromise=fetch(hostedPartsUrl).then(async r=>{
+  if(!r.ok)throw Error('原始 PSD 全部部件未部署：HTTP '+r.status);
+  return zipBytes(new Uint8Array(await r.arrayBuffer()));
+ }).catch(e=>{hostedPartsPromise=null;throw e});
+ return hostedPartsPromise;
+}
+async function zipBytes(buf){
+ // Use the same ZIP importer as user files; no duplicate parsing algorithms.
+ return zipFiles(new File([buf],'original-psd-parts.zip',{type:'application/zip'}));
+}
+async function ensureHostedParts(id){
+ if(id!=='protagonist')return;
+ const front=ed.S.layers.front.some(p=>p.sourcePart);
+ const back=ed.S.layers.back.some(p=>p.sourcePart);
+ if(front&&back)return;
+ message('首次加载 GitHub 已托管的正背面 25 个原始 PSD 部件…');
+ try{
+  const source=await hostedParts();
+  if(currentId!==id)return;
+  await importComponentFiles(source,{missingOnly:true,quiet:true});
+  message('已直接载入 GitHub 原位 PSD：正面17层／背面8层。点选任何部件即可改，保存后游戏直接使用修改结果。');
+ }catch(error){
+  console.error('[L2D] hosted source parts failed',error);
+  message('原始部件在线加载失败：'+error.message+'；动画帧仍可编辑');
+ }
 }
 async function importComponentArchive(file){
  if(!file)return;
