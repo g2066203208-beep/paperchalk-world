@@ -159,18 +159,29 @@ jobs:
           assert back.getpixel((round(bw*.5),round(bh*.74)))[3]<8,'Back leg gap still contains white'
           assert (cw,ch)==(1024,1024) and (bw,bh)==(1024,1024),'Original artwork was resized'
           # Original RGB and alpha are committed as immutable lossless WebP.
-          # Keep the image-edge mask while leaving the main picture readable.
-          assert 'transparent 9%,transparent 91%' in h
-          assert 'transparent 10%,transparent 90%' in h
-          assert 'transparent 15%,transparent 85%' not in h
-          assert 'float width=min(112.,u_viewSize.y*.19);' in h
-          assert 'const width=Math.min(112,sizes.h*.19);' in h
-          assert 'float fluidAlpha=clamp((.025+.47*pow(max(density,0.),.75))*smokeZone,0.,.52);' in h
-          assert 'const fluidAlpha=clamp((.025+.47*d**.75)*smokeZone,0,.52);' in h
-          assert 'width=min(318.' not in h and 'width=Math.min(318' not in h
+          # Dynamic black fog is limited by REAL scene edges and a center safe zone.
+          for marker in (
+              '--rim-solid:7px', '--rim-feather:10px',
+              'uniform vec4 u_fogSettings', 'uniform vec2 u_rimSettings',
+              'float nearEdges=max(', 'float safetyBlack=',
+              "const FOG_KEY='paperchalk-fog-edge-v1'",
+              'width:4,opacity:40,offset:-3,safe:88,solid:7,feather:10',
+              'id="dev-fog-trigger"', 'id="dev-fog-tools"',
+              'id="fog-safe-guide"', 'id="fog-width"',
+              'id="fog-offset"', 'id="fog-safe"',
+              'id="fog-opacity"', 'id="fog-solid"', 'id="fog-feather"',
+              "event.key==='F3'", "function applyFogSettings()",
+              "function showFogEditor(open)", "const m=fogMetrics()",
+              'sceneHalf.x*sizes.w*(1-m.safe*.01)',
+          ):
+              assert marker in h,'missing fog debug feature: '+marker
+          for obsolete in ('width=min(318.', 'width=Math.min(318',
+                           'float width=min(112.', 'const width=Math.min(112',
+                           'transparent 9%,transparent 91%'):
+              assert obsolete not in h,'old oversized fog survived: '+obsolete
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
           assert 'reach=99.' in h and 'const reach=99+' in h
-          assert 'float swirl=' in h and 'const swirl=' in h
+          assert 'float wave=' in h and 'const wave=' in h
           assert 'aimX=0;aimY=0;currentX=0;currentY=0;' in h
           assert "importedScenes=Object.create(null)" in h
           assert 'function enterDeveloper()' in h and 'function exitDeveloper()' in h
@@ -439,6 +450,56 @@ jobs:
                     'back-facing protagonist feet were cropped');
                 }
                 if(!cfg.mobile){
+                  // F3 / fog DEV must edit the CURRENT room, not force classroom.
+                  await page.locator('#dev-fog-trigger').click();
+                  assert.equal(await page.locator('#dev-fog-tools').isVisible(),true);
+                  assert.equal(await page.locator('#fog-safe-guide').isVisible(),true);
+                  assert.equal(await page.locator('#scene').getAttribute('data-scene'),'bedroom');
+                  const original=await page.evaluate(()=>({
+                    width:document.getElementById('fog').dataset.width,
+                    safe:document.getElementById('fog').dataset.safe,
+                    opacity:document.getElementById('fog').dataset.opacity
+                  }));
+                  assert.deepEqual(original,{width:'4',safe:'88',opacity:'40'});
+                  const setFog=async(id,value)=>page.locator('#'+id).evaluate((el,v)=>{
+                    el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));
+                  },value);
+                  await setFog('fog-width',12);
+                  await setFog('fog-opacity',90);
+                  await setFog('fog-offset',22);
+                  await setFog('fog-safe',94);
+                  await setFog('fog-solid',12);
+                  await setFog('fog-feather',19);
+                  const fogDebug=await page.evaluate(()=>{
+                    const scene=document.getElementById('scene');
+                    const guide=document.getElementById('fog-safe-guide');
+                    return {
+                      width:document.getElementById('fog').dataset.width,
+                      safe:document.getElementById('fog').dataset.safe,
+                      strength:document.getElementById('fog').dataset.opacity,
+                      offset:document.getElementById('fog').dataset.offset,
+                      solid:scene.style.getPropertyValue('--rim-solid'),
+                      feather:scene.style.getPropertyValue('--rim-feather'),
+                      safeWidth:guide.offsetWidth,expected:scene.offsetWidth*.94
+                    };
+                  });
+                  assert.equal(fogDebug.width,'12');assert.equal(fogDebug.safe,'94');
+                  assert.equal(fogDebug.strength,'90');assert.equal(fogDebug.offset,'22');
+                  assert.equal(fogDebug.solid,'12px');assert.equal(fogDebug.feather,'19px');
+                  assert.ok(Math.abs(fogDebug.safeWidth-fogDebug.expected)<3,
+                    'fog-free region did not resize with scene');
+                  await page.screenshot({path:'artifacts/classroom/bedroom-FOG-DEV.png'});
+                  await page.locator('#fog-save').click();
+                  assert.equal(await page.evaluate(()=>
+                    JSON.parse(localStorage.getItem('paperchalk-fog-edge-v1')).safe),94);
+                  await page.locator('#fog-reset').click();
+                  assert.equal(await page.locator('#fog').getAttribute('data-width'),'4');
+                  assert.equal(await page.evaluate(()=>
+                    localStorage.getItem('paperchalk-fog-edge-v1')),null);
+                  await page.keyboard.press('F3');
+                  assert.equal(await page.locator('#dev-fog-tools').isVisible(),false);
+                }
+                if(!cfg.mobile){
                   // Center of the room must remain clear: compare the same
                   // pixels with and without the fog canvas, after neutral tilt.
                   await page.mouse.move(cfg.width/2,cfg.height/2);
@@ -470,7 +531,7 @@ jobs:
                     path:'artifacts/classroom/bedroom-smoke-after.png'}));
                   let animatedPixels=0;
                   for(let y=Math.floor(cfg.height*.22);y<cfg.height*.78;y+=2){
-                    for(let x=Math.floor(cfg.width*.83);x<cfg.width*.93;x+=2){
+                    for(let x=Math.floor(cfg.width*.935);x<cfg.width*.966;x+=2){
                       const index=(y*fogBefore.width+x)*4;
                       const change=Math.abs(fogAfter.data[index]-fogBefore.data[index])+
                         Math.abs(fogAfter.data[index+1]-fogBefore.data[index+1])+
@@ -478,7 +539,7 @@ jobs:
                       if(change>8)animatedPixels++;
                     }
                   }
-                  assert.ok(animatedPixels>12,
+                  assert.ok(animatedPixels>2,
                     'black fog invisible/static in inner room edge band: '+animatedPixels);
                   console.log('PASS: independent cinematic fog moves visibly across bedroom, '+animatedPixels+' pixels changed');
                 }
