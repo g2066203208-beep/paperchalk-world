@@ -1557,484 +1557,689 @@
     },
     "skills": {
       "talents": {
-        "value": null,
-        "status": "unknown"
+        "value": "听觉定位、空间记忆、拆装旧电子设备，擅长识别重复出现的不自然声响",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "weaknesses": {
-        "value": null,
-        "status": "unknown"
+        "value": "长时间正式演讲、团队例会、严格执行重复性文书流程",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "learnedSkills": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "焊接简单电路",
+          "更换收音机电池端子",
+          "读取楼层平面图",
+          "基础急救常识"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "academicSkills": {
-        "value": null,
-        "status": "unknown"
+        "value": "物理直觉优于考试成绩；语言表达尚可但书面作业不认真",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "workSkills": {
-        "value": null,
-        "status": "unknown"
+        "value": "小型线路排查、物件简单维修、记录工具损耗",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "combatAbility": {
-        "value": null,
-        "status": "unknown"
+        "value": "非武术大师；能躲闪和挣脱普通推搡，但不把暴力作为常规解决方式",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "physicalEndurance": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏瘦但能持续快步行走约1小时，爆发力中等",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "agility": {
-        "value": null,
-        "status": "unknown"
+        "value": "敏捷中上；快速闪身让路，不做超人跳跃",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "perception": {
-        "value": null,
-        "status": "unknown"
+        "value": "听觉敏感、记路能力强；光线不足时也可能判断错误",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "charisma": {
-        "value": null,
-        "status": "unknown"
+        "value": "第一印象不佳但危机处理时能让同伴信服",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "supernaturalPowers": {
-        "value": null,
-        "status": "unknown"
+        "value": "默认没有超自然能力；异常事件只能通过观察与普通手段应对",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "powerCosts": {
-        "value": null,
-        "status": "unknown"
+        "value": "无魔法消耗；长时间紧张搜寻造成疲倦、判断误差及信任代价",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "equipment": {
-        "value": null,
-        "status": "unknown"
+        "value": "默认空手；剧情事件允许临时手电和旧收音机，但不当常驻立绘道具",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "inventory": {
-        "value": null,
-        "status": "unknown"
+        "value": "校服裤袋只保留正常空间，不固定显示任何可移动物品",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "healthIfStoryApproved": {
-        "value": null,
-        "status": "unknown"
+        "value": "健康成年人；没有已设定疾病，若剧情受伤必须单独更新状态与动画",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       }
     },
     "story": {
       "firstAppearance": {
-        "value": null,
-        "status": "unknown"
+        "value": "第一章：学校放学后，听见楼梯间传来本不该存在的铃声（剧情候选）",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "locationEntrances": {
-        "value": null,
-        "status": "unknown"
+        "value": "校门边缘→教学楼走廊→楼梯口；住宅场景按事件触发，默认无常驻摆件",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "originStory": {
-        "value": null,
-        "status": "unknown"
+        "value": "被贴上厌学不良标签的普通学生，却习惯在独处时辨认建筑中的重复噪声",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "incitingEvent": {
-        "value": null,
-        "status": "unknown"
+        "value": "某晚发现学校走廊的门与楼层地图对不上，响声重复三次",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "keyScenes": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "第一次听到多出的一次铃声",
+          "对照学校地图发现门牌序号缺口",
+          "与女主核对同一异常",
+          "临门选择打开或绕行"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "storyGoals": {
-        "value": null,
-        "status": "unknown"
+        "value": "弄清建筑空间和记忆错位原因，同时决定是否帮助其他角色",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "branchingChoices": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "独自调查或共享线索",
+          "回避危险或提醒他人",
+          "信任记录或相信现场观察"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "secrets": {
-        "value": null,
-        "status": "unknown"
+        "value": "小时候曾见过相似的楼层错位；回忆不可靠，后续才逐步查证",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "reveals": {
-        "value": null,
-        "status": "unknown"
+        "value": "中段可以发现异常不是只有他听到；不直接确定超自然来源",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "relationshipEvents": {
-        "value": null,
-        "status": "unknown"
+        "value": "与女主从互怼到合作，与女二从回避话题到愿意警告风险",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "questEvents": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "核验楼层门牌",
+          "寻找能发出异常铃声的装置",
+          "对照同一走廊不同时刻的差别"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "alternateEndings": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "合作揭开部分真相",
+          "独自离开但留下关键线索",
+          "错误判断导致人物关系破裂（剧情后果待批准）"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "chronologicalHistory": {
-        "value": null,
-        "status": "unknown"
+        "value": "童年停电走错楼层→中学阶段逐渐厌学→18岁异常事件出现→结局尚未定稿",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       }
     },
     "environment": {
       "home": {
-        "value": null,
-        "status": "unknown"
+        "value": "灰港市普通旧住宅的单间卧室；默认不因为角色临时出入就摆出额外物品",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "school": {
-        "value": null,
-        "status": "unknown"
+        "value": "暂定灰港市立第二高中，必须与女主、女二同一所学校的名称统筹",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "workplace": {
-        "value": null,
-        "status": "unknown"
+        "value": "无正式工作场所；不捏造店铺与正式NPC",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "roomOwnership": {
-        "value": null,
-        "status": "unknown"
+        "value": "卧室归本人；同住安排属于剧情提案，不用房间背景判断他此时在家",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "itemOwnership": {
-        "value": null,
-        "status": "unknown"
+        "value": "可拥有简易电子零件盒（若画入场景须有剧情许可），其余携带物默认不显示",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "furnitureConditions": {
-        "value": null,
-        "status": "unknown"
+        "value": "普通旧书桌、床、储物柜只按场景母版出现；不添加随出勤变化的鞋包衣架道具",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "weatherResponse": {
-        "value": null,
-        "status": "unknown"
+        "value": "雨天不张扬，肩膀微缩，衣料潮湿变化由场景触发",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "locationsVisited": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "学校走廊",
+          "楼梯间",
+          "回家路线",
+          "普通住宅房间"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "npcSchedule": {
-        "value": null,
-        "status": "unknown"
+        "value": "平日7:55入校，12:30午休，16:45放学；异常支线触发后允许时段偏移",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "worldEra": {
-        "value": null,
-        "status": "unknown"
+        "value": "当代架空城市的校园/住宅生活恐怖，禁止加入无依据的历史装甲或魔法武装",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       }
     },
     "visualProduction": {
       "frontReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "尚未绘制或验收；目标为仅一名男生的全身正面白底立绘，不得伪造现成路径",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "backReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "尚未绘制或验收；后续独立生成同一校服与发型的全身背面",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "sideReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "计划：左侧和右侧头部结构草图；暂未制作",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "threeQuarterReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "计划：左右3/4视角一致性检查图；暂未制作",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "poseReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "用户原始正面动作：轻微驼背、一手插兜、另一手下垂",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "expressionReferences": {
-        "value": null,
-        "status": "unknown"
+        "value": "计划：无聊、警觉、轻嘲、恼怒、短促惊讶、放松六种表情；尚无图",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "silhouetteLocked": {
-        "value": null,
-        "status": "unknown"
+        "value": "目标：高挑偏瘦男生，凌乱中长黑发，敞开蓝外套、松红领带、黑裤鞋，一手插兜；尚待用户验收",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "colorPalette": {
-        "value": null,
-        "status": "unknown"
+        "value": {
+          "hair": "#191B20",
+          "iris": "#777B83",
+          "blazer": "#202734",
+          "shirt": "#F1F1ED",
+          "tie": "#722B39",
+          "pants": "#343941",
+          "shoes": "#17191D",
+          "skinBase": "#E6CDBD"
+        },
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "artStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "与女主已批准立绘相同的二次元游戏人物画法：干净轮廓线、节制硬边明暗、有限柔和过渡",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "imageAspectRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": "建议竖构图3:4或2:3；不能沿用适合多人的方形双角色构图",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "whiteBackgroundRule": {
-        "value": null,
-        "status": "unknown"
+        "value": "仅一人、纯白、无场景、无阴影道具，周围留白足以容纳头发与鞋",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "fullBodyRule": {
-        "value": null,
-        "status": "unknown"
+        "value": "头顶发梢到鞋底完整入画，不能被画框切掉",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "centeredRule": {
-        "value": null,
-        "status": "unknown"
+        "value": "角色站立于画面中轴线附近，姿态可左右不对称但重心投影落双脚支撑区",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "occlusionRule": {
-        "value": null,
-        "status": "unknown"
+        "value": "插兜那只手需能看见手腕与口袋关系，另一只手五指可见；不允许手臂遮挡整张领带",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "promptPositive": {
-        "value": null,
-        "status": "unknown"
+        "value": "masterpiece, best quality, score_7, safe, 1boy, solo, male focus, original character, delinquent student, high school boy, 18 years old, full body, standing, front view, looking at viewer, eye level, centered composition, exactly one person, black hair, messy hair, medium hair, long bangs, narrow eyes, sharp eyes, grey eyes, slightly raised eyebrows, fair skin, slim build, long legs, school uniform, navy blue blazer, open blazer, white collared shirt, loose red necktie, untucked shirt, dark trousers, black shoes, simple accessories, hands visible, feet visible, relaxed posture, slightly slouched posture, one hand in pocket, other arm at side, calm expression, bored expression, unimpressed expression, rebellious attitude, looks like he hates studying, simple background, plain white background, no objects, no props, A male student with a delinquent and rebellious vibe. He looks like someone who skips class, dislikes studying, and is always a little annoyed. He has a cool, sharp face and a relaxed but unfriendly attitude. Show exactly one complete male character from head to toe. Keep the whole body fully visible and centered. Do not generate multiple people, alternate views, or side-by-side character sheets. @akipekostyle <lora:akipekoanima_v1_1:1>",
+        "status": "user_confirmed",
+        "source": "User's male Anima prompt supplied 2026-11-02"
       },
       "promptNegative": {
-        "value": null,
-        "status": "unknown"
+        "value": "worst quality, low quality, score_1, score_2, score_3, blurry, bad anatomy, bad hands, extra fingers, missing fingers, extra limbs, missing limbs, cropped head, cropped feet, out of frame, multiple boys, multiple people, 1girl, 2boys, group, duplicate, twins, side by side, character sheet, reference sheet, multiple views, split screen, mirrored character, chibi, smiling brightly, cheerful expression, school bag, books, props, text, watermark, logo",
+        "status": "user_confirmed",
+        "source": "User's male Anima prompt supplied 2026-11-02"
       },
       "modelVersion": {
-        "value": null,
-        "status": "unknown"
+        "value": "Anima（版本号待本地生成环境登记）；目前记录的是用户原提示，不声称已完成生成",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "artistTag": {
-        "value": null,
-        "status": "unknown"
+        "value": "@akipekostyle",
+        "status": "user_confirmed",
+        "source": "User's male Anima prompt supplied 2026-11-02"
       },
       "lora": {
-        "value": null,
-        "status": "unknown"
+        "value": "<lora:akipekoanima_v1_1:1>",
+        "status": "user_confirmed",
+        "source": "User's male Anima prompt supplied 2026-11-02"
       },
       "seed": {
-        "value": null,
-        "status": "unknown"
+        "value": "出图时记录实际随机种子，默认候选测试可先用214603但不声称已运行",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "sampler": {
-        "value": null,
-        "status": "unknown"
+        "value": "测试建议按当前Anima工作流保持一致采样器；具体运行结果未有",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "resolution": {
-        "value": null,
-        "status": "unknown"
+        "value": "建议原图1024×1536/768×1152；必须由实际工具验证可用输入尺寸",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "sourceFileHash": {
-        "value": null,
-        "status": "unknown"
+        "value": "暂无已验收图像，因此没有可记录的SHA-256；审批时必须填写",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "assetApproval": {
-        "value": null,
-        "status": "unknown"
+        "value": "未审批；不得注册到游戏角色表，也不得拿虚构纹理冒充L2D",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "bodyFacingYawDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 0,
+        "status": "user_confirmed",
+        "source": "User's male Anima prompt supplied 2026-11-02"
       },
       "headFacingYawDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "headPitchDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 2,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "headRollDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "shoulderYawDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "pelvisYawDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "gazeHorizontalDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "gazeVerticalDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": -2,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "cameraAngle": {
-        "value": null,
-        "status": "unknown"
+        "value": "正面眼平，人物轻微低头但镜头不俯拍",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "cameraFocalStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "中长焦感的低透视全身人物摄影逻辑，不做夸张近大远小",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "projectionOrthoPerspective": {
-        "value": null,
-        "status": "unknown"
+        "value": "近正交，人体与鞋的透视差非常小",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "visualStyleCategory": {
-        "value": null,
-        "status": "unknown"
+        "value": "角色立绘／视觉小说全身独立母版，不是插画场景",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "lineWeightStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "外轮廓中细、五官略细、衣褶克制，优先与CHAR-001母版逐层比对",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "lineColor": {
-        "value": null,
-        "status": "unknown"
+        "value": "#202128（部分阴影可更接近蓝灰而非纯黑）",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "shadingMethod": {
-        "value": null,
-        "status": "unknown"
+        "value": "硬边赛璐璐式主阴影＋少量半软过渡；不做写实油画体积",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "shadowDensity": {
-        "value": null,
-        "status": "unknown"
+        "value": "面部阴影轻，外套阴影中等，校服统一光源从画面左上方",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "highlightTreatment": {
-        "value": null,
-        "status": "unknown"
+        "value": "头发少量宽面柔高光；眼睛单点小高光，黑鞋局部微亮",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "textureComplexity": {
-        "value": null,
-        "status": "unknown"
+        "value": "低至中，避免AI噪点和衣料随机复杂花纹",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "anatomicalStylization": {
-        "value": null,
-        "status": "unknown"
+        "value": "约7.25头身的写实化动漫比例，瘦长而非Q版",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "facialFeatureStylization": {
-        "value": null,
-        "status": "unknown"
+        "value": "窄眼、稍挑眉、窄脸、平嘴；不复制女主的女性脸型和泪痣",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "characterIdentityEmbeddingNotes": {
-        "value": null,
-        "status": "unknown"
+        "value": "独有组合：微乱黑中长发＋冷灰细眼＋未扣深蓝男外套＋歪红领带＋单手插兜",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "frontPosePoseCode": {
-        "value": null,
-        "status": "unknown"
+        "value": "FRONT_IDLE_A: left hand in pocket, right arm at side, slight slouch, facing camera",
+        "status": "user_confirmed",
+        "source": "User's male Anima prompt supplied 2026-11-02"
       },
       "poseSilhouetteNotes": {
-        "value": null,
-        "status": "unknown"
+        "value": "敞开外套形成两条垂直深蓝边线；露白衬衫与松红领带，裤腿长且足部完整",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "framingHeadroomRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.055,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "framingFootroomRatio": {
-        "value": null,
-        "status": "unknown"
+        "value": 0.045,
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "bodyAlignmentRule": {
-        "value": null,
-        "status": "unknown"
+        "value": "统一女主尺寸比例时：同画布像素每厘米恒定，男主176cm/女主162cm/女二155cm；背面服装各元素在同一身高参考线",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       }
     },
     "rigging": {
       "layerSource": {
-        "value": null,
-        "status": "unknown"
+        "value": "待制作PSD/分层TIFF；此处只记录拆件设计，不存在真实文件",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "layerList": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "头后发",
+          "头颅底色",
+          "面部线层",
+          "左右眉眼睑",
+          "左右虹膜瞳孔",
+          "口型",
+          "刘海主束",
+          "左鬓发",
+          "右鬓发",
+          "颈部",
+          "白衬衫胸部",
+          "左外套前片",
+          "右外套前片",
+          "领口与红领带",
+          "肩臂两侧",
+          "肘与前臂",
+          "左右手与指节",
+          "裤腰",
+          "骨盆与裤腿",
+          "鞋袜与鞋底"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "headJoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "头颈连接点：标准身高归一化画面x=0.50、从头顶向下约0.125；以实际PSD为准",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "neckJoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "颈根：头身尺度y≈0.16，微小转动优先",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "shoulderJoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "左右肩骨骼中心：全身归一化y≈0.195，左右x≈0.39和0.61；仅图纸建议",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "elbowJoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "袖肘中心：全身归一化y≈0.34，必须按原图测定",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "wristJoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "腕关节：全身归一化y≈0.47；插兜侧腕需特殊遮挡补画",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "hipJoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "左右髋关节：全身归一化y≈0.53，裤腰与胯部可单独分层",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "kneeJoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "膝关节：全身归一化y≈0.75，裤装褶皱有分离层",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "ankleJoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "踝关节：全身归一化y≈0.94，裤脚可轻度相对移动",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "eyeTrack": {
-        "value": null,
-        "status": "unknown"
+        "value": "水平左右建议±6°，垂直±4°，强度受半垂眼默认形控制",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "blink": {
-        "value": null,
-        "status": "unknown"
+        "value": "眨眼周期暂定3.5–6.0秒随机，不允许两眼以不同速度抖动",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "mouthShapes": {
-        "value": null,
-        "status": "unknown"
+        "value": "闭口、微张、自然讲话、短促张口、咬紧五种口型；嘴形小，颌线稳定",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "hairPhysics": {
-        "value": null,
-        "status": "unknown"
+        "value": "中长乱发分刘海与两侧发束，头转动时延迟0.10–0.22秒并缓慢回稳",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "clothPhysics": {
-        "value": null,
-        "status": "unknown"
+        "value": "敞开外套前片低幅摇摆，松领带中段与末端独立滞后，裤脚变化很小",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "breathingPhysics": {
-        "value": null,
-        "status": "unknown"
+        "value": "胸廓向外±0.7%像素比例缓慢变化，肩部同步轻微上下，周期4.5–5.8秒",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "skinningLimits": {
-        "value": null,
-        "status": "unknown"
+        "value": "肩腕过伸必须补画，手插兜不得穿过裤布，外套与领带不能互相穿透",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "expressionStates": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "bored",
+          "unimpressed",
+          "irritated",
+          "alert",
+          "sarcastic",
+          "surprised",
+          "relieved"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "actionStates": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "idle",
+          "look-left",
+          "look-right",
+          "hands-pocket",
+          "step-forward",
+          "notice-sound",
+          "recoil"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "runtimePreview": {
-        "value": null,
-        "status": "unknown"
+        "value": "计划接入游戏已有通用L2D角色模块与DEV全角色编辑器；目前并未导入或跑图",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "occlusionRepair": {
-        "value": null,
-        "status": "unknown"
+        "value": "口袋开口、前襟露白衬衫、领带与双袖肘必须单独补画空洞",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "qaAnimation": {
-        "value": null,
-        "status": "unknown"
+        "value": "最终验收须正背/表情/眨眼/头发/领带/衣摆连续测试，不以静态放大缩小冒充L2D",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "armRotationBoundsDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": {
+          "shoulder": -20,
+          "shoulderMax": 35,
+          "elbowMin": 0,
+          "elbowMax": 95,
+          "notes": "插兜侧限制更小，仅候选约束"
+        },
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "hipRotationBoundsDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": {
+          "min": -8,
+          "max": 12,
+          "notes": "只做轻微站立重心调整"
+        },
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "kneeFlexBoundsDeg": {
-        "value": null,
-        "status": "unknown"
+        "value": {
+          "min": 0,
+          "max": 28,
+          "notes": "站姿休闲屈膝，不用于蹲跳"
+        },
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "eyelidOpennessChannel": {
-        "value": null,
-        "status": "unknown"
+        "value": "blinkL/blinkR：默认0.60睁眼，闭眼0.0；以最终美术纹理归一化标尺校准",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "browDeformationChannels": {
-        "value": null,
-        "status": "unknown"
+        "value": "browL_raise/browR_raise各±0.15，允许单眉动作",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "mouthCornerChannels": {
-        "value": null,
-        "status": "unknown"
+        "value": "mouth_corner_L/R在-0.12到+0.10间微调，绝不自动做夸张大笑",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "expressionLandmarkMotion": {
-        "value": null,
-        "status": "unknown"
+        "value": "眉眼嘴联动局部偏移，鼻尖与眼距保持锁定，避免人物换脸",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "frontSideBackProportionsQa": {
-        "value": null,
-        "status": "unknown"
+        "value": "三视角必须同176cm角色尺标、同头部体积、同外套扣位和领带长度；尚待生成验证",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       }
     },
     "audio": {
