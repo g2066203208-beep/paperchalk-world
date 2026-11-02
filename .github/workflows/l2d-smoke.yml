@@ -1,4 +1,4 @@
-name: Heroine L2D online smoke tests
+name: Universal game L2D actor and preview smoke tests
 on:
   push:
     branches: [main]
@@ -60,13 +60,15 @@ jobs:
               const page=await browser.newPage({viewport:{width:1360,height:900}});
               const errors=[];page.on('pageerror',e=>errors.push(e.message));
               await page.goto('http://127.0.0.1:8132/',{waitUntil:'load'});
-              await page.waitForFunction(()=>window.paperchalkPlayerBreath?.rig?.source?.width===1024,{timeout:15000});
+              await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.rig?.source?.width===1024,{timeout:15000});
               const a=await page.evaluate(()=>{
                 const img=document.querySelector('#actor-player'),can=document.querySelector('#actor-player-l2d');
                 const r=img.getBoundingClientRect(),b=can.getBoundingClientRect();
-                return {ready:document.querySelector('#camera-player-root').dataset.breathReady,delta:Math.max(Math.abs(r.left-b.left),Math.abs(r.top-b.top),Math.abs(r.width-b.width),Math.abs(r.height-b.height))};
+                return {ready:document.querySelector('#camera-player-root').dataset.l2dState,delta:Math.max(Math.abs(r.left-b.left),Math.abs(r.top-b.top),Math.abs(r.width-b.width),Math.abs(r.height-b.height))};
               });
-              assert.equal(a.ready,'true');
+              assert.equal(a.ready,'ready');
+              assert.equal(await page.locator('[data-l2d-actor]').count(),2);
+              assert.equal(await page.locator('[data-l2d-canvas]').count(),2);
               // When the game menu is active the original player root is hidden.
               // Offsets become comparable only when it is made visible.
               await page.evaluate(()=>document.querySelector('#camera-player-root').hidden=false);
