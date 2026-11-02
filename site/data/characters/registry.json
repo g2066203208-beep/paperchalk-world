@@ -10,7 +10,10 @@
     "fictionalAnatomyIsUnverified": true,
     "draftPhysicalValuesMustNotBeClaimedUserApproved": true,
     "noAdditionalPortraitScene": true,
-    "confirmedCharacterPersonalityIsCanonical": true
+    "confirmedCharacterPersonalityIsCanonical": true,
+    "figureDesignMustBeConsistentAcrossViews": true,
+    "femaleFigureUsesNeutralGarmentDimensions": true,
+    "userOriginalsOverrideTentativeMeasurements": true
   },
   "characters": [
     {
@@ -103,7 +106,7 @@
       ],
       "designDocument": "docs/PROTAGONIST_CANON.md",
       "productionProfile": {
-        "version": "1.1",
+        "version": "1.3",
         "designDocument": "docs/characters/CHAR-001_PROTAGONIST_PROFILE.md",
         "sourceHierarchy": [
           "original approved front/back art",
@@ -170,7 +173,8 @@
             "weight",
             "age",
             "school year",
-            "clothing sizing"
+            "clothing sizing",
+            "bust-waist-hip external uniform fit circumferences"
           ]
         },
         "costumeBlueprint": {
@@ -242,7 +246,74 @@
           "plot relationships",
           "supernatural capabilities",
           "exact shoe fit"
-        ]
+        ],
+        "femaleFigureBlueprint": {
+          "status": "art_direction_not_measured",
+          "identityContinuity": "same female character seen in front, three-quarter, side and back",
+          "genderPresentation": "female",
+          "artPriority": "approved front/back artwork overrides provisional measurements",
+          "boneAndVolume": {
+            "shoulders": "naturally narrow to moderate, gently descending shoulder line; matches both front and back",
+            "ribcage": "genuine three-dimensional torso depth rather than paper-flat chest",
+            "bustThroughClothing": "subtle natural breast contour under opaque shirt and blazer, without exaggerated projection or cleavage",
+            "waist": "gentle inward transition below ribcage, not artificially pinched",
+            "pelvisAndHips": "hips moderately wider than the waist, rounded natural hip transition; covered by pleated uniform skirt",
+            "back": "smooth shoulder-blade to waist to pelvic transition; maintain same waist and pelvis across views",
+            "limbs": "realistic modest soft-tissue volume at upper arms, thighs and calves, naturally tapering wrists and ankles",
+            "posture": "balanced stance, relaxed shoulders and stable pelvis; no exaggerated posing",
+            "overall": "slender, balanced and naturally feminine silhouette, neither masculine rectangular torso nor exaggerated hourglass"
+          },
+          "garmentPatternProposals": {
+            "status": "proposed_not_approved",
+            "measurementType": "external garment fit guide, circumferences, not visual widths; not physical measurements of original artwork",
+            "bustCircumferenceCm": {
+              "min": 80,
+              "max": 84,
+              "center": 82,
+              "unit": "cm",
+              "status": "proposed"
+            },
+            "waistCircumferenceCm": {
+              "min": 62,
+              "max": 66,
+              "center": 64,
+              "unit": "cm",
+              "status": "proposed"
+            },
+            "hipCircumferenceCm": {
+              "min": 86,
+              "max": 90,
+              "center": 88,
+              "unit": "cm",
+              "status": "proposed"
+            },
+            "shoulderWidthCm": {
+              "min": 35,
+              "max": 37,
+              "status": "proposed"
+            },
+            "heightCm": 162,
+            "weightKg": 49,
+            "underwearSize": null,
+            "cupSize": null,
+            "usage": "uniform shirt/blazer fit, waist seam and skirt drape only; not an intimate or sexual body specification"
+          },
+          "viewRules": {
+            "front": "natural blouse and blazer around three-dimensional chest and modest waist taper; no flat torso",
+            "profile": "subtle upper-torso forward depth, natural abdomen and pelvic positioning; no exaggerated bust",
+            "back": "shoulder-blade and waist/hip transitions match front and side; hair may hide but never change body skeleton",
+            "threeQuarter": "preserve shoulder/pelvis perspective and consistent garment volume without morphing proportions",
+            "animation": "upper torso and shoulder girdle breathe together lightly; never isolate or exaggerate breast motion"
+          },
+          "negativeArtConstraints": [
+            "do not replace with flat male-like rectangular torso",
+            "do not enlarge bust, waist-hip curves, or other sexual features",
+            "do not introduce cleavage or gratuitous exposure",
+            "do not alter approved original front/back images to force tentative numeric proportions",
+            "do not treat proposed waist-bust-hip circumferences as pixel widths",
+            "do not create a separate new protagonist identity"
+          ]
+        }
       },
       "profileDocument": "docs/characters/CHAR-001_PROTAGONIST_PROFILE.md",
       "personalityCanon": {
