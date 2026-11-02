@@ -28,6 +28,10 @@ jobs:
           node-version: '22'
       - name: Install local licensed game fonts (pinned and hash-verified)
         run: bash scripts/fetch-game-fonts.sh
+      - name: Repair protagonist alpha matte and remove solid-white leg gap
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/fix_protagonist_cutout.py
       - name: Generate scene catalog from room images (auto publish)
         run: python3 scripts/build_scene_catalog.py
       - name: Prove adding PNG or WebP auto-registers new scene IDs
@@ -115,6 +119,10 @@ jobs:
           assert "type:'portrait'" in h
           assert 'protagonistPreview.hidden=def.type' in h
           assert Path('site/assets/characters/protagonist-front.webp').read_bytes()[:4]==b'RIFF'
+          from PIL import Image
+          cutout=Image.open('site/assets/characters/protagonist-front.webp').convert('RGBA')
+          assert cutout.getpixel((165,700))[3]<8,'White background left between legs'
+          assert cutout.getpixel((150,400))[3]>240,'Character accidentally removed'
           assert 'transparent 15%,transparent 85%' in h
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
           assert 'reach=191.' in h and 'const reach=191+' in h
