@@ -64,7 +64,7 @@ class HeroineBreathRig{
   this.render(performance.now(),true);
   return this;
  }
- setAmplitude(v){this.amplitude=clamp(Number(v)||0,0,2);this.render(performance.now(),true);}
+ setAmplitude(v){this.amplitude=clamp(Number(v)||0,0,4);this.render(performance.now(),true);}
  setPeriod(v){this.period=clamp(Number(v)||4.6,2,12);}
  setSoftness(v){this.softness=clamp(Number(v)||0,0,2);}
  async setLayers(parts,canvasSize){
@@ -121,19 +121,19 @@ class HeroineBreathRig{
   const leftSleeve=bell(u,.378,.046)*arm,rightSleeve=bell(u,.633,.047)*arm;
   // Femur/knee motion is microscopic relative to the rooted shoes.
   const knee=bell(v,.76,.045)*Math.sin(p-.92)*.20*amp;
-  const breathLift=-2.0*resp*chest*amp;
-  const headNod=-.65*slow*head*amp;
-  const sway=(.95*float*head+.62*lag*chest)*amp*standing;
-  const hairTip=(leftHair*(4.2*Math.sin(p-.65)+1.2*Math.sin(p*1.55))
-    +rightHair*(4.7*Math.sin(p-.95)+1.3*Math.sin(p*1.48+.7)))*flex*amp;
-  const hem=(-3.6*leftHem*Math.sin(p-.95)+3.2*rightHem*Math.sin(p-.73))*flex*amp;
-  const sleeve=(leftSleeve*-1.25*Math.sin(p-.48)+rightSleeve*1.15*Math.sin(p-.67))*flex*amp;
+  const breathLift=-8.0*resp*chest*amp;
+  const headNod=-2.6*slow*head*amp;
+  const sway=(3.8*float*head+2.1*lag*chest)*amp*standing;
+  const hairTip=(leftHair*(12.5*Math.sin(p-.65)+3.2*Math.sin(p*1.55))
+    +rightHair*(13.4*Math.sin(p-.95)+3.5*Math.sin(p*1.48+.7)))*flex*amp;
+  const hem=(-9*leftHem*Math.sin(p-.95)+8*rightHem*Math.sin(p-.73))*flex*amp;
+  const sleeve=(leftSleeve*-4.8*Math.sin(p-.48)+rightSleeve*4.5*Math.sin(p-.67))*flex*amp;
   const shiftX=sway+hairTip+hem+sleeve+knee;
   const shiftY=breathLift+headNod
     +(1.45*leftHair+1.15*rightHair)*Math.sin(p-.9)*flex*amp
     +.7*skirt*Math.sin(p-.8)*flex*amp
     +.25*fringe*Math.sin(p-.25)*flex*amp;
-  const widen=chest*.0062*resp*amp;
+  const widen=chest*.017*resp*amp;
   return {x:x+shiftX+(x-sw*.5)*widen,y:y+shiftY};
  }
  blinkAmount(t){
