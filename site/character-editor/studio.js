@@ -34,13 +34,15 @@ section.innerHTML=[
  '<div class="studio-row"><button id="studio-save" type="button">保存到游戏 · L2D</button>',
  '<label class="studio-import">导入新人物<input id="studio-import" type="file" accept="image/png,image/webp,image/jpeg" multiple></label>',
  '<label class="studio-import">导入 V4 动态工程 ZIP<input id="studio-v4zip" type="file" accept=".zip,application/zip"></label>',
+ '<label class="studio-import">导入全部真实部件（PSD / V4 ZIP）<input id="studio-parts-import" type="file" accept=".zip,.psd,application/zip"></label>',
  '<output id="studio-status" role="status">读取人物资源库…</output></div>',
  '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024"></canvas>',
- '<div class="studio-v4-tools"><strong>V4 原动画 · 主画布直接绘制</strong>',
- '<p>可在 V4 动画上修补全帧或选定单帧，原始 128 帧不被破坏。原版为逐帧 WebP，并非可反解的 Cubism 骨骼工程。</p>',
+ '<div class="studio-v4-tools"><strong>L2D 通用部件编辑器</strong>',
+ '<p>真实原位分层：可选择任意部件擦除、补画、移动、独显与调整层级。V4 动画帧另设修补模式；烘焙 WebP 不包含可反解的部件。</p>',
+ '<output id="studio-parts-status" role="status">未导入原始分层时只能做 V4 动画修补。</output>',
  '<label>绘画范围 <select id="studio-edit-scope"><option value="all">全部帧（通用修补）</option><option value="frame">仅当前帧</option></select></label>',
  '<label>帧 <output id="studio-frame-label">0 / 127</output><input id="studio-frame" type="range" min="0" max="127" value="0" step="1"></label>',
- '<div class="studio-row"><button id="studio-play" type="button">播放</button><button id="studio-v4-mode" type="button">查看静态分层</button>',
+ '<div class="studio-row"><button id="studio-play" type="button">播放</button><button id="studio-v4-mode" type="button">编辑原始部件（先导入分层）</button>',
  '<button id="studio-patch-export" type="button">导出修补备份</button><label class="studio-import">导入修补备份<input id="studio-patch-import" type="file" accept="application/json,.json"></label></div>',
  '<small>按人物、正背面、帧分别保存；首次打开默认暂停，方便精修。</small></div></div>'
 ].join('');
@@ -59,6 +61,7 @@ style.textContent=[
  '#studio-v4-canvas{width:110px;height:180px;object-fit:contain;flex-shrink:0;background:#1b2634;border:1px solid #52657e}',
  '.studio-v4-tools{flex:1;min-width:210px;display:grid;gap:5px}.studio-v4-tools p{font-size:11px;color:#b7c9dc;margin:4px 0}.studio-v4-tools label{font-size:12px}.studio-v4-tools input[type=range]{width:100%}',
  '#studio-frame-label{font-size:11px;color:#96cfff}',
+ '#studio-parts-status{font-size:12px;color:#c7d7e9}',
  'body.studio-page .layout{height:calc(100dvh - 170px);min-height:430px}',
  '@media(max-width:710px){.studio-row select{max-width:100%;flex:1}body.studio-page .layout{height:auto}}'
 ].join('\n');
@@ -82,7 +85,7 @@ function change(id,face='front'){
  return pending;
 }
 async function changeCore(id,face='front'){
- if(currentId&&v4&&frameLayer)await persistCorrections();
+ if(currentId){if(v4&&frameLayer)await persistCorrections();await ed.save();}
  if(!list.has(id))throw Error('角色不在已导入列表中：'+id);
  currentId=id;side=face==='back'?'back':'front';
  options();direction.value=side;
@@ -95,6 +98,7 @@ async function changeCore(id,face='front'){
    crop:{x:351,y:9,w:335,h:1013},edition:'V4-official'}:null;
  await showClip(override||builtin);
  await loadCorrectionLayers();
+ updatePartStatus();
  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{detail:{id,side}}));
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
  history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game');
@@ -184,6 +188,92 @@ async function zipFiles(file){
  }
  return files;
 }
+
+const partLabels={rear_hair:'后发',front_hair:'前发',hair_clip:'发夹',
+ sleeves_and_hands:'袖子与双手',sleeve_left:'左袖',sleeve_right:'右袖',
+ legs:'双腿',shoes:'鞋',neck:'脖颈',skirt:'裙子',jacket:'整件外套',
+ brows:'眉毛',ears:'双耳',face:'脸',nose:'鼻子',mouth:'嘴',
+ eye_white:'眼白',irises:'虹膜',lashes:'睫毛',back_hair:'背面头发',hair_over_jacket:'衣服前头发'};
+function countSourceParts(){return ed.S.layers[side].filter(p=>p.sourcePart).length;}
+function updatePartStatus(){
+ const count=countSourceParts(),output=$('studio-parts-status');
+ if(output)output.textContent=count?
+  '本方向已有 '+count+' 个真实原位部件，可在左侧逐个选择编辑。':
+  '该方向没有独立分层。烘焙 V4 WebP 不能直接拆成部件，请导入 PSD 或原始分层 ZIP。';
+ const button=$('studio-v4-mode');
+ if(button)button.textContent=showOriginalV4?'切换到原始部件编辑':'切换到 V4 动画逐帧修补';
+}
+function shouldDrawLayer(part){
+ if(!v4)return true;
+ if(originalLayer(part))return false;
+ return showOriginalV4?!part.sourcePart:!!part.sourcePart;
+}
+async function importComponentFiles(files){
+ const manifestBytes=files.get('assets.json')||files.get('layers.json');
+ if(!manifestBytes)throw Error('需要原始分层工程的 assets.json 或 layers.json；单独动画 WebP 不含独立部件');
+ const meta=JSON.parse(new TextDecoder().decode(manifestBytes));
+ const defs={front:[],back:[]};
+ if(meta.views){
+  for(const face of ['front','back'])
+   defs[face]=Object.values(meta.views[face]||{}).sort((a,b)=>(a.index||0)-(b.index||0)).map(p=>({
+    id:p.name,name:partLabels[p.name]||p.name,role:p.role||'',x:p.x,y:p.y,
+    file:'assets/'+p.filename,locked:false,visible:true,opacity:1
+   }));
+ }else if(meta.layers){
+  for(const face of ['front','back'])defs[face]=(meta.layers[face]||[]).map(p=>({
+   ...p,id:p.partId||p.id||p.name,name:p.name||p.id||p.file
+  }));
+ }else throw Error('工程缺少图层清单');
+ const restored={front:[],back:[]};
+ let count=0;
+ for(const face of ['front','back']){
+  for(const part of defs[face]||[]){
+   const path=part.file||part.filename;
+   if(!path||path.includes('..'))continue;
+   const bytes=files.get(path)||files.get('assets/'+path)||files.get(face+'/'+path);
+   if(!bytes)continue;
+   const url=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
+   let im;
+   try{im=await ed.imgFrom(url)}finally{URL.revokeObjectURL(url)}
+   const q=ed.layer(String(part.name||part.id),im,Number(part.x)||0,Number(part.y)||0,!!part.locked);
+   q.visible=part.visible!==false;
+   q.opacity=Number(part.opacity??1);
+   q.sourcePart=true;
+   q.partId=String(part.id||part.name);
+   q.role=String(part.role||'');
+   restored[face].push(q);count++;
+  }
+ }
+ if(!count)throw Error('分层工程中没有可读取的真实 PNG 部件');
+ // Replace only the source stack. Keep the two animation-correction
+ // tracks separate. Never create neck/collar duplicate objects.
+ for(const face of ['front','back'])
+  if(restored[face].length)ed.S.layers[face]=[
+   ...ed.S.layers[face].filter(p=>!p.sourcePart),...restored[face]];
+ showOriginalV4=false;
+ await loadCorrectionLayers();
+ ed.renderList();ed.render();
+ await ed.save();updatePartStatus();
+ message('✓ 已载入 '+count+' 个真实部件，原始像素、原位坐标和图层顺序保留。可直接选任何部件编辑。');
+ return count;
+}
+async function importComponentArchive(file){
+ if(!file)return;
+ if(/\.psd$/i.test(file.name)){
+  await ed.importPsd(file);
+  for(const part of ed.S.layers[side]){
+   part.sourcePart=true;
+   part.partId=part.name;part.role='psd-part';
+  }
+  showOriginalV4=false;
+  await loadCorrectionLayers();
+  ed.renderList();ed.render();await ed.save();updatePartStatus();
+  return;
+ }
+ message('读取原始分层工程所有部件…');
+ return importComponentFiles(await zipFiles(file));
+}
+
 async function importV4(file){
  if(!currentId)throw Error('先选择人物');
  message('读取 V4 原版动画工程…');
