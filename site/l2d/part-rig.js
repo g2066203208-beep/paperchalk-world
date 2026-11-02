@@ -146,9 +146,9 @@ function bonePoses(part,phase=0){
  }
  return result;
 }
-function skinnedPoint(part,u,v,phase=0){
+function skinnedPoint(part,u,v,phase=0,posed=null){
  const x=u*part.w,y=v*part.h;
- const bones=bonePoses(part,phase);
+ const bones=posed||bonePoses(part,phase);
  if(!bones.length)return{x:part.x+x,y:part.y+y};
  const wx=part.w,wy=part.h;
  // Each vertex is influenced by nearby joints of THIS texture only.
@@ -226,9 +226,9 @@ function project(parts,characterId,face,previous=null){
 // Each part's raster mesh uses its OWN normalized local coordinates.
 // Its own pivot is fixed; deformation weights increase toward its tip.
 // No other part is sampled, moved, cut, duplicated, or transformed.
-function warpPoint(part,u,v,phase=0){
+function warpPoint(part,u,v,phase=0,posed=null){
  if(!part.enabled)return{x:part.x+u*part.w,y:part.y+v*part.h};
- const base=skinnedPoint(part,u,v,phase);
+ const base=skinnedPoint(part,u,v,phase,posed);
  const q=part.motion;
  const dx=part.tip.x-part.pivot.x,dy=part.tip.y-part.pivot.y;
  const den=Math.max(.0001,dx*dx+dy*dy);
@@ -267,10 +267,11 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false){
  if(!active){
   ctx.drawImage(image,part.x,part.y);
  }else{
+  const posed=bonePoses(part,phase);
   const vertices=[];
   for(let j=0;j<=rows;j++){
    const line=[];
-   for(let i=0;i<=cols;i++)line.push(warpPoint(part,i/cols,j/rows,phase));
+   for(let i=0;i<=cols;i++)line.push(warpPoint(part,i/cols,j/rows,phase,posed));
    vertices.push(line);
   }
   for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
@@ -282,11 +283,12 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false){
  }
  ctx.restore();
  if(drawMesh){
+  const poses=bonePoses(part,phase);
   ctx.save();ctx.strokeStyle='rgba(101,215,255,.45)';ctx.lineWidth=.9;
   for(let j=0;j<=rows;j++){
    ctx.beginPath();
    for(let i=0;i<=cols;i++){
-    const p=warpPoint(part,i/cols,j/rows,phase);
+    const p=warpPoint(part,i/cols,j/rows,phase,poses);
     if(!i)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
    }ctx.stroke();
   }
@@ -299,7 +301,7 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false){
   }
   // Selected part displays its actual joint chain, not a decorative
   // fixed-coordinate stick figure. Yellow heads, cyan tails.
-  for(const b of bonePoses(part,phase)){
+  for(const b of poses){
    ctx.save();ctx.lineWidth=1.6;ctx.strokeStyle='#ffd26e';
    ctx.beginPath();ctx.moveTo(part.x+b.headPos.x,part.y+b.headPos.y);
    ctx.lineTo(part.x+b.tailPos.x,part.y+b.tailPos.y);ctx.stroke();
