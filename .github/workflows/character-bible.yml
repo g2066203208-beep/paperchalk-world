@@ -5,21 +5,27 @@ on:
     paths:
       - 'docs/PROTAGONIST_CANON.md'
       - 'docs/CHARACTER_BIBLE_INDEX.md'
+      - 'docs/HUMAN_CAST_ROSTER_V2.json'
+      - 'docs/HUMAN_CAST_PLAN_V2.md'
       - 'docs/characters/**'
       - 'site/data/characters/**'
       - 'site/assets/characters/**'
       - 'scripts/validate_character_identity.py'
       - 'scripts/validate_character_profiles.py'
+      - 'scripts/validate_human_cast_plan.py'
       - '.github/workflows/character-bible.yml'
   pull_request:
     paths:
       - 'docs/PROTAGONIST_CANON.md'
       - 'docs/CHARACTER_BIBLE_INDEX.md'
+      - 'docs/HUMAN_CAST_ROSTER_V2.json'
+      - 'docs/HUMAN_CAST_PLAN_V2.md'
       - 'docs/characters/**'
       - 'site/data/characters/**'
       - 'site/assets/characters/**'
       - 'scripts/validate_character_identity.py'
       - 'scripts/validate_character_profiles.py'
+      - 'scripts/validate_human_cast_plan.py'
       - '.github/workflows/character-bible.yml'
   workflow_dispatch:
 permissions:
@@ -35,6 +41,7 @@ jobs:
         run: |
           python3 scripts/validate_character_identity.py
           python3 scripts/validate_character_profiles.py
+          python3 scripts/validate_human_cast_plan.py
           python3 - <<'PY'
           import json
           from pathlib import Path
