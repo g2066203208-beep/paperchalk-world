@@ -8,6 +8,7 @@ on:
       - 'site/l2d/**'
       - 'site/assets/l2d/**'
       - 'scripts/build_v4_assets.py'
+      - 'scripts/build_char002_v4.py'
       - 'site/dev/**'
       - 'site/characters.catalog.json'
       - 'site/assets/characters/**'
@@ -36,6 +37,7 @@ jobs:
           python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/repair_character_masks.py
           python3 scripts/build_v4_assets.py
+          python3 scripts/build_char002_v4.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
           test -s site/index.html
@@ -44,6 +46,26 @@ jobs:
           test -s site/assets/characters/protagonist-back.webp
           test -s site/assets/l2d/v4/front.webp
           test -s site/assets/l2d/v4/back.webp
+          test -s site/assets/l2d/char-002/front.webp
+          test -s site/assets/l2d/char-002/front-source-regions.zip
+          python3 - <<'PY'
+          from PIL import Image
+          from zipfile import ZipFile
+          from json import loads
+          from pathlib import Path
+          movie=Path('site/assets/l2d/char-002/front.webp')
+          with Image.open(movie) as im:
+              assert im.size==(335,1024) and im.n_frames==128
+          with ZipFile('site/assets/l2d/char-002/front-source-regions.zip') as z:
+              manifest=loads(z.read('layers.json'))
+              assert len(manifest['layers']['front'])==7
+              assert not manifest['layers']['back']
+          catalog=loads(Path('site/characters.catalog.json').read_text())
+          char=next(c for c in catalog['characters'] if c['id']=='char-002')
+          assert char['front'].endswith('/char-002/front.png')
+          assert char['clips']['front']['frames']==128 and not char.get('back')
+          print('PASS: CHAR-002 animation, region layers and single-view safety')
+          PY
           node - <<'JS'
           const fs=require('fs');
           const s=fs.readFileSync('site/character-editor/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
