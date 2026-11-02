@@ -36,6 +36,7 @@ function schedule(){
  if(!S.ready||S.busy||!window.PaperchalkL2DRig)return;
  clearTimeout(timer);timer=setTimeout(async()=>{
   if(!S.ready||S.busy)return;
+  if(window.PaperchalkStudio?.useV4?.()){rig?.stop();return;}
   try{
    const q=motion[S.side]||defaults();
    if(!rig){
@@ -89,6 +90,7 @@ if(typeof oldSwitch==='function'){
   const r=await oldSwitch.call(this,target,face);sync();schedule();return r;
  };
 }
+window.addEventListener('paperchalk:studio-mode-changed',()=>schedule());
 window.addEventListener('paperchalk:studio-character-loaded',event=>{
  currentId=event.detail?.id||'default';
  motion=loadMotion();
