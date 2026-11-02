@@ -28,6 +28,8 @@ jobs:
           const html=fs.readFileSync('site/character-editor/index.html','utf8');
           const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];new Function(script);
           new Function(fs.readFileSync('site/l2d/breath.js','utf8'));
+          new Function(fs.readFileSync('site/l2d/part-rig.js','utf8'));
+          new Function(fs.readFileSync('site/character-editor/part-rig-studio.js','utf8'));
           new Function(fs.readFileSync('site/character-editor/stage-motion.js','utf8'));
           new Function(fs.readFileSync('site/character-editor/easy-mode.js','utf8'));
           assert.ok(fs.readFileSync('site/character-editor/index.html','utf8').includes('easy-mode.css'),'responsive simplified style must load');
@@ -40,6 +42,48 @@ jobs:
                 await page.goto('http://127.0.0.1:8123/character-editor/',{waitUntil:'load'});
                 await page.waitForFunction(()=>window.characterEditor&&window.characterEditor.S.ready,{timeout:10000});
                 await page.waitForFunction(()=>!!window.PaperchalkStageMotion,{timeout:10000});
+                assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio?.state.active),false,
+                  'original V4 preview is the default; opt-in editable rig stays off');
+                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist'&&
+                  window.PaperchalkStudio?.countSourceParts?.()===17,null,{timeout:30000});
+                await page.evaluate(()=>{
+                  window.__partRigArtBackup=window.characterEditor.S.layers.front
+                    .find(p=>p.partId==='jacket').canvas.toDataURL();
+                });
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true);
+                await page.locator('#part-rig-toggle').click();
+                assert.ok(await page.locator('#part-rig-panel').isVisible());
+                assert.equal(await page.locator('#rig-part option').count(),17);
+                await page.locator('#rig-part').selectOption('rear_hair');
+                await page.locator('[data-rig="motion.x"]').fill('35');
+                const rigEval=await page.evaluate(()=>{
+                  const core=window.PaperchalkPartRigCore;
+                  const m=window.PaperchalkPartRigStudio.state.model;
+                  const h=m.parts.rear_hair,j=m.parts.jacket;
+                  return {hair:core.warpPoint(h,.5,.95,Math.PI/2),
+                    pivot:core.warpPoint(h,h.pivot.x,h.pivot.y,Math.PI/2),
+                    staticJacket:core.warpPoint(j,.5,.95,Math.PI/2),
+                    hx:h.x+.5*h.w,jx:j.x+.5*j.w,jy:j.y+.95*j.h,
+                    pivotX:h.x+h.pivot.x*h.w,pivotY:h.y+h.pivot.y*h.h};
+                });
+                assert.ok(Math.abs(rigEval.hair.x-rigEval.hx)>20,
+                  'the selected hair part actually bends/warps');
+                assert.ok(Math.abs(rigEval.pivot.x-rigEval.pivotX)<1e-6 &&
+                  Math.abs(rigEval.pivot.y-rigEval.pivotY)<1e-6,'local root stays planted');
+                assert.ok(Math.abs(rigEval.staticJacket.x-rigEval.jx)<1e-6 &&
+                  Math.abs(rigEval.staticJacket.y-rigEval.jy)<1e-6,
+                  'independent jacket mesh cannot move with a hair parameter');
+                await page.locator('#rig-save').click();
+                await page.waitForFunction(async()=>{
+                  const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
+                  return saved?.parts?.rear_hair?.motion?.x===35;
+                },null,{timeout:10000});
+                await page.locator('#rig-close').click();
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true);
+                assert.equal(await page.evaluate(()=>
+                  window.characterEditor.S.layers.front.find(p=>p.partId==='jacket').canvas.toDataURL()===
+                    window.__partRigArtBackup),true,'the old approved jacket pixels stay byte-identical');
+
                 assert.ok(await page.locator('#main-play').isVisible(),'full viewport playback control must be visible');
                 const breathing=await page.evaluate(()=>{
                   const p=window.PaperchalkLocalBreath?.point;
