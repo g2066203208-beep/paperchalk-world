@@ -55,7 +55,8 @@ function draw(ctx,source,profile={},now=performance.now(),width=ctx.canvas.width
   };
   ctx.moveTo(...pad(D));ctx.lineTo(...pad(E));ctx.lineTo(...pad(F));
   ctx.closePath();ctx.clip();
-  ctx.setTransform(aa,bb,cc,dd,ee,ff);
+  // Compose with the caller's camera zoom/pan (editor stage coordinates).
+  ctx.transform(aa,bb,cc,dd,ee,ff);
   ctx.drawImage(source,0,0,1024,1024);
   ctx.restore();
  }
