@@ -346,13 +346,6 @@ body.mobile-mode.virtual-landscape #view{
 }
 /* Fog-only DEV is a true on-scene preview; it does not enter the 3D rig
    or switch to the classroom. A dashed rectangle marks the guaranteed clear area. */
-#dev-fog-trigger{
-  position:absolute;z-index:15;right:3cqw;top:3.5cqh;
-  border:1px solid rgba(155,178,193,.6);border-radius:4px;
-  padding:5px 9px;background:rgba(10,15,19,.56);color:#dbe9ee;
-  font:12px var(--font-ui);cursor:pointer;pointer-events:auto;
-}
-#dev-fog-trigger[aria-expanded="true"]{border-color:#a4ead0}
 #fog-safe-guide{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   z-index:9;pointer-events:none;box-sizing:border-box;
@@ -402,6 +395,7 @@ body.mobile-mode.virtual-landscape #view{
       <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
         <button id="tilt-toggle" type="button">场景倾斜：开启</button>
+         <button id="menu-fog-debug" type="button" aria-controls="dev-fog-tools" aria-expanded="false">黑雾调试</button>
         <button id="menu-settings-back" type="button">返回</button>
       </nav>
     </div>
@@ -425,6 +419,7 @@ body.mobile-mode.virtual-landscape #view{
       <button id="restart-button" type="button">重新开始</button>
       <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
+       <button id="game-fog-debug" type="button" aria-controls="dev-fog-tools" aria-expanded="false">黑雾调试</button>
        <button id="scene-switcher-toggle" type="button" aria-expanded="false">切换场景</button>
        <div id="scene-switcher" aria-label="已安装场景" hidden></div>
     </div>
@@ -438,11 +433,10 @@ body.mobile-mode.virtual-landscape #view{
   <div id="scene-transition" data-phase="idle" data-active="false" aria-hidden="true"></div>
 
   <button id="dev-trigger" type="button" aria-label="打开分层开发者模式">分层 DEV</button>
-  <button id="dev-fog-trigger" type="button" aria-expanded="false" aria-controls="dev-fog-tools">黑雾 DEV</button>
   <div id="fog-safe-guide" aria-hidden="true" hidden></div>
   <aside id="dev-fog-tools" hidden aria-label="黑雾实时开发者调试">
     <header><strong>黑雾 · 实时调试</strong><button id="dev-fog-close" type="button">关闭</button></header>
-    <p>当前场景直接预览，不切换房间。绿框内保证没有动态黑雾；F3 快速开关。</p>
+    <p>当前场景直接预览，不切换房间。绿框内不绘制动态黑雾；从游戏菜单随时打开。</p>
     <label for="fog-width">黑雾宽度 · 场景高度占比 <output id="fog-width-value"></output></label>
     <input id="fog-width" type="range" min="0" max="14" step=".5">
     <label for="fog-opacity">黑雾强度 <output id="fog-opacity-value"></output></label>
@@ -1105,7 +1099,8 @@ void main(){
   window.addEventListener('keydown',e=>{
     if(transitioning)return;
     if(e.key==='Escape'){
-      if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;galleryOptions.hidden=true;mainOptions.hidden=false}
+      if(!document.getElementById('dev-fog-tools').hidden){showFogEditor(false)}
+      else if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;galleryOptions.hidden=true;mainOptions.hidden=false}
       else if(logOpen)toggleLog();
       else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
     }else if((e.key===' '||e.key==='Enter')&&
@@ -1426,12 +1421,19 @@ void main(){
   }
   // Independent on-scene fog tuning: no reparenting and no forced classroom.
   const fogPanel=document.getElementById('dev-fog-tools');
-  const fogTrigger=document.getElementById('dev-fog-trigger');
+  const fogMenuButtons=[
+    document.getElementById('menu-fog-debug'),
+    document.getElementById('game-fog-debug')
+  ];
   const fogGuide=document.getElementById('fog-safe-guide');
   const fogStatus=document.getElementById('fog-status');
   function showFogEditor(open){
     fogPanel.hidden=!open;fogGuide.hidden=!open;
-    fogTrigger.setAttribute('aria-expanded',String(open));
+    for(const button of fogMenuButtons)button.setAttribute('aria-expanded',String(open));
+    if(open){
+      menuChoices.hidden=true;
+      menuButton.setAttribute('aria-expanded','false');
+    }
     if(open)refreshFogEditor();
     applyFogSettings();start();
   }
@@ -1450,7 +1452,9 @@ void main(){
       fogStatus.textContent='实时预览中 · 尚未保存';
     });
   }
-  fogTrigger.addEventListener('click',()=>showFogEditor(fogPanel.hidden));
+  for(const button of fogMenuButtons){
+    button.addEventListener('click',()=>showFogEditor(fogPanel.hidden));
+  }
   document.getElementById('dev-fog-close').addEventListener('click',()=>showFogEditor(false));
   document.getElementById('fog-save').addEventListener('click',()=>{
     try{localStorage.setItem(FOG_KEY,JSON.stringify(fogConfig));fogStatus.textContent='已保存，切换房间后生效'}
@@ -1466,9 +1470,6 @@ void main(){
     try{await navigator.clipboard.writeText(json);fogStatus.textContent='黑雾参数已复制'}
     catch(_){window.prompt('复制黑雾参数',json)}
   });
-  document.addEventListener('keydown',event=>{
-    if(event.key==='F3'){event.preventDefault();showFogEditor(fogPanel.hidden)}
-  },true);
   applyFogSettings();
   if(new URLSearchParams(location.search).get('fogdev')==='1')showFogEditor(true);
   document.getElementById('dev-trigger').addEventListener('click',enterDeveloper);
