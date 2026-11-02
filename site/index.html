@@ -28,6 +28,7 @@ body.mobile-mode.virtual-landscape #view{
   transform-origin:top left;transform:rotate(90deg);
 }
 #scene{
+  --rim-solid:10px;--rim-feather:10px;
   position:relative;flex:none;margin:0;
   width:min(94vw,calc(94dvh * 16 / 9));
   width:min(94cqw,calc(94cqh * 16 / 9));
@@ -47,8 +48,6 @@ body.mobile-mode.virtual-landscape #view{
   pointer-events:none;
   /* Picture-attached solid rim is deliberately tiny, but still covers
      the image's true edges under 3D rotation. Sizes are developer-tunable. */
-  --rim-solid:10px;
-  --rim-feather:10px;
   background:
     linear-gradient(to right,
       #000 0px,#000 var(--rim-solid),
