@@ -126,6 +126,7 @@ function sendTarget(){
 function openEditor(){
  chooseLoaded(slot);
  if(!catalog.has(activeID)){note('先选择一个已加载的人物');return;}
+ if(overlay.parentElement!==document.body)document.body.appendChild(overlay);
  overlay.hidden=false;document.body.classList.add('character-editing');
  const url=new URL('./character-editor/?embed=1',location.href);
  if(!frame.src||new URL(frame.src).pathname!==url.pathname){
