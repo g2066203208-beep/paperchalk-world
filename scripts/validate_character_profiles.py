@@ -48,6 +48,7 @@ blank = read_profile("CHARACTER_PROFILE_TEMPLATE_V2.json")
 hero = read_profile("CHAR-001.profile.json")
 girl2 = read_profile("CHAR-002.profile.json")
 male = read_profile("CHAR-003.profile.json")
+male2 = read_profile("CHAR-016.profile.json")
 assert blank["recordState"] == "empty_character_profile_template_not_registered_in_game"
 assert hero["recordCode"] == "CHAR-001" and hero["canonicalId"] == "protagonist"
 assert girl2["recordCode"] == "CHAR-002" and girl2["recordState"].startswith("design_candidate")
@@ -70,6 +71,14 @@ assert male["fields"]["visualProduction"]["frontReference"]["value"] == "site/as
 assert male["fields"]["visualProduction"]["frontReference"]["status"] == "approved_art_reference"
 assert "尚未绘制" in male["fields"]["visualProduction"]["backReference"]["value"], "male back portrait remains pending"
 
+assert male2["recordCode"] == "CHAR-016" and male2["canonicalId"] == "male-second-transfer-candidate"
+assert male2["recordState"].startswith("design_candidate")
+assert male2["fields"]["measurements"]["heightCm"]["value"] == 173
+assert male2["fields"]["measurements"]["heightCm"]["status"] == "proposed"
+assert "1boy, solo" in male2["fields"]["visualProduction"]["promptPositive"]["value"]
+assert len(male2["fields"]["visualProduction"]["promptPositive"]["value"].split()) < 500
+assert male2["fields"]["visualProduction"]["frontReference"]["status"] == "unknown"
+assert male2["fields"]["visualProduction"]["backReference"]["status"] == "unknown"
 assert hero["fields"]["temperament"]["coreConfirmedTraits"]["value"] == ["毒舌", "冷淡"]
 assert hero["fields"]["temperament"]["coreConfirmedTraits"]["status"] == "user_confirmed"
 assert girl2["fields"]["temperament"]["coreConfirmedTraits"]["value"] == ["活泼"]
@@ -94,6 +103,9 @@ assert girl2["fields"]["visualProduction"]["backReference"]["value"] is None, (
 assert hero["fields"]["visualProduction"]["frontReference"]["value"].endswith("protagonist-front.webp")
 assert hero["fields"]["visualProduction"]["backReference"]["value"].endswith("protagonist-back.webp")
 registered = json.loads((ROOT / "site/data/characters/registry.json").read_text(encoding="utf-8"))
+assert not any(c["id"] == male2["canonicalId"] for c in registered["characters"]), (
+    "male 2 is a planned character with no approved artwork, cannot be a playable actor"
+)
 assert not any(c["id"] == male["canonicalId"] for c in registered["characters"]), (
     "draft male lead must not become a game actor before artwork approval"
 )
@@ -101,4 +113,4 @@ assert not any(c["id"] == girl2["canonicalId"] for c in registered["characters"]
     "candidate must not be registered as in-game actor without approved art"
 )
 print(f"PASS comprehensive character profiles: {len(spec)} sections, {sum(map(len, spec.values()))} fields each, "
-      "three dossiers + blank template; portrait references and draft provenance valid")
+      "four dossiers + blank template; portrait references and draft provenance valid")
