@@ -1219,9 +1219,9 @@ void main(){
     simIndex=1-simIndex;
     gl.bindFramebuffer(gl.FRAMEBUFFER,null);
     gl.viewport(0,0,fog.width,fog.height);
+    // Uniforms change only on slider input/resize, avoiding per-frame style
+    // mutations and forced layout while retaining the persistent fog texture.
     gl.useProgram(composite);
-    // Apply live slider changes on the same persistent fluid texture.
-    applyFogSettings();
     gl.bindTexture(gl.TEXTURE_2D,simTargets[simIndex].tex);
     gl.uniform1f(gl.getUniformLocation(composite,'u_time'),t);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
