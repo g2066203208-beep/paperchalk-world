@@ -4,7 +4,7 @@
 const ed=window.characterEditor,core=window.PaperchalkPartRigCore,studio=window.PaperchalkStudio;
 if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
-const state={active:false,model:null,selected:'',drag:null,phase:0,playing:true,dirty:false};
+const state={active:false,model:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false};
 const toggle=document.createElement('button');toggle.id='part-rig-toggle';
 toggle.textContent='逐件绑定';toggle.type='button';
 stage.querySelector('.stage-toolbar')?.append(toggle);
@@ -13,6 +13,7 @@ panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</stro
 <p id="rig-source">仅试验独立纹理；不修改原始 V4。</p>
 <label>部件<select id="rig-part"></select></label>
 <div id="rig-sliders"></div>
+<div class="rig-joints"><label>当前骨骼<select id="rig-bone" aria-label="选择当前部件的独立骨骼"></select></label><div id="rig-bone-sliders"></div><p id="rig-bone-tip">每条骨骼有自己的关节、角度、速度、相位与蒙皮半径；不同部件互不影响。</p></div>
 <div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button><button id="rig-module-export" type="button">↓ 一键打包游戏模块 ZIP</button></div>
 <p id="rig-status" role="status">绿色轴点、黄色末端均可在主画布直接拖动。</p>`;
 stage.append(panel);
@@ -29,9 +30,27 @@ for(const [path,label,min,max,step] of fields){
  input.min=min;input.max=max;input.step=step;
  row.append(span,out,input);sliders.append(row);
 }
+const boneFields=[
+ ['head.x','根部 X',0,100,1],['head.y','根部 Y',0,100,1],
+ ['tail.x','关节末端 X',0,100,1],['tail.y','关节末端 Y',0,100,1],
+ ['amplitude','关节摆动角度',-40,40,.5],
+ ['frequency','独立摆动速度',.1,4,.05],
+ ['phase','动作相位',-3.14,3.14,.05],
+ ['radius','蒙皮影响半径',6,80,1]
+];
+const boneSliders=$('rig-bone-sliders');
+for(const [field,label,min,max,step] of boneFields){
+ const row=document.createElement('label');row.className='rig-field';
+ const span=document.createElement('span');span.textContent=label;
+ const out=document.createElement('output');out.id='rig-bone-out-'+field.replace('.','-');
+ const input=document.createElement('input');input.type='range';input.dataset.bone=field;
+ input.min=min;input.max=max;input.step=step;
+ row.append(span,out,input);boneSliders.append(row);
+}
 const parts=()=>S.layers[S.side].filter(p=>p.sourcePart&&p.canvas);
 const key=p=>String(p.partId||p.name);
 const current=()=>state.model?.parts[state.selected];
+const currentBone=()=>current()?.bones?.find(b=>b.id===state.bone);
 const info=s=>{$('rig-status').textContent=s;};
 function values(){
  const p=current();if(!p)return;
@@ -43,12 +62,49 @@ function values(){
   $('rig-out-'+group+'-'+prop).textContent=Number(val.toFixed(2))+(ratio===100?'%':'');
  }
 }
+function boneValues(){
+ const b=currentBone();
+ const section=panel.querySelector('.rig-joints');
+ section.hidden=!b;
+ if(!b)return;
+ for(const input of boneSliders.querySelectorAll('input')){
+  const field=input.dataset.bone;
+  const segments=field.split('.');
+  const val=segments.length===2?b[segments[0]][segments[1]]:b[field];
+  const scale=field==='radius'||segments.length===2?100:1;
+  input.value=String(val*scale);
+  $('rig-bone-out-'+field.replace('.','-')).textContent=
+   Number((val*scale).toFixed(2))+(scale===100?'%':'');
+ }
+}
+function selectBone(id){
+ const p=current();if(!p)return;
+ state.bone=p.bones?.some(b=>b.id===id)?id:p.bones?.[0]?.id||'';
+ $('rig-bone').value=state.bone;boneValues();ed.render();
+}
+function refreshBones(){
+ const list=$('rig-bone');list.replaceChildren();
+ const p=current();
+ for(const b of p?.bones||[])list.add(new Option(b.id,b.id));
+ selectBone(p?.bones?.some(b=>b.id===state.bone)?state.bone:p?.bones?.[0]?.id);
+}
+function adjustBoneJoint(b,key,axis,value){
+ b[key][axis]=value;
+ const p=current(),bones=p.bones||[];
+ if(key==='head'&&b.parent){
+  const parent=bones.find(x=>x.id===b.parent);
+  if(parent)parent.tail[axis]=value;
+ }
+ if(key==='tail'){
+  for(const child of bones)if(child.parent===b.id)child.head[axis]=value;
+ }
+}
 function select(id){
  if(!state.model?.parts[id])return;
  state.selected=id;$('rig-part').value=id;
  const ix=S.layers[S.side].findIndex(x=>x.sourcePart&&key(x)===id);
  if(ix>=0){S.sel=ix;ed.renderList();}
- values();ed.render();
+ values();refreshBones();ed.render();
 }
 let saveTimer;
 async function save(){
@@ -65,7 +121,7 @@ function changed(){
 }
 function deactivate(){
  if(state.dirty)save().catch(console.error);
- state.active=false;state.drag=null;panel.hidden=true;
+ state.active=false;state.drag=null;state.bone='';panel.hidden=true;
  toggle.textContent='逐件绑定';ed.render();
 }
 async function activate(){
@@ -105,6 +161,8 @@ $('rig-export').onclick=()=>{
 
 $('rig-zero').onclick=()=>{const p=current();if(!p)return;
  p.motion.x=0;p.motion.y=0;p.motion.angle=0;p.motion.phase=0;
+ for(const b of p.bones||[])b.amplitude=0;
+ boneValues();
  values();changed();};
 $('rig-pause').onclick=()=>{state.playing=!state.playing;
  $('rig-pause').textContent=state.playing?'暂停':'播放';};
@@ -182,6 +240,17 @@ $('rig-module-export').onclick=async()=>{
  if(id===null)return;
  try{await exportGameModule(id.trim());}catch(error){info('无法打包：'+error.message);}
 };
+$('rig-bone').onchange=e=>selectBone(e.target.value);
+boneSliders.addEventListener('input',e=>{
+ const field=e.target.dataset.bone;if(!field)return;
+ const b=currentBone();if(!b)return;
+ const value=Number(e.target.value);
+ if(field.includes('.')){
+  const [joint,axis]=field.split('.');
+  adjustBoneJoint(b,joint,axis,value/100);
+ }else b[field]=field==='radius'?value/100:value;
+ boneValues();changed();
+});
 function drawPreview(ctx){
  if(!state.active||!state.model)return false;
  core.draw(ctx,parts(),state.model,state.phase,state.selected);
@@ -193,6 +262,21 @@ function drawPreview(ctx){
   for(const [point,color] of [[P,'#5defa0'],[T,'#ffdf81']]){
    ctx.fillStyle=color;ctx.beginPath();ctx.arc(point.x,point.y,7,0,Math.PI*2);ctx.fill();
   }ctx.restore();
+  const joint=currentBone();
+  if(joint){
+   const all=core.bonePoses(p,state.phase);
+   const bone=all.find(b=>b.id===joint.id);
+   if(bone){
+    ctx.save();ctx.strokeStyle='#faf1a6';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(p.x+bone.headPos.x,p.y+bone.headPos.y);
+    ctx.lineTo(p.x+bone.tailPos.x,p.y+bone.tailPos.y);ctx.stroke();
+    ctx.fillStyle='#fbcb70';ctx.beginPath();
+    ctx.arc(p.x+bone.headPos.x,p.y+bone.headPos.y,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#6ff2ff';ctx.beginPath();
+    ctx.arc(p.x+bone.tailPos.x,p.y+bone.tailPos.y,6,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+   }
+  }
  }
  return true;
 }
@@ -207,21 +291,42 @@ stage.addEventListener('pointerdown',e=>{
  const o=loc(e),a={x:p.x+p.pivot.x*p.w,y:p.y+p.pivot.y*p.h};
  const b={x:p.x+p.tip.x*p.w,y:p.y+p.tip.y*p.h};
  const radius=20/Math.max(.1,S.zoom);
- if(Math.hypot(o.x-a.x,o.y-a.y)<radius)state.drag='pivot';
- else if(Math.hypot(o.x-b.x,o.y-b.y)<radius)state.drag='tip';
- else{for(const layer of parts().slice().reverse()){
+ const bone=currentBone();
+ if(bone){
+  const poses=core.bonePoses(p,state.phase);
+  const active=poses.find(x=>x.id===bone.id);
+  if(active){
+   const head={x:p.x+active.headPos.x,y:p.y+active.headPos.y},
+    tail={x:p.x+active.tailPos.x,y:p.y+active.tailPos.y};
+   if(Math.hypot(o.x-head.x,o.y-head.y)<radius)state.drag='bone-head';
+   else if(Math.hypot(o.x-tail.x,o.y-tail.y)<radius)state.drag='bone-tail';
+  }
+ }
+ if(!state.drag&&Math.hypot(o.x-a.x,o.y-a.y)<radius)state.drag='pivot';
+ else if(!state.drag&&Math.hypot(o.x-b.x,o.y-b.y)<radius)state.drag='tip';
+ else if(!state.drag){for(const layer of parts().slice().reverse()){
   const q=state.model.parts[key(layer)];
   if(o.x>=q.x&&o.x<=q.x+q.w&&o.y>=q.y&&o.y<=q.y+q.h){select(q.id);break;}
  }}
- if(state.drag)stage.setPointerCapture(e.pointerId);
+ if(state.drag){state.playing=false;$('rig-pause').textContent='播放';stage.setPointerCapture(e.pointerId);}
 },true);
 stage.addEventListener('pointermove',e=>{
  if(!state.active||!state.drag)return;
  e.stopImmediatePropagation();e.preventDefault();
  const p=current(),pos=loc(e);if(!p)return;
- p[state.drag].x=Math.max(0,Math.min(1,(pos.x-p.x)/p.w));
- p[state.drag].y=Math.max(0,Math.min(1,(pos.y-p.y)/p.h));
- values();changed();
+ const x=Math.max(0,Math.min(1,(pos.x-p.x)/p.w));
+ const y=Math.max(0,Math.min(1,(pos.y-p.y)/p.h));
+ if(state.drag.startsWith('bone-')){
+  const b=currentBone();if(!b)return;
+  // Pointer edits the rest-space joints; the animation is frozen while
+  // adjusting joint positions so pointer coordinates remain predictable.
+  adjustBoneJoint(b,state.drag.slice(5),'x',x);
+  adjustBoneJoint(b,state.drag.slice(5),'y',y);
+  boneValues();
+ }else{
+  p[state.drag].x=x;p[state.drag].y=y;values();
+ }
+ changed();
 },true);
 for(const event of ['pointerup','pointercancel'])stage.addEventListener(event,e=>{
  if(!state.drag)return;
