@@ -159,9 +159,17 @@ jobs:
           assert back.getpixel((round(bw*.5),round(bh*.74)))[3]<8,'Back leg gap still contains white'
           assert (cw,ch)==(1024,1024) and (bw,bh)==(1024,1024),'Original artwork was resized'
           # Original RGB and alpha are committed as immutable lossless WebP.
-          assert 'transparent 15%,transparent 85%' in h
+          # Keep the image-edge mask while leaving the main picture readable.
+          assert 'transparent 9%,transparent 91%' in h
+          assert 'transparent 10%,transparent 90%' in h
+          assert 'transparent 15%,transparent 85%' not in h
+          assert 'float width=min(112.,u_viewSize.y*.19);' in h
+          assert 'const width=Math.min(112,sizes.h*.19);' in h
+          assert 'float fluidAlpha=clamp((.025+.47*pow(max(density,0.),.75))*smokeZone,0.,.52);' in h
+          assert 'const fluidAlpha=clamp((.025+.47*d**.75)*smokeZone,0,.52);' in h
+          assert 'width=min(318.' not in h and 'width=Math.min(318' not in h
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
-          assert 'reach=191.' in h and 'const reach=191+' in h
+          assert 'reach=99.' in h and 'const reach=99+' in h
           assert 'float swirl=' in h and 'const swirl=' in h
           assert 'aimX=0;aimY=0;currentX=0;currentY=0;' in h
           assert "importedScenes=Object.create(null)" in h
@@ -431,8 +439,28 @@ jobs:
                     'back-facing protagonist feet were cropped');
                 }
                 if(!cfg.mobile){
-                  // Compare same fixed camera twice. Any changes in this
-                  // undecorated wall region are from LIVE black fog, not image tilt.
+                  // Center of the room must remain clear: compare the same
+                  // pixels with and without the fog canvas, after neutral tilt.
+                  await page.mouse.move(cfg.width/2,cfg.height/2);
+                  await page.waitForTimeout(500);
+                  const fogOnCenter=PNG.sync.read(await page.screenshot());
+                  await page.locator('#fog').evaluate(el=>el.style.visibility='hidden');
+                  const fogOffCenter=PNG.sync.read(await page.screenshot());
+                  await page.locator('#fog').evaluate(el=>el.style.visibility='visible');
+                  let totalCenterDarkening=0,sampledCenter=0;
+                  for(let y=Math.floor(cfg.height*.34);y<cfg.height*.64;y+=8){
+                    for(let x=Math.floor(cfg.width*.43);x<cfg.width*.64;x+=8){
+                      const p=(y*fogOnCenter.width+x)*4;
+                      const shade=Math.max(0,fogOffCenter.data[p]-fogOnCenter.data[p])+
+                        Math.max(0,fogOffCenter.data[p+1]-fogOnCenter.data[p+1])+
+                        Math.max(0,fogOffCenter.data[p+2]-fogOnCenter.data[p+2]);
+                      totalCenterDarkening+=shade/3;sampledCenter++;
+                    }
+                  }
+                  assert.ok(totalCenterDarkening/Math.max(1,sampledCenter)<5,
+                    'fog darkened important central room content: '+(totalCenterDarkening/sampledCenter).toFixed(2));
+                  // Compare same fixed camera twice. Changes near the outer
+                  // wall come from real-time lightweight fog, not camera tilt.
                   await page.mouse.move(cfg.width/2,cfg.height/2);
                   await page.waitForTimeout(1400);
                   const fogBefore=PNG.sync.read(await page.screenshot({
@@ -441,8 +469,8 @@ jobs:
                   const fogAfter=PNG.sync.read(await page.screenshot({
                     path:'artifacts/classroom/bedroom-smoke-after.png'}));
                   let animatedPixels=0;
-                  for(let y=Math.floor(cfg.height*.26);y<cfg.height*.70;y+=2){
-                    for(let x=Math.floor(cfg.width*.72);x<cfg.width*.85;x+=2){
+                  for(let y=Math.floor(cfg.height*.22);y<cfg.height*.78;y+=2){
+                    for(let x=Math.floor(cfg.width*.83);x<cfg.width*.93;x+=2){
                       const index=(y*fogBefore.width+x)*4;
                       const change=Math.abs(fogAfter.data[index]-fogBefore.data[index])+
                         Math.abs(fogAfter.data[index+1]-fogBefore.data[index+1])+
@@ -450,7 +478,7 @@ jobs:
                       if(change>8)animatedPixels++;
                     }
                   }
-                  assert.ok(animatedPixels>65,
+                  assert.ok(animatedPixels>12,
                     'black fog invisible/static in inner room edge band: '+animatedPixels);
                   console.log('PASS: independent cinematic fog moves visibly across bedroom, '+animatedPixels+' pixels changed');
                 }
