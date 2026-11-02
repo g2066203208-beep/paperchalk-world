@@ -58,11 +58,19 @@ function setExpanded(expanded){
  state.expanded=!!expanded;
  document.body.classList.toggle('stage-expanded',state.expanded);
  sync();
- requestAnimationFrame(()=>{
-  const rect=stage.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2),canvas=$('view');
-  canvas.width=Math.round(rect.width*d);canvas.height=Math.round(rect.height*d);
+ // The fixed-position viewport temporarily leaves grid/flex flow.
+ // Defer fitting until layout has returned a real, nonzero width.
+ const settle=(attempt=0)=>{
+  const rect=stage.getBoundingClientRect();
+  if((rect.width<160||rect.height<120)&&attempt<12){
+   requestAnimationFrame(()=>settle(attempt+1));return;
+  }
+  const d=Math.min(devicePixelRatio||1,2),canvas=$('view');
+  canvas.width=Math.max(1,Math.round(rect.width*d));
+  canvas.height=Math.max(1,Math.round(rect.height*d));
   $('fit')?.click();
- });
+ };
+ requestAnimationFrame(()=>requestAnimationFrame(()=>settle()));
 }
 play?.addEventListener('click',()=>{
  if(!state.enabled){state.enabled=true;state.resumeOnPreview=false;}
