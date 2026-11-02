@@ -117,6 +117,22 @@ def discover():
                       **({'clip':row.get('clips',{}).get(face)} if row.get('clips',{}).get(face) else {})}
                 for face in ('front','back') if row.get(face)
             }
+    # FIX: The ORIGINAL heroine must actually sway, without asking players
+    # to switch to a different actor. The V4 files and all original PNGs
+    # remain untouched/recoverable; only the game's default playback selects
+    # the real independent 17/8-part skeleton. Editor still retains V4 tools.
+    heroine=entries.get('protagonist')
+    articulated=next((m for m in modules if m['id']=='protagonist-rig-v1'),None)
+    if heroine and articulated:
+        for face,view in articulated['views'].items():
+            if face not in heroine['l2dModule'] or view.get('renderer')!='part-mesh':
+                continue
+            old=heroine['l2dModule'][face]
+            old.update({'renderer':'part-mesh',
+                        'rig':{**view['rig'],'sourceCharacterId':'protagonist-rig-v1'},
+                        'originalV4':old.get('clip')})
+        heroine['motionPreference']='independent-bones-no-breath'
+
     return {'version':3,'characters':list(entries.values())}
 
 if __name__=='__main__':
