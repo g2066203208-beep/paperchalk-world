@@ -87,8 +87,11 @@ jobs:
                 // visible image to confirm the browser decoder advances.
                 await page.waitForFunction(()=>Number(document.querySelector('#camera-player-root')?.dataset.l2dFrame)>=0,{timeout:16000});
                 const inspect=()=>page.evaluate(()=>{
-                  const a=window.PaperchalkL2D.get('player'),
-                    pix=a.canvas.getContext('2d',{willReadFrequently:true}).getImageData(352,70,332,860).data;
+                  const a=window.PaperchalkL2D.get('player'),canvas=a.canvas,
+                    x=Math.floor(canvas.width*.344),y=Math.floor(canvas.height*.022),
+                    width=Math.max(1,Math.floor(canvas.width*.32)),
+                    height=Math.max(1,Math.floor(canvas.height*.87)),
+                    pix=canvas.getContext('2d',{willReadFrequently:true}).getImageData(x,y,width,height).data;
                   let hash=2166136261;
                   for(let k=0;k<pix.length;k+=8){
                     hash=Math.imul(hash^pix[k],16777619)>>>0;
@@ -103,7 +106,17 @@ jobs:
                 const secondFrame=await inspect();
                 assert.equal(secondFrame.canvasHidden,'visible','approved V4 must render into visible actor canvas');
                 assert.notEqual(firstFrame.frame,secondFrame.frame,'V4 playback timeline must advance');
-                assert.notEqual(firstFrame.hash,secondFrame.hash,'official V4 must change actual rendered Canvas pixels');
+                await page.waitForFunction(({initial})=>{
+                  const canvas=window.PaperchalkL2D.get('player')?.canvas;if(!canvas)return false;
+                  const x=Math.floor(canvas.width*.344),y=Math.floor(canvas.height*.022),
+                    w=Math.max(1,Math.floor(canvas.width*.32)),h=Math.max(1,Math.floor(canvas.height*.87)),
+                    pix=canvas.getContext('2d',{willReadFrequently:true}).getImageData(x,y,w,h).data;
+                  let hash=2166136261;
+                  for(let k=0;k<pix.length;k+=8){hash=Math.imul(hash^pix[k],16777619)>>>0;hash=Math.imul(hash^pix[k+3],16777619)>>>0;}
+                  return hash!==initial;
+                },{initial:firstFrame.hash},{timeout:16000});
+                const changed=await inspect();
+                assert.notEqual(firstFrame.hash,changed.hash,'official V4 must change actual rendered Canvas pixels');
 
                 assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)>1,'hair tip must physically sway');
                 assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)>1,'skirt hem must physically sway');
