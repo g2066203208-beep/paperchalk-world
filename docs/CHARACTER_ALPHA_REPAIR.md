@@ -1,8 +1,27 @@
-# 主角正面白底抠图修复
+# Paperchalk World — Character alpha-matting pipeline
 
-主角母版仍是用户确认的黑发校服角色。背景资源中的大白洞来自错误的 alpha 连通区域提取：两腿之间的约 7500 像素白色连通块被误认为人物。
+2026-11-02 audit: the old Pillow white-pixel threshold script only fixed the large opaque leg gap, not hair-level matting. It also recompressed the game sprite on EVERY Pages deployment. This is now replaced by a checked-in transparent sprite and a read-only CI alpha validator.
 
-- `scripts/fix_protagonist_cutout.py`：保留原角色像素和姿势，识别封闭白色背景大区域，重建该区域的透明 alpha，边缘使用少量羽化和去白底污染处理。
-- 构建时运行：在生成 Pages 静态站点前修复 `site/assets/characters/protagonist-front.webp`。GitHub 中原有文件视为**未处理的输入源素材**；部署的 WebP 是已经修复的游戏运行版，后续替换新原画时需要重新检查脚本的阈值/尺寸。
-- 自动测试验证腿间空白透明、人物主体不被误删，另保留人物/黑斑场景浏览器截图检查。
-- 请注意：这解决目前确定的**腿间白底和白色边缘污染**，不是人物发丝级手工描修。未来正式人物资产应优先要求 Anima 输出带透明背景的原生 PNG 或另存原图并做独立 alpha 蒙版。
+## Assets and reproducibility
+- site/assets/characters/protagonist-front.webp: corrected original-reference front-facing actor, 312 x 1019 RGBA WebP, processed from the user-approved original 1024 x 1024 flat-white artwork. No character repaint.
+- scripts/validate_character_alpha.py: run at deploy, checks real alpha/leg gap/silhouette without modifying the image.
+- scripts/matte_character.py: reusable tool; plain white backgrounds take a fast deterministic alpha/decontamination path; difficult backgrounds can instead use ONNX anime segmentation via rembg.
+
+### Flat white Anima image
+  python -m pip install Pillow numpy scipy opencv-python-headless
+  python scripts/matte_character.py raw.png transparent.png --engine flat-white --webp site/assets/characters/new-actor.webp --preview-dir out/qa
+
+### Anime neural segmentation
+  python -m pip install 'rembg[cpu]'
+  python scripts/matte_character.py raw.png transparent.png --engine isnet-anime --webp site/assets/characters/new-actor.webp --preview-dir out/anime-qa
+
+Optional alternative for complex foregrounds: --engine birefnet-general-lite. AI model weights are downloaded only in the ASSET PRODUCTION environment, never the game client. The current protagonist's cleaned matte uses flat-white processing; do not claim that it was inferred by isnet-anime.
+
+## Open source sources and licenses
+- rembg (MIT): https://github.com/danielgatis/rembg
+- anime-segmentation (Apache 2.0): https://github.com/SkyTNT/anime-segmentation
+- PyMatting (open source trimap/foreground correction): https://github.com/pymatting/pymatting
+Model license must be checked separately from program license (in particular BRIA's commercial terms).
+
+## Art QA
+Check transparency on dark, neutral, near-white, and checkerboard backgrounds. Inspect individual hair strands, nape, jacket outline, fingers, leg gaps, shoes. Do NOT redraw the character or change its facial design. Alpha must be genuine in PNG/WebP. Keep original source art and lossless PNG; game uses a preprocessed WebP. Auto-tests do not substitute for visual sign-off.
