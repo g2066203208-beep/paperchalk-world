@@ -95,6 +95,7 @@ async function changeCore(id,face='front'){
    crop:{x:351,y:9,w:335,h:1013},edition:'V4-official'}:null;
  await showClip(override||builtin);
  await loadCorrectionLayers();
+ window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{detail:{id,side}}));
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
  history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game');
 }
