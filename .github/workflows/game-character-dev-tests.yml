@@ -59,6 +59,25 @@ jobs:
                 await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready && window.PaperchalkL2D?.get('player')?.rig?.source?.width===1024,{timeout:20000});
                 assert.equal(await page.locator('[data-l2d-canvas]').count(),2);
+                const motion=await page.evaluate(()=>{
+                  const actor=window.PaperchalkL2D.get('player'),rig=actor.rig;
+                  return {mode:actor.root.dataset.l2dMode,
+                    hairA:rig.motionAt(480,296,.4),hairB:rig.motionAt(480,296,1.8),
+                    skirtA:rig.motionAt(466,601,.4),skirtB:rig.motionAt(466,601,1.8),
+                    shoeA:rig.motionAt(462,965,.4),shoeB:rig.motionAt(462,965,1.8)};
+                });
+                assert.equal(motion.mode,'procedural-multinode');
+                assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)>1,'hair tip must physically sway');
+                assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)>1,'skirt hem must physically sway');
+                assert.ok(Math.abs(motion.shoeA.x-motion.shoeB.x)<.9,'feet must remain anchored');
+                await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
+                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.rig?.blinkEnabled===true,{timeout:10000});
+                const blink=await page.evaluate(()=>{
+                  const rig=window.PaperchalkL2D.get('player').rig;
+                  return {closed:rig.blinkAmount(2.21),open:rig.blinkAmount(3.0)};
+                });
+                assert.ok(blink.closed>.95&&blink.open<.01,'front-facing actor must blink');
+
                 assert.equal(await page.locator('#dev-character-overlay').count(),0,'legacy iframe overlay must be removed');
                 await page.selectOption('#dev-layer','player');
                 await page.locator('#dev-character-open').click({force:true});
