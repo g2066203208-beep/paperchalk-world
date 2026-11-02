@@ -82,17 +82,35 @@ jobs:
                 await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
                 await page.waitForTimeout(550);
 
-                const sample=()=>page.evaluate(()=>{
-                  const a=window.PaperchalkL2D.get('player').rig.source,
-                    pix=a.getContext('2d').getImageData(352,70,332,860).data;
-                  let h=2166136261;
-                  for(let k=0;k<pix.length;k+=12){h=Math.imul(h^pix[k],16777619)>>>0;}
-                  return h;
+                // The actual visible V4 <img> is the runtime output, not the
+                // hidden legacy rig.source; read animated frames from that
+                // visible image to confirm the browser decoder advances.
+                const inspect=()=>page.evaluate(()=>{
+                  const a=window.PaperchalkL2D.get('player'),clip=a.clip?.img;
+                  if(!clip)throw Error('approved V4 image not mounted');
+                  const bounds=clip.getBoundingClientRect(),style=getComputedStyle(clip);
+                  const img=document.createElement('canvas');
+                  img.width=335;img.height=1013;
+                  const ctx=img.getContext('2d',{willReadFrequently:true});
+                  ctx.drawImage(clip,0,0,335,1013);
+                  const pix=ctx.getImageData(0,0,335,1013).data;
+                  let hash=2166136261;
+                  for(let k=0;k<pix.length;k+=8){
+                    hash=Math.imul(hash^pix[k],16777619)>>>0;
+                    hash=Math.imul(hash^pix[k+3],16777619)>>>0;
+                  }
+                  return {hash,w:bounds.width,h:bounds.height,
+                    visibility:style.visibility,opacity:Number(style.opacity),
+                    canvasHidden:getComputedStyle(a.canvas).visibility};
                 });
-                const firstFrame=await sample();
+                const firstFrame=await inspect();
                 await page.waitForTimeout(750);
-                const secondFrame=await sample();
-                assert.notEqual(firstFrame,secondFrame,'official V4 must animate actual decoded pixels');
+                const secondFrame=await inspect();
+                assert.ok(firstFrame.w>0&&firstFrame.h>0,'approved V4 must have visible actor geometry');
+                assert.equal(secondFrame.visibility,'visible');
+                assert.equal(secondFrame.opacity,1);
+                assert.equal(secondFrame.canvasHidden,'hidden','simple breathing canvas must be hidden');
+                assert.notEqual(firstFrame.hash,secondFrame.hash,'official V4 WebP must animate its visible decoded pixels');
 
                 assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)>1,'hair tip must physically sway');
                 assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)>1,'skirt hem must physically sway');
