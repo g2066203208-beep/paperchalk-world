@@ -12,7 +12,7 @@ function install(root){
  const canvas=root.querySelector('[data-l2d-canvas]');
  if(!img||!canvas)return;
  const id=root.dataset.l2dActor;
- const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,partPatch:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),overlayPending:new Set(),profile:{amplitude:1.4,period:3.6,softness:1.25,hairSwing:3,skirtSwing:2.8,armSwing:2.2,legSwing:0,swaySpeed:1}};
+ const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,partPatch:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),overlayPending:new Set(),profile:{amplitude:.55,period:4.8,softness:1}};
  rigs.set(root,obj);
  img.addEventListener('load',()=>refresh(obj));
  img.addEventListener('error',()=>{root.dataset.l2dState='error';});
@@ -26,7 +26,7 @@ async function refresh(obj){
   if(!obj.rig){
    obj.rig=new window.PaperchalkL2DRig(obj.img,obj.canvas,{
     amplitude:obj.profile.amplitude,period:obj.profile.period,
-    softness:obj.profile.softness,hairSwing:obj.profile.hairSwing,skirtSwing:obj.profile.skirtSwing,armSwing:obj.profile.armSwing,legSwing:obj.profile.legSwing,swaySpeed:obj.profile.swaySpeed,cleanup:true,playing:true,
+    softness:obj.profile.softness,cleanup:true,playing:true,
     featurePreset:obj.img.dataset.characterId==='protagonist'&&obj.img.dataset.characterSide==='front'?'heroine-front':'generic'
    });
    await obj.rig.ready;
@@ -54,17 +54,14 @@ function target(slot){
 }
 function setProfile(slot,values){
  const a=target(slot);if(!a)return false;
- const ranges={amplitude:[0,4],period:[2,12],softness:[0,2.4],
-  hairSwing:[0,5],skirtSwing:[0,5],armSwing:[0,5],legSwing:[0,5],swaySpeed:[.5,2.5]};
- for(const [name,[min,max]] of Object.entries(ranges)){
-  if(values?.[name]!==undefined&&Number.isFinite(Number(values[name])))
-   a.profile[name]=clamp(Number(values[name]),min,max);
+ for(const name of ['amplitude','period','softness']){
+  if(values[name]!==undefined&&Number.isFinite(Number(values[name])))
+   a.profile[name]=clamp(Number(values[name]),name==='period'?2:0,name==='period'?12:name==='amplitude'?4:2.4);
  }
  if(a.rig){
   a.rig.setAmplitude(a.profile.amplitude);
   a.rig.setPeriod(a.profile.period);
   a.rig.setSoftness(a.profile.softness);
-  a.rig.setDynamics?.(a.profile);
   a.rig.featurePreset=a.img.dataset.characterId==='protagonist'&&a.img.dataset.characterSide==='front'?'heroine-front':'generic';
   a.rig.blinkEnabled=a.rig.featurePreset==='heroine-front';
  }
