@@ -153,21 +153,26 @@ jobs:
                 assert.equal(await page.locator('#studio-character').count(),1);
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
                 assert.equal(await page.locator('#l2d-live-canvas').count(),1);
-                await page.waitForFunction(()=>window.PaperchalkStudio?.edition==='V4-official'&&window.PaperchalkStudio?.useV4?.(),{timeout:18000});
+                await page.waitForFunction(()=>window.PaperchalkStudio?.edition==='V4-official' &&
+                  window.PaperchalkStudio?.countSourceParts?.()===17,{timeout:30000});
+                assert.equal(await page.evaluate(()=>window.characterEditor.S.layers.back.filter(x=>x.sourcePart).length),8,
+                  'authentic front/back PSD parts must load directly from GitHub, without manual upload');
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),false,
+                  'editor opens all genuine source parts for direct editing');
                 assert.equal(await page.locator('#studio-neck-focus').count(),0,
                   'no neck-only tool may modify source layers automatically');
                 assert.equal(await page.locator('#studio-parts-import').count(),1);
-                await page.locator('#studio-parts-import').setInputFiles('/tmp/paperchalk-l2d-source-smoke.zip');
-                await page.waitForFunction(()=>window.PaperchalkStudio?.countSourceParts?.()===2,{timeout:20000});
+                assert.equal(await page.locator('#studio-parts-import').count(),1,'manual import remains optional for other actors');
                 const parts=await page.evaluate(()=>{
                   const arr=window.characterEditor.S.layers.front.filter(p=>p.sourcePart);
                   return arr.map(p=>({name:p.partId,position:[p.x,p.y,p.canvas.width,p.canvas.height],
                     editable:!p.locked}));
                 });
-                assert.deepEqual(parts,[
-                  {name:'neck',position:[496,160,57,74],editable:true},
-                  {name:'jacket',position:[422,190,200,349],editable:true}
-                ],'all authentic PSD parts retain their original position and geometry');
+                assert.ok(parts.some(p=>p.name==='neck' &&
+                  JSON.stringify(p.position)===JSON.stringify([496,160,57,74])&&p.editable));
+                assert.ok(parts.some(p=>p.name==='jacket' &&
+                  JSON.stringify(p.position)===JSON.stringify([422,190,200,349])&&p.editable));
+                assert.equal(parts.length,17,'all original front PSD components, not only a cropped neck');
                 await page.evaluate(()=>{
                   const editor=window.characterEditor,S=editor.S;
                   const arr=S.layers.front,neck=arr.find(p=>p.partId==='neck'),
@@ -184,8 +189,16 @@ jobs:
                 });
                 await page.locator('#studio-save').click();
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('已保存'),{timeout:18000});
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.countSourceParts()),2,
-                  'source component save must preserve separate layers');
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.countSourceParts()),17,
+                  'source component save must preserve all independent source layers');
+                const partPatch=await page.evaluate(()=>new Promise((resolve,reject)=>{
+                  const q=indexedDB.open('paperchalk-dev-characters-v1',1);
+                  q.onsuccess=()=>{const db=q.result,x=db.transaction('kv','readonly').objectStore('kv').get('parts-patch:protagonist:front');
+                    x.onsuccess=()=>{db.close();resolve({changes:x.result?.changes,erase:x.result?.erase?.length,paint:x.result?.paint?.length})};
+                    x.onerror=()=>reject(x.error);};q.onerror=()=>reject(q.error);
+                }));
+                assert.ok(partPatch.changes>0&&partPatch.erase>100&&partPatch.paint>100,
+                  'editing an existing jacket must save a game-ready V4 patch, not merely editor artwork');
                 // Frame corrections remain an independent editing track, not duplicated source parts.
                 await page.locator('#studio-v4-mode').click();
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.useV4?.()),true);
@@ -232,7 +245,7 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
                 await page.locator('#studio-side').selectOption('back');
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' &&
-                  window.PaperchalkStudio?.editSide==='back' && window.PaperchalkStudio?.countSourceParts?.()===2,{timeout:18000});
+                  window.PaperchalkStudio?.editSide==='back' && window.PaperchalkStudio?.countSourceParts?.()===8,{timeout:18000});
                 await page.locator('#studio-v4zip').setInputFiles('/tmp/paperchalk-v4-smoke.zip');
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('V4 动态方向已导入'),{timeout:16000});
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true,'V4 frames must preview in the L2D studio');
@@ -242,6 +255,9 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.type==='decoder',{timeout:16000});
                 assert.equal(await page.evaluate(side=>window.PaperchalkCharacterDev.assigned.player.side===side,paintedSide),true,'game should restore the edited direction');
+                await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
+                assert.ok(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.partPatch?.changes>0),
+                  'game must render the saved source-part eraser changes directly on top of real V4');
                 assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.overlayFrameUrls?.has(12)),true,'painted V4 frame must reload in game');
                 const count=await page.locator('#dev-character-library option').count();
                 assert.equal(count,4,'Game DEV must see all GitHub profiles and locally imported characters');
