@@ -44,10 +44,13 @@ jobs:
                 const rect=await page.locator('#view').boundingBox(),x=rect.x+rect.width/2,y=rect.y+rect.height/2;
                 await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+9,y+9,{steps:3});await page.mouse.up();
                 const painted=await page.evaluate(()=>{
-                  const p=window.characterEditor.S.layers.front.at(-1);
-                  return p.canvas.getContext('2d').getImageData(510,510,1,1).data[3];
+                  const s=window.characterEditor.S,p=s.layers.front.at(-1),d=p.canvas.getContext('2d').getImageData(0,0,p.canvas.width,p.canvas.height).data;
+                  let count=0,xmin=9999,ymin=9999,xmax=-1,ymax=-1;
+                  for(let i=3;i<d.length;i+=4){if(d[i]>0){count++;const n=(i-3)/4,x=n%p.canvas.width,y=(n/p.canvas.width)|0;xmin=Math.min(xmin,x);ymin=Math.min(ymin,y);xmax=Math.max(xmax,x);ymax=Math.max(ymax,y)}}
+                  return {count,bounds:[xmin,ymin,xmax,ymax],tool:s.tool,sel:s.sel,zoom:s.zoom,pan:[s.px,s.py],drag:s.drag,layer:p.name}
                 });
-                assert.ok(painted>0,'brush stroke produced no pixels');
+                console.log('Draw diagnostic',painted);
+                assert.ok(painted.count>0,'brush stroke produced no pixels');
                 await page.locator('#btnUndo').click();
                 await page.locator('#btnRedo').click();
                 await page.locator('#btnSave').click();
