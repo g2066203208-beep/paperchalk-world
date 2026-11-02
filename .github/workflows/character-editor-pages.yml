@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'site/character-editor/**'
+      - 'site/**'
       - 'site/index.html'
       - 'site/l2d/**'
       - 'site/assets/l2d/**'
