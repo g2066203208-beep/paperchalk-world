@@ -191,6 +191,11 @@ body.mobile-mode.virtual-landscape #view{
   width:auto;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
+/* Room foreground: back-facing protagonist, head and feet fully visible.
+   The original bedroom, living room and future entryway art stays unmodified. */
+#view.environment-scene #camera-player-root #actor-player{
+  left:19cqw;bottom:0;height:76cqh;
+}
 @container (max-height:445px){
   #enemy-depth-root #actor-enemy{height:34%;left:46%;bottom:16%}
   #camera-player-root #actor-player{height:82cqh;left:8cqw;bottom:-3cqh}
@@ -374,7 +379,6 @@ body.mobile-mode.virtual-landscape #view{
       <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
         <button id="tilt-toggle" type="button">场景倾斜：开启</button>
-         <button id="ink-toggle" type="button">动态黑斑：开启</button>
         <button id="menu-settings-back" type="button">返回</button>
       </nav>
     </div>
@@ -402,7 +406,6 @@ body.mobile-mode.virtual-landscape #view{
       <button id="restart-button" type="button">重新开始</button>
       <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
-       <button id="ink-toggle-game" type="button">动态黑斑：开启</button>
        <button id="scene-switcher-toggle" type="button" aria-expanded="false">切换场景</button>
        <div id="scene-switcher" aria-label="已安装场景" hidden></div>
     </div>
@@ -529,31 +532,6 @@ uniform sampler2D u_density;
 uniform vec2 u_viewSize;
 uniform vec2 u_half;
 uniform float u_time;
-uniform float u_blotches;
-// Old projector film-burn: nine independent evolving emulsion wounds.
-// Every cell is advanced in real time by JS; no looping pre-rendered frames.
-uniform vec4 u_burns[9]; // center xy, radius in viewport-height units, opacity
-float burnShape(vec2 uv,vec4 burn,float phase){
-  if(burn.w<.001||burn.z<.0001)return 0.;
-  vec2 q=(uv-burn.xy)*vec2(u_viewSize.x/u_viewSize.y,1.)/burn.z;
-  float d2=dot(q,q);
-  if(d2>2.3)return 0.;
-  float angle=atan(q.y,q.x);
-  float rag=.13*sin(angle*5.+phase)+.075*sin(angle*11.-phase*.73)
-           +.046*sin(q.x*12.+q.y*7.+phase*1.8);
-  float radius=sqrt(d2)*(1.+rag);
-  float core=1.-smoothstep(.72,1.02,radius);
-  float soot=1.-smoothstep(.98,1.34,radius);
-  return clamp(burn.w*(.94*core+.16*soot),0.,1.);
-}
-float inkStains(vec2 uv,float t){
-  float transmittance=1.;
-  for(int i=0;i<9;i++){
-    float phase=float(i)*2.399+.14*sin(t*.17+float(i));
-    transmittance*=1.-burnShape(uv,u_burns[i],phase);
-  }
-  return 1.-transmittance;
-}
 void main(){
  vec2 uv=v_uv;
  float density=texture2D(u_density,uv).r;
@@ -573,9 +551,8 @@ void main(){
                    (u_half.y-.037-abs(uv.y-.5))*u_viewSize.y);
  float safetyBlack=1.-smoothstep(0.,min(32.,u_viewSize.y*.065),safetyD);
  float fluidAlpha=clamp((.13+1.02*pow(max(density,0.),.60))*smokeZone,0.,.94);
- float stains=u_blotches*inkStains(uv,u_time);
- // Layers compose as pure black opacity, no newly allocated canvas.
- float alpha=max(1.-(1.-fluidAlpha)*(1.-stains),safetyBlack);
+ // Only persistent flowing black fog plus guaranteed opaque edge protection.
+ float alpha=max(fluidAlpha,safetyBlack);
  gl_FragColor=vec4(0.,0.,0.,alpha);
 }
 </script>
@@ -593,50 +570,6 @@ void main(){
   let sizes={w:1,h:1,sw:1,sh:1},fluidTime=0;
   let fallback=null,fallbackState=null;
   let sceneHalf={x:.4,y:.4};
-  // Film burn uses screen-space uniforms, shared by WebGL and CPU fallback.
-  const BURN_COUNT=9;
-  const burnUniforms=new Float32Array(BURN_COUNT*4);
-  const burnCells=[];
-  let burnGeneration=0,burnUniformLocation=null;
-  function spawnBurn(index,initial){
-    const life=4.3+Math.random()*4.5;
-    burnGeneration++;
-    return {
-      x:.13+Math.random()*.74,y:.16+Math.random()*.67,
-      radius:(.026+Math.random()*.067)*(index%3===0?1.22:1),
-      life,age:initial
-        ?(index<6?life*(.19+Math.random()*.52):-Math.random()*2.1)
-        :-Math.random()*1.3,
-      opacity:.89+Math.random()*.10
-    };
-  }
-  function smooth01(v){
-    const x=clamp(v,0,1);
-    return x*x*(3-2*x);
-  }
-  function advanceBurns(dt){
-    let active=0;
-    for(let i=0;i<BURN_COUNT;i++){
-      let b=burnCells[i];
-      if(!b)b=burnCells[i]=spawnBurn(i,true);
-      b.age+=dt;
-      if(b.age>=b.life)b=burnCells[i]=spawnBurn(i,false);
-      const p=b.age/b.life,k=i*4;
-      if(p<=0){
-        burnUniforms[k]=b.x;burnUniforms[k+1]=b.y;
-        burnUniforms[k+2]=0;burnUniforms[k+3]=0;
-        continue;
-      }
-      const grow=smooth01(p/.37),erode=smooth01((p-.73)/.27);
-      const radius=b.radius*(.14+.86*grow)*(1-.22*erode);
-      const alpha=b.opacity*smooth01(p/.12)*(1-smooth01((p-.72)/.28));
-      burnUniforms[k]=b.x;burnUniforms[k+1]=b.y;
-      burnUniforms[k+2]=radius;burnUniforms[k+3]=alpha;
-      if(alpha>.03)active++;
-    }
-    fog.dataset.burnActive=String(active);
-    fog.dataset.burnGeneration=String(burnGeneration);
-  }
   function logicalSize(){
     const rotated=document.body.classList.contains('virtual-landscape');
     return rotated ? {w:innerHeight,h:innerWidth} : {w:innerWidth,h:innerHeight};
@@ -837,13 +770,10 @@ void main(){
   const tiltButton=document.getElementById('tilt-toggle');
   const SAVE_KEY='paperchalk-scene-v1';
   const TILT_KEY='paperchalk-tilt-v1';
-  const INK_KEY='paperchalk-ink-blotches-v1';
   function loadSetting(){
     try{return localStorage.getItem(TILT_KEY)!=='off'}catch(_){return true}
   }
   let tiltEnabled=loadSetting();
-  let blotchesEnabled=true;
-  try{blotchesEnabled=localStorage.getItem(INK_KEY)!=='off'}catch(_){};
   let dialogueIndex=0,autoEnabled=false,autoTimer=0,logOpen=false,textHidden=false;
   const classroomPreload=new Image();
   classroomPreload.src=SCENES.classroom.image;
@@ -871,7 +801,10 @@ void main(){
     aimX=0;aimY=0;currentX=0;currentY=0;
     stage.style.transform='rotateY(0deg) rotateX(0deg)';
     const isStory=def.type==='story',isMenu=def.type==='menu';
-    enemyDepth.hidden=!isStory;cameraPlayer.hidden=!isStory;
+    // Keep room bitmaps empty; actor is a reusable, independent foreground plane.
+    const hasPlayer=isStory||def.type==='environment';
+    enemyDepth.hidden=!isStory;cameraPlayer.hidden=!hasPlayer;
+    view.classList.toggle('environment-scene',def.type==='environment');
     protagonistPreview.hidden=def.type!=='portrait';
     sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=!isStory;
     if(isMenu){
@@ -1002,19 +935,6 @@ void main(){
     start();
   });
   tiltButton.textContent=tiltEnabled?'场景倾斜：开启':'场景倾斜：关闭';
-  const inkButtons=[document.getElementById('ink-toggle'),document.getElementById('ink-toggle-game')];
-  function refreshInkButtons(){
-    for(const btn of inkButtons){
-      btn.textContent=blotchesEnabled?'动态黑斑：开启':'动态黑斑：关闭';
-      btn.setAttribute('aria-pressed',String(blotchesEnabled));
-    }
-  }
-  for(const btn of inkButtons)btn.addEventListener('click',()=>{
-    blotchesEnabled=!blotchesEnabled;
-    try{localStorage.setItem(INK_KEY,blotchesEnabled?'on':'off')}catch(_){}
-    refreshInkButtons();start();
-  });
-  refreshInkButtons();
   continueButton.disabled=!readSave();
   function cancelAuto(){
     clearTimeout(autoTimer);autoTimer=0;autoEnabled=false;
@@ -1154,8 +1074,6 @@ void main(){
       gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
       const vertex=shader(gl.VERTEX_SHADER,document.getElementById('vertex').textContent);
       simulate=program('fluid',vertex);composite=program('display',vertex);
-      burnUniformLocation=gl.getUniformLocation(composite,'u_burns[0]');
-      if(burnUniformLocation===null)throw Error('Film burn shader uniform missing');
       fog.dataset.renderer='gpu-advected-fluid';
       return true;
     }catch(e){console.warn('GPU fluid unavailable; using CPU fluid fallback:',e);gl=null;return false;}
@@ -1211,8 +1129,6 @@ void main(){
     gl.useProgram(composite);
     gl.bindTexture(gl.TEXTURE_2D,simTargets[simIndex].tex);
     gl.uniform1f(gl.getUniformLocation(composite,'u_time'),t);
-    gl.uniform1f(gl.getUniformLocation(composite,'u_blotches'),blotchesEnabled?1:0);
-    gl.uniform4fv(burnUniformLocation,burnUniforms);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   }
   function sample(arr,fx,fy,w,h){
@@ -1221,28 +1137,6 @@ void main(){
     const x1=Math.min(x+1,w-1),y1=Math.min(y+1,h-1);
     return (arr[y*w+x]*(1-u)+arr[y*w+x1]*u)*(1-v)
        +(arr[y1*w+x]*(1-u)+arr[y1*w+x1]*u)*v;
-  }
-  function inkCPUAmount(x,y,t){
-    // Matching procedural burn contour and alpha in the CPU fallback.
-    let transmittance=1;
-    for(let i=0;i<BURN_COUNT;i++){
-      const k=i*4,cx=burnUniforms[k],cy=burnUniforms[k+1];
-      const size=burnUniforms[k+2],opacity=burnUniforms[k+3];
-      if(opacity<.001||size<.0001)continue;
-      const qx=(x-cx)*sizes.w/sizes.h/size,qy=(y-cy)/size;
-      const d2=qx*qx+qy*qy;
-      if(d2>2.3)continue;
-      const phase=i*2.399+.14*Math.sin(t*.17+i);
-      const angle=Math.atan2(qy,qx);
-      const rag=.13*Math.sin(angle*5+phase)+.075*Math.sin(angle*11-phase*.73)
-        +.046*Math.sin(qx*12+qy*7+phase*1.8);
-      const radius=Math.sqrt(d2)*(1+rag);
-      const core=1-smooth01((radius-.72)/.30);
-      const soot=1-smooth01((radius-.98)/.36);
-      const burnAlpha=clamp(opacity*(.94*core+.16*soot),0,1);
-      transmittance*=1-burnAlpha;
-    }
-    return 1-transmittance;
   }
   function drawCPU(dt,t){
     const s=fallbackState;if(!s)return;
@@ -1274,8 +1168,7 @@ void main(){
       const blackT=clamp(safetyD/Math.min(32,sizes.h*.065),0,1);
       const safetyBlack=1-blackT*blackT*(3-2*blackT);
       const fluidAlpha=clamp((.13+1.02*d**.60)*smokeZone,0,.94);
-      const stains=blotchesEnabled?inkCPUAmount(uvx,uvy,t):0;
-      const alpha=Math.max(1-(1-fluidAlpha)*(1-stains),safetyBlack);
+      const alpha=Math.max(fluidAlpha,safetyBlack);
       image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
     }
     s.a=b;s.b=a;fallback.putImageData(image,0,0);
@@ -1579,7 +1472,6 @@ void main(){
       (currentX*(6.0+.3*depthFactor)).toFixed(3)+'deg) rotateX('+
       (-currentY*(4.6+.22*depthFactor)).toFixed(3)+'deg)';
     fluidTime+=reduced.matches?0:dt;
-    advanceBurns(reduced.matches?0:dt);
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
     fog.dataset.frames=String(++frameNumber);
