@@ -139,7 +139,10 @@ jobs:
                 assert.notEqual(firstFrame.hash,changed.hash,'official V4 must change actual rendered Canvas pixels');
 
                 assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)<5,'hair can flex but scalp and body must not sway');
-                assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)<5,'skirt can flex subtly but hips must not swing');
+                assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)>5,
+                  'skirt hem must have visibly adjustable independent motion');
+                assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)<100,
+                  'secondary cloth amplitude must remain physically bounded');
                 assert.ok(Math.abs(motion.shoeA.x-motion.shoeB.x)<.9,'feet must remain anchored');
                 const anatomy=await page.evaluate(()=>{
                   const breathe=window.PaperchalkLocalBreath;
