@@ -9,7 +9,7 @@ const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
 const bell=(x,c,r)=>Math.max(0,1-Math.abs(x-c)/r);
 const X=[0,300,345,385,415,445,475,505,535,565,595,625,655,690,735,1024];
 const Y=[0,50,95,135,175,215,255,300,345,390,435,480,520,565,610,650,690,740,820,1024];
-const defaults=Object.freeze({amplitude:1.4,period:3.6,softness:1.25,hairSwing:2.5,skirtSwing:2.2,armSwing:1.8,swaySpeed:1});
+const defaults=Object.freeze({amplitude:1.4,period:3.6,softness:1.25,hairSwing:2.5,skirtSwing:2.2,armSwing:1.8,legSwing:0,swaySpeed:1});
 const profileOf=q=>{
  q=q||{};
  const p={};
@@ -19,7 +19,7 @@ const profileOf=q=>{
  }
  p.amplitude=clamp(p.amplitude,0,4);p.period=clamp(p.period,2,12);
  p.softness=clamp(p.softness,0,2.4);
- for(const k of ['hairSwing','skirtSwing','armSwing'])p[k]=clamp(p[k],0,5);
+ for(const k of ['hairSwing','skirtSwing','armSwing','legSwing'])p[k]=clamp(p[k],0,5);
  p.swaySpeed=clamp(p.swaySpeed,.5,2.5);
  return p;
 };
@@ -43,11 +43,14 @@ function deform(x,y,options={},now=0,part=''){
  const armWave=Math.sin(t*.94-1.02+(x-520)*.0018);
  const lagY=Math.sin(t*.88-1.25);
  const r=Math.abs(x-520);
- let b=point(x,y,q.amplitude,q.period,now),hair=0,skirt=0,arm=0;
+ let b=point(x,y,q.amplitude,q.period,now),hair=0,skirt=0,arm=0,leg=0;
  if(name){
   // Every PSD bitmap is an independent bone/mesh, not a region cut from
   // the current V4 frame. The root of each part stays anchored.
-  if(/footwear|鞋|legwear|双腿|裤|袜|shoes|legs/.test(name))return {x,y};
+  if(/footwear|鞋|shoes/.test(name))return {x,y};
+  if(/legwear|双腿|裤|袜|legs/.test(name)){
+   b={x,y};leg=smooth(650,755,y)*(1-smooth(885,945,y));
+  }
   if(/backhair|后发|马尾|hairclip|头部和马尾/.test(name)){
    b={x,y};hair=smooth(135,335,y)*(1-smooth(500,620,y));
   }else if(/fronthair|前发|刘海|fringe/.test(name)){
@@ -72,13 +75,16 @@ function deform(x,y,options={},now=0,part=''){
   skirt=hemX*smooth(475,600,y)*(1-smooth(670,740,y));
   arm=smooth(80,145,r)*(1-smooth(210,285,r))*
       smooth(220,350,y)*(1-smooth(535,635,y));
+  leg=smooth(670,775,y)*(1-smooth(885,945,y))*
+      smooth(300,390,x)*(1-smooth(645,725,x));
  }
  // Substantial but local movement at 250%: loose hair ~16px, skirt hem
  // ~15px, sleeve/arms ~10px. All independent from chest breathing amplitude.
  const flex=q.softness/1.25;
  const dx=hair*6.5*q.hairSwing*flex*hairWave+
           skirt*6.7*q.skirtSwing*flex*skirtWave+
-          arm*5.3*q.armSwing*flex*armWave;
+          arm*5.3*q.armSwing*flex*armWave+
+          leg*2.7*q.legSwing*flex*Math.sin(t*.74-1.2+(x-520)*.006);
  const dy=hair*1.5*q.hairSwing*flex*lagY+
           skirt*1.3*q.skirtSwing*flex*Math.sin(t*.77-1.55)+
           arm*.9*q.armSwing*flex*Math.sin(t*.94-.8);
@@ -87,7 +93,7 @@ function deform(x,y,options={},now=0,part=''){
 function draw(ctx,source,options={},now=performance.now(),width=ctx.canvas.width,height=ctx.canvas.height){
  if(!source||!width||!height)return;
  const q=profileOf(options);
- if(q.amplitude<.001&&q.hairSwing<.001&&q.skirtSwing<.001&&q.armSwing<.001){
+ if(q.amplitude<.001&&q.hairSwing<.001&&q.skirtSwing<.001&&q.armSwing<.001&&q.legSwing<.001){
   ctx.drawImage(source,0,0,width,height);return;
  }
  const pts=Y.map(y=>X.map(x=>{
