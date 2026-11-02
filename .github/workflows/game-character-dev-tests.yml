@@ -321,8 +321,12 @@ jobs:
                 assert.equal(girlTwo.frames,128);
                 assert.deepEqual(girlTwo.size,[335,1024]);
                 await page.selectOption('#dev-layer','enemy');
+                assert.equal(await page.locator('#dev-character-list').inputValue(),'enemy',
+                  'DEV refresh must retain explicitly selected NPC, not silently revert to protagonist');
                 await page.locator('#dev-character-open').click({force:true});
                 await page.waitForURL('**/character-editor/**',{timeout:18000});
+                assert.match(page.url(),/character=char-002/,
+                  'Studio deep-link must preserve assigned CHAR-002 identity');
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-002' &&
                   window.PaperchalkStudio?.isV4 &&
                   window.PaperchalkStudio?.countSourceParts?.()===7,{timeout:30000})
