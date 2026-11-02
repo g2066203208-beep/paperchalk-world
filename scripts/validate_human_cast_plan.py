@@ -34,4 +34,25 @@ registered=json.loads((ROOT/"site"/"data"/"characters"/"registry.json").read_tex
 assert not any(p["recordCode"]=="CHAR-004" for p in registered["characters"]),(
     "CAST-004 is still a design candidate with no approved art"
 )
-print("PASS human cast plan: 48 distinct proposed identities; 28 students, 20 others, 18 important, 30 supporting")
+# school grade class allocation: a concrete, reversible design proposal
+assert (ROOT/"docs"/"SCHOOL_AND_STUDENT_STRUCTURE_V1.md").is_file()
+actual_schools={}
+for person in people:
+    if person["group"] != "student":
+        assert "educationProposal" not in person, person["id"]
+        continue
+    school=person["educationProposal"]
+    assert school["status"] == "proposed", person["id"]
+    assert school["grade"] in (2,3) and isinstance(school["classNumber"],int) and school["classNumber"] >= 1
+    assert school["classLabel"].startswith("高")
+    key=school["schoolCode"]
+    assert key in ("A","B","C")
+    actual_schools[key]=actual_schools.get(key,0)+1
+assert actual_schools=={"A":17,"B":6,"C":5},actual_schools
+pr=data["productionPriorityProposal"]
+assert set(pr["alreadyStarted"])=={"CHAR-001","CHAR-002","CHAR-003","CHAR-016"}
+assert len(pr["remainingImportant"])==8
+assert len(set(pr["alreadyStarted"]+pr["remainingImportant"]))==12
+assert pr["importantStudentTotal"]==12 and pr["supportingStudentTotal"]==16
+print("PASS human cast plan: 48 identities, 3 schools (17+6+5), 12 important students and 16 supporting students")
+
