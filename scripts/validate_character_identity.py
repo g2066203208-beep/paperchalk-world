@@ -61,7 +61,7 @@ assert len(hero["visualCanon"]["iris"]) > 8
 assert len(hero["visualCanon"]["hairAccessory"]) > 25
 # Detailed design data is linked to this SAME character, not an extra identity.
 profile=hero.get("productionProfile")
-assert isinstance(profile,dict) and profile.get("version")=="1.1", "missing detailed character production record"
+assert isinstance(profile,dict) and profile.get("version")=="1.3", "missing detailed character production record"
 assert (ROOT/profile["designDocument"]).is_file(), "missing full heroine dossier"
 assert hero.get("profileDocument")==profile["designDocument"], "profile mismatch"
 assert (ROOT/"docs/CHARACTER_BIBLE_INDEX.md").is_file(), "missing cast index"
@@ -78,6 +78,27 @@ assert profile["personalityProposal"]["status"]=="proposed_not_approved"
 assert len(profile["appearance"])>=8 and len(profile["costumeBlueprint"])>=7
 assert len(profile["unresolved"])>=5
 assert len(profile["animationBoundaries"]["constraints"])>=2
+# The default character identity must remain a visibly female, anatomically
+# coherent uniformed figure without assigning unsupported lingerie details.
+figure=profile["femaleFigureBlueprint"]
+assert figure["genderPresentation"]=="female"
+assert figure["status"]=="art_direction_not_measured"
+assert "approved front/back artwork" in figure["artPriority"]
+for field in ("shoulders","ribcage","bustThroughClothing","waist","pelvisAndHips","back","limbs","posture"):
+    assert len(figure["boneAndVolume"][field])>20, f"missing neutral anatomy descriptor: {field}"
+garments=figure["garmentPatternProposals"]
+assert garments["status"]=="proposed_not_approved"
+assert garments["underwearSize"] is None and garments["cupSize"] is None
+assert garments["heightCm"]==sizing["heightCm"] and garments["weightKg"]==sizing["weightKg"]
+for field in ("bustCircumferenceCm","waistCircumferenceCm","hipCircumferenceCm"):
+    value=garments[field]
+    assert value["status"]=="proposed" and value["min"]<=value["center"]<=value["max"],field
+    assert value["unit"]=="cm",field
+assert set(figure["viewRules"]) >= {"front","profile","back","threeQuarter","animation"}
+assert data["policy"]["figureDesignMustBeConsistentAcrossViews"] is True
+assert data["policy"]["femaleFigureUsesNeutralGarmentDimensions"] is True
+assert data["policy"]["userOriginalsOverrideTentativeMeasurements"] is True
+
 for character in chars:
     # New characters must have their own identity notes and may NOT share
     # either of the original protagonist's locked image files.
