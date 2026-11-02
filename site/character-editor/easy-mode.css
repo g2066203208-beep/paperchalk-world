@@ -125,3 +125,23 @@ body.easy-mode :is(button,summary,select,input):focus-visible{outline:2px solid 
  #l2d-secondary-controls .mlabel{font-size:13px}
  #l2d-secondary-controls .l2d-motion-presets button{min-height:41px;font-size:12px}
 }
+
+/* Live secondary-motion drawer beside the SAME animated central canvas. */
+#main-dynamics{border-color:#6fa2c6;background:#244b6d;color:#edfbff;font-weight:750}
+#main-dynamics[aria-expanded="true"]{background:#346a91;border-color:#9bdaff}
+#l2d-motion-drawer[hidden]{display:none!important}
+#l2d-motion-drawer{position:absolute;top:62px;right:8px;bottom:65px;z-index:15;
+ width:min(290px,calc(100% - 16px));overflow:auto;overscroll-behavior:contain;
+ border:1px solid #79accd;border-radius:13px;background:#111e2bf5;
+ box-shadow:0 15px 35px #000b;padding:8px;touch-action:pan-y}
+#l2d-close-drawer{display:block;margin:0 0 4px auto;padding:5px 11px;font-size:11px;background:#2d4054}
+#l2d-motion-drawer #l2d-secondary-controls{margin:0;border:0;padding:5px;background:transparent}
+#l2d-motion-drawer #l2d-secondary-controls h4{margin:0 0 5px}
+@media(max-width:710px){
+ #l2d-motion-drawer{top:108px;bottom:94px;right:6px;
+  width:min(310px,calc(100% - 12px));padding:8px 10px}
+ #l2d-close-drawer{min-height:32px}
+ #l2d-motion-drawer #l2d-secondary-controls{padding:3px}
+ #l2d-motion-drawer #l2d-secondary-controls .mlabel{margin:7px 0 2px}
+ #l2d-motion-drawer #l2d-secondary-controls input[type=range]{height:28px}
+}
