@@ -41,10 +41,17 @@ async function setPlaying(value){
  if(clip()?.isV4)await clip().setPlaying?.(state.playing);
  sync();ed.render();
 }
-function setPreview(enabled){
- state.enabled=!!enabled;
- // Switching to precision mode must not leave a moving V4 backdrop.
- if(!enabled&&clip()?.isPlaying)clip().setPlaying(false).catch(console.error);
+async function setPreview(enabled){
+ const next=!!enabled;
+ if(next===state.enabled)return;
+ state.enabled=next;
+ if(!next){
+  state.resumeOnPreview=state.playing;
+  await setPlaying(false);
+ }else if(state.resumeOnPreview){
+  state.resumeOnPreview=false;
+  await setPlaying(true);
+ }
  sync();ed.render();
 }
 function setExpanded(expanded){
@@ -54,11 +61,14 @@ function setExpanded(expanded){
  requestAnimationFrame(()=>{
   const rect=stage.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2),canvas=$('view');
   canvas.width=Math.round(rect.width*d);canvas.height=Math.round(rect.height*d);
-  ed.render();
+  $('fit')?.click();
  });
 }
-play?.addEventListener('click',()=>setPlaying(!state.playing).catch(e=>console.error('Main L2D playback',e)));
-preview?.addEventListener('click',()=>setPreview(!state.enabled));
+play?.addEventListener('click',()=>{
+ if(!state.enabled){state.enabled=true;state.resumeOnPreview=false;}
+ setPlaying(!state.playing).catch(e=>console.error('Main L2D playback',e));
+});
+preview?.addEventListener('click',()=>setPreview(!state.enabled).catch(e=>console.error('Main L2D preview',e)));
 expand?.addEventListener('click',()=>setExpanded(!state.expanded));
 stage.addEventListener('pointerdown',e=>{
  if(e.target!==$('view')||e.button===1||S.space||e.altKey||S.tool==='pan')return;
