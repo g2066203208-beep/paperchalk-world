@@ -81,6 +81,31 @@ jobs:
                 await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready && window.PaperchalkL2D?.get('player')?.rig?.source?.width===1024,{timeout:20000});
                 assert.equal(await page.locator('[data-l2d-canvas]').count(),2);
+                // ORIGINAL heroine, not the experimental duplicate: she must
+                // default to independent hair/skirt/arms on every fresh game.
+                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.assigned.player.id==='protagonist' &&
+                  window.PaperchalkL2DLibrary?.get('player')?.layers?.length===8,null,{timeout:25000});
+                const originalBones=await page.evaluate(()=>{
+                  const state=window.PaperchalkL2DLibrary.get('player');
+                  const m=state.model.parts,core=window.PaperchalkPartRigCore;
+                  const movement=id=>{
+                    const p=m[id],u=id==='skirt'?.2:.7;
+                    const a=core.warpPoint(p,u,.93,.2),b=core.warpPoint(p,u,.93,1.4);
+                    return Math.hypot(a.x-b.x,a.y-b.y);
+                  };
+                  return {id:window.PaperchalkCharacterDev.assigned.player.id,
+                    mode:state.actor.root.dataset.l2dMode,
+                    breath:state.actor.root.dataset.l2dBreath,
+                    backHair:movement('back_hair'),skirt:movement('skirt'),
+                    leftSleeve:movement('sleeve_left'),rightSleeve:movement('sleeve_right')};
+                });
+                assert.equal(originalBones.id,'protagonist');
+                assert.equal(originalBones.mode,'library-part-mesh');
+                assert.equal(originalBones.breath,'disabled');
+                for(const part of ['backHair','skirt','leftSleeve','rightSleeve'])
+                  assert.ok(originalBones[part]>.15,'original heroine '+part+' must swing on independent joints');
+                // Test the protected old V4 as an explicit backup, NOT default.
+                await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('v4'));
                 const motion=await page.evaluate(()=>{
                   const actor=window.PaperchalkL2D.get('player'),rig=actor.rig;
                   return {mode:actor.root.dataset.l2dMode,
