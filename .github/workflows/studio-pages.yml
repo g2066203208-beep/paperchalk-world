@@ -144,7 +144,9 @@ jobs:
           from PIL import Image
           cutout=Image.open('site/assets/characters/protagonist-front.webp').convert('RGBA')
           cw,ch=cutout.size
-          assert cutout.getpixel((round(cw*.5),round(ch*.69)))[3]<8,'White background left between legs'
+          # At 69% the left leg overlaps the center line in the real artwork.
+          # Sample the actual opening below the knees instead of skin pixels.
+          assert cutout.getpixel((round(cw*.5),round(ch*.74)))[3]<8,'White background left between legs'
           assert cutout.getpixel((round(cw*.47),round(ch*.39)))[3]>235,'Character accidentally removed'
           assert cw>=300 and ch>=950,'Game sprite has been downscaled unexpectedly'
           assert cutout.getpixel((0,0))[3]==0,'Top corner not transparent'
@@ -154,6 +156,9 @@ jobs:
           assert bw>=250 and bh>=900,(bw,bh)
           assert back.getpixel((0,0))[3]==0 and back.getpixel((bw-1,0))[3]==0
           assert back.getpixel((bw//2,bh//2))[3]>200,'Back-facing protagonist alpha is missing'
+          assert back.getpixel((round(bw*.5),round(bh*.74)))[3]<8,'Back leg gap still contains white'
+          assert (cw,ch)==(1024,1024) and (bw,bh)==(1024,1024),'Original artwork was resized'
+          # Original RGB and alpha are committed as immutable lossless WebP.
           assert 'transparent 15%,transparent 85%' in h
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
           assert 'reach=191.' in h and 'const reach=191+' in h
