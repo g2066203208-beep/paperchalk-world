@@ -123,7 +123,7 @@ class HeroineBreathRig{
   const hair=Math.exp(-Math.pow((nx-520)/110,2))*smooth(175,310,ny)*
     (1-smooth(335,475,ny));
   const skirt=smooth(520,610,ny)*(1-smooth(680,730,ny));
-  const sx=(2.0*hair+1.0*skirt)*this.softness*p*phase;
+  const sx=(3.2*hair+2.4*skirt)*this.softness*p*phase;
   return {x:(local.x+sx)*sw/1024,y:local.y*sh/1024};
  }
  blinkAmount(t){
