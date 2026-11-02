@@ -199,21 +199,17 @@ body.mobile-mode.virtual-landscape #view{
 @media(prefers-reduced-motion:reduce){#scene-menu,#novel-ui{transition:none}}
 @media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
 
-/* OPTIONAL scene-layer development editor: live planes, not a flattened mockup.
-   Outside dev mode the exact approved gameplay transforms remain unchanged. */
-#dev-trigger{
-  position:absolute;z-index:14;top:3.8cqh;left:48%;transform:translateX(-50%);
-  padding:5px 9px;border:0;background:transparent;color:#eee;
-  font:400 clamp(11px,2.0cqh,17px) var(--font-ui);letter-spacing:.09em;
-  opacity:.58;text-shadow:0 1px 5px #000;cursor:pointer;pointer-events:auto;
-}
-#dev-trigger:hover,#dev-trigger:focus-visible{opacity:1}
+/* One developer panel: fog on current scene; other layers in 3D. */
+#view.fog-edit-mode #novel-ui,#view.fog-edit-mode #scene-menu,
+#view.dev-mode #scene-menu{opacity:0!important;pointer-events:none!important}
+#dev-fog-tools[hidden],#dev-z-control[hidden],#dev-layer-actions[hidden],
+#dev-3d-controls[hidden]{display:none!important}
 #dev-stage{position:absolute;inset:0;z-index:9;overflow:hidden;touch-action:none;perspective:1150px}
 #dev-stage[hidden],#dev-tools[hidden]{display:none!important}
 #dev-rig{position:absolute;inset:0;transform-style:preserve-3d;
   transform-origin:50% 50%;will-change:transform;pointer-events:none}
 #view.dev-mode{perspective:none}
-#view.dev-mode #dev-trigger,#view.dev-mode #novel-ui,
+#view.dev-mode #novel-ui,
 #view.dev-mode #scene-transition{display:none!important}
 #view.dev-mode #dev-rig > #scene,
 #view.dev-mode #dev-rig > #enemy-depth-root,
@@ -316,7 +312,7 @@ body.mobile-mode.virtual-landscape #view{
 #view.dev-mode #dev-rig #actor-player:active{cursor:grabbing}
 #dev-tools{
   position:absolute;z-index:40;right:1.4cqw;top:2.5cqh;
-  width:min(298px,39cqw);max-height:95cqh;overflow:auto;
+  width:min(340px,46cqw);max-height:95cqh;overflow:auto;
   padding:12px 13px 14px;color:#eee;pointer-events:auto;
   font:13px var(--font-ui);background:rgba(10,14,18,.89);
   border:1px solid #777b80;border-radius:6px;touch-action:pan-y;
@@ -344,35 +340,17 @@ body.mobile-mode.virtual-landscape #view{
   #dev-tools input[type="range"]{margin:1px 0 4px}
   #dev-tools .dev-buttons{margin:4px 0}
 }
-/* Fog-only DEV is a true on-scene preview; it does not enter the 3D rig
-   or switch to the classroom. A dashed rectangle marks the guaranteed clear area. */
-#fog-safe-guide{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  z-index:9;pointer-events:none;box-sizing:border-box;
-  border:1px dashed rgba(147,248,195,.85);
-  box-shadow:0 0 0 1px rgba(0,0,0,.5);
-}
-#fog-safe-guide[hidden],#dev-fog-tools[hidden]{display:none!important}
-#dev-fog-tools{
-  position:absolute;z-index:30;right:1.5cqw;top:10cqh;
-  width:min(315px,45cqw);max-height:85cqh;overflow:auto;
-  border:1px solid rgba(128,164,178,.8);border-radius:6px;
-  padding:12px;background:rgba(10,14,17,.94);color:#e6f0f1;
-  font:12px var(--font-ui);pointer-events:auto;touch-action:pan-y;
-}
-#dev-fog-tools header{display:flex;align-items:center;justify-content:space-between;gap:8px}
-#dev-fog-tools strong{font-size:14px}
-#dev-fog-tools label{display:block;margin-top:9px}
+/* Integrated fog settings share the existing developer panel. */
+#fog-safe-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  z-index:9;pointer-events:none;box-sizing:border-box;border:1px dashed rgba(147,248,195,.85)}
+#fog-safe-guide[hidden]{display:none!important}
+#dev-fog-tools{border-top:1px solid #77929a;padding-top:7px;margin-top:8px}
+#dev-fog-tools label{display:block;margin-top:8px}
 #dev-fog-tools output{float:right;color:#9cdeb8;font-variant-numeric:tabular-nums}
-#dev-fog-tools input[type="range"]{width:100%;margin:5px 0;accent-color:#8cd9b6}
-#dev-fog-tools .fog-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
-#dev-fog-tools button{background:#23343b;color:#fff;border:1px solid #77929a;border-radius:3px;padding:6px;cursor:pointer}
+#dev-fog-tools input[type="range"]{width:100%;margin:4px 0;accent-color:#8cd9b6}
+#dev-fog-tools .fog-actions{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
 #dev-fog-tools p{font-size:11px;line-height:1.45;color:#bcd0ce}
-@container (max-height:450px){
-  #dev-fog-tools{top:2cqh;max-height:95cqh;width:min(315px,46cqw);padding:8px}
-  #dev-fog-tools label{margin-top:4px}
-  #dev-fog-tools input[type="range"]{margin:2px 0}
-}
+#dev-fog-tools button{cursor:pointer;border:1px solid #77929a;border-radius:3px;background:#23343b;color:white;padding:6px}
 /* Dynamic room selector reuses minimal UI, no new overlay during gameplay */
 #scene-menu-gallery{max-height:52cqh;overflow-y:auto;scrollbar-width:thin}
 #scene-switcher{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-height:45cqh;overflow-y:auto;scrollbar-width:thin}
@@ -395,7 +373,7 @@ body.mobile-mode.virtual-landscape #view{
       <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
         <button id="tilt-toggle" type="button">场景倾斜：开启</button>
-         <button id="menu-fog-debug" type="button" aria-controls="dev-fog-tools" aria-expanded="false">黑雾调试</button>
+         <button id="menu-dev" type="button" aria-controls="dev-tools">开发者 DEV</button>
         <button id="menu-settings-back" type="button">返回</button>
       </nav>
     </div>
@@ -419,7 +397,7 @@ body.mobile-mode.virtual-landscape #view{
       <button id="restart-button" type="button">重新开始</button>
       <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
-       <button id="game-fog-debug" type="button" aria-controls="dev-fog-tools" aria-expanded="false">黑雾调试</button>
+       <button id="game-dev" type="button" aria-controls="dev-tools">开发者 DEV</button>
        <button id="scene-switcher-toggle" type="button" aria-expanded="false">切换场景</button>
        <div id="scene-switcher" aria-label="已安装场景" hidden></div>
     </div>
@@ -432,30 +410,8 @@ body.mobile-mode.virtual-landscape #view{
   </div>
   <div id="scene-transition" data-phase="idle" data-active="false" aria-hidden="true"></div>
 
-  <button id="dev-trigger" type="button" aria-label="打开分层开发者模式">分层 DEV</button>
   <div id="fog-safe-guide" aria-hidden="true" hidden></div>
-  <aside id="dev-fog-tools" hidden aria-label="黑雾实时开发者调试">
-    <header><strong>黑雾 · 实时调试</strong><button id="dev-fog-close" type="button">关闭</button></header>
-    <p>当前场景直接预览，不切换房间。绿框内不绘制动态黑雾；从游戏菜单随时打开。</p>
-    <label for="fog-width">黑雾宽度 · 场景高度占比 <output id="fog-width-value"></output></label>
-    <input id="fog-width" type="range" min="0" max="14" step=".5">
-    <label for="fog-opacity">黑雾强度 <output id="fog-opacity-value"></output></label>
-    <input id="fog-opacity" type="range" min="0" max="100" step="1">
-    <label for="fog-offset">边缘距离 · 正值往里 / 负值往外 <output id="fog-offset-value"></output></label>
-    <input id="fog-offset" type="range" min="-30" max="45" step="1">
-    <label for="fog-safe">中央无雾安全区 <output id="fog-safe-value"></output></label>
-    <input id="fog-safe" type="range" min="65" max="98" step="1">
-    <label for="fog-solid">图片边缘纯黑保护 <output id="fog-solid-value"></output></label>
-    <input id="fog-solid" type="range" min="7" max="24" step="1">
-    <label for="fog-feather">边缘渐变过渡 <output id="fog-feather-value"></output></label>
-    <input id="fog-feather" type="range" min="0" max="35" step="1">
-    <div class="fog-actions">
-      <button id="fog-save" type="button">保存设置</button>
-      <button id="fog-reset" type="button">恢复轻雾默认</button>
-      <button id="fog-copy" type="button">复制参数</button>
-    </div>
-    <output id="fog-status" role="status" aria-live="polite"></output>
-  </aside>
+
   <div id="dev-stage" hidden aria-label="三维场景分层检查器">
     <div id="dev-rig">
       <div id="dev-ground" aria-label="水平三维参考地板与敌人脚点">
@@ -466,8 +422,9 @@ body.mobile-mode.virtual-landscape #view{
     </div>
   </div>
   <aside id="dev-tools" hidden aria-label="开发者分层编辑面板">
-    <header><strong>分层开发者模式</strong><button id="dev-exit" type="button">完成 / 返回</button></header>
-    <p>拖动空白区域旋转镜头；滚轮缩放；右键拖动平移。拖动人物可直接改位置。</p>
+    <header><strong>DEV · 分层与黑雾</strong><button id="dev-exit" type="button">完成 / 返回</button></header>
+    <p>黑雾直接在当前场景预览；其他图层切换到 3D 视图，拖动空白处旋转镜头。</p>
+    <div id="dev-3d-controls">
     <div class="dev-buttons">
       <button id="dev-front" type="button">正视角</button>
       <button id="dev-side" type="button">侧视角</button>
@@ -477,6 +434,7 @@ body.mobile-mode.virtual-landscape #view{
     <label class="dev-floor-toggle" for="dev-ground-toggle">
       <input id="dev-ground-toggle" type="checkbox" checked>显示 3D 透视地板
     </label>
+    </div>
     <label for="dev-layer">正在编辑图层</label>
     <select id="dev-layer">
       <option value="enemy">02 / 敌人</option>
@@ -499,9 +457,32 @@ body.mobile-mode.virtual-landscape #view{
       <output id="dev-ground-delta" class="dev-value"></output>
       <p>绿色网格是真实水平面；橙色圈是敌人的参考脚点，用来观察是否悬空或穿地。</p>
     </div>
-    <label for="dev-z">图层深度（Z）<output id="dev-z-value" class="dev-value"></output></label>
-    <input id="dev-z" type="range" min="-420" max="350" step="5">
-    <div class="dev-buttons">
+    <div id="dev-z-control">
+      <label for="dev-z">图层深度（Z）<output id="dev-z-value" class="dev-value"></output></label>
+      <input id="dev-z" type="range" min="-420" max="350" step="5">
+    </div>
+  <section id="dev-fog-tools" hidden aria-label="黑雾实时参数">
+    <p>当前场景直接预览，不切换房间。绿框内没有动态黑雾。</p>
+    <label for="fog-width">黑雾宽度 · 场景高度占比 <output id="fog-width-value"></output></label>
+    <input id="fog-width" type="range" min="0" max="14" step=".5">
+    <label for="fog-opacity">黑雾强度 <output id="fog-opacity-value"></output></label>
+    <input id="fog-opacity" type="range" min="0" max="100" step="1">
+    <label for="fog-offset">边缘距离 · 正值往里 / 负值往外 <output id="fog-offset-value"></output></label>
+    <input id="fog-offset" type="range" min="-30" max="45" step="1">
+    <label for="fog-safe">中央无雾安全区 <output id="fog-safe-value"></output></label>
+    <input id="fog-safe" type="range" min="65" max="98" step="1">
+    <label for="fog-solid">图片边缘纯黑保护 <output id="fog-solid-value"></output></label>
+    <input id="fog-solid" type="range" min="7" max="24" step="1">
+    <label for="fog-feather">边缘渐变过渡 <output id="fog-feather-value"></output></label>
+    <input id="fog-feather" type="range" min="0" max="35" step="1">
+    <div class="fog-actions">
+      <button id="fog-save" type="button">保存设置</button>
+      <button id="fog-reset" type="button">恢复轻雾默认</button>
+      <button id="fog-copy" type="button">复制参数</button>
+    </div>
+    <output id="fog-status" role="status" aria-live="polite"></output>
+  </section>
+    <div class="dev-buttons" id="dev-layer-actions">
       <button id="dev-save" type="button">保存位置</button>
       <button id="dev-reset" type="button">恢复默认</button>
       <button id="dev-copy" type="button">复制参数</button>
@@ -1099,7 +1080,7 @@ void main(){
   window.addEventListener('keydown',e=>{
     if(transitioning)return;
     if(e.key==='Escape'){
-      if(!document.getElementById('dev-fog-tools').hidden){showFogEditor(false)}
+      if(editorActive)exitDeveloper();
       else if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;galleryOptions.hidden=true;mainOptions.hidden=false}
       else if(logOpen)toggleLog();
       else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
@@ -1376,6 +1357,12 @@ void main(){
     const config=editorConfig[selectedLayer];
     devSelect.value=selectedLayer;
     devActorControls.hidden=!(selectedLayer==='enemy'||selectedLayer==='player');
+    const fogMode=selectedLayer==='fog';
+    document.getElementById('dev-fog-tools').hidden=!fogMode;
+    document.getElementById('dev-z-control').hidden=fogMode;
+    document.getElementById('dev-layer-actions').hidden=fogMode;
+    document.getElementById('dev-3d-controls').hidden=fogMode;
+    if(fogMode)refreshFogEditor();
     devFloorControls.hidden=selectedLayer!=='ground';
     document.getElementById('dev-ground-y').value=String(editorConfig.ground.y);
     document.getElementById('dev-ground-y-value').textContent=editorConfig.ground.y+'%';
@@ -1389,54 +1376,48 @@ void main(){
       }
     }
   }
+  function useRig(active){
+    if(active && !layerAnchors.size){
+      for(const plane of devPlanes){
+        const mark=document.createComment('original position for '+plane.id);
+        plane.before(mark);layerAnchors.set(plane,mark);devRig.appendChild(plane);
+      }
+    }else if(!active && layerAnchors.size){
+      for(const plane of devPlanes){
+        const mark=layerAnchors.get(plane);
+        if(mark)mark.replaceWith(plane);
+      }
+      layerAnchors.clear();
+    }
+    view.classList.toggle('dev-mode',active);
+    devStage.hidden=!active;
+    if(active){applyEditorVisuals();applyDevCamera()}
+  }
   function selectEditorLayer(name){
     if(!editorConfig[name])return;
-    selectedLayer=name;refreshEditorControls();
-    devStage.dataset.selected=name;
-  }
-  function enterDeveloper(){
-    if(editorActive||transitioning)return;
-    if(stage.dataset.scene!=='classroom')openScene('classroom');
-    editorActive=true;
-    for(const plane of devPlanes){
-      const mark=document.createComment('original position for '+plane.id);
-      plane.before(mark);layerAnchors.set(plane,mark);devRig.appendChild(plane);
+    selectedLayer=name;
+    if(editorActive){
+      useRig(name!=='fog');
+      view.classList.toggle('fog-edit-mode',name==='fog');
+      fogGuide.hidden=name!=='fog';
     }
-    view.classList.add('dev-mode');
-    devStage.hidden=false;devTools.hidden=false;
-    applyEditorVisuals();applyDevCamera();selectEditorLayer(selectedLayer);
-    setDevStatus('正在查看实时图层');
-    start();
+    refreshEditorControls();devStage.dataset.selected=name;start();
+  }
+  function enterDeveloper(layer='fog'){
+    if(transitioning)return;
+    editorActive=true;devTools.hidden=false;
+    menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
+    selectEditorLayer(layer);
+    setDevStatus(layer==='fog'?'当前场景 · 黑雾实时调整':'3D 分层检查');
   }
   function exitDeveloper(){
     if(!editorActive)return;
-    editorActive=false;view.classList.remove('dev-mode');
-    for(const plane of devPlanes){
-      const mark=layerAnchors.get(plane);
-      if(mark)mark.replaceWith(plane);
-    }
-    layerAnchors.clear();
-    devStage.hidden=true;devTools.hidden=true;
-    start();
+    editorActive=false;useRig(false);
+    view.classList.remove('fog-edit-mode');
+    fogGuide.hidden=true;devTools.hidden=true;start();
   }
-  // Independent on-scene fog tuning: no reparenting and no forced classroom.
-  const fogPanel=document.getElementById('dev-fog-tools');
-  const fogMenuButtons=[
-    document.getElementById('menu-fog-debug'),
-    document.getElementById('game-fog-debug')
-  ];
   const fogGuide=document.getElementById('fog-safe-guide');
   const fogStatus=document.getElementById('fog-status');
-  function showFogEditor(open){
-    fogPanel.hidden=!open;fogGuide.hidden=!open;
-    for(const button of fogMenuButtons)button.setAttribute('aria-expanded',String(open));
-    if(open){
-      menuChoices.hidden=true;
-      menuButton.setAttribute('aria-expanded','false');
-    }
-    if(open)refreshFogEditor();
-    applyFogSettings();start();
-  }
   function refreshFogEditor(){
     for(const [key,value] of Object.entries(fogConfig)){
       const input=document.getElementById('fog-'+key);
@@ -1452,10 +1433,9 @@ void main(){
       fogStatus.textContent='实时预览中 · 尚未保存';
     });
   }
-  for(const button of fogMenuButtons){
-    button.addEventListener('click',()=>showFogEditor(fogPanel.hidden));
+  for(const id of ['menu-dev','game-dev']){
+    document.getElementById(id).addEventListener('click',()=>enterDeveloper('fog'));
   }
-  document.getElementById('dev-fog-close').addEventListener('click',()=>showFogEditor(false));
   document.getElementById('fog-save').addEventListener('click',()=>{
     try{localStorage.setItem(FOG_KEY,JSON.stringify(fogConfig));fogStatus.textContent='已保存，切换房间后生效'}
     catch(_){fogStatus.textContent='本浏览器禁止本地保存'}
@@ -1471,8 +1451,7 @@ void main(){
     catch(_){window.prompt('复制黑雾参数',json)}
   });
   applyFogSettings();
-  if(new URLSearchParams(location.search).get('fogdev')==='1')showFogEditor(true);
-  document.getElementById('dev-trigger').addEventListener('click',enterDeveloper);
+  if(new URLSearchParams(location.search).get('fogdev')==='1')enterDeveloper('fog');
   document.getElementById('dev-exit').addEventListener('click',exitDeveloper);
   devSelect.addEventListener('change',()=>selectEditorLayer(devSelect.value));
   devGroundToggle.addEventListener('change',()=>{
@@ -1591,14 +1570,12 @@ void main(){
     img.addEventListener('pointercancel',end);
   }
   document.addEventListener('keydown',e=>{
-    if(e.key==='F2'){
-      e.preventDefault();editorActive?exitDeveloper():enterDeveloper();
-    }else if(e.key==='Escape'&&editorActive){e.preventDefault();exitDeveloper()}
+    if(e.key==='Escape'&&editorActive){e.preventDefault();exitDeveloper()}
   },true);
   applyEditorVisuals();
   enemyImage.addEventListener('load',applyEditorVisuals);
   if(new URLSearchParams(location.search).get('dev')==='1'){
-    enterDeveloper();
+    enterDeveloper('enemy');
   }
   function tick(now){
     raf=0;if(document.hidden)return;
