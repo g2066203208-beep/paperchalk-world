@@ -33,6 +33,38 @@ section.innerHTML=[
  '<p class="tip">导入完整 PSD 后驱动真正独立的头发、衣服、四肢图层；原版 V4 则保留原有逐帧动画并叠加局部形变。</p>'
 ].join('');
 document.querySelector('aside.right')?.prepend(section);
+const stage=document.getElementById('stage');
+const stageToolbar=stage?.querySelector('.stage-toolbar');
+const motionControls=$('l2d-secondary-controls');
+if(stage&&stageToolbar&&motionControls){
+ const toggle=document.createElement('button');
+ toggle.id='main-dynamics';
+ toggle.type='button';toggle.textContent='🎚 动作调节';
+ toggle.title='调节头发、裙摆、手臂、腿部及速度 · 大画布直接预览';
+ toggle.setAttribute('aria-expanded','false');
+ toggle.setAttribute('aria-controls','l2d-motion-drawer');
+ stageToolbar.append(toggle);
+ const drawer=document.createElement('div');
+ drawer.id='l2d-motion-drawer';
+ drawer.hidden=true;
+ drawer.setAttribute('role','region');
+ drawer.setAttribute('aria-label','人物局部动作控制器');
+ const close=document.createElement('button');
+ close.type='button';close.id='l2d-close-drawer';close.textContent='× 收起';
+ drawer.append(close,motionControls);
+ stage.append(drawer);
+ function showMotionDrawer(show){
+  drawer.hidden=!show;
+  toggle.setAttribute('aria-expanded',String(show));
+  toggle.textContent=show?'🎚 收起调节':'🎚 动作调节';
+ }
+ toggle.addEventListener('click',()=>showMotionDrawer(drawer.hidden));
+ close.addEventListener('click',()=>showMotionDrawer(false));
+ window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!drawer.hidden)showMotionDrawer(false);
+ });
+}
+
 function sync(){
  const q=motion[S.side]||defaults();
  $('l2d-strength').value=Math.round(q.amplitude*100);
