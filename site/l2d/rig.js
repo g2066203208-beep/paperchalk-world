@@ -44,6 +44,7 @@ class HeroineBreathRig{
   this.ready=this.setImage(image);
  }
  async setImage(im){
+  this.psdParts=null;
   this.image=im;
   if(!im)return this;
   if(!(im instanceof HTMLCanvasElement)&&!(im instanceof ImageBitmap)&&(!im.complete||!im.naturalWidth)){
@@ -79,7 +80,13 @@ class HeroineBreathRig{
    g.drawImage(im,Number(part.x)||0,Number(part.y)||0);
   }
   g.globalAlpha=1;
-  this.animatedFrames=false;return this.setImage(surface);
+  this.animatedFrames=false;
+  await this.setImage(surface);
+  // Keep EACH original PSD bitmap for independently articulated rendering.
+  this.psdParts=parts.filter(p=>p.visible!==false&&p.image).map(p=>({
+   image:p.image,x:Number(p.x)||0,y:Number(p.y)||0,name:String(p.name||''),
+   opacity:clamp(Number(p.opacity??1),0,1)}));
+  this.render(performance.now(),true);return this;
  }
  setPaused(paused){if(paused===!this.playing)return;this.playing=!paused;if(!paused)this.t0=performance.now()-this.frozen;}
  setBones(show){this.drawBones=!!show;this.render(performance.now(),true);}
@@ -186,6 +193,117 @@ class HeroineBreathRig{
   }
   g.restore();
  }
+
+ // Anatomical driver: each imported Photoshop bitmap has its own transform.
+ // Hair and skirt use triangular skinned meshes; face components follow head.
+ // The foot artwork is absolutely fixed to the baseline ground position.
+ psdTarget(x,y,part,t){
+  const name=part.name.toLowerCase().replace(/[\s_-]/g,'');
+  const s=(v,a,b)=>{let n=clamp((v-a)/(b-a),0,1);return n*n*(3-2*n)};
+  const p=t*2*Math.PI/this.period,a=this.amplitude,soft=this.softness;
+  const slow=Math.sin(p*.71-.42),float=Math.sin(p),lag=Math.sin(p*.71-.75);
+  let X=x,Y=y;
+  const around=(px,py,angle)=>{
+   const dx=X-px,dy=Y-py;
+   X=px+Math.cos(angle)*dx-Math.sin(angle)*dy;
+   Y=py+Math.sin(angle)*dx+Math.cos(angle)*dy;
+  };
+  const torso=(factor=1)=>{
+   X+=2.7*a*slow*factor;Y-=1.65*a*float*factor;
+   around(518,520,.0075*a*slow*factor);
+  };
+  const head=()=>{torso();around(535,211,.016*a*lag);X+=1.8*a*slow;};
+  if(/footwear|鞋/.test(name))return {x:X,y:Y};
+  if(/legwear|双腿/.test(name)){
+   X+=2.7*a*slow*.45*(1-s(y,690,930));return {x:X,y:Y};
+  }
+  if(/bottomwear|百褶裙|裙子/.test(name)){
+   torso(.68);around(518,520,.006*a*Math.sin(p*.63-.6));
+   const tip=s(y,498,633),edge=(x-508)/115;
+   X+=soft*a*tip*tip*(6.3*Math.sin(p*.91-.8+edge*.8)+2.5*Math.sin(p*1.56+edge));
+   Y+=soft*a*tip*tip*1.8*Math.sin(p-.5+edge);return {x:X,y:Y};
+  }
+  if(/topwear|上身|外套|校服/.test(name)){
+   torso(1-s(y,455,620)*.42);const upper=1-s(y,300,540);
+   X+=(x-525)*.0038*a*float*upper;
+   Y-=.8*a*float*upper;return {x:X,y:Y};
+  }
+  if(/handwear|手臂|挥手/.test(name)){
+   const left=s(475-x,0,85);torso(1-s(y,405,615)*.4);
+   if(left>.01){around(452,257,-.023*a*Math.sin(p*.77-1)*left);
+    X+=left*s(275-y,0,150)*1.9*a*Math.sin(p*.77-.5);}
+   else X+=.75*a*Math.sin(p-.9)*s(y,415,580);
+   return {x:X,y:Y};
+  }
+  if(/backhair|后发|马尾/.test(name)){
+   head();const tip=s(y,140,275),edge=(x-535)/80;
+   X+=soft*a*tip*tip*(8.5*Math.sin(p*.77-1.1)+3.2*Math.sin(p*1.31+edge));
+   Y+=soft*a*tip*tip*1.9*Math.sin(p*.71-.8);return {x:X,y:Y};
+  }
+  if(/fronthair|刘海|前发/.test(name)){
+   head();const tip=s(y,80,156);
+   X+=soft*a*tip*tip*2.1*Math.sin(p*.87-1.25+(x-530)/65);
+   return {x:X,y:Y};
+  }
+  head();
+  if(/mouth|嘴/.test(name)){
+   const q=1+.12*Math.sin(p*1.8);
+   Y=169+(Y-169)*q;
+  }else if(/irides|虹膜|瞳孔/.test(name)){
+   X+=2.4*a*Math.sin(p*.46-.8);Y=133+(Y-133)*(1-.73*this.blinkAmount(t));
+  }else if(/eyewhite|眼白|eyelash|睫毛/.test(name)){
+   Y=133+(Y-133)*(1-.68*this.blinkAmount(t));
+  }else if(/eyebrow|眉/.test(name))Y-=.55*a*Math.sin(p*.41);
+  return {x:X,y:Y};
+ }
+ renderPSDParts(t){
+  const g=this.ctx,W=this.canvas.width,H=this.canvas.height,sx=W/1024,sy=H/1024;
+  const tri=(src,A,B,C,D,E,F)=>{
+   const ux=B.x-A.x,uy=B.y-A.y,vx=C.x-A.x,vy=C.y-A.y,det=ux*vy-uy*vx;
+   if(Math.abs(det)<.001)return;
+   const dx1=E.x-D.x,dy1=E.y-D.y,dx2=F.x-D.x,dy2=F.y-D.y;
+   const aa=(dx1*vy-dx2*uy)/det,bb=(dy1*vy-dy2*uy)/det;
+   const cc=(dx2*ux-dx1*vx)/det,dd=(dy2*ux-dy1*vx)/det;
+   const ee=D.x-aa*A.x-cc*A.y,ff=D.y-bb*A.x-dd*A.y;
+   g.save();g.setTransform(aa*sx,bb*sy,cc*sx,dd*sy,ee*sx,ff*sy);
+   // Expand each mesh triangle enough to hide diagonal sampling seams.
+   const mx=(A.x+B.x+C.x)/3,my=(A.y+B.y+C.y)/3;
+   const expand=V=>{let k=1+1.25/Math.max(1,Math.hypot(V.x-mx,V.y-my));return [mx+(V.x-mx)*k,my+(V.y-my)*k]};
+   g.beginPath();g.moveTo(...expand(A));g.lineTo(...expand(B));g.lineTo(...expand(C));g.closePath();g.clip();
+   const minx=Math.max(0,Math.floor(Math.min(A.x,B.x,C.x))-1);
+   const miny=Math.max(0,Math.floor(Math.min(A.y,B.y,C.y))-1);
+   const maxx=Math.min(src.width,Math.ceil(Math.max(A.x,B.x,C.x))+1);
+   const maxy=Math.min(src.height,Math.ceil(Math.max(A.y,B.y,C.y))+1);
+   if(maxx>minx&&maxy>miny)
+    g.drawImage(src,minx,miny,maxx-minx,maxy-miny,minx,miny,maxx-minx,maxy-miny);
+   g.restore();
+  };
+  g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  for(const part of this.psdParts){
+   const src=part.image,w=src.width,h=src.height;
+   if(!w||!h)continue;
+   const x=part.x,y=part.y,soft=/back.?hair|front.?hair|后发|刘海|bottomwear|裙|handwear|手臂/i.test(part.name);
+   g.globalAlpha=part.opacity;
+   if(!soft){
+    const A=this.psdTarget(x,y,part,t),B=this.psdTarget(x+w,y,part,t),C=this.psdTarget(x,y+h,part,t);
+    g.save();g.setTransform((B.x-A.x)/w*sx,(B.y-A.y)/w*sy,
+      (C.x-A.x)/h*sx,(C.y-A.y)/h*sy,A.x*sx,A.y*sy);
+    g.drawImage(src,0,0);g.restore();
+   }else{
+    const cols=Math.max(3,Math.ceil(w/32)),rows=Math.max(4,Math.ceil(h/27));
+    const xs=Array.from({length:cols+1},(_,i)=>i*w/cols);
+    const ys=Array.from({length:rows+1},(_,i)=>i*h/rows);
+    const points=ys.map(v=>xs.map(u=>this.psdTarget(x+u,y+v,part,t)));
+    for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+     const A={x:xs[col],y:ys[row]},B={x:xs[col+1],y:ys[row]};
+     const C={x:xs[col],y:ys[row+1]},D={x:xs[col+1],y:ys[row+1]};
+     const a=points[row][col],b=points[row][col+1],cc=points[row+1][col],d=points[row+1][col+1];
+     tri(src,A,B,C,a,b,cc);tri(src,B,D,C,b,d,cc);
+    }
+   }
+  }
+  g.globalAlpha=1;
+ }
  render(now=performance.now(),force=false){
   if(!this.source)return;
   if(!force&&now-this.last<40)return;
@@ -198,6 +316,11 @@ class HeroineBreathRig{
   g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);
   const t=(this.playing?(now-this.t0):this.frozen)/1000;
   if(this.playing)this.frozen=now-this.t0;
+  if(this.psdParts?.length){
+   this.renderPSDParts(t);
+   if(this.drawBones)this.drawBoneRig(t);
+   return;
+  }
   if(this.amplitude<.0001){
    g.drawImage(this.source,0,0,W,H);
    this.drawBoneRig(t);return;
