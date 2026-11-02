@@ -13,7 +13,7 @@ panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</stro
 <p id="rig-source">仅试验独立纹理；不修改原始 V4。</p>
 <label>部件<select id="rig-part"></select></label>
 <div id="rig-sliders"></div>
-<div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button></div>
+<div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button></div>
 <p id="rig-status" role="status">绿色轴点、黄色末端均可在主画布直接拖动。</p>`;
 stage.append(panel);
 const sliders=$('rig-sliders');
@@ -91,6 +91,18 @@ toggle.onclick=()=>state.active?deactivate():activate().catch(e=>info(e.message)
 $('rig-close').onclick=deactivate;
 $('rig-part').onchange=e=>select(e.target.value);
 $('rig-save').onclick=()=>save();
+$('rig-export').onclick=()=>{
+ if(!state.model)return;
+ const clone=JSON.parse(JSON.stringify(state.model));
+ clone.exportedAt=new Date().toISOString();
+ const data=new Blob([JSON.stringify(clone,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(data),a=document.createElement('a');
+ a.href=url;a.download=state.model.characterId+'-'+state.model.face+'-part-rig.json';
+ document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),10000);
+ info('已导出当前人物 '+Object.keys(clone.parts).length+' 个独立部件的绑定备份，不包含或修改原始图片');
+};
+
 $('rig-zero').onclick=()=>{const p=current();if(!p)return;
  p.motion.x=0;p.motion.y=0;p.motion.angle=0;p.motion.phase=0;
  values();changed();};
