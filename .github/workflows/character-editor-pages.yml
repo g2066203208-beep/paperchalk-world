@@ -48,16 +48,13 @@ jobs:
           const fs=require('fs');
           const s=fs.readFileSync('site/character-editor/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
           new Function(s);
-          for(const file of ['site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js','site/character-editor/studio.js','site/character-editor/neck-collar.js'])
+          for(const file of ['site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js','site/character-editor/studio.js'])
             new Function(fs.readFileSync(file,'utf8'));
-          const neckAssets=JSON.parse(fs.readFileSync('site/assets/characters/protagonist-psd-neck-collar.json','utf8'));
-          for(const [part,box] of [['neck',[496,160,57,74]],['collar',[474,190,106,95]]]){
-            const src=neckAssets.front[part];
-            if(JSON.stringify([src.x,src.y,src.w,src.h])!==JSON.stringify(box))throw Error('Original PSD '+part+' bounds mismatch');
-            const bytes=Buffer.from(src.image.slice('data:image/png;base64,'.length),'base64');
-            if(bytes.toString('hex',0,8)!=='89504e470d0a1a0a')throw Error('Invalid source PNG '+part);
-            if(bytes.readUInt32BE(16)!==box[2]||bytes.readUInt32BE(20)!==box[3])throw Error('Wrong PSD PNG dimensions '+part);
-          }
+          const editor=fs.readFileSync('site/character-editor/studio.js','utf8');
+          if(!editor.includes('importComponentFiles')||!editor.includes('shouldDrawLayer'))
+            throw Error('Universal source-component editor missing');
+          if(fs.readFileSync('site/character-editor/index.html','utf8').includes('neck-collar.js'))
+            throw Error('Obsolete neck/collar injection still loaded');
           const game=fs.readFileSync('site/index.html','utf8');
           if(!game.includes('data-l2d-actor="player"')||!game.includes('data-l2d-actor="enemy"'))throw Error('universal L2D actor bindings missing');
           if(game.includes('id="menu-character-breath"'))throw Error('legacy heroine-only link must be absent');
