@@ -345,46 +345,15 @@ body.mobile-mode.virtual-landscape #view{
 #scene-switcher{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-height:45cqh;overflow-y:auto;scrollbar-width:thin}
 #scene-switcher button{min-height:30px}
 
-/* Original player image remains the sole positioning & DEV interaction anchor.
-   L2D canvas mirrors its real measured rectangle, never re-stacks the PSD. */
-#camera-player-root #actor-player-l2d{
+/* Runtime L2D is the ONLY visible character renderer. Invisible images
+   remain as layout/DEV drag targets; both player and every NPC use canvas. */
+[data-l2d-image]{opacity:0!important}
+[data-l2d-actor] [data-l2d-canvas]{
  position:absolute;display:block;width:auto;height:auto;max-width:none;
  left:0;top:0;pointer-events:none;user-select:none;image-rendering:auto;
 }
-#camera-player-root[data-breath-ready="true"] #actor-player{
- opacity:0; /* keep original hit testing and exact layout */
-}
-@media(prefers-reduced-motion:reduce){
- #camera-player-root[data-breath-ready="true"] #actor-player{opacity:1}
- #camera-player-root #actor-player-l2d{display:none}
-}
-
-
-/* In-game layer authoring, not a separate website. Full viewport remains
-   usable on desktop and portrait phone, regardless of 3D scene rotation. */
-#dev-character-controls[hidden],#dev-character-overlay[hidden]{display:none!important}
-#dev-character-overlay{
-  position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;
-  background:#090d13;color:#eef3fa;font-family:var(--font-ui);
-  overflow:hidden;pointer-events:auto;
-}
-#dev-character-overlay .dev-character-toolbar{
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
-  gap:7px;padding:7px 12px;background:#131a24;border-bottom:1px solid #405166;
-}
-#dev-character-overlay .dev-character-toolbar strong{font-size:13px}
-#dev-character-overlay .dev-character-toolbar div{display:flex;gap:6px;flex-wrap:wrap}
-#dev-character-overlay button{
-  color:#e5eefa;background:#263140;border:1px solid #4d6177;
-  font:12px var(--font-ui);padding:7px 9px;border-radius:5px;cursor:pointer;
-}
-#dev-character-overlay #dev-character-apply{background:#1e5249;border-color:#4fae97}
-#dev-character-frame{flex:1;width:100%;height:100%;min-height:0;border:0;background:#0c121c}
-body.character-editing #dev-tools{visibility:hidden;pointer-events:none}
-@media(max-width:550px){
- #dev-character-overlay .dev-character-toolbar{padding:5px 8px}
- #dev-character-overlay button{padding:6px;font-size:11px}
-}
+[data-l2d-actor]:not([data-l2d-state="ready"]) [data-l2d-canvas]{visibility:hidden}
+[data-l2d-actor][data-l2d-state="ready"] [data-l2d-canvas]{visibility:visible}
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
@@ -405,18 +374,19 @@ body.character-editing #dev-tools{visibility:hidden;pointer-events:none}
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
         <button id="tilt-toggle" type="button">场景倾斜：开启</button>
          <button id="menu-dev" type="button" aria-controls="dev-tools">开发者 DEV</button>
-        <button id="menu-character-breath" type="button" onclick="location.href='./l2d/'">女主角 · 呼吸预览</button>
+        
         <button id="menu-settings-back" type="button">返回</button>
       </nav>
     </div>
   </figure>
-  <div id="enemy-depth-root" aria-label="第二景深层：敌人（在黑雾后方）" hidden>
-    <img id="actor-enemy" alt="预留敌人图层（暂无人物素材）" draggable="false" hidden>
+  <div id="enemy-depth-root" data-l2d-actor="enemy" aria-label="第二景深层：敌人（在黑雾后方）" hidden>
+    <img id="actor-enemy" data-l2d-image alt="NPC 素材布局锚点" draggable="false" hidden>
+    <canvas id="actor-enemy-l2d" data-l2d-canvas width="1024" height="1024" aria-label="NPC L2D 动画画布"></canvas>
   </div>
   <canvas id="fog" aria-hidden="true"></canvas>
-  <div id="camera-player-root" aria-label="镜头前景层：玩家（在黑雾前方）" hidden>
-    <img id="actor-player" src="./assets/characters/protagonist-back.webp" alt="背对镜头的主角" draggable="false">
-    <canvas id="actor-player-l2d" width="1024" height="1024" aria-hidden="true"></canvas>
+  <div id="camera-player-root" data-l2d-actor="player" aria-label="镜头前景层：玩家（在黑雾前方）" hidden>
+    <img id="actor-player" data-l2d-image src="./assets/characters/protagonist-back.webp" alt="背对镜头的主角素材定位锚点" draggable="false">
+    <canvas id="actor-player-l2d" data-l2d-canvas width="1024" height="1024" aria-label="主角 L2D 动画画布"></canvas>
   </div>
   <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
     <nav id="top-menu" aria-label="游戏菜单">
@@ -484,15 +454,17 @@ body.character-editing #dev-tools{visibility:hidden;pointer-events:none}
       <label for="dev-size">角色大小 <output id="dev-size-value" class="dev-value"></output></label>
       <input id="dev-size" type="range" min="12" max="120" step=".5">
     </div>
-    <section id="dev-character-controls" hidden aria-label="人物素材与分层绘画">
-      <p style="color:#c9ddec">人物编辑 · 直接在游戏里修改各个导入角色（正面 / 背面分别存档）。</p>
-      <label for="dev-character-list">当前人物</label>
-      <select id="dev-character-list" style="width:100%"><option value="protagonist">女主角</option></select>
+    <section id="dev-character-controls" aria-label="游戏已加载人物的统一 L2D 编辑">
+      <p style="color:#c9ddec">全人物 L2D 编辑 · 选择游戏已加载人物，修改分层 / 骨骼 / 呼吸。</p>
+      <label for="dev-character-list">游戏中已加载的人物</label>
+      <select id="dev-character-list" style="width:100%"></select>
+      <label for="dev-character-library">替换为已有角色素材</label>
+      <select id="dev-character-library" style="width:100%"></select>
       <label for="dev-character-angle">人物方向</label>
       <select id="dev-character-angle" style="width:100%"><option value="front">正面</option><option value="back">背面</option></select>
       <div class="dev-buttons">
-        <button id="dev-character-use" type="button">使用此人物</button>
-        <button id="dev-character-open" type="button">✎ 分层补画 / PSD</button>
+        <button id="dev-character-use" type="button">切换所选角色</button>
+        <button id="dev-character-open" type="button">✎ 编辑所选人物 L2D</button>
       </div>
       <label for="dev-character-import">导入新的游戏人物（PNG / WebP）</label>
       <input id="dev-character-import" type="file" accept="image/png,image/webp,image/jpeg" multiple style="width:100%;max-width:100%">
@@ -539,7 +511,7 @@ body.character-editing #dev-tools{visibility:hidden;pointer-events:none}
   </aside>
   <div id="dev-character-overlay" hidden role="dialog" aria-modal="true" aria-label="游戏人物分层补画编辑器">
     <div class="dev-character-toolbar">
-      <strong>DEV / 游戏人物分层编辑</strong>
+      <strong>DEV / 全人物 L2D 分层 / 骨骼编辑</strong>
       <div>
         <button id="dev-character-apply" type="button">应用到游戏</button>
         <button id="dev-character-export" type="button">导出分层 ZIP</button>
@@ -1679,45 +1651,7 @@ void main(){
 </script>
 
 <script src="./l2d/rig.js"></script>
-<script>
-/* Installed as a final, independent module: existing story/fog code untouched. */
-(function(){
- 'use strict';
- const player=document.getElementById('actor-player');
- const root=document.getElementById('camera-player-root');
- const canvas=document.getElementById('actor-player-l2d');
- if(!player||!root||!canvas||!window.HeroineBreathRig)return;
- let rig=null;
- async function init(){
-  try{
-   rig=new HeroineBreathRig(player,canvas,{
-    amplitude:.55,period:4.8,cleanup:true,
-    playing:!matchMedia('(prefers-reduced-motion:reduce)').matches
-   });
-   await rig.ready;rig.start();root.dataset.breathReady='true';
-  }catch(error){
-   root.dataset.breathReady='false';player.style.opacity='1';
-   console.warn('Player breathing preview fallback to original image',error);
-  }
- }
- function sync(){
-  // The existing image is authoritative for layout, including environment
-  // scene CSS !important rules and the developer's custom player size/offset.
-  const w=player.offsetWidth,h=player.offsetHeight;
-  if(w&&h){
-   canvas.style.left=player.offsetLeft+'px';
-   canvas.style.top=player.offsetTop+'px';
-   canvas.style.width=w+'px';canvas.style.height=h+'px';
-   if(rig)rig.setPaused(root.hidden||document.hidden);
-  }
-  requestAnimationFrame(sync);
- }
- player.addEventListener('load',()=>{if(rig)rig.setImage(player);});
- init();requestAnimationFrame(sync);
- window.paperchalkPlayerBreath={get rig(){return rig},canvas,player};
-})();
-</script>
-
+<script src="./l2d/runtime.js"></script>
 <script src="./dev/character-bridge.js"></script>
 </body>
 </html>
