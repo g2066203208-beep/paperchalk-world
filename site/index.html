@@ -878,8 +878,8 @@ void main(){
     stage.dataset.sceneTitle=def.title;
     stage.dataset.sceneVersion=def.version||'built-in';
     // Character placement belongs to the actor, not the background image.
-    // Re-apply the one saved player transform whenever a scene changes.
-    applyEditorVisuals();
+    // Keep the saved actor transform on every room: do not reset it here.
+    // applyEditorVisuals() runs during initial DEV setup after editorConfig exists.
     view.classList.toggle('environment-scene',def.type==='environment');
     sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=!isStory;
     if(isMenu){
