@@ -83,6 +83,12 @@ quick.append(fitButton);
 const faceButton=el('button',{id:'easy-face',type:'button',title:'放大脸部区域'},'面部');
 faceButton.onclick=()=>$('face')?.click();
 quick.append(faceButton);
+const undoQuick=el('button',{id:'easy-undo',type:'button',title:'撤销上一步（Ctrl+Z）'},'↶ 撤销');
+undoQuick.onclick=()=>$('btnUndo')?.click();
+quick.append(undoQuick);
+const redoQuick=el('button',{id:'easy-redo',type:'button',title:'重做上一步（Ctrl+Y）'},'↷ 重做');
+redoQuick.onclick=()=>$('btnRedo')?.click();
+quick.append(redoQuick);
 const edit=el('button',{id:'easy-edit',type:'button',title:'停止动画并精修选中部件'},'编辑部件');
 quick.append(edit);
 const animate=el('button',{id:'easy-animate',type:'button',title:'退出精修，查看角色在游戏里的动画'},'▶ 看动画');
@@ -148,6 +154,12 @@ function applyMode(){
  requestAnimationFrame(()=>requestAnimationFrame(()=>{$('fit')?.click();sync();}));
 }
 modeButton.onclick=()=>{expert=!expert;applyMode()};
+window.addEventListener('keydown',e=>{
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){
+  e.preventDefault();
+  if(!bSave?.disabled)bSave?.click();
+ }
+});
 layerList?.addEventListener('click',e=>{
  // Selecting a genuine component should enter pixel-accurate editing
  // automatically. Visibility and lock buttons keep their original actions.
