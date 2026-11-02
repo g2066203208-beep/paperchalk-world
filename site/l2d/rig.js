@@ -38,9 +38,9 @@ class HeroineBreathRig{
   this.period=opts.period||4.6;this.playing=opts.playing!==false;
   this.drawBones=!!opts.drawBones;this.cleanup=opts.cleanup!==false;
   this.softness=Math.max(0,Math.min(2.4,Number(opts.softness??1)));this.animatedFrames=!!opts.animatedFrames;
-  this.hairSwing=clamp(Number(opts.hairSwing??2.5),0,5);
-  this.skirtSwing=clamp(Number(opts.skirtSwing??2.2),0,5);
-  this.armSwing=clamp(Number(opts.armSwing??1.8),0,5);
+  this.hairSwing=clamp(Number(opts.hairSwing??3),0,5);
+  this.skirtSwing=clamp(Number(opts.skirtSwing??2.8),0,5);
+  this.armSwing=clamp(Number(opts.armSwing??2.2),0,5);
   this.legSwing=clamp(Number(opts.legSwing??0),0,5);
   this.swaySpeed=clamp(Number(opts.swaySpeed??1),.5,2.5);
   this.featurePreset=opts.featurePreset||'generic';this.blinkEnabled=this.featurePreset==='heroine-front';
