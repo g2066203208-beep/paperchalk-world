@@ -28,7 +28,7 @@ body.mobile-mode.virtual-landscape #view{
   transform-origin:top left;transform:rotate(90deg);
 }
 #scene{
-  --rim-solid:18px;--rim-feather:8px;
+  --rim-solid:24px;--rim-feather:8px;
   position:relative;flex:none;margin:0;
   width:min(94vw,calc(94dvh * 16 / 9));
   width:min(94cqw,calc(94cqh * 16 / 9));
@@ -472,7 +472,7 @@ body.mobile-mode.virtual-landscape #view{
     <label for="fog-safe">中央无雾安全区 <output id="fog-safe-value"></output></label>
     <input id="fog-safe" type="range" min="65" max="98" step="1">
     <label for="fog-solid">图片边缘纯黑保护 <output id="fog-solid-value"></output></label>
-    <input id="fog-solid" type="range" min="7" max="24" step="1">
+    <input id="fog-solid" type="range" min="10" max="32" step="1">
     <label for="fog-feather">边缘渐变过渡 <output id="fog-feather-value"></output></label>
     <input id="fog-feather" type="range" min="0" max="35" step="1">
     <div class="fog-actions">
@@ -595,9 +595,9 @@ void main(){
   // Live persisted fog controls, intentionally separate from 3D layer editor.
   // Large values remain user-adjustable, but the clear-zone hard-clips smoke.
   const FOG_KEY='paperchalk-fog-edge-v1';
-  const fogDefaults=Object.freeze({width:4,opacity:40,offset:-3,safe:88,solid:18,feather:8});
+  const fogDefaults=Object.freeze({width:4,opacity:40,offset:-3,safe:88,solid:24,feather:8});
   const fogBounds=Object.freeze({width:[0,14],opacity:[0,100],offset:[-30,45],
-                                 safe:[65,98],solid:[10,24],feather:[0,35]});
+                                 safe:[65,98],solid:[10,32],feather:[0,35]});
   function cleanFog(raw){
     const result={...fogDefaults};
     if(!raw||typeof raw!=='object')return result;
