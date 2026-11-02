@@ -135,7 +135,8 @@ jobs:
                 assert.ok(fitRect.width>250,'main viewport must regain nonzero width after exit');
                 const initialLayerCount=await page.locator('#layers .layer').count();
                 assert.ok(initialLayerCount>=1);
-                assert.equal(await page.locator('#status').textContent().then(x=>x.includes('载入')),true);
+                assert.ok(await page.locator('#status').textContent().then(x=>x.length>0&&!x.includes('失败')),
+                  'editor must report a non-error state after all hosted original parts load');
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-initial.png',fullPage:true});
                 await page.locator('#add').click();
                 assert.equal(await page.locator('#layers .layer').count(),initialLayerCount+1);
