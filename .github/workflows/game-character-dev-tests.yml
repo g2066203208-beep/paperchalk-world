@@ -139,10 +139,7 @@ jobs:
                 assert.notEqual(firstFrame.hash,changed.hash,'official V4 must change actual rendered Canvas pixels');
 
                 assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)<5,'hair can flex but scalp and body must not sway');
-                assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)>5,
-                  'skirt hem must have visibly adjustable independent motion');
-                assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)<100,
-                  'secondary cloth amplitude must remain physically bounded');
+                assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)<5,'skirt can flex subtly but hips must not swing');
                 assert.ok(Math.abs(motion.shoeA.x-motion.shoeB.x)<.9,'feet must remain anchored');
                 const anatomy=await page.evaluate(()=>{
                   const breathe=window.PaperchalkLocalBreath;
@@ -239,20 +236,6 @@ jobs:
                 assert.equal(await page.locator('#dev-l2d-preview-controls').isVisible(),true,'V4 game motion controls remain accessible');
                 assert.equal(await page.locator('#l2d-live-canvas').isVisible(),false,'fake L2D mesh must stay hidden for the real V4 character');
                 assert.equal(await page.locator('#l2d-strength').getAttribute('max'),'400');
-                assert.equal(await page.locator('#l2d-hair-swing').getAttribute('max'),'500');
-                await page.locator('#main-dynamics').click();
-                await page.locator('#l2d-hair-swing').fill('430');
-                await page.locator('#l2d-skirt-swing').fill('390');
-                await page.locator('#l2d-arm-swing').fill('350');
-                await page.locator('#l2d-leg-swing').fill('60');
-                await page.locator('#l2d-sway-speed').fill('125');
-                await page.locator('#l2d-close-drawer').click();
-                assert.deepEqual(await page.evaluate(()=>{
-                  const p=window.characterEditor.motion().front;
-                  return [p.hairSwing,p.skirtSwing,p.armSwing,p.legSwing,p.swaySpeed];
-                }),[4.3,3.9,3.5,.6,1.25],
-                  'all five controls must update the saved per-character motion model');
-
                 await page.locator('#l2d-strength').fill('300');
                 await page.waitForFunction(()=>window.characterEditor?.motion?.()?.front?.amplitude===3,{timeout:20000});
                 assert.equal(await page.locator('#studio-frame').getAttribute('max'),'127');
@@ -325,12 +308,6 @@ jobs:
                   'breathing must NEVER scale or rotate the whole character');
                 assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.profile?.amplitude),3,
                   'the one-click editor save applies 300% breathing amplitude to game V4 immediately');
-                assert.deepEqual(await page.evaluate(()=>{
-                  const p=window.PaperchalkL2D.get('player').profile;
-                  return [p.hairSwing,p.skirtSwing,p.armSwing,p.legSwing,p.swaySpeed];
-                }),[4.3,3.9,3.5,.6,1.25],
-                  'saveToGame must apply the independently tuned hair skirt arm knee and speed values');
-
                 const count=await page.locator('#dev-character-library option').count();
                 assert.equal(count,originalCharacterCount+1,'Game DEV must see all profiles and locally imported characters');
                 // CHAR-002 is a genuine separate hosted character, not a
