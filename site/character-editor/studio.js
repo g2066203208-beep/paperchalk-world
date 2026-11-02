@@ -82,6 +82,7 @@ function change(id,face='front'){
  return pending;
 }
 async function changeCore(id,face='front'){
+ if(currentId&&v4&&frameLayer)await persistCorrections();
  if(!list.has(id))throw Error('角色不在已导入列表中：'+id);
  currentId=id;side=face==='back'?'back':'front';
  options();direction.value=side;
@@ -93,6 +94,7 @@ async function changeCore(id,face='front'){
  const builtin=id==='protagonist'?{url:new URL('../assets/l2d/v4/'+side+'.webp',location.href).href,
    crop:{x:351,y:9,w:335,h:1013},edition:'V4-official'}:null;
  await showClip(override||builtin);
+ await loadCorrectionLayers();
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
  history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game');
 }
@@ -180,46 +182,245 @@ async function importV4(file){
  message('✓ '+count+' 个 V4 动态方向已导入当前人物；游戏使用原版动态帧，不再使用静态背面。');
 }
 async function showClip(info){
+ const previous=v4;
  v4=null;
+ if(previous?.decoder)try{previous.decoder.close()}catch(_){}
  const uri=info?.data||info?.url||'';
  $('studio-v4-wrap').hidden=!uri;
- if(!uri){ed.l2dRig?.()?.start();return;}
- const img=new Image();
- await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=uri});
- v4={img,crop:info.crop||{x:351,y:9,w:335,h:1013},edition:info.edition||'V4-imported'};
- if(showOriginalV4)ed.l2dRig?.()?.stop();
- $('studio-v4-mode').textContent=showOriginalV4?'切换到图层实时变形':'切换到原版 V4 动画';
+ document.body.classList.toggle('v4-authoring',!!uri);
+ if(!uri){globalLayer=null;frameLayer=null;ed.l2dRig?.()?.start();ed.render();return;}
+ const token=++switchNonce;
+ const surface=ed.make(1024,1024),crop=info.crop||{x:351,y:9,w:335,h:1013};
+ let decoder=null,img=null,count=128;
+ try{
+  if(typeof ImageDecoder!=='function')throw Error('此浏览器未提供 ImageDecoder');
+  const res=await fetch(uri);
+  if(!res.ok)throw Error('V4 动画请求失败 HTTP '+res.status);
+  decoder=new ImageDecoder({data:await res.arrayBuffer(),type:'image/webp',preferAnimation:true});
+  await decoder.tracks.ready;
+  count=decoder.tracks.selectedTrack?.frameCount||128;
+ }catch(e){
+  if(decoder)try{decoder.close()}catch(_){}
+  decoder=null;
+  img=await new Promise((ok,no)=>{
+   const element=new Image();element.onload=()=>ok(element);element.onerror=()=>no(Error('V4 图片加载失败'));element.src=uri;
+  });
+  message('注意：此浏览器不能精确解码 V4 帧。请使用支持 WebCodecs 的浏览器精修逐帧动画。');
+ }
+ if(token!==switchNonce){if(decoder)decoder.close();return;}
+ v4={decoder,img,count,crop,surface,frame:-1,busy:false,edition:info.edition||'V4-imported'};
+ frameIndex=0;activePaintFrame=0;playing=false;playingSince=0;
+ $('studio-frame').max=String(Math.max(0,count-1));
+ $('studio-frame').value='0';$('studio-frame-label').textContent='0 / '+(count-1);
+ $('studio-play').textContent='播放';
+ ed.l2dRig?.()?.stop();
+ await drawFrame(0);
 }
-function loop(t){
- if(v4&&t-frameAt>=48){
-  frameAt=t;
-  const {img,crop}=v4;
-  if(img.complete&&img.naturalWidth){
-   const draw=canvas=>{
-    if(!canvas)return;
-    const g=canvas.getContext('2d');
-    g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,1024,1024);
-    g.drawImage(img,crop.x,crop.y,crop.w,crop.h);
-   };
-   draw($('studio-v4-canvas'));
-   if(showOriginalV4)draw($('l2d-live-canvas'));
+function drawBackdrop(ctx){
+ if(!v4||!showOriginalV4)return;
+ ctx.drawImage(v4.surface,0,0);
+ // During playback, paint corrections for the *actual* V4 frame.
+ if(playing&&frameFrames[frameIndex]){
+  const cached=frameImageCache.get(frameIndex);
+  if(cached)ctx.drawImage(cached,0,0);
+ }
+}
+const frameImageCache=new Map();
+async function drawFrame(index){
+ const clip=v4;
+ if(!clip||clip.busy)return;
+ clip.busy=true;
+ try{
+  const g=clip.surface.getContext('2d',{alpha:true});
+  let image=null;
+  if(clip.decoder){
+   const decoded=await clip.decoder.decode({frameIndex:index});
+   image=decoded.image;
+  }else image=clip.img;
+  if(v4!==clip){if(clip.decoder)image?.close();return;}
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,1024,1024);
+  g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  g.drawImage(image,clip.crop.x,clip.crop.y,clip.crop.w,clip.crop.h);
+  if(clip.decoder)image.close();
+  clip.frame=index;
+  const thumb=$('studio-v4-canvas'),t=thumb.getContext('2d');
+  t.clearRect(0,0,1024,1024);t.drawImage(clip.surface,0,0);
+  ed.render();
+ }catch(e){console.warn('V4 frame error',e);message('V4 解码失败：'+e.message);}
+ finally{clip.busy=false;}
+}
+function originalLayer(p){
+ return /^(原始素材|原始角色合成参考|原网站合成参考)/.test(p.name);
+}
+function blankOrSaved(data){
+ const c=ed.make();
+ if(data){
+  const im=new Image();
+  im.onload=()=>{c.getContext('2d').clearRect(0,0,1024,1024);c.getContext('2d').drawImage(im,0,0);ed.render();};
+  im.src=data;
+ }
+ return c;
+}
+async function loadCorrectionLayers(){
+ if(!v4){globalLayer=null;frameLayer=null;frameFrames={};return;}
+ const arr=ed.S.layers[side];
+ for(const part of arr)if(originalLayer(part))part.visible=false;
+ globalLayer=arr.find(x=>x.name==='V4 · 全帧修补');
+ if(!globalLayer){
+  globalLayer=ed.layer('V4 · 全帧修补',null,0,0,false);
+  arr.push(globalLayer);
+ }
+ frameLayer=arr.find(x=>x.name==='V4 · 当前帧修补');
+ if(!frameLayer){
+  frameLayer=ed.layer('V4 · 当前帧修补',null,0,0,false);
+  arr.push(frameLayer);
+ }
+ frameFrames=await get('frames:'+currentId+':'+side)||{};
+ frameImageCache.clear();
+ frameLayer.canvas.getContext('2d').clearRect(0,0,1024,1024);
+ const scope=$('studio-edit-scope').value||'all';
+ frameLayer.visible=scope==='frame'&&!playing;
+ ed.S.sel=Math.max(0,arr.indexOf(scope==='frame'?frameLayer:globalLayer));
+ await loadFrameImage(0);
+ ed.renderList();ed.render();
+}
+function hasPaint(canvas){
+ const arr=canvas.getContext('2d',{willReadFrequently:true})
+  .getImageData(0,0,canvas.width,canvas.height).data;
+ for(let i=3;i<arr.length;i+=4)if(arr[i])return true;
+ return false;
+}
+function snapshotFrame(){
+ if(!frameLayer||!v4||playing)return;
+ if(hasPaint(frameLayer.canvas)){
+  const url=frameLayer.canvas.toDataURL('image/png');
+  frameFrames[activePaintFrame]=url;
+  const im=new Image();
+  im.src=url;frameImageCache.set(activePaintFrame,im);
+ }else{delete frameFrames[activePaintFrame];frameImageCache.delete(activePaintFrame);}
+}
+async function loadFrameImage(idx){
+ if(!frameLayer)return;
+ const c=frameLayer.canvas,g=c.getContext('2d');
+ g.clearRect(0,0,c.width,c.height);
+ const data=frameFrames[idx];
+ if(data){
+  const img=new Image();
+  await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=data;});
+  g.drawImage(img,0,0);frameImageCache.set(idx,img);
+ }
+ activePaintFrame=idx;ed.render();
+}
+async function seek(index){
+ if(!v4)return;
+ if(!playing)snapshotFrame();
+ frameIndex=Math.max(0,Math.min(v4.count-1,Number(index)||0));
+ $('studio-frame').value=String(frameIndex);
+ $('studio-frame-label').textContent=frameIndex+' / '+(v4.count-1);
+ if(!playing)await loadFrameImage(frameIndex);
+ await drawFrame(frameIndex);
+}
+function collectGlobalOverlay(){
+ const c=ed.make(),g=c.getContext('2d');
+ for(const p of ed.S.layers[side]){
+  if(!p.visible||p===frameLayer||originalLayer(p))continue;
+  g.globalAlpha=p.opacity;
+  g.drawImage(p.canvas,p.x,p.y);
+ }
+ g.globalAlpha=1;return c;
+}
+async function persistCorrections(){
+ if(!v4||!currentId||!globalLayer)return;
+ if(!playing)snapshotFrame();
+ const c=collectGlobalOverlay();
+ const general=hasPaint(c)?c.toDataURL('image/png'):null;
+ await put('overlay:'+currentId+':'+side,general);
+ await put('frames:'+currentId+':'+side,frameFrames);
+}
+function frameLoop(t){
+ if(v4&&!document.hidden){
+  if(playing){
+   const idx=Math.floor((t-playingSince)/50)%v4.count;
+   if(frameIndex!==idx&&!v4.busy){
+    frameIndex=idx;$('studio-frame').value=String(idx);
+    $('studio-frame-label').textContent=idx+' / '+(v4.count-1);
+    drawFrame(idx);
+   }
   }
  }
- requestAnimationFrame(loop);
+ requestAnimationFrame(frameLoop);
 }
+$('studio-frame').oninput=e=>{if(playing){playing=false;$('studio-play').textContent='播放';}
+ seek(Number(e.target.value)).catch(err=>message(err.message));};
+$('studio-play').onclick=async()=>{
+ if(!v4)return;
+ if(!playing){
+  snapshotFrame();
+  playing=true;frameLayer.visible=false;
+  playingSince=performance.now()-frameIndex*50;
+  $('studio-play').textContent='暂停';
+ }else{
+  playing=false;
+  frameLayer.visible=$('studio-edit-scope').value==='frame';
+  $('studio-play').textContent='播放';
+  await loadFrameImage(frameIndex);
+ }
+ ed.renderList();ed.render();
+};
+$('studio-edit-scope').onchange=()=>{
+ if(!v4)return;
+ if(!playing)snapshotFrame();
+ frameLayer.visible=$('studio-edit-scope').value==='frame'&&!playing;
+ ed.S.sel=ed.S.layers[side].indexOf(frameLayer.visible?frameLayer:globalLayer);
+ ed.renderList();ed.render();
+};
 $('studio-v4-mode').onclick=()=>{
  showOriginalV4=!showOriginalV4;
- $('studio-v4-mode').textContent=showOriginalV4?'切换到图层实时变形':'切换到原版 V4 动画';
- const rig=ed.l2dRig?.();
- if(showOriginalV4)rig?.stop();else rig?.start();
- window.dispatchEvent(new Event('paperchalk:studio-mode-changed'));
+ $('studio-v4-mode').textContent=showOriginalV4?'隐藏 V4 背景':'显示 V4 背景';
+ ed.render();
 };
+let suspendAutobackup=false;
+window.addEventListener('paperchalk:art-dirty',()=>{
+ if(suspendAutobackup||!v4)return;
+ clearTimeout(correctionTimer);
+ correctionTimer=setTimeout(()=>persistCorrections().catch(e=>message('自动存档失败：'+e.message)),2100);
+});
+$('studio-patch-export').onclick=async()=>{
+ if(!v4)return;
+ await persistCorrections();
+ const front=await Promise.all(['front','back'].map(async face=>({
+  side:face,overlay:await get('overlay:'+currentId+':'+face),
+  frames:await get('frames:'+currentId+':'+face)||{}
+ })));
+ const out={format:'paperchalk-v4-corrections-v1',characterId:currentId,profile:ed.motion?.(),sides:front,createdAt:new Date().toISOString()};
+ const blob=new Blob([JSON.stringify(out)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='l2d-v4-'+currentId+'-corrections.json';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ message('✓ 已导出 V4 精修备份（含独立正背面及关键帧）。');
+};
+$('studio-patch-import').onchange=async e=>{
+ const file=e.target.files?.[0];e.target.value='';
+ if(!file)return;
+ try{
+  const data=JSON.parse(await file.text());
+  if(data.format!=='paperchalk-v4-corrections-v1'||data.characterId!==currentId)throw Error('角色或文件格式不一致');
+  for(const face of data.sides||[]){
+   if(!['front','back'].includes(face.side))continue;
+   await put('overlay:'+currentId+':'+face.side,face.overlay||null);
+   await put('frames:'+currentId+':'+face.side,face.frames||{});
+  }
+  await loadCorrectionLayers();
+  message('✓ 已导入当前人物 V4 修补备份。');
+ }catch(e){message('导入失败：'+e.message)}
+};
+
 selector.onchange=()=>change(selector.value,direction.value).catch(e=>message(e.message));
 direction.onchange=()=>change(selector.value,direction.value).catch(e=>message(e.message));
 $('studio-save').onclick=()=>saveToGame().catch(e=>message('保存失败：'+e.message));
 $('studio-back').onclick=()=>location.assign(new URL('../?dev=1',location.href).href);
 $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='';importImages(files).catch(x=>message('导入失败：'+x.message));};
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,useV4:()=>!!v4&&showOriginalV4,get current(){return currentId},get edition(){return v4?.edition||'mesh'}};
-requestAnimationFrame(loop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
+window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get current(){return currentId},get edition(){return v4?.edition||'mesh'}};
+requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
