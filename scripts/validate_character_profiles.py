@@ -72,12 +72,16 @@ assert male["fields"]["visualProduction"]["frontReference"]["status"] == "approv
 assert "尚未绘制" in male["fields"]["visualProduction"]["backReference"]["value"], "male back portrait remains pending"
 
 assert male2["recordCode"] == "CHAR-016" and male2["canonicalId"] == "male-second-transfer-candidate"
-assert male2["recordState"].startswith("design_candidate")
+assert male2["recordState"].startswith("front_art_baseline_selected_")
 assert male2["fields"]["measurements"]["heightCm"]["value"] == 173
 assert male2["fields"]["measurements"]["heightCm"]["status"] == "proposed"
 assert "1boy, solo" in male2["fields"]["visualProduction"]["promptPositive"]["value"]
 assert len(male2["fields"]["visualProduction"]["promptPositive"]["value"].split()) < 500
-assert male2["fields"]["visualProduction"]["frontReference"]["status"] == "unknown"
+assert male2["fields"]["visualProduction"]["frontReference"]["value"] == "site/assets/characters/char-016/front.png"
+assert male2["fields"]["visualProduction"]["frontReference"]["status"] == "approved_art_reference"
+assert male2["fields"]["face"]["eyeColor"]["value"].startswith("暖茶棕色")
+assert male2["fields"]["face"]["eyeColor"]["status"] == "approved_art_reference"
+assert (ROOT / "site/assets/characters/char-016/reference-sheet.png").is_file()
 assert male2["fields"]["visualProduction"]["backReference"]["status"] == "unknown"
 assert hero["fields"]["temperament"]["coreConfirmedTraits"]["value"] == ["毒舌", "冷淡"]
 assert hero["fields"]["temperament"]["coreConfirmedTraits"]["status"] == "user_confirmed"
@@ -104,7 +108,7 @@ assert hero["fields"]["visualProduction"]["frontReference"]["value"].endswith("p
 assert hero["fields"]["visualProduction"]["backReference"]["value"].endswith("protagonist-back.webp")
 registered = json.loads((ROOT / "site/data/characters/registry.json").read_text(encoding="utf-8"))
 assert not any(c["id"] == male2["canonicalId"] for c in registered["characters"]), (
-    "male 2 is a planned character with no approved artwork, cannot be a playable actor"
+    "male 2 has an approved front PNG but still has no game actor registration or Live2D rig"
 )
 assert not any(c["id"] == male["canonicalId"] for c in registered["characters"]), (
     "draft male lead must not become a game actor before artwork approval"
