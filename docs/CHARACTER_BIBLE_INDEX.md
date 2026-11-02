@@ -13,7 +13,8 @@
 | **CHAR-004 视觉参考已入库** | 暂未注册正式游戏ID | 女三：可爱假小子、爽朗行动派 | **[第三版选中原图（全身＋脸部特写）](../site/assets/characters/char-004/reference-sheet.png)**，1024×1024；面相、发型、表情及服装参考已确认；不是透明单人图 | **视觉参考通过；演出站姿、单人透明素材、背面、PSD、L2D待制作** | [女三设计与素材档案](characters/CHAR-004_FEMALE_THIRD_PROFILE.md) |
 | **CHAR-020 男三设计档案** | `male-third-youthful-candidate`（尚未游戏注册） | 男三：可爱小正太系男高中生，浅茶棕短发和灰绿眼为候选 | **没有已验收原画**，人物信息、模型参数未获审批 | **22类448项候选已建立** | [机器档案](characters/CHAR-020.profile.json) · [448项逐条可读](characters/CHAR-020_MALE_THIRD_PROFILE.md) |
 | **CHAR-005 女四人设** | `female-fourth-capable-tsundere-heiress-candidate`（未正式注册） | **全能能干的傲娇大小姐**；旧纪律委员设定已否决 | **无已验收原画**，具体造型仍为提案 | 22类448字段候选；双手空着、同校制服 | [448字段](characters/CHAR-005.profile.json) · [逐项可读档案](characters/CHAR-005_FEMALE_FOURTH_PROFILE.md) |
-| CHAR-006～015、CHAR-017～019、CHAR-021起 | 尚未分配正式身份 | 其余规划人物 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
+| **CHAR-008 教师候选** | `class-teacher-geography-candidate`（未正式注册游戏） | 成年女教师兼班主任，科目暂拟地理，28岁、温和幽默、独立生活（均为方案） | 无用户已验收正背面原画、PSD、L2D | **448项人设已建立** | [逐条档案](characters/CHAR-008_FEMALE_TEACHER_PROFILE.md) · [机器448字段](characters/CHAR-008.profile.json) |
+| CHAR-006～007、CHAR-009～015、CHAR-017～019、CHAR-021起 | 尚未分配正式身份 | 其余规划人物 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
 
 **重要：** “教室主角”“卧室主角”“正面主角”“背面主角”“L2D 主角”都不是新身份，只能引用 `protagonist`。旧临时恐怖敌人没有独立的正式人物身份，也不得因为历史素材名称而复活。
 
@@ -81,3 +82,7 @@
 ## CHAR-005 女四更新（2026-11-03）
 
 核心定位由用户指定为**全能能干的傲娇大小姐**；原“纪律委员”概念明确弃用，不能复活成常规校园干部。必须会实际处理学习、运动、料理、家务、采购预算、团队分工和突发问题，能力来自真实训练。戏剧弱点是完美主义和难以求助，而非无能。校服保持同校色系、默认单人正面全身双手空置，具体发色、面相及穿法要经过用户批准原画。见[完整档案](characters/CHAR-005_FEMALE_FOURTH_PROFILE.md)。
+
+## CHAR-008 女教师（2026-11-03）
+
+本次人物设计将CHAR-008原有的班主任规划占位发展为成年女教师的**448字段完整设计候选**，包含外貌和尺寸、衣服款式、职业技能、真实独立生活、家庭关系、情绪、剧情与技术制作规范。**28岁、地理教师、唐予安、深烟紫棕低马尾、雾青灰眼、职业装均为候选**。除用户要求“制作老师角色并把448字段保存到GitHub”外，其余细节尚需批准。当前无批准人物母图与L2D，不能将此文字当作完成制作。[查看完整档案](characters/CHAR-008_FEMALE_TEACHER_PROFILE.md)。

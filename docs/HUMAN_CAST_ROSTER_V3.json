@@ -207,17 +207,34 @@
       "id": "CHAR-008",
       "group": "other",
       "tier": "important",
-      "label": "班主任",
+      "label": "年轻女教师／班主任（地理学科与个人造型均为候选）",
       "visual": {
-        "face": "宽椭圆脸、厚上睑、鼻梁平缓",
-        "hair": "烟棕色盘发",
-        "build": "170cm参考、端庄",
-        "gesture": "两手拢住文件但不固定道具"
+        "face": "成人感圆方鹅蛋脸，上半脸略宽、下颌圆方，避开女主的尖锐冷淡脸；深雾青灰／低饱和石青灰绿（候选）",
+        "hair": "深烟紫棕色，室内更接近棕黑而非纯黑（候选）；自然人物右侧偏分6:4",
+        "build": "169cm／57kg／7.3头身（仅设计参考）",
+        "gesture": "工作服单人自然站立，双手空着，面相亲切而有成熟感",
+        "outfit": "米白衬衫＋灰蓝轻外搭＋墨灰蓝长裤＋低跟鞋，非学生制服（候选）"
       },
-      "personality": "克制负责、对制度有顾虑",
-      "storyFunction": "课程表与课室规则",
+      "personality": "温和幽默、有原则、能够独立处理专业教学与现实生活问题；有工作压力与个人生活（候选）",
+      "storyFunction": "从城市地图、课堂与校舍布局、时刻表的变化发现异常线索，同时遵守教师保护学生的职业责任（候选）",
       "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "artStatus": "448_field_profile_no_approved_character_art",
+      "previousPlanningCandidate": {
+        "label": "班主任",
+        "visual": {
+          "face": "宽椭圆脸、厚上睑、鼻梁平缓",
+          "hair": "烟棕色盘发",
+          "build": "170cm参考、端庄",
+          "gesture": "两手拢住文件但不固定道具"
+        },
+        "personality": "克制负责、对制度有顾虑",
+        "storyFunction": "课程表与课室规则",
+        "status": "proposed",
+        "artStatus": "concept_not_approved"
+      },
+      "profilePath": "docs/characters/CHAR-008.profile.json",
+      "readableProfilePath": "docs/characters/CHAR-008_FEMALE_TEACHER_PROFILE.md",
+      "lastProfileUpdate": "2026-11-03"
     },
     {
       "id": "CHAR-009",

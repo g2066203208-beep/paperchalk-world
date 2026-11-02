@@ -65,3 +65,7 @@
 ### 男三CHAR-020｜448项人物候选
 
 [逐条可读档案](docs/characters/CHAR-020_MALE_THIRD_PROFILE.md) · [机器JSON](docs/characters/CHAR-020.profile.json)。小正太系男性高中生，原画、PSD、L2D和游戏演员注册仍待完成。原CHAR-020田径女生为未批准候选，保留历史记录。
+
+### CHAR-008 成年女教师候选｜448项人设
+
+[完整中文448项](docs/characters/CHAR-008_FEMALE_TEACHER_PROFILE.md) · [机器字段JSON](docs/characters/CHAR-008.profile.json)。已有班主任占位升级为年轻女教师的独立生活和职业人设设计方案；外观及具体传记待审批，未制作原画、PSD、Live2D或正式演员。
