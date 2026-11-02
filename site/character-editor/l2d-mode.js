@@ -33,6 +33,7 @@ function sync(){
  $('l2d-softness-value').textContent=Math.round(q.softness*100)+'%';
 }
 function schedule(){
+ if(window.PaperchalkStudio?.isV4&&window.PaperchalkStudio?.useV4?.()){rig?.stop();return;}
  if(!S.ready||S.busy||!window.PaperchalkL2DRig)return;
  clearTimeout(timer);timer=setTimeout(async()=>{
   if(!S.ready||S.busy)return;
@@ -90,7 +91,7 @@ if(typeof oldSwitch==='function'){
   const r=await oldSwitch.call(this,target,face);sync();schedule();return r;
  };
 }
-window.addEventListener('paperchalk:studio-mode-changed',()=>schedule());
+window.addEventListener('paperchalk:studio-mode-changed',()=>{if(!window.PaperchalkStudio?.isV4)schedule();});
 window.addEventListener('paperchalk:studio-character-loaded',event=>{
  currentId=event.detail?.id||'default';
  motion=loadMotion();
