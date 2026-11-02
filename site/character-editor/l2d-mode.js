@@ -39,13 +39,15 @@ function schedule(){
   try{
    const q=motion[S.side]||defaults();
    if(!rig){
-    rig=new PaperchalkL2DRig(ed.composite(S.side),$('l2d-live-canvas'),{...q,cleanup:false});
+    rig=new PaperchalkL2DRig(ed.composite(S.side),$('l2d-live-canvas'),{...q,cleanup:false,featurePreset:currentId==='protagonist'&&S.side==='front'?'heroine-front':'generic'});
     await rig.ready;rig.start();
    }
    await rig.setLayers(S.layers[S.side].map(p=>({
     canvas:p.canvas,name:p.name,x:p.x,y:p.y,visible:p.visible,opacity:p.opacity
    })),[1024,1024]);
    rig.setAmplitude(q.amplitude);rig.setPeriod(q.period);
+   rig.featurePreset=currentId==='protagonist'&&S.side==='front'?'heroine-front':'generic';
+   rig.blinkEnabled=rig.featurePreset==='heroine-front';
    rig.setSoftness(q.softness);rig.setBones(bones);rig.setPaused(paused);
   }catch(e){$('status').textContent='L2D 动态预览错误：'+e.message;}
  },125);
