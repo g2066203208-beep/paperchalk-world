@@ -57,6 +57,9 @@ jobs:
                 assert.equal(await page.locator('#l2d-secondary-controls input[type="range"]').count(),5,
                   'hair, skirt, arms, legs and speed have independent real sliders');
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:15000});
+                await page.locator('#main-dynamics').click();
+                assert.equal(await page.locator('#l2d-motion-drawer').isVisible(),true,
+                  'motion controls must open directly over animated main stage');
                 await page.locator('#l2d-hair-swing').fill('450');
                 await page.waitForFunction(()=>window.characterEditor.motion().front.hairSwing===4.5,{timeout:12000});
                 assert.equal(await page.locator('#l2d-hair-swing-value').textContent(),'450%');
@@ -80,6 +83,7 @@ jobs:
                 assert.deepEqual(secondary.feet,{x:460,y:963},'foot remains fixed');
                 await page.locator('#l2d-expressive').click();
                 assert.equal(await page.evaluate(()=>window.characterEditor.motion().front.armSwing),2.8);
+                await page.locator('#l2d-close-drawer').click();
 
                 assert.ok(await page.locator('body.easy-mode').count()===1,'simple mode is the default');
                 assert.ok(await page.locator('#easy-save-note').textContent().then(x=>x.includes('浏览器')),'save must disclose browser-only persistence');
