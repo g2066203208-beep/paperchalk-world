@@ -70,6 +70,8 @@ jobs:
           assert 'function enterDeveloper()' in h and 'function exitDeveloper()' in h
           assert 'id="dev-ground"' in h and 'rotateX(90deg)' in h
           assert 'ground:{y:77,z:-215,visible:1}' in h
+          assert 'enemy:{x:46,y:16,size:34,z:-190}' in h
+          assert 'left:46%;bottom:16%;height:34%' in h
           assert 'cameraPlayer.style.transform=' in h
           assert 'float safetyBlack=' in h and 'const safetyBlack=' in h
           assert '#fog{z-index:3}' in h and '#scene{z-index:1}' in h
@@ -147,6 +149,28 @@ jobs:
                 assert.equal(await page.locator('#novel-ui').isVisible(),true);
                 assert.equal(await page.locator('#scene-menu').isVisible(),false);
                 assert.equal(await page.locator('#source').evaluate(el=>el.naturalWidth),1024);
+                const composition=await page.evaluate(()=>{
+                  const stage=document.getElementById('enemy-depth-root');
+                  const art=document.getElementById('actor-enemy');
+                  const stageBox=stage.getBoundingClientRect();
+                  const artBox=art.getBoundingClientRect();
+                  return {
+                    x:parseFloat(art.style.left),
+                    bottom:parseFloat(art.style.bottom),
+                    h:parseFloat(art.style.height),
+                    centerX:(artBox.left+artBox.width/2-stageBox.left)/stageBox.width,
+                    footY:(artBox.bottom-stageBox.top)/stageBox.height,
+                    heightRatio:artBox.height/stageBox.height
+                  };
+                });
+                assert.deepEqual([composition.x,composition.bottom,composition.h],[46,16,34],
+                  'enemy default composition did not update');
+                assert.ok(composition.centerX>.50&&composition.centerX<.55,
+                  'enemy not near middle of classroom aisle');
+                assert.ok(Math.abs(composition.footY-.84)<.02,
+                  'enemy feet not grounded in the lower aisle');
+                assert.ok(Math.abs(composition.heightRatio-.34)<.03,
+                  'enemy still disproportionately large relative to background');
                 for(const id of ['actor-enemy','actor-player']){
                   const art=page.locator('#'+id);
                   assert.equal(await art.isVisible(),true,'character not shown: '+id);
@@ -290,7 +314,7 @@ jobs:
                 assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.style.left),'55%');
                 await page.locator('#dev-save').click();
                 assert.equal(await page.evaluate(
-                  ()=>JSON.parse(localStorage.getItem('paperchalk-layer-editor-v1')).enemy.x),55);
+                  ()=>JSON.parse(localStorage.getItem('paperchalk-layer-editor-v2')).enemy.x),55);
                 await page.locator('#dev-exit').click();
                 assert.equal(await page.locator('#view').evaluate(el=>el.classList.contains('dev-mode')),false);
                 assert.deepEqual(await page.evaluate(
@@ -306,10 +330,10 @@ jobs:
                 await page.locator('#dev-trigger').click();
                 await page.locator('#dev-reset').click();
                 await page.locator('#dev-exit').click();
-                assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.style.left),'61.5%',
-                  'reset did not restore original placement');
+                assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.style.left),'46%',
+                  'reset did not restore updated perspective placement');
                 assert.equal(await page.evaluate(
-                  ()=>localStorage.getItem('paperchalk-layer-editor-v1')),null);
+                  ()=>localStorage.getItem('paperchalk-layer-editor-v2')),null);
 
                 // Reference coordinates (1803x872) map to current LOGICAL
                 // game viewport; physical portrait screens rotate the whole UI.

@@ -156,7 +156,7 @@ body.mobile-mode.virtual-landscape #view{
 }
 #enemy-depth-root[hidden],#camera-player-root[hidden]{display:none!important}
 #enemy-depth-root #actor-enemy{
-  position:absolute;display:block;left:61.5%;bottom:18%;height:64%;
+  position:absolute;display:block;left:46%;bottom:16%;height:34%;
   width:auto;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
@@ -175,7 +175,7 @@ body.mobile-mode.virtual-landscape #view{
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
 @container (max-height:445px){
-  #enemy-depth-root #actor-enemy{height:62%;left:62%;bottom:18%}
+  #enemy-depth-root #actor-enemy{height:34%;left:46%;bottom:16%}
   #camera-player-root #actor-player{height:82cqh;left:8cqw;bottom:-3cqh}
 }
 
@@ -1083,11 +1083,12 @@ void main(){
   const devGroundToggle=document.getElementById('dev-ground-toggle');
   const enemyImage=document.getElementById('actor-enemy');
   const editorDefaults=Object.freeze({
-    bg:{z:-235},enemy:{x:61.5,y:18,size:64,z:-190},
+    bg:{z:-235},enemy:{x:46,y:16,size:34,z:-190},
     fog:{z:0},player:{x:8,y:-3,size:82,z:160},
     ground:{y:77,z:-215,visible:1}
   });
-  const EDITOR_KEY='paperchalk-layer-editor-v1';
+  const EDITOR_KEY='paperchalk-layer-editor-v2';
+  const PREVIOUS_EDITOR_KEY='paperchalk-layer-editor-v1';
   const editorBounds={
     x:[-20,110],y:[-40,96],size:[12,120],z:[-420,350],visible:[0,1]
   };
@@ -1106,8 +1107,20 @@ void main(){
     return next;
   }
   function readEditor(){
-    try{return sanitizeEditor(JSON.parse(localStorage.getItem(EDITOR_KEY)))}
-    catch(_){return copyDefaults()}
+    try{
+      const fresh=localStorage.getItem(EDITOR_KEY);
+      if(fresh)return sanitizeEditor(JSON.parse(fresh));
+      const previous=localStorage.getItem(PREVIOUS_EDITOR_KEY);
+      if(!previous)return copyDefaults();
+      const old=sanitizeEditor(JSON.parse(previous));
+      // On upgrade, only migrate the original enemy composition to the new
+      // perspective-correct ground position. Keep customized enemy placement.
+      const stored=JSON.parse(previous)?.enemy;
+      if(stored&&Number(stored.x)===61.5&&Number(stored.y)===18&&Number(stored.size)===64){
+        Object.assign(old.enemy,{x:46,y:16,size:34});
+      }
+      return old;
+    }catch(_){return copyDefaults()}
   }
   let editorConfig=readEditor(),editorActive=false;
   let selectedLayer='enemy';
@@ -1234,7 +1247,10 @@ void main(){
   });
   document.getElementById('dev-reset').addEventListener('click',()=>{
     editorConfig=copyDefaults();applyEditorVisuals();refreshEditorControls();
-    try{localStorage.removeItem(EDITOR_KEY)}catch(_){}
+    try{
+      localStorage.removeItem(EDITOR_KEY);
+      localStorage.removeItem(PREVIOUS_EDITOR_KEY);
+    }catch(_){}
     setDevStatus('已恢复原始位置与层间距');
   });
   document.getElementById('dev-copy').addEventListener('click',async()=>{
