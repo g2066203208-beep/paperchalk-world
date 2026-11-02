@@ -344,6 +344,21 @@ body.mobile-mode.virtual-landscape #view{
 #scene-menu-gallery{max-height:52cqh;overflow-y:auto;scrollbar-width:thin}
 #scene-switcher{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-height:45cqh;overflow-y:auto;scrollbar-width:thin}
 #scene-switcher button{min-height:30px}
+
+/* Original player image remains the sole positioning & DEV interaction anchor.
+   L2D canvas mirrors its real measured rectangle, never re-stacks the PSD. */
+#camera-player-root #actor-player-l2d{
+ position:absolute;display:block;width:auto;height:auto;max-width:none;
+ left:0;top:0;pointer-events:none;user-select:none;image-rendering:auto;
+}
+#camera-player-root[data-breath-ready="true"] #actor-player{
+ opacity:0; /* keep original hit testing and exact layout */
+}
+@media(prefers-reduced-motion:reduce){
+ #camera-player-root[data-breath-ready="true"] #actor-player{opacity:1}
+ #camera-player-root #actor-player-l2d{display:none}
+}
+
 </style>
 <script src="./scene-catalog.generated.js"></script>
 </head>
@@ -363,6 +378,7 @@ body.mobile-mode.virtual-landscape #view{
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
         <button id="tilt-toggle" type="button">场景倾斜：开启</button>
          <button id="menu-dev" type="button" aria-controls="dev-tools">开发者 DEV</button>
+        <button id="menu-character-breath" type="button" onclick="location.href='./l2d/'">女主角 · 呼吸预览</button>
         <button id="menu-settings-back" type="button">返回</button>
       </nav>
     </div>
@@ -373,6 +389,7 @@ body.mobile-mode.virtual-landscape #view{
   <canvas id="fog" aria-hidden="true"></canvas>
   <div id="camera-player-root" aria-label="镜头前景层：玩家（在黑雾前方）" hidden>
     <img id="actor-player" src="./assets/characters/protagonist-back.webp" alt="背对镜头的主角" draggable="false">
+    <canvas id="actor-player-l2d" width="1024" height="1024" aria-hidden="true"></canvas>
   </div>
   <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
     <nav id="top-menu" aria-label="游戏菜单">
@@ -1615,5 +1632,46 @@ void main(){
   updatePhoneLayout();resize();start();
 })();
 </script>
+
+<script src="./l2d/rig.js"></script>
+<script>
+/* Installed as a final, independent module: existing story/fog code untouched. */
+(function(){
+ 'use strict';
+ const player=document.getElementById('actor-player');
+ const root=document.getElementById('camera-player-root');
+ const canvas=document.getElementById('actor-player-l2d');
+ if(!player||!root||!canvas||!window.HeroineBreathRig)return;
+ let rig=null;
+ async function init(){
+  try{
+   rig=new HeroineBreathRig(player,canvas,{
+    amplitude:.55,period:4.8,cleanup:true,
+    playing:!matchMedia('(prefers-reduced-motion:reduce)').matches
+   });
+   await rig.ready;rig.start();root.dataset.breathReady='true';
+  }catch(error){
+   root.dataset.breathReady='false';player.style.opacity='1';
+   console.warn('Player breathing preview fallback to original image',error);
+  }
+ }
+ function sync(){
+  // The existing image is authoritative for layout, including environment
+  // scene CSS !important rules and the developer's custom player size/offset.
+  const w=player.offsetWidth,h=player.offsetHeight;
+  if(w&&h){
+   canvas.style.left=player.offsetLeft+'px';
+   canvas.style.top=player.offsetTop+'px';
+   canvas.style.width=w+'px';canvas.style.height=h+'px';
+   if(rig)rig.setPaused(root.hidden||document.hidden);
+  }
+  requestAnimationFrame(sync);
+ }
+ player.addEventListener('load',()=>{if(rig)rig.setImage(player);});
+ init();requestAnimationFrame(sync);
+ window.paperchalkPlayerBreath={get rig(){return rig},canvas,player};
+})();
+</script>
+
 </body>
 </html>
