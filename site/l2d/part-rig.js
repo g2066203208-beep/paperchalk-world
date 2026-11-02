@@ -36,8 +36,28 @@ const BACK={
  jacket:['torso',.50,.08,.50,.79,'torso'],
  hair_over_jacket:['head',.50,.05,.50,.94,'hair']
 };
-function cleanPart(part,face,id){
- const p=part||{},spec=(face==='back'?BACK:FRONT)[id];
+// Known real CHAR-002 16-layer PSD layout (front only). Values are
+// neutral initial joint locations; no source bitmap is invented or altered.
+const CHAR002={
+ back_hair:['head',.50,.05,.50,.95,'hair'],
+ legwear:['pelvis',.50,.04,.50,.84,'leg-combined'],
+ footwear:['ground',.50,.86,.50,.86,'fixed'],
+ bottomwear:['pelvis',.50,.04,.50,.93,'skirt'],
+ neck:['torso',.50,.80,.50,.80,'fixed'],
+ topwear:['torso',.50,.10,.50,.84,'torso'],
+ handwear:['torso',.50,.06,.50,.90,'arm-combined'],
+ ears:['head',.50,.50,.50,.50,'fixed'],
+ face:['head',.50,.45,.50,.45,'face'],
+ nose:['head',.50,.50,.50,.50,'fixed'],
+ mouth:['head',.50,.50,.50,.50,'mouth'],
+ eyewhite:['head',.50,.50,.50,.50,'eyes-combined'],
+ eyebrow:['head',.50,.50,.50,.50,'face'],
+ irides:['eyewhite',.50,.50,.50,.50,'eyes-combined'],
+ eyelash:['eyewhite',.50,.50,.50,.50,'eyes-combined'],
+ front_hair:['head',.50,.06,.50,.82,'hair']
+};
+function cleanPart(part,face,id,characterId){
+ const p=part||{},spec=characterId==='char-002'&&face==='front'?(CHAR002[id]||FRONT[id]):(face==='back'?BACK:FRONT)[id];
  const w=Math.max(1,finite(p.canvas?.width||p.w,1));
  const h=Math.max(1,finite(p.canvas?.height||p.h,1));
  const def=spec||['root',.5,.08,.5,.9,'unclassified'];
@@ -49,7 +69,7 @@ function cleanPart(part,face,id){
   motion:{x:0,y:0,angle:0,frequency:1,phase:0},
   enabled:true};
 }
-const all=(layers,face)=>layers.filter(p=>p.sourcePart&&p.canvas).map(p=>cleanPart(p,face,String(p.partId||p.name)));
+const all=(layers,face,characterId)=>layers.filter(p=>p.sourcePart&&p.canvas).map(p=>cleanPart(p,face,String(p.partId||p.name),characterId));
 function sanitize(record,original){
  if(!record)return original;
  const x={...original, ...record};
@@ -74,7 +94,7 @@ function sanitize(record,original){
  return x;
 }
 function project(parts,characterId,face,previous=null){
- const base=all(parts,face);
+ const base=all(parts,face,characterId);
  const prev=previous?.parts||{};
  const entries=base.map(p=>[p.id,sanitize(prev[p.id],p)]);
  return {format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
@@ -163,5 +183,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
