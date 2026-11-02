@@ -123,11 +123,62 @@ async function loadList(){
  const id=args.get('character')||last?.id||'protagonist';
  await change(list.has(id)?id:'protagonist',args.get('side')||last?.side||'front');
 }
+const decodedPristine=new Map();
+async function originalComposite(face){
+ const key=currentId+':'+face,record=await get('baseline:'+key)||[];
+ if(!record.length)return null;
+ const cached=decodedPristine.get(key);
+ if(cached&&cached.count===record.length)return cached.canvas;
+ const canvas=ed.make(),ctx=canvas.getContext('2d',{alpha:true});
+ for(const part of record){
+  if(part.visible===false||!part.image)continue;
+  const image=await ed.imgFrom(part.image);
+  ctx.globalAlpha=Number(part.opacity??1);
+  ctx.drawImage(image,Number(part.x)||0,Number(part.y)||0);
+ }
+ ctx.globalAlpha=1;
+ decodedPristine.set(key,{canvas,count:record.length});
+ return canvas;
+}
+function editedComposite(face){
+ const canvas=ed.make(),ctx=canvas.getContext('2d',{alpha:true});
+ for(const part of ed.S.layers[face]){
+  if(!part.sourcePart||!part.visible)continue;
+  ctx.globalAlpha=Number(part.opacity??1);
+  ctx.drawImage(part.canvas,Number(part.x)||0,Number(part.y)||0);
+ }
+ ctx.globalAlpha=1;return canvas;
+}
+async function persistEditedComponents(face){
+ if(!ed.S.layers[face].some(p=>p.sourcePart))return;
+ const original=await originalComposite(face);
+ if(!original)return;
+ const newer=editedComposite(face),a=original.getContext('2d',{willReadFrequently:true}).getImageData(0,0,1024,1024).data,
+ b=newer.getContext('2d',{willReadFrequently:true}).getImageData(0,0,1024,1024).data;
+ const mask=ed.make(),paint=ed.make();
+ const maskData=mask.getContext('2d').createImageData(1024,1024);
+ const paintData=paint.getContext('2d').createImageData(1024,1024);
+ let changes=0;
+ for(let i=0;i<a.length;i+=4){
+  if(a[i]===b[i]&&a[i+1]===b[i+1]&&a[i+2]===b[i+2]&&a[i+3]===b[i+3])continue;
+  maskData.data[i+3]=255;
+  paintData.data[i]=b[i];paintData.data[i+1]=b[i+1];
+  paintData.data[i+2]=b[i+2];paintData.data[i+3]=b[i+3];changes++;
+ }
+ if(!changes){await put('parts-patch:'+currentId+':'+face,null);return;}
+ mask.getContext('2d').putImageData(maskData,0,0);
+ paint.getContext('2d').putImageData(paintData,0,0);
+ await put('parts-patch:'+currentId+':'+face,{
+  erase:mask.toDataURL('image/png'),paint:paint.toDataURL('image/png'),
+  changes,updatedAt:Date.now(),mode:'v4-layer-delta'
+ });
+}
 async function saveToGame(){
  if(!currentId)return;
  clearTimeout(correctionTimer);
  await ed.save();
  if(v4)await persistCorrections();
+ for(const f of ['front','back'])await persistEditedComponents(f);
  const motion=ed.motion?.()||{};
  for(const face of ['front','back']){
   // Rendering reference is separate from the V4 animation itself; do NOT
@@ -137,7 +188,7 @@ async function saveToGame(){
  }
  const binding=await get('slot:'+slot);
  if(binding?.id===currentId)await put('slot:'+slot,{id:currentId,side});
- message('✓ 已保存 '+(list.get(currentId)?.label||currentId)+'：V4 原始动画保留；当前方向存有 '+Object.keys(frameFrames).length+' 个修补关键帧。可导出备份。');
+ message('✓ 游戏已更新：'+(list.get(currentId)?.label||currentId)+'，原始部件改动已生成 V4 像素修补；原版 128 帧保留。大幅变形需要重新烘焙动画。');
 }
 async function importImages(files){
  const groups=new Map();
@@ -225,7 +276,7 @@ async function importComponentFiles(files,options={}){
    ...p,id:p.partId||p.id||p.name,name:p.name||p.id||p.file
   }));
  }else throw Error('工程缺少图层清单');
- const restored={front:[],back:[]};
+ const restored={front:[],back:[]},pristine={front:[],back:[]};
  let count=0;
  for(const face of ['front','back']){
   for(const part of defs[face]||[]){
@@ -243,6 +294,8 @@ async function importComponentFiles(files,options={}){
    q.partId=String(part.id||part.name);
    q.role=String(part.role||'');
    restored[face].push(q);count++;
+   pristine[face].push({partId:q.partId,name:q.name,x:q.x,y:q.y,
+      visible:q.visible,opacity:q.opacity,image:await fileURL(new Blob([bytes],{type:'image/png'}))});
   }
  }
  if(!count)throw Error('分层工程中没有可读取的真实 PNG 部件');
@@ -253,6 +306,8 @@ async function importComponentFiles(files,options={}){
   ed.S.layers[face]=[
    ...ed.S.layers[face].filter(p=>!p.sourcePart&&!/^(PSD ·|原始角色 ·)/.test(p.name)),
    ...restored[face]];
+  if(!options.missingOnly||!await get('baseline:'+currentId+':'+face))
+   await put('baseline:'+currentId+':'+face,pristine[face]);
  }
  showOriginalV4=false;
  await loadCorrectionLayers();
