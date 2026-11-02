@@ -144,7 +144,7 @@ jobs:
           assert 'scene-catalog.generated.js' in h
           assert '<script src="./scene-modules.js"></script>' in h
           assert not any(x in h for x in ("title:'主角立绘'", "type:'portrait'"))
-          assert '(?:webp|png|jpe?g)' in h
+          assert '(?:webp|png|jpe?g)' in Path('site/scene-modules.js').read_text()
           # Black blotches were intentionally DELETED, not merely turned off.
           forbidden=('u_blotches','u_burns','burnUniform','blotchesEnabled',
                      'inkCPUAmount','inkStains','ink-toggle','advanceBurns',
@@ -221,7 +221,7 @@ jobs:
           assert 'reach=40.' in h and 'const reach=40+' in h
           assert 'float wave=' in h and 'const wave=' in h
           assert 'aimX=0;aimY=0;currentX=0;currentY=0;' in h
-          assert "importedScenes=Object.create(null)" in h
+          assert 'window.PAPERWORLD_SCENE_MODULES.buildRegistry' in h
           assert "function enterDeveloper(layer='fog')" in h and 'function exitDeveloper()' in h
           assert 'id="dev-fog-tools"' in h and 'id="dev-z-control"' in h
           assert 'id="dev-layer-actions"' in h and 'id="dev-3d-controls"' in h
