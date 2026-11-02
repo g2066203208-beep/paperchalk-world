@@ -50,7 +50,7 @@ masterpiece, best quality, score_7, safe, 1boy, solo, original character, 18-yea
 worst quality, low quality, score_1, score_2, score_3, blurry, bad anatomy, bad hands, extra fingers, missing fingers, missing arms, cropped head, cropped feet, out of frame, 2boys, multiple people, duplicate, side by side, character sheet, reference sheet, split screen, multiple views, profile view, back view, three-quarter view, chibi, oversized head, giant sparkling eyes, perfect symmetrical face, generic handsome idol face, influencer face, tiny V-shaped chin, plastic skin, airbrushed face, excessive blush, glossy lips, heavy eyeliner, sharp pointed anime chin, perfect center-part curtain haircut, two identical bangs, spiky hair, silver hair, white hair, blue eyes, muscular model body, exaggerated long legs, big smile, open mouth, open blazer, loose necktie, gold buttons, school bag, books, glasses, earrings, necklace, weapon, objects, scenery, detailed background, text, watermark, logo
 ```
 
-## 六、已验收正面图基准（2026-11-02）
+## 五、已验收正面图基准（2026-11-02）
 
 - **[CHAR-016完整上传原图（1024×1024）](../../site/assets/characters/char-016/reference-sheet.png)**：左侧一人全身、右侧是同一个人的脸部特写。源文件SHA256：`87fdc19c61d067447fcd4322b65a53e2939ff52f7b3e957651fcc1394a5ac110`。
 - **[CHAR-016独立全身正面立绘（315×1024）](../../site/assets/characters/char-016/front.png)**：只从原图坐标 **(75,0) 到 (390,1024)** 精确像素裁剪；**没有生成新画，也没有重画脸**。源文件SHA256：`47f730a0584102ee0086240f70560e9e95be5c411d084f5f96c1fcff0f1d8ba3`。
@@ -58,7 +58,7 @@ worst quality, low quality, score_1, score_2, score_3, blurry, bad anatomy, bad 
 - 视为锁定的**视觉身份锚点**：额头上不规则且近似偏中分的深暖黑发；微垂、略疲倦的横长茶棕眼；柔和收束的脸颊和下巴；自然薄唇、克制的冷淡表情；双手在小腹前交握和扣合的深色校服外套。未来所有正侧面、表情和L2D都必须依据右侧脸部特写原样还原，不能用旧提示词强行改眼色或下巴。
 - **仍未验证或完成**：173cm/64kg等身体数值无法从单张图精确推算；没有背面、透明分件、PSD、L2D参数和游戏内成品。不能把独立PNG当成完整L2D。 
 
-## 五、制作锁定规则
+## 六、制作锁定规则
 
 - 正面原图**一人、白底、全身完整、眼平直视角**。禁止多人物拼图、剪掉鞋子或头发、额外场景物体。
 - 与女主、女二、男主保持同一Anima模型标签、校服体系、轮廓质量和阴影简洁度，但脸型绝不能重复。
