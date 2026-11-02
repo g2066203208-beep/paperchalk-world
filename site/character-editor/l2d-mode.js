@@ -15,13 +15,13 @@ let motion=loadMotion();
 function saveMotion(){try{localStorage.setItem(key(),JSON.stringify(motion));}catch(e){}}
 const section=document.createElement('section');section.id='dev-l2d-preview-controls';
 section.innerHTML=[
- '<h3>角色动态参数 · 当前人物直接使用游戏 V4 动画</h3>',
+ '<h3>角色实时动画 · PSD 分层骨骼 / 原版 V4</h3>',
  '<canvas id="l2d-live-canvas" width="1024" height="1024" aria-label="人物动态预览" style="width:100%;aspect-ratio:1;max-height:270px;border:1px solid #3e5065;border-radius:8px;background:#1b2533"></canvas>',
  '<div class="row tight" style="margin-top:7px"><button id="l2d-play" type="button">暂停</button><button id="l2d-bones" type="button">显示骨骼</button></div>',
  '<label class="mlabel">呼吸幅度 <output id="l2d-strength-value"></output></label><input id="l2d-strength" type="range" min="0" max="400" step="5">',
  '<label class="mlabel">呼吸周期 <output id="l2d-period-value"></output></label><input id="l2d-period" type="range" min="2" max="12" step=".1">',
  '<label class="mlabel">软硬变形 <output id="l2d-softness-value"></output></label><input id="l2d-softness" type="range" min="0" max="240" step="5">',
- '<p class="tip">女主角预览唯一以游戏实际 V4 动画为准；不再渲染另一套假骨骼网格。呼吸参数直接保存在游戏人物档案中。</p>'
+ '<p class="tip">导入完整 PSD 后显示真正的独立图层骨骼/网格（后发、刘海、裙摆、手臂、眼睛、嘴）；未导入时沿用原版 V4。游戏与工作室使用同一套 PSD 驱动代码。</p>'
 ].join('');
 document.querySelector('aside.right')?.prepend(section);
 function sync(){
@@ -33,7 +33,9 @@ function sync(){
  $('l2d-softness-value').textContent=Math.round(q.softness*100)+'%';
 }
 function schedule(){
- const actualV4=!!window.PaperchalkStudio?.isV4;
+ const nativeParts=S.layers[S.side]?.filter(p=>p.sourcePart&&p.role==='psd-part')||[];
+ const actualPsd=nativeParts.length>=12;
+ const actualV4=!!window.PaperchalkStudio?.isV4&&!actualPsd;
  // Never show the unrelated procedural rig as the heroine game model.
  // The central editor canvas now plays the real hosted WebP animation.
  $('l2d-live-canvas').hidden=actualV4;
@@ -52,7 +54,8 @@ function schedule(){
    }
    const arr=S.layers[S.side];
    const genuine=arr.filter(p=>p.sourcePart);
-   const sources=genuine.length
+   const native=genuine.filter(p=>p.role==='psd-part');
+   const sources=native.length>=12?native:genuine.length
     ?arr.filter(p=>p.sourcePart||(!/^V4 ·/.test(p.name)&&!/^原始角色合成参考|^原始素材|^原网站合成参考/.test(p.name)))
     :arr.filter(p=>!/^V4 ·/.test(p.name));
    await rig.setLayers(sources.map(p=>({
