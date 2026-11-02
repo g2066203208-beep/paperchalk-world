@@ -541,19 +541,48 @@ function drawFrameCorrection(ctx){
  }
  if(cached.complete&&cached.naturalWidth)ctx.drawImage(cached,0,0);
 }
-function applyGameMotion(ctx){
- if(!v4||sourceInspect()||!playing)return;
- // Identical idle transform to site/l2d/runtime.js, anchored at the feet.
+// One compositing path for editor and game: V4 pixel frame + source edits
+// + corrections, followed by CHEST-ONLY deformation. The canvas itself is
+// never zoomed, rotated, or rocked as a fake breathing substitute.
+const breathComposite=document.createElement('canvas');
+breathComposite.width=1024;breathComposite.height=1024;
+function drawComposedV4(ctx,S){
+ if(!v4||sourceInspect()||S.only)return false;
+ const g=breathComposite.getContext('2d');
+ g.setTransform(1,0,0,1,0,0);
+ g.clearRect(0,0,1024,1024);
+ g.drawImage(v4.surface,0,0);
+ if(previewPatch?.erase&&previewPatch?.paint){
+  g.save();g.globalCompositeOperation='destination-out';
+  g.drawImage(previewPatch.erase,0,0);g.restore();
+  g.drawImage(previewPatch.paint,0,0);
+ }
+ for(const layer of S.layers[side]){
+  if(!layer.visible||layer.sourcePart||originalLayer(layer))continue;
+  g.globalAlpha=layer.opacity;
+  g.drawImage(layer.canvas,layer.x,layer.y);
+ }
+ g.globalAlpha=1;
+ if(playing||!frameLayer?.visible){
+  const uri=frameFrames[frameIndex];
+  if(uri){
+   let image=frameImageCache.get(frameIndex);
+   if(!image){
+    image=new Image();image.onload=()=>ed.render();image.src=uri;
+    frameImageCache.set(frameIndex,image);
+   }
+   if(image.complete&&image.naturalWidth)g.drawImage(image,0,0);
+  }
+ }
  const profile=ed.motion?.()?.[side]||{amplitude:.55,period:4.8};
- const amp=Math.max(0,Math.min(4,Number(profile.amplitude)||0));
- if(amp<.001)return;
- const period=Math.max(2,Math.min(12,Number(profile.period)||4.8));
- const t=performance.now()/1000*Math.PI*2/period;
- const inhale=Math.sin(t),lag=Math.sin(t-.55);
- const sx=1+.018*amp*inhale,sy=1+.011*amp*inhale;
- const angle=.45*amp*lag*Math.PI/180;
- ctx.translate(512,1024);ctx.rotate(angle);ctx.scale(sx,sy);
- ctx.translate(-512,-1024);
+ if(playing&&window.PaperchalkLocalBreath)
+  window.PaperchalkLocalBreath.draw(ctx,breathComposite,profile,performance.now(),1024,1024);
+ else ctx.drawImage(breathComposite,0,0);
+ return true;
+}
+function applyGameMotion(ctx){
+ // Legacy call kept for compatibility. Never transform the entire character.
+ return ctx;
 }
 const frameImageCache=new Map();
 async function drawFrame(index){
@@ -799,6 +828,6 @@ $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
 $('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,drawFrameCorrection,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&showOriginalV4&&!hasNativePSD(),get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
+window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,drawFrameCorrection,drawComposedV4,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&showOriginalV4&&!hasNativePSD(),get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
