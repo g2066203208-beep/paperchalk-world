@@ -1,0 +1,155 @@
+name: L2D modules - auto-register and game + studio integration
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/assets/l2d/library/**'
+      - 'site/l2d/library-player.js'
+      - 'site/l2d/part-rig.js'
+      - 'site/dev/character-bridge.js'
+      - 'site/character-editor/studio.js'
+      - 'site/index.html'
+      - 'scripts/build_l2d_library.py'
+      - 'scripts/build_character_catalog.py'
+      - 'tests/test_l2d_library.py'
+      - '.github/workflows/l2d-modules.yml'
+  pull_request:
+    paths:
+      - 'site/assets/l2d/library/**'
+      - 'site/l2d/library-player.js'
+      - 'site/dev/character-bridge.js'
+      - 'scripts/build_l2d_library.py'
+      - 'scripts/build_character_catalog.py'
+      - 'tests/test_l2d_library.py'
+      - '.github/workflows/l2d-modules.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: python3 -m pip install --quiet 'Pillow>=10,<12'
+      - name: Unit tests for real format, missing files, path escape and asset version
+        run: python3 -m unittest discover -s tests -p 'test_l2d_library.py' -v
+      - name: Rebuild existing original L2D safely
+        run: |
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_char002_v4.py
+          python3 scripts/build_scene_catalog.py
+      - name: Generate disposable complete V4 + ArtMesh modules in CI only
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          base=Path('site/assets/l2d/library')
+          def out(p,data):p.write_text(json.dumps(data,ensure_ascii=False),encoding='utf-8')
+          def poster(p):Image.new('RGBA',(1024,1024),(0,0,0,0)).save(p/'front.png')
+          v=base/'qa-v4';v.mkdir(parents=True);poster(v)
+          a=Image.new('RGBA',(80,110),(222,80,70,225))
+          b=Image.new('RGBA',(80,110),(65,90,215,225))
+          a.save(v/'clip.webp',save_all=True,append_images=[b],duration=70,loop=0,lossless=True)
+          out(v/'module.json',{'schema':1,'id':'qa-v4','label':'测试逐帧模块',
+            'views':{'front':{'portrait':'front.png','clip':{'type':'v4-webp',
+              'file':'clip.webp','crop':{'x':300,'y':90,'w':80,'h':110},'frames':2,'fps':20}}}})
+          p=base/'qa-rig';p.mkdir(parents=True);poster(p)
+          parts={};textures={}
+          for i,name in enumerate(('hair','skirt')):
+            Image.new('RGBA',(80,120),(80+i*120,90,160,255)).save(p/(name+'.png'))
+            textures[name]=name+'.png'
+            parts[name]={'id':name,'name':name,'x':280+i*70,'y':80+i*210,'w':80,'h':120,
+              'parentId':'root','kind':name,'pivot':{'x':.5,'y':.05},'tip':{'x':.5,'y':.95},
+              'mesh':{'columns':4,'rows':6},
+              'motion':{'x':25,'y':0,'angle':10,'frequency':1,'phase':0},'enabled':True}
+          out(p/'front.rig.json',{'format':'paperchalk-part-rig-v1','characterId':'qa-rig',
+            'face':'front','canvas':[1024,1024],'parts':parts})
+          out(p/'module.json',{'schema':1,'id':'qa-rig','label':'测试独立网格模块',
+            'views':{'front':{'portrait':'front.png','rig':{'type':'part-mesh',
+            'file':'front.rig.json','textures':textures}}}})
+          PY
+          python3 scripts/build_character_catalog.py
+          python3 - <<'PY'
+          import json
+          p=json.load(open('site/characters.catalog.json'))
+          data={c['id']:c for c in p['characters']}
+          assert {'protagonist','char-002','qa-v4','qa-rig'} <= set(data)
+          assert data['protagonist']['clips']['front']['frames']==128
+          assert data['protagonist']['clips']['back']['frames']==128
+          assert data['char-002']['clips']['front']['frames']==128
+          assert 'back' not in data['char-002']['clips']
+          assert data['qa-rig']['l2dModule']['front']['rig']['partCount']==2
+          assert data['qa-v4']['clips']['front']['frames']==2
+          print('PASS auto-catalog: old 128-frame heroines protected + two new modules registered')
+          PY
+      - name: Verify game, independent ArtMesh player and editor parse
+        run: |
+          node - <<'JS'
+          const fs=require('node:fs');
+          for(const p of ['site/l2d/part-rig.js','site/l2d/library-player.js',
+                'site/dev/character-bridge.js','site/character-editor/studio.js',
+                'site/character-editor/part-rig-studio.js'])
+            new Function(fs.readFileSync(p,'utf8'));
+          const h=fs.readFileSync('site/index.html','utf8');
+          if(!h.includes('library-player.js')||!h.includes('part-rig.js'))
+            throw Error('Game is not wired to published independent ArtMesh modules');
+          console.log('PASS module player JS parse and game integration');
+          JS
+      - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Actual browser loads V4 and true independent ArtMesh modules in game and studio
+        run: |
+          python3 -m http.server 8132 --directory site >/tmp/l2d-modules-http.log 2>&1 &
+          node - <<'JS'
+          const {chromium}=require('playwright');
+          const assert=require('node:assert/strict');
+          (async()=>{
+           const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
+           try{
+            const page=await browser.newPage({viewport:{width:1200,height:850}});
+            const errors=[];page.on('pageerror',e=>errors.push(e.message));
+            await page.goto('http://127.0.0.1:8132/?dev=1',{waitUntil:'load'});
+            await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:30000});
+            const names=await page.evaluate(()=>window.PaperchalkCharacterDev.characters.map(c=>c.id));
+            assert.ok(names.includes('qa-rig')&&names.includes('qa-v4'),'new modules must show in live DEV game picker');
+            await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
+            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','qa-rig','front'));
+            await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dMode==='library-part-mesh',{timeout:20000});
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===2,{timeout:12000});
+            await page.waitForFunction(()=>{
+              const a=window.PaperchalkL2D.get('player');
+              if(!a?.canvas.width||!a?.canvas.height)return false;
+              const im=a.canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,a.canvas.width,a.canvas.height).data;
+              for(let i=3;i<im.length;i+=32)if(im[i]>0)return true;
+              return false;
+            },null,{timeout:20000});
+            assert.equal(await page.evaluate(()=>window.PaperchalkL2DLibrary.get('player').model.parts.hair.motion.x),25);
+            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','qa-v4','front'));
+            await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===2,{timeout:20000});
+            assert.equal(await page.evaluate(()=>window.PaperchalkL2DLibrary.get('player')),null,
+              'switching to V4 must unload the old independent texture renderer');
+            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','back'));
+            await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===128,{timeout:20000});
+            assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player').root.dataset.l2dEdition),'V4-official');
+            assert.deepEqual(errors,[],'game page JavaScript errors');
+            await page.goto('http://127.0.0.1:8132/character-editor/?character=qa-rig&side=front',{waitUntil:'load'});
+            await page.waitForFunction(()=>window.PaperchalkStudio?.current==='qa-rig'&&
+              window.PaperchalkStudio?.countSourceParts?.()===2,{timeout:30000});
+            await page.locator('#part-rig-toggle').click();
+            await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state.active,{timeout:12000});
+            const editor=await page.evaluate(()=>window.PaperchalkPartRigStudio.state.model);
+            assert.equal(editor.parts.hair.motion.x,25,
+              'studio must use the published per-part rig rather than a new guessed binding');
+            assert.equal(Object.keys(editor.parts).length,2);
+            await page.locator('#rig-close').click();
+            await browser.close();
+            console.log('PASS full game and editor modular L2D playback + old V4 safety');
+           }finally{await browser.close();}
+          })().catch(e=>{console.error(e);process.exit(1);});
+          JS
