@@ -66,7 +66,7 @@ jobs:
           const assert=require('node:assert/strict');
           const fs=require('node:fs');
           const {chromium}=require('playwright');
-          for(const file of ['site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js','site/character-editor/studio.js']){
+          for(const file of ['site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js','site/character-editor/studio.js','site/character-editor/stage-motion.js']){
             new Function(fs.readFileSync(file,'utf8'));
           }
           (async()=>{
@@ -252,7 +252,16 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' &&
                   window.PaperchalkStudio?.editSide==='back' && window.PaperchalkStudio?.countSourceParts?.()===8,{timeout:18000});
                 await page.locator('#studio-v4zip').setInputFiles('/tmp/paperchalk-v4-smoke.zip');
-                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('V4 动态方向已导入'),{timeout:16000});
+                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('V4 动态方向已导入'),null,{timeout:16000}).catch(async error=>{
+                  console.error('V4 import state',await page.evaluate(()=>({
+                    status:document.querySelector('#studio-status')?.textContent,
+                    id:window.PaperchalkStudio?.current,edition:window.PaperchalkStudio?.edition,
+                    frame:window.PaperchalkStudio?.frame,playing:window.PaperchalkStudio?.isPlaying,
+                    motion:window.PaperchalkStageMotion?.state,
+                    errors:document.querySelector('#status')?.textContent
+                  })),errors);
+                  throw error;
+                });
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true,'V4 frames must preview in the L2D studio');
                 await page.screenshot({path:'artifacts/l2d-studio/'+(phone?'mobile':'desktop')+'.png',fullPage:true});
                 await page.locator('#studio-back').click();
