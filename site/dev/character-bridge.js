@@ -65,18 +65,26 @@ async function assign(target,id,face='front',save=true){
  window.PaperchalkL2D.setProfile(target,rig);
  window.PaperchalkL2D.markAnimation(target,!!c.animated?.[face]);
  const clip=await get('clip:'+id+':'+face);
- if(clip?.data&&clip.data.startsWith('data:image/webp;base64,')){
-  const current=window.PaperchalkL2D.get(target);
-  if(current?.rig)await window.PaperchalkL2D.setAnimationSource(target,clip.data,clip.crop||{x:351,y:9,w:335,h:1013});
-  else {
-   const wait=setInterval(async()=>{
-    const obj=window.PaperchalkL2D.get(target);
-    if(obj?.rig){clearInterval(wait);await window.PaperchalkL2D.setAnimationSource(target,clip.data,clip.crop||{x:351,y:9,w:335,h:1013});}
-   },100);
-   setTimeout(()=>clearInterval(wait),8000);
+ // The approved V4 is built into GitHub Pages, not an optional browser upload.
+ // Explicit per-character V4 imports may override it; other actors keep
+ // their own dynamic mesh rig and NEVER display the hidden static source.
+ const installedV4=id==='protagonist' ? './assets/l2d/v4/'+face+'.webp' : '';
+ const source=(clip?.data?.startsWith('data:image/webp;base64,')?clip.data:installedV4);
+ const shape=clip?.crop||{x:351,y:9,w:335,h:1013};
+ if(source){
+  try{
+   await window.PaperchalkL2D.setAnimationSource(target,source,shape);
+   const obj=window.PaperchalkL2D.get(target);
+   if(obj){obj.root.dataset.l2dEdition=clip?.data?'V4-imported':'V4-official';obj.root.dataset.l2dAnimated='true'}
+  }catch(e){
+   console.error('[L2D] Failed to decode approved V4; retaining live mesh animation',e);
+   await window.PaperchalkL2D.setAnimationSource(target,null);
+   note('V4 视频资源加载异常：'+e.message);
   }
  }else{
   await window.PaperchalkL2D.setAnimationSource(target,null);
+  const obj=window.PaperchalkL2D.get(target);
+  if(obj){obj.root.dataset.l2dEdition='mesh';obj.root.dataset.l2dAnimated='true'}
  }
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
