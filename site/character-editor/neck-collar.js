@@ -84,9 +84,9 @@ async function prepare(){
   prepared=true;
   showButton();selectCollar();
   if(created){
-   // Save the unmodified source layers now. They are composited by the
-   // studio V4 overlay on commit, not baked into the 128-frame WebP.
-   await studio.saveToGame();
+   // Keep the prepared editable PSD stack locally, but do NOT alter what
+   // the game renders until the user explicitly saves their collar edits.
+   await ed.save();
   }
   status('✓ 原始 PSD 脖子已锁定（496,160），外套衣领已选中（474,190）；橡皮擦 9px。现在可以直接擦领口，脖子不会受损。');
  }catch(e){
