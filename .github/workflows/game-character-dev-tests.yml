@@ -33,7 +33,7 @@ jobs:
           const {chromium}=require('playwright');
           new Function(fs.readFileSync('site/dev/character-bridge.js','utf8'));
           const root=fs.readFileSync('site/index.html','utf8');
-          for(const id of ['dev-character-overlay','dev-character-open','dev-character-list','dev-character-angle','dev-character-import','dev-character-frame'])assert.ok(root.includes('id="'+id+'"'),id);
+          for(const id of ['dev-character-overlay','dev-character-open','dev-character-list','dev-character-library','dev-character-angle','dev-character-import','dev-character-archive','dev-character-frame','actor-player-l2d','actor-enemy-l2d'])assert.ok(root.includes('id="'+id+'"'),id);
           (async()=>{
             const b=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
             try {
@@ -44,13 +44,19 @@ jobs:
                 });
                 const errors=[];page.on('pageerror',e=>errors.push(e.message));
                 await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
-                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:16000});
+                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready&&window.PaperchalkL2D?.get('player')?.rig?.source?.width===1024,{timeout:16000});
+                assert.equal(await page.locator('[data-l2d-image]').count(),2);
+                assert.equal(await page.locator('[data-l2d-canvas]').count(),2);
+                assert.equal(await page.locator('#dev-character-list option').count(),1);
                 await page.selectOption('#dev-layer','player');
                 assert.equal(await page.locator('#dev-character-controls').isVisible(),true);
                 await page.locator('#dev-character-open').click({force:phone});
                 await page.waitForFunction(()=>document.querySelector('#dev-character-frame').contentWindow?.characterEditor?.S?.ready,{timeout:15000});
                 const child=page.frameLocator('#dev-character-frame');
                 await child.locator('#status').filter({hasText:'游戏人物'}).waitFor({timeout:12000});
+                await child.locator('#l2d-live-canvas').waitFor();
+                await child.locator('#l2d-strength').fill('74');
+                assert.equal(await child.locator('#l2d-strength-value').textContent(),'74%');
                 assert.equal(await child.locator('#layers .layer').count(),1);
                 await child.locator('#add').click();
                 assert.equal(await child.locator('#layers .layer').count(),2);
@@ -65,7 +71,8 @@ jobs:
                 const tiny=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+v0kQAAAAASUVORK5CYII=','base64');
                 await page.locator('#dev-character-import').setInputFiles({name:'new-npc-front.png',mimeType:'image/png',buffer:tiny});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.characters.some(c=>c.id.startsWith('local-')),{timeout:15000});
-                assert.ok(await page.locator('#dev-character-list option').count()>=2);
+                assert.ok(await page.locator('#dev-character-library option').count()>=2);
+                assert.equal(await page.locator('#dev-character-list option').count(),1,'list contains loaded actors only');
                 await page.locator('#dev-character-open').click({force:phone});
                 await child.locator('#status').filter({hasText:'new-npc'}).waitFor({timeout:15000});
                 assert.equal(await child.locator('#layers .layer').count(),1,'different character has independent layers: '+await child.locator('#status').textContent());
