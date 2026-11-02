@@ -9,7 +9,8 @@
 | **CHAR-001** | `protagonist` | 可操控女主角（姓名待定） | 正面与背面均已有用户批准的作品基准 | **外观与核心性格「毒舌、冷淡」已锁定；年龄、身高、体重与其他人设仍待确认** | [完整版](characters/CHAR-001_PROTAGONIST_PROFILE.md) · [448字段](characters/CHAR-001.profile.json) · [原档](PROTAGONIST_CANON.md) |
 | **CHAR-002 正面已入库** | `pony-tail-girl-candidate`（暂未注册正式游戏角色） | 女二：栗棕单马尾、活泼、略矮 | **[已认可正面PNG](../site/assets/characters/char-002/front.png)**，三人图中间原像素裁剪303×1024；背面、PSD、L2D待制作 | 448项候选档案，正面视觉已定 | [女二详细档案](characters/CHAR-002_CANDIDATE.md) · [448字段](characters/CHAR-002.profile.json) |
 | **CHAR-003 正面已入库** | `male-lead-candidate`（暂未注册正式游戏角色） | 男主：18岁、凌乱黑中长发、灰眼、叛逆厌学 | **[已选正面PNG](../site/assets/characters/char-003/front.png)**，三人图中间原像素裁剪297×1024；背面、PSD、L2D待制作 | 448/448字段，服装体型数值仍为暂定 | [完整档案](characters/CHAR-003_MALE_LEAD_PROFILE.md) · [448字段](characters/CHAR-003.profile.json) |
-| CHAR-004 起 | 尚未分配 | 其他角色 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
+| **CHAR-016 候选** | `male-second-transfer-candidate`（不在游戏注册表） | 男二／插班生；有特点的非网红脸 | 原创脸型、173cm/64kg候选；正负Anima提示词已整理，暂无正式原画 | **448项字段结构建档（232项提案、216项待确认）** | [人物资料与正负提示词](characters/CHAR-016_MALE_SECOND_PROFILE.md) · [448字段机器档案](characters/CHAR-016.profile.json) |
+| CHAR-004～015、CHAR-017起 | 尚未分配正式身份 | 其余规划人物 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
 
 **重要：** “教室主角”“卧室主角”“正面主角”“背面主角”“L2D 主角”都不是新身份，只能引用 `protagonist`。旧临时恐怖敌人没有独立的正式人物身份，也不得因为历史素材名称而复活。
 
