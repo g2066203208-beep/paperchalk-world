@@ -359,6 +359,32 @@ body.mobile-mode.virtual-landscape #view{
  #camera-player-root #actor-player-l2d{display:none}
 }
 
+
+/* In-game layer authoring, not a separate website. Full viewport remains
+   usable on desktop and portrait phone, regardless of 3D scene rotation. */
+#dev-character-controls[hidden],#dev-character-overlay[hidden]{display:none!important}
+#dev-character-overlay{
+  position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;
+  background:#090d13;color:#eef3fa;font-family:var(--font-ui);
+  overflow:hidden;pointer-events:auto;
+}
+#dev-character-overlay .dev-character-toolbar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:7px;padding:7px 12px;background:#131a24;border-bottom:1px solid #405166;
+}
+#dev-character-overlay .dev-character-toolbar strong{font-size:13px}
+#dev-character-overlay .dev-character-toolbar div{display:flex;gap:6px;flex-wrap:wrap}
+#dev-character-overlay button{
+  color:#e5eefa;background:#263140;border:1px solid #4d6177;
+  font:12px var(--font-ui);padding:7px 9px;border-radius:5px;cursor:pointer;
+}
+#dev-character-overlay #dev-character-apply{background:#1e5249;border-color:#4fae97}
+#dev-character-frame{flex:1;width:100%;height:100%;min-height:0;border:0;background:#0c121c}
+body.character-editing #dev-tools{visibility:hidden;pointer-events:none}
+@media(max-width:550px){
+ #dev-character-overlay .dev-character-toolbar{padding:5px 8px}
+ #dev-character-overlay button{padding:6px;font-size:11px}
+}
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
@@ -458,6 +484,20 @@ body.mobile-mode.virtual-landscape #view{
       <label for="dev-size">角色大小 <output id="dev-size-value" class="dev-value"></output></label>
       <input id="dev-size" type="range" min="12" max="120" step=".5">
     </div>
+    <section id="dev-character-controls" hidden aria-label="人物素材与分层绘画">
+      <p style="color:#c9ddec">人物编辑 · 直接在游戏里修改各个导入角色（正面 / 背面分别存档）。</p>
+      <label for="dev-character-list">当前人物</label>
+      <select id="dev-character-list" style="width:100%"><option value="protagonist">女主角</option></select>
+      <label for="dev-character-angle">人物方向</label>
+      <select id="dev-character-angle" style="width:100%"><option value="front">正面</option><option value="back">背面</option></select>
+      <div class="dev-buttons">
+        <button id="dev-character-use" type="button">使用此人物</button>
+        <button id="dev-character-open" type="button">✎ 分层补画 / PSD</button>
+      </div>
+      <label for="dev-character-import">导入新的游戏人物（PNG / WebP）</label>
+      <input id="dev-character-import" type="file" accept="image/png,image/webp,image/jpeg" multiple style="width:100%;max-width:100%">
+      <output id="dev-character-status" role="status" style="font-size:11px;color:#bde2ff;display:block;line-height:1.6;margin-top:8px">载入人物素材库…</output>
+    </section>
     <div id="dev-floor-controls" hidden>
       <label for="dev-ground-y">地板高度 / 画面Y <output id="dev-ground-y-value" class="dev-value"></output></label>
       <input id="dev-ground-y" type="range" min="40" max="96" step=".5">
@@ -497,6 +537,18 @@ body.mobile-mode.virtual-landscape #view{
     <output id="dev-status" class="dev-state" aria-live="polite"></output>
     <p class="dev-hint">保存到本机浏览器。普通视角保留主角贴镜头、敌人轻微视差、黑雾独立。</p>
   </aside>
+  <div id="dev-character-overlay" hidden role="dialog" aria-modal="true" aria-label="游戏人物分层补画编辑器">
+    <div class="dev-character-toolbar">
+      <strong>DEV / 游戏人物分层编辑</strong>
+      <div>
+        <button id="dev-character-apply" type="button">应用到游戏</button>
+        <button id="dev-character-export" type="button">导出分层 ZIP</button>
+        <button id="dev-character-reset" type="button">恢复选中方向原图</button>
+        <button id="dev-character-close" type="button">返回游戏 DEV</button>
+      </div>
+    </div>
+    <iframe id="dev-character-frame" title="游戏人物补画、擦除、分层、PSD导入编辑器" loading="eager" allow="clipboard-write"></iframe>
+  </div>
 </main>
 <script id="vertex" type="x-shader/x-vertex">
 attribute vec2 a_position;
@@ -1666,5 +1718,6 @@ void main(){
 })();
 </script>
 
+<script src="./dev/character-bridge.js"></script>
 </body>
 </html>
