@@ -245,9 +245,16 @@ async function readPartRig(id=currentId,face=side){
  const response=await fetch(url,{cache:'no-store'});
  if(!response.ok)throw Error('模块绑定文件加载失败：HTTP '+response.status);
  const model=await response.json();
- if(model.format!=='paperchalk-part-rig-v1'||model.characterId!==id||model.face!==face)
+ const sourceId=pub.sourceCharacterId;
+ const validAlias=id==='protagonist'&&sourceId==='protagonist-rig-v1'&&
+  model.characterId==='protagonist-rig-v1'&&
+  pub.url.startsWith('./assets/l2d/library/protagonist-rig-v1/');
+ if(model.format!=='paperchalk-part-rig-v1'||
+    (model.characterId!==id&&!validAlias)||model.face!==face)
   throw Error('当前人物的模块绑定文件格式或方向错误');
- return model;
+ // The copy is ONLY an authoring basis. The official published JSON remains
+ // immutable, and local edits stay under the original heroine's own ID.
+ return {...model,characterId:id};
 }
 async function storePartRig(rig){
  if(!rig||rig.format!=='paperchalk-part-rig-v1'||rig.characterId!==currentId||
