@@ -47,3 +47,9 @@
 - [角色机器档案](site/data/characters/registry.json)：所有正背面与未来主角变体均复用 `protagonist`，不创建重复女主角。
 - 验证：`python3 scripts/validate_character_identity.py`，并接入现有 Pages GitHub Actions 部署检查。
 - 原有主角正面/背面 WebP 未修改；传入新场景图也不应生成独立的人物场景。
+
+## 人类角色与原创怪物规划
+
+- [**48名人类角色候选（28名学生、20名其他身份）**](docs/HUMAN_CAST_PLAN_V2.md)：其中优先设计18名核心与重要角色，后续再完成30名剧情NPC；名单均属于创意候选，未全部绘制或加入游戏。
+- [**48人机器花名册**](docs/HUMAN_CAST_ROSTER_V2.json)：编号唯一、保留女主/女二/男主已有记录，记录脸型、发型、体态、姿势和独立剧情功能。
+- [**原创性规范**](docs/ORIGINALITY_AND_HORROR_IDENTITY.md)：怪物数量与名称只是旧版创作预算，未经过原创性验收的设计不能当正式敌人。
