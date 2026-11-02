@@ -174,7 +174,11 @@ function skinnedPoint(part,u,v,phase=0,posed=null){
  if(!sum)return{x:part.x+x,y:part.y+y};
  // Skin weights saturate smoothly at one, preserving attached roots and
  // limiting overlapping influences from distinct strand/pleat chains.
- const blend=1-Math.exp(-sum*1.5);
+ // Independent ArtMesh attachment seam: the top 13% of each real
+ // source component is pinned, with C1 easing into free distal motion.
+ // This prevents torso/neck/arm shoulders and scalp roots from peeling.
+ const rootLock=smooth(clamp((v-.13)/.23,0,1));
+ const blend=(1-Math.exp(-sum*1.5))*rootLock;
  return {x:part.x+x+dx/sum*blend,y:part.y+y+dy/sum*blend};
 }
 function cleanPart(part,face,id,characterId){
