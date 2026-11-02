@@ -45,21 +45,21 @@ body.mobile-mode.virtual-landscape #view{
   z-index:1;
   inset:0;
   pointer-events:none;
-  /* Compact mask tied to scene geometry: all actual image edges remain black
-     through 3D camera tilt, without covering the center of the room. */
+  /* Picture-attached solid rim is deliberately tiny, but still covers
+     the image's true edges under 3D rotation. Sizes are developer-tunable. */
+  --rim-solid:7px;
+  --rim-feather:10px;
   background:
     linear-gradient(to right,
-      #000 0%,#000 1.5%,rgba(0,0,0,.82) 2.5%,
-      rgba(0,0,0,.38) 4.5%,rgba(0,0,0,.10) 6.5%,
-      transparent 9%,transparent 91%,
-      rgba(0,0,0,.10) 93.5%,rgba(0,0,0,.38) 95.5%,
-      rgba(0,0,0,.82) 97.5%,#000 98.5%,#000 100%),
+      #000 0px,#000 var(--rim-solid),
+      transparent calc(var(--rim-solid) + var(--rim-feather)),
+      transparent calc(100% - var(--rim-solid) - var(--rim-feather)),
+      #000 calc(100% - var(--rim-solid)),#000 100%),
     linear-gradient(to bottom,
-      #000 0%,#000 1.5%,rgba(0,0,0,.82) 3%,
-      rgba(0,0,0,.40) 5%,rgba(0,0,0,.10) 7%,
-      transparent 10%,transparent 90%,
-      rgba(0,0,0,.10) 93%,rgba(0,0,0,.40) 95%,
-      rgba(0,0,0,.82) 97%,#000 98.5%,#000 100%);
+      #000 0px,#000 var(--rim-solid),
+      transparent calc(var(--rim-solid) + var(--rim-feather)),
+      transparent calc(100% - var(--rim-solid) - var(--rim-feather)),
+      #000 calc(100% - var(--rim-solid)),#000 100%);
 }
 #fog{
   position:fixed;inset:0;display:block;width:100%;height:100%;
@@ -345,6 +345,42 @@ body.mobile-mode.virtual-landscape #view{
   #dev-tools input[type="range"]{margin:1px 0 4px}
   #dev-tools .dev-buttons{margin:4px 0}
 }
+/* Fog-only DEV is a true on-scene preview; it does not enter the 3D rig
+   or switch to the classroom. A dashed rectangle marks the guaranteed clear area. */
+#dev-fog-trigger{
+  position:absolute;z-index:15;right:3cqw;top:3.5cqh;
+  border:1px solid rgba(155,178,193,.6);border-radius:4px;
+  padding:5px 9px;background:rgba(10,15,19,.56);color:#dbe9ee;
+  font:12px var(--font-ui);cursor:pointer;pointer-events:auto;
+}
+#dev-fog-trigger[aria-expanded="true"]{border-color:#a4ead0}
+#fog-safe-guide{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  z-index:9;pointer-events:none;box-sizing:border-box;
+  border:1px dashed rgba(147,248,195,.85);
+  box-shadow:0 0 0 1px rgba(0,0,0,.5);
+}
+#fog-safe-guide[hidden],#dev-fog-tools[hidden]{display:none!important}
+#dev-fog-tools{
+  position:absolute;z-index:30;right:1.5cqw;top:10cqh;
+  width:min(315px,45cqw);max-height:85cqh;overflow:auto;
+  border:1px solid rgba(128,164,178,.8);border-radius:6px;
+  padding:12px;background:rgba(10,14,17,.94);color:#e6f0f1;
+  font:12px var(--font-ui);pointer-events:auto;touch-action:pan-y;
+}
+#dev-fog-tools header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#dev-fog-tools strong{font-size:14px}
+#dev-fog-tools label{display:block;margin-top:9px}
+#dev-fog-tools output{float:right;color:#9cdeb8;font-variant-numeric:tabular-nums}
+#dev-fog-tools input[type="range"]{width:100%;margin:5px 0;accent-color:#8cd9b6}
+#dev-fog-tools .fog-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+#dev-fog-tools button{background:#23343b;color:#fff;border:1px solid #77929a;border-radius:3px;padding:6px;cursor:pointer}
+#dev-fog-tools p{font-size:11px;line-height:1.45;color:#bcd0ce}
+@container (max-height:450px){
+  #dev-fog-tools{top:2cqh;max-height:95cqh;width:min(315px,46cqw);padding:8px}
+  #dev-fog-tools label{margin-top:4px}
+  #dev-fog-tools input[type="range"]{margin:2px 0}
+}
 /* Dynamic room selector reuses minimal UI, no new overlay during gameplay */
 #scene-menu-gallery{max-height:52cqh;overflow-y:auto;scrollbar-width:thin}
 #scene-switcher{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-height:45cqh;overflow-y:auto;scrollbar-width:thin}
@@ -403,6 +439,30 @@ body.mobile-mode.virtual-landscape #view{
   <div id="scene-transition" data-phase="idle" data-active="false" aria-hidden="true"></div>
 
   <button id="dev-trigger" type="button" aria-label="打开分层开发者模式">分层 DEV</button>
+  <button id="dev-fog-trigger" type="button" aria-expanded="false" aria-controls="dev-fog-tools">黑雾 DEV</button>
+  <div id="fog-safe-guide" aria-hidden="true" hidden></div>
+  <aside id="dev-fog-tools" hidden aria-label="黑雾实时开发者调试">
+    <header><strong>黑雾 · 实时调试</strong><button id="dev-fog-close" type="button">关闭</button></header>
+    <p>当前场景直接预览，不切换房间。绿框内保证没有动态黑雾；F3 快速开关。</p>
+    <label for="fog-width">黑雾宽度 · 场景高度占比 <output id="fog-width-value"></output></label>
+    <input id="fog-width" type="range" min="0" max="14" step=".5">
+    <label for="fog-opacity">黑雾强度 <output id="fog-opacity-value"></output></label>
+    <input id="fog-opacity" type="range" min="0" max="100" step="1">
+    <label for="fog-offset">边缘距离 · 正值往里 / 负值往外 <output id="fog-offset-value"></output></label>
+    <input id="fog-offset" type="range" min="-30" max="45" step="1">
+    <label for="fog-safe">中央无雾安全区 <output id="fog-safe-value"></output></label>
+    <input id="fog-safe" type="range" min="65" max="98" step="1">
+    <label for="fog-solid">图片边缘纯黑保护 <output id="fog-solid-value"></output></label>
+    <input id="fog-solid" type="range" min="7" max="24" step="1">
+    <label for="fog-feather">边缘渐变过渡 <output id="fog-feather-value"></output></label>
+    <input id="fog-feather" type="range" min="0" max="35" step="1">
+    <div class="fog-actions">
+      <button id="fog-save" type="button">保存设置</button>
+      <button id="fog-reset" type="button">恢复轻雾默认</button>
+      <button id="fog-copy" type="button">复制参数</button>
+    </div>
+    <output id="fog-status" role="status" aria-live="polite"></output>
+  </aside>
   <div id="dev-stage" hidden aria-label="三维场景分层检查器">
     <div id="dev-rig">
       <div id="dev-ground" aria-label="水平三维参考地板与敌人脚点">
@@ -516,23 +576,29 @@ uniform sampler2D u_density;
 uniform vec2 u_viewSize;
 uniform vec2 u_half;
 uniform float u_time;
+uniform vec4 u_fogSettings; // width in px, opacity 0..1, signed inset px, clear-zone %
+uniform vec2 u_rimSettings; // full-black protection px, feather px
 void main(){
  vec2 uv=v_uv;
  float density=texture2D(u_density,uv).r;
- // Compact SCREEN-SPACE smoke zone, independent of scene tilt.
- // The independently rotating picture mask protects all actual image edges.
- float d=min((u_half.x-abs(uv.x-.5))*u_viewSize.x,
-             (u_half.y-abs(uv.y-.5))*u_viewSize.y);
- float curl=sin(uv.x*22.+u_time*1.24+sin(uv.y*20.-u_time*.79)*1.8);
- float swirl=sin(uv.y*29.-u_time*1.03+sin(uv.x*19.+u_time*.67)*1.3);
- float width=min(112.,u_viewSize.y*.19);
- float smokeZone=1.-smoothstep(8.,width,d+curl*11.+swirl*7.);
- // Thin viewport safety rim only; the scene has its own solid-black edge mask.
- // Keep the original flowing fog INSIDE, never introduce gray fog.
- float safetyD=min((u_half.x-.008-abs(uv.x-.5))*u_viewSize.x,
-                   (u_half.y-.012-abs(uv.y-.5))*u_viewSize.y);
- float safetyBlack=1.-smoothstep(0.,min(16.,u_viewSize.y*.03),safetyD);
- float fluidAlpha=clamp((.025+.47*pow(max(density,0.),.75))*smokeZone,0.,.52);
+ // Geometry is relative to the ACTUAL centered scene rectangle, not the
+ // display's width. Outside scene is black; inside central clear zone is clear.
+ float dx=(u_half.x-abs(uv.x-.5))*u_viewSize.x;
+ float dy=(u_half.y-abs(uv.y-.5))*u_viewSize.y;
+ float d=min(dx,dy);
+ float safeX=u_half.x*u_viewSize.x*(1.-u_fogSettings.w*.01);
+ float safeY=u_half.y*u_viewSize.y*(1.-u_fogSettings.w*.01);
+ // Union of four scene-edge bands; their inside boundaries feather to 0.
+ float nearEdges=max(1.-smoothstep(max(0.,safeX-6.),safeX,dx),
+                     1.-smoothstep(max(0.,safeY-6.),safeY,dy));
+ float wave=sin(uv.x*23.+u_time*.8+sin(uv.y*15.))*3.
+           +sin(uv.y*19.-u_time*.67)*2.;
+ float distance=d-u_fogSettings.z+wave;
+ float smokeZone=(1.-smoothstep(0.,max(1.,u_fogSettings.x),distance))*nearEdges;
+ float safetyBlack=1.-smoothstep(u_rimSettings.x,
+                                u_rimSettings.x+max(1.,u_rimSettings.y),d);
+ float fluidAlpha=clamp((.09+.53*pow(max(density,0.),.8))
+                    *smokeZone*u_fogSettings.y,0.,.56);
  // Only persistent flowing black fog plus guaranteed opaque edge protection.
  float alpha=max(fluidAlpha,safetyBlack);
  gl_FragColor=vec4(0.,0.,0.,alpha);
@@ -552,6 +618,53 @@ void main(){
   let sizes={w:1,h:1,sw:1,sh:1},fluidTime=0;
   let fallback=null,fallbackState=null;
   let sceneHalf={x:.4,y:.4};
+  // Live persisted fog controls, intentionally separate from 3D layer editor.
+  // Large values remain user-adjustable, but the clear-zone hard-clips smoke.
+  const FOG_KEY='paperchalk-fog-edge-v1';
+  const fogDefaults=Object.freeze({width:4,opacity:40,offset:-3,safe:88,solid:7,feather:10});
+  const fogBounds=Object.freeze({width:[0,14],opacity:[0,100],offset:[-30,45],
+                                 safe:[65,98],solid:[7,24],feather:[0,35]});
+  function cleanFog(raw){
+    const result={...fogDefaults};
+    if(!raw||typeof raw!=='object')return result;
+    for(const key of Object.keys(fogDefaults)){
+      const value=Number(raw[key]);
+      if(raw[key]!==undefined&&Number.isFinite(value))
+        result[key]=clamp(value,...fogBounds[key]);
+    }
+    return result;
+  }
+  function loadFog(){
+    try{return cleanFog(JSON.parse(localStorage.getItem(FOG_KEY)))}catch(_){return {...fogDefaults}}
+  }
+  let fogConfig=loadFog();
+  function fogMetrics(){
+    return {
+      width:stage.offsetHeight*fogConfig.width*.01,
+      opacity:fogConfig.opacity*.01,
+      offset:fogConfig.offset,safe:fogConfig.safe,
+      solid:fogConfig.solid,feather:fogConfig.feather
+    };
+  }
+  function applyFogSettings(){
+    stage.style.setProperty('--rim-solid',fogConfig.solid+'px');
+    stage.style.setProperty('--rim-feather',fogConfig.feather+'px');
+    const guide=document.getElementById('fog-safe-guide');
+    guide.style.width=(stage.offsetWidth*fogConfig.safe*.01)+'px';
+    guide.style.height=(stage.offsetHeight*fogConfig.safe*.01)+'px';
+    fog.dataset.width=String(fogConfig.width);
+    fog.dataset.opacity=String(fogConfig.opacity);
+    fog.dataset.safe=String(fogConfig.safe);
+    fog.dataset.offset=String(fogConfig.offset);
+    if(gl)gl.useProgram(composite);
+    if(gl){
+      const m=fogMetrics();
+      gl.uniform4f(gl.getUniformLocation(composite,'u_fogSettings'),
+        m.width,m.opacity,m.offset,m.safe);
+      gl.uniform2f(gl.getUniformLocation(composite,'u_rimSettings'),m.solid,m.feather);
+    }
+  }
+
   function logicalSize(){
     const rotated=document.body.classList.contains('virtual-landscape');
     return rotated ? {w:innerHeight,h:innerWidth} : {w:innerWidth,h:innerHeight};
@@ -1092,6 +1205,7 @@ void main(){
       fallbackState={sx,sy,a:new Float32Array(sx*sy),b:new Float32Array(sx*sy),image:fallback.createImageData(sx,sy)};
     }
     half();
+    applyFogSettings();
   }
   function drawGPU(dt,t){
     gl.activeTexture(gl.TEXTURE0);
@@ -1106,6 +1220,8 @@ void main(){
     gl.bindFramebuffer(gl.FRAMEBUFFER,null);
     gl.viewport(0,0,fog.width,fog.height);
     gl.useProgram(composite);
+    // Apply live slider changes on the same persistent fluid texture.
+    applyFogSettings();
     gl.bindTexture(gl.TEXTURE_2D,simTargets[simIndex].tex);
     gl.uniform1f(gl.getUniformLocation(composite,'u_time'),t);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
@@ -1137,16 +1253,20 @@ void main(){
       const source=inlet*Math.max(.06,.57+.25*w1+.18*w2)*3.8;
       const d=b[y*sx+x]=clamp(old*Math.exp(-dt*.44)+dt*source,0,1);
       const p=(y*sx+x)*4;
-      const curl=Math.sin(uvx*22+t*1.24+Math.sin(uvy*20-t*.79)*1.8);
-      const swirl=Math.sin(uvy*29-t*1.03+Math.sin(uvx*19+t*.67)*1.3);
-      const width=Math.min(112,sizes.h*.19);
-      const v=clamp((distance+curl*11+swirl*7-8)/Math.max(1,width-8),0,1);
-      const smokeZone=1-v*v*(3-2*v);
-      const safetyD=Math.min((sceneHalf.x-.008-Math.abs(uvx-.5))*sizes.w,
-                             (sceneHalf.y-.012-Math.abs(uvy-.5))*sizes.h);
-      const blackT=clamp(safetyD/Math.min(16,sizes.h*.03),0,1);
-      const safetyBlack=1-blackT*blackT*(3-2*blackT);
-      const fluidAlpha=clamp((.025+.47*d**.75)*smokeZone,0,.52);
+      const m=fogMetrics();
+      const dx=(sceneHalf.x-Math.abs(uvx-.5))*sizes.w;
+      const dy=(sceneHalf.y-Math.abs(uvy-.5))*sizes.h;
+      const safeX=sceneHalf.x*sizes.w*(1-m.safe*.01);
+      const safeY=sceneHalf.y*sizes.h*(1-m.safe*.01);
+      const smooth=(v)=>{const q=clamp(v,0,1);return q*q*(3-2*q)};
+      const nearEdges=Math.max(1-smooth((dx-Math.max(0,safeX-6))/Math.max(.001,safeX-Math.max(0,safeX-6))),
+                               1-smooth((dy-Math.max(0,safeY-6))/Math.max(.001,safeY-Math.max(0,safeY-6))));
+      const wave=Math.sin(uvx*23+t*.8+Math.sin(uvy*15))*3+
+                 Math.sin(uvy*19-t*.67)*2;
+      const distanceToFog=distance-m.offset+wave;
+      const smokeZone=(1-smooth(distanceToFog/Math.max(1,m.width)))*nearEdges;
+      const safetyBlack=1-smooth((distance-m.solid)/Math.max(1,m.feather));
+      const fluidAlpha=clamp((.09+.53*d**.8)*smokeZone*m.opacity,0,.56);
       const alpha=Math.max(fluidAlpha,safetyBlack);
       image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
     }
@@ -1302,6 +1422,53 @@ void main(){
     devStage.hidden=true;devTools.hidden=true;
     start();
   }
+  // Independent on-scene fog tuning: no reparenting and no forced classroom.
+  const fogPanel=document.getElementById('dev-fog-tools');
+  const fogTrigger=document.getElementById('dev-fog-trigger');
+  const fogGuide=document.getElementById('fog-safe-guide');
+  const fogStatus=document.getElementById('fog-status');
+  function showFogEditor(open){
+    fogPanel.hidden=!open;fogGuide.hidden=!open;
+    fogTrigger.setAttribute('aria-expanded',String(open));
+    if(open)refreshFogEditor();
+    applyFogSettings();start();
+  }
+  function refreshFogEditor(){
+    for(const [key,value] of Object.entries(fogConfig)){
+      const input=document.getElementById('fog-'+key);
+      input.value=String(value);
+      document.getElementById('fog-'+key+'-value').textContent=
+        value+(key==='width'||key==='safe'||key==='opacity'?'%':'px');
+    }
+  }
+  for(const key of Object.keys(fogDefaults)){
+    document.getElementById('fog-'+key).addEventListener('input',e=>{
+      fogConfig[key]=clamp(Number(e.target.value),...fogBounds[key]);
+      refreshFogEditor();applyFogSettings();start();
+      fogStatus.textContent='实时预览中 · 尚未保存';
+    });
+  }
+  fogTrigger.addEventListener('click',()=>showFogEditor(fogPanel.hidden));
+  document.getElementById('dev-fog-close').addEventListener('click',()=>showFogEditor(false));
+  document.getElementById('fog-save').addEventListener('click',()=>{
+    try{localStorage.setItem(FOG_KEY,JSON.stringify(fogConfig));fogStatus.textContent='已保存，切换房间后生效'}
+    catch(_){fogStatus.textContent='本浏览器禁止本地保存'}
+  });
+  document.getElementById('fog-reset').addEventListener('click',()=>{
+    fogConfig={...fogDefaults};refreshFogEditor();applyFogSettings();start();
+    try{localStorage.removeItem(FOG_KEY)}catch(_){}
+    fogStatus.textContent='已恢复轻雾默认，保存已清除';
+  });
+  document.getElementById('fog-copy').addEventListener('click',async()=>{
+    const json=JSON.stringify(fogConfig,null,2);
+    try{await navigator.clipboard.writeText(json);fogStatus.textContent='黑雾参数已复制'}
+    catch(_){window.prompt('复制黑雾参数',json)}
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='F3'){event.preventDefault();showFogEditor(fogPanel.hidden)}
+  },true);
+  applyFogSettings();
+  if(new URLSearchParams(location.search).get('fogdev')==='1')showFogEditor(true);
   document.getElementById('dev-trigger').addEventListener('click',enterDeveloper);
   document.getElementById('dev-exit').addEventListener('click',exitDeveloper);
   devSelect.addEventListener('change',()=>selectEditorLayer(devSelect.value));
