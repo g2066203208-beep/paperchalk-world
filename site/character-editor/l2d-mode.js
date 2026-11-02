@@ -53,7 +53,8 @@ function schedule(){
    rig.setAmplitude(q.amplitude);rig.setPeriod(q.period);
    rig.featurePreset=currentId==='protagonist'&&S.side==='front'?'heroine-front':'generic';
    rig.blinkEnabled=rig.featurePreset==='heroine-front';
-   rig.setSoftness(q.softness);rig.setBones(bones);rig.setPaused(paused);rig.start();
+   rig.setSoftness(q.softness);rig.setBones(bones);rig.setPaused(paused);
+   if(paused){rig.stop();rig.render(performance.now(),true)}else rig.start();
   }catch(e){$('status').textContent='L2D 动态预览错误：'+e.message;}
  },125);
 }
@@ -71,6 +72,10 @@ function setMotionPaused(value){
  paused=!!value;
  $('l2d-play').textContent=paused?'播放':'暂停';
  rig?.setPaused(paused);
+ if(rig){
+  if(paused){rig.stop();rig.render(performance.now(),true)}
+  else rig.start();
+ }
  window.dispatchEvent(new CustomEvent('paperchalk:rig-play-changed',{detail:{paused}}));
 }
 $('l2d-play').onclick=()=>setMotionPaused(!paused);
