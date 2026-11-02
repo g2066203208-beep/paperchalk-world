@@ -207,6 +207,8 @@ async function showClip(info){
  const uri=info?.data||info?.url||'';
  $('studio-v4-wrap').hidden=!uri;
  document.body.classList.toggle('v4-authoring',!!uri);
+ const legacyRig=document.getElementById('dev-l2d-preview-controls');
+ if(legacyRig)legacyRig.hidden=!!uri;
  if(!uri){globalLayer=null;frameLayer=null;ed.l2dRig?.()?.start();ed.render();return;}
  const token=++switchNonce;
  const surface=ed.make(1024,1024),crop=info.crop||{x:351,y:9,w:335,h:1013};
