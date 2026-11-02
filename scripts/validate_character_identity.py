@@ -45,7 +45,8 @@ characters_dir = SITE / "assets/characters"
 actual = {p.name for p in characters_dir.glob("protagonist-*") if p.is_file()}
 assert actual == {"protagonist-front.webp", "protagonist-back.webp"}, f"unregistered protagonist duplicate: {actual}"
 assert "protagonist-back.webp" in (SITE / "index.html").read_text(encoding="utf-8")
-assert "protagonist-" in (SITE / "l2d/index.html").read_text(encoding="utf-8")
+assert (SITE / "l2d/runtime.js").is_file(), "missing shared multi-actor L2D runtime"
+assert "protagonist-" in (SITE / "character-editor/index.html").read_text(encoding="utf-8"), "character editor must retain approved reference assets"
 assert (ROOT / hero["designDocument"]).is_file()
 for field in ("ageYears", "heightCm", "weightKg", "occupation"):
     assert hero["proposedProfile"][field]["status"] == "proposed", f"unapproved {field} should remain a proposal"
