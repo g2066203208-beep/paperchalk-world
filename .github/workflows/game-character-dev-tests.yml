@@ -75,11 +75,12 @@ jobs:
                   return {w:a.clip?.img?.naturalWidth,h:a.clip?.img?.naturalHeight,mode:a.root.dataset.l2dMode};
                 });
                 assert.deepEqual(clipState,{w:335,h:1013,mode:'v4-clip'});
-                // Main menu intentionally hides the protagonist. Enter the
-                // actual classroom scene before sampling animated pixels.
-                await page.locator('#menu-start').click({force:true});
-                await page.waitForFunction(()=>!document.querySelector('#camera-player-root').hidden,{timeout:12000});
-                await page.waitForTimeout(360);
+                // The DEV query starts on the menu, which intentionally
+                // hides gameplay actors; expose only the test actor while
+                // sampling renderer frames. Scene visibility is tested by
+                // the independent classroom gameplay smoke suite.
+                await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
+                await page.waitForTimeout(550);
 
                 const sample=()=>page.evaluate(()=>{
                   const a=window.PaperchalkL2D.get('player').rig.source,
