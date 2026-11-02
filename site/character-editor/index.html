@@ -46,7 +46,7 @@ body.embedded #btnCloseInGame{background:#273244}
  body.embedded header{position:relative}
  body.embedded .layout{height:auto;min-height:0}
 }
-</style><link rel="stylesheet" href="./easy-mode.css?v=easy-20261102b"></head><body>
+</style><link rel="stylesheet" href="./easy-mode.css?v=easy-20261102b"><link rel="stylesheet" href="./part-rig.css?v=part-rig-20261103a"></head><body>
 <header><div><strong>✎ 全人物 L2D 编辑工作室</strong><small>编辑游戏实际 V4 动画 · 分层修补 / 逐帧校正 · 原坐标保存</small></div><div class="actions">
 <button id="btnApplyGame" type="button" hidden>✓ 应用到游戏</button><button id="btnCloseInGame" type="button" hidden>返回 DEV</button><button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnSave" style="background:#205e52;border-color:#4ba791;color:#e4fff4;font-weight:700">✓ 保存并应用到游戏</button><button id="btnExport">↓ 完整分层 ZIP</button>
 </div></header>
@@ -89,7 +89,9 @@ function world(p){return{x:(p.x-S.px)/S.zoom,y:(p.y-S.py)/S.zoom}}
 function drawChecker(){const step=20;ctx.fillStyle='#29323f';ctx.fillRect(0,0,W,H);ctx.fillStyle='#374354';for(let y=0;y<H;y+=step)for(let x=0;x<W;x+=step)if((x/step+y/step)%2===0)ctx.fillRect(x,y,step,step)}
 function drawAll(g,side=S.side,only=S.only){const arr=S.layers[side];if(only){const p=current();if(side===S.side&&p&&p.visible&&window.PaperchalkStudio?.shouldDrawLayer?.(p)!==false){g.globalAlpha=p.opacity;g.drawImage(p.canvas,p.x,p.y)}g.globalAlpha=1;return}for(const p of arr){if(!p.visible||window.PaperchalkStudio?.shouldDrawLayer?.(p)===false)continue;g.globalAlpha=p.opacity;g.drawImage(p.canvas,p.x,p.y)}g.globalAlpha=1}
 function render(){if(!S.ready)return;const d=dpr();ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,stage.clientWidth,stage.clientHeight);ctx.fillStyle='#0f1722';ctx.fillRect(0,0,stage.clientWidth,stage.clientHeight);ctx.save();ctx.translate(S.px,S.py);ctx.scale(S.zoom,S.zoom);if(S.checker)drawChecker();else{ctx.fillStyle='#202935';ctx.fillRect(0,0,W,H)}ctx.imageSmoothingEnabled=true;const movingFrame=window.PaperchalkStageMotion?.frame(S);
-if(movingFrame){ctx.drawImage(movingFrame,0,0,W,H)}else{
+const partRig=window.PaperchalkPartRigStudio?.drawPreview?.(ctx,S);
+if(partRig){/* opt-in independent source meshes; V4 stays untouched */}
+else if(movingFrame){ctx.drawImage(movingFrame,0,0,W,H)}else{
   // V4 preview uses the SAME composed layers as game, with a local chest
   // deformation applied after the pixel edits. Source inspection stays static.
   const composed=window.PaperchalkStudio?.drawComposedV4?.(ctx,S);
@@ -262,10 +264,12 @@ if(embedded)sendParent({type:'PAPERCHALK_EDITOR_READY'});
 
 </script>
 <script src="../l2d/breath.js?v=chest-breath-20261103"></script>
+<script src="../l2d/part-rig.js?v=part-rig-20261103a"></script>
 <script src="../l2d/rig.js?v=chest-breath-20261103"></script>
 <script src="./l2d-mode.js?v=char-002-universal-motion-20261102"></script>
 <script src="./studio.js?v=chest-breath-20261103"></script>
 <script src="./stage-motion.js?v=easy-20261102b"></script>
 <script src="./easy-mode.js?v=easy-20261102b"></script>
+<script src="./part-rig-studio.js?v=part-rig-20261103a"></script>
 
 </body></html>
