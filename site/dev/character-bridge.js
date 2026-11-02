@@ -1,286 +1,149 @@
-/* Unified all-character game DEV. Selection comes from actors actually loaded
-   into the game, not a hard-coded "heroine" launcher. Every character remains
-   an L2D canvas, with per-character/side project storage and animation profile. */
+/* Single game DEV entry to the all-character L2D authoring studio.
+ * The game displays ONLY L2D canvases (site/l2d/runtime.js). Source images
+ * are invisible layout anchors and can be PNG or user-edited composites.
+ * All imported character IDs share the same IndexedDB as the studio. */
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const controls=$('dev-character-controls'),loaded=$('dev-character-list'),library=$('dev-character-library');
-const direction=$('dev-character-angle'),picker=$('dev-layer'),frame=$('dev-character-frame');
-const overlay=$('dev-character-overlay'),status=$('dev-character-status');
-if(!controls||!loaded||!library||!frame)return;
-const catalog=new Map();
-const assigned={player:{id:'protagonist',side:'back'},enemy:{id:'',side:'front'}};
-const previews=new Map();
+const loaded=$('dev-character-list'),library=$('dev-character-library');
+const side=$('dev-character-angle'),picker=$('dev-layer'),status=$('dev-character-status');
+if(!loaded||!library||!window.PaperchalkL2D)return;
+const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},enemy:{id:'',side:'front'}};
 const DB='paperchalk-dev-characters-v1';
-let slot='player',activeID='protagonist',side='back',frameReady=false,ready=false;
-const defaultProfile=()=>({amplitude:.55,period:4.8,softness:1});
-function note(t){status.textContent=t;}
-function db(){return new Promise((ok,no)=>{
- const q=indexedDB.open(DB,1);
- q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('kv'))q.result.createObjectStore('kv')};
- q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error);
-});}
-async function get(key){const d=await db();try{return await new Promise((ok,no)=>{
- const q=d.transaction('kv','readonly').objectStore('kv').get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error);
-});}finally{d.close();}}
-async function put(key,val){const d=await db();try{return await new Promise((ok,no)=>{
- const q=d.transaction('kv','readwrite').objectStore('kv').put(val,key);q.onsuccess=()=>ok();q.onerror=()=>no(q.error);
-});}finally{d.close();}}
-function base(id,side){const c=catalog.get(id);return c?.[side]||c?.front||c?.back||'';}
-function actor(key){return window.PaperchalkL2D?.get(key);}
-function loadedActors(){
- const live=window.PaperchalkL2D?.getLoaded()||[];
- return live.filter(a=>a.img?.getAttribute('src')&&a.root.isConnected);
+let slot='player',ready=false;
+function note(s){status.textContent=s;}
+const valid=id=>/^[A-Za-z0-9_-]{1,80}$/.test(String(id));
+async function storage(mode,key,value){
+ const db=await new Promise((ok,no)=>{
+  const r=indexedDB.open(DB,1);
+  r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('kv'))r.result.createObjectStore('kv')};
+  r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);
+ });
+ try{return await new Promise((ok,no)=>{
+  const q=db.transaction('kv',mode).objectStore('kv');
+  const task=mode==='readonly'?q.get(key):q.put(value,key);
+  task.onsuccess=()=>ok(task.result);task.onerror=()=>no(task.error);
+ });}finally{db.close();}
 }
+const get=key=>storage('readonly',key).catch(()=>null);
+const put=(key,v)=>storage('readwrite',key,v);
+const actualActors=()=>window.PaperchalkL2D.getLoaded().filter(a=>a.root.isConnected&&a.img.getAttribute('src'));
 function refreshList(){
- const prev=slot;loaded.replaceChildren();
- for(const a of loadedActors()){
-  const value=a.id;
-  if(!assigned[value])assigned[value]={id:a.root.dataset.characterId||value,side:'front'};
-  const item=assigned[value],c=catalog.get(item.id);
-  const option=new Option((c?.label||item.id||value)+(value==='player'?' · 主角':' · '+(value==='enemy'?'NPC':'角色')),(value));
-  loaded.appendChild(option);
+ const previous=loaded.value||slot;loaded.replaceChildren();
+ for(const a of actualActors()){
+  const bind=assigned[a.id]||{id:a.img.dataset.characterId||a.id,side:a.img.dataset.characterSide||'front'};
+  assigned[a.id]=bind;
+  const desc=catalog.get(bind.id)?.label||bind.id;
+  loaded.add(new Option(desc+' · '+(a.id==='player'?'主角':'NPC'),a.id));
  }
- if(loaded.options.length){
-  if([...loaded.options].some(x=>x.value===prev))loaded.value=prev;
-  else slot=loaded.value=loaded.options[0].value;
- }else note('当前场景没有加载任何人物');
+ if([...loaded.options].some(x=>x.value===previous))slot=loaded.value=previous;
+ else if(loaded.options.length)slot=loaded.value=loaded.options[0].value;
  library.replaceChildren();
  for(const c of catalog.values())library.add(new Option(c.label||c.id,c.id));
- const target=assigned[slot];
- if(target){
-  activeID=target.id||activeID;side=target.side||'front';
-  if(catalog.has(activeID))library.value=activeID;
-  direction.value=side;
+ const bind=assigned[slot];
+ if(bind){
+  library.value=bind.id;side.value=bind.side;
  }
 }
-function imageNode(key){return actor(key)?.img||$(key==='player'?'actor-player':'actor-enemy');}
-async function currentImage(id,face){
- return previews.get(id+':'+face)||await get('render:'+id+':'+face).catch(()=>null)||base(id,face);
+function selectSlot(value){
+ if(!assigned[value])return;
+ slot=value;refreshList();
+ if((value==='player'||value==='enemy')&&picker.value!==value){
+  picker.value=value;picker.dispatchEvent(new Event('change',{bubbles:true}));
+ }
 }
-async function setupL2D(key,id,face){
- const profile=await get('l2d:'+id+':'+face).catch(()=>null)||defaultProfile();
- window.PaperchalkL2D?.setProfile(key,profile);
- const c=catalog.get(id);
- window.PaperchalkL2D?.markAnimation(key,!!c?.animated?.[face]);
-}
-async function assign(key,id,face='front',store=true){
- if(!catalog.has(id))throw Error('角色不存在：'+id);
- const url=await currentImage(id,face);
- if(!url)throw Error('角色没有 '+face+' 素材，请先导入 PNG/PSD');
- const img=imageNode(key);if(!img)throw Error('场景图层尚未加载：'+key);
- assigned[key]={id,side:face};
+async function assign(target,id,face='front',save=true){
+ const c=catalog.get(id);if(!c)throw Error('未找到角色 '+id);
+ const actor=window.PaperchalkL2D.get(target);if(!actor)throw Error('人物图层未加载 '+target);
+ const src=await get('render:'+id+':'+face)||c[face]||c.front||c.back;
+ if(!src)throw Error('人物缺少 '+face+' 方向素材');
+ const img=actor.img;assigned[target]={id,side:face};
  img.dataset.characterId=id;img.dataset.characterSide=face;
+ if(img.src!==new URL(src,location.href).href)img.src=src;
  img.hidden=false;
- const previous=img.src;
- if(previous!==new URL(url,location.href).href&&previous!==url)img.src=url;
- if(store)await put('slot:'+key,assigned[key]).catch(e=>console.warn(e));
- await setupL2D(key,id,face);
+ const rig=await get('l2d:'+id+':'+face)||{amplitude:.55,period:4.8,softness:1};
+ window.PaperchalkL2D.setProfile(target,rig);
+ window.PaperchalkL2D.markAnimation(target,!!c.animated?.[face]);
+ if(save)await put('slot:'+target,{id,side:face});
  refreshList();
- window.dispatchEvent(new CustomEvent('paperchalk:character-assigned',{detail:{slot:key,id,side:face}}));
- note('正在以 L2D 渲染：'+(catalog.get(id)?.label||id)+' · '+(face==='back'?'背面':'正面'));
+ note('正在 L2D 渲染 '+c.label+' · '+(face==='back'?'背面':'正面'));
 }
-async function begin(){
+async function openStudio(){
+ // DEV always navigates to the ONE shared studio, no iframe and no
+ // separate heroine-only page. Studio itself offers all imported characters.
+ const current=assigned[slot]||{id:library.value||'protagonist',side:side.value||'front'};
+ try{localStorage.setItem('paperchalk-studio-last',JSON.stringify(current))}catch(e){}
+ const url=new URL('./character-editor/',location.href);
+ url.searchParams.set('character',current.id);
+ url.searchParams.set('side',current.side);
+ url.searchParams.set('slot',slot);
+ url.searchParams.set('from','game');
+ location.assign(url.href);
+}
+async function fileData(file){return new Promise((ok,no)=>{
+ const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=()=>no(fr.error);fr.readAsDataURL(file);
+});}
+async function importImages(files){
+ const groups=new Map();
+ for(const f of files){
+  if(!/^image\/(png|webp|jpeg)$/.test(f.type))continue;
+  const m=f.name.match(/^(.*?)(?:[-_ ](front|back|正面|背面))?\.(png|webp|jpe?g)$/i);
+  if(!m)continue;
+  const name=m[1]||'新角色',face=/^(back|背面)$/.test(m[2]||'')?'back':'front';
+  let item=groups.get(name)||[...catalog.values()].find(x=>x.localFamily===name);
+  if(!item){
+   item={id:'local-'+crypto.randomUUID().slice(0,12),label:name,front:'',back:'',localFamily:name};
+   catalog.set(item.id,item);
+  }
+  item[face]=await fileData(f);groups.set(name,item);
+ }
+ if(!groups.size)throw Error('只支持 PNG/WebP/JPEG；分层 PSD 在工作室导入');
+ await put('imported',[...catalog.values()].filter(x=>x.id.startsWith('local-')));
+ const item=[...groups.values()].at(-1);
+ await assign(slot,item.id,item.back&&!item.front?'back':'front');
+ note('已导入 '+item.label+'。点击「打开全人物 L2D 编辑工作室」编辑分层/动作。');
+}
+async function init(){
  catalog.set('protagonist',{id:'protagonist',label:'女主角',front:'./assets/characters/protagonist-front.webp',back:'./assets/characters/protagonist-back.webp'});
  try{
-  const res=await fetch('./characters.catalog.json',{cache:'no-cache'});
-  if(res.ok)for(const item of (await res.json()).characters||[]){
-   if(!/^[\w-]{1,80}$/.test(item.id))continue;
-   catalog.set(item.id,{id:item.id,label:String(item.label||item.id),front:item.front||'',back:item.back||''});
+  const response=await fetch('./characters.catalog.json',{cache:'no-store'});
+  if(response.ok)for(const p of (await response.json()).characters||[]){
+   if(valid(p.id))catalog.set(p.id,{id:p.id,label:p.label||p.id,front:p.front||'',back:p.back||''});
   }
- }catch(e){console.warn('Using built-in L2D character catalog',e);}
- const imported=await get('imported').catch(()=>null);
- if(Array.isArray(imported))for(const c of imported)if(c&&/^[\w-]{1,80}$/.test(c.id))catalog.set(c.id,c);
- const overrides=await get('overrides').catch(()=>null);
- if(Array.isArray(overrides))for(const c of overrides)if(c&&catalog.has(c.id))Object.assign(catalog.get(c.id),c);
+ }catch(e){console.warn('L2D catalog offline',e);}
+ const imported=await get('imported');if(Array.isArray(imported))for(const c of imported){
+  if(valid(c?.id))catalog.set(c.id,c);
+ }
+ const overrides=await get('overrides');if(Array.isArray(overrides))for(const c of overrides){
+  if(valid(c?.id)&&catalog.has(c.id))Object.assign(catalog.get(c.id),c);
+ }
  for(const key of ['player','enemy']){
-  const prev=await get('slot:'+key).catch(()=>null);
-  if(prev&&catalog.has(prev.id))assigned[key]={id:prev.id,side:prev.side==='back'?'back':'front'};
+  const old=await get('slot:'+key);
+  if(old?.id&&catalog.has(old.id))assigned[key]={id:old.id,side:old.side==='back'?'back':'front'};
  }
- ready=true;
  for(const key of ['player','enemy']){
-  const a=assigned[key];
-  if(a.id&&catalog.has(a.id))try{await assign(key,a.id,a.side,false)}catch(e){console.warn('L2D assignment:',e);}
- }
- refreshList();
-}
-function chooseLoaded(key){
- if(!assigned[key])return;
- slot=key;const a=assigned[key];activeID=a.id;side=a.side;
- if([...loaded.options].some(x=>x.value===key))loaded.value=key;
- if([...library.options].some(x=>x.value===activeID))library.value=activeID;
- direction.value=side;
- if(['player','enemy'].includes(key)&&picker.value!==key){
-  picker.value=key;picker.dispatchEvent(new Event('change',{bubbles:true}));
- }
-}
-function sources(id){
- const c=catalog.get(id)||{};
- return {id,label:c.label||id,front:c.front||'',back:c.back||''};
-}
-function sendTarget(){
- if(!frameReady)return;
- frame.contentWindow.postMessage({type:'PAPERCHALK_LOAD_CHARACTER',
-   target:sources(activeID),side},location.origin);
-}
-function openEditor(){
- chooseLoaded(slot);
- if(!catalog.has(activeID)){note('先选择一个已加载的人物');return;}
- if(overlay.parentElement!==document.body)document.body.appendChild(overlay);
- overlay.hidden=false;document.body.classList.add('character-editing');
- const url=new URL('./character-editor/?embed=1',location.href);
- if(!frame.src||new URL(frame.src).pathname!==url.pathname){
-  frameReady=false;frame.src=url.href;
- }else sendTarget();
-}
-function closeEditor(){
- overlay.hidden=true;document.body.classList.remove('character-editing');
-}
-async function applyEditor(){
- if(!frameReady)return;frame.contentWindow.postMessage({type:'PAPERCHALK_EDITOR_REQUEST_APPLY'},location.origin);
-}
-async function onMessage(event){
- if(event.source!==frame.contentWindow||event.origin!==location.origin)return;
- const msg=event.data||{};
- if(msg.type==='PAPERCHALK_EDITOR_READY'){frameReady=true;sendTarget();return;}
- if(msg.type==='PAPERCHALK_EDITOR_CLOSE'){closeEditor();return;}
- if(msg.type==='PAPERCHALK_EDITOR_LOADED'){note('已载入 '+msg.label+' 分层工程 · L2D 动态预览');return;}
- if(msg.type==='PAPERCHALK_EDITOR_L2D_PROFILE'){
-  if(!catalog.has(msg.id))return;
-  for(const face of ['front','back']){
-   const profile=msg.profiles?.[face];if(profile)await put('l2d:'+msg.id+':'+face,profile);
-  }
-  for(const [key,item] of Object.entries(assigned))
-   if(item.id===msg.id)window.PaperchalkL2D?.setProfile(key,msg.profiles?.[item.side]||msg.profile||defaultProfile());
-  return;
- }
- if(msg.id!==activeID)return;
- if(msg.type==='PAPERCHALK_EDITOR_PREVIEW'){
-  if(!['front','back'].includes(msg.side)||!/^data:image\/png;base64,/.test(msg.image||''))return;
-  previews.set(msg.id+':'+msg.side,msg.image);
-  for(const [key,item] of Object.entries(assigned))
-   if(item.id===msg.id&&item.side===msg.side){
-    const img=imageNode(key);if(img)img.src=msg.image;
-    window.PaperchalkL2D?.setProfile(key,msg.profile||defaultProfile());
-   }
-  note('正在游戏 L2D 中预览 '+(catalog.get(msg.id)?.label||msg.id));
- }else if(msg.type==='PAPERCHALK_EDITOR_APPLY'){
-  for(const face of ['front','back']){
-   const img=msg.images?.[face];
-   if(typeof img==='string'&&img.startsWith('data:image/png;base64,')){
-    await put('render:'+msg.id+':'+face,img);
-    previews.delete(msg.id+':'+face);
-   }
-   if(msg.profiles?.[face])await put('l2d:'+msg.id+':'+face,msg.profiles[face]);
-  }
-  for(const [key,item] of Object.entries(assigned)){
-   if(item.id!==msg.id)continue;
-   await assign(key,msg.id,item.side,false);
-   const currentImage=imageNode(key);
-   if(currentImage?.decode)await currentImage.decode().catch(()=>{});
-   const project=frame.contentWindow.characterEditor;
-   const layers=project?.S?.layers?.[item.side];
-   if(Array.isArray(layers)&&layers.length&&window.PaperchalkL2D?.get(key)?.rig)
-    await window.PaperchalkL2D.setLayers(key,layers.map(p=>({
-      canvas:p.canvas,x:p.x,y:p.y,name:p.name,visible:p.visible,opacity:p.opacity
-    })),[1024,1024]);
-   if(msg.profiles?.[item.side])window.PaperchalkL2D?.setProfile(key,msg.profiles[item.side]);
-  }
-  note('已保存：'+(catalog.get(msg.id)?.label||msg.id)+'，游戏使用实时 L2D 而非静态贴图');
- }
-}
-window.addEventListener('message',event=>{onMessage(event).catch(e=>note('L2D 同步失败：'+e.message));});
-function readFile(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(file);});}
-async function persistAssets(){
- await put('imported',[...catalog.values()].filter(c=>c.id.startsWith('local-')));
- await put('overrides',[...catalog.values()].filter(c=>!c.id.startsWith('local-')&&(c.override===true)));
-}
-async function onImages(files){
- const families=new Map();
- for(const file of files){
-  if(!/^image\/(png|webp|jpeg)$/.test(file.type))continue;
-  const match=file.name.match(/^(.*?)(?:[-_ ](front|back|正面|背面))?\.(png|webp|jpg|jpeg)$/i);
-  if(!match)continue;
-  const label=match[1]||'新人物';
-  const face=['back','背面'].includes((match[2]||'').toLowerCase())?'back':'front';
-  let row=families.get(label);
-  if(!row){row=[...catalog.values()].find(c=>c.localFamily===label);
-    if(!row){row={id:'local-'+crypto.randomUUID().slice(0,12),label,front:'',back:'',localFamily:label,animated:{}};catalog.set(row.id,row);}
-    families.set(label,row);
-  }
-  row[face]=await readFile(file);
- }
- if(!families.size){note('只支持 PNG / WebP / JPEG，PSD 请在分层编辑器导入');return;}
- await persistAssets();
- const last=[...families.values()].at(-1);await assign(slot,last.id,direction.value||'front');
- note('已把新人物载入游戏 L2D；切换到分层编辑器可继续补画与绑定');
-}
-async function unzip(f){
- const bytes=new Uint8Array(await f.arrayBuffer()),view=new DataView(bytes.buffer);
- let at=0;const out=new Map();
- while(at+30<bytes.length&&view.getUint32(at,true)===0x04034b50){
-  const flags=view.getUint16(at+6,true),method=view.getUint16(at+8,true),
-   len=view.getUint32(at+18,true),n=view.getUint16(at+26,true),ext=view.getUint16(at+28,true);
-  if(flags&8)throw Error('ZIP 使用流式描述符，请重新导出普通 ZIP');
-  const name=new TextDecoder().decode(bytes.subarray(at+30,at+30+n));
-  const start=at+30+n+ext;
-  if(start+len>bytes.length)throw Error('ZIP 文件不完整');
-  let data=bytes.slice(start,start+len);
-  if(method===8){
-   if(!window.DecompressionStream)throw Error('浏览器不支持 ZIP 解压');
-   const stream=new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-   data=new Uint8Array(await new Response(stream).arrayBuffer());
-  }else if(method!==0)throw Error('ZIP 使用不支持的压缩算法 '+method);
-  if(!name.includes('..'))out.set(name.split('/').at(-1).toLowerCase(),data);
-  at=start+len;
- }
- return out;
-}
-async function onArchive(file){
- if(!file)return;
- const files=await unzip(file);
- let count=0;const chosen=catalog.get(assigned[slot]?.id);
- if(!chosen)throw Error('先选择一个在游戏中已加载的人物');
- for(const face of ['front','back']){
-  for(const ext of ['webp','png']){
-   const bin=files.get(face+'.'+ext);
-   if(!bin)continue;
-   const blob=new Blob([bin],{type:'image/'+ext});
-   chosen[face]=await readFile(blob);
-   const prefix=new TextDecoder('latin1').decode(bin.subarray(0,Math.min(2048,bin.length)));
-   chosen.animated??={};chosen.animated[face]=ext==='webp'&&/ANIM|ANMF/.test(prefix);
-   await put('render:'+chosen.id+':'+face,'');
-   previews.delete(chosen.id+':'+face);
-   count++;break;
+  const a=assigned[key];if(a?.id&&catalog.has(a.id)){
+   try{await assign(key,a.id,a.side,false)}catch(e){console.warn(e);}
   }
  }
- if(!count)throw Error('该工程 ZIP 没有 front.png/back.png 或 front.webp/back.webp');
- chosen.override=true;await persistAssets();
- await assign(slot,chosen.id,chosen[side]?side:'front');
- note('导入原位 L2D 工程：'+count+' 个方向；已在当前游戏角色中动态播放');
+ ready=true;refreshList();
 }
-loaded.addEventListener('change',()=>chooseLoaded(loaded.value));
-library.addEventListener('change',()=>{activeID=library.value;});
-direction.addEventListener('change',()=>{side=direction.value;});
-$('dev-character-use').onclick=()=>assign(slot,library.value,direction.value).catch(e=>note(e.message));
-$('dev-character-open').onclick=openEditor;
-$('dev-character-apply').onclick=applyEditor;
-$('dev-character-close').onclick=async()=>{await applyEditor();closeEditor();};
-$('dev-character-export').onclick=()=>frame.contentWindow.postMessage({type:'PAPERCHALK_EDITOR_REQUEST_EXPORT'},location.origin);
-$('dev-character-reset').onclick=async()=>{
- if(!confirm('恢复选中人物方向的原始素材？'))return;
- await put('render:'+activeID+':'+side,'');previews.delete(activeID+':'+side);
- await assign(slot,activeID,side,false);if(frameReady)sendTarget();
+loaded.onchange=()=>selectSlot(loaded.value);
+library.onchange=()=>note('已选择素材 '+(catalog.get(library.value)?.label||library.value)+'。点击切换可替换当前图层角色。');
+$('dev-character-use').onclick=()=>assign(slot,library.value,side.value).catch(e=>note(e.message));
+$('dev-character-open').onclick=()=>openStudio().catch(e=>note(e.message));
+$('dev-character-import').onchange=e=>{
+ const files=[...e.target.files];e.target.value='';
+ importImages(files).catch(x=>note('导入失败：'+x.message));
 };
-$('dev-character-import').onchange=e=>{const files=[...e.target.files];e.target.value='';onImages(files).catch(x=>note(x.message));};
-$('dev-character-archive').onchange=e=>{const f=e.target.files?.[0];e.target.value='';onArchive(f).catch(x=>note('工程导入失败：'+x.message));};
-picker.addEventListener('change',()=>{if(assigned[picker.value])chooseLoaded(picker.value)});
-new MutationObserver(()=>refreshList()).observe(document.getElementById('camera-player-root'),{attributes:true,attributeFilter:['hidden'],subtree:false});
+picker.addEventListener('change',()=>{if(assigned[picker.value])selectSlot(picker.value);});
 window.PaperchalkCharacterDev={
- get ready(){return ready},get characters(){return [...catalog.values()]},
- get assigned(){return assigned},get loaded(){return loadedActors().map(a=>a.id)},
- assign,openEditor,closeEditor,chooseLoaded,
+ get ready(){return ready},
+ get characters(){return [...catalog.values()]},
+ get assigned(){return assigned},
+ get loaded(){return actualActors().map(a=>a.id)},
+ assign,chooseLoaded:selectSlot,openEditor:openStudio,
  openFileUpload:()=>$('dev-character-import').click()
 };
-begin().catch(e=>note('人物列表初始化失败：'+e.message));
+init().catch(e=>note('全人物 L2D 资源库初始化失败：'+e.message));
 })();
