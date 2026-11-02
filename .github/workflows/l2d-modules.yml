@@ -8,6 +8,8 @@ on:
       - 'site/l2d/part-rig.js'
       - 'site/dev/character-bridge.js'
       - 'site/character-editor/studio.js'
+      - 'site/character-editor/part-rig-studio.js'
+      - 'site/character-editor/index.html'
       - 'site/index.html'
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
@@ -147,9 +149,51 @@ jobs:
             assert.equal(editor.parts.hair.motion.x,25,
               'studio must use the published per-part rig rather than a new guessed binding');
             assert.equal(Object.keys(editor.parts).length,2);
+            assert.equal(await page.locator('#rig-module-export').count(),1);
+            page.once('dialog',dialog=>dialog.accept('qa-export'));
+            const zipDownload=page.waitForEvent('download',{timeout:20000});
+            await page.locator('#rig-module-export').click();
+            const downloaded=await zipDownload;
+            assert.equal(downloaded.suggestedFilename(),'qa-export.zip');
+            await downloaded.saveAs('/tmp/qa-export.zip');
             await page.locator('#rig-close').click();
             await browser.close();
             console.log('PASS full game and editor modular L2D playback + old V4 safety');
            }finally{await browser.close();}
           })().catch(e=>{console.error(e);process.exit(1);});
           JS
+      - name: One-ZIP inbox automatically installs the export without per-character code edits
+        run: |
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import json,shutil
+          archive=Path('/tmp/qa-export.zip')
+          assert archive.exists(), 'browser did not export downloadable module'
+          with ZipFile(archive) as z:
+              names=set(z.namelist())
+              assert 'qa-export/module.json' in names
+              assert 'qa-export/front.rig.json' in names
+              assert 'qa-export/parts/front/hair.png' in names
+              assert 'qa-export/parts/front/skirt.png' in names
+              spec=json.loads(z.read('qa-export/module.json'))
+              assert spec['id']=='qa-export'
+              assert spec['views']['front']['rig']['type']=='part-mesh'
+          inbox=Path('site/assets/l2d/inbox')
+          inbox.mkdir(exist_ok=True,parents=True)
+          shutil.copy(archive,inbox/'qa-export.zip')
+          PY
+          python3 scripts/build_character_catalog.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('site/characters.catalog.json').read_text())
+          modules={c['id']:c for c in data['characters']}
+          assert 'qa-export' in modules, 'single ZIP import was not auto-registered'
+          assert modules['qa-export']['l2dModule']['front']['renderer']=='part-mesh'
+          assert modules['qa-export']['l2dModule']['front']['rig']['partCount']==2
+          assert modules['protagonist']['clips']['front']['frames']==128
+          # Repeated builds must not overwrite the installed extracted module.
+          print('PASS one-click browser exported ZIP -> safe inbox -> published game catalog')
+          PY
+          python3 scripts/build_l2d_library.py
