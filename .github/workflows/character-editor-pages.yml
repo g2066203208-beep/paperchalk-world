@@ -8,11 +8,13 @@ on:
       - 'site/l2d/**'
       - 'site/assets/l2d/**'
       - 'scripts/build_v4_assets.py'
+      - 'scripts/build_protagonist_part_rig.py'
       - 'scripts/fix_protagonist_neck_v4.py'
       - 'scripts/build_char002_v4.py'
       - 'site/dev/**'
       - 'site/characters.catalog.json'
       - 'site/assets/characters/**'
+      - 'site/l2d/part-rig.js'
       - 'scripts/build_character_catalog.py'
       - '.github/workflows/character-editor-pages.yml'
   workflow_dispatch:
@@ -38,6 +40,7 @@ jobs:
           python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/repair_character_masks.py
           python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
           python3 scripts/fix_protagonist_neck_v4.py
           python3 scripts/build_char002_v4.py
           python3 scripts/build_scene_catalog.py
