@@ -78,11 +78,21 @@ async function assign(target,id,face='front',save=true){
  // The approved V4 is built into GitHub Pages, not an optional browser upload.
  // Explicit per-character V4 imports may override it; other actors keep
  // their own dynamic mesh rig and NEVER display the hidden static source.
+ const originalPsdLayers=await get('skeletal:'+id+':'+face);
+ const usesPsdRig=Array.isArray(originalPsdLayers)&&originalPsdLayers.length>=12;
  const deployedClip=c.clips?.[face];
  const installedV4=deployedClip?.url||(id==='protagonist'?'./assets/l2d/v4/'+face+'.webp':'');
  const source=(clip?.data?.startsWith('data:image/webp;base64,')?clip.data:installedV4);
  const shape=clip?.crop||deployedClip?.crop||{x:351,y:9,w:335,h:1013};
- if(source){
+ if(usesPsdRig){
+  // Genuine Photoshop layers ALWAYS take precedence over the old baked
+  // flat-PNG WebP. Each image has a separate source texture and bone.
+  await window.PaperchalkL2D.setAnimationSource(target,null);
+  const loaded=await window.PaperchalkL2D.setLayers(target,originalPsdLayers,[1024,1024]);
+  if(!loaded)throw Error('真实 PSD 独立骨骼图层载入中断');
+  const obj=window.PaperchalkL2D.get(target);
+  if(obj){obj.root.dataset.l2dEdition='psd-layer-skeletal';obj.root.dataset.l2dMode='psd-layer-skeletal';obj.root.dataset.l2dAnimated='true';}
+ }else if(source){
   try{
    await window.PaperchalkL2D.setAnimationSource(target,source,shape);
    const obj=window.PaperchalkL2D.get(target);
@@ -99,7 +109,7 @@ async function assign(target,id,face='front',save=true){
  }
  // V4 corrections are independent of the approved source animation.
  // Sparse frame overlays are composited on top at the exact frame index.
- if(source){
+ if(source&&!usesPsdRig){
   await window.PaperchalkL2D.setCorrections(target,
    await get('overlay:'+id+':'+face),
    await get('frames:'+id+':'+face)||{});
@@ -108,10 +118,10 @@ async function assign(target,id,face='front',save=true){
  }
  // The same source artwork edited in DEV is used on the game actor.
  // No ZIP re-import and no separate heroine-only database.
- await window.PaperchalkL2D.setComponentPatch(target,await get('parts-patch:'+id+':'+face));
+ await window.PaperchalkL2D.setComponentPatch(target,usesPsdRig?null:await get('parts-patch:'+id+':'+face));
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
- note('正在 L2D 渲染 '+c.label+' · '+(face==='back'?'背面':'正面'));
+ note('正在 L2D 渲染 '+c.label+' · '+(face==='back'?'背面':'正面')+(usesPsdRig?' · 真正 PSD 分层骨骼':' · V4 帧动画'));
 }
 async function openStudio(){
  // DEV always navigates to the ONE shared studio, no iframe and no
