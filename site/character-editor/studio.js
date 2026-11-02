@@ -39,7 +39,7 @@ section.innerHTML=[
  '<label class="studio-import">导入 V4 动态工程 ZIP<input id="studio-v4zip" type="file" accept=".zip,application/zip"></label>',
  '<label class="studio-import">导入全部真实部件（PSD / V4 ZIP）<input id="studio-parts-import" type="file" accept=".zip,.psd,application/zip"></label>',
  '<output id="studio-status" role="status">读取人物资源库…</output></div>',
- '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024"></canvas>',
+ '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024" aria-hidden="true" hidden></canvas>',
  '<div class="studio-v4-tools"><strong>游戏实际 V4 动画 · 同一人物、同一帧源</strong>',
  '<p>中央画布默认播放游戏实际使用的 V4 WebP；选中真实分层并落笔时才暂时展示静态源部件，保存后将像素修补叠回同一 V4 动画。不是另造一套网格动画。</p>',
  '<output id="studio-parts-status" role="status">未导入原始分层时只能做 V4 动画修补。</output>',
@@ -60,14 +60,17 @@ style.textContent=[
  '.studio-import{cursor:pointer;border:1px solid #4a6079;border-radius:7px;padding:8px;background:#243449}',
  '.studio-import input{display:none}',
  '#studio-status{flex:1;min-width:190px;color:#abd5fc;font-size:12px}',
- '#studio-v4-wrap{display:flex;gap:12px;align-items:center;margin-top:8px;color:#b9c9de;font-size:12px}',
+ '#studio-v4-wrap{display:block;margin-top:10px;padding-top:10px;border-top:1px solid #34485e;color:#cdddeb;font-size:12px}',
  '#studio-v4-wrap[hidden]{display:none}',
- '#studio-v4-canvas{width:110px;height:180px;object-fit:contain;flex-shrink:0;background:#1b2634;border:1px solid #52657e}',
+ '#studio-v4-canvas{display:none!important} /* Internal decoded frame: central game V4 viewport is the sole visible preview */',
  '.studio-v4-tools{flex:1;min-width:210px;display:grid;gap:5px}.studio-v4-tools p{font-size:11px;color:#b7c9dc;margin:4px 0}.studio-v4-tools label{font-size:12px}.studio-v4-tools input[type=range]{width:100%}',
  '#studio-frame-label{font-size:11px;color:#96cfff}',
  '#studio-parts-status{font-size:12px;color:#c7d7e9}',
- 'body.studio-page .layout{height:calc(100dvh - 170px);min-height:430px}',
- '@media(max-width:710px){.studio-row select{max-width:100%;flex:1}body.studio-page .layout{height:auto}}'
+ 'body.studio-page{display:flex;flex-direction:column;min-height:100dvh}',
+ 'body.studio-page>header,body.studio-page>#studio-library{flex-shrink:0}',
+ 'body.studio-page .layout{flex:1 1 auto;height:auto;min-height:440px}',
+ 'body.studio-page .stage{min-height:430px}',
+ '@media(max-width:710px){body.studio-page{display:block}.studio-row select{max-width:100%;flex:1}body.studio-page .layout{display:flex;flex-direction:column;height:auto;min-height:0}body.studio-page .stage{height:62dvh;min-height:400px}}'
 ].join('\n');
 document.head.append(style);
 document.querySelector('header').after(section);
