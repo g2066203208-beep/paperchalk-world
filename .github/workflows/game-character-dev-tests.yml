@@ -62,7 +62,8 @@ jobs:
                 assert.equal(await page.locator('#studio-character option').count(),2);
                 await page.waitForFunction(()=>document.querySelectorAll('#layers .layer').length===1,{timeout:18000});
                 await page.locator('#studio-character').selectOption('protagonist');
-                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' && document.querySelectorAll('#layers .layer').length===2,{timeout:18000});
+                await page.locator('#studio-side').selectOption('back');
+                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' && document.querySelector('#studio-side')?.value==='back' && document.querySelectorAll('#layers .layer').length===2,{timeout:18000});
                 await page.screenshot({path:'artifacts/l2d-studio/'+(phone?'mobile':'desktop')+'.png',fullPage:true});
                 await page.locator('#studio-back').click({force:true});
                 await page.waitForURL('**/?dev=1',{timeout:18000});
