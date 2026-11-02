@@ -1458,8 +1458,9 @@
         "status": "unknown"
       },
       "assetApproval": {
-        "value": null,
-        "status": "unknown"
+        "value": "center figure visual design accepted as usable baseline (image provided in conversation; GitHub asset not yet imported). Back view, PSD layers and L2D remain pending.",
+        "status": "user_confirmed",
+        "source": "User conversation 2026-11-02 acceptance of middle cropped girl"
       },
       "bodyFacingYawDeg": {
         "value": 0,
@@ -1841,8 +1842,9 @@
         "status": "unknown"
       },
       "approvalRecord": {
-        "value": null,
-        "status": "unknown"
+        "value": "用户认可本轮三人图的中间女二裁剪：基本可用，作为后续角色造型参考；无需因琐碎美术差异强制重画。不是正背素材或L2D工程已完成的证明。",
+        "status": "user_confirmed",
+        "source": "User conversation 2026-11-02: 不要要求这么高基本可以就行！"
       },
       "rollbackReference": {
         "value": null,
@@ -1904,6 +1906,7 @@
   "sourceNotes": [
     "User confirmed ponytail, lively personality, slightly shorter than heroine, and distinctive front-view standing pose. Proposals include age 18, 155cm/46kg, 80/62/86cm, chestnut ponytail and amber eyes. These must not be labeled confirmed.",
     "All precise facial landmarks, arm and leg girths, eyebrow/eye geometry ratios, and L2D rig values must stay null until user-approved design or artist-created turnaround.",
-    "No approved CHAR-002 front/back art currently exists. Do NOT register as a loaded game actor."
+    "No approved CHAR-002 front/back art currently exists. Do NOT register as a loaded game actor.",
+    "2026-11-02 user accepted the CENTER character cropped from the latest three-figure draft as good enough for the current girl-2 appearance baseline. Do not force re-generation for minor ponytail, eye, socks, or blazer variations. Only the selected center pose/reference is accepted; back art, layered PSD and L2D assets are not yet verified/imported."
   ]
 }
