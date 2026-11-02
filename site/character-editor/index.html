@@ -27,9 +27,19 @@ input[type=number],input[type=text]{background:#111c2a;border:1px solid var(--li
 kbd{background:#243347;padding:1px 4px;border-radius:4px}
 @media(max-width:1120px){.layout{grid-template-columns:220px minmax(0,1fr)}.right{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.right section{margin:0}}
 @media(max-width:710px){header{padding:9px}.layout{display:flex;flex-direction:column;height:auto;min-height:0;padding:7px;gap:7px}.stage{height:56dvh;min-height:360px;order:0}.left{order:1;overflow:visible}.right{order:2;display:block}.layerlist{max-height:290px}.actions button{font-size:12px;padding:7px 8px}.hudbottom{font-size:9px}header strong{font-size:14px}.row>*{min-width:55px}}
+
+body.embedded header{position:sticky;top:0;z-index:8;padding:9px 13px}
+body.embedded header small{display:none}
+body.embedded .layout{height:calc(100dvh - 60px);min-height:460px}
+body.embedded #btnApplyGame{background:#1c584b;border-color:#58b99e;color:#e6fff7}
+body.embedded #btnCloseInGame{background:#273244}
+@media(max-width:710px){
+ body.embedded header{position:relative}
+ body.embedded .layout{height:auto;min-height:0}
+}
 </style></head><body>
 <header><div><strong>✎ 角色分层修图工作室</strong><small>在线编辑 · 所有部件可擦除 / 补画 / 拆分 / 调整 · 原坐标导出</small></div><div class="actions">
-<button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnSave">保存到本机浏览器</button><button id="btnExport">↓ 完整分层 ZIP</button>
+<button id="btnApplyGame" type="button" hidden>✓ 应用到游戏</button><button id="btnCloseInGame" type="button" hidden>返回 DEV</button><button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnSave">保存到本机浏览器</button><button id="btnExport">↓ 完整分层 ZIP</button>
 </div></header>
 <div class="layout">
 <aside class="left">
@@ -108,10 +118,10 @@ async function unzip(bytes){const dv=new DataView(bytes.buffer,bytes.byteOffset,
 async function importPsd(file){if(!file)return;try{S.busy=true;status('正在加载 PSD 解析器（首次使用需要网络）…');if(!window.agPsd){await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/ag-psd@6.2.0/dist/bundle.js';sc.onload=resolve;sc.onerror=()=>reject(Error('无法加载 PSD 解析器，请改用分层 ZIP 导入'));document.head.appendChild(sc)})}if(!window.agPsd||!window.agPsd.readPsd)throw Error('PSD 解析器未初始化');status('正在解析 PSD 分层信息…');const psd=window.agPsd.readPsd(await file.arrayBuffer(),{skipThumbnail:true});const arr=[];function collect(nodes){for(const node of (nodes||[]).slice().reverse()){if(node.children?.length){collect(node.children);continue}if(!node.canvas)continue;const q=layer(node.name||'PSD 图层',node.canvas,node.left||0,node.top||0,false);q.visible=node.hidden!==true;q.opacity=node.opacity==null?1:node.opacity;arr.push(q)}}collect(psd.children);if(!arr.length)throw Error('PSD 没有找到可用位图图层，建议使用原位图层 ZIP');if(psd.width!==W||psd.height!==H)status('注意：当前项目画布为 1024×1024，PSD 大小为 '+psd.width+'×'+psd.height+'，可在导入后对齐位置');S.layers[S.side]=arr;S.sel=arr.length-1;S.history=[];S.redo=[];S.selection=null;S.busy=false;renderList();fit();autosave();status('✓ 已导入 '+file.name+'，'+arr.length+' 个独立图层；保留各图层 PSD 中的左上角坐标')}catch(e){S.busy=false;console.error(e);status('PSD 导入失败：'+e.message)}}
 
 async function importZip(file){try{S.busy=true;status('正在读取分层 ZIP…');const m=await unzip(new Uint8Array(await file.arrayBuffer())),meta=m.get('layers.json');if(!meta)throw Error('ZIP 内没有 layers.json，请导入从橡皮擦/修图编辑器导出的图层工程');const j=JSON.parse(dec.decode(meta)),views=j.layers||j;for(const side of ['front','back']){if(!Array.isArray(views[side]))continue;const list=[];for(const p of views[side]){const name=p.file||p.name,dat=m.get(name)||m.get(side+'/'+name)||m.get('assets/'+name);if(!dat)continue;const blob=new Blob([dat],{type:'image/png'}),url=URL.createObjectURL(blob),im=await imgFrom(url);URL.revokeObjectURL(url);const q=layer(p.name||p.id||name,im,p.x||0,p.y||0,!!p.locked);q.visible=p.visible!==false;q.opacity=p.opacity==null?1:p.opacity;list.push(q)}if(list.length)S.layers[side]=list}S.sel=Math.max(0,S.layers[S.side].length-1);S.history=[];S.redo=[];S.busy=false;S.selection=null;renderList();fit();autosave();status('已载入分层 ZIP，正面 '+S.layers.front.length+' 层 / 背面 '+S.layers.back.length+' 层。')}catch(e){S.busy=false;status('导入失败：'+e.message);console.error(e)}}
-const DB='pixelatelier-character-v1';
-async function storage(mode,record){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('art');req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tr=db.transaction('art',mode),st=tr.objectStore('art');let q=mode==='readonly'?st.get('project'):st.put(record,'project');q.onsuccess=()=>{db.close();resolve(q.result)};q.onerror=()=>reject(q.error)}})}
+const DB='pixelatelier-character-v1';let activeCharacterId='default',activeCharacterLabel='女主角';const storageKey=()=>activeCharacterId==='default'?'project':'character:'+activeCharacterId;
+async function storage(mode,record){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('art');req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tr=db.transaction('art',mode),st=tr.objectStore('art');let q=mode==='readonly'?st.get(storageKey()):st.put(record,storageKey());q.onsuccess=()=>{db.close();resolve(q.result)};q.onerror=()=>reject(q.error)}})}
 async function save(){if(S.busy)return;const rec={};for(const side of ['front','back'])rec[side]=S.layers[side].map(p=>({name:p.name,x:p.x,y:p.y,visible:p.visible,locked:p.locked,opacity:p.opacity,img:p.canvas.toDataURL('image/png')}));await storage('readwrite',rec);status('✓ 已保存到本机浏览器（请另外导出 ZIP 备份）')}
-let saveTimer=0;function autosave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(e=>status('自动保存失败：'+e.message)),1900)}
+let saveTimer=0;function autosave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(e=>status('自动保存失败：'+e.message)),1900);scheduleLivePreview()}
 async function loadSaved(){const rec=await storage('readonly');if(!rec?.front?.length)return false;for(const side of ['front','back']){const arr=[];for(const p of rec[side]||[]){const im=await imgFrom(p.img);const q=layer(p.name,im,p.x,p.y,p.locked);q.visible=p.visible;q.opacity=p.opacity;arr.push(q)}if(arr.length)S.layers[side]=arr}return true}
 async function init(){try{await defaults();const had=await loadSaved();S.sel=Math.max(0,S.layers.front.length-1);renderList();fit();status(had?'✓ 已恢复上次在此浏览器保存的全部分层工程':'初始人物已载入；可导入上次的分层 ZIP 继续修图')}catch(e){console.error(e);status('载入异常：'+e.message)}}
 for(const b of document.querySelectorAll('[data-tool]'))b.onclick=()=>setTool(b.dataset.tool);
@@ -131,5 +141,84 @@ stage.addEventListener('pointerdown',down);stage.addEventListener('pointermove',
 stage.addEventListener('wheel',e=>{e.preventDefault();const p=getP(e);zoom(p.x,p.y,Math.exp(-Math.sign(e.deltaY)*.17))},{passive:false});
 stage.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redo()}else if(k===' '){S.space=true;e.preventDefault()}else if(k==='b')setTool('brush');else if(k==='e')setTool('eraser');else if(k==='v')setTool('move')});window.addEventListener('keyup',e=>{if(e.key===' ')S.space=false});
-new ResizeObserver(()=>resize()).observe(stage);init();window.characterEditor={S,cut,undo,redo,exportAll,importZip,importPsd,composite};
+
+/* The same in-game editor supports arbitrary characters. Their complete
+   layered projects have independent IndexedDB keys, not one global "project". */
+let previewTimer=0;
+const embedded=new URLSearchParams(location.search).get('embed')==='1';
+if(embedded){
+ document.body.classList.add('embedded');
+ $('btnApplyGame').hidden=false;$('btnCloseInGame').hidden=false;
+}
+function sendParent(message){
+ if(!embedded||window.parent===window)return;
+ window.parent.postMessage(message,location.origin);
+}
+function scheduleLivePreview(){
+ if(!embedded||S.busy)return;
+ clearTimeout(previewTimer);
+ previewTimer=setTimeout(()=>{
+  if(S.busy||!S.ready)return;
+  try{sendParent({type:'PAPERCHALK_EDITOR_PREVIEW',id:activeCharacterId,
+        side:S.side,image:composite(S.side).toDataURL('image/png')})}
+  catch(e){status('游戏实时预览失败：'+e.message)}
+ },450);
+}
+async function applyToGame(){
+ if(!S.ready)return;
+ clearTimeout(saveTimer);clearTimeout(previewTimer);
+ try{
+  await save();
+  sendParent({type:'PAPERCHALK_EDITOR_APPLY',id:activeCharacterId,
+   images:{front:composite('front').toDataURL('image/png'),
+           back:composite('back').toDataURL('image/png')}});
+  status('✓ 角色 '+activeCharacterLabel+' 已发送到游戏；请另存分层 ZIP 作为可移植备份');
+ }catch(e){status('应用到游戏失败：'+e.message)}
+}
+const editorInit=init();
+async function switchCharacter(target,side='front'){
+ await editorInit;
+ if(!target||!/^[a-zA-Z0-9_-]{1,80}$/.test(String(target.id)))throw Error('角色标识格式无效');
+ clearTimeout(saveTimer);clearTimeout(previewTimer);
+ activeCharacterId=target.id;
+ activeCharacterLabel=String(target.label||target.id).slice(0,120);
+ S.busy=true;S.history=[];S.redo=[];S.selection=null;
+ try{
+  for(const face of ['front','back']){
+   const url=String(target[face]||'');
+   let q;
+   if(url){
+    const im=await imgFrom(url);
+    q=layer('原始素材 · '+(face==='front'?'正面':'背面'),im,0,0,true);
+   }else q=layer('空白原位画布 · '+(face==='front'?'正面':'背面'),null,0,0,false);
+   S.layers[face]=[q];
+  }
+  S.busy=false;
+  const saved=await loadSaved();
+  S.side=side==='back'?'back':'front';
+  S.sel=Math.max(0,S.layers[S.side].length-1);
+  $('frontTab').classList.toggle('active',S.side==='front');
+  $('backTab').classList.toggle('active',S.side==='back');
+  S.only=false;$('solo').checked=false;
+  renderList();fit();
+  $('status').textContent=(saved?'✓ 已恢复':'已载入')+'游戏人物「'+activeCharacterLabel+'」的正背面分层工程，可补画、擦除、导入PSD，所有层保持原位';
+  sendParent({type:'PAPERCHALK_EDITOR_LOADED',id:activeCharacterId,label:activeCharacterLabel});
+ }catch(e){
+  S.busy=false;status('加载人物失败：'+e.message);throw e;
+ }
+}
+window.addEventListener('message',event=>{
+ if(!embedded||event.origin!==location.origin||event.source!==window.parent)return;
+ const m=event.data||{};
+ if(m.type==='PAPERCHALK_LOAD_CHARACTER')switchCharacter(m.target,m.side)
+   .catch(e=>status('载入角色失败：'+e.message));
+ if(m.type==='PAPERCHALK_EDITOR_REQUEST_APPLY')applyToGame();
+ if(m.type==='PAPERCHALK_EDITOR_REQUEST_EXPORT')exportAll().catch(e=>status('导出失败：'+e.message));
+});
+$('btnApplyGame').onclick=applyToGame;
+$('btnCloseInGame').onclick=()=>sendParent({type:'PAPERCHALK_EDITOR_CLOSE'});
+new ResizeObserver(()=>resize()).observe(stage);
+window.characterEditor={S,cut,undo,redo,exportAll,importZip,importPsd,composite,switchCharacter,applyToGame};
+if(embedded)sendParent({type:'PAPERCHALK_EDITOR_READY'});
+
 </script></body></html>
