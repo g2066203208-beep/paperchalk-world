@@ -1,6 +1,6 @@
 # CHAR-016｜男二·插班生｜个人信息与Anima正面原画提示词 V1.0
 
-> 2026-11-02｜**设计候选，不是已生成原画或已进入游戏的正式人物。** 用户锁定的是“不要网红AI脸，好看、有特点、要自己的审美”；本档其他具体姓名、脸型、尺寸、性格和背景属于可修订的创作方案。
+> 2026-11-02｜**人物正面原画已按用户上传图验收并存入GitHub；背面、PSD拆件、L2D、游戏演员注册仍未完成。** 用户先前要求的非网红脸审美与同校服装体系继续保留。**以下原始提示词作为历史生成记录存档，后续所有视觉重绘必须以真正的原图为准。** 姓名、身高、体重、性格和未画出的身体尺寸仍是可修订提案。
 
 ## 一、个人信息
 
@@ -50,6 +50,14 @@ masterpiece, best quality, score_7, safe, 1boy, solo, original character, 18-yea
 worst quality, low quality, score_1, score_2, score_3, blurry, bad anatomy, bad hands, extra fingers, missing fingers, missing arms, cropped head, cropped feet, out of frame, 2boys, multiple people, duplicate, side by side, character sheet, reference sheet, split screen, multiple views, profile view, back view, three-quarter view, chibi, oversized head, giant sparkling eyes, perfect symmetrical face, generic handsome idol face, influencer face, tiny V-shaped chin, plastic skin, airbrushed face, excessive blush, glossy lips, heavy eyeliner, sharp pointed anime chin, perfect center-part curtain haircut, two identical bangs, spiky hair, silver hair, white hair, blue eyes, muscular model body, exaggerated long legs, big smile, open mouth, open blazer, loose necktie, gold buttons, school bag, books, glasses, earrings, necklace, weapon, objects, scenery, detailed background, text, watermark, logo
 ```
 
+## 六、已验收正面图基准（2026-11-02）
+
+- **[CHAR-016完整上传原图（1024×1024）](../../site/assets/characters/char-016/reference-sheet.png)**：左侧一人全身、右侧是同一个人的脸部特写。源文件SHA256：`87fdc19c61d067447fcd4322b65a53e2939ff52f7b3e957651fcc1394a5ac110`。
+- **[CHAR-016独立全身正面立绘（315×1024）](../../site/assets/characters/char-016/front.png)**：只从原图坐标 **(75,0) 到 (390,1024)** 精确像素裁剪；**没有生成新画，也没有重画脸**。源文件SHA256：`47f730a0584102ee0086240f70560e9e95be5c411d084f5f96c1fcff0f1d8ba3`。
+- **一致性结论：可直接定为男二正面人物母版。** 发型、表情、深色两扣校服、白衬衫、酒红领带、深灰长裤、黑鞋、低位双手交握均吻合角色形象。原图眼睛实际偏**暖茶棕**（不是提示词里的偏灰茶色）；下颌更偏柔和收圆（不是明显微方）；手掌更明显相互交握。**这些以获选原图为准，不必返工。**
+- 视为锁定的**视觉身份锚点**：额头上不规则且近似偏中分的深暖黑发；微垂、略疲倦的横长茶棕眼；柔和收束的脸颊和下巴；自然薄唇、克制的冷淡表情；双手在小腹前交握和扣合的深色校服外套。未来所有正侧面、表情和L2D都必须依据右侧脸部特写原样还原，不能用旧提示词强行改眼色或下巴。
+- **仍未验证或完成**：173cm/64kg等身体数值无法从单张图精确推算；没有背面、透明分件、PSD、L2D参数和游戏内成品。不能把独立PNG当成完整L2D。 
+
 ## 五、制作锁定规则
 
 - 正面原图**一人、白底、全身完整、眼平直视角**。禁止多人物拼图、剪掉鞋子或头发、额外场景物体。
@@ -57,4 +65,4 @@ worst quality, low quality, score_1, score_2, score_3, blurry, bad anatomy, bad 
 - 出图后以用户实际认可的脸、头发分束和制服颜色为后续同一人物的唯一身份锚点；不要为了数字或微小审美差异无限返工。
 - 不把本文件当作已绘画、已拆PSD或已生成背面、L2D的证明。参见 [角色审美规范](../ORIGINAL_CHARACTER_FACE_STYLE_V1.md)。
 
-[机器花名册](../HUMAN_CAST_ROSTER_V2.json) · [通用448项档案模板](CHARACTER_PROFILE_TEMPLATE.md)
+[现行V3机器花名册](../HUMAN_CAST_ROSTER_V3.json) · [通用448项档案模板](CHARACTER_PROFILE_TEMPLATE.md)
