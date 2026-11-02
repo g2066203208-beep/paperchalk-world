@@ -194,7 +194,8 @@ body.mobile-mode.virtual-landscape #view{
 /* Room foreground: back-facing protagonist, head and feet fully visible.
    The original bedroom, living room and future entryway art stays unmodified. */
 #view.environment-scene #camera-player-root #actor-player{
-  left:19cqw;bottom:0;height:76cqh;
+  /* Keep shoes within viewport even at maximum independent camera tilt. */
+  left:19cqw;bottom:3cqh;height:76cqh;
 }
 @container (max-height:445px){
   #enemy-depth-root #actor-enemy{height:34%;left:46%;bottom:16%}
