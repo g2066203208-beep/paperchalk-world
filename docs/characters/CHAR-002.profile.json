@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "recordCode": "CHAR-002",
   "canonicalId": "pony-tail-girl-candidate",
-  "recordState": "design_candidate_no_approved_character_art_not_in_game",
+  "recordState": "design_candidate_front_art_accepted_back_and_l2d_pending",
   "readableDocument": "docs/characters/CHAR-002_CANDIDATE.md",
   "sourcePriority": [
     "user_confirmed",
@@ -1362,8 +1362,9 @@
     },
     "visualProduction": {
       "frontReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "site/assets/characters/char-002/front.png",
+        "status": "approved_art_reference",
+        "source": "2026-11-02 original user-provided three-figure art sheet; center figure cropped exactly, no redraw, actual PNG uploaded to GitHub; verified using crop coordinates (339,0)-(642,1024)"
       },
       "backReference": {
         "value": null,
@@ -1454,13 +1455,14 @@
         "status": "unknown"
       },
       "sourceFileHash": {
-        "value": null,
-        "status": "unknown"
+        "value": "SHA-256 a0365da4e63436093800516ee595f4f3e593618a8b48ca80f9b4ebb24356ebef | source-sheet SHA-256 3a2df282a66531d6a767968ee3b2c2f7c7433304d3ce39605d88fc7e88eef338 | crop (339,0)-(642,1024)",
+        "status": "approved_art_reference",
+        "source": "Exact 2026-11-02 image bytes and pixel crop dimensions verified in editing environment, GitHub blob committed f3cdaa0e9949962a079f81ec742246886f09bf21"
       },
       "assetApproval": {
-        "value": "center figure visual design accepted as usable baseline (image provided in conversation; GitHub asset not yet imported). Back view, PSD layers and L2D remain pending.",
+        "value": "用户已确认三人图中间女二基本可用，并要求将实际裁剪图放入 GitHub 对应人物目录。正面裁剪已存入；背面、拆层PSD、L2D待做。",
         "status": "user_confirmed",
-        "source": "User conversation 2026-11-02 acceptance of middle cropped girl"
+        "source": "User conversation 2026-11-02: select and crop center character; store images in corresponding GitHub profiles."
       },
       "bodyFacingYawDeg": {
         "value": 0,
@@ -1842,9 +1844,9 @@
         "status": "unknown"
       },
       "approvalRecord": {
-        "value": "用户认可本轮三人图的中间女二裁剪：基本可用，作为后续角色造型参考；无需因琐碎美术差异强制重画。不是正背素材或L2D工程已完成的证明。",
+        "value": "用户已确认三人图中间女二基本可用，并要求将实际裁剪图放入 GitHub 对应人物目录。正面裁剪已存入；背面、拆层PSD、L2D待做。",
         "status": "user_confirmed",
-        "source": "User conversation 2026-11-02: 不要要求这么高基本可以就行！"
+        "source": "User request in conversation 2026-11-02."
       },
       "rollbackReference": {
         "value": null,
@@ -1906,7 +1908,7 @@
   "sourceNotes": [
     "User confirmed ponytail, lively personality, slightly shorter than heroine, and distinctive front-view standing pose. Proposals include age 18, 155cm/46kg, 80/62/86cm, chestnut ponytail and amber eyes. These must not be labeled confirmed.",
     "All precise facial landmarks, arm and leg girths, eyebrow/eye geometry ratios, and L2D rig values must stay null until user-approved design or artist-created turnaround.",
-    "No approved CHAR-002 front/back art currently exists. Do NOT register as a loaded game actor.",
-    "2026-11-02 user accepted the CENTER character cropped from the latest three-figure draft as good enough for the current girl-2 appearance baseline. Do not force re-generation for minor ponytail, eye, socks, or blazer variations. Only the selected center pose/reference is accepted; back art, layered PSD and L2D assets are not yet verified/imported."
+    "2026-11-02 user accepted the CENTER character cropped from the latest three-figure draft as good enough for the current girl-2 appearance baseline. Do not force re-generation for minor ponytail, eye, socks, or blazer variations. Only the selected center pose/reference is accepted; back art, layered PSD and L2D assets are not yet verified/imported.",
+    "2026-11-02 actual center crop (339,0)-(642,1024) as site/assets/characters/char-002/front.png, SHA-256 a0365da4e63436093800516ee595f4f3e593618a8b48ca80f9b4ebb24356ebef; only front source currently exists, no fabricated back/PSD/L2D."
   ]
 }
