@@ -361,7 +361,7 @@ function blinkAmount(phase){
 }
 const FACE_STACK=['rear_hair','sleeves_and_hands','legs','shoes','neck',
   'skirt','jacket','ears','face','eye_white','irises','lashes',
-  'brows','nose','mouth','hair_clip','front_hair'];
+  'brows','front_hair','nose','mouth','hair_clip'];
 const FACE_MICRO=new Set(['face','ears','brows','nose','mouth','hair_clip',
   'eye_white','irises','lashes']);
 function drawFacePart(ctx,source,part,phase,idle){
@@ -383,6 +383,14 @@ function drawFacePart(ctx,source,part,phase,idle){
   ctx.translate(0,center);
   ctx.scale(1,1-blink*.86);
   ctx.translate(0,-center);
+  ctx.drawImage(img,part.x,part.y);
+ }else if(id==='nose'){
+  // The source is a minuscule translucent anime-nose dot. Preserve its PNG
+  // exactly, but provide a soft subpixel edge so it doesn't vanish under
+  // the front fringe or when the game canvas is downscaled on mobile.
+  ctx.shadowBlur=1.25;
+  ctx.shadowOffsetY=.1;
+  ctx.shadowColor='rgba(104,67,63,.38)';
   ctx.drawImage(img,part.x,part.y);
  }else ctx.drawImage(img,part.x,part.y);
  ctx.restore();
