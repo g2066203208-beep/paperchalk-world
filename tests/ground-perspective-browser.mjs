@@ -238,6 +238,9 @@ try{
    // legacy one-off screen-Y calibrator explicitly disables automatic mode.
    await page.locator('#dev-auto-depth').check();
    await page.locator('#dev-exit').click();
+   // DEV->game restores scene transforms and recenters the viewport; let
+   // that full-stage camera motion settle before comparing local shoe pins.
+   await page.waitForTimeout(600);
    const normal=await page.evaluate(()=>{
      const g=window.PaperWorldL2DGround.inspect();
      const actors=Object.fromEntries(g.actors.map(a=>[a.id,a]));
@@ -280,6 +283,8 @@ try{
        origin:getComputedStyle(enemy.canvas).transformOrigin,
        sourceOrigin:enemy.canvas.style.transformOrigin,
        rootTranslation:getComputedStyle(enemy.root).translate,
+       rootTop:enemy.root.getBoundingClientRect().top,
+       shoeLocalY:rect.top+rect.height*actor.soleY-enemy.root.getBoundingClientRect().top,
        rootTransform:getComputedStyle(enemy.root).transform,
        imgRect:enemy.img.getBoundingClientRect().toJSON(),
        canvasRect:rect.toJSON()};
@@ -291,8 +296,8 @@ try{
      JSON.stringify({distant,close}));
    assert.equal(close.size,distant.size,'Camera depth changed the original image geometry');
    assert.equal(close.buffer,distant.buffer,'Zoom should not continuously reallocate rendering buffers');
-   assert.ok(Math.abs(close.shoeScreenY-distant.shoeScreenY)<2,
-     'The CSS zoom pivot was not attached to the real shoe pixels: '+
+   assert.ok(Math.abs(close.shoeLocalY-distant.shoeLocalY)<2,
+     'The L2D shoe pivot drifted relative to its game actor while the camera recentered: '+
      JSON.stringify({distant,close}));
    await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-sharp-normal-distance.png'});
    await actorAt(-190);
