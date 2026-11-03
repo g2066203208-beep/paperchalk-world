@@ -68,15 +68,6 @@ body.embedded > header .actions #idle-open{
 #part-rig-panel .rig-h{font-size:13px}
 #part-rig-panel #rig-idle-controls{border-color:#67b79c;background:#153431}
 #part-rig-toggle{opacity:.85}
-/* The superseded controls did not tune game idle; don't mislead players with
-   old '400% breathing' sliders. Preserve their DOM for legacy project reads. */
-#dev-l2d-preview-controls > label.mlabel,
-#dev-l2d-preview-controls > input[type="range"],
-#dev-l2d-preview-controls > .tip{display:none!important}
-#dev-l2d-preview-controls > h3::after{
- content:"（旧版预览，待机与飘动请点顶部绿色按钮）";
- font-size:10px;color:#92d5b4;display:block;margin-top:5px;font-weight:400;
-}
 @media(max-width:710px){
  body > header .actions #idle-open{font-size:12px;padding:8px 10px;min-height:40px}
  #part-rig-panel{
