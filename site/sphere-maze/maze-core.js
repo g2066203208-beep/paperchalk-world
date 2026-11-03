@@ -100,10 +100,10 @@
  }
  function dailyAngles(day){
   if(!Number.isInteger(day)||day<1)throw Error('day must be >= 1');
-  if(day===1)return [0,0,0];
-  return [((day*73+19)%300)*Math.PI/180,
-   -((day*47+23)%290)*Math.PI/180,
-   ((day*61+37)%270)*Math.PI/180];
+  // Each new day adds an independent circular movement. Angles may exceed
+  // one full revolution; Quaternion.setFromAxisAngle handles that naturally.
+  const d=day-1;
+  return [d*73*Math.PI/180,-d*47*Math.PI/180,d*61*Math.PI/180];
  }
  function generateLayer({day=1,layer=0,detail=DEPTH,seed=43057}={}){
   if(!Number.isInteger(day)||day<1||layer<0||layer>=LEVELS||
