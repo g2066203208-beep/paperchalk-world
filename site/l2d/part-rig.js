@@ -45,7 +45,6 @@ const CHAR002={
  bottomwear:['pelvis',.50,.04,.50,.93,'skirt'],
  neck:['torso',.50,.80,.50,.80,'fixed'],
  topwear:['torso',.50,.10,.50,.84,'torso'],
- handwear:['torso',.50,.06,.50,.90,'arm-combined'],
  // Photoshop drew both sleeves in one source layer, with unconnected alpha.
  hand_raised:['torso',.53,.91,.31,.15,'arm-raised'],
  hand_lowered:['torso',.82,.06,.30,.93,'arm-lowered'],
