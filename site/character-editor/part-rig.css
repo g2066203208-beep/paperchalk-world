@@ -133,3 +133,32 @@ body.rig-authoring #easy-quickbar{display:none!important}
  body.rig-authoring #part-rig-panel .rig-field input{min-height:30px;touch-action:pan-y}
  body.rig-authoring #part-rig-panel .rig-presets button{min-height:44px}
 }
+
+/* Dedicated rig mode removes redundant V4 time-line chrome, not data. */
+body.rig-authoring #studio-library{
+ max-height:none!important;overflow:visible!important;margin-bottom:6px!important;
+ background:#172638!important
+}
+body.rig-authoring #studio-library> :not(.studio-row:first-child){
+ display:none!important
+}
+body.rig-authoring>.layout{min-height:0}
+body.rig-authoring .stage{background:#101c2a}
+@media(max-width:710px){
+ body.rig-authoring>header{padding:7px 9px!important;gap:4px!important}
+ body.rig-authoring>header small{display:none!important}
+ body.rig-authoring>header .actions button:not(#idle-open):not(#btnSave){
+  display:none!important
+ }
+ body.rig-authoring>header .actions{gap:6px!important}
+ body.rig-authoring>header .actions #idle-open,
+ body.rig-authoring>header .actions #btnSave{
+  flex:1 1 auto;min-width:0;font-size:11px;min-height:40px;padding:7px
+ }
+ body.rig-authoring #studio-library{padding:7px!important;margin:3px 5px!important}
+ body.rig-authoring #studio-library>.studio-row:first-child{flex-wrap:nowrap!important;gap:5px!important}
+ body.rig-authoring #studio-library #studio-character{min-width:0!important}
+ body.rig-authoring #studio-library #studio-side{max-width:72px!important}
+ body.rig-authoring #studio-library #studio-back{font-size:10px;padding:6px 4px}
+ body.rig-authoring .stage{height:38dvh!important;min-height:260px!important;max-height:340px!important}
+}
