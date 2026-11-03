@@ -132,15 +132,77 @@ try{
     assert.ok(Math.abs(logicalCenter-quickGeometry.rootHeight*.5)<2,
       'Quick icons must be vertically centered in the game: '+JSON.stringify(quickGeometry));
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-quick-icons-closed.png'});
-    for(const [id,title] of [['quick-backpack','背包'],['quick-phone','手机'],['quick-map','地图']]){
-      await page.locator('#'+id).click();
-      await expectEdge(page,'right',true);
-      assert.equal(await page.locator('#quick-panel-title').textContent(),title);
-      assert.equal(await page.locator('#'+id).getAttribute('aria-expanded'),'true');
-      assert.equal(await page.locator('#quick-panel').isVisible(),true);
-      assert.equal(await page.locator('#quick-panel').evaluate(n=>getComputedStyle(n).backgroundColor),'rgba(0, 0, 0, 0)');
-      await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-'+id+'-open.png'});
-    }
+    // Backpack and map retain the original frameless native-fog panel.
+    await page.locator('#quick-backpack').click();
+    await expectEdge(page,'right',true);
+    assert.equal(await page.locator('#quick-panel-title').textContent(),'背包');
+    assert.equal(await page.locator('#quick-panel').isVisible(),true);
+    assert.equal(await page.locator('#quick-panel').evaluate(n=>getComputedStyle(n).backgroundColor),'rgba(0, 0, 0, 0)');
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-quick-backpack-open.png'});
+
+    // CHAR-001 phone is its own in-world asset: the selected Anima cat-ear
+    // phone shell, not a second generic CSS outline or a "no messages" panel.
+    await page.locator('#quick-phone').click();
+    await expectEdge(page,'right',true);
+    assert.equal(await page.locator('#quick-phone').getAttribute('aria-expanded'),'true');
+    assert.equal(await page.locator('#quick-panel').isVisible(),false);
+    assert.equal(await page.locator('#phone-ui').isVisible(),true);
+    assert.equal(await page.locator('#phone-ui [data-phone-page="lock"]').isVisible(),true);
+    assert.equal(await page.locator('#phone-ui .phone-dot').count(),6);
+    assert.equal(await page.locator('#phone-ui .phone-key[data-key]').count(),11);
+    assert.equal(await page.locator('#phone-ui .phone-charm').count(),0,
+      'Owner rejected dangling phone charms; only the approved shell is allowed');
+    const phoneGeometry=await page.evaluate(()=>{
+      const phone=document.getElementById('phone-ui');
+      const frame=phone.querySelector('.phone-device');
+      const screen=phone.querySelector('.phone-screen');
+      const root=document.getElementById('novel-ui');
+      return {height:phone.offsetHeight,width:phone.offsetWidth,
+        frameBackground:getComputedStyle(frame).backgroundImage,
+        framePseudo:getComputedStyle(frame,'::before').content,
+        screen:{x:screen.offsetLeft,y:screen.offsetTop,width:screen.offsetWidth,height:screen.offsetHeight},
+        root:{width:root.offsetWidth,height:root.offsetHeight}};
+    });
+    assert.ok(phoneGeometry.frameBackground.includes('char001-cat-ear-shell.webp'),
+      'Phone still uses the fake gradient CSS frame instead of the approved art: '+JSON.stringify(phoneGeometry));
+    assert.equal(phoneGeometry.framePseudo,'none','Old fake CSS cat ears are still present');
+    assert.ok(phoneGeometry.height>phoneGeometry.root.height*.7&&phoneGeometry.height<=phoneGeometry.root.height*.9,
+      'Phone size is not scaled to logical game viewport: '+JSON.stringify(phoneGeometry));
+    assert.ok(phoneGeometry.screen.x>0&&phoneGeometry.screen.y>0&&
+      phoneGeometry.screen.x+phoneGeometry.screen.width<=phoneGeometry.width&&
+      phoneGeometry.screen.y+phoneGeometry.screen.height<=phoneGeometry.height,
+      'Software screen must remain within the approved cat-ear illustration: '+JSON.stringify(phoneGeometry));
+    const assetResponse=await page.request.get('./assets/phones/char001-cat-ear-shell.webp');
+    assert.equal(assetResponse.status(),200,'Approved smartphone shell was not deployed');
+    assert.ok(Number(assetResponse.headers()['content-length']||0)>4000,
+      'Approved phone art unexpectedly missing or empty');
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-approved-phone-lock.png'});
+
+    await page.locator('#phone-ui [data-key="1"]').click();
+    assert.equal(await page.locator('#phone-ui .phone-dot[data-filled="true"]').count(),1);
+    await page.locator('#phone-ui [data-key="erase"]').click();
+    assert.equal(await page.locator('#phone-ui .phone-dot[data-filled="true"]').count(),0);
+    // Click the programmatic fingerprint control: no actual biometric API.
+    await page.locator('#phone-fingerprint').click();
+    assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
+    await page.locator('#phone-ui .phone-app[data-app="信息"]').click();
+    assert.equal(await page.locator('#phone-ui [data-phone-page="app"]').isVisible(),true);
+    await page.locator('#phone-app-back').click();
+    assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
+    await page.locator('#quick-phone').click();
+    await expectEdge(page,'right',false);
+    assert.equal(await page.locator('#phone-ui').isVisible(),false);
+
+    // Password path also works and is fully separate from the Anima asset.
+    await page.locator('#quick-phone').click();
+    for(const digit of '000000')await page.locator('#phone-ui [data-key="'+digit+'"]').click();
+    assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
+    assert.equal(await page.evaluate(()=>window.PaperWorldQuickTools.phone.snapshot().unlockedBy),'pin');
+    await page.locator('#quick-map').click();
+    await expectEdge(page,'right',true);
+    assert.equal(await page.locator('#phone-ui').isVisible(),false);
+    assert.equal(await page.locator('#quick-panel-title').textContent(),'地图');
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-quick-map-open.png'});
     await page.keyboard.press('Escape');
     await expectEdge(page,'right',false);
     assert.equal(await page.locator('#quick-panel').isVisible(),false);
