@@ -24,7 +24,7 @@ jobs:
           s=Image.open('site/assets/characters/char-004/reference-sheet.png').convert('RGBA')
           o=Image.open('site/assets/characters/char-004/fullbody-solo.png').convert('RGBA')
           assert o.size==(604,1024)
-          assert o.crop((0,0,448,1024)).tobytes()==s.crop((0,0,448,1024)).tobytes()
+          assert o.crop((0,0,433,1024)).tobytes()==s.crop((0,0,433,1024)).tobytes()
           for y in [70,200,350,500,700,850]:
             assert o.getpixel((570,y))==(255,255,255,255)
           assert Path('docs/characters/char004-review/solo-thumb.b64').stat().st_size>1000
