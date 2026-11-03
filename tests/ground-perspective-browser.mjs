@@ -234,21 +234,64 @@ try{
    assert.equal(shifted.enemy.x,x,'Ground constraint changed horizontal placement');
    await page.locator('#dev-ground-lock').uncheck();
    assert.equal((await page.evaluate(()=>window.PaperWorldGroundPerspective.current())).locked,false);
-   // Leaving DEV disables CSS 3D projection. Its mathematically equivalent
-   // 2D pinhole-distance scale must now apply to the actual visual canvas.
+   // Restore the intended modern auto-Z mode before exiting DEV: the
+   // legacy one-off screen-Y calibrator explicitly disables automatic mode.
+   await page.locator('#dev-auto-depth').check();
    await page.locator('#dev-exit').click();
    const normal=await page.evaluate(()=>{
      const g=window.PaperWorldL2DGround.inspect();
-     const a=Object.fromEntries(g.actors.map(v=>[v.id,v]));
-     const img=slot=>window.PaperchalkL2D.get(slot).img;
-     const actual=(slot)=>img(slot).offsetHeight*a[slot].visibleFraction*a[slot].perspectiveScale;
-     const expected=(a.enemy.physicalCm/a.player.physicalCm)*
-       (1150-a.player.effectiveZ)/(1150-a.enemy.effectiveZ);
-     return {dev:g.dev,ratio:actual('enemy')/actual('player'),expected,actors:a};
+     const actors=Object.fromEntries(g.actors.map(a=>[a.id,a]));
+     const player=window.PaperchalkL2D.get('player');
+     const enemy=window.PaperchalkL2D.get('enemy');
+     return {dev:g.dev,actors,perf:window.PaperWorldL2DGround.performance(),
+       player:{scale:parseFloat(getComputedStyle(player.canvas).scale),
+         origin:getComputedStyle(player.canvas).transformOrigin,
+         buffer:player.canvas.width,height:player.img.offsetHeight},
+       enemy:{scale:parseFloat(getComputedStyle(enemy.canvas).scale),
+         origin:getComputedStyle(enemy.canvas).transformOrigin,
+         buffer:enemy.canvas.width,height:enemy.img.offsetHeight,
+         renderer:enemy.canvas.getContext('2d').getContextAttributes?.().willReadFrequently}};
    });
-   assert.equal(normal.dev,false,'Exited DEV but still applying 3D camera perspective');
-   assert.ok(Math.abs(normal.ratio-normal.expected)<.025,
-     'Regular 2D game does not match physical stature and camera distance: '+JSON.stringify(normal));
+   assert.equal(normal.dev,false);
+   assert.ok(Math.abs(normal.player.scale-1)<.002&&Math.abs(normal.enemy.scale-1)<.002,
+     'Both L2D actors must retain hand-authored original sharp native scale at baseline: '+
+     JSON.stringify(normal));
+   assert.equal(normal.perf.sourceReadbacks,0);
+   assert.equal(normal.perf.globalSubtreeObservers,0);
+   assert.equal(normal.enemy.renderer,false,
+     'The active animated canvas was forced into slow CPU readback mode: '+JSON.stringify(normal));
+   assert.ok(normal.perf.readbackPixels<=192*192*6,
+     'Sole detection read too many pixels: '+JSON.stringify(normal.perf));
+   // Animated part texture quality is tested in *actual* 2D mode, not just
+   // the editor's independent CSS 3D perspective.
+   const actorAt=async z=>page.evaluate(value=>{
+     const rig=document.getElementById('dev-rig');
+     rig.style.setProperty('--dev-depth-enemy',value+'px');
+     const g=window.PaperWorldL2DGround.sync();
+     const enemy=window.PaperchalkL2D.get('enemy');
+     return {size:enemy.img.offsetHeight,buffer:enemy.canvas.width,
+       scale:parseFloat(getComputedStyle(enemy.canvas).scale),
+       canvasHeight:enemy.canvas.getBoundingClientRect().height,
+       foot:g.actors.find(v=>v.id==='enemy')?.errorPx};
+   },z);
+   const distant=await actorAt(-350);
+   const close=await actorAt(-60);
+   assert.ok(close.scale>distant.scale*1.1&&close.scale<1.3,
+     'Camera distance should smoothly adjust a sharp 1x L2D, not magnify it several times: '+
+     JSON.stringify({distant,close}));
+   assert.equal(close.size,distant.size,'Camera depth changed the original image geometry');
+   assert.equal(close.buffer,distant.buffer,'Zoom should not continuously reallocate rendering buffers');
+   assert.ok(Math.abs(close.foot)<1&&Math.abs(distant.foot)<1,
+     'Moving the camera distance detached the L2D shoes from the floor');
+   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-sharp-normal-distance.png'});
+   await actorAt(-190);
+   const perfBefore=await page.evaluate(()=>window.PaperWorldL2DGround.performance());
+   await page.waitForTimeout(550);
+   const perfAfter=await page.evaluate(()=>window.PaperWorldL2DGround.performance());
+   assert.ok(perfAfter.probeCount-perfBefore.probeCount<=1,
+     'Sole scanner is still sampling the live L2D canvas every animation frame: '+
+     JSON.stringify({perfBefore,perfAfter}));
+   console.log('PASS '+cfg.name+' sharp-L2D scale, GPU canvas, sparse sole detection, Z distance and stationary shoe');
    assert.deepEqual(errs,[],errs.join('; '));
    console.log('PASS '+cfg.name+': both genuine L2D sole pixels touch the same floor Y, move with Y/Z, keep authored transforms');
    await page.close();
