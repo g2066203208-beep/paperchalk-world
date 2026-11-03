@@ -331,7 +331,13 @@ jobs:
                 await page.locator('#easy-redo').click();
                 await page.locator('#btnSave').click();
                 await page.waitForFunction(()=>document.getElementById('status').textContent.includes('已保存'),null,{timeout:12000});
-                const dl=page.waitForEvent('download');await page.locator('#btnExport').click();const downloaded=await dl;
+                const dl=page.waitForEvent('download',{timeout:90000});
+                await page.locator('#btnExport').click();
+                const downloaded=await dl.catch(async error=>{
+                  console.error('ZIP EXPORT FAILURE',await page.locator('#status').textContent());
+                  console.error('PAGE ERRORS',errors);
+                  throw error;
+                });
                 assert.ok(downloaded.suggestedFilename().endsWith('.zip'));
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:12000});
                 await page.locator('#studio-side').selectOption('back');
