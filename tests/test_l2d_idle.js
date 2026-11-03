@@ -115,4 +115,12 @@ const customV2=core.sanitizeIdleProfile({
 });
 assert.equal(customV2.hair.amount,1.25,'do not clobber old custom strength');
 assert.equal(customV2.parts.front_hair,1.75,'do not clobber old custom weights');
+const tunedWind=core.presetIdle('windy');
+tunedWind.preset='custom';tunedWind.hair.amount=1.05;
+const recovered=core.sanitizeIdleProfile(JSON.parse(JSON.stringify(tunedWind)));
+assert.equal(recovered.weather,'windy','manual tuning must retain its selected storm');
+const at=core.warpPoint(fringe,.2,.95,2.0,null,recovered);
+const same=core.warpPoint(fringe,.2,.95,2.0,null,{...recovered,preset:'windy'});
+assert.ok(length(at,same)<1e-8,
+ 'switching to custom sliders must NOT silently remove the storm gust envelope');
 console.log('PASS idle presets, original source-part hair/skirt isolation, gentle body, per-part sliders and save/restore');
