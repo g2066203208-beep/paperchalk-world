@@ -45,8 +45,6 @@ jobs:
                 await page.goto('http://127.0.0.1:8123/character-editor/',{waitUntil:'load'});
                 await page.waitForFunction(()=>window.characterEditor&&window.characterEditor.S.ready,{timeout:10000});
                 await page.waitForFunction(()=>!!window.PaperchalkStageMotion,{timeout:10000});
-                assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio?.state.active),false,
-                  'original V4 preview is the default; opt-in editable rig stays off');
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist'&&
                   window.PaperchalkStudio?.countSourceParts?.()===17,null,{timeout:30000}).catch(async error=>{
                   console.error('Original layer audit',await page.evaluate(()=>({
@@ -60,11 +58,15 @@ jobs:
                   console.error('Browser JS errors',errors);
                   throw error;
                 });
+                await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:10000});
+                assert.equal(await page.locator('#part-rig-panel').isVisible(),false,
+                  'new mesh is active by default without opening a cluttered settings panel');
                 await page.evaluate(()=>{
                   window.__partRigArtBackup=window.characterEditor.S.layers.front
                     .find(p=>p.partId==='jacket').canvas.toDataURL();
                 });
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true);
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),false,
+                  'real source parts must use the new mesh, not the legacy V4 clip');
                 // Real user-facing entry must be visible, reachable and active
                 // in default EASY mode without hunting for the canvas toolbar.
                 assert.equal(await page.locator('#idle-open').isVisible(),true,'idle entry must be prominently visible');
@@ -232,7 +234,10 @@ jobs:
                   return saved?.parts?.rear_hair?.motion?.x===35;
                 },null,{timeout:10000});
                 await page.locator('#rig-close').click();
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true);
+                assert.equal(await page.locator('#part-rig-panel').isVisible(),false);
+                assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.active),true,
+                  'closing settings must not stop or revert the new mesh animation');
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),false);
                 assert.equal(await page.evaluate(()=>
                   window.characterEditor.S.layers.front.find(p=>p.partId==='jacket').canvas.toDataURL()===
                     window.__partRigArtBackup),true,'the old approved jacket pixels stay byte-identical');
@@ -240,8 +245,9 @@ jobs:
                 await directPage.goto('http://127.0.0.1:8123/character-editor/?character=protagonist&side=front&idle=1',
                   {waitUntil:'load'});
                 await directPage.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:30000});
-                assert.equal(await directPage.locator('#part-rig-panel').isVisible(),true,
-                  'a shared ?idle=1 URL must open real controls automatically');
+                assert.equal(await directPage.locator('#part-rig-panel').isVisible(),false,
+                  'all entry URLs default to the same uncluttered new-animation canvas');
+                await directPage.locator('#idle-open').click();
                 assert.equal(await directPage.locator('[data-idle="hair.amount"]').isVisible(),true);
                 await directPage.screenshot({path:'artifacts/character-editor/'+vp.width+'-DIRECT-URL-OPEN.png'});
                 await directPage.close();
