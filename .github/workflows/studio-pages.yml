@@ -263,6 +263,14 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify all four independent UI edge fogs in real browser and capture screenshots
         run: node tests/ui-edge-fog-browser.mjs
+      - name: Upload early real UI fog screenshots for visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-fog-immediate-review
+          path: artifacts/classroom/ui-fog-*.png
+          retention-days: 7
+          if-no-files-found: warn
       - name: Verify full background, two independent layers, and continuous frames
         run: |
           mkdir -p artifacts/classroom
