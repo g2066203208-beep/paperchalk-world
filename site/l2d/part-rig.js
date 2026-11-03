@@ -299,7 +299,9 @@ function cleanPart(part,face,id,characterId){
  const p=part||{},spec=characterId==='char-002'&&face==='front'?(CHAR002[id]||FRONT[id]):(face==='back'?BACK:FRONT)[id];
  const w=Math.max(1,finite(p.canvas?.width||p.w,1));
  const h=Math.max(1,finite(p.canvas?.height||p.h,1));
- const def=spec||['root',.5,.08,.5,.9,'unclassified'];
+ const def=spec||(id==='hair'?['head',.5,.06,.5,.9,'hair']:
+    id==='cloth'?['pelvis',.5,.08,.5,.92,'skirt']:
+    ['root',.5,.08,.5,.9,'unclassified']);
  return {id:String(id),name:String(p.name||id),x:finite(p.x,0),y:finite(p.y,0),w,h,
   parentId:def[0],kind:def[5],
   pivot:{x:def[1],y:def[2]},tip:{x:def[3],y:def[4]},
