@@ -31,6 +31,8 @@ panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</stro
 // Dock the inspector beside the character; never cover the preview.
 const dock=document.querySelector('.layout .right')||stage;
 dock.prepend(panel);
+// Keep Play/Pause visible in the rig header, outside the animated portrait.
+panel.querySelector('.rig-h').insertBefore($('rig-pause'),$('rig-close'));
 const sliders=$('rig-sliders');
 const fields=[['pivot.x','轴点 X',0,100,1],['pivot.y','轴点 Y',0,100,1],
  ['tip.x','末端 X',0,100,1],['tip.y','末端 Y',0,100,1],
