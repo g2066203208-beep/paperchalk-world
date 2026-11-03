@@ -1,59 +1,162 @@
-/* Shared floor -> ALL actually displayed L2D actors.
- * Game/DEV glue deliberately lives OUTSIDE the large scene HTML: replacing
- * UI scenes must not silently disconnect the floor from ArtMesh and V4 rigs.
- * The original invisible <img> is only a position source; parent L2D roots
- * own everything that renders (live canvas, PSD parts, WebP/V4 and overlays).
+/* Physically shared L2D ground. The 3D floor is the world Y=constant
+ * plane; 2D L2D billboards remain vertical and rest on that plane by their
+ * LOWEST NONTRANSPARENT SHOE PIXEL, not the invisible poster element bottom.
+ *
+ * Player and NPC rigs preserve bone motion, per-character offset X/Z and
+ * actual mesh image dimensions. This binding survives layout UI rewrites.
  */
 (()=>{
 'use strict';
 const view=document.getElementById('view');
 const rig=document.getElementById('dev-rig');
-const ground=document.getElementById('dev-ground');
-if(!view||!rig||!ground)return;
-const actorRoots=()=>[...document.querySelectorAll('[data-l2d-actor]')];
-const origin={y:77,z:-215};
-const number=(name,defaultValue)=>{
-  const raw=rig.style.getPropertyValue(name).trim();
-  const n=parseFloat(raw);
-  return Number.isFinite(n)?n:defaultValue;
+const floor=document.getElementById('dev-ground');
+if(!view||!rig||!floor)return;
+const ORIGIN=Object.freeze({y:77,z:-215});
+const roots=()=>[...document.querySelectorAll('[data-l2d-actor]')];
+const actorInfo=new Map(),soleCache=new WeakMap();
+let last=null,requested=false;
+const fmt=n=>Number(n.toFixed(3));
+const cssValue=(key,fallback)=>{
+  const n=parseFloat(rig.style.getPropertyValue(key));
+  return Number.isFinite(n)?n:fallback;
 };
-let last={y:null,z:null,height:null,dev:null,count:null};
+function shoeInCanvas(actor){
+  const canvas=actor.canvas;
+  if(!canvas||canvas.width<1||canvas.height<1)return {x:.5,y:1,detected:false};
+  const name=[actor.img?.dataset?.characterId||actor.img?.src||'',
+    actor.root.dataset.l2dEdition||'',actor.root.dataset.l2dMode||'',
+    canvas.width,canvas.height].join('|');
+  const cached=soleCache.get(canvas);
+  if(cached?.name===name)return cached.shoe;
+  // Canvas is painted from genuine original L2D PSD/part layers. Read only
+  // its alpha channel; colors, outfit and head/arm movement are unchanged.
+  let shoe={x:.5,y:1,detected:false};
+  try{
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const w=canvas.width,h=canvas.height;
+    const pixels=ctx.getImageData(0,0,w,h).data;
+    let minX=w,maxX=0,maxY=-1;
+    // A few antialiased strays should not count as soles.
+    for(let y=h-1;y>=0;y--){
+      let rowMin=w,rowMax=-1,hits=0;
+      for(let x=0;x<w;x++){
+        if(pixels[(y*w+x)*4+3]>48){
+          hits++;rowMin=Math.min(rowMin,x);rowMax=Math.max(rowMax,x);
+        }
+      }
+      if(hits>=2){maxY=y;minX=rowMin;maxX=rowMax;break}
+    }
+    if(maxY>=0){
+      // Include a small band above the lowest heel to find the midpoint
+      // between two shoes. A dangling single antialiased pixel cannot drag
+      // the whole character away from the floor.
+      for(let y=maxY;y>=Math.max(0,maxY-Math.ceil(h*.015));y--){
+        for(let x=0;x<w;x++){
+          if(pixels[(y*w+x)*4+3]>48){
+            minX=Math.min(minX,x);maxX=Math.max(maxX,x);
+          }
+        }
+      }
+      shoe={x:((minX+maxX)*.5+.5)/w,y:(maxY+.5)/h,detected:true};
+    }
+  }catch(_){/* cross-origin/empty canvas uses the documented bottom edge */}
+  if(shoe.detected)soleCache.set(canvas,{name,shoe});
+  return shoe;
+}
+function actorSource(root){
+  const img=root.querySelector('[data-l2d-image]');
+  const canvas=root.querySelector('[data-l2d-canvas]');
+  if(!img||!canvas)return null;
+  return {img,canvas,shoe:shoeInCanvas({root,img,canvas})};
+}
+function originalRootTop(root,rigHeight){
+  // The NPC plane is centered on the scene (translateY(-50%)); the player
+  // billboard is full-screen (top=0), both BEFORE DEV camera perspective.
+  return root.id==='enemy-depth-root'
+    ? rigHeight*.5-root.offsetHeight*.5
+    :root.offsetTop;
+}
 function sync(){
-  const y=number('--dev-floor-y',origin.y);
-  const z=number('--dev-depth-ground',origin.z);
-  const height=Math.max(1,view.clientHeight);
-  const inDev=view.classList.contains('dev-mode');
-  const dy=(y-origin.y)*height/100;
-  const dz=inDev?z-origin.z:0;
-  const roots=actorRoots();
-  const translation='0px '+dy.toFixed(3)+'px '+dz.toFixed(3)+'px';
-  for(const root of roots){
+  const y=cssValue('--dev-floor-y',ORIGIN.y);
+  const z=cssValue('--dev-depth-ground',ORIGIN.z);
+  const worldH=Math.max(1,rig.clientHeight);
+  const h=Math.max(1,view.clientHeight);
+  const dev=view.classList.contains('dev-mode');
+  const floorY=worldH*y/100;
+  const dz=dev?z-ORIGIN.z:0;
+  const actorData=[];
+  const items=roots();
+  for(const root of items){
+    const asset=actorSource(root);
+    if(!asset)continue;
+    const {img,canvas,shoe}=asset;
+    const shoeLocalY=originalRootTop(root,worldH)+
+      img.offsetTop+img.offsetHeight*shoe.y;
+    const dy=dev?floorY-shoeLocalY:(y-ORIGIN.y)*h/100;
+    const translation='0px '+fmt(dy)+'px '+fmt(dz)+'px';
     if(root.style.translate!==translation)root.style.translate=translation;
+    const worldFootY=shoeLocalY+dy;
+    // World X and Z determine the 3D floor contact point. The 2D roots
+    // remain vertical; never rotate the actual bones with the floor grid.
+    const worldX=(root.id==='enemy-depth-root'
+       ? (rig.clientWidth-root.offsetWidth)*.5:root.offsetLeft)+
+       img.offsetLeft+img.offsetWidth*shoe.x-rig.clientWidth*.5;
+    const rootZ=cssValue('--dev-depth-'+(root.dataset.l2dActor==='enemy'?'enemy':'player'),0);
+    const relativeZ=rootZ+dz-z;
     root.dataset.groundAttached='true';
+    root.dataset.shoeContact=shoe.detected?'mesh-alpha':'bottom-edge';
+    root.dataset.groundError=String(fmt(worldFootY-floorY));
+    actorData.push({id:root.dataset.l2dActor,detected:shoe.detected,
+      soleX:shoe.x,soleY:shoe.y,worldFootY:fmt(worldFootY),
+      worldX:fmt(worldX),relativeZ:fmt(relativeZ),dy:fmt(dy),dz:fmt(dz),
+      errorPx:fmt(worldFootY-floorY),translation,
+      mode:root.dataset.l2dMode||'loading',
+      canvasW:canvas.width,canvasH:canvas.height});
+    let marker=actorInfo.get(root);
+    if(!marker){
+      marker=document.createElement('div');
+      marker.className='dev-shoe-contact';
+      marker.dataset.actor=root.dataset.l2dActor;
+      marker.setAttribute('aria-hidden','true');
+      marker.textContent=root.dataset.l2dActor==='player'?'主角脚底':'敌人脚底';
+      floor.append(marker);actorInfo.set(root,marker);
+    }
+    marker.style.left='calc(50% + '+fmt(worldX)+'px)';
+    marker.style.top=fmt(relativeZ)+'px';
+    marker.hidden=!dev||root.hidden||img.hidden;
   }
-  // Deterministic public diagnostics for automated visual tests / other
-  // character studios. Never reads/writes or resets saved character poses.
-  last={y,z,height,dev:inDev,count:roots.length,dy,dz,translation};
+  last={y,z,dev,floorY:fmt(floorY),actors:actorData};
   rig.dataset.l2dGroundY=String(y);
   rig.dataset.l2dGroundZ=String(z);
-  rig.dataset.l2dGroundActors=String(roots.length);
+  rig.dataset.l2dGroundActors=String(actorData.length);
   return last;
 }
-// The original DEV implementation writes floor position to CSS custom
-// properties. Observe those authoritative writes instead of keeping a
-// second, out-of-sync copy of editorConfig or overriding its save logic.
-new MutationObserver(sync).observe(rig,{attributes:true,attributeFilter:['style']});
-new MutationObserver(sync).observe(view,{attributes:true,attributeFilter:['class']});
-new MutationObserver(sync).observe(document.body,{childList:true,subtree:true});
-window.addEventListener('resize',sync,{passive:true});
-for(const id of ['dev-ground-y','dev-z','dev-reset','dev-save','dev-layer']){
-  const el=document.getElementById(id);
-  if(el){
-    el.addEventListener('input',sync);
-    el.addEventListener('change',sync);
-    if(id==='dev-reset')el.addEventListener('click',()=>queueMicrotask(sync));
-  }
+function queue(){
+  if(requested)return;
+  requested=true;
+  requestAnimationFrame(()=>{requested=false;sync()});
 }
-window.PaperWorldL2DGround=Object.freeze({sync,state:()=>({...last})});
-sync();
+new MutationObserver(queue).observe(rig,{attributes:true,attributeFilter:['style']});
+new MutationObserver(queue).observe(view,{attributes:true,attributeFilter:['class']});
+new MutationObserver(queue).observe(document.body,{childList:true,subtree:true});
+// Swapping art / character in the L2D studio invalidates the measured sole.
+for(const root of roots()){
+  new MutationObserver(queue).observe(root,{attributes:true,
+    attributeFilter:['data-l2d-state','data-l2d-mode','data-l2d-edition','hidden']});
+  const img=root.querySelector('[data-l2d-image]');
+  if(img)new MutationObserver(queue).observe(img,{attributes:true,
+    attributeFilter:['src','data-character-id','hidden']});
+}
+window.addEventListener('resize',queue,{passive:true});
+for(const id of ['dev-ground-y','dev-z','dev-reset','dev-save','dev-layer']){
+ const el=document.getElementById(id);
+ if(el){
+   el.addEventListener('input',queue);
+   el.addEventListener('change',queue);
+   if(id==='dev-reset')el.addEventListener('click',queue);
+ }
+}
+window.PaperWorldL2DGround=Object.freeze({sync,inspect:()=>sync(),
+  state:()=>structuredClone(last)});
+sync();requestAnimationFrame(sync);
 })();
