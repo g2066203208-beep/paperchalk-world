@@ -21,8 +21,7 @@ jobs:
           node-version: '22'
       - run: python3 -m pip install --quiet 'Pillow>=10,<12'
       - run: python3 scripts/build_v4_assets.py
-      - run: python3 scripts/build_char002_v4.py
-      - run: python3 scripts/build_char002_part_rig.py
+      - run: python3 scripts/build_char002_psd_rig.py
       - run: python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
@@ -207,8 +206,8 @@ jobs:
                   window.__originalJacketPose=window.PaperchalkPartRigCore.warpPoint(m.parts.jacket,.5,.95,Math.PI/2);
                 });
                 await page.locator('[data-rig="motion.x"]').fill('35');
-                assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.CHAR002).length),16,
-                  'CHAR-002 has its own documented 16-part rig blueprint, not the heroine texture');
+                assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.CHAR002).length),17,
+                  'CHAR-002 blueprint matches the 17 genuinely visible PSD components');
                 assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.BACK).length),8,
                   'reverse view uses its own eight source-part bindings');
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-independent-rear-hair-mesh.png',fullPage:true});
@@ -358,9 +357,8 @@ jobs:
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-back.png',fullPage:true});
                 assert.deepEqual(errors,[],'JavaScript errors');
                 await page.close();
-                // CHAR-002 is her ORIGINAL canonical ID, not a second actor.
-                // Only seven derived image regions exist; do not pretend a
-                // combined head_hair PNG can independently animate eyes/bangs.
+                // Female-two's real uploaded PSD: 24 layer records, 17
+                // active original-pixel parts. Verify on desktop AND mobile.
                 const secondaryPage=await browser.newPage({viewport:vp,
                   isMobile:vp.width<500,hasTouch:vp.width<500});
                 await secondaryPage.goto('http://127.0.0.1:8123/character-editor/?character=char-002&side=front',
@@ -368,37 +366,43 @@ jobs:
                 await secondaryPage.waitForFunction(()=>
                   window.PaperchalkStudio?.current==='char-002'&&
                   window.PaperchalkPartRigStudio?.state.active&&
-                  Object.keys(window.PaperchalkPartRigStudio.state.model?.parts||{}).length===7,
+                  window.PaperchalkStudio?.hasNativePSD()&&
+                  Object.keys(window.PaperchalkPartRigStudio.state.model?.parts||{}).length===17,
                   null,{timeout:35000});
                 const female2=await secondaryPage.evaluate(()=>{
                   const m=window.PaperchalkPartRigStudio.state.model,
                     core=window.PaperchalkPartRigCore;
-                  return {id:m.characterId,parts:Object.keys(m.parts),hierarchy:!!m.bodyHierarchy,
-                    roles:Object.fromEntries(Object.entries(m.parts).map(([id,p])=>
-                      [id,core.parentRole(p)]))};
+                  return {id:m.characterId,parts:Object.keys(m.parts),
+                    hierarchy:!!m.bodyHierarchy,
+                    front:core.parentRole(m.parts.front_hair),
+                    back:core.parentRole(m.parts.back_hair),
+                    foot:core.parentRole(m.parts.footwear),
+                    eye:core.parentRole(m.parts.eyewhite)};
                 });
                 assert.equal(female2.id,'char-002');
-                assert.deepEqual(female2.parts,['shoes','legs','skirt','wave_hand',
-                  'free_hand','head_hair','jacket']);
-                assert.ok(female2.hierarchy,'secondary character needs the shared human parent chain');
-                assert.equal(female2.roles.head_hair,'head');
-                assert.equal(await secondaryPage.locator('[data-quick="fringe"]').isVisible(),false,
-                  'combined hair/face cannot be falsely marketed as real bangs');
-                for(const control of ['skirt','hands','shoulders','hips','breath','speed'])
-                  assert.equal(await secondaryPage.locator('[data-quick="'+control+'"]').isVisible(),true,
-                    'missing CHAR-002 usable bone control: '+control);
-                await secondaryPage.locator('[data-quick="hands"]').fill('125');
+                assert.equal(female2.parts.length,17);
+                assert.ok(female2.hierarchy,'PSD source should build human parent hierarchy');
+                assert.deepEqual([female2.front,female2.back,female2.foot,female2.eye],
+                  ['head','head','ground','head']);
+                for(const id of ['fringe','rear','skirt','hands','shoulders','hips','breath','speed'])
+                  assert.equal(await secondaryPage.locator('[data-quick="'+id+'"]').isVisible(),true,
+                    'real PSD slider must be visible: '+id);
+                await secondaryPage.locator('[data-quick="fringe"]').fill('135');
+                await secondaryPage.locator('[data-quick="rear"]').fill('145');
                 await secondaryPage.locator('[data-quick="skirt"]').fill('180');
+                await secondaryPage.locator('[data-quick="hands"]').fill('125');
                 await secondaryPage.locator('[data-quick="breath"]').fill('70');
                 await secondaryPage.locator('#rig-quick-save').click();
                 await secondaryPage.waitForFunction(async()=>{
                   const saved=await window.PaperchalkStudio.readPartRig('char-002','front');
-                  return saved?.idleProfile?.joints?.hands===1.25&&
-                    saved?.idleProfile?.parts?.skirt===1.8&&
+                  return saved?.idleProfile?.parts?.front_hair===1.35&&
+                    saved?.idleProfile?.parts?.back_hair===1.45&&
+                    saved?.idleProfile?.parts?.bottomwear===1.8&&
+                    saved?.idleProfile?.joints?.hands===1.25&&
                     saved?.idleProfile?.breath?.amount===.7;
-                },null,{timeout:18000});
+                },null,{timeout:25000});
                 await secondaryPage.screenshot({path:'artifacts/character-editor/'+vp.width+
-                  '-CHAR-002-REAL-SEVEN-REGION-RIG.png',fullPage:false});
+                  '-CHAR-002-ORIGINAL-PSD-17-PARTS.png',fullPage:false});
                 await secondaryPage.close();
               }
             }finally{await browser.close()}
