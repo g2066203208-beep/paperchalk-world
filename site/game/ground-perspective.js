@@ -17,6 +17,19 @@
   });
   const FALLBACK=Object.freeze({heightCm:162,crown:.035,sole:.985,confirmedHeight:false});
   function metricsFor(id){return CHARACTER_DATA[id]||FALLBACK}
+  const FLOOR_ORIGIN=Object.freeze({y:77,z:-215});
+  // The floor owns a shared world translation. Every character keeps its
+  // authored local X/Y and Z offset relative to that floor. Moving the
+  // floor displaces ALL attached characters by the same world delta.
+  function floorMotion({y=FLOOR_ORIGIN.y,z=FLOOR_ORIGIN.z},viewportHeight){
+    if(!Number.isFinite(y)||!Number.isFinite(z)||!Number.isFinite(viewportHeight)||viewportHeight<=0)
+      return {valid:false,reason:'invalid-floor'};
+    return {
+      valid:true,
+      screenDeltaY:viewportHeight*(y-FLOOR_ORIGIN.y)/100,
+      worldDeltaZ:z-FLOOR_ORIGIN.z
+    };
+  }
   function fit({referenceHeightCm,actorHeightCm,referenceCanvasHeight,
       referenceCanvasBottom,actorCanvasBottom,actorPlaneHeight,
       horizonY,referenceCrown=.033,referenceSole=.978,
@@ -49,5 +62,5 @@
       horizonY,physicalRatio,depthRatio,relativeVisibleHeight,
       referenceVisible,actorVisible};
   }
-  return Object.freeze({CHARACTER_DATA,metricsFor,fit});
+  return Object.freeze({CHARACTER_DATA,FLOOR_ORIGIN,floorMotion,metricsFor,fit});
 });
