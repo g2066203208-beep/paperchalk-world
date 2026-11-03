@@ -12,8 +12,8 @@ const server=createServer((req,res)=>{
   const pathname=new URL(req.url,'http://127.0.0.1').pathname;
   const p=resolve(root,'.'+(pathname.endsWith('/')?pathname+'index.html':pathname));
   if(!p.startsWith(root+'/')){res.writeHead(403).end();return}
-  try{res.writeHead(200,{'content-type':types[extname(p)]||'application/octet-stream','cache-control':'no-store'});res.end(readFileSync(p))}
-  catch{res.writeHead(404).end('not found')}
+  try{const data=readFileSync(p);res.writeHead(200,{'content-type':types[extname(p)]||'application/octet-stream','cache-control':'no-store'});res.end(data)}
+  catch{if(!res.headersSent)res.writeHead(404);res.end('not found')}
 });
 await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 const url='http://127.0.0.1:'+server.address().port+'/index.html?scene=classroom';
