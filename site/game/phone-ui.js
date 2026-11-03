@@ -1,0 +1,169 @@
+
+/* Lightweight, character-configurable smartphone UI.
+ * Art is never baked together with controls: an Anima lock image can replace
+ * the wallpaper via configure({wallpaperUrl}) without touching this keypad.
+ * Demo fingerprint is an in-game interaction, not OS biometric authentication. */
+(function(global){
+  'use strict';
+  const ICONS={
+    '信息':'<path d="M4 5h16v11H9l-5 4z"/>',
+    '电话':'<path d="M8 3l3 4-2 3c1 2 3 4 5 5l3-2 4 3-2 5C11 21 3 13 3 5z"/>',
+    '相册':'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="9" r="2"/><path d="m4 18 6-6 3 3 3-3 4 5"/>',
+    '地图':'<path d="m3 5 6-2 6 3 6-3v16l-6 3-6-3-6 2zM9 3v16M15 6v16"/>',
+    '备忘录':'<path d="M6 3h12v18H6zM9 9h6M9 13h6M9 17h4"/>',
+    '日历':'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',
+    '音乐':'<path d="M9 18V5l12-2v13M9 18c0 3-6 4-6 1s6-4 6-1ZM21 16c0 3-6 4-6 1s6-4 6-1Z"/>',
+    '设置':'<circle cx="12" cy="12" r="3"/><path d="m10 2-1 3-3 1-3-1-2 4 3 2v3l-3 2 2 4 3-1 3 1 1 3h4l1-3 3-1 3 1 2-4-3-2v-3l3-2-2-4-3 1-3-1-1-3z"/>'
+  };
+  const svg=p=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>';
+  const finger=svg('<path d="M12 11a2 2 0 0 1 2 2c0 2.5-.3 4.8-1.1 7M9 19.2c.6-2.1.9-4.2.9-6.3a2.1 2.1 0 0 1 4.2 0M6.5 17.5c.4-1.6.5-3 .5-4.5a5 5 0 0 1 10 0c0 2.7-.2 4.9-.7 7M4.5 13a7.5 7.5 0 0 1 15 0c0 1.7-.1 3.1-.3 4.4M12 3a10 10 0 0 0-9.6 7M7.6 21c.9-2.4 1.2-4.6 1.2-7.5"/>');
+  const defaultApps=Object.keys(ICONS);
+  const defaultProfile={id:'protagonist',name:'女主角',passcode:'000000',
+    apps:defaultApps,wallpaperUrl:null};
+  const weekdays=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  function create({root,profile={}}={}){
+    if(!root)throw new Error('Phone requires #novel-ui root');
+    let config={...defaultProfile,...profile};
+    let pin='',page='lock',opened=false,clockTimer=0;
+    const section=document.createElement('section');
+    section.id='phone-ui';section.hidden=true;
+    section.dataset.uiFogEdge='right';
+    section.setAttribute('role','dialog');section.setAttribute('aria-label','女主角手机');
+    section.setAttribute('aria-modal','false');
+    section.innerHTML=`
+      <div class="phone-device">
+        <div class="phone-screen">
+          <div class="phone-wallpaper" aria-hidden="true"></div>
+          <div class="phone-camera" aria-hidden="true"></div>
+          <div class="phone-status" aria-hidden="true">
+            <span id="phone-status-time">14:50</span>
+            <span class="phone-status-right">
+              ${svg('<path d="M3 17v3M7 13v7M11 9v11M15 5v15"/>')}
+              ${svg('<path d="M2 8c6-6 14-6 20 0M5 11c4-4 10-4 14 0M9 15c2-2 4-2 6 0M12 19h.01"/>')}
+              ${svg('<rect x="2" y="6" width="18" height="12" rx="2"/><path d="M22 10v4"/>')}
+            </span>
+          </div>
+          <div class="phone-lock" data-phone-page="lock">
+            <div class="phone-headline">
+              <div class="phone-big-time" id="phone-clock">14:50</div>
+              <div class="phone-date" id="phone-date">11月3日 星期二</div>
+            </div>
+            <div class="phone-password" aria-live="polite">
+              <div id="phone-prompt" class="phone-prompt">输入六位密码</div>
+              <div class="phone-dots" aria-label="已输入0位密码">${'<span class="phone-dot"></span>'.repeat(6)}</div>
+            </div>
+            <div class="phone-keypad" role="group" aria-label="手机密码数字键盘">
+              ${['1','2','3','4','5','6','7','8','9','','0','erase'].map(n=>
+                 n===''?'<span class="phone-key phone-empty" aria-hidden="true"></span>':
+                 '<button type="button" class="phone-key" data-key="'+n+'" aria-label="'+(n==='erase'?'删除一位':n)+'">'+(n==='erase'?'⌫':n)+'</button>'
+              ).join('')}
+            </div>
+            <div class="phone-biometric">
+              <button type="button" id="phone-fingerprint" class="phone-fingerprint" aria-label="使用指纹解锁（游戏模拟）">${finger}</button>
+              <span class="phone-biometric-label">指纹解锁</span>
+            </div>
+          </div>
+          <div class="phone-home" data-phone-page="home" hidden>
+            <div class="phone-home-head">私人手机</div>
+            <div class="phone-apps" id="phone-apps" role="group" aria-label="手机应用"></div>
+            <span class="phone-home-indicator" aria-hidden="true"></span>
+          </div>
+          <div class="phone-app-view" data-phone-page="app" hidden>
+            <button class="phone-app-back" id="phone-app-back" type="button">‹ 返回</button>
+            <div class="phone-app-title" id="phone-app-title"></div>
+            <div class="phone-app-copy" id="phone-app-copy">暂无内容</div>
+            <span class="phone-home-indicator" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="phone-charm" aria-hidden="true"><span class="phone-charm-cord"></span><span class="phone-charm-fish">${svg('<path d="M8 12c3-4 6-4 9 0-3 4-6 4-9 0ZM8 12l-5-4v8zM12 9v6M15 10v4"/>')}</span></div>
+        <button class="phone-close" type="button" aria-label="收起手机">×</button>
+      </div>`;
+    root.appendChild(section);
+    const get=id=>section.querySelector('#'+id);
+    const prompt=get('phone-prompt'),dots=[...section.querySelectorAll('.phone-dot')];
+    const pages=[...section.querySelectorAll('[data-phone-page]')];
+    function syncWallpaper(){
+      const wall=section.querySelector('.phone-wallpaper');
+      wall.style.setProperty('--phone-lock-image',config.wallpaperUrl?'url("'+encodeURI(config.wallpaperUrl).replace(/"/g,'%22')+'")':'none');
+    }
+    function drawClock(){
+      const now=new Date();
+      const time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+      get('phone-clock').textContent=time;
+      get('phone-status-time').textContent=time;
+      get('phone-date').textContent=(now.getMonth()+1)+'月'+now.getDate()+'日 '+weekdays[now.getDay()];
+    }
+    function showPage(next){
+      page=next;
+      for(const element of pages)element.hidden=element.dataset.phonePage!==next;
+      section.dataset.page=next;
+    }
+    function setPrompt(message='输入六位密码',error=false){
+      prompt.textContent=message;prompt.dataset.error=String(error);
+    }
+    function updatePin(){
+      dots.forEach((dot,index)=>dot.dataset.filled=String(index<pin.length));
+      section.querySelector('.phone-dots').setAttribute('aria-label','已输入'+pin.length+'位密码');
+    }
+    function unlock(method){
+      pin='';updatePin();showPage('home');section.dataset.unlockedBy=method;
+      get('phone-apps').querySelector('button')?.focus({preventScroll:true});
+    }
+    function input(key){
+      if(!opened||page!=='lock')return false;
+      if(key==='erase'){pin=pin.slice(0,-1);updatePin();setPrompt();return true}
+      if(!/^\d$/.test(key)||pin.length>=6)return false;
+      pin+=key;updatePin();setPrompt();
+      if(pin.length===6){
+        if(pin===config.passcode)unlock('pin');
+        else{pin='';updatePin();setPrompt('密码不正确，请重试',true)}
+      }
+      return true;
+    }
+    function drawApps(){
+      const items=get('phone-apps');items.replaceChildren();
+      for(const name of config.apps){
+        const button=document.createElement('button');button.type='button';button.className='phone-app';
+        button.dataset.app=name;button.setAttribute('aria-label','打开'+name);
+        button.innerHTML='<span class="phone-app-icon">'+svg(ICONS[name]||ICONS['备忘录'])+'</span>';
+        const label=document.createElement('span');label.className='phone-app-label';label.textContent=name;
+        button.appendChild(label);
+        button.addEventListener('click',()=>{get('phone-app-title').textContent=name;
+          get('phone-app-copy').textContent='暂无内容';showPage('app')});
+        items.appendChild(button);
+      }
+    }
+    function open(){
+      opened=true;section.hidden=false;pin='';updatePin();setPrompt();showPage('lock');
+      drawClock();clearInterval(clockTimer);clockTimer=setInterval(drawClock,30000);
+    }
+    function close(){
+      opened=false;section.hidden=true;pin='';updatePin();showPage('lock');
+      clearInterval(clockTimer);clockTimer=0;
+    }
+    section.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',()=>input(b.dataset.key)));
+    get('phone-fingerprint').addEventListener('click',()=>{if(opened&&page==='lock')unlock('simulated-fingerprint')});
+    get('phone-app-back').addEventListener('click',()=>showPage('home'));
+    section.querySelector('.phone-close').addEventListener('click',()=>{
+      close();global.PaperWorldQuickTools?.close();
+    });
+    global.addEventListener('keydown',event=>{
+      if(!opened)return;
+      if(page==='lock'&&(/^\d$/.test(event.key)||event.key==='Backspace')){
+        if(input(event.key==='Backspace'?'erase':event.key)){event.preventDefault();event.stopImmediatePropagation()}
+      }else if([' ','Enter'].includes(event.key)&&event.target===document.body){
+        event.preventDefault();event.stopImmediatePropagation();
+      }
+    });
+    function configure(patch={}){
+      config={...config,...patch,apps:Array.isArray(patch.apps)?[...patch.apps]:config.apps};
+      syncWallpaper();drawApps();
+      section.setAttribute('aria-label',config.name+'手机');
+      return true;
+    }
+    configure({});
+    return Object.freeze({open,close,configure,input,isOpen:()=>opened,page:()=>page,
+      snapshot:()=>({owner:config.id,open:opened,page,pinLength:pin.length,unlockedBy:section.dataset.unlockedBy||null})});
+  }
+  global.PaperWorldPhoneUI=Object.freeze({create});
+})(window);
