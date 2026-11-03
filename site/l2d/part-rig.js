@@ -65,6 +65,7 @@ const IDLE_PRESETS=Object.freeze({
  breeze:{body:.32,hair:.64,cloth:.52,sleeves:.24},
  windy:{body:.52,hair:1.15,cloth:.92,sleeves:.45}
 });
+const WEATHER_LIFT=Object.freeze({still:0,realistic:0,breeze:.30,windy:1});
 const IDLE_RATES=Object.freeze({
  realistic:{hair:[.82,.74],cloth:[.76,.74],sleeves:[.83,.55]},
  breeze:{hair:[.98,.85],cloth:[.90,.86],sleeves:[.96,.65]},
@@ -87,7 +88,7 @@ const DEFAULT_PART_STRENGTH=Object.freeze({
 });
 function defaultIdleProfile(){
  const a=IDLE_PRESETS.realistic,r=IDLE_RATES.realistic;
- return {profileVersion:3,preset:'realistic',weather:'realistic',
+ return {profileVersion:3,preset:'realistic',weather:'realistic',windLift:0,
   body:{amount:a.body,speed:.85,swayX:.8,swayY:1.8,rotate:.35},
   hair:{amount:a.hair,speed:r.hair[0],lag:r.hair[1]},
   cloth:{amount:a.cloth,speed:r.cloth[0],lag:r.cloth[1]},
@@ -132,6 +133,7 @@ function sanitizeIdleProfile(input){
  return {profileVersion:3,preset:typeof p.preset==='string'?p.preset:'custom',
   weather:Object.hasOwn(IDLE_PRESETS,p.weather)?p.weather:
    Object.hasOwn(IDLE_PRESETS,p.preset)?p.preset:'realistic',
+  windLift:clamp(finite(p.windLift,WEATHER_LIFT[p.weather]??WEATHER_LIFT[p.preset]??0),0,1),
   body:{...groups.body,swayX:clamp(finite(p.body?.swayX,.8),0,3),
    swayY:clamp(finite(p.body?.swayY,1.8),0,4),
    rotate:clamp(finite(p.body?.rotate,.35),0,1)},
@@ -140,7 +142,7 @@ function sanitizeIdleProfile(input){
 function presetIdle(name,previous=null){
  if(!Object.hasOwn(IDLE_PRESETS,name))throw Error('Unknown idle preset: '+name);
  const p=sanitizeIdleProfile(previous||defaultIdleProfile());
- p.preset=name;p.weather=name;p.profileVersion=3;
+ p.preset=name;p.weather=name;p.windLift=WEATHER_LIFT[name];p.profileVersion=3;
  // Selecting a weather preset also resets old excessive per-part weights.
  p.parts={...DEFAULT_PART_STRENGTH};
  for(const [kind,amount] of Object.entries(IDLE_PRESETS[name]))p[kind].amount=amount;
@@ -155,8 +157,10 @@ function presetIdle(name,previous=null){
 function approachIdle(previous,target,dt){
  if(!previous)return sanitizeIdleProfile(target);
  const a=1-Math.exp(-Math.max(0,Math.min(.12,finite(dt,0)))*3.2);
+ const fromWind=clamp(finite(previous.windLift,WEATHER_LIFT[previous.weather]||0),0,1);
+ const toWind=clamp(finite(target.windLift,WEATHER_LIFT[target.weather]||0),0,1);
  const out={...previous,preset:target.preset,weather:target.weather,profileVersion:3,
-  parts:{...previous.parts}};
+  windLift:fromWind+(toWind-fromWind)*a,parts:{...previous.parts}};
  for(const group of ['body','hair','cloth','sleeves']){
   out[group]={...previous[group]};
   for(const [key,v] of Object.entries(target[group]||{}))
@@ -183,16 +187,17 @@ const FOOT_Y=902;
 function bodyPoseAt(phase,idle){
  if(!idle)return {lean:0,feet:FOOT_Y};
  const b=idle.body||{},weather=idle.weather||idle.preset;
+ const lift=clamp(finite(idle.windLift,WEATHER_LIFT[weather]||0),0,1);
+ const storm=smooth(clamp((lift-.30)/.70,0,1));
+ const breeze=smooth(clamp(lift/.30,0,1));
  const amount=clamp(finite(b.amount,0),0,1);
  const cadence=Math.max(.15,finite(b.speed,.85));
  const sway=Math.sin(phase*cadence*.64+.23)*amount*
   (.018+.012*clamp(finite(b.rotate,.35),0,1));
  // In heavy wind the person leans AGAINST the direction of the air.
  // Feet remain planted; upper body has independent slow weight shifts.
- const gust=weather==='windy'?
-  .72+.28*Math.sin(phase*.42-.35):0;
- const brace=weather==='windy'?-amount*.018*gust:
-  weather==='breeze'?-amount*.0045:0;
+ const gust=.72+.28*Math.sin(phase*.42-.35);
+ const brace=-amount*(.0045*breeze*(1-storm)+.018*storm*gust);
  return {lean:clamp(sway+brace,-.032,.032),feet:FOOT_Y};
 }
 function bodyPosePoint(x,y,phase,idle){
@@ -217,14 +222,19 @@ function windPressure(phase,weather){
 function windField(part,u,v,phase,idle){
  if(!idle||part.enabled===false)return {x:0,y:0};
  const weather=idle.weather||idle.preset;
- if(weather!=='windy'&&weather!=='breeze')return {x:0,y:0};
+ const lift=clamp(finite(idle.windLift,WEATHER_LIFT[weather]||0),0,1);
+ if(lift<.00001)return {x:0,y:0};
+ const breeze=smooth(clamp(lift/.30,0,1));
+ const storm=smooth(clamp((lift-.30)/.70,0,1));
  const isHair=part.kind==='hair',isSkirt=part.kind==='skirt';
  if(!isHair&&!isSkirt)return {x:0,y:0};
  const amount=clamp(finite(idle[isHair?'hair':'cloth']?.amount,0),0,1.5)*
   clamp(finite(idle.parts?.[part.id],1),0,2);
  if(amount<.00001)return {x:0,y:0};
  const lag=clamp(finite(idle[isHair?'hair':'cloth']?.lag,0),0,2);
- const pressure=windPressure(phase-lag*.6,weather);
+ const t=phase-lag*.6;
+ const pressure=breeze*(windPressure(t,'breeze')*(1-storm)+
+  windPressure(t,'windy')*storm);
  const pinned=smooth(clamp((v-(isHair?.16:.18))/(isHair?.74:.72),0,1));
  if(!pinned)return {x:0,y:0};
  if(isHair){
@@ -234,13 +244,13 @@ function windField(part,u,v,phase,idle){
    smooth(clamp((Math.abs(u-.5)-.13)/.21,0,1)):1;
   const fringe=part.id==='front_hair'?(1-edge)*.14:0;
   const bend=pinned*(edge+fringe);
-  const gust=weather==='windy'?1:.16;
+  const gust=.16+.84*storm;
   // Fan ORIGINAL side locks OUTWARD from the face (wind from behind).
   // Sending both locks to +X made the left strand cross and obscure eyes.
   // The left side now lifts left, the right side lifts right; only tips move.
   const spread=clamp((u-.5)/.26,-1,1);
-  const lateral=weather==='windy'?102:32;
-  const rising=weather==='windy'?76:11;
+  const lateral=32+70*storm;
+  const rising=11+65*storm;
   const wave=Math.sin(phase*.9-lag-1.1+u*2.2)*(.08*pressure);
   return {x:amount*bend*spread*(spread<0?.86:1)*(lateral*pressure+gust*12*wave),
     y:-amount*bend*(rising*pressure+gust*7*wave)};
@@ -252,10 +262,9 @@ function windField(part,u,v,phase,idle){
  const outward=clamp((u-.5)/.31,-1,1);
  // Pleats billow outward as two panels, rather than sliding the whole
  // skirt to one side. Add a small breeze-direction bias for asymmetry.
- const lateral=(weather==='windy'?58:24)*outward+
-  (weather==='windy'?8:2);
+ const lateral=(24+34*storm)*outward+(2+6*storm);
  return {x:amount*pinned*flare*lateral*billow,
-  y:-amount*pinned*flare*(weather==='windy'?34:8)*billow};
+  y:-amount*pinned*flare*(8+26*storm)*billow};
 }
 // Independently authored joint chains on ORIGINAL source PNG parts.
 // Coordinates are local UVs, not global character oscillation or name regex.
@@ -658,5 +667,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
