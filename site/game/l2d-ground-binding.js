@@ -21,55 +21,75 @@ const cssValue=(key,fallback)=>{
   const n=parseFloat(rig.style.getPropertyValue(key));
   return Number.isFinite(n)?n:fallback;
 };
+// A one-time, tiny offscreen sample is safe. NEVER request
+// willReadFrequently on the actual animated L2D canvas: Chromium can
+// software-render the whole actor indefinitely after that request.
+const probe=document.createElement('canvas');
+const PROBE_SIZE=192;
+const probeCtx=probe.getContext('2d',{alpha:true,willReadFrequently:true});
+const retryAt=new WeakMap();
+let metrics={probeCount:0,skippedCount:0,readbackPixels:0};
 function shoeInCanvas(actor){
   const canvas=actor.canvas;
   if(!canvas||canvas.width<1||canvas.height<1)
-    return {x:.5,y:1,crown:0,detected:false};
+    return {x:.5,y:.985,crown:.035,detected:false};
   const name=[actor.img?.dataset?.characterId||actor.img?.src||'',
-    actor.root.dataset.l2dEdition||'',actor.root.dataset.l2dMode||'',
-    canvas.width,canvas.height].join('|');
-  const cached=soleCache.get(canvas);
-  if(cached?.name===name)return cached.shoe;
-  // Canvas is painted from genuine original L2D PSD/part layers. Read only
-  // its alpha channel; colors, outfit and head/arm movement are unchanged.
-  let shoe={x:.5,y:1,crown:0,detected:false};
+    actor.root.dataset.l2dEdition||'',actor.root.dataset.l2dMode||''].join('|');
+  const previous=soleCache.get(canvas);
+  if(previous?.name===name)return previous.shoe;
+  if(performance.now()<(retryAt.get(canvas)||0)){
+    metrics.skippedCount++;
+    return {x:.5,y:.985,crown:.035,detected:false};
+  }
+  const w=Math.max(1,Math.round(PROBE_SIZE*canvas.width/
+    Math.max(canvas.width,canvas.height)));
+  const h=Math.max(1,Math.round(PROBE_SIZE*canvas.height/
+    Math.max(canvas.width,canvas.height)));
+  if(probe.width!==w)probe.width=w;
+  if(probe.height!==h)probe.height=h;
+  let shoe={x:.5,y:.985,crown:.035,detected:false};
   try{
-    const ctx=canvas.getContext('2d',{willReadFrequently:true});
-    const w=canvas.width,h=canvas.height;
-    const pixels=ctx.getImageData(0,0,w,h).data;
-    let minX=w,maxX=0,maxY=-1;
-    // A few antialiased strays should not count as soles.
+    probeCtx.clearRect(0,0,w,h);
+    probeCtx.imageSmoothingEnabled=true;
+    probeCtx.drawImage(canvas,0,0,w,h);
+    const pixels=probeCtx.getImageData(0,0,w,h).data;
+    metrics.probeCount++;metrics.readbackPixels+=w*h;
+    let minX=w,maxX=0,maxY=-1,crown=0;
+    // Count only substantial opaque pixels. A moving hair tip or antialias
+    // noise cannot become a new ground/heel anchor.
     for(let y=h-1;y>=0;y--){
-      let rowMin=w,rowMax=-1,hits=0;
+      let hits=0,rowMin=w,rowMax=-1;
       for(let x=0;x<w;x++){
-        if(pixels[(y*w+x)*4+3]>48){
+        if(pixels[(y*w+x)*4+3]>55){
           hits++;rowMin=Math.min(rowMin,x);rowMax=Math.max(rowMax,x);
         }
       }
       if(hits>=2){maxY=y;minX=rowMin;maxX=rowMax;break}
     }
     if(maxY>=0){
-      let crown=0;
-      for(let cy=0;cy<=maxY;cy++){
+      for(let y=0;y<=maxY;y++){
         let hits=0;
-        for(let cx=0;cx<w;cx++)if(pixels[(cy*w+cx)*4+3]>48)hits++;
-        if(hits>=2){crown=(cy+.5)/h;break}
+        for(let x=0;x<w;x++)if(pixels[(y*w+x)*4+3]>55)hits++;
+        if(hits>=2){crown=(y+.5)/h;break}
       }
-      // Include a small band above the lowest heel to find the midpoint
-      // between two shoes. A dangling single antialiased pixel cannot drag
-      // the whole character away from the floor.
-      for(let y=maxY;y>=Math.max(0,maxY-Math.ceil(h*.015));y--){
+      const band=Math.max(1,Math.ceil(h*.015));
+      for(let y=maxY;y>=Math.max(0,maxY-band);y--){
         for(let x=0;x<w;x++){
-          if(pixels[(y*w+x)*4+3]>48){
+          if(pixels[(y*w+x)*4+3]>55){
             minX=Math.min(minX,x);maxX=Math.max(maxX,x);
           }
         }
       }
-      shoe={x:((minX+maxX)*.5+.5)/w,y:(maxY+.5)/h,
-        crown,detected:true};
-    }
-  }catch(_){/* cross-origin/empty canvas uses the documented bottom edge */}
-  if(shoe.detected)soleCache.set(canvas,{name,shoe});
+      shoe={x:((minX+maxX)*.5+.5)/w,
+        y:(maxY+.5)/h,crown,detected:true};
+      // Foot height is stable; never read a running L2D frame again until
+      // actor identity/parts change.
+      soleCache.set(canvas,{name,shoe});
+    }else retryAt.set(canvas,performance.now()+650);
+  }catch(_){
+    // A failed tainted/empty frame is retried sparingly, not every frame.
+    retryAt.set(canvas,performance.now()+1300);
+  }
   return shoe;
 }
 function actorSource(root){
@@ -113,16 +133,16 @@ function sync(){
     const centimetres=Number(img.dataset.heightCm)||meta.heightCm;
     const actorZ=cssValue('--dev-depth-'+id,id==='enemy'?-190:160);
     const effectiveZ=actorZ+worldDepthShift;
-    const physical=projection.renderScale({
-      actorHeightCm:centimetres,referenceHeightCm:playerHeight,
-      actorCanvasHeight:Math.max(1,img.offsetHeight),
-      referenceCanvasHeight:playerCanvasHeight,
-      actorVisibleFraction:Math.max(.1,shoe.y-shoe.crown),
-      referenceVisibleFraction:playerVisible,actorZ:effectiveZ,
-      dev
-    });
-    const appliedScale=automatic&&physical.valid
-      ?Math.max(.12,Math.min(5,physical.scale)):1;
+    // The artist's existing DEV placements already define the natural
+    // baseline size. Re-normalising the two layers by raw IMG canvas height
+    // was blowing up the enemy by several hundred percent and blurring her.
+    // DEV's perspective=1150px already provides the pinhole Z reduction.
+    // Normal game mode (flat layers) gets exactly the matching relative
+    // distance multiplier, anchored to each actor's authored baseline Z.
+    const baselineZ=id==='enemy'?-190:160;
+    const depthFactor=projection.depthScale(effectiveZ,baselineZ);
+    const appliedScale=automatic&&!dev&&Number.isFinite(depthFactor)
+      ?Math.max(.5,Math.min(1.65,depthFactor)):1;
     const originX=(shoe.x*100).toFixed(4)+'%';
     const originY=(shoe.y*100).toFixed(4)+'%';
     // Scaling about the ACTUAL shoe contact ensures the sole never moves.
@@ -161,8 +181,7 @@ function sync(){
       worldX:fmt(worldX),relativeZ:fmt(relativeZ),dy:fmt(dy),dz:fmt(dz),
       errorPx:fmt(worldFootY-floorY),translation,
       perspectiveScale:fmt(appliedScale),autoPerspective:automatic,
-      physicalScale:fmt(physical.valid?physical.correction:1),
-      depthScale:fmt(physical.valid?physical.distance:1),
+      physicalScale:1,depthScale:fmt(depthFactor),
       physicalCm:centimetres,effectiveZ,visibleFraction:fmt(shoe.y-shoe.crown),
       mode:root.dataset.l2dMode||'loading',
       canvasW:canvas.width,canvasH:canvas.height});
@@ -189,14 +208,11 @@ function sync(){
     const current=actorData.find(a=>a.id==='enemy');
     const reference=actorData.find(a=>a.id==='player');
     if(current&&reference){
-      const ratio=(current.physicalCm/reference.physicalCm)*
-        projection.depthScale(current.effectiveZ,reference.effectiveZ);
-      diagnostic.textContent='同一地面 · 自动相机透视开启｜主角 '+
+      diagnostic.textContent='同一地面 · 高性能自动透视｜主角 '+
         reference.physicalCm+'cm / 女二 '+current.physicalCm+
-        'cm｜距离系数 '+fmt(current.depthScale)+
-        '｜女二画布校正 '+current.physicalScale+'×'+
-        '｜实际可见身高约为主角 '+fmt(ratio*100)+'%'+
-        '｜Z 远离自动缩小、靠近自动放大；L2D 鞋底保持贴地。';
+        'cm（身高档案暂定）｜女二距离系数 '+fmt(current.depthScale)+
+        '｜当前可见缩放 '+current.perspectiveScale+'×'+
+        '｜已保留原始画布清晰度与手动摆好的大小；Z 远离缩小、靠近放大。';
     }
   }
   return last;
@@ -208,12 +224,10 @@ function queue(){
 }
 new MutationObserver(queue).observe(rig,{attributes:true,attributeFilter:['style']});
 new MutationObserver(queue).observe(view,{attributes:true,attributeFilter:['class']});
-new MutationObserver(queue).observe(document.body,{childList:true,subtree:true});
+// No global subtree observer: the L2D runtime frequently builds overlays,
+ // and scanning the entire page for every DOM change stalls animation frames.
 // Swapping art / character in the L2D studio invalidates the measured sole.
-const dimensions=typeof ResizeObserver==='function'?new ResizeObserver(queue):null;
 for(const root of roots()){
-  for(const surface of root.querySelectorAll('[data-l2d-image],[data-l2d-canvas]'))
-    dimensions?.observe(surface);
   new MutationObserver(queue).observe(root,{attributes:true,
     attributeFilter:['data-l2d-state','data-l2d-mode','data-l2d-edition','hidden']});
   const img=root.querySelector('[data-l2d-image]');
@@ -230,6 +244,8 @@ for(const id of ['dev-ground-y','dev-z','dev-reset','dev-save','dev-layer']){
  }
 }
 window.PaperWorldL2DGround=Object.freeze({sync,inspect:()=>sync(),
-  state:()=>structuredClone(last)});
+  state:()=>structuredClone(last),
+  performance:()=>({...metrics,probeSize:PROBE_SIZE,
+    sourceReadbacks:0,globalSubtreeObservers:0})});
 sync();requestAnimationFrame(sync);
 })();
