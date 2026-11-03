@@ -888,6 +888,40 @@ void main(){
   const devPanelFog=document.getElementById('dev-panel-fog');
   const devPanelFogCtx=devPanelFog.getContext('2d',{alpha:true});
   let devPanelFogProgress=0;
+  // Sample the *feather* of the EXISTING live fluid fog. The old implementation
+  // sampled the outermost, fully opaque 13% and stretched that into a black board.
+  // The true fog boundary is at 50% +/- half-of-scene * safe-amount.
+  // Its 10-30 px living transition is expanded across the UI text area.
+  function drawNativeSideFog(ctx,edge,w,h,progress,desiredWidth,opacity){
+    const srcW=fog.width,srcH=fog.height;
+    if(srcW<2||srcH<2||progress<=.002)return;
+    const safeFraction=clamp(fogConfig.safe*.01,.01,1);
+    const boundary=(.5+(edge==='right'?1:-1)*sceneHalf.x*safeFraction)*srcW;
+    // Include the organic front (transparent) AND the dense back (opaque).
+    // Deliberately exclude the exterior pure-black portion of the old crop.
+    const inside=Math.max(8,srcW*.037);
+    const outside=Math.max(5,srcW*.015);
+    const sx=Math.max(0,Math.min(srcW-3,
+      Math.floor(edge==='right'?boundary-inside:boundary-outside)));
+    const sxEnd=Math.max(sx+2,Math.min(srcW,
+      Math.ceil(edge==='right'?boundary+outside:boundary+inside)));
+    const sy=Math.min(srcH-2,Math.max(0,Math.floor(srcH*.11)));
+    const sh=Math.max(2,Math.min(srcH-sy,Math.floor(srcH*.78)));
+    const maxWidth=Math.min(w*.75,desiredWidth);
+    const eased=progress*progress*(3-2*progress);
+    const dw=Math.max(1,Math.round(maxWidth*eased));
+    ctx.globalAlpha=opacity*eased;
+    ctx.imageSmoothingEnabled=true;
+    ctx.drawImage(fog,sx,sy,sxEnd-sx,sh,
+      edge==='right'?w-dw:0,0,dw,h);
+    ctx.globalAlpha=1;
+  }
+  function resetDevPanelFog(){
+    devPanelFogProgress=0;
+    if(devPanelFogCtx&&devPanelFog.width&&devPanelFog.height)
+      devPanelFogCtx.clearRect(0,0,devPanelFog.width,devPanelFog.height);
+    devPanelFog.dataset.visible='false';
+  }
   function paintDevPanelFog(dt){
     if(!devPanelFogCtx)return;
     const w=devPanelFog.width,h=devPanelFog.height;
@@ -909,17 +943,12 @@ void main(){
     devPanelFogCtx.clearRect(0,0,w,h);
     const sourceWidth=fog.width,sourceHeight=fog.height;
     if(sourceWidth<2||sourceHeight<2)return;
-    // Match the real controls' footprint, with a small feathering margin.
-    // Crop only the native animated rim of the existing scene fog.
+    // The control text sits on the animated soft fringe of the shared fog;
+    // no solid black slab, card rectangle, or new CSS gradient is drawn.
     const panelWidth=controls?.offsetWidth||Math.round(sizes.w*.40);
-    const maxWidth=Math.min(w*.53,(panelWidth/Math.max(1,sizes.w)+.09)*w);
-    const progress=devPanelFogProgress*devPanelFogProgress*(3-2*devPanelFogProgress);
-    const dw=Math.max(1,Math.round(maxWidth*progress));
-    const sourceSlice=Math.max(2,Math.round(sourceWidth*.13));
-    devPanelFogCtx.globalAlpha=.94*progress;
-    devPanelFogCtx.drawImage(fog,sourceWidth-sourceSlice,0,sourceSlice,sourceHeight,
-      w-dw,0,dw,h);
-    devPanelFogCtx.globalAlpha=1;
+    const spread=(panelWidth/Math.max(1,sizes.w)+.15)*w;
+    drawNativeSideFog(devPanelFogCtx,'right',w,h,
+      devPanelFogProgress,spread,.95);
   }
   const uiFogBands=Array.from(document.querySelectorAll('#ui-fog-state .ui-fog-band'));
   const uiFogEdges=new Set(['top','bottom','left','right']);
@@ -950,26 +979,23 @@ void main(){
     uiFogCanvas.dataset.visible='true';
     uiFogCtx.clearRect(0,0,w,h);
     const srcW=fog.width,srcH=fog.height;
-    // Transparent source begins well inside the original scene safe region;
-    // only the live, dark fluid border is expanded into each UI footprint.
-    const sideSource=Math.round(srcW*.14),verticalSource=Math.round(srcH*.12);
+    const verticalSource=Math.round(srcH*.12);
     const eased=x=>x*x*(3-2*x);
     for(const edge of ['bottom','left','right','top']){
       const p=eased(uiFogProgress[edge]);
       if(p<.003)continue;
-      uiFogCtx.globalAlpha=(edge==='bottom'?.87:.77)*p;
       if(edge==='bottom'){
+        // Keep the approved subtitle smoke unchanged.
         const maxH=Math.round(h*.29),dh=Math.max(1,Math.round(maxH*p));
+        uiFogCtx.globalAlpha=.87*p;
         uiFogCtx.drawImage(fog,0,srcH-verticalSource,srcW,verticalSource,0,h-dh,w,dh);
       }else if(edge==='top'){
         const maxH=Math.round(h*.22),dh=Math.max(1,Math.round(maxH*p));
+        uiFogCtx.globalAlpha=.77*p;
         uiFogCtx.drawImage(fog,0,0,srcW,verticalSource,0,0,w,dh);
-      }else if(edge==='left'){
-        const maxW=Math.round(w*.33),dw=Math.max(1,Math.round(maxW*p));
-        uiFogCtx.drawImage(fog,0,0,sideSource,srcH,0,0,dw,h);
       }else{
-        const maxW=Math.round(w*.33),dw=Math.max(1,Math.round(maxW*p));
-        uiFogCtx.drawImage(fog,srcW-sideSource,0,sideSource,srcH,w-dw,0,dw,h);
+        drawNativeSideFog(uiFogCtx,edge,w,h,
+          uiFogProgress[edge],w*.47,.86);
       }
     }
     uiFogCtx.globalAlpha=1;
@@ -1629,7 +1655,9 @@ void main(){
     if(!editorActive)return;
     editorActive=false;useRig(false);
     view.classList.remove('fog-edit-mode');
-    fogGuide.hidden=true;devTools.hidden=true;start();
+    fogGuide.hidden=true;devTools.hidden=true;
+    // An absent UI must leave ZERO residual sidebar fog, even for one frame.
+    resetDevPanelFog();start();
   }
   const fogGuide=document.getElementById('fog-safe-guide');
   const fogStatus=document.getElementById('fog-status');
