@@ -46,15 +46,15 @@ body.embedded #btnCloseInGame{background:#273244}
  body.embedded header{position:relative}
  body.embedded .layout{height:auto;min-height:0}
 }
-</style><link rel="stylesheet" href="./easy-mode.css?v=easy-20261102b"><link rel="stylesheet" href="./part-rig.css?v=idle-weather-v3"></head><body>
-<header><div><strong>✎ 全人物 L2D 编辑工作室</strong><small>人物待机 / 逐件骨骼 / 图层精修 · 原版 V4 保留</small></div><div class="actions"><button id="idle-open" type="button" aria-controls="part-rig-panel" aria-expanded="false">✦ 待机与飘动</button>
+</style><link rel="stylesheet" href="./easy-mode.css?v=single-rig-20261103"><link rel="stylesheet" href="./part-rig.css?v=single-rig-20261103"></head><body>
+<header><div><strong>✎ 全人物 L2D 编辑工作室</strong><small>人物待机 / 独立骨骼 / 图层精修 · 新版 L2D</small></div><div class="actions"><button id="idle-open" type="button" aria-controls="part-rig-panel" aria-expanded="false">✦ 动画设置</button>
 <button id="btnApplyGame" type="button" hidden>✓ 应用到游戏</button><button id="btnCloseInGame" type="button" hidden>返回 DEV</button><button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnSave" style="background:#205e52;border-color:#4ba791;color:#e4fff4;font-weight:700">✓ 保存并应用到游戏</button><button id="btnExport">↓ 完整分层 ZIP</button>
 </div></header>
 <div class="layout">
 <aside class="left">
-<section><h3>人物方向</h3><div class="row"><button id="frontTab" class="active">正面</button><button id="backTab">背面</button></div><p class="tip">当前人物及方向来自上方全人物列表。PSD/分层 ZIP 导入后保留原图层坐标，游戏正在使用的 V4 动画直接在中央画布播放；原始分层只用于静态精修。</p></section>
+<section><h3>人物方向</h3><div class="row"><button id="frontTab" class="active">正面</button><button id="backTab">背面</button></div><p class="tip">当前人物及方向来自上方全人物列表。PSD/分层 ZIP 导入后保留原图层坐标，真实分层用于动态预览和逐件精修；新版 L2D 是唯一动画编辑模式。</p></section>
 <section><h3>角色部件（真实分层，从上到下 = 前到后）</h3><div class="row"><input id="partSearch" type="search" placeholder="搜索头发 / 眼睛 / 外套 / 任意部件" aria-label="筛选人物部件" style="flex:1;min-width:100px"><button id="focusCurrent" type="button">定位选中部件</button></div><div id="layers" class="layerlist"></div><div class="row" style="margin-top:7px"><button id="add">＋ 新图层</button><button id="dup">复制</button><button id="del">删除</button></div><div class="row" style="margin-top:6px"><button id="up">前移 ▲</button><button id="down">后移 ▼</button><button id="rename">重命名</button></div></section>
-<section><h3>导入你的素材</h3><div class="stack"><label class="tip">导入 PNG / WebP 到当前视角<input id="imgImport" type="file" accept="image/png,image/webp,image/jpeg" multiple></label><label class="tip">直接导入 Photoshop PSD（需要联网加载解析库）<input id="psdImport" type="file" accept=".psd,image/vnd.adobe.photoshop"></label><label class="tip">导入原位分层 ZIP / V4 原始工程 ZIP（全部部件）<input id="zipImport" type="file" accept=".zip,application/zip"></label></div></section>
+<section><h3>导入你的素材</h3><div class="stack"><label class="tip">导入 PNG / WebP 到当前视角<input id="imgImport" type="file" accept="image/png,image/webp,image/jpeg" multiple></label><label class="tip">直接导入 Photoshop PSD（需要联网加载解析库）<input id="psdImport" type="file" accept=".psd,image/vnd.adobe.photoshop"></label><label class="tip">导入原位分层 ZIP（全部部件）<input id="zipImport" type="file" accept=".zip,application/zip"></label></div></section>
 </aside>
 <main class="stage" id="stage"><canvas id="view"></canvas><div class="stage-toolbar" role="toolbar" aria-label="大画布动画控制"><span id="main-motion-status" role="status">动画加载中…</span><button id="main-play" type="button" aria-pressed="false" title="播放或暂停主画布动画 · P">❚❚ 暂停</button><button id="main-preview" type="button" aria-pressed="true" title="在动画预览与原始像素精修之间切换">◇ 静态精修</button><button id="main-expand" type="button" aria-pressed="false" title="放大主画布 · Escape 退出">⛶ 放大画布</button></div><div class="hud" id="hud">准备中…</div><div class="hudbottom">笔刷绘画 · 两指缩放/平移 · 滚轮缩放 · 空格拖动 · 支持矩形/套索选区剪出新图层</div></main>
 <aside class="right">
@@ -90,10 +90,9 @@ function drawChecker(){const step=20;ctx.fillStyle='#29323f';ctx.fillRect(0,0,W,
 function drawAll(g,side=S.side,only=S.only){const arr=S.layers[side];if(only){const p=current();if(side===S.side&&p&&p.visible&&window.PaperchalkStudio?.shouldDrawLayer?.(p)!==false){g.globalAlpha=p.opacity;g.drawImage(p.canvas,p.x,p.y)}g.globalAlpha=1;return}for(const p of arr){if(!p.visible||window.PaperchalkStudio?.shouldDrawLayer?.(p)===false)continue;g.globalAlpha=p.opacity;g.drawImage(p.canvas,p.x,p.y)}g.globalAlpha=1}
 function render(){if(!S.ready)return;const d=dpr();ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,stage.clientWidth,stage.clientHeight);ctx.fillStyle='#0f1722';ctx.fillRect(0,0,stage.clientWidth,stage.clientHeight);ctx.save();ctx.translate(S.px,S.py);ctx.scale(S.zoom,S.zoom);if(S.checker)drawChecker();else{ctx.fillStyle='#202935';ctx.fillRect(0,0,W,H)}ctx.imageSmoothingEnabled=true;const movingFrame=window.PaperchalkStageMotion?.frame(S);
 const partRig=window.PaperchalkPartRigStudio?.drawPreview?.(ctx,S);
-if(partRig){/* opt-in independent source meshes; V4 stays untouched */}
+if(partRig){/* Live independent-part animation is the main viewport. */}
 else if(movingFrame){ctx.drawImage(movingFrame,0,0,W,H)}else{
-  // V4 preview uses the SAME composed layers as game, with a local chest
-  // deformation applied after the pixel edits. Source inspection stays static.
+  // Fall back to a baked preview only when a legacy character has no source parts.
   const composed=window.PaperchalkStudio?.drawComposedV4?.(ctx,S);
   if(!composed){
    window.PaperchalkStudio?.drawBackdrop?.(ctx,S);
@@ -264,9 +263,9 @@ if(embedded)sendParent({type:'PAPERCHALK_EDITOR_READY'});
 
 </script>
 <script src="../l2d/part-rig.js?standing-only-v1"></script>
-<script src="./studio.js?v=inspector-save-v2"></script>
-<script src="./stage-motion.js?v=easy-20261102b"></script>
-<script src="./easy-mode.js?v=easy-20261102b"></script>
-<script src="./part-rig-studio.js?v=standing-only-v1"></script>
+<script src="./studio.js?v=single-rig-20261103"></script>
+<script src="./stage-motion.js?v=single-rig-20261103"></script>
+<script src="./easy-mode.js?v=single-rig-20261103"></script>
+<script src="./part-rig-studio.js?v=single-rig-20261103"></script>
 
 </body></html>
