@@ -127,4 +127,85 @@ const interpolated=core.approachIdle(idle,custom,1/30);
 assert.ok(interpolated.hair.amount>idle.hair.amount&&
  interpolated.hair.amount<custom.hair.amount);
 assert.equal(interpolated.body.amount,0);
-console.log('PASS independent fringe, skirt, hand, shoulder and pelvic sliders; anchored roots, no global sway, legacy migration');
+
+// Anatomically positioned real-component fixture: the old all-same-origin
+// geometry above intentionally remains unaffected when landmarks are invalid.
+const bodyLayer=(id,x,y,w,h)=>({
+ partId:id,name:id,sourcePart:true,x,y,canvas:{width:w,height:h}
+});
+const grounded=core.project([
+ bodyLayer('shoes',400,860,160,50),bodyLayer('legs',409,585,143,292),
+ bodyLayer('skirt',395,550,170,260),bodyLayer('jacket',388,342,190,237),
+ bodyLayer('sleeves_and_hands',340,348,290,278),
+ bodyLayer('neck',461,290,43,75),bodyLayer('face',418,157,131,151),
+ bodyLayer('front_hair',400,124,168,158),
+ bodyLayer('rear_hair',383,124,190,220),
+ bodyLayer('eye_white',439,235,100,35),
+ bodyLayer('irises',443,233,88,32),
+ bodyLayer('brows',440,208,94,25),bodyLayer('nose',479,265,20,16)
+],'protagonist','front');
+assert.ok(grounded.bodyHierarchy,'real source landmarks must build hierarchy');
+const parts=grounded.parts;
+const hipOff=core.sanitizeIdleProfile({...idle,
+ joints:{hands:0,shoulders:0,hips:0}});
+const hipOn=core.sanitizeIdleProfile({...idle,
+ joints:{hands:0,shoulders:0,hips:8}});
+const shoulderOn=core.sanitizeIdleProfile({...idle,
+ joints:{hands:0,shoulders:8,hips:0}});
+const wholeOn=core.sanitizeIdleProfile({...idle,
+ joints:{hands:0,shoulders:8,hips:8}});
+const sourcePoint=(id,u,v)=>({x:parts[id].x+u*parts[id].w,
+ y:parts[id].y+v*parts[id].h});
+const articulated=(id,u,v,time,profile)=>core.warpPoint(parts[id],u,v,time,null,profile);
+const shared=grounded.bodyHierarchy;
+for(const time of [0,.7,1.5,2.7,4.2,6.8]){
+ for(const profile of [hipOff,hipOn,shoulderOn,wholeOn]){
+  // Shoes and BOTH ankle ends are exact nonmoving world-space constraints.
+  assert.ok(distance(articulated('shoes',.5,.92,time,profile),
+   sourcePoint('shoes',.5,.92))<1e-6,'shoes must remain fixed');
+  for(const leg of [shared.left,shared.right]){
+   const u=(leg.ankle.x-parts.legs.x)/parts.legs.w,
+    v=(leg.ankle.y-parts.legs.y)/parts.legs.h;
+   assert.ok(distance(articulated('legs',u,v,time,profile),
+    leg.ankle)<1e-6,'both ankle joints must stay grounded');
+  }
+ }
+ const q=shared.shoulder;
+ const anchor=core.parentPoint(parts.jacket,q,time,shoulderOn);
+ for(const id of ['neck','face','nose','brows','eye_white','irises',
+   'front_hair','rear_hair','sleeves_and_hands']){
+  const got=core.parentPoint(parts[id],q,time,shoulderOn);
+  assert.ok(distance(got,anchor)<1e-5,
+   id+' must inherit the very same shoulder parent transform');
+ }
+ const waist=shared.pelvis;
+ const torsoWaist=core.parentPoint(parts.jacket,waist,time,wholeOn),
+  skirtWaist=core.parentPoint(parts.skirt,waist,time,wholeOn);
+ assert.ok(distance(torsoWaist,skirtWaist)<1e-5,
+  'torso and skirt must meet at their shared pelvic attachment');
+}
+// Pelvis moves: hip and waist move, knees solve, ankle and shoes do not.
+const displacement=(id,u,v,profile)=>
+ distance(articulated(id,u,v,1.2,profile),articulated(id,u,v,4.1,profile));
+assert.ok(displacement('legs',.36,.66,hipOn)>1.5,'knee must bend with pelvis');
+assert.ok(displacement('legs',.36,.66,hipOff)<1e-6,
+ 'no unwanted independent leg swinging with pelvis slider at zero');
+assert.ok(displacement('skirt',.5,.08,hipOn)>2,
+ 'pelvic joint must actually shift the attached waist');
+assert.ok(displacement('face',.5,.5,shoulderOn)>2,
+ 'shoulder must carry the complete head and facial features');
+assert.ok(displacement('neck',.5,.5,shoulderOn)>1,
+ 'neck must follow shoulder rather than remain detached');
+assert.equal(grounded.bodyHierarchy===undefined,false);
+// Runtime attachment is intentionally NOT serialized into the user-authored rig.
+// The game reconstructs it from the same authentic source-part coordinates.
+const savedGrounded=JSON.stringify(grounded);
+assert.ok(!savedGrounded.includes('_bodyHierarchy')&&
+ !savedGrounded.includes('"bodyHierarchy"'),
+ 'runtime parent binding must not pollute saved L2D JSON');
+const restored=JSON.parse(savedGrounded);
+core.bindBodyHierarchy(restored);
+assert.ok(restored.bodyHierarchy&&restored.parts.face._bodyHierarchy,
+ 'game must reconstruct the same shoulder/head and planted-leg ancestry');
+
+console.log('PASS fixed shoes + ankle IK, coupled pelvis/shoulder/neck/head/face, sliders and legacy migration');
