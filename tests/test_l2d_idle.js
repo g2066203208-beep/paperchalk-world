@@ -220,4 +220,78 @@ core.bindBodyHierarchy(restored);
 assert.ok(restored.bodyHierarchy&&restored.parts.face._bodyHierarchy,
  'game must reconstruct the same shoulder/head and planted-leg ancestry');
 
-console.log('PASS fixed shoes + ankle IK, coupled pelvis/shoulder/neck/head/face, sliders and legacy migration');
+
+// The chest breathing control is a local rib cage excursion, NOT whole-body
+// scale or a second idle preset. Every descendant inherits one parent chain.
+const breathProfile=amount=>core.sanitizeIdleProfile({...idle,
+ joints:{hands:0,shoulders:0,hips:0},
+ breath:{amount,speed:1}});
+const breathOff=breathProfile(0),breath100=breathProfile(1),
+ breathMax=breathProfile(3),breathTime=3.8;
+const bpoint=(id,xy,profile)=>core.parentPoint(parts[id],xy,breathTime,profile);
+const anatomical=grounded.bodyHierarchy;
+const shoulderPos=anatomical.shoulder,neckPos=anatomical.neck,
+ neckBottom={x:anatomical.neck.x,y:anatomical.neckBottom};
+const bodyRest=core.humanPoseAt(parts.face,breathTime,breathOff),
+ bodyInhale=core.humanPoseAt(parts.face,breathTime,breath100),
+ bodyMax=core.humanPoseAt(parts.face,breathTime,breathMax);
+assert.equal(bodyRest.breathLift,0,'zero breast/chest slider disables breathing');
+assert.ok(bodyInhale.breathLift>2&&bodyMax.breathLift>bodyInhale.breathLift*2.9,
+ 'breathing strength slider must move the actual shoulder parent, not just its label');
+assert.ok(distance(bpoint('jacket',shoulderPos,breathMax),
+ bpoint('jacket',shoulderPos,breathOff))>5,
+ 'the chest shoulder hinge must rise during inhalation');
+for(const id of ['sleeves_and_hands','neck','face','nose','brows',
+ 'eye_white','irises','front_hair','rear_hair']){
+ assert.ok(distance(bpoint(id,neckPos,breathMax),bpoint(id,neckPos,breathOff))>2,
+  'breathing must propagate to '+id+' through the existing parent hierarchy');
+}
+const close=(a,b,message)=>assert.ok(distance(a,b)<.00001,message);
+close(bpoint('jacket',shoulderPos,breathMax),
+ bpoint('sleeves_and_hands',shoulderPos,breathMax),
+ 'expanding rib cage must keep sleeve shoulder attachment sealed');
+close(bpoint('neck',neckPos,breathMax),bpoint('face',neckPos,breathMax),
+ 'upper neck and face must share the head node during breathing');
+close(bpoint('neck',neckBottom,breathMax),
+ bpoint('sleeves_and_hands',neckBottom,breathMax),
+ 'lower neck must stay joined to the breathing rib cage');
+close(bpoint('jacket',anatomical.pelvis,breathMax),
+ bpoint('skirt',anatomical.pelvis,breathMax),
+ 'the chest inhale must not separate torso from pelvis');
+close(bpoint('jacket',anatomical.pelvis,breathOff),
+ bpoint('jacket',anatomical.pelvis,breathMax),
+ 'breathing must NEVER move the pelvic anchor');
+for(const id of ['shoes','legs','skirt']){
+ if(id==='skirt')
+  close(bpoint(id,anatomical.pelvis,breathOff),bpoint(id,anatomical.pelvis,breathMax),
+   'skirt waistband stays still during isolated breathing');
+ else if(id==='shoes')
+  close(bpoint(id,sourcePoint(id,.5,.8),breathOff),
+   bpoint(id,sourcePoint(id,.5,.8),breathMax),'shoes never move with breath');
+ else{
+  for(const leg of [anatomical.left,anatomical.right])
+   close(bpoint(id,leg.ankle,breathOff),bpoint(id,leg.ankle,breathMax),
+    'ankles never move with breath');
+ }
+}
+// Breathing expands the upper chest sideways, but does NOT resize the head.
+const chestLeft={x:anatomical.shoulder.x-65,y:anatomical.shoulder.y};
+const chestRight={x:anatomical.shoulder.x+65,y:anatomical.shoulder.y};
+const chestSpread=profile=>distance(bpoint('jacket',chestLeft,profile),
+ bpoint('jacket',chestRight,profile));
+assert.ok(chestSpread(breathMax)>chestSpread(breathOff)+7,
+ 'upper rib-cage fabric must really expand without full-body scale');
+const headLeft={x:anatomical.head.x-50,y:anatomical.head.y},
+ headRight={x:anatomical.head.x+50,y:anatomical.head.y};
+assert.ok(Math.abs(distance(bpoint('face',headLeft,breathMax),
+ bpoint('face',headRight,breathMax))-100)<.00001,
+ 'head dimensions must remain unchanged during breathing');
+assert.equal(core.presetIdle('still').breath.amount,0,
+ 'still mode disables breathing as well as the other animation motions');
+assert.equal(core.sanitizeIdleProfile({...idle,breath:{amount:99,speed:99}}).breath.amount,3,
+ 'breathing slider upper limit matches saved profile validation');
+const interpolatedBreath=core.approachIdle(breathOff,breathMax,1/30);
+assert.ok(interpolatedBreath.breath.amount>0&&interpolatedBreath.breath.amount<3,
+ 'breathing slider interpolation should be smooth rather than snapping');
+
+console.log('PASS chest breathing / fixed shoes + ankle IK, coupled pelvis/shoulder/neck/head/face, sliders and legacy migration');
