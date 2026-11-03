@@ -4,7 +4,7 @@
 const ed=window.characterEditor,core=window.PaperchalkPartRigCore,studio=window.PaperchalkStudio;
 if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
-const state={active:false,model:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false};
+const state={active:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false};
 const toggle=document.createElement('button');toggle.id='part-rig-toggle';
 toggle.textContent='逐件绑骨';toggle.type='button';toggle.title='选择独立骨骼与精细蒙皮控制';
 stage.querySelector('.stage-toolbar')?.append(toggle);
@@ -15,10 +15,11 @@ panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</stro
  <strong>真人待机 · 总控</strong>
  <div id="rig-presets" class="rig-presets">
   <button type="button" data-idle-preset="still">静止</button>
-  <button type="button" data-idle-preset="realistic">真人待机</button>
-  <button type="button" data-idle-preset="breeze">轻风</button>
-  <button type="button" data-idle-preset="windy">强风</button>
+  <button type="button" data-idle-preset="realistic">普通待机</button>
+  <button type="button" data-idle-preset="breeze">微风</button>
+  <button type="button" data-idle-preset="windy">大风</button>
  </div>
+ <p id="rig-preset-description" aria-live="polite">普通待机：只有发梢与裙摆轻微摆动。</p>
  <div id="rig-idle-sliders"></div>
 </section>
 <label>部件<select id="rig-part"></select></label>
@@ -138,8 +139,19 @@ function syncIdle(){
   input.value=String(Math.round(n*100));
   $('idle-val-'+group+'-'+key).textContent=(n*100).toFixed(0)+'%';
  }
- for(const b of panel.querySelectorAll('[data-idle-preset]'))
-  b.classList.toggle('active',b.dataset.idlePreset===idle.preset);
+ for(const b of panel.querySelectorAll('[data-idle-preset]')){
+  const active=b.dataset.idlePreset===idle.preset;
+  b.classList.toggle('active',active);
+  b.setAttribute('aria-pressed',String(active));
+ }
+ const guide={
+  still:'静止：没有风，不让衣物和头发额外晃动。',
+  realistic:'普通待机：只有发梢与裙摆轻微摆动，根部固定。',
+  breeze:'微风：稍有飘动，头发和裙摆速度、滞后分别控制。',
+  windy:'大风：明显飘动且有缓慢风力起伏，不是整个人摆来摆去。',
+  custom:'自定义：手动参数已保留；点普通待机会重置为自然默认档。'
+ };
+ $('rig-preset-description').textContent=guide[idle.preset]||guide.custom;
  const amount=$('rig-part-amount');
  const mult=idle.parts?.[state.selected]??1;
  amount.value=String(Math.round(mult*100));
@@ -284,6 +296,7 @@ async function activate(){
  if(studio.current!==id||S.side!==face)return;
  state.model=core.project(src,id,face,saved);
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
+ state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
  state.active=true;state.phase=0;state.playing=true;state.showGuides=false;
  $('rig-guides').checked=false;
  document.body.classList.add('rig-authoring');
@@ -296,7 +309,7 @@ async function activate(){
  $('rig-source').textContent=id==='char-002'&&src.length<12
   ?'女二当前只有 '+src.length+' 个扁平图分区，不是真 PSD。可以试验分区，但不能冒充完整分层绑定。'
   :'真实源图层 '+src.length+' 个。逐层查看轴点、网格；不替换你认可的 V4 动画。';
- info('实时待机总控与逐件倍率已连接同一套游戏骨骼。默认身体极轻微、发梢柔性摆动，不叠加呼吸。');
+ info('普通待机、微风、大风各有独立摆幅与速度；切换时会平滑过渡，重新选预设会复位过大的部件倍率。');
  ed.render();
 }
 function toggleIdle(){
@@ -443,7 +456,9 @@ boneSliders.addEventListener('input',e=>{
 function drawPreview(ctx){
  if(!state.active||!state.model)return false;
  // Wireframe and yellow skeletal handles are strictly opt-in.
- core.draw(ctx,parts(),state.model,state.phase,state.showGuides?state.selected:'');
+ const previewModel=state.visualIdle?
+  {...state.model,idleProfile:state.visualIdle}:state.model;
+ core.draw(ctx,parts(),previewModel,state.phase,state.showGuides?state.selected:'');
  if(!state.showGuides)return true;
  const p=current();if(p){
   const P={x:p.x+p.w*p.pivot.x,y:p.y+p.h*p.pivot.y};
@@ -528,7 +543,9 @@ let last=0,lastDraw=0;
 function tick(now){
  if(state.active&&S.ready&&!document.hidden){
   if(!last)last=now;
-  if(state.playing)state.phase+=Math.min(.07,(now-last)/1000)*2*Math.PI/3.6;
+  const dt=Math.min(.07,Math.max(0,(now-last)/1000));
+  if(state.playing)state.phase+=dt*2*Math.PI/3.6;
+  state.visualIdle=core.approachIdle(state.visualIdle,state.model.idleProfile,dt);
   last=now;
   if(now-lastDraw>32){lastDraw=now;ed.render();}
  }else last=0;
