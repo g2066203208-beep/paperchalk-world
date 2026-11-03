@@ -53,6 +53,8 @@ try{
         overflow:e.scrollWidth>e.clientWidth+2,
         viewportWidth:e.clientWidth,
         statBounds:stats?.getBoundingClientRect().toJSON(),timeBounds:time?.getBoundingClientRect().toJSON(),
+        statAnchor:stats?.offsetLeft,statIntrinsicWidth:stats?.offsetWidth,
+        clockLeft:time?.offsetLeft,clockWidth:time?.offsetWidth,
         hasCrossedIcon:!!stats?.querySelector('[data-stat="hunger"] svg path[opacity]'),
         scale:stats?.style.getPropertyValue('--hud-scale')
       };
@@ -65,10 +67,14 @@ try{
     assert.equal(topHud.weekday,'周五');
     assert.equal(topHud.time,'21:36');
     assert.equal(topHud.overflow,false,'Top HUD contents overflow: '+JSON.stringify(topHud));
-    const center=(topHud.statBounds.left+topHud.statBounds.right)/2;
+    // Check coordinates within the LOGICAL 16:9 game canvas. The mobile
+    // browser rotates that canvas 90 degrees into portrait device space, so
+    // getBoundingClientRect().left is not a logical horizontal position.
+    const center=topHud.statAnchor;
+    const rightEdge=center+topHud.statIntrinsicWidth*Number(topHud.scale)/2;
     assert.ok(Math.abs(center-topHud.viewportWidth/2)<2.5,
-      'Three status groups must be centered on the FULL viewport: '+JSON.stringify(topHud));
-    assert.ok(topHud.statBounds.right+4<=topHud.timeBounds.left,
+      'Three status groups must be centered on the FULL logical game viewport: '+JSON.stringify(topHud));
+    assert.ok(rightEdge+4<=topHud.clockLeft,
       'Status and clock must never overlap on any viewport: '+JSON.stringify(topHud));
     assert.equal(topHud.hasCrossedIcon,false,'Hunger icon still has crossed X-strokes');
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-approved-top-hud.png'});
