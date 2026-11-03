@@ -83,6 +83,31 @@ jobs:
                 // Heroine portrait must NOT draw the selected mesh and axes by default.
                 assert.equal(await page.locator('#rig-guides').isChecked(),false);
                 assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.showGuides),false);
+                // Raster QA: a fully opaque original PNG must not develop
+                // translucent triangular cracks when transformed by bones.
+                const seamPixels=await page.evaluate(()=>{
+                  const core=window.PaperchalkPartRigCore;
+                  const tex=document.createElement('canvas');tex.width=240;tex.height=280;
+                  const tc=tex.getContext('2d');tc.fillStyle='#ffffff';tc.fillRect(0,0,240,280);
+                  const layer={partId:'front_hair',name:'front_hair',sourcePart:true,
+                    canvas:tex,x:80,y:60,visible:true,opacity:1};
+                  const model=core.project([layer],'protagonist','front');
+                  const output=document.createElement('canvas');output.width=460;output.height=460;
+                  const ctx=output.getContext('2d',{alpha:true});
+                  let worst=0;
+                  for(const phase of [.8,1.7,2.9]){
+                    ctx.clearRect(0,0,460,460);
+                    core.draw(ctx,[layer],model,phase);
+                    const d=ctx.getImageData(120,110,155,165).data;
+                    let gaps=0;
+                    for(let n=3;n<d.length;n+=4)if(d[n]<160)gaps++;
+                    worst=Math.max(worst,gaps);
+                  }
+                  return worst;
+                });
+                console.log('OPAQUE TRIANGLE SEAM PIXELS',vp.width,seamPixels);
+                assert.ok(seamPixels<50,
+                  'joint-warped opaque hair cannot develop visible mesh raster cracks');
                 assert.equal(await page.locator('#idle-open').getAttribute('aria-expanded'),'true');
                 const preset=page.locator('[data-idle-preset="realistic"]');
                 assert.equal(await preset.isVisible(),true);
