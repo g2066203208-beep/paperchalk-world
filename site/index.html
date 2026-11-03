@@ -1455,7 +1455,7 @@ void main(){
   subtitleSmokeTexture.width=subtitleSmokeW;subtitleSmokeTexture.height=subtitleSmokeH;
   const subtitleSmokeTextureCtx=subtitleSmokeTexture.getContext('2d',{alpha:true});
   const subtitleSmokePixels=subtitleSmokeTextureCtx.createImageData(subtitleSmokeW,subtitleSmokeH);
-  function drawNativeBottomSmoke(ctx,w,h,progress,phoneOpen=false){
+  function drawNativeBottomSmoke(ctx,w,h,progress){
     if(progress<=.002||fog.width<2||fog.height<2)return;
     // Capture the interior-to-border transition of our existing fluid,
     // NOT the solid black portion at the physical bottom screen edge.
@@ -1508,9 +1508,9 @@ void main(){
     // ~32% screen-height canvas, rising physically from BOTTOM, transparent
     // above the irregular crest. Real smoke density and motion continue
     // on every simulation frame, with the same show/hide timing as before.
-    // Dialogue keeps the previous, focused smoke; opening the handset
-    // lifts the very same moving smoke higher and unites the lower-right fog.
-    const maxHeight=Math.round(h*(phoneOpen?.435:.335));
+    // Bottom smoke belongs to dialogue only. Opening a RIGHT-hand phone
+    // must never expand it, raise it or create any bottom smoke.
+    const maxHeight=Math.round(h*.335);
     const dh=Math.max(1,Math.round(maxHeight*eased));
     ctx.save();
     ctx.globalAlpha=eased;
@@ -1546,16 +1546,6 @@ void main(){
     rg.addColorStop(1,'rgba(0,0,0,.85)');
     phoneFogMaskCtx.fillStyle=rg;
     phoneFogMaskCtx.fillRect(rightStart,py-8*unitY,w-rightStart,ph+16*unitY);
-    // Bottom fog climbs around 11% of phone height, and joins its side fog
-    // in the corner. The top/screen center remains fully uncovered.
-    const bottomStart=py+ph*.865;
-    const bottomEnd=py+ph*1.04;
-    const bg=phoneFogMaskCtx.createLinearGradient(0,bottomStart,0,bottomEnd);
-    bg.addColorStop(0,'rgba(0,0,0,0)');
-    bg.addColorStop(.65,'rgba(0,0,0,.32)');
-    bg.addColorStop(1,'rgba(0,0,0,.8)');
-    phoneFogMaskCtx.fillStyle=bg;
-    phoneFogMaskCtx.fillRect(px-8*unitX,bottomStart,pw+16*unitX,h-bottomStart);
     phoneFogCtx.drawImage(uiFogCanvas,0,0,w,h);
     phoneFogCtx.globalCompositeOperation='destination-in';
     phoneFogCtx.drawImage(phoneFogMask,0,0,w,h);
@@ -1600,7 +1590,7 @@ void main(){
       if(edge==='bottom'){
         // Strictly an irregular black smoke silhouette. Never stretch the
         // opaque native border into a translucent subtitle rectangle.
-        drawNativeBottomSmoke(uiFogCtx,w,h,uiFogProgress.bottom,phoneUI.isOpen());
+        drawNativeBottomSmoke(uiFogCtx,w,h,uiFogProgress.bottom);
       }else if(edge==='top'){
         const maxH=Math.round(h*.22),dh=Math.max(1,Math.round(maxH*p));
         uiFogCtx.globalAlpha=.77*p;
@@ -1626,11 +1616,9 @@ void main(){
       const edge=el.getAttribute('data-ui-fog-edge');
       if(uiFogEdges.has(edge)&&isUiFogOwnerVisible(el))active.add(edge);
     }
-    if(phoneUI.isOpen()){
-      // The lower fog remains present even after dialogue is hidden.
-      active.add('bottom');
-      active.add('right');
-    }
+    // The phone is physically located on the RIGHT; do not hijack the
+    // dialogue-owned BOTTOM fog when the phone alone is opened.
+    if(phoneUI.isOpen())active.add('right');
     let changed=false;
     for(const band of uiFogBands){
       const edge=band.dataset.edge,enabled=active.has(edge),next=String(enabled);
