@@ -85,7 +85,23 @@ jobs:
               assert.ok(await page.locator('[data-idle="hair.amount"]').isVisible());
               assert.ok(await page.locator('[data-idle="cloth.amount"]').isVisible());
               assert.equal(await page.locator('#rig-part option').count(),17);
+              // The inspector must be docked outside the moving canvas.
+              const docked=await page.evaluate(()=>{
+                const inspector=document.getElementById('part-rig-panel');
+                return inspector?.parentElement?.classList.contains('right')&&
+                  document.body.classList.contains('rig-authoring')&&
+                  !document.getElementById('rig-advanced').open;
+              });
+              assert.ok(docked,'authoring controls must not cover the character');
               await page.screenshot({path:'artifacts/l2d-studio/'+name+'-actual-hair-skirt-controls.png'});
+              // Simulate a one-pixel original PART edit, not a flat screen overlay.
+              await page.evaluate(()=>{
+                const p=window.characterEditor.S.layers.front.find(p=>p.partId==='rear_hair');
+                assert(p?.sourcePart,'missing editable real hair part');
+                const ctx=p.canvas.getContext('2d');ctx.fillStyle='#ff31b0';
+                ctx.fillRect(20,140,3,3);
+                window.characterEditor.render();
+              });
               await page.locator('[data-idle-preset="realistic"]').click();
               await page.locator('[data-idle="hair.amount"]').evaluate(el=>{el.value='45';el.dispatchEvent(new Event('input',{bubbles:true}));});
               await page.locator('#btnSave').click(); // Primary Save must flush bone drafts
@@ -119,6 +135,18 @@ jobs:
                   }));
                   throw error;
                 });
+              // Original-part edits must replace the actual moving hair texture,
+              // not an untracked stationary screen-space correction.
+              const localPart=await page.evaluate(()=>{
+                const a=window.PaperchalkL2DLibrary.get('player');
+                const p=a.layers.find(x=>x.partId==='rear_hair');
+                const temp=document.createElement('canvas');temp.width=p.canvas.width;temp.height=p.canvas.height;
+                const g=temp.getContext('2d');g.drawImage(p.canvas,0,0);
+                return {personalised:a.personalised,rgba:[...g.getImageData(20,140,1,1).data]};
+              });
+              assert.ok(localPart.personalised,'game did not load editor artwork into ArtMesh');
+              assert.deepEqual(localPart.rgba,[255,49,176,255],
+                'painted source pixel must travel with its own moving hair mesh');
               // The old 128-frame V4 is a backup, never a permanent replacement.
               await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('v4'));
               await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===128,
