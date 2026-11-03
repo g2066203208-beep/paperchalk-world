@@ -61,9 +61,9 @@ section.innerHTML=[
  '<label class="studio-import">导入全部真实部件（PSD / V4 ZIP）<input id="studio-parts-import" type="file" accept=".zip,.psd,application/zip"></label>',
  '<output id="studio-status" role="status">读取人物资源库…</output></div>',
  '<div id="studio-battle-import-row" class="studio-row" hidden>',
- '<strong>女主·战斗正面｜独立 PSD 拆分工程</strong>',
- '<label class="studio-import studio-battle-picker">导入已整理的 24 层战斗正面 ZIP<input id="studio-battle-import" type="file" accept=".zip,application/zip"></label>',
- '<span class="studio-battle-note">保留源图层原位与独立 L2D 绑定。上方重复斧头默认隐藏；本工程不会覆盖原版女主或自动替换游戏站位。</span>',
+ '<strong>女主·战斗正面｜原始 PSD 已部署 · 自动加载 24 层</strong>',
+ '<label class="studio-import studio-battle-picker">重新导入本地 ZIP（可选）<input id="studio-battle-import" type="file" accept=".zip,application/zip"></label>',
+ '<span class="studio-battle-note">24 张透明 PNG、原位坐标及骨骼已直接托管在 GitHub；进入本人物即自动读取，无需再次上传 PSD。头顶重复斧头默认隐藏，本工程与原版女主独立。</span>',
  '</div>',
  '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024" aria-hidden="true" hidden></canvas>',
  '<div class="studio-v4-tools"><strong>游戏实际 V4 动画 · 同一人物、同一帧源</strong>',
@@ -536,7 +536,7 @@ async function hostedParts(id,face=side){
      if(!data.ok)throw Error('无法加载独立 L2D 部件 '+partId);
      files.set(file,new Uint8Array(await data.arrayBuffer()));
      manifest.layers[face].push({file,id:partId,name:p.name||partId,
-      x:p.x,y:p.y,visible:true,locked:false,opacity:1,role:'module-mesh-part'});
+      x:p.x,y:p.y,visible:p.enabled!==false,locked:false,opacity:1,role:'psd-part'});
     }
     files.set('layers.json',new TextEncoder().encode(JSON.stringify(manifest)));
     return files;
@@ -566,7 +566,7 @@ async function ensureHostedParts(id){
  const back=ed.S.layers.back.some(p=>p.sourcePart);
  const currentSource=ed.S.layers.front.filter(p=>p.sourcePart).map(p=>String(p.partId||p.name));
  const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
- if(front&&!upgrade&&(id==='char-002'||back))return;
+ if(front&&!upgrade&&(id==='char-002'||back||id===BATTLE_FRONT_ID))return;
  message(id==='char-002'?'载入女二 PSD：17 个源层、18 个独立部件（举起的左手已分开）…':'载入真实原位分层…');
  try{
   const source=await hostedParts(id,side);
@@ -574,6 +574,7 @@ async function ensureHostedParts(id){
   await importComponentFiles(source,{missingOnly:!upgrade,quiet:true});
   message(id==='char-002'?
    '✓ 女二已加载 24 层原始记录和 18 个可动部件，两只手臂独立绑定。':
+   id===BATTLE_FRONT_ID?'✓ 女主战斗正面已自动加载：原始 PSD 24 层、原位部件和骨骼绑定，无需再导入 ZIP。':
    '已载入原位PSD独立部件。');
  }catch(error){
   console.error('[L2D] hosted source parts failed',error);
