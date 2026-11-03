@@ -10,8 +10,20 @@ toggle.textContent='逐件绑定';toggle.type='button';
 stage.querySelector('.stage-toolbar')?.append(toggle);
 const panel=document.createElement('section');panel.id='part-rig-panel';panel.hidden=true;
 panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</strong><button id="rig-close" type="button">返回原版 V4</button></header>
-<p id="rig-source">仅试验独立纹理；不修改原始 V4。</p>
+<p id="rig-source">独立骨骼待机 · 原始 V4 完整保留，无额外呼吸。</p>
+<section id="rig-idle-controls" aria-label="真人待机控制">
+ <strong>真人待机 · 总控</strong>
+ <div id="rig-presets" class="rig-presets">
+  <button type="button" data-idle-preset="still">静止</button>
+  <button type="button" data-idle-preset="realistic">真人待机</button>
+  <button type="button" data-idle-preset="breeze">轻风</button>
+  <button type="button" data-idle-preset="windy">强风</button>
+ </div>
+ <div id="rig-idle-sliders"></div>
+</section>
 <label>部件<select id="rig-part"></select></label>
+<label class="rig-part-amount">本部件摆动倍率 <output id="rig-part-amount-value">100%</output>
+ <input id="rig-part-amount" type="range" min="0" max="200" value="100" step="5"></label>
 <div id="rig-sliders"></div>
 <div class="rig-joints"><label>当前骨骼<select id="rig-bone" aria-label="选择当前部件的独立骨骼"></select></label><div id="rig-bone-sliders"></div><p id="rig-bone-tip">每条骨骼有自己的关节、角度、速度、相位与蒙皮半径；不同部件互不影响。</p></div>
 <div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button><button id="rig-module-export" type="button">↓ 一键打包游戏模块 ZIP</button></div>
@@ -47,6 +59,65 @@ for(const [field,label,min,max,step] of boneFields){
  input.min=min;input.max=max;input.step=step;
  row.append(span,out,input);boneSliders.append(row);
 }
+// User-facing controls mutate the exact model read by the game renderer.
+// No copy of animation coefficients in the UI; all presets/limits live in core.
+const idleFields=[
+ ['body.amount','身体微动',0,60,1,100],
+ ['body.speed','身体速度',20,200,5,100],
+ ['hair.amount','头发摆幅',0,150,5,100],
+ ['hair.speed','头发速度',20,200,5,100],
+ ['hair.lag','头发滞后',0,200,5,100],
+ ['cloth.amount','裙子/外套摆幅',0,150,5,100],
+ ['cloth.speed','衣物速度',20,200,5,100],
+ ['cloth.lag','衣物滞后',0,200,5,100],
+ ['sleeves.amount','袖子/手臂摆幅',0,150,5,100],
+ ['sleeves.speed','袖子速度',20,200,5,100]
+];
+const idleSliders=$('rig-idle-sliders');
+for(const [field,label,min,max,step] of idleFields){
+ const row=document.createElement('label');row.className='rig-field';
+ const title=document.createElement('span');title.textContent=label;
+ const value=document.createElement('output');value.id='idle-val-'+field.replace('.','-');
+ const input=document.createElement('input');input.type='range';input.dataset.idle=field;
+ input.min=min;input.max=max;input.step=step;
+ row.append(title,value,input);idleSliders.append(row);
+}
+function syncIdle(){
+ const idle=state.model?.idleProfile;if(!idle)return;
+ for(const input of idleSliders.querySelectorAll('[data-idle]')){
+  const [group,key]=input.dataset.idle.split('.');
+  const n=idle[group][key];
+  input.value=String(Math.round(n*100));
+  $('idle-val-'+group+'-'+key).textContent=(n*100).toFixed(0)+'%';
+ }
+ for(const b of panel.querySelectorAll('[data-idle-preset]'))
+  b.classList.toggle('active',b.dataset.idlePreset===idle.preset);
+ const amount=$('rig-part-amount');
+ const mult=idle.parts?.[state.selected]??1;
+ amount.value=String(Math.round(mult*100));
+ $('rig-part-amount-value').textContent=Math.round(mult*100)+'%';
+}
+idleSliders.addEventListener('input',e=>{
+ const field=e.target.dataset.idle;if(!field||!state.model)return;
+ const [group,key]=field.split('.');
+ const idle=state.model.idleProfile;
+ idle[group][key]=Number(e.target.value)/100;
+ idle.preset='custom';
+ state.model.idleProfile=core.sanitizeIdleProfile(idle);
+ syncIdle();changed();
+});
+panel.querySelector('#rig-presets').addEventListener('click',e=>{
+ const name=e.target?.dataset?.idlePreset;
+ if(!name||!state.model)return;
+ state.model.idleProfile=core.presetIdle(name,state.model.idleProfile);
+ syncIdle();changed();
+});
+$('rig-part-amount').addEventListener('input',e=>{
+ if(!state.model||!state.selected)return;
+ state.model.idleProfile.parts[state.selected]=Number(e.target.value)/100;
+ state.model.idleProfile.preset='custom';
+ syncIdle();changed();
+});
 const parts=()=>S.layers[S.side].filter(p=>p.sourcePart&&p.canvas);
 const key=p=>String(p.partId||p.name);
 const current=()=>state.model?.parts[state.selected];
@@ -104,7 +175,7 @@ function select(id){
  state.selected=id;$('rig-part').value=id;
  const ix=S.layers[S.side].findIndex(x=>x.sourcePart&&key(x)===id);
  if(ix>=0){S.sel=ix;ed.renderList();}
- values();refreshBones();ed.render();
+ values();refreshBones();syncIdle();ed.render();
 }
 let saveTimer;
 async function save(){
@@ -131,6 +202,7 @@ async function activate(){
  const id=studio.current,face=S.side,saved=await studio.readPartRig(id,face);
  if(studio.current!==id||S.side!==face)return;
  state.model=core.project(src,id,face,saved);
+ state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
  state.active=true;state.phase=0;state.playing=true;
  toggle.textContent='返回 V4';panel.hidden=false;
  const selectNode=$('rig-part');selectNode.replaceChildren();
@@ -140,7 +212,7 @@ async function activate(){
  $('rig-source').textContent=id==='char-002'&&src.length<12
   ?'女二当前只有 '+src.length+' 个扁平图分区，不是真 PSD。可以试验分区，但不能冒充完整分层绑定。'
   :'真实源图层 '+src.length+' 个。逐层查看轴点、网格；不替换你认可的 V4 动画。';
- info('已进入独立部件预览。拖动绿色 P 轴点和黄色 T 末端，或调整当前层参数。');
+ info('实时待机总控与逐件倍率已连接同一套游戏骨骼。默认身体极轻微、发梢柔性摆动，不叠加呼吸。');
  ed.render();
 }
 toggle.onclick=()=>state.active?deactivate():activate().catch(e=>info(e.message));
@@ -264,7 +336,7 @@ function drawPreview(ctx){
   }ctx.restore();
   const joint=currentBone();
   if(joint){
-   const all=core.bonePoses(p,state.phase);
+   const all=core.bonePoses(p,state.phase,state.model.idleProfile);
    const bone=all.find(b=>b.id===joint.id);
    if(bone){
     ctx.save();ctx.strokeStyle='#faf1a6';ctx.lineWidth=2.5;
@@ -293,7 +365,7 @@ stage.addEventListener('pointerdown',e=>{
  const radius=20/Math.max(.1,S.zoom);
  const bone=currentBone();
  if(bone){
-  const poses=core.bonePoses(p,state.phase);
+  const poses=core.bonePoses(p,state.phase,state.model.idleProfile);
   const active=poses.find(x=>x.id===bone.id);
   if(active){
    const head={x:p.x+active.headPos.x,y:p.y+active.headPos.y},
