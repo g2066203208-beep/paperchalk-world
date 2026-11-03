@@ -1,0 +1,120 @@
+{
+  "width": 1024,
+  "height": 1024,
+  "mode": "RGBA",
+  "verticalColumns": [
+    {
+      "x": 0,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 15,
+      "samples": 16
+    },
+    {
+      "x": 64,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 12,
+      "samples": 16
+    },
+    {
+      "x": 128,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 8,
+      "samples": 16
+    },
+    {
+      "x": 192,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 2,
+      "samples": 16
+    },
+    {
+      "x": 256,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 5,
+      "samples": 16
+    },
+    {
+      "x": 320,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 6,
+      "samples": 16
+    },
+    {
+      "x": 384,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 8,
+      "samples": 16
+    },
+    {
+      "x": 448,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 14,
+      "samples": 16
+    },
+    {
+      "x": 512,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 7,
+      "samples": 16
+    },
+    {
+      "x": 576,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 4,
+      "samples": 16
+    },
+    {
+      "x": 640,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 1,
+      "samples": 16
+    },
+    {
+      "x": 704,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 1,
+      "samples": 16
+    },
+    {
+      "x": 768,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 2,
+      "samples": 16
+    },
+    {
+      "x": 832,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 2,
+      "samples": 16
+    },
+    {
+      "x": 896,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 7,
+      "samples": 16
+    },
+    {
+      "x": 960,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "whiteLike": 11,
+      "samples": 16
+    }
+  ],
+  "thumbnailBytes": 400410
+}
