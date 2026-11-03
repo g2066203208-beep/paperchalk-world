@@ -10,7 +10,7 @@ panel.innerHTML=`<header class="rig-h"><strong>逐件骨骼细调</strong><butto
 <p id="rig-source">直接拖动画布中的关节，或修改所选部件的高级参数。</p>
 <label>部件<select id="rig-part"></select></label>
 <label class="rig-part-amount">本部件摆动倍率 <output id="rig-part-amount-value">100%</output>
- <input id="rig-part-amount" type="range" min="0" max="300" value="100" step="5"></label>
+ <input id="rig-part-amount" type="range" min="0" max="2000" value="100" step="5"></label>
 <div id="rig-sliders"></div>
 <div class="rig-joints"><label>当前骨骼<select id="rig-bone" aria-label="选择当前部件的独立骨骼"></select></label><div id="rig-bone-sliders"></div><p id="rig-bone-tip">每条骨骼有自己的关节、角度、速度、相位与蒙皮半径；不同部件互不影响。</p></div>
 <div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button><button id="rig-module-export" type="button">↓ 一键打包游戏模块 ZIP</button></div>
@@ -21,7 +21,7 @@ dock.prepend(panel);
 const quickPanel=document.createElement('section');
 quickPanel.id='rig-quick-panel';
 quickPanel.hidden=true;
-quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">拖动直接看效果，身体保持站立不摇摆。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"200\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
+quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">拖动实时看效果；发根、腰线固定，身体不整体摇摆。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hands\"><span>双手／手臂</span><output>70%</output><input data-quick=\"hands\" aria-label=\"双手手臂摆动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"70\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"shoulders\"><span>肩部活动</span><output>30%</output><input data-quick=\"shoulders\" aria-label=\"肩部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"30\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hips\"><span>胯部活动</span><output>20%</output><input data-quick=\"hips\" aria-label=\"胯部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"20\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"250\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
 dock.prepend(quickPanel);
 // Keep Play/Pause visible in the rig header, outside the animated portrait.
 panel.querySelector('.rig-h').insertBefore($('rig-pause'),$('rig-close'));
@@ -71,7 +71,10 @@ $('rig-guides').addEventListener('change',event=>{
 const quickGroups={
  fringe:['front_hair','hair'],
  rear:['rear_hair','back_hair','hair_over_jacket'],
- skirt:['skirt','bottomwear','cloth']
+ skirt:['skirt','bottomwear','cloth'],
+ hands:['sleeves_and_hands','handwear','sleeve_left','sleeve_right'],
+ shoulders:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','jacket','topwear'],
+ hips:['skirt','bottomwear','legs','legwear']
 };
 const available=id=>(quickGroups[id]||[]).filter(key=>!!state.model?.parts[key]);
 function quickInfo(message){$('rig-quick-status').textContent=message;}
@@ -82,6 +85,10 @@ function syncIdle(){
   if(id==='speed'){
    input.value=String(Math.round((idle.hair.speed+idle.cloth.speed)*50/5)*5);
    row.hidden=false;
+  }else if(Object.hasOwn(idle.joints||{},id)){
+   row.hidden=!available(id).length;
+   if(row.hidden)continue;
+   input.value=String(Math.round(idle.joints[id]*100/5)*5);
   }else{
    const ids=available(id);row.hidden=!ids.length;
    if(!ids.length)continue;
@@ -105,6 +112,8 @@ quickPanel.addEventListener('input',event=>{
  const idle=state.model.idleProfile;
  if(id==='speed'){
   for(const group of ['hair','cloth','sleeves'])idle[group].speed=value/100;
+ }else if(Object.hasOwn(idle.joints||{},id)){
+  idle.joints[id]=value/100;
  }else{
   for(const key of available(id))idle.parts[key]=value/100;
  }
@@ -343,10 +352,12 @@ async function exportGameModule(newId){
    // Individual bones can visibly animate even when whole-layer motion=0.
    const group=core.idleGroup(p),idle=model.idleProfile||{};
    const strength=(idle[group]?.amount||0)*(idle.parts?.[id]??1);
-   if(strength>0.0001&&(
+   const jointsActive=(p.bones||[]).some(b=>b.enabled!==false&&
+    Math.abs(b.amplitude)>0.001&&core.jointGainFor(p,b,idle)>0);
+   if(jointsActive||(strength>0.0001&&(
     Math.abs(p.motion?.x||0)+Math.abs(p.motion?.y||0)+Math.abs(p.motion?.angle||0)>0.001||
     (p.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>0.001)
-   ))hasMotion=true;
+   )))hasMotion=true;
    const file='parts/'+face+'/'+id+'.png';
    textures[id]=file;
    const blob=await ed.toBlob(layer.canvas);
