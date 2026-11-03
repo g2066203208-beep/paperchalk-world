@@ -6,6 +6,7 @@ on:
       - 'site/index.html'
       - 'site/game/survival-state.js'
       - 'site/game/ground-perspective.js'
+      - 'site/game/l2d-ground-binding.js'
       - 'site/game/phone-ui.js'
       - 'site/game/phone-ui.css'
       - 'site/assets/phones/**'
