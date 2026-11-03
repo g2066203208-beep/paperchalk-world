@@ -2281,9 +2281,20 @@ void main(){
     document.getElementById('actor-player').style.height=player.size+'cqh';
     // Replacing the protagonist must retain her 1024x1024 layout and foot position.
     document.getElementById('actor-player').style.width=player.size+'cqh';
+    // Enforce world-layer semantics even if an old user save moved a Z slider
+    // past the fog. The stored artistic coordinates remain untouched:
+    // enemy always BEHIND smoke; heroine always IN FRONT of smoke.
+    const fogZ=editorConfig.fog.z;
+    const enemyZ=Math.min(editorConfig.enemy.z,fogZ-12);
+    const playerZ=Math.max(editorConfig.player.z,fogZ+12);
+    const visibleDepths={
+      bg:editorConfig.bg.z,enemy:enemyZ,fog:fogZ,
+      player:playerZ,ground:editorConfig.ground.z
+    };
     for(const name of ['bg','enemy','fog','player','ground']){
-      devRig.style.setProperty('--dev-depth-'+name,editorConfig[name].z+'px');
+      devRig.style.setProperty('--dev-depth-'+name,visibleDepths[name]+'px');
     }
+    devRig.dataset.depthOrderValid=String(enemyZ<fogZ&&fogZ<playerZ);
     const ground=editorConfig.ground;
     devRig.style.setProperty('--dev-floor-y',ground.y+'%');
     devRig.style.setProperty('--dev-floor-horizon',String(ground.horizon));
