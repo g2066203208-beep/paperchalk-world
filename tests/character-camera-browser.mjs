@@ -88,6 +88,17 @@ try{
     ref.enemy.expectedFootY<ref.player.worldFootY,
     'Enemy must stand on the close MIDGROUND at 82–91% frame height: '+JSON.stringify(ref));
   assert.ok(Math.abs(ref.enemy.worldFootY-ref.enemy.expectedFootY)<1);
+  // Logical formulas alone cannot prove visible placement. The ACTUAL
+  // browser layout must show a half-out-of-frame heroine and a fully
+  // onscreen midground opponent. Check rendered shoe pixels, not only
+  // the computed model values.
+  assert.ok(ref.player.shoeScreenY>ref.viewportHeight*1.02&&
+    ref.player.shoeScreenY<ref.viewportHeight*1.09,
+    'Visible heroine canvas shoes are NOT past the lower camera edge: '+JSON.stringify(ref));
+  assert.ok(ref.enemy.shoeScreenY>ref.viewportHeight*.79&&
+    ref.enemy.shoeScreenY<ref.viewportHeight*.93&&
+    ref.enemy.rect.top<ref.viewportHeight*.54,
+    'NPC visible L2D is outside frame or too far from the encounter: '+JSON.stringify(ref));
   assert.ok(ref.enemy.perspectiveScale>1&&ref.enemy.perspectiveScale<1.7,
     'Nearby CHAR-002 must not be magnified from a tiny old 34% source: '+JSON.stringify(ref));
   assert.ok(ref.enemy.sourceCanvasPixels>=512*512,
