@@ -55,7 +55,9 @@ const origin=process.env.SPHERE_TEST_BASE||'http://127.0.0.1:8138';
   assert.equal(await page.locator('.ring-choice.active').getAttribute('data-layer'),'1');
   await page.screenshot({path:'artifacts/sphere-maze/04-middle-shell-isolated.png'});
   await page.locator('[data-layer="-1"]').click();
-  await page.locator('#separation').fill('80');
+  await page.locator('#separation').evaluate(el=>{
+   el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}));
+  });
   assert.ok((await page.evaluate(()=>window.SphericalMazeViewer.state.separation))>.75);
   await page.screenshot({path:'artifacts/sphere-maze/05-separated-shells.png'});
   await page.locator('#reset-world').click();
