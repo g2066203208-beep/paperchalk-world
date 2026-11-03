@@ -148,6 +148,30 @@ try{
     await page.locator('#quick-map').click();
     await expectEdge(page,'right',false);
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-approved-top-hud.png'});
+    // Capture TRACK geometry before changing the values; white fills may
+    // animate, but the 10 gray slots and the entire HUD must never resize.
+    const trackGeometry=()=>page.evaluate(()=>{
+      const vitals=document.getElementById('hud-vitals');
+      const trackData=[...vitals.querySelectorAll('.hud-segments')].map(meter=>{
+        const rect=meter.getBoundingClientRect();
+        return {
+          outer:[rect.x,rect.y,rect.width,rect.height],
+          widths:[...meter.children].map(piece=>piece.getBoundingClientRect().width),
+          positions:[...meter.children].map(piece=>{
+            const b=piece.getBoundingClientRect();return [b.x,b.y];
+          }),
+          layout:getComputedStyle(meter).display,
+          emptyTrackColor:getComputedStyle(meter.children[9]).backgroundColor
+        };
+      });
+      return {vitalsWidth:vitals.offsetWidth,scale:vitals.style.getPropertyValue('--hud-scale'),
+        tracks:trackData};
+    });
+    const fullyFilledGeometry=await trackGeometry();
+    assert.ok(fullyFilledGeometry.tracks.every(track=>track.layout==='grid'),
+      'All ten segments must use a permanently fixed grid');
+    assert.ok(fullyFilledGeometry.tracks.every(track=>track.emptyTrackColor.startsWith('rgba(')),
+      'Inactive segments must retain a visible gray background');
     // True gameplay arithmetic, non-100 maxima, 10 proportional cells and
     // animated transitions; setting mock calendar dates is not supported.
     await page.evaluate(()=>window.PaperWorldTopHUD.setStats({
@@ -165,11 +189,30 @@ try{
       assert.ok(Math.abs(relativeFill[i]-target)<.04,
         '10-cell proportional fill does not match real current/max ratio: '+JSON.stringify(relativeFill));
     }
+    const drainedGeometry=await trackGeometry();
+    // A changing digit count (100/100 -> 37/125 etc) must NOT reflow
+    // the bars or change their scale. Check logical AND screen-space geometry
+    // so this also works on portrait phones rotated into landscape.
+    const compareGeometry=(before,after,stage)=>{
+      assert.equal(after.vitalsWidth,before.vitalsWidth,stage+': total HUD width changed');
+      assert.equal(after.scale,before.scale,stage+': total HUD scale changed');
+      assert.equal(after.tracks.length,3);
+      for(let i=0;i<3;i++){
+        const a=before.tracks[i],b=after.tracks[i];
+        assert.equal(a.widths.length,10);
+        for(const [x,y] of [...a.outer,...a.widths,...a.positions.flat()].map((value,j)=>
+          [value,[...b.outer,...b.widths,...b.positions.flat()][j]])){
+          assert.ok(Math.abs(x-y)<.25,stage+': stat '+i+' track moved/resized: '+x+' vs '+y);
+        }
+      }
+    };
+    compareGeometry(fullyFilledGeometry,drainedGeometry,'after stat drain');
     const prior=await page.evaluate(()=>window.PaperWorldTopHUD.snapshot());
     assert.equal(prior.stats.health.current,37);
     await page.evaluate(()=>window.PaperWorldTopHUD.applyEvent({type:'damage',amount:9}));
     await page.waitForTimeout(650);
     assert.equal(await page.locator('#hud-health-value').textContent(),'28/125');
+    compareGeometry(fullyFilledGeometry,await trackGeometry(),'after damage');
     await page.reload({waitUntil:'domcontentloaded'});
     await expectEdge(page,'bottom',true);
     assert.equal(await page.locator('#hud-health-value').textContent(),'28/125',
