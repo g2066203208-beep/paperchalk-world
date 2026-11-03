@@ -101,7 +101,7 @@ function sanitizeIdleProfile(input){
  if(p.profileVersion!==4)return base;
  const g=(name,max)=>({
   amount:clamp(finite(p[name]?.amount,base[name].amount),0,max),
-  speed:clamp(finite(p[name]?.speed,base[name].speed),.25,2),
+  speed:clamp(finite(p[name]?.speed,base[name].speed),.25,2.5),
   lag:clamp(finite(p[name]?.lag,base[name].lag),0,1.5)
  });
  const parts={...DEFAULT_PART_STRENGTH};
@@ -493,7 +493,11 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
  // Mesh density changes only during windy preview/playback; source pixels
  // and underlying independently saved bone bindings stay untouched.
  const weather=idle?.weather||idle?.preset;
- const windy=weather==='windy';
+ // Increase mesh density only for large user-selected bending. This limits
+ // visible triangle cracks without changing the original source pixels.
+ const largeMotion=idle&&(part.kind==='hair'||part.kind==='skirt')&&
+  idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,20)>1.2;
+ const windy=weather==='windy'||largeMotion;
  const image=source.canvas,
   cols=windy&&part.kind==='hair'?Math.max(part.mesh.columns,12):
    windy&&part.kind==='skirt'?Math.max(part.mesh.columns,10):part.mesh.columns,
