@@ -313,12 +313,45 @@ body.mobile-mode.virtual-landscape #view{
 #view.dev-mode #dev-rig #actor-player{pointer-events:auto!important;cursor:grab;touch-action:none}
 #view.dev-mode #dev-rig #actor-enemy:active,
 #view.dev-mode #dev-rig #actor-player:active{cursor:grabbing}
+/* DEV panel must be an unframed layer of controls over native live black fog. */
 #dev-tools{
   position:absolute;z-index:40;right:1.4cqw;top:2.5cqh;
   width:min(340px,46cqw);max-height:95cqh;overflow:auto;
   padding:12px 13px 14px;color:#eee;pointer-events:auto;
-  font:13px var(--font-ui);background:rgba(10,14,18,.89);
-  border:1px solid #777b80;border-radius:6px;touch-action:pan-y;
+  font:13px var(--font-ui);background:transparent;
+  border:0;border-radius:0;box-shadow:none;backdrop-filter:none;
+  touch-action:pan-y;
+}
+#dev-panel-fog{
+  position:absolute;inset:0;width:100%;height:100%;z-index:39;
+  background:transparent;pointer-events:none;
+  image-rendering:auto;
+}
+#dev-tools header,#dev-tools p,#dev-tools label,
+#dev-tools strong,#dev-tools output,#dev-tools button{
+  text-shadow:0 1px 5px rgba(0,0,0,.9);
+}
+#dev-tools button,#dev-tools select{
+  appearance:none!important;background:transparent!important;
+  border:0!important;border-radius:0!important;
+  box-shadow:none!important;backdrop-filter:none!important;
+}
+#dev-tools select{
+  border-bottom:1px solid rgba(224,229,226,.33)!important;
+  padding:6px 2px;cursor:pointer;
+}
+#dev-tools option{background:#162029;color:#f5f5f1}
+#dev-tools input[type=file]::file-selector-button{
+  background:transparent;color:inherit;border:0;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;
+}
+#dev-tools .dev-buttons button:hover,#dev-tools button:focus-visible{
+  text-decoration:underline;text-underline-offset:3px;
+}
+#dev-fog-tools{border-top:0!important}
+#dev-fog-tools button{
+  background:transparent!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;
 }
 #dev-tools header{display:flex;justify-content:space-between;align-items:center;gap:8px}
 #dev-tools header strong{font-size:15px;letter-spacing:.04em}
@@ -450,7 +483,8 @@ body.mobile-mode.virtual-landscape #view{
       <div id="dev-fog-guide" aria-hidden="true"></div>
     </div>
   </div>
-  <aside id="dev-tools" hidden aria-label="开发者分层编辑面板">
+  <canvas id="dev-panel-fog" aria-hidden="true"></canvas>
+  <aside id="dev-tools" hidden aria-label="开发者分层编辑面板" data-ui-fog-edge="right">
     <header><strong>DEV · 分层与黑雾</strong><button id="dev-exit" type="button">完成 / 返回</button></header>
     <p>黑雾直接在当前场景预览；其他图层切换到 3D 视图，拖动空白处旋转镜头。</p>
     <div id="dev-3d-controls">
@@ -849,6 +883,44 @@ void main(){
   // so no caller has to manually synchronize panel visibility and fog.
   const uiFogCanvas=document.getElementById('ui-edge-fog');
   const uiFogCtx=uiFogCanvas.getContext('2d',{alpha:true});
+  // The developer's right-side settings MUST use the same live #fog pixels.
+  // It is a sibling of the editor, never a rectangular CSS panel or new smoke.
+  const devPanelFog=document.getElementById('dev-panel-fog');
+  const devPanelFogCtx=devPanelFog.getContext('2d',{alpha:true});
+  let devPanelFogProgress=0;
+  function paintDevPanelFog(dt){
+    if(!devPanelFogCtx)return;
+    const w=devPanelFog.width,h=devPanelFog.height;
+    if(w<2||h<2)return;
+    const controls=document.getElementById('dev-tools');
+    const visible=controls&&!controls.hidden&&controls.getClientRects().length>0;
+    const desired=visible?1:0;
+    const next=reduced.matches?desired:
+      devPanelFogProgress+(desired-devPanelFogProgress)*(1-Math.exp(-dt*(desired?7:9)));
+    devPanelFogProgress=Math.abs(next-desired)<.003?desired:next;
+    if(devPanelFogProgress<.002){
+      if(devPanelFog.dataset.visible!=='false'){
+        devPanelFogCtx.clearRect(0,0,w,h);
+        devPanelFog.dataset.visible='false';
+      }
+      return;
+    }
+    devPanelFog.dataset.visible='true';
+    devPanelFogCtx.clearRect(0,0,w,h);
+    const sourceWidth=fog.width,sourceHeight=fog.height;
+    if(sourceWidth<2||sourceHeight<2)return;
+    // Match the real controls' footprint, with a small feathering margin.
+    // Crop only the native animated rim of the existing scene fog.
+    const panelWidth=controls?.offsetWidth||Math.round(sizes.w*.40);
+    const maxWidth=Math.min(w*.53,(panelWidth/Math.max(1,sizes.w)+.09)*w);
+    const progress=devPanelFogProgress*devPanelFogProgress*(3-2*devPanelFogProgress);
+    const dw=Math.max(1,Math.round(maxWidth*progress));
+    const sourceSlice=Math.max(2,Math.round(sourceWidth*.13));
+    devPanelFogCtx.globalAlpha=.94*progress;
+    devPanelFogCtx.drawImage(fog,sourceWidth-sourceSlice,0,sourceSlice,sourceHeight,
+      w-dw,0,dw,h);
+    devPanelFogCtx.globalAlpha=1;
+  }
   const uiFogBands=Array.from(document.querySelectorAll('#ui-fog-state .ui-fog-band'));
   const uiFogEdges=new Set(['top','bottom','left','right']);
   const uiFogProgress={top:0,bottom:0,left:0,right:0};
@@ -1293,6 +1365,10 @@ void main(){
     if(uiFogCanvas){
       uiFogCanvas.width=fw;uiFogCanvas.height=fh;
       uiFogCanvas.dataset.visible='false';
+    }
+    if(devPanelFog){
+      devPanelFog.width=fw;devPanelFog.height=fh;
+      devPanelFog.dataset.visible='false';
     }
     if(gl){
       for(const t of simTargets){gl.deleteTexture(t.tex);gl.deleteFramebuffer(t.fb)}
@@ -1739,8 +1815,9 @@ void main(){
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
-    // Render live project-native fluid once, THEN project it behind visible UI.
+    // Render the same flowing fog behind all visible HUD and side settings.
     paintUiFog(dt);
+    paintDevPanelFog(dt);
     fog.dataset.frames=String(++frameNumber);
     if(editorActive && now-lastFogMirror>=85){
       lastFogMirror=now;
