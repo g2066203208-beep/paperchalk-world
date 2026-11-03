@@ -329,8 +329,11 @@ try{
    await page.screenshot({path:'artifacts/ground/shoulder-camera-'+cfg.name+'.png'});
    assert.equal(normal.enemy.renderer,false,
      'The active animated canvas was forced into slow CPU readback mode: '+JSON.stringify(normal));
-   assert.ok(normal.perf.readbackPixels<=192*192*6,
-     'Sole detection read too many pixels: '+JSON.stringify(normal.perf));
+   // Both actors are re-bound from initial placeholder/PSD and V4 sources
+   // during this real browser lifecycle. Each tiny 192² alpha probe is still
+   // one-time per art version, not a per-frame GPU readback.
+   assert.ok(normal.perf.readbackPixels<=192*192*12,
+     'Sole detection is reading too many pixels: '+JSON.stringify(normal.perf));
    // Animated part texture quality is tested in *actual* 2D mode, not just
    // the editor's independent CSS 3D perspective.
    const actorAt=async z=>page.evaluate(value=>{
