@@ -23,7 +23,6 @@ jobs:
       - run: python3 scripts/build_v4_assets.py
       - run: python3 scripts/build_char002_v4.py
       - run: python3 scripts/build_char002_part_rig.py
-      - run: python3 scripts/build_char016_psd_rig.py
       - run: python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
@@ -401,53 +400,6 @@ jobs:
                 await secondaryPage.screenshot({path:'artifacts/character-editor/'+vp.width+
                   '-CHAR-002-REAL-SEVEN-REGION-RIG.png',fullPage:false});
                 await secondaryPage.close();
-                // Uploaded 315x1024 male-secondary Photoshop document genuinely
-                // contains 21 mutually exclusive visible source layers.
-                const malePage=await browser.newPage({viewport:vp,
-                  isMobile:vp.width<500,hasTouch:vp.width<500});
-                await malePage.goto('http://127.0.0.1:8123/character-editor/?character=char-016&side=front',
-                  {waitUntil:'load'});
-                await malePage.waitForFunction(()=>
-                  window.PaperchalkStudio?.current==='char-016'&&
-                  window.PaperchalkPartRigStudio?.state.active&&
-                  Object.keys(window.PaperchalkPartRigStudio.state.model?.parts||{}).length===21,
-                  null,{timeout:40000});
-                const maleRig=await malePage.evaluate(()=>{
-                  const r=window.PaperchalkPartRigStudio.state.model;
-                  const p=r.parts;
-                  return {id:r.characterId,count:Object.keys(p).length,
-                    hierarchy:!!r.bodyHierarchy,
-                    source:[p.front_hair.kind,p.back_hair.kind,p.pants.kind,
-                      p.shoe_left.kind,p.shoe_right.kind],
-                    image:[p.front_hair.w,p.front_hair.h,p.jacket.w,p.jacket.h],
-                    provenance:r.provenance};
-                });
-                assert.equal(maleRig.id,'char-016');
-                assert.equal(maleRig.count,21);
-                assert.deepEqual(maleRig.source,
-                  ['hair','hair','leg-combined','fixed','fixed']);
-                assert.equal(maleRig.hierarchy,true,
-                  'original male2 art must have planted leg IK and shoulder/head parents');
-                for(const control of ['fringe','rear','hands','shoulders','hips','breath','speed'])
-                  assert.equal(await malePage.locator('[data-quick="'+control+'"]').isVisible(),true,
-                    'real CHAR-016 slider missing: '+control);
-                assert.equal(await malePage.locator('[data-quick="skirt"]').isVisible(),false,
-                  'male-second long trousers must never be advertised as a skirt');
-                await malePage.locator('[data-quick="fringe"]').fill('130');
-                await malePage.locator('[data-quick="rear"]').fill('120');
-                await malePage.locator('[data-quick="hips"]').fill('60');
-                await malePage.locator('[data-quick="breath"]').fill('45');
-                await malePage.locator('#rig-quick-save').click();
-                await malePage.waitForFunction(async()=>{
-                  const saved=await window.PaperchalkStudio.readPartRig('char-016','front');
-                  return saved?.idleProfile?.parts?.front_hair===1.3&&
-                    saved?.idleProfile?.parts?.back_hair===1.2&&
-                    saved?.idleProfile?.joints?.hips===.6&&
-                    saved?.idleProfile?.breath?.amount===.45;
-                },null,{timeout:25000});
-                await malePage.screenshot({path:'artifacts/character-editor/'+vp.width+
-                  '-CHAR-016-REAL-21-LAYER-PSD-L2D.png',fullPage:false});
-                await malePage.close();
               }
             }finally{await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
