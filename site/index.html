@@ -760,7 +760,7 @@ body.mobile-mode.virtual-landscape #view{
       <label for="dev-ground-horizon">地面透视消失线 <output id="dev-ground-horizon-value" class="dev-value">51.5%</output></label>
       <input id="dev-ground-horizon" type="range" min="30" max="74" step=".5">
       <label class="dev-floor-toggle" for="dev-auto-depth">
-        <input id="dev-auto-depth" type="checkbox" checked> 自动距离透视（真实身高 + 人物Z + 相机距离）
+        <input id="dev-auto-depth" type="checkbox" checked> 自动距离透视（保留立绘原始大小 · 随 Z 远近缩放）
       </label>
       <label class="dev-floor-toggle" for="dev-ground-lock">
         <input id="dev-ground-lock" type="checkbox"> 旧版：按屏幕脚点校准画布大小
@@ -2253,7 +2253,7 @@ void main(){
   function applyEditorVisuals(){
     const enemy=editorConfig.enemy,player=editorConfig.player;
     const fit=calculateGroundFit();
-    if(editorConfig.ground.lockPerspective&&fit.valid&&
+    if(editorConfig.ground.lockPerspective&&editorConfig.ground.autoDepth===0&&fit.valid&&
        fit.sizePercent>=editorBounds.size[0]&&fit.sizePercent<=editorBounds.size[1]){
       // Only after user opt-in: retain their precise x/y foot placement.
       enemy.size=Math.round(fit.sizePercent*100)/100;
@@ -2443,7 +2443,10 @@ void main(){
     if(!fit.valid||fit.sizePercent<editorBounds.size[0]||fit.sizePercent>editorBounds.size[1]){
       setDevStatus('透视校准失败：请先把两人的鞋底放在有效地面范围。');return;
     }
+    // Legacy one-off screen-foot calibration is an explicit alternative
+    // to automatic camera-Z scaling, never a second size multiplier.
     editorConfig.ground.lockPerspective=1;
+    editorConfig.ground.autoDepth=0;
     applyEditorVisuals();refreshEditorControls();
     try{localStorage.setItem(EDITOR_KEY,JSON.stringify(editorConfig))}
     catch(_){setDevStatus('已校准，但浏览器禁止保存');return}
@@ -2645,13 +2648,13 @@ void main(){
 </script>
 
 <script src="./l2d/rig.js?v=chest-breath-20261103"></script>
-<script src="./l2d/runtime.js?v=inspector-source-v2"></script>
+<script src="./l2d/runtime.js?v=sharp-sole-pivot-v3"></script>
 <script src="./l2d/part-rig.js?female2-raised-hand-fixed-20261103"></script>
 <script src="./l2d/library-player.js?v=female2-raised-hand-fixed-20261103"></script>
 <script src="./dev/character-bridge.js?v=char002-enemy-slot-v2-20261103"></script>
 <script src="./game/combat-engine.js?v=link-battle-v3-20261103"></script>
 <script src="./game/combat-ui.js?v=link-battle-v3-20261103"></script>
-<script src="./game/l2d-ground-binding.js?v=auto-distance-alpha-20261103-v2"></script>
+<script src="./game/l2d-ground-binding.js?v=sharp-gpu-fast-v3"></script>
 
 </body>
 </html>
