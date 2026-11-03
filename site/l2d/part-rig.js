@@ -346,8 +346,53 @@ function drawTri(ctx,image,A,B,C,D,E,F){
   ctx.drawImage(image,minX,minY,maxX-minX,maxY-minY,minX,minY,maxX-minX,maxY-minY);
  ctx.restore();
 }
+// Eye timing is in the same continuous phase as hair/skirt idle, but blink
+// visibility is NOT connected to body breathing or procedural mesh amplitude.
+// Short organic closure about every 4.6s with a second blink every third cycle.
+function blinkAmount(phase){
+ const seconds=Math.max(0,finite(phase,0))*3.6/(2*Math.PI);
+ const period=4.6,cycle=Math.floor(seconds/period);
+ const t=seconds-cycle*period;
+ const pulse=(at,width)=>{
+  const d=Math.abs(t-at)/width;
+  return d>=1?0:Math.pow(Math.cos(d*Math.PI/2),2);
+ };
+ return clamp(Math.max(pulse(.9,.145),cycle%3===2?pulse(1.17,.11):0),0,1);
+}
+const FACE_STACK=['rear_hair','sleeves_and_hands','legs','shoes','neck',
+  'skirt','jacket','ears','face','eye_white','irises','lashes',
+  'brows','nose','mouth','hair_clip','front_hair'];
+const FACE_MICRO=new Set(['face','ears','brows','nose','mouth','hair_clip',
+  'eye_white','irises','lashes']);
+function drawFacePart(ctx,source,part,phase,idle){
+ const img=source.canvas,id=part.id,blink=blinkAmount(phase);
+ // Align attached facial pieces to exactly the same barely visible head
+ // movement; never skin/melt tiny eyebrows/nose with a large triangular grid.
+ const motion=bodyIdleAt(part,phase,idle);
+ ctx.save();
+ ctx.globalAlpha=source.opacity??1;
+ ctx.translate(motion.x,motion.y);
+ if(id==='eye_white'||id==='irises'){
+  // Real iris/eye-white PNGs gradually disappear under closing eyelids.
+  ctx.globalAlpha*=1-blink;
+  if(ctx.globalAlpha>0.001)ctx.drawImage(img,part.x,part.y);
+ }else if(id==='lashes'){
+  // The source lash art forms the closed eyelid. Squash toward its center,
+  // not toward the face origin; both eyes keep their native proportions.
+  const center=part.y+part.h*.52;
+  ctx.translate(0,center);
+  ctx.scale(1,1-blink*.86);
+  ctx.translate(0,-center);
+  ctx.drawImage(img,part.x,part.y);
+ }else ctx.drawImage(img,part.x,part.y);
+ ctx.restore();
+}
 function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
  if(!source?.canvas||!part)return;
+ if(FACE_MICRO.has(part.id)||part.kind==='eyes-combined'){
+  drawFacePart(ctx,source,part,phase,idle);
+  return;
+ }
  const image=source.canvas,cols=part.mesh.columns,rows=part.mesh.rows;
  const strength=idle?idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
  const active=part.enabled&&(Math.abs(idle?.body?.amount||0)>0||
@@ -406,11 +451,21 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
 }
 function draw(ctx,layers,model,phase=0,selectedId=''){
  if(!model)return;
- for(const p of layers){
+ // The imported ZIP enumerates eyebrows BEFORE opaque face texture.
+ // Draw them after the face: do not let the head erase the eyebrows/nose.
+ // A stable explicit z-order only applies to the known 17-piece heroine.
+ const heroine=(model.characterId==='protagonist'||model.characterId==='protagonist-rig-v1')
+  &&model.face==='front';
+ const order=new Map(FACE_STACK.map((id,i)=>[id,i]));
+ const drawLayers=heroine?[...layers].sort((a,b)=>{
+  const ai=order.get(String(a.partId||a.name)),bi=order.get(String(b.partId||b.name));
+  return (ai??100)-(bi??100);
+ }):layers;
+ for(const p of drawLayers){
   if(!p.visible||!p.sourcePart||!p.canvas)continue;
   const b=model.parts[String(p.partId||p.name)];
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
