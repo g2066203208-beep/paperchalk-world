@@ -717,7 +717,7 @@ body.mobile-mode.virtual-landscape #view{
       <option value="player">04 / 主角</option>
       <option value="bg">01 / 背景</option>
       <option value="fog">03 / 黑雾</option>
-      <option value="ground">05 / 地板（DEV参照）</option>
+      <option value="ground">05 / 共同地面（人物跟随）</option>
     </select>
     <div id="dev-actor-controls">
       <label for="dev-x">水平位置 <output id="dev-x-value" class="dev-value"></output></label>
@@ -744,10 +744,10 @@ body.mobile-mode.virtual-landscape #view{
       <output id="dev-character-status" role="status" style="font-size:11px;color:#bde2ff;display:block;line-height:1.6;margin-top:8px">载入人物素材库…</output>
     </section>
     <div id="dev-floor-controls" hidden>
-      <label for="dev-ground-y">3D地板网格参考Y <output id="dev-ground-y-value" class="dev-value"></output></label>
+      <label for="dev-ground-y">移动共同地面 / 全体人物Y <output id="dev-ground-y-value" class="dev-value"></output></label>
       <input id="dev-ground-y" type="range" min="40" max="96" step=".5">
       <output id="dev-ground-delta" class="dev-value"></output>
-      <p>绿色网格是3D观察辅助；共同地面不意味着两人的脚在相同屏幕高度。</p>
+      <p>移动底板Y或Z时，女主和女二的脚点会跟随相同的世界位移，保留彼此距离及单独摆好的位置。远处人物屏幕脚点更高，是同一地面的正常透视效果。</p>
       <label for="dev-ground-horizon">地面透视消失线 <output id="dev-ground-horizon-value" class="dev-value">51.5%</output></label>
       <input id="dev-ground-horizon" type="range" min="30" max="74" step=".5">
       <label class="dev-floor-toggle" for="dev-ground-lock">
@@ -2206,6 +2206,8 @@ void main(){
   function calculateGroundFit(){
     const p=editorConfig.player,e=editorConfig.enemy,g=editorConfig.ground;
     const viewH=Math.max(1,view.clientHeight);
+    const motion=sharedGround.floorMotion(g,viewH);
+    const dy=motion.valid?motion.screenDeltaY:0;
     const planeH=Math.max(1,stage.offsetHeight);
     const planeTop=(viewH-planeH)*.5;
     const playerID=document.getElementById('actor-player').dataset.characterId||'protagonist';
@@ -2214,10 +2216,10 @@ void main(){
     return {...sharedGround.fit({
       referenceHeightCm:pm.heightCm,actorHeightCm:em.heightCm,
       referenceCanvasHeight:viewH*p.size/100,
-      referenceCanvasBottom:viewH*(1-p.y/100),
-      actorCanvasBottom:planeTop+planeH*(1-e.y/100),
+      referenceCanvasBottom:viewH*(1-p.y/100)+dy,
+      actorCanvasBottom:planeTop+planeH*(1-e.y/100)+dy,
       actorPlaneHeight:planeH,
-      horizonY:planeTop+planeH*g.horizon/100,
+      horizonY:planeTop+planeH*g.horizon/100+dy,
       referenceCrown:pm.crown,referenceSole:pm.sole,
       actorCrown:em.crown,actorSole:em.sole
     }),playerID,enemyID,playerCm:pm.heightCm,enemyCm:em.heightCm};
@@ -2238,7 +2240,10 @@ void main(){
       (editorConfig.ground.lockPerspective?' · 地面锁定中':' · 保留手动摆放');
   }
   function applyEditorVisuals(){
-    const enemy=editorConfig.enemy,player=editorConfig.player;
+    const enemy=editorConfig.enemy,player=editorConfig.player,ground=editorConfig.ground;
+    const motion=sharedGround.floorMotion(ground,Math.max(1,view.clientHeight));
+    const dy=motion.valid?motion.screenDeltaY:0;
+    const dz=motion.valid?motion.worldDeltaZ:0;
     const fit=calculateGroundFit();
     if(editorConfig.ground.lockPerspective&&fit.valid&&
        fit.sizePercent>=editorBounds.size[0]&&fit.sizePercent<=editorBounds.size[1]){
@@ -2247,19 +2252,24 @@ void main(){
     }
     showGroundFit(calculateGroundFit());
     document.getElementById('actor-enemy').style.left=enemy.x+'%';
-    document.getElementById('actor-enemy').style.bottom=enemy.y+'%';
+    document.getElementById('actor-enemy').style.bottom=
+      'calc('+enemy.y+'% - '+dy.toFixed(3)+'px)';
     document.getElementById('actor-enemy').style.height=enemy.size+'%';
     // Square L2D canvas in a 16:9 depth plane (width% = height% * 9/16).
     document.getElementById('actor-enemy').style.width=(enemy.size*9/16)+'%';
     document.getElementById('actor-player').style.left=player.x+'cqw';
-    document.getElementById('actor-player').style.bottom=player.y+'cqh';
+    document.getElementById('actor-player').style.bottom=
+      'calc('+player.y+'cqh - '+dy.toFixed(3)+'px)';
     document.getElementById('actor-player').style.height=player.size+'cqh';
     // Replacing the protagonist must retain her 1024x1024 layout and foot position.
     document.getElementById('actor-player').style.width=player.size+'cqh';
     for(const name of ['bg','enemy','fog','player','ground']){
-      devRig.style.setProperty('--dev-depth-'+name,editorConfig[name].z+'px');
+      // Moving the floor in 3D must carry actor planes at the same depth
+      // offset, NOT leave them stationary while the grid moves alone.
+      const actorDepth=(name==='enemy'||name==='player')?dz:0;
+      devRig.style.setProperty('--dev-depth-'+name,
+        (editorConfig[name].z+actorDepth).toFixed(2)+'px');
     }
-    const ground=editorConfig.ground;
     devRig.style.setProperty('--dev-floor-y',ground.y+'%');
     devGround.hidden=ground.visible===0;
     devGroundToggle.checked=ground.visible!==0;
@@ -2271,14 +2281,15 @@ void main(){
     const shoeX=enemyDepth.offsetWidth*(enemy.x/100-.5)
       +enemyDepth.offsetHeight*(enemy.size/100)*naturalRatio*.5;
     devRig.style.setProperty('--dev-foot-x',shoeX.toFixed(1)+'px');
-    devRig.style.setProperty('--dev-foot-distance',(enemy.z-ground.z)+'px');
+    devRig.style.setProperty('--dev-foot-distance',
+      (enemy.z+dz-ground.z).toFixed(2)+'px');
     const floorY=devRig.offsetHeight*ground.y/100;
     const shoeY=(devRig.offsetHeight-enemyDepth.offsetHeight)*.5+
-      enemyDepth.offsetHeight*(1-enemy.y/100);
+      enemyDepth.offsetHeight*(1-enemy.y/100)+dy;
     const delta=shoeY-floorY;
     const info=document.getElementById('dev-ground-delta');
     if(info)info.textContent='DEV 3D参考网格偏移：'+
-      (delta>=0?'+':'')+delta.toFixed(1)+'px（仅辅助；实际同地面关系按下方视平线计算）';
+      (delta>=0?'+':'')+delta.toFixed(1)+'px（人物跟随底板；深度关系由共同地面视平线计算）';
   }
   function applyDevCamera(){
     devRig.style.transform='translate3d('+devCamera.panX.toFixed(1)+'px,'+
@@ -2403,7 +2414,7 @@ void main(){
   document.getElementById('dev-ground-y').addEventListener('input',event=>{
     editorConfig.ground.y=Number(event.target.value);
     applyEditorVisuals();refreshEditorControls();
-    setDevStatus('地板参考网格已调整，不改变角色脚点。');
+    setDevStatus('共同地面已移动：女主、女二一同跟随，人物相对站位不变。');
   });
   document.getElementById('dev-ground-horizon').addEventListener('input',event=>{
     editorConfig.ground.horizon=Number(event.target.value);
@@ -2433,7 +2444,9 @@ void main(){
       if(field==='size'&&selectedLayer==='enemy')editorConfig.ground.lockPerspective=0;
       editorConfig[selectedLayer][field]=Number(event.target.value);
       applyEditorVisuals();refreshEditorControls();
-      setDevStatus('已预览修改；点击保存位置以保留');
+      setDevStatus(selectedLayer==='ground'&&field==='z'?
+        '地面深度已移动：女主、女二随同地面在3D空间移动。':
+        '已预览修改；点击保存位置以保留');
     });
   }
   document.getElementById('dev-save').addEventListener('click',()=>{
@@ -2541,6 +2554,8 @@ void main(){
     current:()=>({
       horizon:editorConfig.ground.horizon,
       locked:!!editorConfig.ground.lockPerspective,
+      ground:{...editorConfig.ground},
+      motion:sharedGround.floorMotion(editorConfig.ground,Math.max(1,view.clientHeight)),
       player:{...editorConfig.player},enemy:{...editorConfig.enemy}
     })
   });
