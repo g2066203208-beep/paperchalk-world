@@ -37,7 +37,7 @@ try{
     await page.goto(target,{waitUntil:'domcontentloaded',timeout:40000});
     await expectEdge(page,'bottom',true);
     await expectEdge(page,'top',false);
-    // Approved top-only HUD: three icons, eight tiny ticks and exact values,
+    // Approved top-only HUD: three icons, ten proportional cells, real stats,
     // followed by right-aligned date/time. No extra fog or quick-menu icons.
     const topHud=await page.evaluate(()=>{
       const e=document.querySelector('#hud-top');
@@ -61,11 +61,17 @@ try{
     });
     assert.equal(topHud.visible,true);
     assert.equal(topHud.statCount,3);
-    assert.deepEqual(topHud.segmentCounts,[8,8,8]);
-    assert.deepEqual(topHud.vals,['82/100','67/100','91/100']);
-    assert.equal(topHud.date,'4月12日');
-    assert.equal(topHud.weekday,'周五');
-    assert.equal(topHud.time,'21:36');
+    assert.deepEqual(topHud.segmentCounts,[10,10,10]);
+    assert.deepEqual(topHud.vals,['100/100','100/100','100/100']);
+    const clockNow=await page.evaluate(()=>{
+      const d=new Date();
+      return {date:(d.getMonth()+1)+'月'+d.getDate()+'日',
+        weekday:['周日','周一','周二','周三','周四','周五','周六'][d.getDay()],
+        time:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+    });
+    assert.equal(topHud.date,clockNow.date,'HUD date not using device local date');
+    assert.equal(topHud.weekday,clockNow.weekday,'HUD weekday not using real date');
+    assert.equal(topHud.time,clockNow.time,'HUD clock is still a fixed preview time');
     assert.equal(topHud.overflow,false,'Top HUD contents overflow: '+JSON.stringify(topHud));
     // Check coordinates within the LOGICAL 16:9 game canvas. The mobile
     // browser rotates that canvas 90 degrees into portrait device space, so
@@ -78,17 +84,51 @@ try{
       'Status and clock must never overlap on any viewport: '+JSON.stringify(topHud));
     assert.equal(topHud.hasCrossedIcon,false,'Hunger icon still has crossed X-strokes');
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-approved-top-hud.png'});
-    await page.evaluate(()=>{
-      window.PaperWorldTopHUD.setStats({health:{current:37,max:125},hunger:{current:56,max:80}});
-      window.PaperWorldTopHUD.setClock({month:5,day:1,weekday:'周五',hour:7,minute:3});
-    });
+    // True gameplay arithmetic, non-100 maxima, 10 proportional cells and
+    // animated transitions; setting mock calendar dates is not supported.
+    await page.evaluate(()=>window.PaperWorldTopHUD.setStats({
+      health:{current:37,max:125},hunger:{current:56,max:80},sanity:{current:19,max:100}
+    }));
+    await page.waitForTimeout(720);
     assert.equal(await page.locator('#hud-health-value').textContent(),'37/125');
     assert.equal(await page.locator('#hud-hunger-value').textContent(),'56/80');
-    assert.equal(await page.locator('#hud-time').textContent(),'07:03');
-    await page.evaluate(()=>{
-      window.PaperWorldTopHUD.setStats({health:{current:82,max:100},hunger:{current:67,max:100}});
-      window.PaperWorldTopHUD.setClock({month:4,day:12,weekday:'周五',hour:21,minute:36});
+    assert.equal(await page.locator('#hud-sanity-value').textContent(),'19/100');
+    const relativeFill=await page.evaluate(()=>['health','hunger','sanity'].map(k=>{
+      const pieces=[...document.querySelectorAll('#hud-'+k+'-meter .hud-segment i')];
+      return pieces.reduce((sum,node)=>sum+parseFloat(node.style.width)/100,0);
+    }));
+    for(const [i,target] of [2.96,7.00,1.90].entries()){
+      assert.ok(Math.abs(relativeFill[i]-target)<.04,
+        '10-cell proportional fill does not match real current/max ratio: '+JSON.stringify(relativeFill));
+    }
+    const prior=await page.evaluate(()=>window.PaperWorldTopHUD.snapshot());
+    assert.equal(prior.stats.health.current,37);
+    await page.evaluate(()=>window.PaperWorldTopHUD.applyEvent({type:'damage',amount:9}));
+    await page.waitForTimeout(650);
+    assert.equal(await page.locator('#hud-health-value').textContent(),'28/125');
+    await page.reload({waitUntil:'domcontentloaded'});
+    await expectEdge(page,'bottom',true);
+    assert.equal(await page.locator('#hud-health-value').textContent(),'28/125',
+      'HP was not persisted across reload');
+    await page.evaluate(()=>window.PaperWorldTopHUD.advance(4*60*1000));
+    await page.waitForTimeout(650);
+    assert.equal(await page.locator('#hud-hunger-value').textContent(),'55/80',
+      'Hunger must decrease by elapsed active game time');
+    await page.evaluate(()=>window.PaperWorldTopHUD.reset());
+    await page.waitForTimeout(650);
+    assert.equal(await page.locator('#hud-health-value').textContent(),'100/100');
+    assert.equal(await page.locator('#hud-hunger-value').textContent(),'100/100');
+    assert.equal(await page.locator('#hud-sanity-value').textContent(),'100/100');
+    const liveClock=await page.evaluate(()=>{
+      const d=new Date();
+      window.PaperWorldTopHUD.refreshClock();
+      return {real:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),
+        shown:document.querySelector('#hud-time').textContent,
+        setClockExists:typeof window.PaperWorldTopHUD.setClock};
     });
+    assert.equal(liveClock.shown,liveClock.real);
+    assert.equal(liveClock.setClockExists,'undefined',
+      'HUD should not expose a way to spoof the real clock');
     await expectEdge(page,'left',false);
     await expectEdge(page,'right',false);
     assert.equal(await page.locator('#top-actions').isVisible(),false,'AUTO/LOG must not remain visible in the top-right corner');
