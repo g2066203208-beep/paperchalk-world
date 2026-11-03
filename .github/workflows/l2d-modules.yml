@@ -205,6 +205,18 @@ jobs:
             assert.equal(editor.parts.hair.motion.x,25,
               'studio must use the published per-part rig rather than a new guessed binding');
             assert.equal(Object.keys(editor.parts).length,2);
+            assert.equal(await page.locator('[data-idle-preset]').count(),4);
+            await page.locator('[data-idle-preset="still"]').click();
+            assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.model.idleProfile.hair.amount),0);
+            await page.locator('[data-idle-preset="realistic"]').click();
+            await page.locator('#rig-part').selectOption('hair');
+            await page.locator('#rig-part-amount').fill('65');
+            await page.locator('[data-idle="cloth.amount"]').fill('55');
+            await page.locator('#rig-save').click();
+            await page.waitForFunction(async()=>{
+              const m=await window.PaperchalkStudio.readPartRig('qa-rig','front');
+              return m?.idleProfile?.parts?.hair===.65&&m.idleProfile.cloth.amount===.55;
+            },null,{timeout:15000});
             assert.equal(await page.locator('#rig-module-export').count(),1);
             page.once('dialog',dialog=>dialog.accept('qa-export'));
             const zipDownload=page.waitForEvent('download',{timeout:20000});
