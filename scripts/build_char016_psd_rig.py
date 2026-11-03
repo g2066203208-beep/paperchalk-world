@@ -7,7 +7,9 @@ site/assets/characters/char-016/front.png at the same location.  Therefore
 reproducing *each actual layer* = original approved RGB within that exact
 layer's recorded binary PSD alpha mask.  This is lossless layer extraction,
 not a guessed segmentation, another AI image, or a cropped flat character.
-The original source artwork is immutable.  Missing hidden-paint is acknowledged.
+All visible colors are imported losslessly from the same uploaded PSD composite.
+The previously approved char-016/front.png remains immutable as a backup.
+Missing hidden-paint is acknowledged.
 """
 from __future__ import annotations
 
@@ -23,7 +25,8 @@ from pathlib import Path
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[1]
-ART = ROOT / 'site/assets/characters/char-016/front.png'
+ART = ROOT / 'site/assets/l2d/source-masks/char-016-front-psd-composite.png.base64'
+EXPECTED_PIXEL_PNG = '40791f6947ef530e921d75018ca32589238dba0639ec071e53ab6b8578d5658f'
 MASK = ROOT / 'site/assets/l2d/source-masks/char-016-front-psd-maskbank.json'
 DEST = ROOT / 'site/assets/l2d/library/char-016'
 ID = 'char-016'
@@ -60,9 +63,14 @@ def build():
     raw=zlib.decompress(base64.b64decode(maskbank['alphaZlibBase64']))
     if len(raw)!=maskbank['rawBytes'] or len(raw)!=sum(p['w']*p['h'] for p in rows):
         raise ValueError('Truncated PSD mask payload')
-    image=Image.open(ART).convert('RGBA')
+    # Upload payload is a lossless PNG of this PSD's own composite, not the
+    # earlier 2026-11-02 screenshot already registered in the source library.
+    artbytes=base64.b64decode(''.join(ART.read_text(encoding='ascii').split()),validate=True)
+    if hashlib.sha256(artbytes).hexdigest()!=EXPECTED_PIXEL_PNG:
+        raise ValueError('Uploaded CHAR-016 PSD pixel source checksum changed')
+    image=Image.open(io.BytesIO(artbytes)).convert('RGBA')
     if image.size!=(315,1024):
-        raise ValueError('CHAR-016 approved front must be 315x1024 unchanged')
+        raise ValueError('Uploaded CHAR-016 PSD front image is not 315x1024')
     alpha=image.getchannel('A')
     flat=Image.new('RGBA',(1024,1024))
     offset=(1024-image.width)//2
@@ -130,6 +138,7 @@ def build():
     # All 21 independent textures are real, but some source masks have no
     # painted occluded backs; limit default idle to avoid white gaps.
     rig['sourcePsdSha256']=EXPECTED_SOURCE
+    rig['sourcePixelsSha256']=EXPECTED_PIXEL_PNG
     rig['provenance']='original-psd-masks'
     rig['limitations']=[
         '21 exact original source masks and original approved visible RGB',
