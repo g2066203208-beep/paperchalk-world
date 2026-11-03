@@ -14,17 +14,14 @@ panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</stro
 <section id="rig-idle-controls" aria-label="真人待机控制">
  <strong>真人待机 · 总控</strong>
  <div id="rig-presets" class="rig-presets">
-  <button type="button" data-idle-preset="still">静止</button>
-  <button type="button" data-idle-preset="realistic">普通待机</button>
-  <button type="button" data-idle-preset="breeze">微风</button>
-  <button type="button" data-idle-preset="windy">大风</button>
+  <button type="button" data-idle-preset="realistic">恢复基础站立</button>
  </div>
- <p id="rig-preset-description" aria-live="polite">普通待机：只有发梢与裙摆轻微摆动。</p>
+ <p id="rig-preset-description" aria-live="polite">只有一个基础站立待机：身体和五官保持稳定，无左右摇摆、无风力，发梢与衣摆微动，保留眨眼。</p>
  <div id="rig-idle-sliders"></div>
 </section>
 <label>部件<select id="rig-part"></select></label>
 <label class="rig-part-amount">本部件摆动倍率 <output id="rig-part-amount-value">100%</output>
- <input id="rig-part-amount" type="range" min="0" max="200" value="100" step="5"></label>
+ <input id="rig-part-amount" type="range" min="0" max="125" value="100" step="5"></label>
 <div id="rig-sliders"></div>
 <div class="rig-joints"><label>当前骨骼<select id="rig-bone" aria-label="选择当前部件的独立骨骼"></select></label><div id="rig-bone-sliders"></div><p id="rig-bone-tip">每条骨骼有自己的关节、角度、速度、相位与蒙皮半径；不同部件互不影响。</p></div>
 <div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button><button id="rig-module-export" type="button">↓ 一键打包游戏模块 ZIP</button></div>
@@ -67,15 +64,13 @@ for(const [field,label,min,max,step] of boneFields){
 // User-facing controls mutate the exact model read by the game renderer.
 // No copy of animation coefficients in the UI; all presets/limits live in core.
 const idleFields=[
- ['body.amount','身体微动',0,60,1,100],
- ['body.speed','身体速度',20,200,5,100],
- ['hair.amount','头发摆幅',0,150,1,100],
+ ['hair.amount','发梢微动',0,30,1,100],
  ['hair.speed','头发速度',20,200,5,100],
  ['hair.lag','头发滞后',0,200,5,100],
- ['cloth.amount','裙子/外套摆幅',0,150,1,100],
+ ['cloth.amount','衣摆微动',0,22,1,100],
  ['cloth.speed','衣物速度',20,200,5,100],
  ['cloth.lag','衣物滞后',0,200,5,100],
- ['sleeves.amount','袖子/手臂摆幅',0,150,5,100],
+ ['sleeves.amount','袖口微动',0,12,1,100],
  ['sleeves.speed','袖子速度',20,200,5,100]
 ];
 const idleSliders=$('rig-idle-sliders');
@@ -88,7 +83,7 @@ for(const [field,label,min,max,step] of idleFields){
  row.append(title,value,input);idleSliders.append(row);
 }
 // Keep four core controls visible; advanced settings remain one click away.
-const quick=new Set(['body.amount','hair.amount','cloth.amount','sleeves.amount']);
+const quick=new Set(['hair.amount','cloth.amount']);
 const idleAdvanced=document.createElement('details');
 idleAdvanced.id='rig-idle-extra';
 idleAdvanced.innerHTML='<summary>进阶待机 · 速度与惯性</summary>';
@@ -120,7 +115,7 @@ for(const [id,label] of [
  const row=document.createElement('label');
  row.className='rig-field';
  row.dataset.spotlightRow=id;
- row.innerHTML='<span>'+label+'</span><output>100%</output><input type="range" min="0" max="200" step="5" data-spotlight="'+id+'">';
+ row.innerHTML='<span>'+label+'</span><output>100%</output><input type="range" min="0" max="125" step="5" data-spotlight="'+id+'">';
  spotlight.append(row);
 }
 $('rig-idle-controls').insertBefore(spotlight,idleAdvanced);
@@ -128,7 +123,7 @@ spotlight.addEventListener('input',e=>{
  const id=e.target?.dataset?.spotlight;
  if(!id||!state.model?.parts[id])return;
  state.model.idleProfile.parts[id]=Number(e.target.value)/100;
- state.model.idleProfile.preset='custom';
+ state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
  syncIdle();changed();
 });
 function syncIdle(){
@@ -140,18 +135,10 @@ function syncIdle(){
   $('idle-val-'+group+'-'+key).textContent=(n*100).toFixed(0)+'%';
  }
  for(const b of panel.querySelectorAll('[data-idle-preset]')){
-  const active=b.dataset.idlePreset===idle.preset;
-  b.classList.toggle('active',active);
-  b.setAttribute('aria-pressed',String(active));
+  b.classList.add('active');
+  b.setAttribute('aria-pressed','true');
  }
- const guide={
-  still:'无风：头发与裙摆不受风影响，整个人只做很轻微的自然重心调整。',
-  realistic:'自然待机：全身沿脚部支撑点缓慢左右转移重心，衣物微动。',
-  breeze:'微风：侧发、发梢和裙摆有柔和定向飘动，身体轻轻调整重心。',
-  windy:'大风：长发被风吹起，发尾向上扬，裙摆翻起，身体迎风侧倾并持续稳住双脚。',
-  custom:'自定义：手动参数已保留；点普通待机会重置为自然默认档。'
- };
- $('rig-preset-description').textContent=guide[idle.preset]||guide.custom;
+ $('rig-preset-description').textContent='基础站立：无风力、无身体左右摆动；仅有微弱发梢、裙摆与袖口活动，原始眨眼保持。';
  const amount=$('rig-part-amount');
  const mult=idle.parts?.[state.selected]??1;
  amount.value=String(Math.round(mult*100));
@@ -170,7 +157,6 @@ idleSliders.addEventListener('input',e=>{
  const [group,key]=field.split('.');
  const idle=state.model.idleProfile;
  idle[group][key]=Number(e.target.value)/100;
- idle.preset='custom';
  state.model.idleProfile=core.sanitizeIdleProfile(idle);
  syncIdle();changed();
 });
@@ -183,7 +169,7 @@ panel.querySelector('#rig-presets').addEventListener('click',e=>{
 $('rig-part-amount').addEventListener('input',e=>{
  if(!state.model||!state.selected)return;
  state.model.idleProfile.parts[state.selected]=Number(e.target.value)/100;
- state.model.idleProfile.preset='custom';
+ state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
  syncIdle();changed();
 });
 const parts=()=>S.layers[S.side].filter(p=>p.sourcePart&&p.canvas);
@@ -309,7 +295,7 @@ async function activate(){
  $('rig-source').textContent=id==='char-002'&&src.length<12
   ?'女二当前只有 '+src.length+' 个扁平图分区，不是真 PSD。可以试验分区，但不能冒充完整分层绑定。'
   :'真实源图层 '+src.length+' 个。逐层查看轴点、网格；不替换你认可的 V4 动画。';
- info('静止、微风、大风使用不同风型；大风会把发尾和裙摆真正吹起，全身沿双脚轻微侧倾；预设平滑过渡。');
+ info('已只保留基础站立：身体不再左右摇摆，关闭风力和夸张变形，仅保留非常轻微的发梢、衣摆动态与眨眼。');
  ed.render();
 }
 function toggleIdle(){
