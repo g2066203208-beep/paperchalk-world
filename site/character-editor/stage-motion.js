@@ -12,22 +12,22 @@ const play=$('main-play'),preview=$('main-preview'),expand=$('main-expand'),badg
 const activeV4=()=>!!window.PaperchalkStudio?.useV4?.();
 const clip=()=>window.PaperchalkStudio;
 const nativePSD=()=>!!clip()?.hasNativePSD?.();
-const bakedV4=()=>!!clip()?.isV4&&!nativePSD();
+const bakedV4=()=>activeV4()&&!nativePSD();
 function animationCanvas(){
  const rig=ed.l2dRig?.();
  return rig?.source&&rig.canvas.width&&rig.canvas.height?rig.canvas:null;
 }
 function frame(){
- // A game V4 character must never be replaced with the simulated mesh,
- // even when the user temporarily inspects original PSD components.
+ // Only undivided legacy clips need a baked fallback; layered L2D uses the live rig.
  if(!state.enabled||state.editing||S.only||bakedV4())return null;
  return animationCanvas();
 }
 function paintStageStatus(){
  if(!badge)return;
- const mode=nativePSD()?(state.enabled?'PSD 独立图层实时骨骼':'PSD 原位精修'):
-  bakedV4()?(activeV4()?'游戏实际 V4 逐帧':'静态原始部件精修'):
-  animationCanvas()?'分层网格动画':'等待动画加载';
+ const independent=!!window.PaperchalkPartRigStudio?.state?.active;
+ const mode=independent?'新版独立骨骼':
+  nativePSD()?'独立图层动画':bakedV4()?'素材动画预览':
+  animationCanvas()?'分层动画':'等待动画加载';
  badge.textContent=state.editing?'精修中 · 原始坐标':!state.enabled?'静态精修':(state.playing?'● 实时 · ':'❚❚ 暂停 · ')+mode;
  badge.setAttribute('aria-live','off');
 }
@@ -44,7 +44,9 @@ async function setPlaying(value){
  state.playing=!!value;
  ed.setMotionPaused?.(!state.playing);
  // The studio owns V4 frame decoding; a single control drives both renderers.
- if(clip()?.isV4)await clip().setPlaying?.(state.playing);
+ if(activeV4())await clip().setPlaying?.(state.playing);
+ if(window.PaperchalkPartRigStudio?.state?.active)
+  window.PaperchalkPartRigStudio.setPlaying?.(state.playing);
  sync();ed.render();
 }
 async function setPreview(enabled){
