@@ -144,6 +144,67 @@ jobs:
             // synthetic QA bitmap or a full-image sinusoidal distortion.
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','front'));
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===17,{timeout:20000});
+            // Pixel-level regression on ACTUAL protagonist front textures.
+            // This catches "bone values animate but brows/nose vanish" and
+            // "eye parts exist but no actual eyelid closure".
+            const faceCheck=await page.evaluate(()=>{
+              const actor=window.PaperchalkL2DLibrary.get('player'),
+                core=window.PaperchalkPartRigCore;
+              const draw=(phase,except=[])=>{
+                const canvas=document.createElement('canvas');
+                canvas.width=1024;canvas.height=1024;
+                core.draw(canvas.getContext('2d',{alpha:true}),
+                  actor.layers.filter(x=>!except.includes(x.partId)),actor.model,phase);
+                return canvas;
+              };
+              const open=draw(0),blink=draw(.9*2*Math.PI/3.6);
+              const noBrow=draw(0,['brows']),noNose=draw(0,['nose']);
+              const compare=(a,b,x,y,w,h)=>{
+                const d=a.getContext('2d').getImageData(x,y,w,h).data;
+                const e=b.getContext('2d').getImageData(x,y,w,h).data;
+                let changed=0,total=0;
+                for(let i=0;i<d.length;i+=4){
+                  const delta=Math.abs(d[i]-e[i])+Math.abs(d[i+1]-e[i+1])+
+                    Math.abs(d[i+2]-e[i+2])+Math.abs(d[i+3]-e[i+3]);
+                  if(delta>15)changed++;
+                  total+=delta;
+                }
+                return {changed,total};
+              };
+              const out={
+                eyebrows:compare(open,noBrow,465,104,120,48),
+                nose:compare(open,noNose,504,148,40,36),
+                blink:compare(open,blink,465,118,115,50),
+                eyes:[actor.model.parts.eye_white?.id,actor.model.parts.irises?.id,
+                  actor.model.parts.lashes?.id],
+                closed:core.blinkAmount(.9*2*Math.PI/3.6),
+                open:core.blinkAmount(0)
+              };
+              // Include enlarged REAL face renders in browser artifacts.
+              for(const [name,image] of [['eyes-open',open],['eyes-closed',blink]]){
+                const zoom=document.createElement('canvas');
+                zoom.width=600;zoom.height=560;zoom.id='qa-'+name;
+                const ctx=zoom.getContext('2d');
+                ctx.imageSmoothingEnabled=true;
+                ctx.drawImage(image,400,20,260,250,0,0,600,560);
+                zoom.style.cssText='position:fixed;top:20px;left:20px;z-index:100000;' +
+                  'background:#1b2630;width:600px;height:560px;';
+                document.body.appendChild(zoom);
+              }
+              return out;
+            });
+            console.log('REAL HEROINE FACE PIXEL AUDIT',JSON.stringify(faceCheck));
+            assert.ok(faceCheck.eyebrows.changed>=8,
+              'eyebrow must remain visible above face bitmap in the final game composite');
+            assert.ok(faceCheck.nose.changed>=4,
+              'nose must remain visible above face bitmap in the final game composite');
+            assert.ok(faceCheck.blink.changed>=40&&faceCheck.closed>.99&&faceCheck.open<.001,
+              'real eye white, iris and lash pixels must close then reopen, not static eyes');
+            const fs=require('node:fs');
+            fs.mkdirSync('artifacts/l2d-face',{recursive:true});
+            await page.locator('#qa-eyes-open').screenshot({path:'artifacts/l2d-face/original-heroine-open-face.png'});
+            await page.locator('#qa-eyes-closed').screenshot({path:'artifacts/l2d-face/original-heroine-blinking-face.png'});
+            await page.evaluate(()=>document.querySelectorAll('[id^="qa-eyes-"]').forEach(n=>n.remove()));
             const physical=await page.evaluate(()=>{
               const core=window.PaperchalkPartRigCore;
               const m=window.PaperchalkL2DLibrary.get('player').model.parts;
@@ -273,3 +334,10 @@ jobs:
           print('PASS one-click browser exported ZIP -> safe inbox -> published game catalog')
           PY
           python3 scripts/build_l2d_library.py
+      - name: Upload actual original heroine face blink screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: protagonist-original-face-eye-blink
+          path: artifacts/l2d-face/
+          retention-days: 7
