@@ -52,7 +52,51 @@ try{
     const r=await page.request.get(new URL('./assets/phones/char001-cat-ear-shell.webp',page.url()).href);
     assert.equal(r.status(),200,'Approved handset image missing from deployed site');
     assert.ok((await r.body()).length>4000,'Handset image was truncated');
-    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-lock.png'});
+    // Verify actual fog pixels, not merely a toggled CSS class. The native
+    // smoke must fill the side, rise from the bottom, and cross the phone
+    // silhouette while leaving the center of the PIN keypad unobscured.
+    await page.waitForTimeout(1200);
+    const phoneFog=await page.evaluate(()=>{
+      const n=document.querySelector('#phone-ui');
+      const root=document.querySelector('#novel-ui');
+      const base=document.querySelector('#ui-edge-fog');
+      const over=document.querySelector('#ui-phone-fog');
+      const w=over.width,h=over.height;
+      const x=n.offsetLeft*w/root.clientWidth;
+      const y=(n.offsetTop-n.offsetHeight*.5)*h/root.clientHeight;
+      const pw=n.offsetWidth*w/root.clientWidth;
+      const ph=n.offsetHeight*h/root.clientHeight;
+      const pixel=(canvas,xf,yf)=>{
+        const xi=Math.max(0,Math.min(canvas.width-1,Math.floor(xf)));
+        const yi=Math.max(0,Math.min(canvas.height-1,Math.floor(yf)));
+        return canvas.getContext('2d',{willReadFrequently:true}).getImageData(xi,yi,1,1).data[3];
+      };
+      return {
+        rightActive:document.querySelector('[data-edge="right"].ui-fog-band')?.dataset.active,
+        bottomActive:document.querySelector('[data-edge="bottom"].ui-fog-band')?.dataset.active,
+        overlapRight:pixel(over,x+pw*.985,y+ph*.53),
+        overlapBottom:pixel(over,x+pw*.53,y+ph*.985),
+        overlapKeypad:pixel(over,x+pw*.5,y+ph*.52),
+        rightFogBehind:pixel(base,x+pw*.90,y+ph*.50),
+        bottomFogBehind:pixel(base,x+pw*.5,y+ph*.95),
+        middleClassroom:pixel(base,w*.52,h*.42),
+        overlays:{back:getComputedStyle(base).zIndex,front:getComputedStyle(over).zIndex,
+          phone:getComputedStyle(n).zIndex}
+      };
+    });
+    assert.equal(phoneFog.rightActive,'true','The right fog did not activate with the phone');
+    assert.equal(phoneFog.bottomActive,'true','The bottom fog must rise whenever the phone opens');
+    assert.ok(phoneFog.rightFogBehind>30,'The right side lacks the native smoky foundation: '+JSON.stringify(phoneFog));
+    assert.ok(phoneFog.bottomFogBehind>50,'The bottom smoke did not reach the phone: '+JSON.stringify(phoneFog));
+    assert.ok(phoneFog.overlapRight>8,'The native fog is not covering the phone right rim: '+JSON.stringify(phoneFog));
+    assert.ok(phoneFog.overlapBottom>8,'The native fog is not covering the phone lower rim: '+JSON.stringify(phoneFog));
+    assert.equal(phoneFog.overlapKeypad,0,
+      'The new foreground fog masks the center of the PIN keypad: '+JSON.stringify(phoneFog));
+    assert.equal(phoneFog.middleClassroom,0,
+      'A black rectangular plate has spilled over the classroom: '+JSON.stringify(phoneFog));
+    assert.ok(+phoneFog.overlays.front>+phoneFog.overlays.phone,
+      'The foreground fog is still behind the phone: '+JSON.stringify(phoneFog));
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-native-fog-lock.png'});
     await page.locator('#phone-ui [data-key="1"]').click();
     assert.equal(await page.locator('#phone-ui .phone-dot[data-filled="true"]').count(),1);
     await page.locator('#phone-ui [data-key="erase"]').click();
@@ -62,6 +106,14 @@ try{
     await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-home.png'});
     await page.locator('#quick-phone').click();
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
+    await page.waitForTimeout(200);
+    const residual=await page.evaluate(()=>{
+      const c=document.getElementById('ui-phone-fog');
+      const px=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;
+      for(let i=3;i<px.length;i+=4)if(px[i])return true;
+      return false;
+    });
+    assert.equal(residual,false,'Closing phone leaves a foreground fog ghost behind');
     await page.locator('#quick-phone').click();
     for(const ch of '000000')await page.locator('#phone-ui [data-key="'+ch+'"]').click();
     assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
