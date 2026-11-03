@@ -10,6 +10,7 @@ on:
       - 'site/assets/phones/**'
       - 'tests/survival-state.test.cjs'
       - 'tests/ui-edge-fog-browser.mjs'
+      - 'tests/phone-ui-browser.mjs'
       - '.github/workflows/ui-fog-smoke.yml'
   workflow_dispatch:
 permissions:
@@ -35,6 +36,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify deterministic gameplay status mathematics and persistence
         run: node tests/survival-state.test.cjs
+      - name: Test approved cat-ear phone asset and interactivity on desktop/mobile
+        run: node tests/phone-ui-browser.mjs
       - name: Test black fog silhouettes and UI lifecycle on desktop/mobile
         run: node tests/ui-edge-fog-browser.mjs
       - name: Upload actual browser fog screenshots
@@ -43,5 +46,14 @@ jobs:
         with:
           name: ui-fog-browser-screenshots
           path: artifacts/classroom/ui-fog-*.png
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload the real approved phone screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phone-browser-screenshots
+          path: artifacts/phone/*.png
           retention-days: 7
           if-no-files-found: warn
