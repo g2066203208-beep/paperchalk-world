@@ -343,19 +343,30 @@ function drawTri(ctx,image,A,B,C,D,E,F){
  const cc=(ex*ux-dx*vx)/det,dd=(ey*ux-dy*vx)/det;
  const tx=D.x-aa*A.x-cc*A.y,ty=D.y-bb*A.x-dd*A.y;
  ctx.save();ctx.beginPath();
- const cx=(D.x+E.x+F.x)/3,cy=(D.y+E.y+F.y)/3;
- const enlarge=p=>{const dist=Math.max(1,Math.hypot(p.x-cx,p.y-cy));return {x:cx+(p.x-cx)*(1+.45/dist),y:cy+(p.y-cy)*(1+.45/dist)}};
+ // Canvas antialiasing leaves triangular seams even when DEBUG wireframe
+ // is disabled. Expand triangle EDGES in their normal direction by 1.6px.
+ // The incenter is equidistant from all edges, unlike the old centroid
+ // radial 0.45px expansion which left translucent hair/skirt cracks.
+ const ab=Math.hypot(E.x-D.x,E.y-D.y),bc=Math.hypot(F.x-E.x,F.y-E.y),
+  ca=Math.hypot(D.x-F.x,D.y-F.y),perimeter=ab+bc+ca;
+ if(perimeter<.0001){ctx.restore();return;}
+ const cx=(bc*D.x+ca*E.x+ab*F.x)/perimeter,
+  cy=(bc*D.y+ca*E.y+ab*F.y)/perimeter;
+ const inradius=Math.abs((E.x-D.x)*(F.y-D.y)-(E.y-D.y)*(F.x-D.x))/perimeter;
+ const scale=1+Math.min(.8,1.6/Math.max(.5,inradius));
+ const enlarge=p=>({x:cx+(p.x-cx)*scale,y:cy+(p.y-cy)*scale});
  const p=enlarge(D),q=enlarge(E),r=enlarge(F);
  ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.lineTo(r.x,r.y);ctx.closePath();ctx.clip();
  // transform() composes with the author's existing zoom/pan stage transform.
  ctx.transform(aa,bb,cc,dd,tx,ty);
  // Only sample the triangle's *own* source cell rather than uploading the
  // entire RGBA part bitmap for every one of thousands of triangles.
- // A 1px guard keeps edge filtering seamless while preserving exact UVs.
- const minX=Math.max(0,Math.floor(Math.min(A.x,B.x,C.x))-1);
- const minY=Math.max(0,Math.floor(Math.min(A.y,B.y,C.y))-1);
- const maxX=Math.min(image.width,Math.ceil(Math.max(A.x,B.x,C.x))+1);
- const maxY=Math.min(image.height,Math.ceil(Math.max(A.y,B.y,C.y))+1);
+ // Enlarged triangles require a UV guard as well: crop outside each
+ // source cell by 4px so bilinear filtering never samples a clipped edge.
+ const minX=Math.max(0,Math.floor(Math.min(A.x,B.x,C.x))-4);
+ const minY=Math.max(0,Math.floor(Math.min(A.y,B.y,C.y))-4);
+ const maxX=Math.min(image.width,Math.ceil(Math.max(A.x,B.x,C.x))+4);
+ const maxY=Math.min(image.height,Math.ceil(Math.max(A.y,B.y,C.y))+4);
  if(maxX>minX&&maxY>minY)
   ctx.drawImage(image,minX,minY,maxX-minX,maxY-minY,minX,minY,maxX-minX,maxY-minY);
  ctx.restore();
