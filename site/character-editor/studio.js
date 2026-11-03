@@ -4,6 +4,7 @@
 const ed=window.characterEditor;if(!ed)return;
 const $=id=>document.getElementById(id), DB='paperchalk-dev-characters-v1';
 const list=new Map();
+const BATTLE_FRONT_ID='protagonist-battle-front';
 const args=new URLSearchParams(location.search);
 const slot=args.get('slot')==='enemy'?'enemy':'player';
 let currentId='',side='front',v4=null,frameAt=0,showOriginalV4=true;
@@ -59,6 +60,11 @@ section.innerHTML=[
  '<label class="studio-import">导入 V4 动态工程 ZIP<input id="studio-v4zip" type="file" accept=".zip,application/zip"></label>',
  '<label class="studio-import">导入全部真实部件（PSD / V4 ZIP）<input id="studio-parts-import" type="file" accept=".zip,.psd,application/zip"></label>',
  '<output id="studio-status" role="status">读取人物资源库…</output></div>',
+ '<div id="studio-battle-import-row" class="studio-row" hidden>',
+ '<strong>女主·战斗正面｜独立 PSD 拆分工程</strong>',
+ '<label class="studio-import studio-battle-picker">导入已整理的 24 层战斗正面 ZIP<input id="studio-battle-import" type="file" accept=".zip,application/zip"></label>',
+ '<span class="studio-battle-note">保留源图层原位与独立 L2D 绑定。上方重复斧头默认隐藏；本工程不会覆盖原版女主或自动替换游戏站位。</span>',
+ '</div>',
  '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024" aria-hidden="true" hidden></canvas>',
  '<div class="studio-v4-tools"><strong>游戏实际 V4 动画 · 同一人物、同一帧源</strong>',
  '<p>中央画布默认播放游戏实际使用的 V4 WebP；选中真实分层并落笔时才暂时展示静态源部件，保存后将像素修补叠回同一 V4 动画。不是另造一套网格动画。</p>',
@@ -80,6 +86,11 @@ style.textContent=[
  '.studio-import{cursor:pointer;border:1px solid #4a6079;border-radius:7px;padding:8px;background:#243449}',
  '.studio-import input{display:none}',
  '#studio-status{flex:1;min-width:190px;color:#abd5fc;font-size:12px}',
+ '#studio-battle-import-row[hidden]{display:none!important}',
+ '#studio-battle-import-row{padding:10px 11px;border:1px solid #6a6753;background:#2d2a28;border-radius:7px}',
+ '#studio-battle-import-row strong{font-size:13px;color:#ead6b3}',
+ '#studio-battle-import-row .studio-battle-picker{background:#685037;border-color:#b09168;color:#f8ead1}',
+ '.studio-battle-note{color:#c8c5b9;font-size:11px;line-height:1.5}',
  '#studio-v4-wrap{display:none!important} /* Legacy clip tools remain for old imports, not a user-facing animation mode */',
  '#studio-v4-wrap[hidden]{display:none}',
  '#studio-v4-canvas{display:none!important} /* Internal decoded frame: central game V4 viewport is the sole visible preview */',
@@ -131,6 +142,7 @@ async function changeCore(id,face='front'){
   throw Error('角色 '+chosen.label+' 尚无真实背面，禁止用正面冒充');
  currentId=id;side=face==='back'?'back':'front';
  options();direction.value=side;
+ $('studio-battle-import-row').hidden=id!==BATTLE_FRONT_ID;
  const c=list.get(id);
  direction.querySelector('option[value="back"]').disabled=!c.back&&!c.clips?.back;
  await ed.switchCharacter({id:c.id,label:c.label,front:c.front||'',back:c.back||''},side);
@@ -163,6 +175,12 @@ async function changeCore(id,face='front'){
 }
 async function loadList(){
  list.set('protagonist',{id:'protagonist',label:'女主角',front:'../assets/characters/protagonist-front.webp',back:'../assets/characters/protagonist-back.webp'});
+ // A separate, local-only authoring slot; the published protagonist model,
+ // DEV assignment and original textures remain strictly untouched.
+ // Transparent placeholder is intentional until the genuine PSD ZIP is imported.
+ const blank= 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><text x="512" y="493" text-anchor="middle" font-size="29" fill="#b9b0a3">女主 · 战斗正面</text><text x="512" y="545" text-anchor="middle" font-size="20" fill="#92877b">请导入原位分层 ZIP</text></svg>');
+ list.set(BATTLE_FRONT_ID,{id:BATTLE_FRONT_ID,label:'女主·战斗正面（独立工程）',front:blank,back:''});
  try{
   const res=await fetch('../characters.catalog.json',{cache:'no-store'});
   if(res.ok)for(const c of (await res.json()).characters||[]){
@@ -316,6 +334,12 @@ async function saveToGame(){
   // replace the approved 128-frame WebP with a flattened still image.
   if(!v4||face!==side)await put('render:'+currentId+':'+face,ed.composite(face).toDataURL('image/png'));
   if(motion[face])await put('l2d:'+currentId+':'+face,motion[face]);
+ }
+ // This battle-front model is a separate authoring review, NOT a published
+ // game character. Save locally, but never poison the canonical hero slot.
+ if(currentId===BATTLE_FRONT_ID){
+  message('✓ 战斗正面分层与骨骼已保存到独立工作室档案；原版女主、游戏槽位不变。');
+  return;
  }
  // This button explicitly says "save AND apply to game". Bind the
  // selected actor/view to the originating game slot even when the user
@@ -577,7 +601,26 @@ async function importComponentArchive(file){
   return;
  }
  message('读取原始分层工程所有部件…');
- return importComponentFiles(await zipFiles(file));
+ const files=await zipFiles(file);
+ if(currentId===BATTLE_FRONT_ID){
+  const manifest=files.get('layers.json');
+  if(!manifest)throw Error('战斗正面必须使用含 layers.json 的真实原位分层 ZIP');
+  const data=JSON.parse(new TextDecoder().decode(manifest));
+  const ids=(data.layers?.front||[]).map(p=>String(p.partId||p.id||p.name));
+  if(data.characterId!==BATTLE_FRONT_ID||ids.length!==24||
+      !ids.includes('axe_overhead')||!ids.includes('axe_held'))
+   throw Error('工程身份或图层不匹配：需要女主战斗正面 24 层独立工程');
+ }
+ await importComponentFiles(files);
+ if(currentId===BATTLE_FRONT_ID){
+  const bytes=files.get('front.rig.json');
+  if(bytes){
+   const binding=JSON.parse(new TextDecoder().decode(bytes));
+   await storePartRig(binding);
+  }
+  updatePartStatus();
+  message('✓ 女主战斗正面已组装：24 层原位独立贴图、战斗正面专用绑定。右侧打开新版 L2D 编辑骨骼。');
+ }
 }
 
 async function importV4(file){
@@ -941,6 +984,14 @@ $('studio-back').onclick=async()=>{
 $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='';importImages(files).catch(x=>message('导入失败：'+x.message));};
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
+$('studio-battle-import').onchange=e=>{
+ const f=e.target.files?.[0];e.target.value='';
+ if(!f)return;
+ if(currentId!==BATTLE_FRONT_ID){
+  message('请先选择女主·战斗正面独立工程。');return;
+ }
+ importComponentArchive(f).catch(x=>message('战斗正面导入失败：'+x.message));
+};
 $('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
 window.PaperchalkStudio={list,change,saveToGame,notifyGame,readPartRig,storePartRig,drawBackdrop,drawFrameCorrection,drawComposedV4,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&countSourceParts()===0,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
