@@ -93,6 +93,7 @@ jobs:
                 assert.equal(await page.locator('#rig-part option').count(),17);
                 await page.locator('#rig-part').selectOption('rear_hair');
                 assert.equal(await page.locator('#rig-bone option').count(),6,'hair needs three independently skinned two-joint strands');
+                await page.locator('#rig-advanced').evaluate(el=>{el.open=true;});
                 await page.locator('#rig-bone').selectOption('left-tip');
                 await page.locator('[data-bone="amplitude"]').fill('30');
                 await page.evaluate(()=>{
