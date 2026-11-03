@@ -91,6 +91,7 @@ function defaultIdleProfile(){
   hair:{amount:.24,speed:.83,lag:.78},
   cloth:{amount:.18,speed:.78,lag:.70},
   sleeves:{amount:.045,speed:.80,lag:.56},
+  joints:{hands:.7,shoulders:.3,hips:.2},
   parts:{...DEFAULT_PART_STRENGTH}};
 }
 function sanitizeIdleProfile(input){
@@ -107,10 +108,12 @@ function sanitizeIdleProfile(input){
  if(p.parts&&typeof p.parts==='object'&&!Array.isArray(p.parts)){
   for(const [id,value] of Object.entries(p.parts).slice(0,100))
    if(/^[a-z0-9_-]{1,80}$/.test(id))
-    parts[id]=clamp(finite(value,1),0,3);
+    parts[id]=clamp(finite(value,1),0,20);
  }
+ const joints={};
+ for(const name of ['hands','shoulders','hips'])joints[name]=clamp(finite(p.joints?.[name],base.joints[name]),0,8);
  return {...base,hair:g('hair',.4),cloth:g('cloth',.30),
-  sleeves:g('sleeves',.12),parts};
+  sleeves:g('sleeves',.12),joints,parts};
 }
 function presetIdle(name,previous=null){
  if(!Object.hasOwn(IDLE_PRESETS,name))throw Error('Unknown idle preset: '+name);
@@ -118,6 +121,7 @@ function presetIdle(name,previous=null){
  if(name!=='still')return defaultIdleProfile();
  const p=defaultIdleProfile();p.preset='still';
  p.hair.amount=0;p.cloth.amount=0;p.sleeves.amount=0;
+ p.joints={hands:0,shoulders:0,hips:0};
  return p;
 }
 // Smoothly approach a NEW weather tier instead of instantly snapping
@@ -131,6 +135,14 @@ function approachIdle(previous,target,dt){
    const end=dest[name][key];
    dest[name][key]=finite(previous[name]?.[key],end)*(1-k)+end*k;
   }
+ }
+ for(const name of ['hands','shoulders','hips']){
+  const end=dest.joints[name];
+  dest.joints[name]=finite(previous.joints?.[name],end)*(1-k)+end*k;
+ }
+ for(const [id,end] of Object.entries(dest.parts)){
+  const from=finite(previous.parts?.[id],end);
+  dest.parts[id]=from*(1-k)+end*k;
  }
  return dest;
 }
@@ -229,6 +241,17 @@ function normalizeBones(records,kind){
    enabled:q.enabled!==false};
  });
 }
+// Local shoulder, elbow and pelvic articulation; never globally rocks the body.
+function jointGainFor(part,bone,idle){
+ const j=idle?.joints;if(!j||!bone)return 0;
+ const kind=part.kind||'',id=String(bone.id||'');
+ if(kind==='arm-combined'||kind==='arm-left'||kind==='arm-right')
+  return id.includes('elbow')?finite(j.hands,0):finite(j.shoulders,0);
+ if(kind==='torso'&&!bone.parent)return finite(j.shoulders,0)*.65;
+ if(kind==='skirt'&&!bone.parent)return finite(j.hips,0);
+ if(kind==='leg-combined'&&!bone.parent)return finite(j.hips,0)*.38;
+ return 0;
+}
 function bonePoses(part,phase=0,idle=null){
  const records=part.bones||[],byId=new Map(),result=[];
  for(const b of records){
@@ -238,7 +261,7 @@ function bonePoses(part,phase=0,idle=null){
   const head=parent?parent.tailPos:P;
   const parentAngle=parent?parent.totalAngle:0;
   const group=idle?idle[idleGroup(part)]:null;
-  const strength=group?group.amount*clamp(finite(idle.parts?.[part.id],1),0,3):1;
+  const strength=group?group.amount*clamp(finite(idle.parts?.[part.id],1),0,20):1;
   // Independent root/tip strength and slight phase delay approximate inertia;
   // roots do not whip like ends, and different strands stay out of sync.
   const groupFactor=part.kind==='hair'?[.10,.37]:
@@ -250,8 +273,9 @@ function bonePoses(part,phase=0,idle=null){
   const lag=group?.lag||0;
   const wave=Math.sin(phase*finite(b.frequency,1)*speed+
    finite(b.phase,0)-(b.parent?lag:lag*.25));
-  const angle=b.enabled!==false?finite(b.amplitude,0)*strength*factor*
-   Math.PI/180*wave:0;
+  const joint=jointGainFor(part,b,idle);
+  const degrees=finite(b.amplitude,0)*(strength*factor+joint*.24);
+  const angle=b.enabled!==false?clamp(degrees,-55,55)*Math.PI/180*wave:0;
   const theta=parentAngle+angle,cs=Math.cos(theta),sn=Math.sin(theta);
   const dv={x:T.x-P.x,y:T.y-P.y};
   const tailPos={x:head.x+dv.x*cs-dv.y*sn,y:head.y+dv.x*sn+dv.y*cs};
@@ -357,7 +381,7 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  const along=((u-part.pivot.x)*dx+(v-part.pivot.y)*dy)/den;
  const weight=smooth(along);
  const group=idle?.[idleGroup(part)];
- const partStrength=idle?clamp(finite(idle.parts?.[part.id],1),0,3):1;
+ const partStrength=idle?clamp(finite(idle.parts?.[part.id],1),0,20):1;
  const scale=group?group.amount*partStrength:1;
  const oscillation=Math.sin(phase*q.frequency*(group?.speed||1)+q.phase-(group?.lag||0));
  const a=clamp(finite(q.angle,0),-2,2)*weight*oscillation*Math.PI/180;
@@ -475,8 +499,10 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
    windy&&part.kind==='skirt'?Math.max(part.mesh.columns,10):part.mesh.columns,
   rows=windy&&part.kind==='hair'?Math.max(part.mesh.rows,15):
    windy&&part.kind==='skirt'?Math.max(part.mesh.rows,12):part.mesh.rows;
- const strength=idle?idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,3):1;
- const active=part.enabled&&(Math.abs(idle?.body?.amount||0)>0||
+ const strength=idle?idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,20):1;
+ const jointsActive=(part.bones||[]).some(b=>b.enabled!==false&&
+  Math.abs(b.amplitude)>1e-5&&jointGainFor(part,b,idle)>0);
+ const active=part.enabled&&(jointsActive||Math.abs(idle?.body?.amount||0)>0||
   (strength>0&&(Object.values(part.motion).some((v,i)=>i<3&&Math.abs(v)>1e-5)||
   (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5)||
   (weather==='windy'||weather==='breeze')&&
@@ -550,5 +576,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
