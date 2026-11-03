@@ -4,13 +4,10 @@
 const ed=window.characterEditor,core=window.PaperchalkPartRigCore,studio=window.PaperchalkStudio;
 if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
-const state={active:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false};
-const toggle=document.createElement('button');toggle.id='part-rig-toggle';
-toggle.textContent='逐件绑骨';toggle.type='button';toggle.title='选择独立骨骼与精细蒙皮控制';
-stage.querySelector('.stage-toolbar')?.append(toggle);
+const state={active:false,panelOpen:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false};
 const panel=document.createElement('section');panel.id='part-rig-panel';panel.hidden=true;
-panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</strong><button id="rig-close" type="button">返回原版 V4</button></header>
-<p id="rig-source">独立骨骼待机 · 原始 V4 完整保留，无额外呼吸。</p>
+panel.innerHTML=`<header class="rig-h"><strong>新版 L2D · 动画设置</strong><button id="rig-close" type="button">收起设置</button></header>
+<p id="rig-source">独立部件实时骨骼 · 基础站立</p>
 <section id="rig-idle-controls" aria-label="真人待机控制">
  <strong>真人待机 · 总控</strong>
  <div id="rig-presets" class="rig-presets">
@@ -245,7 +242,7 @@ async function save(){
  try{
   await pending;
   if(state.model===model&&revision===version)state.dirty=false;
-  info('✓ 已保存骨骼参数；返回游戏后同步加载（GitHub 发布需另外提交资源）');
+  info('✓ 已保存新版 L2D 骨骼参数，返回游戏后同步加载。');
   return true;
  }catch(error){
   state.dirty=true;
@@ -261,20 +258,24 @@ function changed(){
 function syncOpenState(){
  const primary=$('idle-open');
  if(primary){
-  primary.setAttribute('aria-expanded',String(state.active));
-  primary.textContent=state.active?'✦ 待机调节中 · 收起':'✦ 待机与飘动';
+  primary.setAttribute('aria-expanded',String(state.panelOpen));
+  primary.textContent=state.panelOpen?'✦ 收起动画设置':'✦ 动画设置';
  }
- toggle.setAttribute('aria-pressed',String(state.active));
- toggle.textContent=state.active?'关闭骨骼预览':'逐件绑骨';
+}
+function setInspectorOpen(open){
+ state.panelOpen=!!open&&state.active;
+ panel.hidden=!state.panelOpen;
+ document.body.classList.toggle('rig-authoring',state.panelOpen);
+ syncOpenState();
+ ed.render();
+ if(state.panelOpen)requestAnimationFrame(()=>$('fit')?.click());
 }
 async function deactivate(){
- try{if(state.dirty)await save();}catch{return;}
- state.active=false;state.drag=null;state.bone='';panel.hidden=true;
- document.body.classList.remove('rig-authoring');
- syncOpenState();ed.render();
- requestAnimationFrame(()=>document.getElementById('fit')?.click());
+ if(state.dirty)await save();
+ state.active=false;state.model=null;state.panelOpen=false;state.drag=null;state.bone='';
+ setInspectorOpen(false);
 }
-async function activate(){
+async function activate(openPanel=false){
  if(!studio.current)return;
  const src=parts();
  if(!src.length){info('此人物没有独立源图层');return;}
@@ -285,48 +286,30 @@ async function activate(){
  state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
  state.active=true;state.phase=0;state.playing=true;state.showGuides=false;
  $('rig-guides').checked=false;
- document.body.classList.add('rig-authoring');
- panel.hidden=false;syncOpenState();
- requestAnimationFrame(()=>document.getElementById('fit')?.click());
+ setInspectorOpen(openPanel);
  const selectNode=$('rig-part');selectNode.replaceChildren();
  for(const p of src)selectNode.add(new Option(p.name,p.partId||p.name));
  const preferred=S.layers[S.side][S.sel];
  select(state.model.parts[key(preferred||{})]?key(preferred):key(src[0]));
  $('rig-source').textContent=id==='char-002'&&src.length<12
   ?'女二当前只有 '+src.length+' 个扁平图分区，不是真 PSD。可以试验分区，但不能冒充完整分层绑定。'
-  :'真实源图层 '+src.length+' 个。逐层查看轴点、网格；不替换你认可的 V4 动画。';
+  :'真实源图层 '+src.length+' 个，使用新版独立部件骨骼动画。';
  info('已只保留基础站立：身体不再左右摇摆，关闭风力和夸张变形，仅保留非常轻微的发梢、衣摆动态与眨眼。');
  ed.render();
 }
 function toggleIdle(){
- if(state.active){deactivate().catch(e=>info(e.message));return;}
+ if(state.active){setInspectorOpen(!state.panelOpen);return;}
  const primary=$('idle-open');
- if(primary){primary.disabled=true;primary.textContent='正在打开待机控制…';}
- activate().then(()=>{
-  if(state.active&&matchMedia('(max-width:710px)').matches){
-   // Fixed panel on phones stays in view even if the editor was scrolled.
-   panel.scrollTop=0;
-  }
- }).catch(e=>{
-  info('无法打开待机控制：'+e.message);
+ if(primary)primary.disabled=true;
+ activate(true).catch(e=>{
+  info('无法打开动画设置：'+e.message);
   const note=$('studio-status')||$('status');
-  if(note)note.textContent='待机控制加载失败：'+e.message;
+  if(note)note.textContent='新版 L2D 加载失败：'+e.message;
  }).finally(()=>{if(primary)primary.disabled=false;syncOpenState();});
 }
-toggle.onclick=toggleIdle;
-if($('idle-open'))$('idle-open').onclick=toggleIdle;
-// The direct entry opens the REAL controls, not merely the V4 preview.
-const direct=new URLSearchParams(location.search).get('idle')==='1';
-if(direct){
- const autoOpen=()=>{
-  if(!state.active&&studio.current&&S.ready)toggleIdle();
- };
- window.addEventListener('paperchalk:studio-ready-to-edit',autoOpen);
- // Handles browser revisits where the character loaded before this script.
- requestAnimationFrame(()=>{if(studio.current&&S.ready)autoOpen();});
-}
+$('idle-open').onclick=toggleIdle;
 syncOpenState();
-$('rig-close').onclick=()=>deactivate().catch(e=>info(e.message));
+$('rig-close').onclick=()=>setInspectorOpen(false);
 $('rig-part').onchange=e=>select(e.target.value);
 $('rig-save').onclick=()=>save().catch(()=>{});
 $('rig-export').onclick=()=>{
@@ -346,8 +329,12 @@ $('rig-zero').onclick=()=>{const p=current();if(!p)return;
  for(const b of p.bones||[])b.amplitude=0;
  boneValues();
  values();changed();};
-$('rig-pause').onclick=()=>{state.playing=!state.playing;
- $('rig-pause').textContent=state.playing?'暂停':'播放';};
+function setPlaying(value){
+ state.playing=!!value;
+ $('rig-pause').textContent=state.playing?'暂停':'播放';
+ window.dispatchEvent(new CustomEvent('paperchalk:rig-play-changed',{detail:{paused:!state.playing}}));
+}
+$('rig-pause').onclick=()=>setPlaying(!state.playing);
 sliders.addEventListener('input',e=>{
  const path=e.target.dataset.rig;if(!path)return;
  const p=current();if(!p)return;
@@ -417,8 +404,7 @@ async function exportGameModule(newId){
  const url=URL.createObjectURL(file),a=document.createElement('a');
  a.href=url;a.download=newId+'.zip';document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),10000);
- info('✓ 已打包 '+Object.keys(views).join('/')+' 原始独立部件。将 '+newId+
-   '.zip 上传到 GitHub site/assets/l2d/inbox/，即可自动进入游戏人物库。旧 V4 未改。');
+ info('✓ 已打包 '+Object.keys(views).join('/')+' 原始独立部件，可作为新版 L2D 游戏模块发布。');
  return {id:newId,views:Object.keys(views),files:files.length,blob:file};
 }
 $('rig-module-export').onclick=async()=>{
@@ -440,7 +426,8 @@ boneSliders.addEventListener('input',e=>{
  boneValues();changed();
 });
 function drawPreview(ctx){
- if(!state.active||!state.model)return false;
+ const motion=window.PaperchalkStageMotion?.state;
+ if(!state.active||!state.model||motion?.enabled===false||motion?.editing||S.only)return false;
  // Wireframe and yellow skeletal handles are strictly opt-in.
  const previewModel=state.visualIdle?
   {...state.model,idleProfile:state.visualIdle}:state.model;
@@ -527,7 +514,7 @@ for(const event of ['pointerup','pointercancel'])stage.addEventListener(event,e=
 },true);
 let last=0,lastDraw=0;
 function tick(now){
- if(state.active&&S.ready&&!document.hidden){
+ if(state.active&&S.ready&&!document.hidden&&window.PaperchalkStageMotion?.state?.enabled!==false){
   if(!last)last=now;
   const dt=Math.min(.07,Math.max(0,(now-last)/1000));
   if(state.playing)state.phase+=dt*2*Math.PI/3.6;
@@ -538,8 +525,15 @@ function tick(now){
  requestAnimationFrame(tick);
 }
 window.addEventListener('paperchalk:studio-character-loaded',()=>{
- if(state.active)deactivate();state.model=null;state.selected='';
+ // changeCore flushes the previous rig before emitting this event.
+ state.active=false;state.model=null;state.panelOpen=false;state.selected='';
+ state.drag=null;state.dirty=false;
+ setInspectorOpen(false);
 });
-window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,exportGameModule};
+window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
+ // New independent mesh is the default whenever genuine component art exists.
+ if(parts().length)activate(false).catch(e=>info('独立 L2D 初始化失败：'+e.message));
+});
+window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule};
 requestAnimationFrame(tick);
 })();
