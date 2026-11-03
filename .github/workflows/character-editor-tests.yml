@@ -62,8 +62,8 @@ jobs:
                 assert.equal(await page.locator('#part-rig-panel').isVisible(),false,
                   'new mesh is active by default without opening a cluttered settings panel');
                 assert.equal(await page.locator('#rig-quick-panel').isVisible(),true,
-                  'all four quick sliders must be visible beside the new animation');
-                assert.equal(await page.locator('#rig-quick-sliders input').count(),4);
+                  'all seven quick sliders must be visible beside the new animation');
+                assert.equal(await page.locator('#rig-quick-sliders input').count(),7);
                 assert.equal(await page.locator('#rig-quick-save').isVisible(),true);
                 await page.evaluate(()=>{
                   window.__partRigArtBackup=window.characterEditor.S.layers.front
@@ -118,7 +118,8 @@ jobs:
                 assert.equal(await page.locator('[data-quick="fringe"]').isVisible(),true);
                 assert.equal(await page.locator('[data-quick="rear"]').isVisible(),true);
                 assert.equal(await page.locator('[data-quick="skirt"]').isVisible(),true);
-                assert.equal(await page.locator('[data-quick="speed"]').isVisible(),true);
+                for(const key of ['hands','shoulders','hips','speed'])
+                  assert.equal(await page.locator('[data-quick="'+key+'"]').isVisible(),true,key+' slider missing');
                 const panelRect=await page.locator('#part-rig-panel').boundingBox();
                 assert.ok(panelRect.width>220&&panelRect.height>200&&
                   panelRect.x>=0&&panelRect.x+panelRect.width<=vp.width+2,
@@ -153,28 +154,34 @@ jobs:
                 await page.locator('[data-quick="fringe"]').fill('0');
                 assert.equal(await page.evaluate(()=>
                   window.PaperchalkPartRigStudio.state.model.idleProfile.parts.front_hair),0);
-                await page.locator('[data-quick="fringe"]').fill('245');
-                await page.locator('[data-quick="rear"]').fill('215');
-                await page.locator('[data-quick="skirt"]').fill('260');
-                await page.locator('[data-quick="speed"]').fill('160');
+                await page.locator('[data-quick="fringe"]').fill('900');
+                await page.locator('[data-quick="rear"]').fill('1100');
+                await page.locator('[data-quick="skirt"]').fill('1250');
+                await page.locator('[data-quick="hands"]').fill('230');
+                await page.locator('[data-quick="shoulders"]').fill('310');
+                await page.locator('[data-quick="hips"]').fill('270');
+                await page.locator('[data-quick="speed"]').fill('210');
                 const quickValues=await page.evaluate(()=>{
                   const p=window.PaperchalkPartRigStudio.state.model.idleProfile;
-                  return [p.parts.front_hair,p.parts.rear_hair,p.parts.skirt,p.hair.speed,p.cloth.speed];
+                  return [p.parts.front_hair,p.parts.rear_hair,p.parts.skirt,
+                    p.joints.hands,p.joints.shoulders,p.joints.hips,p.hair.speed,p.cloth.speed];
                 });
-                assert.deepEqual(quickValues,[2.45,2.15,2.6,1.6,1.6],
+                assert.deepEqual(quickValues,[9,11,12.5,2.3,3.1,2.7,2.1,2.1],
                   'quick sliders must change the SAME model used by the game renderer');
                 await page.locator('#rig-quick-save').click();
                 await page.waitForFunction(async()=>{
                   const r=await window.PaperchalkStudio.readPartRig('protagonist','front');
-                  return r?.idleProfile?.parts.front_hair===2.45&&r?.idleProfile?.parts.skirt===2.6;
+                  return r?.idleProfile?.parts.front_hair===9&&r?.idleProfile?.parts.skirt===12.5&&
+                    r?.idleProfile?.joints?.hands===2.3&&r?.idleProfile?.joints?.shoulders===3.1&&
+                    r?.idleProfile?.joints?.hips===2.7;
                 },null,{timeout:15000});
                 assert.equal(await page.evaluate(()=>{
                   const c=window.PaperchalkPartRigCore, m=window.PaperchalkPartRigStudio.state.model;
                   return c.bodyPoseAt(1,m.idleProfile).lean;
                 }),0,'normal standing must not move the whole girl left/right');
                 assert.equal(await page.locator('#rig-part option').count(),17);
-                assert.equal(await page.locator('[data-quick="fringe"]').inputValue(),'245');
-                assert.equal(await page.locator('[data-quick="skirt"]').inputValue(),'260');
+                assert.equal(await page.locator('[data-quick="fringe"]').inputValue(),'900');
+                assert.equal(await page.locator('[data-quick="skirt"]').inputValue(),'1250');
                 await page.locator('#rig-part').selectOption('rear_hair');
                 assert.equal(await page.locator('#rig-bone option').count(),6,'hair needs three independently skinned two-joint strands');
                 await page.locator('#rig-advanced').evaluate(el=>{el.open=true;});
