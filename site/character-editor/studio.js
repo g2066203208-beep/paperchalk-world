@@ -247,9 +247,12 @@ async function readPartRig(id=currentId,face=side){
  if(!response.ok)throw Error('模块绑定文件加载失败：HTTP '+response.status);
  const model=await response.json();
  const sourceId=pub.sourceCharacterId;
- const validAlias=id==='protagonist'&&sourceId==='protagonist-rig-v1'&&
+ const validAlias=(id==='protagonist'&&sourceId==='protagonist-rig-v1'&&
   model.characterId==='protagonist-rig-v1'&&
-  pub.url.startsWith('./assets/l2d/library/protagonist-rig-v1/');
+  pub.url.startsWith('./assets/l2d/library/protagonist-rig-v1/'))||
+  (id==='char-002'&&face==='front'&&sourceId==='char-002-rig-v1'&&
+  model.characterId==='char-002-rig-v1'&&model.provenance==='derived-region'&&
+  pub.url.startsWith('./assets/l2d/library/char-002-rig-v1/'));
  if(model.format!=='paperchalk-part-rig-v1'||
     (model.characterId!==id&&!validAlias)||model.face!==face)
   throw Error('当前人物的模块绑定文件格式或方向错误');
@@ -504,13 +507,13 @@ async function ensureHostedParts(id){
  const front=ed.S.layers.front.some(p=>p.sourcePart);
  const back=ed.S.layers.back.some(p=>p.sourcePart);
  if(front&&(id==='char-002'||back))return;
- message(id==='char-002'?'载入女二号原画分区图层（非PSD）…':'载入女主角正背面PSD部件…');
+ message(id==='char-002'?'载入女二原画7区域独立骨骼（非PSD，待补真分层）…':'载入女主角正背面PSD部件…');
  try{
   const source=await hostedParts(id,side);
   if(currentId!==id)return;
   await importComponentFiles(source,{missingOnly:true,quiet:true});
   message(id==='char-002'?
-    '女二号已载入7个基于原图像素分区的可编辑部件；同一正式正面V4动画，不虚构背面。':
+    '女二已载入原画7个可编辑分区，使用独立网格与基础骨骼。头发与脸尚未真正拆分，背面没有原图。':
     '女主角已载入正面17层／背面8层原位PSD。');
  }catch(error){
   console.error('[L2D] hosted source parts failed',error);
