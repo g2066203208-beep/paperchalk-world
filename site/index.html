@@ -553,6 +553,8 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
 <script src="./game/survival-state.js"></script>
+<link rel="stylesheet" href="./game/prologue.css?v=first-person-v1-20261103">
+<script src="./game/prologue.js?v=first-person-v1-20261103"></script>
 <script src="./game/ground-perspective.js?v=shared-floor-v1"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
@@ -1643,11 +1645,15 @@ void main(){
   edgeFogObserver.observe(view,{attributes:true,attributeFilter:['class']});
   window.PaperWorldUIFog=Object.freeze({refresh:syncUiEdgeFog});
   syncUiEdgeFog();
-  const lines=[
+  const legacyClassroomLines=[
     {speaker:'???',text:'这间教室……和我记忆里的，不太一样。'},
     {speaker:'???',text:'明明已经放学了，为什么还有声音？'},
     {speaker:'???',text:'有人……在看着这里吗？'}
   ];
+  // The real story is a first-person scripted module, not painted onto a
+  // third-person heroine. Preview scenes still retain their neutral lines.
+  const lines=window.PaperWorldPrologue?.lines||legacyClassroomLines;
+  let storyMode=false,awaitingChoice=false,prologueChoiceBox=null;
   // Scene data and dialogue data are independent: an environment may show a
   // line without becoming a special story scene or changing its images/L2D.
   // The bedroom has a neutral demonstration line until real script data lands.
@@ -1673,7 +1679,9 @@ void main(){
   const topActions=document.getElementById('top-actions');
   const continueButton=document.getElementById('menu-continue');
   const tiltButton=document.getElementById('tilt-toggle');
-  const SAVE_KEY='paperchalk-scene-v1';
+  // Separate from the old prototype save; never misresume the new script at an
+  // unrelated line index or destroy the old user's progress record.
+  const SAVE_KEY='paperchalk-prologue-v1';
   const TILT_KEY='paperchalk-tilt-v1';
   function loadSetting(){
     try{return localStorage.getItem(TILT_KEY)!=='off'}catch(_){return true}
@@ -1689,14 +1697,17 @@ void main(){
       const raw=localStorage.getItem(SAVE_KEY);
       if(!raw)return null;
       const save=JSON.parse(raw);
-      return save&&save.scene==='classroom'&&Number.isInteger(save.line)&&
-        save.line>=0&&save.line<lines.length?save:null;
+      return save&&save.storyVersion===1&&save.scene==='classroom'&&
+        Number.isInteger(save.line)&&save.line>=0&&save.line<lines.length?save:null;
     }catch(_){return null}
   }
   function writeSave(){
     // Environment preview dialogue must never overwrite the real story save.
-    if(stage.dataset.scene!=='classroom')return;
-    try{localStorage.setItem(SAVE_KEY,JSON.stringify({scene:'classroom',line:dialogueIndex,finished:storyFinished}))}catch(_){}
+    if(!storyMode||stage.dataset.scene!=='classroom')return;
+    try{localStorage.setItem(SAVE_KEY,JSON.stringify({
+      storyVersion:1,scene:'classroom',line:dialogueIndex,
+      finished:storyFinished,choices:window.PaperWorldPrologue?.choices?.()||{}
+    }))}catch(_){}
     continueButton.disabled=false;
   }
   function openScene(name){
@@ -1709,9 +1720,19 @@ void main(){
     aimX=0;aimY=0;currentX=0;currentY=0;
     stage.style.transform='rotateY(0deg) rotateX(0deg)';
     const isStory=def.type==='story',isMenu=def.type==='menu';
-    // Per-scene layer contract; image files remain actor-free and unmodified.
+    const isPrologue=name==='classroom'&&storyMode;
+    if(!isPrologue){
+      window.PaperWorldPrologue?.leave?.();
+      storyMode=false;
+      if(prologueChoiceBox)prologueChoiceBox.hidden=true;
+      awaitingChoice=false;
+    }
+    // Camera IS the protagonist in this chapter. The pre-existing rear-view
+    // heroine plane is used in DEV/other rooms only, never in the prologue.
     const hasPlayer=def.layers.player;
-    enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
+    enemyDepth.hidden=isPrologue?true:!def.layers.enemy;
+    cameraPlayer.hidden=isPrologue?true:!hasPlayer;
+    if(isPrologue)window.PaperWorldPrologue?.enter?.();
     stage.dataset.sceneTitle=def.title;
     stage.dataset.sceneVersion=def.version||'built-in';
     // Character placement belongs to the actor, not the background image.
@@ -1728,15 +1749,15 @@ void main(){
       menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
       sceneSwitcher.hidden=true;sceneSwitcherToggle.setAttribute('aria-expanded','false');
       if(logOpen){logOpen=false;history.hidden=true;logButton.setAttribute('aria-pressed','false')}
-      activeLines=isStory?lines:(sceneDemoDialogue[name]||[]);
-      if(!isStory)dialogueIndex=0;
+      activeLines=isPrologue?lines:isStory?legacyClassroomLines:(sceneDemoDialogue[name]||[]);
+      if(!isPrologue)dialogueIndex=0;
       textHidden=false;
       storyFinished=activeLines.length===0;
       dialogue.hidden=storyFinished;
       nextLineButton.parentElement.hidden=storyFinished;
       hideButton.textContent='隐藏文字';
       if(!storyFinished)renderDialogue();
-      if(isStory)writeSave();
+      if(isPrologue)writeSave();
     }
     syncUiEdgeFog();
     start(); // continuous, same original fog frame chain
@@ -1806,6 +1827,9 @@ void main(){
   function beginStory(resume){
     if(transitioning)return;
     const save=resume?readSave():null;
+    storyMode=true;
+    window.PaperWorldPrologue?.enableAudio?.();
+    window.PaperWorldPrologue?.restoreChoices?.(save?.choices||null);
     dialogueIndex=save?save.line:0;
     changeScene('classroom');
   }
@@ -1856,28 +1880,63 @@ void main(){
     clearTimeout(autoTimer);autoTimer=0;autoEnabled=false;
     autoButton.setAttribute('aria-pressed','false');
   }
+  function renderPrologueChoice(line){
+    awaitingChoice=false;
+    if(!prologueChoiceBox){
+      prologueChoiceBox=document.createElement('div');
+      prologueChoiceBox.id='prologue-choices';
+      prologueChoiceBox.setAttribute('aria-label','选择你的行动');
+      uiRoot.appendChild(prologueChoiceBox);
+    }
+    prologueChoiceBox.replaceChildren();
+    prologueChoiceBox.hidden=true;
+    if(!storyMode||!line.choices||stage.dataset.scene!=='classroom')return;
+    const saved=window.PaperWorldPrologue?.choices?.()||{};
+    if(saved.entrance)return;
+    awaitingChoice=true;
+    cancelAuto();
+    for(const option of line.choices){
+      const b=document.createElement('button');
+      b.type='button';b.textContent=option.label;
+      b.addEventListener('click',()=>{
+        if(!awaitingChoice)return;
+        if(!window.PaperWorldPrologue?.choose?.(line,option.value))return;
+        awaitingChoice=false;prologueChoiceBox.hidden=true;
+        writeSave();advanceDialogue();
+      });
+      prologueChoiceBox.appendChild(b);
+    }
+    prologueChoiceBox.hidden=false;
+  }
   function renderDialogue(){
     const line=activeLines[dialogueIndex];
     if(!line)return;
-    speakerLabel.textContent=line.speaker;dialogueText.textContent=line.text;
+    speakerLabel.textContent=line.speaker;
+    dialogueText.textContent=storyMode&&stage.dataset.scene==='classroom'
+      ?window.PaperWorldPrologue?.textFor?.(line)||line.text:line.text;
+    renderPrologueChoice(line);
+    if(storyMode&&stage.dataset.scene==='classroom')
+      window.PaperWorldPrologue?.cue?.(dialogueIndex);
     nextLineButton.setAttribute('aria-label',dialogueIndex===activeLines.length-1?'结束对话':'下一句');
   }
   function finishDialogue(){
     if(storyFinished)return;
     cancelAuto();storyFinished=true;
+    if(prologueChoiceBox)prologueChoiceBox.hidden=true;
+    awaitingChoice=false;
     dialogue.hidden=true;nextLineButton.parentElement.hidden=true;
     if(logOpen){history.hidden=true;logOpen=false}
     writeSave();syncUiEdgeFog();
   }
   function advanceDialogue(){
-    if(logOpen||textHidden||storyFinished)return;
+    if(logOpen||textHidden||storyFinished||awaitingChoice)return;
     if(dialogueIndex===activeLines.length-1){finishDialogue();return}
     dialogueIndex++;renderDialogue();writeSave();
     if(autoEnabled)scheduleAuto();
   }
   function scheduleAuto(){
     clearTimeout(autoTimer);
-    if(autoEnabled&&!document.hidden&&!logOpen&&!textHidden&&!storyFinished){
+    if(autoEnabled&&!awaitingChoice&&!document.hidden&&!logOpen&&!textHidden&&!storyFinished){
       const wait=Math.max(2800,Math.min(6600,activeLines[dialogueIndex].text.length*190));
       autoTimer=setTimeout(advanceDialogue,wait);
     }
@@ -1889,7 +1948,8 @@ void main(){
       const p=document.createElement('p');
       const who=document.createElement('span');who.className='log-speaker';
       who.textContent=activeLines[i].speaker+'  ';
-      p.append(who,document.createTextNode(activeLines[i].text));
+      p.append(who,document.createTextNode(
+        storyMode?window.PaperWorldPrologue?.textFor?.(activeLines[i])||activeLines[i].text:activeLines[i].text));
       history.appendChild(p);
     }
     history.scrollTop=history.scrollHeight;
@@ -1922,7 +1982,10 @@ void main(){
     menuChoices.hidden=!opening;menuButton.setAttribute('aria-expanded',String(opening));
   });
   restartButton.addEventListener('click',()=>{
-    cancelAuto();activeLines=stage.dataset.scene==='classroom'?lines:(sceneDemoDialogue[stage.dataset.scene]||[]);
+    cancelAuto();
+    if(storyMode)window.PaperWorldPrologue?.reset?.();
+    activeLines=stage.dataset.scene==='classroom'
+      ?(storyMode?lines:legacyClassroomLines):(sceneDemoDialogue[stage.dataset.scene]||[]);
     storyFinished=activeLines.length===0;dialogueIndex=0;
     if(!storyFinished)renderDialogue();
     writeSave();
@@ -1972,9 +2035,14 @@ void main(){
   });
   renderDialogue();
   openScene('menu');
-  // Scene preview deep link, independent of story saves.
-  const requestedScene=new URLSearchParams(location.search).get('scene');
-  if(requestedScene&&SCENES[requestedScene]&&SCENES[requestedScene].type!=='menu'){
+  // Preview deep links remain separate. ?prologue=1 runs the actual
+  // playable first-person script in the canonical classroom scene.
+  const initialArgs=new URLSearchParams(location.search);
+  const requestedScene=initialArgs.get('scene');
+  if(initialArgs.get('prologue')==='1'){
+    storyMode=true;dialogueIndex=0;window.PaperWorldPrologue?.reset?.();
+    openScene('classroom');
+  }else if(requestedScene&&SCENES[requestedScene]&&SCENES[requestedScene].type!=='menu'){
     openScene(requestedScene);
   }
   function shader(type,text){
