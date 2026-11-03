@@ -79,8 +79,7 @@ function create(opts={}){
    }
    const card=state.drawPile.pop();
    // A downed ally's cards cannot strand the hand.
-   if(!byId(CARD_TYPES[card.type]?.owner==='hero'?'hero':'partner')?.hp&&
-      ['hero','partner'].includes(CARD_TYPES[card.type]?.owner)){
+   if(!byId(CARD_TYPES[card.type]?.owner)?.hp){
      state.exhaust.push(card);continue;
    }
    state.hand.push(card);count++;
@@ -92,7 +91,7 @@ function create(opts={}){
   return {
    version:VERSION,round:state.round,phase:state.phase,energy:state.energy,
    maxEnergy:state.maxEnergy,allies:allies.map(unitSummary),enemies:enemies.map(unitSummary),
-   hand:state.hand.map(c=>({...c,...CARD_TYPES[c.type]})),
+   hand:state.hand.map(c=>({...c,...CARD_TYPES[c.type],cardId:c.type})),
    drawCount:state.drawPile.length,discardCount:state.discard.length,exhaustCount:state.exhaust.length,
    intents:state.intents.map(x=>({...x})),events:state.events.map(x=>({...x})),
    sequence:state.sequence,stats:{...state.stats}
@@ -189,7 +188,7 @@ function create(opts={}){
    const target=targets[(state.round+i)%targets.length];
    result.push({actorId:actor.id,targetId:kind==='guard'?actor.id:target.id,
      kind,power,label:kind==='guard'?'守势':kind==='mark'?'标记突袭':'攻击',
-     willCombo:kind!=='guard'&&living('enemy').some(u=>u.id!==actor.id&&u.rp>0)});
+     willCombo:kind!=='guard'&&living('enemy').some(u=>u.id!==actor.id)});
   }
   return result;
  }
