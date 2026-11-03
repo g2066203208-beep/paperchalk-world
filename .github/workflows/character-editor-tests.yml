@@ -206,8 +206,8 @@ jobs:
                   window.__originalJacketPose=window.PaperchalkPartRigCore.warpPoint(m.parts.jacket,.5,.95,Math.PI/2);
                 });
                 await page.locator('[data-rig="motion.x"]').fill('35');
-                assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.CHAR002).length),17,
-                  'CHAR-002 blueprint matches the 17 genuinely visible PSD components');
+                assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.CHAR002).length),18,
+                  'CHAR-002 blueprint maps all 18 independent playing meshes');
                 assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.BACK).length),8,
                   'reverse view uses its own eight source-part bindings');
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-independent-rear-hair-mesh.png',fullPage:true});
