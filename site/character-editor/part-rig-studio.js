@@ -55,6 +55,18 @@ for(const [field,label,min,max,step] of boneFields){
  input.min=min;input.max=max;input.step=step;
  row.append(span,out,input);boneSliders.append(row);
 }
+const advanced=document.createElement('details');
+advanced.id='rig-advanced';
+advanced.innerHTML='<summary>高级绑定 · 轴点、网格与关节</summary>';
+const guideLabel=document.createElement('label');
+guideLabel.className='rig-guide-toggle';
+guideLabel.innerHTML='<input type="checkbox" id="rig-guides"> 显示关节与网格（仅用于绑骨）';
+advanced.append(guideLabel,sliders,panel.querySelector('.rig-joints'));
+panel.querySelector('.rig-buttons').before(advanced);
+$('rig-guides').addEventListener('change',event=>{
+ state.showGuides=!!event.target.checked;
+ ed.render();
+});
 // Four controls adjust the exact live model played in the game, without presets.
 const quickGroups={
  fringe:['front_hair'],
