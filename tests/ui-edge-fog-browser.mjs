@@ -36,12 +36,22 @@ try{
     page.on('pageerror',e=>errors.push(cfg.label+': '+e.message));
     await page.goto(target,{waitUntil:'domcontentloaded',timeout:40000});
     await expectEdge(page,'bottom',true);
-    await expectEdge(page,'top',true);
+    await expectEdge(page,'top',false);
     await expectEdge(page,'left',false);
     await expectEdge(page,'right',false);
     assert.equal(await page.locator('#top-actions').isVisible(),false,'AUTO/LOG must not remain visible in the top-right corner');
     assert.equal(await page.locator('#dialogue').isVisible(),true);
     await page.waitForTimeout(750);
+    const fogInk=await page.evaluate(()=>{
+      const fog=document.getElementById('ui-edge-fog');
+      const context=fog.getContext('2d');
+      const w=fog.width,h=fog.height;
+      const scan=context.getImageData(0,Math.floor(h*.75),w,h-Math.floor(h*.75)).data;
+      let solid=0;
+      for(let i=3;i<scan.length;i+=4)if(scan[i]>45)solid++;
+      return {solid,total:scan.length/4,width:w,height:h};
+    });
+    assert.ok(fogInk.solid>fogInk.total*.01,'Native fog did not draw any visible subtitle foundation: '+JSON.stringify(fogInk));
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-dialogue.png'});
     await page.locator('#menu-toggle').click();
     await expectEdge(page,'left',true);
@@ -50,9 +60,18 @@ try{
     await page.locator('#hide-button').click();
     await expectEdge(page,'bottom',false);
     await expectEdge(page,'left',false);
-    await expectEdge(page,'top',true);
+    await expectEdge(page,'top',false);
     await page.waitForTimeout(750);
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-no-dialogue.png'});
+    const empty=await page.evaluate(()=>{
+      const canvas=document.querySelector('#ui-edge-fog');
+      const {width:w,height:h}=canvas;
+      const data=canvas.getContext('2d').getImageData(0,0,w,h).data;
+      let pixels=0;
+      for(let i=3;i<data.length;i+=4)if(data[i]>0)pixels++;
+      return pixels;
+    });
+    assert.equal(empty,0,'UI fog must be completely absent with no side panel or subtitle');
     await page.locator('#menu-toggle').click();
     await page.locator('#hide-button').click();
     await expectEdge(page,'bottom',true);
@@ -70,10 +89,17 @@ try{
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-right-panel.png'});
     await page.locator('#fog-right-test').evaluate(el=>el.remove());
     await expectEdge(page,'right',false);
+    // Finishing last dialogue line must retract its fog and leave the scene.
+    for(let i=0;i<3;i++)await page.locator('#next-line').click();
+    await expectEdge(page,'bottom',false);
+    assert.equal(await page.locator('#dialogue').isVisible(),false,'Finished conversation remains stuck on screen');
+    assert.equal(await page.locator('#advance').isVisible(),false,'Next-line arrow remains after conversation ends');
+    await page.waitForTimeout(750);
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-story-finished.png'});
     assert.equal(await page.locator('#fog').count(),1,'Existing independent scene fog must remain untouched');
     assert.equal(await page.locator('#actor-player-l2d').count(),1,'L2D renderer must remain untouched');
     await page.close();
-    console.log('PASS '+cfg.label+': dialogue fog, left menu fog, top fog, right panel auto-detection, close/open, no AUTO/LOG; screenshots saved');
+    console.log('PASS '+cfg.label+': native fluid subtitle, conditional left/right, empty top, fog withdrawn after story end, no AUTO/LOG; screenshots saved');
   }
   assert.deepEqual(errors,[]);
 }finally{
