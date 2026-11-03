@@ -98,7 +98,27 @@ jobs:
               await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
               await page.waitForFunction(()=>
                 window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.hair.amount===.47,
-                null,{timeout:28000});
+                null,{timeout:28000}).catch(async error=>{
+                  console.error('GAME RIG SAVE DIAGNOSTICS',await page.evaluate(async()=>{
+                    const project=await new Promise(resolve=>{
+                      const req=indexedDB.open('paperchalk-dev-characters-v1',1);
+                      req.onsuccess=()=>{
+                        const db=req.result,tr=db.transaction('kv','readonly'),
+                          get=tr.objectStore('kv').get('part-rig:protagonist:front');
+                        get.onsuccess=()=>resolve(get.result);get.onerror=()=>resolve(null);
+                      };req.onerror=()=>resolve(null);
+                    });
+                    const a=window.PaperchalkL2DLibrary?.get('player');
+                    return {savedHair:project?.idleProfile?.hair?.amount,
+                      modelHair:a?.model?.idleProfile?.hair?.amount,
+                      mode:window.PaperchalkCharacterDev?.heroineRenderer,
+                      actorMode:window.PaperchalkL2D.get('player')?.root.dataset.l2dMode,
+                      note:document.getElementById('dev-character-status')?.textContent,
+                      partIds:Object.keys(project?.parts||{}).length,
+                      loaded:a?.layers?.length};
+                  }));
+                  throw error;
+                });
               // The old 128-frame V4 is a backup, never a permanent replacement.
               await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('v4'));
               await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===128,
