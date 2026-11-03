@@ -83,6 +83,56 @@ try{
     assert.ok(rightEdge+4<=topHud.clockLeft,
       'Status and clock must never overlap on any viewport: '+JSON.stringify(topHud));
     assert.equal(topHud.hasCrossedIcon,false,'Hunger icon still has crossed X-strokes');
+    // Quick tools use only three equal-size white 24-unit stroke icons
+    // at the physical RIGHT-CENTER of the landscape game, never top corners.
+    const quickGeometry=await page.evaluate(()=>{
+      const nav=document.getElementById('quick-tools');
+      const panel=document.getElementById('quick-panel');
+      const svgs=[...nav.querySelectorAll('.quick-tool-icon')];
+      const buttons=[...nav.querySelectorAll('.quick-tool')];
+      const root=document.getElementById('novel-ui');
+      return {
+        ids:buttons.map(n=>n.id),
+        svgSizes:svgs.map(n=>[n.offsetWidth||n.getBoundingClientRect().width,
+          n.offsetHeight||n.getBoundingClientRect().height]),
+        strokeWidths:svgs.map(n=>getComputedStyle(n).strokeWidth),
+        navOffsetLeft:nav.offsetLeft,navOffsetTop:nav.offsetTop,
+        navHeight:nav.offsetHeight,navWidth:nav.offsetWidth,
+        rootWidth:root.offsetWidth,rootHeight:root.offsetHeight,
+        panelHidden:panel.hidden,panelBackground:getComputedStyle(panel).backgroundColor
+      };
+    });
+    assert.deepEqual(quickGeometry.ids,['quick-backpack','quick-phone','quick-map']);
+    assert.equal(quickGeometry.panelHidden,true,'Quick panel must start closed');
+    assert.equal(quickGeometry.panelBackground,'rgba(0, 0, 0, 0)',
+      'Quick UI uses a translucent black panel instead of native fog');
+    assert.equal(new Set(quickGeometry.strokeWidths).size,1,
+      'Three quick icons must have identical stroke widths');
+    for(const [w,h] of quickGeometry.svgSizes){
+      assert.ok(Math.abs(w-h)<.5,'Quick icon is not square');
+      assert.ok(w>=19&&w<=27,'Quick icon is not the compact 24px size: '+w);
+    }
+    assert.ok(quickGeometry.navOffsetLeft>quickGeometry.rootWidth*.85,
+      'Quick icons are not at the right side of the game');
+    const logicalCenter=quickGeometry.navOffsetTop;
+    assert.ok(Math.abs(logicalCenter-quickGeometry.rootHeight*.5)<2,
+      'Quick icons must be vertically centered in the game: '+JSON.stringify(quickGeometry));
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-quick-icons-closed.png'});
+    for(const [id,title] of [['quick-backpack','背包'],['quick-phone','手机'],['quick-map','地图']]){
+      await page.locator('#'+id).click();
+      await expectEdge(page,'right',true);
+      assert.equal(await page.locator('#quick-panel-title').textContent(),title);
+      assert.equal(await page.locator('#'+id).getAttribute('aria-expanded'),'true');
+      assert.equal(await page.locator('#quick-panel').isVisible(),true);
+      assert.equal(await page.locator('#quick-panel').evaluate(n=>getComputedStyle(n).backgroundColor),'rgba(0, 0, 0, 0)');
+      await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-'+id+'-open.png'});
+    }
+    await page.keyboard.press('Escape');
+    await expectEdge(page,'right',false);
+    assert.equal(await page.locator('#quick-panel').isVisible(),false);
+    await page.locator('#quick-map').click();
+    await page.locator('#quick-map').click();
+    await expectEdge(page,'right',false);
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-approved-top-hud.png'});
     // True gameplay arithmetic, non-100 maxima, 10 proportional cells and
     // animated transitions; setting mock calendar dates is not supported.
@@ -342,6 +392,15 @@ try{
     assert.ok(subtitleSilhouette.bottomDark>subtitleSilhouette.sampledColumns*.55,
       'Subtitle smoke is not dark enough at the bottom to support dialogue: '+JSON.stringify(subtitleSilhouette));
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-dialogue-and-bottom-fog.png'});
+    // On real bedroom artwork check the right-side icons themselves and
+    // the smoke panel. No extra icon should appear in either top corner.
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-three-right-icons.png'});
+    await page.locator('#quick-backpack').click();
+    await expectEdge(page,'right',true);
+    await page.waitForTimeout(750);
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-backpack-right-fog.png'});
+    await page.locator('#quick-backpack').click();
+    await expectEdge(page,'right',false);
     // A white matte reveals the alpha shape without hiding it in a dark scene.
     await page.evaluate(()=>{
       const src=document.getElementById('ui-edge-fog');
