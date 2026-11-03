@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>错位日常 · 教室双人原画合成</title><style>
+*{box-sizing:border-box}body{margin:0;background:#0e131d;color:#e4eaf3;font-family:system-ui,"Microsoft YaHei",sans-serif}
+header{padding:16px 22px;border-bottom:1px solid #2d3a4a;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:18px;margin:0}small{color:#96a3b5}main{max-width:1600px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px;padding:16px}
+#stage{background:#070a10;border:1px solid #374253;border-radius:12px;padding:8px}canvas{width:100%;display:block;border-radius:6px;cursor:grab;touch-action:none;aspect-ratio:16/9}
+#editor{display:flex;flex-direction:column;gap:12px}article{border:1px solid #374253;border-radius:10px;padding:14px;background:#18212f}
+h2{font-size:15px;margin:0 0 8px}button{border:1px solid #45556a;background:#243144;border-radius:7px;padding:10px 14px;color:inherit;cursor:pointer}button:hover{background:#334257}button.primary{background:#bb965a;color:#121926}
+label{display:block;font-size:12px;margin:11px 0 3px;color:#bbc4d0}label input[type=range]{width:100%;accent-color:#be9656}
+details{font-size:12px;color:#95a6b8;line-height:1.7}.row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}.row>*{flex:1}
+p{font-size:12px;line-height:1.7;color:#94a6b8}#status{padding:8px 0;color:#a2aab4;font-size:12px}
+@media(max-width:950px){main{grid-template-columns:1fr}#editor{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+</style></head><body>
+<header><div><h1>错位日常 · 教室双人分层工作台</h1><small>真实 GitHub 原画｜独立角色｜可调空间与环境光｜不重新绘制五官</small></div>
+<div class="row"><button id="reset">重置</button><button class="primary" id="export">下载 PNG</button></div></header>
+<main><section><div id="stage"><canvas id="scene" width="2048" height="1152"></canvas></div><p id="status">正在加载 GitHub 原画…</p></section>
+<aside id="editor"><article><h2>角色位置和比例</h2><div class="row"><button id="a">女主</button><button id="b">女二</button></div>
+<label>左右位置 X <span id="xv"></span><input type="range" id="x" min="80" max="1950"></label>
+<label>脚底地面位置 Y <span id="yv"></span><input type="range" id="y" min="350" max="1150"></label>
+<label>人物高度 <span id="hv"></span><input type="range" id="h" min="300" max="1080"></label>
+<p>点击选择人物，然后直接在画面中拖动位置。地面深度与人物缩放需要保持一致。</p></article>
+<article><h2>场景融合</h2><label><input type="checkbox" id="shadow" checked> 人物脚底接地阴影</label>
+<label><input type="checkbox" id="light" checked> 人物窗光与环境色</label>
+<label><input type="checkbox" id="foreground" checked> 近景课桌遮挡</label>
+<label><input type="checkbox" id="vignette" checked> 边缘氛围暗角</label>
+<p>教室来自 <code>site/assets/classroom.webp</code>，女主女二为未重新生成的原始角色图片。</p></article>
+<article><h2>替换动作立绘</h2><input type="file" id="replace" accept="image/png,image/webp,image/jpeg">
+<p>只替换当前选中的一个人物；可上传你后续使用局部重绘获得的动作图，另一人物和背景不变。</p>
+<button id="restore">恢复该人物原画</button></article></aside></main>
+<script>
+(()=>{
+const c=document.querySelector("#scene"),ctx=c.getContext("2d"),W=2048,H=1152;
+const sources={bg:"../assets/classroom.webp",a:"../assets/characters/protagonist-front.webp",b:"../assets/characters/char-002/front.png"};
+const $=id=>document.getElementById(id);
+const preset={a:{x:775,y:1114,h:880},b:{x:1340,y:1000,h:685}};
+let pos={a:{...preset.a},b:{...preset.b}},img={},selected="a",drag=null;
+const opt={shadow:true,light:true,foreground:true,vignette:true};
+function load(src){return new Promise((yes,no)=>{let i=new Image();i.onload=()=>yes(i);i.onerror=()=>no(new Error("找不到素材: "+src));i.src=src})}
+function removeWhite(img){
+ const e=document.createElement("canvas");e.width=img.width;e.height=img.height;
+ const x=e.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0);
+ const id=x.getImageData(0,0,e.width,e.height),d=id.data,w=e.width,h=e.height,n=w*h,used=new Uint8Array(n),q=new Int32Array(n);let t=0,j=0;
+ const light=k=>{let v=k*4;return Math.min(d[v],d[v+1],d[v+2])>247&&Math.max(d[v],d[v+1],d[v+2])-Math.min(d[v],d[v+1],d[v+2])<8};
+ function add(k){if(!used[k]&&light(k)){used[k]=1;q[t++]=k}}
+ for(let i=0;i<w;i++){add(i);add(n-w+i)}for(let i=0;i<h;i++){add(i*w);add(i*w+w-1)}
+ while(j<t){let k=q[j++],xx=k%w,yy=Math.floor(k/w);if(xx)add(k-1);if(xx<w-1)add(k+1);if(yy)add(k-w);if(yy<h-1)add(k+w)}
+ for(let i=0;i<n;i++){if(used[i]){d[i*4+3]=0;continue}let x0=i%w,y0=(i/w)|0;let edge=(x0&&used[i-1])||(x0<w-1&&used[i+1])||(y0&&used[i-w])||(y0<h-1&&used[i+w]);if(edge){let k=i*4,a=Math.min(255,Math.max(0,(255-Math.max(d[k],d[k+1],d[k+2]))*13+60));d[k+3]=a}}
+ x.putImageData(id,0,0);return e}
+function bounds(key){let p=pos[key],pic=img[key],w=p.h*pic.width/pic.height;return{x:p.x-w/2,y:p.y-p.h,w,h:p.h}}
+function figure(key){let b=bounds(key);ctx.drawImage(img[key],b.x,b.y,b.w,b.h);if(!opt.light)return;
+ let layer=document.createElement("canvas");layer.width=Math.max(1,Math.round(b.w));layer.height=Math.max(1,b.h);
+ let q=layer.getContext("2d");q.drawImage(img[key],0,0,layer.width,layer.height);
+ q.globalCompositeOperation="source-atop";let g=q.createLinearGradient(0,0,layer.width,0);
+ g.addColorStop(0,"rgba(255,219,170,.08)");g.addColorStop(.45,"rgba(25,47,58,.05)");g.addColorStop(1,"rgba(7,28,47,.22)");
+ q.fillStyle=g;q.fillRect(0,0,layer.width,layer.height);ctx.drawImage(layer,b.x,b.y,b.w,b.h)}
+function shadow(key){if(!opt.shadow)return;let p=pos[key];ctx.save();ctx.filter="blur(17px)";ctx.globalAlpha=.35;ctx.fillStyle="#07121b";ctx.beginPath();ctx.ellipse(p.x,p.y-10,p.h*.12,p.h*.032,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+function foreground(){if(!opt.foreground)return;const poly=[[[0,862],[116,824],[388,821],[750,863],[745,984],[602,1103],[0,1114]],[[1405,854],[1594,808],[1974,798],[2048,850],[2048,1138],[1545,1121],[1409,1031]]];
+ for(let ps of poly){ctx.save();ctx.beginPath();ps.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();ctx.drawImage(img.bg,0,0,W,H);ctx.restore()}}
+function draw(){if(!img.bg||!img.a||!img.b)return;ctx.clearRect(0,0,W,H);ctx.drawImage(img.bg,0,0,W,H);
+ shadow("a");shadow("b");["a","b"].sort((v,k)=>pos[v].y-pos[k].y).forEach(figure);foreground();
+ if(opt.vignette){const g=ctx.createRadialGradient(W*.5,H*.47,200,W*.5,H*.47,1380);g.addColorStop(0,"rgba(5,14,20,0)");g.addColorStop(1,"rgba(5,14,20,.25)");ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}}
+function sync(){let p=pos[selected];for(let k of ["x","y","h"]){$(k).value=p[k];$(k+"v").textContent=p[k]}draw()}
+$("a").onclick=()=>{selected="a";sync()};$("b").onclick=()=>{selected="b";sync()};
+for(let key of ["x","y","h"])$(key).oninput=e=>{pos[selected][key]=+e.target.value;sync()};
+for(let key of ["shadow","light","foreground","vignette"])$(key).onchange=e=>{opt[key]=e.target.checked;draw()};
+$("reset").onclick=()=>{pos={a:{...preset.a},b:{...preset.b}};selected="a";sync()};
+$("restore").onclick=()=>{img[selected]=img["original_"+selected];draw()};
+$("replace").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;const url=URL.createObjectURL(f);try{img[selected]=await load(url);draw()}finally{URL.revokeObjectURL(url)}};
+$("export").onclick=()=>c.toBlob(b=>{if(!b)return;let url=URL.createObjectURL(b),a=document.createElement("a");a.href=url;a.download="paperchalk-classroom-duo.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),1200)},"image/png");
+function mouse(e){let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+c.onpointerdown=e=>{let p=mouse(e);for(let key of ["b","a"]){let b=bounds(key);if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){selected=key;drag={key,x:p.x,y:p.y,origin:{...pos[key]}};c.setPointerCapture(e.pointerId);sync();break}}};
+c.onpointermove=e=>{if(!drag)return;let p=mouse(e),o=pos[drag.key];o.x=Math.round(drag.origin.x+p.x-drag.x);o.y=Math.round(drag.origin.y+p.y-drag.y);sync()};c.onpointerup=()=>drag=null;c.onpointercancel=()=>drag=null;
+Promise.all([load(sources.bg),load(sources.a),load(sources.b)]).then(([bg,a,b])=>{img={bg,a,b:removeWhite(b),original_a:a};img.original_b=img.b;$("status").textContent="女主＋女二原画已载入，直接拖动人物修改位置。";sync()}).catch(e=>$("status").textContent="素材加载失败："+e.message);
+})();
+</script></body></html>
