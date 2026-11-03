@@ -46,6 +46,9 @@ const CHAR002={
  neck:['torso',.50,.80,.50,.80,'fixed'],
  topwear:['torso',.50,.10,.50,.84,'torso'],
  handwear:['torso',.50,.06,.50,.90,'arm-combined'],
+ // Photoshop drew both sleeves in one source layer, with unconnected alpha.
+ hand_raised:['torso',.53,.91,.31,.15,'arm-raised'],
+ hand_lowered:['torso',.82,.06,.30,.93,'arm-lowered'],
  ears:['head',.50,.50,.50,.50,'fixed'],
  face:['head',.50,.45,.50,.45,'face'],
  nose:['head',.50,.50,.50,.50,'fixed'],
@@ -159,7 +162,7 @@ function approachIdle(previous,target,dt){
 function idleGroup(part){
  if(part.kind==='hair')return 'hair';
  if(part.kind==='skirt'||part.kind==='torso')return 'cloth';
- if(part.kind==='arm-left'||part.kind==='arm-right'||part.kind==='arm-combined')return 'sleeves';
+ if(part.kind.startsWith('arm-'))return 'sleeves';
  return 'body';
 }
 // One shared, grounded full-body pose: every texture uses exactly the same
@@ -212,6 +215,14 @@ const SEGMENTS={
   ['right-shoulder',null,.78,.06,.83,.49,8,1.01,.4,.24],
   ['right-elbow','right-shoulder',.83,.49,.81,.92,12,1.16,.95,.23]
  ],
+ 'arm-raised':[
+  ['raised-shoulder',null,.53,.91,.39,.61,8,1.00,-.2,.40],
+  ['raised-elbow','raised-shoulder',.39,.61,.31,.17,18,1.10,.4,.42]
+ ],
+ 'arm-lowered':[
+  ['lowered-shoulder',null,.82,.06,.62,.50,6,1.01,.5,.39],
+  ['lowered-elbow','lowered-shoulder',.62,.50,.30,.93,11,1.13,1.0,.37]
+ ],
  'arm-left':[
   ['shoulder',null,.82,.05,.56,.48,9,.97,.05,.38],
   ['elbow','shoulder',.56,.48,.43,.93,14,1.2,-.62,.36]
@@ -255,7 +266,7 @@ function normalizeBones(records,kind){
 function jointGainFor(part,bone,idle){
  const j=idle?.joints;if(!j||!bone)return 0;
  const kind=part.kind||'',id=String(bone.id||'');
- if(kind==='arm-combined'||kind==='arm-left'||kind==='arm-right')
+ if(kind.startsWith('arm-'))
   return id.includes('elbow')?finite(j.hands,0):finite(j.shoulders,0);
  if(kind==='torso'&&!bone.parent)return finite(j.shoulders,0)*.65;
  if(kind==='skirt'&&!bone.parent)return finite(j.hips,0);
@@ -284,7 +295,9 @@ function bonePoses(part,phase=0,idle=null){
   const wave=Math.sin(phase*finite(b.frequency,1)*speed+
    finite(b.phase,0)-(b.parent?lag:lag*.25));
   const joint=jointGainFor(part,b,idle);
-  const degrees=finite(b.amplitude,0)*(strength*factor+joint*.24);
+  // Wrist of the raised arm needs real displacement, not subpixel jitter.
+  const gain=part.kind==='arm-raised'&&b.id.includes('elbow')?1.15:.24;
+  const degrees=finite(b.amplitude,0)*(strength*factor+joint*gain);
   const angle=b.enabled!==false?clamp(degrees,-55,55)*Math.PI/180*wave:0;
   const theta=parentAngle+angle,cs=Math.cos(theta),sn=Math.sin(theta);
   const dv={x:T.x-P.x,y:T.y-P.y};
@@ -325,7 +338,11 @@ function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  // Independent ArtMesh attachment seam: the top 13% of each real
  // source component is pinned, with C1 easing into free distal motion.
  // This prevents torso/neck/arm shoulders and scalp roots from peeling.
- const rootLock=smooth(clamp((v-.13)/.23,0,1));
+ // Raised arm shoulder is at the bottom. The old top-root lock kept
+ // the raised fingertips stationary regardless of slider value.
+ const rootLock=part.kind==='arm-raised'?
+  smooth(clamp((.91-v)/.23,0,1)):
+  smooth(clamp((v-.13)/.23,0,1));
  const blend=(1-Math.exp(-sum*1.5))*rootLock;
  return {x:part.x+x+dx/sum*blend,y:part.y+y+dy/sum*blend};
 }
