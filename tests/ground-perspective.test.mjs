@@ -55,7 +55,7 @@ const base=perspective.depthScale(160);
 const distantScale=perspective.depthScale(-330);
 assert.ok(near>base&&base>distantScale,'Moving closer MUST make a grounded actor larger');
 assert.equal(base,1,'Reference heroine must retain the 1× reference scale');
-assert.ok(perspective.depthScale(-190)>.7&&perspective.depthScale(-190)<.8);
+assert.ok(perspective.depthScale(-190)>.68&&perspective.depthScale(-190)<.71);
 const normalScale=perspective.renderScale({
   actorHeightCm:155,referenceHeightCm:162,
   actorCanvasHeight:220,referenceCanvasHeight:550,
@@ -79,4 +79,44 @@ const visibleRatio=(220*.86*normalScale.scale)/(550*.9);
 assert.ok(Math.abs(visibleRatio-expectedPhys)<1e-10,
  'The real alpha silhouette plus actual stature must predict apparent height');
 assert.ok(!perspective.renderScale({actorHeightCm:0}).valid);
-console.log('PASS shared L2D floor, physically normalized character height, camera distance shrink/grow and no double perspective');
+// Reproduce the reported screenshot without relying on background assets:
+ // player shoes near y=781, enemy shoes originally near y=670, horizon near
+ // y=430; the enemy must be ~2/3 of the heroine, NOT the old ~0.41 toy scale.
+const screenshot=perspective.projectStandingActor({
+  referenceFootY:781,horizonY:430,
+  referenceVisiblePx:585,actorVisiblePx:242,
+  referenceHeightCm:162,actorHeightCm:155,
+  referenceZ:160,actorZ:-190
+});
+assert.equal(screenshot.valid,true);
+assert.ok(screenshot.visibleRatio>.64&&screenshot.visibleRatio<.68,
+  'Visible height must follow depth plus actual stature: '+JSON.stringify(screenshot));
+assert.ok(screenshot.targetFootY>665&&screenshot.targetFootY<690,
+  'NPC shoe must lie ON the same projected floor: '+JSON.stringify(screenshot));
+assert.ok(screenshot.targetVisiblePx>375&&screenshot.targetVisiblePx<405,
+  'Prior 242px NPC is a perspective error: '+JSON.stringify(screenshot));
+assert.ok(screenshot.scale>1.5&&screenshot.scale<1.7,
+  'Correct by scaling animated art, not reauthoring saved canvas sizes');
+const forward=perspective.projectStandingActor({
+  referenceFootY:781,horizonY:430,
+  referenceVisiblePx:585,actorVisiblePx:242,
+  referenceHeightCm:162,actorHeightCm:155,
+  referenceZ:160,actorZ:-60
+});
+const backward=perspective.projectStandingActor({
+  referenceFootY:781,horizonY:430,
+  referenceVisiblePx:585,actorVisiblePx:242,
+  referenceHeightCm:162,actorHeightCm:155,
+  referenceZ:160,actorZ:-350
+});
+assert.ok(forward.targetVisiblePx>screenshot.targetVisiblePx&&
+  screenshot.targetVisiblePx>backward.targetVisiblePx);
+assert.ok(forward.targetFootY>screenshot.targetFootY&&
+  screenshot.targetFootY>backward.targetFootY);
+assert.equal(perspective.projectStandingActor({
+  referenceFootY:400,horizonY:430,
+  referenceVisiblePx:585,actorVisiblePx:242,
+  referenceHeightCm:162,actorHeightCm:155,
+  referenceZ:160,actorZ:-190
+}).valid,false);
+console.log('PASS shoe-ground single camera, screenshot 66% physical depth ratio, foreground baseline and near/far floor motion');
