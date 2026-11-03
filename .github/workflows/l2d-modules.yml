@@ -50,6 +50,7 @@ jobs:
           python3 scripts/build_v4_assets.py
           python3 scripts/build_protagonist_part_rig.py
           python3 scripts/build_char002_v4.py
+          python3 scripts/build_char002_part_rig.py
           python3 scripts/build_scene_catalog.py
       - name: Export ORIGINAL eye/nose/brow PNGs to face-only QA artifact for visual review
         run: |
