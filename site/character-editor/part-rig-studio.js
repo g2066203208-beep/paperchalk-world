@@ -69,9 +69,9 @@ $('rig-guides').addEventListener('change',event=>{
 });
 // Four controls adjust the exact live model played in the game, without presets.
 const quickGroups={
- fringe:['front_hair'],
+ fringe:['front_hair','hair'],
  rear:['rear_hair','back_hair','hair_over_jacket'],
- skirt:['skirt','bottomwear']
+ skirt:['skirt','bottomwear','cloth']
 };
 const available=id=>(quickGroups[id]||[]).filter(key=>!!state.model?.parts[key]);
 function quickInfo(message){$('rig-quick-status').textContent=message;}
@@ -85,6 +85,9 @@ function syncIdle(){
   }else{
    const ids=available(id);row.hidden=!ids.length;
    if(!ids.length)continue;
+   const label=row.querySelector('span');
+   if(id==='fringe')label.textContent=ids.includes('hair')&&!ids.includes('front_hair')?'头发摆幅':'刘海摆幅';
+   if(id==='skirt')label.textContent=ids.includes('cloth')&&!ids.includes('skirt')?'衣摆摆幅':'裙摆摆幅';
    const mean=ids.reduce((sum,key)=>sum+(idle.parts[key]??1),0)/ids.length;
    input.value=String(Math.round(mean*100/5)*5);
   }
