@@ -106,11 +106,24 @@ try{
         pointerEvents:'none',zIndex:'1000',boxShadow:'none'});
       root.append(el);
     };
-    const W=view.clientWidth,H=view.clientHeight;
-    const x=W*.46,y=H*.52;
-    create(player,'player-fog-probe','#00ff00',x-24,y-24);
-    create(enemy,'enemy-fog-probe','#ff00ff',
-      x-(W-enemy.offsetWidth)/2-24,y-(H-enemy.offsetHeight)/2-24);
+    create(player,'player-fog-probe','#00ff00',0,0);
+    create(enemy,'enemy-fog-probe','#ff00ff',0,0);
+    // The original L2D parent has a large shoe-ground Y translation;
+    // mobile also rotates the whole logical viewport. Position each probe
+    // in local coordinates that maps to the SAME physical screen center.
+    // Do not use locator.screenshot() here: Playwright scrolls #view
+    // (overflow:hidden is still scrollable programmatically) to reveal
+    // the remote enemy marker, moving the fog itself off-screen!
+    const transform=getComputedStyle(view).transform;
+    const m=transform==='none'?new DOMMatrix():new DOMMatrix(transform);
+    const det=m.a*m.d-m.b*m.c;
+    const centerX=innerWidth*.5,centerY=innerHeight*.5;
+    for(const id of ['player-fog-probe','enemy-fog-probe']){
+      const el=document.getElementById(id),b=el.getBoundingClientRect();
+      const dx=centerX-(b.left+b.width*.5),dy=centerY-(b.top+b.height*.5);
+      const x=(m.d*dx-m.c*dy)/det,y=(-m.b*dx+m.a*dy)/det;
+      el.style.left=x+'px';el.style.top=y+'px';
+    }
     // The exact ACTIVE UI-edge fog canvas, not a separate fake test layer.
     // Fully opaque only during this probe; all normal fog animation remains
     // unchanged and continues after the probe.
@@ -118,12 +131,12 @@ try{
     uiFog.hidden=false;
   });
   await page.waitForTimeout(130);
-  const playerColor=pixelAtCenter(await page.locator('#player-fog-probe').screenshot());
+  const playerColor=pixelAtCenter(await page.screenshot());
   assert.ok(playerColor[1]>205&&playerColor[0]<100&&playerColor[2]<100,
     'FOREGROUND PROTAGONIST was painted behind black fog: '+
       JSON.stringify({cfg:cfg.name,playerColor,roles}));
   await page.locator('#player-fog-probe').evaluate(el=>{el.style.opacity='0'});
-  const enemyCovered=pixelAtCenter(await page.locator('#enemy-fog-probe').screenshot());
+  const enemyCovered=pixelAtCenter(await page.screenshot());
   const occlusionDiagnostics=await page.evaluate(()=>{
     const ids=['view','enemy-depth-root','fog','ui-edge-fog',
       'camera-player-root','novel-ui','enemy-fog-probe'];
@@ -144,6 +157,7 @@ try{
     data.hitOrder=document.elementsFromPoint(x,y)
       .slice(0,15).map(e=>e.id||e.tagName);
     data.sample={x,y};
+    data.viewScrollTop=document.getElementById('view').scrollTop;
     return data;
   });
   await page.screenshot({path:'artifacts/fog-layer/'+cfg.name+'-compositing-debug.png'});
@@ -159,7 +173,7 @@ try{
     return {fog:fog.style.visibility,hidden:edge.hidden};
   });
   assert.equal(baseline.hidden,true);
-  const enemyExposed=pixelAtCenter(await page.locator('#enemy-fog-probe').screenshot());
+  const enemyExposed=pixelAtCenter(await page.screenshot());
   assert.ok(enemyExposed[0]>190&&enemyExposed[2]>190&&enemyExposed[1]<90,
     'NPC occlusion probe did not appear when both smoke layers were removed: '+
       JSON.stringify({cfg:cfg.name,enemyExposed,enemyCovered}));
