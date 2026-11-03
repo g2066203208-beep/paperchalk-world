@@ -106,7 +106,8 @@ async function assign(target,id,face='front',save=true){
    if(!window.PaperchalkL2DLibrary)throw Error('游戏未安装模块化 ArtMesh 播放器');
    // PROTAGONIST: her original actor automatically renders independent
    // animated hair, pleats and both arms. No separate experimental selection.
-   await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig);
+   await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig,
+    await get('part-rig:'+id+':'+face));
    if(id==='protagonist')actor.root.dataset.l2dBreath='disabled';
   }catch(error){
    // Fail safe: preserve the existing approved V4 when any PNG/rig is
@@ -143,7 +144,8 @@ async function assign(target,id,face='front',save=true){
  }
  // The same source artwork edited in DEV is used on the game actor.
  // No ZIP re-import and no separate heroine-only database.
- await window.PaperchalkL2D.setComponentPatch(target,usesPsdRig||publishedRig?null:await get('parts-patch:'+id+':'+face));
+ await window.PaperchalkL2D.setComponentPatch(target,usesPsdRig||(publishedRig&&id!=='protagonist')
+  ?null:await get('parts-patch:'+id+':'+face));
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
  note('正在加载 '+c.label+' · '+(face==='back'?'背面':'正面')+
