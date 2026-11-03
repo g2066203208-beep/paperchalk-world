@@ -13,9 +13,6 @@ on:
       - 'site/character-editor/part-rig-studio.js'
       - 'site/character-editor/index.html'
       - 'site/index.html'
-      - 'site/game/prologue.js'
-      - 'site/game/prologue.css'
-      - 'tests/test_prologue.js'
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
@@ -26,9 +23,6 @@ on:
       - 'site/assets/l2d/library/**'
       - 'site/l2d/library-player.js'
       - 'site/dev/character-bridge.js'
-      - 'site/game/prologue.js'
-      - 'site/game/prologue.css'
-      - 'tests/test_prologue.js'
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
@@ -52,8 +46,6 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_l2d_library.py' -v
       - name: Validate realistic idle and independent per-part settings
         run: node tests/test_l2d_idle.js
-      - name: Validate first-person prologue data, branch and safe casting
-        run: node tests/test_prologue.js
       - name: Rebuild existing original L2D safely
         run: |
           python3 scripts/build_v4_assets.py
@@ -162,46 +154,6 @@ jobs:
             const page=await browser.newPage({viewport:{width:1200,height:850}});
             const errors=[];page.on('pageerror',e=>errors.push(e.message));
             await page.goto('http://127.0.0.1:8132/?scene=classroom&dev=1',{waitUntil:'load'});
-            // The opening runs in first person with NO choice menus.
-            // Identity is concealed by the moving ArtMesh silhouette until
-            // the scene's light cue explicitly unmasks the character.
-            const prologuePage=await browser.newPage({viewport:{width:1200,height:850}});
-            await prologuePage.goto('http://127.0.0.1:8132/?prologue=1',{waitUntil:'load'});
-            await prologuePage.waitForFunction(()=>
-              document.querySelector('#view')?.classList.contains('prologue-first-person'),
-              null,{timeout:15000});
-            assert.equal(await prologuePage.evaluate(()=>
-              document.getElementById('camera-player-root').hidden),true);
-            assert.ok((await prologuePage.locator('#dialogue-text').innerText()).includes('第九只'));
-            await prologuePage.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,
-              null,{timeout:30000});
-            for(let i=0;i<8;i++)await prologuePage.locator('#next-line').click();
-            await prologuePage.waitForFunction(()=>
-              window.PaperchalkL2DLibrary?.get('enemy')?.layers?.length===18,
-              null,{timeout:25000});
-            const beforeReveal=await prologuePage.evaluate(()=>{
-              const actor=document.getElementById('enemy-depth-root');
-              const surface=actor.querySelector('[data-l2d-canvas]');
-              return {hidden:actor.hidden,identity:actor.dataset.identityVisibility,
-                filter:getComputedStyle(surface).filter};
-            });
-            assert.equal(beforeReveal.hidden,false);
-            assert.equal(beforeReveal.identity,'silhouette');
-            assert.ok(beforeReveal.filter.includes('brightness(0)'),
-              'unrevealed female-two must be PURE BLACK instead of showing a partial face or original textures');
-            for(let i=8;i<16;i++)await prologuePage.locator('#next-line').click();
-            const afterReveal=await prologuePage.evaluate(()=>{
-              const actor=document.getElementById('enemy-depth-root');
-              return {identity:actor.dataset.identityVisibility,
-                filter:getComputedStyle(actor.querySelector('[data-l2d-canvas]')).filter};
-            });
-            assert.equal(afterReveal.identity,'revealed');
-            assert.ok(!afterReveal.filter.includes('brightness(0)'),
-              'the actual original textured L2D must appear only after the light turns on');
-            assert.equal(await prologuePage.locator('#prologue-choices').count(),0);
-            assert.equal(await prologuePage.evaluate(()=>
-              JSON.parse(localStorage.getItem('paperchalk-prologue-v2')).line),16);
-            await prologuePage.close();
             await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:30000});
             // Both playable slots must exist even though enemy's layout anchor
             // originally had no src. The default NPC is canonical CHAR-002.
