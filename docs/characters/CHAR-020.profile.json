@@ -1580,10 +1580,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "speechUnderStress": {
-        "value": "重复关键时间或声音来确认",
+        "value": "先收住轻浮笑意、观察情况，再简短作答（提案）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "当前仅为设计提案，非正式游戏实装"
       },
       "dialogueExamples": {
         "value": [
@@ -2005,10 +2005,10 @@
         "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "weatherResponse": {
-        "value": "雨天会注意雨点和铃声混合的声响",
+        "value": "天气影响衣服和头发，尚无特殊听觉技能设定",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "当前仅为设计提案，非正式游戏实装"
       },
       "locationsVisited": {
         "value": null,
@@ -2621,16 +2621,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "voiceVolume": {
-        "value": "中等稍轻",
+        "value": "中等、说笑时略亮",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "当前仅为设计提案，非正式游戏实装"
       },
       "ambienceRules": {
-        "value": "雨夜环境声可衬托听辨能力，不遮盖对白",
+        "value": "普通人物对白应保持清楚，环境声不抢戏",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "当前仅为设计提案，非正式游戏实装"
       }
     },
     "gameplay": {
@@ -2641,10 +2641,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "dialogueTree": {
-        "value": "初见→广播异常→证词核验→信任事件",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "旧录音/广播剧情未经批准，撤销以免误导"
       },
       "affinity": {
         "value": "关系数值未定，尊重与验证可提升",
@@ -2653,10 +2653,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "trust": {
-        "value": "被认真倾听则提升，被戏弄则下降",
+        "value": "按角色与玩家实际互动变化；未编制自动好感结算",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "当前仅为设计提案，非正式游戏实装"
       },
       "playerControl": {
         "value": "非默认玩家主控角色",
@@ -2691,22 +2691,17 @@
       "saveFlags": {
         "value": [
           "met_male3",
-          "recording_checked",
           "male3_trust_stage"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "当前仅为设计提案，非正式游戏实装"
       },
       "choiceTriggers": {
-        "value": [
-          "listen_again",
-          "accept_evidence",
-          "ignore_hint"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "旧录音/广播剧情未经批准，撤销以免误导"
       },
       "npcBrain": {
         "value": "候选校园状态机：上课、活动、放学、交谈",
@@ -2717,12 +2712,11 @@
       "flagsVariables": {
         "value": {
           "met": false,
-          "trust": 0,
-          "recordingChecked": false
+          "trust": 0
         },
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 CHAR-020 V0.2 448字段冲突复核",
+        "notes": "当前仅为设计提案，非正式游戏实装"
       },
       "inventoryRules": {
         "value": "物品栏可按剧情拥有物品，但人物待机母图必须双手空；武器装备独立于人物立绘分层，未来按动作/状态动态装备与切换",
@@ -2944,8 +2938,8 @@
   },
   "fieldCount": 448,
   "statusSummary": {
-    "proposed": 305,
-    "unknown": 128,
+    "proposed": 303,
+    "unknown": 130,
     "user_confirmed": 5,
     "not_applicable": 10
   }
