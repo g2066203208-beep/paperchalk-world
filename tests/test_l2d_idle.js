@@ -25,7 +25,7 @@ const span=(id,u,v,profile=idle)=>{
 assert.equal(idle.profileVersion,4);
 assert.equal(idle.preset,'realistic');
 assert.deepEqual([idle.body.amount,idle.hair.amount,idle.cloth.amount,idle.sleeves.amount],
- [0,.18,.12,.045]);
+ [0,.24,.18,.045]);
 assert.equal(idle.weather,'realistic');
 assert.equal(idle.windLift,0);
 assert.equal(p('front_hair').bones.length,6);
@@ -52,7 +52,7 @@ assert.deepEqual(core.bodyIdleAt(p('face'),4,idle),{x:0,y:0});
 for(const name of ['realistic','breeze','windy']){
  const profile=core.presetIdle(name,idle);
  assert.deepEqual([profile.hair.amount,profile.cloth.amount,
-  profile.body.amount,profile.windLift],[.18,.12,0,0],
+  profile.body.amount,profile.windLift],[.24,.18,0,0],
   'all former wind options must resolve to the ONE standing animation');
  assert.deepEqual(core.windField(p('front_hair'),.15,.95,3,profile),{x:0,y:0});
  assert.deepEqual(core.windField(p('skirt'),.85,.95,3,profile),{x:0,y:0});
@@ -80,8 +80,8 @@ const clamped=core.sanitizeIdleProfile({
  profileVersion:4,hair:{amount:99},cloth:{amount:99},
  sleeves:{amount:99},parts:{front_hair:99}
 });
-assert.ok(clamped.hair.amount<=.30&&clamped.cloth.amount<=.22&&
- clamped.sleeves.amount<=.12&&clamped.parts.front_hair<=1.25,
+assert.ok(clamped.hair.amount<=.40&&clamped.cloth.amount<=.30&&
+ clamped.sleeves.amount<=.12&&clamped.parts.front_hair<=3,
  'malformed saved values cannot restore high wind or excessive amplitude');
 const paused=core.presetIdle('still');
 assert.ok(span('front_hair',.2,.95,paused)<.001);
