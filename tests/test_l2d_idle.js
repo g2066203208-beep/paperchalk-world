@@ -50,5 +50,22 @@ const reloaded=core.project([make('rear_hair')],'protagonist','front',{
  idleProfile:core.presetIdle('breeze',initial),
  parts:{rear_hair:part('rear_hair')}});
 assert.equal(reloaded.idleProfile.preset,'breeze');
-assert.equal(reloaded.idleProfile.hair.amount,.78);
+assert.equal(reloaded.idleProfile.hair.amount,1.12);
+const oldDefault=core.sanitizeIdleProfile({
+ preset:'realistic',hair:{amount:.48},cloth:{amount:.34},parts:{}
+});
+assert.equal(oldDefault.hair.amount,.85,'upgrade old untouched gentle hair');
+assert.equal(oldDefault.cloth.amount,.82,'upgrade old untouched weak skirt');
+assert.equal(oldDefault.parts.front_hair,1.25,'special fringe weight');
+assert.equal(oldDefault.parts.skirt,1.35,'special hem weight');
+const savedCustom=core.sanitizeIdleProfile({
+ preset:'custom',hair:{amount:.45},cloth:{amount:.31},
+ parts:{front_hair:.5,skirt:0}
+});
+assert.deepEqual([
+ savedCustom.hair.amount,savedCustom.cloth.amount,
+ savedCustom.parts.front_hair,savedCustom.parts.skirt
+],[.45,.31,.5,0],'explicit user values must remain exactly as set');
+assert.equal(core.defaultIdleProfile().body.amount,.18,
+ 'body must not exaggerate or introduce breathing');
 console.log('PASS idle presets, original source-part hair/skirt isolation, gentle body, per-part sliders and save/restore');
