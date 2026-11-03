@@ -148,6 +148,15 @@ jobs:
                 assert.equal(await page.evaluate(()=>
                   window.characterEditor.S.layers.front.find(p=>p.partId==='jacket').canvas.toDataURL()===
                     window.__partRigArtBackup),true,'the old approved jacket pixels stay byte-identical');
+                const directPage=await browser.newPage({viewport:vp,isMobile:vp.width<500,hasTouch:vp.width<500});
+                await directPage.goto('http://127.0.0.1:8123/character-editor/?character=protagonist&side=front&idle=1',
+                  {waitUntil:'load'});
+                await directPage.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:30000});
+                assert.equal(await directPage.locator('#part-rig-panel').isVisible(),true,
+                  'a shared ?idle=1 URL must open real controls automatically');
+                assert.equal(await directPage.locator('[data-idle="hair.amount"]').isVisible(),true);
+                await directPage.screenshot({path:'artifacts/character-editor/'+vp.width+'-DIRECT-URL-OPEN.png'});
+                await directPage.close();
 
                 assert.ok(await page.locator('#main-play').isVisible(),'full viewport playback control must be visible');
                 const breathing=await page.evaluate(()=>{
