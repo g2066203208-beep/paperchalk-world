@@ -1,0 +1,50 @@
+name: Cinematic shoulder-camera real-render QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/index.html'
+      - 'site/game/ground-perspective.js'
+      - 'site/game/l2d-ground-binding.js'
+      - 'tests/ground-perspective.test.mjs'
+      - 'tests/ground-perspective-browser.mjs'
+      - '.github/workflows/shoulder-camera.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: shoulder-camera-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  camera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build real scene and source-part characters
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_scene_catalog.py
+          python3 scripts/build_character_catalog.py
+      - name: Validate single world-camera projection mathematics
+        run: node tests/ground-perspective.test.mjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Check real animated L2D, close foreground and opponent size on desktop/mobile
+        run: node tests/ground-perspective-browser.mjs
+      - name: Upload real shoulder-camera screenshots for visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shoulder-camera-desktop-mobile
+          path: artifacts/ground/*.png
+          retention-days: 14
+          if-no-files-found: warn
