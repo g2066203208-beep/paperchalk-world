@@ -72,6 +72,45 @@ jobs:
               assert.equal(first.mode,'library-part-mesh');
               assert.equal(first.layerCount,17);
               for(const key of ['face','brows','nose','iris','lashes'])assert.ok(first[key],key+' missing');
+              // Verify the ACTUAL published 17-layer heroine, not a fake mannequin.
+              const anatomy=await page.evaluate(()=>{
+                const a=window.PaperchalkL2DLibrary.get('player');
+                const model=a.model,p=model.parts,rig=model.bodyHierarchy,
+                  core=window.PaperchalkPartRigCore;
+                const missing=!rig;
+                if(missing)return {bound:false,
+                  positions:Object.fromEntries(['shoes','legs','skirt','jacket','neck','face']
+                    .map(id=>[id,{x:p[id]?.x,y:p[id]?.y,h:p[id]?.h}]))};
+                const idle=core.sanitizeIdleProfile({...model.idleProfile,
+                  joints:{hands:0,shoulders:6,hips:6}});
+                const d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+                const wp=(part,u,v,t)=>core.warpPoint(p[part],u,v,t,null,idle);
+                let anchored=0;
+                for(const leg of [rig.left,rig.right]){
+                  const u=(leg.ankle.x-p.legs.x)/p.legs.w,
+                    v=(leg.ankle.y-p.legs.y)/p.legs.h;
+                  for(const t of [.3,1.2,3.2,4.9])
+                    anchored=Math.max(anchored,d(wp('legs',u,v,t),leg.ankle));
+                }
+                const q=rig.shoulder,par=id=>core.parentPoint(p[id],q,1.4,idle);
+                return {bound:true,anchored,
+                  shoeMotion:d(wp('shoes',.5,.8,.4),wp('shoes',.5,.8,3.6)),
+                  faceMotion:d(wp('face',.5,.5,.4),wp('face',.5,.5,3.6)),
+                  neckMotion:d(wp('neck',.5,.5,.4),wp('neck',.5,.5,3.6)),
+                  headCoupling:Math.max(...['neck','face','brows','nose','irises',
+                     'front_hair','rear_hair'].map(id=>d(par(id),par('sleeves_and_hands')))),
+                  waistCoupling:d(core.parentPoint(p.jacket,rig.pelvis,1.4,idle),
+                     core.parentPoint(p.skirt,rig.pelvis,1.4,idle)),
+                  rig};
+              });
+              console.log('REAL GAME GROUNDED L2D HIERARCHY',name,JSON.stringify(anatomy));
+              assert.ok(anatomy.bound,'real heroine must have a hierarchy derived from her source-part coordinates');
+              assert.ok(anatomy.anchored<.00001&&anatomy.shoeMotion<.00001,
+                'shoe layer and both ankles must stay planted during hip motion');
+              assert.ok(anatomy.headCoupling<.00001&&anatomy.waistCoupling<.00001,
+                'head, neck and shoulders must share a parent, and jacket/skirt share pelvis');
+              assert.ok(anatomy.faceMotion>1&&anatomy.neckMotion>1,
+                'shoulder movement must actually carry the visible head and neck');
               assert.equal(first.hasBreath,false,'obsolete breathing script cannot run');
               assert.ok(first.blinkOpen<.001&&first.blinkClosed>.99,'blinking must actually close');
               await page.screenshot({path:'artifacts/l2d-studio/'+name+'-game-protagonist.png'});
