@@ -620,8 +620,8 @@ function blinkAmount(phase){
 const FACE_STACK=['rear_hair','sleeves_and_hands','legs','shoes','neck',
   'skirt','jacket','ears','face','eye_white','irises','lashes',
   'brows','front_hair','nose','mouth','hair_clip'];
-const FACE_MICRO=new Set(['face','ears','brows','nose','mouth','hair_clip',
-  'eye_white','irises','lashes']);
+const FACE_MICRO=new Set(['face','head_reference','ears','brows','eyebrow','nose','mouth','hair_clip',
+  'eye_white','irises','lashes','eyewhite','irides','eyelash']);
 function drawFacePart(ctx,source,part,phase,idle){
  const img=source.canvas,id=part.id,blink=blinkAmount(phase);
  // Align attached facial pieces to exactly the same barely visible head
@@ -634,11 +634,11 @@ function drawFacePart(ctx,source,part,phase,idle){
  ctx.transform(1,0,-lean.lean,1,lean.feet*lean.lean,0);
  ctx.translate(motion.x,motion.y);
  applyRigidParent(ctx,part,phase,idle);
- if(id==='eye_white'||id==='irises'){
+ if(id==='eye_white'||id==='irises'||id==='eyewhite'||id==='irides'){
   // Real iris/eye-white PNGs gradually disappear under closing eyelids.
   ctx.globalAlpha*=1-blink;
   if(ctx.globalAlpha>0.001)ctx.drawImage(img,part.x,part.y);
- }else if(id==='lashes'){
+ }else if(id==='lashes'||id==='eyelash'){
   // The source lash art forms the closed eyelid. Squash toward its center,
   // not toward the face origin; both eyes keep their native proportions.
   const center=part.y+part.h*.52;
