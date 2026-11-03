@@ -393,6 +393,8 @@ function bindBodyHierarchy(model){
  const layout={pelvis:xy(skirt,.5,.08),shoulder:xy(torso,.5,.12),
   head:face?xy(face,.5,.5):hair?xy(hair,.5,.35):xy(torso,.5,-.2),
   left,right,legsId:legs.id,feetId:feet.id};
+ // Cropped or unaligned imports must NOT acquire fabricated body motion.
+ if(layout.pelvis.y-layout.shoulder.y<15)return model;
  Object.defineProperty(model,'bodyHierarchy',{value:layout,configurable:true});
  for(const part of Object.values(p))
   Object.defineProperty(part,'_bodyHierarchy',{value:layout,configurable:true});
