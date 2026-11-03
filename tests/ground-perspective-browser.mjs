@@ -44,12 +44,22 @@ try{
    // Moving the ground is a shared-parent transform, not a loose 3D grid.
    // Check REAL DOM shoes: foreground and background must travel the same
    // logical-pixel distance, leaving individually saved actor offsets intact.
-   // L2D runtime renders into canvases (or animated native V4 image),
-   // NOT the invisible <img> anchors; test the actual visible artwork.
+   // The standalone fog-smoke workflow builds scene assets only; its
+   // committed character catalog contains the heroine, not CHAR-002.
+   // Bind the existing genuine CHAR-002 PNG to its real L2D renderer
+   // (never display the static PNG) before testing the L2D CANVAS.
+   await page.evaluate(async()=>{
+     const a=window.PaperchalkL2D.get('enemy');
+     if(!a.img.src){
+       a.img.src='./assets/characters/char-002/front.png';
+       await a.img.decode();
+     }
+     await window.PaperchalkL2D.refresh('enemy');
+   });
    await page.waitForFunction(()=>['player','enemy'].every(id=>{
-     const actor=window.PaperchalkL2D?.get(id);
-     return actor?.root?.dataset.l2dState==='ready'&&actor.canvas.width>0&&actor.canvas.height>0;
-   }),{timeout:20000});
+     const a=window.PaperchalkL2D?.get(id);
+     return a?.root?.dataset.l2dState==='ready'&&a.canvas.width>0&&a.canvas.height>0;
+   }),null,{timeout:18000});
    const floorStart=await page.evaluate(()=>{
      const view=document.getElementById('view');
      const rig=document.getElementById('dev-rig');
