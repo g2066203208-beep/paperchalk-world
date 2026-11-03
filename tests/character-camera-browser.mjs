@@ -70,7 +70,9 @@ try{
     },z);
   };
   const ref=await capture();
-  const expected=155/162*(950-160)/(950-(-190));
+  // Cinematic v4: heroine +300 is a true cropped foreground character,
+  // female-two -40 is a nearby opponent IN the fog, not a distant doll.
+  const expected=155/162*(950-300)/(950-(-40));
   const ratio=ref.enemy.renderedHeight/ref.player.renderedHeight;
   assert.equal(ref.dev,false);
   assert.ok(ref.horizon>ref.viewportHeight*.3&&ref.horizon<ref.viewportHeight*.7,
@@ -78,17 +80,21 @@ try{
   assert.ok(Math.abs(ratio-expected)<.035,
     'Enemy still looks miniature; visible heights not projectively normalized: '+
     JSON.stringify({ratio,expected,ref}));
-  assert.ok(ref.enemy.expectedFootY>ref.horizon&&
+  assert.ok(ref.player.worldFootY>ref.viewportHeight*1.025&&
+    ref.player.worldFootY<ref.viewportHeight*1.065,
+    'Heroine feet must be deliberately BEYOND the lower camera frame: '+JSON.stringify(ref));
+  assert.ok(ref.enemy.expectedFootY>ref.viewportHeight*.82&&
+    ref.enemy.expectedFootY<ref.viewportHeight*.91&&
     ref.enemy.expectedFootY<ref.player.worldFootY,
-    'Enemy foot must lie between horizon and protagonist foot on the same floor: '+JSON.stringify(ref));
+    'Enemy must stand on the close MIDGROUND at 82–91% frame height: '+JSON.stringify(ref));
   assert.ok(Math.abs(ref.enemy.worldFootY-ref.enemy.expectedFootY)<1);
-  assert.ok(ref.enemy.perspectiveScale>1.3&&ref.enemy.perspectiveScale<2.5,
-    'Legacy 34% layout should get ONE ~1.6x correction, not a 5x upsample: '+JSON.stringify(ref));
+  assert.ok(ref.enemy.perspectiveScale>1&&ref.enemy.perspectiveScale<1.7,
+    'Nearby CHAR-002 must not be magnified from a tiny old 34% source: '+JSON.stringify(ref));
   assert.ok(ref.enemy.sourceCanvasPixels>=512*512,
     'Character sharpness source resolution is too low');
   await page.screenshot({path:'artifacts/perspective/'+cfg.name+'-both-actors-corrected.png'});
   const far=await capture(-350);
-  const near=await capture(-60);
+  const near=await capture(-10);
   assert.ok(far.enemy.renderedHeight<ref.enemy.renderedHeight&&
     ref.enemy.renderedHeight<near.enemy.renderedHeight,
     'Near/far motion must change actual visible L2D height');
@@ -102,7 +108,7 @@ try{
     'Camera distance must not rebuild large L2D textures');
   await page.screenshot({path:'artifacts/perspective/'+cfg.name+'-near-grounded.png'});
   assert.deepEqual(errors,[],errors.join('; '));
-  console.log('PASS '+cfg.name+': character 155/162 height, same ground and one 950px camera: '+
+  console.log('PASS '+cfg.name+': near-camera heroine cropped below screen, midground opponent, common floor: '+
     JSON.stringify({ratio,expected,footY:ref.enemy.worldFootY,
       horizon:ref.horizon,far:far.enemy.renderedHeight,near:near.enemy.renderedHeight,
       sourceReadbacks:ref.perf.sourceReadbacks}));
