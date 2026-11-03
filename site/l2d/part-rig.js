@@ -87,7 +87,7 @@ const DEFAULT_PART_STRENGTH=Object.freeze({
 });
 function defaultIdleProfile(){
  const a=IDLE_PRESETS.realistic,r=IDLE_RATES.realistic;
- return {profileVersion:3,preset:'realistic',
+ return {profileVersion:3,preset:'realistic',weather:'realistic',
   body:{amount:a.body,speed:.85,swayX:.8,swayY:1.8,rotate:.35},
   hair:{amount:a.hair,speed:r.hair[0],lag:r.hair[1]},
   cloth:{amount:a.cloth,speed:r.cloth[0],lag:r.cloth[1]},
@@ -130,6 +130,8 @@ function sanitizeIdleProfile(input){
     parts[id]=DEFAULT_PART_STRENGTH[id];
  }
  return {profileVersion:3,preset:typeof p.preset==='string'?p.preset:'custom',
+  weather:Object.hasOwn(IDLE_PRESETS,p.weather)?p.weather:
+   Object.hasOwn(IDLE_PRESETS,p.preset)?p.preset:'realistic',
   body:{...groups.body,swayX:clamp(finite(p.body?.swayX,.8),0,3),
    swayY:clamp(finite(p.body?.swayY,1.8),0,4),
    rotate:clamp(finite(p.body?.rotate,.35),0,1)},
@@ -138,7 +140,7 @@ function sanitizeIdleProfile(input){
 function presetIdle(name,previous=null){
  if(!Object.hasOwn(IDLE_PRESETS,name))throw Error('Unknown idle preset: '+name);
  const p=sanitizeIdleProfile(previous||defaultIdleProfile());
- p.preset=name;p.profileVersion=3;
+ p.preset=name;p.weather=name;p.profileVersion=3;
  // Selecting a weather preset also resets old excessive per-part weights.
  p.parts={...DEFAULT_PART_STRENGTH};
  for(const [kind,amount] of Object.entries(IDLE_PRESETS[name]))p[kind].amount=amount;
@@ -153,7 +155,7 @@ function presetIdle(name,previous=null){
 function approachIdle(previous,target,dt){
  if(!previous)return sanitizeIdleProfile(target);
  const a=1-Math.exp(-Math.max(0,Math.min(.12,finite(dt,0)))*3.2);
- const out={...previous,preset:target.preset,profileVersion:3,
+ const out={...previous,preset:target.preset,weather:target.weather,profileVersion:3,
   parts:{...previous.parts}};
  for(const group of ['body','hair','cloth','sleeves']){
   out[group]={...previous[group]};
@@ -275,15 +277,16 @@ function bonePoses(part,phase=0,idle=null){
   const lag=group?.lag||0;
   // Smooth gust envelope, separate delays and small directional lift.
   // Realistic mode never gets a gust or whole-poster breathing.
-  const wind=idle?.preset==='windy'?
+  const weather=idle?.weather||idle?.preset;
+  const wind=weather==='windy'?
    smooth((1+Math.sin(phase*.29-.7))/2):0;
-  const mild=idle?.preset==='breeze'?
+  const mild=weather==='breeze'?
    smooth((1+Math.sin(phase*.23-.45))/2):0;
-  const envelope=idle?.preset==='windy'?(.68+.32*wind):
-   idle?.preset==='breeze'?(.88+.12*mild):1;
+  const envelope=weather==='windy'?(.68+.32*wind):
+   weather==='breeze'?(.88+.12*mild):1;
   const wave=Math.sin(phase*finite(b.frequency,1)*speed+
    finite(b.phase,0)-(b.parent?lag:lag*.25));
-  const direction=idle?.preset==='windy'?.13*wind:0;
+  const direction=weather==='windy'?.13*wind:0;
   const angle=b.enabled!==false?finite(b.amplitude,0)*strength*factor*
    Math.PI/180*(wave*envelope+direction):0;
   const theta=parentAngle+angle,cs=Math.cos(theta),sn=Math.sin(theta);
