@@ -57,6 +57,28 @@ try{
     await expectEdge(page,'left',true);
     await page.waitForTimeout(750);
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-left-menu.png'});
+    // Reject the previous translucent black board: the left UI fog must
+    // have a variable organic silhouette, never shade the middle of the room.
+    const menuSmoke=await page.evaluate(()=>{
+      const c=document.getElementById('ui-edge-fog');
+      const w=c.width,h=c.height;
+      const px=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data;
+      const rows=[.18,.28,.38,.48,.58].map(f=>{
+        const y=Math.floor(h*f),range=Math.floor(w*.38);
+        let front=0;
+        for(let x=0;x<range;x++)if(px[(y*w+x)*4+3]>26)front=x;
+        return front;
+      });
+      let spill=0,total=0;
+      for(let y=0;y<h*.64;y+=3)for(let x=Math.floor(w*.37);x<w*.84;x+=3){
+        total++;if(px[(y*w+x)*4+3]>4)spill++;
+      }
+      return {fronts:rows,variation:Math.max(...rows)-Math.min(...rows),spill,total,w,h};
+    });
+    assert.equal(menuSmoke.spill,0,
+      'A rectangular semi-transparent layer darkens the classroom: '+JSON.stringify(menuSmoke));
+    assert.ok(menuSmoke.variation>menuSmoke.w*.011,
+      'The left fog boundary is still a straight panel edge: '+JSON.stringify(menuSmoke));
     await page.locator('#hide-button').click();
     await expectEdge(page,'bottom',false);
     await expectEdge(page,'left',false);
