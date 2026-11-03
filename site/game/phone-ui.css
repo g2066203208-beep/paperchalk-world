@@ -30,9 +30,8 @@
   isolation:isolate
 }
 #phone-ui .phone-wallpaper{position:absolute;inset:0;z-index:-1;
-  background-image:var(--phone-lock-image,none),
-    radial-gradient(ellipse at 58% 28%,#66788b 0%,#354457 31%,#172636 63%,#0b131e 100%);
-  background-size:cover;background-position:center;filter:saturate(.75)}
+  background-color:#1b1b1d;background-image:var(--phone-lock-image,none);
+  background-size:cover;background-position:center;filter:saturate(.85)}
 #phone-ui .phone-wallpaper:after{content:"";position:absolute;inset:0;
   background:linear-gradient(180deg,#07101d44 0%,#10182422 34%,#080d1bbb 100%)}
 #phone-ui .phone-status{position:absolute;left:10%;right:10%;top:clamp(7px,1.4cqh,12px);
