@@ -432,11 +432,19 @@ body.mobile-mode.virtual-landscape #view{
   border:3px solid #ffbd67;background:#131b14;border-radius:50%;
   transform:translateZ(3px);box-shadow:0 0 0 6px rgba(255,189,103,.16);
 }
-#dev-ground-contact::after{
-  content:"敌人脚点Z";position:absolute;left:14px;top:-11px;
-  white-space:nowrap;color:#ffce9b;background:#101411bd;
-  padding:2px 5px;font:12px var(--font-ui);
+/* Real foot markers are projected onto the horizontal ground at exactly
+   each character's L2D shoe-contact X/Z, never a fake image-edge marker. */
+#dev-ground-contact{display:none!important}
+#dev-ground .dev-shoe-contact{
+  position:absolute;z-index:2;display:block;min-width:12px;height:16px;
+  transform:translate(-50%,-50%) translateZ(3px);pointer-events:none;
+  color:#f3e0a2;font:11px var(--font-ui);white-space:nowrap;
+  text-shadow:0 1px 3px #000;background:#12170dda;border:1px solid #fff3ab;
+  border-radius:10px;padding:2px 6px;
 }
+#dev-ground .dev-shoe-contact[data-actor="player"]{border-color:#8be5c8;color:#b1ffe3}
+#dev-ground .dev-shoe-contact[data-actor="enemy"]{border-color:#ffbd67;color:#ffe6b9}
+#dev-ground .dev-shoe-contact[hidden]{display:none!important}
 #dev-floor-controls[hidden]{display:none!important}
 #dev-tools .dev-floor-toggle{display:flex;align-items:center;gap:7px;margin:7px 0}
 #dev-tools .dev-floor-toggle input{width:16px;height:16px;accent-color:#9ce6c8}
@@ -689,7 +697,7 @@ body.mobile-mode.virtual-landscape #view{
 
   <div id="dev-stage" hidden aria-label="三维场景分层检查器">
     <div id="dev-rig">
-      <div id="dev-ground" aria-label="水平三维参考地板与敌人脚点">
+      <div id="dev-ground" aria-label="人物 L2D 鞋底共用的真实水平三维地板">
         <div id="dev-ground-contact" aria-hidden="true"></div>
       </div>
       <canvas id="dev-fog-preview" width="384" height="216" aria-label="实时黑雾图层的缩小镜像"></canvas>
@@ -717,7 +725,7 @@ body.mobile-mode.virtual-landscape #view{
       <option value="player">04 / 主角</option>
       <option value="bg">01 / 背景</option>
       <option value="fog">03 / 黑雾</option>
-      <option value="ground">05 / 地板（DEV参照）</option>
+      <option value="ground">05 / 共同地板（脚底吸附）</option>
     </select>
     <div id="dev-actor-controls">
       <label for="dev-x">水平位置 <output id="dev-x-value" class="dev-value"></output></label>
@@ -744,10 +752,10 @@ body.mobile-mode.virtual-landscape #view{
       <output id="dev-character-status" role="status" style="font-size:11px;color:#bde2ff;display:block;line-height:1.6;margin-top:8px">载入人物素材库…</output>
     </section>
     <div id="dev-floor-controls" hidden>
-      <label for="dev-ground-y">3D地板网格参考Y <output id="dev-ground-y-value" class="dev-value"></output></label>
+      <label for="dev-ground-y">地板高度（全人物脚底贴地） <output id="dev-ground-y-value" class="dev-value"></output></label>
       <input id="dev-ground-y" type="range" min="40" max="96" step=".5">
       <output id="dev-ground-delta" class="dev-value"></output>
-      <p>绿色网格是3D观察辅助；共同地面不意味着两人的脚在相同屏幕高度。</p>
+      <p>所有已加载的 L2D 人物以真实动画画布最下方的鞋底像素为接触点，脚底自动贴住同一个水平地面；沿 Z 方向仍有真实景深，不会强迫屏幕脚点排在同一行。</p>
       <label for="dev-ground-horizon">地面透视消失线 <output id="dev-ground-horizon-value" class="dev-value">51.5%</output></label>
       <input id="dev-ground-horizon" type="range" min="30" max="74" step=".5">
       <label class="dev-floor-toggle" for="dev-ground-lock">
