@@ -43,6 +43,7 @@ jobs:
         run: |
           python3 scripts/build_char002_v4.py
           python3 scripts/build_char002_part_rig.py
+          python3 scripts/build_char016_psd_rig.py
       - name: Generate character catalog for DEV editing (auto publish)
         run: python3 scripts/build_character_catalog.py
       - name: Generate scene catalog from room images (auto publish)
