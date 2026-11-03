@@ -15,7 +15,7 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from PIL import Image, ImageChops, ImageStat
 
@@ -29,6 +29,16 @@ EXPECTED_PARTS = (
     "bottomwear", "topwear", "ears", "face", "handwear",
     "mouth", "eyebrow", "eyewhite", "irides", "eyelash",
     "nose", "front_hair"
+)
+# The one original PSD handwear layer has two DISCONNECTED painted sleeves.
+# Separate its exact original pixel regions; no drawing or model generation.
+RUNTIME_PARTS = tuple(
+    name for pid in EXPECTED_PARTS
+    for name in (("hand_raised", "hand_lowered") if pid=="handwear" else (pid,))
+)
+ARM_REGIONS = (
+    ("hand_raised", "举起的左手与衣袖", (0,0,150,244)),
+    ("hand_lowered", "垂下的右手与衣袖", (150,73,299,440)),
 )
 JS = r"""
 const fs=require('node:fs');
