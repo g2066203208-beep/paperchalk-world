@@ -5,12 +5,15 @@ on:
     paths:
       - 'site/index.html'
       - 'site/game/survival-state.js'
+      - 'site/game/ground-perspective.js'
       - 'site/game/phone-ui.js'
       - 'site/game/phone-ui.css'
       - 'site/assets/phones/**'
       - 'tests/survival-state.test.cjs'
       - 'tests/ui-edge-fog-browser.mjs'
       - 'tests/phone-ui-browser.mjs'
+      - 'tests/ground-perspective.test.mjs'
+      - 'tests/ground-perspective-browser.mjs'
       - '.github/workflows/ui-fog-smoke.yml'
   workflow_dispatch:
 permissions:
@@ -36,6 +39,10 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify deterministic gameplay status mathematics and persistence
         run: node tests/survival-state.test.cjs
+      - name: Verify shared-ground projection physics
+        run: node tests/ground-perspective.test.mjs
+      - name: Test shared-ground calibration in actual game on desktop/mobile
+        run: node tests/ground-perspective-browser.mjs
       - name: Test approved cat-ear phone asset and interactivity on desktop/mobile
         run: node tests/phone-ui-browser.mjs
       - name: Test black fog silhouettes and UI lifecycle on desktop/mobile
@@ -55,5 +62,14 @@ jobs:
         with:
           name: phone-browser-screenshots
           path: artifacts/phone/*.png
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload character floor calibration browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ground-perspective-browser-screenshots
+          path: artifacts/ground/*.png
           retention-days: 7
           if-no-files-found: warn
