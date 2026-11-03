@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'site/index.html'
+      - 'site/game/survival-state.js'
+      - 'tests/survival-state.test.cjs'
       - 'tests/ui-edge-fog-browser.mjs'
       - '.github/workflows/ui-fog-smoke.yml'
   workflow_dispatch:
@@ -27,6 +29,8 @@ jobs:
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
+      - name: Verify deterministic gameplay status mathematics and persistence
+        run: node tests/survival-state.test.cjs
       - name: Test black fog silhouettes and UI lifecycle on desktop/mobile
         run: node tests/ui-edge-fog-browser.mjs
       - name: Upload actual browser fog screenshots
