@@ -67,6 +67,13 @@
   // A grounded actor looks smaller as Z decreases (farther away).
   const CAMERA=Object.freeze({focalLength:950,referenceZ:160,
     minDenominator:180,maxScale:3.0});
+  // Game photographer stays immediately behind the protagonist's shoulders.
+  // Her actual 190% viewport-sized sprite is a cinematic CROP, not a
+  // standing-person calibration for other actors in the world.
+  const SHOULDER_CAMERA=Object.freeze({
+    referenceBodyHeightRatio:.90,
+    referenceFootYRatio:.965
+  });
   function depthScale(z,referenceZ=CAMERA.referenceZ,
       focalLength=CAMERA.focalLength){
     if(!Number.isFinite(z)||!Number.isFinite(referenceZ)||
@@ -126,6 +133,6 @@
       depthRatio,stature,targetFootY,targetVisiblePx,scale,
       visibleRatio:stature*depthRatio,horizonY};
   }
-  return Object.freeze({CHARACTER_DATA,FLOOR_ORIGIN,CAMERA,
+  return Object.freeze({CHARACTER_DATA,FLOOR_ORIGIN,CAMERA,SHOULDER_CAMERA,
     floorMotion,depthScale,renderScale,projectStandingActor,metricsFor,fit});
 });
