@@ -7,7 +7,7 @@
 #phone-ui{
   position:absolute;z-index:3;top:50%;
   right:calc(max(8px,2.6cqw) + var(--game-control-size) + clamp(15px,2cqw,27px));
-  transform:translateY(-50%);height:min(84cqh,510px);aspect-ratio:1/2;
+  transform:translateY(-50%);height:min(90cqh,760px);aspect-ratio:1/2;
   pointer-events:auto;font-family:"PaperSans","Noto Sans CJK SC",sans-serif;
   letter-spacing:0;color:#f6f4f5;text-shadow:0 1px 3px #0007;
   filter:drop-shadow(0 8px 13px #0007)
@@ -20,12 +20,18 @@
 #phone-ui button:focus-visible{outline:2px solid #eae2f8;outline-offset:2px}
 #phone-ui .phone-device{
   position:relative;width:100%;height:100%;padding:0;border:0;border-radius:0;
-  background:var(--phone-shell-image,url("../assets/phones/char001-cat-ear-shell.webp?v=verified-0c8e0d")) center/100% 100% no-repeat;
-  box-shadow:none
+  background:transparent;box-shadow:none
+}
+/* Use the actual approved Anima image as a DOM image, NOT a CSS
+   background/custom-property that could silently fail and hide the case. */
+#phone-ui .phone-shell-art{
+  display:block!important;position:absolute;z-index:0;inset:0;
+  width:100%;height:100%;object-fit:fill;pointer-events:none;
+  user-select:none;-webkit-user-drag:none
 }
 #phone-ui .phone-device:before,#phone-ui .phone-device:after{content:none!important}
 #phone-ui .phone-screen{
-  position:absolute;left:12.4%;top:13.25%;width:75.2%;height:76.5%;
+  position:absolute;z-index:1;left:12.4%;top:13.25%;width:75.2%;height:76.5%;
   border-radius:7% / 3.5%;overflow:hidden;border:0;background:#17191c;
   isolation:isolate
 }
@@ -43,7 +49,7 @@
 #phone-ui .phone-camera{position:absolute;z-index:3;top:2.7%;left:50%;
   transform:translateX(-50%);width:clamp(4px,1cqh,7px);height:clamp(4px,1cqh,7px);
   border-radius:50%;background:#090b10;box-shadow:0 0 0 .5px #5e6770}
-#phone-ui .phone-close{position:absolute;right:clamp(-16px,-2cqh,-9px);top:clamp(-13px,-1.6cqh,-7px);
+#phone-ui .phone-close{position:absolute;right:clamp(-5px,-.65cqh,-3px);top:clamp(-10px,-1.2cqh,-5px);
   z-index:8;width:clamp(25px,4.6cqh,34px);height:clamp(25px,4.6cqh,34px);border-radius:50%!important;
   background:#202027!important;box-shadow:0 2px 9px #0009!important;display:grid;place-items:center;
   font-size:clamp(16px,3.4cqh,22px)!important;line-height:1}
