@@ -10,8 +10,8 @@ on:
       - 'site/character-editor/**'
       - 'scripts/build_v4_assets.py'
       - 'scripts/build_protagonist_part_rig.py'
-      - 'scripts/build_char002_v4.py'
-      - 'scripts/build_char002_part_rig.py'
+      - 'scripts/build_char002_psd_rig.py'
+      - 'site/assets/l2d/source-psd/**'
       - 'scripts/build_character_catalog.py'
       - '.github/workflows/game-character-dev-tests.yml'
   workflow_dispatch:
@@ -29,8 +29,7 @@ jobs:
       - run: |
           python3 scripts/build_v4_assets.py
           python3 scripts/build_protagonist_part_rig.py
-          python3 scripts/build_char002_v4.py
-          python3 scripts/build_char002_part_rig.py
+          python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
@@ -242,35 +241,47 @@ jobs:
               assert.ok(localPart.personalised,'game did not load editor artwork into ArtMesh');
               assert.deepEqual(localPart.rgba,[255,49,176,255],
                 'painted source pixel must travel with its own moving hair mesh');
-              // No user-facing V4 mode switching: source clip is a safe backup.
-              const approved=await page.evaluate(()=>{
+              // Actual uploaded Photoshop front: 24 PSD records, 17
+              // independent visibly textured component meshes.
+              const registered=await page.evaluate(()=>{
                 const entries=new Map(window.PaperchalkCharacterDev.characters.map(c=>[c.id,c]));
+                const c=entries.get('char-002');
                 return {main:entries.get('protagonist')?.clips?.front?.frames,
-                  secondary:entries.get('char-002')?.clips?.front?.frames,
-                  secondaryMode:entries.get('char-002')?.l2dModule?.front?.renderer,
-                  duplicate:entries.has('char-002-rig-v1')};
+                  renderer:c?.l2dModule?.front?.renderer,
+                  partCount:c?.l2dModule?.front?.rig?.partCount,
+                  source:c?.l2dModule?.front?.sourceParts?.provenance,
+                  oldAlias:entries.has('char-002-rig-v1'),
+                  duplicate:entries.has('char-002-psd-v1'),
+                  oldClip:!!c?.clips?.front};
               });
-              assert.deepEqual(approved,{
-                main:128,secondary:128,secondaryMode:'part-mesh',duplicate:false
-              },'keep original fallback clips and single canonical female-two identity');
+              assert.deepEqual(registered,{
+                main:128,renderer:'part-mesh',partCount:17,source:'original-psd',
+                oldAlias:false,duplicate:false,oldClip:false
+              },'the canonical female-two must not load previous synthetic region pieces');
               await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','char-002','front'));
               await page.waitForFunction(()=>
-                window.PaperchalkL2DLibrary?.get('enemy')?.layers?.length===7,
+                window.PaperchalkL2DLibrary?.get('enemy')?.layers?.length===17,
                 null,{timeout:25000});
               const secondary=await page.evaluate(()=>{
-                const actor=window.PaperchalkL2DLibrary.get('enemy');
-                return {id:actor.model.characterId,
-                  provenance:actor.model.provenance,
-                  names:Object.keys(actor.model.parts),
-                  feetFixed:actor.model.parts.shoes?.parentId==='ground'};
+                const a=window.PaperchalkL2DLibrary.get('enemy'),
+                  p=a.model.parts,core=window.PaperchalkPartRigCore;
+                const idle=core.sanitizeIdleProfile({...a.model.idleProfile,
+                    joints:{hands:0,shoulders:2,hips:2}});
+                const foot=core.warpPoint(p.footwear,.5,.95,1,null,idle);
+                const xy={x:p.footwear.x+p.footwear.w*.5,
+                  y:p.footwear.y+p.footwear.h*.95};
+                return {id:a.model.characterId,provenance:a.model.provenance,
+                  count:Object.keys(p).length,hierarchy:!!a.model.bodyHierarchy,
+                  hair:!!p.front_hair&&!!p.back_hair,
+                  eyes:!!p.eyewhite&&!!p.irides&&!!p.eyelash,
+                  hand:!!p.handwear,feetDrift:Math.hypot(foot.x-xy.x,foot.y-xy.y)};
               });
               assert.deepEqual(secondary,{
-                id:'char-002-rig-v1',provenance:'derived-region',
-                names:['shoes','legs','skirt','wave_hand','free_hand','head_hair','jacket'],
-                feetFixed:true
-              },'female two must use independent region rig without faking eye or hair layers');
+                id:'char-002-psd-v1',provenance:'original-psd',
+                count:17,hierarchy:true,hair:true,eyes:true,hand:true,feetDrift:0
+              },'female-two game must animate original independent hair and eyes with feet fixed');
               assert.deepEqual(errors,[],name+' console errors');
-              console.log('PASS 17 real heroine parts + one-click saved art; female two 7 real source regions, protected source V4s',name);
+              console.log('PASS 17 real heroine parts + one-click saved art; female two 17 authentic Photoshop parts with no old 7-region actor',name);
               await page.close();
             }
           }finally{await browser.close();}
