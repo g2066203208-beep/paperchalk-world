@@ -41,7 +41,9 @@ const fs=require('node:fs');
 const window={};
 new Function('window',fs.readFileSync('site/l2d/part-rig.js','utf8'))(window);
 const a=JSON.parse(fs.readFileSync(0,'utf8'));
-const model=window.PaperchalkPartRigCore.project(a.parts,'char-016','front');
+const model=window.PaperchalkPartRigCore.project(a.parts.map(p=>({
+ ...p,canvas:{width:p.w,height:p.h}
+})),'char-016','front');
 process.stdout.write(JSON.stringify(model));
 """
 
