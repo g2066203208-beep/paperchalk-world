@@ -13,6 +13,16 @@ async function getJSON(url){
  if(!r.ok)throw Error('无法获取 L2D 绑定 '+r.status);
  return r.json();
 }
+function imageData(uri){
+ if(typeof uri!=='string'||!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(uri)||uri.length>14000000)
+  return Promise.reject(Error('本机 PNG 部件数据无效'));
+ return new Promise((resolve,reject)=>{
+  const img=new Image();
+  img.onload=()=>resolve(img);
+  img.onerror=()=>reject(Error('本机 PNG 部件解码失败'));
+  img.src=uri;
+ });
+}
 function image(url){
  if(!valid(url))return Promise.reject(Error('非法 L2D 图层地址'));
  return new Promise((resolve,reject)=>{
@@ -28,7 +38,7 @@ function stop(slot){
  const actor=root.PaperchalkL2D?.get(slot);
  if(actor?.libraryPlayer===old)actor.libraryPlayer=null;
 }
-async function attach(slot,characterId,face,rigSpec,localDraft=null){
+async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=null){
  if(!rigSpec?.url||!rigSpec?.textures)throw Error('模块缺少可播放的逐层 ArtMesh');
  if(!root.PaperchalkPartRigCore)throw Error('未加载独立部件网格渲染器');
  // Prepare all assets BEFORE mutating the existing game actor.
@@ -64,8 +74,31 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null){
  }
  if(!ids.length||ids.length!==Object.keys(model.parts||{}).length)
   throw Error('L2D 贴图与绑定层数量不一致');
+ // User-painted source PNGs replace the correct ArtMesh TEXTURES, never
+ // become an independent screen-space patch. Validate every exact part ID,
+ // RGBA dimensions and a bounded original-canvas position before applying.
+ const artLayers=Array.isArray(localArt)?localArt.filter(p=>p?.sourcePart&&p.partId):[];
+ const artIndex=new Map(artLayers.map(p=>[String(p.partId),p]));
+ const artValid=artIndex.size===ids.length&&artLayers.length===ids.length&&
+  ids.every(id=>artIndex.get(id)?.img?.startsWith('data:image/png;base64,'));
+ let drawings=imgs,personalised=false;
+ if(artValid){
+  try{
+   const edited=await Promise.all(ids.map(id=>imageData(artIndex.get(id).img)));
+   if(ids.every((id,i)=>edited[i].width===model.parts[id].w&&
+       edited[i].height===model.parts[id].h&&
+       Number.isFinite(Number(artIndex.get(id).x))&&
+       Number.isFinite(Number(artIndex.get(id).y)))){
+    drawings=edited;personalised=true;
+    ids.forEach(id=>{
+     model.parts[id].x=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).x)));
+     model.parts[id].y=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).y)));
+    });
+   }
+  }catch(e){console.warn('[L2D] 本机分层纹理校验失败，保留已发布素材',e);}
+ }
  const layers=ids.map((id,i)=>{
-  const p=model.parts[id],im=imgs[i];
+  const p=model.parts[id],im=drawings[i];
   if(!p||p.id!==id||p.w!==im.width||p.h!==im.height)
    throw Error('L2D 独立贴图尺寸或部件 ID 错误：'+id);
   return {sourcePart:true,partId:id,canvas:im,visible:p.enabled!==false,opacity:1};
@@ -73,12 +106,12 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null){
  const actor=root.PaperchalkL2D?.get(slot);
  if(!actor)throw Error('游戏缺少人物渲染槽 '+slot);
  stop(slot);
- await root.PaperchalkL2D.setAnimationSource(slot,null);
+ await root.PaperchalkL2D.setAnimationSource(slot,null,{suspendFallback:true});
  actor.rig?.stop();
- const state={disposed:false,frame:0,actor,model,layers,slot,last:-1,phase:0};
+ const state={disposed:false,frame:0,actor,model,layers,slot,last:-1,phase:0,personalised};
  ACTIVE.set(slot,state);actor.libraryPlayer=state;
  actor.root.dataset.l2dMode='library-part-mesh';
- actor.root.dataset.l2dEdition='published-part-mesh';
+ actor.root.dataset.l2dEdition=personalised?'locally-edited-part-mesh':'published-part-mesh';
  actor.root.dataset.l2dAnimated='true';
  actor.root.dataset.l2dState='ready';
  function tick(t){
@@ -97,7 +130,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null){
   // Existing hand-painted correction layers must remain visible when the
   // original heroine switches from V4 to articulated parts. These overlays
   // are stored separately; none of the original source PNGs are modified.
-  if(actor.partPatch?.erase&&actor.partPatch?.paint){
+  if(!state.personalised&&actor.partPatch?.erase&&actor.partPatch?.paint){
    ctx.save();ctx.globalCompositeOperation='destination-out';
    ctx.drawImage(actor.partPatch.erase,0,0,1024,1024);ctx.restore();
    ctx.drawImage(actor.partPatch.paint,0,0,1024,1024);
