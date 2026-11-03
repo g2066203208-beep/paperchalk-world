@@ -98,6 +98,14 @@ try{
     const player=document.getElementById('camera-player-root');
     const uiFog=document.getElementById('ui-edge-fog');
     player.hidden=false;enemy.hidden=false;
+    // Character floor binding may put the enemy billboard's parent hundreds
+    // of pixels below the viewport while its nested L2D canvas is visually
+    // positioned back inside the frame. A test-colored DIV inserted at the
+    // parent's exterior cannot represent that art. Normalize ONLY the test
+    // parent translation so its marker stays inside the billboard's own
+    // clip/hit region; then assert real compositor order.
+    enemy.dataset.testOriginalTranslate=enemy.style.translate;
+    enemy.style.translate='0px';
     const create=(root,id,color,x,y)=>{
       const el=document.createElement('div');
       el.id=id;
@@ -184,6 +192,9 @@ try{
     edge.hidden=false;
     document.getElementById('enemy-fog-probe').remove();
     document.getElementById('player-fog-probe').remove();
+    const enemy=document.getElementById('enemy-depth-root');
+    enemy.style.translate=enemy.dataset.testOriginalTranslate||'';
+    delete enemy.dataset.testOriginalTranslate;
   });
   await page.screenshot({path:'artifacts/fog-layer/'+cfg.name+'-protagonist-outside-enemy-inside.png'});
   await page.evaluate(()=>document.getElementById('novel-ui').hidden=true);
