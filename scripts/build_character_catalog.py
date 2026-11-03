@@ -140,7 +140,7 @@ def discover():
         heroine['motionPreference']='independent-bones-no-breath'
 
     # CHAR-002's user-supplied original Photoshop document is authoritative.
-    # Its 24 records contain 17 visible, independently textured original parts.
+    # Its 24 records contain 17 original visible layers; two disjoint arms are split into 18 playing meshes.
     # Never reuse the old 7-region composites or their baked V4 fallback.
     secondary=entries.get('char-002')
     original_psd=next((m for m in modules if m['id']=='char-002-psd-v1'),None)
@@ -148,8 +148,8 @@ def discover():
         if not original_psd:
             raise ValueError('Female-two authentic uploaded PSD module was not built')
         view=original_psd['views'].get('front')
-        if not view or view.get('renderer')!='part-mesh' or view['rig']['partCount']!=17:
-            raise ValueError('Female-two original PSD has 17 independently drawable parts')
+        if not view or view.get('renderer')!='part-mesh' or view['rig']['partCount']!=18:
+            raise ValueError('Female-two original PSD must provide 18 meshes including two independent arms')
         secondary['front']=view['portrait']
         secondary['l2dModule']={'front':{
             **view,
