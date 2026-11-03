@@ -274,7 +274,19 @@ try{
      const enemy=window.PaperchalkL2D.get('enemy');
      const actor=g.actors.find(v=>v.id==='enemy');
      const rect=enemy.canvas.getBoundingClientRect();
-     return {size:enemy.img.offsetHeight,buffer:enemy.canvas.width,
+     // In nested CSS 3D perspective, bounding-box interpolation is NOT a
+     // coordinate transform. Verify the actual CSS matrix maps the local
+     // shoe point back onto itself; the parent camera can rotate freely.
+     const sourceHeel=new DOMPoint(
+       enemy.img.offsetWidth*actor.soleX,
+       enemy.img.offsetHeight*actor.soleY
+     );
+     const projectedHeel=sourceHeel.matrixTransform(
+       new DOMMatrix(getComputedStyle(enemy.canvas).transform));
+     return {heelErrorX:projectedHeel.x-sourceHeel.x,
+       heelErrorY:projectedHeel.y-sourceHeel.y,
+       sourceHeelX:sourceHeel.x,sourceHeelY:sourceHeel.y,
+       size:enemy.img.offsetHeight,buffer:enemy.canvas.width,
        scale:actor.perspectiveScale,
        transform:getComputedStyle(enemy.canvas).transform,
        canvasHeight:rect.height,
@@ -301,9 +313,13 @@ try{
      JSON.stringify({distant,close}));
    assert.equal(close.size,distant.size,'Camera depth changed the original image geometry');
    assert.equal(close.buffer,distant.buffer,'Zoom should not continuously reallocate rendering buffers');
-   assert.ok(Math.abs(close.shoeLocalY-distant.shoeLocalY)<2,
-     'The L2D shoe pivot drifted relative to its game actor while the camera recentered: '+
-     JSON.stringify({distant,close}));
+   for(const sample of [distant,close]){
+     assert.ok(Math.abs(sample.heelErrorY)<.1&&Math.abs(sample.heelErrorX)<.1,
+       'The actual CSS zoom matrix no longer fixes the L2D shoe coordinate: '+
+       JSON.stringify({distant,close}));
+   }
+   assert.ok(Math.abs(close.sourceHeelY-distant.sourceHeelY)<.1,
+     'The shoe source geometry changed while only camera Z was adjusted');
    await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-sharp-normal-distance.png'});
    await actorAt(-190);
    const perfBefore=await page.evaluate(()=>window.PaperWorldL2DGround.performance());
