@@ -23,7 +23,8 @@ try{
    const url='http://127.0.0.1:'+server.address().port+'/index.html?scene=classroom&dev=1';
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
    await page.waitForFunction(()=>!!window.PaperWorldGroundPerspective&&
-     !!document.getElementById('dev-ground-perspective')?.textContent,{timeout:15000});
+     !!window.PaperWorldL2DGround&&
+     !!document.getElementById('dev-ground-perspective')?.textContent,null,{timeout:15000});
    // This isolated browser starts with the prologue, which deliberately hides
    // NPCs. Expose both layout slots to test the shared-floor coordinates;
    // the real game unhides them when their story scene/actor is active.
@@ -82,6 +83,7 @@ try{
    });
    assert.ok(floorStart.player.canvas.height>0&&floorStart.enemy.canvas.height>0,
      'Expected the actual animated L2D canvas to be laid out: '+JSON.stringify(floorStart));
+   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-before-move.png'});
    await page.evaluate(()=>{
      const slider=document.getElementById('dev-ground-y');
      slider.value='83';slider.dispatchEvent(new Event('input',{bubbles:true}));
@@ -101,7 +103,7 @@ try{
    const expectedShift=floorStart.h*.06;
    for(const role of ['player','enemy']){
      const before=floorStart[role],after=floorYMoved[role];
-     assert.equal(after.ground,'0px '+expectedShift.toFixed(1)+'px',
+     assert.equal(after.ground,'0px '+expectedShift.toFixed(1)+'px 0px',
        role+' entire L2D root must inherit the shared floor translation: '+JSON.stringify(floorYMoved));
      assert.equal(after.height,before.height,
        role+' floor must NOT resize the 1024px L2D rig or restart bones');
@@ -143,10 +145,26 @@ try{
        state:window.PaperWorldGroundPerspective.current()};
    });
    assert.equal(floorZMoved.ground,-165,'Ground 3D Z slider did not move the floor');
-   assert.equal(floorZMoved.player,Number(floorStart.playerZ.replace('px',''))+50,
-     'Player 3D depth failed to follow floor: '+JSON.stringify(floorZMoved));
-   assert.equal(floorZMoved.enemy,Number(floorStart.enemyZ.replace('px',''))+50,
-     'NPC 3D depth failed to follow floor: '+JSON.stringify(floorZMoved));
+   // The original plane depths stay authored and untouched. A separate
+   // stable parent translation is responsible for carrying ALL L2D drawings
+   // with the shared world-floor Z delta (avoids overwriting stored Z).
+   assert.equal(floorZMoved.player,Number(floorStart.playerZ.replace('px','')),
+     'The original player depth was overwritten instead of moving their parent');
+   assert.equal(floorZMoved.enemy,Number(floorStart.enemyZ.replace('px','')),
+     'The original NPC depth was overwritten instead of moving their parent');
+   const attached=await page.evaluate(()=>['player','enemy'].map(id=>{
+     const a=window.PaperchalkL2D.get(id);
+     return {id,translate:getComputedStyle(a.root).translate,
+       canvas:a.canvas.getBoundingClientRect().toJSON(),
+       attached:a.root.dataset.groundAttached};
+   }));
+   for(const actor of attached){
+     assert.equal(actor.attached,'true',actor.id+' is not bound to the floor');
+     assert.equal(actor.translate,'0px 43.2px 50px',
+       actor.id+' visible L2D root did not follow floor depth: '+JSON.stringify(attached));
+     assert.ok(actor.canvas.height>0,actor.id+' L2D canvas is not drawn');
+   }
+   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-depth-follow.png'});
    assert.equal(floorZMoved.state.enemy.z,initial.state.enemy.z,'NPC relative Z anchor was overwritten');
    assert.equal(floorZMoved.state.player.z,initial.state.player.z,'Player relative Z anchor was overwritten');
    // Restore the exact original floor. No residual offset, no change to
@@ -187,7 +205,7 @@ try{
    await page.locator('#dev-ground-lock').uncheck();
    assert.equal((await page.evaluate(()=>window.PaperWorldGroundPerspective.current())).locked,false);
    assert.deepEqual(errs,[],errs.join('; '));
-   console.log('PASS '+cfg.name+': physical stature, common-floor perspective, opt-in calibration, saved coordinates');
+   console.log('PASS '+cfg.name+': visibly rendered L2D canvas follows floor Y/Z; physical stature, calibration, saved coordinates');
    await page.close();
  }
 }finally{
