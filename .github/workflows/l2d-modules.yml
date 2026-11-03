@@ -225,6 +225,14 @@ jobs:
             assert.equal(downloaded.suggestedFilename(),'qa-export.zip');
             await downloaded.saveAs('/tmp/qa-export.zip');
             await page.locator('#rig-close').click();
+            await page.goto('http://127.0.0.1:8132/?dev=1',{waitUntil:'load'});
+            await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:30000});
+            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','qa-rig','front'));
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.model?.idleProfile?.parts?.hair===.65,
+              null,{timeout:22000});
+            assert.equal(await page.evaluate(()=>
+              window.PaperchalkL2DLibrary.get('player').model.idleProfile.cloth.amount),.55,
+              'editor hair and cloth controls must affect the same in-game renderer');
             await browser.close();
             console.log('PASS full game and editor modular L2D playback + old V4 safety');
            }finally{await browser.close();}
