@@ -305,7 +305,7 @@ jobs:
               'unchanged old realistic profile migrates to conservative motion');
             assert.deepEqual(expressive.custom,[.45,.31,.5,0],
               'manual sliders including a deliberate zero remain intact');
-            assert.equal(expressive.body,.12,'torso must remain nearly motionless');
+            assert.equal(expressive.body,.20,'ordinary standing must produce shared natural weight shift');
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','back'));
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===8,{timeout:20000});
             const backBones=await page.evaluate(()=>{
