@@ -236,7 +236,21 @@ body.mobile-mode.virtual-landscape #view{
   position:absolute;inset:0;width:100%;height:100%;
   display:block;z-index:0;pointer-events:none;image-rendering:auto;
 }
-#novel-ui > :not(#ui-edge-fog):not(#ui-fog-state){z-index:1}
+/* Native fog behind panels + a second copy masked to the phone's outer rim.
+   The latter is still real flowing fog, not a rectangular black plate. */
+#novel-ui > :not(#ui-edge-fog):not(#ui-phone-fog):not(#ui-fog-state){z-index:1}
+#novel-ui #ui-phone-fog{
+  position:absolute;inset:0;width:100%;height:100%;
+  z-index:2;display:block;pointer-events:none;image-rendering:auto;
+}
+#novel-ui > #phone-ui{z-index:1!important}
+#novel-ui > #quick-tools,
+#novel-ui > #top-menu,
+#novel-ui > #menu-choices,
+#novel-ui > #dialogue,
+#novel-ui > #advance,
+#novel-ui > #history,
+#novel-ui > #quick-panel{z-index:3!important}
 #novel-ui #ui-fog-state{display:none!important}
 #novel-ui #dialogue:not([hidden]),#novel-ui #history:not([hidden]),
 #novel-ui #menu-choices:not([hidden]){
@@ -574,6 +588,7 @@ body.mobile-mode.virtual-landscape #view{
   </div>
   <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
     <canvas id="ui-edge-fog" aria-hidden="true"></canvas>
+    <canvas id="ui-phone-fog" aria-hidden="true"></canvas>
     <div id="ui-fog-state" hidden aria-hidden="true">
       <i class="ui-fog-band" data-edge="bottom" data-active="false"></i>
       <i class="ui-fog-band" data-edge="top" data-active="false"></i>
@@ -1291,6 +1306,12 @@ void main(){
   // so no caller has to manually synchronize panel visibility and fog.
   const uiFogCanvas=document.getElementById('ui-edge-fog');
   const uiFogCtx=uiFogCanvas.getContext('2d',{alpha:true});
+  // Transparent foreground fog samples the same native UI fog; it reveals
+  // only the handset's right and lower silhouette, never the keypad center.
+  const phoneFogCanvas=document.getElementById('ui-phone-fog');
+  const phoneFogCtx=phoneFogCanvas.getContext('2d',{alpha:true});
+  const phoneFogMask=document.createElement('canvas');
+  const phoneFogMaskCtx=phoneFogMask.getContext('2d',{alpha:true});
   // The developer's right-side settings MUST use the same live #fog pixels.
   // It is a sibling of the editor, never a rectangular CSS panel or new smoke.
   const devPanelFog=document.getElementById('dev-panel-fog');
@@ -1371,7 +1392,7 @@ void main(){
     }
     sideFogWarpCtx.putImageData(sideFogPixels,0,0);
     const eased=progress*progress*(3-2*progress);
-    const dw=Math.max(1,Math.round(Math.min(w*.52,desiredWidth)*eased));
+    const dw=Math.max(1,Math.round(Math.min(w*.56,desiredWidth)*eased));
     ctx.save();
     ctx.globalAlpha=opacity*eased;
     ctx.imageSmoothingEnabled=true;
@@ -1434,7 +1455,7 @@ void main(){
   subtitleSmokeTexture.width=subtitleSmokeW;subtitleSmokeTexture.height=subtitleSmokeH;
   const subtitleSmokeTextureCtx=subtitleSmokeTexture.getContext('2d',{alpha:true});
   const subtitleSmokePixels=subtitleSmokeTextureCtx.createImageData(subtitleSmokeW,subtitleSmokeH);
-  function drawNativeBottomSmoke(ctx,w,h,progress){
+  function drawNativeBottomSmoke(ctx,w,h,progress,phoneOpen=false){
     if(progress<=.002||fog.width<2||fog.height<2)return;
     // Capture the interior-to-border transition of our existing fluid,
     // NOT the solid black portion at the physical bottom screen edge.
@@ -1487,13 +1508,58 @@ void main(){
     // ~32% screen-height canvas, rising physically from BOTTOM, transparent
     // above the irregular crest. Real smoke density and motion continue
     // on every simulation frame, with the same show/hide timing as before.
-    const maxHeight=Math.round(h*.335);
+    // Dialogue keeps the previous, focused smoke; opening the handset
+    // lifts the very same moving smoke higher and unites the lower-right fog.
+    const maxHeight=Math.round(h*(phoneOpen?.435:.335));
     const dh=Math.max(1,Math.round(maxHeight*eased));
     ctx.save();
     ctx.globalAlpha=eased;
     ctx.imageSmoothingEnabled=true;
     ctx.drawImage(subtitleSmokeTexture,0,h-dh,w,dh);
     ctx.restore();
+  }
+  // Alpha-only contact veil: its COLOR is supplied solely by uiFogCanvas,
+  // i.e. by the LIVE fluid smoke. Gradients here shape ONLY how much of
+  // that existing smoke overlaps the physical edge of the approved phone.
+  function paintPhoneFogOverlap(){
+    if(!phoneFogCtx)return;
+    const w=phoneFogCanvas.width,h=phoneFogCanvas.height;
+    if(!w||!h)return;
+    phoneFogCtx.clearRect(0,0,w,h);
+    if(!phoneUI.isOpen()||uiFogProgress.right<.02)return;
+    const phone=document.getElementById('phone-ui');
+    if(!phone||phone.hidden)return;
+    const unitX=w/Math.max(1,uiRoot.clientWidth);
+    const unitY=h/Math.max(1,uiRoot.clientHeight);
+    const px=phone.offsetLeft*unitX;
+    const py=(phone.offsetTop-phone.offsetHeight*.5)*unitY;
+    const pw=phone.offsetWidth*unitX,ph=phone.offsetHeight*unitY;
+    if(pw<=0||ph<=0)return;
+    phoneFogMaskCtx.clearRect(0,0,w,h);
+    // A smoky 10% band on the right side of the phone, growing outward
+    // into the native right fog. No fake shadow across the PIN buttons.
+    const rightStart=px+pw*.875;
+    const rightEnd=px+pw*1.04;
+    const rg=phoneFogMaskCtx.createLinearGradient(rightStart,0,rightEnd,0);
+    rg.addColorStop(0,'rgba(0,0,0,0)');
+    rg.addColorStop(.64,'rgba(0,0,0,.36)');
+    rg.addColorStop(1,'rgba(0,0,0,.85)');
+    phoneFogMaskCtx.fillStyle=rg;
+    phoneFogMaskCtx.fillRect(rightStart,py-8*unitY,w-rightStart,ph+16*unitY);
+    // Bottom fog climbs around 11% of phone height, and joins its side fog
+    // in the corner. The top/screen center remains fully uncovered.
+    const bottomStart=py+ph*.865;
+    const bottomEnd=py+ph*1.04;
+    const bg=phoneFogMaskCtx.createLinearGradient(0,bottomStart,0,bottomEnd);
+    bg.addColorStop(0,'rgba(0,0,0,0)');
+    bg.addColorStop(.65,'rgba(0,0,0,.32)');
+    bg.addColorStop(1,'rgba(0,0,0,.8)');
+    phoneFogMaskCtx.fillStyle=bg;
+    phoneFogMaskCtx.fillRect(px-8*unitX,bottomStart,pw+16*unitX,h-bottomStart);
+    phoneFogCtx.drawImage(uiFogCanvas,0,0,w,h);
+    phoneFogCtx.globalCompositeOperation='destination-in';
+    phoneFogCtx.drawImage(phoneFogMask,0,0,w,h);
+    phoneFogCtx.globalCompositeOperation='source-over';
   }
   const uiFogBands=Array.from(document.querySelectorAll('#ui-fog-state .ui-fog-band'));
   const uiFogEdges=new Set(['top','bottom','left','right']);
@@ -1532,17 +1598,18 @@ void main(){
       if(edge==='bottom'){
         // Strictly an irregular black smoke silhouette. Never stretch the
         // opaque native border into a translucent subtitle rectangle.
-        drawNativeBottomSmoke(uiFogCtx,w,h,uiFogProgress.bottom);
+        drawNativeBottomSmoke(uiFogCtx,w,h,uiFogProgress.bottom,phoneUI.isOpen());
       }else if(edge==='top'){
         const maxH=Math.round(h*.22),dh=Math.max(1,Math.round(maxH*p));
         uiFogCtx.globalAlpha=.77*p;
         uiFogCtx.drawImage(fog,0,0,srcW,verticalSource,0,0,w,dh);
       }else{
         drawNativeSideFog(uiFogCtx,edge,w,h,
-          uiFogProgress[edge],edge==='right'&&phoneUI.isOpen()?w*.41:w*.31,.99);
+          uiFogProgress[edge],edge==='right'&&phoneUI.isOpen()?w*.55:w*.31,.99);
       }
     }
     uiFogCtx.globalAlpha=1;
+    paintPhoneFogOverlap();
   }
   function isUiFogOwnerVisible(el){
     if(uiRoot.hidden||view.classList.contains('dev-mode')||
@@ -1556,6 +1623,11 @@ void main(){
     for(const el of uiRoot.querySelectorAll('[data-ui-fog-edge]')){
       const edge=el.getAttribute('data-ui-fog-edge');
       if(uiFogEdges.has(edge)&&isUiFogOwnerVisible(el))active.add(edge);
+    }
+    if(phoneUI.isOpen()){
+      // The lower fog remains present even after dialogue is hidden.
+      active.add('bottom');
+      active.add('right');
     }
     let changed=false;
     for(const band of uiFogBands){
@@ -1971,6 +2043,8 @@ void main(){
       uiFogCanvas.width=fw;uiFogCanvas.height=fh;
       uiFogCanvas.dataset.visible='false';
     }
+    phoneFogCanvas.width=fw;phoneFogCanvas.height=fh;
+    phoneFogMask.width=fw;phoneFogMask.height=fh;
     if(devPanelFog){
       devPanelFog.width=fw;devPanelFog.height=fh;
       devPanelFog.dataset.visible='false';
