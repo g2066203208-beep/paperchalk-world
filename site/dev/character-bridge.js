@@ -129,12 +129,12 @@ async function assign(target,id,face='front',save=true){
     get('part-rig:'+id+':'+face),getLocalArtwork(id,face)
    ]);
    await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig,savedRig,savedArt);
-   if(id==='protagonist')actor.root.dataset.l2dBreath='disabled';
+   if(id==='protagonist')actor.root.dataset.l2dBreath='joint-parented';
   }catch(error){
    // Fail safe: preserve the existing approved V4 when any PNG/rig is
    // corrupted or unavailable, rather than removing the heroine from scene.
-   if(id!=='protagonist'||!source)throw error;
-   console.warn('[L2D] Original heroine joint rig unavailable, using existing unmodified V4',error);
+   if(!['protagonist','char-002'].includes(id)||!source)throw error;
+   console.warn('[L2D] Original approved animation retained: independent character rig unavailable',error);
    await window.PaperchalkL2D.setAnimationSource(target,source,shape);
    actor.root.dataset.l2dEdition='V4-fallback';
    actor.root.dataset.l2dBreath='disabled';
