@@ -88,9 +88,9 @@ def discover():
         # Explicit guard against replacing the already-approved female leads.
         if ident in ('protagonist','char-002'):
             raise ValueError(f'L2D module {ident} is protected; use an internal source-rig alias')
-        # CHAR-002's derived region rig is an implementation detail of her
-        # canonical ID. Never add a duplicate female lead to the game list.
-        if ident == 'char-002-rig-v1':
+        # Original PSD module is an internal implementation of the ONE
+        # existing CHAR-002, not another game character.
+        if ident == 'char-002-psd-v1':
             continue
         row = entries.setdefault(ident,{
             'id':ident,'label':module['label'],'front':'','back':''
@@ -111,10 +111,9 @@ def discover():
                 # independent ArtMesh module of the same actor and view.
                 clips.pop(face,None)
         if not clips:row.pop('clips',None)
-    # Store source archive metadata for the protected original heroines, too.
+    # The protagonist retains its approved separate original artwork backup.
     for ident, path, provenance in [
-        ('protagonist','./assets/l2d/v4/protagonist-original-parts.zip','original-psd'),
-        ('char-002','./assets/l2d/char-002/front-source-regions.zip','derived-region')
+        ('protagonist','./assets/l2d/v4/protagonist-original-parts.zip','original-psd')
     ]:
         row=entries.get(ident)
         if not row:continue
@@ -140,21 +139,26 @@ def discover():
                         'originalV4':old.get('clip')})
         heroine['motionPreference']='independent-bones-no-breath'
 
-    # CHAR-002: the only committed image is a flat approved front portrait.
-    # The 7-region archive may be articulated *conservatively*, but it must
-    # never be misreported as separate bangs, blinking eyes or 16-layer PSD.
+    # CHAR-002's user-supplied original Photoshop document is authoritative.
+    # Its 24 records contain 17 visible, independently textured original parts.
+    # Never reuse the old 7-region composites or their baked V4 fallback.
     secondary=entries.get('char-002')
-    derived=next((m for m in modules if m['id']=='char-002-rig-v1'),None)
-    if secondary and derived:
-        view=derived['views'].get('front')
-        old=secondary.get('l2dModule',{}).get('front')
-        if old and view and view.get('renderer')=='part-mesh':
-            old.update({'renderer':'part-mesh',
-                'rig':{**view['rig'],'sourceCharacterId':'char-002-rig-v1'},
-                'originalV4':old.get('clip'),
-                'partProvenance':'derived-region',
-                'requiresOriginalPSDForFullRig':True})
-            secondary['motionPreference']='limited-derived-region-ik'
+    original_psd=next((m for m in modules if m['id']=='char-002-psd-v1'),None)
+    if secondary:
+        if not original_psd:
+            raise ValueError('Female-two authentic uploaded PSD module was not built')
+        view=original_psd['views'].get('front')
+        if not view or view.get('renderer')!='part-mesh' or view['rig']['partCount']!=17:
+            raise ValueError('Female-two original PSD has 17 independently drawable parts')
+        secondary['front']=view['portrait']
+        secondary['l2dModule']={'front':{
+            **view,
+            'rig':{**view['rig'],'sourceCharacterId':'char-002-psd-v1'}
+        }}
+        secondary.pop('clips',None)
+        secondary['animated']={'front':True}
+        secondary['sourcePsdLayerRecords']=24
+        secondary['motionPreference']='original-psd-anatomical-idle'
     return {'version':3,'characters':list(entries.values())}
 
 if __name__=='__main__':
