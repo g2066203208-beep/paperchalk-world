@@ -12,7 +12,7 @@ const base=process.env.COMBAT_TEST_URL||'http://127.0.0.1:8133';
   fs.mkdirSync('artifacts/combat',{recursive:true});
   const page=await browser.newPage({viewport:{width:1280,height:720}});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(base+'/?combat=1',{waitUntil:'load'});
+  await page.goto(base+'/?combat=1&combatSeed=42',{waitUntil:'load'});
   await page.waitForFunction(()=>window.PaperWorldCombatUI?.running&&
     document.querySelectorAll('#cb-hand .cb-card').length===5,
     null,{timeout:30000});
