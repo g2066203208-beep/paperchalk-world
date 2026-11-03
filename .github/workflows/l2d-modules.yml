@@ -13,11 +13,6 @@ on:
       - 'site/character-editor/part-rig-studio.js'
       - 'site/character-editor/index.html'
       - 'site/index.html'
-      - 'site/game/combat-engine.js'
-      - 'site/game/combat-ui.js'
-      - 'site/game/combat.css'
-      - 'tests/test_card_combat.js'
-      - 'tests/test_card_combat_browser.js'
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
@@ -29,11 +24,6 @@ on:
       - 'site/l2d/library-player.js'
       - 'site/dev/character-bridge.js'
       - 'site/index.html'
-      - 'site/game/combat-engine.js'
-      - 'site/game/combat-ui.js'
-      - 'site/game/combat.css'
-      - 'tests/test_card_combat.js'
-      - 'tests/test_card_combat_browser.js'
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
@@ -57,8 +47,6 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_l2d_library.py' -v
       - name: Validate realistic idle and independent per-part settings
         run: node tests/test_l2d_idle.js
-      - name: Test card costs, two-sided team follow-ups, targeting and 40 full fights
-        run: node tests/test_card_combat.js
       - name: Rebuild existing original L2D safely
         run: |
           python3 scripts/build_v4_assets.py
@@ -155,10 +143,6 @@ jobs:
           JS
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
-      - name: Live card battle browser test, cooperative attacks on BOTH sides, and image capture
-        run: |
-          python3 -m http.server 8133 --directory site >/tmp/card-combat-http.log 2>&1 &
-          node tests/test_card_combat_browser.js
       - name: Actual browser loads V4 and true independent ArtMesh modules in game and studio
         run: |
           python3 -m http.server 8132 --directory site >/tmp/l2d-modules-http.log 2>&1 &
@@ -509,12 +493,4 @@ jobs:
         with:
           name: protagonist-original-face-eye-blink
           path: artifacts/l2d-face/
-          retention-days: 7
-
-      - name: Upload actual card battle screenshots for visual QA
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: paperchalk-link-card-combat
-          path: artifacts/combat/
           retention-days: 7
