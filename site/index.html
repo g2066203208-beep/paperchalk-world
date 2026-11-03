@@ -101,6 +101,84 @@ body.mobile-mode.virtual-landscape #view{
 }
 
 
+
+/* FOUR-SIDED UI FOG V1: independent viewport-space black fog, never the scene fog.
+   Every edge is normally fully withdrawn. Visible UI declares data-ui-fog-edge.
+   The fog is below the UI text and ABOVE the protagonist / camera plane. */
+#novel-ui #ui-edge-fog{
+  position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  isolation:isolate;
+}
+#novel-ui > :not(#ui-edge-fog){z-index:1}
+#ui-edge-fog .ui-fog-band{
+  position:absolute;pointer-events:none;overflow:hidden;opacity:0;
+  transform:var(--fog-hidden-transform);will-change:transform,opacity;
+  transition:transform 690ms cubic-bezier(.16,.72,.26,1),opacity 440ms ease;
+}
+#ui-edge-fog .ui-fog-band[data-active="true"]{
+  opacity:1;transform:translate3d(0,0,0);
+}
+#ui-edge-fog .ui-fog-band::before,
+#ui-edge-fog .ui-fog-band::after{
+  content:"";position:absolute;inset:-18%;pointer-events:none;
+  background:
+    radial-gradient(ellipse 23% 43% at 12% 72%,rgba(0,0,0,.72) 0%,rgba(0,0,0,.24) 62%,transparent 100%),
+    radial-gradient(ellipse 28% 36% at 38% 42%,rgba(0,0,0,.60),transparent 83%),
+    radial-gradient(ellipse 24% 52% at 67% 70%,rgba(0,0,0,.65),transparent 85%),
+    radial-gradient(ellipse 34% 42% at 94% 45%,rgba(0,0,0,.68),transparent 90%);
+  filter:blur(clamp(7px,1.55cqh,21px));
+  animation:ui-fog-current-a 10s ease-in-out infinite alternate;
+}
+#ui-edge-fog .ui-fog-band::after{
+  opacity:.48;transform:scaleX(-1);
+  animation-name:ui-fog-current-b;animation-duration:13s;
+}
+#ui-edge-fog .ui-fog-band[data-edge="bottom"]{
+  inset:auto 0 0;height:clamp(118px,36cqh,365px);
+  --fog-hidden-transform:translate3d(0,102%,0);
+  background:linear-gradient(to top,#000 0%,rgba(0,0,0,.98) 17%,rgba(0,0,0,.91) 38%,rgba(0,0,0,.66) 57%,rgba(0,0,0,.26) 77%,transparent 100%);
+}
+#ui-edge-fog .ui-fog-band[data-edge="top"]{
+  inset:0 0 auto;height:clamp(78px,19cqh,185px);
+  --fog-hidden-transform:translate3d(0,-103%,0);
+  background:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.91) 25%,rgba(0,0,0,.57) 50%,transparent 100%);
+}
+#ui-edge-fog .ui-fog-band[data-edge="left"]{
+  inset:0 auto 0 0;width:clamp(180px,36cqw,520px);
+  --fog-hidden-transform:translate3d(-104%,0,0);
+  background:linear-gradient(to right,#000 0%,rgba(0,0,0,.94) 24%,rgba(0,0,0,.58) 52%,transparent 100%);
+}
+#ui-edge-fog .ui-fog-band[data-edge="right"]{
+  inset:0 0 0 auto;width:clamp(180px,36cqw,520px);
+  --fog-hidden-transform:translate3d(104%,0,0);
+  background:linear-gradient(to left,#000 0%,rgba(0,0,0,.94) 24%,rgba(0,0,0,.58) 52%,transparent 100%);
+}
+/* Fade the words in after the associated fog starts rising. */
+#novel-ui #dialogue:not([hidden]),
+#novel-ui #advance:not([hidden]),
+#novel-ui #history:not([hidden]),
+#novel-ui #menu-choices:not([hidden]),
+#novel-ui [data-ui-fog-edge="right"]:not([hidden]){
+  animation:ui-fog-words-in 360ms ease-out 140ms both;
+}
+@keyframes ui-fog-words-in{from{opacity:0}to{opacity:1}}
+@keyframes ui-fog-current-a{
+  0%{transform:translate3d(-2.3%,-1%,0) scale(1.04)}
+  50%{transform:translate3d(1.8%,2%,0) scale(1.08)}
+  100%{transform:translate3d(4%,-2%,0) scale(1.03)}
+}
+@keyframes ui-fog-current-b{
+  0%{transform:translate3d(3%,1%,0) scaleX(-1) scale(1.03)}
+  50%{transform:translate3d(-1%,-2%,0) scaleX(-1) scale(1.08)}
+  100%{transform:translate3d(-4%,2%,0) scaleX(-1) scale(1.03)}
+}
+@media(prefers-reduced-motion:reduce){
+  #ui-edge-fog .ui-fog-band{transition:none!important;will-change:auto}
+  #ui-edge-fog .ui-fog-band::before,#ui-edge-fog .ui-fog-band::after{animation:none!important}
+  #novel-ui #dialogue,#novel-ui #advance,#novel-ui #history,#novel-ui #menu-choices,
+  #novel-ui [data-ui-fog-edge]{animation:none!important}
+}
+
 /* SCENE TEMPLATE: one image, 3D tilt, stage-locked actions, viewport black fog. */
 #scene-menu{
   position:absolute;inset:0;z-index:2;pointer-events:none;
@@ -389,14 +467,20 @@ body.mobile-mode.virtual-landscape #view{
     <canvas id="actor-player-l2d" data-l2d-canvas width="1024" height="1024" aria-label="主角 L2D 动画画布"></canvas>
   </div>
   <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
-    <nav id="top-menu" aria-label="游戏菜单">
+    <div id="ui-edge-fog" aria-hidden="true">
+      <div class="ui-fog-band" data-edge="bottom" data-active="false"></div>
+      <div class="ui-fog-band" data-edge="top" data-active="false"></div>
+      <div class="ui-fog-band" data-edge="left" data-active="false"></div>
+      <div class="ui-fog-band" data-edge="right" data-active="false"></div>
+    </div>
+    <nav id="top-menu" data-ui-fog-edge="top" aria-label="游戏菜单">
       <button id="menu-toggle" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="menu-choices">☰</button>
     </nav>
-    <div id="top-actions" aria-label="对话控制">
+    <div id="top-actions" aria-label="对话控制" hidden aria-hidden="true">
       <button id="auto-button" type="button" aria-pressed="false">AUTO</button>
       <button id="log-button" type="button" aria-pressed="false">LOG</button>
     </div>
-    <div id="menu-choices" hidden aria-label="游戏操作">
+    <div id="menu-choices" data-ui-fog-edge="left" hidden aria-label="游戏操作">
       <button id="restart-button" type="button">重新开始</button>
       <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
@@ -404,12 +488,12 @@ body.mobile-mode.virtual-landscape #view{
        <button id="scene-switcher-toggle" type="button" aria-expanded="false">切换场景</button>
        <div id="scene-switcher" aria-label="已安装场景" hidden></div>
     </div>
-    <section id="dialogue" aria-label="人物对白" aria-live="polite">
+    <section id="dialogue" data-ui-fog-edge="bottom" aria-label="人物对白" aria-live="polite">
       <p id="speaker">???</p>
       <p id="dialogue-text">这间教室……和我记忆里的，不太一样。</p>
     </section>
-    <div id="advance"><button id="next-line" type="button" aria-label="下一句">▸</button></div>
-    <div id="history" hidden role="region" aria-label="对白记录"></div>
+    <div id="advance" data-ui-fog-edge="bottom"><button id="next-line" type="button" aria-label="下一句">▸</button></div>
+    <div id="history" data-ui-fog-edge="bottom" hidden role="region" aria-label="对白记录"></div>
   </div>
   <div id="scene-transition" data-phase="idle" data-active="false" aria-hidden="true"></div>
 
@@ -816,6 +900,39 @@ void main(){
   const restartButton=document.getElementById('restart-button');
   const hideButton=document.getElementById('hide-button');
   const history=document.getElementById('history');
+
+  // Generic fog adapter: any future top/right/left/bottom panel with
+  // data-ui-fog-edge appears behind its own independently animated black fog.
+  // MutationObserver follows the application's existing hidden-property state,
+  // so no caller has to manually synchronize panel visibility and fog.
+  const uiFogBands=Array.from(document.querySelectorAll('#ui-edge-fog .ui-fog-band'));
+  const uiFogEdges=new Set(['top','bottom','left','right']);
+  function isUiFogOwnerVisible(el){
+    if(uiRoot.hidden||view.classList.contains('dev-mode')||
+       view.classList.contains('fog-edit-mode')||el.hidden)return false;
+    if(!el.isConnected||!el.getClientRects().length)return false;
+    const css=getComputedStyle(el);
+    return css.display!=='none'&&css.visibility!=='hidden';
+  }
+  function syncUiEdgeFog(){
+    const active=new Set();
+    for(const el of uiRoot.querySelectorAll('[data-ui-fog-edge]')){
+      const edge=el.getAttribute('data-ui-fog-edge');
+      if(uiFogEdges.has(edge)&&isUiFogOwnerVisible(el))active.add(edge);
+    }
+    for(const band of uiFogBands){
+      const next=String(active.has(band.dataset.edge));
+      if(band.dataset.active!==next)band.dataset.active=next;
+    }
+  }
+  const edgeFogObserver=new MutationObserver(syncUiEdgeFog);
+  edgeFogObserver.observe(uiRoot,{
+    subtree:true,childList:true,attributes:true,
+    attributeFilter:['hidden','style','class','data-ui-fog-edge']
+  });
+  edgeFogObserver.observe(view,{attributes:true,attributeFilter:['class']});
+  window.PaperWorldUIFog=Object.freeze({refresh:syncUiEdgeFog});
+  syncUiEdgeFog();
   const lines=[
     {speaker:'???',text:'这间教室……和我记忆里的，不太一样。'},
     {speaker:'???',text:'明明已经放学了，为什么还有声音？'},
@@ -881,7 +998,7 @@ void main(){
     // Keep the saved actor transform on every room: do not reset it here.
     // applyEditorVisuals() runs during initial DEV setup after editorConfig exists.
     view.classList.toggle('environment-scene',def.type==='environment');
-    sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=!isStory;
+    sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=true;
     if(isMenu){
       cancelAuto();if(logOpen)toggleLog();
       mainOptions.hidden=false;settingsOptions.hidden=true;galleryOptions.hidden=true;
