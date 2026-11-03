@@ -36,6 +36,30 @@ const BACK={
  jacket:['torso',.50,.08,.50,.79,'torso'],
  hair_over_jacket:['head',.50,.05,.50,.94,'hair']
 };
+// CHAR-016 / male second: verified 21 real Photoshop layer masks.
+const CHAR016={
+ back_hair:['head',.50,.09,.50,.94,'hair'],
+ ears:['head',.50,.50,.50,.50,'fixed'],
+ brows:['head',.50,.5,.50,.5,'face'],
+ lashes:['eye_white',.50,.5,.50,.5,'eyes-combined'],
+ eye_white:['head',.50,.5,.50,.5,'eyes-combined'],
+ face:['head',.50,.48,.50,.48,'face'],
+ front_hair:['head',.50,.06,.50,.90,'hair'],
+ irises:['eye_white',.50,.5,.50,.5,'eyes-combined'],
+ jacket:['torso',.50,.1,.50,.85,'torso'],
+ pants:['pelvis',.5,.06,.5,.94,'leg-combined'],
+ shoe_left:['ground',.5,.86,.5,.86,'fixed'],
+ shoe_right:['ground',.5,.86,.5,.86,'fixed'],
+ shirt:['torso',.5,.08,.5,.85,'torso'],
+ tie:['torso',.5,.12,.5,.90,'torso'],
+ neck:['torso',.5,.8,.5,.8,'fixed'],
+ collar_left:['torso',.5,.08,.5,.88,'torso'],
+ collar_right:['torso',.5,.08,.5,.88,'torso'],
+ cuff_left:['torso',.75,.05,.5,.95,'arm-left'],
+ cuff_right:['torso',.25,.05,.5,.95,'arm-right'],
+ hand_left:['torso',.72,.05,.5,.92,'arm-left'],
+ hand_right:['torso',.25,.05,.5,.92,'arm-right']
+};
 // Known real CHAR-002 16-layer PSD layout (front only). Values are
 // neutral initial joint locations; no source bitmap is invented or altered.
 // Original flat artwork's seven *derived regions*, never PSD or separately
@@ -342,7 +366,8 @@ function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  return {x:part.x+x+dx/sum*blend,y:part.y+y+dy/sum*blend};
 }
 function cleanPart(part,face,id,characterId){
- const p=part||{},spec=characterId==='char-002-rig-v1'&&face==='front'?
+ const p=part||{},spec=characterId==='char-016'&&face==='front'?CHAR016[id]:
+  characterId==='char-002-rig-v1'&&face==='front'?
   CHAR002_DERIVED[id]:
   characterId==='char-002'&&face==='front'?(CHAR002[id]||CHAR002_DERIVED[id]||FRONT[id]):
   (face==='back'?BACK:FRONT)[id];
@@ -401,8 +426,9 @@ function project(parts,characterId,face,previous=null){
 function bindBodyHierarchy(model){
  const p=model?.parts;if(!p)return model;
  const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
- const legs=pick('legs','legwear'),feet=pick('shoes','footwear'),
-  skirt=pick('skirt','bottomwear'),torso=pick('jacket','topwear'),
+ const legs=pick('legs','legwear','pants'),
+  feet=pick('shoes','footwear','shoe_left','shoe_right'),
+  skirt=pick('skirt','bottomwear','pants'),torso=pick('jacket','topwear'),
   face=pick('face'),hair=pick('front_hair','rear_hair','back_hair','head_hair'),neck=pick('neck');
  if(!legs||!feet||!skirt||!torso)return model;
  const xy=(part,u,v)=>({x:part.x+part.w*u,y:part.y+part.h*v});
@@ -518,7 +544,7 @@ function legPoint(part,point,pose){
 }
 function parentRole(part){
  if(!part)return 'none';
- if(part.parentId==='ground'||part.id==='shoes'||part.id==='footwear')return 'ground';
+ if(part.parentId==='ground'||['shoes','footwear','shoe_left','shoe_right'].includes(part.id))return 'ground';
  if(part.kind==='leg-combined')return 'legs';
  if(part.kind==='skirt')return 'pelvis';
  if(part.kind==='torso')return 'torso';
