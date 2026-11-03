@@ -10,8 +10,8 @@ on:
       - 'scripts/build_v4_assets.py'
       - 'scripts/build_protagonist_part_rig.py'
       - 'scripts/fix_protagonist_neck_v4.py'
-      - 'scripts/build_char002_v4.py'
-      - 'scripts/build_char002_part_rig.py'
+      - 'scripts/build_char002_psd_rig.py'
+      - 'site/assets/l2d/source-psd/**'
       - 'site/dev/**'
       - 'site/characters.catalog.json'
       - 'site/assets/characters/**'
@@ -43,8 +43,7 @@ jobs:
           python3 scripts/build_v4_assets.py
           python3 scripts/build_protagonist_part_rig.py
           python3 scripts/fix_protagonist_neck_v4.py
-          python3 scripts/build_char002_v4.py
-          python3 scripts/build_char002_part_rig.py
+          python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
           test -s site/index.html
@@ -59,25 +58,30 @@ jobs:
               assert im.size==(335,1013) and im.n_frames==128
           print('PASS protagonist revised neck animation: 128 frames')
           PY
-          test -s site/assets/l2d/char-002/front.webp
-          test -s site/assets/l2d/char-002/front-source-regions.zip
+          test -s site/assets/l2d/library/char-002-psd-v1/front-original-psd-parts.zip
+          test -s site/assets/l2d/library/char-002-psd-v1/front.rig.json
           python3 - <<'PY'
-          from PIL import Image
           from zipfile import ZipFile
-          from json import loads
           from pathlib import Path
-          movie=Path('site/assets/l2d/char-002/front.webp')
-          with Image.open(movie) as im:
-              assert im.size==(335,1024) and im.n_frames==128
-          with ZipFile('site/assets/l2d/char-002/front-source-regions.zip') as z:
-              manifest=loads(z.read('layers.json'))
-              assert len(manifest['layers']['front'])==7
-              assert not manifest['layers']['back']
-          catalog=loads(Path('site/characters.catalog.json').read_text())
+          from PIL import Image
+          import json
+          source=Path('site/assets/l2d/library/char-002-psd-v1')
+          with ZipFile(source/'front-original-psd-parts.zip') as z:
+              meta=json.loads(z.read('layers.json'))
+              assert len(meta['originalLayerRecords'])==24
+              assert len(meta['layers']['front'])==17
+              assert len(meta['layers']['back'])==0
+              assert z.testzip() is None
+          with Image.open(source/'front.png') as im:
+              assert im.size==(1024,1024)
+          catalog=json.loads(Path('site/characters.catalog.json').read_text())
           char=next(c for c in catalog['characters'] if c['id']=='char-002')
-          assert char['front'].endswith('/char-002/front.png')
-          assert char['clips']['front']['frames']==128 and not char.get('back')
-          print('PASS: CHAR-002 animation, region layers and single-view safety')
+          assert char['l2dModule']['front']['renderer']=='part-mesh'
+          assert char['l2dModule']['front']['rig']['partCount']==17
+          assert char['l2dModule']['front']['sourceParts']['provenance']=='original-psd'
+          assert 'clips' not in char and not char.get('back')
+          assert not any(c['id']=='char-002-psd-v1' for c in catalog['characters'])
+          print('PASS CHAR-002 original PSD 24 records, 17 visible ArtMeshes, no old 7-region V4')
           PY
           node - <<'JS'
           const fs=require('fs');
