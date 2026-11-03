@@ -130,7 +130,10 @@ body.mobile-mode.virtual-landscape #view{
   flex:none;width:clamp(54px,7.2cqw,129px);height:clamp(5px,.65cqh,7px);
 }
 .hud-segment{position:relative;flex:1;min-width:0;background:rgba(245,245,241,.22);border-radius:1px;overflow:hidden}
-.hud-segment>i{position:absolute;inset:0 auto 0 0;background:#f5f5f1}
+.hud-segment>i{position:absolute;inset:0 auto 0 0;background:#f5f5f1;transition:width .48s cubic-bezier(.2,.75,.3,1)}
+@media(prefers-reduced-motion:reduce){.hud-segment>i{transition:none!important}}
+.hud-exact[data-pulse="true"]{animation:stat-delta .5s ease-out}
+@keyframes stat-delta{0%{opacity:.46;transform:translateY(2px)}100%{opacity:1;transform:translateY(0)}}
 .hud-exact{flex:none;min-width:6ch;letter-spacing:0;line-height:1;text-align:left}
 .hud-divider{flex:none;width:1px;height:clamp(18px,2.35cqh,26px);background:rgba(245,245,241,.56)}
 #hud-clock{
@@ -469,6 +472,7 @@ body.mobile-mode.virtual-landscape #view{
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
+<script src="./game/survival-state.js"></script>
 </head>
 <body>
 <main id="view" aria-label="同一场景模板：背景和菜单随视角倾斜，纯黑流体雾固定在屏幕上">
@@ -970,17 +974,23 @@ void main(){
   const hideButton=document.getElementById('hide-button');
   const history=document.getElementById('history');
 
-  // Screenshot-matching HUD preview state. Combat/survival/game-time
-  // systems can supply their actual numeric values through this small API;
-  // we do not advance a fake clock or pretend these sample values are live.
-  const topHudValues={
-    health:{current:82,max:100},
-    hunger:{current:67,max:100},
-    sanity:{current:91,max:100}
-  };
-  const topHudClock={month:4,day:12,weekday:'周五',hour:21,minute:36};
+  // Real, persisted gameplay state. Combat events change HP; food and
+  // scripted stress/recovery change their own stats. The only automatic
+  // drain is hunger during ACTIVE gameplay, never while offline/hidden.
+  const survivalState=window.PAPERWORLD_SURVIVAL_STATE?.create({
+    storage:(()=>{try{return window.localStorage}catch(_){return null}})()
+  });
+  if(!survivalState)throw new Error('survival-state.js must load before the HUD');
   const hudStatLabels={health:'生命',hunger:'饥饿',sanity:'理智'};
-  const capHudValue=(value,max)=>Math.max(0,Math.min(max,Math.round(value)));
+  const hudKeys=['health','hunger','sanity'];
+  const hudDisplays=Object.fromEntries(hudKeys.map(k=>[k,{current:0,max:100}]));
+  const weekdayNames=['周日','周一','周二','周三','周四','周五','周六'];
+  let hudAnimation=0,hudClockMinuteKey='';
+  function realClock(){
+    const d=new Date();
+    return {year:d.getFullYear(),month:d.getMonth()+1,day:d.getDate(),
+      weekday:weekdayNames[d.getDay()],hour:d.getHours(),minute:d.getMinutes()};
+  }
   function fitTopHud(){
     const container=document.getElementById('hud-top');
     const vitals=document.getElementById('hud-vitals');
@@ -1001,60 +1011,113 @@ void main(){
     vitals.style.setProperty('--hud-scale',scale.toFixed(3));
     container.dataset.fitScale=scale.toFixed(3);
   }
-  function drawTopHud(){
-    for(const [key,stat] of Object.entries(topHudValues)){
-      const bar=document.getElementById('hud-'+key+'-meter');
-      const value=document.getElementById('hud-'+key+'-value');
-      const full=stat.current/stat.max*8;
-      if(bar.childElementCount!==8){
-        const pieces=Array.from({length:8},()=>{const el=document.createElement('span');
-          el.className='hud-segment';
-          el.appendChild(document.createElement('i'));
-          return el;
-        });
-        bar.replaceChildren(...pieces);
+  function paintTopHudValues(values,force){
+    for(const key of hudKeys){
+      const stat=values[key];
+      const meter=document.getElementById('hud-'+key+'-meter');
+      const label=document.getElementById('hud-'+key+'-value');
+      const full=stat.max>0?stat.current/stat.max*10:0;
+      if(meter.childElementCount!==10){
+        meter.replaceChildren(...Array.from({length:10},()=>{
+          const piece=document.createElement('span');
+          piece.className='hud-segment';
+          piece.appendChild(document.createElement('i'));
+          return piece;
+        }));
       }
-      [...bar.children].forEach((piece,index)=>{
-        piece.firstElementChild.style.width=(Math.max(0,Math.min(1,full-index))*100).toFixed(1)+'%';
+      [...meter.children].forEach((piece,i)=>{
+        // A 78/125 HP pool fills 6 whole cells and 24% of cell 7.
+        piece.firstElementChild.style.width=
+          (Math.max(0,Math.min(1,full-i))*100).toFixed(3)+'%';
       });
-      value.textContent=stat.current+'/'+stat.max;
-      bar.parentElement.setAttribute('aria-label',hudStatLabels[key]+' '+value.textContent);
+      const value=Math.round(stat.current)+'/'+Math.round(stat.max);
+      if(label.textContent!==value){
+        if(!force){
+          label.dataset.pulse='false';
+          void label.offsetWidth;
+          label.dataset.pulse='true';
+        }
+        label.textContent=value;
+      }
+      meter.parentElement.setAttribute('aria-label',hudStatLabels[key]+' '+value);
     }
-    const c=topHudClock;
-    document.getElementById('hud-date').textContent=c.month+'月'+c.day+'日';
-    document.getElementById('hud-weekday').textContent=c.weekday;
-    document.getElementById('hud-time').textContent=String(c.hour).padStart(2,'0')+':'+String(c.minute).padStart(2,'0');
+  }
+  function animateTopHudTo(next,source='game'){
+    const previous=Object.fromEntries(hudKeys.map(key=>[key,{...hudDisplays[key]}]));
+    for(const key of hudKeys)hudDisplays[key].max=next[key].max;
+    const major=hudKeys.some(key=>Math.abs(previous[key].current-next[key].current)>=.1);
+    const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    if(hudAnimation)cancelAnimationFrame(hudAnimation);
+    if(!major||reducedMotion||source==='init'){
+      for(const key of hudKeys)hudDisplays[key]={...next[key]};
+      paintTopHudValues(hudDisplays,source==='init');
+      fitTopHud();
+      return;
+    }
+    const started=performance.now();
+    function step(now){
+      const progress=Math.min(1,(now-started)/480);
+      const ease=1-Math.pow(1-progress,3);
+      for(const key of hudKeys){
+        hudDisplays[key].current=previous[key].current+
+          (next[key].current-previous[key].current)*ease;
+      }
+      paintTopHudValues(hudDisplays,false);
+      if(progress<1)hudAnimation=requestAnimationFrame(step);
+      else{hudAnimation=0;for(const key of hudKeys)hudDisplays[key]={...next[key]};
+        paintTopHudValues(hudDisplays,false);fitTopHud();}
+    }
+    hudAnimation=requestAnimationFrame(step);
+  }
+  function refreshRealClock(force=false){
+    const now=realClock();
+    const key=now.year+'-'+now.month+'-'+now.day+'-'+now.hour+'-'+now.minute;
+    if(!force&&key===hudClockMinuteKey)return;
+    hudClockMinuteKey=key;
+    document.getElementById('hud-date').textContent=now.month+'月'+now.day+'日';
+    document.getElementById('hud-weekday').textContent=now.weekday;
+    document.getElementById('hud-time').textContent=
+      String(now.hour).padStart(2,'0')+':'+String(now.minute).padStart(2,'0');
     document.getElementById('hud-clock').setAttribute('aria-label',
-      c.month+'月'+c.day+'日 '+c.weekday+' '+c.hour+'点'+c.minute+'分');
+      now.year+'年'+now.month+'月'+now.day+'日 '+now.weekday+' '+
+      now.hour+'点'+now.minute+'分');
     fitTopHud();
   }
-  function updateTopHudStats(next){
-    for(const key of ['health','hunger','sanity']){
-      const patch=next?.[key];
-      if(!patch)continue;
-      const current=topHudValues[key];
-      const max=Number.isFinite(patch.max)&&patch.max>0?Math.round(patch.max):current.max;
-      const n=Number.isFinite(patch.current)?patch.current:current.current;
-      topHudValues[key]={current:capHudValue(n,max),max};
-    }
-    drawTopHud();
-  }
-  function updateTopHudClock(next){
-    if(next&&Number.isInteger(next.month)&&next.month>=1&&next.month<=12)topHudClock.month=next.month;
-    if(next&&Number.isInteger(next.day)&&next.day>=1&&next.day<=31)topHudClock.day=next.day;
-    if(next&&typeof next.weekday==='string'&&/^周[一二三四五六日]$/.test(next.weekday))topHudClock.weekday=next.weekday;
-    if(next&&Number.isInteger(next.hour)&&next.hour>=0&&next.hour<24)topHudClock.hour=next.hour;
-    if(next&&Number.isInteger(next.minute)&&next.minute>=0&&next.minute<60)topHudClock.minute=next.minute;
-    drawTopHud();
-  }
+  survivalState.subscribe((snap,source)=>animateTopHudTo(snap.stats,source));
+  animateTopHudTo(survivalState.snapshot().stats,'init');
+  refreshRealClock(true);
+  // Do not provide a setClock method: the displayed time is ALWAYS the
+  // device's real local calendar, never a scripted or preview date.
   window.PaperWorldTopHUD=Object.freeze({
-    setStats:updateTopHudStats,setClock:updateTopHudClock,
-    snapshot:()=>({
-      stats:Object.fromEntries(Object.entries(topHudValues).map(([key,v])=>[key,{...v}])),
-      clock:{...topHudClock}
-    })
+    setStats:patch=>survivalState.setStats(patch),
+    applyEvent:event=>survivalState.apply(event),
+    advance:ms=>survivalState.advance(ms),
+    reset:()=>survivalState.reset(),
+    save:()=>survivalState.persist(),
+    subscribe:fn=>survivalState.subscribe(fn),
+    refreshClock:()=>refreshRealClock(true),
+    snapshot:()=>({...survivalState.snapshot(),clock:realClock()})
   });
-  drawTopHud();
+  let lastActiveStatTick=performance.now();
+  function updateLiveGameState(){
+    refreshRealClock();
+    const now=performance.now();
+    const elapsed=Math.max(0,now-lastActiveStatTick);
+    lastActiveStatTick=now;
+    const inGame=!document.hidden&&stage.dataset.scene!=='menu'&&
+      !view.classList.contains('dev-mode')&&
+      !view.classList.contains('fog-edit-mode');
+    if(inGame)survivalState.advance(Math.min(elapsed,2000));
+  }
+  const gameStatusTimer=setInterval(updateLiveGameState,1000);
+  document.addEventListener('visibilitychange',()=>{
+    lastActiveStatTick=performance.now();refreshRealClock(true);
+    if(document.hidden)survivalState.persist();
+  });
+  window.addEventListener('focus',()=>{
+    lastActiveStatTick=performance.now();refreshRealClock(true);
+  });
+  window.addEventListener('pagehide',()=>survivalState.persist());
 
   // Generic fog adapter: any future top/right/left/bottom panel with
   // data-ui-fog-edge appears behind its own independently animated black fog.
