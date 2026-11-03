@@ -69,10 +69,10 @@ for(const [field,label,min,max,step] of boneFields){
 const idleFields=[
  ['body.amount','身体微动',0,60,1,100],
  ['body.speed','身体速度',20,200,5,100],
- ['hair.amount','头发摆幅',0,150,5,100],
+ ['hair.amount','头发摆幅',0,150,1,100],
  ['hair.speed','头发速度',20,200,5,100],
  ['hair.lag','头发滞后',0,200,5,100],
- ['cloth.amount','裙子/外套摆幅',0,150,5,100],
+ ['cloth.amount','裙子/外套摆幅',0,150,1,100],
  ['cloth.speed','衣物速度',20,200,5,100],
  ['cloth.lag','衣物滞后',0,200,5,100],
  ['sleeves.amount','袖子/手臂摆幅',0,150,5,100],
