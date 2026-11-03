@@ -50,4 +50,33 @@ assert.equal(gz.screenDeltaY,gy.screenDeltaY);
 assert.equal(gz.worldDeltaZ,50,
   'Floor depth must carry all actor planes by the exact same world-Z displacement');
 assert.equal(perspective.floorMotion({y:77,z:-215},-1).valid,false);
-console.log('PASS shared physical height, moving floor Y/Z parent translation, perspective invariants');
+const near=perspective.depthScale(250);
+const base=perspective.depthScale(160);
+const far=perspective.depthScale(-330);
+assert.ok(near>base&&base>far,'Moving closer MUST make a grounded actor larger');
+assert.equal(base,1,'Reference heroine must retain the 1× reference scale');
+assert.ok(perspective.depthScale(-190)>.7&&perspective.depthScale(-190)<.8);
+const normalScale=perspective.renderScale({
+  actorHeightCm:155,referenceHeightCm:162,
+  actorCanvasHeight:220,referenceCanvasHeight:550,
+  actorVisibleFraction:.86,referenceVisibleFraction:.9,actorZ:-190,
+  referenceZ:160,dev:false
+});
+const devScale=perspective.renderScale({
+  actorHeightCm:155,referenceHeightCm:162,
+  actorCanvasHeight:220,referenceCanvasHeight:550,
+  actorVisibleFraction:.86,referenceVisibleFraction:.9,actorZ:-190,
+  referenceZ:160,dev:true
+});
+assert.equal(normalScale.valid,true);
+assert.equal(devScale.valid,true);
+assert.ok(normalScale.scale<devScale.scale,
+ 'Normal 2D view needs camera depth compensation; DEV already has CSS 3D projection');
+assert.ok(Math.abs(normalScale.scale/devScale.scale-perspective.depthScale(-190))<1e-10,
+ 'Do not double apply CSS perspective in the 3D DEV scene');
+const expectedPhys=(155/162)*(perspective.depthScale(-190));
+const visibleRatio=(220*.86*normalScale.scale)/(550*.9);
+assert.ok(Math.abs(visibleRatio-expectedPhys)<1e-10,
+ 'The real alpha silhouette plus actual stature must predict apparent height');
+assert.ok(!perspective.renderScale({actorHeightCm:0}).valid);
+console.log('PASS shared L2D floor, physically normalized character height, camera distance shrink/grow and no double perspective');
