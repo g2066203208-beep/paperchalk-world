@@ -1,0 +1,38 @@
+name: Character L2D fog occlusion - real pixel browser test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/index.html'
+      - 'tests/character-fog-layer-browser.mjs'
+      - '.github/workflows/character-fog-compositor.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compositing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build real scene catalog
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_scene_catalog.py
+      - name: Install actual headless Chromium
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify actor L2D/fog paint order on desktop and mobile
+        run: node tests/character-fog-layer-browser.mjs
+      - name: Upload exact browser render screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-foreground-fog-occlusion-real-pixels
+          path: artifacts/fog-layer/*.png
+          retention-days: 7
+          if-no-files-found: warn
