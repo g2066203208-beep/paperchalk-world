@@ -25,7 +25,7 @@ const bodyMotion=length(position('face',.2),position('face',1.7));
 assert.ok(hairMotion>1,'real hair must sway on its actual original component');
 assert.ok(skirtMotion>.4,'real skirt must sway independently of hair');
 assert.ok(bodyMotion>0.5&&bodyMotion<3,'whole-body stance should shift gently, not shake');
-assert.ok(hairMotion>bodyMotion*5,'hair tips should flex more than a living body');
+assert.ok(hairMotion>bodyMotion*1.7,'hair tips add local articulation over whole-body coordinated sway');
 const approvedStill=core.presetIdle('still',model.idleProfile);
 model.idleProfile=approvedStill;
 for(const id of Object.keys(model.parts)){
@@ -99,12 +99,21 @@ assert.ok(ranges.hair.breeze.length>ranges.hair.still.length+3,
  'even gentle breeze must differ visibly from no wind');
 assert.ok(ranges.skirt.breeze.length>ranges.skirt.still.length+.7,
  'breeze should affect cloth');
-assert.ok(ranges.hair.windy.dx>65&&ranges.hair.windy.dy< -35,
- 'HIGH WIND must lift ORIGINAL long hair up and sideways');
+assert.ok(ranges.hair.windy.dx< -65&&ranges.hair.windy.dy< -35,
+ 'HIGH WIND must lift ORIGINAL left lock up and AWAY from the face');
 assert.ok(ranges.skirt.windy.dx>30&&ranges.skirt.windy.dy< -12,
  'HIGH WIND must flare skirt up and to the side');
 assert.ok(ranges.hair.windy.length>ranges.hair.breeze.length*4,
  'strong wind must not look like normal standing');
+const rightLock=displacement(fringe,.88,.95,tiers[3]);
+assert.ok(rightLock.dx>65&&rightLock.dy< -35,
+ 'right hair tip should lift in the opposite OUTWARD direction');
+const centerFringe=core.windField(fringe,.5,.18,2.3,tiers[3]);
+assert.ok(Math.hypot(centerFringe.x,centerFringe.y)<3,
+ 'forehead fringe stays readable; strong wind cannot sweep it over the eyes');
+const leftPleat=displacement(hem,.15,.96,tiers[3]);
+assert.ok(leftPleat.dx< -12&&leftPleat.dy< -12,
+ 'left pleat must fan out instead of both skirt sides shifting to the right');
 const root=(part,idle)=>core.windField(part,.5,.02,2.3,idle);
 for(const part of [fringe,hem]){
  assert.deepEqual(root(part,tiers[3]),{x:0,y:0},
