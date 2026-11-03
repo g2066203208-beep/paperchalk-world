@@ -21,7 +21,7 @@ dock.prepend(panel);
 const quickPanel=document.createElement('section');
 quickPanel.id='rig-quick-panel';
 quickPanel.hidden=true;
-quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">拖动实时预览：脚和鞋固定，骨盆带动腿和腰，肩部带动颈部与头部。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hands\"><span>双手／手臂</span><output>70%</output><input data-quick=\"hands\" aria-label=\"双手手臂摆动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"70\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"shoulders\"><span>肩部活动</span><output>30%</output><input data-quick=\"shoulders\" aria-label=\"肩部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"30\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hips\"><span>胯部活动</span><output>20%</output><input data-quick=\"hips\" aria-label=\"胯部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"20\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"250\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
+quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">拖动实时预览：脚和鞋固定，骨盆带动腿和腰，肩部带动颈部与头部。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hands\"><span>双手／手臂</span><output>70%</output><input data-quick=\"hands\" aria-label=\"双手手臂摆动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"70\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"shoulders\"><span>肩部活动</span><output>30%</output><input data-quick=\"shoulders\" aria-label=\"肩部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"30\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hips\"><span>胯部活动</span><output>20%</output><input data-quick=\"hips\" aria-label=\"胯部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"20\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"breath\"><span>胸部呼吸</span><output>60%</output><input data-quick=\"breath\" aria-label=\"胸部呼吸幅度\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"60\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"250\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
 dock.prepend(quickPanel);
 // Keep Play/Pause visible in the rig header, outside the animated portrait.
 panel.querySelector('.rig-h').insertBefore($('rig-pause'),$('rig-close'));
@@ -67,7 +67,7 @@ $('rig-guides').addEventListener('change',event=>{
  state.showGuides=!!event.target.checked;
  ed.render();
 });
-// Four controls adjust the exact live model played in the game, without presets.
+// The simple live sliders edit the exact shared rig played by the game.
 const quickGroups={
  fringe:['front_hair','hair'],
  rear:['rear_hair','back_hair','hair_over_jacket'],
@@ -82,7 +82,11 @@ function syncIdle(){
  const idle=state.model?.idleProfile;if(!idle)return;
  for(const input of quickPanel.querySelectorAll('[data-quick]')){
   const id=input.dataset.quick,row=input.closest('.rig-quick-row');
-  if(id==='speed'){
+  if(id==='breath'){
+   row.hidden=!state.model?.bodyHierarchy;
+   if(row.hidden)continue;
+   input.value=String(Math.round(idle.breath.amount*100/5)*5);
+  }else if(id==='speed'){
    input.value=String(Math.round((idle.hair.speed+idle.cloth.speed)*50/5)*5);
    row.hidden=false;
   }else if(Object.hasOwn(idle.joints||{},id)){
@@ -110,8 +114,11 @@ quickPanel.addEventListener('input',event=>{
  if(!input||!state.model)return;
  const id=input.dataset.quick,value=Number(input.value);
  const idle=state.model.idleProfile;
- if(id==='speed'){
+ if(id==='breath'){
+  idle.breath.amount=value/100;
+ }else if(id==='speed'){
   for(const group of ['hair','cloth','sleeves'])idle[group].speed=value/100;
+  idle.breath.speed=value/100;
  }else if(Object.hasOwn(idle.joints||{},id)){
   idle.joints[id]=value/100;
  }else{
