@@ -127,6 +127,21 @@ try{
     assert.ok(devPixels.count>devPixels.total*.08,
       'Live source fog missing beneath developer settings: '+JSON.stringify(devPixels));
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-dev-settings.png'});
+    // QA-only fog-on-white isolation: visual reviewers must see a *flowing,
+    // feathered* fog edge, not a dark rectangular plate hiding the room.
+    await page.evaluate(()=>{
+      const original=document.getElementById('dev-panel-fog');
+      const matte=document.createElement('canvas');
+      matte.id='fog-matte-test';
+      matte.width=original.width;matte.height=original.height;
+      const ctx=matte.getContext('2d');
+      ctx.fillStyle='#fff';ctx.fillRect(0,0,matte.width,matte.height);
+      ctx.drawImage(original,0,0);
+      matte.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:70;pointer-events:none';
+      document.querySelector('#view').appendChild(matte);
+    });
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-white-matte.png'});
+    await page.locator('#fog-matte-test').evaluate(el=>el.remove());
     await page.locator('#dev-exit').click();
     await page.waitForTimeout(1200);
     assert.equal(await page.locator('#dev-tools').isVisible(),false);
