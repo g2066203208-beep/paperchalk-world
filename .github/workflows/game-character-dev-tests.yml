@@ -103,17 +103,17 @@ jobs:
                 window.characterEditor.render();
               });
               await page.locator('[data-idle-preset="realistic"]').click();
-              await page.locator('[data-idle="hair.amount"]').evaluate(el=>{el.value='45';el.dispatchEvent(new Event('input',{bubbles:true}));});
+              await page.locator('[data-idle="hair.amount"]').evaluate(el=>{el.value='24';el.dispatchEvent(new Event('input',{bubbles:true}));});
               await page.locator('#btnSave').click(); // Primary Save must flush bone drafts
               await page.waitForFunction(async()=>{
                 const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
-                return saved?.idleProfile?.hair?.amount===.45;
+                return saved?.idleProfile?.hair?.amount===.24;
               },null,{timeout:15000});
               await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
               await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:30000});
               await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
               await page.waitForFunction(()=>
-                window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.hair.amount===.45,
+                window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.hair.amount===.24,
                 null,{timeout:28000}).catch(async error=>{
                   console.error('GAME RIG SAVE DIAGNOSTICS',await page.evaluate(async()=>{
                     const project=await new Promise(resolve=>{
