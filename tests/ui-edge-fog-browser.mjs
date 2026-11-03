@@ -83,8 +83,9 @@ try{
     assert.ok(rightEdge+4<=topHud.clockLeft,
       'Status and clock must never overlap on any viewport: '+JSON.stringify(topHud));
     assert.equal(topHud.hasCrossedIcon,false,'Hunger icon still has crossed X-strokes');
-    // Quick tools use only three equal-size white 24-unit stroke icons
-    // at the physical RIGHT-CENTER of the landscape game, never top corners.
+    // Quick tools use three equal-size enlarged white line icons, and all
+    // primary game icon controls share the same responsive square hit target.
+    // They stay at the physical RIGHT-CENTER, never top corners.
     const quickGeometry=await page.evaluate(()=>{
       const nav=document.getElementById('quick-tools');
       const panel=document.getElementById('quick-panel');
@@ -96,6 +97,11 @@ try{
         svgSizes:svgs.map(n=>[n.offsetWidth||n.getBoundingClientRect().width,
           n.offsetHeight||n.getBoundingClientRect().height]),
         strokeWidths:svgs.map(n=>getComputedStyle(n).strokeWidth),
+        buttonSizes:buttons.map(n=>[n.getBoundingClientRect().width,n.getBoundingClientRect().height]),
+        menuSize:[document.getElementById('menu-toggle').getBoundingClientRect().width,
+          document.getElementById('menu-toggle').getBoundingClientRect().height],
+        nextSize:[document.getElementById('next-line').getBoundingClientRect().width,
+          document.getElementById('next-line').getBoundingClientRect().height],
         navOffsetLeft:nav.offsetLeft,navOffsetTop:nav.offsetTop,
         navHeight:nav.offsetHeight,navWidth:nav.offsetWidth,
         rootWidth:root.offsetWidth,rootHeight:root.offsetHeight,
@@ -110,8 +116,16 @@ try{
       'Three quick icons must have identical stroke widths');
     for(const [w,h] of quickGeometry.svgSizes){
       assert.ok(Math.abs(w-h)<.5,'Quick icon is not square');
-      assert.ok(w>=19&&w<=27,'Quick icon is not the compact 24px size: '+w);
+      assert.ok(w>=29&&w<=37,'Quick icon is not the unified enlarged size: '+w);
     }
+    for(const [w,h] of [...quickGeometry.buttonSizes,quickGeometry.menuSize,quickGeometry.nextSize]){
+      assert.ok(Math.abs(w-h)<.6,'Icon control hit target is not square: '+w+' x '+h);
+      assert.ok(w>=51.5&&w<=65,'Icon control is outside shared minimum touch size: '+w);
+    }
+    assert.equal(new Set(quickGeometry.buttonSizes.map(([w,h])=>w+'x'+h)).size,1,
+      'Backpack, phone, and map button targets must be identical');
+    assert.equal(new Set(quickGeometry.svgSizes.map(([w,h])=>w+'x'+h)).size,1,
+      'Backpack, phone, and map glyph canvases must be identical');
     assert.ok(quickGeometry.navOffsetLeft>quickGeometry.rootWidth*.85,
       'Quick icons are not at the right side of the game');
     const logicalCenter=quickGeometry.navOffsetTop;
