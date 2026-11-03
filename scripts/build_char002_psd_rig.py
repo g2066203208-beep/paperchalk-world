@@ -108,6 +108,7 @@ def build():
         source_rebuild=Image.new("RGBA",src.size)
         textures={}
         parts=[]
+        editable=[]
         for row in rows:
             ident=row["id"]
             file=row["file"]
@@ -124,17 +125,49 @@ def build():
             w,h=image.size
             if not (0<=x<=1024-w and 0<=y<=1024-h):
                 raise ValueError("Original component placement exceeds canvas: "+ident)
+            source_rebuild.alpha_composite(image,(x-offset,y))
+            if ident=="handwear":
+                # Raised wrist is at y~0 while its shoulder is y~235;
+                # a single generic down-arm bone kept that wrist frozen.
+                if image.size!=(299,866):
+                    raise ValueError("Original PSD handwear geometry changed")
+                recovered=Image.new("RGBA",image.size)
+                for name,label,(x0,y0,x1,y1) in ARM_REGIONS:
+                    crop=image.crop((x0,y0,x1,y1))
+                    if not crop.getchannel("A").getbbox():
+                        raise ValueError("PSD arm unexpectedly blank: "+name)
+                    recovered.alpha_composite(crop,(x0,y0))
+                    texture="parts/front/"+name+".png"
+                    dest=DEST/texture
+                    dest.parent.mkdir(parents=True,exist_ok=True)
+                    crop.save(dest,optimize=True)
+                    textures[name]=texture
+                    px,py=x+x0,y+y0
+                    parts.append({"partId":name,"name":label,"x":px,"y":py,
+                      "canvas":{"width":crop.width,"height":crop.height},
+                      "sourcePart":True,"visible":True,"opacity":1})
+                    editable.append({"partId":name,"id":name,"name":label,
+                      "x":px,"y":py,"file":"front/"+name+".png",
+                      "role":"psd-part","visible":True,"opacity":1})
+                # Discard only invisible stray alpha (source art unchanged).
+                lost=ImageChops.difference(image.getchannel("A"),
+                  recovered.getchannel("A"))
+                if ImageStat.Stat(lost).mean[0]>.003:
+                    raise ValueError("Original handwear pixel split lost visible art")
+                continue
             texture="parts/front/"+ident+".png"
             dest=DEST/texture
             dest.parent.mkdir(parents=True,exist_ok=True)
-            dest.write_bytes(data)  # ORIGINAL pixels, no retouch or AI regeneration.
+            dest.write_bytes(data)  # ORIGINAL Photoshop pixels, no repaint.
             textures[ident]=texture
-            source_rebuild.alpha_composite(image,(x-offset,y))
             parts.append({"partId":ident,"name":row["name"],"x":x,"y":y,
                           "canvas":{"width":w,"height":h},"sourcePart":True,
                           "visible":True,"opacity":1})
-        if set(textures) != set(EXPECTED_PARTS):
-            raise ValueError("Loss of original visible Photoshop components")
+            editable.append({"partId":ident,"id":ident,"name":row["name"],
+              "x":x,"y":y,"file":"front/"+ident+".png",
+              "role":"psd-part","visible":True,"opacity":1})
+        if tuple(textures)!=RUNTIME_PARTS:
+            raise ValueError("Original PSD runtime mesh list lost an arm or source layer")
         # The source Photoshop composite is immutable; only anti-aliased, near-zero
         # alpha pixels can differ after export of independently visible regions.
         diff=ImageChops.difference(src,source_rebuild)
