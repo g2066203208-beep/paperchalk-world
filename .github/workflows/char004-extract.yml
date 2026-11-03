@@ -1,0 +1,38 @@
+name: CHAR-004 extract single fullbody
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/char004-extract.yml', 'scripts/extract_char004_solo.py']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  isolate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make precise user-selected single character and inspect thumbnail
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 scripts/extract_char004_solo.py
+      - name: Validate preserved left source and no right face
+        run: |
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          s=Image.open('site/assets/characters/char-004/reference-sheet.png').convert('RGBA')
+          o=Image.open('site/assets/characters/char-004/fullbody-solo.png').convert('RGBA')
+          assert o.size==(604,1024)
+          assert o.crop((0,0,448,1024)).tobytes()==s.crop((0,0,448,1024)).tobytes()
+          for y in [70,200,350,500,700,850]:
+            assert o.getpixel((570,y))==(255,255,255,255)
+          assert Path('docs/characters/char004-review/solo-thumb.b64').stat().st_size>1000
+          print('PASS: original left heroine unchanged and right enlarged portrait erased.')
+          PY
+      - name: Publish PNG and review thumbnail
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/assets/characters/char-004/fullbody-solo.png docs/characters/char004-review/solo-thumb.b64 docs/characters/char004-review/solo.json
+          git diff --cached --quiet || (git commit -m 'Publish approved female third original left fullbody without right giant head' && git push)
