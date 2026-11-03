@@ -378,7 +378,7 @@ function bindBodyHierarchy(model){
  const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
  const legs=pick('legs','legwear'),feet=pick('shoes','footwear'),
   skirt=pick('skirt','bottomwear'),torso=pick('jacket','topwear'),
-  face=pick('face'),hair=pick('front_hair','rear_hair','back_hair');
+  face=pick('face'),hair=pick('front_hair','rear_hair','back_hair'),neck=pick('neck');
  if(!legs||!feet||!skirt||!torso)return model;
  const xy=(part,u,v)=>({x:part.x+part.w*u,y:part.y+part.h*v});
  const get=id=>legs.bones?.find(b=>b.id===id);
@@ -392,6 +392,9 @@ function bindBodyHierarchy(model){
  const left=chain('left'),right=chain('right');if(!left||!right)return model;
  const layout={pelvis:xy(skirt,.5,.08),shoulder:xy(torso,.5,.12),
   head:face?xy(face,.5,.5):hair?xy(hair,.5,.35):xy(torso,.5,-.2),
+  neck:neck?xy(neck,.5,.12):face?xy(face,.5,.88):xy(torso,.5,-.12),
+  neckTop:neck?neck.y+neck.h*.12:(face?face.y+face.h*.88:torso.y),
+  neckBottom:neck?neck.y+neck.h*.96:(face?face.y+face.h*1.12:torso.y+15),
   left,right,legsId:legs.id,feetId:feet.id};
  // Cropped or unaligned imports must NOT acquire fabricated body motion.
  if(layout.pelvis.y-layout.shoulder.y<15)return model;
@@ -408,7 +411,9 @@ function humanPoseAt(part,phase=0,idle=null){
  const a=Math.sin(phase*.65*speed),b=Math.sin(phase*.89*speed+.43);
  return {rig,hipX:a*h*1.1,hipY:(1-a*a)*h*.12,hipAngle:a*h*.0055,
   shoulderX:b*sh*.40,shoulderY:Math.cos(phase*.89*speed+.43)*sh*.13,
-  shoulderAngle:b*sh*.009};
+  shoulderAngle:b*sh*.009,
+  // Cervical counter-rotation keeps the head balanced over the shoulders.
+  neckAngle:-b*sh*.0033+Math.sin(phase*.69*speed+1.2)*sh*.001};
 }
 function turn(p,o,angle){
  const a=p.x-o.x,b=p.y-o.y,c=Math.cos(angle),s=Math.sin(angle);
@@ -421,6 +426,15 @@ function hipPoint(p,pose){
 function shoulderPoint(p,pose){
  const q=turn(hipPoint(p,pose),hipPoint(pose.rig.shoulder,pose),pose.shoulderAngle);
  return {x:q.x+pose.shoulderX,y:q.y+pose.shoulderY};
+}
+function headPoint(p,pose){
+ const upperNeck=shoulderPoint(pose.rig.neck,pose);
+ return turn(shoulderPoint(p,pose),upperNeck,pose.neckAngle);
+}
+function neckPoint(p,pose){
+ const low=shoulderPoint(p,pose),high=headPoint(p,pose),r=pose.rig;
+ const w=smooth((r.neckBottom-p.y)/Math.max(1,r.neckBottom-r.neckTop));
+ return {x:low.x+(high.x-low.x)*w,y:low.y+(high.y-low.y)*w};
 }
 function kneeIK(c,pose){
  const h=hipPoint(c.hip,pose),a=c.ankle,orig=c.knee;
@@ -466,7 +480,8 @@ function parentRole(part){
  if(part.kind==='leg-combined')return 'legs';
  if(part.kind==='skirt')return 'pelvis';
  if(part.kind==='torso')return 'torso';
- if(part.kind.startsWith('arm-')||part.id==='neck')return 'shoulder';
+ if(part.id==='neck')return 'neck';
+ if(part.kind.startsWith('arm-'))return 'shoulder';
  if(part.kind==='hair'||part.kind==='face'||part.kind==='mouth'||
   part.kind==='eyes-combined'||['head','front_hair','eye_white','eyewhite'].includes(part.parentId))
   return 'head';
@@ -478,11 +493,13 @@ function parentPoint(part,p,phase=0,idle=null,pose=null){
  case 'ground':case 'none':return p;
  case 'legs':return legPoint(part,p,h);
  case 'pelvis':return hipPoint(p,h);
+ case 'neck':return neckPoint(p,h);
  case 'torso':{
   const low=hipPoint(p,h),high=shoulderPoint(p,h);
   const rig=h.rig,w=smooth((rig.pelvis.y-p.y)/Math.max(1,rig.pelvis.y-rig.shoulder.y));
   return {x:low.x+(high.x-low.x)*w,y:low.y+(high.y-low.y)*w};
  }
+ case 'head':return headPoint(p,h);
  default:return shoulderPoint(p,h);
  }
 }
@@ -710,5 +727,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
