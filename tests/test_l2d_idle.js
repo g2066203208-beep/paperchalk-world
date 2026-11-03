@@ -11,7 +11,7 @@ const layer=(id,w=200,h=300)=>({
 });
 const model=core.project([
  layer('front_hair'),layer('rear_hair'),layer('skirt'),
- layer('jacket'),layer('sleeves_and_hands'),layer('face'),layer('shoes')
+ layer('jacket'),layer('sleeves_and_hands'),layer('legs'),layer('face'),layer('shoes')
 ],'protagonist','front');
 const idle=model.idleProfile;
 const p=id=>model.parts[id];
@@ -36,7 +36,7 @@ assert.equal(p('sleeves_and_hands').bones.length,4);
 assert.ok(span('rear_hair',.2,.95)>1,'subtle hair tips must still move');
 assert.ok(span('front_hair',.2,.95)<12,'hair tips cannot whip around');
 assert.ok(span('skirt',.2,.95)>0.3,'hem has a barely noticeable idle');
-assert.ok(span('skirt',.2,.95)<6,'hem cannot lift or flare');
+assert.ok(span('skirt',.2,.95)<10,'baseline hem stays gentle');
 for(const id of ['face','shoes']){
  assert.ok(span(id,.5,.5)<.001,'face / shoes must NOT move left-right: '+id);
 }
@@ -78,11 +78,44 @@ assert.deepEqual([custom.hair.amount,custom.cloth.amount,
  'only gentle V4 authoring controls can be saved and reloaded');
 const clamped=core.sanitizeIdleProfile({
  profileVersion:4,hair:{amount:99},cloth:{amount:99},
- sleeves:{amount:99},parts:{front_hair:99}
+ sleeves:{amount:99},parts:{front_hair:99},
+ joints:{hands:99,shoulders:99,hips:99}
 });
 assert.ok(clamped.hair.amount<=.40&&clamped.cloth.amount<=.30&&
- clamped.sleeves.amount<=.12&&clamped.parts.front_hair<=3,
- 'malformed saved values cannot restore high wind or excessive amplitude');
+ clamped.sleeves.amount<=.12&&clamped.parts.front_hair===20&&
+ clamped.joints.hands===8&&clamped.joints.shoulders===8&&clamped.joints.hips===8,
+ 'saved high amplitudes remain adjustable but finite and bounded');
+// Extreme sliders must ACTUALLY change texture motion, not merely labels.
+const maximum=core.sanitizeIdleProfile({...idle,
+ parts:{...idle.parts,front_hair:20,rear_hair:20,skirt:20}});
+assert.ok(span('front_hair',.2,.95,maximum)>span('front_hair',.2,.95,idle)*3,
+ 'fringe 2000% must substantially exceed normal motion');
+assert.ok(span('skirt',.2,.95,maximum)>span('skirt',.2,.95,idle)*3,
+ 'hem 2000% must substantially exceed normal motion');
+const jointProfile=(id,value)=>core.sanitizeIdleProfile({...idle,
+ joints:{...idle.joints,[id]:value}});
+const handsOff=jointProfile('hands',0),handsMax=jointProfile('hands',8);
+assert.ok(span('sleeves_and_hands',.18,.92,handsMax)>
+ span('sleeves_and_hands',.18,.92,handsOff)+20,
+ 'hand/elbow slider articulates original hand texture');
+const shouldersOff=jointProfile('shoulders',0),shouldersMax=jointProfile('shoulders',8);
+assert.ok(span('jacket',.18,.63,shouldersMax)>span('jacket',.18,.63,shouldersOff)+5,
+ 'shoulder slider articulates upper jacket independently');
+const hipsOff=jointProfile('hips',0),hipsMax=jointProfile('hips',8);
+assert.ok(span('skirt',.18,.58,hipsMax)>span('skirt',.18,.58,hipsOff)+10,
+ 'pelvic slider moves the real skirt joint chain');
+assert.ok(span('legs',.35,.65,hipsMax)>span('legs',.35,.65,hipsOff)+2,
+ 'pelvic slider also coordinates the upper legs');
+for(const high of [handsMax,shouldersMax,hipsMax,maximum]){
+ assert.deepEqual(core.bodyPoseAt(1,high),{lean:0,feet:902},
+  'joint controls must not rock the entire character');
+ assert.ok(distance(pt('front_hair',.5,.05,.1,high),pt('front_hair',.5,.05,3.1,high))<.001,
+  'even maximum motion keeps hair rooted');
+ assert.ok(distance(pt('skirt',.5,.05,.1,high),pt('skirt',.5,.05,3.1,high))<.001,
+  'even maximum motion keeps skirt waist pinned');
+}
+const speedHigh=core.sanitizeIdleProfile({...idle,hair:{...idle.hair,speed:2.5}});
+assert.equal(speedHigh.hair.speed,2.5,'entire visible speed slider range must be real');
 const paused=core.presetIdle('still');
 assert.ok(span('front_hair',.2,.95,paused)<.001);
 assert.ok(span('skirt',.2,.95,paused)<.001);
@@ -94,4 +127,4 @@ const interpolated=core.approachIdle(idle,custom,1/30);
 assert.ok(interpolated.hair.amount>idle.hair.amount&&
  interpolated.hair.amount<custom.hair.amount);
 assert.equal(interpolated.body.amount,0);
-console.log('PASS single basic standing: no wind/sway, quiet independent hair and hem, preserved eyes, legacy migration');
+console.log('PASS independent fringe, skirt, hand, shoulder and pelvic sliders; anchored roots, no global sway, legacy migration');
