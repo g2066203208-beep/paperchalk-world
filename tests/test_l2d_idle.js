@@ -1,168 +1,97 @@
-/* Zero-browser deterministic regression for the shared L2D idle controller.
+/* V4 single-standing L2D safety and regression QA.
+ * The rejected storm, breeze and full-body sway MUST NOT reappear.
  * Run: node tests/test_l2d_idle.js
  */
 'use strict';
 const assert=require('node:assert/strict');
 require('../site/l2d/part-rig.js');
 const core=globalThis.PaperchalkPartRigCore;
-const make=(id,w=180,h=290)=>({partId:id,name:id,x:300,y:60,
- sourcePart:true,canvas:{width:w,height:h}});
+const layer=(id,w=200,h=300)=>({
+ partId:id,name:id,x:320,y:80,sourcePart:true,canvas:{width:w,height:h}
+});
 const model=core.project([
- make('rear_hair'),make('skirt'),make('jacket'),make('sleeves_and_hands'),
- make('face'),make('shoes')
+ layer('front_hair'),layer('rear_hair'),layer('skirt'),
+ layer('jacket'),layer('sleeves_and_hands'),layer('face'),layer('shoes')
 ],'protagonist','front');
-const part=id=>model.parts[id];
-const position=(id,t,u=.2,v=.92)=>core.warpPoint(part(id),u,v,t,null,model.idleProfile);
-const length=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-assert.equal(model.idleProfile.preset,'realistic');
-assert.equal(part('rear_hair').bones.length,6);
-assert.equal(part('skirt').bones.length,6);
-assert.equal(part('jacket').bones.length,4);
-assert.equal(part('sleeves_and_hands').bones.length,4);
-const hairMotion=length(position('rear_hair',.2),position('rear_hair',1.7));
-const skirtMotion=length(position('skirt',.2),position('skirt',1.7));
-const bodyMotion=length(position('face',.2),position('face',1.7));
-assert.ok(hairMotion>1,'real hair must sway on its actual original component');
-assert.ok(skirtMotion>.4,'real skirt must sway independently of hair');
-assert.ok(bodyMotion>0.5&&bodyMotion<3,'whole-body stance should shift gently, not shake');
-assert.ok(hairMotion>bodyMotion*1.7,'hair tips add local articulation over whole-body coordinated sway');
-const approvedStill=core.presetIdle('still',model.idleProfile);
-model.idleProfile=approvedStill;
-for(const id of Object.keys(model.parts)){
- const a=position(id,.2),b=position(id,1.7);
- assert.ok(length(a,b)<1.8,id+' still mode should have only subpixel natural body shifting');
-}
-model.idleProfile=core.presetIdle('realistic',model.idleProfile);
-model.idleProfile.parts.rear_hair=0;
-const noHair=length(position('rear_hair',.2),position('rear_hair',1.7));
-assert.ok(noHair<2.7,'single-part zero disables local hair swing but preserves shared body lean');
-const unchangedSkirt=length(position('skirt',.2),position('skirt',1.7));
-assert.ok(unchangedSkirt>.4,'hair slider must not disable or modify skirt swing');
-const initial=core.defaultIdleProfile();
-const windy=core.presetIdle('windy',initial);
-assert.ok(windy.hair.amount>initial.hair.amount);
-assert.ok(windy.cloth.amount>initial.cloth.amount);
-assert.equal(initial.preset,'realistic','preset factory must not mutate default data');
-const bad=core.sanitizeIdleProfile({hair:{amount:400,speed:-9,lag:99},parts:{rear_hair:99}});
-assert.ok(bad.hair.amount<=1.5&&bad.hair.speed>=.15&&bad.hair.lag<=2&&bad.parts.rear_hair<=2,
- 'out-of-range saved settings must be clamped before playback');
-const reloaded=core.project([make('rear_hair')],'protagonist','front',{
- idleProfile:core.presetIdle('breeze',initial),
- parts:{rear_hair:part('rear_hair')}});
-assert.equal(reloaded.idleProfile.preset,'breeze');
-assert.equal(reloaded.idleProfile.hair.amount,.64);
-const oldDefault=core.sanitizeIdleProfile({
- preset:'realistic',hair:{amount:.48},cloth:{amount:.34},parts:{}
-});
-assert.equal(oldDefault.hair.amount,.28,'old untouched calm hair migrates to natural v3');
-assert.equal(oldDefault.cloth.amount,.23,'old untouched skirt migrates to natural v3');
-assert.equal(oldDefault.parts.front_hair,1,'new natural fringe weight');
-assert.equal(oldDefault.parts.skirt,1,'new natural skirt hem');
-const oldV2=core.sanitizeIdleProfile({
- profileVersion:2,preset:'realistic',
- body:{amount:.18},hair:{amount:.85,speed:1.05,lag:.62},
- cloth:{amount:.82,speed:.95,lag:.58},sleeves:{amount:.26},
- parts:{front_hair:1.25,skirt:1.35}
-});
-assert.deepEqual([oldV2.body.amount,oldV2.hair.amount,
- oldV2.cloth.amount,oldV2.parts.front_hair,oldV2.parts.skirt],
- [.20,.28,.23,1,1],
- 'oversized legacy factory defaults must migrate without changing original art');
-const savedCustom=core.sanitizeIdleProfile({
- preset:'custom',hair:{amount:.45},cloth:{amount:.31},
- parts:{front_hair:.5,skirt:0}
-});
-assert.deepEqual([
- savedCustom.hair.amount,savedCustom.cloth.amount,
- savedCustom.parts.front_hair,savedCustom.parts.skirt
-],[.45,.31,.5,0],'explicit user values must remain exactly as set');
-assert.equal(core.defaultIdleProfile().body.amount,.20,
- 'ordinary standing includes coordinated weight shifting, not fake breathing');
-// Wind QA uses actual source-part UVs. Strong wind MUST push ends up
-// and visibly aside, not merely oscillate the same 10px with a bigger label.
-const modes=['still','realistic','breeze','windy'];
-const tiers=modes.map(p=>core.presetIdle(p));
-const fringe=core.project([make('front_hair',200,300)],'protagonist','front').parts.front_hair;
-const hem=core.project([make('skirt',200,300)],'protagonist','front').parts.skirt;
-const rest=(part,u,v)=>core.warpPoint(part,u,v,2.3,null,tiers[0]);
-const displacement=(part,u,v,idle)=>{
- const a=core.warpPoint(part,u,v,2.3,null,idle),b=rest(part,u,v);
- return {dx:a.x-b.x,dy:a.y-b.y,length:length(a,b)};
+const idle=model.idleProfile;
+const p=id=>model.parts[id];
+const pt=(id,u,v,t,profile=idle)=>core.warpPoint(p(id),u,v,t,null,profile);
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const span=(id,u,v,profile=idle)=>{
+ const coords=Array.from({length:240},(_,i)=>pt(id,u,v,i*.07,profile));
+ const xs=coords.map(a=>a.x),ys=coords.map(a=>a.y);
+ return Math.hypot(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
 };
-const ranges={};
-for(const [name,p,u,v] of [['hair',fringe,.12,.95],['skirt',hem,.85,.96]]){
- ranges[name]=Object.fromEntries(modes.map((mode,i)=>
-  [mode,displacement(p,u,v,tiers[i])]));
+assert.equal(idle.profileVersion,4);
+assert.equal(idle.preset,'realistic');
+assert.deepEqual([idle.body.amount,idle.hair.amount,idle.cloth.amount,idle.sleeves.amount],
+ [0,.18,.12,.045]);
+assert.equal(idle.weather,'realistic');
+assert.equal(idle.windLift,0);
+assert.equal(p('front_hair').bones.length,6);
+assert.equal(p('rear_hair').bones.length,6);
+assert.equal(p('skirt').bones.length,6);
+assert.equal(p('jacket').bones.length,4);
+assert.equal(p('sleeves_and_hands').bones.length,4);
+assert.ok(span('rear_hair',.2,.95)>1,'subtle hair tips must still move');
+assert.ok(span('front_hair',.2,.95)<12,'hair tips cannot whip around');
+assert.ok(span('skirt',.2,.95)>0.3,'hem has a barely noticeable idle');
+assert.ok(span('skirt',.2,.95)<6,'hem cannot lift or flare');
+for(const id of ['face','shoes']){
+ assert.ok(span(id,.5,.5)<.001,'face / shoes must NOT move left-right: '+id);
 }
-console.log('3 WEATHER REGIMES REAL BONE TIPS',JSON.stringify(ranges));
-assert.ok(ranges.hair.breeze.length>ranges.hair.still.length+3,
- 'even gentle breeze must differ visibly from no wind');
-assert.ok(ranges.skirt.breeze.length>ranges.skirt.still.length+.7,
- 'breeze should affect cloth');
-assert.ok(ranges.hair.windy.dx< -65&&ranges.hair.windy.dy< -35,
- 'HIGH WIND must lift ORIGINAL left lock up and AWAY from the face');
-assert.ok(ranges.skirt.windy.dx>30&&ranges.skirt.windy.dy< -12,
- 'HIGH WIND must flare skirt up and to the side');
-assert.ok(ranges.hair.windy.length>ranges.hair.breeze.length*4,
- 'strong wind must not look like normal standing');
-const rightLock=displacement(fringe,.88,.95,tiers[3]);
-assert.ok(rightLock.dx>65&&rightLock.dy< -35,
- 'right hair tip should lift in the opposite OUTWARD direction');
-const centerFringe=core.windField(fringe,.5,.18,2.3,tiers[3]);
-assert.ok(Math.hypot(centerFringe.x,centerFringe.y)<3,
- 'forehead fringe stays readable; strong wind cannot sweep it over the eyes');
-const leftPleat=displacement(hem,.15,.96,tiers[3]);
-assert.ok(leftPleat.dx< -12&&leftPleat.dy< -12,
- 'left pleat must fan out instead of both skirt sides shifting to the right');
-const root=(part,idle)=>core.windField(part,.5,.02,2.3,idle);
-for(const part of [fringe,hem]){
- assert.deepEqual(root(part,tiers[3]),{x:0,y:0},
-  'hair roots and skirt waist must be completely pinned against the wind');
+assert.ok(distance(pt('front_hair',.5,.05,.1),pt('front_hair',.5,.05,3.1))<.001,
+ 'hair root must stay firmly attached');
+assert.ok(distance(pt('skirt',.5,.05,.1),pt('skirt',.5,.05,3.1))<.001,
+ 'skirt waistband must stay firmly attached');
+assert.deepEqual(core.bodyPoseAt(1.4,idle),{lean:0,feet:902},
+ 'body leaning/weight-shift was explicitly rejected');
+const point={x:450,y:200};
+assert.deepEqual(core.bodyPosePoint(point.x,point.y,4,idle),point);
+assert.deepEqual(core.bodyIdleAt(p('face'),4,idle),{x:0,y:0});
+for(const name of ['realistic','breeze','windy']){
+ const profile=core.presetIdle(name,idle);
+ assert.deepEqual([profile.hair.amount,profile.cloth.amount,
+  profile.body.amount,profile.windLift],[.18,.12,0,0],
+  'all former wind options must resolve to the ONE standing animation');
+ assert.deepEqual(core.windField(p('front_hair'),.15,.95,3,profile),{x:0,y:0});
+ assert.deepEqual(core.windField(p('skirt'),.85,.95,3,profile),{x:0,y:0});
+ assert.deepEqual(core.bodyPoseAt(3,profile),{lean:0,feet:902});
 }
-// One shared full-body lean across face, jacket, arms, eyes and feet.
-const stillBody=core.bodyPoseAt(2.3,tiers[0]);
-const breezeBody=core.bodyPoseAt(2.3,tiers[2]);
-assert.ok(Math.abs(breezeBody.lean)>Math.abs(stillBody.lean),
- 'gentle breeze should add coordinated body weight shift');
-for(const idle of tiers){
- const toe=core.bodyPosePoint(400,902,2.3,idle);
- assert.equal(toe.x,400,'body tilt must leave shoes planted on the ground');
- const head=core.bodyPosePoint(400,140,2.3,idle);
- assert.ok(Number.isFinite(head.x)&&Math.abs(head.x-400)<30,
-  'head, neck and torso must sway together but cannot snap');
-}
-const reset=core.presetIdle('realistic',{
- ...tiers[2],parts:{front_hair:2,skirt:2}
+assert.equal(core.windPressure(4,'windy'),0);
+const legacy=core.sanitizeIdleProfile({
+ profileVersion:3,preset:'windy',weather:'windy',windLift:1,
+ body:{amount:.52},hair:{amount:1.5},cloth:{amount:1.3},
+ parts:{front_hair:2,skirt:2}
 });
-assert.deepEqual([reset.parts.front_hair,reset.parts.skirt],[1,1],
- 'switching back to normal must reset excessive hair and hem multipliers');
-let t=tiers[1],wind=tiers[3],visual=JSON.parse(JSON.stringify(t));
-for(let i=0;i<35;i++)visual=core.approachIdle(visual,wind,1/30);
-assert.ok(visual.hair.amount>t.hair.amount&&visual.hair.amount<wind.hair.amount,
- 'wind tier change must ease toward its target without snapping');
-const transitioning=core.approachIdle(core.presetIdle('breeze'),wind,1/30);
-assert.ok(transitioning.windLift>.30&&transitioning.windLift<.42,
- 'wind force must ease, not instantly replace a mild breeze by a storm');
-const mildWind=core.windField(fringe,.12,.95,2.3,core.presetIdle('breeze'));
-const intermediate=core.windField(fringe,.12,.95,2.3,transitioning);
-const strongWind=core.windField(fringe,.12,.95,2.3,wind);
-assert.ok(Math.abs(intermediate.x-mildWind.x)<Math.abs(strongWind.x-mildWind.x)*.15,
- 'hair must not snap sideways on first video frame after wind change');
-const fading=core.approachIdle(wind,core.presetIdle('still'),1/30);
-assert.ok(fading.windLift>.85&&fading.windLift<1,
- 'large wind should decay naturally when the player returns to still mode');
-const customV2=core.sanitizeIdleProfile({
- profileVersion:2,preset:'custom',hair:{amount:1.25},cloth:{amount:.43},
- parts:{front_hair:1.75}
+assert.deepEqual(legacy,core.defaultIdleProfile(),
+ 'every old overly dramatic saved profile must reset to the base idle');
+const custom=core.sanitizeIdleProfile({
+ profileVersion:4,preset:'windy',weather:'windy',windLift:1,
+ body:{amount:1,rotate:1,swayX:3},hair:{amount:.27,speed:1.1},
+ cloth:{amount:.15},sleeves:{amount:.08},
+ parts:{front_hair:1.1,skirt:1.2}
 });
-assert.equal(customV2.hair.amount,1.25,'do not clobber old custom strength');
-assert.equal(customV2.parts.front_hair,1.75,'do not clobber old custom weights');
-const tunedWind=core.presetIdle('windy');
-tunedWind.preset='custom';tunedWind.hair.amount=1.05;
-const recovered=core.sanitizeIdleProfile(JSON.parse(JSON.stringify(tunedWind)));
-assert.equal(recovered.weather,'windy','manual tuning must retain its selected storm');
-const at=core.warpPoint(fringe,.2,.95,2.0,null,recovered);
-const same=core.warpPoint(fringe,.2,.95,2.0,null,{...recovered,preset:'windy'});
-assert.ok(length(at,same)<1e-8,
- 'switching to custom sliders must NOT silently remove the storm gust envelope');
-console.log('PASS idle presets, original source-part hair/skirt isolation, gentle body, per-part sliders and save/restore');
+assert.deepEqual([custom.body.amount,custom.weather,custom.windLift],[0,'realistic',0]);
+assert.deepEqual([custom.hair.amount,custom.cloth.amount,
+ custom.parts.front_hair,custom.parts.skirt],[.27,.15,1.1,1.2],
+ 'only gentle V4 authoring controls can be saved and reloaded');
+const clamped=core.sanitizeIdleProfile({
+ profileVersion:4,hair:{amount:99},cloth:{amount:99},
+ sleeves:{amount:99},parts:{front_hair:99}
+});
+assert.ok(clamped.hair.amount<=.30&&clamped.cloth.amount<=.22&&
+ clamped.sleeves.amount<=.12&&clamped.parts.front_hair<=1.25,
+ 'malformed saved values cannot restore high wind or excessive amplitude');
+const paused=core.presetIdle('still');
+assert.ok(span('front_hair',.2,.95,paused)<.001);
+assert.ok(span('skirt',.2,.95,paused)<.001);
+const phase=2.1;
+const a=core.warpPoint(p('front_hair'),.8,.95,phase,null,core.presetIdle('windy'));
+const b=core.warpPoint(p('front_hair'),.8,.95,phase,null,core.presetIdle('realistic'));
+assert.deepEqual(a,b,'old windy preset cannot create a second animation state');
+const interpolated=core.approachIdle(idle,custom,1/30);
+assert.ok(interpolated.hair.amount>idle.hair.amount&&
+ interpolated.hair.amount<custom.hair.amount);
+assert.equal(interpolated.body.amount,0);
+console.log('PASS single basic standing: no wind/sway, quiet independent hair and hem, preserved eyes, legacy migration');
