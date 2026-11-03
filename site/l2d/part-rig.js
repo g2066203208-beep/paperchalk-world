@@ -60,10 +60,10 @@ const CHAR002={
 // Never invokes breathing deformation or a whole-character canvas transform.
 // Distinct wind regimes; keep hair roots and the waist anchored.
 const IDLE_PRESETS=Object.freeze({
- still:{body:0,hair:0,cloth:0,sleeves:0},
- realistic:{body:.12,hair:.28,cloth:.23,sleeves:.12},
- breeze:{body:.13,hair:.64,cloth:.52,sleeves:.24},
- windy:{body:.16,hair:1.15,cloth:.92,sleeves:.45}
+ still:{body:.06,hair:0,cloth:0,sleeves:0},
+ realistic:{body:.20,hair:.28,cloth:.23,sleeves:.12},
+ breeze:{body:.32,hair:.64,cloth:.52,sleeves:.24},
+ windy:{body:.52,hair:1.15,cloth:.92,sleeves:.45}
 });
 const IDLE_RATES=Object.freeze({
  realistic:{hair:[.82,.74],cloth:[.76,.74],sleeves:[.83,.55]},
@@ -175,14 +175,79 @@ function idleGroup(part){
  if(part.kind==='arm-left'||part.kind==='arm-right'||part.kind==='arm-combined')return 'sleeves';
  return 'body';
 }
+// One shared, grounded full-body pose: every texture uses exactly the same
+// world-space shear around the FEET, including tiny brows/eyes and long hair.
+// Avoid different per-layer offsets: those cause heads, collars and wrists
+// to tear apart when the body sways. No simulated breathing / vertical scale.
+const FOOT_Y=902;
+function bodyPoseAt(phase,idle){
+ if(!idle)return {lean:0,feet:FOOT_Y};
+ const b=idle.body||{},weather=idle.weather||idle.preset;
+ const amount=clamp(finite(b.amount,0),0,1);
+ const cadence=Math.max(.15,finite(b.speed,.85));
+ const sway=Math.sin(phase*cadence*.64+.23)*amount*
+  (.018+.012*clamp(finite(b.rotate,.35),0,1));
+ // In heavy wind the person leans AGAINST the direction of the air.
+ // Feet remain planted; upper body has independent slow weight shifts.
+ const gust=weather==='windy'?
+  .72+.28*Math.sin(phase*.42-.35):0;
+ const brace=weather==='windy'?-amount*.018*gust:
+  weather==='breeze'?-amount*.0045:0;
+ return {lean:clamp(sway+brace,-.032,.032),feet:FOOT_Y};
+}
+function bodyPosePoint(x,y,phase,idle){
+ const pose=bodyPoseAt(phase,idle);
+ return {x:x+pose.lean*(pose.feet-y),y};
+}
 function bodyIdleAt(part,phase,idle){
- if(!idle||part.kind==='fixed'||part.kind==='leg-combined')return{x:0,y:0};
- const b=idle.body,group=idleGroup(part);
- // Body displacement is sub-pixel and coordinated through the same phase.
- // Head and attached hair follow the tiny torso motion, not the reverse.
- const share=group==='body'&&part.kind==='mouth'?.8:1;
- return {x:Math.sin(phase*b.speed*.63+.2)*b.swayX*b.amount*share,
-  y:Math.sin(phase*b.speed*.81+.83)*b.swayY*b.amount*share};
+ // Compatibility hook for authored rigs; actual coordinated motion is
+ // implemented once by bodyPosePoint, not independent body-part shaking.
+ return {x:0,y:0};
+}
+// Wind pressure on ORIGINAL independent ArtMeshes. Strong wind has a
+// sustained upward/lateral direction, with low-frequency gusts; no zoom,
+// whole-character shear on the skirt, copied texture or synthetic hair.
+function windPressure(phase,weather){
+ if(weather==='windy')
+  return clamp(.76+.19*Math.sin(phase*.41-.4)+.10*Math.sin(phase*1.13+.3),.43,1);
+ if(weather==='breeze')
+  return clamp(.5+.22*Math.sin(phase*.64+.6),.20,.74);
+ return 0;
+}
+function windField(part,u,v,phase,idle){
+ if(!idle||part.enabled===false)return {x:0,y:0};
+ const weather=idle.weather||idle.preset;
+ if(weather!=='windy'&&weather!=='breeze')return {x:0,y:0};
+ const isHair=part.kind==='hair',isSkirt=part.kind==='skirt';
+ if(!isHair&&!isSkirt)return {x:0,y:0};
+ const amount=clamp(finite(idle[isHair?'hair':'cloth']?.amount,0),0,1.5)*
+  clamp(finite(idle.parts?.[part.id],1),0,2);
+ if(amount<.00001)return {x:0,y:0};
+ const lag=clamp(finite(idle[isHair?'hair':'cloth']?.lag,0),0,2);
+ const pressure=windPressure(phase-lag*.6,weather);
+ const pinned=smooth(clamp((v-(isHair?.16:.18))/(isHair?.74:.72),0,1));
+ if(!pinned)return {x:0,y:0};
+ if(isHair){
+  // Original front_hair PNG contains both forehead fringe AND long side
+  // locks. Wind must lift the SIDE LOCKS, not rip away the scalp and bangs.
+  const edge=part.id==='front_hair'?
+   smooth(clamp((Math.abs(u-.5)-.13)/.21,0,1)):1;
+  const fringe=part.id==='front_hair'?(1-edge)*.14:0;
+  const bend=pinned*(edge+fringe);
+  const gust=weather==='windy'?1:.16;
+  // Distal hair ends arc up and outward; roots are pinned C1-smoothly.
+  const rising=weather==='windy'?62:5;
+  const lateral=weather==='windy'?118:15;
+  const wave=Math.sin(phase*.9-lag-1.1+u*2.2)*(.08*pressure);
+  return {x:amount*bend*(lateral*pressure+gust*12*wave),
+    y:-amount*bend*(rising*pressure+gust*7*wave)};
+ }
+ // Anchored waistband; individual pleats billow, and the hem flicks UP
+ // without dragging the whole dress and legs sideways.
+ const flare=.72+.28*smooth(clamp((u-.20)/.65,0,1));
+ const billow=pressure+Math.sin(phase*.93-lag+u*3.0)*.07;
+ return {x:amount*pinned*flare*(weather==='windy'?69:12)*billow,
+  y:-amount*pinned*flare*(weather==='windy'?34:4)*billow};
 }
 // Independently authored joint chains on ORIGINAL source PNG parts.
 // Coordinates are local UVs, not global character oscillation or name regex.
@@ -399,8 +464,12 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  const baseX=(u-part.pivot.x)*part.w,baseY=(v-part.pivot.y)*part.h;
  const cs=Math.cos(a),sn=Math.sin(a);
  const body=bodyIdleAt(part,phase,idle);
- return {x:base.x+(baseX*cs-baseY*sn-baseX)*scale+q.x*weight*oscillation*scale+body.x,
-  y:base.y+(baseX*sn+baseY*cs-baseY)*scale+q.y*weight*oscillation*scale+body.y};
+ const air=windField(part,u,v,phase,idle);
+ const px=base.x+(baseX*cs-baseY*sn-baseX)*scale+
+  q.x*weight*oscillation*scale+air.x+body.x;
+ const py=base.y+(baseX*sn+baseY*cs-baseY)*scale+
+  q.y*weight*oscillation*scale+air.y+body.y;
+ return bodyPosePoint(px,py,phase,idle);
 }
 function drawTri(ctx,image,A,B,C,D,E,F){
  const ux=B.x-A.x,uy=B.y-A.y,vx=C.x-A.x,vy=C.y-A.y;
@@ -461,8 +530,11 @@ function drawFacePart(ctx,source,part,phase,idle){
  // Align attached facial pieces to exactly the same barely visible head
  // movement; never skin/melt tiny eyebrows/nose with a large triangular grid.
  const motion=bodyIdleAt(part,phase,idle);
+ const lean=bodyPoseAt(phase,idle);
  ctx.save();
  ctx.globalAlpha=source.opacity??1;
+ // Same body transform as skinned hair, arms, clothing and legs.
+ ctx.transform(1,0,-lean.lean,1,lean.feet*lean.lean,0);
  ctx.translate(motion.x,motion.y);
  if(id==='eye_white'||id==='irises'){
   // Real iris/eye-white PNGs gradually disappear under closing eyelids.
@@ -493,11 +565,22 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
   drawFacePart(ctx,source,part,phase,idle);
   return;
  }
- const image=source.canvas,cols=part.mesh.columns,rows=part.mesh.rows;
+ // More tessellation where side locks are blown ABOVE the shoulders.
+ // Mesh density changes only during windy preview/playback; source pixels
+ // and underlying independently saved bone bindings stay untouched.
+ const weather=idle?.weather||idle?.preset;
+ const windy=weather==='windy';
+ const image=source.canvas,
+  cols=windy&&part.kind==='hair'?Math.max(part.mesh.columns,12):
+   windy&&part.kind==='skirt'?Math.max(part.mesh.columns,10):part.mesh.columns,
+  rows=windy&&part.kind==='hair'?Math.max(part.mesh.rows,15):
+   windy&&part.kind==='skirt'?Math.max(part.mesh.rows,12):part.mesh.rows;
  const strength=idle?idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
  const active=part.enabled&&(Math.abs(idle?.body?.amount||0)>0||
   (strength>0&&(Object.values(part.motion).some((v,i)=>i<3&&Math.abs(v)>1e-5)||
-  (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5))));
+  (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5)||
+  (weather==='windy'||weather==='breeze')&&
+   (part.kind==='hair'||part.kind==='skirt'))));
  ctx.save();ctx.globalAlpha=source.opacity??1;
  if(!active){
   ctx.drawImage(image,part.x,part.y);
@@ -567,5 +650,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,approachIdle,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
