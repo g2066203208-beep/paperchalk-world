@@ -8,7 +8,7 @@ const $=id=>document.getElementById(id);
 const loaded=$('dev-character-list'),library=$('dev-character-library');
 const side=$('dev-character-angle'),picker=$('dev-layer'),status=$('dev-character-status');
 if(!loaded||!library||!window.PaperchalkL2D)return;
-const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},enemy:{id:'',side:'front'}};
+const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},enemy:{id:'char-002',side:'front'}};
 const DB='paperchalk-dev-characters-v1';
 let slot='player',ready=false,heroineRenderer=
   (sessionStorage.getItem('paperchalk-heroine-renderer-mode')==='v4'?'v4':'bones');
@@ -47,7 +47,11 @@ async function getLocalArtwork(id,face){
  }catch(error){console.warn('[L2D] 本机美术层读取失败',error);return null;}
 }
 const put=(key,v)=>storage('readwrite',key,v);
-const actualActors=()=>window.PaperchalkL2D.getLoaded().filter(a=>a.root.isConnected&&a.img.getAttribute('src'));
+// Every mounted role is assignable, even when its original invisible image
+// has no src yet. The enemy slot starts empty and is populated by the
+// validated CHAR-002 library module during init.
+const actualActors=()=>['player','enemy'].map(id=>window.PaperchalkL2D.get(id))
+ .filter(a=>a?.root?.isConnected&&a.img&&a.canvas);
 function refreshList(){
  // The explicitly selected actor wins. The old dropdown value must not
  // silently reset enemy/NPC selection to the protagonist during refresh.
@@ -56,7 +60,7 @@ function refreshList(){
   const bind=assigned[a.id]||{id:a.img.dataset.characterId||a.id,side:a.img.dataset.characterSide||'front'};
   assigned[a.id]=bind;
   const desc=catalog.get(bind.id)?.label||bind.id;
-  loaded.add(new Option(desc+' · '+(a.id==='player'?'主角':'NPC'),a.id));
+  loaded.add(new Option(desc+' · '+(a.id==='player'?'主角区':'敌人区'),a.id));
  }
  if([...loaded.options].some(x=>x.value===previous))slot=loaded.value=previous;
  else if(loaded.options.length)slot=loaded.value=loaded.options[0].value;
@@ -64,12 +68,27 @@ function refreshList(){
  for(const c of catalog.values()){
   const modes=Object.values(c.l2dModule||{}).map(x=>x.renderer);
   const kind=modes.includes('part-mesh')?' · 独立网格 L2D':modes.includes('v4-webp')?' · V4 L2D':'';
-  library.add(new Option((c.label||c.id)+kind,c.id));
+  const option=new Option((c.label||c.id)+kind,c.id);
+  // Unimported concepts do not have playable art; they must not become
+  // a silently blank character when assigned to either game slot.
+  option.disabled=!c.front&&!c.back;
+  library.add(option);
  }
  const bind=assigned[slot];
  if(bind){
-  library.value=bind.id;side.value=bind.side;
+  library.value=bind.id;
+  side.value=bind.side;
  }
+ syncFaceAvailability();
+}
+function syncFaceAvailability(){
+ const c=catalog.get(library.value);
+ const front=side.querySelector('option[value="front"]');
+ const back=side.querySelector('option[value="back"]');
+ if(front)front.disabled=!!c&&!c.front;
+ if(back)back.disabled=!!c&&!c.back;
+ if(c&&side.value==='back'&&!c.back)side.value='front';
+ else if(c&&side.value==='front'&&!c.front&&c.back)side.value='back';
 }
 function selectSlot(value){
  if(!assigned[value])return;
@@ -82,6 +101,7 @@ async function assign(target,id,face='front',save=true){
  const c=catalog.get(id);if(!c)throw Error('未找到角色 '+id);
  const actor=window.PaperchalkL2D.get(target);if(!actor)throw Error('人物图层未加载 '+target);
  if(face==='back'&&!c.back)throw Error('该角色还没有真正的背面素材，不能用正面冒充背面：'+c.label);
+ if(face==='front'&&!c.front)throw Error('该角色还没有真正的正面素材：'+c.label);
  const src=await get('render:'+id+':'+face)||c[face]||c.front||c.back;
  if(!src)throw Error('人物缺少 '+face+' 方向素材');
  const img=actor.img;assigned[target]={id,side:face};
@@ -249,7 +269,10 @@ async function init(){
  ready=true;refreshList();
 }
 loaded.onchange=()=>selectSlot(loaded.value);
-library.onchange=()=>note('已选择素材 '+(catalog.get(library.value)?.label||library.value)+'。点击切换可替换当前图层角色。');
+library.onchange=()=>{
+ syncFaceAvailability();
+ note('已选择素材 '+(catalog.get(library.value)?.label||library.value)+'。点击切换可替换当前图层角色。');
+};
 $('dev-character-use').onclick=()=>assign(slot,library.value,side.value).catch(e=>note(e.message));
 const rendererToggle=document.createElement('button');
 rendererToggle.id='dev-heroine-renderer';rendererToggle.type='button';
