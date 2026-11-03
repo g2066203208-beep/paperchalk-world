@@ -1,5 +1,5 @@
 /* Easy workflow for the existing all-character editor.
- * Enhancement only: retain the real editor, V4 decoder, source layers and save handlers. */
+ * One animation workflow: real source layers, independent rig and save handlers. */
 (()=>{
 'use strict';
 const ed=window.characterEditor, studio=window.PaperchalkStudio, stageMotion=window.PaperchalkStageMotion;
@@ -26,9 +26,10 @@ const library=$('studio-library');
 const second=library?.querySelectorAll('.studio-row')[1];
 if(second){
  const details=el('details',{id:'easy-imports',class:'easy-disclosure'});
- details.append(el('summary',{},'导入人物 / V4 动画 / 原始分层'));
+ details.append(el('summary',{},'导入人物 / 独立分层'));
  const row=el('div',{class:'studio-row'});
- for(const id of ['studio-import','studio-v4zip','studio-parts-import']){
+ $('studio-v4zip')?.closest('label')?.remove();
+ for(const id of ['studio-import','studio-parts-import']){
   const input=$(id);if(input?.closest('label'))row.append(input.closest('label'));
  }
  details.append(row);
@@ -114,7 +115,6 @@ async function editPart(){
  }
  const id=ed.S.sel,side=ed.S.side;
  // Enter the real source-pixel editor. Never generate fake replacement parts.
- if(p.sourcePart&&studio.useV4?.())$('studio-v4-mode')?.click();
  if(ed.S.side===side&&ed.S.layers[side][id]===p){
   ed.S.sel=id;ed.renderList();
  }
@@ -122,10 +122,6 @@ async function editPart(){
  ed.render();sync();
 }
 async function animatePart(){
- if(studio.isV4&&!studio.hasNativePSD?.()&&!studio.useV4?.()){
-  const toggle=$('studio-v4-mode');
-  if(toggle&&!toggle.disabled)toggle.click();
- }
  await stageMotion.setPreview(true);
  await stageMotion.setPlaying(true);
  ed.render();sync();
