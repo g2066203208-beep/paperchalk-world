@@ -761,11 +761,8 @@ body.mobile-mode.virtual-landscape #view{
       <label class="dev-floor-toggle" for="dev-auto-depth">
         <input id="dev-auto-depth" type="checkbox" checked> 自动距离透视（保留立绘原始大小 · 随 Z 远近缩放）
       </label>
-      <label class="dev-floor-toggle" for="dev-ground-lock">
-        <input id="dev-ground-lock" type="checkbox"> 旧版：按屏幕脚点校准画布大小
-      </label>
       <output id="dev-ground-perspective" role="status" style="display:block;white-space:normal;line-height:1.55;color:#c6e5f1;font-size:12px"></output>
-      <button id="dev-ground-calibrate" type="button">校准敌人大小并锁定地面</button>
+      <button id="dev-ground-calibrate" type="button">重新对齐全部 L2D 鞋底</button>
     </div>
     <div id="dev-z-control">
       <label for="dev-z">图层深度（Z）<output id="dev-z-value" class="dev-value"></output></label>
@@ -2166,13 +2163,13 @@ void main(){
   const editorDefaults=Object.freeze({
     bg:{z:-235},enemy:{x:46,y:16,size:34,z:-190},
     fog:{z:0},player:{x:19,y:3,size:76,z:160},
-    ground:{y:77,z:-215,visible:1,horizon:51.5,lockPerspective:0,autoDepth:1}
+    ground:{y:77,z:-215,visible:1,horizon:51.5,lockPerspective:0,autoDepth:1,modelVersion:3}
   });
   const EDITOR_KEY='paperchalk-layer-editor-v2';
   const PREVIOUS_EDITOR_KEY='paperchalk-layer-editor-v1';
   const editorBounds={
     x:[-20,110],y:[-40,96],size:[12,120],z:[-420,350],visible:[0,1],
-     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1]
+     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1],modelVersion:[3,3]
   };
   const copyDefaults=()=>JSON.parse(JSON.stringify(editorDefaults));
   function sanitizeEditor(data){
@@ -2185,6 +2182,12 @@ void main(){
         const value=Number(item[key]),bounds=editorBounds[key];
         if(Number.isFinite(value))next[id][key]=clamp(value,...bounds);
       }
+    }
+    // Only migrate the camera model. Never change a saved actor's
+    // individual X/Y/Z/size from the artist's custom composition.
+    if(Number(data.ground?.modelVersion)!==3){
+      next.ground.autoDepth=1;
+      next.ground.lockPerspective=0;
     }
     return next;
   }
@@ -2251,13 +2254,9 @@ void main(){
   }
   function applyEditorVisuals(){
     const enemy=editorConfig.enemy,player=editorConfig.player;
-    const fit=calculateGroundFit();
-    if(editorConfig.ground.lockPerspective&&editorConfig.ground.autoDepth===0&&fit.valid&&
-       fit.sizePercent>=editorBounds.size[0]&&fit.sizePercent<=editorBounds.size[1]){
-      // Only after user opt-in: retain their precise x/y foot placement.
-      enemy.size=Math.round(fit.sizePercent*100)/100;
-    }
-    showGroundFit(calculateGroundFit());
+    // One camera owns all perceived stature. Do NOT write the deprecated
+    // screen-foot guess into the user's saved size. Shoe-ground binding
+    // applies the correction to the animated canvas non-destructively.
     document.getElementById('actor-enemy').style.left=enemy.x+'%';
     document.getElementById('actor-enemy').style.bottom=enemy.y+'%';
     document.getElementById('actor-enemy').style.height=enemy.size+'%';
@@ -2317,10 +2316,8 @@ void main(){
     document.getElementById('dev-ground-y-value').textContent=editorConfig.ground.y+'%';
     document.getElementById('dev-ground-horizon').value=String(editorConfig.ground.horizon);
     document.getElementById('dev-ground-horizon-value').textContent=editorConfig.ground.horizon+'%';
-    document.getElementById('dev-ground-lock').checked=!!editorConfig.ground.lockPerspective;
     document.getElementById('dev-auto-depth').checked=editorConfig.ground.autoDepth!==0;
     devGroundToggle.checked=editorConfig.ground.visible!==0;
-    showGroundFit(calculateGroundFit());
     for(const field of ['x','y','size','z']){
       const input=document.getElementById('dev-'+field);
       const output=document.getElementById('dev-'+field+'-value');
@@ -2433,24 +2430,17 @@ void main(){
       ?'距离透视已自动开启：沿人物 Z 轴靠近放大、远离缩小，真实 L2D 鞋底始终贴地。'
       :'已关闭自动距离透视：当前由人物大小滑块手动控制。');
   });
-  document.getElementById('dev-ground-lock').addEventListener('change',event=>{
-    editorConfig.ground.lockPerspective=event.target.checked?1:0;
-    applyEditorVisuals();refreshEditorControls();
-    setDevStatus(event.target.checked?'已锁定角色远近透视：脚点X/Y保持原样。':'已解除自动缩放：手动大小可继续修改。');
-  });
   document.getElementById('dev-ground-calibrate').addEventListener('click',()=>{
-    const fit=calculateGroundFit();
-    if(!fit.valid||fit.sizePercent<editorBounds.size[0]||fit.sizePercent>editorBounds.size[1]){
-      setDevStatus('透视校准失败：请先把两人的鞋底放在有效地面范围。');return;
-    }
-    // Legacy one-off screen-foot calibration is an explicit alternative
-    // to automatic camera-Z scaling, never a second size multiplier.
-    editorConfig.ground.lockPerspective=1;
-    editorConfig.ground.autoDepth=0;
+    editorConfig.ground.lockPerspective=0;
+    editorConfig.ground.autoDepth=1;
     applyEditorVisuals();refreshEditorControls();
+    const state=window.PaperWorldL2DGround?.sync();
+    if(!state||state.actors.some(a=>Math.abs(a.errorPx)>1)){
+      setDevStatus('正在等待真实 L2D 鞋底素材载入后重新贴地。');return;
+    }
     try{localStorage.setItem(EDITOR_KEY,JSON.stringify(editorConfig))}
-    catch(_){setDevStatus('已校准，但浏览器禁止保存');return}
-    setDevStatus('共同地面透视已校准并保存。保留手动摆好的角色横向与脚底位置。');
+    catch(_){setDevStatus('鞋底已贴地，但浏览器禁止保存');return}
+    setDevStatus('两人的 L2D 鞋底已对齐到共同地面；位置/原画/骨骼未改动。');
   });
   for(const field of ['x','y','size','z']){
     document.getElementById('dev-'+field).addEventListener('input',event=>{
