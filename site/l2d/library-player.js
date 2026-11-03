@@ -52,30 +52,35 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    rigSpec.sourceCharacterId==='protagonist-rig-v1'&&
    model?.characterId==='protagonist-rig-v1'&&
    rigSpec.url.startsWith('./assets/l2d/library/protagonist-rig-v1/');
- // The temporary seven-region CHAR-002 model is allowed ONLY for its one
- // approved front picture; this does not create a duplicate game character.
+ // The one canonical female-two is backed by the author's actual Photoshop
+ // PSD rather than the retired artificial seven-region preview.
  const approvedSecondary=characterId==='char-002'&&face==='front'&&
-   rigSpec.sourceCharacterId==='char-002-rig-v1'&&
-   model?.characterId==='char-002-rig-v1'&&
-   model?.provenance==='derived-region'&&
-   Object.keys(model.parts||{}).join(',')===
-     'shoes,legs,skirt,wave_hand,free_hand,head_hair,jacket'&&
-   rigSpec.url.startsWith('./assets/l2d/library/char-002-rig-v1/');
+   rigSpec.sourceCharacterId==='char-002-psd-v1'&&
+   model?.characterId==='char-002-psd-v1'&&
+   model?.provenance==='original-psd'&&
+   Object.keys(model.parts||{}).length===17&&
+   ['front_hair','back_hair','face','eyewhite','irides','eyelash',
+    'handwear','bottomwear','legwear','footwear'].every(id=>!!model.parts[id])&&
+   rigSpec.url.startsWith('./assets/l2d/library/char-002-psd-v1/');
  if(model?.format!=='paperchalk-part-rig-v1'||
     (model.characterId!==characterId&&!approvedOriginal&&!approvedSecondary)||model.face!==face)
   throw Error('L2D 绑定文件与人物 ID/方向不一致');
  // Every playable module (including the ORIGINAL heroine actor) has a
  // deterministic gentle idle preset. A saved local editor profile overrides it.
- model.idleProfile=root.PaperchalkPartRigCore.sanitizeIdleProfile(
-  localDraft?.idleProfile||model.idleProfile||root.PaperchalkPartRigCore.defaultIdleProfile());
  const ids=Object.keys(rigSpec.textures);
+ // Stale 7-region IndexedDB drafts must not contaminate the new 17-source
+ // PSD rig (including speed, amplitudes and 'saved' pseudo-joints).
+ const draftMatches=localDraft?.format==='paperchalk-part-rig-v1'&&
+   localDraft.characterId===characterId&&localDraft.face===face&&
+   Object.keys(localDraft.parts||{}).length===ids.length&&
+   ids.every(id=>localDraft.parts[id]&&model.parts[id]);
+ model.idleProfile=root.PaperchalkPartRigCore.sanitizeIdleProfile(
+   (draftMatches?localDraft.idleProfile:null)||model.idleProfile||
+   root.PaperchalkPartRigCore.defaultIdleProfile());
  // Merge ONLY the user's explicitly saved rig for this exact actor and
  // direction. Art assets, layer IDs, published positions and original V4
  // remain authoritative; malformed drafts cannot modify a published model.
- if(localDraft?.format==='paperchalk-part-rig-v1'&&
-    localDraft.characterId===characterId&&localDraft.face===face&&
-    Object.keys(localDraft.parts||{}).length===ids.length&&
-    ids.every(id=>localDraft.parts[id]&&model.parts[id])){
+ if(draftMatches){
    for(const id of ids){
     const original=model.parts[id],edit=localDraft.parts[id];
     model.parts[id]=root.PaperchalkPartRigCore.sanitize(edit,original);
