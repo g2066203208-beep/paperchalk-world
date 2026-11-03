@@ -59,17 +59,16 @@ const CHAR002={
 // Shared, versioned idle controller: used by BOTH game and bone editor.
 // Never invokes breathing deformation or a whole-character canvas transform.
 // Distinct wind regimes; keep hair roots and the waist anchored.
+// Only a single approved base standing animation. Old weather names remain
+// legacy API aliases, not user-facing presets or physical gusts.
+const BASIC_IDLE=Object.freeze({body:0,hair:.18,cloth:.12,sleeves:.045});
 const IDLE_PRESETS=Object.freeze({
- still:{body:.06,hair:0,cloth:0,sleeves:0},
- realistic:{body:.20,hair:.28,cloth:.23,sleeves:.12},
- breeze:{body:.32,hair:.64,cloth:.52,sleeves:.24},
- windy:{body:.52,hair:1.15,cloth:.92,sleeves:.45}
+ still:{body:0,hair:0,cloth:0,sleeves:0},
+ realistic:BASIC_IDLE,breeze:BASIC_IDLE,windy:BASIC_IDLE
 });
-const WEATHER_LIFT=Object.freeze({still:0,realistic:0,breeze:.30,windy:1});
+const WEATHER_LIFT=Object.freeze({still:0,realistic:0,breeze:0,windy:0});
 const IDLE_RATES=Object.freeze({
- realistic:{hair:[.82,.74],cloth:[.76,.74],sleeves:[.83,.55]},
- breeze:{hair:[.98,.85],cloth:[.90,.86],sleeves:[.96,.65]},
- windy:{hair:[1.07,1.08],cloth:[1.01,1.02],sleeves:[1.04,.82]}
+ realistic:{hair:[.83,.78],cloth:[.78,.70],sleeves:[.80,.56]}
 });
 // Known v1/v2 factory values only; custom motion remains user-owned.
 const LEGACY_PRESETS=Object.freeze({
@@ -87,91 +86,53 @@ const DEFAULT_PART_STRENGTH=Object.freeze({
  front_hair:1,back_hair:1,hair_over_jacket:1,skirt:1
 });
 function defaultIdleProfile(){
- const a=IDLE_PRESETS.realistic,r=IDLE_RATES.realistic;
- return {profileVersion:3,preset:'realistic',weather:'realistic',windLift:0,
-  body:{amount:a.body,speed:.85,swayX:.8,swayY:1.8,rotate:.35},
-  hair:{amount:a.hair,speed:r.hair[0],lag:r.hair[1]},
-  cloth:{amount:a.cloth,speed:r.cloth[0],lag:r.cloth[1]},
-  sleeves:{amount:a.sleeves,speed:r.sleeves[0],lag:r.sleeves[1]},
+ return {profileVersion:4,preset:'realistic',weather:'realistic',windLift:0,
+  body:{amount:0,speed:.85,swayX:0,swayY:0,rotate:0},
+  hair:{amount:.18,speed:.83,lag:.78},
+  cloth:{amount:.12,speed:.78,lag:.70},
+  sleeves:{amount:.045,speed:.80,lag:.56},
   parts:{...DEFAULT_PART_STRENGTH}};
 }
 function sanitizeIdleProfile(input){
  const base=defaultIdleProfile(),p=input&&typeof input==='object'?input:{};
- const group=(id,max)=>({
-  amount:clamp(finite(p[id]?.amount,base[id].amount),0,max),
-  speed:clamp(finite(p[id]?.speed,base[id].speed),.15,3.5),
-  ...((id==='hair'||id==='cloth'||id==='sleeves')
-   ?{lag:clamp(finite(p[id]?.lag,base[id].lag),0,2)}:{})
+ // Old saved windy/breeze rigs are reset to base motion on both editor
+ // and game. Source artwork and independently authored bones are untouched.
+ if(p.profileVersion!==4)return base;
+ const g=(name,max)=>({
+  amount:clamp(finite(p[name]?.amount,base[name].amount),0,max),
+  speed:clamp(finite(p[name]?.speed,base[name].speed),.25,1.5),
+  lag:clamp(finite(p[name]?.lag,base[name].lag),0,1.5)
  });
  const parts={...DEFAULT_PART_STRENGTH};
  if(p.parts&&typeof p.parts==='object'&&!Array.isArray(p.parts)){
-  for(const [id,v] of Object.entries(p.parts).slice(0,100)){
-   if(/^[a-z0-9_-]{1,80}$/.test(id))parts[id]=clamp(finite(v,1),0,2);
-  }
+  for(const [id,value] of Object.entries(p.parts).slice(0,100))
+   if(/^[a-z0-9_-]{1,80}$/.test(id))
+    parts[id]=clamp(finite(value,1),0,1.25);
  }
- const groups={body:group('body',1),hair:group('hair',1.5),
-  cloth:group('cloth',1.5),sleeves:group('sleeves',1.5)};
- const old=p.profileVersion===3?null:
-  LEGACY_PRESETS[p.preset]?.[p.profileVersion===2?'v2':'v1'];
- if(old){
-  const target=IDLE_PRESETS[p.preset],rates=IDLE_RATES[p.preset];
-  for(const name of ['body','hair','cloth','sleeves'])
-   if(Math.abs(groups[name].amount-old[name])<.00001)
-    groups[name].amount=target[name];
-  // Migrate factory speed and lag. Don't overwrite manually tuned values.
-  for(const [name,speed,lag] of [
-   ['hair',1.05,.62],['cloth',.95,.58],['sleeves',.9,.5]]){
-   if(rates&&Math.abs(groups[name].speed-speed)<.00001)
-    groups[name].speed=rates[name][0];
-   if(rates&&Math.abs(groups[name].lag-lag)<.00001)
-    groups[name].lag=rates[name][1];
-  }
-  for(const [id,weight] of Object.entries(OLD_PART_STRENGTH))
-   if(Math.abs((p.parts?.[id]??weight)-weight)<.00001)
-    parts[id]=DEFAULT_PART_STRENGTH[id];
- }
- return {profileVersion:3,preset:typeof p.preset==='string'?p.preset:'custom',
-  weather:Object.hasOwn(IDLE_PRESETS,p.weather)?p.weather:
-   Object.hasOwn(IDLE_PRESETS,p.preset)?p.preset:'realistic',
-  windLift:clamp(finite(p.windLift,WEATHER_LIFT[p.weather]??WEATHER_LIFT[p.preset]??0),0,1),
-  body:{...groups.body,swayX:clamp(finite(p.body?.swayX,.8),0,3),
-   swayY:clamp(finite(p.body?.swayY,1.8),0,4),
-   rotate:clamp(finite(p.body?.rotate,.35),0,1)},
-  hair:groups.hair,cloth:groups.cloth,sleeves:groups.sleeves,parts};
+ return {...base,hair:g('hair',.30),cloth:g('cloth',.22),
+  sleeves:g('sleeves',.12),parts};
 }
 function presetIdle(name,previous=null){
  if(!Object.hasOwn(IDLE_PRESETS,name))throw Error('Unknown idle preset: '+name);
- const p=sanitizeIdleProfile(previous||defaultIdleProfile());
- p.preset=name;p.weather=name;p.windLift=WEATHER_LIFT[name];p.profileVersion=3;
- // Selecting a weather preset also resets old excessive per-part weights.
- p.parts={...DEFAULT_PART_STRENGTH};
- for(const [kind,amount] of Object.entries(IDLE_PRESETS[name]))p[kind].amount=amount;
- const rates=IDLE_RATES[name];
- if(rates)for(const [kind,[speed,lag]] of Object.entries(rates)){
-  p[kind].speed=speed;p[kind].lag=lag;
- }
+ // Legacy wind aliases explicitly cannot reactivate rejected motion.
+ if(name!=='still')return defaultIdleProfile();
+ const p=defaultIdleProfile();p.preset='still';
+ p.hair.amount=0;p.cloth.amount=0;p.sleeves.amount=0;
  return p;
 }
 // Smoothly approach a NEW weather tier instead of instantly snapping
 // every joint when the user taps calm / breeze / wind.
 function approachIdle(previous,target,dt){
  if(!previous)return sanitizeIdleProfile(target);
- const a=1-Math.exp(-Math.max(0,Math.min(.12,finite(dt,0)))*3.2);
- const fromWind=clamp(finite(previous.windLift,WEATHER_LIFT[previous.weather]||0),0,1);
- const toWind=clamp(finite(target.windLift,WEATHER_LIFT[target.weather]||0),0,1);
- const out={...previous,preset:target.preset,weather:target.weather,profileVersion:3,
-  windLift:fromWind+(toWind-fromWind)*a,parts:{...previous.parts}};
- for(const group of ['body','hair','cloth','sleeves']){
-  out[group]={...previous[group]};
-  for(const [key,v] of Object.entries(target[group]||{}))
-   if(typeof v==='number')out[group][key]=
-    finite(previous[group]?.[key],v)+(v-finite(previous[group]?.[key],v))*a;
+ const dest=sanitizeIdleProfile(target),k=1-Math.exp(-clamp(finite(dt,0),0,.12)*4);
+ for(const name of ['hair','cloth','sleeves']){
+  dest[name]={...dest[name]};
+  for(const key of ['amount','speed','lag']){
+   const end=dest[name][key];
+   dest[name][key]=finite(previous[name]?.[key],end)*(1-k)+end*k;
+  }
  }
- for(const id of new Set([...Object.keys(previous.parts||{}),...Object.keys(target.parts||{})])){
-  const from=finite(previous.parts?.[id],1),to=finite(target.parts?.[id],1);
-  out.parts[id]=from+(to-from)*a;
- }
- return out;
+ return dest;
 }
 function idleGroup(part){
  if(part.kind==='hair')return 'hair';
@@ -184,26 +145,8 @@ function idleGroup(part){
 // Avoid different per-layer offsets: those cause heads, collars and wrists
 // to tear apart when the body sways. No simulated breathing / vertical scale.
 const FOOT_Y=902;
-function bodyPoseAt(phase,idle){
- if(!idle)return {lean:0,feet:FOOT_Y};
- const b=idle.body||{},weather=idle.weather||idle.preset;
- const lift=clamp(finite(idle.windLift,WEATHER_LIFT[weather]||0),0,1);
- const storm=smooth(clamp((lift-.30)/.70,0,1));
- const breeze=smooth(clamp(lift/.30,0,1));
- const amount=clamp(finite(b.amount,0),0,1);
- const cadence=Math.max(.15,finite(b.speed,.85));
- const sway=Math.sin(phase*cadence*.64+.23)*amount*
-  (.018+.012*clamp(finite(b.rotate,.35),0,1));
- // In heavy wind the person leans AGAINST the direction of the air.
- // Feet remain planted; upper body has independent slow weight shifts.
- const gust=.72+.28*Math.sin(phase*.42-.35);
- const brace=-amount*(.0045*breeze*(1-storm)+.018*storm*gust);
- return {lean:clamp(sway+brace,-.032,.032),feet:FOOT_Y};
-}
-function bodyPosePoint(x,y,phase,idle){
- const pose=bodyPoseAt(phase,idle);
- return {x:x+pose.lean*(pose.feet-y),y};
-}
+function bodyPoseAt(){return {lean:0,feet:FOOT_Y};}
+function bodyPosePoint(x,y){return {x,y};}
 function bodyIdleAt(part,phase,idle){
  // Compatibility hook for authored rigs; actual coordinated motion is
  // implemented once by bodyPosePoint, not independent body-part shaking.
@@ -212,60 +155,8 @@ function bodyIdleAt(part,phase,idle){
 // Wind pressure on ORIGINAL independent ArtMeshes. Strong wind has a
 // sustained upward/lateral direction, with low-frequency gusts; no zoom,
 // whole-character shear on the skirt, copied texture or synthetic hair.
-function windPressure(phase,weather){
- if(weather==='windy')
-  return clamp(.76+.19*Math.sin(phase*.41-.4)+.10*Math.sin(phase*1.13+.3),.43,1);
- if(weather==='breeze')
-  return clamp(.5+.22*Math.sin(phase*.64+.6),.20,.74);
- return 0;
-}
-function windField(part,u,v,phase,idle){
- if(!idle||part.enabled===false)return {x:0,y:0};
- const weather=idle.weather||idle.preset;
- const lift=clamp(finite(idle.windLift,WEATHER_LIFT[weather]||0),0,1);
- if(lift<.00001)return {x:0,y:0};
- const breeze=smooth(clamp(lift/.30,0,1));
- const storm=smooth(clamp((lift-.30)/.70,0,1));
- const isHair=part.kind==='hair',isSkirt=part.kind==='skirt';
- if(!isHair&&!isSkirt)return {x:0,y:0};
- const amount=clamp(finite(idle[isHair?'hair':'cloth']?.amount,0),0,1.5)*
-  clamp(finite(idle.parts?.[part.id],1),0,2);
- if(amount<.00001)return {x:0,y:0};
- const lag=clamp(finite(idle[isHair?'hair':'cloth']?.lag,0),0,2);
- const t=phase-lag*.6;
- const pressure=breeze*(windPressure(t,'breeze')*(1-storm)+
-  windPressure(t,'windy')*storm);
- const pinned=smooth(clamp((v-(isHair?.16:.18))/(isHair?.74:.72),0,1));
- if(!pinned)return {x:0,y:0};
- if(isHair){
-  // Original front_hair PNG contains both forehead fringe AND long side
-  // locks. Wind must lift the SIDE LOCKS, not rip away the scalp and bangs.
-  const edge=part.id==='front_hair'?
-   smooth(clamp((Math.abs(u-.5)-.13)/.21,0,1)):1;
-  const fringe=part.id==='front_hair'?(1-edge)*.14:0;
-  const bend=pinned*(edge+fringe);
-  const gust=.16+.84*storm;
-  // Fan ORIGINAL side locks OUTWARD from the face (wind from behind).
-  // Sending both locks to +X made the left strand cross and obscure eyes.
-  // The left side now lifts left, the right side lifts right; only tips move.
-  const spread=clamp((u-.5)/.26,-1,1);
-  const lateral=32+70*storm;
-  const rising=11+65*storm;
-  const wave=Math.sin(phase*.9-lag-1.1+u*2.2)*(.08*pressure);
-  return {x:amount*bend*spread*(spread<0?.86:1)*(lateral*pressure+gust*12*wave),
-    y:-amount*bend*(rising*pressure+gust*7*wave)};
- }
- // Anchored waistband; individual pleats billow, and the hem flicks UP
- // without dragging the whole dress and legs sideways.
- const flare=.72+.28*smooth(clamp((u-.20)/.65,0,1));
- const billow=pressure+Math.sin(phase*.93-lag+u*3.0)*.07;
- const outward=clamp((u-.5)/.31,-1,1);
- // Pleats billow outward as two panels, rather than sliding the whole
- // skirt to one side. Add a small breeze-direction bias for asymmetry.
- const lateral=(24+34*storm)*outward+(2+6*storm);
- return {x:amount*pinned*flare*lateral*billow,
-  y:-amount*pinned*flare*(8+26*storm)*billow};
-}
+function windPressure(){return 0;}
+function windField(){return {x:0,y:0};}
 // Independently authored joint chains on ORIGINAL source PNG parts.
 // Coordinates are local UVs, not global character oscillation or name regex.
 // Paired sleeves inside a *single original PNG* still get separate left/right
@@ -350,27 +241,17 @@ function bonePoses(part,phase=0,idle=null){
   const strength=group?group.amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
   // Independent root/tip strength and slight phase delay approximate inertia;
   // roots do not whip like ends, and different strands stay out of sync.
-  const groupFactor=part.kind==='hair'?[.12,.48]:
-   part.kind==='skirt'?[.14,.55]:
+  const groupFactor=part.kind==='hair'?[.10,.37]:
+   part.kind==='skirt'?[.10,.32]:
    part.kind==='torso'?[.18,.50]:
    part.kind.startsWith('arm-')?[.13,.32]:[.1,.22];
   const factor=groupFactor[b.parent?1:0];
   const speed=group?group.speed:1;
   const lag=group?.lag||0;
-  // Smooth gust envelope, separate delays and small directional lift.
-  // Realistic mode never gets a gust or whole-poster breathing.
-  const weather=idle?.weather||idle?.preset;
-  const wind=weather==='windy'?
-   smooth((1+Math.sin(phase*.29-.7))/2):0;
-  const mild=weather==='breeze'?
-   smooth((1+Math.sin(phase*.23-.45))/2):0;
-  const envelope=weather==='windy'?(.68+.32*wind):
-   weather==='breeze'?(.88+.12*mild):1;
   const wave=Math.sin(phase*finite(b.frequency,1)*speed+
    finite(b.phase,0)-(b.parent?lag:lag*.25));
-  const direction=weather==='windy'?.13*wind:0;
   const angle=b.enabled!==false?finite(b.amplitude,0)*strength*factor*
-   Math.PI/180*(wave*envelope+direction):0;
+   Math.PI/180*wave:0;
   const theta=parentAngle+angle,cs=Math.cos(theta),sn=Math.sin(theta);
   const dv={x:T.x-P.x,y:T.y-P.y};
   const tailPos={x:head.x+dv.x*cs-dv.y*sn,y:head.y+dv.x*sn+dv.y*cs};
@@ -477,15 +358,15 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  const partStrength=idle?clamp(finite(idle.parts?.[part.id],1),0,2):1;
  const scale=group?group.amount*partStrength:1;
  const oscillation=Math.sin(phase*q.frequency*(group?.speed||1)+q.phase-(group?.lag||0));
- const a=q.angle*weight*oscillation*Math.PI/180;
+ const a=clamp(finite(q.angle,0),-2,2)*weight*oscillation*Math.PI/180;
  const baseX=(u-part.pivot.x)*part.w,baseY=(v-part.pivot.y)*part.h;
  const cs=Math.cos(a),sn=Math.sin(a);
  const body=bodyIdleAt(part,phase,idle);
  const air=windField(part,u,v,phase,idle);
  const px=base.x+(baseX*cs-baseY*sn-baseX)*scale+
-  q.x*weight*oscillation*scale+air.x+body.x;
+  clamp(finite(q.x,0),-4,4)*weight*oscillation*scale+air.x+body.x;
  const py=base.y+(baseX*sn+baseY*cs-baseY)*scale+
-  q.y*weight*oscillation*scale+air.y+body.y;
+  clamp(finite(q.y,0),-4,4)*weight*oscillation*scale+air.y+body.y;
  return bodyPosePoint(px,py,phase,idle);
 }
 function drawTri(ctx,image,A,B,C,D,E,F){
