@@ -36,19 +36,9 @@ const BACK={
  jacket:['torso',.50,.08,.50,.79,'torso'],
  hair_over_jacket:['head',.50,.05,.50,.94,'hair']
 };
-// Original flat artwork's seven *derived regions*, never PSD or separately
-// reconstructed facial/hair meshes.  Movements are limited by the missing
-// occluded pixels; a genuine 16-part PSD will replace this provisional rig.
-const CHAR002_DERIVED={
- shoes:['ground',.50,.90,.50,.90,'fixed'],
- legs:['pelvis',.50,.02,.50,.90,'leg-combined'],
- skirt:['pelvis',.50,.04,.50,.96,'skirt'],
- wave_hand:['torso',.73,.05,.45,.90,'arm-left'],
- free_hand:['torso',.32,.05,.55,.90,'arm-right'],
- head_hair:['head',.50,.80,.50,.80,'head-combined'],
- jacket:['torso',.50,.12,.50,.83,'torso']
-};
+// CHAR-002: source-authentic PSD layers; empty source records are kept in the ZIP.
 const CHAR002={
+ head_reference:['head',.50,.48,.50,.48,'face'],
  back_hair:['head',.50,.05,.50,.95,'hair'],
  legwear:['pelvis',.50,.04,.50,.84,'leg-combined'],
  footwear:['ground',.50,.86,.50,.86,'fixed'],
@@ -340,9 +330,8 @@ function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  return {x:part.x+x+dx/sum*blend,y:part.y+y+dy/sum*blend};
 }
 function cleanPart(part,face,id,characterId){
- const p=part||{},spec=characterId==='char-002-rig-v1'&&face==='front'?
-  CHAR002_DERIVED[id]:
-  characterId==='char-002'&&face==='front'?(CHAR002[id]||CHAR002_DERIVED[id]||FRONT[id]):
+ const p=part||{},spec=(characterId==='char-002'||characterId==='char-002-psd-v1')&&face==='front'?
+  (CHAR002[id]||FRONT[id]):
   (face==='back'?BACK:FRONT)[id];
  const w=Math.max(1,finite(p.canvas?.width||p.w,1));
  const h=Math.max(1,finite(p.canvas?.height||p.h,1));
