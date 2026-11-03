@@ -30,7 +30,7 @@ jobs:
           const fs=require('fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');
           const html=fs.readFileSync('site/character-editor/index.html','utf8');
           const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];new Function(script);
-          new Function(fs.readFileSync('site/l2d/breath.js','utf8'));
+          // Legacy breath UI and runtime are deliberately NOT imported.
           new Function(fs.readFileSync('site/l2d/part-rig.js','utf8'));
           new Function(fs.readFileSync('site/character-editor/part-rig-studio.js','utf8'));
           new Function(fs.readFileSync('site/character-editor/stage-motion.js','utf8'));
@@ -163,18 +163,18 @@ jobs:
                 await directPage.close();
 
                 assert.ok(await page.locator('#main-play').isVisible(),'full viewport playback control must be visible');
-                const breathing=await page.evaluate(()=>{
-                  const p=window.PaperchalkLocalBreath?.point;
-                  if(!p)return null;
-                  return {head1:p(525,110,3,4.8,1000),head2:p(525,110,3,4.8,3000),
-                    waist1:p(510,625,3,4.8,1000),waist2:p(510,625,3,4.8,3000),
-                    feet1:p(480,960,3,4.8,1000),feet2:p(480,960,3,4.8,3000),
-                    chest1:p(605,320,3,4.8,1000),chest2:p(605,320,3,4.8,3000)};
+                assert.equal(await page.locator('#dev-l2d-preview-controls').count(),0,
+                  'old 400% breathing panel must be deleted, not just hidden');
+                assert.equal(await page.locator('#l2d-strength').count(),0);
+                assert.equal(await page.evaluate(()=>window.PaperchalkLocalBreath),undefined,
+                  'the retired breathing renderer must never load in the editor');
+                const blinkMath=await page.evaluate(()=>{
+                  const fn=window.PaperchalkPartRigCore.blinkAmount;
+                  return {open:fn(0),closed:fn(.9*2*Math.PI/3.6),
+                    reopened:fn(1.35*2*Math.PI/3.6)};
                 });
-                assert.ok(breathing,'shared anatomical breath implementation must load');
-                for(const part of ['head','waist','feet'])
-                  assert.deepEqual(breathing[part+'1'],breathing[part+'2'],part+' may not sway');
-                assert.notDeepEqual(breathing.chest1,breathing.chest2,'chest must inhale/exhale locally');
+                assert.ok(blinkMath.open<.001&&blinkMath.closed>.99&&blinkMath.reopened<.001,
+                  'blink must close and reopen fully in one natural short cycle');
                 assert.ok(await page.locator('#easy-quickbar').isVisible(),'large-screen and phone quick edit tools must exist');
                 assert.ok(await page.locator('body.easy-mode').count()===1,'simple mode is the default');
                 assert.ok(await page.locator('#easy-save-note').textContent().then(x=>x.includes('浏览器')),'save must disclose browser-only persistence');
