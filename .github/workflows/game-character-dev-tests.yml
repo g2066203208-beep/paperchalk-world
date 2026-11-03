@@ -97,7 +97,7 @@ jobs:
               // Simulate a one-pixel original PART edit, not a flat screen overlay.
               await page.evaluate(()=>{
                 const p=window.characterEditor.S.layers.front.find(p=>p.partId==='rear_hair');
-                assert(p?.sourcePart,'missing editable real hair part');
+                if(!p?.sourcePart)throw Error('missing editable real hair part');
                 const ctx=p.canvas.getContext('2d');ctx.fillStyle='#ff31b0';
                 ctx.fillRect(20,140,3,3);
                 window.characterEditor.render();
