@@ -48,6 +48,7 @@ jobs:
         run: |
           python3 scripts/build_scene_catalog.py
           node tests/scene-modules.test.cjs
+          node tests/ground-perspective.test.mjs
       - name: Prove adding PNG or WebP auto-registers new scene IDs
         run: |
           python3 - <<'PY'
@@ -238,10 +239,12 @@ jobs:
           assert 'id="dev-layer-actions"' in h and 'id="dev-3d-controls"' in h
           assert 'function showFogEditor(' not in h and 'id="dev-fog-close"' not in h
           assert 'id="dev-ground"' in h and 'rotateX(90deg)' in h
-          assert 'ground:{y:77,z:-215,visible:1}' in h
-          assert 'enemy:{x:46,y:16,size:34,z:-190}' in h
-          assert 'left:46%;bottom:16%;height:34%' in h
+          assert 'ground:{y:77,z:-215,visible:1,horizon:52,lockPerspective:0,autoDepth:1,modelVersion:5}' in h
+          assert 'enemy:{x:46,y:12,size:48,z:-40}' in h
+          assert 'left:46%;bottom:12%;height:48%' in h
           assert 'cameraPlayer.style.transform=' in h
+          assert 'player:{x:27,y:-86.5,size:190,z:300}' in h
+          assert 'calc(27cqw - 95cqh)' in h
           assert 'safeDistance<=0.?1.' in h and 'safeDistance<=0?1:' in h
           assert '#fog{z-index:3}' in h and '#scene{z-index:1}' in h
           assert 'id="scene-transition"' in h and "async function changeScene(name)" in h
