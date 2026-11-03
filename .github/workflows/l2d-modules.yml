@@ -13,6 +13,9 @@ on:
       - 'site/character-editor/part-rig-studio.js'
       - 'site/character-editor/index.html'
       - 'site/index.html'
+      - 'site/game/prologue.js'
+      - 'site/game/prologue.css'
+      - 'tests/test_prologue.js'
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
@@ -23,6 +26,9 @@ on:
       - 'site/assets/l2d/library/**'
       - 'site/l2d/library-player.js'
       - 'site/dev/character-bridge.js'
+      - 'site/game/prologue.js'
+      - 'site/game/prologue.css'
+      - 'tests/test_prologue.js'
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
@@ -46,6 +52,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_l2d_library.py' -v
       - name: Validate realistic idle and independent per-part settings
         run: node tests/test_l2d_idle.js
+      - name: Validate first-person prologue data, branch and safe casting
+        run: node tests/test_prologue.js
       - name: Rebuild existing original L2D safely
         run: |
           python3 scripts/build_v4_assets.py
@@ -154,6 +162,32 @@ jobs:
             const page=await browser.newPage({viewport:{width:1200,height:850}});
             const errors=[];page.on('pageerror',e=>errors.push(e.message));
             await page.goto('http://127.0.0.1:8132/?scene=classroom&dev=1',{waitUntil:'load'});
+            // First-person story: the player must NEVER see her rear-view
+            // character model. Female-two enters as the real CHAR-002 ArtMesh.
+            const prologuePage=await browser.newPage({viewport:{width:1200,height:850}});
+            await prologuePage.goto('http://127.0.0.1:8132/?prologue=1',{waitUntil:'load'});
+            await prologuePage.waitForFunction(()=>
+              document.querySelector('#view')?.classList.contains('prologue-first-person'),
+              null,{timeout:15000});
+            assert.equal(await prologuePage.evaluate(()=>
+              document.getElementById('camera-player-root').hidden),true);
+            assert.ok((await prologuePage.locator('#dialogue-text').innerText()).includes('教室外'));
+            await prologuePage.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,
+              null,{timeout:30000});
+            for(let i=0;i<13;i++)await prologuePage.locator('#next-line').click();
+            await prologuePage.waitForFunction(()=>
+              window.PaperchalkL2DLibrary?.get('enemy')?.layers?.length===18,
+              null,{timeout:25000});
+            assert.equal(await prologuePage.evaluate(()=>
+              document.getElementById('enemy-depth-root').hidden),false);
+            for(let i=13;i<35;i++)await prologuePage.locator('#next-line').click();
+            await prologuePage.locator('#prologue-choices button').first().click();
+            assert.equal(await prologuePage.evaluate(()=>
+              window.PaperWorldPrologue.choices().entrance),'shadow');
+            assert.equal(await prologuePage.evaluate(()=>
+              JSON.parse(localStorage.getItem('paperchalk-prologue-v1')).choices.entrance),
+              'shadow');
+            await prologuePage.close();
             await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:30000});
             // Both playable slots must exist even though enemy's layout anchor
             // originally had no src. The default NPC is canonical CHAR-002.
