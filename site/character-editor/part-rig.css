@@ -38,3 +38,17 @@
 #part-rig-panel #rig-bone{display:block;width:100%;min-height:34px;color:#e5f7ff;background:#1c3854;border:1px solid #6abddc;border-radius:6px;margin:7px 0}
 #part-rig-panel #rig-bone-tip{font-size:10px;line-height:1.5;color:#b1d8ee}
 #part-rig-panel #rig-bone-sliders .rig-field output{color:#76f4d2}
+
+/* Realistic standing idle: primary controls above the per-bone inspector. */
+#part-rig-panel #rig-idle-controls{padding:10px 8px;margin:7px 0 12px;border:1px solid #4a8291;
+ border-radius:8px;background:#142d35}
+#part-rig-panel #rig-idle-controls>strong{display:block;font-size:12px;color:#c6f7e6;margin-bottom:8px}
+#part-rig-panel .rig-presets{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+#part-rig-panel .rig-presets button{min-height:34px;padding:6px;font-size:11px;border-radius:6px}
+#part-rig-panel .rig-presets button.active{background:#26614e;border:1px solid #7fe4b3;color:#eafff7}
+#part-rig-panel #rig-idle-sliders .rig-field{margin:9px 0}
+#part-rig-panel #rig-idle-sliders .rig-field output{color:#a5f0c9}
+#part-rig-panel .rig-part-amount{display:block;margin:10px 0 14px!important;padding:9px;
+ border:1px solid #496682;border-radius:7px;color:#c9d9f6}
+#part-rig-panel #rig-part-amount{display:block;width:100%;height:29px;accent-color:#8ff3ca}
+#part-rig-panel #rig-part-amount-value{float:right;color:#98f1cf}
