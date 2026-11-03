@@ -37,10 +37,14 @@ try{
    const initial=await page.evaluate(()=>({fit:window.PaperWorldGroundPerspective.inspect(),
      state:window.PaperWorldGroundPerspective.current()}));
    assert.equal(initial.fit.valid,true,JSON.stringify(initial));
-   assert.ok(initial.fit.sizePercent>45&&initial.fit.sizePercent<60,
-     'Default distant NPC should be about 52% of the scene, not old hardcoded 34%: '+JSON.stringify(initial));
+   assert.ok(initial.fit.sizePercent>51&&initial.fit.sizePercent<66,
+     'Nearby NPC should be around 58% of scene with cinematic crop: '+JSON.stringify(initial));
    assert.equal(initial.state.locked,false,'Preexisting hand-placed defaults must not be silently changed');
-   assert.equal(initial.state.enemy.size,34,'Editor changed saved NPC size without consent');
+   assert.equal(initial.state.enemy.size,48,'Cinematic enemy source must be 48%, not the tiny old 34%');
+   assert.equal(initial.state.player.size,90,'The heroine was not enlarged into the camera foreground');
+   assert.equal(initial.state.player.y,-5.5,'The heroine must extend below the lower frame');
+   assert.equal(initial.state.player.z,300);
+   assert.equal(initial.state.enemy.z,-40);
    const {x,y,size}=initial.state.enemy;
    // Moving the ground is a shared-parent transform, not a loose 3D grid.
    // Check REAL DOM shoes: foreground and background must travel the same
@@ -199,7 +203,7 @@ try{
    assert.ok(near.actor.perspectiveScale>1.3,
      'DEV world height must normalize the undersized original enemy layer');
    await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-near-depth.png'});
-   await capture(-190);
+   await capture(-40);
    await page.locator('#dev-auto-depth').uncheck();
    const manual=await page.evaluate(()=>window.PaperWorldL2DGround.inspect());
    assert.equal(manual.autoPerspective,false);
@@ -220,7 +224,7 @@ try{
    assert.equal(calibrated.state.enemy.x,x,'Ground calibration moved authored X');
    assert.equal(calibrated.state.enemy.y,y,'Ground calibration moved authored Y');
    assert.equal(calibrated.state.enemy.size,size,'Ground calibration rewrote the original artwork size');
-   assert.ok(calibrated.stored?.includes('"modelVersion":3'),
+   assert.ok(calibrated.stored?.includes('"modelVersion":4'),
      'Single-camera migration was not saved');
    for(const role of ['player','enemy']){
      const before=soleBefore.actors.find(a=>a.id===role);
@@ -357,7 +361,7 @@ try{
      'Moving enemy Z must move shoes along the SAME projected ground toward/away from horizon: '+
      JSON.stringify({distant,close}));
    await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-sharp-normal-distance.png'});
-   await actorAt(-190);
+   await actorAt(-40);
    const perfBefore=await page.evaluate(()=>window.PaperWorldL2DGround.performance());
    await page.waitForTimeout(550);
    const perfAfter=await page.evaluate(()=>window.PaperWorldL2DGround.performance());
