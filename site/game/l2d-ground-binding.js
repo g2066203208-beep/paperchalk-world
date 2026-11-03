@@ -184,6 +184,21 @@ function sync(){
   rig.dataset.l2dGroundY=String(y);
   rig.dataset.l2dGroundZ=String(z);
   rig.dataset.l2dGroundActors=String(actorData.length);
+  const diagnostic=document.getElementById('dev-ground-perspective');
+  if(diagnostic&&dev&&automatic){
+    const current=actorData.find(a=>a.id==='enemy');
+    const reference=actorData.find(a=>a.id==='player');
+    if(current&&reference){
+      const ratio=(current.physicalCm/reference.physicalCm)*
+        projection.depthScale(current.effectiveZ,reference.effectiveZ);
+      diagnostic.textContent='同一地面 · 自动相机透视开启｜主角 '+
+        reference.physicalCm+'cm / 女二 '+current.physicalCm+
+        'cm｜距离系数 '+fmt(current.depthScale)+
+        '｜女二画布校正 '+current.physicalScale+'×'+
+        '｜实际可见身高约为主角 '+fmt(ratio*100)+'%'+
+        '｜Z 远离自动缩小、靠近自动放大；L2D 鞋底保持贴地。';
+    }
+  }
   return last;
 }
 function queue(){
@@ -195,7 +210,10 @@ new MutationObserver(queue).observe(rig,{attributes:true,attributeFilter:['style
 new MutationObserver(queue).observe(view,{attributes:true,attributeFilter:['class']});
 new MutationObserver(queue).observe(document.body,{childList:true,subtree:true});
 // Swapping art / character in the L2D studio invalidates the measured sole.
+const dimensions=typeof ResizeObserver==='function'?new ResizeObserver(queue):null;
 for(const root of roots()){
+  for(const surface of root.querySelectorAll('[data-l2d-image],[data-l2d-canvas]'))
+    dimensions?.observe(surface);
   new MutationObserver(queue).observe(root,{attributes:true,
     attributeFilter:['data-l2d-state','data-l2d-mode','data-l2d-edition','hidden']});
   const img=root.querySelector('[data-l2d-image]');
