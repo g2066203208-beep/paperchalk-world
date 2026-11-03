@@ -223,3 +223,13 @@ body.rig-authoring #rig-quick-panel{display:block}
  #rig-quick-panel .rig-quick-row{margin:10px 0 12px}
  #rig-quick-panel .rig-quick-row input{height:35px;touch-action:pan-y}
 }
+
+/* L2D workflow is discoverable but remains collapsed during normal authoring. */
+#l2d-production-guide{margin:9px 0 16px;padding:0!important;border:1px solid #35545f;
+ border-radius:9px;background:#152a34;color:#c1d9df;font-size:12px}
+#l2d-production-guide>summary{cursor:pointer;list-style:disclosure-closed;
+ padding:11px 12px;user-select:none;font-weight:650;line-height:1.4}
+#l2d-production-guide[open]>summary{border-bottom:1px solid #35545f}
+#l2d-production-guide .rig-workflow-body{padding:2px 12px 13px;line-height:1.6}
+#l2d-production-guide .rig-workflow-body p{margin:10px 0}
+#l2d-production-guide a{color:#91e7c6;text-decoration:underline}
