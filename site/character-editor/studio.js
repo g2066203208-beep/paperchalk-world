@@ -14,6 +14,15 @@ let frameFrames={},globalLayer=null,frameLayer=null,correctionTimer=0,decodeBusy
 let previewPatch=null;
 const okId=v=>/^[\w-]{1,80}$/.test(v);
 const message=s=>$('studio-status').textContent=s;
+// Live game tabs share this origin and the exact same IndexedDB records.
+// Broadcast only a reload notification AFTER the corresponding write commits;
+// never send image pixels, change a second actor, or publish user art to GitHub.
+const gameSync=typeof BroadcastChannel==='function'
+ ?new BroadcastChannel('paperchalk-l2d-live-v1'):null;
+function notifyGame(id=currentId,face=side,kind='rig-saved'){
+ if(!gameSync||!okId(id)||!['front','back'].includes(face))return;
+ gameSync.postMessage({type:'paperchalk:l2d-saved',id,face,slot,kind});
+}
 function openDB(){return new Promise((ok,no)=>{
  const r=indexedDB.open(DB,1);
  r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('kv'))r.result.createObjectStore('kv')};
@@ -315,6 +324,9 @@ async function saveToGame(){
  // the protagonist (or a different NPC) after returning.
  // Only touch this slot key: original artwork and every other actor stay safe.
  await put('slot:'+slot,{id:currentId,side});
+ // Explicit Save & Apply: update any concurrently open game tab immediately.
+ // Pages without a game tab still load this exact saved version on return.
+ notifyGame(currentId,side,'applied');
  const native=await get('skeletal:'+currentId+':'+side);
  message('✓ 已保存：'+(list.get(currentId)?.label||currentId)+
   (rig?.state?.model?.characterId===currentId?'，新版独立骨骼已同步到本机游戏。':
@@ -930,6 +942,6 @@ $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
 $('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,readPartRig,storePartRig,drawBackdrop,drawFrameCorrection,drawComposedV4,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&countSourceParts()===0,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
+window.PaperchalkStudio={list,change,saveToGame,notifyGame,readPartRig,storePartRig,drawBackdrop,drawFrameCorrection,drawComposedV4,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&countSourceParts()===0,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
