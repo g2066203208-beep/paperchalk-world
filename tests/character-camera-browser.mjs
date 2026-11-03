@@ -64,6 +64,7 @@ try{
           imgSize:a.img.offsetHeight};
       };
       return {dev:s.dev,horizon:s.horizonY,
+        viewportHeight:document.getElementById('view').clientHeight,
         player:get('player'),enemy:get('enemy'),
         perf:window.PaperWorldL2DGround.performance()};
     },z);
@@ -72,6 +73,8 @@ try{
   const expected=155/162*(950-160)/(950-(-190));
   const ratio=ref.enemy.renderedHeight/ref.player.renderedHeight;
   assert.equal(ref.dev,false);
+  assert.ok(ref.horizon>ref.viewportHeight*.3&&ref.horizon<ref.viewportHeight*.7,
+    'Hidden DEV rig leaked a zero-height horizon into the real game: '+JSON.stringify(ref));
   assert.ok(Math.abs(ratio-expected)<.035,
     'Enemy still looks miniature; visible heights not projectively normalized: '+
     JSON.stringify({ratio,expected,ref}));
