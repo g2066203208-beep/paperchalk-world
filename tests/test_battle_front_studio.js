@@ -31,7 +31,7 @@ for(const id of known)assert.match(rig,new RegExp(' '+id+':\\['),
   'must have explicit part category: '+id);
 assert.match(guide,/源 PSD 为 \*\*1024 × 1024\*\*/);
 assert.match(guide,/图层 \*\*23 层\*\*/);
-assert.match(guide,/保留源图层/);
+assert.match(guide,/原位分层/);
 assert.doesNotMatch(game,/protagonist-battle-front|battle-front-l2d/,
  'the incomplete character must NOT be installed into the main game');
 console.log('PASS battle-front studio role isolation, safe ZIP importer, 24-part bone mappings and no original-hero override');
