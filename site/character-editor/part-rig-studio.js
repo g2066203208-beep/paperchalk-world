@@ -23,6 +23,18 @@ quickPanel.id='rig-quick-panel';
 quickPanel.hidden=true;
 quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">胸部呼吸单独调节，肩、手臂、脖子和头部自动跟随；脚鞋固定。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hands\"><span>双手／手臂</span><output>70%</output><input data-quick=\"hands\" aria-label=\"双手手臂摆动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"70\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"shoulders\"><span>肩部活动</span><output>30%</output><input data-quick=\"shoulders\" aria-label=\"肩部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"30\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hips\"><span>胯部活动</span><output>20%</output><input data-quick=\"hips\" aria-label=\"胯部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"20\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"breath\"><span>胸部呼吸</span><output>60%</output><input data-quick=\"breath\" aria-label=\"胸部呼吸幅度\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"60\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"250\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
 dock.prepend(quickPanel);
+// One concise, CLOSED guide; no second workflow, animation preset or overlay.
+const workflow=document.createElement('details');
+workflow.id='l2d-production-guide';
+workflow.innerHTML=`<summary>制作流程与素材检查</summary>
+<div class="rig-workflow-body">
+<p><b>① 原画分层</b>：确认独立 PNG、透明遮挡补画、1024 原位坐标；合成图裁剪必须标注为“原画分区”。</p>
+<p><b>② 绑定骨骼</b>：脚鞋固定 → 膝胯 → 腰胸肩 → 手臂 → 颈头五官；发根与裙腰固定。</p>
+<p><b>③ 调滑块</b>：看实时动作和接缝，不创建多个待机/风力版本。</p>
+<p><b>④ 保存</b>：保存到本机游戏；跨设备发布需导出模块 ZIP 并提交 GitHub，通过自动验证后上线。</p>
+<a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/docs/l2d/L2D_STUDIO_CANONICAL_WORKFLOW_20261103.md" target="_blank" rel="noopener noreferrer">查看完整 L2D 制作规范与验收清单</a>
+</div>`;
+dock.append(workflow);
 // Keep Play/Pause visible in the rig header, outside the animated portrait.
 panel.querySelector('.rig-h').insertBefore($('rig-pause'),$('rig-close'));
 const sliders=$('rig-sliders');
