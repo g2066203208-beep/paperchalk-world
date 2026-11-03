@@ -441,7 +441,10 @@ function bindBodyHierarchy(model){
    hy:upper.head.y,ky:upper.tail.y,ay:lower.tail.y}:null;
  };
  const left=chain('left'),right=chain('right');if(!left||!right)return model;
- const layout={pelvis:xy(skirt,.5,.08),shoulder:xy(torso,.5,.12),shoulderHalfWidth:torso.w*.48,
+ const maleSecond=model.characterId==='char-016';
+ const layout={pelvis:xy(skirt,.5,maleSecond?.045:.08),
+  shoulder:maleSecond&&neck?{x:neck.x+neck.w*.50,y:neck.y+neck.h+18}:
+   xy(torso,.5,.12),shoulderHalfWidth:maleSecond?torso.w*.43:torso.w*.48,
   head:face?xy(face,.5,.5):hair?xy(hair,.5,.35):xy(torso,.5,-.2),
   neck:neck?xy(neck,.5,.12):face?xy(face,.5,.88):xy(torso,.5,-.12),
   neckTop:neck?neck.y+neck.h*.12:(face?face.y+face.h*.88:torso.y),
