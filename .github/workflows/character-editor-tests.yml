@@ -357,8 +357,8 @@ jobs:
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-back.png',fullPage:true});
                 assert.deepEqual(errors,[],'JavaScript errors');
                 await page.close();
-                // Female-two's real uploaded PSD: 24 layer records, 17
-                // active original-pixel parts. Verify on desktop AND mobile.
+                // Female-two's original PSD: 24 records, 17 source art layers and 18
+                // animated meshes with individually bound arms. Verify on desktop AND mobile.
                 const secondaryPage=await browser.newPage({viewport:vp,
                   isMobile:vp.width<500,hasTouch:vp.width<500});
                 await secondaryPage.goto('http://127.0.0.1:8123/character-editor/?character=char-002&side=front',
@@ -367,7 +367,7 @@ jobs:
                   window.PaperchalkStudio?.current==='char-002'&&
                   window.PaperchalkPartRigStudio?.state.active&&
                   window.PaperchalkStudio?.hasNativePSD()&&
-                  Object.keys(window.PaperchalkPartRigStudio.state.model?.parts||{}).length===17,
+                  Object.keys(window.PaperchalkPartRigStudio.state.model?.parts||{}).length===18,
                   null,{timeout:35000});
                 const female2=await secondaryPage.evaluate(()=>{
                   const m=window.PaperchalkPartRigStudio.state.model,
@@ -380,7 +380,33 @@ jobs:
                     eye:core.parentRole(m.parts.eyewhite)};
                 });
                 assert.equal(female2.id,'char-002');
-                assert.equal(female2.parts.length,17);
+                assert.equal(female2.parts.length,18);
+                assert.ok(female2.parts.includes('hand_raised')&&
+                  female2.parts.includes('hand_lowered')&&!female2.parts.includes('handwear'),
+                  'two separate original-pixel arms must replace the down-arm mesh');
+                const raisedMotion=await secondaryPage.evaluate(()=>{
+                  const model=window.PaperchalkPartRigStudio.state.model,
+                    core=window.PaperchalkPartRigCore,part=model.parts.hand_raised;
+                  const make=hands=>core.sanitizeIdleProfile({...model.idleProfile,
+                    joints:{hands,shoulders:0,hips:0},breath:{amount:0,speed:1}});
+                  const off=make(0),on=make(3);
+                  const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+                  let tip=0,root=0;
+                  for(const t of [0,.5,1,1.5,2,2.5,3,3.5,4,4.5,5]){
+                    tip=Math.max(tip,distance(
+                      core.warpPoint(part,.31,.15,t,null,on),
+                      core.warpPoint(part,.31,.15,t,null,off)));
+                    root=Math.max(root,distance(
+                      core.warpPoint(part,.53,.91,t,null,on),
+                      core.warpPoint(part,.53,.91,t,null,off)));
+                  }
+                  return {tip,root,kind:part.kind,bones:part.bones?.length};
+                });
+                console.log('FEMALE TWO RAISED ARM ANIM',raisedMotion);
+                assert.equal(raisedMotion.kind,'arm-raised');
+                assert.equal(raisedMotion.bones,2);
+                assert.ok(raisedMotion.tip>5,'raised fingertips must actually move');
+                assert.ok(raisedMotion.root<.1,'raised arm shoulder must stay planted');
                 assert.ok(female2.hierarchy,'PSD source should build human parent hierarchy');
                 assert.deepEqual([female2.front,female2.back,female2.foot,female2.eye],
                   ['head','head','ground','head']);
@@ -402,7 +428,7 @@ jobs:
                     saved?.idleProfile?.breath?.amount===.7;
                 },null,{timeout:25000});
                 await secondaryPage.screenshot({path:'artifacts/character-editor/'+vp.width+
-                  '-CHAR-002-ORIGINAL-PSD-17-PARTS.png',fullPage:false});
+                  '-CHAR-002-ORIGINAL-PSD-18-MESH-RAISED-ARM.png',fullPage:false});
                 await secondaryPage.close();
               }
             }finally{await browser.close()}
