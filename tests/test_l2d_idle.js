@@ -104,8 +104,8 @@ assert.ok(span('jacket',.18,.63,shouldersMax)>span('jacket',.18,.63,shouldersOff
 const hipsOff=jointProfile('hips',0),hipsMax=jointProfile('hips',8);
 assert.ok(span('skirt',.18,.58,hipsMax)>span('skirt',.18,.58,hipsOff)+10,
  'pelvic slider moves the real skirt joint chain');
-assert.ok(span('legs',.35,.65,hipsMax)>span('legs',.35,.65,hipsOff)+2,
- 'pelvic slider also coordinates the upper legs');
+assert.equal(span('legs',.35,.65,hipsMax),span('legs',.35,.65,hipsOff),
+ 'unaligned partial imports must not invent a free-floating leg swing');
 for(const high of [handsMax,shouldersMax,hipsMax,maximum]){
  assert.deepEqual(core.bodyPoseAt(1,high),{lean:0,feet:902},
   'joint controls must not rock the entire character');
