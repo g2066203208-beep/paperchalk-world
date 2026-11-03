@@ -24,6 +24,15 @@ try{
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
    await page.waitForFunction(()=>!!window.PaperWorldGroundPerspective&&
      !!document.getElementById('dev-ground-perspective')?.textContent,{timeout:15000});
+   // This isolated browser starts with the prologue, which deliberately hides
+   // NPCs. Expose both layout slots to test the shared-floor coordinates;
+   // the real game unhides them when their story scene/actor is active.
+   await page.evaluate(()=>{
+     document.getElementById('enemy-depth-root').hidden=false;
+     document.getElementById('actor-enemy').hidden=false;
+     document.getElementById('camera-player-root').hidden=false;
+   });
+   await page.waitForFunction(()=>document.getElementById('actor-enemy').offsetHeight>0);
    const initial=await page.evaluate(()=>({fit:window.PaperWorldGroundPerspective.inspect(),
      state:window.PaperWorldGroundPerspective.current()}));
    assert.equal(initial.fit.valid,true,JSON.stringify(initial));
