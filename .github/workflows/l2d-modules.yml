@@ -49,6 +49,28 @@ jobs:
           python3 scripts/build_protagonist_part_rig.py
           python3 scripts/build_char002_v4.py
           python3 scripts/build_scene_catalog.py
+      - name: Export ORIGINAL eye/nose/brow PNGs to face-only QA artifact for visual review
+        run: |
+          mkdir -p artifacts/l2d-face/source-parts
+          python3 - <<'PY'
+          import json
+          from zipfile import ZipFile
+          from pathlib import Path
+          source=Path('site/assets/l2d/v4/protagonist-original-parts.zip')
+          with ZipFile(source) as z:
+              art=json.loads(z.read('layers.json'))['layers']['front']
+              for entry in art:
+                  if entry['id'] in ('face','brows','nose','eye_white','irises','lashes','front_hair'):
+                      data=z.read(entry['file'])
+                      Path('artifacts/l2d-face/source-parts/'+entry['id']+'.png').write_bytes(data)
+                      from PIL import Image
+                      import io
+                      with Image.open(io.BytesIO(data)).convert('RGBA') as im:
+                          a=im.getchannel('A')
+                          print('REAL ORIGINAL PART',entry['id'],
+                                'size',im.size,'alphaBounds',a.getbbox(),'pixelCount',
+                                sum(1 for v in a.getdata() if v>30))
+          PY
       - name: Generate disposable complete V4 + ArtMesh modules in CI only
         run: |
           python3 - <<'PY'
@@ -202,8 +224,11 @@ jobs:
               'real eye white, iris and lash pixels must close then reopen, not static eyes');
             const fs=require('node:fs');
             fs.mkdirSync('artifacts/l2d-face',{recursive:true});
-            await page.locator('#qa-eyes-open').screenshot({path:'artifacts/l2d-face/original-heroine-open-face.png'});
-            await page.locator('#qa-eyes-closed').screenshot({path:'artifacts/l2d-face/original-heroine-blinking-face.png'});
+            for(const [id,file] of [['qa-eyes-open','original-heroine-open-face.png'],
+                                    ['qa-eyes-closed','original-heroine-blinking-face.png']]){
+              const data=await page.locator('#'+id).evaluate(canvas=>canvas.toDataURL('image/png').split(',')[1]);
+              fs.writeFileSync('artifacts/l2d-face/'+file,Buffer.from(data,'base64'));
+            }
             await page.evaluate(()=>document.querySelectorAll('[id^="qa-eyes-"]').forEach(n=>n.remove()));
             const physical=await page.evaluate(()=>{
               const core=window.PaperchalkPartRigCore;
