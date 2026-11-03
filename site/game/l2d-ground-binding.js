@@ -28,6 +28,17 @@ const probe=document.createElement('canvas');
 const PROBE_SIZE=192;
 const probeCtx=probe.getContext('2d',{alpha:true,willReadFrequently:true});
 const retryAt=new WeakMap();
+const retryCount=new WeakMap(),retryTimers=new WeakMap();
+function retryWhenVisible(actor,canvas,delay){
+  if(actor.root.hidden||actor.img.hidden||retryTimers.get(canvas))return;
+  const attempts=retryCount.get(canvas)||0;
+  if(attempts>=9)return;
+  retryCount.set(canvas,attempts+1);
+  retryTimers.set(canvas,setTimeout(()=>{
+    retryTimers.delete(canvas);
+    queue(); // one scheduled attempt, not one readback per video frame
+  },delay));
+}
 let metrics={probeCount:0,skippedCount:0,readbackPixels:0};
 function shoeInCanvas(actor){
   const canvas=actor.canvas;
@@ -85,10 +96,15 @@ function shoeInCanvas(actor){
       // Foot height is stable; never read a running L2D frame again until
       // actor identity/parts change.
       soleCache.set(canvas,{name,shoe});
-    }else retryAt.set(canvas,performance.now()+650);
+      retryCount.set(canvas,0);
+    }else{
+      retryAt.set(canvas,performance.now()+650);
+      retryWhenVisible(actor,canvas,700);
+    }
   }catch(_){
     // A failed tainted/empty frame is retried sparingly, not every frame.
     retryAt.set(canvas,performance.now()+1300);
+    retryWhenVisible(actor,canvas,1350);
   }
   return shoe;
 }
