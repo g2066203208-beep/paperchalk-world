@@ -148,6 +148,25 @@ function presetIdle(name,previous=null){
  }
  return p;
 }
+// Smoothly approach a NEW weather tier instead of instantly snapping
+// every joint when the user taps calm / breeze / wind.
+function approachIdle(previous,target,dt){
+ if(!previous)return sanitizeIdleProfile(target);
+ const a=1-Math.exp(-Math.max(0,Math.min(.12,finite(dt,0)))*3.2);
+ const out={...previous,preset:target.preset,profileVersion:3,
+  parts:{...previous.parts}};
+ for(const group of ['body','hair','cloth','sleeves']){
+  out[group]={...previous[group]};
+  for(const [key,v] of Object.entries(target[group]||{}))
+   if(typeof v==='number')out[group][key]=
+    finite(previous[group]?.[key],v)+(v-finite(previous[group]?.[key],v))*a;
+ }
+ for(const id of new Set([...Object.keys(previous.parts||{}),...Object.keys(target.parts||{})])){
+  const from=finite(previous.parts?.[id],1),to=finite(target.parts?.[id],1);
+  out.parts[id]=from+(to-from)*a;
+ }
+ return out;
+}
 function idleGroup(part){
  if(part.kind==='hair')return 'hair';
  if(part.kind==='skirt'||part.kind==='torso')return 'cloth';
@@ -545,5 +564,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,approachIdle,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
