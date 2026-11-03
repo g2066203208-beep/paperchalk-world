@@ -1,0 +1,106 @@
+
+/* CHAR-001 phone. Native edge fog is supplied by #ui-edge-fog, never a static rectangular plate. */
+#phone-ui{position:absolute;z-index:3;top:50%;
+  right:calc(max(8px,2.6cqw) + var(--game-control-size) + clamp(15px,2cqw,27px));
+  transform:translateY(-50%);height:min(76cqh,475px);aspect-ratio:0.475;
+  pointer-events:auto;font-family:"PaperSans","Noto Sans CJK SC",sans-serif;
+  letter-spacing:0;color:#f6f4f5;text-shadow:0 1px 3px #0007;
+  filter:drop-shadow(0 10px 18px #000b);
+}
+#phone-ui[hidden],#phone-ui [hidden]{display:none!important}
+#phone-ui button{appearance:none;-webkit-appearance:none;font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;border:0}
+#phone-ui button:focus-visible{outline:2px solid #eae2f8;outline-offset:2px}
+#phone-ui .phone-device{position:relative;width:100%;height:96%;padding:clamp(4px,.7cqh,6px);
+  border-radius:clamp(19px,4.4cqh,30px);
+  background:linear-gradient(110deg,#e4dfe9 0%,#b7b0c5 15%,#f0e9ef 45%,#c0b9c8 84%,#9c95ab 100%);
+  border:1px solid #ded3e4;box-shadow:inset 0 0 0 2px #ffffff44,0 0 0 1px #736c8190;
+}
+#phone-ui .phone-device:before,#phone-ui .phone-device:after{content:"";position:absolute;z-index:0;
+  width:clamp(7px,1.2cqh,10px);height:clamp(9px,1.8cqh,14px);
+  top:clamp(-6px,-.65cqh,-3px);background:#d6ccd8;
+  border:1px solid #e8dfeb;border-radius:5px 5px 1px 1px}
+#phone-ui .phone-device:before{left:18%;transform:rotate(-9deg)}
+#phone-ui .phone-device:after{right:18%;transform:rotate(9deg)}
+#phone-ui .phone-screen{position:relative;overflow:hidden;width:100%;height:100%;
+  border-radius:clamp(15px,3.7cqh,25px);
+  border:1px solid #070b12;background:#121c29;
+  isolation:isolate}
+#phone-ui .phone-wallpaper{position:absolute;inset:0;z-index:-1;
+  background-image:var(--phone-lock-image,none),radial-gradient(ellipse at 58% 28%,#66788b 0%,#354457 31%,#172636 63%,#0b131e 100%);
+  background-size:cover;background-position:center;filter:saturate(.75)}
+#phone-ui .phone-wallpaper:after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,#07101d44 0%,#10182422 34%,#080d1bbb 100%)}
+#phone-ui .phone-status{position:absolute;left:10%;right:10%;top:clamp(7px,1.4cqh,12px);
+  z-index:2;display:flex;justify-content:space-between;align-items:center;
+  font-size:clamp(8px,1.7cqh,11px);line-height:1;font-variant-numeric:tabular-nums}
+#phone-ui .phone-status-right{display:flex;align-items:center;gap:3px}
+#phone-ui .phone-status-right svg{width:clamp(12px,2.4cqh,17px);height:clamp(9px,1.75cqh,12px);
+  fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#phone-ui .phone-camera{position:absolute;z-index:3;top:clamp(5px,.95cqh,8px);left:50%;transform:translateX(-50%);
+  width:clamp(5px,.95cqh,7px);height:clamp(5px,.95cqh,7px);border-radius:50%;
+  background:#070a0e;box-shadow:0 0 0 1px #5e6770}
+#phone-ui .phone-close{position:absolute;right:clamp(-16px,-2cqh,-9px);top:clamp(-13px,-1.6cqh,-7px);
+  z-index:8;width:clamp(25px,4.6cqh,34px);height:clamp(25px,4.6cqh,34px);border-radius:50%!important;
+  background:#202027!important;box-shadow:0 2px 9px #0009!important;display:grid;place-items:center;
+  font-size:clamp(16px,3.4cqh,22px)!important;line-height:1}
+#phone-ui .phone-lock{height:100%;display:flex;flex-direction:column;align-items:center;
+  padding:clamp(27px,5.8cqh,43px) 8% clamp(11px,2.2cqh,16px)}
+#phone-ui .phone-headline{text-align:center;flex:none;min-height:22%;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start}
+#phone-ui .phone-big-time{font-size:clamp(23px,5.5cqh,39px);line-height:1.16;font-weight:300;letter-spacing:-.055em;
+  font-variant-numeric:tabular-nums}
+#phone-ui .phone-date{margin-top:2px;font-size:clamp(8px,1.65cqh,12px);opacity:.94}
+#phone-ui .phone-password{flex:none;margin:0 0 clamp(8px,1.5cqh,11px);
+  display:flex;flex-direction:column;align-items:center;gap:clamp(6px,1.15cqh,9px);width:100%}
+#phone-ui .phone-prompt{font-size:clamp(8px,1.65cqh,12px);white-space:nowrap;min-height:1.2em}
+#phone-ui .phone-prompt[data-error="true"]{color:#ffd6d6}
+#phone-ui .phone-dots{display:flex;justify-content:center;gap:clamp(9px,1.5cqh,13px)}
+#phone-ui .phone-dot{width:clamp(5px,1cqh,7px);height:clamp(5px,1cqh,7px);
+  border:1px solid #f6f6fa;border-radius:50%;background:transparent}
+#phone-ui .phone-dot[data-filled="true"]{background:#f6f6fa}
+#phone-ui .phone-keypad{width:100%;flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(4,1fr);column-gap:clamp(7px,1.4cqh,13px);row-gap:clamp(3px,.8cqh,7px);
+  place-items:stretch}
+#phone-ui .phone-key{border-radius:50%!important;background:#ffffff1d!important;
+  color:#fff!important;display:grid;place-items:center;min-height:0;padding:0!important;
+  font-family:"PaperSans",sans-serif!important;font-size:clamp(15px,3.4cqh,23px)!important;
+  font-weight:400!important;line-height:1!important;transition:background .12s ease}
+#phone-ui .phone-key:active{background:#ffffff56!important}
+#phone-ui .phone-key.phone-empty{pointer-events:none;background:transparent!important}
+#phone-ui .phone-key[data-key="erase"]{font-size:clamp(13px,2.65cqh,18px)!important}
+#phone-ui .phone-biometric{flex:none;display:flex;align-items:center;justify-content:center;gap:clamp(3px,.7cqh,6px);
+  flex-direction:column;min-height:clamp(48px,9cqh,62px);width:100%;margin-top:clamp(3px,.8cqh,8px)}
+#phone-ui .phone-fingerprint{padding:2px!important;border-radius:50%!important;background:transparent!important;
+  display:grid;place-items:center;width:clamp(27px,5.2cqh,37px);height:clamp(27px,5.2cqh,37px)}
+#phone-ui .phone-fingerprint svg{width:100%;height:100%;fill:none;stroke:#f7f2f8;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+#phone-ui .phone-biometric-label{font-size:clamp(7px,1.38cqh,10px);opacity:.9}
+#phone-ui .phone-home{position:relative;display:flex;height:100%;flex-direction:column;
+  padding:clamp(35px,6.3cqh,46px) 8% 9%;gap:clamp(10px,2cqh,15px)}
+#phone-ui .phone-home-head{text-align:center;font-size:clamp(10px,2cqh,14px);letter-spacing:.08em}
+#phone-ui .phone-apps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(11px,2cqh,18px) 4px;
+  align-content:start;margin-top:clamp(8px,1.5cqh,12px)}
+#phone-ui .phone-app{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
+  padding:0!important;background:none!important;text-shadow:0 1px 4px #000}
+#phone-ui .phone-app-icon{width:clamp(26px,5.7cqh,40px);height:clamp(26px,5.7cqh,40px);
+  border-radius:clamp(8px,1.5cqh,12px);display:grid;place-items:center;
+  border:1px solid #ffffff40;background:#e8e1ef2a;backdrop-filter:blur(6px)}
+#phone-ui .phone-app-icon svg{width:54%;height:54%;stroke:#fff;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+#phone-ui .phone-app-label{font-size:clamp(8px,1.5cqh,11px);white-space:nowrap}
+#phone-ui .phone-home-indicator{position:absolute;bottom:clamp(6px,1.1cqh,9px);left:50%;transform:translateX(-50%);
+  border-radius:99px;width:28%;height:3px;background:#f3edf3b6}
+#phone-ui .phone-app-view{display:flex;align-items:center;flex-direction:column;gap:12px;
+  padding:clamp(46px,8cqh,60px) 12% 13%;height:100%;text-align:center}
+#phone-ui .phone-app-back{align-self:flex-start;font-size:clamp(11px,2cqh,15px)!important;
+  background:transparent!important;padding:5px!important}
+#phone-ui .phone-app-title{font-size:clamp(18px,3.1cqh,24px);margin-top:16%}
+#phone-ui .phone-app-copy{font-size:clamp(10px,1.8cqh,13px);line-height:1.5;opacity:.8}
+#phone-ui .phone-charm{position:absolute;right:-8%;bottom:-3%;width:19%;height:12%;pointer-events:none}
+#phone-ui .phone-charm-cord{position:absolute;top:0;left:30%;height:48%;width:28%;border:clamp(2px,.35cqh,3px) solid #744452;
+  border-radius:35% 35% 40% 40%;transform:rotate(-14deg)}
+#phone-ui .phone-charm-fish{position:absolute;bottom:0;left:20%;width:60%;height:48%;
+  color:#d2c7d4;filter:drop-shadow(0 1px 2px #0009)}
+#phone-ui .phone-charm-fish svg{height:100%;width:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+@media(prefers-reduced-motion:reduce){#phone-ui .phone-key{transition:none}}
