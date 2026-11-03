@@ -758,8 +758,11 @@ body.mobile-mode.virtual-landscape #view{
       <p>所有已加载的 L2D 人物以真实动画画布最下方的鞋底像素为接触点，脚底自动贴住同一个水平地面；沿 Z 方向仍有真实景深，不会强迫屏幕脚点排在同一行。</p>
       <label for="dev-ground-horizon">地面透视消失线 <output id="dev-ground-horizon-value" class="dev-value">51.5%</output></label>
       <input id="dev-ground-horizon" type="range" min="30" max="74" step=".5">
+      <label class="dev-floor-toggle" for="dev-auto-depth">
+        <input id="dev-auto-depth" type="checkbox" checked> 自动距离透视（真实身高 + 人物Z + 相机距离）
+      </label>
       <label class="dev-floor-toggle" for="dev-ground-lock">
-        <input id="dev-ground-lock" type="checkbox"> 锁定同一地面的透视大小
+        <input id="dev-ground-lock" type="checkbox"> 旧版：按屏幕脚点校准画布大小
       </label>
       <output id="dev-ground-perspective" role="status" style="display:block;white-space:normal;line-height:1.55;color:#c6e5f1;font-size:12px"></output>
       <button id="dev-ground-calibrate" type="button">校准敌人大小并锁定地面</button>
@@ -2163,13 +2166,13 @@ void main(){
   const editorDefaults=Object.freeze({
     bg:{z:-235},enemy:{x:46,y:16,size:34,z:-190},
     fog:{z:0},player:{x:19,y:3,size:76,z:160},
-    ground:{y:77,z:-215,visible:1,horizon:51.5,lockPerspective:0}
+    ground:{y:77,z:-215,visible:1,horizon:51.5,lockPerspective:0,autoDepth:1}
   });
   const EDITOR_KEY='paperchalk-layer-editor-v2';
   const PREVIOUS_EDITOR_KEY='paperchalk-layer-editor-v1';
   const editorBounds={
     x:[-20,110],y:[-40,96],size:[12,120],z:[-420,350],visible:[0,1],
-     horizon:[30,74],lockPerspective:[0,1]
+     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1]
   };
   const copyDefaults=()=>JSON.parse(JSON.stringify(editorDefaults));
   function sanitizeEditor(data){
@@ -2241,7 +2244,8 @@ void main(){
       '；透视系数 '+fit.depthRatio.toFixed(3)+
       '；建议敌人层大小 '+fit.sizePercent.toFixed(1)+'%'+
       '（前景可见身高的 '+(fit.relativeVisibleHeight*100).toFixed(1)+'%）'+
-      '；当前 '+editorConfig.enemy.size.toFixed(1)+'%'+
+      '；当前画布 '+editorConfig.enemy.size.toFixed(1)+'%'+
+      '；真实 L2D 远近缩放 '+(editorConfig.ground.autoDepth?'自动':'手动')+
       (outside?'；超出编辑器大小范围，请调整脚点。':'')+
       (editorConfig.ground.lockPerspective?' · 地面锁定中':' · 保留手动摆放');
   }
@@ -2269,6 +2273,7 @@ void main(){
     }
     const ground=editorConfig.ground;
     devRig.style.setProperty('--dev-floor-y',ground.y+'%');
+    devRig.style.setProperty('--dev-auto-perspective',String(ground.autoDepth));
     devGround.hidden=ground.visible===0;
     devGroundToggle.checked=ground.visible!==0;
     // Contact marker is placed on the HORIZONTAL floor in the same 3D
@@ -2312,6 +2317,7 @@ void main(){
     document.getElementById('dev-ground-horizon').value=String(editorConfig.ground.horizon);
     document.getElementById('dev-ground-horizon-value').textContent=editorConfig.ground.horizon+'%';
     document.getElementById('dev-ground-lock').checked=!!editorConfig.ground.lockPerspective;
+    document.getElementById('dev-auto-depth').checked=editorConfig.ground.autoDepth!==0;
     devGroundToggle.checked=editorConfig.ground.visible!==0;
     showGroundFit(calculateGroundFit());
     for(const field of ['x','y','size','z']){
@@ -2418,6 +2424,14 @@ void main(){
     applyEditorVisuals();refreshEditorControls();
     setDevStatus('视平线已预览；保存位置后保留。');
   });
+  document.getElementById('dev-auto-depth').addEventListener('change',event=>{
+    editorConfig.ground.autoDepth=event.target.checked?1:0;
+    applyEditorVisuals();refreshEditorControls();
+    window.PaperWorldL2DGround?.sync();
+    setDevStatus(event.target.checked
+      ?'距离透视已自动开启：沿人物 Z 轴靠近放大、远离缩小，真实 L2D 鞋底始终贴地。'
+      :'已关闭自动距离透视：当前由人物大小滑块手动控制。');
+  });
   document.getElementById('dev-ground-lock').addEventListener('change',event=>{
     editorConfig.ground.lockPerspective=event.target.checked?1:0;
     applyEditorVisuals();refreshEditorControls();
@@ -2438,7 +2452,12 @@ void main(){
     document.getElementById('dev-'+field).addEventListener('input',event=>{
       if(editorConfig[selectedLayer][field]===undefined)return;
       // A new hand-authored scale always takes priority over automatic fit.
-      if(field==='size'&&selectedLayer==='enemy')editorConfig.ground.lockPerspective=0;
+      if(field==='size'&&(selectedLayer==='enemy'||selectedLayer==='player')){
+        // Explicit manual artistic size override takes precedence over
+        // distance-based normalisation; Z remains independently editable.
+        editorConfig.ground.lockPerspective=0;
+        editorConfig.ground.autoDepth=0;
+      }
       editorConfig[selectedLayer][field]=Number(event.target.value);
       applyEditorVisuals();refreshEditorControls();
       setDevStatus('已预览修改；点击保存位置以保留');
@@ -2549,6 +2568,8 @@ void main(){
     current:()=>({
       horizon:editorConfig.ground.horizon,
       locked:!!editorConfig.ground.lockPerspective,
+      autoDepth:editorConfig.ground.autoDepth!==0,
+      ground:{...editorConfig.ground},
       player:{...editorConfig.player},enemy:{...editorConfig.enemy}
     })
   });
