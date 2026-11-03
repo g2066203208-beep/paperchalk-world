@@ -108,12 +108,17 @@ async function assign(target,id,face='front',save=true){
  const usesPsdRig=Array.isArray(originalPsdLayers)&&originalPsdLayers.length>=12;
  const published=c.l2dModule?.[face];
  const publishedRig=published?.renderer==='part-mesh'&&(id!=='protagonist'||heroineRenderer==='bones')?published.rig:null;
+ // CHAR-002's hosted 18-part PSD ArtMesh is authoritative. The studio also
+ // saves a legacy 'skeletal' compatibility record; it must NOT hijack the
+ // runtime renderer and silently discard the user's PartRig bone edits.
+ // Keep the legacy path for other characters with no dedicated published rig.
+ const preferFemale2ArtMesh=id==='char-002'&&face==='front'&&!!publishedRig;
  const deployedClip=c.clips?.[face];
  const installedV4=deployedClip?.url||(id==='protagonist'?'./assets/l2d/v4/'+face+'.webp':'');
  const source=(clip?.data?.startsWith('data:image/webp;base64,')?clip.data:installedV4);
  const shape=clip?.crop||deployedClip?.crop||{x:351,y:9,w:335,h:1013};
- if(usesPsdRig){
-  // Genuine Photoshop layers ALWAYS take precedence over the old baked
+ if(usesPsdRig&&!preferFemale2ArtMesh){
+  // Genuine Photoshop layers without an authoritative PartRig take precedence over the old baked
   // flat-PNG WebP. Each image has a separate source texture and bone.
   await window.PaperchalkL2D.setAnimationSource(target,null);
   const loaded=await window.PaperchalkL2D.setLayers(target,originalPsdLayers,[1024,1024]);
