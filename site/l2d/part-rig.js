@@ -457,7 +457,9 @@ function headPoint(p,pose){
  return turn(shoulderPoint(p,pose),upperNeck,pose.neckAngle);
 }
 function neckPoint(p,pose){
- const low=shoulderPoint(p,pose),high=headPoint(p,pose),r=pose.rig;
+ // The cervical base inherits the widened rib-cage surface, while the
+ // upper neck follows the rigid head hinge without a visible gap.
+ const low=ribcagePoint(p,pose),high=headPoint(p,pose),r=pose.rig;
  const w=smooth((r.neckBottom-p.y)/Math.max(1,r.neckBottom-r.neckTop));
  return {x:low.x+(high.x-low.x)*w,y:low.y+(high.y-low.y)*w};
 }
