@@ -239,10 +239,10 @@ function windField(part,u,v,phase,idle){
   // Sending both locks to +X made the left strand cross and obscure eyes.
   // The left side now lifts left, the right side lifts right; only tips move.
   const spread=clamp((u-.5)/.26,-1,1);
-  const lateral=weather==='windy'?108:16;
-  const rising=weather==='windy'?65:5;
+  const lateral=weather==='windy'?102:32;
+  const rising=weather==='windy'?76:11;
   const wave=Math.sin(phase*.9-lag-1.1+u*2.2)*(.08*pressure);
-  return {x:amount*bend*spread*(lateral*pressure+gust*12*wave),
+  return {x:amount*bend*spread*(spread<0?.86:1)*(lateral*pressure+gust*12*wave),
     y:-amount*bend*(rising*pressure+gust*7*wave)};
  }
  // Anchored waistband; individual pleats billow, and the hem flicks UP
@@ -252,10 +252,10 @@ function windField(part,u,v,phase,idle){
  const outward=clamp((u-.5)/.31,-1,1);
  // Pleats billow outward as two panels, rather than sliding the whole
  // skirt to one side. Add a small breeze-direction bias for asymmetry.
- const lateral=(weather==='windy'?58:13)*outward+
+ const lateral=(weather==='windy'?58:24)*outward+
   (weather==='windy'?8:2);
  return {x:amount*pinned*flare*lateral*billow,
-  y:-amount*pinned*flare*(weather==='windy'?34:4)*billow};
+  y:-amount*pinned*flare*(weather==='windy'?34:8)*billow};
 }
 // Independently authored joint chains on ORIGINAL source PNG parts.
 // Coordinates are local UVs, not global character oscillation or name regex.
