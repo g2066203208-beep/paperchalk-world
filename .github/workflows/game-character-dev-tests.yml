@@ -241,8 +241,8 @@ jobs:
               assert.ok(localPart.personalised,'game did not load editor artwork into ArtMesh');
               assert.deepEqual(localPart.rgba,[255,49,176,255],
                 'painted source pixel must travel with its own moving hair mesh');
-              // Actual uploaded Photoshop front: 24 PSD records, 17
-              // independent visibly textured component meshes.
+              // Actual uploaded Photoshop front: 24 PSD records, 17 source
+              // art layers, 18 playing meshes with two independent arms.
               const registered=await page.evaluate(()=>{
                 const entries=new Map(window.PaperchalkCharacterDev.characters.map(c=>[c.id,c]));
                 const c=entries.get('char-002');
@@ -255,12 +255,12 @@ jobs:
                   oldClip:!!c?.clips?.front};
               });
               assert.deepEqual(registered,{
-                main:128,renderer:'part-mesh',partCount:17,source:'original-psd',
+                main:128,renderer:'part-mesh',partCount:18,source:'original-psd',
                 oldAlias:false,duplicate:false,oldClip:false
               },'the canonical female-two must not load previous synthetic region pieces');
               await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','char-002','front'));
               await page.waitForFunction(()=>
-                window.PaperchalkL2DLibrary?.get('enemy')?.layers?.length===17,
+                window.PaperchalkL2DLibrary?.get('enemy')?.layers?.length===18,
                 null,{timeout:25000});
               const secondary=await page.evaluate(()=>{
                 const a=window.PaperchalkL2DLibrary.get('enemy'),
@@ -274,14 +274,14 @@ jobs:
                   count:Object.keys(p).length,hierarchy:!!a.model.bodyHierarchy,
                   hair:!!p.front_hair&&!!p.back_hair,
                   eyes:!!p.eyewhite&&!!p.irides&&!!p.eyelash,
-                  hand:!!p.handwear,feetDrift:Math.hypot(foot.x-xy.x,foot.y-xy.y)};
+                  hand:!!p.hand_raised&&!!p.hand_lowered&&!p.handwear,feetDrift:Math.hypot(foot.x-xy.x,foot.y-xy.y)};
               });
               assert.deepEqual(secondary,{
                 id:'char-002-psd-v1',provenance:'original-psd',
-                count:17,hierarchy:true,hair:true,eyes:true,hand:true,feetDrift:0
+                count:18,hierarchy:true,hair:true,eyes:true,hand:true,feetDrift:0
               },'female-two game must animate original independent hair and eyes with feet fixed');
               assert.deepEqual(errors,[],name+' console errors');
-              console.log('PASS 17 real heroine parts + one-click saved art; female two 17 authentic Photoshop parts with no old 7-region actor',name);
+              console.log('PASS 17 real heroine parts + one-click saved art; female two 17 original PSD layers split into 18 arm-corrected meshes with no old 7-region actor',name);
               await page.close();
             }
           }finally{await browser.close();}
