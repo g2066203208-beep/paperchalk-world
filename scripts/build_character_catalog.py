@@ -13,7 +13,7 @@ from build_l2d_library import build as build_l2d_library
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 ART=ROOT/'site'/'assets'/'characters'
 OUTPUT=ROOT/'site'/'characters.catalog.json'
-KNOWN={'protagonist':'女主角','char-002':'女二号','char-016':'男二号'}
+KNOWN={'protagonist':'女主角','char-002':'女二号'}
 
 def discover():
     entries={}
@@ -31,6 +31,7 @@ def discover():
                 char_id,face=match.group(1),match.group(2).lower()
             else:
                 char_id,face=stem,'front'
+        if char_id=='char-016':continue  # Never resurrect removed male-second import.
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',char_id):
             print('Skip unsupported filename:',f.name)
             continue
@@ -49,6 +50,7 @@ def discover():
             title=(identity.get('displayName') or {}).get('value') or ident
             if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',ident):
                 continue
+            if ident=='char-016':continue
             if ident not in entries:
                 entries[ident]={'id':ident,'label':str(title or ident),
                     'front':'','back':'','draft':True,'state':data.get('recordState','concept_only')}
@@ -82,6 +84,7 @@ def discover():
     modules = build_l2d_library()['modules']
     for module in modules:
         ident = module['id']
+        if ident=='char-016':continue
         # Explicit guard against replacing the already-approved female leads.
         if ident in ('protagonist','char-002'):
             raise ValueError(f'L2D module {ident} is protected; use an internal source-rig alias')
