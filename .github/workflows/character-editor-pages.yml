@@ -12,12 +12,10 @@ on:
       - 'scripts/fix_protagonist_neck_v4.py'
       - 'scripts/build_char002_v4.py'
       - 'scripts/build_char002_part_rig.py'
-      - 'scripts/build_char016_psd_rig.py'
       - 'site/dev/**'
       - 'site/characters.catalog.json'
       - 'site/assets/characters/**'
       - 'site/l2d/part-rig.js'
-      - 'site/assets/l2d/source-masks/**'
       - 'scripts/build_character_catalog.py'
       - '.github/workflows/character-editor-pages.yml'
   workflow_dispatch:
@@ -47,7 +45,6 @@ jobs:
           python3 scripts/fix_protagonist_neck_v4.py
           python3 scripts/build_char002_v4.py
           python3 scripts/build_char002_part_rig.py
-          python3 scripts/build_char016_psd_rig.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
           test -s site/index.html
