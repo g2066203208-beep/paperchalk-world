@@ -162,3 +162,11 @@ body.rig-authoring .stage{background:#101c2a}
  body.rig-authoring #studio-library #studio-back{font-size:10px;padding:6px 4px}
  body.rig-authoring .stage{height:38dvh!important;min-height:260px!important;max-height:340px!important}
 }
+
+/* Final portrait safety: no preview toolbar crosses eyes or hair roots. */
+body.rig-authoring .stage .stage-toolbar{display:none!important}
+body.rig-authoring #part-rig-panel .rig-h strong{flex:1 1 auto;min-width:0}
+body.rig-authoring #part-rig-panel .rig-h #rig-pause{
+ flex:0 0 auto;min-height:34px;background:#24505e;border:1px solid #538a91;
+ color:#e5fcfc;font-size:11px;padding:6px 9px
+}
