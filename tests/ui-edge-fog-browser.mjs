@@ -229,7 +229,18 @@ try{
     assert.equal(await page.locator('#actor-player-l2d').count(),1,'L2D renderer must remain untouched');
     // Verify approved HUD on the requested actual bedroom module as well.
     await page.goto(target.replace('scene=classroom','scene=bedroom'),{waitUntil:'domcontentloaded'});
-    await page.locator('#hud-top').waitFor({state:'visible'});
+    await page.waitForTimeout(900);
+    const bedroomInit=await page.evaluate(()=>({
+      url:location.href,scene:document.querySelector('#scene')?.dataset.scene,
+      rootHidden:document.querySelector('#novel-ui')?.hidden,
+      hudVisible:!!document.querySelector('#hud-top')?.getClientRects().length,
+      dialogueHidden:document.querySelector('#dialogue')?.hidden,
+      registry:window.PAPERWORLD_SCENE_CATALOG?.map(x=>x.id),
+      runtime:Boolean(window.PaperWorldDialogue),
+      bodyClass:document.body.className
+    }));
+    console.log('BEDROOM INIT',JSON.stringify(bedroomInit),'PAGE ERRORS',errors.join('; '));
+    await page.locator('#hud-top').waitFor({state:'visible',timeout:6000});
     await expectEdge(page,'bottom',true);
     assert.equal(await page.locator('#dialogue').isVisible(),true,
       'Bedroom environment incorrectly hides its active dialogue');
