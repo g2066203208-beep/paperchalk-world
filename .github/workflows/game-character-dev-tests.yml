@@ -159,7 +159,35 @@ jobs:
               await page.locator('[data-quick="shoulders"]').fill('180');
               await page.locator('[data-quick="hips"]').fill('275');
               await page.locator('[data-quick="speed"]').fill('195');
-              await page.locator('#rig-quick-save').click(); // One click saves to the same game rig
+              await page.locator('#rig-quick-save').click(); // One click saves ArtMesh PNGs + game rig
+              await page.waitForFunction(()=>{
+                const b=document.querySelector('#rig-quick-save'),
+                  s=document.querySelector('#rig-quick-status');
+                return b&&!b.disabled&&s?.textContent?.includes('已保存');
+              },null,{timeout:30000});
+              // Verify that the ORIGINAL source bitmap is durable before navigation.
+              const artPersisted=await page.evaluate(async()=>{
+                const db=await new Promise((resolve,reject)=>{
+                  const r=indexedDB.open('pixelatelier-character-v1',1);
+                  r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+                });
+                try{
+                  const record=await new Promise((resolve,reject)=>{
+                    const tr=db.transaction('art','readonly'),
+                      q=tr.objectStore('art').get('character:protagonist');
+                    q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);
+                  });
+                  const src=record?.front?.find(x=>x.partId==='rear_hair');
+                  if(!src?.img)return {found:false};
+                  const img=new Image();img.src=src.img;await img.decode();
+                  const cvs=document.createElement('canvas');cvs.width=img.width;cvs.height=img.height;
+                  const g=cvs.getContext('2d');g.drawImage(img,0,0);
+                  return {found:true,pixel:[...g.getImageData(20,140,1,1).data]};
+                }finally{db.close();}
+              });
+              assert.equal(artPersisted.found,true,'source texture saved before rig');
+              assert.deepEqual(artPersisted.pixel,[255,49,176,255],
+                'one-click Save must persist original hair pixel before game navigation');
               await page.waitForFunction(async()=>{
                 const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
                 return saved?.idleProfile?.parts.front_hair===11&&
