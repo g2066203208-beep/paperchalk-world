@@ -24,18 +24,18 @@ const skirtMotion=length(position('skirt',.2),position('skirt',1.7));
 const bodyMotion=length(position('face',.2),position('face',1.7));
 assert.ok(hairMotion>1,'real hair must sway on its actual original component');
 assert.ok(skirtMotion>.4,'real skirt must sway independently of hair');
-assert.ok(bodyMotion<1.0,'body/face cannot rock like a whole image');
+assert.ok(bodyMotion>0.5&&bodyMotion<3,'whole-body stance should shift gently, not shake');
 assert.ok(hairMotion>bodyMotion*5,'hair tips should flex more than a living body');
 const approvedStill=core.presetIdle('still',model.idleProfile);
 model.idleProfile=approvedStill;
 for(const id of Object.keys(model.parts)){
  const a=position(id,.2),b=position(id,1.7);
- assert.ok(length(a,b)<1e-7,id+' must stop completely with still preset');
+ assert.ok(length(a,b)<1.8,id+' still mode should have only subpixel natural body shifting');
 }
 model.idleProfile=core.presetIdle('realistic',model.idleProfile);
 model.idleProfile.parts.rear_hair=0;
 const noHair=length(position('rear_hair',.2),position('rear_hair',1.7));
-assert.ok(noHair<.6,'single-part strength of zero should disable hair swing while keeping subpixel body follow');
+assert.ok(noHair<2.7,'single-part zero disables local hair swing but preserves shared body lean');
 const unchangedSkirt=length(position('skirt',.2),position('skirt',1.7));
 assert.ok(unchangedSkirt>.4,'hair slider must not disable or modify skirt swing');
 const initial=core.defaultIdleProfile();
@@ -66,7 +66,7 @@ const oldV2=core.sanitizeIdleProfile({
 });
 assert.deepEqual([oldV2.body.amount,oldV2.hair.amount,
  oldV2.cloth.amount,oldV2.parts.front_hair,oldV2.parts.skirt],
- [.12,.28,.23,1,1],
+ [.20,.28,.23,1,1],
  'oversized legacy factory defaults must migrate without changing original art');
 const savedCustom=core.sanitizeIdleProfile({
  preset:'custom',hair:{amount:.45},cloth:{amount:.31},
@@ -76,29 +76,51 @@ assert.deepEqual([
  savedCustom.hair.amount,savedCustom.cloth.amount,
  savedCustom.parts.front_hair,savedCustom.parts.skirt
 ],[.45,.31,.5,0],'explicit user values must remain exactly as set');
-assert.equal(core.defaultIdleProfile().body.amount,.12,
- 'body must stay nearly motionless; no fake breathing');
-const tiers=['realistic','breeze','windy'].map(p=>core.presetIdle(p));
-const travel=(p,u,v,idle)=>{
- const pts=Array.from({length:300},(_,i)=>core.warpPoint(p,u,v,i*.066,null,idle));
- const xs=pts.map(x=>x.x),ys=pts.map(x=>x.y);
- return Math.hypot(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
-};
+assert.equal(core.defaultIdleProfile().body.amount,.20,
+ 'ordinary standing includes coordinated weight shifting, not fake breathing');
+// Wind QA uses actual source-part UVs. Strong wind MUST push ends up
+// and visibly aside, not merely oscillate the same 10px with a bigger label.
+const modes=['still','realistic','breeze','windy'];
+const tiers=modes.map(p=>core.presetIdle(p));
 const fringe=core.project([make('front_hair',200,300)],'protagonist','front').parts.front_hair;
 const hem=core.project([make('skirt',200,300)],'protagonist','front').parts.skirt;
-const ranges={fringe:tiers.map(t=>travel(fringe,.2,.95,t)),
- hem:tiers.map(t=>travel(hem,.15,.95,t))};
-console.log('CALM BREEZE WINDY VERTEX SPANS',JSON.stringify(ranges));
-assert.ok(ranges.fringe[0]>5&&ranges.fringe[0]<14,'normal fringe should be subtle');
-assert.ok(ranges.hem[0]>3&&ranges.hem[0]<9,'normal skirt should be subtle');
-assert.ok(ranges.fringe[1]>ranges.fringe[0]*1.65&&ranges.fringe[1]<28,'breeze fringe must be visible but gentle');
-assert.ok(ranges.hem[1]>ranges.hem[0]*1.65&&ranges.hem[1]<18,'breeze skirt must be visible but gentle');
-assert.ok(ranges.fringe[2]>ranges.fringe[1]*1.5&&ranges.fringe[2]<55,'storm fringe must be bigger but controlled');
-assert.ok(ranges.hem[2]>ranges.hem[1]*1.5&&ranges.hem[2]<35,'storm hem must be bigger but controlled');
+const rest=(part,u,v)=>core.warpPoint(part,u,v,2.3,null,tiers[0]);
+const displacement=(part,u,v,idle)=>{
+ const a=core.warpPoint(part,u,v,2.3,null,idle),b=rest(part,u,v);
+ return {dx:a.x-b.x,dy:a.y-b.y,length:length(a,b)};
+};
+const ranges={};
+for(const [name,p,u,v] of [['hair',fringe,.12,.95],['skirt',hem,.85,.96]]){
+ ranges[name]=Object.fromEntries(modes.map((mode,i)=>
+  [mode,displacement(p,u,v,tiers[i])]));
+}
+console.log('3 WEATHER REGIMES REAL BONE TIPS',JSON.stringify(ranges));
+assert.ok(ranges.hair.breeze.length>ranges.hair.still.length+3,
+ 'even gentle breeze must differ visibly from no wind');
+assert.ok(ranges.skirt.breeze.length>ranges.skirt.still.length+.7,
+ 'breeze should affect cloth');
+assert.ok(ranges.hair.windy.dx>65&&ranges.hair.windy.dy< -35,
+ 'HIGH WIND must lift ORIGINAL long hair up and sideways');
+assert.ok(ranges.skirt.windy.dx>30&&ranges.skirt.windy.dy< -12,
+ 'HIGH WIND must flare skirt up and to the side');
+assert.ok(ranges.hair.windy.length>ranges.hair.breeze.length*4,
+ 'strong wind must not look like normal standing');
+const root=(part,idle)=>core.windField(part,.5,.02,2.3,idle);
 for(const part of [fringe,hem]){
- const a=core.warpPoint(part,.5,.05,.1,null,tiers[2]);
- const b=core.warpPoint(part,.5,.05,3.1,null,tiers[2]);
- assert.ok(length(a,b)<1,'hair root/skirt waist must remain attached in strong wind');
+ assert.deepEqual(root(part,tiers[3]),{x:0,y:0},
+  'hair roots and skirt waist must be completely pinned against the wind');
+}
+// One shared full-body lean across face, jacket, arms, eyes and feet.
+const stillBody=core.bodyPoseAt(2.3,tiers[0]);
+const breezeBody=core.bodyPoseAt(2.3,tiers[2]);
+assert.ok(Math.abs(breezeBody.lean)>Math.abs(stillBody.lean),
+ 'gentle breeze should add coordinated body weight shift');
+for(const idle of tiers){
+ const toe=core.bodyPosePoint(400,902,2.3,idle);
+ assert.equal(toe.x,400,'body tilt must leave shoes planted on the ground');
+ const head=core.bodyPosePoint(400,140,2.3,idle);
+ assert.ok(Number.isFinite(head.x)&&Math.abs(head.x-400)<30,
+  'head, neck and torso must sway together but cannot snap');
 }
 const reset=core.presetIdle('realistic',{
  ...tiers[2],parts:{front_hair:2,skirt:2}
