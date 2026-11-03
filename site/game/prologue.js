@@ -162,6 +162,9 @@ function cue(index){
  fx.className=''; // restart individual short impacts
  void fx.offsetWidth;
  fx.className='prologue-'+type;
+ view.dataset.prologueCue='';
+ void view.offsetWidth;
+ view.dataset.prologueCue=type;
  if(type==='reveal'||index>=13)setFemaleVisible(true);
  else setFemaleVisible(false);
  if(type==='ending')view.dataset.prologueEnding='true';
@@ -171,7 +174,7 @@ function cue(index){
 async function ensureCharacter(){
  // This is a temporary story casting choice, NOT a write to the DEV slot
  // or a replacement of the user's uploaded L2D/rig and saved preferences.
- for(let frame=0;frame<180&&started&&!disposed;frame++){
+ for(let frame=0;frame<900&&started&&!disposed;frame++){
   const dev=root.PaperchalkCharacterDev;
   if(dev?.ready){
    if(!ownsEnemy){
@@ -201,7 +204,7 @@ function enter(){
 async function leave(){
  if(!started)return;
  started=false;disposed=true;
- if(view){view.classList.remove('prologue-first-person');delete view.dataset.prologueEnding;}
+ if(view){view.classList.remove('prologue-first-person');delete view.dataset.prologueEnding;delete view.dataset.prologueCue;}
  if(fx){fx.hidden=true;fx.className='';}
  if(enemy){enemy.dataset.prologuePose='';}
  const previous=oldEnemy;oldEnemy=null;
