@@ -62,5 +62,44 @@
       horizonY,physicalRatio,depthRatio,relativeVisibleHeight,
       referenceVisible,actorVisible};
   }
-  return Object.freeze({CHARACTER_DATA,FLOOR_ORIGIN,floorMotion,metricsFor,fit});
+  // Camera-space depth convention matches CSS translateZ: positive Z is
+  // closer to the camera. This bounded pinhole ratio is dimensionless.
+  // A grounded actor looks smaller as Z decreases (farther away).
+  const CAMERA=Object.freeze({focalLength:1150,referenceZ:160,
+    minDenominator:180,maxScale:4.5});
+  function depthScale(z,referenceZ=CAMERA.referenceZ,
+      focalLength=CAMERA.focalLength){
+    if(!Number.isFinite(z)||!Number.isFinite(referenceZ)||
+       !Number.isFinite(focalLength)||focalLength<=referenceZ+CAMERA.minDenominator)
+      return NaN;
+    const near=Math.max(CAMERA.minDenominator,focalLength-z);
+    const ref=focalLength-referenceZ;
+    return Math.min(CAMERA.maxScale,Math.max(.1,ref/near));
+  }
+  // The authoritative baseline is the ORIGINAL 1024x1024 L2D visible
+  // crown-to-shoe span; different characters have different transparent
+  // margins. Size normalization is independent of their canvas dimensions.
+  // 3D DEV already adds camera projection; normal 2D game needs the
+  // mathematically equivalent Z scale factor.
+  function renderScale({actorHeightCm,referenceHeightCm,
+      actorCanvasHeight,referenceCanvasHeight,actorVisibleFraction,
+      referenceVisibleFraction,actorZ,referenceZ=CAMERA.referenceZ,
+      focalLength=CAMERA.focalLength,dev=false}={}){
+    if(![actorHeightCm,referenceHeightCm,actorCanvasHeight,
+      referenceCanvasHeight,actorVisibleFraction,referenceVisibleFraction,actorZ]
+      .every(Number.isFinite)||actorHeightCm<=0||referenceHeightCm<=0||
+      actorCanvasHeight<=0||referenceCanvasHeight<=0||
+      actorVisibleFraction<=0||referenceVisibleFraction<=0)
+      return {valid:false,reason:'invalid-character'};
+    const stature=actorHeightCm/referenceHeightCm;
+    const correction=(referenceCanvasHeight*referenceVisibleFraction*stature)/
+      (actorCanvasHeight*actorVisibleFraction);
+    const distance=depthScale(actorZ,referenceZ,focalLength);
+    if(!Number.isFinite(distance))return {valid:false,reason:'invalid-camera'};
+    const scale=correction*(dev?1:distance);
+    return {valid:Number.isFinite(scale),scale,correction,distance,
+      stature,dev,actorZ,referenceZ};
+  }
+  return Object.freeze({CHARACTER_DATA,FLOOR_ORIGIN,CAMERA,
+    floorMotion,depthScale,renderScale,metricsFor,fit});
 });
