@@ -159,23 +159,32 @@ function sync(){
     const depthFactor=projection.depthScale(effectiveZ,baselineZ);
     const appliedScale=automatic&&!dev&&Number.isFinite(depthFactor)
       ?Math.max(.5,Math.min(1.65,depthFactor)):1;
-    const originX=(shoe.x*100).toFixed(4)+'%';
-    const originY=(shoe.y*100).toFixed(4)+'%';
-    // Scaling about the ACTUAL shoe contact ensures the sole never moves.
-    // The invisible IMG, animated ArtMesh and native V4 are always aligned.
-    for(const surface of [img,canvas]){
-      if(surface.style.transformOrigin!==originX+' '+originY)
-        surface.style.transformOrigin=originX+' '+originY;
-      if(surface.style.scale!==String(fmt(appliedScale)))
-        surface.style.scale=String(fmt(appliedScale));
-    }
+    // CSS's independent `scale` longhand drifted the shoe anchor by 11px
+    // in Chromium's nested perspective scene. Apply a single explicit
+    // affine matrix with origin (0,0), translating the shoe by (1-scale)*heel
+    // in CSS layout pixels BEFORE scaling. Never upscale the source by >1.65.
+    const applySoleZoom=(surface,heelX,heelY)=>{
+      const scale=fmt(appliedScale);
+      const changed=Math.abs(scale-1)>.0005;
+      const transform=changed
+        ?'translate('+fmt(heelX*(1-scale))+'px,'+
+           fmt(heelY*(1-scale))+'px) scale('+scale+')':'';
+      if(surface.style.scale)surface.style.scale='';
+      if(surface.style.transformOrigin!=='0px 0px')
+        surface.style.transformOrigin='0px 0px';
+      if(surface.style.transform!==transform)surface.style.transform=transform;
+    };
+    // Invisible layout IMG and visible ArtMesh canvas have the same CSS
+    // position/size; both must receive identical geometry.
+    const heelX=img.offsetWidth*shoe.x;
+    const heelY=img.offsetHeight*shoe.y;
+    applySoleZoom(img,heelX,heelY);
+    applySoleZoom(canvas,heelX,heelY);
     const native=window.PaperchalkL2D?.get(id)?.clip;
     if(native?.type==='native'&&native.img){
-      const heelX=img.offsetLeft+img.offsetWidth*shoe.x;
-      const heelY=img.offsetTop+img.offsetHeight*shoe.y;
-      native.img.style.transformOrigin=
-        fmt(heelX-native.img.offsetLeft)+'px '+fmt(heelY-native.img.offsetTop)+'px';
-      native.img.style.scale=String(fmt(appliedScale));
+      applySoleZoom(native.img,
+        img.offsetLeft+heelX-native.img.offsetLeft,
+        img.offsetTop+heelY-native.img.offsetTop);
     }
     const shoeLocalY=originalRootTop(root,worldH)+
       img.offsetTop+img.offsetHeight*shoe.y;
