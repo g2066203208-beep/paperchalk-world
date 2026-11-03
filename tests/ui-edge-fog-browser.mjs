@@ -156,17 +156,18 @@ try{
       const phone=document.getElementById('phone-ui');
       const frame=phone.querySelector('.phone-device');
       const screen=phone.querySelector('.phone-screen');
+      const shell=frame.querySelector('.phone-shell-art');
       const root=document.getElementById('novel-ui');
       return {height:phone.offsetHeight,width:phone.offsetWidth,
-        frameBackground:getComputedStyle(frame).backgroundImage,
+        frameImage:shell?.currentSrc||'',frameLoaded:!!shell?.complete&&shell.naturalWidth>0,
         framePseudo:getComputedStyle(frame,'::before').content,
         screen:{x:screen.offsetLeft,y:screen.offsetTop,width:screen.offsetWidth,height:screen.offsetHeight},
         root:{width:root.offsetWidth,height:root.offsetHeight}};
     });
-    assert.ok(phoneGeometry.frameBackground.includes('char001-cat-ear-shell.webp'),
-      'Phone still uses the fake gradient CSS frame instead of the approved art: '+JSON.stringify(phoneGeometry));
+    assert.ok(phoneGeometry.frameImage.includes('char001-cat-ear-shell.webp')&&phoneGeometry.frameLoaded,
+      'Original cat-ear smartphone art failed to load visibly: '+JSON.stringify(phoneGeometry));
     assert.equal(phoneGeometry.framePseudo,'none','Old fake CSS cat ears are still present');
-    assert.ok(phoneGeometry.height>phoneGeometry.root.height*.7&&phoneGeometry.height<=phoneGeometry.root.height*.9,
+    assert.ok(phoneGeometry.height>phoneGeometry.root.height*.87&&phoneGeometry.height<=phoneGeometry.root.height*.92,
       'Phone size is not scaled to logical game viewport: '+JSON.stringify(phoneGeometry));
     assert.ok(phoneGeometry.screen.x>0&&phoneGeometry.screen.y>0&&
       phoneGeometry.screen.x+phoneGeometry.screen.width<=phoneGeometry.width&&
