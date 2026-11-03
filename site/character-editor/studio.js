@@ -271,11 +271,13 @@ async function storePartRig(rig){
 }
 async function saveToGame(){
  if(!currentId)return;
- // One primary Save: flush rig snapshots before painting and navigation.
+ // Save the original edited ArtMesh textures BEFORE the rig snapshot. The
+ // committed rig is the save marker after images are durable: navigating
+ // immediately to the game cannot race ahead and load stale source PNGs.
  const rig=window.PaperchalkPartRigStudio;
- if(rig?.state?.active||rig?.state?.dirty)await rig.save();
  clearTimeout(correctionTimer);
  await ed.save();
+ if(rig?.state?.active||rig?.state?.dirty)await rig.save();
  if(v4)await persistCorrections();
  for(const f of ['front','back'])await persistEditedComponents(f);
  for(const f of ['front','back'])await persistSkeleton(f);
