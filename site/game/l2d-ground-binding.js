@@ -124,9 +124,12 @@ function originalRootTop(root,rigHeight){
 function sync(){
   const y=cssValue('--dev-floor-y',ORIGIN.y);
   const z=cssValue('--dev-depth-ground',ORIGIN.z);
-  const worldH=Math.max(1,rig.clientHeight);
   const h=Math.max(1,view.clientHeight);
   const dev=view.classList.contains('dev-mode');
+  // DEV panel is display:none in normal game: rig.clientHeight is ZERO.
+  // Never project the entire world's horizon against that hidden 0px box.
+  const worldH=Math.max(1,dev?rig.clientHeight:h);
+  const worldW=Math.max(1,dev?rig.clientWidth:view.clientWidth);
   const floorY=worldH*y/100;
   const dz=dev?z-ORIGIN.z:0;
   const worldDepthShift=z-ORIGIN.z;
@@ -224,8 +227,8 @@ function sync(){
     // World X and Z determine the 3D floor contact point. The 2D roots
     // remain vertical; never rotate the actual bones with the floor grid.
     const worldX=(root.id==='enemy-depth-root'
-       ? (rig.clientWidth-root.offsetWidth)*.5:root.offsetLeft)+
-       img.offsetLeft+img.offsetWidth*shoe.x-rig.clientWidth*.5;
+       ? (worldW-root.offsetWidth)*.5:root.offsetLeft)+
+       img.offsetLeft+img.offsetWidth*shoe.x-worldW*.5;
     const relativeZ=actorZ+dz-z;
     root.dataset.groundAttached='true';
     root.dataset.shoeContact=shoe.detected?'mesh-alpha':'bottom-edge';
