@@ -104,8 +104,13 @@ try{
     // parent's exterior cannot represent that art. Normalize ONLY the test
     // parent translation so its marker stays inside the billboard's own
     // clip/hit region; then assert real compositor order.
-    enemy.dataset.testOriginalTranslate=enemy.style.translate;
-    enemy.style.translate='0px';
+    // Background rig keeps writing shoe-ground translations during render.
+    // A test-only !important stylesheet wins over those per-frame inline
+    // writes. Remove it immediately after pixel probes.
+    const normalizer=document.createElement('style');
+    normalizer.id='fog-test-billboard-normalizer';
+    normalizer.textContent='#view #enemy-depth-root{translate:0px !important}';
+    document.head.append(normalizer);
     const create=(root,id,color,x,y)=>{
       const el=document.createElement('div');
       el.id=id;
@@ -192,9 +197,7 @@ try{
     edge.hidden=false;
     document.getElementById('enemy-fog-probe').remove();
     document.getElementById('player-fog-probe').remove();
-    const enemy=document.getElementById('enemy-depth-root');
-    enemy.style.translate=enemy.dataset.testOriginalTranslate||'';
-    delete enemy.dataset.testOriginalTranslate;
+    document.getElementById('fog-test-billboard-normalizer')?.remove();
   });
   await page.screenshot({path:'artifacts/fog-layer/'+cfg.name+'-protagonist-outside-enemy-inside.png'});
   await page.evaluate(()=>document.getElementById('novel-ui').hidden=true);
