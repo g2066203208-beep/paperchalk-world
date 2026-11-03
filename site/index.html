@@ -102,6 +102,54 @@ body.mobile-mode.virtual-landscape #view{
 
 
 
+/* APPROVED TOP HUD: reference image only. No boards, outlines, smoke
+   overlays, icons elsewhere, or changes to camera, L2D or dialogue. */
+#hud-top{
+  position:absolute;top:max(8px,3.45cqh);
+  left:25.6cqw;right:2.65cqw;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:clamp(12px,2.0cqw,42px);
+  white-space:nowrap;pointer-events:none;
+  color:#f5f5f1;font-family:var(--font-ui);
+  text-shadow:0 1px 5px #000;
+  font-size:clamp(11px,2.42cqh,23px);
+  line-height:1.18;font-variant-numeric:tabular-nums;
+}
+#hud-vitals,#hud-clock,.hud-stat{
+  display:flex;align-items:center;
+}
+#hud-vitals{gap:clamp(9px,1.42cqw,25px);min-width:0}
+.hud-stat{gap:clamp(6px,.67cqw,12px)}
+.hud-stat-icon{width:clamp(17px,2.95cqh,33px);height:clamp(17px,2.95cqh,33px);flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hud-segments{
+  display:flex;gap:clamp(1px,.20cqw,4px);
+  width:clamp(50px,7.15cqw,126px);height:clamp(4px,.64cqh,7px);
+  flex:none;
+}
+.hud-segment{position:relative;flex:1;min-width:0;background:rgba(245,245,241,.24);border-radius:1px;overflow:hidden}
+.hud-segment>i{position:absolute;inset:0 auto 0 0;background:#f5f5f1}
+.hud-exact{min-width:6ch;text-align:left;letter-spacing:0}
+.hud-divider{width:1px;height:clamp(16px,2.25cqh,26px);background:rgba(245,245,241,.62);flex:none}
+#hud-clock{flex:none;gap:clamp(7px,1.13cqw,20px);letter-spacing:.03em}
+#hud-clock .hud-moon{width:clamp(13px,2.02cqh,23px);height:clamp(13px,2.02cqh,23px);fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+@container (max-width:1100px){
+  #hud-top{left:22.5cqw;right:2.5cqw;gap:1.3cqw;font-size:clamp(10px,2.2cqh,17px)}
+  #hud-vitals{gap:clamp(6px,.9cqw,13px)}
+  .hud-stat{gap:clamp(4px,.55cqw,8px)}
+  .hud-segments{width:clamp(34px,6.5cqw,80px);gap:clamp(1px,.15cqw,3px)}
+  #hud-clock{gap:clamp(4px,.75cqw,10px)}
+}
+@container (max-width:740px){
+  #hud-top{left:18cqw;right:2cqw;font-size:clamp(9px,2.05cqh,13px)}
+  .hud-segments{width:clamp(23px,5.3cqw,52px)}
+  #hud-vitals{gap:clamp(3px,.65cqw,7px)}
+  .hud-stat{gap:3px}
+  .hud-exact{min-width:5.5ch}
+  #hud-clock{gap:3px}
+}
+/* Top widgets do not declare data-ui-fog-edge: their background remains
+   the scene's own black border. No additional top smoke when idle. */
+
 /* UI FOG V2: project-native fog, not a second painted gradient or black plate.
    The UI's transparent canvas reprojects the LIVE existing #fog framebuffer
    into a soft feather at whichever edge ACTUALLY owns visible UI content. */
@@ -451,6 +499,39 @@ body.mobile-mode.virtual-landscape #view{
     <nav id="top-menu" aria-label="游戏菜单">
       <button id="menu-toggle" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="menu-choices">☰</button>
     </nav>
+    <div id="hud-top" aria-label="游戏日期时间与角色状态">
+      <div id="hud-vitals" aria-label="生命、饥饿、理智">
+        <div class="hud-stat" data-stat="health" role="group" aria-label="生命 82/100">
+          <svg class="hud-stat-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 4.8c-2.2-2.2-5.8-2.2-8 0l-.6.6-.6-.6c-2.2-2.2-5.8-2.2-8 0s-2.2 5.8 0 8L12 21l8.6-8.2c2.2-2.2 2.2-5.8 0-8Z"/></svg>
+          <span class="hud-segments" id="hud-health-meter" aria-hidden="true"></span>
+          <span class="hud-exact" id="hud-health-value">82/100</span>
+        </div>
+        <span class="hud-divider" aria-hidden="true"></span>
+        <div class="hud-stat" data-stat="hunger" role="group" aria-label="饥饿 67/100">
+          <svg class="hud-stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4.4 2v6.5M6.6 2v6.5M8.8 2v6.5M6.6 8.5V22M4.4 8.5h4.4M18.7 2c-2.3 1.2-3.6 3.7-3.6 7.3v4.2h4.2V22M18.7 2v11.5"/>
+            <path d="M3.5 20.5 20.5 3.5M3.5 3.5l17 17" opacity=".7"/>
+          </svg>
+          <span class="hud-segments" id="hud-hunger-meter" aria-hidden="true"></span>
+          <span class="hud-exact" id="hud-hunger-value">67/100</span>
+        </div>
+        <span class="hud-divider" aria-hidden="true"></span>
+        <div class="hud-stat" data-stat="sanity" role="group" aria-label="理智 91/100">
+          <svg class="hud-stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 4.7A4.1 4.1 0 0 0 4.7 6a4.2 4.2 0 0 0-2 6 4 4 0 0 0 2.2 5.8A4.1 4.1 0 0 0 12 20m0-15.3A4.1 4.1 0 0 1 19.3 6a4.2 4.2 0 0 1 2 6 4 4 0 0 1-2.2 5.8A4.1 4.1 0 0 1 12 20m0-15.3V20"/>
+            <path d="M5 8.6c2.1-.1 3.3 1 3.3 3M4.3 15c1.8-1.1 3.5-.8 4.2.6M9 5.6c-1.4 2.2-.9 4.1 1 5.1M19 8.6c-2.1-.1-3.3 1-3.3 3M19.7 15c-1.8-1.1-3.5-.8-4.2.6M15 5.6c1.4 2.2.9 4.1-1 5.1"/>
+          </svg>
+          <span class="hud-segments" id="hud-sanity-meter" aria-hidden="true"></span>
+          <span class="hud-exact" id="hud-sanity-value">91/100</span>
+        </div>
+      </div>
+      <div id="hud-clock" aria-label="4月12日 周五 21点36分">
+        <span id="hud-date">4月12日</span>
+        <span id="hud-weekday">周五</span>
+        <span id="hud-time">21:36</span>
+        <svg class="hud-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 14.7A9 9 0 0 1 9.3 3.2a9.2 9.2 0 1 0 11.5 11.5Z"/></svg>
+      </div>
+    </div>
     <div id="top-actions" aria-label="对话控制" hidden aria-hidden="true">
       <button id="auto-button" type="button" aria-pressed="false">AUTO</button>
       <button id="log-button" type="button" aria-pressed="false">LOG</button>
@@ -876,6 +957,71 @@ void main(){
   const restartButton=document.getElementById('restart-button');
   const hideButton=document.getElementById('hide-button');
   const history=document.getElementById('history');
+
+  // Screenshot-matching HUD preview state. Combat/survival/game-time
+  // systems can supply their actual numeric values through this small API;
+  // we do not advance a fake clock or pretend these sample values are live.
+  const topHudValues={
+    health:{current:82,max:100},
+    hunger:{current:67,max:100},
+    sanity:{current:91,max:100}
+  };
+  const topHudClock={month:4,day:12,weekday:'周五',hour:21,minute:36};
+  const hudStatLabels={health:'生命',hunger:'饥饿',sanity:'理智'};
+  const capHudValue=(value,max)=>Math.max(0,Math.min(max,Math.round(value)));
+  function drawTopHud(){
+    for(const [key,stat] of Object.entries(topHudValues)){
+      const bar=document.getElementById('hud-'+key+'-meter');
+      const value=document.getElementById('hud-'+key+'-value');
+      const full=stat.current/stat.max*8;
+      if(bar.childElementCount!==8){
+        const pieces=Array.from({length:8},()=>{const el=document.createElement('span');
+          el.className='hud-segment';
+          el.appendChild(document.createElement('i'));
+          return el;
+        });
+        bar.replaceChildren(...pieces);
+      }
+      [...bar.children].forEach((piece,index)=>{
+        piece.firstElementChild.style.width=(Math.max(0,Math.min(1,full-index))*100).toFixed(1)+'%';
+      });
+      value.textContent=stat.current+'/'+stat.max;
+      bar.parentElement.setAttribute('aria-label',hudStatLabels[key]+' '+value.textContent);
+    }
+    const c=topHudClock;
+    document.getElementById('hud-date').textContent=c.month+'月'+c.day+'日';
+    document.getElementById('hud-weekday').textContent=c.weekday;
+    document.getElementById('hud-time').textContent=String(c.hour).padStart(2,'0')+':'+String(c.minute).padStart(2,'0');
+    document.getElementById('hud-clock').setAttribute('aria-label',
+      c.month+'月'+c.day+'日 '+c.weekday+' '+c.hour+'点'+c.minute+'分');
+  }
+  function updateTopHudStats(next){
+    for(const key of ['health','hunger','sanity']){
+      const patch=next?.[key];
+      if(!patch)continue;
+      const current=topHudValues[key];
+      const max=Number.isFinite(patch.max)&&patch.max>0?Math.round(patch.max):current.max;
+      const n=Number.isFinite(patch.current)?patch.current:current.current;
+      topHudValues[key]={current:capHudValue(n,max),max};
+    }
+    drawTopHud();
+  }
+  function updateTopHudClock(next){
+    if(next&&Number.isInteger(next.month)&&next.month>=1&&next.month<=12)topHudClock.month=next.month;
+    if(next&&Number.isInteger(next.day)&&next.day>=1&&next.day<=31)topHudClock.day=next.day;
+    if(next&&typeof next.weekday==='string'&&/^周[一二三四五六日]$/.test(next.weekday))topHudClock.weekday=next.weekday;
+    if(next&&Number.isInteger(next.hour)&&next.hour>=0&&next.hour<24)topHudClock.hour=next.hour;
+    if(next&&Number.isInteger(next.minute)&&next.minute>=0&&next.minute<60)topHudClock.minute=next.minute;
+    drawTopHud();
+  }
+  window.PaperWorldTopHUD=Object.freeze({
+    setStats:updateTopHudStats,setClock:updateTopHudClock,
+    snapshot:()=>({
+      stats:Object.fromEntries(Object.entries(topHudValues).map(([key,v])=>[key,{...v}])),
+      clock:{...topHudClock}
+    })
+  });
+  drawTopHud();
 
   // Generic fog adapter: any future top/right/left/bottom panel with
   // data-ui-fog-edge appears behind its own independently animated black fog.
