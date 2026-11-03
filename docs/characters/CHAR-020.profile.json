@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "recordCode": "CHAR-020",
   "canonicalId": "male-third-youthful-candidate",
-  "recordState": "concept_draft_not_approved_no_art_no_game_actor",
+  "recordState": "concept_draft_user_direction_confirmed_art_unapproved",
   "readableDocument": "docs/characters/CHAR-020_MALE_THIRD_PROFILE.md",
   "sourcePriority": [
     "user_confirmed",
@@ -22,16 +22,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "canonicalId": {
-        "value": "male-third-youthful-candidate",
+        "value": "male-third-fashionable-youth-candidate",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "displayName": {
-        "value": "男三／小正太系少年，暂称林见夏",
+        "value": "男三｜潮流花花公子型少年（原创；罗曼仅作气质参考）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "legalName": {
         "value": null,
@@ -40,22 +40,20 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "nicknames": {
-        "value": [
-          "小夏",
-          "见夏"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "aliases": {
         "value": [
           "男三",
-          "小正太少年"
+          "潮流少年",
+          "花花公子气质的俊俏男生"
         ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "status": "user_confirmed",
+        "source": "用户2026-11-04：男三参考《赛博朋克：边缘行者2》罗曼的少年气场，潮流花花公子正太；否定旧圆脸/软萌五官和错误身高视觉",
+        "notes": "这些是创作气质标签而非姓名"
       },
       "pronouns": {
         "value": "他",
@@ -64,15 +62,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "genderPresentation": {
-        "value": "男生，清秀少年感",
+        "value": "少年感、明显男性的正太型男高中生；气质时髦、自信、顽皮",
         "status": "user_confirmed",
-        "source": "用户2026-11-02：男三、小正太"
+        "source": "用户2026-11-04：男三参考《赛博朋克：边缘行者2》罗曼的少年气场，潮流花花公子正太；否定旧圆脸/软萌五官和错误身高视觉",
+        "notes": "用户明确指定的方向；不代表具体脸、身高、成图已经验收"
       },
       "ageYears": {
         "value": 16,
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "birthDate": {
         "value": null,
@@ -105,22 +104,22 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "schoolYear": {
-        "value": "高一（提案）",
+        "value": "同校高中生（年级待定）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "storyRole": {
         "value": "男三",
         "status": "user_confirmed",
-        "source": "用户2026-11-02：男三、小正太",
-        "notes": "仅男三身份是用户明确指定；声音线索剧情只是候选，记录在story和skills字段。"
+        "source": "用户2026-11-04：男三参考《赛博朋克：边缘行者2》罗曼的少年气场，潮流花花公子正太；否定旧圆脸/软萌五官和错误身高视觉",
+        "notes": "用户明确指定的方向；不代表具体脸、身高、成图已经验收"
       },
       "designStatus": {
-        "value": "仅448项创作候选，不代表原画、背面、PSD、L2D或游戏上线",
+        "value": "人物方向已修订；正面母图、背面、PSD、L2D、游戏注册均未通过验收",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       }
     },
     "family": {
@@ -199,10 +198,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "club": {
-        "value": "校园广播站音效组（候选）",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "grades": {
         "value": "整体中上，偏重听觉记忆",
@@ -211,23 +210,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "subjectStrengths": {
-        "value": [
-          "语言听辨",
-          "节奏识别",
-          "基础数学"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "subjectWeaknesses": {
-        "value": [
-          "大型体育项目",
-          "即兴当众陈述"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "workplace": {
         "value": null,
@@ -246,302 +238,302 @@
         "source": "CHAR-020角色设计草案2026-11-02"
       },
       "experience": {
-        "value": "会基础录音和音效剪辑（候选）",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "professionalGoals": {
-        "value": "希望制作自己的声音故事（候选）",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       }
     },
     "measurements": {
       "heightCm": {
-        "value": 158,
+        "value": 160,
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "weightKg": {
-        "value": 46,
+        "value": 48,
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "headBodyRatio": {
-        "value": 6.4,
+        "value": 6.8,
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "shoulderWidthCm": {
-        "value": 36,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "chestCircumferenceCm": {
-        "value": 77,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "waistCircumferenceCm": {
-        "value": 66,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "hipCircumferenceCm": {
-        "value": 80,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "torsoLengthCm": {
-        "value": 44,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "armSpanCm": {
-        "value": 155,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "inseamCm": {
-        "value": 72,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "shoeSize": {
-        "value": "CN 38–39，未测量",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "bodyBuild": {
-        "value": "骨架略小、自然纤细、健康的少年体态",
+        "value": "略矮于成年高中男生，比例匀称，偏瘦但有自然的男性肩颈线，不是矮胖娃娃体形",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "bodyMassDescription": {
-        "value": "轻度肌肉感，非女童也非肌肉型成年男性",
+        "value": "体型轻巧利落，肩背不过宽也不娘化，无幼儿比例",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "posture": {
-        "value": "肩部松弛，左腿自然承重",
+        "value": "背部自然挺直但带一点漫不经心的自信，骨盆不歪，足底平行",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "handDominance": {
-        "value": "右手惯用（提案）",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "gait": {
-        "value": "步幅小，脚步轻快",
+        "value": "动作轻快，步伐利落，有街头潮流感，不用大跨步",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "upperArmCircumferenceCm": {
-        "value": 22,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "forearmCircumferenceCm": {
-        "value": 20,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "wristCircumferenceCm": {
-        "value": 14.4,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "thighCircumferenceCm": {
-        "value": 43,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "calfCircumferenceCm": {
-        "value": 30,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "kneeCircumferenceCm": {
-        "value": 31,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "ankleCircumferenceCm": {
-        "value": 19,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "upperArmLengthCm": {
-        "value": 27,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "forearmLengthCm": {
-        "value": 23.5,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "handLengthCm": {
-        "value": 17.2,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "palmWidthCm": {
-        "value": 7.3,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "upperLegLengthCm": {
-        "value": 39.5,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "lowerLegLengthCm": {
-        "value": 36.5,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "kneeHeightCm": {
-        "value": 45,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "hipBreadthCm": {
-        "value": 30,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "shoulderBreadthCm": {
-        "value": 36,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "waistHeightCm": {
-        "value": 95,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "ribcageDepthCm": {
-        "value": 18,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "hipDepthCm": {
-        "value": 18,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "headWidthCm": {
-        "value": 14.8,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "faceLengthCm": {
-        "value": 19.4,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "faceWidthCm": {
-        "value": 14.1,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "footLengthCm": {
-        "value": 23.8,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "footWidthCm": {
-        "value": 9.1,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       }
     },
     "anatomy": {
       "headShape": {
-        "value": "短鹅蛋形头骨，略圆不幼儿化",
+        "value": "偏小的窄椭圆少年头骨；颧颊收紧，绝不圆球娃娃头",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "shoulderSlope": {
-        "value": "自然向下约6度",
+        "value": "自然男性肩线，轻微下斜，不塌肩",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "torsoDepth": {
-        "value": "上身自然轻薄且有体积",
+        "value": "偏轻薄但有正常少年胸廓",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "ribcageContour": {
-        "value": "制服内正常少年胸廓",
+        "value": "制服下的少年男性平整胸廓，肋廓体积明确",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "waistContour": {
-        "value": "直线型腰身，外套留松量",
+        "value": "略收束的直线型男性腰部",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "pelvisAndHips": {
-        "value": "自然窄骨盆视觉比例",
+        "value": "窄骨盆，骨架不刻意女性化",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "backContour": {
-        "value": "颈背平直，后衣片有轻褶",
+        "value": "肩背平顺，校服后衣片少量自然褶皱",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "bustThroughClothing": {
         "value": "男生平坦衬衫胸前轮廓",
@@ -550,28 +542,28 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "limbProportions": {
-        "value": "四肢自然匀称而非儿童四头身",
+        "value": "约6.8头身的真实少年四肢比例，腿不故意拉长，不是幼儿童身",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "handShape": {
-        "value": "小巧但结构完整、指尖略圆",
+        "value": "少年男生稍窄的掌形，手指骨节明确，十指自然完整",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "skinUndertone": {
-        "value": "温暖偏中性浅肤色",
+        "value": "健康自然浅暖肤色，不粉红娃娃皮",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "skinTexture": {
-        "value": "干净块面，不用塑料皮肤",
+        "value": "干净赛璐璐明暗，脸颊不过分粉嫩",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "scars": {
         "value": null,
@@ -598,10 +590,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "postureAsymmetry": {
-        "value": "左腿承重、右膝放松、头右倾3度",
+        "value": "纯正面中立站姿，轻微松弛，不倾头、不扭腰",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "mobilityNeeds": {
         "value": null,
@@ -610,46 +602,46 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "upperArmShape": {
-        "value": "上臂细但不骨感",
+        "value": "上臂略瘦但骨骼正常",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "forearmShape": {
-        "value": "前臂自然向腕部收束",
+        "value": "肘到腕自然收束的少年男性前臂",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "wristShape": {
-        "value": "腕骨柔和可辨",
+        "value": "纤细但明显的腕骨",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "thighShape": {
-        "value": "大腿匀称，非专业短跑腿型",
+        "value": "自然匀称，裤装不画成女性大腿线条",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "calfShape": {
-        "value": "小腿自然纤细",
+        "value": "裤管有合理膝踝宽度",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "kneeShape": {
-        "value": "膝关节结构清楚",
+        "value": "校裤下膝部自然结构",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "ankleShape": {
-        "value": "踝部细、鞋袜分界明确",
+        "value": "鞋裤交界清楚",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "legAxis": {
         "value": "腿轴自然平直，足尖微向外",
@@ -658,16 +650,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "upperLimbTaper": {
-        "value": "肩肘腕顺畅过渡",
+        "value": "双臂有自然的肩肘腕递进",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "lowerLimbTaper": {
-        "value": "直筒裤保留腿部体积",
+        "value": "腿部比例接近正常男性少年，裤管贴合骨骼",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "legMuscleDistribution": {
         "value": "普通青少年步行形成的轻度肌肉",
@@ -694,96 +686,90 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "handFingerLengthRatios": {
-        "value": [
-          1,
-          0.94,
-          0.96,
-          0.74,
-          0.69
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "bodySilhouetteType": {
-        "value": "小体型少年直线轮廓，外套略宽松",
+        "value": "小个子、轻巧利落的修身男高中生体形，衣服有明确肩线",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "shoulderToHipWidthRatio": {
-        "value": 1.2,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "waistToHipWidthRatio": {
-        "value": 0.86,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "headToShoulderWidthRatio": {
-        "value": 0.411,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未经母版测量不可给精确比例"
       }
     },
     "face": {
       "faceShape": {
-        "value": "圆润短鹅蛋脸，和女二、女三有不同眉眼骨相",
+        "value": "窄短六边形少年脸，颧侧轻收、面颊平整，区别于圆脸杏眼模板",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "forehead": {
-        "value": "额头稍高，被轻刘海遮住部分",
+        "value": "额头大小正常，被不对称碎刘海局部遮挡",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "cheekbones": {
-        "value": "颧骨平缓、颊部轻微饱满",
+        "value": "少年感的清晰浅颧骨，脸颊不鼓",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "jawline": {
-        "value": "自然微收，保留少年短方圆下颌",
+        "value": "有骨点的短直下颌线，不尖V、不圆球",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "chin": {
-        "value": "短而略方圆，不尖V",
+        "value": "短而平缓略方的少年男生下巴",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "noseBridge": {
-        "value": "小巧细直鼻梁",
+        "value": "细直略挺的鼻梁，正面有存在感",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "noseTip": {
-        "value": "圆润短鼻尖",
+        "value": "清晰小鼻尖，不是幼儿小圆鼻",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "mouthShape": {
-        "value": "小嘴，微笑时一侧形成浅酒窝",
+        "value": "一边嘴角略上挑的狡黠自信笑，非甜美双侧弧形",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "lips": {
-        "value": "薄唇，不涂口红",
+        "value": "细薄自然唇，去除粉色光泽和嘟嘴",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "teeth": {
         "value": "默认闭口；开怀笑可露自然上齿",
@@ -798,70 +784,70 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "eyebrows": {
-        "value": "较短的自然平眉，外端略柔和下落",
+        "value": "略粗而有折角的自然少年眉，一侧微挑",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyelidShape": {
-        "value": "上睑温柔的弧形",
+        "value": "上眼睑干净利落、眼尾轻微上扬",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyeShape": {
-        "value": "灰绿杏圆眼，横向略长而非超大玻璃眼",
+        "value": "中等大小的略窄杏眼，眼神敏捷带一点狡黠；不画圆形大眼",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyeSpacing": {
-        "value": "眼距中等微宽",
+        "value": "正常眼距，不刻意拉宽作娃娃感",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyeCornerAngle": {
-        "value": "外眼角比内眼角略低",
+        "value": "外眼角自然轻扬，产生狡黠感",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyeColor": {
-        "value": "低饱和灰绿色",
+        "value": "低饱和青灰绿，非罗曼的鲜亮荧光绿",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyeHex": {
-        "value": "#788977",
+        "value": "#6E8E8A",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "pupilColor": {
-        "value": "#35463D",
+        "value": "#273E40",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyeHighlights": {
-        "value": "一个中小主高光",
+        "value": "单个克制的小高光，绝不玻璃珠眼",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyelashes": {
-        "value": "克制短睫毛",
+        "value": "短少、不女性化的睫毛",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "defaultExpression": {
-        "value": "温柔又好奇的小幅闭口笑",
+        "value": "自信、略带得意的一侧嘴角微笑，眉眼轻挑，像很会聊天的坏小子",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "facialLandmarkSystem": {
         "value": "脸部包围盒坐标[0,1]，仅为未验收的视觉草图",
@@ -870,133 +856,112 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "facialLandmarksNormalized": {
-        "value": {
-          "leftEye": [
-            0.35,
-            0.45
-          ],
-          "rightEye": [
-            0.65,
-            0.455
-          ],
-          "nose": [
-            0.5,
-            0.655
-          ],
-          "mouth": [
-            0.5,
-            0.765
-          ],
-          "chin": [
-            0.5,
-            0.99
-          ]
-        },
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "faceLengthToWidthRatio": {
-        "value": 1.38,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "foreheadToFaceHeightRatio": {
-        "value": 0.31,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "jawWidthToFaceWidthRatio": {
-        "value": 0.72,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "cheekboneWidthToFaceWidthRatio": {
-        "value": 0.94,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "eyeCenterHeightRatio": {
-        "value": 0.45,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "interocularSpacingRatio": {
-        "value": 0.3,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "eyeWidthToFaceWidthRatio": {
-        "value": 0.22,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "eyebrowEyeGapRatio": {
-        "value": 0.065,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "noseTopHeightRatio": {
-        "value": 0.53,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "noseTipHeightRatio": {
-        "value": 0.655,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "noseWidthToFaceWidthRatio": {
-        "value": 0.1,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "mouthCenterHeightRatio": {
-        "value": 0.765,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "mouthWidthToFaceWidthRatio": {
-        "value": 0.3,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "philtrumLengthRatio": {
-        "value": 0.075,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "earTopHeightRatio": {
-        "value": 0.4,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "earBottomHeightRatio": {
-        "value": 0.67,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "eyeTailSlantDeg": {
-        "value": -2,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "eyelidOpennessBaseline": {
         "value": 0.68,
@@ -1005,89 +970,89 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "lipCornerSlopeDeg": {
-        "value": 2,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "browAngleDeg": {
-        "value": -1,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "expressionLandmarkVariants": {
         "value": {
-          "smile": "嘴角柔和抬起，浅酒窝",
-          "serious": "下眼睑轻收，嘴角水平",
-          "surprised": "眉稍抬、眼睑睁大",
-          "shy": "目光略避开，嘴角收束"
+          "smile": "单边嘴角得意上扬，眼神含笑",
+          "serious": "眉放平，嘴角收住",
+          "surprised": "眼睑稍开、眉起",
+          "flirtatious": "带分寸的调皮挑眉与轻笑，不做成人化性感表情"
         },
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "noseToMouthDistanceRatio": {
-        "value": 0.11,
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       }
     },
     "hair": {
       "hairBaseColor": {
-        "value": "低饱和浅茶棕、暖灰栗棕",
+        "value": "灰麦金色偏冷的短发，根部深亚麻色，发梢浅金灰；与罗曼的金发区别在低饱和及形状",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "hairHex": {
-        "value": "#957867",
+        "value": "#B7A080",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "hairHighlights": {
-        "value": "#B09A82",
+        "value": "#D7C49F",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "hairLength": {
-        "value": "耳上至耳中的短层次碎发",
+        "value": "耳上到耳中不对称短碎发，颈后干净利落",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "hairTexture": {
-        "value": "蓬松柔软、有空气感",
+        "value": "略硬的束状碎发，造型有锐度，不是软绵绵蓬松球",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "hairDensity": {
-        "value": "中等密度",
+        "value": "中等发量，头顶轻盈而不膨胀",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "parting": {
-        "value": "人物左偏7:3自然分发",
+        "value": "侧偏分，眉上碎刘海有方向性",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "bangs": {
-        "value": "4–5束轻刘海，额前一小束不听话地翘起",
+        "value": "不对称侧分碎刘海，一束越过眉心，其余露出额头",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "sidelocks": {
-        "value": "耳畔碎发不对称，右边一缕稍翘",
+        "value": "一侧耳上修短，另一侧保留少量角状碎发",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "ponytailCount": {
         "value": 0,
@@ -1122,24 +1087,24 @@
         "source": "CHAR-020角色设计草案2026-11-02"
       },
       "backSilhouette": {
-        "value": "圆润后脑＋轻薄碎发后颈",
+        "value": "有层次的短后脑外轮廓，后颈利落，无超大圆形发团",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       }
     },
     "wardrobe": {
       "outerwear": {
-        "value": "同校深蓝单排扣制服外套，尺寸比身体略宽松，前襟自然敞开以露出独特针织背心；不是手拎、肩扛或双手撑开的外套",
+        "value": "同校近黑深藏蓝修身西装校服，西装敞开穿，肩线清晰；袖口略收、有自然生活感",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "shirt": {
-        "value": "白色翻领长袖衬衫，外穿浅米白V领针织背心，白领与酒红领带从V口露出；衬衫袖口不遮挡手掌手指",
+        "value": "象牙白校园衬衫，最上方一粒扣略松，但整体整洁，领口不暴露胸口",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "blouse": {
         "value": null,
@@ -1147,10 +1112,10 @@
         "source": "CHAR-020角色设计草案2026-11-02"
       },
       "neckwear": {
-        "value": "同校酒红色小领带，结略微歪斜，前段从浅米白V领针织背心领口露出",
+        "value": "同校暗酒红领带，结轻微松开、略偏但保持有形",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "skirt": {
         "value": null,
@@ -1158,10 +1123,10 @@
         "source": "CHAR-020角色设计草案2026-11-02"
       },
       "trousers": {
-        "value": "炭灰色直筒长校裤",
+        "value": "深炭灰直筒略修身校裤，裤脚自然堆在鞋面，绝不紧身裤",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "socks": {
         "value": "深灰短袜",
@@ -1170,51 +1135,50 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "footwear": {
-        "value": "黑色乐福鞋",
+        "value": "干净的黑色皮质乐福鞋，鞋型略窄，保留校鞋规范",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "garmentLayerOrder": {
         "value": [
           "白衬衫",
-          "酒红领带（V领处可见）",
-          "浅米白V领针织背心",
-          "深蓝校服外套",
-          "炭灰长裤",
-          "深灰袜",
-          "圆头黑校鞋"
+          "暗酒红色略松领带",
+          "深灰色薄V领针织背心（选配，可不露）",
+          "敞开的近黑深藏蓝校服西装",
+          "炭灰修身直筒长裤",
+          "深灰短袜",
+          "黑色校鞋"
         ],
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "paletteHex": {
         "value": {
-          "navy": "#25354B",
-          "white": "#F2F0E9",
-          "tie": "#783B46",
-          "trousers": "#575962",
-          "hair": "#957867",
-          "eyes": "#788977",
-          "knitVest": "#E7DED0",
-          "shoes": "#222329"
+          "navy": "#202B3D",
+          "white": "#EEEDE8",
+          "tie": "#753945",
+          "trousers": "#4B4C55",
+          "hair": "#B7A080",
+          "eyes": "#6E8E8A",
+          "vest": "#363A43"
         },
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "fabrics": {
-        "value": "深蓝校服混纺斜纹外套、白色棉衬衫、浅米白薄针织V领背心、酒红织物领带、炭灰长裤",
+        "value": "校服深蓝毛混纺、西装清晰纹理、哑光象牙白棉衬衫、深色薄针织、炭灰长裤",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "sewingDetails": {
-        "value": "翻领与门襟清晰，袖口暗扣",
+        "value": "西装驳领、胸袋、袖扣清晰，袖口露少量白衬衫，不出现夸张飘带",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "pleats": {
         "value": "男裤无裙褶，保留正常裤腰压线",
@@ -1223,22 +1187,22 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "buttons": {
-        "value": "两颗哑光深色校服纽扣",
+        "value": "暗色非金色校服纽扣，校服敞开所以前襟纽扣可见但不扣合",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "pockets": {
-        "value": "外套侧袋、长裤斜插袋；默认手不插兜",
+        "value": "标准校服口袋，母版双手仍然露出不插兜",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "wearCondition": {
-        "value": "干净但自然有少量衣褶",
+        "value": "精心打理的时髦穿法，略有生活褶皱",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "seasonalVariants": {
         "value": "未来夏季同校款待定，本轮不画",
@@ -1253,76 +1217,80 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "permanentAccessories": {
-        "value": "可选极小的衣襟刺绣或同校徽章；不挂胸前收音设备，不佩戴遮脸帽子或影响手臂动画的物件。全套均为提案",
+        "value": "可选一枚极细银色单侧耳骨夹（原创细节，后续可删），不做义体或赛博朋克装饰",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "temporaryProps": {
-        "value": "首张正面/背面/待机立绘**双手必须空着**；不拿录音机、耳机、书本、书包、外套、手机、武器或其他物体。未来游戏武器由独立装备资源按动作加载，绝不直接烘焙到人物母图",
+        "value": "全身母版必须空手、五指露出，不持书包、手机、武器或外套；其他武器动作后续另做",
         "status": "user_confirmed",
-        "source": "用户在2026-11-02明确要求：人物立绘双手空着，后续需持武器",
-        "notes": "锁定：母版双手空，无手持物；仍可在运行时装备武器"
+        "source": "用户2026-11-04：男三参考《赛博朋克：边缘行者2》罗曼的少年气场，潮流花花公子正太；否定旧圆脸/软萌五官和错误身高视觉",
+        "notes": "用户明确指定的方向；不代表具体脸、身高、成图已经验收"
       }
     },
     "temperament": {
       "coreConfirmedTraits": {
         "value": [
-          "小正太型外貌方向，其他性格未获用户确认"
+          "男三的年轻男性正太方向",
+          "潮流花花公子气质",
+          "参考《赛博朋克：边缘行者2》罗曼的鲜明灵动少年气场，不照搬作品脸、衣服和义体"
         ],
         "status": "user_confirmed",
-        "source": "用户2026-11-02：男三、小正太"
+        "source": "用户2026-11-04：男三参考《赛博朋克：边缘行者2》罗曼的少年气场，潮流花花公子正太；否定旧圆脸/软萌五官和错误身高视觉",
+        "notes": "用户明确指定的方向；不代表具体脸、身高、成图已经验收"
       },
       "proposedTraits": {
         "value": [
-          "乖巧",
-          "亲切",
+          "自信",
+          "时髦",
           "机灵",
-          "细心",
-          "微微害羞",
-          "熟悉后调皮"
+          "爱开玩笑",
+          "嘴甜但不油腻",
+          "有一点自恋",
+          "知道什么时候收敛"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "strengths": {
         "value": [
-          "善于倾听",
-          "记得声音先后",
-          "重视朋友感受"
+          "临场反应快",
+          "擅长观察人情绪",
+          "容易与同学打开话题"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "weaknesses": {
         "value": [
-          "害怕冲突",
-          "不喜欢被当小学生",
-          "紧急情况会短暂慌张"
+          "偶尔自以为是",
+          "不习惯被无视",
+          "对枯燥流程缺乏耐心"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "socialEnergy": {
-        "value": "初见腼腆，熟悉后话变多",
+        "value": "社交主动，进门就敢搭话，不是怕生学弟",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "humorStyle": {
-        "value": "小声说一本正经的玩笑，然后先自己笑",
+        "value": "略有坏笑的俏皮吐槽、轻巧打趣，绝非甜甜卖萌",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "conflictStyle": {
-        "value": "先劝和，被误解时能坚持澄清",
+        "value": "能用玩笑化解尴尬，但触到底线时收起笑容",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "fears": {
         "value": "完全寂静的走廊（剧情候选）",
@@ -1337,16 +1305,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "stressResponse": {
-        "value": "先停住，随后冷静寻找声源",
+        "value": "短暂一惊后嘴硬说笑，随即观察出口和队友",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "defenseMechanism": {
-        "value": "用笑话缓解压力",
+        "value": "用轻浮表象掩饰真正的紧张，剧情尚未确认",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "moralLimits": {
         "value": "不会为了取乐欺负弱者",
@@ -1355,107 +1323,107 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "goals": {
-        "value": "想被当作真正有用的同伴",
+        "value": "想证明外表轻浮不代表没本事（剧情候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "contradictions": {
-        "value": "长相乖巧但并非没有主见",
+        "value": "看似玩世不恭，却比别人以为的细心（剧情候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "publicPersona": {
-        "value": "讲礼貌、软软的可靠学弟",
+        "value": "潮流、自信、稍显张扬的校园人气少年",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "privatePersona": {
-        "value": "机灵好奇、有一点倔",
+        "value": "敏锐，偶尔怕自己的认真不被看见（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "emotionalBaseline": {
-        "value": "温暖安静中带好奇",
+        "value": "精力明亮、眼神灵动，有一点狡黠",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "expressionRange": {
         "value": [
-          "微笑",
+          "狡黠微笑",
+          "挑眉",
+          "得意",
           "认真",
-          "惊讶",
-          "害羞",
-          "委屈",
-          "害怕"
+          "恼火",
+          "吃惊"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "defaultMicroExpression": {
-        "value": "眼睛轻亮、嘴角小幅上提",
+        "value": "略上扬的一侧嘴角，单眉轻抬，目光直视",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "signatureMicroExpressions": {
         "value": [
-          "听到怪声先眨眼",
-          "被夸会忍笑",
-          "思考时抿一下嘴"
+          "轻挑单眉",
+          "眼睛微眯露出狡黠笑",
+          "认真时立即收住笑容"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyesExpression": {
-        "value": "经常注意人的目光和声音方向",
+        "value": "眼神主动而敏捷，略微上挑，不是无辜圆眼",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "eyebrowsExpression": {
-        "value": "疑惑时单侧眉略高",
+        "value": "左或右单眉微扬，眉峰比旧图清晰",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "mouthExpression": {
-        "value": "常闭口微笑，认真时嘴角收平",
+        "value": "常见不对称一侧嘴角轻笑",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "bodyLanguageMood": {
-        "value": "小幅自然手势，兴奋会前倾一点",
+        "value": "动作利落、自然自信，不扭捏、不低头害羞",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "composureLevel": {
-        "value": "日常稳定、遇到真实异常会紧张",
+        "value": "日常自信，真正的危险面前也可能紧张",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       }
     },
     "psychology": {
       "innerNeed": {
-        "value": "证明自己不是只能被保护的小孩",
+        "value": "希望别人认可他的真本事，不只看到会聊天的外表（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "externalGoal": {
-        "value": "通过录音与观察帮同伴找证据",
+        "value": "未知具体主线；角色不自动获得录音或偷拍剧情",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "secretGoal": {
         "value": null,
@@ -1464,28 +1432,28 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "belief": {
-        "value": "小小的声音差异也能证明事实",
+        "value": "懂得打扮和会说话，不妨碍做靠谱的人（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "selfImage": {
-        "value": "努力可靠的学弟",
+        "value": "有品味、反应快、绝不无聊的同学",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "insecurities": {
-        "value": "在意别人总拿身高开玩笑",
+        "value": "不愿被人只当成小孩（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "regrets": {
-        "value": "一次没敢及时说出的提醒（未定剧情）",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "traumaIfStoryApproved": {
         "value": null,
@@ -1499,65 +1467,65 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "trustPattern": {
-        "value": "喜欢肯听他说话的人，受嘲弄后很难立刻恢复",
+        "value": "表面好相处，但会认真记住别人的轻视（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "breakingPoint": {
-        "value": "同伴否认他亲耳听到的声音",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "growthArc": {
-        "value": "从不敢提问到敢坚持复核证据",
+        "value": "从自我表现到愿意真正承担责任（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "values": {
         "value": [
-          "善良",
-          "细致",
-          "可靠",
-          "勇气"
+          "有趣",
+          "自由",
+          "朋友",
+          "尊重"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       }
     },
     "dialogue": {
       "voicePitch": {
-        "value": "自然中高少年男声，非女声或幼儿假声",
+        "value": "明亮的中高音少年男声，有男生声线，不做幼儿假声",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "voiceTimbre": {
-        "value": "清澈轻软但有男生声线",
+        "value": "清脆干净、速度灵活，轻微沙哑的笑音（提案）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "speechRate": {
-        "value": "熟人面前略快，讲证据时慢",
+        "value": "略快但咬字清楚",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "voiceVolume": {
-        "value": "中等偏小、兴奋时轻快",
+        "value": "正常偏活跃，谈笑时自然提高",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "tone": {
-        "value": "温柔友善有点顽皮",
+        "value": "有点轻佻的自信，不是甜美温柔",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "accents": {
         "value": "标准普通话，未决定地域口音",
@@ -1572,38 +1540,38 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "sentenceLength": {
-        "value": "短句为主，先提出小观察",
+        "value": "短句和俏皮插话为主",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "vocabulary": {
-        "value": "生活化，偶尔用广播设备术语",
+        "value": "轻松校园口语，偶尔潮流用语不过量",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "habitualPhrases": {
         "value": [
-          "欸？等一下。",
-          "不是啦，我很认真的。",
-          "好像不太对耶。"
+          "哦？你真这么想？",
+          "放心，这点小事交给我。",
+          "别这样看我，我可是认真的。"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "sarcasmLevel": {
-        "value": "低",
+        "value": "中低，重心是俏皮而非刻薄",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "laughStyle": {
-        "value": "先忍笑后短促轻笑",
+        "value": "嘴角先翘、短促轻笑",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "cryingStyle": {
         "value": "努力克制哽咽，不尖叫",
@@ -1619,45 +1587,45 @@
       },
       "dialogueExamples": {
         "value": [
-          "我真的听到了第二声铃响。",
-          "别总觉得我年纪小嘛。",
-          "嗯……刚才那段脚步声，不像同一个人。"
+          "哎，你这表情我可是看懂了。",
+          "少看不起我，个子小不代表没用。",
+          "行了，别吵，我有办法。"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "forbiddenVoicePatterns": {
-        "value": "幼儿腔、故作甜腻、霸道总裁、连续卖萌",
+        "value": "刻意奶音、软萌撒娇、女性嗓音、过度油腻成人情话、同男主的冷漠语气",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       }
     },
     "behavior": {
       "idlePose": {
-        "value": "自然正面全身站姿，双肩放松，重心轻偏左腿，两臂分置身体左右、肘部与躯干保留小空隙，双手完整外露，掌心自然内向、手指微弯，**双手不持物、不插兜、不交叉、不扶衣领**",
+        "value": "严格纯正面完整全身中立站姿，轻松但自信；双臂自然垂在身侧，肘与衣服边缘留空，双手五指露出且空手；双脚着地不交叉",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "signatureGesture": {
-        "value": "对话偶尔小幅点头或抬手示意；待机时两手始终空，未来武器动作切换为独立动作与手部装备图层",
+        "value": "交谈时轻挑眉，短促比手势；母版不画动作",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "greetingHabit": {
-        "value": "先点头再轻轻挥手",
+        "value": "先露出熟稔的半笑，再主动招呼",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "gazePattern": {
-        "value": "看人眼睛一瞬，害羞时迅速避开",
+        "value": "主动直视，偶尔带好奇探究，不躲闪害羞",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "blinkHabit": {
         "value": "自然短眨眼，听异常声源时停顿",
@@ -1666,34 +1634,34 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "eyebrowMotion": {
-        "value": "疑惑时单眉稍抬",
+        "value": "单眉微扬是招牌动作",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "headTilt": {
-        "value": "右倾3–5°，不是长期歪头",
+        "value": "母版头与躯干正对画面，只有表情不对称",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "walkCycle": {
-        "value": "较短步幅，轻快落地",
+        "value": "步伐轻快、落地利落，街头少年感",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "runningCycle": {
-        "value": "短步频率较快但体力不出众",
+        "value": "轻快步频、稳定重心",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "nervousTics": {
-        "value": "拇指轻轻摩擦食指指腹",
+        "value": "有时整理领带或衣领（仅剧情动画，不影响母版双手空置）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "sleepRhythm": {
         "value": "普通高中上学作息，细节待剧情",
@@ -1702,44 +1670,44 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "eatingStyle": {
-        "value": "小口吃饭，听别人说话时停下来",
+        "value": "自然随性，边聊天边吃（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "favoriteFoods": {
-        "value": "玉米浓汤和软面包（候选）",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "hobbies": {
         "value": [
-          "剪辑环境声音",
-          "折纸",
-          "听雨声"
+          "穿搭",
+          "音乐",
+          "社交小游戏（候选）"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "dailyRoutine": {
-        "value": "上课、课间帮广播站、放学回家；时间尚未落地",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "timeManagement": {
-        "value": "通常会早几分钟到",
+        "value": "不完全守时但会为了重要事提前到（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "transportation": {
-        "value": "步行或公交，取决于待定住处",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       }
     },
     "relationships": {
@@ -1750,28 +1718,28 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "schoolRelations": {
-        "value": "广播站前辈愿意教他设备（候选）",
+        "value": "人缘好、熟人多但不是人人喜欢（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "friendRelations": {
-        "value": "熟人面前亲切爱笑",
+        "value": "用玩笑亲近朋友，在关键时刻会认真（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "rivalRelations": {
-        "value": "不喜欢欺负小个子同学的人",
+        "value": "不喜欢被人当成无能小孩（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "mentorRelations": {
-        "value": "广播站指导老师（候选）",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "romancesIfStoryApproved": {
         "value": null,
@@ -1779,25 +1747,25 @@
         "source": "CHAR-020角色设计草案2026-11-02"
       },
       "relationshipToProtagonist": {
-        "value": "开始怕女主毒舌，后来明白她其实认真",
+        "value": "以自信俏皮对上女主冷淡吐槽，具体剧情待审定",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "relationshipToMaleLead": {
-        "value": "欣赏男主敢说真话但不喜欢旷课态度",
+        "value": "会主动逗寡言男主，具体关系待确定",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "trustFlags": {
         "value": [
-          "认真听他讲话增加信任",
-          "否认录音证据会降低信任"
+          "被认真对待增加信任",
+          "轻视其能力降低信任"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "secretsShared": {
         "value": null,
@@ -1812,52 +1780,45 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "relationProgression": {
-        "value": "初见羞涩→合作记录→主动提出线索→重大事件敢反对",
+        "value": "日常逗趣→真正展示可靠性，尚未定稿",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       }
     },
     "skills": {
       "talents": {
         "value": [
-          "听辨细小声音差异",
-          "复述节奏",
-          "事件按时间排序"
+          "察言观色",
+          "临场反应",
+          "带动气氛（候选）"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "weaknesses": {
         "value": [
-          "力气不大",
-          "不擅长公开争执",
-          "嘈杂时易分心"
+          "偶尔轻率",
+          "体力与力量非成年人级别（候选）"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "learnedSkills": {
         "value": [
-          "基础录音",
-          "音频剪辑",
-          "设备线路简单检查"
+          "审美穿搭（候选）"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "academicSkills": {
-        "value": [
-          "语文朗读",
-          "节奏逻辑",
-          "基础数学"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "workSkills": {
         "value": null,
@@ -1866,34 +1827,34 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "combatAbility": {
-        "value": "无专业战斗训练，卡牌体系优先信息支援",
+        "value": "未确认武器与职业；普通高中生而非默认枪手",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "physicalEndurance": {
-        "value": "日常体力中等略低",
+        "value": "体力普通偏灵活（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "agility": {
-        "value": "短距离行动灵活",
+        "value": "自然轻快，短距离动作敏捷（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "perception": {
-        "value": "对频率和声音顺序敏感，必须复核不具超能力",
+        "value": "敏感于人的表情与语气（候选）",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "charisma": {
-        "value": "友善容易沟通，不保证所有人无条件喜欢",
+        "value": "很会打开话题，带自信和少年感，但不过度撩拨他人",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "supernaturalPowers": {
         "value": null,
@@ -1908,16 +1869,16 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "equipment": {
-        "value": "角色基础立绘未装备任何手持物。武器等装备由游戏阶段另行设定与加载，首张原画不得画进手内",
-        "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "inventory": {
-        "value": "按剧情事件持有物品",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "healthIfStoryApproved": {
         "value": null,
@@ -1928,94 +1889,82 @@
     },
     "story": {
       "firstAppearance": {
-        "value": "候选：校园广播室外首次遇见主角",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "locationEntrances": {
-        "value": [
-          "校内走廊",
-          "广播室",
-          "教室"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "originStory": {
-        "value": "因日常录音习惯注意到不合常理的时间顺序",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "incitingEvent": {
-        "value": "走廊铃声出现两个互斥版本",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "keyScenes": {
-        "value": [
-          "播放两段矛盾录音",
-          "被质疑恶作剧后仍坚持说明",
-          "用回声推断门的方向"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "storyGoals": {
-        "value": "帮助主角验证异常时间与声源",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "branchingChoices": {
-        "value": [
-          "相信他的记录",
-          "要求重听核验",
-          "忽略记录"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "secrets": {
         "value": null,
         "status": "unknown",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "现有证据不足，不伪造信息"
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "reveals": {
-        "value": "录音线索要有证据链，不是万能解密",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "relationshipEvents": {
-        "value": "认真倾听他的证词使关系加深",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "questEvents": {
-        "value": "消失的第二声铃（候选支线）",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "alternateEndings": {
         "value": null,
         "status": "unknown",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "现有证据不足，不伪造信息"
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "chronologicalHistory": {
         "value": null,
         "status": "unknown",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "现有证据不足，不伪造信息"
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       }
     },
     "environment": {
@@ -2040,20 +1989,20 @@
       "roomOwnership": {
         "value": null,
         "status": "unknown",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "现有证据不足，不伪造信息"
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "itemOwnership": {
-        "value": "校园广播器材属于学校",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "furnitureConditions": {
-        "value": "场景默认不放与人在场状态有关的私人物品",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "weatherResponse": {
         "value": "雨天会注意雨点和铃声混合的声响",
@@ -2062,20 +2011,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "locationsVisited": {
-        "value": [
-          "教室",
-          "校内走廊",
-          "广播室"
-        ],
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "npcSchedule": {
-        "value": "校园上课与放学后广播活动，需与日程系统统一",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": null,
+        "status": "unknown",
+        "source": "旧候选撤销：无可靠依据",
+        "notes": "未确认；保留448字段，不填造假的精准数值/剧情"
       },
       "worldEra": {
         "value": "当代架空都市异常事件",
@@ -2110,23 +2055,23 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "poseReference": {
-        "value": "单人正面全身演出待机姿势；左右手五指清楚、完全空手，肘部与外套侧缘稍分离，方便以后做持武器动作与拆层",
+        "value": "纯正面单人立绘；不得生成两个相同人物或附加大头特写",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "expressionReferences": {
         "value": [
-          "微笑",
-          "害羞",
-          "好奇",
+          "自信单边坏笑",
+          "微挑眉",
           "认真",
-          "惊讶",
-          "害怕"
+          "疑惑",
+          "不服气",
+          "吃惊"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "silhouetteLocked": {
         "value": false,
@@ -2136,16 +2081,16 @@
       },
       "colorPalette": {
         "value": {
-          "hair": "#957867",
-          "eyes": "#788977",
-          "blazer": "#25354B",
-          "shirt": "#F2F0E9",
-          "tie": "#783B46",
-          "trousers": "#575962"
+          "hair": "#B7A080",
+          "eyes": "#6E8E8A",
+          "blazer": "#202B3D",
+          "shirt": "#EEEDE8",
+          "tie": "#753945",
+          "trousers": "#4B4C55"
         },
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "artStyle": {
         "value": "沿用项目已认可的日系二维GalGame赛璐璐立绘",
@@ -2154,46 +2099,46 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "imageAspectRatio": {
-        "value": "建议1024×1024留完整人像，不拼版",
+        "value": "推荐832×1216竖版独立全身人物，不做双人拼图",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "whiteBackgroundRule": {
-        "value": "纯白背景，无场景物件",
+        "value": "纯白或纯浅灰干净背景，不画地板墙面",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "fullBodyRule": {
-        "value": "头到鞋底完整",
+        "value": "头顶、鞋底、双手完全入镜",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "centeredRule": {
-        "value": "人物正中偏下，地面线稳定",
+        "value": "人物居中、正面、平视，留足头顶与鞋底边距",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "occlusionRule": {
-        "value": "双手五指不得被衣袖、口袋或躯干挡住；两臂与身体之间有可见空隙；不画手持物；衬衫、领带、针织背心、外套分层逻辑明确",
+        "value": "双手完整露出，袖口不遮五指，贴合人体的手臂与肩线；不插兜、不持物、不抓衣领",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "promptPositive": {
-        "value": "masterpiece, best quality, score_7, safe, 1boy, solo, original cute youthful male high school student with an age-appropriate sixteen-year-old appearance, petite healthy teenager, natural 6.4-head-tall body, short softly rounded oval face, short softly squared chin, muted grey-green almond-round eyes, gentle short straight brows, little natural nose, slight shy playful closed-mouth smile, fluffy short layered warm light tea-brown hair, airy uneven fringe and a small flipped forelock, same-school deep navy blazer worn open naturally, white collared shirt, light cream V-neck knit sweater vest clearly visible under blazer, small slightly crooked burgundy necktie emerging from the vest V-neck, charcoal straight school trousers, dark socks, black rounded loafers, full body, solo standing, front view, facing viewer, normal visual novel idle pose, weight slightly on left leg, relaxed shoulders, both arms naturally hanging at either side with a little space from torso, BOTH HANDS COMPLETELY EMPTY and visible, five natural fingers on each hand, palms inward and fingers relaxed, no objects held, no hands in pockets, no crossed arms, no touching blazer, clean white background, clear separate garment layers, clean silhouette, suitable for later Live2D arm rigging and independently equipped weapons, restrained anime visual novel cel shading, coherent cast art style, @akipekostyle<lora:akipekoanima_v1_1:1>",
+        "value": "masterpiece, best quality, score_7, newest, safe, highres, @akipekostyle, <lora:akipekoanima_v1_1:1>, 1boy, solo, one character only, original stylish teenage male student, boyish male appearance, youthful fashionable charming troublemaker, confident flirty playboy-like charisma expressed only as a mischievous grin, mischievous expressive personality, a little cocky, short and slender but anatomically mature teenage proportions, approximately 160 cm tall in character canon, 6.8 heads tall, clearly masculine narrow shoulders and straight hips, small angular-oval male face, subtle cheekbone definition, distinct slightly squared chin, not round cheeked, natural narrow slightly upturned gray-teal eyes of moderate size, sharp upper eyelids, one eyebrow slightly raised, expressive masculine brows, small straight defined nose, thin lips with a one-sided cheeky smirk, bright attentive gaze, warm healthy skin tone, stylish short muted wheat-ash blond hair with darker roots, asymmetrical choppy fringe partially exposing forehead, deliberately tousled structured hair clumps, short clean nape, distinctive original haircut not copied from any existing anime character, fitted near-black dark navy school blazer worn open, crisp masculine shoulder seams, white school shirt with slightly relaxed top button, slightly loose dark burgundy necktie, optional subtle dark charcoal V-neck sweater vest underneath, straight charcoal-gray tailored school trousers, black leather school loafers, clean uniform fabric construction, polished precise Japanese anime visual novel character art, refined detailed linework, professional restrained cel shading with deliberate shadows, subtle well-placed highlights, absolutely front facing, centered full body, eye-level camera, neutral natural standing pose, head straight, torso straight, feet naturally together, both arms hanging relaxed at either side with small gaps from body, hands completely visible and EMPTY with five anatomically correct fingers each, no object held, clean white studio background, generous room above head and below shoes, entire character visible",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "promptNegative": {
-        "value": "worst quality, low quality, score_1, score_2, score_3, 1girl, female, adult man, infant, elementary-school child, chibi, oversized head, giant shiny eyes, adult idol V chin, generic AI face, identical face to other male leads, black long hair, black center part, chestnut ponytail, amber eyes, muscular physique, skirt, shorts, unrelated uniform, gold buttons, holding any object, handheld recorder, microphone, headphones in hand, mobile phone, book, paper, bag, backpack, jacket in hands, weapon in hands, sword, gun, staff, hands in pockets, crossed arms, gripping blazer, hands behind back, hands obscured by sleeves, missing hands, hidden fingers, duplicated fingers, bad anatomy, detached wrists, dramatic action pose, jumping, fighting, split-screen, character sheet, two boys, cropped feet, cropped head, text, logo, watermark, glossy plastic skin",
+        "value": "worst quality, low quality, blurry, 1girl, female, overly feminine boy, baby face, doll face, round cheeks, puffy cheeks, soft cute round face, overly large round glassy eyes, giant irises, long eyelashes, glossy pink lips, little child, toddler, chibi, oversized head, tiny legs, infant proportions, identical cloned characters, two boys, duo, side-by-side comparison, duplicate person, brown round fluffy bowl cut, brown hair, bright saturated emerald eyes, cybernetic implants, futuristic jacket, replica of Roman Carax, exact anime character copy, cosplay of existing copyrighted character, serious melancholic cold male lead face, shy bashful smile, timid downward gaze, childish sweet grin, huge shoulders, muscular adult, elderly, schoolgirl uniform, skirt, casual hoodie, missing school blazer, missing necktie, bright blue blazer, purple blazer, golden oversized buttons, baggy oversized jacket, messy random outfit, hands in pockets, hands behind back, crossed arms, holding weapon, holding phone, holding book, carrying jacket, hands touching collar, hands hidden, broken anatomy, extra fingers, fused fingers, malformed hands, stiff asymmetrical body, dramatic action, walking, lunging, jumping, tilted head, side view, three quarter view, cropped shoes, cropped head, scene background, buildings, floor tiles, text, watermark",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "modelVersion": {
         "value": "Anima，具体权重待出图登记",
@@ -2226,10 +2171,10 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "resolution": {
-        "value": "推荐1024×1024，非已出图参数",
+        "value": "832×1216 txt2img 起始建议，人物高度需和角色库同标准另核验",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "sourceFileHash": {
         "value": null,
@@ -2246,14 +2191,14 @@
       "bodyFacingYawDeg": {
         "value": 0,
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "headFacingYawDeg": {
         "value": 0,
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "headPitchDeg": {
         "value": 0,
@@ -2262,10 +2207,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "headRollDeg": {
-        "value": 3,
+        "value": 0,
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "shoulderYawDeg": {
         "value": 0,
@@ -2352,16 +2297,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "anatomicalStylization": {
-        "value": "约6.4头身的自然少年比例，非幼童",
+        "value": "约6.8头身、约160厘米的稍矮男高中生候选比例；非幼儿童身和娃娃圆脸",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "facialFeatureStylization": {
-        "value": "柔和少年骨相，不能变女脸或另一个男主",
+        "value": "窄短六边形少年脸、略锐利的中等青灰绿眼睛、单侧坏笑、明确男性骨相",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "characterIdentityEmbeddingNotes": {
         "value": "尚无母图，不可声称已经生成身份embedding",
@@ -2370,16 +2315,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "frontPosePoseCode": {
-        "value": "M03_IDLE_A0",
+        "value": "M03_FASHION_IDLE_FRONT_V2",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "poseSilhouetteNotes": {
-        "value": "双手始终空置、完整可见，肘与躯干留白，左右臂可单独绑定；不抱胸、不插兜、不抓外套、不拿录音机/书/包，适合武器装备动作后续独立制作",
+        "value": "双臂自然下垂且与腰部留可拆分缝隙，十指露出，立绘不得带道具，避免与已批准角色撞脸",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "framingHeadroomRatio": {
         "value": 0.035,
@@ -2394,10 +2339,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "bodyAlignmentRule": {
-        "value": "统一同校角色地面线，明显矮于男主和男二",
+        "value": "候选160cm对比男主候选176cm，应按同一地面线缩放到约0.91身高；绝不能因各自画满画布而看起来同高",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       }
     },
     "rigging": {
@@ -2788,34 +2733,34 @@
     },
     "quality": {
       "originalityCheck": {
-        "value": "原创脸型，避免照抄其他作品正太角色",
+        "value": "借鉴Roman Carax的青春街头态度，不复制原角色金发剪裁、绿色眼睛、义体或服装；原创校园身份",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "similarityCheck": {
-        "value": "重点对比CHAR-003/016男角色及CHAR-004女三的脸与发色",
+        "value": "必须与CHAR-003黑色乱发冷脸男主、CHAR-016黑偏分端正男二、CHAR-004短发假小子区分脸骨相和姿态",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "faceConsistency": {
-        "value": "暂无正式母图，等待验收",
+        "value": "暂无用户批准的原创脸部母图；旧圆脸绿大眼生成图已否决",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "hairSideCheck": {
-        "value": "检查偏分与翘发正背统一",
+        "value": "短灰麦金碎发，左偏右偏不等，正背面应一致",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "visualIdentityCheck": {
-        "value": "少年可爱但明显是男高中生",
+        "value": "短个子、有男性少年骨相、时髦自信的调皮花花公子气场，不是软萌女脸",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "handsCheck": {
         "value": "正式原画验收：双手空着、五指可辨、袖口不遮手、左右手和手腕可独立拆层；不能因道具或插兜遮挡",
@@ -2836,16 +2781,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "measurementProvenanceCheck": {
-        "value": "所有数值仅服装制作提案，不代表真实测量",
+        "value": "身高160cm、6.8头身等只是待审定的制版锚点；其余精确厘米与脸部坐标撤销，待正式立绘验收测量",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "outfitCheck": {
-        "value": "同校制服材质、纽扣、领带颜色一致",
+        "value": "同校近黑深藏蓝外套、白衬衫、暗酒红领带、灰校裤；轻微松领带和修身版型作区别，不变独立街头服",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "sourceRightsCheck": {
         "value": "Anima和LoRA权重商用许可待核验",
@@ -2860,10 +2805,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "poseCheck": {
-        "value": "正式原画验收：自然站姿，两臂外露，双手空置且与躯干有空隙；可无缝切换未来装备动作。尚未出图与测试",
+        "value": "严格正面、头平、身直、双臂下垂、空手无遮挡；不再双人拼排",
         "status": "proposed",
-        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
-        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "screenshotCheck": {
         "value": "游戏主场景、全屏编辑器及手机视图尚未测试",
@@ -2872,10 +2817,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "approvalRecord": {
-        "value": "只确认小正太男三的创作方向",
+        "value": "用户否定2026-11-04的旧双人圆脸图；确认罗曼参考气场+潮流花花公子正太方向，尚未批准新母图",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "rollbackReference": {
         "value": "不覆盖CHAR-001/002/003/004/016任何已认可原图",
@@ -2892,52 +2837,59 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "updatedAt": {
-        "value": "2026-11-02",
+        "value": "2026-11-04",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "userConfirmedFields": {
         "value": [
           "男三",
-          "小正太类型",
-          "男三母版必须双手空、不拿无关道具，预留后续武器装备动作"
+          "正太型男性少年",
+          "潮流花花公子气质",
+          "罗曼仅作为审美气场参考",
+          "母版空手、不插兜"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "sourceCitations": {
         "value": [
-          "用户2026-11-02指定男三小正太",
-          "448字段标准V3"
+          "用户2026-11-04指出原画娘化、圆脸、五官雷同与身高视觉不对",
+          "用户2026-11-04明确参照《赛博朋克：边缘行者2》罗曼气场",
+          "https://www.cyberpunk.net/zh-cn/edgerunners2（官方角色外部参考，不属于原创母版）"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "proposedFields": {
-        "value": "所有已填年龄体型五官性格剧情为候选",
+        "value": "当前16岁/160cm/48kg/6.8头身、发型眼色、校服变化和性格细节都是待用户审定的原创提案",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "unknownFields": {
-        "value": "家庭生日、正式姓名、剧情细节、真实图像和模型参数未定",
+        "value": "角色真名、绝大多数围度、精确五官比例、家庭、课业细节、真实游戏剧情、母版图源、声优与武器均未定",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "rejectedFields": {
         "value": [
-          "男主复制脸",
-          "男二复制脸",
-          "高大成熟型",
-          "女性脸或幼儿四头身"
+          "旧林见夏软萌腼腆定稿假设",
+          "旧158cm与6.4头身视觉制版方案",
+          "旧圆脸、杏圆大眼、温柔无辜微笑",
+          "旧浅茶棕蓬松球头",
+          "未经确认的录音少年与校园广播室剧情",
+          "与现有男角色复制脸",
+          "女性化娃娃感或两个角色并排生成",
+          "照抄罗曼的可辨识造型"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "revisionHistory": {
         "value": [
@@ -2945,11 +2897,16 @@
             "date": "2026-11-02",
             "version": "0.1.0",
             "note": "CHAR-020由未获批准的田径女生规划占位改为男三小正太候选"
+          },
+          {
+            "date": "2026-11-04",
+            "version": "0.2.0",
+            "note": "逐项审校448字段；按用户要求调整为潮流花花公子型正太男三，以Roman Carax为气质参考；撤销无来源的精确五官数据和旧软萌广播室提案；尚待正式原画验收"
           }
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       },
       "authorReviewer": {
         "value": "AI创作提案；待用户审批",
@@ -2970,26 +2927,26 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "historyNotes": {
-        "value": "未生成图片，不等于PSD或L2D完成",
+        "value": "旧双人生成结果已由用户否定；没有正式原画、拆分PSD或L2D，任何项目状态不得标记完成",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "2026-11-04 男三原创化再设计提案V0.2（罗曼仅为审美气质参考，不复制外貌）",
+        "notes": "仍需用户验收，非官方身材或作品人物复制"
       }
     }
   },
-  "recordVersion": "0.1.0",
-  "updatedAt": "2026-11-02",
+  "recordVersion": "0.2.0",
+  "updatedAt": "2026-11-04",
   "sourceNotes": {
-    "confirmedByUser": "男三、小正太类型",
-    "notApproved": "名字、年龄、身高、体重、五官、剧情、配色与行为等为提案；没有任何原画。",
+    "confirmedByUser": "男三、正太型男性少年、潮流花花公子气场；罗曼仅为角色气质参考，非本人或官方复制",
+    "notApproved": "正式姓名、16岁/160cm/48kg/6.8头身等候选数值、原创发型眼色、详细性格和主线均需用户审核；无正式立绘或L2D",
     "numbering": "CHAR-020原为未批准的田径女生规划占位；重新规划为男三候选不覆盖已批准人物。",
-    "userConstraintAdded": "用户要求所有人物母版能用于后续持武器动作，男三基础姿势双手空着，拒绝手持装饰道具。衣物差异化优先用针织背心、领带与校服穿法实现（提案）。"
+    "userConstraintAdded": "基础正面母版两手空着、五指露出、脚底完整；肩臂不必为武器设计专用动作；禁止重复双人、放大脸图、娃娃脸。"
   },
   "fieldCount": 448,
   "statusSummary": {
-    "user_confirmed": 4,
-    "proposed": 393,
-    "unknown": 41,
+    "proposed": 305,
+    "unknown": 128,
+    "user_confirmed": 5,
     "not_applicable": 10
   }
 }
