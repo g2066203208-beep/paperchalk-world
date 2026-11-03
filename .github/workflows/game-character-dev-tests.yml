@@ -339,7 +339,7 @@ jobs:
               for(const slot of ['player','enemy']){
                 const a=liveBefore[slot],b=liveAfter[slot],
                   delta=b.canvas.top-a.canvas.top,
-                  axis=b.translate.split(/\\s+/).map(parseFloat);
+                  axis=b.translate.trim().split(/\s+/).map(parseFloat);
                 assert.ok(delta>3&&Math.abs(axis[1]-liveBefore.height*.06)<.01,
                   'REAL '+slot+' L2D ArtMesh did not follow moving floor Y: '+JSON.stringify({a,b,delta}));
                 assert.equal(b.layers,a.layers,
