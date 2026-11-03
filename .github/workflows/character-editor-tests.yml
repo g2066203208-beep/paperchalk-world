@@ -119,70 +119,42 @@ jobs:
                   'idle controls panel must be on-screen, including phone viewport');
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-VISIBLE-HAIR-SKIRT-CONTROLS.png',fullPage:false});
                 if(vp.width>500){
-                  // Compare THREE weather tiers over four phases on the
-                  // REAL 17-source-PNG heroine (not abstract unit squares).
-                  const contact=await page.evaluate(()=>{
+                  // Inspect the SAME 17 original PNG parts across one
+                  // standing cycle; never create three weather variants again.
+                  const sheet=await page.evaluate(()=>{
                     const core=window.PaperchalkPartRigCore;
-                    const ed=window.characterEditor;
                     const base=window.PaperchalkPartRigStudio.state.model;
-                    const layers=ed.S.layers.front;
-                    const frame=document.createElement('canvas');frame.width=1024;frame.height=1024;
-                    const sheet=document.createElement('canvas');sheet.width=1600;sheet.height=1200;
-                    const ctx=sheet.getContext('2d');ctx.fillStyle='#12202c';ctx.fillRect(0,0,1600,1200);
-                    const phase=[0,1.5,3.1,4.7],regimes=['still','breeze','windy'];
-                    for(let row=0;row<regimes.length;row++){
-                      const model={...base,idleProfile:core.presetIdle(regimes[row],base.idleProfile)};
-                      for(let col=0;col<phase.length;col++){
-                        const f=frame.getContext('2d');f.clearRect(0,0,1024,1024);
-                        core.draw(f,layers,model,phase[col],'');
-                        ctx.drawImage(frame,col*400+4,row*400+18,392,377);
-                        ctx.font='14px sans-serif';ctx.fillStyle='#f4f7f7';
-                        ctx.fillText(regimes[row]+' / phase '+phase[col],col*400+8,row*400+15);
-                      }
-                    }
-                    return sheet.toDataURL('image/png').split(',')[1];
+                    const layers=window.characterEditor.S.layers.front;
+                    const pic=document.createElement('canvas');
+                    pic.width=1024;pic.height=1024;
+                    const out=document.createElement('canvas');
+                    out.width=1600;out.height=410;
+                    const ctx=out.getContext('2d');ctx.fillStyle='#17202a';
+                    ctx.fillRect(0,0,out.width,out.height);
+                    [0,1.5,3.1,4.7].forEach((phase,i)=>{
+                      const f=pic.getContext('2d');f.clearRect(0,0,1024,1024);
+                      core.draw(f,layers,base,phase,'');
+                      ctx.drawImage(pic,0,0,1024,1024,i*400+5,20,390,385);
+                      ctx.fillStyle='#f2f2f2';ctx.font='14px sans-serif';
+                      ctx.fillText('基础站立 / '+phase,i*400+8,17);
+                    });
+                    return out.toDataURL('image/png').split(',')[1];
                   });
-                  fs.writeFileSync('artifacts/character-editor/heroine-3-weather-tiers-4-phases.png',
-                    Buffer.from(contact,'base64'));
-                  // Original source art, enlarged face/hair and hem crops.
-                  // Four phases of each weather tier reveal real lift, not
-                  // merely a different slider percentage in a tiny portrait.
-                  const closeup=await page.evaluate(()=>{
-                    const core=window.PaperchalkPartRigCore;
-                    const ed=window.characterEditor;
-                    const model=window.PaperchalkPartRigStudio.state.model;
-                    const frame=document.createElement('canvas');
-                    frame.width=1024;frame.height=1024;
-                    const sheet=document.createElement('canvas');
-                    sheet.width=1600;sheet.height=1410;
-                    const ctx=sheet.getContext('2d');ctx.fillStyle='#17202d';
-                    ctx.fillRect(0,0,sheet.width,sheet.height);
-                    const phases=[0,1.5,3.1,4.7],types=['still','breeze','windy'];
-                    for(let row=0;row<3;row++){
-                      const current={...model,idleProfile:core.presetIdle(types[row],model.idleProfile)};
-                      for(let col=0;col<4;col++){
-                        const f=frame.getContext('2d');f.clearRect(0,0,1024,1024);
-                        core.draw(f,ed.S.layers.front,current,phases[col],'');
-                        const x=col*400,y=row*470;
-                        ctx.drawImage(frame,315,25,395,370,x+6,y+25,388,290);
-                        ctx.drawImage(frame,315,465,395,215,x+6,y+313,388,146);
-                        ctx.fillStyle='#e7f7f8';ctx.font='15px sans-serif';
-                        ctx.fillText(types[row]+' / '+phases[col],x+11,y+17);
-                      }
-                    }
-                    return sheet.toDataURL('image/png').split(',')[1];
-                  });
-                  fs.writeFileSync('artifacts/character-editor/heroine-3-weather-hair-skirt-CLOSEUP.png',
-                    Buffer.from(closeup,'base64'));
+                  fs.writeFileSync('artifacts/character-editor/heroine-basic-standing-4-phases.png',
+                    Buffer.from(sheet,'base64'));
                 }
                 assert.deepEqual(await page.locator('#rig-presets button').allTextContents(),
-                  ['静止','普通待机','微风','大风']);
-                await page.locator('[data-idle-preset="windy"]').click();
-                assert.equal(await page.locator('[data-idle="hair.amount"]').inputValue(),'115');
-                assert.equal(await page.locator('[data-idle="cloth.amount"]').inputValue(),'92');
+                  ['恢复基础站立']);
+                assert.equal(await page.locator('[data-idle-preset="windy"]').count(),0);
+                assert.equal(await page.locator('[data-idle-preset="breeze"]').count(),0);
+                assert.equal(await page.locator('[data-idle="body.amount"]').count(),0);
                 await page.locator('[data-idle-preset="realistic"]').click();
-                assert.equal(await page.locator('[data-idle="hair.amount"]').inputValue(),'28');
-                assert.equal(await page.locator('[data-idle="cloth.amount"]').inputValue(),'23');
+                assert.equal(await page.locator('[data-idle="hair.amount"]').inputValue(),'18');
+                assert.equal(await page.locator('[data-idle="cloth.amount"]').inputValue(),'12');
+                assert.equal(await page.evaluate(()=>{
+                  const c=window.PaperchalkPartRigCore, m=window.PaperchalkPartRigStudio.state.model;
+                  return c.bodyPoseAt(1,m.idleProfile).lean;
+                }),0,'normal standing must not move the whole girl left/right');
                 assert.equal(await page.locator('#rig-part option').count(),17);
                 assert.equal(await page.locator('[data-spotlight="front_hair"]').isVisible(),true);
                 assert.equal(await page.locator('[data-spotlight="skirt"]').isVisible(),true);
