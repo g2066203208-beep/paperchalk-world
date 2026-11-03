@@ -45,7 +45,28 @@ def output(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
 
 
+def preserve_original_psd():
+    """Reassemble the exact uploaded 4,356,278-byte Photoshop document.
+
+    GitHub stores four ordinary lossless binary blobs to avoid relying on
+    Actions' ImageMagick PSD decoder or truncating a >4MB API upload.
+    The same validated .psd is published as a directly retrievable source.
+    """
+    folder=SOURCE.parent
+    chunks=[folder / f"CHAR-002_middle_cropped_generated.psd.part0{i}" for i in range(1,5)]
+    if any(not chunk.is_file() for chunk in chunks):
+        raise FileNotFoundError("The four original uploaded PSD binary chunks are missing")
+    data=b"".join(chunk.read_bytes() for chunk in chunks)
+    if len(data)!=4356278 or hashlib.sha256(data).hexdigest()!=PSD_SHA:
+        raise ValueError("The committed original female-two Photoshop document is incomplete")
+    dest=folder / "CHAR-002_middle_cropped_generated.psd"
+    if not dest.exists() or hashlib.sha256(dest.read_bytes()).hexdigest()!=PSD_SHA:
+        dest.write_bytes(data)
+    return dest
+
+
 def build():
+    preserve_original_psd()
     if not SOURCE.is_file():
         raise FileNotFoundError("The uploaded CHAR-002 PSD archive is not committed")
     if hashlib.sha256(SOURCE.read_bytes()).hexdigest() != ZIP_SHA:
