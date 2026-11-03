@@ -137,7 +137,8 @@ async function changeCore(id,face='front'){
  }));
  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{detail:{id,side}}));
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
- history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game');
+ history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game'+
+  (args.get('idle')==='1'?'&idle=1':''));
  }finally{document.body.classList.remove('studio-loading')}
 }
 async function loadList(){
