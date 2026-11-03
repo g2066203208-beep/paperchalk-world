@@ -27,6 +27,17 @@ async function kv(mode,key,data){
  });}finally{db.close();}
 }
 const get=k=>kv('readonly',k).catch(()=>null),put=(k,v)=>kv('readwrite',k,v);
+async function dropDraft(key){
+ const db=await openDB();
+ try{await new Promise((resolve,reject)=>{
+  const r=db.transaction('kv','readwrite').objectStore('kv').delete(key);
+  r.onsuccess=resolve;r.onerror=()=>reject(r.error);
+ });}finally{db.close();}
+}
+const female2PsdIds=['head_reference','back_hair','legwear','footwear','neck',
+ 'bottomwear','topwear','ears','face','handwear','mouth','eyebrow',
+ 'eyewhite','irides','eyelash','nose','front_hair'];
+const hasFemale2Psd=ids=>ids.length===17&&female2PsdIds.every(id=>ids.includes(id));
 const fileURL=file=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(file)});
 const section=document.createElement('section');section.id='studio-library';
 section.innerHTML=[
@@ -153,10 +164,12 @@ async function loadList(){
     clips:c.clips||{},animated:c.animated||{},l2dModule:c.l2dModule||{}});
   }
  }catch(e){console.warn('Character catalog offline',e)}
+ const canonicalFemale2=list.get('char-002');
  const imported=await get('imported');
  if(Array.isArray(imported))for(const c of imported)if(okId(c?.id))list.set(c.id,c);
  const overrides=await get('overrides');
  if(Array.isArray(overrides))for(const c of overrides)if(list.has(c?.id))Object.assign(list.get(c.id),c);
+ if(canonicalFemale2)list.set('char-002',canonicalFemale2);
  let last=null;try{last=JSON.parse(localStorage.getItem('paperchalk-studio-last')||'null')}catch(e){}
  const id=args.get('character')||last?.id||'protagonist';
  await change(list.has(id)?id:'protagonist',args.get('side')||last?.side||'front');
@@ -239,7 +252,10 @@ async function persistSkeleton(face){
 async function readPartRig(id=currentId,face=side){
  if(!id||!['front','back'].includes(face))return null;
  const local=await get('part-rig:'+id+':'+face);
- if(local)return local;
+ if(local){
+  if(id!=='char-002'||hasFemale2Psd(Object.keys(local.parts||{})))return local;
+  await dropDraft('part-rig:'+id+':'+face);
+ }
  const pub=list.get(id)?.l2dModule?.[face]?.rig;
  if(!pub?.url)return null;
  const url=new URL(pub.url,new URL('../',location.href));
@@ -250,9 +266,10 @@ async function readPartRig(id=currentId,face=side){
  const validAlias=(id==='protagonist'&&sourceId==='protagonist-rig-v1'&&
   model.characterId==='protagonist-rig-v1'&&
   pub.url.startsWith('./assets/l2d/library/protagonist-rig-v1/'))||
-  (id==='char-002'&&face==='front'&&sourceId==='char-002-rig-v1'&&
-  model.characterId==='char-002-rig-v1'&&model.provenance==='derived-region'&&
-  pub.url.startsWith('./assets/l2d/library/char-002-rig-v1/'));
+  (id==='char-002'&&face==='front'&&sourceId==='char-002-psd-v1'&&
+  model.characterId==='char-002-psd-v1'&&model.provenance==='original-psd'&&
+  hasFemale2Psd(Object.keys(model.parts||{}))&&
+  pub.url.startsWith('./assets/l2d/library/char-002-psd-v1/'));
  if(model.format!=='paperchalk-part-rig-v1'||
     (model.characterId!==id&&!validAlias)||model.face!==face)
   throw Error('当前人物的模块绑定文件格式或方向错误');
@@ -360,7 +377,7 @@ function hasNativePSD(face=side){return (ed.S.layers[face]||[]).filter(p=>p.sour
 function updatePartStatus(){
  const count=countSourceParts(),output=$('studio-parts-status');
  if(output)output.textContent=count?
-  (hasNativePSD()?'已载入 '+count+' 个真实 PSD 独立纹理：后发、刘海、校服、手臂、裙摆、眼睛、嘴等采用实时关节及网格驱动。':currentId==='char-002'?'本方向已有 '+count+' 个从女二静态原画划分的编辑区域（非PSD），尚需导入原始分层。':
+  (hasNativePSD()?'已载入 '+count+' 个真实 PSD 独立纹理：后发、刘海、校服、手臂、裙摆、眼睛、嘴等采用实时关节及网格驱动。':currentId==='char-002'?'旧分区正在自动替换为原始PSD分层…':
    '本方向已有 '+count+' 个原位分层部件，可在左侧逐个选择编辑。'):
   '该方向没有独立分层。烘焙 V4 WebP 不能直接拆成部件，请导入 PSD 或原始分层 ZIP。';
 }
@@ -437,8 +454,7 @@ async function importComponentFiles(files,options={}){
  return count;
 }
 const hostedPartsURLs={
- protagonist:'../assets/l2d/v4/protagonist-original-parts.zip',
- 'char-002':'../assets/l2d/char-002/front-source-regions.zip'
+ protagonist:'../assets/l2d/v4/protagonist-original-parts.zip'
 };
 const hostedPartsCache=new Map();
 const siteURL=path=>new URL(path,new URL('../',location.href)).href;
@@ -506,15 +522,17 @@ async function ensureHostedParts(id){
  if(!hostedPartsURLs[id]&&!list.get(id)?.l2dModule?.[side]?.sourceParts&&!list.get(id)?.l2dModule?.[side]?.rig)return;
  const front=ed.S.layers.front.some(p=>p.sourcePart);
  const back=ed.S.layers.back.some(p=>p.sourcePart);
- if(front&&(id==='char-002'||back))return;
- message(id==='char-002'?'载入女二原画7区域独立骨骼（非PSD，待补真分层）…':'载入女主角正背面PSD部件…');
+ const currentSource=ed.S.layers.front.filter(p=>p.sourcePart).map(p=>String(p.partId||p.name));
+ const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
+ if(front&&!upgrade&&(id==='char-002'||back))return;
+ message(id==='char-002'?'载入你上传的女二 PSD：17 个真实可见部件…':'载入真实原位分层…');
  try{
   const source=await hostedParts(id,side);
   if(currentId!==id)return;
-  await importComponentFiles(source,{missingOnly:true,quiet:true});
+  await importComponentFiles(source,{missingOnly:!upgrade,quiet:true});
   message(id==='char-002'?
-    '女二已载入原画7个可编辑分区，使用独立网格与基础骨骼。头发与脸尚未真正拆分，背面没有原图。':
-    '女主角已载入正面17层／背面8层原位PSD。');
+   '✓ 女二已替换旧分区为原始PSD（24层记录、17个真实可见部件），全部可以编辑和绑定。':
+   '已载入原位PSD独立部件。');
  }catch(error){
   console.error('[L2D] hosted source parts failed',error);
   message('原始部件在线加载失败：'+error.message+'；动画帧仍可编辑');
@@ -526,8 +544,8 @@ async function importComponentArchive(file){
  if(/\.psd$/i.test(file.name)){
   if(currentId==='char-002'&&side!=='front')throw Error('女二只有真实正面 PSD，尚无背面分层');
   await ed.importPsd(file);
-  if(currentId==='char-002'&&ed.S.layers[side].length!==16)
-   throw Error('女二 PSD 没有正确解析为 16 个图层；请检查文件或导入原位分层 ZIP');
+  if(currentId==='char-002'&&ed.S.layers[side].length<17)
+   throw Error('女二原始PSD包含24层记录、17个有内容的部件；当前读取不完整');
   for(const part of ed.S.layers[side]){
    part.sourcePart=true;
    part.partId=part.name;part.role='psd-part';
