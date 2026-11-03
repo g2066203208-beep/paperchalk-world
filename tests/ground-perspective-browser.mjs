@@ -19,6 +19,9 @@ mkdirSync('artifacts/ground',{recursive:true});
 try{
  for(const cfg of [{name:'desktop',w:1280,h:720,mobile:false},{name:'mobile',w:390,h:844,mobile:true}]){
    const page=await browser.newPage({viewport:{width:cfg.w,height:cfg.h},isMobile:cfg.mobile,hasTouch:cfg.mobile});
+   // Stale pre-v5 camera saves must migrate automatically.
+   await page.addInitScript(()=>localStorage.setItem('paperchalk-layer-editor-v2',
+     JSON.stringify({player:{x:9,y:-5.5,size:90,z:300},ground:{modelVersion:4}})));
    const errs=[];page.on('pageerror',e=>errs.push(e.message));
    const url='http://127.0.0.1:'+server.address().port+'/index.html?scene=classroom&dev=1';
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
@@ -41,8 +44,9 @@ try{
      'Nearby NPC should be around 58% of scene with cinematic crop: '+JSON.stringify(initial));
    assert.equal(initial.state.locked,false,'Preexisting hand-placed defaults must not be silently changed');
    assert.equal(initial.state.enemy.size,48,'Cinematic enemy source must be 48%, not the tiny old 34%');
-   assert.equal(initial.state.player.size,90,'The heroine was not enlarged into the camera foreground');
-   assert.equal(initial.state.player.y,-5.5,'The heroine must extend below the lower frame');
+   assert.equal(initial.state.player.size,190,'Heroine must fill camera-near shoulder foreground');
+   assert.equal(initial.state.player.y,-86.5,'Shoes/waist belong outside the close-camera frame');
+   assert.equal(initial.state.player.x,27,'Her back stays centered at 27% of the viewport');
    assert.equal(initial.state.player.z,300);
    assert.equal(initial.state.enemy.z,-40);
    const {x,y,size}=initial.state.enemy;
@@ -224,7 +228,7 @@ try{
    assert.equal(calibrated.state.enemy.x,x,'Ground calibration moved authored X');
    assert.equal(calibrated.state.enemy.y,y,'Ground calibration moved authored Y');
    assert.equal(calibrated.state.enemy.size,size,'Ground calibration rewrote the original artwork size');
-   assert.ok(calibrated.stored?.includes('"modelVersion":4'),
+   assert.ok(calibrated.stored?.includes('"modelVersion":5'),
      'Single-camera migration was not saved');
    for(const role of ['player','enemy']){
      const before=soleBefore.actors.find(a=>a.id===role);
@@ -275,25 +279,47 @@ try{
          renderer:enemy.canvas.getContext('2d').getContextAttributes?.().willReadFrequently}};
    });
    assert.equal(normal.dev,false);
+   assert.equal(normal.cameraProfile,'close-follow-shoulder-v5');
+   assert.equal(normal.playerShoeActuallyOffscreen,true);
+   // Compare to the independent full-body camera reference, not the
+   // intentionally 190%-height heroine cropped right against the lens.
    const actualRatio=(normal.enemy.height*normal.actors.enemy.visibleFraction*
-      normal.enemy.scale)/
-     (normal.player.height*normal.actors.player.visibleFraction*
-      normal.player.scale);
+      normal.enemy.scale)/normal.cameraReferenceBodyPx;
    const predictedRatio=(normal.actors.enemy.physicalCm/
       normal.actors.player.physicalCm)*
      normal.actors.enemy.depthScale;
    assert.ok(Math.abs(normal.player.scale-1)<.002,
-     'Heroine must remain the exact original visual-size reference');
+     'Heroine close crop must not receive a second arbitrary depth scale');
    assert.ok(Math.abs(actualRatio-predictedRatio)<.02,
      'Enemy normal-game apparent height must match 155/162 stature and Z distance: '+
      JSON.stringify({actualRatio,predictedRatio,normal}));
    assert.ok(predictedRatio>.6&&predictedRatio<.8,
-     'Second heroine cannot be reduced to toy-like 40% size');
+     'Opponent must remain a readable midground character');
    assert.ok(Math.abs(normal.actors.enemy.worldFootY-
       normal.actors.enemy.expectedFootY)<1,
      'Second heroine is floating above projected common floor');
    assert.equal(normal.perf.sourceReadbacks,0);
    assert.equal(normal.perf.globalSubtreeObservers,0);
+   const shot=await page.evaluate(()=>{
+     const view=document.getElementById('view'),actor=window.PaperchalkL2D.get('player');
+     const rect=actor.img.getBoundingClientRect();
+     const g=window.PaperWorldL2DGround.inspect();
+     const p=g.actors.find(a=>a.id==='player');
+     const enemy=g.actors.find(a=>a.id==='enemy');
+     return {width:view.clientWidth,height:view.clientHeight,
+       headY:rect.top+rect.height*(p.soleY-p.visibleFraction),
+       centerX:rect.left+rect.width*.5,
+       enemyFoot:enemy.worldFootY,enemyVisible:enemy.targetVisiblePx};
+   });
+   assert.ok(Math.abs(shot.centerX/shot.width-.27)<.018,
+     'Camera must remain behind heroine shoulder on phone and desktop: '+JSON.stringify(shot));
+   assert.ok(shot.headY/shot.height>-.12&&shot.headY/shot.height<.14,
+     'Heroine head should be near frame top: '+JSON.stringify(shot));
+   assert.ok(shot.enemyFoot/shot.height>.65&&shot.enemyFoot/shot.height<1,
+     'NPC foot must remain within midground viewport: '+JSON.stringify(shot));
+   assert.ok(shot.enemyVisible/shot.height>.35&&shot.enemyVisible/shot.height<.75,
+     'Opponent must not inherit the giant 190% foreground crop: '+JSON.stringify(shot));
+   await page.screenshot({path:'artifacts/ground/shoulder-camera-'+cfg.name+'.png'});
    assert.equal(normal.enemy.renderer,false,
      'The active animated canvas was forced into slow CPU readback mode: '+JSON.stringify(normal));
    assert.ok(normal.perf.readbackPixels<=192*192*6,
