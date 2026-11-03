@@ -208,34 +208,47 @@ try{
    await page.locator('#dev-auto-depth').check();
    const enabled=await page.evaluate(()=>window.PaperWorldL2DGround.inspect());
    assert.equal(enabled.autoPerspective,true);
+   const soleBefore=await page.evaluate(()=>window.PaperWorldL2DGround.inspect());
    await page.locator('#dev-ground-calibrate').click({timeout:15000});
-   const calibrated=await page.evaluate(()=>({state:window.PaperWorldGroundPerspective.current(),
-     fit:window.PaperWorldGroundPerspective.inspect(),
-     stored:localStorage.getItem('paperchalk-layer-editor-v2')}));
-   assert.equal(calibrated.state.locked,true,'Calibrate button did not enable ground locking');
-   assert.equal(calibrated.state.enemy.x,x,'Calibration moved manually placed X');
-   assert.equal(calibrated.state.enemy.y,y,'Calibration moved manually placed shoe Y');
-   assert.notEqual(calibrated.state.enemy.size,size,'Calibration did not change perspective size');
-   assert.ok(Math.abs(calibrated.state.enemy.size-calibrated.fit.sizePercent)<.03,
-     'Projected scale does not match floor geometry: '+JSON.stringify(calibrated));
-   assert.ok(calibrated.stored?.includes('"lockPerspective":1'),
-     'One-click calibration did not preserve the updated floor model');
-   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-calibrated.png'});
-   // Moving the NPC shoe point is movement across one common ground plane:
-   // depth and physical apparent size must update; the new foot is not moved.
+   const calibrated=await page.evaluate(()=>({
+     state:window.PaperWorldGroundPerspective.current(),
+     ground:window.PaperWorldL2DGround.inspect(),
+     stored:localStorage.getItem('paperchalk-layer-editor-v2')
+   }));
+   assert.equal(calibrated.state.autoDepth,true,'Recalibration must retain the ONE automatic camera');
+   assert.equal(calibrated.state.locked,false,'The deprecated second scale solver was re-enabled');
+   assert.equal(calibrated.state.enemy.x,x,'Ground calibration moved authored X');
+   assert.equal(calibrated.state.enemy.y,y,'Ground calibration moved authored Y');
+   assert.equal(calibrated.state.enemy.size,size,'Ground calibration rewrote the original artwork size');
+   assert.ok(calibrated.stored?.includes('"modelVersion":3'),
+     'Single-camera migration was not saved');
+   for(const role of ['player','enemy']){
+     const before=soleBefore.actors.find(a=>a.id===role);
+     const after=calibrated.ground.actors.find(a=>a.id===role);
+     assert.ok(Math.abs(after.worldFootY-before.worldFootY)<1,
+       role+' floor foot moved during non-destructive calibration');
+     assert.ok(Math.abs(after.errorPx)<1,'L2D shoe lost ground while calibrating');
+   }
+   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-single-camera-calibrated.png'});
+   // The authored image Y is a local paint offset; while automatic grounding
+   // is on, shoe/ground stay fixed. Only moving WORLD Z changes perspective.
    const oldHeight=calibrated.state.enemy.size;
+   const oldFoot=calibrated.ground.actors.find(a=>a.id==='enemy').worldFootY;
    await page.evaluate(()=>{
      const slider=document.getElementById('dev-y');
-     slider.value='26';
-     slider.dispatchEvent(new Event('input',{bubbles:true}));
+     slider.value='26';slider.dispatchEvent(new Event('input',{bubbles:true}));
    });
-   const shifted=await page.evaluate(()=>window.PaperWorldGroundPerspective.current());
-   assert.equal(shifted.enemy.y,26);
-   assert.ok(shifted.enemy.size<oldHeight,
-     'Moving the NPC farther along the floor should shrink apparent stature');
-   assert.equal(shifted.enemy.x,x,'Ground constraint changed horizontal placement');
-   await page.locator('#dev-ground-lock').uncheck();
-   assert.equal((await page.evaluate(()=>window.PaperWorldGroundPerspective.current())).locked,false);
+   const shifted=await page.evaluate(()=>({
+     state:window.PaperWorldGroundPerspective.current(),
+     ground:window.PaperWorldL2DGround.inspect()
+   }));
+   assert.equal(shifted.state.enemy.y,26);
+   assert.equal(shifted.state.enemy.size,oldHeight,
+     'A foot-y correction silently rewrote the original L2D resolution');
+   assert.ok(Math.abs(shifted.ground.actors.find(a=>a.id==='enemy').worldFootY-oldFoot)<1,
+     'Changing a local sprite anchor detached the NPC from one common floor');
+   assert.equal(shifted.state.enemy.x,x,'Ground constraint changed horizontal placement');
+   assert.equal(shifted.state.autoDepth,true,'Single camera was turned off by editing shoe anchor');
    // Restore the intended modern auto-Z mode before exiting DEV: the
    // legacy one-off screen-Y calibrator explicitly disables automatic mode.
    await page.locator('#dev-auto-depth').check();
