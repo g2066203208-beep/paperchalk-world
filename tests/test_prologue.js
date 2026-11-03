@@ -1,49 +1,43 @@
-/* Deterministic contract for Paperchalk World's first-person prologue.
- * Run with node tests/test_prologue.js; no external npm dependency.
- */
+/* No external dependencies: Node contracts for the minimal FPS encounter. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
 const root=path.join(__dirname,'..');
-const text=p=>fs.readFileSync(path.join(root,p),'utf8');
-const prologueSource=text('site/game/prologue.js');
-const html=text('site/index.html');
-const style=text('site/game/prologue.css');
-new Function(prologueSource);
-const client={};
-vm.runInNewContext(prologueSource,{window:client,console});
-const prologue=client.PaperWorldPrologue;
-assert.ok(prologue,'exposes first-person scripted module');
-assert.ok(prologue.lines.length>=50,'script must be a complete narrative, not placeholder 3-lines');
-assert.equal(prologue.lines[0].speaker,'环境');
-assert.ok(prologue.lines.some(x=>x.text.includes('清扫记录')));
-assert.ok(prologue.lines.some(x=>x.text.includes('栗棕马尾')));
-assert.ok(prologue.lines.some(x=>x.text.includes('未登记人员')));
-const choice=prologue.lines.find(x=>x.choices);
-assert.ok(choice&&choice.choices.length===2);
-assert.equal(prologue.choose(choice,'shadow'),true);
-assert.equal(prologue.choices().entrance,'shadow');
-const alternate=prologue.lines.find(x=>x.variants);
-assert.ok(alternate);
-assert.notEqual(prologue.textFor(alternate),alternate.text);
-prologue.reset();
-assert.equal(prologue.choices().entrance,undefined);
-prologue.restoreChoices({entrance:'knock'});
-assert.equal(prologue.choices().entrance,'knock');
-prologue.restoreChoices({entrance:'injected-value'});
-assert.equal(prologue.choices().entrance,undefined,'reject invalid saved choices');
-assert.ok(html.indexOf('game/prologue.js')<html.indexOf('const legacyClassroomLines'),
- 'narrative module must load before game inline script');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const script=read('site/game/prologue.js');
+const html=read('site/index.html');
+const css=read('site/game/prologue.css');
+new Function(script);
+const win={};
+vm.runInNewContext(script,{window:win,console});
+const prologue=win.PaperWorldPrologue;
+assert.ok(prologue,'game exposes the script');
+assert.equal(prologue.lines.length,28,'keep the prologue brief');
+assert.equal(prologue.silhouetteStart,8,'show an unknown moving person before reveal');
+assert.equal(prologue.identityReveal,16,'reveal full texture only after the lamp comes on');
+assert.equal(prologue.lines[8].speaker,'？？？');
+assert.equal(prologue.lines[16].cue,'unmask');
+assert.equal(prologue.lines[17].speaker,'女二');
+assert.ok(prologue.lines.some(line=>line.cue==='attack'));
+assert.ok(prologue.lines.some(line=>line.cue==='strike'));
+assert.ok(prologue.lines.some(line=>line.cue==='impact'));
+assert.ok(prologue.lines.every(line=>!line.choices),'no unrequested branching choices');
+assert.doesNotMatch(script,/请勿包庇|清扫名单|二十八号/,'remove invented checklist plot');
+assert.doesNotMatch(script,/choice1|restoreChoices|function choose/);
+assert.ok(html.indexOf('game/prologue.js')<html.indexOf('const legacyClassroomLines'));
 assert.match(html,/cameraPlayer\.hidden=isPrologue\?true:!hasPlayer/);
 assert.match(html,/enemyDepth\.hidden=isPrologue\?true:!def\.layers\.enemy/);
-assert.match(html,/paperchalk-prologue-v1/);
-assert.match(html,/if\(!storyMode\|\|stage\.dataset\.scene!=='classroom'\)return;/);
-assert.match(html,/function renderPrologueChoice/);
-assert.match(html,/PaperWorldPrologue\?\.cue\?\.\(dialogueIndex\)/);
-assert.match(style,/#view\.prologue-first-person #camera-player-root/);
-assert.match(prologueSource,/dev\.assign\('enemy','char-002','front',false\)/,
- 'story casting cannot persist or overwrite the DEV NPC assignment');
-assert.doesNotMatch(prologueSource,/location\.assign|localStorage\.setItem/);
-console.log('PASS: first-person prologue data, choices, slots, save isolation, and load order');
+assert.match(html,/paperchalk-prologue-v2/,'old saves are not resumed at invalid lines');
+assert.match(html,/storyVersion===2/);
+assert.doesNotMatch(html,/prologue-choices|function renderPrologueChoice|awaitingChoice/);
+assert.match(css,/data-identity-visibility="silhouette"/);
+assert.match(css,/filter:brightness\(0\) saturate\(0\)!important/);
+assert.match(script,/enemy\.dataset\.identityVisibility=known\?'revealed':'silhouette'/);
+assert.match(script,/setFemaleVisible\(index>=SILHOUETTE_START,index>=IDENTITY_REVEAL\)/);
+assert.doesNotMatch(css,/height:72%!important/,'never override user actor height');
+assert.match(script,/dev\.assign\('enemy','char-002','front',false\)/,
+ 'casting must not persist an NPC slot choice');
+assert.doesNotMatch(script,/localStorage\.setItem/);
+console.log('PASS: no choice UI, brief first-person scene, pure black animated L2D until identity reveal');
