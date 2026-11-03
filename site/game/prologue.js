@@ -5,103 +5,45 @@
  */
 (function(root){
 'use strict';
+// First-person sound-led encounter. No choice menus, no invented clearance
+// bureaucracy, no narrator describing impossible on-screen animations.
 const rows=[
- ['环境','黑色从教室外的走廊缓缓漫过门槛。头顶的灯管只亮了一半。','hum'],
- ['女主·心声','二十七号。剩下的东西应该就在附近。'],
- ['环境','右边传来指甲刮过墙砖的声音，越来越近。','scrape'],
- ['女主','出来。'],
- ['环境','灯光骤然暗了一瞬，侧面的黑影几乎撞上视线。','attack'],
- ['女主·心声','太慢。','strike'],
- ['环境','尖锐的金属声贴着耳边划过。黑影撞在地面上，逐渐散成一滩墨迹。','impact'],
- ['女主','二十七。结束。'],
- ['环境','走廊另一端，突然传来急促而凌乱的脚步。','steps'],
- ['陌生少女（远处）','救命！有没有人在？！'],
- ['女主·心声','……人声？'],
- ['环境','脚步声越来越近，后面还跟着一串完全相同、却慢了半拍的脚步。','echoSteps'],
- ['陌生少女（远处）','怎么又是这里？！我明明往楼下跑了！'],
- ['环境','一个扎着栗棕色马尾的少女跌跌撞撞冲到你面前。','reveal'],
- ['女二','你、你是人吧？！'],
- ['女主','看你怎么定义。'],
- ['女二','现在是说这个的时候吗？！'],
- ['环境','门外传来一模一样的声音：“你、你是人吧？！”','echo'],
- ['女二','……谁？那个是我的声音？'],
- ['女主','别回头。'],
- ['环境','一种沉重的东西沿着门框爬进来。你握紧手里的武器。','attack'],
- ['女主','蹲下。现在。','strike'],
- ['环境','女孩抱头蹲下。视线边缘闪过一道寒光，随后是重物砸在地上的闷响。','impact'],
- ['女二','它、它没了？！你刚才做了什么？！'],
- ['女主','清扫。'],
- ['女二','清扫？！你把那个叫清扫？！'],
- ['女主','你可以换一个好听的词。'],
- ['女二','我连这里是哪都不知道！我只是想从学校出去！'],
+ ['女主·心声','第九只。','scrape'],
+ ['环境','墙边有什么东西贴着地面滑了过来。','attack'],
+ ['女主','太慢。','strike'],
+ ['环境','铿。','impact'],
+ ['女主·心声','清完了。'],
+ ['环境','另一串急促的脚步声，从走廊尽头冲过来。','steps'],
+ ['？？？（远处）','救命！有人吗？！'],
+ ['环境','那人的脚步停了。身后却还有脚步在继续。','echoSteps'],
+ ['？？？','别、别过来！','silhouette'],
+ ['女主','站住。'],
+ ['？？？','你……你是人吗？'],
+ ['女主','蹲下。','attack'],
+ ['？？？','什么？'],
+ ['女主','现在。','strike'],
+ ['环境','金属声骤响，沉重的东西在眼前倒下。','impact'],
+ ['？？？','……它呢？'],
+ ['环境','灯管重新亮起。','unmask'],
+ ['女二','你刚才……救了我？'],
+ ['女主','顺手。'],
+ ['女二','这里到底是什么地方？我一直跑，楼梯却全绕回原处！'],
  ['女主','第一次进来？'],
- ['女二','第一次？！难道还有第二次吗？！'],
- ['女主','有的人运气没那么好。'],
- ['女二','……我只想回家。'],
- ['环境','门外传来三下敲击。前两下是木头声，第三下像敲在你的后脑。','knock'],
- ['女二','那边有光……会不会是出口？'],
- ['女主','看着地上，先别过去。'],
- ['选择','门里突然响起你的声音。你先做什么？','choice1',[
-   {label:'观察门缝下的影子',value:'shadow'},
-   {label:'确认敲门的方向',value:'knock'}
- ]],
- ['女主·心声','这声音……离门太近了。','',null,{shadow:'门缝下的影子正朝着光的反方向生长。',knock:'第三声从你身后响起，和门后的脚步不可能属于同一个人。'}],
- ['女二','等、等一下！那个影子在动！'],
- ['女主','看到了。后退。'],
- ['环境','门板猛地向内一鼓，漆黑的水线沿着缝隙抽走。','impact'],
- ['女二','为什么我们没事……'],
- ['女主','因为你至少学会了停下。'],
- ['女二','你就不能好好夸人吗？！'],
- ['环境','袖口里的记录夹突然自行亮起。','record'],
- ['终端','清扫记录：27 / 28。'],
- ['女主·心声','不对。清扫目标进来时只有二十七个。'],
- ['终端','第 28 号：栗棕马尾，深色校服。首次出现。'],
- ['终端','当前位置：清道夫身后。','warning'],
- ['环境','你缓缓抬起视线。女孩正看着门口，仍在努力平复呼吸。'],
- ['女二','怎么了？你脸色好像……很不好。'],
- ['女主','在考虑要不要把你留在这。'],
- ['女二','喂？！我刚刚还帮了你吧？！'],
- ['女主','所以还没决定。'],
- ['女二','这是什么理由啊！'],
- ['女主','别离开我视线。'],
- ['终端','请勿包庇。','warning'],
- ['环境','教室突然安静下来。灯亮了，黑板上出现两行没有姓名的值日记录。','silence'],
- ['女二','……等等。这不就是我们的教室吗？'],
- ['女主','“我们的”？'],
- ['女二','对啊。难道你不是这里的学生？'],
- ['女主','我可没说过。'],
- ['广播','今日清扫工作已经结束。','radio'],
- ['广播','当前未登记人员：两名。'],
- ['女二','两名……包括你？！'],
- ['广播','请前往广播室，领取自己的名字。'],
- ['女二','你也听到了吧？我们现在怎么办？'],
- ['女主','先把广播关了。'],
- ['广播中的女主','第二十八号。已确认接触。','warning'],
- ['环境','声音和你自己的声音完全一样。你从未对它报过名字。','ending'],
- ['终端','状态更新：正在与你同行。'],
- ['序章','清扫名单上的活人。']
+ ['女二','还、还能再进来？！'],
+ ['女主','想活着出去，就跟紧。'],
+ ['女二','……你说话一直这么难听吗？'],
+ ['女主','你脚步一直这么吵吗？'],
+ ['环境','走廊深处，又传来一声敲门声。','knock'],
+ ['女主','别回头。','ending'],
+ ['女二','……好。']
 ];
-const lines=Object.freeze(rows.map(([speaker,text,cue,choices,variants])=>
- Object.freeze({speaker,text,cue:cue||'',choices:choices||null,variants:variants||null})));
+const SILHOUETTE_START=8;
+const IDENTITY_REVEAL=16;
+const lines=Object.freeze(rows.map(([speaker,text,cue])=>
+ Object.freeze({speaker,text,cue:cue||''})));
 let view=null,fx=null,enemy=null,started=false,disposed=false,sceneSound=null;
-let selections=Object.create(null),oldEnemy=null,ownsEnemy=false,expectedEnemy=null;
+let oldEnemy=null,ownsEnemy=false,expectedEnemy=null;
 let castingTask=Promise.resolve();
-const choiceKey=line=>line?.cue==='choice1'?'entrance':null;
-const readChoice=key=>selections[key]||null;
-const choices=()=>({...selections});
-function restoreChoices(data){
- selections=Object.create(null);
- if(data&&['shadow','knock'].includes(data.entrance))selections.entrance=data.entrance;
-}
-function choose(line,value){
- const key=choiceKey(line);
- if(!key||!line.choices.some(option=>option.value===value))return false;
- selections[key]=value;return true;
-}
-function textFor(line){
- if(line?.variants?.[selections.entrance])return line.variants[selections.entrance];
- return line?.text||'';
-}
 function ensure(){
  view=document.getElementById('view');
  if(!view)return;
@@ -150,10 +92,14 @@ function enableAudio(){
   if(sceneSound.state==='suspended')sceneSound.resume().catch(()=>{});
  }catch(_){}
 }
-function setFemaleVisible(visible){
+// Only the silhouette is shown before the actual light/reveal event.
+ // CSS brightness(0) preserves the original L2D alpha and moving contour.
+function setFemaleVisible(visible,known=false){
  if(!enemy)return;
  enemy.hidden=!visible;
  enemy.dataset.prologuePose=visible?'present':'absent';
+ if(visible)enemy.dataset.identityVisibility=known?'revealed':'silhouette';
+ else delete enemy.dataset.identityVisibility;
 }
 function cue(index){
  if(!started||!view)return;
@@ -166,8 +112,9 @@ function cue(index){
  view.dataset.prologueCue='';
  void view.offsetWidth;
  view.dataset.prologueCue=type;
- if(type==='reveal'||index>=13)setFemaleVisible(true);
- else setFemaleVisible(false);
+ // Stage rule: offscreen first, then PURE-BLACK moving contour,
+ // then original colors only after the lamp becomes bright at reveal.
+ setFemaleVisible(index>=SILHOUETTE_START,index>=IDENTITY_REVEAL);
  if(type==='ending')view.dataset.prologueEnding='true';
  else view.dataset.prologueEnding='false';
  playSound(type);
@@ -210,7 +157,7 @@ async function leave(){
  await castingTask.catch(()=>{});
  if(view){view.classList.remove('prologue-first-person');delete view.dataset.prologueEnding;delete view.dataset.prologueCue;}
  if(fx){fx.hidden=true;fx.className='';}
- if(enemy){enemy.dataset.prologuePose='';}
+ if(enemy){delete enemy.dataset.prologuePose;delete enemy.dataset.identityVisibility;}
  const previous=oldEnemy;oldEnemy=null;
  if(ownsEnemy&&previous&&expectedEnemy&&root.PaperchalkCharacterDev?.ready){
   const dev=root.PaperchalkCharacterDev;
@@ -221,8 +168,8 @@ async function leave(){
  }
  ownsEnemy=false;expectedEnemy=null;
 }
-function reset(){restoreChoices(null);}
 root.PaperWorldPrologue=Object.freeze({
- lines,enter,leave,cue,enableAudio,reset,choose,choices,restoreChoices,textFor
+ lines,enter,leave,cue,enableAudio,
+ silhouetteStart:SILHOUETTE_START,identityReveal:IDENTITY_REVEAL
 });
 })(window);
