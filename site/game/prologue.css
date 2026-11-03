@@ -1,4 +1,17 @@
 /* Prologue-only effects: never alter normal room composition or L2D artwork. */
+#view.prologue-first-person #scene #source{
+ filter:brightness(.46) contrast(1.15) saturate(.68);
+}
+@keyframes prologue-view-recoil{
+ 0%{translate:0 0}
+ 18%{translate:-3px 2px}
+ 42%{translate:2px -2px}
+ 100%{translate:0 0}
+}
+#view.prologue-first-person[data-prologue-cue="attack"] #scene #source,
+#view.prologue-first-person[data-prologue-cue="impact"] #scene #source{
+ animation:prologue-view-recoil 290ms ease-out;
+}
 #prologue-vfx{
  position:absolute;inset:0;z-index:4;pointer-events:none;
  background:transparent;opacity:0;overflow:hidden;
