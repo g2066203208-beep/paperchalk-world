@@ -298,9 +298,6 @@ body.mobile-mode.virtual-landscape #view{
 #scene{z-index:1}
 #enemy-depth-root{
   position:absolute;left:50%;top:50%;
-  /* Actor world motion is applied to the ENTIRE L2D root, not the
-     invisible layout image. Includes ArtMesh canvas, V4 native and patches. */
-  translate:0 var(--actor-ground-y,0px);
   width:min(94vw,calc(94dvh * 16 / 9));
   width:min(94cqw,calc(94cqh * 16 / 9));
   max-width:100%;aspect-ratio:16/9;
@@ -319,7 +316,6 @@ body.mobile-mode.virtual-landscape #view{
 #fog{z-index:3}
 #camera-player-root{
   position:absolute;inset:0;z-index:4;pointer-events:none;
-  translate:0 var(--actor-ground-y,0px);
   /* The player stays camera-near but responds subtly to view direction.
      Its plane tilts independently; it never inherits the background tilt. */
   transform-origin:18% 74%;
@@ -557,8 +553,6 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
 <script src="./game/survival-state.js"></script>
-<link rel="stylesheet" href="./game/prologue.css?v=first-person-silhouette-v4-20261103">
-<script src="./game/prologue.js?v=first-person-silhouette-v4-20261103"></script>
 <script src="./game/ground-perspective.js?v=shared-floor-v1"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
@@ -723,7 +717,7 @@ body.mobile-mode.virtual-landscape #view{
       <option value="player">04 / 主角</option>
       <option value="bg">01 / 背景</option>
       <option value="fog">03 / 黑雾</option>
-      <option value="ground">05 / 共同地面（人物跟随）</option>
+      <option value="ground">05 / 地板（DEV参照）</option>
     </select>
     <div id="dev-actor-controls">
       <label for="dev-x">水平位置 <output id="dev-x-value" class="dev-value"></output></label>
@@ -750,10 +744,10 @@ body.mobile-mode.virtual-landscape #view{
       <output id="dev-character-status" role="status" style="font-size:11px;color:#bde2ff;display:block;line-height:1.6;margin-top:8px">载入人物素材库…</output>
     </section>
     <div id="dev-floor-controls" hidden>
-      <label for="dev-ground-y">移动共同地面 / 全体人物Y <output id="dev-ground-y-value" class="dev-value"></output></label>
+      <label for="dev-ground-y">3D地板网格参考Y <output id="dev-ground-y-value" class="dev-value"></output></label>
       <input id="dev-ground-y" type="range" min="40" max="96" step=".5">
       <output id="dev-ground-delta" class="dev-value"></output>
-      <p>移动底板Y或Z时，女主和女二的脚点会跟随相同的世界位移，保留彼此距离及单独摆好的位置。远处人物屏幕脚点更高，是同一地面的正常透视效果。</p>
+      <p>绿色网格是3D观察辅助；共同地面不意味着两人的脚在相同屏幕高度。</p>
       <label for="dev-ground-horizon">地面透视消失线 <output id="dev-ground-horizon-value" class="dev-value">51.5%</output></label>
       <input id="dev-ground-horizon" type="range" min="30" max="74" step=".5">
       <label class="dev-floor-toggle" for="dev-ground-lock">
@@ -1649,15 +1643,11 @@ void main(){
   edgeFogObserver.observe(view,{attributes:true,attributeFilter:['class']});
   window.PaperWorldUIFog=Object.freeze({refresh:syncUiEdgeFog});
   syncUiEdgeFog();
-  const legacyClassroomLines=[
+  const lines=[
     {speaker:'???',text:'这间教室……和我记忆里的，不太一样。'},
     {speaker:'???',text:'明明已经放学了，为什么还有声音？'},
     {speaker:'???',text:'有人……在看着这里吗？'}
   ];
-  // The real story is a first-person scripted module, not painted onto a
-  // third-person heroine. Preview scenes still retain their neutral lines.
-  const lines=window.PaperWorldPrologue?.lines||legacyClassroomLines;
-  let storyMode=false;
   // Scene data and dialogue data are independent: an environment may show a
   // line without becoming a special story scene or changing its images/L2D.
   // The bedroom has a neutral demonstration line until real script data lands.
@@ -1683,9 +1673,7 @@ void main(){
   const topActions=document.getElementById('top-actions');
   const continueButton=document.getElementById('menu-continue');
   const tiltButton=document.getElementById('tilt-toggle');
-  // Separate from the old prototype save; never misresume the new script at an
-  // unrelated line index or destroy the old user's progress record.
-  const SAVE_KEY='paperchalk-prologue-v2';
+  const SAVE_KEY='paperchalk-scene-v1';
   const TILT_KEY='paperchalk-tilt-v1';
   function loadSetting(){
     try{return localStorage.getItem(TILT_KEY)!=='off'}catch(_){return true}
@@ -1701,17 +1689,14 @@ void main(){
       const raw=localStorage.getItem(SAVE_KEY);
       if(!raw)return null;
       const save=JSON.parse(raw);
-      return save&&save.storyVersion===2&&save.scene==='classroom'&&
-        Number.isInteger(save.line)&&save.line>=0&&save.line<lines.length?save:null;
+      return save&&save.scene==='classroom'&&Number.isInteger(save.line)&&
+        save.line>=0&&save.line<lines.length?save:null;
     }catch(_){return null}
   }
   function writeSave(){
     // Environment preview dialogue must never overwrite the real story save.
-    if(!storyMode||stage.dataset.scene!=='classroom')return;
-    try{localStorage.setItem(SAVE_KEY,JSON.stringify({
-      storyVersion:2,scene:'classroom',line:dialogueIndex,
-      finished:storyFinished
-    }))}catch(_){}
+    if(stage.dataset.scene!=='classroom')return;
+    try{localStorage.setItem(SAVE_KEY,JSON.stringify({scene:'classroom',line:dialogueIndex,finished:storyFinished}))}catch(_){}
     continueButton.disabled=false;
   }
   function openScene(name){
@@ -1724,18 +1709,9 @@ void main(){
     aimX=0;aimY=0;currentX=0;currentY=0;
     stage.style.transform='rotateY(0deg) rotateX(0deg)';
     const isStory=def.type==='story',isMenu=def.type==='menu';
-    const isPrologue=name==='classroom'&&storyMode;
-    if(!isPrologue){
-      window.PaperWorldPrologue?.leave?.();
-      storyMode=false;
-
-    }
-    // Camera IS the protagonist in this chapter. The pre-existing rear-view
-    // heroine plane is used in DEV/other rooms only, never in the prologue.
+    // Per-scene layer contract; image files remain actor-free and unmodified.
     const hasPlayer=def.layers.player;
-    enemyDepth.hidden=isPrologue?true:!def.layers.enemy;
-    cameraPlayer.hidden=isPrologue?true:!hasPlayer;
-    if(isPrologue)window.PaperWorldPrologue?.enter?.();
+    enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
     stage.dataset.sceneTitle=def.title;
     stage.dataset.sceneVersion=def.version||'built-in';
     // Character placement belongs to the actor, not the background image.
@@ -1752,15 +1728,15 @@ void main(){
       menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
       sceneSwitcher.hidden=true;sceneSwitcherToggle.setAttribute('aria-expanded','false');
       if(logOpen){logOpen=false;history.hidden=true;logButton.setAttribute('aria-pressed','false')}
-      activeLines=isPrologue?lines:isStory?legacyClassroomLines:(sceneDemoDialogue[name]||[]);
-      if(!isPrologue)dialogueIndex=0;
+      activeLines=isStory?lines:(sceneDemoDialogue[name]||[]);
+      if(!isStory)dialogueIndex=0;
       textHidden=false;
       storyFinished=activeLines.length===0;
       dialogue.hidden=storyFinished;
       nextLineButton.parentElement.hidden=storyFinished;
       hideButton.textContent='隐藏文字';
       if(!storyFinished)renderDialogue();
-      if(isPrologue)writeSave();
+      if(isStory)writeSave();
     }
     syncUiEdgeFog();
     start(); // continuous, same original fog frame chain
@@ -1830,8 +1806,6 @@ void main(){
   function beginStory(resume){
     if(transitioning)return;
     const save=resume?readSave():null;
-    storyMode=true;
-    window.PaperWorldPrologue?.enableAudio?.();
     dialogueIndex=save?save.line:0;
     changeScene('classroom');
   }
@@ -1885,10 +1859,7 @@ void main(){
   function renderDialogue(){
     const line=activeLines[dialogueIndex];
     if(!line)return;
-    speakerLabel.textContent=line.speaker;
-    dialogueText.textContent=line.text;
-    if(storyMode&&stage.dataset.scene==='classroom')
-      window.PaperWorldPrologue?.cue?.(dialogueIndex);
+    speakerLabel.textContent=line.speaker;dialogueText.textContent=line.text;
     nextLineButton.setAttribute('aria-label',dialogueIndex===activeLines.length-1?'结束对话':'下一句');
   }
   function finishDialogue(){
@@ -1935,7 +1906,7 @@ void main(){
     }
     logButton.setAttribute('aria-pressed',String(logOpen));
   }
-  nextLineButton.addEventListener('click',e=>{e.stopPropagation();if(storyMode)window.PaperWorldPrologue?.enableAudio?.();advanceDialogue()});
+  nextLineButton.addEventListener('click',e=>{e.stopPropagation();advanceDialogue()});
   // Clicking text/black fog advances, but sensor and fog calculations are untouched.
   dialogue.addEventListener('click',e=>{e.stopPropagation();advanceDialogue()});
   autoButton.addEventListener('click',()=>{
@@ -1951,9 +1922,7 @@ void main(){
     menuChoices.hidden=!opening;menuButton.setAttribute('aria-expanded',String(opening));
   });
   restartButton.addEventListener('click',()=>{
-    cancelAuto();
-    activeLines=stage.dataset.scene==='classroom'
-      ?(storyMode?lines:legacyClassroomLines):(sceneDemoDialogue[stage.dataset.scene]||[]);
+    cancelAuto();activeLines=stage.dataset.scene==='classroom'?lines:(sceneDemoDialogue[stage.dataset.scene]||[]);
     storyFinished=activeLines.length===0;dialogueIndex=0;
     if(!storyFinished)renderDialogue();
     writeSave();
@@ -2003,14 +1972,9 @@ void main(){
   });
   renderDialogue();
   openScene('menu');
-  // Preview deep links remain separate. ?prologue=1 runs the actual
-  // playable first-person script in the canonical classroom scene.
-  const initialArgs=new URLSearchParams(location.search);
-  const requestedScene=initialArgs.get('scene');
-  if(initialArgs.get('prologue')==='1'){
-    storyMode=true;dialogueIndex=0;
-    openScene('classroom');
-  }else if(requestedScene&&SCENES[requestedScene]&&SCENES[requestedScene].type!=='menu'){
+  // Scene preview deep link, independent of story saves.
+  const requestedScene=new URLSearchParams(location.search).get('scene');
+  if(requestedScene&&SCENES[requestedScene]&&SCENES[requestedScene].type!=='menu'){
     openScene(requestedScene);
   }
   function shader(type,text){
@@ -2242,8 +2206,6 @@ void main(){
   function calculateGroundFit(){
     const p=editorConfig.player,e=editorConfig.enemy,g=editorConfig.ground;
     const viewH=Math.max(1,view.clientHeight);
-    const motion=sharedGround.floorMotion(g,viewH);
-    const dy=motion.valid?motion.screenDeltaY:0;
     const planeH=Math.max(1,stage.offsetHeight);
     const planeTop=(viewH-planeH)*.5;
     const playerID=document.getElementById('actor-player').dataset.characterId||'protagonist';
@@ -2252,10 +2214,10 @@ void main(){
     return {...sharedGround.fit({
       referenceHeightCm:pm.heightCm,actorHeightCm:em.heightCm,
       referenceCanvasHeight:viewH*p.size/100,
-      referenceCanvasBottom:viewH*(1-p.y/100)+dy,
-      actorCanvasBottom:planeTop+planeH*(1-e.y/100)+dy,
+      referenceCanvasBottom:viewH*(1-p.y/100),
+      actorCanvasBottom:planeTop+planeH*(1-e.y/100),
       actorPlaneHeight:planeH,
-      horizonY:planeTop+planeH*g.horizon/100+dy,
+      horizonY:planeTop+planeH*g.horizon/100,
       referenceCrown:pm.crown,referenceSole:pm.sole,
       actorCrown:em.crown,actorSole:em.sole
     }),playerID,enemyID,playerCm:pm.heightCm,enemyCm:em.heightCm};
@@ -2276,10 +2238,7 @@ void main(){
       (editorConfig.ground.lockPerspective?' · 地面锁定中':' · 保留手动摆放');
   }
   function applyEditorVisuals(){
-    const enemy=editorConfig.enemy,player=editorConfig.player,ground=editorConfig.ground;
-    const motion=sharedGround.floorMotion(ground,Math.max(1,view.clientHeight));
-    const dy=motion.valid?motion.screenDeltaY:0;
-    const dz=motion.valid?motion.worldDeltaZ:0;
+    const enemy=editorConfig.enemy,player=editorConfig.player;
     const fit=calculateGroundFit();
     if(editorConfig.ground.lockPerspective&&fit.valid&&
        fit.sizePercent>=editorBounds.size[0]&&fit.sizePercent<=editorBounds.size[1]){
@@ -2288,8 +2247,6 @@ void main(){
     }
     showGroundFit(calculateGroundFit());
     document.getElementById('actor-enemy').style.left=enemy.x+'%';
-    // Position image/rig inside its own L2D root, never move just this
-    // invisible image: otherwise the animation canvas/clip stays behind.
     document.getElementById('actor-enemy').style.bottom=enemy.y+'%';
     document.getElementById('actor-enemy').style.height=enemy.size+'%';
     // Square L2D canvas in a 16:9 depth plane (width% = height% * 9/16).
@@ -2299,18 +2256,10 @@ void main(){
     document.getElementById('actor-player').style.height=player.size+'cqh';
     // Replacing the protagonist must retain her 1024x1024 layout and foot position.
     document.getElementById('actor-player').style.width=player.size+'cqh';
-    // Shared world-space ground origin. Shifting the ROOT guarantees ALL
-    // L2D renderers (ArtMesh, PSD, native V4, rig and image) follow at once.
-    const offset=dy.toFixed(3)+'px';
-    enemyDepth.style.setProperty('--actor-ground-y',offset);
-    cameraPlayer.style.setProperty('--actor-ground-y',offset);
     for(const name of ['bg','enemy','fog','player','ground']){
-      // Moving the floor in 3D must carry actor planes at the same depth
-      // offset, NOT leave them stationary while the grid moves alone.
-      const actorDepth=(name==='enemy'||name==='player')?dz:0;
-      devRig.style.setProperty('--dev-depth-'+name,
-        (editorConfig[name].z+actorDepth).toFixed(2)+'px');
+      devRig.style.setProperty('--dev-depth-'+name,editorConfig[name].z+'px');
     }
+    const ground=editorConfig.ground;
     devRig.style.setProperty('--dev-floor-y',ground.y+'%');
     devGround.hidden=ground.visible===0;
     devGroundToggle.checked=ground.visible!==0;
@@ -2322,15 +2271,14 @@ void main(){
     const shoeX=enemyDepth.offsetWidth*(enemy.x/100-.5)
       +enemyDepth.offsetHeight*(enemy.size/100)*naturalRatio*.5;
     devRig.style.setProperty('--dev-foot-x',shoeX.toFixed(1)+'px');
-    devRig.style.setProperty('--dev-foot-distance',
-      (enemy.z+dz-ground.z).toFixed(2)+'px');
+    devRig.style.setProperty('--dev-foot-distance',(enemy.z-ground.z)+'px');
     const floorY=devRig.offsetHeight*ground.y/100;
     const shoeY=(devRig.offsetHeight-enemyDepth.offsetHeight)*.5+
-      enemyDepth.offsetHeight*(1-enemy.y/100)+dy;
+      enemyDepth.offsetHeight*(1-enemy.y/100);
     const delta=shoeY-floorY;
     const info=document.getElementById('dev-ground-delta');
     if(info)info.textContent='DEV 3D参考网格偏移：'+
-      (delta>=0?'+':'')+delta.toFixed(1)+'px（人物跟随底板；深度关系由共同地面视平线计算）';
+      (delta>=0?'+':'')+delta.toFixed(1)+'px（仅辅助；实际同地面关系按下方视平线计算）';
   }
   function applyDevCamera(){
     devRig.style.transform='translate3d('+devCamera.panX.toFixed(1)+'px,'+
@@ -2455,7 +2403,7 @@ void main(){
   document.getElementById('dev-ground-y').addEventListener('input',event=>{
     editorConfig.ground.y=Number(event.target.value);
     applyEditorVisuals();refreshEditorControls();
-    setDevStatus('共同地面已移动：女主、女二一同跟随，人物相对站位不变。');
+    setDevStatus('地板参考网格已调整，不改变角色脚点。');
   });
   document.getElementById('dev-ground-horizon').addEventListener('input',event=>{
     editorConfig.ground.horizon=Number(event.target.value);
@@ -2485,9 +2433,7 @@ void main(){
       if(field==='size'&&selectedLayer==='enemy')editorConfig.ground.lockPerspective=0;
       editorConfig[selectedLayer][field]=Number(event.target.value);
       applyEditorVisuals();refreshEditorControls();
-      setDevStatus(selectedLayer==='ground'&&field==='z'?
-        '地面深度已移动：女主、女二随同地面在3D空间移动。':
-        '已预览修改；点击保存位置以保留');
+      setDevStatus('已预览修改；点击保存位置以保留');
     });
   }
   document.getElementById('dev-save').addEventListener('click',()=>{
@@ -2595,8 +2541,6 @@ void main(){
     current:()=>({
       horizon:editorConfig.ground.horizon,
       locked:!!editorConfig.ground.lockPerspective,
-      ground:{...editorConfig.ground},
-      motion:sharedGround.floorMotion(editorConfig.ground,Math.max(1,view.clientHeight)),
       player:{...editorConfig.player},enemy:{...editorConfig.enemy}
     })
   });
