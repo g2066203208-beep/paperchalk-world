@@ -169,7 +169,7 @@ function sync(){
     // Solve the enemy's whole height and grounded shoe position from the
     // SAME camera and real source alpha silhouette. The protagonist's L2D
     // stays at exactly 1x as the user's near-field visual reference.
-    const projected=id==='enemy'&&player
+    const projected=id!=='player'&&player
       ?projection.projectStandingActor({
          referenceFootY,horizonY,referenceVisiblePx:playerVisiblePx,
          referenceHeightCm:playerHeight,actorHeightCm:centimetres,
