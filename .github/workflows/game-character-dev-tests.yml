@@ -301,7 +301,8 @@ jobs:
               },null,{timeout:20000});
               await page.waitForTimeout(200);
               const liveBefore=await page.evaluate(()=>{
-                const out={height:document.getElementById('view').clientHeight};
+                const out={height:document.getElementById('view').clientHeight,
+                  ground:window.PaperWorldL2DGround.inspect()};
                 for(const slot of ['player','enemy']){
                   const a=window.PaperchalkL2DLibrary.get(slot).actor;
                   const scratch=document.createElement('canvas');
@@ -321,13 +322,20 @@ jobs:
               assert.equal(liveBefore.enemy.layers,18);
               assert.ok(liveBefore.player.ink>10&&liveBefore.enemy.ink>10,
                 'True part-mesh character art must paint opaque pixels: '+JSON.stringify(liveBefore));
+              for(const slot of ['player','enemy']){
+                const a=liveBefore.ground.actors.find(x=>x.id===slot);
+                assert.ok(a?.detected&&Math.abs(a.errorPx)<1,
+                  'REAL '+slot+' original PSD/ArtMesh shoe is not standing on the floor: '+JSON.stringify(a));
+                assert.ok(a.soleY>.5&&a.soleY<=1,'Incorrect true footwear alpha bounds');
+              }
               await page.screenshot({path:'artifacts/l2d-studio/'+name+'-l2d-floor-before.png'});
               await page.evaluate(()=>{
                 const y=document.getElementById('dev-ground-y');
                 y.value='83';y.dispatchEvent(new Event('input',{bubbles:true}));
               });
+              await page.waitForFunction(()=>window.PaperWorldL2DGround?.state()?.y===83);
               const liveAfter=await page.evaluate(()=>{
-                const obj={};
+                const obj={ground:window.PaperWorldL2DGround.inspect()};
                 for(const slot of ['player','enemy']){
                   const a=window.PaperchalkL2DLibrary.get(slot).actor;
                   obj[slot]={canvas:a.canvas.getBoundingClientRect().toJSON(),
@@ -340,8 +348,13 @@ jobs:
                 const a=liveBefore[slot],b=liveAfter[slot],
                   delta=b.canvas.top-a.canvas.top,
                   axis=b.translate.trim().split(/\s+/).map(parseFloat);
-                assert.ok(delta>3&&Math.abs(axis[1]-liveBefore.height*.06)<.01,
-                  'REAL '+slot+' L2D ArtMesh did not follow moving floor Y: '+JSON.stringify({a,b,delta}));
+                const footBefore=liveBefore.ground.actors.find(x=>x.id===slot),
+                  footAfter=liveAfter.ground.actors.find(x=>x.id===slot);
+                assert.ok(delta>3&&Math.abs(axis[1]-footAfter.dy)<.02&&
+                  Math.abs(footAfter.dy-footBefore.dy-liveBefore.height*.06)<.02,
+                  'REAL '+slot+' L2D ArtMesh did not follow moving floor Y: '+JSON.stringify({a,b,footBefore,footAfter,delta}));
+                assert.ok(footAfter.detected&&Math.abs(footAfter.errorPx)<1,
+                  'REAL '+slot+' visible L2D shoe left the shared floor during movement');
                 assert.equal(b.layers,a.layers,
                   'Moving ground detached or reloaded the original source-part mesh');
               }
@@ -350,7 +363,7 @@ jobs:
                 const y=document.getElementById('dev-ground-y');
                 y.value='77';y.dispatchEvent(new Event('input',{bubbles:true}));
               });
-              console.log('PASS REAL BOTH L2D: 17-layer heroine + 18-layer CHAR-002 PSD follow the shared floor Y',name);
+              console.log('PASS REAL BOTH L2D: 17-layer heroine + 18-layer CHAR-002 PSD shoes ON shared 3D floor Y',name);
               assert.deepEqual(errors,[],name+' console errors');
               console.log('PASS 17 real heroine parts + one-click saved art; female two 17 original PSD layers split into 18 arm-corrected meshes with no old 7-region actor',name);
               await page.close();
