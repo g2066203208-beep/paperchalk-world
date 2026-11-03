@@ -45,7 +45,7 @@ section.innerHTML=[
  '<output id="studio-parts-status" role="status">未导入原始分层时只能做 V4 动画修补。</output>',
  '<label>绘画范围 <select id="studio-edit-scope"><option value="all">全部帧（通用修补）</option><option value="frame">仅当前帧</option></select></label>',
  '<label>帧 <output id="studio-frame-label">0 / 127</output><input id="studio-frame" type="range" min="0" max="127" value="0" step="1"></label>',
- '<div class="studio-row"><button id="studio-play" type="button">播放</button><button id="studio-v4-mode" type="button">编辑原始部件（先导入分层）</button>',
+ '<div class="studio-row"><button id="studio-play" type="button">播放</button>',
  '<button id="studio-patch-export" type="button">导出修补备份</button><label class="studio-import">导入修补备份<input id="studio-patch-import" type="file" accept="application/json,.json"></label></div>',
  '<small>只修改现有角色的原版动画与对应修补图层；数据在本站 IndexedDB 保存，跨设备需导出修补备份。</small></div></div>'
 ].join('');
@@ -60,7 +60,7 @@ style.textContent=[
  '.studio-import{cursor:pointer;border:1px solid #4a6079;border-radius:7px;padding:8px;background:#243449}',
  '.studio-import input{display:none}',
  '#studio-status{flex:1;min-width:190px;color:#abd5fc;font-size:12px}',
- '#studio-v4-wrap{display:block;margin-top:10px;padding-top:10px;border-top:1px solid #34485e;color:#cdddeb;font-size:12px}',
+ '#studio-v4-wrap{display:none!important} /* Legacy clip tools remain for old imports, not a user-facing animation mode */',
  '#studio-v4-wrap[hidden]{display:none}',
  '#studio-v4-canvas{display:none!important} /* Internal decoded frame: central game V4 viewport is the sole visible preview */',
  '.studio-v4-tools{flex:1;min-width:210px;display:grid;gap:5px}.studio-v4-tools p{font-size:11px;color:#b7c9dc;margin:4px 0}.studio-v4-tools label{font-size:12px}.studio-v4-tools input[type=range]{width:100%}',
@@ -290,8 +290,8 @@ async function saveToGame(){
  if(binding?.id===currentId)await put('slot:'+slot,{id:currentId,side});
  const native=await get('skeletal:'+currentId+':'+side);
  message('✓ 已保存：'+(list.get(currentId)?.label||currentId)+
-  (rig?.state?.model?.characterId===currentId?'，当前骨骼将在返回游戏后加载。':
-   native?.length>=12?'，原始分层工程已保存。':'，保留 V4 和像素修补。'));
+  (rig?.state?.model?.characterId===currentId?'，新版独立骨骼已同步到本机游戏。':
+   native?.length>=12?'，独立分层工程已保存。':'，素材已保存（需要导入独立分层才能启用新版骨骼）。'));
 }
 async function importImages(files){
  await switchQueue;
@@ -358,8 +358,6 @@ function updatePartStatus(){
   (hasNativePSD()?'已载入 '+count+' 个真实 PSD 独立纹理：后发、刘海、校服、手臂、裙摆、眼睛、嘴等采用实时关节及网格驱动。':currentId==='char-002'?'本方向已有 '+count+' 个从女二静态原画划分的编辑区域（非PSD），尚需导入原始分层。':
    '本方向已有 '+count+' 个原位分层部件，可在左侧逐个选择编辑。'):
   '该方向没有独立分层。烘焙 V4 WebP 不能直接拆成部件，请导入 PSD 或原始分层 ZIP。';
- const button=$('studio-v4-mode');
- if(button){button.disabled=hasNativePSD();button.textContent=hasNativePSD()?'正在显示 PSD 实时骨骼':'切换到原始分层 / V4';}
 }
 function shouldDrawLayer(part){
  if(hasNativePSD())return !!part.sourcePart&&part.role==='psd-part';
@@ -599,7 +597,8 @@ async function showClip(info){
  await drawFrame(0);
 }
 function sourceInspect(){
- if(hasNativePSD())return true;
+ // Genuine source components always use the new independent-mesh workflow.
+ if(countSourceParts()>0)return true;
  const selected=ed.S.layers[side]?.[ed.S.sel];
  const stage=window.PaperchalkStageMotion?.state;
  return !showOriginalV4 || (!!selected?.sourcePart &&
@@ -842,20 +841,6 @@ $('studio-edit-scope').onchange=()=>{
  ed.S.sel=ed.S.layers[side].indexOf(frameLayer.visible?frameLayer:globalLayer);
  ed.renderList();ed.render();
 };
-$('studio-v4-mode').onclick=()=>{
- if(showOriginalV4&&!countSourceParts()){
-  message('没有真实可编辑的部件。先导入带 PSD 图层或 assets.json/layers.json 的分层 ZIP。');
-  return;
- }
- showOriginalV4=!showOriginalV4;
- if(showOriginalV4){
-  ed.S.sel=Math.max(0,ed.S.layers[side].indexOf(
-   $('studio-edit-scope').value==='frame'?frameLayer:globalLayer));
- }else{
-  ed.S.sel=Math.max(0,ed.S.layers[side].findLastIndex(p=>p.sourcePart));
- }
- ed.renderList();ed.render();updatePartStatus();
-};
 let suspendAutobackup=false;
 window.addEventListener('paperchalk:art-dirty',()=>{
  if(suspendAutobackup||!v4)return;
@@ -916,6 +901,6 @@ $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
 $('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,readPartRig,storePartRig,drawBackdrop,drawFrameCorrection,drawComposedV4,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&showOriginalV4&&!hasNativePSD(),get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
+window.PaperchalkStudio={list,change,saveToGame,readPartRig,storePartRig,drawBackdrop,drawFrameCorrection,drawComposedV4,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,hasNativePSD,useV4:()=>!!v4&&countSourceParts()===0,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
