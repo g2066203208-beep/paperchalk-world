@@ -38,4 +38,16 @@ assert.equal(perspective.fit({...reference,actorCanvasBottom:200}).valid,false,
 const far=perspective.fit({...reference,actorCanvasBottom:400});
 assert.ok(far.valid&&far.heightPx<fit.heightPx);
 assert.ok(fit.actorFootY>fit.horizonY);
-console.log('PASS shared physical height, ground plane, resize stability, shoe/horizon validation');
+const g0=perspective.floorMotion({y:77,z:-215},720);
+const gy=perspective.floorMotion({y:83,z:-215},720);
+const gz=perspective.floorMotion({y:83,z:-165},720);
+assert.equal(g0.valid,true);
+assert.equal(g0.screenDeltaY,0);
+assert.equal(g0.worldDeltaZ,0);
+assert.ok(Math.abs(gy.screenDeltaY-43.2)<.00001,
+  'Moving the common floor by 6% must move all actor shoe points 43.2px');
+assert.equal(gz.screenDeltaY,gy.screenDeltaY);
+assert.equal(gz.worldDeltaZ,50,
+  'Floor depth must carry all actor planes by the exact same world-Z displacement');
+assert.equal(perspective.floorMotion({y:77,z:-215},-1).valid,false);
+console.log('PASS shared physical height, moving floor Y/Z parent translation, perspective invariants');
