@@ -65,9 +65,27 @@ jobs:
                     .find(p=>p.partId==='jacket').canvas.toDataURL();
                 });
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true);
-                await page.locator('#part-rig-toggle').click();
+                // Real user-facing entry must be visible, reachable and active
+                // in default EASY mode without hunting for the canvas toolbar.
+                assert.equal(await page.locator('#idle-open').isVisible(),true,'idle entry must be prominently visible');
+                const idleButton=await page.locator('#idle-open').boundingBox();
+                assert.ok(idleButton.width>110&&idleButton.x>=0&&idleButton.y>=0&&
+                  idleButton.x+idleButton.width<=vp.width+1,'idle entry must fit the visible viewport');
+                assert.equal(await page.locator('#l2d-strength').isVisible(),false,
+                  'deprecated and misleading breathing slider must be hidden');
+                await page.locator('#idle-open').click();
                 await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:10000});
                 assert.ok(await page.locator('#part-rig-panel').isVisible());
+                assert.equal(await page.locator('#idle-open').getAttribute('aria-expanded'),'true');
+                const preset=page.locator('[data-idle-preset="realistic"]');
+                assert.equal(await preset.isVisible(),true);
+                assert.equal(await page.locator('[data-idle="hair.amount"]').isVisible(),true);
+                assert.equal(await page.locator('[data-idle="cloth.amount"]').isVisible(),true);
+                const panelRect=await page.locator('#part-rig-panel').boundingBox();
+                assert.ok(panelRect.width>220&&panelRect.height>200&&
+                  panelRect.x>=0&&panelRect.x+panelRect.width<=vp.width+2,
+                  'idle controls panel must be on-screen, including phone viewport');
+                await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-VISIBLE-HAIR-SKIRT-CONTROLS.png',fullPage:false});
                 assert.equal(await page.locator('#rig-part option').count(),17);
                 await page.locator('#rig-part').selectOption('rear_hair');
                 assert.equal(await page.locator('#rig-bone option').count(),6,'hair needs three independently skinned two-joint strands');
