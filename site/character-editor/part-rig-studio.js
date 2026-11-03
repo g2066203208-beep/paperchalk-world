@@ -231,7 +231,12 @@ async function save(){
  saveQueue=pending.catch(()=>{});
  try{
   await pending;
-  if(state.model===model&&revision===version)state.dirty=false;
+  if(state.model===model&&revision===version){
+   state.dirty=false;
+   // Slider and bone edits take effect in any open game tab once this
+   // immutable snapshot is durably written, without reimporting the model.
+   studio.notifyGame?.(model.characterId,model.face,'rig-saved');
+  }
   info('✓ 已保存新版 L2D 骨骼参数，返回游戏后同步加载。');
   return true;
  }catch(error){
