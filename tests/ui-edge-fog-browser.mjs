@@ -96,10 +96,47 @@ try{
     assert.equal(await page.locator('#advance').isVisible(),false,'Next-line arrow remains after conversation ends');
     await page.waitForTimeout(750);
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-story-finished.png'});
+    // Real developer settings: native right-side fluid rather than a black rectangle.
+    await page.locator('#menu-toggle').click();
+    await page.locator('#game-dev').click();
+    await page.waitForFunction(()=>!document.getElementById('dev-tools').hidden,{timeout:12000});
+    const settingsSurface=await page.locator('#dev-tools').evaluate(el=>{
+      const own=getComputedStyle(el);
+      const button=getComputedStyle(el.querySelector('button'));
+      const selector=getComputedStyle(el.querySelector('select'));
+      return {background:own.backgroundColor,border:own.borderTopWidth,
+        buttonBackground:button.backgroundColor,selectBackground:selector.backgroundColor};
+    });
+    assert.equal(settingsSurface.background,'rgba(0, 0, 0, 0)',
+      'Developer settings still paints a rectangular black panel');
+    assert.equal(settingsSurface.border,'0px',
+      'Developer settings still paints a rectangular frame');
+    assert.equal(settingsSurface.buttonBackground,'rgba(0, 0, 0, 0)',
+      'Developer settings buttons still paint opaque squares');
+    assert.equal(settingsSurface.selectBackground,'rgba(0, 0, 0, 0)',
+      'Developer settings selects still paint black blocks');
+    await page.waitForTimeout(1300);
+    const devPixels=await page.evaluate(()=>{
+      const c=document.getElementById('dev-panel-fog');
+      const w=c.width,h=c.height;
+      const alpha=c.getContext('2d').getImageData(Math.floor(w*.72),0,w-Math.floor(w*.72),h).data;
+      let count=0;
+      for(let i=3;i<alpha.length;i+=4)if(alpha[i]>55)count++;
+      return {count,total:alpha.length/4,visible:c.dataset.visible};
+    });
+    assert.ok(devPixels.count>devPixels.total*.08,
+      'Live source fog missing beneath developer settings: '+JSON.stringify(devPixels));
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-dev-settings.png'});
+    await page.locator('#dev-exit').click();
+    await page.waitForTimeout(1200);
+    assert.equal(await page.locator('#dev-tools').isVisible(),false);
+    assert.equal(await page.locator('#dev-panel-fog').getAttribute('data-visible'),'false',
+      'Settings-side fog remains after settings are closed');
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-dev-closed.png'});
     assert.equal(await page.locator('#fog').count(),1,'Existing independent scene fog must remain untouched');
     assert.equal(await page.locator('#actor-player-l2d').count(),1,'L2D renderer must remain untouched');
     await page.close();
-    console.log('PASS '+cfg.label+': native fluid subtitle, conditional left/right, empty top, fog withdrawn after story end, no AUTO/LOG; screenshots saved');
+    console.log('PASS '+cfg.label+': native subtitle and settings fog, transparent controls, left/right triggers, empty top, hidden fog after closing, dialogue end; screenshots saved');
   }
   assert.deepEqual(errors,[]);
 }finally{
