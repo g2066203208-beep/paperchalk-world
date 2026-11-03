@@ -30,6 +30,10 @@ for y in range(1024):
  for x in range(448,crop_w):
   # White-paper foreground erase, no generative replacement.
   out_pixels[x,y]=(255,255,255,255)
+# The original reference sheet also contributes a small disconnected dark
+# contour at x~437, y~860 (the edge of the enlarged right portrait). It is
+# NOT part of the girl's trouser; clear that sliver without touching her leg.
+ImageDraw.Draw(image).polygon([(434,847),(451,849),(452,895),(436,895)],fill=(255,255,255,255))
 # Restore the distant (right) shoe and ankle that extends into the erased
 # right bust panel. The polygon is entirely below the girl's knee.
 keep=Image.new('L',(crop_w,1024),0)
