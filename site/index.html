@@ -964,10 +964,20 @@ void main(){
     sideFogWarpCtx.putImageData(sideFogPixels,0,0);
     const eased=progress*progress*(3-2*progress);
     const dw=Math.max(1,Math.round(Math.min(w*.52,desiredWidth)*eased));
+    ctx.save();
     ctx.globalAlpha=opacity*eased;
     ctx.imageSmoothingEnabled=true;
-    ctx.drawImage(sideFogWarp,edge==='right'?w-dw:0,0,dw,h);
-    ctx.globalAlpha=1;
+    if(edge==='right'){
+      // Mirror the mask: the dense core touches the RIGHT screen edge,
+      // and its soft turbulent front recedes inward. Never show a hard
+      // vertical slab boundary at the interior edge of the canvas.
+      ctx.translate(w,0);
+      ctx.scale(-1,1);
+      ctx.drawImage(sideFogWarp,0,0,dw,h);
+    }else{
+      ctx.drawImage(sideFogWarp,0,0,dw,h);
+    }
+    ctx.restore();
   }
   function resetDevPanelFog(){
     devPanelFogProgress=0;
