@@ -102,6 +102,56 @@ body.mobile-mode.virtual-landscape #view{
 
 
 
+/* RIGHT QUICK TOOLS V1: three identical 24-unit line glyphs, vertically
+   centered, NO panel behind icons. Never in either top corner or dialogue. */
+#quick-tools{
+  position:absolute;right:max(8px,2.6cqw);top:50%;
+  transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;
+  gap:clamp(10px,2.6cqh,22px);pointer-events:auto;
+  font-family:var(--font-ui);
+}
+#quick-tools .quick-tool{
+  width:clamp(40px,7.6cqh,46px);height:clamp(40px,7.6cqh,46px);
+  min-width:0;min-height:0;padding:0!important;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ui-ink);background:transparent!important;
+  border:0!important;box-shadow:none!important;
+}
+#quick-tools .quick-tool-icon{
+  display:block;width:clamp(20px,3.35cqh,26px);
+  height:clamp(20px,3.35cqh,26px);
+  fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+  flex:none;overflow:visible;
+}
+#quick-tools .quick-tool:focus-visible{
+  outline:1px solid var(--ui-ink);outline-offset:1px;
+}
+#quick-tools .quick-tool[aria-expanded="true"] .quick-tool-icon{opacity:1}
+#quick-tools .quick-tool:hover .quick-tool-icon{opacity:.8}
+#quick-panel{
+  position:absolute;top:50%;right:max(70px,9.5cqw);
+  transform:translateY(-50%);
+  width:clamp(150px,19cqw,300px);max-height:65cqh;
+  padding:8px 4px;color:var(--ui-ink);
+  border:0!important;border-radius:0!important;
+  box-shadow:none!important;background:transparent!important;
+  backdrop-filter:none!important;
+  pointer-events:auto;overflow-y:auto;
+  font-family:var(--font-ui);font-size:clamp(11px,2.1cqh,16px);
+  line-height:1.7;text-shadow:0 1px 5px #000;
+}
+#quick-panel h2{
+  margin:0 0 8px;font:inherit;font-weight:500;
+  font-size:clamp(14px,2.5cqh,19px);
+}
+#quick-panel p{margin:0;color:#eaeae6}
+#quick-panel button{margin-top:8px;padding:4px 0!important}
+@media (prefers-reduced-motion:reduce){
+  #quick-tools .quick-tool-icon{transition:none}
+}
+
 /* APPROVED TOP HUD V2 — centred on the ENTIRE logical viewport.
    Everything uses unframed white strokes, native status segments and numbers;
    the right-hand clock is positioned independently of the three vitals. */
@@ -515,6 +565,38 @@ body.mobile-mode.virtual-landscape #view{
     <nav id="top-menu" aria-label="游戏菜单">
       <button id="menu-toggle" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="menu-choices">☰</button>
     </nav>
+    <nav id="quick-tools" aria-label="快捷工具">
+      <button id="quick-backpack" class="quick-tool" type="button"
+        aria-label="背包" aria-controls="quick-panel" aria-expanded="false" title="背包">
+        <svg class="quick-tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 7V5.3a4 4 0 0 1 8 0V7"/>
+          <rect x="4.5" y="6.5" width="15" height="15" rx="3"/>
+          <path d="M4.5 11H3.2v6.8h1.3M19.5 11h1.3v6.8h-1.3"/>
+          <path d="M8 13.5h8v4.2H8z"/>
+        </svg>
+      </button>
+      <button id="quick-phone" class="quick-tool" type="button"
+        aria-label="手机" aria-controls="quick-panel" aria-expanded="false" title="手机">
+        <svg class="quick-tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="6.1" y="2" width="11.8" height="20" rx="1.7"/>
+          <path d="M9.6 4.3h4.8M6.1 18.8h11.8"/>
+          <circle cx="12" cy="20.3" r=".55" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+      <button id="quick-map" class="quick-tool" type="button"
+        aria-label="地图" aria-controls="quick-panel" aria-expanded="false" title="地图">
+        <svg class="quick-tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2.5 5.5 9 3l6 2.5L21.5 3v15.5L15 21l-6-2.5-6.5 2.5z"/>
+          <path d="M9 3v15.5M15 5.5V21"/>
+        </svg>
+      </button>
+    </nav>
+    <section id="quick-panel" data-ui-fog-edge="right" hidden
+      aria-label="快捷工具内容" aria-live="polite">
+      <h2 id="quick-panel-title"></h2>
+      <p id="quick-panel-content"></p>
+      <button id="quick-panel-close" type="button" aria-label="关闭快捷工具">关闭</button>
+    </section>
     <div id="hud-top" aria-label="游戏日期时间与角色状态">
       <div id="hud-vitals" aria-label="生命、饥饿、理智">
         <div class="hud-stat" data-stat="health" role="group" aria-label="生命 82/100">
@@ -973,6 +1055,49 @@ void main(){
   const restartButton=document.getElementById('restart-button');
   const hideButton=document.getElementById('hide-button');
   const history=document.getElementById('history');
+
+  // Quick access only: do not pretend map/inventory/phone systems exist.
+  // Real modules can replace this content later without changing the HUD.
+  const quickPanel=document.getElementById('quick-panel');
+  const quickPanelTitle=document.getElementById('quick-panel-title');
+  const quickPanelContent=document.getElementById('quick-panel-content');
+  const quickToolButtons=Object.freeze({
+    backpack:document.getElementById('quick-backpack'),
+    phone:document.getElementById('quick-phone'),
+    map:document.getElementById('quick-map')
+  });
+  const quickToolData=Object.freeze({
+    backpack:{title:'背包',empty:'暂无物品'},
+    phone:{title:'手机',empty:'暂无消息'},
+    map:{title:'地图',empty:'地图尚未解锁'}
+  });
+  let activeQuickTool=null;
+  function closeQuickPanel(){
+    activeQuickTool=null;
+    quickPanel.hidden=true;
+    for(const button of Object.values(quickToolButtons))
+      button.setAttribute('aria-expanded','false');
+  }
+  function toggleQuickPanel(id){
+    if(!quickToolData[id]||uiRoot.hidden)return;
+    if(activeQuickTool===id){closeQuickPanel();return}
+    activeQuickTool=id;
+    quickPanelTitle.textContent=quickToolData[id].title;
+    quickPanelContent.textContent=quickToolData[id].empty;
+    quickPanel.hidden=false;
+    menuChoices.hidden=true;
+    menuButton.setAttribute('aria-expanded','false');
+    for(const [key,button] of Object.entries(quickToolButtons))
+      button.setAttribute('aria-expanded',String(key===id));
+  }
+  for(const [id,button] of Object.entries(quickToolButtons)){
+    button.addEventListener('click',()=>toggleQuickPanel(id));
+  }
+  document.getElementById('quick-panel-close').addEventListener('click',closeQuickPanel);
+  window.PaperWorldQuickTools=Object.freeze({
+    open:toggleQuickPanel,close:closeQuickPanel,
+    active:()=>activeQuickTool
+  });
 
   // Real, persisted gameplay state. Combat events change HP; food and
   // scripted stress/recovery change their own stats. The only automatic
@@ -1469,6 +1594,7 @@ void main(){
     continueButton.disabled=false;
   }
   function openScene(name){
+    closeQuickPanel();
     const def=SCENES[name];if(!def)throw new Error('Unknown scene: '+name);
     // Swapping only image and scene content NEVER recreates the fluid simulator.
     sourceImage.src=def.image;sourceImage.alt=def.alt;
@@ -1685,6 +1811,7 @@ void main(){
   });
   logButton.addEventListener('click',toggleLog);
   menuButton.addEventListener('click',()=>{
+    closeQuickPanel();
     const opening=menuChoices.hidden;
     menuChoices.hidden=!opening;menuButton.setAttribute('aria-expanded',String(opening));
   });
@@ -1709,6 +1836,7 @@ void main(){
     if(transitioning)return;
     if(e.key==='Escape'){
       if(editorActive)exitDeveloper();
+      else if(activeQuickTool)closeQuickPanel();
       else if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;galleryOptions.hidden=true;mainOptions.hidden=false}
       else if(logOpen)toggleLog();
       else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
