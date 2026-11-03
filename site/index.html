@@ -553,6 +553,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
 <script src="./game/survival-state.js"></script>
+<script src="./game/ground-perspective.js?v=shared-floor-v1"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -743,10 +744,17 @@ body.mobile-mode.virtual-landscape #view{
       <output id="dev-character-status" role="status" style="font-size:11px;color:#bde2ff;display:block;line-height:1.6;margin-top:8px">载入人物素材库…</output>
     </section>
     <div id="dev-floor-controls" hidden>
-      <label for="dev-ground-y">地板高度 / 画面Y <output id="dev-ground-y-value" class="dev-value"></output></label>
+      <label for="dev-ground-y">3D地板网格参考Y <output id="dev-ground-y-value" class="dev-value"></output></label>
       <input id="dev-ground-y" type="range" min="40" max="96" step=".5">
       <output id="dev-ground-delta" class="dev-value"></output>
-      <p>绿色网格是真实水平面；橙色圈是敌人的参考脚点，用来观察是否悬空或穿地。</p>
+      <p>绿色网格是3D观察辅助；共同地面不意味着两人的脚在相同屏幕高度。</p>
+      <label for="dev-ground-horizon">地面透视消失线 <output id="dev-ground-horizon-value" class="dev-value">51.5%</output></label>
+      <input id="dev-ground-horizon" type="range" min="30" max="74" step=".5">
+      <label class="dev-floor-toggle" for="dev-ground-lock">
+        <input id="dev-ground-lock" type="checkbox"> 锁定同一地面的透视大小
+      </label>
+      <output id="dev-ground-perspective" role="status" style="display:block;white-space:normal;line-height:1.55;color:#c6e5f1;font-size:12px"></output>
+      <button id="dev-ground-calibrate" type="button">校准敌人大小并锁定地面</button>
     </div>
     <div id="dev-z-control">
       <label for="dev-z">图层深度（Z）<output id="dev-z-value" class="dev-value"></output></label>
@@ -2147,12 +2155,13 @@ void main(){
   const editorDefaults=Object.freeze({
     bg:{z:-235},enemy:{x:46,y:16,size:34,z:-190},
     fog:{z:0},player:{x:19,y:3,size:76,z:160},
-    ground:{y:77,z:-215,visible:1}
+    ground:{y:77,z:-215,visible:1,horizon:51.5,lockPerspective:0}
   });
   const EDITOR_KEY='paperchalk-layer-editor-v2';
   const PREVIOUS_EDITOR_KEY='paperchalk-layer-editor-v1';
   const editorBounds={
-    x:[-20,110],y:[-40,96],size:[12,120],z:[-420,350],visible:[0,1]
+    x:[-20,110],y:[-40,96],size:[12,120],z:[-420,350],visible:[0,1],
+     horizon:[30,74],lockPerspective:[0,1]
   };
   const copyDefaults=()=>JSON.parse(JSON.stringify(editorDefaults));
   function sanitizeEditor(data){
