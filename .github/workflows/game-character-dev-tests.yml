@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'site/index.html'
+      - 'site/game/l2d-ground-binding.js'
       - 'site/dev/**'
       - 'site/l2d/**'
       - 'site/assets/l2d/**'
@@ -280,6 +281,76 @@ jobs:
                 id:'char-002-psd-v1',provenance:'original-psd',
                 count:18,hierarchy:true,hair:true,eyes:true,hand:true,feetDrift:0
               },'female-two game must animate original independent hair and eyes with feet fixed');
+
+              // NOT poster images and NOT procedural placeholders: exercise
+              // the REAL heroine 17-part and female-two PSD 18-part player
+              // while moving the shared scene ground. Both canvas pixels
+              // and shoe positions must follow their actual L2D parent.
+              await page.evaluate(()=>{
+                for(const slot of ['player','enemy']){
+                  const a=window.PaperchalkL2D.get(slot);
+                  a.root.hidden=false;a.img.hidden=false;
+                }
+              });
+              await page.waitForFunction(()=>{
+                return ['player','enemy'].every(slot=>{
+                  const s=window.PaperchalkL2DLibrary?.get(slot);
+                  return s?.actor?.root?.dataset.l2dMode==='library-part-mesh'&&
+                    s.actor.canvas.width>0&&s.actor.canvas.height>0;
+                });
+              },null,{timeout:20000});
+              await page.waitForTimeout(200);
+              const liveBefore=await page.evaluate(()=>{
+                const out={height:document.getElementById('view').clientHeight};
+                for(const slot of ['player','enemy']){
+                  const a=window.PaperchalkL2DLibrary.get(slot).actor;
+                  const scratch=document.createElement('canvas');
+                  scratch.width=32;scratch.height=32;
+                  const c=scratch.getContext('2d');
+                  c.drawImage(a.canvas,0,0,32,32);
+                  const rgba=c.getImageData(0,0,32,32).data;
+                  let ink=0;
+                  for(let i=3;i<rgba.length;i+=4)if(rgba[i]>20)ink++;
+                  out[slot]={canvas:a.canvas.getBoundingClientRect().toJSON(),
+                    ink,layers:window.PaperchalkL2DLibrary.get(slot).layers.length,
+                    id:a.img.dataset.characterId};
+                }
+                return out;
+              });
+              assert.equal(liveBefore.player.layers,17);
+              assert.equal(liveBefore.enemy.layers,18);
+              assert.ok(liveBefore.player.ink>10&&liveBefore.enemy.ink>10,
+                'True part-mesh character art must paint opaque pixels: '+JSON.stringify(liveBefore));
+              await page.screenshot({path:'artifacts/l2d-studio/'+name+'-l2d-floor-before.png'});
+              await page.evaluate(()=>{
+                const y=document.getElementById('dev-ground-y');
+                y.value='83';y.dispatchEvent(new Event('input',{bubbles:true}));
+              });
+              const liveAfter=await page.evaluate(()=>{
+                const obj={};
+                for(const slot of ['player','enemy']){
+                  const a=window.PaperchalkL2DLibrary.get(slot).actor;
+                  obj[slot]={canvas:a.canvas.getBoundingClientRect().toJSON(),
+                    translate:getComputedStyle(a.root).translate,
+                    layers:window.PaperchalkL2DLibrary.get(slot).layers.length};
+                }
+                return obj;
+              });
+              for(const slot of ['player','enemy']){
+                const a=liveBefore[slot],b=liveAfter[slot],
+                  delta=b.canvas.top-a.canvas.top,
+                  axis=b.translate.split(/\\s+/).map(parseFloat);
+                assert.ok(delta>3&&Math.abs(axis[1]-liveBefore.height*.06)<.01,
+                  'REAL '+slot+' L2D ArtMesh did not follow moving floor Y: '+JSON.stringify({a,b,delta}));
+                assert.equal(b.layers,a.layers,
+                  'Moving ground detached or reloaded the original source-part mesh');
+              }
+              await page.screenshot({path:'artifacts/l2d-studio/'+name+'-l2d-floor-after.png'});
+              await page.evaluate(()=>{
+                const y=document.getElementById('dev-ground-y');
+                y.value='77';y.dispatchEvent(new Event('input',{bubbles:true}));
+              });
+              console.log('PASS REAL BOTH L2D: 17-layer heroine + 18-layer CHAR-002 PSD follow the shared floor Y',name);
               assert.deepEqual(errors,[],name+' console errors');
               console.log('PASS 17 real heroine parts + one-click saved art; female two 17 original PSD layers split into 18 arm-corrected meshes with no old 7-region actor',name);
               await page.close();
