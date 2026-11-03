@@ -12,6 +12,14 @@ const rig=document.getElementById('dev-rig');
 const floor=document.getElementById('dev-ground');
 if(!view||!rig||!floor)return;
 const ORIGIN=Object.freeze({y:77,z:-215});
+// The visible close-up is deliberately NOT a full-body calibration sprite.
+// Camera-space reference for the opponent stays a normal standing person:
+// world grounding and stature remain stable when we crop the heroine at
+// waist height for an intimate over-the-shoulder composition.
+const SHOULDER_CAMERA=Object.freeze({
+  referenceBodyHeightRatio:.90,
+  referenceFootYRatio:.965
+});
 const roots=()=>[...document.querySelectorAll('[data-l2d-actor]')];
 const actorInfo=new Map(),soleCache=new WeakMap();
 const projection=window.PaperWorldPerspectiveGround;
@@ -140,7 +148,9 @@ function sync(){
   const playerHeight=Number(player?.img?.dataset?.heightCm)||162;
   const playerVisible=player
     ?Math.max(.1,player.shoe.y-player.shoe.crown):1;
-  const playerVisiblePx=(player?.img?.offsetHeight||h*.76)*playerVisible;
+  const playerVisiblePx=(dev
+    ?(player?.img?.offsetHeight||h*SHOULDER_CAMERA.referenceBodyHeightRatio)
+    :worldH*SHOULDER_CAMERA.referenceBodyHeightRatio)*playerVisible;
   const playerWorldZ=cssValue('--dev-depth-player',160)+worldDepthShift;
   const playerRawFoot=player&&playerRoot
     ?originalRootTop(playerRoot,worldH)+player.img.offsetTop+
@@ -154,7 +164,12 @@ function sync(){
   const horizonPercent=cssValue('--dev-floor-horizon',51.5);
   const horizonY=(worldH-sceneHeight)*.5+
     sceneHeight*horizonPercent/100+groundShiftY;
-  const referenceFootY=playerRawFoot+groundShiftY;
+  // During the game the heroine's physical shoe is far below the screen:
+  // using it as a reference makes the opponent giant and projects its feet
+  // outside the viewport. The virtual standing-body anchor is the same
+  // world-camera calibration BEFORE the close-up crop, not a fake shoe.
+  const referenceFootY=(dev?playerRawFoot:
+    worldH*SHOULDER_CAMERA.referenceFootYRatio)+groundShiftY;
   const automatic=cssValue('--dev-auto-perspective',1)!==0;
   for(const root of items){
     const asset=actorSource(root);
@@ -264,6 +279,9 @@ function sync(){
   }
   last={y,z,dev,floorY:fmt(floorY),horizonY:fmt(horizonY),
     referenceFootY:fmt(referenceFootY),
+    cameraProfile:dev?'physical-dev-floor':'close-follow-shoulder-v5',
+    cameraReferenceBodyPx:fmt(playerVisiblePx),
+    playerShoeActuallyOffscreen:!dev&&playerRawFoot>worldH,
     autoPerspective:automatic,actors:actorData};
   rig.dataset.l2dGroundY=String(y);
   rig.dataset.l2dGroundZ=String(z);
