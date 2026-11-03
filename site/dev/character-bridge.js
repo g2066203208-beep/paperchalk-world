@@ -266,7 +266,12 @@ async function init(){
    try{await assign(key,a.id,a.side,false)}catch(e){console.warn(e);}
   }
  }
- ready=true;refreshList();
+ ready=true;
+ // Match the scene DEV layer already selected before this script boots.
+ // Previously the scene could say "enemy" while the actor selector kept
+ // editing "player", leading to edits landing in the wrong slot.
+ if(picker.value==='player'||picker.value==='enemy')slot=picker.value;
+ refreshList();
 }
 loaded.onchange=()=>selectSlot(loaded.value);
 library.onchange=()=>{
