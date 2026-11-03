@@ -263,8 +263,8 @@ jobs:
             }
             assert.ok(physical.rightArmCrossTalk<1,
               'right arm must not move from editing left elbow within the same real PNG');
-            // Regression: with the SAME exact source PNGs, the fringe and
-            // skirt visibly travel farther without increasing body breathing.
+            // Regression: with the SAME exact heroine PNGs, calm idle
+            // must move less than the previously exaggerated factory rig.
             const expressive=await page.evaluate(()=>{
               const core=window.PaperchalkPartRigCore;
               const model=window.PaperchalkL2DLibrary.get('player').model;
@@ -296,16 +296,16 @@ jobs:
                   custom.parts.front_hair,custom.parts.skirt],
                 body:idle.body.amount};
             });
-            console.log('EXPRESSIVE FRINGE / SKIRT',JSON.stringify(expressive));
-            assert.ok(expressive.hairNow>expressive.hairBefore*1.5,
-              'fringe must visibly move farther than previous idle');
-            assert.ok(expressive.skirtNow>expressive.skirtBefore*1.8,
-              'skirt hem must visibly move farther than previous idle');
-            assert.deepEqual(expressive.migrated,[.85,.82],
-              'unchanged old realistic profile migrates safely');
+            console.log('CALIBRATED NATURAL FRINGE / SKIRT',JSON.stringify(expressive));
+            assert.ok(expressive.hairNow>2&&expressive.hairNow<expressive.hairBefore*.8,
+              'normal fringe should move, but less than the exaggerated previous idle');
+            assert.ok(expressive.skirtNow>1&&expressive.skirtNow<expressive.skirtBefore*.85,
+              'normal skirt should move gently, not flap as in the previous idle');
+            assert.deepEqual(expressive.migrated,[.28,.23],
+              'unchanged old realistic profile migrates to conservative motion');
             assert.deepEqual(expressive.custom,[.45,.31,.5,0],
-              'custom sliders, including a deliberate zero, remain intact');
-            assert.equal(expressive.body,.18,'torso must retain subtle standing idle');
+              'manual sliders including a deliberate zero remain intact');
+            assert.equal(expressive.body,.12,'torso must remain nearly motionless');
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','back'));
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===8,{timeout:20000});
             const backBones=await page.evaluate(()=>{
