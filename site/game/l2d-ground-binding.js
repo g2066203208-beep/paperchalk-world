@@ -137,7 +137,21 @@ function sync(){
   const playerHeight=Number(player?.img?.dataset?.heightCm)||162;
   const playerVisible=player
     ?Math.max(.1,player.shoe.y-player.shoe.crown):1;
-  const playerCanvasHeight=player?.img?.offsetHeight||h*.76;
+  const playerVisiblePx=(player?.img?.offsetHeight||h*.76)*playerVisible;
+  const playerWorldZ=cssValue('--dev-depth-player',160)+worldDepthShift;
+  const playerRawFoot=player&&playerRoot
+    ?originalRootTop(playerRoot,worldH)+player.img.offsetTop+
+      player.img.offsetHeight*player.shoe.y
+    :worldH*.88;
+  const scene=document.getElementById('scene');
+  const sceneHeight=scene?.offsetHeight||worldH;
+  const groundShiftY=(y-ORIGIN.y)*h/100;
+  // One explicit virtual camera / ground plane independent of background
+  // artwork. The scene can be repainted without recalibrating characters.
+  const horizonPercent=cssValue('--dev-floor-horizon',51.5);
+  const horizonY=(worldH-sceneHeight)*.5+
+    sceneHeight*horizonPercent/100+groundShiftY;
+  const referenceFootY=playerRawFoot+groundShiftY;
   const automatic=cssValue('--dev-auto-perspective',1)!==0;
   for(const root of items){
     const asset=actorSource(root);
@@ -149,16 +163,26 @@ function sync(){
     const centimetres=Number(img.dataset.heightCm)||meta.heightCm;
     const actorZ=cssValue('--dev-depth-'+id,id==='enemy'?-190:160);
     const effectiveZ=actorZ+worldDepthShift;
-    // The artist's existing DEV placements already define the natural
-    // baseline size. Re-normalising the two layers by raw IMG canvas height
-    // was blowing up the enemy by several hundred percent and blurring her.
-    // DEV's perspective=1150px already provides the pinhole Z reduction.
-    // Normal game mode (flat layers) gets exactly the matching relative
-    // distance multiplier, anchored to each actor's authored baseline Z.
-    const baselineZ=id==='enemy'?-190:160;
-    const depthFactor=projection.depthScale(effectiveZ,baselineZ);
-    const appliedScale=automatic&&!dev&&Number.isFinite(depthFactor)
-      ?Math.max(.5,Math.min(1.65,depthFactor)):1;
+    // Solve the enemy's whole height and grounded shoe position from the
+    // SAME camera and real source alpha silhouette. The protagonist's L2D
+    // stays at exactly 1x as the user's near-field visual reference.
+    const projected=id==='enemy'&&player
+      ?projection.projectStandingActor({
+         referenceFootY,horizonY,referenceVisiblePx:playerVisiblePx,
+         referenceHeightCm:playerHeight,actorHeightCm:centimetres,
+         actorVisiblePx:Math.max(1,img.offsetHeight*
+           Math.max(.1,shoe.y-shoe.crown)),
+         referenceZ:playerWorldZ,actorZ:effectiveZ
+       }):null;
+    const depthFactor=projected?.valid?projected.depthRatio:
+       projection.depthScale(effectiveZ,playerWorldZ);
+    // The DEV inspector already has a real CSS 3D pinhole camera, so only
+    // correct source-person dimensions there. In the flat game compensate
+    // for BOTH physical stature and depth; never apply depth twice.
+    const measuredScale=projected?.valid
+      ?(dev?projected.scale/projected.depthRatio:projected.scale):1;
+    const appliedScale=automatic&&projected?.valid
+      ?Math.max(.35,Math.min(3.2,measuredScale)):1;
     // CSS's independent `scale` longhand drifted the shoe anchor by 11px
     // in Chromium's nested perspective scene. Apply a single explicit
     // affine matrix with origin (0,0), translating the shoe by (1-scale)*heel
@@ -188,10 +212,15 @@ function sync(){
     }
     const shoeLocalY=originalRootTop(root,worldH)+
       img.offsetTop+img.offsetHeight*shoe.y;
-    const dy=dev?floorY-shoeLocalY:(y-ORIGIN.y)*h/100;
+    const dy=dev?floorY-shoeLocalY:
+      automatic&&projected?.valid?
+        projected.targetFootY-shoeLocalY:groundShiftY;
     const translation='0px '+fmt(dy)+'px '+fmt(dz)+'px';
     if(root.style.translate!==translation)root.style.translate=translation;
     const worldFootY=shoeLocalY+dy;
+    const expectedFootY=dev?floorY:
+      automatic&&projected?.valid?projected.targetFootY:
+      shoeLocalY+groundShiftY;
     // World X and Z determine the 3D floor contact point. The 2D roots
     // remain vertical; never rotate the actual bones with the floor grid.
     const worldX=(root.id==='enemy-depth-root'
@@ -200,14 +229,21 @@ function sync(){
     const relativeZ=actorZ+dz-z;
     root.dataset.groundAttached='true';
     root.dataset.shoeContact=shoe.detected?'mesh-alpha':'bottom-edge';
-    root.dataset.groundError=String(fmt(worldFootY-floorY));
+    root.dataset.groundError=String(fmt(worldFootY-expectedFootY));
     actorData.push({id:root.dataset.l2dActor,detected:shoe.detected,
       soleX:shoe.x,soleY:shoe.y,worldFootY:fmt(worldFootY),
       worldX:fmt(worldX),relativeZ:fmt(relativeZ),dy:fmt(dy),dz:fmt(dz),
-      errorPx:fmt(worldFootY-floorY),translation,
+      errorPx:fmt(worldFootY-expectedFootY),translation,
       perspectiveScale:fmt(appliedScale),autoPerspective:automatic,
-      physicalScale:1,depthScale:fmt(depthFactor),
-      physicalCm:centimetres,effectiveZ,visibleFraction:fmt(shoe.y-shoe.crown),
+      physicalScale:fmt(projected?.valid
+        ?projected.scale/projected.depthRatio:1),
+      depthScale:fmt(depthFactor),
+      physicalCm:centimetres,effectiveZ,
+      referenceFootY:fmt(referenceFootY),horizonY:fmt(horizonY),
+      expectedFootY:fmt(expectedFootY),
+      targetVisiblePx:fmt(projected?.valid?
+        projected.targetVisiblePx:playerVisiblePx),
+      visibleFraction:fmt(shoe.y-shoe.crown),
       mode:root.dataset.l2dMode||'loading',
       canvasW:canvas.width,canvasH:canvas.height});
     let marker=actorInfo.get(root);
@@ -223,8 +259,9 @@ function sync(){
     marker.style.top=fmt(relativeZ)+'px';
     marker.hidden=!dev||root.hidden||img.hidden;
   }
-  last={y,z,dev,floorY:fmt(floorY),autoPerspective:automatic,
-    actors:actorData};
+  last={y,z,dev,floorY:fmt(floorY),horizonY:fmt(horizonY),
+    referenceFootY:fmt(referenceFootY),
+    autoPerspective:automatic,actors:actorData};
   rig.dataset.l2dGroundY=String(y);
   rig.dataset.l2dGroundZ=String(z);
   rig.dataset.l2dGroundActors=String(actorData.length);
@@ -233,11 +270,14 @@ function sync(){
     const current=actorData.find(a=>a.id==='enemy');
     const reference=actorData.find(a=>a.id==='player');
     if(current&&reference){
-      diagnostic.textContent='同一地面 · 高性能自动透视｜主角 '+
+      diagnostic.textContent='同一地面 + 单镜头透视｜主角 '+
         reference.physicalCm+'cm / 女二 '+current.physicalCm+
-        'cm（身高档案暂定）｜女二距离系数 '+fmt(current.depthScale)+
-        '｜当前可见缩放 '+current.perspectiveScale+'×'+
-        '｜已保留原始画布清晰度与手动摆好的大小；Z 远离缩小、靠近放大。';
+        'cm（人物档案暂定）｜远近系数 '+current.depthScale+
+        '｜女二源画布校正 '+current.physicalScale+'×'+
+        '｜最终 L2D 缩放 '+current.perspectiveScale+'×'+
+        '｜脚底屏幕Y '+current.expectedFootY+
+        '｜视平线Y '+current.horizonY+
+        '；背景图不参与计算。';
     }
   }
   return last;
