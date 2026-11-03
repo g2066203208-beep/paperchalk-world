@@ -13,6 +13,15 @@ const names={hero:'女主',partner:'女二'};
 let host=null,active=false,closing=false,selected=null,chainCaption='',tip='',raf=0;
 let prevVisible=null,prevSlots=null,castTask=Promise.resolve();
 let feedbackTimer=0;
+function battleSeed(){
+ const raw=new URLSearchParams(location.search).get('combatSeed');
+ if(raw!==null&&/^[0-9]{1,10}$/.test(raw))return Number(raw)>>>0||1;
+ if(root.crypto?.getRandomValues){
+  const number=new Uint32Array(1);root.crypto.getRandomValues(number);
+  return number[0]||1;
+ }
+ return (Date.now()^Math.floor(Math.random()*4294967296))>>>0||1;
+}
 function install(){
  if(host)return;
  const view=$('view');if(!view)return;
@@ -195,7 +204,7 @@ function handleClick(event){
  const button=event.target.closest('button');if(!button||button.disabled)return;
  if(button.id==='cb-close'||button.id==='cb-result-close'){close();return;}
  if(button.id==='cb-rematch'){
-  clearFeedback();selected=null;chainCaption='';tip='';model.reset();render(model.snapshot());return;
+  clearFeedback();selected=null;chainCaption='';tip='';model.reset(battleSeed());render(model.snapshot());return;
  }
  if(button.id==='cb-end'){
   const prev=model.snapshot().sequence;
@@ -281,7 +290,7 @@ function open(){
  };
  if($('camera-player-root'))$('camera-player-root').hidden=false;
  if($('enemy-depth-root'))$('enemy-depth-root').hidden=false;
- model.reset();host.hidden=false;render(model.snapshot());
+ model.reset(battleSeed());host.hidden=false;render(model.snapshot());
  castTask=castPortraits();
  raf=requestAnimationFrame(portraitFrame);
 }
