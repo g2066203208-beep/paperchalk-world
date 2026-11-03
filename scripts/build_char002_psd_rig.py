@@ -180,7 +180,7 @@ def build():
     result=subprocess.run(["node","-e",JS],cwd=ROOT,
         input=json.dumps({"parts":parts}),capture_output=True,text=True,check=True)
     model=json.loads(result.stdout)
-    if tuple(model["parts"])!=EXPECTED_PARTS:
+    if tuple(model["parts"])!=RUNTIME_PARTS:
         raise ValueError("The shared L2D renderer lost a real PSD component")
     idle=model["idleProfile"]
     idle["body"]["amount"]=0
@@ -188,32 +188,47 @@ def build():
     idle["cloth"]["amount"]=.11
     idle["sleeves"]["amount"]=.045
     idle["breath"]["amount"]=.34
-    idle["joints"]={"hands":.24,"shoulders":.12,"hips":.10}
+    idle["joints"]={"hands":.75,"shoulders":.12,"hips":.10}
     idle["parts"].update({"back_hair":1.20,"front_hair":1.25,
-        "bottomwear":1.15,"handwear":.8})
+        "bottomwear":1.15,"hand_raised":1.15,"hand_lowered":.75})
     model["provenance"]="original-psd"
     model["sourcePsdSha256"]=PSD_SHA
     model["sourceLayerRecords"]=24
-    model["visiblePartCount"]=17
+    model["sourceVisiblePartCount"]=17
+    model["visiblePartCount"]=18
+    model["pixelSplits"]={"handwear":["hand_raised","hand_lowered"]}
+    model["raisedArmBinding"]="bottom-root shoulder / upper-wrist"
     model["limitations"]=[
-        "24 original PSD records; 17 visible independently textured parts",
+        "24 original PSD records: 17 source art layers, 18 independently animated runtime meshes",
         "Seven empty or nearly transparent source placeholders are not animated",
-        "The supplied PSD has one combined handwear texture and one combined footwear texture",
+        "The original combined handwear is separated by an exact pixel-only spatial split",
+        "The original footwear layer stays single and grounded",
         "The hidden back sides of hair and sleeves cannot be invented without additional painting",
         "Front view only: no original back PSD was uploaded"
     ]
     output(DEST/"front.rig.json",model)
     shutil.copyfile(SOURCE,DEST/"front-original-psd-parts.zip")
+    editable_manifest={"schema":1,"canvas":[1024,1024],"characterId":"char-002",
+      "provenance":"original-psd-pixel-partition",
+      "sourceVisibleParts":17,"originalLayerRecords":24,
+      "layers":{"front":editable,"back":[]}}
+    # The studio loads the same 18 ArtMeshes the game animates, while the
+    # untouched original 17-layer PSD export is retained for provenance.
+    with ZipFile(DEST/"front-rig-editable-parts.zip","w",ZIP_DEFLATED,compresslevel=6) as out:
+        out.writestr("layers.json",json.dumps(editable_manifest,ensure_ascii=False))
+        for row in editable:
+            out.write(DEST/"parts"/row["file"],row["file"])
     output(DEST/"module.json",{
         "schema":1,"id":"char-002-psd-v1","label":"女二 · 原始PSD独立骨骼",
         "views":{"front":{
             "portrait":"front.png",
-            "sourceParts":{"file":"front-original-psd-parts.zip","provenance":"original-psd"},
+            "sourceParts":{"file":"front-rig-editable-parts.zip","provenance":"original-psd"},
+            "originalPsdArchive":"front-original-psd-parts.zip",
             "rig":{"type":"part-mesh","file":"front.rig.json","textures":textures}
         }}
     })
-    print("PASS CHAR-002: 24 real PSD records, 17 individually visible"
-          " textures, original pixels preserved, no old 7-region clip")
+    print("PASS CHAR-002: 24 source PSD records, 17 original textures, "
+          "18 runtime ArtMeshes including independently animated raised/lowered arms")
 
 
 if __name__=="__main__":
