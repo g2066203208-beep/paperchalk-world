@@ -170,14 +170,26 @@ for(const time of [0,.7,1.5,2.7,4.2,6.8]){
     leg.ankle)<1e-6,'both ankle joints must stay grounded');
   }
  }
+ // Chest and arms inherit the shoulder node.
  const q=shared.shoulder;
- const anchor=core.parentPoint(parts.jacket,q,time,shoulderOn);
+ const shoulderAnchor=core.parentPoint(parts.jacket,q,time,shoulderOn);
+ assert.ok(distance(shoulderAnchor,
+  core.parentPoint(parts.sleeves_and_hands,q,time,shoulderOn))<1e-5,
+  'both arms must inherit shoulder position');
+ // The neck bridges shoulder → head, so its upper seam is identical to
+ // the head parent while its lower seam is attached to the shoulders.
+ const neckJoint=shared.neck;
+ const headAnchor=core.parentPoint(parts.face,neckJoint,time,shoulderOn);
  for(const id of ['neck','face','nose','brows','eye_white','irises',
-   'front_hair','rear_hair','sleeves_and_hands']){
-  const got=core.parentPoint(parts[id],q,time,shoulderOn);
-  assert.ok(distance(got,anchor)<1e-5,
-   id+' must inherit the very same shoulder parent transform');
+   'front_hair','rear_hair']){
+  const got=core.parentPoint(parts[id],neckJoint,time,shoulderOn);
+  assert.ok(distance(got,headAnchor)<1e-5,
+   id+' must inherit the neck/head parent without opening a seam');
  }
+ const lowNeck={x:shared.neck.x,y:shared.neckBottom};
+ assert.ok(distance(core.parentPoint(parts.neck,lowNeck,time,shoulderOn),
+  core.parentPoint(parts.sleeves_and_hands,lowNeck,time,shoulderOn))<1e-5,
+  'lower neck must remain attached to the shoulder, not follow the head rigidly');
  const waist=shared.pelvis;
  const torsoWaist=core.parentPoint(parts.jacket,waist,time,wholeOn),
   skirtWaist=core.parentPoint(parts.skirt,waist,time,wholeOn);
