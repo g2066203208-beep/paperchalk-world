@@ -124,9 +124,34 @@ try{
       JSON.stringify({cfg:cfg.name,playerColor,roles}));
   await page.locator('#player-fog-probe').evaluate(el=>{el.style.opacity='0'});
   const enemyCovered=pixelAtCenter(await page.locator('#enemy-fog-probe').screenshot());
+  const occlusionDiagnostics=await page.evaluate(()=>{
+    const ids=['view','enemy-depth-root','fog','ui-edge-fog',
+      'camera-player-root','novel-ui','enemy-fog-probe'];
+    const data=Object.fromEntries(ids.map(id=>{
+      const e=document.getElementById(id),s=getComputedStyle(e);
+      return [id,{z:s.zIndex,transform:s.transform,translate:s.translate,
+        display:s.display,visibility:s.visibility,opacity:s.opacity,
+        background:s.backgroundColor,
+        bounds:e.getBoundingClientRect().toJSON(),
+        hidden:e.hidden}];
+    }));
+    const probe=document.getElementById('enemy-fog-probe');
+    const r=probe.getBoundingClientRect();
+    const x=r.left+r.width*.5,y=r.top+r.height*.5;
+    for(const id of ['enemy-depth-root','fog','ui-edge-fog','camera-player-root']){
+      document.getElementById(id).style.pointerEvents='auto';
+    }
+    data.hitOrder=document.elementsFromPoint(x,y)
+      .slice(0,15).map(e=>e.id||e.tagName);
+    data.sample={x,y};
+    return data;
+  });
+  await page.screenshot({path:'artifacts/fog-layer/'+cfg.name+'-compositing-debug.png'});
+  console.log('COMPOSITING DEBUG '+cfg.name+' '+JSON.stringify({roles,
+    playerColor,enemyCovered,occlusionDiagnostics}));
   assert.ok(enemyCovered.every(x=>x<75),
     'ENEMY L2D was not occluded by black fog in real browser paint: '+
-      JSON.stringify({cfg:cfg.name,enemyCovered,roles}));
+      JSON.stringify({cfg:cfg.name,enemyCovered,roles,occlusionDiagnostics}));
   const baseline=await page.locator('#enemy-fog-probe').evaluate(el=>{
     const fog=document.getElementById('fog'),edge=document.getElementById('ui-edge-fog');
     fog.style.visibility='hidden';
