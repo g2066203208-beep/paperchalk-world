@@ -235,6 +235,7 @@ async function deactivate(){
  state.active=false;state.drag=null;state.bone='';panel.hidden=true;
  document.body.classList.remove('rig-authoring');
  syncOpenState();ed.render();
+ requestAnimationFrame(()=>document.getElementById('fit')?.click());
 }
 async function activate(){
  if(!studio.current)return;
@@ -247,6 +248,7 @@ async function activate(){
  state.active=true;state.phase=0;state.playing=true;
  document.body.classList.add('rig-authoring');
  panel.hidden=false;syncOpenState();
+ requestAnimationFrame(()=>document.getElementById('fit')?.click());
  const selectNode=$('rig-part');selectNode.replaceChildren();
  for(const p of src)selectNode.add(new Option(p.name,p.partId||p.name));
  const preferred=S.layers[S.side][S.sel];
