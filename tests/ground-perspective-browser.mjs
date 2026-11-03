@@ -274,7 +274,14 @@ try{
      return {size:enemy.img.offsetHeight,buffer:enemy.canvas.width,
        scale:parseFloat(getComputedStyle(enemy.canvas).scale),
        canvasHeight:rect.height,
-       shoeScreenY:rect.top+rect.height*actor.soleY};
+       shoeScreenY:rect.top+rect.height*actor.soleY,
+       soleY:actor.soleY,
+       origin:getComputedStyle(enemy.canvas).transformOrigin,
+       sourceOrigin:enemy.canvas.style.transformOrigin,
+       rootTranslation:getComputedStyle(enemy.root).translate,
+       rootTransform:getComputedStyle(enemy.root).transform,
+       imgRect:enemy.img.getBoundingClientRect().toJSON(),
+       canvasRect:rect.toJSON()};
    },z);
    const distant=await actorAt(-350);
    const close=await actorAt(-60);
