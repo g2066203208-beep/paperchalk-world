@@ -104,7 +104,14 @@ function render(snap){
   Array.from({length:snap.maxEnergy},(_,i)=>'<i class="cb-orb '+(i>=snap.energy?'empty':'')+'"></i>').join('');
  $('cb-end').disabled=snap.phase!=='player';
  $('cb-allies').innerHTML=snap.allies.map(u=>unitButton(u,false,null,options.has(u.id))).join('');
- $('cb-enemies').innerHTML=snap.enemies.map(u=>unitButton(u,true,snap.intents.find(x=>x.actorId===u.id),options.has(u.id))).join('');
+ $('cb-enemies').innerHTML=snap.enemies.map(u=>{
+  const plan=snap.intents.find(x=>x.actorId===u.id);
+  // An intent prepared when three enemies lived must stop advertising a
+  // combo if the player eliminated every potential supporting enemy.
+  const liveSupport=snap.enemies.some(x=>x.id!==u.id&&x.hp>0);
+  const currentPlan=plan?{...plan,willCombo:plan.kind!=='guard'&&liveSupport}:null;
+  return unitButton(u,true,currentPlan,options.has(u.id));
+ }).join('');
  $('cb-hand').innerHTML=snap.hand.map(c=>cardButton(c,snap)).join('');
  $('cb-deck-info').textContent='牌库 '+snap.drawCount+' · 弃牌 '+snap.discardCount;
  const last=snap.events.slice(-4);
