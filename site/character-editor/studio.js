@@ -35,9 +35,9 @@ async function dropDraft(key){
  });}finally{db.close();}
 }
 const female2PsdIds=['head_reference','back_hair','legwear','footwear','neck',
- 'bottomwear','topwear','ears','face','handwear','mouth','eyebrow',
+ 'bottomwear','topwear','ears','face','hand_raised','hand_lowered','mouth','eyebrow',
  'eyewhite','irides','eyelash','nose','front_hair'];
-const hasFemale2Psd=ids=>ids.length===17&&female2PsdIds.every(id=>ids.includes(id));
+const hasFemale2Psd=ids=>ids.length===18&&female2PsdIds.every(id=>ids.includes(id));
 const fileURL=file=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(file)});
 const section=document.createElement('section');section.id='studio-library';
 section.innerHTML=[
@@ -368,6 +368,7 @@ async function zipFiles(file){
 }
 
 const partLabels={rear_hair:'后发',front_hair:'前发',hair_clip:'发夹',
+ hand_raised:'举起的左手及衣袖',hand_lowered:'垂下的右手及衣袖',
  sleeves_and_hands:'袖子与双手',sleeve_left:'左袖',sleeve_right:'右袖',
  legs:'双腿',shoes:'鞋',neck:'脖颈',skirt:'裙子',jacket:'整件外套',
  brows:'眉毛',ears:'双耳',face:'脸',nose:'鼻子',mouth:'嘴',
@@ -377,7 +378,7 @@ function hasNativePSD(face=side){return (ed.S.layers[face]||[]).filter(p=>p.sour
 function updatePartStatus(){
  const count=countSourceParts(),output=$('studio-parts-status');
  if(output)output.textContent=count?
-  (hasNativePSD()?'已载入 '+count+' 个真实 PSD 独立纹理：后发、刘海、校服、手臂、裙摆、眼睛、嘴等采用实时关节及网格驱动。':currentId==='char-002'?'旧分区正在自动替换为原始PSD分层…':
+  (hasNativePSD()?'已载入 '+count+' 个真实 PSD 独立纹理：后发、刘海、校服、手臂、裙摆、眼睛、嘴等采用实时关节及网格驱动。':currentId==='char-002'?'旧合并手臂正在替换为独立左右手臂…':
    '本方向已有 '+count+' 个原位分层部件，可在左侧逐个选择编辑。'):
   '该方向没有独立分层。烘焙 V4 WebP 不能直接拆成部件，请导入 PSD 或原始分层 ZIP。';
 }
@@ -525,13 +526,13 @@ async function ensureHostedParts(id){
  const currentSource=ed.S.layers.front.filter(p=>p.sourcePart).map(p=>String(p.partId||p.name));
  const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
  if(front&&!upgrade&&(id==='char-002'||back))return;
- message(id==='char-002'?'载入你上传的女二 PSD：17 个真实可见部件…':'载入真实原位分层…');
+ message(id==='char-002'?'载入女二 PSD：17 个源层、18 个独立部件（举起的左手已分开）…':'载入真实原位分层…');
  try{
   const source=await hostedParts(id,side);
   if(currentId!==id)return;
   await importComponentFiles(source,{missingOnly:!upgrade,quiet:true});
   message(id==='char-002'?
-   '✓ 女二已替换旧分区为原始PSD（24层记录、17个真实可见部件），全部可以编辑和绑定。':
+   '✓ 女二已加载 24 层原始记录和 18 个可动部件，两只手臂独立绑定。':
    '已载入原位PSD独立部件。');
  }catch(error){
   console.error('[L2D] hosted source parts failed',error);
