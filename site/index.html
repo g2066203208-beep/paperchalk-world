@@ -19,6 +19,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
   position:fixed;inset:0;display:grid;place-items:center;
   overflow:hidden;background:#000;perspective:1500px;
   container-type:size;touch-action:none;
+  /* One logical-viewport scale for every player-facing game control. */
+  --game-control-size:clamp(52px,8.2cqh,64px);
+  --game-control-icon:clamp(30px,4.7cqh,36px);
+  --game-control-row:clamp(52px,7.7cqh,62px);
+  --game-control-text:clamp(16px,2.75cqh,22px);
 }
 /* The Android APK uses a real landscape Activity. A normal browser tab
    cannot force OS rotation, so render its COMPLETE game viewport rotated
@@ -75,17 +80,17 @@ body.mobile-mode.virtual-landscape #view{
 }
 #novel-ui button:focus-visible{outline:1px solid var(--ui-ink);outline-offset:3px}
 #top-menu{position:absolute;top:max(7px,3.7cqh);left:max(8px,2.7cqw)}
-#top-menu button{font-family:var(--font-ui);font-size:clamp(19px,3.7cqh,88px);font-weight:300;line-height:1;min-width:38px;min-height:38px;text-align:left;padding:2px 4px}
+#top-menu button{font-family:var(--font-ui);font-size:var(--game-control-icon);font-weight:300;line-height:1;width:var(--game-control-size);height:var(--game-control-size);display:grid;place-items:center;text-align:center;padding:0}
 #top-actions{position:absolute;top:max(7px,3.8cqh);right:max(9px,3.0cqw);display:flex;align-items:center;gap:max(10px,3.2cqw)}
-#top-actions button{font-family:var(--font-ui);font-size:clamp(11px,2.45cqh,60px);min-height:36px;min-width:38px;padding:4px 2px}
+#top-actions button{font-family:var(--font-ui);font-size:var(--game-control-text);min-height:var(--game-control-size);min-width:var(--game-control-size);padding:0 8px}
 #top-actions button[aria-pressed="true"]{text-decoration:underline;text-underline-offset:6px}
 #dialogue{position:absolute;left:8.3cqw;bottom:max(24px,8.4cqh);width:76cqw;pointer-events:auto;text-shadow:0 1px 6px #000}
 #speaker{font-family:var(--font-name);font-weight:500;font-size:clamp(12px,2.75cqh,70px);line-height:1.25;margin:0 0 max(7px,1.8cqh)}
 #dialogue-text{font-family:var(--font-dialogue);font-weight:400;font-size:clamp(14px,2.95cqh,74px);line-height:1.46;margin:0;max-width:100%;overflow-wrap:anywhere}
 #advance{position:absolute;right:max(15px,8.8cqw);bottom:max(16px,6.3cqh)}
-#advance button{font-size:clamp(18px,2.8cqh,70px);line-height:1;min-width:44px;min-height:40px;padding:0;text-align:center}
-#menu-choices{position:absolute;top:max(45px,11.5cqh);left:max(9px,2.7cqw);display:flex;flex-direction:column;align-items:flex-start;gap:max(4px,1.1cqh);pointer-events:auto}
-#menu-choices button{font-size:clamp(12px,2.1cqh,52px);padding:5px 8px;min-height:35px;text-align:left}
+#advance button{font-size:var(--game-control-icon);line-height:1;width:var(--game-control-size);height:var(--game-control-size);padding:0;display:grid;place-items:center;text-align:center}
+#menu-choices{position:absolute;top:calc(max(7px,3.7cqh) + var(--game-control-size) + 8px);left:max(9px,2.7cqw);display:flex;flex-direction:column;align-items:flex-start;gap:max(4px,1.1cqh);max-height:calc(100% - max(7px,3.7cqh) - var(--game-control-size) - 18px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;pointer-events:auto}
+#menu-choices button{font-size:var(--game-control-text);padding:8px 10px;min-height:var(--game-control-row);min-width:clamp(150px,21cqw,230px);text-align:left}
 #history{position:absolute;left:8.3cqw;bottom:max(24px,8.4cqh);width:76cqw;max-height:54cqh;overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;text-shadow:0 1px 6px #000;scrollbar-width:thin}
 #history p{font-size:clamp(12px,2.15cqh,54px);line-height:1.65;margin:.28em 0}
 #history .log-speaker{color:#eee9}
@@ -102,26 +107,26 @@ body.mobile-mode.virtual-landscape #view{
 
 
 
-/* RIGHT QUICK TOOLS V1: three identical 24-unit line glyphs, vertically
-   centered, NO panel behind icons. Never in either top corner or dialogue. */
+/* RIGHT QUICK TOOLS V2: equal 52–64px touch areas and 30–36px stroke icons;
+   transparent, frameless, and anchored at the same right-center position. */
 #quick-tools{
   position:absolute;right:max(8px,2.6cqw);top:50%;
   transform:translateY(-50%);
   display:flex;flex-direction:column;align-items:center;
-  gap:clamp(10px,2.6cqh,22px);pointer-events:auto;
+  gap:clamp(12px,2.9cqh,22px);pointer-events:auto;
   font-family:var(--font-ui);
 }
 #quick-tools .quick-tool{
-  width:clamp(40px,7.6cqh,46px);height:clamp(40px,7.6cqh,46px);
-  min-width:0;min-height:0;padding:0!important;
+  width:var(--game-control-size);height:var(--game-control-size);
+  min-width:var(--game-control-size);min-height:var(--game-control-size);padding:0!important;
   display:flex;align-items:center;justify-content:center;
   color:var(--ui-ink);background:transparent!important;
   border:0!important;box-shadow:none!important;
 }
 #quick-tools .quick-tool-icon{
-  display:block;width:clamp(20px,3.35cqh,26px);
-  height:clamp(20px,3.35cqh,26px);
-  fill:none;stroke:currentColor;stroke-width:1.7;
+  display:block;width:var(--game-control-icon);
+  height:var(--game-control-icon);
+  fill:none;stroke:currentColor;stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round;
   flex:none;overflow:visible;
 }
@@ -129,11 +134,12 @@ body.mobile-mode.virtual-landscape #view{
   outline:1px solid var(--ui-ink);outline-offset:1px;
 }
 #quick-tools .quick-tool[aria-expanded="true"] .quick-tool-icon{opacity:1}
+#quick-tools .quick-tool:active .quick-tool-icon{transform:scale(.94)}
 #quick-tools .quick-tool:hover .quick-tool-icon{opacity:.8}
 #quick-panel{
-  position:absolute;top:50%;right:max(70px,9.5cqw);
+  position:absolute;top:50%;right:calc(max(8px,2.6cqw) + var(--game-control-size) + clamp(10px,1.5cqw,22px));
   transform:translateY(-50%);
-  width:clamp(150px,19cqw,300px);max-height:65cqh;
+  width:clamp(160px,22cqw,320px);max-height:65cqh;
   padding:8px 4px;color:var(--ui-ink);
   border:0!important;border-radius:0!important;
   box-shadow:none!important;background:transparent!important;
@@ -147,7 +153,7 @@ body.mobile-mode.virtual-landscape #view{
   font-size:clamp(14px,2.5cqh,19px);
 }
 #quick-panel p{margin:0;color:#eaeae6}
-#quick-panel button{margin-top:8px;padding:4px 0!important}
+#quick-panel button{margin-top:8px;padding:8px 0!important;min-height:var(--game-control-row);font-size:var(--game-control-text)}
 @media (prefers-reduced-motion:reduce){
   #quick-tools .quick-tool-icon{transition:none}
 }
@@ -246,9 +252,11 @@ body.mobile-mode.virtual-landscape #view{
 #scene-menu button{
   font-family:var(--font-menu);
   appearance:none;display:block;border:0;border-radius:0;background:none;
-  box-shadow:none;color:inherit;font:inherit;font-size:clamp(14px,2.8cqh,38px);
+  box-shadow:none;color:inherit;font:inherit;
   line-height:1.35;white-space:nowrap;text-align:left;
-  min-width:44px;min-height:38px;padding:3px 7px;cursor:pointer;
+  font-size:var(--game-control-text);
+  min-width:clamp(168px,22cqw,232px);min-height:var(--game-control-row);
+  padding:8px 10px;cursor:pointer;
   pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   opacity:.90;transition:opacity 150ms ease;text-shadow:inherit;
 }
@@ -257,8 +265,8 @@ body.mobile-mode.virtual-landscape #view{
 #scene-menu button:disabled{opacity:.28;cursor:default}
 #scene-menu [hidden],#scene-menu[hidden],#novel-ui[hidden]{display:none!important}
 @container (max-height:445px){
-  #scene-menu .scene-menu-options{left:60%;top:39%;gap:2px}
-  #scene-menu button{font-size:clamp(12px,2.7cqh,23px);min-height:30px}
+  #scene-menu .scene-menu-options{left:60%;top:33%;gap:2px}
+  #scene-menu button{font-size:clamp(15px,2.7cqh,19px);min-height:48px}
 }
 
 
@@ -503,7 +511,7 @@ body.mobile-mode.virtual-landscape #view{
 /* Dynamic room selector reuses minimal UI, no new overlay during gameplay */
 #scene-menu-gallery{max-height:52cqh;overflow-y:auto;scrollbar-width:thin}
 #scene-switcher{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-height:45cqh;overflow-y:auto;scrollbar-width:thin}
-#scene-switcher button{min-height:30px}
+#scene-switcher button{min-height:var(--game-control-row)}
 
 /* Runtime L2D is the ONLY visible character renderer. Invisible images
    remain as layout/DEV drag targets; both player and every NPC use canvas. */
@@ -578,8 +586,8 @@ body.mobile-mode.virtual-landscape #view{
       <button id="quick-phone" class="quick-tool" type="button"
         aria-label="手机" aria-controls="quick-panel" aria-expanded="false" title="手机">
         <svg class="quick-tool-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="6.1" y="2" width="11.8" height="20" rx="1.7"/>
-          <path d="M9.6 4.3h4.8M6.1 18.8h11.8"/>
+          <rect x="4.2" y="2" width="15.6" height="20" rx="2"/>
+          <path d="M10 4.3h4M4.2 18.8h15.6"/>
           <circle cx="12" cy="20.3" r=".55" fill="currentColor" stroke="none"/>
         </svg>
       </button>
