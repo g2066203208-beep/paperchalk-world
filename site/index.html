@@ -1192,6 +1192,80 @@ void main(){
     drawNativeSideFog(devPanelFogCtx,'right',w,h,
       devPanelFogProgress,spread,.98);
   }
+  // Dedicated subtitle smoke: the old code stretched the OPAQUE outer 12%
+  // of #fog into a giant translucent rectangular plate. This continuously
+  // advected alpha field instead creates a genuinely irregular, black,
+  // transparent-outside cloud front. It takes moving density information
+  // from the SAME existing live #fog canvas used by the approved side smoke.
+  const subtitleSmokeW=288,subtitleSmokeH=144;
+  const subtitleSmokeSource=document.createElement('canvas');
+  subtitleSmokeSource.width=subtitleSmokeW;subtitleSmokeSource.height=subtitleSmokeH;
+  const subtitleSmokeSourceCtx=subtitleSmokeSource.getContext('2d',{alpha:true,willReadFrequently:true});
+  const subtitleSmokeTexture=document.createElement('canvas');
+  subtitleSmokeTexture.width=subtitleSmokeW;subtitleSmokeTexture.height=subtitleSmokeH;
+  const subtitleSmokeTextureCtx=subtitleSmokeTexture.getContext('2d',{alpha:true});
+  const subtitleSmokePixels=subtitleSmokeTextureCtx.createImageData(subtitleSmokeW,subtitleSmokeH);
+  function drawNativeBottomSmoke(ctx,w,h,progress){
+    if(progress<=.002||fog.width<2||fog.height<2)return;
+    // Capture the interior-to-border transition of our existing fluid,
+    // NOT the solid black portion at the physical bottom screen edge.
+    const fw=fog.width,fh=fog.height;
+    const bound=.5+sceneHalf.y*clamp(fogConfig.safe*.01,.01,1);
+    const sy=Math.max(0,Math.min(fh-2,Math.floor((bound-.11)*fh)));
+    const sh=Math.max(2,Math.min(fh-sy,Math.round(fh*.18)));
+    subtitleSmokeSourceCtx.clearRect(0,0,subtitleSmokeW,subtitleSmokeH);
+    subtitleSmokeSourceCtx.drawImage(fog,0,sy,fw,sh,0,0,subtitleSmokeW,subtitleSmokeH);
+    const live=subtitleSmokeSourceCtx.getImageData(0,0,subtitleSmokeW,subtitleSmokeH).data;
+    const pixels=subtitleSmokePixels.data;
+    const t=fluidTime;
+    const smooth=v=>{v=clamp(v,0,1);return v*v*(3-2*v)};
+    const realAlpha=(fx,fy)=>{
+      const x=clamp(fx,0,subtitleSmokeW-1),y=clamp(fy,0,subtitleSmokeH-1);
+      const x0=Math.floor(x),y0=Math.floor(y),dx=x-x0,dy=y-y0;
+      const x1=Math.min(subtitleSmokeW-1,x0+1),y1=Math.min(subtitleSmokeH-1,y0+1);
+      const a=live[(y0*subtitleSmokeW+x0)*4+3],b=live[(y0*subtitleSmokeW+x1)*4+3];
+      const c=live[(y1*subtitleSmokeW+x0)*4+3],d=live[(y1*subtitleSmokeW+x1)*4+3];
+      return ((a+(b-a)*dx)*(1-dy)+(c+(d-c)*dx)*dy)/255;
+    };
+    // The front twists continuously along x and also by height, so there
+    // is NEVER a horizontal alpha seam at the top of the subtitle region.
+    // Lower cloud mass becomes dark enough for legible text; no solid sheet.
+    for(let y=0;y<subtitleSmokeH;y++){
+      const ny=(y+.5)/subtitleSmokeH;
+      for(let x=0;x<subtitleSmokeW;x++){
+        const nx=(x+.5)/subtitleSmokeW;
+        const curl=.032*Math.sin(nx*16.+ny*8.-t*.43)
+                   +.018*Math.sin(nx*37.-ny*14.+t*.69);
+        const sampleX=(nx+curl)*(subtitleSmokeW-1);
+        const sampleY=(.36+ny*.52+.035*Math.sin(nx*18.+t*.37))
+                      *(subtitleSmokeH-1);
+        const flow=realAlpha(sampleX,sampleY);
+        const surge=.20+.075*Math.sin(nx*13.5+t*.31)
+                        +.066*Math.sin(nx*28.3-t*.51+1.4)
+                        +.027*Math.sin(nx*52.7+t*.22);
+        const front=surge+.028*(flow-.5);
+        const deep=smooth((ny-front)/.33);
+        const rolls=Math.max(0,smooth((ny-front+.13)/.12)-deep);
+        const density=.88+.12*flow;
+        const alpha=clamp(deep*density+.22*rolls*flow,0,1);
+        const k=(y*subtitleSmokeW+x)*4;
+        pixels[k]=0;pixels[k+1]=0;pixels[k+2]=0;
+        pixels[k+3]=Math.round(alpha*255);
+      }
+    }
+    subtitleSmokeTextureCtx.putImageData(subtitleSmokePixels,0,0);
+    const eased=progress*progress*(3-2*progress);
+    // ~32% screen-height canvas, rising physically from BOTTOM, transparent
+    // above the irregular crest. Real smoke density and motion continue
+    // on every simulation frame, with the same show/hide timing as before.
+    const maxHeight=Math.round(h*.335);
+    const dh=Math.max(1,Math.round(maxHeight*eased));
+    ctx.save();
+    ctx.globalAlpha=eased;
+    ctx.imageSmoothingEnabled=true;
+    ctx.drawImage(subtitleSmokeTexture,0,h-dh,w,dh);
+    ctx.restore();
+  }
   const uiFogBands=Array.from(document.querySelectorAll('#ui-fog-state .ui-fog-band'));
   const uiFogEdges=new Set(['top','bottom','left','right']);
   const uiFogProgress={top:0,bottom:0,left:0,right:0};
@@ -1227,10 +1301,9 @@ void main(){
       const p=eased(uiFogProgress[edge]);
       if(p<.003)continue;
       if(edge==='bottom'){
-        // Keep the approved subtitle smoke unchanged.
-        const maxH=Math.round(h*.29),dh=Math.max(1,Math.round(maxH*p));
-        uiFogCtx.globalAlpha=.87*p;
-        uiFogCtx.drawImage(fog,0,srcH-verticalSource,srcW,verticalSource,0,h-dh,w,dh);
+        // Strictly an irregular black smoke silhouette. Never stretch the
+        // opaque native border into a translucent subtitle rectangle.
+        drawNativeBottomSmoke(uiFogCtx,w,h,uiFogProgress.bottom);
       }else if(edge==='top'){
         const maxH=Math.round(h*.22),dh=Math.max(1,Math.round(maxH*p));
         uiFogCtx.globalAlpha=.77*p;
