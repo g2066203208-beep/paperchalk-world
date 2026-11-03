@@ -264,6 +264,34 @@ $('dev-character-import').onchange=e=>{
  importImages(files).catch(x=>note('导入失败：'+x.message));
 };
 picker.addEventListener('change',()=>{if(assigned[picker.value])selectSlot(picker.value);});
+// A studio Save & Apply updates this exact browser-origin game slot. Ongoing
+// slider auto-saves only reload actors ALREADY bound to the same identity/view.
+// Notifications contain no artwork; source pixels and rigs remain in IndexedDB.
+const gameSync=typeof BroadcastChannel==='function'
+ ?new BroadcastChannel('paperchalk-l2d-live-v1'):null;
+let syncQueue=Promise.resolve();
+if(gameSync)gameSync.onmessage=event=>{
+ const msg=event.data||{};
+ if(msg.type!=='paperchalk:l2d-saved'||!valid(msg.id)||
+    !['front','back'].includes(msg.face)||
+    !['rig-saved','applied'].includes(msg.kind))return;
+ if(msg.kind==='applied'&&!['player','enemy'].includes(msg.slot))return;
+ syncQueue=syncQueue.then(async()=>{
+  if(!ready)return;
+  if(msg.kind==='applied'){
+   // Ignore stale messages and never change an unrelated actor: the originating
+   // studio must have committed this slot assignment before notifying us.
+   const binding=await get('slot:'+msg.slot);
+   if(binding?.id!==msg.id||binding?.side!==msg.face)return;
+   await assign(msg.slot,msg.id,msg.face,false);
+  }else{
+   for(const [target,binding] of Object.entries(assigned)){
+    if(binding.id===msg.id&&binding.side===msg.face)
+     await assign(target,msg.id,msg.face,false);
+   }
+  }
+ }).catch(error=>note('L2D 实时同步失败：'+error.message));
+};
 window.PaperchalkCharacterDev={
  get ready(){return ready},
  get characters(){return [...catalog.values()]},
