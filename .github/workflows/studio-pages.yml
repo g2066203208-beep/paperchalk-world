@@ -804,7 +804,7 @@ jobs:
                 // game viewport; physical portrait screens rotate the whole UI.
                 const layout=await page.evaluate(()=>{
                   const view=document.querySelector('#view');
-                  const items=['#menu-toggle','#auto-button','#log-button','#dialogue','#speaker','#dialogue-text','#next-line'];
+                  const items=['#menu-toggle','#dialogue','#speaker','#dialogue-text','#next-line'];
                   const elements=Object.fromEntries(items.map(id=>{
                     const el=document.querySelector(id),rect=el.getBoundingClientRect();
                     return [id,{x:rect.left,y:rect.top,right:rect.right,bottom:rect.bottom,w:rect.width,h:rect.height}];
@@ -980,14 +980,9 @@ jobs:
                 await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-ui.png'});
                 await page.locator('#next-line').click();
                 assert.equal(await page.locator('#dialogue-text').textContent(),'明明已经放学了，为什么还有声音？');
-                await page.locator('#log-button').click();
-                assert.equal(await page.locator('#history').isVisible(),true,'LOG does not open');
-                await page.locator('#log-button').click();
-                assert.equal(await page.locator('#dialogue').isVisible(),true,'LOG does not close');
-                await page.locator('#auto-button').click();
-                assert.equal(await page.locator('#auto-button').getAttribute('aria-pressed'),'true','AUTO did not start');
-                await page.locator('#auto-button').click();
-                assert.equal(await page.locator('#auto-button').getAttribute('aria-pressed'),'false','AUTO did not stop');
+                assert.equal(await page.locator('#auto-button').isVisible(),false,'AUTO must not occupy the game HUD');
+                assert.equal(await page.locator('#log-button').isVisible(),false,'LOG must not occupy the game HUD');
+                assert.equal(await page.locator('#dialogue').isVisible(),true,'dialogue disappeared unexpectedly');
                 await page.locator('#menu-toggle').click();
                 assert.equal(await page.locator('#restart-button').isVisible(),true,'menu does not open');
                 await page.locator('#restart-button').click();
@@ -1025,7 +1020,7 @@ jobs:
                     &&document.getElementById('scene').dataset.scene==='classroom',null,{timeout:6500});
                   const metrics=await p.evaluate(()=>{
                     const view=document.getElementById('view');
-                    const selectors=['#menu-toggle','#auto-button','#log-button','#speaker','#dialogue-text','#next-line'];
+                    const selectors=['#menu-toggle','#speaker','#dialogue-text','#next-line'];
                     const locations=selectors.map(sel=>{
                       const rect=document.querySelector(sel).getBoundingClientRect();
                       return {sel,x:rect.left,y:rect.top,right:rect.right,bottom:rect.bottom};
