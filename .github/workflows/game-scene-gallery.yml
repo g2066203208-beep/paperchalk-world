@@ -1,0 +1,39 @@
+name: Capture all real playable game scenes
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/game-scene-gallery.mjs'
+      - '.github/workflows/game-scene-gallery.yml'
+      - 'site/assets/scenes/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build automatic scene registry
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_scene_catalog.py
+      - name: Load original game fonts
+        run: bash scripts/fetch-game-fonts.sh
+      - name: Install headless game browser
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Screenshot every installed scene on desktop and phone
+        run: node tests/game-scene-gallery.mjs
+      - name: Preserve real scene screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-game-scenes
+          path: artifacts/game-scene-gallery/
+          if-no-files-found: warn
