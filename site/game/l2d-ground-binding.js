@@ -148,9 +148,11 @@ function sync(){
   const playerHeight=Number(player?.img?.dataset?.heightCm)||162;
   const playerVisible=player
     ?Math.max(.1,player.shoe.y-player.shoe.crown):1;
-  const playerVisiblePx=(dev
-    ?(player?.img?.offsetHeight||h*SHOULDER_CAMERA.referenceBodyHeightRatio)
-    :worldH*SHOULDER_CAMERA.referenceBodyHeightRatio)*playerVisible;
+  // The character's model-scale height remains 90% of the viewport in
+  // both the game and the DEV 3D inspector. The 190% painted close-up is
+  // camera framing only and must NEVER inflate the NPC's L2D mesh.
+  const playerVisiblePx=
+    worldH*SHOULDER_CAMERA.referenceBodyHeightRatio*playerVisible;
   const playerWorldZ=cssValue('--dev-depth-player',160)+worldDepthShift;
   const playerRawFoot=player&&playerRoot
     ?originalRootTop(playerRoot,worldH)+player.img.offsetTop+
