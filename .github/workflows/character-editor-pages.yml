@@ -11,6 +11,7 @@ on:
       - 'scripts/build_protagonist_part_rig.py'
       - 'scripts/fix_protagonist_neck_v4.py'
       - 'scripts/build_char002_v4.py'
+      - 'scripts/build_char002_part_rig.py'
       - 'site/dev/**'
       - 'site/characters.catalog.json'
       - 'site/assets/characters/**'
@@ -43,6 +44,7 @@ jobs:
           python3 scripts/build_protagonist_part_rig.py
           python3 scripts/fix_protagonist_neck_v4.py
           python3 scripts/build_char002_v4.py
+          python3 scripts/build_char002_part_rig.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
           test -s site/index.html
