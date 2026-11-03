@@ -1,0 +1,46 @@
+name: Standalone 3D spherical maze / geometry and browser proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/sphere-maze/**'
+      - 'tests/test_sphere_maze.js'
+      - 'tests/test_sphere_maze_browser.js'
+      - '.github/workflows/sphere-maze.yml'
+  pull_request:
+    paths:
+      - 'site/sphere-maze/**'
+      - 'tests/test_sphere_maze.js'
+      - 'tests/test_sphere_maze_browser.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sphere-maze-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test 3D spherical topology, maze connectivity and daily rearrangement
+        run: node tests/test_sphere_maze.js
+      - name: Install Chromium browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Validate real WebGL2 geometry, docking paths, day transitions, mobile layout and capture screenshots
+        run: |
+          python3 -m http.server 8138 --directory site >/tmp/sphere-maze-http.log 2>&1 &
+          node tests/test_sphere_maze_browser.js
+      - name: Upload actual model screenshots for review
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sphere-maze-three-shells
+          path: artifacts/sphere-maze/
+          retention-days: 7
