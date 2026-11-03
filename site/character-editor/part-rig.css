@@ -52,3 +52,45 @@
  border:1px solid #496682;border-radius:7px;color:#c9d9f6}
 #part-rig-panel #rig-part-amount{display:block;width:100%;height:29px;accent-color:#8ff3ca}
 #part-rig-panel #rig-part-amount-value{float:right;color:#98f1cf}
+
+/* Prominent primary entry in BOTH easy and expert modes. */
+body > header .actions #idle-open,
+body.embedded > header .actions #idle-open{
+ order:-10;display:inline-flex;align-items:center;justify-content:center;
+ min-height:41px;padding:9px 13px;
+ background:#235d4d;border:2px solid #7ad7ad;color:#f1fff7;
+ font-size:13px;font-weight:750;letter-spacing:.02em;white-space:nowrap;
+ box-shadow:0 0 0 1px #174236,0 2px 12px #0005;
+}
+#idle-open[aria-expanded="true"]{background:#196f66;border-color:#aaf4d5}
+#idle-open:focus-visible{outline:3px solid #ffdd84;outline-offset:3px}
+#part-rig-panel{z-index:25}
+#part-rig-panel .rig-h{font-size:13px}
+#part-rig-panel #rig-idle-controls{border-color:#67b79c;background:#153431}
+#part-rig-toggle{opacity:.85}
+/* The superseded controls did not tune game idle; don't mislead players with
+   old '400% breathing' sliders. Preserve their DOM for legacy project reads. */
+#dev-l2d-preview-controls > label.mlabel,
+#dev-l2d-preview-controls > input[type="range"],
+#dev-l2d-preview-controls > .tip{display:none!important}
+#dev-l2d-preview-controls > h3::after{
+ content:"（旧版预览，待机与飘动请点顶部绿色按钮）";
+ font-size:10px;color:#92d5b4;display:block;margin-top:5px;font-weight:400;
+}
+@media(max-width:710px){
+ body > header .actions #idle-open{font-size:12px;padding:8px 10px;min-height:40px}
+ #part-rig-panel{
+  position:fixed;z-index:150;
+  top:max(74px,env(safe-area-inset-top));right:8px;
+  bottom:max(8px,env(safe-area-inset-bottom));
+  width:min(355px,calc(100vw - 16px));max-height:none;
+  overflow:auto;overscroll-behavior:contain;touch-action:pan-y;
+  border:2px solid #76ceac;box-shadow:0 12px 32px #000d;
+ }
+ body.stage-expanded #part-rig-panel{z-index:151}
+ #part-rig-panel .rig-presets button{min-height:43px;font-size:12px}
+ #part-rig-panel #rig-idle-sliders .rig-field input{height:33px}
+}
+@media(min-width:711px) and (max-width:1100px){
+ body > header .actions #idle-open{min-height:38px}
+}
