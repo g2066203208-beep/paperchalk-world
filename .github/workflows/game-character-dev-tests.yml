@@ -84,9 +84,11 @@ jobs:
               assert.equal(await page.locator('#l2d-strength').count(),0);
               assert.equal(await page.locator('#part-rig-panel').isVisible(),false,
                 'new mesh plays without a permanently open settings panel');
+              assert.ok(await page.locator('[data-quick="fringe"]').isVisible());
+              assert.ok(await page.locator('[data-quick="rear"]').isVisible());
+              assert.ok(await page.locator('[data-quick="skirt"]').isVisible());
+              assert.ok(await page.locator('[data-quick="speed"]').isVisible());
               await page.locator('#idle-open').click();
-              assert.ok(await page.locator('[data-idle="hair.amount"]').isVisible());
-              assert.ok(await page.locator('[data-idle="cloth.amount"]').isVisible());
               assert.equal(await page.locator('#rig-part option').count(),17);
               // The inspector must be docked outside the moving canvas.
               const docked=await page.evaluate(()=>{
@@ -105,18 +107,22 @@ jobs:
                 ctx.fillRect(20,140,3,3);
                 window.characterEditor.render();
               });
-              await page.locator('[data-idle-preset="realistic"]').click();
-              await page.locator('[data-idle="hair.amount"]').evaluate(el=>{el.value='24';el.dispatchEvent(new Event('input',{bubbles:true}));});
-              await page.locator('#btnSave').click(); // Primary Save must flush bone drafts
+              await page.locator('[data-quick="fringe"]').fill('230');
+              await page.locator('[data-quick="rear"]').fill('215');
+              await page.locator('[data-quick="skirt"]').fill('245');
+              await page.locator('[data-quick="speed"]').fill('150');
+              await page.locator('#rig-quick-save').click(); // One click saves to the same game rig
               await page.waitForFunction(async()=>{
                 const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
-                return saved?.idleProfile?.hair?.amount===.24;
+                return saved?.idleProfile?.parts.front_hair===2.3&&
+                  saved?.idleProfile?.parts.rear_hair===2.15&&
+                  saved?.idleProfile?.parts.skirt===2.45&&saved?.idleProfile?.hair.speed===1.5;
               },null,{timeout:15000});
               await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
               await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:30000});
               await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
               await page.waitForFunction(()=>
-                window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.hair.amount===.24,
+                window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.parts.front_hair===2.3,
                 null,{timeout:28000}).catch(async error=>{
                   console.error('GAME RIG SAVE DIAGNOSTICS',await page.evaluate(async()=>{
                     const project=await new Promise(resolve=>{
@@ -128,8 +134,8 @@ jobs:
                       };req.onerror=()=>resolve(null);
                     });
                     const a=window.PaperchalkL2DLibrary?.get('player');
-                    return {savedHair:project?.idleProfile?.hair?.amount,
-                      modelHair:a?.model?.idleProfile?.hair?.amount,
+                    return {savedHair:project?.idleProfile?.parts?.front_hair,
+                      modelHair:a?.model?.idleProfile?.parts?.front_hair,
                       mode:window.PaperchalkCharacterDev?.heroineRenderer,
                       actorMode:window.PaperchalkL2D.get('player')?.root.dataset.l2dMode,
                       note:document.getElementById('dev-character-status')?.textContent,
