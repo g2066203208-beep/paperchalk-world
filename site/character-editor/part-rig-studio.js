@@ -286,11 +286,11 @@ async function activate(openPanel=false){
  for(const p of src)selectNode.add(new Option(p.name,p.partId||p.name));
  const preferred=S.layers[S.side][S.sel];
  select(state.model.parts[key(preferred||{})]?key(preferred):key(src[0]));
- $('rig-source').textContent=id==='char-002'&&src.length<12
-  ?'女二当前只有 '+src.length+' 个扁平图分区，不是真 PSD。可以试验分区，但不能冒充完整分层绑定。'
-  :'真实源图层 '+src.length+' 个，使用新版独立部件骨骼动画。';
- quickInfo(id==='char-002'&&src.length===7?
-  '女二当前是7个原画分区：双臂、裙子、肩、胯、胸可调整。头发与脸为同一纹理，尚不能独立摆动或自然眨眼；需要原始PSD后才能升级。':
+ $('rig-source').textContent=id==='char-002'?
+  '女二原始 PSD：24个图层记录，17个实际可见、独立运动的部件。':
+  '真实源图层 '+src.length+' 个，使用新版独立部件骨骼动画。';
+ quickInfo(id==='char-002'?
+  '原始PSD分层：刘海、后发、脸和眼睛独立，左右手目前同属手袖层。拖动实时预览，保存到游戏。':
   '拖动滑块后点击保存，实时预览不会改变身体站姿。');
  info('新版独立部件骨骼已载入。');
  ed.render();
@@ -409,7 +409,7 @@ async function exportGameModule(newId){
 }
 $('rig-module-export').onclick=async()=>{
  const suggestion=studio.current==='protagonist'?'protagonist-rig-v1':
-  studio.current==='char-002'?'char-002-rig-v1':studio.current+'-rig-v1';
+  studio.current==='char-002'?'char-002-personal-rig':studio.current+'-rig-v1';
  const id=prompt('新模块 ID（新建独立角色，不覆盖现有游戏人物）',suggestion);
  if(id===null)return;
  try{await exportGameModule(id.trim());}catch(error){info('无法打包：'+error.message);}
