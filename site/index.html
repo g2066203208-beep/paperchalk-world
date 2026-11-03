@@ -902,20 +902,21 @@ void main(){
   sideFogWarp.width=sideFogW;sideFogWarp.height=sideFogH;
   const sideFogWarpCtx=sideFogWarp.getContext('2d',{alpha:true});
   const sideFogPixels=sideFogWarpCtx.createImageData(sideFogW,sideFogH);
+  // Side UI is localized BLACK SMOKE, not a large semi-transparent overlay.
+  // The existing real-time #fog drives its texture; a turbulent front gives
+  // it an irregular, fully transparent outer silhouette.
   function drawNativeSideFog(ctx,edge,w,h,progress,desiredWidth,opacity){
     const srcW=fog.width,srcH=fog.height;
     if(srcW<2||srcH<2||progress<=.002)return;
     const safeFraction=clamp(fogConfig.safe*.01,.01,1);
     const boundary=(.5+(edge==='right'?1:-1)*sceneHalf.x*safeFraction)*srcW;
-    // Sample exclusively around the original REAL moving feather, not a
-    // fully-opaque outer strip. Preserve the native fog's living density.
-    const inside=Math.max(7,srcW*.021),outside=Math.max(5,srcW*.018);
+    const inside=Math.max(8,srcW*.025),outside=Math.max(5,srcW*.017);
     const sx=Math.max(0,Math.min(srcW-3,
       edge==='right'?boundary-inside:boundary-outside));
     const ex=Math.max(sx+2,Math.min(srcW,
       edge==='right'?boundary+outside:boundary+inside));
-    const sy=Math.max(0,Math.min(srcH-2,srcH*.11));
-    const sh=Math.max(2,Math.min(srcH-sy,srcH*.78));
+    const sy=Math.max(0,Math.min(srcH-2,srcH*.10));
+    const sh=Math.max(2,Math.min(srcH-sy,srcH*.80));
     sideFogSampleCtx.clearRect(0,0,sideFogW,sideFogH);
     sideFogSampleCtx.drawImage(fog,sx,sy,ex-sx,sh,0,0,sideFogW,sideFogH);
     const live=sideFogSampleCtx.getImageData(0,0,sideFogW,sideFogH).data;
@@ -925,36 +926,44 @@ void main(){
       const x0=Math.floor(x),y0=Math.floor(y);
       const x1=Math.min(sideFogW-1,x0+1),y1=Math.min(sideFogH-1,y0+1);
       const dx=x-x0,dy=y-y0;
-      const a00=live[(y0*sideFogW+x0)*4+3];
-      const a10=live[(y0*sideFogW+x1)*4+3];
-      const a01=live[(y1*sideFogW+x0)*4+3];
-      const a11=live[(y1*sideFogW+x1)*4+3];
+      const a00=live[(y0*sideFogW+x0)*4+3],a10=live[(y0*sideFogW+x1)*4+3];
+      const a01=live[(y1*sideFogW+x0)*4+3],a11=live[(y1*sideFogW+x1)*4+3];
       return ((a00+(a10-a00)*dx)*(1-dy)+(a01+(a11-a01)*dx)*dy)/255;
     };
+    const smooth01=x=>{x=clamp(x,0,1);return x*x*(3-2*x)};
     for(let y=0;y<sideFogH;y++){
       const ny=(y+.5)/sideFogH;
-      const curl=.046*Math.sin(ny*12.4+tm*.43)
-                +.027*Math.sin(ny*25.1-tm*.69+1.4)
-                +.012*Math.sin(ny*39.7+tm*.28);
+      // Moving multi-scale curls form the advancing smoke front, not a
+      // straight dividing line. The front fluctuates strongly by height.
+      const front=.57
+        +.105*Math.sin(ny*8.8+tm*.36)
+        +.082*Math.sin(ny*17.5-tm*.57+1.5)
+        +.046*Math.sin(ny*34.0+tm*.28+2.2)
+        +.021*Math.sin(ny*53.0-tm*.45);
       for(let x=0;x<sideFogW;x++){
         const nx=(x+.5)/sideFogW;
-        const eddy=.013*Math.sin(nx*13.+ny*11.-tm*.58)
-                         *Math.cos(ny*7.+tm*.25);
-        const sampleX=(nx+curl+eddy)*(sideFogW-1);
-        const sampleY=(ny+.006*Math.sin(nx*17.+tm*.3))*(sideFogH-1);
-        const core=getAlpha(sampleX,sampleY);
-        // A very light duplicate of the same REAL fog front extends forward
-        // as diffuse wisps; it is not a fabricated solid or CSS gradient.
-        const wisp=getAlpha(sampleX+sideFogW*.115,sampleY);
-        const alpha=clamp(core*.85+wisp*.15,0,1);
-        const i=(y*sideFogW+x)*4;
-        pixels[i]=0;pixels[i+1]=0;pixels[i+2]=0;
-        pixels[i+3]=Math.round(alpha*255);
+        const curl=.023*Math.sin(nx*13.+ny*13.-tm*.62)
+                        *Math.cos(ny*8.+tm*.23);
+        const sampleX=(nx+curl)*(sideFogW-1);
+        const sampleY=(ny+.012*Math.sin(nx*14.+tm*.30))*(sideFogH-1);
+        const native=getAlpha(sampleX,sampleY);
+        const nativeWisp=getAlpha(sampleX+sideFogW*.13,sampleY);
+        const flow=(native*.75+nativeWisp*.25);
+        // NO FLAT TINT. Outside the animated fog silhouette alpha is
+        // precisely zero. Only a dark, textured cloud touches the scene.
+        const distance=front-nx+curl;
+        const body=smooth01(distance/.20);
+        const vein=smooth01((distance+.047)/.066)-body;
+        const turbulence=.80+.20*flow;
+        const alpha=clamp(body*turbulence+.17*Math.max(0,vein)*flow,0,1);
+        const k=(y*sideFogW+x)*4;
+        pixels[k]=0;pixels[k+1]=0;pixels[k+2]=0;
+        pixels[k+3]=Math.round(alpha*255);
       }
     }
     sideFogWarpCtx.putImageData(sideFogPixels,0,0);
     const eased=progress*progress*(3-2*progress);
-    const dw=Math.max(1,Math.round(Math.min(w*.75,desiredWidth)*eased));
+    const dw=Math.max(1,Math.round(Math.min(w*.52,desiredWidth)*eased));
     ctx.globalAlpha=opacity*eased;
     ctx.imageSmoothingEnabled=true;
     ctx.drawImage(sideFogWarp,edge==='right'?w-dw:0,0,dw,h);
@@ -992,7 +1001,7 @@ void main(){
     const panelWidth=controls?.offsetWidth||Math.round(sizes.w*.40);
     const spread=(panelWidth/Math.max(1,sizes.w)+.15)*w;
     drawNativeSideFog(devPanelFogCtx,'right',w,h,
-      devPanelFogProgress,spread,.95);
+      devPanelFogProgress,spread,.98);
   }
   const uiFogBands=Array.from(document.querySelectorAll('#ui-fog-state .ui-fog-band'));
   const uiFogEdges=new Set(['top','bottom','left','right']);
@@ -1039,7 +1048,7 @@ void main(){
         uiFogCtx.drawImage(fog,0,0,srcW,verticalSource,0,0,w,dh);
       }else{
         drawNativeSideFog(uiFogCtx,edge,w,h,
-          uiFogProgress[edge],w*.47,.86);
+          uiFogProgress[edge],w*.31,.99);
       }
     }
     uiFogCtx.globalAlpha=1;
