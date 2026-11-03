@@ -61,124 +61,105 @@ try{
      const a=window.PaperchalkL2D?.get(id);
      return a?.root?.dataset.l2dState==='ready'&&a.canvas.width>0&&a.canvas.height>0;
    }),null,{timeout:18000});
+   await page.waitForFunction(()=>{
+     const state=window.PaperWorldL2DGround?.inspect();
+     return state?.actors?.length===2&&
+       state.actors.every(a=>a.detected&&Math.abs(a.errorPx)<1&&a.canvasH>0);
+   },null,{timeout:25000});
    const floorStart=await page.evaluate(()=>{
-     const view=document.getElementById('view');
      const rig=document.getElementById('dev-rig');
-     const snap=id=>{
-       const a=window.PaperchalkL2D.get(id);
-       const rect=el=>el.getBoundingClientRect().toJSON();
-       return {root:rect(a.root),canvas:rect(a.canvas),
-         source:rect(a.img),mode:a.root.dataset.l2dMode,
-         native:a.clip?.type==='native'?rect(a.clip.img):null,
-         ground:getComputedStyle(a.root).translate,
-         height:a.img.offsetHeight};
-     };
-     return {
-       h:view.clientHeight,
-       player:snap('player'),enemy:snap('enemy'),
-       playerZ:getComputedStyle(rig).getPropertyValue('--dev-depth-player').trim(),
-       enemyZ:getComputedStyle(rig).getPropertyValue('--dev-depth-enemy').trim(),
-       floorZ:getComputedStyle(rig).getPropertyValue('--dev-depth-ground').trim()
-     };
+     const ground=window.PaperWorldL2DGround.inspect();
+     const data={height:document.getElementById('view').clientHeight,
+       ground,mode:'real-L2D',
+       originalDepths:{player:getComputedStyle(rig).getPropertyValue('--dev-depth-player').trim(),
+         enemy:getComputedStyle(rig).getPropertyValue('--dev-depth-enemy').trim()}};
+     for(const role of ['player','enemy']){
+       const a=window.PaperchalkL2D.get(role);
+       data[role]={canvas:a.canvas.getBoundingClientRect().toJSON(),
+         imgHeight:a.img.offsetHeight,translate:getComputedStyle(a.root).translate,
+         mode:a.root.dataset.l2dMode};
+     }
+     return data;
    });
-   assert.ok(floorStart.player.canvas.height>0&&floorStart.enemy.canvas.height>0,
-     'Expected the actual animated L2D canvas to be laid out: '+JSON.stringify(floorStart));
-   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-before-move.png'});
+   assert.equal(floorStart.ground.actors.length,2);
+   for(const a of floorStart.ground.actors){
+     assert.equal(a.detected,true,a.id+' must use actual opaque L2D footwear pixels');
+     assert.ok(a.soleY>.5&&a.soleY<=1,
+       a.id+' foot contact is not at the bottom of the rendered L2D: '+JSON.stringify(a));
+     assert.ok(Math.abs(a.worldFootY-floorStart.ground.floorY)<1,
+       a.id+' is floating or buried in the 3D ground: '+JSON.stringify(a));
+   }
+   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-shoes-snapped.png'});
    await page.evaluate(()=>{
      const slider=document.getElementById('dev-ground-y');
      slider.value='83';slider.dispatchEvent(new Event('input',{bubbles:true}));
    });
-   const floorYMoved=await page.evaluate(()=>{
-     const snap=id=>{
-       const a=window.PaperchalkL2D.get(id);
-       const rect=el=>el.getBoundingClientRect().toJSON();
-       return {root:rect(a.root),canvas:rect(a.canvas),
-         source:rect(a.img),native:a.clip?.type==='native'?rect(a.clip.img):null,
-         ground:getComputedStyle(a.root).translate,
-         height:a.img.offsetHeight};
-     };
-     return {player:snap('player'),enemy:snap('enemy'),
-       state:window.PaperWorldGroundPerspective.current()};
-   });
-   const expectedShift=floorStart.h*.06;
-   for(const role of ['player','enemy']){
-     const before=floorStart[role],after=floorYMoved[role];
-     const translation=after.ground.split(/\s+/).map(parseFloat);
-     // CSS computed translate intentionally drops a trailing zero Z length.
-     assert.ok(Math.abs(translation[0])<.002&&Math.abs(translation[1]-expectedShift)<.002&&
-       Math.abs(translation[2]||0)<.002,
-       role+' entire L2D root must inherit the shared floor translation: '+JSON.stringify(floorYMoved));
-     assert.equal(after.height,before.height,
-       role+' floor must NOT resize the 1024px L2D rig or restart bones');
-     for(const surface of ['root','canvas','source','native']){
-       if(!before[surface])continue;
-       const delta=after[surface].top-before[surface].top;
-       assert.ok(delta>3,
-         role+' visible L2D '+surface+' stayed behind when floor moved: '+
-         JSON.stringify({delta,expectedShift,before,after}));
-       // The 3D DEV rig tilts the billboard in perspective: a topmost
-       // root bounding box and a lower internal canvas point naturally
-       // move DIFFERENT screen distances. Verify every visible render
-       // surface stays registered to its source layout at the same depth.
-       const canvasDelta=after.canvas.top-before.canvas.top;
-       const sourceDelta=after.source.top-before.source.top;
-       assert.ok(Math.abs(canvasDelta-sourceDelta)<2,
-         role+' animated canvas detached from invisible layout shoe anchor: '+
-         JSON.stringify({canvasDelta,sourceDelta,before,after}));
-       if(surface==='native'){
-         assert.ok(Math.abs(delta-canvasDelta)<12,
-           role+' native V4 clip detached from its L2D parent: '+
-           JSON.stringify({delta,canvasDelta,before,after}));
-       }
+   await page.waitForFunction(()=>window.PaperWorldL2DGround.state()?.y===83);
+   const moved=await page.evaluate(()=>{
+     const ground=window.PaperWorldL2DGround.inspect();
+     const out={ground};
+     for(const role of ['player','enemy']){
+       const a=window.PaperchalkL2D.get(role);
+       out[role]={canvas:a.canvas.getBoundingClientRect().toJSON(),
+         imgHeight:a.img.offsetHeight,translate:getComputedStyle(a.root).translate};
      }
+     return out;
+   });
+   const deltaFloor=floorStart.height*.06;
+   for(const role of ['player','enemy']){
+     const before=floorStart[role],after=moved[role];
+     const footBefore=floorStart.ground.actors.find(a=>a.id===role);
+     const footAfter=moved.ground.actors.find(a=>a.id===role);
+     assert.ok(Math.abs(footAfter.worldFootY-moved.ground.floorY)<1,
+       role+' L2D shoes did not remain ON the moving floor: '+JSON.stringify({footBefore,footAfter}));
+     assert.ok(Math.abs(footAfter.dy-footBefore.dy-deltaFloor)<.1,
+       role+' root vertical translation did not match floor displacement');
+     assert.equal(after.imgHeight,before.imgHeight,role+' changed rig dimensions');
+     assert.ok(after.canvas.top-before.canvas.top>2,
+       role+' visible L2D ArtMesh canvas did not move with the ground');
    }
-   assert.equal(floorYMoved.state.enemy.y,y,'NPC relative foot anchor was overwritten');
-   assert.equal(floorYMoved.state.player.y,initial.state.player.y,'Player relative foot anchor was overwritten');
-   assert.equal(floorYMoved.state.enemy.size,size,'Moving the floor changed NPC stature');
-   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-all-actors-follow-floor.png'});
+   assert.equal(initial.state.enemy.y,y,'NPC authored Y was overwritten by floor snapping');
+   assert.equal(initial.state.enemy.size,size,'Floor snap changed NPC stature');
+   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-floor-updated.png'});
    await page.locator('#dev-layer').selectOption('ground');
    await page.evaluate(()=>{
      const slider=document.getElementById('dev-z');
      slider.value='-165';slider.dispatchEvent(new Event('input',{bubbles:true}));
    });
-   const floorZMoved=await page.evaluate(()=>{
+   await page.waitForFunction(()=>window.PaperWorldL2DGround.state()?.z===-165);
+   const deep=await page.evaluate(()=>{
+     const state=window.PaperWorldL2DGround.inspect();
      const rig=document.getElementById('dev-rig');
-     const value=name=>Number(getComputedStyle(rig).getPropertyValue('--dev-depth-'+name).replace('px',''));
-     return {player:value('player'),enemy:value('enemy'),ground:value('ground'),
-       state:window.PaperWorldGroundPerspective.current()};
+     return {state,
+       authoredZ:['player','enemy'].map(id=>getComputedStyle(rig).getPropertyValue('--dev-depth-'+id).trim()),
+       markers:[...document.querySelectorAll('.dev-shoe-contact')].map(el=>({
+         role:el.dataset.actor,hidden:el.hidden,top:el.style.top,left:el.style.left
+       }))};
    });
-   assert.equal(floorZMoved.ground,-165,'Ground 3D Z slider did not move the floor');
-   // The original plane depths stay authored and untouched. A separate
-   // stable parent translation is responsible for carrying ALL L2D drawings
-   // with the shared world-floor Z delta (avoids overwriting stored Z).
-   assert.equal(floorZMoved.player,Number(floorStart.playerZ.replace('px','')),
-     'The original player depth was overwritten instead of moving their parent');
-   assert.equal(floorZMoved.enemy,Number(floorStart.enemyZ.replace('px','')),
-     'The original NPC depth was overwritten instead of moving their parent');
-   const attached=await page.evaluate(()=>['player','enemy'].map(id=>{
-     const a=window.PaperchalkL2D.get(id);
-     return {id,translate:getComputedStyle(a.root).translate,
-       canvas:a.canvas.getBoundingClientRect().toJSON(),
-       attached:a.root.dataset.groundAttached};
-   }));
-   for(const actor of attached){
-     assert.equal(actor.attached,'true',actor.id+' is not bound to the floor');
-     const xyz=actor.translate.split(/\s+/).map(parseFloat);
-     assert.ok(Math.abs(xyz[0])<.01&&Math.abs(xyz[1]-expectedShift)<.01&&
-       Math.abs(xyz[2]-50)<.01,
-       actor.id+' visible L2D root did not follow floor depth: '+JSON.stringify({expectedShift,attached}));
-     assert.ok(actor.canvas.height>0,actor.id+' L2D canvas is not drawn');
+   for(const role of ['player','enemy']){
+     const a=moved.ground.actors.find(v=>v.id===role);
+     const b=deep.state.actors.find(v=>v.id===role);
+     assert.equal(b.dz,50,role+' L2D parent did not follow ground Z');
+     assert.ok(Math.abs(b.errorPx)<1,role+' detached vertically while floor moved in Z');
+     assert.ok(Math.abs(b.relativeZ-a.relativeZ)<.01,
+       role+' lost its Z position on the floor: '+JSON.stringify({a,b}));
+     const marker=deep.markers.find(v=>v.role===role);
+     assert.ok(marker&&!marker.hidden,'Missing shoe contact marker for '+role);
+     assert.ok(marker.left.startsWith('calc(')&&marker.top.endsWith('px'));
    }
-   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-depth-follow.png'});
-   assert.equal(floorZMoved.state.enemy.z,initial.state.enemy.z,'NPC relative Z anchor was overwritten');
-   assert.equal(floorZMoved.state.player.z,initial.state.player.z,'Player relative Z anchor was overwritten');
-   // Restore the exact original floor. No residual offset, no change to
-   // the two character transforms, and the existing calibration test follows.
+   assert.deepEqual(deep.authoredZ,
+     [floorStart.originalDepths.player,floorStart.originalDepths.enemy],
+     'Ground motion overwrote manually placed actor depths');
+   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-both-shoes-on-plane.png'});
    await page.evaluate(()=>{
-     const depth=document.getElementById('dev-z');depth.value='-215';
-     depth.dispatchEvent(new Event('input',{bubbles:true}));
-     const height=document.getElementById('dev-ground-y');height.value='77';
-     height.dispatchEvent(new Event('input',{bubbles:true}));
+     const depth=document.getElementById('dev-z');
+     depth.value='-215';depth.dispatchEvent(new Event('input',{bubbles:true}));
+     const height=document.getElementById('dev-ground-y');
+     height.value='77';height.dispatchEvent(new Event('input',{bubbles:true}));
+   });
+   await page.waitForFunction(()=>{
+     const s=window.PaperWorldL2DGround.state();
+     return s?.y===77&&s?.z===-215&&s.actors.every(a=>Math.abs(a.errorPx)<1);
    });
    await page.locator('#dev-layer').selectOption('enemy');
    await page.locator('#dev-ground-calibrate').click({timeout:15000});
@@ -210,7 +191,7 @@ try{
    await page.locator('#dev-ground-lock').uncheck();
    assert.equal((await page.evaluate(()=>window.PaperWorldGroundPerspective.current())).locked,false);
    assert.deepEqual(errs,[],errs.join('; '));
-   console.log('PASS '+cfg.name+': visibly rendered L2D canvas follows floor Y/Z; physical stature, calibration, saved coordinates');
+   console.log('PASS '+cfg.name+': both genuine L2D sole pixels touch the same floor Y, move with Y/Z, keep authored transforms');
    await page.close();
  }
 }finally{
