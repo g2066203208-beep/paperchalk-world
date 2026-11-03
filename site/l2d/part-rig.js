@@ -249,7 +249,7 @@ function jointGainFor(part,bone,idle){
   return id.includes('elbow')?finite(j.hands,0):finite(j.shoulders,0);
  if(kind==='torso'&&!bone.parent)return finite(j.shoulders,0)*.65;
  if(kind==='skirt'&&!bone.parent)return finite(j.hips,0);
- if(kind==='leg-combined'&&!bone.parent)return finite(j.hips,0)*.38;
+ if(kind==='leg-combined')return 0; // planted legs are governed by ankle IK
  return 0;
 }
 function bonePoses(part,phase=0,idle=null){
@@ -365,10 +365,134 @@ function project(parts,characterId,face,previous=null){
  const base=all(parts,face,characterId);
  const prev=previous?.parts||{};
  const entries=base.map(p=>[p.id,sanitize(prev[p.id],p)]);
- return {format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
+ return bindBodyHierarchy({format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
   idleProfile:sanitizeIdleProfile(previous?.idleProfile||defaultIdleProfile()),
-  parts:Object.fromEntries(entries)};
+  parts:Object.fromEntries(entries)});
 }
+
+/* Anchored 2D parent hierarchy, rebuilt from ORIGINAL source component positions.
+   Shoes/feet are ground nodes. Pelvis connects to two planted ankle chains.
+   Chest/shoulders descend from pelvis; neck, eyes and hair descend from shoulders. */
+function bindBodyHierarchy(model){
+ const p=model?.parts;if(!p)return model;
+ const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
+ const legs=pick('legs','legwear'),feet=pick('shoes','footwear'),
+  skirt=pick('skirt','bottomwear'),torso=pick('jacket','topwear'),
+  face=pick('face'),hair=pick('front_hair','rear_hair','back_hair');
+ if(!legs||!feet||!skirt||!torso)return model;
+ const xy=(part,u,v)=>({x:part.x+part.w*u,y:part.y+part.h*v});
+ const get=id=>legs.bones?.find(b=>b.id===id);
+ const chain=side=>{
+  const upper=get(side+'-knee'),lower=get(side+'-ankle');
+  return upper&&lower?{hip:xy(legs,upper.head.x,upper.head.y),
+   knee:xy(legs,upper.tail.x,upper.tail.y),
+   ankle:xy(legs,lower.tail.x,lower.tail.y),
+   hy:upper.head.y,ky:upper.tail.y,ay:lower.tail.y}:null;
+ };
+ const left=chain('left'),right=chain('right');if(!left||!right)return model;
+ const layout={pelvis:xy(skirt,.5,.08),shoulder:xy(torso,.5,.12),
+  head:face?xy(face,.5,.5):hair?xy(hair,.5,.35):xy(torso,.5,-.2),
+  left,right,legsId:legs.id,feetId:feet.id};
+ Object.defineProperty(model,'bodyHierarchy',{value:layout,configurable:true});
+ for(const part of Object.values(p))
+  Object.defineProperty(part,'_bodyHierarchy',{value:layout,configurable:true});
+ return model;
+}
+function humanPoseAt(part,phase=0,idle=null){
+ const rig=part?._bodyHierarchy;if(!rig)return null;
+ const h=clamp(finite(idle?.joints?.hips,0),0,8),
+  sh=clamp(finite(idle?.joints?.shoulders,0),0,8),
+  speed=clamp(finite(idle?.cloth?.speed,.8),.25,2.5);
+ const a=Math.sin(phase*.65*speed),b=Math.sin(phase*.89*speed+.43);
+ return {rig,hipX:a*h*1.1,hipY:(1-a*a)*h*.12,hipAngle:a*h*.0055,
+  shoulderX:b*sh*.40,shoulderY:Math.cos(phase*.89*speed+.43)*sh*.13,
+  shoulderAngle:b*sh*.009};
+}
+function turn(p,o,angle){
+ const a=p.x-o.x,b=p.y-o.y,c=Math.cos(angle),s=Math.sin(angle);
+ return {x:o.x+a*c-b*s,y:o.y+a*s+b*c};
+}
+function hipPoint(p,pose){
+ const q=turn(p,pose.rig.pelvis,pose.hipAngle);
+ return {x:q.x+pose.hipX,y:q.y+pose.hipY};
+}
+function shoulderPoint(p,pose){
+ const q=turn(hipPoint(p,pose),hipPoint(pose.rig.shoulder,pose),pose.shoulderAngle);
+ return {x:q.x+pose.shoulderX,y:q.y+pose.shoulderY};
+}
+function kneeIK(c,pose){
+ const h=hipPoint(c.hip,pose),a=c.ankle,orig=c.knee;
+ const L1=Math.hypot(orig.x-c.hip.x,orig.y-c.hip.y),
+  L2=Math.hypot(a.x-orig.x,a.y-orig.y);
+ const dx=a.x-h.x,dy=a.y-h.y,d=Math.max(.001,Math.hypot(dx,dy));
+ const factor=Math.max(1,d/Math.max(.001,L1+L2));
+ const l1=L1*factor,l2=L2*factor;
+ const along=Math.max(0,Math.min(d,(l1*l1-l2*l2+d*d)/(2*d)));
+ const altitude=Math.sqrt(Math.max(0,l1*l1-along*along));
+ const ex=dx/d,ey=dy/d;
+ const cross=(a.x-c.hip.x)*(orig.y-c.hip.y)-
+  (a.y-c.hip.y)*(orig.x-c.hip.x);
+ const sign=cross>=0?1:-1;
+ return {hip:h,knee:{x:h.x+ex*along-sign*ey*altitude,
+  y:h.y+ey*along+sign*ex*altitude},ankle:a};
+}
+function legPoint(part,point,pose){
+ const u=(point.x-part.x)/part.w,v=(point.y-part.y)/part.h;
+ const a=pose.rig.left,b=pose.rig.right;
+ if(v>=Math.max(a.ay,b.ay))return point;
+ const shift=c=>{
+  const q=kneeIK(c,pose),r=c;
+  let from,to,t;
+  if(v<=c.hy){from=q.hip;to=r.hip;}
+  else if(v<=c.ky){
+   t=smooth((v-c.hy)/Math.max(.001,c.ky-c.hy));
+   from={x:q.hip.x*(1-t)+q.knee.x*t,y:q.hip.y*(1-t)+q.knee.y*t};
+   to={x:r.hip.x*(1-t)+r.knee.x*t,y:r.hip.y*(1-t)+r.knee.y*t};
+  }else{
+   t=smooth((v-c.ky)/Math.max(.001,c.ay-c.ky));
+   from={x:q.knee.x*(1-t)+q.ankle.x*t,y:q.knee.y*(1-t)+q.ankle.y*t};
+   to={x:r.knee.x*(1-t)+r.ankle.x*t,y:r.knee.y*(1-t)+r.ankle.y*t};
+  }
+  return {x:from.x-to.x,y:from.y-to.y};
+ };
+ const l=shift(a),r=shift(b),wr=smooth((u-.4)/.2);
+ return {x:point.x+l.x*(1-wr)+r.x*wr,y:point.y+l.y*(1-wr)+r.y*wr};
+}
+function parentRole(part){
+ if(!part)return 'none';
+ if(part.parentId==='ground'||part.id==='shoes'||part.id==='footwear')return 'ground';
+ if(part.kind==='leg-combined')return 'legs';
+ if(part.kind==='skirt')return 'pelvis';
+ if(part.kind==='torso')return 'torso';
+ if(part.kind.startsWith('arm-')||part.id==='neck')return 'shoulder';
+ if(part.kind==='hair'||part.kind==='face'||part.kind==='mouth'||
+  part.kind==='eyes-combined'||['head','front_hair','eye_white','eyewhite'].includes(part.parentId))
+  return 'head';
+ return 'none';
+}
+function parentPoint(part,p,phase=0,idle=null,pose=null){
+ const h=pose||humanPoseAt(part,phase,idle);if(!h)return p;
+ switch(parentRole(part)){
+ case 'ground':case 'none':return p;
+ case 'legs':return legPoint(part,p,h);
+ case 'pelvis':return hipPoint(p,h);
+ case 'torso':{
+  const low=hipPoint(p,h),high=shoulderPoint(p,h);
+  const rig=h.rig,w=smooth((rig.pelvis.y-p.y)/Math.max(1,rig.pelvis.y-rig.shoulder.y));
+  return {x:low.x+(high.x-low.x)*w,y:low.y+(high.y-low.y)*w};
+ }
+ default:return shoulderPoint(p,h);
+ }
+}
+function applyRigidParent(ctx,part,phase,idle){
+ if(parentRole(part)!=='head'&&parentRole(part)!=='shoulder')return;
+ if(!humanPoseAt(part,phase,idle))return;
+ const o=parentPoint(part,{x:0,y:0},phase,idle),
+  x=parentPoint(part,{x:1,y:0},phase,idle),
+  y=parentPoint(part,{x:0,y:1},phase,idle);
+ ctx.transform(x.x-o.x,x.y-o.y,y.x-o.x,y.y-o.y,o.x,o.y);
+}
+
 // Each part's raster mesh uses its OWN normalized local coordinates.
 // Its own pivot is fixed; deformation weights increase toward its tip.
 // No other part is sampled, moved, cut, duplicated, or transformed.
@@ -393,7 +517,7 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
   clamp(finite(q.x,0),-4,4)*weight*oscillation*scale+air.x+body.x;
  const py=base.y+(baseX*sn+baseY*cs-baseY)*scale+
   clamp(finite(q.y,0),-4,4)*weight*oscillation*scale+air.y+body.y;
- return bodyPosePoint(px,py,phase,idle);
+ return parentPoint(part,bodyPosePoint(px,py,phase,idle),phase,idle);
 }
 function drawTri(ctx,image,A,B,C,D,E,F){
  const ux=B.x-A.x,uy=B.y-A.y,vx=C.x-A.x,vy=C.y-A.y;
@@ -460,6 +584,7 @@ function drawFacePart(ctx,source,part,phase,idle){
  // Same body transform as skinned hair, arms, clothing and legs.
  ctx.transform(1,0,-lean.lean,1,lean.feet*lean.lean,0);
  ctx.translate(motion.x,motion.y);
+ applyRigidParent(ctx,part,phase,idle);
  if(id==='eye_white'||id==='irises'){
   // Real iris/eye-white PNGs gradually disappear under closing eyelids.
   ctx.globalAlpha*=1-blink;
@@ -506,7 +631,10 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
  const strength=idle?idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,20):1;
  const jointsActive=(part.bones||[]).some(b=>b.enabled!==false&&
   Math.abs(b.amplitude)>1e-5&&jointGainFor(part,b,idle)>0);
- const active=part.enabled&&(jointsActive||Math.abs(idle?.body?.amount||0)>0||
+ const role=parentRole(part);
+ const linked=!!part._bodyHierarchy&&role!=='none'&&role!=='ground'&&
+  (Math.abs(idle?.joints?.hips||0)>0||Math.abs(idle?.joints?.shoulders||0)>0);
+ const active=part.enabled&&(linked||jointsActive||Math.abs(idle?.body?.amount||0)>0||
   (strength>0&&(Object.values(part.motion).some((v,i)=>i<3&&Math.abs(v)>1e-5)||
   (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5)||
   (weather==='windy'||weather==='breeze')&&
@@ -580,5 +708,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
