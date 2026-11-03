@@ -350,7 +350,7 @@ body.mobile-mode.virtual-landscape #view{
 #view.dev-mode #scene-menu{opacity:0!important;pointer-events:none!important}
 #dev-fog-tools[hidden],#dev-z-control[hidden],#dev-layer-actions[hidden],
 #dev-3d-controls[hidden]{display:none!important}
-#dev-stage{position:absolute;inset:0;z-index:9;overflow:hidden;touch-action:none;perspective:1150px}
+#dev-stage{position:absolute;inset:0;z-index:9;overflow:hidden;touch-action:none;perspective:950px}
 #dev-stage[hidden],#dev-tools[hidden]{display:none!important}
 #dev-rig{position:absolute;inset:0;transform-style:preserve-3d;
   transform-origin:50% 50%;will-change:transform;pointer-events:none}
@@ -561,7 +561,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
 <script src="./game/survival-state.js"></script>
-<script src="./game/ground-perspective.js?v=auto-distance-physheight-v2"></script>
+<script src="./game/ground-perspective.js?v=unified-floor-projection-v3"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -2273,6 +2273,7 @@ void main(){
     }
     const ground=editorConfig.ground;
     devRig.style.setProperty('--dev-floor-y',ground.y+'%');
+    devRig.style.setProperty('--dev-floor-horizon',String(ground.horizon));
     devRig.style.setProperty('--dev-auto-perspective',String(ground.autoDepth));
     devGround.hidden=ground.visible===0;
     devGroundToggle.checked=ground.visible!==0;
@@ -2651,7 +2652,7 @@ void main(){
 <script src="./l2d/part-rig.js?female2-raised-hand-fixed-20261103"></script>
 <script src="./l2d/library-player.js?v=female2-raised-hand-fixed-20261103"></script>
 <script src="./dev/character-bridge.js?v=char002-enemy-slot-v2-20261103"></script>
-<script src="./game/l2d-ground-binding.js?v=sharp-sparse-sole-affine-v4"></script>
+<script src="./game/l2d-ground-binding.js?v=unified-floor-projection-v5"></script>
 
 </body>
 </html>
