@@ -183,7 +183,7 @@ try{
        const g=window.PaperWorldL2DGround.inspect();
        const actor=g.actors.find(a=>a.id==='enemy');
        return {actor,canvas:a.canvas.getBoundingClientRect().toJSON(),
-         imgSize:a.img.offsetHeight,meshScale:parseFloat(getComputedStyle(a.canvas).scale)};
+         imgSize:a.img.offsetHeight,meshScale:actor.perspectiveScale};
      });
    };
    const far=await capture(-350);
@@ -244,10 +244,10 @@ try{
      const player=window.PaperchalkL2D.get('player');
      const enemy=window.PaperchalkL2D.get('enemy');
      return {dev:g.dev,actors,perf:window.PaperWorldL2DGround.performance(),
-       player:{scale:parseFloat(getComputedStyle(player.canvas).scale),
+       player:{scale:actors.player.perspectiveScale,
          origin:getComputedStyle(player.canvas).transformOrigin,
          buffer:player.canvas.width,height:player.img.offsetHeight},
-       enemy:{scale:parseFloat(getComputedStyle(enemy.canvas).scale),
+       enemy:{scale:actors.enemy.perspectiveScale,
          origin:getComputedStyle(enemy.canvas).transformOrigin,
          buffer:enemy.canvas.width,height:enemy.img.offsetHeight,
          renderer:enemy.canvas.getContext('2d').getContextAttributes?.().willReadFrequently}};
@@ -272,7 +272,8 @@ try{
      const actor=g.actors.find(v=>v.id==='enemy');
      const rect=enemy.canvas.getBoundingClientRect();
      return {size:enemy.img.offsetHeight,buffer:enemy.canvas.width,
-       scale:parseFloat(getComputedStyle(enemy.canvas).scale),
+       scale:actor.perspectiveScale,
+       transform:getComputedStyle(enemy.canvas).transform,
        canvasHeight:rect.height,
        shoeScreenY:rect.top+rect.height*actor.soleY,
        soleY:actor.soleY,
