@@ -37,6 +37,43 @@ try{
     await page.goto(target,{waitUntil:'domcontentloaded',timeout:40000});
     await expectEdge(page,'bottom',true);
     await expectEdge(page,'top',false);
+    // Approved top-only HUD: three icons, eight tiny ticks and exact values,
+    // followed by right-aligned date/time. No extra fog or quick-menu icons.
+    const topHud=await page.evaluate(()=>{
+      const e=document.querySelector('#hud-top');
+      const stats=document.querySelector('#hud-vitals');
+      const time=document.querySelector('#hud-clock');
+      return {visible:!!e&&getComputedStyle(e).display!=='none',
+        statCount:stats?.querySelectorAll('.hud-stat').length,
+        segmentCounts:[...document.querySelectorAll('.hud-segments')].map(n=>n.children.length),
+        vals:['health','hunger','sanity'].map(k=>document.getElementById('hud-'+k+'-value').textContent),
+        date:document.getElementById('hud-date')?.textContent,
+        weekday:document.getElementById('hud-weekday')?.textContent,
+        time:document.getElementById('hud-time')?.textContent,
+        overflow:e.scrollWidth>e.clientWidth+2,
+        statBounds:stats?.getBoundingClientRect().toJSON(),timeBounds:time?.getBoundingClientRect().toJSON()
+      };
+    });
+    assert.equal(topHud.visible,true);
+    assert.equal(topHud.statCount,3);
+    assert.deepEqual(topHud.segmentCounts,[8,8,8]);
+    assert.deepEqual(topHud.vals,['82/100','67/100','91/100']);
+    assert.equal(topHud.date,'4月12日');
+    assert.equal(topHud.weekday,'周五');
+    assert.equal(topHud.time,'21:36');
+    assert.equal(topHud.overflow,false,'Top HUD contents overflow: '+JSON.stringify(topHud));
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-approved-top-hud.png'});
+    await page.evaluate(()=>{
+      window.PaperWorldTopHUD.setStats({health:{current:37,max:125},hunger:{current:56,max:80}});
+      window.PaperWorldTopHUD.setClock({month:5,day:1,weekday:'周五',hour:7,minute:3});
+    });
+    assert.equal(await page.locator('#hud-health-value').textContent(),'37/125');
+    assert.equal(await page.locator('#hud-hunger-value').textContent(),'56/80');
+    assert.equal(await page.locator('#hud-time').textContent(),'07:03');
+    await page.evaluate(()=>{
+      window.PaperWorldTopHUD.setStats({health:{current:82,max:100},hunger:{current:67,max:100}});
+      window.PaperWorldTopHUD.setClock({month:4,day:12,weekday:'周五',hour:21,minute:36});
+    });
     await expectEdge(page,'left',false);
     await expectEdge(page,'right',false);
     assert.equal(await page.locator('#top-actions').isVisible(),false,'AUTO/LOG must not remain visible in the top-right corner');
@@ -190,6 +227,11 @@ try{
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-dev-closed.png'});
     assert.equal(await page.locator('#fog').count(),1,'Existing independent scene fog must remain untouched');
     assert.equal(await page.locator('#actor-player-l2d').count(),1,'L2D renderer must remain untouched');
+    // Verify approved HUD on the requested actual bedroom module as well.
+    await page.goto(target.replace('scene=classroom','scene=bedroom'),{waitUntil:'domcontentloaded'});
+    await page.locator('#hud-top').waitFor({state:'visible'});
+    await page.waitForTimeout(800);
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-top-hud.png'});
     await page.close();
     console.log('PASS '+cfg.label+': native subtitle and settings fog, transparent controls, left/right triggers, empty top, hidden fog after closing, dialogue end; screenshots saved');
   }
