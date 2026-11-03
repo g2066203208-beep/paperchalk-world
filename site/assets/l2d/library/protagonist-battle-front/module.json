@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "protagonist-battle-front",
+  "label": "女主·战斗正面 (PSD真实部件)",
+  "views": {
+    "front": {
+      "portrait": "front.png",
+      "rig": {
+        "type": "part-mesh",
+        "file": "front.rig.json",
+        "textures": {
+          "back_hair": "front/back_hair.png",
+          "axe_overhead": "front/axe_overhead.png",
+          "axe_held": "front/axe_held.png",
+          "legwear": "front/legwear.png",
+          "footwear": "front/footwear.png",
+          "handwear_r": "front/handwear_r.png",
+          "bottomwear": "front/bottomwear.png",
+          "neck": "front/neck.png",
+          "topwear": "front/topwear.png",
+          "eyebrow_l": "front/eyebrow_l.png",
+          "eyebrow_r": "front/eyebrow_r.png",
+          "handwear_l": "front/handwear_l.png",
+          "face": "front/face.png",
+          "mouth": "front/mouth.png",
+          "ears_r": "front/ears_r.png",
+          "ears_l": "front/ears_l.png",
+          "headwear": "front/headwear.png",
+          "eyelash_r": "front/eyelash_r.png",
+          "eyewhite_r": "front/eyewhite_r.png",
+          "eyewhite_l": "front/eyewhite_l.png",
+          "eyelash_l": "front/eyelash_l.png",
+          "irides_r": "front/irides_r.png",
+          "irides_l": "front/irides_l.png",
+          "front_hair": "front/front_hair.png"
+        }
+      }
+    }
+  }
+}
