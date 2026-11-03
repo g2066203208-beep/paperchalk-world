@@ -118,6 +118,41 @@ jobs:
                   panelRect.x>=0&&panelRect.x+panelRect.width<=vp.width+2,
                   'idle controls panel must be on-screen, including phone viewport');
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-VISIBLE-HAIR-SKIRT-CONTROLS.png',fullPage:false});
+                if(vp.width>500){
+                  // Compare THREE weather tiers over four phases on the
+                  // REAL 17-source-PNG heroine (not abstract unit squares).
+                  const contact=await page.evaluate(()=>{
+                    const core=window.PaperchalkPartRigCore;
+                    const ed=window.characterEditor;
+                    const base=window.PaperchalkPartRigStudio.state.model;
+                    const layers=ed.S.layers.front;
+                    const frame=document.createElement('canvas');frame.width=1024;frame.height=1024;
+                    const sheet=document.createElement('canvas');sheet.width=1600;sheet.height=1200;
+                    const ctx=sheet.getContext('2d');ctx.fillStyle='#12202c';ctx.fillRect(0,0,1600,1200);
+                    const phase=[0,1.5,3.1,4.7],regimes=['realistic','breeze','windy'];
+                    for(let row=0;row<regimes.length;row++){
+                      const model={...base,idleProfile:core.presetIdle(regimes[row],base.idleProfile)};
+                      for(let col=0;col<phase.length;col++){
+                        const f=frame.getContext('2d');f.clearRect(0,0,1024,1024);
+                        core.draw(f,layers,model,phase[col],'');
+                        ctx.drawImage(frame,col*400+4,row*400+18,392,377);
+                        ctx.font='14px sans-serif';ctx.fillStyle='#f4f7f7';
+                        ctx.fillText(regimes[row]+' / phase '+phase[col],col*400+8,row*400+15);
+                      }
+                    }
+                    return sheet.toDataURL('image/png').split(',')[1];
+                  });
+                  fs.writeFileSync('artifacts/character-editor/heroine-3-weather-tiers-4-phases.png',
+                    Buffer.from(contact,'base64'));
+                }
+                assert.deepEqual(await page.locator('#rig-presets button').allTextContents(),
+                  ['静止','普通待机','微风','大风']);
+                await page.locator('[data-idle-preset="windy"]').click();
+                assert.equal(await page.locator('[data-idle="hair.amount"]').inputValue(),'115');
+                assert.equal(await page.locator('[data-idle="cloth.amount"]').inputValue(),'92');
+                await page.locator('[data-idle-preset="realistic"]').click();
+                assert.equal(await page.locator('[data-idle="hair.amount"]').inputValue(),'28');
+                assert.equal(await page.locator('[data-idle="cloth.amount"]').inputValue(),'23');
                 assert.equal(await page.locator('#rig-part option').count(),17);
                 assert.equal(await page.locator('[data-spotlight="front_hair"]').isVisible(),true);
                 assert.equal(await page.locator('[data-spotlight="skirt"]').isVisible(),true);
