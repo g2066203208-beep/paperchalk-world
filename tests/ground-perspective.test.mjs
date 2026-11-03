@@ -52,8 +52,8 @@ assert.equal(gz.worldDeltaZ,50,
 assert.equal(perspective.floorMotion({y:77,z:-215},-1).valid,false);
 const near=perspective.depthScale(250);
 const base=perspective.depthScale(160);
-const far=perspective.depthScale(-330);
-assert.ok(near>base&&base>far,'Moving closer MUST make a grounded actor larger');
+const distantScale=perspective.depthScale(-330);
+assert.ok(near>base&&base>distantScale,'Moving closer MUST make a grounded actor larger');
 assert.equal(base,1,'Reference heroine must retain the 1× reference scale');
 assert.ok(perspective.depthScale(-190)>.7&&perspective.depthScale(-190)<.8);
 const normalScale=perspective.renderScale({
