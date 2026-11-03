@@ -1,0 +1,43 @@
+name: CHAR-004 source-image proof
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/char004-proof.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  image-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build original-reference thumbnail and pixel-layout record
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          import io, json, base64, os
+          p='site/assets/characters/char-004/reference-sheet.png'
+          im=Image.open(p).convert('RGBA')
+          small=im.copy()
+          small.thumbnail((640,640),Image.Resampling.LANCZOS)
+          b=io.BytesIO();small.save(b,'PNG',optimize=True)
+          os.makedirs('docs/characters/char004-review',exist_ok=True)
+          open('docs/characters/char004-review/thumb.b64','w').write(base64.b64encode(b.getvalue()).decode())
+          rows=[]
+          for x in range(0,im.width,64):
+            arr=[im.getpixel((x,y)) for y in range(0,im.height,64)]
+            rows.append(dict(x=x,alphaMin=min(p[3] for p in arr),alphaMax=max(p[3] for p in arr),
+                             whiteLike=sum(1 for c in arr if all(z>238 for z in c[:3])),
+                             samples=len(arr)))
+          open('docs/characters/char004-review/layout.json','w').write(json.dumps(dict(
+            width=im.width,height=im.height,mode=im.mode,verticalColumns=rows,
+            thumbnailBytes=len(b.getvalue())),ensure_ascii=False,indent=2))
+          PY
+      - name: Commit visual proof only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/characters/char004-review/thumb.b64 docs/characters/char004-review/layout.json
+          git diff --cached --quiet || (git commit -m "Preview original CHAR-004 reference for precise single-portrait extraction" && git push)
