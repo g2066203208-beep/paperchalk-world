@@ -147,6 +147,15 @@ body.mobile-mode.virtual-landscape #view{
   .hud-exact{min-width:5.5ch}
   #hud-clock{gap:3px}
 }
+/* The reference's three groups are centred as one unit, not stretched
+   to fill the space between ☰ and the clock; no extra decoration. */
+@container (min-width:1101px){
+  #hud-top{display:block}
+  #hud-vitals{position:absolute;left:50%;transform:translateX(-50%);gap:clamp(11px,1.3cqw,25px)}
+  #hud-clock{position:absolute;right:0;top:0}
+  .hud-stat-icon{width:clamp(20px,3.35cqh,33px);height:clamp(20px,3.35cqh,33px)}
+  .hud-segments{height:clamp(4px,.62cqh,7px)}
+}
 /* Top widgets do not declare data-ui-fog-edge: their background remains
    the scene's own black border. No additional top smoke when idle. */
 
@@ -1243,6 +1252,13 @@ void main(){
     {speaker:'???',text:'明明已经放学了，为什么还有声音？'},
     {speaker:'???',text:'有人……在看着这里吗？'}
   ];
+  // Scene data and dialogue data are independent: an environment may show a
+  // line without becoming a special story scene or changing its images/L2D.
+  // The bedroom has a neutral demonstration line until real script data lands.
+  const sceneDemoDialogue=Object.freeze({
+    bedroom:Object.freeze([{speaker:'???',text:'房间里很安静……窗外却好像有什么动静。'}])
+  });
+  let activeLines=lines;
   // Scene assets/content are data; rendering, 3D tilt and black fog are shared.
   // Only add an image to site/assets/scenes; CI auto-registers new scenes.
   // New rooms are declared ONLY by the compiled scene image catalog.
@@ -1282,6 +1298,8 @@ void main(){
     }catch(_){return null}
   }
   function writeSave(){
+    // Environment preview dialogue must never overwrite the real story save.
+    if(stage.dataset.scene!=='classroom')return;
     try{localStorage.setItem(SAVE_KEY,JSON.stringify({scene:'classroom',line:dialogueIndex,finished:storyFinished}))}catch(_){}
     continueButton.disabled=false;
   }
@@ -1309,18 +1327,21 @@ void main(){
       mainOptions.hidden=false;settingsOptions.hidden=true;galleryOptions.hidden=true;
       continueButton.disabled=!readSave();
     }else{
+      cancelAuto();
       menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
       sceneSwitcher.hidden=true;sceneSwitcherToggle.setAttribute('aria-expanded','false');
-      if(isStory){
-        storyFinished=false;
-        textHidden=false;dialogue.hidden=false;
-        nextLineButton.parentElement.hidden=false;renderDialogue();writeSave();
-      }else{
-        cancelAuto();
-        if(logOpen){logOpen=false;history.hidden=true;logButton.setAttribute('aria-pressed','false')}
-        dialogue.hidden=true;nextLineButton.parentElement.hidden=true;
-      }
+      if(logOpen){logOpen=false;history.hidden=true;logButton.setAttribute('aria-pressed','false')}
+      activeLines=isStory?lines:(sceneDemoDialogue[name]||[]);
+      if(!isStory)dialogueIndex=0;
+      textHidden=false;
+      storyFinished=activeLines.length===0;
+      dialogue.hidden=storyFinished;
+      nextLineButton.parentElement.hidden=storyFinished;
+      hideButton.textContent='隐藏文字';
+      if(!storyFinished)renderDialogue();
+      if(isStory)writeSave();
     }
+    syncUiEdgeFog();
     start(); // continuous, same original fog frame chain
   }
 
@@ -1439,9 +1460,10 @@ void main(){
     autoButton.setAttribute('aria-pressed','false');
   }
   function renderDialogue(){
-    const line=lines[dialogueIndex];
+    const line=activeLines[dialogueIndex];
+    if(!line)return;
     speakerLabel.textContent=line.speaker;dialogueText.textContent=line.text;
-    nextLineButton.setAttribute('aria-label',dialogueIndex===lines.length-1?'结束对话':'下一句');
+    nextLineButton.setAttribute('aria-label',dialogueIndex===activeLines.length-1?'结束对话':'下一句');
   }
   function finishDialogue(){
     if(storyFinished)return;
@@ -1452,14 +1474,14 @@ void main(){
   }
   function advanceDialogue(){
     if(logOpen||textHidden||storyFinished)return;
-    if(dialogueIndex===lines.length-1){finishDialogue();return}
+    if(dialogueIndex===activeLines.length-1){finishDialogue();return}
     dialogueIndex++;renderDialogue();writeSave();
     if(autoEnabled)scheduleAuto();
   }
   function scheduleAuto(){
     clearTimeout(autoTimer);
     if(autoEnabled&&!document.hidden&&!logOpen&&!textHidden&&!storyFinished){
-      const wait=Math.max(2800,Math.min(6600,lines[dialogueIndex].text.length*190));
+      const wait=Math.max(2800,Math.min(6600,activeLines[dialogueIndex].text.length*190));
       autoTimer=setTimeout(advanceDialogue,wait);
     }
   }
@@ -1469,8 +1491,8 @@ void main(){
     for(let i=0;i<=dialogueIndex;i++){
       const p=document.createElement('p');
       const who=document.createElement('span');who.className='log-speaker';
-      who.textContent=lines[i].speaker+'  ';
-      p.append(who,document.createTextNode(lines[i].text));
+      who.textContent=activeLines[i].speaker+'  ';
+      p.append(who,document.createTextNode(activeLines[i].text));
       history.appendChild(p);
     }
     history.scrollTop=history.scrollHeight;
@@ -1502,10 +1524,14 @@ void main(){
     menuChoices.hidden=!opening;menuButton.setAttribute('aria-expanded',String(opening));
   });
   restartButton.addEventListener('click',()=>{
-    cancelAuto();storyFinished=false;dialogueIndex=0;renderDialogue();writeSave();
+    cancelAuto();activeLines=stage.dataset.scene==='classroom'?lines:(sceneDemoDialogue[stage.dataset.scene]||[]);
+    storyFinished=activeLines.length===0;dialogueIndex=0;
+    if(!storyFinished)renderDialogue();
+    writeSave();
     if(logOpen)toggleLog();
-    textHidden=false;dialogue.hidden=false;nextLineButton.parentElement.hidden=false;
+    textHidden=false;dialogue.hidden=storyFinished;nextLineButton.parentElement.hidden=storyFinished;
     menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
+    syncUiEdgeFog();
   });
   document.getElementById('return-main').addEventListener('click',()=>changeScene('menu'));
   hideButton.addEventListener('click',()=>{
@@ -1523,12 +1549,27 @@ void main(){
       else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
     }else if((e.key===' '||e.key==='Enter')&&
       !['BUTTON','INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
-      if(stage.dataset.scene==='classroom'){e.preventDefault();advanceDialogue()}
+      if(!storyFinished&&!dialogue.hidden){e.preventDefault();advanceDialogue()}
     }
   });
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)clearTimeout(autoTimer);
     else if(autoEnabled)scheduleAuto();
+  });
+  // Public runtime hook for later scripted events; 1-20 lines, no fictional
+  // dialogue must remain on screen once the corresponding event is finished.
+  window.PaperWorldDialogue=Object.freeze({
+    show(linesToShow){
+      const incoming=Array.isArray(linesToShow)?linesToShow:[linesToShow];
+      if(!incoming.length||incoming.length>20||incoming.some(x=>
+         !x||typeof x.speaker!=='string'||typeof x.text!=='string'))return false;
+      cancelAuto();activeLines=incoming.map(x=>({speaker:x.speaker,text:x.text}));
+      dialogueIndex=0;storyFinished=false;textHidden=false;logOpen=false;history.hidden=true;
+      dialogue.hidden=false;nextLineButton.parentElement.hidden=false;
+      renderDialogue();syncUiEdgeFog();start();return true;
+    },
+    close(){finishDialogue()},
+    visible:()=>!uiRoot.hidden&&!dialogue.hidden&&!storyFinished
   });
   renderDialogue();
   openScene('menu');
