@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'site/**'
+      - 'tests/ui-edge-fog-browser.mjs'
       - 'scripts/fetch-game-fonts.sh'
       - 'scripts/build_scene_catalog.py'
       - 'scripts/build_character_catalog.py'
@@ -260,6 +261,8 @@ jobs:
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1 pngjs@7.0.0
           npx playwright install --with-deps chromium
+      - name: Verify all four independent UI edge fogs in real browser and capture screenshots
+        run: node tests/ui-edge-fog-browser.mjs
       - name: Verify full background, two independent layers, and continuous frames
         run: |
           mkdir -p artifacts/classroom
