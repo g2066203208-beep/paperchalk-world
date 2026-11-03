@@ -308,8 +308,13 @@ async function saveToGame(){
   if(!v4||face!==side)await put('render:'+currentId+':'+face,ed.composite(face).toDataURL('image/png'));
   if(motion[face])await put('l2d:'+currentId+':'+face,motion[face]);
  }
- const binding=await get('slot:'+slot);
- if(binding?.id===currentId)await put('slot:'+slot,{id:currentId,side});
+ // This button explicitly says "save AND apply to game". Bind the
+ // selected actor/view to the originating game slot even when the user
+ // selected a different character inside the studio. Merely keeping the
+ // previous binding made the editor report success while game still showed
+ // the protagonist (or a different NPC) after returning.
+ // Only touch this slot key: original artwork and every other actor stay safe.
+ await put('slot:'+slot,{id:currentId,side});
  const native=await get('skeletal:'+currentId+':'+side);
  message('✓ 已保存：'+(list.get(currentId)?.label||currentId)+
   (rig?.state?.model?.characterId===currentId?'，新版独立骨骼已同步到本机游戏。':
