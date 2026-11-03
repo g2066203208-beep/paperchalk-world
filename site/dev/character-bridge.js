@@ -27,6 +27,25 @@ async function storage(mode,key,value){
  });}finally{db.close();}
 }
 const get=key=>storage('readonly',key).catch(()=>null);
+// The painting editor stores each original RGBA texture in a separate DB.
+// This is NOT a flattened screenshot and cannot cross character identities.
+async function getLocalArtwork(id,face){
+ if(!valid(id))return null;
+ try{
+  const db=await new Promise((ok,no)=>{
+   const r=indexedDB.open('pixelatelier-character-v1',1);
+   r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('art'))r.result.createObjectStore('art')};
+   r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);
+  });
+  try{
+   const record=await new Promise((ok,no)=>{
+    const r=db.transaction('art','readonly').objectStore('art').get('character:'+id);
+    r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);
+   });
+   return Array.isArray(record?.[face])?record[face]:null;
+  }finally{db.close();}
+ }catch(error){console.warn('[L2D] 本机美术层读取失败',error);return null;}
+}
 const put=(key,v)=>storage('readwrite',key,v);
 const actualActors=()=>window.PaperchalkL2D.getLoaded().filter(a=>a.root.isConnected&&a.img.getAttribute('src'));
 function refreshList(){
@@ -106,8 +125,10 @@ async function assign(target,id,face='front',save=true){
    if(!window.PaperchalkL2DLibrary)throw Error('游戏未安装模块化 ArtMesh 播放器');
    // PROTAGONIST: her original actor automatically renders independent
    // animated hair, pleats and both arms. No separate experimental selection.
-   await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig,
-    await get('part-rig:'+id+':'+face));
+   const [savedRig,savedArt]=await Promise.all([
+    get('part-rig:'+id+':'+face),getLocalArtwork(id,face)
+   ]);
+   await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig,savedRig,savedArt);
    if(id==='protagonist')actor.root.dataset.l2dBreath='disabled';
   }catch(error){
    // Fail safe: preserve the existing approved V4 when any PNG/rig is
