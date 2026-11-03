@@ -72,8 +72,8 @@ const quickGroups={
  fringe:['front_hair','hair'],
  rear:['rear_hair','back_hair','hair_over_jacket'],
  skirt:['skirt','bottomwear','cloth'],
- hands:['sleeves_and_hands','handwear','sleeve_left','sleeve_right'],
- shoulders:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','jacket','topwear'],
+ hands:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand'],
+ shoulders:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','jacket','topwear'],
  hips:['skirt','bottomwear','legs','legwear']
 };
 const available=id=>(quickGroups[id]||[]).filter(key=>!!state.model?.parts[key]);
@@ -277,7 +277,9 @@ async function activate(openPanel=false){
  $('rig-source').textContent=id==='char-002'&&src.length<12
   ?'女二当前只有 '+src.length+' 个扁平图分区，不是真 PSD。可以试验分区，但不能冒充完整分层绑定。'
   :'真实源图层 '+src.length+' 个，使用新版独立部件骨骼动画。';
- quickInfo('拖动滑块后点击保存，实时预览不会改变身体站姿。');
+ quickInfo(id==='char-002'&&src.length===7?
+  '女二当前是7个原画分区：双臂、裙子、肩、胯、胸可调整。头发与脸为同一纹理，尚不能独立摆动或自然眨眼；需要原始PSD后才能升级。':
+  '拖动滑块后点击保存，实时预览不会改变身体站姿。');
  info('新版独立部件骨骼已载入。');
  ed.render();
 }
