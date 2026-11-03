@@ -163,8 +163,10 @@ try{
    }));
    for(const actor of attached){
      assert.equal(actor.attached,'true',actor.id+' is not bound to the floor');
-     assert.equal(actor.translate,'0px 43.2px 50px',
-       actor.id+' visible L2D root did not follow floor depth: '+JSON.stringify(attached));
+     const xyz=actor.translate.split(/\s+/).map(parseFloat);
+     assert.ok(Math.abs(xyz[0])<.01&&Math.abs(xyz[1]-expectedShift)<.01&&
+       Math.abs(xyz[2]-50)<.01,
+       actor.id+' visible L2D root did not follow floor depth: '+JSON.stringify({expectedShift,attached}));
      assert.ok(actor.canvas.height>0,actor.id+' L2D canvas is not drawn');
    }
    await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-depth-follow.png'});
