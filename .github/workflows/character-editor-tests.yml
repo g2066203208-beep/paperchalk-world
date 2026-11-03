@@ -61,6 +61,10 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:10000});
                 assert.equal(await page.locator('#part-rig-panel').isVisible(),false,
                   'new mesh is active by default without opening a cluttered settings panel');
+                assert.equal(await page.locator('#rig-quick-panel').isVisible(),true,
+                  'all four quick sliders must be visible beside the new animation');
+                assert.equal(await page.locator('#rig-quick-sliders input').count(),4);
+                assert.equal(await page.locator('#rig-quick-save').isVisible(),true);
                 await page.evaluate(()=>{
                   window.__partRigArtBackup=window.characterEditor.S.layers.front
                     .find(p=>p.partId==='jacket').canvas.toDataURL();
@@ -111,10 +115,10 @@ jobs:
                 assert.ok(seamPixels<50,
                   'joint-warped opaque hair cannot develop visible mesh raster cracks');
                 assert.equal(await page.locator('#idle-open').getAttribute('aria-expanded'),'true');
-                const preset=page.locator('[data-idle-preset="realistic"]');
-                assert.equal(await preset.isVisible(),true);
-                assert.equal(await page.locator('[data-idle="hair.amount"]').isVisible(),true);
-                assert.equal(await page.locator('[data-idle="cloth.amount"]').isVisible(),true);
+                assert.equal(await page.locator('[data-quick="fringe"]').isVisible(),true);
+                assert.equal(await page.locator('[data-quick="rear"]').isVisible(),true);
+                assert.equal(await page.locator('[data-quick="skirt"]').isVisible(),true);
+                assert.equal(await page.locator('[data-quick="speed"]').isVisible(),true);
                 const panelRect=await page.locator('#part-rig-panel').boundingBox();
                 assert.ok(panelRect.width>220&&panelRect.height>200&&
                   panelRect.x>=0&&panelRect.x+panelRect.width<=vp.width+2,
@@ -145,21 +149,32 @@ jobs:
                   fs.writeFileSync('artifacts/character-editor/heroine-basic-standing-4-phases.png',
                     Buffer.from(sheet,'base64'));
                 }
-                assert.deepEqual(await page.locator('#rig-presets button').allTextContents(),
-                  ['恢复基础站立']);
-                assert.equal(await page.locator('[data-idle-preset="windy"]').count(),0);
-                assert.equal(await page.locator('[data-idle-preset="breeze"]').count(),0);
-                assert.equal(await page.locator('[data-idle="body.amount"]').count(),0);
-                await page.locator('[data-idle-preset="realistic"]').click();
-                assert.equal(await page.locator('[data-idle="hair.amount"]').inputValue(),'18');
-                assert.equal(await page.locator('[data-idle="cloth.amount"]').inputValue(),'12');
+                assert.equal(await page.locator('[data-idle-preset]').count(),0,'no confusing animation presets');
+                await page.locator('[data-quick="fringe"]').fill('0');
+                assert.equal(await page.evaluate(()=>
+                  window.PaperchalkPartRigStudio.state.model.idleProfile.parts.front_hair),0);
+                await page.locator('[data-quick="fringe"]').fill('245');
+                await page.locator('[data-quick="rear"]').fill('215');
+                await page.locator('[data-quick="skirt"]').fill('260');
+                await page.locator('[data-quick="speed"]').fill('160');
+                const quickValues=await page.evaluate(()=>{
+                  const p=window.PaperchalkPartRigStudio.state.model.idleProfile;
+                  return [p.parts.front_hair,p.parts.rear_hair,p.parts.skirt,p.hair.speed,p.cloth.speed];
+                });
+                assert.deepEqual(quickValues,[2.45,2.15,2.6,1.6,1.6],
+                  'quick sliders must change the SAME model used by the game renderer');
+                await page.locator('#rig-quick-save').click();
+                await page.waitForFunction(async()=>{
+                  const r=await window.PaperchalkStudio.readPartRig('protagonist','front');
+                  return r?.idleProfile?.parts.front_hair===2.45&&r?.idleProfile?.parts.skirt===2.6;
+                },null,{timeout:15000});
                 assert.equal(await page.evaluate(()=>{
                   const c=window.PaperchalkPartRigCore, m=window.PaperchalkPartRigStudio.state.model;
                   return c.bodyPoseAt(1,m.idleProfile).lean;
                 }),0,'normal standing must not move the whole girl left/right');
                 assert.equal(await page.locator('#rig-part option').count(),17);
-                assert.equal(await page.locator('[data-spotlight="front_hair"]').isVisible(),true);
-                assert.equal(await page.locator('[data-spotlight="skirt"]').isVisible(),true);
+                assert.equal(await page.locator('[data-quick="fringe"]').inputValue(),'245');
+                assert.equal(await page.locator('[data-quick="skirt"]').inputValue(),'260');
                 await page.locator('#rig-part').selectOption('rear_hair');
                 assert.equal(await page.locator('#rig-bone option').count(),6,'hair needs three independently skinned two-joint strands');
                 await page.locator('#rig-advanced').evaluate(el=>{el.open=true;});
@@ -248,7 +263,7 @@ jobs:
                 assert.equal(await directPage.locator('#part-rig-panel').isVisible(),false,
                   'all entry URLs default to the same uncluttered new-animation canvas');
                 await directPage.locator('#idle-open').click();
-                assert.equal(await directPage.locator('[data-idle="hair.amount"]').isVisible(),true);
+                assert.equal(await directPage.locator('[data-quick="fringe"]').isVisible(),true);
                 await directPage.screenshot({path:'artifacts/character-editor/'+vp.width+'-DIRECT-URL-OPEN.png'});
                 await directPage.close();
 
