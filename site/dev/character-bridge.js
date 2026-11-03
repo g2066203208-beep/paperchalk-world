@@ -133,7 +133,7 @@ async function assign(target,id,face='front',save=true){
   }catch(error){
    // Fail safe: preserve the existing approved V4 when any PNG/rig is
    // corrupted or unavailable, rather than removing the heroine from scene.
-   if(!['protagonist','char-002'].includes(id)||!source)throw error;
+   if(id!=='protagonist'||!source)throw error;
    console.warn('[L2D] Original approved animation retained: independent character rig unavailable',error);
    await window.PaperchalkL2D.setAnimationSource(target,source,shape);
    actor.root.dataset.l2dEdition='V4-fallback';
