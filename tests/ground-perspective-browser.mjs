@@ -269,10 +269,12 @@ try{
      rig.style.setProperty('--dev-depth-enemy',value+'px');
      const g=window.PaperWorldL2DGround.sync();
      const enemy=window.PaperchalkL2D.get('enemy');
+     const actor=g.actors.find(v=>v.id==='enemy');
+     const rect=enemy.canvas.getBoundingClientRect();
      return {size:enemy.img.offsetHeight,buffer:enemy.canvas.width,
        scale:parseFloat(getComputedStyle(enemy.canvas).scale),
-       canvasHeight:enemy.canvas.getBoundingClientRect().height,
-       foot:g.actors.find(v=>v.id==='enemy')?.errorPx};
+       canvasHeight:rect.height,
+       shoeScreenY:rect.top+rect.height*actor.soleY};
    },z);
    const distant=await actorAt(-350);
    const close=await actorAt(-60);
@@ -281,8 +283,9 @@ try{
      JSON.stringify({distant,close}));
    assert.equal(close.size,distant.size,'Camera depth changed the original image geometry');
    assert.equal(close.buffer,distant.buffer,'Zoom should not continuously reallocate rendering buffers');
-   assert.ok(Math.abs(close.foot)<1&&Math.abs(distant.foot)<1,
-     'Moving the camera distance detached the L2D shoes from the floor');
+   assert.ok(Math.abs(close.shoeScreenY-distant.shoeScreenY)<2,
+     'The CSS zoom pivot was not attached to the real shoe pixels: '+
+     JSON.stringify({distant,close}));
    await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-sharp-normal-distance.png'});
    await actorAt(-190);
    const perfBefore=await page.evaluate(()=>window.PaperWorldL2DGround.performance());
