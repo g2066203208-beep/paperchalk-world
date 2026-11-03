@@ -49,6 +49,32 @@ const FRONT={
  irides_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
  irides_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined']
 };
+// CHAR-004 / female third: actual user-supplied PSD, 21 layers and TWO
+// physically separate shoe meshes. Not the protagonist/CHAR002 rig.
+const CHAR004={
+ back_hair:['head',.50,.08,.52,.91,'hair'],
+ front_hair:['head',.50,.07,.51,.92,'hair'],
+ topwear:['torso',.50,.18,.50,.75,'torso'],
+ neck:['torso',.50,.70,.50,.13,'fixed'],
+ legwear:['pelvis',.50,.04,.51,.91,'leg-combined'],
+ footwear_left:['ground',.50,.83,.50,.83,'fixed'],
+ footwear_right:['ground',.50,.83,.50,.83,'fixed'],
+ handwear_l:['torso',.15,.81,.70,.11,'arm-raised'],
+ handwear_r:['torso',.89,.80,.60,.11,'arm-raised'],
+ face:['head',.50,.50,.50,.50,'face'],
+ eyebrow_r:['head',.50,.50,.50,.50,'face'],
+ eyebrow_l:['head',.50,.50,.50,.50,'face'],
+ ears_r:['head',.50,.50,.50,.50,'fixed'],
+ ears_l:['head',.50,.50,.50,.50,'fixed'],
+ nose:['head',.50,.50,.50,.50,'fixed'],
+ mouth:['head',.50,.50,.50,.50,'mouth'],
+ eyewhite_r:['head',.50,.50,.50,.50,'eyes-combined'],
+ eyewhite_l:['head',.50,.50,.50,.50,'eyes-combined'],
+ irides_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
+ irides_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined'],
+ eyelash_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
+ eyelash_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined']
+};
 const BACK={
  legs:['pelvis',.50,.02,.50,.82,'leg-combined'],
  sleeve_left:['torso',.85,.05,.50,.96,'arm-left'],
@@ -369,9 +395,11 @@ function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  return {x:part.x+x+dx/sum*blend,y:part.y+y+dy/sum*blend};
 }
 function cleanPart(part,face,id,characterId){
- const p=part||{},spec=(characterId==='char-002'||characterId==='char-002-psd-v1')&&face==='front'?
-  (CHAR002[id]||FRONT[id]):
-  (face==='back'?BACK:FRONT)[id];
+ const p=part||{},spec=characterId==='char-004'&&face==='front'?
+  (CHAR004[id]||FRONT[id]):
+  (characterId==='char-002'||characterId==='char-002-psd-v1')&&face==='front'?
+   (CHAR002[id]||FRONT[id]):
+   (face==='back'?BACK:FRONT)[id];
  const w=Math.max(1,finite(p.canvas?.width||p.w,1));
  const h=Math.max(1,finite(p.canvas?.height||p.h,1));
  const def=spec||(id==='hair'?['head',.5,.06,.5,.9,'hair']:
@@ -427,8 +455,9 @@ function project(parts,characterId,face,previous=null){
 function bindBodyHierarchy(model){
  const p=model?.parts;if(!p)return model;
  const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
- const legs=pick('legs','legwear'),feet=pick('shoes','footwear'),
-  skirt=pick('skirt','bottomwear'),torso=pick('jacket','topwear'),
+ const legs=pick('legs','legwear'),feet=pick('shoes','footwear','footwear_left','footwear_right'),
+  skirt=pick('skirt','bottomwear')||(model.characterId==='char-004'?legs:null),
+  torso=pick('jacket','topwear'),
   face=pick('face'),hair=pick('front_hair','rear_hair','back_hair','head_hair'),neck=pick('neck');
  if(!legs||!feet||!skirt||!torso)return model;
  const xy=(part,u,v)=>({x:part.x+part.w*u,y:part.y+part.h*v});
@@ -660,7 +689,9 @@ const FACE_STACK=['rear_hair','sleeves_and_hands','legs','shoes','neck',
   'skirt','jacket','ears','face','eye_white','irises','lashes',
   'brows','front_hair','nose','mouth','hair_clip'];
 const FACE_MICRO=new Set(['face','head_reference','ears','brows','eyebrow','nose','mouth','hair_clip',
-  'eye_white','irises','lashes','eyewhite','irides','eyelash']);
+  'eye_white','irises','lashes','eyewhite','irides','eyelash',
+  'ears_r','ears_l','eyebrow_r','eyebrow_l',
+  'eyewhite_r','eyewhite_l','irides_r','irides_l','eyelash_r','eyelash_l']);
 function drawFacePart(ctx,source,part,phase,idle){
  const img=source.canvas,id=part.id,blink=blinkAmount(phase);
  // Align attached facial pieces to exactly the same barely visible head
@@ -673,11 +704,12 @@ function drawFacePart(ctx,source,part,phase,idle){
  ctx.transform(1,0,-lean.lean,1,lean.feet*lean.lean,0);
  ctx.translate(motion.x,motion.y);
  applyRigidParent(ctx,part,phase,idle);
- if(id==='eye_white'||id==='irises'||id==='eyewhite'||id==='irides'){
+ if(id==='eye_white'||id==='irises'||id==='eyewhite'||id==='irides'||
+    /^eyewhite_[lr]$/.test(id)||/^irides_[lr]$/.test(id)){
   // Real iris/eye-white PNGs gradually disappear under closing eyelids.
   ctx.globalAlpha*=1-blink;
   if(ctx.globalAlpha>0.001)ctx.drawImage(img,part.x,part.y);
- }else if(id==='lashes'||id==='eyelash'){
+ }else if(id==='lashes'||id==='eyelash'||/^eyelash_[lr]$/.test(id)){
   // The source lash art forms the closed eyelid. Squash toward its center,
   // not toward the face origin; both eyes keep their native proportions.
   const center=part.y+part.h*.52;
@@ -797,5 +829,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
