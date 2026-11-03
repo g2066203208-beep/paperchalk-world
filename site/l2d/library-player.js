@@ -45,6 +45,10 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null){
  if(model?.format!=='paperchalk-part-rig-v1'||
     (model.characterId!==characterId&&!approvedOriginal)||model.face!==face)
   throw Error('L2D 绑定文件与人物 ID/方向不一致');
+ // Every playable module (including the ORIGINAL heroine actor) has a
+ // deterministic gentle idle preset. A saved local editor profile overrides it.
+ model.idleProfile=root.PaperchalkPartRigCore.sanitizeIdleProfile(
+  localDraft?.idleProfile||model.idleProfile||root.PaperchalkPartRigCore.defaultIdleProfile());
  const ids=Object.keys(rigSpec.textures);
  // Merge ONLY the user's explicitly saved rig for this exact actor and
  // direction. Art assets, layer IDs, published positions and original V4
