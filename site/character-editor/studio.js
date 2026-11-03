@@ -619,7 +619,12 @@ async function importComponentArchive(file){
    await storePartRig(binding);
   }
   updatePartStatus();
-  message('✓ 女主战斗正面已组装：24 层原位独立贴图、战斗正面专用绑定。右侧打开新版 L2D 编辑骨骼。');
+  // Character-loaded fires only on a selector switch. After first ZIP import
+  // the independent L2D editor must initialize without switching characters.
+  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{
+   detail:{id:currentId,side}
+  }));
+  message('✓ 战斗正面：24 层原位组装完成，已启动独立 L2D 骨骼预览。原版女主没有被覆盖。');
  }
 }
 
