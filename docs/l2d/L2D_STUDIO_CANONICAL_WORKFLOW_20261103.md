@@ -77,12 +77,14 @@
 
 **自动化**：`.github/workflows/l2d-modules.yml`、`game-character-dev-tests.yml`、`character-editor-tests.yml`，以当前提交成功为准；旧提交绿灯不代表新提交已验收。
 
-## 6. 女二（char-002）实际交付账本
+## 6. 女二（char-002）正式 PSD 交付账本
 
-- **批准资源**：`site/assets/characters/char-002/front.png`（原画 303×1024），只有正面；`scripts/build_char002_v4.py` 生成 128 帧可回退动画与 7 个保真像素区域。
-- **基础独立网格模块**：`scripts/build_char002_part_rig.py` 从同一 ZIP 构建 `char-002-rig-v1` 并以 alias 挂到原来的 `char-002`，不新增重复女二角色。7 个实际区域：`shoes`、`legs`、`skirt`、`wave_hand`、`free_hand`、`head_hair`、`jacket`。
-- **可用动作**：脚不动的骨盆/腿联动、两手/肩部联动、上胸呼吸、裙摆的少量变形、整体头部继承。区域边界使用保守默认值，避免露出合成图原本不存在的遮挡信息。
-- **不是完成的真实 PSD**：`head_hair` 把头和头发合在一块，刘海无法真正独立晃动、眼睛无法可靠独立闭合；两臂原始像素由区域裁切而不是完整遮挡补画；没有原生背面 16 层。这些不能宣称“女二已经达到女主 17 层的同级艺术质量”。
-- **升级条件**：将女二真正 16+ 层正面 PNG/PSD 连同隐藏部位补画导入工作室，逐层校验并绑定独立眼睛、脸、刘海、后发、裙摆、左右手；保留 `char-002` ID 和用户保存，升级同一模块而不是创造另一位女二。
+- 2026-11-03 用户明确指定 `CHAR-002_middle_cropped_generated.psd` 为女二原始完整拆分。**这份 PSD 优先于旧合成图人工裁切。** 源 PSD SHA-256：`b8d6509214f1013dc3f455261f43815b58e7b4f07600f33a5a4038309acfc3bc`。
+- **24 条 Photoshop 图层记录**，其中 17 个具备实际可见内容；另外 7 个空白或仅有极淡残留的预留层只保存在原始审计 ZIP，不能冒充动画层。原始图片 303×1024，舞台 1024×1024，左右居中且不改变原始像素。
+- `site/assets/l2d/source-psd/char-002-original-psd-parts.zip` 保留 PSD 的全部原始图层 PNG 和图层清单，`scripts/build_char002_psd_rig.py` 构建 `site/assets/l2d/library/char-002-psd-v1/`，最终映射到唯一的 `char-002` 人物档案，不创建副本。
+- 17 个动画用部件：`head_reference`, `back_hair`, `legwear`, `footwear`, `neck`, `bottomwear`, `topwear`, `ears`, `face`, `handwear`, `mouth`, `eyebrow`, `eyewhite`, `irides`, `eyelash`, `nose`, `front_hair`。
+- 骨骼父级：鞋脚作为固定锚点 → 双腿和骨盆 → 上衣/胸廓/肩 → 颈和头 → 刘海、后发、面部五官。女二 PSD 中两只手和袖子属于同一张 `handwear` 贴图，局部网格上有双侧关节，但并非真实分别绘制的两张手臂。只提供正面，绝不生成假背面。
+- **旧版 7 区域人工裁切、旧烘焙 V4 与旧 `char-002-rig-v1` 构建已移除。** 旧浏览器如果存在 7 区域骨骼与图片缓存，工作室自动替换为当前 PSD；游戏运行时不接受旧 7 部件 JSON。
+- 本地改动经编辑器「保存到游戏」写入 IndexedDB；正式 GitHub 发布使用明确的 PSD 模块构建与自动化验证。
 
 > 官方技术参考：Live2D Cubism 的 parent-child deformer、rotation/warp deformer、ArtMesh skinning 是人体父级设计的交叉校验依据；本项目自身格式和实际可用功能以代码/测试结果为准。
