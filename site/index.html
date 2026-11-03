@@ -2277,8 +2277,8 @@ void main(){
       enemyDepth.offsetHeight*(1-enemy.y/100);
     const delta=shoeY-floorY;
     const info=document.getElementById('dev-ground-delta');
-    if(info)info.textContent='敌人脚点相对地板：'+
-      (delta>=0?'+':'')+delta.toFixed(1)+'px（正数=脚点偏低）';
+    if(info)info.textContent='DEV 3D参考网格偏移：'+
+      (delta>=0?'+':'')+delta.toFixed(1)+'px（仅辅助；实际同地面关系按下方视平线计算）';
   }
   function applyDevCamera(){
     devRig.style.transform='translate3d('+devCamera.panX.toFixed(1)+'px,'+
