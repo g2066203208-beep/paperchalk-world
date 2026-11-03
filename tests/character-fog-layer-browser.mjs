@@ -148,7 +148,13 @@ try{
   assert.ok(playerColor[1]>205&&playerColor[0]<100&&playerColor[2]<100,
     'FOREGROUND PROTAGONIST was painted behind black fog: '+
       JSON.stringify({cfg:cfg.name,playerColor,roles}));
-  await page.locator('#player-fog-probe').evaluate(el=>{el.style.opacity='0'});
+  // After confirming the foreground draws above fog, hide JUST that
+  // foreground for the NPC-only color read. On rotated phones the genuine
+  // heroine L2D silhouette can overlap the center of the opponent: a
+  // near-black heroine sprite is not evidence that the NPC probe failed.
+  await page.evaluate(()=>{
+    document.getElementById('camera-player-root').style.visibility='hidden';
+  });
   const enemyCovered=pixelAtCenter(await page.screenshot());
   const occlusionDiagnostics=await page.evaluate(()=>{
     const ids=['view','enemy-depth-root','fog','ui-edge-fog',
@@ -192,6 +198,7 @@ try{
       JSON.stringify({cfg:cfg.name,enemyExposed,enemyCovered}));
   await page.evaluate(()=>{
     document.getElementById('fog').style.visibility='';
+    document.getElementById('camera-player-root').style.visibility='';
     const edge=document.getElementById('ui-edge-fog');
     edge.style.backgroundColor='';
     edge.hidden=false;
