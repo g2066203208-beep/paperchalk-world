@@ -97,6 +97,9 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    }
   }catch(e){console.warn('[L2D] 本机分层纹理校验失败，保留已发布素材',e);}
  }
+ // Restore runtime-only bone ancestry AFTER published parts and local artwork
+ // positions are finalized. Every drawn layer shares the same ground anchors.
+ root.PaperchalkPartRigCore.bindBodyHierarchy(model);
  const layers=ids.map((id,i)=>{
   const p=model.parts[id],im=drawings[i];
   if(!p||p.id!==id||p.w!==im.width||p.h!==im.height)
