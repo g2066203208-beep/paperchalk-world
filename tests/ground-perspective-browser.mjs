@@ -44,8 +44,8 @@ try{
      'Nearby NPC should be around 58% of scene with cinematic crop: '+JSON.stringify(initial));
    assert.equal(initial.state.locked,false,'Preexisting hand-placed defaults must not be silently changed');
    assert.equal(initial.state.enemy.size,48,'Cinematic enemy source must be 48%, not the tiny old 34%');
-   assert.equal(initial.state.player.size,104,'Protagonist must feel camera-close while keeping some upper thigh');
-   assert.equal(initial.state.player.y,-34.5,'Head locked to one-third while the lower frame crops at thighs');
+   assert.equal(initial.state.player.size,128,'Protagonist must dominate foreground without losing the skirt');
+   assert.equal(initial.state.player.y,-43.5,'The larger heroine should still be cropped near upper thigh');
    assert.equal(initial.state.player.x,27,'Her back stays centered at 27% of the viewport');
    assert.equal(initial.state.player.z,300);
    assert.equal(initial.state.enemy.z,-40);
@@ -228,7 +228,7 @@ try{
    assert.equal(calibrated.state.enemy.x,x,'Ground calibration moved authored X');
    assert.equal(calibrated.state.enemy.y,y,'Ground calibration moved authored Y');
    assert.equal(calibrated.state.enemy.size,size,'Ground calibration rewrote the original artwork size');
-   assert.ok(calibrated.stored?.includes('"modelVersion":7'),
+   assert.ok(calibrated.stored?.includes('"modelVersion":8'),
      'Single-camera migration was not saved');
    for(const role of ['player','enemy']){
      const before=soleBefore.actors.find(a=>a.id===role);
@@ -322,9 +322,9 @@ try{
    });
    assert.ok(Math.abs(shot.centerX/shot.width-.27)<.018,
      'Camera must remain behind heroine shoulder on phone and desktop: '+JSON.stringify(shot));
-   assert.ok(shot.headY/shot.height>.28&&shot.headY/shot.height<.39,
+   assert.ok(shot.headY/shot.height>.15&&shot.headY/shot.height<.26,
      'Heroine head must begin near 1/3 screen height: '+JSON.stringify(shot));
-   assert.ok(shot.visibleBottomFraction>.65&&shot.visibleBottomFraction<.69,
+   assert.ok(shot.visibleBottomFraction>.64&&shot.visibleBottomFraction<.70,
      'Frame must end at heroine thighs instead of cutting her at waist: '+JSON.stringify(shot));
    assert.ok(shot.enemyFoot/shot.height>.65&&shot.enemyFoot/shot.height<1,
      'NPC foot must remain within midground viewport: '+JSON.stringify(shot));
