@@ -12,6 +12,7 @@ const enemyMark={shade:'◈',echo:'≋',rift:'◇'};
 const names={hero:'女主',partner:'女二'};
 let host=null,active=false,closing=false,selected=null,chainCaption='',tip='',raf=0;
 let prevVisible=null,prevSlots=null,castTask=Promise.resolve();
+let feedbackTimer=0;
 function install(){
  if(host)return;
  const view=$('view');if(!view)return;
@@ -134,23 +135,65 @@ function noteChain(snap,prev){
  if(chain)chainCaption=chain.text;
  // Preserve latest enemy-chain announcement through next-round bookkeeping.
 }
+/* The engine resolves instantly for determinism; every actual damage event is
+ * nevertheless replayed in attack order, including enemy follow-up strikes.
+ * A new action cancels only the old visual queue, never the battle result.
+ */
+function clearFeedback(){
+ if(feedbackTimer)clearTimeout(feedbackTimer);
+ feedbackTimer=0;
+ if(!host)return;
+ for(const node of host.querySelectorAll('.cb-unit.cb-striking, .cb-unit.cb-taking-hit, .cb-unit.cb-being-helped'))
+  node.classList.remove('cb-striking','cb-taking-hit','cb-being-helped');
+ for(const node of host.querySelectorAll('.cb-float'))node.remove();
+}
+function showSequence(snap,prior){
+ clearFeedback();
+ const steps=snap.events.filter(e=>e.id>prior&&
+  ['attack','assist','guard','heal'].includes(e.kind));
+ if(!steps.length)return;
+ let i=0;
+ function playNext(){
+  if(!active||!host)return;
+  clearFeedback();
+  if(i>=steps.length){render(model.snapshot());return;}
+  const entry=steps[i++];
+  const actor=host.querySelector('.cb-unit[data-target="'+entry.actor+'"]');
+  const target=host.querySelector('.cb-unit[data-target="'+entry.target+'"]');
+  if(actor)actor.classList.add('cb-striking');
+  if(target){
+   target.classList.add(entry.kind==='guard'||entry.kind==='heal'?'cb-being-helped':'cb-taking-hit');
+   const pop=document.createElement('span');
+   pop.className='cb-float'+(entry.kind==='assist'?' cb-assist':'')+
+    (entry.kind==='guard'||entry.kind==='heal'?' cb-help':'');
+   const amount=Number.isFinite(entry.amount)?entry.amount:0;
+   pop.textContent=(entry.kind==='guard'||entry.kind==='heal'?'+':'−')+amount;
+   target.appendChild(pop);
+  }
+  $('cb-chain-label').textContent=entry.kind==='assist'?'连携追击':
+   entry.side==='enemy'?'敌方行动':entry.kind==='attack'?'主攻':'支援';
+  $('cb-chain-detail').textContent=entry.text||'';
+  feedbackTimer=setTimeout(playNext,entry.kind==='assist'?260:320);
+ }
+ playNext();
+}
 function useCard(uid,target){
  const prev=model.snapshot().sequence;
  const result=model.play(uid,target);
  if(!result.ok){tip=result.reason;render(result.snapshot);return;}
- selected=null;tip='';noteChain(result.snapshot,prev);render(result.snapshot);
+ selected=null;tip='';noteChain(result.snapshot,prev);render(result.snapshot);showSequence(result.snapshot,prev);
 }
 function handleClick(event){
  if(!active)return;
  const button=event.target.closest('button');if(!button||button.disabled)return;
  if(button.id==='cb-close'||button.id==='cb-result-close'){close();return;}
  if(button.id==='cb-rematch'){
-  selected=null;chainCaption='';tip='';model.reset();render(model.snapshot());return;
+  clearFeedback();selected=null;chainCaption='';tip='';model.reset();render(model.snapshot());return;
  }
  if(button.id==='cb-end'){
   const prev=model.snapshot().sequence;
   selected=null;tip='';const res=model.endTurn();
-  if(res.ok){noteChain(res.snapshot,prev);render(res.snapshot);}return;
+  if(res.ok){noteChain(res.snapshot,prev);render(res.snapshot);showSequence(res.snapshot,prev);}return;
  }
  if(button.dataset.card){
   const uid=button.dataset.card;
@@ -224,7 +267,7 @@ async function uncastPortraits(){
 function open(){
  if(active||closing)return;
  install();if(!host)return;
- active=true;selected=null;chainCaption='';tip='';
+ clearFeedback();active=true;selected=null;chainCaption='';tip='';
  prevVisible={
   player:$('camera-player-root')?.hidden,
   enemy:$('enemy-depth-root')?.hidden
@@ -237,7 +280,7 @@ function open(){
 }
 async function close(){
  if(!active||closing)return;
- active=false;closing=true;host.hidden=true;
+ active=false;closing=true;clearFeedback();host.hidden=true;
  if(raf)cancelAnimationFrame(raf);raf=0;
  try{await castTask.catch(()=>{});await uncastPortraits();}
  finally{
