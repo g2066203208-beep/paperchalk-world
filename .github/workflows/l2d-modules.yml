@@ -15,6 +15,7 @@ on:
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
+      - 'tests/test_l2d_idle.js'
       - '.github/workflows/l2d-modules.yml'
   pull_request:
     paths:
@@ -24,6 +25,7 @@ on:
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
+      - 'tests/test_l2d_idle.js'
       - '.github/workflows/l2d-modules.yml'
   workflow_dispatch:
 permissions:
