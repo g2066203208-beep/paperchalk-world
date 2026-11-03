@@ -80,6 +80,9 @@ jobs:
                 await page.locator('#idle-open').click();
                 await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:10000});
                 assert.ok(await page.locator('#part-rig-panel').isVisible());
+                // Heroine portrait must NOT draw the selected mesh and axes by default.
+                assert.equal(await page.locator('#rig-guides').isChecked(),false);
+                assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.showGuides),false);
                 assert.equal(await page.locator('#idle-open').getAttribute('aria-expanded'),'true');
                 const preset=page.locator('[data-idle-preset="realistic"]');
                 assert.equal(await preset.isVisible(),true);
@@ -91,9 +94,15 @@ jobs:
                   'idle controls panel must be on-screen, including phone viewport');
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-VISIBLE-HAIR-SKIRT-CONTROLS.png',fullPage:false});
                 assert.equal(await page.locator('#rig-part option').count(),17);
+                assert.equal(await page.locator('[data-spotlight="front_hair"]').isVisible(),true);
+                assert.equal(await page.locator('[data-spotlight="skirt"]').isVisible(),true);
                 await page.locator('#rig-part').selectOption('rear_hair');
                 assert.equal(await page.locator('#rig-bone option').count(),6,'hair needs three independently skinned two-joint strands');
                 await page.locator('#rig-advanced').evaluate(el=>{el.open=true;});
+                await page.locator('#rig-guides').check();
+                assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.showGuides),true);
+                await page.locator('#rig-guides').uncheck();
+                assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.showGuides),false);
                 await page.locator('#rig-bone').selectOption('left-tip');
                 await page.locator('[data-bone="amplitude"]').fill('30');
                 await page.evaluate(()=>{
