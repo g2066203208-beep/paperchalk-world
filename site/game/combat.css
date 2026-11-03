@@ -2,6 +2,15 @@
  * Isolated overlay: does not alter world fog, scene transforms or DEV L2D rig.
  * Landscape-first, container-relative to the game's virtual landscape view.
  */
+/* Five main-menu entries must fit a real phone's rotated landscape viewport. */
+#scene-menu #scene-menu-main:has(#menu-combat){
+ top:33%;gap:clamp(1px,.5cqh,7px);
+}
+#scene-menu #scene-menu-main:has(#menu-combat) button{
+ min-height:clamp(33px,6.25cqh,53px);
+ padding:clamp(3px,.65cqh,8px) 10px;
+}
+
 #pw-combat[hidden]{display:none!important}
 #pw-combat{
  position:absolute;inset:0;z-index:90;overflow:hidden;pointer-events:auto;
