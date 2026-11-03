@@ -87,7 +87,8 @@ jobs:
               assert.ok(await page.locator('[data-quick="fringe"]').isVisible());
               assert.ok(await page.locator('[data-quick="rear"]').isVisible());
               assert.ok(await page.locator('[data-quick="skirt"]').isVisible());
-              assert.ok(await page.locator('[data-quick="speed"]').isVisible());
+              for(const field of ['hands','shoulders','hips','speed'])
+                assert.ok(await page.locator('[data-quick="'+field+'"]').isVisible());
               await page.locator('#idle-open').click();
               assert.equal(await page.locator('#rig-part option').count(),17);
               // The inspector must be docked outside the moving canvas.
@@ -107,22 +108,29 @@ jobs:
                 ctx.fillRect(20,140,3,3);
                 window.characterEditor.render();
               });
-              await page.locator('[data-quick="fringe"]').fill('230');
-              await page.locator('[data-quick="rear"]').fill('215');
-              await page.locator('[data-quick="skirt"]').fill('245');
-              await page.locator('[data-quick="speed"]').fill('150');
+              await page.locator('[data-quick="fringe"]').fill('1100');
+              await page.locator('[data-quick="rear"]').fill('900');
+              await page.locator('[data-quick="skirt"]').fill('1400');
+              await page.locator('[data-quick="hands"]').fill('235');
+              await page.locator('[data-quick="shoulders"]').fill('180');
+              await page.locator('[data-quick="hips"]').fill('275');
+              await page.locator('[data-quick="speed"]').fill('195');
               await page.locator('#rig-quick-save').click(); // One click saves to the same game rig
               await page.waitForFunction(async()=>{
                 const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
-                return saved?.idleProfile?.parts.front_hair===2.3&&
-                  saved?.idleProfile?.parts.rear_hair===2.15&&
-                  saved?.idleProfile?.parts.skirt===2.45&&saved?.idleProfile?.hair.speed===1.5;
+                return saved?.idleProfile?.parts.front_hair===11&&
+                  saved?.idleProfile?.parts.rear_hair===9&&
+                  saved?.idleProfile?.parts.skirt===14&&saved?.idleProfile?.hair.speed===1.95&&
+                  saved?.idleProfile?.joints?.hands===2.35&&
+                  saved?.idleProfile?.joints?.shoulders===1.8&&
+                  saved?.idleProfile?.joints?.hips===2.75;
               },null,{timeout:15000});
               await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
               await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:30000});
               await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
               await page.waitForFunction(()=>
-                window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.parts.front_hair===2.3,
+                window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.parts.front_hair===11&&
+                window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.joints?.hips===2.75,
                 null,{timeout:28000}).catch(async error=>{
                   console.error('GAME RIG SAVE DIAGNOSTICS',await page.evaluate(async()=>{
                     const project=await new Promise(resolve=>{
