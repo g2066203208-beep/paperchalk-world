@@ -28,7 +28,7 @@ function stop(slot){
  const actor=root.PaperchalkL2D?.get(slot);
  if(actor?.libraryPlayer===old)actor.libraryPlayer=null;
 }
-async function attach(slot,characterId,face,rigSpec){
+async function attach(slot,characterId,face,rigSpec,localDraft=null){
  if(!rigSpec?.url||!rigSpec?.textures)throw Error('模块缺少可播放的逐层 ArtMesh');
  if(!root.PaperchalkPartRigCore)throw Error('未加载独立部件网格渲染器');
  // Prepare all assets BEFORE mutating the existing game actor.
@@ -46,6 +46,18 @@ async function attach(slot,characterId,face,rigSpec){
     (model.characterId!==characterId&&!approvedOriginal)||model.face!==face)
   throw Error('L2D 绑定文件与人物 ID/方向不一致');
  const ids=Object.keys(rigSpec.textures);
+ // Merge ONLY the user's explicitly saved rig for this exact actor and
+ // direction. Art assets, layer IDs, published positions and original V4
+ // remain authoritative; malformed drafts cannot modify a published model.
+ if(localDraft?.format==='paperchalk-part-rig-v1'&&
+    localDraft.characterId===characterId&&localDraft.face===face&&
+    Object.keys(localDraft.parts||{}).length===ids.length&&
+    ids.every(id=>localDraft.parts[id]&&model.parts[id])){
+   for(const id of ids){
+    const original=model.parts[id],edit=localDraft.parts[id];
+    model.parts[id]=root.PaperchalkPartRigCore.sanitize(edit,original);
+   }
+ }
  if(!ids.length||ids.length!==Object.keys(model.parts||{}).length)
   throw Error('L2D 贴图与绑定层数量不一致');
  const layers=ids.map((id,i)=>{
@@ -78,6 +90,14 @@ async function attach(slot,characterId,face,rigSpec){
   ctx.setTransform(w/1024,0,0,h/1024,0,0);
   // The approved rig drives its OWN geometry, not the character poster.
   root.PaperchalkPartRigCore.draw(ctx,layers,model,t*Math.PI*2/3600);
+  // Existing hand-painted correction layers must remain visible when the
+  // original heroine switches from V4 to articulated parts. These overlays
+  // are stored separately; none of the original source PNGs are modified.
+  if(actor.partPatch?.erase&&actor.partPatch?.paint){
+   ctx.save();ctx.globalCompositeOperation='destination-out';
+   ctx.drawImage(actor.partPatch.erase,0,0,1024,1024);ctx.restore();
+   ctx.drawImage(actor.partPatch.paint,0,0,1024,1024);
+  }
   ctx.setTransform(1,0,0,1,0,0);
   actor.root.dataset.l2dFrame=String(Math.floor(t/50)%128);
   state.last=t;
