@@ -33,16 +33,18 @@ try{
       const n=document.querySelector('#phone-ui'),frame=n.querySelector('.phone-device');
       const screen=n.querySelector('.phone-screen'),root=document.querySelector('#novel-ui');
       const rect=n.getBoundingClientRect(),quick=document.querySelector('#quick-phone').getBoundingClientRect();
+      const shell=frame.querySelector('.phone-shell-art');
       return {ratio:n.offsetWidth/n.offsetHeight,height:n.offsetHeight,rootHeight:root.offsetHeight,
-        art:getComputedStyle(frame).backgroundImage,
+        art:shell?.currentSrc||'',imageLoaded:!!shell?.complete&&shell.naturalWidth>0,
         imageRect:screen.getBoundingClientRect().toJSON(),
         phoneRect:rect.toJSON(),quickRect:quick.toJSON(),
         shellPseudo:getComputedStyle(frame,'::before').content};
     });
-    assert.ok(state.art.includes('char001-cat-ear-shell.webp'),JSON.stringify(state));
+    assert.ok(state.art.includes('char001-cat-ear-shell.webp')&&state.imageLoaded,
+      'Original cat-ear phone image must be visibly loaded: '+JSON.stringify(state));
     assert.equal(state.shellPseudo,'none','The approved phone has no fabricated CSS ears');
     assert.ok(state.ratio>.47&&state.ratio<.53,'Incorrect smartphone silhouette ratio');
-    assert.ok(state.height>state.rootHeight*.7&&state.height<state.rootHeight*.9,
+    assert.ok(state.height>state.rootHeight*.87&&state.height<=state.rootHeight*.92,
       'Phone is incorrectly scaled for this logical game viewport: '+JSON.stringify(state));
     assert.equal(await page.locator('#phone-ui .phone-charm').count(),0,'Unwanted hanging accessory');
     assert.equal(await page.locator('#phone-ui .phone-dot').count(),6);
