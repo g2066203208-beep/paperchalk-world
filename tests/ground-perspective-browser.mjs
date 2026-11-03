@@ -269,7 +269,10 @@ try{
      const actors=Object.fromEntries(g.actors.map(a=>[a.id,a]));
      const player=window.PaperchalkL2D.get('player');
      const enemy=window.PaperchalkL2D.get('enemy');
-     return {dev:g.dev,actors,perf:window.PaperWorldL2DGround.performance(),
+     return {dev:g.dev,actors,cameraProfile:g.cameraProfile,
+       cameraReferenceBodyPx:g.cameraReferenceBodyPx,
+       playerShoeActuallyOffscreen:g.playerShoeActuallyOffscreen,
+       perf:window.PaperWorldL2DGround.performance(),
        player:{scale:actors.player.perspectiveScale,
          origin:getComputedStyle(player.canvas).transformOrigin,
          buffer:player.canvas.width,height:player.img.offsetHeight},
