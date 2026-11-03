@@ -21,7 +21,7 @@ try{
    const page=await browser.newPage({viewport:{width:cfg.w,height:cfg.h},isMobile:cfg.mobile,hasTouch:cfg.mobile});
    // Stale pre-v5 camera saves must migrate automatically.
    await page.addInitScript(()=>localStorage.setItem('paperchalk-layer-editor-v2',
-     JSON.stringify({player:{x:9,y:-5.5,size:90,z:300},ground:{modelVersion:4}})));
+     JSON.stringify({player:{x:9,y:-5.5,size:190,z:300},ground:{modelVersion:5}})));
    const errs=[];page.on('pageerror',e=>errs.push(e.message));
    const url='http://127.0.0.1:'+server.address().port+'/index.html?scene=classroom&dev=1';
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
@@ -44,8 +44,8 @@ try{
      'Nearby NPC should be around 58% of scene with cinematic crop: '+JSON.stringify(initial));
    assert.equal(initial.state.locked,false,'Preexisting hand-placed defaults must not be silently changed');
    assert.equal(initial.state.enemy.size,48,'Cinematic enemy source must be 48%, not the tiny old 34%');
-   assert.equal(initial.state.player.size,190,'Heroine must fill camera-near shoulder foreground');
-   assert.equal(initial.state.player.y,-86.5,'Shoes/waist belong outside the close-camera frame');
+   assert.equal(initial.state.player.size,88,'Heroine should be visible from head to upper thighs');
+   assert.equal(initial.state.player.y,-18.5,'Lower frame should crop at thighs, not at waist');
    assert.equal(initial.state.player.x,27,'Her back stays centered at 27% of the viewport');
    assert.equal(initial.state.player.z,300);
    assert.equal(initial.state.enemy.z,-40);
@@ -228,7 +228,7 @@ try{
    assert.equal(calibrated.state.enemy.x,x,'Ground calibration moved authored X');
    assert.equal(calibrated.state.enemy.y,y,'Ground calibration moved authored Y');
    assert.equal(calibrated.state.enemy.size,size,'Ground calibration rewrote the original artwork size');
-   assert.ok(calibrated.stored?.includes('"modelVersion":5'),
+   assert.ok(calibrated.stored?.includes('"modelVersion":6'),
      'Single-camera migration was not saved');
    for(const role of ['player','enemy']){
      const before=soleBefore.actors.find(a=>a.id===role);
@@ -315,13 +315,17 @@ try{
      return {width:view.clientWidth,height:view.clientHeight,
        headY:actor.img.offsetTop+rootY+actor.img.offsetHeight*
          (p.soleY-p.visibleFraction),
+       visibleBottomFraction:(view.clientHeight-actor.img.offsetTop-rootY)/
+         actor.img.offsetHeight,
        centerX:actor.img.offsetLeft+actor.img.offsetWidth*.5,
        enemyFoot:enemy.worldFootY,enemyVisible:enemy.targetVisiblePx};
    });
    assert.ok(Math.abs(shot.centerX/shot.width-.27)<.018,
      'Camera must remain behind heroine shoulder on phone and desktop: '+JSON.stringify(shot));
-   assert.ok(shot.headY/shot.height>-.12&&shot.headY/shot.height<.14,
-     'Heroine head should be near frame top: '+JSON.stringify(shot));
+   assert.ok(shot.headY/shot.height>.28&&shot.headY/shot.height<.39,
+     'Heroine head must begin near 1/3 screen height: '+JSON.stringify(shot));
+   assert.ok(shot.visibleBottomFraction>.75&&shot.visibleBottomFraction<.83,
+     'Frame must end at heroine thighs instead of cutting her at waist: '+JSON.stringify(shot));
    assert.ok(shot.enemyFoot/shot.height>.65&&shot.enemyFoot/shot.height<1,
      'NPC foot must remain within midground viewport: '+JSON.stringify(shot));
    assert.ok(shot.enemyVisible/shot.height>.35&&shot.enemyVisible/shot.height<.75,
