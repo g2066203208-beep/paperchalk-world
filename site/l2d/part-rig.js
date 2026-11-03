@@ -91,6 +91,8 @@ function defaultIdleProfile(){
   hair:{amount:.24,speed:.83,lag:.78},
   cloth:{amount:.18,speed:.78,lag:.70},
   sleeves:{amount:.045,speed:.80,lag:.56},
+  // Chest-only rib-cage motion; never old full-body breathing scale.
+  breath:{amount:.6,speed:.85},
   joints:{hands:.7,shoulders:.3,hips:.2},
   parts:{...DEFAULT_PART_STRENGTH}};
 }
@@ -113,7 +115,10 @@ function sanitizeIdleProfile(input){
  const joints={};
  for(const name of ['hands','shoulders','hips'])joints[name]=clamp(finite(p.joints?.[name],base.joints[name]),0,8);
  return {...base,hair:g('hair',.4),cloth:g('cloth',.30),
-  sleeves:g('sleeves',.12),joints,parts};
+  sleeves:g('sleeves',.12),
+  breath:{amount:clamp(finite(p.breath?.amount,base.breath.amount),0,3),
+   speed:clamp(finite(p.breath?.speed,base.breath.speed),.25,2.5)},
+  joints,parts};
 }
 function presetIdle(name,previous=null){
  if(!Object.hasOwn(IDLE_PRESETS,name))throw Error('Unknown idle preset: '+name);
@@ -121,6 +126,7 @@ function presetIdle(name,previous=null){
  if(name!=='still')return defaultIdleProfile();
  const p=defaultIdleProfile();p.preset='still';
  p.hair.amount=0;p.cloth.amount=0;p.sleeves.amount=0;
+ p.breath.amount=0;
  p.joints={hands:0,shoulders:0,hips:0};
  return p;
 }
@@ -135,6 +141,10 @@ function approachIdle(previous,target,dt){
    const end=dest[name][key];
    dest[name][key]=finite(previous[name]?.[key],end)*(1-k)+end*k;
   }
+ }
+ for(const key of ['amount','speed']){
+  const end=dest.breath[key];
+  dest.breath[key]=finite(previous.breath?.[key],end)*(1-k)+end*k;
  }
  for(const name of ['hands','shoulders','hips']){
   const end=dest.joints[name];
@@ -390,7 +400,7 @@ function bindBodyHierarchy(model){
    hy:upper.head.y,ky:upper.tail.y,ay:lower.tail.y}:null;
  };
  const left=chain('left'),right=chain('right');if(!left||!right)return model;
- const layout={pelvis:xy(skirt,.5,.08),shoulder:xy(torso,.5,.12),
+ const layout={pelvis:xy(skirt,.5,.08),shoulder:xy(torso,.5,.12),shoulderHalfWidth:torso.w*.48,
   head:face?xy(face,.5,.5):hair?xy(hair,.5,.35):xy(torso,.5,-.2),
   neck:neck?xy(neck,.5,.12):face?xy(face,.5,.88):xy(torso,.5,-.12),
   neckTop:neck?neck.y+neck.h*.12:(face?face.y+face.h*.88:torso.y),
@@ -409,7 +419,12 @@ function humanPoseAt(part,phase=0,idle=null){
   sh=clamp(finite(idle?.joints?.shoulders,0),0,8),
   speed=clamp(finite(idle?.cloth?.speed,.8),.25,2.5);
  const a=Math.sin(phase*.65*speed),b=Math.sin(phase*.89*speed+.43);
- return {rig,hipX:a*h*1.1,hipY:(1-a*a)*h*.12,hipAngle:a*h*.0055,
+ // Breathing locally expands the upper chest and lifts its descendant
+ // shoulder chain. Shoes, ankles, legs and pelvis remain grounded.
+ const respiration=clamp(finite(idle?.breath?.amount,0),0,3)*
+  .5*(1-Math.cos(phase*.74*clamp(finite(idle?.breath?.speed,.85),.25,2.5)));
+ return {rig,breathLift:respiration*3.0,breathExpand:respiration*2.25,
+  hipX:a*h*1.1,hipY:(1-a*a)*h*.12,hipAngle:a*h*.0055,
   shoulderX:b*sh*.40,shoulderY:Math.cos(phase*.89*speed+.43)*sh*.13,
   shoulderAngle:b*sh*.009,
   // Cervical counter-rotation keeps the head balanced over the shoulders.
@@ -425,7 +440,17 @@ function hipPoint(p,pose){
 }
 function shoulderPoint(p,pose){
  const q=turn(hipPoint(p,pose),hipPoint(pose.rig.shoulder,pose),pose.shoulderAngle);
- return {x:q.x+pose.shoulderX,y:q.y+pose.shoulderY};
+ return {x:q.x+pose.shoulderX,y:q.y+pose.shoulderY-pose.breathLift};
+}
+// Rib cage widens symmetrically only in its upper region. Head/eyes/hair
+// retain the rigid shoulder-to-neck-to-head transform, without head scaling.
+function ribcagePoint(p,pose){
+ const upper=shoulderPoint(p,pose);
+ const height=smooth((pose.rig.pelvis.y-p.y)/
+  Math.max(1,pose.rig.pelvis.y-pose.rig.shoulder.y));
+ const lateral=clamp((p.x-pose.rig.shoulder.x)/
+  Math.max(35,pose.rig.shoulderHalfWidth||85),-1,1);
+ return {x:upper.x+lateral*pose.breathExpand*height,y:upper.y};
 }
 function headPoint(p,pose){
  const upperNeck=shoulderPoint(pose.rig.neck,pose);
@@ -495,11 +520,12 @@ function parentPoint(part,p,phase=0,idle=null,pose=null){
  case 'pelvis':return hipPoint(p,h);
  case 'neck':return neckPoint(p,h);
  case 'torso':{
-  const low=hipPoint(p,h),high=shoulderPoint(p,h);
+  const low=hipPoint(p,h),high=ribcagePoint(p,h);
   const rig=h.rig,w=smooth((rig.pelvis.y-p.y)/Math.max(1,rig.pelvis.y-rig.shoulder.y));
   return {x:low.x+(high.x-low.x)*w,y:low.y+(high.y-low.y)*w};
  }
  case 'head':return headPoint(p,h);
+ case 'shoulder':return ribcagePoint(p,h);
  default:return shoulderPoint(p,h);
  }
 }
@@ -652,7 +678,8 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
   Math.abs(b.amplitude)>1e-5&&jointGainFor(part,b,idle)>0);
  const role=parentRole(part);
  const linked=!!part._bodyHierarchy&&role!=='none'&&role!=='ground'&&
-  (Math.abs(idle?.joints?.hips||0)>0||Math.abs(idle?.joints?.shoulders||0)>0);
+  (Math.abs(idle?.joints?.hips||0)>0||Math.abs(idle?.joints?.shoulders||0)>0||
+   Math.abs(idle?.breath?.amount||0)>0);
  const active=part.enabled&&(linked||jointsActive||Math.abs(idle?.body?.amount||0)>0||
   (strength>0&&(Object.values(part.motion).some((v,i)=>i<3&&Math.abs(v)>1e-5)||
   (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5)||
@@ -727,5 +754,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
