@@ -145,10 +145,10 @@ function syncIdle(){
   b.setAttribute('aria-pressed',String(active));
  }
  const guide={
-  still:'静止：没有风，不让衣物和头发额外晃动。',
-  realistic:'普通待机：只有发梢与裙摆轻微摆动，根部固定。',
-  breeze:'微风：稍有飘动，头发和裙摆速度、滞后分别控制。',
-  windy:'大风：明显飘动且有缓慢风力起伏，不是整个人摆来摆去。',
+  still:'无风：头发与裙摆不受风影响，整个人只做很轻微的自然重心调整。',
+  realistic:'自然待机：全身沿脚部支撑点缓慢左右转移重心，衣物微动。',
+  breeze:'微风：侧发、发梢和裙摆有柔和定向飘动，身体轻轻调整重心。',
+  windy:'大风：长发被风吹起，发尾向上扬，裙摆翻起，身体迎风侧倾并持续稳住双脚。',
   custom:'自定义：手动参数已保留；点普通待机会重置为自然默认档。'
  };
  $('rig-preset-description').textContent=guide[idle.preset]||guide.custom;
@@ -309,7 +309,7 @@ async function activate(){
  $('rig-source').textContent=id==='char-002'&&src.length<12
   ?'女二当前只有 '+src.length+' 个扁平图分区，不是真 PSD。可以试验分区，但不能冒充完整分层绑定。'
   :'真实源图层 '+src.length+' 个。逐层查看轴点、网格；不替换你认可的 V4 动画。';
- info('普通待机、微风、大风各有独立摆幅与速度；切换时会平滑过渡，重新选预设会复位过大的部件倍率。');
+ info('静止、微风、大风使用不同风型；大风会把发尾和裙摆真正吹起，全身沿双脚轻微侧倾；预设平滑过渡。');
  ed.render();
 }
 function toggleIdle(){
