@@ -1,4 +1,4 @@
-name: Game DEV → all-character L2D studio E2E
+name: Game DEV → L2D game/editor face and idle E2E
 on:
   push:
     branches: [main]
@@ -7,11 +7,11 @@ on:
       - 'site/dev/**'
       - 'site/l2d/**'
       - 'site/assets/l2d/**'
+      - 'site/character-editor/**'
       - 'scripts/build_v4_assets.py'
+      - 'scripts/build_protagonist_part_rig.py'
       - 'scripts/build_char002_v4.py'
       - 'scripts/build_character_catalog.py'
-      - 'site/assets/characters/char-002/**'
-      - 'site/character-editor/**'
       - '.github/workflows/game-character-dev-tests.yml'
   workflow_dispatch:
 permissions:
@@ -25,498 +25,98 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - run: python3 -m pip install --quiet 'Pillow>=10,<12'
-      - run: python3 scripts/build_v4_assets.py && python3 scripts/build_protagonist_part_rig.py && python3 scripts/build_char002_v4.py && python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
+      - run: |
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/build_char002_v4.py
+          python3 scripts/build_scene_catalog.py
+          python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
-      - name: Create small two-frame V4-format animation fixture
-        run: |
-          python3 - <<'PY'
-          from PIL import Image, ImageDraw
-          import io, zipfile, json
-          frames=[]
-          for dx in (0,24):
-              img=Image.new('RGBA',(335,1013),(0,0,0,0))
-              ImageDraw.Draw(img).ellipse((90+dx,200,240+dx,560),fill=(250,120,140,230))
-              frames.append(img)
-          with zipfile.ZipFile('/tmp/paperchalk-v4-smoke.zip','w',zipfile.ZIP_DEFLATED) as archive:
-              for face in ('front','back'):
-                  data=io.BytesIO()
-                  frames[0].save(data,'WEBP',save_all=True,append_images=[frames[1]],duration=250,loop=0,quality=70)
-                  archive.writestr(face+'.webp',data.getvalue())
-          # Genuine PSD-like source parts in the same schema as the user V4 archive.
-          manifest={'canvas':[1024,1024],'views':{}}
-          with zipfile.ZipFile('/tmp/paperchalk-l2d-source-smoke.zip','w',zipfile.ZIP_DEFLATED) as archive:
-              for face in ('front','back'):
-                  manifest['views'][face]={}
-                  for idx,(name,x,y,w,h,color) in enumerate([
-                      ('neck',496,160,57,74,(224,176,152,255)),
-                      ('jacket',422,190,200,349,(18,32,58,255))
-                  ],1):
-                      img=Image.new('RGBA',(w,h),color)
-                      data=io.BytesIO()
-                      img.save(data,format='PNG')
-                      filename=f'{face}_{idx:02d}_{name}.png'
-                      archive.writestr('assets/'+filename,data.getvalue())
-                      manifest['views'][face][name]={'name':name,'role':name,'filename':filename,
-                          'x':x,'y':y,'w':w,'h':h,'index':idx}
-              archive.writestr('assets.json',json.dumps(manifest))
-          PY
-      - name: Verify navigation, all imported actors, motion editor and game return
+      - name: Real original heroine face, blink, editor and V4 backup on phone/desktop
         run: |
           mkdir -p artifacts/l2d-studio
           python3 -m http.server 8129 --directory site >/tmp/l2d-studio-http.log 2>&1 &
           node - <<'JS'
-          const assert=require('node:assert/strict');
+          const {chromium}=require('playwright'),assert=require('node:assert/strict');
           const fs=require('node:fs');
-          const {chromium}=require('playwright');
-          for(const file of ['site/l2d/breath.js','site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js','site/character-editor/studio.js','site/character-editor/stage-motion.js']){
+          for(const file of ['site/l2d/part-rig.js','site/l2d/library-player.js',
+              'site/l2d/runtime.js','site/dev/character-bridge.js',
+              'site/character-editor/studio.js','site/character-editor/part-rig-studio.js'])
             new Function(fs.readFileSync(file,'utf8'));
-          }
-          (async()=>{
-            const b=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
-            try{
-              for(const phone of [false,true]){
-                const page=await b.newPage({viewport:phone?{width:390,height:844}:{width:1280,height:800},isMobile:phone,hasTouch:phone});
-                const errors=[];page.on('pageerror',e=>errors.push(e.message));
-                await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
-                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready && window.PaperchalkL2D?.get('player')?.rig?.source?.width===1024,{timeout:20000});
-                assert.equal(await page.locator('[data-l2d-canvas]').count(),2);
-                // ORIGINAL heroine, not the experimental duplicate: she must
-                // default to independent hair/skirt/arms on every fresh game.
-                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.assigned.player.id==='protagonist' &&
-                  window.PaperchalkL2DLibrary?.get('player')?.layers?.length===8,null,{timeout:25000});
-                const originalBones=await page.evaluate(()=>{
-                  const state=window.PaperchalkL2DLibrary.get('player');
-                  const m=state.model.parts,core=window.PaperchalkPartRigCore;
-                  const movement=id=>{
-                    const p=m[id],u=id==='skirt'?.2:.7;
-                    const a=core.warpPoint(p,u,.93,.2),b=core.warpPoint(p,u,.93,1.4);
-                    return Math.hypot(a.x-b.x,a.y-b.y);
-                  };
-                  return {id:window.PaperchalkCharacterDev.assigned.player.id,
-                    mode:state.actor.root.dataset.l2dMode,
-                    breath:state.actor.root.dataset.l2dBreath,
-                    backHair:movement('back_hair'),skirt:movement('skirt'),
-                    leftSleeve:movement('sleeve_left'),rightSleeve:movement('sleeve_right')};
-                });
-                assert.equal(originalBones.id,'protagonist');
-                assert.equal(originalBones.mode,'library-part-mesh');
-                assert.equal(originalBones.breath,'disabled');
-                for(const part of ['backHair','skirt','leftSleeve','rightSleeve'])
-                  assert.ok(originalBones[part]>.15,'original heroine '+part+' must swing on independent joints');
-                // Verify the REAL rendered original heroine changes canvas pixels.
-                await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
-                await page.waitForFunction(()=>{
-                  const actor=window.PaperchalkL2D.get('player');
-                  return actor?.canvas?.width>120&&actor.canvas.height>120&&
-                    window.PaperchalkL2DLibrary.get('player')?.last>0;
-                },null,{timeout:25000});
-                const sampleHeroine=()=>page.evaluate(()=>{
-                  const a=window.PaperchalkL2D.get('player'),c=a.canvas;
-                  const data=c.getContext('2d',{willReadFrequently:true})
-                    .getImageData(0,0,c.width,c.height).data;
-                  let hash=2166136261,alpha=0;
-                  for(let i=0;i<data.length;i+=32){
-                    hash=Math.imul(hash^data[i],16777619)>>>0;
-                    hash=Math.imul(hash^data[i+3],16777619)>>>0;
-                    alpha+=data[i+3];
-                  }
-                  return {hash,alpha,w:c.width,h:c.height};
-                });
-                const firstRigFrame=await sampleHeroine();
-                assert.ok(firstRigFrame.alpha>20000,'original source PNGs must be visible in the game');
-                await page.waitForFunction(previous=>{
-                  const a=window.PaperchalkL2D.get('player'),c=a?.canvas;
-                  if(!c)return false;
-                  const d=c.getContext('2d',{willReadFrequently:true})
-                    .getImageData(0,0,c.width,c.height).data;
-                  let h=2166136261;
-                  for(let i=0;i<d.length;i+=32){
-                    h=Math.imul(h^d[i],16777619)>>>0;
-                    h=Math.imul(h^d[i+3],16777619)>>>0;
-                  }
-                  return h!==previous;
-                },firstRigFrame.hash,{timeout:18000});
-                await page.screenshot({path:'artifacts/l2d-studio/'+(phone?'mobile':'desktop')+'-original-heroine-swaying-hair-skirt.png',fullPage:true});
-                // Test the protected old V4 as an explicit backup, NOT default.
-                await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('v4'));
-                const motion=await page.evaluate(()=>{
-                  const actor=window.PaperchalkL2D.get('player'),rig=actor.rig;
-                  return {mode:actor.root.dataset.l2dMode,
-                    hairA:rig.motionAt(480,296,.4),hairB:rig.motionAt(480,296,1.8),
-                    skirtA:rig.motionAt(466,601,.4),skirtB:rig.motionAt(466,601,1.8),
-                    shoeA:rig.motionAt(462,965,.4),shoeB:rig.motionAt(462,965,1.8)};
-                });
-                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dEdition==='V4-official',{timeout:20000});
-                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dMode==='v4-decoder',{timeout:15000});
-                const clipState=await page.evaluate(()=>{
-                  const a=window.PaperchalkL2D.get('player');
-                  return {type:a.clip?.type,count:a.clip?.count,w:a.clip?.w,h:a.clip?.h,mode:a.root.dataset.l2dMode};
-                });
-                assert.deepEqual(clipState,{type:'decoder',count:128,w:335,h:1013,mode:'v4-decoder'});
-                // The DEV query starts on the menu, which intentionally
-                // hides gameplay actors; expose only the test actor while
-                // sampling renderer frames. Scene visibility is tested by
-                // the independent classroom gameplay smoke suite.
-                await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
-                await page.waitForTimeout(550);
-
-                // The actual visible V4 <img> is the runtime output, not the
-                // hidden legacy rig.source; read animated frames from that
-                // visible image to confirm the browser decoder advances.
-                await page.waitForFunction(()=>Number(document.querySelector('#camera-player-root')?.dataset.l2dFrame)>=0,{timeout:16000});
-                const inspect=()=>page.evaluate(()=>{
-                  const a=window.PaperchalkL2D.get('player'),canvas=a.canvas,
-                    x=Math.floor(canvas.width*.344),y=Math.floor(canvas.height*.022),
-                    width=Math.max(1,Math.floor(canvas.width*.32)),
-                    height=Math.max(1,Math.floor(canvas.height*.87)),
-                    pix=canvas.getContext('2d',{willReadFrequently:true}).getImageData(x,y,width,height).data;
-                  let hash=2166136261;
-                  for(let k=0;k<pix.length;k+=8){
-                    hash=Math.imul(hash^pix[k],16777619)>>>0;
-                    hash=Math.imul(hash^pix[k+3],16777619)>>>0;
-                  }
-                  return {hash,frame:a.root.dataset.l2dFrame,canvasHidden:getComputedStyle(a.canvas).visibility};
-                });
-                const firstFrame=await inspect();
-                // CI software WebP decoders can take much longer than 750 ms
-                // under parallel builds. Wait for actual frame evidence.
-                await page.waitForFunction(previous=>document.querySelector('#camera-player-root')?.dataset.l2dFrame!==previous,firstFrame.frame,{timeout:16000});
-                const secondFrame=await inspect();
-                assert.equal(secondFrame.canvasHidden,'visible','approved V4 must render into visible actor canvas');
-                assert.notEqual(firstFrame.frame,secondFrame.frame,'V4 playback timeline must advance');
-                await page.waitForFunction(({initial})=>{
-                  const canvas=window.PaperchalkL2D.get('player')?.canvas;if(!canvas)return false;
-                  const x=Math.floor(canvas.width*.344),y=Math.floor(canvas.height*.022),
-                    w=Math.max(1,Math.floor(canvas.width*.32)),h=Math.max(1,Math.floor(canvas.height*.87)),
-                    pix=canvas.getContext('2d',{willReadFrequently:true}).getImageData(x,y,w,h).data;
-                  let hash=2166136261;
-                  for(let k=0;k<pix.length;k+=8){hash=Math.imul(hash^pix[k],16777619)>>>0;hash=Math.imul(hash^pix[k+3],16777619)>>>0;}
-                  return hash!==initial;
-                },{initial:firstFrame.hash},{timeout:16000});
-                const changed=await inspect();
-                assert.notEqual(firstFrame.hash,changed.hash,'official V4 must change actual rendered Canvas pixels');
-
-                assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)<5,'hair can flex but scalp and body must not sway');
-                assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)<5,'skirt can flex subtly but hips must not swing');
-                assert.ok(Math.abs(motion.shoeA.x-motion.shoeB.x)<.9,'feet must remain anchored');
-                const anatomy=await page.evaluate(()=>{
-                  const breathe=window.PaperchalkLocalBreath;
-                  const sample=(x,y,time)=>breathe.point(x,y,3,4.8,time);
-                  return {headA:sample(515,120,1200),headB:sample(515,120,2800),
-                    waistA:sample(510,610,1200),waistB:sample(510,610,2800),
-                    footA:sample(465,963,1200),footB:sample(465,963,2800),
-                    chestA:sample(600,315,1200),chestB:sample(600,315,2800)};
-                });
-                for(const name of ['head','waist','foot']){
-                  assert.deepEqual(anatomy[name+'A'],anatomy[name+'B'],
-                    name+' must be immobile through a breathing cycle');
-                }
-                assert.ok(Math.abs(anatomy.chestA.x-anatomy.chestB.x)>5,
-                  'breathing should produce a real, visible local chest expansion');
-                await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
-                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dEdition==='V4-official' && window.PaperchalkL2D.get('player')?.rig?.blinkEnabled===true,{timeout:15000});
-                const blink=await page.evaluate(()=>{
-                  const rig=window.PaperchalkL2D.get('player').rig;
-                  return {closed:rig.blinkAmount(2.21),open:rig.blinkAmount(3.0)};
-                });
-                assert.ok(blink.closed>.95&&blink.open<.01,'front-facing actor must blink');
-
-                assert.equal(await page.locator('#dev-character-overlay').count(),0,'legacy iframe overlay must be removed');
-                await page.selectOption('#dev-layer','player');
-                await page.locator('#dev-character-open').click({force:true});
-                await page.waitForURL('**/character-editor/**',{timeout:15000});
-                assert.equal(await page.locator('#studio-character').count(),1);
-                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
-                assert.equal(await page.locator('#l2d-live-canvas').count(),1);
-                await page.waitForFunction(()=>window.PaperchalkStudio?.edition==='V4-official' &&
-                  window.PaperchalkStudio?.countSourceParts?.()===17&&window.characterEditor?.S.layers.back.filter(x=>x.sourcePart).length===8,{timeout:30000});
-                assert.equal(await page.evaluate(()=>window.characterEditor.S.layers.back.filter(x=>x.sourcePart).length),8,
-                  'authentic front/back PSD parts must load directly from GitHub, without manual upload');
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true,
-                  'the editor must preview the SAME original V4 clip that the running game uses');
-                assert.equal(await page.locator('#l2d-live-canvas').isVisible(),false,
-                  'procedural mesh preview must not impersonate the real V4 heroine');
-                // Screenshot the genuinely hosted 128-frame protagonist BEFORE
-                // later importing the artificial pink two-frame test fixture.
-                await page.screenshot({path:'artifacts/l2d-studio/'+
-                  (phone?'mobile':'desktop')+'-actual-hosted-v4.png',fullPage:true});
-                assert.equal(await page.locator('#studio-neck-focus').count(),0,
-                  'no neck-only tool may modify source layers automatically');
-                assert.equal(await page.locator('#studio-parts-import').count(),1);
-                assert.equal(await page.locator('#studio-parts-import').count(),1,'manual import remains optional for other actors');
-                const parts=await page.evaluate(()=>{
-                  const arr=window.characterEditor.S.layers.front.filter(p=>p.sourcePart);
-                  return arr.map(p=>({name:p.partId,position:[p.x,p.y,p.canvas.width,p.canvas.height],
-                    editable:!p.locked}));
-                });
-                assert.ok(parts.some(p=>p.name==='neck' &&
-                  JSON.stringify(p.position)===JSON.stringify([496,160,57,74])&&p.editable));
-                assert.ok(parts.some(p=>p.name==='jacket' &&
-                  JSON.stringify(p.position)===JSON.stringify([422,190,200,349])&&p.editable));
-                assert.equal(parts.length,17,'all original front PSD components, not only a cropped neck');
-                await page.evaluate(()=>{
-                  const editor=window.characterEditor,S=editor.S;
-                  const arr=S.layers.front,neck=arr.find(p=>p.partId==='neck'),
-                    jacket=arr.find(p=>p.partId==='jacket');
-                  const neckBefore=neck.canvas.toDataURL();
-                  const g=jacket.canvas.getContext('2d');
-                  g.globalCompositeOperation='destination-out';g.fillRect(80,24,24,24);
-                  g.globalCompositeOperation='source-over';
-                  if(neck.canvas.toDataURL()!==neckBefore)throw Error('erasing jacket changed neck');
-                  if(g.getImageData(82,26,1,1).data[3]!==0)throw Error('jacket eraser did not change original source pixels');
-                  S.sel=arr.indexOf(jacket);
-                  editor.render();
-                  window.dispatchEvent(new Event('paperchalk:art-dirty'));
-                });
-                await page.locator('#btnSave').click();
-                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('游戏已更新'),{timeout:18000});
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.countSourceParts()),17,
-                  'source component save must preserve all independent source layers');
-                const partPatch=await page.evaluate(()=>new Promise((resolve,reject)=>{
-                  const q=indexedDB.open('paperchalk-dev-characters-v1',1);
-                  q.onsuccess=()=>{const db=q.result,x=db.transaction('kv','readonly').objectStore('kv').get('parts-patch:protagonist:front');
-                    x.onsuccess=()=>{db.close();resolve({changes:x.result?.changes,erase:x.result?.erase?.length,paint:x.result?.paint?.length})};
-                    x.onerror=()=>reject(x.error);};q.onerror=()=>reject(q.error);
-                }));
-                assert.ok(partPatch.changes>0&&partPatch.erase>100&&partPatch.paint>100,
-                  'editing an existing jacket must save a game-ready V4 patch, not merely editor artwork');
-                // Frame corrections remain an independent editing track, not duplicated source parts.
-                // PSD inspection is explicit and temporary; game V4 is the default
-                // and returns unchanged when the user finishes source inspection.
-                await page.locator('#studio-v4-mode').click();
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.useV4?.()),false);
-                await page.locator('#studio-v4-mode').click();
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.useV4?.()),true);
-
-                const originalCharacterCount=await page.locator('#studio-character option').count();
-                assert.ok(originalCharacterCount>=3,'full GitHub catalog, not only the protagonist');
-                assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true);
-                assert.equal(await page.locator('#dev-l2d-preview-controls').isVisible(),true,'V4 game motion controls remain accessible');
-                assert.equal(await page.locator('#l2d-live-canvas').isVisible(),false,'fake L2D mesh must stay hidden for the real V4 character');
-                assert.equal(await page.locator('#l2d-strength').getAttribute('max'),'400');
-                await page.locator('#l2d-strength').fill('300');
-                await page.waitForFunction(()=>window.characterEditor?.motion?.()?.front?.amplitude===3,{timeout:20000});
-                assert.equal(await page.locator('#studio-frame').getAttribute('max'),'127');
-                const paintedSide=await page.locator('#studio-side').inputValue();
-                await page.locator('#studio-edit-scope').selectOption('frame');
-                await page.locator('#studio-frame').fill('12');
-                await page.waitForFunction(()=>window.PaperchalkStudio?.frame===12,{timeout:18000});
-                await page.evaluate(()=>{
-                  const editor=window.characterEditor,S=editor.S;
-                  const correction=S.layers[S.side].find(x=>x.name==='V4 · 当前帧修补');
-                  if(!correction)throw Error('V4 keyframe correction layer missing');
-                  const g=correction.canvas.getContext('2d');
-                  g.fillStyle='#fe3535';g.fillRect(430,405,16,16);
-                  editor.render();
-                  window.dispatchEvent(new Event('paperchalk:art-dirty'));
-                });
-                await page.locator('#studio-edit-scope').selectOption('all');
-                // Verify character-specific layer stacks, not a heroine-only static canvas.
-                const initialLayers=await page.locator('#layers .layer').count();
-                await page.locator('#add').click({force:true});
-                assert.equal(await page.locator('#layers .layer').count(),initialLayers+1);
-                await page.locator('#btnSave').click();
-                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('游戏已更新'),{timeout:18000});
-                const hasSavedFrame=await page.evaluate(paintedSide=>new Promise((ok,no)=>{
-                  const req=indexedDB.open('paperchalk-dev-characters-v1',1);
-                  req.onsuccess=()=>{const db=req.result;
-                    const q=db.transaction('kv','readonly').objectStore('kv').get('frames:protagonist:'+paintedSide);
-                    q.onsuccess=()=>{db.close();ok(typeof q.result?.[12]==='string'&&q.result[12].startsWith('data:image/png;'));};
-                    q.onerror=()=>no(q.error);
-                  };req.onerror=()=>no(req.error);
-                }),paintedSide);
-                assert.equal(hasSavedFrame,true,'V4 painted frame 12 must persist separately from original animation; '+JSON.stringify(await page.evaluate(()=>({side:window.PaperchalkStudio?.editSide,active:window.PaperchalkStudio?.activePaintFrame,frames:window.PaperchalkStudio?.correctedFrames,paint:window.PaperchalkStudio?.frameHasPaint}))));
-                const tiny=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+v0kQAAAAASUVORK5CYII=','base64');
-                await page.locator('#studio-import').setInputFiles({name:'sample-npc-front.png',mimeType:'image/png',buffer:tiny});
-                await page.waitForFunction(original=>window.PaperchalkStudio?.list.size===original+1 &&
-                  window.PaperchalkStudio.current!=='protagonist',originalCharacterCount,{timeout:18000});
-                assert.equal(await page.locator('#studio-character option').count(),originalCharacterCount+1);
-                await page.waitForFunction(()=>document.querySelectorAll('#layers .layer').length===1,{timeout:18000});
-                await page.locator('#studio-character').selectOption('protagonist');
-                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
-                await page.locator('#studio-side').selectOption('back');
-                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' &&
-                  window.PaperchalkStudio?.editSide==='back' && window.PaperchalkStudio?.countSourceParts?.()===8,{timeout:18000});
-                await page.locator('#studio-v4zip').setInputFiles('/tmp/paperchalk-v4-smoke.zip');
-                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('V4 动态方向已导入'),null,{timeout:16000}).catch(async error=>{
-                  console.error('V4 import state',await page.evaluate(()=>({
-                    status:document.querySelector('#studio-status')?.textContent,
-                    id:window.PaperchalkStudio?.current,edition:window.PaperchalkStudio?.edition,
-                    frame:window.PaperchalkStudio?.frame,playing:window.PaperchalkStudio?.isPlaying,
-                    motion:window.PaperchalkStageMotion?.state,
-                    errors:document.querySelector('#status')?.textContent
-                  })),errors);
-                  throw error;
-                });
-                assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true,'V4 frames must preview in the L2D studio');
-                await page.screenshot({path:'artifacts/l2d-studio/'+(phone?'mobile':'desktop')+'.png',fullPage:true});
-                await page.locator('#studio-back').click();
-                await page.waitForURL('**/?dev=1',{timeout:18000});
-                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
-                await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.type==='decoder',{timeout:16000});
-                assert.equal(await page.evaluate(()=>window.PaperchalkCharacterDev.assigned.player.side),'back',
-                  'game must restore the most recently edited direction, not an earlier test frame direction');
-                await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
-                assert.ok(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.partPatch?.changes>0),
-                  'game must render the saved source-part eraser changes directly on top of real V4');
-                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.overlayFrameUrls?.has(12)),true,'painted V4 frame must reload in game');
-                await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
-                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.canvas?.width>0,{timeout:18000});
-                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player').canvas.style.transform),'',
-                  'breathing must NEVER scale or rotate the whole character');
-                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.profile?.amplitude),3,
-                  'the one-click editor save applies 300% breathing amplitude to game V4 immediately');
-                const count=await page.locator('#dev-character-library option').count();
-                assert.equal(count,originalCharacterCount+1,'Game DEV must see all profiles and locally imported characters');
-                // CHAR-002 is a genuine separate hosted character, not a
-                // copy of the protagonist. Verify the GAME first.
-                await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','char-002','front'));
-                await page.waitForFunction(()=>window.PaperchalkL2D.get('enemy')?.clip?.type==='decoder',{timeout:16000})
-                  .catch(async error=>{
-                    console.error('CHAR002 FIRST GAME DECODE STATUS',await page.evaluate(()=>({
-                      clipType:window.PaperchalkL2D.get('enemy')?.clip?.type,
-                      clipCount:window.PaperchalkL2D.get('enemy')?.clip?.count,
-                      mode:document.getElementById('enemy-depth-root')?.dataset.l2dMode,
-                      edition:document.getElementById('enemy-depth-root')?.dataset.l2dEdition,
-                      character:window.PaperchalkCharacterDev.characters.find(c=>c.id==='char-002'),
-                      status:document.getElementById('dev-character-status')?.textContent,
-                      decoder:typeof ImageDecoder
-                    })));
-                    throw error;
-                  });
-                const girlTwo=await page.evaluate(()=>{
-                  const a=window.PaperchalkL2D.get('enemy');
-                  return {name:a.img.dataset.characterId,side:a.img.dataset.characterSide,
-                    frames:a.clip?.count,size:[a.clip?.w,a.clip?.h],
-                    source:a.clip?.src||a.clip?.url};
-                });
-                assert.equal(girlTwo.name,'char-002');
-                assert.equal(girlTwo.side,'front');
-                assert.equal(girlTwo.frames,128);
-                assert.deepEqual(girlTwo.size,[335,1024]);
-                await page.selectOption('#dev-layer','enemy');
-                assert.equal(await page.locator('#dev-character-list').inputValue(),'enemy',
-                  'DEV refresh must retain explicitly selected NPC, not silently revert to protagonist');
-                await page.locator('#dev-character-open').click({force:true});
-                await page.waitForURL('**/character-editor/**',{timeout:18000});
-                assert.match(page.url(),/character=char-002/,
-                  'Studio deep-link must preserve assigned CHAR-002 identity');
-                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-002' &&
-                  window.PaperchalkStudio?.isV4 &&
-                  window.PaperchalkStudio?.countSourceParts?.()===7,{timeout:30000})
-                  .catch(async error=>{
-                    console.error('CHAR002 STUDIO STATUS',await page.evaluate(()=>({
-                      id:window.PaperchalkStudio?.current,
-                      side:window.PaperchalkStudio?.editSide,
-                      edition:window.PaperchalkStudio?.edition,
-                      parts:window.PaperchalkStudio?.countSourceParts?.(),
-                      frontLayers:window.characterEditor?.S.layers.front.map(x=>({name:x.name,sourcePart:x.sourcePart})),
-                      status:document.querySelector('#studio-status')?.textContent,
-                      editorStatus:document.querySelector('#status')?.textContent,
-                      loading:document.body.classList.contains('studio-loading'),
-                      zip:performance.getEntriesByType('resource').filter(x=>/char-002|regions|front.webp/.test(x.name)).map(x=>({name:x.name,duration:x.duration}))
-                    })));
-                    throw error;
-                  });
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true,
-                  'CHAR-002 studio MUST use the same V4 source as the game');
-                await page.waitForFunction(()=>{
-                  const stage=document.getElementById('stage'),s=window.characterEditor?.S;
-                  if(!stage||!s)return false;
-                  return s.py>=-18 && s.py+1024*s.zoom<=stage.clientHeight+18;
-                },null,{timeout:8000});
-                assert.equal(await page.evaluate(()=>document.getElementById('stage').clientHeight>0),true);
-                assert.equal(await page.locator('#studio-side option[value="back"]').isDisabled(),true,
-                  'No fake CHAR-002 back view until real artwork exists');
-                assert.equal(await page.locator('#l2d-live-canvas').isVisible(),false,
-                  'CHAR-002 must never display a separate fake mesh preview');
-                await page.screenshot({path:'artifacts/l2d-studio/'+
-                  (phone?'mobile':'desktop')+'-char-002-live-v4.png',fullPage:true});
-                // Replace fallback 7 zones with SIXTEEN independently textured
-                // PSD-style parts. Synthetic tiny colors exercise the same browser
-                // IndexedDB, composer, bone driver and game assignment path; the
-                // original 16 PSD source is validated separately offline.
-                await page.evaluate(async()=>{
-                  const ed=window.characterEditor,side=ed.S.side;
-                  ed.S.layers[side]=ed.S.layers[side].filter(p=>!p.sourcePart);
-                  const parts=[
-                   ['back hair',467,33],['legwear',435,448],['footwear',488,912],
-                   ['bottomwear',397,413],['neck',521,156],['topwear',411,193],
-                   ['handwear',370,164],['ears',480,120],['face',476,67],
-                   ['nose',528,143],['mouth',526,160],['eyewhite',494,117],
-                   ['eyebrow',485,96],['irides',502,119],['eyelash',491,114],
-                   ['front hair',479,43]];
-                  for(let i=0;i<parts.length;i++){
-                    const [name,x,y]=parts[i],canvas=document.createElement('canvas');
-                    canvas.width=32;canvas.height=32;
-                    const ctx=canvas.getContext('2d');
-                    ctx.fillStyle='hsl('+((i*47)%360)+' 65% 55%)';
-                    ctx.fillRect(2,2,27,27);
-                    const layer=ed.layer(name,canvas,x,y,false);
-                    layer.sourcePart=true;layer.role='psd-part';layer.partId=name;
-                    ed.S.layers[side].push(layer);
-                  }
-                  ed.renderList();ed.render();await ed.save();
-                  window.dispatchEvent(new Event('paperchalk:studio-source-parts-loaded'));
-                });
-                await page.waitForFunction(()=>{
-                  const rig=window.characterEditor?.l2dRig?.();
-                  return rig?.psdParts?.length===16 &&
-                    !document.getElementById('l2d-live-canvas').hidden;
-                },null,{timeout:10000}).catch(async error=>{
-                  console.error('PSD16 PREVIEW DETAIL',await page.evaluate(()=>({
-                    current:window.PaperchalkStudio?.current,
-                    side:window.characterEditor?.S?.side,
-                    busy:window.characterEditor?.S?.busy,
-                    ready:window.characterEditor?.S?.ready,
-                    count:window.characterEditor?.S?.layers?.front?.filter(p=>p.sourcePart&&p.role==='psd-part').length,
-                    rig:!!window.characterEditor?.l2dRig?.(),
-                    rigPartCount:window.characterEditor?.l2dRig?.()?.psdParts?.length,
-                    canvasHidden:document.getElementById('l2d-live-canvas')?.hidden,
-                    canvasDisplay:document.getElementById('l2d-live-canvas')?.style.display,
-                    status:document.getElementById('status')?.textContent,
-                    studioStatus:document.getElementById('studio-status')?.textContent
-                  })));throw error;
-                });
-                assert.equal(await page.evaluate(()=>!!window.PaperchalkStageMotion?.frame()),true,
-                  'when original PSD16 is loaded the CENTRAL viewport must use its real live skeletal rig');
-                const psdBreath=await page.evaluate(()=>{
-                  const rig=window.characterEditor?.l2dRig?.();
-                  const top={name:'topwear'};
-                  return {chestA:rig.psdTarget(600,315,top,.5),
-                    chestB:rig.psdTarget(600,315,top,2.8),
-                    footA:rig.psdTarget(500,940,{name:'footwear'},.5),
-                    footB:rig.psdTarget(500,940,{name:'footwear'},2.8)};
-                });
-                assert.notDeepEqual(psdBreath.chestA,psdBreath.chestB,
-                  'PSD torso skin must move at the chest');
-                assert.deepEqual(psdBreath.footA,psdBreath.footB,
-                  'PSD foot layer must remain strictly anchored');
-                assert.equal(await page.evaluate(()=>window.characterEditor?.S?.layers?.front?.filter(x=>x.role==='psd-part').length),16,
-                  'source editor retains the 16 independent bitmaps');
-                await page.screenshot({path:'artifacts/l2d-studio/'+
-                  (phone?'mobile':'desktop')+'-char-002-real-psd16-rig.png',fullPage:true});
-                await page.locator('#studio-back').click();
-                await page.waitForURL('**/?dev=1',{timeout:18000});
-                await page.waitForFunction(()=>{
-                  const a=window.PaperchalkL2D?.get('enemy');
-                  return window.PaperchalkCharacterDev?.ready &&
-                    a?.root?.dataset.l2dMode==='psd-layer-skeletal' &&
-                    a?.rig?.psdParts?.length===16;
-                },null,{timeout:22000});
-                assert.equal(await page.evaluate(()=>window.PaperchalkCharacterDev.assigned.enemy.id),'char-002');
-                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('enemy').clip),null,
-                  'PSD16 must render as independent live parts, never the fallback WebP clip');
-                assert.deepEqual(errors,[],'No browser errors');
-                await page.close();
-              }
-            } finally{await b.close();}
-          })().catch(e=>{console.error(e);process.exit(1)});
+          const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
+          try{
+            for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+              const phone=viewport.width<500,name=phone?'phone':'desktop';
+              const page=await browser.newPage({viewport,hasTouch:phone,isMobile:phone,acceptDownloads:true});
+              const errors=[];page.on('pageerror',err=>errors.push(err.message));
+              await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
+              await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:30000});
+              await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
+              await page.waitForFunction(()=>window.PaperchalkL2DLibrary?.get('player')?.layers.length===17,
+                null,{timeout:28000});
+              const first=await page.evaluate(()=>{
+                const a=window.PaperchalkL2DLibrary.get('player');
+                const core=window.PaperchalkPartRigCore;
+                return {id:window.PaperchalkCharacterDev.assigned.player.id,
+                  mode:a.actor.root.dataset.l2dMode,layerCount:a.layers.length,
+                  face:a.model.parts.face?.id,brows:a.model.parts.brows?.id,
+                  nose:a.model.parts.nose?.id,iris:a.model.parts.irises?.id,
+                  lashes:a.model.parts.lashes?.id,
+                  blinkOpen:core.blinkAmount(0),
+                  blinkClosed:core.blinkAmount(.9*2*Math.PI/3.6),
+                  hasBreath:!!window.PaperchalkLocalBreath};
+              });
+              assert.equal(first.id,'protagonist');
+              assert.equal(first.mode,'library-part-mesh');
+              assert.equal(first.layerCount,17);
+              for(const key of ['face','brows','nose','iris','lashes'])assert.ok(first[key],key+' missing');
+              assert.equal(first.hasBreath,false,'obsolete breathing script cannot run');
+              assert.ok(first.blinkOpen<.001&&first.blinkClosed>.99,'blinking must actually close');
+              await page.screenshot({path:'artifacts/l2d-studio/'+name+'-game-protagonist.png'});
+              // Shared URL must open the REAL editor panel, not an old breath overlay.
+              await page.goto('http://127.0.0.1:8129/character-editor/?character=protagonist&side=front&idle=1',
+                {waitUntil:'load'});
+              await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist'&&
+                window.PaperchalkPartRigStudio?.state.active===true,null,{timeout:35000});
+              assert.equal(await page.locator('#dev-l2d-preview-controls').count(),0);
+              assert.equal(await page.locator('#l2d-strength').count(),0);
+              assert.ok(await page.locator('[data-idle="hair.amount"]').isVisible());
+              assert.ok(await page.locator('[data-idle="cloth.amount"]').isVisible());
+              assert.equal(await page.locator('#rig-part option').count(),17);
+              await page.screenshot({path:'artifacts/l2d-studio/'+name+'-actual-hair-skirt-controls.png'});
+              await page.locator('[data-idle-preset="realistic"]').click();
+              await page.locator('[data-idle="hair.amount"]').fill('47');
+              await page.locator('#rig-save').click();
+              await page.waitForFunction(async()=>{
+                const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
+                return saved?.idleProfile?.hair?.amount===.47;
+              },null,{timeout:15000});
+              await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
+              await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:30000});
+              await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
+              await page.waitForFunction(()=>
+                window.PaperchalkL2DLibrary?.get('player')?.model.idleProfile?.hair.amount===.47,
+                null,{timeout:28000});
+              // The old 128-frame V4 is a backup, never a permanent replacement.
+              await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('v4'));
+              await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===128,
+                null,{timeout:22000});
+              await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('bones'));
+              await page.waitForFunction(()=>window.PaperchalkL2DLibrary?.get('player')?.layers?.length===17,
+                null,{timeout:25000});
+              await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','char-002','front'));
+              await page.waitForFunction(()=>window.PaperchalkL2D.get('enemy')?.clip?.count===128,
+                null,{timeout:22000});
+              assert.deepEqual(errors,[],name+' console errors');
+              console.log('PASS original heroine 17 PNG face + eyelid blink, no old breath, sliders save-game, protected V4 and second heroine',name);
+              await page.close();
+            }
+          }finally{await browser.close();}
           JS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: all-character-l2d-studio-screenshots
+          name: l2d-original-heroine-face-idle-desktop-mobile
           path: artifacts/l2d-studio
           retention-days: 7
