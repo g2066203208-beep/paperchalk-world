@@ -57,7 +57,7 @@
 body > header .actions #idle-open,
 body.embedded > header .actions #idle-open{
  order:-10;display:inline-flex;align-items:center;justify-content:center;
- min-height:41px;padding:9px 13px;
+ min-height:42px;min-width:138px;padding:9px 13px;
  background:#235d4d;border:2px solid #7ad7ad;color:#f1fff7;
  font-size:13px;font-weight:750;letter-spacing:.02em;white-space:nowrap;
  box-shadow:0 0 0 1px #174236,0 2px 12px #0005;
