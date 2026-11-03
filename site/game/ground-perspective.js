@@ -65,8 +65,8 @@
   // Camera-space depth convention matches CSS translateZ: positive Z is
   // closer to the camera. This bounded pinhole ratio is dimensionless.
   // A grounded actor looks smaller as Z decreases (farther away).
-  const CAMERA=Object.freeze({focalLength:1150,referenceZ:160,
-    minDenominator:180,maxScale:4.5});
+  const CAMERA=Object.freeze({focalLength:950,referenceZ:160,
+    minDenominator:180,maxScale:3.0});
   function depthScale(z,referenceZ=CAMERA.referenceZ,
       focalLength=CAMERA.focalLength){
     if(!Number.isFinite(z)||!Number.isFinite(referenceZ)||
@@ -100,6 +100,32 @@
     return {valid:Number.isFinite(scale),scale,correction,distance,
       stature,dev,actorZ,referenceZ};
   }
+  // Full world-ground projection: A shoe's image-plane Y is NOT the same
+  // for two people standing at different depths. The shared ground appears
+  // as a family of projected shoe coordinates converging to one horizon.
+  // Actor stature is expressed in cm and measured on actual NONtransparent
+  // L2D crown-to-shoe pixels, not in arbitrary 1024px canvas bounds.
+  function projectStandingActor({referenceFootY,horizonY,referenceVisiblePx,
+       referenceHeightCm,actorHeightCm,actorVisiblePx,referenceZ,actorZ,
+       focalLength=CAMERA.focalLength}={}){
+    const numbers=[referenceFootY,horizonY,referenceVisiblePx,
+      referenceHeightCm,actorHeightCm,actorVisiblePx,referenceZ,actorZ,
+      focalLength];
+    if(!numbers.every(Number.isFinite)||referenceVisiblePx<=0||
+       actorVisiblePx<=0||referenceHeightCm<=0||actorHeightCm<=0||
+       referenceFootY<=horizonY+8)
+      return {valid:false,reason:'invalid-floor-projection'};
+    const depthRatio=depthScale(actorZ,referenceZ,focalLength);
+    if(!Number.isFinite(depthRatio))
+      return {valid:false,reason:'invalid-camera'};
+    const stature=actorHeightCm/referenceHeightCm;
+    const targetFootY=horizonY+(referenceFootY-horizonY)*depthRatio;
+    const targetVisiblePx=referenceVisiblePx*stature*depthRatio;
+    const scale=targetVisiblePx/actorVisiblePx;
+    return {valid:Number.isFinite(scale)&&scale>0,
+      depthRatio,stature,targetFootY,targetVisiblePx,scale,
+      visibleRatio:stature*depthRatio,horizonY};
+  }
   return Object.freeze({CHARACTER_DATA,FLOOR_ORIGIN,CAMERA,
-    floorMotion,depthScale,renderScale,metricsFor,fit});
+    floorMotion,depthScale,renderScale,projectStandingActor,metricsFor,fit});
 });
