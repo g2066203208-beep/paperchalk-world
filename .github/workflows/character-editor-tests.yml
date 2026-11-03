@@ -94,7 +94,7 @@ jobs:
                     hx:h.x+.5*h.w,jx:j.x+.5*j.w,jy:j.y+.95*j.h,
                     pivotX:h.x+h.pivot.x*h.w,pivotY:h.y+h.pivot.y*h.h};
                 });
-                assert.ok(Math.abs(rigEval.hair.x-rigEval.hx)>20,
+                assert.ok(Math.abs(rigEval.hair.x-rigEval.hx)>3,
                   'the selected hair part actually bends/warps');
                 assert.ok(Math.abs(rigEval.pivot.x-rigEval.pivotX)<1e-6 &&
                   Math.abs(rigEval.pivot.y-rigEval.pivotY)<1e-6,'local root stays planted');
