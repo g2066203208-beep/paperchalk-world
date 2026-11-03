@@ -69,6 +69,10 @@ jobs:
                 // in default EASY mode without hunting for the canvas toolbar.
                 assert.equal(await page.locator('#idle-open').isVisible(),true,'idle entry must be prominently visible');
                 const idleButton=await page.locator('#idle-open').boundingBox();
+                console.log('IDLE ENTRY VISIBLE RECT',JSON.stringify({viewport:vp,button:idleButton,
+                  dimensions:await page.evaluate(()=>({innerWidth:innerWidth,
+                    innerHeight:innerHeight,scrollWidth:document.documentElement.scrollWidth,
+                    css:getComputedStyle(document.querySelector('#idle-open')).cssText}))}));
                 assert.ok(idleButton.width>110&&idleButton.x>=0&&idleButton.y>=0&&
                   idleButton.x+idleButton.width<=vp.width+1,'idle entry must fit the visible viewport');
                 assert.equal(await page.locator('#l2d-strength').isVisible(),false,
