@@ -84,8 +84,8 @@ const quickGroups={
  fringe:['front_hair','hair'],
  rear:['rear_hair','back_hair','hair_over_jacket'],
  skirt:['skirt','bottomwear','cloth'],
- hands:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand'],
- shoulders:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','jacket','topwear'],
+ hands:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered'],
+ shoulders:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered','jacket','topwear'],
  hips:['skirt','bottomwear','legs','legwear']
 };
 const available=id=>(quickGroups[id]||[]).filter(key=>!!state.model?.parts[key]);
@@ -290,7 +290,7 @@ async function activate(openPanel=false){
   '女二原始 PSD：24个图层记录，17个实际可见、独立运动的部件。':
   '真实源图层 '+src.length+' 个，使用新版独立部件骨骼动画。';
  quickInfo(id==='char-002'?
-  '原始PSD分层：刘海、后发、脸和眼睛独立，左右手目前同属手袖层。拖动实时预览，保存到游戏。':
+  '原始PSD举起的左手和下垂的右手已独立拆出并分别绑定；调节「双手／手臂」实时查看左手动作。':
   '拖动滑块后点击保存，实时预览不会改变身体站姿。');
  info('新版独立部件骨骼已载入。');
  ed.render();
