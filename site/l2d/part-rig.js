@@ -235,18 +235,26 @@ function windField(part,u,v,phase,idle){
   const fringe=part.id==='front_hair'?(1-edge)*.14:0;
   const bend=pinned*(edge+fringe);
   const gust=weather==='windy'?1:.16;
-  // Distal hair ends arc up and outward; roots are pinned C1-smoothly.
-  const rising=weather==='windy'?62:5;
-  const lateral=weather==='windy'?118:15;
+  // Fan ORIGINAL side locks OUTWARD from the face (wind from behind).
+  // Sending both locks to +X made the left strand cross and obscure eyes.
+  // The left side now lifts left, the right side lifts right; only tips move.
+  const spread=clamp((u-.5)/.26,-1,1);
+  const lateral=weather==='windy'?108:16;
+  const rising=weather==='windy'?65:5;
   const wave=Math.sin(phase*.9-lag-1.1+u*2.2)*(.08*pressure);
-  return {x:amount*bend*(lateral*pressure+gust*12*wave),
+  return {x:amount*bend*spread*(lateral*pressure+gust*12*wave),
     y:-amount*bend*(rising*pressure+gust*7*wave)};
  }
  // Anchored waistband; individual pleats billow, and the hem flicks UP
  // without dragging the whole dress and legs sideways.
  const flare=.72+.28*smooth(clamp((u-.20)/.65,0,1));
  const billow=pressure+Math.sin(phase*.93-lag+u*3.0)*.07;
- return {x:amount*pinned*flare*(weather==='windy'?69:12)*billow,
+ const outward=clamp((u-.5)/.31,-1,1);
+ // Pleats billow outward as two panels, rather than sliding the whole
+ // skirt to one side. Add a small breeze-direction bias for asymmetry.
+ const lateral=(weather==='windy'?58:13)*outward+
+  (weather==='windy'?8:2);
+ return {x:amount*pinned*flare*lateral*billow,
   y:-amount*pinned*flare*(weather==='windy'?34:4)*billow};
 }
 // Independently authored joint chains on ORIGINAL source PNG parts.
