@@ -129,7 +129,7 @@ jobs:
                     const frame=document.createElement('canvas');frame.width=1024;frame.height=1024;
                     const sheet=document.createElement('canvas');sheet.width=1600;sheet.height=1200;
                     const ctx=sheet.getContext('2d');ctx.fillStyle='#12202c';ctx.fillRect(0,0,1600,1200);
-                    const phase=[0,1.5,3.1,4.7],regimes=['realistic','breeze','windy'];
+                    const phase=[0,1.5,3.1,4.7],regimes=['still','breeze','windy'];
                     for(let row=0;row<regimes.length;row++){
                       const model={...base,idleProfile:core.presetIdle(regimes[row],base.idleProfile)};
                       for(let col=0;col<phase.length;col++){
@@ -144,6 +144,36 @@ jobs:
                   });
                   fs.writeFileSync('artifacts/character-editor/heroine-3-weather-tiers-4-phases.png',
                     Buffer.from(contact,'base64'));
+                  // Original source art, enlarged face/hair and hem crops.
+                  // Four phases of each weather tier reveal real lift, not
+                  // merely a different slider percentage in a tiny portrait.
+                  const closeup=await page.evaluate(()=>{
+                    const core=window.PaperchalkPartRigCore;
+                    const ed=window.characterEditor;
+                    const model=window.PaperchalkPartRigStudio.state.model;
+                    const frame=document.createElement('canvas');
+                    frame.width=1024;frame.height=1024;
+                    const sheet=document.createElement('canvas');
+                    sheet.width=1600;sheet.height=1410;
+                    const ctx=sheet.getContext('2d');ctx.fillStyle='#17202d';
+                    ctx.fillRect(0,0,sheet.width,sheet.height);
+                    const phases=[0,1.5,3.1,4.7],types=['still','breeze','windy'];
+                    for(let row=0;row<3;row++){
+                      const current={...model,idleProfile:core.presetIdle(types[row],model.idleProfile)};
+                      for(let col=0;col<4;col++){
+                        const f=frame.getContext('2d');f.clearRect(0,0,1024,1024);
+                        core.draw(f,ed.S.layers.front,current,phases[col],'');
+                        const x=col*400,y=row*470;
+                        ctx.drawImage(frame,315,25,395,370,x+6,y+25,388,290);
+                        ctx.drawImage(frame,315,465,395,215,x+6,y+313,388,146);
+                        ctx.fillStyle='#e7f7f8';ctx.font='15px sans-serif';
+                        ctx.fillText(types[row]+' / '+phases[col],x+11,y+17);
+                      }
+                    }
+                    return sheet.toDataURL('image/png').split(',')[1];
+                  });
+                  fs.writeFileSync('artifacts/character-editor/heroine-3-weather-hair-skirt-CLOSEUP.png',
+                    Buffer.from(closeup,'base64'));
                 }
                 assert.deepEqual(await page.locator('#rig-presets button').allTextContents(),
                   ['静止','普通待机','微风','大风']);
