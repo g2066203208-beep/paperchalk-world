@@ -87,7 +87,7 @@ jobs:
               assert.equal(await page.locator('#rig-part option').count(),17);
               await page.screenshot({path:'artifacts/l2d-studio/'+name+'-actual-hair-skirt-controls.png'});
               await page.locator('[data-idle-preset="realistic"]').click();
-              await page.locator('[data-idle="hair.amount"]').fill('47');
+              await page.locator('[data-idle="hair.amount"]').evaluate(el=>{el.value='47';el.dispatchEvent(new Event('input',{bubbles:true}));});
               await page.locator('#rig-save').click();
               await page.waitForFunction(async()=>{
                 const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
