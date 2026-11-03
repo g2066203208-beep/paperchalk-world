@@ -5,6 +5,9 @@ on:
     paths:
       - 'site/index.html'
       - 'site/game/survival-state.js'
+      - 'site/game/phone-ui.js'
+      - 'site/game/phone-ui.css'
+      - 'site/assets/phones/**'
       - 'tests/survival-state.test.cjs'
       - 'tests/ui-edge-fog-browser.mjs'
       - '.github/workflows/ui-fog-smoke.yml'
@@ -20,11 +23,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Build the actual game scene and character catalogs
+      - name: Build scene catalog for actual game browser runtime
+        # UI regression is independent of the separately verified L2D packaging.
+        # A missing CHAR-002 PSD must never prevent testing the phone/fog HUD.
         run: |
           python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/build_scene_catalog.py
-          python3 scripts/build_character_catalog.py
       - name: Install Chromium and Playwright
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
