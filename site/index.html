@@ -102,81 +102,22 @@ body.mobile-mode.virtual-landscape #view{
 
 
 
-/* FOUR-SIDED UI FOG V1: independent viewport-space black fog, never the scene fog.
-   Every edge is normally fully withdrawn. Visible UI declares data-ui-fog-edge.
-   The fog is below the UI text and ABOVE the protagonist / camera plane. */
+/* UI FOG V2: project-native fog, not a second painted gradient or black plate.
+   The UI's transparent canvas reprojects the LIVE existing #fog framebuffer
+   into a soft feather at whichever edge ACTUALLY owns visible UI content. */
 #novel-ui #ui-edge-fog{
-  position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
-  isolation:isolate;
+  position:absolute;inset:0;width:100%;height:100%;
+  display:block;z-index:0;pointer-events:none;image-rendering:auto;
 }
-#novel-ui > :not(#ui-edge-fog){z-index:1}
-#ui-edge-fog .ui-fog-band{
-  position:absolute;pointer-events:none;overflow:hidden;opacity:0;
-  transform:var(--fog-hidden-transform);will-change:transform,opacity;
-  transition:transform 690ms cubic-bezier(.16,.72,.26,1),opacity 440ms ease;
+#novel-ui > :not(#ui-edge-fog):not(#ui-fog-state){z-index:1}
+#novel-ui #ui-fog-state{display:none!important}
+#novel-ui #dialogue:not([hidden]),#novel-ui #history:not([hidden]),
+#novel-ui #menu-choices:not([hidden]){
+  animation:ui-content-settle 230ms ease-out both;
 }
-#ui-edge-fog .ui-fog-band[data-active="true"]{
-  opacity:1;transform:translate3d(0,0,0);
-}
-#ui-edge-fog .ui-fog-band::before,
-#ui-edge-fog .ui-fog-band::after{
-  content:"";position:absolute;inset:-18%;pointer-events:none;
-  background:
-    radial-gradient(ellipse 23% 43% at 12% 72%,rgba(0,0,0,.72) 0%,rgba(0,0,0,.24) 62%,transparent 100%),
-    radial-gradient(ellipse 28% 36% at 38% 42%,rgba(0,0,0,.60),transparent 83%),
-    radial-gradient(ellipse 24% 52% at 67% 70%,rgba(0,0,0,.65),transparent 85%),
-    radial-gradient(ellipse 34% 42% at 94% 45%,rgba(0,0,0,.68),transparent 90%);
-  filter:blur(clamp(7px,1.55cqh,21px));
-  animation:ui-fog-current-a 10s ease-in-out infinite alternate;
-}
-#ui-edge-fog .ui-fog-band::after{
-  opacity:.48;transform:scaleX(-1);
-  animation-name:ui-fog-current-b;animation-duration:13s;
-}
-#ui-edge-fog .ui-fog-band[data-edge="bottom"]{
-  inset:auto 0 0;height:clamp(118px,36cqh,365px);
-  --fog-hidden-transform:translate3d(0,102%,0);
-  background:linear-gradient(to top,#000 0%,rgba(0,0,0,.98) 17%,rgba(0,0,0,.91) 38%,rgba(0,0,0,.66) 57%,rgba(0,0,0,.26) 77%,transparent 100%);
-}
-#ui-edge-fog .ui-fog-band[data-edge="top"]{
-  inset:0 0 auto;height:clamp(78px,19cqh,185px);
-  --fog-hidden-transform:translate3d(0,-103%,0);
-  background:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.91) 25%,rgba(0,0,0,.57) 50%,transparent 100%);
-}
-#ui-edge-fog .ui-fog-band[data-edge="left"]{
-  inset:0 auto 0 0;width:clamp(180px,36cqw,520px);
-  --fog-hidden-transform:translate3d(-104%,0,0);
-  background:linear-gradient(to right,#000 0%,rgba(0,0,0,.94) 24%,rgba(0,0,0,.58) 52%,transparent 100%);
-}
-#ui-edge-fog .ui-fog-band[data-edge="right"]{
-  inset:0 0 0 auto;width:clamp(180px,36cqw,520px);
-  --fog-hidden-transform:translate3d(104%,0,0);
-  background:linear-gradient(to left,#000 0%,rgba(0,0,0,.94) 24%,rgba(0,0,0,.58) 52%,transparent 100%);
-}
-/* Fade the words in after the associated fog starts rising. */
-#novel-ui #dialogue:not([hidden]),
-#novel-ui #advance:not([hidden]),
-#novel-ui #history:not([hidden]),
-#novel-ui #menu-choices:not([hidden]),
-#novel-ui [data-ui-fog-edge="right"]:not([hidden]){
-  animation:ui-fog-words-in 360ms ease-out 140ms both;
-}
-@keyframes ui-fog-words-in{from{opacity:0}to{opacity:1}}
-@keyframes ui-fog-current-a{
-  0%{transform:translate3d(-2.3%,-1%,0) scale(1.04)}
-  50%{transform:translate3d(1.8%,2%,0) scale(1.08)}
-  100%{transform:translate3d(4%,-2%,0) scale(1.03)}
-}
-@keyframes ui-fog-current-b{
-  0%{transform:translate3d(3%,1%,0) scaleX(-1) scale(1.03)}
-  50%{transform:translate3d(-1%,-2%,0) scaleX(-1) scale(1.08)}
-  100%{transform:translate3d(-4%,2%,0) scaleX(-1) scale(1.03)}
-}
+@keyframes ui-content-settle{from{opacity:.35}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){
-  #ui-edge-fog .ui-fog-band{transition:none!important;will-change:auto}
-  #ui-edge-fog .ui-fog-band::before,#ui-edge-fog .ui-fog-band::after{animation:none!important}
-  #novel-ui #dialogue,#novel-ui #advance,#novel-ui #history,#novel-ui #menu-choices,
-  #novel-ui [data-ui-fog-edge]{animation:none!important}
+  #novel-ui #dialogue,#novel-ui #history,#novel-ui #menu-choices{animation:none!important}
 }
 
 /* SCENE TEMPLATE: one image, 3D tilt, stage-locked actions, viewport black fog. */
@@ -467,13 +408,14 @@ body.mobile-mode.virtual-landscape #view{
     <canvas id="actor-player-l2d" data-l2d-canvas width="1024" height="1024" aria-label="主角 L2D 动画画布"></canvas>
   </div>
   <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
-    <div id="ui-edge-fog" aria-hidden="true">
-      <div class="ui-fog-band" data-edge="bottom" data-active="false"></div>
-      <div class="ui-fog-band" data-edge="top" data-active="false"></div>
-      <div class="ui-fog-band" data-edge="left" data-active="false"></div>
-      <div class="ui-fog-band" data-edge="right" data-active="false"></div>
+    <canvas id="ui-edge-fog" aria-hidden="true"></canvas>
+    <div id="ui-fog-state" hidden aria-hidden="true">
+      <i class="ui-fog-band" data-edge="bottom" data-active="false"></i>
+      <i class="ui-fog-band" data-edge="top" data-active="false"></i>
+      <i class="ui-fog-band" data-edge="left" data-active="false"></i>
+      <i class="ui-fog-band" data-edge="right" data-active="false"></i>
     </div>
-    <nav id="top-menu" data-ui-fog-edge="top" aria-label="游戏菜单">
+    <nav id="top-menu" aria-label="游戏菜单">
       <button id="menu-toggle" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="menu-choices">☰</button>
     </nav>
     <div id="top-actions" aria-label="对话控制" hidden aria-hidden="true">
@@ -905,8 +847,61 @@ void main(){
   // data-ui-fog-edge appears behind its own independently animated black fog.
   // MutationObserver follows the application's existing hidden-property state,
   // so no caller has to manually synchronize panel visibility and fog.
-  const uiFogBands=Array.from(document.querySelectorAll('#ui-edge-fog .ui-fog-band'));
+  const uiFogCanvas=document.getElementById('ui-edge-fog');
+  const uiFogCtx=uiFogCanvas.getContext('2d',{alpha:true});
+  const uiFogBands=Array.from(document.querySelectorAll('#ui-fog-state .ui-fog-band'));
   const uiFogEdges=new Set(['top','bottom','left','right']);
+  const uiFogProgress={top:0,bottom:0,left:0,right:0};
+  const uiFogTarget={top:0,bottom:0,left:0,right:0};
+  // Original advected fluid is rendered into #fog once per frame.
+  // Resample only its organic rim, maintaining identical motion, density,
+  // feather, and renderer settings; do NOT draw invented gradient blobs.
+  function paintUiFog(dt){
+    if(!uiFogCtx)return;
+    const w=uiFogCanvas.width,h=uiFogCanvas.height;
+    if(w<2||h<2)return;
+    let any=false;
+    for(const edge of uiFogEdges){
+      const desired=uiFogTarget[edge];
+      const next=reduced.matches?desired:
+        uiFogProgress[edge]+(desired-uiFogProgress[edge])*(1-Math.exp(-dt*(desired?7:9)));
+      uiFogProgress[edge]=Math.abs(next-desired)<.003?desired:next;
+      if(uiFogProgress[edge]>.002)any=true;
+    }
+    if(!any){
+      if(uiFogCanvas.dataset.visible!=='false'){
+        uiFogCtx.clearRect(0,0,w,h);
+        uiFogCanvas.dataset.visible='false';
+      }
+      return;
+    }
+    uiFogCanvas.dataset.visible='true';
+    uiFogCtx.clearRect(0,0,w,h);
+    const srcW=fog.width,srcH=fog.height;
+    // Transparent source begins well inside the original scene safe region;
+    // only the live, dark fluid border is expanded into each UI footprint.
+    const sideSource=Math.round(srcW*.14),verticalSource=Math.round(srcH*.12);
+    const eased=x=>x*x*(3-2*x);
+    for(const edge of ['bottom','left','right','top']){
+      const p=eased(uiFogProgress[edge]);
+      if(p<.003)continue;
+      uiFogCtx.globalAlpha=(edge==='bottom'?.87:.77)*p;
+      if(edge==='bottom'){
+        const maxH=Math.round(h*.29),dh=Math.max(1,Math.round(maxH*p));
+        uiFogCtx.drawImage(fog,0,srcH-verticalSource,srcW,verticalSource,0,h-dh,w,dh);
+      }else if(edge==='top'){
+        const maxH=Math.round(h*.22),dh=Math.max(1,Math.round(maxH*p));
+        uiFogCtx.drawImage(fog,0,0,srcW,verticalSource,0,0,w,dh);
+      }else if(edge==='left'){
+        const maxW=Math.round(w*.33),dw=Math.max(1,Math.round(maxW*p));
+        uiFogCtx.drawImage(fog,0,0,sideSource,srcH,0,0,dw,h);
+      }else{
+        const maxW=Math.round(w*.33),dw=Math.max(1,Math.round(maxW*p));
+        uiFogCtx.drawImage(fog,srcW-sideSource,0,sideSource,srcH,w-dw,0,dw,h);
+      }
+    }
+    uiFogCtx.globalAlpha=1;
+  }
   function isUiFogOwnerVisible(el){
     if(uiRoot.hidden||view.classList.contains('dev-mode')||
        view.classList.contains('fog-edit-mode')||el.hidden)return false;
@@ -920,10 +915,13 @@ void main(){
       const edge=el.getAttribute('data-ui-fog-edge');
       if(uiFogEdges.has(edge)&&isUiFogOwnerVisible(el))active.add(edge);
     }
+    let changed=false;
     for(const band of uiFogBands){
-      const next=String(active.has(band.dataset.edge));
-      if(band.dataset.active!==next)band.dataset.active=next;
+      const edge=band.dataset.edge,enabled=active.has(edge),next=String(enabled);
+      if(band.dataset.active!==next){band.dataset.active=next;changed=true}
+      uiFogTarget[edge]=enabled?1:0;
     }
+    if(changed)start();
   }
   const edgeFogObserver=new MutationObserver(syncUiEdgeFog);
   edgeFogObserver.observe(uiRoot,{
@@ -962,7 +960,7 @@ void main(){
     try{return localStorage.getItem(TILT_KEY)!=='off'}catch(_){return true}
   }
   let tiltEnabled=loadSetting();
-  let dialogueIndex=0,autoEnabled=false,autoTimer=0,logOpen=false,textHidden=false;
+  let dialogueIndex=0,autoEnabled=false,autoTimer=0,logOpen=false,textHidden=false,storyFinished=false;
   const classroomPreload=new Image();
   classroomPreload.src=SCENES.classroom.image;
   const mainMenuPreload=new Image();
@@ -977,7 +975,7 @@ void main(){
     }catch(_){return null}
   }
   function writeSave(){
-    try{localStorage.setItem(SAVE_KEY,JSON.stringify({scene:'classroom',line:dialogueIndex}))}catch(_){}
+    try{localStorage.setItem(SAVE_KEY,JSON.stringify({scene:'classroom',line:dialogueIndex,finished:storyFinished}))}catch(_){}
     continueButton.disabled=false;
   }
   function openScene(name){
@@ -1007,6 +1005,7 @@ void main(){
       menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
       sceneSwitcher.hidden=true;sceneSwitcherToggle.setAttribute('aria-expanded','false');
       if(isStory){
+        storyFinished=false;
         textHidden=false;dialogue.hidden=false;
         nextLineButton.parentElement.hidden=false;renderDialogue();writeSave();
       }else{
@@ -1135,21 +1134,26 @@ void main(){
   function renderDialogue(){
     const line=lines[dialogueIndex];
     speakerLabel.textContent=line.speaker;dialogueText.textContent=line.text;
-    nextLineButton.setAttribute('aria-label',dialogueIndex===lines.length-1?'重新播放':'下一句');
+    nextLineButton.setAttribute('aria-label',dialogueIndex===lines.length-1?'结束对话':'下一句');
+  }
+  function finishDialogue(){
+    if(storyFinished)return;
+    cancelAuto();storyFinished=true;
+    dialogue.hidden=true;nextLineButton.parentElement.hidden=true;
+    if(logOpen){history.hidden=true;logOpen=false}
+    writeSave();syncUiEdgeFog();
   }
   function advanceDialogue(){
-    if(logOpen||textHidden)return;
-    dialogueIndex=(dialogueIndex+1)%lines.length;renderDialogue();writeSave();
+    if(logOpen||textHidden||storyFinished)return;
+    if(dialogueIndex===lines.length-1){finishDialogue();return}
+    dialogueIndex++;renderDialogue();writeSave();
     if(autoEnabled)scheduleAuto();
   }
   function scheduleAuto(){
     clearTimeout(autoTimer);
-    if(autoEnabled&&!document.hidden&&!logOpen&&!textHidden){
+    if(autoEnabled&&!document.hidden&&!logOpen&&!textHidden&&!storyFinished){
       const wait=Math.max(2800,Math.min(6600,lines[dialogueIndex].text.length*190));
-      autoTimer=setTimeout(()=>{
-        if(dialogueIndex===lines.length-1){cancelAuto();return}
-        advanceDialogue();
-      },wait);
+      autoTimer=setTimeout(advanceDialogue,wait);
     }
   }
   function updateHistory(){
@@ -1171,8 +1175,8 @@ void main(){
       dialogue.hidden=true;nextLineButton.parentElement.hidden=true;
       menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
     }else{
-      history.hidden=true;dialogue.hidden=textHidden;
-      nextLineButton.parentElement.hidden=textHidden;
+      history.hidden=true;dialogue.hidden=textHidden||storyFinished;
+      nextLineButton.parentElement.hidden=textHidden||storyFinished;
     }
     logButton.setAttribute('aria-pressed',String(logOpen));
   }
@@ -1181,7 +1185,7 @@ void main(){
   dialogue.addEventListener('click',e=>{e.stopPropagation();advanceDialogue()});
   autoButton.addEventListener('click',()=>{
     if(logOpen)toggleLog();
-    if(textHidden){textHidden=false;dialogue.hidden=false;nextLineButton.parentElement.hidden=false}
+    if(textHidden&&!storyFinished){textHidden=false;dialogue.hidden=false;nextLineButton.parentElement.hidden=false}
     autoEnabled=!autoEnabled;autoButton.setAttribute('aria-pressed',String(autoEnabled));
     if(autoEnabled)scheduleAuto();else clearTimeout(autoTimer);
   });
@@ -1191,7 +1195,7 @@ void main(){
     menuChoices.hidden=!opening;menuButton.setAttribute('aria-expanded',String(opening));
   });
   restartButton.addEventListener('click',()=>{
-    cancelAuto();dialogueIndex=0;renderDialogue();writeSave();
+    cancelAuto();storyFinished=false;dialogueIndex=0;renderDialogue();writeSave();
     if(logOpen)toggleLog();
     textHidden=false;dialogue.hidden=false;nextLineButton.parentElement.hidden=false;
     menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
@@ -1199,7 +1203,7 @@ void main(){
   document.getElementById('return-main').addEventListener('click',()=>changeScene('menu'));
   hideButton.addEventListener('click',()=>{
     cancelAuto();textHidden=!textHidden;
-    dialogue.hidden=textHidden;nextLineButton.parentElement.hidden=textHidden;
+    dialogue.hidden=textHidden||storyFinished;nextLineButton.parentElement.hidden=textHidden||storyFinished;
     hideButton.textContent=textHidden?'显示文字':'隐藏文字';
     menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
   });
@@ -1286,6 +1290,10 @@ void main(){
     const sw=Math.max(80,Math.round(w*simulationScale));
     const sh=Math.max(80,Math.round(h*simulationScale));
     sizes={w,h,sw,sh};
+    if(uiFogCanvas){
+      uiFogCanvas.width=fw;uiFogCanvas.height=fh;
+      uiFogCanvas.dataset.visible='false';
+    }
     if(gl){
       for(const t of simTargets){gl.deleteTexture(t.tex);gl.deleteFramebuffer(t.fb)}
       simTargets=[];
@@ -1731,6 +1739,8 @@ void main(){
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
+    // Render live project-native fluid once, THEN project it behind visible UI.
+    paintUiFog(dt);
     fog.dataset.frames=String(++frameNumber);
     if(editorActive && now-lastFogMirror>=85){
       lastFogMirror=now;
