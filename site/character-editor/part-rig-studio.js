@@ -6,7 +6,7 @@ if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
 const state={active:false,model:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false};
 const toggle=document.createElement('button');toggle.id='part-rig-toggle';
-toggle.textContent='逐件绑定';toggle.type='button';
+toggle.textContent='逐件绑骨';toggle.type='button';toggle.title='选择独立骨骼与精细蒙皮控制';
 stage.querySelector('.stage-toolbar')?.append(toggle);
 const panel=document.createElement('section');panel.id='part-rig-panel';panel.hidden=true;
 panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</strong><button id="rig-close" type="button">返回原版 V4</button></header>
@@ -190,10 +190,19 @@ function changed(){
  clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(console.error),600);
  ed.render();
 }
+function syncOpenState(){
+ const primary=$('idle-open');
+ if(primary){
+  primary.setAttribute('aria-expanded',String(state.active));
+  primary.textContent=state.active?'✦ 待机调节中 · 收起':'✦ 待机与飘动';
+ }
+ toggle.setAttribute('aria-pressed',String(state.active));
+ toggle.textContent=state.active?'关闭骨骼预览':'逐件绑骨';
+}
 function deactivate(){
  if(state.dirty)save().catch(console.error);
  state.active=false;state.drag=null;state.bone='';panel.hidden=true;
- toggle.textContent='逐件绑定';ed.render();
+ syncOpenState();ed.render();
 }
 async function activate(){
  if(!studio.current)return;
@@ -204,7 +213,7 @@ async function activate(){
  state.model=core.project(src,id,face,saved);
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
  state.active=true;state.phase=0;state.playing=true;
- toggle.textContent='返回 V4';panel.hidden=false;
+ panel.hidden=false;syncOpenState();
  const selectNode=$('rig-part');selectNode.replaceChildren();
  for(const p of src)selectNode.add(new Option(p.name,p.partId||p.name));
  const preferred=S.layers[S.side][S.sel];
@@ -215,7 +224,34 @@ async function activate(){
  info('实时待机总控与逐件倍率已连接同一套游戏骨骼。默认身体极轻微、发梢柔性摆动，不叠加呼吸。');
  ed.render();
 }
-toggle.onclick=()=>state.active?deactivate():activate().catch(e=>info(e.message));
+function toggleIdle(){
+ if(state.active){deactivate();return;}
+ const primary=$('idle-open');
+ if(primary){primary.disabled=true;primary.textContent='正在打开待机控制…';}
+ activate().then(()=>{
+  if(state.active&&matchMedia('(max-width:710px)').matches){
+   // Fixed panel on phones stays in view even if the editor was scrolled.
+   panel.scrollTop=0;
+  }
+ }).catch(e=>{
+  info('无法打开待机控制：'+e.message);
+  const note=$('studio-status')||$('status');
+  if(note)note.textContent='待机控制加载失败：'+e.message;
+ }).finally(()=>{if(primary)primary.disabled=false;syncOpenState();});
+}
+toggle.onclick=toggleIdle;
+if($('idle-open'))$('idle-open').onclick=toggleIdle;
+// The direct entry opens the REAL controls, not merely the V4 preview.
+const direct=new URLSearchParams(location.search).get('idle')==='1';
+if(direct){
+ const autoOpen=()=>{
+  if(!state.active&&studio.current&&S.ready)toggleIdle();
+ };
+ window.addEventListener('paperchalk:studio-ready-to-edit',autoOpen);
+ // Handles browser revisits where the character loaded before this script.
+ requestAnimationFrame(()=>{if(studio.current&&S.ready)autoOpen();});
+}
+syncOpenState();
 $('rig-close').onclick=deactivate;
 $('rig-part').onchange=e=>select(e.target.value);
 $('rig-save').onclick=()=>save();
