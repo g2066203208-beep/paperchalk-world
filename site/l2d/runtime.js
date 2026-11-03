@@ -280,7 +280,11 @@ function sync(t){
   // Breathing is now a localized image-space deformation in advanceV4().
   // Undo any old whole-image rocking transform left by a cached version.
   const surface=a.clip?.type==='native'?a.clip.img:a.canvas;
-  if(surface?.style.transform)surface.style.transform='';
+  // Sole-anchored distance zoom is owned by l2d-ground-binding and must
+  // survive the 60Hz runtime sync. Unbound legacy rocking transforms still
+  // need clearing, as before.
+  if(surface?.style.transform&&!a.root.dataset.groundAttached)
+   surface.style.transform='';
   // Keep the sole pivot owned by the ground/perspective binder. Erasing it
   // on every frame made scaled characters drift off the floor and churn styles.
   if(surface?.style.transformOrigin&&!a.root.dataset.groundAttached)
