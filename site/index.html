@@ -1083,7 +1083,12 @@ void main(){
       now.hour+'点'+now.minute+'分');
     fitTopHud();
   }
-  survivalState.subscribe((snap,source)=>animateTopHudTo(snap.stats,source));
+  survivalState.subscribe((snap,source)=>{
+    // A 1-second hunger tick must not interrupt a 480-ms damage/heal/reset
+    // animation. Otherwise the displayed HP can stall at 99 rather than 100.
+    if(source==='time'&&hudAnimation)return;
+    animateTopHudTo(snap.stats,source);
+  });
   animateTopHudTo(survivalState.snapshot().stats,'init');
   refreshRealClock(true);
   // Do not provide a setClock method: the displayed time is ALWAYS the
