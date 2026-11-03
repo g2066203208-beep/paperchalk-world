@@ -328,7 +328,7 @@ worst quality, low quality, blurry, 1girl, female, overly feminine boy, baby fac
 | 246 | `dialogue.sarcasmLevel` | 中低，重心是俏皮而非刻薄 | 待验收设计候选 |
 | 247 | `dialogue.laughStyle` | 嘴角先翘、短促轻笑 | 待验收设计候选 |
 | 248 | `dialogue.cryingStyle` | 努力克制哽咽，不尖叫 | 待验收设计候选 |
-| 249 | `dialogue.speechUnderStress` | 重复关键时间或声音来确认 | 待验收设计候选 |
+| 249 | `dialogue.speechUnderStress` | 先收住轻浮笑意、观察情况，再简短作答（提案） | 待验收设计候选 |
 | 250 | `dialogue.dialogueExamples` | ["哎，你这表情我可是看懂了。","少看不起我，个子小不代表没用。","行了，别吵，我有办法。"] | 待验收设计候选 |
 | 251 | `dialogue.forbiddenVoicePatterns` | 刻意奶音、软萌撒娇、女性嗓音、过度油腻成人情话、同男主的冷漠语气 | 待验收设计候选 |
 
@@ -419,7 +419,7 @@ worst quality, low quality, blurry, 1girl, female, overly feminine boy, baby fac
 | 312 | `environment.roomOwnership` | 待定 | 未知 / 待核实 |
 | 313 | `environment.itemOwnership` | 待定 | 未知 / 待核实 |
 | 314 | `environment.furnitureConditions` | 待定 | 未知 / 待核实 |
-| 315 | `environment.weatherResponse` | 雨天会注意雨点和铃声混合的声响 | 待验收设计候选 |
+| 315 | `environment.weatherResponse` | 天气影响衣服和头发，尚无特殊听觉技能设定 | 待验收设计候选 |
 | 316 | `environment.locationsVisited` | 待定 | 未知 / 待核实 |
 | 317 | `environment.npcSchedule` | 待定 | 未知 / 待核实 |
 | 318 | `environment.worldEra` | 当代架空都市异常事件 | 待验收设计候选 |
@@ -524,26 +524,26 @@ worst quality, low quality, blurry, 1girl, female, overly feminine boy, baby fac
 | 402 | `audio.recordedVoices` | 待定 | 未知 / 待核实 |
 | 403 | `audio.footstepSfx` | 轻快短步的校鞋足音 | 待验收设计候选 |
 | 404 | `audio.costumeSfx` | 外套与领带细微布料摩擦 | 待验收设计候选 |
-| 405 | `audio.voiceVolume` | 中等稍轻 | 待验收设计候选 |
-| 406 | `audio.ambienceRules` | 雨夜环境声可衬托听辨能力，不遮盖对白 | 待验收设计候选 |
+| 405 | `audio.voiceVolume` | 中等、说笑时略亮 | 待验收设计候选 |
+| 406 | `audio.ambienceRules` | 普通人物对白应保持清楚，环境声不抢戏 | 待验收设计候选 |
 
 ### 游戏交互（gameplay，14项）
 
 | # | 字段 | 值 | 状态 |
 |---:|---|---|---|
 | 407 | `gameplay.npcSchedule` | 学校日常作息待项目日程系统建立 | 待验收设计候选 |
-| 408 | `gameplay.dialogueTree` | 初见→广播异常→证词核验→信任事件 | 待验收设计候选 |
+| 408 | `gameplay.dialogueTree` | 待定 | 未知 / 待核实 |
 | 409 | `gameplay.affinity` | 关系数值未定，尊重与验证可提升 | 待验收设计候选 |
-| 410 | `gameplay.trust` | 被认真倾听则提升，被戏弄则下降 | 待验收设计候选 |
+| 410 | `gameplay.trust` | 按角色与玩家实际互动变化；未编制自动好感结算 | 待验收设计候选 |
 | 411 | `gameplay.playerControl` | 非默认玩家主控角色 | 待验收设计候选 |
 | 412 | `gameplay.interactRange` | 沿用场景全局交互范围 | 待验收设计候选 |
 | 413 | `gameplay.characterSelection` | 入队资格待剧情确定 | 待验收设计候选 |
 | 414 | `gameplay.sceneLayers` | 人物L2D层+对话层，角色目前未注册 | 待验收设计候选 |
 | 415 | `gameplay.collisionBounds` | 按未来真实立绘确定 | 待验收设计候选 |
-| 416 | `gameplay.saveFlags` | ["met_male3","recording_checked","male3_trust_stage"] | 待验收设计候选 |
-| 417 | `gameplay.choiceTriggers` | ["listen_again","accept_evidence","ignore_hint"] | 待验收设计候选 |
+| 416 | `gameplay.saveFlags` | ["met_male3","male3_trust_stage"] | 待验收设计候选 |
+| 417 | `gameplay.choiceTriggers` | 待定 | 未知 / 待核实 |
 | 418 | `gameplay.npcBrain` | 候选校园状态机：上课、活动、放学、交谈 | 待验收设计候选 |
-| 419 | `gameplay.flagsVariables` | {"met":false,"trust":0,"recordingChecked":false} | 待验收设计候选 |
+| 419 | `gameplay.flagsVariables` | {"met":false,"trust":0} | 待验收设计候选 |
 | 420 | `gameplay.inventoryRules` | 物品栏可按剧情拥有物品，但人物待机母图必须双手空；武器装备独立于人物立绘分层，未来按动作/状态动态装备与切换 | 待验收设计候选 |
 
 ### 验收测试（quality，16项）
@@ -586,4 +586,4 @@ worst quality, low quality, blurry, 1girl, female, overly feminine boy, baby fac
 
 ## 本次核对统计
 
-共 **448** 项，用户确认方向 5 项、待验收提案 305 项、未知 128 项、不适用 10 项。字段不缺、不重复，未批准的内容不可当成角色正史或正式视觉母版。
+共 **448** 项，用户确认方向 5 项、待验收提案 303 项、未知 130 项、不适用 10 项。字段不缺、不重复，未批准的内容不可当成角色正史或正式视觉母版。
