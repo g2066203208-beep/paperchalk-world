@@ -50,8 +50,7 @@ jobs:
         run: |
           python3 scripts/build_v4_assets.py
           python3 scripts/build_protagonist_part_rig.py
-          python3 scripts/build_char002_v4.py
-          python3 scripts/build_char002_part_rig.py
+          python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_scene_catalog.py
       - name: Export ORIGINAL eye/nose/brow PNGs to face-only QA artifact for visual review
         run: |
@@ -114,19 +113,19 @@ jobs:
           assert {'protagonist','char-002','qa-v4','qa-rig'} <= set(data)
           assert data['protagonist']['clips']['front']['frames']==128
           assert data['protagonist']['clips']['back']['frames']==128
-          assert data['char-002']['clips']['front']['frames']==128
-          assert 'back' not in data['char-002']['clips']
-          assert 'char-002-rig-v1' not in data, 'female two must not appear as a duplicate actor'
+          assert not data['char-002'].get('clips'), 'old female-two V4 must not load'
+          assert not data['char-002'].get('back')
+          assert 'char-002-psd-v1' not in data, 'one female-two ID only'
+          assert 'char-002-rig-v1' not in data, 'old fake rig is gone'
           secondary=data['char-002']['l2dModule']['front']
-          assert secondary['renderer']=='part-mesh',secondary
-          assert secondary['rig']['partCount']==7
-          assert secondary['partProvenance']=='derived-region'
-          assert secondary['requiresOriginalPSDForFullRig'] is True
-          assert secondary['rig']['sourceCharacterId']=='char-002-rig-v1'
+          assert secondary['renderer']=='part-mesh'
+          assert secondary['rig']['partCount']==17
+          assert secondary['sourceParts']['provenance']=='original-psd'
+          assert secondary['rig']['sourceCharacterId']=='char-002-psd-v1'
           assert 'char-016' not in data, 'deleted male-second character must remain absent'
           assert data['qa-rig']['l2dModule']['front']['rig']['partCount']==2
           assert data['qa-v4']['clips']['front']['frames']==2
-          print('PASS catalog: female-two registered and mistaken male-second entry removed')
+          print('PASS catalog: CHAR-002 original 17-part PSD and no duplicate seven-region actor')
           PY
       - name: Verify game, independent ArtMesh player and editor parse
         run: |
@@ -177,41 +176,36 @@ jobs:
               'switching to V4 must unload the old independent texture renderer');
             // This is the ACTUAL heroine's original 25-layer ZIP, not a
             // synthetic QA bitmap or a full-image sinusoidal distortion.
-            // Female two: real ORIGINAL front art divided into seven preserved
-            // pixel regions. Distinct movable arms/hem, parented head; no
-            // fabricated independent bangs, eyes or back view.
+            // The uploaded female-two PSD: 24 source layer records, 17
+            // genuinely painted source textures. No seven-region fallback.
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','char-002','front'));
-            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===7,{timeout:24000});
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===17,
+              null,{timeout:25000});
             const secondary=await page.evaluate(()=>{
-              const a=window.PaperchalkL2DLibrary.get('player'),core=window.PaperchalkPartRigCore,
-                p=a.model.parts;
-              const ids=Object.keys(p);
-              const t0=core.sanitizeIdleProfile({...a.model.idleProfile,
-                joints:{hands:0,shoulders:0,hips:0},breath:{amount:0,speed:1}});
-              const t1=core.sanitizeIdleProfile({...a.model.idleProfile,
-                joints:{hands:1.5,shoulders:1.3,hips:.5},breath:{amount:1.25,speed:1}});
-              const wiggle=(id,u,v)=>{
-                const a0=core.warpPoint(p[id],u,v,.5,null,t1),
-                  a1=core.warpPoint(p[id],u,v,2.7,null,t1);
-                return Math.hypot(a0.x-a1.x,a0.y-a1.y);
+              const a=window.PaperchalkL2DLibrary.get('player'),
+                p=a.model.parts,core=window.PaperchalkPartRigCore;
+              const f=core.sanitizeIdleProfile({...a.model.idleProfile,
+                joints:{hands:0,shoulders:2,hips:2}});
+              const move=(id,u,v)=>{
+                const a=core.warpPoint(p[id],u,v,.5,null,f),
+                  b=core.warpPoint(p[id],u,v,2.7,null,f);
+                return Math.hypot(a.x-b.x,a.y-b.y);
               };
-              const shoe=core.warpPoint(p.shoes,.5,.9,1.7,null,t1);
-              const original={x:p.shoes.x+p.shoes.w*.5,y:p.shoes.y+p.shoes.h*.9};
-              return {ids,provenance:a.model.provenance,mode:a.actor.root.dataset.l2dMode,
-                connected:!!a.model.bodyHierarchy,shoes:Math.hypot(shoe.x-original.x,shoe.y-original.y),
-                armWave:wiggle('wave_hand',.5,.9),armFree:wiggle('free_hand',.5,.9),
-                hem:wiggle('skirt',.55,.95),
-                head:wiggle('head_hair',.5,.5)};
+              const foot=p.footwear,q=core.warpPoint(foot,.5,.9,1.4,null,f);
+              return {ids:Object.keys(p),provenance:a.model.provenance,
+                rig:!!a.model.bodyHierarchy,
+                feet:Math.hypot(q.x-foot.x-foot.w*.5,q.y-foot.y-foot.h*.9),
+                fringe:move('front_hair',.5,.95),rear:move('back_hair',.5,.92),
+                hem:move('bottomwear',.5,.93),
+                eyes:!!p.eyewhite&&!!p.irides&&!!p.eyelash};
             });
-            console.log('REAL CHAR-002 DERIVED RIG',JSON.stringify(secondary));
-            assert.deepEqual(secondary.ids,['shoes','legs','skirt','wave_hand',
-              'free_hand','head_hair','jacket']);
-            assert.equal(secondary.mode,'library-part-mesh');
-            assert.equal(secondary.provenance,'derived-region');
-            assert.ok(secondary.connected&&secondary.shoes<1e-5,
-              'female two must keep shoes fixed while moving attached body');
-            assert.ok(secondary.armWave>0.15&&secondary.armFree>0.15&&secondary.hem>0.1,
-              'female two original arm and skirt regions must actually move independently');
+            console.log('ORIGINAL CHAR-002 PSD IN GAME',JSON.stringify(secondary));
+            assert.equal(secondary.ids.length,17);
+            assert.equal(secondary.provenance,'original-psd');
+            assert.ok(secondary.rig&&secondary.feet<.00001,'both feet must stay grounded');
+            assert.ok(secondary.fringe>0.02&&secondary.rear>0.02&&secondary.hem>0.02,
+              'original hair and hem must actually animate');
+            assert.equal(secondary.eyes,true);
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','front'));
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===17,{timeout:20000});
             // Pixel-level regression on ACTUAL protagonist front textures.
