@@ -195,7 +195,9 @@ try{
    assert.ok(Math.abs(near.actor.errorPx)<1&&Math.abs(far.actor.errorPx)<1,
      'Automatic zoom separated an NPC shoe from the ground');
    assert.ok(Math.abs(near.actor.perspectiveScale-far.actor.perspectiveScale)<.01,
-     'Camera Z applied twice: DEV should use CSS 3D perspective only');
+     'Camera Z applied twice: DEV should only normalize original L2D size');
+   assert.ok(near.actor.perspectiveScale>1.3,
+     'DEV world height must normalize the undersized original enemy layer');
    await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-near-depth.png'});
    await capture(-190);
    await page.locator('#dev-auto-depth').uncheck();
@@ -256,9 +258,23 @@ try{
          renderer:enemy.canvas.getContext('2d').getContextAttributes?.().willReadFrequently}};
    });
    assert.equal(normal.dev,false);
-   assert.ok(Math.abs(normal.player.scale-1)<.002&&Math.abs(normal.enemy.scale-1)<.002,
-     'Both L2D actors must retain hand-authored original sharp native scale at baseline: '+
-     JSON.stringify(normal));
+   const actualRatio=(normal.enemy.height*normal.actors.enemy.visibleFraction*
+      normal.enemy.scale)/
+     (normal.player.height*normal.actors.player.visibleFraction*
+      normal.player.scale);
+   const predictedRatio=(normal.actors.enemy.physicalCm/
+      normal.actors.player.physicalCm)*
+     normal.actors.enemy.depthScale;
+   assert.ok(Math.abs(normal.player.scale-1)<.002,
+     'Heroine must remain the exact original visual-size reference');
+   assert.ok(Math.abs(actualRatio-predictedRatio)<.02,
+     'Enemy normal-game apparent height must match 155/162 stature and Z distance: '+
+     JSON.stringify({actualRatio,predictedRatio,normal}));
+   assert.ok(predictedRatio>.6&&predictedRatio<.8,
+     'Second heroine cannot be reduced to toy-like 40% size');
+   assert.ok(Math.abs(normal.actors.enemy.worldFootY-
+      normal.actors.enemy.expectedFootY)<1,
+     'Second heroine is floating above projected common floor');
    assert.equal(normal.perf.sourceReadbacks,0);
    assert.equal(normal.perf.globalSubtreeObservers,0);
    assert.equal(normal.enemy.renderer,false,
@@ -285,6 +301,8 @@ try{
        new DOMMatrix(getComputedStyle(enemy.canvas).transform));
      return {heelErrorX:projectedHeel.x-sourceHeel.x,
        heelErrorY:projectedHeel.y-sourceHeel.y,
+       footY:actor.worldFootY,targetFootY:actor.expectedFootY,
+       visibleTarget:actor.targetVisiblePx,horizonY:actor.horizonY,
        sourceHeelX:sourceHeel.x,sourceHeelY:sourceHeel.y,
        size:enemy.img.offsetHeight,buffer:enemy.canvas.width,
        scale:actor.perspectiveScale,
@@ -308,8 +326,8 @@ try{
    },z);
    const distant=await actorAt(-350);
    const close=await actorAt(-60);
-   assert.ok(close.scale>distant.scale*1.1&&close.scale<1.3,
-     'Camera distance should smoothly adjust a sharp 1x L2D, not magnify it several times: '+
+   assert.ok(close.scale>distant.scale*1.1&&close.scale<3.3,
+     'One pinhole camera should resize the actual 1024 L2D smoothly: '+
      JSON.stringify({distant,close}));
    assert.equal(close.size,distant.size,'Camera depth changed the original image geometry');
    assert.equal(close.buffer,distant.buffer,'Zoom should not continuously reallocate rendering buffers');
@@ -320,6 +338,11 @@ try{
    }
    assert.ok(Math.abs(close.sourceHeelY-distant.sourceHeelY)<.1,
      'The shoe source geometry changed while only camera Z was adjusted');
+   assert.ok(distant.footY<close.footY&&
+      Math.abs(distant.footY-distant.targetFootY)<1&&
+      Math.abs(close.footY-close.targetFootY)<1,
+     'Moving enemy Z must move shoes along the SAME projected ground toward/away from horizon: '+
+     JSON.stringify({distant,close}));
    await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-sharp-normal-distance.png'});
    await actorAt(-190);
    const perfBefore=await page.evaluate(()=>window.PaperWorldL2DGround.performance());
