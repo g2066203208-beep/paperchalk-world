@@ -199,7 +199,11 @@ function bonePoses(part,phase=0,idle=null){
   const strength=group?group.amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
   // Independent root/tip strength and slight phase delay approximate inertia;
   // roots do not whip like ends, and different strands stay out of sync.
-  const factor=b.parent?1:.34;
+  const groupFactor=part.kind==='hair'?[.22,.65]:
+   part.kind==='skirt'?[.23,.78]:
+   part.kind==='torso'?[.18,.50]:
+   part.kind.startsWith('arm-')?[.13,.32]:[.1,.22];
+  const factor=groupFactor[b.parent?1:0];
   const speed=group?group.speed:1;
   const lag=group?.lag||0;
   const angle=b.enabled!==false?(finite(b.amplitude,0)*strength*factor*Math.PI/180*
