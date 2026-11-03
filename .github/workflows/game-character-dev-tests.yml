@@ -104,6 +104,40 @@ jobs:
                 assert.equal(originalBones.breath,'disabled');
                 for(const part of ['backHair','skirt','leftSleeve','rightSleeve'])
                   assert.ok(originalBones[part]>.15,'original heroine '+part+' must swing on independent joints');
+                // Verify the REAL rendered original heroine changes canvas pixels.
+                await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
+                await page.waitForFunction(()=>{
+                  const actor=window.PaperchalkL2D.get('player');
+                  return actor?.canvas?.width>120&&actor.canvas.height>120&&
+                    window.PaperchalkL2DLibrary.get('player')?.last>0;
+                },null,{timeout:25000});
+                const sampleHeroine=()=>page.evaluate(()=>{
+                  const a=window.PaperchalkL2D.get('player'),c=a.canvas;
+                  const data=c.getContext('2d',{willReadFrequently:true})
+                    .getImageData(0,0,c.width,c.height).data;
+                  let hash=2166136261,alpha=0;
+                  for(let i=0;i<data.length;i+=32){
+                    hash=Math.imul(hash^data[i],16777619)>>>0;
+                    hash=Math.imul(hash^data[i+3],16777619)>>>0;
+                    alpha+=data[i+3];
+                  }
+                  return {hash,alpha,w:c.width,h:c.height};
+                });
+                const firstRigFrame=await sampleHeroine();
+                assert.ok(firstRigFrame.alpha>20000,'original source PNGs must be visible in the game');
+                await page.waitForFunction(previous=>{
+                  const a=window.PaperchalkL2D.get('player'),c=a?.canvas;
+                  if(!c)return false;
+                  const d=c.getContext('2d',{willReadFrequently:true})
+                    .getImageData(0,0,c.width,c.height).data;
+                  let h=2166136261;
+                  for(let i=0;i<d.length;i+=32){
+                    h=Math.imul(h^d[i],16777619)>>>0;
+                    h=Math.imul(h^d[i+3],16777619)>>>0;
+                  }
+                  return h!==previous;
+                },firstRigFrame.hash,{timeout:18000});
+                await page.screenshot({path:'artifacts/l2d-studio/'+(phone?'mobile':'desktop')+'-original-heroine-swaying-hair-skirt.png',fullPage:true});
                 // Test the protected old V4 as an explicit backup, NOT default.
                 await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('v4'));
                 const motion=await page.evaluate(()=>{
