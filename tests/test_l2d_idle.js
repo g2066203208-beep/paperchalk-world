@@ -50,14 +50,24 @@ const reloaded=core.project([make('rear_hair')],'protagonist','front',{
  idleProfile:core.presetIdle('breeze',initial),
  parts:{rear_hair:part('rear_hair')}});
 assert.equal(reloaded.idleProfile.preset,'breeze');
-assert.equal(reloaded.idleProfile.hair.amount,1.12);
+assert.equal(reloaded.idleProfile.hair.amount,.64);
 const oldDefault=core.sanitizeIdleProfile({
  preset:'realistic',hair:{amount:.48},cloth:{amount:.34},parts:{}
 });
-assert.equal(oldDefault.hair.amount,.85,'upgrade old untouched gentle hair');
-assert.equal(oldDefault.cloth.amount,.82,'upgrade old untouched weak skirt');
-assert.equal(oldDefault.parts.front_hair,1.25,'special fringe weight');
-assert.equal(oldDefault.parts.skirt,1.35,'special hem weight');
+assert.equal(oldDefault.hair.amount,.28,'old untouched calm hair migrates to natural v3');
+assert.equal(oldDefault.cloth.amount,.23,'old untouched skirt migrates to natural v3');
+assert.equal(oldDefault.parts.front_hair,1,'new natural fringe weight');
+assert.equal(oldDefault.parts.skirt,1,'new natural skirt hem');
+const oldV2=core.sanitizeIdleProfile({
+ profileVersion:2,preset:'realistic',
+ body:{amount:.18},hair:{amount:.85,speed:1.05,lag:.62},
+ cloth:{amount:.82,speed:.95,lag:.58},sleeves:{amount:.26},
+ parts:{front_hair:1.25,skirt:1.35}
+});
+assert.deepEqual([oldV2.body.amount,oldV2.hair.amount,
+ oldV2.cloth.amount,oldV2.parts.front_hair,oldV2.parts.skirt],
+ [.12,.28,.23,1,1],
+ 'oversized legacy factory defaults must migrate without changing original art');
 const savedCustom=core.sanitizeIdleProfile({
  preset:'custom',hair:{amount:.45},cloth:{amount:.31},
  parts:{front_hair:.5,skirt:0}
@@ -66,6 +76,43 @@ assert.deepEqual([
  savedCustom.hair.amount,savedCustom.cloth.amount,
  savedCustom.parts.front_hair,savedCustom.parts.skirt
 ],[.45,.31,.5,0],'explicit user values must remain exactly as set');
-assert.equal(core.defaultIdleProfile().body.amount,.18,
- 'body must not exaggerate or introduce breathing');
+assert.equal(core.defaultIdleProfile().body.amount,.12,
+ 'body must stay nearly motionless; no fake breathing');
+const tiers=['realistic','breeze','windy'].map(p=>core.presetIdle(p));
+const travel=(p,u,v,idle)=>{
+ const pts=Array.from({length:300},(_,i)=>core.warpPoint(p,u,v,i*.066,null,idle));
+ const xs=pts.map(x=>x.x),ys=pts.map(x=>x.y);
+ return Math.hypot(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
+};
+const fringe=core.project([make('front_hair',200,300)],'protagonist','front').parts.front_hair;
+const hem=core.project([make('skirt',200,300)],'protagonist','front').parts.skirt;
+const ranges={fringe:tiers.map(t=>travel(fringe,.2,.95,t)),
+ hem:tiers.map(t=>travel(hem,.15,.95,t))};
+console.log('CALM BREEZE WINDY VERTEX SPANS',JSON.stringify(ranges));
+assert.ok(ranges.fringe[0]>5&&ranges.fringe[0]<14,'normal fringe should be subtle');
+assert.ok(ranges.hem[0]>3&&ranges.hem[0]<9,'normal skirt should be subtle');
+assert.ok(ranges.fringe[1]>ranges.fringe[0]*1.65&&ranges.fringe[1]<28,'breeze fringe must be visible but gentle');
+assert.ok(ranges.hem[1]>ranges.hem[0]*1.65&&ranges.hem[1]<18,'breeze skirt must be visible but gentle');
+assert.ok(ranges.fringe[2]>ranges.fringe[1]*1.5&&ranges.fringe[2]<55,'storm fringe must be bigger but controlled');
+assert.ok(ranges.hem[2]>ranges.hem[1]*1.5&&ranges.hem[2]<35,'storm hem must be bigger but controlled');
+for(const part of [fringe,hem]){
+ const a=core.warpPoint(part,.5,.05,.1,null,tiers[2]);
+ const b=core.warpPoint(part,.5,.05,3.1,null,tiers[2]);
+ assert.ok(length(a,b)<1,'hair root/skirt waist must remain attached in strong wind');
+}
+const reset=core.presetIdle('realistic',{
+ ...tiers[2],parts:{front_hair:2,skirt:2}
+});
+assert.deepEqual([reset.parts.front_hair,reset.parts.skirt],[1,1],
+ 'switching back to normal must reset excessive hair and hem multipliers');
+let t=tiers[0],wind=tiers[2],visual=JSON.parse(JSON.stringify(t));
+for(let i=0;i<35;i++)visual=core.approachIdle(visual,wind,1/30);
+assert.ok(visual.hair.amount>t.hair.amount&&visual.hair.amount<wind.hair.amount,
+ 'wind tier change must ease toward its target without snapping');
+const customV2=core.sanitizeIdleProfile({
+ profileVersion:2,preset:'custom',hair:{amount:1.25},cloth:{amount:.43},
+ parts:{front_hair:1.75}
+});
+assert.equal(customV2.hair.amount,1.25,'do not clobber old custom strength');
+assert.equal(customV2.parts.front_hair,1.75,'do not clobber old custom weights');
 console.log('PASS idle presets, original source-part hair/skirt isolation, gentle body, per-part sliders and save/restore');
