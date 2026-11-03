@@ -6,6 +6,7 @@ on:
       - 'site/assets/l2d/library/**'
       - 'site/l2d/library-player.js'
       - 'site/l2d/part-rig.js'
+      - 'site/assets/l2d/source-masks/**'
       - 'scripts/build_protagonist_part_rig.py'
       - 'site/dev/character-bridge.js'
       - 'site/character-editor/studio.js'
@@ -51,6 +52,7 @@ jobs:
           python3 scripts/build_protagonist_part_rig.py
           python3 scripts/build_char002_v4.py
           python3 scripts/build_char002_part_rig.py
+          python3 scripts/build_char016_psd_rig.py
           python3 scripts/build_scene_catalog.py
       - name: Export ORIGINAL eye/nose/brow PNGs to face-only QA artifact for visual review
         run: |
