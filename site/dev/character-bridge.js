@@ -135,7 +135,7 @@ async function assign(target,id,face='front',save=true){
  }
  // V4 corrections are independent of the approved source animation.
  // Sparse frame overlays are composited on top at the exact frame index.
- if(source&&!usesPsdRig&&!publishedRig){
+ if(source&&!usesPsdRig&&!window.PaperchalkL2DLibrary?.get(target)){
   await window.PaperchalkL2D.setCorrections(target,
    await get('overlay:'+id+':'+face),
    await get('frames:'+id+':'+face)||{});
@@ -149,7 +149,8 @@ async function assign(target,id,face='front',save=true){
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
  note('正在加载 '+c.label+' · '+(face==='back'?'背面':'正面')+
-   (usesPsdRig?' · 本机独立 PSD':publishedRig?' · 真实部件头发/裙摆/手臂独立摆动（无呼吸）':source?' · V4 逐帧':' · 通用程序网格'));
+   (usesPsdRig?' · 本机独立 PSD':window.PaperchalkL2DLibrary?.get(target)?
+      ' · 真实部件头发/裙摆/手臂独立摆动（无呼吸）':source?' · V4 备份（无额外呼吸）':' · 通用程序网格'));
 }
 async function setHeroineRenderer(mode){
  if(mode!=='bones'&&mode!=='v4')throw Error('只能选择逐部件骨骼或原版 V4 备份');
