@@ -301,11 +301,16 @@ jobs:
               'normal fringe should move, but less than the exaggerated previous idle');
             assert.ok(expressive.skirtNow>1&&expressive.skirtNow<expressive.skirtBefore*.85,
               'normal skirt should move gently, not flap as in the previous idle');
-            assert.deepEqual(expressive.migrated,[.28,.23],
-              'unchanged old realistic profile migrates to conservative motion');
-            assert.deepEqual(expressive.custom,[.45,.31,.5,0],
-              'manual sliders including a deliberate zero remain intact');
-            assert.equal(expressive.body,.20,'ordinary standing must produce shared natural weight shift');
+            assert.deepEqual(expressive.migrated,[.18,.12],
+              'old settings migrate to the only approved basic standing animation');
+            assert.deepEqual(expressive.custom,[.18,.12,1,1],
+              'rejected v3 custom storm values cannot reactivate after reload');
+            assert.equal(expressive.body,0,'no full-body left-right standing sway');
+            assert.deepEqual(await page.evaluate(()=>{
+              const core=window.PaperchalkPartRigCore,m=window.PaperchalkL2DLibrary.get('player').model;
+              return [core.bodyPoseAt(3,m.idleProfile).lean,
+                core.windField(m.parts.front_hair,.15,.95,3,m.idleProfile).x];
+            }),[0,0],'the actual game renderer must have no lean or air force');
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','back'));
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===8,{timeout:20000});
             const backBones=await page.evaluate(()=>{
@@ -336,17 +341,18 @@ jobs:
             assert.equal(editor.parts.hair.motion.x,25,
               'studio must use the published per-part rig rather than a new guessed binding');
             assert.equal(Object.keys(editor.parts).length,2);
-            assert.equal(await page.locator('[data-idle-preset]').count(),4);
-            await page.locator('[data-idle-preset="still"]').click();
-            assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.model.idleProfile.hair.amount),0);
+            assert.equal(await page.locator('[data-idle-preset]').count(),1);
+            assert.equal(await page.locator('[data-idle-preset="windy"]').count(),0);
+            assert.equal(await page.locator('[data-idle-preset="breeze"]').count(),0);
             await page.locator('[data-idle-preset="realistic"]').click();
+            assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.model.idleProfile.hair.amount),.18);
             await page.locator('#rig-part').selectOption('hair');
             await page.locator('#rig-part-amount').fill('65');
-            await page.locator('[data-idle="cloth.amount"]').fill('55');
+            await page.locator('[data-idle="cloth.amount"]').fill('15');
             await page.locator('#rig-save').click();
             await page.waitForFunction(async()=>{
               const m=await window.PaperchalkStudio.readPartRig('qa-rig','front');
-              return m?.idleProfile?.parts?.hair===.65&&m.idleProfile.cloth.amount===.55;
+              return m?.idleProfile?.parts?.hair===.65&&m.idleProfile.cloth.amount===.15;
             },null,{timeout:15000});
             assert.equal(await page.locator('#rig-module-export').count(),1);
             page.once('dialog',dialog=>dialog.accept('qa-export'));
@@ -362,7 +368,7 @@ jobs:
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.model?.idleProfile?.parts?.hair===.65,
               null,{timeout:22000});
             assert.equal(await page.evaluate(()=>
-              window.PaperchalkL2DLibrary.get('player').model.idleProfile.cloth.amount),.55,
+              window.PaperchalkL2DLibrary.get('player').model.idleProfile.cloth.amount),.15,
               'editor hair and cloth controls must affect the same in-game renderer');
             await browser.close();
             console.log('PASS full game and editor modular L2D playback + old V4 safety');
