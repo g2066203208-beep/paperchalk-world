@@ -20,7 +20,7 @@
 #phone-ui button:focus-visible{outline:2px solid #eae2f8;outline-offset:2px}
 #phone-ui .phone-device{
   position:relative;width:100%;height:100%;padding:0;border:0;border-radius:0;
-  background:var(--phone-shell-image,url("../assets/phones/char001-cat-ear-shell.webp")) center/100% 100% no-repeat;
+  background:var(--phone-shell-image,url("../assets/phones/char001-cat-ear-shell.webp?v=verified-0c8e0d")) center/100% 100% no-repeat;
   box-shadow:none
 }
 #phone-ui .phone-device:before,#phone-ui .phone-device:after{content:none!important}
