@@ -68,10 +68,10 @@
         "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
       },
       "ageYears": {
-        "value": 17,
+        "value": 16,
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "birthDate": {
         "value": null,
@@ -259,82 +259,82 @@
     },
     "measurements": {
       "heightCm": {
-        "value": 170,
+        "value": 148,
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "weightKg": {
-        "value": 57,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
-      },
-      "headBodyRatio": {
-        "value": 7.2,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
-      },
-      "shoulderWidthCm": {
         "value": 40,
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
+      },
+      "headBodyRatio": {
+        "value": 6.3,
+        "status": "proposed",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
+      },
+      "shoulderWidthCm": {
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "chestCircumferenceCm": {
-        "value": 84,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "waistCircumferenceCm": {
-        "value": 70,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "hipCircumferenceCm": {
-        "value": 86,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "torsoLengthCm": {
-        "value": 48,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "armSpanCm": {
-        "value": 171,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "inseamCm": {
-        "value": 77,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "shoeSize": {
-        "value": "CN 40–41（视觉制版提案）",
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "bodyBuild": {
-        "value": "中等身高、偏瘦修长、明确男生体态；挺拔但有轻松少年气",
+        "value": "明显小个子、轻巧的少年男性身形，头身比约6.3，肩颈和四肢结构明确，体态并非成年人缩小贴图",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "bodyMassDescription": {
-        "value": "健康的轻薄肌肉感，有男性肩颈及四肢比例，不刻意壮硕",
+        "value": "纤细、轻巧而健康；不壮硕，也不做幼儿肥胖四肢",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "posture": {
         "value": "肩膀自然水平，姿态松弛又自信，双脚站稳，双手空置",
@@ -355,148 +355,148 @@
         "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
       },
       "upperArmCircumferenceCm": {
-        "value": 25,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "forearmCircumferenceCm": {
-        "value": 23,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "wristCircumferenceCm": {
-        "value": 15.5,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "thighCircumferenceCm": {
-        "value": 46,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "calfCircumferenceCm": {
-        "value": 33,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "kneeCircumferenceCm": {
-        "value": 34,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "ankleCircumferenceCm": {
-        "value": 20,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "upperArmLengthCm": {
-        "value": 30,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "forearmLengthCm": {
-        "value": 25.5,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "handLengthCm": {
-        "value": 18.5,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "palmWidthCm": {
-        "value": 8.2,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "upperLegLengthCm": {
-        "value": 42,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "lowerLegLengthCm": {
-        "value": 39.5,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "kneeHeightCm": {
-        "value": 48.5,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "hipBreadthCm": {
-        "value": 31,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "shoulderBreadthCm": {
-        "value": 40,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "waistHeightCm": {
-        "value": 101,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "ribcageDepthCm": {
-        "value": 19,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "hipDepthCm": {
-        "value": 18.5,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "headWidthCm": {
-        "value": 14.8,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "faceLengthCm": {
-        "value": 19.8,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "faceWidthCm": {
-        "value": 13.8,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "footLengthCm": {
-        "value": 25.5,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       },
       "footWidthCm": {
-        "value": 9.7,
-        "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "value": null,
+        "status": "unknown",
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "原170cm方案中的围度、长度或鞋码未经母版测量，因体型重设撤销原假设"
       }
     },
     "anatomy": {
@@ -2183,16 +2183,16 @@
         "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
       },
       "promptPositive": {
-        "value": "masterpiece, best quality, score_7, newest, safe, highres, <lora:akipekoanima_v1_1:1>, @akipekostyle, 1boy, solo, one character only, full body, strict front view, eye-level camera, original fashionable youthful Japanese high school boy, stylish mischievous teenage boy, approximately 17 years old, natural 7.2-head-tall male body proportions, 170cm visual design, slender well-proportioned masculine physique, confident charming boyish face with clear masculine bone structure, subtly angular narrow-oval face, defined cheekbones, clean lightly squared jawline, medium-sized slightly narrow almond eyes, muted turquoise-gray irises, expressive single raised eyebrow, confident playful gaze, asymmetrical teasing half-smile, original short layered smoky ash-blond hair with dark taupe roots, airy asymmetric side swept bangs partially revealing forehead, clear ears, stylish youthful playful slightly cocky atmosphere without feminine softness, original near-black deep navy fitted school blazer worn casually open, white collared shirt with slightly relaxed collar, loosened dark burgundy tie, charcoal gray well-fitted straight school trousers, black school loafers, jacket with two matte dark buttons, balanced upright relaxed stance, both arms at sides slightly away from torso, both empty hands fully visible, all fingers naturally separated, clean refined cel-shaded Japanese visual novel character artwork, crisp lineart, correct natural male shoulder and elbow anatomy, restrained fabric folds and coherent lighting, plain warm off-white studio background, complete head and feet visible, centered single full-body illustration, original character face and hairstyle not copied from any existing anime.",
+        "value": "masterpiece, best quality, score_7, newest, safe, highres, <lora:akipekoanima_v1_1:1>, @akipekostyle, 1boy, solo, one character only, full body, strict front view, eye-level camera, original fashionable youthful Japanese high school boy, stylish mischievous short teenage boy, compact cute male silhouette, approximately 16 years old, natural 6.3-head-tall youthful male body proportions, noticeably short stature around 148cm, short and compact yet anatomically coherent limbs, petite slender but clearly boyish adolescent physique, shorter limb proportions, clear male shoulder and jaw anatomy, confident charismatic youthful male face with clear boyish bone structure, subtly angular narrow-oval face, defined cheekbones, clean lightly squared jawline, medium-sized slightly narrow almond eyes, muted turquoise-gray irises, expressive single raised eyebrow, confident playful gaze, asymmetrical teasing half-smile, original short layered smoky ash-blond hair with dark taupe roots, airy asymmetric side swept bangs partially revealing forehead, clear ears, stylish youthful playful slightly cocky atmosphere without feminine softness, original near-black deep navy fitted school blazer worn casually open, white collared shirt with slightly relaxed collar, loosened dark burgundy tie, charcoal gray well-fitted straight school trousers, black school loafers, jacket with two matte dark buttons, balanced upright relaxed stance, both arms at sides slightly away from torso, both empty hands fully visible, all fingers naturally separated, clean refined cel-shaded Japanese visual novel character artwork, crisp lineart, correct natural male shoulder and elbow anatomy, restrained fabric folds and coherent lighting, plain warm off-white studio background, complete head and feet visible, centered single full-body illustration, original character face and hairstyle not copied from any existing anime.",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "promptNegative": {
-        "value": "worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy girl, round baby face, oversized round eyes, glassy huge green eyes, chubby cheeks, innocent child, elementary school boy, chibi, 5 or 6 heads tall, huge head, short limbs, infantilized proportions, generic AI pretty girl face, infantile button nose, weak jawline, identical face to existing male leads, copied Roman Carax face or costume, identical anime character design, cybernetic temple implants, futuristic jacket, blonde undercut with futuristic cybernetics, generic reddish brown mushroom hair, black messy center-part hair, thick dark side part, oversized purple blazer, gold buttons, white knit vest, classroom background, double character, two boys, multiple views, split panel, big bust portrait beside body, hands in pockets, crossed arms, holding jacket, holding any prop, phone, camera, weapon, book, missing fingers, hidden hands, malformed arms, distorted shoulders, cropped feet, cropped head, text, logo, watermark.",
+        "value": "worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy girl, round baby face, oversized round eyes, glassy huge green eyes, chubby cheeks, innocent child, elementary school boy, chibi, 4 or 5 heads tall, huge deformed head, stubby infant limbs, infantilized proportions, tall adult body, 170cm or taller silhouette, overly long legs, generic AI pretty girl face, infantile button nose, weak jawline, identical face to existing male leads, copied Roman Carax face or costume, identical anime character design, cybernetic temple implants, futuristic jacket, blonde undercut with futuristic cybernetics, generic reddish brown mushroom hair, black messy center-part hair, thick dark side part, oversized purple blazer, gold buttons, white knit vest, classroom background, double character, two boys, multiple views, split panel, big bust portrait beside body, hands in pockets, crossed arms, holding jacket, holding any prop, phone, camera, weapon, book, missing fingers, hidden hands, malformed arms, distorted shoulders, cropped feet, cropped head, text, logo, watermark.",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "modelVersion": {
         "value": "Anima Base v1.0（当前生成建议，实际版本以用户软件为准）",
@@ -2351,10 +2351,10 @@
         "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
       },
       "anatomicalStylization": {
-        "value": "约7.2头身、约170cm外观的修长原创少年型男性，非幼童",
+        "value": "约6.3头身的身形偏矮正太型高中男生，头占比略高但五官骨相清晰；非小学生、非圆脸女相",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "facialFeatureStylization": {
         "value": "窄杏眼、有颧颌结构、独立鼻梁、轻挑眉与一侧嘴角；不要女相和大圆眼",
@@ -2375,10 +2375,10 @@
         "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
       },
       "poseSilhouetteNotes": {
-        "value": "原始站姿，双手完整空着，肘外留空隙；不抓外套、不持物、不插兜",
+        "value": "正面单人短小男孩身形但服装轮廓完整，双手自然空置、离开躯干且五指可见，头脚不裁切，画布内留白不能用撑满画面假装同样身高",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "framingHeadroomRatio": {
         "value": 0.05,
@@ -2393,10 +2393,10 @@
         "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
       },
       "bodyAlignmentRule": {
-        "value": "实际站位用约170cm提案与男主候选176cm对照；不能凭生成图像绝对锁定身高",
+        "value": "暂按148cm候选与男主176cm候选共享脚底基准，男三身高约为男主84.1%；游戏缩放依据最终批准身高而非画布像素",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       }
     },
     "rigging": {
@@ -2832,10 +2832,10 @@
         "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
       },
       "measurementProvenanceCheck": {
-        "value": "170cm、57kg、7.2头身及各围度均是重新制版提案，非用户确认或原画测量",
+        "value": "148cm、40kg、6.3头身均为响应用户否定160cm方案后的设计候选，未获明确验收；除三项锚点外其他精确围度全部归入未知",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "outfitCheck": {
         "value": "同校近黑深藏蓝外套、白衬衫、松酒红领带、炭灰裤、黑鞋；没有针织背心、金扣或赛博外套",
@@ -2916,16 +2916,16 @@
         "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
       },
       "proposedFields": {
-        "value": "新拟17岁、170cm、57kg、7.2头身、灰亚麻金棕发、灰青杏眼、原创骨相、修身校服及新的故事性格均待用户审核",
+        "value": "新拟16岁、148cm、40kg、6.3头身、发型眼色、服装细节和性格都是未验收美术提案",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "unknownFields": {
-        "value": "真实身高、正式姓名、家庭、生日、年级、剧情确认、正式母图、图像哈希、LoRA和L2D均未定",
+        "value": "真实身高体重、其他人体围度与长度、正式姓名、家庭、剧情、正式图像和L2D均未知",
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "rejectedFields": {
         "value": [
@@ -2951,11 +2951,16 @@
             "date": "2026-11-04",
             "version": "0.2.0",
             "note": "用户更正为潮流花花公子型正太，参考罗曼少年自信气质；448项重新复核、修正冲突值并保留未知项，等待单人原画审核"
+          },
+          {
+            "date": "2026-11-04",
+            "version": "0.2.1",
+            "note": "用户拒绝160cm/偏高少年的正太比例；制版草案修正为148cm、40kg、6.3头身，清除旧170cm版本的无依据围度。仍未批准正式身高。"
           }
         ],
         "status": "proposed",
-        "source": "2026-11-04男三造型重设计提案，未经母图验收",
-        "notes": "V2复核；参考《赛博朋克：边缘行者2》罗曼的清晰少年轮廓与自信气质，不复制官方角色脸、发型、服装或身份"
+        "source": "用户2026-11-04明确否决160cm正太设计；148cm/40kg/6.3头身仅作为新的美术制版候选",
+        "notes": "新制版提案，身高和比例仍待用户验收"
       },
       "authorReviewer": {
         "value": "角色V2由AI提出待用户验收，未宣称官方角色或画面批准",
@@ -2983,21 +2988,20 @@
       }
     }
   },
-  "recordVersion": "0.2.0",
+  "recordVersion": "0.2.1",
   "updatedAt": "2026-11-04",
   "sourceNotes": {
     "confirmedByUser": "CHAR-020男三；潮流花花公子小正太、罗曼式少年自信参考；拒绝女相圆脸旧稿；母版双手空",
-    "notApproved": "包括170cm、57kg、7.2头身、发色眼色、新五官、校服变化、性格、姓名、家庭、故事均为未验收创作候选",
+    "notApproved": "148cm、40kg、6.3头身是新的候选比例，尚未用户最终批准；其他尺码、五官、故事和原画同样未验收",
     "romanReference": "《赛博朋克：边缘行者2》Roman Carax为他人版权角色，只取少年气、洒脱自信与鲜明设计思路，禁止复制具体脸、发型、服装、义体或剧情",
-    "designCorrections": "拒绝旧158cm/6.4头身和大圆眼软娃娃脸；修正为高一点的修长男生骨架、收敛眼睛与棱角下颌；单人全身空手母版",
+    "designCorrections": "用户否定旧158/160/170cm偏高比例，现提议148cm小个子正太，避免偏女性的圆脸大眼、婴儿头身；不照抄罗曼角色外观",
     "nextGate": "用户从Anima单人正面图中选择批准稿→保存完整原图与生成参数/哈希→才补背面与PSD/L2D"
   },
   "fieldCount": 448,
   "statusSummary": {
+    "proposed": 358,
+    "unknown": 78,
     "user_confirmed": 2,
-    "proposed": 390,
-    "unknown": 46,
-    "not_applicable": 10,
-    "rejected": 0
+    "not_applicable": 10
   }
 }
