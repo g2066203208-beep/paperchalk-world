@@ -261,6 +261,49 @@ jobs:
             }
             assert.ok(physical.rightArmCrossTalk<1,
               'right arm must not move from editing left elbow within the same real PNG');
+            // Regression: with the SAME exact source PNGs, the fringe and
+            // skirt visibly travel farther without increasing body breathing.
+            const expressive=await page.evaluate(()=>{
+              const core=window.PaperchalkPartRigCore;
+              const model=window.PaperchalkL2DLibrary.get('player').model;
+              const upgraded=core.sanitizeIdleProfile({
+                preset:'realistic',hair:{amount:.48},cloth:{amount:.34},parts:{}
+              });
+              const custom=core.sanitizeIdleProfile({
+                preset:'custom',hair:{amount:.45},cloth:{amount:.31},
+                parts:{front_hair:.5,skirt:0}
+              });
+              const idle=model.idleProfile;
+              const quiet=JSON.parse(JSON.stringify(idle));
+              quiet.hair.amount=.48;quiet.cloth.amount=.34;quiet.parts={};
+              const travel=(id,u,v,profile)=>{
+                const p=model.parts[id],xs=[],ys=[];
+                for(let i=0;i<=90;i++){
+                  const pt=core.warpPoint(p,u,v,i*.11,null,profile);
+                  xs.push(pt.x);ys.push(pt.y);
+                }
+                return Math.hypot(Math.max(...xs)-Math.min(...xs),
+                  Math.max(...ys)-Math.min(...ys));
+              };
+              return {hairNow:travel('front_hair',.22,.95,idle),
+                hairBefore:travel('front_hair',.22,.95,quiet),
+                skirtNow:travel('skirt',.16,.95,idle),
+                skirtBefore:travel('skirt',.16,.95,quiet),
+                migrated:[upgraded.hair.amount,upgraded.cloth.amount],
+                custom:[custom.hair.amount,custom.cloth.amount,
+                  custom.parts.front_hair,custom.parts.skirt],
+                body:idle.body.amount};
+            });
+            console.log('EXPRESSIVE FRINGE / SKIRT',JSON.stringify(expressive));
+            assert.ok(expressive.hairNow>expressive.hairBefore*1.5,
+              'fringe must visibly move farther than previous idle');
+            assert.ok(expressive.skirtNow>expressive.skirtBefore*1.8,
+              'skirt hem must visibly move farther than previous idle');
+            assert.deepEqual(expressive.migrated,[.85,.82],
+              'unchanged old realistic profile migrates safely');
+            assert.deepEqual(expressive.custom,[.45,.31,.5,0],
+              'custom sliders, including a deliberate zero, remain intact');
+            assert.equal(expressive.body,.18,'torso must retain subtle standing idle');
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','back'));
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===8,{timeout:20000});
             const backBones=await page.evaluate(()=>{
