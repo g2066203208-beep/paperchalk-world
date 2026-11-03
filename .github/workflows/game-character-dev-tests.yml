@@ -242,18 +242,35 @@ jobs:
               assert.ok(localPart.personalised,'game did not load editor artwork into ArtMesh');
               assert.deepEqual(localPart.rgba,[255,49,176,255],
                 'painted source pixel must travel with its own moving hair mesh');
-              // The old 128-frame V4 is a backup, never a permanent replacement.
-              await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('v4'));
-              await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===128,
-                null,{timeout:22000});
-              await page.evaluate(()=>window.PaperchalkCharacterDev.setHeroineRenderer('bones'));
-              await page.waitForFunction(()=>window.PaperchalkL2DLibrary?.get('player')?.layers?.length===17,
-                null,{timeout:25000});
+              // No user-facing V4 mode switching: source clip is a safe backup.
+              const approved=await page.evaluate(()=>{
+                const entries=new Map(window.PaperchalkCharacterDev.characters.map(c=>[c.id,c]));
+                return {main:entries.get('protagonist')?.clips?.front?.frames,
+                  secondary:entries.get('char-002')?.clips?.front?.frames,
+                  secondaryMode:entries.get('char-002')?.l2dModule?.front?.renderer,
+                  duplicate:entries.has('char-002-rig-v1')};
+              });
+              assert.deepEqual(approved,{
+                main:128,secondary:128,secondaryMode:'part-mesh',duplicate:false
+              },'keep original fallback clips and single canonical female-two identity');
               await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','char-002','front'));
-              await page.waitForFunction(()=>window.PaperchalkL2D.get('enemy')?.clip?.count===128,
-                null,{timeout:22000});
+              await page.waitForFunction(()=>
+                window.PaperchalkL2DLibrary?.get('enemy')?.layers?.length===7,
+                null,{timeout:25000});
+              const secondary=await page.evaluate(()=>{
+                const actor=window.PaperchalkL2DLibrary.get('enemy');
+                return {id:actor.model.characterId,
+                  provenance:actor.model.provenance,
+                  names:Object.keys(actor.model.parts),
+                  feetFixed:actor.model.parts.shoes?.parentId==='ground'};
+              });
+              assert.deepEqual(secondary,{
+                id:'char-002-rig-v1',provenance:'derived-region',
+                names:['shoes','legs','skirt','wave_hand','free_hand','head_hair','jacket'],
+                feetFixed:true
+              },'female two must use independent region rig without faking eye or hair layers');
               assert.deepEqual(errors,[],name+' console errors');
-              console.log('PASS original heroine 17 PNG face + eyelid blink, no old breath, sliders save-game, protected V4 and second heroine',name);
+              console.log('PASS 17 real heroine parts + one-click saved art; female two 7 real source regions, protected source V4s',name);
               await page.close();
             }
           }finally{await browser.close();}
