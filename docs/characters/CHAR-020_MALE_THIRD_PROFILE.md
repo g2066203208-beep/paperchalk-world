@@ -1,495 +1,589 @@
-# CHAR-020 男三｜小正太少年型｜448字段完整人物档案
+# CHAR-020 男三｜潮流花花公子型少年｜448字段核对V0.2
 
-> 用户已经指定的是**男三、小正太**，其余全部为未审核候选。CHAR-020旧“田径女生”没有批准过原画或人设，已记录为历史候选。
+> 更新：2026-11-04。**用户确认的是男三正太少年、潮流花花公子气场与罗曼作为审美参考；脸、身高、姓名、剧情和立绘均未验收。** 旧圆脸软萌双人图已否决。此文与 `CHAR-020.profile.json` 同步生成，448字段必须完整存在。
 
-## 人物概述
+## 当前人物方向（创作提案，不是最终官设）
 
-**暂称：林见夏（名字未确认）**。16岁、高一、158cm、46kg、6.4头身均为建议。浅茶棕蓬松短发，一小束翘刘海，灰绿杏圆眼，柔软脸颊和短方圆下巴。清秀可爱却明显是男高中生，初见有点腼腆，熟悉后机灵爱开玩笑。擅长辨听细微声音，可能成为异常事件调查同伴。与已定形象的男主、男二、女三绝不重复五官、发色或演出姿态。
+- **审美参照**：动画《赛博朋克：边缘行者2》的罗曼·卡拉克斯，仅借鉴鲜明少年表现力和自信街头气质，**不复制脸型、义体、服装与标志发型**。
+- **体型草案**：16岁、高约160厘米、约48公斤、**6.8头身**，个子明显低于176厘米男主（若统一尺度约0.91倍），不矮胖、非幼儿化；以上数值均为待用户审定提案。
+- **脸部草案**：短窄六边形少年脸，颧颊偏平、下颌有骨点，中等偏窄青灰绿眼、一侧眉挑起、单侧嘴角略带坏笑；**拒绝大眼圆脸乖巧模板**。
+- **发型草案**：低饱和灰麦金、暗色发根、不对称短层次碎发；明确原创，与罗曼造型以及现有男主/男二/女三不重合。
+- **校服草案**：同校近黑藏蓝西装敞穿、白衬衫、略松暗酒红领带、炭灰长裤、黑校鞋；时髦在穿法和神态，不要乱加赛博朋克衣服。
+- **L2D母版**：纯正面完整单人、手臂自然下垂、双手空着且五指清楚，肩肘腕与躯干保持合乎人体的间距。
+- **当前状态**：无批准正面原画/背面、PSD、Live2D或正式游戏注册。精确面部坐标和无依据人体围度按未知处理，不伪装成测量成果。
 
-**服装候选**：同校深蓝校服外套自然敞开，内搭浅米白V领薄针织背心与白衬衫、略歪的小酒红领带、炭灰长裤、圆头黑鞋；服装不脱离统一校服体系。**用户锁定动作约束**：默认母版双手必须空着，肘与躯干稍留空隙，手掌和手指完整露出；不持物、不插兜、不抱胸、不抓外套。武器作为后续独立游戏装备动作实现。
+## Anima txt2img 正向提示词
 
-**美术状态**：无正背面已验收原画，未制作PSD、分层、Live2D或游戏角色注册。全部数字和人格细节不是用户已确认事实。
+```text
+masterpiece, best quality, score_7, newest, safe, highres, @akipekostyle, <lora:akipekoanima_v1_1:1>, 1boy, solo, one character only, original stylish teenage male student, boyish male appearance, youthful fashionable charming troublemaker, confident flirty playboy-like charisma expressed only as a mischievous grin, mischievous expressive personality, a little cocky, short and slender but anatomically mature teenage proportions, approximately 160 cm tall in character canon, 6.8 heads tall, clearly masculine narrow shoulders and straight hips, small angular-oval male face, subtle cheekbone definition, distinct slightly squared chin, not round cheeked, natural narrow slightly upturned gray-teal eyes of moderate size, sharp upper eyelids, one eyebrow slightly raised, expressive masculine brows, small straight defined nose, thin lips with a one-sided cheeky smirk, bright attentive gaze, warm healthy skin tone, stylish short muted wheat-ash blond hair with darker roots, asymmetrical choppy fringe partially exposing forehead, deliberately tousled structured hair clumps, short clean nape, distinctive original haircut not copied from any existing anime character, fitted near-black dark navy school blazer worn open, crisp masculine shoulder seams, white school shirt with slightly relaxed top button, slightly loose dark burgundy necktie, optional subtle dark charcoal V-neck sweater vest underneath, straight charcoal-gray tailored school trousers, black leather school loafers, clean uniform fabric construction, polished precise Japanese anime visual novel character art, refined detailed linework, professional restrained cel shading with deliberate shadows, subtle well-placed highlights, absolutely front facing, centered full body, eye-level camera, neutral natural standing pose, head straight, torso straight, feet naturally together, both arms hanging relaxed at either side with small gaps from body, hands completely visible and EMPTY with five anatomically correct fingers each, no object held, clean white studio background, generous room above head and below shoes, entire character visible
+```
 
-## 逐字段档案（22类 × 448项）
+## Anima txt2img 负向提示词
 
-| # | 字段 | 设计值 | 状态 |
+```text
+worst quality, low quality, blurry, 1girl, female, overly feminine boy, baby face, doll face, round cheeks, puffy cheeks, soft cute round face, overly large round glassy eyes, giant irises, long eyelashes, glossy pink lips, little child, toddler, chibi, oversized head, tiny legs, infant proportions, identical cloned characters, two boys, duo, side-by-side comparison, duplicate person, brown round fluffy bowl cut, brown hair, bright saturated emerald eyes, cybernetic implants, futuristic jacket, replica of Roman Carax, exact anime character copy, cosplay of existing copyrighted character, serious melancholic cold male lead face, shy bashful smile, timid downward gaze, childish sweet grin, huge shoulders, muscular adult, elderly, schoolgirl uniform, skirt, casual hoodie, missing school blazer, missing necktie, bright blue blazer, purple blazer, golden oversized buttons, baggy oversized jacket, messy random outfit, hands in pockets, hands behind back, crossed arms, holding weapon, holding phone, holding book, carrying jacket, hands touching collar, hands hidden, broken anatomy, extra fingers, fused fingers, malformed hands, stiff asymmetrical body, dramatic action, walking, lunging, jumping, tilted head, side view, three quarter view, cropped shoes, cropped head, scene background, buildings, floor tiles, text, watermark
+```
+
+## 完整448字段（依照 CHARACTER_FIELD_SCHEMA_V2.json）
+
+### 身份与编号（identity，17项）
+
+| # | 字段 | 值 | 状态 |
 |---:|---|---|---|
-| **身份** | **identity** | **17字段** | |
-| 1 | `identity.recordCode` | CHAR-020 | 候选 |
-| 2 | `identity.canonicalId` | male-third-youthful-candidate | 候选 |
-| 3 | `identity.displayName` | 男三／小正太系少年，暂称林见夏 | 候选 |
-| 4 | `identity.legalName` | 待定 | 未知 |
-| 5 | `identity.nicknames` | ["小夏","见夏"] | 候选 |
-| 6 | `identity.aliases` | ["男三","小正太少年"] | 候选 |
-| 7 | `identity.pronouns` | 他 | 候选 |
-| 8 | `identity.genderPresentation` | 男生，清秀少年感 | 用户方向 |
-| 9 | `identity.ageYears` | 16 | 候选 |
-| 10 | `identity.birthDate` | 待定 | 未知 |
-| 11 | `identity.birthplace` | 待定 | 未知 |
-| 12 | `identity.currentResidence` | 待定 | 未知 |
-| 13 | `identity.era` | 当代架空都市 | 候选 |
-| 14 | `identity.occupation` | 高中生 | 候选 |
-| 15 | `identity.schoolYear` | 高一（提案） | 候选 |
-| 16 | `identity.storyRole` | 男三 | 用户方向 |
-| 17 | `identity.designStatus` | 仅448项创作候选，不代表原画、背面、PSD、L2D或游戏上线 | 候选 |
-| **家庭** | **family** | **10字段** | |
-| 18 | `family.parents` | 待定 | 未知 |
-| 19 | `family.guardians` | 待定 | 未知 |
-| 20 | `family.siblings` | 待定 | 未知 |
-| 21 | `family.relatives` | 待定 | 未知 |
-| 22 | `family.familyStructure` | 待定 | 未知 |
-| 23 | `family.childhoodEvents` | 待定 | 未知 |
-| 24 | `family.upbringing` | 候选：从小被教导礼貌和认真倾听 | 候选 |
-| 25 | `family.householdMembers` | 待定 | 未知 |
-| 26 | `family.livingSituation` | 待定 | 未知 |
-| 27 | `family.socioeconomicBackground` | 待定 | 未知 |
-| **教育** | **education** | **11字段** | |
-| 28 | `education.school` | 和女主同校，校名暂不固定 | 候选 |
-| 29 | `education.className` | 高一班级未定 | 候选 |
-| 30 | `education.club` | 校园广播站音效组（候选） | 候选 |
-| 31 | `education.grades` | 整体中上，偏重听觉记忆 | 候选 |
-| 32 | `education.subjectStrengths` | ["语言听辨","节奏识别","基础数学"] | 候选 |
-| 33 | `education.subjectWeaknesses` | ["大型体育项目","即兴当众陈述"] | 候选 |
+| 1 | `identity.recordCode` | CHAR-020 | 待验收设计候选 |
+| 2 | `identity.canonicalId` | male-third-fashionable-youth-candidate | 待验收设计候选 |
+| 3 | `identity.displayName` | 男三｜潮流花花公子型少年（原创；罗曼仅作气质参考） | 待验收设计候选 |
+| 4 | `identity.legalName` | 待定 | 未知 / 待核实 |
+| 5 | `identity.nicknames` | 待定 | 未知 / 待核实 |
+| 6 | `identity.aliases` | ["男三","潮流少年","花花公子气质的俊俏男生"] | 用户确认方向 |
+| 7 | `identity.pronouns` | 他 | 待验收设计候选 |
+| 8 | `identity.genderPresentation` | 少年感、明显男性的正太型男高中生；气质时髦、自信、顽皮 | 用户确认方向 |
+| 9 | `identity.ageYears` | 16 | 待验收设计候选 |
+| 10 | `identity.birthDate` | 待定 | 未知 / 待核实 |
+| 11 | `identity.birthplace` | 待定 | 未知 / 待核实 |
+| 12 | `identity.currentResidence` | 待定 | 未知 / 待核实 |
+| 13 | `identity.era` | 当代架空都市 | 待验收设计候选 |
+| 14 | `identity.occupation` | 高中生 | 待验收设计候选 |
+| 15 | `identity.schoolYear` | 同校高中生（年级待定） | 待验收设计候选 |
+| 16 | `identity.storyRole` | 男三 | 用户确认方向 |
+| 17 | `identity.designStatus` | 人物方向已修订；正面母图、背面、PSD、L2D、游戏注册均未通过验收 | 待验收设计候选 |
+
+### 家庭成长（family，10项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 18 | `family.parents` | 待定 | 未知 / 待核实 |
+| 19 | `family.guardians` | 待定 | 未知 / 待核实 |
+| 20 | `family.siblings` | 待定 | 未知 / 待核实 |
+| 21 | `family.relatives` | 待定 | 未知 / 待核实 |
+| 22 | `family.familyStructure` | 待定 | 未知 / 待核实 |
+| 23 | `family.childhoodEvents` | 待定 | 未知 / 待核实 |
+| 24 | `family.upbringing` | 候选：从小被教导礼貌和认真倾听 | 待验收设计候选 |
+| 25 | `family.householdMembers` | 待定 | 未知 / 待核实 |
+| 26 | `family.livingSituation` | 待定 | 未知 / 待核实 |
+| 27 | `family.socioeconomicBackground` | 待定 | 未知 / 待核实 |
+
+### 教育职业（education，11项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 28 | `education.school` | 和女主同校，校名暂不固定 | 待验收设计候选 |
+| 29 | `education.className` | 高一班级未定 | 待验收设计候选 |
+| 30 | `education.club` | 待定 | 未知 / 待核实 |
+| 31 | `education.grades` | 整体中上，偏重听觉记忆 | 待验收设计候选 |
+| 32 | `education.subjectStrengths` | 待定 | 未知 / 待核实 |
+| 33 | `education.subjectWeaknesses` | 待定 | 未知 / 待核实 |
 | 34 | `education.workplace` | 待定 | 不适用 |
-| 35 | `education.jobTitle` | 学生 | 候选 |
+| 35 | `education.jobTitle` | 学生 | 待验收设计候选 |
 | 36 | `education.salaryRange` | 待定 | 不适用 |
-| 37 | `education.experience` | 会基础录音和音效剪辑（候选） | 候选 |
-| 38 | `education.professionalGoals` | 希望制作自己的声音故事（候选） | 候选 |
-| **体型** | **measurements** | **40字段** | |
-| 39 | `measurements.heightCm` | 158 | 候选 |
-| 40 | `measurements.weightKg` | 46 | 候选 |
-| 41 | `measurements.headBodyRatio` | 6.4 | 候选 |
-| 42 | `measurements.shoulderWidthCm` | 36 | 候选 |
-| 43 | `measurements.chestCircumferenceCm` | 77 | 候选 |
-| 44 | `measurements.waistCircumferenceCm` | 66 | 候选 |
-| 45 | `measurements.hipCircumferenceCm` | 80 | 候选 |
-| 46 | `measurements.torsoLengthCm` | 44 | 候选 |
-| 47 | `measurements.armSpanCm` | 155 | 候选 |
-| 48 | `measurements.inseamCm` | 72 | 候选 |
-| 49 | `measurements.shoeSize` | CN 38–39，未测量 | 候选 |
-| 50 | `measurements.bodyBuild` | 骨架略小、自然纤细、健康的少年体态 | 候选 |
-| 51 | `measurements.bodyMassDescription` | 轻度肌肉感，非女童也非肌肉型成年男性 | 候选 |
-| 52 | `measurements.posture` | 肩部松弛，左腿自然承重 | 候选 |
-| 53 | `measurements.handDominance` | 右手惯用（提案） | 候选 |
-| 54 | `measurements.gait` | 步幅小，脚步轻快 | 候选 |
-| 55 | `measurements.upperArmCircumferenceCm` | 22 | 候选 |
-| 56 | `measurements.forearmCircumferenceCm` | 20 | 候选 |
-| 57 | `measurements.wristCircumferenceCm` | 14.4 | 候选 |
-| 58 | `measurements.thighCircumferenceCm` | 43 | 候选 |
-| 59 | `measurements.calfCircumferenceCm` | 30 | 候选 |
-| 60 | `measurements.kneeCircumferenceCm` | 31 | 候选 |
-| 61 | `measurements.ankleCircumferenceCm` | 19 | 候选 |
-| 62 | `measurements.upperArmLengthCm` | 27 | 候选 |
-| 63 | `measurements.forearmLengthCm` | 23.5 | 候选 |
-| 64 | `measurements.handLengthCm` | 17.2 | 候选 |
-| 65 | `measurements.palmWidthCm` | 7.3 | 候选 |
-| 66 | `measurements.upperLegLengthCm` | 39.5 | 候选 |
-| 67 | `measurements.lowerLegLengthCm` | 36.5 | 候选 |
-| 68 | `measurements.kneeHeightCm` | 45 | 候选 |
-| 69 | `measurements.hipBreadthCm` | 30 | 候选 |
-| 70 | `measurements.shoulderBreadthCm` | 36 | 候选 |
-| 71 | `measurements.waistHeightCm` | 95 | 候选 |
-| 72 | `measurements.ribcageDepthCm` | 18 | 候选 |
-| 73 | `measurements.hipDepthCm` | 18 | 候选 |
-| 74 | `measurements.headWidthCm` | 14.8 | 候选 |
-| 75 | `measurements.faceLengthCm` | 19.4 | 候选 |
-| 76 | `measurements.faceWidthCm` | 14.1 | 候选 |
-| 77 | `measurements.footLengthCm` | 23.8 | 候选 |
-| 78 | `measurements.footWidthCm` | 9.1 | 候选 |
-| **骨架** | **anatomy** | **37字段** | |
-| 79 | `anatomy.headShape` | 短鹅蛋形头骨，略圆不幼儿化 | 候选 |
-| 80 | `anatomy.shoulderSlope` | 自然向下约6度 | 候选 |
-| 81 | `anatomy.torsoDepth` | 上身自然轻薄且有体积 | 候选 |
-| 82 | `anatomy.ribcageContour` | 制服内正常少年胸廓 | 候选 |
-| 83 | `anatomy.waistContour` | 直线型腰身，外套留松量 | 候选 |
-| 84 | `anatomy.pelvisAndHips` | 自然窄骨盆视觉比例 | 候选 |
-| 85 | `anatomy.backContour` | 颈背平直，后衣片有轻褶 | 候选 |
-| 86 | `anatomy.bustThroughClothing` | 男生平坦衬衫胸前轮廓 | 候选 |
-| 87 | `anatomy.limbProportions` | 四肢自然匀称而非儿童四头身 | 候选 |
-| 88 | `anatomy.handShape` | 小巧但结构完整、指尖略圆 | 候选 |
-| 89 | `anatomy.skinUndertone` | 温暖偏中性浅肤色 | 候选 |
-| 90 | `anatomy.skinTexture` | 干净块面，不用塑料皮肤 | 候选 |
-| 91 | `anatomy.scars` | 待定 | 未知 |
-| 92 | `anatomy.birthmarks` | 待定 | 未知 |
-| 93 | `anatomy.moles` | 不预设标志性痣 | 候选 |
-| 94 | `anatomy.freckles` | 不靠随机雀斑强化可爱 | 候选 |
-| 95 | `anatomy.postureAsymmetry` | 左腿承重、右膝放松、头右倾3度 | 候选 |
-| 96 | `anatomy.mobilityNeeds` | 待定 | 未知 |
-| 97 | `anatomy.upperArmShape` | 上臂细但不骨感 | 候选 |
-| 98 | `anatomy.forearmShape` | 前臂自然向腕部收束 | 候选 |
-| 99 | `anatomy.wristShape` | 腕骨柔和可辨 | 候选 |
-| 100 | `anatomy.thighShape` | 大腿匀称，非专业短跑腿型 | 候选 |
-| 101 | `anatomy.calfShape` | 小腿自然纤细 | 候选 |
-| 102 | `anatomy.kneeShape` | 膝关节结构清楚 | 候选 |
-| 103 | `anatomy.ankleShape` | 踝部细、鞋袜分界明确 | 候选 |
-| 104 | `anatomy.legAxis` | 腿轴自然平直，足尖微向外 | 候选 |
-| 105 | `anatomy.upperLimbTaper` | 肩肘腕顺畅过渡 | 候选 |
-| 106 | `anatomy.lowerLimbTaper` | 直筒裤保留腿部体积 | 候选 |
-| 107 | `anatomy.legMuscleDistribution` | 普通青少年步行形成的轻度肌肉 | 候选 |
-| 108 | `anatomy.armMuscleDistribution` | 普通少年手臂，不夸张肌肉 | 候选 |
-| 109 | `anatomy.pelvisTilt` | 中性略倾，便于待机 | 候选 |
-| 110 | `anatomy.spinalCurve` | 自然生理弧度 | 候选 |
-| 111 | `anatomy.handFingerLengthRatios` | [1,0.94,0.96,0.74,0.69] | 候选 |
-| 112 | `anatomy.bodySilhouetteType` | 小体型少年直线轮廓，外套略宽松 | 候选 |
-| 113 | `anatomy.shoulderToHipWidthRatio` | 1.2 | 候选 |
-| 114 | `anatomy.waistToHipWidthRatio` | 0.86 | 候选 |
-| 115 | `anatomy.headToShoulderWidthRatio` | 0.411 | 候选 |
-| **面容** | **face** | **46字段** | |
-| 116 | `face.faceShape` | 圆润短鹅蛋脸，和女二、女三有不同眉眼骨相 | 候选 |
-| 117 | `face.forehead` | 额头稍高，被轻刘海遮住部分 | 候选 |
-| 118 | `face.cheekbones` | 颧骨平缓、颊部轻微饱满 | 候选 |
-| 119 | `face.jawline` | 自然微收，保留少年短方圆下颌 | 候选 |
-| 120 | `face.chin` | 短而略方圆，不尖V | 候选 |
-| 121 | `face.noseBridge` | 小巧细直鼻梁 | 候选 |
-| 122 | `face.noseTip` | 圆润短鼻尖 | 候选 |
-| 123 | `face.mouthShape` | 小嘴，微笑时一侧形成浅酒窝 | 候选 |
-| 124 | `face.lips` | 薄唇，不涂口红 | 候选 |
-| 125 | `face.teeth` | 默认闭口；开怀笑可露自然上齿 | 候选 |
-| 126 | `face.ears` | 小耳廓，右耳部分有碎发遮盖 | 候选 |
-| 127 | `face.eyebrows` | 较短的自然平眉，外端略柔和下落 | 候选 |
-| 128 | `face.eyelidShape` | 上睑温柔的弧形 | 候选 |
-| 129 | `face.eyeShape` | 灰绿杏圆眼，横向略长而非超大玻璃眼 | 候选 |
-| 130 | `face.eyeSpacing` | 眼距中等微宽 | 候选 |
-| 131 | `face.eyeCornerAngle` | 外眼角比内眼角略低 | 候选 |
-| 132 | `face.eyeColor` | 低饱和灰绿色 | 候选 |
-| 133 | `face.eyeHex` | #788977 | 候选 |
-| 134 | `face.pupilColor` | #35463D | 候选 |
-| 135 | `face.eyeHighlights` | 一个中小主高光 | 候选 |
-| 136 | `face.eyelashes` | 克制短睫毛 | 候选 |
-| 137 | `face.defaultExpression` | 温柔又好奇的小幅闭口笑 | 候选 |
-| 138 | `face.facialLandmarkSystem` | 脸部包围盒坐标[0,1]，仅为未验收的视觉草图 | 候选 |
-| 139 | `face.facialLandmarksNormalized` | {"leftEye":[0.35,0.45],"rightEye":[0.65,0.455],"nose":[0.5,0.655],"mouth":[0.5,0.765],"chin":[0.5,0.99]} | 候选 |
-| 140 | `face.faceLengthToWidthRatio` | 1.38 | 候选 |
-| 141 | `face.foreheadToFaceHeightRatio` | 0.31 | 候选 |
-| 142 | `face.jawWidthToFaceWidthRatio` | 0.72 | 候选 |
-| 143 | `face.cheekboneWidthToFaceWidthRatio` | 0.94 | 候选 |
-| 144 | `face.eyeCenterHeightRatio` | 0.45 | 候选 |
-| 145 | `face.interocularSpacingRatio` | 0.3 | 候选 |
-| 146 | `face.eyeWidthToFaceWidthRatio` | 0.22 | 候选 |
-| 147 | `face.eyebrowEyeGapRatio` | 0.065 | 候选 |
-| 148 | `face.noseTopHeightRatio` | 0.53 | 候选 |
-| 149 | `face.noseTipHeightRatio` | 0.655 | 候选 |
-| 150 | `face.noseWidthToFaceWidthRatio` | 0.1 | 候选 |
-| 151 | `face.mouthCenterHeightRatio` | 0.765 | 候选 |
-| 152 | `face.mouthWidthToFaceWidthRatio` | 0.3 | 候选 |
-| 153 | `face.philtrumLengthRatio` | 0.075 | 候选 |
-| 154 | `face.earTopHeightRatio` | 0.4 | 候选 |
-| 155 | `face.earBottomHeightRatio` | 0.67 | 候选 |
-| 156 | `face.eyeTailSlantDeg` | -2 | 候选 |
-| 157 | `face.eyelidOpennessBaseline` | 0.68 | 候选 |
-| 158 | `face.lipCornerSlopeDeg` | 2 | 候选 |
-| 159 | `face.browAngleDeg` | -1 | 候选 |
-| 160 | `face.expressionLandmarkVariants` | {"smile":"嘴角柔和抬起，浅酒窝","serious":"下眼睑轻收，嘴角水平","surprised":"眉稍抬、眼睑睁大","shy":"目光略避开，嘴角收束"} | 候选 |
-| 161 | `face.noseToMouthDistanceRatio` | 0.11 | 候选 |
-| **头发** | **hair** | **16字段** | |
-| 162 | `hair.hairBaseColor` | 低饱和浅茶棕、暖灰栗棕 | 候选 |
-| 163 | `hair.hairHex` | #957867 | 候选 |
-| 164 | `hair.hairHighlights` | #B09A82 | 候选 |
-| 165 | `hair.hairLength` | 耳上至耳中的短层次碎发 | 候选 |
-| 166 | `hair.hairTexture` | 蓬松柔软、有空气感 | 候选 |
-| 167 | `hair.hairDensity` | 中等密度 | 候选 |
-| 168 | `hair.parting` | 人物左偏7:3自然分发 | 候选 |
-| 169 | `hair.bangs` | 4–5束轻刘海，额前一小束不听话地翘起 | 候选 |
-| 170 | `hair.sidelocks` | 耳畔碎发不对称，右边一缕稍翘 | 候选 |
-| 171 | `hair.ponytailCount` | 0 | 候选 |
+| 37 | `education.experience` | 待定 | 未知 / 待核实 |
+| 38 | `education.professionalGoals` | 待定 | 未知 / 待核实 |
+
+### 体型尺码（measurements，40项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 39 | `measurements.heightCm` | 160 | 待验收设计候选 |
+| 40 | `measurements.weightKg` | 48 | 待验收设计候选 |
+| 41 | `measurements.headBodyRatio` | 6.8 | 待验收设计候选 |
+| 42 | `measurements.shoulderWidthCm` | 待定 | 未知 / 待核实 |
+| 43 | `measurements.chestCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 44 | `measurements.waistCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 45 | `measurements.hipCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 46 | `measurements.torsoLengthCm` | 待定 | 未知 / 待核实 |
+| 47 | `measurements.armSpanCm` | 待定 | 未知 / 待核实 |
+| 48 | `measurements.inseamCm` | 待定 | 未知 / 待核实 |
+| 49 | `measurements.shoeSize` | 待定 | 未知 / 待核实 |
+| 50 | `measurements.bodyBuild` | 略矮于成年高中男生，比例匀称，偏瘦但有自然的男性肩颈线，不是矮胖娃娃体形 | 待验收设计候选 |
+| 51 | `measurements.bodyMassDescription` | 体型轻巧利落，肩背不过宽也不娘化，无幼儿比例 | 待验收设计候选 |
+| 52 | `measurements.posture` | 背部自然挺直但带一点漫不经心的自信，骨盆不歪，足底平行 | 待验收设计候选 |
+| 53 | `measurements.handDominance` | 待定 | 未知 / 待核实 |
+| 54 | `measurements.gait` | 动作轻快，步伐利落，有街头潮流感，不用大跨步 | 待验收设计候选 |
+| 55 | `measurements.upperArmCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 56 | `measurements.forearmCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 57 | `measurements.wristCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 58 | `measurements.thighCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 59 | `measurements.calfCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 60 | `measurements.kneeCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 61 | `measurements.ankleCircumferenceCm` | 待定 | 未知 / 待核实 |
+| 62 | `measurements.upperArmLengthCm` | 待定 | 未知 / 待核实 |
+| 63 | `measurements.forearmLengthCm` | 待定 | 未知 / 待核实 |
+| 64 | `measurements.handLengthCm` | 待定 | 未知 / 待核实 |
+| 65 | `measurements.palmWidthCm` | 待定 | 未知 / 待核实 |
+| 66 | `measurements.upperLegLengthCm` | 待定 | 未知 / 待核实 |
+| 67 | `measurements.lowerLegLengthCm` | 待定 | 未知 / 待核实 |
+| 68 | `measurements.kneeHeightCm` | 待定 | 未知 / 待核实 |
+| 69 | `measurements.hipBreadthCm` | 待定 | 未知 / 待核实 |
+| 70 | `measurements.shoulderBreadthCm` | 待定 | 未知 / 待核实 |
+| 71 | `measurements.waistHeightCm` | 待定 | 未知 / 待核实 |
+| 72 | `measurements.ribcageDepthCm` | 待定 | 未知 / 待核实 |
+| 73 | `measurements.hipDepthCm` | 待定 | 未知 / 待核实 |
+| 74 | `measurements.headWidthCm` | 待定 | 未知 / 待核实 |
+| 75 | `measurements.faceLengthCm` | 待定 | 未知 / 待核实 |
+| 76 | `measurements.faceWidthCm` | 待定 | 未知 / 待核实 |
+| 77 | `measurements.footLengthCm` | 待定 | 未知 / 待核实 |
+| 78 | `measurements.footWidthCm` | 待定 | 未知 / 待核实 |
+
+### 骨架体表（anatomy，37项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 79 | `anatomy.headShape` | 偏小的窄椭圆少年头骨；颧颊收紧，绝不圆球娃娃头 | 待验收设计候选 |
+| 80 | `anatomy.shoulderSlope` | 自然男性肩线，轻微下斜，不塌肩 | 待验收设计候选 |
+| 81 | `anatomy.torsoDepth` | 偏轻薄但有正常少年胸廓 | 待验收设计候选 |
+| 82 | `anatomy.ribcageContour` | 制服下的少年男性平整胸廓，肋廓体积明确 | 待验收设计候选 |
+| 83 | `anatomy.waistContour` | 略收束的直线型男性腰部 | 待验收设计候选 |
+| 84 | `anatomy.pelvisAndHips` | 窄骨盆，骨架不刻意女性化 | 待验收设计候选 |
+| 85 | `anatomy.backContour` | 肩背平顺，校服后衣片少量自然褶皱 | 待验收设计候选 |
+| 86 | `anatomy.bustThroughClothing` | 男生平坦衬衫胸前轮廓 | 待验收设计候选 |
+| 87 | `anatomy.limbProportions` | 约6.8头身的真实少年四肢比例，腿不故意拉长，不是幼儿童身 | 待验收设计候选 |
+| 88 | `anatomy.handShape` | 少年男生稍窄的掌形，手指骨节明确，十指自然完整 | 待验收设计候选 |
+| 89 | `anatomy.skinUndertone` | 健康自然浅暖肤色，不粉红娃娃皮 | 待验收设计候选 |
+| 90 | `anatomy.skinTexture` | 干净赛璐璐明暗，脸颊不过分粉嫩 | 待验收设计候选 |
+| 91 | `anatomy.scars` | 待定 | 未知 / 待核实 |
+| 92 | `anatomy.birthmarks` | 待定 | 未知 / 待核实 |
+| 93 | `anatomy.moles` | 不预设标志性痣 | 待验收设计候选 |
+| 94 | `anatomy.freckles` | 不靠随机雀斑强化可爱 | 待验收设计候选 |
+| 95 | `anatomy.postureAsymmetry` | 纯正面中立站姿，轻微松弛，不倾头、不扭腰 | 待验收设计候选 |
+| 96 | `anatomy.mobilityNeeds` | 待定 | 未知 / 待核实 |
+| 97 | `anatomy.upperArmShape` | 上臂略瘦但骨骼正常 | 待验收设计候选 |
+| 98 | `anatomy.forearmShape` | 肘到腕自然收束的少年男性前臂 | 待验收设计候选 |
+| 99 | `anatomy.wristShape` | 纤细但明显的腕骨 | 待验收设计候选 |
+| 100 | `anatomy.thighShape` | 自然匀称，裤装不画成女性大腿线条 | 待验收设计候选 |
+| 101 | `anatomy.calfShape` | 裤管有合理膝踝宽度 | 待验收设计候选 |
+| 102 | `anatomy.kneeShape` | 校裤下膝部自然结构 | 待验收设计候选 |
+| 103 | `anatomy.ankleShape` | 鞋裤交界清楚 | 待验收设计候选 |
+| 104 | `anatomy.legAxis` | 腿轴自然平直，足尖微向外 | 待验收设计候选 |
+| 105 | `anatomy.upperLimbTaper` | 双臂有自然的肩肘腕递进 | 待验收设计候选 |
+| 106 | `anatomy.lowerLimbTaper` | 腿部比例接近正常男性少年，裤管贴合骨骼 | 待验收设计候选 |
+| 107 | `anatomy.legMuscleDistribution` | 普通青少年步行形成的轻度肌肉 | 待验收设计候选 |
+| 108 | `anatomy.armMuscleDistribution` | 普通少年手臂，不夸张肌肉 | 待验收设计候选 |
+| 109 | `anatomy.pelvisTilt` | 中性略倾，便于待机 | 待验收设计候选 |
+| 110 | `anatomy.spinalCurve` | 自然生理弧度 | 待验收设计候选 |
+| 111 | `anatomy.handFingerLengthRatios` | 待定 | 未知 / 待核实 |
+| 112 | `anatomy.bodySilhouetteType` | 小个子、轻巧利落的修身男高中生体形，衣服有明确肩线 | 待验收设计候选 |
+| 113 | `anatomy.shoulderToHipWidthRatio` | 待定 | 未知 / 待核实 |
+| 114 | `anatomy.waistToHipWidthRatio` | 待定 | 未知 / 待核实 |
+| 115 | `anatomy.headToShoulderWidthRatio` | 待定 | 未知 / 待核实 |
+
+### 面部五官（face，46项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 116 | `face.faceShape` | 窄短六边形少年脸，颧侧轻收、面颊平整，区别于圆脸杏眼模板 | 待验收设计候选 |
+| 117 | `face.forehead` | 额头大小正常，被不对称碎刘海局部遮挡 | 待验收设计候选 |
+| 118 | `face.cheekbones` | 少年感的清晰浅颧骨，脸颊不鼓 | 待验收设计候选 |
+| 119 | `face.jawline` | 有骨点的短直下颌线，不尖V、不圆球 | 待验收设计候选 |
+| 120 | `face.chin` | 短而平缓略方的少年男生下巴 | 待验收设计候选 |
+| 121 | `face.noseBridge` | 细直略挺的鼻梁，正面有存在感 | 待验收设计候选 |
+| 122 | `face.noseTip` | 清晰小鼻尖，不是幼儿小圆鼻 | 待验收设计候选 |
+| 123 | `face.mouthShape` | 一边嘴角略上挑的狡黠自信笑，非甜美双侧弧形 | 待验收设计候选 |
+| 124 | `face.lips` | 细薄自然唇，去除粉色光泽和嘟嘴 | 待验收设计候选 |
+| 125 | `face.teeth` | 默认闭口；开怀笑可露自然上齿 | 待验收设计候选 |
+| 126 | `face.ears` | 小耳廓，右耳部分有碎发遮盖 | 待验收设计候选 |
+| 127 | `face.eyebrows` | 略粗而有折角的自然少年眉，一侧微挑 | 待验收设计候选 |
+| 128 | `face.eyelidShape` | 上眼睑干净利落、眼尾轻微上扬 | 待验收设计候选 |
+| 129 | `face.eyeShape` | 中等大小的略窄杏眼，眼神敏捷带一点狡黠；不画圆形大眼 | 待验收设计候选 |
+| 130 | `face.eyeSpacing` | 正常眼距，不刻意拉宽作娃娃感 | 待验收设计候选 |
+| 131 | `face.eyeCornerAngle` | 外眼角自然轻扬，产生狡黠感 | 待验收设计候选 |
+| 132 | `face.eyeColor` | 低饱和青灰绿，非罗曼的鲜亮荧光绿 | 待验收设计候选 |
+| 133 | `face.eyeHex` | #6E8E8A | 待验收设计候选 |
+| 134 | `face.pupilColor` | #273E40 | 待验收设计候选 |
+| 135 | `face.eyeHighlights` | 单个克制的小高光，绝不玻璃珠眼 | 待验收设计候选 |
+| 136 | `face.eyelashes` | 短少、不女性化的睫毛 | 待验收设计候选 |
+| 137 | `face.defaultExpression` | 自信、略带得意的一侧嘴角微笑，眉眼轻挑，像很会聊天的坏小子 | 待验收设计候选 |
+| 138 | `face.facialLandmarkSystem` | 脸部包围盒坐标[0,1]，仅为未验收的视觉草图 | 待验收设计候选 |
+| 139 | `face.facialLandmarksNormalized` | 待定 | 未知 / 待核实 |
+| 140 | `face.faceLengthToWidthRatio` | 待定 | 未知 / 待核实 |
+| 141 | `face.foreheadToFaceHeightRatio` | 待定 | 未知 / 待核实 |
+| 142 | `face.jawWidthToFaceWidthRatio` | 待定 | 未知 / 待核实 |
+| 143 | `face.cheekboneWidthToFaceWidthRatio` | 待定 | 未知 / 待核实 |
+| 144 | `face.eyeCenterHeightRatio` | 待定 | 未知 / 待核实 |
+| 145 | `face.interocularSpacingRatio` | 待定 | 未知 / 待核实 |
+| 146 | `face.eyeWidthToFaceWidthRatio` | 待定 | 未知 / 待核实 |
+| 147 | `face.eyebrowEyeGapRatio` | 待定 | 未知 / 待核实 |
+| 148 | `face.noseTopHeightRatio` | 待定 | 未知 / 待核实 |
+| 149 | `face.noseTipHeightRatio` | 待定 | 未知 / 待核实 |
+| 150 | `face.noseWidthToFaceWidthRatio` | 待定 | 未知 / 待核实 |
+| 151 | `face.mouthCenterHeightRatio` | 待定 | 未知 / 待核实 |
+| 152 | `face.mouthWidthToFaceWidthRatio` | 待定 | 未知 / 待核实 |
+| 153 | `face.philtrumLengthRatio` | 待定 | 未知 / 待核实 |
+| 154 | `face.earTopHeightRatio` | 待定 | 未知 / 待核实 |
+| 155 | `face.earBottomHeightRatio` | 待定 | 未知 / 待核实 |
+| 156 | `face.eyeTailSlantDeg` | 待定 | 未知 / 待核实 |
+| 157 | `face.eyelidOpennessBaseline` | 0.68 | 待验收设计候选 |
+| 158 | `face.lipCornerSlopeDeg` | 待定 | 未知 / 待核实 |
+| 159 | `face.browAngleDeg` | 待定 | 未知 / 待核实 |
+| 160 | `face.expressionLandmarkVariants` | {"smile":"单边嘴角得意上扬，眼神含笑","serious":"眉放平，嘴角收住","surprised":"眼睑稍开、眉起","flirtatious":"带分寸的调皮挑眉与轻笑，不做成人化性感表情"} | 待验收设计候选 |
+| 161 | `face.noseToMouthDistanceRatio` | 待定 | 未知 / 待核实 |
+
+### 头发识别（hair，16项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 162 | `hair.hairBaseColor` | 灰麦金色偏冷的短发，根部深亚麻色，发梢浅金灰；与罗曼的金发区别在低饱和及形状 | 待验收设计候选 |
+| 163 | `hair.hairHex` | #B7A080 | 待验收设计候选 |
+| 164 | `hair.hairHighlights` | #D7C49F | 待验收设计候选 |
+| 165 | `hair.hairLength` | 耳上到耳中不对称短碎发，颈后干净利落 | 待验收设计候选 |
+| 166 | `hair.hairTexture` | 略硬的束状碎发，造型有锐度，不是软绵绵蓬松球 | 待验收设计候选 |
+| 167 | `hair.hairDensity` | 中等发量，头顶轻盈而不膨胀 | 待验收设计候选 |
+| 168 | `hair.parting` | 侧偏分，眉上碎刘海有方向性 | 待验收设计候选 |
+| 169 | `hair.bangs` | 不对称侧分碎刘海，一束越过眉心，其余露出额头 | 待验收设计候选 |
+| 170 | `hair.sidelocks` | 一侧耳上修短，另一侧保留少量角状碎发 | 待验收设计候选 |
+| 171 | `hair.ponytailCount` | 0 | 待验收设计候选 |
 | 172 | `hair.ponytailPosition` | 待定 | 不适用 |
 | 173 | `hair.ponytailLength` | 待定 | 不适用 |
-| 174 | `hair.hairAccessories` | 无固定发饰 | 候选 |
+| 174 | `hair.hairAccessories` | 无固定发饰 | 待验收设计候选 |
 | 175 | `hair.accessorySide` | 待定 | 不适用 |
 | 176 | `hair.accessoryPosition` | 待定 | 不适用 |
-| 177 | `hair.backSilhouette` | 圆润后脑＋轻薄碎发后颈 | 候选 |
-| **校服** | **wardrobe** | **20字段** | |
-| 178 | `wardrobe.outerwear` | 同校深蓝单排扣制服外套，尺寸比身体略宽松，前襟自然敞开以露出独特针织背心；不是手拎、肩扛或双手撑开的外套 | 候选 |
-| 179 | `wardrobe.shirt` | 白色翻领长袖衬衫，外穿浅米白V领针织背心，白领与酒红领带从V口露出；衬衫袖口不遮挡手掌手指 | 候选 |
+| 177 | `hair.backSilhouette` | 有层次的短后脑外轮廓，后颈利落，无超大圆形发团 | 待验收设计候选 |
+
+### 服装形象（wardrobe，20项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 178 | `wardrobe.outerwear` | 同校近黑深藏蓝修身西装校服，西装敞开穿，肩线清晰；袖口略收、有自然生活感 | 待验收设计候选 |
+| 179 | `wardrobe.shirt` | 象牙白校园衬衫，最上方一粒扣略松，但整体整洁，领口不暴露胸口 | 待验收设计候选 |
 | 180 | `wardrobe.blouse` | 待定 | 不适用 |
-| 181 | `wardrobe.neckwear` | 同校酒红色小领带，结略微歪斜，前段从浅米白V领针织背心领口露出 | 候选 |
+| 181 | `wardrobe.neckwear` | 同校暗酒红领带，结轻微松开、略偏但保持有形 | 待验收设计候选 |
 | 182 | `wardrobe.skirt` | 待定 | 不适用 |
-| 183 | `wardrobe.trousers` | 炭灰色直筒长校裤 | 候选 |
-| 184 | `wardrobe.socks` | 深灰短袜 | 候选 |
-| 185 | `wardrobe.footwear` | 黑色乐福鞋 | 候选 |
-| 186 | `wardrobe.garmentLayerOrder` | ["白衬衫","酒红领带（V领处可见）","浅米白V领针织背心","深蓝校服外套","炭灰长裤","深灰袜","圆头黑校鞋"] | 候选 |
-| 187 | `wardrobe.paletteHex` | {"navy":"#25354B","white":"#F2F0E9","tie":"#783B46","trousers":"#575962","hair":"#957867","eyes":"#788977","knitVest":"#E7DED0","shoes":"#222329"} | 候选 |
-| 188 | `wardrobe.fabrics` | 深蓝校服混纺斜纹外套、白色棉衬衫、浅米白薄针织V领背心、酒红织物领带、炭灰长裤 | 候选 |
-| 189 | `wardrobe.sewingDetails` | 翻领与门襟清晰，袖口暗扣 | 候选 |
-| 190 | `wardrobe.pleats` | 男裤无裙褶，保留正常裤腰压线 | 候选 |
-| 191 | `wardrobe.buttons` | 两颗哑光深色校服纽扣 | 候选 |
-| 192 | `wardrobe.pockets` | 外套侧袋、长裤斜插袋；默认手不插兜 | 候选 |
-| 193 | `wardrobe.wearCondition` | 干净但自然有少量衣褶 | 候选 |
-| 194 | `wardrobe.seasonalVariants` | 未来夏季同校款待定，本轮不画 | 候选 |
-| 195 | `wardrobe.occasionVariants` | 后续剧情换装另定，本轮仅校服 | 候选 |
-| 196 | `wardrobe.permanentAccessories` | 可选极小的衣襟刺绣或同校徽章；不挂胸前收音设备，不佩戴遮脸帽子或影响手臂动画的物件。全套均为提案 | 候选 |
-| 197 | `wardrobe.temporaryProps` | 首张正面/背面/待机立绘**双手必须空着**；不拿录音机、耳机、书本、书包、外套、手机、武器或其他物体。未来游戏武器由独立装备资源按动作加载，绝不直接烘焙到人物母图 | 用户方向 |
-| **性格** | **temperament** | **25字段** | |
-| 198 | `temperament.coreConfirmedTraits` | ["小正太型外貌方向，其他性格未获用户确认"] | 用户方向 |
-| 199 | `temperament.proposedTraits` | ["乖巧","亲切","机灵","细心","微微害羞","熟悉后调皮"] | 候选 |
-| 200 | `temperament.strengths` | ["善于倾听","记得声音先后","重视朋友感受"] | 候选 |
-| 201 | `temperament.weaknesses` | ["害怕冲突","不喜欢被当小学生","紧急情况会短暂慌张"] | 候选 |
-| 202 | `temperament.socialEnergy` | 初见腼腆，熟悉后话变多 | 候选 |
-| 203 | `temperament.humorStyle` | 小声说一本正经的玩笑，然后先自己笑 | 候选 |
-| 204 | `temperament.conflictStyle` | 先劝和，被误解时能坚持澄清 | 候选 |
-| 205 | `temperament.fears` | 完全寂静的走廊（剧情候选） | 候选 |
-| 206 | `temperament.angerTriggers` | 别人漠视朋友的求助 | 候选 |
-| 207 | `temperament.stressResponse` | 先停住，随后冷静寻找声源 | 候选 |
-| 208 | `temperament.defenseMechanism` | 用笑话缓解压力 | 候选 |
-| 209 | `temperament.moralLimits` | 不会为了取乐欺负弱者 | 候选 |
-| 210 | `temperament.goals` | 想被当作真正有用的同伴 | 候选 |
-| 211 | `temperament.contradictions` | 长相乖巧但并非没有主见 | 候选 |
-| 212 | `temperament.publicPersona` | 讲礼貌、软软的可靠学弟 | 候选 |
-| 213 | `temperament.privatePersona` | 机灵好奇、有一点倔 | 候选 |
-| 214 | `temperament.emotionalBaseline` | 温暖安静中带好奇 | 候选 |
-| 215 | `temperament.expressionRange` | ["微笑","认真","惊讶","害羞","委屈","害怕"] | 候选 |
-| 216 | `temperament.defaultMicroExpression` | 眼睛轻亮、嘴角小幅上提 | 候选 |
-| 217 | `temperament.signatureMicroExpressions` | ["听到怪声先眨眼","被夸会忍笑","思考时抿一下嘴"] | 候选 |
-| 218 | `temperament.eyesExpression` | 经常注意人的目光和声音方向 | 候选 |
-| 219 | `temperament.eyebrowsExpression` | 疑惑时单侧眉略高 | 候选 |
-| 220 | `temperament.mouthExpression` | 常闭口微笑，认真时嘴角收平 | 候选 |
-| 221 | `temperament.bodyLanguageMood` | 小幅自然手势，兴奋会前倾一点 | 候选 |
-| 222 | `temperament.composureLevel` | 日常稳定、遇到真实异常会紧张 | 候选 |
-| **内心** | **psychology** | **13字段** | |
-| 223 | `psychology.innerNeed` | 证明自己不是只能被保护的小孩 | 候选 |
-| 224 | `psychology.externalGoal` | 通过录音与观察帮同伴找证据 | 候选 |
-| 225 | `psychology.secretGoal` | 待定 | 未知 |
-| 226 | `psychology.belief` | 小小的声音差异也能证明事实 | 候选 |
-| 227 | `psychology.selfImage` | 努力可靠的学弟 | 候选 |
-| 228 | `psychology.insecurities` | 在意别人总拿身高开玩笑 | 候选 |
-| 229 | `psychology.regrets` | 一次没敢及时说出的提醒（未定剧情） | 候选 |
+| 183 | `wardrobe.trousers` | 深炭灰直筒略修身校裤，裤脚自然堆在鞋面，绝不紧身裤 | 待验收设计候选 |
+| 184 | `wardrobe.socks` | 深灰短袜 | 待验收设计候选 |
+| 185 | `wardrobe.footwear` | 干净的黑色皮质乐福鞋，鞋型略窄，保留校鞋规范 | 待验收设计候选 |
+| 186 | `wardrobe.garmentLayerOrder` | ["白衬衫","暗酒红色略松领带","深灰色薄V领针织背心（选配，可不露）","敞开的近黑深藏蓝校服西装","炭灰修身直筒长裤","深灰短袜","黑色校鞋"] | 待验收设计候选 |
+| 187 | `wardrobe.paletteHex` | {"navy":"#202B3D","white":"#EEEDE8","tie":"#753945","trousers":"#4B4C55","hair":"#B7A080","eyes":"#6E8E8A","vest":"#363A43"} | 待验收设计候选 |
+| 188 | `wardrobe.fabrics` | 校服深蓝毛混纺、西装清晰纹理、哑光象牙白棉衬衫、深色薄针织、炭灰长裤 | 待验收设计候选 |
+| 189 | `wardrobe.sewingDetails` | 西装驳领、胸袋、袖扣清晰，袖口露少量白衬衫，不出现夸张飘带 | 待验收设计候选 |
+| 190 | `wardrobe.pleats` | 男裤无裙褶，保留正常裤腰压线 | 待验收设计候选 |
+| 191 | `wardrobe.buttons` | 暗色非金色校服纽扣，校服敞开所以前襟纽扣可见但不扣合 | 待验收设计候选 |
+| 192 | `wardrobe.pockets` | 标准校服口袋，母版双手仍然露出不插兜 | 待验收设计候选 |
+| 193 | `wardrobe.wearCondition` | 精心打理的时髦穿法，略有生活褶皱 | 待验收设计候选 |
+| 194 | `wardrobe.seasonalVariants` | 未来夏季同校款待定，本轮不画 | 待验收设计候选 |
+| 195 | `wardrobe.occasionVariants` | 后续剧情换装另定，本轮仅校服 | 待验收设计候选 |
+| 196 | `wardrobe.permanentAccessories` | 可选一枚极细银色单侧耳骨夹（原创细节，后续可删），不做义体或赛博朋克装饰 | 待验收设计候选 |
+| 197 | `wardrobe.temporaryProps` | 全身母版必须空手、五指露出，不持书包、手机、武器或外套；其他武器动作后续另做 | 用户确认方向 |
+
+### 性格与情绪（temperament，25项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 198 | `temperament.coreConfirmedTraits` | ["男三的年轻男性正太方向","潮流花花公子气质","参考《赛博朋克：边缘行者2》罗曼的鲜明灵动少年气场，不照搬作品脸、衣服和义体"] | 用户确认方向 |
+| 199 | `temperament.proposedTraits` | ["自信","时髦","机灵","爱开玩笑","嘴甜但不油腻","有一点自恋","知道什么时候收敛"] | 待验收设计候选 |
+| 200 | `temperament.strengths` | ["临场反应快","擅长观察人情绪","容易与同学打开话题"] | 待验收设计候选 |
+| 201 | `temperament.weaknesses` | ["偶尔自以为是","不习惯被无视","对枯燥流程缺乏耐心"] | 待验收设计候选 |
+| 202 | `temperament.socialEnergy` | 社交主动，进门就敢搭话，不是怕生学弟 | 待验收设计候选 |
+| 203 | `temperament.humorStyle` | 略有坏笑的俏皮吐槽、轻巧打趣，绝非甜甜卖萌 | 待验收设计候选 |
+| 204 | `temperament.conflictStyle` | 能用玩笑化解尴尬，但触到底线时收起笑容 | 待验收设计候选 |
+| 205 | `temperament.fears` | 完全寂静的走廊（剧情候选） | 待验收设计候选 |
+| 206 | `temperament.angerTriggers` | 别人漠视朋友的求助 | 待验收设计候选 |
+| 207 | `temperament.stressResponse` | 短暂一惊后嘴硬说笑，随即观察出口和队友 | 待验收设计候选 |
+| 208 | `temperament.defenseMechanism` | 用轻浮表象掩饰真正的紧张，剧情尚未确认 | 待验收设计候选 |
+| 209 | `temperament.moralLimits` | 不会为了取乐欺负弱者 | 待验收设计候选 |
+| 210 | `temperament.goals` | 想证明外表轻浮不代表没本事（剧情候选） | 待验收设计候选 |
+| 211 | `temperament.contradictions` | 看似玩世不恭，却比别人以为的细心（剧情候选） | 待验收设计候选 |
+| 212 | `temperament.publicPersona` | 潮流、自信、稍显张扬的校园人气少年 | 待验收设计候选 |
+| 213 | `temperament.privatePersona` | 敏锐，偶尔怕自己的认真不被看见（候选） | 待验收设计候选 |
+| 214 | `temperament.emotionalBaseline` | 精力明亮、眼神灵动，有一点狡黠 | 待验收设计候选 |
+| 215 | `temperament.expressionRange` | ["狡黠微笑","挑眉","得意","认真","恼火","吃惊"] | 待验收设计候选 |
+| 216 | `temperament.defaultMicroExpression` | 略上扬的一侧嘴角，单眉轻抬，目光直视 | 待验收设计候选 |
+| 217 | `temperament.signatureMicroExpressions` | ["轻挑单眉","眼睛微眯露出狡黠笑","认真时立即收住笑容"] | 待验收设计候选 |
+| 218 | `temperament.eyesExpression` | 眼神主动而敏捷，略微上挑，不是无辜圆眼 | 待验收设计候选 |
+| 219 | `temperament.eyebrowsExpression` | 左或右单眉微扬，眉峰比旧图清晰 | 待验收设计候选 |
+| 220 | `temperament.mouthExpression` | 常见不对称一侧嘴角轻笑 | 待验收设计候选 |
+| 221 | `temperament.bodyLanguageMood` | 动作利落、自然自信，不扭捏、不低头害羞 | 待验收设计候选 |
+| 222 | `temperament.composureLevel` | 日常自信，真正的危险面前也可能紧张 | 待验收设计候选 |
+
+### 内心世界（psychology，13项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 223 | `psychology.innerNeed` | 希望别人认可他的真本事，不只看到会聊天的外表（候选） | 待验收设计候选 |
+| 224 | `psychology.externalGoal` | 未知具体主线；角色不自动获得录音或偷拍剧情 | 待验收设计候选 |
+| 225 | `psychology.secretGoal` | 待定 | 未知 / 待核实 |
+| 226 | `psychology.belief` | 懂得打扮和会说话，不妨碍做靠谱的人（候选） | 待验收设计候选 |
+| 227 | `psychology.selfImage` | 有品味、反应快、绝不无聊的同学 | 待验收设计候选 |
+| 228 | `psychology.insecurities` | 不愿被人只当成小孩（候选） | 待验收设计候选 |
+| 229 | `psychology.regrets` | 待定 | 未知 / 待核实 |
 | 230 | `psychology.traumaIfStoryApproved` | 待定 | 不适用 |
-| 231 | `psychology.attachmentStyle` | 待定 | 未知 |
-| 232 | `psychology.trustPattern` | 喜欢肯听他说话的人，受嘲弄后很难立刻恢复 | 候选 |
-| 233 | `psychology.breakingPoint` | 同伴否认他亲耳听到的声音 | 候选 |
-| 234 | `psychology.growthArc` | 从不敢提问到敢坚持复核证据 | 候选 |
-| 235 | `psychology.values` | ["善良","细致","可靠","勇气"] | 候选 |
-| **台词** | **dialogue** | **16字段** | |
-| 236 | `dialogue.voicePitch` | 自然中高少年男声，非女声或幼儿假声 | 候选 |
-| 237 | `dialogue.voiceTimbre` | 清澈轻软但有男生声线 | 候选 |
-| 238 | `dialogue.speechRate` | 熟人面前略快，讲证据时慢 | 候选 |
-| 239 | `dialogue.voiceVolume` | 中等偏小、兴奋时轻快 | 候选 |
-| 240 | `dialogue.tone` | 温柔友善有点顽皮 | 候选 |
-| 241 | `dialogue.accents` | 标准普通话，未决定地域口音 | 候选 |
-| 242 | `dialogue.diction` | 咬字清晰 | 候选 |
-| 243 | `dialogue.sentenceLength` | 短句为主，先提出小观察 | 候选 |
-| 244 | `dialogue.vocabulary` | 生活化，偶尔用广播设备术语 | 候选 |
-| 245 | `dialogue.habitualPhrases` | ["欸？等一下。","不是啦，我很认真的。","好像不太对耶。"] | 候选 |
-| 246 | `dialogue.sarcasmLevel` | 低 | 候选 |
-| 247 | `dialogue.laughStyle` | 先忍笑后短促轻笑 | 候选 |
-| 248 | `dialogue.cryingStyle` | 努力克制哽咽，不尖叫 | 候选 |
-| 249 | `dialogue.speechUnderStress` | 重复关键时间或声音来确认 | 候选 |
-| 250 | `dialogue.dialogueExamples` | ["我真的听到了第二声铃响。","别总觉得我年纪小嘛。","嗯……刚才那段脚步声，不像同一个人。"] | 候选 |
-| 251 | `dialogue.forbiddenVoicePatterns` | 幼儿腔、故作甜腻、霸道总裁、连续卖萌 | 候选 |
-| **行为** | **behavior** | **17字段** | |
-| 252 | `behavior.idlePose` | 自然正面全身站姿，双肩放松，重心轻偏左腿，两臂分置身体左右、肘部与躯干保留小空隙，双手完整外露，掌心自然内向、手指微弯，**双手不持物、不插兜、不交叉、不扶衣领** | 候选 |
-| 253 | `behavior.signatureGesture` | 对话偶尔小幅点头或抬手示意；待机时两手始终空，未来武器动作切换为独立动作与手部装备图层 | 候选 |
-| 254 | `behavior.greetingHabit` | 先点头再轻轻挥手 | 候选 |
-| 255 | `behavior.gazePattern` | 看人眼睛一瞬，害羞时迅速避开 | 候选 |
-| 256 | `behavior.blinkHabit` | 自然短眨眼，听异常声源时停顿 | 候选 |
-| 257 | `behavior.eyebrowMotion` | 疑惑时单眉稍抬 | 候选 |
-| 258 | `behavior.headTilt` | 右倾3–5°，不是长期歪头 | 候选 |
-| 259 | `behavior.walkCycle` | 较短步幅，轻快落地 | 候选 |
-| 260 | `behavior.runningCycle` | 短步频率较快但体力不出众 | 候选 |
-| 261 | `behavior.nervousTics` | 拇指轻轻摩擦食指指腹 | 候选 |
-| 262 | `behavior.sleepRhythm` | 普通高中上学作息，细节待剧情 | 候选 |
-| 263 | `behavior.eatingStyle` | 小口吃饭，听别人说话时停下来 | 候选 |
-| 264 | `behavior.favoriteFoods` | 玉米浓汤和软面包（候选） | 候选 |
-| 265 | `behavior.hobbies` | ["剪辑环境声音","折纸","听雨声"] | 候选 |
-| 266 | `behavior.dailyRoutine` | 上课、课间帮广播站、放学回家；时间尚未落地 | 候选 |
-| 267 | `behavior.timeManagement` | 通常会早几分钟到 | 候选 |
-| 268 | `behavior.transportation` | 步行或公交，取决于待定住处 | 候选 |
-| **关系** | **relationships** | **12字段** | |
-| 269 | `relationships.familyRelations` | 待定 | 未知 |
-| 270 | `relationships.schoolRelations` | 广播站前辈愿意教他设备（候选） | 候选 |
-| 271 | `relationships.friendRelations` | 熟人面前亲切爱笑 | 候选 |
-| 272 | `relationships.rivalRelations` | 不喜欢欺负小个子同学的人 | 候选 |
-| 273 | `relationships.mentorRelations` | 广播站指导老师（候选） | 候选 |
+| 231 | `psychology.attachmentStyle` | 待定 | 未知 / 待核实 |
+| 232 | `psychology.trustPattern` | 表面好相处，但会认真记住别人的轻视（候选） | 待验收设计候选 |
+| 233 | `psychology.breakingPoint` | 待定 | 未知 / 待核实 |
+| 234 | `psychology.growthArc` | 从自我表现到愿意真正承担责任（候选） | 待验收设计候选 |
+| 235 | `psychology.values` | ["有趣","自由","朋友","尊重"] | 待验收设计候选 |
+
+### 台词语音（dialogue，16项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 236 | `dialogue.voicePitch` | 明亮的中高音少年男声，有男生声线，不做幼儿假声 | 待验收设计候选 |
+| 237 | `dialogue.voiceTimbre` | 清脆干净、速度灵活，轻微沙哑的笑音（提案） | 待验收设计候选 |
+| 238 | `dialogue.speechRate` | 略快但咬字清楚 | 待验收设计候选 |
+| 239 | `dialogue.voiceVolume` | 正常偏活跃，谈笑时自然提高 | 待验收设计候选 |
+| 240 | `dialogue.tone` | 有点轻佻的自信，不是甜美温柔 | 待验收设计候选 |
+| 241 | `dialogue.accents` | 标准普通话，未决定地域口音 | 待验收设计候选 |
+| 242 | `dialogue.diction` | 咬字清晰 | 待验收设计候选 |
+| 243 | `dialogue.sentenceLength` | 短句和俏皮插话为主 | 待验收设计候选 |
+| 244 | `dialogue.vocabulary` | 轻松校园口语，偶尔潮流用语不过量 | 待验收设计候选 |
+| 245 | `dialogue.habitualPhrases` | ["哦？你真这么想？","放心，这点小事交给我。","别这样看我，我可是认真的。"] | 待验收设计候选 |
+| 246 | `dialogue.sarcasmLevel` | 中低，重心是俏皮而非刻薄 | 待验收设计候选 |
+| 247 | `dialogue.laughStyle` | 嘴角先翘、短促轻笑 | 待验收设计候选 |
+| 248 | `dialogue.cryingStyle` | 努力克制哽咽，不尖叫 | 待验收设计候选 |
+| 249 | `dialogue.speechUnderStress` | 重复关键时间或声音来确认 | 待验收设计候选 |
+| 250 | `dialogue.dialogueExamples` | ["哎，你这表情我可是看懂了。","少看不起我，个子小不代表没用。","行了，别吵，我有办法。"] | 待验收设计候选 |
+| 251 | `dialogue.forbiddenVoicePatterns` | 刻意奶音、软萌撒娇、女性嗓音、过度油腻成人情话、同男主的冷漠语气 | 待验收设计候选 |
+
+### 习惯与举止（behavior，17项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 252 | `behavior.idlePose` | 严格纯正面完整全身中立站姿，轻松但自信；双臂自然垂在身侧，肘与衣服边缘留空，双手五指露出且空手；双脚着地不交叉 | 待验收设计候选 |
+| 253 | `behavior.signatureGesture` | 交谈时轻挑眉，短促比手势；母版不画动作 | 待验收设计候选 |
+| 254 | `behavior.greetingHabit` | 先露出熟稔的半笑，再主动招呼 | 待验收设计候选 |
+| 255 | `behavior.gazePattern` | 主动直视，偶尔带好奇探究，不躲闪害羞 | 待验收设计候选 |
+| 256 | `behavior.blinkHabit` | 自然短眨眼，听异常声源时停顿 | 待验收设计候选 |
+| 257 | `behavior.eyebrowMotion` | 单眉微扬是招牌动作 | 待验收设计候选 |
+| 258 | `behavior.headTilt` | 母版头与躯干正对画面，只有表情不对称 | 待验收设计候选 |
+| 259 | `behavior.walkCycle` | 步伐轻快、落地利落，街头少年感 | 待验收设计候选 |
+| 260 | `behavior.runningCycle` | 轻快步频、稳定重心 | 待验收设计候选 |
+| 261 | `behavior.nervousTics` | 有时整理领带或衣领（仅剧情动画，不影响母版双手空置） | 待验收设计候选 |
+| 262 | `behavior.sleepRhythm` | 普通高中上学作息，细节待剧情 | 待验收设计候选 |
+| 263 | `behavior.eatingStyle` | 自然随性，边聊天边吃（候选） | 待验收设计候选 |
+| 264 | `behavior.favoriteFoods` | 待定 | 未知 / 待核实 |
+| 265 | `behavior.hobbies` | ["穿搭","音乐","社交小游戏（候选）"] | 待验收设计候选 |
+| 266 | `behavior.dailyRoutine` | 待定 | 未知 / 待核实 |
+| 267 | `behavior.timeManagement` | 不完全守时但会为了重要事提前到（候选） | 待验收设计候选 |
+| 268 | `behavior.transportation` | 待定 | 未知 / 待核实 |
+
+### 人际关系（relationships，12项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 269 | `relationships.familyRelations` | 待定 | 未知 / 待核实 |
+| 270 | `relationships.schoolRelations` | 人缘好、熟人多但不是人人喜欢（候选） | 待验收设计候选 |
+| 271 | `relationships.friendRelations` | 用玩笑亲近朋友，在关键时刻会认真（候选） | 待验收设计候选 |
+| 272 | `relationships.rivalRelations` | 不喜欢被人当成无能小孩（候选） | 待验收设计候选 |
+| 273 | `relationships.mentorRelations` | 待定 | 未知 / 待核实 |
 | 274 | `relationships.romancesIfStoryApproved` | 待定 | 不适用 |
-| 275 | `relationships.relationshipToProtagonist` | 开始怕女主毒舌，后来明白她其实认真 | 候选 |
-| 276 | `relationships.relationshipToMaleLead` | 欣赏男主敢说真话但不喜欢旷课态度 | 候选 |
-| 277 | `relationships.trustFlags` | ["认真听他讲话增加信任","否认录音证据会降低信任"] | 候选 |
-| 278 | `relationships.secretsShared` | 待定 | 未知 |
-| 279 | `relationships.conflictHistory` | 待定 | 未知 |
-| 280 | `relationships.relationProgression` | 初见羞涩→合作记录→主动提出线索→重大事件敢反对 | 候选 |
-| **技能** | **skills** | **15字段** | |
-| 281 | `skills.talents` | ["听辨细小声音差异","复述节奏","事件按时间排序"] | 候选 |
-| 282 | `skills.weaknesses` | ["力气不大","不擅长公开争执","嘈杂时易分心"] | 候选 |
-| 283 | `skills.learnedSkills` | ["基础录音","音频剪辑","设备线路简单检查"] | 候选 |
-| 284 | `skills.academicSkills` | ["语文朗读","节奏逻辑","基础数学"] | 候选 |
-| 285 | `skills.workSkills` | 待定 | 未知 |
-| 286 | `skills.combatAbility` | 无专业战斗训练，卡牌体系优先信息支援 | 候选 |
-| 287 | `skills.physicalEndurance` | 日常体力中等略低 | 候选 |
-| 288 | `skills.agility` | 短距离行动灵活 | 候选 |
-| 289 | `skills.perception` | 对频率和声音顺序敏感，必须复核不具超能力 | 候选 |
-| 290 | `skills.charisma` | 友善容易沟通，不保证所有人无条件喜欢 | 候选 |
-| 291 | `skills.supernaturalPowers` | 待定 | 未知 |
-| 292 | `skills.powerCosts` | 待定 | 未知 |
-| 293 | `skills.equipment` | 角色基础立绘未装备任何手持物。武器等装备由游戏阶段另行设定与加载，首张原画不得画进手内 | 候选 |
-| 294 | `skills.inventory` | 按剧情事件持有物品 | 候选 |
-| 295 | `skills.healthIfStoryApproved` | 待定 | 未知 |
-| **剧情** | **story** | **13字段** | |
-| 296 | `story.firstAppearance` | 候选：校园广播室外首次遇见主角 | 候选 |
-| 297 | `story.locationEntrances` | ["校内走廊","广播室","教室"] | 候选 |
-| 298 | `story.originStory` | 因日常录音习惯注意到不合常理的时间顺序 | 候选 |
-| 299 | `story.incitingEvent` | 走廊铃声出现两个互斥版本 | 候选 |
-| 300 | `story.keyScenes` | ["播放两段矛盾录音","被质疑恶作剧后仍坚持说明","用回声推断门的方向"] | 候选 |
-| 301 | `story.storyGoals` | 帮助主角验证异常时间与声源 | 候选 |
-| 302 | `story.branchingChoices` | ["相信他的记录","要求重听核验","忽略记录"] | 候选 |
-| 303 | `story.secrets` | 待定 | 未知 |
-| 304 | `story.reveals` | 录音线索要有证据链，不是万能解密 | 候选 |
-| 305 | `story.relationshipEvents` | 认真倾听他的证词使关系加深 | 候选 |
-| 306 | `story.questEvents` | 消失的第二声铃（候选支线） | 候选 |
-| 307 | `story.alternateEndings` | 待定 | 未知 |
-| 308 | `story.chronologicalHistory` | 待定 | 未知 |
-| **环境** | **environment** | **10字段** | |
-| 309 | `environment.home` | 待定 | 未知 |
-| 310 | `environment.school` | 主角同一所高中 | 候选 |
-| 311 | `environment.workplace` | 待定 | 未知 |
-| 312 | `environment.roomOwnership` | 待定 | 未知 |
-| 313 | `environment.itemOwnership` | 校园广播器材属于学校 | 候选 |
-| 314 | `environment.furnitureConditions` | 场景默认不放与人在场状态有关的私人物品 | 候选 |
-| 315 | `environment.weatherResponse` | 雨天会注意雨点和铃声混合的声响 | 候选 |
-| 316 | `environment.locationsVisited` | ["教室","校内走廊","广播室"] | 候选 |
-| 317 | `environment.npcSchedule` | 校园上课与放学后广播活动，需与日程系统统一 | 候选 |
-| 318 | `environment.worldEra` | 当代架空都市异常事件 | 候选 |
-| **立绘** | **visualProduction** | **50字段** | |
-| 319 | `visualProduction.frontReference` | 待定 | 未知 |
-| 320 | `visualProduction.backReference` | 待定 | 未知 |
-| 321 | `visualProduction.sideReference` | 待定 | 未知 |
-| 322 | `visualProduction.threeQuarterReference` | 待定 | 未知 |
-| 323 | `visualProduction.poseReference` | 单人正面全身演出待机姿势；左右手五指清楚、完全空手，肘部与外套侧缘稍分离，方便以后做持武器动作与拆层 | 候选 |
-| 324 | `visualProduction.expressionReferences` | ["微笑","害羞","好奇","认真","惊讶","害怕"] | 候选 |
-| 325 | `visualProduction.silhouetteLocked` | false | 候选 |
-| 326 | `visualProduction.colorPalette` | {"hair":"#957867","eyes":"#788977","blazer":"#25354B","shirt":"#F2F0E9","tie":"#783B46","trousers":"#575962"} | 候选 |
-| 327 | `visualProduction.artStyle` | 沿用项目已认可的日系二维GalGame赛璐璐立绘 | 候选 |
-| 328 | `visualProduction.imageAspectRatio` | 建议1024×1024留完整人像，不拼版 | 候选 |
-| 329 | `visualProduction.whiteBackgroundRule` | 纯白背景，无场景物件 | 候选 |
-| 330 | `visualProduction.fullBodyRule` | 头到鞋底完整 | 候选 |
-| 331 | `visualProduction.centeredRule` | 人物正中偏下，地面线稳定 | 候选 |
-| 332 | `visualProduction.occlusionRule` | 双手五指不得被衣袖、口袋或躯干挡住；两臂与身体之间有可见空隙；不画手持物；衬衫、领带、针织背心、外套分层逻辑明确 | 候选 |
-| 333 | `visualProduction.promptPositive` | masterpiece, best quality, score_7, safe, 1boy, solo, original cute youthful male high school student with an age-appropriate sixteen-year-old appearance, petite healthy teenager, natural 6.4-head-tall body, short softly rounded oval face, short softly squared chin, muted grey-green almond-round eyes, gentle short straight brows, little natural nose, slight shy playful closed-mouth smile, fluffy short layered warm light tea-brown hair, airy uneven fringe and a small flipped forelock, same-school deep navy blazer worn open naturally, white collared shirt, light cream V-neck knit sweater vest clearly visible under blazer, small slightly crooked burgundy necktie emerging from the vest V-neck, charcoal straight school trousers, dark socks, black rounded loafers, full body, solo standing, front view, facing viewer, normal visual novel idle pose, weight slightly on left leg, relaxed shoulders, both arms naturally hanging at either side with a little space from torso, BOTH HANDS COMPLETELY EMPTY and visible, five natural fingers on each hand, palms inward and fingers relaxed, no objects held, no hands in pockets, no crossed arms, no touching blazer, clean white background, clear separate garment layers, clean silhouette, suitable for later Live2D arm rigging and independently equipped weapons, restrained anime visual novel cel shading, coherent cast art style, @akipekostyle&lt;lora:akipekoanima_v1_1:1&gt; | 候选 |
-| 334 | `visualProduction.promptNegative` | worst quality, low quality, score_1, score_2, score_3, 1girl, female, adult man, infant, elementary-school child, chibi, oversized head, giant shiny eyes, adult idol V chin, generic AI face, identical face to other male leads, black long hair, black center part, chestnut ponytail, amber eyes, muscular physique, skirt, shorts, unrelated uniform, gold buttons, holding any object, handheld recorder, microphone, headphones in hand, mobile phone, book, paper, bag, backpack, jacket in hands, weapon in hands, sword, gun, staff, hands in pockets, crossed arms, gripping blazer, hands behind back, hands obscured by sleeves, missing hands, hidden fingers, duplicated fingers, bad anatomy, detached wrists, dramatic action pose, jumping, fighting, split-screen, character sheet, two boys, cropped feet, cropped head, text, logo, watermark, glossy plastic skin | 候选 |
-| 335 | `visualProduction.modelVersion` | Anima，具体权重待出图登记 | 候选 |
-| 336 | `visualProduction.artistTag` | @akipekostyle | 候选 |
-| 337 | `visualProduction.lora` | &lt;lora:akipekoanima_v1_1:1&gt; | 候选 |
-| 338 | `visualProduction.seed` | 待定 | 未知 |
-| 339 | `visualProduction.sampler` | 待定 | 未知 |
-| 340 | `visualProduction.resolution` | 推荐1024×1024，非已出图参数 | 候选 |
-| 341 | `visualProduction.sourceFileHash` | 待定 | 未知 |
-| 342 | `visualProduction.assetApproval` | 未批准原画，不注册游戏角色 | 候选 |
-| 343 | `visualProduction.bodyFacingYawDeg` | 0 | 候选 |
-| 344 | `visualProduction.headFacingYawDeg` | 0 | 候选 |
-| 345 | `visualProduction.headPitchDeg` | 0 | 候选 |
-| 346 | `visualProduction.headRollDeg` | 3 | 候选 |
-| 347 | `visualProduction.shoulderYawDeg` | 0 | 候选 |
-| 348 | `visualProduction.pelvisYawDeg` | 0 | 候选 |
-| 349 | `visualProduction.gazeHorizontalDeg` | 0 | 候选 |
-| 350 | `visualProduction.gazeVerticalDeg` | 0 | 候选 |
-| 351 | `visualProduction.cameraAngle` | 眼平视角、正面 | 候选 |
-| 352 | `visualProduction.cameraFocalStyle` | 全身常规人像镜头 | 候选 |
-| 353 | `visualProduction.projectionOrthoPerspective` | 低透视畸变 | 候选 |
-| 354 | `visualProduction.visualStyleCategory` | 2D anime visual novel character portrait | 候选 |
-| 355 | `visualProduction.lineWeightStyle` | 外轮廓较重、五官精细线条 | 候选 |
-| 356 | `visualProduction.lineColor` | #25262A | 候选 |
-| 357 | `visualProduction.shadingMethod` | 2–3层克制赛璐璐光影 | 候选 |
-| 358 | `visualProduction.shadowDensity` | 中低 | 候选 |
-| 359 | `visualProduction.highlightTreatment` | 头发低光泽、眼小高光 | 候选 |
-| 360 | `visualProduction.textureComplexity` | 少量服装材质，不堆AI噪点 | 候选 |
-| 361 | `visualProduction.anatomicalStylization` | 约6.4头身的自然少年比例，非幼童 | 候选 |
-| 362 | `visualProduction.facialFeatureStylization` | 柔和少年骨相，不能变女脸或另一个男主 | 候选 |
-| 363 | `visualProduction.characterIdentityEmbeddingNotes` | 尚无母图，不可声称已经生成身份embedding | 候选 |
-| 364 | `visualProduction.frontPosePoseCode` | M03_IDLE_A0 | 候选 |
-| 365 | `visualProduction.poseSilhouetteNotes` | 双手始终空置、完整可见，肘与躯干留白，左右臂可单独绑定；不抱胸、不插兜、不抓外套、不拿录音机/书/包，适合武器装备动作后续独立制作 | 候选 |
-| 366 | `visualProduction.framingHeadroomRatio` | 0.035 | 候选 |
-| 367 | `visualProduction.framingFootroomRatio` | 0.025 | 候选 |
-| 368 | `visualProduction.bodyAlignmentRule` | 统一同校角色地面线，明显矮于男主和男二 | 候选 |
-| **L2D** | **rigging** | **30字段** | |
-| 369 | `rigging.layerSource` | 待定 | 未知 |
-| 370 | `rigging.layerList` | ["后发","颈部","脸","左眉","右眉","左眼","右眼","嘴","前刘海","白衬衫","酒红领带","V领针织背心","外套后片","外套前片左","外套前片右","左上臂","左前臂","左手（空）","右上臂","右前臂","右手（空）","左腿","右腿","左鞋","右鞋"] | 候选 |
-| 371 | `rigging.headJoint` | 颈根位置待原图确定 | 候选 |
-| 372 | `rigging.neckJoint` | 锁骨至颈根轻转 | 候选 |
-| 373 | `rigging.shoulderJoint` | 两肩独立旋转 | 候选 |
-| 374 | `rigging.elbowJoint` | 小幅自然屈伸 | 候选 |
-| 375 | `rigging.wristJoint` | 左右手掌独立分件，默认五指自然放松且空手；握持类动作另由独立手部贴图/蒙皮和武器层构建，避免待机母版锁死手势 | 候选 |
-| 376 | `rigging.hipJoint` | 骨盆中点待机重心 | 候选 |
-| 377 | `rigging.kneeJoint` | 膝轻屈 | 候选 |
-| 378 | `rigging.ankleJoint` | 双足贴地 | 候选 |
-| 379 | `rigging.eyeTrack` | 瞳孔小幅水平移动 | 候选 |
-| 380 | `rigging.blink` | 上下眼睑自然眨眼 | 候选 |
-| 381 | `rigging.mouthShapes` | ["闭口","小开口","笑","A","I","U"] | 候选 |
-| 382 | `rigging.hairPhysics` | 额前小翘发微晃 | 候选 |
-| 383 | `rigging.clothPhysics` | 外套下摆和领带轻微滞后 | 候选 |
-| 384 | `rigging.breathingPhysics` | 肩、胸与领带低幅联动 | 候选 |
-| 385 | `rigging.skinningLimits` | 袖口手指不能橡皮变形 | 候选 |
-| 386 | `rigging.expressionStates` | ["idle","smile","shy","thinking","surprised","scared"] | 候选 |
-| 387 | `rigging.actionStates` | ["idle_empty_hands","small_wave_empty_hands","look_side","nod","equip_weapon_future","hold_weapon_future","unequip_to_empty_hands_future"] | 候选 |
-| 388 | `rigging.runtimePreview` | 尚未制作 | 候选 |
-| 389 | `rigging.occlusionRepair` | 需要补画刘海下的额头与袖内手臂 | 候选 |
-| 390 | `rigging.qaAnimation` | 未测试 | 候选 |
-| 391 | `rigging.armRotationBoundsDeg` | 肩小幅±12°，更大动作单独绘制 | 候选 |
-| 392 | `rigging.hipRotationBoundsDeg` | 待机±3° | 候选 |
-| 393 | `rigging.kneeFlexBoundsDeg` | 待机2–4°，均待实际测试 | 候选 |
-| 394 | `rigging.eyelidOpennessChannel` | 0–1归一化开眼 | 候选 |
-| 395 | `rigging.browDeformationChannels` | ["左眉高度","右眉高度","眉中内聚"] | 候选 |
-| 396 | `rigging.mouthCornerChannels` | ["笑意","开合","左右口角微调"] | 候选 |
-| 397 | `rigging.expressionLandmarkMotion` | 只做小幅自然形变不改脸 | 候选 |
-| 398 | `rigging.frontSideBackProportionsQa` | 实际母图批准以后再制作背面，严禁镜像 | 候选 |
-| **配音** | **audio** | **8字段** | |
-| 399 | `audio.voiceCasting` | 自然少年男声候选，演员未定 | 候选 |
-| 400 | `audio.pronunciation` | 普通话、咬字清楚 | 候选 |
-| 401 | `audio.multilingualNotes` | 其他语言未设计 | 候选 |
-| 402 | `audio.recordedVoices` | 待定 | 未知 |
-| 403 | `audio.footstepSfx` | 轻快短步的校鞋足音 | 候选 |
-| 404 | `audio.costumeSfx` | 外套与领带细微布料摩擦 | 候选 |
-| 405 | `audio.voiceVolume` | 中等稍轻 | 候选 |
-| 406 | `audio.ambienceRules` | 雨夜环境声可衬托听辨能力，不遮盖对白 | 候选 |
-| **游戏** | **gameplay** | **14字段** | |
-| 407 | `gameplay.npcSchedule` | 学校日常作息待项目日程系统建立 | 候选 |
-| 408 | `gameplay.dialogueTree` | 初见→广播异常→证词核验→信任事件 | 候选 |
-| 409 | `gameplay.affinity` | 关系数值未定，尊重与验证可提升 | 候选 |
-| 410 | `gameplay.trust` | 被认真倾听则提升，被戏弄则下降 | 候选 |
-| 411 | `gameplay.playerControl` | 非默认玩家主控角色 | 候选 |
-| 412 | `gameplay.interactRange` | 沿用场景全局交互范围 | 候选 |
-| 413 | `gameplay.characterSelection` | 入队资格待剧情确定 | 候选 |
-| 414 | `gameplay.sceneLayers` | 人物L2D层+对话层，角色目前未注册 | 候选 |
-| 415 | `gameplay.collisionBounds` | 按未来真实立绘确定 | 候选 |
-| 416 | `gameplay.saveFlags` | ["met_male3","recording_checked","male3_trust_stage"] | 候选 |
-| 417 | `gameplay.choiceTriggers` | ["listen_again","accept_evidence","ignore_hint"] | 候选 |
-| 418 | `gameplay.npcBrain` | 候选校园状态机：上课、活动、放学、交谈 | 候选 |
-| 419 | `gameplay.flagsVariables` | {"met":false,"trust":0,"recordingChecked":false} | 候选 |
-| 420 | `gameplay.inventoryRules` | 物品栏可按剧情拥有物品，但人物待机母图必须双手空；武器装备独立于人物立绘分层，未来按动作/状态动态装备与切换 | 候选 |
-| **验收** | **quality** | **16字段** | |
-| 421 | `quality.originalityCheck` | 原创脸型，避免照抄其他作品正太角色 | 候选 |
-| 422 | `quality.similarityCheck` | 重点对比CHAR-003/016男角色及CHAR-004女三的脸与发色 | 候选 |
-| 423 | `quality.faceConsistency` | 暂无正式母图，等待验收 | 候选 |
-| 424 | `quality.hairSideCheck` | 检查偏分与翘发正背统一 | 候选 |
-| 425 | `quality.visualIdentityCheck` | 少年可爱但明显是男高中生 | 候选 |
-| 426 | `quality.handsCheck` | 正式原画验收：双手空着、五指可辨、袖口不遮手、左右手和手腕可独立拆层；不能因道具或插兜遮挡 | 候选 |
-| 427 | `quality.feetCheck` | 黑色校鞋完整且同一地面线 | 候选 |
-| 428 | `quality.fullBodyCheck` | 头顶到脚底无裁切 | 候选 |
-| 429 | `quality.measurementProvenanceCheck` | 所有数值仅服装制作提案，不代表真实测量 | 候选 |
-| 430 | `quality.outfitCheck` | 同校制服材质、纽扣、领带颜色一致 | 候选 |
-| 431 | `quality.sourceRightsCheck` | Anima和LoRA权重商用许可待核验 | 候选 |
-| 432 | `quality.rigCheck` | 尚未绑定，不能标记通过 | 候选 |
-| 433 | `quality.poseCheck` | 正式原画验收：自然站姿，两臂外露，双手空置且与躯干有空隙；可无缝切换未来装备动作。尚未出图与测试 | 候选 |
-| 434 | `quality.screenshotCheck` | 游戏主场景、全屏编辑器及手机视图尚未测试 | 候选 |
-| 435 | `quality.approvalRecord` | 只确认小正太男三的创作方向 | 候选 |
-| 436 | `quality.rollbackReference` | 不覆盖CHAR-001/002/003/004/016任何已认可原图 | 候选 |
-| **来源** | **provenance** | **12字段** | |
-| 437 | `provenance.createdAt` | 2026-11-02 | 候选 |
-| 438 | `provenance.updatedAt` | 2026-11-02 | 候选 |
-| 439 | `provenance.userConfirmedFields` | ["男三","小正太类型","男三母版必须双手空、不拿无关道具，预留后续武器装备动作"] | 候选 |
-| 440 | `provenance.sourceCitations` | ["用户2026-11-02指定男三小正太","448字段标准V3"] | 候选 |
-| 441 | `provenance.proposedFields` | 所有已填年龄体型五官性格剧情为候选 | 候选 |
-| 442 | `provenance.unknownFields` | 家庭生日、正式姓名、剧情细节、真实图像和模型参数未定 | 候选 |
-| 443 | `provenance.rejectedFields` | ["男主复制脸","男二复制脸","高大成熟型","女性脸或幼儿四头身"] | 候选 |
-| 444 | `provenance.revisionHistory` | [{"date":"2026-11-02","version":"0.1.0","note":"CHAR-020由未获批准的田径女生规划占位改为男三小正太候选"}] | 候选 |
-| 445 | `provenance.authorReviewer` | AI创作提案；待用户审批 | 候选 |
-| 446 | `provenance.approvedBy` | 待定 | 未知 |
-| 447 | `provenance.permissions` | 仅设计文件，严禁未经许可修改其他角色原画 | 候选 |
-| 448 | `provenance.historyNotes` | 未生成图片，不等于PSD或L2D完成 | 候选 |
-**核对：448 项，暂定 393 项，用户方向 4 项，未知 41 项，不适用 10 项。**
+| 275 | `relationships.relationshipToProtagonist` | 以自信俏皮对上女主冷淡吐槽，具体剧情待审定 | 待验收设计候选 |
+| 276 | `relationships.relationshipToMaleLead` | 会主动逗寡言男主，具体关系待确定 | 待验收设计候选 |
+| 277 | `relationships.trustFlags` | ["被认真对待增加信任","轻视其能力降低信任"] | 待验收设计候选 |
+| 278 | `relationships.secretsShared` | 待定 | 未知 / 待核实 |
+| 279 | `relationships.conflictHistory` | 待定 | 未知 / 待核实 |
+| 280 | `relationships.relationProgression` | 日常逗趣→真正展示可靠性，尚未定稿 | 待验收设计候选 |
 
-## 后续制作
+### 技能与状态（skills，15项）
 
-先让用户确认脸型和发色方向 → 生成单人正面校服全身母图 → 保存实际图与图像哈希 → 背面/分层 → L2D → 游戏内测试。不能凭此草案宣称原画或动画已完成。
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 281 | `skills.talents` | ["察言观色","临场反应","带动气氛（候选）"] | 待验收设计候选 |
+| 282 | `skills.weaknesses` | ["偶尔轻率","体力与力量非成年人级别（候选）"] | 待验收设计候选 |
+| 283 | `skills.learnedSkills` | ["审美穿搭（候选）"] | 待验收设计候选 |
+| 284 | `skills.academicSkills` | 待定 | 未知 / 待核实 |
+| 285 | `skills.workSkills` | 待定 | 未知 / 待核实 |
+| 286 | `skills.combatAbility` | 未确认武器与职业；普通高中生而非默认枪手 | 待验收设计候选 |
+| 287 | `skills.physicalEndurance` | 体力普通偏灵活（候选） | 待验收设计候选 |
+| 288 | `skills.agility` | 自然轻快，短距离动作敏捷（候选） | 待验收设计候选 |
+| 289 | `skills.perception` | 敏感于人的表情与语气（候选） | 待验收设计候选 |
+| 290 | `skills.charisma` | 很会打开话题，带自信和少年感，但不过度撩拨他人 | 待验收设计候选 |
+| 291 | `skills.supernaturalPowers` | 待定 | 未知 / 待核实 |
+| 292 | `skills.powerCosts` | 待定 | 未知 / 待核实 |
+| 293 | `skills.equipment` | 待定 | 未知 / 待核实 |
+| 294 | `skills.inventory` | 待定 | 未知 / 待核实 |
+| 295 | `skills.healthIfStoryApproved` | 待定 | 未知 / 待核实 |
 
-## 2026-11-02 补充：两手空置与独立武器装备
+### 剧情时间轴（story，13项）
 
-用户明确纠正：**不要在立绘里乱拿东西**。男三的基础正面、背面、待机演出必须是自然垂放的两只空手，不能手持录音笔、书本、手机、书包、衣服或预先画好的武器；也不能让两手藏进口袋或被袖口遮住。为了以后战斗换武器与装备动画，手、前臂、上臂拆成独立部件，武器在游戏中由独立装备资源和动作驱动。衣着个性通过浅米白V领针织背心、微歪领带、宽松校服和极少量衣物上的细节建立，不靠手持装饰品。针织背心仍是设计提案，最终以用户认可原画为准。
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 296 | `story.firstAppearance` | 待定 | 未知 / 待核实 |
+| 297 | `story.locationEntrances` | 待定 | 未知 / 待核实 |
+| 298 | `story.originStory` | 待定 | 未知 / 待核实 |
+| 299 | `story.incitingEvent` | 待定 | 未知 / 待核实 |
+| 300 | `story.keyScenes` | 待定 | 未知 / 待核实 |
+| 301 | `story.storyGoals` | 待定 | 未知 / 待核实 |
+| 302 | `story.branchingChoices` | 待定 | 未知 / 待核实 |
+| 303 | `story.secrets` | 待定 | 未知 / 待核实 |
+| 304 | `story.reveals` | 待定 | 未知 / 待核实 |
+| 305 | `story.relationshipEvents` | 待定 | 未知 / 待核实 |
+| 306 | `story.questEvents` | 待定 | 未知 / 待核实 |
+| 307 | `story.alternateEndings` | 待定 | 未知 / 待核实 |
+| 308 | `story.chronologicalHistory` | 待定 | 未知 / 待核实 |
+
+### 生活环境（environment，10项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 309 | `environment.home` | 待定 | 未知 / 待核实 |
+| 310 | `environment.school` | 主角同一所高中 | 待验收设计候选 |
+| 311 | `environment.workplace` | 待定 | 未知 / 待核实 |
+| 312 | `environment.roomOwnership` | 待定 | 未知 / 待核实 |
+| 313 | `environment.itemOwnership` | 待定 | 未知 / 待核实 |
+| 314 | `environment.furnitureConditions` | 待定 | 未知 / 待核实 |
+| 315 | `environment.weatherResponse` | 雨天会注意雨点和铃声混合的声响 | 待验收设计候选 |
+| 316 | `environment.locationsVisited` | 待定 | 未知 / 待核实 |
+| 317 | `environment.npcSchedule` | 待定 | 未知 / 待核实 |
+| 318 | `environment.worldEra` | 当代架空都市异常事件 | 待验收设计候选 |
+
+### 立绘原画（visualProduction，50项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 319 | `visualProduction.frontReference` | 待定 | 未知 / 待核实 |
+| 320 | `visualProduction.backReference` | 待定 | 未知 / 待核实 |
+| 321 | `visualProduction.sideReference` | 待定 | 未知 / 待核实 |
+| 322 | `visualProduction.threeQuarterReference` | 待定 | 未知 / 待核实 |
+| 323 | `visualProduction.poseReference` | 纯正面单人立绘；不得生成两个相同人物或附加大头特写 | 待验收设计候选 |
+| 324 | `visualProduction.expressionReferences` | ["自信单边坏笑","微挑眉","认真","疑惑","不服气","吃惊"] | 待验收设计候选 |
+| 325 | `visualProduction.silhouetteLocked` | false | 待验收设计候选 |
+| 326 | `visualProduction.colorPalette` | {"hair":"#B7A080","eyes":"#6E8E8A","blazer":"#202B3D","shirt":"#EEEDE8","tie":"#753945","trousers":"#4B4C55"} | 待验收设计候选 |
+| 327 | `visualProduction.artStyle` | 沿用项目已认可的日系二维GalGame赛璐璐立绘 | 待验收设计候选 |
+| 328 | `visualProduction.imageAspectRatio` | 推荐832×1216竖版独立全身人物，不做双人拼图 | 待验收设计候选 |
+| 329 | `visualProduction.whiteBackgroundRule` | 纯白或纯浅灰干净背景，不画地板墙面 | 待验收设计候选 |
+| 330 | `visualProduction.fullBodyRule` | 头顶、鞋底、双手完全入镜 | 待验收设计候选 |
+| 331 | `visualProduction.centeredRule` | 人物居中、正面、平视，留足头顶与鞋底边距 | 待验收设计候选 |
+| 332 | `visualProduction.occlusionRule` | 双手完整露出，袖口不遮五指，贴合人体的手臂与肩线；不插兜、不持物、不抓衣领 | 待验收设计候选 |
+| 333 | `visualProduction.promptPositive` | masterpiece, best quality, score_7, newest, safe, highres, @akipekostyle, <lora:akipekoanima_v1_1:1>, 1boy, solo, one character only, original stylish teenage male student, boyish male appearance, youthful fashionable charming troublemaker, confident flirty playboy-like charisma expressed only as a mischievous grin, mischievous expressive personality, a little cocky, short and slender but anatomically mature teenage proportions, approximately 160 cm tall in character canon, 6.8 heads tall, clearly masculine narrow shoulders and straight hips, small angular-oval male face, subtle cheekbone definition, distinct slightly squared chin, not round cheeked, natural narrow slightly upturned gray-teal eyes of moderate size, sharp upper eyelids, one eyebrow slightly raised, expressive masculine brows, small straight defined nose, thin lips with a one-sided cheeky smirk, bright attentive gaze, warm healthy skin tone, stylish short muted wheat-ash blond hair with darker roots, asymmetrical choppy fringe partially exposing forehead, deliberately tousled structured hair clumps, short clean nape, distinctive original haircut not copied from any existing anime character, fitted near-black dark navy school blazer worn open, crisp masculine shoulder seams, white school shirt with slightly relaxed top button, slightly loose dark burgundy necktie, optional subtle dark charcoal V-neck sweater vest underneath, straight charcoal-gray tailored school trousers, black leather school loafers, clean uniform fabric construction, polished precise Japanese anime visual novel character art, refined detailed linework, professional restrained cel shading with deliberate shadows, subtle well-placed highlights, absolutely front facing, centered full body, eye-level camera, neutral natural standing pose, head straight, torso straight, feet naturally together, both arms hanging relaxed at either side with small gaps from body, hands completely visible and EMPTY with five anatomically correct fingers each, no object held, clean white studio background, generous room above head and below shoes, entire character visible | 待验收设计候选 |
+| 334 | `visualProduction.promptNegative` | worst quality, low quality, blurry, 1girl, female, overly feminine boy, baby face, doll face, round cheeks, puffy cheeks, soft cute round face, overly large round glassy eyes, giant irises, long eyelashes, glossy pink lips, little child, toddler, chibi, oversized head, tiny legs, infant proportions, identical cloned characters, two boys, duo, side-by-side comparison, duplicate person, brown round fluffy bowl cut, brown hair, bright saturated emerald eyes, cybernetic implants, futuristic jacket, replica of Roman Carax, exact anime character copy, cosplay of existing copyrighted character, serious melancholic cold male lead face, shy bashful smile, timid downward gaze, childish sweet grin, huge shoulders, muscular adult, elderly, schoolgirl uniform, skirt, casual hoodie, missing school blazer, missing necktie, bright blue blazer, purple blazer, golden oversized buttons, baggy oversized jacket, messy random outfit, hands in pockets, hands behind back, crossed arms, holding weapon, holding phone, holding book, carrying jacket, hands touching collar, hands hidden, broken anatomy, extra fingers, fused fingers, malformed hands, stiff asymmetrical body, dramatic action, walking, lunging, jumping, tilted head, side view, three quarter view, cropped shoes, cropped head, scene background, buildings, floor tiles, text, watermark | 待验收设计候选 |
+| 335 | `visualProduction.modelVersion` | Anima，具体权重待出图登记 | 待验收设计候选 |
+| 336 | `visualProduction.artistTag` | @akipekostyle | 待验收设计候选 |
+| 337 | `visualProduction.lora` | <lora:akipekoanima_v1_1:1> | 待验收设计候选 |
+| 338 | `visualProduction.seed` | 待定 | 未知 / 待核实 |
+| 339 | `visualProduction.sampler` | 待定 | 未知 / 待核实 |
+| 340 | `visualProduction.resolution` | 832×1216 txt2img 起始建议，人物高度需和角色库同标准另核验 | 待验收设计候选 |
+| 341 | `visualProduction.sourceFileHash` | 待定 | 未知 / 待核实 |
+| 342 | `visualProduction.assetApproval` | 未批准原画，不注册游戏角色 | 待验收设计候选 |
+| 343 | `visualProduction.bodyFacingYawDeg` | 0 | 待验收设计候选 |
+| 344 | `visualProduction.headFacingYawDeg` | 0 | 待验收设计候选 |
+| 345 | `visualProduction.headPitchDeg` | 0 | 待验收设计候选 |
+| 346 | `visualProduction.headRollDeg` | 0 | 待验收设计候选 |
+| 347 | `visualProduction.shoulderYawDeg` | 0 | 待验收设计候选 |
+| 348 | `visualProduction.pelvisYawDeg` | 0 | 待验收设计候选 |
+| 349 | `visualProduction.gazeHorizontalDeg` | 0 | 待验收设计候选 |
+| 350 | `visualProduction.gazeVerticalDeg` | 0 | 待验收设计候选 |
+| 351 | `visualProduction.cameraAngle` | 眼平视角、正面 | 待验收设计候选 |
+| 352 | `visualProduction.cameraFocalStyle` | 全身常规人像镜头 | 待验收设计候选 |
+| 353 | `visualProduction.projectionOrthoPerspective` | 低透视畸变 | 待验收设计候选 |
+| 354 | `visualProduction.visualStyleCategory` | 2D anime visual novel character portrait | 待验收设计候选 |
+| 355 | `visualProduction.lineWeightStyle` | 外轮廓较重、五官精细线条 | 待验收设计候选 |
+| 356 | `visualProduction.lineColor` | #25262A | 待验收设计候选 |
+| 357 | `visualProduction.shadingMethod` | 2–3层克制赛璐璐光影 | 待验收设计候选 |
+| 358 | `visualProduction.shadowDensity` | 中低 | 待验收设计候选 |
+| 359 | `visualProduction.highlightTreatment` | 头发低光泽、眼小高光 | 待验收设计候选 |
+| 360 | `visualProduction.textureComplexity` | 少量服装材质，不堆AI噪点 | 待验收设计候选 |
+| 361 | `visualProduction.anatomicalStylization` | 约6.8头身、约160厘米的稍矮男高中生候选比例；非幼儿童身和娃娃圆脸 | 待验收设计候选 |
+| 362 | `visualProduction.facialFeatureStylization` | 窄短六边形少年脸、略锐利的中等青灰绿眼睛、单侧坏笑、明确男性骨相 | 待验收设计候选 |
+| 363 | `visualProduction.characterIdentityEmbeddingNotes` | 尚无母图，不可声称已经生成身份embedding | 待验收设计候选 |
+| 364 | `visualProduction.frontPosePoseCode` | M03_FASHION_IDLE_FRONT_V2 | 待验收设计候选 |
+| 365 | `visualProduction.poseSilhouetteNotes` | 双臂自然下垂且与腰部留可拆分缝隙，十指露出，立绘不得带道具，避免与已批准角色撞脸 | 待验收设计候选 |
+| 366 | `visualProduction.framingHeadroomRatio` | 0.035 | 待验收设计候选 |
+| 367 | `visualProduction.framingFootroomRatio` | 0.025 | 待验收设计候选 |
+| 368 | `visualProduction.bodyAlignmentRule` | 候选160cm对比男主候选176cm，应按同一地面线缩放到约0.91身高；绝不能因各自画满画布而看起来同高 | 待验收设计候选 |
+
+### L2D动态分层（rigging，30项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 369 | `rigging.layerSource` | 待定 | 未知 / 待核实 |
+| 370 | `rigging.layerList` | ["后发","颈部","脸","左眉","右眉","左眼","右眼","嘴","前刘海","白衬衫","酒红领带","V领针织背心","外套后片","外套前片左","外套前片右","左上臂","左前臂","左手（空）","右上臂","右前臂","右手（空）","左腿","右腿","左鞋","右鞋"] | 待验收设计候选 |
+| 371 | `rigging.headJoint` | 颈根位置待原图确定 | 待验收设计候选 |
+| 372 | `rigging.neckJoint` | 锁骨至颈根轻转 | 待验收设计候选 |
+| 373 | `rigging.shoulderJoint` | 两肩独立旋转 | 待验收设计候选 |
+| 374 | `rigging.elbowJoint` | 小幅自然屈伸 | 待验收设计候选 |
+| 375 | `rigging.wristJoint` | 左右手掌独立分件，默认五指自然放松且空手；握持类动作另由独立手部贴图/蒙皮和武器层构建，避免待机母版锁死手势 | 待验收设计候选 |
+| 376 | `rigging.hipJoint` | 骨盆中点待机重心 | 待验收设计候选 |
+| 377 | `rigging.kneeJoint` | 膝轻屈 | 待验收设计候选 |
+| 378 | `rigging.ankleJoint` | 双足贴地 | 待验收设计候选 |
+| 379 | `rigging.eyeTrack` | 瞳孔小幅水平移动 | 待验收设计候选 |
+| 380 | `rigging.blink` | 上下眼睑自然眨眼 | 待验收设计候选 |
+| 381 | `rigging.mouthShapes` | ["闭口","小开口","笑","A","I","U"] | 待验收设计候选 |
+| 382 | `rigging.hairPhysics` | 额前小翘发微晃 | 待验收设计候选 |
+| 383 | `rigging.clothPhysics` | 外套下摆和领带轻微滞后 | 待验收设计候选 |
+| 384 | `rigging.breathingPhysics` | 肩、胸与领带低幅联动 | 待验收设计候选 |
+| 385 | `rigging.skinningLimits` | 袖口手指不能橡皮变形 | 待验收设计候选 |
+| 386 | `rigging.expressionStates` | ["idle","smile","shy","thinking","surprised","scared"] | 待验收设计候选 |
+| 387 | `rigging.actionStates` | ["idle_empty_hands","small_wave_empty_hands","look_side","nod","equip_weapon_future","hold_weapon_future","unequip_to_empty_hands_future"] | 待验收设计候选 |
+| 388 | `rigging.runtimePreview` | 尚未制作 | 待验收设计候选 |
+| 389 | `rigging.occlusionRepair` | 需要补画刘海下的额头与袖内手臂 | 待验收设计候选 |
+| 390 | `rigging.qaAnimation` | 未测试 | 待验收设计候选 |
+| 391 | `rigging.armRotationBoundsDeg` | 肩小幅±12°，更大动作单独绘制 | 待验收设计候选 |
+| 392 | `rigging.hipRotationBoundsDeg` | 待机±3° | 待验收设计候选 |
+| 393 | `rigging.kneeFlexBoundsDeg` | 待机2–4°，均待实际测试 | 待验收设计候选 |
+| 394 | `rigging.eyelidOpennessChannel` | 0–1归一化开眼 | 待验收设计候选 |
+| 395 | `rigging.browDeformationChannels` | ["左眉高度","右眉高度","眉中内聚"] | 待验收设计候选 |
+| 396 | `rigging.mouthCornerChannels` | ["笑意","开合","左右口角微调"] | 待验收设计候选 |
+| 397 | `rigging.expressionLandmarkMotion` | 只做小幅自然形变不改脸 | 待验收设计候选 |
+| 398 | `rigging.frontSideBackProportionsQa` | 实际母图批准以后再制作背面，严禁镜像 | 待验收设计候选 |
+
+### 声音表演（audio，8项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 399 | `audio.voiceCasting` | 自然少年男声候选，演员未定 | 待验收设计候选 |
+| 400 | `audio.pronunciation` | 普通话、咬字清楚 | 待验收设计候选 |
+| 401 | `audio.multilingualNotes` | 其他语言未设计 | 待验收设计候选 |
+| 402 | `audio.recordedVoices` | 待定 | 未知 / 待核实 |
+| 403 | `audio.footstepSfx` | 轻快短步的校鞋足音 | 待验收设计候选 |
+| 404 | `audio.costumeSfx` | 外套与领带细微布料摩擦 | 待验收设计候选 |
+| 405 | `audio.voiceVolume` | 中等稍轻 | 待验收设计候选 |
+| 406 | `audio.ambienceRules` | 雨夜环境声可衬托听辨能力，不遮盖对白 | 待验收设计候选 |
+
+### 游戏交互（gameplay，14项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 407 | `gameplay.npcSchedule` | 学校日常作息待项目日程系统建立 | 待验收设计候选 |
+| 408 | `gameplay.dialogueTree` | 初见→广播异常→证词核验→信任事件 | 待验收设计候选 |
+| 409 | `gameplay.affinity` | 关系数值未定，尊重与验证可提升 | 待验收设计候选 |
+| 410 | `gameplay.trust` | 被认真倾听则提升，被戏弄则下降 | 待验收设计候选 |
+| 411 | `gameplay.playerControl` | 非默认玩家主控角色 | 待验收设计候选 |
+| 412 | `gameplay.interactRange` | 沿用场景全局交互范围 | 待验收设计候选 |
+| 413 | `gameplay.characterSelection` | 入队资格待剧情确定 | 待验收设计候选 |
+| 414 | `gameplay.sceneLayers` | 人物L2D层+对话层，角色目前未注册 | 待验收设计候选 |
+| 415 | `gameplay.collisionBounds` | 按未来真实立绘确定 | 待验收设计候选 |
+| 416 | `gameplay.saveFlags` | ["met_male3","recording_checked","male3_trust_stage"] | 待验收设计候选 |
+| 417 | `gameplay.choiceTriggers` | ["listen_again","accept_evidence","ignore_hint"] | 待验收设计候选 |
+| 418 | `gameplay.npcBrain` | 候选校园状态机：上课、活动、放学、交谈 | 待验收设计候选 |
+| 419 | `gameplay.flagsVariables` | {"met":false,"trust":0,"recordingChecked":false} | 待验收设计候选 |
+| 420 | `gameplay.inventoryRules` | 物品栏可按剧情拥有物品，但人物待机母图必须双手空；武器装备独立于人物立绘分层，未来按动作/状态动态装备与切换 | 待验收设计候选 |
+
+### 验收测试（quality，16项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 421 | `quality.originalityCheck` | 借鉴Roman Carax的青春街头态度，不复制原角色金发剪裁、绿色眼睛、义体或服装；原创校园身份 | 待验收设计候选 |
+| 422 | `quality.similarityCheck` | 必须与CHAR-003黑色乱发冷脸男主、CHAR-016黑偏分端正男二、CHAR-004短发假小子区分脸骨相和姿态 | 待验收设计候选 |
+| 423 | `quality.faceConsistency` | 暂无用户批准的原创脸部母图；旧圆脸绿大眼生成图已否决 | 待验收设计候选 |
+| 424 | `quality.hairSideCheck` | 短灰麦金碎发，左偏右偏不等，正背面应一致 | 待验收设计候选 |
+| 425 | `quality.visualIdentityCheck` | 短个子、有男性少年骨相、时髦自信的调皮花花公子气场，不是软萌女脸 | 待验收设计候选 |
+| 426 | `quality.handsCheck` | 正式原画验收：双手空着、五指可辨、袖口不遮手、左右手和手腕可独立拆层；不能因道具或插兜遮挡 | 待验收设计候选 |
+| 427 | `quality.feetCheck` | 黑色校鞋完整且同一地面线 | 待验收设计候选 |
+| 428 | `quality.fullBodyCheck` | 头顶到脚底无裁切 | 待验收设计候选 |
+| 429 | `quality.measurementProvenanceCheck` | 身高160cm、6.8头身等只是待审定的制版锚点；其余精确厘米与脸部坐标撤销，待正式立绘验收测量 | 待验收设计候选 |
+| 430 | `quality.outfitCheck` | 同校近黑深藏蓝外套、白衬衫、暗酒红领带、灰校裤；轻微松领带和修身版型作区别，不变独立街头服 | 待验收设计候选 |
+| 431 | `quality.sourceRightsCheck` | Anima和LoRA权重商用许可待核验 | 待验收设计候选 |
+| 432 | `quality.rigCheck` | 尚未绑定，不能标记通过 | 待验收设计候选 |
+| 433 | `quality.poseCheck` | 严格正面、头平、身直、双臂下垂、空手无遮挡；不再双人拼排 | 待验收设计候选 |
+| 434 | `quality.screenshotCheck` | 游戏主场景、全屏编辑器及手机视图尚未测试 | 待验收设计候选 |
+| 435 | `quality.approvalRecord` | 用户否定2026-11-04的旧双人圆脸图；确认罗曼参考气场+潮流花花公子正太方向，尚未批准新母图 | 待验收设计候选 |
+| 436 | `quality.rollbackReference` | 不覆盖CHAR-001/002/003/004/016任何已认可原图 | 待验收设计候选 |
+
+### 版本与来源（provenance，12项）
+
+| # | 字段 | 值 | 状态 |
+|---:|---|---|---|
+| 437 | `provenance.createdAt` | 2026-11-02 | 待验收设计候选 |
+| 438 | `provenance.updatedAt` | 2026-11-04 | 待验收设计候选 |
+| 439 | `provenance.userConfirmedFields` | ["男三","正太型男性少年","潮流花花公子气质","罗曼仅作为审美气场参考","母版空手、不插兜"] | 待验收设计候选 |
+| 440 | `provenance.sourceCitations` | ["用户2026-11-04指出原画娘化、圆脸、五官雷同与身高视觉不对","用户2026-11-04明确参照《赛博朋克：边缘行者2》罗曼气场","https://www.cyberpunk.net/zh-cn/edgerunners2（官方角色外部参考，不属于原创母版）"] | 待验收设计候选 |
+| 441 | `provenance.proposedFields` | 当前16岁/160cm/48kg/6.8头身、发型眼色、校服变化和性格细节都是待用户审定的原创提案 | 待验收设计候选 |
+| 442 | `provenance.unknownFields` | 角色真名、绝大多数围度、精确五官比例、家庭、课业细节、真实游戏剧情、母版图源、声优与武器均未定 | 待验收设计候选 |
+| 443 | `provenance.rejectedFields` | ["旧林见夏软萌腼腆定稿假设","旧158cm与6.4头身视觉制版方案","旧圆脸、杏圆大眼、温柔无辜微笑","旧浅茶棕蓬松球头","未经确认的录音少年与校园广播室剧情","与现有男角色复制脸","女性化娃娃感或两个角色并排生成","照抄罗曼的可辨识造型"] | 待验收设计候选 |
+| 444 | `provenance.revisionHistory` | [{"date":"2026-11-02","version":"0.1.0","note":"CHAR-020由未获批准的田径女生规划占位改为男三小正太候选"},{"date":"2026-11-04","version":"0.2.0","note":"逐项审校448字段；按用户要求调整为潮流花花公子型正太男三，以Roman Carax为气质参考；撤销无来源的精确五官数据和旧软萌广播室提案；尚待正式原画验收"}] | 待验收设计候选 |
+| 445 | `provenance.authorReviewer` | AI创作提案；待用户审批 | 待验收设计候选 |
+| 446 | `provenance.approvedBy` | 待定 | 未知 / 待核实 |
+| 447 | `provenance.permissions` | 仅设计文件，严禁未经许可修改其他角色原画 | 待验收设计候选 |
+| 448 | `provenance.historyNotes` | 旧双人生成结果已由用户否定；没有正式原画、拆分PSD或L2D，任何项目状态不得标记完成 | 待验收设计候选 |
+
+## 本次核对统计
+
+共 **448** 项，用户确认方向 5 项、待验收提案 305 项、未知 128 项、不适用 10 项。字段不缺、不重复，未批准的内容不可当成角色正史或正式视觉母版。
