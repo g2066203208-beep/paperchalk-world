@@ -280,7 +280,8 @@ function sync(t){
   const surface=a.clip?.type==='native'?a.clip.img:a.canvas;
   if(surface?.style.transform)surface.style.transform='';
   if(surface?.style.transformOrigin)surface.style.transformOrigin='';
-  if(a.rig&&!a.clip)a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
+  if(a.rig&&!a.clip&&!a.libraryPlayer)
+   a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
   if(a.clip?.type==='decoder')advanceV4(a,t||performance.now());
   if(a.clip?.type==='native')placeClip(a);
  }
