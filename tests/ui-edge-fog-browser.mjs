@@ -172,9 +172,9 @@ try{
       phoneGeometry.screen.x+phoneGeometry.screen.width<=phoneGeometry.width&&
       phoneGeometry.screen.y+phoneGeometry.screen.height<=phoneGeometry.height,
       'Software screen must remain within the approved cat-ear illustration: '+JSON.stringify(phoneGeometry));
-    const assetResponse=await page.request.get('./assets/phones/char001-cat-ear-shell.webp');
+    const assetResponse=await page.request.get(new URL('./assets/phones/char001-cat-ear-shell.webp',page.url()).href);
     assert.equal(assetResponse.status(),200,'Approved smartphone shell was not deployed');
-    assert.ok(Number(assetResponse.headers()['content-length']||0)>4000,
+    assert.ok((await assetResponse.body()).length>4000,
       'Approved phone art unexpectedly missing or empty');
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-approved-phone-lock.png'});
 
