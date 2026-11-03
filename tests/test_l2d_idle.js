@@ -140,6 +140,17 @@ let t=tiers[0],wind=tiers[2],visual=JSON.parse(JSON.stringify(t));
 for(let i=0;i<35;i++)visual=core.approachIdle(visual,wind,1/30);
 assert.ok(visual.hair.amount>t.hair.amount&&visual.hair.amount<wind.hair.amount,
  'wind tier change must ease toward its target without snapping');
+const transitioning=core.approachIdle(core.presetIdle('breeze'),wind,1/30);
+assert.ok(transitioning.windLift>.30&&transitioning.windLift<.42,
+ 'wind force must ease, not instantly replace a mild breeze by a storm');
+const mildWind=core.windField(fringe,.12,.95,2.3,core.presetIdle('breeze'));
+const intermediate=core.windField(fringe,.12,.95,2.3,transitioning);
+const strongWind=core.windField(fringe,.12,.95,2.3,wind);
+assert.ok(Math.abs(intermediate.x-mildWind.x)<Math.abs(strongWind.x-mildWind.x)*.15,
+ 'hair must not snap sideways on first video frame after wind change');
+const fading=core.approachIdle(wind,core.presetIdle('still'),1/30);
+assert.ok(fading.windLift>.85&&fading.windLift<1,
+ 'large wind should decay naturally when the player returns to still mode');
 const customV2=core.sanitizeIdleProfile({
  profileVersion:2,preset:'custom',hair:{amount:1.25},cloth:{amount:.43},
  parts:{front_hair:1.75}
