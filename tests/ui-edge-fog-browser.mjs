@@ -270,7 +270,50 @@ try{
     });
     assert.ok(bedroomFogPixels.count>bedroomFogPixels.total*.04,
       'Dialogue is visible but its actual bottom fluid black fog is missing: '+JSON.stringify(bedroomFogPixels));
+    // This is a real shape test, not just "there were dark pixels". A
+    // translucent black panel would fail because its top edge is flat, while
+    // the native fog must have a completely clear region above a variable
+    // smoky crest and become dense only close to the physical bottom.
+    const subtitleSilhouette=await page.evaluate(()=>{
+      const c=document.getElementById('ui-edge-fog'),w=c.width,h=c.height;
+      const pixels=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data;
+      const alpha=(x,y)=>pixels[(Math.floor(y)*w+Math.floor(x))*4+3];
+      const fronts=[];
+      for(let x=w*.07;x<w*.94;x+=w*.025){
+        let first=h;
+        for(let y=Math.floor(h*.61);y<h*.93;y+=2){
+          if(alpha(x,y)>20){first=y;break}
+        }
+        fronts.push(first);
+      }
+      let upperDark=0,bottomDark=0;
+      for(let x=0;x<w;x+=5){
+        if(alpha(x,h*.57)>2)upperDark++;
+        if(alpha(x,h*.94)>130)bottomDark++;
+      }
+      return {minFront:Math.min(...fronts),maxFront:Math.max(...fronts),
+        variation:Math.max(...fronts)-Math.min(...fronts),upperDark,bottomDark,
+        sampledColumns:Math.ceil(w/5),h,w};
+    });
+    assert.equal(subtitleSilhouette.upperDark,0,
+      'Subtitle fog includes a rectangular translucent black board above its smoke: '+JSON.stringify(subtitleSilhouette));
+    assert.ok(subtitleSilhouette.variation>subtitleSilhouette.h*.022,
+      'Subtitle smoke leading edge remains a perfectly straight horizontal panel: '+JSON.stringify(subtitleSilhouette));
+    assert.ok(subtitleSilhouette.bottomDark>subtitleSilhouette.sampledColumns*.55,
+      'Subtitle smoke is not dark enough at the bottom to support dialogue: '+JSON.stringify(subtitleSilhouette));
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-dialogue-and-bottom-fog.png'});
+    // A white matte reveals the alpha shape without hiding it in a dark scene.
+    await page.evaluate(()=>{
+      const src=document.getElementById('ui-edge-fog');
+      const matte=document.createElement('canvas');
+      matte.id='subtitle-fog-matte';matte.width=src.width;matte.height=src.height;
+      const ctx=matte.getContext('2d');ctx.fillStyle='white';
+      ctx.fillRect(0,0,matte.width,matte.height);ctx.drawImage(src,0,0);
+      matte.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:80;pointer-events:none';
+      document.querySelector('#view').appendChild(matte);
+    });
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-bottom-fog-white-matte.png'});
+    await page.locator('#subtitle-fog-matte').evaluate(el=>el.remove());
     await page.locator('#menu-toggle').click();
     await expectEdge(page,'left',true);
     await expectEdge(page,'bottom',true);
