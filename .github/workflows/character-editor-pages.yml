@@ -81,7 +81,7 @@ jobs:
           const fs=require('fs');
           const s=fs.readFileSync('site/character-editor/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
           new Function(s);
-          for(const file of ['site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/l2d-mode.js','site/character-editor/studio.js'])
+          for(const file of ['site/l2d/rig.js','site/l2d/runtime.js','site/dev/character-bridge.js','site/character-editor/part-rig-studio.js','site/l2d/part-rig.js','site/character-editor/studio.js'])
             new Function(fs.readFileSync(file,'utf8'));
           const editor=fs.readFileSync('site/character-editor/studio.js','utf8');
           if(!editor.includes('importComponentFiles')||!editor.includes('shouldDrawLayer'))
