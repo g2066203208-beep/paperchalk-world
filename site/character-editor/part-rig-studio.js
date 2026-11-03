@@ -1,4 +1,4 @@
-/* Non-destructive PartRig authoring UI: opt-in; original V4 unaffected. */
+/* Single editable L2D: quick movement sliders and an optional bone inspector. */
 (()=>{
 'use strict';
 const ed=window.characterEditor,core=window.PaperchalkPartRigCore,studio=window.PaperchalkStudio;
@@ -6,19 +6,11 @@ if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
 const state={active:false,panelOpen:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false};
 const panel=document.createElement('section');panel.id='part-rig-panel';panel.hidden=true;
-panel.innerHTML=`<header class="rig-h"><strong>新版 L2D · 动画设置</strong><button id="rig-close" type="button">收起设置</button></header>
-<p id="rig-source">独立部件实时骨骼 · 基础站立</p>
-<section id="rig-idle-controls" aria-label="真人待机控制">
- <strong>真人待机 · 总控</strong>
- <div id="rig-presets" class="rig-presets">
-  <button type="button" data-idle-preset="realistic">恢复基础站立</button>
- </div>
- <p id="rig-preset-description" aria-live="polite">只有一个基础站立待机：身体和五官保持稳定，无左右摇摆、无风力，发梢与衣摆微动，保留眨眼。</p>
- <div id="rig-idle-sliders"></div>
-</section>
+panel.innerHTML=`<header class="rig-h"><strong>逐件骨骼细调</strong><button id="rig-close" type="button">关闭高级设置</button></header>
+<p id="rig-source">直接拖动画布中的关节，或修改所选部件的高级参数。</p>
 <label>部件<select id="rig-part"></select></label>
 <label class="rig-part-amount">本部件摆动倍率 <output id="rig-part-amount-value">100%</output>
- <input id="rig-part-amount" type="range" min="0" max="125" value="100" step="5"></label>
+ <input id="rig-part-amount" type="range" min="0" max="300" value="100" step="5"></label>
 <div id="rig-sliders"></div>
 <div class="rig-joints"><label>当前骨骼<select id="rig-bone" aria-label="选择当前部件的独立骨骼"></select></label><div id="rig-bone-sliders"></div><p id="rig-bone-tip">每条骨骼有自己的关节、角度、速度、相位与蒙皮半径；不同部件互不影响。</p></div>
 <div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button><button id="rig-module-export" type="button">↓ 一键打包游戏模块 ZIP</button></div>
@@ -26,6 +18,11 @@ panel.innerHTML=`<header class="rig-h"><strong>新版 L2D · 动画设置</stron
 // Dock the inspector beside the character; never cover the preview.
 const dock=document.querySelector('.layout .right')||stage;
 dock.prepend(panel);
+const quickPanel=document.createElement('section');
+quickPanel.id='rig-quick-panel';
+quickPanel.hidden=true;
+quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">拖动直接看效果，身体保持站立不摇摆。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"200\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
+dock.prepend(quickPanel);
 // Keep Play/Pause visible in the rig header, outside the animated portrait.
 panel.querySelector('.rig-h').insertBefore($('rig-pause'),$('rig-close'));
 const sliders=$('rig-sliders');
@@ -58,117 +55,67 @@ for(const [field,label,min,max,step] of boneFields){
  input.min=min;input.max=max;input.step=step;
  row.append(span,out,input);boneSliders.append(row);
 }
-// User-facing controls mutate the exact model read by the game renderer.
-// No copy of animation coefficients in the UI; all presets/limits live in core.
-const idleFields=[
- ['hair.amount','发梢微动',0,30,1,100],
- ['hair.speed','头发速度',20,200,5,100],
- ['hair.lag','头发滞后',0,200,5,100],
- ['cloth.amount','衣摆微动',0,22,1,100],
- ['cloth.speed','衣物速度',20,200,5,100],
- ['cloth.lag','衣物滞后',0,200,5,100],
- ['sleeves.amount','袖口微动',0,12,1,100],
- ['sleeves.speed','袖子速度',20,200,5,100]
-];
-const idleSliders=$('rig-idle-sliders');
-for(const [field,label,min,max,step] of idleFields){
- const row=document.createElement('label');row.className='rig-field';
- const title=document.createElement('span');title.textContent=label;
- const value=document.createElement('output');value.id='idle-val-'+field.replace('.','-');
- const input=document.createElement('input');input.type='range';input.dataset.idle=field;
- input.min=min;input.max=max;input.step=step;
- row.append(title,value,input);idleSliders.append(row);
-}
-// Keep four core controls visible; advanced settings remain one click away.
-const quick=new Set(['hair.amount','cloth.amount']);
-const idleAdvanced=document.createElement('details');
-idleAdvanced.id='rig-idle-extra';
-idleAdvanced.innerHTML='<summary>进阶待机 · 速度与惯性</summary>';
-for(const row of [...idleSliders.querySelectorAll('.rig-field')]){
- const input=row.querySelector('[data-idle]');
- if(input&&!quick.has(input.dataset.idle))idleAdvanced.append(row);
-}
-$('rig-idle-controls').append(idleAdvanced);
-const advanced=document.createElement('details');
-advanced.id='rig-advanced';
-advanced.innerHTML='<summary>高级绑定 · 轴点、网格与关节</summary>';
-const guideLabel=document.createElement('label');
-guideLabel.className='rig-guide-toggle';
-guideLabel.innerHTML='<input type="checkbox" id="rig-guides"> 显示网格与关节线（仅用于绑骨）';
-advanced.append(guideLabel,sliders,panel.querySelector('.rig-joints'));
-panel.querySelector('.rig-buttons').before(advanced);
-$('rig-guides').addEventListener('change',e=>{
- state.showGuides=!!e.target.checked;
- ed.render();
-});
-// Easy controls for a moving fringe and skirt, independent of whole coat/head.
-const spotlight=document.createElement('div');
-spotlight.id='rig-spotlight';
-spotlight.innerHTML='<strong>重点飘动 · 单独调节</strong>';
-for(const [id,label] of [
- ['front_hair','刘海摆幅'],['back_hair','后发摆幅'],
- ['hair_over_jacket','背面外披发'],['skirt','裙摆摆幅']
-]){
- const row=document.createElement('label');
- row.className='rig-field';
- row.dataset.spotlightRow=id;
- row.innerHTML='<span>'+label+'</span><output>100%</output><input type="range" min="0" max="125" step="5" data-spotlight="'+id+'">';
- spotlight.append(row);
-}
-$('rig-idle-controls').insertBefore(spotlight,idleAdvanced);
-spotlight.addEventListener('input',e=>{
- const id=e.target?.dataset?.spotlight;
- if(!id||!state.model?.parts[id])return;
- state.model.idleProfile.parts[id]=Number(e.target.value)/100;
- state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
- syncIdle();changed();
-});
+// Four controls adjust the exact live model played in the game, without presets.
+const quickGroups={
+ fringe:['front_hair'],
+ rear:['rear_hair','back_hair','hair_over_jacket'],
+ skirt:['skirt','bottomwear']
+};
+const available=id=>(quickGroups[id]||[]).filter(key=>!!state.model?.parts[key]);
+function quickInfo(message){$('rig-quick-status').textContent=message;}
 function syncIdle(){
  const idle=state.model?.idleProfile;if(!idle)return;
- for(const input of idleSliders.querySelectorAll('[data-idle]')){
-  const [group,key]=input.dataset.idle.split('.');
-  const n=idle[group][key];
-  input.value=String(Math.round(n*100));
-  $('idle-val-'+group+'-'+key).textContent=(n*100).toFixed(0)+'%';
+ for(const input of quickPanel.querySelectorAll('[data-quick]')){
+  const id=input.dataset.quick,row=input.closest('.rig-quick-row');
+  if(id==='speed'){
+   input.value=String(Math.round((idle.hair.speed+idle.cloth.speed)*50/5)*5);
+   row.hidden=false;
+  }else{
+   const ids=available(id);row.hidden=!ids.length;
+   if(!ids.length)continue;
+   const mean=ids.reduce((sum,key)=>sum+(idle.parts[key]??1),0)/ids.length;
+   input.value=String(Math.round(mean*100/5)*5);
+  }
+  row.querySelector('output').textContent=input.value+'%';
  }
- for(const b of panel.querySelectorAll('[data-idle-preset]')){
-  b.classList.add('active');
-  b.setAttribute('aria-pressed','true');
- }
- $('rig-preset-description').textContent='基础站立：无风力、无身体左右摆动；仅有微弱发梢、裙摆与袖口活动，原始眨眼保持。';
  const amount=$('rig-part-amount');
  const mult=idle.parts?.[state.selected]??1;
  amount.value=String(Math.round(mult*100));
  $('rig-part-amount-value').textContent=Math.round(mult*100)+'%';
- for(const input of spotlight.querySelectorAll('[data-spotlight]')){
-  const id=input.dataset.spotlight,row=input.closest('.rig-field');
-  row.hidden=!state.model.parts[id];
-  if(row.hidden)continue;
-  const weight=idle.parts?.[id]??1;
-  input.value=String(Math.round(weight*100));
-  row.querySelector('output').textContent=Math.round(weight*100)+'%';
- }
 }
-idleSliders.addEventListener('input',e=>{
- const field=e.target.dataset.idle;if(!field||!state.model)return;
- const [group,key]=field.split('.');
+quickPanel.addEventListener('input',event=>{
+ const input=event.target.closest('[data-quick]');
+ if(!input||!state.model)return;
+ const id=input.dataset.quick,value=Number(input.value);
  const idle=state.model.idleProfile;
- idle[group][key]=Number(e.target.value)/100;
+ if(id==='speed'){
+  for(const group of ['hair','cloth','sleeves'])idle[group].speed=value/100;
+ }else{
+  for(const key of available(id))idle.parts[key]=value/100;
+ }
  state.model.idleProfile=core.sanitizeIdleProfile(idle);
- syncIdle();changed();
+ syncIdle();
+ changed(false);
 });
-panel.querySelector('#rig-presets').addEventListener('click',e=>{
- const name=e.target?.dataset?.idlePreset;
- if(!name||!state.model)return;
- state.model.idleProfile=core.presetIdle(name,state.model.idleProfile);
- syncIdle();changed();
-});
-$('rig-part-amount').addEventListener('input',e=>{
+$('rig-part-amount').addEventListener('input',event=>{
  if(!state.model||!state.selected)return;
- state.model.idleProfile.parts[state.selected]=Number(e.target.value)/100;
+ state.model.idleProfile.parts[state.selected]=Number(event.target.value)/100;
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
  syncIdle();changed();
 });
+$('rig-quick-save').onclick=async()=>{
+ const button=$('rig-quick-save');
+ if(button.disabled||!state.active)return;
+ button.disabled=true;button.textContent='正在保存…';
+ try{
+  await studio.saveToGame();
+  quickInfo('✓ 已保存，本机游戏直接读取这些参数。');
+ }catch(error){
+  quickInfo('保存失败：'+error.message);
+ }finally{
+  button.disabled=false;button.textContent='✓ 保存到游戏';
+ }
+};
 const parts=()=>S.layers[S.side].filter(p=>p.sourcePart&&p.canvas);
 const key=p=>String(p.partId||p.name);
 const current=()=>state.model?.parts[state.selected];
@@ -250,16 +197,19 @@ async function save(){
   throw error;
  }
 }
-function changed(){
- revision++;state.dirty=true;info('正在保存当前骨骼设置…');
- clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(()=>{}),600);
+function changed(autosave=true){
+ revision++;state.dirty=true;
+ info('有尚未保存的骨骼调整');
+ quickInfo('已实时预览，点击「保存到游戏」应用。');
+ clearTimeout(saveTimer);
+ if(autosave)saveTimer=setTimeout(()=>save().catch(()=>{}),1200);
  ed.render();
 }
 function syncOpenState(){
  const primary=$('idle-open');
  if(primary){
   primary.setAttribute('aria-expanded',String(state.panelOpen));
-  primary.textContent=state.panelOpen?'✦ 收起动画设置':'✦ 动画设置';
+  primary.textContent=state.panelOpen?'✦ 关闭骨骼细调':'✦ 骨骼细调';
  }
 }
 function setInspectorOpen(open){
@@ -273,6 +223,7 @@ function setInspectorOpen(open){
 async function deactivate(){
  if(state.dirty)await save();
  state.active=false;state.model=null;state.panelOpen=false;state.drag=null;state.bone='';
+ quickPanel.hidden=true;
  setInspectorOpen(false);
 }
 async function activate(openPanel=false){
@@ -285,6 +236,7 @@ async function activate(openPanel=false){
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
  state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
  state.active=true;state.phase=0;state.playing=true;state.showGuides=false;
+ quickPanel.hidden=false;
  $('rig-guides').checked=false;
  setInspectorOpen(openPanel);
  const selectNode=$('rig-part');selectNode.replaceChildren();
@@ -294,7 +246,8 @@ async function activate(openPanel=false){
  $('rig-source').textContent=id==='char-002'&&src.length<12
   ?'女二当前只有 '+src.length+' 个扁平图分区，不是真 PSD。可以试验分区，但不能冒充完整分层绑定。'
   :'真实源图层 '+src.length+' 个，使用新版独立部件骨骼动画。';
- info('已只保留基础站立：身体不再左右摇摆，关闭风力和夸张变形，仅保留非常轻微的发梢、衣摆动态与眨眼。');
+ quickInfo('拖动滑块后点击保存，实时预览不会改变身体站姿。');
+ info('新版独立部件骨骼已载入。');
  ed.render();
 }
 function toggleIdle(){
@@ -464,7 +417,7 @@ function loc(e){
  return {x:(e.clientX-b.left-S.px)/S.zoom,y:(e.clientY-b.top-S.py)/S.zoom};
 }
 stage.addEventListener('pointerdown',e=>{
- if(!state.active||e.target!==$('view'))return;
+ if(!state.active||!state.panelOpen||!state.showGuides||e.target!==$('view'))return;
  e.stopImmediatePropagation();e.preventDefault();
  const p=current();if(!p)return;
  const o=loc(e),a={x:p.x+p.pivot.x*p.w,y:p.y+p.pivot.y*p.h};
@@ -527,7 +480,7 @@ function tick(now){
 window.addEventListener('paperchalk:studio-character-loaded',()=>{
  // changeCore flushes the previous rig before emitting this event.
  state.active=false;state.model=null;state.panelOpen=false;state.selected='';
- state.drag=null;state.dirty=false;
+ state.drag=null;state.dirty=false;quickPanel.hidden=true;
  setInspectorOpen(false);
 });
 window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
