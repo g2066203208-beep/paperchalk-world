@@ -1585,6 +1585,8 @@ void main(){
         uiFogCtx.clearRect(0,0,w,h);
         uiFogCanvas.dataset.visible='false';
       }
+      // A closed phone must not leave a one-frame foreground fog ghost.
+      phoneFogCtx.clearRect(0,0,w,h);
       return;
     }
     uiFogCanvas.dataset.visible='true';
