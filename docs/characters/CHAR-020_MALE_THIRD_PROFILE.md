@@ -1,25 +1,25 @@
-# CHAR-020｜男三V2：潮流花花公子型正太｜448字段逐项核对
+# CHAR-020｜男三V2.1：潮流花花公子型矮个正太｜448字段逐项核对
 
 > 更新日期：2026-11-04；资料状态：设计候选，**未生成或验收正式原画**。用户确认的是角色方向，所有具体数值与未给定的剧情仍为提案或未知。
 > 灵感辨认：用户明确指《赛博朋克：边缘行者2》的罗曼（Roman Carax），只参考年轻、自信、有视觉个性的气质；不复制其脸、发型、服装、义体或故事。版权角色并非本游戏男三。
 
 ## V1被否决 / V2改动
 
-- 旧158cm/46kg/6.4头身、圆润婴儿脸、大杏眼、羞涩微笑等设计提案已撤销。
-- V2暂定170cm、57kg、7.2头身；偏长带清晰颧颌转折的原创男生脸；中等偏细长杏眼、挑眉、坏笑、修长体态。
+- 旧158cm/46kg/6.4头身以及后来170cm/57kg/7.2头身、圆润婴儿脸、大杏眼、羞涩微笑等设计提案已撤销。
+- V2.1暂以**148cm、40kg、6.3头身**作为正太体型候选，头身相对偏小巧，但五官和肩颈仍清晰呈现少年男性气质；用户只否定偏高版本，未明确批准此数值。
 - 服装保持同校近黑深蓝校服与酒红领带，穿法稍松但不改变校服身份，母版双手空着。
 - 姓名、年龄、身高、家世、正式图像与绑定均未由用户验收；不要把数值当真实测量。
 
 ## 正向提示词｜Anima txt2img
 
 ```text
-masterpiece, best quality, score_7, newest, safe, highres, <lora:akipekoanima_v1_1:1>, @akipekostyle, 1boy, solo, one character only, full body, strict front view, eye-level camera, original fashionable youthful Japanese high school boy, stylish mischievous teenage boy, approximately 17 years old, natural 7.2-head-tall male body proportions, 170cm visual design, slender well-proportioned masculine physique, confident charming boyish face with clear masculine bone structure, subtly angular narrow-oval face, defined cheekbones, clean lightly squared jawline, medium-sized slightly narrow almond eyes, muted turquoise-gray irises, expressive single raised eyebrow, confident playful gaze, asymmetrical teasing half-smile, original short layered smoky ash-blond hair with dark taupe roots, airy asymmetric side swept bangs partially revealing forehead, clear ears, stylish youthful playful slightly cocky atmosphere without feminine softness, original near-black deep navy fitted school blazer worn casually open, white collared shirt with slightly relaxed collar, loosened dark burgundy tie, charcoal gray well-fitted straight school trousers, black school loafers, jacket with two matte dark buttons, balanced upright relaxed stance, both arms at sides slightly away from torso, both empty hands fully visible, all fingers naturally separated, clean refined cel-shaded Japanese visual novel character artwork, crisp lineart, correct natural male shoulder and elbow anatomy, restrained fabric folds and coherent lighting, plain warm off-white studio background, complete head and feet visible, centered single full-body illustration, original character face and hairstyle not copied from any existing anime.
+masterpiece, best quality, score_7, newest, safe, highres, <lora:akipekoanima_v1_1:1>, @akipekostyle, 1boy, solo, one character only, full body, strict front view, eye-level camera, original fashionable youthful Japanese high school boy, stylish mischievous short teenage boy, compact cute male silhouette, approximately 16 years old, natural 6.3-head-tall youthful male body proportions, noticeably short stature around 148cm, short and compact yet anatomically coherent limbs, petite slender but clearly boyish adolescent physique, shorter limb proportions, clear male shoulder and jaw anatomy, confident charismatic youthful male face with clear boyish bone structure, subtly angular narrow-oval face, defined cheekbones, clean lightly squared jawline, medium-sized slightly narrow almond eyes, muted turquoise-gray irises, expressive single raised eyebrow, confident playful gaze, asymmetrical teasing half-smile, original short layered smoky ash-blond hair with dark taupe roots, airy asymmetric side swept bangs partially revealing forehead, clear ears, stylish youthful playful slightly cocky atmosphere without feminine softness, original near-black deep navy fitted school blazer worn casually open, white collared shirt with slightly relaxed collar, loosened dark burgundy tie, charcoal gray well-fitted straight school trousers, black school loafers, jacket with two matte dark buttons, balanced upright relaxed stance, both arms at sides slightly away from torso, both empty hands fully visible, all fingers naturally separated, clean refined cel-shaded Japanese visual novel character artwork, crisp lineart, correct natural male shoulder and elbow anatomy, restrained fabric folds and coherent lighting, plain warm off-white studio background, complete head and feet visible, centered single full-body illustration, original character face and hairstyle not copied from any existing anime.
 ```
 
 ## 负向提示词
 
 ```text
-worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy girl, round baby face, oversized round eyes, glassy huge green eyes, chubby cheeks, innocent child, elementary school boy, chibi, 5 or 6 heads tall, huge head, short limbs, infantilized proportions, generic AI pretty girl face, infantile button nose, weak jawline, identical face to existing male leads, copied Roman Carax face or costume, identical anime character design, cybernetic temple implants, futuristic jacket, blonde undercut with futuristic cybernetics, generic reddish brown mushroom hair, black messy center-part hair, thick dark side part, oversized purple blazer, gold buttons, white knit vest, classroom background, double character, two boys, multiple views, split panel, big bust portrait beside body, hands in pockets, crossed arms, holding jacket, holding any prop, phone, camera, weapon, book, missing fingers, hidden hands, malformed arms, distorted shoulders, cropped feet, cropped head, text, logo, watermark.
+worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy girl, round baby face, oversized round eyes, glassy huge green eyes, chubby cheeks, innocent child, elementary school boy, chibi, 4 or 5 heads tall, huge deformed head, stubby infant limbs, infantilized proportions, tall adult body, 170cm or taller silhouette, overly long legs, generic AI pretty girl face, infantile button nose, weak jawline, identical face to existing male leads, copied Roman Carax face or costume, identical anime character design, cybernetic temple implants, futuristic jacket, blonde undercut with futuristic cybernetics, generic reddish brown mushroom hair, black messy center-part hair, thick dark side part, oversized purple blazer, gold buttons, white knit vest, classroom background, double character, two boys, multiple views, split panel, big bust portrait beside body, hands in pockets, crossed arms, holding jacket, holding any prop, phone, camera, weapon, book, missing fingers, hidden hands, malformed arms, distorted shoulders, cropped feet, cropped head, text, logo, watermark.
 ```
 
 ## 22类 × 448字段全量档案（逐项值+状态）
@@ -36,7 +36,7 @@ worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy gi
 | 6 | `aliases` | ["男三","潮流少年","小正太型帅气男生"] | 未验收提案 |
 | 7 | `pronouns` | 他 | 未验收提案 |
 | 8 | `genderPresentation` | 男三：清秀少年男生、帅气时髦、玩世不恭的花花公子气质，但不能女相 | 用户确认 |
-| 9 | `ageYears` | 17 | 未验收提案 |
+| 9 | `ageYears` | 16 | 未验收提案 |
 | 10 | `birthDate` | 待定 | 未知 |
 | 11 | `birthplace` | 待定 | 未知 |
 | 12 | `currentResidence` | 待定 | 未知 |
@@ -81,46 +81,46 @@ worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy gi
 
 | # | 字段 | V2值 | 状态 |
 |---:|---|---|---|
-| 39 | `heightCm` | 170 | 未验收提案 |
-| 40 | `weightKg` | 57 | 未验收提案 |
-| 41 | `headBodyRatio` | 7.2 | 未验收提案 |
-| 42 | `shoulderWidthCm` | 40 | 未验收提案 |
-| 43 | `chestCircumferenceCm` | 84 | 未验收提案 |
-| 44 | `waistCircumferenceCm` | 70 | 未验收提案 |
-| 45 | `hipCircumferenceCm` | 86 | 未验收提案 |
-| 46 | `torsoLengthCm` | 48 | 未验收提案 |
-| 47 | `armSpanCm` | 171 | 未验收提案 |
-| 48 | `inseamCm` | 77 | 未验收提案 |
-| 49 | `shoeSize` | CN 40–41（视觉制版提案） | 未验收提案 |
-| 50 | `bodyBuild` | 中等身高、偏瘦修长、明确男生体态；挺拔但有轻松少年气 | 未验收提案 |
-| 51 | `bodyMassDescription` | 健康的轻薄肌肉感，有男性肩颈及四肢比例，不刻意壮硕 | 未验收提案 |
+| 39 | `heightCm` | 148 | 未验收提案 |
+| 40 | `weightKg` | 40 | 未验收提案 |
+| 41 | `headBodyRatio` | 6.3 | 未验收提案 |
+| 42 | `shoulderWidthCm` | 待定 | 未知 |
+| 43 | `chestCircumferenceCm` | 待定 | 未知 |
+| 44 | `waistCircumferenceCm` | 待定 | 未知 |
+| 45 | `hipCircumferenceCm` | 待定 | 未知 |
+| 46 | `torsoLengthCm` | 待定 | 未知 |
+| 47 | `armSpanCm` | 待定 | 未知 |
+| 48 | `inseamCm` | 待定 | 未知 |
+| 49 | `shoeSize` | 待定 | 未知 |
+| 50 | `bodyBuild` | 明显小个子、轻巧的少年男性身形，头身比约6.3，肩颈和四肢结构明确，体态并非成年人缩小贴图 | 未验收提案 |
+| 51 | `bodyMassDescription` | 纤细、轻巧而健康；不壮硕，也不做幼儿肥胖四肢 | 未验收提案 |
 | 52 | `posture` | 肩膀自然水平，姿态松弛又自信，双脚站稳，双手空置 | 未验收提案 |
 | 53 | `handDominance` | 待定 | 未知 |
 | 54 | `gait` | 步子轻快、走路有节奏感，不过分卖弄 | 未验收提案 |
-| 55 | `upperArmCircumferenceCm` | 25 | 未验收提案 |
-| 56 | `forearmCircumferenceCm` | 23 | 未验收提案 |
-| 57 | `wristCircumferenceCm` | 15.5 | 未验收提案 |
-| 58 | `thighCircumferenceCm` | 46 | 未验收提案 |
-| 59 | `calfCircumferenceCm` | 33 | 未验收提案 |
-| 60 | `kneeCircumferenceCm` | 34 | 未验收提案 |
-| 61 | `ankleCircumferenceCm` | 20 | 未验收提案 |
-| 62 | `upperArmLengthCm` | 30 | 未验收提案 |
-| 63 | `forearmLengthCm` | 25.5 | 未验收提案 |
-| 64 | `handLengthCm` | 18.5 | 未验收提案 |
-| 65 | `palmWidthCm` | 8.2 | 未验收提案 |
-| 66 | `upperLegLengthCm` | 42 | 未验收提案 |
-| 67 | `lowerLegLengthCm` | 39.5 | 未验收提案 |
-| 68 | `kneeHeightCm` | 48.5 | 未验收提案 |
-| 69 | `hipBreadthCm` | 31 | 未验收提案 |
-| 70 | `shoulderBreadthCm` | 40 | 未验收提案 |
-| 71 | `waistHeightCm` | 101 | 未验收提案 |
-| 72 | `ribcageDepthCm` | 19 | 未验收提案 |
-| 73 | `hipDepthCm` | 18.5 | 未验收提案 |
-| 74 | `headWidthCm` | 14.8 | 未验收提案 |
-| 75 | `faceLengthCm` | 19.8 | 未验收提案 |
-| 76 | `faceWidthCm` | 13.8 | 未验收提案 |
-| 77 | `footLengthCm` | 25.5 | 未验收提案 |
-| 78 | `footWidthCm` | 9.7 | 未验收提案 |
+| 55 | `upperArmCircumferenceCm` | 待定 | 未知 |
+| 56 | `forearmCircumferenceCm` | 待定 | 未知 |
+| 57 | `wristCircumferenceCm` | 待定 | 未知 |
+| 58 | `thighCircumferenceCm` | 待定 | 未知 |
+| 59 | `calfCircumferenceCm` | 待定 | 未知 |
+| 60 | `kneeCircumferenceCm` | 待定 | 未知 |
+| 61 | `ankleCircumferenceCm` | 待定 | 未知 |
+| 62 | `upperArmLengthCm` | 待定 | 未知 |
+| 63 | `forearmLengthCm` | 待定 | 未知 |
+| 64 | `handLengthCm` | 待定 | 未知 |
+| 65 | `palmWidthCm` | 待定 | 未知 |
+| 66 | `upperLegLengthCm` | 待定 | 未知 |
+| 67 | `lowerLegLengthCm` | 待定 | 未知 |
+| 68 | `kneeHeightCm` | 待定 | 未知 |
+| 69 | `hipBreadthCm` | 待定 | 未知 |
+| 70 | `shoulderBreadthCm` | 待定 | 未知 |
+| 71 | `waistHeightCm` | 待定 | 未知 |
+| 72 | `ribcageDepthCm` | 待定 | 未知 |
+| 73 | `hipDepthCm` | 待定 | 未知 |
+| 74 | `headWidthCm` | 待定 | 未知 |
+| 75 | `faceLengthCm` | 待定 | 未知 |
+| 76 | `faceWidthCm` | 待定 | 未知 |
+| 77 | `footLengthCm` | 待定 | 未知 |
+| 78 | `footWidthCm` | 待定 | 未知 |
 
 ### anatomy（37项）
 
@@ -440,8 +440,8 @@ worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy gi
 | 330 | `fullBodyRule` | 单人头顶和鞋底全部完整，身形修长 | 未验收提案 |
 | 331 | `centeredRule` | 一个人物居中，无并排双人、无右侧大头照 | 未验收提案 |
 | 332 | `occlusionRule` | 两手空置外露，衣领、外套、领带结构独立；不使用手机、摄影机或武器 | 未验收提案 |
-| 333 | `promptPositive` | masterpiece, best quality, score_7, newest, safe, highres, <lora:akipekoanima_v1_1:1>, @akipekostyle, 1boy, solo, one character only, full body, strict front view, eye-level camera, original fashionable youthful Japanese high school boy, stylish mischievous teenage boy, approximately 17 years old, natural 7.2-head-tall male body proportions, 170cm visual design, slender well-proportioned masculine physique, confident charming boyish face with clear masculine bone structure, subtly angular nar… | 未验收提案 |
-| 334 | `promptNegative` | worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy girl, round baby face, oversized round eyes, glassy huge green eyes, chubby cheeks, innocent child, elementary school boy, chibi, 5 or 6 heads tall, huge head, short limbs, infantilized proportions, generic AI pretty girl face, infantile button nose, weak jawline, identical face to existing male leads, copied Roman Carax face or costume, identical anime character design, cybernetic temple implants, futuristic jacket… | 未验收提案 |
+| 333 | `promptPositive` | masterpiece, best quality, score_7, newest, safe, highres, <lora:akipekoanima_v1_1:1>, @akipekostyle, 1boy, solo, one character only, full body, strict front view, eye-level camera, original fashionable youthful Japanese high school boy, stylish mischievous short teenage boy, compact cute male silhouette, approximately 16 years old, natural 6.3-head-tall youthful male body proportions, noticeably short stature around 148cm, short and compact yet anatomically coherent limbs, petite slender but clearly boyish adolescent physique, shorter limb proportions, clear male shoulder and jaw anatomy, confident charismatic youthful male face with clear boyish bone structure, subtly angular narrow-oval face, defined cheekbones, clean lightly squared jawline, medium-sized slightly narrow almond eyes, muted turquoise-gray irises, expressive single raised eyebrow, confident playful gaze, asymmetrical teasing half-smile, original short layered smoky ash-blond hair with dark taupe roots, airy asymmetric side swept bangs partially revealing forehead, clear ears, stylish youthful playful slightly cocky atmosphere without feminine softness, original near-black deep navy fitted school blazer worn casually open, white collared shirt with slightly relaxed collar, loosened dark burgundy tie, charcoal gray well-fitted straight school trousers, black school loafers, jacket with two matte dark buttons, balanced upright relaxed stance, both arms at sides slightly away from torso, both empty hands fully visible, all fingers naturally separated, clean refined cel-shaded Japanese visual novel character artwork, crisp lineart, correct natural male shoulder and elbow anatomy, restrained fabric folds and coherent lighting, plain warm off-white studio background, complete head and feet visible, centered single full-body illustration, original character face and hairstyle not copied from any existing anime. | 未验收提案 |
+| 334 | `promptNegative` | worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy girl, round baby face, oversized round eyes, glassy huge green eyes, chubby cheeks, innocent child, elementary school boy, chibi, 4 or 5 heads tall, huge deformed head, stubby infant limbs, infantilized proportions, tall adult body, 170cm or taller silhouette, overly long legs, generic AI pretty girl face, infantile button nose, weak jawline, identical face to existing male leads, copied Roman Carax face or costume, identical anime character design, cybernetic temple implants, futuristic jacket, blonde undercut with futuristic cybernetics, generic reddish brown mushroom hair, black messy center-part hair, thick dark side part, oversized purple blazer, gold buttons, white knit vest, classroom background, double character, two boys, multiple views, split panel, big bust portrait beside body, hands in pockets, crossed arms, holding jacket, holding any prop, phone, camera, weapon, book, missing fingers, hidden hands, malformed arms, distorted shoulders, cropped feet, cropped head, text, logo, watermark. | 未验收提案 |
 | 335 | `modelVersion` | Anima Base v1.0（当前生成建议，实际版本以用户软件为准） | 未验收提案 |
 | 336 | `artistTag` | @akipekostyle | 未验收提案 |
 | 337 | `lora` | <lora:akipekoanima_v1_1:1> | 未验收提案 |
@@ -468,14 +468,14 @@ worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy gi
 | 358 | `shadowDensity` | 中等，不能大块脏阴影 | 未验收提案 |
 | 359 | `highlightTreatment` | 头发反光克制、眼睛小高光，五官有立体感 | 未验收提案 |
 | 360 | `textureComplexity` | 不添加AI噪点，只保留面料、发丝等有意义纹理 | 未验收提案 |
-| 361 | `anatomicalStylization` | 约7.2头身、约170cm外观的修长原创少年型男性，非幼童 | 未验收提案 |
+| 361 | `anatomicalStylization` | 约6.3头身的身形偏矮正太型高中男生，头占比略高但五官骨相清晰；非小学生、非圆脸女相 | 未验收提案 |
 | 362 | `facialFeatureStylization` | 窄杏眼、有颧颌结构、独立鼻梁、轻挑眉与一侧嘴角；不要女相和大圆眼 | 未验收提案 |
 | 363 | `characterIdentityEmbeddingNotes` | 尚无正式母版，禁止宣称已训练LoRA或生成身份Embedding；先用独立原创txt2img定稿 | 未验收提案 |
 | 364 | `frontPosePoseCode` | M03_IDLE_FASHION_MALE_V2 | 未验收提案 |
-| 365 | `poseSilhouetteNotes` | 原始站姿，双手完整空着，肘外留空隙；不抓外套、不持物、不插兜 | 未验收提案 |
+| 365 | `poseSilhouetteNotes` | 正面单人短小男孩身形但服装轮廓完整，双手自然空置、离开躯干且五指可见，头脚不裁切，画布内留白不能用撑满画面假装同样身高 | 未验收提案 |
 | 366 | `framingHeadroomRatio` | 0.05 | 未验收提案 |
 | 367 | `framingFootroomRatio` | 0.04 | 未验收提案 |
-| 368 | `bodyAlignmentRule` | 实际站位用约170cm提案与男主候选176cm对照；不能凭生成图像绝对锁定身高 | 未验收提案 |
+| 368 | `bodyAlignmentRule` | 暂按148cm候选与男主176cm候选共享脚底基准，男三身高约为男主84.1%；游戏缩放依据最终批准身高而非画布像素 | 未验收提案 |
 
 ### rigging（30项）
 
@@ -556,7 +556,7 @@ worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy gi
 | 426 | `handsCheck` | 双手空着完整可见，五指自然，保持L2D拆分余量 | 未验收提案 |
 | 427 | `feetCheck` | 鞋底完整、正常地面线，按170cm比例提案测量 | 未验收提案 |
 | 428 | `fullBodyCheck` | 单人竖版完整全身，不双人拼版或右侧大头照 | 未验收提案 |
-| 429 | `measurementProvenanceCheck` | 170cm、57kg、7.2头身及各围度均是重新制版提案，非用户确认或原画测量 | 未验收提案 |
+| 429 | `measurementProvenanceCheck` | 148cm、40kg、6.3头身均为响应用户否定160cm方案后的设计候选，未获明确验收；除三项锚点外其他精确围度全部归入未知 | 未验收提案 |
 | 430 | `outfitCheck` | 同校近黑深藏蓝外套、白衬衫、松酒红领带、炭灰裤、黑鞋；没有针织背心、金扣或赛博外套 | 未验收提案 |
 | 431 | `sourceRightsCheck` | 画风模型与LoRA商业授权仍需核验；不能复刻罗曼既有版权造型 | 未验收提案 |
 | 432 | `rigCheck` | 尚未拆PSD或Live2D，不能标记通过 | 未验收提案 |
@@ -573,10 +573,10 @@ worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy gi
 | 438 | `updatedAt` | 2026-11-04 | 未验收提案 |
 | 439 | `userConfirmedFields` | ["男三定位","潮流花花公子正太气质","拒绝旧娃娃脸、女相、错误身高","参考《赛博朋克：边缘行者2》罗曼少年感与自信气质","基础立绘双手空置"] | 未验收提案 |
 | 440 | `sourceCitations` | ["用户2026-11-04纠正旧设计","CD PROJEKT RED《赛博朋克：边缘行者2》Roman Carax官方角色介绍，仅气质参考","2026-11-02原CHAR-020草案作为已废弃设计对照"] | 未验收提案 |
-| 441 | `proposedFields` | 新拟17岁、170cm、57kg、7.2头身、灰亚麻金棕发、灰青杏眼、原创骨相、修身校服及新的故事性格均待用户审核 | 未验收提案 |
-| 442 | `unknownFields` | 真实身高、正式姓名、家庭、生日、年级、剧情确认、正式母图、图像哈希、LoRA和L2D均未定 | 未验收提案 |
+| 441 | `proposedFields` | 新拟16岁、148cm、40kg、6.3头身、发型眼色、服装细节和性格都是未验收美术提案 | 未验收提案 |
+| 442 | `unknownFields` | 真实身高体重、其他人体围度与长度、正式姓名、家庭、剧情、正式图像和L2D均未知 | 未验收提案 |
 | 443 | `rejectedFields` | ["158cm/46kg/6.4头身旧数值提案","圆脸婴儿肥+大圆杏眼+腼腆微笑","浅茶棕蘑菇头翘刘海","旧奶油色针织背心+广播站专属设定","生成的双人圆脸图作为母版","复制《边缘行者2》罗曼具体脸型发型衣服或义体"] | 未验收提案 |
-| 444 | `revisionHistory` | [{"date":"2026-11-02","version":"0.1.0","note":"早期小正太角色草案，后来经用户否决形象"},{"date":"2026-11-04","version":"0.2.0","note":"用户更正为潮流花花公子型正太，参考罗曼少年自信气质；448项重新复核、修正冲突值并保留未知项，等待单人原画审核"}] | 未验收提案 |
+| 444 | `revisionHistory` | [{"date":"2026-11-02","version":"0.1.0","note":"早期小正太角色草案，后来经用户否决形象"},{"date":"2026-11-04","version":"0.2.0","note":"用户更正为潮流花花公子型正太，参考罗曼少年自信气质；448项重新复核、修正冲突值并保留未知项，等待单人原画审核"},{"date":"2026-11-04","version":"0.2.1","note":"用户拒绝160cm/偏高少年的正太比例；制版草案修正为148cm、40kg、6.3头身，清除旧170cm版本的无依据围度。仍未批准正式身高。"}] | 未验收提案 |
 | 445 | `authorReviewer` | 角色V2由AI提出待用户验收，未宣称官方角色或画面批准 | 未验收提案 |
 | 446 | `approvedBy` | 待定 | 未知 |
 | 447 | `permissions` | 仅设计文件，严禁未经许可修改其他角色原画 | 未验收提案 |
@@ -584,6 +584,6 @@ worst quality, low quality, blurry, lowres, 1girl, female, feminine face, shy gi
 
 ## 状态统计
 
-字段总数：448；状态计数：{"user_confirmed":2,"proposed":390,"unknown":46,"not_applicable":10,"rejected":0}。
+字段总数：448；状态计数：{"proposed":358,"unknown":78,"user_confirmed":2,"not_applicable":10}。
 
 原始结构化数据为同目录 `CHAR-020.profile.json`；所有具体数值均可在正式原画验收后修订。
