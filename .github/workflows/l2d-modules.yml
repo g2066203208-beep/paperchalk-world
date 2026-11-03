@@ -17,6 +17,7 @@ on:
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
       - 'tests/test_l2d_idle.js'
+      - 'tests/test_battle_front_studio.js'
       - '.github/workflows/l2d-modules.yml'
   pull_request:
     paths:
@@ -24,10 +25,13 @@ on:
       - 'site/l2d/library-player.js'
       - 'site/dev/character-bridge.js'
       - 'site/index.html'
+      - 'site/character-editor/studio.js'
+      - 'site/l2d/part-rig.js'
       - 'scripts/build_l2d_library.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
       - 'tests/test_l2d_idle.js'
+      - 'tests/test_battle_front_studio.js'
       - '.github/workflows/l2d-modules.yml'
   workflow_dispatch:
 permissions:
@@ -47,6 +51,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_l2d_library.py' -v
       - name: Validate realistic idle and independent per-part settings
         run: node tests/test_l2d_idle.js
+      - name: Verify separate protagonist battle-front PSD studio and ZIP isolation
+        run: node tests/test_battle_front_studio.js
       - name: Rebuild existing original L2D safely
         run: |
           python3 scripts/build_v4_assets.py
