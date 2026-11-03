@@ -302,13 +302,17 @@ try{
    assert.equal(normal.perf.globalSubtreeObservers,0);
    const shot=await page.evaluate(()=>{
      const view=document.getElementById('view'),actor=window.PaperchalkL2D.get('player');
-     const rect=actor.img.getBoundingClientRect();
+     // offsetLeft / offsetTop are unrotated logical game-space pixels.
+     // Browser DOMRect is screen-rotated in phone portrait fallback, so
+     // comparing it to logical clientWidth would falsely fail 90° rotation.
      const g=window.PaperWorldL2DGround.inspect();
      const p=g.actors.find(a=>a.id==='player');
      const enemy=g.actors.find(a=>a.id==='enemy');
+     const rootY=parseFloat(getComputedStyle(actor.root).translate.split(/\\s+/)[1])||0;
      return {width:view.clientWidth,height:view.clientHeight,
-       headY:rect.top+rect.height*(p.soleY-p.visibleFraction),
-       centerX:rect.left+rect.width*.5,
+       headY:actor.img.offsetTop+rootY+actor.img.offsetHeight*
+         (p.soleY-p.visibleFraction),
+       centerX:actor.img.offsetLeft+actor.img.offsetWidth*.5,
        enemyFoot:enemy.worldFootY,enemyVisible:enemy.targetVisiblePx};
    });
    assert.ok(Math.abs(shot.centerX/shot.width-.27)<.018,
