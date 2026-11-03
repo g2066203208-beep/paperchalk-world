@@ -230,8 +230,41 @@ try{
     // Verify approved HUD on the requested actual bedroom module as well.
     await page.goto(target.replace('scene=classroom','scene=bedroom'),{waitUntil:'domcontentloaded'});
     await page.locator('#hud-top').waitFor({state:'visible'});
+    await expectEdge(page,'bottom',true);
+    assert.equal(await page.locator('#dialogue').isVisible(),true,
+      'Bedroom environment incorrectly hides its active dialogue');
+    assert.equal(await page.locator('#speaker').textContent(),'???');
+    assert.ok((await page.locator('#dialogue-text').textContent()).includes('房间'),
+      'Bedroom dialogue appears to use classroom words');
+    await page.waitForTimeout(1150);
+    const bedroomFogPixels=await page.evaluate(()=>{
+      const c=document.getElementById('ui-edge-fog');
+      const w=c.width,h=c.height,a=c.getContext('2d').getImageData(0,Math.floor(h*.74),w,Math.ceil(h*.26)).data;
+      let count=0;for(let k=3;k<a.length;k+=4)if(a[k]>35)count++;return {count,total:a.length/4};
+    });
+    assert.ok(bedroomFogPixels.count>bedroomFogPixels.total*.04,
+      'Dialogue is visible but its actual bottom fluid black fog is missing: '+JSON.stringify(bedroomFogPixels));
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-dialogue-and-bottom-fog.png'});
+    await page.locator('#menu-toggle').click();
+    await expectEdge(page,'left',true);
+    await expectEdge(page,'bottom',true);
+    await page.waitForTimeout(750);
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-left-menu-and-bottom-fog.png'});
+    await page.locator('#menu-toggle').click();
+    await expectEdge(page,'left',false);
+    await page.locator('#next-line').click();
+    await expectEdge(page,'bottom',false);
+    assert.equal(await page.locator('#dialogue').isVisible(),false,
+      'Bedroom preview dialogue should end and disappear');
     await page.waitForTimeout(800);
-    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-top-hud.png'});
+    await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-bedroom-clean-scene.png'});
+    await page.evaluate(()=>window.PaperWorldDialogue.show({
+      speaker:'测试对白',text:'字幕与黑雾必须一起出现。'
+    }));
+    await expectEdge(page,'bottom',true);
+    assert.equal(await page.locator('#dialogue-text').textContent(),'字幕与黑雾必须一起出现。');
+    await page.locator('#next-line').click();
+    await expectEdge(page,'bottom',false);
     await page.close();
     console.log('PASS '+cfg.label+': native subtitle and settings fog, transparent controls, left/right triggers, empty top, hidden fog after closing, dialogue end; screenshots saved');
   }
