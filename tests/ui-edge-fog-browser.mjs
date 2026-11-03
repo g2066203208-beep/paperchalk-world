@@ -148,6 +148,24 @@ try{
     });
     assert.ok(devPixels.count>devPixels.total*.08,
       'Live source fog missing beneath developer settings: '+JSON.stringify(devPixels));
+    // Regress the exact screenshot defect: side fog must grow FROM the right
+    // screen edge, not start as a solid rectangle halfway across the scene.
+    const rightOrientation=await page.evaluate(()=>{
+      const c=document.getElementById('dev-panel-fog'),w=c.width,h=c.height;
+      const p=c.getContext('2d').getImageData(0,0,w,h).data;
+      const avg=x=>{
+        let sum=0,n=0;
+        for(let y=Math.floor(h*.1);y<h*.85;y+=3){
+          sum+=p[(y*w+Math.floor(w*x))*4+3];n++;
+        }
+        return sum/Math.max(1,n);
+      };
+      return {farInside:avg(.48),front:avg(.60),edge:avg(.97)};
+    });
+    assert.ok(rightOrientation.edge>rightOrientation.front+40,
+      'Right fog faces backwards (opaque rectangular inner border): '+JSON.stringify(rightOrientation));
+    assert.ok(rightOrientation.farInside<3,
+      'Right UI fog still dims an unrelated middle section: '+JSON.stringify(rightOrientation));
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-dev-settings.png'});
     // QA-only fog-on-white isolation: visual reviewers must see a *flowing,
     // feathered* fog edge, not a dark rectangular plate hiding the room.
