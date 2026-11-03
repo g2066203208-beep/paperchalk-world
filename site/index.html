@@ -313,7 +313,7 @@ body.mobile-mode.virtual-landscape #view{
 #enemy-depth-root[hidden],#camera-player-root[hidden]{display:none!important}
 #enemy-depth-root #actor-enemy[hidden]{display:none!important}
 #enemy-depth-root #actor-enemy{
-  position:absolute;display:block;left:46%;bottom:16%;height:34%;
+  position:absolute;display:block;left:46%;bottom:12%;height:48%;
   width:auto;aspect-ratio:1 / 1;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
@@ -327,15 +327,15 @@ body.mobile-mode.virtual-landscape #view{
   will-change:transform;
 }
 #camera-player-root #actor-player{
-  position:absolute;display:block;left:19cqw;bottom:3cqh;height:76cqh;
+  position:absolute;display:block;left:9cqw;bottom:-5.5cqh;height:90cqh;
   width:auto;aspect-ratio:1 / 1;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
 /* The same saved protagonist transform is used in classrooms and all rooms.
    Do not override the DEV-authored inline x/y/size on environment scenes. */
 @container (max-height:445px){
-  #enemy-depth-root #actor-enemy{height:34%;width:19.125%;left:46%;bottom:16%}
-  #camera-player-root #actor-player{height:76cqh;width:76cqh;left:19cqw;bottom:3cqh}
+  #enemy-depth-root #actor-enemy{height:48%;width:27%;left:46%;bottom:12%}
+  #camera-player-root #actor-player{height:90cqh;width:90cqh;left:9cqw;bottom:-5.5cqh}
 }
 
 /* BLACK-only scene transition, independent of the original running fluid fog */
@@ -2173,17 +2173,21 @@ void main(){
   const devFootprint=document.getElementById('dev-ground-contact');
   const devGroundToggle=document.getElementById('dev-ground-toggle');
   const enemyImage=document.getElementById('actor-enemy');
-  // One uncropped default for all rooms. Saved user DEV positions remain authoritative.
+  // Cinematic encounter camera v4:
+  // the near heroine's real L2D shoes sit 4% below the frame (intentional
+  // camera crop), the opponent is a LARGE midground threat inside the fog.
+  // The common floor, crown-to-shoe stature and pinhole model still decide
+  // NPC apparent height; do not apply an unrelated fixed 0.58 CSS scale.
   const editorDefaults=Object.freeze({
-    bg:{z:-235},enemy:{x:46,y:16,size:34,z:-190},
-    fog:{z:0},player:{x:19,y:3,size:76,z:160},
-    ground:{y:77,z:-215,visible:1,horizon:51.5,lockPerspective:0,autoDepth:1,modelVersion:3}
+    bg:{z:-235},enemy:{x:46,y:12,size:48,z:-40},
+    fog:{z:90},player:{x:9,y:-5.5,size:90,z:300},
+    ground:{y:77,z:-215,visible:1,horizon:52,lockPerspective:0,autoDepth:1,modelVersion:4}
   });
   const EDITOR_KEY='paperchalk-layer-editor-v2';
   const PREVIOUS_EDITOR_KEY='paperchalk-layer-editor-v1';
   const editorBounds={
     x:[-20,110],y:[-40,96],size:[12,120],z:[-420,350],visible:[0,1],
-     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1],modelVersion:[3,3]
+     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1],modelVersion:[4,4]
   };
   const copyDefaults=()=>JSON.parse(JSON.stringify(editorDefaults));
   function sanitizeEditor(data){
@@ -2197,11 +2201,18 @@ void main(){
         if(Number.isFinite(value))next[id][key]=clamp(value,...bounds);
       }
     }
-    // Only migrate the camera model. Never change a saved actor's
-    // individual X/Y/Z/size from the artist's custom composition.
-    if(Number(data.ground?.modelVersion)!==3){
-      next.ground.autoDepth=1;
-      next.ground.lockPerspective=0;
+    // Explicit cinematic v4 migration: previous v3 positioned the
+    // protagonist fully within the frame and sent the NPC too far back.
+    // Upgrade ONCE even for existing browser DEV saves, or old localStorage
+    // silently defeats the newly approved camera. Preserve hand-placed X
+    // unless it was the untouched v3 default.
+    if(Number(data.ground?.modelVersion)!==4){
+      next.player.y=-5.5;next.player.size=90;next.player.z=300;
+      next.enemy.y=12;next.enemy.size=48;next.enemy.z=-40;
+      next.fog.z=90;next.ground.horizon=52;
+      next.ground.autoDepth=1;next.ground.lockPerspective=0;
+      next.ground.modelVersion=4;
+      if(Math.abs(next.player.x-19)<.001)next.player.x=9;
     }
     return next;
   }
@@ -2223,7 +2234,7 @@ void main(){
   }
   let editorConfig=readEditor(),editorActive=false;
   let selectedLayer='enemy';
-  const devCamera={yaw:-36,pitch:-23,zoom:.68,panX:-45,panY:-12};
+  const devCamera={yaw:-26,pitch:-17,zoom:.65,panX:-32,panY:-10};
   // Fog stays attached to its original view; only its live texture is mirrored.
   const devPlanes=[stage,enemyDepth,cameraPlayer];
   const devFogPreview=document.getElementById('dev-fog-preview');
@@ -2612,10 +2623,9 @@ void main(){
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
     cameraPlayer.style.transform='rotateY('+(currentX*3.2).toFixed(3)+
       'deg) rotateX('+(-currentY*2.6).toFixed(3)+'deg)';
-    // Enemy is only slightly nearer than the classroom back wall.
-    // The player stays camera-pinned; black fog remains screen-space.
-    // Editor Z gap changes the in-game enemy parallax without ever moving
-    // the camera player. Defaults exactly match the approved subtle tilt.
+    // A midground encounter: opponent is not a far-wall miniature;
+    // protagonist stays camera-near, deliberately cropped by the frame.
+    // Keep mouse parallax subtle and separate from physical Z projection.
     const depthFactor=clamp((editorConfig.enemy.z-editorConfig.bg.z)/45,0,3);
     const parallaxPx=Math.min(6,sizes.w*.005)*depthFactor;
     enemyDepth.style.transform='translate(-50%,-50%) translate3d('+
