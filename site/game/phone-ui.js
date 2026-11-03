@@ -19,7 +19,7 @@
   const finger=svg('<path d="M12 11a2 2 0 0 1 2 2c0 2.5-.3 4.8-1.1 7M9 19.2c.6-2.1.9-4.2.9-6.3a2.1 2.1 0 0 1 4.2 0M6.5 17.5c.4-1.6.5-3 .5-4.5a5 5 0 0 1 10 0c0 2.7-.2 4.9-.7 7M4.5 13a7.5 7.5 0 0 1 15 0c0 1.7-.1 3.1-.3 4.4M12 3a10 10 0 0 0-9.6 7M7.6 21c.9-2.4 1.2-4.6 1.2-7.5"/>');
   const defaultApps=Object.keys(ICONS);
   const defaultProfile={id:'protagonist',name:'女主角',passcode:'000000',
-    apps:defaultApps,wallpaperUrl:null,shellUrl:'./assets/phones/char001-cat-ear-shell.webp'};
+    apps:defaultApps,wallpaperUrl:null,shellUrl:'./assets/phones/char001-cat-ear-shell.webp?v=verified-0c8e0d'};
   const weekdays=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
   function create({root,profile={}}={}){
     if(!root)throw new Error('Phone requires #novel-ui root');
