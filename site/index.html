@@ -897,23 +897,38 @@ void main(){
     if(srcW<2||srcH<2||progress<=.002)return;
     const safeFraction=clamp(fogConfig.safe*.01,.01,1);
     const boundary=(.5+(edge==='right'?1:-1)*sceneHalf.x*safeFraction)*srcW;
-    // Include the organic front (transparent) AND the dense back (opaque).
-    // Deliberately exclude the exterior pure-black portion of the old crop.
-    const inside=Math.max(8,srcW*.037);
-    const outside=Math.max(5,srcW*.015);
-    const sx=Math.max(0,Math.min(srcW-3,
-      Math.floor(edge==='right'?boundary-inside:boundary-outside)));
-    const sxEnd=Math.max(sx+2,Math.min(srcW,
-      Math.ceil(edge==='right'?boundary+outside:boundary+inside)));
-    const sy=Math.min(srcH-2,Math.max(0,Math.floor(srcH*.11)));
-    const sh=Math.max(2,Math.min(srcH-sy,Math.floor(srcH*.78)));
-    const maxWidth=Math.min(w*.75,desiredWidth);
+    // Source only the actual moving feather; copying the exterior opaque zone
+    // is what made earlier UI fog look like a translucent rectangular board.
+    const inside=Math.max(7,srcW*.021);
+    const outside=Math.max(5,srcW*.018);
+    const srcX=Math.max(0,Math.min(srcW-3,
+      (edge==='right'?boundary-inside:boundary-outside)));
+    const srcEnd=Math.max(srcX+2,Math.min(srcW,
+      (edge==='right'?boundary+outside:boundary+inside)));
+    const srcY=Math.min(srcH-2,Math.max(0,srcH*.11));
+    const srcHeight=Math.max(2,Math.min(srcH-srcY,srcH*.78));
     const eased=progress*progress*(3-2*progress);
-    const dw=Math.max(1,Math.round(maxWidth*eased));
-    ctx.globalAlpha=opacity*eased;
+    const dw=Math.max(1,Math.round(Math.min(w*.75,desiredWidth)*eased));
+    // Transport the real fog rim through continuous row-wise flow: the dark
+    // body stays anchored at the screen edge, but its living leading boundary
+    // curls and recedes. Same pixels as #fog, NO synthetic black fill.
+    const rowHeight=Math.max(5,Math.ceil(h/66));
+    const time=fluidTime;
     ctx.imageSmoothingEnabled=true;
-    ctx.drawImage(fog,sx,sy,sxEnd-sx,sh,
-      edge==='right'?w-dw:0,0,dw,h);
+    ctx.globalAlpha=opacity*eased;
+    for(let y=0;y<h;y+=rowHeight){
+      const dh=Math.min(rowHeight,h-y),ny=(y+dh*.5)/h;
+      const curl=(.58*Math.sin(ny*12.4+time*.43)
+                 +.32*Math.sin(ny*25.1-time*.69+1.4)
+                 +.18*Math.sin(ny*39.7+time*.28));
+      const shift=(edge==='right'?-1:1)*curl*srcW*.0036;
+      const sy=srcY+srcHeight*y/h;
+      const sh=srcHeight*(dh+1)/h;
+      const sx=Math.max(0,Math.min(srcW-2,srcX+shift));
+      const sw=Math.min(srcW-sx,srcEnd-srcX);
+      ctx.drawImage(fog,sx,sy,sw,sh,
+        edge==='right'?w-dw:0,y,dw,dh+1);
+    }
     ctx.globalAlpha=1;
   }
   function resetDevPanelFog(){
