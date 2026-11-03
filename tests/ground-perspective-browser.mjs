@@ -103,7 +103,10 @@ try{
    const expectedShift=floorStart.h*.06;
    for(const role of ['player','enemy']){
      const before=floorStart[role],after=floorYMoved[role];
-     assert.equal(after.ground,'0px '+expectedShift.toFixed(1)+'px 0px',
+     const translation=after.ground.split(/\s+/).map(parseFloat);
+     // CSS computed translate intentionally drops a trailing zero Z length.
+     assert.ok(Math.abs(translation[0])<.002&&Math.abs(translation[1]-expectedShift)<.002&&
+       Math.abs(translation[2]||0)<.002,
        role+' entire L2D root must inherit the shared floor translation: '+JSON.stringify(floorYMoved));
      assert.equal(after.height,before.height,
        role+' floor must NOT resize the 1024px L2D rig or restart bones');
