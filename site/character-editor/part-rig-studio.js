@@ -28,7 +28,9 @@ panel.innerHTML=`<header class="rig-h"><strong>独立部件 ArtMesh 草稿</stro
 <div class="rig-joints"><label>当前骨骼<select id="rig-bone" aria-label="选择当前部件的独立骨骼"></select></label><div id="rig-bone-sliders"></div><p id="rig-bone-tip">每条骨骼有自己的关节、角度、速度、相位与蒙皮半径；不同部件互不影响。</p></div>
 <div class="rig-buttons"><button id="rig-pause" type="button">暂停</button><button id="rig-zero" type="button">本层归零</button><button id="rig-save" type="button">保存绑定草稿</button><button id="rig-export" type="button">↓ 备份绑定 JSON</button><button id="rig-module-export" type="button">↓ 一键打包游戏模块 ZIP</button></div>
 <p id="rig-status" role="status">绿色轴点、黄色末端均可在主画布直接拖动。</p>`;
-stage.append(panel);
+// Dock the inspector beside the character; never cover the preview.
+const dock=document.querySelector('.layout .right')||stage;
+dock.prepend(panel);
 const sliders=$('rig-sliders');
 const fields=[['pivot.x','轴点 X',0,100,1],['pivot.y','轴点 Y',0,100,1],
  ['tip.x','末端 X',0,100,1],['tip.y','末端 Y',0,100,1],
@@ -82,6 +84,21 @@ for(const [field,label,min,max,step] of idleFields){
  input.min=min;input.max=max;input.step=step;
  row.append(title,value,input);idleSliders.append(row);
 }
+// Keep four core controls visible; advanced settings remain one click away.
+const quick=new Set(['body.amount','hair.amount','cloth.amount','sleeves.amount']);
+const idleAdvanced=document.createElement('details');
+idleAdvanced.id='rig-idle-extra';
+idleAdvanced.innerHTML='<summary>进阶待机 · 速度与惯性</summary>';
+for(const row of [...idleSliders.querySelectorAll('.rig-field')]){
+ const input=row.querySelector('[data-idle]');
+ if(input&&!quick.has(input.dataset.idle))idleAdvanced.append(row);
+}
+$('rig-idle-controls').append(idleAdvanced);
+const advanced=document.createElement('details');
+advanced.id='rig-advanced';
+advanced.innerHTML='<summary>高级绑定 · 轴点、网格与关节</summary>';
+advanced.append(sliders,panel.querySelector('.rig-joints'));
+panel.querySelector('.rig-buttons').before(advanced);
 function syncIdle(){
  const idle=state.model?.idleProfile;if(!idle)return;
  for(const input of idleSliders.querySelectorAll('[data-idle]')){
@@ -177,17 +194,31 @@ function select(id){
  if(ix>=0){S.sel=ix;ed.renderList();}
  values();refreshBones();syncIdle();ed.render();
 }
-let saveTimer;
+let saveTimer=null,saveQueue=Promise.resolve(),revision=0;
 async function save(){
- if(!state.model||state.model.characterId!==studio.current||state.model.face!==S.side)return;
+ if(!state.model)return false;
+ if(state.model.characterId!==studio.current||state.model.face!==S.side)
+  throw Error('人物或方向已切换，拒绝覆盖错误工程');
  clearTimeout(saveTimer);saveTimer=null;
- try{await studio.storePartRig(state.model);state.dirty=false;
- info('绑定草稿已保存到本机；原始 V4、PNG 和游戏均未改变');}
- catch(e){info('保存失败：'+e.message);}
+ const model=state.model,version=revision;
+ const snapshot=JSON.parse(JSON.stringify(model));
+ // Queue immutable snapshots: a late autosave cannot overwrite the primary Save.
+ const pending=saveQueue.then(()=>studio.storePartRig(snapshot));
+ saveQueue=pending.catch(()=>{});
+ try{
+  await pending;
+  if(state.model===model&&revision===version)state.dirty=false;
+  info('✓ 已保存骨骼参数；返回游戏后同步加载（GitHub 发布需另外提交资源）');
+  return true;
+ }catch(error){
+  state.dirty=true;
+  info('保存失败，当前修改仍在编辑器：'+error.message);
+  throw error;
+ }
 }
 function changed(){
- state.dirty=true;info('本部件参数已改变，其他部件不受影响');
- clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(console.error),600);
+ revision++;state.dirty=true;info('正在保存当前骨骼设置…');
+ clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(()=>{}),600);
  ed.render();
 }
 function syncOpenState(){
@@ -199,9 +230,10 @@ function syncOpenState(){
  toggle.setAttribute('aria-pressed',String(state.active));
  toggle.textContent=state.active?'关闭骨骼预览':'逐件绑骨';
 }
-function deactivate(){
- if(state.dirty)save().catch(console.error);
+async function deactivate(){
+ try{if(state.dirty)await save();}catch{return;}
  state.active=false;state.drag=null;state.bone='';panel.hidden=true;
+ document.body.classList.remove('rig-authoring');
  syncOpenState();ed.render();
 }
 async function activate(){
@@ -213,6 +245,7 @@ async function activate(){
  state.model=core.project(src,id,face,saved);
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
  state.active=true;state.phase=0;state.playing=true;
+ document.body.classList.add('rig-authoring');
  panel.hidden=false;syncOpenState();
  const selectNode=$('rig-part');selectNode.replaceChildren();
  for(const p of src)selectNode.add(new Option(p.name,p.partId||p.name));
@@ -225,7 +258,7 @@ async function activate(){
  ed.render();
 }
 function toggleIdle(){
- if(state.active){deactivate();return;}
+ if(state.active){deactivate().catch(e=>info(e.message));return;}
  const primary=$('idle-open');
  if(primary){primary.disabled=true;primary.textContent='正在打开待机控制…';}
  activate().then(()=>{
@@ -252,9 +285,9 @@ if(direct){
  requestAnimationFrame(()=>{if(studio.current&&S.ready)autoOpen();});
 }
 syncOpenState();
-$('rig-close').onclick=deactivate;
+$('rig-close').onclick=()=>deactivate().catch(e=>info(e.message));
 $('rig-part').onchange=e=>select(e.target.value);
-$('rig-save').onclick=()=>save();
+$('rig-save').onclick=()=>save().catch(()=>{});
 $('rig-export').onclick=()=>{
  if(!state.model)return;
  const clone=JSON.parse(JSON.stringify(state.model));
@@ -311,7 +344,13 @@ async function exportGameModule(newId){
    const p=model.parts[id];
    if(!p)throw Error('缺少源部件的绑定：'+id);
    p.enabled=layer.visible!==false;
-   if(Object.values(p.motion||{}).some((v,i)=>i<3&&Math.abs(v)>0.001))hasMotion=true;
+   // Individual bones can visibly animate even when whole-layer motion=0.
+   const group=core.idleGroup(p),idle=model.idleProfile||{};
+   const strength=(idle[group]?.amount||0)*(idle.parts?.[id]??1);
+   if(strength>0.0001&&(
+    Math.abs(p.motion?.x||0)+Math.abs(p.motion?.y||0)+Math.abs(p.motion?.angle||0)>0.001||
+    (p.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>0.001)
+   ))hasMotion=true;
    const file='parts/'+face+'/'+id+'.png';
    textures[id]=file;
    const blob=await ed.toBlob(layer.canvas);
@@ -329,7 +368,7 @@ async function exportGameModule(newId){
    type:'part-mesh',file:face+'.rig.json',textures}};
  }
  if(!views.front)throw Error('游戏角色至少需要真实正面分层；不能假造正面');
- if(!hasMotion)throw Error('全部部件形变量仍为零，请先调整至少一个部件的动作再发布');
+ if(!hasMotion)throw Error('当前全部有效动画已关闭，请启用骨骼或提高待机强度再发布');
  const old=studio.list.get(sourceId);
  const module={schema:1,id:newId,label:(old?.label||sourceId)+' · 独立 L2D',views};
  add(newId+'/module.json',enc.encode(JSON.stringify(module,null,2)));
