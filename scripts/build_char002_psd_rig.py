@@ -38,7 +38,7 @@ RUNTIME_PARTS = tuple(
 )
 ARM_REGIONS = (
     ("hand_raised", "举起的左手与衣袖", (0,0,150,244)),
-    ("hand_lowered", "垂下的右手与衣袖", (150,73,299,440)),
+    ("hand_lowered", "垂下的右手与衣袖", (150,73,293,437)),
 )
 JS = r"""
 const fs=require('node:fs');
@@ -129,7 +129,7 @@ def build():
             if ident=="handwear":
                 # Raised wrist is at y~0 while its shoulder is y~235;
                 # a single generic down-arm bone kept that wrist frozen.
-                if image.size!=(299,866):
+                if image.size!=(293,437):
                     raise ValueError("Original PSD handwear geometry changed")
                 recovered=Image.new("RGBA",image.size)
                 for name,label,(x0,y0,x1,y1) in ARM_REGIONS:
