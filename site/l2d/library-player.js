@@ -58,9 +58,9 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    rigSpec.sourceCharacterId==='char-002-psd-v1'&&
    model?.characterId==='char-002-psd-v1'&&
    model?.provenance==='original-psd'&&
-   Object.keys(model.parts||{}).length===17&&
+   Object.keys(model.parts||{}).length===18&&
    ['front_hair','back_hair','face','eyewhite','irides','eyelash',
-    'handwear','bottomwear','legwear','footwear'].every(id=>!!model.parts[id])&&
+    'hand_raised','hand_lowered','bottomwear','legwear','footwear'].every(id=>!!model.parts[id])&&
    rigSpec.url.startsWith('./assets/l2d/library/char-002-psd-v1/');
  if(model?.format!=='paperchalk-part-rig-v1'||
     (model.characterId!==characterId&&!approvedOriginal&&!approvedSecondary)||model.face!==face)
@@ -68,7 +68,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // Every playable module (including the ORIGINAL heroine actor) has a
  // deterministic gentle idle preset. A saved local editor profile overrides it.
  const ids=Object.keys(rigSpec.textures);
- // Stale 7-region IndexedDB drafts must not contaminate the new 17-source
+ // Stale 7/17-mesh drafts must not contaminate the corrected 18-part PSD
  // PSD rig (including speed, amplitudes and 'saved' pseudo-joints).
  const draftMatches=localDraft?.format==='paperchalk-part-rig-v1'&&
    localDraft.characterId===characterId&&localDraft.face===face&&
