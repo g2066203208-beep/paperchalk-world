@@ -24,7 +24,30 @@ const FRONT={
  eye_white:['head',.50,.50,.50,.50,'eyes-combined'],
  irises:['eye_white',.50,.50,.50,.50,'eyes-combined'],
  lashes:['eye_white',.50,.50,.50,.50,'eyes-combined'],
- front_hair:['head',.50,.08,.50,.88,'hair']
+ front_hair:['head',.50,.08,.50,.88,'hair'],
+ // Woman protagonist's independently imported BATTLE FRONT PSD:
+ // these are exact source-bitmaps and spatial pivots, not copies of a
+ // pre-existing heroine rig. They do not change existing character IDs.
+ back_hair:['head',.50,.04,.50,.94,'hair'],
+ axe_overhead:['root',.50,.50,.50,.50,'fixed'],
+ axe_held:['handwear_l',.60,.50,.40,.50,'fixed'],
+ legwear:['pelvis',.50,.04,.50,.85,'leg-combined'],
+ footwear:['ground',.50,.84,.50,.84,'fixed'],
+ handwear_r:['torso',.86,.07,.48,.92,'arm-right'],
+ handwear_l:['torso',.17,.07,.48,.91,'arm-left'],
+ bottomwear:['pelvis',.50,.05,.50,.90,'skirt'],
+ topwear:['torso',.50,.09,.50,.81,'torso'],
+ eyebrow_l:['head',.50,.50,.50,.50,'face'],
+ eyebrow_r:['head',.50,.50,.50,.50,'face'],
+ ears_r:['head',.50,.50,.50,.50,'fixed'],
+ ears_l:['head',.50,.50,.50,.50,'fixed'],
+ headwear:['head',.50,.50,.50,.50,'fixed'],
+ eyelash_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
+ eyelash_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined'],
+ eyewhite_r:['head',.50,.50,.50,.50,'eyes-combined'],
+ eyewhite_l:['head',.50,.50,.50,.50,'eyes-combined'],
+ irides_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
+ irides_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined']
 };
 const BACK={
  legs:['pelvis',.50,.02,.50,.82,'leg-combined'],
