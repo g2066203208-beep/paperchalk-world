@@ -136,7 +136,7 @@ const reset=core.presetIdle('realistic',{
 });
 assert.deepEqual([reset.parts.front_hair,reset.parts.skirt],[1,1],
  'switching back to normal must reset excessive hair and hem multipliers');
-let t=tiers[0],wind=tiers[2],visual=JSON.parse(JSON.stringify(t));
+let t=tiers[1],wind=tiers[3],visual=JSON.parse(JSON.stringify(t));
 for(let i=0;i<35;i++)visual=core.approachIdle(visual,wind,1/30);
 assert.ok(visual.hair.amount>t.hair.amount&&visual.hair.amount<wind.hair.amount,
  'wind tier change must ease toward its target without snapping');
