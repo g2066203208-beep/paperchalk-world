@@ -350,7 +350,9 @@ jobs:
                   axis=b.translate.trim().split(/\s+/).map(parseFloat);
                 const footBefore=liveBefore.ground.actors.find(x=>x.id===slot),
                   footAfter=liveAfter.ground.actors.find(x=>x.id===slot);
-                assert.ok(delta>3&&Math.abs(axis[1]-footAfter.dy)<.02&&
+                // In oblique CSS 3D the projected screen displacement is smaller
+                // than the physical floor delta; verify BOTH without equating them.
+                assert.ok(delta>.75&&Math.abs(axis[1]-footAfter.dy)<.02&&
                   Math.abs(footAfter.dy-footBefore.dy-liveBefore.height*.06)<.02,
                   'REAL '+slot+' L2D ArtMesh did not follow moving floor Y: '+JSON.stringify({a,b,footBefore,footAfter,delta}));
                 assert.ok(footAfter.detected&&Math.abs(footAfter.errorPx)<1,
