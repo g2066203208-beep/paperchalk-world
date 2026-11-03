@@ -153,7 +153,7 @@ jobs:
            try{
             const page=await browser.newPage({viewport:{width:1200,height:850}});
             const errors=[];page.on('pageerror',e=>errors.push(e.message));
-            await page.goto('http://127.0.0.1:8132/?dev=1',{waitUntil:'load'});
+            await page.goto('http://127.0.0.1:8132/?scene=classroom&dev=1',{waitUntil:'load'});
             await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:30000});
             // Both playable slots must exist even though enemy's layout anchor
             // originally had no src. The default NPC is canonical CHAR-002.
@@ -169,6 +169,16 @@ jobs:
             assert.equal(slots.enemy.side,'front');
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('enemy')?.layers?.length===18,
               null,{timeout:25000});
+            // Verify real pixels, not just a loaded model: the classroom
+            // NPC canvas must be visible and nontransparent.
+            await page.waitForFunction(()=>{
+              const a=window.PaperchalkL2D.get('enemy');
+              if(!a||a.root.hidden||a.img.hidden||!a.canvas.width||!a.canvas.height)return false;
+              const data=a.canvas.getContext('2d',{willReadFrequently:true})
+                .getImageData(0,0,a.canvas.width,a.canvas.height).data;
+              for(let i=3;i<data.length;i+=32)if(data[i]>0)return true;
+              return false;
+            },null,{timeout:25000});
             // Swapping one zone must never mutate the other actor. The true
             // female-two rig must survive returning to the NPC zone.
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','protagonist','front',false));
