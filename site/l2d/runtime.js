@@ -30,7 +30,9 @@ async function refresh(obj){
     featurePreset:obj.img.dataset.characterId==='protagonist'&&obj.img.dataset.characterSide==='front'?'heroine-front':'generic'
    });
    await obj.rig.ready;
-   if(!obj.clip)obj.rig.start();
+   // The protagonist is rebound to her actual source-part rig or V4.
+   // Never flash a stale procedural breathing mesh during bootstrap.
+   if(!obj.clip&&obj.id!=='player')obj.rig.start();
   }else{
    await obj.rig.setImage(obj.img);
   }
@@ -41,7 +43,7 @@ async function refresh(obj){
   obj.rig.animatedFrames=!!obj.animated;
   if(obj.clip)obj.rig.stop();
   obj.root.dataset.l2dState='ready';
-  if(!obj.clip)obj.root.dataset.l2dMode='procedural-multinode';
+  if(!obj.clip&&!obj.libraryPlayer)obj.root.dataset.l2dMode='procedural-multinode';
   obj.lastSource=obj.img.currentSrc||obj.img.src;
  }catch(error){
   obj.root.dataset.l2dState='error';
@@ -97,7 +99,7 @@ async function setAnimationSource(slot,uri,opts={}){
  obj.clip=null;obj.v4Composite=null;
  if(!uri){
   obj.root.dataset.l2dMode='procedural-multinode';
-  if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}
+  if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);if(opts.suspendFallback)obj.rig.stop();else obj.rig.start()}
   return true;
  }
  const origin={x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w??335),h:Number(opts.h??1013)};
