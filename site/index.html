@@ -327,7 +327,7 @@ body.mobile-mode.virtual-landscape #view{
   will-change:transform;
 }
 #camera-player-root #actor-player{
-  position:absolute;display:block;left:calc(27cqw - 52cqh);bottom:-34.5cqh;height:104cqh;
+  position:absolute;display:block;left:calc(27cqw - 64cqh);bottom:-43.5cqh;height:128cqh;
   width:auto;aspect-ratio:1 / 1;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
@@ -335,7 +335,7 @@ body.mobile-mode.virtual-landscape #view{
    Do not override the DEV-authored inline x/y/size on environment scenes. */
 @container (max-height:445px){
   #enemy-depth-root #actor-enemy{height:48%;width:27%;left:46%;bottom:12%}
-  #camera-player-root #actor-player{height:104cqh;width:104cqh;left:calc(27cqw - 52cqh);bottom:-34.5cqh}
+  #camera-player-root #actor-player{height:128cqh;width:128cqh;left:calc(27cqw - 64cqh);bottom:-43.5cqh}
 }
 
 /* BLACK-only scene transition, independent of the original running fluid fog */
@@ -2173,19 +2173,20 @@ void main(){
   const devFootprint=document.getElementById('dev-ground-contact');
   const devGroundToggle=document.getElementById('dev-ground-toggle');
   const enemyImage=document.getElementById('actor-enemy');
-  // Cinematic shoulder camera v7: 104% viewport height, head top ~1/3 down.
-  // The camera is close enough to feel behind her while keeping upper thighs in frame.
+  // Cinematic shoulder camera v8: 128% viewport height, clear near-camera
+  // dominance. Head enters the upper third; skirt hem and upper thighs
+  // approach the lower edge without reducing her real L2D resolution.
   // The canvas crop never defines the opponent's world-scale calibration.
   const editorDefaults=Object.freeze({
     bg:{z:-235},enemy:{x:46,y:12,size:48,z:-40},
-    fog:{z:90},player:{x:27,y:-34.5,size:104,z:300},
-    ground:{y:77,z:-215,visible:1,horizon:52,lockPerspective:0,autoDepth:1,modelVersion:7}
+    fog:{z:90},player:{x:27,y:-43.5,size:128,z:300},
+    ground:{y:77,z:-215,visible:1,horizon:52,lockPerspective:0,autoDepth:1,modelVersion:8}
   });
   const EDITOR_KEY='paperchalk-layer-editor-v2';
   const PREVIOUS_EDITOR_KEY='paperchalk-layer-editor-v1';
   const editorBounds={
     x:[-65,110],y:[-125,96],size:[12,240],z:[-420,350],visible:[0,1],
-     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1],modelVersion:[7,7]
+     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1],modelVersion:[8,8]
   };
   const copyDefaults=()=>JSON.parse(JSON.stringify(editorDefaults));
   function sanitizeEditor(data){
@@ -2199,13 +2200,14 @@ void main(){
         if(Number.isFinite(value))next[id][key]=clamp(value,...bounds);
       }
     }
-    // Camera framing v7: slightly larger than v6 (104% vs 88% viewport height)
-    // but keep the head at 1/3 screen and skirt hem near 94% height.
-    // A little upper thigh stays visible. Preserve NPC / room / fog.
+    // Camera framing v8: 128% of viewport height (up from 104%).
+    // Shift her silhouette upward so her head remains within the upper
+    // third and the bottom crops at the upper thighs, not the waist.
+    // Upgrade stale v7 browser saves, preserve NPC / room / fog.
     // player.x remains the on-screen CENTER, regardless of aspect ratio.
-    if(Number(data.ground?.modelVersion)!==7){
-      Object.assign(next.player,{x:27,y:-34.5,size:104,z:300});
-      next.ground.modelVersion=7;
+    if(Number(data.ground?.modelVersion)!==8){
+      Object.assign(next.player,{x:27,y:-43.5,size:128,z:300});
+      next.ground.modelVersion=8;
     }
     return next;
   }
