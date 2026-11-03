@@ -85,6 +85,7 @@ const lines=Object.freeze(rows.map(([speaker,text,cue,choices,variants])=>
  Object.freeze({speaker,text,cue:cue||'',choices:choices||null,variants:variants||null})));
 let view=null,fx=null,enemy=null,started=false,disposed=false,sceneSound=null;
 let selections=Object.create(null),oldEnemy=null,ownsEnemy=false,expectedEnemy=null;
+let castingTask=Promise.resolve();
 const choiceKey=line=>line?.cue==='choice1'?'entrance':null;
 const readChoice=key=>selections[key]||null;
 const choices=()=>({...selections});
@@ -199,11 +200,14 @@ function enter(){
  const player=document.getElementById('camera-player-root');
  if(player)player.hidden=true;
  setFemaleVisible(false);
- ensureCharacter();
+ castingTask=ensureCharacter();
 }
 async function leave(){
  if(!started)return;
  started=false;disposed=true;
+ // Do not restore the user's previous NPC while the temporary story casting
+ // request is still in flight; that would race and overwrite the restore.
+ await castingTask.catch(()=>{});
  if(view){view.classList.remove('prologue-first-person');delete view.dataset.prologueEnding;delete view.dataset.prologueCue;}
  if(fx){fx.hidden=true;fx.className='';}
  if(enemy){enemy.dataset.prologuePose='';}
