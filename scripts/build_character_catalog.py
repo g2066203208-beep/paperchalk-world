@@ -84,7 +84,11 @@ def discover():
         ident = module['id']
         # Explicit guard against replacing the already-approved female leads.
         if ident in ('protagonist','char-002'):
-            raise ValueError(f'L2D module {ident} is protected; use a new ID and keep the approved 128-frame V4')
+            raise ValueError(f'L2D module {ident} is protected; use an internal source-rig alias')
+        # CHAR-002's derived region rig is an implementation detail of her
+        # canonical ID. Never add a duplicate female lead to the game list.
+        if ident == 'char-002-rig-v1':
+            continue
         row = entries.setdefault(ident,{
             'id':ident,'label':module['label'],'front':'','back':''
         })
@@ -133,6 +137,21 @@ def discover():
                         'originalV4':old.get('clip')})
         heroine['motionPreference']='independent-bones-no-breath'
 
+    # CHAR-002: the only committed image is a flat approved front portrait.
+    # The 7-region archive may be articulated *conservatively*, but it must
+    # never be misreported as separate bangs, blinking eyes or 16-layer PSD.
+    secondary=entries.get('char-002')
+    derived=next((m for m in modules if m['id']=='char-002-rig-v1'),None)
+    if secondary and derived:
+        view=derived['views'].get('front')
+        old=secondary.get('l2dModule',{}).get('front')
+        if old and view and view.get('renderer')=='part-mesh':
+            old.update({'renderer':'part-mesh',
+                'rig':{**view['rig'],'sourceCharacterId':'char-002-rig-v1'},
+                'originalV4':old.get('clip'),
+                'partProvenance':'derived-region',
+                'requiresOriginalPSDForFullRig':True})
+            secondary['motionPreference']='limited-derived-region-ik'
     return {'version':3,'characters':list(entries.values())}
 
 if __name__=='__main__':
