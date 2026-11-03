@@ -84,9 +84,9 @@ const quickGroups={
  fringe:['front_hair','hair'],
  rear:['rear_hair','back_hair','hair_over_jacket'],
  skirt:['skirt','bottomwear','cloth'],
- hands:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand'],
- shoulders:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','jacket','topwear'],
- hips:['skirt','bottomwear','legs','legwear']
+ hands:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_left','hand_right','cuff_left','cuff_right'],
+ shoulders:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_left','hand_right','cuff_left','cuff_right','jacket','topwear'],
+ hips:['skirt','bottomwear','legs','legwear','pants']
 };
 const available=id=>(quickGroups[id]||[]).filter(key=>!!state.model?.parts[key]);
 function quickInfo(message){$('rig-quick-status').textContent=message;}
