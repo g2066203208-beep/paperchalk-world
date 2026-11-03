@@ -322,12 +322,12 @@ body.mobile-mode.virtual-landscape #view{
   position:absolute;inset:0;z-index:5;pointer-events:none;
   /* The player stays camera-near but responds subtly to view direction.
      Its plane tilts independently; it never inherits the background tilt. */
-  transform-origin:18% 74%;
+  transform-origin:27% 42%;
   transform:rotateY(0deg) rotateX(0deg);
   will-change:transform;
 }
 #camera-player-root #actor-player{
-  position:absolute;display:block;left:9cqw;bottom:-5.5cqh;height:90cqh;
+  position:absolute;display:block;left:calc(27cqw - 95cqh);bottom:-86.5cqh;height:190cqh;
   width:auto;aspect-ratio:1 / 1;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
@@ -335,7 +335,7 @@ body.mobile-mode.virtual-landscape #view{
    Do not override the DEV-authored inline x/y/size on environment scenes. */
 @container (max-height:445px){
   #enemy-depth-root #actor-enemy{height:48%;width:27%;left:46%;bottom:12%}
-  #camera-player-root #actor-player{height:90cqh;width:90cqh;left:9cqw;bottom:-5.5cqh}
+  #camera-player-root #actor-player{height:190cqh;width:190cqh;left:calc(27cqw - 95cqh);bottom:-86.5cqh}
 }
 
 /* BLACK-only scene transition, independent of the original running fluid fog */
@@ -735,11 +735,11 @@ body.mobile-mode.virtual-landscape #view{
     </select>
     <div id="dev-actor-controls">
       <label for="dev-x">水平位置 <output id="dev-x-value" class="dev-value"></output></label>
-      <input id="dev-x" type="range" min="-20" max="110" step=".5">
+      <input id="dev-x" type="range" min="-65" max="110" step=".5">
       <label for="dev-y">底部位置 <output id="dev-y-value" class="dev-value"></output></label>
-      <input id="dev-y" type="range" min="-40" max="85" step=".5">
+      <input id="dev-y" type="range" min="-125" max="96" step=".5">
       <label for="dev-size">角色大小 <output id="dev-size-value" class="dev-value"></output></label>
-      <input id="dev-size" type="range" min="12" max="120" step=".5">
+      <input id="dev-size" type="range" min="12" max="240" step=".5">
     </div>
     <section id="dev-character-controls" aria-label="游戏已加载人物的统一 L2D 编辑">
       <p style="color:#c9ddec">统一 L2D：选中当前人物后直接进入全人物工作室，可编辑所有已导入角色。</p>
@@ -2173,21 +2173,20 @@ void main(){
   const devFootprint=document.getElementById('dev-ground-contact');
   const devGroundToggle=document.getElementById('dev-ground-toggle');
   const enemyImage=document.getElementById('actor-enemy');
-  // Cinematic encounter camera v4:
-  // the near heroine's real L2D shoes sit 4% below the frame (intentional
-  // camera crop), the opponent is a LARGE midground threat inside the fog.
-  // The common floor, crown-to-shoe stature and pinhole model still decide
-  // NPC apparent height; do not apply an unrelated fixed 0.58 CSS scale.
+  // Cinematic shoulder camera v5: the photographer stands directly behind
+  // the heroine. The back-facing 1024px L2D fills the near-left foreground,
+  // with waist/feet intentionally OUT of frame. Camera framing must not be
+  // reused as the opponent's world-space perspective calibration.
   const editorDefaults=Object.freeze({
     bg:{z:-235},enemy:{x:46,y:12,size:48,z:-40},
-    fog:{z:90},player:{x:9,y:-5.5,size:90,z:300},
-    ground:{y:77,z:-215,visible:1,horizon:52,lockPerspective:0,autoDepth:1,modelVersion:4}
+    fog:{z:90},player:{x:27,y:-86.5,size:190,z:300},
+    ground:{y:77,z:-215,visible:1,horizon:52,lockPerspective:0,autoDepth:1,modelVersion:5}
   });
   const EDITOR_KEY='paperchalk-layer-editor-v2';
   const PREVIOUS_EDITOR_KEY='paperchalk-layer-editor-v1';
   const editorBounds={
-    x:[-20,110],y:[-40,96],size:[12,120],z:[-420,350],visible:[0,1],
-     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1],modelVersion:[4,4]
+    x:[-65,110],y:[-125,96],size:[12,240],z:[-420,350],visible:[0,1],
+     horizon:[30,74],lockPerspective:[0,1],autoDepth:[0,1],modelVersion:[5,5]
   };
   const copyDefaults=()=>JSON.parse(JSON.stringify(editorDefaults));
   function sanitizeEditor(data){
@@ -2201,18 +2200,12 @@ void main(){
         if(Number.isFinite(value))next[id][key]=clamp(value,...bounds);
       }
     }
-    // Explicit cinematic v4 migration: previous v3 positioned the
-    // protagonist fully within the frame and sent the NPC too far back.
-    // Upgrade ONCE even for existing browser DEV saves, or old localStorage
-    // silently defeats the newly approved camera. Preserve hand-placed X
-    // unless it was the untouched v3 default.
-    if(Number(data.ground?.modelVersion)!==4){
-      next.player.y=-5.5;next.player.size=90;next.player.z=300;
-      next.enemy.y=12;next.enemy.size=48;next.enemy.z=-40;
-      next.fog.z=90;next.ground.horizon=52;
-      next.ground.autoDepth=1;next.ground.lockPerspective=0;
-      next.ground.modelVersion=4;
-      if(Math.abs(next.player.x-19)<.001)next.player.x=9;
+    // Upgrade pre-v5 camera saves once: old x meant image LEFT; in v5
+    // player.x is the projected on-screen CENTER, independent of aspect ratio.
+    // Keep user's enemy, fog, floor and background placement untouched.
+    if(Number(data.ground?.modelVersion)!==5){
+      Object.assign(next.player,{x:27,y:-86.5,size:190,z:300});
+      next.ground.modelVersion=5;
     }
     return next;
   }
@@ -2287,7 +2280,10 @@ void main(){
     document.getElementById('actor-enemy').style.height=enemy.size+'%';
     // Square L2D canvas in a 16:9 depth plane (width% = height% * 9/16).
     document.getElementById('actor-enemy').style.width=(enemy.size*9/16)+'%';
-    document.getElementById('actor-player').style.left=player.x+'cqw';
+    // The close-up's face/back center remains at the same 27% screen X
+    // on phones, tablets and wide monitors; canvas width is based on height.
+    document.getElementById('actor-player').style.left=
+      'calc('+player.x+'cqw - '+(player.size/2)+'cqh)';
     document.getElementById('actor-player').style.bottom=player.y+'cqh';
     document.getElementById('actor-player').style.height=player.size+'cqh';
     // Replacing the protagonist must retain her 1024x1024 layout and foot position.
@@ -2621,8 +2617,10 @@ void main(){
     if(reduced.matches||!tiltEnabled||editorActive){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
-    cameraPlayer.style.transform='rotateY('+(currentX*3.2).toFixed(3)+
-      'deg) rotateX('+(-currentY*2.6).toFixed(3)+'deg)';
+    // A shoulder-mounted camera keeps the near back almost fixed;
+    // the room and the enemy supply the majority of view parallax.
+    cameraPlayer.style.transform='rotateY('+(currentX*.65).toFixed(3)+
+      'deg) rotateX('+(-currentY*.45).toFixed(3)+'deg)';
     // A midground encounter: opponent is not a far-wall miniature;
     // protagonist stays camera-near, deliberately cropped by the frame.
     // Keep mouse parallax subtle and separate from physical Z projection.
@@ -2677,7 +2675,7 @@ void main(){
 <script src="./l2d/part-rig.js?female2-raised-hand-fixed-20261103"></script>
 <script src="./l2d/library-player.js?v=female2-raised-hand-fixed-20261103"></script>
 <script src="./dev/character-bridge.js?v=char002-enemy-slot-v2-20261103"></script>
-<script src="./game/l2d-ground-binding.js?v=unified-floor-projection-v5"></script>
+<script src="./game/l2d-ground-binding.js?v=shoulder-camera-v6"></script>
 
 </body>
 </html>
