@@ -182,15 +182,23 @@ body.mobile-mode.virtual-landscape #view{
   stroke-linecap:round;stroke-linejoin:round;
 }
 .hud-segments{
-  display:flex;align-items:stretch;gap:clamp(2px,.16cqw,4px);
+  /* Ten fixed tracks. Only the white fill inside each slot is allowed to
+     change; empty tracks always remain visible at their original positions. */
+  display:grid;grid-template-columns:repeat(10,minmax(0,1fr));
+  align-items:stretch;gap:clamp(2px,.16cqw,4px);
   flex:none;width:clamp(54px,7.2cqw,129px);height:clamp(5px,.65cqh,7px);
 }
-.hud-segment{position:relative;flex:1;min-width:0;background:rgba(245,245,241,.22);border-radius:1px;overflow:hidden}
-.hud-segment>i{position:absolute;inset:0 auto 0 0;background:#f5f5f1;transition:width .48s cubic-bezier(.2,.75,.3,1)}
+.hud-segment{position:relative;min-width:0;width:100%;height:100%;background:rgba(245,245,241,.34);border-radius:1px;overflow:hidden}
+.hud-segment>i{position:absolute;inset:0 auto 0 0;display:block;height:100%;width:0;background:#f5f5f1;transition:width .48s cubic-bezier(.2,.75,.3,1)}
 @media(prefers-reduced-motion:reduce){.hud-segment>i{transition:none!important}}
 .hud-exact[data-pulse="true"]{animation:stat-delta .5s ease-out}
 @keyframes stat-delta{0%{opacity:.46;transform:translateY(2px)}100%{opacity:1;transform:translateY(0)}}
-.hud-exact{flex:none;min-width:6ch;letter-spacing:0;line-height:1;text-align:left}
+.hud-exact{
+  /* Reserve the entire numeric field even when 100/100 becomes 9/100.
+     Otherwise text reflow changes total HUD width and fit scale as HP drains. */
+  flex:none;width:var(--hud-number-width,7.4ch);min-width:0;
+  font-variant-numeric:tabular-nums;letter-spacing:0;line-height:1;text-align:left;
+}
 .hud-divider{flex:none;width:1px;height:clamp(18px,2.35cqh,26px);background:rgba(245,245,241,.56)}
 #hud-clock{
   position:absolute;top:max(7px,3.35cqh);right:2.65cqw;
@@ -215,7 +223,7 @@ body.mobile-mode.virtual-landscape #view{
   .hud-stat{gap:3px}
   .hud-stat-icon{width:clamp(16px,2.9cqh,23px);height:clamp(16px,2.9cqh,23px)}
   .hud-segments{width:clamp(25px,5.55cqw,44px);gap:1px;height:4px}
-  .hud-exact{min-width:5.6ch}
+  .hud-exact{width:var(--hud-number-width,7.4ch)}
   .hud-divider{height:15px}
   #hud-clock{gap:clamp(3px,.6cqw,7px);right:1.8cqw}
 }
@@ -1150,6 +1158,10 @@ void main(){
       const meter=document.getElementById('hud-'+key+'-meter');
       const label=document.getElementById('hud-'+key+'-value');
       const full=stat.max>0?stat.current/stat.max*10:0;
+      // Reserve enough digits for the MAXIMUM, never for the changing
+      // current value. This prevents hit-by-hit resizing of all three bars.
+      const maxDigits=String(Math.round(stat.max)).length;
+      label.style.setProperty('--hud-number-width',Math.max(7.4,2*maxDigits+1.4)+'ch');
       if(meter.childElementCount!==10){
         meter.replaceChildren(...Array.from({length:10},()=>{
           const piece=document.createElement('span');
@@ -1159,6 +1171,7 @@ void main(){
         }));
       }
       [...meter.children].forEach((piece,i)=>{
+        // Only this inner white fill changes; all 10 gray tracks are fixed.
         // A 78/125 HP pool fills 6 whole cells and 24% of cell 7.
         piece.firstElementChild.style.width=
           (Math.max(0,Math.min(1,full-i))*100).toFixed(3)+'%';
