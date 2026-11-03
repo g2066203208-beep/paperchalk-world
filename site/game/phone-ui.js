@@ -19,7 +19,7 @@
   const finger=svg('<path d="M12 11a2 2 0 0 1 2 2c0 2.5-.3 4.8-1.1 7M9 19.2c.6-2.1.9-4.2.9-6.3a2.1 2.1 0 0 1 4.2 0M6.5 17.5c.4-1.6.5-3 .5-4.5a5 5 0 0 1 10 0c0 2.7-.2 4.9-.7 7M4.5 13a7.5 7.5 0 0 1 15 0c0 1.7-.1 3.1-.3 4.4M12 3a10 10 0 0 0-9.6 7M7.6 21c.9-2.4 1.2-4.6 1.2-7.5"/>');
   const defaultApps=Object.keys(ICONS);
   const defaultProfile={id:'protagonist',name:'女主角',passcode:'000000',
-    apps:defaultApps,wallpaperUrl:null};
+    apps:defaultApps,wallpaperUrl:null,shellUrl:'./assets/phones/char001-cat-ear-shell.webp'};
   const weekdays=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
   function create({root,profile={}}={}){
     if(!root)throw new Error('Phone requires #novel-ui root');
@@ -75,7 +75,6 @@
             <span class="phone-home-indicator" aria-hidden="true"></span>
           </div>
         </div>
-        <div class="phone-charm" aria-hidden="true"><span class="phone-charm-cord"></span><span class="phone-charm-fish">${svg('<path d="M8 12c3-4 6-4 9 0-3 4-6 4-9 0ZM8 12l-5-4v8zM12 9v6M15 10v4"/>')}</span></div>
         <button class="phone-close" type="button" aria-label="收起手机">×</button>
       </div>`;
     root.appendChild(section);
@@ -84,6 +83,9 @@
     const pages=[...section.querySelectorAll('[data-phone-page]')];
     function syncWallpaper(){
       const wall=section.querySelector('.phone-wallpaper');
+      const shell=section.querySelector('.phone-device');
+      if(config.shellUrl)shell.style.setProperty('--phone-shell-image',
+        'url("'+encodeURI(config.shellUrl).replace(/"/g,'%22')+'")');
       wall.style.setProperty('--phone-lock-image',config.wallpaperUrl?'url("'+encodeURI(config.wallpaperUrl).replace(/"/g,'%22')+'")':'none');
     }
     function drawClock(){
