@@ -203,8 +203,11 @@ function create(opts={}){
   draw(5);
   emit({kind:'round',side:'ally',text:'第 '+state.round+' 回合 · 我方行动'});
  }
- function reset(){
-  seed=(Number.isInteger(opts.seed)?opts.seed:20261103)>>>0||1;
+ function reset(nextSeed){
+  // Replays may reshuffle with a fresh seed; tests and shared challenge links
+  // can still pass a fixed seed and reproduce the exact same hand/deck.
+  seed=(Number.isInteger(nextSeed)?nextSeed:
+    Number.isInteger(opts.seed)?opts.seed:20261103)>>>0||1;
   const units=[...(opts.allies||FRIENDS),...(opts.enemies||FOES)];
   for(const u of [...allies,...enemies]){
    const item=units.find(x=>x.id===u.id);
