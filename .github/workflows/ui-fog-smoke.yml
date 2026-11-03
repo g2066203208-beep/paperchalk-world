@@ -16,6 +16,7 @@ on:
       - 'tests/ground-perspective.test.mjs'
       - 'tests/ground-perspective-browser.mjs'
       - 'tests/character-camera-browser.mjs'
+      - 'tests/character-fog-layer-browser.mjs'
       - '.github/workflows/ui-fog-smoke.yml'
   workflow_dispatch:
 permissions:
@@ -47,6 +48,8 @@ jobs:
         run: node tests/ground-perspective-browser.mjs
       - name: Verify true L2D stature + shoe-ground perspective on desktop/mobile
         run: node tests/character-camera-browser.mjs
+      - name: Validate real L2D foreground occludes black fog and enemy stays behind
+        run: node tests/character-fog-layer-browser.mjs
       - name: Test approved cat-ear phone asset and interactivity on desktop/mobile
         run: node tests/phone-ui-browser.mjs
       - name: Test black fog silhouettes and UI lifecycle on desktop/mobile
@@ -84,5 +87,14 @@ jobs:
         with:
           name: physical-ground-perspective-camera
           path: artifacts/perspective/*.png
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload real scene foreground/fog compositor screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-fog-foreground-vs-enemy
+          path: artifacts/fog-layer/*.png
           retention-days: 7
           if-no-files-found: warn
