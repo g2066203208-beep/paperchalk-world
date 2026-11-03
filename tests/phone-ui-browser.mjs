@@ -27,6 +27,12 @@ try{
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
+    // Phone must own RIGHT ONLY: first hide dialogue so there is no
+    // independent, legitimate bottom subtitle smoke.
+    await page.locator('#menu-toggle').click();
+    await page.locator('#hide-button').click();
+    assert.equal(await page.locator('#dialogue').isVisible(),false);
+    await page.waitForFunction(()=>document.querySelector('.ui-fog-band[data-edge="bottom"]').dataset.active==='false');
     await page.locator('#quick-phone').click({timeout:15000});
     await page.locator('#phone-ui').waitFor({state:'visible'});
     const state=await page.evaluate(()=>{
@@ -52,9 +58,9 @@ try{
     const r=await page.request.get(new URL('./assets/phones/char001-cat-ear-shell.webp',page.url()).href);
     assert.equal(r.status(),200,'Approved handset image missing from deployed site');
     assert.ok((await r.body()).length>4000,'Handset image was truncated');
-    // Verify actual fog pixels, not merely a toggled CSS class. The native
-    // smoke must fill the side, rise from the bottom, and cross the phone
-    // silhouette while leaving the center of the PIN keypad unobscured.
+    // Verify native smoke pixels, not just a CSS class. The opened phone
+    // must create RIGHT-side smoke ONLY, with absolutely no bottom smoke
+    // activation. Preserve the PIN keypad center.
     await page.waitForTimeout(1200);
     const phoneFog=await page.evaluate(()=>{
       const n=document.querySelector('#phone-ui');
@@ -75,21 +81,18 @@ try{
         rightActive:document.querySelector('[data-edge="right"].ui-fog-band')?.dataset.active,
         bottomActive:document.querySelector('[data-edge="bottom"].ui-fog-band')?.dataset.active,
         overlapRight:pixel(over,x+pw*.985,y+ph*.53),
-        overlapBottom:pixel(over,x+pw*.53,y+ph*.985),
         overlapKeypad:pixel(over,x+pw*.5,y+ph*.52),
         rightFogBehind:pixel(base,x+pw*.90,y+ph*.50),
-        bottomFogBehind:pixel(base,x+pw*.5,y+ph*.95),
         middleClassroom:pixel(base,w*.52,h*.42),
         overlays:{back:getComputedStyle(base).zIndex,front:getComputedStyle(over).zIndex,
           phone:getComputedStyle(n).zIndex}
       };
     });
     assert.equal(phoneFog.rightActive,'true','The right fog did not activate with the phone');
-    assert.equal(phoneFog.bottomActive,'true','The bottom fog must rise whenever the phone opens');
+    assert.equal(phoneFog.bottomActive,'false',
+      'Opening the right-hand phone illegally activates the bottom smoke: '+JSON.stringify(phoneFog));
     assert.ok(phoneFog.rightFogBehind>30,'The right side lacks the native smoky foundation: '+JSON.stringify(phoneFog));
-    assert.ok(phoneFog.bottomFogBehind>50,'The bottom smoke did not reach the phone: '+JSON.stringify(phoneFog));
     assert.ok(phoneFog.overlapRight>8,'The native fog is not covering the phone right rim: '+JSON.stringify(phoneFog));
-    assert.ok(phoneFog.overlapBottom>8,'The native fog is not covering the phone lower rim: '+JSON.stringify(phoneFog));
     assert.equal(phoneFog.overlapKeypad,0,
       'The new foreground fog masks the center of the PIN keypad: '+JSON.stringify(phoneFog));
     assert.equal(phoneFog.middleClassroom,0,
@@ -120,6 +123,11 @@ try{
     await page.locator('#quick-backpack').click();
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
     assert.equal(await page.locator('#quick-panel-title').textContent(),'背包');
+    // Hide/show dialogue retains its original bottom fog lifecycle.
+    await page.locator('#menu-toggle').click();
+    await page.locator('#hide-button').click();
+    await page.waitForFunction(()=>document.querySelector('.ui-fog-band[data-edge="bottom"]').dataset.active==='true');
+    assert.equal(await page.locator('#dialogue').isVisible(),true);
     assert.deepEqual(errors,[],'Browser runtime errors: '+errors.join('; '));
     console.log('PASS '+cfg.name+' phone shell, responsive display, PIN, fingerprint, app screen and quick-tool lifecycle');
     await page.close();
