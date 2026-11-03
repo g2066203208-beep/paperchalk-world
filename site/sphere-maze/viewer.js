@@ -76,6 +76,14 @@ function startup(){
   window.SphericalMazeViewer=Object.freeze({
    get state(){return {...config}},
    get model(){return layerObjects.map(x=>x.info)},
+   get metrics(){return {
+    visibleRooms:layerObjects.map(x=>x.floor?.geometry.getAttribute('position').count/3||0),
+    closedWalls:layerObjects.map(x=>x.info?.wallCount||0),
+    routeLengths:layerObjects.map(x=>x.routeLength||0),
+    gateConnections:bridges.filter(x=>x.connected).length,
+    rotations:layerObjects.map(x=>x.pivot.quaternion.toArray()),
+    renderer:renderer.getContext() instanceof WebGL2RenderingContext?'webgl2':'unknown'
+   }},
    nextDay,resetWorld,selectLayer,resetCamera,
    get renderCount(){return renderedFrames}
   });
