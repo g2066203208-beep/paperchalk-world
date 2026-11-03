@@ -2403,11 +2403,34 @@ void main(){
   document.getElementById('dev-ground-y').addEventListener('input',event=>{
     editorConfig.ground.y=Number(event.target.value);
     applyEditorVisuals();refreshEditorControls();
-    setDevStatus('地板参考高度已调整；保存位置可保留设置');
+    setDevStatus('地板参考网格已调整，不改变角色脚点。');
+  });
+  document.getElementById('dev-ground-horizon').addEventListener('input',event=>{
+    editorConfig.ground.horizon=Number(event.target.value);
+    applyEditorVisuals();refreshEditorControls();
+    setDevStatus('视平线已预览；保存位置后保留。');
+  });
+  document.getElementById('dev-ground-lock').addEventListener('change',event=>{
+    editorConfig.ground.lockPerspective=event.target.checked?1:0;
+    applyEditorVisuals();refreshEditorControls();
+    setDevStatus(event.target.checked?'已锁定角色远近透视：脚点X/Y保持原样。':'已解除自动缩放：手动大小可继续修改。');
+  });
+  document.getElementById('dev-ground-calibrate').addEventListener('click',()=>{
+    const fit=calculateGroundFit();
+    if(!fit.valid||fit.sizePercent<editorBounds.size[0]||fit.sizePercent>editorBounds.size[1]){
+      setDevStatus('透视校准失败：请先把两人的鞋底放在有效地面范围。');return;
+    }
+    editorConfig.ground.lockPerspective=1;
+    applyEditorVisuals();refreshEditorControls();
+    try{localStorage.setItem(EDITOR_KEY,JSON.stringify(editorConfig))}
+    catch(_){setDevStatus('已校准，但浏览器禁止保存');return}
+    setDevStatus('共同地面透视已校准并保存。保留手动摆好的角色横向与脚底位置。');
   });
   for(const field of ['x','y','size','z']){
     document.getElementById('dev-'+field).addEventListener('input',event=>{
       if(editorConfig[selectedLayer][field]===undefined)return;
+      // A new hand-authored scale always takes priority over automatic fit.
+      if(field==='size'&&selectedLayer==='enemy')editorConfig.ground.lockPerspective=0;
       editorConfig[selectedLayer][field]=Number(event.target.value);
       applyEditorVisuals();refreshEditorControls();
       setDevStatus('已预览修改；点击保存位置以保留');
@@ -2513,8 +2536,22 @@ void main(){
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'&&editorActive){e.preventDefault();exitDeveloper()}
   },true);
+  window.PaperWorldGroundPerspective=Object.freeze({
+    inspect:()=>calculateGroundFit(),
+    current:()=>({
+      horizon:editorConfig.ground.horizon,
+      locked:!!editorConfig.ground.lockPerspective,
+      player:{...editorConfig.player},enemy:{...editorConfig.enemy}
+    })
+  });
   applyEditorVisuals();
   enemyImage.addEventListener('load',applyEditorVisuals);
+  const protagonistImage=document.getElementById('actor-player');
+  protagonistImage.addEventListener('load',applyEditorVisuals);
+  for(const img of [enemyImage,protagonistImage]){
+    new MutationObserver(()=>{applyEditorVisuals();refreshEditorControls()})
+      .observe(img,{attributes:true,attributeFilter:['data-character-id','data-character-side']});
+  }
   if(new URLSearchParams(location.search).get('dev')==='1'){
     enterDeveloper('enemy');
   }
