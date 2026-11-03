@@ -56,6 +56,65 @@ const CHAR002={
  eyelash:['eyewhite',.50,.50,.50,.50,'eyes-combined'],
  front_hair:['head',.50,.06,.50,.82,'hair']
 };
+// Shared, versioned idle controller: used by BOTH game and bone editor.
+// Never invokes breathing deformation or a whole-character canvas transform.
+const IDLE_PRESETS={
+ still:{body:0,hair:0,cloth:0,sleeves:0},
+ realistic:{body:.18,hair:.48,cloth:.34,sleeves:.26},
+ breeze:{body:.15,hair:.78,cloth:.62,sleeves:.46},
+ windy:{body:.24,hair:1.1,cloth:.95,sleeves:.76}
+};
+function defaultIdleProfile(){
+ return {preset:'realistic',
+  body:{amount:.18,speed:.85,swayX:.8,swayY:1.8,rotate:.35},
+  hair:{amount:.48,speed:1.05,lag:.62},
+  cloth:{amount:.34,speed:.95,lag:.58},
+  sleeves:{amount:.26,speed:.9,lag:.5},
+  parts:{}};
+}
+function sanitizeIdleProfile(input){
+ const base=defaultIdleProfile(),p=input&&typeof input==='object'?input:{};
+ const group=(id,max)=>({
+  amount:clamp(finite(p[id]?.amount,base[id].amount),0,max),
+  speed:clamp(finite(p[id]?.speed,base[id].speed),.15,3.5),
+  ...((id==='hair'||id==='cloth'||id==='sleeves')
+   ?{lag:clamp(finite(p[id]?.lag,base[id].lag),0,2)}:{})
+ });
+ const parts={};
+ if(p.parts&&typeof p.parts==='object'&&!Array.isArray(p.parts)){
+  for(const [id,v] of Object.entries(p.parts).slice(0,100)){
+   if(/^[a-z0-9_-]{1,80}$/.test(id))parts[id]=clamp(finite(v,1),0,2);
+  }
+ }
+ return {preset:typeof p.preset==='string'?p.preset:'custom',
+  body:{...group('body',1),swayX:clamp(finite(p.body?.swayX,.8),0,3),
+   swayY:clamp(finite(p.body?.swayY,1.8),0,4),
+   rotate:clamp(finite(p.body?.rotate,.35),0,1)},
+  hair:group('hair',1.5),cloth:group('cloth',1.5),
+  sleeves:group('sleeves',1.5),parts};
+}
+function presetIdle(name,previous=null){
+ if(!Object.hasOwn(IDLE_PRESETS,name))throw Error('Unknown idle preset: '+name);
+ const p=sanitizeIdleProfile(previous||defaultIdleProfile());
+ p.preset=name;
+ for(const [kind,amount] of Object.entries(IDLE_PRESETS[name]))p[kind].amount=amount;
+ return p;
+}
+function idleGroup(part){
+ if(part.kind==='hair')return 'hair';
+ if(part.kind==='skirt'||part.kind==='torso')return 'cloth';
+ if(part.kind==='arm-left'||part.kind==='arm-right'||part.kind==='arm-combined')return 'sleeves';
+ return 'body';
+}
+function bodyIdleAt(part,phase,idle){
+ if(!idle||part.kind==='fixed'||part.kind==='leg-combined')return{x:0,y:0};
+ const b=idle.body,group=idleGroup(part);
+ // Body displacement is sub-pixel and coordinated through the same phase.
+ // Head and attached hair follow the tiny torso motion, not the reverse.
+ const share=group==='body'&&part.kind==='mouth'?.8:1;
+ return {x:Math.sin(phase*b.speed*.63+.2)*b.swayX*b.amount*share,
+  y:Math.sin(phase*b.speed*.81+.83)*b.swayY*b.amount*share};
+}
 // Independently authored joint chains on ORIGINAL source PNG parts.
 // Coordinates are local UVs, not global character oscillation or name regex.
 // Paired sleeves inside a *single original PNG* still get separate left/right
@@ -128,7 +187,7 @@ function normalizeBones(records,kind){
    enabled:q.enabled!==false};
  });
 }
-function bonePoses(part,phase=0){
+function bonePoses(part,phase=0,idle=null){
  const records=part.bones||[],byId=new Map(),result=[];
  for(const b of records){
   const P={x:b.head.x*part.w,y:b.head.y*part.h};
@@ -136,8 +195,15 @@ function bonePoses(part,phase=0){
   const parent=b.parent&&byId.get(b.parent);
   const head=parent?parent.tailPos:P;
   const parentAngle=parent?parent.totalAngle:0;
-  const angle=b.enabled!==false?(finite(b.amplitude,0)*Math.PI/180*
-   Math.sin(phase*finite(b.frequency,1)+finite(b.phase,0))):0;
+  const group=idle?idle[idleGroup(part)]:null;
+  const strength=group?group.amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
+  // Independent root/tip strength and slight phase delay approximate inertia;
+  // roots do not whip like ends, and different strands stay out of sync.
+  const factor=b.parent?1:.34;
+  const speed=group?group.speed:1;
+  const lag=group?.lag||0;
+  const angle=b.enabled!==false?(finite(b.amplitude,0)*strength*factor*Math.PI/180*
+   Math.sin(phase*finite(b.frequency,1)*speed+finite(b.phase,0)-(b.parent?lag:lag*.25))):0;
   const theta=parentAngle+angle,cs=Math.cos(theta),sn=Math.sin(theta);
   const dv={x:T.x-P.x,y:T.y-P.y};
   const tailPos={x:head.x+dv.x*cs-dv.y*sn,y:head.y+dv.x*sn+dv.y*cs};
@@ -146,9 +212,9 @@ function bonePoses(part,phase=0){
  }
  return result;
 }
-function skinnedPoint(part,u,v,phase=0,posed=null){
+function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  const x=u*part.w,y=v*part.h;
- const bones=posed||bonePoses(part,phase);
+ const bones=posed||bonePoses(part,phase,idle);
  if(!bones.length)return{x:part.x+x,y:part.y+y};
  const wx=part.w,wy=part.h;
  // Each vertex is influenced by nearby joints of THIS texture only.
@@ -226,25 +292,30 @@ function project(parts,characterId,face,previous=null){
  const prev=previous?.parts||{};
  const entries=base.map(p=>[p.id,sanitize(prev[p.id],p)]);
  return {format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
+  idleProfile:sanitizeIdleProfile(previous?.idleProfile||defaultIdleProfile()),
   parts:Object.fromEntries(entries)};
 }
 // Each part's raster mesh uses its OWN normalized local coordinates.
 // Its own pivot is fixed; deformation weights increase toward its tip.
 // No other part is sampled, moved, cut, duplicated, or transformed.
-function warpPoint(part,u,v,phase=0,posed=null){
+function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  if(!part.enabled)return{x:part.x+u*part.w,y:part.y+v*part.h};
- const base=skinnedPoint(part,u,v,phase,posed);
+ const base=skinnedPoint(part,u,v,phase,posed,idle);
  const q=part.motion;
  const dx=part.tip.x-part.pivot.x,dy=part.tip.y-part.pivot.y;
  const den=Math.max(.0001,dx*dx+dy*dy);
  const along=((u-part.pivot.x)*dx+(v-part.pivot.y)*dy)/den;
  const weight=smooth(along);
- const oscillation=Math.sin(phase*q.frequency+q.phase);
+ const group=idle?.[idleGroup(part)];
+ const partStrength=idle?clamp(finite(idle.parts?.[part.id],1),0,2):1;
+ const scale=group?group.amount*partStrength:1;
+ const oscillation=Math.sin(phase*q.frequency*(group?.speed||1)+q.phase-(group?.lag||0));
  const a=q.angle*weight*oscillation*Math.PI/180;
  const baseX=(u-part.pivot.x)*part.w,baseY=(v-part.pivot.y)*part.h;
  const cs=Math.cos(a),sn=Math.sin(a);
- return {x:base.x+(baseX*cs-baseY*sn-baseX)+q.x*weight*oscillation,
-  y:base.y+(baseX*sn+baseY*cs-baseY)+q.y*weight*oscillation};
+ const body=bodyIdleAt(part,phase,idle);
+ return {x:base.x+(baseX*cs-baseY*sn-baseX)*scale+q.x*weight*oscillation*scale+body.x,
+  y:base.y+(baseX*sn+baseY*cs-baseY)*scale+q.y*weight*oscillation*scale+body.y};
 }
 function drawTri(ctx,image,A,B,C,D,E,F){
  const ux=B.x-A.x,uy=B.y-A.y,vx=C.x-A.x,vy=C.y-A.y;
@@ -271,20 +342,22 @@ function drawTri(ctx,image,A,B,C,D,E,F){
   ctx.drawImage(image,minX,minY,maxX-minX,maxY-minY,minX,minY,maxX-minX,maxY-minY);
  ctx.restore();
 }
-function drawPart(ctx,source,part,phase=0,drawMesh=false){
+function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
  if(!source?.canvas||!part)return;
  const image=source.canvas,cols=part.mesh.columns,rows=part.mesh.rows;
- const active=part.enabled&&(Object.values(part.motion).some((v,i)=>i<3&&Math.abs(v)>1e-5)||
-  (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5));
+ const strength=idle?idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
+ const active=part.enabled&&(Math.abs(idle?.body?.amount||0)>0||
+  (strength>0&&(Object.values(part.motion).some((v,i)=>i<3&&Math.abs(v)>1e-5)||
+  (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5))));
  ctx.save();ctx.globalAlpha=source.opacity??1;
  if(!active){
   ctx.drawImage(image,part.x,part.y);
  }else{
-  const posed=bonePoses(part,phase);
+  const posed=bonePoses(part,phase,idle);
   const vertices=[];
   for(let j=0;j<=rows;j++){
    const line=[];
-   for(let i=0;i<=cols;i++)line.push(warpPoint(part,i/cols,j/rows,phase,posed));
+   for(let i=0;i<=cols;i++)line.push(warpPoint(part,i/cols,j/rows,phase,posed,idle));
    vertices.push(line);
   }
   for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
@@ -296,19 +369,19 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false){
  }
  ctx.restore();
  if(drawMesh){
-  const poses=bonePoses(part,phase);
+  const poses=bonePoses(part,phase,idle);
   ctx.save();ctx.strokeStyle='rgba(101,215,255,.45)';ctx.lineWidth=.9;
   for(let j=0;j<=rows;j++){
    ctx.beginPath();
    for(let i=0;i<=cols;i++){
-    const p=warpPoint(part,i/cols,j/rows,phase,poses);
+    const p=warpPoint(part,i/cols,j/rows,phase,poses,idle);
     if(!i)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
    }ctx.stroke();
   }
   for(let i=0;i<=cols;i++){
    ctx.beginPath();
    for(let j=0;j<=rows;j++){
-    const p=warpPoint(part,i/cols,j/rows,phase);
+    const p=warpPoint(part,i/cols,j/rows,phase,poses,idle);
     if(!j)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
    }ctx.stroke();
   }
@@ -332,8 +405,8 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
  for(const p of layers){
   if(!p.visible||!p.sourcePart||!p.canvas)continue;
   const b=model.parts[String(p.partId||p.name)];
-  if(b)drawPart(ctx,p,b,phase,b.id===selectedId);
+  if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,SEGMENTS,IDLE_PRESETS,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
