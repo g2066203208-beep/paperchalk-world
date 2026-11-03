@@ -83,13 +83,13 @@ const OLD_PART_STRENGTH=Object.freeze({
  front_hair:1.25,back_hair:1.18,hair_over_jacket:1.18,skirt:1.35
 });
 const DEFAULT_PART_STRENGTH=Object.freeze({
- front_hair:1,back_hair:1,hair_over_jacket:1,skirt:1
+ front_hair:1.3,rear_hair:1.4,back_hair:1.4,hair_over_jacket:1.4,skirt:1.5,bottomwear:1.5
 });
 function defaultIdleProfile(){
  return {profileVersion:4,preset:'realistic',weather:'realistic',windLift:0,
   body:{amount:0,speed:.85,swayX:0,swayY:0,rotate:0},
-  hair:{amount:.18,speed:.83,lag:.78},
-  cloth:{amount:.12,speed:.78,lag:.70},
+  hair:{amount:.24,speed:.83,lag:.78},
+  cloth:{amount:.18,speed:.78,lag:.70},
   sleeves:{amount:.045,speed:.80,lag:.56},
   parts:{...DEFAULT_PART_STRENGTH}};
 }
@@ -100,16 +100,16 @@ function sanitizeIdleProfile(input){
  if(p.profileVersion!==4)return base;
  const g=(name,max)=>({
   amount:clamp(finite(p[name]?.amount,base[name].amount),0,max),
-  speed:clamp(finite(p[name]?.speed,base[name].speed),.25,1.5),
+  speed:clamp(finite(p[name]?.speed,base[name].speed),.25,2),
   lag:clamp(finite(p[name]?.lag,base[name].lag),0,1.5)
  });
  const parts={...DEFAULT_PART_STRENGTH};
  if(p.parts&&typeof p.parts==='object'&&!Array.isArray(p.parts)){
   for(const [id,value] of Object.entries(p.parts).slice(0,100))
    if(/^[a-z0-9_-]{1,80}$/.test(id))
-    parts[id]=clamp(finite(value,1),0,1.25);
+    parts[id]=clamp(finite(value,1),0,3);
  }
- return {...base,hair:g('hair',.30),cloth:g('cloth',.22),
+ return {...base,hair:g('hair',.4),cloth:g('cloth',.30),
   sleeves:g('sleeves',.12),parts};
 }
 function presetIdle(name,previous=null){
@@ -238,7 +238,7 @@ function bonePoses(part,phase=0,idle=null){
   const head=parent?parent.tailPos:P;
   const parentAngle=parent?parent.totalAngle:0;
   const group=idle?idle[idleGroup(part)]:null;
-  const strength=group?group.amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
+  const strength=group?group.amount*clamp(finite(idle.parts?.[part.id],1),0,3):1;
   // Independent root/tip strength and slight phase delay approximate inertia;
   // roots do not whip like ends, and different strands stay out of sync.
   const groupFactor=part.kind==='hair'?[.10,.37]:
@@ -355,7 +355,7 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  const along=((u-part.pivot.x)*dx+(v-part.pivot.y)*dy)/den;
  const weight=smooth(along);
  const group=idle?.[idleGroup(part)];
- const partStrength=idle?clamp(finite(idle.parts?.[part.id],1),0,2):1;
+ const partStrength=idle?clamp(finite(idle.parts?.[part.id],1),0,3):1;
  const scale=group?group.amount*partStrength:1;
  const oscillation=Math.sin(phase*q.frequency*(group?.speed||1)+q.phase-(group?.lag||0));
  const a=clamp(finite(q.angle,0),-2,2)*weight*oscillation*Math.PI/180;
@@ -473,7 +473,7 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
    windy&&part.kind==='skirt'?Math.max(part.mesh.columns,10):part.mesh.columns,
   rows=windy&&part.kind==='hair'?Math.max(part.mesh.rows,15):
    windy&&part.kind==='skirt'?Math.max(part.mesh.rows,12):part.mesh.rows;
- const strength=idle?idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
+ const strength=idle?idle[idleGroup(part)].amount*clamp(finite(idle.parts?.[part.id],1),0,3):1;
  const active=part.enabled&&(Math.abs(idle?.body?.amount||0)>0||
   (strength>0&&(Object.values(part.motion).some((v,i)=>i<3&&Math.abs(v)>1e-5)||
   (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5)||
