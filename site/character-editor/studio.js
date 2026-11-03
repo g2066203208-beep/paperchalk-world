@@ -584,6 +584,8 @@ async function importComponentArchive(file){
  if(!file)return;
  await switchQueue; // Do not import into a half-loaded character or direction.
  if(/\.psd$/i.test(file.name)){
+  if(currentId===BATTLE_FRONT_ID)
+   throw Error('战斗正面请导入已整理的 24 层 ZIP；原始 PSD 把两把斧头合在同一层，直接导入会失去正确拆分。');
   if(currentId==='char-002'&&side!=='front')throw Error('女二只有真实正面 PSD，尚无背面分层');
   await ed.importPsd(file);
   if(currentId==='char-002'&&ed.S.layers[side].length<17)
