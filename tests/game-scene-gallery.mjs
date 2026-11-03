@@ -8,8 +8,8 @@ const server=createServer((req,res)=>{
  if(path.endsWith('/'))path+='index.html';
  const absolute=resolve(root,'.'+path);
  if(!absolute.startsWith(root+'/')){res.writeHead(403);res.end();return;}
- try{res.writeHead(200,{'content-type':types[extname(absolute)]||'application/octet-stream'});res.end(readFileSync(absolute))}
- catch{res.writeHead(404);res.end('not found')}
+ try{const data=readFileSync(absolute);res.writeHead(200,{'content-type':types[extname(absolute)]||'application/octet-stream'});res.end(data)}
+ catch{if(!res.headersSent)res.writeHead(404);res.end('not found')}
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const catalog=JSON.parse(readFileSync('site/scene-catalog.generated.json','utf8')).scenes;
