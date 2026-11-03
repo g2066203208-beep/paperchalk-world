@@ -89,18 +89,16 @@ site/assets/l2d/library/char-007/
 
 随后只要将这个 ZIP **上传到** `site/assets/l2d/inbox/` 并提交 GitHub，Pages 构建就会自动安装、校验并注册为游戏可选人物。详细说明在 [inbox/README.md](../inbox/README.md)。
 
-请注意：女二目前仓库里只有从合成图划分的七块原画区域，**不是**真实 16 层 PSD。
+**女二 CHAR-002 已改用上传的真实 PSD。** `scripts/build_char002_psd_rig.py` 从原始 `site/assets/l2d/source-psd/char-002-original-psd-parts.zip` 构建单一人物 `char-002` 的正面独立网格：24 条 PSD 图层记录中 17 个带实际内容、可独立绘制的部件，另 7 个空白或极淡预留图层保留在原始 ZIP 供审计，不制造多余图片。刘海、后发、眼白、虹膜、睫毛、脸、校服、裙摆、腿和鞋按各自原位 PNG 注册。旧版 7 块裁剪模块和旧烘焙动画生成脚本已删除。
 
-- `scripts/build_char002_part_rig.py` 会将这 7 个保真区域建立为内部 `char-002-rig-v1` 的**有限独立网格**，经严格白名单自动绑定到原来唯一的 `char-002` 人物，不增加重复女二。可在原游戏里调节两手、肩、胯、胸部呼吸与裙摆。
-- `head_hair` 仍是一张头部合成区域，**无法宣称刘海/后发独立飘动或独立眨眼**。没有原画遮挡补像素时，大角度变形可能暴露分区边界。正式 16 层 PSD/独立 PNG 到齐后才能完整升级。
-- 女二原始正面 `front.png`、旧 128 帧 V4 和真实角色 ID 均不覆盖。这里的基础骨骼是可用的过渡模块，不是美术分层已完成的证明。
+手部仍由原始 PSD 的一张 `handwear` 贴图连接双臂，不虚构两张独立上臂；只有正面，没有凭空生成背面。工作室保存直接应用于同一个 `char-002` ID。
 
 **全流程与验收规范**：[L2D 工作室唯一制作流程](../../../../docs/l2d/L2D_STUDIO_CANONICAL_WORKFLOW_20261103.md)。
 
 ## 自动化工作流
 
 1. 新增完整人物模块目录 + `module.json` 并提交到主分支。
-2. GitHub Actions 执行 `scripts/build_v4_assets.py`、`scripts/build_char002_v4.py`、`scripts/build_character_catalog.py`，最后一步会自动调用 `scripts/build_l2d_library.py`。
+2. GitHub Actions 执行 `scripts/build_v4_assets.py`、`scripts/build_character_catalog.py`，最后一步会自动调用 `scripts/build_l2d_library.py`。
 3. 模块检测器验证路径不能越界、素材不是损坏文件、多帧 V4 尺寸/帧数、ArtMesh 的逐层原始贴图、骨骼模型身份和部件数量。无效模块**直接使构建失败**，不会偷偷挂载损坏的人物。
 4. 通过后自动编译 `site/l2d-library.generated.json` 和 `site/characters.catalog.json`，游戏 DEV 的「人物素材库」出现该角色，可选择映射为主角或 NPC；L2D 运行时自动区分 V4 和独立网格。
 5. 工作室打开同一角色时自动找到模块里的源 ZIP 或网格 PNG 与绑定 JSON。保存的本机临时调整仍然保留在 IndexedDB，不会自动上传 GitHub；正式发布需要将导出的绑定 JSON + 对应纹理提交到此模块目录。
