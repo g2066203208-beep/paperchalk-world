@@ -52,8 +52,17 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    rigSpec.sourceCharacterId==='protagonist-rig-v1'&&
    model?.characterId==='protagonist-rig-v1'&&
    rigSpec.url.startsWith('./assets/l2d/library/protagonist-rig-v1/');
+ // The temporary seven-region CHAR-002 model is allowed ONLY for its one
+ // approved front picture; this does not create a duplicate game character.
+ const approvedSecondary=characterId==='char-002'&&face==='front'&&
+   rigSpec.sourceCharacterId==='char-002-rig-v1'&&
+   model?.characterId==='char-002-rig-v1'&&
+   model?.provenance==='derived-region'&&
+   Object.keys(model.parts||{}).join(',')===
+     'shoes,legs,skirt,wave_hand,free_hand,head_hair,jacket'&&
+   rigSpec.url.startsWith('./assets/l2d/library/char-002-rig-v1/');
  if(model?.format!=='paperchalk-part-rig-v1'||
-    (model.characterId!==characterId&&!approvedOriginal)||model.face!==face)
+    (model.characterId!==characterId&&!approvedOriginal&&!approvedSecondary)||model.face!==face)
   throw Error('L2D 绑定文件与人物 ID/方向不一致');
  // Every playable module (including the ORIGINAL heroine actor) has a
  // deterministic gentle idle preset. A saved local editor profile overrides it.
