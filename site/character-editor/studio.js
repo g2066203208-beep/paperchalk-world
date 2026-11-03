@@ -271,6 +271,9 @@ async function storePartRig(rig){
 }
 async function saveToGame(){
  if(!currentId)return;
+ // One primary Save: flush rig snapshots before painting and navigation.
+ const rig=window.PaperchalkPartRigStudio;
+ if(rig?.state?.active||rig?.state?.dirty)await rig.save();
  clearTimeout(correctionTimer);
  await ed.save();
  if(v4)await persistCorrections();
@@ -286,7 +289,9 @@ async function saveToGame(){
  const binding=await get('slot:'+slot);
  if(binding?.id===currentId)await put('slot:'+slot,{id:currentId,side});
  const native=await get('skeletal:'+currentId+':'+side);
- message('✓ 游戏已更新：'+(list.get(currentId)?.label||currentId)+(native?.length>=12?'，'+native.length+' 个真正独立的 PSD 部件已接入游戏实时骨骼动画。':'，保留当前 V4 动画及像素修补。'));
+ message('✓ 已保存：'+(list.get(currentId)?.label||currentId)+
+  (rig?.state?.model?.characterId===currentId?'，当前骨骼将在返回游戏后加载。':
+   native?.length>=12?'，原始分层工程已保存。':'，保留 V4 和像素修补。'));
 }
 async function importImages(files){
  await switchQueue;
