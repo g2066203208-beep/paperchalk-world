@@ -1966,7 +1966,7 @@ void main(){
     }
     logButton.setAttribute('aria-pressed',String(logOpen));
   }
-  nextLineButton.addEventListener('click',e=>{e.stopPropagation();advanceDialogue()});
+  nextLineButton.addEventListener('click',e=>{e.stopPropagation();if(storyMode)window.PaperWorldPrologue?.enableAudio?.();advanceDialogue()});
   // Clicking text/black fog advances, but sensor and fog calculations are untouched.
   dialogue.addEventListener('click',e=>{e.stopPropagation();advanceDialogue()});
   autoButton.addEventListener('click',()=>{
