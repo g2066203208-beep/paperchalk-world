@@ -161,7 +161,51 @@ try{
      const s=window.PaperWorldL2DGround.state();
      return s?.y===77&&s?.z===-215&&s.actors.every(a=>Math.abs(a.errorPx)<1);
    });
+   // Physics test of the REAL rendered L2D mesh: in 3D DEV the CSS
+   // perspective camera handles Z, so mesh normalization must stay stable
+   // as the enemy walks toward/away from the camera.
    await page.locator('#dev-layer').selectOption('enemy');
+   const baselineAuto=await page.evaluate(()=>window.PaperWorldL2DGround.inspect());
+   assert.equal(baselineAuto.autoPerspective,true,'Distance perspective must be ON by default');
+   assert.ok(baselineAuto.actors.every(a=>a.perspectiveScale>0&&a.visibleFraction>.5));
+   const capture=async z=>{
+     await page.evaluate(value=>{
+       const slider=document.getElementById('dev-z');
+       slider.value=String(value);
+       slider.dispatchEvent(new Event('input',{bubbles:true}));
+     },z);
+     await page.waitForFunction(target=>{
+       const ground=window.PaperWorldL2DGround.inspect();
+       return ground.actors.find(a=>a.id==='enemy')?.effectiveZ===target;
+     },z);
+     return page.evaluate(()=>{
+       const a=window.PaperchalkL2D.get('enemy');
+       const g=window.PaperWorldL2DGround.inspect();
+       const actor=g.actors.find(a=>a.id==='enemy');
+       return {actor,canvas:a.canvas.getBoundingClientRect().toJSON(),
+         imgSize:a.img.offsetHeight,meshScale:parseFloat(getComputedStyle(a.canvas).scale)};
+     });
+   };
+   const far=await capture(-350);
+   const near=await capture(-60);
+   assert.ok(near.canvas.height>far.canvas.height*1.1,
+     'REAL animated L2D must become visibly bigger as Z approaches camera: '+
+     JSON.stringify({far,near}));
+   assert.equal(far.imgSize,near.imgSize,'3D camera distance must not change original 1024 L2D proportions');
+   assert.ok(Math.abs(near.actor.errorPx)<1&&Math.abs(far.actor.errorPx)<1,
+     'Automatic zoom separated an NPC shoe from the ground');
+   assert.ok(Math.abs(near.actor.perspectiveScale-far.actor.perspectiveScale)<.01,
+     'Camera Z applied twice: DEV should use CSS 3D perspective only');
+   await page.screenshot({path:'artifacts/ground/ground-'+cfg.name+'-l2d-near-depth.png'});
+   await capture(-190);
+   await page.locator('#dev-auto-depth').uncheck();
+   const manual=await page.evaluate(()=>window.PaperWorldL2DGround.inspect());
+   assert.equal(manual.autoPerspective,false);
+   assert.ok(manual.actors.every(a=>Math.abs(a.perspectiveScale-1)<.001),
+     'Disabling auto must restore the hand-authored raw L2D size');
+   await page.locator('#dev-auto-depth').check();
+   const enabled=await page.evaluate(()=>window.PaperWorldL2DGround.inspect());
+   assert.equal(enabled.autoPerspective,true);
    await page.locator('#dev-ground-calibrate').click({timeout:15000});
    const calibrated=await page.evaluate(()=>({state:window.PaperWorldGroundPerspective.current(),
      fit:window.PaperWorldGroundPerspective.inspect(),
@@ -190,6 +234,21 @@ try{
    assert.equal(shifted.enemy.x,x,'Ground constraint changed horizontal placement');
    await page.locator('#dev-ground-lock').uncheck();
    assert.equal((await page.evaluate(()=>window.PaperWorldGroundPerspective.current())).locked,false);
+   // Leaving DEV disables CSS 3D projection. Its mathematically equivalent
+   // 2D pinhole-distance scale must now apply to the actual visual canvas.
+   await page.locator('#dev-exit').click();
+   const normal=await page.evaluate(()=>{
+     const g=window.PaperWorldL2DGround.inspect();
+     const a=Object.fromEntries(g.actors.map(v=>[v.id,v]));
+     const img=slot=>window.PaperchalkL2D.get(slot).img;
+     const actual=(slot)=>img(slot).offsetHeight*a[slot].visibleFraction*a[slot].perspectiveScale;
+     const expected=(a.enemy.physicalCm/a.player.physicalCm)*
+       (1150-a.player.effectiveZ)/(1150-a.enemy.effectiveZ);
+     return {dev:g.dev,ratio:actual('enemy')/actual('player'),expected,actors:a};
+   });
+   assert.equal(normal.dev,false,'Exited DEV but still applying 3D camera perspective');
+   assert.ok(Math.abs(normal.ratio-normal.expected)<.025,
+     'Regular 2D game does not match physical stature and camera distance: '+JSON.stringify(normal));
    assert.deepEqual(errs,[],errs.join('; '));
    console.log('PASS '+cfg.name+': both genuine L2D sole pixels touch the same floor Y, move with Y/Z, keep authored transforms');
    await page.close();
