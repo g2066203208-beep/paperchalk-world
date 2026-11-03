@@ -92,13 +92,26 @@ try{
   // browser layout must show a half-out-of-frame heroine and a fully
   // onscreen midground opponent. Check rendered shoe pixels, not only
   // the computed model values.
-  assert.ok(ref.player.shoeScreenY>ref.viewportHeight*1.02&&
-    ref.player.shoeScreenY<ref.viewportHeight*1.09,
-    'Visible heroine canvas shoes are NOT past the lower camera edge: '+JSON.stringify(ref));
-  assert.ok(ref.enemy.shoeScreenY>ref.viewportHeight*.79&&
-    ref.enemy.shoeScreenY<ref.viewportHeight*.93&&
-    ref.enemy.rect.top<ref.viewportHeight*.54,
-    'NPC visible L2D is outside frame or too far from the encounter: '+JSON.stringify(ref));
+  if(cfg.mobile){
+    // The entire 16:9 logical game is ROTATED 90° on a portrait phone.
+    // Browser rect.x, not rect.y, is then the game's vertical axis.
+    // Logical ground positions remain 104% (hero) and 86% (enemy).
+    assert.ok(ref.player.rect.left<0&&ref.player.rect.right>cfg.width*.5,
+      'Portrait camera crop did not place heroine partly past the edge: '+JSON.stringify(ref));
+    assert.ok(ref.enemy.rect.left<cfg.width*.5&&
+      ref.enemy.rect.right>cfg.width*.5&&
+      ref.enemy.rect.top<cfg.height*.72&&
+      ref.enemy.rect.bottom>cfg.height*.24,
+      'Portrait enemy L2D must be visible within the rotated game: '+JSON.stringify(ref));
+  }else{
+    assert.ok(ref.player.shoeScreenY>ref.viewportHeight*1.02&&
+      ref.player.shoeScreenY<ref.viewportHeight*1.09,
+      'Visible heroine canvas shoes are NOT past the lower camera edge: '+JSON.stringify(ref));
+    assert.ok(ref.enemy.shoeScreenY>ref.viewportHeight*.79&&
+      ref.enemy.shoeScreenY<ref.viewportHeight*.93&&
+      ref.enemy.rect.top<ref.viewportHeight*.54,
+      'NPC visible L2D is outside frame or too far from the encounter: '+JSON.stringify(ref));
+  }
   assert.ok(ref.enemy.perspectiveScale>1&&ref.enemy.perspectiveScale<1.7,
     'Nearby CHAR-002 must not be magnified from a tiny old 34% source: '+JSON.stringify(ref));
   assert.ok(ref.enemy.sourceCanvasPixels>=512*512,
