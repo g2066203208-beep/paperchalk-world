@@ -281,7 +281,10 @@ function sync(t){
   // Undo any old whole-image rocking transform left by a cached version.
   const surface=a.clip?.type==='native'?a.clip.img:a.canvas;
   if(surface?.style.transform)surface.style.transform='';
-  if(surface?.style.transformOrigin)surface.style.transformOrigin='';
+  // Keep the sole pivot owned by the ground/perspective binder. Erasing it
+  // on every frame made scaled characters drift off the floor and churn styles.
+  if(surface?.style.transformOrigin&&!a.root.dataset.groundAttached)
+   surface.style.transformOrigin='';
   if(a.rig&&!a.clip&&!a.libraryPlayer)
    a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
   if(a.clip?.type==='decoder')advanceV4(a,t||performance.now());
