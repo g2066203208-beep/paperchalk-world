@@ -52,7 +52,6 @@ jobs:
           python3 scripts/build_protagonist_part_rig.py
           python3 scripts/build_char002_v4.py
           python3 scripts/build_char002_part_rig.py
-          python3 scripts/build_char016_psd_rig.py
           python3 scripts/build_scene_catalog.py
       - name: Export ORIGINAL eye/nose/brow PNGs to face-only QA artifact for visual review
         run: |
@@ -112,7 +111,7 @@ jobs:
           import json
           p=json.load(open('site/characters.catalog.json'))
           data={c['id']:c for c in p['characters']}
-          assert {'protagonist','char-002','char-016','qa-v4','qa-rig'} <= set(data)
+          assert {'protagonist','char-002','qa-v4','qa-rig'} <= set(data)
           assert data['protagonist']['clips']['front']['frames']==128
           assert data['protagonist']['clips']['back']['frames']==128
           assert data['char-002']['clips']['front']['frames']==128
@@ -124,16 +123,10 @@ jobs:
           assert secondary['partProvenance']=='derived-region'
           assert secondary['requiresOriginalPSDForFullRig'] is True
           assert secondary['rig']['sourceCharacterId']=='char-002-rig-v1'
-          male=data['char-016']
-          assert male['l2dModule']['front']['renderer']=='part-mesh'
-          assert male['l2dModule']['front']['rig']['partCount']==21
-          assert male['l2dModule']['front']['sourceParts']['provenance']=='original-psd'
-          assert male['l2dModule']['front']['rig']['url'].endswith('/char-016/front.rig.json')
-          assert 'back' not in male['l2dModule']
-          assert 'char-016-rig-v1' not in data,'no duplicate male character'
+          assert 'char-016' not in data, 'deleted male-second character must remain absent'
           assert data['qa-rig']['l2dModule']['front']['rig']['partCount']==2
           assert data['qa-v4']['clips']['front']['frames']==2
-          print('PASS catalog: male 2=CHAR-016 with 21 exact source PSD parts; female 2 unique + protected V4')
+          print('PASS catalog: female-two registered and mistaken male-second entry removed')
           PY
       - name: Verify game, independent ArtMesh player and editor parse
         run: |
@@ -165,7 +158,7 @@ jobs:
             await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:30000});
             const names=await page.evaluate(()=>window.PaperchalkCharacterDev.characters.map(c=>c.id));
             assert.ok(names.includes('qa-rig')&&names.includes('qa-v4'),'new modules must show in live DEV game picker');
-            assert.ok(names.includes('char-016'),'male-second character must appear once in DEV picker');
+            assert.ok(!names.includes('char-016'),'deleted character must not appear in DEV picker');
             await page.evaluate(()=>{document.querySelector('#camera-player-root').hidden=false;});
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','qa-rig','front'));
             await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dMode==='library-part-mesh',{timeout:20000});
@@ -182,33 +175,6 @@ jobs:
             await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.clip?.count===2,{timeout:20000});
             assert.equal(await page.evaluate(()=>window.PaperchalkL2DLibrary.get('player')),null,
               'switching to V4 must unload the old independent texture renderer');
-            // The uploaded male second Photoshop file has 21 REAL separate
-            // PSD alpha masks and original pixels, never an AI layer guess.
-            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','char-016','front'));
-            await page.waitForFunction(()=>window.PaperchalkL2DLibrary?.get('player')?.layers?.length===21,
-              null,{timeout:25000});
-            const male=await page.evaluate(()=>{
-              const a=window.PaperchalkL2DLibrary.get('player'),core=window.PaperchalkPartRigCore,
-                p=a.model.parts,rig=a.model.bodyHierarchy,
-                point=(id,u,v,t)=>core.warpPoint(p[id],u,v,t,null,
-                  core.sanitizeIdleProfile({...a.model.idleProfile,joints:{hands:0,shoulders:2,hips:3}}));
-              const movement=(id)=>{const q=point(id,.5,.88,.3),r=point(id,.5,.88,3.1);
-                return Math.hypot(q.x-r.x,q.y-r.y);};
-              return {id:a.model.characterId,parts:Object.keys(p),rig:!!rig,
-                provenance:a.model.provenance,
-                feet:[movement('shoe_left'),movement('shoe_right')],
-                hair:movement('front_hair'),
-                eyes:[!!p.eye_white,!!p.irises,!!p.lashes],
-                hips:a.model.idleProfile.joints.hips};
-            });
-            console.log('TRUE PSD MALE SECOND PART RIG',JSON.stringify(male));
-            assert.equal(male.id,'char-016');
-            assert.equal(male.parts.length,21,'21 exact Photoshop original parts must survive');
-            assert.equal(male.rig,true,'male second must have hip->shoulder->neck->head parent chain');
-            assert.equal(male.provenance,'original-psd-masks');
-            assert.ok(male.feet.every(x=>x<1e-5),'both male shoes must be grounded');
-            assert.deepEqual(male.eyes,[true,true,true],
-              'male second face has genuine original white/iris/lashes layers');
             // This is the ACTUAL heroine's original 25-layer ZIP, not a
             // synthetic QA bitmap or a full-image sinusoidal distortion.
             // Female two: real ORIGINAL front art divided into seven preserved
