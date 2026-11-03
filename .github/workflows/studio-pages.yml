@@ -39,6 +39,10 @@ jobs:
           python3 scripts/repair_character_masks.py
       - name: Validate single canonical protagonist and approved front/back assets
         run: python3 scripts/validate_character_identity.py
+      - name: Build CHAR-002 front source region rig
+        run: |
+          python3 scripts/build_char002_v4.py
+          python3 scripts/build_char002_part_rig.py
       - name: Generate character catalog for DEV editing (auto publish)
         run: python3 scripts/build_character_catalog.py
       - name: Generate scene catalog from room images (auto publish)
