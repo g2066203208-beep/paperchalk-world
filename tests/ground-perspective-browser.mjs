@@ -44,34 +44,69 @@ try{
    // Moving the ground is a shared-parent transform, not a loose 3D grid.
    // Check REAL DOM shoes: foreground and background must travel the same
    // logical-pixel distance, leaving individually saved actor offsets intact.
+   // L2D runtime renders into canvases (or animated native V4 image),
+   // NOT the invisible <img> anchors; test the actual visible artwork.
+   await page.waitForFunction(()=>['player','enemy'].every(id=>{
+     const actor=window.PaperchalkL2D?.get(id);
+     return actor?.root?.dataset.l2dState==='ready'&&actor.canvas.width>0&&actor.canvas.height>0;
+   }),{timeout:20000});
    const floorStart=await page.evaluate(()=>{
-     const root=document.getElementById('view');
-     const enemy=document.getElementById('actor-enemy');
-     const player=document.getElementById('actor-player');
+     const view=document.getElementById('view');
      const rig=document.getElementById('dev-rig');
+     const snap=id=>{
+       const a=window.PaperchalkL2D.get(id);
+       const rect=el=>el.getBoundingClientRect().toJSON();
+       return {root:rect(a.root),canvas:rect(a.canvas),
+         source:rect(a.img),mode:a.root.dataset.l2dMode,
+         native:a.clip?.type==='native'?rect(a.clip.img):null,
+         ground:getComputedStyle(a.root).translate,
+         height:a.img.offsetHeight};
+     };
      return {
-       h:root.clientHeight,playerTop:player.offsetTop,enemyTop:enemy.offsetTop,
+       h:view.clientHeight,
+       player:snap('player'),enemy:snap('enemy'),
        playerZ:getComputedStyle(rig).getPropertyValue('--dev-depth-player').trim(),
        enemyZ:getComputedStyle(rig).getPropertyValue('--dev-depth-enemy').trim(),
        floorZ:getComputedStyle(rig).getPropertyValue('--dev-depth-ground').trim()
      };
    });
+   assert.ok(floorStart.player.canvas.height>0&&floorStart.enemy.canvas.height>0,
+     'Expected the actual animated L2D canvas to be laid out: '+JSON.stringify(floorStart));
    await page.evaluate(()=>{
      const slider=document.getElementById('dev-ground-y');
      slider.value='83';slider.dispatchEvent(new Event('input',{bubbles:true}));
    });
    const floorYMoved=await page.evaluate(()=>{
-     const enemy=document.getElementById('actor-enemy');
-     const player=document.getElementById('actor-player');
-     return {playerTop:player.offsetTop,enemyTop:enemy.offsetTop,
-       state:window.PaperWorldGroundPerspective.current(),
-       playerBottom:player.style.bottom,enemyBottom:enemy.style.bottom};
+     const snap=id=>{
+       const a=window.PaperchalkL2D.get(id);
+       const rect=el=>el.getBoundingClientRect().toJSON();
+       return {root:rect(a.root),canvas:rect(a.canvas),
+         source:rect(a.img),native:a.clip?.type==='native'?rect(a.clip.img):null,
+         ground:getComputedStyle(a.root).translate,
+         height:a.img.offsetHeight};
+     };
+     return {player:snap('player'),enemy:snap('enemy'),
+       state:window.PaperWorldGroundPerspective.current()};
    });
    const expectedShift=floorStart.h*.06;
-   assert.ok(Math.abs(floorYMoved.playerTop-floorStart.playerTop-expectedShift)<2,
-     'Player did not follow moved floor Y: '+JSON.stringify({floorStart,floorYMoved,expectedShift}));
-   assert.ok(Math.abs(floorYMoved.enemyTop-floorStart.enemyTop-expectedShift)<2,
-     'NPC did not follow moved floor Y: '+JSON.stringify({floorStart,floorYMoved,expectedShift}));
+   for(const role of ['player','enemy']){
+     const before=floorStart[role],after=floorYMoved[role];
+     assert.equal(after.ground,'0px '+expectedShift.toFixed(1)+'px',
+       role+' entire L2D root must inherit the shared floor translation: '+JSON.stringify(floorYMoved));
+     assert.equal(after.height,before.height,
+       role+' floor must NOT resize the 1024px L2D rig or restart bones');
+     for(const surface of ['root','canvas','source','native']){
+       if(!before[surface])continue;
+       const delta=after[surface].top-before[surface].top;
+       assert.ok(delta>3,
+         role+' visible L2D '+surface+' stayed behind when floor moved: '+
+         JSON.stringify({delta,expectedShift,before,after}));
+       const actorDelta=after.root.top-before.root.top;
+       assert.ok(Math.abs(delta-actorDelta)<2,
+         role+' renderer '+surface+' separated from its animated L2D parent: '+
+         JSON.stringify({delta,actorDelta,before,after}));
+     }
+   }
    assert.equal(floorYMoved.state.enemy.y,y,'NPC relative foot anchor was overwritten');
    assert.equal(floorYMoved.state.player.y,initial.state.player.y,'Player relative foot anchor was overwritten');
    assert.equal(floorYMoved.state.enemy.size,size,'Moving the floor changed NPC stature');
