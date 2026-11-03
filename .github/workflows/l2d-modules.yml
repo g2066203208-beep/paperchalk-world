@@ -41,6 +41,8 @@ jobs:
       - run: python3 -m pip install --quiet 'Pillow>=10,<12'
       - name: Unit tests for real format, missing files, path escape and asset version
         run: python3 -m unittest discover -s tests -p 'test_l2d_library.py' -v
+      - name: Validate realistic idle and independent per-part settings
+        run: node tests/test_l2d_idle.js
       - name: Rebuild existing original L2D safely
         run: |
           python3 scripts/build_v4_assets.py
