@@ -66,7 +66,7 @@ body.mobile-mode.virtual-landscape #view{
    correctly follow the game in actual Android landscape and rotated browser portrait.
    No panel, no rectangular frame, no extra gradient, no smoke layers. */
 #novel-ui{
-  position:absolute;inset:0;z-index:5;pointer-events:none;
+  position:absolute;inset:0;z-index:6;pointer-events:none;
   color:#f5f5f1;font-family:var(--font-dialogue);
   font-weight:400;letter-spacing:.045em;
   --ui-ink:#f5f5f1;
@@ -229,16 +229,19 @@ body.mobile-mode.virtual-landscape #view{
 }
 /* No fog background for always-visible top HUD, only the ORIGINAL scene rim. */
 
-/* UI FOG V2: project-native fog, not a second painted gradient or black plate.
-   The UI's transparent canvas reprojects the LIVE existing #fog framebuffer
-   into a soft feather at whichever edge ACTUALLY owns visible UI content. */
-#novel-ui #ui-edge-fog{
+/* The moving scene fog and UI-edge smoke are WORLD fog. Both MUST remain
+   behind the visible player L2D and in front of enemy L2D. The UI controls
+   themselves remain above the player, so dialogue stays interactive.
+   A UI-edge canvas nested inside #novel-ui (z=6) used to darken the player. */
+#ui-edge-fog{
   position:absolute;inset:0;width:100%;height:100%;
-  display:block;z-index:0;pointer-events:none;image-rendering:auto;
+  display:block;z-index:4;pointer-events:none;image-rendering:auto;
 }
-/* Native fog behind panels + a second copy masked to the phone's outer rim.
-   The latter is still real flowing fog, not a rectangular black plate. */
-#novel-ui > :not(#ui-edge-fog):not(#ui-phone-fog):not(#ui-fog-state){z-index:1}
+#ui-edge-fog[hidden],#view.dev-mode #ui-edge-fog,
+#view.fog-edit-mode #ui-edge-fog{display:none!important}
+/* Only the phone's tiny localized contact fog is an above-player UI effect.
+   The full-width bottom/side/top smoke is now beneath the player. */
+#novel-ui > :not(#ui-phone-fog):not(#ui-fog-state){z-index:1}
 #novel-ui #ui-phone-fog{
   position:absolute;inset:0;width:100%;height:100%;
   z-index:2;display:block;pointer-events:none;image-rendering:auto;
@@ -293,8 +296,9 @@ body.mobile-mode.virtual-landscape #view{
 
 
 /* Real depth composition, front to back:
-   camera player (fixed) > original viewport black fog > enemy (parallax)
-   > background (independently tilted). Nothing else is drawn. */
+   interactive UI (6) > camera player L2D (5) > live UI-edge smoke (4)
+   > original viewport fog (3) > enemy L2D (2) > scene (1).
+   Fog may obscure the enemy but NEVER paint over the visible heroine. */
 #scene{z-index:1}
 #enemy-depth-root{
   position:absolute;left:50%;top:50%;
@@ -315,7 +319,7 @@ body.mobile-mode.virtual-landscape #view{
 }
 #fog{z-index:3}
 #camera-player-root{
-  position:absolute;inset:0;z-index:4;pointer-events:none;
+  position:absolute;inset:0;z-index:5;pointer-events:none;
   /* The player stays camera-near but responds subtly to view direction.
      Its plane tilts independently; it never inherits the background tilt. */
   transform-origin:18% 74%;
@@ -591,12 +595,14 @@ body.mobile-mode.virtual-landscape #view{
     <canvas id="actor-enemy-l2d" data-l2d-canvas width="1024" height="1024" aria-label="NPC L2D 动画画布"></canvas>
   </div>
   <canvas id="fog" aria-hidden="true"></canvas>
+  <!-- World-space dynamic UI fog is below the protagonist's complete L2D rig,
+       not inside #novel-ui: fog obscures NPCs, never the foreground heroine. -->
+  <canvas id="ui-edge-fog" aria-hidden="true" hidden></canvas>
   <div id="camera-player-root" data-l2d-actor="player" aria-label="镜头前景层：玩家（在黑雾前方）" hidden>
     <img id="actor-player" data-l2d-image src="./assets/characters/protagonist-back.webp" alt="背对镜头的主角素材定位锚点" draggable="false">
     <canvas id="actor-player-l2d" data-l2d-canvas width="1024" height="1024" aria-label="主角 L2D 动画画布"></canvas>
   </div>
   <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
-    <canvas id="ui-edge-fog" aria-hidden="true"></canvas>
     <canvas id="ui-phone-fog" aria-hidden="true"></canvas>
     <div id="ui-fog-state" hidden aria-hidden="true">
       <i class="ui-fog-band" data-edge="bottom" data-active="false"></i>
@@ -1627,6 +1633,14 @@ void main(){
     return css.display!=='none'&&css.visibility!=='hidden';
   }
   function syncUiEdgeFog(){
+    // The UI fog's canvas is deliberately a world-space sibling between
+    // NPC and protagonist. Mirror the UI lifecycle so menus/DEV never
+    // leave a stray black sheet over the scene after a scene switch.
+    const worldUiFogHidden=uiRoot.hidden||
+      view.classList.contains('dev-mode')||
+      view.classList.contains('fog-edit-mode');
+    if(uiFogCanvas.hidden!==worldUiFogHidden)
+      uiFogCanvas.hidden=worldUiFogHidden;
     const active=new Set();
     for(const el of uiRoot.querySelectorAll('[data-ui-fog-edge]')){
       const edge=el.getAttribute('data-ui-fog-edge');
