@@ -12,17 +12,10 @@ const rig=document.getElementById('dev-rig');
 const floor=document.getElementById('dev-ground');
 if(!view||!rig||!floor)return;
 const ORIGIN=Object.freeze({y:77,z:-215});
-// The visible close-up is deliberately NOT a full-body calibration sprite.
-// Camera-space reference for the opponent stays a normal standing person:
-// world grounding and stature remain stable when we crop the heroine at
-// waist height for an intimate over-the-shoulder composition.
-const SHOULDER_CAMERA=Object.freeze({
-  referenceBodyHeightRatio:.90,
-  referenceFootYRatio:.965
-});
+const projection=window.PaperWorldPerspectiveGround;
+const SHOULDER_CAMERA=projection.SHOULDER_CAMERA;
 const roots=()=>[...document.querySelectorAll('[data-l2d-actor]')];
 const actorInfo=new Map(),soleCache=new WeakMap();
-const projection=window.PaperWorldPerspectiveGround;
 let last=null,requested=false;
 const fmt=n=>Number(n.toFixed(3));
 const cssValue=(key,fallback)=>{
