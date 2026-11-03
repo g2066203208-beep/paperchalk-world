@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070d14">
+<meta name="description" content="Paperchalk World 里世界三层立体球形迷宫独立模型。可三维旋转、剖视、逐层探索，并模拟每日球壳自转与重组。">
+<title>里世界 · 三重球壳迷宫｜独立3D模型</title>
+<link rel="stylesheet" href="./style.css?v=sphere-maze-01">
+<script type="importmap">
+{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}
+</script>
+<script src="./maze-core.js?v=sphere-maze-01"></script>
+<script type="module" src="./viewer.js?v=sphere-maze-01"></script>
+</head>
+<body>
+<main id="app">
+ <div class="ambient ambient-one" aria-hidden="true"></div>
+ <div class="ambient ambient-two" aria-hidden="true"></div>
+ <div id="stage" role="region" aria-label="可拖动旋转的三层3D球形迷宫模型"></div>
+ <div id="load-error" hidden role="alert"></div>
+ <header id="masthead">
+  <div class="brand"><span class="brand-mark" aria-hidden="true">◉</span><span>PAPERCHALK <i>WORLD</i></span></div>
+  <div class="eyebrow">独立模型研究 · WORLD FORM STUDY / 001</div>
+  <h1>里世界<span>·</span>三重球壳</h1>
+  <p class="tagline">三维同心迷宫 / 独立旋转 / 每日重排</p>
+  <div class="model-badges">
+   <span class="model-badge"><b>03</b> 球壳</span>
+   <span class="model-badge"><b>960</b> 空间单元</span>
+   <span class="model-badge"><b>3D</b> 真实网格</span>
+  </div>
+ </header>
+ <section id="ring-panel" aria-label="球壳图层选择">
+  <div class="pane-heading"><span>SPHERICAL SHELLS</span><span class="pane-dash"></span><span>3 LAYERS</span></div>
+  <button class="ring-choice active" type="button" data-layer="-1" aria-pressed="true">
+   <span class="ring-symbol ring-all" aria-hidden="true">◎</span>
+   <span class="ring-copy"><strong>全部球壳</strong><small>OVERVIEW</small></span>
+   <span class="ring-status">总览</span>
+  </button>
+  <button class="ring-choice" type="button" data-layer="0" aria-pressed="false">
+   <span class="ring-symbol outer" aria-hidden="true">◉</span>
+   <span class="ring-copy"><strong>第一层 · 外壳</strong><small>OUTER / R 13.8</small></span>
+   <span class="ring-status">01</span>
+  </button>
+  <button class="ring-choice" type="button" data-layer="1" aria-pressed="false">
+   <span class="ring-symbol middle" aria-hidden="true">◉</span>
+   <span class="ring-copy"><strong>第二层 · 中壳</strong><small>MIDDLE / R 9.9</small></span>
+   <span class="ring-status">02</span>
+  </button>
+  <button class="ring-choice" type="button" data-layer="2" aria-pressed="false">
+   <span class="ring-symbol inner" aria-hidden="true">◉</span>
+   <span class="ring-copy"><strong>第三层 · 内壳</strong><small>INNER / R 6.1</small></span>
+   <span class="ring-status">03</span>
+  </button>
+  <div id="layer-readout">
+   <span class="readout-kicker">当前视图 / MODEL DATA</span>
+   <span id="geometry-count">320 × 3 单元</span>
+   <span id="wall-count">—</span>
+  </div>
+ </section>
+ <section id="control-panel" aria-label="三维模型控制">
+  <div class="control-top"><div><span class="tiny-label">WORLD CYCLE</span>
+   <span class="cycle-label">空间周期</span></div><div class="day-chip" id="day-number">DAY 01</div>
+  </div>
+  <button class="primary-action" id="next-day" type="button">
+   <span>推进一天 · 旋转并重组</span><span aria-hidden="true">↗</span>
+  </button>
+  <div class="control-explain" id="cycle-note">每层沿不同轴旋转，球面内的通路和区域重新排列。</div>
+  <div class="control-divider"></div>
+  <label class="setting-line" for="cutaway"><span><strong>剖视球壳</strong><small>打开局部截面，观察内部</small></span><input id="cutaway" type="checkbox" checked><i class="toggle"></i></label>
+  <label class="setting-line" for="auto-spin"><span><strong>演示自转</strong><small>仅为模型预览，不计入天数</small></span><input id="auto-spin" type="checkbox"><i class="toggle"></i></label>
+  <label class="setting-line" for="show-paths"><span><strong>通道与入口</strong><small>显示可通行迷宫路径</small></span><input id="show-paths" type="checkbox" checked><i class="toggle"></i></label>
+  <label class="setting-slider" for="separation"><span><strong>球壳间距</strong><output id="separation-value" for="separation">原始比例</output></span>
+   <input id="separation" type="range" min="0" max="100" value="0" step="1"></label>
+  <div class="control-actions">
+   <button class="sub-action" id="reset-camera" type="button">↺ 重置视角</button>
+   <button class="sub-action" id="reset-world" type="button">↩ 第一天</button>
+  </div>
+ </section>
+ <section id="inspect-panel" aria-live="polite">
+  <div class="inspect-top"><span class="inspect-dot" aria-hidden="true"></span><span id="inspect-title">空间结构已载入</span></div>
+  <p id="inspect-text">点击球壳表面的三角区域，查看该位置所属球壳与区域。</p>
+ </section>
+ <div id="center-label" aria-hidden="true"><span>CORE</span><i></i><span>球心</span></div>
+ <footer id="foot">
+  <span><b>操作</b> 拖动旋转视角 <i>·</i> 滚轮 / 双指缩放 <i>·</i> 点击单元检查结构</span>
+  <span class="footer-right"><span class="signal"></span><span id="connection-state">连接通道 · 计算中</span></span>
+ </footer>
+ <div id="loading" aria-live="polite"><span class="loader-logo">◎</span><span>构建三层球形迷宫…</span><span class="loading-detail">GEOMETRY / PATHS / SHELLS</span></div>
+</main>
+</body>
+</html>
