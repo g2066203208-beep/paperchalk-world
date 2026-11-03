@@ -4,7 +4,7 @@
 const ed=window.characterEditor,core=window.PaperchalkPartRigCore,studio=window.PaperchalkStudio;
 if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
-const state={active:false,model:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false};
+const state={active:false,model:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false};
 const toggle=document.createElement('button');toggle.id='part-rig-toggle';
 toggle.textContent='逐件绑骨';toggle.type='button';toggle.title='选择独立骨骼与精细蒙皮控制';
 stage.querySelector('.stage-toolbar')?.append(toggle);
@@ -99,8 +99,37 @@ $('rig-idle-controls').append(idleAdvanced);
 const advanced=document.createElement('details');
 advanced.id='rig-advanced';
 advanced.innerHTML='<summary>高级绑定 · 轴点、网格与关节</summary>';
-advanced.append(sliders,panel.querySelector('.rig-joints'));
+const guideLabel=document.createElement('label');
+guideLabel.className='rig-guide-toggle';
+guideLabel.innerHTML='<input type="checkbox" id="rig-guides"> 显示网格与关节线（仅用于绑骨）';
+advanced.append(guideLabel,sliders,panel.querySelector('.rig-joints'));
 panel.querySelector('.rig-buttons').before(advanced);
+$('rig-guides').addEventListener('change',e=>{
+ state.showGuides=!!e.target.checked;
+ ed.render();
+});
+// Easy controls for a moving fringe and skirt, independent of whole coat/head.
+const spotlight=document.createElement('div');
+spotlight.id='rig-spotlight';
+spotlight.innerHTML='<strong>重点飘动 · 单独调节</strong>';
+for(const [id,label] of [
+ ['front_hair','刘海摆幅'],['back_hair','后发摆幅'],
+ ['hair_over_jacket','背面外披发'],['skirt','裙摆摆幅']
+]){
+ const row=document.createElement('label');
+ row.className='rig-field';
+ row.dataset.spotlightRow=id;
+ row.innerHTML='<span>'+label+'</span><output>100%</output><input type="range" min="0" max="200" step="5" data-spotlight="'+id+'">';
+ spotlight.append(row);
+}
+$('rig-idle-controls').insertBefore(spotlight,idleAdvanced);
+spotlight.addEventListener('input',e=>{
+ const id=e.target?.dataset?.spotlight;
+ if(!id||!state.model?.parts[id])return;
+ state.model.idleProfile.parts[id]=Number(e.target.value)/100;
+ state.model.idleProfile.preset='custom';
+ syncIdle();changed();
+});
 function syncIdle(){
  const idle=state.model?.idleProfile;if(!idle)return;
  for(const input of idleSliders.querySelectorAll('[data-idle]')){
@@ -115,6 +144,14 @@ function syncIdle(){
  const mult=idle.parts?.[state.selected]??1;
  amount.value=String(Math.round(mult*100));
  $('rig-part-amount-value').textContent=Math.round(mult*100)+'%';
+ for(const input of spotlight.querySelectorAll('[data-spotlight]')){
+  const id=input.dataset.spotlight,row=input.closest('.rig-field');
+  row.hidden=!state.model.parts[id];
+  if(row.hidden)continue;
+  const weight=idle.parts?.[id]??1;
+  input.value=String(Math.round(weight*100));
+  row.querySelector('output').textContent=Math.round(weight*100)+'%';
+ }
 }
 idleSliders.addEventListener('input',e=>{
  const field=e.target.dataset.idle;if(!field||!state.model)return;
@@ -247,7 +284,8 @@ async function activate(){
  if(studio.current!==id||S.side!==face)return;
  state.model=core.project(src,id,face,saved);
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
- state.active=true;state.phase=0;state.playing=true;
+ state.active=true;state.phase=0;state.playing=true;state.showGuides=false;
+ $('rig-guides').checked=false;
  document.body.classList.add('rig-authoring');
  panel.hidden=false;syncOpenState();
  requestAnimationFrame(()=>document.getElementById('fit')?.click());
@@ -404,7 +442,9 @@ boneSliders.addEventListener('input',e=>{
 });
 function drawPreview(ctx){
  if(!state.active||!state.model)return false;
- core.draw(ctx,parts(),state.model,state.phase,state.selected);
+ // Wireframe and yellow skeletal handles are strictly opt-in.
+ core.draw(ctx,parts(),state.model,state.phase,state.showGuides?state.selected:'');
+ if(!state.showGuides)return true;
  const p=current();if(p){
   const P={x:p.x+p.w*p.pivot.x,y:p.y+p.h*p.pivot.y};
   const T={x:p.x+p.w*p.tip.x,y:p.y+p.h*p.tip.y};

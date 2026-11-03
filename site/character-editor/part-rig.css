@@ -170,3 +170,15 @@ body.rig-authoring #part-rig-panel .rig-h #rig-pause{
  flex:0 0 auto;min-height:34px;background:#24505e;border:1px solid #538a91;
  color:#e5fcfc;font-size:11px;padding:6px 9px
 }
+
+/* Normal character preview is CLEAN; debug mesh is an explicit expert toggle. */
+#part-rig-panel .rig-guide-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;
+ padding:9px 11px;margin:9px 10px 12px!important;border:1px dashed #57738b;
+ border-radius:8px;color:#b3cbe0;font-size:12px}
+#part-rig-panel .rig-guide-toggle input{width:18px;height:18px;accent-color:#84e1d0}
+#part-rig-panel #rig-spotlight{padding:10px 10px 6px;margin:12px 0 4px;
+ background:#202f3d;border:1px solid #54717e;border-radius:10px}
+#part-rig-panel #rig-spotlight>strong{font-size:12px;color:#e0eafa;display:block;margin-bottom:7px}
+#part-rig-panel #rig-spotlight .rig-field{margin:8px 0}
+#part-rig-panel #rig-spotlight .rig-field output{color:#9cf0d3}
+#part-rig-panel #rig-spotlight [hidden]{display:none!important}

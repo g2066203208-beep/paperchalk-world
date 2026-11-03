@@ -60,17 +60,26 @@ const CHAR002={
 // Never invokes breathing deformation or a whole-character canvas transform.
 const IDLE_PRESETS={
  still:{body:0,hair:0,cloth:0,sleeves:0},
- realistic:{body:.18,hair:.48,cloth:.34,sleeves:.26},
- breeze:{body:.15,hair:.78,cloth:.62,sleeves:.46},
- windy:{body:.24,hair:1.1,cloth:.95,sleeves:.76}
+ realistic:{body:.18,hair:.85,cloth:.82,sleeves:.26},
+ breeze:{body:.15,hair:1.12,cloth:1.05,sleeves:.46},
+ windy:{body:.24,hair:1.4,cloth:1.28,sleeves:.76}
 };
+// Upgrade ONLY untouched v1 factory presets, not user-custom sliders.
+const LEGACY_PRESETS={
+ realistic:{hair:.48,cloth:.34},
+ breeze:{hair:.78,cloth:.62},
+ windy:{hair:1.1,cloth:.95}
+};
+const DEFAULT_PART_STRENGTH=Object.freeze({
+ front_hair:1.25,back_hair:1.18,hair_over_jacket:1.18,skirt:1.35
+});
 function defaultIdleProfile(){
- return {preset:'realistic',
+ return {profileVersion:2,preset:'realistic',
   body:{amount:.18,speed:.85,swayX:.8,swayY:1.8,rotate:.35},
-  hair:{amount:.48,speed:1.05,lag:.62},
-  cloth:{amount:.34,speed:.95,lag:.58},
+  hair:{amount:.85,speed:1.05,lag:.62},
+  cloth:{amount:.82,speed:.95,lag:.58},
   sleeves:{amount:.26,speed:.9,lag:.5},
-  parts:{}};
+  parts:{...DEFAULT_PART_STRENGTH}};
 }
 function sanitizeIdleProfile(input){
  const base=defaultIdleProfile(),p=input&&typeof input==='object'?input:{};
@@ -80,18 +89,23 @@ function sanitizeIdleProfile(input){
   ...((id==='hair'||id==='cloth'||id==='sleeves')
    ?{lag:clamp(finite(p[id]?.lag,base[id].lag),0,2)}:{})
  });
- const parts={};
+ const parts={...DEFAULT_PART_STRENGTH};
  if(p.parts&&typeof p.parts==='object'&&!Array.isArray(p.parts)){
   for(const [id,v] of Object.entries(p.parts).slice(0,100)){
    if(/^[a-z0-9_-]{1,80}$/.test(id))parts[id]=clamp(finite(v,1),0,2);
   }
  }
- return {preset:typeof p.preset==='string'?p.preset:'custom',
+ const hair=group('hair',1.5),cloth=group('cloth',1.5);
+ const old=p.profileVersion!==2?LEGACY_PRESETS[p.preset]:null;
+ if(old){
+  if(Math.abs(hair.amount-old.hair)<.00001)hair.amount=IDLE_PRESETS[p.preset].hair;
+  if(Math.abs(cloth.amount-old.cloth)<.00001)cloth.amount=IDLE_PRESETS[p.preset].cloth;
+ }
+ return {profileVersion:2,preset:typeof p.preset==='string'?p.preset:'custom',
   body:{...group('body',1),swayX:clamp(finite(p.body?.swayX,.8),0,3),
    swayY:clamp(finite(p.body?.swayY,1.8),0,4),
    rotate:clamp(finite(p.body?.rotate,.35),0,1)},
-  hair:group('hair',1.5),cloth:group('cloth',1.5),
-  sleeves:group('sleeves',1.5),parts};
+  hair,cloth,sleeves:group('sleeves',1.5),parts};
 }
 function presetIdle(name,previous=null){
  if(!Object.hasOwn(IDLE_PRESETS,name))throw Error('Unknown idle preset: '+name);
@@ -199,8 +213,8 @@ function bonePoses(part,phase=0,idle=null){
   const strength=group?group.amount*clamp(finite(idle.parts?.[part.id],1),0,2):1;
   // Independent root/tip strength and slight phase delay approximate inertia;
   // roots do not whip like ends, and different strands stay out of sync.
-  const groupFactor=part.kind==='hair'?[.22,.65]:
-   part.kind==='skirt'?[.23,.78]:
+  const groupFactor=part.kind==='hair'?[.24,.92]:
+   part.kind==='skirt'?[.28,1.02]:
    part.kind==='torso'?[.18,.50]:
    part.kind.startsWith('arm-')?[.13,.32]:[.1,.22];
   const factor=groupFactor[b.parent?1:0];
