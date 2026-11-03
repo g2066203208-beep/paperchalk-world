@@ -119,13 +119,13 @@ jobs:
           assert 'char-002-rig-v1' not in data, 'old fake rig is gone'
           secondary=data['char-002']['l2dModule']['front']
           assert secondary['renderer']=='part-mesh'
-          assert secondary['rig']['partCount']==17
+          assert secondary['rig']['partCount']==18
           assert secondary['sourceParts']['provenance']=='original-psd'
           assert secondary['rig']['sourceCharacterId']=='char-002-psd-v1'
           assert 'char-016' not in data, 'deleted male-second character must remain absent'
           assert data['qa-rig']['l2dModule']['front']['rig']['partCount']==2
           assert data['qa-v4']['clips']['front']['frames']==2
-          print('PASS catalog: CHAR-002 original 17-part PSD and no duplicate seven-region actor')
+          print('PASS catalog: CHAR-002 authentic 17 source layers and independent raised/lowered arm meshes')
           PY
       - name: Verify game, independent ArtMesh player and editor parse
         run: |
@@ -179,7 +179,7 @@ jobs:
             // The uploaded female-two PSD: 24 source layer records, 17
             // genuinely painted source textures. No seven-region fallback.
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','char-002','front'));
-            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===17,
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===18,
               null,{timeout:25000});
             const secondary=await page.evaluate(()=>{
               const a=window.PaperchalkL2DLibrary.get('player'),
@@ -200,7 +200,8 @@ jobs:
                 eyes:!!p.eyewhite&&!!p.irides&&!!p.eyelash};
             });
             console.log('ORIGINAL CHAR-002 PSD IN GAME',JSON.stringify(secondary));
-            assert.equal(secondary.ids.length,17);
+            assert.equal(secondary.ids.length,18);
+            assert.ok(secondary.ids.includes('hand_raised')&&secondary.ids.includes('hand_lowered')&&!secondary.ids.includes('handwear'));
             assert.equal(secondary.provenance,'original-psd');
             assert.ok(secondary.rig&&secondary.feet<.00001,'both feet must stay grounded');
             assert.ok(secondary.fringe>0.02&&secondary.rear>0.02&&secondary.hem>0.02,
