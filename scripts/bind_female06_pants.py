@@ -118,11 +118,15 @@ def install(library: Path) -> bool:
 
     # The portrait is deliberately composed from the source original PNG
     # and the exact same fitted garment used in the ArtMesh, not AI artwork.
-    with Image.open(base / "front.png") as source_poster:
+    # Compiler can be invoked more than once in CI. Preserve the ORIGINAL
+    # portrait once and always rebuild the derived preview from its bytes;
+    # never alpha-composite shorts repeatedly over themselves.
+    pristine = base / "front.pristine-source.png"
+    if not pristine.is_file():
+        with Image.open(base / "front.png") as source_poster:
+            source_poster.convert("RGBA").save(pristine, "PNG", optimize=True)
+    with Image.open(pristine) as source_poster:
         poster = source_poster.convert("RGBA")
-    # Idempotence: build() runs once per checkout; on repeated invocations
-    # derive the unmodified source portrait by stacking original textures.
-    # No other source body pixels are changed.
     poster.alpha_composite(fitted, (x, y))
     poster.save(base / "front.png", "PNG", optimize=True)
 
