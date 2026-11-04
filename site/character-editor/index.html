@@ -56,10 +56,35 @@ body.embedded #btnCloseInGame{background:#273244}
  body.embedded header{position:relative}
  body.embedded .layout{height:auto;min-height:0}
 }
+
+#studio-recovery{margin:0 auto;padding:11px 14px;max-width:1480px;background:#172a37;
+ border:1px solid #536e83;border-top:none;border-radius:0 0 11px 11px;position:relative;z-index:9}
+#studio-recovery[hidden]{display:none!important}
+.recovery-heading{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:9px}
+.recovery-heading strong{font-size:13px}.recovery-heading span{font-size:11px;color:#bbccdb}
+.recovery-tools{display:flex;flex-wrap:wrap;gap:6px}
+.recovery-tools button{font-size:11px;padding:8px 9px;min-height:35px}
+.recovery-tools button:focus-visible{outline:2px solid #91d8ff}
+#recover-layer-original{border-color:#b68c65}
+#studio-recovery #recovery-status{color:#aebfcf;font-size:11px;line-height:1.5;margin:8px 0 0}
 </style><link rel="stylesheet" href="./easy-mode.css?v=safe-tree-select-20261104"><link rel="stylesheet" href="./part-rig.css?v=local-mask-tree-20261104-r3"></head><body>
 <header><div><strong>✎ L2D 工作室</strong></div><div class="actions"><button id="idle-open" type="button" aria-controls="part-rig-panel" aria-expanded="false">✦ 骨骼细调</button>
-<button id="btnApplyGame" type="button" hidden>✓ 应用到游戏</button><button id="btnCloseInGame" type="button" hidden>返回 DEV</button><button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnSave" style="background:#205e52;border-color:#4ba791;color:#e4fff4;font-weight:700">✓ 保存并应用到游戏</button><button id="btnExport">↓ 完整分层 ZIP</button>
+<button id="btnApplyGame" type="button" hidden>✓ 应用到游戏</button><button id="btnCloseInGame" type="button" hidden>返回 DEV</button><button id="btnUndo">↶ 撤销</button><button id="btnRedo">↷ 重做</button><button id="btnRecovery" aria-controls="studio-recovery" aria-expanded="false" type="button">↩ 复原工具</button><button id="btnSave" style="background:#205e52;border-color:#4ba791;color:#e4fff4;font-weight:700">✓ 保存并应用到游戏</button><button id="btnExport">↓ 完整分层 ZIP</button>
 </div></header>
+<section id="studio-recovery" hidden aria-label="非破坏式复原工具">
+ <div class="recovery-heading"><strong>↩ 撤销、复原与安全备份</strong><span>先选中图层；每项只恢复指定范围，不清空其他部件</span></div>
+ <div class="recovery-tools">
+  <button id="recover-undo" type="button">↶ 撤销上一步</button>
+  <button id="recover-redo" type="button">↷ 重做</button>
+  <button id="recover-position" type="button">复原移动位置</button>
+  <button id="recover-scale" type="button">复原缩放大小</button>
+  <button id="recover-motion" type="button">还原蹲姿动态</button>
+  <button id="recover-rig-open" type="button">恢复本次打开时骨骼</button>
+  <button id="recover-last" type="button">恢复上次保存稿</button>
+  <button id="recover-previous" type="button">恢复更早保存稿</button>
+  <button id="recover-layer-original" type="button">恢复本层原始贴图</button>
+ </div><p id="recovery-status" role="status">自动保存不覆盖手动保存的检查点；原始 PSD、蒙版和其他人物不受影响。</p>
+</section>
 <div class="layout">
 <aside class="left">
 <section><h3>人物方向</h3><div class="row"><button id="frontTab" class="active">正面</button><button id="backTab">背面</button></div><p class="tip">当前人物及方向来自上方全人物列表。PSD/分层 ZIP 导入后保留原图层坐标，真实分层用于动态预览和逐件精修；新版 L2D 是唯一动画编辑模式。</p></section>
@@ -83,7 +108,7 @@ body.embedded #btnCloseInGame{background:#273244}
 <script>
 'use strict';
 const W=1024,H=1024, $=id=>document.getElementById(id), stage=$('stage'),view=$('view'),ctx=view.getContext('2d',{alpha:false});
-const S={side:'front',tool:'select',layers:{front:[],back:[]},sel:-1,zoom:.65,px:0,py:0,brush:6,alpha:1,color:'#bc9ab0',pointers:new Map(),drag:null,space:false,only:false,checker:true,grid:false,selection:null,history:[],redo:[],busy:false,ready:false,sourceDirty:false,derivedDirty:false,sourceRevision:0};
+const S={side:'front',tool:'select',layers:{front:[],back:[]},sel:-1,zoom:.65,px:0,py:0,brush:6,alpha:1,color:'#bc9ab0',pointers:new Map(),drag:null,space:false,only:false,checker:true,grid:false,selection:null,history:[],redo:[],busy:false,ready:false,sourceDirty:false,derivedDirty:false,sourceRevision:0,lastOperationAt:0};
 const make=(w=W,h=H)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
 const current=()=>S.layers[S.side][S.sel];const status=s=>$('status').textContent=s;
 function layer(name,img,x=0,y=0,locked=false){const c=make(img?img.width:W,img?img.height:H);if(img)c.getContext('2d').drawImage(img,0,0);return {name,canvas:c,x,y,visible:true,locked,opacity:1,sourcePart:false,partId:'',role:''}};
@@ -217,9 +242,9 @@ else if(movingFrame){ctx.drawImage(movingFrame,0,0,W,H)}else{
 function zoom(cx,cy,mul){const wp=world({x:cx,y:cy});S.zoom=Math.max(.1,Math.min(20,S.zoom*mul));S.px=cx-wp.x*S.zoom;S.py=cy-wp.y*S.zoom;render()}
 function snapshot(){const arr=S.layers[S.side];return {side:S.side,sel:S.sel,arr:arr.map(p=>({name:p.name,x:p.x,y:p.y,visible:p.visible,locked:p.locked,opacity:p.opacity,sourcePart:!!p.sourcePart,partId:p.partId||'',role:p.role||'',img:p.canvas.toDataURL('image/png')}))}}
 async function restoreSnap(h){S.busy=true;const arr=[];for(const p of h.arr){const img=await imgFrom(p.img);const q=layer(p.name,img,p.x,p.y,p.locked);q.visible=p.visible;q.opacity=p.opacity;q.sourcePart=!!p.sourcePart;q.partId=p.partId||'';q.role=p.role||'';arr.push(q)}S.layers[h.side]=arr;S.side=h.side;S.sel=Math.min(h.sel,arr.length-1);S.selection=null;S.busy=false;$('frontTab').classList.toggle('active',S.side==='front');$('backTab').classList.toggle('active',S.side==='back');notifyLayerOrder();window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'));window.dispatchEvent(new CustomEvent('paperchalk:studio-source-stack-restored',{detail:{side:S.side}}));renderList();render()}
-function check(){if(S.busy)return;S.history.push(snapshot());if(S.history.length>16)S.history.shift();S.redo=[]}
-async function undo(){if(!S.history.length||S.busy)return;const cur=snapshot(),h=S.history.pop();S.redo.push(cur);await restoreSnap(h);autosave();status('已撤销')}
-async function redo(){if(!S.redo.length||S.busy)return;const cur=snapshot(),h=S.redo.pop();S.history.push(cur);await restoreSnap(h);autosave();status('已重做')}
+function check(){if(S.busy)return;S.lastOperationAt=Date.now();S.history.push(snapshot());if(S.history.length>48)S.history.shift();S.redo=[]}
+async function undo(){if(!S.history.length||S.busy)return false;const cur=snapshot(),h=S.history.pop();S.redo.push(cur);await restoreSnap(h);S.lastOperationAt=Date.now();autosave();status('✓ 已撤销绘画／图层操作');return true}
+async function redo(){if(!S.redo.length||S.busy)return false;const cur=snapshot(),h=S.redo.pop();S.history.push(cur);await restoreSnap(h);S.lastOperationAt=Date.now();autosave();status('✓ 已重做绘画／图层操作');return true}
 function editable(){const p=current();if(!p){status('请先选中图层');return false}if(p.locked){status('当前图层锁定，请点图层右侧 🔒 解锁');return false}return true}
 function colorParts(){const s=S.color;return[parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16)]}
 function stroke(a,b){const p=current();if(!p)return;const g=p.canvas.getContext('2d');g.save();g.globalAlpha=S.alpha;g.lineCap='round';g.lineJoin='round';g.lineWidth=S.brush;g.globalCompositeOperation=S.tool==='eraser'?'destination-out':'source-over';g.strokeStyle=S.tool==='eraser'?'#000':S.color;g.beginPath();g.moveTo(a.x-p.x,a.y-p.y);g.lineTo(b.x-p.x,b.y-p.y);g.stroke();if(Math.abs(a.x-b.x)+Math.abs(a.y-b.y)<.01){g.fillStyle=S.tool==='eraser'?'#000':S.color;g.beginPath();g.arc(a.x-p.x,a.y-p.y,S.brush/2,0,2*Math.PI);g.fill()}g.restore();render()}
@@ -335,7 +360,114 @@ async function importPsd(file){if(!file)return;try{S.busy=true;status('正在加
 
 async function importZip(file){try{S.busy=true;status('正在读取分层 ZIP…');const m=await unzip(new Uint8Array(await file.arrayBuffer())),meta=m.get('layers.json');if(!meta)throw Error('ZIP 内没有 layers.json，请导入从橡皮擦/修图编辑器导出的图层工程');const j=JSON.parse(dec.decode(meta)),views=j.layers||j;for(const side of ['front','back']){if(!Array.isArray(views[side]))continue;const list=[];for(const p of views[side]){const name=p.file||p.name,dat=m.get(name)||m.get(side+'/'+name)||m.get('assets/'+name);if(!dat)continue;const blob=new Blob([dat],{type:'image/png'}),url=URL.createObjectURL(blob),im=await imgFrom(url);URL.revokeObjectURL(url);const q=layer(p.name||p.id||name,im,p.x||0,p.y||0,!!p.locked);q.visible=p.visible!==false;q.opacity=p.opacity==null?1:p.opacity;q.sourcePart=!!p.sourcePart;q.partId=p.partId||'';q.role=p.role||'';list.push(q)}if(list.length)S.layers[side]=list}S.sel=Math.max(0,S.layers[S.side].length-1);S.history=[];S.redo=[];S.busy=false;S.selection=null;renderList();fit();autosave();status('已载入分层 ZIP，正面 '+S.layers.front.length+' 层 / 背面 '+S.layers.back.length+' 层。')}catch(e){S.busy=false;status('导入失败：'+e.message);console.error(e)}}
 const DB='pixelatelier-character-v1';let activeCharacterId='default',activeCharacterLabel='女主角';const storageKey=()=>activeCharacterId==='default'?'project':'character:'+activeCharacterId;
-async function storage(mode,record){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('art');req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tr=db.transaction('art',mode),st=tr.objectStore('art');let q=mode==='readonly'?st.get(storageKey()):st.put(record,storageKey());q.onsuccess=()=>{db.close();resolve(q.result)};q.onerror=()=>reject(q.error)}})}
+async function storage(mode,record,key=storageKey()){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('art');req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tr=db.transaction('art',mode),st=tr.objectStore('art');let q=mode==='readonly'?st.get(key):st.put(record,key);q.onsuccess=()=>{db.close();resolve(q.result)};q.onerror=()=>reject(q.error)}})}
+// Manual checkpoints are separate from the aggressive autosave record.
+/// They never change the published source ZIP and are scoped to the actor.
+const recoveryKey=(older=false)=>'artist-checkpoint:'+(older?'previous:':'latest:')+storageKey();
+async function seedRecoveryCheckpoint(){
+ const saved=await storage('readonly');
+ if(!saved?.[S.side]?.length)return;
+ if(await storage('readonly',undefined,recoveryKey()))return;
+ await storage('readwrite',{art:saved,rig:null,at:Date.now()},recoveryKey());
+}
+async function recordManualCheckpoint(){
+ const artwork=await storage('readonly');
+ if(!artwork?.[S.side]?.length)return false;
+ const rig=window.PaperchalkPartRigStudio?.state?.model;
+ const saved=rig?.characterId===activeCharacterId&&rig?.face===S.side?
+  JSON.parse(JSON.stringify(rig)):null;
+ const prior=await storage('readonly',undefined,recoveryKey());
+ if(prior?.art)await storage('readwrite',prior,recoveryKey(true));
+ await storage('readwrite',{art:artwork,rig:saved,at:Date.now()},recoveryKey());
+ return true;
+}
+const recoverMsg=text=>{$('recovery-status').textContent=text;status(text)};
+async function restoreCheckpoint(older=false){
+ const target=await storage('readonly',undefined,recoveryKey(older));
+ const arr=target?.art?.[S.side];
+ if(!Array.isArray(arr)||!arr.length){
+  recoverMsg('此人物还没有对应的手动保存检查点；你的现有绘画不会被清除');
+  return false;
+ }
+ const part=current(),choice=part?.partId||part?.name;
+ if(!confirm('恢复「'+activeCharacterLabel+'」'+(S.side==='front'?'正面':'背面')+
+    '到'+(older?'更早':'最近')+'一次保存的绘画／图层位置？当前画面先进入撤销历史，不影响其他人物；保存过的蒙版也会尽可能一起恢复。'))return false;
+ const copy=target.art[S.side].map(p=>({...p}));
+ check();
+ const selected=Math.max(0,copy.findIndex(p=>p.partId===choice||p.name===choice));
+ await restoreSnap({side:S.side,sel:selected,arr:copy});
+ const rig=window.PaperchalkPartRigStudio;
+ if(target.rig&&rig?.state?.active&&
+    target.rig.characterId===activeCharacterId&&target.rig.face===S.side)
+   rig.applySavedRecovery?.(target.rig);
+ autosave();
+ recoverMsg('✓ 已复原到该人物的保存检查点。Ctrl+Z 可以再次撤销复原。');
+ return true;
+}
+async function restoreSelectedOriginal(){
+ const part=current(),id=part?.partId;
+ if(!part||!part.sourcePart||!id){
+  recoverMsg('请先在人物图层里选中一个真实 PSD 部件，再恢复它的原始贴图');
+  return false;
+ }
+ const studio=window.PaperchalkStudio;
+ const spec=studio?.list?.get(studio.current)?.l2dModule?.[S.side]?.rig;
+ const imagePath=spec?.textures?.[id];
+ if(!imagePath){recoverMsg('没有找到这层原始 PSD 纹理，未修改当前画作');return false}
+ const url=new URL(imagePath,new URL('../',location.href));
+ const image=await imgFrom(url.href);
+ if(image.width!==part.canvas.width||image.height!==part.canvas.height)
+  throw Error('该层已裁剪或换图，尺寸不一致，不能直接复原覆盖');
+ if(!confirm('仅把「'+part.name+'」这一层像素恢复成原始 PSD 图吗？\n你的其他图层、骨骼与蒙版都保留，并且本次操作可撤销。'))return false;
+ check();const ctx=part.canvas.getContext('2d');
+ ctx.clearRect(0,0,part.canvas.width,part.canvas.height);
+ ctx.drawImage(image,0,0);render();autosave();
+ recoverMsg('✓ 本层已恢复原图。其他画作和蒙版未被修改，仍可撤销。');
+ return true;
+}
+function recoveryAction(fn){
+ return Promise.resolve().then(fn).catch(error=>recoverMsg('复原未完成：'+error.message));
+}
+function undoSmart(){
+ const rig=window.PaperchalkPartRigStudio;
+ if(rig?.maskEditing&&rig.canUndo())return rig.undo();
+ if(rig?.canUndo?.()&&rig.lastOperationAt>=S.lastOperationAt)
+  return rig.undo();
+ return undo();
+}
+function redoSmart(){
+ const rig=window.PaperchalkPartRigStudio;
+ if(rig?.maskEditing&&rig.canRedo())return rig.redo();
+ if(rig?.canRedo?.()&&rig.lastOperationAt>=S.lastOperationAt)
+  return rig.redo();
+ return redo();
+}
+function recoverPartPosition(){
+ const p=current();if(!p){recoverMsg('请先选中图层');return false}
+ const rig=window.PaperchalkPartRigStudio;
+ // Source pixel position and rig offset are distinct. Restore the former
+ // from a user-approved checkpoint; never assume moving it to (0,0) is safe.
+ return recoveryAction(async()=>{
+  const rec=await storage('readonly',undefined,recoveryKey());
+  const old=rec?.art?.[S.side]?.find(row=>row.partId&&row.partId===p.partId||
+    (!p.partId&&row.name===p.name));
+  if(old&&(!Number.isFinite(old.x)||!Number.isFinite(old.y)))
+   throw Error('保存稿位置无效，未触及当前数据');
+  if(old&&(p.x!==old.x||p.y!==old.y)){
+   check();p.x=old.x;p.y=old.y;renderList();autosave();
+   window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'));
+  }
+  rig?.resetPlacement?.('position');
+  recoverMsg(old?'✓ 已恢复选中图层保存的坐标与骨骼偏移':
+   '✓ 已复原骨骼偏移；没有可用的旧图层坐标，未移动源图');
+ });
+}
+function recoverPartScale(){
+ return recoveryAction(()=>{
+  if(!window.PaperchalkPartRigStudio?.resetPlacement?.('scale'))
+   recoverMsg('请先选中 L2D 部件；若没发生变化，当前已是保存时尺寸');
+ });
+}
 async function save(){
  if(S.busy)return;
  const revision=S.sourceRevision;
@@ -349,7 +481,7 @@ let saveTimer=0;function autosave(){
  S.derivedDirty=true;
  clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(e=>status('自动保存失败：'+e.message)),1900);scheduleLivePreview();window.dispatchEvent(new Event('paperchalk:art-dirty'))}
 async function loadSaved(){const rec=await storage('readonly');if(!rec?.front?.length)return false;for(const side of ['front','back']){const arr=[];for(const p of rec[side]||[]){const im=await imgFrom(p.img);const q=layer(p.name,im,p.x,p.y,p.locked);q.visible=p.visible;q.opacity=p.opacity;q.sourcePart=!!p.sourcePart;q.partId=p.partId||'';q.role=p.role||'';arr.push(q)}if(arr.length)S.layers[side]=arr}return true}
-async function init(){try{await defaults();const had=await loadSaved();S.sel=Math.max(0,S.layers.front.length-1);renderList();fit();status(had?'✓ 已恢复上次在此浏览器保存的全部分层工程':'初始人物已载入；可导入上次的分层 ZIP 继续修图')}catch(e){console.error(e);status('载入异常：'+e.message)}}
+async function init(){try{await defaults();const had=await loadSaved();S.sel=Math.max(0,S.layers.front.length-1);renderList();fit();if(had)await seedRecoveryCheckpoint();status(had?'✓ 已恢复上次在此浏览器保存的全部分层工程':'初始人物已载入；可导入上次的分层 ZIP 继续修图')}catch(e){console.error(e);status('载入异常：'+e.message)}}
 for(const b of document.querySelectorAll('[data-tool]'))b.onclick=()=>setTool(b.dataset.tool);
 $('frontTab').onclick=()=>setSide('front');$('backTab').onclick=()=>setSide('back');
 $('partSearch').oninput=()=>renderList();
@@ -361,7 +493,31 @@ $('focusCurrent').onclick=()=>{
  focus(x,y,z);
 };
 $('add').onclick=addLayer;$('dup').onclick=dupe;$('del').onclick=()=>removeLayer();$('up').onclick=()=>rearrange(1);$('down').onclick=()=>rearrange(-1);$('rename').onclick=()=>{const p=current();if(!p)return;const s=prompt('图层名称',p.name);if(s){check();p.name=s;renderList();autosave()}};
-$('btnUndo').onclick=undo;$('btnRedo').onclick=redo;$('btnSave').onclick=async()=>{
+$('btnUndo').onclick=()=>recoveryAction(undoSmart);
+$('btnRedo').onclick=()=>recoveryAction(redoSmart);
+const recovery=$('studio-recovery'),recoveryToggle=$('btnRecovery');
+recoveryToggle.onclick=()=>{
+ recovery.hidden=!recovery.hidden;
+ recoveryToggle.setAttribute('aria-expanded',String(!recovery.hidden));
+ if(!recovery.hidden)$('recovery-status').textContent=
+  '选错、画错、移错、缩放错：可独立撤销。恢复保存稿不会删其他人物。';
+};
+$('recover-undo').onclick=()=>recoveryAction(undoSmart);
+$('recover-redo').onclick=()=>recoveryAction(redoSmart);
+$('recover-position').onclick=recoverPartPosition;
+$('recover-scale').onclick=recoverPartScale;
+$('recover-motion').onclick=()=>recoveryAction(()=>{
+ const r=window.PaperchalkPartRigStudio?.resetCrouchMotion?.();
+ if(!r)recoverMsg('已是原画蹲姿，或当前没有选中蹲姿动作');
+});
+$('recover-rig-open').onclick=()=>recoveryAction(()=>{
+ const r=window.PaperchalkPartRigStudio?.restoreOpened?.();
+ if(!r)recoverMsg('未更改任何骨骼。请选择已加载的 L2D 人物');
+});
+$('recover-last').onclick=()=>recoveryAction(()=>restoreCheckpoint(false));
+$('recover-previous').onclick=()=>recoveryAction(()=>restoreCheckpoint(true));
+$('recover-layer-original').onclick=()=>recoveryAction(restoreSelectedOriginal);
+$('btnSave').onclick=async()=>{
  const button=$('btnSave');if(button.disabled)return;
  button.disabled=true;
  const before=button.textContent;button.textContent='正在保存并应用…';
@@ -372,6 +528,7 @@ $('btnUndo').onclick=undo;$('btnRedo').onclick=redo;$('btnSave').onclick=async()
   }else{
    await save();button.textContent='✓ 已保存到浏览器';
   }
+  await recordManualCheckpoint();
  }catch(e){button.textContent=before;status('保存并应用失败：'+e.message)}
  finally{button.disabled=false;}
 };
@@ -387,7 +544,7 @@ $('clearLayer').onclick=()=>{if(!editable())return;if(!confirm('清空当前图�
 stage.addEventListener('pointerdown',down);stage.addEventListener('pointermove',move);stage.addEventListener('pointerup',upPointer);stage.addEventListener('pointercancel',upPointer);
 stage.addEventListener('wheel',e=>{e.preventDefault();const p=getP(e);zoom(p.x,p.y,Math.exp(-Math.sign(e.deltaY)*.17))},{passive:false});
 stage.addEventListener('contextmenu',e=>e.preventDefault());
-window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redo()}else if(k===' '){S.space=true;e.preventDefault()}else if(k==='Escape'){clearPartSelection();setTool('select')}else if(k==='b')setTool('brush');else if(k==='e')setTool('eraser');else if(k==='v')setTool('select')});window.addEventListener('keyup',e=>{if(e.key===' ')S.space=false});
+window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();recoveryAction(()=>e.shiftKey?redoSmart():undoSmart())}else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();recoveryAction(redoSmart)}else if(k===' '){S.space=true;e.preventDefault()}else if(k==='Escape'){clearPartSelection();setTool('select')}else if(k==='b')setTool('brush');else if(k==='e')setTool('eraser');else if(k==='v')setTool('select')});window.addEventListener('keyup',e=>{if(e.key===' ')S.space=false});
 
 /* The same in-game editor supports arbitrary characters. Their complete
    layered projects have independent IndexedDB keys, not one global "project". */
@@ -442,6 +599,7 @@ async function switchCharacter(target,side='front'){
   }
   S.busy=false;
   const saved=await loadSaved();
+  if(saved)await seedRecoveryCheckpoint();
   S.sourceDirty=false;S.derivedDirty=false;
   S.side=side==='back'?'back':'front';
   S.sel=Math.max(0,S.layers[S.side].length-1);
@@ -466,7 +624,7 @@ window.addEventListener('message',event=>{
 $('btnApplyGame').onclick=applyToGame;
 $('btnCloseInGame').onclick=async()=>{await applyToGame();sendParent({type:'PAPERCHALK_EDITOR_CLOSE'});};
 new ResizeObserver(()=>resize()).observe(stage);
-window.characterEditor={S,cut,undo,redo,clearPartSelection,exportAll,zip,toBlob,importZip,importPsd,composite,switchCharacter,applyToGame,save,render,renderList,layer,make,focus,setTool,autosave,unzip,imgFrom};
+window.characterEditor={S,cut,undo,redo,check,restoreSnap,seedRecoveryCheckpoint,recordManualCheckpoint,restoreCheckpoint,clearPartSelection,exportAll,zip,toBlob,importZip,importPsd,composite,switchCharacter,applyToGame,save,render,renderList,layer,make,focus,setTool,autosave,unzip,imgFrom};
 if(embedded)sendParent({type:'PAPERCHALK_EDITOR_READY'});
 
 </script>
