@@ -86,6 +86,31 @@ try{
  const restored=await inspect();
  assert.ok(restored.renderedFrames>paused.renderedFrames&&restored.opaquePixels>100,
   'canvas restore must repaint authentic source layers');
+ // Simulate Page Visibility transitions in the real browser. Chromium's
+ // headless tab scheduler stays active, while the page visibility getter
+ // models a phone that went to sleep and woke up minutes later.
+ await page.evaluate(()=>{
+  Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});
+  document.dispatchEvent(new Event('visibilitychange'));
+ });
+ await page.waitForTimeout(250);
+ const hiddenStart=await inspect();
+ await page.waitForTimeout(350);
+ const hiddenEnd=await inspect();
+ assert.equal(hiddenEnd.renderedFrames,hiddenStart.renderedFrames,
+   'hidden PartRig must not waste rendering work');
+ assert.equal(hiddenEnd.phaseMs,hiddenStart.phaseMs,
+   'the character idle animation clock must freeze when the tab is hidden');
+ await page.evaluate(()=>{
+  delete document.hidden;
+  document.dispatchEvent(new Event('visibilitychange'));
+ });
+ await page.waitForTimeout(410);
+ const resumed=await inspect();
+ assert.ok(resumed.renderedFrames>hiddenEnd.renderedFrames,
+   'the original PSD rig must resume automatically');
+ assert.ok(resumed.phaseMs>hiddenEnd.phaseMs&&resumed.phaseMs-hiddenEnd.phaseMs<430,
+   'background elapsed time must not jump hair and skirt animation on wake');
  // Source geometry is restored exactly; next page still uses authored
  // shoulder-camera defaults and keeps the same 20 PartRig objects.
  await page.evaluate(()=>{
