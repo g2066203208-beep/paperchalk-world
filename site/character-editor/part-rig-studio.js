@@ -1073,6 +1073,28 @@ window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
  // New independent mesh is the default whenever genuine component art exists.
  if(parts().length)activate(true).catch(e=>info('独立 L2D 初始化失败：'+e.message));
 });
-window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,syncLayerMetadata,mapToSource,clearSelection};
+function getMaskRelations(source){
+ return (state.model?.occlusionMasks||[]).map((entry,index)=>({
+  index,source:entry.source,direction:entry.direction==='behind'?'behind':'front',
+  name:entry.name||'局部遮罩',targets:maskTargets(entry)
+ })).filter(e=>e.source===source);
+}
+function selectMaskRelation(source,index){
+ const entry=state.model?.occlusionMasks?.[index];
+ if(!entry||entry.source!==source)return false;
+ if(state.selected!==source)select(source);
+ setMaskMode(false);
+ const first=maskTargets(entry).find(t=>[...maskTarget.options].some(o=>o.value===t));
+ if(first)maskTarget.value=first;
+ maskState.direction=entry.direction==='behind'?'behind':'front';
+ maskState.targets=new Set(maskTargets(entry));
+ maskState.editingEntry=entry;
+ maskState.history=[];maskState.redo=[];
+ syncDirection();drawTargetList();drawRelationList();
+ maskLabel.textContent=maskHint();
+ $('rig-mask-relations').open=true;
+ ed.render();return true;
+}
+window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,syncLayerMetadata,mapToSource,clearSelection,getMaskRelations,selectMaskRelation};
 requestAnimationFrame(tick);
 })();
