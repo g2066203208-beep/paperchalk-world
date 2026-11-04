@@ -33,11 +33,11 @@ for(const id of ['rig-save','rig-quick-save','rig-pause','rig-close']){
 // Unlike the old front-only control there is no "move layer first" prerequisite.
 const maskPanel=document.createElement('section');
 maskPanel.id='rig-mask-panel';
-maskPanel.innerHTML="<div class=\"rig-mask-head\"><strong>局部遮挡</strong><span>选部件 · 选对象 · 涂抹</span></div><div class=\"rig-mask-source\">当前部件：<output id=\"rig-mask-source\">未选择</output></div><div class=\"rig-mask-object\"><label>相对对象 <select id=\"rig-mask-target\" aria-label=\"选定需要遮挡的对象\"></select></label><button id=\"rig-mask-more\" type=\"button\" title=\"一块蒙版可以同时对多个部件生效\">＋ 多选</button></div><div id=\"rig-mask-multiple\" hidden><div id=\"rig-mask-target-list\" class=\"rig-mask-target-list\"></div></div><div class=\"rig-mask-directions\" role=\"group\" aria-label=\"画出的区域相对对象的位置\"><button type=\"button\" id=\"rig-mask-front\" aria-pressed=\"true\">在对象前面</button><button type=\"button\" id=\"rig-mask-back\" aria-pressed=\"false\">在对象后面</button></div><div class=\"rig-mask-actions\"><button type=\"button\" id=\"rig-mask-paint\">✎ 涂抹</button><button type=\"button\" id=\"rig-mask-erase\">橡皮擦</button><button type=\"button\" id=\"rig-mask-toggle\" hidden>完成</button></div><label class=\"rig-mask-size\">大小 <input id=\"rig-mask-size\" type=\"range\" min=\"2\" max=\"96\" value=\"12\" step=\"2\"><output id=\"rig-mask-size-value\">12</output></label><div class=\"rig-mask-actions rig-mask-secondary\"><button type=\"button\" id=\"rig-mask-undo\">撤销</button><button type=\"button\" id=\"rig-mask-clear\">清空这块</button></div><details id=\"rig-mask-relations\"><summary>已做的遮挡 <span id=\"rig-mask-relation-count\"></span></summary><div id=\"rig-mask-relation-list\"></div></details><small id=\"rig-mask-hint\">只改选中的局部，不修改原图。</small>";
+maskPanel.innerHTML="<div class=\"rig-mask-head\"><strong>局部遮挡</strong><span>选部件 · 选对象 · 涂抹</span></div><div class=\"rig-mask-source\">当前部件：<output id=\"rig-mask-source\">未选择</output></div><div class=\"rig-mask-object\"><label>相对对象 <select id=\"rig-mask-target\" aria-label=\"选定需要遮挡的对象\"></select></label><button id=\"rig-mask-more\" type=\"button\" title=\"一块蒙版可以同时对多个部件生效\">＋ 多选</button></div><div id=\"rig-mask-multiple\" hidden><div id=\"rig-mask-target-list\" class=\"rig-mask-target-list\"></div></div><div class=\"rig-mask-directions\" role=\"group\" aria-label=\"画出的区域相对对象的位置\"><button type=\"button\" id=\"rig-mask-front\" aria-pressed=\"true\">在对象前面</button><button type=\"button\" id=\"rig-mask-back\" aria-pressed=\"false\">在对象后面</button></div><div class=\"rig-mask-actions\"><button type=\"button\" id=\"rig-mask-paint\">✎ 涂抹</button><button type=\"button\" id=\"rig-mask-erase\">橡皮擦</button><button type=\"button\" id=\"rig-mask-toggle\" hidden>完成</button></div><label class=\"rig-mask-size\">大小 <input id=\"rig-mask-size\" type=\"range\" min=\"2\" max=\"96\" value=\"12\" step=\"2\"><output id=\"rig-mask-size-value\">12</output></label><div class=\"rig-mask-actions rig-mask-secondary\"><button type=\"button\" id=\"rig-mask-undo\">撤销</button><button type=\"button\" id=\"rig-mask-redo\">重做</button><button type=\"button\" id=\"rig-mask-clear\">清空</button></div><details id=\"rig-mask-relations\"><summary>已做的遮挡 <span id=\"rig-mask-relation-count\"></span></summary><div id=\"rig-mask-relation-list\"></div></details><small id=\"rig-mask-hint\">只改选中的局部，不修改原图。</small>";
 panel.querySelector('.rig-part-amount').before(maskPanel);
 const maskState={enabled:false,erase:false,direction:'front',targets:new Set(),
  pointer:null,touches:new Map(),blockedTouches:new Set(),pinch:null,
- restorePlaying:null,history:[]};
+ restorePlaying:null,history:[],redo:[]};
 const maskTarget=$('rig-mask-target'),maskLabel=$('rig-mask-hint'),maskSize=$('rig-mask-size');
 function maskTargets(entry){
  return Array.isArray(entry?.targets)?entry.targets:(entry?.target?[entry.target]:[]);
@@ -170,7 +170,7 @@ function drawRelationList(){
    if(available)maskTarget.value=available;
    maskState.direction=entry.direction==='behind'?'behind':'front';
    maskState.targets=new Set(targets);
-   maskState.history=[];syncDirection();drawTargetList();maskLabel.textContent=maskHint();
+   maskState.history=[];maskState.redo=[];syncDirection();drawTargetList();maskLabel.textContent=maskHint();
   };
   const remove=document.createElement('button');remove.type='button';remove.textContent='删除';
   remove.title='删除遮挡关系；保留原部件贴图';
@@ -201,7 +201,7 @@ function updateMaskControls(){
  if(choice)maskTarget.value=choice;
  maskState.direction=preferred?.direction==='behind'?'behind':'front';
  maskState.targets=new Set(preferred?maskTargets(preferred):maskTarget.value?[maskTarget.value]:[]);
- maskState.history=[];
+ maskState.history=[];maskState.redo=[];
  $('rig-mask-source').textContent=part?.name||'未选择';
  maskPanel.hidden=!state.active||!part;
  if(preferred?.png&&part)maskCanvas(preferred,part);
@@ -218,12 +218,12 @@ maskTarget.onchange=()=>{
   maskTargets(m).includes(maskTarget.value));
  maskState.direction=e?.direction==='behind'?'behind':'front';
  maskState.targets=new Set(e?maskTargets(e):[maskTarget.value]);
- maskState.history=[];syncDirection();drawTargetList();drawRelationList();
+ maskState.history=[];maskState.redo=[];syncDirection();drawTargetList();drawRelationList();
  maskLabel.textContent=maskHint();ed.render();
 };
 for(const [button,direction] of [['rig-mask-front','front'],['rig-mask-back','behind']]){
  $(button).onclick=()=>{
-  setMaskMode(false);maskState.direction=direction;maskState.history=[];
+  setMaskMode(false);maskState.direction=direction;maskState.history=[];maskState.redo=[];
   const entry=getMask();
   if(entry){maskState.targets=new Set(maskTargets(entry));maskCanvas(entry,state.model.parts[state.selected])}
   syncDirection();drawTargetList();maskLabel.textContent=maskHint();ed.render();
@@ -233,19 +233,32 @@ $('rig-mask-paint').onclick=()=>{maskState.erase=false;setMaskMode(true)};
 $('rig-mask-erase').onclick=()=>{maskState.erase=true;setMaskMode(true)};
 $('rig-mask-toggle').onclick=()=>setMaskMode(false);
 maskSize.oninput=()=>{$('rig-mask-size-value').textContent=maskSize.value};
-$('rig-mask-undo').onclick=()=>{
- const entry=getMask(),prior=maskState.history.pop();
- if(!entry||!prior||entry._pending)return;
- const c=maskCanvas(entry,state.model.parts[state.selected]);
- c.getContext('2d').putImageData(prior,0,0);serializeMask(entry);ed.render();
-};
+function maskHistoryStep(redo){
+ const entry=getMask(),source=state.model?.parts[state.selected];
+ if(!entry||!source||entry._pending)return;
+ const src=redo?maskState.redo:maskState.history,
+  dst=redo?maskState.history:maskState.redo,prior=src.pop();
+ if(!prior)return;
+ const c=maskCanvas(entry,source),g=c.getContext('2d');
+ dst.push(g.getImageData(0,0,c.width,c.height));
+ g.putImageData(prior,0,0);serializeMask(entry);ed.render();
+}
+$('rig-mask-undo').onclick=()=>maskHistoryStep(false);
+$('rig-mask-redo').onclick=()=>maskHistoryStep(true);
+window.addEventListener('keydown',e=>{
+ if(!maskState.enabled||(e.target instanceof HTMLInputElement&&
+  ['text','number','search'].includes(e.target.type)))return;
+ if(!(e.ctrlKey||e.metaKey)||!['z','y'].includes(e.key.toLowerCase()))return;
+ e.preventDefault();e.stopImmediatePropagation();
+ maskHistoryStep(e.key.toLowerCase()==='y'||e.shiftKey);
+},true);
 $('rig-mask-clear').onclick=()=>{
  const entry=getMask();if(!entry)return;
  if(!confirm('清空这一块遮挡？原始部件不会改变。'))return;
  const c=maskCanvas(entry,state.model.parts[state.selected]);
  if(entry._pending)return;
  maskState.history.push(c.getContext('2d').getImageData(0,0,c.width,c.height));
- c.getContext('2d').clearRect(0,0,c.width,c.height);
+ maskState.redo=[];c.getContext('2d').clearRect(0,0,c.width,c.height);
  serializeMask(entry);ed.render();
 };
 const quickPanel=document.createElement('section');
@@ -915,7 +928,7 @@ stage.addEventListener('pointerdown',e=>{
   return;
  }
  const snapshot=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
- maskState.history.push(snapshot);if(maskState.history.length>24)maskState.history.shift();
+ maskState.history.push(snapshot);maskState.redo=[];if(maskState.history.length>24)maskState.history.shift();
  maskState.pointer={id:e.pointerId,entry,point,start:point,snapshot,moved:false,
   isTouch:e.pointerType==='touch'};
  if(!stage.hasPointerCapture(e.pointerId))stage.setPointerCapture(e.pointerId);
