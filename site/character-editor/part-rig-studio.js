@@ -35,7 +35,67 @@ const maskPanel=document.createElement('section');
 maskPanel.id='rig-mask-panel';
 maskPanel.innerHTML="<div class=\"rig-mask-head\"><strong>局部遮挡</strong><span>选部件 · 选对象 · 涂抹</span></div><div class=\"rig-mask-source\">当前部件：<output id=\"rig-mask-source\">未选择</output></div><div class=\"rig-mask-object\"><label>相对对象 <select id=\"rig-mask-target\" aria-label=\"选定需要遮挡的对象\"></select></label><button id=\"rig-mask-more\" type=\"button\" title=\"一块蒙版可以同时对多个部件生效\">＋ 多选</button></div><div id=\"rig-mask-multiple\" hidden><div id=\"rig-mask-target-list\" class=\"rig-mask-target-list\"></div></div><div class=\"rig-mask-directions\" role=\"group\" aria-label=\"画出的区域相对对象的位置\"><button type=\"button\" id=\"rig-mask-front\" aria-pressed=\"true\">在对象前面</button><button type=\"button\" id=\"rig-mask-back\" aria-pressed=\"false\">在对象后面</button></div><div class=\"rig-mask-actions\"><button type=\"button\" id=\"rig-mask-paint\">✎ 涂抹</button><button type=\"button\" id=\"rig-mask-erase\">橡皮擦</button><button type=\"button\" id=\"rig-mask-toggle\" hidden>完成</button></div><label class=\"rig-mask-size\">大小 <input id=\"rig-mask-size\" type=\"range\" min=\"2\" max=\"96\" value=\"12\" step=\"2\"><output id=\"rig-mask-size-value\">12</output></label><div class=\"rig-mask-actions rig-mask-secondary\"><button type=\"button\" id=\"rig-mask-undo\">撤销</button><button type=\"button\" id=\"rig-mask-redo\">重做</button><button type=\"button\" id=\"rig-mask-clear\">清空</button></div><details id=\"rig-mask-relations\"><summary>已做的遮挡 <span id=\"rig-mask-relation-count\"></span></summary><div id=\"rig-mask-relation-list\"></div></details><small id=\"rig-mask-hint\">只改选中的局部，不修改原图。</small><small id=\"rig-mask-conflict\" hidden role=\"status\"></small>";
 
+
 panel.querySelector('.rig-part-amount').before(maskPanel);
+// The crouching heroine is one dedicated action rig, NOT a new NPC/wardrobe.
+// Four safe, bounded coupled-motion strengths share the exact engine used
+// by the game. They can be saved without editing or redrawing PSD layers.
+const crouchPanel=document.createElement('section');
+crouchPanel.id='rig-crouch-motion';
+crouchPanel.hidden=true;
+crouchPanel.innerHTML=`<div class="rig-crouch-head"><strong>蹲下 · 持斧动态</strong><span>双手握柄绑定 · 鞋底锁定</span></div>
+<div class="rig-crouch-sliders">
+<label>裙摆／外套下摆 <output data-out="cloth">100%</output>
+<input type="range" data-crouch="cloth" min="0" max="150" step="5" value="100" aria-label="蹲姿裙摆和外套下摆摆动强度"></label>
+<label>斧头＋双手同步 <output data-out="axe">100%</output>
+<input type="range" data-crouch="axe" min="0" max="150" step="5" value="100" aria-label="蹲姿斧头与两只手同步动态强度"></label>
+<label>左右大腿承重 <output data-out="legs">100%</output>
+<input type="range" data-crouch="legs" min="0" max="150" step="5" value="100" aria-label="蹲姿左右腿承重动态强度"></label>
+<label>鞋面微弯（鞋底固定） <output data-out="feet">100%</output>
+<input type="range" data-crouch="feet" min="0" max="150" step="5" value="100" aria-label="蹲姿鞋面弯曲强度"></label>
+</div>
+<small>始终保持原始蹲姿；根部固定，末端渐变。动态参数保存到当前 L2D 与游戏，不改原图。</small>`;
+panel.querySelector('#rig-source').after(crouchPanel);
+const crouchCSS=document.createElement('style');
+crouchCSS.textContent=`
+#rig-crouch-motion{margin:10px 0;padding:11px;border:1px solid #47657a;
+ border-radius:10px;background:#172a39}
+#rig-crouch-motion .rig-crouch-head{display:flex;gap:8px;flex-wrap:wrap;
+ align-items:baseline;justify-content:space-between;font-size:12px;margin-bottom:9px}
+#rig-crouch-motion .rig-crouch-head span{color:#a6c3d7;font-size:10px}
+#rig-crouch-motion .rig-crouch-sliders{display:grid;grid-template-columns:1fr;gap:10px}
+#rig-crouch-motion label{display:grid;grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;gap:5px;font-size:11px}
+#rig-crouch-motion label input{grid-column:1/-1;width:100%}
+#rig-crouch-motion output{font-variant-numeric:tabular-nums;color:#94d5ee}
+#rig-crouch-motion small{display:block;color:#a7bbc9;font-size:10px;
+ margin-top:10px;line-height:1.55}`;
+document.head.append(crouchCSS);
+function syncCrouchUI(){
+ const enabled=state.model?.characterId==='protagonist-crouch-axe'&&state.model?.face==='front';
+ crouchPanel.hidden=!enabled;
+ if(!enabled)return;
+ const profile=core.sanitizeCrouchDynamics(state.model.crouchDynamics);
+ state.model.crouchDynamics=profile;
+ core.bindCrouchDynamics(state.model);
+ for(const input of crouchPanel.querySelectorAll('input[data-crouch]')){
+  const value=Math.round(profile[input.dataset.crouch]*100);
+  input.value=String(value);
+  crouchPanel.querySelector('[data-out="'+input.dataset.crouch+'"]').textContent=value+'%';
+ }
+}
+for(const input of crouchPanel.querySelectorAll('input[data-crouch]')){
+ input.addEventListener('input',()=>{
+  if(!state.active||state.model?.characterId!=='protagonist-crouch-axe')return;
+  const amount=Number(input.value)/100;
+  state.model.crouchDynamics[input.dataset.crouch]=amount;
+  core.bindCrouchDynamics(state.model);
+  crouchPanel.querySelector('[data-out="'+input.dataset.crouch+'"]').textContent=
+   Math.round(amount*100)+'%';
+  changed();
+ });
+}
+
 const fitPanel=document.createElement('section');
 fitPanel.id='rig-fit-panel';
 fitPanel.innerHTML=`
@@ -768,6 +828,7 @@ async function activate(openPanel=false){
  const id=studio.current,face=S.side,saved=await studio.readPartRig(id,face);
  if(studio.current!==id||S.side!==face)return;
  state.model=core.project(src,id,face,saved);
+ syncCrouchUI();
  // Store absent source parts as actual deletions, even when reopening a draft.
  state.model.deletedParts=[...new Set((saved?.deletedParts||[])
   .filter(key=>typeof key==='string'&&!src.some(p=>(p.partId||p.name)===key)))];
@@ -1373,6 +1434,7 @@ function tick(now){
  requestAnimationFrame(tick);
 }
 window.addEventListener('paperchalk:studio-character-loaded',()=>{
+ crouchPanel.hidden=true;
  // changeCore flushes the previous rig before emitting this event.
  state.active=false;state.model=null;state.panelOpen=false;state.selected='';
  state.drag=null;state.fitDrag=null;state.fitMode=false;state.dirty=false;quickPanel.hidden=true;actionRow.hidden=true;
