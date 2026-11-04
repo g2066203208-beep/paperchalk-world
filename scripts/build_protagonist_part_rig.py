@@ -149,6 +149,16 @@ def build_unified():
             part['kind']='fixed'
         ordered[variant_id]=part
     # Back-to-front is a formal property of the model, not dictionary order.
+    src['layerOrder']=[
+        'rear_hair','sleeves_and_hands','battle_handwear_r','legs',
+        'shoes','neck','skirt','jacket','battle_axe','battle_handwear_l',
+        'ears','face','eye_white','irises','lashes','brows','front_hair',
+        'nose','mouth','hair_clip',
+    ]
+    if set(src['layerOrder'])!=set(ordered) or len(src['layerOrder'])!=20:
+        raise ValueError('Invalid standing-first front-layer Z-order')
+    src['parts']={key:ordered[key] for key in src['layerOrder']}
+    textures={key:textures[key] for key in src['layerOrder']}
     src['characterId']='protagonist-unified-v1'
     src['characterFamilyId']='protagonist'
     src['partLayerGroups']={
