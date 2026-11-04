@@ -67,7 +67,35 @@ const fs=require('node:fs');
     window.PaperchalkStudio?.current==='male2'&&
     window.characterEditor.S.layers.front.filter(p=>p.sourcePart).length===16,
     null,{timeout:35000});
+  // The prebuilt male2_l2d_module.zip should also import without manual
+  // extraction, preserving its tuned rig for the same male2 family.
+  await page.evaluate(async()=>{
+   const ed=window.characterEditor,studio=window.PaperchalkStudio,
+    rig=window.PaperchalkPartRigStudio.state.model,enc=new TextEncoder();
+   const meta={schema:1,characterId:'male2',canvas:[1024,1024],
+    layers:{front:[],back:[]}};
+   const inner=[];
+   for(const p of ed.S.layers.front.filter(p=>p.sourcePart)){
+    const id=p.partId,blob=await new Promise(resolve=>p.canvas.toBlob(resolve,'image/png'));
+    const path='front/'+id+'.png';
+    inner.push({path,data:new Uint8Array(await blob.arrayBuffer())});
+    meta.layers.front.push({id,partId:id,name:p.name,role:'psd-part',file:path,
+     x:p.x,y:p.y,visible:true,opacity:1});
+   }
+   inner.push({path:'layers.json',data:enc.encode(JSON.stringify(meta))});
+   const innerZip=ed.zip(inner);
+   const outer=ed.zip([
+    {path:'male2/front-rig-editable-parts.zip',
+     data:new Uint8Array(await innerZip.arrayBuffer())},
+    {path:'male2/front.rig.json',data:enc.encode(JSON.stringify(rig))},
+    {path:'male2/module.json',data:enc.encode(JSON.stringify({schema:1,id:'male2'}))}
+   ]);
+   await studio.importComponentArchive(
+    new File([outer],'male2_l2d_module.zip',{type:'application/zip'}));
+  });
+  await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active&&
+   Object.keys(window.PaperchalkPartRigStudio.state.model.parts||{}).length===16);
   assert.deepEqual(errors,[]);
-  console.log('PASS male2 raw SeeThrough import: 16 nonempty genuine parts, no source portrait, bones, save and reload');
+  console.log('PASS male2 raw SeeThrough + installable module ZIP: 16 source parts, original standalone rig, save and reload');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
