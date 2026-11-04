@@ -9,6 +9,7 @@ on:
       - 'scripts/build_character_catalog.py'
       - 'tests/test_protagonist_unified.py'
       - 'site/assets/l2d/source-masks/**'
+      - 'site/assets/l2d/inbox/**'
       - '.github/workflows/character-editor-tests.yml'
   workflow_dispatch:
 permissions:
@@ -503,6 +504,49 @@ jobs:
                 await secondaryPage.screenshot({path:'artifacts/character-editor/'+vp.width+
                   '-CHAR-002-ORIGINAL-PSD-18-MESH-RAISED-ARM.png',fullPage:false});
                 await secondaryPage.close();
+                // REAL NEW CHARACTERS: open the deployed 19-PNG ArtMeshes,
+                // inspect character family grouping and save desktop/mobile screenshots.
+                for(const item of [
+                  {id:'char-004',parts:19,family:'char-004',label:'FEMALE-THREE'},
+                  {id:'protagonist-sleepwear',parts:19,family:'protagonist',label:'HEROINE-SLEEPWEAR'},
+                ]){
+                  const p=await browser.newPage({viewport:vp,hasTouch:vp.width<500,
+                    isMobile:vp.width<500});
+                  const pageErrors=[];p.on('pageerror',e=>pageErrors.push(e.message));
+                  await p.goto('http://127.0.0.1:8123/character-editor/?character='+
+                    item.id+'&side=front',{waitUntil:'load'});
+                  await p.waitForFunction(({id,count})=>
+                    window.PaperchalkStudio?.current===id&&
+                    window.PaperchalkStudio.countSourceParts?.()===count&&
+                    window.PaperchalkPartRigStudio?.state?.active===true,
+                    {id:item.id,count:item.parts},{timeout:35000});
+                  const audit=await p.evaluate(id=>{
+                    const model=window.PaperchalkPartRigStudio.state.model;
+                    const option=[...document.querySelectorAll('#studio-character option')]
+                      .find(x=>x.value===id);
+                    return {id:model.characterId,parts:Object.keys(model.parts).length,
+                      group:option?.parentElement?.label,
+                      visible:[...document.querySelectorAll('#layers .layer')].length,
+                      canvasSize:[model.canvas?.[0],model.canvas?.[1]],
+                      legs:Object.keys(model.parts).filter(k=>k.includes('leg'))};
+                  },item.id);
+                  assert.equal(audit.id,item.id);
+                  assert.equal(audit.parts,item.parts);
+                  assert.ok(audit.group&&audit.visible>=item.parts,
+                    'real deployed source PNG layers must be editable');
+                  assert.deepEqual(audit.canvasSize,[1024,1024]);
+                  if(item.id==='protagonist-sleepwear'){
+                    assert.ok(audit.legs.includes('leg_viewer_left')&&
+                      audit.legs.includes('leg_viewer_right'),
+                      'both sleepwear legs must exist and be independently animatable');
+                    assert.ok(/女主/.test(audit.group),'sleepwear grouped beneath heroine');
+                  }
+                  assert.deepEqual(pageErrors,[]);
+                  await p.screenshot({path:'artifacts/character-editor/'+vp.width+
+                    '-NEW-'+item.label+'-REAL-L2D.png',fullPage:false});
+                  console.log('PASS new L2D module',item.id,audit);
+                  await p.close();
+                }
               }
             }finally{await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
