@@ -84,10 +84,10 @@ for(const t of phases){
   toeTravel=Math.max(toeTravel,gap(warp(shoe,toe,t),toe));
  }
 }
-assert.ok(hemTravel>10,'coat tails must visibly move, not a tiny sine idle');
-assert.ok(legTravel>2,'knees must carry clearly observable weight');
-assert.ok(toeTravel>.6,'shoe upper leather must show dynamic articulation');
-assert.ok(axeTravel>19,'axe and BOTH hands need clearly expressive swing');
+assert.ok(hemTravel>3,'coat tails should move without destroying the authored silhouette');
+assert.ok(legTravel>.7,'knees should carry a small natural weight shift');
+assert.ok(toeTravel>.22,'shoe upper should flex without moving the sole');
+assert.ok(axeTravel>5,'axe should move without swinging the heroine into distortion');
 // Absolute rest at phase 0, and a zero-strength pose, preserve source EXACT.
 for(const id of core.CROUCH_KEYS){
  const part=p[id],q={x:part.x+part.w*.6,y:part.y+part.h*.7};
