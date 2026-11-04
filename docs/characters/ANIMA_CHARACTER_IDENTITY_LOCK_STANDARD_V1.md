@@ -55,9 +55,9 @@
 
 **状态：项目制作强制规范；不是图像已验收或L2D已完成的宣告。**
 
-## 2026-11-04｜Anima 512 上限及画风优先（用户修订）
+## 2026-11-04｜Anima 每栏 512 words 上限及画风优先（用户修订）
 
-- **用户指定：Prompt 最长 512。** 为兼容不同界面的字符/Token 定义，当前直接粘贴的**正向提示词优先压到 512 个字符以内**（中文服装占位也计入），负面词也应精简；不是凑满 512 字符/Token。
+- **用户明确修正：每个 Prompt 输入框最多 512 个英文单词（words），不是 512 个字符（characters）。** 采用按空格分隔的英文单词计数作为项目创作规范；这不等同于扩散模型 tokenizer 的 token 数，也不自动代表 Anima 官方硬限制。正负提示词分别核对用户界面的 word count，保留【在这里填写服装描述】，替换服装后再次校验；不是为了凑满 512 而机械堆词。
 - **画风优先且唯一：** 优先保留 `@akipekostyle`、`<lora:akipekoanima_v1_1:1>` 与原本确认的 Anima checkpoint、VAE、sampler 等；不要另写大段 `visual novel art style / cinematic / realistic / painterly` 互相污染风格。
 - **Tag优先：** 用简短低重复的 Danbooru/Gelbooru标签，体型`petite, short stature, short torso, short legs, skinny`；脸`baby face, round cheeks, tsurime, pink eyes, fang`；发型`asymmetrical fluffy pink twintails, ahoge`；动作`full body, front view, standing, both index fingers pressing own cheeks`。复杂固定人体数据留在人物档案，而不是长 Prompt。
 - **多人物故障**用 `1girl, solo`，负面补`multiple girls, duplicate, collage, character sheet`；SD WebUI 的 Batch size/count 另检查。绝不把四视图、四宫格语义加入正向。
