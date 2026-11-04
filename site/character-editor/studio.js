@@ -452,9 +452,15 @@ async function changeCore(id,face='front'){
    url:new URL('../assets/l2d/v4/'+side+'.webp',location.href).href,
    crop:{x:351,y:9,w:335,h:1013},edition:'V4-official'
   }:null;
- await showClip(override||builtin);
+ // Keep the approved V4 asset untouched, but stop decoding its 128
+ // hidden frames once a real independently skinned PartRig is available.
+ // Otherwise the protagonist decodes frames at ~20fps while her 20 meshes
+ // also render at ~30fps, competing for the same main thread.
+ if(ed.S.layers[side].some(p=>p.sourcePart))await showClip(null);
+ else await showClip(override||builtin);
  await loadCorrectionLayers();
  await ensureHostedParts(id);
+ if(ed.S.layers[side].some(p=>p.sourcePart)&&v4)await showClip(null);
  updatePartStatus();
  // A hosted model and its layers may increase the top library height after
  // switchCharacter() has fitted the old geometry. Fit again once the final
@@ -1159,7 +1165,11 @@ async function showClip(info){
  document.body.classList.toggle('v4-authoring',!!uri);
  const legacyRig=document.getElementById('dev-l2d-preview-controls');
  if(legacyRig)legacyRig.hidden=false; // Static painting, dynamic preview stays live.
- if(!uri){playing=false;globalLayer=null;frameLayer=null;ed.l2dRig?.()?.start();ed.render();return;}
+ if(!uri){
+  playing=false;globalLayer=null;frameLayer=null;
+  if(!ed.S.layers[side].some(p=>p.sourcePart))ed.l2dRig?.()?.start();
+  ed.render();return;
+ }
  const token=++switchNonce;
  const surface=ed.make(1024,1024),crop=info.crop||{x:351,y:9,w:335,h:1013};
  let decoder=null,img=null,count=128;
