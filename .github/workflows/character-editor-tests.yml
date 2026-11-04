@@ -10,6 +10,7 @@ on:
       - 'tests/test_protagonist_unified.py'
       - 'tests/test_l2d_studio_rework_browser.js'
       - 'tests/test_l2d_occlusion_masks_browser.js'
+      - 'tests/test_l2d_bidirectional_masks_browser.js'
       - 'tests/test_male2_seethrough_browser.js'
       - 'tests/test_char004_z_persistence_browser.js'
       - 'tests/test_outfit_module_import_browser.js'
@@ -581,6 +582,7 @@ jobs:
           python3 -m http.server 8134 --directory site >/tmp/l2d-studio-rework.log 2>&1 &
           node tests/test_l2d_studio_rework_browser.js
           node tests/test_l2d_occlusion_masks_browser.js
+          node tests/test_l2d_bidirectional_masks_browser.js
           node tests/test_male2_seethrough_browser.js
           node tests/test_char004_z_persistence_browser.js
           node tests/test_outfit_module_import_browser.js
