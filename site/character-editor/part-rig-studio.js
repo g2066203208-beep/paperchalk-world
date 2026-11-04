@@ -504,13 +504,20 @@ fitPanel.addEventListener('change',event=>{
  const currentValue=p.placement[k],v=Number(event.target.value)/ratio;
  p.placement[k]=fitClamp(v,k.startsWith('scale')?.25:-1024,
   k.startsWith('scale')?4:1024,currentValue);
- if(k.startsWith('scale')&&$('rig-fit-lock').checked)
-  p.placement[k==='scaleX'?'scaleY':'scaleX']=p.placement[k];
+ if(k.startsWith('scale')&&$('rig-fit-lock').checked){
+  const other=k==='scaleX'?'scaleY':'scaleX';
+  const multiplier=p.placement[k]/Math.max(.001,currentValue);
+  p.placement[other]=fitClamp(p.placement[other]*multiplier,.25,4,p.placement[other]);
+ }
  fitValues();changed();
 });
 $('rig-fit-reset').onclick=()=>{
  const p=current();if(!p)return;
- p.placement={scaleX:1,scaleY:1,offsetX:0,offsetY:0};
+ // Reset restores each character's approved base fit, not a previously
+ // rejected raw shorts placement. All other parts reset to native 100%.
+ p.placement=studio.current==='female-06'&&p.id==='pants_overlay'?
+  {scaleX:.92,scaleY:.80,offsetX:-7,offsetY:-12}:
+  {scaleX:1,scaleY:1,offsetX:0,offsetY:0};
  fitValues();changed();
 };
 function setFitMode(value){
