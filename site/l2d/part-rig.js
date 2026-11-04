@@ -49,7 +49,7 @@ const FRONT={
  bottomwear:['pelvis',.50,.05,.50,.90,'skirt'],
  // User-authored black shorts from female-06 outfit's original SeeThrough PSD.
  // They deform using EXACTLY the base legwear's per-vertex hip/knee field.
- pants_overlay:['legwear',.50,.09,.50,.91,'pants-bound'],
+ pants_overlay:['pelvis',.50,.09,.50,.91,'pants-bound'],
  topwear:['torso',.50,.09,.50,.81,'torso'],
  eyebrow_l:['head',.50,.50,.50,.50,'face'],
  eyebrow_r:['head',.50,.50,.50,.50,'face'],
@@ -570,12 +570,14 @@ function sanitize(record,original){
  x.mesh=original.mesh;
  x.bones=normalizeBones(record.bones,original.kind);
  if(original.kind==='pants-bound'){
+  x.parentId='pelvis';
   // Binding contract: the shorts do not have an independent skeleton or
   // garment jitter. Every pixel inherits the source body's leg skin field.
   x.motion={x:0,y:0,angle:0,frequency:1,phase:0};
   x.bones=[];
-  x.skinBinding={target:'legwear',method:'shared-leg-field-v1',
-    waist:'pelvis',left:'left-knee',right:'right-knee',rootLock:1};
+  x.skinBinding={target:'legwear',method:'pelvis-waist-dual-thigh-v2',
+    waist:'pelvis',left:'left-knee',right:'right-knee',
+    waistLock:1,transition:[.42,.84],rootLock:1};
  }
  return x;
 }
@@ -745,12 +747,33 @@ function bindBodyHierarchy(model){
    hy:upper.head.y,ky:upper.tail.y,ay:lower.tail.y}:null;
  };
  const left=chain('left'),right=chain('right');if(!left||!right)return model;
- const layout={pelvis:xy(skirt,.5,.08),shoulder:xy(torso,.5,.12),shoulderHalfWidth:torso.w*.48,
+ // Virtual pelvis comes from the original BODY, never a clothing overlay.
+ // Female-six bare legs contain the actual ankles; no extra shoes are forged.
+ const pelvis=model.characterId==='female-06'?
+  {x:(left.hip.x+right.hip.x)*.5,y:legs.y+Math.min(22,legs.h*.038)}:
+  xy(skirt,.5,.08);
+ const layout={pelvis,shoulder:xy(torso,.5,.12),shoulderHalfWidth:torso.w*.48,
   head:face?xy(face,.5,.5):hair?xy(hair,.5,.35):xy(torso,.5,-.2),
   neck:neck?xy(neck,.5,.12):face?xy(face,.5,.88):xy(torso,.5,-.12),
   neckTop:neck?neck.y+neck.h*.12:(face?face.y+face.h*.88:torso.y),
   neckBottom:neck?neck.y+neck.h*.96:(face?face.y+face.h*1.12:torso.y+15),
-  left,right,legsId:legs.id,feetId:feet?.id||legs.id};
+  left,right,legsId:legs.id,feetId:feet?.id||legs.id,
+  graph:{
+   pelvis:{parent:'ground',rest:pelvis},
+   torso:{parent:'pelvis',partId:torso.id},
+   leftShoulder:{parent:'torso'},rightShoulder:{parent:'torso'},
+   neck:{parent:'torso',partId:neck?.id||null},
+   head:{parent:'neck',partId:face?.id||null},
+   leftHip:{parent:'pelvis',rest:left.hip},
+   leftKnee:{parent:'leftHip',rest:left.knee},
+   leftAnkle:{parent:'leftKnee',rest:left.ankle},
+   rightHip:{parent:'pelvis',rest:right.hip},
+   rightKnee:{parent:'rightHip',rest:right.knee},
+   rightAnkle:{parent:'rightKnee',rest:right.ankle},
+   shortsWaist:{parent:'pelvis',partId:p.pants_overlay?.id||null},
+   shortsLeftHem:{parent:'leftHip',partId:p.pants_overlay?.id||null},
+   shortsRightHem:{parent:'rightHip',partId:p.pants_overlay?.id||null}
+  }};
  // Cropped or unaligned imports must NOT acquire fabricated body motion.
  if(layout.pelvis.y-layout.shoulder.y<15)return model;
  Object.defineProperty(model,'bodyHierarchy',{value:layout,configurable:true});
@@ -761,8 +784,10 @@ function bindBodyHierarchy(model){
    // Newly installed garment may be absent from a user's 17-piece local
    // saved draft. The binding is an authoritative rig contract, NOT
    // optional UI state inherited from an old stored JSON blob.
-   part.skinBinding={target:legs.id,method:'shared-leg-field-v1',
-    waist:'pelvis',left:'left-knee',right:'right-knee',rootLock:1};
+   part.parentId='pelvis';
+   part.skinBinding={target:legs.id,method:'pelvis-waist-dual-thigh-v2',
+    waist:'pelvis',left:'left-knee',right:'right-knee',
+    waistLock:1,transition:[.42,.84],rootLock:1};
    // Share the leg deformation source *by reference*; don't duplicate
    // or separately keyframe the shorts' hips, inseam and two thigh zones.
    Object.defineProperty(part,'_garmentLegs',{value:legs,configurable:true});
@@ -858,6 +883,19 @@ function legPoint(part,point,pose){
  const l=shift(a),r=shift(b),wr=smooth((u-.4)/.2);
  return {x:point.x+l.x*(1-wr)+r.x*wr,y:point.y+l.y*(1-wr)+r.y*wr};
 }
+// One waist/hip root, with two secondary knee-driven hem attachments.
+function garmentPoint(part,p,pose){
+ const waist=hipPoint(p,pose);
+ if(!part._garmentLegs)return waist;
+ const bounds=placedBounds(part);
+ const relativeY=(p.y-bounds.y)/Math.max(1,bounds.h);
+ const range=part.skinBinding?.transition||[.42,.84];
+ const thighWeight=smooth((relativeY-range[0])/Math.max(.01,range[1]-range[0]));
+ if(thighWeight<=0)return waist;
+ const lower=legPoint(part._garmentLegs,p,pose);
+ return {x:waist.x+(lower.x-waist.x)*thighWeight,
+         y:waist.y+(lower.y-waist.y)*thighWeight};
+}
 function parentRole(part){
  if(!part)return 'none';
  if(part.parentId==='ground'||part.id==='shoes'||part.id==='footwear')return 'ground';
@@ -877,16 +915,15 @@ function parentPoint(part,p,phase=0,idle=null,pose=null){
  switch(parentRole(part)){
  case 'ground':case 'none':return p;
  case 'legs':return legPoint(part,p,h);
- case 'garment':
-  // Every shorts vertex samples the same 2-leg IK / area-weighted skin
-  // field used by the underlying ORIGINAL body ArtMesh. No independent
-  // hip motion means that hem, inseam and waistband cannot drift away.
-  return part._garmentLegs?legPoint(part._garmentLegs,p,h):hipPoint(p,h);
+ case 'garment':return garmentPoint(part,p,h);
  case 'pelvis':return hipPoint(p,h);
  case 'neck':return neckPoint(p,h);
  case 'torso':{
   const low=hipPoint(p,h),high=ribcagePoint(p,h);
-  const rig=h.rig,w=smooth((rig.pelvis.y-p.y)/Math.max(1,rig.pelvis.y-rig.shoulder.y));
+  // Waistband and lower torso share the SAME pelvis transform.
+  const rig=h.rig,zone=rig.legsId==='legwear'?64:0;
+  const w=smooth((rig.pelvis.y-p.y-zone)/
+    Math.max(1,rig.pelvis.y-rig.shoulder.y-zone));
   return {x:low.x+(high.x-low.x)*w,y:low.y+(high.y-low.y)*w};
  }
  case 'head':return headPoint(p,h);
@@ -1456,5 +1493,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
 
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,CROUCH_CONTACTS,CROUCH_KEYS,sanitizeCrouchDynamics,bindCrouchDynamics,crouchWeaponPose,crouchWeaponPoint,crouchDeform,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,placedRestPoint,unplacedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,CROUCH_CONTACTS,CROUCH_KEYS,sanitizeCrouchDynamics,bindCrouchDynamics,crouchWeaponPose,crouchWeaponPoint,crouchDeform,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,garmentPoint,placedRestPoint,unplacedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
 })(typeof window!=='undefined'?window:globalThis);
