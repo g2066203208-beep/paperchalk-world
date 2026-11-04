@@ -15,19 +15,31 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    ['male2','male2','男二'],
    ['char-004','char-004','女三'],
    ['female-06','female-06','女六'],
+   ['female-06-outfit-02','female-06','女六'],
    ['class-teacher-geography-candidate','class-teacher-geography-candidate','女老师'],
    ['protagonist-sleepwear','protagonist','女主角'],
-   ['char-003-outfit-02','char-003','男主角'],
-   ['female-06-outfit-02','female-06','女六']
+   ['char-003-outfit-02','char-003','男主角']
   ];
   for(const [id,family,name] of cases){
    await page.goto(BASE+'?character='+encodeURIComponent(id)+'&side=front',
     {waitUntil:'load'});
-   await page.waitForFunction(id=>window.PaperchalkStudio?.current===id&&
+   try{
+    await page.waitForFunction(id=>window.PaperchalkStudio?.current===id&&
      !!document.getElementById('studio-person-import')&&
      !!document.querySelector('.character-family[data-family="'+
       (window.PaperchalkCharacterLibrary.familyOf(window.PaperchalkStudio.list.get(id)))+'"]'),
-     id,{timeout:45000});
+     id,{timeout:18000});
+   }catch(error){
+    console.error('CHARACTER TREE LOAD DIAGNOSTIC '+id,await page.evaluate(()=>({
+     current:window.PaperchalkStudio?.current,
+     list:[...window.PaperchalkStudio?.list?.keys()||[]],
+     error:document.querySelector('#studio-status')?.textContent,
+     active:window.PaperchalkPartRigStudio?.state?.active,
+     tree:[...document.querySelectorAll('.character-family')].map(x=>x.dataset.family),
+     href:location.href
+    })),exceptions);
+    throw error;
+   }
    const audit=await page.evaluate(()=>({
     roots:[...document.querySelectorAll('.character-family')].map(x=>x.dataset.family),
     rootNames:[...document.querySelectorAll('.character-family>summary')].map(x=>x.textContent),
