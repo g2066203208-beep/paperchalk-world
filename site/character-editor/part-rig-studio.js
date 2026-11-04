@@ -176,6 +176,7 @@ function drawRelationList(){
    if(available)maskTarget.value=available;
    maskState.direction=entry.direction==='behind'?'behind':'front';
    maskState.targets=new Set(targets);
+   maskState.editingEntry=entry;
    maskState.history=[];maskState.redo=[];syncDirection();drawTargetList();maskLabel.textContent=maskHint();
   };
   const remove=document.createElement('button');remove.type='button';remove.textContent='删除';
@@ -184,7 +185,8 @@ function drawRelationList(){
    setMaskMode(false);
    if(!confirm('删除这条局部遮挡关系？原始图片不会变。'))return;
    state.model.occlusionMasks=state.model.occlusionMasks.filter(m=>m!==entry);
-   changed(false);drawRelationList();maskLabel.textContent=maskHint();
+   if(maskState.editingEntry===entry)maskState.editingEntry=null;
+   changed(false);ed.renderList();drawRelationList();maskLabel.textContent=maskHint();
   };
   item.append(name,edit,remove);list.append(item);
  }
@@ -206,6 +208,7 @@ function updateMaskControls(){
   id&&[...maskTarget.options].some(o=>o.value===id));
  if(choice)maskTarget.value=choice;
  maskState.direction=preferred?.direction==='behind'?'behind':'front';
+ maskState.editingEntry=preferred||null;
  maskState.targets=new Set(preferred?maskTargets(preferred):maskTarget.value?[maskTarget.value]:[]);
  maskState.history=[];maskState.redo=[];
  $('rig-mask-source').textContent=part?.name||'未选择';
