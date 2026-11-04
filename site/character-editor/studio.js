@@ -683,7 +683,14 @@ async function saveToGame(){
  // game character. Save locally, but never poison the canonical hero slot.
  if(currentId===BATTLE_FRONT_ID){
   message('✓ 战斗正面分层与骨骼已保存到独立工作室档案；原版女主、游戏槽位不变。');
-  return;
+  return {applied:false};
+ }
+ const selected=list.get(currentId);
+ if(selected?.editorOnly&&!selected?.l2dModule?.[side]?.rig){
+  // A missing teacher/outfit source is NOT a valid game actor. Save the draft
+  // locally while preserving the previously selected playable character.
+  message('✓ 分层草稿已保存在本浏览器；此服装尚无已发布的 L2D 模块，未替换游戏人物。');
+  return {applied:false};
  }
  // This button explicitly says "save AND apply to game". Bind the
  // selected actor/view to the originating game slot even when the user
@@ -699,6 +706,7 @@ async function saveToGame(){
  message('✓ 已保存：'+(list.get(currentId)?.label||currentId)+
   (rig?.state?.model?.characterId===currentId?'，新版独立骨骼已同步到本机游戏。':
    native?.length>=12?'，独立分层工程已保存。':'，素材已保存（需要导入独立分层才能启用新版骨骼）。'));
+ return {applied:true};
 }
 async function importImages(files){
  await switchQueue;
