@@ -551,7 +551,16 @@ function sanitize(record,original){
  };
  // Keep the authored pixel texture immutable. Size and position are
  // transformed in rest/world space before the same parent bone field.
- const t=record.placement||original.placement||{};
+ const old=record.placement||{};
+ // The preceding release accidentally shipped a miniature shorts default.
+ // Upgrade EXACTLY that old default (not personalized fittings), preserving
+ // user-authored scale/position changes and source pixels.
+ const oldFemale06Shorts=original.id==='pants_overlay'&&original.kind==='pants-bound'&&
+  Math.abs(finite(old.scaleX,0)-.92)<.000001&&
+  Math.abs(finite(old.scaleY,0)-.8)<.000001&&
+  Math.abs(finite(old.offsetX,0)+7)<.000001&&
+  Math.abs(finite(old.offsetY,0)+12)<.000001;
+ const t=oldFemale06Shorts?original.placement:(record.placement||original.placement||{});
  x.placement={
   scaleX:clamp(finite(t.scaleX,1),.25,4),
   scaleY:clamp(finite(t.scaleY,1),.25,4),
