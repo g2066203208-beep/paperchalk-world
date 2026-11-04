@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 3,
+  "recordCode": "CHAR-006",
+  "canonicalId": "char-006",
+  "recordState": "visual_candidate_source_psd_not_published",
+  "fields": {
+    "identity": {
+      "canonicalId": {
+        "value": "char-006",
+        "status": "proposed",
+        "source": "2026-11-04 user-uploaded SeeThrough PSD, awaiting identity confirmation"
+      },
+      "displayName": {
+        "value": "女五（新 PSD 待正式验收）",
+        "status": "proposed",
+        "source": "2026-11-04 user request"
+      },
+      "storyRole": {
+        "value": "女五",
+        "status": "user_requested",
+        "source": "2026-11-04 user request"
+      },
+      "designStatus": {
+        "value": "15-source-layer SeeThrough PSD processed into a 17-part L2D import bundle; GitHub media not committed yet",
+        "status": "in_progress",
+        "source": "2026-11-04 local PSD conversion"
+      }
+    }
+  },
+  "importedArtwork": {
+    "state": "candidate_not_published",
+    "sourcePSD": "SeeThrough-09c07882ba7c.psd",
+    "sourceCanvas": [
+      1024,
+      1024
+    ],
+    "sourceLayerCount": 15,
+    "derivedIndependentPartCount": 17,
+    "candidateCategory": "winged female character",
+    "confirmedCanonicalArt": false,
+    "targetInboxPath": "site/assets/l2d/inbox/char-006.zip",
+    "sourceProvenance": "original PSD with two split wings and two split arms; near-transparent artifacts trimmed"
+  },
+  "notes": "Do not claim a playable L2D is deployed until the 17 PNG textures and module archive are actually committed to GitHub and Pages CI succeeds."
+}
