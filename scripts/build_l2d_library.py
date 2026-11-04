@@ -189,6 +189,15 @@ def inspect_module(folder):
         fail(folder, "label must be a nonempty string of <=80 characters")
     if m.get("schema") != 1:
         fail(folder,"schema must be 1")
+    family = m.get("familyId", ident)
+    category = m.get("variantCategory", "default")
+    if not isinstance(family, str) or not ID.fullmatch(family):
+        fail(folder, "familyId must be a valid canonical character ID")
+    if not isinstance(category, str) or not ID.fullmatch(category):
+        fail(folder, "variantCategory must be a valid short ID")
+    declared_actions = m.get("actions", [])
+    if not isinstance(declared_actions,list) or any(not isinstance(x,str) or not ID.fullmatch(x) for x in declared_actions):
+        fail(folder, "actions must contain action IDs")
     views = m.get("views")
     if not isinstance(views,dict) or not views or any(k not in ("front","back") for k in views):
         fail(folder,"views must contain front and/or back")
@@ -203,7 +212,7 @@ def inspect_module(folder):
             with f.open("rb") as stream:
                 for chunk in iter(lambda:stream.read(1024*1024),b""):
                     digest.update(chunk)
-    return {"id":ident, "label":label.strip(), "views":faces,
+    return {"id":ident, "familyId":family, "variantCategory":category, "actions":declared_actions, "label":label.strip(), "views":faces,
             "module":True, "version":digest.hexdigest()[:12]}
 
 
