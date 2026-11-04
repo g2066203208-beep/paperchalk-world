@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "profileBase": {
+    "path": "docs/characters/CHARACTER_FIELD_SCHEMA_V2.json",
+    "baseFieldCount": 448,
+    "baseSectionCount": 22
+  },
+  "extensionFieldCount": 64,
+  "totalFieldCount": 512,
+  "totalSectionCount": 30,
+  "designStatus": "schema_only_runtime_not_implemented",
+  "description": "Angel transaction, character desire, SAN and combat psychology extension. Additive; do not mutate the 448 canonical fields or existing visual assets. Unknown values remain null.",
+  "statuses": [
+    "user_confirmed",
+    "approved_art_reference",
+    "approved_story_reference",
+    "proposed",
+    "unknown",
+    "not_applicable",
+    "rejected"
+  ],
+  "valueExample": {
+    "value": null,
+    "status": "unknown"
+  },
+  "sections": [
+    {
+      "id": "tradeEligibility",
+      "title": "交易参与与资格",
+      "fields": [
+        "participationRole",
+        "recruitedBy",
+        "recruitmentVoluntary",
+        "dealOptIn",
+        "participationStatus",
+        "firstContact",
+        "eligibilityCriteria",
+        "civilianLifeStatus"
+      ]
+    },
+    {
+      "id": "tradeDesire",
+      "title": "现实缺口与交易愿望",
+      "fields": [
+        "lifeDeficit",
+        "outwardMask",
+        "trueWish",
+        "spokenWish",
+        "deepestFear",
+        "emotionalTrigger",
+        "desiredChange",
+        "desperationScale"
+      ]
+    },
+    {
+      "id": "tradeContract",
+      "title": "天使契约与债务",
+      "fields": [
+        "angelCounterparty",
+        "contractTerms",
+        "requestedBenefit",
+        "promisedReward",
+        "upfrontCost",
+        "hiddenCost",
+        "debtState",
+        "cancellationRule"
+      ]
+    },
+    {
+      "id": "sanityRules",
+      "title": "SAN数值与例外规则",
+      "fields": [
+        "startingSan",
+        "baselineSan",
+        "minimumSan",
+        "maximumSan",
+        "monsterEncounterDelta",
+        "combatKillDelta",
+        "passiveDecayRule",
+        "otherNegativeEffectRule"
+      ]
+    },
+    {
+      "id": "fearAndCombat",
+      "title": "恐惧反应与战斗心理",
+      "fields": [
+        "fearResponse",
+        "enemyClarityEffect",
+        "killSatisfactionEffect",
+        "battleMentalTrajectory",
+        "retreatTrigger",
+        "nonMonsterThreatResponse",
+        "panicThreshold",
+        "exceptions"
+      ]
+    },
+    {
+      "id": "mentalPresentation",
+      "title": "精神状态演出",
+      "fields": [
+        "idleEmotion",
+        "threatExpression",
+        "attackExpression",
+        "victoryExpression",
+        "lowSanExpression",
+        "socialMask",
+        "maskBreakTrigger",
+        "psychologicalAftereffect"
+      ]
+    },
+    {
+      "id": "plotTransaction",
+      "title": "交易剧情与个人弧线",
+      "fields": [
+        "preDealLife",
+        "incitingIncident",
+        "dealDecisionScene",
+        "turningPoint",
+        "characterArc",
+        "relationToHeroine",
+        "angelManipulationCounter",
+        "unresolvedQuestion"
+      ]
+    },
+    {
+      "id": "runtimeAndQA",
+      "title": "游戏联动与验收",
+      "fields": [
+        "mechanicState",
+        "saveDataKey",
+        "currentSanStorage",
+        "clamping",
+        "combatEvents",
+        "guiRules",
+        "regressionTests",
+        "approvalStatus"
+      ]
+    }
+  ],
+  "rules": [
+    "448 base fields stay untouched; 64 extension fields are additive, 512 total.",
+    "Being selected as a non-voluntary night-world cleaner and choosing to sign an angel deal are separate facts. Do not conflate.",
+    "Non-protagonist angel traders are written with a concrete unmet need or life deficit; no automatic claim that every cleaner willingly trades.",
+    "Protagonist is the only established exception to the desire-based deal motif; do not fabricate a wish, financial debt, trauma or bargain.",
+    "Protagonist SAN: 0..100 display scale, initial/baseline/minimum=50, maximum=100, encounters do not reduce SAN, no negative effects or passive decay, valid monster kills increase SAN (exact gain not approved). Current SAN is runtime save state, not a fixed character-file property.",
+    "These are writing and data-design rules, not evidence that game code already implements them. Mechanics require separate verified implementation.",
+    "All statuses follow provenance: user_confirmed only for user's explicit directives; numerical proposals have status proposed."
+  ]
+}
