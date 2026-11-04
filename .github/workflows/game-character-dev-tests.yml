@@ -129,21 +129,21 @@ jobs:
                 window.PaperchalkPartRigStudio?.state.active===true,null,{timeout:35000});
               assert.equal(await page.locator('#dev-l2d-preview-controls').count(),0);
               assert.equal(await page.locator('#l2d-strength').count(),0);
-              assert.equal(await page.locator('#part-rig-panel').isVisible(),false,
-                'new mesh plays without a permanently open settings panel');
               if(name==='phone')await page.locator('[data-studio-pane="motion"]').click();
+              assert.equal(await page.locator('#part-rig-panel').isVisible(),true,
+                'permanent docked inspector replaces the old mode switch');
               assert.ok(await page.locator('[data-quick="fringe"]').isVisible());
               assert.ok(await page.locator('[data-quick="rear"]').isVisible());
               assert.ok(await page.locator('[data-quick="skirt"]').isVisible());
               for(const field of ['hands','shoulders','hips','breath','speed'])
                 assert.ok(await page.locator('[data-quick="'+field+'"]').isVisible());
-              await page.locator('#idle-open').click();
+              assert.equal(await page.locator('#idle-open').isVisible(),false);
               assert.equal(await page.locator('#rig-part option').count(),20);
               // The inspector must be docked outside the moving canvas.
               const docked=await page.evaluate(()=>{
                 const inspector=document.getElementById('part-rig-panel');
                 return inspector?.parentElement?.classList.contains('right')&&
-                  document.body.classList.contains('rig-authoring')&&
+                  !document.body.classList.contains('rig-authoring')&&
                   !document.getElementById('rig-advanced').open;
               });
               assert.ok(docked,'authoring controls must not cover the character');
@@ -164,11 +164,10 @@ jobs:
               await page.locator('[data-quick="hips"]').fill('275');
               await page.locator('[data-quick="breath"]').fill('185');
               await page.locator('[data-quick="speed"]').fill('195');
-              await page.locator('#rig-quick-save').click(); // One click saves ArtMesh PNGs + game rig
+              await page.locator('#btnSave').click(); // The only visible Save commits images + rig
               await page.waitForFunction(()=>{
-                const b=document.querySelector('#rig-quick-save'),
-                  s=document.querySelector('#rig-quick-status');
-                return b&&!b.disabled&&s?.textContent?.includes('已保存');
+                const b=document.querySelector('#btnSave');
+                return b&&!b.disabled&&b.textContent.includes('已保存');
               },null,{timeout:30000});
               // Verify that the ORIGINAL source bitmap is durable before navigation.
               const artPersisted=await page.evaluate(async()=>{
