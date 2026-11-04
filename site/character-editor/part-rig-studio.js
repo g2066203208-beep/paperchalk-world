@@ -61,12 +61,15 @@ function maskCanvas(mask,source){
  const c=document.createElement('canvas');c.width=source.w;c.height=source.h;
  Object.defineProperty(mask,'_canvas',{value:c,writable:true,configurable:true,enumerable:false});
  if(mask.png?.startsWith('data:image/png;base64,')){
+  mask._pending=true;
   const image=new Image();
   image.onload=()=>{
    if(mask._canvas===c&&image.width===c.width&&image.height===c.height){
     c.getContext('2d').drawImage(image,0,0);mask._revision=(mask._revision||0)+1;ed.render();
    }
+   mask._pending=false;
   };
+  image.onerror=()=>{mask._pending=false;maskLabel.textContent='旧蒙版图片加载失败，未覆盖保存内容'};
   image.src=mask.png;
  }
  return c;
@@ -785,6 +788,9 @@ stage.addEventListener('pointerdown',e=>{
  if(!mapped)return;
  const entry=ensureMask();if(!entry)return;
  const c=maskCanvas(entry,state.model.parts[state.selected]);
+ if(entry._pending){
+  maskLabel.textContent='正在读取原有蒙版，加载完成后才能落笔，避免覆盖旧内容';return;
+ }
  maskState.history.push(c.getContext('2d').getImageData(0,0,c.width,c.height));
  if(maskState.history.length>20)maskState.history.shift();
  maskState.pointer={id:e.pointerId,point:mapped,start:mapped,entry,hasMoved:false};
