@@ -377,122 +377,154 @@ body.studio-page .character-family>summary{
 }
 `;
 document.head.append(workspaceCSS);
+
+/* The registry contains source rigs, wardrobe and old local imports.  These
+ * are files/variants of a PERSON, not separate people.  Do not delete the
+ * underlying data: this normalises the navigation surface only. */
+const PERSON_NAMES={
+ protagonist:'女主角','char-002':'女二','char-003':'男主角',
+ 'char-004':'女三',male2:'男二','female-06':'女六',
+ 'class-teacher-geography-candidate':'女老师'
+};
+function canonicalFamily(record){
+ const id=String(record?.id||''),family=String(record?.familyId||id);
+ const name=String(record?.label||'').trim();
+ const nameFamily=/^(女二(号)?|女2)(?:[\\s·（(:：/-]|$)/.test(name)?'char-002':
+  /^(男主角?|男一)(?:[\\s·（(:：/-]|$)/.test(name)?'char-003':
+  /^(女主角?|女一)(?:[\\s·（(:：/-]|$)/.test(name)?'protagonist':null;
+ const token=nameFamily||family;
+ if(/^(protagonist)(?:$|-)/.test(token))return 'protagonist';
+ if(/^(char-002|female-?0?2|female2)(?:$|-)/.test(token))return 'char-002';
+ if(/^(char-003|male-lead|malelead)(?:$|-)/.test(token))return 'char-003';
+ if(/^(char-004|female-?0?3)(?:$|-)/.test(token))return 'char-004';
+ if(/^(male2)(?:$|-)/.test(token))return 'male2';
+ return token;
+}
+function familyDisplayName(person,family){
+ return PERSON_NAMES[family]||String(person?.label||family)
+  .replace(/ · 未导入立绘$/,'').replace(/^char-(\\d+)$/i,'角色 $1');
+}
+function visibleFamilyGroups(){
+ const families=new Map();
+ for(const record of list.values()){
+  if(!okId(record?.id))continue;
+  const family=canonicalFamily(record);
+  if(!families.has(family))families.set(family,[]);
+  families.get(family).push(record);
+ }
+ const visible=[];
+ for(const [family,all] of families){
+  const primary=all.find(c=>c.id===family)||
+   all.find(c=>c.variantCategory!=='combat'&&c.variantCategory!=='outfit'&&
+    (c.front||c.back||c.l2dModule?.front?.rig))||all[0];
+  // Concept-only 448-field records are not painted actors.  Keep in the
+  // full catalog, but don't fill the active L2D tree with blank templates.
+  const hasArtwork=all.some(c=>!!c.front||!!c.back||!!c.l2dModule?.front?.rig);
+  if(!hasArtwork&&family!=='male2'&&!all.some(c=>c.id===currentId))continue;
+  const choices=all.filter(c=>c.id!==primary.id&&
+    (c.variantCategory==='outfit'||c.variantCategory==='combat')&&
+    c.id!=='protagonist-battle-front'&&
+    !/^(char-002-psd-v1|protagonist-rig-v1|protagonist-unified-v1)$/.test(c.id));
+  // Deduplicate stale local copies of the same variant.  Preserve every
+  // record in list/IndexedDB, just display one action per unique asset ID.
+  const seen=new Set(),variants=choices.filter(c=>{
+   const signature=c.variantCategory+':'+(c.front||c.id);
+   if(seen.has(signature))return false;
+   seen.add(signature);return true;
+  });
+  visible.push({family,primary,variants});
+ }
+ return visible;
+}
 function renderFamilyTree(){
  const root=$('character-tree-items');if(!root)return;
  root.replaceChildren();
- const families=new Map();
- for(const c of list.values()){
-  const family=c.familyId||c.id;
-  if(!families.has(family))families.set(family,[]);
-  families.get(family).push(c);
- }
- for(const [family,variants] of families){
-  const primary=list.get(family)||variants[0];
+ for(const {family,primary,variants} of visibleFamilyGroups()){
+  const activeFamily=canonicalFamily(list.get(currentId)||{id:currentId});
   const group=document.createElement('details');
-  group.className='character-family'+(family===(list.get(currentId)?.familyId||currentId)?' active':'');
-  group.open=openedFamilies.has(family)||family===(list.get(currentId)?.familyId||currentId);
-  const summary=document.createElement('summary');summary.textContent=/^char-\d+$/.test(String(primary.label||''))?('角色 '+String(primary.label).toUpperCase()):String(primary.label||family).replace(' · 未导入立绘','');
+  group.className='character-family'+(family===activeFamily?' active':'');
+  group.open=openedFamilies.has(family)||family===activeFamily;
+  const summary=document.createElement('summary');
+  summary.textContent=familyDisplayName(primary,family);
   group.append(summary);
   group.addEventListener('toggle',()=>{if(group.open)openedFamilies.add(family);else openedFamilies.delete(family)});
   const children=document.createElement('div');children.className='character-family-children';
-  if(family==='male2'){
+  if(family==='male2'&&!primary.l2dModule?.front?.rig){
    const button=document.createElement('button');
-   button.type='button';button.className='male2-direct-import';
-   button.textContent='＋ 导入男二 SeeThrough ZIP';
+   button.type='button';button.textContent='＋ 导入男二 SeeThrough ZIP';
    const uploader=document.createElement('input');
    uploader.type='file';uploader.accept='.zip,application/zip';uploader.hidden=true;
    uploader.onchange=e=>{
     const file=e.target.files?.[0];e.target.value='';
     if(!file)return;
-    const importNow=()=>importComponentArchive(file).catch(error=>message('男二拆分导入失败：'+error.message));
-    if(currentId==='male2'&&side==='front')importNow();
-    else change('male2','front').then(importNow).catch(error=>message(error.message));
+    change(primary.id,'front').then(()=>importComponentArchive(file))
+     .catch(error=>message('男二拆分导入失败：'+error.message));
    };
-   button.onclick=e=>{e.stopPropagation();uploader.click()};
+   button.onclick=()=>uploader.click();
    children.append(button,uploader);
   }
   const base=document.createElement('button');base.type='button';
-  base.textContent='基础全身模型 · 正面';base.className=currentId===primary.id?'active':'';
+  base.textContent='基础立绘 · 正面';
+  base.className=currentId===primary.id&&side==='front'?'active':'';
   base.onclick=()=>change(primary.id,'front').catch(e=>message(e.message));
   children.append(base);
   if(primary.back){
-   const back=document.createElement('button');back.type='button';back.textContent='基础模型 · 背面';
+   const back=document.createElement('button');back.type='button';
+   back.textContent='基础立绘 · 背面';
    back.className=currentId===primary.id&&side==='back'?'active':'';
    back.onclick=()=>change(primary.id,'back').catch(e=>message(e.message));
    children.append(back);
   }
-  for(const v of variants.filter(x=>x.id!==primary.id)){
-   const item=document.createElement('button');item.type='button';
-   const isBattle=v.variantCategory==='combat';
-   item.textContent=isBattle?'战斗 · 切换手臂与武器':'服装 / 素材 · '+String(v.label||v.id).replace(/^女主 · /,'');
-   const small=document.createElement('small');
-   small.textContent=isBattle?'使用基础人物同一套骨骼，不切换整个人物':
-    v.variantCategory==='outfit'?'同一人物的服装子资源；原衣服不覆盖':'独立源稿；完成部件映射后并入基础模型';
-   item.append(small);
-   if(v.variantCategory==='outfit'){
+  for(const variant of variants){
+   const isOutfit=variant.variantCategory==='outfit';
+   const isBattle=variant.variantCategory==='combat';
+   const btn=document.createElement('button');btn.type='button';
+   btn.className=currentId===variant.id?'active':'';
+   const title=String(variant.label||variant.id)
+    .replace(/^(女主角?|女二|女三|男主角?|男二|女老师)\\s*[·:：-]\\s*/,'');
+   btn.textContent=(isOutfit?'换装 · ':isBattle?'动作 · ':'素材 · ')+title;
+   btn.onclick=async()=>{
+    try{
+     if(isBattle&&primary.id==='protagonist'){
+      await change(primary.id,'front');
+      const action=$('rig-character-action');
+      if(action&&[...action.options].some(o=>o.value==='combat')){
+       action.value='combat';action.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+     }else await change(variant.id,'front');
+    }catch(e){message('切换失败：'+e.message)}
+   };
+   children.append(btn);
+   if(isOutfit&&!variant.l2dModule?.front?.rig){
     const file=document.createElement('input');file.type='file';
     file.accept='.psd,.zip,application/zip';file.hidden=true;
     file.onchange=e=>{
      const uploaded=e.target.files?.[0];e.target.value='';
      if(!uploaded)return;
-     change(v.id,'front').then(()=>importComponentArchive(uploaded))
-      .catch(error=>message('新衣服导入失败：'+error.message));
+     change(variant.id,'front').then(()=>importComponentArchive(uploaded))
+      .catch(error=>message('换装素材导入失败：'+error.message));
     };
-    const action=document.createElement('button');action.type='button';
-    action.className='studio-outfit-import';
-    action.textContent='＋ 导入此服装 PSD / ZIP';
-    action.onclick=e=>{e.stopPropagation();file.click()};
-    children.append(file);
-    children.append(action);
+    const importBtn=document.createElement('button');importBtn.type='button';
+    importBtn.textContent='＋ 导入这套服装';importBtn.onclick=()=>file.click();
+    children.append(file,importBtn);
    }
-   item.className=currentId===v.id?'active':'';
-   item.onclick=async()=>{
-    try{
-     if(isBattle){
-      await change(primary.id,'front');
-      const attempt=(n=0)=>{
-       const rig=window.PaperchalkPartRigStudio;
-       if(rig?.state?.active&&rig.state.model?.characterId===primary.id){
-        const select=$('rig-character-action');
-        if(select&&[...select.options].some(o=>o.value==='combat')){
-         select.value='combat';select.dispatchEvent(new Event('change',{bubbles:true}));
-        }
-       }else if(n<80)requestAnimationFrame(()=>attempt(n+1));
-      };
-      attempt();
-     }else await change(v.id,'front');
-    }catch(e){message('切换失败：'+e.message)}
-   };
-   children.append(item);
   }
   group.append(children);root.append(group);
  }
 }
 function options(){
- const old=selector.value;
  selector.replaceChildren();
- // An optgroup represents a PERSON, options represent that person's art/actions.
- const families=new Map();
- for(const c of list.values()){
-  const family=c.familyId||c.id;
-  if(!families.has(family))families.set(family,[]);
-  families.get(family).push(c);
+ for(const {family,primary,variants} of visibleFamilyGroups()){
+  const group=document.createElement('optgroup');group.label=familyDisplayName(primary,family);
+  group.append(new Option('基础立绘 · '+group.label,primary.id));
+  for(const v of variants)
+   group.append(new Option((v.variantCategory==='outfit'?'换装 · ':'动作 · ')+
+    String(v.label||v.id),v.id));
+  selector.append(group);
  }
- for(const [family,variants] of families){
-  const canonical=list.get(family)||variants[0];
-  const group=document.createElement('optgroup');
-  group.label=(canonical?.label||family).replace(' · 未导入立绘','');
-  for(const c of variants){
-   const subset=c.id===family?(c.back?'基本立绘 · 正面 / 背面':'基础立绘 · 正面'):
-    c.variantCategory==='combat'?'原始战斗 PSD · 备份素材（非游戏主模型）':
-    (c.label||c.id);
-   group.appendChild(new Option(group.label+' · '+subset+(c.draft?'（待导入）':''),c.id));
-  }
-  selector.appendChild(group);
- }
- if(list.has(currentId))selector.value=currentId;
- else if(list.has(old))selector.value=old;
- renderFamilyTree();
+ if(list.has(currentId)&&[...selector.options].some(o=>o.value===currentId))
+  selector.value=currentId;
+ else selector.value=visibleFamilyGroups()[0]?.primary?.id||'';
 }
 let switchQueue=Promise.resolve();
 function change(id,face='front'){
@@ -611,9 +643,19 @@ async function loadList(){
  const canonicalFemale2=list.get('char-002');
  await resetFemale06OriginalIfRequested();
  const imported=await get('imported');
- if(Array.isArray(imported))for(const c of imported)if(okId(c?.id))list.set(c.id,c);
+ // Never let a stale local import overwrite an official character identity.
+ if(Array.isArray(imported))for(const record of imported)if(okId(record?.id)){
+  const published=list.get(record.id);
+  if(!published)list.set(record.id,record);
+  else if(published.draft&&!published.l2dModule?.front?.rig)
+   list.set(record.id,{...published,...record});
+ }
  const overrides=await get('overrides');
- if(Array.isArray(overrides))for(const c of overrides)if(list.has(c?.id))Object.assign(list.get(c.id),c);
+ if(Array.isArray(overrides))for(const record of overrides){
+  const existing=list.get(record?.id);
+  if(existing&&!existing.l2dModule?.front?.rig)
+   Object.assign(existing,record);
+ }
  if(canonicalFemale2)list.set('char-002',canonicalFemale2);
  let last=null;try{last=JSON.parse(localStorage.getItem('paperchalk-studio-last')||'null')}catch(e){}
  const id=args.get('character')||last?.id||'protagonist';
@@ -753,8 +795,13 @@ async function storePartRig(rig){
  const layers=ed.S.layers[rig.face].filter(p=>p.sourcePart);
  const ids=new Set(layers.map(p=>String(p.partId||p.name)));
  const keys=Object.keys(rig.parts);
- if(!keys.length||keys.some(k=>!ids.has(k)))
-  throw Error('绑定工程部件与真实源图层不一致，拒绝覆盖');
+ const removed=Array.isArray(rig.deletedParts)?rig.deletedParts:[];
+ const deployed=new Set(Object.keys(list.get(currentId)?.l2dModule?.[rig.face]?.rig?.textures||{}));
+ if(keys.some(k=>!ids.has(k))||keys.length!==ids.size||
+    new Set(keys).size!==keys.length||removed.some(k=>typeof k!=='string'||
+      keys.includes(k)||(deployed.size&&!deployed.has(k)))||
+    (!keys.length&&!removed.length))
+  throw Error('绑定工程部件、删除记录与真实源图层不一致，拒绝覆盖');
  await put('part-rig:'+currentId+':'+rig.face,JSON.parse(JSON.stringify(rig)));
  return true;
 }
@@ -1035,6 +1082,11 @@ async function zipBytes(buf){
  return zipFiles(new File([buf],'original-psd-parts.zip',{type:'application/zip'}));
 }
 async function ensureHostedParts(id){
+ // A deliberate deletion of ALL local source parts must not trigger an
+ // automatic re-import of the original PNGs on the next visit.
+ const draft=await get('part-rig:'+id+':'+side);
+ if(draft?.deletedParts?.length&&Object.keys(draft.parts||{}).length===0&&
+    !ed.S.layers[side].some(p=>p.sourcePart))return;
  if(!hostedPartsURLs[id]&&!list.get(id)?.l2dModule?.[side]?.sourceParts&&!list.get(id)?.l2dModule?.[side]?.rig)return;
  const front=ed.S.layers.front.some(p=>p.sourcePart);
  const back=ed.S.layers.back.some(p=>p.sourcePart);
