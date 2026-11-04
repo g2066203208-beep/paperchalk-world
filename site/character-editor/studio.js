@@ -230,6 +230,34 @@ workspaceCSS.textContent=`
   body.studio-page .stage-toolbar{top:5px;right:5px;width:94px;max-width:94px;padding:3px;gap:3px}body.studio-page .stage-toolbar button{font-size:10px;padding:5px 2px;min-height:30px}
  }
 `;
+
+workspaceCSS.textContent+=`
+body.studio-page #studio-character-tree{
+ display:block!important;margin:0 0 8px!important;padding:0 0 6px!important
+}
+body.studio-page #studio-character-tree>h3{font-size:15px;font-weight:750;margin:0 0 7px}
+body.studio-page .character-family>summary{font-size:13px;min-height:39px;padding:9px 10px}
+body.studio-page .character-family-children{padding:5px 8px;gap:3px}
+body.studio-page .character-family-children button{font-size:12px;min-height:35px;padding:7px 9px}
+body.studio-page .character-family-children small{display:none!important}
+body.studio-page #easy-layer-guide,
+body.studio-page #studio-character-tree .character-tree-legend{display:none!important}
+body.studio-page #easy-selection{padding:4px 7px!important;margin:0 0 5px!important;font-size:11px;min-height:23px}
+body.studio-page aside.left>section:has(#layers)>h3{font-size:12px;line-height:1.25;margin:0 0 6px}
+body.studio-page aside.left>section:has(#layers)>.row button{font-size:11px;padding:5px 6px}
+body.studio-page aside.left>section .tip{display:none!important}
+body.studio-page #studio-library{padding:6px!important;margin:5px 0!important}
+body.studio-page #studio-library>.studio-row:first-child{display:none!important}
+body.studio-page #studio-battle-import-row{display:none!important}
+body.studio-page .left{min-width:0;overflow-y:auto}
+body.studio-page .right,body.studio-page .stage{min-width:0}
+@media(max-width:710px){
+ body.studio-page #studio-character-tree{min-height:260px!important;max-height:none!important}
+ body.studio-page .character-family>summary{font-size:14px;min-height:41px}
+ body.studio-page .character-family-children button{font-size:13px;min-height:41px}
+ body.studio-page .stage{height:43dvh!important;min-height:295px!important}
+}
+`;
 document.head.append(workspaceCSS);
 function renderFamilyTree(){
  const root=$('character-tree-items');if(!root)return;
