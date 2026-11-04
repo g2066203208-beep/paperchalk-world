@@ -20,6 +20,7 @@ on:
       - 'tests/test_l2d_idle.js'
       - 'tests/test_l2d_display_lifecycle.cjs'
       - 'tests/test_battle_front_studio.js'
+      - 'tests/test_female5_teacher_alias_browser.js'
       - 'tests/test_protagonist_unified.py'
       - '.github/workflows/l2d-modules.yml'
   pull_request:
@@ -468,6 +469,10 @@ jobs:
            }finally{await browser.close();}
           })().catch(e=>{console.error(e);process.exit(1);});
           JS
+      - name: Verify female five teacher is one playable real-PSD actor
+        run: |
+          python3 -m http.server 8136 --directory site >/tmp/l2d-char006-http.log 2>&1 &
+          node tests/test_female5_teacher_alias_browser.js
       - name: One-ZIP inbox automatically installs the export without per-character code edits
         run: |
           python3 - <<'PY'
