@@ -23,6 +23,8 @@ const BASE='http://127.0.0.1:8134/character-editor/';
     rig:window.PaperchalkStudio?.list?.get('char-003')?.l2dModule?.front?.rig,
     source:window.characterEditor?.S.layers.front.filter(x=>x.sourcePart).map(x=>x.partId),
     state:window.PaperchalkPartRigStudio?.state?.active,
+    model:window.PaperchalkPartRigStudio?.state?.model?.characterId,
+    rigStatus:document.querySelector('#rig-status')?.textContent,
     status:document.querySelector('#studio-status')?.textContent,
     href:location.href
    })),errors);
