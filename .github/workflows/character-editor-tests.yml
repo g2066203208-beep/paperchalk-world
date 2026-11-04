@@ -485,7 +485,7 @@ jobs:
                 await secondaryPage.locator('[data-quick="skirt"]').fill('180');
                 await secondaryPage.locator('[data-quick="hands"]').fill('125');
                 await secondaryPage.locator('[data-quick="breath"]').fill('70');
-                await secondaryPage.locator('#rig-quick-save').click();
+                await secondaryPage.locator('#btnSave').click();
                 await secondaryPage.waitForFunction(async()=>{
                   const saved=await window.PaperchalkStudio.readPartRig('char-002','front');
                   return saved?.idleProfile?.parts?.front_hair===1.35&&
