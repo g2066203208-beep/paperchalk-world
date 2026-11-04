@@ -336,3 +336,21 @@ body.stage-expanded #mobile-studio-tabs{
  visibility:hidden!important;pointer-events:none!important
 }
 body.stage-expanded #stage .stage-toolbar{z-index:10000!important}
+
+/* Per-part foreground occlusion mask — always in the same rig inspector. */
+#rig-mask-panel{padding:10px;margin:9px 0;border:1px solid #35536c;
+ background:#122538;border-radius:10px;display:grid;gap:7px}
+#rig-mask-panel[hidden]{display:none!important}
+#rig-mask-panel .rig-mask-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#rig-mask-panel .rig-mask-head strong{font-size:13px;color:#dceefd}
+#rig-mask-panel .rig-mask-head button{min-width:88px;background:#21465d;border-color:#417792}
+#rig-mask-panel.painting .rig-mask-head button{background:#215b4b;border-color:#71bca2}
+#rig-mask-panel label{font-size:11px;color:#bcd5e8;display:grid;gap:4px}
+#rig-mask-panel label>output{font-weight:600;color:#eaf6ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rig-mask-panel select{width:100%;max-width:100%;min-height:36px}
+#rig-mask-panel input[type="range"]{width:100%;margin:2px 0}
+#rig-mask-panel .rig-mask-row{display:flex;gap:6px}
+#rig-mask-panel .rig-mask-row button{flex:1;min-width:0;min-height:34px;padding:5px;font-size:11px}
+#rig-mask-panel .rig-mask-row button[aria-pressed="true"]{background:#305b79;border-color:#76b5df;color:white}
+#rig-mask-panel small{font-size:10px;color:#a7c2d6;line-height:1.35}
+body.studio-page #view.mask-paint-active{cursor:crosshair!important}
