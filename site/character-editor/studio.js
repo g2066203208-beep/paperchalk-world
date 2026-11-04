@@ -50,7 +50,10 @@ const female2PsdIds=['head_reference','back_hair','legwear','footwear','neck',
 const hasFemale2Psd=ids=>ids.length===18&&female2PsdIds.every(id=>ids.includes(id));
 // Exact 21 original CHAR-004 PSD layer IDs in ORIGINAL back-to-front order.
 const female3OriginalLayerIds=["back_hair","footwear","legwear","neck","topwear","eyebrow_r","ears_r","ears_l","face","nose","mouth","handwear_l","eyebrow_l","eyelash_r","eyelash_l","eyewhite_r","eyewhite_l","irides_l","irides_r","handwear_r","front_hair"];
-const hasFemale3Psd=ids=>Array.isArray(ids)&&ids.length===21&&female3OriginalLayerIds.every((key,i)=>ids[i]===key);
+// 21 authentic PSD parts is a VALID working model; 23 was an optional
+// coat-panel experiment. Neither model is corrupt just because Z was edited.
+const hasFemale3Psd=ids=>Array.isArray(ids)&&ids.length===21&&
+ new Set(ids).size===ids.length&&female3OriginalLayerIds.every(key=>ids.includes(key));
 const female3CoatLayerIds=(()=>{const ids=[...female3OriginalLayerIds],i=ids.indexOf('topwear')+1;
  ids.splice(i,0,'coat_left','coat_right');return ids})();
 // A rig has the correct parts regardless of its author-edited Z order.
@@ -59,6 +62,7 @@ const female3CoatLayerIds=(()=>{const ids=[...female3OriginalLayerIds],i=ids.ind
 const hasFemale3CoatRig=ids=>Array.isArray(ids)&&
  ids.length===female3CoatLayerIds.length&&new Set(ids).size===ids.length&&
  female3CoatLayerIds.every(key=>ids.includes(key));
+const hasFemale3SourceRig=ids=>hasFemale3Psd(ids)||hasFemale3CoatRig(ids);
 const fileURL=file=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(file)});
 const section=document.createElement('section');section.id='studio-library';
 section.innerHTML=[
@@ -603,8 +607,10 @@ async function readPartRig(id=currentId,face=side){
  // coat-left and coat-right are losslessly partitioned from topwear.
  // Rebuild old 19/21-layer drafts so wrists and cloth share actual parents.
  const staleFemale3=id==='char-004'&&face==='front'&&local&&
-  (!hasFemale3CoatRig(Object.keys(local.parts||{}))||
-   local.motionQualityProfile!=='coat-grip-parented-v1');
+  !hasFemale3SourceRig(Object.keys(local.parts||{}));
+ // IMPORTANT: do not delete a perfectly valid 21-source user model just
+ // because it lacks a special coat-grip version marker. Published char-004
+ // itself has 21 ArtMeshes, so such deletion lost the user's Z edits.
  if(staleFemale3){
   const backupKey='legacy-part-rig:char-004:front:pre-coat-grip-v1';
   if(!await get(backupKey))await put(backupKey,local);
@@ -931,13 +937,13 @@ async function ensureHostedParts(id){
  const needsHeroArms=heroUnified&&front&&
   !['battle_handwear_r','battle_handwear_l','battle_axe'].every(x=>currentSource.includes(x));
  const repairFemale3=id==='char-004'&&side==='front'&&
-  !hasFemale3CoatRig(currentSource);
+  !hasFemale3SourceRig(currentSource);
  const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
  // Authored CHAR-004 layers are not "broken" merely because the user
  // moved a mesh forward/backward. Never fetch and replace a valid local stack.
  if(front&&!upgrade&&!needsHeroArms&&
     (id==='char-002'||back||id===BATTLE_FRONT_ID||heroUnified||
-      (id==='char-004'&&hasFemale3CoatRig(currentSource))))return;
+      (id==='char-004'&&hasFemale3SourceRig(currentSource))))return;
  message(id==='char-002'?'载入女二 PSD：17 个源层、18 个独立部件（举起的左手已分开）…':'载入真实原位分层…');
  try{
   const source=await hostedParts(id,side);
