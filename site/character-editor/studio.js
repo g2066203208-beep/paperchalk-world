@@ -258,6 +258,24 @@ body.studio-page .right,body.studio-page .stage{min-width:0}
  body.studio-page .stage{height:43dvh!important;min-height:295px!important}
 }
 `;
+workspaceCSS.textContent+=`
+@media(min-width:711px){
+ body.studio-page.easy-mode #easy-quickbar{
+  left:6px!important;right:auto!important;top:50%!important;
+  bottom:auto!important;transform:translateY(-50%)!important;
+  width:76px!important;max-width:76px!important;
+  display:flex!important;flex-direction:column!important;
+  gap:3px!important;padding:4px!important
+ }
+ body.studio-page.easy-mode #easy-quickbar button{
+  min-width:0!important;width:100%!important;min-height:32px!important;
+  font-size:11px!important;padding:5px 2px!important
+ }
+}
+body.studio-page .character-family>summary{
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+`;
 document.head.append(workspaceCSS);
 function renderFamilyTree(){
  const root=$('character-tree-items');if(!root)return;
