@@ -13,6 +13,8 @@ on:
       - 'tests/test_male2_seethrough_browser.js'
       - 'tests/test_char004_z_persistence_browser.js'
       - 'tests/test_outfit_module_import_browser.js'
+      - 'tests/test_published_l2d_modules_autoload_browser.js'
+      - 'site/assets/l2d/inbox/**'
       - 'site/assets/l2d/source-masks/**'
       - 'site/assets/l2d/inbox/**'
       - '.github/workflows/character-editor-tests.yml'
@@ -582,6 +584,7 @@ jobs:
           node tests/test_male2_seethrough_browser.js
           node tests/test_char004_z_persistence_browser.js
           node tests/test_outfit_module_import_browser.js
+          node tests/test_published_l2d_modules_autoload_browser.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
