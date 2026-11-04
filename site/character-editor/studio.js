@@ -165,6 +165,16 @@ workspaceCSS.textContent=`
  body.studio-page .layout{gap:10px}
  body.studio-page .left,body.studio-page .right{scrollbar-width:thin;scrollbar-color:#415c70 transparent}
  body.studio-page .stage{box-shadow:0 7px 24px #0004;border-color:#3b5568}
+ body.studio-page .stage-toolbar{
+  top:8px;right:8px;left:auto;width:156px;max-width:156px;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+  padding:5px;gap:4px;background:#0e1b28e8
+ }
+ body.studio-page .stage-toolbar button{
+  width:100%;min-height:30px;padding:5px 6px;text-overflow:ellipsis;
+  overflow:hidden;white-space:nowrap;text-align:center;font-size:11px
+ }
+ body.studio-page #main-motion-status{display:none!important}
  body.studio-page #studio-library{border-radius:9px}
  body.studio-page .layer{transition:background-color .12s,border-color .12s}
  body.studio-page .layer:hover{background:#273a4c}
@@ -202,7 +212,7 @@ workspaceCSS.textContent=`
   body.studio-page.easy-mode #easy-quickbar{display:flex!important;grid-template-columns:none!important;grid-template-rows:none!important;overflow-x:auto!important;justify-content:flex-start!important;white-space:nowrap}
   body.studio-page.easy-mode #easy-quickbar button{min-width:64px;min-height:40px;white-space:nowrap}
   body.studio-page.rig-authoring #easy-quickbar{display:none!important}
-  body.studio-page .stage-toolbar{top:5px;right:5px}
+  body.studio-page .stage-toolbar{top:5px;right:5px;width:94px;max-width:94px;padding:3px;gap:3px}body.studio-page .stage-toolbar button{font-size:10px;padding:5px 2px;min-height:30px}
  }
 `;
 document.head.append(workspaceCSS);
