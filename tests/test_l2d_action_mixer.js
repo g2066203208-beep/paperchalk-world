@@ -1,8 +1,10 @@
 /* Canonical heroine family, correct PSD Z-stack, and in-place part-only action transitions. */
 'use strict';
-const assert=require('node:assert/strict');
-const fs=require('node:fs');
-const path=require('node:path');
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
 const coreScript=read('site/l2d/part-rig.js');
 const root={};
