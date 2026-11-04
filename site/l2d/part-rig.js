@@ -695,7 +695,7 @@ const BATTLE_FRONT_STACK=['back_hair','legwear','footwear','axe_overhead',
 const BATTLE_ACTIONS={
  default:'combat',transitionMs:420,actions:{
   idle:{label:'日常待机 · 共用身体',parts:{
-   handwear_r:{angle:-12},handwear_l:{angle:12},axe_held:{opacity:0}}},
+   handwear_r:{angle:-4},handwear_l:{angle:43},axe_held:{opacity:0}}},
   combat:{label:'战斗戒备 · 手臂与斧头',parts:{
    handwear_r:{angle:0},handwear_l:{angle:0},axe_held:{opacity:1}}}
  }};
