@@ -11,10 +11,23 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   const page=await browser.newPage({viewport:{width:1400,height:900}});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(BASE+'?character=char-003&side=front',{waitUntil:'load'});
-  await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-003'&&
-   window.PaperchalkPartRigStudio?.state?.active&&
-   window.characterEditor.S.layers.front.filter(p=>p.sourcePart).length===17,
-   null,{timeout:45000});
+  try{
+   await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-003'&&
+    window.PaperchalkPartRigStudio?.state?.active&&
+    window.characterEditor.S.layers.front.filter(p=>p.sourcePart).length===17,
+    null,{timeout:18000});
+  }catch(error){
+   console.error('MALE-LEAD FRONT DIAGNOSTIC',await page.evaluate(()=>({
+    current:window.PaperchalkStudio?.current,
+    label:window.PaperchalkStudio?.list?.get('char-003')?.label,
+    rig:window.PaperchalkStudio?.list?.get('char-003')?.l2dModule?.front?.rig,
+    source:window.characterEditor?.S.layers.front.filter(x=>x.sourcePart).map(x=>x.partId),
+    state:window.PaperchalkPartRigStudio?.state?.active,
+    status:document.querySelector('#studio-status')?.textContent,
+    href:location.href
+   })),errors);
+   throw error;
+  }
   const result=await page.evaluate(()=>{
    const row=window.PaperchalkStudio.list.get('char-003');
    const model=window.PaperchalkPartRigStudio.state.model;
