@@ -452,9 +452,9 @@ function renderFamilyTree(){
   group.append(summary);
   group.addEventListener('toggle',()=>{if(group.open)openedFamilies.add(family);else openedFamilies.delete(family)});
   const children=document.createElement('div');children.className='character-family-children';
-  if(family==='male2'&&!primary.l2dModule?.front?.rig){
+  if(family==='male2'){
    const button=document.createElement('button');
-   button.type='button';button.textContent='＋ 导入男二 SeeThrough ZIP';
+   button.type='button';button.className='male2-direct-import';button.textContent='＋ 导入男二 SeeThrough ZIP';
    const uploader=document.createElement('input');
    uploader.type='file';uploader.accept='.zip,application/zip';uploader.hidden=true;
    uploader.onchange=e=>{
