@@ -112,6 +112,38 @@ const CHAR004={
  eyelash_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
  eyelash_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined']
 };
+// Female protagonist's NEW independently authored crouch-and-axe source.
+// Exactly one canonical actor: this is a pose module, never a replacement
+// standing body or another identity. The editor must keep the approved
+// pose's rigid floor/axe and separate hands/legs, not reclassify as unknown.
+// Stage coordinates and live authored pivots are read from the published rig.
+const PROTAGONIST_CROUCH={
+ back_hair:['head',.50,.08,.50,.95,'hair'],
+ neck:['torso',.50,.75,.50,.75,'fixed'],
+ topwear:['torso',.50,.15,.50,.80,'torso'],
+ legwear_l:['ground',.50,.16,.50,.90,'fixed'],
+ legwear_r:['ground',.50,.16,.50,.90,'fixed'],
+ footwear_l:['ground',.50,.88,.50,.88,'fixed'],
+ footwear_r:['ground',.50,.88,.50,.88,'fixed'],
+ axe:['root',.50,.50,.50,.50,'fixed'],
+ handwear_l:['torso',.82,.08,.46,.89,'arm-left'],
+ handwear_r:['torso',.18,.08,.54,.89,'arm-right'],
+ ears_l:['head',.50,.50,.50,.50,'fixed'],
+ ears_r:['head',.50,.50,.50,.50,'fixed'],
+ face:['head',.50,.42,.50,.42,'face'],
+ eyewhite_l:['head',.50,.50,.50,.50,'eyes-combined'],
+ eyewhite_r:['head',.50,.50,.50,.50,'eyes-combined'],
+ irides_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined'],
+ irides_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
+ eyelash_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined'],
+ eyelash_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
+ eyebrow_l:['head',.50,.50,.50,.50,'face'],
+ eyebrow_r:['head',.50,.50,.50,.50,'face'],
+ nose:['head',.50,.50,.50,.50,'fixed'],
+ mouth:['head',.50,.50,.50,.50,'mouth'],
+ front_hair:['head',.50,.08,.50,.90,'hair'],
+ headwear:['front_hair',.50,.50,.50,.50,'fixed']
+};
 const BACK={
  legs:['pelvis',.50,.02,.50,.82,'leg-combined'],
  sleeve_left:['torso',.85,.05,.50,.96,'arm-left'],
@@ -459,6 +491,8 @@ function cleanPart(part,face,id,characterId){
    (id==='handwear_l'
     ?['torso',.83,.065,.16,.92,'arm-left']
     :['torso',.17,.065,.85,.92,'arm-right']):
+  characterId==='protagonist-crouch-axe'&&face==='front'?
+  (PROTAGONIST_CROUCH[id]||FRONT[id]):
   characterId==='char-003-outfit-02'&&face==='front'?
   (CHAR003_OUTFIT[id]||FRONT[id]):
   characterId==='char-004'&&face==='front'?
@@ -1230,5 +1264,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
 
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
 })(typeof window!=='undefined'?window:globalThis);
