@@ -102,7 +102,7 @@ topActions?.append(saveNote);
 const bSave=$('btnSave');
 if(bSave){bSave.textContent='✓ 保存到本机游戏';bSave.title='保存角色改动，当前浏览器的游戏 DEV 立即可用；并非提交 GitHub';}
 // ZIP export is reachable in the left-side file section, not the top bar.
-if($('studio-back'))$('studio-back').textContent='↩ 返回游戏';
+if($('studio-back'))$('studio-back').textContent='↩ 游戏';
 function sourcePart(){
  return ed.S.layers[ed.S.side]?.[ed.S.sel]||null;
 }
