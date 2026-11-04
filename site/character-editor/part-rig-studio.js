@@ -249,6 +249,11 @@ function adjustBoneJoint(b,key,axis,value){
   for(const child of bones)if(child.parent===b.id)child.head[axis]=value;
  }
 }
+function clearSelection(){
+ state.selected='';state.bone='';state.drag=null;
+ $('rig-part').value='';$('rig-bone').value='';
+ ed.render();
+}
 function select(id){
  if(!state.model?.parts[id])return;
  state.selected=id;$('rig-part').value=id;
@@ -617,7 +622,7 @@ function loc(e){
  return {x:(e.clientX-b.left-S.px)/S.zoom,y:(e.clientY-b.top-S.py)/S.zoom};
 }
 stage.addEventListener('pointerdown',e=>{
- if(!state.active||!state.panelOpen||!state.showGuides||e.target!==$('view'))return;
+ if(!state.active||!state.panelOpen||!state.showGuides||S.tool==='select'||e.target!==$('view'))return;
  e.stopImmediatePropagation();e.preventDefault();
  const p=current();if(!p)return;
  const o=loc(e),a={x:p.x+p.pivot.x*p.w,y:p.y+p.pivot.y*p.h};
@@ -687,6 +692,6 @@ window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
  // New independent mesh is the default whenever genuine component art exists.
  if(parts().length)activate(true).catch(e=>info('独立 L2D 初始化失败：'+e.message));
 });
-window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,syncLayerMetadata,mapToSource};
+window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,syncLayerMetadata,mapToSource,clearSelection};
 requestAnimationFrame(tick);
 })();
