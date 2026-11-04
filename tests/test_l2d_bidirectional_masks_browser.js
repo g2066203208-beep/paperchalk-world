@@ -70,6 +70,22 @@ const assert=require('node:assert/strict');
   assert.ok(result?.painted>100,'brush should paint behind-mask source alpha');
   assert.equal(result.direction,'behind');
   assert.equal(result.png,'data:image/png;base64,');
+  await page.keyboard.press('Control+z');
+  const undone=await page.evaluate(({source,target})=>{
+   const mask=window.PaperchalkPartRigStudio.state.model.occlusionMasks
+     .find(x=>x.source===source&&x.direction==='behind'&&x.target===target);
+   return mask._canvas.getContext('2d').getImageData(0,0,mask._canvas.width,
+      mask._canvas.height).data.some((v,i)=>i%4===3&&v>0);
+  },sample);
+  assert.equal(undone,false,'Ctrl+Z must undo one whole mask stroke without touching source PNG');
+  await page.keyboard.press('Control+Shift+z');
+  const redone=await page.evaluate(({source,target})=>{
+   const mask=window.PaperchalkPartRigStudio.state.model.occlusionMasks
+     .find(x=>x.source===source&&x.direction==='behind'&&x.target===target);
+   return mask._canvas.getContext('2d').getImageData(0,0,mask._canvas.width,
+      mask._canvas.height).data.some((v,i)=>i%4===3&&v>0);
+  },sample);
+  assert.equal(redone,true,'Ctrl+Shift+Z must restore the mask stroke');
   const difference=await page.evaluate(({source,target})=>{
    const core=window.PaperchalkPartRigCore,st=window.PaperchalkPartRigStudio.state,
     art=window.characterEditor.S.layers.front,m=st.model;
