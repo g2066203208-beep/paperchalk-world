@@ -41,6 +41,21 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    return x?.parts?.pants_overlay?.placement?.scaleX===.86&&
     x?.parts?.pants_overlay?.placement?.offsetY===-11;
   },null,{timeout:35000});
+  // Saved rig must render with the identical transform in the REAL game.
+  await page.goto('http://127.0.0.1:8134/?dev=1',{waitUntil:'load'});
+  await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:35000});
+  await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','female-06','front',false));
+  await page.waitForFunction(()=>
+   window.PaperchalkL2DLibrary?.get('enemy')?.model?.parts?.pants_overlay?.placement?.scaleX===.86,
+   null,{timeout:45000});
+  const gameFit=await page.evaluate(()=>window.PaperchalkL2DLibrary.get('enemy').model.parts.pants_overlay.placement);
+  assert.deepEqual(gameFit,{scaleX:.86,scaleY:1.1,offsetX:8,offsetY:-11},
+   'same authored fit must load into the live game actor');
+  await page.goto('http://127.0.0.1:8134/character-editor/?character=female-06&side=front',
+   {waitUntil:'load'});
+  await page.waitForFunction(()=>
+   window.PaperchalkStudio?.current==='female-06'&&
+   window.PaperchalkPartRigStudio?.state?.active,null,{timeout:50000});
   await page.reload({waitUntil:'load'});
   await page.waitForFunction(()=>
    window.PaperchalkStudio?.current==='female-06'&&
