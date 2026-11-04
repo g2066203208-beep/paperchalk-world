@@ -5,6 +5,9 @@ on:
     paths:
       - 'site/character-editor/**'
       - 'site/l2d/part-rig.js'
+      - 'scripts/build_protagonist_part_rig.py'
+      - 'scripts/build_character_catalog.py'
+      - 'tests/test_protagonist_unified.py'
       - 'site/assets/l2d/source-masks/**'
       - '.github/workflows/character-editor-tests.yml'
   workflow_dispatch:
@@ -23,6 +26,7 @@ jobs:
       - run: python3 scripts/build_v4_assets.py
       - run: python3 scripts/build_protagonist_part_rig.py
       - run: python3 scripts/build_char002_psd_rig.py
+      - run: python3 -m unittest tests/test_protagonist_unified.py -v
       - run: python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
@@ -50,7 +54,7 @@ jobs:
                 await page.waitForFunction(()=>window.characterEditor&&window.characterEditor.S.ready,{timeout:10000});
                 await page.waitForFunction(()=>!!window.PaperchalkStageMotion,{timeout:10000});
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist'&&
-                  window.PaperchalkStudio?.countSourceParts?.()===17,null,{timeout:30000}).catch(async error=>{
+                  window.PaperchalkStudio?.countSourceParts?.()===20,null,{timeout:30000}).catch(async error=>{
                   console.error('Original layer audit',await page.evaluate(()=>({
                     status:document.querySelector('#studio-status')?.textContent,
                     editor:document.querySelector('#status')?.textContent,
@@ -130,7 +134,7 @@ jobs:
                   'idle controls panel must be on-screen, including phone viewport');
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-VISIBLE-HAIR-SKIRT-CONTROLS.png',fullPage:false});
                 if(vp.width>500){
-                  // Inspect the SAME 17 original PNG parts across one
+                  // Inspect the SAME 17 original PNG parts plus only 3 battle alternatives across one
                   // standing cycle; never create three weather variants again.
                   const sheet=await page.evaluate(()=>{
                     const core=window.PaperchalkPartRigCore;
@@ -189,7 +193,7 @@ jobs:
                   const c=window.PaperchalkPartRigCore, m=window.PaperchalkPartRigStudio.state.model;
                   return c.bodyPoseAt(1,m.idleProfile).lean;
                 }),0,'normal standing must not move the whole girl left/right');
-                assert.equal(await page.locator('#rig-part option').count(),17);
+                assert.equal(await page.locator('#rig-part option').count(),20);
                 assert.equal(await page.locator('[data-quick="fringe"]').inputValue(),'900');
                 assert.equal(await page.locator('[data-quick="skirt"]').inputValue(),'1250');
                 assert.equal(await page.locator('[data-quick="breath"]').inputValue(),'235');
