@@ -128,7 +128,12 @@ window.addEventListener('paperchalk:rig-play-changed',e=>{
 let last=0;
 function tick(now){
  // V4 refreshes via its own decoded frame loop; only mesh preview needs this copy.
- if(now-last>=40&&state.enabled&&!state.editing&&state.playing&&!document.hidden&&S.ready&&!S.only&&!bakedV4()&&animationCanvas()){
+ // Genuine PartRig owns its own animation timer. The old fallback timer
+ // previously drew the SAME 20-piece heroine a second time ~25fps, on top of
+ // the mesh loop. Never compete for the main canvas.
+ const independent=!!window.PaperchalkPartRigStudio?.state?.active;
+ if(!independent&&now-last>=40&&state.enabled&&!state.editing&&state.playing&&
+    !document.hidden&&S.ready&&!S.only&&!bakedV4()&&animationCanvas()){
   last=now;ed.render();
  }
  if(now-last>=400){paintStageStatus();}
