@@ -6,7 +6,7 @@ if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
 const state={active:false,panelOpen:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false};
 const panel=document.createElement('section');panel.id='part-rig-panel';panel.hidden=true;
-panel.innerHTML=`<header class="rig-h"><strong>逐件骨骼细调</strong><button id="rig-close" type="button">关闭高级设置</button></header>
+panel.innerHTML=`<header class="rig-h"><strong>部件与骨骼</strong><button id="rig-close" type="button" hidden aria-hidden="true">关闭</button></header>
 <p id="rig-source">直接拖动画布中的关节，或修改所选部件的高级参数。</p>
 <label>部件<select id="rig-part"></select></label>
 <label class="rig-part-amount">本部件摆动倍率 <output id="rig-part-amount-value">100%</output>
@@ -18,11 +18,23 @@ panel.innerHTML=`<header class="rig-h"><strong>逐件骨骼细调</strong><butto
 // Dock the inspector beside the character; never cover the preview.
 const dock=document.querySelector('.layout .right')||stage;
 dock.prepend(panel);
+// Secondary exports stay under a single collapsed file section, not in the top toolbar.
+const rigFiles=document.createElement('details');
+rigFiles.id='rig-file-actions';rigFiles.className='single-workspace-files';
+rigFiles.innerHTML='<summary>骨骼文件与模块导出</summary>';
+for(const id of ['rig-export','rig-module-export']){
+ const button=$(id);if(button)rigFiles.append(button);
+}
+panel.append(rigFiles);
+for(const id of ['rig-save','rig-quick-save','rig-pause','rig-close']){
+ const element=$(id);if(element)element.hidden=true;
+}
 const quickPanel=document.createElement('section');
 quickPanel.id='rig-quick-panel';
 quickPanel.hidden=true;
 quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">胸部呼吸单独调节，肩、手臂、脖子和头部自动跟随；脚鞋固定。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hands\"><span>双手／手臂</span><output>70%</output><input data-quick=\"hands\" aria-label=\"双手手臂摆动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"70\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"shoulders\"><span>肩部活动</span><output>30%</output><input data-quick=\"shoulders\" aria-label=\"肩部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"30\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hips\"><span>胯部活动</span><output>20%</output><input data-quick=\"hips\" aria-label=\"胯部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"20\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"breath\"><span>胸部呼吸</span><output>60%</output><input data-quick=\"breath\" aria-label=\"胸部呼吸幅度\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"60\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"250\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
 dock.prepend(quickPanel);
+$('rig-quick-save').hidden=true; // One save control in the header.
 const actionRow=document.createElement('label');
 actionRow.className='rig-action-row';
 actionRow.style.cssText='display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 10px;margin:8px 0;background:#172938;border:1px solid #426078;border-radius:8px';
@@ -300,18 +312,16 @@ function changed(autosave=true){
 }
 function syncOpenState(){
  const primary=$('idle-open');
- if(primary){
-  primary.setAttribute('aria-expanded',String(state.panelOpen));
-  primary.textContent=state.panelOpen?'✦ 关闭骨骼细调':'✦ 骨骼细调';
- }
+ if(primary)primary.setAttribute('aria-expanded',String(state.panelOpen));
 }
-function setInspectorOpen(open){
- state.panelOpen=!!open&&state.active;
+function setInspectorOpen(){
+ // A single permanent workspace: the inspector is always docked when a real
+ // mesh exists. Do not switch UI layouts or change canvas zoom on selection.
+ state.panelOpen=!!state.active;
  panel.hidden=!state.panelOpen;
- document.body.classList.toggle('rig-authoring',state.panelOpen);
+ document.body.classList.remove('rig-authoring');
  syncOpenState();
  ed.render();
- if(state.panelOpen)requestAnimationFrame(()=>$('fit')?.click());
 }
 async function deactivate(){
  if(state.dirty)await save();
@@ -357,7 +367,7 @@ async function activate(openPanel=false){
  state.active=true;state.phase=0;state.playing=true;state.showGuides=false;
  quickPanel.hidden=false;
  $('rig-guides').checked=false;
- setInspectorOpen(openPanel);
+ setInspectorOpen();
  const selectNode=$('rig-part');selectNode.replaceChildren();
  for(const p of src)selectNode.add(new Option(p.name,p.partId||p.name));
  const preferred=S.layers[S.side][S.sel];
@@ -372,7 +382,7 @@ async function activate(openPanel=false){
  ed.render();
 }
 function toggleIdle(){
- if(state.active){setInspectorOpen(!state.panelOpen);return;}
+ if(state.active){setInspectorOpen();return;}
  const primary=$('idle-open');
  if(primary)primary.disabled=true;
  activate(true).catch(e=>{
@@ -383,7 +393,7 @@ function toggleIdle(){
 }
 $('idle-open').onclick=toggleIdle;
 syncOpenState();
-$('rig-close').onclick=()=>setInspectorOpen(false);
+$('rig-close').onclick=()=>setInspectorOpen();
 $('rig-part').onchange=e=>select(e.target.value);
 $('rig-save').onclick=()=>save().catch(()=>{});
 $('rig-export').onclick=()=>{
@@ -664,7 +674,7 @@ window.addEventListener('paperchalk:studio-character-loaded',()=>{
 });
 window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
  // New independent mesh is the default whenever genuine component art exists.
- if(parts().length)activate(false).catch(e=>info('独立 L2D 初始化失败：'+e.message));
+ if(parts().length)activate(true).catch(e=>info('独立 L2D 初始化失败：'+e.message));
 });
 window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,syncLayerMetadata,mapToSource};
 requestAnimationFrame(tick);
