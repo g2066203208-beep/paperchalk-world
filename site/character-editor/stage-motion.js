@@ -28,13 +28,13 @@ function paintStageStatus(){
  const mode=independent?'新版独立骨骼':
   nativePSD()?'独立图层动画':bakedV4()?'素材动画预览':
   animationCanvas()?'分层动画':'等待动画加载';
- badge.textContent=state.editing?'精修中 · 原始坐标':!state.enabled?'静态精修':(state.playing?'● 实时 · ':'❚❚ 暂停 · ')+mode;
+ badge.textContent=state.editing?'精修中 · 原始素材':!state.enabled?'精修中 · 当前动态姿势':(state.playing?'● 实时 · ':'❚❚ 暂停 · ')+mode;
  badge.setAttribute('aria-live','off');
 }
 function sync(){
  play.textContent=state.playing?'❚❚ 暂停':'▶ 播放';
  play.setAttribute('aria-pressed',String(!state.playing));
- preview.textContent=state.enabled?'◇ 静态精修':'◉ 动态预览';
+ preview.textContent=state.enabled?'✎ 当前姿势精修':'▶ 返回动态预览';
  preview.setAttribute('aria-pressed',String(state.enabled));
  expand.textContent=state.expanded?'⤓ 退出大画布':'⛶ 放大画布';
  expand.setAttribute('aria-pressed',String(state.expanded));
@@ -89,15 +89,16 @@ expand?.addEventListener('click',()=>setExpanded(!state.expanded));
 stage.addEventListener('pointerdown',e=>{
  if(e.target!==$('view')||e.button===1||S.space||e.altKey||S.tool==='pan')return;
  if(!['brush','eraser','restore','picker','fill','move','rect','lasso'].includes(S.tool))return;
- state.editing=true;
- state.resumeAfterEdit=!!(state.enabled&&bakedV4()&&clip()?.isPlaying);
- if(state.resumeAfterEdit)clip().setPlaying(false).catch(console.error);
- paintStageStatus();
- ed.render();
+ const liveRig=!!window.PaperchalkPartRigStudio?.state?.active;
+ // Never swap the live actor for a flat texture when the first pixel is
+ // touched. Freeze the exact visible pose; editor maps brush through mesh UV.
+ state.editing=!liveRig;
+ state.resumeAfterEdit=!!(state.enabled&&state.playing);
+ if(state.resumeAfterEdit)setPlaying(false).catch(console.error);
+ paintStageStatus();ed.render();
 },true);
 function release(){
- if(!state.editing)return;
- // Let the editor finish the last stroke and update its original-coordinate image.
+ if(!state.editing&&!state.resumeAfterEdit)return;
  requestAnimationFrame(()=>{
   state.editing=false;
   const resume=state.resumeAfterEdit;
