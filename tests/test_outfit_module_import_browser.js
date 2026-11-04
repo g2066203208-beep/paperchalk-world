@@ -72,7 +72,23 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    null,{timeout:45000});
   assert.equal(await page.locator('.character-family[data-family="char-003"]').count(),1);
   assert.equal(await page.locator('#studio-character option[value="char-003-outfit-02"]').count(),0);
-  assert.deepEqual(errors,[], 'no JS errors during male front and redirected old URL');
+  // The same canonical model must be playable by the actual game DEV slot.
+  await page.goto('http://127.0.0.1:8134/?dev=1',{waitUntil:'load'});
+  await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,
+    null,{timeout:35000});
+  const choices=await page.evaluate(()=>window.PaperchalkCharacterDev.characters.map(x=>x.id));
+  assert.ok(choices.includes('char-003'));
+  assert.ok(!choices.includes('char-003-outfit-02'),'old costume ID must not be a second playable NPC');
+  await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','char-003','front',false));
+  await page.waitForFunction(()=>window.PaperchalkL2DLibrary?.get('enemy')?.layers.length===17,
+    null,{timeout:45000});
+  const playing=await page.evaluate(()=>{
+    const actor=window.PaperchalkL2DLibrary.get('enemy');
+    return {id:actor.model.characterId,parts:actor.layers.length};
+  });
+  assert.deepEqual(playing,{id:'char-003',parts:17},
+    'game must use the approved full 17-piece male-lead front');
+  assert.deepEqual(errors,[], 'no JS errors during male front, old URL or gameplay');
   console.log('PASS male-lead canonical FRONT: 17 original source PSD ArtMeshes, no wardrobe duplicate, proper hands, saved rig and legacy URL');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
