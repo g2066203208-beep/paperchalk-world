@@ -6,6 +6,8 @@ const rigs=new Map();
 const MAX_DPR=2.5;
 const quality=()=>Math.min(MAX_DPR,Math.max(1,window.devicePixelRatio||1));
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
+const GEOMETRY_INTERVAL=1000/30;
+let lastGeometryFrame=0;
 function install(root){
  if(!root||rigs.has(root))return;
  const img=root.querySelector('[data-l2d-image]');
@@ -260,6 +262,12 @@ function markAnimation(slot,enabled){
  if(a.rig)a.rig.animatedFrames=!!enabled;
 }
 function sync(t){
+ // Running geometry readbacks at 60/120Hz parallel to the 30Hz rig loop
+ // forces redundant style/layout calculations in the main game UI.
+ if(t&&lastGeometryFrame&&t-lastGeometryFrame<GEOMETRY_INTERVAL-.5){
+  requestAnimationFrame(sync);return;
+ }
+ lastGeometryFrame=t||performance.now();
  for(const a of entries()){
   // Original invisible image remains authoritative for the layout and
   // current DEV drag handles; the animated canvas follows its geometry.
