@@ -10,6 +10,7 @@ const side=$('dev-character-angle'),picker=$('dev-layer'),status=$('dev-characte
 if(!loaded||!library||!window.PaperchalkL2D)return;
 const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},enemy:{id:'char-002',side:'front'}};
 const DB='paperchalk-dev-characters-v1';
+const assignmentVersions={player:0,enemy:0};
 let slot='player',ready=false,heroineRenderer=
   (sessionStorage.getItem('paperchalk-heroine-renderer-mode')==='v4'?'v4':'bones');
 function note(s){status.textContent=s;}
@@ -117,7 +118,16 @@ async function assign(target,id,face='front',save=true){
  const actor=window.PaperchalkL2D.get(target);if(!actor)throw Error('人物图层未加载 '+target);
  if(face==='back'&&!c.back)throw Error('该角色还没有真正的背面素材，不能用正面冒充背面：'+c.label);
  if(face==='front'&&!c.front)throw Error('该角色还没有真正的正面素材：'+c.label);
- const src=await get('render:'+id+':'+face)||c[face]||c.front||c.back;
+ // A newer scene/person selection supersedes earlier asynchronous decodes.
+ const revision=(assignmentVersions[target]||0)+1;
+ assignmentVersions[target]=revision;
+ const current=()=>assignmentVersions[target]===revision;
+ const checked=async promise=>{
+  const result=await promise;
+  if(!current())throw Error('L2D 角色切换已被后续操作取代');
+  return result;
+ };
+ const src=await checked(get('render:'+id+':'+face))||c[face]||c.front||c.back;
  if(!src)throw Error('人物缺少 '+face+' 方向素材');
  const currentBinding=assigned[target];
  const previousAction=currentBinding?.id===id&&currentBinding?.side===face
@@ -129,20 +139,20 @@ async function assign(target,id,face='front',save=true){
   // runtime.refresh() and invalidates any V4 decoder installed too early.
   // Wait for the real source image AND its L2D rig before installing the clip.
   img.src=src;
-  await img.decode();
-  await window.PaperchalkL2D.refresh(target);
+  await checked(img.decode());
+  await checked(window.PaperchalkL2D.refresh(target));
  }
  img.hidden=false;
  // Unmount previously installed authored mesh before choosing a new actor.
  window.PaperchalkL2DLibrary?.detach(target);
- const rig=await get('l2d:'+id+':'+face)||{amplitude:.55,period:4.8,softness:1};
+ const rig=await checked(get('l2d:'+id+':'+face))||{amplitude:.55,period:4.8,softness:1};
  window.PaperchalkL2D.setProfile(target,rig);
  window.PaperchalkL2D.markAnimation(target,!!c.animated?.[face]);
- const clip=await get('clip:'+id+':'+face);
+ const clip=await checked(get('clip:'+id+':'+face));
  // The approved V4 is built into GitHub Pages, not an optional browser upload.
  // Explicit per-character V4 imports may override it; other actors keep
  // their own dynamic mesh rig and NEVER display the hidden static source.
- const originalPsdLayers=await get('skeletal:'+id+':'+face);
+ const originalPsdLayers=await checked(get('skeletal:'+id+':'+face));
  const usesPsdRig=Array.isArray(originalPsdLayers)&&originalPsdLayers.length>=12;
  const published=c.l2dModule?.[face];
  const publishedRig=published?.renderer==='part-mesh'&&(id!=='protagonist'||heroineRenderer==='bones')?published.rig:null;
@@ -161,8 +171,8 @@ async function assign(target,id,face='front',save=true){
  if(usesPsdRig&&!preferPublishedArtMesh){
   // Genuine Photoshop layers without an authoritative PartRig take precedence over the old baked
   // flat-PNG WebP. Each image has a separate source texture and bone.
-  await window.PaperchalkL2D.setAnimationSource(target,null);
-  const loaded=await window.PaperchalkL2D.setLayers(target,originalPsdLayers,[1024,1024]);
+  await checked(window.PaperchalkL2D.setAnimationSource(target,null));
+  const loaded=await checked(window.PaperchalkL2D.setLayers(target,originalPsdLayers,[1024,1024]));
   if(!loaded)throw Error('真实 PSD 独立骨骼图层载入中断');
   const obj=window.PaperchalkL2D.get(target);
   if(obj){obj.root.dataset.l2dEdition='psd-layer-skeletal';obj.root.dataset.l2dMode='psd-layer-skeletal';obj.root.dataset.l2dAnimated='true';}
@@ -171,33 +181,36 @@ async function assign(target,id,face='front',save=true){
    if(!window.PaperchalkL2DLibrary)throw Error('游戏未安装模块化 ArtMesh 播放器');
    // PROTAGONIST: her original actor automatically renders independent
    // animated hair, pleats and both arms. No separate experimental selection.
-   const [savedRig,savedArt]=await Promise.all([
+   const [savedRig,savedArt]=await checked(Promise.all([
     get('part-rig:'+id+':'+face),getLocalArtwork(id,face)
-   ]);
-   await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig,savedRig,savedArt);
+   ]));
+   const attached=await checked(window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig,savedRig,savedArt));
+   if(!attached)throw Error('L2D 模块加载已被后续操作取消');
    if(previousAction)window.PaperchalkL2DLibrary.setAction(target,previousAction);
    if(id==='protagonist')actor.root.dataset.l2dBreath='joint-parented';
   }catch(error){
+   if(!current())throw error;
    // Fail safe: preserve the existing approved V4 when any PNG/rig is
    // corrupted or unavailable, rather than removing the heroine from scene.
    if(id!=='protagonist'||!source)throw error;
    console.warn('[L2D] Original approved animation retained: independent character rig unavailable',error);
-   await window.PaperchalkL2D.setAnimationSource(target,source,shape);
+   await checked(window.PaperchalkL2D.setAnimationSource(target,source,shape));
    actor.root.dataset.l2dEdition='V4-fallback';
    actor.root.dataset.l2dBreath='disabled';
   }
  }else if(source){
   try{
-   await window.PaperchalkL2D.setAnimationSource(target,source,shape);
+   await checked(window.PaperchalkL2D.setAnimationSource(target,source,shape));
    const obj=window.PaperchalkL2D.get(target);
    if(obj){obj.root.dataset.l2dEdition=clip?.data?'V4-imported':'V4-official';obj.root.dataset.l2dAnimated='true'}
   }catch(e){
+   if(!current())throw e;
    console.error('[L2D] Failed to decode approved V4; retaining live mesh animation',e);
-   await window.PaperchalkL2D.setAnimationSource(target,null);
+   await checked(window.PaperchalkL2D.setAnimationSource(target,null));
    note('V4 视频资源加载异常：'+e.message);
   }
  }else{
-  await window.PaperchalkL2D.setAnimationSource(target,null);
+  await checked(window.PaperchalkL2D.setAnimationSource(target,null));
   const obj=window.PaperchalkL2D.get(target);
   if(obj){obj.root.dataset.l2dEdition='mesh';obj.root.dataset.l2dAnimated='true'}
  }
