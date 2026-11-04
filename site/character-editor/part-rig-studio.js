@@ -1081,6 +1081,14 @@ function drawPreview(ctx){
    x:p.x+p.w*p.pivot.x,y:p.y+p.h*p.pivot.y});
   ctx.fillStyle='#ffdb82';ctx.beginPath();
   ctx.arc(at.x,at.y,4/z,0,2*Math.PI);ctx.fill();
+  // The artboard itself explains how to manipulate the selected part.
+  const label='拖动移动 · 拉四角缩放';
+  ctx.font=(12/z)+'px sans-serif';ctx.textBaseline='bottom';
+  const tx=Math.max(2,Math.min(990,b.x)),ty=Math.max(24,b.y-12/z);
+  const tw=ctx.measureText(label).width+12/z;
+  ctx.fillStyle='rgba(12,31,44,.84)';
+  ctx.fillRect(tx-4/z,ty-17/z,tw,20/z);
+  ctx.fillStyle='#c8f5ff';ctx.fillText(label,tx,ty);
   ctx.restore();
  }
  if(!state.showGuides)return true;
@@ -1279,6 +1287,9 @@ function hitPaintedPixel(layer,point){
  if(!layer?.sourcePart||layer.visible===false||layer.opacity<=0)return false;
  const rig=state.model?.parts[key(layer)];
  if(!rig||rig.enabled===false)return false;
+ const bounds=fitBounds(rig),margin=32;
+ if(point.x<bounds.x-margin||point.x>bounds.x+bounds.w+margin||
+    point.y<bounds.y-margin||point.y>bounds.y+bounds.h+margin)return false;
  const uv=mapToSource(point,layer);
  if(!uv)return false;
  const x=Math.floor(uv.x-layer.x),y=Math.floor(uv.y-layer.y);
