@@ -50,6 +50,23 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.locator('#rig-part').selectOption('pants_overlay');
   assert.equal(await page.locator('#rig-fit-width').inputValue(),'86');
   assert.equal(await page.locator('#rig-fit-height').inputValue(),'110');
+  // The canvas handles are not decorative: drag the real lower-right
+  // corner in viewport pixels and verify the stored ArtMesh width changes.
+  await page.locator('#rig-fit-handles').click();
+  const handle=await page.evaluate(()=>{
+   const s=window.characterEditor.S,p=window.PaperchalkPartRigStudio.state.model.parts.pants_overlay;
+   const b=window.PaperchalkPartRigCore.placedBounds(p);
+   const rect=document.querySelector('#stage').getBoundingClientRect();
+   return {x:rect.left+s.px+(b.x+b.w)*s.zoom,
+    y:rect.top+s.py+(b.y+b.h)*s.zoom};
+  });
+  await page.mouse.move(handle.x,handle.y);
+  await page.mouse.down();
+  await page.mouse.move(handle.x+16,handle.y+12,{steps:5});
+  await page.mouse.up();
+  const resized=await page.evaluate(()=>
+   window.PaperchalkPartRigStudio.state.model.parts.pants_overlay.placement.scaleX);
+  assert.ok(resized>.86,'dragging the ArtMesh handle must resize the garment');
   await page.locator('#rig-fit-reset').click();
   await page.locator('#btnSave').click();
   await page.waitForFunction(async()=>{
