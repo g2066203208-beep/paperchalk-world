@@ -51,6 +51,8 @@ def discover():
             if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',ident):
                 continue
             if ident=='char-016':continue
+            # CHAR-008 teacher candidate was confirmed to be CHAR-006 female five.
+            if ident=='class-teacher-geography-candidate':continue
             if ident not in entries:
                 entries[ident]={'id':ident,'label':str(title or ident),
                     'front':'','back':'','draft':True,'state':data.get('recordState','concept_only')}
@@ -85,6 +87,9 @@ def discover():
     for module in modules:
         ident = module['id']
         if ident=='char-016':continue
+        if ident=='class-teacher-geography-candidate' and any(m['id']=='char-006' for m in modules):
+            continue  # the native CHAR-006 upload takes precedence over legacy teacher media
+        actor_id='char-006' if ident=='class-teacher-geography-candidate' else ident
         # Explicit guard against replacing the already-approved female leads.
         if ident in ('protagonist','char-002'):
             raise ValueError(f'L2D module {ident} is protected; use an internal source-rig alias')
@@ -94,15 +99,21 @@ def discover():
             # Generated internal rigs belong to the ONE canonical actor.
             # They are render implementations, never new NPC identities.
             continue
-        row = entries.setdefault(ident,{
-            'id':ident,'label':module['label'],'front':'','back':''
+        row = entries.setdefault(actor_id,{
+            'id':actor_id,'label':module['label'],'front':'','back':''
         })
-        row['label'] = module['label']
-        row['familyId'] = module.get('familyId', ident)
-        row['variantCategory'] = module.get('variantCategory', 'default')
-        row['actions'] = module.get('actions', [])
+        row['label']='女五 · 女老师（基础正面）' if actor_id=='char-006' else module['label']
+        row['familyId']=actor_id if actor_id=='char-006' else module.get('familyId',ident)
+        row['variantCategory']=module.get('variantCategory','default')
+        row['actions']=module.get('actions',[])
         row.pop('draft',None)
-        row['l2dModule']=module['views']
+        row.pop('state',None)
+        if actor_id=='char-006' and ident!=actor_id:
+            # The old teacher art is explicitly authorized as female five; preserve true rig provenance.
+            row['l2dModule']={face:{**v,'rig':{**v['rig'],'sourceCharacterId':ident}}
+                              for face,v in module['views'].items()}
+        else:
+            row['l2dModule']=module['views']
         row['assetVersion']=module['version']
         clips=row.setdefault('clips',{})
         animated=row.setdefault('animated',{})
