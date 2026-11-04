@@ -995,7 +995,7 @@ for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,e=>{
  else{
   if(!d.moved&&d.isTouch)paintMaskLine(d.point,d.point);
   serializeMask(d.entry);maskState.pointer=null;
-  drawRelationList();maskLabel.textContent=maskHint();ed.render();
+  ed.renderList();drawRelationList();maskLabel.textContent=maskHint();ed.render();
  }
  if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
 },true);
