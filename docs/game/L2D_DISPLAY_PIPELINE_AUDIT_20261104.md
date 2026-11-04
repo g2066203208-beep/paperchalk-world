@@ -30,3 +30,14 @@
 
 ## 后续必须继续验收
 长时间切换场景/人物、手机竖屏模拟横屏、后台恢复、GPU context loss 和低内存设备。现在仅完成上述针对性修复和 CI 验收，尚不能宣称任意设备绝对不会掉帧或产生图形问题。
+
+## 高清画布与浏览器恢复（本轮）
+
+- **统一尺寸计算**：`site/l2d/canvas-budget.js` 负责普通 ArtMesh 和 V4 的 CSS 尺寸 → DPR 像素计算；同时限制单维 ≤2560 像素及总面积 ≤4194304 像素，保持纵横比。过去角色高度过大时 `library-player.js` 会直接 `return`，如今始终选择可绘制的合理 backing store。
+- **设备中断**：Canvas 2D `contextlost` 不主动调用 `preventDefault()`，由浏览器自动恢复；`contextrestored` 后强制重新绘制真实 PSD 网格或 V4 帧。仅在支持此事件的浏览器上可以依赖其通知；其他设备仍需实际长时间运行监测。
+- **隐藏时钟**：隐藏选项卡暂停 PartRig 的动画相位，回来后仅推进可见时间，避免睡眠数分钟后一瞬间头发/裙摆突变；可从 `PaperchalkL2DLibrary.inspect('player').phaseMs` 观察。
+- **异步贴图安全**：V4 通用修正图和部件补丁同样会校验角色加载版本，避免慢速旧图片覆盖新角色；失败资源不应污染缓存。
+- **现场验收**：`tests/test_l2d_canvas_budget.cjs` 验证尺寸与显存预算，`tests/l2d-viewport-quality-browser.mjs` 运行真实 20 部件女主，模拟超大尺寸、手机适配、浏览器隐藏/恢复和合成画布恢复；`tests/character-fog-layer-browser.mjs` 用独立 CSS visibility 关闭仅用于像素探测的黑雾，避免游戏内部可见性观察者重新打开 UI 雾层造成偶发失败。
+- **实际截图**：GitHub Actions `l2d-original-heroine-face-idle-desktop-mobile` 保存两个人物、真实地板和渲染恢复的 Chromium 截图。测试通过证明这些场景在 CI 环境下正常，不代表任意手机的性能已达到固定帧率。
+
+技术依据：MDN Canvas high DPI、`contextlost`/`contextrestored` 的文档与 Canvas 2D 实际浏览器测试。不要在没有基准数据时把 20 层源素材扁平化，也不要动已批准的角色大小、深度和蒙版关系。
