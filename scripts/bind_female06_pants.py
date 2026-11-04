@@ -116,6 +116,24 @@ def install(library: Path) -> bool:
     if rgba.size != (225, 207) or not rgba.getchannel("A").getbbox():
         raise ValueError("female-06 source pants dimensions/alpha changed; refit required")
 
+    # Audit the true PSD coordinates and nontransparent silhouettes before fitting.
+    # Log source geometry in the build so a visible misfit can be corrected
+    # against the original wearer rather than a guessed 1024-stage box.
+    with Image.open(base / "front" / "legwear.png") as body_part:
+        body = body_part.convert("RGBA")
+    waist_rows = []
+    for frac in (.0, .04, .08, .12, .18, .24, .30):
+        row = min(body.height-1, round(frac*(body.height-1)))
+        a = body.getchannel("A").crop((0,row,body.width,row+1))
+        waist_rows.append((round(frac,2),a.getbbox()))
+    print("FEMALE06 SOURCE GEOMETRY:",
+          "legs",(original_legs['x'],original_legs['y'],original_legs['w'],original_legs['h']),
+          "alpha",body.getchannel("A").getbbox(),
+          "waist_rows",waist_rows,
+          "outfit_shorts_source",rgba.size,
+          "outfit_alpha_bbox",rgba.getchannel("A").getbbox(),
+          "original_topwear", {k:outfit_rig['parts']['topwear'].get(k)
+                              for k in ('x','y','w','h')})
     x, y, w, h = PANTS_BOUNDS
     fitted = rgba.resize((w, h), Image.Resampling.LANCZOS)
     target_file = base / "front" / (PANTS_ID + ".png")
