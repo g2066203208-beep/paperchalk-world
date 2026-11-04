@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>See-through 原位拆层清晰度检验｜L2D 工作室</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#111722;color:#edf3fa;font:14px system-ui,"Microsoft Yahei",sans-serif}
+header{background:#1b2735;border-bottom:1px solid #41576d;padding:14px 20px}h1{font-size:18px;margin:0 0 8px}p{color:#a9c2d4;line-height:1.5;margin:7px 0}
+button,.file{border:1px solid #57758d;border-radius:8px;background:#284053;color:#f0fbff;padding:9px 12px;cursor:pointer}
+button.active{background:#126986;border-color:#66bbd5}.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.file input{display:none}.layout{display:grid;grid-template-columns:245px minmax(300px,1fr) 270px;min-height:calc(100vh - 145px)}
+aside{background:#1a2634;padding:13px;overflow:auto;max-height:calc(100vh - 145px)}aside h2{font-size:15px;margin:6px 0 12px}
+#viewport{overflow:auto;min-height:550px;padding:20px;display:flex;justify-content:center;align-items:flex-start;background-color:#62686f;background-image:linear-gradient(45deg,#717780 25%,transparent 25%),linear-gradient(-45deg,#717780 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#717780 75%),linear-gradient(-45deg,transparent 75%,#717780 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+canvas{display:block;max-width:none;box-shadow:0 4px 28px #081019b0}.part{display:flex;gap:7px;align-items:center;margin:5px 0;padding:5px;border-bottom:1px solid #304353}
+.part input{accent-color:#60b9d9}.part em{font-size:11px;color:#9db6cb;font-style:normal}
+.stats{padding:12px;border:1px solid #385068;border-radius:8px;background:#213245;line-height:1.7;margin-bottom:10px}
+#message{color:#9ddbed;white-space:pre-wrap;font-size:12px;min-height:20px}#zoom{width:100%;accent-color:#65bfdc}
+@media(max-width:920px){.layout{grid-template-columns:165px 1fr}aside:last-child{grid-column:1/-1;max-height:270px}}
+@media(max-width:620px){.layout{display:block}aside{max-height:230px}#viewport{justify-content:flex-start}}
+</style></head><body>
+<header><h1>See-through 拆层清晰度检查 · L2D 工作室附属工具</h1>
+<div class="tools"><label class="file">选择 See-through 原始 ZIP<input id="input" type="file" accept=".zip,application/zip"></label>
+<button data-view="src">导入图</button><button data-view="recon">模型重建</button><button data-view="layers" class="active">独立图层叠放</button>
+<button id="fit">适应</button><button id="z100">原生 100%</button><button id="z200">200% 像素</button><button id="save">导出合成 PNG</button>
+<a href="./" style="color:#9ddbed">返回 L2D 工作室</a></div><p id="message">选择本地 ZIP 即可检查，图片只在当前浏览器解析；不覆盖任何人物树、原画或骨骼。</p></header>
+<div class="layout"><aside><h2>图层与可见性</h2><div id="parts"></div><p>空的 See-through 语义层会保留在统计里，但不作为实际 ArtMesh。这里是清晰度与叠放预览，不冒充已完成的骨骼绑定。</p></aside>
+<div id="viewport"><canvas id="canvas" width="1024" height="1024"></canvas></div>
+<aside><h2>像素检查</h2><div class="stats" id="info">尚未载入文件</div>
+<div class="stats">倍率 <b id="zlabel">100%</b><input id="zoom" type="range" min="25" max="300" step="5" value="100"></div>
+<label><input id="clean" type="checkbox" checked> 预览时过滤 Alpha 小于 48 的透明噪点</label>
+<div class="stats" id="cursor">像素位置：-</div>
+<p>100% 对比脸部眼睫毛、发丝和衣服边缘；不要只看缩小后的整体图。</p>
+<p>ZIP 里的 src_img.png 和 reconstruction.png 通常已经采用推理输出尺寸，不能反推原始上传的 2048 细节已被完全保留。</p></aside></div>
+<script>
+(function(){
+"use strict";
+const order=["back hair","legwear","neck","topwear","handwear","bottomwear","head","ears","face","eyewhite","irides","eyebrow","eyelash","nose","mouth","front hair","headwear"];
+const view=document.getElementById("viewport"),can=document.getElementById("canvas"),g=can.getContext("2d");
+const msg=document.getElementById("message"),partBox=document.getElementById("parts"),info=document.getElementById("info");
+let state={src:null,recon:null,layers:[],view:"layers",zoom:1,w:1024,h:1024};
+const decoder=new TextDecoder();
+function status(x){msg.textContent=x}
+function setZoom(v){state.zoom=Math.min(3,Math.max(.25,v));can.style.width=Math.round(state.w*state.zoom)+"px";can.style.height=Math.round(state.h*state.zoom)+"px";document.getElementById("zoom").value=Math.round(state.zoom*100/5)*5;document.getElementById("zlabel").textContent=Math.round(state.zoom*100)+"%"}
+async function unzip(file){
+ if(file.size>140*1024*1024)throw Error("ZIP 超过此工具的 140 MB 安全限制");
+ const buf=new Uint8Array(await file.arrayBuffer()),dv=new DataView(buf.buffer),files=new Map();let at=0,seen=0;
+ while(at+30<=buf.length&&dv.getUint32(at,true)===0x04034b50){
+  const flags=dv.getUint16(at+6,true),method=dv.getUint16(at+8,true),packed=dv.getUint32(at+18,true),size=dv.getUint32(at+22,true);
+  const nameLen=dv.getUint16(at+26,true),extra=dv.getUint16(at+28,true);const from=at+30+nameLen+extra;
+  if((flags&8)!==0)throw Error("ZIP 使用数据描述符，请用无数据描述符的标准 ZIP 重新打包");
+  if(from>buf.length||packed>100*1024*1024||size>100*1024*1024||from+packed>buf.length)throw Error("ZIP 条目尺寸异常");
+  const name=decoder.decode(buf.subarray(at+30,at+30+nameLen));
+  let body=buf.slice(from,from+packed);
+  if(method===8){if(typeof DecompressionStream!=="function")throw Error("浏览器不支持解压 Deflate ZIP");
+   body=new Uint8Array(await new Response(new Blob([body]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+  }else if(method!==0)throw Error("暂不支持的 ZIP 压缩方法 "+method);
+  if(!name.includes("..")&&!name.includes("/")&&/\.png$/i.test(name)&&++seen<=150)files.set(name,body);
+  at=from+packed;
+ }
+ return files;
+}
+async function decodeImage(bytes){
+ const u=URL.createObjectURL(new Blob([bytes],{type:"image/png"}));
+ try{return await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(Error("PNG 解码失败"));i.src=u})}
+ finally{URL.revokeObjectURL(u)}
+}
+function cleanImage(img,w,h){
+ const tmp=document.createElement("canvas");tmp.width=w;tmp.height=h;
+ const ctx=tmp.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0);
+ const pixels=ctx.getImageData(0,0,w,h);let meaningful=0;
+ for(let k=3;k<pixels.data.length;k+=4){if(pixels.data[k]<48)pixels.data[k]=0;else meaningful++}
+ ctx.putImageData(pixels,0,0);return {preview:tmp,pixels:meaningful};
+}
+function draw(){
+ g.clearRect(0,0,state.w,state.h);
+ if(state.view==="src"&&state.src)g.drawImage(state.src,0,0);
+ else if(state.view==="recon"&&state.recon)g.drawImage(state.recon,0,0);
+ else for(const layer of state.layers)if(layer.visible)g.drawImage(document.getElementById("clean").checked?layer.cleaned:layer.img,0,0);
+}
+function showInfo(){
+ info.textContent="原位画布 "+state.w+" × "+state.h+" 像素；有效图层 "+state.layers.filter(l=>l.valid).length+" / "+state.layers.length+"；输入图与重建图保留原图像尺寸。";
+}
+async function load(file){
+ status("正在解压并按像素检查实际图层…");const all=await unzip(file);
+ const get=n=>{for(const [k,v] of all)if(k.toLowerCase().replace(/\s+/g,"_")===n)return v;return null};
+ const origin=get("src_img.png"),recon=get("reconstruction.png");
+ if(!origin||!recon)throw Error("这不是完整的 See-through 导出 ZIP，缺少 src_img.png 或 reconstruction.png");
+ const src=await decodeImage(origin),re=await decodeImage(recon),w=re.width,h=re.height;
+ if(w!==src.width||h!==src.height||w<64||h<64||w>4096||h>4096)throw Error("原图与重建图尺寸不一致或超出范围");
+ const sources=[];
+ for(const [name,bytes] of all){if(!name.toLowerCase().endsWith(".png")||name.toLowerCase().endsWith("_depth.png")||/^(src_img|src_head|reconstruction)\.png$/i.test(name))continue;
+  const img=await decodeImage(bytes);if(img.width!==w||img.height!==h)continue;
+  const x=cleanImage(img,w,h);
+  sources.push({name:name.replace(/\.png$/i,""),img,cleaned:x.preview,pixels:x.pixels,valid:x.pixels>32,visible:x.pixels>32});
+ }
+ sources.sort((a,b)=>{const i=order.indexOf(a.name.toLowerCase().replace(/_/g," ")),j=order.indexOf(b.name.toLowerCase().replace(/_/g," "));return (i<0?order.length:i)-(j<0?order.length:j)});
+ state={src,recon:re,layers:sources,view:"layers",zoom:1,w,h};can.width=w;can.height=h;partBox.replaceChildren();
+ for(const layer of sources){const row=document.createElement("label");row.className="part";const chk=document.createElement("input");chk.type="checkbox";chk.checked=layer.visible;chk.onchange=()=>{layer.visible=chk.checked;draw()};
+ const desc=document.createElement("span");desc.textContent=layer.name+" · "+Math.round(layer.pixels/1000)+"k px";
+ if(!layer.valid){desc.style.opacity=".5";desc.title="基本为空，仅有透明噪点"}
+ row.append(chk,desc);partBox.append(row)}
+ document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view==="layers"));
+ setZoom(Math.min(1,(view.clientWidth-44)/w,(view.clientHeight-44)/h));
+ showInfo();draw();status("✓ 已载入 "+file.name+"；可以 100% 检查原图、重建及独立图层。浏览器没有自动上传文件。");
+}
+document.getElementById("input").onchange=e=>{if(e.target.files[0])load(e.target.files[0]).catch(err=>status("导入失败："+err.message))};
+for(const b of document.querySelectorAll("[data-view]"))b.onclick=()=>{state.view=b.dataset.view;document.querySelectorAll("[data-view]").forEach(x=>x.classList.toggle("active",x===b));draw()};
+document.getElementById("clean").onchange=draw;document.getElementById("z100").onclick=()=>setZoom(1);
+document.getElementById("z200").onclick=()=>setZoom(2);
+document.getElementById("fit").onclick=()=>setZoom(Math.min(1,(view.clientWidth-44)/state.w,(view.clientHeight-44)/state.h));
+document.getElementById("zoom").oninput=e=>setZoom(+e.target.value/100);
+can.onmousemove=e=>{const r=can.getBoundingClientRect();document.getElementById("cursor").textContent="像素位置："+Math.floor((e.clientX-r.left)/state.zoom)+", "+Math.floor((e.clientY-r.top)/state.zoom)};
+document.getElementById("save").onclick=()=>can.toBlob(b=>{if(!b)return;const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="seethrough-layer-composite.png";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000)},"image/png");
+setZoom(1);
+})();
+</script></body></html>
