@@ -11,6 +11,7 @@ const outfit=path.join(__dirname,'../site/assets/l2d/library/female-06-outfit-02
 const r=JSON.parse(fs.readFileSync(path.join(base,'front.rig.json'),'utf8'));
 const o=JSON.parse(fs.readFileSync(path.join(outfit,'front.rig.json'),'utf8'));
 assert.equal(r.parts.pants_overlay.kind,'pants-bound');
+assert.deepEqual(r.parts.pants_overlay.placement,{scaleX:.92,scaleY:.8,offsetX:-7,offsetY:-12});
 assert.equal(r.parts.pants_overlay.parentId,'legwear');
 assert.deepEqual(r.parts.pants_overlay.skinBinding.target,'legwear');
 assert.equal(r.parts.pants_overlay.bones.length,0,
@@ -45,14 +46,15 @@ for(let n=0;n<32;n++){
  const phase=n*.41;
  for(const [x,y] of samples){
   const uvP=[(x-trousers.x)/trousers.w,(y-trousers.y)/trousers.h];
-  const uvL=[(x-legs.x)/legs.w,(y-legs.y)/legs.h];
+  const rest=core.placedRestPoint(trousers,{x,y});
+  const uvL=[(rest.x-legs.x)/legs.w,(rest.y-legs.y)/legs.h];
   const p=core.warpPoint(trousers,uvP[0],uvP[1],phase,null,idle);
   const l=core.warpPoint(legs,uvL[0],uvL[1],phase,null,idle);
   const error=Math.hypot(p.x-l.x,p.y-l.y);
   maxError=Math.max(maxError,error);
   assert.ok(error<.025,
    'shorts detached from leg at '+x+','+y+' phase '+phase+': '+error);
-  moved=Math.max(moved,Math.hypot(p.x-x,p.y-y));
+  moved=Math.max(moved,Math.hypot(p.x-rest.x,p.y-rest.y));
  }
 }
 assert.ok(moved>2,'test must exercise actual nonzero hip and leg movement');
