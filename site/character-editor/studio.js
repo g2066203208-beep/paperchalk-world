@@ -428,6 +428,12 @@ async function loadList(){
  const blank= 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><text x="512" y="493" text-anchor="middle" font-size="29" fill="#b9b0a3">女主 · 战斗正面</text><text x="512" y="545" text-anchor="middle" font-size="20" fill="#92877b">请导入原位分层 ZIP</text></svg>');
  list.set(BATTLE_FRONT_ID,{id:BATTLE_FRONT_ID,familyId:'protagonist',variantCategory:'combat',label:'女主·战斗正面（动作子集）',front:blank,back:''});
+ // A NEW source-verified male-second slot. Do not revive the deleted char-016
+ // assets, or substitute the older accidental male-second art. The authentic
+ // SeeThrough ZIP is imported verbatim in-browser into this isolated actor.
+ const newMale2Blank='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><text x="512" y="480" fill="#bbc8da" font-size="28" text-anchor="middle">男二 · 新拆分</text><text x="512" y="520" fill="#8294a9" font-size="18" text-anchor="middle">导入 SeeThrough ZIP 后显示真实立绘</text></svg>');
+ list.set('male2',{id:'male2',label:'男二',front:newMale2Blank,back:'',familyId:'male2',variantCategory:'default'});
  try{
   const res=await fetch('../characters.catalog.json',{cache:'no-store'});
   if(res.ok)for(const c of (await res.json()).characters||[]){
@@ -882,6 +888,74 @@ async function ensureHostedParts(id){
   message('原始部件在线加载失败：'+error.message+'；动画帧仍可编辑');
  }
 }
+// Raw SeeThrough archives contain original 1024px RGBA part PNGs and optional
+// *_depth.png layers, but no layers.json. Reject transparent placeholders and
+// oversized reference portraits; retain the exact pixels WITHIN the crop.
+const SEETHROUGH_Z=[
+ 'nose','head','back_hair','ears','footwear','legwear','neck',
+ 'topwear','handwear','face','eyewhite','irides','eyelash','eyebrow',
+ 'mouth','front_hair'
+];
+const SEETHROUGH_LABELS={
+ nose:'鼻子',head:'头部参考层',back_hair:'后发',ears:'耳朵',footwear:'鞋',
+ legwear:'长裤与双腿',neck:'颈部',topwear:'西装外套 / 衬衫 / 领带',
+ handwear:'双臂与交握双手',face:'脸部',eyewhite:'眼白',
+ irides:'瞳孔',eyelash:'睫毛',eyebrow:'眉毛',mouth:'嘴',
+ front_hair:'前发'};
+async function convertSeethroughArchive(raw){
+ const names=[...raw.keys()].filter(n=>/^[^/]+\.png$/i.test(n));
+ const norm=n=>n.trim().toLowerCase().replace(/\s+/g,'_');
+ const ids=new Map(names.map(n=>[norm(n.slice(0,-4)),n]));
+ if(!ids.has('reconstruction')||!ids.has('src_img')||
+    !ids.has('handwear')||!ids.has('topwear'))
+  return null;
+ const result=new Map(),layers=[],used=new Set(),tiny=[];
+ const manifest={schema:1,canvas:[1024,1024],characterId:'male2',
+  provenance:'authentic-seethrough-rgba',sourceImage:'src_img.png',
+  sourceLayerGroups:24,layers:{front:layers,back:[]}};
+ for(const id of SEETHROUGH_Z){
+  const path=ids.get(id);
+  if(!path)continue;
+  const bytes=raw.get(path),url=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
+  let img;
+  try{img=await ed.imgFrom(url)}finally{URL.revokeObjectURL(url)}
+  if(img.width!==1024||img.height!==1024)
+   throw Error('SeeThrough 部件尺寸必须是 1024×1024：'+path);
+  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=1024;
+  const context=canvas.getContext('2d',{willReadFrequently:true});
+  context.drawImage(img,0,0);
+  const data=context.getImageData(0,0,1024,1024).data;
+  let minX=1024,minY=1024,maxX=-1,maxY=-1,pixels=0;
+  for(let y=0;y<1024;y++)for(let x=0;x<1024;x++){
+   if(data[(y*1024+x)*4+3]<=16)continue;
+   pixels++;if(x<minX)minX=x;if(x>maxX)maxX=x;
+   if(y<minY)minY=y;if(y>maxY)maxY=y;
+  }
+  if(pixels<16){tiny.push(id);continue}
+  // Keep the original source RGBA samples (no synthesized limbs, no upscaling).
+  const crop=document.createElement('canvas');
+  crop.width=maxX-minX+1;crop.height=maxY-minY+1;
+  crop.getContext('2d').drawImage(img,-minX,-minY);
+  const blob=await new Promise(resolve=>crop.toBlob(resolve,'image/png'));
+  if(!blob)throw Error('无法编码有效的 SeeThrough 真实部件：'+id);
+  const file='front/'+id+'.png';
+  result.set(file,new Uint8Array(await blob.arrayBuffer()));
+  layers.push({id,partId:id,name:SEETHROUGH_LABELS[id]||id,
+   role:'psd-part',sourceType:'seethrough',file,x:minX,y:minY,
+   w:crop.width,h:crop.height,visible:true,opacity:1,locked:false});
+  used.add(id);
+ }
+ if(layers.length<12||!used.has('handwear')||!used.has('legwear')||
+    !used.has('topwear')||!used.has('footwear'))
+  throw Error('SeeThrough 有效源部件不足，拒绝创建错误 L2D');
+ result.set('layers.json',new TextEncoder().encode(JSON.stringify(manifest)));
+ result.set('seethrough-report.json',new TextEncoder().encode(JSON.stringify({
+  retained:layers.map(p=>p.id),emptyOrNearlyEmpty:tiny,
+  discardedReference:['src_head.png','src_img.png','reconstruction.png'],
+  limitations:['双臂当前共用一个真实 handwear PNG','没有原始背面拆分'],
+ },null,2)));
+ return result;
+}
 async function importComponentArchive(file){
  if(!file)return;
  await switchQueue; // Do not import into a half-loaded character or direction.
@@ -905,7 +979,10 @@ async function importComponentArchive(file){
   return;
  }
  message('读取原始分层工程所有部件…');
- const files=await zipFiles(file);
+ const zipped=await zipFiles(file);
+ const seethrough=await convertSeethroughArchive(zipped);
+ if(seethrough&&currentId!=='male2')throw Error('此文件是男二 SeeThrough 拆分，请先选择人物树里的「男二」');
+ const files=seethrough||zipped;
  if(currentId===BATTLE_FRONT_ID){
   const manifest=files.get('layers.json');
   if(!manifest)throw Error('战斗正面必须使用含 layers.json 的真实原位分层 ZIP');
@@ -916,6 +993,14 @@ async function importComponentArchive(file){
    throw Error('工程身份或图层不匹配：需要女主战斗正面 24 层独立工程');
  }
  await importComponentFiles(files);
+ if(seethrough){
+  // No second character and no fake static mesh. PartRig will build a new
+  // per-source skeleton for the SAME male2 family as soon as this is emitted.
+  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{
+   detail:{id:currentId,side:'front'}
+  }));
+  message('✓ 男二 SeeThrough 真拆分已装载：16个有效原始部件，8个空分类已跳过。骨骼画布可实时预览；双手仍共用一张原始 PNG。');
+ }
  if(currentId===BATTLE_FRONT_ID){
   const bytes=files.get('front.rig.json');
   if(bytes){
