@@ -100,8 +100,8 @@ const quickGroups={
  fringe:['front_hair','hair'],
  rear:['rear_hair','back_hair','hair_over_jacket'],
  skirt:['skirt','bottomwear','cloth'],
- hands:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered'],
- shoulders:['sleeves_and_hands','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered','jacket','topwear'],
+ hands:['sleeves_and_hands','battle_handwear_l','battle_handwear_r','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered'],
+ shoulders:['sleeves_and_hands','battle_handwear_l','battle_handwear_r','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered','jacket','topwear'],
  hips:['skirt','bottomwear','legs','legwear']
 };
 const available=id=>(quickGroups[id]||[]).filter(key=>!!state.model?.parts[key]);
