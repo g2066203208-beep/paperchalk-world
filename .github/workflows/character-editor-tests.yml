@@ -486,10 +486,10 @@ jobs:
                 assert.ok(female2.hierarchy,'PSD source should build human parent hierarchy');
                 assert.deepEqual([female2.front,female2.back,female2.foot,female2.eye],
                   ['head','head','ground','head']);
+                if(vp.width<500)await secondaryPage.locator('[data-studio-pane="motion"]').click();
                 for(const id of ['fringe','rear','skirt','hands','shoulders','hips','breath','speed'])
                   assert.equal(await secondaryPage.locator('[data-quick="'+id+'"]').isVisible(),true,
                     'real PSD slider must be visible: '+id);
-                if(vp.width<500)await secondaryPage.locator('[data-studio-pane="motion"]').click();
                 await secondaryPage.locator('[data-quick="fringe"]').fill('135');
                 await secondaryPage.locator('[data-quick="rear"]').fill('145');
                 await secondaryPage.locator('[data-quick="skirt"]').fill('180');
