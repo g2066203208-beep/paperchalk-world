@@ -63,8 +63,10 @@ const CHAR004={
  legwear:['pelvis',.50,.04,.51,.91,'leg-combined'],
  footwear_left:['ground',.50,.83,.50,.83,'fixed'],
  footwear_right:['ground',.50,.83,.50,.83,'fixed'],
- handwear_l:['torso',.15,.81,.70,.11,'arm-raised'],
- handwear_r:['torso',.89,.80,.60,.11,'arm-raised'],
+ handwear_l:['torso',.16,.89,.45,.095,'arm-coat-right'],
+ handwear_r:['torso',.76,.86,.87,.12,'arm-coat-left'],
+ coat_left:['torso',.77,.075,.38,.955,'coat-panel-left'],
+ coat_right:['torso',.67,.075,.69,.97,'coat-panel-right'],
  face:['head',.50,.50,.50,.50,'face'],
  eyebrow_r:['head',.50,.50,.50,.50,'face'],
  eyebrow_l:['head',.50,.50,.50,.50,'face'],
@@ -213,7 +215,7 @@ function approachIdle(previous,target,dt){
 }
 function idleGroup(part){
  if(part.kind==='hair')return 'hair';
- if(part.kind==='skirt'||part.kind==='torso')return 'cloth';
+ if(part.kind==='skirt'||part.kind==='torso'||part.kind.startsWith('coat-panel-'))return 'cloth';
  if(part.kind.startsWith('arm-'))return 'sleeves';
  return 'body';
 }
@@ -283,6 +285,26 @@ const SEGMENTS={
   ['shoulder',null,.18,.05,.45,.50,9,1.05,.4,.38],
   ['elbow','shoulder',.45,.50,.60,.94,14,1.18,.9,.36]
  ],
+ // Authored 3-bone raised sleeves: shoulder -> elbow -> wrist grip.
+ 'arm-coat-left':[
+  ['shoulder',null,.76,.86,.37,.69,1.35,.80,0,.28],
+  ['elbow','shoulder',.37,.69,.71,.23,3.75,.91,-.15,.27],
+  ['wrist','elbow',.71,.23,.88,.12,1.9,1.08,.38,.22]
+ ],
+ 'arm-coat-right':[
+  ['shoulder',null,.16,.89,.47,.65,1.35,.79,.32,.28],
+  ['elbow','shoulder',.47,.65,.50,.21,3.25,.89,.55,.25],
+  ['wrist','elbow',.50,.21,.44,.095,1.8,1.12,.80,.22]
+ ],
+ // Cloth roots held at grip, with delayed distal hem bones.
+ 'coat-panel-left':[
+  ['coat-root',null,.77,.075,.61,.52,7.8,.80,-.38,.36],
+  ['coat-hem','coat-root',.61,.52,.38,.955,12.5,1.08,-1.11,.30]
+ ],
+ 'coat-panel-right':[
+  ['coat-root',null,.67,.075,.42,.51,7.8,.80,.55,.36],
+  ['coat-hem','coat-root',.42,.51,.69,.97,12.5,1.08,-.18,.30]
+ ],
  'leg-combined':[
   ['left-knee',null,.37,.13,.36,.66,1.8,.76,0,.23],
   ['left-ankle','left-knee',.36,.66,.33,.92,3.5,.84,-.5,.21],
@@ -319,7 +341,7 @@ function jointGainFor(part,bone,idle){
  const j=idle?.joints;if(!j||!bone)return 0;
  const kind=part.kind||'',id=String(bone.id||'');
  if(kind.startsWith('arm-'))
-  return id.includes('elbow')?finite(j.hands,0):finite(j.shoulders,0);
+  return /elbow|wrist|grip/.test(id)?finite(j.hands,0):finite(j.shoulders,0);
  if(kind==='torso'&&!bone.parent)return finite(j.shoulders,0)*.65;
  if(kind==='skirt'&&!bone.parent)return finite(j.hips,0);
  if(kind==='leg-combined')return 0; // planted legs are governed by ankle IK
@@ -340,7 +362,8 @@ function bonePoses(part,phase=0,idle=null){
   const groupFactor=part.kind==='hair'?[.10,.37]:
    part.kind==='skirt'?[.10,.32]:
    part.kind==='torso'?[.18,.50]:
-   part.kind.startsWith('arm-')?[.13,.32]:[.1,.22];
+    part.kind.startsWith('coat-panel-')?[.25,.54]:
+    part.kind.startsWith('arm-')?[.13,.32]:[.1,.22];
   const factor=groupFactor[b.parent?1:0];
   const speed=group?group.speed:1;
   const lag=group?.lag||0;
@@ -348,7 +371,8 @@ function bonePoses(part,phase=0,idle=null){
    finite(b.phase,0)-(b.parent?lag:lag*.25));
   const joint=jointGainFor(part,b,idle);
   // Wrist of the raised arm needs real displacement, not subpixel jitter.
-  const gain=part.kind==='arm-raised'&&b.id.includes('elbow')?1.15:.24;
+  const gain=part.kind==='arm-raised'&&b.id.includes('elbow')?1.15:
+    part.kind.startsWith('arm-coat-')&&/elbow|wrist/.test(b.id)?0.58:.24;
   const degrees=finite(b.amplitude,0)*(strength*factor+joint*gain);
   const angle=b.enabled!==false?clamp(degrees,-55,55)*Math.PI/180*wave:0;
   const theta=parentAngle+angle,cs=Math.cos(theta),sn=Math.sin(theta);
@@ -392,7 +416,7 @@ function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  // This prevents torso/neck/arm shoulders and scalp roots from peeling.
  // Raised arm shoulder is at the bottom. The old top-root lock kept
  // the raised fingertips stationary regardless of slider value.
- const rootLock=part.kind==='arm-raised'?
+ const rootLock=(part.kind==='arm-raised'||part.kind.startsWith('arm-coat-'))?
   smooth(clamp((.91-v)/.23,0,1)):
   smooth(clamp((v-.13)/.23,0,1));
  const blend=(1-Math.exp(-sum*1.5))*rootLock;
@@ -584,7 +608,7 @@ function parentRole(part){
  if(part.parentId==='ground'||part.id==='shoes'||part.id==='footwear')return 'ground';
  if(part.kind==='leg-combined')return 'legs';
  if(part.kind==='skirt')return 'pelvis';
- if(part.kind==='torso')return 'torso';
+ if(part.kind==='torso'||part.kind.startsWith('coat-panel-'))return 'torso';
  if(part.id==='neck')return 'neck';
  if(part.kind.startsWith('arm-'))return 'shoulder';
  if(part.kind==='head-combined'||part.kind==='hair'||part.kind==='face'||part.kind==='mouth'||
