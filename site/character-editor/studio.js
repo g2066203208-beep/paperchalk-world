@@ -1046,12 +1046,18 @@ async function importComponentArchive(file){
  }
  message('读取原始分层工程所有部件…');
  const zipped=await zipFiles(file);
- const packagedMale2=zipped.get('male2/front-rig-editable-parts.zip')&&
-  zipped.get('male2/front.rig.json')&&zipped.get('male2/module.json');
- const seethrough=packagedMale2?null:await convertSeethroughArchive(zipped);
- if((seethrough||packagedMale2)&&currentId!=='male2')throw Error('此文件是男二拆分，请先选择人物树里的「男二」');
- const files=packagedMale2?
-  await zipBytes(zipped.get('male2/front-rig-editable-parts.zip')):
+ // A ready-to-use independent PartRig module ZIP is importable by any
+ // named actor or wardrobe child. It retains its original authored bones and
+ // textures; never confuse one person's module with another's actor slot.
+ const packageIds=[...zipped.keys()].filter(n=>/^[a-z][a-z0-9_-]{0,79}\/module\.json$/.test(n))
+  .map(n=>n.split('/')[0]).filter(id=>zipped.has(id+'/front-rig-editable-parts.zip')&&
+   zipped.has(id+'/front.rig.json'));
+ if(packageIds.length>1)throw Error('ZIP 内有多个模型，请分别导入');
+ const packagedId=packageIds[0]||null;
+ const seethrough=packagedId?null:await convertSeethroughArchive(zipped);
+ if(seethrough&&currentId!=='male2')throw Error('此原始 SeeThrough ZIP 是男二，请先选择人物树里的「男二」');
+ if(packagedId&&packagedId!==currentId)throw Error('ZIP 的人物标识为 '+packagedId+'，当前是 '+currentId+'；请先选正确人物或服装');
+ const files=packagedId?await zipBytes(zipped.get(packagedId+'/front-rig-editable-parts.zip')):
   (seethrough||zipped);
  if(currentId===BATTLE_FRONT_ID){
   const manifest=files.get('layers.json');
@@ -1063,20 +1069,24 @@ async function importComponentArchive(file){
    throw Error('工程身份或图层不匹配：需要女主战斗正面 24 层独立工程');
  }
  await importComponentFiles(files);
- if(packagedMale2){
-  const binding=JSON.parse(new TextDecoder().decode(zipped.get('male2/front.rig.json')));
-  if(binding.format!=='paperchalk-part-rig-v1'||binding.characterId!=='male2'||
-     binding.face!=='front'||Object.keys(binding.parts||{}).length!==16)
-   throw Error('男二模块骨骼数据不匹配，拒绝使用损坏的绑定');
+ if(packagedId){
+  const binding=JSON.parse(new TextDecoder().decode(zipped.get(packagedId+'/front.rig.json')));
+  const sourceIds=ed.S.layers.front.filter(p=>p.sourcePart).map(p=>p.partId);
+  if(binding.format!=='paperchalk-part-rig-v1'||binding.characterId!==currentId||
+     binding.face!=='front'||sourceIds.length<8||
+     Object.keys(binding.parts||{}).length!==sourceIds.length||
+     sourceIds.some(id=>!binding.parts[id]))
+   throw Error('模块骨骼/人物/真实图层不一致，拒绝覆盖');
   await storePartRig(binding);
  }
- if(seethrough||packagedMale2){
+ if(seethrough||packagedId){
   // No second character and no fake static mesh. PartRig will build a new
   // per-source skeleton for the SAME male2 family as soon as this is emitted.
   window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{
    detail:{id:currentId,side:'front'}
   }));
-  message('✓ 男二真实分层已装载：16个源部件、骨骼与动态预览；8个空分类不参与动画。双手仍共用一张原始 PNG。');
+  message('✓ '+(list.get(currentId)?.label||currentId)+'：'+
+   ed.S.layers.front.filter(p=>p.sourcePart).length+' 个真实部件已装入 L2D；模型与骨骼可编辑并保存。');
  }
  if(currentId===BATTLE_FRONT_ID){
   const bytes=files.get('front.rig.json');
