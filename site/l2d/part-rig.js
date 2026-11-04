@@ -31,6 +31,10 @@ const FRONT={
  back_hair:['head',.50,.04,.50,.94,'hair'],
  axe_overhead:['root',.50,.50,.50,.50,'fixed'],
  axe_held:['handwear_l',.60,.50,.40,.50,'fixed'],
+ // Same canonical heroine front rig, original standing baseline + combat parts:
+ battle_handwear_r:['torso',.86,.07,.48,.92,'arm-right'],
+ battle_handwear_l:['torso',.17,.07,.48,.91,'arm-left'],
+ battle_axe:['battle_handwear_l',.60,.50,.40,.50,'fixed'],
  legwear:['pelvis',.50,.04,.50,.85,'leg-combined'],
  footwear:['ground',.50,.84,.50,.84,'fixed'],
  handwear_r:['torso',.86,.07,.48,.92,'arm-right'],
