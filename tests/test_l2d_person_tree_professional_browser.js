@@ -24,15 +24,14 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.equal(await root.locator('[data-category="outfit"] button').count(),1);
   assert.equal(await root.locator('[data-category="action"] button[data-action="combat"]').count(),1);
   assert.equal(await root.locator('[data-category="outfit"] button[data-character="protagonist-sleepwear"]').count(),1);
-  assert.equal(await root.locator('button[data-character="protagonist-battle-front"]').count(),1,
-    '24-part battle PSD retained under archive, NOT used as extra action');
-  const archive=root.locator('.character-source-archive');
-  assert.equal(await archive.count(),1);
-  assert.equal(await archive.evaluate(el=>el.open),false,
-    'source archives should be folded by default');
-  const groupBattle=await page.locator('#studio-character option[value="protagonist-battle-front"]').evaluate(el=>el.parentElement.label);
-  const groupBase=await page.locator('#studio-character option[value="protagonist"]').evaluate(el=>el.parentElement.label);
-  assert.equal(groupBattle,groupBase,'original PSD still belongs to heroine');
+  assert.equal(await root.locator('button[data-character="protagonist-battle-front"]').count(),0,
+    'technical battle PSD must never appear in ordinary person navigation');
+  assert.equal(await root.locator('.character-source-archive').count(),0,
+    'no confusing source/history section in the editor');
+  assert.equal(await page.locator('#studio-character option[value="protagonist-battle-front"]').count(),0,
+    'legacy source is hidden from daily character selector, but deep URLs still work');
+  assert.equal(await page.locator('#studio-person-import').isVisible(),true);
+  assert.match(await page.locator('#studio-person-import-target').textContent(),/女主角.*正面/);
   // Every person root is unique and has user-facing resource categories.
   const families=await page.locator('.character-family').evaluateAll(nodes=>
    nodes.map(el=>el.dataset.family));
@@ -71,9 +70,11 @@ const BASE='http://127.0.0.1:8134/character-editor/';
     window.PaperchalkStudio?.countSourceParts?.()===24,
     null,{timeout:45000});
   assert.equal(await page.locator('.character-family[data-family="protagonist"]').count(),1);
-  assert.equal(await page.locator('.character-family[data-family="protagonist"] .character-source-archive').evaluate(e=>e.open),true,
-    'direct links to a legacy source automatically expand its archive');
+  assert.equal(await page.locator('.character-source-archive').count(),0,
+    'old PSD remains editable through its URL, without polluting the navigation');
+  assert.equal(await page.locator('#studio-character').inputValue(),'protagonist-battle-front');
+  assert.match(await page.locator('#studio-person-import-target').textContent(),/女主角.*战斗/);
   assert.deepEqual(errors,[], 'browser must have no uncaught JS errors');
-  console.log('PASS live studio: heroine 1 root / 1 combat action / 1 sleepwear / folded battle PSD / same rig / search / direct source');
+  console.log('PASS live studio: heroine 1 root / 1 combat action / 1 sleepwear / no source clutter / universal import / deep URL');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
