@@ -6,6 +6,7 @@ on:
       - 'site/character-editor/**'
       - 'tests/test_l2d_person_tree_model.cjs'
       - 'tests/test_l2d_person_tree_professional_browser.js'
+      - 'tests/test_l2d_all_people_clean_tree_browser.js'
       - 'site/l2d/part-rig.js'
       - 'scripts/build_protagonist_part_rig.py'
       - 'scripts/build_character_catalog.py'
@@ -587,6 +588,7 @@ jobs:
           python3 -m http.server 8134 --directory site >/tmp/l2d-studio-rework.log 2>&1 &
           node tests/test_l2d_studio_rework_browser.js
           node tests/test_l2d_person_tree_professional_browser.js
+          node tests/test_l2d_all_people_clean_tree_browser.js
           node tests/test_l2d_person_tree_delete_browser.js
           node tests/test_l2d_heroine_performance_browser.js
           node tests/test_l2d_occlusion_masks_browser.js
