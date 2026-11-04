@@ -422,12 +422,16 @@ function visibleFamilyGroups(){
   const hasArtwork=all.some(c=>!!c.front||!!c.back||!!c.l2dModule?.front?.rig);
   if(!hasArtwork&&family!=='male2'&&!all.some(c=>c.id===currentId))continue;
   const choices=all.filter(c=>c.id!==primary.id&&
-    (c.variantCategory==='outfit'||c.variantCategory==='combat')&&
+    // Published sleepwear can have variantCategory=default; still put its
+    // actual asset UNDER the canonical actor instead of hiding the garment.
+    (c.variantCategory==='outfit'||c.variantCategory==='combat'||
+      /(?:outfit|sleepwear|costume)/i.test(c.id)|| 
+      (!!c.l2dModule?.front?.rig&&c.familyId===family))&&
     !/^(char-002-psd-v1|protagonist-rig-v1|protagonist-unified-v1)$/.test(c.id));
   // Deduplicate stale local copies of the same variant.  Preserve every
   // record in list/IndexedDB, just display one action per unique asset ID.
   const seen=new Set(),variants=choices.filter(c=>{
-   const signature=c.variantCategory+':'+(c.front||c.id);
+   const signature=(/(?:outfit|sleepwear|costume)/i.test(c.id)?'outfit':c.variantCategory)+':'+(c.front||c.id);
    if(seen.has(signature))return false;
    seen.add(signature);return true;
   });
@@ -475,7 +479,7 @@ function renderFamilyTree(){
    children.append(back);
   }
   for(const variant of variants){
-   const isOutfit=variant.variantCategory==='outfit';
+   const isOutfit=variant.variantCategory==='outfit'||/(?:outfit|sleepwear|costume)/i.test(variant.id);
    const isBattle=variant.variantCategory==='combat';
    const btn=document.createElement('button');btn.type='button';
    btn.className=currentId===variant.id?'active':'';
@@ -517,7 +521,7 @@ function options(){
   const group=document.createElement('optgroup');group.label=familyDisplayName(primary,family);
   group.append(new Option('基础立绘 · '+group.label,primary.id));
   for(const v of variants)
-   group.append(new Option((v.variantCategory==='outfit'?'换装 · ':'动作 · ')+
+   group.append(new Option((v.variantCategory==='outfit'||/(?:outfit|sleepwear|costume)/i.test(v.id)?'服装 · ':'战斗动作 · ')+
     String(v.label||v.id),v.id));
   selector.append(group);
  }
