@@ -65,14 +65,25 @@ function refreshList(){
  if([...loaded.options].some(x=>x.value===previous))slot=loaded.value=previous;
  else if(loaded.options.length)slot=loaded.value=loaded.options[0].value;
  library.replaceChildren();
+ // Group each person's regular artwork and action variants in ONE collection.
+ const families=new Map();
  for(const c of catalog.values()){
-  const modes=Object.values(c.l2dModule||{}).map(x=>x.renderer);
-  const kind=modes.includes('part-mesh')?' · 独立网格 L2D':modes.includes('v4-webp')?' · V4 L2D':'';
-  const option=new Option((c.label||c.id)+kind,c.id);
-  // Unimported concepts do not have playable art; they must not become
-  // a silently blank character when assigned to either game slot.
-  option.disabled=!c.front&&!c.back;
-  library.add(option);
+  const family=c.familyId||c.id;
+  if(!families.has(family))families.set(family,[]);
+  families.get(family).push(c);
+ }
+ for(const [family,variants] of families){
+  const parent=document.createElement('optgroup');
+  parent.label=catalog.get(family)?.label||family;
+  for(const c of variants){
+   const modes=Object.values(c.l2dModule||{}).map(x=>x.renderer);
+   const kind=modes.includes('part-mesh')?' · 网格 L2D':modes.includes('v4-webp')?' · V4 L2D':'';
+   const label=c.id===family?'基本立绘':c.variantCategory==='combat'?'战斗动作':(c.label||c.id);
+   const option=new Option(label+kind,c.id);
+   option.disabled=!c.front&&!c.back;
+   parent.append(option);
+  }
+  library.append(parent);
  }
  const bind=assigned[slot];
  if(bind){
@@ -80,6 +91,7 @@ function refreshList(){
   side.value=bind.side;
  }
  syncFaceAvailability();
+ refreshActionOptions();
 }
 function syncFaceAvailability(){
  const c=catalog.get(library.value);
@@ -104,6 +116,9 @@ async function assign(target,id,face='front',save=true){
  if(face==='front'&&!c.front)throw Error('该角色还没有真正的正面素材：'+c.label);
  const src=await get('render:'+id+':'+face)||c[face]||c.front||c.back;
  if(!src)throw Error('人物缺少 '+face+' 方向素材');
+ const currentBinding=assigned[target];
+ const previousAction=currentBinding?.id===id&&currentBinding?.side===face
+  ?window.PaperchalkL2DLibrary?.getAction(target):null;
  const img=actor.img;assigned[target]={id,side:face};
  img.dataset.characterId=id;img.dataset.characterSide=face;
  if(img.src!==new URL(src,location.href).href){
@@ -154,6 +169,7 @@ async function assign(target,id,face='front',save=true){
     get('part-rig:'+id+':'+face),getLocalArtwork(id,face)
    ]);
    await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig,savedRig,savedArt);
+   if(previousAction)window.PaperchalkL2DLibrary.setAction(target,previousAction);
    if(id==='protagonist')actor.root.dataset.l2dBreath='joint-parented';
   }catch(error){
    // Fail safe: preserve the existing approved V4 when any PNG/rig is
@@ -248,7 +264,8 @@ async function init(){
  try{
   const response=await fetch('./characters.catalog.json',{cache:'no-store'});
   if(response.ok)for(const p of (await response.json()).characters||[]){
-   if(valid(p.id))catalog.set(p.id,{id:p.id,label:p.label||p.id,front:p.front||'',back:p.back||'',clips:p.clips||{},animated:p.animated||{},l2dModule:p.l2dModule||{}});
+   if(valid(p.id))catalog.set(p.id,{id:p.id,label:p.label||p.id,front:p.front||'',back:p.back||'',clips:p.clips||{},animated:p.animated||{},l2dModule:p.l2dModule||{},
+    familyId:p.familyId||p.id,variantCategory:p.variantCategory||'default'});
   }
  }catch(e){console.warn('L2D catalog offline',e);}
  const imported=await get('imported');if(Array.isArray(imported))for(const c of imported){
@@ -285,6 +302,29 @@ rendererToggle.textContent=heroineRenderer==='bones'?'女主：骨骼摆动中 �
 rendererToggle.title='只切换女主渲染器；不覆盖原始V4、贴图或本机PSD修改';
 $('dev-character-use').insertAdjacentElement('afterend',rendererToggle);
 rendererToggle.onclick=()=>setHeroineRenderer(heroineRenderer==='bones'?'v4':'bones').catch(e=>note(e.message));
+const actionRow=document.createElement('label');
+actionRow.id='dev-l2d-action-row';
+actionRow.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 0;font-size:12px;flex-wrap:wrap';
+actionRow.textContent='当前人物动作 · 不换 L2D';
+const actionPicker=document.createElement('select');
+actionPicker.id='dev-l2d-action';
+actionPicker.setAttribute('aria-label','同一人物局部动作');
+actionRow.append(actionPicker);
+rendererToggle.insertAdjacentElement('afterend',actionRow);
+function refreshActionOptions(){
+ const choices=window.PaperchalkL2DLibrary?.actions(slot)||[];
+ actionRow.hidden=choices.length<2;
+ actionPicker.replaceChildren();
+ for(const c of choices)actionPicker.add(new Option(c.label,c.id));
+ const selected=window.PaperchalkL2DLibrary?.getAction(slot);
+ if(choices.some(c=>c.id===selected))actionPicker.value=selected;
+}
+actionPicker.onchange=()=>{
+ const chosen=actionPicker.value;
+ if(window.PaperchalkL2DLibrary?.setAction(slot,chosen)){
+  note('✓ 已在当前人物网格内过渡到「'+actionPicker.selectedOptions[0]?.textContent+'」；未重新加载 L2D');
+ }else note('该角色没有可用的局部动作。');
+};
 
 $('dev-character-open').onclick=()=>openStudio().catch(e=>note(e.message));
 $('dev-character-import').onchange=e=>{
@@ -326,6 +366,7 @@ window.PaperchalkCharacterDev={
  get assigned(){return assigned},
  get loaded(){return actualActors().map(a=>a.id)},
  assign,chooseLoaded:selectSlot,openEditor:openStudio,setHeroineRenderer,get heroineRenderer(){return heroineRenderer},
+ setAction:(action,target=slot)=>window.PaperchalkL2DLibrary?.setAction(target,action)||false,
  openFileUpload:()=>$('dev-character-import').click()
 };
 init().catch(e=>note('全人物 L2D 资源库初始化失败：'+e.message));
