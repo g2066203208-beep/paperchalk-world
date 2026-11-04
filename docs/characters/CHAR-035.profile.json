@@ -1,0 +1,2418 @@
+{
+  "schemaVersion": 3,
+  "recordCode": "CHAR-035",
+  "canonicalId": "char-035",
+  "recordState": "adult_angel_trader_design_candidate_no_approved_art",
+  "readableDocument": "docs/characters/CHAR-035_ANGEL_TRADER_PROFILE.md",
+  "sourcePriority": [
+    "user_confirmed",
+    "approved_art_reference",
+    "approved_story_reference",
+    "proposed",
+    "unknown",
+    "not_applicable",
+    "rejected"
+  ],
+  "fields": {
+    "identity": {
+      "recordCode": {
+        "value": "CHAR-035",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "canonicalId": {
+        "value": "char-035",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "displayName": {
+        "value": "成年雌小鬼／落魄天使交易者（候选名：岑弥）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "legalName": {
+        "value": "岑弥（候选名）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "nicknames": {
+        "value": null,
+        "status": "unknown"
+      },
+      "aliases": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pronouns": {
+        "value": null,
+        "status": "unknown"
+      },
+      "genderPresentation": {
+        "value": "成年女性，娇小而不幼态；女性化小恶魔气质",
+        "status": "user_confirmed",
+        "source": "2026-11-04 用户明确提出成年非学生雌小鬼、楚楚可怜孤家寡人失败人生及天使交易者概念"
+      },
+      "ageYears": {
+        "value": 23,
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "birthDate": {
+        "value": null,
+        "status": "unknown"
+      },
+      "birthplace": {
+        "value": null,
+        "status": "unknown"
+      },
+      "currentResidence": {
+        "value": null,
+        "status": "unknown"
+      },
+      "era": {
+        "value": "当代架空城市",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "occupation": {
+        "value": "夜间电竞馆前台／值班领班（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "schoolYear": {
+        "value": "非学生（成年）",
+        "status": "user_confirmed",
+        "source": "2026-11-04 用户明确提出成年非学生雌小鬼、楚楚可怜孤家寡人失败人生及天使交易者概念"
+      },
+      "storyRole": {
+        "value": "社会边缘的成年雌小鬼型天使交易者",
+        "status": "user_confirmed",
+        "source": "2026-11-04 用户明确提出成年非学生雌小鬼、楚楚可怜孤家寡人失败人生及天使交易者概念"
+      },
+      "designStatus": {
+        "value": "尚无正式已验收立绘、PSD、L2D",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "family": {
+      "parents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "guardians": {
+        "value": null,
+        "status": "unknown"
+      },
+      "siblings": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relatives": {
+        "value": null,
+        "status": "unknown"
+      },
+      "familyStructure": {
+        "value": null,
+        "status": "unknown"
+      },
+      "childhoodEvents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upbringing": {
+        "value": null,
+        "status": "unknown"
+      },
+      "householdMembers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "livingSituation": {
+        "value": "独自生活（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "socioeconomicBackground": {
+        "value": "生活拮据，经济缺乏安全感（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "education": {
+      "school": {
+        "value": null,
+        "status": "unknown"
+      },
+      "className": {
+        "value": null,
+        "status": "unknown"
+      },
+      "club": {
+        "value": null,
+        "status": "unknown"
+      },
+      "grades": {
+        "value": null,
+        "status": "unknown"
+      },
+      "subjectStrengths": {
+        "value": null,
+        "status": "unknown"
+      },
+      "subjectWeaknesses": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workplace": {
+        "value": "夜间电竞馆（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "jobTitle": {
+        "value": "夜班前台／领班（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "salaryRange": {
+        "value": null,
+        "status": "unknown"
+      },
+      "experience": {
+        "value": null,
+        "status": "unknown"
+      },
+      "professionalGoals": {
+        "value": "争取稳定收入和独立生活空间（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "measurements": {
+      "heightCm": {
+        "value": 153,
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "weightKg": {
+        "value": 47,
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "headBodyRatio": {
+        "value": 6.8,
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "shoulderWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "chestCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "torsoLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "armSpanCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "inseamCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoeSize": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodyBuild": {
+        "value": "娇小成年女性，细致但符合成人比例",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "bodyMassDescription": {
+        "value": null,
+        "status": "unknown"
+      },
+      "posture": {
+        "value": "面对陌生人时略仰头逞强；正式立绘双脚自然站立",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "handDominance": {
+        "value": "右利手（未确认候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "gait": {
+        "value": "轻快且略带挑衅的短步幅",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "upperArmCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forearmCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wristCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "thighCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "calfCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ankleCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperArmLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forearmLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "handLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "palmWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperLegLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lowerLegLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeHeightCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipBreadthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderBreadthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistHeightCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ribcageDepthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipDepthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footWidthCm": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "anatomy": {
+      "headShape": {
+        "value": "成人短心形头型",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "shoulderSlope": {
+        "value": "肩线自然微降",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "torsoDepth": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ribcageContour": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistContour": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pelvisAndHips": {
+        "value": null,
+        "status": "unknown"
+      },
+      "backContour": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bustThroughClothing": {
+        "value": null,
+        "status": "unknown"
+      },
+      "limbProportions": {
+        "value": "成年自然四肢，非夸张幼态比例",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "handShape": {
+        "value": "成人纤细手掌，五指自然，空手",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "skinUndertone": {
+        "value": "暖色偏冷粉底调（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "skinTexture": {
+        "value": null,
+        "status": "unknown"
+      },
+      "scars": {
+        "value": null,
+        "status": "unknown"
+      },
+      "birthmarks": {
+        "value": null,
+        "status": "unknown"
+      },
+      "moles": {
+        "value": null,
+        "status": "unknown"
+      },
+      "freckles": {
+        "value": null,
+        "status": "unknown"
+      },
+      "postureAsymmetry": {
+        "value": "闲时轻微偏侧重心，不妨碍正面拆分",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "mobilityNeeds": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperArmShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forearmShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wristShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "thighShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "calfShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ankleShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "legAxis": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperLimbTaper": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lowerLimbTaper": {
+        "value": null,
+        "status": "unknown"
+      },
+      "legMuscleDistribution": {
+        "value": null,
+        "status": "unknown"
+      },
+      "armMuscleDistribution": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pelvisTilt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "spinalCurve": {
+        "value": null,
+        "status": "unknown"
+      },
+      "handFingerLengthRatios": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodySilhouetteType": {
+        "value": "小个子成年女性，甜辣穿搭形成明确腰线",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "shoulderToHipWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistToHipWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headToShoulderWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "face": {
+      "faceShape": {
+        "value": "小巧成人心形脸",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "forehead": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cheekbones": {
+        "value": "略圆但不娃娃脸",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "jawline": {
+        "value": "线条收窄，保留成年骨相",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "chin": {
+        "value": "圆尖而不童稚",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "noseBridge": {
+        "value": "鼻梁小巧挺直",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "noseTip": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthShape": {
+        "value": "一侧上扬的挑衅坏笑",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "lips": {
+        "value": null,
+        "status": "unknown"
+      },
+      "teeth": {
+        "value": "微露一侧小虎牙（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "ears": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyebrows": {
+        "value": "细眉、单边稍上挑",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "eyelidShape": {
+        "value": "略半眯，带挑衅眼神",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "eyeShape": {
+        "value": "外眼尾微上挑的猫眼",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "eyeSpacing": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeCornerAngle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeColor": {
+        "value": "灰玫瑰粉色（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "eyeHex": {
+        "value": "#BD627A",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "pupilColor": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeHighlights": {
+        "value": "单点亮光与柔和辅助反射",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "eyelashes": {
+        "value": "轻而精细的上眼睫毛",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "defaultExpression": {
+        "value": "嘴硬得意的微笑与眼下轻微疲惫",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "facialLandmarkSystem": {
+        "value": null,
+        "status": "unknown"
+      },
+      "facialLandmarksNormalized": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceLengthToWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "foreheadToFaceHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "jawWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cheekboneWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeCenterHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "interocularSpacingRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyebrowEyeGapRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseTopHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseTipHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthCenterHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "philtrumLengthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "earTopHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "earBottomHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeTailSlantDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyelidOpennessBaseline": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lipCornerSlopeDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "browAngleDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionLandmarkVariants": {
+        "value": "得意坏笑／吃瘪惊讶／求助却嘴硬／疲惫空眼神（提案）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "noseToMouthDistanceRatio": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "hair": {
+      "hairBaseColor": {
+        "value": "灰莓粉",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hairHex": {
+        "value": "#B77787",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hairHighlights": {
+        "value": "低饱和的玫瑰粉柔和挑染",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hairLength": {
+        "value": "双马尾至胸背附近（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hairTexture": {
+        "value": "柔软顺直，发尾轻卷",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hairDensity": {
+        "value": null,
+        "status": "unknown"
+      },
+      "parting": {
+        "value": "中分偏侧",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "bangs": {
+        "value": "薄碎刘海有明显分束",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "sidelocks": {
+        "value": "颊侧柔软细束",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "ponytailCount": {
+        "value": 2,
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "ponytailPosition": {
+        "value": "左右对称略高，避免幼儿夸张位置",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "ponytailLength": {
+        "value": "中长，后方可独立物理摆动",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hairAccessories": {
+        "value": "两条略旧的小蝴蝶结",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "accessorySide": {
+        "value": null,
+        "status": "unknown"
+      },
+      "accessoryPosition": {
+        "value": null,
+        "status": "unknown"
+      },
+      "backSilhouette": {
+        "value": "完整双马尾背部轮廓，不与女二单马尾重合",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "wardrobe": {
+      "outerwear": {
+        "value": "略旧灰粉针织短外套，袖口轻微起球",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "shirt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "blouse": {
+        "value": "奶油白细荷叶边成人日常上衣",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "neckwear": {
+        "value": null,
+        "status": "unknown"
+      },
+      "skirt": {
+        "value": "深莓黑高腰A字短裙",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "trousers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "socks": {
+        "value": "深色略松的长袜",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "footwear": {
+        "value": "磨损的黑色玛丽珍平底鞋",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "garmentLayerOrder": {
+        "value": "双马尾后束→内搭→外套→裙→袜→鞋→发前束与细饰品",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "paletteHex": {
+        "value": [
+          "#B77787",
+          "#EDE1DA",
+          "#43323F",
+          "#24252C"
+        ],
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "fabrics": {
+        "value": "平价针织、棉混纺、普通百褶或轻薄斜纹面料",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "sewingDetails": {
+        "value": "简洁可辨的缝线与口袋边；不堆繁杂饰物",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "pleats": {
+        "value": null,
+        "status": "unknown"
+      },
+      "buttons": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pockets": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wearCondition": {
+        "value": "清洁但略旧，经济状况隐约可见",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "seasonalVariants": {
+        "value": null,
+        "status": "unknown"
+      },
+      "occasionVariants": {
+        "value": null,
+        "status": "unknown"
+      },
+      "permanentAccessories": {
+        "value": "便宜的蝴蝶结发饰与一个小吊坠",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "temporaryProps": {
+        "value": "常驻立绘双手不拿道具",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "temperament": {
+      "coreConfirmedTraits": {
+        "value": [
+          "雌小鬼气质",
+          "楚楚可怜",
+          "孤独",
+          "人生失意"
+        ],
+        "status": "user_confirmed",
+        "source": "2026-11-04 用户明确提出成年非学生雌小鬼、楚楚可怜孤家寡人失败人生及天使交易者概念"
+      },
+      "proposedTraits": {
+        "value": [
+          "嘴硬",
+          "爱挑衅",
+          "机灵",
+          "害怕被同情"
+        ],
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "strengths": {
+        "value": "察言观色，善于在糟糕环境里保持表面镇定",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "weaknesses": {
+        "value": "把关心误读成怜悯，习惯先刺伤别人",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "socialEnergy": {
+        "value": "外显活跃，独处时迅速沉默",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "humorStyle": {
+        "value": "主动取笑与自嘲",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "conflictStyle": {
+        "value": "先阴阳怪气后缩回防线",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "fears": {
+        "value": "无人需要自己，被轻易抛弃（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "angerTriggers": {
+        "value": "被公开施舍、被当成孩子（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "stressResponse": {
+        "value": "嘴上更刻薄，细微眼神回避",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "defenseMechanism": {
+        "value": "以挑衅隐藏自卑",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "moralLimits": {
+        "value": null,
+        "status": "unknown"
+      },
+      "goals": {
+        "value": "看起来绝对不需要别人（外显）；获得稳定关系（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "contradictions": {
+        "value": "笑着赶人走，却害怕别人真的离开",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "publicPersona": {
+        "value": "嘴欠得意的小恶魔",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "privatePersona": {
+        "value": "疲惫、低落却不轻易放弃的成年女性",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "emotionalBaseline": {
+        "value": "紧绷的乐观伪装",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "expressionRange": {
+        "value": "坏笑→被戳穿→气急→勉强镇定→孤独时放空",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "defaultMicroExpression": {
+        "value": "单边嘴角上扬、右眉轻抬",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "signatureMicroExpressions": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyesExpression": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyebrowsExpression": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthExpression": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodyLanguageMood": {
+        "value": null,
+        "status": "unknown"
+      },
+      "composureLevel": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "psychology": {
+      "innerNeed": {
+        "value": "被认真看见，而不是被施舍",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "externalGoal": {
+        "value": "获得更有保障的日常生活（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "secretGoal": {
+        "value": "让某个人主动选择留下（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "belief": {
+        "value": "先嘲讽别人就不会先被看穿",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "selfImage": {
+        "value": "自称聪明潇洒，实际对失败很敏感",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "insecurities": {
+        "value": "经济与关系都未能建立安全感",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "regrets": {
+        "value": null,
+        "status": "unknown"
+      },
+      "traumaIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      },
+      "attachmentStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trustPattern": {
+        "value": "先挑刺，后通过长期行动形成信任",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "breakingPoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "growthArc": {
+        "value": "从靠挑衅保护自己，到可以坦白表达需求（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "values": {
+        "value": "尊严、自主与不被怜悯",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "dialogue": {
+      "voicePitch": {
+        "value": "偏高但仍是成人女性自然嗓音",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "voiceTimbre": {
+        "value": "带笑的轻鼻音，疲惫时低哑",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "speechRate": {
+        "value": "挑衅时偏快，失落时明显变慢",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "voiceVolume": {
+        "value": null,
+        "status": "unknown"
+      },
+      "tone": {
+        "value": "阴阳怪气的小恶魔口吻；关键情绪反差",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "accents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "diction": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sentenceLength": {
+        "value": "短促反问、故意延长的尾音",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "vocabulary": {
+        "value": null,
+        "status": "unknown"
+      },
+      "habitualPhrases": {
+        "value": [
+          "咦，这都不知道？",
+          "你该不会是在可怜我吧？"
+        ],
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "sarcasmLevel": {
+        "value": "高，但不能无意义重复骂人",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "laughStyle": {
+        "value": "轻哼、憋笑、讥笑",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "cryingStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "speechUnderStress": {
+        "value": "开头仍强撑挑衅，后来吞音",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "dialogueExamples": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forbiddenVoicePatterns": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "behavior": {
+      "idlePose": {
+        "value": "正面自然站立，双臂略离身体、双手空置，轻抬下巴",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "signatureGesture": {
+        "value": "单边挑眉与小角度歪头",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "greetingHabit": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gazePattern": {
+        "value": "先直视再迅速移开",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "blinkHabit": {
+        "value": "挑衅时眨眼偏慢",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "eyebrowMotion": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headTilt": {
+        "value": "轻微偏头，不影响L2D中性骨架",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "walkCycle": {
+        "value": "轻快小步伐",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "runningCycle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "nervousTics": {
+        "value": "攥衣角后又假装无事",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "sleepRhythm": {
+        "value": "夜班生活导致不规律（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "eatingStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "favoriteFoods": {
+        "value": "便利店打折便当（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hobbies": {
+        "value": "夜间打游戏和听歌（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "dailyRoutine": {
+        "value": "夜班—回租屋—补觉—出门（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "timeManagement": {
+        "value": null,
+        "status": "unknown"
+      },
+      "transportation": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "relationships": {
+      "familyRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "schoolRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "friendRelations": {
+        "value": "很少有真正亲近的朋友（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "rivalRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mentorRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "romancesIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationshipToProtagonist": {
+        "value": "喜欢挑衅女主，女主不受影响而让她失去节奏（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "relationshipToMaleLead": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trustFlags": {
+        "value": "遭善意时先否认、逐渐相信（设计机制）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "secretsShared": {
+        "value": null,
+        "status": "unknown"
+      },
+      "conflictHistory": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationProgression": {
+        "value": "熟客→互怼→暴露困境→共同应对里世界（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "skills": {
+      "talents": {
+        "value": "观察情绪与不对劲的社交细节",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "weaknesses": {
+        "value": "体力和持续高压表现欠佳（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "learnedSkills": {
+        "value": null,
+        "status": "unknown"
+      },
+      "academicSkills": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workSkills": {
+        "value": "夜班收银、电脑设备基础处理（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "combatAbility": {
+        "value": "未定；不得默认她会打怪或已经是战斗成员",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "physicalEndurance": {
+        "value": null,
+        "status": "unknown"
+      },
+      "agility": {
+        "value": null,
+        "status": "unknown"
+      },
+      "perception": {
+        "value": "较敏锐，但容易被自身恐惧误导",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "charisma": {
+        "value": null,
+        "status": "unknown"
+      },
+      "supernaturalPowers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "powerCosts": {
+        "value": null,
+        "status": "unknown"
+      },
+      "equipment": {
+        "value": "常驻立绘无武器",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "inventory": {
+        "value": "不预设道具，需要玩法事件提供",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "healthIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "story": {
+      "firstAppearance": {
+        "value": "夜间电竞馆，尚未锁定具体章回",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "locationEntrances": {
+        "value": null,
+        "status": "unknown"
+      },
+      "originStory": {
+        "value": "成年后事业与人际连续受挫（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "incitingEvent": {
+        "value": "天使交易机会触及她无法回避的生活缺口（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "keyScenes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "storyGoals": {
+        "value": "寻求不必靠逞强才能获得的归属（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "branchingChoices": {
+        "value": "接受帮助／反击施舍／坦白真实愿望（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "secrets": {
+        "value": null,
+        "status": "unknown"
+      },
+      "reveals": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationshipEvents": {
+        "value": "与女主由互相嘲讽发展到依赖可能性（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "questEvents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "alternateEndings": {
+        "value": null,
+        "status": "unknown"
+      },
+      "chronologicalHistory": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "environment": {
+      "home": {
+        "value": "廉价小单间（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "school": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workplace": {
+        "value": "城市夜间电竞馆（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "roomOwnership": {
+        "value": "租住，不是自己房产（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "itemOwnership": {
+        "value": "仅在剧情需要时出现个人物品，不默认放进空房间",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "furnitureConditions": {
+        "value": null,
+        "status": "unknown"
+      },
+      "weatherResponse": {
+        "value": null,
+        "status": "unknown"
+      },
+      "locationsVisited": {
+        "value": null,
+        "status": "unknown"
+      },
+      "npcSchedule": {
+        "value": "日间休息、夜间工作（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "worldEra": {
+        "value": "当代架空城市",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "visualProduction": {
+      "frontReference": {
+        "value": "尚无用户验收的正式正面母图",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "backReference": {
+        "value": "尚未绘制背面母图",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "sideReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "threeQuarterReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "poseReference": {
+        "value": "正面自然中性站立，空手、无装备、鞋完整",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "expressionReferences": {
+        "value": "坏笑、吃瘪、疲惫、动摇、认真（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "silhouetteLocked": {
+        "value": false,
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "colorPalette": {
+        "value": [
+          "#B77787",
+          "#EDE1DA",
+          "#43323F",
+          "#24252C"
+        ],
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "artStyle": {
+        "value": "延续既有Anima人物画风，不复刻其他作品角色",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "imageAspectRatio": {
+        "value": "1024:1024",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "whiteBackgroundRule": {
+        "value": "纯色易抠图背景，最终透明PNG",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "fullBodyRule": {
+        "value": "头顶到脚底完整",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "centeredRule": {
+        "value": "1024原位画布人物居中",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "occlusionRule": {
+        "value": "双手与躯干分离以便拆层，鞋腿不能缺失",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "promptPositive": {
+        "value": null,
+        "status": "unknown"
+      },
+      "promptNegative": {
+        "value": null,
+        "status": "unknown"
+      },
+      "modelVersion": {
+        "value": "Anima（以用户当前本地模型版本为准）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "artistTag": {
+        "value": "@akipekostyle",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "lora": {
+        "value": "<lora:akipekoanima_v1_1:1>",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "seed": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sampler": {
+        "value": null,
+        "status": "unknown"
+      },
+      "resolution": {
+        "value": "1024x1024",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "sourceFileHash": {
+        "value": null,
+        "status": "unknown"
+      },
+      "assetApproval": {
+        "value": "未验收，不可自动入正式游戏",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "bodyFacingYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "headFacingYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "headPitchDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headRollDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pelvisYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gazeHorizontalDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gazeVerticalDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cameraAngle": {
+        "value": "平视正面",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "cameraFocalStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "projectionOrthoPerspective": {
+        "value": null,
+        "status": "unknown"
+      },
+      "visualStyleCategory": {
+        "value": "二次元GalGame全身角色立绘",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "lineWeightStyle": {
+        "value": "精细清晰、轮廓不浮夸",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "lineColor": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shadingMethod": {
+        "value": "柔和赛璐璐分层阴影",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "shadowDensity": {
+        "value": null,
+        "status": "unknown"
+      },
+      "highlightTreatment": {
+        "value": null,
+        "status": "unknown"
+      },
+      "textureComplexity": {
+        "value": null,
+        "status": "unknown"
+      },
+      "anatomicalStylization": {
+        "value": null,
+        "status": "unknown"
+      },
+      "facialFeatureStylization": {
+        "value": null,
+        "status": "unknown"
+      },
+      "characterIdentityEmbeddingNotes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "frontPosePoseCode": {
+        "value": null,
+        "status": "unknown"
+      },
+      "poseSilhouetteNotes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "framingHeadroomRatio": {
+        "value": "少量头顶留白，不裁发饰",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "framingFootroomRatio": {
+        "value": "脚底保留空间",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "bodyAlignmentRule": {
+        "value": "重心对齐脚底，不做夸张S形动态",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "rigging": {
+      "layerSource": {
+        "value": "未来真实PSD/SeeThrough分层，当前没有",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "layerList": {
+        "value": "后发双马尾、脸、前发、眉、眼白、虹膜、睫毛、嘴、颈、内搭、外套、左右袖手、裙、左右腿、袜鞋",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "headJoint": {
+        "value": "头随颈部父级移动",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "neckJoint": {
+        "value": "颈根父级连肩",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "shoulderJoint": {
+        "value": "左右肩分别连接袖子手臂",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "elbowJoint": {
+        "value": "真图层允许时才绑定独立肘",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "wristJoint": {
+        "value": "独立手腕需要真实补绘",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hipJoint": {
+        "value": "脚不动，髋通过下肢IK",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "kneeJoint": {
+        "value": "腿部独立分段时才绑定",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "ankleJoint": {
+        "value": "两脚钉地",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "eyeTrack": {
+        "value": null,
+        "status": "unknown"
+      },
+      "blink": {
+        "value": "眼部必须拆层后才实现",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "mouthShapes": {
+        "value": "根据原画口型进行微笑、惊讶、紧闭嘴差分",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hairPhysics": {
+        "value": "两束马尾独立轻摆，避免假小子头发动作",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "clothPhysics": {
+        "value": "短外套袖口与裙摆低幅摆动",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "breathingPhysics": {
+        "value": "仅上胸细微联动，不让裙鞋整体缩放",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "skinningLimits": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionStates": {
+        "value": "smug, tired, surprised, guarded, honest",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "actionStates": {
+        "value": "idle, dialogue; battle未设计",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "runtimePreview": {
+        "value": "未接入",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "occlusionRepair": {
+        "value": null,
+        "status": "unknown"
+      },
+      "qaAnimation": {
+        "value": "导入之后检查发丝遮挡与手部骨骼",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "armRotationBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipRotationBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeFlexBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyelidOpennessChannel": {
+        "value": null,
+        "status": "unknown"
+      },
+      "browDeformationChannels": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthCornerChannels": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionLandmarkMotion": {
+        "value": null,
+        "status": "unknown"
+      },
+      "frontSideBackProportionsQa": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "audio": {
+      "voiceCasting": {
+        "value": "成年女性偏高声音，表面坏笑、底层疲惫",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "pronunciation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "multilingualNotes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "recordedVoices": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footstepSfx": {
+        "value": "玛丽珍鞋的轻微室内脚步声（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "costumeSfx": {
+        "value": "轻针织衣料，不夸张",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "voiceVolume": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ambienceRules": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "gameplay": {
+      "npcSchedule": {
+        "value": "随夜班工作与睡眠变化（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "dialogueTree": {
+        "value": "挑衅／求助／坦白愿望多分支",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "affinity": {
+        "value": "先防备、后信任的独立进度（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "trust": {
+        "value": "对怜悯敏感，真诚行动增长信任（候选）",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "playerControl": {
+        "value": "默认NPC，未指定可操控",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "interactRange": {
+        "value": null,
+        "status": "unknown"
+      },
+      "characterSelection": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sceneLayers": {
+        "value": "独立L2D角色层，非背景固定摆件",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "collisionBounds": {
+        "value": null,
+        "status": "unknown"
+      },
+      "saveFlags": {
+        "value": "交易状态／信任／剧情结局未来需要存档",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "choiceTriggers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "npcBrain": {
+        "value": "常规班次与临时避险，不是每夜永远待在同一位置",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "flagsVariables": {
+        "value": null,
+        "status": "unknown"
+      },
+      "inventoryRules": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "quality": {
+      "originalityCheck": {
+        "value": "与既有核心人物及其它作品面相独立对比",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "similarityCheck": {
+        "value": "不得变成女三假小子、女二单马尾或女四大小姐换皮",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "faceConsistency": {
+        "value": "待出母图后验证",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "hairSideCheck": {
+        "value": "双马尾左右位置保持一致",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "visualIdentityCheck": {
+        "value": "成年非学生且可爱嘴硬与可怜反差成立",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "handsCheck": {
+        "value": "正面五指完整，双手可单独拆分",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "feetCheck": {
+        "value": "鞋子与双脚必须完整",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "fullBodyCheck": {
+        "value": "全身不裁切",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "measurementProvenanceCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "outfitCheck": {
+        "value": "便宜甜辣女装非校服非中性工装",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "sourceRightsCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "rigCheck": {
+        "value": "真实分层才能宣称完成",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "poseCheck": {
+        "value": "自然正面站立",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "screenshotCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "approvalRecord": {
+        "value": "未验收",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "rollbackReference": {
+        "value": "尚无母图",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    },
+    "provenance": {
+      "createdAt": {
+        "value": "2026-11-04",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "updatedAt": {
+        "value": "2026-11-04",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "userConfirmedFields": {
+        "value": [
+          "成年",
+          "非学生",
+          "雌小鬼",
+          "楚楚可怜",
+          "孤家寡人",
+          "失败人生",
+          "交易者有现实缺口"
+        ],
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "sourceCitations": {
+        "value": [
+          "2026-11-04 当次对话",
+          "docs/ANGEL_TRADE_AND_SAN_CANON_20261104.md"
+        ],
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "proposedFields": {
+        "value": "年龄、姓名、具体服装及工作、发色、身材数值均为候选",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "unknownFields": {
+        "value": "天使名字、合同金额、债务、父母家庭史、故事结局、正式美术和L2D",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "rejectedFields": {
+        "value": null,
+        "status": "unknown"
+      },
+      "revisionHistory": {
+        "value": "V0.1：废弃中性假小子机能服，改为成年落魄小恶魔型女性",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "authorReviewer": {
+        "value": null,
+        "status": "unknown"
+      },
+      "approvedBy": {
+        "value": null,
+        "status": "unknown"
+      },
+      "permissions": {
+        "value": "美术未验收，不自动投入游戏",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      },
+      "historyNotes": {
+        "value": "保留48人名册CHAR-035编号，不新建额外身份",
+        "status": "proposed",
+        "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+      }
+    }
+  },
+  "extensions": {
+    "extensionSchema": "docs/characters/ANGEL_TRANSACTION_SAN_EXTENSION_V1.json",
+    "schemaVersion": 1,
+    "fields": {
+      "tradeEligibility": {
+        "participationRole": {
+          "value": "成年天使交易者；与非自愿入场清道夫身份分离",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确提出成年非学生雌小鬼、楚楚可怜孤家寡人失败人生及天使交易者概念"
+        },
+        "recruitedBy": {
+          "value": null,
+          "status": "unknown"
+        },
+        "recruitmentVoluntary": {
+          "value": null,
+          "status": "unknown"
+        },
+        "dealOptIn": {
+          "value": null,
+          "status": "unknown"
+        },
+        "participationStatus": {
+          "value": null,
+          "status": "unknown"
+        },
+        "firstContact": {
+          "value": null,
+          "status": "unknown"
+        },
+        "eligibilityCriteria": {
+          "value": null,
+          "status": "unknown"
+        },
+        "civilianLifeStatus": {
+          "value": "现实世界普通成年城市劳动者（职业详情候选）",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        }
+      },
+      "tradeDesire": {
+        "lifeDeficit": {
+          "value": "人生失意、孤家寡人、楚楚可怜；具体事件未定",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确提出成年非学生雌小鬼、楚楚可怜孤家寡人失败人生及天使交易者概念"
+        },
+        "outwardMask": {
+          "value": "挑衅与嘴硬掩盖狼狈",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "trueWish": {
+          "value": "希望被真正需要，摆脱孤独；仅是候选",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "spokenWish": {
+          "value": "她未必承认自己有所求（候选）",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "deepestFear": {
+          "value": "被抛下和被居高临下地怜悯（候选）",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "emotionalTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "desiredChange": {
+          "value": "希望现实拥有稳定关系和体面生活（候选）",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "desperationScale": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "tradeContract": {
+        "angelCounterparty": {
+          "value": null,
+          "status": "unknown"
+        },
+        "contractTerms": {
+          "value": null,
+          "status": "unknown"
+        },
+        "requestedBenefit": {
+          "value": null,
+          "status": "unknown"
+        },
+        "promisedReward": {
+          "value": null,
+          "status": "unknown"
+        },
+        "upfrontCost": {
+          "value": null,
+          "status": "unknown"
+        },
+        "hiddenCost": {
+          "value": null,
+          "status": "unknown"
+        },
+        "debtState": {
+          "value": null,
+          "status": "unknown"
+        },
+        "cancellationRule": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "sanityRules": {
+        "startingSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "baselineSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "minimumSan": {
+          "value": 0,
+          "status": "proposed",
+          "source": "docs/ANGEL_TRADE_AND_SAN_CANON_20261104.md"
+        },
+        "maximumSan": {
+          "value": 100,
+          "status": "proposed",
+          "source": "docs/ANGEL_TRADE_AND_SAN_CANON_20261104.md"
+        },
+        "monsterEncounterDelta": {
+          "value": null,
+          "status": "unknown"
+        },
+        "combatKillDelta": {
+          "value": null,
+          "status": "unknown"
+        },
+        "passiveDecayRule": {
+          "value": "是否自然下降、恢复速度尚未设计",
+          "status": "proposed",
+          "source": "docs/ANGEL_TRADE_AND_SAN_CANON_20261104.md"
+        },
+        "otherNegativeEffectRule": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "fearAndCombat": {
+        "fearResponse": {
+          "value": "会产生恐惧与心理动摇；与女主无惧形成对照",
+          "status": "proposed",
+          "source": "docs/ANGEL_TRADE_AND_SAN_CANON_20261104.md"
+        },
+        "enemyClarityEffect": {
+          "value": null,
+          "status": "unknown"
+        },
+        "killSatisfactionEffect": {
+          "value": null,
+          "status": "unknown"
+        },
+        "battleMentalTrajectory": {
+          "value": null,
+          "status": "unknown"
+        },
+        "retreatTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "nonMonsterThreatResponse": {
+          "value": null,
+          "status": "unknown"
+        },
+        "panicThreshold": {
+          "value": null,
+          "status": "unknown"
+        },
+        "exceptions": {
+          "value": "没有女主的 SAN 不掉落特例",
+          "status": "proposed",
+          "source": "docs/ANGEL_TRADE_AND_SAN_CANON_20261104.md"
+        }
+      },
+      "mentalPresentation": {
+        "idleEmotion": {
+          "value": "得意坏笑底下藏着疲惫",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "threatExpression": {
+          "value": "眼神短暂僵住，立刻重新强撑坏笑",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "attackExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "victoryExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "lowSanExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "socialMask": {
+          "value": "狡黠、挑衅、嘴硬",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "maskBreakTrigger": {
+          "value": "真诚的关心或暴露生活困境",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "psychologicalAftereffect": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "plotTransaction": {
+        "preDealLife": {
+          "value": "社会关系稀薄、生活不顺（具体履历未定）",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确提出成年非学生雌小鬼、楚楚可怜孤家寡人失败人生及天使交易者概念"
+        },
+        "incitingIncident": {
+          "value": "因无法独自解决的现实缺口接触天使交易",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "dealDecisionScene": {
+          "value": null,
+          "status": "unknown"
+        },
+        "turningPoint": {
+          "value": null,
+          "status": "unknown"
+        },
+        "characterArc": {
+          "value": null,
+          "status": "unknown"
+        },
+        "relationToHeroine": {
+          "value": "无法理解女主为何享受杀怪，又被她的冷淡反将一军",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "angelManipulationCounter": {
+          "value": null,
+          "status": "unknown"
+        },
+        "unresolvedQuestion": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "runtimeAndQA": {
+        "mechanicState": {
+          "value": "只有人物设定；交易系统与SAN尚未为此角色实施",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        },
+        "saveDataKey": {
+          "value": null,
+          "status": "unknown"
+        },
+        "currentSanStorage": {
+          "value": null,
+          "status": "unknown"
+        },
+        "clamping": {
+          "value": null,
+          "status": "unknown"
+        },
+        "combatEvents": {
+          "value": null,
+          "status": "unknown"
+        },
+        "guiRules": {
+          "value": null,
+          "status": "unknown"
+        },
+        "regressionTests": {
+          "value": null,
+          "status": "unknown"
+        },
+        "approvalStatus": {
+          "value": "人物设定候选，无正式立绘和L2D",
+          "status": "proposed",
+          "source": "2026-11-04 角色候选设计，尚无用户美术验收"
+        }
+      }
+    }
+  },
+  "updatedAt": "2026-11-04",
+  "recordVersion": "0.1-proposal",
+  "sourceNotes": [
+    "用户确认：成年非学生、雌小鬼、楚楚可怜孤家寡人失败人生、参与天使交易；其他外貌和职业参数均为AI候选",
+    "无已批准原画/PSD/L2D，扩展64字段并不等于功能实装"
+  ],
+  "fieldCount": 512,
+  "fieldBreakdown": {
+    "base": 448,
+    "extension": 64
+  }
+}
