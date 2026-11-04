@@ -66,7 +66,7 @@ def restore_original_inputs(library: Path) -> None:
     from zipfile import ZipFile
     inbox = library.parent / "inbox"
     definitions = (
-        (BASE_ID, "wearableSource", "binding", "shared-leg-field-v1",
+        (BASE_ID, "wearableSource", "binding", "pelvis-waist-dual-thigh-v2",
          ("module.json", "front.rig.json", "front.png"),
          ("front/pants_overlay.png", "front.pristine-source.png")),
         (OUTFIT_ID, "sleeveRigFix", None, "paired-shoulder-elbow-v1",
@@ -149,16 +149,17 @@ def install(library: Path) -> bool:
     # additional shorts ArtMesh is placed in front of the leg/torso.
     pants = {
         "id": PANTS_ID, "name": "女六 · 黑色短裤", "x": x, "y": y,
-        "w": w, "h": h, "parentId": "legwear", "kind": "pants-bound",
+        "w": w, "h": h, "parentId": "pelvis", "kind": "pants-bound",
         "pivot": {"x": .5, "y": .09}, "tip": {"x": .5, "y": .91},
         "placement": PANTS_PLACEMENT.copy(),
         "mesh": {"rows": 12, "columns": 12},
         "bones": [],
         "motion": {"x": 0, "y": 0, "angle": 0, "frequency": 1, "phase": 0},
         "skinBinding": {
-            "target": "legwear", "method": "shared-leg-field-v1",
+            "target": "legwear", "method": "pelvis-waist-dual-thigh-v2",
             "waist": "pelvis", "left": "left-knee",
-            "right": "right-knee", "rootLock": 1.0
+            "right": "right-knee", "waistLock": 1.0,
+            "transition": [.42, .84], "rootLock": 1.0
         },
         "enabled": True,
     }
@@ -172,9 +173,9 @@ def install(library: Path) -> bool:
     strengths[PANTS_ID] = 0
     base_rig["wearableSource"] = {
         "outfitId": OUTFIT_ID, "sourcePart": "bottomwear",
-        "fittedTo": "legwear", "binding": "shared-leg-field-v1",
+        "fittedTo": "legwear", "binding": "pelvis-waist-dual-thigh-v2",
         "fitPlacement": PANTS_PLACEMENT.copy(),
-        "fitRevision": "female06-hip-geometry-v2",
+        "fitRevision": "female06-pelvis-waist-v3",
         "noTextureRegeneration": True
     }
     base_mod["views"]["front"]["rig"]["textures"][PANTS_ID] = "front/" + PANTS_ID + ".png"
