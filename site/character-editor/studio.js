@@ -785,7 +785,7 @@ async function importComponentFiles(files,options={}){
   // The previous 19-layer import left behind an untouched auto-created
   // “未命名透明层”, producing a fake 22nd item in the 21-layer original PSD.
   // Never remove user-authored content; drop ONLY the exactly empty starter.
-  const keepAuxiliary=currentId==='char-004'&&face==='front'
+  const keepAuxiliary=(currentId==='char-004'||currentId==='male2')&&face==='front'
    ?auxiliary.filter(p=>!/^原始素材 · 正面$/.test(p.name)&&
       !(p.name==='未命名透明层'&&p.canvas&&!hasPaint(p.canvas)))
    :auxiliary;
