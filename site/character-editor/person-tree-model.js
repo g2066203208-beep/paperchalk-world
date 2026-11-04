@@ -8,7 +8,7 @@
 const NAMES=Object.freeze({
  protagonist:'女主角','char-002':'女二','char-003':'男主角',
  male2:'男二','char-004':'女三','char-005':'女四',
- 'female-06':'女六','class-teacher-geography-candidate':'女老师'
+ 'char-006':'女五 · 女老师','female-06':'女六'
 });
 const ORDER=['protagonist','char-002','char-003','male2','char-004','char-005',
  'female-06','class-teacher-geography-candidate'];
@@ -31,7 +31,9 @@ if(id==='male2'||raw==='male2')return 'male2';
  for(const name of ['char-002','char-003','char-004','char-005']){
   if(id===name||id.startsWith(name+'-')||raw===name)return name;
  }
- if(raw==='class-teacher-geography-candidate'||raw==='female-06')return raw;
+ if(id==='class-teacher-geography-candidate'||raw==='class-teacher-geography-candidate')return 'char-006';
+ if(raw==='char-006'||id==='char-006')return 'char-006';
+ if(raw==='female-06')return raw;
  for(const [pattern,canonical] of FALLBACK)
   if(pattern.test(String(record?.label||'').trim()))return canonical;
  return raw;
