@@ -45,16 +45,20 @@ crouchPanel.id='rig-crouch-motion';
 crouchPanel.hidden=true;
 crouchPanel.innerHTML=`<div class="rig-crouch-head"><strong>蹲下 · 持斧动态</strong><span>双手握柄绑定 · 鞋底锁定</span></div>
 <div class="rig-crouch-sliders">
+<label>身体重心／上身倾斜 <output data-out="body">100%</output>
+<input type="range" data-crouch="body" min="0" max="200" step="5" value="100" aria-label="蹲姿身体重心和躯干倾斜幅度"></label>
+<label>2.5D 转身透视／远近 <output data-out="depth">100%</output>
+<input type="range" data-crouch="depth" min="0" max="200" step="5" value="100" aria-label="蹲姿2.5D透视远近角度幅度"></label>
 <label>裙摆／外套下摆 <output data-out="cloth">100%</output>
-<input type="range" data-crouch="cloth" min="0" max="150" step="5" value="100" aria-label="蹲姿裙摆和外套下摆摆动强度"></label>
+<input type="range" data-crouch="cloth" min="0" max="200" step="5" value="100" aria-label="蹲姿裙摆和外套下摆摆动强度"></label>
 <label>斧头＋双手同步 <output data-out="axe">100%</output>
-<input type="range" data-crouch="axe" min="0" max="150" step="5" value="100" aria-label="蹲姿斧头与两只手同步动态强度"></label>
+<input type="range" data-crouch="axe" min="0" max="200" step="5" value="100" aria-label="蹲姿斧头与两只手同步动态强度"></label>
 <label>左右大腿承重 <output data-out="legs">100%</output>
-<input type="range" data-crouch="legs" min="0" max="150" step="5" value="100" aria-label="蹲姿左右腿承重动态强度"></label>
+<input type="range" data-crouch="legs" min="0" max="200" step="5" value="100" aria-label="蹲姿左右腿承重动态强度"></label>
 <label>鞋面微弯（鞋底固定） <output data-out="feet">100%</output>
-<input type="range" data-crouch="feet" min="0" max="150" step="5" value="100" aria-label="蹲姿鞋面弯曲强度"></label>
+<input type="range" data-crouch="feet" min="0" max="200" step="5" value="100" aria-label="蹲姿鞋面弯曲强度"></label>
 </div>
-<small>始终保持原始蹲姿；根部固定，末端渐变。动态参数保存到当前 L2D 与游戏，不改原图。</small>`;
+<small>保留本浏览器的精修贴图和蒙版。身体、脸、双手与斧头共享 2.5D 透视；握柄连接、鞋底固定。仅增加动态，不重写原图。</small>`;
 panel.querySelector('#rig-source').after(crouchPanel);
 const crouchCSS=document.createElement('style');
 crouchCSS.textContent=`
