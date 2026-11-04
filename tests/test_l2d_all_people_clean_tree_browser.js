@@ -18,7 +18,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    ['female-06-outfit-02','female-06','女六'],
    ['char-006','char-006','女五 · 女老师'],
    ['protagonist-sleepwear','protagonist','女主角'],
-   ['char-003-outfit-02','char-003','男主角']
+   ['char-003','char-003','男主角']
   ];
   for(const [id,family,name] of cases){
    await page.goto(BASE+'?character='+encodeURIComponent(id)+'&side=front',
@@ -77,6 +77,13 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    }
    console.log('PASS actor tree',id,'=>',family,'import',audit.importTarget);
   }
+  // The old "outfit" URL now opens the SAME canonical male-lead FRONT.
+  await page.goto(BASE+'?character=char-003-outfit-02&side=front',
+   {waitUntil:'load'});
+  await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-003',
+   null,{timeout:35000});
+  assert.equal(await page.locator('.character-family[data-family="char-003"]').count(),1);
+  assert.equal(await page.locator('.character-family[data-family="char-003"] [data-category="outfit"] button[data-character="char-003-outfit-02"]').count(),0);
   // Old teacher URL must select the same CHAR-006, not create a second playable teacher.
   await page.goto(BASE+'?character=class-teacher-geography-candidate&side=front',
     {waitUntil:'load'});
