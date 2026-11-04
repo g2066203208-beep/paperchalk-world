@@ -47,8 +47,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    window.PaperchalkPartRigStudio?.state?.active&&
    window.PaperchalkPartRigStudio.state.model.parts.pants_overlay.placement.scaleX===.86,
    null,{timeout:50000});
-  assert.equal(await page.locator('#rig-fit-width').inputValue(),'86');
   await page.locator('#rig-part').selectOption('pants_overlay');
+  assert.equal(await page.locator('#rig-fit-width').inputValue(),'86');
   assert.equal(await page.locator('#rig-fit-height').inputValue(),'110');
   await page.locator('#rig-fit-reset').click();
   await page.locator('#btnSave').click();
