@@ -20,7 +20,9 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.deepEqual(await root.locator(':scope > .character-family-children > .character-resource-section > .character-resource-heading').allTextContents(),
    ['基础立绘','动作','服装'],'only canonical primary views, actions and outfits');
   assert.equal(await root.locator('[data-category="base"] button').count(),2);
-  assert.equal(await root.locator('[data-category="action"] button').count(),1);
+  assert.equal(await root.locator('[data-category="action"] button').count(),2);
+  assert.equal(await root.locator('[data-category="action"] button[data-character="protagonist-crouch-axe"]').count(),1,
+    'the heroine crouching axe source must appear as a real action, not a new person');
   assert.equal(await root.locator('[data-category="outfit"] button').count(),1);
   assert.equal(await root.locator('[data-category="action"] button[data-action="combat"]').count(),1);
   assert.equal(await root.locator('[data-category="outfit"] button[data-character="protagonist-sleepwear"]').count(),1);
