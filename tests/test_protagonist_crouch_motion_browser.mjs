@@ -146,12 +146,12 @@ try{
  });
  assert.equal(actual.id,'protagonist-crouch-axe');
  assert.equal(actual.parts,25);
- assert.equal(actual.enabled,8);
+ assert.equal(actual.enabled,25,'all head, face, hair and limb meshes inherit the safe shared parent field');
  assert.deepEqual(actual.motion,{version:2,cloth:1.15,axe:.9,legs:1.1,feet:.85,body:1,depth:1},
   'saved crouch strengths must be restored in SAME browser game slot');
  assert.deepEqual(gameErrors,[],'real game must load source action without JS errors');
  await game.screenshot({path:dir+'/game-crouch-dynamics.png'});
- console.log('PASS CROUCH SAME GAME RENDERER: 25 PSD layers / 8 coupled dynamic parts, no detached grip or floating sole');
+ console.log('PASS CROUCH SAME GAME RENDERER: 25 PSD layers / shared upper body + grounded limbs, no detached grip or floating sole');
  await game.close();
  await context.close();
 }finally{
