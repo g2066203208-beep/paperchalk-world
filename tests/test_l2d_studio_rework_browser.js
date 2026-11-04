@@ -25,8 +25,10 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   assert.equal(await page.locator('#easy-mode-switch').count(),0);
   assert.equal(await page.locator('#idle-open').isVisible(),false);
   assert.equal(await page.locator('#part-rig-panel').isVisible(),true);
-  assert.equal(await page.locator('header .actions button:visible').count(),2,
-    'header must only show Return and Save');
+  assert.equal(await page.locator('header .actions button:visible').count(),3,
+    'editor exposes Restore alongside the prior two core actions');
+  assert.equal(await page.locator('#btnRecovery').isVisible(),true,
+    'a professional editor must expose a visible repair/recovery entry');
   const safe=await page.evaluate(()=>({tool:window.characterEditor.S.tool,
     personRect:document.getElementById('studio-character-tree').getBoundingClientRect().toJSON(),
     layerRect:document.getElementById('layers').getBoundingClientRect().toJSON()}));
