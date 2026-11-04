@@ -9,6 +9,7 @@ on:
       - 'tests/test_l2d_all_people_clean_tree_browser.js'
       - 'site/l2d/part-rig.js'
       - 'tests/test_protagonist_crouch_dynamics.cjs'
+      - 'tests/test_l2d_restore_safety_browser.js'
       - 'scripts/bind_female06_pants.py'
       - 'tests/test_female06_pants_skin.cjs'
       - 'tests/test_l2d_part_placement.cjs'
@@ -598,6 +599,7 @@ jobs:
         run: |
           python3 -m http.server 8134 --directory site >/tmp/l2d-studio-rework.log 2>&1 &
           node tests/test_l2d_studio_rework_browser.js
+          node tests/test_l2d_restore_safety_browser.js
           node tests/test_l2d_person_tree_professional_browser.js
           node tests/test_l2d_all_people_clean_tree_browser.js
           node tests/test_female06_pants_wear_browser.js
