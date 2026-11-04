@@ -21,9 +21,10 @@ const catalog=[
  {id:'char-003-outfit-02',label:'男主 · 新衣服',familyId:'char-003',
   variantCategory:'outfit',front:'new-suit.png',l2dModule:{front:{rig:{partCount:17}}}},
  {id:'char-008-outfit-02',label:'女老师 · 新衣服（待导入）',
-  familyId:'class-teacher-geography-candidate',variantCategory:'outfit',
+  familyId:'char-006',variantCategory:'outfit',
   editorOnly:true,front:'data:image/svg+xml,placeholder'},
- {id:'class-teacher-geography-candidate',label:'女老师',front:'teacher.png'}
+ {id:'char-006',label:'女五 · 女老师',front:'teacher.png'},
+ {id:'class-teacher-geography-candidate',label:'历史女老师别名',familyId:'char-006',editorOnly:true}
 ];
 const roots=model.makeTree(catalog,'protagonist');
 const ids=roots.map(row=>row.family);
@@ -46,11 +47,13 @@ assert.equal(roots.find(x=>x.family==='char-003').sources.filter(
  x=>x.id==='old-male').length,1);
 assert.deepEqual(roots.find(x=>x.family==='char-003').outfits.map(x=>x.id),
  ['char-003-outfit-02']);
-assert.equal(roots.find(x=>x.family==='class-teacher-geography-candidate')
+assert.equal(roots.find(x=>x.family==='char-006')
  .outfits.length,0,'unimported wardrobes are not presented as playable');
-assert.ok(roots.find(x=>x.family==='class-teacher-geography-candidate')
+assert.ok(roots.find(x=>x.family==='char-006')
  .sources.some(x=>x.type==='pending'));
 assert.ok(ids.indexOf('protagonist')<ids.indexOf('char-002'));
+assert.equal(ids.filter(id=>id==='char-006').length,1,'female five and teacher must share one actor root');
+assert.equal(model.familyOf({id:'class-teacher-geography-candidate'}),'char-006');
 assert.equal(model.familyOf({id:'male2',label:'男二',familyId:'char-016'}),'male2');
 assert.equal(model.familyOf({id:'temp',label:'女二 · 旧拆分'}),'char-002');
 assert.equal(model.familyOf({id:'temp',label:'男主角 · 旧版'}),'char-003');
