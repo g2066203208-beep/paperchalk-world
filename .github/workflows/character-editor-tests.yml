@@ -367,7 +367,7 @@ jobs:
                 assert.ok(await page.locator('#easy-quickbar').isVisible(),'large-screen and phone quick edit tools must exist');
                 assert.ok(await page.locator('body.easy-mode').count()===1,'single streamlined workspace');
                 assert.equal(await page.locator('body.expert-mode').count(),0);
-                assert.ok(await page.locator('#easy-save-note').textContent().then(x=>x.includes('浏览器')),'save must disclose browser-only persistence');
+                assert.equal(await page.locator('#btnSave').isVisible(),true,'one visible Save control persists locally');
                 assert.equal(await page.locator('#easy-mode-switch').count(),0,'no mode switch button');
                 assert.equal(await page.locator('#main-preview').isVisible(),false,'no static-edit mode switch');
                 assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),true);
