@@ -25,8 +25,14 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   assert.equal(await page.locator('#easy-mode-switch').count(),0);
   assert.equal(await page.locator('#idle-open').isVisible(),false);
   assert.equal(await page.locator('#part-rig-panel').isVisible(),true);
-  assert.equal(await page.locator('header .actions button:visible').count(),1,
-    'header must show only the primary Save action');
+  assert.equal(await page.locator('header .actions button:visible').count(),2,
+    'header must only show Return and Save');
+  const safe=await page.evaluate(()=>({tool:window.characterEditor.S.tool,
+    personRect:document.getElementById('studio-character-tree').getBoundingClientRect().toJSON(),
+    layerRect:document.getElementById('layers').getBoundingClientRect().toJSON()}));
+  assert.equal(safe.tool,'select','opening the editor must never arm a brush');
+  assert.ok(safe.personRect.width>=315,'person tree must have comfortable width');
+  assert.ok(safe.personRect.height>=260,'person tree must have enough vertical room');
   assert.equal(await page.locator('#btnSave').isVisible(),true);
   assert.equal(await page.locator('#easy-imports').count(),1);
   assert.equal(await page.locator('#main-preview').isVisible(),false);
@@ -34,6 +40,16 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   assert.deepEqual(original.ui,original.order,'source list must equal true rendered Z order');
   assert.match(original.tree,/战斗/);
   assert.match(original.tree,/服装/);
+  // Explicit cancellation may not change any pixel in the current source.
+  await page.locator('#layers .layer').first().click();
+  await page.locator('#clearPartSelection').click();
+  assert.equal(await page.evaluate(()=>window.characterEditor.S.sel),-1);
+  assert.equal(await page.evaluate(()=>window.characterEditor.S.tool),'select');
+  const before=await page.evaluate(()=>window.characterEditor.S.layers.front.find(p=>p.partId==='jacket').canvas.toDataURL());
+  const rect=await page.locator('#view').boundingBox();
+  await page.mouse.click(rect.x+rect.width*.5,rect.y+rect.height*.5);
+  const after=await page.evaluate(()=>window.characterEditor.S.layers.front.find(p=>p.partId==='jacket').canvas.toDataURL());
+  assert.equal(after,before,'safe select taps cannot modify painting');
   // Pixel-level proof: same character, same animation phase, two painter
   // orders. Moving the sleeve behind/in front of the jacket MUST change the
   // real composed output, not just a JSON array or a list row.
