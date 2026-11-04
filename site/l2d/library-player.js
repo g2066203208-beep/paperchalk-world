@@ -92,12 +92,21 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    rigSpec.sourceCharacterId==='class-teacher-geography-candidate'&&
    model?.characterId==='class-teacher-geography-candidate'&&
    rigSpec.url.startsWith('./assets/l2d/library/class-teacher-geography-candidate/');
+ // The author's male lead "new clothes" PSD was confirmed to be the REAL
+ // front. Accept only this exact published source, never arbitrary aliases.
+ const approvedMaleLead=characterId==='char-003'&&face==='front'&&
+   rigSpec.sourceCharacterId==='char-003-outfit-02'&&
+   model?.characterId==='char-003-outfit-02'&&
+   rigSpec.url.startsWith('./assets/l2d/library/char-003-outfit-02/')&&
+   Object.keys(model.parts||{}).length===17&&
+   ['handwear_left','handwear_right','topwear','face','legwear','footwear'].every(id=>!!model.parts[id]);
  if(model?.format!=='paperchalk-part-rig-v1'||
-    (model.characterId!==characterId&&!approvedOriginal&&!approvedSecondary&&!approvedFemaleFive)||model.face!==face)
+    (model.characterId!==characterId&&!approvedOriginal&&!approvedSecondary&&!approvedFemaleFive&&!approvedMaleLead)||model.face!==face)
   throw Error('L2D 绑定文件与人物 ID/方向不一致');
- // The teacher PSD was confirmed as the single female-five actor.
- // Keep all original textures, but expose the canonical actor identity to the game.
+ // Source IDs are provenance, not game actors. Reuse the original meshes
+ // with the stable canonical identity expected by editor and game slots.
  if(approvedFemaleFive)model.characterId='char-006';
+ if(approvedMaleLead)model.characterId='char-003';
  // Every playable module (including the ORIGINAL heroine actor) has a
  // deterministic gentle idle preset. A saved local editor profile overrides it.
  const ids=Object.keys(rigSpec.textures);
