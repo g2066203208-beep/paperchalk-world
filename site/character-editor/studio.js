@@ -423,7 +423,6 @@ function visibleFamilyGroups(){
   if(!hasArtwork&&family!=='male2'&&!all.some(c=>c.id===currentId))continue;
   const choices=all.filter(c=>c.id!==primary.id&&
     (c.variantCategory==='outfit'||c.variantCategory==='combat')&&
-    c.id!=='protagonist-battle-front'&&
     !/^(char-002-psd-v1|protagonist-rig-v1|protagonist-unified-v1)$/.test(c.id));
   // Deduplicate stale local copies of the same variant.  Preserve every
   // record in list/IndexedDB, just display one action per unique asset ID.
