@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
  try{
   for(const [id,count,required] of [
    ['male2',16,['handwear','footwear','topwear']],
-   ['char-003-outfit-02',17,['handwear_left','handwear_right','topwear']],
+   ['char-003',17,['handwear_left','handwear_right','topwear','face','legwear']],
    ['female-06-outfit-02',17,['handwear_l','handwear_r','topwear','bottomwear','footwear','front_hair']]
   ]){
    const page=await browser.newPage({viewport:{width:1366,height:900}});
