@@ -24,6 +24,7 @@ on:
       - 'tests/test_protagonist_crouch_dynamics.cjs'
       - 'scripts/qa_crouch_geometry.py'
       - 'tests/test_protagonist_crouch_studio_browser.mjs'
+      - 'tests/test_protagonist_crouch_motion_browser.mjs'
       - 'tests/test_l2d_display_lifecycle.cjs'
       - 'tests/test_battle_front_studio.js'
       - 'tests/test_female5_teacher_alias_browser.js'
@@ -48,6 +49,7 @@ on:
       - 'tests/test_protagonist_crouch_dynamics.cjs'
       - 'scripts/qa_crouch_geometry.py'
       - 'tests/test_protagonist_crouch_studio_browser.mjs'
+      - 'tests/test_protagonist_crouch_motion_browser.mjs'
       - 'tests/test_battle_front_studio.js'
       - '.github/workflows/l2d-modules.yml'
   workflow_dispatch:
@@ -179,6 +181,38 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Real Chromium inspect heroine crouch 25 layers, actions, viewport and game player
         run: node tests/test_protagonist_crouch_studio_browser.mjs
+      - name: Real Chromium QA of crouch skirt inertia, two-hand axe and planted feet
+        run: node tests/test_protagonist_crouch_motion_browser.mjs
+      - name: Assemble TRUE rendered L2D poses into a ping-pong motion preview
+        run: |
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw
+          from pathlib import Path
+          base=Path('artifacts/protagonist-crouch/motion')
+          paths=sorted(base.glob('phase-*.png'))
+          assert len(paths)>=10,'motion browser frames must exist'
+          w=h=576
+          bg=Image.new('RGBA',(w,h),(34,39,48,255))
+          g=ImageDraw.Draw(bg)
+          for yy in range(0,h,24):
+              for xx in range(0,w,24):
+                  if (xx//24+yy//24)%2==0:
+                      g.rectangle((xx,yy,xx+23,yy+23),fill=(41,47,57,255))
+          images=[]
+          for path in paths:
+              with Image.open(path) as im:
+                  art=im.convert('RGBA').resize((w,h),Image.Resampling.LANCZOS)
+                  f=bg.copy()
+                  f.alpha_composite(art)
+                  images.append(f.convert('RGB').quantize(colors=192))
+          timeline=images+list(reversed(images[1:-1]))
+          timeline[0].save(base/'real-crouch-l2d-loop.gif',
+              save_all=True,append_images=timeline[1:],duration=115,
+              loop=0,disposal=2,optimize=False)
+          print('PASS generated REAL played L2D art frames:',len(paths),
+            'ping-pong preview:',len(timeline),
+            'GIF bytes:',(base/'real-crouch-l2d-loop.gif').stat().st_size)
+          PY
       - name: Actual browser loads V4 and true independent ArtMesh modules in game and studio
         run: |
           python3 -m http.server 8132 --directory site >/tmp/l2d-modules-http.log 2>&1 &
