@@ -233,3 +233,91 @@ body.rig-authoring #rig-quick-panel{display:block}
 #l2d-production-guide .rig-workflow-body{padding:2px 12px 13px;line-height:1.6}
 #l2d-production-guide .rig-workflow-body p{margin:10px 0}
 #l2d-production-guide a{color:#91e7c6;text-decoration:underline}
+
+
+/* Single workspace — no modal bone mode, no duplicated mode selector/save. */
+body.studio-page #idle-open,
+body.studio-page #easy-mode-switch,
+body.studio-page #easy-import,
+body.studio-page #btnUndo,
+body.studio-page #btnRedo,
+body.studio-page #rig-close,
+body.studio-page #rig-save,
+body.studio-page #rig-quick-save,
+body.studio-page #rig-pause,
+body.studio-page #main-preview,
+body.studio-page #easy-edit,
+body.studio-page #easy-animate,
+body.studio-page #easy-face,
+body.studio-page #easy-quickbar [data-easy-tool="restore"]{
+ display:none!important
+}
+body.studio-page #part-rig-panel{
+ position:relative!important;left:auto!important;top:auto!important;
+ right:auto!important;bottom:auto!important;inset:auto!important;
+ width:100%!important;max-width:100%!important;height:auto!important;
+ max-height:none!important;overflow:visible!important;
+ padding:12px!important;margin:0 0 10px!important;
+ border:1px solid #3d5b6b;border-radius:12px;
+ background:#192836;box-shadow:none!important;touch-action:auto
+}
+body.studio-page #part-rig-panel .rig-h{
+ position:static;display:block;margin:0 0 10px;
+ padding:0 0 8px;border-bottom:1px solid #344b5a;background:transparent
+}
+body.studio-page #part-rig-panel .rig-h strong{font-size:14px}
+body.studio-page #part-rig-panel .rig-part-amount{padding:8px;margin:8px 0!important}
+body.studio-page #part-rig-panel #rig-advanced{margin:10px 0!important}
+body.studio-page #part-rig-panel .rig-buttons{
+ display:flex!important;margin:8px 0!important;gap:5px
+}
+body.studio-page #part-rig-panel #rig-zero{
+ min-width:100%;min-height:34px;font-size:12px
+}
+body.studio-page #rig-quick-panel{
+ padding:12px!important;margin-bottom:10px!important;
+ border-radius:12px
+}
+body.studio-page #rig-quick-panel .rig-quick-heading strong{font-size:14px}
+body.studio-page #rig-quick-panel .rig-quick-tip{font-size:11px;margin:5px 0 9px}
+body.studio-page .right{
+ min-height:0;overscroll-behavior:contain;scrollbar-width:thin
+}
+body.studio-page .single-workspace-files{
+ border-top:1px solid #354e61;margin-top:10px;padding-top:8px
+}
+body.studio-page .single-workspace-files summary{
+ color:#acc7d9;font-size:11px;cursor:pointer;padding:6px 0
+}
+body.studio-page .single-workspace-files button{
+ display:block;width:100%;margin:5px 0;min-height:34px;
+ padding:7px 9px;font-size:11px
+}
+body.studio-page .actions #btnSave{
+ min-height:38px;padding:8px 14px;border-radius:8px;
+ font-size:13px;white-space:nowrap
+}
+body.studio-page #easy-save-note{display:none!important}
+body.studio-page .actions{align-items:center}
+body.studio-page .stage-toolbar{width:104px!important;max-width:104px!important}
+body.studio-page #easy-quickbar{width:112px!important;max-width:112px!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+body.studio-page .easy-disclosure{border:1px solid #334b5a;border-radius:8px;margin-top:8px}
+body.studio-page .easy-disclosure>summary{padding:9px 10px}
+body.studio-page #easy-imports .studio-backup-action{
+ display:block;width:calc(100% - 18px);margin:5px 9px 10px;min-height:38px
+}
+@media(max-width:1120px) and (min-width:711px){
+ body.studio-page .right{display:block!important;grid-column:1/-1!important}
+ body.studio-page .right #part-rig-panel{max-width:none!important}
+}
+@media(max-width:710px){
+ body.studio-page #part-rig-panel{
+  position:relative!important;top:auto!important;right:auto!important;
+  bottom:auto!important;inset:auto!important;width:100%!important;
+  max-height:none!important;overflow:visible!important;padding:10px!important
+ }
+ body.studio-page .right{position:relative!important}
+ body.studio-page #easy-quickbar{width:auto!important;max-width:calc(100% - 12px)!important;display:flex!important}
+ body.studio-page .stage-toolbar{width:75px!important;max-width:75px!important}
+ body.studio-page #btnSave{font-size:12px;padding:8px 10px}
+}
