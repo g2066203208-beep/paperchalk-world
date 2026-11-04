@@ -9,7 +9,7 @@ const assert=require('node:assert/strict');
    {waitUntil:'load'});
   await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-003-outfit-02',
    null,{timeout:35000});
-  assert.ok(await page.locator('#studio-character-tree').textContent().then(s=>s.includes('新衣服')));
+  assert.ok(await page.locator('#studio-character-tree').textContent().then(s=>s.includes('新服装')));
   const partIds=['earwear','headwear','handwear_left','handwear_right','neck','footwear',
    'legwear','back_hair','topwear','eyelash','eyebrow','ears','face','nose','mouth','irides','front_hair'];
   await page.evaluate(async ids=>{
