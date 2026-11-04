@@ -37,7 +37,7 @@ maskPanel.innerHTML="<div class=\"rig-mask-head\"><strong>局部遮挡</strong><
 panel.querySelector('.rig-part-amount').before(maskPanel);
 const maskState={enabled:false,erase:false,direction:'front',targets:new Set(),
  pointer:null,touches:new Map(),blockedTouches:new Set(),pinch:null,
- restorePlaying:null,history:[],redo:[]};
+ restorePlaying:null,history:[],redo:[],editingEntry:null};
 const maskTarget=$('rig-mask-target'),maskLabel=$('rig-mask-hint'),maskSize=$('rig-mask-size');
 function maskTargets(entry){
  return Array.isArray(entry?.targets)?entry.targets:(entry?.target?[entry.target]:[]);
