@@ -447,6 +447,8 @@ function project(parts,characterId,face,previous=null){
  return bindBodyHierarchy({format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
   idleProfile:sanitizeIdleProfile(previous?.idleProfile||defaultIdleProfile()),
   ...(previous?.actionProfiles?{actionProfiles:previous.actionProfiles}:{}),
+  ...(previous?.layerOrder?{layerOrder:previous.layerOrder}:{}),
+  ...(previous?.partLayerGroups?{partLayerGroups:previous.partLayerGroups}:{}),
   parts:Object.fromEntries(entries)});
 }
 
@@ -728,6 +730,11 @@ function setAction(model,name,now=typeof performance!=='undefined'?performance.n
   duration:Math.max(120,Number(config.transitionMs)||420)};
  return true;
 }
+// Original protagonist identity, 17 UNCHANGED standing PSD parts.
+// Only battle arms and weapon are added; order is BACK -> FRONT.
+const UNIFIED_FRONT_STACK=['rear_hair','sleeves_and_hands','battle_handwear_r',
+ 'legs','shoes','neck','skirt','jacket','battle_axe','battle_handwear_l',
+ 'ears','face','eye_white','irises','lashes','brows','front_hair','nose','mouth','hair_clip'];
 const FACE_STACK=['rear_hair','sleeves_and_hands','legs','shoes','neck',
   'skirt','jacket','ears','face','eye_white','irises','lashes',
   'brows','front_hair','nose','mouth','hair_clip'];
@@ -861,8 +868,11 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
  // A stable explicit z-order only applies to the known 17-piece heroine.
  const heroine=(model.characterId==='protagonist'||model.characterId==='protagonist-rig-v1')
   &&model.face==='front';
- const stack=model.characterId==='protagonist-battle-front'&&model.face==='front'
-  ?BATTLE_FRONT_STACK:heroine?FACE_STACK:null;
+ const stack=model.layerOrder||
+  (model.characterId==='protagonist-unified-v1'&&model.face==='front'
+   ?UNIFIED_FRONT_STACK:
+   model.characterId==='protagonist-battle-front'&&model.face==='front'
+    ?BATTLE_FRONT_STACK:heroine?FACE_STACK:null);
  const order=stack?new Map(stack.map((id,i)=>[id,i])):null;
  const drawLayers=order?[...layers].sort((a,b)=>{
   const ai=order.get(String(a.partId||a.name)),bi=order.get(String(b.partId||b.name));
@@ -877,9 +887,10 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   // A held weapon must share the HAND'S action transform, not rotate
   // separately about the huge weapon bitmap's unrelated bounding-box center.
   // This keeps the grip registered while blending the action.
-  const attached=id==='axe_held'&&b.parentId==='handwear_l'
-   ?model.parts.handwear_l:null;
-  const motion=attached?actionPart(model,'handwear_l'):pose;
+  const attached=(id==='axe_held'&&b.parentId==='handwear_l')||
+   (id==='battle_axe'&&b.parentId==='battle_handwear_l')
+   ?model.parts[b.parentId]:null;
+  const motion=attached?actionPart(model,b.parentId):pose;
   const mount=attached||b;
   ctx.save();
   if(motion.x||motion.y||motion.angle){
@@ -895,5 +906,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   ctx.restore();
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
