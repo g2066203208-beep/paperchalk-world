@@ -214,20 +214,20 @@ async function assign(target,id,face='front',save=true){
   const obj=window.PaperchalkL2D.get(target);
   if(obj){obj.root.dataset.l2dEdition='mesh';obj.root.dataset.l2dAnimated='true'}
  }
- // V4 corrections are independent of the approved source animation.
- // Sparse frame overlays are composited on top at the exact frame index.
+ // Sparse corrected frames remain owned by THIS selection only.
+ // An older slow IndexedDB read cannot overwrite the newer actor's masks.
  if(source&&!usesPsdRig&&!window.PaperchalkL2DLibrary?.get(target)){
-  await window.PaperchalkL2D.setCorrections(target,
-   await get('overlay:'+id+':'+face),
-   await get('frames:'+id+':'+face)||{});
+  const [general,frames]=await checked(Promise.all([
+   get('overlay:'+id+':'+face),get('frames:'+id+':'+face)
+  ]));
+  await checked(window.PaperchalkL2D.setCorrections(target,general,frames||{}));
  }else{
-  await window.PaperchalkL2D.setCorrections(target,null,{});
+  await checked(window.PaperchalkL2D.setCorrections(target,null,{}));
  }
- // The same source artwork edited in DEV is used on the game actor.
- // No ZIP re-import and no separate heroine-only database.
- await window.PaperchalkL2D.setComponentPatch(target,usesPsdRig||(publishedRig&&id!=='protagonist')
-  ?null:await get('parts-patch:'+id+':'+face));
- if(save)await put('slot:'+target,{id,side:face});
+ const patch=(usesPsdRig||(publishedRig&&id!=='protagonist'))
+  ?null:await checked(get('parts-patch:'+id+':'+face));
+ await checked(window.PaperchalkL2D.setComponentPatch(target,patch));
+ if(save)await checked(put('slot:'+target,{id,side:face}));
  refreshList();
  note('正在加载 '+c.label+' · '+(face==='back'?'背面':'正面')+
    (usesPsdRig?' · 本机独立 PSD':window.PaperchalkL2DLibrary?.get(target)?
