@@ -53,12 +53,12 @@ body.embedded #btnCloseInGame{background:#273244}
 <div class="layout">
 <aside class="left">
 <section><h3>人物方向</h3><div class="row"><button id="frontTab" class="active">正面</button><button id="backTab">背面</button></div><p class="tip">当前人物及方向来自上方全人物列表。PSD/分层 ZIP 导入后保留原图层坐标，真实分层用于动态预览和逐件精修；新版 L2D 是唯一动画编辑模式。</p></section>
-<section><h3>角色部件（按共用 / 待机 / 战斗分类，Z 为真实绘制层级）</h3><div class="row"><input id="partSearch" type="search" placeholder="搜索头发 / 眼睛 / 外套 / 任意部件" aria-label="筛选人物部件" style="flex:1;min-width:100px"><button id="focusCurrent" type="button">定位选中部件</button></div><div id="layers" class="layerlist"></div><div class="row" style="margin-top:7px"><button id="add">＋ 新修补层</button><button id="dup">复制</button><button id="del">删除</button></div><div class="row" style="margin-top:6px"><button id="up">前移 ▲</button><button id="down">后移 ▼</button><button id="rename">重命名</button></div></section>
+<section><h3>角色部件（按共用 / 待机 / 战斗分类，Z 为真实绘制层级）</h3><div class="row"><input id="partSearch" type="search" placeholder="搜索头发 / 眼睛 / 外套 / 任意部件" aria-label="筛选人物部件" style="flex:1;min-width:100px"><button id="focusCurrent" type="button">定位</button><button id="clearPartSelection" type="button">取消选择</button></div><div id="layers" class="layerlist"></div><div class="row" style="margin-top:7px"><button id="add">＋ 新修补层</button><button id="dup">复制</button><button id="del">删除</button></div><div class="row" style="margin-top:6px"><button id="up">前移 ▲</button><button id="down">后移 ▼</button><button id="rename">重命名</button></div></section>
 <section><h3>导入你的素材</h3><div class="stack"><label class="tip">导入 PNG / WebP 到当前视角<input id="imgImport" type="file" accept="image/png,image/webp,image/jpeg" multiple></label><label class="tip">直接导入 Photoshop PSD（需要联网加载解析库）<input id="psdImport" type="file" accept=".psd,image/vnd.adobe.photoshop"></label><label class="tip">导入原位分层 ZIP（全部部件）<input id="zipImport" type="file" accept=".zip,application/zip"></label></div></section>
 </aside>
 <main class="stage" id="stage"><canvas id="view"></canvas><div class="stage-toolbar" role="toolbar" aria-label="大画布动画控制"><span id="main-motion-status" role="status">动画加载中…</span><button id="main-play" type="button" aria-pressed="false" title="播放或暂停主画布动画 · P">❚❚ 暂停</button><button id="main-preview" type="button" aria-pressed="true" title="在动画预览与原始像素精修之间切换">◇ 静态精修</button><button id="main-expand" type="button" aria-pressed="false" title="放大主画布 · Escape 退出">⛶ 放大画布</button></div><div class="hud" id="hud">准备中…</div><div class="hudbottom">笔刷绘画 · 两指缩放/平移 · 滚轮缩放 · 空格拖动 · 支持矩形/套索选区剪出新图层</div></main>
 <aside class="right">
-<section><h3>绘制工具</h3><div class="btns" id="tools"><button data-tool="brush" class="active">✎ 画笔</button><button data-tool="eraser">◯ 橡皮擦</button><button data-tool="restore">✚ 补画</button><button data-tool="picker">◉ 吸色</button><button data-tool="fill">▣ 填充</button><button data-tool="move">✥ 移动层</button><button data-tool="rect">□ 矩形选区</button><button data-tool="lasso">♧ 套索</button><button data-tool="pan">⤢ 移动画布</button></div>
+<section><h3>绘制工具</h3><div class="btns" id="tools"><button data-tool="select" class="active" aria-pressed="true">↖ 选择</button><button data-tool="brush">✎ 画笔</button><button data-tool="eraser">◯ 橡皮擦</button><button data-tool="restore">✚ 补画</button><button data-tool="picker">◉ 吸色</button><button data-tool="fill">▣ 填充</button><button data-tool="move">✥ 移动层</button><button data-tool="rect">□ 矩形选区</button><button data-tool="lasso">♧ 套索</button><button data-tool="pan">⤢ 移动画布</button></div>
 <div class="mlabel"><span>画笔颜色</span><input id="color" type="color" value="#bc9ab0"></div>
 <div class="mlabel"><span>笔刷大小</span><output id="sizeText">6 px</output></div><input id="size" type="range" min="1" max="90" value="6">
 <div class="mlabel"><span>笔刷不透明度</span><output id="alphaText">100%</output></div><input id="alpha" type="range" min="1" max="100" value="100">
@@ -73,7 +73,7 @@ body.embedded #btnCloseInGame{background:#273244}
 <script>
 'use strict';
 const W=1024,H=1024, $=id=>document.getElementById(id), stage=$('stage'),view=$('view'),ctx=view.getContext('2d',{alpha:false});
-const S={side:'front',tool:'brush',layers:{front:[],back:[]},sel:-1,zoom:.65,px:0,py:0,brush:6,alpha:1,color:'#bc9ab0',pointers:new Map(),drag:null,space:false,only:false,checker:true,grid:false,selection:null,history:[],redo:[],busy:false,ready:false};
+const S={side:'front',tool:'select',layers:{front:[],back:[]},sel:-1,zoom:.65,px:0,py:0,brush:6,alpha:1,color:'#bc9ab0',pointers:new Map(),drag:null,space:false,only:false,checker:true,grid:false,selection:null,history:[],redo:[],busy:false,ready:false};
 const make=(w=W,h=H)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
 const current=()=>S.layers[S.side][S.sel];const status=s=>$('status').textContent=s;
 function layer(name,img,x=0,y=0,locked=false){const c=make(img?img.width:W,img?img.height:H);if(img)c.getContext('2d').drawImage(img,0,0);return {name,canvas:c,x,y,visible:true,locked,opacity:1,sourcePart:false,partId:'',role:''}};
@@ -179,11 +179,57 @@ const paintAt=p=>{
  return part?.sourcePart?(window.PaperchalkPartRigStudio?.mapToSource?.(p,part)||p):p;
 };
 const getP=e=>{const box=stage.getBoundingClientRect();return{x:e.clientX-box.left,y:e.clientY-box.top}};
-function down(e){if(S.busy||!S.ready||e.target!==view)return;if(e.pointerType==='mouse'&&e.button===2)return;e.preventDefault();const q=getP(e);S.pointers.set(e.pointerId,q);stage.setPointerCapture(e.pointerId);if(S.pointers.size===2){S.drag={type:'pinch',two:[...S.pointers.values()],zoom:S.zoom,px:S.px,py:S.py};return}const w=world(q);if(S.tool==='pan'||S.space||e.altKey||e.button===1){S.drag={type:'pan',q,px:S.px,py:S.py};return}if(S.tool==='picker'){sample(w);return}if(S.tool==='fill'){fillAt(paintAt(w));return}if(S.tool==='rect'){S.selection={type:'rect',x:w.x,y:w.y,w:0,h:0,done:false};S.drag={type:'rect'};render();return}if(S.tool==='lasso'){S.selection={type:'lasso',points:[w],done:false};S.drag={type:'lasso'};return}if(S.tool==='move'){if(!editable())return;check();S.drag={type:'move',q,x:current().x,y:current().y};return}if(!editable())return;check();const paint=paintAt(w);S.drag={type:'paint',p:paint};stroke(paint,paint)}
+function clearPartSelection(){
+ S.sel=-1;S.selection=null;S.drag=null;
+ window.PaperchalkPartRigStudio?.clearSelection?.();
+ renderList();syncOpacity();render();
+ status('已取消选择 · 安全查看，不会误画');
+}
+function choosePartAt(point){
+ // Pick the topmost VISIBLE pixel, not a transparent rectangle.
+ const arr=S.layers[S.side];
+ for(let i=arr.length-1;i>=0;i--){
+  const p=arr[i];if(!p.visible||p.locked||p.opacity<=.01)continue;
+  const source=p.sourcePart?window.PaperchalkPartRigStudio?.mapToSource?.(point,p):null;
+  const local=source||point,x=Math.floor(local.x-p.x),y=Math.floor(local.y-p.y);
+  if(x<0||y<0||x>=p.canvas.width||y>=p.canvas.height)continue;
+  try{if(p.canvas.getContext('2d',{willReadFrequently:true}).getImageData(x,y,1,1).data[3]<18)continue;}catch(_){continue;}
+  if(S.sel===i){clearPartSelection();return;}
+  S.sel=i;S.selection=null;
+  window.PaperchalkPartRigStudio?.select?.(String(p.partId||p.name));
+  renderList();syncOpacity();render();
+  return;
+ }
+ clearPartSelection();
+}
+function down(e){if(S.busy||!S.ready||e.target!==view)return;if(e.pointerType==='mouse'&&e.button===2)return;e.preventDefault();const q=getP(e);S.pointers.set(e.pointerId,q);stage.setPointerCapture(e.pointerId);if(S.pointers.size===2){S.drag={type:'pinch',two:[...S.pointers.values()],zoom:S.zoom,px:S.px,py:S.py};return}const w=world(q);if(S.tool==='pan'||S.space||e.altKey||e.button===1){S.drag={type:'pan',q,px:S.px,py:S.py};return}
+if(S.tool==='select'){
+  if(e.pointerType==='touch'){S.drag={type:'select',start:q,point:w,px:S.px,py:S.py};return;}
+  choosePartAt(w);return;
+}
+if(S.tool==='picker'){sample(w);return}if(S.tool==='fill'){fillAt(paintAt(w));return}if(S.tool==='rect'){S.selection={type:'rect',x:w.x,y:w.y,w:0,h:0,done:false};S.drag={type:'rect'};render();return}if(S.tool==='lasso'){S.selection={type:'lasso',points:[w],done:false};S.drag={type:'lasso'};return}if(S.tool==='move'){if(!editable())return;check();S.drag={type:'move',q,x:current().x,y:current().y};return}if(!editable())return;check();const paint=paintAt(w);S.drag={type:'paint',p:paint};stroke(paint,paint)}
 function move(e){if(!S.pointers.has(e.pointerId)||!S.drag)return;const q=getP(e);S.pointers.set(e.pointerId,q);let d=S.drag;if(S.pointers.size>=2){const a=[...S.pointers.values()];if(d.type!=='pinch')S.drag={type:'pinch',two:[...a],zoom:S.zoom,px:S.px,py:S.py};const s=S.drag,dist=Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),old=Math.hypot(s.two[1].x-s.two[0].x,s.two[1].y-s.two[0].y);const m={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2},o={x:(s.two[0].x+s.two[1].x)/2,y:(s.two[0].y+s.two[1].y)/2};S.zoom=Math.max(.1,Math.min(20,s.zoom*dist/Math.max(1,old)));S.px=m.x-(o.x-s.px)*S.zoom/s.zoom;S.py=m.y-(o.y-s.py)*S.zoom/s.zoom;render();return}
-const w=world(q);if(d.type==='pan'){S.px=d.px+q.x-d.q.x;S.py=d.py+q.y-d.q.y}else if(d.type==='move'){const p=current();p.x=Math.round(d.x+(q.x-d.q.x)/S.zoom);p.y=Math.round(d.y+(q.y-d.q.y)/S.zoom);window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'))}else if(d.type==='paint'){const paint=paintAt(w);stroke(d.p,paint);d.p=paint}else if(d.type==='rect'){S.selection.w=w.x-S.selection.x;S.selection.h=w.y-S.selection.y}else if(d.type==='lasso'&&S.selection.points.length<10000){const pp=S.selection.points.at(-1);if(Math.hypot(pp.x-w.x,pp.y-w.y)>1)S.selection.points.push(w)}render()}
-function upPointer(e){if(!S.pointers.has(e.pointerId))return;S.pointers.delete(e.pointerId);if(S.drag?.type==='pinch'){S.drag=null;render();return}if(S.drag?.type==='rect'||S.drag?.type==='lasso')S.selection.done=true;if(['paint','move'].includes(S.drag?.type))autosave();S.drag=null;renderList();render()}
-function setTool(name){S.tool=name;document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===name));render()}
+const w=world(q);if(d.type==='pan'){S.px=d.px+q.x-d.q.x;S.py=d.py+q.y-d.q.y}
+else if(d.type==='select'){
+ const distance=Math.hypot(q.x-d.start.x,q.y-d.start.y);
+ if(distance>8){d.moved=true;S.px=d.px+q.x-d.start.x;S.py=d.py+q.y-d.start.y;}
+}else if(d.type==='move'){const p=current();p.x=Math.round(d.x+(q.x-d.q.x)/S.zoom);p.y=Math.round(d.y+(q.y-d.q.y)/S.zoom);window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'))}else if(d.type==='paint'){const paint=paintAt(w);stroke(d.p,paint);d.p=paint}else if(d.type==='rect'){S.selection.w=w.x-S.selection.x;S.selection.h=w.y-S.selection.y}else if(d.type==='lasso'&&S.selection.points.length<10000){const pp=S.selection.points.at(-1);if(Math.hypot(pp.x-w.x,pp.y-w.y)>1)S.selection.points.push(w)}render()}
+function upPointer(e){if(!S.pointers.has(e.pointerId))return;S.pointers.delete(e.pointerId);if(S.drag?.type==='pinch'){S.drag=null;render();return}
+if(S.drag?.type==='select'){
+ const drag=S.drag;S.drag=null;
+ if(!drag.moved)choosePartAt(drag.point);
+ renderList();render();return;
+}
+if(S.drag?.type==='rect'||S.drag?.type==='lasso')S.selection.done=true;if(['paint','move'].includes(S.drag?.type))autosave();S.drag=null;renderList();render()}
+function setTool(name){
+ S.tool=name;
+ document.querySelectorAll('[data-tool]').forEach(b=>{
+  b.classList.toggle('active',b.dataset.tool===name);
+  b.setAttribute('aria-pressed',String(b.dataset.tool===name));
+ });
+ window.dispatchEvent(new CustomEvent('paperchalk:studio-tool-changed',{detail:{tool:name}}));
+ render();
+}
 function addLayer(){check();const q=layer('未命名透明层');S.layers[S.side].splice(S.sel+1,0,q);S.sel++;notifyLayerOrder();renderList();render();autosave()}
 async function addImages(files){for(const f of files){const url=URL.createObjectURL(f);const im=await imgFrom(url);URL.revokeObjectURL(url);check();const l=layer(f.name,im,Math.round((W-im.width)/2),Math.round((H-im.height)/2));S.layers[S.side].push(l);S.sel=S.layers[S.side].length-1}renderList();render();autosave();status('已导入图片图层')}
 function removeLayer(){if(!current()||!confirm('删除当前图层？可以用撤销恢复。'))return;check();S.layers[S.side].splice(S.sel,1);S.sel=Math.max(0,Math.min(S.sel,S.layers[S.side].length-1));notifyLayerOrder();renderList();render();autosave()}
@@ -212,6 +258,7 @@ async function init(){try{await defaults();const had=await loadSaved();S.sel=Mat
 for(const b of document.querySelectorAll('[data-tool]'))b.onclick=()=>setTool(b.dataset.tool);
 $('frontTab').onclick=()=>setSide('front');$('backTab').onclick=()=>setSide('back');
 $('partSearch').oninput=()=>renderList();
+$('clearPartSelection').onclick=()=>{clearPartSelection();setTool('select')};
 $('focusCurrent').onclick=()=>{
  const part=current();if(!part)return;
  const x=part.x+part.canvas.width/2,y=part.y+part.canvas.height/2;
@@ -245,7 +292,7 @@ $('clearLayer').onclick=()=>{if(!editable())return;if(!confirm('清空当前图�
 stage.addEventListener('pointerdown',down);stage.addEventListener('pointermove',move);stage.addEventListener('pointerup',upPointer);stage.addEventListener('pointercancel',upPointer);
 stage.addEventListener('wheel',e=>{e.preventDefault();const p=getP(e);zoom(p.x,p.y,Math.exp(-Math.sign(e.deltaY)*.17))},{passive:false});
 stage.addEventListener('contextmenu',e=>e.preventDefault());
-window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redo()}else if(k===' '){S.space=true;e.preventDefault()}else if(k==='b')setTool('brush');else if(k==='e')setTool('eraser');else if(k==='v')setTool('move')});window.addEventListener('keyup',e=>{if(e.key===' ')S.space=false});
+window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redo()}else if(k===' '){S.space=true;e.preventDefault()}else if(k==='Escape'){clearPartSelection();setTool('select')}else if(k==='b')setTool('brush');else if(k==='e')setTool('eraser');else if(k==='v')setTool('select')});window.addEventListener('keyup',e=>{if(e.key===' ')S.space=false});
 
 /* The same in-game editor supports arbitrary characters. Their complete
    layered projects have independent IndexedDB keys, not one global "project". */
@@ -323,7 +370,7 @@ window.addEventListener('message',event=>{
 $('btnApplyGame').onclick=applyToGame;
 $('btnCloseInGame').onclick=async()=>{await applyToGame();sendParent({type:'PAPERCHALK_EDITOR_CLOSE'});};
 new ResizeObserver(()=>resize()).observe(stage);
-window.characterEditor={S,cut,undo,redo,exportAll,zip,toBlob,importZip,importPsd,composite,switchCharacter,applyToGame,save,render,renderList,layer,make,focus,setTool,autosave,unzip,imgFrom};
+window.characterEditor={S,cut,undo,redo,clearPartSelection,exportAll,zip,toBlob,importZip,importPsd,composite,switchCharacter,applyToGame,save,render,renderList,layer,make,focus,setTool,autosave,unzip,imgFrom};
 if(embedded)sendParent({type:'PAPERCHALK_EDITOR_READY'});
 
 </script>
