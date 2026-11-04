@@ -29,6 +29,136 @@ panel.append(rigFiles);
 for(const id of ['rig-save','rig-quick-save','rig-pause','rig-close']){
  const element=$(id);if(element)element.hidden=true;
 }
+// Any source component can be painted over any target. No extra model, layer
+// or mode-switching workspace is created: this lives inside the rig inspector.
+const maskPanel=document.createElement('section');
+maskPanel.id='rig-mask-panel';
+maskPanel.innerHTML=`<div class="rig-mask-head"><strong>部件遮挡蒙版</strong>
+ <button type="button" id="rig-mask-toggle">画蒙版</button></div>
+ <label>前景部件 <output id="rig-mask-source"></output></label>
+ <label>遮挡对象 <select id="rig-mask-target" aria-label="蒙版覆盖哪个部件"></select></label>
+ <div class="rig-mask-row">
+  <button id="rig-mask-paint" type="button" aria-pressed="true">＋ 画前景</button>
+  <button id="rig-mask-erase" type="button" aria-pressed="false">－ 擦蒙版</button>
+ </div>
+ <label>画笔大小 <output id="rig-mask-size-value">12 px</output>
+  <input id="rig-mask-size" type="range" min="2" max="96" step="2" value="12"></label>
+ <div class="rig-mask-row"><button id="rig-mask-undo" type="button">↶ 撤销</button>
+  <button id="rig-mask-clear" type="button">清空蒙版</button></div>
+ <small id="rig-mask-hint">选部件，再选要被它遮挡的对象；蒙版不修改原图。</small>`;
+panel.querySelector('.rig-part-amount').before(maskPanel);
+const maskState={enabled:false,erase:false,pointer:null,restorePlaying:null,history:[],pair:''};
+const maskTarget=$('rig-mask-target');
+const maskLabel=$('rig-mask-hint');
+const maskSize=$('rig-mask-size');
+function maskKey(){return state.selected+'|'+maskTarget.value;}
+function getMask(){
+ return state.model?.occlusionMasks?.find(m=>m.source===state.selected&&m.target===maskTarget.value);
+}
+function maskCanvas(mask,source){
+ if(mask._canvas)return mask._canvas;
+ const c=document.createElement('canvas');c.width=source.w;c.height=source.h;
+ Object.defineProperty(mask,'_canvas',{value:c,writable:true,configurable:true,enumerable:false});
+ if(mask.png?.startsWith('data:image/png;base64,')){
+  const image=new Image();
+  image.onload=()=>{
+   if(mask._canvas===c&&image.width===c.width&&image.height===c.height){
+    c.getContext('2d').drawImage(image,0,0);mask._revision=(mask._revision||0)+1;ed.render();
+   }
+  };
+  image.src=mask.png;
+ }
+ return c;
+}
+function ensureMask(){
+ const src=state.model?.parts[state.selected],target=maskTarget.value;
+ if(!src||!target||target===state.selected||!state.model.parts[target])return null;
+ let mask=getMask();
+ if(!mask){
+  mask={source:state.selected,target,png:'',enabled:true};
+  (state.model.occlusionMasks ||= []).push(mask);
+  const c=document.createElement('canvas');c.width=src.w;c.height=src.h;
+  Object.defineProperty(mask,'_canvas',{value:c,configurable:true,writable:true,enumerable:false});
+ }
+ return mask;
+}
+function updateMaskControls(){
+ const part=state.model?.parts[state.selected],before=maskTarget.value;
+ maskTarget.replaceChildren();
+ for(const p of parts()){
+  const id=key(p);if(id!==state.selected)maskTarget.add(new Option(p.name,id));
+ }
+ const prefers=part&&(state.model.occlusionMasks||[]).find(m=>m.source===state.selected)?.target;
+ const weapon=['battle_axe','axe_held'].find(id=>state.model.parts[id]&&id!==state.selected);
+ const next=[before,prefers,weapon].find(id=>id&&[...maskTarget.options].some(o=>o.value===id));
+ if(next)maskTarget.value=next;
+ $('rig-mask-source').textContent=part?.name||'未选择';
+ const existing=getMask();
+ maskLabel.textContent=existing?.png?'已保存蒙版 · 修改只影响当前遮挡对象':
+  '画白色区域表示此部件出现在目标前面；擦除则恢复后景。';
+ maskState.pair=maskKey();maskState.history=[];
+ maskPanel.hidden=!state.active||!part;
+}
+function serializeMask(mask){
+ if(!mask?._canvas)return;
+ mask.png=mask._canvas.toDataURL('image/png');
+ mask._revision=(mask._revision||0)+1;
+ changed(false);
+}
+function setMaskMode(enable){
+ if(enable&&!state.model?.parts[state.selected])return;
+ if(enable===maskState.enabled)return;
+ maskState.enabled=enable;
+ if(enable){
+  maskState.restorePlaying=state.playing;
+  state.playing=false;ed.setTool('mask');
+ }else{
+  if(maskState.pointer)maskState.pointer=null;
+  if(maskState.restorePlaying!==null)state.playing=maskState.restorePlaying;
+  maskState.restorePlaying=null;
+  if(S.tool==='mask')ed.setTool('select');
+ }
+ $('rig-mask-toggle').textContent=enable?'✓ 结束画蒙版':'画蒙版';
+ $('rig-mask-toggle').setAttribute('aria-pressed',String(enable));
+ maskPanel.classList.toggle('painting',enable);
+ ed.render();
+}
+$('rig-mask-toggle').onclick=()=>setMaskMode(!maskState.enabled);
+for(const [id,erase] of [['rig-mask-paint',false],['rig-mask-erase',true]]){
+ $(id).onclick=()=>{
+  maskState.erase=erase;
+  $('rig-mask-paint').setAttribute('aria-pressed',String(!erase));
+  $('rig-mask-erase').setAttribute('aria-pressed',String(erase));
+  setMaskMode(true);
+ };
+}
+maskTarget.onchange=()=>{maskState.history=[];updateMaskControls()};
+maskSize.oninput=()=>{$('rig-mask-size-value').textContent=maskSize.value+' px'};
+$('rig-mask-undo').onclick=()=>{
+ const mask=getMask(),snapshot=maskState.history.pop();
+ if(!mask||!snapshot)return;
+ maskCanvas(mask,state.model.parts[state.selected]).getContext('2d').putImageData(snapshot,0,0);
+ serializeMask(mask);
+};
+$('rig-mask-clear').onclick=()=>{
+ const mask=getMask();if(!mask||!confirm('清空当前部件对这个对象的前景蒙版？原始图片不会改变。'))return;
+ const c=maskCanvas(mask,state.model.parts[state.selected]);
+ maskState.history.push(c.getContext('2d').getImageData(0,0,c.width,c.height));
+ c.getContext('2d').clearRect(0,0,c.width,c.height);serializeMask(mask);
+};
+function maskStroke(a,b){
+ const mask=ensureMask(),source=state.model?.parts[state.selected];
+ if(!mask||!source)return;
+ const c=maskCanvas(mask,source),g=c.getContext('2d');
+ g.save();g.globalCompositeOperation=maskState.erase?'destination-out':'source-over';
+ g.strokeStyle='#fff';g.fillStyle='#fff';g.lineWidth=Number(maskSize.value);
+ g.lineCap='round';g.lineJoin='round';
+ g.beginPath();g.moveTo(a.x-source.x,a.y-source.y);g.lineTo(b.x-source.x,b.y-source.y);g.stroke();
+ if(Math.hypot(a.x-b.x,a.y-b.y)<.01){
+  g.beginPath();g.arc(a.x-source.x,a.y-source.y,g.lineWidth/2,0,2*Math.PI);g.fill();
+ }
+ g.restore();mask._revision=(mask._revision||0)+1;ed.render();
+}
 const quickPanel=document.createElement('section');
 quickPanel.id='rig-quick-panel';
 quickPanel.hidden=true;
@@ -256,10 +386,11 @@ function clearSelection(){
 }
 function select(id){
  if(!state.model?.parts[id])return;
+ if(maskState.enabled)setMaskMode(false);
  state.selected=id;$('rig-part').value=id;
  const ix=S.layers[S.side].findIndex(x=>x.sourcePart&&key(x)===id);
  if(ix>=0){S.sel=ix;ed.renderList();}
- values();refreshBones();syncIdle();ed.render();
+ values();refreshBones();syncIdle();updateMaskControls();ed.render();
 }
 let saveTimer=null,saveQueue=Promise.resolve(),revision=0;
 async function save(){
@@ -339,6 +470,7 @@ function setInspectorOpen(){
  ed.render();
 }
 async function deactivate(){
+ if(maskState.enabled)setMaskMode(false);
  if(state.dirty)await save();
  state.active=false;state.model=null;state.panelOpen=false;state.drag=null;state.bone='';
  quickPanel.hidden=true;
@@ -380,6 +512,7 @@ async function activate(openPanel=false){
   state.model.actionState={to:initial}; // initial pose immediate, next switches blend
  }
  state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
+ state.model.occlusionMasks=Array.isArray(state.model.occlusionMasks)?state.model.occlusionMasks:[];
  state.active=true;state.phase=0;state.playing=true;state.showGuides=false;
  quickPanel.hidden=false;
  $('rig-guides').checked=false;
@@ -621,8 +754,57 @@ function loc(e){
  const b=stage.getBoundingClientRect();
  return {x:(e.clientX-b.left-S.px)/S.zoom,y:(e.clientY-b.top-S.py)/S.zoom};
 }
+// Mask brush is captured before the base editor's pixel brush. Edits are in
+// source texture coordinates via live ArtMesh inverse mapping; masks stay at
+// the chosen source part even if the rendered character is animated.
 stage.addEventListener('pointerdown',e=>{
- if(!state.active||!state.panelOpen||!state.showGuides||S.tool==='select'||e.target!==$('view'))return;
+ if(!maskState.enabled||S.tool!=='mask'||e.target!==$('view'))return;
+ e.preventDefault();e.stopImmediatePropagation();
+ if(maskState.pointer!==null||!state.model?.parts[state.selected])return;
+ const partLayer=parts().find(p=>key(p)===state.selected);
+ if(!partLayer)return;
+ const local=loc(e),source=ed.S;
+ const world={x:local.x,y:local.y};
+ const mapped=ed.S.only?world:window.PaperchalkPartRigStudio?.mapToSource?.(world,partLayer);
+ if(!mapped)return;
+ const entry=ensureMask();if(!entry)return;
+ const c=maskCanvas(entry,state.model.parts[state.selected]);
+ maskState.history.push(c.getContext('2d').getImageData(0,0,c.width,c.height));
+ if(maskState.history.length>20)maskState.history.shift();
+ maskState.pointer={id:e.pointerId,point:mapped,start:mapped,entry,hasMoved:false};
+ stage.setPointerCapture(e.pointerId);
+ // Touch painting begins only after movement or intentional release, not on
+ // the first finger of an attempted two-finger zoom.
+ if(e.pointerType==='mouse')maskStroke(mapped,mapped);
+},true);
+stage.addEventListener('pointermove',e=>{
+ const d=maskState.pointer;
+ if(!d||d.id!==e.pointerId)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ const layer=parts().find(p=>key(p)===state.selected);if(!layer)return;
+ const q=window.PaperchalkPartRigStudio?.mapToSource?.(loc(e),layer);
+ if(!q)return;
+ if(!d.hasMoved&&Math.hypot(q.x-d.start.x,q.y-d.start.y)<2)return;
+ d.hasMoved=true;maskStroke(d.point,q);d.point=q;
+},true);
+for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,e=>{
+ const d=maskState.pointer;
+ if(!d||d.id!==e.pointerId)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ if(!d.hasMoved&&type==='pointerup'&&e.pointerType!=='mouse')maskStroke(d.point,d.point);
+ if(type==='pointercancel'&&maskState.history.length){
+  const before=maskState.history.pop(),c=maskCanvas(d.entry,state.model.parts[state.selected]);
+  c.getContext('2d').putImageData(before,0,0);
+ }
+ serializeMask(d.entry);
+ maskState.pointer=null;
+ if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
+},true);
+window.addEventListener('paperchalk:studio-tool-changed',e=>{
+ if(maskState.enabled&&e.detail?.tool!=='mask')setMaskMode(false);
+});
+stage.addEventListener('pointerdown',e=>{
+ if(!state.active||!state.panelOpen||!state.showGuides||['select','mask'].includes(S.tool)||e.target!==$('view'))return;
  e.stopImmediatePropagation();e.preventDefault();
  const p=current();if(!p)return;
  const o=loc(e),a={x:p.x+p.pivot.x*p.w,y:p.y+p.pivot.y*p.h};
