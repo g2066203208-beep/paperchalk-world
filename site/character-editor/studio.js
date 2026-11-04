@@ -531,6 +531,9 @@ function options(){
  if(list.has(currentId)&&[...selector.options].some(o=>o.value===currentId))
   selector.value=currentId;
  else selector.value=visibleFamilyGroups()[0]?.primary?.id||'';
+ // Paint the tree synchronously with the selected actor. A deferred rebuild
+ // made the list appear blank during the first source-rig load.
+ renderFamilyTree();
 }
 let switchQueue=Promise.resolve();
 function change(id,face='front'){
