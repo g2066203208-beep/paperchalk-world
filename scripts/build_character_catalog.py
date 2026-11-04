@@ -90,7 +90,9 @@ def discover():
             raise ValueError(f'L2D module {ident} is protected; use an internal source-rig alias')
         # Original PSD module is an internal implementation of the ONE
         # existing CHAR-002, not another game character.
-        if ident == 'char-002-psd-v1':
+        if ident in ('char-002-psd-v1','protagonist-rig-v1','protagonist-unified-v1'):
+            # Generated internal rigs belong to the ONE canonical actor.
+            # They are render implementations, never new NPC identities.
             continue
         row = entries.setdefault(ident,{
             'id':ident,'label':module['label'],'front':'','back':''
@@ -141,6 +143,28 @@ def discover():
                         'rig':{**view['rig'],'sourceCharacterId':'protagonist-rig-v1'},
                         'originalV4':old.get('clip')})
         heroine['motionPreference']='independent-bones-no-breath'
+    # The final playable heroine FRONT is the approved standing body, and
+    # battle contributes only two exchangeable arms plus the axe.
+    # A single actor/portrait/rig is used in both editor and game.
+    unified=next((m for m in modules if m['id']=='protagonist-unified-v1'),None)
+    if heroine:
+        if not unified:
+            raise ValueError('Heroine unified standing-first ArtMesh build is missing')
+        combined=unified['views'].get('front')
+        if not combined or combined.get('renderer')!='part-mesh' or combined['rig']['partCount']!=20:
+            raise ValueError('Heroine requires 17 standing PSD parts plus 3 real battle parts')
+        if 'front' not in heroine.get('l2dModule',{}):
+            raise ValueError('Approved heroine front L2D reference missing')
+        old=heroine['l2dModule']['front']
+        old.update({'renderer':'part-mesh',
+                    'rig':{**combined['rig'],'sourceCharacterId':'protagonist-unified-v1'},
+                    'originalV4':old.get('originalV4') or old.get('clip'),
+                    'actions':['idle','combat'],
+                    'partLayerGroups':{'shared':17,'idleArms':1,'battleArms':2,'weapons':1}})
+        heroine['familyId']='protagonist'
+        heroine['actionSystem']='shared-stand-base-swap-arms-v1'
+        heroine['motionPreference']='approved-standing-with-local-battle-arms'
+
 
     # CHAR-002's user-supplied original Photoshop document is authoritative.
     # Its 24 records contain 17 original visible layers; two disjoint arms are split into 18 playing meshes.
