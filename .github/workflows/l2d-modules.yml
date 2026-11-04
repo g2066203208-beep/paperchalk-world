@@ -21,6 +21,7 @@ on:
       - 'tests/test_l2d_library.py'
       - 'tests/test_l2d_idle.js'
       - 'tests/test_protagonist_crouch_asset.py'
+      - 'tests/test_protagonist_crouch_dynamics.cjs'
       - 'scripts/qa_crouch_geometry.py'
       - 'tests/test_protagonist_crouch_studio_browser.mjs'
       - 'tests/test_l2d_display_lifecycle.cjs'
@@ -44,6 +45,7 @@ on:
       - 'tests/test_l2d_library.py'
       - 'tests/test_l2d_idle.js'
       - 'tests/test_protagonist_crouch_asset.py'
+      - 'tests/test_protagonist_crouch_dynamics.cjs'
       - 'scripts/qa_crouch_geometry.py'
       - 'tests/test_protagonist_crouch_studio_browser.mjs'
       - 'tests/test_battle_front_studio.js'
@@ -156,6 +158,8 @@ jobs:
           PY
       - name: Verify crouch source pixel integrity, eye layers, exact grips and 25 real textures
         run: python3 -m unittest tests/test_protagonist_crouch_asset.py -v
+      - name: Verify true crouch: rigid axe + both grips, planted soles and waist-locked hem
+        run: node tests/test_protagonist_crouch_dynamics.cjs
       - name: Record real source layer bounds for fitted hem, planted feet and axe grip
         run: python3 scripts/qa_crouch_geometry.py
       - name: Verify game, independent ArtMesh player and editor parse
