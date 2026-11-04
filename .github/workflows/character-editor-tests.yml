@@ -534,11 +534,16 @@ jobs:
                   assert.equal(audit.parts,item.parts);
                   if(item.id==='char-004'){
                     const expected=["back_hair","footwear","legwear","neck","topwear","eyebrow_r","ears_r","ears_l","face","nose","mouth","handwear_l","eyebrow_l","eyelash_r","eyelash_l","eyewhite_r","eyewhite_l","irides_l","irides_r","handwear_r","front_hair"];
-                    const fidelity=await p.evaluate(()=>{
+                    const fidelity=await p.evaluate(async()=>{
                       const m=window.PaperchalkPartRigStudio.state.model;
                       const layers=window.characterEditor.S.layers.front.filter(x=>x.sourcePart);
-                      return {order:m.layerOrder,source:m.provenance,
-                        score:m.qualityAudit?.visiblePixelAccuracyWithin10,
+                      // Project runtime intentionally sanitizes non-animation provenance.
+                      // Verify original PSD proof from the authoritative published JSON.
+                      const spec=window.PaperchalkStudio.list.get('char-004').l2dModule.front;
+                      const url=new URL(spec.rig.url,new URL('../',location.href));
+                      const raw=await (await fetch(url,{cache:'no-store'})).json();
+                      return {order:m.layerOrder,source:raw.provenance,
+                        score:raw.qualityAudit?.visiblePixelAccuracyWithin10,
                         uiLayerOrder:layers.map(x=>x.partId)};
                     });
                     assert.deepEqual(fidelity.order,expected,
