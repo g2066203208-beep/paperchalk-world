@@ -11,14 +11,12 @@ const el=(tag,attrs={},text='')=>{
  if(text)node.textContent=text;
  return node;
 };
-const saved=(()=>{try{return localStorage.getItem('paperchalk-editor-ui')==='expert'}catch(_){return false}})();
-let expert=saved,dirty=false;
+// One permanent workspace. No beginner/expert mode, no duplicate toolbar.
+let dirty=false;
 const topActions=document.querySelector('header .actions');
-const modeButton=el('button',{id:'easy-mode-switch',type:'button','aria-pressed':String(expert)});
-topActions?.prepend(modeButton);
-const quickImport=el('button',{id:'easy-import',type:'button',title:'导入真正的 PSD 或原位分层 ZIP'},'＋ 导入分层');
-topActions?.prepend(quickImport);
-quickImport.onclick=()=>$('studio-parts-import')?.click();
+for(const id of ['idle-open','btnUndo','btnRedo']){
+ const node=$(id);if(node)node.hidden=true;
+}
 
 // The catalog and face selector remain the first thing users see.
 // Keep the original import handlers and input IDs untouched inside an optional section.
@@ -33,6 +31,8 @@ if(second){
   const input=$(id);if(input?.closest('label'))row.append(input.closest('label'));
  }
  details.append(row);
+ const backup=$('btnExport');
+ if(backup){backup.textContent='导出完整备份 ZIP';backup.classList.add('studio-backup-action');details.append(backup);}
  second.before(details);
 }
 // Make destructive layer actions deliberate, not part of the primary editing path.
@@ -101,7 +101,7 @@ const saveNote=el('span',{id:'easy-save-note',role:'status'},'保存在当前浏
 topActions?.append(saveNote);
 const bSave=$('btnSave');
 if(bSave){bSave.textContent='✓ 保存到本机游戏';bSave.title='保存角色改动，当前浏览器的游戏 DEV 立即可用；并非提交 GitHub';}
-if($('btnExport'))$('btnExport').textContent='↓ 备份 ZIP';
+// ZIP export is reachable in the left-side file section, not the top bar.
 if($('studio-back'))$('studio-back').textContent='↩ 返回游戏';
 function sourcePart(){
  return ed.S.layers[ed.S.side]?.[ed.S.sel]||null;
@@ -141,15 +141,11 @@ function sync(){
   b.classList.toggle('active',b.dataset.easyTool===ed.S.tool);
 }
 function applyMode(){
- document.body.classList.toggle('easy-mode',!expert);
- document.body.classList.toggle('expert-mode',expert);
- modeButton.textContent=expert?'简洁模式':'高级模式';
- modeButton.setAttribute('aria-pressed',String(expert));
- for(const d of document.querySelectorAll('.easy-disclosure'))d.open=expert;
- try{localStorage.setItem('paperchalk-editor-ui',expert?'expert':'easy')}catch(_){}
+ document.body.classList.add('easy-mode');
+ document.body.classList.remove('expert-mode','rig-authoring');
+ for(const d of document.querySelectorAll('.easy-disclosure'))d.open=false;
  requestAnimationFrame(()=>requestAnimationFrame(()=>{$('fit')?.click();sync();}));
 }
-modeButton.onclick=()=>{expert=!expert;applyMode()};
 window.addEventListener('keydown',e=>{
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){
   e.preventDefault();
@@ -188,6 +184,6 @@ $('main-preview')?.addEventListener('click',()=>requestAnimationFrame(sync));
 $('main-play')?.addEventListener('click',()=>requestAnimationFrame(sync));
 window.addEventListener('paperchalk:studio-play-changed',sync);
 window.addEventListener('paperchalk:rig-play-changed',sync);
-window.PaperchalkEasyEditor={get expert(){return expert},setExpert(value){expert=!!value;applyMode()},editPart,animatePart,sync};
+window.PaperchalkEasyEditor={get expert(){return false},setExpert(){/* A single permanent editor */},editPart,animatePart,sync};
 applyMode();sync();
 })();
