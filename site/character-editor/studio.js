@@ -481,7 +481,7 @@ function renderFamilyTree(){
    btn.className=currentId===variant.id?'active':'';
    const title=String(variant.label||variant.id)
     .replace(/^(女主角?|女二|女三|男主角?|男二|女老师)\\s*[·:：-]\\s*/,'');
-   btn.textContent=(isOutfit?'换装 · ':isBattle?'动作 · ':'素材 · ')+title;
+   btn.textContent=(isOutfit?'服装 / 换装 · ':isBattle?'战斗动作 · ':'素材 · ')+title;
    btn.onclick=async()=>{
     try{
      if(isBattle&&primary.id==='protagonist'){
@@ -740,12 +740,13 @@ async function readPartRig(id=currentId,face=side){
  const local=await get('part-rig:'+id+':'+face);
  const needsUnified=id==='protagonist'&&face==='front'&&
   list.get(id)?.l2dModule?.front?.rig?.sourceCharacterId==='protagonist-unified-v1';
- const staleBase=needsUnified&&local&&
+ const intentionalDeletion=Array.isArray(local?.deletedParts)&&local.deletedParts.length>0;
+ const staleBase=needsUnified&&local&&!intentionalDeletion&&
   !['battle_handwear_r','battle_handwear_l','battle_axe'].every(x=>!!local.parts?.[x]);
  // CHAR-004 v2 has 21 source Photoshop layers but 23 REAL playing parts:
  // coat-left and coat-right are losslessly partitioned from topwear.
  // Rebuild old 19/21-layer drafts so wrists and cloth share actual parents.
- const staleFemale3=id==='char-004'&&face==='front'&&local&&
+ const staleFemale3=id==='char-004'&&face==='front'&&local&&!intentionalDeletion&&
   !hasFemale3SourceRig(Object.keys(local.parts||{}));
  // IMPORTANT: do not delete a perfectly valid 21-source user model just
  // because it lacks a special coat-grip version marker. Published char-004
@@ -756,7 +757,7 @@ async function readPartRig(id=currentId,face=side){
   await dropDraft('part-rig:'+id+':'+face);
  }
  if(local&&!staleBase&&!staleFemale3){
-  if(id!=='char-002'||hasFemale2Psd(Object.keys(local.parts||{})))return local;
+  if(id!=='char-002'||intentionalDeletion||hasFemale2Psd(Object.keys(local.parts||{})))return local;
   await dropDraft('part-rig:'+id+':'+face);
  }
  const pub=list.get(id)?.l2dModule?.[face]?.rig;
@@ -1084,6 +1085,7 @@ async function ensureHostedParts(id){
  // A deliberate deletion of ALL local source parts must not trigger an
  // automatic re-import of the original PNGs on the next visit.
  const draft=await get('part-rig:'+id+':'+side);
+ if(draft?.deletedParts?.length&&ed.S.layers[side].some(p=>p.sourcePart))return;
  if(draft?.deletedParts?.length&&Object.keys(draft.parts||{}).length===0&&
     !ed.S.layers[side].some(p=>p.sourcePart))return;
  if(!hostedPartsURLs[id]&&!list.get(id)?.l2dModule?.[side]?.sourceParts&&!list.get(id)?.l2dModule?.[side]?.rig)return;
