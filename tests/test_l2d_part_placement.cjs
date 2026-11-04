@@ -14,6 +14,13 @@ modified.parts.testfabric.placement={scaleX:1.5,scaleY:.8,offsetX:20,offsetY:-10
 const model=core.project(art,'test-fitting','front',modified),p=model.parts.testfabric;
 assert.deepEqual(p.placement,{scaleX:1.5,scaleY:.8,offsetX:20,offsetY:-10});
 const bounds=core.placedBounds(p);
+for(const [u,v] of [[0,0],[.1,.87],[.5,.5],[1,1]]){
+ const original={x:p.x+u*p.w,y:p.y+v*p.h};
+ const placed=core.placedRestPoint(p,original);
+ const restored=core.unplacedRestPoint(p,placed);
+ assert.ok(Math.hypot(original.x-restored.x,original.y-restored.y)<1e-9,
+  'bone/paint selection must invert exact authored scale and offset');
+}
 assert.ok(Math.abs(bounds.x-70)<.00001);
 assert.ok(Math.abs(bounds.y-191.6)<.00001);
 assert.ok(Math.abs(bounds.w-300)<.00001);
