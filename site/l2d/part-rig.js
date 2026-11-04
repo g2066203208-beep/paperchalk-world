@@ -638,12 +638,16 @@ const CROUCH_CONTACTS=Object.freeze({
 });
 const CROUCH_KEYS=['topwear','axe','handwear_l','handwear_r',
  'legwear_l','legwear_r','footwear_l','footwear_r'];
-const CROUCH_DEFAULTS=Object.freeze({version:1,cloth:1,axe:1,legs:1,feet:1});
+const CROUCH_DEFAULTS=Object.freeze({version:2,cloth:1,axe:1,legs:1,feet:1,body:1,depth:1});
 function sanitizeCrouchDynamics(value){
  const a=value&&typeof value==='object'?value:{};
  const out={...CROUCH_DEFAULTS};
- for(const name of ['cloth','axe','legs','feet'])
-  out[name]=clamp(finite(a[name],1),0,1.5);
+ // 0 keeps the artist's EXACT painted/restored pose, not a fake fallback.
+ // A saved v1 character is upgraded only with new motion parameters; its
+ // personally authored strengths, textures, rig and occlusionMasks survive.
+ for(const name of ['cloth','axe','legs','feet','body','depth'])
+  out[name]=clamp(finite(a[name],1),0,2);
+ out.version=2;
  return out;
 }
 function bindCrouchDynamics(model){
@@ -653,8 +657,13 @@ function bindCrouchDynamics(model){
  if(!CROUCH_KEYS.every(id=>!!model.parts?.[id]))return model;
  model.crouchDynamics=sanitizeCrouchDynamics(model.crouchDynamics);
  const axe=model.parts.axe;
- for(const id of CROUCH_KEYS){
-  const p=model.parts[id];
+ // All the head, hair, neckline and facial ArtMeshes share the SAME upper
+ // space deformer. This is NOT a new painting or replacement texture.
+ // Lower legs and shoe soles are excluded to retain ground contact.
+ const upper=new Set(CROUCH_KEYS);
+ for(const [id,p] of Object.entries(model.parts)){
+  const local=/^(?:face|mouth|nose|head|neck|hair|front_hair|back_hair|rear_hair|irid|eyewhite|eye_white|eyelash|eyebrow|ear|hair_clip)/.test(id);
+  if(!upper.has(id)&&!local)continue;
   Object.defineProperty(p,'_crouchDynamics',{
    value:model.crouchDynamics,configurable:true,writable:true});
   Object.defineProperty(p,'_crouchAxe',{value:axe,configurable:true});
@@ -663,13 +672,53 @@ function bindCrouchDynamics(model){
 }
 // Weapon moves as ONE rigid object: its long handle cannot bend or break.
 // Both separate hand ArtMeshes sample this exact same transformation field.
+// Cinematic 2.5D performance: an affine shared parent deformer + an
+// artist-safe local cloth field. It emulates Cubism Angle XY/Body Z without
+// claiming that flat PSD paintings become real 3D geometry.
+const CROUCH_PERSPECTIVE_CENTER=Object.freeze({x:516,y:696});
+function crouchSpacePose(phase,d=CROUCH_DEFAULTS){
+ const body=(d.body??1),depth=(d.depth??1);
+ // No additive phase offsets: frame zero is EXACTLY the saved drawing.
+ const lean=Math.sin(phase*.53),shift=Math.sin(phase*.73);
+ const angle=body*.039*lean; // ±2.23° body Z rotation
+ const foreshorten=depth*.068*Math.sin(phase*.52); // Angle X proxy
+ const yaw=depth*.080*Math.sin(phase*.51); // small Angle Y shear
+ const pitch=depth*.045*Math.sin(phase*.47); // tilt into camera
+ return {pivot:CROUCH_PERSPECTIVE_CENTER,angle,
+  sx:1+foreshorten,sy:1+pitch,
+  shear:yaw,tx:body*(13*shift+4*Math.sin(phase*.37)),
+  ty:body*(9*Math.sin(phase*.63)+3*Math.sin(phase*.31))};
+}
+function crouchSpacePoint(point,pose){
+ const dX=point.x-pose.pivot.x,dY=point.y-pose.pivot.y,
+  cs=Math.cos(pose.angle),sn=Math.sin(pose.angle);
+ const x=dX*pose.sx+pose.shear*dY,y=dY*pose.sy;
+ return {x:pose.pivot.x+pose.tx+x*cs-y*sn,
+  y:pose.pivot.y+pose.ty+x*sn+y*cs};
+}
+function crouchUpperWeight(point){
+ // The fixed planted sole remains independent. The original skirt/coat
+ // texture extends to y=890 and blends from its waist, not as a cardboard
+ // cutout rigidly translated along with the face.
+ return 1-smooth(clamp((point.y-540)/360,0,1));
+}
+function crouchSpacePartPoint(part,point,phase){
+ if(!part._crouchDynamics)return point;
+ const id=part.id;
+ if(id.startsWith('footwear_')||id.startsWith('legwear_'))return point;
+ const pose=crouchSpacePose(phase,part._crouchDynamics);
+ const weight=id==='topwear'?crouchUpperWeight(point):1;
+ const q=crouchSpacePoint(point,pose);
+ return {x:point.x+(q.x-point.x)*weight,
+  y:point.y+(q.y-point.y)*weight};
+}
 function crouchWeaponPose(part,phase){
  const d=part._crouchDynamics||CROUCH_DEFAULTS;
  const strength=d.axe||0;
  return {pivot:placedRestPoint(part._crouchAxe||part,CROUCH_CONTACTS.weaponPivot),
-  angle:strength*.013*Math.sin(phase*.86),
-  x:strength*1.2*Math.sin(phase*.70),
-  y:strength*.85*Math.sin(phase*.91)};
+  angle:strength*.083*Math.sin(phase*.78),  // ±4.75° weapon swing
+  x:strength*(5.5*Math.sin(phase*.73)+2*Math.sin(phase*.41)),
+  y:strength*3.7*Math.sin(phase*.88)};
 }
 function crouchWeaponPoint(point,pose){
  const cs=Math.cos(pose.angle),sn=Math.sin(pose.angle);
@@ -680,7 +729,9 @@ function crouchWeaponPoint(point,pose){
 function crouchDeform(part,point,u,v,phase){
  const d=part._crouchDynamics;
  if(!d)return point;
- if(part.id==='axe')return crouchWeaponPoint(point,crouchWeaponPose(part,phase));
+ if(part.id==='axe')
+  return crouchSpacePartPoint(part,
+    crouchWeaponPoint(point,crouchWeaponPose(part,phase)),phase);
  if(part.id==='handwear_l'||part.id==='handwear_r'){
   const source=part.id==='handwear_l'?CROUCH_CONTACTS.left:CROUCH_CONTACTS.right;
   const shoulder=placedRestPoint(part,source.shoulder),
@@ -688,44 +739,43 @@ function crouchDeform(part,point,u,v,phase){
   const vx=grip.x-shoulder.x,vy=grip.y-shoulder.y,
    den=Math.max(1,vx*vx+vy*vy);
   const along=((point.x-shoulder.x)*vx+(point.y-shoulder.y)*vy)/den;
-  // Shoulder stays sewn to the jacket; wrist & all gripping fingers
-  // inherit 100% of the axe movement, keeping both grip points glued.
-  const w=smooth(clamp((along-.08)/.74,0,1));
+  // The actual glove pixels gripping the handle use 100% of the SAME
+  // rigid axe deformation, then the SAME shared view perspective.
+  // The shoulder root follows torso perspective but not axe rotation.
+  const w=smooth(clamp((along-.02)/.70,0,1));
   const target=crouchWeaponPoint(point,crouchWeaponPose(part,phase));
-  return {x:point.x+(target.x-point.x)*w,
-          y:point.y+(target.y-point.y)*w};
+  const linked={x:point.x+(target.x-point.x)*w,
+                y:point.y+(target.y-point.y)*w};
+  return crouchSpacePartPoint(part,linked,phase);
  }
  if(part.id==='topwear'){
-  // NO independent skirt layer exists in the original PSD. Its white front
-  // drape and black split coat tails are inside this genuine ArtMesh.
-  // Zero deformation above the pelvis; smooth skin weights below the
-  // waist, with slightly delayed, asymmetrical coat/hem follow-through.
-  const hem=smooth(clamp((v-.42)/.43,0,1));
+  // Preserve user's painted collar, seam masks and tailored hem shape.
+  // Constrain shoulders/waist: bottom hem carries larger but delayed
+  // asymmetrical amplitude and subtle perspective foreshortening.
+  const hem=smooth(clamp((v-.36)/.57,0,1));
   const side=clamp((u-.5)*2,-1,1),edge=Math.abs(side);
-  const sway=Math.sin(phase*.79),follow=Math.sin(phase*.53);
-  const dx=d.cloth*hem*((.85+2.55*edge)*sway+1.55*side*follow);
-  const dy=d.cloth*hem*(1.30*follow+.75*edge*Math.sin(phase*.95));
-  return {x:point.x+dx,y:point.y+dy};
+  const sway=Math.sin(phase*.78),lag=Math.sin(phase*.46);
+  const dx=d.cloth*hem*((4.7+8.6*edge)*sway+6.2*side*lag);
+  const dy=d.cloth*hem*(4.6*lag+2.8*edge*Math.sin(phase*.9));
+  return crouchSpacePartPoint(part,{x:point.x+dx,y:point.y+dy},phase);
  }
  if(part.id==='legwear_l'||part.id==='legwear_r'){
-  // Deep crouch is already correctly drawn: express tiny knee pressure,
-  // easing to zero BEFORE the ankle/footwear attachment.
-  const w=smooth(clamp((v-.10)/.24,0,1))*
-   (1-smooth(clamp((v-.65)/.18,0,1)));
+  // Deform the knee between 16–78% of the source leg; the ankle is
+  // a ground-rooted constraint. No detached foot, no fake standup pose.
+  const w=smooth(clamp((v-.06)/.23,0,1))*
+   (1-smooth(clamp((v-.59)/.21,0,1)));
   const side=part.id.endsWith('_l')?-1:1;
-  const load=Math.sin(phase*.66)*d.legs*w;
-  return {x:point.x+side*2.05*load,y:point.y+.95*load};
+  const load=Math.sin(phase*.69)*d.legs*w;
+  return {x:point.x+side*5.4*load,y:point.y+2.9*load};
  }
  if(part.id==='footwear_l'||part.id==='footwear_r'){
-  // Ankle collar AND last 20% of each shoe stay planted. Only leather/toe
-  // shape bends imperceptibly under weight; the soles never translate.
-  const toe=smooth(clamp((v-.32)/.19,0,1))*
-   (1-smooth(clamp((v-.73)/.19,0,1)));
+  const toe=smooth(clamp((v-.28)/.19,0,1))*
+   (1-smooth(clamp((v-.70)/.20,0,1)));
   const side=part.id.endsWith('_l')?-1:1;
-  const pulse=Math.sin(phase*.66)*d.feet*toe;
-  return {x:point.x+side*.9*pulse,y:point.y-.7*pulse};
+  const pulse=Math.sin(phase*.69)*d.feet*toe;
+  return {x:point.x+side*2.15*pulse,y:point.y-1.6*pulse};
  }
- return point;
+ return crouchSpacePartPoint(part,point,phase);
 }
 function bindBodyHierarchy(model){
  const p=model?.parts;if(!p)return model;
@@ -1121,12 +1171,23 @@ const FACE_MICRO=new Set(['face','head','head_reference','ears','brows','eyebrow
   'eyewhite_r','eyewhite_l','irides_r','irides_l','eyelash_r','eyelash_l']);
 function drawFacePart(ctx,source,part,phase,idle){
  const img=source.canvas,id=part.id,blink=blinkAmount(phase);
+ // Facial micro-meshes (eyelids, irises, nose, eyebrows) are drawn as
+ // rigid patches, NOT triangulated. Apply the identical shared torso
+ // projection so no eye floats away from the already animated head.
  // Align attached facial pieces to exactly the same barely visible head
  // movement; never skin/melt tiny eyebrows/nose with a large triangular grid.
  const motion=bodyIdleAt(part,phase,idle);
  const lean=bodyPoseAt(phase,idle);
  ctx.save();
  ctx.globalAlpha=source.opacity??1;
+ if(part._crouchDynamics){
+  const p=crouchSpacePose(phase,part._crouchDynamics),
+   cs=Math.cos(p.angle),sn=Math.sin(p.angle);
+  ctx.translate(p.pivot.x+p.tx,p.pivot.y+p.ty);
+  ctx.transform(cs*p.sx,sn*p.sx,cs*p.shear-sn*p.sy,
+   sn*p.shear+cs*p.sy,0,0);
+  ctx.translate(-p.pivot.x,-p.pivot.y);
+ }
  // Same body transform as skinned hair, arms, clothing and legs.
  ctx.transform(1,0,-lean.lean,1,lean.feet*lean.lean,0);
  ctx.translate(motion.x,motion.y);
@@ -1179,13 +1240,24 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
  const windy=weather==='windy'||largeMotion;
  const image=source.canvas;
  if(part._crouchDynamics&&part.id==='axe'){
-  // A true rigid weapon draw costs ONE textured quad, not dozens of
-  // tiny triangles that could kink the blade or create shaft seams.
-  const p=crouchWeaponPose(part,phase),t=part.placement||{};
+  // One affine texture render keeps the source axe, paint touchups,
+  // and its author-drawn handle completely rigid. Its affine X/Y view
+  // deformation matches the glove vertices in crouchDeform.
+  const p=crouchWeaponPose(part,phase);
+  const d=crouchSpacePose(phase,part._crouchDynamics),
+   a=Math.cos(p.angle),b=Math.sin(p.angle),
+   cs=Math.cos(d.angle),sn=Math.sin(d.angle);
+  const A=cs*d.sx, B=sn*d.sx,
+   C=cs*d.shear-sn*d.sy, D=sn*d.shear+cs*d.sy;
+  // Global affine composed AFTER local held-weapon rigid rotation.
   ctx.save();ctx.globalAlpha=source.opacity??1;
+  ctx.translate(d.pivot.x+d.tx,d.pivot.y+d.ty);
+  ctx.transform(A,B,C,D,0,0);
+  ctx.translate(-d.pivot.x,-d.pivot.y);
   ctx.translate(p.pivot.x+p.x,p.pivot.y+p.y);
   ctx.rotate(p.angle);
   ctx.translate(-p.pivot.x,-p.pivot.y);
+  const t=part.placement||{};
   if(t.scaleX!==1||t.scaleY!==1||t.offsetX||t.offsetY){
    const bounds=placedBounds(part);
    ctx.drawImage(image,bounds.x,bounds.y,bounds.w,bounds.h);
@@ -1193,12 +1265,12 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
   ctx.restore();return;
  }
  const crouch=!!part._crouchDynamics,
-  cols=crouch&&part.id==='topwear'?Math.max(part.mesh.columns,12):
+  cols=crouch&&part.id==='topwear'?Math.max(part.mesh.columns,16):
    crouch&&part.id.startsWith('handwear_')?Math.max(part.mesh.columns,10):
    crouch&&part.id.startsWith('legwear_')?Math.max(part.mesh.columns,9):
    windy&&part.kind==='hair'?Math.max(part.mesh.columns,12):
    windy&&part.kind==='skirt'?Math.max(part.mesh.columns,10):part.mesh.columns,
-  rows=crouch&&part.id==='topwear'?Math.max(part.mesh.rows,14):
+  rows=crouch&&part.id==='topwear'?Math.max(part.mesh.rows,18):
    crouch&&part.id.startsWith('handwear_')?Math.max(part.mesh.rows,12):
    crouch&&part.id.startsWith('legwear_')?Math.max(part.mesh.rows,10):
    windy&&part.kind==='hair'?Math.max(part.mesh.rows,15):
@@ -1493,5 +1565,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
 
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,CROUCH_CONTACTS,CROUCH_KEYS,sanitizeCrouchDynamics,bindCrouchDynamics,crouchWeaponPose,crouchWeaponPoint,crouchDeform,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,garmentPoint,hipPoint,legPoint,placedRestPoint,unplacedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,CROUCH_CONTACTS,CROUCH_KEYS,sanitizeCrouchDynamics,bindCrouchDynamics,crouchSpacePose,crouchSpacePoint,crouchSpacePartPoint,crouchWeaponPose,crouchWeaponPoint,crouchDeform,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,garmentPoint,hipPoint,legPoint,placedRestPoint,unplacedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
 })(typeof window!=='undefined'?window:globalThis);
