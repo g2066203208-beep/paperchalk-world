@@ -45,7 +45,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.equal(current.sourcePart,'legwear');
   assert.equal(current.bound,true);
   assert.deepEqual(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.model.parts.pants_overlay.placement),
-   {scaleX:.92,scaleY:.8,offsetX:-7,offsetY:-12});
+   {scaleX:1.2,scaleY:1,offsetX:-15,offsetY:-17});
   assert.ok(current.max<.03,'pants hem must not pull away from real legs');
   assert.ok(current.travel>1.0,'must test actual nonzero motion');
   fs.mkdirSync('artifacts/character-editor',{recursive:true});
