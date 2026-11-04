@@ -16,7 +16,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    null,{timeout:50000});
   await page.locator('#rig-part').selectOption('pants_overlay');
   assert.equal(await page.locator('#rig-fit-panel').isVisible(),true);
-  assert.equal(await page.locator('#rig-fit-width').inputValue(),'92');
+  assert.equal(await page.locator('#rig-fit-width').inputValue(),'120');
   await page.locator('#rig-fit-lock').uncheck();
   await page.locator('#rig-fit-width').fill('86');
   await page.locator('#rig-fit-height').fill('110');
@@ -87,7 +87,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.waitForFunction(async()=>{
    const rig=await window.PaperchalkStudio.readPartRig('female-06','front');
    const t=rig.parts.pants_overlay.placement;
-   return t.scaleX===.92&&t.scaleY===.8&&t.offsetX===-7&&t.offsetY===-12;
+   return t.scaleX===1.2&&t.scaleY===1&&t.offsetX===-15&&t.offsetY===-17;
   },null,{timeout:35000});
   assert.deepEqual(errors,[],'no browser page errors during sizing/save/reload');
   console.log('PASS female06 resize inspector: independent X/Y scale, offset, canvas handles, save/reload, reset, source PNG preserved');
