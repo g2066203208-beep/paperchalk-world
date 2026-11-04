@@ -526,8 +526,15 @@ async function importComponentFiles(files,options={}){
    :new Map();
   // Existing painted standing parts win; only missing battle PNGs are imported.
   const ordered=restored[face].map(p=>existing.get(String(p.partId||p.name))||p);
+  const auxiliary=ed.S.layers[face].filter(p=>!p.sourcePart&&!/^(PSD ·|原始角色 ·)/.test(p.name));
+  // The previous 19-layer import left behind an untouched auto-created
+  // “未命名透明层”, producing a fake 22nd item in the 21-layer original PSD.
+  // Never remove user-authored content; drop ONLY the exactly empty starter.
+  const keepAuxiliary=currentId==='char-004'&&face==='front'
+   ?auxiliary.filter(p=>!(p.name==='未命名透明层'&&p.canvas&&!hasPaint(p.canvas)))
+   :auxiliary;
   ed.S.layers[face]=[
-   ...ed.S.layers[face].filter(p=>!p.sourcePart&&!/^(PSD ·|原始角色 ·)/.test(p.name)),
+   ...keepAuxiliary,
    ...(options.appendMissingParts&&existing.size?ordered:restored[face])];
   if(!options.missingOnly||!await get('baseline:'+currentId+':'+face))
    await put('baseline:'+currentId+':'+face,pristine[face]);
