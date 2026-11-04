@@ -863,6 +863,17 @@ function markRigRestored(label){
  info(label+' · 原始绘画、蒙版与其他部件未清空');
  ed.render();
 }
+function applySavedRecovery(snapshot){
+ if(!state.active||!snapshot)return false;
+ const old=rigSnapshot();
+ rehydrateRig(snapshot);
+ if(old===rigSnapshot())return false;
+ state.undoStack.push({snapshot:old,time:Date.now(),part:state.selected});
+ if(state.undoStack.length>24)state.undoStack.shift();
+ state.redoStack=[];
+ markRigRestored('已恢复保存的骨骼／蒙版检查点');
+ return true;
+}
 function restoreOpenedRig(){
  if(!state.openedRig||!state.active)return false;
  if(!confirm('把当前人物骨骼、摆动和局部遮挡恢复到本次打开工作室时的状态？不会删除你绘画的贴图。')){
@@ -1689,7 +1700,7 @@ window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,selec
   !!(maskState.enabled&&maskState.history.length),
  canRedo:()=>!!state.redoStack.length||!!(maskState.enabled&&maskState.redo.length),
  restoreOpened:restoreOpenedRig,resetPlacement:resetPartPlacement,
- resetCrouchMotion,maskUndo:()=>maskHistoryStep(false),
+ resetCrouchMotion,applySavedRecovery,maskUndo:()=>maskHistoryStep(false),
  maskRedo:()=>maskHistoryStep(true),
  get lastOperationAt(){return state.lastOperationAt;},
  get maskEditing(){return maskState.enabled;}};
