@@ -370,10 +370,21 @@ jobs:
                 assert.equal(await page.locator('#novel-ui').isVisible(),true);
                 assert.equal(await page.locator('#scene-menu').isVisible(),false);
                 assert.equal(await page.locator('#source').evaluate(el=>el.naturalWidth),1024);
-                assert.equal(await page.locator('#actor-enemy').isVisible(),false,
-                  'old enemy art must not render');
-                assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.hasAttribute('src')),false,
-                  'old enemy image source must be removed');
+                // The old bitmap is a TRANSPARENT layout anchor for the
+                // actual L2D canvas. Playwright's isVisible() does not test
+                // opacity:0, so presence alone is not a visual regression.
+                const enemyLayer=await page.locator('#actor-enemy').evaluate(el=>{
+                  const root=el.closest('[data-l2d-actor]');
+                  const canvas=root?.querySelector('[data-l2d-canvas]');
+                  return {
+                    alpha:Number(getComputedStyle(el).opacity),
+                    anchor:el.hasAttribute('data-l2d-image'),
+                    animated:!!canvas
+                  };
+                });
+                assert.equal(enemyLayer.alpha,0,'enemy bitmap anchor must not render');
+                assert.equal(enemyLayer.anchor,true,'L2D position anchor is missing');
+                assert.equal(enemyLayer.animated,true,'enemy must have a real L2D canvas');
                 const art=page.locator('#actor-player');
                 assert.equal(await art.isVisible(),true,'new protagonist back missing in classroom');
                 const dimensions=await art.evaluate(async el=>{
