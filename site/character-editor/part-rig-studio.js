@@ -32,7 +32,7 @@ for(const id of ['rig-save','rig-quick-save','rig-pause','rig-close']){
 const quickPanel=document.createElement('section');
 quickPanel.id='rig-quick-panel';
 quickPanel.hidden=true;
-quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">胸部呼吸单独调节，肩、手臂、脖子和头部自动跟随；脚鞋固定。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hands\"><span>双手／手臂</span><output>70%</output><input data-quick=\"hands\" aria-label=\"双手手臂摆动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"70\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"shoulders\"><span>肩部活动</span><output>30%</output><input data-quick=\"shoulders\" aria-label=\"肩部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"30\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hips\"><span>胯部活动</span><output>20%</output><input data-quick=\"hips\" aria-label=\"胯部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"20\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"breath\"><span>胸部呼吸</span><output>60%</output><input data-quick=\"breath\" aria-label=\"胸部呼吸幅度\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"60\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"250\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
+quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">胸部呼吸单独调节，肩、手臂、脖子和头部自动跟随；脚鞋固定。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"coat-left\"><span>画面左侧外套翻摆</span><output>160%</output><input data-quick=\"coat-left\" aria-label=\"画面左侧外套翻摆幅度\" type=\"range\" min=\"0\" max=\"280\" step=\"5\" value=\"160\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"coat-right\"><span>画面右侧外套翻摆</span><output>185%</output><input data-quick=\"coat-right\" aria-label=\"画面右侧外套翻摆幅度\" type=\"range\" min=\"0\" max=\"280\" step=\"5\" value=\"185\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hands\"><span>双手／手臂</span><output>70%</output><input data-quick=\"hands\" aria-label=\"双手手臂摆动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"70\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hand-left\"><span>画面左手腕动作</span><output>115%</output><input data-quick=\"hand-left\" aria-label=\"画面左手腕活动幅度\" type=\"range\" min=\"0\" max=\"280\" step=\"5\" value=\"115\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hand-right\"><span>画面右手腕动作</span><output>125%</output><input data-quick=\"hand-right\" aria-label=\"画面右手腕活动幅度\" type=\"range\" min=\"0\" max=\"280\" step=\"5\" value=\"125\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"shoulders\"><span>肩部活动</span><output>30%</output><input data-quick=\"shoulders\" aria-label=\"肩部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"30\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hips\"><span>胯部活动</span><output>20%</output><input data-quick=\"hips\" aria-label=\"胯部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"20\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"breath\"><span>胸部呼吸</span><output>60%</output><input data-quick=\"breath\" aria-label=\"胸部呼吸幅度\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"60\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"250\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
 dock.prepend(quickPanel);
 $('rig-quick-save').hidden=true; // One save control in the header.
 const actionRow=document.createElement('label');
@@ -41,6 +41,12 @@ actionRow.style.cssText='display:flex;gap:10px;align-items:center;flex-wrap:wrap
 actionRow.innerHTML='<strong>角色动作 · 同一套 L2D</strong> <select id="rig-character-action" aria-label="切换同一人物的局部动作"></select>';
 actionRow.hidden=true;
 quickPanel.querySelector('.rig-quick-tip').after(actionRow);
+const gripExplanation=document.createElement('p');
+gripExplanation.id='rig-parent-chain-summary';
+gripExplanation.style.cssText='font-size:12px;line-height:1.55;color:#b9d0e0;padding:5px 3px';
+gripExplanation.textContent='父级：脚/胯 → 躯干 → 左右肩 → 肘 → 手腕；外套左右片以躯干为父级，抓握处跟随对应手腕，衣摆滞后自然摆动。';
+gripExplanation.hidden=true;
+quickPanel.querySelector('.rig-quick-tip').after(gripExplanation);
 const actionSelect=$('rig-character-action');
 actionSelect.addEventListener('change',()=>{
  if(!state.model)return;
@@ -112,8 +118,12 @@ const quickGroups={
  fringe:['front_hair','hair'],
  rear:['rear_hair','back_hair','hair_over_jacket'],
  skirt:['skirt','bottomwear','cloth'],
- hands:['sleeves_and_hands','battle_handwear_l','battle_handwear_r','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered'],
- shoulders:['sleeves_and_hands','battle_handwear_l','battle_handwear_r','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered','jacket','topwear'],
+ 'coat-left':['coat_left'],
+ 'coat-right':['coat_right'],
+ 'hand-left':['handwear_r'],
+ 'hand-right':['handwear_l'],
+ hands:['sleeves_and_hands','battle_handwear_l','battle_handwear_r','handwear_l','handwear_r','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered'],
+ shoulders:['sleeves_and_hands','battle_handwear_l','battle_handwear_r','handwear_l','handwear_r','handwear','sleeve_left','sleeve_right','wave_hand','free_hand','hand_raised','hand_lowered','jacket','topwear'],
  hips:['skirt','bottomwear','legs','legwear']
 };
 const available=id=>(quickGroups[id]||[]).filter(key=>!!state.model?.parts[key]);
@@ -336,6 +346,7 @@ async function activate(openPanel=false){
  const id=studio.current,face=S.side,saved=await studio.readPartRig(id,face);
  if(studio.current!==id||S.side!==face)return;
  state.model=core.project(src,id,face,saved);
+ gripExplanation.hidden=!(id==='char-004'&&face==='front'&&state.model?.parts?.coat_left&&state.model?.parts?.coat_right);
  // Published rigs sometimes store their exact Z order independently of
  // original ZIP insertion order. Align the layer panel at load, not on
  // the first user click (which would otherwise visibly jump the actor).
