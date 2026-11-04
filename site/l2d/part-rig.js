@@ -797,6 +797,14 @@ function placedRestPoint(part,point){
  return {x:px+(point.x-px)*sx+clamp(finite(t.offsetX,0),-1024,1024),
   y:py+(point.y-py)*sy+clamp(finite(t.offsetY,0),-1024,1024)};
 }
+function unplacedRestPoint(part,point){
+ const t=part.placement;
+ if(!t)return point;
+ const sx=clamp(finite(t.scaleX,1),.25,4),sy=clamp(finite(t.scaleY,1),.25,4);
+ const px=part.x+part.w*part.pivot.x,py=part.y+part.h*part.pivot.y;
+ return {x:px+(point.x-px-clamp(finite(t.offsetX,0),-1024,1024))/sx,
+  y:py+(point.y-py-clamp(finite(t.offsetY,0),-1024,1024))/sy};
+}
 function placedBounds(part){
  const a=placedRestPoint(part,{x:part.x,y:part.y});
  const b=placedRestPoint(part,{x:part.x+part.w,y:part.y+part.h});
@@ -1075,12 +1083,14 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
   // fixed-coordinate stick figure. Yellow heads, cyan tails.
   for(const b of poses){
    ctx.save();ctx.lineWidth=1.6;ctx.strokeStyle='#ffd26e';
-   ctx.beginPath();ctx.moveTo(part.x+b.headPos.x,part.y+b.headPos.y);
-   ctx.lineTo(part.x+b.tailPos.x,part.y+b.tailPos.y);ctx.stroke();
+   const head=placedRestPoint(part,{x:part.x+b.headPos.x,y:part.y+b.headPos.y});
+   const tail=placedRestPoint(part,{x:part.x+b.tailPos.x,y:part.y+b.tailPos.y});
+   ctx.beginPath();ctx.moveTo(head.x,head.y);
+   ctx.lineTo(tail.x,tail.y);ctx.stroke();
    ctx.fillStyle='#ffd26e';ctx.beginPath();
-   ctx.arc(part.x+b.headPos.x,part.y+b.headPos.y,3.5,0,Math.PI*2);ctx.fill();
+   ctx.arc(head.x,head.y,3.5,0,Math.PI*2);ctx.fill();
    ctx.fillStyle='#68e6fa';ctx.beginPath();
-   ctx.arc(part.x+b.tailPos.x,part.y+b.tailPos.y,3.5,0,Math.PI*2);ctx.fill();
+   ctx.arc(tail.x,tail.y,3.5,0,Math.PI*2);ctx.fill();
    ctx.restore();
   }
   ctx.restore();
@@ -1307,5 +1317,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
 
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,placedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,placedRestPoint,unplacedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
 })(typeof window!=='undefined'?window:globalThis);
