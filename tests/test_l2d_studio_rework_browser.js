@@ -20,6 +20,16 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
    return {order:[...rig.layerOrder],ui:state.layers.front.filter(x=>x.sourcePart).map(x=>x.partId),
       roots:root.length,tree:document.querySelector('#studio-character-tree')?.textContent||''};
   });
+  // UX contract: exactly one permanent editor; no user-facing advanced/easy
+  // mode button or separate "open rig" workflow in the page header.
+  assert.equal(await page.locator('#easy-mode-switch').count(),0);
+  assert.equal(await page.locator('#idle-open').isVisible(),false);
+  assert.equal(await page.locator('#part-rig-panel').isVisible(),true);
+  assert.equal(await page.locator('header .actions button:visible').count(),1,
+    'header must show only the primary Save action');
+  assert.equal(await page.locator('#btnSave').isVisible(),true);
+  assert.equal(await page.locator('#easy-imports').count(),1);
+  assert.equal(await page.locator('#main-preview').isVisible(),false);
   assert.equal(original.roots,1,'one heroine root, not independent actors for each pose');
   assert.deepEqual(original.ui,original.order,'source list must equal true rendered Z order');
   assert.match(original.tree,/战斗/);
