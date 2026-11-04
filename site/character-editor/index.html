@@ -83,7 +83,7 @@ body.embedded #btnCloseInGame{background:#273244}
 <script>
 'use strict';
 const W=1024,H=1024, $=id=>document.getElementById(id), stage=$('stage'),view=$('view'),ctx=view.getContext('2d',{alpha:false});
-const S={side:'front',tool:'select',layers:{front:[],back:[]},sel:-1,zoom:.65,px:0,py:0,brush:6,alpha:1,color:'#bc9ab0',pointers:new Map(),drag:null,space:false,only:false,checker:true,grid:false,selection:null,history:[],redo:[],busy:false,ready:false};
+const S={side:'front',tool:'select',layers:{front:[],back:[]},sel:-1,zoom:.65,px:0,py:0,brush:6,alpha:1,color:'#bc9ab0',pointers:new Map(),drag:null,space:false,only:false,checker:true,grid:false,selection:null,history:[],redo:[],busy:false,ready:false,sourceDirty:false,derivedDirty:false,sourceRevision:0};
 const make=(w=W,h=H)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
 const current=()=>S.layers[S.side][S.sel];const status=s=>$('status').textContent=s;
 function layer(name,img,x=0,y=0,locked=false){const c=make(img?img.width:W,img?img.height:H);if(img)c.getContext('2d').drawImage(img,0,0);return {name,canvas:c,x,y,visible:true,locked,opacity:1,sourcePart:false,partId:'',role:''}};
@@ -297,8 +297,18 @@ async function importPsd(file){if(!file)return;try{S.busy=true;status('正在加
 async function importZip(file){try{S.busy=true;status('正在读取分层 ZIP…');const m=await unzip(new Uint8Array(await file.arrayBuffer())),meta=m.get('layers.json');if(!meta)throw Error('ZIP 内没有 layers.json，请导入从橡皮擦/修图编辑器导出的图层工程');const j=JSON.parse(dec.decode(meta)),views=j.layers||j;for(const side of ['front','back']){if(!Array.isArray(views[side]))continue;const list=[];for(const p of views[side]){const name=p.file||p.name,dat=m.get(name)||m.get(side+'/'+name)||m.get('assets/'+name);if(!dat)continue;const blob=new Blob([dat],{type:'image/png'}),url=URL.createObjectURL(blob),im=await imgFrom(url);URL.revokeObjectURL(url);const q=layer(p.name||p.id||name,im,p.x||0,p.y||0,!!p.locked);q.visible=p.visible!==false;q.opacity=p.opacity==null?1:p.opacity;q.sourcePart=!!p.sourcePart;q.partId=p.partId||'';q.role=p.role||'';list.push(q)}if(list.length)S.layers[side]=list}S.sel=Math.max(0,S.layers[S.side].length-1);S.history=[];S.redo=[];S.busy=false;S.selection=null;renderList();fit();autosave();status('已载入分层 ZIP，正面 '+S.layers.front.length+' 层 / 背面 '+S.layers.back.length+' 层。')}catch(e){S.busy=false;status('导入失败：'+e.message);console.error(e)}}
 const DB='pixelatelier-character-v1';let activeCharacterId='default',activeCharacterLabel='女主角';const storageKey=()=>activeCharacterId==='default'?'project':'character:'+activeCharacterId;
 async function storage(mode,record){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('art');req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tr=db.transaction('art',mode),st=tr.objectStore('art');let q=mode==='readonly'?st.get(storageKey()):st.put(record,storageKey());q.onsuccess=()=>{db.close();resolve(q.result)};q.onerror=()=>reject(q.error)}})}
-async function save(){if(S.busy)return;const rec={};for(const side of ['front','back'])rec[side]=S.layers[side].map(p=>({name:p.name,x:p.x,y:p.y,visible:p.visible,locked:p.locked,opacity:p.opacity,sourcePart:!!p.sourcePart,partId:p.partId||'',role:p.role||'',img:p.canvas.toDataURL('image/png')}));await storage('readwrite',rec);status('✓ 已保存到本机浏览器（请另外导出 ZIP 备份）')}
-let saveTimer=0;function autosave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(e=>status('自动保存失败：'+e.message)),1900);scheduleLivePreview();window.dispatchEvent(new Event('paperchalk:art-dirty'))}
+async function save(){
+ if(S.busy)return;
+ const revision=S.sourceRevision;
+ const rec={};for(const side of ['front','back'])rec[side]=S.layers[side].map(p=>({name:p.name,x:p.x,y:p.y,visible:p.visible,locked:p.locked,opacity:p.opacity,sourcePart:!!p.sourcePart,partId:p.partId||'',role:p.role||'',img:p.canvas.toDataURL('image/png')}));await storage('readwrite',rec);
+ if(revision===S.sourceRevision)S.sourceDirty=false;
+ status('✓ 已保存到本机浏览器（请另外导出 ZIP 备份）')
+}
+let saveTimer=0;function autosave(){
+ S.sourceRevision++;
+ S.sourceDirty=true;
+ S.derivedDirty=true;
+ clearTimeout(saveTimer);saveTimer=setTimeout(()=>save().catch(e=>status('自动保存失败：'+e.message)),1900);scheduleLivePreview();window.dispatchEvent(new Event('paperchalk:art-dirty'))}
 async function loadSaved(){const rec=await storage('readonly');if(!rec?.front?.length)return false;for(const side of ['front','back']){const arr=[];for(const p of rec[side]||[]){const im=await imgFrom(p.img);const q=layer(p.name,im,p.x,p.y,p.locked);q.visible=p.visible;q.opacity=p.opacity;q.sourcePart=!!p.sourcePart;q.partId=p.partId||'';q.role=p.role||'';arr.push(q)}if(arr.length)S.layers[side]=arr}return true}
 async function init(){try{await defaults();const had=await loadSaved();S.sel=Math.max(0,S.layers.front.length-1);renderList();fit();status(had?'✓ 已恢复上次在此浏览器保存的全部分层工程':'初始人物已载入；可导入上次的分层 ZIP 继续修图')}catch(e){console.error(e);status('载入异常：'+e.message)}}
 for(const b of document.querySelectorAll('[data-tool]'))b.onclick=()=>setTool(b.dataset.tool);
@@ -393,6 +403,7 @@ async function switchCharacter(target,side='front'){
   }
   S.busy=false;
   const saved=await loadSaved();
+  S.sourceDirty=false;S.derivedDirty=false;
   S.side=side==='back'?'back':'front';
   S.sel=Math.max(0,S.layers[S.side].length-1);
   $('frontTab').classList.toggle('active',S.side==='front');
