@@ -294,6 +294,8 @@ def install_inbox():
 
 
 def build():
+    from bind_female06_pants import restore_original_inputs
+    restore_original_inputs(LIBRARY)
     install_inbox()
     # Wearable ArtMeshes are assembled from two immutable *original PSD*
     # ZIPs in the disposable build checkout.  The published female-06
