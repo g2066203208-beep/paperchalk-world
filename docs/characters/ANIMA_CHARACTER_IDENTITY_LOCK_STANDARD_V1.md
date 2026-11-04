@@ -54,3 +54,12 @@
 - 用户可以自行改服装；不得因服装切换改动体型、脸、发型、表情基线或相机尺度。
 
 **状态：项目制作强制规范；不是图像已验收或L2D已完成的宣告。**
+
+## 2026-11-04｜Anima 512 上限及画风优先（用户修订）
+
+- **用户指定：Prompt 最长 512。** 为兼容不同界面的字符/Token 定义，当前直接粘贴的**正向提示词优先压到 512 个字符以内**（中文服装占位也计入），负面词也应精简；不是凑满 512 字符/Token。
+- **画风优先且唯一：** 优先保留 `@akipekostyle`、`<lora:akipekoanima_v1_1:1>` 与原本确认的 Anima checkpoint、VAE、sampler 等；不要另写大段 `visual novel art style / cinematic / realistic / painterly` 互相污染风格。
+- **Tag优先：** 用简短低重复的 Danbooru/Gelbooru标签，体型`petite, short stature, short torso, short legs, skinny`；脸`baby face, round cheeks, tsurime, pink eyes, fang`；发型`asymmetrical fluffy pink twintails, ahoge`；动作`full body, front view, standing, both index fingers pressing own cheeks`。复杂固定人体数据留在人物档案，而不是长 Prompt。
+- **多人物故障**用 `1girl, solo`，负面补`multiple girls, duplicate, collage, character sheet`；SD WebUI 的 Batch size/count 另检查。绝不把四视图、四宫格语义加入正向。
+- **技术边界：** 提示词长度上限是用户当前工作流要求，不能冒充官方 Anima 模型硬限制；精确体态要参考图/结构控制，不能单靠多写数字做到。
+- **服装换装：** 正向保留中文 `【在这里填写服装描述】`；换装优先原图Inpaint，禁止覆盖已验收人物母图。
