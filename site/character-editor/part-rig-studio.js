@@ -23,6 +23,22 @@ quickPanel.id='rig-quick-panel';
 quickPanel.hidden=true;
 quickPanel.innerHTML="<div class=\"rig-quick-heading\"><strong>待机动态</strong><span>实时预览</span></div>\n<p class=\"rig-quick-tip\">胸部呼吸单独调节，肩、手臂、脖子和头部自动跟随；脚鞋固定。</p>\n<div id=\"rig-quick-sliders\">\n <label class=\"rig-quick-row\" data-quick-row=\"fringe\"><span>刘海摆幅</span><output>130%</output><input data-quick=\"fringe\" aria-label=\"刘海摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"130\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"rear\"><span>后发摆幅</span><output>140%</output><input data-quick=\"rear\" aria-label=\"后发摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"140\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"skirt\"><span>裙摆摆幅</span><output>150%</output><input data-quick=\"skirt\" aria-label=\"裙摆摆幅\" type=\"range\" min=\"0\" max=\"2000\" step=\"5\" value=\"150\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hands\"><span>双手／手臂</span><output>70%</output><input data-quick=\"hands\" aria-label=\"双手手臂摆动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"70\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"shoulders\"><span>肩部活动</span><output>30%</output><input data-quick=\"shoulders\" aria-label=\"肩部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"30\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"hips\"><span>胯部活动</span><output>20%</output><input data-quick=\"hips\" aria-label=\"胯部活动\" type=\"range\" min=\"0\" max=\"800\" step=\"5\" value=\"20\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"breath\"><span>胸部呼吸</span><output>60%</output><input data-quick=\"breath\" aria-label=\"胸部呼吸幅度\" type=\"range\" min=\"0\" max=\"300\" step=\"5\" value=\"60\"></label>\n <label class=\"rig-quick-row\" data-quick-row=\"speed\"><span>摆动速度</span><output>80%</output><input data-quick=\"speed\" aria-label=\"摆动速度\" type=\"range\" min=\"25\" max=\"250\" step=\"5\" value=\"80\"></label>\n</div>\n<button id=\"rig-quick-save\" type=\"button\">✓ 保存到游戏</button>\n<p id=\"rig-quick-status\" role=\"status\">拖动滑块后点击保存。</p>";
 dock.prepend(quickPanel);
+const actionRow=document.createElement('label');
+actionRow.className='rig-action-row';
+actionRow.style.cssText='display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 10px;margin:8px 0;background:#172938;border:1px solid #426078;border-radius:8px';
+actionRow.innerHTML='<strong>角色动作 · 同一套 L2D</strong> <select id="rig-character-action" aria-label="切换同一人物的局部动作"></select>';
+actionRow.hidden=true;
+quickPanel.querySelector('.rig-quick-tip').after(actionRow);
+const actionSelect=$('rig-character-action');
+actionSelect.addEventListener('change',()=>{
+ if(!state.model)return;
+ if(core.setAction(state.model,actionSelect.value)){
+  // The action is NOT a new actor or a replacement PSD.
+  try{localStorage.setItem('paperchalk-action:'+studio.current+':'+S.side,actionSelect.value);}catch(e){}
+  info('已切换 '+actionSelect.selectedOptions[0]?.textContent+'：局部过渡，其余部件连续播放');
+  ed.render();
+ }
+});
 // One concise, CLOSED guide; no second workflow, animation preset or overlay.
 const workflow=document.createElement('details');
 workflow.id='l2d-production-guide';
@@ -144,6 +160,18 @@ $('rig-part-amount').addEventListener('input',event=>{
  if(!state.model||!state.selected)return;
  state.model.idleProfile.parts[state.selected]=Number(event.target.value)/100;
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
+ const supported=core.actionNames(state.model);
+ actionRow.hidden=supported.length<2;
+ actionSelect.replaceChildren();
+ for(const action of supported)actionSelect.add(new Option(action.label,action.id));
+ if(supported.length){
+  let preferred='';
+  try{preferred=localStorage.getItem('paperchalk-action:'+id+':'+face)||'';}catch(e){}
+  const initial=supported.some(x=>x.id===preferred)?preferred:
+   (state.model.actionProfiles?.default||'combat');
+  actionSelect.value=initial;
+  state.model.actionState={to:initial}; // initial pose immediate, next switches blend
+ }
  syncIdle();changed();
 });
 $('rig-quick-save').onclick=async()=>{
@@ -226,6 +254,7 @@ async function save(){
  clearTimeout(saveTimer);saveTimer=null;
  const model=state.model,version=revision;
  const snapshot=JSON.parse(JSON.stringify(model));
+ delete snapshot.actionState; // do not persist ephemeral animation timing
  // Queue immutable snapshots: a late autosave cannot overwrite the primary Save.
  const pending=saveQueue.then(()=>studio.storePartRig(snapshot));
  saveQueue=pending.catch(()=>{});
@@ -532,7 +561,7 @@ function tick(now){
 window.addEventListener('paperchalk:studio-character-loaded',()=>{
  // changeCore flushes the previous rig before emitting this event.
  state.active=false;state.model=null;state.panelOpen=false;state.selected='';
- state.drag=null;state.dirty=false;quickPanel.hidden=true;
+ state.drag=null;state.dirty=false;quickPanel.hidden=true;actionRow.hidden=true;
  setInspectorOpen(false);
 });
 window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
