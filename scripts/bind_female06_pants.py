@@ -49,6 +49,46 @@ def arm_bones(side: str) -> list:
     ]
 
 
+
+def restore_original_inputs(library: Path) -> None:
+    """Restore only the source files OUR build derived on a prior invocation.
+
+    The common inbox installer compares extracted ZIP bytes exactly and must
+    keep rejecting unrelated changes. Before re-running it, undo ONLY our
+    versioned, explicitly marked generated modifications. Never loosen ZIP
+    verification or overwrite other locally authored modules.
+    """
+    from zipfile import ZipFile
+    inbox = library.parent / "inbox"
+    definitions = (
+        (BASE_ID, "wearableSource", "binding", "shared-leg-field-v1",
+         ("module.json", "front.rig.json", "front.png"),
+         ("front/pants_overlay.png", "front.pristine-source.png")),
+        (OUTFIT_ID, "sleeveRigFix", None, "paired-shoulder-elbow-v1",
+         ("front.rig.json",), ()),
+    )
+    for module_id, field, subfield, expected, restore, purge in definitions:
+        folder = library / module_id
+        source_archive = inbox / (module_id + ".zip")
+        rig_path = folder / "front.rig.json"
+        if not (rig_path.is_file() and source_archive.is_file()):
+            continue
+        record = read(rig_path)
+        marker = record.get(field)
+        marked = (marker.get(subfield) == expected) if subfield else marker == expected
+        if not marked:
+            continue
+        with ZipFile(source_archive) as z:
+            for rel in restore:
+                member = module_id + "/" + rel
+                if member not in z.namelist():
+                    raise ValueError("missing immutable original " + member)
+                dest = folder / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(z.read(member))
+        for rel in purge:
+            (folder / rel).unlink(missing_ok=True)
+
 def install(library: Path) -> bool:
     base = library / BASE_ID
     outfit = library / OUTFIT_ID
