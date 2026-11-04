@@ -93,6 +93,17 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   if(order.length===ids.length&&new Set(order).size===ids.length&&
      order.every(id=>ids.includes(id)))model.layerOrder=[...order];
  }
+ // Manual foreground masks are part of the shared L2D rig, not sidecar images.
+ // Accept only same-character, same-face source/target IDs and PNG data URLs.
+ if(draftMatches&&Array.isArray(localDraft.occlusionMasks)){
+  model.occlusionMasks=localDraft.occlusionMasks.filter(m=>
+   m&&typeof m.source==='string'&&typeof m.target==='string'&&
+   m.source!==m.target&&ids.includes(m.source)&&ids.includes(m.target)&&
+   typeof m.png==='string'&&m.png.startsWith('data:image/png;base64,')&&
+   m.png.length<8_000_000).map(m=>({
+    source:m.source,target:m.target,png:m.png,enabled:m.enabled!==false
+   }));
+ }
  if(!ids.length||ids.length!==Object.keys(model.parts||{}).length)
   throw Error('L2D 贴图与绑定层数量不一致');
  // User-painted source PNGs replace the correct ArtMesh TEXTURES, never
