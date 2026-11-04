@@ -686,14 +686,14 @@ function crouchSpacePose(phase,d=CROUCH_DEFAULTS){
  const body=(d.body??1),depth=(d.depth??1);
  // No additive phase offsets: frame zero is EXACTLY the saved drawing.
  const lean=Math.sin(phase*.53),shift=Math.sin(phase*.73);
- const angle=body*.039*lean; // ±2.23° body Z rotation
- const foreshorten=depth*.068*Math.sin(phase*.52); // Angle X proxy
- const yaw=depth*.080*Math.sin(phase*.51); // small Angle Y shear
- const pitch=depth*.045*Math.sin(phase*.47); // tilt into camera
+ const angle=body*.005*lean; // SAFE ±0.29°; preserve the hand-painted silhouette
+ const foreshorten=depth*.009*Math.sin(phase*.52); // limited flat-art 2.5D proxy
+ const yaw=depth*.008*Math.sin(phase*.51); // max shear bound, no folding
+ const pitch=depth*.005*Math.sin(phase*.47); // subtle safe depth cue
  return {pivot:CROUCH_PERSPECTIVE_CENTER,angle,
   sx:1+foreshorten,sy:1+pitch,
-  shear:yaw,tx:body*(13*shift+4*Math.sin(phase*.37)),
-  ty:body*(9*Math.sin(phase*.63)+3*Math.sin(phase*.31))};
+  shear:yaw,tx:body*(4.5*shift+1*Math.sin(phase*.37)),
+  ty:body*(3*Math.sin(phase*.63)+.7*Math.sin(phase*.31))};
 }
 function crouchSpacePoint(point,pose){
  const dX=point.x-pose.pivot.x,dY=point.y-pose.pivot.y,
@@ -722,9 +722,9 @@ function crouchWeaponPose(part,phase){
  const d=part._crouchDynamics||CROUCH_DEFAULTS;
  const strength=d.axe||0;
  return {pivot:placedRestPoint(part._crouchAxe||part,CROUCH_CONTACTS.weaponPivot),
-  angle:strength*.083*Math.sin(phase*.78),  // ±4.75° weapon swing
-  x:strength*(5.5*Math.sin(phase*.73)+2*Math.sin(phase*.41)),
-  y:strength*3.7*Math.sin(phase*.88)};
+  angle:strength*.024*Math.sin(phase*.78),  // restrained ±1.38°
+  x:strength*(2.9*Math.sin(phase*.73)+.8*Math.sin(phase*.41)),
+  y:strength*1.7*Math.sin(phase*.88)};
 }
 function crouchWeaponPoint(point,pose){
  const cs=Math.cos(pose.angle),sn=Math.sin(pose.angle);
@@ -761,8 +761,8 @@ function crouchDeform(part,point,u,v,phase){
   const hem=smooth(clamp((v-.36)/.57,0,1));
   const side=clamp((u-.5)*2,-1,1),edge=Math.abs(side);
   const sway=Math.sin(phase*.78),lag=Math.sin(phase*.46);
-  const dx=d.cloth*hem*((4.7+8.6*edge)*sway+6.2*side*lag);
-  const dy=d.cloth*hem*(4.6*lag+2.8*edge*Math.sin(phase*.9));
+  const dx=d.cloth*hem*((2.4+4.1*edge)*sway+3.2*side*lag);
+  const dy=d.cloth*hem*(2.5*lag+1.5*edge*Math.sin(phase*.9));
   return crouchSpacePartPoint(part,{x:point.x+dx,y:point.y+dy},phase);
  }
  if(part.id==='legwear_l'||part.id==='legwear_r'){
@@ -772,14 +772,14 @@ function crouchDeform(part,point,u,v,phase){
    (1-smooth(clamp((v-.59)/.21,0,1)));
   const side=part.id.endsWith('_l')?-1:1;
   const load=Math.sin(phase*.69)*d.legs*w;
-  return {x:point.x+side*5.4*load,y:point.y+2.9*load};
+  return {x:point.x+side*2.7*load,y:point.y+1.45*load};
  }
  if(part.id==='footwear_l'||part.id==='footwear_r'){
   const toe=smooth(clamp((v-.28)/.19,0,1))*
    (1-smooth(clamp((v-.70)/.20,0,1)));
   const side=part.id.endsWith('_l')?-1:1;
   const pulse=Math.sin(phase*.69)*d.feet*toe;
-  return {x:point.x+side*2.15*pulse,y:point.y-1.6*pulse};
+  return {x:point.x+side*1.15*pulse,y:point.y-.8*pulse};
  }
  return crouchSpacePartPoint(part,point,phase);
 }
