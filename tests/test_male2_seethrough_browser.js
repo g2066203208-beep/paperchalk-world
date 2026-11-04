@@ -13,7 +13,20 @@ const fs=require('node:fs');
   await page.waitForFunction(()=>window.PaperchalkStudio?.current==='male2'&&
     window.PaperchalkStudio.list.has('male2'),null,{timeout:35000});
   assert.equal(await page.locator('#studio-character-tree').textContent().then(s=>s.includes('男二')),true);
-  assert.equal(await page.locator('.male2-direct-import').isVisible(),true);
+  const directVisible=await page.locator('.male2-direct-import').isVisible();
+  if(!directVisible)console.log('MALE2 TREE DIAGNOSTIC',await page.evaluate(()=>({
+   current:window.PaperchalkStudio?.current,
+   male:window.PaperchalkStudio?.list?.get('male2'),
+   tree:[...document.querySelectorAll('.character-family')].map(el=>({
+    open:el.open,active:el.classList.contains('active'),
+    name:el.querySelector('summary')?.textContent,
+    import:!!el.querySelector('.male2-direct-import')})),
+   importCount:document.querySelectorAll('.male2-direct-import').length,
+   hidden:document.querySelector('.male2-direct-import')?.hidden,
+   bodyPane:document.body.dataset.studioPane,
+   computed:document.querySelector('.male2-direct-import')?.getBoundingClientRect().toJSON()
+  })));
+  assert.equal(directVisible,true);
   const created=await page.evaluate(async()=>{
    const names=['nose','head','back hair','ears','footwear','legwear','neck',
     'topwear','handwear','face','eyewhite','irides','eyelash','eyebrow','mouth','front hair'];
