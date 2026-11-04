@@ -22,7 +22,10 @@ const FALLBACK=[
 ];
 function familyOf(record){
  const id=String(record?.id||''),raw=String(record?.familyId||id);
- if(id==='male2'||raw==='male2')return 'male2';
+ // Retired char-016 was an older, explicitly superseded male-two import.
+ // Keep its editable bytes / deep links, never create an extra person root.
+ if(id==='char-016'||raw==='char-016')return 'male2';
+if(id==='male2'||raw==='male2')return 'male2';
  if(id==='protagonist'||id.startsWith('protagonist-')||
     raw==='protagonist')return 'protagonist';
  for(const name of ['char-002','char-003','char-004','char-005']){
