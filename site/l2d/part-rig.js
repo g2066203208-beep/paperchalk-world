@@ -50,6 +50,8 @@ const FRONT={
  // User-authored black shorts from female-06 outfit's original SeeThrough PSD.
  // They deform using EXACTLY the base legwear's per-vertex hip/knee field.
  pants_overlay:['pelvis',.50,.09,.50,.91,'pants-bound'],
+ wings_l:['torso',.90,.70,.22,.55,'wing'],
+ wings_r:['torso',.10,.70,.78,.55,'wing'],
  topwear:['torso',.50,.09,.50,.81,'torso'],
  eyebrow_l:['head',.50,.50,.50,.50,'face'],
  eyebrow_r:['head',.50,.50,.50,.50,'face'],
@@ -488,7 +490,11 @@ function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  const rootLock=(part.kind==='arm-raised'||part.kind.startsWith('arm-coat-'))?
   smooth(clamp((.91-v)/.23,0,1)):
   smooth(clamp((v-.13)/.23,0,1));
- const blend=(1-Math.exp(-sum*1.5))*rootLock;
+ // Female-six waist remains sewn to the same pelvis as the shorts.
+ // Fade torso-local shoulder motion completely out at its lower hem.
+ const pelvisHemLock=part._bodyHierarchy?.legsId==='legwear'&&part.kind==='torso'?
+  1-smooth((v-.69)/.19):1;
+ const blend=(1-Math.exp(-sum*1.5))*rootLock*pelvisHemLock;
  return {x:part.x+x+dx/sum*blend,y:part.y+y+dy/sum*blend};
 }
 function cleanPart(part,face,id,characterId){
@@ -953,6 +959,7 @@ function parentRole(part){
  if(part.kind==='pants-bound')return 'garment';
  if(part.kind==='skirt')return 'pelvis';
  if(part.kind==='torso'||part.kind.startsWith('coat-panel-'))return 'torso';
+ if(part.kind==='wing')return 'shoulder';
  if(part.id==='neck')return 'neck';
  if(part.kind.startsWith('arm-'))return 'shoulder';
  if(part.kind==='head-combined'||part.kind==='hair'||part.kind==='face'||part.kind==='mouth'||
