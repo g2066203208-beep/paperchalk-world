@@ -297,6 +297,7 @@ actionSelect.addEventListener('change',()=>{
   // The action is NOT a new actor or a replacement PSD.
   try{localStorage.setItem('paperchalk-action:'+studio.current+':'+S.side,actionSelect.value);}catch(e){}
   info('已切换 '+actionSelect.selectedOptions[0]?.textContent+'：局部过渡，其余部件连续播放');
+  window.dispatchEvent(new CustomEvent('paperchalk:studio-action-changed',{detail:{characterId:studio.current,face:S.side,action:actionSelect.value}}));
   ed.render();
  }
 });
@@ -696,6 +697,7 @@ async function activate(openPanel=false){
    (state.model.actionProfiles?.default||'combat');
   actionSelect.value=initial;
   state.model.actionState={to:initial}; // initial pose immediate, next switches blend
+  queueMicrotask(()=>window.dispatchEvent(new CustomEvent('paperchalk:studio-action-changed',{detail:{characterId:id,face,action:initial}})));
  }
  state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
  state.model.occlusionMasks=Array.isArray(state.model.occlusionMasks)?state.model.occlusionMasks:[];
