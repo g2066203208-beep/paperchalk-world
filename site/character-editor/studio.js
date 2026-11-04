@@ -110,6 +110,30 @@ style.textContent=[
 document.head.append(style);
 document.querySelector('header').after(section);
 document.body.classList.add('studio-page');
+// Mobile keeps the character preview fixed and exposes one focused inspector
+// at a time; no kilometre-long stacked list of unrelated advanced controls.
+const mobileTabs=document.createElement('nav');
+mobileTabs.id='mobile-studio-tabs';mobileTabs.setAttribute('aria-label','移动端工作区');
+mobileTabs.innerHTML='<button type="button" data-studio-pane="characters">人物</button><button type="button" data-studio-pane="layers">图层</button><button type="button" data-studio-pane="motion">动画</button><button type="button" data-studio-pane="paint">绘画</button>';
+section.after(mobileTabs);
+function setMobilePane(name){
+ if(!['characters','layers','motion','paint'].includes(name))name='layers';
+ document.body.dataset.studioPane=name;
+ for(const b of mobileTabs.querySelectorAll('button')){
+  b.classList.toggle('active',b.dataset.studioPane===name);
+  b.setAttribute('aria-pressed',String(b.dataset.studioPane===name));
+ }
+}
+mobileTabs.addEventListener('click',e=>{
+ const button=e.target.closest('button[data-studio-pane]');
+ if(button)setMobilePane(button.dataset.studioPane);
+});
+document.getElementById('idle-open')?.addEventListener('click',()=>setMobilePane('motion'),true);
+const head=document.querySelector('body>header');
+if(head&&typeof ResizeObserver==='function'){
+ new ResizeObserver(()=>document.documentElement.style.setProperty('--studio-header-height',head.getBoundingClientRect().height+'px')).observe(head);
+}
+setMobilePane('layers');
 const selector=$('studio-character'),direction=$('studio-side');
 // Tree has a single PERSON root. Actions and outfits are descendants of that
 // person, never competing full-body actors in the primary navigation.
@@ -135,6 +159,53 @@ treeCSS.textContent=`
  @media(max-width:710px){#studio-character-tree{margin-bottom:8px}#character-tree-items{grid-template-columns:1fr 1fr;gap:5px}}
 `;
 document.head.append(treeCSS);
+const workspaceCSS=document.createElement('style');
+workspaceCSS.textContent=`
+ body.studio-page{--studio-pane-border:#3b5367}
+ body.studio-page .layout{gap:10px}
+ body.studio-page .left,body.studio-page .right{scrollbar-width:thin;scrollbar-color:#415c70 transparent}
+ body.studio-page .stage{box-shadow:0 7px 24px #0004;border-color:#3b5568}
+ body.studio-page #studio-library{border-radius:9px}
+ body.studio-page .layer{transition:background-color .12s,border-color .12s}
+ body.studio-page .layer:hover{background:#273a4c}
+ body.studio-page .layer.selected{border-color:#7dc6ef}
+ body.studio-page .left>.section{margin-bottom:10px}
+ #mobile-studio-tabs{display:none}
+ @media(min-width:1121px){
+  body.studio-page .layout{grid-template-columns:270px minmax(0,1fr) 305px}
+  body.studio-page.rig-authoring .layout{grid-template-columns:250px minmax(0,1fr) 340px}
+ }
+ @media(max-width:710px){
+  body.studio-page #studio-library>.studio-row:nth-child(2){display:none}
+  body.studio-page #studio-library{margin:4px 6px;padding:6px}
+  #mobile-studio-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px 6px;background:#101a25;border-bottom:1px solid #324b5d}
+  #mobile-studio-tabs button{min-height:40px;padding:6px 4px;border-radius:8px;font-size:12px}
+  #mobile-studio-tabs button.active{background:#2b5672;border-color:#84cbef;color:white;font-weight:650}
+  body.studio-page .layout{gap:5px;padding:5px;overflow:visible!important}
+  body.studio-page .stage,body.studio-page.easy-mode .stage,body.studio-page.rig-authoring .stage{
+   order:0!important;position:sticky!important;top:0!important;
+   height:40dvh!important;min-height:245px!important;max-height:420px!important;
+   z-index:9;border-radius:9px
+  }
+  body.studio-page .left,body.studio-page .right{order:1!important;min-height:160px!important}
+  body.studio-page[data-studio-pane="characters"] .right,
+  body.studio-page[data-studio-pane="layers"] .right,
+  body.studio-page[data-studio-pane="motion"] .left,
+  body.studio-page[data-studio-pane="paint"] .left{display:none!important}
+  body.studio-page[data-studio-pane="characters"] .left>section:not(#studio-character-tree),
+  body.studio-page[data-studio-pane="layers"] #studio-character-tree{display:none!important}
+  body.studio-page[data-studio-pane="motion"] .right>section:not(#part-rig-panel):not(#rig-quick-panel),
+  body.studio-page[data-studio-pane="paint"] #rig-quick-panel,
+  body.studio-page[data-studio-pane="paint"] #part-rig-panel{display:none!important}
+  body.studio-page .left,body.studio-page .right{padding:10px!important}
+  body.studio-page .layerlist,body.studio-page.easy-mode .layerlist{max-height:none!important}
+  body.studio-page.easy-mode #easy-quickbar{display:flex!important;grid-template-columns:none!important;grid-template-rows:none!important;overflow-x:auto!important;justify-content:flex-start!important;white-space:nowrap}
+  body.studio-page.easy-mode #easy-quickbar button{min-width:64px;min-height:40px;white-space:nowrap}
+  body.studio-page.rig-authoring #easy-quickbar{display:none!important}
+  body.studio-page .stage-toolbar{top:5px;right:5px}
+ }
+`;
+document.head.append(workspaceCSS);
 function renderFamilyTree(){
  const root=$('character-tree-items');if(!root)return;
  root.replaceChildren();
