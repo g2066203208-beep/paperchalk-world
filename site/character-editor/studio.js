@@ -1029,19 +1029,32 @@ async function importComponentArchive(file){
   if(currentId===BATTLE_FRONT_ID)
    throw Error('战斗正面请导入已整理的 24 层 ZIP；原始 PSD 把两把斧头合在同一层，直接导入会失去正确拆分。');
   if(currentId==='char-002'&&side!=='front')throw Error('女二只有真实正面 PSD，尚无背面分层');
+  const oldSource=ed.S.layers[side],beforeCount=oldSource.length;
   await ed.importPsd(file);
+  if(ed.S.layers[side]===oldSource||ed.S.layers[side].length<8)
+   throw Error('PSD 没有成功解析为真实独立图层，请检查文件或使用打包好的 L2D 模块 ZIP');
   if(currentId==='char-002'&&ed.S.layers[side].length<17)
    throw Error('女二原始PSD包含24层记录、17个有内容的部件；当前读取不完整');
-  for(const part of ed.S.layers[side]){
+  const seen=new Set();
+  for(const [index,part] of ed.S.layers[side].entries()){
    part.sourcePart=true;
-   part.partId=part.name;part.role='psd-part';
+   const raw=part.name.trim().toLowerCase().replace(/\s+/g,'_');
+   let ident=/^[a-z][a-z0-9_-]{0,79}$/.test(raw)?raw:'layer_'+String(index+1).padStart(2,'0');
+   while(seen.has(ident))ident=ident+'_dup';
+   seen.add(ident);
+   part.partId=ident;part.role='psd-part';
   }
   showOriginalV4=true;
   await loadCorrectionLayers();
   ed.renderList();ed.render();await ed.save();
   await persistSkeleton(side);updatePartStatus();
   window.dispatchEvent(new Event('paperchalk:studio-source-parts-loaded'));
-  message('✓ 已按原 PSD 导入真实 '+ed.S.layers[side].filter(p=>p.sourcePart).length+' 层。保存并返回游戏后使用独立网格/骨骼，不再使用扁平 V4。');
+  // A new outfit has no pre-existing rig; activate the same universal editor
+  // immediately instead of leaving its layer panel static until navigation.
+  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{
+   detail:{id:currentId,side}
+  }));
+  message('✓ 已按原 PSD 导入真实 '+ed.S.layers[side].filter(p=>p.sourcePart).length+' 层，启动独立 L2D 骨骼预览。');
   return;
  }
  message('读取原始分层工程所有部件…');
