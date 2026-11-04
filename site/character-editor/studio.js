@@ -156,7 +156,7 @@ treeCSS.textContent=`
  .character-family-children button.active{background:#275c7e;border-color:#74b9ea}
  .character-family-children small{display:block;color:#a7c3d5;font-size:10px;margin-top:3px}
  .character-tree-legend{font-size:10px;color:#91adbf;line-height:1.5;margin:7px 2px 0}
- @media(max-width:710px){#studio-character-tree{margin-bottom:8px}#character-tree-items{grid-template-columns:1fr 1fr;gap:5px}}
+ @media(max-width:710px){#studio-character-tree{margin-bottom:8px}#character-tree-items{grid-template-columns:1fr;gap:5px}}
 `;
 document.head.append(treeCSS);
 const workspaceCSS=document.createElement('style');
@@ -183,7 +183,7 @@ workspaceCSS.textContent=`
   #mobile-studio-tabs button.active{background:#2b5672;border-color:#84cbef;color:white;font-weight:650}
   body.studio-page .layout{gap:5px;padding:5px;overflow:visible!important}
   body.studio-page .stage,body.studio-page.easy-mode .stage,body.studio-page.rig-authoring .stage{
-   order:0!important;position:sticky!important;top:0!important;
+   order:0!important;position:sticky!important;top:var(--studio-header-height,60px)!important;
    height:40dvh!important;min-height:245px!important;max-height:420px!important;
    z-index:9;border-radius:9px
   }
