@@ -262,6 +262,20 @@ async function save(){
   throw error;
  }
 }
+// Keep the editor's visible painter order, ArtMesh render order and saved
+// game model identical. Auxiliary paint layers are not independent ArtMeshes.
+function syncLayerOrder(){
+ if(!state.active||!state.model||state.model.face!==S.side)return;
+ const ids=parts().map(p=>key(p)),previous=state.model.layerOrder||[];
+ if(ids.length!==Object.keys(state.model.parts).length||
+    ids.some(id=>!state.model.parts[id])||new Set(ids).size!==ids.length){
+  info('无法同步 Z 顺序：源部件与骨骼绑定不一致');return;
+ }
+ if(previous.length===ids.length&&ids.every((id,i)=>id===previous[i]))return;
+ state.model.layerOrder=ids;
+ changed(false);
+}
+window.addEventListener('paperchalk:studio-layer-order-changed',syncLayerOrder);
 function changed(autosave=true){
  revision++;state.dirty=true;
  info('有尚未保存的骨骼调整');
@@ -298,6 +312,20 @@ async function activate(openPanel=false){
  const id=studio.current,face=S.side,saved=await studio.readPartRig(id,face);
  if(studio.current!==id||S.side!==face)return;
  state.model=core.project(src,id,face,saved);
+ // Published rigs sometimes store their exact Z order independently of
+ // original ZIP insertion order. Align the layer panel at load, not on
+ // the first user click (which would otherwise visibly jump the actor).
+ const expected=state.model.layerOrder;
+ if(Array.isArray(expected)&&expected.length===src.length){
+  const index=new Map(expected.map((name,i)=>[String(name),i]));
+  const indices=S.layers[face].map((p,i)=>p.sourcePart?i:-1).filter(i=>i>=0);
+  if(indices.every(i=>index.has(key(S.layers[face][i])))){
+   const arranged=indices.map(i=>S.layers[face][i]).sort((a,b)=>index.get(key(a))-index.get(key(b)));
+   indices.forEach((at,i)=>{S.layers[face][at]=arranged[i]});
+   ed.renderList();
+  }
+ }
+ if(!Array.isArray(state.model.layerOrder))state.model.layerOrder=parts().map(key);
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
  const supported=core.actionNames(state.model);
  actionRow.hidden=supported.length<2;
@@ -568,6 +596,6 @@ window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
  // New independent mesh is the default whenever genuine component art exists.
  if(parts().length)activate(false).catch(e=>info('独立 L2D 初始化失败：'+e.message));
 });
-window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule};
+window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder};
 requestAnimationFrame(tick);
 })();
