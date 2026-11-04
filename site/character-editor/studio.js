@@ -234,7 +234,7 @@ function renderFamilyTree(){
   const group=document.createElement('details');
   group.className='character-family'+(family===(list.get(currentId)?.familyId||currentId)?' active':'');
   group.open=openedFamilies.has(family)||family===(list.get(currentId)?.familyId||currentId);
-  const summary=document.createElement('summary');summary.textContent=/^char-\\d+$/.test(String(primary.label||''))?('角色 '+String(primary.label).toUpperCase()):String(primary.label||family).replace(' · 未导入立绘','');
+  const summary=document.createElement('summary');summary.textContent=/^char-\d+$/.test(String(primary.label||''))?('角色 '+String(primary.label).toUpperCase()):String(primary.label||family).replace(' · 未导入立绘','');
   group.append(summary);
   group.addEventListener('toggle',()=>{if(group.open)openedFamilies.add(family);else openedFamilies.delete(family)});
   const children=document.createElement('div');children.className='character-family-children';
