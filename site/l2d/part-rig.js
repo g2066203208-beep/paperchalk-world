@@ -731,7 +731,7 @@ function bindBodyHierarchy(model){
  const p=model?.parts;if(!p)return model;
  const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
  const legs=pick('legs','legwear'),feet=pick('shoes','footwear','footwear_left','footwear_right'),
-  skirt=pick('skirt','bottomwear','pants_overlay')||(model.characterId==='char-004'?legs:null),
+  skirt=pick('skirt','bottomwear','pants_overlay')||(['char-004','female-06'].includes(model.characterId)?legs:null),
   torso=pick('jacket','topwear'),
   face=pick('face'),hair=pick('front_hair','rear_hair','back_hair','head_hair'),neck=pick('neck');
  // Female-06's original 17-part PSD has bare feet WITHIN the legwear mesh.
