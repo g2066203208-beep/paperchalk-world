@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'site/assets/l2d/library/**'
+      - 'site/assets/l2d/inbox/**'
       - 'site/l2d/library-player.js'
       - 'site/l2d/part-rig.js'
       - 'site/assets/l2d/source-masks/**'
@@ -23,6 +24,7 @@ on:
   pull_request:
     paths:
       - 'site/assets/l2d/library/**'
+      - 'site/assets/l2d/inbox/**'
       - 'site/l2d/library-player.js'
       - 'site/dev/character-bridge.js'
       - 'site/index.html'
