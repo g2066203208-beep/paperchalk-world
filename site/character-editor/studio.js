@@ -389,6 +389,9 @@ const PERSON_NAMES={
 function canonicalFamily(record){
  const id=String(record?.id||''),family=String(record?.familyId||id);
  const name=String(record?.label||'').trim();
+ // A published male-second actor remains its own canonical person even when
+ // older module metadata still carries the retired char-016 family ID.
+ if(id==='male2'||family==='male2')return 'male2';
  const nameFamily=/^(女二(号)?|女2)(?:[\s·（(:：/-]|$)/.test(name)?'char-002':
   /^(男主角?|男一)(?:[\s·（(:：/-]|$)/.test(name)?'char-003':
   /^(女主角?|女一)(?:[\s·（(:：/-]|$)/.test(name)?'protagonist':null;
