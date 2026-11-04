@@ -27,9 +27,10 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    for(const t of [0,.4,1,2,3.8,6.5,9.4]){
     for(const [x,y] of targets){
      const q=core.warpPoint(pants,(x-pants.x)/pants.w,(y-pants.y)/pants.h,t,null,idle);
-     const r=core.warpPoint(leg,(x-leg.x)/leg.w,(y-leg.y)/leg.h,t,null,idle);
+     const rest=core.placedRestPoint(pants,{x,y});
+     const r=core.warpPoint(leg,(rest.x-leg.x)/leg.w,(rest.y-leg.y)/leg.h,t,null,idle);
      max=Math.max(max,Math.hypot(q.x-r.x,q.y-r.y));
-     travel=Math.max(travel,Math.hypot(q.x-x,q.y-y));
+     travel=Math.max(travel,Math.hypot(q.x-rest.x,q.y-rest.y));
     }
    }
    return {partCount:Object.keys(m.parts).length,shortFound:!!short,
@@ -43,6 +44,8 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.equal(current.shortImage,true);
   assert.equal(current.sourcePart,'legwear');
   assert.equal(current.bound,true);
+  assert.deepEqual(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.model.parts.pants_overlay.placement),
+   {scaleX:.92,scaleY:.8,offsetX:-7,offsetY:-12});
   assert.ok(current.max<.03,'pants hem must not pull away from real legs');
   assert.ok(current.travel>1.0,'must test actual nonzero motion');
   fs.mkdirSync('artifacts/character-editor',{recursive:true});
