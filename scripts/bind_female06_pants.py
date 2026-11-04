@@ -20,7 +20,12 @@ from PIL import Image
 PANTS_ID = "pants_overlay"
 BASE_ID = "female-06"
 OUTFIT_ID = "female-06-outfit-02"
-PANTS_BOUNDS = (420, 415, 164, 162)  # fitted on original female-06 hips, px
+PANTS_BOUNDS = (420, 415, 164, 162)  # preserved source raster in current approved module
+# Original legwear: (413,409,164,605), hip-alpha width ~139px at Y=433.
+# The old 164x162 visible shorts were shifted right and extended too far down.
+# Fit as non-destructive Rig placement, not by repeatedly resizing the PNG.
+PANTS_PLACEMENT = {"scaleX": .92, "scaleY": .80,
+                   "offsetX": -7.0, "offsetY": -12.0}
 
 
 def read(path: Path) -> dict:
@@ -146,6 +151,7 @@ def install(library: Path) -> bool:
         "id": PANTS_ID, "name": "女六 · 黑色短裤", "x": x, "y": y,
         "w": w, "h": h, "parentId": "legwear", "kind": "pants-bound",
         "pivot": {"x": .5, "y": .09}, "tip": {"x": .5, "y": .91},
+        "placement": PANTS_PLACEMENT.copy(),
         "mesh": {"rows": 12, "columns": 12},
         "bones": [],
         "motion": {"x": 0, "y": 0, "angle": 0, "frequency": 1, "phase": 0},
@@ -167,6 +173,8 @@ def install(library: Path) -> bool:
     base_rig["wearableSource"] = {
         "outfitId": OUTFIT_ID, "sourcePart": "bottomwear",
         "fittedTo": "legwear", "binding": "shared-leg-field-v1",
+        "fitPlacement": PANTS_PLACEMENT.copy(),
+        "fitRevision": "female06-hip-geometry-v2",
         "noTextureRegeneration": True
     }
     base_mod["views"]["front"]["rig"]["textures"][PANTS_ID] = "front/" + PANTS_ID + ".png"
@@ -213,7 +221,7 @@ def install(library: Path) -> bool:
     # A compiled module must contain EXACTLY one texture per model ArtMesh.
     if set(base_mod["views"]["front"]["rig"]["textures"]) != set(base_rig["parts"]):
         raise ValueError("female-06 post-attach ArtMesh textures do not match")
-    print("AUTO FITTED female-06 original PSD pants: x=420 y=415 164x162, "
+    print("AUTO FITTED female-06 authentic hip geometry: raw x=420 y=415 164x162, rendered placement "+str(PANTS_PLACEMENT)+", "
           "18 ArtMeshes, dual-leg shared-skin, separate repaired outfit sleeves")
     return True
 
