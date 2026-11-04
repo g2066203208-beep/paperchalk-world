@@ -463,13 +463,13 @@ function renderFamilyTree(){
    children.append(button,uploader);
   }
   const base=document.createElement('button');base.type='button';
-  base.textContent='基础立绘 · 正面';
+  base.textContent='基础全身模型 · 正面';
   base.className=currentId===primary.id&&side==='front'?'active':'';
   base.onclick=()=>change(primary.id,'front').catch(e=>message(e.message));
   children.append(base);
   if(primary.back){
    const back=document.createElement('button');back.type='button';
-   back.textContent='基础立绘 · 背面';
+   back.textContent='基础模型 · 背面';
    back.className=currentId===primary.id&&side==='back'?'active':'';
    back.onclick=()=>change(primary.id,'back').catch(e=>message(e.message));
    children.append(back);
