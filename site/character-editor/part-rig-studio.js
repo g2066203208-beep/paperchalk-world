@@ -234,7 +234,8 @@ maskTarget.onchange=()=>{
 for(const [button,direction] of [['rig-mask-front','front'],['rig-mask-back','behind']]){
  $(button).onclick=()=>{
   setMaskMode(false);maskState.direction=direction;maskState.history=[];maskState.redo=[];
-  const entry=getMask();
+  maskState.editingEntry=null;
+  const entry=getMask();maskState.editingEntry=entry||null;
   if(entry){maskState.targets=new Set(maskTargets(entry));maskCanvas(entry,state.model.parts[state.selected])}
   syncDirection();drawTargetList();maskLabel.textContent=maskHint();ed.render();
  };
