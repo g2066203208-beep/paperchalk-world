@@ -53,7 +53,11 @@ function image(url){
 }
 function dispose(slot){
  const old=ACTIVE.get(slot);
- if(old){old.disposed=true;cancelAnimationFrame(old.frame||0);ACTIVE.delete(slot);}
+ if(old){
+  old.disposed=true;cancelAnimationFrame(old.frame||0);ACTIVE.delete(slot);
+  if(old.onContextLost)old.actor.canvas.removeEventListener?.('contextlost',old.onContextLost);
+  if(old.onContextRestored)old.actor.canvas.removeEventListener?.('contextrestored',old.onContextRestored);
+ }
  const actor=root.PaperchalkL2D?.get(slot);
  if(actor?.libraryPlayer===old)actor.libraryPlayer=null;
 }
@@ -179,7 +183,18 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  await root.PaperchalkL2D.setAnimationSource(slot,null,{suspendFallback:true});
  if(VERSIONS.get(slot)!==version)return false;
  actor.rig?.stop();
- const state={disposed:false,frame:0,actor,model,layers,slot,last:-1,phase:0,personalised,renderedFrames:0};
+ const state={disposed:false,frame:0,actor,model,layers,slot,last:-1,
+  elapsedMs:0,previousTime:0,contextLost:false,contextRestores:0,
+  personalised,renderedFrames:0};
+ state.onContextLost=()=>{
+  state.contextLost=true;state.previousTime=0;state.last=-1;
+ };
+ state.onContextRestored=()=>{
+  state.contextLost=false;state.contextRestores++;
+  state.previousTime=0;state.last=-1; // next RAF restores the REAL PSD mesh
+ };
+ actor.canvas.addEventListener?.('contextlost',state.onContextLost);
+ actor.canvas.addEventListener?.('contextrestored',state.onContextRestored);
  const actionOptions=root.PaperchalkPartRigCore.actionNames?.(model)||[];
  const initialAction=model.actionProfiles?.default||actionOptions[0]?.id;
  if(initialAction)model.actionState={to:initialAction};
@@ -193,16 +208,27 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  function tick(t){
   if(state.disposed)return;
   state.frame=requestAnimationFrame(tick);
-  if(document.hidden||actor.root.hidden||actor.img.hidden||t-state.last<33)return;
-  const w=Math.max(1,Math.round(actor.img.offsetWidth*Math.min(2,devicePixelRatio||1)));
-  const h=Math.max(1,Math.round(actor.img.offsetHeight*Math.min(2,devicePixelRatio||1)));
-  if(w>2560||h>2560)return;
-  if(actor.canvas.width!==w||actor.canvas.height!==h){actor.canvas.width=w;actor.canvas.height=h;}
+  if(document.hidden||actor.root.hidden||actor.img.hidden){
+   state.previousTime=0;state.last=-1;return;
+  }
+  if(t-state.last<33)return;
+  const size=root.PaperchalkL2DCanvasBudget.backingSize(
+   actor.img.offsetWidth,actor.img.offsetHeight,root.devicePixelRatio||1);
+  if(!size.width||!size.height)return;
+  const {width:w,height:h}=size;
+  // Losing a 2D context is possible after memory/driver errors. Let the
+  // browser restore it, then redraw this model on the very next RAF.
   const ctx=actor.canvas.getContext('2d',{alpha:true});
+  if(!ctx||state.contextLost||ctx.isContextLost?.())return;
+  if(actor.canvas.width!==w||actor.canvas.height!==h){
+   actor.canvas.width=w;actor.canvas.height=h;
+  }
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);
   ctx.setTransform(w/1024,0,0,h/1024,0,0);
-  // The approved rig drives its OWN geometry, not the character poster.
-  root.PaperchalkPartRigCore.draw(ctx,layers,model,t*Math.PI*2/3600);
+  if(state.previousTime)state.elapsedMs+=Math.min(80,Math.max(0,t-state.previousTime));
+  state.previousTime=t;
+  // Clock pauses while hidden: waking a phone cannot jump hair/skirt phase.
+  root.PaperchalkPartRigCore.draw(ctx,layers,model,state.elapsedMs*Math.PI*2/3600);
   // Existing hand-painted correction layers must remain visible when the
   // original heroine switches from V4 to articulated parts. These overlays
   // are stored separately; none of the original source PNGs are modified.
@@ -212,7 +238,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    ctx.drawImage(actor.partPatch.paint,0,0,1024,1024);
   }
   ctx.setTransform(1,0,0,1,0,0);
-  actor.root.dataset.l2dFrame=String(Math.floor(t/50)%128);
+  actor.root.dataset.l2dFrame=String(Math.floor(state.elapsedMs/50)%128);
   state.last=t;state.renderedFrames++;
  }
  state.frame=requestAnimationFrame(tick);
@@ -236,6 +262,8 @@ root.PaperchalkL2DLibrary={attach,detach:stop,setAction,getAction,
   return {slot,version:VERSIONS.get(slot)||0,active:!!a&&!a.disposed,
    parts:a?.layers.length||0,renderedFrames:a?.renderedFrames||0,
    source:a?.model.characterId||null,
+   contextLost:!!a?.contextLost,contextRestores:a?.contextRestores||0,
+   backing:a?{width:a.actor.canvas.width,height:a.actor.canvas.height}:null,
    textureCache:TEXTURE_CACHE.size,modelCache:MODEL_CACHE.size,...cacheStats};
  }};
 })(typeof window!=='undefined'?window:globalThis);

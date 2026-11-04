@@ -3,9 +3,7 @@
 (function(){
 'use strict';
 const rigs=new Map();
-const MAX_DPR=2.5;
-const quality=()=>Math.min(MAX_DPR,Math.max(1,window.devicePixelRatio||1));
-const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
+ const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
 const GEOMETRY_INTERVAL=1000/30;
 let lastGeometryFrame=0;
 function install(root){
@@ -16,6 +14,17 @@ function install(root){
  const id=root.dataset.l2dActor;
  const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,partPatch:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),overlayPending:new Set(),profile:{amplitude:.55,period:4.8,softness:1}};
  rigs.set(root,obj);
+ // Canvas 2D context loss differs from WebGL loss. Supported browsers
+ // restore 2D backing storage automatically, after which we must repaint.
+ canvas.addEventListener?.('contextlost',()=>{
+  obj.contextLost=true;obj.root.dataset.l2dContext='lost';
+ });
+ canvas.addEventListener?.('contextrestored',()=>{
+  obj.contextLost=false;obj.root.dataset.l2dContext='ready';
+  if(obj.clip?.type==='decoder')obj.clip.frame=-1;
+  if(!obj.clip&&!obj.libraryPlayer&&obj.rig)
+   obj.rig.render(performance.now(),true);
+ });
  img.addEventListener('load',()=>refresh(obj));
  img.addEventListener('error',()=>{root.dataset.l2dState='error';});
  if(img.complete&&img.naturalWidth)refresh(obj);
@@ -189,7 +198,7 @@ function placeClip(obj){
 function advanceV4(obj,now){
  const clip=obj.clip;
  if(!clip||clip.type!=='decoder')return;
- if(document.hidden||obj.root.hidden||obj.img.hidden){
+ if(document.hidden||obj.root.hidden||obj.img.hidden||obj.contextLost){
   // Freeze the timeline when the actor is not shown. The scene manager
   // controls actor visibility; no invisible animation overhead.
   clip.start=undefined;
@@ -265,7 +274,11 @@ async function setCorrections(slot,general,frames={}){
   if(!src)return ok(null);
   const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(Error('修正图层解码失败'));im.src=src;
  });
+ const revision=(obj.correctionRevision||0)+1;
+ obj.correctionRevision=revision;
+ const owner=obj.loading;
  const generalImg=await decode(general);
+ if(revision!==obj.correctionRevision||owner!==obj.loading)return false;
  const list=Object.entries(frames||{})
   .filter(([k,url])=>/^\d{1,3}$/.test(k)&&Number(k)<256&&typeof url==='string'&&url.startsWith('data:image/'));
  obj.overlay=generalImg;
@@ -278,12 +291,14 @@ async function setCorrections(slot,general,frames={}){
 async function setComponentPatch(slot,patch){
  const obj=target(slot);if(!obj)return false;
  const token=obj.loading;
+ const revision=(obj.patchRevision||0)+1;
+ obj.patchRevision=revision;
  if(!patch?.erase||!patch?.paint){obj.partPatch=null;return true;}
  const decode=uri=>new Promise((ok,no)=>{
   const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(Error('部件修补图片损坏'));im.src=uri;
  });
  const [erase,paint]=await Promise.all([decode(patch.erase),decode(patch.paint)]);
- if(token!==obj.loading)return false;
+ if(token!==obj.loading||revision!==obj.patchRevision)return false;
  obj.partPatch={erase,paint,changes:Number(patch.changes)||0};
  if(obj.clip?.type==='decoder')obj.clip.frame=-1;
  return true;
@@ -305,9 +320,8 @@ function sync(t){
   // current DEV drag handles; the animated canvas follows its geometry.
   const w=a.img.offsetWidth,h=a.img.offsetHeight;
   if(a.clip?.type==='decoder'&&w>0&&h>0){
-   const scale=quality();
-   const W=Math.min(2560,Math.max(1,Math.round(w*scale)));
-   const H=Math.min(2560,Math.max(1,Math.round(h*scale)));
+   const {width:W,height:H}=window.PaperchalkL2DCanvasBudget.backingSize(
+    w,h,window.devicePixelRatio||1,{maxDpr:2.5});
    if(a.canvas.width!==W||a.canvas.height!==H){
     a.canvas.width=W;a.canvas.height=H;
     if(a.clip)a.clip.frame=-1; // freshly resized buffer needs a new frame

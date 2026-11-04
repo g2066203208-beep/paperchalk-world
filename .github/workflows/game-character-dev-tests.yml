@@ -8,6 +8,8 @@ on:
       - 'site/dev/**'
       - 'site/l2d/**'
       - 'tests/test_l2d_fallback_isolation.cjs'
+      - 'tests/test_l2d_canvas_budget.cjs'
+      - 'tests/l2d-viewport-quality-browser.mjs'
       - 'site/assets/l2d/**'
       - 'site/character-editor/**'
       - 'scripts/build_v4_assets.py'
@@ -29,6 +31,8 @@ jobs:
         with: {node-version: '22'}
       - name: Verify fallback cannot overwrite an active authored L2D canvas
         run: node tests/test_l2d_fallback_isolation.cjs
+      - name: Verify oversized L2D canvases preserve pixels, aspect ratio and memory budget
+        run: node tests/test_l2d_canvas_budget.cjs
       - run: python3 -m pip install --quiet 'Pillow>=10,<12'
       - run: |
           python3 scripts/build_v4_assets.py
@@ -39,6 +43,8 @@ jobs:
           python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
+      - name: Browser verify high-DPI L2D, resize, background resume and 2D canvas restore
+        run: node tests/l2d-viewport-quality-browser.mjs
       - name: Real original heroine face, blink, editor and V4 backup on phone/desktop
         run: |
           mkdir -p artifacts/l2d-studio
