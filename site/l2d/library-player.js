@@ -95,6 +95,9 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  if(model?.format!=='paperchalk-part-rig-v1'||
     (model.characterId!==characterId&&!approvedOriginal&&!approvedSecondary&&!approvedFemaleFive)||model.face!==face)
   throw Error('L2D 绑定文件与人物 ID/方向不一致');
+ // The teacher PSD was confirmed as the single female-five actor.
+ // Keep all original textures, but expose the canonical actor identity to the game.
+ if(approvedFemaleFive)model.characterId='char-006';
  // Every playable module (including the ORIGINAL heroine actor) has a
  // deterministic gentle idle preset. A saved local editor profile overrides it.
  const ids=Object.keys(rigSpec.textures);
