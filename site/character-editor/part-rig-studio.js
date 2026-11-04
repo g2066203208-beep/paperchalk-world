@@ -45,6 +45,7 @@ maskPanel.innerHTML=`<div class="rig-mask-head"><strong>部件遮挡蒙版</stro
   <input id="rig-mask-size" type="range" min="2" max="96" step="2" value="12"></label>
  <div class="rig-mask-row"><button id="rig-mask-undo" type="button">↶ 撤销</button>
   <button id="rig-mask-clear" type="button">清空蒙版</button></div>
+ <button id="rig-mask-behind" type="button" hidden>将当前部件放到遮挡对象后面</button>
  <small id="rig-mask-hint">选部件，再选要被它遮挡的对象；蒙版不修改原图。</small>`;
 panel.querySelector('.rig-part-amount').before(maskPanel);
 const maskState={enabled:false,erase:false,pointer:null,restorePlaying:null,history:[],pair:''};
@@ -97,8 +98,23 @@ function updateMaskControls(){
  maskLabel.textContent=existing?.png?'已保存蒙版 · 修改只影响当前遮挡对象':
   '画白色区域表示此部件出现在目标前面；擦除则恢复后景。';
  maskState.pair=maskKey();maskState.history=[];
+ const order=state.model?.layerOrder||parts().map(p=>key(p));
+ const behind=order.indexOf(state.selected)>=order.indexOf(maskTarget.value)&&
+  order.includes(state.selected)&&order.includes(maskTarget.value);
+ $('rig-mask-behind').hidden=!behind;
+ if(behind)maskLabel.textContent='需要先把此部件放到对象后方，再画前景蒙版。';
  maskPanel.hidden=!state.active||!part;
 }
+$('rig-mask-behind').onclick=()=>{
+ const layers=S.layers[S.side],from=layers.findIndex(p=>p.sourcePart&&key(p)===state.selected),
+  target=layers.findIndex(p=>p.sourcePart&&key(p)===maskTarget.value);
+ if(from<0||target<0||from<target)return;
+ const [part]=layers.splice(from,1);
+ const dest=layers.findIndex(p=>p.sourcePart&&key(p)===maskTarget.value);
+ layers.splice(dest,0,part);S.sel=dest;
+ window.dispatchEvent(new Event('paperchalk:studio-layer-order-changed'));
+ ed.renderList();ed.autosave();updateMaskControls();ed.render();
+};
 function serializeMask(mask){
  if(!mask?._canvas)return;
  mask.png=mask._canvas.toDataURL('image/png');
