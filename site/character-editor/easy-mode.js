@@ -94,6 +94,10 @@ quick.append(edit);
 const animate=el('button',{id:'easy-animate',type:'button',title:'退出精修，查看角色在游戏里的动画'},'▶ 看动画');
 quick.append(animate);
 $('stage')?.append(quick);
+// Initial actor fit may precede creation of this mobile dock. Reframe once
+// AFTER its layout is measured, without resetting zoom during later editing.
+if(matchMedia('(max-width:710px)').matches)
+ requestAnimationFrame(()=>$('fit')?.click());
 const selectedBox=el('div',{id:'easy-selection','aria-live':'polite'});
 layerSection?.querySelector('#easy-layer-guide')?.after(selectedBox);
 const saveNote=el('span',{id:'easy-save-note',role:'status'},'保存在当前浏览器；不会自动提交 GitHub');
