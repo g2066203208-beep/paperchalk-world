@@ -96,6 +96,9 @@ const {chromium}=require('playwright');
   assert.equal(after.image,baseline.image,'restore artist-saved texture, not original stock PSD');
   assert.deepEqual(after.ids,init.ids,'no art layers deleted during recovery');
   assert.equal(after.mask,baseline.mask,'artist occlusion mask restored unchanged');
+  require('node:fs').mkdirSync('artifacts/character-editor',{recursive:true});
+  await page.screenshot({path:'artifacts/character-editor/RECOVERY-EDITOR-CROUCH.png',
+   fullPage:true});
   assert.deepEqual(errors,[],'browser must have no JS exceptions');
   console.log('PASS L2D restore: top recovery, position, scale, pose rest, authored PNG checkpoint and mask fidelity');
  }finally{await browser.close()}
