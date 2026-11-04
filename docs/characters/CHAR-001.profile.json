@@ -1900,5 +1900,304 @@
   "sourceNotes": [
     "Latest user Anima prompt says 18 years old, grey-purple eyes and under-left-eye beauty mark, while older repository registry proposes 17 years and muted gray-brown iris. Differences are tracked rather than silently mutating approved original art.",
     "All limb girths, precise facial landmark ratios and unverified measurements remain unknown; 162cm/49kg and 82/64/88 are separate art-design proposals."
-  ]
+  ],
+  "extensions": {
+    "extensionSchema": "docs/characters/ANGEL_TRANSACTION_SAN_EXTENSION_V1.json",
+    "schemaVersion": 1,
+    "fields": {
+      "tradeEligibility": {
+        "participationRole": {
+          "value": "非救赎目的的清道夫／天使交易体系特殊例外",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "recruitedBy": {
+          "value": null,
+          "status": "unknown"
+        },
+        "recruitmentVoluntary": {
+          "value": null,
+          "status": "unknown"
+        },
+        "dealOptIn": {
+          "value": null,
+          "status": "unknown"
+        },
+        "participationStatus": {
+          "value": null,
+          "status": "unknown"
+        },
+        "firstContact": {
+          "value": null,
+          "status": "unknown"
+        },
+        "eligibilityCriteria": {
+          "value": null,
+          "status": "unknown"
+        },
+        "civilianLifeStatus": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "tradeDesire": {
+        "lifeDeficit": {
+          "value": null,
+          "status": "unknown"
+        },
+        "outwardMask": {
+          "value": "冷淡、毒舌",
+          "status": "user_confirmed",
+          "source": "用户已确认角色核心气质；docs/characters/CHAR-001.profile.json"
+        },
+        "trueWish": {
+          "value": "没有借天使交易求救赎的愿望；享受与怪物战斗",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "spokenWish": {
+          "value": null,
+          "status": "unknown"
+        },
+        "deepestFear": {
+          "value": null,
+          "status": "unknown"
+        },
+        "emotionalTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "desiredChange": {
+          "value": null,
+          "status": "unknown"
+        },
+        "desperationScale": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "tradeContract": {
+        "angelCounterparty": {
+          "value": null,
+          "status": "unknown"
+        },
+        "contractTerms": {
+          "value": null,
+          "status": "unknown"
+        },
+        "requestedBenefit": {
+          "value": null,
+          "status": "unknown"
+        },
+        "promisedReward": {
+          "value": null,
+          "status": "unknown"
+        },
+        "upfrontCost": {
+          "value": null,
+          "status": "unknown"
+        },
+        "hiddenCost": {
+          "value": null,
+          "status": "unknown"
+        },
+        "debtState": {
+          "value": null,
+          "status": "unknown"
+        },
+        "cancellationRule": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "sanityRules": {
+        "startingSan": {
+          "value": 50,
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "baselineSan": {
+          "value": 50,
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "minimumSan": {
+          "value": 50,
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "maximumSan": {
+          "value": 100,
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "monsterEncounterDelta": {
+          "value": 0,
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "combatKillDelta": {
+          "value": "正值；单次具体增量尚未确认",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "passiveDecayRule": {
+          "value": "无自然降低，不会自行掉回50",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "otherNegativeEffectRule": {
+          "value": "不能使女主 SAN 下降",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        }
+      },
+      "fearAndCombat": {
+        "fearResponse": {
+          "value": "完全无惧怪物",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "enemyClarityEffect": {
+          "value": "敌人明确使她更清醒",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "killSatisfactionEffect": {
+          "value": "击杀怪物令 SAN 增长",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "battleMentalTrajectory": {
+          "value": "遇怪不掉SAN，击杀增长，保持已获得值，最高100",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        },
+        "retreatTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "nonMonsterThreatResponse": {
+          "value": null,
+          "status": "unknown"
+        },
+        "panicThreshold": {
+          "value": null,
+          "status": "unknown"
+        },
+        "exceptions": {
+          "value": "女主是交易动机与 SAN 恐惧消耗机制的例外",
+          "status": "user_confirmed",
+          "source": "2026-11-04 用户明确确认女主 SAN 不掉、初始一半、杀怪增加、无惧且敌人明确"
+        }
+      },
+      "mentalPresentation": {
+        "idleEmotion": {
+          "value": null,
+          "status": "unknown"
+        },
+        "threatExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "attackExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "victoryExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "lowSanExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "socialMask": {
+          "value": null,
+          "status": "unknown"
+        },
+        "maskBreakTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "psychologicalAftereffect": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "plotTransaction": {
+        "preDealLife": {
+          "value": null,
+          "status": "unknown"
+        },
+        "incitingIncident": {
+          "value": null,
+          "status": "unknown"
+        },
+        "dealDecisionScene": {
+          "value": null,
+          "status": "unknown"
+        },
+        "turningPoint": {
+          "value": null,
+          "status": "unknown"
+        },
+        "characterArc": {
+          "value": null,
+          "status": "unknown"
+        },
+        "relationToHeroine": {
+          "value": null,
+          "status": "unknown"
+        },
+        "angelManipulationCounter": {
+          "value": null,
+          "status": "unknown"
+        },
+        "unresolvedQuestion": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "runtimeAndQA": {
+        "mechanicState": {
+          "value": "人物规则已记录；未证明代码已实装",
+          "status": "proposed",
+          "source": "2026-11-04 512 字段扩展设计；仅作为游戏实现建议，未声称代码已实装"
+        },
+        "saveDataKey": {
+          "value": null,
+          "status": "unknown"
+        },
+        "currentSanStorage": {
+          "value": null,
+          "status": "unknown"
+        },
+        "clamping": {
+          "value": "数值钳制范围 [50,100]",
+          "status": "proposed",
+          "source": "2026-11-04 512 字段扩展设计；仅作为游戏实现建议，未声称代码已实装"
+        },
+        "combatEvents": {
+          "value": "在确认的有效怪物击杀事件中加 SAN；具体奖励待平衡",
+          "status": "proposed",
+          "source": "2026-11-04 512 字段扩展设计；仅作为游戏实现建议，未声称代码已实装"
+        },
+        "guiRules": {
+          "value": "显示50—100有效范围，不可伪造低于50的女主SAN",
+          "status": "proposed",
+          "source": "2026-11-04 512 字段扩展设计；仅作为游戏实现建议，未声称代码已实装"
+        },
+        "regressionTests": {
+          "value": "生成时50；遇怪0扣除；恐惧0扣除；有效击杀上升；无自然回落；上限100",
+          "status": "proposed",
+          "source": "2026-11-04 512 字段扩展设计；仅作为游戏实现建议，未声称代码已实装"
+        },
+        "approvalStatus": {
+          "value": null,
+          "status": "unknown"
+        }
+      }
+    }
+  }
 }
