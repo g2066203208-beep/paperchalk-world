@@ -258,6 +258,25 @@ treeCSS.textContent=`
  .character-family-children button{display:block;text-align:left;width:100%;min-width:0;min-height:34px;padding:7px 9px;font-size:11px;white-space:normal}
  .character-family-children button.active{background:#275c7e;border-color:#74b9ea}
  .character-family-children small{display:block;color:#a7c3d5;font-size:10px;margin-top:3px}
+ #studio-person-search{display:block;width:100%;padding:8px 10px;margin:1px 0 10px;
+  background:#111d2a;border:1px solid #3e546a;border-radius:8px;color:#e1eaf5;
+  font-size:12px;outline-offset:2px}
+ .character-resource-section{display:flex;flex-direction:column;gap:4px;margin:4px 0 9px}
+ .character-resource-heading{font-size:11px;font-weight:650;color:#a6c3d7;
+  padding:4px 5px 3px;letter-spacing:.04em;border-bottom:1px solid #304b5d}
+ .character-resource-section button{padding-left:12px}
+ .character-resource-section[data-category="action"] button{border-left:2px solid #8daed3}
+ .character-resource-section[data-category="outfit"] button{border-left:2px solid #9c9bb9}
+ .character-source-archive{margin:9px 1px 2px;border-top:1px solid #35516a;padding-top:7px}
+ .character-source-archive>summary{font-size:11px;color:#adc1d4;cursor:pointer;
+  padding:7px 4px;line-height:1.5}
+ .character-source-archive>button{font-size:11px;min-height:30px;opacity:.82;
+  margin:3px 0;background:#182533;border-color:#354557}
+ .character-resource-empty,.character-search-empty{color:#9aafc5;font-size:11px;
+  line-height:1.6;margin:5px 7px}
+ .character-family button[aria-current="true"]{background:#275c7e;border-color:#74b9ea}
+ .character-family>summary:focus-visible,.character-family button:focus-visible{
+  outline:2px solid #97d3ff;outline-offset:1px}
  .character-tree-legend{font-size:10px;color:#91adbf;line-height:1.5;margin:7px 2px 0}
  @media(max-width:710px){#studio-character-tree{margin-bottom:8px}#character-tree-items{grid-template-columns:1fr;gap:5px}}
 `;
@@ -381,83 +400,169 @@ document.head.append(workspaceCSS);
 /* The registry contains source rigs, wardrobe and old local imports.  These
  * are files/variants of a PERSON, not separate people.  Do not delete the
  * underlying data: this normalises the navigation surface only. */
-const PERSON_NAMES={
- protagonist:'女主角','char-002':'女二','char-003':'男主角',
- 'char-004':'女三',male2:'男二','female-06':'女六',
- 'class-teacher-geography-candidate':'女老师'
+/* One character identity → base views / canonical actions / real outfits.
+ * Raw PSDs and old imports live in the collapsed advanced source archive.
+ * Organization never affects the source ArtMesh hierarchy or Z-order. */
+const personModel=window.PaperchalkCharacterLibrary;
+if(!personModel)throw Error('人物资源分类模块未加载');
+let personFilter='';
+const personSearch=document.createElement('input');
+personSearch.id='studio-person-search';
+personSearch.type='search';personSearch.autocomplete='off';
+personSearch.placeholder='搜索人物、服装、动作';
+personSearch.setAttribute('aria-label','搜索人物、服装和动作');
+personSearch.oninput=()=>{
+ personFilter=personSearch.value.trim().toLocaleLowerCase('zh-CN');
+ renderFamilyTree();
 };
-function canonicalFamily(record){
- const id=String(record?.id||''),family=String(record?.familyId||id);
- const name=String(record?.label||'').trim();
- // A published male-second actor remains its own canonical person even when
- // older module metadata still carries the retired char-016 family ID.
- if(id==='male2'||family==='male2')return 'male2';
- const nameFamily=/^(女二(号)?|女2)(?:[\s·（(:：/-]|$)/.test(name)?'char-002':
-  /^(男主角?|男一)(?:[\s·（(:：/-]|$)/.test(name)?'char-003':
-  /^(女主角?|女一)(?:[\s·（(:：/-]|$)/.test(name)?'protagonist':null;
- const token=nameFamily||family;
- if(/^(protagonist)(?:$|-)/.test(token))return 'protagonist';
- if(/^(char-002|female-?0?2|female2)(?:$|-)/.test(token))return 'char-002';
- if(/^(char-003|male-lead|malelead)(?:$|-)/.test(token))return 'char-003';
- if(/^(char-004|female-?0?3)(?:$|-)/.test(token))return 'char-004';
- if(/^(male2)(?:$|-)/.test(token))return 'male2';
- return token;
+characterTree.querySelector('h3')?.after(personSearch);
+function visibleFamilyGroups(){
+ return personModel.makeTree([...list.values()],currentId);
 }
 function familyDisplayName(person,family){
- return PERSON_NAMES[family]||String(person?.label||family)
-  .replace(/ · 未导入立绘$/,'').replace(/^char-(\d+)$/i,'角色 $1');
+ return personModel.displayName(person,family);
 }
-function visibleFamilyGroups(){
- const families=new Map();
- for(const record of list.values()){
-  if(!okId(record?.id))continue;
-  const family=canonicalFamily(record);
-  if(!families.has(family))families.set(family,[]);
-  families.get(family).push(record);
+function activeAction(){
+ const rig=window.PaperchalkPartRigStudio?.state;
+ return rig?.active&&rig.model?.characterId===currentId&&rig.model?.face===side
+  ?(rig.model.actionState?.to||'idle'):'idle';
+}
+function updatePersonTreeActive(){
+ const current=personModel.familyOf(list.get(currentId)||{id:currentId});
+ const pose=activeAction();
+ for(const family of document.querySelectorAll('#character-tree-items .character-family')){
+  family.classList.toggle('active',family.dataset.family===current);
+  for(const btn of family.querySelectorAll('button[data-character]')){
+   const id=btn.dataset.character,face=btn.dataset.face||'front';
+   const action=btn.dataset.action||'';
+   const selected=id===currentId&&face===side&&
+    (action?pose===action:
+     btn.dataset.role==='base'?pose==='idle':true);
+   btn.classList.toggle('active',selected);
+   if(selected)btn.setAttribute('aria-current','true');
+   else btn.removeAttribute('aria-current');
+  }
  }
- const visible=[];
- for(const [family,all] of families){
-  const primary=all.find(c=>c.id===family)||
-   all.find(c=>c.variantCategory!=='combat'&&c.variantCategory!=='outfit'&&
-    (c.front||c.back||c.l2dModule?.front?.rig))||all[0];
-  // Concept-only 448-field records are not painted actors.  Keep in the
-  // full catalog, but don't fill the active L2D tree with blank templates.
-  const hasArtwork=all.some(c=>!!c.front||!!c.back||!!c.l2dModule?.front?.rig);
-  if(!hasArtwork&&family!=='male2'&&!all.some(c=>c.id===currentId))continue;
-  const choices=all.filter(c=>c.id!==primary.id&&
-    // Published sleepwear can have variantCategory=default; still put its
-    // actual asset UNDER the canonical actor instead of hiding the garment.
-    (c.variantCategory==='outfit'||c.variantCategory==='combat'||
-      /(?:outfit|sleepwear|costume)/i.test(c.id)|| 
-      (!!c.l2dModule?.front?.rig&&c.familyId===family))&&
-    !/^(char-002-psd-v1|protagonist-rig-v1|protagonist-unified-v1)$/.test(c.id));
-  // Deduplicate stale local copies of the same variant.  Preserve every
-  // record in list/IndexedDB, just display one action per unique asset ID.
-  const seen=new Set(),variants=choices.filter(c=>{
-   const signature=(/(?:outfit|sleepwear|costume)/i.test(c.id)?'outfit':c.variantCategory)+':'+(c.front||c.id);
-   if(seen.has(signature))return false;
-   seen.add(signature);return true;
-  });
-  visible.push({family,primary,variants});
+}
+function navButton(title,{id,face='front',action='',role='source',hint=''},activate){
+ const btn=document.createElement('button');btn.type='button';
+ btn.textContent=title;btn.dataset.character=id;btn.dataset.face=face;
+ btn.dataset.role=role;
+ if(action)btn.dataset.action=action;
+ if(hint)btn.title=hint;
+ btn.onclick=()=>Promise.resolve().then(activate)
+  .catch(error=>message('切换资源失败：'+error.message));
+ return btn;
+}
+async function setPersonAction(id,action){
+ if(currentId!==id||side!=='front')await change(id,'front');
+ // The PartRig mounts asynchronously after switchCharacter loads source PNGs.
+ // Retry only until the matching actor is ready; never touch another actor.
+ const select=$('rig-character-action');
+ for(let frame=0;frame<100;frame++){
+  if(currentId!==id||side!=='front')return;
+  const state=window.PaperchalkPartRigStudio?.state;
+  if(state?.active&&state.model?.characterId===id&&state.model?.face==='front'&&
+    select&&[...select.options].some(opt=>opt.value===action)){
+   if(select.value!==action){
+    select.value=action;
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+   }
+   updatePersonTreeActive();
+   return;
+  }
+  await new Promise(resolve=>requestAnimationFrame(resolve));
  }
- return visible;
+ throw Error('人物动作尚未加载完成，请在右侧动作菜单中重试');
+}
+function appendPersonSection(target,label,role){
+ const section=document.createElement('div');
+ section.className='character-resource-section';
+ section.dataset.category=role;
+ const heading=document.createElement('div');heading.className='character-resource-heading';
+ heading.textContent=label;section.append(heading);
+ target.append(section);return section;
 }
 function renderFamilyTree(){
  const root=$('character-tree-items');if(!root)return;
  root.replaceChildren();
- for(const {family,primary,variants} of visibleFamilyGroups()){
-  const activeFamily=canonicalFamily(list.get(currentId)||{id:currentId});
+ const groups=visibleFamilyGroups(),matches=[];
+ for(const actor of groups){
+  const searchable=[
+   actor.name,actor.family,...actor.outfits.map(x=>x.label),
+   ...actor.actions.map(x=>x.label),...actor.sources.map(x=>x.label)
+  ].join(' ').toLocaleLowerCase('zh-CN');
+  if(personFilter&&!searchable.includes(personFilter))continue;
+  matches.push(actor.family);
+  const {family,name,primary,faces,actions,outfits,sources}=actor;
   const group=document.createElement('details');
-  group.className='character-family'+(family===activeFamily?' active':'');
-  group.open=openedFamilies.has(family)||family===activeFamily;
-  const summary=document.createElement('summary');
-  summary.textContent=familyDisplayName(primary,family);
+  group.dataset.family=family;
+  group.className='character-family';
+  const isCurrent=personModel.familyOf(list.get(currentId)||{id:currentId})===family;
+  group.open=!!personFilter||openedFamilies.has(family)||isCurrent;
+  const summary=document.createElement('summary');summary.textContent=name;
   group.append(summary);
-  group.addEventListener('toggle',()=>{if(group.open)openedFamilies.add(family);else openedFamilies.delete(family)});
-  const children=document.createElement('div');children.className='character-family-children';
+  group.addEventListener('toggle',()=>{
+   if(personFilter)return;
+   if(group.open)openedFamilies.add(family);
+   else openedFamilies.delete(family);
+  });
+  const children=document.createElement('div');
+  children.className='character-family-children';
+
+  // Every actor has ONE base rig. The standing idle is not a separate
+  // 20-part/24-part character; combat changes only the action parameter.
+  const basic=appendPersonSection(children,'基础立绘','base');
+  if(faces.front){
+   basic.append(navButton(
+     family==='protagonist'?'正面 · 站立':'正面 · 基础模型',
+     {id:primary.id,face:'front',role:'base',
+      hint:'加载正式基础模型；女主站立动作会恢复到默认姿态'},
+     ()=>family==='protagonist'&&
+       primary.l2dModule?.front?.actions?.includes('idle')
+        ?setPersonAction(primary.id,'idle'):change(primary.id,'front')
+   ));
+  }
+  if(faces.back){
+   basic.append(navButton('基础模型 · 背面',
+    {id:primary.id,face:'back',role:'base'},
+    ()=>change(primary.id,'back')));
+  }
+  if(!faces.front&&!faces.back){
+   const empty=document.createElement('p');empty.className='character-resource-empty';
+   empty.textContent='暂无正式立绘';basic.append(empty);
+  }
+
+  if(actions.length){
+   const section=appendPersonSection(children,'动作','action');
+   for(const entry of actions){
+    const isCanonical=entry.canonical===true;
+    section.append(navButton(entry.label,{
+      id:isCanonical?primary.id:entry.id,face:'front',
+      action:isCanonical?entry.action:'',
+      role:isCanonical?'canonical-action':'variant-action',
+      hint:isCanonical?'沿用同一人物骨骼，只切换需要动作的部件':'独立动作源工程'
+    },()=>isCanonical?
+      setPersonAction(primary.id,entry.action):change(entry.id,'front')));
+   }
+  }
+
+  if(outfits.length){
+   const section=appendPersonSection(children,'服装','outfit');
+   for(const item of outfits){
+    section.append(navButton(item.label+' · 正面',
+     {id:item.id,role:'outfit',hint:'这是一套独立服装资源，不是新的角色'},
+     ()=>change(item.id,'front')));
+    if(item.record.back)section.append(navButton(item.label+' · 背面',
+     {id:item.id,face:'back',role:'outfit'},()=>change(item.id,'back')));
+   }
+  }
+
   if(family==='male2'){
+   const section=appendPersonSection(children,'素材导入','import');
    const button=document.createElement('button');
-   button.type='button';button.className='male2-direct-import';button.textContent='＋ 导入男二 SeeThrough ZIP';
+   button.type='button';button.className='male2-direct-import';
+   button.textContent='＋ 导入男二 SeeThrough ZIP';
    const uploader=document.createElement('input');
    uploader.type='file';uploader.accept='.zip,application/zip';uploader.hidden=true;
    uploader.onchange=e=>{
@@ -467,74 +572,59 @@ function renderFamilyTree(){
      .catch(error=>message('男二拆分导入失败：'+error.message));
    };
    button.onclick=()=>uploader.click();
-   children.append(button,uploader);
+   section.append(button,uploader);
   }
-  const base=document.createElement('button');base.type='button';
-  base.textContent='基础全身模型 · 正面';
-  base.className=currentId===primary.id&&side==='front'?'active':'';
-  base.onclick=()=>change(primary.id,'front').catch(e=>message(e.message));
-  children.append(base);
-  if(primary.back){
-   const back=document.createElement('button');back.type='button';
-   back.textContent='基础模型 · 背面';
-   back.className=currentId===primary.id&&side==='back'?'active':'';
-   back.onclick=()=>change(primary.id,'back').catch(e=>message(e.message));
-   children.append(back);
-  }
-  for(const variant of variants){
-   const isOutfit=variant.variantCategory==='outfit'||/(?:outfit|sleepwear|costume)/i.test(variant.id);
-   const isBattle=variant.variantCategory==='combat';
-   const btn=document.createElement('button');btn.type='button';
-   btn.className=currentId===variant.id?'active':'';
-   const title=String(variant.label||variant.id)
-    .replace(/^(女主角?|女二|女三|男主角?|男二|女老师)\s*[·:：-]\s*/,'');
-   btn.textContent=(isOutfit?'服装 / 换装 · ':isBattle?'战斗动作 · ':'素材 · ')+title;
-   btn.onclick=async()=>{
-    try{
-     if(isBattle&&primary.id==='protagonist'){
-      await change(primary.id,'front');
-      const action=$('rig-character-action');
-      if(action&&[...action.options].some(o=>o.value==='combat')){
-       action.value='combat';action.dispatchEvent(new Event('change',{bubbles:true}));
-      }
-     }else await change(variant.id,'front');
-    }catch(e){message('切换失败：'+e.message)}
-   };
-   children.append(btn);
-   if(isOutfit&&!variant.l2dModule?.front?.rig){
-    const file=document.createElement('input');file.type='file';
-    file.accept='.psd,.zip,application/zip';file.hidden=true;
-    file.onchange=e=>{
-     const uploaded=e.target.files?.[0];e.target.value='';
-     if(!uploaded)return;
-     change(variant.id,'front').then(()=>importComponentArchive(uploaded))
-      .catch(error=>message('换装素材导入失败：'+error.message));
-    };
-    const importBtn=document.createElement('button');importBtn.type='button';
-    importBtn.textContent='＋ 导入这套服装';importBtn.onclick=()=>file.click();
-    children.append(file,importBtn);
+
+  if(sources.length){
+   const archive=document.createElement('details');archive.className='character-source-archive';
+   archive.dataset.category='archive';
+   const heading=document.createElement('summary');
+   heading.textContent='源稿与历史工程 ('+sources.length+')';
+   heading.title='保留原始 PSD、实验模型及旧导入稿，不作为独立人物或战斗动作';
+   archive.append(heading);
+   // An explicitly opened legacy/source document must remain locatable.
+   archive.open=!!personFilter||sources.some(entry=>entry.id===currentId);
+   for(const entry of sources){
+    const sourceText=(entry.type==='pending'?'待导入 · ':
+      entry.type==='legacy'?'旧工程 · ':'源稿 · ')+entry.label;
+    archive.append(navButton(sourceText,
+     {id:entry.id,role:'source',hint:'打开独立源工程；不会替换游戏中的正式角色'},
+     ()=>change(entry.id,'front')));
    }
+   children.append(archive);
   }
   group.append(children);root.append(group);
  }
+ if(!matches.length){
+  const empty=document.createElement('p');empty.className='character-search-empty';
+  empty.textContent='没有匹配人物或资源';root.append(empty);
+ }
+ updatePersonTreeActive();
 }
 function options(){
  selector.replaceChildren();
- for(const {family,primary,variants} of visibleFamilyGroups()){
-  const group=document.createElement('optgroup');group.label=familyDisplayName(primary,family);
-  group.append(new Option('基础立绘 · '+group.label,primary.id));
-  for(const v of variants)
-   group.append(new Option((v.variantCategory==='outfit'||/(?:outfit|sleepwear|costume)/i.test(v.id)?'服装 · ':'战斗动作 · ')+
-    String(v.label||v.id),v.id));
+ for(const {family,name,primary,outfits,actions,sources} of visibleFamilyGroups()){
+  const group=document.createElement('optgroup');group.label=name;
+  group.append(new Option('基础立绘 · '+name,primary.id));
+  for(const entry of outfits)
+   group.append(new Option('服装 · '+entry.label,entry.id));
+  for(const entry of actions.filter(a=>!a.canonical))
+   group.append(new Option('动作源稿 · '+entry.label,entry.id));
+  // Keep old deep links and previously imported projects selectable, but
+  // intentionally sort the advanced sources AFTER playable art and outfits.
+  for(const entry of sources)
+   group.append(new Option('原稿 / 历史 · '+entry.label,entry.id));
   selector.append(group);
  }
- if(list.has(currentId)&&[...selector.options].some(o=>o.value===currentId))
-  selector.value=currentId;
+ const matched=[...selector.options].some(option=>option.value===currentId);
+ if(matched)selector.value=currentId;
  else selector.value=visibleFamilyGroups()[0]?.primary?.id||'';
- // Paint the tree synchronously with the selected actor. A deferred rebuild
- // made the list appear blank during the first source-rig load.
  renderFamilyTree();
 }
+window.addEventListener('paperchalk:studio-action-changed',updatePersonTreeActive);
+window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
+ requestAnimationFrame(updatePersonTreeActive);
+});
 let switchQueue=Promise.resolve();
 function change(id,face='front'){
  // Serialise character changes so two rapid UI selections cannot load
