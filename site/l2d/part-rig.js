@@ -60,6 +60,27 @@ const FRONT={
  irides_r:['eyewhite_r',.50,.50,.50,.50,'eyes-combined'],
  irides_l:['eyewhite_l',.50,.50,.50,.50,'eyes-combined']
 };
+// Male lead is ONE canonical actor. This is his *alternate clothing* part
+// library, not the male2 bundle or a copy of the original standing character.
+const CHAR003_OUTFIT={
+ earwear:['head',.50,.15,.50,.80,'fixed'],
+ headwear:['head',.50,.04,.50,.95,'hair'],
+ handwear_left:['torso',.50,.06,.50,.90,'arm-left'],
+ handwear_right:['torso',.50,.06,.50,.93,'arm-right'],
+ neck:['torso',.50,.75,.50,.75,'fixed'],
+ footwear:['ground',.50,.85,.50,.85,'fixed'],
+ legwear:['pelvis',.50,.04,.50,.90,'leg-combined'],
+ back_hair:['head',.50,.09,.50,.94,'hair'],
+ topwear:['torso',.50,.12,.50,.85,'torso'],
+ eyelash:['head',.50,.50,.50,.50,'eyes-combined'],
+ eyebrow:['head',.50,.50,.50,.50,'face'],
+ ears:['head',.50,.50,.50,.50,'fixed'],
+ face:['head',.50,.45,.50,.45,'face'],
+ nose:['head',.50,.50,.50,.50,'fixed'],
+ mouth:['head',.50,.50,.50,.50,'mouth'],
+ irides:['head',.50,.50,.50,.50,'eyes-combined'],
+ front_hair:['head',.50,.06,.50,.91,'hair']
+};
 // CHAR-004 / female third: actual user-supplied PSD, 21 layers and TWO
 // physically separate shoe meshes. Not the protagonist/CHAR002 rig.
 const CHAR004={
@@ -430,7 +451,9 @@ function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  return {x:part.x+x+dx/sum*blend,y:part.y+y+dy/sum*blend};
 }
 function cleanPart(part,face,id,characterId){
- const p=part||{},spec=characterId==='char-004'&&face==='front'?
+ const p=part||{},spec=characterId==='char-003-outfit-02'&&face==='front'?
+  (CHAR003_OUTFIT[id]||FRONT[id]):
+  characterId==='char-004'&&face==='front'?
   (CHAR004[id]||FRONT[id]):
   (characterId==='char-002'||characterId==='char-002-psd-v1')&&face==='front'?
    (CHAR002[id]||FRONT[id]):
