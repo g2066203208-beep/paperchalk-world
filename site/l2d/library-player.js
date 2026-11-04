@@ -190,6 +190,15 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // Restore runtime-only bone ancestry AFTER published parts and local artwork
  // positions are finalized. Every drawn layer shares the same ground anchors.
  root.PaperchalkPartRigCore.bindBodyHierarchy(model);
+ // Crouch is a separate authored ACTION resource under the same heroine.
+ // Both editor and game evaluate precisely the same anchored deformation.
+ // Restore the user's optional per-system strengths without making a new
+ // outfit/person or rewriting any original PSD PNG.
+ if(characterId==='protagonist-crouch-axe'){
+  model.crouchDynamics=root.PaperchalkPartRigCore.sanitizeCrouchDynamics(
+    draftMatches?localDraft.crouchDynamics:model.crouchDynamics);
+  root.PaperchalkPartRigCore.bindCrouchDynamics(model);
+ }
  const layers=ids.map((id,i)=>{
   const p=model.parts[id],im=drawings[i];
   if(!p||p.id!==id||p.w!==im.width||p.h!==im.height)
