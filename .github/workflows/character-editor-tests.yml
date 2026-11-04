@@ -8,6 +8,7 @@ on:
       - 'scripts/build_protagonist_part_rig.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_protagonist_unified.py'
+      - 'tests/test_l2d_studio_rework_browser.js'
       - 'site/assets/l2d/source-masks/**'
       - 'site/assets/l2d/inbox/**'
       - '.github/workflows/character-editor-tests.yml'
