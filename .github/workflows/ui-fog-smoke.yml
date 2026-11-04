@@ -8,6 +8,12 @@ on:
       - 'site/game/ground-perspective.js'
       - 'site/game/l2d-ground-binding.js'
       - 'site/game/phone-ui.js'
+      - 'site/game/frame-budget.js'
+      - 'site/game/scene-preloader.js'
+      - 'site/game/story-content.js'
+      - 'site/game/dialogue-layout.css'
+      - 'tests/game-runtime-modules.test.cjs'
+      - 'tests/game-render-budget-browser.mjs'
       - 'site/game/phone-ui.css'
       - 'site/assets/phones/**'
       - 'tests/survival-state.test.cjs'
@@ -42,6 +48,10 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify deterministic gameplay status mathematics and persistence
         run: node tests/survival-state.test.cjs
+      - name: Verify modular runtime cadence and bounded scene decoding
+        run: node tests/game-runtime-modules.test.cjs
+      - name: Verify full-rate world fog with independently budgeted UI fog
+        run: node tests/game-render-budget-browser.mjs
       - name: Verify shared-ground projection physics
         run: node tests/ground-perspective.test.mjs
       - name: Test shared-ground calibration in actual game on desktop/mobile

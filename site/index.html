@@ -564,6 +564,10 @@ body.mobile-mode.virtual-landscape #view{
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
+<script src="./game/story-content.js?v=runtime-architecture-1"></script>
+<script src="./game/scene-preloader.js?v=runtime-architecture-1"></script>
+<script src="./game/frame-budget.js?v=runtime-architecture-1"></script>
+<link rel="stylesheet" href="./game/dialogue-layout.css?v=runtime-architecture-1">
 <script src="./game/survival-state.js"></script>
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
@@ -899,6 +903,8 @@ void main(){
   let gl=null,simulate=null,composite=null,simTargets=[],simIndex=0,quad=null;
   let sizes={w:1,h:1,sw:1,sh:1},fluidTime=0;
   let fallback=null,fallbackState=null;
+  // UI-only pixel resampling has its own cadence; world fluid stays at rAF.
+  const fogOverlayPacer=window.PaperWorldFrameBudget.create({fps:30,maxDeltaSeconds:.12});
   let sceneHalf={x:.4,y:.4};
   // Live persisted fog controls, intentionally separate from 3D layer editor.
   // Large values remain user-adjustable, but the clear-zone hard-clips smoke.
@@ -1655,7 +1661,7 @@ void main(){
       if(band.dataset.active!==next){band.dataset.active=next;changed=true}
       uiFogTarget[edge]=enabled?1:0;
     }
-    if(changed)start();
+    if(changed){fogOverlayPacer.invalidate();start();}
   }
   const edgeFogObserver=new MutationObserver(syncUiEdgeFog);
   edgeFogObserver.observe(uiRoot,{
@@ -1665,17 +1671,8 @@ void main(){
   edgeFogObserver.observe(view,{attributes:true,attributeFilter:['class']});
   window.PaperWorldUIFog=Object.freeze({refresh:syncUiEdgeFog});
   syncUiEdgeFog();
-  const lines=[
-    {speaker:'???',text:'这间教室……和我记忆里的，不太一样。'},
-    {speaker:'???',text:'明明已经放学了，为什么还有声音？'},
-    {speaker:'???',text:'有人……在看着这里吗？'}
-  ];
-  // Scene data and dialogue data are independent: an environment may show a
-  // line without becoming a special story scene or changing its images/L2D.
-  // The bedroom has a neutral demonstration line until real script data lands.
-  const sceneDemoDialogue=Object.freeze({
-    bedroom:Object.freeze([{speaker:'???',text:'房间里很安静……窗外却好像有什么动静。'}])
-  });
+  const lines=window.PaperWorldStoryContent.classroom;
+  const sceneDemoDialogue=window.PaperWorldStoryContent.environment;
   let activeLines=lines;
   // Scene assets/content are data; rendering, 3D tilt and black fog are shared.
   // Only add an image to site/assets/scenes; CI auto-registers new scenes.
@@ -1702,10 +1699,13 @@ void main(){
   }
   let tiltEnabled=loadSetting();
   let dialogueIndex=0,autoEnabled=false,autoTimer=0,logOpen=false,textHidden=false,storyFinished=false;
-  const classroomPreload=new Image();
-  classroomPreload.src=SCENES.classroom.image;
-  const mainMenuPreload=new Image();
-  mainMenuPreload.src=SCENES.menu.image;
+  // Reuse decoded images instead of allocating a fresh Image on every visit.
+  const scenePreloader=window.PaperWorldScenePreloader.create({
+    ImageCtor:Image,maxEntries:3,timeoutMs:6500
+  });
+  scenePreloader.prefetch(SCENES.classroom.image);
+  scenePreloader.prefetch(SCENES.menu.image);
+  window.PaperWorldSceneCache=Object.freeze({inspect:()=>scenePreloader.inspect()});
   function readSave(){
     try{
       const raw=localStorage.getItem(SAVE_KEY);
@@ -1789,14 +1789,8 @@ void main(){
   }
   function waitForPaint(){return new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done)))}
   async function ensureAsset(name){
-    const image=new Image();image.decoding='async';image.src=SCENES[name].image;
-    let timeout;
-    try{
-      await Promise.race([image.decode(),
-        new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error('image timeout')),6500)})]);
-      return true;
-    }catch(e){console.error('Scene asset unavailable',name,e);return false}
-    finally{clearTimeout(timeout)}
+    try{await scenePreloader.ensure(SCENES[name].image);return true}
+    catch(error){console.error('Scene asset unavailable',name,error);return false}
   }
   async function changeScene(name){
     if(transitioning||editorActive||!SCENES[name]||stage.dataset.scene===name)return false;
@@ -2090,6 +2084,7 @@ void main(){
     }
     half();
     applyFogSettings();
+    fogOverlayPacer.invalidate();
   }
   function drawGPU(dt,t){
     gl.activeTexture(gl.TEXTURE0);
@@ -2645,9 +2640,13 @@ void main(){
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
-    // Render the same flowing fog behind all visible HUD and side settings.
-    paintUiFog(dt);
-    paintDevPanelFog(dt);
+    // CPU-heavy UI fog compositing is limited to 30 fps, while the original
+    // advected world fog continues at the full browser animation cadence.
+    const overlayFrame=fogOverlayPacer.sample(now);
+    if(overlayFrame){
+      paintUiFog(overlayFrame.dt);
+      paintDevPanelFog(overlayFrame.dt);
+    }
     fog.dataset.frames=String(++frameNumber);
     if(editorActive && now-lastFogMirror>=85){
       lastFogMirror=now;
@@ -2674,8 +2673,12 @@ void main(){
   view.addEventListener('pointerleave',()=>{aimX=0;aimY=0;start()});
   window.addEventListener('blur',()=>{aimX=0;aimY=0;start()});
   window.addEventListener('resize',()=>{updatePhoneLayout();resize();centreSensor();fitTopHud();start()},{passive:true});
-  document.addEventListener('visibilitychange',()=>{last=0;if(!document.hidden)start()});
-  reduced.addEventListener?.('change',()=>{last=0;start()});
+  document.addEventListener('visibilitychange',()=>{last=0;fogOverlayPacer.reset();if(!document.hidden)start()});
+  reduced.addEventListener?.('change',()=>{last=0;fogOverlayPacer.reset();start()});
+  window.PaperWorldRenderMetrics=()=>Object.freeze({
+    worldFrames:frameNumber,overlay:fogOverlayPacer.inspect(),
+    renderer:fog.dataset.renderer,simulation:{width:sizes.sw,height:sizes.sh}
+  });
   if(!initGPU())initCPU();
   updatePhoneLayout();resize();fitTopHud();start();
 })();

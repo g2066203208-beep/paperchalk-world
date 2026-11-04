@@ -1,0 +1,24 @@
+/* Composition-aware dialogue positioning.
+ * The camera-near heroine lives in the left foreground; narration must not
+ * print across her skirt/legs. Preserve the independently rendered smoke:
+ * no rectangular text plate, gradient backdrop or additional shadow panel.
+ */
+#novel-ui #dialogue,
+#novel-ui #history {
+  left:39cqw;
+  right:12cqw;
+  width:auto;
+  max-width:none;
+}
+#novel-ui #dialogue-text {
+  max-width:100%;
+  text-wrap:pretty;
+}
+@container (max-height:445px) {
+  #novel-ui #dialogue,
+  #novel-ui #history {
+    left:39cqw;
+    right:10cqw;
+    width:auto;
+  }
+}
