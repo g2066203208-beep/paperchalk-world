@@ -160,18 +160,6 @@ $('rig-part-amount').addEventListener('input',event=>{
  if(!state.model||!state.selected)return;
  state.model.idleProfile.parts[state.selected]=Number(event.target.value)/100;
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
- const supported=core.actionNames(state.model);
- actionRow.hidden=supported.length<2;
- actionSelect.replaceChildren();
- for(const action of supported)actionSelect.add(new Option(action.label,action.id));
- if(supported.length){
-  let preferred='';
-  try{preferred=localStorage.getItem('paperchalk-action:'+id+':'+face)||'';}catch(e){}
-  const initial=supported.some(x=>x.id===preferred)?preferred:
-   (state.model.actionProfiles?.default||'combat');
-  actionSelect.value=initial;
-  state.model.actionState={to:initial}; // initial pose immediate, next switches blend
- }
  syncIdle();changed();
 });
 $('rig-quick-save').onclick=async()=>{
@@ -311,6 +299,18 @@ async function activate(openPanel=false){
  if(studio.current!==id||S.side!==face)return;
  state.model=core.project(src,id,face,saved);
  state.model.idleProfile=core.sanitizeIdleProfile(state.model.idleProfile);
+ const supported=core.actionNames(state.model);
+ actionRow.hidden=supported.length<2;
+ actionSelect.replaceChildren();
+ for(const action of supported)actionSelect.add(new Option(action.label,action.id));
+ if(supported.length){
+  let preferred='';
+  try{preferred=localStorage.getItem('paperchalk-action:'+id+':'+face)||'';}catch(e){}
+  const initial=supported.some(x=>x.id===preferred)?preferred:
+   (state.model.actionProfiles?.default||'combat');
+  actionSelect.value=initial;
+  state.model.actionState={to:initial}; // initial pose immediate, next switches blend
+ }
  state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
  state.active=true;state.phase=0;state.playing=true;state.showGuides=false;
  quickPanel.hidden=false;
