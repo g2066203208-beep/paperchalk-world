@@ -8,6 +8,9 @@ on:
       - 'site/characters.catalog.json'
       - 'site/l2d/part-rig.js'
       - 'tests/test_battle_front_studio_browser.js'
+      - 'tests/test_l2d_action_mixer.js'
+      - 'site/l2d/library-player.js'
+      - 'scripts/build_l2d_library.py'
       - '.github/workflows/battle-front-psd.yml'
   workflow_dispatch:
 permissions:
@@ -21,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check stable battle PSD Z order and action blending
+        run: node tests/test_l2d_action_mixer.js
       - name: Install Playwright Chromium
         run: |
           npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
