@@ -91,7 +91,7 @@ const URL=process.env.BATTLE_FRONT_TEST_URL||
   await page.screenshot({path:'artifacts/battle-front/01-auto-loaded-24-layers.png'});
   assert.ok(!exceptions.length,'browser exceptions: '+exceptions.join(' | '));
   // Switch to the original protagonist: the battle slot must NOT overwrite her.
-  await page.locator('#studio-character').selectOption('protagonist');
+  await page.locator('#studio-character-tree .character-family.active .character-family-children button').first().click();
   await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',
    null,{timeout:30000});
   assert.equal(await page.locator('#studio-battle-import-row').isVisible(),false);
