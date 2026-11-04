@@ -940,7 +940,12 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
 // Unified foreground masks. The source PNG is NEVER modified; a local alpha
 // image decides which pixels to replay over a particular target layer.
 // Runtime caches are private and non-persistent; serialized models stay JSON.
-const maskSourceCache=new WeakMap(),maskedArtCache=new WeakMap();
+const maskSourceCache=new WeakMap();
+let maskedArtCache=new WeakMap();
+// Refresh the derived foreground texture whenever the user edits the ORIGINAL
+// source art. Mask PNG and original PNG remain stored independently.
+if(typeof window!=='undefined')window.addEventListener(
+ 'paperchalk:art-dirty',()=>{maskedArtCache=new WeakMap()});
 function sourceMaskCanvas(entry,source){
  if(!entry||!source?.canvas)return null;
  const w=source.canvas.width,h=source.canvas.height;
