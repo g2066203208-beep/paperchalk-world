@@ -26,7 +26,7 @@ jobs:
       - run: python3 scripts/build_v4_assets.py
       - run: python3 scripts/build_protagonist_part_rig.py
       - run: python3 scripts/build_char002_psd_rig.py
-      - run: python3 -m unittest tests/test_protagonist_unified.py -v
+      - run: python3 tests/test_protagonist_unified.py
       - run: python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
@@ -73,6 +73,65 @@ jobs:
                   'eight quick sliders include the breathing chest control');
                 assert.equal(await page.locator('#rig-quick-sliders input').count(),8);
                 assert.equal(await page.locator('#rig-quick-save').isVisible(),true);
+
+                // Standing is the single canonical heroine base; battle only
+                // replaces the arm textures and weapon INSIDE the same model.
+                assert.equal(await page.locator('#rig-character-action').isVisible(),true);
+                assert.deepEqual(await page.locator('#rig-character-action option').evaluateAll(
+                  nodes=>nodes.map(n=>n.value)),['idle','combat']);
+                assert.equal(await page.locator('#rig-character-action').inputValue(),'idle');
+                await page.evaluate(()=>window.__heroineOriginalModel=window.PaperchalkPartRigStudio.state.model);
+                const standingState=await page.evaluate(()=>{
+                  const m=window.PaperchalkPartRigStudio.state.model,
+                    core=window.PaperchalkPartRigCore;
+                  return {id:m.characterId,parts:Object.keys(m.parts).length,
+                    arms:core.actionPart(m,'sleeves_and_hands').opacity,
+                    axe:core.actionPart(m,'battle_axe').opacity,
+                    head:JSON.stringify(m.parts.face),
+                    body:JSON.stringify(m.parts.jacket),
+                    skirt:JSON.stringify(m.parts.skirt),
+                    legs:JSON.stringify(m.parts.legs),
+                    shoes:JSON.stringify(m.parts.shoes)};
+                });
+                assert.equal(standingState.id,'protagonist');
+                assert.equal(standingState.parts,20);
+                assert.equal(standingState.arms,1);
+                assert.equal(standingState.axe,0);
+                if(vp.width>500)await page.screenshot({
+                  path:'artifacts/character-editor/HEROINE-ORIGINAL-STANDING-BASE.png',
+                  fullPage:false});
+                await page.locator('#rig-character-action').selectOption('combat');
+                await page.waitForFunction(()=>{
+                  const m=window.PaperchalkPartRigStudio?.state?.model,
+                    core=window.PaperchalkPartRigCore;
+                  return m&&core.actionPart(m,'sleeves_and_hands').opacity<.02&&
+                    core.actionPart(m,'battle_axe').opacity>.98;
+                },null,{timeout:5000});
+                const combatState=await page.evaluate(()=>{
+                  const m=window.PaperchalkPartRigStudio.state.model,
+                    core=window.PaperchalkPartRigCore;
+                  return {sameModel:m===window.__heroineOriginalModel,
+                    arms:core.actionPart(m,'sleeves_and_hands').opacity,
+                    axe:core.actionPart(m,'battle_axe').opacity,
+                    battleL:core.actionPart(m,'battle_handwear_l').opacity,
+                    battleR:core.actionPart(m,'battle_handwear_r').opacity,
+                    head:JSON.stringify(m.parts.face),body:JSON.stringify(m.parts.jacket),
+                    skirt:JSON.stringify(m.parts.skirt),legs:JSON.stringify(m.parts.legs),
+                    shoes:JSON.stringify(m.parts.shoes)};
+                });
+                assert.equal(combatState.sameModel,true);
+                for(const k of ['head','body','skirt','legs','shoes'])
+                  assert.equal(combatState[k],standingState[k],k+' must not switch mesh');
+                assert.ok(combatState.arms<.02&&combatState.axe>.98&&
+                  combatState.battleL>.98&&combatState.battleR>.98);
+                if(vp.width>500)await page.screenshot({
+                  path:'artifacts/character-editor/HEROINE-COMBAT-SWAPPED-HANDS-ONLY.png',
+                  fullPage:false});
+                await page.locator('#rig-character-action').selectOption('idle');
+                await page.waitForFunction(()=>window.PaperchalkPartRigCore.actionPart(
+                  window.PaperchalkPartRigStudio.state.model,'sleeves_and_hands').opacity>.98,
+                  null,{timeout:5000});
+
                 await page.evaluate(()=>{
                   window.__partRigArtBackup=window.characterEditor.S.layers.front
                     .find(p=>p.partId==='jacket').canvas.toDataURL();
