@@ -143,8 +143,8 @@ async function assign(target,id,face='front',save=true){
   await checked(window.PaperchalkL2D.refresh(target));
  }
  img.hidden=false;
- // Unmount previously installed authored mesh before choosing a new actor.
- window.PaperchalkL2DLibrary?.detach(target);
+ // Keep the old authored PartRig visible while fetching the new model.
+ // The library player will dispose it atomically AFTER the new PNGs decode.
  const rig=await checked(get('l2d:'+id+':'+face))||{amplitude:.55,period:4.8,softness:1};
  window.PaperchalkL2D.setProfile(target,rig);
  window.PaperchalkL2D.markAnimation(target,!!c.animated?.[face]);
@@ -168,6 +168,9 @@ async function assign(target,id,face='front',save=true){
  const installedV4=deployedClip?.url||(id==='protagonist'?'./assets/l2d/v4/'+face+'.webp':'');
  const source=(clip?.data?.startsWith('data:image/webp;base64,')?clip.data:installedV4);
  const shape=clip?.crop||deployedClip?.crop||{x:351,y:9,w:335,h:1013};
+ // Non-library modes own their own rendering driver; let the previous
+ // library complete its final frame right up to this selected handoff.
+ if(!publishedRig)window.PaperchalkL2DLibrary?.detach(target);
  if(usesPsdRig&&!preferPublishedArtMesh){
   // Genuine Photoshop layers without an authoritative PartRig take precedence over the old baked
   // flat-PNG WebP. Each image has a separate source texture and bone.
@@ -194,6 +197,7 @@ async function assign(target,id,face='front',save=true){
    // corrupted or unavailable, rather than removing the heroine from scene.
    if(id!=='protagonist'||!source)throw error;
    console.warn('[L2D] Original approved animation retained: independent character rig unavailable',error);
+   window.PaperchalkL2DLibrary?.detach(target);
    await checked(window.PaperchalkL2D.setAnimationSource(target,source,shape));
    actor.root.dataset.l2dEdition='V4-fallback';
    actor.root.dataset.l2dBreath='disabled';
