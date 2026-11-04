@@ -23,7 +23,7 @@ body.easy-mode .hudbottom{display:none}
 body.easy-mode .hud{top:62px;max-width:65%;font-size:10px;opacity:.88}
 body.easy-mode .layout{grid-template-columns:245px minmax(0,1fr) 242px;gap:8px}
 body.easy-mode aside{padding:11px}
-body.easy-mode .left>section:first-child{display:none}
+body.easy-mode .left>section:has(#frontTab){display:none}
 body.easy-mode #easy-layer-more{margin-top:9px}
 body.easy-mode #studio-library{padding:7px 12px;margin:6px 8px;border-color:#2e4e69}
 body.easy-mode #studio-library>.studio-row:first-child{margin:0}
@@ -107,4 +107,19 @@ body.easy-mode :is(button,summary,select,input):focus-visible{outline:2px solid 
  body.easy-mode #easy-quickbar button{white-space:normal;min-width:0;min-height:38px;padding:5px 2px;font-size:10px;line-height:1.2}
  body.easy-mode #easy-quickbar #easy-edit,
  body.easy-mode #easy-quickbar #easy-animate{font-size:10px}
+}
+
+/* Large-screen refinements: keep feet visible and never cover character face. */
+@media(min-width:711px){
+ body.studio-page.easy-mode #easy-quickbar{
+  left:8px!important;right:auto!important;top:50%!important;bottom:auto!important;
+  transform:translateY(-50%)!important;display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  width:154px!important;max-width:154px!important;gap:5px!important;
+  max-height:calc(100% - 26px)!important;overflow-y:auto!important;overflow-x:hidden!important;
+ }
+ body.studio-page.easy-mode #easy-quickbar button{
+  min-width:0!important;padding:7px 3px!important;white-space:normal!important;
+  font-size:11px!important;min-height:35px!important
+ }
 }
