@@ -112,14 +112,21 @@ style.textContent=[
  '@media(max-width:710px){body.studio-page{display:block;height:auto;min-height:100dvh;overflow:visible}body.studio-page>#studio-library{max-height:none;overflow:visible}.studio-row select{max-width:100%;flex:1}body.studio-page .layout{display:flex;flex-direction:column;height:auto;min-height:0;overflow:visible}body.studio-page .stage{height:62dvh;min-height:400px}}'
 ].join('\n');
 document.head.append(style);
-document.querySelector('header').after(section);
+// Files, less common selectors and import utilities belong with the person
+// library, not as a second full-width toolbar above the canvas.
+document.querySelector('.layout .left')?.append(section);
+const returnToGame=document.getElementById('studio-back');
+if(returnToGame){
+ returnToGame.title='返回游戏';
+ document.querySelector('body>header .actions')?.prepend(returnToGame);
+}
 document.body.classList.add('studio-page');
 // Mobile keeps the character preview fixed and exposes one focused inspector
 // at a time; no kilometre-long stacked list of unrelated advanced controls.
 const mobileTabs=document.createElement('nav');
 mobileTabs.id='mobile-studio-tabs';mobileTabs.setAttribute('aria-label','移动端工作区');
 mobileTabs.innerHTML='<button type="button" data-studio-pane="characters">人物</button><button type="button" data-studio-pane="layers">图层</button><button type="button" data-studio-pane="motion">动画</button><button type="button" data-studio-pane="paint">绘画</button>';
-section.after(mobileTabs);
+document.querySelector('body>header')?.after(mobileTabs);
 function setMobilePane(name){
  if(!['characters','layers','motion','paint'].includes(name))name='layers';
  document.body.dataset.studioPane=name;
