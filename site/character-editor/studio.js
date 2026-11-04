@@ -53,8 +53,12 @@ const female3OriginalLayerIds=["back_hair","footwear","legwear","neck","topwear"
 const hasFemale3Psd=ids=>Array.isArray(ids)&&ids.length===21&&female3OriginalLayerIds.every((key,i)=>ids[i]===key);
 const female3CoatLayerIds=(()=>{const ids=[...female3OriginalLayerIds],i=ids.indexOf('topwear')+1;
  ids.splice(i,0,'coat_left','coat_right');return ids})();
-const hasFemale3CoatRig=ids=>Array.isArray(ids)&&ids.length===23&&
- female3CoatLayerIds.every((key,i)=>ids[i]===key);
+// A rig has the correct parts regardless of its author-edited Z order.
+// Previously equality against the original array classified EVERY reorder as
+// broken, forcing re-import and permanently deleting the user's Z edits.
+const hasFemale3CoatRig=ids=>Array.isArray(ids)&&
+ ids.length===female3CoatLayerIds.length&&new Set(ids).size===ids.length&&
+ female3CoatLayerIds.every(key=>ids.includes(key));
 const fileURL=file=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(file)});
 const section=document.createElement('section');section.id='studio-library';
 section.innerHTML=[
@@ -891,7 +895,11 @@ async function ensureHostedParts(id){
  const repairFemale3=id==='char-004'&&side==='front'&&
   !hasFemale3CoatRig(currentSource);
  const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
- if(front&&!upgrade&&!needsHeroArms&&(id==='char-002'||back||id===BATTLE_FRONT_ID||heroUnified))return;
+ // Authored CHAR-004 layers are not "broken" merely because the user
+ // moved a mesh forward/backward. Never fetch and replace a valid local stack.
+ if(front&&!upgrade&&!needsHeroArms&&
+    (id==='char-002'||back||id===BATTLE_FRONT_ID||heroUnified||
+      (id==='char-004'&&hasFemale3CoatRig(currentSource))))return;
  message(id==='char-002'?'载入女二 PSD：17 个源层、18 个独立部件（举起的左手已分开）…':'载入真实原位分层…');
  try{
   const source=await hostedParts(id,side);
