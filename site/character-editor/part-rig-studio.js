@@ -641,6 +641,9 @@ async function activate(openPanel=false){
   '原始PSD举起的左手和下垂的右手已独立拆出并分别绑定；调节「双手／手臂」实时查看左手动作。':
   '拖动滑块后点击保存，实时预览不会改变身体站姿。');
  info('新版独立部件骨骼已载入。');
+ // The part tree owns the permanent base Z stack; masks are children of
+ // their ArtMesh and must reappear immediately after model rehydration.
+ ed.renderList();
  ed.render();
 }
 function toggleIdle(){
