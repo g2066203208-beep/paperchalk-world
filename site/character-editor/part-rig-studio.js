@@ -1342,10 +1342,20 @@ window.addEventListener('paperchalk:studio-character-loaded',()=>{
  state.drag=null;state.fitDrag=null;state.fitMode=false;state.dirty=false;quickPanel.hidden=true;actionRow.hidden=true;
  setInspectorOpen(false);
 });
-window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
- // New independent mesh is the default whenever genuine component art exists.
- if(parts().length)activate(true).catch(e=>info('独立 L2D 初始化失败：'+e.message));
-});
+// These scripts load in order, but the catalog and PNG fetches are async.
+// A fast cached page can finish character loading BEFORE the rig editor
+// registers its event listener.  Catch up on boot as well as future changes.
+let autoActivation=null;
+function ensureReadyRig(){
+ if(state.active||!studio.current||!parts().length||autoActivation)return;
+ autoActivation=activate(true).catch(e=>{
+  info('独立 L2D 初始化失败：'+e.message);
+  const notice=$('studio-status');
+  if(notice)notice.textContent='L2D 骨骼自动加载失败：'+e.message;
+ }).finally(()=>{autoActivation=null});
+}
+window.addEventListener('paperchalk:studio-ready-to-edit',ensureReadyRig);
+queueMicrotask(ensureReadyRig);
 function getMaskRelations(source){
  return (state.model?.occlusionMasks||[]).map((entry,index)=>({
   index,source:entry.source,direction:entry.direction==='behind'?'behind':'front',
