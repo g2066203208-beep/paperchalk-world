@@ -76,6 +76,9 @@ function refreshList(){
   const parent=document.createElement('optgroup');
   parent.label=catalog.get(family)?.label||family;
   for(const c of variants){
+   // The old full battle PSD is retained only for SOURCE inspection inside
+   // the Studio; the playable heroine uses the unified canonical part swap.
+   if(c.id==='protagonist-battle-front')continue;
    const modes=Object.values(c.l2dModule||{}).map(x=>x.renderer);
    const kind=modes.includes('part-mesh')?' · 网格 L2D':modes.includes('v4-webp')?' · V4 L2D':'';
    const label=c.id===family?'基本立绘':c.variantCategory==='combat'?'战斗动作':(c.label||c.id);
