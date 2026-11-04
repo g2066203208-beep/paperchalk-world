@@ -533,6 +533,8 @@ jobs:
                   assert.equal(audit.id,item.id);
                   assert.equal(audit.parts,item.parts);
                   if(item.id==='char-004'){
+                    assert.equal(audit.visible,21,
+                      '21 authentic PSD parts only: no leftover empty starter layer');
                     const expected=["back_hair","footwear","legwear","neck","topwear","eyebrow_r","ears_r","ears_l","face","nose","mouth","handwear_l","eyebrow_l","eyelash_r","eyelash_l","eyewhite_r","eyewhite_l","irides_l","irides_r","handwear_r","front_hair"];
                     const fidelity=await p.evaluate(async()=>{
                       const m=window.PaperchalkPartRigStudio.state.model;
