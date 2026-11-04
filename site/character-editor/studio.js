@@ -144,7 +144,7 @@ const head=document.querySelector('body>header');
 if(head&&typeof ResizeObserver==='function'){
  new ResizeObserver(()=>document.documentElement.style.setProperty('--studio-header-height',head.getBoundingClientRect().height+'px')).observe(head);
 }
-setMobilePane('layers');
+setMobilePane('characters');
 const selector=$('studio-character'),direction=$('studio-side');
 // Tree has a single PERSON root. Actions and outfits are descendants of that
 // person, never competing full-body actors in the primary navigation.
@@ -176,8 +176,8 @@ workspaceCSS.textContent=`
  body.studio-page .layout{gap:10px}
  body.studio-page .left,body.studio-page .right{scrollbar-width:thin;scrollbar-color:#415c70 transparent}
  @media(min-width:711px){
-  body.studio-page #studio-character-tree{max-height:200px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
-  body.studio-page .left .layerlist{max-height:52dvh;overflow-y:auto;scrollbar-width:thin}
+  body.studio-page #studio-character-tree{min-height:270px;max-height:49dvh;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  body.studio-page .left .layerlist{max-height:30dvh;overflow-y:auto;scrollbar-width:thin}
  }
  body.studio-page .stage{box-shadow:0 7px 24px #0004;border-color:#3b5568}
  body.studio-page .stage-toolbar{
@@ -197,7 +197,7 @@ workspaceCSS.textContent=`
  body.studio-page .left>.section{margin-bottom:10px}
  #mobile-studio-tabs{display:none}
  @media(min-width:1121px){
-  body.studio-page .layout{grid-template-columns:270px minmax(0,1fr) 305px}
+  body.studio-page .layout{grid-template-columns:minmax(320px,26vw) minmax(0,1fr) minmax(260px,22vw)}
   body.studio-page.rig-authoring .layout{grid-template-columns:250px minmax(0,1fr) 340px}
  }
  @media(max-width:710px){
