@@ -8,6 +8,9 @@ on:
       - 'tests/test_l2d_person_tree_professional_browser.js'
       - 'tests/test_l2d_all_people_clean_tree_browser.js'
       - 'site/l2d/part-rig.js'
+      - 'scripts/bind_female06_pants.py'
+      - 'tests/test_female06_pants_skin.cjs'
+      - 'tests/test_female06_pants_wear_browser.js'
       - 'scripts/build_protagonist_part_rig.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_protagonist_unified.py'
@@ -52,6 +55,7 @@ jobs:
       - run: python3 tests/test_protagonist_unified.py
       - run: python3 scripts/build_character_catalog.py
       - run: node tests/test_l2d_person_tree_model.cjs
+      - run: node tests/test_female06_pants_skin.cjs
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - name: Check syntax, desktop drawing and phone layout
@@ -589,6 +593,7 @@ jobs:
           node tests/test_l2d_studio_rework_browser.js
           node tests/test_l2d_person_tree_professional_browser.js
           node tests/test_l2d_all_people_clean_tree_browser.js
+          node tests/test_female06_pants_wear_browser.js
           node tests/test_l2d_person_tree_delete_browser.js
           node tests/test_l2d_heroine_performance_browser.js
           node tests/test_l2d_occlusion_masks_browser.js
