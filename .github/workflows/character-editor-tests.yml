@@ -79,12 +79,13 @@ jobs:
                 });
                 await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:10000});
                 if(vp.width<500)await page.locator('[data-studio-pane="motion"]').click();
-                assert.equal(await page.locator('#part-rig-panel').isVisible(),false,
-                  'new mesh is active by default without opening a cluttered settings panel');
+                assert.equal(await page.locator('#part-rig-panel').isVisible(),true,
+                  'one workspace always shows the real rig inspector in the animation pane');
                 assert.equal(await page.locator('#rig-quick-panel').isVisible(),true,
                   'eight quick sliders include the breathing chest control');
                 assert.equal(await page.locator('#rig-quick-sliders input').count(),8);
-                assert.equal(await page.locator('#rig-quick-save').isVisible(),true);
+                assert.equal(await page.locator('#rig-quick-save').isVisible(),false,
+                  'one save action, never a second save button');
 
                 // Standing is the single canonical heroine base; battle only
                 // replaces the arm textures and weapon INSIDE the same model.
@@ -150,21 +151,11 @@ jobs:
                 });
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),false,
                   'real source parts must use the new mesh, not the legacy V4 clip');
-                // Real user-facing entry must be visible, reachable and active
-                // in default EASY mode without hunting for the canvas toolbar.
-                assert.equal(await page.locator('#idle-open').isVisible(),true,'idle entry must be prominently visible');
-                const idleButton=await page.locator('#idle-open').boundingBox();
-                console.log('IDLE ENTRY VISIBLE RECT',JSON.stringify({viewport:vp,button:idleButton,
-                  dimensions:await page.evaluate(()=>({innerWidth:innerWidth,
-                    innerHeight:innerHeight,scrollWidth:document.documentElement.scrollWidth,
-                    css:getComputedStyle(document.querySelector('#idle-open')).cssText}))}));
-                assert.ok(idleButton.width>110&&idleButton.x>=0&&idleButton.y>=0&&
-                  idleButton.x+idleButton.width<=vp.width+1,'idle entry must fit the visible viewport');
-                assert.equal(await page.locator('#l2d-strength').isVisible(),false,
-                  'deprecated and misleading breathing slider must be hidden');
-                await page.locator('#idle-open').click();
-                await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:10000});
+                // One editor only: no separate expert/simple or open-bones mode.
+                assert.equal(await page.locator('#easy-mode-switch').count(),0);
+                assert.equal(await page.locator('#idle-open').isVisible(),false);
                 assert.ok(await page.locator('#part-rig-panel').isVisible());
+                assert.equal(await page.locator('#l2d-strength').isVisible(),false);
                 // Heroine portrait must NOT draw the selected mesh and axes by default.
                 assert.equal(await page.locator('#rig-guides').isChecked(),false);
                 assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.showGuides),false);
@@ -193,7 +184,7 @@ jobs:
                 console.log('OPAQUE TRIANGLE SEAM PIXELS',vp.width,seamPixels);
                 assert.ok(seamPixels<50,
                   'joint-warped opaque hair cannot develop visible mesh raster cracks');
-                assert.equal(await page.locator('#idle-open').getAttribute('aria-expanded'),'true');
+                assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.panelOpen),true);
                 assert.equal(await page.locator('[data-quick="fringe"]').isVisible(),true);
                 assert.equal(await page.locator('[data-quick="rear"]').isVisible(),true);
                 assert.equal(await page.locator('[data-quick="skirt"]').isVisible(),true);
@@ -252,7 +243,7 @@ jobs:
                 });
                 assert.deepEqual(quickValues,[9,11,12.5,2.3,3.1,2.7,2.35,2.1,2.1,2.1],
                   'quick sliders must change the SAME model used by the game renderer');
-                await page.locator('#rig-quick-save').click();
+                await page.locator('#btnSave').click();
                 await page.waitForFunction(async()=>{
                   const r=await window.PaperchalkStudio.readPartRig('protagonist','front');
                   return r?.idleProfile?.parts.front_hair===9&&r?.idleProfile?.parts.skirt===12.5&&
@@ -336,15 +327,14 @@ jobs:
                   'right arm must remain nearly unchanged when only left elbow is edited');
                 assert.equal(armIsolation.skirt,6,'skirt has three separate two-bone pleat chains');
                 assert.equal(armIsolation.jacket,4,'jacket left and right panels have independent chains');
-                await page.locator('#rig-save').click();
+                await page.locator('#btnSave').click();
                 await page.waitForFunction(async()=>{
                   const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
                   return saved?.parts?.rear_hair?.motion?.x===35;
                 },null,{timeout:10000});
-                await page.locator('#rig-close').click();
-                assert.equal(await page.locator('#part-rig-panel').isVisible(),false);
+                assert.equal(await page.locator('#part-rig-panel').isVisible(),true);
                 assert.equal(await page.evaluate(()=>window.PaperchalkPartRigStudio.state.active),true,
-                  'closing settings must not stop or revert the new mesh animation');
+                  'inspector remains docked without interrupting the mesh animation');
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),false);
                 assert.equal(await page.evaluate(()=>
                   window.characterEditor.S.layers.front.find(p=>p.partId==='jacket').canvas.toDataURL()===
@@ -353,9 +343,9 @@ jobs:
                 await directPage.goto('http://127.0.0.1:8123/character-editor/?character=protagonist&side=front&idle=1',
                   {waitUntil:'load'});
                 await directPage.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:30000});
-                assert.equal(await directPage.locator('#part-rig-panel').isVisible(),false,
-                  'all entry URLs default to the same uncluttered new-animation canvas');
-                await directPage.locator('#idle-open').click();
+                if(vp.width<500)await directPage.locator('[data-studio-pane="motion"]').click();
+                assert.equal(await directPage.locator('#part-rig-panel').isVisible(),true,
+                  'all URLs expose the same inspector within one workspace');
                 assert.equal(await directPage.locator('[data-quick="fringe"]').isVisible(),true);
                 assert.equal(await directPage.locator('[data-quick="breath"]').isVisible(),true);
                 await directPage.screenshot({path:'artifacts/character-editor/'+vp.width+'-DIRECT-URL-OPEN.png'});
@@ -375,17 +365,15 @@ jobs:
                 assert.ok(blinkMath.open<.001&&blinkMath.closed>.99&&blinkMath.reopened<.001,
                   'blink must close and reopen fully in one natural short cycle');
                 assert.ok(await page.locator('#easy-quickbar').isVisible(),'large-screen and phone quick edit tools must exist');
-                assert.ok(await page.locator('body.easy-mode').count()===1,'simple mode is the default');
+                assert.ok(await page.locator('body.easy-mode').count()===1,'single streamlined workspace');
+                assert.equal(await page.locator('body.expert-mode').count(),0);
                 assert.ok(await page.locator('#easy-save-note').textContent().then(x=>x.includes('浏览器')),'save must disclose browser-only persistence');
-                await page.locator('#easy-mode-switch').click();
-                assert.ok(await page.locator('body.expert-mode').count()===1,'expert mode reveals full controls');
-                await page.locator('#easy-mode-switch').click();
-                assert.ok(await page.locator('body.easy-mode').count()===1,'simple mode can be restored');
+                assert.equal(await page.locator('#easy-mode-switch').count(),0,'no mode switch button');
+                assert.equal(await page.locator('#main-preview').isVisible(),false,'no static-edit mode switch');
                 assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),true);
-                await page.locator('#main-preview').click();
-                assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),false,'precision mode shows original coordinates');
-                await page.locator('#main-preview').click();
-                assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),true,'live main viewport restored');
+                await page.evaluate(()=>window.PaperchalkEasyEditor.editPart());
+                assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),true,
+                  'selecting a part must keep the same live animation surface');
                 await page.locator('#main-expand').click();
                 assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.expanded),true);
                 const large=await page.locator('#stage').boundingBox();
