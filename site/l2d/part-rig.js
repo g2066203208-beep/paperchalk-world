@@ -944,7 +944,7 @@ const maskSourceCache=new WeakMap();
 let maskedArtCache=new WeakMap();
 // Refresh the derived foreground texture whenever the user edits the ORIGINAL
 // source art. Mask PNG and original PNG remain stored independently.
-if(typeof window!=='undefined')window.addEventListener(
+if(typeof window!=='undefined'&&typeof window.addEventListener==='function')window.addEventListener(
  'paperchalk:art-dirty',()=>{maskedArtCache=new WeakMap()});
 function sourceMaskCanvas(entry,source){
  if(!entry||!source?.canvas)return null;
