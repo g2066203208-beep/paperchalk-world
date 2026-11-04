@@ -1000,9 +1000,13 @@ async function importComponentArchive(file){
  }
  message('读取原始分层工程所有部件…');
  const zipped=await zipFiles(file);
- const seethrough=await convertSeethroughArchive(zipped);
- if(seethrough&&currentId!=='male2')throw Error('此文件是男二 SeeThrough 拆分，请先选择人物树里的「男二」');
- const files=seethrough||zipped;
+ const packagedMale2=zipped.get('male2/front-rig-editable-parts.zip')&&
+  zipped.get('male2/front.rig.json')&&zipped.get('male2/module.json');
+ const seethrough=packagedMale2?null:await convertSeethroughArchive(zipped);
+ if((seethrough||packagedMale2)&&currentId!=='male2')throw Error('此文件是男二拆分，请先选择人物树里的「男二」');
+ const files=packagedMale2?
+  await zipBytes(zipped.get('male2/front-rig-editable-parts.zip')):
+  (seethrough||zipped);
  if(currentId===BATTLE_FRONT_ID){
   const manifest=files.get('layers.json');
   if(!manifest)throw Error('战斗正面必须使用含 layers.json 的真实原位分层 ZIP');
@@ -1013,13 +1017,20 @@ async function importComponentArchive(file){
    throw Error('工程身份或图层不匹配：需要女主战斗正面 24 层独立工程');
  }
  await importComponentFiles(files);
- if(seethrough){
+ if(packagedMale2){
+  const binding=JSON.parse(new TextDecoder().decode(zipped.get('male2/front.rig.json')));
+  if(binding.format!=='paperchalk-part-rig-v1'||binding.characterId!=='male2'||
+     binding.face!=='front'||Object.keys(binding.parts||{}).length!==16)
+   throw Error('男二模块骨骼数据不匹配，拒绝使用损坏的绑定');
+  await storePartRig(binding);
+ }
+ if(seethrough||packagedMale2){
   // No second character and no fake static mesh. PartRig will build a new
   // per-source skeleton for the SAME male2 family as soon as this is emitted.
   window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{
    detail:{id:currentId,side:'front'}
   }));
-  message('✓ 男二 SeeThrough 真拆分已装载：16个有效原始部件，8个空分类已跳过。骨骼画布可实时预览；双手仍共用一张原始 PNG。');
+  message('✓ 男二真实分层已装载：16个源部件、骨骼与动态预览；8个空分类不参与动画。双手仍共用一张原始 PNG。');
  }
  if(currentId===BATTLE_FRONT_ID){
   const bytes=files.get('front.rig.json');
