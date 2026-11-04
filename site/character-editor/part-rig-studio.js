@@ -4,7 +4,7 @@
 const ed=window.characterEditor,core=window.PaperchalkPartRigCore,studio=window.PaperchalkStudio;
 if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
-const state={active:false,panelOpen:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false};
+const state={active:false,panelOpen:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false,fitMode:false,fitDrag:null};
 const panel=document.createElement('section');panel.id='part-rig-panel';panel.hidden=true;
 panel.innerHTML=`<header class="rig-h"><strong>部件与骨骼</strong><button id="rig-close" type="button" hidden aria-hidden="true">关闭</button></header>
 <p id="rig-source">直接拖动画布中的关节，或修改所选部件的高级参数。</p>
@@ -34,7 +34,37 @@ for(const id of ['rig-save','rig-quick-save','rig-pause','rig-close']){
 const maskPanel=document.createElement('section');
 maskPanel.id='rig-mask-panel';
 maskPanel.innerHTML="<div class=\"rig-mask-head\"><strong>局部遮挡</strong><span>选部件 · 选对象 · 涂抹</span></div><div class=\"rig-mask-source\">当前部件：<output id=\"rig-mask-source\">未选择</output></div><div class=\"rig-mask-object\"><label>相对对象 <select id=\"rig-mask-target\" aria-label=\"选定需要遮挡的对象\"></select></label><button id=\"rig-mask-more\" type=\"button\" title=\"一块蒙版可以同时对多个部件生效\">＋ 多选</button></div><div id=\"rig-mask-multiple\" hidden><div id=\"rig-mask-target-list\" class=\"rig-mask-target-list\"></div></div><div class=\"rig-mask-directions\" role=\"group\" aria-label=\"画出的区域相对对象的位置\"><button type=\"button\" id=\"rig-mask-front\" aria-pressed=\"true\">在对象前面</button><button type=\"button\" id=\"rig-mask-back\" aria-pressed=\"false\">在对象后面</button></div><div class=\"rig-mask-actions\"><button type=\"button\" id=\"rig-mask-paint\">✎ 涂抹</button><button type=\"button\" id=\"rig-mask-erase\">橡皮擦</button><button type=\"button\" id=\"rig-mask-toggle\" hidden>完成</button></div><label class=\"rig-mask-size\">大小 <input id=\"rig-mask-size\" type=\"range\" min=\"2\" max=\"96\" value=\"12\" step=\"2\"><output id=\"rig-mask-size-value\">12</output></label><div class=\"rig-mask-actions rig-mask-secondary\"><button type=\"button\" id=\"rig-mask-undo\">撤销</button><button type=\"button\" id=\"rig-mask-redo\">重做</button><button type=\"button\" id=\"rig-mask-clear\">清空</button></div><details id=\"rig-mask-relations\"><summary>已做的遮挡 <span id=\"rig-mask-relation-count\"></span></summary><div id=\"rig-mask-relation-list\"></div></details><small id=\"rig-mask-hint\">只改选中的局部，不修改原图。</small><small id=\"rig-mask-conflict\" hidden role=\"status\"></small>";
+
 panel.querySelector('.rig-part-amount').before(maskPanel);
+const fitPanel=document.createElement('section');
+fitPanel.id='rig-fit-panel';
+fitPanel.innerHTML=`
+<div class="rig-fit-heading"><strong>部件尺寸与位置</strong><span>非破坏性 · 保留骨骼绑定</span></div>
+<div class="rig-fit-grid">
+<label>宽度 <input id="rig-fit-width" data-fit="scaleX" type="number" inputmode="decimal" min="25" max="400" step="1" value="100"> %</label>
+<label>高度 <input id="rig-fit-height" data-fit="scaleY" type="number" inputmode="decimal" min="25" max="400" step="1" value="100"> %</label>
+<label>水平偏移 <input id="rig-fit-x" data-fit="offsetX" type="number" inputmode="decimal" min="-1024" max="1024" step="1" value="0"> px</label>
+<label>垂直偏移 <input id="rig-fit-y" data-fit="offsetY" type="number" inputmode="decimal" min="-1024" max="1024" step="1" value="0"> px</label>
+</div>
+<label class="rig-fit-lock"><input id="rig-fit-lock" type="checkbox" checked> 等比缩放（解除后可分别调整宽高）</label>
+<div class="rig-fit-actions"><button type="button" id="rig-fit-handles" aria-pressed="false">⬚ 画布拖动／缩放</button><button type="button" id="rig-fit-reset">重置尺寸位置</button></div>
+<small id="rig-fit-help">先选部件；调整宽高、左右上下位置，或者打开画布手柄。原始 PNG 不变，骨骼/蒙版自动跟随。右上角保存到游戏。</small>`;
+panel.querySelector('.rig-part-amount').before(fitPanel);
+const fitCSS=document.createElement('style');
+fitCSS.textContent=`
+#rig-fit-panel{padding:10px;margin:8px 0;border:1px solid #41677b;border-radius:9px;background:#172734}
+.rig-fit-heading{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;font-size:12px}
+.rig-fit-heading span{font-size:10px;color:#a8c2d0}
+.rig-fit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.rig-fit-grid label{font-size:11px;color:#c9daea;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.rig-fit-grid input{min-width:0;max-width:100%;width:80px;padding:6px;text-align:right;font-variant-numeric:tabular-nums}
+.rig-fit-lock{display:flex;gap:6px;align-items:center;font-size:11px;margin:8px 0}
+.rig-fit-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px}
+.rig-fit-actions button{padding:7px 5px;white-space:normal;min-height:38px;font-size:11px}
+#rig-fit-handles[aria-pressed="true"]{background:#21536e;border-color:#7cd0f4}
+#rig-fit-help{display:block;font-size:10px;line-height:1.55;color:#a9c4d4;margin-top:7px}
+`;
+document.head.append(fitCSS);
 const maskState={enabled:false,erase:false,direction:'front',targets:new Set(),
  pointer:null,touches:new Map(),blockedTouches:new Set(),pinch:null,
  restorePlaying:null,history:[],redo:[],editingEntry:null};
@@ -445,6 +475,51 @@ const parts=()=>S.layers[S.side].filter(p=>p.sourcePart&&p.canvas);
 const key=p=>String(p.partId||p.name);
 const current=()=>state.model?.parts[state.selected];
 const currentBone=()=>current()?.bones?.find(b=>b.id===state.bone);
+const fitClamp=(v,low,high,defaultValue)=>Number.isFinite(v)?Math.max(low,Math.min(high,v)):defaultValue;
+function fitBounds(part){return core.placedBounds(part)}
+function fitValues(){
+ const p=current(),t=p?.placement||{};
+ const values={scaleX:Math.round((t.scaleX??1)*1000)/10,
+  scaleY:Math.round((t.scaleY??1)*1000)/10,
+  offsetX:Math.round((t.offsetX??0)*100)/100,
+  offsetY:Math.round((t.offsetY??0)*100)/100};
+ for(const [id,key] of [['rig-fit-width','scaleX'],['rig-fit-height','scaleY'],
+  ['rig-fit-x','offsetX'],['rig-fit-y','offsetY']]){
+  const input=$(id);input.disabled=!p;input.value=String(values[key]);
+ }
+ $('rig-fit-reset').disabled=!p;
+ $('rig-fit-handles').disabled=!p;
+}
+fitPanel.addEventListener('change',event=>{
+ const k=event.target?.dataset?.fit,p=current();if(!k||!p)return;
+ const ratio=k.startsWith('scale')?100:1;
+ const currentValue=p.placement[k],v=Number(event.target.value)/ratio;
+ p.placement[k]=fitClamp(v,k.startsWith('scale')?.25:-1024,
+  k.startsWith('scale')?4:1024,currentValue);
+ if(k.startsWith('scale')&&$('rig-fit-lock').checked)
+  p.placement[k==='scaleX'?'scaleY':'scaleX']=p.placement[k];
+ fitValues();changed();
+});
+$('rig-fit-reset').onclick=()=>{
+ const p=current();if(!p)return;
+ p.placement={scaleX:1,scaleY:1,offsetX:0,offsetY:0};
+ fitValues();changed();
+};
+function setFitMode(value){
+ state.fitMode=!!value&&state.active&&!!current();
+ state.fitDrag=null;
+ if(state.fitMode){
+  setMaskMode(false);
+  document.querySelector('#tools [data-tool="select"]')?.click();
+  setPlaying(false);
+ }
+ $('rig-fit-handles').setAttribute('aria-pressed',String(state.fitMode));
+ $('rig-fit-help').textContent=state.fitMode?
+  '拖矩形内部移动部件，拖四角改尺寸。方向键微调1px，Shift+方向键10px；手机可拖四角。':
+  '先选部件；调整宽高、左右上下位置，或打开画布手柄。右上角保存到游戏。';
+ ed.render();
+}
+$('rig-fit-handles').onclick=()=>setFitMode(!state.fitMode);
 const info=s=>{$('rig-status').textContent=s;};
 function values(){
  const p=current();if(!p)return;
@@ -501,10 +576,11 @@ function clearSelection(){
 function select(id){
  if(!state.model?.parts[id])return;
  if(maskState.enabled)setMaskMode(false);
+ state.fitDrag=null;
  state.selected=id;$('rig-part').value=id;
  const ix=S.layers[S.side].findIndex(x=>x.sourcePart&&key(x)===id);
  if(ix>=0){S.sel=ix;ed.renderList();}
- values();refreshBones();syncIdle();updateMaskControls();ed.render();
+ values();fitValues();refreshBones();syncIdle();updateMaskControls();ed.render();
 }
 let saveTimer=null,saveQueue=Promise.resolve(),revision=0;
 async function save(){
@@ -616,7 +692,7 @@ function reconcileSourceParts(removedId=''){
  if(state.selected)selectNode.value=state.selected;
  state.active=true;
  if(!source.length){quickPanel.hidden=true;setInspectorOpen();}
- else{quickPanel.hidden=false;setInspectorOpen();values();refreshBones();syncIdle();updateMaskControls();}
+ else{quickPanel.hidden=false;setInspectorOpen();values();fitValues();refreshBones();syncIdle();updateMaskControls();}
  changed();ed.renderList();ed.render();
 }
 window.addEventListener('paperchalk:studio-part-removed',event=>{
@@ -653,7 +729,7 @@ function setInspectorOpen(){
 async function deactivate(){
  if(maskState.enabled)setMaskMode(false);
  if(state.dirty)await save();
- state.active=false;state.model=null;state.panelOpen=false;state.drag=null;state.bone='';
+ state.active=false;state.model=null;state.panelOpen=false;state.drag=null;state.bone='';state.fitMode=false;state.fitDrag=null;
  quickPanel.hidden=true;
  setInspectorOpen(false);
 }
@@ -701,7 +777,8 @@ async function activate(openPanel=false){
  }
  state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
  state.model.occlusionMasks=Array.isArray(state.model.occlusionMasks)?state.model.occlusionMasks:[];
- state.active=true;state.phase=0;state.playing=true;state.showGuides=false;
+ state.active=true;state.phase=0;state.playing=true;state.showGuides=false;state.fitMode=false;state.fitDrag=null;
+ $('rig-fit-handles').setAttribute('aria-pressed','false');
  quickPanel.hidden=false;
  $('rig-guides').checked=false;
  setInspectorOpen();
@@ -1163,7 +1240,7 @@ function tick(now){
 window.addEventListener('paperchalk:studio-character-loaded',()=>{
  // changeCore flushes the previous rig before emitting this event.
  state.active=false;state.model=null;state.panelOpen=false;state.selected='';
- state.drag=null;state.dirty=false;quickPanel.hidden=true;actionRow.hidden=true;
+ state.drag=null;state.fitDrag=null;state.fitMode=false;state.dirty=false;quickPanel.hidden=true;actionRow.hidden=true;
  setInspectorOpen(false);
 });
 window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
