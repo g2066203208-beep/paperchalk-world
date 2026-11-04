@@ -24,7 +24,7 @@ const library=$('studio-library');
 const second=library?.querySelectorAll('.studio-row')[1];
 if(second){
  const details=el('details',{id:'easy-imports',class:'easy-disclosure'});
- details.append(el('summary',{},'导入人物 / 独立分层'));
+ details.append(el('summary',{},'新增人物 / 备份'));
  const row=el('div',{class:'studio-row'});
  $('studio-v4zip')?.closest('label')?.remove();
  for(const id of ['studio-import','studio-parts-import']){
