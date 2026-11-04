@@ -577,7 +577,11 @@ function reconcileSourceParts(removedId=''){
  }
  const previous={...old,parts:{...backups,...(old.parts||{})}};
  const next=core.project(source,studio.current,S.side,previous);
- next.deletedParts=[...oldDeleted].filter(id=>!present.has(id));
+ // Undo/Redo restores the artwork stack, not a separate rig history.
+ // Remember every removed source from its snapshot, so Redo re-applies the
+ // deletion tombstone and the game cannot resurrect the missing PNG.
+ next.deletedParts=[...new Set([...oldDeleted,...Object.keys(backups),
+  ...Object.keys(old.parts||{})])].filter(id=>!present.has(id));
  next.deletedPartBackups=backups;
  next.layerOrder=ids;
  state.model=next;
