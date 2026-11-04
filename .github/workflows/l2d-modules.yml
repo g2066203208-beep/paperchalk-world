@@ -18,6 +18,7 @@ on:
       - 'tests/test_l2d_library.py'
       - 'tests/test_l2d_idle.js'
       - 'tests/test_battle_front_studio.js'
+      - 'tests/test_protagonist_unified.py'
       - '.github/workflows/l2d-modules.yml'
   pull_request:
     paths:
@@ -57,6 +58,7 @@ jobs:
         run: |
           python3 scripts/build_v4_assets.py
           python3 scripts/build_protagonist_part_rig.py
+          python3 -m unittest tests/test_protagonist_unified.py -v
           python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_scene_catalog.py
       - name: Export ORIGINAL eye/nose/brow PNGs to face-only QA artifact for visual review
@@ -124,6 +126,8 @@ jobs:
           assert not data['char-002'].get('back')
           assert 'char-002-psd-v1' not in data, 'one female-two ID only'
           assert 'char-002-rig-v1' not in data, 'old fake rig is gone'
+          assert 'protagonist-unified-v1' not in data, 'unified front is an internal module, not a new NPC'
+          assert data['protagonist']['l2dModule']['front']['rig']['partCount']==20
           secondary=data['char-002']['l2dModule']['front']
           assert secondary['renderer']=='part-mesh'
           assert secondary['rig']['partCount']==18
@@ -248,8 +252,8 @@ jobs:
             assert.ok(secondary.fringe>0.02&&secondary.rear>0.02&&secondary.hem>0.02,
               'original hair and hem must actually animate');
             assert.equal(secondary.eyes,true);
-            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','front'));
-            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===17,{timeout:20000});
+            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===20,{timeout:20000});
             // Pixel-level regression on ACTUAL protagonist front textures.
             // This catches "bone values animate but brows/nose vanish" and
             // "eye parts exist but no actual eyelid closure".
@@ -393,7 +397,7 @@ jobs:
               return [core.bodyPoseAt(3,m.idleProfile).lean,
                 core.windField(m.parts.front_hair,.15,.95,3,m.idleProfile).x];
             }),[0,0],'the actual game renderer must have no lean or air force');
-            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist-rig-v1','back'));
+            await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','back'));
             await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('player')?.layers?.length===8,{timeout:20000});
             const backBones=await page.evaluate(()=>{
               const p=window.PaperchalkL2DLibrary.get('player').model.parts;
