@@ -124,14 +124,22 @@ function serializeMask(entry){
 function paintMaskLine(a,b){
  const entry=ensureMask(),source=state.model?.parts[state.selected];
  if(!entry||!source||entry._pending)return;
+ // Brush in the actual warped/placed ArtMesh, but write to ORIGINAL
+ // source-local mask pixels. Resizing must never shift painted occlusions.
+ const art=parts().find(p=>key(p)===state.selected);
+ const localA=art?mapToSource(a,art):null,localB=art?mapToSource(b,art):null;
+ if(!localA||!localB)return;
  const g=maskCanvas(entry,source).getContext('2d');
  g.save();
  g.globalCompositeOperation=maskState.erase?'destination-out':'source-over';
  g.strokeStyle='#fff';g.fillStyle='#fff';
- g.lineWidth=Number(maskSize.value);g.lineCap='round';g.lineJoin='round';
- g.beginPath();g.moveTo(a.x-source.x,a.y-source.y);g.lineTo(b.x-source.x,b.y-source.y);g.stroke();
- if(Math.hypot(a.x-b.x,a.y-b.y)<.01){
-  g.beginPath();g.arc(a.x-source.x,a.y-source.y,g.lineWidth/2,0,Math.PI*2);g.fill();
+ const scale=(source.placement?.scaleX||1)+(source.placement?.scaleY||1);
+ g.lineWidth=Number(maskSize.value)*2/Math.max(.5,scale);
+ g.lineCap='round';g.lineJoin='round';
+ g.beginPath();g.moveTo(localA.x-source.x,localA.y-source.y);
+ g.lineTo(localB.x-source.x,localB.y-source.y);g.stroke();
+ if(Math.hypot(localA.x-localB.x,localA.y-localB.y)<.01){
+  g.beginPath();g.arc(localA.x-source.x,localA.y-source.y,g.lineWidth/2,0,Math.PI*2);g.fill();
  }
  g.restore();entry._revision=(entry._revision||0)+1;ed.render();
 }
