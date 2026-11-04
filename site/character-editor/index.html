@@ -181,7 +181,23 @@ function renderList(){
 }
 function syncOpacity(){const p=current();$('opacity').value=p?Math.round(p.opacity*100):100;$('opacityText').textContent=$('opacity').value+'%';}
 function dpr(){return Math.min(devicePixelRatio||1,2)}function resize(){const d=dpr();view.width=Math.round(stage.clientWidth*d);view.height=Math.round(stage.clientHeight*d);render()}
-function fit(){const z=Math.min((stage.clientWidth-32)/W,(stage.clientHeight-32)/H);S.zoom=Math.max(.15,z);S.px=(stage.clientWidth-W*S.zoom)/2;S.py=(stage.clientHeight-H*S.zoom)/2;render()}
+function fit(){
+ // Mobile action bar lives OVER the stage. Use the actual unobstructed
+ // canvas height when framing a whole-body source; otherwise crouching
+ // shoes disappear beneath the toolbar even though the scene has room.
+ const mobile=matchMedia('(max-width:710px)').matches&&
+  !document.body.classList.contains('stage-expanded');
+ const dock=mobile?document.getElementById('easy-quickbar'):null;
+ const dockHeight=dock&&getComputedStyle(dock).display!=='none'
+  ?Math.min(stage.clientHeight*.3,dock.getBoundingClientRect().height+14):0;
+ const usableHeight=Math.max(110,stage.clientHeight-dockHeight-20);
+ const z=Math.min((stage.clientWidth-32)/W,usableHeight/H);
+ S.zoom=Math.max(.10,z);
+ S.px=(stage.clientWidth-W*S.zoom)/2;
+ S.py=mobile?10+(usableHeight-H*S.zoom)/2:
+  (stage.clientHeight-H*S.zoom)/2;
+ render();
+}
 function focus(x,y,z){S.zoom=z;S.px=stage.clientWidth/2-x*z;S.py=stage.clientHeight/2-y*z;render()}
 function world(p){return{x:(p.x-S.px)/S.zoom,y:(p.y-S.py)/S.zoom}}
 function drawChecker(){const step=20;ctx.fillStyle='#29323f';ctx.fillRect(0,0,W,H);ctx.fillStyle='#374354';for(let y=0;y<H;y+=step)for(let x=0;x<W;x+=step)if((x/step+y/step)%2===0)ctx.fillRect(x,y,step,step)}
