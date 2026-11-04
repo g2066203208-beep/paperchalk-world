@@ -337,20 +337,61 @@ body.stage-expanded #mobile-studio-tabs{
 }
 body.stage-expanded #stage .stage-toolbar{z-index:10000!important}
 
-/* Per-part foreground occlusion mask — always in the same rig inspector. */
-#rig-mask-panel{padding:10px;margin:9px 0;border:1px solid #35536c;
- background:#122538;border-radius:10px;display:grid;gap:7px}
-#rig-mask-panel[hidden]{display:none!important}
-#rig-mask-panel .rig-mask-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-#rig-mask-panel .rig-mask-head strong{font-size:13px;color:#dceefd}
-#rig-mask-panel .rig-mask-head button{min-width:88px;background:#21465d;border-color:#417792}
-#rig-mask-panel.painting .rig-mask-head button{background:#215b4b;border-color:#71bca2}
-#rig-mask-panel label{font-size:11px;color:#bcd5e8;display:grid;gap:4px}
-#rig-mask-panel label>output{font-weight:600;color:#eaf6ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#rig-mask-panel select{width:100%;max-width:100%;min-height:36px}
-#rig-mask-panel input[type="range"]{width:100%;margin:2px 0}
-#rig-mask-panel .rig-mask-row{display:flex;gap:6px}
-#rig-mask-panel .rig-mask-row button{flex:1;min-width:0;min-height:34px;padding:5px;font-size:11px}
-#rig-mask-panel .rig-mask-row button[aria-pressed="true"]{background:#305b79;border-color:#76b5df;color:white}
-#rig-mask-panel small{font-size:10px;color:#a7c2d6;line-height:1.35}
+/* Single non-destructive depth brush. Same workspace on phone and desktop. */
+#rig-mask-panel{
+ background:#14283a;border:1px solid #345568;border-radius:10px;
+ padding:10px;margin:9px 0;display:grid;gap:9px;min-width:0
+}
+#rig-mask-panel[hidden],#rig-mask-multiple[hidden]{display:none!important}
+#rig-mask-panel button,#rig-mask-panel select{min-height:37px;border-radius:7px}
+#rig-mask-panel button{font-size:12px}
+#rig-mask-panel .rig-mask-head{display:flex;justify-content:space-between;align-items:center;gap:9px}
+#rig-mask-panel .rig-mask-head strong{color:#e2f5ff;font-size:14px}
+#rig-mask-panel .rig-mask-head span{color:#90acbe;font-size:10px;white-space:nowrap}
+#rig-mask-panel .rig-mask-source{
+ color:#bbd8ec;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+#rig-mask-panel #rig-mask-source{color:#f3faff;font-weight:650}
+#rig-mask-panel .rig-mask-object{display:grid;grid-template-columns:minmax(0,1fr) 72px;gap:6px;align-items:end}
+#rig-mask-panel .rig-mask-object label{display:grid;gap:4px;min-width:0;color:#b4d0df;font-size:11px}
+#rig-mask-panel select{width:100%;min-width:0;padding:5px 8px;font-size:12px}
+#rig-mask-panel #rig-mask-more{padding:3px;font-size:11px;white-space:nowrap}
+#rig-mask-panel .rig-mask-directions{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+#rig-mask-panel .rig-mask-directions button{font-size:12px;min-width:0;padding:8px 3px;background:#1b3346}
+#rig-mask-panel .rig-mask-directions button[aria-pressed="true"]{
+ background:#335a73;border:1px solid #8bcfff;color:#fff;font-weight:700
+}
+#rig-mask-panel #rig-mask-back[aria-pressed="true"]{background:#62452e;border-color:#f5ab67}
+#rig-mask-panel .rig-mask-actions{display:flex;gap:5px;min-width:0}
+#rig-mask-panel .rig-mask-actions>button{
+ flex:1;min-width:0;min-height:38px;padding:6px 4px;font-weight:600
+}
+#rig-mask-panel .rig-mask-actions button[aria-pressed="true"]{
+ background:#256953;border-color:#8dd4a8;color:#f6fff7
+}
+#rig-mask-panel .rig-mask-secondary>button{font-weight:400;min-height:31px;font-size:11px}
+#rig-mask-panel .rig-mask-size{display:flex;align-items:center;gap:7px;color:#acc9db;font-size:11px}
+#rig-mask-panel .rig-mask-size input{flex:1;min-width:0;margin:0}
+#rig-mask-panel .rig-mask-size output{min-width:20px;text-align:right;font-variant-numeric:tabular-nums}
+#rig-mask-panel #rig-mask-hint{display:block;color:#a9c5d8;font-size:11px;line-height:1.3;min-height:14px}
+#rig-mask-panel #rig-mask-relations{border-top:1px solid #355168;padding:5px 0 0}
+#rig-mask-panel #rig-mask-relations>summary{cursor:pointer;font-size:11px;color:#bbd5e7;padding:6px 0}
+#rig-mask-panel .rig-mask-target-list{max-height:170px;overflow-y:auto;display:grid;gap:3px}
+#rig-mask-panel .rig-mask-target-check{
+ display:flex;align-items:center;gap:6px;min-height:29px;
+ border:1px solid #34536b;border-radius:6px;padding:2px 6px;color:#d9eafa;font-size:11px
+}
+#rig-mask-panel .rig-mask-target-check input{width:17px;height:17px;accent-color:#5bb5e4}
+#rig-mask-panel .rig-mask-relation{
+ display:grid;grid-template-columns:minmax(0,1fr) 42px 42px;
+ gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid #294356
+}
+#rig-mask-panel .rig-mask-relation span{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rig-mask-panel .rig-mask-relation button{min-height:29px;font-size:10px;padding:2px}
 body.studio-page #view.mask-paint-active{cursor:crosshair!important}
+@media(max-width:710px){
+ #rig-mask-panel{padding:9px;gap:8px}
+ #rig-mask-panel .rig-mask-head span{font-size:10px}
+ #rig-mask-panel .rig-mask-directions button{min-height:42px}
+ #rig-mask-panel .rig-mask-actions button{min-height:42px}
+}
