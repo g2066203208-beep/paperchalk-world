@@ -30,7 +30,7 @@ jobs:
       - run: |
           python3 scripts/build_v4_assets.py
           python3 scripts/build_protagonist_part_rig.py
-          python3 -m unittest tests/test_protagonist_unified.py -v
+          python3 tests/test_protagonist_unified.py
           python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
