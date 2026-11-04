@@ -883,7 +883,14 @@ async function readPartRig(id=currentId,face=side){
   pub.url.startsWith('./assets/l2d/library/char-002-psd-v1/'))||
   (id==='char-006'&&face==='front'&&sourceId==='class-teacher-geography-candidate'&&
    model.characterId==='class-teacher-geography-candidate'&&
-   pub.url.startsWith('./assets/l2d/library/class-teacher-geography-candidate/'));
+   pub.url.startsWith('./assets/l2d/library/class-teacher-geography-candidate/'))||
+  // The approved "new outfit" is the male lead's actual 17-part FRONT,
+  // while the immutable source archive keeps its original module identity.
+  (id==='char-003'&&face==='front'&&sourceId==='char-003-outfit-02'&&
+   model.characterId==='char-003-outfit-02'&&
+   Object.keys(model.parts||{}).length===17&&
+   ['handwear_left','handwear_right','topwear','face','legwear','footwear'].every(key=>!!model.parts[key])&&
+   pub.url.startsWith('./assets/l2d/library/char-003-outfit-02/'));
  if(model.format!=='paperchalk-part-rig-v1'||
     (model.characterId!==id&&!validAlias)||model.face!==face)
   throw Error('当前人物的模块绑定文件格式或方向错误');
