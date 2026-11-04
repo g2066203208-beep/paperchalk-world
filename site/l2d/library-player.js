@@ -88,8 +88,12 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    ['front_hair','back_hair','face','eyewhite','irides','eyelash',
     'hand_raised','hand_lowered','bottomwear','legwear','footwear'].every(id=>!!model.parts[id])&&
    rigSpec.url.startsWith('./assets/l2d/library/char-002-psd-v1/');
+ const approvedFemaleFive=characterId==='char-006'&&face==='front'&&
+   rigSpec.sourceCharacterId==='class-teacher-geography-candidate'&&
+   model?.characterId==='class-teacher-geography-candidate'&&
+   rigSpec.url.startsWith('./assets/l2d/library/class-teacher-geography-candidate/');
  if(model?.format!=='paperchalk-part-rig-v1'||
-    (model.characterId!==characterId&&!approvedOriginal&&!approvedSecondary)||model.face!==face)
+    (model.characterId!==characterId&&!approvedOriginal&&!approvedSecondary&&!approvedFemaleFive)||model.face!==face)
   throw Error('L2D 绑定文件与人物 ID/方向不一致');
  // Every playable module (including the ORIGINAL heroine actor) has a
  // deterministic gentle idle preset. A saved local editor profile overrides it.
