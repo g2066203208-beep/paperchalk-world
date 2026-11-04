@@ -17,6 +17,7 @@ on:
       - 'site/assets/characters/**'
       - 'site/l2d/part-rig.js'
       - 'scripts/build_character_catalog.py'
+      - 'docs/characters/*.profile.json'
       - '.github/workflows/character-editor-pages.yml'
   workflow_dispatch:
 permissions:
