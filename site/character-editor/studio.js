@@ -1194,7 +1194,65 @@ async function hostedParts(id,face=side){
 async function zipBytes(buf){
  return zipFiles(new File([buf],'original-psd-parts.zip',{type:'application/zip'}));
 }
+/* One-way, lossless migration of previously saved female-six projects.
+ * Her published 17-part source and user-painted edits stay in IndexedDB;
+ * only the new PSD-authentic shorts is installed, not an entire new actor.
+ * The updated 18th module part is loaded from its published standalone PNG. */
+async function appendFemale06FittedPantsIfMissing(id){
+ if(id!=='female-06'||side!=='front'||currentId!==id)return false;
+ const layers=ed.S.layers.front||[];
+ if(!layers.some(p=>p.sourcePart)||layers.some(p=>
+   p.sourcePart&&String(p.partId||p.name)==='pants_overlay'))return false;
+ const view=list.get(id)?.l2dModule?.front;
+ const imageUrl=view?.rig?.textures?.pants_overlay;
+ if(!imageUrl||!view?.rig?.url)return false;
+ const saved=await get('part-rig:'+id+':front');
+ if(saved?.deletedParts?.includes('pants_overlay'))return false;
+ const [imageRes,rigRes]=await Promise.all([
+  fetch(siteURL(imageUrl)),fetch(siteURL(view.rig.url))
+ ]);
+ if(!imageRes.ok||!rigRes.ok)
+  throw Error('女6短裤增量加载失败：缺少正式发布 PNG/骨骼');
+ const rig=await rigRes.json(),def=rig.parts?.pants_overlay;
+ if(rig.characterId!==id||!def||
+    def.kind!=='pants-bound'||def.skinBinding?.target!=='legwear')
+  throw Error('女6短裤绑定版本不匹配；保留原工程不覆盖');
+ const bytes=new Uint8Array(await imageRes.arrayBuffer());
+ const blob=new Blob([bytes],{type:'image/png'});
+ const sourceURL=URL.createObjectURL(blob);
+ let image;try{image=await ed.imgFrom(sourceURL)}
+ finally{URL.revokeObjectURL(sourceURL)}
+ if(image.width!==def.w||image.height!==def.h)
+  throw Error('短裤源图尺寸与骨骼面积绑定不一致');
+ // Do not mutate an existing actor until the source PNG and rig BOTH pass.
+ if(currentId!==id||side!=='front'||ed.S.layers.front.some(p=>
+  p.sourcePart&&String(p.partId||p.name)==='pants_overlay'))return false;
+ const part=ed.layer('女六 · 黑色短裤',image,def.x,def.y,false);
+ part.sourcePart=true;part.partId='pants_overlay';part.role='psd-part';
+ const current=ed.S.layers.front;
+ const torsoAt=current.findIndex(p=>p.sourcePart&&(p.partId||p.name)==='topwear');
+ const legsAt=current.findIndex(p=>p.sourcePart&&(p.partId||p.name)==='legwear');
+ const index=(torsoAt>=0?torsoAt:legsAt)+1;
+ current.splice(Math.max(0,index),0,part);
+ // Keep the per-character immutable source comparison baseline additive.
+ const key='baseline:'+id+':front';
+ const baseline=await get(key);
+ if(Array.isArray(baseline)&&!baseline.some(p=>p.partId==='pants_overlay'))
+  await put(key,[...baseline,{
+   partId:'pants_overlay',name:part.name,x:def.x,y:def.y,
+   visible:true,opacity:1,image:await fileURL(blob)
+  }]);
+ ed.renderList();ed.render();await ed.save();
+ await persistSkeleton('front');
+ updatePartStatus();
+ window.dispatchEvent(new Event('paperchalk:studio-source-parts-loaded'));
+ message('✓ 保留女6旧工程全部编辑，已增量加入随双腿变形的黑色短裤');
+ return true;
+}
 async function ensureHostedParts(id){
+ // Migrate a locally saved 17-mesh female-six without replacing drawings,
+ // authored occlusion masks, rig transforms, or other character data.
+ if(await appendFemale06FittedPantsIfMissing(id))return;
  // A deliberate deletion of ALL local source parts must not trigger an
  // automatic re-import of the original PNGs on the next visit.
  const draft=await get('part-rig:'+id+':'+side);
