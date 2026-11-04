@@ -13,8 +13,8 @@ const server=createServer((req,res)=>{
   if(p.endsWith('/'))p+='index.html';
   const file=resolve(root,'.'+p);
   if(!file.startsWith(root+'/')){res.writeHead(403);res.end();return}
-  try{res.writeHead(200,{'content-type':types[extname(file)]||'application/octet-stream'});res.end(readFileSync(file))}
-  catch{res.writeHead(404);res.end('not found')}
+  try{const data=readFileSync(file);res.writeHead(200,{'content-type':types[extname(file)]||'application/octet-stream'});res.end(data)}
+  catch{if(!res.headersSent)res.writeHead(404);res.end('not found')}
 });
 await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
