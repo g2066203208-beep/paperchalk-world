@@ -690,6 +690,34 @@ function drawPreview(ctx){
  const previewModel=state.visualIdle?
   {...state.model,idleProfile:state.visualIdle}:state.model;
  core.draw(ctx,parts(),previewModel,state.phase,state.showGuides?state.selected:'');
+ // Editor-only translucent cyan preview. Shows exactly which source pixels
+ // become foreground, while the game sees only the natural original colors.
+ if(maskState.enabled){
+  const entry=getMask(),part=state.model.parts[state.selected];
+  if(entry&&part){
+   const source=maskCanvas(entry,part);
+   if(!entry._pending){
+    const tint=document.createElement('canvas');tint.width=source.width;tint.height=source.height;
+    const g=tint.getContext('2d');
+    g.drawImage(source,0,0);
+    g.globalCompositeOperation='source-in';
+    g.fillStyle='#46d8ff';g.fillRect(0,0,tint.width,tint.height);
+    const motion=core.actionPart(previewModel,part.id);
+    const mounted=(part.id==='battle_axe'||part.id==='axe_held')&&
+      previewModel.parts[part.parentId]?previewModel.parts[part.parentId]:part;
+    const over=mounted===part?motion:core.actionPart(previewModel,part.parentId);
+    ctx.save();
+    if(over.x||over.y||over.angle){
+     const ax=mounted.x+mounted.w*mounted.pivot.x,ay=mounted.y+mounted.h*mounted.pivot.y;
+     ctx.translate(ax+over.x,ay+over.y);
+     ctx.rotate(over.angle*Math.PI/180);
+     ctx.translate(-ax,-ay);
+    }
+    core.drawPart(ctx,{canvas:tint,opacity:.48},part,state.phase,false,previewModel.idleProfile);
+    ctx.restore();
+   }
+  }
+ }
  if(!state.showGuides)return true;
  const p=current();if(p){
   const P={x:p.x+p.w*p.pivot.x,y:p.y+p.h*p.pivot.y};
