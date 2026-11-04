@@ -47,6 +47,9 @@ const FRONT={
  eyelash:['eyewhite',.50,.50,.50,.50,'eyes-combined'],
  eyebrow:['head',.50,.50,.50,.50,'face'],
  bottomwear:['pelvis',.50,.05,.50,.90,'skirt'],
+ // User-authored black shorts from female-06 outfit's original SeeThrough PSD.
+ // They deform using EXACTLY the base legwear's per-vertex hip/knee field.
+ pants_overlay:['legwear',.50,.09,.50,.91,'pants-bound'],
  topwear:['torso',.50,.09,.50,.81,'torso'],
  eyebrow_l:['head',.50,.50,.50,.50,'face'],
  eyebrow_r:['head',.50,.50,.50,.50,'face'],
@@ -451,7 +454,12 @@ function skinnedPoint(part,u,v,phase=0,posed=null,idle=null){
  return {x:part.x+x+dx/sum*blend,y:part.y+y+dy/sum*blend};
 }
 function cleanPart(part,face,id,characterId){
- const p=part||{},spec=characterId==='char-003-outfit-02'&&face==='front'?
+ const p=part||{},spec=characterId==='female-06-outfit-02'&&face==='front'&&
+   (id==='handwear_l'||id==='handwear_r')?
+   (id==='handwear_l'
+    ?['torso',.83,.065,.16,.92,'arm-left']
+    :['torso',.17,.065,.85,.92,'arm-right']):
+  characterId==='char-003-outfit-02'&&face==='front'?
   (CHAR003_OUTFIT[id]||FRONT[id]):
   characterId==='char-004'&&face==='front'?
   (CHAR004[id]||FRONT[id]):
@@ -466,8 +474,9 @@ function cleanPart(part,face,id,characterId){
  return {id:String(id),name:String(p.name||id),x:finite(p.x,0),y:finite(p.y,0),w,h,
   parentId:def[0],kind:def[5],
   pivot:{x:def[1],y:def[2]},tip:{x:def[3],y:def[4]},
-  mesh:{columns:Math.min(def[5]==='hair'?6:5,Math.max(4,Math.ceil(w/35))),
-        rows:Math.min(def[5]==='hair'?9:7,Math.max(4,Math.ceil(h/40)))},
+  mesh:def[5]==='pants-bound'?{columns:12,rows:12}:{
+    columns:Math.min(def[5]==='hair'?6:5,Math.max(4,Math.ceil(w/35))),
+    rows:Math.min(def[5]==='hair'?9:7,Math.max(4,Math.ceil(h/40)))},
   bones:defaultBones(def[5]),
   // The REST shape is always the original bitmap when preview is stopped.
   motion:{x:0,y:0,angle:0,frequency:1,phase:0},
@@ -496,6 +505,14 @@ function sanitize(record,original){
  };
  x.mesh=original.mesh;
  x.bones=normalizeBones(record.bones,original.kind);
+ if(original.kind==='pants-bound'){
+  // Binding contract: the shorts do not have an independent skeleton or
+  // garment jitter. Every pixel inherits the source body's leg skin field.
+  x.motion={x:0,y:0,angle:0,frequency:1,phase:0};
+  x.bones=[];
+  x.skinBinding={target:'legwear',method:'shared-leg-field-v1',
+    waist:'pelvis',left:'left-knee',right:'right-knee',rootLock:1};
+ }
  return x;
 }
 function project(parts,characterId,face,previous=null){
@@ -546,10 +563,12 @@ function bindBodyHierarchy(model){
  const p=model?.parts;if(!p)return model;
  const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
  const legs=pick('legs','legwear'),feet=pick('shoes','footwear','footwear_left','footwear_right'),
-  skirt=pick('skirt','bottomwear')||(model.characterId==='char-004'?legs:null),
+  skirt=pick('skirt','bottomwear','pants_overlay')||(model.characterId==='char-004'?legs:null),
   torso=pick('jacket','topwear'),
   face=pick('face'),hair=pick('front_hair','rear_hair','back_hair','head_hair'),neck=pick('neck');
- if(!legs||!feet||!skirt||!torso)return model;
+ // Female-06's original 17-part PSD has bare feet WITHIN the legwear mesh.
+ // They are planted at the two ankle-chain tails, not a missing shoe layer.
+ if(!legs||(!feet&&model.characterId!=='female-06')||!skirt||!torso)return model;
  const xy=(part,u,v)=>({x:part.x+part.w*u,y:part.y+part.h*v});
  const get=id=>legs.bones?.find(b=>b.id===id);
  const chain=side=>{
@@ -565,12 +584,18 @@ function bindBodyHierarchy(model){
   neck:neck?xy(neck,.5,.12):face?xy(face,.5,.88):xy(torso,.5,-.12),
   neckTop:neck?neck.y+neck.h*.12:(face?face.y+face.h*.88:torso.y),
   neckBottom:neck?neck.y+neck.h*.96:(face?face.y+face.h*1.12:torso.y+15),
-  left,right,legsId:legs.id,feetId:feet.id};
+  left,right,legsId:legs.id,feetId:feet?.id||legs.id};
  // Cropped or unaligned imports must NOT acquire fabricated body motion.
  if(layout.pelvis.y-layout.shoulder.y<15)return model;
  Object.defineProperty(model,'bodyHierarchy',{value:layout,configurable:true});
- for(const part of Object.values(p))
+ for(const part of Object.values(p)){
   Object.defineProperty(part,'_bodyHierarchy',{value:layout,configurable:true});
+  if(part.kind==='pants-bound'&&part.skinBinding?.target===legs.id){
+   // Share the leg deformation source *by reference*; don't duplicate
+   // or separately keyframe the shorts' hips, inseam and two thigh zones.
+   Object.defineProperty(part,'_garmentLegs',{value:legs,configurable:true});
+  }
+ }
  return model;
 }
 function humanPoseAt(part,phase=0,idle=null){
@@ -665,6 +690,7 @@ function parentRole(part){
  if(!part)return 'none';
  if(part.parentId==='ground'||part.id==='shoes'||part.id==='footwear')return 'ground';
  if(part.kind==='leg-combined')return 'legs';
+ if(part.kind==='pants-bound')return 'garment';
  if(part.kind==='skirt')return 'pelvis';
  if(part.kind==='torso'||part.kind.startsWith('coat-panel-'))return 'torso';
  if(part.id==='neck')return 'neck';
@@ -679,6 +705,11 @@ function parentPoint(part,p,phase=0,idle=null,pose=null){
  switch(parentRole(part)){
  case 'ground':case 'none':return p;
  case 'legs':return legPoint(part,p,h);
+ case 'garment':
+  // Every shorts vertex samples the same 2-leg IK / area-weighted skin
+  // field used by the underlying ORIGINAL body ArtMesh. No independent
+  // hip motion means that hem, inseam and waistband cannot drift away.
+  return part._garmentLegs?legPoint(part._garmentLegs,p,h):hipPoint(p,h);
  case 'pelvis':return hipPoint(p,h);
  case 'neck':return neckPoint(p,h);
  case 'torso':{
