@@ -66,14 +66,13 @@ if(right){
 }
 const quick=el('div',{id:'easy-quickbar',role:'toolbar','aria-label':'画布快捷操作'});
 const toolButtons=[
- ['brush','✎ 画笔'],['eraser','◯ 擦除'],['restore','✚ 补画'],['pan','✥ 平移']
+ ['select','↖ 选择'],['brush','✎ 画笔'],['eraser','◯ 擦除'],['pan','✥ 平移']
 ];
 for(const [tool,label] of toolButtons){
  const b=el('button',{type:'button','data-easy-tool':tool,title:label},label);
  b.onclick=()=>{
+  if(tool==='select'&&ed.S.tool==='select')ed.clearPartSelection?.();
   ed.setTool(tool);
-  const part=ed.S.layers[ed.S.side]?.[ed.S.sel];
-  if(part?.sourcePart&&stageMotion.state.enabled)editPart().catch(console.error);
   sync();
  };
  quick.append(b);
@@ -84,7 +83,7 @@ quick.append(fitButton);
 const faceButton=el('button',{id:'easy-face',type:'button',title:'放大脸部区域'},'面部');
 faceButton.onclick=()=>$('face')?.click();
 quick.append(faceButton);
-const undoQuick=el('button',{id:'easy-undo',type:'button',title:'撤销上一步（Ctrl+Z）'},'↶ 撤销');
+const undoQuick=el('button',{id:'easy-undo',type:'button',title:'撤销误操作（Ctrl+Z）'},'↶ 撤销');
 undoQuick.onclick=()=>$('btnUndo')?.click();
 quick.append(undoQuick);
 const redoQuick=el('button',{id:'easy-redo',type:'button',title:'重做上一步（Ctrl+Y）'},'↷ 重做');
@@ -131,9 +130,9 @@ edit.onclick=()=>editPart().catch(e=>{selectedBox.textContent='无法编辑：'+
 animate.onclick=()=>animatePart().catch(e=>{selectedBox.textContent='无法预览：'+e.message});
 function sync(){
  const p=sourcePart(),isSource=!!p?.sourcePart;
- selectedBox.textContent=!p?'尚未选择图层':p.locked
-  ?'🔒 '+p.name+' · 已锁定，点右侧锁图标才能编辑'
-  :p.name+(isSource?' · 原始部件，可直接精修':' · 可编辑图层');
+ selectedBox.textContent=!p?'未选择部件 · 安全查看':p.locked
+  ?'🔒 '+p.name
+  :p.name;
  edit.disabled=!p||p.locked;
  edit.textContent=stageMotion.state.enabled?'✎ 编辑此部件':'✎ 正在精修';
  animate.classList.toggle('active',stageMotion.state.enabled&&stageMotion.state.playing);
@@ -165,7 +164,9 @@ layerList?.addEventListener('click',e=>{
 });
 new MutationObserver(sync).observe(layerList,{childList:true});
 window.addEventListener('paperchalk:studio-ready-to-edit',()=>{dirty=false;saveNote.textContent='当前浏览器自动保存；跨设备请导出 ZIP';sync()});
-window.addEventListener('paperchalk:studio-character-loaded',()=>{dirty=false;sync()});
+window.addEventListener('paperchalk:studio-character-loaded',()=>{dirty=false;ed.setTool('select');sync()});
+window.addEventListener('paperchalk:studio-tool-changed',sync);
+window.addEventListener('paperchalk:studio-selection-changed',sync);
 window.addEventListener('paperchalk:art-dirty',()=>{
  dirty=true;saveNote.textContent='● 有修改 · 点击保存到本机游戏';
  sync();
@@ -186,5 +187,5 @@ $('main-play')?.addEventListener('click',()=>requestAnimationFrame(sync));
 window.addEventListener('paperchalk:studio-play-changed',sync);
 window.addEventListener('paperchalk:rig-play-changed',sync);
 window.PaperchalkEasyEditor={get expert(){return false},setExpert(){/* A single permanent editor */},editPart,animatePart,sync};
-applyMode();sync();
+applyMode();ed.setTool('select');sync();
 })();
