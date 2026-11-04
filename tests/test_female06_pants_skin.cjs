@@ -37,6 +37,11 @@ assert.equal(rig.graph.shortsRightHem.parent,'rightHip');
 assert.equal(core.parentRole(pants),'garment');
 assert.equal(core.parentRole(legs),'legs');
 assert.equal(core.parentRole(torso),'torso');
+for(const id of ['wings_l','wings_r']){
+ if(!model.parts[id])continue;
+ assert.equal(model.parts[id].parentId,'torso',id+' must be parented to upper body');
+ assert.equal(core.parentRole(model.parts[id]),'shoulder',id+' should inherit shoulder/chest');
+}
 // Changing the scale or position of pants cannot ever move the ROOT SKELETON.
 const edited=JSON.parse(JSON.stringify(r));
 edited.parts.pants_overlay.placement={scaleX:1.45,scaleY:.66,offsetX:150,offsetY:-120};
@@ -76,6 +81,13 @@ for(let frame=0;frame<42;frame++){
    traveled=Math.max(traveled,Math.hypot(actual.x-rest.x,actual.y-rest.y));
   }
  }
+ // Local mesh / cloth bending at the lower torso must vanish at the hip
+ // seam; this tests REAL ArtMesh warp, not only parent relationship metadata.
+ const lower={x:torso.x+torso.w*.5,y:torso.y+torso.h*.97};
+ const lowerWarp=core.warpPoint(torso,.5,.97,phase,null,idle);
+ const lowerHip=core.hipPoint(lower,core.humanPoseAt(torso,phase,idle));
+ const lowerError=Math.hypot(lowerWarp.x-lowerHip.x,lowerWarp.y-lowerHip.y);
+ assert.ok(lowerError<.01,'torso lower edge has detached from root pelvis: '+lowerError);
  for(const c of [rig.left,rig.right]){
   const sole={x:c.ankle.x,y:c.ankle.y};
   const actual=core.parentPoint(legs,sole,phase,idle);
