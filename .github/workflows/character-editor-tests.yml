@@ -57,6 +57,7 @@ jobs:
 
       - run: python3 tests/test_protagonist_unified.py
       - run: python3 scripts/build_character_catalog.py
+      - run: python3 scripts/build_scene_catalog.py # game-side ArtMesh integration checks need the scene registry
       - run: node tests/test_l2d_person_tree_model.cjs
       - run: node tests/test_female06_pants_skin.cjs
       - run: node tests/test_l2d_part_placement.cjs
