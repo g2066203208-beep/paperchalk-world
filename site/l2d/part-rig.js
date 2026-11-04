@@ -493,7 +493,7 @@ function cleanPart(part,face,id,characterId){
     :['torso',.17,.065,.85,.92,'arm-right']):
   characterId==='protagonist-crouch-axe'&&face==='front'?
   (PROTAGONIST_CROUCH[id]||FRONT[id]):
-  characterId==='char-003-outfit-02'&&face==='front'?
+  (characterId==='char-003'||characterId==='char-003-outfit-02')&&face==='front'?
   (CHAR003_OUTFIT[id]||FRONT[id]):
   characterId==='char-004'&&face==='front'?
   (CHAR004[id]||FRONT[id]):
