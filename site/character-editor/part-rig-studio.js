@@ -585,7 +585,7 @@ $('rig-fit-reset').onclick=()=>{
  // Reset restores each character's approved base fit, not a previously
  // rejected raw shorts placement. All other parts reset to native 100%.
  p.placement=studio.current==='female-06'&&p.id==='pants_overlay'?
-  {scaleX:.92,scaleY:.80,offsetX:-7,offsetY:-12}:
+  {scaleX:1.20,scaleY:1.00,offsetX:-15,offsetY:-17}:
   {scaleX:1,scaleY:1,offsetX:0,offsetY:0};
  fitValues();changed();
 };
