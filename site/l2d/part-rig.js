@@ -1081,6 +1081,19 @@ function getDepthPlan(source,id,stack,model,visible){
  depthPlanCache.set(source.canvas,{signature,result});
  return result;
 }
+function occlusionDiagnostics(layers,model){
+ if(!model)return [];
+ const stack=model.layerOrder||
+  layers.filter(p=>p.sourcePart).map(p=>String(p.partId||p.name));
+ const actual=[...layers].filter(p=>p.sourcePart&&p.canvas);
+ const visible=new Set(actual.filter(p=>p.visible&&model.parts?.[p.partId||p.name]?.enabled!==false)
+  .map(p=>String(p.partId||p.name)));
+ return actual.map(p=>{
+  const id=String(p.partId||p.name);
+  const plan=visible.has(id)?getDepthPlan(p,id,stack,model,visible):null;
+  return {source:id,conflicts:plan?.conflicts||0,moved:plan?.moved||0};
+ });
+}
 function renderArtPart(ctx,source,part,motion,mount,phase,idle,selected=false){
  ctx.save();
  if(motion.x||motion.y||motion.angle){
@@ -1179,5 +1192,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
 
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
 })(typeof window!=='undefined'?window:globalThis);
