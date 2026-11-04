@@ -512,10 +512,14 @@ function project(parts,characterId,face,previous=null){
   // PNG stays in source-texture local coordinates, so the same ArtMesh warps it.
   ...(Array.isArray(previous?.occlusionMasks)?{occlusionMasks:previous.occlusionMasks
    .filter(m=>m&&typeof m.source==='string'&&typeof m.target==='string'&&
-    m.source!==m.target&&parts.some(p=>p.partId===m.source||p.name===m.source)&&
-    parts.some(p=>p.partId===m.target||p.name===m.target)&&
+    parts.some(p=>p.partId===m.source||p.name===m.source)&&
+    (Array.isArray(m.targets)?m.targets:[m.target]).some(t=>typeof t==='string'&&
+      t!==m.source&&parts.some(p=>p.partId===t||p.name===t))&&
     typeof m.png==='string'&&m.png.startsWith('data:image/png;base64,'))
-   .map(m=>({source:m.source,target:m.target,png:m.png,enabled:m.enabled!==false}))}:{}),
+   .map(m=>({source:m.source,target:m.target,
+     targets:Array.isArray(m.targets)?[...new Set(m.targets.filter(v=>typeof v==='string'))]:[m.target],
+     direction:m.direction==='behind'?'behind':'front',
+     png:m.png,enabled:m.enabled!==false}))}:{}),
   ...(previous?.animationGraph?{animationGraph:previous.animationGraph}:{}),
   ...(previous?.motionQualityProfile?{motionQualityProfile:previous.motionQualityProfile}:{}),
   parts:Object.fromEntries(entries)}));
@@ -967,45 +971,115 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
   ctx.restore();
  }
 }
-// Unified foreground masks. The source PNG is NEVER modified; a local alpha
-// image decides which pixels to replay over a particular target layer.
-// Runtime caches are private and non-persistent; serialized models stay JSON.
-const maskSourceCache=new WeakMap();
-let maskedArtCache=new WeakMap();
-// Refresh the derived foreground texture whenever the user edits the ORIGINAL
-// source art. Mask PNG and original PNG remain stored independently.
-if(typeof window!=='undefined'&&typeof window.addEventListener==='function')window.addEventListener(
- 'paperchalk:art-dirty',()=>{maskedArtCache=new WeakMap()});
+// Unified bidirectional occlusion painter. A mask pixel is PARTITIONED
+// between its source's usual slot and the requested depth slot. This avoids
+// painting the full hand/collar again (ghosted, repeated alpha).
+const alphaMaskCache=new WeakMap(),maskLookupCache=new WeakMap();
+let depthPlanCache=new WeakMap();
+if(typeof window!=='undefined'&&typeof window.addEventListener==='function')
+ window.addEventListener('paperchalk:art-dirty',()=>{depthPlanCache=new WeakMap()});
 function sourceMaskCanvas(entry,source){
  if(!entry||!source?.canvas)return null;
- const w=source.canvas.width,h=source.canvas.height;
- const live=entry._canvas;
+ const live=entry._canvas,w=source.canvas.width,h=source.canvas.height;
  if(live&&live.width===w&&live.height===h)return live;
  if(typeof entry.png!=='string'||!entry.png.startsWith('data:image/png;base64,'))return null;
- let rec=maskSourceCache.get(entry);
- if(!rec||rec.uri!==entry.png){
-  const image=new Image();
-  rec={uri:entry.png,image,loaded:false};
-  maskSourceCache.set(entry,rec);
-  image.onload=()=>{rec.loaded=image.width===w&&image.height===h;};
-  image.onerror=()=>{rec.loaded=false};
-  image.src=entry.png;
+ let info=maskLookupCache.get(entry);
+ if(!info||info.uri!==entry.png){
+  const img=new Image();info={uri:entry.png,img,ready:false};maskLookupCache.set(entry,info);
+  img.onload=()=>{info.ready=img.width===w&&img.height===h};
+  img.onerror=()=>{info.ready=false};
+  img.src=entry.png;
  }
- return rec.loaded?rec.image:null;
+ return info.ready?info.img:null;
 }
-function maskedSourceCanvas(entry,source){
+function sourceCoverage(entry,source){
  const mask=sourceMaskCanvas(entry,source);if(!mask)return null;
- const changed=Number(entry._revision)||0;
- const cache=maskedArtCache.get(entry);
- if(cache&&cache.source===source.canvas&&cache.mask===mask&&cache.rev===changed)return cache.canvas;
- const c=document.createElement('canvas');c.width=source.canvas.width;c.height=source.canvas.height;
- const g=c.getContext('2d');
+ const revision=Number(entry._revision)||0,cache=alphaMaskCache.get(entry);
+ if(cache&&cache.mask===mask&&cache.revision===revision)return cache;
+ const width=source.canvas.width,height=source.canvas.height;
+ const c=document.createElement('canvas');c.width=width;c.height=height;
+ const g=c.getContext('2d',{willReadFrequently:true});
+ g.drawImage(mask,0,0,width,height);
+ const data=g.getImageData(0,0,width,height).data;
+ const alphas=new Uint8Array(width*height);
+ for(let i=0;i<alphas.length;i++)alphas[i]=data[i*4+3];
+ const result={mask,revision,alphas};
+ alphaMaskCache.set(entry,result);
+ return result;
+}
+function maskTargets(entry){
+ return Array.isArray(entry.targets)?entry.targets:
+   typeof entry.target==='string'?[entry.target]:[];
+}
+function getDepthPlan(source,id,stack,model,visible){
+ const baseIndex=stack.indexOf(id);
+ if(baseIndex<0||!source.canvas)return null;
+ const rules=[];
+ for(const entry of (Array.isArray(model.occlusionMasks)?model.occlusionMasks:[])){
+  if(!entry||entry.enabled===false||entry.source!==id)continue;
+  const targets=[...new Set(maskTargets(entry))].filter(t=>t!==id&&visible.has(t));
+  if(!targets.length)continue;
+  const coverage=sourceCoverage(entry,source);
+  if(!coverage)continue; // Never erase an image while its PNG is decoding.
+  const indexes=targets.map(t=>stack.indexOf(t)).filter(i=>i>=0);
+  if(!indexes.length)continue;
+  const behind=entry.direction==='behind';
+  rules.push({entry,alpha:coverage.alphas,
+   minimum:behind?0:2*Math.max(...indexes)+2,
+   maximum:behind?2*Math.min(...indexes):2*stack.length,
+   revision:coverage.revision,mask:coverage.mask});
+ }
+ if(!rules.length)return null;
+ const signature=JSON.stringify([stack,source.canvas.width,source.canvas.height,
+  rules.map(r=>[r.entry.source,maskTargets(r.entry),r.entry.direction||'front',
+   r.revision,r.entry.png?.length,r.minimum,r.maximum,r.mask===r.entry._canvas])]);
+ const cached=depthPlanCache.get(source.canvas);
+ if(cached?.signature===signature)return cached.result;
+ const width=source.canvas.width,height=source.canvas.height;
+ const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ const g=canvas.getContext('2d',{willReadFrequently:true});
  g.drawImage(source.canvas,0,0);
- g.globalCompositeOperation='destination-in';
- g.drawImage(mask,0,0,c.width,c.height);
- g.globalCompositeOperation='source-over';
- maskedArtCache.set(entry,{source:source.canvas,mask,rev:changed,canvas:c});
- return c;
+ const original=g.getImageData(0,0,width,height).data;
+ const rasters=new Map(),baseSlot=baseIndex*2+1;let conflicts=0,moved=0;
+ const getRaster=slot=>{
+  if(!rasters.has(slot))rasters.set(slot,new Uint8ClampedArray(original.length));
+  return rasters.get(slot);
+ };
+ const assign=(slot,k,alpha)=>{
+  if(alpha<1)return;
+  const dest=getRaster(slot);
+  dest[k]=original[k];dest[k+1]=original[k+1];dest[k+2]=original[k+2];
+  dest[k+3]=alpha;
+ };
+ for(let pixel=0;pixel<width*height;pixel++){
+  const k=pixel*4,originalAlpha=original[k+3];
+  if(!originalAlpha)continue;
+  let minimum=0,maximum=2*stack.length,coverage=0,matched=false;
+  for(const rule of rules){
+   const v=rule.alpha[pixel];if(!v)continue;
+   matched=true;coverage=Math.max(coverage,v);
+   minimum=Math.max(minimum,rule.minimum);
+   maximum=Math.min(maximum,rule.maximum);
+  }
+  let slot=baseSlot;
+  if(matched){
+   if(minimum>maximum)conflicts++;
+   else slot=Math.min(maximum,Math.max(minimum,baseSlot));
+  }
+  if(slot===baseSlot){assign(baseSlot,k,originalAlpha);continue;}
+  const shifted=Math.round(originalAlpha*coverage/255);
+  assign(baseSlot,k,originalAlpha-shifted);
+  assign(slot,k,shifted);moved++;
+ }
+ const segments=new Map();
+ for(const [slot,data] of rasters){
+  const item=document.createElement('canvas');item.width=width;item.height=height;
+  item.getContext('2d').putImageData(new ImageData(data,width,height),0,0);
+  segments.set(slot,item);
+ }
+ const result={segments,conflicts,moved};
+ depthPlanCache.set(source.canvas,{signature,result});
+ return result;
 }
 function renderArtPart(ctx,source,part,motion,mount,phase,idle,selected=false){
  ctx.save();
@@ -1035,46 +1109,39 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   const ai=order.get(String(a.partId||a.name)),bi=order.get(String(b.partId||b.name));
   return (ai??100)-(bi??100);
  }):layers;
- for(const p of drawLayers){
-  if(!p.visible||!p.sourcePart||!p.canvas)continue;
-  const id=String(p.partId||p.name),b=model.parts[id];
-  if(!b||b.enabled===false)continue;
-  const pose=actionPart(model,id);
-  if(pose.opacity<=0.001)continue;
-  // A held weapon must share the HAND'S action transform, not rotate
-  // separately about the huge weapon bitmap's unrelated bounding-box center.
-  // This keeps the grip registered while blending the action.
-  const attached=(id==='axe_held'&&b.parentId==='handwear_l')||
-   (id==='battle_axe'&&b.parentId==='battle_handwear_l')
-   ?model.parts[b.parentId]:null;
-  const motion=attached?actionPart(model,b.parentId):pose;
-  const mount=attached||b;
-  // Opacity is per-part; other art, head motion and full actor identity persist.
-  const source=pose.opacity===1?p:{...p,opacity:(p.opacity??1)*pose.opacity};
-  renderArtPart(ctx,source,b,motion,mount,phase,model.idleProfile||null,b.id===selectedId);
-
-  // A single ArtMesh may be BEHIND one object but IN FRONT of another.
-  // Each mask is attached to the source part and triggered AFTER its target
-  // has been painted. Any character/part pair can use this, not just axes.
-  const custom=Array.isArray(model.occlusionMasks)?model.occlusionMasks:[];
-  for(const entry of custom){
-   if(entry?.enabled===false||entry?.target!==id)continue;
-   const original=drawLayers.find(layer=>String(layer.partId||layer.name)===entry.source&&
-       layer.visible&&layer.sourcePart&&layer.canvas);
-   const arm=original&&model.parts[entry.source];
-   if(!arm||arm.enabled===false)continue;
-   const front=maskedSourceCanvas(entry,original);
-   if(!front)continue;
-   const gripPose=actionPart(model,entry.source);
-   if(gripPose.opacity<=0.001)continue;
-   const parent=(arm.id==='battle_axe'||arm.id==='axe_held')&&model.parts[arm.parentId]
-    ?model.parts[arm.parentId]:null;
-   const overMotion=parent?actionPart(model,arm.parentId):gripPose;
-   renderArtPart(ctx,{...original,canvas:front,
-       opacity:(original.opacity??1)*gripPose.opacity},
-    arm,overMotion,parent||arm,phase,model.idleProfile||null);
+ const ids=drawLayers.map(p=>String(p.partId||p.name));
+ const visible=new Set(drawLayers.filter(p=>p.visible&&p.sourcePart&&p.canvas&&
+    model.parts[String(p.partId||p.name)]?.enabled!==false)
+   .map(p=>String(p.partId||p.name)));
+ const scheduled=new Map(),originals=new Map();
+ const enqueue=(slot,id,part,texture)=>{
+  if(!scheduled.has(slot))scheduled.set(slot,[]);
+  scheduled.get(slot).push({slot,id,part,texture});
+ };
+ for(let i=0;i<drawLayers.length;i++){
+  const p=drawLayers[i],id=ids[i];
+  if(!visible.has(id))continue;
+  const plan=getDepthPlan(p,id,ids,model,visible);
+  originals.set(id,p);
+  if(!plan){enqueue(2*i+1,id,p,p.canvas);continue}
+  for(const [slot,texture] of plan.segments)enqueue(slot,id,p,texture);
+ }
+ const custom=Array.isArray(model.occlusionMasks)?model.occlusionMasks:[];
+ for(let slot=0;slot<=2*drawLayers.length;slot++){
+  for(const item of scheduled.get(slot)||[]){
+   const {id,part,texture}=item,b=model.parts[id];
+   if(!b||b.enabled===false)continue;
+   const pose=actionPart(model,id);
+   if(pose.opacity<=.001)continue;
+   const attached=((id==='axe_held'&&b.parentId==='handwear_l')||
+    (id==='battle_axe'&&b.parentId==='battle_handwear_l'))?model.parts[b.parentId]:null;
+   const motion=attached?actionPart(model,b.parentId):pose;
+   renderArtPart(ctx,{...part,canvas:texture,opacity:(part.opacity??1)*pose.opacity},
+    b,motion,attached||b,phase,model.idleProfile||null,
+    id===selectedId&&slot===2*ids.indexOf(id)+1);
   }
-
+  if(slot%2!==1)continue;
+  const id=ids[(slot-1)/2];
   // The AXE is in FRONT of the jacket but BEHIND the actual gripping fingers.
   // An arm's sleeve must stay behind the torso; painting the whole arm over
   // the weapon is incorrect. Repaint only the authentic hand-shaped region
@@ -1083,7 +1150,7 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
    for(const armId of ['battle_handwear_r','battle_handwear_l']){
     // A manual mask for this exact source/target supersedes the old hardcoded
     // heroine grip polygon, even if it has been intentionally erased.
-    if(custom.some(m=>m.source===armId&&m.target===id))continue;
+    if(custom.some(m=>m.source===armId&&maskTargets(m).includes(id)))continue;
     const outline=model.gripOverlays[armId];
     if(!Array.isArray(outline)||outline.length<3)continue;
     const arm=model.parts[armId];
@@ -1109,6 +1176,7 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
     ctx.restore();
    }
   }
+
  }
 }
 root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
