@@ -48,7 +48,8 @@ maskPanel.innerHTML=`<div class="rig-mask-head"><strong>部件遮挡蒙版</stro
  <button id="rig-mask-behind" type="button" hidden>将当前部件放到遮挡对象后面</button>
  <small id="rig-mask-hint">选部件，再选要被它遮挡的对象；蒙版不修改原图。</small>`;
 panel.querySelector('.rig-part-amount').before(maskPanel);
-const maskState={enabled:false,erase:false,pointer:null,restorePlaying:null,history:[],pair:''};
+const maskState={enabled:false,erase:false,pointer:null,restorePlaying:null,
+ history:[],pair:'',touches:new Map(),pinch:null};
 const maskTarget=$('rig-mask-target');
 const maskLabel=$('rig-mask-hint');
 const maskSize=$('rig-mask-size');
@@ -134,6 +135,7 @@ function setMaskMode(enable){
   state.playing=false;ed.setTool('mask');
  }else{
   if(maskState.pointer)maskState.pointer=null;
+  maskState.touches.clear();maskState.pinch=null;
   if(maskState.restorePlaying!==null)state.playing=maskState.restorePlaying;
   maskState.restorePlaying=null;
   if(S.tool==='mask')ed.setTool('select');
@@ -811,6 +813,28 @@ function loc(e){
 stage.addEventListener('pointerdown',e=>{
  if(!maskState.enabled||S.tool!=='mask'||e.target!==$('view'))return;
  e.preventDefault();e.stopImmediatePropagation();
+ if(e.pointerType==='touch'){
+  maskState.touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  stage.setPointerCapture(e.pointerId);
+  if(maskState.touches.size>=2){
+   // Undo any tentative first-finger paint when it becomes a two-finger gesture.
+   if(maskState.pointer){
+    const prior=maskState.history.pop(),entry=maskState.pointer.entry;
+    if(prior&&entry?._canvas){
+     entry._canvas.getContext('2d').putImageData(prior,0,0);
+     entry._revision=(entry._revision||0)+1;ed.render();
+    }
+    maskState.pointer=null;
+   }
+   if(maskState.touches.size===2){
+    const [a,b]=[...maskState.touches.values()];
+    maskState.pinch={distance:Math.hypot(a.x-b.x,a.y-b.y)||1,
+     midpoint:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},
+     zoom:S.zoom,px:S.px,py:S.py};
+   }
+   return;
+  }
+ }
  if(maskState.pointer!==null||!state.model?.parts[state.selected])return;
  const partLayer=parts().find(p=>key(p)===state.selected);
  if(!partLayer)return;
@@ -832,6 +856,30 @@ stage.addEventListener('pointerdown',e=>{
  if(e.pointerType==='mouse')maskStroke(mapped,mapped);
 },true);
 stage.addEventListener('pointermove',e=>{
+ if(maskState.touches.has(e.pointerId)){
+  maskState.touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(maskState.pinch&&maskState.touches.size>=2){
+   e.preventDefault();e.stopImmediatePropagation();
+   const [a,b]=[...maskState.touches.values()];
+   const distance=Math.hypot(a.x-b.x,a.y-b.y)||1;
+   const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+   const base=maskState.pinch,stageBox=stage.getBoundingClientRect();
+   const sx=base.midpoint.x-stageBox.x,sy=base.midpoint.y-stageBox.y;
+   S.zoom=Math.max(.1,Math.min(20,base.zoom*distance/base.distance));
+   S.px=mid.x-stageBox.x-(sx-base.px)*S.zoom/base.zoom;
+   S.py=mid.y-stageBox.y-(sy-base.py)*S.zoom/base.zoom;
+   ed.render();return;
+  }
+ }
+ if(maskState.touches.has(e.pointerId)){
+  maskState.touches.delete(e.pointerId);
+  if(maskState.pinch){
+   e.preventDefault();e.stopImmediatePropagation();
+   if(maskState.touches.size<2)maskState.pinch=null;
+   if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
+   return;
+  }
+ }
  const d=maskState.pointer;
  if(!d||d.id!==e.pointerId)return;
  e.preventDefault();e.stopImmediatePropagation();
