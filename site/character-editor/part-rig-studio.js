@@ -39,16 +39,18 @@ panel.querySelector('.rig-part-amount').before(maskPanel);
 const fitPanel=document.createElement('section');
 fitPanel.id='rig-fit-panel';
 fitPanel.innerHTML=`
-<div class="rig-fit-heading"><strong>部件尺寸与位置</strong><span>非破坏性 · 保留骨骼绑定</span></div>
-<div class="rig-fit-grid">
-<label>宽度 <input id="rig-fit-width" data-fit="scaleX" type="number" inputmode="decimal" min="25" max="400" step="1" value="100"> %</label>
-<label>高度 <input id="rig-fit-height" data-fit="scaleY" type="number" inputmode="decimal" min="25" max="400" step="1" value="100"> %</label>
-<label>水平偏移 <input id="rig-fit-x" data-fit="offsetX" type="number" inputmode="decimal" min="-1024" max="1024" step="1" value="0"> px</label>
-<label>垂直偏移 <input id="rig-fit-y" data-fit="offsetY" type="number" inputmode="decimal" min="-1024" max="1024" step="1" value="0"> px</label>
-</div>
-<label class="rig-fit-lock"><input id="rig-fit-lock" type="checkbox" checked> 等比缩放（解除后可分别调整宽高）</label>
-<div class="rig-fit-actions"><button type="button" id="rig-fit-handles" aria-pressed="false">⬚ 画布拖动／缩放</button><button type="button" id="rig-fit-reset">重置尺寸位置</button></div>
-<small id="rig-fit-help">先选部件；调整宽高、左右上下位置，或者打开画布手柄。原始 PNG 不变，骨骼/蒙版自动跟随。右上角保存到游戏。</small>`;
+<div class="rig-fit-heading"><strong>↖ 直接在画布调整</strong><span>选择图层后自动出现四角手柄</span></div>
+<small id="rig-fit-help">点选人物上的部件 → 直接拖动位置；拖四角调整大小。无需填参数。完成后点顶部「保存并应用到游戏」。</small>
+<div class="rig-fit-actions"><button type="button" id="rig-fit-handles" aria-pressed="true">🔓 拖动已开启</button><button type="button" id="rig-fit-reset">↶ 恢复该部件原位</button></div>
+<details id="rig-fit-precise"><summary>精确数字微调（可选）</summary>
+ <div class="rig-fit-grid">
+ <label>宽度 <input id="rig-fit-width" data-fit="scaleX" type="number" inputmode="decimal" min="25" max="400" step="1" value="100"> %</label>
+ <label>高度 <input id="rig-fit-height" data-fit="scaleY" type="number" inputmode="decimal" min="25" max="400" step="1" value="100"> %</label>
+ <label>水平偏移 <input id="rig-fit-x" data-fit="offsetX" type="number" inputmode="decimal" min="-1024" max="1024" step="1" value="0"> px</label>
+ <label>垂直偏移 <input id="rig-fit-y" data-fit="offsetY" type="number" inputmode="decimal" min="-1024" max="1024" step="1" value="0"> px</label>
+ </div>
+ <label class="rig-fit-lock"><input id="rig-fit-lock" type="checkbox"> 保持宽高比例</label>
+</details>`;
 maskPanel.before(fitPanel);
 const fitCSS=document.createElement('style');
 fitCSS.textContent=`
@@ -63,6 +65,13 @@ fitCSS.textContent=`
 .rig-fit-actions button{padding:7px 5px;white-space:normal;min-height:38px;font-size:11px}
 #rig-fit-handles[aria-pressed="true"]{background:#21536e;border-color:#7cd0f4}
 #rig-fit-help{display:block;font-size:10px;line-height:1.55;color:#a9c4d4;margin-top:7px}
+#rig-fit-help{font-size:12px;color:#d0eaff;margin:8px 0 10px}
+#rig-fit-precise{margin-top:9px;border-top:1px solid #3b556b;padding-top:7px}
+#rig-fit-precise summary{cursor:pointer;color:#91afc4;font-size:11px;padding:7px 3px}
+#rig-fit-precise:not([open]) .rig-fit-grid{display:none}
+#rig-fit-panel .rig-fit-actions button[aria-pressed="true"]{background:#1d5b54;border-color:#78c9aa;color:#eafff4}
+#rig-fit-panel .rig-fit-actions button{touch-action:manipulation}
+#stage #view{touch-action:none}
 `;
 document.head.append(fitCSS);
 const maskState={enabled:false,erase:false,direction:'front',targets:new Set(),
@@ -529,9 +538,10 @@ function setFitMode(value){
   setPlaying(false);
  }
  $('rig-fit-handles').setAttribute('aria-pressed',String(state.fitMode));
+ $('rig-fit-handles').textContent=state.fitMode?'🔓 拖动已开启':'🔒 锁定部件';
  $('rig-fit-help').textContent=state.fitMode?
-  '拖矩形内部移动部件，拖四角改尺寸。方向键微调1px，Shift+方向键10px；手机可拖四角。':
-  '先选部件；调整宽高、左右上下位置，或打开画布手柄。右上角保存到游戏。';
+  '点击部件直接选中，拖动移动，拉四角改大小；支持手机触摸，数字输入只是可选的高级微调。':
+  '当前部件已锁定；点击「锁定部件」恢复直接拖动。';
  ed.render();
 }
 $('rig-fit-handles').onclick=()=>setFitMode(!state.fitMode);
@@ -587,9 +597,9 @@ function adjustBoneJoint(b,key,axis,value){
  }
 }
 function clearSelection(){
- state.selected='';state.bone='';state.drag=null;
+ state.selected='';state.bone='';state.drag=null;state.fitDrag=null;
  $('rig-part').value='';$('rig-bone').value='';
- ed.render();
+ fitValues();ed.render();
 }
 function select(id){
  if(!state.model?.parts[id])return;
@@ -795,15 +805,18 @@ async function activate(openPanel=false){
  }
  state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
  state.model.occlusionMasks=Array.isArray(state.model.occlusionMasks)?state.model.occlusionMasks:[];
- state.active=true;state.phase=0;state.playing=true;state.showGuides=false;state.fitMode=false;state.fitDrag=null;
- $('rig-fit-handles').setAttribute('aria-pressed','false');
+ state.active=true;state.phase=0;state.playing=true;state.showGuides=false;state.fitMode=true;state.fitDrag=null;
+ $('rig-fit-handles').setAttribute('aria-pressed','true');
+ $('rig-fit-handles').textContent='🔓 拖动已开启';
  quickPanel.hidden=false;
  $('rig-guides').checked=false;
  setInspectorOpen();
  const selectNode=$('rig-part');selectNode.replaceChildren();
  for(const p of src)selectNode.add(new Option(p.name,p.partId||p.name));
  const preferred=S.layers[S.side][S.sel];
- select(state.model.parts[key(preferred||{})]?key(preferred):key(src[0]));
+ const startingPart=id==='female-06'&&face==='front'&&state.model.parts.pants_overlay?
+  'pants_overlay':(state.model.parts[key(preferred||{})]?key(preferred):key(src[0]));
+ select(startingPart);
  $('rig-source').textContent=id==='char-002'?
   '女二原始 PSD：24个图层记录，17个实际可见、独立运动的部件。':
   '真实源图层 '+src.length+' 个，使用新版独立部件骨骼动画。';
