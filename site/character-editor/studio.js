@@ -5,6 +5,7 @@ const ed=window.characterEditor;if(!ed)return;
 const $=id=>document.getElementById(id), DB='paperchalk-dev-characters-v1';
 const list=new Map();
 const BATTLE_FRONT_ID='protagonist-battle-front';
+const SEETHROUGH_QA_ID='seethrough-qa-2048';
 const args=new URLSearchParams(location.search);
 const slot=args.get('slot')==='enemy'?'enemy':'player';
 let currentId='',side='front',v4=null,frameAt=0,showOriginalV4=true;
@@ -725,6 +726,15 @@ async function loadList(){
  const newMale2Blank='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><text x="512" y="480" fill="#bbc8da" font-size="28" text-anchor="middle">男二 · 新拆分</text><text x="512" y="520" fill="#8294a9" font-size="18" text-anchor="middle">导入 SeeThrough ZIP 后显示真实立绘</text></svg>');
  list.set('male2',{id:'male2',label:'男二',front:newMale2Blank,back:'',familyId:'male2',variantCategory:'default'});
+ // Separate authoring-only See-through 2048→1024 resolution QA slot.
+ // The uploaded reference is a TWO-PERSON illustration, never substitute it
+ // for the approved protagonist or for the genuine male2 actor.
+ const seethroughQaBlank='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><text x="512" y="480" fill="#bbc8da" font-size="26" text-anchor="middle">See-through 1024 · 双人测试模型</text><text x="512" y="530" fill="#8294a9" font-size="19" text-anchor="middle">导入原始 See-through ZIP 后查看自动装配</text></svg>');
+ list.set(SEETHROUGH_QA_ID,{id:SEETHROUGH_QA_ID,
+  label:'See-through 2048→1024 · 双人测试（不进游戏）',
+  front:seethroughQaBlank,back:'',familyId:SEETHROUGH_QA_ID,
+  variantCategory:'source',editorOnly:true});
  try{
   const res=await fetch('../characters.catalog.json',{cache:'no-store'});
   if(res.ok)for(const c of (await res.json()).characters||[]){
@@ -1320,13 +1330,27 @@ const SEETHROUGH_Z=[
  'topwear','handwear','face','eyewhite','irides','eyelash','eyebrow',
  'mouth','front_hair'
 ];
+const SEETHROUGH_QA_Z=[
+ 'back_hair','legwear','bottomwear','topwear','neck','handwear',
+ 'head','ears','face','eyewhite','irides','eyebrow','eyelash',
+ 'nose','mouth','front_hair','headwear'
+];
+// This review mode is deliberately not the old male2 preset. Bare feet
+// and a two-person image do not have a usable "footwear" layer.
+const SEETHROUGH_QA_LABELS={
+ back_hair:'后发',legwear:'双腿',bottomwear:'泳装下装',
+ topwear:'上半身与泳装',neck:'颈部',handwear:'手臂与双手',
+ head:'头部',ears:'兽耳',face:'脸部',eyewhite:'眼白',
+ irides:'虹膜',eyebrow:'眉毛',eyelash:'睫毛',nose:'鼻',
+ mouth:'嘴',front_hair:'前发与刘海',headwear:'头饰'
+};
 const SEETHROUGH_LABELS={
  nose:'鼻子',head:'头部参考层',back_hair:'后发',ears:'耳朵',footwear:'鞋',
  legwear:'长裤与双腿',neck:'颈部',topwear:'西装外套 / 衬衫 / 领带',
  handwear:'双臂与交握双手',face:'脸部',eyewhite:'眼白',
  irides:'瞳孔',eyelash:'睫毛',eyebrow:'眉毛',mouth:'嘴',
  front_hair:'前发'};
-async function convertSeethroughArchive(raw){
+async function convertSeethroughArchive(raw,actorId='male2'){
  const names=[...raw.keys()].filter(n=>/^[^/]+\.png$/i.test(n));
  const norm=n=>n.trim().toLowerCase().replace(/\s+/g,'_');
  const ids=new Map(names.map(n=>[norm(n.slice(0,-4)),n]));
@@ -1334,10 +1358,12 @@ async function convertSeethroughArchive(raw){
     !ids.has('handwear')||!ids.has('topwear'))
   return null;
  const result=new Map(),layers=[],used=new Set(),tiny=[];
- const manifest={schema:1,canvas:[1024,1024],characterId:'male2',
+ const isQa=actorId===SEETHROUGH_QA_ID;
+ const sequence=isQa?SEETHROUGH_QA_Z:SEETHROUGH_Z;
+ const manifest={schema:1,canvas:[1024,1024],characterId:actorId,
   provenance:'authentic-seethrough-rgba',sourceImage:'src_img.png',
   sourceLayerGroups:24,layers:{front:layers,back:[]}};
- for(const id of SEETHROUGH_Z){
+ for(const id of sequence){
   const path=ids.get(id);
   if(!path)continue;
   const bytes=raw.get(path),url=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
@@ -1364,19 +1390,20 @@ async function convertSeethroughArchive(raw){
   if(!blob)throw Error('无法编码有效的 SeeThrough 真实部件：'+id);
   const file='front/'+id+'.png';
   result.set(file,new Uint8Array(await blob.arrayBuffer()));
-  layers.push({id,partId:id,name:SEETHROUGH_LABELS[id]||id,
+  layers.push({id,partId:id,name:(isQa?SEETHROUGH_QA_LABELS:SEETHROUGH_LABELS)[id]||id,
    role:'psd-part',sourceType:'seethrough',file,x:minX,y:minY,
    w:crop.width,h:crop.height,visible:true,opacity:1,locked:false});
   used.add(id);
  }
  if(layers.length<12||!used.has('handwear')||!used.has('legwear')||
-    !used.has('topwear')||!used.has('footwear'))
+    !used.has('topwear')||(isQa?!used.has('bottomwear'):!used.has('footwear')))
   throw Error('SeeThrough 有效源部件不足，拒绝创建错误 L2D');
  result.set('layers.json',new TextEncoder().encode(JSON.stringify(manifest)));
  result.set('seethrough-report.json',new TextEncoder().encode(JSON.stringify({
   retained:layers.map(p=>p.id),emptyOrNearlyEmpty:tiny,
   discardedReference:['src_head.png','src_img.png','reconstruction.png'],
-  limitations:['双臂当前共用一个真实 handwear PNG','没有原始背面拆分'],
+  limitations:isQa?['原图包含两个人：头发、手臂和腿仍为跨人物语义层','不能冒充独立左右手臂 IK','没有原始背面拆分']:
+   ['双臂当前共用一个真实 handwear PNG','没有原始背面拆分'],
  },null,2)));
  return result;
 }
@@ -1425,8 +1452,10 @@ async function importComponentArchive(file){
    zipped.has(id+'/front.rig.json'));
  if(packageIds.length>1)throw Error('ZIP 内有多个模型，请分别导入');
  const packagedId=packageIds[0]||null;
- const seethrough=packagedId?null:await convertSeethroughArchive(zipped);
- if(seethrough&&currentId!=='male2')throw Error('此原始 SeeThrough ZIP 是男二，请先选择人物树里的「男二」');
+ const seethrough=packagedId?null:await convertSeethroughArchive(zipped,
+  currentId===SEETHROUGH_QA_ID?SEETHROUGH_QA_ID:'male2');
+ if(seethrough&&currentId!=='male2'&&currentId!==SEETHROUGH_QA_ID)
+  throw Error('原始 See-through ZIP 必须导入专用测试槽位或男二；不允许覆盖现有女主 / 其他人物');
  if(packagedId&&packagedId!==currentId)throw Error('ZIP 的人物标识为 '+packagedId+'，当前是 '+currentId+'；请先选正确人物或服装');
  const files=packagedId?await zipBytes(zipped.get(packagedId+'/front-rig-editable-parts.zip')):
   (seethrough||zipped);
