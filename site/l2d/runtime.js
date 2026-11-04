@@ -23,6 +23,15 @@ function install(root){
 async function refresh(obj){
  const n=++obj.loading;
  if(!obj.img.naturalWidth)return;
+ // The procedural fallback uses the SAME canvas as the authored PartRig.
+ // Never call rig.setImage() while the real published renderer is drawing:
+ // setImage() paints immediately and would flash the old/new bitmap over
+ // the canonical PSD layers on every source-load event.
+ if(obj.libraryPlayer||obj.clip){
+  obj.pendingRigSource=obj.img;
+  obj.lastSource=obj.img.currentSrc||obj.img.src;
+  return;
+ }
  try{
   obj.root.dataset.l2dState='loading';
   if(!obj.rig){
@@ -63,9 +72,15 @@ function setProfile(slot,values){
    a.profile[name]=clamp(Number(values[name]),name==='period'?2:0,name==='period'?12:name==='amplitude'?4:2.4);
  }
  if(a.rig){
-  a.rig.setAmplitude(a.profile.amplitude);
-  a.rig.setPeriod(a.profile.period);
-  a.rig.setSoftness(a.profile.softness);
+  if(a.libraryPlayer||a.clip){
+   // Updating fallback parameters cannot render into the live ArtMesh canvas.
+   Object.assign(a.rig,{amplitude:a.profile.amplitude,
+    period:a.profile.period,softness:a.profile.softness});
+  }else{
+   a.rig.setAmplitude(a.profile.amplitude);
+   a.rig.setPeriod(a.profile.period);
+   a.rig.setSoftness(a.profile.softness);
+  }
   a.rig.featurePreset=a.img.dataset.characterId==='protagonist'&&a.img.dataset.characterSide==='front'?'heroine-front':'generic';
   a.rig.blinkEnabled=a.rig.featurePreset==='heroine-front';
  }
@@ -100,8 +115,25 @@ async function setAnimationSource(slot,uri,opts={}){
  if(obj.clip?.img?.parentElement)obj.clip.img.remove();
  obj.clip=null;obj.v4Composite=null;
  if(!uri){
+  if(obj.rig){
+   if(opts.suspendFallback){
+    // Module attach first decodes EVERY original part. The temporary
+    // fallback must not paint a procedural bitmap onto the previous rig.
+    obj.rig.amplitude=obj.profile.amplitude;
+    obj.rig.stop();
+   }else{
+    // Refresh any source that changed while an authored renderer was active.
+    // Only do this when the fallback is actually going to be visible.
+    if(obj.pendingRigSource){
+     await obj.rig.setImage(obj.pendingRigSource);
+     if(nonce!==obj.loading)return false;
+     obj.pendingRigSource=null;
+    }
+    obj.rig.setAmplitude(obj.profile.amplitude);
+    obj.rig.start();
+   }
+  }
   obj.root.dataset.l2dMode='procedural-multinode';
-  if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);if(opts.suspendFallback)obj.rig.stop();else obj.rig.start()}
   return true;
  }
  const origin={x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w??335),h:Number(opts.h??1013)};
