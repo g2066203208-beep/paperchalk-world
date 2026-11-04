@@ -478,6 +478,14 @@ function project(parts,characterId,face,previous=null){
   ...(previous?.layerOrder?{layerOrder:previous.layerOrder}:{}),
   ...(previous?.partLayerGroups?{partLayerGroups:previous.partLayerGroups}:{}),
   ...(previous?.gripOverlays?{gripOverlays:previous.gripOverlays}:{}),
+  // Authored per-part alpha masks: source is drawn again in FRONT of target.
+  // PNG stays in source-texture local coordinates, so the same ArtMesh warps it.
+  ...(Array.isArray(previous?.occlusionMasks)?{occlusionMasks:previous.occlusionMasks
+   .filter(m=>m&&typeof m.source==='string'&&typeof m.target==='string'&&
+    m.source!==m.target&&parts.some(p=>p.partId===m.source||p.name===m.source)&&
+    parts.some(p=>p.partId===m.target||p.name===m.target)&&
+    typeof m.png==='string'&&m.png.startsWith('data:image/png;base64,'))
+   .map(m=>({source:m.source,target:m.target,png:m.png,enabled:m.enabled!==false}))}:{}),
   ...(previous?.animationGraph?{animationGraph:previous.animationGraph}:{}),
   ...(previous?.motionQualityProfile?{motionQualityProfile:previous.motionQualityProfile}:{}),
   parts:Object.fromEntries(entries)}));
@@ -929,6 +937,52 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
   ctx.restore();
  }
 }
+// Unified foreground masks. The source PNG is NEVER modified; a local alpha
+// image decides which pixels to replay over a particular target layer.
+// Runtime caches are private and non-persistent; serialized models stay JSON.
+const maskSourceCache=new WeakMap(),maskedArtCache=new WeakMap();
+function sourceMaskCanvas(entry,source){
+ if(!entry||!source?.canvas)return null;
+ const w=source.canvas.width,h=source.canvas.height;
+ const live=entry._canvas;
+ if(live&&live.width===w&&live.height===h)return live;
+ if(typeof entry.png!=='string'||!entry.png.startsWith('data:image/png;base64,'))return null;
+ let rec=maskSourceCache.get(entry);
+ if(!rec||rec.uri!==entry.png){
+  const image=new Image();
+  rec={uri:entry.png,image,loaded:false};
+  maskSourceCache.set(entry,rec);
+  image.onload=()=>{rec.loaded=image.width===w&&image.height===h;};
+  image.onerror=()=>{rec.loaded=false};
+  image.src=entry.png;
+ }
+ return rec.loaded?rec.image:null;
+}
+function maskedSourceCanvas(entry,source){
+ const mask=sourceMaskCanvas(entry,source);if(!mask)return null;
+ const changed=Number(entry._revision)||0;
+ const cache=maskedArtCache.get(entry);
+ if(cache&&cache.source===source.canvas&&cache.mask===mask&&cache.rev===changed)return cache.canvas;
+ const c=document.createElement('canvas');c.width=source.canvas.width;c.height=source.canvas.height;
+ const g=c.getContext('2d');
+ g.drawImage(source.canvas,0,0);
+ g.globalCompositeOperation='destination-in';
+ g.drawImage(mask,0,0,c.width,c.height);
+ g.globalCompositeOperation='source-over';
+ maskedArtCache.set(entry,{source:source.canvas,mask,rev:changed,canvas:c});
+ return c;
+}
+function renderArtPart(ctx,source,part,motion,mount,phase,idle,selected=false){
+ ctx.save();
+ if(motion.x||motion.y||motion.angle){
+  const anchorX=mount.x+mount.w*mount.pivot.x,anchorY=mount.y+mount.h*mount.pivot.y;
+  ctx.translate(anchorX+motion.x,anchorY+motion.y);
+  ctx.rotate(motion.angle*Math.PI/180);
+  ctx.translate(-anchorX,-anchorY);
+ }
+ drawPart(ctx,source,part,phase,selected,idle);
+ ctx.restore();
+}
 function draw(ctx,layers,model,phase=0,selectedId=''){
  if(!model)return;
  // The imported ZIP enumerates eyebrows BEFORE opaque face texture.
@@ -960,18 +1014,31 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
    ?model.parts[b.parentId]:null;
   const motion=attached?actionPart(model,b.parentId):pose;
   const mount=attached||b;
-  ctx.save();
-  if(motion.x||motion.y||motion.angle){
-   const anchorX=mount.x+mount.w*mount.pivot.x;
-   const anchorY=mount.y+mount.h*mount.pivot.y;
-   ctx.translate(anchorX+motion.x,anchorY+motion.y);
-   ctx.rotate(motion.angle*Math.PI/180);
-   ctx.translate(-anchorX,-anchorY);
-  }
   // Opacity is per-part; other art, head motion and full actor identity persist.
   const source=pose.opacity===1?p:{...p,opacity:(p.opacity??1)*pose.opacity};
-  drawPart(ctx,source,b,phase,b.id===selectedId,model.idleProfile||null);
-  ctx.restore();
+  renderArtPart(ctx,source,b,motion,mount,phase,model.idleProfile||null,b.id===selectedId);
+
+  // A single ArtMesh may be BEHIND one object but IN FRONT of another.
+  // Each mask is attached to the source part and triggered AFTER its target
+  // has been painted. Any character/part pair can use this, not just axes.
+  const custom=Array.isArray(model.occlusionMasks)?model.occlusionMasks:[];
+  for(const entry of custom){
+   if(entry?.enabled===false||entry?.target!==id)continue;
+   const original=drawLayers.find(layer=>String(layer.partId||layer.name)===entry.source&&
+       layer.visible&&layer.sourcePart&&layer.canvas);
+   const arm=original&&model.parts[entry.source];
+   if(!arm||arm.enabled===false)continue;
+   const front=maskedSourceCanvas(entry,original);
+   if(!front)continue;
+   const gripPose=actionPart(model,entry.source);
+   if(gripPose.opacity<=0.001)continue;
+   const parent=(arm.id==='battle_axe'||arm.id==='axe_held')&&model.parts[arm.parentId]
+    ?model.parts[arm.parentId]:null;
+   const overMotion=parent?actionPart(model,arm.parentId):gripPose;
+   renderArtPart(ctx,{...original,canvas:front,
+       opacity:(original.opacity??1)*gripPose.opacity},
+    arm,overMotion,parent||arm,phase,model.idleProfile||null);
+  }
 
   // The AXE is in FRONT of the jacket but BEHIND the actual gripping fingers.
   // An arm's sleeve must stay behind the torso; painting the whole arm over
@@ -979,6 +1046,9 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   // from its SAME texture, using the same mesh/bones and phase.
   if(id==='battle_axe'&&model.gripOverlays){
    for(const armId of ['battle_handwear_r','battle_handwear_l']){
+    // A manual mask for this exact source/target supersedes the old hardcoded
+    // heroine grip polygon, even if it has been intentionally erased.
+    if(custom.some(m=>m.source===armId&&m.target===id))continue;
     const outline=model.gripOverlays[armId];
     if(!Array.isArray(outline)||outline.length<3)continue;
     const arm=model.parts[armId];
