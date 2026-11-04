@@ -27,8 +27,11 @@ jobs:
         run: python3 -m pip install --quiet 'Pillow>=10,<12'
       - name: Build all source-PSD modules without editing original ZIPs
         run: |
-          python3 scripts/build_scene_catalog.py
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_character_catalog.py
+          python3 scripts/build_scene_catalog.py
       - name: Validate body-pelvis hierarchy, waistband, two-leg IK, ground soles and wings
         run: |
           node tests/test_female06_pants_skin.cjs
