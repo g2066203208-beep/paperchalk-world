@@ -90,7 +90,7 @@ quick.append(undoQuick);
 const redoQuick=el('button',{id:'easy-redo',type:'button',title:'重做上一步（Ctrl+Y）'},'↷ 重做');
 redoQuick.onclick=()=>$('btnRedo')?.click();
 quick.append(redoQuick);
-const edit=el('button',{id:'easy-edit',type:'button',title:'停止动画并精修选中部件'},'编辑部件');
+const edit=el('button',{id:'easy-edit',type:'button',title:'精修当前部件'},'精修当前部件');
 quick.append(edit);
 const animate=el('button',{id:'easy-animate',type:'button',title:'退出精修，查看角色在游戏里的动画'},'▶ 看动画');
 quick.append(animate);
@@ -118,7 +118,8 @@ async function editPart(){
  if(ed.S.side===side&&ed.S.layers[side][id]===p){
   ed.S.sel=id;ed.renderList();
  }
- await stageMotion.setPreview(false);
+ // Keep the actual moving mesh in place while selecting a part.
+ // Brush mapping is performed through the live mesh's inverse deformation.
  ed.render();sync();
 }
 async function animatePart(){
