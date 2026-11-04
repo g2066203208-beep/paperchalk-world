@@ -298,7 +298,11 @@ async function persistSkeleton(face){
 async function readPartRig(id=currentId,face=side){
  if(!id||!['front','back'].includes(face))return null;
  const local=await get('part-rig:'+id+':'+face);
- if(local){
+ const needsUnified=id==='protagonist'&&face==='front'&&
+  list.get(id)?.l2dModule?.front?.rig?.sourceCharacterId==='protagonist-unified-v1';
+ const staleBase=needsUnified&&local&&
+  !['battle_handwear_r','battle_handwear_l','battle_axe'].every(x=>!!local.parts?.[x]);
+ if(local&&!staleBase){
   if(id!=='char-002'||hasFemale2Psd(Object.keys(local.parts||{})))return local;
   await dropDraft('part-rig:'+id+':'+face);
  }
@@ -309,9 +313,10 @@ async function readPartRig(id=currentId,face=side){
  if(!response.ok)throw Error('模块绑定文件加载失败：HTTP '+response.status);
  const model=await response.json();
  const sourceId=pub.sourceCharacterId;
- const validAlias=(id==='protagonist'&&sourceId==='protagonist-rig-v1'&&
-  model.characterId==='protagonist-rig-v1'&&
-  pub.url.startsWith('./assets/l2d/library/protagonist-rig-v1/'))||
+ const validAlias=(id==='protagonist'&&
+   ['protagonist-rig-v1','protagonist-unified-v1'].some(variant=>
+    sourceId===variant&&model.characterId===variant&&
+    pub.url.startsWith('./assets/l2d/library/'+variant+'/')))||
   (id==='char-002'&&face==='front'&&sourceId==='char-002-psd-v1'&&
   model.characterId==='char-002-psd-v1'&&model.provenance==='original-psd'&&
   hasFemale2Psd(Object.keys(model.parts||{}))&&
@@ -321,6 +326,12 @@ async function readPartRig(id=currentId,face=side){
   throw Error('当前人物的模块绑定文件格式或方向错误');
  // The copy is ONLY an authoring basis. The official published JSON remains
  // immutable, and local edits stay under the original heroine's own ID.
+ // Preserve earlier local standing-art rig settings when adding battle parts.
+ if(staleBase){
+  for(const [key,value] of Object.entries(local.parts||{}))
+   if(model.parts[key])model.parts[key]={...model.parts[key],...value};
+  if(local.idleProfile)model.idleProfile=local.idleProfile;
+ }
  return {...model,characterId:id};
 }
 async function storePartRig(rig){
@@ -497,9 +508,14 @@ async function importComponentFiles(files,options={}){
  // tracks separate. Never create neck/collar duplicate objects.
  for(const face of ['front','back']){
   if(!restored[face].length||(options.missingOnly&&ed.S.layers[face].some(p=>p.sourcePart)))continue;
+  const existing=options.appendMissingParts
+   ?new Map(ed.S.layers[face].filter(p=>p.sourcePart).map(p=>[String(p.partId||p.name),p]))
+   :new Map();
+  // Existing painted standing parts win; only missing battle PNGs are imported.
+  const ordered=restored[face].map(p=>existing.get(String(p.partId||p.name))||p);
   ed.S.layers[face]=[
    ...ed.S.layers[face].filter(p=>!p.sourcePart&&!/^(PSD ·|原始角色 ·)/.test(p.name)),
-   ...restored[face]];
+   ...(options.appendMissingParts&&existing.size?ordered:restored[face])];
   if(!options.missingOnly||!await get('baseline:'+currentId+':'+face))
    await put('baseline:'+currentId+':'+face,pristine[face]);
  }
@@ -521,7 +537,10 @@ const hostedPartsCache=new Map();
 const siteURL=path=>new URL(path,new URL('../',location.href)).href;
 async function hostedParts(id,face=side){
  const view=list.get(id)?.l2dModule?.[face];
- const packed=view?.sourceParts?.url;
+ // Approved standing-first front rig contains 20 parts; the V4 ZIP has only 17.
+ const packed=id==='protagonist'&&face==='front'&&
+  view?.rig?.sourceCharacterId==='protagonist-unified-v1'
+  ?null:view?.sourceParts?.url;
  if(packed){
   const url=siteURL(packed),cacheKey='archive:'+url;
   if(!hostedPartsCache.has(cacheKey)){
@@ -544,7 +563,12 @@ async function hostedParts(id,face=side){
     const response=await fetch(siteURL(published.url));
     if(!response.ok)throw Error('无法读取 L2D 模块关节文件：HTTP '+response.status);
     const rig=await response.json();
-    if(rig.format!=='paperchalk-part-rig-v1'||rig.characterId!==id||rig.face!==face)
+    const originalAlias=id==='protagonist'&&
+     ['protagonist-rig-v1','protagonist-unified-v1'].some(alias=>
+      published.sourceCharacterId===alias&&rig.characterId===alias&&
+      published.url.startsWith('./assets/l2d/library/'+alias+'/'));
+    if(rig.format!=='paperchalk-part-rig-v1'||
+       (rig.characterId!==id&&!originalAlias)||rig.face!==face)
      throw Error('当前人物绑定与独立图层不一致');
     const manifest={canvas:[1024,1024],provenance:'published-part-mesh',layers:{front:[],back:[]}};
     const files=new Map(),pairs=Object.entries(published.textures);
@@ -584,13 +608,18 @@ async function ensureHostedParts(id){
  const front=ed.S.layers.front.some(p=>p.sourcePart);
  const back=ed.S.layers.back.some(p=>p.sourcePart);
  const currentSource=ed.S.layers.front.filter(p=>p.sourcePart).map(p=>String(p.partId||p.name));
+ const heroUnified=id==='protagonist'&&side==='front'&&
+  list.get(id)?.l2dModule?.front?.rig?.sourceCharacterId==='protagonist-unified-v1';
+ const needsHeroArms=heroUnified&&front&&
+  !['battle_handwear_r','battle_handwear_l','battle_axe'].every(x=>currentSource.includes(x));
  const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
- if(front&&!upgrade&&(id==='char-002'||back||id===BATTLE_FRONT_ID))return;
+ if(front&&!upgrade&&!needsHeroArms&&(id==='char-002'||back||id===BATTLE_FRONT_ID||heroUnified))return;
  message(id==='char-002'?'载入女二 PSD：17 个源层、18 个独立部件（举起的左手已分开）…':'载入真实原位分层…');
  try{
   const source=await hostedParts(id,side);
   if(currentId!==id)return;
-  await importComponentFiles(source,{missingOnly:!upgrade,quiet:true});
+  await importComponentFiles(source,{missingOnly:!upgrade&&!needsHeroArms,
+   appendMissingParts:needsHeroArms,quiet:true});
   message(id==='char-002'?
    '✓ 女二已加载 24 层原始记录和 18 个可动部件，两只手臂独立绑定。':
    id===BATTLE_FRONT_ID?'✓ 女主战斗正面已自动加载：原始 PSD 24 层、原位部件和骨骼绑定，无需再导入 ZIP。':
