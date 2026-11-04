@@ -516,7 +516,7 @@ function cleanPart(part,face,id,characterId){
   // previous misaligned female-six shorts, without overwriting authored edits.
   // The identical preset is used by scripts/bind_female06_pants.py.
   placement:(characterId==='female-06'&&id==='pants_overlay'?
-   {scaleX:.92,scaleY:.80,offsetX:-7,offsetY:-12}:
+   {scaleX:1.20,scaleY:1.00,offsetX:-15,offsetY:-17}:
    {scaleX:1,scaleY:1,offsetX:0,offsetY:0}),
   parentId:def[0],kind:def[5],
   pivot:{x:def[1],y:def[2]},tip:{x:def[3],y:def[4]},
