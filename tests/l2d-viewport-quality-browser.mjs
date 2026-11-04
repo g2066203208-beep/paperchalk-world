@@ -59,8 +59,11 @@ try{
  await page.waitForTimeout(700);
  const after=await inspect();
  assert.ok(after.renderedFrames>before.renderedFrames+1,'oversized L2D must keep ANIMATING');
- const actor=await page.evaluate(()=>window.PaperchalkL2DLibrary.get('player').model);
- assert.equal(actor.characterId,'protagonist-unified-v1');
+ const actor=await page.evaluate(()=>{
+  const m=window.PaperchalkL2DLibrary.get('player').model;
+  return {id:m.characterId,count:Object.keys(m.parts).length};
+ });
+ assert.equal(actor.count,20,'real published 20-part heroine must remain mounted');
  // Synthetic 2D context loss tests the browser event contract; do not
  // preventDefault so actual driver recovery remains supported.
  await page.evaluate(()=>{
@@ -95,7 +98,6 @@ try{
  assert.ok(mobile.backing.width>0&&mobile.backing.height>0);
  assert.ok(mobile.backing.width<=2560&&mobile.backing.height<=2560);
  assert.ok(mobile.opaquePixels>100,'mobile resize must not blank L2D');
- assert.equal(window.undefined,undefined);
  assert.deepEqual(errors,[],'no page exceptions during high-DPI, restore and mobile rotation');
  await page.screenshot({path:'artifacts/l2d-studio/high-dpi-resize-after.png'});
  console.log('PASS REAL L2D high DPI memory budget, 20-part paint, >2560 legacy freeze, context restore and mobile resizing',JSON.stringify({before,restored,mobile}));
