@@ -1,8 +1,8 @@
 {
   "version": "3.0",
   "project": "错位日常 / Paperchalk World",
-  "date": "2026-11-02",
-  "description": "Rebalanced 48 proposed identifiable humans for original urban life and tactical deck-building RPG: 8 students, 12 other important, 28 city/support NPCs. All remain proposals, not completed actors.",
+  "date": "2026-11-04",
+  "description": "Rebalanced 48 proposed identifiable humans for original urban life and tactical deck-building RPG: 8 students, 12 other important, 28 city/support NPCs. All remain proposals, not completed actors. Updated 2026-11-04: CHAR-006 is the confirmed female-five/teacher actor; night-security-guard proposal moved to CHAR-008 to avoid a duplicate teacher.",
   "supersedes": "docs/HUMAN_CAST_ROSTER_V2.json",
   "policy": {
     "oneIdentityPerCharacter": true,
@@ -175,17 +175,47 @@
       "id": "CHAR-006",
       "group": "other",
       "tier": "important",
-      "label": "夜间保安",
+      "label": "女五／女老师（同一人物，用户已确认）",
       "visual": {
-        "face": "长方脸、下眼袋明显、浓平眉",
-        "hair": "灰黑短发、后发稍蓬",
-        "build": "181cm参考、壮实不过胖",
-        "gesture": "抬下巴看楼层牌"
+        "face": "以2026-11-04上传的真实 PSD 为准：成年女性，柔和面形、浅色眼睛",
+        "hair": "棕色中长自然卷发，额前偏分",
+        "build": "以原画为准，年龄/身高/体重尚未确认",
+        "gesture": "保持原PSD基础正面姿势、双翼及单手提袋，不擅自改姿态"
       },
-      "personality": "谨慎耐心、保守",
-      "storyFunction": "夜间巡查时间证词",
-      "status": "proposed",
-      "artStatus": "concept_not_approved"
+      "personality": "温和幽默、有原则、能够独立处理专业教学与现实生活问题；有工作压力与个人生活（候选）",
+      "storyFunction": "从城市地图、课堂与校舍布局、时刻表的变化发现异常线索，同时遵守教师保护学生的职业责任（候选）",
+      "status": "user_confirmed_identity",
+      "artStatus": "15_original_PSD_layers_17_independent_partmesh_current_conversation",
+      "previousPlanningCandidate": {
+        "label": "班主任",
+        "visual": {
+          "face": "宽椭圆脸、厚上睑、鼻梁平缓",
+          "hair": "烟棕色盘发",
+          "build": "170cm参考、端庄",
+          "gesture": "两手拢住文件但不固定道具"
+        },
+        "personality": "克制负责、对制度有顾虑",
+        "storyFunction": "课程表与课室规则",
+        "status": "proposed",
+        "artStatus": "concept_not_approved"
+      },
+      "designProfile": "docs/characters/CHAR-006.profile.json",
+      "readableProfile": "docs/l2d/CHAR006_TEACHER_BASE_FRONT_20261104.md",
+      "referenceAssets": {
+        "status": "user_supplied_original_psd",
+        "source": "SeeThrough-09c07882ba7c.psd",
+        "sha256": "1938264e92927c17e3a6c341326418279b6e20ed8cade7f6fdcd56f2065a78bb",
+        "canvas": [
+          1024,
+          1024
+        ],
+        "psdLayers": 15,
+        "splitPartCount": 17,
+        "newBinaryPublished": false
+      },
+      "artReview": {
+        "decision": "女五和此前女老师是同一人物，禁止两个演员；原始PSD是正面基准"
+      }
     },
     {
       "id": "CHAR-007",
@@ -207,18 +237,17 @@
       "id": "CHAR-008",
       "group": "other",
       "tier": "important",
-      "label": "年轻女教师／班主任（地理学科与个人造型均为候选）",
+      "label": "夜间保安（原 CHAR-006 候选重新编号）",
       "visual": {
-        "face": "成人感圆方鹅蛋脸，上半脸略宽、下颌圆方，避开女主的尖锐冷淡脸；深雾青灰／低饱和石青灰绿（候选）",
-        "hair": "深烟紫棕色，室内更接近棕黑而非纯黑（候选）；自然人物右侧偏分6:4",
-        "build": "169cm／57kg／7.3头身（仅设计参考）",
-        "gesture": "工作服单人自然站立，双手空着，面相亲切而有成熟感",
-        "outfit": "米白衬衫＋灰蓝轻外搭＋墨灰蓝长裤＋低跟鞋，非学生制服（候选）"
+        "face": "长方脸、下眼袋明显、浓平眉",
+        "hair": "灰黑短发、后发稍蓬",
+        "build": "181cm参考、壮实不过胖",
+        "gesture": "抬下巴看楼层牌"
       },
-      "personality": "温和幽默、有原则、能够独立处理专业教学与现实生活问题；有工作压力与个人生活（候选）",
-      "storyFunction": "从城市地图、课堂与校舍布局、时刻表的变化发现异常线索，同时遵守教师保护学生的职业责任（候选）",
+      "personality": "谨慎耐心、保守",
+      "storyFunction": "夜间巡查时间证词",
       "status": "proposed",
-      "artStatus": "448_field_profile_no_approved_character_art",
+      "artStatus": "concept_not_approved",
       "previousPlanningCandidate": {
         "label": "班主任",
         "visual": {
