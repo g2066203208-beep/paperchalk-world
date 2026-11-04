@@ -74,13 +74,15 @@ function ensureMask(){
  if(!part||!target||target===state.selected||!state.model.parts[target])return null;
  let entry=getMask();
  if(!entry){
+  const n=(state.model.occlusionMasks||[]).filter(x=>x.source===state.selected).length+1;
   entry={source:state.selected,target,targets:[...maskState.targets],direction:maskState.direction,
-   enabled:true,png:''};
+   enabled:true,png:'',name:'局部'+n};
   if(!entry.targets.length)entry.targets=[target];
   (state.model.occlusionMasks ||= []).push(entry);
   const c=document.createElement('canvas');c.width=part.w;c.height=part.h;
   Object.defineProperty(entry,'_canvas',{value:c,enumerable:false,configurable:true,writable:true});
  }
+ maskState.editingEntry=entry;
  return entry;
 }
 function serializeMask(entry){
