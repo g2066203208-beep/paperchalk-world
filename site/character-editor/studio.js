@@ -734,11 +734,8 @@ async function loadList(){
   encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024">'+
    '<text x="512" y="488" font-family="sans-serif" fill="#bfd1e7" font-size="26" text-anchor="middle">'+label+'</text>'+
    '<text x="512" y="527" font-family="sans-serif" fill="#9cacc5" font-size="18" text-anchor="middle">请导入原始分层 ZIP / PSD</text></svg>');
- if(!list.has('char-003-outfit-02')){
-  list.set('char-003-outfit-02',{id:'char-003-outfit-02',
-   label:'男主 · 新衣服',front:wardrobePlaceholder('男主 · 新衣服'),back:'',
-   familyId:'char-003',variantCategory:'outfit',editorOnly:true});
- }
+ // The formerly named char-003-outfit-02 is the CANONICAL male lead FRONT.
+ // Do not create a second local wardrobe node for an existing base pose.
  if(!list.has('char-008-outfit-02')){
   list.set('char-008-outfit-02',{id:'char-008-outfit-02',
    label:'女五 · 女老师新衣服（待导入）',front:wardrobePlaceholder('女五 · 新衣服'),back:'',
@@ -763,7 +760,10 @@ async function loadList(){
  if(canonicalFemale2)list.set('char-002',canonicalFemale2);
  let last=null;try{last=JSON.parse(localStorage.getItem('paperchalk-studio-last')||'null')}catch(e){}
  const requestedId=args.get('character')||last?.id||'protagonist';
- const id=requestedId==='class-teacher-geography-candidate'?'char-006':requestedId;
+ // Preserve historical deep links while opening the one true male-lead
+ // front model instead of creating a duplicate "new outfit" project.
+ const id=requestedId==='class-teacher-geography-candidate'?'char-006':
+  requestedId==='char-003-outfit-02'?'char-003':requestedId;
  await change(list.has(id)?id:'protagonist',args.get('side')||last?.side||'front');
 }
 const decodedPristine=new Map();
@@ -1158,8 +1158,13 @@ async function hostedParts(id,face=side){
       published.sourceCharacterId==='class-teacher-geography-candidate'&&
       rig.characterId==='class-teacher-geography-candidate'&&
       published.url.startsWith('./assets/l2d/library/class-teacher-geography-candidate/');
+    const maleLeadAlias=id==='char-003'&&face==='front'&&
+      published.sourceCharacterId==='char-003-outfit-02'&&
+      rig.characterId==='char-003-outfit-02'&&
+      published.url.startsWith('./assets/l2d/library/char-003-outfit-02/')&&
+      Object.keys(rig.parts||{}).length===17;
     if(rig.format!=='paperchalk-part-rig-v1'||
-       (rig.characterId!==id&&!originalAlias&&!femaleFiveAlias)||rig.face!==face)
+       (rig.characterId!==id&&!originalAlias&&!femaleFiveAlias&&!maleLeadAlias)||rig.face!==face)
      throw Error('当前人物绑定与独立图层不一致');
     const manifest={canvas:[1024,1024],provenance:'published-part-mesh',layers:{front:[],back:[]}};
     const files=new Map(),pairs=Object.entries(published.textures);
