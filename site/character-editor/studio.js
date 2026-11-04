@@ -124,7 +124,7 @@ function options(){
   group.label=(canonical?.label||family).replace(' · 未导入立绘','');
   for(const c of variants){
    const subset=c.id===family?'基本立绘 · 正面 / 背面':
-    c.variantCategory==='combat'?'战斗动作 · 正面独立部件':
+    c.variantCategory==='combat'?'原始战斗 PSD · 备份素材（非游戏主模型）':
     (c.label||c.id);
    group.appendChild(new Option(subset+(c.draft?'（待导入）':''),c.id));
   }
