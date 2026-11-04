@@ -446,6 +446,7 @@ function project(parts,characterId,face,previous=null){
  const entries=base.map(p=>[p.id,sanitize(prev[p.id],p)]);
  return bindBodyHierarchy({format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
   idleProfile:sanitizeIdleProfile(previous?.idleProfile||defaultIdleProfile()),
+  ...(previous?.actionProfiles?{actionProfiles:previous.actionProfiles}:{}),
   parts:Object.fromEntries(entries)});
 }
 
@@ -685,6 +686,48 @@ function blinkAmount(phase){
  };
  return clamp(Math.max(pulse(.9,.145),cycle%3===2?pulse(1.17,.11):0),0,1);
 }
+// Battle PSD uses one shared body/face model. Only arm transforms and the
+// held weapon differ between actions; these are ordered BACK -> FRONT.
+const BATTLE_FRONT_STACK=['back_hair','legwear','footwear','axe_overhead',
+ 'bottomwear','neck','topwear','axe_held','handwear_r','handwear_l',
+ 'ears_r','ears_l','face','eyewhite_r','eyewhite_l','irides_r','irides_l',
+ 'eyelash_r','eyelash_l','eyebrow_r','eyebrow_l','mouth','front_hair','headwear'];
+const BATTLE_ACTIONS={
+ default:'combat',transitionMs:420,actions:{
+  idle:{label:'日常待机 · 共用身体',parts:{
+   handwear_r:{angle:-12},handwear_l:{angle:12},axe_held:{opacity:0}}},
+  combat:{label:'战斗戒备 · 手臂与斧头',parts:{
+   handwear_r:{angle:0},handwear_l:{angle:0},axe_held:{opacity:1}}}
+ }};
+function actionSet(model){
+ return model?.actionProfiles ||
+  (model?.characterId==='protagonist-battle-front'&&model?.face==='front'?BATTLE_ACTIONS:null);
+}
+function actionNames(model){
+ const config=actionSet(model);
+ return config?Object.entries(config.actions||{}).map(([id,pose])=>({id,label:pose.label||id})):[];
+}
+function actionPart(model,id,now=typeof performance!=='undefined'?performance.now():0){
+ const config=actionSet(model),zero={x:0,y:0,angle:0,opacity:1};
+ if(!config)return zero;
+ const current=model.actionState||{to:config.default},target=current.to||config.default;
+ const goal={...zero,...config.actions?.[target]?.parts?.[id]};
+ const length=Number(current.duration)||Math.max(120,Number(config.transitionMs)||420);
+ const fraction=current.start==null?1:smooth((now-current.start)/length);
+ const old=current.fromParts?.[id]||{...zero,...config.actions?.[current.from||config.default]?.parts?.[id]};
+ return Object.fromEntries(Object.keys(zero).map(key=>[key,finite(old[key],zero[key])*(1-fraction)+finite(goal[key],zero[key])*fraction]));
+}
+function setAction(model,name,now=typeof performance!=='undefined'?performance.now():0){
+ const config=actionSet(model);
+ if(!config?.actions?.[name])return false;
+ const previous=model.actionState?.to||config.default;
+ if(previous===name){if(!model.actionState)model.actionState={to:name};return true;}
+ const fromParts={};
+ for(const id of Object.keys(model.parts||{}))fromParts[id]=actionPart(model,id,now);
+ model.actionState={from:previous,fromParts,to:name,start:now,
+  duration:Math.max(120,Number(config.transitionMs)||420)};
+ return true;
+}
 const FACE_STACK=['rear_hair','sleeves_and_hands','legs','shoes','neck',
   'skirt','jacket','ears','face','eye_white','irises','lashes',
   'brows','front_hair','nose','mouth','hair_clip'];
@@ -818,16 +861,31 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
  // A stable explicit z-order only applies to the known 17-piece heroine.
  const heroine=(model.characterId==='protagonist'||model.characterId==='protagonist-rig-v1')
   &&model.face==='front';
- const order=new Map(FACE_STACK.map((id,i)=>[id,i]));
- const drawLayers=heroine?[...layers].sort((a,b)=>{
+ const stack=model.characterId==='protagonist-battle-front'&&model.face==='front'
+  ?BATTLE_FRONT_STACK:heroine?FACE_STACK:null;
+ const order=stack?new Map(stack.map((id,i)=>[id,i])):null;
+ const drawLayers=order?[...layers].sort((a,b)=>{
   const ai=order.get(String(a.partId||a.name)),bi=order.get(String(b.partId||b.name));
   return (ai??100)-(bi??100);
  }):layers;
  for(const p of drawLayers){
   if(!p.visible||!p.sourcePart||!p.canvas)continue;
-  const b=model.parts[String(p.partId||p.name)];
-  if(b)drawPart(ctx,p,b,phase,b.id===selectedId,model.idleProfile||null);
+  const id=String(p.partId||p.name),b=model.parts[id];
+  if(!b||b.enabled===false)continue;
+  const pose=actionPart(model,id);
+  if(pose.opacity<=0.001)continue;
+  ctx.save();
+  if(pose.x||pose.y||pose.angle){
+   const anchorX=b.x+b.w*b.pivot.x,anchorY=b.y+b.h*b.pivot.y;
+   ctx.translate(anchorX+pose.x,anchorY+pose.y);
+   ctx.rotate(pose.angle*Math.PI/180);
+   ctx.translate(-anchorX,-anchorY);
+  }
+  // Opacity is per-part; other art, head motion and full actor identity persist.
+  const source=pose.opacity===1?p:{...p,opacity:(p.opacity??1)*pose.opacity};
+  drawPart(ctx,source,b,phase,b.id===selectedId,model.idleProfile||null);
+  ctx.restore();
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
