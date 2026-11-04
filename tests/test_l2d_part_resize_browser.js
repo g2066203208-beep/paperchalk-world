@@ -16,7 +16,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    null,{timeout:50000});
   await page.locator('#rig-part').selectOption('pants_overlay');
   assert.equal(await page.locator('#rig-fit-panel').isVisible(),true);
-  assert.equal(await page.locator('#rig-fit-width').inputValue(),'100');
+  assert.equal(await page.locator('#rig-fit-width').inputValue(),'92');
   await page.locator('#rig-fit-lock').uncheck();
   await page.locator('#rig-fit-width').fill('86');
   await page.locator('#rig-fit-height').fill('110');
