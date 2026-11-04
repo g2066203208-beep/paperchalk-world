@@ -13,6 +13,10 @@ const assert=require('node:assert/strict');
     window.PaperchalkPartRigStudio?.state?.active===true&&
     window.characterEditor.S.layers.front.filter(p=>p.sourcePart).length===16,
     null,{timeout:45000});
+  const fixedOrder=await page.evaluate(()=>({
+    ui:window.characterEditor.S.layers.front.filter(p=>p.sourcePart).map(p=>p.partId),
+    z:[...window.PaperchalkPartRigStudio.state.model.layerOrder]
+  }));
   assert.equal(await page.locator('#rig-mask-front').isVisible(),true);
   assert.equal(await page.locator('#rig-mask-back').isVisible(),true);
   assert.equal(await page.locator('#rig-mask-behind').count(),0,'old manual base-Z repair removed');
@@ -70,6 +74,16 @@ const assert=require('node:assert/strict');
   assert.ok(result?.painted>100,'brush should paint behind-mask source alpha');
   assert.equal(result.direction,'behind');
   assert.equal(result.png,'data:image/png;base64,');
+  const postPaint=await page.evaluate(()=>({
+   ui:window.characterEditor.S.layers.front.filter(p=>p.sourcePart).map(p=>p.partId),
+   z:[...window.PaperchalkPartRigStudio.state.model.layerOrder]
+  }));
+  assert.deepEqual(postPaint,fixedOrder,'painting a local mask must NEVER reorder the parent global Z stack');
+  const children=page.locator('#layers .layer-local-mask[data-source-part="topwear"]');
+  assert.equal(await children.count(),1,'one painted override is shown UNDER the original suit part');
+  assert.equal(await page.locator('#layers .layer').count(),16,
+    'virtual mask nodes may not be mistaken for additional body layers');
+
   await page.keyboard.press('Control+z');
   const undone=await page.evaluate(({source,target})=>{
    const mask=window.PaperchalkPartRigStudio.state.model.occlusionMasks
@@ -130,6 +144,11 @@ const assert=require('node:assert/strict');
     window.PaperchalkPartRigStudio.state.model?.occlusionMasks?.some(m=>
      m.source==='topwear'&&m.direction==='behind'&&m.targets?.length===2),
     null,{timeout:45000});
+  assert.equal(await page.locator('#layers .layer-local-mask[data-source-part="topwear"]').count(),1,
+    'saved override must reappear as child of original source after reload');
+  await page.locator('#layers .layer-local-mask[data-source-part="topwear"]').click();
+  assert.equal(await page.locator('#rig-mask-back').getAttribute('aria-pressed'),'true',
+    'clicking the tree child selects its own relative behind-neck depth rule');
   assert.deepEqual(errors,[]);
   console.log('PASS bidirectional behind-neck mask, multi-target, live Z composite, safe Select, source fidelity, save/reload; changed pixels:',difference);
  }finally{await browser.close()}
