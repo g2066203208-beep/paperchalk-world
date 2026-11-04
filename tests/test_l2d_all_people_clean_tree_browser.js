@@ -17,7 +17,8 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    ['female-06','female-06','女六'],
    ['class-teacher-geography-candidate','class-teacher-geography-candidate','女老师'],
    ['protagonist-sleepwear','protagonist','女主角'],
-   ['char-003-outfit-02','char-003','男主角']
+   ['char-003-outfit-02','char-003','男主角'],
+   ['female-06-outfit-02','female-06','女六']
   ];
   for(const [id,family,name] of cases){
    await page.goto(BASE+'?character='+encodeURIComponent(id)+'&side=front',
@@ -56,6 +57,12 @@ const BASE='http://127.0.0.1:8134/character-editor/';
      'drop-down must not list technical source archives: '+id);
    assert.equal(audit.tree.includes('＋ 导入男二'),false);
    assert.equal(audit.current,id);
+   if(id==='female-06-outfit-02'){
+    assert.equal(await page.locator('.character-family[data-family="female-06"]').count(),1,
+      'new dress is NOT a second female6 character');
+    assert.equal(await page.locator('.character-family[data-family="female-06"] [data-category="outfit"] button[data-character="female-06-outfit-02"]').count(),1,
+      'new clothes must appear under 女六 → 服装');
+   }
    console.log('PASS actor tree',id,'=>',family,'import',audit.importTarget);
   }
   // The universal action must trigger the actual PSD/ZIP file picker, not a
@@ -72,6 +79,6 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.equal(await page.locator('#studio-character').inputValue(),'protagonist-battle-front');
   assert.equal(await page.locator('.character-source-archive').count(),0);
   assert.deepEqual(exceptions,[],'no uncaught client exceptions for all actors');
-  console.log('PASS full cast: 9 character/wardrobe views, uniform file chooser, no archive clutter, deep-link safe');
+  console.log('PASS full cast: 10 character/wardrobe views, uniform file chooser, no archive clutter, deep-link safe');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
