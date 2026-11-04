@@ -35,15 +35,20 @@ try{
     window.PaperchalkPartRigStudio?.state?.active===true&&
     window.characterEditor?.S?.layers?.front?.filter(x=>x.sourcePart)?.length===25,
    null,{timeout:50000});
-  const data=await page.evaluate(()=>{
+  const data=await page.evaluate(async()=>{
    const model=window.PaperchalkPartRigStudio.state.model;
+   const published=await fetch('../assets/l2d/library/protagonist-crouch-axe/front.rig.json').then(r=>{
+    if(!r.ok)throw Error('Hosted true crouch rig missing: '+r.status);
+    return r.json();
+   });
    const parts=window.characterEditor.S.layers.front.filter(p=>p.sourcePart);
    const family=document.querySelector('.character-family[data-family="protagonist"]');
    const actionButtons=[...family.querySelectorAll('[data-category="action"] button')];
    const w=model.parts;
    const textureReady=parts.every(p=>p.canvas&&p.canvas.width>0&&p.canvas.height>0);
    const src=parts.map(p=>p.partId);
-   return {characterId:model.characterId,family:model.characterFamilyId,
+   return {characterId:model.characterId,
+    family:window.PaperchalkCharacterLibrary.familyOf(window.PaperchalkStudio.list.get('protagonist-crouch-axe')),
     partCount:Object.keys(w).length,ids:src,textureReady,
     actionTo:model.actionState?.to||model.actionProfiles?.default,
     actionNames:actionButtons.map(x=>x.textContent),
@@ -52,7 +57,7 @@ try{
     footLeft:w.footwear_l.parentId,footRight:w.footwear_r.parentId,
     axe:w.axe.kind,hair:w.front_hair.kind,
     maskNames:src.filter(id=>id.includes('eye')||id.includes('brow')||id.includes('lashes')),
-    seeThroughSource:model.sourceSha256};
+    seeThroughSource:published.sourceSha256};
   });
   assert.equal(data.characterId,'protagonist-crouch-axe');
   assert.equal(data.family,'protagonist');
