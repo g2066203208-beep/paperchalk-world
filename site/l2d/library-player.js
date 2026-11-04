@@ -120,6 +120,13 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    localDraft.characterId===characterId&&localDraft.face===face&&validDeleted&&
    Object.keys(localDraft.parts||{}).length===activeIds.length&&
    activeIds.every(id=>localDraft.parts[id]&&model.parts[id]);
+ // Do not quietly discard the player's personally painted masking, source
+ // texture placements and rig just because an older draft is incompatible.
+ // Silent fallback made the author see the ORIGINAL PSD as the new animation.
+ // This is scoped to the character the user has actually edited.
+ if(characterId==='protagonist-crouch-axe'&&
+    localDraft?.format==='paperchalk-part-rig-v1'&&!draftMatches)
+  throw Error('已检测到你的蹲姿骨骼／蒙版工程，但它与当前25层版本不兼容；拒绝回退旧PSD或覆盖修正版，请在工作室保存／导出修正版');
  model.idleProfile=root.PaperchalkPartRigCore.sanitizeIdleProfile(
    (draftMatches?localDraft.idleProfile:null)||model.idleProfile||
    root.PaperchalkPartRigCore.defaultIdleProfile());
@@ -169,6 +176,8 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  const artValid=artIndex.size===activeIds.length&&
   artLayers.length===activeIds.length&&
   activeIds.every(id=>artIndex.get(id)?.img?.startsWith('data:image/png;base64,'));
+ if(characterId==='protagonist-crouch-axe'&&artLayers.length&&!artValid)
+  throw Error('已找到你绘制的蹲姿贴图，但图层不完整；禁止自动改回原版PNG');
  let drawings=imgs,personalised=false;
  if(artValid){
   try{
@@ -184,7 +193,13 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
      model.parts[id].y=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).y)));
     });
    }
-  }catch(e){console.warn('[L2D] 本机分层纹理校验失败，保留已发布素材',e);}
+  }catch(e){
+   if(characterId==='protagonist-crouch-axe')
+    throw Error('你的蹲姿修复贴图校验未通过：'+e.message+'。不会自动替换成原版');
+   console.warn('[L2D] 本机分层纹理校验失败，保留已发布素材',e);
+  }
+  if(characterId==='protagonist-crouch-axe'&&!personalised)
+   throw Error('你的蹲姿修复贴图尺寸／位置与素材不匹配，拒绝加载未修改的原图');
  }
  if(VERSIONS.get(slot)!==version)return false;
  // Restore runtime-only bone ancestry AFTER published parts and local artwork
