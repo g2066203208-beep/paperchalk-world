@@ -417,7 +417,9 @@ jobs:
                 });
                 assert.ok(downloaded.suggestedFilename().endsWith('.zip'));
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:12000});
-                await page.locator('#studio-side').selectOption('back');
+                if(vp.width<500)await page.locator('[data-studio-pane="characters"]').click();
+                await page.locator('#studio-character-tree .character-family.active button').filter({hasText:'基础模型 · 背面'}).click();
+                if(vp.width<500)await page.locator('[data-studio-pane="layers"]').click();
                 await page.waitForFunction(()=>window.PaperchalkStudio?.editSide==='back',{timeout:15000});
                 assert.ok(await page.locator('#layers .layer').count()>=1);
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-back.png',fullPage:true});
