@@ -20,6 +20,8 @@ on:
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
       - 'tests/test_l2d_idle.js'
+      - 'tests/test_protagonist_crouch_asset.py'
+      - 'tests/test_protagonist_crouch_studio_browser.mjs'
       - 'tests/test_l2d_display_lifecycle.cjs'
       - 'tests/test_battle_front_studio.js'
       - 'tests/test_female5_teacher_alias_browser.js'
@@ -40,6 +42,8 @@ on:
       - 'scripts/build_character_catalog.py'
       - 'tests/test_l2d_library.py'
       - 'tests/test_l2d_idle.js'
+      - 'tests/test_protagonist_crouch_asset.py'
+      - 'tests/test_protagonist_crouch_studio_browser.mjs'
       - 'tests/test_battle_front_studio.js'
       - '.github/workflows/l2d-modules.yml'
   workflow_dispatch:
@@ -148,6 +152,8 @@ jobs:
           assert data['qa-v4']['clips']['front']['frames']==2
           print('PASS catalog: CHAR-002 authentic 17 source layers and independent raised/lowered arm meshes')
           PY
+      - name: Verify crouch source pixel integrity, eye layers, exact grips and 25 real textures
+        run: python3 -m unittest tests/test_protagonist_crouch_asset.py -v
       - name: Verify game, independent ArtMesh player and editor parse
         run: |
           node - <<'JS'
@@ -163,6 +169,8 @@ jobs:
           JS
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
+      - name: Real Chromium inspect heroine crouch 25 layers, actions, viewport and game player
+        run: node tests/test_protagonist_crouch_studio_browser.mjs
       - name: Actual browser loads V4 and true independent ArtMesh modules in game and studio
         run: |
           python3 -m http.server 8132 --directory site >/tmp/l2d-modules-http.log 2>&1 &
@@ -518,4 +526,11 @@ jobs:
         with:
           name: protagonist-original-face-eye-blink
           path: artifacts/l2d-face/
+          retention-days: 7
+      - name: Upload true crouch action Studio and Game screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: heroine-crouch-studio-desktop-mobile
+          path: artifacts/protagonist-crouch/
           retention-days: 7
