@@ -1,56 +1,63 @@
-# Character Resource Tree V2 — 人物、动作、服装、源稿严格分离
+# 人物资源库 V3 — 全角色一致的 L2D 工作室规则
 
-## 身份与编辑资源不是同一概念
+## 编辑器里只保留正常制作所需的资源
 
-一个**人物身份（canonical actor）**在工作室资源树里只能占据一个根节点。背景、动作、换装、动画导出、PSD 拆分及实验版本绝不能被登记为另一个人物。人物根 ID 不随姿势和服装切换。
-
-资源树使用 `site/character-editor/person-tree-model.js` 的纯函数 `makeTree()` 构建。页面只负责渲染和响应点击，禁止为了凑列表临时拷贝人物记录或改动贴图的 Z 顺序。
-
-### 女主角的正式资源结构
+每个人物始终是**一个根节点**，按同一顺序呈现：
 
 ```text
-女主角                      ← 唯一人物根 protagonist
-├── 基础立绘
-│   ├── 正面 · 站立         ← protagonist/front；正式 20 个 ArtMesh
-│   └── 基础模型 · 背面      ← protagonist/back
-├── 动作
-│   └── 战斗 · 持斧          ← 同一个 protagonist/front，切到 combat 参数
-├── 服装
-│   └── 睡衣 · 正面          ← protagonist-sleepwear；同一人物的另一套服装
-└── ▸ 源稿与历史工程        ← 默认折叠，不参与日常人物切换
-    ├── 战斗 PSD · 原始 24 部件
-    │                       ← protagonist-battle-front；可独立校对源稿
-    └── 旧导入／备份版本     ← 保留编辑权限，不冒充新的游戏人物
+女主角
+  基础立绘
+    正面 · 站立
+    背面
+  动作（已做好的才显示）
+    战斗 · 持斧
+  服装（已导入的才显示）
+    睡衣
+女二
+  基础立绘
+    正面
+男主角
+  基础立绘
+    正面
+  服装
+    新服装
+男二
+  基础立绘
+    正面
+女三
+  基础立绘
+    正面
+女六
+  基础立绘
+    正面
+女老师
+  基础立绘
+    正面
 ```
 
-## 类型合同
+实际显示以该角色已发布且能加载的真实素材为准，不用假的背面、假的换装或待导入占位充数。没有的分类**不显示空文件夹**。
 
-| 类型 | 编辑对象 | 是否独立人物 | 主导航 |
-| --- | --- | --- | --- |
-| 基础立绘 | canonical person + front/back | 否 | 展开 |
-| 角色动作 | 同一人物／同一网格的动作参数 | 否 | 展开 |
-| 服装 | `variantCategory=outfit` 或明确的已发布服装模块 | 否 | 展开 |
-| 源稿 | PSD 原件、单独姿势源模块、Rig 中间产物 | 否 | 默认折叠 |
-| 历史导入 | 同身份旧稿、不明类别历史条目 | 否 | 默认折叠 |
-| 待导入 | 只有占位图、无正式 ArtMesh 的服装 | 否 | 默认折叠 |
+## 一个通用导入入口
 
-任何类别都禁止修改用户素材的永久删除状态、网格亲子关系、遮挡蒙版或实际绘制 Z 顺序。源稿保留原始 ID 和打开能力，直接访问旧 `?character=...` 链接时自动展开所在的源稿组。
+人物资源库上方只有一处 **＋ 导入 PSD / 分层 ZIP**，始终显示当前选中的人物与方向（例如：`导入到：女二 / 正面`）。导入按钮直接调用现有正式导入器 `studio-parts-import` / `importComponentArchive`，不得另写不一致的男二、女二或老师专用导入流程。切换已有服装后，导入目标是当前服装，不会误写到基础模型。
 
-## 编辑器交互约束
+**技术源文件和历史工程**：`protagonist-battle-front`、旧女二 PSD、旧版 male2/char-016 等仍保留在原有仓库和浏览器草稿，**不放进人物树，也不放进常规角色下拉选择列表**。特殊原始项目仍可通过原有 `?character=...` 深链接直接打开，不影响回退、源稿校对和修改。
 
-1. 点击正面基础模型：恢复已发布正面 L2D；女主同时选择 `idle`，避免从上次保存的战斗状态残留。
-2. 点击战斗：沿用 `protagonist` 的 20 片正式模型，只通过 `rig-character-action` 修改动作；不切到 `protagonist-battle-front`，也不重复加载头、脸、身体或裙子。
-3. 点击睡衣：加载 `protagonist-sleepwear`，但人物树始终选中同一个“女主角”根节点。
-4. 点击源稿：才进入原始 24 片战斗 PSD 模块；保留其独立审稿与修改用途。
-5. 任何旧导入记录不得覆盖同 ID 的已发布资源，也不得生成第二个女主／女二／男主根节点。
-6. 搜索可按人物、动作、服装和源稿过滤；折叠状态保持，真实图层编辑器独立工作。
-7. PC、手机及 URL 深链接均使用同一套分类模型。
+不能让旧导入草稿盖掉已发布主角立绘；不得因为整理树而删除源 PNG、ArtMesh、骨骼、遮罩、动作参数或本地数据。
 
-## 验收与回归
+## 动作与换装
 
-- 纯数据测试：`node tests/test_l2d_person_tree_model.cjs`
-- 浏览器页面测试：`node tests/test_l2d_person_tree_professional_browser.js`
-- 工作室旧功能回归：`node tests/test_l2d_studio_rework_browser.js`
-- 删除和身份去重测试：`node tests/test_l2d_person_tree_delete_browser.js`
+- **动作**是同一个人物的参数／局部部件变化，现有女主战斗通过 `protagonist/front` 的 `combat` 参数执行，绝不把独立 24 片 PSD 复制成一个人物。
+- **服装**是同一人物的另一套正式艺术资源，可单独维护；不要把它登记为另一名角色。
+- **正面／背面**只显示真实可加载的视图，不用正面图片伪装成背面。
+- **图层树**是另一个独立系统，按原始 PSD ArtMesh 和遮挡／Z 顺序工作；人物资源树不参与重排图层。
 
-专业参考：Live2D Cubism Editor 官方 [Parts palette](https://docs.live2d.com/en/cubism-editor-manual/partspalatte/) 和 [About draw order](https://docs.live2d.com/en/cubism-editor-manual/draworder/)。本项目借鉴组件树层次化思想，但人物资产导航与 ArtMesh Z-order 永远是两个独立系统。
+## 每次发布必须验收
+
+- `node tests/test_l2d_person_tree_model.cjs`：身份、分类、动作、服装、旧稿归属
+- `node tests/test_l2d_person_tree_professional_browser.js`：女主动作/睡衣/直链
+- `node tests/test_l2d_all_people_clean_tree_browser.js`：全演员资源树、统一导入、无历史杂项
+- `node tests/test_male2_seethrough_browser.js`：男二通过统一导入方式安装拆分
+- `node tests/test_l2d_person_tree_delete_browser.js`：删除、撤销、保存和人物去重
+
+参考资料：[Live2D Parts Palette](https://docs.live2d.com/en/cubism-editor-manual/partspalatte/)，[Spine Skins](https://us.esotericsoftware.com/spine-skins)。二者的共同设计原则是把人物、图形部件、动作和换装概念分离，让制作资产归档不妨碍日常使用。
