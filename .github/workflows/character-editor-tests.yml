@@ -11,6 +11,7 @@ on:
       - 'scripts/bind_female06_pants.py'
       - 'tests/test_female06_pants_skin.cjs'
       - 'tests/test_female06_pants_wear_browser.js'
+      - 'tests/test_female06_existing_draft_migration_browser.js'
       - 'scripts/build_protagonist_part_rig.py'
       - 'scripts/build_character_catalog.py'
       - 'tests/test_protagonist_unified.py'
@@ -594,6 +595,7 @@ jobs:
           node tests/test_l2d_person_tree_professional_browser.js
           node tests/test_l2d_all_people_clean_tree_browser.js
           node tests/test_female06_pants_wear_browser.js
+          node tests/test_female06_existing_draft_migration_browser.js
           node tests/test_l2d_person_tree_delete_browser.js
           node tests/test_l2d_heroine_performance_browser.js
           node tests/test_l2d_occlusion_masks_browser.js
