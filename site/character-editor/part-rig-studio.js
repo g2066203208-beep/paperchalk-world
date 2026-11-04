@@ -49,7 +49,7 @@ fitPanel.innerHTML=`
 <label class="rig-fit-lock"><input id="rig-fit-lock" type="checkbox" checked> 等比缩放（解除后可分别调整宽高）</label>
 <div class="rig-fit-actions"><button type="button" id="rig-fit-handles" aria-pressed="false">⬚ 画布拖动／缩放</button><button type="button" id="rig-fit-reset">重置尺寸位置</button></div>
 <small id="rig-fit-help">先选部件；调整宽高、左右上下位置，或者打开画布手柄。原始 PNG 不变，骨骼/蒙版自动跟随。右上角保存到游戏。</small>`;
-panel.querySelector('.rig-part-amount').before(fitPanel);
+maskPanel.before(fitPanel);
 const fitCSS=document.createElement('style');
 fitCSS.textContent=`
 #rig-fit-panel{padding:10px;margin:8px 0;border:1px solid #41677b;border-radius:9px;background:#172734}
@@ -528,6 +528,9 @@ function setFitMode(value){
  ed.render();
 }
 $('rig-fit-handles').onclick=()=>setFitMode(!state.fitMode);
+window.addEventListener('paperchalk:studio-tool-changed',e=>{
+ if(state.fitMode&&e.detail?.tool!=='select')setFitMode(false);
+});
 const info=s=>{$('rig-status').textContent=s;};
 function values(){
  const p=current();if(!p)return;
