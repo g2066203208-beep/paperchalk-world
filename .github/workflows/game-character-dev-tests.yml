@@ -30,6 +30,7 @@ jobs:
       - run: |
           python3 scripts/build_v4_assets.py
           python3 scripts/build_protagonist_part_rig.py
+          python3 -m unittest tests/test_protagonist_unified.py -v
           python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
@@ -56,7 +57,7 @@ jobs:
               await page.goto('http://127.0.0.1:8129/?dev=1',{waitUntil:'load'});
               await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:30000});
               await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
-              await page.waitForFunction(()=>window.PaperchalkL2DLibrary?.get('player')?.layers.length===17,
+              await page.waitForFunction(()=>window.PaperchalkL2DLibrary?.get('player')?.layers.length===20,
                 null,{timeout:28000});
               const first=await page.evaluate(()=>{
                 const a=window.PaperchalkL2DLibrary.get('player');
@@ -72,9 +73,9 @@ jobs:
               });
               assert.equal(first.id,'protagonist');
               assert.equal(first.mode,'library-part-mesh');
-              assert.equal(first.layerCount,17);
+              assert.equal(first.layerCount,20);
               for(const key of ['face','brows','nose','iris','lashes'])assert.ok(first[key],key+' missing');
-              // Verify the ACTUAL published 17-layer heroine, not a fake mannequin.
+              // Verify the ACTUAL published 20-layer heroine, not a fake mannequin.
               const anatomy=await page.evaluate(()=>{
                 const a=window.PaperchalkL2DLibrary.get('player');
                 const model=a.model,p=model.parts,rig=model.bodyHierarchy,
@@ -136,7 +137,7 @@ jobs:
               for(const field of ['hands','shoulders','hips','breath','speed'])
                 assert.ok(await page.locator('[data-quick="'+field+'"]').isVisible());
               await page.locator('#idle-open').click();
-              assert.equal(await page.locator('#rig-part option').count(),17);
+              assert.equal(await page.locator('#rig-part option').count(),20);
               // The inspector must be docked outside the moving canvas.
               const docked=await page.evaluate(()=>{
                 const inspector=document.getElementById('part-rig-panel');
@@ -283,7 +284,7 @@ jobs:
               },'female-two game must animate original independent hair and eyes with feet fixed');
 
               // NOT poster images and NOT procedural placeholders: exercise
-              // the REAL heroine 17-part and female-two PSD 18-part player
+              // the REAL heroine 20-part (17 standing + 3 PSD battle alternatives) and female-two PSD 18-part player
               // while moving the shared scene ground. Both canvas pixels
               // and shoe positions must follow their actual L2D parent.
               await page.evaluate(()=>{
@@ -318,7 +319,7 @@ jobs:
                 }
                 return out;
               });
-              assert.equal(liveBefore.player.layers,17);
+              assert.equal(liveBefore.player.layers,20);
               assert.equal(liveBefore.enemy.layers,18);
               assert.ok(liveBefore.player.ink>10&&liveBefore.enemy.ink>10,
                 'True part-mesh character art must paint opaque pixels: '+JSON.stringify(liveBefore));
@@ -365,9 +366,9 @@ jobs:
                 const y=document.getElementById('dev-ground-y');
                 y.value='77';y.dispatchEvent(new Event('input',{bubbles:true}));
               });
-              console.log('PASS REAL BOTH L2D: 17-layer heroine + 18-layer CHAR-002 PSD shoes ON shared 3D floor Y',name);
+              console.log('PASS REAL BOTH L2D: 20-layer heroine + 18-layer CHAR-002 PSD shoes ON shared 3D floor Y',name);
               assert.deepEqual(errors,[],name+' console errors');
-              console.log('PASS 17 real heroine parts + one-click saved art; female two 17 original PSD layers split into 18 arm-corrected meshes with no old 7-region actor',name);
+              console.log('PASS 17 approved original heroine parts plus 3 PSD battle alternatives + one-click saved art; female two 17 original PSD layers split into 18 arm-corrected meshes with no old 7-region actor',name);
               await page.close();
             }
           }finally{await browser.close();}
