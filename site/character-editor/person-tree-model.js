@@ -52,6 +52,9 @@ function canonicalActions(primary){
 function categoryOf(record,primary,family){
  const id=String(record.id),kind=String(record.variantCategory||'default');
  if(id===primary.id)return 'base';
+ // Former "new clothes" male-front ID is an internal SOURCE alias only.
+ // Even old user-imported records must not create a fake second outfit.
+ if(family==='char-003'&&id==='char-003-outfit-02')return 'source';
  const actions=canonicalActions(primary);
  // The standalone 24-layer battle PSD is an editable source document,
  // NOT a second combat action or a second playable protagonist.
