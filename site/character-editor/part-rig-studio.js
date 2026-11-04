@@ -570,13 +570,35 @@ function reconcileSourceParts(removedId=''){
  const old=state.model,source=parts(),ids=source.map(key),present=new Set(ids);
  const oldDeleted=new Set(Array.isArray(old.deletedParts)?old.deletedParts:[]);
  const backups={...(old.deletedPartBackups||{})};
+ const maskBackups={...(old.deletedMaskBackups||{})};
  if(removedId){
   const before=old.parts?.[removedId];
   if(before)backups[removedId]=JSON.parse(JSON.stringify(before));
+  const linked=(old.occlusionMasks||[]).filter(mask=>
+   mask.source===removedId||
+   (Array.isArray(mask.targets)?mask.targets:[mask.target]).includes(removedId));
+  if(linked.length)maskBackups[removedId]=JSON.parse(JSON.stringify(linked));
   oldDeleted.add(removedId);
  }
- const previous={...old,parts:{...backups,...(old.parts||{})}};
+ const candidates=[...(old.occlusionMasks||[])];
+ for(const [removed,masks] of Object.entries(maskBackups)){
+  if(!present.has(removed))continue;
+  for(const mask of masks)if(!candidates.some(existing=>
+   existing.source===mask.source&&existing.name===mask.name&&
+   existing.direction===mask.direction&&existing.png===mask.png))
+   candidates.push(mask);
+ }
+ // Never retain an orphan front/back relation against a removed layer.
+ const validMasks=candidates.flatMap(mask=>{
+  if(!present.has(mask.source))return [];
+  const targets=[...new Set((Array.isArray(mask.targets)?mask.targets:[mask.target])
+   .filter(id=>id!==mask.source&&present.has(id)))];
+  return targets.length?[{...mask,target:targets[0],targets}]:[];
+ });
+ const previous={...old,parts:{...backups,...(old.parts||{})},
+  occlusionMasks:validMasks};
  const next=core.project(source,studio.current,S.side,previous);
+ next.deletedMaskBackups=maskBackups;
  // Undo/Redo restores the artwork stack, not a separate rig history.
  // Remember every removed source from its snapshot, so Redo re-applies the
  // deletion tombstone and the game cannot resurrect the missing PNG.
@@ -645,6 +667,7 @@ async function activate(openPanel=false){
  state.model.deletedParts=[...new Set((saved?.deletedParts||[])
   .filter(key=>typeof key==='string'&&!src.some(p=>(p.partId||p.name)===key)))];
  state.model.deletedPartBackups=saved?.deletedPartBackups||{};
+ state.model.deletedMaskBackups=saved?.deletedMaskBackups||{};
 
  gripExplanation.hidden=!(id==='char-004'&&face==='front'&&state.model?.parts?.coat_left&&state.model?.parts?.coat_right);
  // Published rigs sometimes store their exact Z order independently of
