@@ -517,6 +517,7 @@ function project(parts,characterId,face,previous=null){
       t!==m.source&&parts.some(p=>p.partId===t||p.name===t))&&
     typeof m.png==='string'&&m.png.startsWith('data:image/png;base64,'))
    .map(m=>({source:m.source,target:m.target,
+     name:typeof m.name==='string'?m.name.slice(0,80):'',
      targets:Array.isArray(m.targets)?[...new Set(m.targets.filter(v=>typeof v==='string'))]:[m.target],
      direction:m.direction==='behind'?'behind':'front',
      png:m.png,enabled:m.enabled!==false}))}:{}),
