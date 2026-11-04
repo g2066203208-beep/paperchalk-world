@@ -207,20 +207,34 @@ if(S.tool==='select'){
   if(e.pointerType==='touch'){S.drag={type:'select',start:q,point:w,px:S.px,py:S.py};return;}
   choosePartAt(w);return;
 }
-if(S.tool==='picker'){sample(w);return}if(S.tool==='fill'){fillAt(paintAt(w));return}if(S.tool==='rect'){S.selection={type:'rect',x:w.x,y:w.y,w:0,h:0,done:false};S.drag={type:'rect'};render();return}if(S.tool==='lasso'){S.selection={type:'lasso',points:[w],done:false};S.drag={type:'lasso'};return}if(S.tool==='move'){if(!editable())return;check();S.drag={type:'move',q,x:current().x,y:current().y};return}if(!editable())return;check();const paint=paintAt(w);S.drag={type:'paint',p:paint};stroke(paint,paint)}
+if(S.tool==='picker'){sample(w);return}if(S.tool==='fill'){fillAt(paintAt(w));return}if(S.tool==='rect'){S.selection={type:'rect',x:w.x,y:w.y,w:0,h:0,done:false};S.drag={type:'rect'};render();return}if(S.tool==='lasso'){S.selection={type:'lasso',points:[w],done:false};S.drag={type:'lasso'};return}if(S.tool==='move'){if(!editable())return;check();S.drag={type:'move',q,x:current().x,y:current().y};return}if(!editable())return;
+const paint=paintAt(w);
+if(e.pointerType==='touch'){
+ S.drag={type:'paint-pending',p:paint,start:q};
+ return; // A second finger can now pinch without leaving an accidental dot.
+}
+check();S.drag={type:'paint',p:paint};stroke(paint,paint)}
 function move(e){if(!S.pointers.has(e.pointerId)||!S.drag)return;const q=getP(e);S.pointers.set(e.pointerId,q);let d=S.drag;if(S.pointers.size>=2){const a=[...S.pointers.values()];if(d.type!=='pinch')S.drag={type:'pinch',two:[...a],zoom:S.zoom,px:S.px,py:S.py};const s=S.drag,dist=Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),old=Math.hypot(s.two[1].x-s.two[0].x,s.two[1].y-s.two[0].y);const m={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2},o={x:(s.two[0].x+s.two[1].x)/2,y:(s.two[0].y+s.two[1].y)/2};S.zoom=Math.max(.1,Math.min(20,s.zoom*dist/Math.max(1,old)));S.px=m.x-(o.x-s.px)*S.zoom/s.zoom;S.py=m.y-(o.y-s.py)*S.zoom/s.zoom;render();return}
 const w=world(q);if(d.type==='pan'){S.px=d.px+q.x-d.q.x;S.py=d.py+q.y-d.q.y}
 else if(d.type==='select'){
  const distance=Math.hypot(q.x-d.start.x,q.y-d.start.y);
  if(distance>8){d.moved=true;S.px=d.px+q.x-d.start.x;S.py=d.py+q.y-d.start.y;}
-}else if(d.type==='move'){const p=current();p.x=Math.round(d.x+(q.x-d.q.x)/S.zoom);p.y=Math.round(d.y+(q.y-d.q.y)/S.zoom);window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'))}else if(d.type==='paint'){const paint=paintAt(w);stroke(d.p,paint);d.p=paint}else if(d.type==='rect'){S.selection.w=w.x-S.selection.x;S.selection.h=w.y-S.selection.y}else if(d.type==='lasso'&&S.selection.points.length<10000){const pp=S.selection.points.at(-1);if(Math.hypot(pp.x-w.x,pp.y-w.y)>1)S.selection.points.push(w)}render()}
+}else if(d.type==='move'){const p=current();p.x=Math.round(d.x+(q.x-d.q.x)/S.zoom);p.y=Math.round(d.y+(q.y-d.q.y)/S.zoom);window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'))}else if(d.type==='paint-pending'){
+ if(Math.hypot(q.x-d.start.x,q.y-d.start.y)<5)return;
+ const paint=paintAt(w);
+ check();S.drag={type:'paint',p:paint};
+ stroke(d.p,paint);
+}else if(d.type==='paint'){const paint=paintAt(w);stroke(d.p,paint);d.p=paint}else if(d.type==='rect'){S.selection.w=w.x-S.selection.x;S.selection.h=w.y-S.selection.y}else if(d.type==='lasso'&&S.selection.points.length<10000){const pp=S.selection.points.at(-1);if(Math.hypot(pp.x-w.x,pp.y-w.y)>1)S.selection.points.push(w)}render()}
 function upPointer(e){if(!S.pointers.has(e.pointerId))return;S.pointers.delete(e.pointerId);if(S.drag?.type==='pinch'){S.drag=null;render();return}
 if(S.drag?.type==='select'){
  const drag=S.drag;S.drag=null;
  if(!drag.moved)choosePartAt(drag.point);
  renderList();render();return;
 }
-if(S.drag?.type==='rect'||S.drag?.type==='lasso')S.selection.done=true;if(['paint','move'].includes(S.drag?.type))autosave();S.drag=null;renderList();render()}
+if(S.drag?.type==='rect'||S.drag?.type==='lasso')S.selection.done=true;if(S.drag?.type==='paint-pending'){
+ const point=S.drag.p;check();stroke(point,point);autosave();
+}
+if(['paint','move'].includes(S.drag?.type))autosave();S.drag=null;renderList();render()}
 function setTool(name){
  S.tool=name;
  document.querySelectorAll('[data-tool]').forEach(b=>{
