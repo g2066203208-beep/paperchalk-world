@@ -267,6 +267,13 @@ treeCSS.textContent=`
  .character-resource-section button{padding-left:12px}
  .character-resource-section[data-category="action"] button{border-left:2px solid #8daed3}
  .character-resource-section[data-category="outfit"] button{border-left:2px solid #9c9bb9}
+ #studio-person-import-bar{display:flex;flex-direction:column;gap:5px;
+  padding:8px 9px;margin:0 0 9px;background:#122337;
+  border:1px solid #3c5a71;border-radius:9px}
+ #studio-person-import{width:100%;font-size:12px;font-weight:650;
+  min-height:35px;text-align:center}
+ #studio-person-import-target{display:block;overflow-wrap:anywhere;
+  color:#a9c3d8;font-size:10px;line-height:1.4}
  .character-source-archive{margin:9px 1px 2px;border-top:1px solid #35516a;padding-top:7px}
  .character-source-archive>summary{font-size:11px;color:#adc1d4;cursor:pointer;
   padding:7px 4px;line-height:1.5}
@@ -416,6 +423,34 @@ personSearch.oninput=()=>{
  renderFamilyTree();
 };
 characterTree.querySelector('h3')?.after(personSearch);
+// One consistent PSD/ZIP import for every selected character and outfit.
+const personImportBar=document.createElement('div');
+personImportBar.id='studio-person-import-bar';
+const personImportBtn=document.createElement('button');
+personImportBtn.id='studio-person-import';personImportBtn.type='button';
+personImportBtn.textContent='＋ 导入 PSD / 分层 ZIP';
+personImportBtn.title='导入到当前选中的角色正面或背面；先切换人物再导入素材';
+const personImportTarget=document.createElement('span');
+personImportTarget.id='studio-person-import-target';
+personImportBar.append(personImportBtn,personImportTarget);
+personSearch.after(personImportBar);
+personImportBtn.onclick=()=>{
+ const input=$('studio-parts-import');
+ if(!currentId||!input){message('请先选择人物，再导入 PSD / 分层 ZIP');return;}
+ input.click();
+};
+function updatePersonImportLabel(){
+ const actor=list.get(currentId);
+ const family=actor?personModel.familyOf(actor):'';
+ const person=actor?personModel.displayName(actor,family):'未选择人物';
+ const isVariant=!!actor&&actor.id!==family;
+ personImportTarget.textContent='导入到：'+person+' / '+
+  (side==='back'?'背面':'正面')+
+  (isVariant?' · '+actor.label:'');
+ personImportBtn.disabled=!actor;
+}
+const duplicatedImport=$('studio-parts-import')?.closest('label');
+if(duplicatedImport)duplicatedImport.hidden=true;
 function visibleFamilyGroups(){
  return personModel.makeTree([...list.values()],currentId);
 }
@@ -490,11 +525,11 @@ function renderFamilyTree(){
  for(const actor of groups){
   const searchable=[
    actor.name,actor.family,...actor.outfits.map(x=>x.label),
-   ...actor.actions.map(x=>x.label),...actor.sources.map(x=>x.label)
+   ...actor.actions.map(x=>x.label)
   ].join(' ').toLocaleLowerCase('zh-CN');
   if(personFilter&&!searchable.includes(personFilter))continue;
   matches.push(actor.family);
-  const {family,name,primary,faces,actions,outfits,sources}=actor;
+  const {family,name,primary,faces,actions,outfits}=actor;
   const group=document.createElement('details');
   group.dataset.family=family;
   group.className='character-family';
@@ -558,41 +593,6 @@ function renderFamilyTree(){
    }
   }
 
-  if(family==='male2'){
-   const section=appendPersonSection(children,'素材导入','import');
-   const button=document.createElement('button');
-   button.type='button';button.className='male2-direct-import';
-   button.textContent='＋ 导入男二 SeeThrough ZIP';
-   const uploader=document.createElement('input');
-   uploader.type='file';uploader.accept='.zip,application/zip';uploader.hidden=true;
-   uploader.onchange=e=>{
-    const file=e.target.files?.[0];e.target.value='';
-    if(!file)return;
-    change(primary.id,'front').then(()=>importComponentArchive(file))
-     .catch(error=>message('男二拆分导入失败：'+error.message));
-   };
-   button.onclick=()=>uploader.click();
-   section.append(button,uploader);
-  }
-
-  if(sources.length){
-   const archive=document.createElement('details');archive.className='character-source-archive';
-   archive.dataset.category='archive';
-   const heading=document.createElement('summary');
-   heading.textContent='源稿与历史工程 ('+sources.length+')';
-   heading.title='保留原始 PSD、实验模型及旧导入稿，不作为独立人物或战斗动作';
-   archive.append(heading);
-   // An explicitly opened legacy/source document must remain locatable.
-   archive.open=!!personFilter||sources.some(entry=>entry.id===currentId);
-   for(const entry of sources){
-    const sourceText=(entry.type==='pending'?'待导入 · ':
-      entry.type==='legacy'?'旧工程 · ':'源稿 · ')+entry.label;
-    archive.append(navButton(sourceText,
-     {id:entry.id,role:'source',hint:'打开独立源工程；不会替换游戏中的正式角色'},
-     ()=>change(entry.id,'front')));
-   }
-   children.append(archive);
-  }
   group.append(children);root.append(group);
  }
  if(!matches.length){
@@ -603,22 +603,27 @@ function renderFamilyTree(){
 }
 function options(){
  selector.replaceChildren();
- for(const {family,name,primary,outfits,actions,sources} of visibleFamilyGroups()){
+ for(const {family,name,primary,outfits,actions} of visibleFamilyGroups()){
   const group=document.createElement('optgroup');group.label=name;
   group.append(new Option('基础立绘 · '+name,primary.id));
   for(const entry of outfits)
    group.append(new Option('服装 · '+entry.label,entry.id));
   for(const entry of actions.filter(a=>!a.canonical))
-   group.append(new Option('动作源稿 · '+entry.label,entry.id));
-  // Keep old deep links and previously imported projects selectable, but
-  // intentionally sort the advanced sources AFTER playable art and outfits.
-  for(const entry of sources)
-   group.append(new Option('原稿 / 历史 · '+entry.label,entry.id));
+   group.append(new Option('动作 · '+entry.label,entry.id));
+  // Old direct project URLs still work. They are not listed under a
+  // misleading "source/history" category in normal character navigation.
+  if(personModel.familyOf(list.get(currentId)||{id:currentId})===family&&
+     ![...group.querySelectorAll('option')].some(o=>o.value===currentId)&&
+     list.has(currentId)){
+   const current=list.get(currentId);
+   group.append(new Option('当前工程 · '+String(current.label||currentId),currentId));
+  }
   selector.append(group);
  }
- const matched=[...selector.options].some(option=>option.value===currentId);
- if(matched)selector.value=currentId;
+ if([...selector.options].some(option=>option.value===currentId))
+  selector.value=currentId;
  else selector.value=visibleFamilyGroups()[0]?.primary?.id||'';
+ updatePersonImportLabel();
  renderFamilyTree();
 }
 window.addEventListener('paperchalk:studio-action-changed',updatePersonTreeActive);
