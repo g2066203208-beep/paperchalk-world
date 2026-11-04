@@ -15,7 +15,8 @@ const catalog=[
  {id:'hero-old-002',label:'女主 · 第2版',front:'old-002.png'},
  {id:'char-002',label:'女二号',front:'female-two.png'},
  {id:'char-002-psd-v1',label:'女二 · 原始 PSD',front:'female-two-original.png'},
- {id:'char-003',label:'男主角',front:'male-lead.png'},
+ {id:'char-003',label:'男主角',front:'approved-17-artmeshes.png',
+  l2dModule:{front:{rig:{partCount:17,sourceCharacterId:'char-003-outfit-02'}}}},
  {id:'old-male',label:'男主角 · 旧版',front:'male-legacy.png'},
  {id:'male2',label:'男二',front:'male-two.png'},
  {id:'char-003-outfit-02',label:'男主 · 新衣服',familyId:'char-003',
@@ -45,8 +46,12 @@ assert.equal(roots.find(x=>x.family==='char-002').sources.filter(
  x=>x.id==='char-002-psd-v1').length,1);
 assert.equal(roots.find(x=>x.family==='char-003').sources.filter(
  x=>x.id==='old-male').length,1);
-assert.deepEqual(roots.find(x=>x.family==='char-003').outfits.map(x=>x.id),
- ['char-003-outfit-02']);
+assert.deepEqual(roots.find(x=>x.family==='char-003').outfits.map(x=>x.id),[],
+ 'approved male front must not be duplicated in wardrobe');
+assert.equal(roots.find(x=>x.family==='char-003').primary.id,'char-003');
+assert.ok(roots.find(x=>x.family==='char-003').sources.some(x=>
+ x.id==='char-003-outfit-02'&&x.type==='source'),
+ 'old module ID retained only as source provenance, never outfit');
 assert.equal(roots.find(x=>x.family==='char-006')
  .outfits.length,0,'unimported wardrobes are not presented as playable');
 assert.ok(roots.find(x=>x.family==='char-006')
