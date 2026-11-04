@@ -1011,8 +1011,8 @@ function drawPreview(ctx){
  }
  if(!state.showGuides)return true;
  const p=current();if(p){
-  const P={x:p.x+p.w*p.pivot.x,y:p.y+p.h*p.pivot.y};
-  const T={x:p.x+p.w*p.tip.x,y:p.y+p.h*p.tip.y};
+  const P=core.placedRestPoint(p,{x:p.x+p.w*p.pivot.x,y:p.y+p.h*p.pivot.y});
+  const T=core.placedRestPoint(p,{x:p.x+p.w*p.tip.x,y:p.y+p.h*p.tip.y});
   ctx.save();ctx.strokeStyle='#dbe7ff';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(P.x,P.y);ctx.lineTo(T.x,T.y);ctx.stroke();
   for(const [point,color] of [[P,'#5defa0'],[T,'#ffdf81']]){
@@ -1024,12 +1024,14 @@ function drawPreview(ctx){
    const bone=all.find(b=>b.id===joint.id);
    if(bone){
     ctx.save();ctx.strokeStyle='#faf1a6';ctx.lineWidth=2.5;
-    ctx.beginPath();ctx.moveTo(p.x+bone.headPos.x,p.y+bone.headPos.y);
-    ctx.lineTo(p.x+bone.tailPos.x,p.y+bone.tailPos.y);ctx.stroke();
+    const head=core.placedRestPoint(p,{x:p.x+bone.headPos.x,y:p.y+bone.headPos.y});
+    const tail=core.placedRestPoint(p,{x:p.x+bone.tailPos.x,y:p.y+bone.tailPos.y});
+    ctx.beginPath();ctx.moveTo(head.x,head.y);
+    ctx.lineTo(tail.x,tail.y);ctx.stroke();
     ctx.fillStyle='#fbcb70';ctx.beginPath();
-    ctx.arc(p.x+bone.headPos.x,p.y+bone.headPos.y,6,0,Math.PI*2);ctx.fill();
+    ctx.arc(head.x,head.y,6,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#6ff2ff';ctx.beginPath();
-    ctx.arc(p.x+bone.tailPos.x,p.y+bone.tailPos.y,6,0,Math.PI*2);ctx.fill();
+    ctx.arc(tail.x,tail.y,6,0,Math.PI*2);ctx.fill();
     ctx.restore();
    }
   }
@@ -1282,16 +1284,18 @@ stage.addEventListener('pointerdown',e=>{
  if(!state.active||!state.panelOpen||!state.showGuides||['select','mask'].includes(S.tool)||e.target!==$('view'))return;
  e.stopImmediatePropagation();e.preventDefault();
  const p=current();if(!p)return;
- const o=loc(e),a={x:p.x+p.pivot.x*p.w,y:p.y+p.pivot.y*p.h};
- const b={x:p.x+p.tip.x*p.w,y:p.y+p.tip.y*p.h};
+ const o=loc(e),a=core.placedRestPoint(p,{
+  x:p.x+p.pivot.x*p.w,y:p.y+p.pivot.y*p.h});
+ const b=core.placedRestPoint(p,{
+  x:p.x+p.tip.x*p.w,y:p.y+p.tip.y*p.h});
  const radius=20/Math.max(.1,S.zoom);
  const bone=currentBone();
  if(bone){
   const poses=core.bonePoses(p,state.phase,state.model.idleProfile);
   const active=poses.find(x=>x.id===bone.id);
   if(active){
-   const head={x:p.x+active.headPos.x,y:p.y+active.headPos.y},
-    tail={x:p.x+active.tailPos.x,y:p.y+active.tailPos.y};
+   const head=core.placedRestPoint(p,{x:p.x+active.headPos.x,y:p.y+active.headPos.y}),
+    tail=core.placedRestPoint(p,{x:p.x+active.tailPos.x,y:p.y+active.tailPos.y});
    if(Math.hypot(o.x-head.x,o.y-head.y)<radius)state.drag='bone-head';
    else if(Math.hypot(o.x-tail.x,o.y-tail.y)<radius)state.drag='bone-tail';
   }
@@ -1308,8 +1312,9 @@ stage.addEventListener('pointermove',e=>{
  if(!state.active||!state.drag)return;
  e.stopImmediatePropagation();e.preventDefault();
  const p=current(),pos=loc(e);if(!p)return;
- const x=Math.max(0,Math.min(1,(pos.x-p.x)/p.w));
- const y=Math.max(0,Math.min(1,(pos.y-p.y)/p.h));
+ const original=core.unplacedRestPoint(p,pos);
+ const x=Math.max(0,Math.min(1,(original.x-p.x)/p.w));
+ const y=Math.max(0,Math.min(1,(original.y-p.y)/p.h));
  if(state.drag.startsWith('bone-')){
   const b=currentBone();if(!b)return;
   // Pointer edits the rest-space joints; the animation is frozen while
