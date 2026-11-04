@@ -47,7 +47,9 @@ try{
  }));
  assert.equal(baseline.parts,25);
  assert.equal(baseline.weapon,'fixed');
- assert.deepEqual(baseline.movement,{version:1,cloth:1,axe:1,legs:1,feet:1});
+ assert.equal(baseline.movement.version,2);
+ for(const key of ['cloth','axe','legs','feet','body','depth'])
+  assert.equal(baseline.movement[key],1);
  // Four real user-adjustable coupled motions persist on this action.
  await page.evaluate(()=>{
   for(const [id,value] of [['cloth','115'],['axe','90'],['legs','110'],['feet','85']]){
@@ -145,7 +147,7 @@ try{
  assert.equal(actual.id,'protagonist-crouch-axe');
  assert.equal(actual.parts,25);
  assert.equal(actual.enabled,8);
- assert.deepEqual(actual.motion,{version:1,cloth:1.15,axe:.9,legs:1.1,feet:.85},
+ assert.deepEqual(actual.motion,{version:2,cloth:1.15,axe:.9,legs:1.1,feet:.85,body:1,depth:1},
   'saved crouch strengths must be restored in SAME browser game slot');
  assert.deepEqual(gameErrors,[],'real game must load source action without JS errors');
  await game.screenshot({path:dir+'/game-crouch-dynamics.png'});
