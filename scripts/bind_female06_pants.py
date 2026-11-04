@@ -22,10 +22,10 @@ BASE_ID = "female-06"
 OUTFIT_ID = "female-06-outfit-02"
 PANTS_BOUNDS = (420, 415, 164, 162)  # preserved source raster in current approved module
 # Original legwear: (413,409,164,605), hip-alpha width ~139px at Y=433.
-# The old 164x162 visible shorts were shifted right and extended too far down.
+# Comparing actual studio screenshots of base female06 and outfit02 showed the last\n# attempted fit was visibly too narrow and flat (about 95px vs 135px on screen).\n# Restore the authored loose bubble-short width, retain waist attachment, and\n# align the hem over the original thigh tops without altering body art.
 # Fit as non-destructive Rig placement, not by repeatedly resizing the PNG.
-PANTS_PLACEMENT = {"scaleX": .92, "scaleY": .80,
-                   "offsetX": -7.0, "offsetY": -12.0}
+PANTS_PLACEMENT = {"scaleX": 1.20, "scaleY": 1.00,
+                   "offsetX": -15.0, "offsetY": -17.0}
 
 
 def read(path: Path) -> dict:
