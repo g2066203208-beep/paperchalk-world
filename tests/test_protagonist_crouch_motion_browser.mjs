@@ -38,7 +38,7 @@ try{
   window.characterEditor.S.layers.front.filter(x=>x.sourcePart).length===25&&
   !document.getElementById('rig-crouch-motion')?.hidden,
   null,{timeout:60000});
- assert.equal(await page.locator('#rig-crouch-motion input[data-crouch]').count(),4);
+ assert.equal(await page.locator('#rig-crouch-motion input[data-crouch]').count(),6);
  const baseline=await page.evaluate(()=>({
   name:window.PaperchalkStudio.list.get('protagonist-crouch-axe').label,
   parts:Object.keys(window.PaperchalkPartRigStudio.state.model.parts).length,
