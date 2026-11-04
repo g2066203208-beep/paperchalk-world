@@ -1,0 +1,28 @@
+name: Character SAN and Angel Trade - 512-field validation
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/characters/**'
+      - 'docs/HUMAN_CAST_ROSTER_V3.json'
+      - 'docs/ANGEL_TRADE_AND_SAN_CANON_20261104.md'
+      - 'scripts/validate_character_extension.py'
+      - '.github/workflows/character-system-extension.yml'
+  pull_request:
+    paths:
+      - 'docs/characters/**'
+      - 'docs/HUMAN_CAST_ROSTER_V3.json'
+      - 'docs/ANGEL_TRADE_AND_SAN_CANON_20261104.md'
+      - 'scripts/validate_character_extension.py'
+      - '.github/workflows/character-system-extension.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-extension:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate additive schema, roster, trader motives and heroine SAN
+        run: python3 scripts/validate_character_extension.py
