@@ -261,7 +261,7 @@ root.PaperchalkL2DLibrary={attach,detach:stop,setAction,getAction,
   const a=ACTIVE.get(slot);
   return {slot,version:VERSIONS.get(slot)||0,active:!!a&&!a.disposed,
    parts:a?.layers.length||0,renderedFrames:a?.renderedFrames||0,
-   source:a?.model.characterId||null,
+   source:a?.model.characterId||null,phaseMs:a?.elapsedMs||0,
    contextLost:!!a?.contextLost,contextRestores:a?.contextRestores||0,
    backing:a?{width:a.actor.canvas.width,height:a.actor.canvas.height}:null,
    textureCache:TEXTURE_CACHE.size,modelCache:MODEL_CACHE.size,...cacheStats};
