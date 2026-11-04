@@ -789,7 +789,18 @@ function reconcileSourceParts(removedId=''){
  state.active=true;
  if(!source.length){quickPanel.hidden=true;setInspectorOpen();}
  else{quickPanel.hidden=false;setInspectorOpen();values();fitValues();refreshBones();syncIdle();updateMaskControls();}
- changed();ed.renderList();ed.render();
+ // This operation was initiated by the PAINTER. Its own full-layer undo
+ // includes PNG bytes, Z order and deleted ArtMeshes. Do NOT turn it into
+ // an independent "rig operation": top Undo must restore the source PNG.
+ // Any older rig geometry snapshots are now incompatible with the new
+ // ArtMesh count, so clear them without touching the artist's work.
+ state.historyBaseline=JSON.stringify(state.model);
+ state.undoStack=[];state.redoStack=[];
+ state.lastOperationAt=0;
+ revision++;state.dirty=true;
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(()=>save().catch(e=>info('图层同步保存失败：'+e.message)),1200);
+ ed.renderList();ed.render();
 }
 window.addEventListener('paperchalk:studio-part-removed',event=>{
  const detail=event.detail||{};
