@@ -1,0 +1,52 @@
+name: Female six pelvis-waist hierarchy / real editor + game
+on:
+  push:
+    paths:
+      - 'site/l2d/part-rig.js'
+      - 'site/character-editor/**'
+      - 'scripts/bind_female06_pants.py'
+      - 'tests/test_female06_pants_skin.cjs'
+      - 'tests/test_female06_pants_wear_browser.js'
+      - 'tests/test_l2d_part_placement.cjs'
+      - 'tests/test_l2d_part_resize_browser.js'
+      - '.github/workflows/female06-body-hierarchy.yml'
+  workflow_dispatch:
+jobs:
+  female6-physical-parents:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install genuine texture pipeline dependencies
+        run: python3 -m pip install --quiet 'Pillow>=10,<12'
+      - name: Build all source-PSD modules without editing original ZIPs
+        run: |
+          python3 scripts/build_scene_catalog.py
+          python3 scripts/build_character_catalog.py
+      - name: Validate body-pelvis hierarchy, waistband, two-leg IK, ground soles and wings
+        run: |
+          node tests/test_female06_pants_skin.cjs
+          node tests/test_l2d_part_placement.cjs
+      - name: Prepare browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify PSD ArtMesh waist/leg adhesion in actual Chromium L2D studio
+        run: |
+          python3 -m http.server 8134 --directory site >/tmp/female6-pelvis-server.log 2>&1 &
+          node tests/test_female06_pants_wear_browser.js
+          node tests/test_l2d_part_resize_browser.js
+      - name: Save screenshots for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: female06-pelvis-waist-qa
+          path: artifacts/character-editor
+          if-no-files-found: warn
+          retention-days: 7
