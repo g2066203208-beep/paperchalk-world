@@ -77,6 +77,7 @@ jobs:
                   throw error;
                 });
                 await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active===true,null,{timeout:10000});
+                if(vp.width<500)await page.locator('[data-studio-pane="motion"]').click();
                 assert.equal(await page.locator('#part-rig-panel').isVisible(),false,
                   'new mesh is active by default without opening a cluttered settings panel');
                 assert.equal(await page.locator('#rig-quick-panel').isVisible(),true,
@@ -393,6 +394,7 @@ jobs:
                 await page.waitForFunction(()=>document.getElementById('stage').clientWidth>250,null,{timeout:7000});
                 const fitRect=await page.locator('#stage').boundingBox();
                 assert.ok(fitRect.width>250,'main viewport must regain nonzero width after exit');
+                if(vp.width<500)await page.locator('[data-studio-pane="layers"]').click();
                 const initialLayerCount=await page.locator('#layers .layer').count();
                 assert.ok(initialLayerCount>=1);
                 assert.ok(await page.locator('#status').textContent().then(x=>x.length>0&&!x.includes('失败')),
@@ -487,6 +489,7 @@ jobs:
                 for(const id of ['fringe','rear','skirt','hands','shoulders','hips','breath','speed'])
                   assert.equal(await secondaryPage.locator('[data-quick="'+id+'"]').isVisible(),true,
                     'real PSD slider must be visible: '+id);
+                if(vp.width<500)await secondaryPage.locator('[data-studio-pane="motion"]').click();
                 await secondaryPage.locator('[data-quick="fringe"]').fill('135');
                 await secondaryPage.locator('[data-quick="rear"]').fill('145');
                 await secondaryPage.locator('[data-quick="skirt"]').fill('180');
