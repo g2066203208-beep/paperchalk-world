@@ -51,6 +51,10 @@ const hasFemale2Psd=ids=>ids.length===18&&female2PsdIds.every(id=>ids.includes(i
 // Exact 21 original CHAR-004 PSD layer IDs in ORIGINAL back-to-front order.
 const female3OriginalLayerIds=["back_hair","footwear","legwear","neck","topwear","eyebrow_r","ears_r","ears_l","face","nose","mouth","handwear_l","eyebrow_l","eyelash_r","eyelash_l","eyewhite_r","eyewhite_l","irides_l","irides_r","handwear_r","front_hair"];
 const hasFemale3Psd=ids=>Array.isArray(ids)&&ids.length===21&&female3OriginalLayerIds.every((key,i)=>ids[i]===key);
+const female3CoatLayerIds=(()=>{const ids=[...female3OriginalLayerIds],i=ids.indexOf('topwear')+1;
+ ids.splice(i,0,'coat_left','coat_right');return ids})();
+const hasFemale3CoatRig=ids=>Array.isArray(ids)&&ids.length===23&&
+ female3CoatLayerIds.every((key,i)=>ids[i]===key);
 const fileURL=file=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(file)});
 const section=document.createElement('section');section.id='studio-library';
 section.innerHTML=[
@@ -474,13 +478,14 @@ async function readPartRig(id=currentId,face=side){
   list.get(id)?.l2dModule?.front?.rig?.sourceCharacterId==='protagonist-unified-v1';
  const staleBase=needsUnified&&local&&
   !['battle_handwear_r','battle_handwear_l','battle_axe'].every(x=>!!local.parts?.[x]);
- // Earlier CHAR-004 was a guessed 19-layer construction: eyebrows, eyelashes,
- // mouth and eye whites were wrong. Preserve the old local edit as an archive,
- // then use the new ORIGINAL Photoshop 21-layer rig instead of poisoning it.
+ // CHAR-004 v2 has 21 source Photoshop layers but 23 REAL playing parts:
+ // coat-left and coat-right are losslessly partitioned from topwear.
+ // Rebuild old 19/21-layer drafts so wrists and cloth share actual parents.
  const staleFemale3=id==='char-004'&&face==='front'&&local&&
-  (!hasFemale3Psd(Object.keys(local.parts||{}))||local.provenance!=='original-psd');
+  (!hasFemale3CoatRig(Object.keys(local.parts||{}))||
+   local.motionQualityProfile!=='coat-grip-parented-v1');
  if(staleFemale3){
-  const backupKey='legacy-part-rig:char-004:front:pre-21-psd';
+  const backupKey='legacy-part-rig:char-004:front:pre-coat-grip-v1';
   if(!await get(backupKey))await put(backupKey,local);
   await dropDraft('part-rig:'+id+':'+face);
  }
@@ -631,7 +636,9 @@ function hasNativePSD(face=side){return (ed.S.layers[face]||[]).filter(p=>p.sour
 function updatePartStatus(){
  const count=countSourceParts(),output=$('studio-parts-status');
  if(output)output.textContent=count?
-  (hasNativePSD()?'已载入 '+count+' 个真实 PSD 独立纹理：后发、刘海、校服、手臂、裙摆、眼睛、嘴等采用实时关节及网格驱动。':currentId==='char-002'?'旧合并手臂正在替换为独立左右手臂…':
+  (currentId==='char-004'&&count===23?
+    '女三：21 张原始 PSD 图层＋2 张从真实外套分离的可动布片；双手各有肩／肘／腕父级，衣摆跟随握持点。':
+   hasNativePSD()?'已载入 '+count+' 个真实 PSD 独立纹理：后发、刘海、校服、手臂、裙摆、眼睛、嘴等采用实时关节及网格驱动。':currentId==='char-002'?'旧合并手臂正在替换为独立左右手臂…':
    '本方向已有 '+count+' 个原位分层部件，可在左侧逐个选择编辑。'):
   '该方向没有独立分层。烘焙 V4 WebP 不能直接拆成部件，请导入 PSD 或原始分层 ZIP。';
 }
@@ -803,7 +810,7 @@ async function ensureHostedParts(id){
  const needsHeroArms=heroUnified&&front&&
   !['battle_handwear_r','battle_handwear_l','battle_axe'].every(x=>currentSource.includes(x));
  const repairFemale3=id==='char-004'&&side==='front'&&
-  !hasFemale3Psd(currentSource);
+  !hasFemale3CoatRig(currentSource);
  const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
  if(front&&!upgrade&&!needsHeroArms&&(id==='char-002'||back||id===BATTLE_FRONT_ID||heroUnified))return;
  message(id==='char-002'?'载入女二 PSD：17 个源层、18 个独立部件（举起的左手已分开）…':'载入真实原位分层…');
@@ -814,7 +821,7 @@ async function ensureHostedParts(id){
    appendMissingParts:needsHeroArms,quiet:true});
   message(id==='char-002'?
    '✓ 女二已加载 24 层原始记录和 18 个可动部件，两只手臂独立绑定。':
-   id==='char-004'?'✓ 女三原始 Photoshop 的 21 层已按原名、原始坐标及前后顺序恢复；左右眼眉睫毛鼻嘴完整。':
+   id==='char-004'?'✓ 女三 21 原始 PSD 层＋2 张原画外套分区：双臂→手腕→外套抓握点为真实父子动态，裤腰与领口遮挡不变。':
    id===BATTLE_FRONT_ID?'✓ 女主战斗正面已自动加载：原始 PSD 24 层、原位部件和骨骼绑定，无需再导入 ZIP。':
    '已载入原位PSD独立部件。');
  }catch(error){
