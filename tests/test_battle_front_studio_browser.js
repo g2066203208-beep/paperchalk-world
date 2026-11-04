@@ -46,6 +46,44 @@ const URL=process.env.BATTLE_FRONT_TEST_URL||
   assert.ok(result.opaque>1500,'original PSD character must be visibly rendered');
   assert.equal(await page.locator('#studio-battle-import-row').isVisible(),true);
   assert.equal(await page.locator('#studio-character').inputValue(),'protagonist-battle-front');
+  const groupBattle=await page.locator('#studio-character option[value="protagonist-battle-front"]')
+    .evaluate(el=>el.parentElement?.label);
+  const groupDefault=await page.locator('#studio-character option[value="protagonist"]')
+    .evaluate(el=>el.parentElement?.label);
+  assert.equal(groupBattle,groupDefault,'battle is a child of the SAME heroine family');
+  const rigUI=page.locator('#rig-character-action');
+  assert.equal(await rigUI.isVisible(),true,'battle ArtMesh exposes the action selector');
+  await page.evaluate(()=>window.__battleRigBefore=window.PaperchalkPartRigStudio.state.model);
+  await rigUI.selectOption('idle');
+  await page.waitForFunction(()=>{
+    const rig=window.PaperchalkPartRigStudio.state.model;
+    return window.PaperchalkPartRigCore.actionPart(rig,'axe_held').opacity<0.02;
+  },null,{timeout:5000});
+  const actionResult=await page.evaluate(()=>{
+    const model=window.PaperchalkPartRigStudio.state.model;
+    const core=window.PaperchalkPartRigCore;
+    return {sameRig:window.__battleRigBefore===model,selected:model.actionState?.to,
+      weaponOpacity:core.actionPart(model,'axe_held').opacity,
+      faceOpacity:core.actionPart(model,'face').opacity,
+      armAngle:core.actionPart(model,'handwear_r').angle,
+      parent:model.parts.topwear.parentId,
+      order:window.characterEditor.S.layers.front.filter(p=>p.sourcePart).map(p=>p.partId)};
+  });
+  assert.equal(actionResult.sameRig,true,'action must not replace all of the L2D meshes');
+  assert.equal(actionResult.selected,'idle');
+  assert.ok(actionResult.weaponOpacity<0.02);
+  assert.equal(actionResult.faceOpacity,1);
+  assert.ok(Math.abs(actionResult.armAngle+12)<0.25);
+  assert.equal(actionResult.parent,'torso');
+  assert.ok(actionResult.order.indexOf('face')<actionResult.order.indexOf('eyewhite_r'),
+    'face must render behind eyes');
+  await page.screenshot({path:'artifacts/battle-front/02-idle-part-only.png'});
+  await rigUI.selectOption('combat');
+  await page.waitForFunction(()=>window.PaperchalkPartRigCore.actionPart(
+    window.PaperchalkPartRigStudio.state.model,'axe_held').opacity>.98,
+    null,{timeout:5000});
+  assert.equal(await page.evaluate(()=>window.__battleRigBefore===window.PaperchalkPartRigStudio.state.model),true);
+  await page.screenshot({path:'artifacts/battle-front/03-combat-same-model.png'});
   fs.mkdirSync('artifacts/battle-front',{recursive:true});
   await page.screenshot({path:'artifacts/battle-front/01-auto-loaded-24-layers.png'});
   assert.ok(!exceptions.length,'browser exceptions: '+exceptions.join(' | '));
