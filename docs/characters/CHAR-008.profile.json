@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "recordCode": "CHAR-008",
   "canonicalId": "class-teacher-geography-candidate",
-  "recordState": "448_field_character_concept_no_approved_art",
+  "recordState": "archived_teacher_concept_merged_into_CHAR-006",
   "readableDocument": "docs/characters/CHAR-008_FEMALE_TEACHER_PROFILE.md",
   "sourcePriority": [
     "user_confirmed",
@@ -3031,7 +3031,10 @@
   "sourceNotes": {
     "actualUserIntent": "用户在讨论完成学生后选择接下来制作教师，并要求448条人物资料写入GitHub。",
     "explicitlyUnapproved": "女性、28岁、地理学科、名字、五官、衣装、身材、家庭、剧情、日程等仍是建议；无用户验收图片。",
-    "identityRule": "沿用已有CHAR-008班主任占位，不给另一个身份或注册游戏演员。"
+    "identityRule": "沿用已有CHAR-008班主任占位，不给另一个身份或注册游戏演员。",
+    "updatedUserConfirmation": "2026-11-04 用户明确女五就是现有女老师；此档仅历史企划，不再作为第二个可播放人物",
+    "mergedInto": "char-006",
+    "activeL2DActor": "char-006"
   },
   "fieldCount": 448,
   "statusSummary": {
@@ -3317,5 +3320,10 @@
         }
       }
     }
+  },
+  "mergedInto": {
+    "canonicalCharacterId": "char-006",
+    "reason": "用户确认女五与女老师为同一人物",
+    "registeredAsSeparateActor": false
   }
 }
