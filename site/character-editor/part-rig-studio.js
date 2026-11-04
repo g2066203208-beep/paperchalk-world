@@ -240,6 +240,7 @@ async function save(){
  if(state.model.characterId!==studio.current||state.model.face!==S.side)
   throw Error('人物或方向已切换，拒绝覆盖错误工程');
  clearTimeout(saveTimer);saveTimer=null;
+ syncLayerMetadata(false);
  const model=state.model,version=revision;
  const snapshot=JSON.parse(JSON.stringify(model));
  delete snapshot.actionState; // do not persist ephemeral animation timing
@@ -264,6 +265,19 @@ async function save(){
 }
 // Keep the editor's visible painter order, ArtMesh render order and saved
 // game model identical. Auxiliary paint layers are not independent ArtMeshes.
+function syncLayerMetadata(markDirty=true){
+ if(!state.active||!state.model||state.model.face!==S.side)return;
+ let different=false;
+ for(const art of parts()){
+  const p=state.model.parts[key(art)];if(!p)continue;
+  const enabled=art.visible!==false,x=Number(art.x)||0,y=Number(art.y)||0;
+  if(p.enabled!==enabled||p.x!==x||p.y!==y){
+   p.enabled=enabled;p.x=x;p.y=y;different=true;
+  }
+ }
+ if(different&&markDirty)changed(false);
+}
+window.addEventListener('paperchalk:studio-part-metadata-changed',()=>syncLayerMetadata(true));
 function syncLayerOrder(){
  if(!state.active||!state.model||state.model.face!==S.side)return;
  const ids=parts().map(p=>key(p)),previous=state.model.layerOrder||[];
@@ -652,6 +666,6 @@ window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
  // New independent mesh is the default whenever genuine component art exists.
  if(parts().length)activate(false).catch(e=>info('独立 L2D 初始化失败：'+e.message));
 });
-window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,mapToSource};
+window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,syncLayerMetadata,mapToSource};
 requestAnimationFrame(tick);
 })();
