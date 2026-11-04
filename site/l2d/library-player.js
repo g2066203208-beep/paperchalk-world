@@ -49,9 +49,9 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // Explicitly authorize ONLY the original heroine using her own
  // published 25-part rig model. Do not trust arbitrary cross-character aliases.
  const approvedOriginal=characterId==='protagonist'&&
-   rigSpec.sourceCharacterId==='protagonist-rig-v1'&&
-   model?.characterId==='protagonist-rig-v1'&&
-   rigSpec.url.startsWith('./assets/l2d/library/protagonist-rig-v1/');
+  ['protagonist-rig-v1','protagonist-unified-v1'].some(alias=>
+   rigSpec.sourceCharacterId===alias&&model?.characterId===alias&&
+   rigSpec.url.startsWith('./assets/l2d/library/'+alias+'/'));
  // The one canonical female-two is backed by the author's actual Photoshop
  // PSD rather than the retired artificial seven-region preview.
  const approvedSecondary=characterId==='char-002'&&face==='front'&&
