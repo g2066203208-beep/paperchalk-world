@@ -111,6 +111,88 @@ document.head.append(style);
 document.querySelector('header').after(section);
 document.body.classList.add('studio-page');
 const selector=$('studio-character'),direction=$('studio-side');
+// Tree has a single PERSON root. Actions and outfits are descendants of that
+// person, never competing full-body actors in the primary navigation.
+const characterTree=document.createElement('section');
+characterTree.id='studio-character-tree';
+characterTree.innerHTML='<h3>人物资源库</h3><div id="character-tree-items" role="tree" aria-label="按人物组织立绘、动作与服装"></div>';
+document.querySelector('.layout .left')?.prepend(characterTree);
+const openedFamilies=new Set(['protagonist']);
+const treeCSS=document.createElement('style');
+treeCSS.textContent=`
+ #studio-character-tree{margin:0 0 12px}
+ #studio-character-tree>h3{font-size:13px;margin:4px 0 10px}
+ #character-tree-items{display:grid;gap:5px}
+ .character-family{border:1px solid #35546c;background:#162436;border-radius:10px;overflow:hidden}
+ .character-family[open]{border-color:#5682a0}
+ .character-family>summary{cursor:pointer;padding:10px 9px;font-size:12px;font-weight:650;list-style-position:inside;line-height:1.5}
+ .character-family.active>summary{background:#23415a;color:#e0f5ff}
+ .character-family-children{padding:5px 7px 8px;display:grid;gap:4px;border-top:1px solid #29455e}
+ .character-family-children button{display:block;text-align:left;width:100%;min-width:0;min-height:34px;padding:7px 9px;font-size:11px;white-space:normal}
+ .character-family-children button.active{background:#275c7e;border-color:#74b9ea}
+ .character-family-children small{display:block;color:#a7c3d5;font-size:10px;margin-top:3px}
+ .character-tree-legend{font-size:10px;color:#91adbf;line-height:1.5;margin:7px 2px 0}
+ @media(max-width:710px){#studio-character-tree{margin-bottom:8px}#character-tree-items{grid-template-columns:1fr 1fr;gap:5px}}
+`;
+document.head.append(treeCSS);
+function renderFamilyTree(){
+ const root=$('character-tree-items');if(!root)return;
+ root.replaceChildren();
+ const families=new Map();
+ for(const c of list.values()){
+  const family=c.familyId||c.id;
+  if(!families.has(family))families.set(family,[]);
+  families.get(family).push(c);
+ }
+ for(const [family,variants] of families){
+  const primary=list.get(family)||variants[0];
+  const group=document.createElement('details');
+  group.className='character-family'+(family===(list.get(currentId)?.familyId||currentId)?' active':'');
+  group.open=openedFamilies.has(family)||family===(list.get(currentId)?.familyId||currentId);
+  const summary=document.createElement('summary');summary.textContent=String(primary.label||family).replace(' · 未导入立绘','');
+  group.append(summary);
+  group.addEventListener('toggle',()=>{if(group.open)openedFamilies.add(family);else openedFamilies.delete(family)});
+  const children=document.createElement('div');children.className='character-family-children';
+  const base=document.createElement('button');base.type='button';
+  base.textContent='基础全身模型 · 正面';base.className=currentId===primary.id?'active':'';
+  base.onclick=()=>change(primary.id,'front').catch(e=>message(e.message));
+  children.append(base);
+  if(primary.back){
+   const back=document.createElement('button');back.type='button';back.textContent='基础模型 · 背面';
+   back.className=currentId===primary.id&&side==='back'?'active':'';
+   back.onclick=()=>change(primary.id,'back').catch(e=>message(e.message));
+   children.append(back);
+  }
+  for(const v of variants.filter(x=>x.id!==primary.id)){
+   const item=document.createElement('button');item.type='button';
+   const isBattle=v.variantCategory==='combat';
+   item.textContent=isBattle?'战斗 · 切换手臂与武器':'服装 / 素材 · '+String(v.label||v.id).replace(/^女主 · /,'');
+   const small=document.createElement('small');
+   small.textContent=isBattle?'使用基础人物同一套骨骼，不切换整个人物':'独立源稿；完成部件映射后并入基础模型';
+   item.append(small);
+   item.className=currentId===v.id?'active':'';
+   item.onclick=async()=>{
+    try{
+     if(isBattle){
+      await change(primary.id,'front');
+      const attempt=(n=0)=>{
+       const rig=window.PaperchalkPartRigStudio;
+       if(rig?.state?.active&&rig.state.model?.characterId===primary.id){
+        const select=$('rig-character-action');
+        if(select&&[...select.options].some(o=>o.value==='combat')){
+         select.value='combat';select.dispatchEvent(new Event('change',{bubbles:true}));
+        }
+       }else if(n<80)requestAnimationFrame(()=>attempt(n+1));
+      };
+      attempt();
+     }else await change(v.id,'front');
+    }catch(e){message('切换失败：'+e.message)}
+   };
+   children.append(item);
+  }
+  group.append(children);root.append(group);
+ }
+}
 function options(){
  const old=selector.value;
  selector.replaceChildren();
@@ -135,6 +217,7 @@ function options(){
  }
  if(list.has(currentId))selector.value=currentId;
  else if(list.has(old))selector.value=old;
+ renderFamilyTree();
 }
 let switchQueue=Promise.resolve();
 function change(id,face='front'){
@@ -189,6 +272,7 @@ async function changeCore(id,face='front'){
    if(currentId===id&&document.getElementById('fit'))document.getElementById('fit').click();
  }));
  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{detail:{id,side}}));
+ renderFamilyTree();
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
  history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game'+
   (args.get('idle')==='1'?'&idle=1':''));
