@@ -10,7 +10,7 @@
 - 不得虚构背面。原始 `handwear` 包含相互交握的左右手，目前一个源贴图、四条独立局部骨骼链，允许微动；不宣称已完成完整独立抬手动作。
 - 编辑器操作：打开 `/character-editor/?character=male2&side=front`，人物树「男二」下点击「＋ 导入男二 SeeThrough ZIP」，选择原始 ZIP；进入现有 L2D 动画预览，按「保存」保存在浏览器。
 - 分发：将已验证的 `male2_l2d_module.zip` 放入 `site/assets/l2d/inbox/male2.zip` 并提交 Git，现有自动模块构建器会安装到 `site/assets/l2d/library/male2` 并在游戏目录自动注册。
-- 当前 GitHub 源码包含可用的导入器、人物槽、骨骼映射、回归测试；直到上述 ZIP 二进制发布到仓库，其他设备首次进入工作室只会看到上传入口，不会凭空拥有这些用户私有贴图。
+- 2026-11-04 已将真实的男二模块 ZIP 二进制正式提交至 `site/assets/l2d/inbox/male2.zip`，部署期间 `build_l2d_library.py` 自动安装至 `site/assets/l2d/library/male2` 并注册到目录。**全新浏览器直接打开 `?character=male2&side=front` 即可自动加载 16 个真实 ArtMesh，不再需要本地导入。**
 
 ## 验收
 
