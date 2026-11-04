@@ -26,6 +26,15 @@ jobs:
       - run: python3 scripts/build_v4_assets.py
       - run: python3 scripts/build_protagonist_part_rig.py
       - run: python3 scripts/build_char002_psd_rig.py
+      - name: Collect actual arm / axe / torso PNGs for overlap QA
+        run: |
+          mkdir -p artifacts/character-editor/depth-sources
+          cp site/assets/l2d/library/protagonist-battle-front/front/handwear_r.png artifacts/character-editor/depth-sources/
+          cp site/assets/l2d/library/protagonist-battle-front/front/handwear_l.png artifacts/character-editor/depth-sources/
+          cp site/assets/l2d/library/protagonist-battle-front/front/axe_held.png artifacts/character-editor/depth-sources/
+          cp site/assets/l2d/library/protagonist-rig-v1/parts/front/jacket.png artifacts/character-editor/depth-sources/standing-jacket.png
+          cp site/assets/l2d/library/protagonist-rig-v1/parts/front/sleeves_and_hands.png artifacts/character-editor/depth-sources/standing-sleeves.png
+
       - run: python3 tests/test_protagonist_unified.py
       - run: python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
