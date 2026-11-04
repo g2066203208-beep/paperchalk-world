@@ -433,6 +433,15 @@ personImportBtn.title='导入到当前选中的角色正面或背面；先切换
 const personImportTarget=document.createElement('span');
 personImportTarget.id='studio-person-import-target';
 personImportBar.append(personImportBtn,personImportTarget);
+// A generic See-through ZIP is not proof of any existing actor's identity.
+// The safe comparison viewer does not pollute the character roster or save
+// someone else's body into the currently selected canonical character.
+const seethroughQaLink=document.createElement('a');
+seethroughQaLink.href='./seethrough-qa.html';
+seethroughQaLink.textContent='🔍 See-through 清晰度对照';
+seethroughQaLink.title='原图 / 重建图 / 逐层合成，100%/200% 查看；不会覆盖游戏人物';
+seethroughQaLink.style.cssText='display:inline-flex;align-items:center;padding:7px 9px;border:1px solid #4b8499;border-radius:7px;color:#a6e5f3;text-decoration:none;font-size:12px';
+personImportBar.append(seethroughQaLink);
 personSearch.after(personImportBar);
 personImportBtn.onclick=()=>{
  const input=$('studio-parts-import');
