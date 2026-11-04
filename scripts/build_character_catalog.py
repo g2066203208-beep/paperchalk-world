@@ -89,7 +89,12 @@ def discover():
         if ident=='char-016':continue
         if ident=='class-teacher-geography-candidate' and any(m['id']=='char-006' for m in modules):
             continue  # the native CHAR-006 upload takes precedence over legacy teacher media
-        actor_id='char-006' if ident=='class-teacher-geography-candidate' else ident
+        # The previously labelled "new clothes" is the male LEAD's real
+        # front-facing L2D source, not a costume variant or extra NPC.
+        # Keep the original archive filename/rig provenance for reversibility.
+        actor_id=('char-006' if ident=='class-teacher-geography-candidate'
+                  else 'char-003' if ident=='char-003-outfit-02'
+                  else ident)
         # Explicit guard against replacing the already-approved female leads.
         if ident in ('protagonist','char-002'):
             raise ValueError(f'L2D module {ident} is protected; use an internal source-rig alias')
@@ -102,16 +107,24 @@ def discover():
         row = entries.setdefault(actor_id,{
             'id':actor_id,'label':module['label'],'front':'','back':''
         })
-        row['label']='女五 · 女老师（基础正面）' if actor_id=='char-006' else module['label']
-        row['familyId']=actor_id if actor_id=='char-006' else module.get('familyId',ident)
-        row['variantCategory']=module.get('variantCategory','default')
+        row['label']=('女五 · 女老师（基础正面）' if actor_id=='char-006'
+                       else '男主角' if actor_id=='char-003' and ident=='char-003-outfit-02'
+                       else module['label'])
+        row['familyId']=actor_id if actor_id in ('char-006','char-003') else module.get('familyId',ident)
+        row['variantCategory']=('default' if actor_id=='char-003' and ident=='char-003-outfit-02'
+                                else module.get('variantCategory','default'))
         row['actions']=module.get('actions',[])
         row.pop('draft',None)
         row.pop('state',None)
-        if actor_id=='char-006' and ident!=actor_id:
-            # The old teacher art is explicitly authorized as female five; preserve true rig provenance.
+        if (actor_id=='char-006' and ident!=actor_id) or (
+            actor_id=='char-003' and ident=='char-003-outfit-02'):
+            # The original module is an implementation of the canonical actor,
+            # NOT another selectable person or outfit.  Retain its source ID
+            # for strict runtime provenance checks and direct asset URLs.
             row['l2dModule']={face:{**v,'rig':{**v['rig'],'sourceCharacterId':ident}}
                               for face,v in module['views'].items()}
+            if actor_id=='char-003':
+                row['frontSourceModule']=ident
         else:
             row['l2dModule']=module['views']
         row['assetVersion']=module['version']
