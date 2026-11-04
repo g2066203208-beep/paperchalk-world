@@ -911,10 +911,10 @@
         "label": "日常待机 · 共用身体",
         "parts": {
           "handwear_r": {
-            "angle": -12
+            "angle": -4
           },
           "handwear_l": {
-            "angle": 12
+            "angle": 43
           },
           "axe_held": {
             "opacity": 0
