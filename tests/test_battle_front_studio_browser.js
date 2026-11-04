@@ -44,7 +44,10 @@ const URL=process.env.BATTLE_FRONT_TEST_URL||
   assert.equal(result.axeOverhead,false,'duplicate overhead axe must be hidden');
   assert.equal(result.axeHeld,true,'held axe must remain in the artwork');
   assert.ok(result.opaque>1500,'original PSD character must be visibly rendered');
-  assert.equal(await page.locator('#studio-battle-import-row').isVisible(),true);
+  assert.equal(await page.locator('#studio-battle-import-row').isVisible(),false,
+    'old battle import explanation is intentionally collapsed in compact workspace');
+  assert.ok(await page.locator('#studio-character-tree').textContent().then(x=>x.includes('战斗')),
+    'battle action remains visible in heroine person tree');
   assert.equal(await page.locator('#studio-character').inputValue(),'protagonist-battle-front');
   const groupBattle=await page.locator('#studio-character option[value="protagonist-battle-front"]')
     .evaluate(el=>el.parentElement?.label);
