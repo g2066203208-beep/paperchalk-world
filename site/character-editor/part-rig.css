@@ -321,3 +321,18 @@ body.studio-page #easy-imports .studio-backup-action{
  body.studio-page .stage-toolbar{width:75px!important;max-width:75px!important}
  body.studio-page #btnSave{font-size:12px;padding:8px 10px}
 }
+
+/* Full-screen editor must own hit testing; inspectors cannot intercept its
+   toolbar while expanded. Do not destroy/rehydrate the active actor. */
+body.stage-expanded #stage{
+ position:fixed!important;inset:8px!important;top:8px!important;
+ width:auto!important;height:auto!important;z-index:9999!important;
+ isolation:isolate;overflow:hidden!important;
+}
+body.stage-expanded .left,
+body.stage-expanded .right,
+body.stage-expanded #studio-library,
+body.stage-expanded #mobile-studio-tabs{
+ visibility:hidden!important;pointer-events:none!important
+}
+body.stage-expanded #stage .stage-toolbar{z-index:10000!important}
