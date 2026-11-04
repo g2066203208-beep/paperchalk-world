@@ -975,6 +975,22 @@ function drawPreview(ctx){
    }
   }
  }
+ if(state.fitMode&&current()){
+  // Selection outline uses the exact REST-space layout transform.
+  const b=fitBounds(current()),z=Math.max(.2,S.zoom),size=6/z;
+  ctx.save();ctx.strokeStyle='#80e0f3';ctx.lineWidth=1.8/z;
+  ctx.setLineDash([7/z,4/z]);ctx.strokeRect(b.x,b.y,b.w,b.h);ctx.setLineDash([]);
+  ctx.fillStyle='#eaffff';ctx.strokeStyle='#247b98';
+  for(const x of [b.x,b.x+b.w])for(const y of [b.y,b.y+b.h]){
+   ctx.fillRect(x-size,y-size,2*size,2*size);
+   ctx.strokeRect(x-size,y-size,2*size,2*size);
+  }
+  const p=current(),at=core.placedRestPoint(p,{
+   x:p.x+p.w*p.pivot.x,y:p.y+p.h*p.pivot.y});
+  ctx.fillStyle='#ffdb82';ctx.beginPath();
+  ctx.arc(at.x,at.y,4/z,0,2*Math.PI);ctx.fill();
+  ctx.restore();
+ }
  if(!state.showGuides)return true;
  const p=current();if(p){
   const P={x:p.x+p.w*p.pivot.x,y:p.y+p.h*p.pivot.y};
@@ -1161,6 +1177,89 @@ for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,e=>{
 window.addEventListener('paperchalk:studio-tool-changed',event=>{
  if(maskState.enabled&&event.detail?.tool!=='mask')setMaskMode(false);
 });
+// Only an explicitly enabled transform tool captures resize/move gestures.
+// The original PNG and the actual stored texture dimensions are never changed.
+stage.addEventListener('pointerdown',e=>{
+ if(!state.fitMode||!state.active||S.tool!=='select'||e.target!==$('view')||
+   (e.pointerType==='mouse'&&e.button!==0))return;
+ const pos=loc(e),p=current();if(!p)return;
+ const b=fitBounds(p),radius=17/Math.max(.2,S.zoom);
+ let corner='';
+ for(const [id,x,y] of [['tl',b.x,b.y],['tr',b.x+b.w,b.y],
+  ['bl',b.x,b.y+b.h],['br',b.x+b.w,b.y+b.h]]){
+  if(Math.hypot(pos.x-x,pos.y-y)<radius){corner=id;break;}
+ }
+ const inside=pos.x>=b.x&&pos.x<=b.x+b.w&&
+  pos.y>=b.y&&pos.y<=b.y+b.h;
+ if(!corner&&(!inside||e.pointerType==='touch')){
+  if(e.pointerType!=='touch'){
+   for(const layer of parts().slice().reverse()){
+    const other=state.model.parts[key(layer)];if(!other)continue;
+    const rect=fitBounds(other);
+    if(pos.x>=rect.x&&pos.x<=rect.x+rect.w&&pos.y>=rect.y&&pos.y<=rect.y+rect.h){
+     e.stopImmediatePropagation();e.preventDefault();select(other.id);return;
+    }
+   }
+  }
+  return;
+ }
+ e.stopImmediatePropagation();e.preventDefault();
+ state.fitDrag={pointerId:e.pointerId,corner,id:p.id,start:pos,bounds:b,
+  old:{...p.placement}};
+ stage.setPointerCapture(e.pointerId);
+},true);
+stage.addEventListener('pointermove',e=>{
+ const drag=state.fitDrag;
+ if(!drag||drag.pointerId!==e.pointerId||!state.active)return;
+ e.stopImmediatePropagation();e.preventDefault();
+ const p=state.model?.parts[drag.id];if(!p)return;
+ const pt=loc(e),dx=pt.x-drag.start.x,dy=pt.y-drag.start.y;
+ if(!drag.corner){
+  p.placement.offsetX=fitClamp(drag.old.offsetX+dx,-1024,1024,drag.old.offsetX);
+  p.placement.offsetY=fitClamp(drag.old.offsetY+dy,-1024,1024,drag.old.offsetY);
+ }else{
+  const right=drag.corner.includes('r'),bottom=drag.corner.includes('b');
+  const anchorX=right?drag.bounds.x:drag.bounds.x+drag.bounds.w;
+  const anchorY=bottom?drag.bounds.y:drag.bounds.y+drag.bounds.h;
+  let sx=fitClamp((right?pt.x-anchorX:anchorX-pt.x)/p.w,.25,4,drag.old.scaleX);
+  let sy=fitClamp((bottom?pt.y-anchorY:anchorY-pt.y)/p.h,.25,4,drag.old.scaleY);
+  if($('rig-fit-lock').checked){
+   const changeX=Math.abs(sx-drag.old.scaleX),changeY=Math.abs(sy-drag.old.scaleY);
+   const factor=changeX>=changeY?sx/drag.old.scaleX:sy/drag.old.scaleY;
+   sx=fitClamp(drag.old.scaleX*factor,.25,4,drag.old.scaleX);
+   sy=fitClamp(drag.old.scaleY*factor,.25,4,drag.old.scaleY);
+  }
+  const px=p.x+p.w*p.pivot.x,py=p.y+p.h*p.pivot.y;
+  p.placement.scaleX=sx;p.placement.scaleY=sy;
+  p.placement.offsetX=fitClamp(
+   (right?anchorX+p.w*p.pivot.x*sx:anchorX-p.w*(1-p.pivot.x)*sx)-px,
+   -1024,1024,drag.old.offsetX);
+  p.placement.offsetY=fitClamp(
+   (bottom?anchorY+p.h*p.pivot.y*sy:anchorY-p.h*(1-p.pivot.y)*sy)-py,
+   -1024,1024,drag.old.offsetY);
+ }
+ fitValues();changed(false);
+},true);
+for(const event of ['pointerup','pointercancel'])stage.addEventListener(event,e=>{
+ if(!state.fitDrag||state.fitDrag.pointerId!==e.pointerId)return;
+ e.stopImmediatePropagation();e.preventDefault();state.fitDrag=null;
+ if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
+ changed();
+},true);
+window.addEventListener('keydown',e=>{
+ if(!state.fitMode||!state.active||e.altKey||e.ctrlKey||e.metaKey||
+  e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement||
+  !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;
+ const p=current();if(!p)return;
+ const d=e.shiftKey?10:1;
+ if(e.key==='ArrowLeft')p.placement.offsetX-=d;
+ else if(e.key==='ArrowRight')p.placement.offsetX+=d;
+ else if(e.key==='ArrowUp')p.placement.offsetY-=d;
+ else p.placement.offsetY+=d;
+ p.placement.offsetX=fitClamp(p.placement.offsetX,-1024,1024,0);
+ p.placement.offsetY=fitClamp(p.placement.offsetY,-1024,1024,0);
+ e.preventDefault();fitValues();changed();
+},true);
 stage.addEventListener('pointerdown',e=>{
  if(!state.active||!state.panelOpen||!state.showGuides||['select','mask'].includes(S.tool)||e.target!==$('view'))return;
  e.stopImmediatePropagation();e.preventDefault();
