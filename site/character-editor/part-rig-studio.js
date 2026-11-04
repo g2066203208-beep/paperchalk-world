@@ -560,6 +560,47 @@ function syncLayerOrder(){
  state.model.layerOrder=ids;
  changed(false);
 }
+
+/* Layer deletion must update real ArtMesh state, not merely the painter list.
+ * Keep a reversible snapshot of removed joints; authored PSD PNGs are never
+ * deleted from the published library. deletedParts is respected in-game. */
+function reconcileSourceParts(removedId=''){
+ if(!state.model||state.model.characterId!==studio.current||state.model.face!==S.side)return;
+ if(maskState.enabled)setMaskMode(false);
+ const old=state.model,source=parts(),ids=source.map(key),present=new Set(ids);
+ const oldDeleted=new Set(Array.isArray(old.deletedParts)?old.deletedParts:[]);
+ const backups={...(old.deletedPartBackups||{})};
+ if(removedId){
+  const before=old.parts?.[removedId];
+  if(before)backups[removedId]=JSON.parse(JSON.stringify(before));
+  oldDeleted.add(removedId);
+ }
+ const previous={...old,parts:{...backups,...(old.parts||{})}};
+ const next=core.project(source,studio.current,S.side,previous);
+ next.deletedParts=[...oldDeleted].filter(id=>!present.has(id));
+ next.deletedPartBackups=backups;
+ next.layerOrder=ids;
+ state.model=next;
+ state.visualIdle=JSON.parse(JSON.stringify(next.idleProfile));
+ state.selected=present.has(state.selected)?state.selected:(ids[0]||'');
+ state.bone='';
+ const selectNode=$('rig-part');selectNode.replaceChildren();
+ for(const item of source)selectNode.add(new Option(item.name,key(item)));
+ if(state.selected)selectNode.value=state.selected;
+ state.active=true;
+ if(!source.length){quickPanel.hidden=true;setInspectorOpen();}
+ else{quickPanel.hidden=false;setInspectorOpen();values();refreshBones();syncIdle();updateMaskControls();}
+ changed();ed.renderList();ed.render();
+}
+window.addEventListener('paperchalk:studio-part-removed',event=>{
+ const detail=event.detail||{};
+ if(detail.id!==studio.current||detail.face!==S.side||!detail.partId)return;
+ reconcileSourceParts(String(detail.partId));
+});
+window.addEventListener('paperchalk:studio-source-stack-restored',event=>{
+ if(event.detail?.side!==S.side)return;
+ reconcileSourceParts();
+});
 window.addEventListener('paperchalk:studio-layer-order-changed',syncLayerOrder);
 function changed(autosave=true){
  revision++;state.dirty=true;
@@ -596,6 +637,11 @@ async function activate(openPanel=false){
  const id=studio.current,face=S.side,saved=await studio.readPartRig(id,face);
  if(studio.current!==id||S.side!==face)return;
  state.model=core.project(src,id,face,saved);
+ // Store absent source parts as actual deletions, even when reopening a draft.
+ state.model.deletedParts=[...new Set((saved?.deletedParts||[])
+  .filter(key=>typeof key==='string'&&!src.some(p=>(p.partId||p.name)===key)))];
+ state.model.deletedPartBackups=saved?.deletedPartBackups||{};
+
  gripExplanation.hidden=!(id==='char-004'&&face==='front'&&state.model?.parts?.coat_left&&state.model?.parts?.coat_right);
  // Published rigs sometimes store their exact Z order independently of
  // original ZIP insertion order. Align the layer panel at load, not on
