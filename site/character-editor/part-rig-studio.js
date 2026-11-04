@@ -101,7 +101,11 @@ function paintMaskLine(a,b){
 }
 function setMaskMode(enabled){
  enabled=!!enabled&&!!state.model?.parts[state.selected];
- if(enabled===maskState.enabled)return;
+ if(enabled===maskState.enabled){
+  $('rig-mask-paint').setAttribute('aria-pressed',String(enabled&&!maskState.erase));
+  $('rig-mask-erase').setAttribute('aria-pressed',String(enabled&&maskState.erase));
+  maskLabel.textContent=maskHint();ed.render();return;
+ }
  maskState.enabled=enabled;
  if(enabled){
   maskState.restorePlaying=state.playing;state.playing=false;
@@ -134,9 +138,10 @@ function drawTargetList(){
   const label=document.createElement('label');label.className='rig-mask-target-check';
   const input=document.createElement('input');input.type='checkbox';
   input.value=id;input.checked=maskState.targets.has(id);
+  input.disabled=id===maskTarget.value; // Primary target is changed via dropdown.
   input.onchange=()=>{
    if(input.checked)maskState.targets.add(id);else maskState.targets.delete(id);
-   if(!maskState.targets.size){maskState.targets.add(maskTarget.value);input.checked=id===maskTarget.value}
+   maskState.targets.add(maskTarget.value);
    const entry=getMask();
    if(entry){entry.targets=[...maskState.targets];entry.target=maskTarget.value;changed(false)}
    $('rig-mask-more').textContent='对象 '+maskState.targets.size;
