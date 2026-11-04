@@ -149,12 +149,31 @@ def build_unified():
             part['kind']='fixed'
         ordered[variant_id]=part
     # Back-to-front is a formal property of the model, not dictionary order.
+    # BOTH battle sleeves must originate BEHIND the jacket; the old
+    # version accidentally placed the character's LEFT sleeve in front.
+    # Only the visible, original skin-coloured grip regions cross IN FRONT
+    # of the axe shaft (the source PNGs remain untouched).
     src['layerOrder']=[
-        'rear_hair','sleeves_and_hands','battle_handwear_r','legs',
-        'shoes','neck','skirt','jacket','battle_axe','battle_handwear_l',
+        'rear_hair','sleeves_and_hands',
+        'battle_handwear_r','battle_handwear_l',
+        'legs','shoes','neck','skirt','jacket','battle_axe',
         'ears','face','eye_white','irises','lashes','brows','front_hair',
         'nose','mouth','hair_clip',
     ]
+    src['gripOverlays']={
+        # All points are measured on the TRUE source arm PNGs, not a
+        # made-up hand image. The mesh renderer warps this mask WITH its arm.
+        # r = viewer-left fist (133x237), l = viewer-right palm (151x192).
+        'battle_handwear_r':[
+            [0,193],[11,180],[29,172],[44,166],[61,169],[73,174],
+            [82,187],[85,203],[98,218],[103,233],[94,237],
+            [72,230],[55,237],[33,237],[14,230],[0,213]],
+        'battle_handwear_l':[
+            [77,65],[90,63],[107,65],[117,63],[121,47],[130,47],
+            [135,64],[147,69],[151,81],[151,104],[142,115],
+            [127,121],[113,139],[101,135],[92,124],[86,110],
+            [81,98],[76,88]],
+    }
     if set(src['layerOrder'])!=set(ordered) or len(src['layerOrder'])!=20:
         raise ValueError('Invalid standing-first front-layer Z-order')
     src['parts']={key:ordered[key] for key in src['layerOrder']}
