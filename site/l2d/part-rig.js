@@ -874,11 +874,19 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   if(!b||b.enabled===false)continue;
   const pose=actionPart(model,id);
   if(pose.opacity<=0.001)continue;
+  // A held weapon must share the HAND'S action transform, not rotate
+  // separately about the huge weapon bitmap's unrelated bounding-box center.
+  // This keeps the grip registered while blending the action.
+  const attached=id==='axe_held'&&b.parentId==='handwear_l'
+   ?model.parts.handwear_l:null;
+  const motion=attached?actionPart(model,'handwear_l'):pose;
+  const mount=attached||b;
   ctx.save();
-  if(pose.x||pose.y||pose.angle){
-   const anchorX=b.x+b.w*b.pivot.x,anchorY=b.y+b.h*b.pivot.y;
-   ctx.translate(anchorX+pose.x,anchorY+pose.y);
-   ctx.rotate(pose.angle*Math.PI/180);
+  if(motion.x||motion.y||motion.angle){
+   const anchorX=mount.x+mount.w*mount.pivot.x;
+   const anchorY=mount.y+mount.h*mount.pivot.y;
+   ctx.translate(anchorX+motion.x,anchorY+motion.y);
+   ctx.rotate(motion.angle*Math.PI/180);
    ctx.translate(-anchorX,-anchorY);
   }
   // Opacity is per-part; other art, head motion and full actor identity persist.
