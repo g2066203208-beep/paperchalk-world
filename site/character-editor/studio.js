@@ -244,6 +244,10 @@ body.studio-page .character-family>summary{font-size:13px;min-height:39px;paddin
 body.studio-page .character-family-children{padding:5px 8px;gap:3px}
 body.studio-page .character-family-children button{font-size:12px;min-height:35px;padding:7px 9px}
 body.studio-page .character-family-children small{display:none!important}
+body.studio-page .character-family-children .studio-outfit-import{
+ background:#255043;border:1px solid #428971;color:#e1fff0;
+ font-weight:650;min-height:38px;font-size:12px
+}
 body.studio-page .character-family-children .male2-direct-import{
  background:#205049;border:1px solid #3e947d;color:#e2fff3;font-weight:650;
  min-height:40px;font-size:12px
@@ -334,8 +338,25 @@ function renderFamilyTree(){
    const isBattle=v.variantCategory==='combat';
    item.textContent=isBattle?'战斗 · 切换手臂与武器':'服装 / 素材 · '+String(v.label||v.id).replace(/^女主 · /,'');
    const small=document.createElement('small');
-   small.textContent=isBattle?'使用基础人物同一套骨骼，不切换整个人物':'独立源稿；完成部件映射后并入基础模型';
+   small.textContent=isBattle?'使用基础人物同一套骨骼，不切换整个人物':
+    v.variantCategory==='outfit'?'同一人物的服装子资源；原衣服不覆盖':'独立源稿；完成部件映射后并入基础模型';
    item.append(small);
+   if(v.variantCategory==='outfit'){
+    const file=document.createElement('input');file.type='file';
+    file.accept='.psd,.zip,application/zip';file.hidden=true;
+    file.onchange=e=>{
+     const uploaded=e.target.files?.[0];e.target.value='';
+     if(!uploaded)return;
+     change(v.id,'front').then(()=>importComponentArchive(uploaded))
+      .catch(error=>message('新衣服导入失败：'+error.message));
+    };
+    const action=document.createElement('button');action.type='button';
+    action.className='studio-outfit-import';
+    action.textContent='＋ 导入此服装 PSD / ZIP';
+    action.onclick=e=>{e.stopPropagation();file.click()};
+    children.append(file);
+    children.append(action);
+   }
    item.className=currentId===v.id?'active':'';
    item.onclick=async()=>{
     try{
@@ -469,6 +490,23 @@ async function loadList(){
     familyId:c.familyId||c.id,variantCategory:c.variantCategory||'default',actions:c.actions||[]});
   }
  }catch(e){console.warn('Character catalog offline',e)}
+ // Clothing is a child of the canonical actor, never another NPC or a
+ // replacement for its approved standing art. These fallback editor slots
+ // become real published modules when binary art is installed in the library.
+ const wardrobePlaceholder=(label)=>'data:image/svg+xml;charset=utf-8,'+
+  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024">'+
+   '<text x="512" y="488" font-family="sans-serif" fill="#bfd1e7" font-size="26" text-anchor="middle">'+label+'</text>'+
+   '<text x="512" y="527" font-family="sans-serif" fill="#9cacc5" font-size="18" text-anchor="middle">请导入原始分层 ZIP / PSD</text></svg>');
+ if(!list.has('char-003-outfit-02')){
+  list.set('char-003-outfit-02',{id:'char-003-outfit-02',
+   label:'男主 · 新衣服',front:wardrobePlaceholder('男主 · 新衣服'),back:'',
+   familyId:'char-003',variantCategory:'outfit',editorOnly:true});
+ }
+ if(!list.has('char-008-outfit-02')){
+  list.set('char-008-outfit-02',{id:'char-008-outfit-02',
+   label:'女老师 · 新衣服（待导入）',front:wardrobePlaceholder('女老师 · 新衣服'),back:'',
+   familyId:'class-teacher-geography-candidate',variantCategory:'outfit',editorOnly:true});
+ }
  const canonicalFemale2=list.get('char-002');
  const imported=await get('imported');
  if(Array.isArray(imported))for(const c of imported)if(okId(c?.id))list.set(c.id,c);
