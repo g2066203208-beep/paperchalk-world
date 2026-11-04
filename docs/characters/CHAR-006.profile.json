@@ -2,44 +2,1867 @@
   "schemaVersion": 3,
   "recordCode": "CHAR-006",
   "canonicalId": "char-006",
-  "recordState": "visual_candidate_source_psd_not_published",
+  "recordState": "candidate_psd_processed_source_media_pending_publication",
+  "readableDocument": "docs/l2d/CHAR006_CHAR020_PSD_IMPORT_AUDIT_20261104.md",
+  "sourcePriority": [
+    "user_confirmed",
+    "approved_art_reference",
+    "approved_story_reference",
+    "proposed",
+    "unknown",
+    "not_applicable",
+    "rejected"
+  ],
   "fields": {
     "identity": {
+      "recordCode": {
+        "value": "CHAR-006",
+        "status": "proposed",
+        "source": "2026-11-04新建女五候选档案"
+      },
       "canonicalId": {
         "value": "char-006",
         "status": "proposed",
-        "source": "2026-11-04 user-uploaded SeeThrough PSD, awaiting identity confirmation"
+        "source": "2026-11-04女五预留独立人物ID"
       },
       "displayName": {
         "value": "女五（新 PSD 待正式验收）",
         "status": "proposed",
-        "source": "2026-11-04 user request"
+        "source": "2026-11-04用户要求女五接入 L2D"
+      },
+      "legalName": {
+        "value": null,
+        "status": "unknown"
+      },
+      "nicknames": {
+        "value": null,
+        "status": "unknown"
+      },
+      "aliases": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pronouns": {
+        "value": null,
+        "status": "unknown"
+      },
+      "genderPresentation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ageYears": {
+        "value": null,
+        "status": "unknown"
+      },
+      "birthDate": {
+        "value": null,
+        "status": "unknown"
+      },
+      "birthplace": {
+        "value": null,
+        "status": "unknown"
+      },
+      "currentResidence": {
+        "value": null,
+        "status": "unknown"
+      },
+      "era": {
+        "value": null,
+        "status": "unknown"
+      },
+      "occupation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "schoolYear": {
+        "value": null,
+        "status": "unknown"
       },
       "storyRole": {
         "value": "女五",
-        "status": "user_requested",
-        "source": "2026-11-04 user request"
+        "status": "user_confirmed",
+        "source": "2026-11-04用户称女五"
       },
       "designStatus": {
-        "value": "15-source-layer SeeThrough PSD processed into a 17-part L2D import bundle; GitHub media not committed yet",
-        "status": "in_progress",
-        "source": "2026-11-04 local PSD conversion"
+        "value": "PSD 已在本轮制作候选 L2D 包，正式图像身份与上线仍未验收",
+        "status": "proposed",
+        "source": "2026-11-04 SeeThrough PSD 本地制作检查"
+      }
+    },
+    "family": {
+      "parents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "guardians": {
+        "value": null,
+        "status": "unknown"
+      },
+      "siblings": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relatives": {
+        "value": null,
+        "status": "unknown"
+      },
+      "familyStructure": {
+        "value": null,
+        "status": "unknown"
+      },
+      "childhoodEvents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upbringing": {
+        "value": null,
+        "status": "unknown"
+      },
+      "householdMembers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "livingSituation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "socioeconomicBackground": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "education": {
+      "school": {
+        "value": null,
+        "status": "unknown"
+      },
+      "className": {
+        "value": null,
+        "status": "unknown"
+      },
+      "club": {
+        "value": null,
+        "status": "unknown"
+      },
+      "grades": {
+        "value": null,
+        "status": "unknown"
+      },
+      "subjectStrengths": {
+        "value": null,
+        "status": "unknown"
+      },
+      "subjectWeaknesses": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workplace": {
+        "value": null,
+        "status": "unknown"
+      },
+      "jobTitle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "salaryRange": {
+        "value": null,
+        "status": "unknown"
+      },
+      "experience": {
+        "value": null,
+        "status": "unknown"
+      },
+      "professionalGoals": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "measurements": {
+      "heightCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "weightKg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headBodyRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "chestCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "torsoLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "armSpanCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "inseamCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoeSize": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodyBuild": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodyMassDescription": {
+        "value": null,
+        "status": "unknown"
+      },
+      "posture": {
+        "value": null,
+        "status": "unknown"
+      },
+      "handDominance": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gait": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperArmCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forearmCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wristCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "thighCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "calfCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ankleCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperArmLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forearmLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "handLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "palmWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperLegLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lowerLegLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeHeightCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipBreadthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderBreadthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistHeightCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ribcageDepthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipDepthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footWidthCm": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "anatomy": {
+      "headShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderSlope": {
+        "value": null,
+        "status": "unknown"
+      },
+      "torsoDepth": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ribcageContour": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistContour": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pelvisAndHips": {
+        "value": null,
+        "status": "unknown"
+      },
+      "backContour": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bustThroughClothing": {
+        "value": null,
+        "status": "unknown"
+      },
+      "limbProportions": {
+        "value": null,
+        "status": "unknown"
+      },
+      "handShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "skinUndertone": {
+        "value": null,
+        "status": "unknown"
+      },
+      "skinTexture": {
+        "value": null,
+        "status": "unknown"
+      },
+      "scars": {
+        "value": null,
+        "status": "unknown"
+      },
+      "birthmarks": {
+        "value": null,
+        "status": "unknown"
+      },
+      "moles": {
+        "value": null,
+        "status": "unknown"
+      },
+      "freckles": {
+        "value": null,
+        "status": "unknown"
+      },
+      "postureAsymmetry": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mobilityNeeds": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperArmShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forearmShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wristShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "thighShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "calfShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ankleShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "legAxis": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperLimbTaper": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lowerLimbTaper": {
+        "value": null,
+        "status": "unknown"
+      },
+      "legMuscleDistribution": {
+        "value": null,
+        "status": "unknown"
+      },
+      "armMuscleDistribution": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pelvisTilt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "spinalCurve": {
+        "value": null,
+        "status": "unknown"
+      },
+      "handFingerLengthRatios": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodySilhouetteType": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderToHipWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistToHipWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headToShoulderWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "face": {
+      "faceShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forehead": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cheekbones": {
+        "value": null,
+        "status": "unknown"
+      },
+      "jawline": {
+        "value": null,
+        "status": "unknown"
+      },
+      "chin": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseBridge": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseTip": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lips": {
+        "value": null,
+        "status": "unknown"
+      },
+      "teeth": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ears": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyebrows": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyelidShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeSpacing": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeCornerAngle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeColor": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeHex": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pupilColor": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeHighlights": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyelashes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "defaultExpression": {
+        "value": null,
+        "status": "unknown"
+      },
+      "facialLandmarkSystem": {
+        "value": null,
+        "status": "unknown"
+      },
+      "facialLandmarksNormalized": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceLengthToWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "foreheadToFaceHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "jawWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cheekboneWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeCenterHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "interocularSpacingRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyebrowEyeGapRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseTopHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseTipHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthCenterHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "philtrumLengthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "earTopHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "earBottomHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeTailSlantDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyelidOpennessBaseline": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lipCornerSlopeDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "browAngleDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionLandmarkVariants": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseToMouthDistanceRatio": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "hair": {
+      "hairBaseColor": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairHex": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairHighlights": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairLength": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairTexture": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairDensity": {
+        "value": null,
+        "status": "unknown"
+      },
+      "parting": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bangs": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sidelocks": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ponytailCount": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ponytailPosition": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ponytailLength": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairAccessories": {
+        "value": null,
+        "status": "unknown"
+      },
+      "accessorySide": {
+        "value": null,
+        "status": "unknown"
+      },
+      "accessoryPosition": {
+        "value": null,
+        "status": "unknown"
+      },
+      "backSilhouette": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "wardrobe": {
+      "outerwear": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shirt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "blouse": {
+        "value": null,
+        "status": "unknown"
+      },
+      "neckwear": {
+        "value": null,
+        "status": "unknown"
+      },
+      "skirt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trousers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "socks": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footwear": {
+        "value": null,
+        "status": "unknown"
+      },
+      "garmentLayerOrder": {
+        "value": null,
+        "status": "unknown"
+      },
+      "paletteHex": {
+        "value": null,
+        "status": "unknown"
+      },
+      "fabrics": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sewingDetails": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pleats": {
+        "value": null,
+        "status": "unknown"
+      },
+      "buttons": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pockets": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wearCondition": {
+        "value": null,
+        "status": "unknown"
+      },
+      "seasonalVariants": {
+        "value": null,
+        "status": "unknown"
+      },
+      "occasionVariants": {
+        "value": null,
+        "status": "unknown"
+      },
+      "permanentAccessories": {
+        "value": null,
+        "status": "unknown"
+      },
+      "temporaryProps": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "temperament": {
+      "coreConfirmedTraits": {
+        "value": null,
+        "status": "unknown"
+      },
+      "proposedTraits": {
+        "value": null,
+        "status": "unknown"
+      },
+      "strengths": {
+        "value": null,
+        "status": "unknown"
+      },
+      "weaknesses": {
+        "value": null,
+        "status": "unknown"
+      },
+      "socialEnergy": {
+        "value": null,
+        "status": "unknown"
+      },
+      "humorStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "conflictStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "fears": {
+        "value": null,
+        "status": "unknown"
+      },
+      "angerTriggers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "stressResponse": {
+        "value": null,
+        "status": "unknown"
+      },
+      "defenseMechanism": {
+        "value": null,
+        "status": "unknown"
+      },
+      "moralLimits": {
+        "value": null,
+        "status": "unknown"
+      },
+      "goals": {
+        "value": null,
+        "status": "unknown"
+      },
+      "contradictions": {
+        "value": null,
+        "status": "unknown"
+      },
+      "publicPersona": {
+        "value": null,
+        "status": "unknown"
+      },
+      "privatePersona": {
+        "value": null,
+        "status": "unknown"
+      },
+      "emotionalBaseline": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionRange": {
+        "value": null,
+        "status": "unknown"
+      },
+      "defaultMicroExpression": {
+        "value": null,
+        "status": "unknown"
+      },
+      "signatureMicroExpressions": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyesExpression": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyebrowsExpression": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthExpression": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodyLanguageMood": {
+        "value": null,
+        "status": "unknown"
+      },
+      "composureLevel": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "psychology": {
+      "innerNeed": {
+        "value": null,
+        "status": "unknown"
+      },
+      "externalGoal": {
+        "value": null,
+        "status": "unknown"
+      },
+      "secretGoal": {
+        "value": null,
+        "status": "unknown"
+      },
+      "belief": {
+        "value": null,
+        "status": "unknown"
+      },
+      "selfImage": {
+        "value": null,
+        "status": "unknown"
+      },
+      "insecurities": {
+        "value": null,
+        "status": "unknown"
+      },
+      "regrets": {
+        "value": null,
+        "status": "unknown"
+      },
+      "traumaIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      },
+      "attachmentStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trustPattern": {
+        "value": null,
+        "status": "unknown"
+      },
+      "breakingPoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "growthArc": {
+        "value": null,
+        "status": "unknown"
+      },
+      "values": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "dialogue": {
+      "voicePitch": {
+        "value": null,
+        "status": "unknown"
+      },
+      "voiceTimbre": {
+        "value": null,
+        "status": "unknown"
+      },
+      "speechRate": {
+        "value": null,
+        "status": "unknown"
+      },
+      "voiceVolume": {
+        "value": null,
+        "status": "unknown"
+      },
+      "tone": {
+        "value": null,
+        "status": "unknown"
+      },
+      "accents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "diction": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sentenceLength": {
+        "value": null,
+        "status": "unknown"
+      },
+      "vocabulary": {
+        "value": null,
+        "status": "unknown"
+      },
+      "habitualPhrases": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sarcasmLevel": {
+        "value": null,
+        "status": "unknown"
+      },
+      "laughStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cryingStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "speechUnderStress": {
+        "value": null,
+        "status": "unknown"
+      },
+      "dialogueExamples": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forbiddenVoicePatterns": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "behavior": {
+      "idlePose": {
+        "value": null,
+        "status": "unknown"
+      },
+      "signatureGesture": {
+        "value": null,
+        "status": "unknown"
+      },
+      "greetingHabit": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gazePattern": {
+        "value": null,
+        "status": "unknown"
+      },
+      "blinkHabit": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyebrowMotion": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headTilt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "walkCycle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "runningCycle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "nervousTics": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sleepRhythm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eatingStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "favoriteFoods": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hobbies": {
+        "value": null,
+        "status": "unknown"
+      },
+      "dailyRoutine": {
+        "value": null,
+        "status": "unknown"
+      },
+      "timeManagement": {
+        "value": null,
+        "status": "unknown"
+      },
+      "transportation": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "relationships": {
+      "familyRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "schoolRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "friendRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "rivalRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mentorRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "romancesIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationshipToProtagonist": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationshipToMaleLead": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trustFlags": {
+        "value": null,
+        "status": "unknown"
+      },
+      "secretsShared": {
+        "value": null,
+        "status": "unknown"
+      },
+      "conflictHistory": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationProgression": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "skills": {
+      "talents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "weaknesses": {
+        "value": null,
+        "status": "unknown"
+      },
+      "learnedSkills": {
+        "value": null,
+        "status": "unknown"
+      },
+      "academicSkills": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workSkills": {
+        "value": null,
+        "status": "unknown"
+      },
+      "combatAbility": {
+        "value": null,
+        "status": "unknown"
+      },
+      "physicalEndurance": {
+        "value": null,
+        "status": "unknown"
+      },
+      "agility": {
+        "value": null,
+        "status": "unknown"
+      },
+      "perception": {
+        "value": null,
+        "status": "unknown"
+      },
+      "charisma": {
+        "value": null,
+        "status": "unknown"
+      },
+      "supernaturalPowers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "powerCosts": {
+        "value": null,
+        "status": "unknown"
+      },
+      "equipment": {
+        "value": null,
+        "status": "unknown"
+      },
+      "inventory": {
+        "value": null,
+        "status": "unknown"
+      },
+      "healthIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "story": {
+      "firstAppearance": {
+        "value": null,
+        "status": "unknown"
+      },
+      "locationEntrances": {
+        "value": null,
+        "status": "unknown"
+      },
+      "originStory": {
+        "value": null,
+        "status": "unknown"
+      },
+      "incitingEvent": {
+        "value": null,
+        "status": "unknown"
+      },
+      "keyScenes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "storyGoals": {
+        "value": null,
+        "status": "unknown"
+      },
+      "branchingChoices": {
+        "value": null,
+        "status": "unknown"
+      },
+      "secrets": {
+        "value": null,
+        "status": "unknown"
+      },
+      "reveals": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationshipEvents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "questEvents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "alternateEndings": {
+        "value": null,
+        "status": "unknown"
+      },
+      "chronologicalHistory": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "environment": {
+      "home": {
+        "value": null,
+        "status": "unknown"
+      },
+      "school": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workplace": {
+        "value": null,
+        "status": "unknown"
+      },
+      "roomOwnership": {
+        "value": null,
+        "status": "unknown"
+      },
+      "itemOwnership": {
+        "value": null,
+        "status": "unknown"
+      },
+      "furnitureConditions": {
+        "value": null,
+        "status": "unknown"
+      },
+      "weatherResponse": {
+        "value": null,
+        "status": "unknown"
+      },
+      "locationsVisited": {
+        "value": null,
+        "status": "unknown"
+      },
+      "npcSchedule": {
+        "value": null,
+        "status": "unknown"
+      },
+      "worldEra": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "visualProduction": {
+      "frontReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "backReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sideReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "threeQuarterReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "poseReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionReferences": {
+        "value": null,
+        "status": "unknown"
+      },
+      "silhouetteLocked": {
+        "value": null,
+        "status": "unknown"
+      },
+      "colorPalette": {
+        "value": null,
+        "status": "unknown"
+      },
+      "artStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "imageAspectRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "whiteBackgroundRule": {
+        "value": null,
+        "status": "unknown"
+      },
+      "fullBodyRule": {
+        "value": null,
+        "status": "unknown"
+      },
+      "centeredRule": {
+        "value": null,
+        "status": "unknown"
+      },
+      "occlusionRule": {
+        "value": null,
+        "status": "unknown"
+      },
+      "promptPositive": {
+        "value": null,
+        "status": "unknown"
+      },
+      "promptNegative": {
+        "value": null,
+        "status": "unknown"
+      },
+      "modelVersion": {
+        "value": null,
+        "status": "unknown"
+      },
+      "artistTag": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lora": {
+        "value": null,
+        "status": "unknown"
+      },
+      "seed": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sampler": {
+        "value": null,
+        "status": "unknown"
+      },
+      "resolution": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sourceFileHash": {
+        "value": null,
+        "status": "unknown"
+      },
+      "assetApproval": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodyFacingYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headFacingYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headPitchDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headRollDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pelvisYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gazeHorizontalDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gazeVerticalDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cameraAngle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cameraFocalStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "projectionOrthoPerspective": {
+        "value": null,
+        "status": "unknown"
+      },
+      "visualStyleCategory": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lineWeightStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lineColor": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shadingMethod": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shadowDensity": {
+        "value": null,
+        "status": "unknown"
+      },
+      "highlightTreatment": {
+        "value": null,
+        "status": "unknown"
+      },
+      "textureComplexity": {
+        "value": null,
+        "status": "unknown"
+      },
+      "anatomicalStylization": {
+        "value": null,
+        "status": "unknown"
+      },
+      "facialFeatureStylization": {
+        "value": null,
+        "status": "unknown"
+      },
+      "characterIdentityEmbeddingNotes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "frontPosePoseCode": {
+        "value": null,
+        "status": "unknown"
+      },
+      "poseSilhouetteNotes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "framingHeadroomRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "framingFootroomRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodyAlignmentRule": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "rigging": {
+      "layerSource": {
+        "value": null,
+        "status": "unknown"
+      },
+      "layerList": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "neckJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "elbowJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wristJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ankleJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeTrack": {
+        "value": null,
+        "status": "unknown"
+      },
+      "blink": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthShapes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairPhysics": {
+        "value": null,
+        "status": "unknown"
+      },
+      "clothPhysics": {
+        "value": null,
+        "status": "unknown"
+      },
+      "breathingPhysics": {
+        "value": null,
+        "status": "unknown"
+      },
+      "skinningLimits": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionStates": {
+        "value": null,
+        "status": "unknown"
+      },
+      "actionStates": {
+        "value": null,
+        "status": "unknown"
+      },
+      "runtimePreview": {
+        "value": null,
+        "status": "unknown"
+      },
+      "occlusionRepair": {
+        "value": null,
+        "status": "unknown"
+      },
+      "qaAnimation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "armRotationBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipRotationBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeFlexBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyelidOpennessChannel": {
+        "value": null,
+        "status": "unknown"
+      },
+      "browDeformationChannels": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthCornerChannels": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionLandmarkMotion": {
+        "value": null,
+        "status": "unknown"
+      },
+      "frontSideBackProportionsQa": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "audio": {
+      "voiceCasting": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pronunciation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "multilingualNotes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "recordedVoices": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footstepSfx": {
+        "value": null,
+        "status": "unknown"
+      },
+      "costumeSfx": {
+        "value": null,
+        "status": "unknown"
+      },
+      "voiceVolume": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ambienceRules": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "gameplay": {
+      "npcSchedule": {
+        "value": null,
+        "status": "unknown"
+      },
+      "dialogueTree": {
+        "value": null,
+        "status": "unknown"
+      },
+      "affinity": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trust": {
+        "value": null,
+        "status": "unknown"
+      },
+      "playerControl": {
+        "value": null,
+        "status": "unknown"
+      },
+      "interactRange": {
+        "value": null,
+        "status": "unknown"
+      },
+      "characterSelection": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sceneLayers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "collisionBounds": {
+        "value": null,
+        "status": "unknown"
+      },
+      "saveFlags": {
+        "value": null,
+        "status": "unknown"
+      },
+      "choiceTriggers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "npcBrain": {
+        "value": null,
+        "status": "unknown"
+      },
+      "flagsVariables": {
+        "value": null,
+        "status": "unknown"
+      },
+      "inventoryRules": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "quality": {
+      "originalityCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "similarityCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceConsistency": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairSideCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "visualIdentityCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "handsCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "feetCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "fullBodyCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "measurementProvenanceCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "outfitCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sourceRightsCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "rigCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "poseCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "screenshotCheck": {
+        "value": null,
+        "status": "unknown"
+      },
+      "approvalRecord": {
+        "value": null,
+        "status": "unknown"
+      },
+      "rollbackReference": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "provenance": {
+      "createdAt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "updatedAt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "userConfirmedFields": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sourceCitations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "proposedFields": {
+        "value": null,
+        "status": "unknown"
+      },
+      "unknownFields": {
+        "value": null,
+        "status": "unknown"
+      },
+      "rejectedFields": {
+        "value": null,
+        "status": "unknown"
+      },
+      "revisionHistory": {
+        "value": null,
+        "status": "unknown"
+      },
+      "authorReviewer": {
+        "value": null,
+        "status": "unknown"
+      },
+      "approvedBy": {
+        "value": null,
+        "status": "unknown"
+      },
+      "permissions": {
+        "value": null,
+        "status": "unknown"
+      },
+      "historyNotes": {
+        "value": null,
+        "status": "unknown"
       }
     }
   },
-  "importedArtwork": {
-    "state": "candidate_not_published",
-    "sourcePSD": "SeeThrough-09c07882ba7c.psd",
-    "sourceCanvas": [
-      1024,
-      1024
-    ],
-    "sourceLayerCount": 15,
-    "derivedIndependentPartCount": 17,
-    "candidateCategory": "winged female character",
-    "confirmedCanonicalArt": false,
-    "targetInboxPath": "site/assets/l2d/inbox/char-006.zip",
-    "sourceProvenance": "original PSD with two split wings and two split arms; near-transparent artifacts trimmed"
-  },
-  "notes": "Do not claim a playable L2D is deployed until the 17 PNG textures and module archive are actually committed to GitHub and Pages CI succeeds."
+  "recordVersion": "0.1",
+  "updatedAt": "2026-11-04",
+  "sourceNotes": "用户提出女五; 本轮有一份 SeeThrough 翅膀女性 PSD 候选，但没有正式认定的角色设计、年龄或裸体出镜设定。GitHub 尚未取得二进制源素材，不得当作已发布 L2D。",
+  "fieldCount": 448,
+  "statusSummary": {
+    "proposed": 4,
+    "unknown": 443,
+    "user_confirmed": 1
+  }
 }
