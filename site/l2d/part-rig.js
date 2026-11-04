@@ -590,7 +590,13 @@ function bindBodyHierarchy(model){
  Object.defineProperty(model,'bodyHierarchy',{value:layout,configurable:true});
  for(const part of Object.values(p)){
   Object.defineProperty(part,'_bodyHierarchy',{value:layout,configurable:true});
-  if(part.kind==='pants-bound'&&part.skinBinding?.target===legs.id){
+  if(part.kind==='pants-bound'&&part.id==='pants_overlay'&&
+     model.characterId==='female-06'){
+   // Newly installed garment may be absent from a user's 17-piece local
+   // saved draft. The binding is an authoritative rig contract, NOT
+   // optional UI state inherited from an old stored JSON blob.
+   part.skinBinding={target:legs.id,method:'shared-leg-field-v1',
+    waist:'pelvis',left:'left-knee',right:'right-knee',rootLock:1};
    // Share the leg deformation source *by reference*; don't duplicate
    // or separately keyframe the shorts' hips, inseam and two thigh zones.
    Object.defineProperty(part,'_garmentLegs',{value:legs,configurable:true});
