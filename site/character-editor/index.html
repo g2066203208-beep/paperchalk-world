@@ -87,21 +87,24 @@ function renderList(){
    arr.some(p=>p.partId==='sleeves_and_hands');
  // Visible order is grouped by PERSON/MOTION; actual draw Z remains the
  // authoritative source sequence and is shown on every row.
- const toGroup=id=>id==='sleeves_and_hands'?'idle':
-  id==='battle_axe'?'weapon':/^battle_handwear_[lr]$/.test(id)?'battle':'shared';
+ const toGroup=p=>!p.sourcePart?'aux':
+  p.partId==='sleeves_and_hands'?'idle':
+  p.partId==='battle_axe'?'weapon':
+  (p.partId==='battle_handwear_l'||p.partId==='battle_handwear_r')?'battle':'shared';
  const groups=isUnified?[
   ['shared','基础共用 · 头发 / 脸 / 身体 / 裙腿'],
   ['idle','日常站立 · 原始手臂'],
   ['battle','战斗动作 · 两条真实 PSD 手臂'],
-  ['weapon','武器 · 独立长斧']
+  ['weapon','武器 · 独立长斧'],
+  ['aux','绘图修补 / 辅助层 · 非骨骼部件']
  ]:[['shared','全部原始部件']];
  const rows=groups.map(([k,label])=>({
   id:k,label,items:arr.map((p,i)=>({p,i})).filter(({p})=>
-   (!isUnified||toGroup(String(p.partId||p.name))===k)&&
+   (!isUnified||toGroup(p)===k)&&
    (!query||(p.name+' '+(p.role||'')+' '+(p.partId||'')).toLowerCase().includes(query))
   ).reverse()
  }));
- if(!S.groupFold)S.groupFold={shared:true,idle:true,battle:true,weapon:true};
+ if(!S.groupFold)S.groupFold={shared:true,idle:true,battle:true,weapon:true,aux:false};
  for(const row of rows){
   if(!row.items.length)continue;
   const group=document.createElement('details');
