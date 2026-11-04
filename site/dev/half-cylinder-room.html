@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paperchalk · 半圆柱场景灰模</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;color:#edf3f5;background:#0c131c}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 27% 15%,#1b2d3b 0,#101923 51%,#0c121a 100%)}
+header{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,3vw,46px);border-bottom:1px solid #ffffff14;gap:18px}
+.brand{font-size:11px;color:#9db8c1;letter-spacing:.24em;font-weight:700}.brand b{color:#bce6dc}.heading{font-size:21px;letter-spacing:.03em;font-weight:650;margin:5px 0 0}.header-right{font-size:12px;color:#87a2af;white-space:nowrap}.header-right strong{color:#a6d7c9;font-weight:550}
+main{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;padding:18px;max-width:1660px;margin:0 auto;min-height:calc(100vh - 76px)}
+.viewport{position:relative;min-width:0;min-height:590px;overflow:hidden;border:1px solid #334756;border-radius:16px;background:radial-gradient(ellipse at 52% 30%,#263e4b 0,#131e2a 60%,#0b121b 100%);box-shadow:0 25px 60px #0005;touch-action:none}
+#gl,#overlay{position:absolute;inset:0;width:100%;height:100%;display:block}#overlay{pointer-events:none}.view-top{position:absolute;top:20px;left:22px;pointer-events:none}.eyebrow{font-size:10px;letter-spacing:.2em;color:#8aa6b3;font-weight:700}.view-name{font-size:17px;font-weight:610;margin-top:7px}.mode-tag{display:inline-flex;align-items:center;border:1px solid #80c8b355;border-radius:20px;padding:5px 10px;background:#24463c88;font-size:11px;color:#a1dfcc;margin-top:12px}
+.view-bottom{position:absolute;bottom:18px;left:22px;right:22px;display:flex;align-items:end;justify-content:space-between;gap:20px;pointer-events:none}.hint{font-size:12px;line-height:1.9;color:#9bb3be;text-shadow:0 1px 8px #0a111a}.scale{font-size:11px;color:#a9bdc3;text-align:right;letter-spacing:.02em}
+.side{display:flex;flex-direction:column;gap:13px}.panel{padding:19px;border:1px solid #344650;border-radius:15px;background:linear-gradient(150deg,#1b2a33d9,#131c25ed);box-shadow:0 12px 24px #0002}.panel h2{margin:0 0 16px;font-size:13px;letter-spacing:.06em;font-weight:650;color:#e7f0f1}.tabs{display:flex;gap:5px;border-radius:10px;background:#0b151d;padding:5px}.tabs button{flex:1;border:0;background:transparent;color:#9ab0bb;padding:11px 6px;border-radius:8px;font-size:12px;cursor:pointer}.tabs button.active{background:#315d61;color:#dff8f4;box-shadow:0 2px 8px #0003}
+.control{margin:18px 0 8px}.label-line{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px}.label-line span{font-size:12px;color:#a9bdc5}.label-line output{font-variant-numeric:tabular-nums;font-size:14px;color:#d9eee7;font-weight:650}input[type=range]{width:100%;accent-color:#8dd6bd;cursor:pointer}input[type=checkbox]{accent-color:#7bd7b8}.rangeends{display:flex;justify-content:space-between;color:#58717f;font-size:10px;margin-top:3px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{border-radius:10px;border:1px solid #ffffff13;padding:12px;background:#0c1921}.metric small{display:block;color:#8ea8b2;font-size:10px;margin-bottom:6px}.metric strong{font-size:19px;color:#e8f8f3;font-weight:550;font-variant-numeric:tabular-nums}.metric em{font-size:11px;color:#89aeb4;font-style:normal;margin-left:4px}.options{display:grid;gap:12px;margin-top:2px}.options label{font-size:12px;color:#adc4cb;cursor:pointer}.options input{margin-right:8px}
+.info{margin:0;color:#92a9b4;font-size:11px;line-height:1.85}.info strong{color:#c8e5dd}.footer{margin-top:auto;color:#71909f;font-size:10px;line-height:1.7;padding:0 5px}
+@media(max-width:850px){header{height:auto;min-height:72px;padding:14px 18px}.header-right{display:none}main{grid-template-columns:1fr;padding:10px;gap:12px}.viewport{min-height:56vh}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.footer{grid-column:1/-1}.panel{padding:15px}}
+@media(max-width:540px){.side{display:flex}.viewport{min-height:55vh}.view-bottom{bottom:12px;left:14px;right:14px}.hint{font-size:10px}.scale{display:none}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">PAPERCHALK <b>/ SCENE LAB</b></div><div class="heading">半圆柱场景 · 空间灰模</div></div><div class="header-right">独立实验页面 · <strong>不影响正式游戏</strong> · v0.1</div></header>
+<main>
+<section class="viewport" id="viewport" aria-label="可拖动旋转的半圆柱房间三维模型">
+<canvas id="gl"></canvas><canvas id="overlay"></canvas>
+<div class="view-top"><div class="eyebrow">CYLINDRICAL STAGE / 180°</div><div class="view-name" id="viewName">整体模型预览</div><div class="mode-tag" id="modeTag">半圆形地板 · 连续弧形墙面</div></div>
+<div class="view-bottom"><div class="hint" id="hint">拖动画面：旋转模型　·　滚轮：调整远近<br>空心前侧是摄影机入口，并不是缺失的墙面</div><div class="scale" id="scaleLegend">淡青色标尺 = 1.62 m 人物高度<br>地板刻线间距 = 1 m</div></div>
+</section>
+<aside class="side">
+<section class="panel"><h2>观看方式</h2><div class="tabs"><button type="button" data-mode="model" class="active">整体模型</button><button type="button" data-mode="inside">室内镜头</button></div><div class="control"><div class="label-line"><span id="viewControlLabel">观察角度</span><output id="angleValue">0°</output></div><input type="range" id="angle" min="-55" max="55" step="1" value="0"><div class="rangeends"><span id="angleLeft">左侧 -55°</span><span id="angleRight">右侧 +55°</span></div></div><div class="control"><div class="label-line"><span id="pitchLabel">模型俯视角</span><output id="pitchValue">34°</output></div><input type="range" id="pitch" min="12" max="68" step="1" value="34"></div></section>
+<section class="panel"><h2>场景尺寸 · 米制</h2><div class="control"><div class="label-line"><span>地板半径</span><output id="radiusValue">4.0 m</output></div><input type="range" id="radius" min="2.5" max="6.5" step="0.25" value="4"><div class="rangeends"><span>2.5 m</span><span>6.5 m</span></div></div><div class="control"><div class="label-line"><span>连续墙面高度</span><output id="heightValue">3.0 m</output></div><input type="range" id="height" min="2.4" max="4.2" step="0.1" value="3"><div class="rangeends"><span>2.4 m</span><span>4.2 m</span></div></div><div class="metrics"><div class="metric"><small>地板最大宽度</small><strong id="diameter">8.0</strong><em>m</em></div><div class="metric"><small>半圆形地板面积</small><strong id="area">25.1</strong><em>m²</em></div><div class="metric"><small>弧形墙面展开长度</small><strong id="wallLength">12.6</strong><em>m</em></div><div class="metric"><small>标准人物高度</small><strong>1.62</strong><em>m</em></div></div></section>
+<section class="panel"><h2>辅助参考</h2><div class="options"><label><input type="checkbox" id="grid" checked>显示 1 米地板刻度</label><label><input type="checkbox" id="mannequin" checked>显示 1.62 米人物标尺</label><label><input type="checkbox" id="wallSeams" checked>显示墙面分片线</label></div></section>
+<section class="panel"><p class="info"><strong>本次只建空间结构：</strong>半圆地板、一圈连续竖直弧墙、摄影机与尺寸参照。<br>不添加家具、贴图、门窗或黑雾。之后可以将 Anima 绘制的无透视墙面横图沿弧墙展开贴附。</p></section>
+<div class="footer">纯浏览器 Canvas · 无第三方库 · 不修改角色、原画及 L2D 配置</div>
+</aside>
+</main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id), canvas=$('gl'), overlay=$('overlay'), viewport=$('viewport');
+const ctx=canvas.getContext('2d',{alpha:false});
+const state={mode:'model',radius:4,height:3,angle:0,pitch:34,zoom:.82,grid:true,mannequin:true,wallSeams:true};
+let triangles=[],lines=[],figureStart=0,triCount=0,lineCount=0,mat=null,viewMat=null,logicalW=1,logicalH=1;
+function push(dest,p,c){dest.push(p[0],p[1],p[2],c[0],c[1],c[2]);}
+function tri(a,b,c,color){for(const p of [a,b,c])push(triangles,p,color)}
+function quad(a,b,c,d,color){tri(a,b,c,color);tri(a,c,d,color)}
+function line(a,b,color){push(lines,a,color);push(lines,b,color)}
+function box(cx,cy,cz,w,h,d,color){const X=[cx-w/2,cx+w/2],Y=[cy-h/2,cy+h/2],Z=[cz-d/2,cz+d/2];const p=(x,y,z)=>[X[x],Y[y],Z[z]];const shades=[1,.86,.74,.92,.83,.78];const faces=[[p(0,0,0),p(1,0,0),p(1,0,1),p(0,0,1)],[p(0,1,0),p(0,1,1),p(1,1,1),p(1,1,0)],[p(0,0,1),p(1,0,1),p(1,1,1),p(0,1,1)],[p(1,0,0),p(0,0,0),p(0,1,0),p(1,1,0)],[p(0,0,0),p(0,0,1),p(0,1,1),p(0,1,0)],[p(1,0,1),p(1,0,0),p(1,1,0),p(1,1,1)]];faces.forEach((f,i)=>quad(...f,color.map(v=>v*shades[i])))}
+function arcPoint(radius,angle,y){return [radius*Math.cos(angle),y,radius*Math.sin(angle)]}
+function makeModel(){triangles=[];lines=[];const R=state.radius,H=state.height,N=72;
+// Half disk only (z >= 0). Its straight front edge is open toward the virtual camera.
+for(let i=0;i<N;i++){const a=i*Math.PI/N,b=(i+1)*Math.PI/N;const tint=i%2===0?[.16,.245,.285]:[.174,.260,.303];tri([0,0,0],arcPoint(R,a,0),arcPoint(R,b,0),tint);quad(arcPoint(R,a,0),arcPoint(R,b,0),arcPoint(R,b,-.085),arcPoint(R,a,-.085),[.11,.205,.243]);}
+for(let i=0;i<N;i++){const a=i*Math.PI/N,b=(i+1)*Math.PI/N;const shade=.91+.055*Math.sin(a*2.2);const c=[.21*shade,.333*shade,.385*shade];quad(arcPoint(R,a,0),arcPoint(R,b,0),arcPoint(R,b,H),arcPoint(R,a,H),c);quad(arcPoint(R,a,H),arcPoint(R,b,H),arcPoint(R*1.012,b,H),arcPoint(R*1.012,a,H),[.46,.66,.68]);}
+// Structural borders. Fine lines are visual references, not physical walls.
+for(let i=0;i<N;i++){const a=i*Math.PI/N,b=(i+1)*Math.PI/N;line(arcPoint(R,a,H+.01),arcPoint(R,b,H+.01),[.49,.75,.73]);line(arcPoint(R,a,.015),arcPoint(R,b,.015),[.25,.49,.51]);}
+line([-R,0,.005],[R,0,.005],[.51,.73,.71]);
+if(state.grid){for(let r=1;r<R-.05;r++){for(let i=0;i<N;i++){const a=i*Math.PI/N,b=(i+1)*Math.PI/N;line(arcPoint(r,a,.018),arcPoint(r,b,.018),[.23,.37,.41]);}}
+for(let k=0;k<=12;k++){const a=k*Math.PI/12;line(arcPoint(.06,a,.02),arcPoint(R,a,.02),[.24,.38,.42]);}}
+if(state.wallSeams){for(let k=0;k<=12;k++){const a=k*Math.PI/12;line(arcPoint(R-.01,a,.01),arcPoint(R-.01,a,H),[.36,.51,.55]);}for(let i=0;i<N;i++){const a=i*Math.PI/N,b=(i+1)*Math.PI/N;line(arcPoint(R-.009,a,1.5),arcPoint(R-.009,b,1.5),[.28,.415,.464]);}}
+figureStart=triangles.length;
+if(state.mannequin){const x=-.90*Math.min(1,R/4),z=R*.71;const cyan=[.47,.91,.79];box(x,1.20,z,.38,.48,.19,cyan);box(x,1.5,z,.22,.22,.22,[.74,.95,.83]);box(x-.12,.54,z,.12,.85,.16,[.46,.84,.75]);box(x+.12,.54,z,.12,.85,.16,[.46,.84,.75]);box(x-.27,1.16,z,.12,.53,.15,[.42,.78,.70]);box(x+.27,1.16,z,.12,.53,.15,[.42,.78,.70]);line([x-.5,0,z],[x-.5,1.62,z],[.85,.91,.72]);line([x-.62,1.62,z],[x-.38,1.62,z],[.85,.91,.72]);line([x-.62,0,z],[x-.38,0,z],[.85,.91,.72]);}
+triCount=triangles.length/6;lineCount=lines.length/6;draw();}
+function sub(a,b){return a.map((v,i)=>v-b[i])}function dot(a,b){return a.reduce((v,n,i)=>v+n*b[i],0)}function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}function norm(x){const n=Math.hypot(...x)||1;return x.map(v=>v/n)}
+function lookAt(e,t){const z=norm(sub(e,t)),x=norm(cross([0,1,0],z)),y=cross(z,x);return [x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,e),-dot(y,e),-dot(z,e),1]}
+function perspective(fov,aspect,near,far){const f=1/Math.tan(fov/2);return [f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,2*far*near/(near-far),0]}
+function mult(a,b){const o=new Array(16).fill(0);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o}
+function project(x,y,z){const q=[x,y,z,1];const v=[0,0,0,0];for(let r=0;r<4;r++)for(let k=0;k<4;k++)v[r]+=mat[k*4+r]*q[k];if(v[3]<=.01)return null;return [(v[0]/v[3]*.5+.5)*logicalW,(-v[1]/v[3]*.5+.5)*logicalH]}
+function drawText(ctx,value,x,y,align='center',color='#b4d1d2'){ctx.font='600 12px system-ui,sans-serif';ctx.fillStyle=color;ctx.textAlign=align;ctx.shadowColor='#08131a';ctx.shadowBlur=6;ctx.fillText(value,x,y);ctx.shadowBlur=0}
+function screenLine(ctx,a,b,color='#9de0d1'){if(!a||!b)return;ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.strokeStyle=color;ctx.lineWidth=1.2;ctx.stroke()}
+function annotations(){const ctx=overlay.getContext('2d');ctx.clearRect(0,0,logicalW,logicalH);if(state.mode!=='model')return;const R=state.radius,H=state.height;
+const a=project(-R,0,0),b=project(R,0,0),c=project(0,H,R),d=project(0,0,R);if(a&&b){screenLine(ctx,a,b,'#72c7bb');drawText(ctx,'直径 '+(2*R).toFixed(1)+' m',(a[0]+b[0])/2,(a[1]+b[1])/2+17)}
+if(c&&d){screenLine(ctx,c,d,'#aad4d2');drawText(ctx,H.toFixed(1)+' m',c[0]+15,(c[1]+d[1])/2,'left')}
+figureStart=triangles.length;
+if(state.mannequin){const x=-.90*Math.min(1,R/4),z=R*.71,p=project(x,1.65,z);if(p)drawText(ctx,'1.62 m',p[0]+16,p[1]-2,'left','#b6f2d6')}}
+function resize(){const rect=viewport.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);logicalW=Math.max(1,rect.width);logicalH=Math.max(1,rect.height);for(const c of [canvas,overlay]){c.width=Math.round(logicalW*dpr);c.height=Math.round(logicalH*dpr);}overlay.getContext('2d').setTransform(dpr,0,0,dpr,0,0);draw()}
+function viewPoint(p){const q=[...p,1],v=[0,0,0,0];for(let r=0;r<4;r++)for(let k=0;k<4;k++)v[r]+=viewMat[k*4+r]*q[k];return [...p,-v[2]]}
+function clipNear(points,near=.09){const out=[];for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+1)%points.length],ai=a[3]>=near,bi=b[3]>=near;if(ai)out.push(a);if(ai!==bi){const t=(near-a[3])/(b[3]-a[3]);out.push(a.map((v,j)=>v+(b[j]-v)*t))}}return out}
+function drawFace(points,color){const clipped=clipNear(points.map(p=>viewPoint(p)));if(clipped.length<3)return;ctx.beginPath();let n=0;for(const p of clipped){const pos=project(...p.slice(0,3));if(!pos)continue;if(n++===0)ctx.moveTo(...pos);else ctx.lineTo(...pos)}if(n<3)return;ctx.closePath();ctx.fillStyle='rgb('+color.map(c=>Math.round(Math.max(0,Math.min(1,c))*255)).join(',')+')';ctx.fill();}
+function drawSurface(start,end){const faces=[];for(let k=start;k<end;k+=18){const p=[],c=[];for(let t=0;t<3;t++){const j=k+t*6;p.push(triangles.slice(j,j+3));c.push(...triangles.slice(j+3,j+6));}const depth=p.reduce((v,x)=>v+viewPoint(x)[3],0)/3;faces.push({p,c:c.slice(0,3),depth})}faces.sort((a,b)=>b.depth-a.depth);for(const f of faces)drawFace(f.p,f.c)}
+function drawWire(){for(let k=0;k<lines.length;k+=12){const a=lines.slice(k,k+3),b=lines.slice(k+6,k+9),c=lines.slice(k+3,k+6);const clipped=clipNear([viewPoint(a),viewPoint(b)]);if(clipped.length!==2)continue;const x=project(...clipped[0].slice(0,3)),y=project(...clipped[1].slice(0,3));if(!x||!y)continue;ctx.beginPath();ctx.moveTo(...x);ctx.lineTo(...y);ctx.strokeStyle='rgba('+c.map(v=>Math.round(255*v)).join(',')+',.64)';ctx.lineWidth=1;ctx.stroke()}}
+function draw(){if(!triCount||!logicalW)return;const R=state.radius,H=state.height,yaw=state.angle*Math.PI/180,pitch=state.pitch*Math.PI/180;let eye,target,fov;
+if(state.mode==='model'){const distance=(R*2.75+3)*state.zoom;const a=yaw,elevation=pitch;target=[0,H*.48,R*.43];eye=[Math.sin(a)*distance*Math.cos(elevation),target[1]+distance*Math.sin(elevation),-Math.cos(a)*distance*Math.cos(elevation)+target[2]];fov=49;}else{eye=[0,1.60,-1.10];target=[Math.sin(yaw),1.60+Math.tan(pitch),Math.cos(yaw)-1.10];fov=74;}
+viewMat=lookAt(eye,target);mat=mult(perspective(fov*Math.PI/180,logicalW/logicalH,.06,100),viewMat);const gradient=ctx.createRadialGradient(logicalW*.52,logicalH*.34,10,logicalW*.5,logicalH*.54,Math.max(logicalW,logicalH)*.72);gradient.addColorStop(0,'#294351');gradient.addColorStop(1,'#101c27');ctx.fillStyle=gradient;ctx.fillRect(0,0,logicalW,logicalH);
+// Software projection fallback: no WebGL / external libraries required.
+drawSurface(0,figureStart);drawWire();drawSurface(figureStart,triangles.length);annotations();}
+function refresh(){state.radius=+$('radius').value;state.height=+$('height').value;state.angle=+$('angle').value;state.pitch=+$('pitch').value;state.grid=$('grid').checked;state.mannequin=$('mannequin').checked;state.wallSeams=$('wallSeams').checked;
+$('radiusValue').textContent=state.radius.toFixed(2).replace(/0$/,'')+' m';$('heightValue').textContent=state.height.toFixed(1)+' m';$('diameter').textContent=(state.radius*2).toFixed(1);$('area').textContent=(Math.PI*state.radius*state.radius/2).toFixed(1);$('wallLength').textContent=(Math.PI*state.radius).toFixed(1);$('angleValue').textContent=state.angle+'°';$('pitchValue').textContent=state.pitch+'°';makeModel();}
+function setMode(m){state.mode=m;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));$('viewName').textContent=m==='model'?'整体模型预览':'室内摄影机视角';$('modeTag').textContent=m==='model'?'半圆形地板 · 连续弧形墙面':'原地看向弧形墙面 · 仅 ±40°';$('hint').innerHTML=m==='model'?'拖动画面：旋转模型　·　滚轮：调整远近<br>空心前侧是摄影机入口，并不是缺失的墙面':'拖动画面：小幅转头　·　该视角不允许转身<br>蓝绿色人物仅用于尺寸参考';$('viewControlLabel').textContent=m==='model'?'观察角度':'镜头左右方向';$('pitchLabel').textContent=m==='model'?'模型俯视角':'镜头上下俯仰';$('angle').min=m==='model'?-55:-40;$('angle').max=m==='model'?55:40;$('angleLeft').textContent=m==='model'?'左侧 -55°':'左转 -40°';$('angleRight').textContent=m==='model'?'右侧 +55°':'右转 +40°';$('pitch').min=m==='model'?12:-12;$('pitch').max=m==='model'?68:12;$('pitch').value=m==='model'?34:-8;$('angle').value=0;state.zoom=.82;refresh();}
+['radius','height','angle','pitch','grid','mannequin','wallSeams'].forEach(id=>$(id).addEventListener('input',refresh));document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+let drag=null;viewport.addEventListener('pointerdown',e=>{if(e.target!==canvas&&e.target!==overlay)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,angle:+$('angle').value,pitch:+$('pitch').value};viewport.setPointerCapture(e.pointerId)});viewport.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const mx=e.clientX-drag.x,my=e.clientY-drag.y;$('angle').value=Math.max(+$('angle').min,Math.min(+$('angle').max,drag.angle+mx*.22));$('pitch').value=Math.max(+$('pitch').min,Math.min(+$('pitch').max,drag.pitch-my*.15));refresh()});function stop(){drag=null}viewport.addEventListener('pointerup',stop);viewport.addEventListener('pointercancel',stop);viewport.addEventListener('wheel',e=>{if(state.mode!=='model')return;e.preventDefault();state.zoom=Math.max(.65,Math.min(1.8,state.zoom*Math.exp(e.deltaY*.001)));draw()},{passive:false});
+new ResizeObserver(resize).observe(viewport);refresh();resize();
+window.PaperchalkHalfCylinder=Object.freeze({inspect:()=>({radius:state.radius,diameter:2*state.radius,height:state.height,floorArea:Math.PI*state.radius**2/2,wallLength:Math.PI*state.radius,mode:state.mode,angle:state.angle}),setMode});
+})();
+</script>
+</body>
+</html>
