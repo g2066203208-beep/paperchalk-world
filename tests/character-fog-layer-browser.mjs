@@ -188,10 +188,15 @@ try{
   const baseline=await page.locator('#enemy-fog-probe').evaluate(el=>{
     const fog=document.getElementById('fog'),edge=document.getElementById('ui-edge-fog');
     fog.style.visibility='hidden';
+    // The runtime owns 'hidden' and may automatically re-enable it as
+    // dialogue/phone visibility updates. Use an independent CSS visibility
+    // override for this pixel-only isolation to prevent observer races.
+    edge.style.visibility='hidden';
     edge.hidden=true;
-    return {fog:fog.style.visibility,hidden:edge.hidden};
+    return {fog:fog.style.visibility,hidden:edge.hidden,
+      forcedHidden:getComputedStyle(edge).visibility==='hidden'};
   });
-  assert.equal(baseline.hidden,true);
+  assert.equal(baseline.forcedHidden,true);
   const enemyExposed=pixelAtCenter(await page.screenshot());
   await page.screenshot({path:'artifacts/fog-layer/'+cfg.name+'-enemy-exposed-debug.png'});
   // Diagnose mobile 90deg compositor behavior without weakening any assert.
@@ -233,6 +238,7 @@ try{
     document.getElementById('camera-player-root').style.visibility='';
     const edge=document.getElementById('ui-edge-fog');
     edge.style.backgroundColor='';
+    edge.style.visibility='';
     edge.hidden=false;
     document.getElementById('enemy-fog-probe').remove();
     document.getElementById('player-fog-probe').remove();
