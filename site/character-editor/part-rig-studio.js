@@ -29,161 +29,220 @@ panel.append(rigFiles);
 for(const id of ['rig-save','rig-quick-save','rig-pause','rig-close']){
  const element=$(id);if(element)element.hidden=true;
 }
-// Any source component can be painted over any target. No extra model, layer
-// or mode-switching workspace is created: this lives inside the rig inspector.
+// One simple tool: pick a part → choose one/many other parts → front/back → paint.
+// Unlike the old front-only control there is no "move layer first" prerequisite.
 const maskPanel=document.createElement('section');
 maskPanel.id='rig-mask-panel';
-maskPanel.innerHTML=`<div class="rig-mask-head"><strong>部件遮挡蒙版</strong>
- <button type="button" id="rig-mask-toggle">画蒙版</button></div>
- <label>前景部件 <output id="rig-mask-source"></output></label>
- <label>遮挡对象 <select id="rig-mask-target" aria-label="蒙版覆盖哪个部件"></select></label>
- <div class="rig-mask-row">
-  <button id="rig-mask-paint" type="button" aria-pressed="true">＋ 画前景</button>
-  <button id="rig-mask-erase" type="button" aria-pressed="false">－ 擦蒙版</button>
- </div>
- <label>画笔大小 <output id="rig-mask-size-value">12 px</output>
-  <input id="rig-mask-size" type="range" min="2" max="96" step="2" value="12"></label>
- <div class="rig-mask-row"><button id="rig-mask-undo" type="button">↶ 撤销</button>
-  <button id="rig-mask-clear" type="button">清空蒙版</button></div>
- <button id="rig-mask-behind" type="button" hidden>将当前部件放到遮挡对象后面</button>
- <small id="rig-mask-hint">选部件，再选要被它遮挡的对象；蒙版不修改原图。</small>`;
+maskPanel.innerHTML="<div class=\"rig-mask-head\"><strong>局部遮挡</strong><span>选部件 · 选对象 · 涂抹</span></div><div class=\"rig-mask-source\">当前部件：<output id=\"rig-mask-source\">未选择</output></div><div class=\"rig-mask-object\"><label>相对对象 <select id=\"rig-mask-target\" aria-label=\"选定需要遮挡的对象\"></select></label><button id=\"rig-mask-more\" type=\"button\" title=\"一块蒙版可以同时对多个部件生效\">＋ 多选</button></div><div id=\"rig-mask-multiple\" hidden><div id=\"rig-mask-target-list\" class=\"rig-mask-target-list\"></div></div><div class=\"rig-mask-directions\" role=\"group\" aria-label=\"画出的区域相对对象的位置\"><button type=\"button\" id=\"rig-mask-front\" aria-pressed=\"true\">在对象前面</button><button type=\"button\" id=\"rig-mask-back\" aria-pressed=\"false\">在对象后面</button></div><div class=\"rig-mask-actions\"><button type=\"button\" id=\"rig-mask-paint\">✎ 涂抹</button><button type=\"button\" id=\"rig-mask-erase\">橡皮擦</button><button type=\"button\" id=\"rig-mask-toggle\" hidden>完成</button></div><label class=\"rig-mask-size\">大小 <input id=\"rig-mask-size\" type=\"range\" min=\"2\" max=\"96\" value=\"12\" step=\"2\"><output id=\"rig-mask-size-value\">12</output></label><div class=\"rig-mask-actions rig-mask-secondary\"><button type=\"button\" id=\"rig-mask-undo\">撤销</button><button type=\"button\" id=\"rig-mask-clear\">清空这块</button></div><details id=\"rig-mask-relations\"><summary>已做的遮挡 <span id=\"rig-mask-relation-count\"></span></summary><div id=\"rig-mask-relation-list\"></div></details><small id=\"rig-mask-hint\">只改选中的局部，不修改原图。</small>";
 panel.querySelector('.rig-part-amount').before(maskPanel);
-const maskState={enabled:false,erase:false,pointer:null,restorePlaying:null,
- history:[],pair:'',touches:new Map(),pinch:null};
-const maskTarget=$('rig-mask-target');
-const maskLabel=$('rig-mask-hint');
-const maskSize=$('rig-mask-size');
-function maskKey(){return state.selected+'|'+maskTarget.value;}
-function getMask(){
- return state.model?.occlusionMasks?.find(m=>m.source===state.selected&&m.target===maskTarget.value);
+const maskState={enabled:false,erase:false,direction:'front',targets:new Set(),
+ pointer:null,touches:new Map(),blockedTouches:new Set(),pinch:null,
+ restorePlaying:null,history:[]};
+const maskTarget=$('rig-mask-target'),maskLabel=$('rig-mask-hint'),maskSize=$('rig-mask-size');
+function maskTargets(entry){
+ return Array.isArray(entry?.targets)?entry.targets:(entry?.target?[entry.target]:[]);
 }
-function maskCanvas(mask,source){
- if(mask._canvas)return mask._canvas;
+function getMask(){
+ return state.model?.occlusionMasks?.find(m=>m.source===state.selected&&
+  (m.direction||'front')===maskState.direction&&
+  maskTargets(m).includes(maskTarget.value));
+}
+function maskCanvas(entry,source){
+ if(entry._canvas)return entry._canvas;
  const c=document.createElement('canvas');c.width=source.w;c.height=source.h;
- Object.defineProperty(mask,'_canvas',{value:c,writable:true,configurable:true,enumerable:false});
- if(mask.png?.startsWith('data:image/png;base64,')){
-  mask._pending=true;
+ Object.defineProperty(entry,'_canvas',{value:c,enumerable:false,configurable:true,writable:true});
+ if(entry.png?.startsWith('data:image/png;base64,')){
+  entry._pending=true;
   const image=new Image();
   image.onload=()=>{
-   if(mask._canvas===c&&image.width===c.width&&image.height===c.height){
-    c.getContext('2d').drawImage(image,0,0);mask._revision=(mask._revision||0)+1;ed.render();
-   }
-   mask._pending=false;
+   if(entry._canvas===c&&image.width===c.width&&image.height===c.height)
+    c.getContext('2d').drawImage(image,0,0);
+   else maskLabel.textContent='旧蒙版尺寸不一致，已保留原数据';
+   entry._pending=false;entry._revision=(entry._revision||0)+1;ed.render();
   };
-  image.onerror=()=>{mask._pending=false;maskLabel.textContent='旧蒙版图片加载失败，未覆盖保存内容'};
-  image.src=mask.png;
+  image.onerror=()=>{entry._pending=false;maskLabel.textContent='旧蒙版加载失败，未覆盖原文件'};
+  image.src=entry.png;
  }
  return c;
 }
 function ensureMask(){
- const src=state.model?.parts[state.selected],target=maskTarget.value;
- if(!src||!target||target===state.selected||!state.model.parts[target])return null;
- let mask=getMask();
- if(!mask){
-  mask={source:state.selected,target,png:'',enabled:true};
-  (state.model.occlusionMasks ||= []).push(mask);
-  const c=document.createElement('canvas');c.width=src.w;c.height=src.h;
-  Object.defineProperty(mask,'_canvas',{value:c,configurable:true,writable:true,enumerable:false});
+ const part=state.model?.parts[state.selected],target=maskTarget.value;
+ if(!part||!target||target===state.selected||!state.model.parts[target])return null;
+ let entry=getMask();
+ if(!entry){
+  entry={source:state.selected,target,targets:[...maskState.targets],direction:maskState.direction,
+   enabled:true,png:''};
+  if(!entry.targets.length)entry.targets=[target];
+  (state.model.occlusionMasks ||= []).push(entry);
+  const c=document.createElement('canvas');c.width=part.w;c.height=part.h;
+  Object.defineProperty(entry,'_canvas',{value:c,enumerable:false,configurable:true,writable:true});
  }
- return mask;
+ return entry;
 }
-function updateMaskControls(){
- const part=state.model?.parts[state.selected],before=maskTarget.value;
- maskTarget.replaceChildren();
- for(const p of parts()){
-  const id=key(p);if(id!==state.selected)maskTarget.add(new Option(p.name,id));
- }
- const prefers=part&&(state.model.occlusionMasks||[]).find(m=>m.source===state.selected)?.target;
- const weapon=['battle_axe','axe_held'].find(id=>state.model.parts[id]&&id!==state.selected);
- const next=[before,prefers,weapon].find(id=>id&&[...maskTarget.options].some(o=>o.value===id));
- if(next)maskTarget.value=next;
- $('rig-mask-source').textContent=part?.name||'未选择';
- const existing=getMask();
- if(existing?.png&&part)maskCanvas(existing,part);
- maskLabel.textContent=existing?.png?'已保存蒙版 · 修改只影响当前遮挡对象':
-  '画白色区域表示此部件出现在目标前面；擦除则恢复后景。';
- maskState.pair=maskKey();maskState.history=[];
- const order=state.model?.layerOrder||parts().map(p=>key(p));
- const behind=order.indexOf(state.selected)>=order.indexOf(maskTarget.value)&&
-  order.includes(state.selected)&&order.includes(maskTarget.value);
- $('rig-mask-behind').hidden=!behind;
- if(behind)maskLabel.textContent='需要先把此部件放到对象后方，再画前景蒙版。';
- maskPanel.hidden=!state.active||!part;
-}
-$('rig-mask-behind').onclick=()=>{
- const layers=S.layers[S.side],from=layers.findIndex(p=>p.sourcePart&&key(p)===state.selected),
-  target=layers.findIndex(p=>p.sourcePart&&key(p)===maskTarget.value);
- if(from<0||target<0||from<target)return;
- const [part]=layers.splice(from,1);
- const dest=layers.findIndex(p=>p.sourcePart&&key(p)===maskTarget.value);
- layers.splice(dest,0,part);S.sel=dest;
- window.dispatchEvent(new Event('paperchalk:studio-layer-order-changed'));
- ed.renderList();ed.autosave();updateMaskControls();ed.render();
-};
-function serializeMask(mask){
- if(!mask?._canvas)return;
- mask.png=mask._canvas.toDataURL('image/png');
- mask._revision=(mask._revision||0)+1;
+function serializeMask(entry){
+ if(!entry?._canvas||entry._pending)return;
+ entry.png=entry._canvas.toDataURL('image/png');
+ entry._revision=(entry._revision||0)+1;
  changed(false);
 }
-function setMaskMode(enable){
- if(enable&&!state.model?.parts[state.selected])return;
- if(enable===maskState.enabled)return;
- maskState.enabled=enable;
- if(enable){
-  maskState.restorePlaying=state.playing;
-  state.playing=false;ed.setTool('mask');
+function paintMaskLine(a,b){
+ const entry=ensureMask(),source=state.model?.parts[state.selected];
+ if(!entry||!source||entry._pending)return;
+ const g=maskCanvas(entry,source).getContext('2d');
+ g.save();
+ g.globalCompositeOperation=maskState.erase?'destination-out':'source-over';
+ g.strokeStyle='#fff';g.fillStyle='#fff';
+ g.lineWidth=Number(maskSize.value);g.lineCap='round';g.lineJoin='round';
+ g.beginPath();g.moveTo(a.x-source.x,a.y-source.y);g.lineTo(b.x-source.x,b.y-source.y);g.stroke();
+ if(Math.hypot(a.x-b.x,a.y-b.y)<.01){
+  g.beginPath();g.arc(a.x-source.x,a.y-source.y,g.lineWidth/2,0,Math.PI*2);g.fill();
+ }
+ g.restore();entry._revision=(entry._revision||0)+1;ed.render();
+}
+function setMaskMode(enabled){
+ enabled=!!enabled&&!!state.model?.parts[state.selected];
+ if(enabled===maskState.enabled)return;
+ maskState.enabled=enabled;
+ if(enabled){
+  maskState.restorePlaying=state.playing;state.playing=false;
+  ed.setTool('mask');
  }else{
-  if(maskState.pointer)maskState.pointer=null;
-  maskState.touches.clear();maskState.pinch=null;
+  maskState.pointer=null;maskState.touches.clear();maskState.blockedTouches.clear();
+  maskState.pinch=null;
   if(maskState.restorePlaying!==null)state.playing=maskState.restorePlaying;
   maskState.restorePlaying=null;
   if(S.tool==='mask')ed.setTool('select');
  }
- $('rig-mask-toggle').textContent=enable?'✓ 结束画蒙版':'画蒙版';
- $('rig-mask-toggle').setAttribute('aria-pressed',String(enable));
- maskPanel.classList.toggle('painting',enable);
+ $('rig-mask-toggle').hidden=!enabled;
+ $('rig-mask-paint').setAttribute('aria-pressed',String(enabled&&!maskState.erase));
+ $('rig-mask-erase').setAttribute('aria-pressed',String(enabled&&maskState.erase));
+ maskPanel.classList.toggle('painting',enabled);
  ed.render();
 }
-$('rig-mask-toggle').onclick=()=>setMaskMode(!maskState.enabled);
-for(const [id,erase] of [['rig-mask-paint',false],['rig-mask-erase',true]]){
- $(id).onclick=()=>{
-  maskState.erase=erase;
-  $('rig-mask-paint').setAttribute('aria-pressed',String(!erase));
-  $('rig-mask-erase').setAttribute('aria-pressed',String(erase));
-  setMaskMode(true);
+function maskHint(){
+ const part=state.model?.parts[state.selected];
+ if(!part)return '先选一个部件。';
+ if(maskState.enabled)return (maskState.erase?'擦除':'涂抹')+'：'+
+  (maskState.direction==='behind'?'橙色部分会在对象后面':'蓝色部分会在对象前面');
+ const targets=[...maskState.targets].length;
+ return targets>1?'当前选择 '+targets+' 个对象，画一次同时应用':'不伤原图 · 点「涂抹」开始，点「完成」退出';
+}
+function drawTargetList(){
+ const list=$('rig-mask-target-list');list.replaceChildren();
+ for(const p of parts()){
+  const id=key(p);if(id===state.selected)continue;
+  const label=document.createElement('label');label.className='rig-mask-target-check';
+  const input=document.createElement('input');input.type='checkbox';
+  input.value=id;input.checked=maskState.targets.has(id);
+  input.onchange=()=>{
+   if(input.checked)maskState.targets.add(id);else maskState.targets.delete(id);
+   if(!maskState.targets.size){maskState.targets.add(maskTarget.value);input.checked=id===maskTarget.value}
+   const entry=getMask();
+   if(entry){entry.targets=[...maskState.targets];entry.target=maskTarget.value;changed(false)}
+   $('rig-mask-more').textContent='对象 '+maskState.targets.size;
+   maskLabel.textContent=maskHint();
+   drawRelationList();
+  };
+  label.append(input,document.createTextNode(p.name));
+  list.append(label);
+ }
+ $('rig-mask-more').textContent=maskState.targets.size>1?'对象 '+maskState.targets.size:'＋ 多选';
+}
+function drawRelationList(){
+ const list=$('rig-mask-relation-list');list.replaceChildren();
+ const entries=(state.model?.occlusionMasks||[]).filter(e=>e.source===state.selected);
+ $('rig-mask-relation-count').textContent=entries.length?String(entries.length):'';
+ for(const entry of entries){
+  const item=document.createElement('div');item.className='rig-mask-relation';
+  const name=document.createElement('span');
+  const targets=maskTargets(entry);
+  name.textContent=(entry.direction==='behind'?'后面':'前面')+' · '+
+    targets.map(id=>parts().find(p=>key(p)===id)?.name||id).join('、');
+  const edit=document.createElement('button');edit.type='button';edit.textContent='修改';
+  edit.onclick=()=>{
+   setMaskMode(false);
+   const available=targets.find(t=>[...maskTarget.options].some(x=>x.value===t));
+   if(available)maskTarget.value=available;
+   maskState.direction=entry.direction==='behind'?'behind':'front';
+   maskState.targets=new Set(targets);
+   maskState.history=[];syncDirection();drawTargetList();maskLabel.textContent=maskHint();
+  };
+  const remove=document.createElement('button');remove.type='button';remove.textContent='删除';
+  remove.title='删除遮挡关系；保留原部件贴图';
+  remove.onclick=()=>{
+   setMaskMode(false);
+   if(!confirm('删除这条局部遮挡关系？原始图片不会变。'))return;
+   state.model.occlusionMasks=state.model.occlusionMasks.filter(m=>m!==entry);
+   changed(false);drawRelationList();maskLabel.textContent=maskHint();
+  };
+  item.append(name,edit,remove);list.append(item);
+ }
+}
+function syncDirection(){
+ $('rig-mask-front').setAttribute('aria-pressed',String(maskState.direction==='front'));
+ $('rig-mask-back').setAttribute('aria-pressed',String(maskState.direction==='behind'));
+}
+function updateMaskControls(){
+ const part=state.model?.parts[state.selected],prev=maskTarget.value;
+ maskTarget.replaceChildren();
+ for(const p of parts()){const id=key(p);if(id!==state.selected)maskTarget.add(new Option(p.name,id))}
+ const entries=(state.model?.occlusionMasks||[]).filter(e=>e.source===state.selected);
+ const preferred=entries.find(e=>maskTargets(e).some(t=>[...maskTarget.options].some(o=>o.value===t)));
+ const isCollar=/topwear|collar|coat|jacket|lapel/i.test(state.selected);
+ const isGrip=/hand|arm|glove/i.test(state.selected);
+ const suggested=isCollar?'neck':isGrip?'battle_axe':'';
+ const choice=[prev,maskTargets(preferred)[0],suggested].find(id=>
+  id&&[...maskTarget.options].some(o=>o.value===id));
+ if(choice)maskTarget.value=choice;
+ maskState.direction=preferred?.direction==='behind'?'behind':'front';
+ maskState.targets=new Set(preferred?maskTargets(preferred):maskTarget.value?[maskTarget.value]:[]);
+ maskState.history=[];
+ $('rig-mask-source').textContent=part?.name||'未选择';
+ maskPanel.hidden=!state.active||!part;
+ if(preferred?.png&&part)maskCanvas(preferred,part);
+ syncDirection();drawTargetList();drawRelationList();maskLabel.textContent=maskHint();
+}
+$('rig-mask-more').onclick=()=>{
+ const pop=$('rig-mask-multiple');
+ pop.hidden=!pop.hidden;
+ if(!pop.hidden)drawTargetList();
+};
+maskTarget.onchange=()=>{
+ setMaskMode(false);
+ const e=(state.model?.occlusionMasks||[]).find(m=>m.source===state.selected&&
+  maskTargets(m).includes(maskTarget.value));
+ maskState.direction=e?.direction==='behind'?'behind':'front';
+ maskState.targets=new Set(e?maskTargets(e):[maskTarget.value]);
+ maskState.history=[];syncDirection();drawTargetList();drawRelationList();
+ maskLabel.textContent=maskHint();ed.render();
+};
+for(const [button,direction] of [['rig-mask-front','front'],['rig-mask-back','behind']]){
+ $(button).onclick=()=>{
+  setMaskMode(false);maskState.direction=direction;maskState.history=[];
+  const entry=getMask();
+  if(entry){maskState.targets=new Set(maskTargets(entry));maskCanvas(entry,state.model.parts[state.selected])}
+  syncDirection();drawTargetList();maskLabel.textContent=maskHint();ed.render();
  };
 }
-maskTarget.onchange=()=>{maskState.history=[];updateMaskControls()};
-maskSize.oninput=()=>{$('rig-mask-size-value').textContent=maskSize.value+' px'};
+$('rig-mask-paint').onclick=()=>{maskState.erase=false;setMaskMode(true)};
+$('rig-mask-erase').onclick=()=>{maskState.erase=true;setMaskMode(true)};
+$('rig-mask-toggle').onclick=()=>setMaskMode(false);
+maskSize.oninput=()=>{$('rig-mask-size-value').textContent=maskSize.value};
 $('rig-mask-undo').onclick=()=>{
- const mask=getMask();
- if(mask?._pending){maskLabel.textContent='蒙版仍在加载，暂时不能撤销';return;}
- const snapshot=maskState.history.pop();
- if(!mask||!snapshot)return;
- maskCanvas(mask,state.model.parts[state.selected]).getContext('2d').putImageData(snapshot,0,0);
- serializeMask(mask);
+ const entry=getMask(),prior=maskState.history.pop();
+ if(!entry||!prior||entry._pending)return;
+ const c=maskCanvas(entry,state.model.parts[state.selected]);
+ c.getContext('2d').putImageData(prior,0,0);serializeMask(entry);ed.render();
 };
 $('rig-mask-clear').onclick=()=>{
- const mask=getMask();if(!mask||!confirm('清空当前部件对这个对象的前景蒙版？原始图片不会改变。'))return;
- const c=maskCanvas(mask,state.model.parts[state.selected]);
- if(mask._pending){maskLabel.textContent='蒙版仍在加载，暂时不能清空';return;}
+ const entry=getMask();if(!entry)return;
+ if(!confirm('清空这一块遮挡？原始部件不会改变。'))return;
+ const c=maskCanvas(entry,state.model.parts[state.selected]);
+ if(entry._pending)return;
  maskState.history.push(c.getContext('2d').getImageData(0,0,c.width,c.height));
- c.getContext('2d').clearRect(0,0,c.width,c.height);serializeMask(mask);
+ c.getContext('2d').clearRect(0,0,c.width,c.height);
+ serializeMask(entry);ed.render();
 };
-function maskStroke(a,b){
- const mask=ensureMask(),source=state.model?.parts[state.selected];
- if(!mask||!source)return;
- const c=maskCanvas(mask,source),g=c.getContext('2d');
- g.save();g.globalCompositeOperation=maskState.erase?'destination-out':'source-over';
- g.strokeStyle='#fff';g.fillStyle='#fff';g.lineWidth=Number(maskSize.value);
- g.lineCap='round';g.lineJoin='round';
- g.beginPath();g.moveTo(a.x-source.x,a.y-source.y);g.lineTo(b.x-source.x,b.y-source.y);g.stroke();
- if(Math.hypot(a.x-b.x,a.y-b.y)<.01){
-  g.beginPath();g.arc(a.x-source.x,a.y-source.y,g.lineWidth/2,0,2*Math.PI);g.fill();
- }
- g.restore();mask._revision=(mask._revision||0)+1;ed.render();
-}
 const quickPanel=document.createElement('section');
 quickPanel.id='rig-quick-panel';
 quickPanel.hidden=true;
@@ -703,7 +762,7 @@ function drawPreview(ctx){
     const g=tint.getContext('2d');
     g.drawImage(source,0,0);
     g.globalCompositeOperation='source-in';
-    g.fillStyle='#46d8ff';g.fillRect(0,0,tint.width,tint.height);
+    g.fillStyle=maskState.direction==='behind'?'#ff9e59':'#46d8ff';g.fillRect(0,0,tint.width,tint.height);
     const motion=core.actionPart(previewModel,part.id);
     const mounted=(part.id==='battle_axe'||part.id==='axe_held')&&
       previewModel.parts[part.parentId]?previewModel.parts[part.parentId]:part;
@@ -807,25 +866,32 @@ function loc(e){
  const b=stage.getBoundingClientRect();
  return {x:(e.clientX-b.left-S.px)/S.zoom,y:(e.clientY-b.top-S.py)/S.zoom};
 }
-// Mask brush is captured before the base editor's pixel brush. Edits are in
-// source texture coordinates via live ArtMesh inverse mapping; masks stay at
-// the chosen source part even if the rendered character is animated.
+// Editing is deliberate: only mask tool captures strokes; safe Select does not.
+function maskWorld(e){return loc(e)}
+function maskPoint(e){
+ const layer=parts().find(p=>key(p)===state.selected);
+ if(!layer)return null;
+ return window.PaperchalkPartRigStudio?.mapToSource?.(maskWorld(e),layer);
+}
+function maskCancelStroke(rollback){
+ const d=maskState.pointer;
+ if(!d)return;
+ if(rollback&&d.entry?._canvas&&d.snapshot){
+  d.entry._canvas.getContext('2d').putImageData(d.snapshot,0,0);
+  d.entry._revision=(d.entry._revision||0)+1;
+  maskState.history.pop();ed.render();
+ }
+ maskState.pointer=null;
+}
 stage.addEventListener('pointerdown',e=>{
  if(!maskState.enabled||S.tool!=='mask'||e.target!==$('view'))return;
  e.preventDefault();e.stopImmediatePropagation();
  if(e.pointerType==='touch'){
   maskState.touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
   stage.setPointerCapture(e.pointerId);
-  if(maskState.touches.size>=2){
-   // Undo any tentative first-finger paint when it becomes a two-finger gesture.
-   if(maskState.pointer){
-    const prior=maskState.history.pop(),entry=maskState.pointer.entry;
-    if(prior&&entry?._canvas){
-     entry._canvas.getContext('2d').putImageData(prior,0,0);
-     entry._revision=(entry._revision||0)+1;ed.render();
-    }
-    maskState.pointer=null;
-   }
+  if(maskState.touches.size>1){
+   maskCancelStroke(true);
+   maskState.blockedTouches=new Set(maskState.touches.keys());
    if(maskState.touches.size===2){
     const [a,b]=[...maskState.touches.values()];
     maskState.pinch={distance:Math.hypot(a.x-b.x,a.y-b.y)||1,
@@ -836,74 +902,68 @@ stage.addEventListener('pointerdown',e=>{
   }
  }
  if(maskState.pointer!==null||!state.model?.parts[state.selected])return;
- const partLayer=parts().find(p=>key(p)===state.selected);
- if(!partLayer)return;
- const local=loc(e),source=ed.S;
- const world={x:local.x,y:local.y};
- const mapped=ed.S.only?world:window.PaperchalkPartRigStudio?.mapToSource?.(world,partLayer);
- if(!mapped)return;
- const entry=ensureMask();if(!entry)return;
- const c=maskCanvas(entry,state.model.parts[state.selected]);
+ const point=maskPoint(e),entry=point&&ensureMask();
+ if(!point||!entry)return;
+ const source=state.model.parts[state.selected],canvas=maskCanvas(entry,source);
  if(entry._pending){
-  maskLabel.textContent='正在读取原有蒙版，加载完成后才能落笔，避免覆盖旧内容';return;
+  maskLabel.textContent='正在读取旧蒙版，稍后才能涂抹';
+  return;
  }
- maskState.history.push(c.getContext('2d').getImageData(0,0,c.width,c.height));
- if(maskState.history.length>20)maskState.history.shift();
- maskState.pointer={id:e.pointerId,point:mapped,start:mapped,entry,hasMoved:false};
- stage.setPointerCapture(e.pointerId);
- // Touch painting begins only after movement or intentional release, not on
- // the first finger of an attempted two-finger zoom.
- if(e.pointerType==='mouse')maskStroke(mapped,mapped);
+ const snapshot=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
+ maskState.history.push(snapshot);if(maskState.history.length>24)maskState.history.shift();
+ maskState.pointer={id:e.pointerId,entry,point,start:point,snapshot,moved:false,
+  isTouch:e.pointerType==='touch'};
+ if(!stage.hasPointerCapture(e.pointerId))stage.setPointerCapture(e.pointerId);
+ if(e.pointerType!=='touch')paintMaskLine(point,point);
 },true);
 stage.addEventListener('pointermove',e=>{
+ if(!maskState.enabled||S.tool!=='mask')return;
  if(maskState.touches.has(e.pointerId)){
   maskState.touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(maskState.pinch&&maskState.touches.size>=2){
    e.preventDefault();e.stopImmediatePropagation();
-   const [a,b]=[...maskState.touches.values()];
+   const [a,b]=[...maskState.touches.values()],base=maskState.pinch;
    const distance=Math.hypot(a.x-b.x,a.y-b.y)||1;
-   const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
-   const base=maskState.pinch,stageBox=stage.getBoundingClientRect();
-   const sx=base.midpoint.x-stageBox.x,sy=base.midpoint.y-stageBox.y;
-   S.zoom=Math.max(.1,Math.min(20,base.zoom*distance/base.distance));
-   S.px=mid.x-stageBox.x-(sx-base.px)*S.zoom/base.zoom;
-   S.py=mid.y-stageBox.y-(sy-base.py)*S.zoom/base.zoom;
+   const middle={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+   const rect=stage.getBoundingClientRect();
+   const sx=base.midpoint.x-rect.x,sy=base.midpoint.y-rect.y;
+   S.zoom=Math.max(.15,Math.min(20,base.zoom*distance/base.distance));
+   S.px=middle.x-rect.x-(sx-base.px)*S.zoom/base.zoom;
+   S.py=middle.y-rect.y-(sy-base.py)*S.zoom/base.zoom;
    ed.render();return;
   }
  }
- if(maskState.touches.has(e.pointerId)){
-  maskState.touches.delete(e.pointerId);
-  if(maskState.pinch){
-   e.preventDefault();e.stopImmediatePropagation();
-   if(maskState.touches.size<2)maskState.pinch=null;
-   if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
-   return;
-  }
- }
+ if(maskState.blockedTouches.has(e.pointerId))return;
  const d=maskState.pointer;
  if(!d||d.id!==e.pointerId)return;
  e.preventDefault();e.stopImmediatePropagation();
- const layer=parts().find(p=>key(p)===state.selected);if(!layer)return;
- const q=window.PaperchalkPartRigStudio?.mapToSource?.(loc(e),layer);
- if(!q)return;
- if(!d.hasMoved&&Math.hypot(q.x-d.start.x,q.y-d.start.y)<2)return;
- d.hasMoved=true;maskStroke(d.point,q);d.point=q;
+ const point=maskPoint(e);if(!point)return;
+ if(!d.moved&&Math.hypot(point.x-d.start.x,point.y-d.start.y)<3)return;
+ d.moved=true;paintMaskLine(d.point,point);d.point=point;
 },true);
 for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,e=>{
+ if(!maskState.enabled||S.tool!=='mask')return;
+ const touched=maskState.touches.has(e.pointerId);
+ if(touched){maskState.touches.delete(e.pointerId);maskState.blockedTouches.delete(e.pointerId)}
+ if(maskState.pinch){
+  if(touched){e.preventDefault();e.stopImmediatePropagation()}
+  if(maskState.touches.size<2)maskState.pinch=null;
+  if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
+  return;
+ }
  const d=maskState.pointer;
  if(!d||d.id!==e.pointerId)return;
  e.preventDefault();e.stopImmediatePropagation();
- if(!d.hasMoved&&type==='pointerup'&&e.pointerType!=='mouse')maskStroke(d.point,d.point);
- if(type==='pointercancel'&&maskState.history.length){
-  const before=maskState.history.pop(),c=maskCanvas(d.entry,state.model.parts[state.selected]);
-  c.getContext('2d').putImageData(before,0,0);
+ if(type==='pointercancel')maskCancelStroke(true);
+ else{
+  if(!d.moved&&d.isTouch)paintMaskLine(d.point,d.point);
+  serializeMask(d.entry);maskState.pointer=null;
+  drawRelationList();maskLabel.textContent=maskHint();ed.render();
  }
- serializeMask(d.entry);
- maskState.pointer=null;
  if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
 },true);
-window.addEventListener('paperchalk:studio-tool-changed',e=>{
- if(maskState.enabled&&e.detail?.tool!=='mask')setMaskMode(false);
+window.addEventListener('paperchalk:studio-tool-changed',event=>{
+ if(maskState.enabled&&event.detail?.tool!=='mask')setMaskMode(false);
 });
 stage.addEventListener('pointerdown',e=>{
  if(!state.active||!state.panelOpen||!state.showGuides||['select','mask'].includes(S.tool)||e.target!==$('view'))return;
