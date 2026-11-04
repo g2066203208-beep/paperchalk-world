@@ -389,9 +389,9 @@ const PERSON_NAMES={
 function canonicalFamily(record){
  const id=String(record?.id||''),family=String(record?.familyId||id);
  const name=String(record?.label||'').trim();
- const nameFamily=/^(女二(号)?|女2)(?:[\\s·（(:：/-]|$)/.test(name)?'char-002':
-  /^(男主角?|男一)(?:[\\s·（(:：/-]|$)/.test(name)?'char-003':
-  /^(女主角?|女一)(?:[\\s·（(:：/-]|$)/.test(name)?'protagonist':null;
+ const nameFamily=/^(女二(号)?|女2)(?:[\s·（(:：/-]|$)/.test(name)?'char-002':
+  /^(男主角?|男一)(?:[\s·（(:：/-]|$)/.test(name)?'char-003':
+  /^(女主角?|女一)(?:[\s·（(:：/-]|$)/.test(name)?'protagonist':null;
  const token=nameFamily||family;
  if(/^(protagonist)(?:$|-)/.test(token))return 'protagonist';
  if(/^(char-002|female-?0?2|female2)(?:$|-)/.test(token))return 'char-002';
@@ -402,7 +402,7 @@ function canonicalFamily(record){
 }
 function familyDisplayName(person,family){
  return PERSON_NAMES[family]||String(person?.label||family)
-  .replace(/ · 未导入立绘$/,'').replace(/^char-(\\d+)$/i,'角色 $1');
+  .replace(/ · 未导入立绘$/,'').replace(/^char-(\d+)$/i,'角色 $1');
 }
 function visibleFamilyGroups(){
  const families=new Map();
@@ -484,7 +484,7 @@ function renderFamilyTree(){
    const btn=document.createElement('button');btn.type='button';
    btn.className=currentId===variant.id?'active':'';
    const title=String(variant.label||variant.id)
-    .replace(/^(女主角?|女二|女三|男主角?|男二|女老师)\\s*[·:：-]\\s*/,'');
+    .replace(/^(女主角?|女二|女三|男主角?|男二|女老师)\s*[·:：-]\s*/,'');
    btn.textContent=(isOutfit?'服装 / 换装 · ':isBattle?'战斗动作 · ':'素材 · ')+title;
    btn.onclick=async()=>{
     try{
