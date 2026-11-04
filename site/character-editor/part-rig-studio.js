@@ -489,7 +489,7 @@ boneSliders.addEventListener('input',e=>{
 });
 function drawPreview(ctx){
  const motion=window.PaperchalkStageMotion?.state;
- if(!state.active||!state.model||motion?.enabled===false||motion?.editing||S.only)return false;
+ if(!state.active||!state.model||S.only)return false; // Editing retains the actual frozen mesh.
  // Wireframe and yellow skeletal handles are strictly opt-in.
  const previewModel=state.visualIdle?
   {...state.model,idleProfile:state.visualIdle}:state.model;
@@ -520,6 +520,62 @@ function drawPreview(ctx){
   }
  }
  return true;
+}
+// Invert the very same deformed triangles used by the on-screen ArtMesh.
+// Painting in the current pose must target ORIGINAL per-part PNG pixels;
+// no separate static snapshot is shown and no detached overlay is created.
+function mapToSource(point,layer){
+ if(!state.active||!state.model||!layer?.sourcePart)return null;
+ const id=key(layer),part=state.model.parts[id];
+ if(!part||part.enabled===false||!part.mesh)return null;
+ const idle=state.visualIdle||state.model.idleProfile,phase=state.phase;
+ const pose=core.actionPart(state.model,id);
+ if(pose.opacity<=0.001)return null;
+ let px=point.x,py=point.y;
+ const mount=(id==='battle_axe'||id==='axe_held')&&
+  state.model.parts[part.parentId]?state.model.parts[part.parentId]:part;
+ const motion=mount===part?pose:core.actionPart(state.model,part.parentId);
+ if(motion.x||motion.y||motion.angle){
+  const cx=mount.x+mount.w*mount.pivot.x,cy=mount.y+mount.h*mount.pivot.y;
+  const angle=-motion.angle*Math.PI/180,dx=px-cx-motion.x,dy=py-cy-motion.y;
+  px=cx+dx*Math.cos(angle)-dy*Math.sin(angle);
+  py=cy+dx*Math.sin(angle)+dy*Math.cos(angle);
+ }
+ const cols=Math.max(1,part.mesh.columns||5),rows=Math.max(1,part.mesh.rows||6);
+ const bones=core.bonePoses(part,phase,idle);
+ // Use the same finer tessellation as the renderer for larger hair/skirt moves.
+ const weather=idle?.weather||idle?.preset;
+ const amount=(idle?.[core.idleGroup(part)]?.amount||0)*
+  Math.max(0,Math.min(20,Number(idle?.parts?.[id]??1)));
+ const windy=weather==='windy'||((part.kind==='hair'||part.kind==='skirt')&&amount>1.2);
+ const nx=windy&&part.kind==='hair'?Math.max(cols,12):
+  windy&&part.kind==='skirt'?Math.max(cols,10):cols;
+ const ny=windy&&part.kind==='hair'?Math.max(rows,15):
+  windy&&part.kind==='skirt'?Math.max(rows,12):rows;
+ const verts=[];
+ for(let j=0;j<=ny;j++){
+  const line=[];
+  for(let i=0;i<=nx;i++)line.push(core.warpPoint(part,i/nx,j/ny,phase,bones,idle));
+  verts.push(line);
+ }
+ function triangle(a,b,c,ta,tb,tc){
+  const den=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);
+  if(Math.abs(den)<1e-6)return null;
+  const wa=((b.y-c.y)*(px-c.x)+(c.x-b.x)*(py-c.y))/den;
+  const wb=((c.y-a.y)*(px-c.x)+(a.x-c.x)*(py-c.y))/den;
+  const wc=1-wa-wb;
+  if(Math.min(wa,wb,wc)<-0.0005)return null;
+  return {x:part.x+part.w*(ta.x*wa+tb.x*wb+tc.x*wc),
+          y:part.y+part.h*(ta.y*wa+tb.y*wb+tc.y*wc)};
+ }
+ for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+  const u=i/nx,v=j/ny,U=(i+1)/nx,V=(j+1)/ny;
+  const a=verts[j][i],b=verts[j][i+1],c=verts[j+1][i],d=verts[j+1][i+1];
+  const hit=triangle(a,b,c,{x:u,y:v},{x:U,y:v},{x:u,y:V})||
+   triangle(b,d,c,{x:U,y:v},{x:U,y:V},{x:u,y:V});
+  if(hit)return hit;
+ }
+ return null;
 }
 function loc(e){
  const b=stage.getBoundingClientRect();
@@ -596,6 +652,6 @@ window.addEventListener('paperchalk:studio-ready-to-edit',()=>{
  // New independent mesh is the default whenever genuine component art exists.
  if(parts().length)activate(false).catch(e=>info('独立 L2D 初始化失败：'+e.message));
 });
-window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder};
+window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,mapToSource};
 requestAnimationFrame(tick);
 })();
