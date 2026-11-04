@@ -3039,5 +3039,283 @@
     "proposed": 414,
     "unknown": 30,
     "not_applicable": 2
+  },
+  "extensions": {
+    "extensionSchema": "docs/characters/ANGEL_TRANSACTION_SAN_EXTENSION_V1.json",
+    "schemaVersion": 1,
+    "fields": {
+      "tradeEligibility": {
+        "participationRole": {
+          "value": null,
+          "status": "unknown"
+        },
+        "recruitedBy": {
+          "value": null,
+          "status": "unknown"
+        },
+        "recruitmentVoluntary": {
+          "value": null,
+          "status": "unknown"
+        },
+        "dealOptIn": {
+          "value": null,
+          "status": "unknown"
+        },
+        "participationStatus": {
+          "value": null,
+          "status": "unknown"
+        },
+        "firstContact": {
+          "value": null,
+          "status": "unknown"
+        },
+        "eligibilityCriteria": {
+          "value": null,
+          "status": "unknown"
+        },
+        "civilianLifeStatus": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "tradeDesire": {
+        "lifeDeficit": {
+          "value": null,
+          "status": "unknown"
+        },
+        "outwardMask": {
+          "value": null,
+          "status": "unknown"
+        },
+        "trueWish": {
+          "value": null,
+          "status": "unknown"
+        },
+        "spokenWish": {
+          "value": null,
+          "status": "unknown"
+        },
+        "deepestFear": {
+          "value": null,
+          "status": "unknown"
+        },
+        "emotionalTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "desiredChange": {
+          "value": null,
+          "status": "unknown"
+        },
+        "desperationScale": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "tradeContract": {
+        "angelCounterparty": {
+          "value": null,
+          "status": "unknown"
+        },
+        "contractTerms": {
+          "value": null,
+          "status": "unknown"
+        },
+        "requestedBenefit": {
+          "value": null,
+          "status": "unknown"
+        },
+        "promisedReward": {
+          "value": null,
+          "status": "unknown"
+        },
+        "upfrontCost": {
+          "value": null,
+          "status": "unknown"
+        },
+        "hiddenCost": {
+          "value": null,
+          "status": "unknown"
+        },
+        "debtState": {
+          "value": null,
+          "status": "unknown"
+        },
+        "cancellationRule": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "sanityRules": {
+        "startingSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "baselineSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "minimumSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "maximumSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "monsterEncounterDelta": {
+          "value": null,
+          "status": "unknown"
+        },
+        "combatKillDelta": {
+          "value": null,
+          "status": "unknown"
+        },
+        "passiveDecayRule": {
+          "value": null,
+          "status": "unknown"
+        },
+        "otherNegativeEffectRule": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "fearAndCombat": {
+        "fearResponse": {
+          "value": null,
+          "status": "unknown"
+        },
+        "enemyClarityEffect": {
+          "value": null,
+          "status": "unknown"
+        },
+        "killSatisfactionEffect": {
+          "value": null,
+          "status": "unknown"
+        },
+        "battleMentalTrajectory": {
+          "value": null,
+          "status": "unknown"
+        },
+        "retreatTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "nonMonsterThreatResponse": {
+          "value": null,
+          "status": "unknown"
+        },
+        "panicThreshold": {
+          "value": null,
+          "status": "unknown"
+        },
+        "exceptions": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "mentalPresentation": {
+        "idleEmotion": {
+          "value": null,
+          "status": "unknown"
+        },
+        "threatExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "attackExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "victoryExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "lowSanExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "socialMask": {
+          "value": null,
+          "status": "unknown"
+        },
+        "maskBreakTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "psychologicalAftereffect": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "plotTransaction": {
+        "preDealLife": {
+          "value": null,
+          "status": "unknown"
+        },
+        "incitingIncident": {
+          "value": null,
+          "status": "unknown"
+        },
+        "dealDecisionScene": {
+          "value": null,
+          "status": "unknown"
+        },
+        "turningPoint": {
+          "value": null,
+          "status": "unknown"
+        },
+        "characterArc": {
+          "value": null,
+          "status": "unknown"
+        },
+        "relationToHeroine": {
+          "value": null,
+          "status": "unknown"
+        },
+        "angelManipulationCounter": {
+          "value": null,
+          "status": "unknown"
+        },
+        "unresolvedQuestion": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "runtimeAndQA": {
+        "mechanicState": {
+          "value": null,
+          "status": "unknown"
+        },
+        "saveDataKey": {
+          "value": null,
+          "status": "unknown"
+        },
+        "currentSanStorage": {
+          "value": null,
+          "status": "unknown"
+        },
+        "clamping": {
+          "value": null,
+          "status": "unknown"
+        },
+        "combatEvents": {
+          "value": null,
+          "status": "unknown"
+        },
+        "guiRules": {
+          "value": null,
+          "status": "unknown"
+        },
+        "regressionTests": {
+          "value": null,
+          "status": "unknown"
+        },
+        "approvalStatus": {
+          "value": null,
+          "status": "unknown"
+        }
+      }
+    }
   }
 }
