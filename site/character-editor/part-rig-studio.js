@@ -226,6 +226,7 @@ maskTarget.onchange=()=>{
  const e=(state.model?.occlusionMasks||[]).find(m=>m.source===state.selected&&
   maskTargets(m).includes(maskTarget.value));
  maskState.direction=e?.direction==='behind'?'behind':'front';
+ maskState.editingEntry=e||null;
  maskState.targets=new Set(e?maskTargets(e):[maskTarget.value]);
  maskState.history=[];maskState.redo=[];syncDirection();drawTargetList();drawRelationList();
  maskLabel.textContent=maskHint();ed.render();
