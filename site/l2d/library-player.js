@@ -96,10 +96,14 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  const ids=Object.keys(rigSpec.textures);
  // Stale 7/17-mesh drafts must not contaminate the corrected 18-part PSD
  // PSD rig (including speed, amplitudes and 'saved' pseudo-joints).
+ const deleted=(Array.isArray(localDraft?.deletedParts)?
+  [...new Set(localDraft.deletedParts.filter(id=>typeof id==='string'))]:[]);
+ const validDeleted=deleted.every(id=>ids.includes(id)&&!!model.parts[id]);
+ const activeIds=ids.filter(id=>!deleted.includes(id));
  const draftMatches=localDraft?.format==='paperchalk-part-rig-v1'&&
-   localDraft.characterId===characterId&&localDraft.face===face&&
-   Object.keys(localDraft.parts||{}).length===ids.length&&
-   ids.every(id=>localDraft.parts[id]&&model.parts[id]);
+   localDraft.characterId===characterId&&localDraft.face===face&&validDeleted&&
+   Object.keys(localDraft.parts||{}).length===activeIds.length&&
+   activeIds.every(id=>localDraft.parts[id]&&model.parts[id]);
  model.idleProfile=root.PaperchalkPartRigCore.sanitizeIdleProfile(
    (draftMatches?localDraft.idleProfile:null)||model.idleProfile||
    root.PaperchalkPartRigCore.defaultIdleProfile());
@@ -107,30 +111,33 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // direction. Art assets, layer IDs, published positions and original V4
  // remain authoritative; malformed drafts cannot modify a published model.
  if(draftMatches){
-   for(const id of ids){
+   for(const id of activeIds){
     const original=model.parts[id],edit=localDraft.parts[id];
     model.parts[id]=root.PaperchalkPartRigCore.sanitize(edit,original);
    }
+   // A deleted original PNG remains in the immutable library, but not
+   // the user's playable actor; never re-display it from the hosted rig.
+   for(const id of deleted)model.parts[id].enabled=false;
  }
  // Load the same independently saved Z-stack as the editor. Previously
  // only joint values were merged, so arms/weapons reverted on game return.
  if(draftMatches&&Array.isArray(localDraft.layerOrder)){
   const order=localDraft.layerOrder.map(String);
-  if(order.length===ids.length&&new Set(order).size===ids.length&&
-     order.every(id=>ids.includes(id)))model.layerOrder=[...order];
+  if(order.length===activeIds.length&&new Set(order).size===activeIds.length&&
+     order.every(id=>activeIds.includes(id)))model.layerOrder=[...order];
  }
  // The editor and game share the same non-destructive, bidirectional
  // local depth rules. Preserve old single-target/front masks as-is.
  if(draftMatches&&Array.isArray(localDraft.occlusionMasks)){
   model.occlusionMasks=localDraft.occlusionMasks.filter(m=>{
    const targets=Array.isArray(m?.targets)?m.targets:[m?.target];
-   return typeof m?.source==='string'&&ids.includes(m.source)&&
-    targets.some(t=>t!==m.source&&ids.includes(t))&&
+   return typeof m?.source==='string'&&activeIds.includes(m.source)&&
+    targets.some(t=>t!==m.source&&activeIds.includes(t))&&
     typeof m.png==='string'&&m.png.startsWith('data:image/png;base64,')&&
     m.png.length<8_000_000;
   }).map(m=>{
    const targets=[...new Set((Array.isArray(m.targets)?m.targets:[m.target])
-    .filter(t=>t!==m.source&&ids.includes(t)))];
+    .filter(t=>t!==m.source&&activeIds.includes(t)))];
    return {source:m.source,target:targets[0],targets,
     direction:m.direction==='behind'?'behind':'front',
     png:m.png,enabled:m.enabled!==false};
@@ -143,18 +150,20 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // RGBA dimensions and a bounded original-canvas position before applying.
  const artLayers=Array.isArray(localArt)?localArt.filter(p=>p?.sourcePart&&p.partId):[];
  const artIndex=new Map(artLayers.map(p=>[String(p.partId),p]));
- const artValid=artIndex.size===ids.length&&artLayers.length===ids.length&&
-  ids.every(id=>artIndex.get(id)?.img?.startsWith('data:image/png;base64,'));
+ const artValid=artIndex.size===activeIds.length&&
+  artLayers.length===activeIds.length&&
+  activeIds.every(id=>artIndex.get(id)?.img?.startsWith('data:image/png;base64,'));
  let drawings=imgs,personalised=false;
  if(artValid){
   try{
-   const edited=await Promise.all(ids.map(id=>imageData(artIndex.get(id).img)));
+   const edited=await Promise.all(ids.map((id,i)=>
+    activeIds.includes(id)?imageData(artIndex.get(id).img):imgs[i]));
    if(ids.every((id,i)=>edited[i].width===model.parts[id].w&&
        edited[i].height===model.parts[id].h&&
-       Number.isFinite(Number(artIndex.get(id).x))&&
-       Number.isFinite(Number(artIndex.get(id).y)))){
+       (!activeIds.includes(id)||(Number.isFinite(Number(artIndex.get(id).x))&&
+        Number.isFinite(Number(artIndex.get(id).y)))))){
     drawings=edited;personalised=true;
-    ids.forEach(id=>{
+    activeIds.forEach(id=>{
      model.parts[id].x=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).x)));
      model.parts[id].y=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).y)));
     });
