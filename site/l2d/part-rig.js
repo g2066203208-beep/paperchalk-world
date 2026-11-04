@@ -506,6 +506,7 @@ function cleanPart(part,face,id,characterId){
     id==='cloth'?['pelvis',.5,.08,.5,.92,'skirt']:
     ['root',.5,.08,.5,.9,'unclassified']);
  return {id:String(id),name:String(p.name||id),x:finite(p.x,0),y:finite(p.y,0),w,h,
+  placement:{scaleX:1,scaleY:1,offsetX:0,offsetY:0},
   parentId:def[0],kind:def[5],
   pivot:{x:def[1],y:def[2]},tip:{x:def[3],y:def[4]},
   mesh:def[5]==='pants-bound'?{columns:12,rows:12}:{
@@ -536,6 +537,15 @@ function sanitize(record,original){
   angle:clamp(finite(m.angle,0),-25,25),
   frequency:clamp(finite(m.frequency,1),.25,4),
   phase:clamp(finite(m.phase,0),-6.2832,6.2832)
+ };
+ // Keep the authored pixel texture immutable. Size and position are
+ // transformed in rest/world space before the same parent bone field.
+ const t=record.placement||original.placement||{};
+ x.placement={
+  scaleX:clamp(finite(t.scaleX,1),.25,4),
+  scaleY:clamp(finite(t.scaleY,1),.25,4),
+  offsetX:clamp(finite(t.offsetX,0),-1024,1024),
+  offsetY:clamp(finite(t.offsetY,0),-1024,1024)
  };
  x.mesh=original.mesh;
  x.bones=normalizeBones(record.bones,original.kind);
@@ -771,6 +781,22 @@ function applyRigidParent(ctx,part,phase,idle){
  ctx.transform(x.x-o.x,x.y-o.y,y.x-o.x,y.y-o.y,o.x,o.y);
 }
 
+// Non-destructive local affine placement; never changes source PNG, mesh UV,
+// parent IDs or occlusion mask coordinates. For fitted clothing this transform
+// is evaluated BEFORE the leg IK deformation, preventing detached shorts.
+function placedRestPoint(part,point){
+ const t=part.placement;
+ if(!t)return point;
+ const sx=clamp(finite(t.scaleX,1),.25,4),sy=clamp(finite(t.scaleY,1),.25,4);
+ const px=part.x+part.w*part.pivot.x,py=part.y+part.h*part.pivot.y;
+ return {x:px+(point.x-px)*sx+clamp(finite(t.offsetX,0),-1024,1024),
+  y:py+(point.y-py)*sy+clamp(finite(t.offsetY,0),-1024,1024)};
+}
+function placedBounds(part){
+ const a=placedRestPoint(part,{x:part.x,y:part.y});
+ const b=placedRestPoint(part,{x:part.x+part.w,y:part.y+part.h});
+ return {x:a.x,y:a.y,w:b.x-a.x,h:b.y-a.y};
+}
 // Each part's raster mesh uses its OWN normalized local coordinates.
 // Its own pivot is fixed; deformation weights increase toward its tip.
 // No other part is sampled, moved, cut, duplicated, or transformed.
@@ -795,7 +821,8 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
   clamp(finite(q.x,0),-4,4)*weight*oscillation*scale+air.x+body.x;
  const py=base.y+(baseX*sn+baseY*cs-baseY)*scale+
   clamp(finite(q.y,0),-4,4)*weight*oscillation*scale+air.y+body.y;
- const inherited=parentPoint(part,bodyPosePoint(px,py,phase,idle),phase,idle);
+ const placed=placedRestPoint(part,{x:px,y:py});
+ const inherited=parentPoint(part,bodyPosePoint(placed.x,placed.y,phase,idle),phase,idle);
  // Two parents in one deformation: pelvis->torso->coat, wrist->grasped fold.
  // Follow the authentic hand ArtMesh, never clone the hand onto the jacket.
  const link=part.followGrip,hand=part._gripParent;
@@ -936,6 +963,13 @@ function drawFacePart(ctx,source,part,phase,idle){
  ctx.transform(1,0,-lean.lean,1,lean.feet*lean.lean,0);
  ctx.translate(motion.x,motion.y);
  applyRigidParent(ctx,part,phase,idle);
+ const t=part.placement||{};
+ if(t.scaleX!==1||t.scaleY!==1||t.offsetX||t.offsetY){
+  const ax=part.x+part.w*part.pivot.x,ay=part.y+part.h*part.pivot.y;
+  ctx.translate(ax+(t.offsetX||0),ay+(t.offsetY||0));
+  ctx.scale(t.scaleX||1,t.scaleY||1);
+  ctx.translate(-ax,-ay);
+ }
  if(id==='eye_white'||id==='irises'||id==='eyewhite'||id==='irides'||
     /^eyewhite_[lr]$/.test(id)||/^irides_[lr]$/.test(id)){
   // Real iris/eye-white PNGs gradually disappear under closing eyelids.
@@ -994,7 +1028,11 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
    (part.kind==='hair'||part.kind==='skirt'))));
  ctx.save();ctx.globalAlpha=source.opacity??1;
  if(!active){
-  ctx.drawImage(image,part.x,part.y);
+  const t=part.placement||{};
+  if(t.scaleX!==1||t.scaleY!==1||t.offsetX||t.offsetY){
+   const b=placedBounds(part);
+   ctx.drawImage(image,b.x,b.y,b.w,b.h);
+  }else ctx.drawImage(image,part.x,part.y);
  }else{
   const posed=bonePoses(part,phase,idle);
   const vertices=[];
@@ -1264,5 +1302,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
 
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,placedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
 })(typeof window!=='undefined'?window:globalThis);
