@@ -741,8 +741,8 @@ async function loadList(){
  }
  if(!list.has('char-008-outfit-02')){
   list.set('char-008-outfit-02',{id:'char-008-outfit-02',
-   label:'女老师 · 新衣服（待导入）',front:wardrobePlaceholder('女老师 · 新衣服'),back:'',
-   familyId:'class-teacher-geography-candidate',variantCategory:'outfit',editorOnly:true});
+   label:'女五 · 女老师新衣服（待导入）',front:wardrobePlaceholder('女五 · 新衣服'),back:'',
+   familyId:'char-006',variantCategory:'outfit',editorOnly:true});
  }
  const canonicalFemale2=list.get('char-002');
  await resetFemale06OriginalIfRequested();
@@ -762,7 +762,8 @@ async function loadList(){
  }
  if(canonicalFemale2)list.set('char-002',canonicalFemale2);
  let last=null;try{last=JSON.parse(localStorage.getItem('paperchalk-studio-last')||'null')}catch(e){}
- const id=args.get('character')||last?.id||'protagonist';
+ const requestedId=args.get('character')||last?.id||'protagonist';
+ const id=requestedId==='class-teacher-geography-candidate'?'char-006':requestedId;
  await change(list.has(id)?id:'protagonist',args.get('side')||last?.side||'front');
 }
 const decodedPristine=new Map();
@@ -879,7 +880,10 @@ async function readPartRig(id=currentId,face=side){
   (id==='char-002'&&face==='front'&&sourceId==='char-002-psd-v1'&&
   model.characterId==='char-002-psd-v1'&&model.provenance==='original-psd'&&
   hasFemale2Psd(Object.keys(model.parts||{}))&&
-  pub.url.startsWith('./assets/l2d/library/char-002-psd-v1/'));
+  pub.url.startsWith('./assets/l2d/library/char-002-psd-v1/'))||
+  (id==='char-006'&&face==='front'&&sourceId==='class-teacher-geography-candidate'&&
+   model.characterId==='class-teacher-geography-candidate'&&
+   pub.url.startsWith('./assets/l2d/library/class-teacher-geography-candidate/'));
  if(model.format!=='paperchalk-part-rig-v1'||
     (model.characterId!==id&&!validAlias)||model.face!==face)
   throw Error('当前人物的模块绑定文件格式或方向错误');
@@ -1150,8 +1154,12 @@ async function hostedParts(id,face=side){
      ['protagonist-rig-v1','protagonist-unified-v1'].some(alias=>
       published.sourceCharacterId===alias&&rig.characterId===alias&&
       published.url.startsWith('./assets/l2d/library/'+alias+'/'));
+    const femaleFiveAlias=id==='char-006'&&face==='front'&&
+      published.sourceCharacterId==='class-teacher-geography-candidate'&&
+      rig.characterId==='class-teacher-geography-candidate'&&
+      published.url.startsWith('./assets/l2d/library/class-teacher-geography-candidate/');
     if(rig.format!=='paperchalk-part-rig-v1'||
-       (rig.characterId!==id&&!originalAlias)||rig.face!==face)
+       (rig.characterId!==id&&!originalAlias&&!femaleFiveAlias)||rig.face!==face)
      throw Error('当前人物绑定与独立图层不一致');
     const manifest={canvas:[1024,1024],provenance:'published-part-mesh',layers:{front:[],back:[]}};
     const files=new Map(),pairs=Object.entries(published.textures);
