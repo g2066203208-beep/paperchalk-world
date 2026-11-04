@@ -20,9 +20,6 @@ on:
       - 'tests/ui-edge-fog-browser.mjs'
       - 'tests/phone-ui-browser.mjs'
       - 'tests/ground-perspective.test.mjs'
-      - 'tests/ground-perspective-browser.mjs'
-      - 'tests/character-camera-browser.mjs'
-      - 'tests/character-fog-layer-browser.mjs'
       - '.github/workflows/ui-fog-smoke.yml'
   workflow_dispatch:
 permissions:
@@ -38,7 +35,8 @@ jobs:
           node-version: '22'
       - name: Build scene catalog for actual game browser runtime
         # UI regression is independent of the separately verified L2D packaging.
-        # A missing CHAR-002 PSD must never prevent testing the phone/fog HUD.
+        # Camera and L2D occlusion are covered by the separately built
+        # shoulder-camera and character-fog-layer GitHub Actions workflows.
         run: |
           python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/build_scene_catalog.py
@@ -54,12 +52,6 @@ jobs:
         run: node tests/game-render-budget-browser.mjs
       - name: Verify shared-ground projection physics
         run: node tests/ground-perspective.test.mjs
-      - name: Test shared-ground calibration in actual game on desktop/mobile
-        run: node tests/ground-perspective-browser.mjs
-      - name: Verify true L2D stature + shoe-ground perspective on desktop/mobile
-        run: node tests/character-camera-browser.mjs
-      - name: Validate real L2D foreground occludes black fog and enemy stays behind
-        run: node tests/character-fog-layer-browser.mjs
       - name: Test approved cat-ear phone asset and interactivity on desktop/mobile
         run: node tests/phone-ui-browser.mjs
       - name: Test black fog silhouettes and UI lifecycle on desktop/mobile
@@ -82,29 +74,3 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-      - name: Upload character floor calibration browser screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ground-perspective-browser-screenshots
-          path: artifacts/ground/*.png
-          retention-days: 7
-          if-no-files-found: warn
-
-      - name: Upload corrected two-character camera comparison screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: physical-ground-perspective-camera
-          path: artifacts/perspective/*.png
-          retention-days: 7
-          if-no-files-found: warn
-
-      - name: Upload real scene foreground/fog compositor screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: character-fog-foreground-vs-enemy
-          path: artifacts/fog-layer/*.png
-          retention-days: 7
-          if-no-files-found: warn
