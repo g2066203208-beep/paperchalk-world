@@ -16,7 +16,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    ['char-004','char-004','女三'],
    ['female-06','female-06','女六'],
    ['female-06-outfit-02','female-06','女六'],
-   ['class-teacher-geography-candidate','class-teacher-geography-candidate','女老师'],
+   ['char-006','char-006','女五 · 女老师'],
    ['protagonist-sleepwear','protagonist','女主角'],
    ['char-003-outfit-02','char-003','男主角']
   ];
@@ -77,6 +77,11 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    }
    console.log('PASS actor tree',id,'=>',family,'import',audit.importTarget);
   }
+  // Old teacher URL must select the same CHAR-006, not create a second playable teacher.
+  await page.goto(BASE+'?character=class-teacher-geography-candidate&side=front',
+    {waitUntil:'load'});
+  await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-006',null,{timeout:35000});
+  assert.equal(await page.locator('.character-family[data-family="char-006"]').count(),1);
   // The universal action must trigger the actual PSD/ZIP file picker, not a
   // decoration or a disconnected button.
   const fileChooserPromise=page.waitForEvent('filechooser',{timeout:7000});
