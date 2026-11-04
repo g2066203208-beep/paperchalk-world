@@ -1271,43 +1271,94 @@ for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,e=>{
 window.addEventListener('paperchalk:studio-tool-changed',event=>{
  if(maskState.enabled&&event.detail?.tool!=='mask')setMaskMode(false);
 });
-// Only an explicitly enabled transform tool captures resize/move gestures.
-// The original PNG and the actual stored texture dimensions are never changed.
+// SELECT is itself the immediate transform tool. There is no modal
+// step or numeric input prerequisite: click painted pixels to select,
+// drag painted pixels to move, drag corners to size. A transparent wing
+// rectangle must NEVER intercept a different visible body/garment part.
+function hitPaintedPixel(layer,point){
+ if(!layer?.sourcePart||layer.visible===false||layer.opacity<=0)return false;
+ const rig=state.model?.parts[key(layer)];
+ if(!rig||rig.enabled===false)return false;
+ const uv=mapToSource(point,layer);
+ if(!uv)return false;
+ const x=Math.floor(uv.x-layer.x),y=Math.floor(uv.y-layer.y);
+ if(x<0||y<0||x>=layer.canvas.width||y>=layer.canvas.height)return false;
+ try{
+  return layer.canvas.getContext('2d',{willReadFrequently:true})
+   .getImageData(x,y,1,1).data[3]>=18;
+ }catch(_){return false;}
+}
+function paintedTopLayer(point){
+ const ordered=parts();
+ // Drawn Z order is preserved by the original source stack.
+ return ordered.slice().reverse().find(layer=>hitPaintedPixel(layer,point))||null;
+}
+const fitTouches=new Map();
+let fitPinch=null;
+function fitPinchStart(){
+ const v=[...fitTouches.values()];if(v.length!==2)return;
+ const a=v[0],b=v[1];
+ const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
+ fitPinch={distance:Math.hypot(a.x-b.x,a.y-b.y)||1,
+  midpoint:{x:cx,y:cy},zoom:S.zoom,px:S.px,py:S.py};
+ state.fitDrag=null;
+}
 stage.addEventListener('pointerdown',e=>{
  if(!state.fitMode||!state.active||S.tool!=='select'||e.target!==$('view')||
    (e.pointerType==='mouse'&&e.button!==0))return;
- const pos=loc(e),p=current();if(!p)return;
- const b=fitBounds(p),radius=17/Math.max(.2,S.zoom);
+ const pos=loc(e),p=current();
+ if(e.pointerType==='touch'){
+  fitTouches.set(e.pointerId,pos);
+  if(fitTouches.size>=2){
+   e.stopImmediatePropagation();e.preventDefault();
+   fitPinchStart();
+   stage.setPointerCapture(e.pointerId);
+   return;
+  }
+ }
+ if(!p)return;
+ const b=fitBounds(p),radius=16/Math.max(.2,S.zoom);
  let corner='';
  for(const [id,x,y] of [['tl',b.x,b.y],['tr',b.x+b.w,b.y],
   ['bl',b.x,b.y+b.h],['br',b.x+b.w,b.y+b.h]]){
   if(Math.hypot(pos.x-x,pos.y-y)<radius){corner=id;break;}
  }
- const inside=pos.x>=b.x&&pos.x<=b.x+b.w&&
-  pos.y>=b.y&&pos.y<=b.y+b.h;
- if(!corner&&(!inside||e.pointerType==='touch')){
-  if(e.pointerType!=='touch'){
-   for(const layer of parts().slice().reverse()){
-    const other=state.model.parts[key(layer)];if(!other)continue;
-    const rect=fitBounds(other);
-    if(pos.x>=rect.x&&pos.x<=rect.x+rect.w&&pos.y>=rect.y&&pos.y<=rect.y+rect.h){
-     e.stopImmediatePropagation();e.preventDefault();select(other.id);return;
-    }
-   }
+ if(!corner){
+  const top=paintedTopLayer(pos);
+  if(top&&key(top)!==p.id){
+   e.stopImmediatePropagation();e.preventDefault();
+   select(key(top));if(e.pointerType==='touch')fitTouches.delete(e.pointerId);
+   return;
   }
-  return;
+  if(!top)return; // Empty alpha area: let the existing canvas pan/select run.
  }
  e.stopImmediatePropagation();e.preventDefault();
+ if(state.playing)setPlaying(false); // edits use a stable unanimated viewport
  state.fitDrag={pointerId:e.pointerId,corner,id:p.id,start:pos,bounds:b,
-  old:{...p.placement}};
+  old:{...p.placement},moved:false};
  stage.setPointerCapture(e.pointerId);
 },true);
 stage.addEventListener('pointermove',e=>{
+ if(fitTouches.has(e.pointerId)){
+  fitTouches.set(e.pointerId,loc(e));
+  if(fitPinch&&fitTouches.size>=2){
+   e.stopImmediatePropagation();e.preventDefault();
+   const [a,b]=[...fitTouches.values()];
+   const distance=Math.hypot(a.x-b.x,a.y-b.y)||1;
+   const middle={x:(a.x+b.x)/2,y:(a.y+b.y)/2},base=fitPinch;
+   S.zoom=Math.max(.1,Math.min(20,base.zoom*distance/base.distance));
+   S.px=middle.x-(base.midpoint.x-base.px)*S.zoom/base.zoom;
+   S.py=middle.y-(base.midpoint.y-base.py)*S.zoom/base.zoom;
+   ed.render();return;
+  }
+ }
  const drag=state.fitDrag;
  if(!drag||drag.pointerId!==e.pointerId||!state.active)return;
  e.stopImmediatePropagation();e.preventDefault();
  const p=state.model?.parts[drag.id];if(!p)return;
  const pt=loc(e),dx=pt.x-drag.start.x,dy=pt.y-drag.start.y;
+ if(Math.hypot(dx,dy)<.7&&!drag.moved)return;
+ drag.moved=true;
  if(!drag.corner){
   p.placement.offsetX=fitClamp(drag.old.offsetX+dx,-1024,1024,drag.old.offsetX);
   p.placement.offsetY=fitClamp(drag.old.offsetY+dy,-1024,1024,drag.old.offsetY);
@@ -1335,10 +1386,34 @@ stage.addEventListener('pointermove',e=>{
  fitValues();changed(false);
 },true);
 for(const event of ['pointerup','pointercancel'])stage.addEventListener(event,e=>{
- if(!state.fitDrag||state.fitDrag.pointerId!==e.pointerId)return;
+ const wasTouch=fitTouches.delete(e.pointerId);
+ if(wasTouch&&fitPinch){
+  e.stopImmediatePropagation();e.preventDefault();
+  if(fitTouches.size<2)fitPinch=null;
+  state.fitDrag=null;
+  if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
+  return;
+ }
+ const drag=state.fitDrag;
+ if(!drag||drag.pointerId!==e.pointerId)return;
  e.stopImmediatePropagation();e.preventDefault();state.fitDrag=null;
  if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
- changed();
+ if(drag.moved&&event==='pointerup')changed();
+},true);
+// Cursor previews make every handle discoverable without opening settings.
+stage.addEventListener('pointermove',e=>{
+ if(!state.fitMode||!state.active||state.fitDrag||S.tool!=='select'||e.target!==$('view'))return;
+ const p=current(),pos=loc(e);
+ let cursor='crosshair';
+ if(p){
+  const b=fitBounds(p),r=14/Math.max(.2,S.zoom);
+  if(Math.hypot(pos.x-b.x,pos.y-b.y)<r||
+     Math.hypot(pos.x-(b.x+b.w),pos.y-(b.y+b.h))<r)cursor='nwse-resize';
+  else if(Math.hypot(pos.x-(b.x+b.w),pos.y-b.y)<r||
+          Math.hypot(pos.x-b.x,pos.y-(b.y+b.h))<r)cursor='nesw-resize';
+  else if(hitPaintedPixel(parts().find(x=>key(x)===p.id),pos))cursor='grab';
+ }
+ $('view').style.cursor=cursor;
 },true);
 window.addEventListener('keydown',e=>{
  if(!state.fitMode||!state.active||e.altKey||e.ctrlKey||e.metaKey||
