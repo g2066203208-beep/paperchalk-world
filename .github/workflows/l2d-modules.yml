@@ -158,7 +158,7 @@ jobs:
           PY
       - name: Verify crouch source pixel integrity, eye layers, exact grips and 25 real textures
         run: python3 -m unittest tests/test_protagonist_crouch_asset.py -v
-      - name: Verify true crouch: rigid axe + both grips, planted soles and waist-locked hem
+      - name: "Verify true crouch - rigid axe, dual grips, planted soles and waist-locked hem"
         run: node tests/test_protagonist_crouch_dynamics.cjs
       - name: Record real source layer bounds for fitted hem, planted feet and axe grip
         run: python3 scripts/qa_crouch_geometry.py
