@@ -5,13 +5,32 @@
  */
 (function(root){
 'use strict';
-const ACTIVE=new Map();
+const ACTIVE=new Map(),VERSIONS=new Map();
+const MODEL_CACHE=new Map(),TEXTURE_CACHE=new Map();
+const cacheStats={hits:0,misses:0,evictions:0};
+const nextVersion=slot=>{const n=(VERSIONS.get(slot)||0)+1;VERSIONS.set(slot,n);return n};
+function memo(cache,key,create,limit){
+ if(cache.has(key)){
+  const promise=cache.get(key);cache.delete(key);cache.set(key,promise);
+  cacheStats.hits++;return promise;
+ }
+ cacheStats.misses++;
+ const promise=Promise.resolve().then(create);
+ cache.set(key,promise);
+ promise.catch(()=>{if(cache.get(key)===promise)cache.delete(key)});
+ while(cache.size>limit){cache.delete(cache.keys().next().value);cacheStats.evictions++}
+ return promise;
+}
 const valid=(path)=>typeof path==='string'&&/^\.\/assets\/l2d\/library\/[a-z0-9_-]+\//.test(path);
 async function getJSON(url){
  if(!valid(url))throw Error('非法 L2D 绑定地址');
- const r=await fetch(url,{cache:'no-store'});
- if(!r.ok)throw Error('无法获取 L2D 绑定 '+r.status);
- return r.json();
+ const raw=await memo(MODEL_CACHE,url,async()=>{
+  const r=await fetch(url,{cache:'default'});
+  if(!r.ok)throw Error('无法获取 L2D 绑定 '+r.status);
+  return r.json();
+ },8);
+ // Never share mutable bones, animations and local masks across actors.
+ return JSON.parse(JSON.stringify(raw));
 }
 function imageData(uri){
  if(typeof uri!=='string'||!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(uri)||uri.length>14000000)
@@ -25,27 +44,30 @@ function imageData(uri){
 }
 function image(url){
  if(!valid(url))return Promise.reject(Error('非法 L2D 图层地址'));
- return new Promise((resolve,reject)=>{
+ return memo(TEXTURE_CACHE,url,()=>new Promise((resolve,reject)=>{
   const img=new Image();
   img.onload=()=>resolve(img);
   img.onerror=()=>reject(Error('无法解码原始 L2D 图层 '+url));
   img.src=url;
- });
+ }),24);
 }
-function stop(slot){
+function dispose(slot){
  const old=ACTIVE.get(slot);
  if(old){old.disposed=true;cancelAnimationFrame(old.frame||0);ACTIVE.delete(slot);}
  const actor=root.PaperchalkL2D?.get(slot);
  if(actor?.libraryPlayer===old)actor.libraryPlayer=null;
 }
+function stop(slot){nextVersion(slot);dispose(slot)}
 async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=null){
  if(!rigSpec?.url||!rigSpec?.textures)throw Error('模块缺少可播放的逐层 ArtMesh');
  if(!root.PaperchalkPartRigCore)throw Error('未加载独立部件网格渲染器');
+ const version=nextVersion(slot);
  // Prepare all assets BEFORE mutating the existing game actor.
  const [model,...imgs]=await Promise.all([
   getJSON(rigSpec.url),
   ...Object.values(rigSpec.textures).map(url=>image(url))
  ]);
+ if(VERSIONS.get(slot)!==version)return false;
  // Explicitly authorize ONLY the original heroine using her own
  // published 25-part rig model. Do not trust arbitrary cross-character aliases.
  const approvedOriginal=characterId==='protagonist'&&
@@ -135,6 +157,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    }
   }catch(e){console.warn('[L2D] 本机分层纹理校验失败，保留已发布素材',e);}
  }
+ if(VERSIONS.get(slot)!==version)return false;
  // Restore runtime-only bone ancestry AFTER published parts and local artwork
  // positions are finalized. Every drawn layer shares the same ground anchors.
  root.PaperchalkPartRigCore.bindBodyHierarchy(model);
@@ -151,10 +174,12 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  });
  const actor=root.PaperchalkL2D?.get(slot);
  if(!actor)throw Error('游戏缺少人物渲染槽 '+slot);
- stop(slot);
+ if(VERSIONS.get(slot)!==version)return false;
+ dispose(slot);
  await root.PaperchalkL2D.setAnimationSource(slot,null,{suspendFallback:true});
+ if(VERSIONS.get(slot)!==version)return false;
  actor.rig?.stop();
- const state={disposed:false,frame:0,actor,model,layers,slot,last:-1,phase:0,personalised};
+ const state={disposed:false,frame:0,actor,model,layers,slot,last:-1,phase:0,personalised,renderedFrames:0};
  const actionOptions=root.PaperchalkPartRigCore.actionNames?.(model)||[];
  const initialAction=model.actionProfiles?.default||actionOptions[0]?.id;
  if(initialAction)model.actionState={to:initialAction};
@@ -188,7 +213,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   }
   ctx.setTransform(1,0,0,1,0,0);
   actor.root.dataset.l2dFrame=String(Math.floor(t/50)%128);
-  state.last=t;
+  state.last=t;state.renderedFrames++;
  }
  state.frame=requestAnimationFrame(tick);
  return {id:characterId,face,parts:layers.length};
@@ -205,5 +230,12 @@ function setAction(slot,name){
 function getAction(slot){return ACTIVE.get(slot)?.model?.actionState?.to||null;}
 root.PaperchalkL2DLibrary={attach,detach:stop,setAction,getAction,
  actions:slot=>root.PaperchalkPartRigCore.actionNames?.(ACTIVE.get(slot)?.model)||[],
- get:slot=>ACTIVE.get(slot)||null};
+ get:slot=>ACTIVE.get(slot)||null,
+ inspect:slot=>{
+  const a=ACTIVE.get(slot);
+  return {slot,version:VERSIONS.get(slot)||0,active:!!a&&!a.disposed,
+   parts:a?.layers.length||0,renderedFrames:a?.renderedFrames||0,
+   source:a?.model.characterId||null,
+   textureCache:TEXTURE_CACHE.size,modelCache:MODEL_CACHE.size,...cacheStats};
+ }};
 })(typeof window!=='undefined'?window:globalThis);
