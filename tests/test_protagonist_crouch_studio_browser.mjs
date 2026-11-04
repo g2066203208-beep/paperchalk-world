@@ -73,6 +73,19 @@ try{
   assert.ok(data.actionTargets.includes('protagonist-crouch-axe'));
   assert.ok(data.actionNames.some(t=>t.includes('蹲下')));
   assert.ok(data.actionNames.some(t=>t.includes('战斗')));
+  if(cfg.name==='mobile'){
+   const frame=await page.evaluate(()=>{
+    const stage=document.getElementById('stage'),
+     dock=document.getElementById('easy-quickbar'),
+     art=window.characterEditor.S;
+    return {bottom:art.py+1024*art.zoom,
+      toolbarTop:dock.getBoundingClientRect().top-stage.getBoundingClientRect().top,
+      zoom:art.zoom,py:art.py};
+   });
+   assert.ok(frame.bottom<frame.toolbarTop-5,
+    'entire original crouch heroine including shoes must remain ABOVE mobile tool dock: '+
+      JSON.stringify(frame));
+  }
   assert.equal(data.seeThroughSource,'7fb38ce233b0c6a9f5674f190f3ac95c70bc3ed8c7ea574a27460b6e79312a1f');
   // Actual deformed 2D source meshes should paint, not merely be registered.
   const pixel=await page.evaluate(()=>{
