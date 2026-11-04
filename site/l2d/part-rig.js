@@ -39,6 +39,13 @@ const FRONT={
  footwear:['ground',.50,.84,.50,.84,'fixed'],
  handwear_r:['torso',.86,.07,.48,.92,'arm-right'],
  handwear_l:['torso',.17,.07,.48,.91,'arm-left'],
+ // New 2026-11-04 male-second authentic SeeThrough source:
+ handwear:['torso',.50,.05,.50,.88,'arm-combined'],
+ head:['head',.50,.52,.50,.52,'face'],
+ eyewhite:['head',.50,.50,.50,.50,'eyes-combined'],
+ irides:['eyewhite',.50,.50,.50,.50,'eyes-combined'],
+ eyelash:['eyewhite',.50,.50,.50,.50,'eyes-combined'],
+ eyebrow:['head',.50,.50,.50,.50,'face'],
  bottomwear:['pelvis',.50,.05,.50,.90,'skirt'],
  topwear:['torso',.50,.09,.50,.81,'torso'],
  eyebrow_l:['head',.50,.50,.50,.50,'face'],
@@ -814,7 +821,7 @@ const UNIFIED_FRONT_STACK=['rear_hair','sleeves_and_hands',
 const FACE_STACK=['rear_hair','sleeves_and_hands','legs','shoes','neck',
   'skirt','jacket','ears','face','eye_white','irises','lashes',
   'brows','front_hair','nose','mouth','hair_clip'];
-const FACE_MICRO=new Set(['face','head_reference','ears','brows','eyebrow','nose','mouth','hair_clip',
+const FACE_MICRO=new Set(['face','head','head_reference','ears','brows','eyebrow','nose','mouth','hair_clip',
   'eye_white','irises','lashes','eyewhite','irides','eyelash',
   'ears_r','ears_l','eyebrow_r','eyebrow_l',
   'eyewhite_r','eyewhite_l','irides_r','irides_l','eyelash_r','eyelash_l']);
