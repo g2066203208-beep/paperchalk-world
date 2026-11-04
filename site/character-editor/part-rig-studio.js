@@ -783,13 +783,17 @@ function drawPreview(ctx){
  const previewModel=state.visualIdle?
   {...state.model,idleProfile:state.visualIdle}:state.model;
  core.draw(ctx,parts(),previewModel,state.phase,state.showGuides?state.selected:'');
+ // A full alpha-mask collision scan involves large RGBA buffers. Run it
+ // only during mask authoring; never on every idle frame of the heroine.
  const trouble=$('rig-mask-conflict');
  if(trouble){
-  const issue=core.occlusionDiagnostics?.(parts(),previewModel)
-   .find(row=>row.source===state.selected&&row.conflicts>0);
-  trouble.hidden=!issue;
-  if(issue)trouble.textContent='⚠ '+issue.conflicts+
-   ' 个像素的前后关系冲突；擦除重叠区域即可修复';
+  if(maskState.enabled){
+   const issue=core.occlusionDiagnostics?.(parts(),previewModel)
+    .find(row=>row.source===state.selected&&row.conflicts>0);
+   trouble.hidden=!issue;
+   if(issue)trouble.textContent='⚠ '+issue.conflicts+
+    ' 个像素的前后关系冲突；擦除重叠区域即可修复';
+  }else trouble.hidden=true;
  }
  // Editor-only translucent cyan preview. Shows exactly which source pixels
  // become foreground, while the game sees only the natural original colors.
@@ -1054,7 +1058,10 @@ for(const event of ['pointerup','pointercancel'])stage.addEventListener(event,e=
  e.stopImmediatePropagation();state.drag=null;
  if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
 },true);
-let last=0,lastDraw=0;
+// The independent mesh editor owns the ONLY live animation redraw loop.
+// Cap refresh rate to the actual browser budget; do not flood the main thread
+// with overlapping mesh renders on devices with slow Canvas2D triangle clips.
+let last=0,lastDraw=0,renderCost=0;
 function tick(now){
  if(state.active&&S.ready&&!document.hidden&&window.PaperchalkStageMotion?.state?.enabled!==false){
   if(!last)last=now;
@@ -1062,7 +1069,19 @@ function tick(now){
   if(state.playing)state.phase+=dt*2*Math.PI/3.6;
   state.visualIdle=core.approachIdle(state.visualIdle,state.model.idleProfile,dt);
   last=now;
-  if(now-lastDraw>32){lastDraw=now;ed.render();}
+  const mobile=window.innerWidth<=710;
+  const baseBudget=mobile?50:33;
+  const budget=Math.max(baseBudget,
+   renderCost>47?75:renderCost>29?50:baseBudget);
+  if(now-lastDraw>=budget){
+   const start=performance.now();
+   lastDraw=now;
+   ed.render();
+   const sample=performance.now()-start;
+   renderCost=renderCost?renderCost*.8+sample*.2:sample;
+   state.previewRenderMs=Math.round(renderCost*10)/10;
+   state.previewFrameBudgetMs=budget;
+  }
  }else last=0;
  requestAnimationFrame(tick);
 }
