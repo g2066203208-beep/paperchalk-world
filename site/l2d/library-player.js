@@ -126,6 +126,11 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  await root.PaperchalkL2D.setAnimationSource(slot,null,{suspendFallback:true});
  actor.rig?.stop();
  const state={disposed:false,frame:0,actor,model,layers,slot,last:-1,phase:0,personalised};
+ const actionOptions=root.PaperchalkPartRigCore.actionNames?.(model)||[];
+ const initialAction=model.actionProfiles?.default||actionOptions[0]?.id;
+ if(initialAction)model.actionState={to:initialAction};
+ if(initialAction)actor.root.dataset.l2dAction=initialAction;
+ else delete actor.root.dataset.l2dAction;
  ACTIVE.set(slot,state);actor.libraryPlayer=state;
  actor.root.dataset.l2dMode='library-part-mesh';
  actor.root.dataset.l2dEdition=personalised?'locally-edited-part-mesh':'published-part-mesh';
@@ -159,5 +164,17 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  state.frame=requestAnimationFrame(tick);
  return {id:characterId,face,parts:layers.length};
 }
-root.PaperchalkL2DLibrary={attach,detach:stop,get:slot=>ACTIVE.get(slot)||null};
+// Change only targeted PART transforms/visibility in the already loaded
+// ArtMesh actor. Never detach the actor, re-decode PSD, or restart its phase.
+function setAction(slot,name){
+ const state=ACTIVE.get(slot);
+ if(!state||state.disposed)return false;
+ if(!root.PaperchalkPartRigCore.setAction(state.model,name))return false;
+ state.actor.root.dataset.l2dAction=name;
+ return true;
+}
+function getAction(slot){return ACTIVE.get(slot)?.model?.actionState?.to||null;}
+root.PaperchalkL2DLibrary={attach,detach:stop,setAction,getAction,
+ actions:slot=>root.PaperchalkPartRigCore.actionNames?.(ACTIVE.get(slot)?.model)||[],
+ get:slot=>ACTIVE.get(slot)||null};
 })(typeof window!=='undefined'?window:globalThis);
