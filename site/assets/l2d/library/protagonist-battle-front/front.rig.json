@@ -99,68 +99,6 @@
       },
       "enabled": true
     },
-    "axe_overhead": {
-      "id": "axe_overhead",
-      "name": "上方斧头（原稿重复，默认隐藏）",
-      "x": 55,
-      "y": 43,
-      "w": 940,
-      "h": 134,
-      "parentId": "root",
-      "kind": "fixed",
-      "pivot": {
-        "x": 0.5,
-        "y": 0.08
-      },
-      "tip": {
-        "x": 0.5,
-        "y": 0.86
-      },
-      "mesh": {
-        "columns": 5,
-        "rows": 7
-      },
-      "bones": [],
-      "motion": {
-        "x": 0,
-        "y": 0,
-        "angle": 0,
-        "frequency": 1,
-        "phase": 0
-      },
-      "enabled": false
-    },
-    "axe_held": {
-      "id": "axe_held",
-      "name": "手持斧头",
-      "x": 88,
-      "y": 199,
-      "w": 902,
-      "h": 367,
-      "parentId": "handwear_l",
-      "kind": "fixed",
-      "pivot": {
-        "x": 0.5,
-        "y": 0.08
-      },
-      "tip": {
-        "x": 0.5,
-        "y": 0.86
-      },
-      "mesh": {
-        "columns": 5,
-        "rows": 7
-      },
-      "bones": [],
-      "motion": {
-        "x": 0,
-        "y": 0,
-        "angle": 0,
-        "frequency": 1,
-        "phase": 0
-      },
-      "enabled": true
-    },
     "legwear": {
       "id": "legwear",
       "name": "双腿",
@@ -223,15 +161,15 @@
       },
       "enabled": true
     },
-    "handwear_r": {
-      "id": "handwear_r",
-      "name": "画面左侧手臂与手",
-      "x": 317,
-      "y": 233,
-      "w": 133,
-      "h": 237,
-      "parentId": "torso",
-      "kind": "arm-left",
+    "axe_overhead": {
+      "id": "axe_overhead",
+      "name": "上方斧头（原稿重复，默认隐藏）",
+      "x": 55,
+      "y": 43,
+      "w": 940,
+      "h": 134,
+      "parentId": "root",
+      "kind": "fixed",
       "pivot": {
         "x": 0.5,
         "y": 0.08
@@ -244,25 +182,7 @@
         "columns": 5,
         "rows": 7
       },
-      "bones": [
-        {
-          "id": "main-root",
-          "parent": null,
-          "head": {
-            "x": 0.5,
-            "y": 0.1
-          },
-          "tail": {
-            "x": 0.5,
-            "y": 0.72
-          },
-          "amplitude": 0,
-          "frequency": 1,
-          "phase": 0,
-          "radius": 0.4,
-          "enabled": true
-        }
-      ],
+      "bones": [],
       "motion": {
         "x": 0,
         "y": 0,
@@ -270,7 +190,7 @@
         "frequency": 1,
         "phase": 0
       },
-      "enabled": true
+      "enabled": false
     },
     "bottomwear": {
       "id": "bottomwear",
@@ -359,7 +279,7 @@
       "y": 192,
       "w": 217,
       "h": 343,
-      "parentId": "head",
+      "parentId": "torso",
       "kind": "torso",
       "pivot": {
         "x": 0.5,
@@ -401,15 +321,15 @@
       },
       "enabled": true
     },
-    "eyebrow_l": {
-      "id": "eyebrow_l",
-      "name": "左眉",
-      "x": 523,
-      "y": 118,
-      "w": 36,
-      "h": 6,
-      "parentId": "head",
-      "kind": "face",
+    "axe_held": {
+      "id": "axe_held",
+      "name": "手持斧头",
+      "x": 88,
+      "y": 199,
+      "w": 902,
+      "h": 367,
+      "parentId": "handwear_l",
+      "kind": "fixed",
       "pivot": {
         "x": 0.5,
         "y": 0.08
@@ -432,49 +352,18 @@
       },
       "enabled": true
     },
-    "eyebrow_r": {
-      "id": "eyebrow_r",
-      "name": "右眉",
-      "x": 468,
-      "y": 118,
-      "w": 34,
-      "h": 6,
-      "parentId": "head",
-      "kind": "face",
-      "pivot": {
-        "x": 0.5,
-        "y": 0.08
-      },
-      "tip": {
-        "x": 0.5,
-        "y": 0.86
-      },
-      "mesh": {
-        "columns": 5,
-        "rows": 7
-      },
-      "bones": [],
-      "motion": {
-        "x": 0,
-        "y": 0,
-        "angle": 0,
-        "frequency": 1,
-        "phase": 0
-      },
-      "enabled": true
-    },
-    "handwear_l": {
-      "id": "handwear_l",
-      "name": "画面右侧手臂与手",
-      "x": 576,
-      "y": 237,
-      "w": 151,
-      "h": 192,
+    "handwear_r": {
+      "id": "handwear_r",
+      "name": "画面左侧手臂与手",
+      "x": 317,
+      "y": 233,
+      "w": 133,
+      "h": 237,
       "parentId": "torso",
-      "kind": "arm-right",
+      "kind": "arm-left",
       "pivot": {
-        "x": 0.5,
-        "y": 0.08
+        "x": 0.86,
+        "y": 0.07
       },
       "tip": {
         "x": 0.5,
@@ -512,18 +401,18 @@
       },
       "enabled": true
     },
-    "face": {
-      "id": "face",
-      "name": "脸",
-      "x": 451,
-      "y": 46,
-      "w": 119,
-      "h": 157,
-      "parentId": "head",
-      "kind": "face",
+    "handwear_l": {
+      "id": "handwear_l",
+      "name": "画面右侧手臂与手",
+      "x": 576,
+      "y": 237,
+      "w": 151,
+      "h": 192,
+      "parentId": "torso",
+      "kind": "arm-right",
       "pivot": {
-        "x": 0.5,
-        "y": 0.08
+        "x": 0.17,
+        "y": 0.07
       },
       "tip": {
         "x": 0.5,
@@ -533,38 +422,25 @@
         "columns": 5,
         "rows": 7
       },
-      "bones": [],
-      "motion": {
-        "x": 0,
-        "y": 0,
-        "angle": 0,
-        "frequency": 1,
-        "phase": 0
-      },
-      "enabled": true
-    },
-    "mouth": {
-      "id": "mouth",
-      "name": "嘴",
-      "x": 509,
-      "y": 178,
-      "w": 10,
-      "h": 5,
-      "parentId": "head",
-      "kind": "mouth",
-      "pivot": {
-        "x": 0.5,
-        "y": 0.08
-      },
-      "tip": {
-        "x": 0.5,
-        "y": 0.86
-      },
-      "mesh": {
-        "columns": 5,
-        "rows": 7
-      },
-      "bones": [],
+      "bones": [
+        {
+          "id": "main-root",
+          "parent": null,
+          "head": {
+            "x": 0.5,
+            "y": 0.1
+          },
+          "tail": {
+            "x": 0.5,
+            "y": 0.72
+          },
+          "amplitude": 0,
+          "frequency": 1,
+          "phase": 0,
+          "radius": 0.4,
+          "enabled": true
+        }
+      ],
       "motion": {
         "x": 0,
         "y": 0,
@@ -636,46 +512,15 @@
       },
       "enabled": true
     },
-    "headwear": {
-      "id": "headwear",
-      "name": "发饰",
-      "x": 558,
-      "y": 96,
-      "w": 18,
-      "h": 25,
+    "face": {
+      "id": "face",
+      "name": "脸",
+      "x": 451,
+      "y": 46,
+      "w": 119,
+      "h": 157,
       "parentId": "head",
-      "kind": "fixed",
-      "pivot": {
-        "x": 0.5,
-        "y": 0.08
-      },
-      "tip": {
-        "x": 0.5,
-        "y": 0.86
-      },
-      "mesh": {
-        "columns": 5,
-        "rows": 7
-      },
-      "bones": [],
-      "motion": {
-        "x": 0,
-        "y": 0,
-        "angle": 0,
-        "frequency": 1,
-        "phase": 0
-      },
-      "enabled": true
-    },
-    "eyelash_r": {
-      "id": "eyelash_r",
-      "name": "右睫毛",
-      "x": 463,
-      "y": 133,
-      "w": 38,
-      "h": 18,
-      "parentId": "head",
-      "kind": "eyes-combined",
+      "kind": "face",
       "pivot": {
         "x": 0.5,
         "y": 0.08
@@ -736,37 +581,6 @@
       "y": 129,
       "w": 31,
       "h": 17,
-      "parentId": "head",
-      "kind": "eyes-combined",
-      "pivot": {
-        "x": 0.5,
-        "y": 0.08
-      },
-      "tip": {
-        "x": 0.5,
-        "y": 0.86
-      },
-      "mesh": {
-        "columns": 5,
-        "rows": 7
-      },
-      "bones": [],
-      "motion": {
-        "x": 0,
-        "y": 0,
-        "angle": 0,
-        "frequency": 1,
-        "phase": 0
-      },
-      "enabled": true
-    },
-    "eyelash_l": {
-      "id": "eyelash_l",
-      "name": "左睫毛",
-      "x": 523,
-      "y": 127,
-      "w": 36,
-      "h": 20,
       "parentId": "head",
       "kind": "eyes-combined",
       "pivot": {
@@ -853,6 +667,161 @@
       },
       "enabled": true
     },
+    "eyelash_r": {
+      "id": "eyelash_r",
+      "name": "右睫毛",
+      "x": 463,
+      "y": 133,
+      "w": 38,
+      "h": 18,
+      "parentId": "head",
+      "kind": "eyes-combined",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.08
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "eyelash_l": {
+      "id": "eyelash_l",
+      "name": "左睫毛",
+      "x": 523,
+      "y": 127,
+      "w": 36,
+      "h": 20,
+      "parentId": "head",
+      "kind": "eyes-combined",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.08
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "eyebrow_r": {
+      "id": "eyebrow_r",
+      "name": "右眉",
+      "x": 468,
+      "y": 118,
+      "w": 34,
+      "h": 6,
+      "parentId": "head",
+      "kind": "face",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.08
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "eyebrow_l": {
+      "id": "eyebrow_l",
+      "name": "左眉",
+      "x": 523,
+      "y": 118,
+      "w": 36,
+      "h": 6,
+      "parentId": "head",
+      "kind": "face",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.08
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "mouth": {
+      "id": "mouth",
+      "name": "嘴",
+      "x": 509,
+      "y": 178,
+      "w": 10,
+      "h": 5,
+      "parentId": "head",
+      "kind": "mouth",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.08
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
     "front_hair": {
       "id": "front_hair",
       "name": "刘海与前发",
@@ -901,6 +870,78 @@
         "phase": 0
       },
       "enabled": true
+    },
+    "headwear": {
+      "id": "headwear",
+      "name": "发饰",
+      "x": 558,
+      "y": 96,
+      "w": 18,
+      "h": 25,
+      "parentId": "head",
+      "kind": "fixed",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.08
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
     }
-  }
+  },
+  "actionProfiles": {
+    "default": "combat",
+    "transitionMs": 420,
+    "actions": {
+      "idle": {
+        "label": "日常待机 · 共用身体",
+        "parts": {
+          "handwear_r": {
+            "angle": -12
+          },
+          "handwear_l": {
+            "angle": 12
+          },
+          "axe_held": {
+            "opacity": 0
+          },
+          "axe_overhead": {
+            "opacity": 0
+          }
+        }
+      },
+      "combat": {
+        "label": "战斗戒备 · 手臂与斧头",
+        "parts": {
+          "handwear_r": {
+            "angle": 0
+          },
+          "handwear_l": {
+            "angle": 0
+          },
+          "axe_held": {
+            "opacity": 1
+          },
+          "axe_overhead": {
+            "opacity": 0
+          }
+        }
+      }
+    }
+  },
+  "characterFamilyId": "protagonist"
 }
