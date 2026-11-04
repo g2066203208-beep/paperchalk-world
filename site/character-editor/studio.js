@@ -240,6 +240,10 @@ body.studio-page .character-family>summary{font-size:13px;min-height:39px;paddin
 body.studio-page .character-family-children{padding:5px 8px;gap:3px}
 body.studio-page .character-family-children button{font-size:12px;min-height:35px;padding:7px 9px}
 body.studio-page .character-family-children small{display:none!important}
+body.studio-page .character-family-children .male2-direct-import{
+ background:#205049;border:1px solid #3e947d;color:#e2fff3;font-weight:650;
+ min-height:40px;font-size:12px
+}
 body.studio-page #easy-layer-guide,
 body.studio-page #studio-character-tree .character-tree-legend{display:none!important}
 body.studio-page #easy-selection{padding:4px 7px!important;margin:0 0 5px!important;font-size:11px;min-height:23px}
@@ -295,6 +299,22 @@ function renderFamilyTree(){
   group.append(summary);
   group.addEventListener('toggle',()=>{if(group.open)openedFamilies.add(family);else openedFamilies.delete(family)});
   const children=document.createElement('div');children.className='character-family-children';
+  if(family==='male2'){
+   const button=document.createElement('button');
+   button.type='button';button.className='male2-direct-import';
+   button.textContent='＋ 导入男二 SeeThrough ZIP';
+   const uploader=document.createElement('input');
+   uploader.type='file';uploader.accept='.zip,application/zip';uploader.hidden=true;
+   uploader.onchange=e=>{
+    const file=e.target.files?.[0];e.target.value='';
+    if(!file)return;
+    const importNow=()=>importComponentArchive(file).catch(error=>message('男二拆分导入失败：'+error.message));
+    if(currentId==='male2'&&side==='front')importNow();
+    else change('male2','front').then(importNow).catch(error=>message(error.message));
+   };
+   button.onclick=e=>{e.stopPropagation();uploader.click()};
+   children.append(button,uploader);
+  }
   const base=document.createElement('button');base.type='button';
   base.textContent='基础全身模型 · 正面';base.className=currentId===primary.id?'active':'';
   base.onclick=()=>change(primary.id,'front').catch(e=>message(e.message));
