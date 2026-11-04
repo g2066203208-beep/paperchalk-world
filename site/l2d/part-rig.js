@@ -1031,7 +1031,11 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  const dx=part.tip.x-part.pivot.x,dy=part.tip.y-part.pivot.y;
  const den=Math.max(.0001,dx*dx+dy*dy);
  const along=((u-part.pivot.x)*dx+(v-part.pivot.y)*dy)/den;
- const weight=smooth(along);
+ // Pelvis is the complete owner of a shirt/torso waist seam:
+ // no separate cloth translation, rotation or bone motion at the waistband.
+ const hemLock=part._bodyHierarchy?.legsId==='legwear'&&part.kind==='torso'?
+  1-smooth((v-.69)/.19):1;
+ const weight=smooth(along)*hemLock;
  const group=idle?.[idleGroup(part)];
  const partStrength=idle?clamp(finite(idle.parts?.[part.id],1),0,20):1;
  const scale=group?group.amount*partStrength:1;
