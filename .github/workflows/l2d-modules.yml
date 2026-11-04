@@ -434,13 +434,14 @@ jobs:
             await page.locator('[data-quick="fringe"]').fill('65');
             await page.locator('[data-quick="skirt"]').fill('150');
             await page.locator('[data-quick="speed"]').fill('140');
-            await page.locator('#rig-quick-save').click();
+            await page.locator('#btnSave').click();
             await page.waitForFunction(async()=>{
               const m=await window.PaperchalkStudio.readPartRig('qa-rig','front');
               return m?.idleProfile?.parts?.hair===.65&&
                 m?.idleProfile?.parts?.skirt===1.5&&m.idleProfile.hair.speed===1.4;
             },null,{timeout:15000});
-            await page.locator('#idle-open').click();
+            assert.equal(await page.locator('#idle-open').isVisible(),false);
+            await page.locator('#rig-file-actions summary').click();
             assert.equal(await page.locator('#rig-module-export').count(),1);
             page.once('dialog',dialog=>dialog.accept('qa-export'));
             const zipDownload=page.waitForEvent('download',{timeout:20000});
@@ -448,7 +449,7 @@ jobs:
             const downloaded=await zipDownload;
             assert.equal(downloaded.suggestedFilename(),'qa-export.zip');
             await downloaded.saveAs('/tmp/qa-export.zip');
-            await page.locator('#rig-close').click();
+            assert.equal(await page.locator('#part-rig-panel').isVisible(),true);
             await page.goto('http://127.0.0.1:8132/?dev=1',{waitUntil:'load'});
             await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:30000});
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','qa-rig','front'));
