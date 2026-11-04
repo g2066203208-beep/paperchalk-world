@@ -55,11 +55,14 @@ if(fs.existsSync(folder)){
   for(const [u,v] of [[.1,.1],[.5,.1],[.85,.45],[.25,.9],[.75,.95]]){
    const at=core.placedRestPoint(shorts,{x:shorts.x+u*shorts.w,y:shorts.y+v*shorts.h});
    const pant=core.warpPoint(shorts,u,v,phase,null,idle);
-   const body=core.warpPoint(legs,(at.x-legs.x)/legs.w,(at.y-legs.y)/legs.h,
-    phase,null,idle);
+   const pose=core.humanPoseAt(shorts,phase,idle);
+   const body=v<=.42?core.hipPoint(at,pose):
+    v>=.84?core.parentPoint(legs,at,phase,idle):
+    core.garmentPoint(shorts,at,pose);
    assert.ok(Math.hypot(pant.x-body.x,pant.y-body.y)<.025,
-    'fitted pants must never detach from source legs under 2D IK');
+    'shorts top MUST follow pelvis; hem follows legs while resizing');
+   assert.equal(shorts.parentId,'pelvis');
   }
  }
- console.log('PASS female-six shorts width/height reposition still follows original legs across 150 dynamic samples');
+ console.log('PASS female-six clothing width/height reposition uses stable pelvis waist and separately weighted thigh hems across 150 samples');
 }
