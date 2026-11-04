@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "recordCode": "CHAR-006",
   "canonicalId": "char-006",
-  "recordState": "candidate_psd_processed_source_media_pending_publication",
+  "recordState": "confirmed_female_five_is_teacher_base_front_l2d",
   "readableDocument": "docs/l2d/CHAR006_CHAR020_PSD_IMPORT_AUDIT_20261104.md",
   "sourcePriority": [
     "user_confirmed",
@@ -17,18 +17,18 @@
     "identity": {
       "recordCode": {
         "value": "CHAR-006",
-        "status": "proposed",
-        "source": "2026-11-04新建女五候选档案"
+        "status": "user_confirmed",
+        "source": "2026-11-04 用户确认女五就是女老师"
       },
       "canonicalId": {
         "value": "char-006",
-        "status": "proposed",
-        "source": "2026-11-04女五预留独立人物ID"
+        "status": "user_confirmed",
+        "source": "2026-11-04 用户确认统一角色ID"
       },
       "displayName": {
-        "value": "女五（新 PSD 待正式验收）",
-        "status": "proposed",
-        "source": "2026-11-04用户要求女五接入 L2D"
+        "value": "女五／女老师",
+        "status": "user_confirmed",
+        "source": "2026-11-04 用户确认女五就是女老师"
       },
       "legalName": {
         "value": null,
@@ -71,8 +71,9 @@
         "status": "unknown"
       },
       "occupation": {
-        "value": null,
-        "status": "unknown"
+        "value": "教师（具体科目和职位未确认）",
+        "status": "user_confirmed",
+        "source": "2026-11-04 用户称女老师"
       },
       "schoolYear": {
         "value": null,
@@ -84,9 +85,9 @@
         "source": "2026-11-04用户称女五"
       },
       "designStatus": {
-        "value": "PSD 已在本轮制作候选 L2D 包，正式图像身份与上线仍未验收",
+        "value": "用户提供原始15层PSD；已在当前会话提取17个独立可播放部件的正面模块，GitHub在线角色入口复用已发布的女老师真实拆分；新PSD的独立char-006.zip仍需二进制发布",
         "status": "proposed",
-        "source": "2026-11-04 SeeThrough PSD 本地制作检查"
+        "source": "2026-11-04 PSD解析和GitHub仓库核对"
       }
     },
     "family": {
@@ -1858,12 +1859,12 @@
   },
   "recordVersion": "0.1",
   "updatedAt": "2026-11-04",
-  "sourceNotes": "用户提出女五; 本轮有一份 SeeThrough 翅膀女性 PSD 候选，但没有正式认定的角色设计、年龄或裸体出镜设定。GitHub 尚未取得二进制源素材，不得当作已发布 L2D。",
+  "sourceNotes": "用户明确确认女五就是此前女老师；不另建老师身份。原件SeeThrough-09c07882ba7c.psd，1024×1024，15个真实分层；本轮生成17个局部RGBA部件和char-006.zip。本地完成≠二进制包已发布到GitHub；现GitHub托管版以旧女老师真实分层作为女五基础（严格sourceCharacterId别名）。",
   "fieldCount": 448,
   "statusSummary": {
-    "proposed": 4,
-    "unknown": 443,
-    "user_confirmed": 1
+    "user_confirmed": 5,
+    "unknown": 442,
+    "proposed": 1
   },
   "extensions": {
     "extensionSchema": "docs/characters/ANGEL_TRANSACTION_SAN_EXTENSION_V1.json",
@@ -2142,5 +2143,17 @@
         }
       }
     }
+  },
+  "mediaSource": {
+    "originalFile": "SeeThrough-09c07882ba7c.psd",
+    "sha256": "1938264e92927c17e3a6c341326418279b6e20ed8cade7f6fdcd56f2065a78bb",
+    "psdLayers": 15,
+    "exportedArtMeshes": 17,
+    "views": [
+      "front"
+    ],
+    "localPackage": "char-006.zip",
+    "onlineBackedByExistingModule": "class-teacher-geography-candidate",
+    "newZipPublished": false
   }
 }
