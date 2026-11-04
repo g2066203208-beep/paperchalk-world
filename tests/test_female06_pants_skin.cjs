@@ -11,7 +11,7 @@ const outfit=path.join(__dirname,'../site/assets/l2d/library/female-06-outfit-02
 const r=JSON.parse(fs.readFileSync(path.join(base,'front.rig.json'),'utf8'));
 const o=JSON.parse(fs.readFileSync(path.join(outfit,'front.rig.json'),'utf8'));
 assert.equal(r.parts.pants_overlay.kind,'pants-bound');
-assert.deepEqual(r.parts.pants_overlay.placement,{scaleX:.92,scaleY:.8,offsetX:-7,offsetY:-12});
+assert.deepEqual(r.parts.pants_overlay.placement,{scaleX:1.2,scaleY:1,offsetX:-15,offsetY:-17});
 assert.equal(r.parts.pants_overlay.parentId,'legwear');
 assert.deepEqual(r.parts.pants_overlay.skinBinding.target,'legwear');
 assert.equal(r.parts.pants_overlay.bones.length,0,
