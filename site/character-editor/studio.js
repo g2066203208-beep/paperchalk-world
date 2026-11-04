@@ -164,6 +164,10 @@ workspaceCSS.textContent=`
  body.studio-page{--studio-pane-border:#3b5367}
  body.studio-page .layout{gap:10px}
  body.studio-page .left,body.studio-page .right{scrollbar-width:thin;scrollbar-color:#415c70 transparent}
+ @media(min-width:711px){
+  body.studio-page #studio-character-tree{max-height:200px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  body.studio-page .left .layerlist{max-height:52dvh;overflow-y:auto;scrollbar-width:thin}
+ }
  body.studio-page .stage{box-shadow:0 7px 24px #0004;border-color:#3b5568}
  body.studio-page .stage-toolbar{
   top:8px;right:8px;left:auto;width:156px;max-width:156px;
@@ -194,7 +198,7 @@ workspaceCSS.textContent=`
   body.studio-page .layout{gap:5px;padding:5px;overflow:visible!important}
   body.studio-page .stage,body.studio-page.easy-mode .stage,body.studio-page.rig-authoring .stage{
    order:0!important;position:sticky!important;top:var(--studio-header-height,60px)!important;
-   height:40dvh!important;min-height:245px!important;max-height:420px!important;
+   height:48dvh!important;min-height:345px!important;max-height:460px!important;
    z-index:9;border-radius:9px
   }
   body.studio-page .left,body.studio-page .right{order:1!important;min-height:160px!important}
