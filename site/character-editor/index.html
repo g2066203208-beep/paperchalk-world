@@ -63,7 +63,7 @@ body.embedded #btnCloseInGame{background:#273244}
 <div class="layout">
 <aside class="left">
 <section><h3>人物方向</h3><div class="row"><button id="frontTab" class="active">正面</button><button id="backTab">背面</button></div><p class="tip">当前人物及方向来自上方全人物列表。PSD/分层 ZIP 导入后保留原图层坐标，真实分层用于动态预览和逐件精修；新版 L2D 是唯一动画编辑模式。</p></section>
-<section><h3>图层</h3><div class="row"><input id="partSearch" type="search" placeholder="搜索头发 / 眼睛 / 外套 / 任意部件" aria-label="筛选人物部件" style="flex:1;min-width:100px"><button id="focusCurrent" type="button">定位</button><button id="clearPartSelection" type="button">取消选择</button></div><div id="layers" class="layerlist"></div><div class="row" style="margin-top:7px"><button id="add">＋ 新修补层</button><button id="dup">复制</button><button id="del">删除</button></div><div class="row" style="margin-top:6px"><button id="up">前移 ▲</button><button id="down">后移 ▼</button><button id="rename">重命名</button></div></section>
+<section><h3>图层</h3><div class="row"><input id="partSearch" type="search" placeholder="搜索头发 / 眼睛 / 外套 / 任意部件" aria-label="筛选人物部件" style="flex:1;min-width:100px"><button id="focusCurrent" type="button">定位</button><button id="clearPartSelection" type="button">取消选择</button></div><div id="layers" class="layerlist"></div><div class="row" style="margin-top:7px"><button id="add">＋ 新修补层</button><button id="dup">复制</button><button id="del" title="删除选中的图层，包括独立 L2D 部件">删除所选</button></div><div class="row" style="margin-top:6px"><button id="up">前移 ▲</button><button id="down">后移 ▼</button><button id="rename">重命名</button></div></section>
 <section><h3>导入你的素材</h3><div class="stack"><label class="tip">导入 PNG / WebP 到当前视角<input id="imgImport" type="file" accept="image/png,image/webp,image/jpeg" multiple></label><label class="tip">直接导入 Photoshop PSD（需要联网加载解析库）<input id="psdImport" type="file" accept=".psd,image/vnd.adobe.photoshop"></label><label class="tip">导入原位分层 ZIP（全部部件）<input id="zipImport" type="file" accept=".zip,application/zip"></label></div></section>
 </aside>
 <main class="stage" id="stage"><canvas id="view"></canvas><div class="stage-toolbar" role="toolbar" aria-label="大画布动画控制"><span id="main-motion-status" role="status">动画加载中…</span><button id="main-play" type="button" aria-pressed="false" title="播放或暂停主画布动画 · P">❚❚ 暂停</button><button id="main-preview" type="button" aria-pressed="true" title="在动画预览与原始像素精修之间切换">◇ 静态精修</button><button id="main-expand" type="button" aria-pressed="false" title="放大主画布 · Escape 退出">⛶ 放大画布</button></div><div class="hud" id="hud">准备中…</div><div class="hudbottom">笔刷绘画 · 两指缩放/平移 · 滚轮缩放 · 空格拖动 · 支持矩形/套索选区剪出新图层</div></main>
@@ -141,7 +141,12 @@ function renderList(){
   down.onclick=e=>{e.stopPropagation();moveLayer(i,i-1)};
   const lock=document.createElement('button');lock.textContent=p.locked?'🔒':'🔓';lock.title='锁定/解锁';
   lock.onclick=e=>{e.stopPropagation();p.locked=!p.locked;renderList();autosave()};
-  row.append(eye,name,up,down,lock);
+  const remove=document.createElement('button');
+  remove.type='button';remove.className='layer-delete';
+  remove.textContent='×';remove.title='删除此图层（原始 PSD 备份不受影响）';
+  remove.setAttribute('aria-label','删除图层 '+p.name);
+  remove.onclick=e=>{e.stopPropagation();removeLayer(i)};
+  row.append(eye,name,up,down,lock,remove);
   row.onclick=()=>{S.sel=i;window.PaperchalkPartRigStudio?.select?.(String(p.partId||p.name));renderList();syncOpacity();render()};
   row.ondragstart=e=>{draggedLayerIndex=i;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(i));row.classList.add('dragging')};
   row.ondragend=()=>{draggedLayerIndex=-1;row.classList.remove('dragging')};
@@ -195,7 +200,7 @@ else if(movingFrame){ctx.drawImage(movingFrame,0,0,W,H)}else{
  }if(S.grid&&S.zoom>=5){ctx.strokeStyle='#ffffff25';ctx.lineWidth=1/S.zoom;ctx.beginPath();for(let i=0;i<=W;i++){ctx.moveTo(i,0);ctx.lineTo(i,H)}for(let i=0;i<=H;i++){ctx.moveTo(0,i);ctx.lineTo(W,i)}ctx.stroke()}if(S.selection){let a=S.selection;ctx.strokeStyle='#fff';ctx.lineWidth=1.4/S.zoom;ctx.setLineDash([7/S.zoom,4/S.zoom]);ctx.beginPath();if(a.type==='rect'){ctx.rect(a.x,a.y,a.w,a.h)}else if(a.points?.length){ctx.moveTo(a.points[0].x,a.points[0].y);for(const p of a.points.slice(1))ctx.lineTo(p.x,p.y);if(a.done)ctx.closePath()}ctx.stroke();ctx.setLineDash([])}ctx.restore();const p=current();$('hud').textContent=(S.side==='front'?'正面':'背面')+' · '+Math.round(S.zoom*100)+'% · '+S.tool+(p?' · '+p.name:'')}
 function zoom(cx,cy,mul){const wp=world({x:cx,y:cy});S.zoom=Math.max(.1,Math.min(20,S.zoom*mul));S.px=cx-wp.x*S.zoom;S.py=cy-wp.y*S.zoom;render()}
 function snapshot(){const arr=S.layers[S.side];return {side:S.side,sel:S.sel,arr:arr.map(p=>({name:p.name,x:p.x,y:p.y,visible:p.visible,locked:p.locked,opacity:p.opacity,sourcePart:!!p.sourcePart,partId:p.partId||'',role:p.role||'',img:p.canvas.toDataURL('image/png')}))}}
-async function restoreSnap(h){S.busy=true;const arr=[];for(const p of h.arr){const img=await imgFrom(p.img);const q=layer(p.name,img,p.x,p.y,p.locked);q.visible=p.visible;q.opacity=p.opacity;q.sourcePart=!!p.sourcePart;q.partId=p.partId||'';q.role=p.role||'';arr.push(q)}S.layers[h.side]=arr;S.side=h.side;S.sel=Math.min(h.sel,arr.length-1);S.selection=null;S.busy=false;$('frontTab').classList.toggle('active',S.side==='front');$('backTab').classList.toggle('active',S.side==='back');notifyLayerOrder();window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'));renderList();render()}
+async function restoreSnap(h){S.busy=true;const arr=[];for(const p of h.arr){const img=await imgFrom(p.img);const q=layer(p.name,img,p.x,p.y,p.locked);q.visible=p.visible;q.opacity=p.opacity;q.sourcePart=!!p.sourcePart;q.partId=p.partId||'';q.role=p.role||'';arr.push(q)}S.layers[h.side]=arr;S.side=h.side;S.sel=Math.min(h.sel,arr.length-1);S.selection=null;S.busy=false;$('frontTab').classList.toggle('active',S.side==='front');$('backTab').classList.toggle('active',S.side==='back');notifyLayerOrder();window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'));window.dispatchEvent(new CustomEvent('paperchalk:studio-source-stack-restored',{detail:{side:S.side}}));renderList();render()}
 function check(){if(S.busy)return;S.history.push(snapshot());if(S.history.length>16)S.history.shift();S.redo=[]}
 async function undo(){if(!S.history.length||S.busy)return;const cur=snapshot(),h=S.history.pop();S.redo.push(cur);await restoreSnap(h);status('已撤销')}
 async function redo(){if(!S.redo.length||S.busy)return;const cur=snapshot(),h=S.redo.pop();S.history.push(cur);await restoreSnap(h);status('已重做')}
@@ -278,7 +283,25 @@ function setTool(name){
 }
 function addLayer(){check();const q=layer('未命名透明层');S.layers[S.side].splice(S.sel+1,0,q);S.sel++;notifyLayerOrder();renderList();render();autosave()}
 async function addImages(files){for(const f of files){const url=URL.createObjectURL(f);const im=await imgFrom(url);URL.revokeObjectURL(url);check();const l=layer(f.name,im,Math.round((W-im.width)/2),Math.round((H-im.height)/2));S.layers[S.side].push(l);S.sel=S.layers[S.side].length-1}renderList();render();autosave();status('已导入图片图层')}
-function removeLayer(){if(!current()||!confirm('删除当前图层？可以用撤销恢复。'))return;check();S.layers[S.side].splice(S.sel,1);S.sel=Math.max(0,Math.min(S.sel,S.layers[S.side].length-1));notifyLayerOrder();renderList();render();autosave()}
+function removeLayer(index=S.sel){
+ const arr=S.layers[S.side],layer=arr[index];
+ if(S.busy||!layer){status('请先选择需要删除的图层');return false;}
+ const part=layer.sourcePart;
+ const notice=part?
+  '删除真实部件「'+layer.name+'」？\n此人物的 L2D 骨骼、遮挡和游戏显示会同步去除这个部件；不会删除 GitHub 原始 PSD，仍可恢复原版。':
+  '删除图层「'+layer.name+'」？可以撤销。';
+ if(!confirm(notice))return false;
+ check();arr.splice(index,1);
+ S.sel=arr.length?Math.max(0,Math.min(index,arr.length-1)):-1;
+ if(part)window.dispatchEvent(new CustomEvent('paperchalk:studio-part-removed',{
+  detail:{id:window.PaperchalkStudio?.current||'',face:S.side,partId:String(layer.partId||layer.name),
+   remaining:arr.filter(p=>p.sourcePart).map(p=>String(p.partId||p.name))}
+ }));
+ notifyLayerOrder();window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'));
+ renderList();render();autosave();
+ status('✓ 已删除「'+layer.name+'」'+(part?'，骨骼与遮挡同步更新。':'。'));
+ return true;
+}
 function rearrange(n){moveLayer(S.sel,S.sel+n)}
 function dupe(){if(!current())return;check();const p=current(),q=layer(p.name+' (副本)',p.canvas,p.x,p.y,false);S.layers[S.side].splice(S.sel+1,0,q);S.sel++;notifyLayerOrder();renderList();render();autosave()}
 function download(b,name){const url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000)}
@@ -321,7 +344,7 @@ $('focusCurrent').onclick=()=>{
  const z=Math.min(12,Math.max(1.2,Math.min(stage.clientWidth/(part.canvas.width+60),stage.clientHeight/(part.canvas.height+60))));
  focus(x,y,z);
 };
-$('add').onclick=addLayer;$('dup').onclick=dupe;$('del').onclick=removeLayer;$('up').onclick=()=>rearrange(1);$('down').onclick=()=>rearrange(-1);$('rename').onclick=()=>{const p=current();if(!p)return;const s=prompt('图层名称',p.name);if(s){check();p.name=s;renderList();autosave()}};
+$('add').onclick=addLayer;$('dup').onclick=dupe;$('del').onclick=()=>removeLayer();$('up').onclick=()=>rearrange(1);$('down').onclick=()=>rearrange(-1);$('rename').onclick=()=>{const p=current();if(!p)return;const s=prompt('图层名称',p.name);if(s){check();p.name=s;renderList();autosave()}};
 $('btnUndo').onclick=undo;$('btnRedo').onclick=redo;$('btnSave').onclick=async()=>{
  const button=$('btnSave');if(button.disabled)return;
  button.disabled=true;
