@@ -295,6 +295,11 @@ def install_inbox():
 
 def build():
     install_inbox()
+    # Wearable ArtMeshes are assembled from two immutable *original PSD*
+    # ZIPs in the disposable build checkout.  The published female-06
+    # module thereby contains the fitted shorts in BOTH game and studio.
+    from bind_female06_pants import install as attach_female06_wearable
+    attach_female06_wearable(LIBRARY)
     modules = []
     if LIBRARY.exists():
         for folder in sorted(LIBRARY.iterdir(),key=lambda f:f.name.lower()):
