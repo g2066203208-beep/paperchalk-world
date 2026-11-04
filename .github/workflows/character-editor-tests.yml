@@ -9,6 +9,7 @@ on:
       - 'scripts/build_character_catalog.py'
       - 'tests/test_protagonist_unified.py'
       - 'tests/test_l2d_studio_rework_browser.js'
+      - 'tests/test_l2d_occlusion_masks_browser.js'
       - 'site/assets/l2d/source-masks/**'
       - 'site/assets/l2d/inbox/**'
       - '.github/workflows/character-editor-tests.yml'
@@ -574,6 +575,7 @@ jobs:
         run: |
           python3 -m http.server 8134 --directory site >/tmp/l2d-studio-rework.log 2>&1 &
           node tests/test_l2d_studio_rework_browser.js
+          node tests/test_l2d_occlusion_masks_browser.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
