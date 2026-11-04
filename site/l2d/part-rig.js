@@ -453,6 +453,7 @@ function project(parts,characterId,face,previous=null){
   ...(previous?.actionProfiles?{actionProfiles:previous.actionProfiles}:{}),
   ...(previous?.layerOrder?{layerOrder:previous.layerOrder}:{}),
   ...(previous?.partLayerGroups?{partLayerGroups:previous.partLayerGroups}:{}),
+  ...(previous?.gripOverlays?{gripOverlays:previous.gripOverlays}:{}),
   parts:Object.fromEntries(entries)});
 }
 
@@ -736,8 +737,8 @@ function setAction(model,name,now=typeof performance!=='undefined'?performance.n
 }
 // Original protagonist identity, 17 UNCHANGED standing PSD parts.
 // Only battle arms and weapon are added; order is BACK -> FRONT.
-const UNIFIED_FRONT_STACK=['rear_hair','sleeves_and_hands','battle_handwear_r',
- 'legs','shoes','neck','skirt','jacket','battle_axe','battle_handwear_l',
+const UNIFIED_FRONT_STACK=['rear_hair','sleeves_and_hands',
+ 'battle_handwear_r','battle_handwear_l','legs','shoes','neck','skirt','jacket','battle_axe',
  'ears','face','eye_white','irises','lashes','brows','front_hair','nose','mouth','hair_clip'];
 const FACE_STACK=['rear_hair','sleeves_and_hands','legs','shoes','neck',
   'skirt','jacket','ears','face','eye_white','irises','lashes',
@@ -908,6 +909,38 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   const source=pose.opacity===1?p:{...p,opacity:(p.opacity??1)*pose.opacity};
   drawPart(ctx,source,b,phase,b.id===selectedId,model.idleProfile||null);
   ctx.restore();
+
+  // The AXE is in FRONT of the jacket but BEHIND the actual gripping fingers.
+  // An arm's sleeve must stay behind the torso; painting the whole arm over
+  // the weapon is incorrect. Repaint only the authentic hand-shaped region
+  // from its SAME texture, using the same mesh/bones and phase.
+  if(id==='battle_axe'&&model.gripOverlays){
+   for(const armId of ['battle_handwear_r','battle_handwear_l']){
+    const outline=model.gripOverlays[armId];
+    if(!Array.isArray(outline)||outline.length<3)continue;
+    const arm=model.parts[armId];
+    const original=drawLayers.find(layer=>
+      String(layer.partId||layer.name)===armId&&layer.visible&&layer.sourcePart&&layer.canvas);
+    if(!arm||arm.enabled===false||!original)continue;
+    const gripPose=actionPart(model,armId);
+    if(gripPose.opacity<=0.001)continue;
+    const idle=model.idleProfile||null;
+    const posed=bonePoses(arm,phase,idle);
+    ctx.save();
+    ctx.beginPath();
+    for(let i=0;i<outline.length;i++){
+     const point=outline[i],u=Number(point?.[0])/arm.w,v=Number(point?.[1])/arm.h;
+     if(!Number.isFinite(u)||!Number.isFinite(v))continue;
+     const q=warpPoint(arm,u,v,phase,posed,idle);
+     if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);
+    }
+    ctx.closePath();
+    ctx.clip();
+    drawPart(ctx,{...original,opacity:(original.opacity??1)*gripPose.opacity},
+      arm,phase,false,idle);
+    ctx.restore();
+   }
+  }
  }
 }
 root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
