@@ -98,6 +98,7 @@ function updateMaskControls(){
  if(next)maskTarget.value=next;
  $('rig-mask-source').textContent=part?.name||'未选择';
  const existing=getMask();
+ if(existing?.png&&part)maskCanvas(existing,part);
  maskLabel.textContent=existing?.png?'已保存蒙版 · 修改只影响当前遮挡对象':
   '画白色区域表示此部件出现在目标前面；擦除则恢复后景。';
  maskState.pair=maskKey();maskState.history=[];
@@ -154,7 +155,9 @@ for(const [id,erase] of [['rig-mask-paint',false],['rig-mask-erase',true]]){
 maskTarget.onchange=()=>{maskState.history=[];updateMaskControls()};
 maskSize.oninput=()=>{$('rig-mask-size-value').textContent=maskSize.value+' px'};
 $('rig-mask-undo').onclick=()=>{
- const mask=getMask(),snapshot=maskState.history.pop();
+ const mask=getMask();
+ if(mask?._pending){maskLabel.textContent='蒙版仍在加载，暂时不能撤销';return;}
+ const snapshot=maskState.history.pop();
  if(!mask||!snapshot)return;
  maskCanvas(mask,state.model.parts[state.selected]).getContext('2d').putImageData(snapshot,0,0);
  serializeMask(mask);
@@ -162,6 +165,7 @@ $('rig-mask-undo').onclick=()=>{
 $('rig-mask-clear').onclick=()=>{
  const mask=getMask();if(!mask||!confirm('清空当前部件对这个对象的前景蒙版？原始图片不会改变。'))return;
  const c=maskCanvas(mask,state.model.parts[state.selected]);
+ if(mask._pending){maskLabel.textContent='蒙版仍在加载，暂时不能清空';return;}
  maskState.history.push(c.getContext('2d').getImageData(0,0,c.width,c.height));
  c.getContext('2d').clearRect(0,0,c.width,c.height);serializeMask(mask);
 };
