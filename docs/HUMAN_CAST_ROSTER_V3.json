@@ -721,19 +721,22 @@
       "id": "CHAR-035",
       "group": "other",
       "tier": "support",
-      "label": "电竞馆夜班领班",
+      "label": "成年雌小鬼天使交易者／夜间电竞馆前台（职业候选）",
       "visual": {
-        "face": "银灰棕短发、眼尾锐但不夸张，休闲夹克",
-        "hair": "银灰棕短发",
-        "build": "174cm参考、苗条",
-        "gesture": "稍前倾"
+        "face": "成人心形脸、狡黠坏笑、玫瑰色上挑猫眼（候选），不再采用原短发中性外形",
+        "hair": "灰莓粉长双马尾与略旧小蝴蝶结（候选）",
+        "build": "153cm/47kg、成年小个子女性（候选）",
+        "gesture": "正面自然空手站立、轻挑眉与微抬下巴（候选）",
+        "wardrobe": "略旧灰粉针织外套、奶白荷叶边上衣、深色A字裙、长袜与旧玛丽珍鞋（候选）"
       },
-      "personality": "嘴快、心软；具体职业性格待新剧情与原画审美确认",
-      "storyFunction": "夜间街区人流与营业记录，个人利益使证词不总可靠",
+      "personality": "用户锁定成年雌小鬼、楚楚可怜、孤家寡人、失败人生方向；嘴硬爱挑衅、渴望被需要为具体性格设计候选",
+      "storyFunction": "有现实缺口的天使交易者，用嘴硬抵御被看穿；与不以救赎为目的且 SAN 不下降的女主形成鲜明反差",
       "status": "proposed",
-      "artStatus": "concept_not_approved",
-      "ageYearsProposal": 24,
-      "designNotes": " 原版尚未批准的学生占位身份已转为城市成年人候选；不得沿用高中的校服或制服名称。"
+      "artStatus": "512_field_candidate_no_approved_art",
+      "ageYearsProposal": 23,
+      "designNotes": "2026-11-04：旧24岁银灰短发中性夹克设计已否决；保留CHAR-035编号与夜间电竞馆职业候选，不新增第49名。外貌、尺寸、具体愿望及天使交易合同均待批准。",
+      "designProfile": "docs/characters/CHAR-035.profile.json",
+      "readableProfile": "docs/characters/CHAR-035_ANGEL_TRADER_PROFILE.md"
     },
     {
       "id": "CHAR-036",
