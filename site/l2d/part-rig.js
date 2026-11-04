@@ -472,18 +472,33 @@ function project(parts,characterId,face,previous=null){
  const base=all(parts,face,characterId);
  const prev=previous?.parts||{};
  const entries=base.map(p=>[p.id,sanitize(prev[p.id],p)]);
- return bindBodyHierarchy({format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
+ return bindGripParents(bindBodyHierarchy({format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
   idleProfile:sanitizeIdleProfile(previous?.idleProfile||defaultIdleProfile()),
   ...(previous?.actionProfiles?{actionProfiles:previous.actionProfiles}:{}),
   ...(previous?.layerOrder?{layerOrder:previous.layerOrder}:{}),
   ...(previous?.partLayerGroups?{partLayerGroups:previous.partLayerGroups}:{}),
   ...(previous?.gripOverlays?{gripOverlays:previous.gripOverlays}:{}),
-  parts:Object.fromEntries(entries)});
+  ...(previous?.animationGraph?{animationGraph:previous.animationGraph}:{}),
+  ...(previous?.motionQualityProfile?{motionQualityProfile:previous.motionQualityProfile}:{}),
+  parts:Object.fromEntries(entries)}));
 }
 
 /* Anchored 2D parent hierarchy, rebuilt from ORIGINAL source component positions.
    Shoes/feet are ground nodes. Pelvis connects to two planted ankle chains.
    Chest/shoulders descend from pelvis; neck, eyes and hair descend from shoulders. */
+// Reusable parent constraints: the child's coat root inherits torso pose,
+// while its grasped edge is constrained to the genuine moving wrist.
+// Non-enumerable source references are never stored in rig JSON.
+function bindGripParents(model){
+ for(const part of Object.values(model?.parts||{})){
+  const link=part.followGrip;
+  const target=link&&model.parts[link.partId];
+  if(!link||!target||target===part||target.followGrip)continue;
+  Object.defineProperty(part,'_gripParent',{value:target,configurable:true});
+  Object.defineProperty(part,'_gripCache',{value:null,writable:true,configurable:true});
+ }
+ return model;
+}
 function bindBodyHierarchy(model){
  const p=model?.parts;if(!p)return model;
  const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
@@ -666,7 +681,31 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
   clamp(finite(q.x,0),-4,4)*weight*oscillation*scale+air.x+body.x;
  const py=base.y+(baseX*sn+baseY*cs-baseY)*scale+
   clamp(finite(q.y,0),-4,4)*weight*oscillation*scale+air.y+body.y;
- return parentPoint(part,bodyPosePoint(px,py,phase,idle),phase,idle);
+ const inherited=parentPoint(part,bodyPosePoint(px,py,phase,idle),phase,idle);
+ // Two parents in one deformation: pelvis->torso->coat, wrist->grasped fold.
+ // Follow the authentic hand ArtMesh, never clone the hand onto the jacket.
+ const link=part.followGrip,hand=part._gripParent;
+ if(!link||!hand)return inherited;
+ let cache=part._gripCache;
+ if(!cache||cache.phase!==phase||cache.idle!==idle){
+  const point={x:clamp(finite(link.point?.x,.5),0,1),
+   y:clamp(finite(link.point?.y,.5),0,1)};
+  const rest={x:hand.x+point.x*hand.w,y:hand.y+point.y*hand.h};
+  const moved=warpPoint(hand,point.x,point.y,phase,null,idle);
+  const parent=parentPoint(part,rest,phase,idle);
+  cache={phase,idle,delta:{x:clamp(moved.x-parent.x,-8,8),
+   y:clamp(moved.y-parent.y,-8,8)}};
+  part._gripCache=cache;
+ }
+ const seam=link.seam||{x:part.x+part.w*part.pivot.x,
+  y:part.y+part.h*part.pivot.y};
+ const rx=clamp(finite(link.radiusX,90),25,250),
+  ry=clamp(finite(link.radiusY,155),25,350);
+ const ox=(part.x+u*part.w-finite(seam.x,0))/rx,
+  oy=(part.y+v*part.h-finite(seam.y,0))/ry;
+ const w=clamp(finite(link.strength,1),0,1)*Math.exp(-2*(ox*ox+oy*oy));
+ return {x:inherited.x+cache.delta.x*w,
+  y:inherited.y+cache.delta.y*w};
 }
 function drawTri(ctx,image,A,B,C,D,E,F){
  const ux=B.x-A.x,uy=B.y-A.y,vx=C.x-A.x,vy=C.y-A.y;
@@ -967,5 +1006,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   }
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart};
 })(typeof window!=='undefined'?window:globalThis);
