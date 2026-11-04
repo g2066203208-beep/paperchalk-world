@@ -1469,6 +1469,14 @@ async function importComponentArchive(file){
    throw Error('工程身份或图层不匹配：需要女主战斗正面 24 层独立工程');
  }
  await importComponentFiles(files);
+ if(currentId===SEETHROUGH_QA_ID){
+  // This isolated import has no published skeleton; start a real PartRig
+  // directly after all RGBA source layers are committed.
+  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{
+   detail:{id:SEETHROUGH_QA_ID,side:'front'}
+  }));
+  message('✓ See-through 双人测试：真实分层已载入，骨骼编辑已启动；原版角色及游戏槽位不变。');
+ }
  if(packagedId){
   const binding=JSON.parse(new TextDecoder().decode(zipped.get(packagedId+'/front.rig.json')));
   const sourceIds=ed.S.layers.front.filter(p=>p.sourcePart).map(p=>p.partId);
