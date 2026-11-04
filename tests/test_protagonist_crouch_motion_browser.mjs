@@ -28,7 +28,8 @@ const browser=await chromium.launch({headless:true,
 const dir='artifacts/protagonist-crouch/motion';
 mkdirSync(dir,{recursive:true});
 try{
- const page=await browser.newPage({viewport:{width:1440,height:900}});
+ const context=await browser.newContext({viewport:{width:1440,height:900}});
+ const page=await context.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(url+'/character-editor/?character=protagonist-crouch-axe&side=front',
   {waitUntil:'load'});
@@ -124,7 +125,8 @@ try{
   saved:baseline.movement,poseAfterReload:'unchanged'}));
  await page.close();
  // The GAME must receive exactly the saved combined movement settings.
- const game=await browser.newPage({viewport:{width:1280,height:800}});
+ const game=await context.newPage();
+ await game.setViewportSize({width:1280,height:800});
  const gameErrors=[];game.on('pageerror',e=>gameErrors.push(e.message));
  await game.goto(url+'/?dev=1&scene=classroom',{waitUntil:'load'});
  await game.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:45000});
@@ -143,11 +145,13 @@ try{
  assert.equal(actual.id,'protagonist-crouch-axe');
  assert.equal(actual.parts,25);
  assert.equal(actual.enabled,8);
- assert.ok(actual.motion.axe>=0&&actual.motion.axe<=1.5);
+ assert.deepEqual(actual.motion,{version:1,cloth:1.15,axe:.9,legs:1.1,feet:.85},
+  'saved crouch strengths must be restored in SAME browser game slot');
  assert.deepEqual(gameErrors,[],'real game must load source action without JS errors');
  await game.screenshot({path:dir+'/game-crouch-dynamics.png'});
  console.log('PASS CROUCH SAME GAME RENDERER: 25 PSD layers / 8 coupled dynamic parts, no detached grip or floating sole');
  await game.close();
+ await context.close();
 }finally{
  await browser.close();
  await new Promise(ok=>server.close(ok));
