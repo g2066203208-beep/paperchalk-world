@@ -427,9 +427,15 @@ async function changeCore(id,face='front'){
   if(window.PaperchalkPartRigStudio?.state?.dirty)
    await window.PaperchalkPartRigStudio.save();
   if(v4&&frameLayer)await persistCorrections();
-  for(const f of ['front','back'])await persistEditedComponents(f);
-  for(const f of ['front','back'])await persistSkeleton(f);
-  await ed.save();
+  // Moving between characters should NOT flatten/re-encode every unchanged
+  // 1024x1024 layer or recompute a 4M-pixel V4 diff. The editor tracks source
+  // edits separately from harmless selection, idle animation and camera moves.
+  if(ed.S.derivedDirty){
+   for(const f of ['front','back'])await persistEditedComponents(f);
+   for(const f of ['front','back'])await persistSkeleton(f);
+   ed.S.derivedDirty=false;
+  }
+  if(ed.S.sourceDirty)await ed.save();
  }
  if(!list.has(id))throw Error('角色不在已导入列表中：'+id);
  const chosen=list.get(id);
@@ -678,6 +684,7 @@ async function saveToGame(){
  if(v4)await persistCorrections();
  for(const f of ['front','back'])await persistEditedComponents(f);
  for(const f of ['front','back'])await persistSkeleton(f);
+ ed.S.derivedDirty=false;
  const motion=ed.motion?.()||{};
  for(const face of ['front','back']){
   // Rendering reference is separate from the V4 animation itself; do NOT
