@@ -193,7 +193,7 @@ jobs:
             // Swapping one zone must never mutate the other actor. The true
             // female-two rig must survive returning to the NPC zone.
             await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','protagonist','front',false));
-            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('enemy')?.layers?.length===17,
+            await page.waitForFunction(()=>window.PaperchalkL2DLibrary.get('enemy')?.layers?.length===20,
               null,{timeout:20000});
             assert.equal(await page.evaluate(()=>window.PaperchalkCharacterDev.assigned.player.id),
               'protagonist');
