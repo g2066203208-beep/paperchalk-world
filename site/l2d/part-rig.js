@@ -506,7 +506,12 @@ function cleanPart(part,face,id,characterId){
     id==='cloth'?['pelvis',.5,.08,.5,.92,'skirt']:
     ['root',.5,.08,.5,.9,'unclassified']);
  return {id:String(id),name:String(p.name||id),x:finite(p.x,0),y:finite(p.y,0),w,h,
-  placement:{scaleX:1,scaleY:1,offsetX:0,offsetY:0},
+  // Existing 17/18-part local drafts are automatically upgraded from the
+  // previous misaligned female-six shorts, without overwriting authored edits.
+  // The identical preset is used by scripts/bind_female06_pants.py.
+  placement:(characterId==='female-06'&&id==='pants_overlay'?
+   {scaleX:.92,scaleY:.80,offsetX:-7,offsetY:-12}:
+   {scaleX:1,scaleY:1,offsetX:0,offsetY:0}),
   parentId:def[0],kind:def[5],
   pivot:{x:def[1],y:def[2]},tip:{x:def[3],y:def[4]},
   mesh:def[5]==='pants-bound'?{columns:12,rows:12}:{
