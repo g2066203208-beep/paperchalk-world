@@ -9,7 +9,7 @@
     },
     {
       "id": "protagonist-battle-front",
-      "label": "女主·战斗正面（PSD真实24层）",
+      "label": "女主角 · 战斗正面（同人物动作子集）",
       "front": "./assets/l2d/library/protagonist-battle-front/front.png",
       "back": "",
       "draft": false,
@@ -24,36 +24,42 @@
             "url": "./assets/l2d/library/protagonist-battle-front/front.rig.json",
             "textures": {
               "back_hair": "./assets/l2d/library/protagonist-battle-front/front/back_hair.png",
-              "axe_overhead": "./assets/l2d/library/protagonist-battle-front/front/axe_overhead.png",
-              "axe_held": "./assets/l2d/library/protagonist-battle-front/front/axe_held.png",
               "legwear": "./assets/l2d/library/protagonist-battle-front/front/legwear.png",
               "footwear": "./assets/l2d/library/protagonist-battle-front/front/footwear.png",
-              "handwear_r": "./assets/l2d/library/protagonist-battle-front/front/handwear_r.png",
+              "axe_overhead": "./assets/l2d/library/protagonist-battle-front/front/axe_overhead.png",
               "bottomwear": "./assets/l2d/library/protagonist-battle-front/front/bottomwear.png",
               "neck": "./assets/l2d/library/protagonist-battle-front/front/neck.png",
               "topwear": "./assets/l2d/library/protagonist-battle-front/front/topwear.png",
-              "eyebrow_l": "./assets/l2d/library/protagonist-battle-front/front/eyebrow_l.png",
-              "eyebrow_r": "./assets/l2d/library/protagonist-battle-front/front/eyebrow_r.png",
+              "axe_held": "./assets/l2d/library/protagonist-battle-front/front/axe_held.png",
+              "handwear_r": "./assets/l2d/library/protagonist-battle-front/front/handwear_r.png",
               "handwear_l": "./assets/l2d/library/protagonist-battle-front/front/handwear_l.png",
-              "face": "./assets/l2d/library/protagonist-battle-front/front/face.png",
-              "mouth": "./assets/l2d/library/protagonist-battle-front/front/mouth.png",
               "ears_r": "./assets/l2d/library/protagonist-battle-front/front/ears_r.png",
               "ears_l": "./assets/l2d/library/protagonist-battle-front/front/ears_l.png",
-              "headwear": "./assets/l2d/library/protagonist-battle-front/front/headwear.png",
-              "eyelash_r": "./assets/l2d/library/protagonist-battle-front/front/eyelash_r.png",
+              "face": "./assets/l2d/library/protagonist-battle-front/front/face.png",
               "eyewhite_r": "./assets/l2d/library/protagonist-battle-front/front/eyewhite_r.png",
               "eyewhite_l": "./assets/l2d/library/protagonist-battle-front/front/eyewhite_l.png",
-              "eyelash_l": "./assets/l2d/library/protagonist-battle-front/front/eyelash_l.png",
               "irides_r": "./assets/l2d/library/protagonist-battle-front/front/irides_r.png",
               "irides_l": "./assets/l2d/library/protagonist-battle-front/front/irides_l.png",
-              "front_hair": "./assets/l2d/library/protagonist-battle-front/front/front_hair.png"
+              "eyelash_r": "./assets/l2d/library/protagonist-battle-front/front/eyelash_r.png",
+              "eyelash_l": "./assets/l2d/library/protagonist-battle-front/front/eyelash_l.png",
+              "eyebrow_r": "./assets/l2d/library/protagonist-battle-front/front/eyebrow_r.png",
+              "eyebrow_l": "./assets/l2d/library/protagonist-battle-front/front/eyebrow_l.png",
+              "mouth": "./assets/l2d/library/protagonist-battle-front/front/mouth.png",
+              "front_hair": "./assets/l2d/library/protagonist-battle-front/front/front_hair.png",
+              "headwear": "./assets/l2d/library/protagonist-battle-front/front/headwear.png"
             },
             "partCount": 24
           },
           "renderer": "part-mesh"
         }
       },
-      "assetVersion": "battle-psd-original-20261103"
+      "assetVersion": "battle-psd-original-20261103",
+      "familyId": "protagonist",
+      "variantCategory": "combat",
+      "actions": [
+        "idle",
+        "combat"
+      ]
     }
   ]
 }
