@@ -413,17 +413,17 @@ jobs:
                 assert.equal(await art.evaluate(el=>el.closest('#scene')===null),true,
                   'hero must be on a separate depth plane');
                 const layerAudit=await page.evaluate(()=>{
-                  const ids=['scene','enemy-depth-root','fog','camera-player-root'];
+                  const ids=['scene','enemy-depth-root','fog','ui-edge-fog','camera-player-root'];
                   const layers=ids.map(id=>document.getElementById(id));
                   const parents=layers.map(el=>el.parentElement.id);
                   const z=layers.map(el=>Number(getComputedStyle(el).zIndex));
                   return {parents,z,player:document.getElementById('camera-player-root').style.transform,
                     order:layers.map(el=>Array.prototype.indexOf.call(el.parentElement.children,el))};
                 });
-                assert.deepEqual(layerAudit.parents,['view','view','view','view'],
+                assert.deepEqual(layerAudit.parents,['view','view','view','view','view'],
                   'visual layers must be sibling planes, not all children of the scene');
-                assert.deepEqual(layerAudit.z,[1,2,3,4],
-                  'wrong 3D depth: bg < enemy < black fog < player');
+                assert.deepEqual(layerAudit.z,[1,2,3,4,5],
+                  'wrong 3D depth: bg < enemy < world fog < UI fog < player');
                 assert.ok(layerAudit.order.every((x,i,a)=>i===0||x>a[i-1]),
                   'painter order is reversed');
                 if(!cfg.mobile){
@@ -451,8 +451,9 @@ jobs:
                     'foreground player must now tilt subtly with the camera');
                   assert.ok(Math.abs(a.player.x-b.player.x)<28&&Math.abs(a.player.y-b.player.y)<28,
                     'camera-near player shifted too far rather than only tilting');
-                  assert.equal(await page.locator('#actor-enemy').isVisible(),false,
-                    'deleted enemy picture became visible during camera tilt');
+                  assert.equal(await page.locator('#actor-enemy')
+                    .evaluate(el=>Number(getComputedStyle(el).opacity)),0,
+                    'invisible L2D bitmap anchor must remain transparent during camera tilt');
                   assert.notEqual(a.enemyStyle,b.enemyStyle,'enemy plane never tilts');
                   const angles=(style,axis)=>{
                     const part=style.match(new RegExp(axis+'\\((-?[\\d.]+)deg\\)'));
