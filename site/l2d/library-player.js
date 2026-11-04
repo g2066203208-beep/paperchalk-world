@@ -125,7 +125,12 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   const p=model.parts[id],im=drawings[i];
   if(!p||p.id!==id||p.w!==im.width||p.h!==im.height)
    throw Error('L2D 独立贴图尺寸或部件 ID 错误：'+id);
-  return {sourcePart:true,partId:id,canvas:im,visible:p.enabled!==false,opacity:1};
+  // Keep personal source visibility and alpha consistent with editor preview.
+  const artwork=personalised?artIndex.get(id):null;
+  const alpha=Number(artwork?.opacity);
+  return {sourcePart:true,partId:id,canvas:im,
+   visible:p.enabled!==false&&artwork?.visible!==false,
+   opacity:artwork&&Number.isFinite(alpha)?Math.max(0,Math.min(1,alpha)):1};
  });
  const actor=root.PaperchalkL2D?.get(slot);
  if(!actor)throw Error('游戏缺少人物渲染槽 '+slot);
