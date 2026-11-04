@@ -6,7 +6,7 @@
 - 此前把新衣服的黑色短裤硬重采样为 `164×162`，置于 `(420,415)`，结果既偏右又盖得过长。旧图层的动态蒙皮跟随测试通过，**但初始穿着贴合并未通过**。
 - 不再重新裁切或涂改用户的任何原始图层。正式构建的 `pants_overlay` 保留原位 PSD 独立纹理，追加非破坏性 `placement`：
   `{"scaleX":1.20,"scaleY":1.00,"offsetX":-15,"offsetY":-17}`。
-- 短裤继续 `parentId="legwear"`, `kind="pants-bound"`, `skinBinding.target="legwear"`。部件每个纹理顶点先按编辑后的局部尺寸位置确定**静止世界坐标**，再与真实腿部一起通过同一 `legPoint()` 二腿 IK + 面积权重。
+- **修复父级后：短裤一级父级为 `parentId="pelvis"`，不是 `legwear`。** `skinBinding.target="legwear"` 只是裤腿的二级蒙皮来源。腰部上方约 42% 的面网格与骨盆刚性绑定，中段向左右腿 IK 权重平滑过渡，下摆完全继承左右腿。上衣的下摆也固定到同一个骨盆变换，避免呼吸/肩部动作使腰线脱开。骨盆坐标来自原始腿部骨骼和身体位置，**绝不从裤子素材推算**。左右翅膀同样附着肩部，原身体脚踝保持落地。
 - 画册静态合成 `front.png` 与动态 ArtMesh 使用同一个贴合变换。不保留旧的错位裤子缩略图。
 
 ## 每个角色、每个部件可复用
@@ -33,3 +33,30 @@
 - Chromium 端到端：`tests/test_l2d_part_resize_browser.js`、`tests/test_female06_pants_wear_browser.js`、`tests/test_female06_existing_draft_migration_browser.js`。要核对保存、刷新、原贴图尺寸、腿部运动时的贴合和重复打开不会新增第二条裤子。
 - 在线改动**不等于**服务器自动保存手工编辑后的二进制纹理；跨设备发布需导出模块并经 GitHub CI。用户同一浏览器中的 Rig 参数通过 IndexedDB 保存。
 
+
+
+## 2026-11-04 父子骨骼绑定复核与验证
+
+实际发现：此前裤子虽然指定了 `skinBinding.target='legwear'`，**但这不等于裤腰的父级为骨盆**；上一版骨盆还可能从被调整的短裤纹理推算。新绑定使用人体源图层定义的固定骨盆根节点。
+
+```
+ground (fixed feet)
+└── pelvis (virtual skeletal root, from original body anatomy)
+    ├── torso (waist locked, shoulders and breath above)
+    │   ├── left/right shoulder → independent arms
+    │   ├── left/right wing attachment
+    │   └── neck → head → face, eyes, hair
+    ├── left hip → knee → planted ankle
+    ├── right hip → knee → planted ankle
+    └── shorts waistband (100% pelvis)
+        ├── left leg hem → blended into left thigh skin
+        └── right leg hem → blended into right thigh skin
+```
+
+- 根节点：`bodyHierarchy.graph.pelvis` 从原始腿部骨骼推导，不再依附 shorts 的位置、缩放。
+- 裤子：`parentId='pelvis'`，`skinBinding.method='pelvis-waist-dual-thigh-v2'`，网格上部刚性腰锁 `[0,.42]`，中间 `[.42,.84]` 平滑过渡，裤脚 `[.84,1]` 采用二腿 IK 蒙皮。
+- 上衣：肩部/胸部允许局部呼吸，腰下方的局部骨骼与服装角度变换逐步衰减到 0，和短裤共享骨盆。
+- 双翼：`wings_l/r` 接 `torso` 肩部。脚底保留原腿骨的落地约束。
+- 专项 GitHub Action `.github/workflows/female06-body-hierarchy.yml` 成功验证：`tests/test_female06_pants_skin.cjs`（42 帧）+`tests/test_l2d_part_placement.cjs`+`tests/test_female06_pants_wear_browser.js`+`tests/test_l2d_part_resize_browser.js`，包含真实 Chromium 工作室/游戏往返。
+
+**适用范围：本轮对女六正面做了完整父级验证；不代表全部其他人物的每一张 PSD 都已经达到同样的验收水平。**
