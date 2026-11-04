@@ -64,11 +64,11 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   assert.equal(raised.selected,'rear_hair');
   assert.equal(raised.rig.indexOf('rear_hair'),from+1,'up means truly moving toward front');
   assert.deepEqual(raised.ui,raised.rig,'live render order follows UI immediately');
-  await page.locator('#btnUndo').click();
+  await page.locator('#easy-undo').click();
   await page.waitForFunction(order=>
     JSON.stringify(window.PaperchalkPartRigStudio.state.model.layerOrder)===JSON.stringify(order),
     original.order);
-  await page.locator('#btnRedo').click();
+  await page.locator('#easy-redo').click();
   await page.waitForFunction(order=>
     JSON.stringify(window.PaperchalkPartRigStudio.state.model.layerOrder)===JSON.stringify(order),
     raised.rig);
@@ -86,8 +86,10 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   }));
   assert.deepEqual(restored.order,raised.rig,'saved layer order must survive reload');
   assert.deepEqual(restored.ui,raised.rig,'panel must reopen in persisted Z order');
-  await page.locator('#main-preview').click();
-  assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),false);
+  assert.equal(await page.locator('#main-preview').isVisible(),false,
+    'no separate edit/animation mode switch');
+  await page.evaluate(()=>window.PaperchalkEasyEditor.editPart());
+  assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.enabled),true);
   assert.equal(await page.evaluate(()=>{
    const ctx=document.createElement('canvas').getContext('2d');
    return window.PaperchalkPartRigStudio.drawPreview(ctx);
