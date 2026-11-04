@@ -93,16 +93,22 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   if(order.length===ids.length&&new Set(order).size===ids.length&&
      order.every(id=>ids.includes(id)))model.layerOrder=[...order];
  }
- // Manual foreground masks are part of the shared L2D rig, not sidecar images.
- // Accept only same-character, same-face source/target IDs and PNG data URLs.
+ // The editor and game share the same non-destructive, bidirectional
+ // local depth rules. Preserve old single-target/front masks as-is.
  if(draftMatches&&Array.isArray(localDraft.occlusionMasks)){
-  model.occlusionMasks=localDraft.occlusionMasks.filter(m=>
-   m&&typeof m.source==='string'&&typeof m.target==='string'&&
-   m.source!==m.target&&ids.includes(m.source)&&ids.includes(m.target)&&
-   typeof m.png==='string'&&m.png.startsWith('data:image/png;base64,')&&
-   m.png.length<8_000_000).map(m=>({
-    source:m.source,target:m.target,png:m.png,enabled:m.enabled!==false
-   }));
+  model.occlusionMasks=localDraft.occlusionMasks.filter(m=>{
+   const targets=Array.isArray(m?.targets)?m.targets:[m?.target];
+   return typeof m?.source==='string'&&ids.includes(m.source)&&
+    targets.some(t=>t!==m.source&&ids.includes(t))&&
+    typeof m.png==='string'&&m.png.startsWith('data:image/png;base64,')&&
+    m.png.length<8_000_000;
+  }).map(m=>{
+   const targets=[...new Set((Array.isArray(m.targets)?m.targets:[m.target])
+    .filter(t=>t!==m.source&&ids.includes(t)))];
+   return {source:m.source,target:targets[0],targets,
+    direction:m.direction==='behind'?'behind':'front',
+    png:m.png,enabled:m.enabled!==false};
+  });
  }
  if(!ids.length||ids.length!==Object.keys(model.parts||{}).length)
   throw Error('L2D 贴图与绑定层数量不一致');
