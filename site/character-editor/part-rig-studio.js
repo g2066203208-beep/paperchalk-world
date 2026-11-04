@@ -43,7 +43,11 @@ function maskTargets(entry){
  return Array.isArray(entry?.targets)?entry.targets:(entry?.target?[entry.target]:[]);
 }
 function getMask(){
- return state.model?.occlusionMasks?.find(m=>m.source===state.selected&&
+ const entries=state.model?.occlusionMasks||[],focused=maskState.editingEntry;
+ if(focused&&entries.includes(focused)&&focused.source===state.selected&&
+  (focused.direction||'front')===maskState.direction&&
+  maskTargets(focused).includes(maskTarget.value))return focused;
+ return entries.find(m=>m.source===state.selected&&
   (m.direction||'front')===maskState.direction&&
   maskTargets(m).includes(maskTarget.value));
 }
