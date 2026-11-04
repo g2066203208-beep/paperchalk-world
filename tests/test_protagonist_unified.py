@@ -29,7 +29,14 @@ class HeroineUnifiedTest(unittest.TestCase):
         self.assertEqual(len(merged['layerOrder']),20)
         self.assertLess(merged['layerOrder'].index('rear_hair'),merged['layerOrder'].index('jacket'))
         self.assertLess(merged['layerOrder'].index('jacket'),merged['layerOrder'].index('battle_axe'))
-        self.assertLess(merged['layerOrder'].index('battle_axe'),merged['layerOrder'].index('battle_handwear_l'))
+        self.assertLess(merged['layerOrder'].index('battle_handwear_l'),merged['layerOrder'].index('jacket'),
+                        'character left arm/sleeve must stay BEHIND the body')
+        self.assertLess(merged['layerOrder'].index('battle_handwear_r'),merged['layerOrder'].index('jacket'))
+        self.assertLess(merged['layerOrder'].index('jacket'),merged['layerOrder'].index('battle_axe'))
+        self.assertEqual(set(merged['gripOverlays']),{'battle_handwear_r','battle_handwear_l'})
+        self.assertTrue(all(len(outline)>=12 for outline in merged['gripOverlays'].values()))
+        self.assertNotIn('battle_axe',merged['gripOverlays'],
+                         'only the real original hands may be repainted over the weapon')
         self.assertLess(merged['layerOrder'].index('face'),merged['layerOrder'].index('eye_white'))
         self.assertLess(merged['layerOrder'].index('eye_white'),merged['layerOrder'].index('irises'))
         self.assertLess(merged['layerOrder'].index('irises'),merged['layerOrder'].index('lashes'))
