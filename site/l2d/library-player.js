@@ -86,6 +86,13 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
     model.parts[id]=root.PaperchalkPartRigCore.sanitize(edit,original);
    }
  }
+ // Load the same independently saved Z-stack as the editor. Previously
+ // only joint values were merged, so arms/weapons reverted on game return.
+ if(draftMatches&&Array.isArray(localDraft.layerOrder)){
+  const order=localDraft.layerOrder.map(String);
+  if(order.length===ids.length&&new Set(order).size===ids.length&&
+     order.every(id=>ids.includes(id)))model.layerOrder=[...order];
+ }
  if(!ids.length||ids.length!==Object.keys(model.parts||{}).length)
   throw Error('L2D 贴图与绑定层数量不一致');
  // User-painted source PNGs replace the correct ArtMesh TEXTURES, never
