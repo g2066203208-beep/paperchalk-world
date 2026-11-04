@@ -73,7 +73,7 @@ const URL=process.env.BATTLE_FRONT_TEST_URL||
   assert.equal(actionResult.selected,'idle');
   assert.ok(actionResult.weaponOpacity<0.02);
   assert.equal(actionResult.faceOpacity,1);
-  assert.ok(Math.abs(actionResult.armAngle+12)<0.25);
+  assert.ok(Math.abs(actionResult.armAngle+4)<0.25);
   assert.equal(actionResult.parent,'torso');
   assert.ok(actionResult.order.indexOf('face')<actionResult.order.indexOf('eyewhite_r'),
     'face must render behind eyes');
