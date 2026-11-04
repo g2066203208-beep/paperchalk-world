@@ -131,7 +131,8 @@ jobs:
               assert.equal(await page.locator('#l2d-strength').count(),0);
               assert.equal(await page.locator('#part-rig-panel').isVisible(),false,
                 'new mesh plays without a permanently open settings panel');
-              assert.ok(await page.locator('[data-quick="fringe"]').isVisible());
+              if(name==='phone')await page.locator('[data-studio-pane="motion"]').click();
+    assert.ok(await page.locator('[data-quick="fringe"]').isVisible());
               assert.ok(await page.locator('[data-quick="rear"]').isVisible());
               assert.ok(await page.locator('[data-quick="skirt"]').isVisible());
               for(const field of ['hands','shoulders','hips','breath','speed'])
