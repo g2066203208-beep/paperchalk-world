@@ -61,9 +61,9 @@ section.innerHTML=[
  '<label class="studio-import">导入全部真实部件（PSD / V4 ZIP）<input id="studio-parts-import" type="file" accept=".zip,.psd,application/zip"></label>',
  '<output id="studio-status" role="status">读取人物资源库…</output></div>',
  '<div id="studio-battle-import-row" class="studio-row" hidden>',
- '<strong>女主·战斗正面｜原始 PSD 已部署 · 自动加载 24 层</strong>',
+ '<strong>女主角 / 战斗子动作｜已部署 PSD · 24 层</strong>',
  '<label class="studio-import studio-battle-picker">重新导入本地 ZIP（可选）<input id="studio-battle-import" type="file" accept=".zip,application/zip"></label>',
- '<span class="studio-battle-note">24 张透明 PNG、原位坐标及骨骼已直接托管在 GitHub；进入本人物即自动读取，无需再次上传 PSD。头顶重复斧头默认隐藏，本工程与原版女主独立。</span>',
+ '<span class="studio-battle-note">24 张原始 PNG 与骨骼来自同一个女主角动作资源库；在「角色动作」中切换站立/战斗只调整手臂与斧头，不重新载入整个人物。默认隐藏重复的头顶斧头，原版立绘仍保留。</span>',
  '</div>',
  '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024" aria-hidden="true" hidden></canvas>',
  '<div class="studio-v4-tools"><strong>游戏实际 V4 动画 · 同一人物、同一帧源</strong>',
@@ -111,7 +111,25 @@ const selector=$('studio-character'),direction=$('studio-side');
 function options(){
  const old=selector.value;
  selector.replaceChildren();
- for(const c of list.values())selector.add(new Option(c.label||c.id,c.id));
+ // An optgroup represents a PERSON, options represent that person's art/actions.
+ const families=new Map();
+ for(const c of list.values()){
+  const family=c.familyId||c.id;
+  if(!families.has(family))families.set(family,[]);
+  families.get(family).push(c);
+ }
+ for(const [family,variants] of families){
+  const canonical=list.get(family)||variants[0];
+  const group=document.createElement('optgroup');
+  group.label=(canonical?.label||family).replace(' · 未导入立绘','');
+  for(const c of variants){
+   const subset=c.id===family?'基本立绘 · 正面 / 背面':
+    c.variantCategory==='combat'?'战斗动作 · 正面独立部件':
+    (c.label||c.id);
+   group.appendChild(new Option(subset+(c.draft?'（待导入）':''),c.id));
+  }
+  selector.appendChild(group);
+ }
  if(list.has(currentId))selector.value=currentId;
  else if(list.has(old))selector.value=old;
 }
@@ -180,7 +198,7 @@ async function loadList(){
  // Transparent placeholder is intentional until the genuine PSD ZIP is imported.
  const blank= 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><text x="512" y="493" text-anchor="middle" font-size="29" fill="#b9b0a3">女主 · 战斗正面</text><text x="512" y="545" text-anchor="middle" font-size="20" fill="#92877b">请导入原位分层 ZIP</text></svg>');
- list.set(BATTLE_FRONT_ID,{id:BATTLE_FRONT_ID,label:'女主·战斗正面（独立工程）',front:blank,back:''});
+ list.set(BATTLE_FRONT_ID,{id:BATTLE_FRONT_ID,familyId:'protagonist',variantCategory:'combat',label:'女主·战斗正面（动作子集）',front:blank,back:''});
  try{
   const res=await fetch('../characters.catalog.json',{cache:'no-store'});
   if(res.ok)for(const c of (await res.json()).characters||[]){
@@ -188,7 +206,8 @@ async function loadList(){
    list.set(c.id,{id:c.id,label:(c.label||c.id)+(c.draft?' · 未导入立绘':''),draft:!!c.draft,
     front:c.front?new URL(c.front,new URL('../',location.href)).href:'',
     back:c.back?new URL(c.back,new URL('../',location.href)).href:'',
-    clips:c.clips||{},animated:c.animated||{},l2dModule:c.l2dModule||{}});
+    clips:c.clips||{},animated:c.animated||{},l2dModule:c.l2dModule||{},
+    familyId:c.familyId||c.id,variantCategory:c.variantCategory||'default',actions:c.actions||[]});
   }
  }catch(e){console.warn('Character catalog offline',e)}
  const canonicalFemale2=list.get('char-002');
