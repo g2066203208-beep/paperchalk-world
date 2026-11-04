@@ -44,6 +44,74 @@ async function dropDraft(key){
   r.onsuccess=resolve;r.onerror=()=>reject(r.error);
  });}finally{db.close();}
 }
+/* Female-six baseline restore: scoped to this one actor and its local
+ * editing records. The original PSD-derived hosted textures stay immutable.
+ * ?character=female-06&reset-original=1 deliberately performs the restore
+ * before any local overrides or canvas drafts are loaded. */
+async function resetFemale06OriginalIfRequested(){
+ if(args.get('reset-original')!=='1'||args.get('character')!=='female-06')return false;
+ const id='female-06',face='front',canonical=list.get(id);
+ const published=canonical?.l2dModule?.front?.rig;
+ if(!canonical?.front||!published?.url||!published?.textures)
+  throw Error('女6原版模块尚未部署，未删除任何本地修改');
+ // Fetch AND validate all source textures before any destructive write.
+ const files=await hostedParts(id,face);
+ const bytes=files.get('layers.json');
+ if(!bytes)throw Error('女6原始 PSD 分层清单缺失，未删除本地修改');
+ const manifest=JSON.parse(new TextDecoder().decode(bytes));
+ const original=manifest.layers?.front||[],ids=Object.keys(published.textures);
+ if(original.length<10||original.length!==ids.length||
+    new Set(original.map(p=>p.id||p.partId)).size!==ids.length||
+    !ids.every(key=>original.some(p=>(p.id||p.partId)===key)))
+  throw Error('女6原始网格/分层未通过检查，保留本地修改');
+ // All the following keys belong ONLY to female-06. Other characters,
+ // browser preferences, and game actor slots are preserved.
+ const db=await openDB();
+ try{
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction('kv','readwrite'),store=tx.objectStore('kv');
+   const cursor=store.openCursor();
+   cursor.onsuccess=()=>{
+    const row=cursor.result;if(!row)return;
+    const key=String(row.key);
+    if(key==='female-06'||key.startsWith('female-06:')||
+       key.endsWith(':female-06')||key.includes(':female-06:'))
+     row.delete();
+    row.continue();
+   };
+   for(const key of ['imported','overrides']){
+    const request=store.get(key);
+    request.onsuccess=()=>{
+     if(Array.isArray(request.result)){
+      const kept=request.result.filter(row=>row?.id!==id);
+      if(kept.length!==request.result.length)store.put(kept,key);
+     }
+    };
+   }
+   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||Error('角色草稿重置失败'));
+   tx.onabort=()=>reject(tx.error||Error('角色草稿重置被中断'));
+  });
+ }finally{db.close();}
+ // The painting editor uses a DIFFERENT IndexedDB database from the
+ // bones/patches store. Both must be reset or old painted pixels come back.
+ const paintDb=await new Promise((resolve,reject)=>{
+  const req=indexedDB.open('pixelatelier-character-v1',1);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('art'))
+   req.result.createObjectStore('art');};
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+ });
+ try{
+  await new Promise((resolve,reject)=>{
+   const tx=paintDb.transaction('art','readwrite');
+   tx.objectStore('art').delete('character:'+id);
+   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||Error('绘画图层重置失败'));
+   tx.onabort=()=>reject(tx.error||Error('绘画图层重置被中断'));
+  });
+ }finally{paintDb.close();}
+ try{localStorage.setItem('paperchalk-studio-last',JSON.stringify({id,side:face}));}catch(_){}
+ message('✓ 女6旧绘画、图层、骨骼和遮挡缓存已清除；正在重新导入 GitHub 原版 PSD 部件。');
+ return true;
+}
 const female2PsdIds=['head_reference','back_hair','legwear','footwear','neck',
  'bottomwear','topwear','ears','face','hand_raised','hand_lowered','mouth','eyebrow',
  'eyewhite','irides','eyelash','nose','front_hair'];
@@ -154,6 +222,22 @@ if(head&&typeof ResizeObserver==='function'){
 }
 setMobilePane('characters');
 const selector=$('studio-character'),direction=$('studio-side');
+const female06ResetBtn=document.createElement('button');
+female06ResetBtn.id='studio-reset-female06';female06ResetBtn.type='button';
+female06ResetBtn.hidden=true;
+female06ResetBtn.textContent='恢复女6原版';
+female06ResetBtn.title='仅清除女6在本浏览器的绘画、图层、遮挡、骨骼修改；重新载入最初上传的 PSD 原位部件，不影响其他人物';
+$('studio-save')?.after(female06ResetBtn);
+female06ResetBtn.addEventListener('click',()=>{
+ if(currentId!=='female-06')return;
+ if(!confirm('恢复女6原版拆分？这会清除本浏览器中女6的绘画、图层顺序、局部遮挡和骨骼调整；其他人物不受影响。'))return;
+ const url=new URL(location.href);
+ url.searchParams.set('character','female-06');
+ url.searchParams.set('side','front');
+ url.searchParams.set('reset-original','1');
+ location.assign(url.href);
+});
+
 // Tree has a single PERSON root. Actions and outfits are descendants of that
 // person, never competing full-body actors in the primary navigation.
 const characterTree=document.createElement('section');
@@ -442,6 +526,7 @@ async function changeCore(id,face='front'){
  if(face==='back'&&!chosen.back&&!chosen.clips?.back)
   throw Error('角色 '+chosen.label+' 尚无真实背面，禁止用正面冒充');
  currentId=id;side=face==='back'?'back':'front';
+ female06ResetBtn.hidden=id!=='female-06';
  options();direction.value=side;
  $('studio-battle-import-row').hidden=id!==BATTLE_FRONT_ID;
  const c=list.get(id);
@@ -524,6 +609,7 @@ async function loadList(){
    familyId:'class-teacher-geography-candidate',variantCategory:'outfit',editorOnly:true});
  }
  const canonicalFemale2=list.get('char-002');
+ await resetFemale06OriginalIfRequested();
  const imported=await get('imported');
  if(Array.isArray(imported))for(const c of imported)if(okId(c?.id))list.set(c.id,c);
  const overrides=await get('overrides');
