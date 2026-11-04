@@ -16,7 +16,7 @@ assert.equal(raw.characterId,'protagonist-crouch-axe');
 assert.equal(source.length,25);
 const model=core.project(source,'protagonist-crouch-axe','front',raw);
 assert.equal(Object.keys(model.parts).length,25);
-assert.equal(model.crouchDynamics.version,1);
+assert.equal(model.crouchDynamics.version,2);
 assert.ok(core.CROUCH_KEYS.every(id=>model.parts[id]._crouchDynamics===model.crouchDynamics));
 const p=model.parts;
 const rest=(pt)=>({x:pt[0],y:pt[1]});
@@ -46,15 +46,24 @@ for(const t of phases){
  // Axe is an unbroken RIGID body: arbitrary distant points retain length.
  const weaponA=rest([90,220]),weaponB=rest([885,603]);
  const distance=gap(warp(axe,weaponA,t),warp(axe,weaponB,t));
- assert.ok(Math.abs(distance-gap(weaponA,weaponB))<.0001,'axe shaft must not bend');
+ // Changing orientation/depth foreshortens the blade; three collinear
+ // handle points MUST remain collinear under the shared affine transform.
+ const mid={x:(weaponA.x+weaponB.x)/2,y:(weaponA.y+weaponB.y)/2};
+ const W1=warp(axe,weaponA,t),W2=warp(axe,weaponB,t),WM=warp(axe,mid,t);
+ assert.ok(gap(WM,{x:(W1.x+W2.x)/2,y:(W1.y+W2.y)/2})<.0001,
+  'axe shaft must remain perfectly straight under perspective');
+ assert.ok(distance>gap(weaponA,weaponB)*.82&&distance<gap(weaponA,weaponB)*1.18,
+  'perspective foreshortening must remain credible');
  axeTravel=Math.max(axeTravel,gap(warp(axe,weaponB,t),weaponB));
  const garment=p.topwear;
  const waist={x:garment.x+garment.w*.5,y:garment.y+garment.h*.33};
  const hem={x:garment.x+garment.w*.84,y:garment.y+garment.h*.97};
- assert.ok(gap(warp(garment,waist,t),waist)<.001,'waist seam detached');
+ const expectedWaist=core.crouchSpacePartPoint(garment,waist,t);
+ assert.ok(gap(warp(garment,waist,t),expectedWaist)<.001,
+  'waist must track parent body projection without independent cloth drift');
  const flutter=gap(warp(garment,hem,t),hem);
  hemTravel=Math.max(hemTravel,flutter);
- assert.ok(flutter<9,'bottom coat too strong / clips through legs');
+ assert.ok(flutter<45,'coat hem distorts beyond safe material bounds');
  for(const id of ['legwear_l','legwear_r']){
   const leg=p[id],ankle={x:leg.x+leg.w*.5,y:leg.y+leg.h*.92};
   assert.ok(gap(warp(leg,ankle,t),ankle)<.001,'ankle drift '+id);
@@ -75,28 +84,30 @@ for(const t of phases){
   toeTravel=Math.max(toeTravel,gap(warp(shoe,toe,t),toe));
  }
 }
-assert.ok(hemTravel>2,'skirt and coat tails must visibly move');
-assert.ok(legTravel>.65,'knees must carry dynamic weight');
-assert.ok(toeTravel>.25,'shoe upper leather must show subtle articulation');
-assert.ok(axeTravel>2,'axe and BOTH hands need visible but restrained idle motion');
+assert.ok(hemTravel>10,'coat tails must visibly move, not a tiny sine idle');
+assert.ok(legTravel>2,'knees must carry clearly observable weight');
+assert.ok(toeTravel>.6,'shoe upper leather must show dynamic articulation');
+assert.ok(axeTravel>19,'axe and BOTH hands need clearly expressive swing');
 // Absolute rest at phase 0, and a zero-strength pose, preserve source EXACT.
 for(const id of core.CROUCH_KEYS){
  const part=p[id],q={x:part.x+part.w*.6,y:part.y+part.h*.7};
  assert.ok(gap(warp(part,q,0),q)<.001,id+' must start on original PNG coordinates');
 }
-const saved={version:1,cloth:0,axe:0,legs:0,feet:0};
+const saved={version:2,cloth:0,axe:0,legs:0,feet:0,body:0,depth:0};
 model.crouchDynamics=saved;core.bindCrouchDynamics(model);
 for(const id of core.CROUCH_KEYS){
  const part=p[id],q={x:part.x+part.w*.6,y:part.y+part.h*.7};
  assert.ok(gap(warp(part,q,2.4),q)<.001,id+' zero-strength must preserve source');
 }
 const restored=core.project(source,'protagonist-crouch-axe','front',{
- ...raw,crouchDynamics:{version:1,cloth:1.25,axe:.8,legs:.65,feet:.4}
+ ...raw,crouchDynamics:{version:2,cloth:1.25,axe:.8,legs:.65,feet:.4,body:1.4,depth:1.2}
 });
 assert.equal(restored.crouchDynamics.cloth,1.25);
 assert.equal(restored.crouchDynamics.axe,.8);
 assert.equal(restored.crouchDynamics.legs,.65);
 assert.equal(restored.crouchDynamics.feet,.4);
+assert.equal(restored.crouchDynamics.body,1.4);
+assert.equal(restored.crouchDynamics.depth,1.2);
 const unrelated=core.project(source,'test-actor','front',raw);
 assert.ok(!unrelated.crouchDynamics,'other characters must never receive crouch motion');
 assert.ok(!unrelated.parts.axe._crouchDynamics);
