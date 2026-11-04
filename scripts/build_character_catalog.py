@@ -96,6 +96,9 @@ def discover():
             'id':ident,'label':module['label'],'front':'','back':''
         })
         row['label'] = module['label']
+        row['familyId'] = module.get('familyId', ident)
+        row['variantCategory'] = module.get('variantCategory', 'default')
+        row['actions'] = module.get('actions', [])
         row.pop('draft',None)
         row['l2dModule']=module['views']
         row['assetVersion']=module['version']
