@@ -549,6 +549,7 @@ jobs:
                   enemyHidden:document.getElementById('enemy-depth-root').hidden,
                   playerHidden:document.getElementById('camera-player-root').hidden,
                   dialogueHidden:document.getElementById('dialogue').hidden,
+                  dialogueText:document.getElementById('dialogue-text').textContent,
                   originalFog:window.__originalFogNode===document.getElementById('fog')
                 }));
                 assert.deepEqual(bedroomCheck.natural,[1024,576]);
@@ -558,7 +559,11 @@ jobs:
                 const zeroPitch=bedroomRotation.match(/rotateX\((-?[\d.]+)deg\)/);
                 assert.ok(zeroYaw&&zeroPitch&&Math.abs(Number(zeroYaw[1]))<.02&&Math.abs(Number(zeroPitch[1]))<.02,
                   'new bedroom retained unwanted tilt from the mouse on the previous room: '+bedroomRotation);
-                assert.equal(bedroomCheck.enemyHidden&&bedroomCheck.dialogueHidden,true);
+                assert.equal(bedroomCheck.enemyHidden,true,'bedroom must not contain a hostile actor');
+                assert.equal(bedroomCheck.dialogueHidden,false,
+                  'bedroom demo dialogue must be visible in the scene');
+                assert.ok(bedroomCheck.dialogueText.includes('房间'),
+                  'bedroom should display its independently registered dialogue content');
                 assert.equal(bedroomCheck.playerHidden,false,
                   'back-facing protagonist must be visible in bedroom');
                 assert.equal(bedroomCheck.originalFog,true);
