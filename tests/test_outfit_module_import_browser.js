@@ -88,7 +88,12 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   });
   assert.deepEqual(playing,{id:'char-003',parts:17},
     'game must use the approved full 17-piece male-lead front');
-  assert.deepEqual(errors,[], 'no JS errors during male front, old URL or gameplay');
+  // This isolated character test server does not build the scene catalog.
+  // Only exclude that unrelated scene-bootstrap warning; keep all L2D and
+  // editor exceptions as failures.
+  const relevant=errors.filter(message=>!message.includes(
+    'Scene catalog unavailable — run scripts/build_scene_catalog.py'));
+  assert.deepEqual(relevant,[], 'no L2D/editor JS exceptions during game or editor');
   console.log('PASS male-lead canonical FRONT: 17 original source PSD ArtMeshes, no wardrobe duplicate, proper hands, saved rig and legacy URL');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
