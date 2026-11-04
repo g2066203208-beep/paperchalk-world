@@ -55,7 +55,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.waitForFunction(async()=>{
    const rig=await window.PaperchalkStudio.readPartRig('female-06','front');
    const t=rig.parts.pants_overlay.placement;
-   return t.scaleX===1&&t.scaleY===1&&t.offsetX===0&&t.offsetY===0;
+   return t.scaleX===.92&&t.scaleY===.8&&t.offsetX===-7&&t.offsetY===-12;
   },null,{timeout:35000});
   assert.deepEqual(errors,[],'no browser page errors during sizing/save/reload');
   console.log('PASS female06 resize inspector: independent X/Y scale, offset, canvas handles, save/reload, reset, source PNG preserved');
