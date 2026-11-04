@@ -507,7 +507,7 @@ jobs:
                 // REAL NEW CHARACTERS: open the deployed 19-PNG ArtMeshes,
                 // inspect character family grouping and save desktop/mobile screenshots.
                 for(const item of [
-                  {id:'char-004',parts:19,family:'char-004',label:'FEMALE-THREE'},
+                  {id:'char-004',parts:21,family:'char-004',label:'FEMALE-THREE'},
                   {id:'protagonist-sleepwear',parts:19,family:'protagonist',label:'HEROINE-SLEEPWEAR'},
                 ]){
                   const p=await browser.newPage({viewport:vp,hasTouch:vp.width<500,
@@ -532,6 +532,23 @@ jobs:
                   },item.id);
                   assert.equal(audit.id,item.id);
                   assert.equal(audit.parts,item.parts);
+                  if(item.id==='char-004'){
+                    const expected=["back_hair","footwear","legwear","neck","topwear","eyebrow_r","ears_r","ears_l","face","nose","mouth","handwear_l","eyebrow_l","eyelash_r","eyelash_l","eyewhite_r","eyewhite_l","irides_l","irides_r","handwear_r","front_hair"];
+                    const fidelity=await p.evaluate(()=>{
+                      const m=window.PaperchalkPartRigStudio.state.model;
+                      const layers=window.characterEditor.S.layers.front.filter(x=>x.sourcePart);
+                      return {order:m.layerOrder,source:m.provenance,
+                        score:m.qualityAudit?.visiblePixelAccuracyWithin10,
+                        uiLayerOrder:layers.map(x=>x.partId)};
+                    });
+                    assert.deepEqual(fidelity.order,expected,
+                      '21 layers must use source PSD Z-order, never guess by name');
+                    assert.deepEqual(fidelity.uiLayerOrder,expected,
+                      'editor source layer stack must match PSD draw order');
+                    assert.equal(fidelity.source,'original-psd');
+                    assert.ok(fidelity.score>=.98,
+                      'PSD composite should be pixel-verified against original');
+                  }
                   assert.ok(audit.group&&audit.visible>=item.parts,
                     'real deployed source PNG layers must be editable');
                   assert.deepEqual(audit.canvasSize,[1024,1024]);

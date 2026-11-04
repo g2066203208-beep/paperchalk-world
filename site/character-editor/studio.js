@@ -48,6 +48,9 @@ const female2PsdIds=['head_reference','back_hair','legwear','footwear','neck',
  'bottomwear','topwear','ears','face','hand_raised','hand_lowered','mouth','eyebrow',
  'eyewhite','irides','eyelash','nose','front_hair'];
 const hasFemale2Psd=ids=>ids.length===18&&female2PsdIds.every(id=>ids.includes(id));
+// Exact 21 original CHAR-004 PSD layer IDs in ORIGINAL back-to-front order.
+const female3OriginalLayerIds=["back_hair","footwear","legwear","neck","topwear","eyebrow_r","ears_r","ears_l","face","nose","mouth","handwear_l","eyebrow_l","eyelash_r","eyelash_l","eyewhite_r","eyewhite_l","irides_l","irides_r","handwear_r","front_hair"];
+const hasFemale3Psd=ids=>Array.isArray(ids)&&ids.length===21&&female3OriginalLayerIds.every((key,i)=>ids[i]===key);
 const fileURL=file=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(file)});
 const section=document.createElement('section');section.id='studio-library';
 section.innerHTML=[
@@ -123,7 +126,7 @@ function options(){
   const group=document.createElement('optgroup');
   group.label=(canonical?.label||family).replace(' · 未导入立绘','');
   for(const c of variants){
-   const subset=c.id===family?'基本立绘 · 正面 / 背面':
+   const subset=c.id===family?(c.back?'基本立绘 · 正面 / 背面':'基础立绘 · 正面'):
     c.variantCategory==='combat'?'原始战斗 PSD · 备份素材（非游戏主模型）':
     (c.label||c.id);
    group.appendChild(new Option(subset+(c.draft?'（待导入）':''),c.id));
@@ -302,7 +305,17 @@ async function readPartRig(id=currentId,face=side){
   list.get(id)?.l2dModule?.front?.rig?.sourceCharacterId==='protagonist-unified-v1';
  const staleBase=needsUnified&&local&&
   !['battle_handwear_r','battle_handwear_l','battle_axe'].every(x=>!!local.parts?.[x]);
- if(local&&!staleBase){
+ // Earlier CHAR-004 was a guessed 19-layer construction: eyebrows, eyelashes,
+ // mouth and eye whites were wrong. Preserve the old local edit as an archive,
+ // then use the new ORIGINAL Photoshop 21-layer rig instead of poisoning it.
+ const staleFemale3=id==='char-004'&&face==='front'&&local&&
+  (!hasFemale3Psd(Object.keys(local.parts||{}))||local.provenance!=='original-psd');
+ if(staleFemale3){
+  const backupKey='legacy-part-rig:char-004:front:pre-21-psd';
+  if(!await get(backupKey))await put(backupKey,local);
+  await dropDraft('part-rig:'+id+':'+face);
+ }
+ if(local&&!staleBase&&!staleFemale3){
   if(id!=='char-002'||hasFemale2Psd(Object.keys(local.parts||{})))return local;
   await dropDraft('part-rig:'+id+':'+face);
  }
@@ -612,16 +625,19 @@ async function ensureHostedParts(id){
   list.get(id)?.l2dModule?.front?.rig?.sourceCharacterId==='protagonist-unified-v1';
  const needsHeroArms=heroUnified&&front&&
   !['battle_handwear_r','battle_handwear_l','battle_axe'].every(x=>currentSource.includes(x));
+ const repairFemale3=id==='char-004'&&side==='front'&&
+  !hasFemale3Psd(currentSource);
  const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
  if(front&&!upgrade&&!needsHeroArms&&(id==='char-002'||back||id===BATTLE_FRONT_ID||heroUnified))return;
  message(id==='char-002'?'载入女二 PSD：17 个源层、18 个独立部件（举起的左手已分开）…':'载入真实原位分层…');
  try{
   const source=await hostedParts(id,side);
   if(currentId!==id)return;
-  await importComponentFiles(source,{missingOnly:!upgrade&&!needsHeroArms,
+  await importComponentFiles(source,{missingOnly:!upgrade&&!needsHeroArms&&!repairFemale3,
    appendMissingParts:needsHeroArms,quiet:true});
   message(id==='char-002'?
    '✓ 女二已加载 24 层原始记录和 18 个可动部件，两只手臂独立绑定。':
+   id==='char-004'?'✓ 女三原始 Photoshop 的 21 层已按原名、原始坐标及前后顺序恢复；左右眼眉睫毛鼻嘴完整。':
    id===BATTLE_FRONT_ID?'✓ 女主战斗正面已自动加载：原始 PSD 24 层、原位部件和骨骼绑定，无需再导入 ZIP。':
    '已载入原位PSD独立部件。');
  }catch(error){
