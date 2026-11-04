@@ -193,6 +193,38 @@ try{
   });
   assert.equal(baseline.hidden,true);
   const enemyExposed=pixelAtCenter(await page.screenshot());
+  await page.screenshot({path:'artifacts/fog-layer/'+cfg.name+'-enemy-exposed-debug.png'});
+  // Diagnose mobile 90deg compositor behavior without weakening any assert.
+  // A phone-specific fog canvas is a separate overlay above the enemy.
+  const extra=await page.evaluate(()=>{
+    const ui=document.getElementById('novel-ui');
+    const phone=document.getElementById('ui-phone-fog');
+    const marker=document.getElementById('enemy-fog-probe');
+    const pick=el=>{
+      const s=getComputedStyle(el);
+      return {hidden:el.hidden,display:s.display,visibility:s.visibility,
+        opacity:s.opacity,zIndex:s.zIndex,background:s.backgroundColor,
+        rect:el.getBoundingClientRect().toJSON()};
+    };
+    const result={phone:pick(phone),ui:pick(ui),marker:pick(marker),
+      fog:pick(document.getElementById('fog')),
+      edge:pick(document.getElementById('ui-edge-fog'))};
+    phone.style.visibility='hidden';
+    return result;
+  });
+  const withoutPhone=pixelAtCenter(await page.screenshot());
+  await page.screenshot({path:'artifacts/fog-layer/'+cfg.name+'-enemy-without-phone-fog.png'});
+  await page.evaluate(()=>{
+    document.getElementById('novel-ui').style.visibility='hidden';
+  });
+  const withoutHUD=pixelAtCenter(await page.screenshot());
+  await page.screenshot({path:'artifacts/fog-layer/'+cfg.name+'-enemy-without-all-ui.png'});
+  await page.evaluate(()=>{
+    document.getElementById('novel-ui').style.visibility='';
+    document.getElementById('ui-phone-fog').style.visibility='';
+  });
+  console.log('NPC COMPOSITOR DEBUG '+cfg.name+' '+JSON.stringify({
+    enemyExposed,withoutPhone,withoutHUD,extra}));
   assert.ok(enemyExposed[0]>190&&enemyExposed[2]>190&&enemyExposed[1]<90,
     'NPC occlusion probe did not appear when both smoke layers were removed: '+
       JSON.stringify({cfg:cfg.name,enemyExposed,enemyCovered}));
