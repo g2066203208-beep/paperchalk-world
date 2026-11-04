@@ -4,7 +4,7 @@
 const ed=window.characterEditor,core=window.PaperchalkPartRigCore,studio=window.PaperchalkStudio;
 if(!ed||!core||!studio)return;
 const $=id=>document.getElementById(id),S=ed.S,stage=$('stage');
-const state={active:false,panelOpen:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false,fitMode:false,fitDrag:null};
+const state={active:false,panelOpen:false,model:null,visualIdle:null,selected:'',bone:'',drag:null,phase:0,playing:true,dirty:false,showGuides:false,fitMode:false,fitDrag:null,undoStack:[],redoStack:[],historyBaseline:'',openedRig:null,lastOperationAt:0};
 const panel=document.createElement('section');panel.id='part-rig-panel';panel.hidden=true;
 panel.innerHTML=`<header class="rig-h"><strong>部件与骨骼</strong><button id="rig-close" type="button" hidden aria-hidden="true">关闭</button></header>
 <p id="rig-source">直接拖动画布中的关节，或修改所选部件的高级参数。</p>
@@ -801,9 +801,118 @@ window.addEventListener('paperchalk:studio-source-stack-restored',event=>{
  reconcileSourceParts();
 });
 window.addEventListener('paperchalk:studio-layer-order-changed',syncLayerOrder);
-function changed(autosave=true){
+// This history is independent from the bitmap painter and from the
+// per-mask brush undo stack. Unlike the old UI, a mis-dragged pivot,
+// wrong scale or wrong bone slider can be undone immediately.
+function rigSnapshot(){return JSON.stringify(state.model)}
+function rememberRigHistory(){
+ const next=rigSnapshot(),prior=state.historyBaseline;
+ if(prior&&next!==prior){
+  const now=Date.now(),last=state.undoStack[state.undoStack.length-1];
+  // One drag gesture / slider scrubbing sequence = one undo step.
+  if(!last||last.time+450<now||last.part!==state.selected)
+   state.undoStack.push({snapshot:prior,time:now,part:state.selected});
+  if(state.undoStack.length>24)state.undoStack.shift();
+  state.redoStack.length=0;
+  state.lastOperationAt=now;
+ }
+ state.historyBaseline=next;
+}
+function rehydrateRig(snapshot){
+ if(!state.active||!state.model||!snapshot)return false;
+ if(snapshot.characterId!==studio.current||snapshot.face!==S.side)
+  throw Error('复原数据不属于当前人物或方向，已阻止错误覆盖');
+ if(Object.keys(snapshot.parts||{}).length!==parts().length||
+    !parts().every(p=>snapshot.parts[key(p)]))
+  throw Error('源图层数量与复原版本不一致，已保留所有画作');
+ if(maskState.enabled)setMaskMode(false);
+ state.model=core.project(parts(),studio.current,S.side,snapshot);
+ state.model.deletedParts=snapshot.deletedParts||[];
+ state.model.deletedPartBackups=snapshot.deletedPartBackups||{};
+ state.model.deletedMaskBackups=snapshot.deletedMaskBackups||{};
+ state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
+ maskState.editingEntry=null;maskState.history=[];maskState.redo=[];
+ state.historyBaseline=rigSnapshot();
+ syncCrouchUI();fitValues();values();refreshBones();syncIdle();
+ updateMaskControls();ed.renderList();ed.render();
+ return true;
+}
+function undoRig(){
+ if(maskState.enabled&&maskState.history.length){
+  maskHistoryStep(false);return true;
+ }
+ if(!state.undoStack.length||!state.active)return false;
+ const prior=state.undoStack.pop(),current=rigSnapshot();
+ state.redoStack.push({snapshot:current,time:Date.now(),part:state.selected});
+ rehydrateRig(JSON.parse(prior.snapshot));markRigRestored('已撤销骨骼／缩放操作');
+ return true;
+}
+function redoRig(){
+ if(maskState.enabled&&maskState.redo.length){maskHistoryStep(true);return true;}
+ if(!state.redoStack.length||!state.active)return false;
+ const next=state.redoStack.pop(),current=rigSnapshot();
+ state.undoStack.push({snapshot:current,time:Date.now(),part:state.selected});
+ rehydrateRig(JSON.parse(next.snapshot));markRigRestored('已重做骨骼／缩放操作');
+ return true;
+}
+function markRigRestored(label){
  revision++;state.dirty=true;
- info('有尚未保存的骨骼调整');
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(()=>save().catch(e=>info('复原保存失败：'+e.message)),1200);
+ state.lastOperationAt=Date.now();
+ info(label+' · 原始绘画、蒙版与其他部件未清空');
+ ed.render();
+}
+function restoreOpenedRig(){
+ if(!state.openedRig||!state.active)return false;
+ if(!confirm('把当前人物骨骼、摆动和局部遮挡恢复到本次打开工作室时的状态？不会删除你绘画的贴图。')){
+  return false;
+ }
+ const old=rigSnapshot();
+ rehydrateRig(JSON.parse(state.openedRig));
+ state.undoStack.push({snapshot:old,time:Date.now(),part:state.selected});
+ state.redoStack=[];
+ markRigRestored('已恢复本次打开时的骨骼与蒙版');
+ return true;
+}
+function resetPartPlacement(mode){
+ const p=current(),baseline=state.openedRig?
+  JSON.parse(state.openedRig).parts?.[p?.id]:null;
+ if(!p)return false;
+ const prev=rigSnapshot();
+ const rest=baseline?.placement||{scaleX:1,scaleY:1,offsetX:0,offsetY:0};
+ p.placement||={scaleX:1,scaleY:1,offsetX:0,offsetY:0};
+ if(mode==='position'){
+  p.placement.offsetX=Number(rest.offsetX)||0;
+  p.placement.offsetY=Number(rest.offsetY)||0;
+ }else if(mode==='scale'){
+  p.placement.scaleX=Number(rest.scaleX)||1;
+  p.placement.scaleY=Number(rest.scaleY)||1;
+ }else{
+  const approved=studio.current==='female-06'&&p.id==='pants_overlay'?
+   {scaleX:1.20,scaleY:1,offsetX:-15,offsetY:-17}:
+   {scaleX:1,scaleY:1,offsetX:0,offsetY:0};
+  p.placement={...approved};
+ }
+ if(prev===rigSnapshot())return false;
+ rememberRigHistory();fitValues();markRigRestored(
+  mode==='position'?'位置已恢复到本次打开时':
+  mode==='scale'?'缩放已恢复到本次打开时':'已恢复预设原位');
+ return true;
+}
+function resetCrouchMotion(){
+ if(!state.active||state.model?.characterId!=='protagonist-crouch-axe')return false;
+ const old=rigSnapshot();
+ state.model.crouchDynamics={version:2,body:0,depth:0,cloth:0,axe:0,legs:0,feet:0};
+ core.bindCrouchDynamics(state.model);
+ if(old===rigSnapshot())return false;
+ rememberRigHistory();syncCrouchUI();markRigRestored('已复原原画蹲姿：关闭全部新增变形');
+ return true;
+}
+function changed(autosave=true){
+ rememberRigHistory();
+ revision++;state.dirty=true;
+ info('有尚未保存的骨骼调整 · 可用顶部「复原」或撤销');
  quickInfo('已实时预览，点击「保存到游戏」应用。');
  clearTimeout(saveTimer);
  if(autosave)saveTimer=setTimeout(()=>save().catch(()=>{}),1200);
@@ -873,6 +982,11 @@ async function activate(openPanel=false){
   queueMicrotask(()=>window.dispatchEvent(new CustomEvent('paperchalk:studio-action-changed',{detail:{characterId:id,face,action:initial}})));
  }
  state.visualIdle=JSON.parse(JSON.stringify(state.model.idleProfile));
+ // A true session recovery point survives the user's next mistaken drag.
+ // It contains ALL authored mask relationships, bones and placements.
+ state.openedRig=rigSnapshot();
+ state.historyBaseline=state.openedRig;
+ state.undoStack=[];state.redoStack=[];state.lastOperationAt=0;
  state.model.occlusionMasks=Array.isArray(state.model.occlusionMasks)?state.model.occlusionMasks:[];
  state.active=true;state.phase=0;state.playing=true;state.showGuides=false;state.fitMode=true;state.fitDrag=null;
  $('rig-fit-handles').setAttribute('aria-pressed','true');
@@ -1570,6 +1684,14 @@ function selectMaskRelation(source,index){
  $('rig-mask-relations').open=true;
  ed.render();return true;
 }
-window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,syncLayerMetadata,mapToSource,clearSelection,getMaskRelations,selectMaskRelation};
+window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,select,setPlaying,exportGameModule,syncLayerOrder,syncLayerMetadata,mapToSource,clearSelection,getMaskRelations,selectMaskRelation,
+ undo:undoRig,redo:redoRig,canUndo:()=>!!state.undoStack.length||
+  !!(maskState.enabled&&maskState.history.length),
+ canRedo:()=>!!state.redoStack.length||!!(maskState.enabled&&maskState.redo.length),
+ restoreOpened:restoreOpenedRig,resetPlacement:resetPartPlacement,
+ resetCrouchMotion,maskUndo:()=>maskHistoryStep(false),
+ maskRedo:()=>maskHistoryStep(true),
+ get lastOperationAt(){return state.lastOperationAt;},
+ get maskEditing(){return maskState.enabled;}};
 requestAnimationFrame(tick);
 })();
