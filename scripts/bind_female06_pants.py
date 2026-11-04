@@ -193,7 +193,16 @@ def install(library: Path) -> bool:
             source_poster.convert("RGBA").save(pristine, "PNG", optimize=True)
     with Image.open(pristine) as source_poster:
         poster = source_poster.convert("RGBA")
-    poster.alpha_composite(fitted, (x, y))
+    # Static poster must agree with the exact PartMesh REST pose. Otherwise
+    # gallery/actor thumbnails show the former oversized/misplaced shorts.
+    transform = PANTS_PLACEMENT
+    sw = max(1, round(w * transform["scaleX"]))
+    sh = max(1, round(h * transform["scaleY"]))
+    px, py = .5, .09
+    left = round(x + w*px + transform["offsetX"] - sw*px)
+    top = round(y + h*py + transform["offsetY"] - sh*py)
+    poster.alpha_composite(fitted.resize((sw, sh), Image.Resampling.LANCZOS),
+                           (left, top))
     poster.save(base / "front.png", "PNG", optimize=True)
 
     # Repair BOTH new-outfit arms using per-sleeve shoulder -> elbow chains.
