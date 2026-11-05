@@ -25,7 +25,7 @@ const COLORS=Object.freeze({
 // A matching PNG/WebP may replace any SVG without changing world geometry.
 // Game performs perspective; no camera perspective is baked into assets.
 const MATERIALS=Object.freeze({
-  floor:'./assets/room-box/floor.svg',
+  floor:'./assets/room-box/floor.png',
   ceiling:'./assets/room-box/ceiling.svg',
   back:'./assets/room-box/back.png',
   left:'./assets/room-box/left.svg',
