@@ -1,0 +1,60 @@
+name: Export protagonist axe practice swing
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/render_protagonist_axe_attack.py'
+      - '.github/workflows/render-axe-attack.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: render-protagonist-axe-attack
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Pillow
+        run: python3 -m pip install --quiet 'Pillow>=10,<12'
+      - name: Render original-PSD-layer animation
+        run: python3 scripts/render_protagonist_axe_attack.py
+      - name: Verify GIF and transparent frames
+        run: |
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          p=Path('site/assets/animations/protagonist-axe-attack')
+          frames=sorted((p/'frames').glob('frame_*.png'))
+          assert len(frames)==14,len(frames)
+          for frame in frames:
+              img=Image.open(frame)
+              assert img.mode=='RGBA' and img.size==(1280,1280)
+              assert img.getpixel((0,0))[3]==0
+          gif=Image.open(p/'attack.gif')
+          assert gif.n_frames==14
+          assert gif.info.get('loop')==0
+          assert (p/'png-sequence.zip').stat().st_size>100000
+          print('PASS: 14 transparent frames, looping GIF, sprite sheet and ZIP')
+          PY
+      - name: Commit exported preview only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/assets/animations/protagonist-axe-attack
+          if ! git diff --cached --quiet; then
+            git commit -m 'assets: export protagonist axe practice swing GIF and PNG frames'
+            git push origin HEAD:main
+          fi
+      - name: Package outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: protagonist-axe-practice-gif-and-frames
+          path: |
+            site/assets/animations/protagonist-axe-attack/attack.gif
+            site/assets/animations/protagonist-axe-attack/png-sequence.zip
+            site/assets/animations/protagonist-axe-attack/spritesheet.png
+            site/assets/animations/protagonist-axe-attack/metadata.json
+          retention-days: 90
