@@ -22,6 +22,24 @@ const COLORS=Object.freeze({
   ceiling:'#a8b1be',floor:'#bca17f',back:'#70899b',
   left:'#86a69e',right:'#b78e82'
 });
+// Every surface is a separately authored, flat/orthographic image file.
+// A matching PNG/WebP may replace any SVG without changing world geometry.
+// Game performs perspective; no camera perspective is baked into assets.
+const MATERIALS=Object.freeze({
+  floor:'./assets/room-box/floor.svg',
+  ceiling:'./assets/room-box/ceiling.svg',
+  back:'./assets/room-box/back.svg',
+  left:'./assets/room-box/left.svg',
+  right:'./assets/room-box/right.svg'
+});
+const TEX_UV=Object.freeze({
+  // uv.v=1 means the top of a source image after WebGL UNPACK_FLIP_Y.
+  floor:[[0,0],[0,1],[1,1],[1,0]],
+  ceiling:[[0,0],[1,0],[1,1],[0,1]],
+  back:[[0,0],[1,0],[1,1],[0,1]],
+  left:[[0,0],[0,1],[1,1],[1,0]],
+  right:[[0,0],[1,0],[1,1],[0,1]]
+});
 const FACES=Object.freeze([
   {id:'back',label:'后墙',vertices:[[-4.8,0,8],[4.8,0,8],[4.8,3.2,8],[-4.8,3.2,8]],center:[0,2.2,8]},
   {id:'floor',label:'地板',vertices:[[-4.8,0,0],[-4.8,0,8],[4.8,0,8],[4.8,0,0]],center:[0,0,4]},
@@ -74,12 +92,16 @@ function hexColor(hex,opacity=1){
 }
 function meshVertex(out,pt,color){out.push(pt[0],pt[1],pt[2],...color)}
 function buildMesh(){
-  const solids=[],edges=[],shadows=[];
+  const solids=[],edges=[],shadows=[],textured={};
   const edgeColor=hexColor('#344251',.8);
   for(const face of FACES){
     const c=hexColor(COLORS[face.id]);
     const v=face.vertices;
-    for(const i of [0,1,2,0,2,3])meshVertex(solids,v[i],c);
+    const uv=TEX_UV[face.id];
+    const triangleOrder=[0,1,2,0,2,3];
+    for(const i of triangleOrder)meshVertex(solids,v[i],c);
+    textured[face.id]=new Float32Array(triangleOrder.flatMap(i=>
+      [...v[i],...uv[i]]));
     for(let i=0;i<4;i++){
       meshVertex(edges,v[i],edgeColor);
       meshVertex(edges,v[(i+1)%4],edgeColor);
@@ -98,7 +120,7 @@ function buildMesh(){
     }
   }
   return {solids:new Float32Array(solids),edges:new Float32Array(edges),
-    shadows:new Float32Array(shadows),faceCount:5};
+    shadows:new Float32Array(shadows),textured,faceCount:5};
 }
 const VS=[
 'attribute vec3 a_position;',
@@ -126,6 +148,35 @@ const FS=[
 'varying vec4 v_color;',
 'void main(){gl_FragColor=v_color;}'
 ].join('\n');
+// Same exact camera as the colored mesh; the GPU interpolates UV across
+// the five actual 3D planes with perspective-correct interpolation.
+const TEXTURE_VS=[
+'attribute vec3 a_position;',
+'attribute vec2 a_uv;',
+'uniform vec3 u_camera;',
+'uniform vec2 u_angles;',
+'uniform vec2 u_tanHalf;',
+'varying vec2 v_uv;',
+'void main(){',
+'vec3 d=a_position-u_camera;',
+'float cy=cos(u_angles.x),sy=sin(u_angles.x);',
+'float cp=cos(u_angles.y),sp=sin(u_angles.y);',
+'float x=cy*d.x-sy*d.z;',
+'float z0=sy*d.x+cy*d.z;',
+'float y=cp*d.y-sp*z0;',
+'float depth=sp*d.y+cp*z0;',
+'float n=0.08,f=30.0;',
+'float clipZ=(f+n)/(f-n)*depth-(2.0*f*n)/(f-n);',
+'gl_Position=vec4(x/u_tanHalf.x,y/u_tanHalf.y,clipZ,depth);',
+'v_uv=a_uv;',
+'}'
+].join('\n');
+const TEXTURE_FS=[
+'precision mediump float;',
+'varying vec2 v_uv;',
+'uniform sampler2D u_tex;',
+'void main(){gl_FragColor=texture2D(u_tex,v_uv);}'
+].join('\n');
 
 function create({stage,view,playerRoot,enemyRoot}={}){
   if(!stage||!view||!playerRoot||!enemyRoot)
@@ -140,6 +191,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   original.insertAdjacentElement('afterend',surface);
   let gl=null,program=null,buffers=null,positions=null,ctx=null,renderer='uninitialized';
   let cameraLoc=null,anglesLoc=null,tanLoc=null,enabled=false,lastKey='',lastState=null,frames=0;
+  let texturedProgram=null,texturedLocations=null,materialBuffers=null,textureResources=null;
+  const materialStatus=Object.fromEntries(Object.keys(MATERIALS).map(id=>[id,'not-loaded']));
   const geometry=buildMesh();
   const labels=document.createElement('div');
   labels.id='classroom-box-labels';
@@ -200,16 +253,84 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       buffers[key]={buffer,count:arr.length/7};
     }
     positions={p,c};
+    const tv=compile(gl.VERTEX_SHADER,TEXTURE_VS);
+    const tf=compile(gl.FRAGMENT_SHADER,TEXTURE_FS);
+    texturedProgram=gl.createProgram();
+    if(!texturedProgram)throw Error('3D surface material shader unavailable');
+    gl.attachShader(texturedProgram,tv);gl.attachShader(texturedProgram,tf);
+    gl.linkProgram(texturedProgram);gl.deleteShader(tv);gl.deleteShader(tf);
+    if(!gl.getProgramParameter(texturedProgram,gl.LINK_STATUS))
+      throw Error('Material shader link: '+gl.getProgramInfoLog(texturedProgram));
+    texturedLocations={
+      position:gl.getAttribLocation(texturedProgram,'a_position'),
+      uv:gl.getAttribLocation(texturedProgram,'a_uv'),
+      camera:gl.getUniformLocation(texturedProgram,'u_camera'),
+      angles:gl.getUniformLocation(texturedProgram,'u_angles'),
+      tan:gl.getUniformLocation(texturedProgram,'u_tanHalf'),
+      image:gl.getUniformLocation(texturedProgram,'u_tex')
+    };
+    if(texturedLocations.position<0||texturedLocations.uv<0)
+      throw Error('3D material UV attributes unavailable');
+    materialBuffers={};
+    for(const [id,arr] of Object.entries(geometry.textured)){
+      const buffer=gl.createBuffer();
+      if(!buffer)throw Error('Surface UV buffer unavailable: '+id);
+      gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+      gl.bufferData(gl.ARRAY_BUFFER,arr,gl.STATIC_DRAW);
+      materialBuffers[id]={buffer,count:arr.length/5};
+    }
+    // Separate image/texture for each physical face. Keep the solid face
+    // under it as an explicit fallback if an asset is missing.
+    textureResources={};
+    const generation=textureResources;
+    for(const [id,url] of Object.entries(MATERIALS)){
+      const texture=gl.createTexture();
+      if(!texture)throw Error('Material texture creation failed: '+id);
+      gl.bindTexture(gl.TEXTURE_2D,texture);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+      textureResources[id]={texture,url,ready:false};
+      materialStatus[id]='loading';
+      const img=new Image();
+      img.onload=()=>{
+        if(textureResources!==generation)return;
+        try{
+          gl.bindTexture(gl.TEXTURE_2D,texture);
+          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+          gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,
+            gl.UNSIGNED_BYTE,img);
+          if(gl.getError()!==gl.NO_ERROR)throw Error('GPU upload failed');
+          generation[id].ready=true;materialStatus[id]='ready';
+        }catch(error){
+          materialStatus[id]='error';
+          console.warn('3D material '+id+' unavailable',error);
+        }
+        lastKey=''; // repaint on the next normal game frame
+      };
+      img.onerror=()=>{
+        if(textureResources!==generation)return;
+        materialStatus[id]='error';
+        console.warn('3D material failed to load:',id,url);
+        lastKey='';
+      };
+      img.src=url;
+    }
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
     gl.clearColor(.08,.12,.17,1);
     surface.addEventListener('webglcontextlost',event=>{
-      event.preventDefault();program=null;buffers=null;renderer='context-lost';
+      event.preventDefault();program=null;buffers=null;
+      texturedProgram=null;materialBuffers=null;textureResources=null;
+      renderer='context-lost';
     });
     surface.addEventListener('webglcontextrestored',()=>{
-      program=null;buffers=null;gl=null;lastKey='';if(enabled)render();
+      program=null;buffers=null;texturedProgram=null;
+      materialBuffers=null;textureResources=null;gl=null;lastKey='';
+      if(enabled)render();
     });
     renderer='webgl-3d-mesh';
   }
@@ -232,6 +353,33 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       gl.drawArrays(mode,0,b.count);
     };
     draw('solids',gl.TRIANGLES,true);
+    // The five independently authored orthographic assets are attached to
+    // five different world-space surfaces, not composited as one wallpaper.
+    gl.disableVertexAttribArray(positions.p);
+    gl.disableVertexAttribArray(positions.c);
+    gl.useProgram(texturedProgram);
+    const m=texturedLocations;
+    gl.uniform3f(m.camera,cam.x,cam.y,cam.z);
+    gl.uniform2f(m.angles,cam.yaw,cam.pitch);
+    gl.uniform2f(m.tan,tanX,tanX/(w/h));
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform1i(m.image,0);
+    gl.depthMask(true);
+    for(const face of FACES){
+      const resource=textureResources?.[face.id];
+      if(!resource?.ready)continue;
+      const gpu=materialBuffers[face.id];
+      gl.bindTexture(gl.TEXTURE_2D,resource.texture);
+      gl.bindBuffer(gl.ARRAY_BUFFER,gpu.buffer);
+      gl.enableVertexAttribArray(m.position);
+      gl.enableVertexAttribArray(m.uv);
+      gl.vertexAttribPointer(m.position,3,gl.FLOAT,false,20,0);
+      gl.vertexAttribPointer(m.uv,2,gl.FLOAT,false,20,12);
+      gl.drawArrays(gl.TRIANGLES,0,gpu.count);
+    }
+    gl.disableVertexAttribArray(m.position);
+    gl.disableVertexAttribArray(m.uv);
+    gl.useProgram(program);
     draw('edges',gl.LINES,false);
     draw('shadows',gl.TRIANGLES,false);
     gl.depthMask(true);
@@ -277,6 +425,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     setVar(id,'top',fix(offsetY+geometry.localTop));
   }
   function updateLabels(cam,w,h){
+    if(labels.hidden)return;
     for(const face of FACES){
       const el=labels.querySelector('[data-face="'+face.id+'"]');
       const p=project(face.center,cam,w,h);
@@ -324,12 +473,18 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     }
     lastState={active:true,faceCount:5,room:ROOM,camera:cam,player,enemy,
       renderer,meshFaceCount:5,vertexCount:geometry.solids.length/7,
+      materialSources:MATERIALS,materials:{...materialStatus},
+      loadedMaterialCount:Object.values(materialStatus).filter(v=>v==='ready').length,
       projection:'physical-perspective-camera',frames,
       floorY:0,actorRendering:'real-game-l2d',canvasSize:{w:bw,h:bh}};
     return true;
   }
   function setActive(state){
-    enabled=!!state;surface.hidden=!enabled;labels.hidden=!enabled;
+    enabled=!!state;surface.hidden=!enabled;
+    // Material drawings provide the wall/floor geometry; labels only on
+    // explicit debug request, not as floating wallpaper-like decorations.
+    labels.hidden=!enabled||
+      new URLSearchParams(window.location.search).get('roomlabels')!=='1';
     view.classList.toggle('room-blockout-active',enabled);
     if(!enabled){
       lastKey='';lastState=null;
@@ -342,6 +497,6 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     get canvas(){return surface}
   });
 }
-return Object.freeze({ROOM,BASE_CAMERA,CHARACTERS,COLORS,FACES,
+return Object.freeze({ROOM,BASE_CAMERA,CHARACTERS,COLORS,FACES,MATERIALS,
   camera,project,actorGeometry,buildMesh,create});
 });
