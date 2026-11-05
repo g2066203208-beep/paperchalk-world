@@ -16,7 +16,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    null,{timeout:45000});
   const root=page.locator('.character-family[data-family="protagonist"]');
   assert.equal(await root.count(),1,'heroine has exactly one person root');
-  assert.equal(await root.locator('summary').first().textContent(),'女主角');
+  assert.equal(await root.locator('summary').first().textContent(),'女主');
   assert.deepEqual(await root.locator(':scope > .character-family-children > .character-resource-section > .character-resource-heading').allTextContents(),
    ['基础立绘','动作','服装'],'only canonical primary views, actions and outfits');
   assert.equal(await root.locator('[data-category="base"] button').count(),2);
@@ -33,7 +33,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.equal(await page.locator('#studio-character option[value="protagonist-battle-front"]').count(),0,
     'legacy source is hidden from daily character selector, but deep URLs still work');
   assert.equal(await page.locator('#studio-person-import').isVisible(),true);
-  assert.match(await page.locator('#studio-person-import-target').textContent(),/女主角.*正面/);
+  assert.match(await page.locator('#studio-person-import-target').textContent(),/女主.*正面/);
   // Every person root is unique and has user-facing resource categories.
   const families=await page.locator('.character-family').evaluateAll(nodes=>
    nodes.map(el=>el.dataset.family));
@@ -57,7 +57,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    window.PaperchalkPartRigStudio.state.model),true,'base front returns to idle without a second rig');
   await page.locator('#studio-person-search').fill('睡衣');
   assert.equal(await page.locator('.character-family').count(),1);
-  assert.equal(await page.locator('.character-family>summary').first().textContent(),'女主角');
+  assert.equal(await page.locator('.character-family>summary').first().textContent(),'女主');
   await page.locator('#studio-person-search').fill('');
   await page.locator('.character-family[data-family="protagonist"] [data-category="outfit"] button').click();
   await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist-sleepwear'&&
@@ -75,7 +75,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.equal(await page.locator('.character-source-archive').count(),0,
     'old PSD remains editable through its URL, without polluting the navigation');
   assert.equal(await page.locator('#studio-character').inputValue(),'protagonist-battle-front');
-  assert.match(await page.locator('#studio-person-import-target').textContent(),/女主角.*战斗/);
+  assert.match(await page.locator('#studio-person-import-target').textContent(),/女主.*战斗/);
   assert.deepEqual(errors,[], 'browser must have no uncaught JS errors');
   console.log('PASS live studio: heroine 1 root / 1 combat action / 1 sleepwear / no source clutter / universal import / deep URL');
  }finally{await browser.close()}
