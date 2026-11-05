@@ -557,3 +557,9 @@ body.studio-page[data-focused-workspace="v3"][data-inspector="motion"] #rig-stat
   width:35px;height:38px
  }
 }
+
+@media(max-width:420px){
+ body.studio-page[data-focused-workspace="v3"] #btnSave[data-saved="true"]::after{
+  content:"已保存"
+ }
+}
