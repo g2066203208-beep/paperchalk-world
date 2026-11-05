@@ -245,6 +245,12 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   let texturedProgram=null,texturedLocations=null,materialBuffers=null,textureResources=null;
   let debugMode=false,debugCamera=null,selectedFace=null,guidesVisible=false;
   let pointerStrength=1;
+  const pointerKey='paperchalk-classroom-camera-range-v1';
+  try{
+    const stored=Number(localStorage.getItem(pointerKey));
+    if(localStorage.getItem(pointerKey)!==null&&Number.isFinite(stored))
+      pointerStrength=clamp(stored,0,1.5);
+  }catch(_){}
   const visibleFaces=Object.fromEntries(FACES.map(face=>[face.id,true]));
   const materialStatus=Object.fromEntries(Object.keys(MATERIALS).map(id=>[id,'not-loaded']));
   const actorWorld=Object.fromEntries(Object.entries(CHARACTERS).map(([id,a])=>[id,{...a}]));
@@ -635,6 +641,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   function setPointerStrength(value){
     const next=clamp(Number(value)||0,0,1.5);
     pointerStrength=next;lastKey='';
+    try{localStorage.setItem(pointerKey,String(pointerStrength))}catch(_){}
     return pointerStrength;
   }
   function setGuidesVisible(value){
