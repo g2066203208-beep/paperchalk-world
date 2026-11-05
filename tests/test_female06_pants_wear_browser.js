@@ -95,6 +95,20 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.deepEqual(arms.map(x=>x.kind),['arm-left','arm-right']);
   assert.ok(arms.every(x=>x.parent==='torso'));
   assert.ok(arms.every(x=>x.root?.y<.15&&x.second==='shoulder'));
+  // Screenshot both the actual animated ArtMeshes AND the corrected nested
+  // character tree, so clothing is not mistaken for a duplicate person.
+  const studioTree=await page.evaluate(()=>{
+    const nodes=[...document.querySelectorAll('.character-family')];
+    return nodes.map(el=>({id:el.dataset.family,name:el.querySelector('summary')?.textContent}));
+  });
+  const canonical=['protagonist','char-003','char-002','male2','char-004','char-006','female-06'];
+  assert.deepEqual(studioTree.filter(n=>canonical.includes(n.id)).map(n=>n.id),canonical);
+  assert.equal(studioTree.find(n=>n.id==='char-006')?.name,'女五');
+  assert.equal(studioTree.find(n=>n.id==='female-06')?.name,'女六');
+  const six=page.locator('.character-family[data-family="female-06"]');
+  assert.equal(await six.count(),1);
+  await six.evaluate(el=>{el.open=true;el.scrollIntoView({block:'nearest'});});
+  assert.equal(await six.locator('[data-category="outfit"] button[data-character="female-06-outfit-02"]').count(),1);
   await page.screenshot({
    path:'artifacts/character-editor/FEMALE06-NEW-CLOTHES-FIXED-ARMS.png',
    fullPage:true
