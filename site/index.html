@@ -727,7 +727,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./scene-modules.js"></script>
 <script src="./game/story-content.js?v=runtime-architecture-1"></script>
 <script src="./game/scene-preloader.js?v=runtime-architecture-1"></script>
-<script src="./game/frame-budget.js?v=runtime-architecture-1"></script>
+<script src="./game/frame-budget.js?v=frame-time-telemetry-20261105"></script>
 <link rel="stylesheet" href="./game/dialogue-layout.css?v=runtime-architecture-1">
 <script src="./game/survival-state.js"></script>
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
@@ -1116,6 +1116,7 @@ void main(){
   let fallback=null,fallbackState=null;
   // UI-only pixel resampling has its own cadence; world fluid stays at rAF.
   const fogOverlayPacer=window.PaperWorldFrameBudget.create({fps:30,maxDeltaSeconds:.12});
+  const frameTiming=window.PaperWorldFrameBudget.createTiming({capacity:240,slowFrameMs:50});
   let sceneHalf={x:.4,y:.4};
   // Live persisted fog controls, intentionally separate from 3D layer editor.
   // Large values remain user-adjustable, but the clear-zone hard-clips smoke.
@@ -3124,6 +3125,7 @@ void main(){
   }
   function tick(now){
     raf=0;if(document.hidden)return;
+    frameTiming.record(now);
     let dt=last?clamp((now-last)/1000,.001,.055):1/60;last=now;
     // First-person mouse look: smooth yaw/pitch at ONE stationary camera
     // pivot, not a dolly. This is the sole frame-time-based damping pass.
@@ -3211,10 +3213,10 @@ void main(){
   view.addEventListener('pointerleave',()=>{aimX=0;aimY=0;start()});
   window.addEventListener('blur',()=>{aimX=0;aimY=0;start()});
   window.addEventListener('resize',()=>{updatePhoneLayout();resize();centreSensor();fitTopHud();start()},{passive:true});
-  document.addEventListener('visibilitychange',()=>{last=0;fogOverlayPacer.reset();if(!document.hidden)start()});
+  document.addEventListener('visibilitychange',()=>{last=0;fogOverlayPacer.reset();frameTiming.pause();if(!document.hidden)start()});
   reduced.addEventListener?.('change',()=>{last=0;fogOverlayPacer.reset();start()});
   window.PaperWorldRenderMetrics=()=>Object.freeze({
-    worldFrames:frameNumber,overlay:fogOverlayPacer.inspect(),
+    worldFrames:frameNumber,overlay:fogOverlayPacer.inspect(),timing:frameTiming.inspect(),
     renderer:fog.dataset.renderer,simulation:{width:sizes.sw,height:sizes.sh}
   });
   if(!initGPU())initCPU();
