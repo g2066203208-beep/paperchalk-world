@@ -16,7 +16,7 @@
   wallRadius:11.4,wallHeight:6.3,outerRoleRadius:7.42,
   innerRoleRadius:4.28,outerCameraRadius:9.78,
   innerCameraRadius:1.54,verticalFov:61,
-  cameraStartAngle:rad(31),cameraEndAngle:rad(-38)
+  cameraStartAngle:rad(14),cameraEndAngle:rad(-14)
  });
  // Deliberately human-authored STATIONARY formation angles; never derive
  // actors from camera interpolation or pointer delta.
@@ -76,7 +76,8 @@
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
  function camera(mode='outer',progress=0){
   const t=clamp(Number(progress)||0,0,1),outer=mode==='outer';
-  const angle=lerp(SPEC.cameraStartAngle,SPEC.cameraEndAngle,t);
+  const angle=outer?lerp(SPEC.cameraStartAngle,SPEC.cameraEndAngle,t):
+   lerp(rad(-19),rad(19),t);
   const R=outer?SPEC.outerCameraRadius:SPEC.innerCameraRadius;
   const eye=polar(R,angle,1.45);
   const focus=polar(outer?2.9:8.0,angle,1.12);
