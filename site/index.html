@@ -2599,6 +2599,7 @@ void main(){
       boxScene.setFaceVisible(input.dataset.roomFaceToggle,true);
     restoreRoomLayers();
     boxScene.selectFace(null);
+    boxScene.setReferenceLayer(null);
     selectedRoomObject=null;
     refreshRoomDev();
     setDevStatus('已恢复全部三维面、玩家、敌人和黑雾');
