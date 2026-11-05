@@ -63,15 +63,19 @@ try{
     assert.equal(topHud.statCount,3);
     assert.deepEqual(topHud.segmentCounts,[10,10,10]);
     assert.deepEqual(topHud.vals,['100/100','100/100','100/100']);
-    const clockNow=await page.evaluate(()=>{
+    // The DOM sample and Date sample can straddle a minute/day rollover.
+    // Validate the LIVE clock together in one browser task, allowing the
+    // existing 1-second HUD interval to catch up instead of a false failure.
+    await page.waitForFunction(()=>{
       const d=new Date();
-      return {date:(d.getMonth()+1)+'月'+d.getDate()+'日',
-        weekday:['周日','周一','周二','周三','周四','周五','周六'][d.getDay()],
-        time:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
-    });
-    assert.equal(topHud.date,clockNow.date,'HUD date not using device local date');
-    assert.equal(topHud.weekday,clockNow.weekday,'HUD weekday not using real date');
-    assert.equal(topHud.time,clockNow.time,'HUD clock is still a fixed preview time');
+      const expectedDate=(d.getMonth()+1)+'月'+d.getDate()+'日';
+      const expectedDay=['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+      const expectedTime=String(d.getHours()).padStart(2,'0')+':'+
+        String(d.getMinutes()).padStart(2,'0');
+      return document.getElementById('hud-date')?.textContent===expectedDate&&
+        document.getElementById('hud-weekday')?.textContent===expectedDay&&
+        document.getElementById('hud-time')?.textContent===expectedTime;
+    },null,{timeout:4000});
     assert.equal(topHud.overflow,false,'Top HUD contents overflow: '+JSON.stringify(topHud));
     // Check coordinates within the LOGICAL 16:9 game canvas. The mobile
     // browser rotates that canvas 90 degrees into portrait device space, so
