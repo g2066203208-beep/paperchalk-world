@@ -222,8 +222,10 @@ const artSection=[...left.querySelectorAll(':scope > section')].find(
 if(artSection)artSection.classList.add('workspace-layers-section');
 const selector=$('rig-part');
 function syncSelection(){
- const id=selector?.selectedOptions?.[0]?.textContent?.trim()||'未选择部件';
- subtitle.textContent=rig.state?.active?id:'角色工作室';
+ const selected=selector?.selectedOptions?.[0]?.textContent?.trim()||'未选择部件';
+ const name=$('studio-character')?.selectedOptions?.[0]?.textContent?.trim()||'角色工作室';
+ subtitle.textContent=rig.state?.active?name+' · '+selected:name;
+ subtitle.title=subtitle.textContent;
 }
 selector?.addEventListener('change',syncSelection);
 window.addEventListener('paperchalk:studio-ready-to-edit',syncSelection);
