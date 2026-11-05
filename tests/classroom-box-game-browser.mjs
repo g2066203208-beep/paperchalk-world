@@ -42,8 +42,8 @@ try{
      const room=window.PaperWorldGameRoomBox?.inspect();
      const player=window.PaperchalkL2D?.get('player');
      const enemy=window.PaperchalkL2D?.get('enemy');
-     const others=['enemy2','enemy3'].map(id=>window.PaperchalkL2D?.get(id));
-     return room?.active&&room.faceCount===5&&room.player&&room.enemy&&room.enemy2&&room.enemy3&&
+     const others=['enemy2','enemy3','enemy4'].map(id=>window.PaperchalkL2D?.get(id));
+     return room?.active&&room.faceCount===5&&room.player&&room.enemy&&room.enemy2&&room.enemy3&&room.enemy4&&
        player?.root?.dataset.l2dState==='ready' &&
        room?.renderer==='webgl-3d-mesh' &&
        room.loadedMaterialCount===5 &&
@@ -63,6 +63,7 @@ try{
      const enemy=window.PaperchalkL2D.get('enemy');
      const enemy2=window.PaperchalkL2D.get('enemy2');
      const enemy3=window.PaperchalkL2D.get('enemy3');
+     const enemy4=window.PaperchalkL2D.get('enemy4');
      const inspect=actor=>{
        const rect=actor.canvas.getBoundingClientRect();
        const img=actor.img.getBoundingClientRect();
@@ -75,7 +76,7 @@ try{
      return {room,canvas:{hidden:canvas.hidden,w:canvas.width,h:canvas.height},
       scene:document.getElementById('scene').dataset.scene,
       player:inspect(player),enemy:inspect(enemy),
-      enemy2:inspect(enemy2),enemy3:inspect(enemy3),
+      enemy2:inspect(enemy2),enemy3:inspect(enemy3),enemy4:inspect(enemy4),
       fogFrames:Number(document.querySelector('#fog').dataset.frames),
       sceneRect:document.getElementById('scene').getBoundingClientRect().toJSON(),
       viewportRect:view.getBoundingClientRect().toJSON(),
@@ -87,7 +88,7 @@ try{
       originalImageVisibility:getComputedStyle(document.querySelector('#source')).visibility,
       cameraProfile:document.querySelector('#scene').dataset.cameraProfile,
       gameBackgroundTransform:document.querySelector('#scene').style.transform,
-      actorLayers:['enemy-depth-root','room-enemy2-root','room-enemy3-root',
+      actorLayers:['enemy-depth-root','room-enemy2-root','room-enemy3-root','room-enemy4-root',
         'camera-player-root'].map(id=>document.getElementById(id).hidden),
       scenePicker:!!document.querySelector('[data-scene-target="classroom-box"]')
      };
@@ -122,10 +123,10 @@ try{
    assert.equal(data.gameBackgroundTransform,'none');
    assert.equal(data.cameraProfile,'five-face-world-3d');
    assert.ok(data.fogFrames>5);
-   assert.deepEqual(data.actorLayers,[false,false,false,false]);
-   for(const id of ['player','enemy','enemy2','enemy3'])
+   assert.deepEqual(data.actorLayers,[false,false,false,false,false]);
+   for(const id of ['player','enemy','enemy2','enemy3','enemy4'])
      assert.equal(data[id].state,'ready',id+' real L2D canvas is not ready');
-   for(const id of ['enemy2','enemy3']){
+   for(const id of ['enemy2','enemy3','enemy4']){
      assert.equal(data[id].mode,'library-part-mesh','must animate genuine character layers: '+id);
      assert.ok(data[id].src&&data[id].canvasPixels>0);
    }
@@ -148,7 +149,8 @@ try{
    const stage=await page.locator('#scene').boundingBox();
    const playerRect=data.player.imgRect,enemyRect=data.enemy.imgRect;
    for(const [id,rect] of [['player',playerRect],['enemy',enemyRect],
-     ['enemy2',data.enemy2.imgRect],['enemy3',data.enemy3.imgRect]]){
+     ['enemy2',data.enemy2.imgRect],['enemy3',data.enemy3.imgRect],
+      ['enemy4',data.enemy4.imgRect]]){
      const actor=data.room[id];
      const shoeX=rect.x+rect.width*actor.soleX;
      const shoeY=rect.y+rect.height*actor.soleY;
@@ -160,12 +162,12 @@ try{
    }
    assert.ok(data.room.player.drawnHeight>data.room.enemy.drawnHeight,
      'near protagonist should be larger than midground opponent');
-   // All three enemies stand in an actual 3D straight row: same world
+   // All four enemies stand in an actual 3D straight row: same world
    // floor/depth, same shoe baseline, matching perspective size and equal
    // center-to-center screen gaps. This must hold on desktop and phone.
-   const foes=['enemy','enemy2','enemy3'].map(id=>data.room[id]);
-   const enemyWorld=['enemy','enemy2','enemy3'].map(id=>data.room.worldActors[id]);
-   for(let i=1;i<3;i++){
+   const foes=['enemy','enemy2','enemy3','enemy4'].map(id=>data.room[id]);
+   const enemyWorld=['enemy','enemy2','enemy3','enemy4'].map(id=>data.room.worldActors[id]);
+   for(let i=1;i<4;i++){
      assert.equal(enemyWorld[i].z,enemyWorld[0].z,'enemies cannot stagger in depth');
      assert.equal(enemyWorld[i].y,enemyWorld[0].y,'enemies share floor Y');
      assert.ok(Math.abs(foes[i].shoe.y-foes[0].shoe.y)<1,
@@ -173,10 +175,9 @@ try{
      assert.ok(Math.abs(foes[i].drawnHeight/foes[0].drawnHeight-1)<.08,
        'enemy size should not change because of fake distance layering');
    }
-   const firstGap=foes[1].shoe.x-foes[0].shoe.x;
-   const secondGap=foes[2].shoe.x-foes[1].shoe.x;
-   assert.ok(firstGap>40&&secondGap>40&&Math.abs(firstGap-secondGap)<2,
-     'three projected enemies should have even horizontal spacing');
+   const gaps=foes.slice(1).map((actor,i)=>actor.shoe.x-foes[i].shoe.x);
+   assert.ok(gaps.every(g=>g>35)&&Math.max(...gaps)-Math.min(...gaps)<2,
+     'four projected enemies should have even horizontal spacing');
    await page.screenshot({path:'artifacts/classroom-box/in-game-'+cfg.name+
      '-five-faces-l2d.png'});
    if(!cfg.mobile){
