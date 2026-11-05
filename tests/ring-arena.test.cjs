@@ -1,77 +1,68 @@
 'use strict';
-// Fixed 3D battle-composition regression: only camera switches, never actors.
+/* World-space cinematic battle framing regression based on supplied
+ * reference gameplay frames. No per-character camera-space shortcuts.
+ */
 const assert=require('node:assert/strict');
 const arena=require('../site/game/ring-arena-runtime.js');
-const near=(a,b,eps=1e-7)=>assert.ok(Math.abs(a-b)<eps,a+' != '+b);
-const distance=p=>Math.hypot(p.x,p.z);
-const spectator='hero,enemy-1,enemy-2,enemy-3,enemy-4';
-assert.equal(arena.SPEC.stageType,'shallow-arc');
+const approx=(a,b,eps=1e-8)=>assert.ok(Math.abs(a-b)<=eps,a+' != '+b);
+assert.equal(arena.SPEC.stageType,'wide-cinematic-arc');
+assert.ok(arena.SPEC.wallRadius>=30,'large performance environment, no tiny circle');
+assert.ok(arena.SPEC.floorWidth>=80);
 assert.deepEqual(arena.SHOT_NAMES,['左侧','全景','右侧']);
-assert.equal(arena.CAMERA_STOPS.outer.length,3);
-assert.equal(arena.CAMERA_STOPS.inner.length,3);
 assert.deepEqual(arena.HIDDEN_ALLY_IDS,['ally-2','ally-3','ally-4']);
+assert.ok(arena.responsiveFov(52,9/16)>arena.responsiveFov(52,16/9),
+ 'portrait must expand vertical FOV and retain horizontal composition');
 for(const mode of ['outer','inner']){
- const original=arena.layout(mode);
- assert.equal(original.allies.length,4);assert.equal(original.enemies.length,4);
- assert.equal(arena.visibleActors(mode).map(a=>a.id).join(','),spectator);
- assert.strictEqual(arena.layout(mode),original,'scene is immutable');
- assert.ok(Object.isFrozen(original.allies)&&Object.isFrozen(original.enemies));
- for(const actor of [...original.allies,...original.enemies]){
-  assert.ok(Object.isFrozen(actor));
-  near(actor.y,0);
-  const r=actor.team==='ally'?
-   (mode==='outer'?arena.SPEC.outerRoleRadius:arena.SPEC.innerRoleRadius):
-   (mode==='outer'?arena.SPEC.innerRoleRadius:arena.SPEC.outerRoleRadius);
-  near(distance(actor),r);
+ const scene=arena.layout(mode),orig=JSON.stringify(scene);
+ assert.equal(scene.allies.length,4);assert.equal(scene.enemies.length,4);
+ assert.equal(arena.visibleActors(mode).map(p=>p.id).join(','),
+  'hero,enemy-1,enemy-2,enemy-3,enemy-4');
+ assert.strictEqual(arena.layout(mode),scene);
+ assert.ok(Object.isFrozen(scene.allies)&&Object.isFrozen(scene.enemies));
+ for(const actor of [...scene.allies,...scene.enemies]){
+  assert.ok(Object.isFrozen(actor));approx(actor.y,0);
+  assert.ok(actor.height>=1.5&&actor.height<=1.7);
  }
- // Camera API is a FINITE shot selector (no free fractional camera orbit).
- assert.deepEqual([-.7,0,.3,.5,.8,1.1,1.6,2,20].map(x=>arena.camera(mode,x).index),
-  [0,0,0,1,1,1,2,2,2]);
- assert.ok(arena.camera(mode,0).shot==='left');
- assert.ok(arena.camera(mode,1).shot==='center');
- assert.ok(arena.camera(mode,2).shot==='right');
+ const spread=Math.max(...scene.enemies.map(p=>p.x))-
+  Math.min(...scene.enemies.map(p=>p.x));
+ assert.ok(spread>=4.1,'four opponents must occupy a WIDE shallow arc');
+ const h=scene.allies[0];
+ assert.ok(scene.enemies.every(p=>mode==='outer'?p.z<h.z:p.z>h.z),
+  'two surround modes use opposite physical depth directions');
+ assert.deepEqual([-.5,.3,.7,1.3,1.7,4].map(k=>arena.camera(mode,k).index),
+  [0,0,1,1,2,2],'only three fixed camera stations');
  for(const index of [0,1,2]){
-  const cam=arena.camera(mode,index);
-  assert.ok(cam.fov>=40&&cam.fov<=56);
-  assert.ok(cam.eye.y>1.3&&cam.eye.y<1.6);
-  assert.ok(distance(cam.eye)<arena.SPEC.wallRadius);
-  for(const actor of [...original.allies,...original.enemies])near(actor.y,0);
-  // Single shared pinhole camera and world-foot coordinates.
-  const hero=original.allies[0];
-  const head=arena.project({...hero,y:hero.height},cam);
-  const foot=arena.project(hero,cam);
-  assert.ok(head.valid&&foot.valid&&head.y>foot.y);
-  const projected=original.enemies.map(actor=>({
-   actor,
-   head:arena.project({...actor,y:actor.height},cam),
-   foot:arena.project(actor,cam)
-  }));
-  for(const p of projected){
-   assert.ok(p.head.valid&&p.foot.valid);
-   assert.ok(Math.abs(p.head.x)<.94 && Math.abs(p.foot.x)<.94);
-   assert.ok(p.head.y<.9&&p.foot.y>-.95,
-    'all enemies have complete full-body height in the film camera');
-   assert.ok((p.head.y-p.foot.y)*360>195,
-    'opponents must be prominently displayed at 1280x720');
+  const camera=arena.camera(mode,index);
+  assert.equal(camera.shot,['left','center','right'][index]);
+  assert.ok(camera.fov>=40&&camera.fov<=55);
+  for(const aspect of [16/9,4/3,9/16]){
+   const boxes=scene.enemies.map(p=>arena.portraitBounds(p,camera,aspect));
+   boxes.forEach(box=>{
+    assert.ok(box.valid);
+    assert.ok(box.left>=-.97&&box.right<=.97,
+      'enemy horizontally clipped at '+mode+'/'+index+'/'+aspect);
+    assert.ok(box.top<=.98&&box.bottom>=-.98,
+      'enemy vertically clipped at '+mode+'/'+index+'/'+aspect);
+   });
   }
+  const hero=arena.portraitBounds(h,camera);
+  assert.ok(hero.valid&&hero.left<1&&hero.right>-1,
+   'heroine must stay partially inside frame');
+  if(index!==1)assert.ok(hero.heightFraction>=.80,
+   'heroine must dominate the foreground');
+  const foes=scene.enemies.map(p=>arena.portraitBounds(p,camera));
+  assert.ok(foes.every(q=>q.heightFraction>=.23),
+   'foes must be legible middle-ground figures');
+  assert.equal(JSON.stringify(scene),orig,'camera must not alter actor world anchors');
  }
- // Interpolated render values are permitted only BETWEEN approved poses.
- const first=arena.camera(mode,0),last=arena.camera(mode,2);
- const partial=arena.blendCamera(first,last,.25);
- near(partial.eye.x,first.eye.x*.75+last.eye.x*.25);
- near(partial.fov,first.fov*.75+last.fov*.25);
- assert.ok(Math.abs(first.eye.x-last.eye.x)>.1);
- assert.deepEqual(arena.layout(mode),original);
+ const from=arena.camera(mode,0),to=arena.camera(mode,2);
+ const between=arena.blendCamera(from,to,.25);
+ approx(between.eye.x,from.eye.x*.75+to.eye.x*.25);
+ approx(between.fov,from.fov*.75+to.fov*.25);
 }
-const centerAngle=0,outerEdge=arena.SPEC.wallArcHalfAngle*.85;
-const o0=arena.backdropPoint('outer',centerAngle);
-const o1=arena.backdropPoint('outer',outerEdge);
-const i0=arena.backdropPoint('inner',centerAngle);
-const i1=arena.backdropPoint('inner',outerEdge);
-// Same projected wall X geometry, opposite physical curvature as SEEN
-// by the cameras (outside looks -Z; inside looks +Z).
-near(o0.x,i0.x);near(o1.x,i1.x);
-assert.ok(o0.z>o1.z,'outer camera sees near center/far wings');
-assert.ok(i0.z>i1.z,'inner camera sees far center/near wings looking +Z');
-assert.ok(i1.z>10.8,'curved wall is BEHIND the enemy formation');
-console.log('PASS: fixed 3-shot cinematic cameras, inverted surround wall and 4 visible L2D enemies');
+const o0=arena.backdropPoint('outer',0),o1=arena.backdropPoint('outer',1);
+const i0=arena.backdropPoint('inner',0),i1=arena.backdropPoint('inner',1);
+approx(o0.x,i0.x);approx(o1.x,i1.x);
+assert.ok(o0.z>o1.z&&i0.z>i1.z);
+assert.ok(i0.z>o0.z,'inner surround wall uses opposite physical view');
+console.log('PASS: wide camera-aware staging, foreground heroine, 4 visible foes, 3 fixed shots, responsive WebGL FOV');
