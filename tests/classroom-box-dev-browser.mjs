@@ -82,6 +82,14 @@ try{
     'camera','perspective'
   ],'DEV must display the complete physical room + L2D + fog + camera tree');
   assert.notEqual(tree.panelBackground,'rgba(0, 0, 0, 0)');
+  await page.locator('[data-room-object-focus="fog"]').click();
+  const fogReference=await page.evaluate(()=>({
+    selected:window.PaperWorldGameRoomBox.inspect().selectedReference,
+    overlay:document.querySelector('#classroom-box-reference-planes').hidden
+  }));
+  assert.equal(fogReference.selected,'fog');
+  assert.equal(fogReference.overlay,false);
+  await page.screenshot({path:'artifacts/classroom-box/in-game-dev-fog-reference.png'});
   const enemyBox=page.locator('[data-room-layer-toggle="enemy"]');
   await enemyBox.uncheck();
   assert.equal(await page.locator('#enemy-depth-root').evaluate(el=>el.style.opacity),'0');
