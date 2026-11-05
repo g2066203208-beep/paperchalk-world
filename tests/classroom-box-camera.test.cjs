@@ -44,6 +44,15 @@ assert.ok(pu.y>p0.y,'looking up moves central world point down on screen');
 const distance=c=>Math.hypot(point[0]-c.x,point[1]-c.y,point[2]-c.z);
 close(distance(base),distance(right));
 close(distance(base),distance(up));
+// User-approved back-wall plate must stay on the real back face, in the
+// exact 3:1 aspect ratio of the 9.6m × 3.2m physical wall.
+const fs=require('node:fs');
+const path=require('node:path');
+assert.equal(api.MATERIALS.back,'./assets/room-box/back.png');
+const plate=fs.readFileSync(path.join(__dirname,'../site/assets/room-box/back.png'));
+assert.equal(plate.toString('hex',0,8),'89504e470d0a1a0a','back wall must be a real PNG');
+assert.equal(plate.readUInt32BE(16),1728,'back wall width');
+assert.equal(plate.readUInt32BE(20),576,'back wall height');
 assert.equal(api.FACES.length,5);
 assert.equal(api.buildMesh().faceCount,5);
 console.log('PASS 3D first-person head look: fixed camera XYZ, matched pointer axes, ±7° yaw / ±3.8° pitch, deadzone and no dolly');
