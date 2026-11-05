@@ -426,9 +426,11 @@
   }
   function render(dt=1/60){
    if(!active)return false;
-   const k=1-Math.exp(-clamp(Number(dt)||0,0,.06)*7);
-   position=lerp(position,target,k);
-   if(Math.abs(position-target)<.00005)position=target;
+   const k=1-Math.exp(-clamp(Number(dt)||0,0,.06)*9);
+   const approved=camera(mode,shotIndex);
+   lens=lens?blendCamera(lens,approved,k):approved;
+   if(Math.hypot(lens.eye.x-approved.eye.x,lens.eye.y-approved.eye.y,
+      lens.eye.z-approved.eye.z)<.0001)lens=approved;
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
@@ -436,7 +438,7 @@
    const pixel=Math.min(window.devicePixelRatio||1,1.75);
    const W=Math.floor(w*pixel),H=Math.floor(h*pixel);
    if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
-   const cam=camera(mode,position),vp=multiply(perspective(SPEC.verticalFov,w/h),lookAt(cam.eye,cam.focus));
+   const cam=lens,vp=multiply(perspective(cam.fov,w/h),lookAt(cam.eye,cam.focus));
    gl.viewport(0,0,W,H);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
    gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
    gl.clearColor(.001,.005,.008,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -451,8 +453,8 @@
    drawActors(all,cam,vp);
    if(frames%12===0){
     const ready=all.filter(a=>textures.get(a.id).painted).length;
-    status.textContent=(mode==='outer'?'外侧镜头':'内侧镜头')+
-     ' · L2D '+ready+'/'+all.length+' · 相机 '+Math.round(cam.angle*180/Math.PI)+'°';
+    status.textContent=(mode==='outer'?'外侧机位':'内侧机位')+
+     ' · '+SHOT_NAMES[shotIndex]+' · L2D '+ready+'/'+all.length;
     canvas.dataset.l2dReady=String(ready);
     canvas.dataset.renderedFrames=String(frames);
    }
@@ -461,13 +463,16 @@
   function setActive(value){
    active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
-   if(active){elapsed=0;frames=0;render(0)}
+   if(active){elapsed=0;frames=0;shotIndex=0;lens=camera(mode,0);syncButtons();render(0)}
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
-   mode,progress:position,target,actors:layout(mode),
+   mode,shotIndex,shotName:SHOT_NAMES[shotIndex],
+   cameraTarget:camera(mode,shotIndex),
+   settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,shotIndex).eye.x,
+     lens.eye.z-camera(mode,shotIndex).eye.z)<.001,actors:layout(mode),
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
-   camera:camera(mode,position),ring:SPEC,
+   camera:lens||camera(mode,shotIndex),ring:SPEC,
    l2dReady:visibleActors(mode).filter(a=>textures.get(a.id).painted).length,
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:'existing PaperchalkL2D actors; source assets unchanged'});
