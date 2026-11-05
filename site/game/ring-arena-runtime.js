@@ -253,6 +253,7 @@
    '#ring-arena-controls .bottom{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;width:94%}',
    '#ring-arena-controls button{pointer-events:auto;min-height:38px;padding:8px 11px;border:1px solid rgba(118,196,166,.5);border-radius:7px;background:rgba(2,17,23,.86);font:inherit;color:#e7fff3;cursor:pointer}',
    '#ring-arena-controls button[aria-pressed=true]{background:#185b4a;border-color:#aaf9d6}',
+   '#ring-arena-controls button:disabled{opacity:.36;cursor:default}',
    '#ring-arena-controls .status{position:absolute;right:14px;top:14px;font:11px/1.5 monospace;color:#b1dccc;text-align:right}',
    '@media(max-width:690px){#ring-arena-controls .status,#ring-arena-controls .top small{display:none}#ring-arena-controls button{padding:6px 8px;min-height:35px}}'
   ].join('\n');
@@ -261,12 +262,15 @@
   canvas.hidden=true;canvas.setAttribute('aria-label','真实3D浅弧形战场，固定人物站位，滑动只移动摄像机');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="top"><b>ARC BATTLE / 3D</b><small>真实弧形舞台 · 人物固定 · 镜头沿弧线运动</small></div>',
+   '<div class="top"><b>ARC BATTLE / 3D</b><small>世界坐标固定 · 三个演出机位</small></div>',
    '<div class="status" role="status"></div><div class="bottom">',
-   '<button data-shift="-1" type="button">◀ 镜头向左</button>',
+   '<button data-shift="-1" type="button">◀ 上一机位</button>',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
-   '<button data-shift="1" type="button">镜头向右 ▶</button>',
+   '<button data-shift="1" type="button">下一机位 ▶</button>',
+   '<button data-shot="0" aria-pressed="true" type="button">左</button>',
+   '<button data-shot="1" aria-pressed="false" type="button">中</button>',
+   '<button data-shot="2" aria-pressed="false" type="button">右</button>',
    '<button data-exit type="button">返回</button></div>'
   ].join('');
   stage.append(hud);
@@ -289,28 +293,47 @@
    canvas.dataset.error=String(err.message||err);status.textContent='WebGL failed '+String(err.message||err);
    gl=null;
   }
-  let active=false,mode='outer',position=0,target=.0,elapsed=0,frames=0,paintCount=0;
+  let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0;
   let drag=null;
-  const shift=d=>{target=clamp(target+d,0,1)};
+  function syncButtons(){
+   for(const button of hud.querySelectorAll('[data-shot]'))
+    button.setAttribute('aria-pressed',String(Number(button.dataset.shot)===shotIndex));
+   for(const button of hud.querySelectorAll('[data-shift]')){
+    const next=shotIndex+Number(button.dataset.shift);
+    button.disabled=next<0||next>2;
+   }
+  }
+  function goShot(index){
+   const next=stopIndex(index);
+   if(next===shotIndex)return;
+   shotIndex=next;syncButtons();
+  }
+  const shift=dir=>goShot(shotIndex+Math.sign(dir));
+  // Only gesture RELEASE selects a new fixed camera shot; no pointer-follow.
   canvas.addEventListener('pointerdown',e=>{
    if(!active)return;e.preventDefault();e.stopPropagation();
-   drag={id:e.pointerId,x:e.clientX,y:e.clientY,initial:target};
+   drag={id:e.pointerId,x:e.clientX,y:e.clientY};
    canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove',e=>{
-   if(!drag||drag.id!==e.pointerId)return;e.preventDefault();e.stopPropagation();
-   const dx=e.clientX-drag.x;
-   target=clamp(drag.initial+dx/Math.max(270,canvas.clientWidth)*1.5,0,1);
+   if(drag&&drag.id===e.pointerId){e.preventDefault();e.stopPropagation()}
   });
-  for(const type of ['pointerup','pointercancel']){
-   canvas.addEventListener(type,e=>{if(drag&&drag.id===e.pointerId){drag=null;e.stopPropagation()}});
-  }
+  for(const type of ['pointerup','pointercancel'])canvas.addEventListener(type,e=>{
+   if(!drag||e.pointerId!==drag.id)return;
+   e.preventDefault();e.stopPropagation();
+   const delta=view.classList.contains('virtual-landscape')?
+    -(e.clientY-drag.y):(e.clientX-drag.x);
+   if(type==='pointerup'&&Math.abs(delta)>55)shift(delta>0?1:-1);
+   drag=null;
+  });
   hud.addEventListener('click',e=>{
    const b=e.target.closest('button');if(!b)return;
    e.preventDefault();e.stopPropagation();
-   if(b.hasAttribute('data-shift'))shift(Number(b.dataset.shift)*.14);
+   if(b.hasAttribute('data-shift'))shift(Number(b.dataset.shift));
+   if(b.hasAttribute('data-shot'))goShot(Number(b.dataset.shot));
    if(b.hasAttribute('data-mode')){
     mode=b.dataset.mode;
+    lens=camera(mode,shotIndex);
     for(const option of hud.querySelectorAll('[data-mode]'))
      option.setAttribute('aria-pressed',String(option.dataset.mode===mode));
     render(0);
@@ -318,10 +341,12 @@
    if(b.hasAttribute('data-exit')&&typeof onExit==='function')onExit();
   });
   document.addEventListener('keydown',e=>{
-   if(!active||e.metaKey||e.ctrlKey||e.altKey)return;
-   if(['ArrowRight','d','D'].includes(e.key)){e.preventDefault();shift(.07)}
-   if(['ArrowLeft','a','A'].includes(e.key)){e.preventDefault();shift(-.07)}
+   if(!active||e.metaKey||e.ctrlKey||e.altKey||
+      e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;
+   if(['ArrowRight','d','D'].includes(e.key)){e.preventDefault();shift(1)}
+   if(['ArrowLeft','a','A'].includes(e.key)){e.preventDefault();shift(-1)}
   });
+  syncButtons();
   function sourceFor(actor){
    const runtime=window.PaperchalkL2D?.get(actor.slot);
    if(!runtime||runtime.root.hidden||runtime.img.hidden||
