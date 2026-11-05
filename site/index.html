@@ -730,7 +730,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/survival-state.js"></script>
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
-<script src="./game/classroom-box-runtime.js?v=dev-five-face-inspector-v5"></script>
+<script src="./game/classroom-box-runtime.js?v=physical-bounded-camera-v6"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -2950,9 +2950,14 @@ void main(){
   function tick(now){
     raf=0;if(document.hidden)return;
     let dt=last?clamp((now-last)/1000,.001,.055):1/60;last=now;
-    const k=1-Math.exp(-dt*7);
+    // The 3D room uses the same time-based camera damping as all scenes,
+    // with slightly more responsive X and gently weighted vertical motion.
+    // There is NO second per-layer parallax or independent L2D tilt.
+    const roomMove=stage.dataset.scene==='classroom-box';
+    const kx=1-Math.exp(-dt*(roomMove?8.4:7));
+    const ky=1-Math.exp(-dt*(roomMove?6.8:7));
     if(reduced.matches||!tiltEnabled||editorActive){aimX=0;aimY=0}
-    currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
+    currentX+=(aimX-currentX)*kx;currentY+=(aimY-currentY)*ky;
     if(stage.dataset.scene==='menu'){
       // The menu is authored as a flat graphic; retain its original tilt.
       stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+
@@ -2964,9 +2969,9 @@ void main(){
       stage.style.transform='none';
       enemyDepth.style.transform='none';
       cameraPlayer.style.transform='none';
-      // No mouse-follow parallax or CSS tilt for the true 3D scene.
-      // Only an explicit camera action in DEV moves the shared viewpoint.
-      boxScene.render();
+      // Drive ONE bounded real camera. Physical depth differences emerge
+      // from world geometry; L2D and the five meshes use the same matrix.
+      boxScene.render(currentX,currentY);
       stage.dataset.cameraProfile='five-face-world-3d';
     }else{
       const camera=sceneCamera.pose(currentX,currentY,sizes.h);
