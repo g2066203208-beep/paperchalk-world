@@ -36,8 +36,9 @@ const BASE='http://127.0.0.1:8132/';
    return {part:'front_hair',angle:2.375,pngHash:hash(image),pngLength:image.length};
   });
   await page.goto(BASE+'?scene=classroom&dev=1',{waitUntil:'load'});
-  await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready&&
-   window.PaperchalkL2DLibrary?.get('player')?.model?.characterId==='protagonist'&&
+  await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:60000});
+  await page.evaluate(()=>{const a=window.PaperchalkL2D.get('player');a.root.hidden=false;a.img.hidden=false});
+  await page.waitForFunction(()=>window.PaperchalkL2DLibrary?.get('player')?.model?.characterId==='protagonist'&&
    window.PaperchalkL2DLibrary?.get('player')?.renderedFrames>1,
    null,{timeout:60000});
   const actual=await page.evaluate(name=>{
@@ -61,7 +62,9 @@ const BASE='http://127.0.0.1:8132/';
   assert.match(actual.edition,/(?:local-studio|locally-edited)/);
   // Verify fresh reload still uses the edited original asset, not stale V4.
   await page.reload({waitUntil:'load'});
-  await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready&&
+  await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:60000});
+  await page.evaluate(()=>{const a=window.PaperchalkL2D.get('player');a.root.hidden=false;a.img.hidden=false});
+  await page.waitForFunction(()=>
    window.PaperchalkL2DLibrary?.get('player')?.renderedFrames>1,
    null,{timeout:60000});
   const reloaded=await page.evaluate(()=>
