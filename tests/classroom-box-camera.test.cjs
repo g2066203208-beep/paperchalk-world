@@ -53,6 +53,16 @@ const plate=fs.readFileSync(path.join(__dirname,'../site/assets/room-box/back.pn
 assert.equal(plate.toString('hex',0,8),'89504e470d0a1a0a','back wall must be a real PNG');
 assert.equal(plate.readUInt32BE(16),1728,'back wall width');
 assert.equal(plate.readUInt32BE(20),576,'back wall height');
+// Unedited user-uploaded floor atlas: PNG alpha is fully opaque, and the
+// existing 3D floor UV determines perspective (not the source image).
+assert.equal(api.MATERIALS.floor,'./assets/room-box/floor.png');
+const floorPlate=fs.readFileSync(path.join(__dirname,'../site/assets/room-box/floor.png'));
+assert.equal(floorPlate.toString('hex',0,8),'89504e470d0a1a0a','floor material must be a real PNG');
+assert.equal(floorPlate.readUInt32BE(16),1728,'original floor image width');
+assert.equal(floorPlate.readUInt32BE(20),1472,'original floor image height: preserve original pixels');
+assert.deepEqual(api.FACES.find(face=>face.id==='floor').vertices,
+  [[-4.8,0,0],[-4.8,0,8],[4.8,0,8],[4.8,0,0]],
+  'original 9.6x8m physical floor geometry must remain unchanged');
 assert.equal(api.FACES.length,5);
 assert.equal(api.buildMesh().faceCount,5);
 console.log('PASS 3D first-person head look: fixed camera XYZ, matched pointer axes, ±7° yaw / ±3.8° pitch, deadzone and no dolly');
