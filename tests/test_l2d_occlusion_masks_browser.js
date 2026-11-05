@@ -48,7 +48,7 @@ const assert=require('node:assert/strict');
   assert.ok(sample,'need visible overlap for mask occlusion test');
   await page.locator('#rig-part').selectOption(sample.source);
   await page.locator('#rig-mask-target').selectOption(sample.target);
-  assert.equal(await page.evaluate(()=>window.characterEditor.S.tool),'select');
+  assert.equal(await page.evaluate(()=>window.characterEditor.S.tool),'pan');
   const original=await page.evaluate(id=>
    window.characterEditor.S.layers.front.find(p=>p.partId===id).canvas.toDataURL(),
    sample.source);
