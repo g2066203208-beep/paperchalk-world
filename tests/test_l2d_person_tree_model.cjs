@@ -19,6 +19,7 @@ const catalog=[
   l2dModule:{front:{rig:{partCount:17,sourceCharacterId:'char-003-outfit-02'}}}},
  {id:'old-male',label:'男主角 · 旧版',front:'male-legacy.png'},
  {id:'male2',label:'男二',front:'male-two.png'},
+ {id:'char-004',label:'女三',front:'female-three.png'},
  {id:'char-003-outfit-02',label:'男主 · 新衣服',familyId:'char-003',
   variantCategory:'outfit',front:'new-suit.png',l2dModule:{front:{rig:{partCount:17}}}},
  {id:'char-008-outfit-02',label:'女老师 · 新衣服（待导入）',
