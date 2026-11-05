@@ -43,6 +43,13 @@ body.mobile-mode.virtual-landscape #view{
   will-change:transform;backface-visibility:hidden;
 }
 #scene img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none;-webkit-user-drag:none}
+/* The original image remains the source/fallback; only its display is curved. */
+#scene > #source.scene-cylinder-source-hidden{visibility:hidden}
+#scene > .scene-cylinder-surface{
+  position:absolute;inset:0;width:100%;height:100%;z-index:0;
+  display:block;pointer-events:none;image-rendering:auto;
+}
+#scene > .scene-cylinder-surface[hidden]{display:none}
 #scene::after{
   /* STEP 1: A tiny photo-attached black feather with smoothly rounded
      corners. No intersecting horizontal/vertical dark gradients. */
@@ -566,6 +573,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./scene-modules.js"></script>
 <script src="./game/story-content.js?v=runtime-architecture-1"></script>
 <script src="./game/scene-preloader.js?v=runtime-architecture-1"></script>
+<script src="./game/cylinder-background.js?v=cylinder-background-v1"></script>
 <script src="./game/frame-budget.js?v=runtime-architecture-1"></script>
 <link rel="stylesheet" href="./game/dialogue-layout.css?v=runtime-architecture-1">
 <script src="./game/survival-state.js"></script>
@@ -1681,6 +1689,11 @@ void main(){
     window.PAPERWORLD_SCENE_CATALOG
   ));
   const sourceImage=document.getElementById('source');
+  // One cylindrical rear-surface renderer; all other layers stay untouched.
+  const cylinderBackground=window.PaperWorldCylinderBackground.create({
+    stage,source:sourceImage
+  });
+  window.PaperWorldSceneCylinder=cylinderBackground;
   const enemyDepth=document.getElementById('enemy-depth-root');
   const cameraPlayer=document.getElementById('camera-player-root');
   const sceneMenu=document.getElementById('scene-menu');
@@ -1727,9 +1740,11 @@ void main(){
     // Swapping only image and scene content NEVER recreates the fluid simulator.
     sourceImage.src=def.image;sourceImage.alt=def.alt;
     stage.dataset.scene=name;stage.setAttribute('aria-label',def.alt);
+    cylinderBackground.setScene(name);
     // Prevent stale mouse position in the previous scene from tilting this one.
     aimX=0;aimY=0;currentX=0;currentY=0;
-    stage.style.transform='rotateY(0deg) rotateX(0deg)';
+    stage.style.transform=name==='menu'
+      ?'rotateY(0deg) rotateX(0deg)':'none';
     const isStory=def.type==='story',isMenu=def.type==='menu';
     // Per-scene layer contract; image files remain actor-free and unmodified.
     const hasPlayer=def.layers.player;
@@ -2622,7 +2637,15 @@ void main(){
     const k=1-Math.exp(-dt*7);
     if(reduced.matches||!tiltEnabled||editorActive){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
-    stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    // Only the rear background becomes a cylinder. Keep the menu's original
+    // planar tilt and do not change L2D, fog, UI or their transforms.
+    if(stage.dataset.scene==='menu'){
+      stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+
+        'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    }else{
+      if(stage.style.transform!=='none')stage.style.transform='none';
+      cylinderBackground.setView(currentX,currentY);
+    }
     // A shoulder-mounted camera keeps the near back almost fixed;
     // the room and the enemy supply the majority of view parallax.
     cameraPlayer.style.transform='rotateY('+(currentX*.65).toFixed(3)+
