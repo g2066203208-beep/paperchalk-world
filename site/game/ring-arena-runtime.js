@@ -90,23 +90,24 @@
   return [mode,Object.freeze([scene.allies[0],...scene.enemies])];
  })));
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
- // Three fixed authored camera stations. The rendered interpolation is not an input mode.
- const SHOT_NAMES=Object.freeze(['左侧','全景','右侧']);
+ // Two hand-authored over-shoulder camera stations only. The heroine's
+ // distance to these cameras is ~40% shorter than the previous version.
+ const SHOT_NAMES=Object.freeze(['左侧','右侧']);
  const CAMERA_STOPS=Object.freeze({
-  // The actress is close to the lens; the four opponents occupy the middle
-  // distance and remain individually separated. No CSS sprite scaling.
   outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:2.10,eyeZ:11.70,eyeY:1.48,focusX:.6,focusY:1,focusZ:8.8,fov:52}),
-   Object.freeze({id:'center',eyeX:2.05,eyeZ:12.2,eyeY:1.47,focusX:.35,focusY:1,focusZ:8.55,fov:50}),
-   Object.freeze({id:'right',eyeX:-2.10,eyeZ:11.70,eyeY:1.48,focusX:-.6,focusY:1,focusZ:8.8,fov:52})
+   Object.freeze({id:'left',eyeX:1.05,eyeZ:11.40,eyeY:1.48,
+    focusX:.20,focusY:.78,focusZ:8.70,fov:56}),
+   Object.freeze({id:'right',eyeX:-1.05,eyeZ:11.40,eyeY:1.48,
+    focusX:-.20,focusY:.78,focusZ:8.70,fov:56})
   ]),
   inner:Object.freeze([
-   Object.freeze({id:'left',eyeX:-2.10,eyeZ:7.20,eyeY:1.45,focusX:0,focusY:1,focusZ:10.4,fov:54}),
-   Object.freeze({id:'center',eyeX:-2.6,eyeZ:6.8,eyeY:1.45,focusX:0,focusY:1,focusZ:11.8,fov:47}),
-   Object.freeze({id:'right',eyeX:2.10,eyeZ:7.20,eyeY:1.45,focusX:0,focusY:1,focusZ:10.4,fov:54})
+   Object.freeze({id:'left',eyeX:-1.20,eyeZ:7.15,eyeY:1.43,
+    focusX:.50,focusY:.45,focusZ:12.40,fov:48}),
+   Object.freeze({id:'right',eyeX:1.20,eyeZ:7.15,eyeY:1.43,
+    focusX:-.50,focusY:.45,focusZ:12.40,fov:48})
   ])
  });
- const stopIndex=n=>clamp(Math.round(Number(n)||0),0,2);
+ const stopIndex=n=>clamp(Math.round(Number(n)||0),0,1);
  function camera(mode='outer',index=0){
   const i=stopIndex(index),p=(CAMERA_STOPS[mode]||CAMERA_STOPS.outer)[i];
   const eye={x:p.eyeX,y:p.eyeY,z:p.eyeZ};
@@ -292,18 +293,15 @@
   ].join('\n');
   document.head.append(style);
   const canvas=document.createElement('canvas');canvas.id='ring-arena-canvas';
-  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D浅弧形战场，固定人物站位，滑动只移动摄像机');stage.append(canvas);
+  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D浅弧形战场，固定人物站位，只切换左右镜头');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="top"><b>ARC BATTLE / 3D</b><small>世界坐标固定 · 三个演出机位</small></div>',
+   '<div class="top"><b>ARC BATTLE / 3D</b><small>世界坐标固定 · 左右双机位</small></div>',
    '<div class="status" role="status"></div><div class="bottom">',
-   '<button data-shift="-1" type="button">◀ 上一机位</button>',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
-   '<button data-shift="1" type="button">下一机位 ▶</button>',
-   '<button data-shot="0" aria-pressed="true" type="button">左</button>',
-   '<button data-shot="1" aria-pressed="false" type="button">中</button>',
-   '<button data-shot="2" aria-pressed="false" type="button">右</button>',
+   '<button data-shot="0" aria-pressed="true" type="button">◀ 左机位</button>',
+   '<button data-shot="1" aria-pressed="false" type="button">右机位 ▶</button>',
    '<button data-exit type="button">返回</button></div>'
   ].join('');
   stage.append(hud);
@@ -332,10 +330,7 @@
   function syncButtons(){
    for(const button of hud.querySelectorAll('[data-shot]'))
     button.setAttribute('aria-pressed',String(Number(button.dataset.shot)===shotIndex));
-   for(const button of hud.querySelectorAll('[data-shift]')){
-    const next=shotIndex+Number(button.dataset.shift);
-    button.disabled=next<0||next>2;
-   }
+
   }
   function goShot(index){
    const next=stopIndex(index);
@@ -365,7 +360,6 @@
   hud.addEventListener('click',e=>{
    const b=e.target.closest('button');if(!b)return;
    e.preventDefault();e.stopPropagation();
-   if(b.hasAttribute('data-shift'))shift(Number(b.dataset.shift));
    if(b.hasAttribute('data-shot'))goShot(Number(b.dataset.shot));
    if(b.hasAttribute('data-mode')){
     mode=b.dataset.mode;
@@ -464,9 +458,9 @@
    if(!active)return false;
    const approved=camera(mode,shotIndex);
    if(transitionFrom){
-    // 280ms cinematic ease measured in WALL-CLOCK time, not frame count.
+    // 260ms cinematic ease measured in WALL-CLOCK time, not frame count.
     // SwiftShader and slow mobile devices must still reach their final shot.
-    const u=clamp((performance.now()-transitionStart)/280,0,1);
+    const u=clamp((performance.now()-transitionStart)/260,0,1);
     lens=u>=1?approved:blendCamera(transitionFrom,approved,u*u*(3-2*u));
     if(u>=1)transitionFrom=null;
    }else lens=approved;
