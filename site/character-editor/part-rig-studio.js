@@ -103,8 +103,8 @@ for(const input of crouchPanel.querySelectorAll('input[data-crouch]')){
 const fitPanel=document.createElement('section');
 fitPanel.id='rig-fit-panel';
 fitPanel.innerHTML=`
-<div class="rig-fit-heading"><strong>↖ 直接在画布调整</strong><span>选择图层后自动出现四角手柄</span></div>
-<small id="rig-fit-help">点选人物上的部件 → 直接拖动位置；拖四角调整大小。无需填参数。完成后点顶部「保存并应用到游戏」。</small>
+<div class="rig-fit-heading"><strong>部件位置 / 大小</strong><span>默认锁定，防止误触</span></div>
+<small id="rig-fit-help">默认仅平移和缩放画布。先选图层，需要改部件时再点击“开启部件调整”；完成后重新锁定。</small>
 <div class="rig-fit-actions"><button type="button" id="rig-fit-handles" aria-pressed="false">🔒 开启部件调整</button><button type="button" id="rig-fit-reset">↶ 恢复该部件原位</button></div>
 <details id="rig-fit-precise"><summary>精确数字微调（可选）</summary>
  <div class="rig-fit-grid">
@@ -1067,6 +1067,7 @@ async function activate(openPanel=false){
  state.active=true;state.phase=0;state.playing=true;state.showGuides=false;state.fitMode=false;state.fitDrag=null;
  $('rig-fit-handles').setAttribute('aria-pressed','false');
  $('rig-fit-handles').textContent='🔒 开启部件调整';
+ $('rig-fit-help').textContent='默认安全浏览：单指平移、双指缩放。只有主动点击解锁后才能移动或缩放部件。';
  // Selecting a new model cannot ever start a destructive drag gesture.
  ed.setTool('pan');
  quickPanel.hidden=false;
