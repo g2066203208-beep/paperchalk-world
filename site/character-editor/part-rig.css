@@ -401,3 +401,99 @@ body.studio-page #view.mask-paint-active{cursor:crosshair!important}
  color:#ffce98;background:#4b321e;border:1px solid #986137;
  border-radius:6px;padding:7px;
 }
+
+
+/* 2026-11-05 phone-first L2D workspace: canvas stays dominant and panels
+   never float across the face/feet. No touch gesture can modify a layer
+   unless the author explicitly activates the dedicated adjustment tool. */
+#mobile-studio-tabs{display:none}
+@media(max-width:710px){
+ html,body{max-width:100%;overflow-x:hidden}
+ body.studio-page .layout{display:flex!important;flex-direction:column!important;
+  min-width:0!important;gap:7px!important;padding:6px!important;
+  height:auto!important;min-height:0!important}
+ #mobile-studio-tabs{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;
+  position:sticky;top:0;z-index:70;margin:0;padding:7px 7px;
+  background:#111d2bf5;border-bottom:1px solid #39546b;
+  padding-top:max(6px,env(safe-area-inset-top));min-width:0
+ }
+ #mobile-studio-tabs button{min-width:0;min-height:46px;padding:7px 1px;
+  font-size:12px;line-height:1.25;border-radius:8px;
+  color:#e5f3ff;border:1px solid #3c5265;background:#1c2938}
+ #mobile-studio-tabs button[aria-pressed=true]{background:#244d64;
+  border-color:#8acbf2;color:white;font-weight:700}
+ body.studio-page .stage,
+ body.studio-page.easy-mode .stage,
+ body.rig-authoring .stage{
+  order:0!important;width:100%!important;min-width:0!important;
+  height:clamp(290px,53dvh,620px)!important;min-height:290px!important;
+  max-height:620px!important;overflow:hidden;border-radius:11px;
+  scroll-margin-top:65px
+ }
+ body.studio-page .left,body.studio-page .right{
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  position:static!important;overflow:visible!important;
+  scroll-margin-top:64px;margin:0!important
+ }
+ body.studio-page[data-mobile-panel=canvas] .left,
+ body.studio-page[data-mobile-panel=canvas] .right{display:none!important}
+ body.studio-page[data-mobile-panel=parts] .left{display:block!important}
+ body.studio-page[data-mobile-panel=parts] .right{display:none!important}
+ body.studio-page[data-mobile-panel=controls] .left{display:none!important}
+ body.studio-page[data-mobile-panel=controls] .right{display:block!important}
+ body.studio-page .layerlist{max-height:min(56dvh,500px)!important;overflow:auto!important}
+ body.studio-page .stage-toolbar{top:6px!important;right:6px!important;
+  max-width:calc(100% - 12px)!important;z-index:5}
+ body.studio-page .stage-toolbar button{font-size:11px!important;
+  padding:7px 5px!important;min-height:37px!important}
+ body.studio-page .hud{top:49px!important;left:6px!important;max-width:64%;
+  font-size:10px!important;padding:5px 7px!important}
+ body.studio-page .hudbottom{display:none!important}
+ body.studio-page #easy-quickbar{
+  display:flex!important;overflow-x:auto!important;overflow-y:hidden!important;
+  flex-wrap:nowrap!important;overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;touch-action:pan-x;
+  left:5px!important;right:5px!important;bottom:5px!important;
+  max-width:calc(100% - 10px)!important;padding:5px!important;
+  gap:5px!important;justify-content:flex-start!important;
+ }
+ body.studio-page #easy-quickbar button{flex:0 0 auto!important;
+  min-width:54px!important;min-height:46px!important;
+  font-size:12px!important;padding:8px 6px!important}
+ body.studio-page #part-rig-panel{width:100%!important;max-width:100%!important;
+  position:relative!important;inset:auto!important;top:auto!important;
+  bottom:auto!important;overflow:visible!important;padding:12px!important;
+  margin:0 0 12px!important;touch-action:auto!important}
+ body.studio-page #part-rig-panel :is(input,select,button,summary){
+  min-height:44px;max-width:100%;touch-action:manipulation
+ }
+ body.studio-page #part-rig-panel input[type=range]{min-height:42px;touch-action:pan-y}
+ body.studio-page #rig-fit-panel .rig-fit-actions{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important
+ }
+ body.studio-page #rig-fit-panel .rig-fit-actions button{min-width:0!important;
+  white-space:normal!important}
+ body.studio-page header .actions{display:flex;flex-wrap:wrap;gap:5px}
+ body.studio-page header #btnSave{flex:1 0 auto;min-height:43px}
+ body.studio-page header #btnExport{display:none!important}
+ body.studio-page #studio-recovery{margin:0 6px!important;padding:10px!important}
+ body.studio-page #studio-recovery .recovery-tools{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px
+ }
+ body.studio-page #studio-recovery button{min-width:0;white-space:normal;
+  min-height:44px;font-size:12px;padding:8px 5px}
+ body.stage-expanded #mobile-studio-tabs{visibility:hidden!important;pointer-events:none!important}
+ body.stage-expanded .stage,body.stage-expanded.easy-mode .stage{
+  position:fixed!important;top:7px!important;bottom:7px!important;
+  left:7px!important;right:7px!important;width:auto!important;
+  height:auto!important;max-height:none!important;z-index:9999!important
+ }
+}
+@media(max-width:710px) and (orientation:landscape) and (max-height:520px){
+ body.studio-page .stage,body.studio-page.easy-mode .stage{
+  height:65dvh!important;min-height:200px!important
+ }
+ #mobile-studio-tabs{padding:4px 6px}
+ #mobile-studio-tabs button{min-height:38px}
+}
