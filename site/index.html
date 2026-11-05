@@ -748,7 +748,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/survival-state.js"></script>
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
-<script src="./game/classroom-box-runtime.js?v=three-opponents-3d-20261105"></script>
+<script src="./game/classroom-box-runtime.js?v=cinematic-formation-v2"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -2474,7 +2474,7 @@ void main(){
   let roomView='front';
   const roomViews={front:{x:0,y:1.22,z:-1.25,yaw:0,pitch:0},side:{x:-1.55,y:1.4,z:-2.05,yaw:.37,pitch:.025},top:{x:0,y:2.35,z:-2.35,yaw:0,pitch:.46}};
   const roomCameraSaveKey='paperchalk-classroom-dev-camera-v1';
-  let roomCameraFov=68;
+  let roomCameraFov=60;
   let selectedRoomObject='floor';
   const roomDevSurfaces=document.getElementById('dev-room-surfaces');
   const roomDevStatus=document.getElementById('dev-room-status');
@@ -2559,7 +2559,7 @@ void main(){
       depth:-Number(cam.z||-1.25),
       yaw:Number(cam.yaw||0)*180/Math.PI,
       pitch:Number(cam.pitch||0)*180/Math.PI,
-      fov:Number(cam.hFov||68)
+      fov:Number(cam.hFov||60)
     };
     for(const field of document.querySelectorAll('[data-room-camera-field]')){
       const key=field.dataset.roomCameraField,value=values[key];
@@ -2692,7 +2692,7 @@ void main(){
     if(!is3DRoom())return;
     roomView='front';
     Object.assign(devCamera,{yaw:0,pitch:0,zoom:1,panX:0,panY:40.6});
-    roomCameraFov=68;applyDevCamera();
+    roomCameraFov=60;applyDevCamera();
     setDevStatus('已恢复三维摄影机的默认正视构图');
   });
   // Fog stays attached to its original view; only its live texture is mirrored.
