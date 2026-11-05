@@ -102,7 +102,10 @@ try{
  await page.waitForTimeout(700);
  const inner=await get();
  assert.equal(inner.arena.mode,'inner');
- assert.equal(inner.arena.camera.radius,3.45);
+ assert.equal(inner.arena.camera.radius,7.2);
+ assert.equal(inner.arena.ring.wallRadius,18);
+ assert.equal(inner.arena.ring.outerRoleRadius,12);
+ assert.equal(inner.arena.ring.innerRoleRadius,9.6);
  assert.equal(inner.arena.l2dReady,5);
  assert.deepEqual(inner.arena.visibleActorIds,before.arena.visibleActorIds);
  assert.equal(inner.arena.actors.allies.length,4);
