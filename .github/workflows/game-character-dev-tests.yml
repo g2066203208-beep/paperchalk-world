@@ -18,6 +18,11 @@ on:
       - 'site/assets/l2d/source-psd/**'
       - 'scripts/build_character_catalog.py'
       - '.github/workflows/game-character-dev-tests.yml'
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'tests/**'
+      - '.github/workflows/game-character-dev-tests.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -144,8 +149,18 @@ jobs:
               assert.ok(await page.locator('[data-quick="fringe"]').isVisible());
               assert.ok(await page.locator('[data-quick="rear"]').isVisible());
               assert.ok(await page.locator('[data-quick="skirt"]').isVisible());
+              // Focused Studio intentionally hides secondary joint sliders until
+              // the artist asks for them. Test the real user path rather than
+              // demanding the old always-expanded inspector layout.
+              const moreMotion=page.locator('#workspace-motion-more');
+              assert.ok(await moreMotion.isVisible(),'advanced motion control must be discoverable');
+              assert.equal(await page.locator('[data-quick="hands"]').isVisible(),false,
+                'advanced joint controls must start collapsed for a clean workspace');
+              await moreMotion.click();
+              assert.equal(await moreMotion.getAttribute('aria-expanded'),'true');
               for(const field of ['hands','shoulders','hips','breath','speed'])
-                assert.ok(await page.locator('[data-quick="'+field+'"]').isVisible());
+                assert.ok(await page.locator('[data-quick="'+field+'"]').isVisible(),
+                  field+' must be usable after opening more motion controls');
               assert.equal(await page.locator('#idle-open').isVisible(),false);
               assert.equal(await page.locator('#rig-part option').count(),20);
               // The inspector must be docked outside the moving canvas.

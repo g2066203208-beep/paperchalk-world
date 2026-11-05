@@ -63,15 +63,19 @@ try{
     assert.equal(topHud.statCount,3);
     assert.deepEqual(topHud.segmentCounts,[10,10,10]);
     assert.deepEqual(topHud.vals,['100/100','100/100','100/100']);
-    const clockNow=await page.evaluate(()=>{
+    // The DOM sample and Date sample can straddle a minute/day rollover.
+    // Validate the LIVE clock together in one browser task, allowing the
+    // existing 1-second HUD interval to catch up instead of a false failure.
+    await page.waitForFunction(()=>{
       const d=new Date();
-      return {date:(d.getMonth()+1)+'月'+d.getDate()+'日',
-        weekday:['周日','周一','周二','周三','周四','周五','周六'][d.getDay()],
-        time:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
-    });
-    assert.equal(topHud.date,clockNow.date,'HUD date not using device local date');
-    assert.equal(topHud.weekday,clockNow.weekday,'HUD weekday not using real date');
-    assert.equal(topHud.time,clockNow.time,'HUD clock is still a fixed preview time');
+      const expectedDate=(d.getMonth()+1)+'月'+d.getDate()+'日';
+      const expectedDay=['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+      const expectedTime=String(d.getHours()).padStart(2,'0')+':'+
+        String(d.getMinutes()).padStart(2,'0');
+      return document.getElementById('hud-date')?.textContent===expectedDate&&
+        document.getElementById('hud-weekday')?.textContent===expectedDay&&
+        document.getElementById('hud-time')?.textContent===expectedTime;
+    },null,{timeout:4000});
     assert.equal(topHud.overflow,false,'Top HUD contents overflow: '+JSON.stringify(topHud));
     // Check coordinates within the LOGICAL 16:9 game canvas. The mobile
     // browser rotates that canvas 90 degrees into portrait device space, so
@@ -380,7 +384,7 @@ try{
     assert.equal(await page.locator('#advance').isVisible(),false,'Next-line arrow remains after conversation ends');
     await page.waitForTimeout(750);
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-story-finished.png'});
-    // Real developer settings: native right-side fluid rather than a black rectangle.
+    // Real DEV inspector: legible translucent controls over independent flowing fog.
     await page.locator('#menu-toggle').click();
     await page.locator('#game-dev').click();
     await page.waitForFunction(()=>!document.getElementById('dev-tools').hidden,{timeout:12000});
@@ -391,14 +395,21 @@ try{
       return {background:own.backgroundColor,border:own.borderTopWidth,
         buttonBackground:button.backgroundColor,selectBackground:selector.backgroundColor};
     });
-    assert.equal(settingsSurface.background,'rgba(0, 0, 0, 0)',
-      'Developer settings still paints a rectangular black panel');
-    assert.equal(settingsSurface.border,'0px',
-      'Developer settings still paints a rectangular frame');
-    assert.equal(settingsSurface.buttonBackground,'rgba(0, 0, 0, 0)',
-      'Developer settings buttons still paint opaque squares');
-    assert.equal(settingsSurface.selectBackground,'rgba(0, 0, 0, 0)',
-      'Developer settings selects still paint black blocks');
+    // The current professional DEV inspector has its own translucent
+    // readable control surface. The independently flowing fog remains behind
+    // it; do not enforce the obsolete unframed/fully transparent mockup.
+    const panelAlpha=settingsSurface.background.startsWith('rgba(')
+      ?Number(settingsSurface.background.split(',').at(-1).replace(')','').trim()):1;
+    assert.ok(panelAlpha>=.7&&panelAlpha<1,
+      'DEV inspector must be a translucent, readable panel: '+JSON.stringify(settingsSurface));
+    assert.notEqual(settingsSurface.background,'rgb(0, 0, 0)',
+      'DEV inspector must not be a solid black rectangle');
+    assert.ok(parseFloat(settingsSurface.border)>=1,
+      'DEV inspector needs a visible but restrained boundary');
+    assert.notEqual(settingsSurface.buttonBackground,'rgba(0, 0, 0, 0)',
+      'DEV buttons need visible affordances');
+    assert.notEqual(settingsSurface.selectBackground,'rgba(0, 0, 0, 0)',
+      'DEV selects need visible affordances');
     await page.waitForTimeout(1300);
     const devPixels=await page.evaluate(()=>{
       const c=document.getElementById('dev-panel-fog');
