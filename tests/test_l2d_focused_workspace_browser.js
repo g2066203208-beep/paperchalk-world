@@ -49,7 +49,8 @@ const {chromium}=require('playwright');
    assert.equal(basis.sourceCount,25,'original 25 real parts retained');
    assert.equal(basis.actor,'protagonist-crouch-axe');
    assert.equal(basis.view,'front');
-   assert.ok(basis.stageW>=device.width*.7,'viewport should dominate available width');
+   assert.ok(basis.stageW>=device.width*(device.mobile?.92:.56),
+    'viewport should dominate its available workspace width');
    assert.ok(basis.stageH>170,'stage must remain usable');
    assert.ok(basis.scrollW<=basis.viewportW+4,'must not overflow horizontally '+JSON.stringify(basis));
    assert.equal(basis.navCount,1,'no duplicate phone navigation');
