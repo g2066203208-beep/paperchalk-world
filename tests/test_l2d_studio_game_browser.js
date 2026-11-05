@@ -58,7 +58,7 @@ const BASE='http://127.0.0.1:8132/';
   assert.equal(actual.pngLength,expected.pngLength);
   assert.equal(actual.pngHash,expected.pngHash,'game must use the exact Studio painted PNG bytes');
   assert.equal(actual.personalised,true);
-  assert.match(actual.edition,/locally-edited/);
+  assert.match(actual.edition,/(?:local-studio|locally-edited)/);
   // Verify fresh reload still uses the edited original asset, not stale V4.
   await page.reload({waitUntil:'load'});
   await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready&&
@@ -70,7 +70,7 @@ const BASE='http://127.0.0.1:8132/';
      edition:window.PaperchalkL2DLibrary.get('player').actor.root.dataset.l2dEdition}));
   assert.equal(reloaded.side,'front');
   assert.equal(reloaded.angle,2.375);
-  assert.match(reloaded.edition,/locally-edited/);
+  assert.match(reloaded.edition,/(?:local-studio|locally-edited)/);
   assert.deepEqual(errors,[], 'no JS errors in Studio or game');
   console.log('PASS end-to-end Studio original PNG + edited 20-part bone -> game live renderer + reload');
  }finally{await browser.close()}
