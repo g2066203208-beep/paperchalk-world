@@ -563,3 +563,22 @@ body.studio-page[data-focused-workspace="v3"][data-inspector="motion"] #rig-stat
   content:"已保存"
  }
 }
+
+/* Paint is an actual usable editing page on phones, not a hidden desktop grid. */
+body.studio-page[data-focused-workspace="v3"][data-inspector="paint"] #tools{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ gap:6px!important
+}
+body.studio-page[data-focused-workspace="v3"][data-inspector="paint"] #tools button{
+ display:block!important;min-height:43px;padding:8px 3px;font-size:12px
+}
+.workspace-paint-more{margin:12px 0;border:1px solid #354e60;border-radius:9px}
+.workspace-paint-more>summary{cursor:pointer;padding:12px;color:#c1d4e2;font-size:12px}
+.workspace-paint-more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:6px;padding:9px}
+body.studio-page[data-focused-workspace="v3"] .workspace-paint-more-grid button{
+ display:block!important;min-height:43px;font-size:12px;padding:7px 4px
+}
+body.studio-page[data-focused-workspace="v3"][data-inspector="paint"] .workspace-paint-more{
+ display:block!important
+}
