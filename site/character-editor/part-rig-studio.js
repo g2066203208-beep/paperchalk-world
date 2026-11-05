@@ -588,15 +588,66 @@ fitPanel.addEventListener('change',event=>{
  }
  fitValues();changed();
 });
-$('rig-fit-reset').onclick=()=>{
- const p=current();if(!p)return;
- // Reset restores each character's approved base fit, not a previously
- // rejected raw shorts placement. All other parts reset to native 100%.
- p.placement=studio.current==='female-06'&&p.id==='pants_overlay'?
-  {scaleX:1.20,scaleY:1.00,offsetX:-15,offsetY:-17}:
-  {scaleX:1,scaleY:1,offsetX:0,offsetY:0};
- fitValues();changed();
-};
+// A published source rig is the immutable original, NOT the "opened" draft
+// (which may already contain the user's misplaced hair clip). Never guess
+// the coordinates or overwrite any different bone, PNG, or occlusion mask.
+async function restorePublishedPlacement(id=state.selected){
+ if(!state.active||!state.model?.parts?.[id])throw Error('先在图层里选择一个真实部件');
+ if(state.fitDrag||state.drag)throw Error('请先松开手指，结束当前拖动');
+ const actor=studio.current,face=S.side;
+ const spec=studio.list.get(actor)?.l2dModule?.[face]?.rig;
+ if(!spec?.url)throw Error('这个动作没有已发布的原始绑定，无法可靠恢复原画坐标；请用保存稿恢复，未改动其他图层');
+ const url=new URL(spec.url,new URL('../',location.href));
+ const response=await fetch(url,{cache:'no-store'});
+ if(!response.ok)throw Error('无法读取 GitHub 原始骨骼：HTTP '+response.status);
+ const origin=await response.json();
+ if(origin.format!=='paperchalk-part-rig-v1'||origin.face!==face||
+    !origin.parts||!origin.parts[id])
+  throw Error('发布源文件中找不到同名部件 '+id+'，已保护当前稿');
+ if(actor!==studio.current||face!==S.side||!state.model?.parts?.[id])
+  throw Error('人物已切换，取消复原以保护其他角色');
+ const p=state.model.parts[id],reference=origin.parts[id];
+ const art=parts().find(item=>key(item)===id);
+ if(!art||art.canvas.width!==reference.w||art.canvas.height!==reference.h)
+  throw Error('原始 PNG 与当前部件尺寸不一致，不能安全移动');
+ const numeric=(v)=>typeof v==='number'&&Number.isFinite(v);
+ if(!numeric(reference.x)||!numeric(reference.y))
+  throw Error('源部件坐标无效，未修改人物');
+ const placement=reference.placement||{scaleX:1,scaleY:1,offsetX:0,offsetY:0};
+ if(!['scaleX','scaleY','offsetX','offsetY'].every(name=>
+    numeric(placement[name]??(name.startsWith('scale')?1:0))))
+  throw Error('原始部件变形数据不完整，未修改人物');
+ const target={scaleX:placement.scaleX??1,scaleY:placement.scaleY??1,
+  offsetX:placement.offsetX??0,offsetY:placement.offsetY??0};
+ const unchanged=art.x===reference.x&&art.y===reference.y&&
+  JSON.stringify(p.placement||{})===JSON.stringify(target);
+ if(unchanged){info('本部件已经位于原画位置和大小，未改动其他内容');return false}
+ // Both history systems capture their own previous state for Ctrl+Z.
+ ed.check();
+ const previous=rigSnapshot();
+ state.undoStack.push({snapshot:previous,time:Date.now(),part:id});
+ if(state.undoStack.length>30)state.undoStack.shift();
+ state.redoStack=[];
+ art.x=reference.x;art.y=reference.y;
+ p.x=reference.x;p.y=reference.y;p.placement={...target};
+ state.fitDrag=null;
+ fitValues();ed.renderList();
+ window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'));
+ ed.autosave();
+ markRigRestored('✓ 已从 GitHub 原始 L2D 恢复「'+art.name+'」的位置与大小');
+ return true;
+}
+async function restoreCrouchHairpin(){
+ if(studio.current!=='protagonist-crouch-axe'||S.side!=='front')
+  throw Error('请先切换到女主 → 蹲姿持斧 → 正面');
+ const id=Object.keys(state.model?.parts||{}).find(name=>
+  /^(hair_clip|hairpin|headwear|hair_clip_[lr])$/i.test(name));
+ if(!id)throw Error('蹲姿工程没有可验证的发卡/头饰独立部件，已保持原样');
+ select(id);
+ return restorePublishedPlacement(id);
+}
+$('rig-fit-reset').textContent='↩ 从原画恢复位置和大小';
+$('rig-fit-reset').onclick=()=>restorePublishedPlacement().catch(e=>info('复原失败：'+e.message));
 function setFitMode(value){
  state.fitMode=!!value&&state.active&&!!current();
  state.fitDrag=null;
@@ -1712,7 +1763,7 @@ window.PaperchalkPartRigStudio={state,activate,deactivate,drawPreview,save,selec
  undo:undoRig,redo:redoRig,canUndo:()=>!!state.undoStack.length||
   !!(maskState.enabled&&maskState.history.length),
  canRedo:()=>!!state.redoStack.length||!!(maskState.enabled&&maskState.redo.length),
- restoreOpened:restoreOpenedRig,resetPlacement:resetPartPlacement,
+ restoreOpened:restoreOpenedRig,resetPlacement:resetPartPlacement,restorePublishedPlacement,restoreCrouchHairpin,
  resetCrouchMotion,applySavedRecovery,maskUndo:()=>maskHistoryStep(false),
  maskRedo:()=>maskHistoryStep(true),
  get lastOperationAt(){return state.lastOperationAt;},
