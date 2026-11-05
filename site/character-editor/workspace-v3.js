@@ -133,6 +133,7 @@ function setMode(name,fromClick){
  if(name==='motion')requestAnimationFrame(()=>quick.hidden=!rig.state?.active);
 }
 root.dataset.motionExtra='false';
+root.dataset.canvasTool=ed.S.tool;
 setMode('motion',false);
 
 // The otherwise long restoration toolbar becomes a small accessible sheet.
@@ -230,6 +231,7 @@ function syncSelection(){
 }
 selector?.addEventListener('change',syncSelection);
 window.addEventListener('paperchalk:studio-ready-to-edit',syncSelection);
+window.addEventListener('paperchalk:studio-selection-changed',syncSelection);
 window.addEventListener('paperchalk:studio-character-loaded',()=>{
  // Persistent choice between models is never a destructive edit mode.
  ed.setTool('pan');root.dataset.motionExtra='false';
@@ -239,7 +241,8 @@ window.addEventListener('paperchalk:studio-character-loaded',()=>{
  requestAnimationFrame(syncSelection);
 });
 window.addEventListener('paperchalk:studio-tool-changed',()=>{
- // When a user chooses a real paint tool, show its proper inspector page.
+ root.dataset.canvasTool=ed.S.tool;
+ // Painting must expose the correct contextual controls, never unlock meshes.
  if(['brush','eraser','fill','restore','picker','rect','lasso'].includes(ed.S.tool)){
   setMode('paint',false);
  }
