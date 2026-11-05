@@ -44,3 +44,4 @@ assert.match(h,/const SAVE_KEY='paperchalk-scene-v1'/);
 assert.match(h,/const EDITOR_KEY='paperchalk-layer-editor-v2'/);
 assert.match(h,/const FOG_KEY=/);
 console.log('PASS: '+catalog.scenes.length+' image-driven rooms, shared effects/layers, persistent user settings and guarded routes');
+require('./cylinder-background.test.cjs');
