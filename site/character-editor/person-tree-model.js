@@ -5,13 +5,24 @@
  * The same code runs in the browser and in Node regression tests. */
 (function(root){
 'use strict';
+// One stable PERSON root per canon actor. The tree alternates women and
+// men in roster order, not alphabetical/source-ZIP discovery order.
 const NAMES=Object.freeze({
- protagonist:'女主角','char-002':'女二','char-003':'男主角',
- male2:'男二','char-004':'女三','char-005':'女四',
- 'char-006':'女五 · 女老师','female-06':'女六'
+ protagonist:'女主', 'char-003':'男主',
+ 'char-002':'女二',male2:'男二',
+ 'char-004':'女三','char-020':'男三',
+ 'char-005':'女四','male4':'男四',
+ 'char-006':'女五','male5':'男五',
+ 'female-06':'女六','male6':'男六'
 });
-const ORDER=['protagonist','char-002','char-003','male2','char-004','char-005',
- 'female-06','class-teacher-geography-candidate'];
+const ORDER=[
+ 'protagonist','char-003',
+ 'char-002','male2',
+ 'char-004','char-020',
+ 'char-005','male4',
+ 'char-006','male5',
+ 'female-06','male6'
+];
 const FALLBACK=[
  [/^(?:女主角?|女一)(?:\s|[·（(:：/-]|$)/,'protagonist'],
  [/^(?:女二号?|女2)(?:\s|[·（(:：/-]|$)/,'char-002'],
@@ -28,12 +39,12 @@ function familyOf(record){
 if(id==='male2'||raw==='male2')return 'male2';
  if(id==='protagonist'||id.startsWith('protagonist-')||
     raw==='protagonist')return 'protagonist';
- for(const name of ['char-002','char-003','char-004','char-005']){
+ for(const name of ['char-002','char-003','char-004','char-005','char-020']){
   if(id===name||id.startsWith(name+'-')||raw===name)return name;
  }
  if(id==='class-teacher-geography-candidate'||raw==='class-teacher-geography-candidate')return 'char-006';
- if(raw==='char-006'||id==='char-006')return 'char-006';
- if(raw==='female-06')return raw;
+ if(raw==='char-006'||id==='char-006'||id.startsWith('char-006-'))return 'char-006';
+ if(id==='female-06'||id.startsWith('female-06-')||raw==='female-06')return 'female-06';
  for(const [pattern,canonical] of FALLBACK)
   if(pattern.test(String(record?.label||'').trim()))return canonical;
  return raw;
