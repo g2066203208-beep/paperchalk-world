@@ -123,6 +123,11 @@ function originalRootTop(root,rigHeight){
     :root.offsetTop;
 }
 function sync(){
+  // This dedicated game scene positions the AUTHENTIC L2D canvases on a
+  // physically projected floor; the old virtual-screen shoe binder must not
+  // apply a second and contradictory depth correction.
+  if(view.classList.contains('room-blockout-active') &&
+     !view.classList.contains('dev-mode'))return last;
   const y=cssValue('--dev-floor-y',ORIGIN.y);
   const z=cssValue('--dev-depth-ground',ORIGIN.z);
   const h=Math.max(1,view.clientHeight);
