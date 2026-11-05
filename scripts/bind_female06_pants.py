@@ -159,7 +159,13 @@ def install(library: Path) -> bool:
             "target": "legwear", "method": "pelvis-waist-dual-thigh-v2",
             "waist": "pelvis", "left": "left-knee",
             "right": "right-knee", "waistLock": 1.0,
-            "transition": [.42, .84], "rootLock": 1.0
+            "transition": [.42, .84], "rootLock": 1.0,
+            "waistTuck": .075,
+            "bodyOcclusion": {
+                "mode": "pelvis-garment-stencil-v1",
+                "waistV": .105,
+                "hemV": .96
+            }
         },
         "enabled": True,
     }
@@ -175,11 +181,13 @@ def install(library: Path) -> bool:
         "outfitId": OUTFIT_ID, "sourcePart": "bottomwear",
         "fittedTo": "legwear", "binding": "pelvis-waist-dual-thigh-v2",
         "fitPlacement": PANTS_PLACEMENT.copy(),
-        "fitRevision": "female06-pelvis-waist-v3",
+        "fitRevision": "female06-stitched-waist-and-hip-stencil-v4",
         "noTextureRegeneration": True
     }
     base_mod["views"]["front"]["rig"]["textures"][PANTS_ID] = "front/" + PANTS_ID + ".png"
-    base_mod["label"] = "女六 · 原始彩绘＋黑色短裤"
+    base_mod["label"] = "女六"
+    # Stencilled hidden skin remains in the ORIGINAL source PSD: only the
+    # runtime pixels inside the garment are clipped on every animated pose.
     write(base / "front.rig.json", base_rig)
     write(base / "module.json", base_mod)
 
