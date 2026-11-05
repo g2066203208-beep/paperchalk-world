@@ -327,6 +327,7 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0;
+  let transitionFrom=null,transitionStart=0;
   let drag=null;
   function syncButtons(){
    for(const button of hud.querySelectorAll('[data-shot]'))
@@ -339,6 +340,8 @@
   function goShot(index){
    const next=stopIndex(index);
    if(next===shotIndex)return;
+   transitionFrom=lens||camera(mode,shotIndex);
+   transitionStart=performance.now();
    shotIndex=next;syncButtons();
   }
   const shift=dir=>goShot(shotIndex+Math.sign(dir));
@@ -366,7 +369,7 @@
    if(b.hasAttribute('data-shot'))goShot(Number(b.dataset.shot));
    if(b.hasAttribute('data-mode')){
     mode=b.dataset.mode;
-    lens=camera(mode,shotIndex);
+    transitionFrom=null;lens=camera(mode,shotIndex);
     for(const option of hud.querySelectorAll('[data-mode]'))
      option.setAttribute('aria-pressed',String(option.dataset.mode===mode));
     render(0);
@@ -459,11 +462,14 @@
   }
   function render(dt=1/60){
    if(!active)return false;
-   const k=1-Math.exp(-clamp(Number(dt)||0,0,.06)*9);
    const approved=camera(mode,shotIndex);
-   lens=lens?blendCamera(lens,approved,k):approved;
-   if(Math.hypot(lens.eye.x-approved.eye.x,lens.eye.y-approved.eye.y,
-      lens.eye.z-approved.eye.z)<.0001)lens=approved;
+   if(transitionFrom){
+    // 280ms cinematic ease measured in WALL-CLOCK time, not frame count.
+    // SwiftShader and slow mobile devices must still reach their final shot.
+    const u=clamp((performance.now()-transitionStart)/280,0,1);
+    lens=u>=1?approved:blendCamera(transitionFrom,approved,u*u*(3-2*u));
+    if(u>=1)transitionFrom=null;
+   }else lens=approved;
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
@@ -496,7 +502,8 @@
   function setActive(value){
    active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
-   if(active){elapsed=0;frames=0;shotIndex=0;lens=camera(mode,0);syncButtons();render(0)}
+   if(active){elapsed=0;frames=0;shotIndex=0;transitionFrom=null;
+    lens=camera(mode,0);syncButtons();render(0)}
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],
