@@ -34,12 +34,40 @@ try{
   return s?.active&&s.renderer==='webgl-l2d'&&s.actors.allies.length===4&&
    s.actors.enemies.length===4&&document.getElementById('ring-arena-canvas')?.width>800;
  },null,{timeout:65000});
+ await page.screenshot({path:'artifacts/ring-arena/l2d-initial.png'});
+ console.log('INIT',JSON.stringify(await page.evaluate(()=>{
+   const r=window.PaperWorldGameRingArena?.inspect();
+   return {active:r?.active,renderer:r?.renderer,l2dReady:r?.l2dReady,
+     pageScene:document.querySelector('#scene')?.dataset.scene,
+     sources:['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4']
+       .map(id=>{const a=window.PaperchalkL2D?.get(id);
+         return {id,ready:a?.root?.dataset.l2dState,hidden:a?.root?.hidden,
+           imgHidden:a?.img?.hidden,canvas:a?.canvas?.width,
+           character:a?.img?.dataset.characterId}});
+   };
+ })));
+ try{
  await page.waitForFunction(()=>{
   const r=window.PaperWorldGameRingArena?.inspect();
   return window.PaperchalkCharacterDev?.ready&&r?.l2dReady===8&&
    ['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4']
      .every(id=>window.PaperchalkL2D?.get(id)?.root?.dataset.l2dState==='ready');
  },null,{timeout:75000});
+ }catch(error){
+   await page.screenshot({path:'artifacts/ring-arena/l2d-failed-diagnostic.png'}).catch(()=>{});
+   console.error('DIAG',JSON.stringify(await page.evaluate(()=>({
+     scene:document.querySelector('#scene')?.dataset.scene,
+     ring:window.PaperWorldGameRingArena?.inspect(),
+     ready:window.PaperchalkCharacterDev?.ready,
+     errors:document.getElementById('dev-character-status')?.textContent,
+     actors:['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4']
+      .map(id=>{const a=window.PaperchalkL2D?.get(id);
+       return {id,ready:a?.root?.dataset.l2dState,hidden:a?.root?.hidden,
+        imgHidden:a?.img?.hidden,w:a?.canvas?.width,
+        char:a?.img?.dataset.characterId,mode:a?.root?.dataset.l2dMode}})
+   }))));
+   throw error;
+ }
  await page.waitForTimeout(800);
  const get=()=>page.evaluate(()=>{
   const r=window.PaperWorldGameRingArena.inspect();
