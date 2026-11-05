@@ -78,7 +78,7 @@ try{
       getComputedStyle(document.querySelector('#dev-room-show-all')).borderRadius};
   });
   assert.deepEqual(tree.rows,[
-    'floor','ceiling','back','left','right','enemy','player','fog',
+    'floor','ceiling','back','left','right','enemy','enemy2','enemy3','player','fog',
     'camera','perspective'
   ],'DEV must display the complete physical room + L2D + fog + camera tree');
   assert.notEqual(tree.panelBackground,'rgba(0, 0, 0, 0)');
@@ -92,9 +92,11 @@ try{
   await page.screenshot({path:'artifacts/classroom-box/in-game-dev-fog-reference.png'});
   const enemyBox=page.locator('[data-room-layer-toggle="enemy"]');
   await enemyBox.uncheck();
-  assert.equal(await page.locator('#enemy-depth-root').evaluate(el=>el.style.opacity),'0');
+  for(const id of ['enemy-depth-root','room-enemy2-root','room-enemy3-root'])
+    assert.equal(await page.locator('#'+id).evaluate(el=>el.style.opacity),'0');
   await enemyBox.check();
-  assert.notEqual(await page.locator('#enemy-depth-root').evaluate(el=>el.style.opacity),'0');
+  for(const id of ['enemy-depth-root','room-enemy2-root','room-enemy3-root'])
+    assert.notEqual(await page.locator('#'+id).evaluate(el=>el.style.opacity),'0');
   const fogBox=page.locator('[data-room-layer-toggle="fog"]');
   await fogBox.uncheck();
   assert.equal(await page.locator('#fog').evaluate(el=>el.style.opacity),'0');
@@ -117,6 +119,19 @@ try{
     (await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).worldActors.enemy.x,
     oldEnemy
   );
+  for(const id of ['enemy2','enemy3']){
+    await page.locator('[data-room-object-focus="'+id+'"]').click();
+    assert.equal(await page.locator('#dev-room-actor-tools').isVisible(),true);
+    assert.equal((await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).selectedReference,id);
+    const state=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
+    const oldX=state.worldActors[id].x;
+    await page.locator('[data-room-actor-field="x"]').evaluate(el=>{
+      el.value=String(Number(el.value)+.3);el.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    assert.notEqual((await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).worldActors[id].x,oldX);
+    await page.locator('#dev-room-actor-reset').click();
+    assert.equal((await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).worldActors[id].x,oldX);
+  }
   await page.locator('[data-room-object-focus="camera"]').click();
   const cameraDetails=page.locator('#dev-room-camera-tuning');
   assert.equal(await cameraDetails.evaluate(el=>el.open),true);
