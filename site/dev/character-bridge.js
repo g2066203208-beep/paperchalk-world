@@ -352,6 +352,14 @@ async function init(){
   const old=await get('slot:'+key);
   if(old?.id&&catalog.has(old.id))assigned[key]={id:old.id,side:old.side==='back'?'back':'front'};
  }
+ // Prefer existing published L2D actors and never introduce placeholder art.
+ for(const key of GAME_SLOTS){
+  const a=assigned[key];
+  if(a&&!catalog.has(a.id)){
+   const fallback=['char-004','char-003','char-002','protagonist'].find(id=>catalog.get(id)?.front);
+   if(fallback)assigned[key]={id:fallback,side:'front'};
+  }
+ }
  for(const key of GAME_SLOTS){
   const a=assigned[key];if(a?.id&&catalog.has(a.id)){
    try{await assign(key,a.id,a.side,false)}
