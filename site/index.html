@@ -3028,6 +3028,7 @@ void main(){
   devStage.addEventListener('contextmenu',e=>e.preventDefault());
   let cameraDrag=null;
   devStage.addEventListener('pointerdown',e=>{
+    if(is3DRoom())return;
     if(!editorActive||e.target.id==='actor-enemy'||e.target.id==='actor-player')return;
     e.preventDefault();
     cameraDrag={id:e.pointerId,x:e.clientX,y:e.clientY,
