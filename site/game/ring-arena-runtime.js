@@ -13,11 +13,14 @@
  const TAU=Math.PI*2,clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
  const lerp=(a,b,t)=>a+(b-a)*t,rad=(d)=>d*Math.PI/180;
  const SPEC=Object.freeze({
-  wallRadius:10.0,wallHeight:6.0,outerRoleRadius:6.65,
-  innerRoleRadius:5.10,outerCameraRadius:8.25,
-  innerCameraRadius:3.45,verticalFov:60,
+  wallRadius:18.0,wallHeight:6.0,outerRoleRadius:12.0,
+  innerRoleRadius:9.60,outerCameraRadius:14.60,
+  innerCameraRadius:7.20,verticalFov:60,
   cameraStartAngle:rad(9),cameraEndAngle:rad(-9)
  });
+ // Expanded 18m cylindrical world: larger circumference restores separation
+ // between individual L2D actors without reducing their real heights.
+ // Keep all four radius constants aligned with the floor shader's rings.
  // Deliberately human-authored STATIONARY formation angles; never derive
  // actors from camera interpolation or pointer delta.
  const formation=Object.freeze({
@@ -89,7 +92,7 @@
    lerp(rad(-9),rad(9),t);
   const R=outer?SPEC.outerCameraRadius:SPEC.innerCameraRadius;
   const eye=polar(R,angle,1.45);
-  const focus=polar(5.72,angle,1.12);
+  const focus=polar(10.70,angle,1.12);
   return {mode,progress:t,radius:R,angle,eye,focus};
  }
  function project(p,cam,aspect=16/9){
@@ -130,13 +133,13 @@
   'void main(){vec3 color;',
   'if(uSurface==0){',
   'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
-  'float radial=line(r/10.0,24.0,.027);float spokes=line(a,48.0,.019);',
-  'float allies=1.0-smoothstep(.016,.053,abs(r-6.65));',
-  'float enemies=1.0-smoothstep(.016,.053,abs(r-5.10));',
+  'float radial=line(r/18.0,30.0,.027);float spokes=line(a,48.0,.019);',
+  'float allies=1.0-smoothstep(.016,.053,abs(r-12.00));',
+  'float enemies=1.0-smoothstep(.016,.053,abs(r-9.60));',
   'color=vec3(.006,.019,.023)+vec3(.02,.18,.14)*(radial*.6+spokes*.26)',
   '+vec3(.01,.16,.14)*(allies+enemies);',
-  'float innerCam=1.0-smoothstep(.01,.05,abs(r-3.45));',
-  'float outerCam=1.0-smoothstep(.01,.05,abs(r-8.25));',
+  'float innerCam=1.0-smoothstep(.01,.05,abs(r-7.20));',
+  'float outerCam=1.0-smoothstep(.01,.05,abs(r-14.60));',
   'color+=vec3(.25,.20,.04)*(innerCam+outerCam)*.35;',
   '}else{',
   'float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
