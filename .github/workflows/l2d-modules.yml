@@ -28,6 +28,7 @@ on:
       - 'tests/test_l2d_display_lifecycle.cjs'
       - 'tests/test_l2d_studio_game_sync.cjs'
       - 'tests/test_l2d_studio_game_browser.js'
+      - 'tests/test_l2d_mobile_safe_recovery_browser.js'
       - 'tests/test_battle_front_studio.js'
       - 'tests/test_female5_teacher_alias_browser.js'
       - 'tests/test_protagonist_unified.py'
@@ -529,6 +530,8 @@ jobs:
           JS
       - name: Real Chromium L2D Studio saved PNG and bones must match game and reload
         run: node tests/test_l2d_studio_game_browser.js
+      - name: Phone viewport, safe-pan default, crouch hairclip source restoration
+        run: node tests/test_l2d_mobile_safe_recovery_browser.js
       - name: Verify female five teacher is one playable real-PSD actor
         run: |
           python3 -m http.server 8136 --directory site >/tmp/l2d-char006-http.log 2>&1 &
