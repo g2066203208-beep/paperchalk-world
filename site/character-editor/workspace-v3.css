@@ -603,3 +603,12 @@ body.studio-page[data-focused-workspace="v3"][data-inspector="paint"] .workspace
   min-height:42px!important;min-width:38px!important
  }
 }
+
+body.studio-page[data-focused-workspace="v3"][data-canvas-tool="brush"] #view,
+body.studio-page[data-focused-workspace="v3"][data-canvas-tool="eraser"] #view,
+body.studio-page[data-focused-workspace="v3"][data-canvas-tool="mask"] #view,
+body.studio-page[data-focused-workspace="v3"][data-canvas-tool="restore"] #view,
+body.studio-page[data-focused-workspace="v3"][data-canvas-tool="rect"] #view,
+body.studio-page[data-focused-workspace="v3"][data-canvas-tool="lasso"] #view{
+ cursor:crosshair!important
+}
