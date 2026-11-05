@@ -137,51 +137,56 @@ try{
    if(!cfg.mobile){
      const neutral=data.room.camera;
      await page.mouse.move(cfg.w-5,cfg.h/3);
-     await page.waitForTimeout(750);
+     await page.waitForTimeout(850);
      await page.screenshot({path:'artifacts/classroom-box/in-game-desktop-motion.png'});
      const updated=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
      assert.equal(updated.renderer,'webgl-3d-mesh');
      assert.equal(updated.faceCount,5);
-     assert.ok(Math.abs(updated.camera.x-neutral.x)>.10,
-       'real camera should move laterally when the mouse moves');
-     assert.ok(Math.abs(updated.camera.x-neutral.x)<=.27*updated.pointerStrength+.002,
-       'physical camera dolly exceeds safe X travel limit');
-     assert.ok(Math.abs(updated.camera.y-neutral.y)<=.095*updated.pointerStrength+.002,
-       'physical camera lift exceeds safe Y travel limit');
-     // Only the camera moved; actual GPU mesh vertices and physical world
-     // positions stay fixed. The perspective projector naturally separates
-     // near and far geometry without separately shifting the actors.
-     const motion=await page.evaluate(()=>{
+     for(const axis of ['x','y','z'])
+       assert.equal(updated.camera[axis],neutral[axis],
+         'mouse gaze may not translate stationary camera along '+axis);
+     assert.ok(updated.camera.yaw>neutral.yaw+.025,
+       'mouse right must turn head to the right');
+     assert.ok(Math.abs(updated.camera.yaw)<=
+       7*Math.PI/180*updated.pointerStrength+.002,
+       'head yaw must not exceed ergonomic bounds');
+     assert.ok(Math.abs(updated.camera.pitch)<=
+       3.8*Math.PI/180*updated.pointerStrength+.002,
+       'head pitch must not exceed ergonomic bounds');
+     const geometry=await page.evaluate(()=>{
        const api=window.PaperWorldClassroomBox;
        const box=window.PaperWorldGameRoomBox.inspect();
        const width=document.getElementById('scene').clientWidth;
        const height=document.getElementById('scene').clientHeight;
-       const c0=api.camera(0,0),c1=box.camera;
-       const displacement=point=>{
-         const a=api.project(point,c0,width,height);
-         const b=api.project(point,c1,width,height);
-         return Math.hypot(b.x-a.x,b.y-a.y);
+       const target=[0,1.22,8];
+       return {
+         center:api.project(target,api.camera(0,0),width,height),
+         looked:api.project(target,box.camera,width,height),
+         actors:box.worldActors,meshes:api.FACES.length
        };
-       return {near:displacement([-.9,0,1]),
-         far:displacement([-.9,0,8]),
-         world:box.worldActors,
-         faceCount:api.FACES.length};
      });
-     assert.ok(motion.near>motion.far*1.25,
-       'real camera must yield natural inverse-depth visual displacement: '+
-        JSON.stringify(motion));
-     assert.equal(motion.faceCount,5);
-     assert.deepEqual(motion.world,data.room.worldActors,
-       'pointer movement must not change player/enemy physical coordinates');
+     assert.ok(geometry.looked.x<geometry.center.x-15,
+       'turning head right must shift room center LEFT onscreen');
+     assert.equal(geometry.meshes,5);
+     assert.deepEqual(geometry.actors,data.room.worldActors,
+       'look-around must not move the actual player or NPC');
      await page.mouse.move(cfg.w/2,3);
-     await page.waitForTimeout(750);
-     const pitched=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
-     assert.ok(Math.abs(pitched.camera.y-neutral.y)>.04,
-       'vertical motion should gently lift/lower the same real camera');
-     assert.ok(Math.abs(pitched.camera.pitch)>.002,
-       'framing compensation should rotate the real camera');
-     assert.equal(pitched.renderer,'webgl-3d-mesh');
+     await page.waitForTimeout(850);
+     const lookedUp=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
+     for(const axis of ['x','y','z'])
+       assert.equal(lookedUp.camera[axis],neutral[axis],
+         'looking upward cannot lift the camera');
+     assert.ok(lookedUp.camera.pitch>.015,
+       'mouse upward must make head PITCH UP, not the opposite');
+     assert.equal(lookedUp.renderer,'webgl-3d-mesh');
      await page.screenshot({path:'artifacts/classroom-box/in-game-desktop-look-up.png'});
+     await page.mouse.move(cfg.w/2,cfg.h/2);
+     await page.waitForTimeout(950);
+     const centered=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
+     assert.ok(Math.abs(centered.camera.yaw)<.004 &&
+       Math.abs(centered.camera.pitch)<.004,
+       'returning mouse to center should gently recover level neutral gaze');
+     await page.screenshot({path:'artifacts/classroom-box/in-game-desktop-recentered.png'});
    }
    assert.deepEqual(errors,[],'uncaught game runtime exception');
    console.log('PASS classroom-box integrated',cfg.name,JSON.stringify({
