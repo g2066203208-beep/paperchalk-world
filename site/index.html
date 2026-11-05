@@ -561,6 +561,17 @@ body.mobile-mode.virtual-landscape #view{
 [data-l2d-actor][data-l2d-mode="v4-native"] [data-l2d-canvas]{visibility:hidden!important}
 [data-l2d-actor] img[data-l2d-v4]{opacity:1!important;visibility:visible!important;pointer-events:none!important}
 
+/* Cinematic 3D encounter: the camera fills the ENTIRE logical game view.
+   No 94% postcard frame, no 16:9 letterboxing on phone aspect ratios,
+   no rounded black rim, and no viewport-edge fluid vignette.
+   Only classroom-box opts in; original story/menu fog art remains intact. */
+#view.room-blockout-active #scene{
+  width:100cqw!important;height:100cqh!important;max-width:none!important;
+  aspect-ratio:auto!important;border-radius:0!important;overflow:hidden;
+}
+#view.room-blockout-active #scene::after{content:none!important}
+#view.room-blockout-active > #fog{visibility:hidden!important}
+#view.room-blockout-active > #ui-edge-fog{display:none!important}
 /* 3D five-face test room is an ordinary game scene, not a detached editor.
    Only active for ?scene=classroom-box; original UI/L2D materials unchanged. */
 #scene > #classroom-box-surface{
@@ -1979,6 +1990,9 @@ void main(){
     enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
     extraEnemies.forEach(node=>node.hidden=name!=='classroom-box');
     boxScene.setActive(name==='classroom-box');
+    // The room now fills the viewport; legacy fog needs its saved safe-zone
+    // bounds restored when we leave this scene without a window resize.
+    if(frameNumber>0){half();applyFogSettings();}
     if(name!=='classroom-box')window.PaperWorldL2DGround?.sync?.();
     stage.dataset.sceneTitle=def.title;
     stage.dataset.sceneVersion=def.version||'built-in';
