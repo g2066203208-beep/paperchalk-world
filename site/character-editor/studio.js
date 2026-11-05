@@ -207,10 +207,10 @@ document.body.classList.add('studio-page');
 // at a time; no kilometre-long stacked list of unrelated advanced controls.
 const mobileTabs=document.createElement('nav');
 mobileTabs.id='mobile-studio-tabs';mobileTabs.setAttribute('aria-label','移动端工作区');
-mobileTabs.innerHTML='<button type="button" data-studio-pane="characters">人物</button><button type="button" data-studio-pane="layers">图层</button><button type="button" data-studio-pane="motion">动画</button><button type="button" data-studio-pane="paint">绘画</button>';
+mobileTabs.innerHTML='<button type="button" data-studio-pane="canvas">画面</button><button type="button" data-studio-pane="characters">人物</button><button type="button" data-studio-pane="layers">图层</button><button type="button" data-studio-pane="motion">动画</button><button type="button" data-studio-pane="paint">绘画</button><button type="button" id="mobile-studio-recover">复原</button>';
 document.querySelector('body>header')?.after(mobileTabs);
 function setMobilePane(name){
- if(!['characters','layers','motion','paint'].includes(name))name='layers';
+ if(!['canvas','characters','layers','motion','paint'].includes(name))name='canvas';
  document.body.dataset.studioPane=name;
  for(const b of mobileTabs.querySelectorAll('button')){
   b.classList.toggle('active',b.dataset.studioPane===name);
@@ -219,14 +219,21 @@ function setMobilePane(name){
 }
 mobileTabs.addEventListener('click',e=>{
  const button=e.target.closest('button[data-studio-pane]');
- if(button)setMobilePane(button.dataset.studioPane);
+ if(button){setMobilePane(button.dataset.studioPane);ed.setTool('pan');}
+ if(e.target.closest('#mobile-studio-recover')){
+  ed.setTool('pan');
+  const panel=document.getElementById('studio-recovery');
+  panel.hidden=false;
+  document.getElementById('btnRecovery')?.setAttribute('aria-expanded','true');
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+ }
 });
 document.getElementById('idle-open')?.addEventListener('click',()=>setMobilePane('motion'),true);
 const head=document.querySelector('body>header');
 if(head&&typeof ResizeObserver==='function'){
  new ResizeObserver(()=>document.documentElement.style.setProperty('--studio-header-height',head.getBoundingClientRect().height+'px')).observe(head);
 }
-setMobilePane('characters');
+setMobilePane('canvas');
 const selector=$('studio-character'),direction=$('studio-side');
 const female06ResetBtn=document.createElement('button');
 female06ResetBtn.id='studio-reset-female06';female06ResetBtn.type='button';
@@ -327,16 +334,18 @@ workspaceCSS.textContent=`
  @media(max-width:710px){
   body.studio-page #studio-library>.studio-row:nth-child(2){display:none}
   body.studio-page #studio-library{margin:4px 6px;padding:6px}
-  #mobile-studio-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px 6px;background:#101a25;border-bottom:1px solid #324b5d}
+  #mobile-studio-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:5px 6px;background:#101a25;border-bottom:1px solid #324b5d}
   #mobile-studio-tabs button{min-height:40px;padding:6px 4px;border-radius:8px;font-size:12px}
   #mobile-studio-tabs button.active{background:#2b5672;border-color:#84cbef;color:white;font-weight:650}
   body.studio-page .layout{gap:5px;padding:5px;overflow:visible!important}
   body.studio-page .stage,body.studio-page.easy-mode .stage,body.studio-page.rig-authoring .stage{
-   order:0!important;position:sticky!important;top:var(--studio-header-height,60px)!important;
-   height:48dvh!important;min-height:345px!important;max-height:460px!important;
+   order:0!important;position:relative!important;top:auto!important;
+   height:clamp(290px,53dvh,620px)!important;min-height:290px!important;max-height:620px!important;
    z-index:9;border-radius:9px
   }
   body.studio-page .left,body.studio-page .right{order:1!important;min-height:160px!important}
+  body.studio-page[data-studio-pane="canvas"] .left,
+  body.studio-page[data-studio-pane="canvas"] .right,
   body.studio-page[data-studio-pane="characters"] .right,
   body.studio-page[data-studio-pane="layers"] .right,
   body.studio-page[data-studio-pane="motion"] .left,
