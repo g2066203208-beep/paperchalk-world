@@ -79,6 +79,11 @@ try{
       scenePicker:!!document.querySelector('[data-scene-target="classroom-box"]')
      };
    });
+   assert.equal(data.room.renderer,'webgl-3d-mesh',
+     '3D room must render real GPU triangle faces, not a 2D painted image');
+   assert.equal(data.room.vertexCount,30,
+     'five actual planar faces are triangulated into 10 GPU triangles');
+   assert.equal(data.room.projection,'physical-perspective-camera');
    assert.equal(data.scene,'classroom-box');
    assert.equal(data.canvas.hidden,false);
    assert.equal(data.roomClass,true);
@@ -128,7 +133,34 @@ try{
      await page.screenshot({path:'artifacts/classroom-box/in-game-desktop-motion.png'});
      const updated=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
      assert.ok(Math.abs(updated.camera.yaw)>.004);
+     assert.ok(Math.abs(updated.camera.x)>.07);
+     assert.equal(updated.renderer,'webgl-3d-mesh');
      assert.equal(updated.faceCount,5);
+     // Moving the actual camera causes stronger near-field displacement
+     // than the stationary back wall. Rotation alone fails this test.
+     const motion=await page.evaluate(()=>{
+       const api=window.PaperWorldClassroomBox;
+       const box=window.PaperWorldGameRoomBox.inspect();
+       const width=document.getElementById('scene').clientWidth;
+       const height=document.getElementById('scene').clientHeight;
+       const c0=api.camera(0,0),c1=box.camera;
+       const nearPoint=[-.9,0,1],farPoint=[-.9,0,8];
+       const delta=point=>{
+         const a=api.project(point,c0,width,height);
+         const b=api.project(point,c1,width,height);
+         return Math.hypot(b.x-a.x,b.y-a.y);
+       };
+       return {near:delta(nearPoint),far:delta(farPoint)};
+     });
+     assert.ok(motion.near>motion.far*1.6,
+       'mouse parallax is not distance-dependent '+JSON.stringify(motion));
+     await page.mouse.move(cfg.w/2,3);
+     await page.waitForTimeout(650);
+     const pitched=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
+     assert.ok(Math.abs(pitched.camera.pitch)>.004,
+       'vertical mouse movement must rotate the real camera');
+     assert.equal(pitched.renderer,'webgl-3d-mesh');
+     await page.screenshot({path:'artifacts/classroom-box/in-game-desktop-look-up.png'});
    }
    assert.deepEqual(errors,[],'uncaught game runtime exception');
    console.log('PASS classroom-box integrated',cfg.name,JSON.stringify({
