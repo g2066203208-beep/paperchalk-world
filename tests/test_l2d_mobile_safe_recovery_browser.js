@@ -34,12 +34,12 @@ const base='http://127.0.0.1:8132/character-editor/?character=protagonist-crouch
     'phone must not scroll sideways: '+JSON.stringify(initial));
    if(viewport.width<=710){
     assert.equal(initial.nav,true,'mobile navigation must remain accessible');
-    await page.locator('[data-mobile-tab=parts]').click();
-    assert.equal(await page.locator('body').getAttribute('data-mobile-panel'),'parts');
+    await page.locator('[data-studio-pane=layers]').click();
+    assert.equal(await page.locator('body').getAttribute('data-studio-pane'),'layers');
     assert.equal(await page.locator('.layout .left').isVisible(),true);
-    await page.locator('[data-mobile-tab=controls]').click();
+    await page.locator('[data-studio-pane=motion]').click();
     assert.equal(await page.locator('.layout .right').isVisible(),true);
-    await page.locator('[data-mobile-tab=canvas]').click();
+    await page.locator('[data-studio-pane=canvas]').click();
     assert.equal(await page.locator('.layout .right').isVisible(),false);
    }
    await page.evaluate(async()=>{
