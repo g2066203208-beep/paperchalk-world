@@ -27,7 +27,7 @@
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[0,10.55],[-1.8,9.6],[1.8,9.6],[-3.5,9.0]]),
-   enemies:Object.freeze([[-2.0,6.4],[-.4,6.75],[1.2,6.75],[2.8,6.4]])
+   enemies:Object.freeze([[-2.55,6.2],[-.85,6.65],[.85,6.65],[2.55,6.2]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[0,8.3],[-1.8,8.0],[1.8,8.0],[-3.5,7.7]]),
@@ -96,13 +96,13 @@
   // The actress is close to the lens; the four opponents occupy the middle
   // distance and remain individually separated. No CSS sprite scaling.
   outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:2.391,eyeZ:11.249,eyeY:1.48,focusX:.7,focusY:1,focusZ:8.8,fov:48}),
-   Object.freeze({id:'center',eyeX:2.05,eyeZ:12.2,eyeY:1.47,focusX:.35,focusY:1,focusZ:8.55,fov:52}),
-   Object.freeze({id:'right',eyeX:-2.391,eyeZ:11.249,eyeY:1.48,focusX:-.7,focusY:1,focusZ:8.8,fov:48})
+   Object.freeze({id:'left',eyeX:2.391,eyeZ:11.249,eyeY:1.48,focusX:1.1,focusY:1,focusZ:8.8,fov:52}),
+   Object.freeze({id:'center',eyeX:2.05,eyeZ:12.2,eyeY:1.47,focusX:.35,focusY:1,focusZ:8.55,fov:50}),
+   Object.freeze({id:'right',eyeX:-2.391,eyeZ:11.249,eyeY:1.48,focusX:-1.1,focusY:1,focusZ:8.8,fov:52})
   ]),
   inner:Object.freeze([
    Object.freeze({id:'left',eyeX:-2.6,eyeZ:7,eyeY:1.45,focusX:.2,focusY:1,focusZ:12,fov:42}),
-   Object.freeze({id:'center',eyeX:-2.85,eyeZ:6.3,eyeY:1.45,focusX:0,focusY:1,focusZ:11.8,fov:49}),
+   Object.freeze({id:'center',eyeX:-2.6,eyeZ:6.8,eyeY:1.45,focusX:0,focusY:1,focusZ:11.8,fov:47}),
    Object.freeze({id:'right',eyeX:2.6,eyeZ:7,eyeY:1.45,focusX:-.2,focusY:1,focusZ:12,fov:42})
   ])
  });
@@ -128,6 +128,24 @@
   if(w<=0)return {valid:false};
   return {valid:true,x:(m[0]*x+m[4]*y+m[8]*z+m[12])/w,
    y:(m[1]*x+m[5]*y+m[9]*z+m[13])/w,depth:w};
+ }
+ // Actual WebGL billboard quad bounds from the SAME 3D projection used in
+ // the render shader. Used to prevent enemy clipping on authored camera stops.
+ function portraitBounds(actor,cam,aspect=16/9){
+  const forward=normalize({x:cam.focus.x-cam.eye.x,y:0,z:cam.focus.z-cam.eye.z});
+  const right=normalize(cross(forward,{x:0,y:1,z:0}));
+  const h=actor.height/Math.max(.01,actor.soleY-actor.crownY),points=[];
+  for(const u of [0,1])for(const v of [0,1])
+   points.push(project({
+    x:actor.x+right.x*(u-actor.soleX)*h,
+    y:actor.y+(actor.soleY-v)*h,
+    z:actor.z+right.z*(u-actor.soleX)*h
+   },cam,aspect));
+  if(points.some(p=>!p.valid))return {valid:false};
+  const xs=points.map(p=>p.x),ys=points.map(p=>p.y);
+  return {valid:true,left:Math.min(...xs),right:Math.max(...xs),
+   top:Math.max(...ys),bottom:Math.min(...ys),
+   heightFraction:(Math.max(...ys)-Math.min(...ys))/2};
  }
  function shader(gl,type,source){
   const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);
@@ -487,6 +505,6 @@
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
-  SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,lookAt,
+  SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,portraitBounds,lookAt,
   perspective,multiply,project,create});
 });
