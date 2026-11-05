@@ -150,7 +150,7 @@ jobs:
           assert 'sceneCamera.billboard(world.depths.enemy,camera)' in h
           assert 'sceneCamera.pose(currentX,currentY,sizes.h)' in h
           assert Path('site/game/scene-camera.js').is_file()
-          assert 'depthFactor=clamp(' in h
+          assert 'const world=sceneCamera.inspect(editorConfig,camera)' in h
           assert 'id="dev-tools"' in h and 'id="dev-layer"' in h
           assert 'id="dev-trigger"' not in h
           assert 'id="menu-gallery-button"' in h
