@@ -135,6 +135,7 @@ try{
   await page.locator('#dev-room-show-all').click();
   const restored=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
   assert.ok(Object.values(restored.visibleFaces).every(Boolean));
+  await page.locator('[data-room-object-focus="camera"]').click();
   await page.locator('[data-room-view="side"]').click();
   const rotated=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
   assert.ok(Math.abs(rotated.camera.yaw)>.3,
