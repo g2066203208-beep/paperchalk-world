@@ -25,7 +25,12 @@ const catalog=[
   familyId:'char-006',variantCategory:'outfit',
   editorOnly:true,front:'data:image/svg+xml,placeholder'},
  {id:'char-006',label:'女五 · 女老师',front:'teacher.png'},
- {id:'class-teacher-geography-candidate',label:'历史女老师别名',familyId:'char-006',editorOnly:true}
+ {id:'class-teacher-geography-candidate',label:'历史女老师别名',familyId:'char-006',editorOnly:true},
+ {id:'female-06',label:'女六 · 原始彩绘＋黑色短裤',front:'base-female-six.png',
+   l2dModule:{front:{rig:{partCount:18}}}},
+ {id:'female-06-outfit-02',label:'女六 · 橙棕外套黑色短裤',
+   familyId:'female-06',variantCategory:'outfit',front:'outfit-female-six.png',
+   l2dModule:{front:{rig:{partCount:17}}}}
 ];
 const roots=model.makeTree(catalog,'protagonist');
 const ids=roots.map(row=>row.family);
@@ -56,6 +61,16 @@ assert.equal(roots.find(x=>x.family==='char-006')
  .outfits.length,0,'unimported wardrobes are not presented as playable');
 assert.ok(roots.find(x=>x.family==='char-006')
  .sources.some(x=>x.type==='pending'));
+assert.deepEqual(ids,['protagonist','char-003','char-002','male2','char-004','char-006','female-06'],
+ 'visible cast must alternate 女主/男主, 女二/男二, 女三/男三 and preserve female five/six');
+assert.deepEqual(roots.map(x=>x.name),
+ ['女主','男主','女二','男二','女三','女五','女六'],
+ 'all canon roots use single short names, not descriptions or suffixes');
+const femaleSix=roots.find(x=>x.family==='female-06');
+assert.deepEqual(femaleSix.outfits.map(x=>x.id),['female-06-outfit-02']);
+assert.equal(femaleSix.outfits[0].label,'第二套 · 橙棕外套');
+assert.equal(roots.filter(x=>x.family==='female-06').length,1,
+ 'female-six second outfit must never become an extra person node');
 assert.ok(ids.indexOf('protagonist')<ids.indexOf('char-002'));
 assert.equal(ids.filter(id=>id==='char-006').length,1,'female five and teacher must share one actor root');
 assert.equal(model.familyOf({id:'class-teacher-geography-candidate'}),'char-006');
