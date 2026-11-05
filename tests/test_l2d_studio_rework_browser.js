@@ -33,7 +33,7 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
     personRect:document.getElementById('studio-character-tree').getBoundingClientRect().toJSON(),
     layerRect:document.getElementById('layers').getBoundingClientRect().toJSON()}));
   assert.equal(safe.tool,'pan','editor opens with safe canvas movement, never a brush or mesh transform');
-  assert.ok(safe.personRect.width>=315,'person tree must have comfortable width');
+  assert.ok(safe.personRect.width>=210,'compact hierarchy must remain readable while prioritizing the canvas');
   assert.ok(safe.personRect.height>=260,'person tree must have enough vertical room');
   assert.equal(await page.locator('#btnSave').isVisible(),true);
   assert.equal(await page.locator('#easy-imports').count(),1);
