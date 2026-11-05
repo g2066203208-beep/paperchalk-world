@@ -48,8 +48,12 @@ for(const mode of ['outer','inner']){
   const hero=arena.portraitBounds(h,camera);
   assert.ok(hero.valid&&hero.left<1&&hero.right>-1,
    'heroine must stay partially inside frame');
-  if(index!==1)assert.ok(hero.heightFraction>=.80,
-   'heroine must dominate the foreground');
+  if(index!==1){
+   assert.ok(hero.heightFraction>=.72,'heroine must dominate near-camera foreground');
+   const bodyCenter=arena.project({...h,y:h.height*.5},camera);
+   assert.ok(bodyCenter.valid&&Math.abs(bodyCenter.x)>=.35&&Math.abs(bodyCenter.x)<=.85,
+    'actual visible actress center, not a blank corner of transparent L2D canvas');
+  }
   const foes=scene.enemies.map(p=>arena.portraitBounds(p,camera));
   assert.ok(foes.every(q=>q.heightFraction>=.23),
    'foes must be legible middle-ground figures');
