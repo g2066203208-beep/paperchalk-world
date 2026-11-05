@@ -76,7 +76,10 @@ const base='http://127.0.0.1:8132/character-editor/?character=protagonist-crouch
     part.placement.offsetX+=15;part.x+=4;layer.x+=4;
    });
    const isPhone=viewport.width<=710||(viewport.width<=950&&viewport.height<=520);
-   if(isPhone)await page.locator('#mobile-studio-recover').click();
+   if(isPhone){
+    await page.locator('#workspace-mobile-more > summary').click();
+    await page.locator('#mobile-studio-recover').click();
+   }
    else await page.locator('#btnRecovery').click();
    assert.equal(await page.locator('#studio-recovery').isVisible(),true,
     'restore panel must be reachable without entering destructive edit mode');
