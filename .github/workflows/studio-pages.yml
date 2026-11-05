@@ -268,6 +268,8 @@ jobs:
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1 pngjs@7.0.0
           npx playwright install --with-deps chromium
+      - name: Verify real 3D cylindrical background camera and original image fidelity
+        run: node tests/cylinder-background-browser.mjs
       - name: Verify all four independent UI edge fogs in real browser and capture screenshots
         run: node tests/ui-edge-fog-browser.mjs
       - name: Upload early real UI fog screenshots for visual review
