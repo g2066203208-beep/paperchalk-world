@@ -2659,6 +2659,7 @@ void main(){
   });
   document.getElementById('dev-room-camera-restore').addEventListener('click',()=>{
     if(!is3DRoom())return;
+    roomView='front';
     Object.assign(devCamera,{yaw:0,pitch:0,zoom:1,panX:0,panY:40.6});
     roomCameraFov=68;applyDevCamera();
     setDevStatus('已恢复三维摄影机的默认正视构图');
