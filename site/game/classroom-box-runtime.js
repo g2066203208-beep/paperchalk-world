@@ -238,7 +238,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   let gl=null,program=null,buffers=null,positions=null,ctx=null,renderer='uninitialized';
   let cameraLoc=null,anglesLoc=null,tanLoc=null,enabled=false,lastKey='',lastState=null,frames=0;
   let texturedProgram=null,texturedLocations=null,materialBuffers=null,textureResources=null;
-  let debugMode=false,debugCamera=null,selectedFace=null,guidesVisible=false;
+  let debugMode=false,debugCamera=null,selectedFace=null,
+    selectedReference=null,guidesVisible=false;
   let pointerStrength=1;
   const pointerKey='paperchalk-classroom-camera-range-v1';
   try{
@@ -279,6 +280,17 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   }
   surface.insertAdjacentElement('afterend',labels);
   labels.hidden=true;
+  // Editor-only reference planes are computed from SAME world coordinates
+  // and camera projector as the GPU mesh. These do not replace the real fog.
+  const references=document.createElement('canvas');
+  references.id='classroom-box-reference-planes';
+  references.setAttribute('aria-label','DEV 3D 黑雾、玩家及敌人参考平面');
+  references.setAttribute('aria-hidden','true');
+  references.style.cssText='position:absolute;inset:0;width:100%;height:100%;'+
+    'pointer-events:none;z-index:2;';
+  references.hidden=true;
+  surface.insertAdjacentElement('afterend',references);
+  const refCtx=references.getContext('2d',{alpha:true});
   function compile(type,code){
     const shader=gl.createShader(type);
     if(!shader)throw Error('WebGL shader creation failed');
@@ -509,6 +521,50 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       ctx.closePath();ctx.fillStyle='#26313b9c';ctx.fill();
     }
   }
+  function drawReferences(cam,w,h){
+    if(!refCtx||!debugMode||!selectedReference){references.hidden=true;return}
+    const dpi=Math.min(1.5,window.devicePixelRatio||1);
+    const rw=Math.round(w*dpi),rh=Math.round(h*dpi);
+    if(references.width!==rw)references.width=rw;
+    if(references.height!==rh)references.height=rh;
+    refCtx.setTransform(rw/w,0,0,rh/h,0,0);
+    refCtx.clearRect(0,0,w,h);
+    let verts,color,description;
+    if(selectedReference==='fog'){
+      // The fog is a fixed viewport-space fluid layer. This is a 3D
+      // calibration plane for its virtual separation, NOT a new fog layer.
+      verts=[[-3.8,0,1.75],[3.8,0,1.75],
+        [3.8,3.2,1.75],[-3.8,3.2,1.75]];
+      color='#9cc5d9';description='雾层参考 · 游戏黑雾仍为屏幕特效';
+    }else{
+      const actor=actorWorld[selectedReference];
+      if(!actor){references.hidden=true;return}
+      verts=[[actor.x-.43,0,actor.z],[actor.x+.43,0,actor.z],
+        [actor.x+.43,actor.height,actor.z],
+        [actor.x-.43,actor.height,actor.z]];
+      color=selectedReference==='player'?'#edc5a1':'#bde2c1';
+      description=selectedReference==='player'?'玩家 L2D 参考平面':
+        '敌人 L2D 参考平面';
+    }
+    const p=verts.map(v=>project(v,cam,w,h));
+    if(p.some(q=>!q)){references.hidden=true;return}
+    references.hidden=false;
+    refCtx.beginPath();refCtx.moveTo(p[0].x,p[0].y);
+    for(let i=1;i<4;i++)refCtx.lineTo(p[i].x,p[i].y);
+    refCtx.closePath();refCtx.fillStyle=color+'20';refCtx.fill();
+    refCtx.strokeStyle=color;refCtx.lineWidth=1.8;
+    refCtx.setLineDash([7,4]);refCtx.stroke();refCtx.setLineDash([]);
+    refCtx.beginPath();refCtx.moveTo(p[0].x,p[0].y);
+    refCtx.lineTo(p[2].x,p[2].y);refCtx.moveTo(p[1].x,p[1].y);
+    refCtx.lineTo(p[3].x,p[3].y);refCtx.globalAlpha=.45;
+    refCtx.stroke();refCtx.globalAlpha=1;
+    const cx=p.reduce((sum,v)=>sum+v.x,0)/4;
+    const cy=Math.max(15,Math.min(h-15,p[0].y-18));
+    refCtx.font='12px system-ui,sans-serif';refCtx.textAlign='center';
+    const tw=refCtx.measureText(description).width+18;
+    refCtx.fillStyle='#142734d9';refCtx.fillRect(cx-tw/2,cy-12,tw,23);
+    refCtx.fillStyle='#e6f1f5';refCtx.fillText(description,cx,cy+4);
+  }
   function setVar(id,key,value){
     const prop='--room-'+id+'-'+key;
     if(view.style.getPropertyValue(prop)!==value)view.style.setProperty(prop,value);
@@ -573,11 +629,13 @@ function create({stage,view,playerRoot,enemyRoot}={}){
         return false;
       }
     }
+    drawReferences(cam,w,h);
     lastState={active:true,faceCount:5,room:ROOM,camera:cam,player,enemy,
       renderer,meshFaceCount:5,vertexCount:geometry.solids.length/7,
       materialSources:MATERIALS,materials:{...materialStatus},
       loadedMaterialCount:Object.values(materialStatus).filter(v=>v==='ready').length,
-      debugMode,visibleFaces:{...visibleFaces},selectedFace,guidesVisible,
+      debugMode,visibleFaces:{...visibleFaces},selectedFace,
+      selectedReference,guidesVisible,
       worldActors:{player:{...actorWorld.player},enemy:{...actorWorld.enemy}},
       pointerStrength,cameraRig:CAMERA_RIG,
       projection:'physical-perspective-camera',frames,
@@ -587,7 +645,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   function setDevMode(active,settings){
     debugMode=!!active;
     if(!debugMode){
-      debugCamera=null;selectedFace=null;guidesVisible=false;
+      debugCamera=null;selectedFace=null;
+      selectedReference=null;guidesVisible=false;references.hidden=true;
       for(const face of FACES)visibleFaces[face.id]=true;
     }else if(settings){
       debugCamera={...BASE_CAMERA,...settings};
@@ -639,6 +698,12 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     try{localStorage.setItem(pointerKey,String(pointerStrength))}catch(_){}
     return pointerStrength;
   }
+  function setReferenceLayer(id){
+    if(id!==null&&!['fog','player','enemy'].includes(id))return false;
+    selectedReference=id;references.hidden=!debugMode||!id;lastKey='';
+    if(enabled)render();
+    return true;
+  }
   function setGuidesVisible(value){
     guidesVisible=!!value;lastKey='';
     if(enabled)render();
@@ -658,6 +723,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   }
   function setActive(state){
     enabled=!!state;surface.hidden=!enabled;
+    references.hidden=!enabled||!debugMode||!selectedReference;
     // Material drawings provide the wall/floor geometry; labels only on
     // explicit debug request, not as floating wallpaper-like decorations.
     labels.hidden=!enabled||
@@ -670,7 +736,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     }else render(0,0);
   }
   return Object.freeze({setActive,setDevMode,setDevCamera,
-    setFaceVisible,setGuidesVisible,setPointerStrength,setActorWorld,saveActorWorld,
+    setFaceVisible,setGuidesVisible,setReferenceLayer,
+    setPointerStrength,setActorWorld,saveActorWorld,
     resetActorWorld,selectFace,render,
     inspect:()=>lastState||{active:false,faceCount:5,room:ROOM},
     get canvas(){return surface}
