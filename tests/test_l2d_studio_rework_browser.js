@@ -92,10 +92,12 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   assert.equal(raised.selected,'rear_hair');
   assert.equal(raised.rig.indexOf('rear_hair'),from+1,'up means truly moving toward front');
   assert.deepEqual(raised.ui,raised.rig,'live render order follows UI immediately');
+  await page.locator('#workspace-quick-more > summary').click();
   await page.locator('#easy-undo').click();
   await page.waitForFunction(order=>
     JSON.stringify(window.PaperchalkPartRigStudio.state.model.layerOrder)===JSON.stringify(order),
     original.order);
+  await page.locator('#workspace-quick-more > summary').click();
   await page.locator('#easy-redo').click();
   await page.waitForFunction(order=>
     JSON.stringify(window.PaperchalkPartRigStudio.state.model.layerOrder)===JSON.stringify(order),
