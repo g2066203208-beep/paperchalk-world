@@ -958,7 +958,7 @@ jobs:
                   assert.equal(check.fog.y,0,'fog should remain anchored');
                   assert.ok(Math.abs(check.fog.width-cfg.width)<2,'fog width changed');
                   assert.ok(Math.abs(check.fog.height-cfg.height)<2,'fog height changed');
-                  assert.ok(check.transform.includes('rotateY('));
+                  assert.ok(check.transform.startsWith('matrix3d('),'scene must use one projected 3D plane');
                 }
                 assert.ok(renderer==='gpu-advected-fluid'||renderer==='cpu-advected-fluid');
                 if(!cfg.mobile){
@@ -966,7 +966,7 @@ jobs:
                   await page.mouse.move(1200,600);
                   await page.waitForTimeout(380);
                   const transform=await page.locator('#scene').evaluate(e=>e.style.transform);
-                  assert.ok(transform.includes('rotateY('));
+                  assert.ok(transform.startsWith('matrix3d('),'background must stay 3D-projected');
                   const afterFog=await page.locator('#fog').boundingBox();
                   assert.deepEqual(afterFog,beforeFog,'fog moved with image');
                 }
@@ -985,16 +985,16 @@ jobs:
                     const geometry=await page.locator('#scene').evaluate(el=>({
                       w:el.offsetWidth,h:el.offsetHeight,css:el.style.transform
                     }));
-                    const yaw=Number(geometry.css.match(/rotateY\((-?[\d.]+)deg\)/)?.[1])*Math.PI/180;
-                    const pitch=Number(geometry.css.match(/rotateX\((-?[\d.]+)deg\)/)?.[1])*Math.PI/180;
-                    assert.ok(Number.isFinite(yaw)&&Number.isFinite(pitch),'rotation not numeric');
+                    assert.ok(geometry.css.startsWith('matrix3d('),'missing 3D projective matrix');
+                    const matrix=geometry.css.slice(9,-1).split(',').map(Number);
+                    assert.equal(matrix.length,16);
+                    assert.ok(matrix.every(Number.isFinite),'non-finite camera matrix');
                     const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([ux,uy])=>{
                       const xx=ux*geometry.w*.5,yy=uy*geometry.h*.5;
-                      const y1=yy*Math.cos(pitch),z1=yy*Math.sin(pitch);
-                      const x2=xx*Math.cos(yaw)+z1*Math.sin(yaw);
-                      const z2=-xx*Math.sin(yaw)+z1*Math.cos(yaw);
-                      const m=1500/(1500-z2);
-                      return [cfg.width*.5+x2*m,cfg.height*.5+y1*m];
+                      const w=matrix[3]*xx+matrix[7]*yy+matrix[15];
+                      const x=(matrix[0]*xx+matrix[4]*yy+matrix[12])/w;
+                      const y=(matrix[1]*xx+matrix[5]*yy+matrix[13])/w;
+                      return [cfg.width*.5+x,cfg.height*.5+y];
                     });
                     for(let j=0;j<4;j++){
                       const a=corners[j],b=corners[(j+1)%4];
@@ -1027,8 +1027,10 @@ jobs:
                   });
                   await page.waitForTimeout(400);
                   const transform=await page.locator('#scene').evaluate(el=>el.style.transform);
-                  const yaw=Number(transform.match(/rotateY\((-?[\d.]+)deg\)/)?.[1]);
-                  assert.ok(Math.abs(yaw)>1,'mobile gyro did not rotate the classroom: '+transform);
+                  const yaw=await page.evaluate(()=>
+                    window.PaperWorldSceneCameraState().camera.yaw);
+                  assert.ok(Math.abs(yaw)>.002 && transform.startsWith('matrix3d('),
+                    'mobile gyro did not update the physical scene camera: '+transform);
                   assert.equal(await page.locator('#calibrate-motion').count(),0,'recenter button must be absent');
                   console.log('PASS: mobile emulated gyroscope rotates classroom in '+(cfg.width>cfg.height?'real':'virtual')+' landscape');
                 }
