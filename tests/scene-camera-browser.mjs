@@ -49,7 +49,7 @@ try{
       assert.equal(initial.cameraProfile,'one-pinhole-3d');
       assert.ok(initial.stageStyle.startsWith('matrix3d('));
       assert.ok(initial.enemyStyle.includes('scale('));
-      assert.match(initial.playerStyle,/translate3d\\(0px,\\s*0px,\\s*0px\\)/);
+      assert.ok(initial.playerStyle.replaceAll(' ','').includes('translate3d(0px,0px,0px)'));
       assert.ok(initial.world.distances.background>initial.world.distances.enemy);
       assert.ok(initial.world.distances.enemy>initial.world.distances.player);
       assert.ok(Math.abs(initial.fogRect.width-cfg.w)<3);
