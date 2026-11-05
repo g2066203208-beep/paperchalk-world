@@ -67,8 +67,8 @@ function project(point,cam,width,height){
   return {x:width/2+focal*xx/depth,
     y:height/2-focal*yy/depth,depth,focal};
 }
-function actorGeometry(id,cam,width,height,metrics){
-  const a=CHARACTERS[id];if(!a)return null;
+function actorGeometry(id,cam,width,height,metrics,worldActor=null){
+  const a=worldActor||CHARACTERS[id];if(!a)return null;
   const shoe=project([a.x,0,a.z],cam,width,height);
   const head=project([a.x,a.height,a.z],cam,width,height);
   if(!shoe||!head)return null;
@@ -87,7 +87,7 @@ function hexColor(hex,opacity=1){
   return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255,opacity];
 }
 function meshVertex(out,pt,color){out.push(pt[0],pt[1],pt[2],...color)}
-function buildMesh(){
+function buildMesh(actors=CHARACTERS){
   const solids=[],edges=[],shadows=[],guides=[],textured={},solidFaces={},edgeFaces={};
   const edgeColor=hexColor('#344251',.8);
   for(const face of FACES){
@@ -124,7 +124,7 @@ function buildMesh(){
     meshVertex(guides,[4.8,.016,z],color);
   }
   for(const id of ['player','enemy']){
-    const a=CHARACTERS[id],center=[a.x,.009,a.z];
+    const a=actors[id],center=[a.x,.009,a.z];
     const tone=hexColor('#26313b',.58);
     for(let i=0;i<32;i++){
       const t=i*Math.PI*2/32,u=(i+1)*Math.PI*2/32;
@@ -216,7 +216,22 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   let debugMode=false,debugCamera=null,selectedFace=null,guidesVisible=false;
   const visibleFaces=Object.fromEntries(FACES.map(face=>[face.id,true]));
   const materialStatus=Object.fromEntries(Object.keys(MATERIALS).map(id=>[id,'not-loaded']));
-  const geometry=buildMesh();
+  const actorWorld=Object.fromEntries(Object.entries(CHARACTERS).map(([id,a])=>[id,{...a}]));
+  let geometry=buildMesh(actorWorld);
+  const savedActorKey='paperchalk-classroom-3d-actor-world-v1';
+  try{
+    const stored=JSON.parse(localStorage.getItem(savedActorKey)||'null');
+    if(stored&&typeof stored==='object'){
+      for(const id of ['player','enemy']){
+        const a=stored[id];if(!a)continue;
+        for(const [key,lo,hi] of [['x',-4.5,4.5],['z',.1,7.8],['height',1.2,1.95]]){
+          const n=Number(a[key]);
+          if(Number.isFinite(n))actorWorld[id][key]=clamp(n,lo,hi);
+        }
+      }
+      geometry=buildMesh(actorWorld);
+    }
+  }catch(_){/* Corrupted local saves must not block the room. */}
   const labels=document.createElement('div');
   labels.id='classroom-box-labels';
   labels.setAttribute('aria-hidden','true');
@@ -449,7 +464,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
         ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
       }
     }
-    if(!debugMode)for(const a of Object.values(CHARACTERS)){
+    if(!debugMode)for(const a of Object.values(actorWorld)){
       const ring=[];
       for(let i=0;i<32;i++){
         const t=i*2*Math.PI/32;
@@ -495,8 +510,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     if(w<1||h<1)return false;
     const cam=debugMode&&debugCamera?debugCamera:camera();
     const info=metrics();
-    const player=actorGeometry('player',cam,w,h,info.player);
-    const enemy=actorGeometry('enemy',cam,w,h,info.enemy);
+    const player=actorGeometry('player',cam,w,h,info.player,actorWorld.player);
+    const enemy=actorGeometry('enemy',cam,w,h,info.enemy,actorWorld.enemy);
     const left=(view.clientWidth-w)/2,top=(view.clientHeight-h)/2;
     applyActor('player',player,left,top);
     applyActor('enemy',enemy,left,top);
@@ -530,6 +545,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       materialSources:MATERIALS,materials:{...materialStatus},
       loadedMaterialCount:Object.values(materialStatus).filter(v=>v==='ready').length,
       debugMode,visibleFaces:{...visibleFaces},selectedFace,guidesVisible,
+      worldActors:{player:{...actorWorld.player},enemy:{...actorWorld.enemy}},
       projection:'physical-perspective-camera',frames,
       floorY:0,actorRendering:'real-game-l2d',canvasSize:{w:bw,h:bh}};
     return true;
@@ -548,6 +564,39 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     if(!debugMode)return false;
     debugCamera={...BASE_CAMERA,...settings};lastKey='';
     if(enabled)render();
+    return true;
+  }
+  function setActorWorld(id,updates){
+    if(!debugMode||!actorWorld[id]||!updates)return false;
+    const actor=actorWorld[id];
+    for(const [key,lo,hi] of [['x',-4.5,4.5],['z',.1,7.8],['height',1.2,1.95]]){
+      if(!Object.hasOwn(updates,key))continue;
+      const n=Number(updates[key]);
+      if(Number.isFinite(n))actor[key]=clamp(n,lo,hi);
+    }
+    geometry=buildMesh(actorWorld);
+    if(gl&&buffers?.shadows){
+      gl.bindBuffer(gl.ARRAY_BUFFER,buffers.shadows.buffer);
+      gl.bufferData(gl.ARRAY_BUFFER,geometry.shadows,gl.STATIC_DRAW);
+      buffers.shadows.count=geometry.shadows.length/7;
+    }
+    lastKey='';if(enabled)render();
+    return true;
+  }
+  function saveActorWorld(){
+    try{localStorage.setItem(savedActorKey,JSON.stringify(actorWorld));return true}
+    catch(_){return false}
+  }
+  function resetActorWorld(){
+    for(const id of ['player','enemy'])Object.assign(actorWorld[id],CHARACTERS[id]);
+    geometry=buildMesh(actorWorld);
+    if(gl&&buffers?.shadows){
+      gl.bindBuffer(gl.ARRAY_BUFFER,buffers.shadows.buffer);
+      gl.bufferData(gl.ARRAY_BUFFER,geometry.shadows,gl.STATIC_DRAW);
+      buffers.shadows.count=geometry.shadows.length/7;
+    }
+    try{localStorage.removeItem(savedActorKey)}catch(_){}
+    lastKey='';if(enabled)render();
     return true;
   }
   function setGuidesVisible(value){
@@ -581,7 +630,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     }else render(0,0);
   }
   return Object.freeze({setActive,setDevMode,setDevCamera,
-    setFaceVisible,setGuidesVisible,selectFace,render,
+    setFaceVisible,setGuidesVisible,setActorWorld,saveActorWorld,
+    resetActorWorld,selectFace,render,
     inspect:()=>lastState||{active:false,faceCount:5,room:ROOM},
     get canvas(){return surface}
   });
