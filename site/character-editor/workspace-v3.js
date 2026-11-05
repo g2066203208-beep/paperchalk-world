@@ -154,6 +154,7 @@ if(quickbar){
  toolMore.id='workspace-quick-more';
  toolMore.innerHTML='<summary title="更多画布操作" aria-label="更多画布操作">···</summary>';
  const list=make('div','workspace-quick-more-list');
+ list.id='workspace-quick-more-list';
  for(const id of ['easy-face','easy-undo','easy-redo','easy-edit','easy-animate']){
   const button=$(id);if(button)list.append(button);
  }
