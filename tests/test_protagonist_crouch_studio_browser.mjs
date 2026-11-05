@@ -102,6 +102,7 @@ try{
   await page.screenshot({path:'artifacts/protagonist-crouch/'+cfg.name+'-crouch-studio.png',fullPage:true});
   // Do not create another protagonist root; the standard front button
   // should return to the authored standing 20-PartRig on demand.
+  if(cfg.width<=710)await page.locator('#mobile-studio-tabs [data-studio-pane="characters"]').click();
   await page.locator('.character-family[data-family="protagonist"] [data-category="base"] button[data-face="front"]').click();
   await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist'&&
     window.PaperchalkStudio.countSourceParts?.()===20,null,{timeout:50000});
