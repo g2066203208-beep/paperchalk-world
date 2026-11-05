@@ -54,6 +54,16 @@ actions.append(more);
 $('btnRecovery')?.setAttribute('title','打开恢复、撤销和原版复原');
 $('btnRecovery')?.setAttribute('aria-label','复原工具');
 $('btnSave')?.setAttribute('title','将工作室的当前稿保存给本机同站点游戏');
+const saveButton=$('btnSave');
+if(saveButton&&typeof MutationObserver==='function'){
+ const reflectSaveState=()=>{
+  saveButton.dataset.saved=/已保存|保存成功/.test(saveButton.textContent)?'true':'false';
+ };
+ new MutationObserver(reflectSaveState).observe(saveButton,{
+  childList:true,characterData:true,subtree:true
+ });
+ reflectSaveState();
+}
 
 // A single character & tool inspector, rather than 5 open panels stacked.
 const inspectorTabs=make('div','workspace-inspector-tabs');
