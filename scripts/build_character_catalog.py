@@ -215,6 +215,13 @@ def discover():
     for canonical,label in KNOWN.items():
         if canonical in entries:
             entries[canonical]['label']=label
+    # The source package still has the historical outfit-02 ID. Renaming the
+    # rig would lose local Studio bone/paint drafts; only its DISPLAY name
+    # changes. The orange-coat model is outfit THREE, not outfit two.
+    if 'female-06-outfit-02' in entries:
+        entries['female-06-outfit-02']['label']='女六 · 第三套（橙棕外套）'
+        entries['female-06-outfit-02']['familyId']='female-06'
+        entries['female-06-outfit-02']['variantCategory']='outfit'
     return {'version':3,'characters':list(entries.values())}
 
 if __name__=='__main__':
