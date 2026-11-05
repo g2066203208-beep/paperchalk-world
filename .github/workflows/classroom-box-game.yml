@@ -11,6 +11,7 @@ on:
       - 'site/l2d/**'
       - 'site/dev/character-bridge.js'
       - 'tests/classroom-box-game-browser.mjs'
+      - 'tests/classroom-box-dev-browser.mjs'
       - '.github/workflows/classroom-box-game.yml'
   workflow_dispatch:
 permissions:
@@ -42,6 +43,8 @@ jobs:
           node tests/scene-modules.test.cjs
       - name: Capture game with real protagonist and enemy L2D on 3D floor
         run: node tests/classroom-box-game-browser.mjs
+      - name: Verify DEV sees five physical WebGL faces, not one flat background
+        run: node tests/classroom-box-dev-browser.mjs
       - name: Upload screenshot evidence even if test fails
         if: always()
         uses: actions/upload-artifact@v4
