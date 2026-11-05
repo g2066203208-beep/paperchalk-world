@@ -56,6 +56,33 @@ try{
       assert.equal(initial.source,'./assets/classroom.webp');
       await page.screenshot({path:'artifacts/scene-camera/'+cfg.name+'-neutral.png'});
       if(!cfg.mobile){
+        // Inspect the actual two-character composition, not just hidden
+        // opponent geometry. The original L2D animation stays in Canvas.
+        await page.evaluate(async()=>{
+          document.getElementById('enemy-depth-root').hidden=false;
+          document.getElementById('actor-enemy').hidden=false;
+          const actor=window.PaperchalkL2D.get('enemy');
+          if(!actor.img.src){
+            actor.img.src='./assets/characters/char-002/front.png';
+            await actor.img.decode();
+          }
+          await window.PaperchalkL2D.refresh('enemy');
+        });
+        await page.waitForFunction(()=>{
+          const s=window.PaperWorldL2DGround?.inspect();
+          const actor=window.PaperchalkL2D?.get('enemy');
+          return actor?.root?.dataset.l2dState==='ready' &&
+            s?.actors?.some(a=>a.id==='enemy'&&a.detected);
+        },null,{timeout:22000});
+        const checked=await page.evaluate(()=>{
+          const s=window.PaperWorldL2DGround.inspect();
+          return {enemy:s.actors.find(a=>a.id==='enemy'),
+            player:s.actors.find(a=>a.id==='player')};
+        });
+        assert.ok(checked.enemy.errorPx<1 && checked.enemy.errorPx>-1,
+          'real L2D sole must stay attached to the shared ground');
+        assert.ok(checked.enemy.depthScale>0 && checked.enemy.depthScale<1);
+        await page.screenshot({path:'artifacts/scene-camera/desktop-player-and-enemy.png'});
         await page.mouse.move(cfg.w-4,cfg.h/2);
         await page.waitForFunction(()=>
           Math.abs(window.PaperWorldSceneCameraState().camera.x)>10,
