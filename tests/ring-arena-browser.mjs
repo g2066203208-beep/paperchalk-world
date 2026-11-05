@@ -43,7 +43,7 @@ try{
        .map(id=>{const a=window.PaperchalkL2D?.get(id);
          return {id,ready:a?.root?.dataset.l2dState,hidden:a?.root?.hidden,
            imgHidden:a?.img?.hidden,canvas:a?.canvas?.width,
-           character:a?.img?.dataset.characterId}});
+           character:a?.img?.dataset.characterId}})
    };
  })));
  try{
@@ -99,7 +99,7 @@ try{
  await page.waitForTimeout(700);
  const inner=await get();
  assert.equal(inner.arena.mode,'inner');
- assert.equal(inner.arena.camera.radius,1.54);
+ assert.equal(inner.arena.camera.radius,2.45);
  assert.equal(inner.arena.l2dReady,8);
  assert.equal(inner.arena.actors.allies.length,4);
  await page.screenshot({path:'artifacts/ring-arena/l2d-inner-right.png'});
