@@ -779,6 +779,7 @@ body.mobile-mode.virtual-landscape #view{
         <button id="menu-continue" type="button" disabled>继续游戏</button>
         <button id="menu-settings-button" type="button">设置</button>
          <button id="menu-gallery-button" type="button">场景预览</button>
+         <button id="menu-ring-arena" type="button">3D 圆环战场测试</button>
       </nav>
       <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
@@ -2102,6 +2103,7 @@ void main(){
     changeScene('classroom');
   }
   document.getElementById('menu-start').addEventListener('click',()=>beginStory(false));
+  document.getElementById('menu-ring-arena').addEventListener('click',()=>changeScene('ring-arena'));
   continueButton.addEventListener('click',()=>{if(readSave())beginStory(true)});
   function sceneButton(id,title,onPick){
     const button=document.createElement('button');
