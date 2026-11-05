@@ -135,20 +135,52 @@ try{
    await page.screenshot({path:'artifacts/classroom-box/in-game-'+cfg.name+
      '-five-faces-l2d.png'});
    if(!cfg.mobile){
-     const neutralCamera=JSON.stringify(data.room.camera);
+     const neutral=data.room.camera;
      await page.mouse.move(cfg.w-5,cfg.h/3);
-     await page.waitForTimeout(600);
+     await page.waitForTimeout(750);
      await page.screenshot({path:'artifacts/classroom-box/in-game-desktop-motion.png'});
      const updated=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
-     assert.equal(JSON.stringify(updated.camera),neutralCamera,
-       '3D gameplay must not apply fake mouse parallax to the scene or L2D');
      assert.equal(updated.renderer,'webgl-3d-mesh');
      assert.equal(updated.faceCount,5);
+     assert.ok(Math.abs(updated.camera.x-neutral.x)>.10,
+       'real camera should move laterally when the mouse moves');
+     assert.ok(Math.abs(updated.camera.x-neutral.x)<=.27*updated.pointerStrength+.002,
+       'physical camera dolly exceeds safe X travel limit');
+     assert.ok(Math.abs(updated.camera.y-neutral.y)<=.095*updated.pointerStrength+.002,
+       'physical camera lift exceeds safe Y travel limit');
+     // Only the camera moved; actual GPU mesh vertices and physical world
+     // positions stay fixed. The perspective projector naturally separates
+     // near and far geometry without separately shifting the actors.
+     const motion=await page.evaluate(()=>{
+       const api=window.PaperWorldClassroomBox;
+       const box=window.PaperWorldGameRoomBox.inspect();
+       const width=document.getElementById('scene').clientWidth;
+       const height=document.getElementById('scene').clientHeight;
+       const c0=api.camera(0,0),c1=box.camera;
+       const displacement=point=>{
+         const a=api.project(point,c0,width,height);
+         const b=api.project(point,c1,width,height);
+         return Math.hypot(b.x-a.x,b.y-a.y);
+       };
+       return {near:displacement([-.9,0,1]),
+         far:displacement([-.9,0,8]),
+         world:box.worldActors,
+         faceCount:api.FACES.length};
+     });
+     assert.ok(motion.near>motion.far*1.25,
+       'real camera must yield natural inverse-depth visual displacement: '+
+        JSON.stringify(motion));
+     assert.equal(motion.faceCount,5);
+     assert.deepEqual(motion.world,data.room.worldActors,
+       'pointer movement must not change player/enemy physical coordinates');
      await page.mouse.move(cfg.w/2,3);
-     await page.waitForTimeout(650);
+     await page.waitForTimeout(750);
      const pitched=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
-     assert.equal(JSON.stringify(pitched.camera),neutralCamera,
-       'vertical mouse motion must not tilt the physical game room');
+     assert.ok(Math.abs(pitched.camera.y-neutral.y)>.04,
+       'vertical motion should gently lift/lower the same real camera');
+     assert.ok(Math.abs(pitched.camera.pitch)>.002,
+       'framing compensation should rotate the real camera');
+     assert.equal(pitched.renderer,'webgl-3d-mesh');
      await page.screenshot({path:'artifacts/classroom-box/in-game-desktop-look-up.png'});
    }
    assert.deepEqual(errors,[],'uncaught game runtime exception');
