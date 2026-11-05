@@ -109,6 +109,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   assert.equal(await six.count(),1);
   await six.evaluate(el=>{el.open=true;el.scrollIntoView({block:'nearest'});});
   assert.equal(await six.locator('[data-category="outfit"] button[data-character="female-06-outfit-02"]').count(),1);
+  assert.match(await six.locator('[data-category="outfit"] button[data-character="female-06-outfit-02"]').textContent(),/第三套 · 橙棕外套/);
   await page.screenshot({
    path:'artifacts/character-editor/FEMALE06-NEW-CLOTHES-FIXED-ARMS.png',
    fullPage:true
