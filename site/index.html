@@ -2773,19 +2773,10 @@ void main(){
   }
   function applyDevCamera(){
     if(view.classList.contains('room-dev-mode')){
-      const toRad=Math.PI/180;
-      // Unlike the legacy CSS plane inspector this is a true camera moving
-      // inside a stationary room. The same matrix projects both L2D shoes.
-      boxScene.setDevCamera({
-        x:clamp(devCamera.panX/160,-2.4,2.4),
-        y:clamp(1.50-devCamera.panY/145,.55,2.7),
-        z:-clamp(1.25/Math.max(.25,devCamera.zoom),1.20,5),
-        yaw:clamp(devCamera.yaw,-55,55)*toRad,
-        pitch:clamp(devCamera.pitch,-55,55)*toRad,
-        hFov:clamp(roomCameraFov,40,90)
-      });
-      devStage.dataset.yaw=String(devCamera.yaw);
-      devStage.dataset.zoom=String(devCamera.zoom);
+      const c=roomViews[roomView]||roomViews.front;
+      boxScene.setDevCamera({...c,hFov:clamp(roomCameraFov,40,90)});
+      devStage.dataset.yaw=String(c.yaw*180/Math.PI);
+      devStage.dataset.zoom='1';
       refreshRoomDev();
       return;
     }
