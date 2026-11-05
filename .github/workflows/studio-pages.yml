@@ -568,10 +568,16 @@ jobs:
                 assert.deepEqual(bedroomCheck.natural,[1024,576]);
                 assert.ok(bedroomCheck.src.endsWith('/assets/scenes/bedroom.webp'));
                 const bedroomRotation=await page.locator('#scene').evaluate(el=>el.style.transform);
-                const zeroYaw=bedroomRotation.match(/rotateY\((-?[\d.]+)deg\)/);
-                const zeroPitch=bedroomRotation.match(/rotateX\((-?[\d.]+)deg\)/);
-                assert.ok(zeroYaw&&zeroPitch&&Math.abs(Number(zeroYaw[1]))<.02&&Math.abs(Number(zeroPitch[1]))<.02,
-                  'new bedroom retained unwanted tilt from the mouse on the previous room: '+bedroomRotation);
+                const reset=await page.locator('#scene').evaluate(el=>{
+                  const m=new DOMMatrix(el.style.transform);
+                  return {x:m.m41/m.m44,y:m.m42/m.m44,
+                    scaleX:m.m11,scaleY:m.m22,
+                    projectX:m.m14,projectY:m.m24};
+                });
+                assert.ok(Math.abs(reset.x)<.8&&Math.abs(reset.y)<.8&&
+                  Math.abs(reset.scaleX-1)<.01&&Math.abs(reset.scaleY-1)<.01&&
+                  Math.abs(reset.projectX)<.001&&Math.abs(reset.projectY)<.001,
+                  'new bedroom retained unwanted camera pose: '+JSON.stringify(reset));
                 assert.equal(bedroomCheck.enemyHidden,true,'bedroom must not contain a hostile actor');
                 assert.equal(bedroomCheck.dialogueHidden,false,
                   'bedroom demo dialogue must be visible in the scene');
