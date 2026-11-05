@@ -32,7 +32,7 @@ const base='http://127.0.0.1:8132/character-editor/?character=protagonist-crouch
    assert.equal(initial.stageVisible,true,'canvas must fit the phone viewport');
    assert.ok(initial.scrollWidth<=initial.viewport+3,
     'phone must not scroll sideways: '+JSON.stringify(initial));
-   if(viewport.width<=710){
+   if(viewport.width<=710||(viewport.width<=950&&viewport.height<=520)){
     assert.equal(initial.nav,true,'mobile navigation must remain accessible');
     await page.locator('[data-studio-pane=layers]').click();
     assert.equal(await page.locator('body').getAttribute('data-studio-pane'),'layers');
