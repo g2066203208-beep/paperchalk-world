@@ -93,7 +93,8 @@ function namesFor(record,category){
  if(id==='protagonist-sleepwear')return '睡衣';
  if(id==='protagonist-battle-front')return '战斗 PSD · 原始 24 部件';
  if(id==='char-003-outfit-02')return '新服装';
- if(id==='female-06-outfit-02')return '第二套 · 橙棕外套';
+ // Historic asset ID stays stable for saved PSD bones and IndexedDB drafts.
+ if(id==='female-06-outfit-02')return '第三套 · 橙棕外套';
  if(category==='source')return label.replace(/^(?:女主角?|男主角?)\s*[·:：-]\s*/,'');
  if(category==='pending')return label.replace(/\s*[（(].*?待导入.*?[）)]/g,'');
  return label.replace(/^(?:女主角?|女二号?|女三|男主角?|男二|女老师)\s*[·:：-]\s*/,'')
