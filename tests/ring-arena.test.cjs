@@ -13,6 +13,13 @@ for(const mode of ['outer','inner']){
  assert.equal(actors.enemies.length,4);
  assert.strictEqual(arena.layout(mode),actors,'same frozen layout reused');
  const people=[...actors.allies,...actors.enemies];
+ assert.deepEqual(arena.visibleActors(mode).map(p=>p.id),
+   ['hero','enemy-1','enemy-2','enemy-3','enemy-4'],
+   'battle view draws only heroine plus enemy characters');
+ assert.deepEqual(arena.HIDDEN_ALLY_IDS,['ally-2','ally-3','ally-4'],
+   'teammates hidden without deleting their permanent standing anchors');
+ assert.ok(arena.visibleActors(mode).every(p=>!arena.HIDDEN_ALLY_IDS.includes(p.id)));
+
  assert.equal(new Set(people.map(p=>p.slot)).size,8,'8 independent L2D slots');
  assert.equal(actors.allies[0].slot,'player');
  assert.ok(people.every(p=>Object.isFrozen(p)),'all world anchors frozen');
