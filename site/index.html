@@ -2633,7 +2633,7 @@ void main(){
       // The menu is authored as a flat graphic; retain its original tilt.
       stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+
         'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
-    }else if(!editorActive){
+    }else{
       const camera=sceneCamera.pose(currentX,currentY,sizes.h);
       const world=sceneCamera.inspect(editorConfig,camera);
       // A perspective-correct planar image at the authored BACKGROUND Z,
