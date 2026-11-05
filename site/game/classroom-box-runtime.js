@@ -22,9 +22,10 @@ const CHARACTERS=Object.freeze({
   // Same ground depth => identical screen shoe Y and consistent perspective
   // at the neutral camera, unlike the old staggered triangular formation.
   // Keep each published L2D character's real physical height and appearance.
-  enemy:Object.freeze({x:-.30,y:0,z:3.05,height:1.58,soleX:.5,soleY:.978,visible:.95}),
-  enemy2:Object.freeze({x:.86,y:0,z:3.05,height:1.59,soleX:.5,soleY:.978,visible:.95}),
-  enemy3:Object.freeze({x:2.02,y:0,z:3.05,height:1.60,soleX:.5,soleY:.978,visible:.95})
+  enemy:Object.freeze({x:-.55,y:0,z:3.05,height:1.58,soleX:.5,soleY:.978,visible:.95}),
+  enemy2:Object.freeze({x:.25,y:0,z:3.05,height:1.59,soleX:.5,soleY:.978,visible:.95}),
+  enemy3:Object.freeze({x:1.05,y:0,z:3.05,height:1.60,soleX:.5,soleY:.978,visible:.95}),
+  enemy4:Object.freeze({x:1.85,y:0,z:3.05,height:1.58,soleX:.5,soleY:.978,visible:.95})
 });
 const COLORS=Object.freeze({
   ceiling:'#a8b1be',floor:'#bca17f',back:'#70899b',
@@ -270,7 +271,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   // Versioned so prior two-character experimental positions cannot overwrite this composition.
   // Intentional new authored composition. Earlier saved experiments should
   // not silently force the old crowded arrangement on returning players.
-  const savedActorKey='paperchalk-classroom-3d-actor-world-v4';
+  const savedActorKey='paperchalk-classroom-3d-actor-world-v5';
   try{
     const stored=JSON.parse(localStorage.getItem(savedActorKey)||'null');
     if(stored&&typeof stored==='object'){
@@ -623,11 +624,13 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     const enemy=actorGeometry('enemy',cam,w,h,info.enemy,actorWorld.enemy);
     const enemy2=actorGeometry('enemy2',cam,w,h,info.enemy2,actorWorld.enemy2);
     const enemy3=actorGeometry('enemy3',cam,w,h,info.enemy3,actorWorld.enemy3);
+    const enemy4=actorGeometry('enemy4',cam,w,h,info.enemy4,actorWorld.enemy4);
     const left=(view.clientWidth-w)/2,top=(view.clientHeight-h)/2;
     applyActor('player',player,left,top);
     applyActor('enemy',enemy,left,top);
     applyActor('enemy2',enemy2,left,top);
     applyActor('enemy3',enemy3,left,top);
+    applyActor('enemy4',enemy4,left,top);
     const pixelRatio=Math.min(1.5,window.devicePixelRatio||1,
       Math.sqrt(2000000/(w*h)));
     const bw=Math.max(1,Math.round(w*pixelRatio));
@@ -654,7 +657,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       }
     }
     drawReferences(cam,w,h);
-    lastState={active:true,faceCount:5,room:ROOM,camera:cam,player,enemy,enemy2,enemy3,
+    lastState={active:true,faceCount:5,room:ROOM,camera:cam,player,enemy,enemy2,enemy3,enemy4,
       renderer,meshFaceCount:5,vertexCount:geometry.solids.length/7,
       materialSources:MATERIALS,materials:{...materialStatus},
       loadedMaterialCount:Object.values(materialStatus).filter(v=>v==='ready').length,
