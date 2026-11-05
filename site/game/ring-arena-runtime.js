@@ -153,7 +153,7 @@
   'color=vec3(.003,.011,.014)+vec3(.006,.045,.038)*line(vWorld.x,3.0,.016)',
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   '}gl_FragColor=vec4(color,1.0);}'
- ].join('\\n');
+ ].join('\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
  // Vertical pivot uses the source canvas's measured shoe & crown fractions.
  // No regenerated textures or destructive crop operations.
