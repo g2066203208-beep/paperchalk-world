@@ -1442,6 +1442,66 @@ async function convertSeethroughArchive(raw){
  },null,2)));
  return result;
 }
+// Import a complete independent PartRig without forcing users to install
+// a binary ZIP in GitHub first. This is an explicit user file-picker action:
+// it creates a LOCAL second wardrobe for the existing female-06 family.
+// Never replace female-06's base PSD or the existing orange-coat third outfit.
+async function importFemaleSixSecondOutfit(zipped){
+ const id='female-06-second-outfit',root=id+'/';
+ const header=zipped.get(root+'module.json'),body=zipped.get(root+'front.rig.json');
+ if(!header||!body||!zipped.has(root+'front.png'))
+  throw Error('女六第二套缺少完整模型信息、原立绘或独立骨骼');
+ const module=JSON.parse(new TextDecoder().decode(header));
+ const rig=JSON.parse(new TextDecoder().decode(body));
+ const view=module?.views?.front, textures=view?.rig?.textures;
+ if(module.id!==id||module.familyId!=='female-06'||module.variantCategory!=='outfit'||
+    rig.format!=='paperchalk-part-rig-v1'||rig.characterId!==id||
+    rig.face!=='front'||!textures||!rig.parts)
+  throw Error('第二套 ZIP 的人物身份或 ArtMesh 格式不正确；禁止覆盖女六基础模型');
+ const ids=Object.keys(textures),ordered=rig.layerOrder;
+ if(ids.length<12||ids.length>64||new Set(ids).size!==ids.length||
+    !Array.isArray(ordered)||ordered.length!==ids.length||
+    ordered.some(name=>!rig.parts[name]||!textures[name]))
+  throw Error('第二套真实图层、骨骼和渲染顺序不匹配');
+ const flat=new Map(),layers=[];
+ for(const name of ordered){
+   const local=textures[name],part=rig.parts[name];
+   if(!/^(?:front)\/[a-z][a-z0-9_-]*\.png$/.test(local))
+    throw Error('第二套含非法 ArtMesh 路径：'+local);
+   const bytes=zipped.get(root+local);
+   if(!bytes||bytes.length<32||bytes[0]!==137||bytes[1]!==80||
+      bytes[2]!==78||bytes[3]!==71)
+    throw Error('第二套缺失真实独立 PNG 部件：'+name);
+   layers.push({partId:name,name:part.name||name,
+     x:part.x,y:part.y,file:local,role:'psd-part',
+     locked:false,visible:true,opacity:1});
+   flat.set(local,bytes);
+ }
+ flat.set('layers.json',new TextEncoder().encode(JSON.stringify({
+   characterId:id,layers:{front:layers,back:[]}
+ })));
+ if(list.get(id)?.l2dModule?.front?.rig)
+  throw Error('该人物的正式 L2D 已在云端发布，请使用其原有资源编辑，不覆盖官方工程');
+ const portrait=await fileURL(new Blob([zipped.get(root+'front.png')],{type:'image/png'}));
+ const record={id,label:'女六 · 第二套（翼羽姿态）',
+   familyId:'female-06',variantCategory:'outfit',
+   front:portrait,back:'',draft:false};
+ // Register this outfit as a CHILD of female-06, never as another actor.
+ list.set(id,record);
+ const installed=await get('imported');
+ const existing=Array.isArray(installed)?installed.filter(c=>c?.id!==id):[];
+ await put('imported',[...existing,record]);
+ await change(id,'front');
+ await importComponentFiles(flat);
+ await storePartRig(rig);
+ window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{
+   detail:{id,side:'front'}
+ }));
+ renderFamilyTree();
+ updatePartStatus();
+ message('✓ 女六 → 第二套：'+ids.length+
+   ' 个原位 PSD ArtMesh 和独立骨骼已导入本机工作室。原版与第三套完全保留；点击保存应用到游戏。');
+}
 async function importComponentArchive(file){
  if(!file)return;
  await switchQueue; // Do not import into a half-loaded character or direction.
@@ -1479,6 +1539,13 @@ async function importComponentArchive(file){
  }
  message('读取原始分层工程所有部件…');
  const zipped=await zipFiles(file);
+ // 001.psd is the SECOND female-six outfit. Its self-contained archive
+ // contains authored PNGs+rig, unlike older editable-parts nested ZIPs.
+ // Install it into the selected browser's wardrobe with no fake extra person.
+ if(zipped.has('female-06-second-outfit/module.json')){
+   await importFemaleSixSecondOutfit(zipped);
+   return;
+ }
  // A ready-to-use independent PartRig module ZIP is importable by any
  // named actor or wardrobe child. It retains its original authored bones and
  // textures; never confuse one person's module with another's actor slot.
