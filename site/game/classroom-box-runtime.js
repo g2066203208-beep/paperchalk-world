@@ -14,10 +14,10 @@ if(root)root.PaperWorldClassroomBox=api;
 })(typeof window!=='undefined'?window:null,function(){
 'use strict';
 const ROOM=Object.freeze({width:9.6,depth:8,height:3.2});
-const BASE_CAMERA=Object.freeze({x:-1.4,y:1.2,z:-1.25,hFov:68});
+const BASE_CAMERA=Object.freeze({x:0,y:1.2,z:-1.25,hFov:68});
 const CHARACTERS=Object.freeze({
-  player:Object.freeze({x:-2.2,y:0,z:1.0,height:1.62,soleX:.51,soleY:.978,visible:.945}),
-  enemy:Object.freeze({x:-.2,y:0,z:2.4,height:1.55,soleX:.6,soleY:.987,visible:.95})
+  player:Object.freeze({x:-.9,y:0,z:1.0,height:1.62,soleX:.51,soleY:.978,visible:.945}),
+  enemy:Object.freeze({x:1.3,y:0,z:2.4,height:1.55,soleX:.6,soleY:.987,visible:.95})
 });
 const COLORS=Object.freeze({
   ceiling:'#a8b1be',floor:'#bca17f',back:'#70899b',
@@ -26,9 +26,9 @@ const COLORS=Object.freeze({
 const FACES=Object.freeze([
   {id:'back',label:'后墙',vertices:[[-4.8,0,8],[4.8,0,8],[4.8,3.2,8],[-4.8,3.2,8]],center:[0,2.2,8]},
   {id:'floor',label:'地板',vertices:[[-4.8,0,0],[-4.8,0,8],[4.8,0,8],[4.8,0,0]],center:[0,0,4]},
-  {id:'ceiling',label:'天花板',vertices:[[-4.8,3.2,0],[4.8,3.2,0],[4.8,3.2,8],[-4.8,3.2,8]],center:[0,3.2,4]},
-  {id:'left',label:'左墙',vertices:[[-4.8,0,0],[-4.8,3.2,0],[-4.8,3.2,8],[-4.8,0,8]],center:[-4.8,1.45,4]},
-  {id:'right',label:'右墙',vertices:[[4.8,0,0],[4.8,0,8],[4.8,3.2,8],[4.8,3.2,0]],center:[4.8,1.45,4]}
+  {id:'ceiling',label:'天花板',vertices:[[-4.8,3.2,0],[4.8,3.2,0],[4.8,3.2,8],[-4.8,3.2,8]],center:[0,3.2,7.3]},
+  {id:'left',label:'左墙',vertices:[[-4.8,0,0],[-4.8,3.2,0],[-4.8,3.2,8],[-4.8,0,8]],center:[-4.8,1.45,6.5]},
+  {id:'right',label:'右墙',vertices:[[4.8,0,0],[4.8,0,8],[4.8,3.2,8],[4.8,3.2,0]],center:[4.8,1.45,6.5]}
 ]);
 const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
 function camera(inputX=0,inputY=0){
@@ -102,8 +102,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     const ring=[];
     for(let i=0;i<24;i++){
       const t=i*Math.PI*2/24;
-      ring.push([actor.x+.29*Math.cos(t),.007,
-        actor.z+.20*Math.sin(t)]);
+      ring.push([actor.x+.23*Math.cos(t),.007,
+        actor.z+.14*Math.sin(t)]);
     }
     plane(ring,cam,width,height,'#17253185');
   }
