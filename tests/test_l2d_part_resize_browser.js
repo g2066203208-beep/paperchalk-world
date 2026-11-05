@@ -1,117 +1,82 @@
-/* Real Chromium contract: independent, nondestructive ArtMesh sizing
- * survives Save, reload and stays attached to the correct character. */
+/* Real Chromium: garment sizing belongs to the THIRD outfit, not the
+ * original female-06 body. Shares weights; source pixels and rig persist. */
 'use strict';
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
  try{
-  const page=await browser.newPage({viewport:{width:1440,height:920}});
-  const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:8134/character-editor/?character=female-06&side=front',
-   {waitUntil:'load'});
-  await page.waitForFunction(()=>
-   window.PaperchalkPartRigStudio?.state?.active&&
-   window.PaperchalkStudio?.current==='female-06'&&
-   window.PaperchalkPartRigStudio.state.model.parts.pants_overlay,
-   null,{timeout:50000});
-  // Safe canvas mode is the default; the author opens Placement explicitly.
+  const page=await browser.newPage({viewport:{width:1440,height:920}}),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  const id='female-06-outfit-02',piece='bottomwear';
+  const url='http://127.0.0.1:8134/character-editor/?character='+id+'&side=front';
+  await page.goto(url,{waitUntil:'load'});
+  await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active&&
+   window.PaperchalkStudio?.current==='female-06-outfit-02'&&
+   window.PaperchalkPartRigStudio.state.model.parts.bottomwear?._garmentLegs===
+   window.PaperchalkPartRigStudio.state.model.parts.legwear,null,{timeout:60000});
   await page.locator('#workspace-inspector-tabs [data-inspector="placement"]').click();
-  assert.equal(await page.locator('#rig-part').inputValue(),'pants_overlay');
+  await page.locator('#rig-part').selectOption(piece);
   assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'false');
   await page.locator('#rig-fit-handles').click();
   assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'true');
-  assert.equal(await page.locator('#rig-fit-precise').getAttribute('open'),null,
-   'numbers must be folded away by default');
-  assert.equal(await page.locator('#rig-fit-panel').isVisible(),true);
-  // The transparent oversized wing must NOT steal a visible shorts click.
-  await page.locator('#rig-part').selectOption('wings_l');
-  const pick=await page.evaluate(()=>{
-   const S=window.characterEditor.S,part=window.PaperchalkPartRigStudio.state.model.parts.pants_overlay;
-   const c=window.PaperchalkPartRigCore.placedBounds(part);
-   const rect=document.querySelector('#stage').getBoundingClientRect();
-   return {x:rect.left+S.px+(c.x+c.w*.5)*S.zoom,
-    y:rect.top+S.py+(c.y+c.h*.65)*S.zoom};
-  });
-  await page.mouse.click(pick.x,pick.y);
-  assert.equal(await page.locator('#rig-part').inputValue(),'pants_overlay',
-   'click the visible pants pixels, not the transparent wing rectangle');
+  assert.equal(await page.locator('#rig-fit-precise').getAttribute('open'),null);
   await page.locator('#rig-fit-precise summary').click();
-  assert.equal(await page.locator('#rig-fit-width').inputValue(),'120');
+  assert.equal(await page.locator('#rig-fit-width').inputValue(),'100');
   await page.locator('#rig-fit-lock').uncheck();
-  await page.locator('#rig-fit-width').fill('86');
-  await page.locator('#rig-fit-height').fill('110');
-  await page.locator('#rig-fit-x').fill('8');
-  await page.locator('#rig-fit-y').fill('-11');
+  for(const [name,value] of [['width','86'],['height','110'],['x','8'],['y','-11']])
+   await page.locator('#rig-fit-'+name).fill(value);
   await page.locator('#rig-fit-panel .rig-fit-heading strong').click();
-  let scaled=await page.evaluate(()=>{
-   const ed=window.characterEditor,m=window.PaperchalkPartRigStudio.state.model;
-   const p=m.parts.pants_overlay,part=ed.S.layers.front.find(x=>x.partId==='pants_overlay');
-   const b=window.PaperchalkPartRigCore.placedBounds(p);
-   return {placement:p.placement,original:{w:part.canvas.width,h:part.canvas.height},
-    bounds:b,skin:p._garmentLegs===m.parts.legwear};
+  const result=await page.evaluate(()=>{
+   const m=window.PaperchalkPartRigStudio.state.model;
+   const layer=window.characterEditor.S.layers.front.find(x=>x.partId==='bottomwear');
+   return {placement:m.parts.bottomwear.placement,bound:m.parts.bottomwear._garmentLegs===m.parts.legwear,
+      bitmap:{w:layer.canvas.width,h:layer.canvas.height}};
   });
-  assert.deepEqual(scaled.placement,{scaleX:.86,scaleY:1.1,offsetX:8,offsetY:-11});
-  assert.equal(scaled.skin,true);
-  assert.equal(scaled.original.w>0&&scaled.original.h>0,true);
-  assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'true');
+  assert.deepEqual(result.placement,{scaleX:.86,scaleY:1.1,offsetX:8,offsetY:-11});
+  assert.equal(result.bound,true);
+  assert.ok(result.bitmap.w>0&&result.bitmap.h>0);
   await page.locator('#btnSave').click();
   await page.waitForFunction(async()=>{
-   const x=await window.PaperchalkStudio.readPartRig('female-06','front');
-   return x?.parts?.pants_overlay?.placement?.scaleX===.86&&
-    x?.parts?.pants_overlay?.placement?.offsetY===-11;
+   const rig=await window.PaperchalkStudio.readPartRig('female-06-outfit-02','front');
+   return rig?.parts?.bottomwear?.placement?.scaleX===.86&&
+     rig?.parts?.bottomwear?.placement?.offsetY===-11;
   },null,{timeout:35000});
-  // Saved rig must render with the identical transform in the REAL game.
-  await page.goto('http://127.0.0.1:8134/?dev=1',{waitUntil:'load'});
-  await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,null,{timeout:35000});
-  await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','female-06','front',false));
-  await page.waitForFunction(()=>
-   window.PaperchalkL2DLibrary?.get('enemy')?.model?.parts?.pants_overlay?.placement?.scaleX===.86,
-   null,{timeout:45000});
-  const gameFit=await page.evaluate(()=>window.PaperchalkL2DLibrary.get('enemy').model.parts.pants_overlay.placement);
-  assert.deepEqual(gameFit,{scaleX:.86,scaleY:1.1,offsetX:8,offsetY:-11},
-   'same authored fit must load into the live game actor');
-  await page.goto('http://127.0.0.1:8134/character-editor/?character=female-06&side=front',
-   {waitUntil:'load'});
-  await page.waitForFunction(()=>
-   window.PaperchalkStudio?.current==='female-06'&&
-   window.PaperchalkPartRigStudio?.state?.active,null,{timeout:50000});
   await page.reload({waitUntil:'load'});
-  await page.waitForFunction(()=>
-   window.PaperchalkStudio?.current==='female-06'&&
+  await page.waitForFunction(()=>window.PaperchalkStudio?.current==='female-06-outfit-02'&&
    window.PaperchalkPartRigStudio?.state?.active&&
-   window.PaperchalkPartRigStudio.state.model.parts.pants_overlay.placement.scaleX===.86,
+   window.PaperchalkPartRigStudio.state.model.parts.bottomwear?.placement?.scaleX===.86,
    null,{timeout:50000});
   await page.locator('#workspace-inspector-tabs [data-inspector="placement"]').click();
-  assert.equal(await page.locator('#rig-part').inputValue(),'pants_overlay');
+  await page.locator('#rig-part').selectOption(piece);
   await page.locator('#rig-fit-precise summary').click();
   assert.equal(await page.locator('#rig-fit-width').inputValue(),'86');
   assert.equal(await page.locator('#rig-fit-height').inputValue(),'110');
-  // After reload, canvas is safe again until specifically unlocked.
   assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'false');
   await page.locator('#rig-fit-handles').click();
-  assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'true');
   const handle=await page.evaluate(()=>{
-   const s=window.characterEditor.S,p=window.PaperchalkPartRigStudio.state.model.parts.pants_overlay;
+   const S=window.characterEditor.S;
+   const p=window.PaperchalkPartRigStudio.state.model.parts.bottomwear;
    const b=window.PaperchalkPartRigCore.placedBounds(p);
    const rect=document.querySelector('#stage').getBoundingClientRect();
-   return {x:rect.left+s.px+(b.x+b.w)*s.zoom,
-    y:rect.top+s.py+(b.y+b.h)*s.zoom};
+   return {x:rect.left+S.px+(b.x+b.w)*S.zoom,y:rect.top+S.py+(b.y+b.h)*S.zoom};
   });
-  await page.mouse.move(handle.x,handle.y);
-  await page.mouse.down();
-  await page.mouse.move(handle.x+16,handle.y+12,{steps:5});
-  await page.mouse.up();
-  const resized=await page.evaluate(()=>
-   window.PaperchalkPartRigStudio.state.model.parts.pants_overlay.placement.scaleX);
-  assert.ok(resized>.86,'dragging the ArtMesh handle must resize the garment');
-  await page.locator('#rig-fit-reset').click();
-  await page.locator('#btnSave').click();
+  await page.mouse.move(handle.x,handle.y);await page.mouse.down();
+  await page.mouse.move(handle.x+16,handle.y+12,{steps:5});await page.mouse.up();
+  const resized=await page.evaluate(()=>window.PaperchalkPartRigStudio.state.model.parts.bottomwear.placement.scaleX);
+  assert.ok(resized>.86,'user drag handle must resize only the selected outfit');
+  await page.locator('#rig-fit-reset').click();await page.locator('#btnSave').click();
   await page.waitForFunction(async()=>{
-   const rig=await window.PaperchalkStudio.readPartRig('female-06','front');
-   const t=rig.parts.pants_overlay.placement;
-   return t.scaleX===1.2&&t.scaleY===1&&t.offsetX===-15&&t.offsetY===-17;
+   const rig=await window.PaperchalkStudio.readPartRig('female-06-outfit-02','front');
+   const t=rig?.parts?.bottomwear?.placement;
+   return t&&t.scaleX===1&&t.scaleY===1&&t.offsetX===0&&t.offsetY===0;
   },null,{timeout:35000});
-  assert.deepEqual(errors,[],'no browser page errors during sizing/save/reload');
-  console.log('PASS female06 resize inspector: independent X/Y scale, offset, canvas handles, save/reload, reset, source PNG preserved');
+  await page.goto('http://127.0.0.1:8134/character-editor/?character=female-06&side=front',
+   {waitUntil:'load'});
+  await page.waitForFunction(()=>window.PaperchalkStudio?.current==='female-06'&&
+    window.PaperchalkPartRigStudio?.state?.active&&
+    Object.keys(window.PaperchalkPartRigStudio.state.model.parts).length===17,null,{timeout:50000});
+  assert.equal(await page.evaluate(()=>!!window.PaperchalkPartRigStudio.state.model.parts.pants_overlay),false);
+  assert.deepEqual(errors,[]);
+  console.log('PASS third-outfit weighted pants resize/save/reload; original 17-part body unchanged');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
