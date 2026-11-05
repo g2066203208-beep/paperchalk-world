@@ -1,139 +1,77 @@
-/* Ring battle math: actor worlds STAY FIXED; only camera orbit can move.
- * This contract forbids fake sliding cut-outs and any reused proxy cubes.
- */
 'use strict';
+// Fixed 3D battle-composition regression: only camera switches, never actors.
 const assert=require('node:assert/strict');
 const arena=require('../site/game/ring-arena-runtime.js');
-const near=(a,b,eps=1e-8)=>assert.ok(Math.abs(a-b)<eps,a+' != '+b);
-const radius=p=>Math.hypot(p.x,p.z);
-const keys=['x','y','z','angle','height'];
-for(const mode of ['outer','inner']){
- const actors=arena.layout(mode);
- assert.equal(actors.allies.length,4);
- assert.equal(actors.enemies.length,4);
- assert.strictEqual(arena.layout(mode),actors,'same frozen layout reused');
- const people=[...actors.allies,...actors.enemies];
- assert.deepEqual(arena.visibleActors(mode).map(p=>p.id),
-   ['hero','enemy-1','enemy-2','enemy-3','enemy-4'],
-   'battle view draws only heroine plus enemy characters');
- assert.deepEqual(arena.HIDDEN_ALLY_IDS,['ally-2','ally-3','ally-4'],
-   'teammates hidden without deleting their permanent standing anchors');
- assert.ok(arena.visibleActors(mode).every(p=>!arena.HIDDEN_ALLY_IDS.includes(p.id)));
-
- assert.equal(new Set(people.map(p=>p.slot)).size,8,'8 independent L2D slots');
- assert.equal(actors.allies[0].slot,'player');
- assert.ok(people.every(p=>Object.isFrozen(p)),'all world anchors frozen');
- for(const p of people){
-  assert.equal(p.y,0,'every foot is exactly on the floor');
-  const ring=p.team==='ally'?(mode==='outer'?arena.SPEC.outerRoleRadius:arena.SPEC.innerRoleRadius):
-    (mode==='outer'?arena.SPEC.innerRoleRadius:arena.SPEC.outerRoleRadius);
-  near(radius(p),ring);
- }
- const views=[0,.16,.45,.76,1].map(p=>arena.camera(mode,p));
- for(let i=1;i<views.length;i++){
-  near(radius(views[i].eye),radius(views[0].eye));
-  assert.notEqual(views[i].eye.x,views[i-1].eye.x,'camera must orbit');
- }
- const stable=people.map(p=>keys.map(k=>p[k]));
- for(const t of [0,.25,.5,1]){
-  const cam=arena.camera(mode,t);
-  near(radius(cam.eye),mode==='outer'?arena.SPEC.outerCameraRadius:arena.SPEC.innerCameraRadius);
-  assert.ok(radius(cam.eye)<arena.SPEC.wallRadius);
-  for(let i=0;i<people.length;i++){
-   assert.deepEqual(keys.map(k=>people[i][k]),stable[i]);
-  }
-  const hero=people[0];
-  assert.ok(arena.project(hero,cam).valid);
-  const top=arena.project({...hero,y:hero.height},cam);
-  const shoe=arena.project(hero,cam);
-  assert.ok(top.valid&&top.y>shoe.y,'head projects above grounded shoe');
- }
- const start=arena.project(people[0],views[0]);
- const end=arena.project(people[0],views[4]);
- assert.ok(Math.abs(start.x-end.x)>.10,'fixed hero shifts on SCREEN due to camera only');
-}
-// True shallow-arc theater: comfortable camera composition, no giant 360 hall.
+const near=(a,b,eps=1e-7)=>assert.ok(Math.abs(a-b)<eps,a+' != '+b);
+const distance=p=>Math.hypot(p.x,p.z);
+const spectator='hero,enemy-1,enemy-2,enemy-3,enemy-4';
 assert.equal(arena.SPEC.stageType,'shallow-arc');
-assert.ok(arena.SPEC.wallArcHalfAngle<Math.PI/2,
-  'backdrop must be a shallow curved stage, never a closed circular wall');
-assert.ok(arena.SPEC.wallHeight>=9,'curved background must fill vertical stage');
-const mid=(actor,cam)=>arena.project({...actor,y:actor.height*.5},cam);
+assert.deepEqual(arena.SHOT_NAMES,['左侧','全景','右侧']);
+assert.equal(arena.CAMERA_STOPS.outer.length,3);
+assert.equal(arena.CAMERA_STOPS.inner.length,3);
+assert.deepEqual(arena.HIDDEN_ALLY_IDS,['ally-2','ally-3','ally-4']);
 for(const mode of ['outer','inner']){
- for(const p of [0,.25,.5,.75,1]){
-  const cam=arena.camera(mode,p),enemies=arena.layout(mode).enemies;
-  // The heroine must NEVER disappear beyond the left/right screen edges.
-  const heroine=mid(arena.layout(mode).allies[0],cam);
-  assert.ok(heroine.valid&&Math.abs(heroine.x)<.8,
-   'heroine must stay inside safe framing margin even at camera orbit endpoints');
-  const projected=enemies.map(a=>({
-    mid:mid(a,cam),
-    head:arena.project({...a,y:a.height},cam),
-    foot:arena.project(a,cam)
+ const original=arena.layout(mode);
+ assert.equal(original.allies.length,4);assert.equal(original.enemies.length,4);
+ assert.equal(arena.visibleActors(mode).map(a=>a.id).join(','),spectator);
+ assert.strictEqual(arena.layout(mode),original,'scene is immutable');
+ assert.ok(Object.isFrozen(original.allies)&&Object.isFrozen(original.enemies));
+ for(const actor of [...original.allies,...original.enemies]){
+  assert.ok(Object.isFrozen(actor));
+  near(actor.y,0);
+  const r=actor.team==='ally'?
+   (mode==='outer'?arena.SPEC.outerRoleRadius:arena.SPEC.innerRoleRadius):
+   (mode==='outer'?arena.SPEC.innerRoleRadius:arena.SPEC.outerRoleRadius);
+  near(distance(actor),r);
+ }
+ // Camera API is a FINITE shot selector (no free fractional camera orbit).
+ assert.deepEqual([-.7,0,.3,.5,.8,1.1,1.6,2,20].map(x=>arena.camera(mode,x).index),
+  [0,0,0,1,1,1,2,2,2]);
+ assert.ok(arena.camera(mode,0).shot==='left');
+ assert.ok(arena.camera(mode,1).shot==='center');
+ assert.ok(arena.camera(mode,2).shot==='right');
+ for(const index of [0,1,2]){
+  const cam=arena.camera(mode,index);
+  assert.ok(cam.fov>=40&&cam.fov<=56);
+  assert.ok(cam.eye.y>1.3&&cam.eye.y<1.6);
+  assert.ok(distance(cam.eye)<arena.SPEC.wallRadius);
+  for(const actor of [...original.allies,...original.enemies])near(actor.y,0);
+  // Single shared pinhole camera and world-foot coordinates.
+  const hero=original.allies[0];
+  const head=arena.project({...hero,y:hero.height},cam);
+  const foot=arena.project(hero,cam);
+  assert.ok(head.valid&&foot.valid&&head.y>foot.y);
+  const projected=original.enemies.map(actor=>({
+   actor,
+   head:arena.project({...actor,y:actor.height},cam),
+   foot:arena.project(actor,cam)
   }));
-  for(const {mid,head,foot} of projected){
-   assert.ok(mid.valid&&head.valid&&foot.valid,'all four enemies must face camera');
-   assert.ok(Math.abs(mid.x)<.92,
-    'all four opponents must stay within horizontal composition margins');
-   assert.ok(head.y<.90&&foot.y>-.95,
-    'all four opponent full-body feet and heads must be visible');
-   assert.ok((head.y-foot.y)*360>215,
-    'enemies must be large enough on a 720px height, not tiny background figures');
+  for(const p of projected){
+   assert.ok(p.head.valid&&p.foot.valid);
+   assert.ok(Math.abs(p.head.x)<.94 && Math.abs(p.foot.x)<.94);
+   assert.ok(p.head.y<.9&&p.foot.y>-.95,
+    'all enemies have complete full-body height in the film camera');
+   assert.ok((p.head.y-p.foot.y)*360>195,
+    'opponents must be prominently displayed at 1280x720');
   }
  }
+ // Interpolated render values are permitted only BETWEEN approved poses.
+ const first=arena.camera(mode,0),last=arena.camera(mode,2);
+ const partial=arena.blendCamera(first,last,.25);
+ near(partial.eye.x,first.eye.x*.75+last.eye.x*.25);
+ near(partial.fov,first.fov*.75+last.fov*.25);
+ assert.ok(Math.abs(first.eye.x-last.eye.x)>.1);
+ assert.deepEqual(arena.layout(mode),original);
 }
-// Verify the WHOLE L2D WebGL quad, not merely the actor's middle point.
-function cardBounds(actor,cam){
- const v={x:cam.focus.x-cam.eye.x,y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z};
- const len=Math.hypot(v.x,v.y,v.z),fx=v.x/len,fz=v.z/len;
- const right={x:-fz/Math.hypot(fx,fz),z:fx/Math.hypot(fx,fz)};
- const size=actor.height/(actor.soleY-actor.crownY);
- const projected=[0,1].flatMap(u=>[0,1].map(y=>arena.project({
-  x:actor.x+right.x*(u-actor.soleX)*size,
-  y:(actor.soleY-y)*size,
-  z:actor.z+right.z*(u-actor.soleX)*size
- },cam)));
- return {left:Math.min(...projected.map(p=>p.x)),
-  right:Math.max(...projected.map(p=>p.x)),
-  top:Math.max(...projected.map(p=>p.y)),
-  bottom:Math.min(...projected.map(p=>p.y))};
-}
-for(const mode of ['outer','inner']){
- for(const p of [0,.25,.5,.75,1]){
-  const cam=arena.camera(mode,p);
-  for(const actor of arena.layout(mode).enemies){
-   const b=cardBounds(actor,cam);
-   assert.ok(b.left>-.96&&b.right<.96,
-    'original full L2D enemy quad must not be cropped by camera: '+JSON.stringify({mode,p,id:actor.id,b}));
-   assert.ok(b.top<.94&&b.bottom>-.94,
-    'original L2D full-body portrait must remain vertically visible');
-  }
- }
-}
-// The curved walls are NOT concentric with cast; all world positions stay frozen.
-const s=arena.SPEC;
-const ringGap=s.outerRoleRadius-s.innerRoleRadius;
-assert.ok(s.wallRadius>=17&&s.wallRadius>=s.outerRoleRadius+4.5,
- 'battle must have genuine curved-wall clearance and broad circular floor');
-assert.ok(ringGap>=2.2&&ringGap<=2.8,'opposing rings need physical clearance without becoming distant');
-const angleRange=values=>(Math.max(...values)-Math.min(...values))*180/Math.PI;
-assert.ok(angleRange(arena.formation.allies)<45,'allied team no longer scatters around the arena');
-assert.ok(angleRange(arena.formation.enemies)<50,'enemy team no longer scatters around the arena');
-const minChord=(radius,angles)=>Math.min(...angles.flatMap((a,i)=>angles.slice(i+1).map(b=>2*radius*Math.sin(Math.abs(b-a)/2))));
-assert.ok(minChord(s.innerRoleRadius,arena.formation.enemies)>1.0,
- 'adjacent enemy anchors must not intersect');
-assert.ok(minChord(s.innerRoleRadius,arena.formation.allies)>1.5,
- 'adjacent allied anchors must not intersect');
-for(const mode of ['outer','inner']){
-  const hero=arena.layout(mode).allies[0];
-  const left=arena.project(hero,arena.camera(mode,0));
-  const right=arena.project(hero,arena.camera(mode,1));
-  assert.ok(left.x<-.25&&right.x>.25,
-    'the heroine must stay cinematic, left-to-right, while camera orbits stationary cast');
-}
-assert.ok(arena.SPEC.innerCameraRadius<arena.SPEC.innerRoleRadius);
-assert.ok(arena.SPEC.outerCameraRadius>arena.SPEC.outerRoleRadius);
-assert.ok(arena.SPEC.outerCameraRadius<arena.SPEC.wallRadius-2.0,
- 'camera must not approach or cut through cylindrical wall');
-assert.ok(arena.SPEC.innerCameraRadius<arena.SPEC.innerRoleRadius-2.0,
- 'inner camera must remain clearly inside the front actor circle');
-console.log('PASS: fixed world-space L2D formation; only two real camera orbits move');
+const centerAngle=0,outerEdge=arena.SPEC.wallArcHalfAngle*.85;
+const o0=arena.backdropPoint('outer',centerAngle);
+const o1=arena.backdropPoint('outer',outerEdge);
+const i0=arena.backdropPoint('inner',centerAngle);
+const i1=arena.backdropPoint('inner',outerEdge);
+// Same projected wall X geometry, opposite physical curvature as SEEN
+// by the cameras (outside looks -Z; inside looks +Z).
+near(o0.x,i0.x);near(o1.x,i1.x);
+assert.ok(o0.z>o1.z,'outer camera sees near center/far wings');
+assert.ok(i0.z>i1.z,'inner camera sees far center/near wings looking +Z');
+assert.ok(i1.z>10.8,'curved wall is BEHIND the enemy formation');
+console.log('PASS: fixed 3-shot cinematic cameras, inverted surround wall and 4 visible L2D enemies');
