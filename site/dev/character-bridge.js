@@ -8,10 +8,12 @@ const $=id=>document.getElementById(id);
 const loaded=$('dev-character-list'),library=$('dev-character-library');
 const side=$('dev-character-angle'),picker=$('dev-layer'),status=$('dev-character-status');
 if(!loaded||!library||!window.PaperchalkL2D)return;
-const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},enemy:{id:'char-002',side:'front'},enemy2:{id:'char-003',side:'front'},enemy3:{id:'char-006',side:'front'},enemy4:{id:'char-004',side:'front'}};
-const GAME_SLOTS=['player','enemy','enemy2','enemy3','enemy4'];
+const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},
+  ally2:{id:'char-003',side:'front'},ally3:{id:'char-004',side:'front'},ally4:{id:'char-006',side:'front'},
+  enemy:{id:'char-002',side:'front'},enemy2:{id:'char-003',side:'front'},enemy3:{id:'char-006',side:'front'},enemy4:{id:'char-004',side:'front'}};
+const GAME_SLOTS=['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4'];
 const DB='paperchalk-dev-characters-v1';
-const assignmentVersions={player:0,enemy:0,enemy2:0,enemy3:0,enemy4:0};
+const assignmentVersions=Object.fromEntries(GAME_SLOTS.map(id=>[id,0]));
 let slot='player',ready=false,heroineRenderer=
   (sessionStorage.getItem('paperchalk-heroine-renderer-mode')==='v4'?'v4':'bones');
 function note(s){status.textContent=s;}
@@ -67,7 +69,8 @@ function refreshList(){
   const bind=assigned[a.id]||{id:a.img.dataset.characterId||a.id,side:a.img.dataset.characterSide||'front'};
   assigned[a.id]=bind;
   const desc=catalog.get(bind.id)?.label||bind.id;
-  const zone=a.id==='player'?'主角区':a.id==='enemy'?'敌人一':a.id==='enemy2'?'敌人二':a.id==='enemy3'?'敌人三':'敌人四';
+  const zone=a.id==='player'?'主角区':a.id==='ally2'?'我方二':a.id==='ally3'?'我方三':a.id==='ally4'?'我方四':
+    a.id==='enemy'?'敌人一':a.id==='enemy2'?'敌人二':a.id==='enemy3'?'敌人三':'敌人四';
   loaded.add(new Option(desc+' · '+zone,a.id));
  }
  if([...loaded.options].some(x=>x.value===previous))slot=loaded.value=previous;
