@@ -617,6 +617,97 @@ body.mobile-mode.virtual-landscape #view{
 #view.room-dev-mode #scene-menu,
 #view.room-dev-mode #novel-ui{display:none!important}
 #view.room-dev-mode #scene{transform:none!important}
+
+/* Unified DEV design system: one restrained palette, one control geometry.
+   Applies to the legacy multi-layer editor and the in-game 3D room. */
+#view #dev-tools{
+  --dev-ink:#e6edf1;--dev-muted:#9fb3c0;--dev-border:#354d5a;
+  --dev-accent:#a6cbd8;--dev-control:#243a48;
+  width:clamp(272px,27cqw,334px);max-height:94cqh;
+  top:3cqh;right:1.7cqw;
+  background:rgba(16,28,38,.94)!important;
+  border:1px solid var(--dev-border)!important;border-radius:12px!important;
+  box-shadow:0 14px 35px #0007!important;
+  padding:12px!important;color:var(--dev-ink);
+  font:12px/1.45 var(--font-ui);
+  scrollbar-width:thin;scrollbar-color:#55707e transparent;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+}
+#view #dev-tools header{gap:10px;align-items:center}
+#view #dev-tools>header{position:sticky;top:-12px;z-index:5;
+  background:#152530;border-bottom:1px solid #3d5360;margin:-12px -12px 10px;padding:12px}
+#view #dev-tools header strong{font-size:14px;letter-spacing:0;font-weight:650}
+#view #dev-tools button,#view #dev-tools select,
+#view #dev-tools input[type=file]::file-selector-button{
+  appearance:none!important;color:var(--dev-ink)!important;
+  background:var(--dev-control)!important;
+  border:1px solid #466171!important;border-radius:6px!important;
+  text-shadow:none!important;box-shadow:none!important;
+  font:500 11.5px/1.25 var(--font-ui)!important;
+  min-height:32px;padding:6px 9px;cursor:pointer;
+  transition:background .13s ease,border-color .13s ease;
+}
+#view #dev-tools button:hover,
+#view #dev-tools input[type=file]::file-selector-button:hover{
+  background:#365467!important;border-color:#79a2b5!important;
+}
+#view #dev-tools button:focus-visible,#view #dev-tools select:focus-visible,
+#view #dev-tools input:focus-visible{outline:2px solid #a6cbd8;outline-offset:1px}
+#view #dev-tools p{font-size:11px;line-height:1.5;margin:6px 0 10px;color:var(--dev-muted);text-shadow:none!important}
+#view #dev-tools label{font-size:11.5px;line-height:1.4;color:#d5e1e7;text-shadow:none!important}
+#view #dev-tools input[type=range]{height:18px;margin:2px 0 6px;accent-color:var(--dev-accent)}
+#view #dev-tools input[type=checkbox]{width:15px;height:15px;accent-color:var(--dev-accent);flex:none}
+#view #dev-tools .dev-buttons,#view #dev-tools .fog-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#view #dev-tools .dev-buttons>button,#view #dev-tools .fog-actions>button{flex:1 1 75px}
+#view #dev-tools select{width:100%;margin:5px 0 8px}
+#view #dev-tools output{font-size:11px;color:#a6cad8;text-shadow:none!important}
+#view #dev-tools #dev-fog-tools{border:0!important;border-top:1px solid var(--dev-border)!important;padding-top:10px}
+#view #dev-tools #dev-room-surfaces{margin:0 0 9px;padding:0;border:0;border-radius:0;background:transparent;color:inherit}
+#view #dev-tools #dev-room-surfaces .dev-subhead{margin:4px 0 8px}
+#view #dev-tools .dev-subhead>span{font-size:10px;color:#91acb9}
+#view #dev-tools .dev-tree-heading{font-size:10px;font-weight:650;letter-spacing:.07em;
+  color:#9bb7c4;margin:11px 0 5px;padding:3px 0 4px;border-bottom:1px solid #314958}
+#view #dev-tools .dev-room-face-row{
+  display:flex;align-items:center;gap:6px;min-height:34px;
+  border:0;border-radius:6px;padding:2px 4px;
+}
+#view #dev-tools .dev-room-face-row:hover{background:#ffffff09}
+#view #dev-tools .dev-room-face-row[data-selected=true]{background:#9fcedb18}
+#view #dev-tools .dev-room-face-row button[data-room-object-focus]{
+  flex:1;text-align:left;border-color:transparent!important;
+  background:transparent!important;padding:5px 3px;min-width:0;font-size:12px!important;
+}
+#view #dev-tools .dev-room-face-row[data-selected=true] button[data-room-object-focus]{color:#bcdeef!important}
+#view #dev-tools .dev-room-face-row button[data-room-object-focus] small{
+  color:var(--dev-muted);font-size:9px;margin-left:4px;white-space:nowrap}
+#view #dev-tools .dev-room-face-row button[data-room-isolate]{padding:4px 7px;min-height:25px;font-size:10px!important}
+#view #dev-tools .dev-object-glyph{width:15px;text-align:center;color:#a9cbd7}
+#view #dev-tools .dev-tree-actions{display:flex;gap:7px;margin:9px 0 5px}
+#view #dev-tools .dev-tree-actions button{flex:1}
+#view #dev-tools #dev-room-status,#view #dev-tools #dev-room-selection{display:block;
+  font-size:10.5px;line-height:1.45;color:var(--dev-muted);padding:4px 0}
+#view #dev-tools #dev-3d-controls{padding:8px 0;margin:5px 0 7px;
+  border-top:1px solid var(--dev-border);border-bottom:1px solid var(--dev-border)}
+#view.room-dev-mode #dev-layer-select-wrap{display:none!important}
+#view.room-dev-mode #dev-actor-controls{display:none!important}
+#view.room-dev-mode #dev-floor-controls{display:none!important}
+#view.room-dev-mode #dev-z-control{display:none!important}
+#view.room-dev-mode #dev-room-surfaces{display:block}
+#view.room-dev-mode #dev-tools>p{display:none}
+#view.room-dev-mode #dev-character-controls[hidden]{display:none!important}
+#view.room-dev-mode #dev-tools .dev-hint{display:none}
+#dev-room-surfaces[hidden]{display:none!important}
+@container (max-height:445px){
+ #view #dev-tools{width:clamp(250px,38cqw,300px);padding:9px!important;max-height:96cqh;top:2cqh}
+ #view #dev-tools>header{margin:-9px -9px 7px;padding:8px 9px}
+ #view #dev-tools .dev-room-face-row{min-height:30px}
+ #view #dev-tools .dev-tree-heading{margin:7px 0 3px}
+ #view #dev-tools button{min-height:27px}
+}
+@media (prefers-reduced-motion:reduce){
+ #view #dev-tools button{transition:none}
+}
+
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
@@ -776,18 +867,28 @@ body.mobile-mode.virtual-landscape #view{
   <aside id="dev-tools" hidden aria-label="开发者分层编辑面板" data-ui-fog-edge="right">
     <header><strong>DEV · 分层与黑雾</strong><button id="dev-exit" type="button">完成 / 返回</button></header>
     <p>普通场景保持原来的分层检查；五面教室在下方直接检查真实 3D 几何和独立贴图。</p>
-    <section id="dev-room-surfaces" hidden aria-label="教室五面三维物体">
-      <strong>教室 · 真实 3D 五面空间</strong>
-      <p>每个面的素材独立装在世界坐标中。勾选显示，单独看可检查安装方向；拖动画面转动真正的 3D 摄影机。</p>
+    <section id="dev-room-surfaces" hidden aria-label="当前游戏场景对象和图层">
+      <header class="dev-subhead"><strong>场景对象</strong><span>3D · 实时</span></header>
+      <div class="dev-tree-heading">空间 · 五个真实 3D 面</div>
       <div id="dev-room-face-list" role="group" aria-label="五个独立三维面">
-        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="floor" checked>地板</label><button type="button" data-room-isolate="floor">单独看</button></div>
-        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="ceiling" checked>天花板</label><button type="button" data-room-isolate="ceiling">单独看</button></div>
-        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="back" checked>后墙</label><button type="button" data-room-isolate="back">单独看</button></div>
-        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="left" checked>左墙</label><button type="button" data-room-isolate="left">单独看</button></div>
-        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="right" checked>右墙</label><button type="button" data-room-isolate="right">单独看</button></div>
+        <div class="dev-room-face-row" data-dev-object="floor"><input type="checkbox" data-room-face-toggle="floor" checked aria-label="显示地板"><button type="button" data-room-object-focus="floor">地板 <small>Floor</small></button><button type="button" data-room-isolate="floor" title="仅显示此面">独看</button></div>
+        <div class="dev-room-face-row" data-dev-object="ceiling"><input type="checkbox" data-room-face-toggle="ceiling" checked aria-label="显示天花板"><button type="button" data-room-object-focus="ceiling">天花板 <small>Ceiling</small></button><button type="button" data-room-isolate="ceiling" title="仅显示此面">独看</button></div>
+        <div class="dev-room-face-row" data-dev-object="back"><input type="checkbox" data-room-face-toggle="back" checked aria-label="显示后墙"><button type="button" data-room-object-focus="back">后墙 <small>Back</small></button><button type="button" data-room-isolate="back" title="仅显示此面">独看</button></div>
+        <div class="dev-room-face-row" data-dev-object="left"><input type="checkbox" data-room-face-toggle="left" checked aria-label="显示左墙"><button type="button" data-room-object-focus="left">左墙 <small>Left</small></button><button type="button" data-room-isolate="left" title="仅显示此面">独看</button></div>
+        <div class="dev-room-face-row" data-dev-object="right"><input type="checkbox" data-room-face-toggle="right" checked aria-label="显示右墙"><button type="button" data-room-object-focus="right">右墙 <small>Right</small></button><button type="button" data-room-isolate="right" title="仅显示此面">独看</button></div>
       </div>
-      <button id="dev-room-show-all" type="button">显示全部五面</button>
-      <output id="dev-room-status" role="status">五张素材独立安装在三维面上</output>
+      <div class="dev-tree-heading">人物 · 特效 · 空间辅助</div>
+      <div class="dev-room-face-row" data-dev-object="enemy"><input type="checkbox" data-room-layer-toggle="enemy" checked aria-label="显示敌人 L2D"><button type="button" data-room-object-focus="enemy">敌人 <small>L2D · 中景</small></button></div>
+      <div class="dev-room-face-row" data-dev-object="player"><input type="checkbox" data-room-layer-toggle="player" checked aria-label="显示玩家 L2D"><button type="button" data-room-object-focus="player">玩家 <small>L2D · 近景</small></button></div>
+      <div class="dev-room-face-row" data-dev-object="fog"><input type="checkbox" data-room-layer-toggle="fog" checked aria-label="显示动态黑雾"><button type="button" data-room-object-focus="fog">动态黑雾 <small>屏幕特效</small></button></div>
+      <div class="dev-room-face-row" data-dev-object="camera"><span class="dev-object-glyph" aria-hidden="true">◎</span><button type="button" data-room-object-focus="camera">摄影机 <small>世界坐标</small></button></div>
+      <div class="dev-room-face-row" data-dev-object="perspective"><input type="checkbox" data-room-grid-toggle aria-label="显示三维地面透视网格"><button type="button" data-room-object-focus="perspective">地板透视 <small>3D 参考网格</small></button></div>
+      <div class="dev-tree-actions">
+        <button id="dev-room-show-all" type="button">全部显示</button>
+        <button id="dev-room-clear-selection" type="button">取消选中</button>
+      </div>
+      <output id="dev-room-selection" role="status">选择任意对象，下面只显示相关属性</output>
+      <output id="dev-room-status" role="status">读取三维房间材质…</output>
     </section>
     <div id="dev-3d-controls">
     <div class="dev-buttons">
@@ -800,14 +901,16 @@ body.mobile-mode.virtual-landscape #view{
       <input id="dev-ground-toggle" type="checkbox" checked>显示 3D 透视地板
     </label>
     </div>
-    <label for="dev-layer">正在编辑图层</label>
-    <select id="dev-layer">
+    <div id="dev-layer-select-wrap">
+      <label for="dev-layer">正在编辑图层</label>
+      <select id="dev-layer">
       <option value="enemy">02 / 敌人</option>
       <option value="player">04 / 主角</option>
       <option value="bg">01 / 背景</option>
       <option value="fog">03 / 黑雾</option>
       <option value="ground">05 / 共同地板（脚底吸附）</option>
     </select>
+    </div>
     <div id="dev-actor-controls">
       <label for="dev-x">水平位置 <output id="dev-x-value" class="dev-value"></output></label>
       <input id="dev-x" type="range" min="-65" max="110" step=".5">
