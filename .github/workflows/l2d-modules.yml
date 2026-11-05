@@ -507,6 +507,7 @@ jobs:
                 m?.idleProfile?.parts?.skirt===1.5&&m.idleProfile.hair.speed===1.4;
             },null,{timeout:15000});
             assert.equal(await page.locator('#idle-open').isVisible(),false);
+            await page.locator('#workspace-rig-more > summary').click();
             await page.locator('#rig-file-actions summary').click();
             assert.equal(await page.locator('#rig-module-export').count(),1);
             page.once('dialog',dialog=>dialog.accept('qa-export'));
