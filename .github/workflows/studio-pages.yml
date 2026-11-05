@@ -5,6 +5,8 @@ on:
     paths:
       - 'site/**'
       - 'tests/ui-edge-fog-browser.mjs'
+      - 'tests/scene-camera*'
+      - 'tests/character-camera-browser.mjs'
       - 'scripts/fetch-game-fonts.sh'
       - 'scripts/build_scene_catalog.py'
       - 'scripts/build_character_catalog.py'
