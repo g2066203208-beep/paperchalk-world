@@ -1,9 +1,8 @@
-/* In-game REAL WebGL 3D classroom, five world-space planes (not a picture).
- * The live L2D protagonist/NPC are billboards projected by precisely the same
- * pinhole camera used by the WebGL vertex shader. Mouse controls move the
- * camera through 3D space with small yaw/pitch and damping already performed
- * in the game's tick; meshes NEVER deform, scale, or rotate with the mouse.
- * Original game layers, saved character rigs, fog and UI are untouched.
+/* In-game WebGL 3D classroom, five world-space planes (not a picture).
+ * Genuine L2D actors and room meshes share ONE physical pinhole camera.
+ * No mouse-follow parallax, independent layer transforms, fake tilts or
+ * secondary per-layer easing. Only explicit camera movement (DEV/editor)
+ * changes viewpoint. Existing game L2D rigs, fog and UI remain intact.
  */
 (function(root,factory){
 'use strict';
@@ -48,13 +47,10 @@ const FACES=Object.freeze([
   {id:'right',label:'右墙',vertices:[[4.8,0,0],[4.8,0,8],[4.8,3.2,8],[4.8,3.2,0]],center:[4.8,1.45,6.5]}
 ]);
 const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
-const easing=x=>x*(.74+.26*x*x);
-// Input is the game loop's already time-damped aim. Do not smooth twice.
-function camera(inputX=0,inputY=0){
-  const a=easing(clamp(Number(inputX)||0,-1,1));
-  const b=easing(clamp(Number(inputY)||0,-1,1));
-  return {x:BASE_CAMERA.x+a*.18,y:BASE_CAMERA.y-b*.065,z:BASE_CAMERA.z,
-    yaw:a*.0125,pitch:-b*.009,hFov:BASE_CAMERA.hFov};
+// A fixed, physical camera. Nearby objects have naturally different
+// projected sizes; NO mouse position is translated into fake parallax.
+function camera(){
+  return {...BASE_CAMERA,yaw:0,pitch:0};
 }
 // Reference CPU projector matches the WebGL vertex shader exactly.
 function project(point,cam,width,height){
@@ -464,11 +460,11 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       el.hidden=false;el.style.left=p.x.toFixed(2)+'px';el.style.top=p.y.toFixed(2)+'px';
     }
   }
-  function render(inputX=0,inputY=0){
+  function render(){
     if(!enabled)return false;
     const w=stage.clientWidth,h=stage.clientHeight;
     if(w<1||h<1)return false;
-    const cam=debugMode&&debugCamera?debugCamera:camera(inputX,inputY);
+    const cam=debugMode&&debugCamera?debugCamera:camera();
     const info=metrics();
     const player=actorGeometry('player',cam,w,h,info.player);
     const enemy=actorGeometry('enemy',cam,w,h,info.enemy);
