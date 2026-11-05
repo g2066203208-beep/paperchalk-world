@@ -87,14 +87,26 @@ try{
  assert.equal(before.arena.shotName,'左侧');
  assert.equal(before.arena.camera.shot,'left');
  assert.equal(await page.locator('[data-shot]').count(),3);
- assert.equal(before.arena.ring.stageType,'shallow-arc');
- assert.equal(before.arena.ring.verticalFov,46);
+ assert.equal(before.arena.ring.stageType,'wide-cinematic-arc');
+ assert.equal(before.arena.ring.verticalFov,48);
  assert.equal(before.arena.l2dReady,5);
  assert.deepEqual(before.arena.visibleActorIds,['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.deepEqual(before.arena.hiddenAlliedTeammateIds,['ally-2','ally-3','ally-4']);
  assert.equal(before.sources.find(s=>s.id==='player').side,'back');
  assert.ok(before.sources.every(s=>!s.hidden&&s.ready==='ready'&&s.canvasW>0),'all 8 authentic L2D sources active');
  const original=JSON.stringify(before.arena.actors);
+ const bounds=await page.evaluate(()=>{
+  const ar=window.PaperWorldRingArena, cam=ar.camera('outer',0);
+  const scene=ar.layout('outer');
+  return {hero:ar.portraitBounds(scene.allies[0],cam),
+   enemies:scene.enemies.map(p=>ar.portraitBounds(p,cam)),
+   foeSpread:Math.max(...scene.enemies.map(p=>p.x))-
+    Math.min(...scene.enemies.map(p=>p.x))};
+ });
+ assert.ok(bounds.hero.heightFraction>.8,'large nearby heroine rear-view');
+ assert.ok(bounds.foeSpread>=5,'widen the enemy arc in 3D world units');
+ assert.ok(bounds.enemies.every(b=>b.valid&&b.left>-.97&&b.right<.97),
+   'all four enemy L2D quads completely visible in the frame');
  await page.screenshot({path:'artifacts/ring-arena/l2d-outer-left.png'});
  // Moving the pointer cannot alter the camera; release snaps exactly one stop.
  await page.mouse.move(540,250);
@@ -135,12 +147,12 @@ try{
  assert.ok(curvature.outerNear>curvature.outerSide);
  assert.ok(curvature.innerNear>curvature.innerSide);
  assert.ok(curvature.innerNear>curvature.outerNear);
- assert.equal(inner.arena.camera.radius,7.45);
- assert.equal(inner.arena.camera.fov,43);
- assert.equal(inner.arena.ring.wallRadius,18);
+ assert.ok(Math.abs(inner.arena.camera.radius-Math.hypot(2.6,7))<.01);
+ assert.equal(inner.arena.camera.fov,42);
+ assert.equal(inner.arena.ring.wallRadius,32);
  assert.equal(inner.arena.ring.outerRoleRadius,10.55);
  assert.equal(inner.arena.ring.innerRoleRadius,8.3);
- assert.equal(inner.arena.ring.stageType,'shallow-arc');
+ assert.equal(inner.arena.ring.stageType,'wide-cinematic-arc');
  assert.equal(inner.arena.l2dReady,5);
  assert.deepEqual(inner.arena.visibleActorIds,before.arena.visibleActorIds);
  assert.equal(inner.arena.actors.allies.length,4);
@@ -153,6 +165,24 @@ try{
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,null,{timeout:7000});
  assert.equal((await get()).arena.shotIndex,0);
  await page.screenshot({path:'artifacts/ring-arena/l2d-inner-left.png'});
+ // Cross-screen checks of the SAME world-space battle.
+ // Portrait keeps the same horizontal framing by adapting vertical FOV;
+ // the game must not move any 3D actor to fake perspective.
+ await page.setViewportSize({width:1920,height:1080});
+ await page.waitForTimeout(300);
+ await page.screenshot({path:'artifacts/ring-arena/desktop-1920x1080.png'});
+ await page.setViewportSize({width:844,height:390});
+ await page.waitForTimeout(300);
+ await page.screenshot({path:'artifacts/ring-arena/mobile-landscape-844x390.png'});
+ await page.setViewportSize({width:390,height:844});
+ await page.waitForTimeout(300);
+ const mobile=await get();
+ assert.equal(JSON.stringify(mobile.arena.actors),
+   JSON.stringify(inner.arena.actors),
+   'viewport changes must never modify actor world coordinates');
+ assert.ok(mobile.arena.effectiveVerticalFov>=mobile.arena.camera.fov,
+   'portrait viewport should expand vertical lens FOV');
+ await page.screenshot({path:'artifacts/ring-arena/mobile-portrait-390x844.png'});
  assert.deepEqual(errors,[],'browser should not report unexpected errors');
  await page.close();
  console.log('PASS: cinematic left/center/right snaps, opposite inner wall curvature, heroine+4 enemies L2D and fixed 3D anchors');
