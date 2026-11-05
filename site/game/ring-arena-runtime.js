@@ -13,19 +13,26 @@
  const TAU=Math.PI*2,clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
  const lerp=(a,b,t)=>a+(b-a)*t,rad=(d)=>d*Math.PI/180;
  const SPEC=Object.freeze({
-  stageType:'shallow-arc',
-  wallRadius:18.0,wallHeight:12.0,wallCenterZ:-14.0,
-  wallArcHalfAngle:rad(85),floorWidth:70,floorFrontZ:42,floorBackZ:-42,
+  stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:13,
+  wallCenterZ:-16,wallArcHalfAngle:rad(78),
+  floorWidth:96,floorFrontZ:48,floorBackZ:-55,
   outerRoleRadius:10.55,innerRoleRadius:8.30,
-  outerCameraRadius:12.44,innerCameraRadius:6.00,
-  verticalFov:46,cameraStartAngle:rad(14.42),
-  cameraEndAngle:rad(-14.42),battleFocusZ:8.10
+  outerCameraRadius:11.5,innerCameraRadius:7.47,
+  verticalFov:48,cameraStartAngle:rad(12),
+  cameraEndAngle:rad(-12),battleFocusZ:8.8
  });
- // A real shallow combat arc: actors retain frozen world coordinates, while
- // the camera can follow its own curved rail around the encounter.
- const formation=Object.freeze({
-  allies:Object.freeze([0,rad(-23),rad(-11),rad(15)]),
-  enemies:Object.freeze([rad(-10.8),rad(-3.6),rad(3.6),rad(10.8)])
+ // Art-directed 3D footholds: four enemies occupy a deliberately WIDER
+ // shallow arc. Unlike the old small circle, everyone keeps an independent,
+ // immutable position, and perspective is made by a real shared camera.
+ const STAGING=Object.freeze({
+  outer:Object.freeze({
+   allies:Object.freeze([[0,10.55],[-1.8,9.6],[1.8,9.6],[-3.5,9.0]]),
+   enemies:Object.freeze([[-2.0,6.4],[-.4,6.75],[1.2,6.75],[2.8,6.4]])
+  }),
+  inner:Object.freeze({
+   allies:Object.freeze([[0,8.3],[-1.8,8.0],[1.8,8.0],[-3.5,7.7]]),
+   enemies:Object.freeze([[-2.1,12.8],[-.7,13.2],[.7,13.2],[2.1,12.8]])
+  })
  });
  const bindings=Object.freeze({
   hero:'player', 'ally-2':'ally2','ally-3':'ally3','ally-4':'ally4',
@@ -57,22 +64,19 @@
   return result;
  }
  const identity=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
- function actor(id,team,r,angle){
-  const pos=polar(r,angle);
-  return Object.freeze({id,slot:bindings[id],team,angle,
-   height:heights[id],soleX:.5,soleY:.979,crownY:.028,
-   x:pos.x,y:0,z:pos.z});
+ function actor(id,team,position){
+  const [x,z]=position;
+  return Object.freeze({id,slot:bindings[id],team,
+   angle:Math.atan2(x,z),height:heights[id],
+   soleX:.5,soleY:.979,crownY:.028,x,y:0,z});
  }
  const LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
-  const outer=mode==='outer';
-  const allyRadius=outer?SPEC.outerRoleRadius:SPEC.innerRoleRadius;
-  const enemyRadius=outer?SPEC.innerRoleRadius:SPEC.outerRoleRadius;
-  return [mode,Object.freeze({
-   mode,
-   allies:Object.freeze(['hero','ally-2','ally-3','ally-4'].map((id,i)=>
-    actor(id,'ally',allyRadius,formation.allies[i]))),
-   enemies:Object.freeze(['enemy-1','enemy-2','enemy-3','enemy-4'].map((id,i)=>
-    actor(id,'enemy',enemyRadius,formation.enemies[i])))
+  const coords=STAGING[mode];
+  return [mode,Object.freeze({mode,
+   allies:Object.freeze(['hero','ally-2','ally-3','ally-4']
+    .map((id,i)=>actor(id,'ally',coords.allies[i]))),
+   enemies:Object.freeze(['enemy-1','enemy-2','enemy-3','enemy-4']
+    .map((id,i)=>actor(id,'enemy',coords.enemies[i])))
   })];
  })));
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
@@ -89,22 +93,26 @@
  // Three fixed authored camera stations. The rendered interpolation is not an input mode.
  const SHOT_NAMES=Object.freeze(['左侧','全景','右侧']);
  const CAMERA_STOPS=Object.freeze({
+  // The actress is close to the lens; the four opponents occupy the middle
+  // distance and remain individually separated. No CSS sprite scaling.
   outer:Object.freeze([
-   Object.freeze({id:'left',angle:rad(20),radius:12.10,eyeY:1.40,focusX:1.10,focusY:1.00,focusZ:9.30,fov:43}),
-   Object.freeze({id:'center',angle:rad(16),radius:12.40,eyeY:1.44,focusX:-.50,focusY:1.00,focusZ:8.70,fov:49}),
-   Object.freeze({id:'right',angle:rad(-20),radius:12.10,eyeY:1.40,focusX:-1.10,focusY:1.00,focusZ:9.30,fov:43})
+   Object.freeze({id:'left',eyeX:2.391,eyeZ:11.249,eyeY:1.48,focusX:.7,focusY:1,focusZ:8.8,fov:48}),
+   Object.freeze({id:'center',eyeX:2.05,eyeZ:12.2,eyeY:1.47,focusX:.35,focusY:1,focusZ:8.55,fov:52}),
+   Object.freeze({id:'right',eyeX:-2.391,eyeZ:11.249,eyeY:1.48,focusX:-.7,focusY:1,focusZ:8.8,fov:48})
   ]),
   inner:Object.freeze([
-   Object.freeze({id:'left',angle:rad(-28),radius:7.45,eyeY:1.42,focusX:1.10,focusY:1.00,focusZ:11.10,fov:43}),
-   Object.freeze({id:'center',angle:rad(-24),radius:7.75,eyeY:1.45,focusX:1.00,focusY:1.00,focusZ:11.20,fov:52}),
-   Object.freeze({id:'right',angle:rad(28),radius:7.45,eyeY:1.42,focusX:-1.10,focusY:1.00,focusZ:11.10,fov:43})
+   Object.freeze({id:'left',eyeX:-2.6,eyeZ:7,eyeY:1.45,focusX:.2,focusY:1,focusZ:12,fov:42}),
+   Object.freeze({id:'center',eyeX:-2.85,eyeZ:6.3,eyeY:1.45,focusX:0,focusY:1,focusZ:11.8,fov:49}),
+   Object.freeze({id:'right',eyeX:2.6,eyeZ:7,eyeY:1.45,focusX:-.2,focusY:1,focusZ:12,fov:42})
   ])
  });
  const stopIndex=n=>clamp(Math.round(Number(n)||0),0,2);
  function camera(mode='outer',index=0){
   const i=stopIndex(index),p=(CAMERA_STOPS[mode]||CAMERA_STOPS.outer)[i];
-  return {mode,index:i,shot:p.id,angle:p.angle,radius:p.radius,fov:p.fov,
-   eye:polar(p.radius,p.angle,p.eyeY),focus:{x:p.focusX,y:p.focusY,z:p.focusZ}};
+  const eye={x:p.eyeX,y:p.eyeY,z:p.eyeZ};
+  return {mode,index:i,shot:p.id,
+   angle:Math.atan2(eye.x,eye.z),radius:Math.hypot(eye.x,eye.z),fov:p.fov,
+   eye,focus:{x:p.focusX,y:p.focusY,z:p.focusZ}};
  }
  function blendCamera(from,to,t){
   const v=clamp(t,0,1),mix=(a,b)=>lerp(a,b,v);
@@ -114,7 +122,7 @@
    focus:{x:mix(from.focus.x,to.focus.x),y:mix(from.focus.y,to.focus.y),z:mix(from.focus.z,to.focus.z)}};
  }
  function project(p,cam,aspect=16/9){
-  const vp=multiply(perspective(SPEC.verticalFov,aspect),lookAt(cam.eye,cam.focus));
+  const vp=multiply(perspective(cam.fov||SPEC.verticalFov,aspect),lookAt(cam.eye,cam.focus));
   const x=p.x,y=p.y,z=p.z,m=vp;
   const w=m[3]*x+m[7]*y+m[11]*z+m[15];
   if(w<=0)return {valid:false};
@@ -151,13 +159,13 @@
   'void main(){vec3 color;',
   'if(uSurface==0){',
   'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
-  'float radial=line(r/18.0,32.0,.024);float spokes=line(a,64.0,.016);',
+  'float radial=line(r/32.0,40.0,.016);float spokes=line(a,78.0,.013);',
   'float allies=1.0-smoothstep(.016,.065,abs(r-10.55));',
-  'float enemies=1.0-smoothstep(.016,.065,abs(r-8.30));',
-  'color=vec3(.005,.013,.016)+vec3(.010,.086,.072)*(radial*.55+spokes*.16)',
-  '+vec3(.006,.11,.10)*(allies+enemies)*.48;',
-  'float innerCam=1.0-smoothstep(.01,.06,abs(r-6.00));',
-  'float outerCam=1.0-smoothstep(.01,.06,abs(r-12.44));',
+  'float enemies=1.0-smoothstep(.016,.065,abs(r-13.0));',
+  'color=vec3(.005,.013,.016)+vec3(.009,.055,.049)*(radial*.40+spokes*.10)',
+  '+vec3(.006,.085,.08)*(allies+enemies)*.22;',
+  'float innerCam=1.0-smoothstep(.01,.06,abs(r-7.47));',
+  'float outerCam=1.0-smoothstep(.01,.06,abs(r-11.50));',
   'color+=vec3(.12,.13,.03)*(innerCam+outerCam)*.22;',
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
@@ -193,8 +201,8 @@
   const a=clamp(angle,-SPEC.wallArcHalfAngle,SPEC.wallArcHalfAngle);
   const bow=SPEC.wallRadius*(1-Math.cos(a));
   return mode==='inner'
-   ? {x:SPEC.wallRadius*Math.sin(a),z:23.0-bow*.72}
-   : {x:SPEC.wallRadius*Math.sin(a),z:4.0-bow};
+   ? {x:SPEC.wallRadius*Math.sin(a),z:26.0-bow*.35}
+   : {x:SPEC.wallRadius*Math.sin(a),z:3.4-bow*.7};
  }
  function worldMesh(gl){
   const floor=[],backInner=[],backOuter=[];
@@ -478,7 +486,7 @@
    pixelsFrom:'existing PaperchalkL2D actors; source assets unchanged'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
- return Object.freeze({SPEC,formation,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
+ return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
   SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,lookAt,
   perspective,multiply,project,create});
 });
