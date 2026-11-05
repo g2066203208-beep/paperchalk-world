@@ -1,8 +1,8 @@
-/* In-game WebGL 3D classroom, five world-space planes (not a picture).
- * Genuine L2D actors and room meshes share ONE physical pinhole camera.
- * No mouse-follow parallax, independent layer transforms, fake tilts or
- * secondary per-layer easing. Only explicit camera movement (DEV/editor)
- * changes viewpoint. Existing game L2D rigs, fog and UI remain intact.
+/* True WebGL 3D room and L2D actors share ONE pinhole camera.
+ * Mouse input moves ONLY the actual camera within safe bounds, with
+ * composition-preserving look-at rotation. All walls, floor, ceiling and
+ * the actors stay at their unchanged world-space coordinates.
+ * Frame-time damping happens once in the host game loop.
  */
 (function(root,factory){
 'use strict';
@@ -47,10 +47,40 @@ const FACES=Object.freeze([
   {id:'right',label:'右墙',vertices:[[4.8,0,0],[4.8,0,8],[4.8,3.2,8],[4.8,3.2,0]],center:[4.8,1.45,6.5]}
 ]);
 const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
-// A fixed, physical camera. Nearby objects have naturally different
-// projected sizes; NO mouse position is translated into fake parallax.
-function camera(){
-  return {...BASE_CAMERA,yaw:0,pitch:0};
+// Cinematic bounded dolly with a soft pointer dead zone and an anchored
+// composition target. This is an actual camera transform, NOT per-layer
+// parallax. The nearby L2D person and distant wall naturally diverge
+// because project() and the WebGL vertex shader share this camera.
+const CAMERA_RIG=Object.freeze({
+  xTravel:.27, yTravel:.095, deadzone:.065,
+  focusX:0,focusY:1.30,focusZ:4.2,
+  focusLock:.64
+});
+const smoothstep=t=>t*t*(3-2*t);
+function pointerAxis(value,deadzone=CAMERA_RIG.deadzone){
+  const v=clamp(Number(value)||0,-1,1);
+  const size=Math.abs(v);
+  if(size<=deadzone)return 0;
+  const t=clamp((size-deadzone)/(1-deadzone),0,1);
+  return Math.sign(v)*smoothstep(t);
+}
+function camera(inputX=0,inputY=0,strength=1){
+  const sx=pointerAxis(inputX),sy=pointerAxis(inputY);
+  const intensity=clamp(Number(strength)||0,0,1.5);
+  const x=BASE_CAMERA.x+sx*CAMERA_RIG.xTravel*intensity;
+  const y=BASE_CAMERA.y-sy*CAMERA_RIG.yTravel*intensity;
+  const z=BASE_CAMERA.z;
+  const dz=CAMERA_RIG.focusZ-z;
+  const dx=CAMERA_RIG.focusX-x;
+  const dy=CAMERA_RIG.focusY-y;
+  const baseDx=CAMERA_RIG.focusX-BASE_CAMERA.x;
+  const baseDy=CAMERA_RIG.focusY-BASE_CAMERA.y;
+  const baselineYaw=Math.atan2(baseDx,dz);
+  const baselinePitch=Math.atan2(baseDy,Math.hypot(baseDx,dz));
+  const yaw=(Math.atan2(dx,dz)-baselineYaw)*CAMERA_RIG.focusLock;
+  const pitch=(Math.atan2(dy,Math.hypot(dx,dz))-baselinePitch)*
+    CAMERA_RIG.focusLock;
+  return {x,y,z,yaw,pitch,hFov:BASE_CAMERA.hFov};
 }
 // Reference CPU projector matches the WebGL vertex shader exactly.
 function project(point,cam,width,height){
@@ -214,6 +244,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   let cameraLoc=null,anglesLoc=null,tanLoc=null,enabled=false,lastKey='',lastState=null,frames=0;
   let texturedProgram=null,texturedLocations=null,materialBuffers=null,textureResources=null;
   let debugMode=false,debugCamera=null,selectedFace=null,guidesVisible=false;
+  let pointerStrength=1;
   const visibleFaces=Object.fromEntries(FACES.map(face=>[face.id,true]));
   const materialStatus=Object.fromEntries(Object.keys(MATERIALS).map(id=>[id,'not-loaded']));
   const actorWorld=Object.fromEntries(Object.entries(CHARACTERS).map(([id,a])=>[id,{...a}]));
@@ -504,11 +535,12 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       el.hidden=false;el.style.left=p.x.toFixed(2)+'px';el.style.top=p.y.toFixed(2)+'px';
     }
   }
-  function render(){
+  function render(inputX=0,inputY=0){
     if(!enabled)return false;
     const w=stage.clientWidth,h=stage.clientHeight;
     if(w<1||h<1)return false;
-    const cam=debugMode&&debugCamera?debugCamera:camera();
+    const cam=debugMode&&debugCamera?debugCamera:
+      camera(inputX,inputY,pointerStrength);
     const info=metrics();
     const player=actorGeometry('player',cam,w,h,info.player,actorWorld.player);
     const enemy=actorGeometry('enemy',cam,w,h,info.enemy,actorWorld.enemy);
@@ -546,6 +578,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       loadedMaterialCount:Object.values(materialStatus).filter(v=>v==='ready').length,
       debugMode,visibleFaces:{...visibleFaces},selectedFace,guidesVisible,
       worldActors:{player:{...actorWorld.player},enemy:{...actorWorld.enemy}},
+      pointerStrength,cameraRig:CAMERA_RIG,
       projection:'physical-perspective-camera',frames,
       floorY:0,actorRendering:'real-game-l2d',canvasSize:{w:bw,h:bh}};
     return true;
@@ -599,6 +632,11 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     lastKey='';if(enabled)render();
     return true;
   }
+  function setPointerStrength(value){
+    const next=clamp(Number(value)||0,0,1.5);
+    pointerStrength=next;lastKey='';
+    return pointerStrength;
+  }
   function setGuidesVisible(value){
     guidesVisible=!!value;lastKey='';
     if(enabled)render();
@@ -630,12 +668,12 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     }else render(0,0);
   }
   return Object.freeze({setActive,setDevMode,setDevCamera,
-    setFaceVisible,setGuidesVisible,setActorWorld,saveActorWorld,
+    setFaceVisible,setGuidesVisible,setPointerStrength,setActorWorld,saveActorWorld,
     resetActorWorld,selectFace,render,
     inspect:()=>lastState||{active:false,faceCount:5,room:ROOM},
     get canvas(){return surface}
   });
 }
-return Object.freeze({ROOM,BASE_CAMERA,CHARACTERS,COLORS,FACES,MATERIALS,
-  camera,project,actorGeometry,buildMesh,create});
+return Object.freeze({ROOM,BASE_CAMERA,CAMERA_RIG,CHARACTERS,COLORS,FACES,MATERIALS,
+  camera,pointerAxis,project,actorGeometry,buildMesh,create});
 });
