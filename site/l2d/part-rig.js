@@ -1517,7 +1517,10 @@ function garmentTuckGeometry(part,phase=0,idle=null){
 }
 function clipBodyUnderGarment(ctx,id,g){
  if(!g)return;
- const W=ctx.canvas.width,H=ctx.canvas.height,y=g.waistY;
+ // ArtMesh vertices live on the FIXED 1024x1024 model plane, while
+ // the editor canvas may be a smaller CSS/backing surface with ctx.scale().
+ // Using the display surface height used to sever both calves midair.
+ const W=Math.max(1024,ctx.canvas.width),H=Math.max(1024,ctx.canvas.height),y=g.waistY;
  ctx.beginPath();
  if(id==='topwear'){
    // Exposed belly tapers into the stitched waistband. Under-shirt skin
