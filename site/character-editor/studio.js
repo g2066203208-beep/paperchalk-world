@@ -988,11 +988,33 @@ async function saveToGame(){
   return {applied:false};
  }
  const selected=list.get(currentId);
- if(selected?.editorOnly&&!selected?.l2dModule?.[side]?.rig){
-  // A missing teacher/outfit source is NOT a valid game actor. Save the draft
-  // locally while preserving the previously selected playable character.
-  message('✓ 分层草稿已保存在本浏览器；此服装尚无已发布的 L2D 模块，未替换游戏人物。');
+ // A fully authored local PartRig is playable even before its module is
+ // committed to GitHub. Placeholder-only wardrobe projects remain drafts.
+ const authored=await get('part-rig:'+currentId+':'+side);
+ const authoredIds=Object.keys(authored?.parts||{});
+ const artIds=ed.S.layers[side].filter(p=>p.sourcePart).map(p=>String(p.partId||p.name));
+ const validLocal=authored?.format==='paperchalk-part-rig-v1'&&
+  authored.characterId===currentId&&authored.face===side&&
+  authoredIds.length>=8&&authoredIds.length===artIds.length&&
+  new Set(artIds).size===artIds.length&&authoredIds.every(id=>artIds.includes(id));
+ if(selected?.editorOnly&&!selected?.l2dModule?.[side]?.rig&&!validLocal){
+  message('✓ 未完成的服装/人物草稿只在工作室保存；还没有足够独立部件，未替换游戏人物。');
   return {applied:false};
+ }
+ if(validLocal&&!selected?.l2dModule?.[side]?.rig){
+  // Register the complete local model under its REAL character/wardrobe ID;
+  // never create another duplicate actor or publish a placeholder as PSD.
+  const existing=await get('imported');
+  const imported=Array.isArray(existing)?existing.filter(c=>c?.id!==currentId):[];
+  const prior=Array.isArray(existing)?existing.find(c=>c?.id===currentId):null;
+  const rendered=await get('render:'+currentId+':'+side);
+  if(typeof rendered!=='string'||!rendered.startsWith('data:image/png;base64,'))
+   throw Error('本机 L2D 缺少已保存的完整原位画布，无法应用到游戏');
+  const record={...(prior||{}),id:currentId,
+   label:selected?.label||currentId,familyId:selected?.familyId||currentId,
+   variantCategory:selected?.variantCategory||'default',
+   [side]:rendered};
+  await put('imported',[...imported,record]);
  }
  // This button explicitly says "save AND apply to game". Bind the
  // selected actor/view to the originating game slot even when the user
