@@ -116,8 +116,9 @@ function selectSlot(value){
 async function assign(target,id,face='front',save=true){
  const c=catalog.get(id);if(!c)throw Error('未找到角色 '+id);
  const actor=window.PaperchalkL2D.get(target);if(!actor)throw Error('人物图层未加载 '+target);
- if(face==='back'&&!c.back)throw Error('该角色还没有真正的背面素材，不能用正面冒充背面：'+c.label);
- if(face==='front'&&!c.front)throw Error('该角色还没有真正的正面素材：'+c.label);
+ // A complete user-painted L2D may be present locally even before a GitHub
+ // portrait was published. Validate the exact requested view below, after
+ // checking its saved 1024px composite (never substitute the opposite side).
  // A newer scene/person selection supersedes earlier asynchronous decodes.
  const revision=(assignmentVersions[target]||0)+1;
  assignmentVersions[target]=revision;
@@ -127,8 +128,8 @@ async function assign(target,id,face='front',save=true){
   if(!current())throw Error('L2D 角色切换已被后续操作取代');
   return result;
  };
- const src=await checked(get('render:'+id+':'+face))||c[face]||c.front||c.back;
- if(!src)throw Error('人物缺少 '+face+' 方向素材');
+ const src=await checked(get('render:'+id+':'+face))||c[face];
+ if(!src)throw Error('人物缺少独立的 '+face+' 方向素材；不会使用另一面冒充');
  const currentBinding=assigned[target];
  const previousAction=currentBinding?.id===id&&currentBinding?.side===face
   ?window.PaperchalkL2DLibrary?.getAction(target):null;
@@ -311,6 +312,23 @@ async function init(){
  }
  const overrides=await get('overrides');if(Array.isArray(overrides))for(const c of overrides){
   if(valid(c?.id)&&catalog.has(c.id))Object.assign(catalog.get(c.id),c);
+ }
+ // Local, independently rigged character views are playable without a
+ // published PNG. Only expose a face once BOTH authentic source PNGs and
+ // the saved PartRig exist; no blank draft or opposite-side substitution.
+ for(const c of catalog.values()){
+  for(const face of ['front','back']){
+   if(c[face])continue;
+   const [rig,composite,art]=await Promise.all([
+    get('part-rig:'+c.id+':'+face),get('render:'+c.id+':'+face),getLocalArtwork(c.id,face)
+   ]);
+   if(rig?.format==='paperchalk-part-rig-v1'&&
+      rig.characterId===c.id&&rig.face===face&&
+      Object.keys(rig.parts||{}).length>=8&&
+      Array.isArray(art)&&art.filter(p=>p?.sourcePart&&p.partId).length>=8&&
+      typeof composite==='string'&&composite.startsWith('data:image/png;base64,'))
+    c[face]=composite;
+  }
  }
  for(const key of ['player','enemy']){
   const old=await get('slot:'+key);
