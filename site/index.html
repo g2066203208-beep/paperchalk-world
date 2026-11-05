@@ -570,6 +570,7 @@ body.mobile-mode.virtual-landscape #view{
 <link rel="stylesheet" href="./game/dialogue-layout.css?v=runtime-architecture-1">
 <script src="./game/survival-state.js"></script>
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
+<script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -2232,6 +2233,12 @@ void main(){
   let lastFogMirror=0;
   const layerAnchors=new Map();
   const sharedGround=window.PaperWorldPerspectiveGround;
+  // Single 3D camera for the physical scene background and L2D actor planes.
+  // Near heroine is camera-followed; her approved crop remains unchanged.
+  const sceneCamera=window.PaperWorldSceneCamera;
+  window.PaperWorldSceneCameraState=()=>sceneCamera.inspect(
+    editorConfig,sceneCamera.pose(currentX,currentY,view.clientHeight)
+  );
   function calculateGroundFit(){
     const p=editorConfig.player,e=editorConfig.enemy,g=editorConfig.ground;
     const viewH=Math.max(1,view.clientHeight);
@@ -2622,21 +2629,30 @@ void main(){
     const k=1-Math.exp(-dt*7);
     if(reduced.matches||!tiltEnabled||editorActive){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
-    stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
-    // A shoulder-mounted camera keeps the near back almost fixed;
-    // the room and the enemy supply the majority of view parallax.
-    cameraPlayer.style.transform='rotateY('+(currentX*.65).toFixed(3)+
-      'deg) rotateX('+(-currentY*.45).toFixed(3)+'deg)';
-    // A midground encounter: opponent is not a far-wall miniature;
-    // protagonist stays camera-near, deliberately cropped by the frame.
-    // Keep mouse parallax subtle and separate from physical Z projection.
-    const depthFactor=clamp((editorConfig.enemy.z-editorConfig.bg.z)/45,0,3);
-    const parallaxPx=Math.min(6,sizes.w*.005)*depthFactor;
-    enemyDepth.style.transform='translate(-50%,-50%) translate3d('+
-      (currentX*parallaxPx).toFixed(2)+'px,'+
-      (currentY*parallaxPx*.55).toFixed(2)+'px,0) rotateY('+
-      (currentX*(6.0+.3*depthFactor)).toFixed(3)+'deg) rotateX('+
-      (-currentY*(4.6+.22*depthFactor)).toFixed(3)+'deg)';
+    if(stage.dataset.scene==='menu'){
+      // The menu is authored as a flat graphic; retain its original tilt.
+      stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+
+        'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    }else if(!editorActive){
+      const camera=sceneCamera.pose(currentX,currentY,sizes.h);
+      const world=sceneCamera.inspect(editorConfig,camera);
+      // A perspective-correct planar image at the authored BACKGROUND Z,
+      // not a distorted cylinder and not an arbitrary CSS rotation.
+      const background=sceneCamera.planeMatrix(world.depths.background,camera);
+      const enemyView=sceneCamera.billboard(world.depths.enemy,camera);
+      if(background.valid && enemyView.valid){
+        stage.style.transform=background.css;
+        // L2D sprites always face the camera (billboards); their own mesh,
+        // physical heights, ground anchoring and saved offsets are unchanged.
+        enemyDepth.style.transform='translate(-50%,-50%) '+enemyView.css;
+        // Camera follows the heroine at player Z. Her framing stays
+        // camera-relative, never rescaled a second time.
+        cameraPlayer.style.transform='translate3d(0px,0px,0px)';
+        stage.dataset.cameraProfile='one-pinhole-3d';
+        stage.dataset.worldDistances=Object.values(world.distances)
+          .map(n=>n.toFixed(1)).join(',');
+      }
+    }
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
