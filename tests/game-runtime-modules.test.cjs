@@ -42,6 +42,26 @@ const story=require('../site/game/story-content.js');
   assert.equal(loader.inspect().cached,2);
   await loader.ensure('bedroom.webp');
   assert.equal(images,4,'least recently used image is evicted');
+  // A decode still in progress must not be duplicated merely because another
+  // scene evicted it from the bounded completed-image cache.
+  const pendingResolvers=new Map();
+  let pendingLoads=0;
+  class SlowImage{
+    constructor(){pendingLoads++}
+    set src(url){this.url=url}
+    decode(){return new Promise(resolve=>pendingResolvers.set(this.url,resolve))}
+  }
+  const rapid=createPreloader({ImageCtor:SlowImage,maxEntries:1,timeoutMs:500});
+  const slow=rapid.ensure('slow-room.webp');
+  const other=rapid.ensure('other-room.webp'); // evicts slow from LRU
+  assert.equal(rapid.ensure('slow-room.webp'),slow,
+    'in-flight image remains shared even after LRU eviction');
+  assert.equal(pendingLoads,2,'scene switches must not launch duplicate decodes');
+  assert.equal(rapid.inspect().pending,2);
+  pendingResolvers.get('slow-room.webp')();
+  pendingResolvers.get('other-room.webp')();
+  await Promise.all([slow,other]);
+  assert.equal(rapid.inspect().pending,0,'completed decodes must release pending refs');
   class BrokenImage{set src(v){this.url=v}decode(){return Promise.reject(new Error('broken'))}}
   const broken=createPreloader({ImageCtor:BrokenImage,timeoutMs:100});
   await assert.rejects(broken.ensure('missing.webp'),/broken/);
