@@ -2883,6 +2883,7 @@ void main(){
   function exitDeveloper(){
     if(!editorActive)return;
     editorActive=false;useRig(false);
+    roomView='front';
     view.classList.remove('fog-edit-mode');
     fogGuide.hidden=true;devTools.hidden=true;
     // An absent UI must leave ZERO residual sidebar fog, even for one frame.
