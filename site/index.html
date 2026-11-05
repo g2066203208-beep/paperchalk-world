@@ -2551,6 +2551,7 @@ void main(){
     if(!is3DRoom())return;
     selectedRoomObject=id;
     boxScene.selectFace(['floor','ceiling','back','left','right'].includes(id)?id:null);
+    boxScene.setReferenceLayer(['fog','enemy','player'].includes(id)?id:null);
     selectEditorLayer(['enemy','player','fog'].includes(id)?id:
       id==='floor'||id==='perspective'?'ground':'bg');
     if(id==='camera')roomCameraDetails.open=true;
