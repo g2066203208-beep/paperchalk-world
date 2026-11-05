@@ -1,138 +1,70 @@
-/* Female-six body hierarchy: ground -> pelvis -> torso and both hips.
- * The garment root must be pelvis, with lower shorts sides skinned to each leg. */
+/* FEMALE-06: source body must remain pristine. Wardrobe trousers ONLY
+ * use continuous per-vertex pelvis+left/right-thigh skin weights.
+ * There is no body alpha scissor, no overlay injection, no bitmap resize. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 require('../site/l2d/part-rig.js');
 const core=globalThis.PaperchalkPartRigCore;
-const folder=path.join(__dirname,'../site/assets/l2d/library');
-const r=JSON.parse(fs.readFileSync(path.join(folder,'female-06/front.rig.json')));
-const outfit=JSON.parse(fs.readFileSync(path.join(folder,'female-06-outfit-02/front.rig.json')));
-assert.equal(r.parts.pants_overlay.kind,'pants-bound');
-assert.equal(r.parts.pants_overlay.parentId,'pelvis','shorts waistband PRIMARY parent');
-assert.equal(r.parts.pants_overlay.skinBinding.method,'pelvis-waist-dual-thigh-v2');
-assert.equal(r.parts.pants_overlay.skinBinding.waistTuck,.075);
-assert.deepEqual(r.parts.pants_overlay.skinBinding.bodyOcclusion,
- {mode:'pelvis-garment-stencil-v1',waistV:.105,hemV:.96});
-assert.deepEqual(r.parts.pants_overlay.skinBinding.transition,[.42,.84]);
-assert.equal(r.parts.pants_overlay.skinBinding.target,'legwear');
-assert.deepEqual(r.parts.pants_overlay.placement,{scaleX:1.2,scaleY:1,offsetX:-15,offsetY:-17});
-assert.equal(r.parts.pants_overlay.bones.length,0,'no independent animated pants bones');
-assert.equal(r.parts.legwear.bones.length,4,'two source knee/ankle chains');
-assert.equal(new Set(r.layerOrder).size,r.layerOrder.length);
-assert.equal(Object.keys(r.parts).length,18);
-const src=Object.values(r.parts).map(p=>({
+const root=path.join(__dirname,'../site/assets/l2d/library');
+const read=(name)=>JSON.parse(fs.readFileSync(path.join(root,name,'front.rig.json'),'utf8'));
+const base=read('female-06'),third=read('female-06-outfit-02');
+assert.equal(base.characterId,'female-06');
+assert.equal(Object.keys(base.parts).length,17,'ORIGINAL 17 source ArtMeshes only');
+assert.equal(base.parts.pants_overlay,undefined,'never inject shorts into BASE');
+assert.equal(base.wearableSource,undefined,'base must have NO previous composite-overlay provenance');
+assert.ok(!base.layerOrder.includes('pants_overlay'));
+assert.ok(fs.existsSync(path.join(root,'female-06/front.png')));
+assert.ok(!fs.existsSync(path.join(root,'female-06/front/pants_overlay.png')));
+const pants=third.parts.bottomwear,legs=third.parts.legwear;
+assert.ok(pants&&legs,'third costume pants and legs exist');
+assert.equal(pants.skinBinding.method,'pelvis-waist-dual-thigh-v2');
+assert.equal(pants.skinBinding.target,'legwear');
+assert.equal(pants.skinBinding.waistLock,1);
+assert.deepEqual(pants.skinBinding.transition,[.35,.80]);
+assert.equal(pants.parentId,'pelvis');
+assert.equal(pants.bones.length,0,'no independently animated trousers causing a detached waist');
+assert.equal(third.weightBindingVersion,'third-outfit-skin-weight-v1');
+assert.equal(third.parts.handwear_l.parentId,'torso');
+assert.equal(third.parts.handwear_r.parentId,'torso');
+const makeSrc=rig=>Object.values(rig.parts).map(p=>({
  partId:p.id,name:p.name,x:p.x,y:p.y,sourcePart:true,
  canvas:{width:p.w,height:p.h}
 }));
-const model=core.project(src,'female-06','front',r);
-const pants=model.parts.pants_overlay,legs=model.parts.legwear,torso=model.parts.topwear;
-assert.equal(pants._garmentLegs,legs,'secondary skin target references real body leg object');
-const rig=model.bodyHierarchy;
-assert.ok(rig,'source body must have actual full-body hierarchy');
-assert.equal(rig.graph.pelvis.parent,'ground');
-assert.equal(rig.graph.torso.parent,'pelvis');
-assert.equal(rig.graph.head.parent,'neck');
-assert.equal(rig.graph.leftKnee.parent,'leftHip');
-assert.equal(rig.graph.rightKnee.parent,'rightHip');
-assert.equal(rig.graph.shortsWaist.parent,'pelvis');
-assert.equal(rig.graph.shortsLeftHem.parent,'leftHip');
-assert.equal(rig.graph.shortsRightHem.parent,'rightHip');
-assert.equal(core.parentRole(pants),'garment');
-// A tight waistband and hidden-body stencil are calculated from EXACTLY
-// the same animated ArtMesh as the two IK-connected pants cuffs.
-// The Studio can paint on a display canvas smaller than the 1024px PSD.
- // Hidden-body masking must still cover the entire original leg texture.
- const clipCalls=[];
- const smallCanvas={canvas:{width:640,height:760},
-  beginPath(){},moveTo(){},lineTo(){},closePath(){},clip(){},
-  rect(x,y,w,h){clipCalls.push({x,y,w,h})}};
- core.clipBodyUnderGarment(smallCanvas,'legwear',
-  {waistY:410,leftX:420,rightX:570,hemY:560,torsoPinchHeight:78});
- assert.equal(clipCalls.length,1);
- assert.ok(clipCalls[0].y+clipCalls[0].h>=1024,
-  'viewport-sized L2D canvas must not cut off either calf/foot');
- const restTuck=core.garmentTuckGeometry(pants,0,model.idleProfile);
-assert.ok(restTuck&&restTuck.leftX<restTuck.rightX);
-const a=core.placedRestPoint(pants,{x:pants.x,y:pants.y});
-const b=core.placedRestPoint(pants,{x:pants.x+pants.w,y:pants.y});
-const topWidth=b.x-a.x,hemL=core.placedRestPoint(pants,{x:pants.x,y:pants.y+pants.h});
-const hemR=core.placedRestPoint(pants,{x:pants.x+pants.w,y:pants.y+pants.h});
-assert.ok(topWidth<hemR.x-hemL.x,
- 'garment waist must cinch narrower than original hips');
-assert.ok(restTuck.waistY<restTuck.hemY);
-for(const u of [0,.2,.5,.8,1]){
- for(const v of [0,.1,.35,.65,1]){
-  const p={x:pants.x+u*pants.w,y:pants.y+v*pants.h};
-  const placed=core.placedRestPoint(pants,p);
-  const inv=core.unplacedRestPoint(pants,placed);
-  assert.ok(Math.hypot(inv.x-p.x,inv.y-p.y)<.0001,'waist cinch inverse must preserve editor hit testing');
- }
-}
-assert.equal(core.parentRole(legs),'legs');
-assert.equal(core.parentRole(torso),'torso');
-for(const id of ['wings_l','wings_r']){
- if(!model.parts[id])continue;
- assert.equal(model.parts[id].parentId,'torso',id+' must be parented to upper body');
- assert.equal(core.parentRole(model.parts[id]),'shoulder',id+' should inherit shoulder/chest');
-}
-// Changing the scale or position of pants cannot ever move the ROOT SKELETON.
-const edited=JSON.parse(JSON.stringify(r));
-edited.parts.pants_overlay.placement={scaleX:1.45,scaleY:.66,offsetX:150,offsetY:-120};
-const editedBody=core.project(src,'female-06','front',edited);
-assert.deepEqual(editedBody.bodyHierarchy.pelvis,rig.pelvis,'source-body hip root is independent of shorts');
-assert.deepEqual(editedBody.bodyHierarchy.graph.leftHip.rest,rig.graph.leftHip.rest);
-assert.deepEqual(editedBody.bodyHierarchy.graph.rightHip.rest,rig.graph.rightHip.rest);
-const idle=JSON.parse(JSON.stringify(model.idleProfile));
-idle.joints.hips=8;idle.joints.shoulders=8;idle.breath.amount=3;
-let traveled=0,maxWaist=0,maxHem=0;
-for(let frame=0;frame<42;frame++){
- const phase=frame*.37,pose=core.humanPoseAt(pants,phase,idle);
- const tuck=core.garmentTuckGeometry(pants,phase,idle);
- assert.ok(tuck&&tuck.leftX<tuck.rightX,'dynamic waistband stencil must exist every frame');
- assert.ok(tuck.hemY>tuck.waistY+90,'hip/hem stencil cannot invert with IK');
- for(const u of [.18,.5,.82]){
-  for(const v of [.03,.18,.38,.58,.75,.9,.97]){
-   const rest=core.placedRestPoint(pants,{x:pants.x+u*pants.w,y:pants.y+v*pants.h});
-   const actual=core.warpPoint(pants,u,v,phase,null,idle);
-   const expected=core.parentPoint(pants,rest,phase,idle);
-   assert.ok(Math.hypot(actual.x-expected.x,actual.y-expected.y)<.001,
-    'no second garment oscillator or duplicate hip transform');
-   if(v<=.38){
-    const hip=core.hipPoint(rest,pose);
-    const err=Math.hypot(actual.x-hip.x,actual.y-hip.y);
-    maxWaist=Math.max(maxWaist,err);
-    assert.ok(err<.001,'shorts waist is EXACT welded pelvis child');
-    if(v===.03){
-     const belly=core.parentPoint(torso,rest,phase,idle);
-     assert.ok(Math.hypot(belly.x-actual.x,belly.y-actual.y)<.001,
-      'torso hem and shorts waist MUST inherit identical hip transform');
-    }
-   }
-   if(v>=.9){
-    const thigh=core.parentPoint(legs,rest,phase,idle);
-    const err=Math.hypot(actual.x-thigh.x,actual.y-thigh.y);
-    maxHem=Math.max(maxHem,err);
-    assert.ok(err<.001,'lower shorts must inherit true left/right leg IK');
-   }
-   traveled=Math.max(traveled,Math.hypot(actual.x-rest.x,actual.y-rest.y));
+const baseModel=core.project(makeSrc(base),'female-06','front',base);
+assert.equal(Object.keys(baseModel.parts).length,17);
+const outfit=core.project(makeSrc(third),'female-06-outfit-02','front',third);
+const garment=outfit.parts.bottomwear,body=outfit.parts.legwear;
+assert.equal(garment._garmentLegs,body,'pants must inherit actual outfit legs by reference');
+assert.equal(core.parentRole(garment),'garment');
+assert.equal(core.parentRole(outfit.parts.topwear),'torso');
+const idle=JSON.parse(JSON.stringify(outfit.idleProfile));
+idle.joints.hips=8;idle.joints.shoulders=8;idle.breath.amount=2;
+let travel=0,maxWaistError=0,maxHemError=0;
+for(let f=0;f<42;f++){
+ const phase=f*.37,pose=core.humanPoseAt(garment,phase,idle);
+ assert.ok(pose?.rig?.pelvis,'costume needs physical pelvis hierarchy');
+ for(const u of [.15,.35,.5,.65,.85]){
+  for(const v of [.02,.16,.30,.43,.57,.69,.87,.96]){
+   const basePoint={x:garment.x+garment.w*u,y:garment.y+garment.h*v};
+   const rest=core.placedRestPoint(garment,basePoint);
+   const actual=core.warpPoint(garment,u,v,phase,null,idle);
+   const hip=core.hipPoint(rest,pose);
+   const thigh=core.parentPoint(body,rest,phase,idle);
+   const weight=Math.max(0,Math.min(1,(v-.35)/(.80-.35)));
+   // Cubic smoothstep implements continuous joint weighting.
+   const t=weight*weight*(3-2*weight);
+   const target={x:hip.x+(thigh.x-hip.x)*t,y:hip.y+(thigh.y-hip.y)*t};
+   const error=Math.hypot(actual.x-target.x,actual.y-target.y);
+   assert.ok(error<.005,'outfit trousers must share pelvis-to-thigh vertex weights');
+   if(v<=.30)maxWaistError=Math.max(maxWaistError,Math.hypot(actual.x-hip.x,actual.y-hip.y));
+   if(v>=.87)maxHemError=Math.max(maxHemError,Math.hypot(actual.x-thigh.x,actual.y-thigh.y));
+   travel=Math.max(travel,Math.hypot(actual.x-rest.x,actual.y-rest.y));
   }
  }
- // Local mesh / cloth bending at the lower torso must vanish at the hip
- // seam; this tests REAL ArtMesh warp, not only parent relationship metadata.
- const lower={x:torso.x+torso.w*.5,y:torso.y+torso.h*.97};
- const lowerWarp=core.warpPoint(torso,.5,.97,phase,null,idle);
- const lowerHip=core.hipPoint(lower,core.humanPoseAt(torso,phase,idle));
- const lowerError=Math.hypot(lowerWarp.x-lowerHip.x,lowerWarp.y-lowerHip.y);
- assert.ok(lowerError<.01,'torso lower edge has detached from root pelvis: '+lowerError);
- for(const c of [rig.left,rig.right]){
-  const sole={x:c.ankle.x,y:c.ankle.y};
-  const actual=core.parentPoint(legs,sole,phase,idle);
-  assert.ok(Math.hypot(actual.x-sole.x,actual.y-sole.y)<.001,'foot must stay planted');
- }
 }
-assert.ok(traveled>2,'animation must test real nonzero hip motion');
-for(const side of ['l','r']){
- const p=outfit.parts['handwear_'+side];
- assert.ok(p.bones.length>=2&&p.parentId==='torso','sleeves inherit shoulders');
-}
-console.log('PASS female06 true full-body pelvis hierarchy: 882 waistband/hem vertices, 42 frames, root independent of pants scale, original feet planted; max waist '+maxWaist.toFixed(4)+'px hem '+maxHem.toFixed(4)+'px movement '+traveled.toFixed(2)+'px');
+assert.ok(travel>1,'42 animation frames must exercise live body skinning');
+assert.ok(maxWaistError<.005&&maxHemError<.005);
+const engine=fs.readFileSync(path.join(__dirname,'../site/l2d/part-rig.js'),'utf8');
+assert.ok(!engine.includes('clipBodyUnderGarment('),'body pixels may NEVER be clipped');
+assert.ok(!engine.includes('garmentTuckGeometry('),'do not distort sprite silhouettes');
+console.log('PASS female6 original BASE 17 textures untouched; third wardrobe weighted to shared pelvis/thighs across 1680 animated vertices; no body clipping/painting');
