@@ -213,6 +213,11 @@ jobs:
                 assert.equal(await page.locator('[data-quick="fringe"]').isVisible(),true);
                 assert.equal(await page.locator('[data-quick="rear"]').isVisible(),true);
                 assert.equal(await page.locator('[data-quick="skirt"]').isVisible(),true);
+                // Focused UI starts with frequent sliders; professional rows are
+                // one explicit expansion away, not deleted or duplicated.
+                assert.equal(await page.locator('[data-quick="hands"]').isVisible(),false,
+                  'secondary sliders should be folded away initially');
+                await page.locator('#workspace-motion-more').click();
                 for(const key of ['hands','shoulders','hips','breath','speed'])
                   assert.equal(await page.locator('[data-quick="'+key+'"]').isVisible(),true,key+' slider missing');
                 const panelRect=await page.locator('#part-rig-panel').boundingBox();
