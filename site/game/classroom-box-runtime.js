@@ -83,6 +83,14 @@ function camera(inputX=0,inputY=0,strength=1){
   return {x:BASE_CAMERA.x,y:BASE_CAMERA.y,z:BASE_CAMERA.z,
     yaw,pitch,hFov:BASE_CAMERA.hFov};
 }
+// Keep authored 16:9 vertical composition when the room becomes full-bleed.
+// On ultrawide phones, OPEN UP horizontal viewing angle rather than blowing
+// up/vertically cropping all actors. The GPU and CPU share the exact focal.
+const REFERENCE_ASPECT=16/9;
+function focalLength(cam,width,height){
+  return Math.min(width,height*REFERENCE_ASPECT)/
+    (2*Math.tan(cam.hFov*Math.PI/360));
+}
 // Reference CPU projector matches the WebGL vertex shader exactly.
 function project(point,cam,width,height){
   const [px,py,pz]=point;
@@ -94,7 +102,7 @@ function project(point,cam,width,height){
   const yy=cp*dy-sp*z0;
   const depth=sp*dy+cp*z0;
   if(depth<=.03)return null;
-  const focal=width/(2*Math.tan(cam.hFov*Math.PI/360));
+  const focal=focalLength(cam,width,height);
   return {x:width/2+focal*xx/depth,
     y:height/2-focal*yy/depth,depth,focal};
 }
@@ -440,8 +448,9 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     gl.useProgram(program);
     gl.uniform3f(cameraLoc,cam.x,cam.y,cam.z);
     gl.uniform2f(anglesLoc,cam.yaw,cam.pitch);
-    const tanX=Math.tan(cam.hFov*Math.PI/360);
-    gl.uniform2f(tanLoc,tanX,tanX/(w/h));
+    const focal=focalLength(cam,w,h);
+    const tanX=w/(2*focal),tanY=h/(2*focal);
+    gl.uniform2f(tanLoc,tanX,tanY);
     const draw=(name,mode,depthWrite)=>{
       const b=buffers[name];
       gl.depthMask(depthWrite);
@@ -463,7 +472,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     const m=texturedLocations;
     gl.uniform3f(m.camera,cam.x,cam.y,cam.z);
     gl.uniform2f(m.angles,cam.yaw,cam.pitch);
-    gl.uniform2f(m.tan,tanX,tanX/(w/h));
+    gl.uniform2f(m.tan,tanX,tanY);
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(m.image,0);
     gl.depthMask(true);
@@ -757,5 +766,5 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   });
 }
 return Object.freeze({ROOM,BASE_CAMERA,CAMERA_RIG,CHARACTERS,COLORS,FACES,MATERIALS,
-  camera,pointerAxis,project,actorGeometry,buildMesh,create});
+  REFERENCE_ASPECT,focalLength,camera,pointerAxis,project,actorGeometry,buildMesh,create});
 });
