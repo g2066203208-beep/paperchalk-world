@@ -94,7 +94,7 @@
    lerp(rad(-18),rad(18),t);
   const R=outer?SPEC.outerCameraRadius:SPEC.innerCameraRadius;
   const eye=polar(R,angle,1.42);
-  const focus={x:(outer?1.40:-.75)*(1-2*t),
+  const focus={x:(outer?0.0:-.40)*(1-2*t),
    y:.95,z:outer?SPEC.battleFocusZ:10.7};
   return {mode,progress:t,radius:R,angle,eye,focus};
  }
