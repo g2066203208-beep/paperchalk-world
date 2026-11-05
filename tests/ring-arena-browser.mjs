@@ -103,7 +103,14 @@ try{
    foeSpread:Math.max(...scene.enemies.map(p=>p.x))-
     Math.min(...scene.enemies.map(p=>p.x))};
  });
- assert.ok(bounds.hero.heightFraction>.8,'large nearby heroine rear-view');
+ assert.ok(bounds.hero.heightFraction>.72,'large nearby heroine rear-view');
+ const heroCenter=await page.evaluate(()=>{
+  const a=window.PaperWorldRingArena;
+  const l=a.layout('outer');
+  return a.project({...l.allies[0],y:l.allies[0].height*.5},a.camera('outer',0));
+ });
+ assert.ok(heroCenter.valid&&heroCenter.x<-.35&&heroCenter.x>-.85,
+  'the visible center of the heroine, not only transparent quad, must be inside the shot');
  assert.ok(bounds.foeSpread>=5,'widen the enemy arc in 3D world units');
  assert.ok(bounds.enemies.every(b=>b.valid&&b.left>-.97&&b.right<.97),
    'all four enemy L2D quads completely visible in the frame');
@@ -147,8 +154,8 @@ try{
  assert.ok(curvature.outerNear>curvature.outerSide);
  assert.ok(curvature.innerNear>curvature.innerSide);
  assert.ok(curvature.innerNear>curvature.outerNear);
- assert.ok(Math.abs(inner.arena.camera.radius-Math.hypot(2.6,7))<.01);
- assert.equal(inner.arena.camera.fov,42);
+ assert.ok(Math.abs(inner.arena.camera.radius-Math.hypot(2.1,7.2))<.01);
+ assert.equal(inner.arena.camera.fov,54);
  assert.equal(inner.arena.ring.wallRadius,32);
  assert.equal(inner.arena.ring.outerRoleRadius,10.55);
  assert.equal(inner.arena.ring.innerRoleRadius,8.3);
