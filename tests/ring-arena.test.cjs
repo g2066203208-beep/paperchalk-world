@@ -77,6 +77,34 @@ for(const mode of ['outer','inner']){
   }
  }
 }
+// Verify the WHOLE L2D WebGL quad, not merely the actor's middle point.
+function cardBounds(actor,cam){
+ const v={x:cam.focus.x-cam.eye.x,y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z};
+ const len=Math.hypot(v.x,v.y,v.z),fx=v.x/len,fz=v.z/len;
+ const right={x:-fz/Math.hypot(fx,fz),z:fx/Math.hypot(fx,fz)};
+ const size=actor.height/(actor.soleY-actor.crownY);
+ const projected=[0,1].flatMap(u=>[0,1].map(y=>arena.project({
+  x:actor.x+right.x*(u-actor.soleX)*size,
+  y:(actor.soleY-y)*size,
+  z:actor.z+right.z*(u-actor.soleX)*size
+ },cam)));
+ return {left:Math.min(...projected.map(p=>p.x)),
+  right:Math.max(...projected.map(p=>p.x)),
+  top:Math.max(...projected.map(p=>p.y)),
+  bottom:Math.min(...projected.map(p=>p.y))};
+}
+for(const mode of ['outer','inner']){
+ for(const p of [0,.25,.5,.75,1]){
+  const cam=arena.camera(mode,p);
+  for(const actor of arena.layout(mode).enemies){
+   const b=cardBounds(actor,cam);
+   assert.ok(b.left>-.96&&b.right<.96,
+    'original full L2D enemy quad must not be cropped by camera: '+JSON.stringify({mode,p,id:actor.id,b}));
+   assert.ok(b.top<.94&&b.bottom>-.94,
+    'original L2D full-body portrait must remain vertically visible');
+  }
+ }
+}
 // The curved walls are NOT concentric with cast; all world positions stay frozen.
 const s=arena.SPEC;
 const ringGap=s.outerRoleRadius-s.innerRoleRadius;
