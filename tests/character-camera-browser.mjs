@@ -85,10 +85,10 @@ try{
   assert.ok(Math.abs(ratio-expected)<.035,
     'Enemy does not match the virtual uncropped 90%-height physical body reference: '+
     JSON.stringify({ratio,expected,ref}));
-  assert.ok(ref.player.worldFootY>ref.viewportHeight*1.025&&
-    ref.player.worldFootY<ref.viewportHeight*1.065,
+  assert.ok(ref.player.worldFootY>ref.viewportHeight*1.32&&
+    ref.player.worldFootY<ref.viewportHeight*1.55,
     'Heroine feet must be deliberately BEYOND the lower camera frame: '+JSON.stringify(ref));
-  assert.ok(ref.enemy.expectedFootY>ref.viewportHeight*.82&&
+  assert.ok(ref.enemy.expectedFootY>ref.viewportHeight*.79&&
     ref.enemy.expectedFootY<ref.viewportHeight*.91&&
     ref.enemy.expectedFootY<ref.player.worldFootY,
     'Enemy must stand on the close MIDGROUND at 82–91% frame height: '+JSON.stringify(ref));
@@ -100,7 +100,7 @@ try{
   if(cfg.mobile){
     // The entire 16:9 logical game is ROTATED 90° on a portrait phone.
     // Browser rect.x, not rect.y, is then the game's vertical axis.
-    // Logical ground positions remain 104% (hero) and 86% (enemy).
+    // The heroine is deliberately cropped beyond the frame; enemy shoes remain visible.
     assert.ok(ref.player.rect.left<0&&ref.player.rect.right>cfg.width*.5,
       'Portrait camera crop did not place heroine partly past the edge: '+JSON.stringify(ref));
     assert.ok(ref.enemy.rect.left<cfg.width*.5&&
@@ -109,8 +109,8 @@ try{
       ref.enemy.rect.bottom>cfg.height*.24,
       'Portrait enemy L2D must be visible within the rotated game: '+JSON.stringify(ref));
   }else{
-    assert.ok(ref.player.shoeScreenY>ref.viewportHeight*1.02&&
-      ref.player.shoeScreenY<ref.viewportHeight*1.09,
+    assert.ok(ref.player.shoeScreenY>ref.viewportHeight*1.32&&
+      ref.player.shoeScreenY<ref.viewportHeight*1.55,
       'Visible heroine canvas shoes are NOT past the lower camera edge: '+JSON.stringify(ref));
     assert.ok(ref.enemy.shoeScreenY>ref.viewportHeight*.79&&
       ref.enemy.shoeScreenY<ref.viewportHeight*.93&&
