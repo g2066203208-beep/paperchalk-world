@@ -151,7 +151,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
    draftKeys.every(id=>activeIds.includes(id)&&!!model.parts[id])&&
    // If a published module gains new independent parts, keep the author's
    // existing rig adjustments and use published defaults ONLY for new IDs.
-   (localOnly||draftKeys.length>=Math.max(8,Math.ceil(activeIds.length*.6)));
+   (localOnly||draftKeys.length>=Math.max(1,Math.ceil(activeIds.length*.6)));
  // Never silently discard a real local rig in favor of the old published
  // model: that made the game visibly different from the studio.
  if(localDraft&&!draftMatches)
