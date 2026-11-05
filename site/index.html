@@ -914,6 +914,9 @@ body.mobile-mode.virtual-landscape #view{
       </div>
       <details id="dev-room-camera-tuning">
         <summary>摄影机 · 坐标与视角</summary>
+        <label>游戏鼠标活动范围 <output id="dev-room-pointer-strength-value">100%</output></label>
+        <input id="dev-room-pointer-strength" type="range" min="0" max="150" value="100" step="5" aria-label="真实3D摄影机鼠标活动范围">
+        <p>游戏镜头最大移动：左右 ±27 cm、上下 ±9.5 cm（100%）。中心死区与视线锁定自动保持舒适构图。</p>
         <label>左右 X <output data-room-camera-value="x"></output></label>
         <input type="range" data-room-camera-field="x" min="-2.4" max="2.4" step=".05">
         <label>高度 Y <output data-room-camera-value="y"></output></label>
