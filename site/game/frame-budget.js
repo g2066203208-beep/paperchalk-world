@@ -43,5 +43,43 @@
       inspect(){return {fps,minFramesBetween,frames,skipped,invalidated,lastAt}}
     });
   }
-  return Object.freeze({create});
+  // Fixed-size, allocation-free per-frame telemetry for the real world rAF.
+  // Percentiles are calculated only when DEV explicitly asks for metrics.
+  function createTiming({capacity=240,slowFrameMs=50}={}){
+    if(!Number.isSafeInteger(capacity)||capacity<16||capacity>4096)
+      throw new RangeError('capacity must be 16..4096');
+    if(!Number.isFinite(slowFrameMs)||slowFrameMs<=0)
+      throw new RangeError('slowFrameMs must be positive');
+    const timings=new Float32Array(capacity);
+    let index=0,count=0,previous=null,totalFrames=0,slowFrames=0;
+    function record(now){
+      if(!Number.isFinite(now))return;
+      if(previous!==null){
+        const elapsed=now-previous;
+        // Do not claim a multi-minute background tab is a dropped frame.
+        if(elapsed>0&&elapsed<=250){
+          timings[index]=elapsed;
+          index=(index+1)%capacity;
+          count=Math.min(count+1,capacity);
+          totalFrames++;
+          if(elapsed>slowFrameMs)slowFrames++;
+        }
+      }
+      previous=now;
+    }
+    function inspect(){
+      if(!count)return {samples:0,fps:0,meanMs:0,p50Ms:0,p95Ms:0,
+        slowFrames,totalFrames};
+      const sorted=Array.from(timings.subarray(0,count)).sort((a,b)=>a-b);
+      const sum=sorted.reduce((s,n)=>s+n,0);
+      const mean=sum/count;
+      return {samples:count,fps:Number((1000/mean).toFixed(1)),
+        meanMs:Number(mean.toFixed(2)),
+        p50Ms:Number(sorted[Math.ceil(count*.5)-1].toFixed(2)),
+        p95Ms:Number(sorted[Math.ceil(count*.95)-1].toFixed(2)),
+        slowFrames,totalFrames};
+    }
+    return Object.freeze({record,inspect,pause(){previous=null}});
+  }
+  return Object.freeze({create,createTiming});
 });

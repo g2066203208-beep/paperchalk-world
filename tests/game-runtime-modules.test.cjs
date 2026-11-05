@@ -3,7 +3,7 @@
  */
 'use strict';
 const assert=require('node:assert/strict');
-const {create:createBudget}=require('../site/game/frame-budget.js');
+const {create:createBudget,createTiming}=require('../site/game/frame-budget.js');
 const {create:createPreloader}=require('../site/game/scene-preloader.js');
 const story=require('../site/game/story-content.js');
 (async()=>{
@@ -19,6 +19,25 @@ const story=require('../site/game/story-content.js');
   b.reset();
   assert.ok(b.sample(1000).dt<=.12,'background gap is clamped');
   assert.throws(()=>createBudget({fps:0}),RangeError);
+  const timing=createTiming({capacity:16,slowFrameMs:30});
+  assert.equal(timing.inspect().samples,0);
+  timing.record(0);
+  timing.record(16);
+  timing.record(32);
+  timing.record(80);
+  let stats=timing.inspect();
+  assert.equal(stats.samples,3);
+  assert.equal(stats.p50Ms,16);
+  assert.equal(stats.p95Ms,48);
+  assert.equal(stats.slowFrames,1);
+  timing.pause();
+  timing.record(80000); // hidden tab must not count as a multi-minute jank spike
+  timing.record(80016);
+  stats=timing.inspect();
+  assert.equal(stats.samples,4);
+  assert.equal(stats.p95Ms,48);
+  assert.equal(stats.slowFrames,1);
+  assert.throws(()=>createTiming({capacity:2}),RangeError);
   assert.equal(story.classroom.length,3);
   assert.equal(story.environment.bedroom.length,1);
   assert.equal(Object.isFrozen(story.classroom[0]),true);
