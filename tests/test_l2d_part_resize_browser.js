@@ -14,8 +14,10 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    window.PaperchalkStudio?.current==='female-06'&&
    window.PaperchalkPartRigStudio.state.model.parts.pants_overlay,
    null,{timeout:50000});
-  // The real work area starts immediately in drag mode; no dialogs or form.
+  // Safe canvas mode is the default; editing requires explicit unlock.
   assert.equal(await page.locator('#rig-part').inputValue(),'pants_overlay');
+  assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'false');
+  await page.locator('#rig-fit-handles').click();
   assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'true');
   assert.equal(await page.locator('#rig-fit-precise').getAttribute('open'),null,
    'numbers must be folded away by default');
@@ -82,8 +84,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.locator('#rig-fit-precise summary').click();
   assert.equal(await page.locator('#rig-fit-width').inputValue(),'86');
   assert.equal(await page.locator('#rig-fit-height').inputValue(),'110');
-  // The canvas handles are not decorative: drag the real lower-right
-  // corner in viewport pixels and verify the stored ArtMesh width changes.
+  // After reload, canvas is safe again until specifically unlocked.
+  assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'false');
+  await page.locator('#rig-fit-handles').click();
   assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'true');
   const handle=await page.evaluate(()=>{
    const s=window.characterEditor.S,p=window.PaperchalkPartRigStudio.state.model.parts.pants_overlay;
