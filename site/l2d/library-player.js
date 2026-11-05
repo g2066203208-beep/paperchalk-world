@@ -222,16 +222,16 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   try{
    const edited=await Promise.all(ids.map((id,i)=>
     artIndex.has(id)?imageData(artIndex.get(id).img):imgs[i]));
-   if(ids.every((id,i)=>edited[i].width===model.parts[id].w&&
+   if(!ids.every((id,i)=>edited[i].width===model.parts[id].w&&
        edited[i].height===model.parts[id].h&&
        (!artIndex.has(id)||(Number.isFinite(Number(artIndex.get(id).x))&&
-        Number.isFinite(Number(artIndex.get(id).y)))))){
-    drawings=edited;personalised=true;
-    activeIds.filter(id=>artIndex.has(id)).forEach(id=>{
-     model.parts[id].x=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).x)));
-     model.parts[id].y=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).y)));
-    });
-   }
+        Number.isFinite(Number(artIndex.get(id).y))))))
+    throw Error('编辑器保存的 PNG 尺寸或坐标和 PartRig 不一致');
+   drawings=edited;personalised=true;
+   activeIds.filter(id=>artIndex.has(id)).forEach(id=>{
+    model.parts[id].x=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).x)));
+    model.parts[id].y=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).y)));
+   });
   }catch(e){
    if(characterId==='protagonist-crouch-axe')
     throw Error('你的蹲姿修复贴图校验未通过：'+e.message+'。不会自动替换成原版');
