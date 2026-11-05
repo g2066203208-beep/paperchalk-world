@@ -79,6 +79,7 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    if(id==='female-06-outfit-02'){
     assert.equal(await page.locator('.character-family[data-family="female-06"]').count(),1,
       'new dress is NOT a second female6 character');
+    assert.match(await page.locator('.character-family[data-family="female-06"] [data-category="outfit"] button[data-character="female-06-outfit-02"]').textContent(),/第三套 · 橙棕外套/);
     assert.equal(await page.locator('.character-family[data-family="female-06"] [data-category="outfit"] button[data-character="female-06-outfit-02"]').count(),1,
       'new clothes must appear under 女六 → 服装');
    }
