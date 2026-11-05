@@ -583,7 +583,8 @@ function sanitize(record,original){
   x.bones=[];
   x.skinBinding={target:'legwear',method:'pelvis-waist-dual-thigh-v2',
     waist:'pelvis',left:'left-knee',right:'right-knee',
-    waistLock:1,transition:[.42,.84],rootLock:1};
+    waistLock:1,transition:[.42,.84],rootLock:1,
+    waistTuck:.075,bodyOcclusion:{waistV:.105,hemV:.96,mode:'pelvis-garment-stencil-v1'}};
  }
  return x;
 }
@@ -843,7 +844,8 @@ function bindBodyHierarchy(model){
    part.parentId='pelvis';
    part.skinBinding={target:legs.id,method:'pelvis-waist-dual-thigh-v2',
     waist:'pelvis',left:'left-knee',right:'right-knee',
-    waistLock:1,transition:[.42,.84],rootLock:1};
+    waistLock:1,transition:[.42,.84],rootLock:1,
+    waistTuck:.075,bodyOcclusion:{waistV:.105,hemV:.96,mode:'pelvis-garment-stencil-v1'}};
    // Share the leg deformation source *by reference*; don't duplicate
    // or separately keyframe the shorts' hips, inseam and two thigh zones.
    Object.defineProperty(part,'_garmentLegs',{value:legs,configurable:true});
@@ -1005,16 +1007,35 @@ function placedRestPoint(part,point){
  if(!t)return point;
  const sx=clamp(finite(t.scaleX,1),.25,4),sy=clamp(finite(t.scaleY,1),.25,4);
  const px=part.x+part.w*part.pivot.x,py=part.y+part.h*part.pivot.y;
- return {x:px+(point.x-px)*sx+clamp(finite(t.offsetX,0),-1024,1024),
-  y:py+(point.y-py)*sy+clamp(finite(t.offsetY,0),-1024,1024)};
+ const offsetX=clamp(finite(t.offsetX,0),-1024,1024);
+ let x=px+(point.x-px)*sx+offsetX;
+ const y=py+(point.y-py)*sy+clamp(finite(t.offsetY,0),-1024,1024);
+ if(part.kind==='pants-bound'){
+   // Waistband progressively cinches into the pelvis; cuffs retain width.
+   const v=clamp((point.y-part.y)/Math.max(1,part.h),0,1);
+   const tight=clamp(finite(part.skinBinding?.waistTuck,0),0,.24);
+   const weight=1-smooth((v-.025)/.38);
+   const cx=px+offsetX;
+   x=cx+(x-cx)*(1-tight*weight);
+ }
+ return {x,y};
 }
 function unplacedRestPoint(part,point){
  const t=part.placement;
  if(!t)return point;
  const sx=clamp(finite(t.scaleX,1),.25,4),sy=clamp(finite(t.scaleY,1),.25,4);
  const px=part.x+part.w*part.pivot.x,py=part.y+part.h*part.pivot.y;
- return {x:px+(point.x-px-clamp(finite(t.offsetX,0),-1024,1024))/sx,
-  y:py+(point.y-py-clamp(finite(t.offsetY,0),-1024,1024))/sy};
+ const offsetX=clamp(finite(t.offsetX,0),-1024,1024);
+ const y=py+(point.y-py-clamp(finite(t.offsetY,0),-1024,1024))/sy;
+ let x=point.x;
+ if(part.kind==='pants-bound'){
+   const v=clamp((y-part.y)/Math.max(1,part.h),0,1);
+   const tight=clamp(finite(part.skinBinding?.waistTuck,0),0,.24);
+   const weight=1-smooth((v-.025)/.38);
+   const cx=px+offsetX;
+   x=cx+(x-cx)/Math.max(.5,1-tight*weight);
+ }
+ return {x:px+(x-px-offsetX)/sx,y};
 }
 function placedBounds(part){
  const a=placedRestPoint(part,{x:part.x,y:part.y});
@@ -1478,6 +1499,40 @@ function occlusionDiagnostics(layers,model){
   return {source:id,conflicts:plan?.conflicts||0,moved:plan?.moved||0};
  });
 }
+// Body-surface and tailored garment share the SAME dynamic pelvis/leg pose.
+// Trim only the hidden body raster at draw time; no author PSD is destroyed.
+function garmentTuckGeometry(part,phase=0,idle=null){
+ if(!part||part.kind!=='pants-bound')return null;
+ const cfg=part.skinBinding?.bodyOcclusion;
+ if(cfg?.mode!=='pelvis-garment-stencil-v1')return null;
+ const waistV=clamp(finite(cfg.waistV,.105),.06,.20);
+ const hemV=clamp(finite(cfg.hemV,.96),.85,.99);
+ const waistL=warpPoint(part,.18,waistV,phase,null,idle);
+ const waistR=warpPoint(part,.82,waistV,phase,null,idle);
+ const cuffL=warpPoint(part,.32,hemV,phase,null,idle);
+ const cuffR=warpPoint(part,.68,hemV,phase,null,idle);
+ return {waistY:(waistL.y+waistR.y)*.5,
+   leftX:Math.min(waistL.x,waistR.x),rightX:Math.max(waistL.x,waistR.x),
+   hemY:Math.max(cuffL.y,cuffR.y)+1.5,torsoPinchHeight:78};
+}
+function clipBodyUnderGarment(ctx,id,g){
+ if(!g)return;
+ const W=ctx.canvas.width,H=ctx.canvas.height,y=g.waistY;
+ ctx.beginPath();
+ if(id==='topwear'){
+   // Exposed belly tapers into the stitched waistband. Under-shirt skin
+   // below the waist may never protrude through a moving shorts seam.
+   const flare=g.torsoPinchHeight,edge=2;
+   ctx.moveTo(0,0);ctx.lineTo(W,0);ctx.lineTo(W,y-flare);
+   ctx.lineTo(g.rightX+edge,y+1);ctx.lineTo(g.leftX-edge,y+1);
+   ctx.lineTo(0,y-flare);ctx.closePath();
+ }else if(id==='legwear'){
+   // Skin of hips/upper thighs remains behind the opaque shorts, while
+   // legs only re-emerge below the hem (both legs continue to use IK).
+   ctx.rect(0,Math.max(0,g.hemY),W,Math.max(0,H-g.hemY));
+ }else return;
+ ctx.clip();
+}
 function renderArtPart(ctx,source,part,motion,mount,phase,idle,selected=false){
  ctx.save();
  if(motion.x||motion.y||motion.angle){
@@ -1524,6 +1579,9 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   for(const [slot,texture] of plan.segments)enqueue(slot,id,p,texture);
  }
  const custom=Array.isArray(model.occlusionMasks)?model.occlusionMasks:[];
+ const worn=model.characterId==='female-06'&&visible.has('pants_overlay')
+  ?model.parts.pants_overlay:null;
+ const tuck=worn?garmentTuckGeometry(worn,phase,model.idleProfile||null):null;
  for(let slot=0;slot<=2*drawLayers.length;slot++){
   for(const item of scheduled.get(slot)||[]){
    const {id,part,texture}=item,b=model.parts[id];
@@ -1533,9 +1591,12 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
    const attached=((id==='axe_held'&&b.parentId==='handwear_l')||
     (id==='battle_axe'&&b.parentId==='battle_handwear_l'))?model.parts[b.parentId]:null;
    const motion=attached?actionPart(model,b.parentId):pose;
+   const hideUnderGarment=tuck&&(id==='topwear'||id==='legwear');
+   if(hideUnderGarment){ctx.save();clipBodyUnderGarment(ctx,id,tuck);}
    renderArtPart(ctx,{...part,canvas:texture,opacity:(part.opacity??1)*pose.opacity},
     b,motion,attached||b,phase,model.idleProfile||null,
     id===selectedId&&slot===2*ids.indexOf(id)+1);
+   if(hideUnderGarment)ctx.restore();
   }
   if(slot%2!==1)continue;
   const id=ids[(slot-1)/2];
@@ -1576,5 +1637,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
 
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,CROUCH_CONTACTS,CROUCH_KEYS,sanitizeCrouchDynamics,bindCrouchDynamics,crouchSpacePose,crouchSpacePoint,crouchSpacePartPoint,crouchWeaponPose,crouchWeaponPoint,crouchDeform,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,garmentPoint,hipPoint,legPoint,placedRestPoint,unplacedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,CROUCH_CONTACTS,CROUCH_KEYS,sanitizeCrouchDynamics,bindCrouchDynamics,crouchSpacePose,crouchSpacePoint,crouchSpacePartPoint,crouchWeaponPose,crouchWeaponPoint,crouchDeform,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,garmentPoint,hipPoint,legPoint,placedRestPoint,unplacedRestPoint,placedBounds,garmentTuckGeometry,clipBodyUnderGarment,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
 })(typeof window!=='undefined'?window:globalThis);
