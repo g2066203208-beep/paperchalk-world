@@ -1,0 +1,11 @@
+{
+  "source": "site/assets/l2d/library/protagonist-battle-front",
+  "preservesOriginal": true,
+  "frames": 14,
+  "canvas": [
+    1280,
+    1280
+  ],
+  "durationMs": 1150,
+  "note": "Preview only; existing L2D art and character config untouched."
+}
