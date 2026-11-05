@@ -2831,7 +2831,9 @@ void main(){
       view.classList.add('room-dev-mode');
       devStage.hidden=false;
       devRig.hidden=true;
+      roomView='front';
       boxScene.setDevMode(true);
+      boxScene.setGuidesVisible(true);
       applyDevCamera();
       refreshRoomDev();
       return;
