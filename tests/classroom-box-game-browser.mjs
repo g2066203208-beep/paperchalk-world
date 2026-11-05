@@ -160,9 +160,23 @@ try{
    }
    assert.ok(data.room.player.drawnHeight>data.room.enemy.drawnHeight,
      'near protagonist should be larger than midground opponent');
-   // The nearer front-row opponent must be visibly taller than the two behind.
-   assert.ok(data.room.enemy.drawnHeight>data.room.enemy2.drawnHeight);
-   assert.ok(data.room.enemy.drawnHeight>data.room.enemy3.drawnHeight);
+   // All three enemies stand in an actual 3D straight row: same world
+   // floor/depth, same shoe baseline, matching perspective size and equal
+   // center-to-center screen gaps. This must hold on desktop and phone.
+   const foes=['enemy','enemy2','enemy3'].map(id=>data.room[id]);
+   const enemyWorld=['enemy','enemy2','enemy3'].map(id=>data.room.worldActors[id]);
+   for(let i=1;i<3;i++){
+     assert.equal(enemyWorld[i].z,enemyWorld[0].z,'enemies cannot stagger in depth');
+     assert.equal(enemyWorld[i].y,enemyWorld[0].y,'enemies share floor Y');
+     assert.ok(Math.abs(foes[i].shoe.y-foes[0].shoe.y)<1,
+       'enemy shoe baseline must form one screen row');
+     assert.ok(Math.abs(foes[i].drawnHeight/foes[0].drawnHeight-1)<.08,
+       'enemy size should not change because of fake distance layering');
+   }
+   const firstGap=foes[1].shoe.x-foes[0].shoe.x;
+   const secondGap=foes[2].shoe.x-foes[1].shoe.x;
+   assert.ok(firstGap>40&&secondGap>40&&Math.abs(firstGap-secondGap)<2,
+     'three projected enemies should have even horizontal spacing');
    await page.screenshot({path:'artifacts/classroom-box/in-game-'+cfg.name+
      '-five-faces-l2d.png'});
    if(!cfg.mobile){
