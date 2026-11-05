@@ -69,7 +69,7 @@ for(const [id,label] of modes){
  button.setAttribute('aria-controls',id==='paint'?'tools':'part-rig-panel');
  inspectorTabs.append(button);refs.set(id,button);
 }
-panel.prepend(inspectorTabs);
+right.insertBefore(inspectorTabs,panel);
 // Existing animation controls are moved, not duplicated or re-initialized.
 panel.querySelector('.rig-h')?.after(quick);
 const crouch=$('rig-crouch-motion');
@@ -79,6 +79,9 @@ advancedDetails.id='workspace-rig-more';
 advancedDetails.innerHTML='<summary>更多参数与专业工具</summary>';
 for(const id of ['rig-advanced','rig-file-actions','l2d-production-guide']){
  const node=$(id);if(node)advancedDetails.append(node);
+}
+for(const node of [panel.querySelector('.rig-part-amount'),panel.querySelector('.rig-buttons')]){
+ if(node)advancedDetails.append(node);
 }
 panel.append(advancedDetails);
 // Keep the preview clean until the user explicitly asks for details.
