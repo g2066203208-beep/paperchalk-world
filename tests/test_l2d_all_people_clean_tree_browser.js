@@ -9,16 +9,16 @@ const BASE='http://127.0.0.1:8134/character-editor/';
   const page=await browser.newPage({viewport:{width:1366,height:900}});
   const exceptions=[];page.on('pageerror',e=>exceptions.push(e.message));
   const cases=[
-   ['protagonist','protagonist','女主角'],
+   ['protagonist','protagonist','女主'],
    ['char-002','char-002','女二'],
-   ['char-003','char-003','男主角'],
+   ['char-003','char-003','男主'],
    ['male2','male2','男二'],
    ['char-004','char-004','女三'],
    ['female-06','female-06','女六'],
    ['female-06-outfit-02','female-06','女六'],
-   ['char-006','char-006','女五 · 女老师'],
-   ['protagonist-sleepwear','protagonist','女主角'],
-   ['char-003','char-003','男主角']
+   ['char-006','char-006','女五'],
+   ['protagonist-sleepwear','protagonist','女主'],
+   ['char-003','char-003','男主']
   ];
   for(const [id,family,name] of cases){
    await page.goto(BASE+'?character='+encodeURIComponent(id)+'&side=front',
@@ -69,6 +69,13 @@ const BASE='http://127.0.0.1:8134/character-editor/';
      'drop-down must not list technical source archives: '+id);
    assert.equal(audit.tree.includes('＋ 导入男二'),false);
    assert.equal(audit.current,id);
+   if(id==='protagonist'){
+     const expected=['protagonist','char-003','char-002','male2','char-004','char-006','female-06'];
+     assert.deepEqual(audit.roots.filter(root=>expected.includes(root)),expected,
+       'canon roster alternates female and male roles, then existing female-five/six');
+     assert.equal(audit.rootNames[audit.roots.indexOf('char-006')],'女五',
+       'female five is exactly 女五 without descriptive suffix');
+   }
    if(id==='female-06-outfit-02'){
     assert.equal(await page.locator('.character-family[data-family="female-06"]').count(),1,
       'new dress is NOT a second female6 character');
