@@ -40,7 +40,18 @@ assert.equal(rig.graph.shortsRightHem.parent,'rightHip');
 assert.equal(core.parentRole(pants),'garment');
 // A tight waistband and hidden-body stencil are calculated from EXACTLY
 // the same animated ArtMesh as the two IK-connected pants cuffs.
-const restTuck=core.garmentTuckGeometry(pants,0,model.idleProfile);
+// The Studio can paint on a display canvas smaller than the 1024px PSD.
+ // Hidden-body masking must still cover the entire original leg texture.
+ const clipCalls=[];
+ const smallCanvas={canvas:{width:640,height:760},
+  beginPath(){},moveTo(){},lineTo(){},closePath(){},clip(){},
+  rect(x,y,w,h){clipCalls.push({x,y,w,h})}};
+ core.clipBodyUnderGarment(smallCanvas,'legwear',
+  {waistY:410,leftX:420,rightX:570,hemY:560,torsoPinchHeight:78});
+ assert.equal(clipCalls.length,1);
+ assert.ok(clipCalls[0].y+clipCalls[0].h>=1024,
+  'viewport-sized L2D canvas must not cut off either calf/foot');
+ const restTuck=core.garmentTuckGeometry(pants,0,model.idleProfile);
 assert.ok(restTuck&&restTuck.leftX<restTuck.rightX);
 const a=core.placedRestPoint(pants,{x:pants.x,y:pants.y});
 const b=core.placedRestPoint(pants,{x:pants.x+pants.w,y:pants.y});
