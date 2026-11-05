@@ -68,6 +68,29 @@ const base='http://127.0.0.1:8132/character-editor/?character=protagonist-crouch
     if(JSON.stringify(oldNeighbor[1])!==neighborBefore)throw Error('unrelated part mutated');
     if(rig.state.fitMode)throw Error('recovery unexpectedly enabled drag mode');
    });
+   // Exercise the actual visible controls, not just the exported API.
+   await page.evaluate(()=>{
+    const m=window.PaperchalkPartRigStudio.state.model;
+    const id=Object.keys(m.parts).find(n=>/^(hair_clip|hairpin|headwear|hair_clip_[lr])$/i.test(n));
+    const part=m.parts[id],layer=window.characterEditor.S.layers.front.find(p=>p.partId===id);
+    part.placement.offsetX+=15;part.x+=4;layer.x+=4;
+   });
+   const isPhone=viewport.width<=710||(viewport.width<=950&&viewport.height<=520);
+   if(isPhone)await page.locator('#mobile-studio-recover').click();
+   else await page.locator('#btnRecovery').click();
+   assert.equal(await page.locator('#studio-recovery').isVisible(),true,
+    'restore panel must be reachable without entering destructive edit mode');
+   await page.locator('#recover-crouch-hairpin').click();
+   await page.waitForFunction(async()=>{
+    const id=Object.keys(window.PaperchalkPartRigStudio.state.model.parts)
+      .find(n=>/^(hair_clip|hairpin|headwear|hair_clip_[lr])$/i.test(n));
+    const spec=window.PaperchalkStudio.list.get('protagonist-crouch-axe').l2dModule.front.rig;
+    const origin=await (await fetch(new URL(spec.url,new URL('../',location.href)))).json();
+    const part=window.PaperchalkPartRigStudio.state.model.parts[id],layer=
+      window.characterEditor.S.layers.front.find(p=>p.partId===id);
+    return part.x===origin.parts[id].x&&layer.x===origin.parts[id].x&&
+      part.placement.offsetX===(origin.parts[id].placement?.offsetX??0);
+   },null,{timeout:20000});
    assert.deepEqual(errors,[],'no browser exceptions '+JSON.stringify(viewport));
    await context.close();
    console.log('PASS safe phone canvas, no overflow, source hairclip restore',viewport.width,viewport.height);
