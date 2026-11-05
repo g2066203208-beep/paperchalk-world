@@ -634,6 +634,9 @@ async function restorePublishedPlacement(id=state.selected){
  fitValues();ed.renderList();
  window.dispatchEvent(new Event('paperchalk:studio-part-metadata-changed'));
  ed.autosave();
+ // Source texture coordinates must commit before the bone-save notification:
+ // the concurrently open game must never see new bones with old PNG metadata.
+ await ed.save();
  markRigRestored('✓ 已从 GitHub 原始 L2D 恢复「'+art.name+'」的位置与大小');
  return true;
 }
