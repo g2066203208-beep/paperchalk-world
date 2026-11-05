@@ -168,7 +168,7 @@ layerList?.addEventListener('click',e=>{
 });
 new MutationObserver(sync).observe(layerList,{childList:true});
 window.addEventListener('paperchalk:studio-ready-to-edit',()=>{dirty=false;saveNote.textContent='当前浏览器自动保存；跨设备请导出 ZIP';sync()});
-window.addEventListener('paperchalk:studio-character-loaded',()=>{dirty=false;ed.setTool('select');sync()});
+window.addEventListener('paperchalk:studio-character-loaded',()=>{dirty=false;ed.setTool('pan');sync()});
 window.addEventListener('paperchalk:studio-tool-changed',sync);
 window.addEventListener('paperchalk:studio-selection-changed',sync);
 window.addEventListener('paperchalk:art-dirty',()=>{
@@ -191,5 +191,5 @@ $('main-play')?.addEventListener('click',()=>requestAnimationFrame(sync));
 window.addEventListener('paperchalk:studio-play-changed',sync);
 window.addEventListener('paperchalk:rig-play-changed',sync);
 window.PaperchalkEasyEditor={get expert(){return false},setExpert(){/* A single permanent editor */},editPart,animatePart,sync};
-applyMode();ed.setTool('select');sync();
+applyMode();ed.setTool('pan');sync();
 })();
