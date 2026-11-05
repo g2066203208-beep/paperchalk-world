@@ -497,3 +497,38 @@ body.studio-page #view.mask-paint-active{cursor:crosshair!important}
  #mobile-studio-tabs{padding:4px 6px}
  #mobile-studio-tabs button{min-height:38px}
 }
+
+/* Real landscape phones often report 740–950 CSS-pixel width. Treat them
+   as phones when touch is coarse; otherwise the desktop two-column layout
+   cuts off the character and pushes the inspector past the viewport. */
+@media (min-width:711px) and (max-width:950px) and (max-height:520px)
+       and (orientation:landscape) and (pointer:coarse){
+ html,body{max-width:100%;overflow-x:hidden}
+ #mobile-studio-tabs{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:5px;padding:4px 8px;position:sticky;top:0;z-index:70;
+  background:#101d2cf5}
+ #mobile-studio-tabs button{min-width:0;min-height:40px;padding:5px 3px;font-size:12px}
+ body.studio-page .layout{display:flex!important;flex-direction:column!important;
+  height:auto!important;min-height:0!important;gap:6px;padding:5px}
+ body.studio-page .stage,body.studio-page.easy-mode .stage{
+  width:100%!important;min-width:0!important;order:0!important;
+  height:63dvh!important;min-height:180px!important;max-height:310px!important;
+  position:relative!important;top:auto!important}
+ body.studio-page .left,body.studio-page .right{
+  width:100%!important;min-width:0!important;order:1!important}
+ body.studio-page[data-studio-pane="canvas"] .left,
+ body.studio-page[data-studio-pane="canvas"] .right,
+ body.studio-page[data-studio-pane="characters"] .right,
+ body.studio-page[data-studio-pane="layers"] .right,
+ body.studio-page[data-studio-pane="motion"] .left,
+ body.studio-page[data-studio-pane="paint"] .left{display:none!important}
+ body.studio-page[data-studio-pane="characters"] .left,
+ body.studio-page[data-studio-pane="layers"] .left,
+ body.studio-page[data-studio-pane="motion"] .right,
+ body.studio-page[data-studio-pane="paint"] .right{display:block!important}
+ body.studio-page #easy-quickbar{left:5px!important;right:5px!important;
+  bottom:4px!important;display:flex!important;flex-wrap:nowrap!important;
+  overflow-x:auto!important;max-width:calc(100% - 10px)!important}
+ body.studio-page #easy-quickbar button{min-height:40px!important}
+ body.studio-page .hudbottom{display:none!important}
+}
