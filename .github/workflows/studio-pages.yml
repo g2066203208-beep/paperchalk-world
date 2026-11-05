@@ -146,7 +146,10 @@ jobs:
           assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
           assert 'id="camera-player-root"' in h and 'id="enemy-depth-root"' in h
           assert 'enemyDepth.style.transform=' in h
-          assert 'const parallaxPx=Math.min(6,sizes.w*.005)*depthFactor' in h
+          assert 'sceneCamera.planeMatrix(world.depths.background,camera)' in h
+          assert 'sceneCamera.billboard(world.depths.enemy,camera)' in h
+          assert 'sceneCamera.pose(currentX,currentY,sizes.h)' in h
+          assert Path('site/game/scene-camera.js').is_file()
           assert 'depthFactor=clamp(' in h
           assert 'id="dev-tools"' in h and 'id="dev-layer"' in h
           assert 'id="dev-trigger"' not in h
