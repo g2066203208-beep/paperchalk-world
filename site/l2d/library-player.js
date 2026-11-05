@@ -63,14 +63,42 @@ function dispose(slot){
 }
 function stop(slot){nextVersion(slot);dispose(slot)}
 async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=null){
- if(!rigSpec?.url||!rigSpec?.textures)throw Error('模块缺少可播放的逐层 ArtMesh');
+ // Both the hosted game and the editor use PaperchalkPartRigCore. A locally
+ // imported PSD need not be published to GitHub before the same-browser game
+ // can play its exact saved rig and original per-part images.
+ const localOnly=!rigSpec?.url;
+ if(!localOnly&&!rigSpec?.textures)throw Error('模块缺少可播放的逐层 ArtMesh');
  if(!root.PaperchalkPartRigCore)throw Error('未加载独立部件网格渲染器');
  const version=nextVersion(slot);
- // Prepare all assets BEFORE mutating the existing game actor.
- const [model,...imgs]=await Promise.all([
-  getJSON(rigSpec.url),
-  ...Object.values(rigSpec.textures).map(url=>image(url))
- ]);
+ let model,imgs;
+ if(localOnly){
+  if(localDraft?.format!=='paperchalk-part-rig-v1'||
+     localDraft.characterId!==characterId||localDraft.face!==face||
+     !localDraft.parts||!Array.isArray(localArt))
+   throw Error('工作室本地 L2D 骨骼或源图层缺失，不能用简化 PSD 替代');
+  const ids=Object.keys(localDraft.parts);
+  const art=new Map(localArt.filter(p=>p?.sourcePart&&p.partId)
+   .map(p=>[String(p.partId),p]));
+  if(ids.length<8||ids.length>100||art.size!==ids.length||
+     ids.some(id=>!art.get(id)?.img?.startsWith('data:image/png;base64,')))
+   throw Error('工作室保存的独立 L2D 纹理与骨骼不匹配：'+characterId+'/'+face);
+  model=JSON.parse(JSON.stringify(localDraft));
+  // Local projects have no hosted deleted textures to redisplay.
+  model.deletedParts=[];localDraft=model;
+  rigSpec={textures:Object.fromEntries(ids.map(id=>[id,'local:'+id]))};
+  imgs=await Promise.all(ids.map(id=>imageData(art.get(id).img)));
+  for(let i=0;i<ids.length;i++){
+   const p=model.parts[ids[i]],im=imgs[i];
+   if(!p||p.id!==ids[i]||p.w!==im.width||p.h!==im.height)
+    throw Error('本地独立 L2D 部件尺寸不匹配：'+ids[i]);
+  }
+ }else{
+  // Prepare all hosted assets BEFORE mutating the existing game actor.
+  [model,...imgs]=await Promise.all([
+   getJSON(rigSpec.url),
+   ...Object.values(rigSpec.textures).map(url=>image(url))
+  ]);
+ }
  if(VERSIONS.get(slot)!==version)return false;
  // Explicitly authorize ONLY the original heroine using her own
  // published 25-part rig model. Do not trust arbitrary cross-character aliases.
@@ -116,10 +144,18 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   [...new Set(localDraft.deletedParts.filter(id=>typeof id==='string'))]:[]);
  const validDeleted=deleted.every(id=>ids.includes(id)&&!!model.parts[id]);
  const activeIds=ids.filter(id=>!deleted.includes(id));
+ const draftKeys=Object.keys(localDraft?.parts||{});
  const draftMatches=localDraft?.format==='paperchalk-part-rig-v1'&&
    localDraft.characterId===characterId&&localDraft.face===face&&validDeleted&&
-   Object.keys(localDraft.parts||{}).length===activeIds.length&&
-   activeIds.every(id=>localDraft.parts[id]&&model.parts[id]);
+   draftKeys.length>0&&draftKeys.length<=activeIds.length&&
+   draftKeys.every(id=>activeIds.includes(id)&&!!model.parts[id])&&
+   // If a published module gains new independent parts, keep the author's
+   // existing rig adjustments and use published defaults ONLY for new IDs.
+   (localOnly||draftKeys.length>=Math.max(8,Math.ceil(activeIds.length*.6)));
+ // Never silently discard a real local rig in favor of the old published
+ // model: that made the game visibly different from the studio.
+ if(localDraft&&!draftMatches)
+  throw Error('本机 L2D 修改与已发布部件 ID 不兼容；保留编辑稿，禁止静默回退原版：'+characterId+'/'+face);
  // Do not quietly discard the player's personally painted masking, source
  // texture placements and rig just because an older draft is incompatible.
  // Silent fallback made the author see the ORIGINAL PSD as the new animation.
@@ -146,8 +182,9 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // only joint values were merged, so arms/weapons reverted on game return.
  if(draftMatches&&Array.isArray(localDraft.layerOrder)){
   const order=localDraft.layerOrder.map(String);
-  if(order.length===activeIds.length&&new Set(order).size===activeIds.length&&
-     order.every(id=>activeIds.includes(id)))model.layerOrder=[...order];
+  if(order.length>0&&new Set(order).size===order.length&&
+     order.every(id=>activeIds.includes(id)))
+   model.layerOrder=[...order,...activeIds.filter(id=>!order.includes(id))];
  }
  // The editor and game share the same non-destructive, bidirectional
  // local depth rules. Preserve old single-target/front masks as-is.
@@ -173,22 +210,24 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // RGBA dimensions and a bounded original-canvas position before applying.
  const artLayers=Array.isArray(localArt)?localArt.filter(p=>p?.sourcePart&&p.partId):[];
  const artIndex=new Map(artLayers.map(p=>[String(p.partId),p]));
- const artValid=artIndex.size===activeIds.length&&
-  artLayers.length===activeIds.length&&
-  activeIds.every(id=>artIndex.get(id)?.img?.startsWith('data:image/png;base64,'));
+ const artValid=artLayers.length>0&&artIndex.size===artLayers.length&&
+  artLayers.every(p=>activeIds.includes(String(p.partId))&&
+   p.img?.startsWith('data:image/png;base64,'));
+ if(artLayers.length&&!artValid)
+  throw Error('本机 L2D 绘画图层与当前部件 ID 不匹配，禁止默默加载旧贴图：'+characterId+'/'+face);
  if(characterId==='protagonist-crouch-axe'&&artLayers.length&&!artValid)
   throw Error('已找到你绘制的蹲姿贴图，但图层不完整；禁止自动改回原版PNG');
  let drawings=imgs,personalised=false;
  if(artValid){
   try{
    const edited=await Promise.all(ids.map((id,i)=>
-    activeIds.includes(id)?imageData(artIndex.get(id).img):imgs[i]));
+    artIndex.has(id)?imageData(artIndex.get(id).img):imgs[i]));
    if(ids.every((id,i)=>edited[i].width===model.parts[id].w&&
        edited[i].height===model.parts[id].h&&
-       (!activeIds.includes(id)||(Number.isFinite(Number(artIndex.get(id).x))&&
+       (!artIndex.has(id)||(Number.isFinite(Number(artIndex.get(id).x))&&
         Number.isFinite(Number(artIndex.get(id).y)))))){
     drawings=edited;personalised=true;
-    activeIds.forEach(id=>{
+    activeIds.filter(id=>artIndex.has(id)).forEach(id=>{
      model.parts[id].x=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).x)));
      model.parts[id].y=Math.max(-1024,Math.min(2048,Number(artIndex.get(id).y)));
     });
@@ -196,7 +235,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   }catch(e){
    if(characterId==='protagonist-crouch-axe')
     throw Error('你的蹲姿修复贴图校验未通过：'+e.message+'。不会自动替换成原版');
-   console.warn('[L2D] 本机分层纹理校验失败，保留已发布素材',e);
+   throw Error('已找到工作室修改的 L2D 纹理，但读取失败，拒绝回退旧版：'+e.message);
   }
   if(characterId==='protagonist-crouch-axe'&&!personalised)
    throw Error('你的蹲姿修复贴图尺寸／位置与素材不匹配，拒绝加载未修改的原图');
@@ -251,7 +290,9 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  else delete actor.root.dataset.l2dAction;
  ACTIVE.set(slot,state);actor.libraryPlayer=state;
  actor.root.dataset.l2dMode='library-part-mesh';
- actor.root.dataset.l2dEdition=personalised?'locally-edited-part-mesh':'published-part-mesh';
+ actor.root.dataset.l2dEdition=localOnly?'local-studio-part-mesh':
+  personalised?'locally-edited-part-mesh':
+  draftMatches?'locally-edited-rig':'published-part-mesh';
  actor.root.dataset.l2dAnimated='true';
  actor.root.dataset.l2dState='ready';
  function tick(t){
