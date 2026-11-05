@@ -40,6 +40,7 @@ jobs:
         run: |
           node --check site/game/classroom-box-runtime.js
           node --check site/scene-modules.js
+          node tests/classroom-box-camera.test.cjs
           node tests/scene-modules.test.cjs
       - name: Capture game with real protagonist and enemy L2D on 3D floor
         run: node tests/classroom-box-game-browser.mjs
