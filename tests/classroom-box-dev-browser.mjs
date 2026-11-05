@@ -69,6 +69,61 @@ try{
   assert.equal(origin.renderer,'webgl-3d-mesh');
   assert.equal(origin.loaded,5);
   await page.screenshot({path:'artifacts/classroom-box/in-game-dev-five-planes.png'});
+  const tree=await page.evaluate(()=>{
+    const rows=[...document.querySelectorAll('[data-dev-object]')]
+      .map(x=>x.dataset.devObject);
+    const a=document.querySelector('#dev-tools');
+    const style=getComputedStyle(a);
+    return {rows,panelBackground:style.backgroundColor,controlRadius:
+      getComputedStyle(document.querySelector('#dev-room-show-all')).borderRadius};
+  });
+  assert.deepEqual(tree.rows,[
+    'floor','ceiling','back','left','right','enemy','player','fog',
+    'camera','perspective'
+  ],'DEV must display the complete physical room + L2D + fog + camera tree');
+  assert.notEqual(tree.panelBackground,'rgba(0, 0, 0, 0)');
+  const enemyBox=page.locator('[data-room-layer-toggle="enemy"]');
+  await enemyBox.uncheck();
+  assert.equal(await page.locator('#enemy-depth-root').evaluate(el=>el.style.opacity),'0');
+  await enemyBox.check();
+  assert.notEqual(await page.locator('#enemy-depth-root').evaluate(el=>el.style.opacity),'0');
+  const fogBox=page.locator('[data-room-layer-toggle="fog"]');
+  await fogBox.uncheck();
+  assert.equal(await page.locator('#fog').evaluate(el=>el.style.opacity),'0');
+  await fogBox.check();
+  const grid=page.locator('[data-room-grid-toggle]');
+  await grid.check();
+  assert.equal((await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).guidesVisible,true);
+  await grid.uncheck();
+  await page.locator('[data-room-object-focus="enemy"]').click();
+  assert.equal(await page.locator('#dev-room-actor-tools').isVisible(),true);
+  const oldEnemy=(await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).worldActors.enemy.x;
+  await page.locator('[data-room-actor-field="x"]').evaluate(el=>{
+    el.value='1.6';el.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  const moved=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
+  assert.equal(moved.worldActors.enemy.x,1.6);
+  assert.notEqual(moved.worldActors.enemy.x,oldEnemy);
+  await page.locator('#dev-room-actor-reset').click();
+  assert.equal(
+    (await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).worldActors.enemy.x,
+    oldEnemy
+  );
+  await page.locator('[data-room-object-focus="camera"]').click();
+  const cameraDetails=page.locator('#dev-room-camera-tuning');
+  assert.equal(await cameraDetails.evaluate(el=>el.open),true);
+  await page.locator('#dev-room-pointer-strength').evaluate(el=>{
+    el.value='125';el.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  assert.equal((await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).pointerStrength,1.25);
+  await page.locator('#dev-room-pointer-strength').evaluate(el=>{
+    el.value='100';el.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  await page.locator('#dev-room-camera-restore').click();
+  const cameraReset=(await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).camera;
+  assert.ok(Math.abs(cameraReset.yaw)<.0001);
+  assert.equal(cameraReset.hFov,68);
+  await page.screenshot({path:'artifacts/classroom-box/in-game-dev-unified-scene-tree.png'});
 
   const before=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
   await page.locator('[data-room-isolate="floor"]').click();
