@@ -596,6 +596,27 @@ body.mobile-mode.virtual-landscape #view{
 #view.room-blockout-active [data-l2d-actor] [data-l2d-v4]{
   transform:none!important;scale:1!important;
 }
+/* DEV classroom-box is the SAME WebGL scene as gameplay.
+   Do not turn the real 3D room into a single legacy CSS background plane. */
+#dev-room-surfaces[hidden]{display:none!important}
+#dev-room-surfaces{border:1px solid #587386;border-radius:9px;padding:11px;margin:9px 0;background:#172a36;color:#e3eef3}
+#dev-room-surfaces strong{display:block;font-size:13px;margin-bottom:5px}
+#dev-room-surfaces p{font-size:11px;line-height:1.5;margin:5px 0 8px;color:#b7ceda}
+#dev-room-face-list{display:grid;gap:4px}
+.dev-room-face-row{display:flex;align-items:center;justify-content:space-between;min-height:30px;border-bottom:1px solid #3b5361}
+.dev-room-face-row label{display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;font-size:12px}
+.dev-room-face-row input{accent-color:#95d9d1}
+.dev-room-face-row button,#dev-room-show-all{padding:5px 9px;font-size:11px}
+#dev-room-show-all{margin:10px 0 6px}
+#dev-room-status{display:block;color:#a3c8d5;font-size:11px;line-height:1.4}
+#view.room-dev-mode #dev-rig{display:none!important}
+#view.room-dev-mode #dev-stage{
+  background:transparent!important;pointer-events:auto!important;
+  touch-action:none;
+}
+#view.room-dev-mode #scene-menu,
+#view.room-dev-mode #novel-ui{display:none!important}
+#view.room-dev-mode #scene{transform:none!important}
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
@@ -606,7 +627,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/survival-state.js"></script>
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
-<script src="./game/classroom-box-runtime.js?v=independent-room-materials-v4"></script>
+<script src="./game/classroom-box-runtime.js?v=dev-five-face-inspector-v5"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -754,7 +775,20 @@ body.mobile-mode.virtual-landscape #view{
   <canvas id="dev-panel-fog" aria-hidden="true"></canvas>
   <aside id="dev-tools" hidden aria-label="开发者分层编辑面板" data-ui-fog-edge="right">
     <header><strong>DEV · 分层与黑雾</strong><button id="dev-exit" type="button">完成 / 返回</button></header>
-    <p>黑雾直接在当前场景预览；其他图层切换到 3D 视图，拖动空白处旋转镜头。</p>
+    <p>普通场景保持原来的分层检查；五面教室在下方直接检查真实 3D 几何和独立贴图。</p>
+    <section id="dev-room-surfaces" hidden aria-label="教室五面三维物体">
+      <strong>教室 · 真实 3D 五面空间</strong>
+      <p>每个面的素材独立装在世界坐标中。勾选显示，单独看可检查安装方向；拖动画面转动真正的 3D 摄影机。</p>
+      <div id="dev-room-face-list" role="group" aria-label="五个独立三维面">
+        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="floor" checked>地板</label><button type="button" data-room-isolate="floor">单独看</button></div>
+        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="ceiling" checked>天花板</label><button type="button" data-room-isolate="ceiling">单独看</button></div>
+        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="back" checked>后墙</label><button type="button" data-room-isolate="back">单独看</button></div>
+        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="left" checked>左墙</label><button type="button" data-room-isolate="left">单独看</button></div>
+        <div class="dev-room-face-row"><label><input type="checkbox" data-room-face-toggle="right" checked>右墙</label><button type="button" data-room-isolate="right">单独看</button></div>
+      </div>
+      <button id="dev-room-show-all" type="button">显示全部五面</button>
+      <output id="dev-room-status" role="status">五张素材独立安装在三维面上</output>
+    </section>
     <div id="dev-3d-controls">
     <div class="dev-buttons">
       <button id="dev-front" type="button">正视角</button>
@@ -2268,6 +2302,49 @@ void main(){
   let editorConfig=readEditor(),editorActive=false;
   let selectedLayer='enemy';
   const devCamera={yaw:-26,pitch:-17,zoom:.65,panX:-32,panY:-10};
+  const roomDevSurfaces=document.getElementById('dev-room-surfaces');
+  const roomDevStatus=document.getElementById('dev-room-status');
+  const roomFaceToggles=[...document.querySelectorAll('[data-room-face-toggle]')];
+  function is3DRoom(){return stage.dataset.scene==='classroom-box'}
+  function refreshRoomDev(){
+    const room=is3DRoom()&&editorActive;
+    roomDevSurfaces.hidden=!room;
+    if(!room)return;
+    const state=boxScene.inspect();
+    for(const input of roomFaceToggles)
+      input.checked=state.visibleFaces?.[input.dataset.roomFaceToggle]!==false;
+    const count=state.loadedMaterialCount||0;
+    roomDevStatus.textContent=
+      '五个独立三维面 · '+count+'/5 张材质已装载 · '+(state.renderer||'初始化中');
+  }
+  for(const input of roomFaceToggles){
+    input.addEventListener('change',()=>{
+      if(!is3DRoom())return;
+      boxScene.setFaceVisible(input.dataset.roomFaceToggle,input.checked);
+      refreshRoomDev();
+    });
+  }
+  document.querySelectorAll('[data-room-isolate]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      if(!is3DRoom())return;
+      const id=button.dataset.roomIsolate;
+      for(const input of roomFaceToggles){
+        const visible=input.dataset.roomFaceToggle===id;
+        boxScene.setFaceVisible(input.dataset.roomFaceToggle,visible);
+      }
+      boxScene.selectFace(id);
+      refreshRoomDev();
+      setDevStatus('正在单独检查 '+button.previousElementSibling?.textContent.trim()+' 的三维材质');
+    });
+  });
+  document.getElementById('dev-room-show-all').addEventListener('click',()=>{
+    if(!is3DRoom())return;
+    for(const input of roomFaceToggles)
+      boxScene.setFaceVisible(input.dataset.roomFaceToggle,true);
+    boxScene.selectFace(null);
+    refreshRoomDev();
+    setDevStatus('已恢复五面独立材质和共同的三维空间');
+  });
   // Fog stays attached to its original view; only its live texture is mirrored.
   const devPlanes=[stage,enemyDepth,cameraPlayer];
   const devFogPreview=document.getElementById('dev-fog-preview');
@@ -2381,6 +2458,23 @@ void main(){
       (delta>=0?'+':'')+delta.toFixed(1)+'px（仅辅助；实际同地面关系按下方视平线计算）';
   }
   function applyDevCamera(){
+    if(view.classList.contains('room-dev-mode')){
+      const toRad=Math.PI/180;
+      // Unlike the legacy CSS plane inspector this is a true camera moving
+      // inside a stationary room. The same matrix projects both L2D shoes.
+      boxScene.setDevCamera({
+        x:clamp(devCamera.panX/160,-2.4,2.4),
+        y:clamp(1.50-devCamera.panY/145,.55,2.7),
+        z:-clamp(1.25/Math.max(.36,devCamera.zoom),1.20,5),
+        yaw:clamp(devCamera.yaw,-55,55)*toRad,
+        pitch:clamp(devCamera.pitch,-55,55)*toRad,
+        hFov:68
+      });
+      devStage.dataset.yaw=String(devCamera.yaw);
+      devStage.dataset.zoom=String(devCamera.zoom);
+      refreshRoomDev();
+      return;
+    }
     devRig.style.transform='translate3d('+devCamera.panX.toFixed(1)+'px,'+
       devCamera.panY.toFixed(1)+'px,0) rotateY('+devCamera.yaw.toFixed(1)+
       'deg) rotateX('+devCamera.pitch.toFixed(1)+'deg) scale('+devCamera.zoom.toFixed(3)+')';
@@ -2415,6 +2509,31 @@ void main(){
     }
   }
   function useRig(active){
+    // The original inspector treats #scene as ONE flat background sheet.
+    // For the five-face room never reparent #scene into that CSS layer rig:
+    // keep its five WebGL planes, shader/texture state and live L2D in place.
+    if(is3DRoom()&&editorActive){
+      if(layerAnchors.size){
+        for(const plane of devPlanes){
+          const mark=layerAnchors.get(plane);
+          if(mark)mark.replaceWith(plane);
+        }
+        layerAnchors.clear();
+      }
+      view.classList.remove('dev-mode');
+      view.classList.add('room-dev-mode');
+      devStage.hidden=false;
+      devRig.hidden=true;
+      boxScene.setDevMode(true);
+      applyDevCamera();
+      refreshRoomDev();
+      return;
+    }
+    if(view.classList.contains('room-dev-mode')){
+      boxScene.setDevMode(false);
+      view.classList.remove('room-dev-mode');
+      devStage.hidden=true;devRig.hidden=false;
+    }
     if(active && !layerAnchors.size){
       for(const plane of devPlanes){
         const mark=document.createComment('original position for '+plane.id);
@@ -2439,14 +2558,17 @@ void main(){
       view.classList.toggle('fog-edit-mode',name==='fog');
       fogGuide.hidden=name!=='fog';
     }
-    refreshEditorControls();devStage.dataset.selected=name;start();
+    refreshEditorControls();devStage.dataset.selected=name;
+    refreshRoomDev();start();
   }
   function enterDeveloper(layer='fog'){
     if(transitioning)return;
     editorActive=true;devTools.hidden=false;
     menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
     selectEditorLayer(layer);
-    setDevStatus(layer==='fog'?'当前场景 · 黑雾实时调整':'3D 分层检查');
+    setDevStatus(is3DRoom()
+      ?'正在查看真实 WebGL 教室：五面独立素材，拖动检查空间'
+      :layer==='fog'?'当前场景 · 黑雾实时调整':'3D 分层检查');
   }
   function exitDeveloper(){
     if(!editorActive)return;
@@ -2454,6 +2576,7 @@ void main(){
     view.classList.remove('fog-edit-mode');
     fogGuide.hidden=true;devTools.hidden=true;
     // An absent UI must leave ZERO residual sidebar fog, even for one frame.
+    roomDevSurfaces.hidden=true;
     resetDevPanelFog();start();
   }
   const fogGuide=document.getElementById('fog-safe-guide');
@@ -2495,6 +2618,12 @@ void main(){
   document.getElementById('dev-exit').addEventListener('click',exitDeveloper);
   devSelect.addEventListener('change',()=>selectEditorLayer(devSelect.value));
   devGroundToggle.addEventListener('change',()=>{
+    if(is3DRoom()&&editorActive){
+      boxScene.setFaceVisible('floor',devGroundToggle.checked);
+      refreshRoomDev();
+      setDevStatus(devGroundToggle.checked?'真实3D地面已显示':'真实3D地面已隐藏');
+      return;
+    }
     editorConfig.ground.visible=devGroundToggle.checked?1:0;
     applyEditorVisuals();
     setDevStatus(devGroundToggle.checked?'已显示水平3D地板':'已隐藏地板辅助线');
@@ -2568,7 +2697,13 @@ void main(){
     }
   });
   function setDevView(yaw,pitch,zoom,panX=0,panY=0){
-    Object.assign(devCamera,{yaw,pitch,zoom,panX,panY});applyDevCamera();
+    if(is3DRoom()&&editorActive){
+      // Open the actual room at its center, not a camera looking at a page.
+      if(Math.abs(yaw)<1&&Math.abs(pitch)<1){
+        Object.assign(devCamera,{yaw:0,pitch:0,zoom:1,panX:0,panY:0});
+      }else Object.assign(devCamera,{yaw,pitch,zoom,panX:0,panY:0});
+    }else Object.assign(devCamera,{yaw,pitch,zoom,panX,panY});
+    applyDevCamera();
   }
   document.getElementById('dev-front').addEventListener('click',
     ()=>setDevView(0,0,.77,-70,0));
