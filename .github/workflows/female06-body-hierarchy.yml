@@ -6,6 +6,7 @@ on:
       - 'site/character-editor/**'
       - 'scripts/bind_female06_pants.py'
       - 'tests/test_female06_pants_skin.cjs'
+      - 'tests/test_female06_base_immutable.py'
       - 'tests/test_female06_pants_wear_browser.js'
       - 'tests/test_female06_second_outfit_local_import_browser.cjs'
       - 'tests/test_female06_existing_draft_migration_browser.js'
@@ -36,6 +37,7 @@ jobs:
           python3 scripts/build_scene_catalog.py
       - name: Validate body-pelvis hierarchy, waistband, two-leg IK, ground soles and wings
         run: |
+          python3 tests/test_female06_base_immutable.py
           node tests/test_female06_pants_skin.cjs
           node tests/test_l2d_part_placement.cjs
       - name: Prepare browser
