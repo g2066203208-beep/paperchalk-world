@@ -43,4 +43,5 @@ assert.match(h,/const TILT_KEY='paperchalk-tilt-v1'/);
 assert.match(h,/const SAVE_KEY='paperchalk-scene-v1'/);
 assert.match(h,/const EDITOR_KEY='paperchalk-layer-editor-v2'/);
 assert.match(h,/const FOG_KEY=/);
+require('./scene-camera.test.cjs');
 console.log('PASS: '+catalog.scenes.length+' image-driven rooms, shared effects/layers, persistent user settings and guarded routes');
