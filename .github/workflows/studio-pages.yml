@@ -52,6 +52,7 @@ jobs:
           python3 scripts/build_scene_catalog.py
           node tests/scene-modules.test.cjs
           node tests/ground-perspective.test.mjs
+          node tests/ring-arena.test.cjs
       - name: Prove adding PNG or WebP auto-registers new scene IDs
         run: |
           python3 - <<'PY'
