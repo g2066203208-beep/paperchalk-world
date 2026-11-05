@@ -92,7 +92,7 @@ function hexColor(hex,opacity=1){
 }
 function meshVertex(out,pt,color){out.push(pt[0],pt[1],pt[2],...color)}
 function buildMesh(){
-  const solids=[],edges=[],shadows=[],textured={};
+  const solids=[],edges=[],shadows=[],textured={},solidFaces={},edgeFaces={};
   const edgeColor=hexColor('#344251',.8);
   for(const face of FACES){
     const c=hexColor(COLORS[face.id]);
@@ -102,10 +102,16 @@ function buildMesh(){
     for(const i of triangleOrder)meshVertex(solids,v[i],c);
     textured[face.id]=new Float32Array(triangleOrder.flatMap(i=>
       [...v[i],...uv[i]]));
+    solidFaces[face.id]=new Float32Array(triangleOrder.flatMap(i=>
+      [...v[i],...c]));
+    const faceEdges=[];
     for(let i=0;i<4;i++){
       meshVertex(edges,v[i],edgeColor);
       meshVertex(edges,v[(i+1)%4],edgeColor);
+      meshVertex(faceEdges,v[i],edgeColor);
+      meshVertex(faceEdges,v[(i+1)%4],edgeColor);
     }
+    edgeFaces[face.id]=new Float32Array(faceEdges);
   }
   for(const id of ['player','enemy']){
     const a=CHARACTERS[id],center=[a.x,.009,a.z];
@@ -120,7 +126,7 @@ function buildMesh(){
     }
   }
   return {solids:new Float32Array(solids),edges:new Float32Array(edges),
-    shadows:new Float32Array(shadows),textured,faceCount:5};
+    shadows:new Float32Array(shadows),textured,solidFaces,edgeFaces,faceCount:5};
 }
 const VS=[
 'attribute vec3 a_position;',
@@ -175,7 +181,11 @@ const TEXTURE_FS=[
 'precision mediump float;',
 'varying vec2 v_uv;',
 'uniform sampler2D u_tex;',
-'void main(){gl_FragColor=texture2D(u_tex,v_uv);}'
+'uniform float u_selected;',
+'void main(){',
+'vec4 color=texture2D(u_tex,v_uv);',
+'gl_FragColor=vec4(mix(color.rgb,vec3(1.0,.83,.50),u_selected*.25),color.a);',
+'}'
 ].join('\n');
 
 function create({stage,view,playerRoot,enemyRoot}={}){
@@ -192,6 +202,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   let gl=null,program=null,buffers=null,positions=null,ctx=null,renderer='uninitialized';
   let cameraLoc=null,anglesLoc=null,tanLoc=null,enabled=false,lastKey='',lastState=null,frames=0;
   let texturedProgram=null,texturedLocations=null,materialBuffers=null,textureResources=null;
+  let debugMode=false,debugCamera=null,selectedFace=null;
+  const visibleFaces=Object.fromEntries(FACES.map(face=>[face.id,true]));
   const materialStatus=Object.fromEntries(Object.keys(MATERIALS).map(id=>[id,'not-loaded']));
   const geometry=buildMesh();
   const labels=document.createElement('div');
@@ -245,7 +257,14 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     anglesLoc=gl.getUniformLocation(program,'u_angles');
     tanLoc=gl.getUniformLocation(program,'u_tanHalf');
     buffers={};
-    for(const [key,arr] of Object.entries(geometry).filter(([,v])=>v instanceof Float32Array)){
+    const meshArrays={
+      solids:geometry.solids,edges:geometry.edges,shadows:geometry.shadows
+    };
+    for(const face of FACES){
+      meshArrays['solid-'+face.id]=geometry.solidFaces[face.id];
+      meshArrays['edge-'+face.id]=geometry.edgeFaces[face.id];
+    }
+    for(const [key,arr] of Object.entries(meshArrays)){
       const buffer=gl.createBuffer();
       if(!buffer)throw Error('GPU vertex buffer failed');
       gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
@@ -267,7 +286,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       camera:gl.getUniformLocation(texturedProgram,'u_camera'),
       angles:gl.getUniformLocation(texturedProgram,'u_angles'),
       tan:gl.getUniformLocation(texturedProgram,'u_tanHalf'),
-      image:gl.getUniformLocation(texturedProgram,'u_tex')
+      image:gl.getUniformLocation(texturedProgram,'u_tex'),
+      selected:gl.getUniformLocation(texturedProgram,'u_selected')
     };
     if(texturedLocations.position<0||texturedLocations.uv<0)
       throw Error('3D material UV attributes unavailable');
@@ -352,7 +372,9 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       gl.vertexAttribPointer(positions.c,4,gl.FLOAT,false,28,12);
       gl.drawArrays(mode,0,b.count);
     };
-    draw('solids',gl.TRIANGLES,true);
+    for(const face of FACES){
+      if(visibleFaces[face.id])draw('solid-'+face.id,gl.TRIANGLES,true);
+    }
     // The five independently authored orthographic assets are attached to
     // five different world-space surfaces, not composited as one wallpaper.
     gl.disableVertexAttribArray(positions.p);
@@ -367,7 +389,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     gl.depthMask(true);
     for(const face of FACES){
       const resource=textureResources?.[face.id];
-      if(!resource?.ready)continue;
+      if(!visibleFaces[face.id]||!resource?.ready)continue;
+      gl.uniform1f(m.selected,debugMode&&selectedFace===face.id?1:0);
       const gpu=materialBuffers[face.id];
       gl.bindTexture(gl.TEXTURE_2D,resource.texture);
       gl.bindBuffer(gl.ARRAY_BUFFER,gpu.buffer);
@@ -380,22 +403,28 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     gl.disableVertexAttribArray(m.position);
     gl.disableVertexAttribArray(m.uv);
     gl.useProgram(program);
-    draw('edges',gl.LINES,false);
-    draw('shadows',gl.TRIANGLES,false);
+    for(const face of FACES){
+      if(visibleFaces[face.id])draw('edge-'+face.id,gl.LINES,false);
+    }
+    if(!debugMode)draw('shadows',gl.TRIANGLES,false);
     gl.depthMask(true);
     if(gl.getError()!==gl.NO_ERROR)throw Error('WebGL mesh draw failed');
   }
   function drawCPU(cam,w,h){
     ctx.clearRect(0,0,w,h);ctx.fillStyle='#172430';ctx.fillRect(0,0,w,h);
     for(const face of FACES){
+      if(!visibleFaces[face.id])continue;
       const v=face.vertices.map(point=>project(point,cam,w,h));
       if(v.some(x=>!x))continue;
       ctx.beginPath();ctx.moveTo(v[0].x,v[0].y);
       for(let i=1;i<v.length;i++)ctx.lineTo(v[i].x,v[i].y);
       ctx.closePath();ctx.fillStyle=COLORS[face.id];ctx.fill();
+      if(debugMode&&selectedFace===face.id){
+        ctx.fillStyle='#ffe1a347';ctx.fill();
+      }
       ctx.strokeStyle='#344251';ctx.lineWidth=1;ctx.stroke();
     }
-    for(const a of Object.values(CHARACTERS)){
+    if(!debugMode)for(const a of Object.values(CHARACTERS)){
       const ring=[];
       for(let i=0;i<32;i++){
         const t=i*2*Math.PI/32;
@@ -439,7 +468,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     if(!enabled)return false;
     const w=stage.clientWidth,h=stage.clientHeight;
     if(w<1||h<1)return false;
-    const cam=camera(inputX,inputY);
+    const cam=debugMode&&debugCamera?debugCamera:camera(inputX,inputY);
     const info=metrics();
     const player=actorGeometry('player',cam,w,h,info.player);
     const enemy=actorGeometry('enemy',cam,w,h,info.enemy);
@@ -475,8 +504,37 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       renderer,meshFaceCount:5,vertexCount:geometry.solids.length/7,
       materialSources:MATERIALS,materials:{...materialStatus},
       loadedMaterialCount:Object.values(materialStatus).filter(v=>v==='ready').length,
+      debugMode,visibleFaces:{...visibleFaces},selectedFace,
       projection:'physical-perspective-camera',frames,
       floorY:0,actorRendering:'real-game-l2d',canvasSize:{w:bw,h:bh}};
+    return true;
+  }
+  function setDevMode(active,settings){
+    debugMode=!!active;
+    if(!debugMode){
+      debugCamera=null;selectedFace=null;
+      for(const face of FACES)visibleFaces[face.id]=true;
+    }else if(settings){
+      debugCamera={...BASE_CAMERA,...settings};
+    }
+    lastKey='';if(enabled)render();
+  }
+  function setDevCamera(settings){
+    if(!debugMode)return false;
+    debugCamera={...BASE_CAMERA,...settings};lastKey='';
+    if(enabled)render();
+    return true;
+  }
+  function setFaceVisible(id,visible){
+    if(!Object.hasOwn(visibleFaces,id))return false;
+    visibleFaces[id]=!!visible;
+    lastKey='';if(enabled)render();
+    return true;
+  }
+  function selectFace(id){
+    if(id!==null&&!Object.hasOwn(visibleFaces,id))return false;
+    selectedFace=id;
+    lastKey='';if(enabled)render();
     return true;
   }
   function setActive(state){
@@ -492,7 +550,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
         view.style.removeProperty('--room-'+id+'-'+key);
     }else render(0,0);
   }
-  return Object.freeze({setActive,render,
+  return Object.freeze({setActive,setDevMode,setDevCamera,
+    setFaceVisible,selectFace,render,
     inspect:()=>lastState||{active:false,faceCount:5,room:ROOM},
     get canvas(){return surface}
   });
