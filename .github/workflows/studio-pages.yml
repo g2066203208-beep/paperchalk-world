@@ -608,8 +608,11 @@ jobs:
                 if(!cfg.mobile){
                   assert.ok(roomProtagonist.rect.top>=roomProtagonist.view.top-4,
                     'back-facing protagonist head was cropped');
-                  assert.ok(roomProtagonist.rect.bottom<=roomProtagonist.view.bottom+4,
-                    'back-facing protagonist feet were cropped');
+                  // The approved close-up deliberately lets the near-camera
+                  // heroine extend BELOW the frame. Do not undo that framing
+                  // by requiring both shoes to be fully visible in bedroom.
+                  assert.ok(roomProtagonist.rect.bottom>=roomProtagonist.view.bottom-48,
+                    'near-camera protagonist has drifted too high from the bottom edge');
                 }
                 // The same menu opens fog tuning without changing the room.
                 await page.locator('#menu-toggle').click();
