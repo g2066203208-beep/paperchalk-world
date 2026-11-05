@@ -1,0 +1,75 @@
+name: Publish tested 3D L2D ring arena
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/ring-arena-runtime.js'
+      - 'tests/ring-arena.test.cjs'
+      - '.github/workflows/ring-arena-pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+# The oldest general-purpose release may be stuck on unrelated fog/studio UI
+# checks. A newly validated release must supersede older deployments, not
+# publish an outdated Pages snapshot after the latest 3D scene.
+concurrency:
+  group: paperchalk-world-pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: https://g2066203208-beep.github.io/paperchalk-world/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the exact real game and authored Live2D assets
+        run: |
+          bash scripts/fetch-game-fonts.sh
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/repair_character_masks.py
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/fix_protagonist_neck_v4.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_scene_catalog.py
+          python3 scripts/build_character_catalog.py
+          test -s site/index.html
+          test -s site/characters.catalog.json
+          test -s site/game/ring-arena-runtime.js
+          test -s site/assets/l2d/v4/back.webp
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Gate release on fixed actors, authored L2D and real 3D camera
+        run: |
+          node tests/ring-arena.test.cjs
+          node tests/scene-camera.test.cjs
+          node tests/test_l2d_display_lifecycle.cjs
+          node tests/test_l2d_studio_game_sync.cjs
+          node - <<'JS'
+          const fs=require('fs');
+          for(const path of [
+            'site/game/ring-arena-runtime.js',
+            'site/l2d/runtime.js',
+            'site/dev/character-bridge.js'
+          ])new Function(fs.readFileSync(path,'utf8'));
+          const html=fs.readFileSync('site/index.html','utf8');
+          if(!html.includes('ring-arena-runtime.js?v=compact-combat-v3-20261105'))
+            throw Error('Deployed HTML still points at stale ring-arena WebGL source');
+          if(!html.includes("ringScene.setActive(name==='ring-arena')"))
+            throw Error('3D ring scene was not integrated into the game');
+          console.log('PASS: game links to compact 4v4 ring L2D source and camera-only motion');
+          JS
+      # Real Chromium 8-L2D screenshot proof already runs separately in
+      # ring-arena-proof.yml. Do not block a ring-only deploy behind the
+      # unrelated full fog/editor browser suite.
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
