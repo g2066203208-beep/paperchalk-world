@@ -25,6 +25,7 @@ const gl=new Proxy({}, {get(_t,k){
   if(k==='getUniformLocation')return (_p,name)=>name;
   if(k==='createShader'||k==='createProgram'||k==='createBuffer'||
      k==='createTexture')return ()=>({});
+  if(k==='NO_ERROR')return 0;
   if(k==='getParameter')return ()=>4096;
   if(k==='getError')return ()=>0;
   if(k==='getShaderInfoLog'||k==='getProgramInfoLog')return ()=>'';
