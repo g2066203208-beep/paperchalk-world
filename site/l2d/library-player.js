@@ -79,7 +79,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   const ids=Object.keys(localDraft.parts);
   const art=new Map(localArt.filter(p=>p?.sourcePart&&p.partId)
    .map(p=>[String(p.partId),p]));
-  if(ids.length<8||ids.length>100||art.size!==ids.length||
+  if(ids.length<1||ids.length>100||art.size!==ids.length||
      ids.some(id=>!art.get(id)?.img?.startsWith('data:image/png;base64,')))
    throw Error('工作室保存的独立 L2D 纹理与骨骼不匹配：'+characterId+'/'+face);
   model=JSON.parse(JSON.stringify(localDraft));
