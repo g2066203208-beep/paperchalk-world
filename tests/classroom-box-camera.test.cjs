@@ -44,22 +44,34 @@ assert.ok(pu.y>p0.y,'looking up moves central world point down on screen');
 const distance=c=>Math.hypot(point[0]-c.x,point[1]-c.y,point[2]-c.z);
 close(distance(base),distance(right));
 close(distance(base),distance(up));
-// User-approved back-wall plate must stay on the real back face, in the
-// exact 3:1 aspect ratio of the 9.6m × 3.2m physical wall.
+// The recently painted wall/floor PNGs were rejected. The real WebGL
+// five-plane geometry remains, with the earlier neutral materials restored.
 const fs=require('node:fs');
 const path=require('node:path');
-assert.equal(api.MATERIALS.back,'./assets/room-box/back.png');
-const plate=fs.readFileSync(path.join(__dirname,'../site/assets/room-box/back.png'));
-assert.equal(plate.toString('hex',0,8),'89504e470d0a1a0a','back wall must be a real PNG');
-assert.equal(plate.readUInt32BE(16),1728,'back wall width');
-assert.equal(plate.readUInt32BE(20),576,'back wall height');
-// Unedited user-uploaded floor atlas: PNG alpha is fully opaque, and the
-// existing 3D floor UV determines perspective (not the source image).
-assert.equal(api.MATERIALS.floor,'./assets/room-box/floor.png');
-const floorPlate=fs.readFileSync(path.join(__dirname,'../site/assets/room-box/floor.png'));
-assert.equal(floorPlate.toString('hex',0,8),'89504e470d0a1a0a','floor material must be a real PNG');
-assert.equal(floorPlate.readUInt32BE(16),1728,'original floor image width');
-assert.equal(floorPlate.readUInt32BE(20),1472,'original floor image height: preserve original pixels');
+for(const face of ['back','floor']){
+ assert.equal(api.MATERIALS[face],'./assets/room-box/'+face+'.svg');
+ assert.ok(fs.existsSync(path.join(__dirname,'../site/assets/room-box/'+face+'.svg')));
+ assert.ok(!fs.existsSync(path.join(__dirname,'../site/assets/room-box/'+face+'.png')),
+  'rejected new material must be absent');
+}
+// Four different world-space actors; player cropped foreground and a
+// three-enemy staggered formation, projected by this same pinhole camera.
+const ids=Object.keys(api.CHARACTERS);
+assert.deepEqual(ids,['player','enemy','enemy2','enemy3']);
+const shot=Object.fromEntries(ids.map(id=>[id,api.actorGeometry(id,base,1280,720)]));
+assert.ok(shot.player.head.y/720>.15&&shot.player.head.y/720<.25);
+assert.ok(shot.player.shoe.y>720*1.20,'foreground shoes are below camera frame');
+for(const id of ['enemy','enemy2','enemy3']){
+ assert.ok(shot[id].shoe.y<720&&shot[id].shoe.y>720*.73,
+  id+' foot must stay visible in midground');
+ assert.ok(shot[id].head.y>720*.30&&shot[id].head.y<720*.48,
+  id+' head must be fully in frame');
+}
+assert.ok(api.CHARACTERS.enemy.z<api.CHARACTERS.enemy2.z);
+assert.ok(api.CHARACTERS.enemy.z<api.CHARACTERS.enemy3.z);
+assert.ok(shot.enemy2.shoe.x<shot.enemy.shoe.x);
+assert.ok(shot.enemy.shoe.x<shot.enemy3.shoe.x);
+assert.ok(api.buildMesh().shadows.length>4*32*3,'each actor needs a 3D floor contact patch');
 assert.deepEqual(api.FACES.find(face=>face.id==='floor').vertices,
   [[-4.8,0,0],[-4.8,0,8],[4.8,0,8],[4.8,0,0]],
   'original 9.6x8m physical floor geometry must remain unchanged');
