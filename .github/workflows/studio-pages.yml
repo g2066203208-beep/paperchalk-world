@@ -273,6 +273,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify one 3D camera projects background/NPC and preserves L2D + fog
         run: node tests/scene-camera-browser.mjs
+      - name: Validate L2D physical size and shoe-ground relationship with camera
+        run: node tests/character-camera-browser.mjs
       - name: Save 3D camera and scene-distance screenshots
         if: always()
         uses: actions/upload-artifact@v4
