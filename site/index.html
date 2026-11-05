@@ -2644,6 +2644,7 @@ void main(){
       applyDevCamera();
     });
   });
+  document.querySelectorAll('[data-room-view]').forEach(btn=>btn.addEventListener('click',()=>{roomView=btn.dataset.roomView;applyDevCamera();}));
   document.getElementById('dev-room-camera-save').addEventListener('click',()=>{
     if(!is3DRoom())return;
     try{
