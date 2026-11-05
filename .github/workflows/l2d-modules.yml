@@ -243,7 +243,7 @@ jobs:
               player:window.PaperchalkCharacterDev.assigned.player,
               enemy:window.PaperchalkCharacterDev.assigned.enemy
             }));
-            assert.deepEqual(slots.visible,['player','enemy','enemy2','enemy3'],
+            assert.deepEqual(slots.visible,['player','enemy','enemy2','enemy3','enemy4'],
               'both independent character zones must be selectable in DEV');
             assert.equal(slots.player.id,'protagonist');
             assert.equal(slots.enemy.id,'char-002');
