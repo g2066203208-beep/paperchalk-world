@@ -526,3 +526,34 @@ body.studio-page[data-focused-workspace="v3"] .layout>.right>#workspace-inspecto
 body.studio-page[data-focused-workspace="v3"][data-inspector="paint"] .right>section:has(#tools){
  display:block!important
 }
+
+/* Context-dependent field economy and small-phone topbar labels. */
+body.studio-page[data-focused-workspace="v3"][data-inspector="motion"] #part-rig-panel>label:has(#rig-part),
+body.studio-page[data-focused-workspace="v3"][data-inspector="motion"] #rig-status{
+ display:none!important
+}
+@media(max-width:420px){
+ body.studio-page[data-focused-workspace="v3"]>header .actions{gap:4px!important}
+ body.studio-page[data-focused-workspace="v3"]>header strong{font-size:12px!important}
+ body.studio-page[data-focused-workspace="v3"] #btnRecovery{
+  font-size:0!important;padding:6px 7px!important;min-width:43px
+ }
+ body.studio-page[data-focused-workspace="v3"] #btnRecovery::after{
+  content:"复原";font-size:12px
+ }
+ body.studio-page[data-focused-workspace="v3"] #btnSave{
+  font-size:0!important;padding:7px 8px!important;min-width:56px!important
+ }
+ body.studio-page[data-focused-workspace="v3"] #btnSave::after{
+  content:"保存";font-size:12px
+ }
+ body.studio-page[data-focused-workspace="v3"] #studio-back{
+  font-size:0!important;min-width:32px!important;padding:5px!important
+ }
+ body.studio-page[data-focused-workspace="v3"] #studio-back::after{
+  content:"←";font-size:19px
+ }
+ body.studio-page[data-focused-workspace="v3"] .workspace-more>summary{
+  width:35px;height:38px
+ }
+}
