@@ -13,7 +13,7 @@ from build_l2d_library import build as build_l2d_library
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 ART=ROOT/'site'/'assets'/'characters'
 OUTPUT=ROOT/'site'/'characters.catalog.json'
-KNOWN={'protagonist':'女主角','char-002':'女二号'}
+KNOWN={'protagonist':'女主','char-002':'女二','char-003':'男主','char-006':'女五','female-06':'女六'}
 
 def discover():
     entries={}
@@ -107,8 +107,8 @@ def discover():
         row = entries.setdefault(actor_id,{
             'id':actor_id,'label':module['label'],'front':'','back':''
         })
-        row['label']=('女五 · 女老师（基础正面）' if actor_id=='char-006'
-                       else '男主角' if actor_id=='char-003' and ident=='char-003-outfit-02'
+        row['label']=('女五' if actor_id=='char-006'
+                       else '男主' if actor_id=='char-003' and ident=='char-003-outfit-02'
                        else module['label'])
         row['familyId']=actor_id if actor_id in ('char-006','char-003') else module.get('familyId',ident)
         row['variantCategory']=('default' if actor_id=='char-003' and ident=='char-003-outfit-02'
@@ -210,6 +210,11 @@ def discover():
         secondary['animated']={'front':True}
         secondary['sourcePsdLayerRecords']=24
         secondary['motionPreference']='original-psd-anatomical-idle'
+    # Canonical person names must never inherit a costume/source suffix.
+    # Outfit variations remain under the same family in the studio tree.
+    for canonical,label in KNOWN.items():
+        if canonical in entries:
+            entries[canonical]['label']=label
     return {'version':3,'characters':list(entries.values())}
 
 if __name__=='__main__':
