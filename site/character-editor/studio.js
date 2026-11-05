@@ -702,6 +702,39 @@ async function changeCore(id,face='front'){
   (args.get('idle')==='1'?'&idle=1':''));
  }finally{document.body.classList.remove('studio-loading')}
 }
+// One-time compatibility cleanup for the unrequested See-through QA actor.
+// Delete only records belonging to that retired test ID; other people and
+// their local edits remain untouched.
+async function purgeUnrequestedQaDraft(){
+ const retired='seethrough-qa-2048';
+ const db=await openDB();
+ try{await new Promise((resolve,reject)=>{
+  const tx=db.transaction('kv','readwrite'),store=tx.objectStore('kv');
+  const cursor=store.openCursor();
+  cursor.onsuccess=()=>{
+   const row=cursor.result;if(!row)return;
+   const key=String(row.key);
+   if(key===retired||key.startsWith(retired+':')||
+      key.endsWith(':'+retired)||key.includes(':'+retired+':'))row.delete();
+   row.continue();
+  };
+  for(const key of ['imported','overrides']){
+   const request=store.get(key);
+   request.onsuccess=()=>{
+    if(Array.isArray(request.result)){
+     const rows=request.result.filter(row=>row?.id!==retired);
+     if(rows.length!==request.result.length)store.put(rows,key);
+    }
+   };
+  }
+  tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||Error('QA cleanup failed'));
+  tx.onabort=()=>reject(tx.error||Error('QA cleanup aborted'));
+ });}finally{db.close()}
+ try{
+  const last=JSON.parse(localStorage.getItem('paperchalk-studio-last')||'null');
+  if(last?.id===retired)localStorage.removeItem('paperchalk-studio-last');
+ }catch(e){}
+}
 async function loadList(){
  list.set('protagonist',{id:'protagonist',label:'女主角',front:'../assets/characters/protagonist-front.webp',back:'../assets/characters/protagonist-back.webp'});
  // A separate, local-only authoring slot; the published protagonist model,
@@ -743,6 +776,7 @@ async function loadList(){
  }
  const canonicalFemale2=list.get('char-002');
  await resetFemale06OriginalIfRequested();
+ await purgeUnrequestedQaDraft().catch(e=>console.warn('Retired See-through QA cleanup:',e));
  const imported=await get('imported');
  // Never let a stale local import overwrite an official character identity.
  if(Array.isArray(imported))for(const record of imported)if(okId(record?.id)){
