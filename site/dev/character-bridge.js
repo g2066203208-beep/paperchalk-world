@@ -171,9 +171,17 @@ async function assign(target,id,face='front',save=true){
   Object.keys(savedRig.parts||{}).length>=8;
  if(savedRig&&!localRigAvailable)
   throw Error('发现本机 L2D 骨骼编辑稿，但人物/方向/格式不匹配；拒绝换回旧模型：'+id+'/'+face);
+ // The artist can add/split/remove meshes without publishing binaries.
+ // When the editor has persisted all actual RGBA layers, the exact edited
+ // PartRig is authoritative over the GitHub module's old part inventory.
+ const sourceParts=Array.isArray(savedArt)?savedArt.filter(p=>p?.sourcePart&&p.partId):[];
+ const savedIds=localRigAvailable?Object.keys(savedRig.parts):[];
+ const localComplete=localRigAvailable&&sourceParts.length===savedIds.length&&
+  new Set(sourceParts.map(p=>String(p.partId))).size===savedIds.length&&
+  savedIds.every(name=>sourceParts.some(p=>String(p.partId)===name&&
+   typeof p.img==='string'&&p.img.startsWith('data:image/png;base64,')));
  // Explicit studio edits always win over the legacy heroine V4 toggle.
- const hasStudioEdits=localRigAvailable||
-  (Array.isArray(savedArt)&&savedArt.some(p=>p?.sourcePart));
+ const hasStudioEdits=localRigAvailable||sourceParts.length>0;
  const publishedRig=published?.renderer==='part-mesh'&&
   (id!=='protagonist'||heroineRenderer==='bones'||hasStudioEdits)?published.rig:null;
  // CHAR-002's hosted 18-part PSD ArtMesh is authoritative. The studio also
@@ -205,7 +213,7 @@ async function assign(target,id,face='front',save=true){
    // If no GitHub module exists, the SAME complete saved PartRig and
    // original PNGs are used; do not degrade to the old simplified PSD rig.
    const attached=await checked(window.PaperchalkL2DLibrary.attach(
-    target,id,face,publishedRig||null,savedRig,savedArt));
+    target,id,face,localComplete?null:(publishedRig||null),savedRig,savedArt));
    if(!attached)throw Error('L2D 模块加载已被后续操作取消');
    if(previousAction)window.PaperchalkL2DLibrary.setAction(target,previousAction);
    if(id==='protagonist')actor.root.dataset.l2dBreath='joint-parented';
