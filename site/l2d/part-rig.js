@@ -579,7 +579,11 @@ function sanitize(record,original){
   offsetY:clamp(finite(t.offsetY,0),-1024,1024)
  };
  x.mesh=original.mesh;
- x.bones=normalizeBones(record.bones,original.kind);
+ // A garment with explicit waist/thigh SKIN WEIGHTS must not have old
+ // skirt/cloth auto-bones re-created when authored bones=[].
+ // Recreating them double-deforms the waistband and breaks body attachment.
+ x.bones=record.skinBinding?.method==='pelvis-waist-dual-thigh-v2'
+  ?[]:normalizeBones(record.bones,original.kind);
  // Preserve authored skinBinding/weights exactly; the renderer must not
  // silently overwrite a user's outfit with guessed pelvis/cloth settings.
  return x;
@@ -1020,7 +1024,9 @@ function placedBounds(part){
 // No other part is sampled, moved, cut, duplicated, or transformed.
 function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  if(!part.enabled)return{x:part.x+u*part.w,y:part.y+v*part.h};
- const base=skinnedPoint(part,u,v,phase,posed,idle);
+ const base=(part.skinBinding?.method==='pelvis-waist-dual-thigh-v2')
+  ?{x:part.x+u*part.w,y:part.y+v*part.h}
+  :skinnedPoint(part,u,v,phase,posed,idle);
  const q=part.motion;
  const dx=part.tip.x-part.pivot.x,dy=part.tip.y-part.pivot.y;
  const den=Math.max(.0001,dx*dx+dy*dy);
