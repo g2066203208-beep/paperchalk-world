@@ -69,8 +69,18 @@ for(const id of ['enemy','enemy2','enemy3']){
 }
 assert.ok(api.CHARACTERS.enemy.z<api.CHARACTERS.enemy2.z);
 assert.ok(api.CHARACTERS.enemy.z<api.CHARACTERS.enemy3.z);
-assert.ok(shot.enemy2.shoe.x<shot.enemy.shoe.x);
-assert.ok(shot.enemy.shoe.x<shot.enemy3.shoe.x);
+assert.ok(shot.enemy.shoe.x<shot.enemy2.shoe.x);
+assert.ok(shot.enemy2.shoe.x<shot.enemy3.shoe.x);
+// Cast must occupy distinct thirds with clear horizontal gaps, and the
+// heroine must be a cropped close-up on the left, not a full-body doll.
+const projected=Object.fromEntries(ids.map(id=>[id,api.actorGeometry(id,base,1280,720)]));
+assert.ok(projected.player.head.x<300);
+assert.ok(projected.enemy.shoe.x>520&&projected.enemy.shoe.x<700);
+assert.ok(projected.enemy2.shoe.x>790&&projected.enemy2.shoe.x<980);
+assert.ok(projected.enemy3.shoe.x>1000&&projected.enemy3.shoe.x<1230);
+assert.ok(projected.enemy2.shoe.x-projected.enemy.shoe.x>200);
+assert.ok(projected.enemy3.shoe.x-projected.enemy2.shoe.x>190);
+assert.equal(api.BASE_CAMERA.hFov,60);
 assert.ok(api.buildMesh().shadows.length>4*32*3,'each actor needs a 3D floor contact patch');
 assert.deepEqual(api.FACES.find(face=>face.id==='floor').vertices,
   [[-4.8,0,0],[-4.8,0,8],[4.8,0,8],[4.8,0,0]],
