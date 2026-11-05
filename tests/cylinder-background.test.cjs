@@ -1,68 +1,92 @@
 'use strict';
 const assert=require('node:assert/strict');
 const cylinder=require('../site/game/cylinder-background.js');
-const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10,[a,b].join(' != '));
-near(cylinder.projectU(0),0);
-near(cylinder.projectU(.5),.5);
-near(cylinder.projectU(1),1);
-assert.ok(cylinder.projectU(.5,.08)>.5);
-for(let x=.01;x<=1;x+=.01)
-  assert.ok(cylinder.projectU(x)>cylinder.projectU(x-.01));
-near(cylinder.verticalFraction(.5),1);
-assert.ok(cylinder.verticalFraction(0)<1&&cylinder.verticalFraction(0)>.8);
-
-const listeners={},cssClasses=new Set();
-let calls=0,fail=false,canvas;
-const ctx={
-  clearRect(){},drawImage(){if(fail)throw Error('canvas reset');calls++},
-  imageSmoothingEnabled:false,imageSmoothingQuality:'low'
-};
+const near=(a,b,eps=1e-6)=>assert.ok(Math.abs(a-b)<eps,a+' != '+b);
+const mesh=cylinder.buildCylinderMesh(1,160);
+assert.equal(mesh.length,160*18,'each 3D curved segment is two triangles');
+for(let i=0;i<mesh.length;i+=3){
+  near(Math.hypot(mesh[i],mesh[i+2]),1,1e-5);
+  near(Math.abs(mesh[i+1]),1);
+}
+const tanX=Math.tan(cylinder.FOV/2),tanY=tanX/(16/9);
+near(cylinder.projectUV({x:0,y:0,z:-1},tanX,tanY).u,.5);
+near(cylinder.projectUV({x:0,y:0,z:-1},tanX,tanY).v,.5);
+// The neutral camera reconstructs the exact original image coordinates.
+for(const u of [.15,.3,.5,.75,.85]){
+  const a=Math.atan((2*u-1)*tanX);
+  const point={x:Math.sin(a),y:0,z:-Math.cos(a)};
+  near(cylinder.projectUV(point,tanX,tanY).u,u);
+}
+const glConsts=new Proxy({}, {get:(_t,k)=>typeof k==='string'?k:'unknown'});
+let draws=0,texUploads=0,angles=[],meshUpload=null,fail=false;
+const gl=new Proxy({}, {get(_t,k){
+  if(k==='getShaderParameter'||k==='getProgramParameter')return ()=>true;
+  if(k==='getAttribLocation')return ()=>0;
+  if(k==='getUniformLocation')return (_p,name)=>name;
+  if(k==='createShader'||k==='createProgram'||k==='createBuffer'||
+     k==='createTexture')return ()=>({});
+  if(k==='getParameter')return ()=>4096;
+  if(k==='getError')return ()=>0;
+  if(k==='getShaderInfoLog'||k==='getProgramInfoLog')return ()=>'';
+  if(k==='bufferData')return (_target,data)=>{meshUpload=data};
+  if(k==='texImage2D')return ()=>{if(fail)throw Error('texture failure');texUploads++};
+  if(k==='drawArrays')return ()=>{if(fail)throw Error('draw failure');draws++};
+  if(k==='uniform2f')return (key,a,b)=>{if(key==='u_camera')angles.push([a,b])};
+  if(typeof k==='string'&&k===k.toUpperCase())return glConsts[k];
+  return ()=>{};
+}});
+const callbacks={},sourceCallbacks={},classes=new Set();
+let canvas;
+global.window={devicePixelRatio:1,addEventListener(){}};
+global.document={createElement(){
+  return {width:0,height:0,hidden:true,setAttribute(){},
+    getContext(type){assert.equal(type,'webgl');return gl},
+    addEventListener:(name,fn)=>{callbacks[name]=fn}};
+}};
+global.ResizeObserver=class{observe(){}};
 const source={
   complete:true,naturalWidth:1024,naturalHeight:576,
   src:'/classroom.webp',currentSrc:'/classroom.webp',
-  classList:{add:v=>cssClasses.add(v),remove:v=>cssClasses.delete(v)},
+  classList:{add:v=>classes.add(v),remove:v=>classes.delete(v)},
   insertAdjacentElement(_where,node){canvas=node},
-  addEventListener(type,fn){listeners[type]=fn}
+  addEventListener:(name,fn)=>{sourceCallbacks[name]=fn}
 };
 const stage={clientWidth:1024,clientHeight:576,dataset:{}};
-global.window={devicePixelRatio:1,addEventListener(){}};
-global.document={createElement(type){
-  assert.equal(type,'canvas');
-  return {hidden:true,width:0,height:0,setAttribute(){},
-    getContext(){return ctx}};
-}};
-global.ResizeObserver=class{observe(node){assert.equal(node,stage)}};
-const instance=cylinder.create({stage,source});
+const bg=cylinder.create({stage,source});
 assert.ok(canvas);
-assert.equal(instance.inspect().enabled,false);
-instance.setScene('classroom');
-assert.equal(stage.dataset.backgroundSurface,'cylinder');
-assert.equal(canvas.hidden,false);
-assert.ok(cssClasses.has('scene-cylinder-source-hidden'));
-assert.ok(calls>100);
-const after=calls;
-instance.setView(0,0);
-assert.equal(calls,after,'unchanged camera should not redraw');
-instance.setView(1,.5);
-assert.ok(calls>after,'mouse motion should update the curved background');
-assert.ok(instance.inspect().yawDegrees>0);
-source.complete=false;
+assert.equal(bg.inspect().ready,false);
+bg.setScene('classroom');
+assert.equal(stage.dataset.backgroundSurface,'cylinder-webgl');
+assert.equal(bg.inspect().renderer,'webgl-3d-cylinder');
+assert.ok(meshUpload instanceof Float32Array);
+assert.equal(draws,1);
+assert.equal(texUploads,1);
+assert.ok(classes.has('scene-cylinder-source-hidden'));
+const before=draws;
+bg.setView(0,0);
+assert.equal(draws,before,'static camera does not redraw');
+bg.setView(.5,.5);
+assert.equal(draws,before+1,'camera rotation redraws actual geometry');
+assert.ok(angles.at(-1)[0]>0&&angles.at(-1)[1]>0);
+assert.equal(texUploads,1,'mouse pitch MUST NOT crop or reupload the art');
 source.src='/bedroom.webp';
 source.currentSrc='/bedroom.webp';
-instance.setScene('bedroom');
-assert.equal(canvas.hidden,true,'do not show previous room image');
-assert.ok(!cssClasses.has('scene-cylinder-source-hidden'));
+source.complete=false;
+bg.setScene('bedroom');
+assert.equal(canvas.hidden,true,'show original while loading new scene');
 source.complete=true;
-listeners.load();
+sourceCallbacks.load();
 assert.equal(canvas.hidden,false);
-assert.equal(stage.dataset.backgroundSurface,'cylinder');
+assert.equal(texUploads,2);
 fail=true;
-assert.equal(instance.refresh(),false,'drawing failure must not break the game');
-assert.equal(canvas.hidden,true,'failed projection reveals unchanged source');
+assert.equal(bg.refresh(),false);
+assert.equal(bg.inspect().renderer,'flat-fallback');
+assert.equal(canvas.hidden,true);
 fail=false;
-instance.refresh();
-assert.equal(canvas.hidden,false,'projection can recover without reloading');
-instance.setScene('menu');
-assert.equal(canvas.hidden,true,'menu keeps original flat artwork');
-assert.ok(!cssClasses.has('scene-cylinder-source-hidden'));
-console.log('PASS: cylindrical background geometry, image switching, fallback, camera motion');
+assert.equal(bg.refresh(),true);
+assert.equal(canvas.hidden,false);
+bg.setScene('menu');
+assert.equal(canvas.hidden,true);
+assert.ok(!classes.has('scene-cylinder-source-hidden'));
+assert.equal(bg.inspect().enabled,false);
+console.log('PASS genuine 3D cylinder: mesh, neutral projection, yaw/pitch, image switch, fallback');
