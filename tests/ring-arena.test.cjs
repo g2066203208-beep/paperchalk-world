@@ -45,6 +45,25 @@ for(const mode of ['outer','inner']){
  const end=arena.project(people[0],views[4]);
  assert.ok(Math.abs(start.x-end.x)>.10,'fixed hero shifts on SCREEN due to camera only');
 }
+// Combat staging has a tighter squad fan and true physical 3D spacing.
+const s=arena.SPEC;
+const ringGap=s.outerRoleRadius-s.innerRoleRadius;
+assert.ok(ringGap>=1.30&&ringGap<=1.80,'opposing rings must read as close combat, without intersecting');
+const angleRange=values=>(Math.max(...values)-Math.min(...values))*180/Math.PI;
+assert.ok(angleRange(arena.formation.allies)<45,'allied team no longer scatters around the arena');
+assert.ok(angleRange(arena.formation.enemies)<50,'enemy team no longer scatters around the arena');
+const minChord=(radius,angles)=>Math.min(...angles.flatMap((a,i)=>angles.slice(i+1).map(b=>2*radius*Math.sin(Math.abs(b-a)/2))));
+assert.ok(minChord(s.innerRoleRadius,arena.formation.enemies)>1.1,
+ 'adjacent enemy anchors must not intersect');
+assert.ok(minChord(s.innerRoleRadius,arena.formation.allies)>0.9,
+ 'adjacent allied anchors must not intersect');
+for(const mode of ['outer','inner']){
+  const hero=arena.layout(mode).allies[0];
+  const left=arena.project(hero,arena.camera(mode,0));
+  const right=arena.project(hero,arena.camera(mode,1));
+  assert.ok(left.x<-.25&&right.x>.25,
+    'the heroine must stay cinematic, left-to-right, while camera orbits stationary cast');
+}
 assert.ok(arena.SPEC.innerCameraRadius<arena.SPEC.innerRoleRadius);
 assert.ok(arena.SPEC.outerCameraRadius>arena.SPEC.outerRoleRadius);
 console.log('PASS: fixed world-space L2D formation; only two real camera orbits move');
