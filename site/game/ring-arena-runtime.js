@@ -96,7 +96,7 @@
   ]),
   inner:Object.freeze([
    Object.freeze({id:'left',angle:rad(-28),radius:7.45,eyeY:1.42,focusX:1.10,focusY:1.00,focusZ:11.10,fov:43}),
-   Object.freeze({id:'center',angle:rad(-24),radius:7.75,eyeY:1.45,focusX:1.00,focusY:1.00,focusZ:11.20,fov:49}),
+   Object.freeze({id:'center',angle:rad(-24),radius:7.75,eyeY:1.45,focusX:1.00,focusY:1.00,focusZ:11.20,fov:52}),
    Object.freeze({id:'right',angle:rad(28),radius:7.45,eyeY:1.42,focusX:-1.10,focusY:1.00,focusZ:11.10,fov:43})
   ])
  });
@@ -478,6 +478,7 @@
    pixelsFrom:'existing PaperchalkL2D actors; source assets unchanged'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
- return Object.freeze({SPEC,formation,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,camera,lookAt,
+ return Object.freeze({SPEC,formation,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
+  SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,lookAt,
   perspective,multiply,project,create});
 });
