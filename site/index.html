@@ -2489,7 +2489,11 @@ void main(){
   function refreshRoomDev(){
     const active=is3DRoom()&&editorActive;
     roomDevSurfaces.hidden=!active;
-    if(!active)return;
+    if(!active){
+      const option=devSelect.querySelector('option[value="bg"]');
+      if(option)option.textContent='01 / 背景';
+      return;
+    }
     const state=boxScene.inspect();
     const option=devSelect.querySelector('option[value="bg"]');
     if(option)option.textContent='01 / 三维房间 · 五面独立素材';
@@ -2893,6 +2897,8 @@ void main(){
     // An absent UI must leave ZERO residual sidebar fog, even for one frame.
     roomDevSurfaces.hidden=true;
     restoreRoomLayers();
+    // Returning to the legacy scene editor must retain full L2D library access.
+    document.getElementById('dev-character-controls').hidden=false;
     resetDevPanelFog();start();
   }
   const fogGuide=document.getElementById('fog-safe-guide');
@@ -3125,7 +3131,11 @@ void main(){
     const roomMove=stage.dataset.scene==='classroom-box';
     const kx=1-Math.exp(-dt*(roomMove?8.4:7));
     const ky=1-Math.exp(-dt*(roomMove?6.8:7));
-    if(reduced.matches||!tiltEnabled||editorActive){aimX=0;aimY=0}
+    // Legacy "scene tilt" controls 2D illustrations only. A physical
+    // 3D camera has its own independently adjustable, bounded travel range.
+    if(reduced.matches||editorActive||(!roomMove&&!tiltEnabled)){
+      aimX=0;aimY=0;
+    }
     currentX+=(aimX-currentX)*kx;currentY+=(aimY-currentY)*ky;
     if(stage.dataset.scene==='menu'){
       // The menu is authored as a flat graphic; retain its original tilt.
