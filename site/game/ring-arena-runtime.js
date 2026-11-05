@@ -121,8 +121,15 @@
    eye:{x:mix(from.eye.x,to.eye.x),y:mix(from.eye.y,to.eye.y),z:mix(from.eye.z,to.eye.z)},
    focus:{x:mix(from.focus.x,to.focus.x),y:mix(from.focus.y,to.focus.y),z:mix(from.focus.z,to.focus.z)}};
  }
+ // Preserve the DESIGNED horizontal battle framing when a browser or
+ // device changes aspect ratio. Portrait canvases no longer crop half the
+ // team by reusing a desktop vertical field of view.
+ function responsiveFov(fov,aspect=16/9){
+  const valid=clamp(Number(aspect)||16/9,.35,3.5);
+  return clamp(2*Math.atan(Math.tan(rad(fov/2))*(16/9)/valid)*180/Math.PI,25,125);
+ }
  function project(p,cam,aspect=16/9){
-  const vp=multiply(perspective(cam.fov||SPEC.verticalFov,aspect),lookAt(cam.eye,cam.focus));
+  const vp=multiply(perspective(responsiveFov(cam.fov||SPEC.verticalFov,aspect),aspect),lookAt(cam.eye,cam.focus));
   const x=p.x,y=p.y,z=p.z,m=vp;
   const w=m[3]*x+m[7]*y+m[11]*z+m[15];
   if(w<=0)return {valid:false};
@@ -464,7 +471,7 @@
    const pixel=Math.min(window.devicePixelRatio||1,1.75);
    const W=Math.floor(w*pixel),H=Math.floor(h*pixel);
    if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
-   const cam=lens,vp=multiply(perspective(cam.fov,w/h),lookAt(cam.eye,cam.focus));
+   const cam=lens,vp=multiply(perspective(responsiveFov(cam.fov,w/h),w/h),lookAt(cam.eye,cam.focus));
    gl.viewport(0,0,W,H);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
    gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
    gl.clearColor(.001,.005,.008,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -499,12 +506,15 @@
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,
+   projectionAspect:canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
+   effectiveVerticalFov:responsiveFov((lens||camera(mode,shotIndex)).fov,
+    canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
    l2dReady:visibleActors(mode).filter(a=>textures.get(a.id).painted).length,
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:'existing PaperchalkL2D actors; source assets unchanged'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
-  SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,portraitBounds,lookAt,
+  SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,portraitBounds,responsiveFov,lookAt,
   perspective,multiply,project,create});
 });
