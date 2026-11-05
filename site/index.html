@@ -561,6 +561,41 @@ body.mobile-mode.virtual-landscape #view{
 [data-l2d-actor][data-l2d-mode="v4-native"] [data-l2d-canvas]{visibility:hidden!important}
 [data-l2d-actor] img[data-l2d-v4]{opacity:1!important;visibility:visible!important;pointer-events:none!important}
 
+/* 3D five-face test room is an ordinary game scene, not a detached editor.
+   Only active for ?scene=classroom-box; original UI/L2D materials unchanged. */
+#scene > #classroom-box-surface{
+  position:absolute;inset:0;display:block;width:100%;height:100%;
+  pointer-events:none;image-rendering:auto;z-index:0;
+}
+#scene > #classroom-box-surface[hidden]{display:none!important}
+#view.room-blockout-active #scene > #source{visibility:hidden!important}
+#view.room-blockout-active #enemy-depth-root,
+#view.room-blockout-active #camera-player-root{
+  position:absolute!important;left:0!important;top:0!important;
+  width:100%!important;height:100%!important;aspect-ratio:auto!important;
+  transform:none!important;translate:none!important;
+  transform-origin:50% 50%!important;backface-visibility:visible!important;
+}
+#view.room-blockout-active #enemy-depth-root #actor-enemy{
+  left:var(--room-enemy-left,50%)!important;
+  top:var(--room-enemy-top,15%)!important;
+  width:var(--room-enemy-size,360px)!important;
+  height:var(--room-enemy-size,360px)!important;
+  bottom:auto!important;max-width:none!important;
+  transform:none!important;scale:1!important;
+}
+#view.room-blockout-active #camera-player-root #actor-player{
+  left:var(--room-player-left,5%)!important;
+  top:var(--room-player-top,5%)!important;
+  width:var(--room-player-size,650px)!important;
+  height:var(--room-player-size,650px)!important;
+  bottom:auto!important;max-width:none!important;
+  transform:none!important;scale:1!important;
+}
+#view.room-blockout-active [data-l2d-actor] [data-l2d-canvas],
+#view.room-blockout-active [data-l2d-actor] [data-l2d-v4]{
+  transform:none!important;scale:1!important;
+}
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
@@ -571,6 +606,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/survival-state.js"></script>
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
+<script src="./game/classroom-box-runtime.js?v=in-game-five-faces-v1"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -1684,6 +1720,10 @@ void main(){
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
   const cameraPlayer=document.getElementById('camera-player-root');
+  const boxScene=window.PaperWorldClassroomBox.create({
+    stage,view,playerRoot:cameraPlayer,enemyRoot:enemyDepth
+  });
+  window.PaperWorldGameRoomBox=boxScene;
   const sceneMenu=document.getElementById('scene-menu');
   const mainOptions=document.getElementById('scene-menu-main');
   const settingsOptions=document.getElementById('scene-menu-settings');
@@ -1735,6 +1775,8 @@ void main(){
     // Per-scene layer contract; image files remain actor-free and unmodified.
     const hasPlayer=def.layers.player;
     enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
+    boxScene.setActive(name==='classroom-box');
+    if(name!=='classroom-box')window.PaperWorldL2DGround?.sync?.();
     stage.dataset.sceneTitle=def.title;
     stage.dataset.sceneVersion=def.version||'built-in';
     // Character placement belongs to the actor, not the background image.
@@ -2633,6 +2675,15 @@ void main(){
       // The menu is authored as a flat graphic; retain its original tilt.
       stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+
         'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    }else if(stage.dataset.scene==='classroom-box'){
+      // Genuine world X/Y/Z -> one pinhole perspective for BOTH surfaces and
+      // the existing L2D player/enemy (same shoe coordinates on the floor).
+      // No transform from the original flat image may leak into this scene.
+      stage.style.transform='none';
+      enemyDepth.style.transform='none';
+      cameraPlayer.style.transform='none';
+      boxScene.render(currentX,currentY);
+      stage.dataset.cameraProfile='five-face-world-3d';
     }else{
       const camera=sceneCamera.pose(currentX,currentY,sizes.h);
       const world=sceneCamera.inspect(editorConfig,camera);
