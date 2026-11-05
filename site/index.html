@@ -764,7 +764,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
 <script src="./game/classroom-box-runtime.js?v=four-enemy-row-v2"></script>
-<script src="./game/ring-arena-runtime.js?v=dual-orbit-webgl-v1"></script>
+<script src="./game/ring-arena-runtime.js?v=world-anchored-l2d-v2"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -805,6 +805,21 @@ body.mobile-mode.virtual-landscape #view{
   <div id="room-enemy4-root" class="room-extra-enemy" data-l2d-actor="enemy4" aria-label="第四名敌人 L2D" hidden>
     <img id="actor-enemy4" data-l2d-image alt="敌人四 L2D 定位源" draggable="false" hidden>
     <canvas id="actor-enemy4-l2d" data-l2d-canvas width="1024" height="1024" aria-label="敌人四独立 L2D"></canvas>
+  </div>
+  <!-- Live art rigs are rendered by their ORIGINAL L2D studio runtime, then
+       streamed as transparent WebGL billboards at fixed ground anchors.
+       These additional three team actors never replace any old room actor. -->
+  <div id="ring-ally2-root" class="ring-ally-source" data-l2d-actor="ally2" hidden>
+    <img id="actor-ally2" data-l2d-image alt="第二位我方队友原始L2D来源" draggable="false" hidden>
+    <canvas id="actor-ally2-l2d" data-l2d-canvas width="1024" height="1024"></canvas>
+  </div>
+  <div id="ring-ally3-root" class="ring-ally-source" data-l2d-actor="ally3" hidden>
+    <img id="actor-ally3" data-l2d-image alt="第三位我方队友原始L2D来源" draggable="false" hidden>
+    <canvas id="actor-ally3-l2d" data-l2d-canvas width="1024" height="1024"></canvas>
+  </div>
+  <div id="ring-ally4-root" class="ring-ally-source" data-l2d-actor="ally4" hidden>
+    <img id="actor-ally4" data-l2d-image alt="第四位我方队友原始L2D来源" draggable="false" hidden>
+    <canvas id="actor-ally4-l2d" data-l2d-canvas width="1024" height="1024"></canvas>
   </div>
   <canvas id="fog" aria-hidden="true"></canvas>
   <!-- World-space dynamic UI fog is below the protagonist's complete L2D rig,
@@ -1945,6 +1960,7 @@ void main(){
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
   const extraEnemies=['enemy2','enemy3','enemy4'].map(id=>document.getElementById('room-'+id+'-root'));
+  const ringAllies=['ally2','ally3','ally4'].map(id=>document.getElementById('ring-'+id+'-root'));
   const cameraPlayer=document.getElementById('camera-player-root');
   const boxScene=window.PaperWorldClassroomBox.create({
     stage,view,playerRoot:cameraPlayer,enemyRoot:enemyDepth
@@ -2003,14 +2019,17 @@ void main(){
     const isStory=def.type==='story',isMenu=def.type==='menu';
     // Per-scene layer contract; image files remain actor-free and unmodified.
     const hasPlayer=def.layers.player;
-    enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
-    extraEnemies.forEach(node=>node.hidden=name!=='classroom-box');
+    const ringActive=name==='ring-arena';
+    enemyDepth.hidden=!def.layers.enemy&&!ringActive;
+    cameraPlayer.hidden=!hasPlayer&&!ringActive;
+    ringAllies.forEach(node=>node.hidden=!ringActive);
+    extraEnemies.forEach(node=>node.hidden=name!=='classroom-box'&&!ringActive);
     boxScene.setActive(name==='classroom-box');
     ringScene.setActive(name==='ring-arena');
     // The room now fills the viewport; legacy fog needs its saved safe-zone
     // bounds restored when we leave this scene without a window resize.
     if(frameNumber>0){half();applyFogSettings();}
-    if(name!=='classroom-box')window.PaperWorldL2DGround?.sync?.();
+    if(name!=='classroom-box'&&!ringActive)window.PaperWorldL2DGround?.sync?.();
     stage.dataset.sceneTitle=def.title;
     stage.dataset.sceneVersion=def.version||'built-in';
     // Character placement belongs to the actor, not the background image.
