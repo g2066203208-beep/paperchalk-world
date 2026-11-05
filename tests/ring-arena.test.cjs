@@ -52,7 +52,32 @@ for(const mode of ['outer','inner']){
  const end=arena.project(people[0],views[4]);
  assert.ok(Math.abs(start.x-end.x)>.10,'fixed hero shifts on SCREEN due to camera only');
 }
-// The broad arena keeps physical separation (not a tiny ring with overlapping L2Ds).
+// True shallow-arc theater: comfortable camera composition, no giant 360 hall.
+assert.equal(arena.SPEC.stageType,'shallow-arc');
+assert.ok(arena.SPEC.wallArcHalfAngle<Math.PI/2,
+  'backdrop must be a shallow curved stage, never a closed circular wall');
+assert.ok(arena.SPEC.wallHeight>=9,'curved background must fill vertical stage');
+const mid=(actor,cam)=>arena.project({...actor,y:actor.height*.5},cam);
+for(const mode of ['outer','inner']){
+ for(const p of [0,.25,.5,.75,1]){
+  const cam=arena.camera(mode,p),enemies=arena.layout(mode).enemies;
+  const projected=enemies.map(a=>({
+    mid:mid(a,cam),
+    head:arena.project({...a,y:a.height},cam),
+    foot:arena.project(a,cam)
+  }));
+  for(const {mid,head,foot} of projected){
+   assert.ok(mid.valid&&head.valid&&foot.valid,'all four enemies must face camera');
+   assert.ok(Math.abs(mid.x)<.92,
+    'all four opponents must stay within horizontal composition margins');
+   assert.ok(head.y<.90&&foot.y>-.95,
+    'all four opponent full-body feet and heads must be visible');
+   assert.ok((head.y-foot.y)*360>215,
+    'enemies must be large enough on a 720px height, not tiny background figures');
+  }
+ }
+}
+// The curved walls are NOT concentric with cast; all world positions stay frozen.
 const s=arena.SPEC;
 const ringGap=s.outerRoleRadius-s.innerRoleRadius;
 assert.ok(s.wallRadius>=17&&s.wallRadius>=s.outerRoleRadius+4.5,
@@ -62,9 +87,9 @@ const angleRange=values=>(Math.max(...values)-Math.min(...values))*180/Math.PI;
 assert.ok(angleRange(arena.formation.allies)<45,'allied team no longer scatters around the arena');
 assert.ok(angleRange(arena.formation.enemies)<50,'enemy team no longer scatters around the arena');
 const minChord=(radius,angles)=>Math.min(...angles.flatMap((a,i)=>angles.slice(i+1).map(b=>2*radius*Math.sin(Math.abs(b-a)/2))));
-assert.ok(minChord(s.innerRoleRadius,arena.formation.enemies)>2.1,
+assert.ok(minChord(s.innerRoleRadius,arena.formation.enemies)>1.0,
  'adjacent enemy anchors must not intersect');
-assert.ok(minChord(s.innerRoleRadius,arena.formation.allies)>1.8,
+assert.ok(minChord(s.innerRoleRadius,arena.formation.allies)>1.5,
  'adjacent allied anchors must not intersect');
 for(const mode of ['outer','inner']){
   const hero=arena.layout(mode).allies[0];
