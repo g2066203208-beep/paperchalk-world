@@ -79,6 +79,9 @@ assert.equal(model.familyOf({id:'male2',label:'男二',familyId:'char-016'}),'ma
 assert.equal(model.familyOf({id:'temp',label:'女二 · 旧拆分'}),'char-002');
 assert.equal(model.familyOf({id:'temp',label:'男主角 · 旧版'}),'char-003');
 assert.equal(model.familyOf({id:'protagonist-sleepwear'}),'protagonist');
+assert.equal(model.familyOf({id:'old-teacher',label:'女老师 · 旧版'}),'char-006');
+assert.equal(model.familyOf({id:'old-female5',label:'女五 · 基础正面'}),'char-006');
+assert.equal(model.familyOf({id:'old-female6-outfit',label:'女六 · 新衣服'}),'female-06');
 assert.deepEqual(model.makeTree(catalog,'protagonist').map(x=>x.family),ids,
  'stable order on repeated render without relying on Map insertion');
 console.log('PASS person taxonomy: one actor, canonical rig actions, wardrobe, folded PSD/archive, provenance, identity, stable order');
