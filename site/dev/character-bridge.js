@@ -155,7 +155,21 @@ async function assign(target,id,face='front',save=true){
  const originalPsdLayers=await checked(get('skeletal:'+id+':'+face));
  const usesPsdRig=Array.isArray(originalPsdLayers)&&originalPsdLayers.length>=12;
  const published=c.l2dModule?.[face];
- const publishedRig=published?.renderer==='part-mesh'&&(id!=='protagonist'||heroineRenderer==='bones')?published.rig:null;
+ // Studio and game share the canonical actor/face keys in IndexedDB.
+ // Read user-authored bones and per-part artwork BEFORE selecting a renderer.
+ const [savedRig,savedArt]=await checked(Promise.all([
+  get('part-rig:'+id+':'+face),getLocalArtwork(id,face)
+ ]));
+ const localRigAvailable=savedRig?.format==='paperchalk-part-rig-v1'&&
+  savedRig.characterId===id&&savedRig.face===face&&
+  Object.keys(savedRig.parts||{}).length>=8;
+ if(savedRig&&!localRigAvailable)
+  throw Error('发现本机 L2D 骨骼编辑稿，但人物/方向/格式不匹配；拒绝换回旧模型：'+id+'/'+face);
+ // Explicit studio edits always win over the legacy heroine V4 toggle.
+ const hasStudioEdits=localRigAvailable||
+  (Array.isArray(savedArt)&&savedArt.some(p=>p?.sourcePart));
+ const publishedRig=published?.renderer==='part-mesh'&&
+  (id!=='protagonist'||heroineRenderer==='bones'||hasStudioEdits)?published.rig:null;
  // CHAR-002's hosted 18-part PSD ArtMesh is authoritative. The studio also
  // saves a legacy 'skeletal' compatibility record; it must NOT hijack the
  // runtime renderer and silently discard the user's PartRig bone edits.
@@ -170,8 +184,8 @@ async function assign(target,id,face='front',save=true){
  const shape=clip?.crop||deployedClip?.crop||{x:351,y:9,w:335,h:1013};
  // Non-library modes own their own rendering driver; let the previous
  // library complete its final frame right up to this selected handoff.
- if(!publishedRig)window.PaperchalkL2DLibrary?.detach(target);
- if(usesPsdRig&&!preferPublishedArtMesh){
+ if(!publishedRig&&!localRigAvailable)window.PaperchalkL2DLibrary?.detach(target);
+ if(usesPsdRig&&!preferPublishedArtMesh&&!localRigAvailable){
   // Genuine Photoshop layers without an authoritative PartRig take precedence over the old baked
   // flat-PNG WebP. Each image has a separate source texture and bone.
   await checked(window.PaperchalkL2D.setAnimationSource(target,null));
@@ -179,22 +193,22 @@ async function assign(target,id,face='front',save=true){
   if(!loaded)throw Error('真实 PSD 独立骨骼图层载入中断');
   const obj=window.PaperchalkL2D.get(target);
   if(obj){obj.root.dataset.l2dEdition='psd-layer-skeletal';obj.root.dataset.l2dMode='psd-layer-skeletal';obj.root.dataset.l2dAnimated='true';}
- }else if(publishedRig){
+ }else if(publishedRig||localRigAvailable){
   try{
    if(!window.PaperchalkL2DLibrary)throw Error('游戏未安装模块化 ArtMesh 播放器');
-   // PROTAGONIST: her original actor automatically renders independent
-   // animated hair, pleats and both arms. No separate experimental selection.
-   const [savedRig,savedArt]=await checked(Promise.all([
-    get('part-rig:'+id+':'+face),getLocalArtwork(id,face)
-   ]));
-   const attached=await checked(window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig,savedRig,savedArt));
+   // If no GitHub module exists, the SAME complete saved PartRig and
+   // original PNGs are used; do not degrade to the old simplified PSD rig.
+   const attached=await checked(window.PaperchalkL2DLibrary.attach(
+    target,id,face,publishedRig||null,savedRig,savedArt));
    if(!attached)throw Error('L2D 模块加载已被后续操作取消');
    if(previousAction)window.PaperchalkL2DLibrary.setAction(target,previousAction);
    if(id==='protagonist')actor.root.dataset.l2dBreath='joint-parented';
   }catch(error){
    if(!current())throw error;
-   // Fail safe: preserve the existing approved V4 when any PNG/rig is
-   // corrupted or unavailable, rather than removing the heroine from scene.
+   // Never lie that the editor's changes were applied when a saved user
+   // model or painted PSD layer cannot be loaded. Preserve the active actor
+   // and surface the exact failure instead of silently showing old V4.
+   if(hasStudioEdits)throw Error('工作室 L2D 同步失败，已保留你的编辑数据：'+error.message);
    if(id!=='protagonist'||!source)throw error;
    console.warn('[L2D] Original approved animation retained: independent character rig unavailable',error);
    window.PaperchalkL2DLibrary?.detach(target);
@@ -233,9 +247,10 @@ async function assign(target,id,face='front',save=true){
  await checked(window.PaperchalkL2D.setComponentPatch(target,patch));
  if(save)await checked(put('slot:'+target,{id,side:face}));
  refreshList();
- note('正在加载 '+c.label+' · '+(face==='back'?'背面':'正面')+
-   (usesPsdRig?' · 本机独立 PSD':window.PaperchalkL2DLibrary?.get(target)?
-      ' · 真实部件头发/裙摆/手臂独立摆动（无呼吸）':source?' · V4 备份（无额外呼吸）':' · 通用程序网格'));
+ const live=window.PaperchalkL2DLibrary?.get(target);
+ note('✓ 已加载 '+c.label+' · '+(face==='back'?'背面':'正面')+
+   (live?(live.model?.characterId===id?' · 工作室/游戏同一 PartRig':' · 发布版 PartRig'):
+    usesPsdRig?' · 简化 PSD 骨骼':source?' · V4 备份':' · 通用程序网格'));
 }
 async function setHeroineRenderer(mode){
  if(mode!=='bones'&&mode!=='v4')throw Error('只能选择逐部件骨骼或原版 V4 备份');
@@ -303,7 +318,8 @@ async function init(){
  }
  for(const key of ['player','enemy']){
   const a=assigned[key];if(a?.id&&catalog.has(a.id)){
-   try{await assign(key,a.id,a.side,false)}catch(e){console.warn(e);}
+   try{await assign(key,a.id,a.side,false)}
+   catch(e){console.error('[L2D] 游戏启动同步失败',e);note('L2D 加载失败：'+e.message);}
   }
  }
  ready=true;
