@@ -274,6 +274,16 @@ jobs:
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1 pngjs@7.0.0
           npx playwright install --with-deps chromium
+      - name: Capture ring arena WebGL world-space battle views
+        run: node tests/ring-arena-browser.mjs
+      - name: Upload actual dual-ring WebGL screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ring-arena-real-webgl
+          path: artifacts/ring-arena/*.png
+          retention-days: 7
+          if-no-files-found: warn
       - name: Verify one 3D camera projects background/NPC and preserves L2D + fog
         run: node tests/scene-camera-browser.mjs
       - name: Validate L2D physical size and shoe-ground relationship with camera
