@@ -49,7 +49,7 @@ try{
  try{
  await page.waitForFunction(()=>{
   const r=window.PaperWorldGameRingArena?.inspect();
-  return window.PaperchalkCharacterDev?.ready&&r?.l2dReady===8&&
+  return window.PaperchalkCharacterDev?.ready&&r?.l2dReady===5&&
    ['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4']
      .every(id=>window.PaperchalkL2D?.get(id)?.root?.dataset.l2dState==='ready');
  },null,{timeout:75000});
@@ -83,7 +83,9 @@ try{
  });
  const before=await get();
  assert.equal(before.arena.mode,'outer');
- assert.equal(before.arena.l2dReady,8);
+ assert.equal(before.arena.l2dReady,5);
+ assert.deepEqual(before.arena.visibleActorIds,['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
+ assert.deepEqual(before.arena.hiddenAlliedTeammateIds,['ally-2','ally-3','ally-4']);
  assert.equal(before.sources.find(s=>s.id==='player').side,'back');
  assert.ok(before.sources.every(s=>!s.hidden&&s.ready==='ready'&&s.canvasW>0),'all 8 authentic L2D sources active');
  const original=JSON.stringify(before.arena.actors);
@@ -93,19 +95,21 @@ try{
  const moved=await get();
  assert.equal(JSON.stringify(moved.arena.actors),original,'world positions must be unchanged by camera pan');
  assert.notEqual(moved.arena.camera.angle,before.arena.camera.angle);
- assert.equal(moved.arena.l2dReady,8);
+ assert.equal(moved.arena.l2dReady,5);
+ assert.deepEqual(moved.arena.visibleActorIds,before.arena.visibleActorIds);
  await page.screenshot({path:'artifacts/ring-arena/l2d-outer-right.png'});
  await page.locator('[data-mode="inner"]').click();
  await page.waitForTimeout(700);
  const inner=await get();
  assert.equal(inner.arena.mode,'inner');
  assert.equal(inner.arena.camera.radius,3.45);
- assert.equal(inner.arena.l2dReady,8);
+ assert.equal(inner.arena.l2dReady,5);
+ assert.deepEqual(inner.arena.visibleActorIds,before.arena.visibleActorIds);
  assert.equal(inner.arena.actors.allies.length,4);
  await page.screenshot({path:'artifacts/ring-arena/l2d-inner-right.png'});
  assert.deepEqual(errors,[],'browser should not report unexpected errors');
  await page.close();
- console.log('PASS: all eight live L2D actors; fixed world coordinates; true 3D camera orbit screenshot QA');
+ console.log('PASS: heroine + 4 enemies drawn; 3 allied teammates hidden; all world coordinates fixed; true 3D camera orbit');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }
