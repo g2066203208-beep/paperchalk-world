@@ -1,0 +1,168 @@
+{
+  "version": "0.3.0",
+  "status": "design_spec_not_implemented",
+  "date": "2026-11-06",
+  "source_doc": "docs/game/TIMEGRID_CARD_COMBAT_RULES_V0_3_20261106.md",
+  "time": {
+    "ticks_per_round": 10,
+    "in_game_minutes_per_round": 10,
+    "one_tick_minutes": 1,
+    "global_shared_clock": true,
+    "plan_before_execute": true,
+    "simultaneous_step_resolution": true,
+    "allow_gaps": true,
+    "one_actor_no_overlap": true,
+    "allow_only_rightmost_action_cross_round": true,
+    "max_start_tick_in_round": 10
+  },
+  "action_phase": {
+    "order": [
+      "windup",
+      "active",
+      "recovery"
+    ],
+    "durations_nonnegative": true,
+    "active_min_ticks": 1,
+    "only_active_has_primary_effect": true
+  },
+  "visual": {
+    "attack": {
+      "primary": "#D45C62",
+      "icon": "swords"
+    },
+    "defense": {
+      "primary": "#4E95CC",
+      "icon": "shield"
+    },
+    "skill": {
+      "primary": "#4AAE99",
+      "icon": "sparkles"
+    },
+    "power": {
+      "primary": "#9A75C4",
+      "icon": "star"
+    },
+    "special": {
+      "primary": "#D79B53",
+      "icon": "diamond"
+    },
+    "finisher": {
+      "primary": "#C9A05B",
+      "icon": "zap"
+    },
+    "system": {
+      "primary": "#81909E",
+      "icon": "refresh-cw"
+    },
+    "crowd_control": {
+      "primary": "#75616A",
+      "icon": "triangle-alert"
+    },
+    "windup_variant": "light",
+    "active_variant": "primary",
+    "recovery_variant": "dark",
+    "require_icons_and_patterns": true
+  },
+  "hand": {
+    "hand_size_tuning_value": 4,
+    "empty_hand_refill": {
+      "requires_player_action": true,
+      "min_ticks": 1,
+      "prototype_ticks": 1,
+      "locks_previous_plan": true,
+      "new_cards_usable_after_action": true
+    },
+    "manual_redraw_with_cards": {
+      "prototype_ticks": 2,
+      "discards_unspent_cards": true,
+      "locks_previous_plan": true
+    },
+    "draw_pile_recycle": {
+      "automatic": true,
+      "extra_ticks": 0,
+      "only_when_drawing": true
+    },
+    "allow_drawn_cards_before_refill_time": false,
+    "deterministic_draw_order": true
+  },
+  "combat": {
+    "same_rules_for_enemies_and_allies": true,
+    "attack": {
+      "default_hit_policy": "damage_every_active_tick",
+      "instant_active_ticks": 1
+    },
+    "defense": {
+      "guard_pool_shared_across_active_ticks": true,
+      "only_active_ticks_block": true,
+      "guard_break_when_depleted": true,
+      "guard_overflow_damage_fraction_prototype": 1,
+      "expiry_does_not_trigger_break": true
+    },
+    "break": {
+      "event_marker_ticks": 1,
+      "prototype_total_incapacitation_ticks": 3,
+      "interrupt_remaining_plan": true
+    },
+    "unconscious": {
+      "event_marker_ticks": 1,
+      "prototype_total_incapacitation_ticks": 6,
+      "interrupt_remaining_plan": true
+    },
+    "resolve_same_tick_as_batch": true,
+    "no_network_arrival_priority": true
+  },
+  "finisher": {
+    "independent_slot": true,
+    "in_draw_discard_piles": false,
+    "meter_carries_between_battles": true,
+    "requires_meter_and_conditions": true,
+    "finish_battle_triggers_special_scoring": true
+  },
+  "examples": [
+    {
+      "id": "basic_attack_example",
+      "name": "普通攻击",
+      "type": "attack",
+      "windup_ticks": 1,
+      "active_ticks": 1,
+      "recovery_ticks": 1,
+      "trigger_mode": "per_active_tick",
+      "damage_per_active_tick": 8,
+      "editable_balance": true
+    },
+    {
+      "id": "multi_attack_example",
+      "name": "持续挥击",
+      "type": "attack",
+      "windup_ticks": 1,
+      "active_ticks": 3,
+      "recovery_ticks": 1,
+      "trigger_mode": "per_active_tick",
+      "damage_per_active_tick": 4,
+      "editable_balance": true
+    },
+    {
+      "id": "guard_example",
+      "name": "持续防御",
+      "type": "defense",
+      "windup_ticks": 0,
+      "active_ticks": 3,
+      "recovery_ticks": 0,
+      "trigger_mode": "per_active_tick",
+      "guard_points": 8,
+      "guard_policy": "shared_pool_not_refilled_per_tick",
+      "editable_balance": true
+    },
+    {
+      "id": "empty_hand_shuffle_example",
+      "name": "空手换手",
+      "type": "system",
+      "windup_ticks": 0,
+      "active_ticks": 1,
+      "recovery_ticks": 0,
+      "trigger_mode": "on_active_end",
+      "effect": "draw_next_hand_and_lock_previous_plan",
+      "editable_balance": true
+    }
+  ]
+}
