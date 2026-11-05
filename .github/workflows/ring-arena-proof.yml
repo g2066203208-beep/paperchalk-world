@@ -1,0 +1,47 @@
+name: Ring arena — true L2D WebGL proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/ring-arena-runtime.js'
+      - 'site/index.html'
+      - 'site/dev/character-bridge.js'
+      - 'tests/ring-arena*'
+      - '.github/workflows/ring-arena-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build exact approved character rigs used by game
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/fix_protagonist_neck_v4.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_character_catalog.py
+          python3 scripts/build_scene_catalog.py
+      - name: Verify eight immutable world anchors and camera-only orbit
+        run: node tests/ring-arena.test.cjs
+      - name: Install real Chromium renderer
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Render and capture original eight L2D actors in true 3D
+        run: node tests/ring-arena-browser.mjs
+      - name: Preserve real rendered game screenshots even on failed test
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ring-arena-original-l2d-actual-browser
+          path: artifacts/ring-arena/*.png
+          if-no-files-found: warn
+          retention-days: 7
