@@ -919,7 +919,7 @@ body.mobile-mode.virtual-landscape #view{
         <div class="dev-buttons"><button type="button" data-room-view="front">正视</button>
         <button type="button" data-room-view="side">侧视</button>
         <button type="button" data-room-view="top">俯视</button></div>
-        <label>游戏镜头移动幅度 <output id="dev-room-pointer-strength-value">100%</output></label>
+        <label>环顾视角幅度 <output id="dev-room-pointer-strength-value">100%</output></label>
         <input id="dev-room-pointer-strength" type="range" min="0" max="150" value="100" step="5">
         <label>摄影机 FOV <output data-room-camera-value="fov">68°</output></label>
         <input type="range" data-room-camera-field="fov" min="40" max="90" step="1">
@@ -2631,7 +2631,7 @@ void main(){
     if(!is3DRoom())return;
     boxScene.setPointerStrength(Number(e.target.value)/100);
     refreshRoomDev();
-    setDevStatus('已更新游戏摄影机安全活动范围');
+    setDevStatus('已更新站立环顾角度范围');
   });
   document.querySelectorAll('[data-room-camera-field]').forEach(input=>{
     input.addEventListener('input',()=>{
@@ -3125,14 +3125,14 @@ void main(){
   function tick(now){
     raf=0;if(document.hidden)return;
     let dt=last?clamp((now-last)/1000,.001,.055):1/60;last=now;
-    // The 3D room uses the same time-based camera damping as all scenes,
-    // with slightly more responsive X and gently weighted vertical motion.
-    // There is NO second per-layer parallax or independent L2D tilt.
+    // First-person mouse look: smooth yaw/pitch at ONE stationary camera
+    // pivot, not a dolly. This is the sole frame-time-based damping pass.
+    // No individual L2D, fog or material-layer parallax.
     const roomMove=stage.dataset.scene==='classroom-box';
-    const kx=1-Math.exp(-dt*(roomMove?8.4:7));
-    const ky=1-Math.exp(-dt*(roomMove?6.8:7));
-    // Legacy "scene tilt" controls 2D illustrations only. A physical
-    // 3D camera has its own independently adjustable, bounded travel range.
+    const kx=1-Math.exp(-dt*(roomMove?10:7));
+    const ky=1-Math.exp(-dt*(roomMove?9:7));
+    // Old flat-scene tilt only affects 2D. The WebGL room uses the
+    // independently bounded first-person PAN/TILT angles.
     if(reduced.matches||editorActive||(!roomMove&&!tiltEnabled)){
       aimX=0;aimY=0;
     }
@@ -3148,8 +3148,8 @@ void main(){
       stage.style.transform='none';
       enemyDepth.style.transform='none';
       cameraPlayer.style.transform='none';
-      // Drive ONE bounded real camera. Physical depth differences emerge
-      // from world geometry; L2D and the five meshes use the same matrix.
+      // Rotate ONE camera around its fixed standing point. WebGL surfaces
+      // and L2D feet share the same projection; never move scene layers.
       boxScene.render(currentX,currentY);
       stage.dataset.cameraProfile='five-face-world-3d';
     }else{
