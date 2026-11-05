@@ -55,9 +55,9 @@ for(const face of ['back','floor']){
   'rejected new material must be absent');
 }
 // Four different world-space actors; player cropped foreground and a
-// three-enemy evenly spaced straight row, projected by this same camera.
+// four-enemy evenly spaced straight row, projected by this same camera.
 const ids=Object.keys(api.CHARACTERS);
-assert.deepEqual(ids,['player','enemy','enemy2','enemy3']);
+assert.deepEqual(ids,['player','enemy','enemy2','enemy3','enemy4']);
 const shot=Object.fromEntries(ids.map(id=>[id,api.actorGeometry(id,base,1280,720)]));
 assert.ok(shot.player.head.y/720>.15&&shot.player.head.y/720<.25);
 assert.ok(shot.player.shoe.y>720*1.20,'foreground shoes are below camera frame');
@@ -71,12 +71,12 @@ for(const id of ids){
  close(ultrawide[id].drawnHeight/wideH,shot[id].drawnHeight/720,1e-8);
 }
 assert.ok(ultrawide.player.head.y/wideH>.15&&ultrawide.player.head.y/wideH<.25);
-for(const id of ['enemy','enemy2','enemy3']){
+for(const id of ['enemy','enemy2','enemy3','enemy4']){
  const shoe=ultrawide[id].shoe;
  assert.ok(shoe.x>0&&shoe.x<wideW&&shoe.y>0&&shoe.y<wideH,
    id+' must keep both shoes visible in full-bleed mobile landscape: '+JSON.stringify(shoe));
 }
-for(const id of ['enemy','enemy2','enemy3']){
+for(const id of ['enemy','enemy2','enemy3','enemy4']){
  assert.ok(shot[id].shoe.y<720&&shot[id].shoe.y>720*.73,
   id+' foot must stay visible in midground');
  assert.ok(shot[id].head.y>720*.30&&shot[id].head.y<720*.48,
@@ -84,27 +84,32 @@ for(const id of ['enemy','enemy2','enemy3']){
 }
 // Strict 3D line-up: equal world Y and Z, equal screen foot baseline,
 // nearly identical visual size (only individual physical heights differ).
-for(const id of ['enemy2','enemy3']){
+for(const id of ['enemy2','enemy3','enemy4']){
  close(api.CHARACTERS[id].y,api.CHARACTERS.enemy.y);
  close(api.CHARACTERS[id].z,api.CHARACTERS.enemy.z);
  close(shot[id].shoe.y,shot.enemy.shoe.y);
  close(ultrawide[id].shoe.y,ultrawide.enemy.shoe.y);
  assert.ok(Math.abs(shot[id].drawnHeight/shot.enemy.drawnHeight-1)<.025);
 }
-const leftGap=shot.enemy2.shoe.x-shot.enemy.shoe.x;
-const rightGap=shot.enemy3.shoe.x-shot.enemy2.shoe.x;
-assert.ok(Math.abs(leftGap-rightGap)<2,'three enemies must have equal horizontal gaps');
+const gaps=[shot.enemy2.shoe.x-shot.enemy.shoe.x,
+ shot.enemy3.shoe.x-shot.enemy2.shoe.x,
+ shot.enemy4.shoe.x-shot.enemy3.shoe.x];
+assert.ok(gaps.every(g=>g>120),'four enemies should have visible horizontal separation');
+assert.ok(Math.max(...gaps)-Math.min(...gaps)<2,'four enemies must have equal horizontal gaps');
 assert.ok(shot.enemy.shoe.x<shot.enemy2.shoe.x);
 assert.ok(shot.enemy2.shoe.x<shot.enemy3.shoe.x);
+assert.ok(shot.enemy3.shoe.x<shot.enemy4.shoe.x);
 // Cast must occupy distinct thirds with clear horizontal gaps, and the
 // heroine must be a cropped close-up on the left, not a full-body doll.
 const projected=Object.fromEntries(ids.map(id=>[id,api.actorGeometry(id,base,1280,720)]));
 assert.ok(projected.player.head.x<300);
-assert.ok(projected.enemy.shoe.x>520&&projected.enemy.shoe.x<700);
-assert.ok(projected.enemy2.shoe.x>790&&projected.enemy2.shoe.x<980);
-assert.ok(projected.enemy3.shoe.x>1000&&projected.enemy3.shoe.x<1230);
-assert.ok(projected.enemy2.shoe.x-projected.enemy.shoe.x>200);
-assert.ok(projected.enemy3.shoe.x-projected.enemy2.shoe.x>190);
+assert.ok(projected.enemy.shoe.x>440&&projected.enemy.shoe.x<570);
+assert.ok(projected.enemy2.shoe.x>640&&projected.enemy2.shoe.x<780);
+assert.ok(projected.enemy3.shoe.x>840&&projected.enemy3.shoe.x<1000);
+assert.ok(projected.enemy4.shoe.x>1050&&projected.enemy4.shoe.x<1210);
+assert.ok(projected.enemy2.shoe.x-projected.enemy.shoe.x>120);
+assert.ok(projected.enemy3.shoe.x-projected.enemy2.shoe.x>120);
+assert.ok(projected.enemy4.shoe.x-projected.enemy3.shoe.x>120);
 assert.equal(api.BASE_CAMERA.hFov,60);
 assert.ok(api.buildMesh().shadows.length>4*32*3,'each actor needs a 3D floor contact patch');
 assert.deepEqual(api.FACES.find(face=>face.id==='floor').vertices,
