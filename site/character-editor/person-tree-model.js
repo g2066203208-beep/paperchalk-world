@@ -94,6 +94,7 @@ function namesFor(record,category){
  if(id==='protagonist-battle-front')return '战斗 PSD · 原始 24 部件';
  if(id==='char-003-outfit-02')return '新服装';
  // Historic asset ID stays stable for saved PSD bones and IndexedDB drafts.
+ if(id==='female-06-second-outfit')return '第二套 · 翼羽姿态';
  if(id==='female-06-outfit-02')return '第三套 · 橙棕外套';
  if(category==='source')return label.replace(/^(?:女主角?|男主角?)\s*[·:：-]\s*/,'');
  if(category==='pending')return label.replace(/\s*[（(].*?待导入.*?[）)]/g,'');
@@ -138,6 +139,12 @@ function makeTree(records,currentId=''){
   if(!hasArt&&family!=='male2'&&!all.some(x=>x.id===currentId))continue;
   const face={front:!!(primary.front||primary.l2dModule?.front),
    back:!!(primary.back||primary.l2dModule?.back)};
+  // Wardrobe numbers, not historical ZIP filenames, define costume order.
+  variants.outfits.sort((a,b)=>{
+   const n=x=>Number((x.label.match(/^第([一二三四五六七八九十])套/)||[])[1]&&
+     ({一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10})[x.label[1]])||99;
+   return n(a)-n(b)||a.label.localeCompare(b.label,'zh-CN');
+  });
   const rank=ORDER.indexOf(family);
   const sources=[...variants.sources,...variants.legacy,...variants.pending]
    .sort((a,b)=>({source:0,legacy:1,pending:2}[a.type]-
