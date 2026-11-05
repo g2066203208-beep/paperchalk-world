@@ -55,7 +55,7 @@ for(const face of ['back','floor']){
   'rejected new material must be absent');
 }
 // Four different world-space actors; player cropped foreground and a
-// three-enemy staggered formation, projected by this same pinhole camera.
+// three-enemy evenly spaced straight row, projected by this same camera.
 const ids=Object.keys(api.CHARACTERS);
 assert.deepEqual(ids,['player','enemy','enemy2','enemy3']);
 const shot=Object.fromEntries(ids.map(id=>[id,api.actorGeometry(id,base,1280,720)]));
@@ -82,8 +82,18 @@ for(const id of ['enemy','enemy2','enemy3']){
  assert.ok(shot[id].head.y>720*.30&&shot[id].head.y<720*.48,
   id+' head must be fully in frame');
 }
-assert.ok(api.CHARACTERS.enemy.z<api.CHARACTERS.enemy2.z);
-assert.ok(api.CHARACTERS.enemy.z<api.CHARACTERS.enemy3.z);
+// Strict 3D line-up: equal world Y and Z, equal screen foot baseline,
+// nearly identical visual size (only individual physical heights differ).
+for(const id of ['enemy2','enemy3']){
+ close(api.CHARACTERS[id].y,api.CHARACTERS.enemy.y);
+ close(api.CHARACTERS[id].z,api.CHARACTERS.enemy.z);
+ close(shot[id].shoe.y,shot.enemy.shoe.y);
+ close(ultrawide[id].shoe.y,ultrawide.enemy.shoe.y);
+ assert.ok(Math.abs(shot[id].drawnHeight/shot.enemy.drawnHeight-1)<.025);
+}
+const leftGap=shot.enemy2.shoe.x-shot.enemy.shoe.x;
+const rightGap=shot.enemy3.shoe.x-shot.enemy2.shoe.x;
+assert.ok(Math.abs(leftGap-rightGap)<2,'three enemies must have equal horizontal gaps');
 assert.ok(shot.enemy.shoe.x<shot.enemy2.shoe.x);
 assert.ok(shot.enemy2.shoe.x<shot.enemy3.shoe.x);
 // Cast must occupy distinct thirds with clear horizontal gaps, and the
