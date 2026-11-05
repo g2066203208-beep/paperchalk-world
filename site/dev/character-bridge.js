@@ -8,9 +8,10 @@ const $=id=>document.getElementById(id);
 const loaded=$('dev-character-list'),library=$('dev-character-library');
 const side=$('dev-character-angle'),picker=$('dev-layer'),status=$('dev-character-status');
 if(!loaded||!library||!window.PaperchalkL2D)return;
-const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},enemy:{id:'char-002',side:'front'}};
+const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},enemy:{id:'char-002',side:'front'},enemy2:{id:'char-003',side:'front'},enemy3:{id:'char-006',side:'front'}};
+const GAME_SLOTS=['player','enemy','enemy2','enemy3'];
 const DB='paperchalk-dev-characters-v1';
-const assignmentVersions={player:0,enemy:0};
+const assignmentVersions={player:0,enemy:0,enemy2:0,enemy3:0};
 let slot='player',ready=false,heroineRenderer=
   (sessionStorage.getItem('paperchalk-heroine-renderer-mode')==='v4'?'v4':'bones');
 function note(s){status.textContent=s;}
@@ -56,7 +57,7 @@ const put=(key,v)=>storage('readwrite',key,v);
 // Every mounted role is assignable, even when its original invisible image
 // has no src yet. The enemy slot starts empty and is populated by the
 // validated CHAR-002 library module during init.
-const actualActors=()=>['player','enemy'].map(id=>window.PaperchalkL2D.get(id))
+const actualActors=()=>GAME_SLOTS.map(id=>window.PaperchalkL2D.get(id))
  .filter(a=>a?.root?.isConnected&&a.img&&a.canvas);
 function refreshList(){
  // The explicitly selected actor wins. The old dropdown value must not
@@ -66,7 +67,8 @@ function refreshList(){
   const bind=assigned[a.id]||{id:a.img.dataset.characterId||a.id,side:a.img.dataset.characterSide||'front'};
   assigned[a.id]=bind;
   const desc=catalog.get(bind.id)?.label||bind.id;
-  loaded.add(new Option(desc+' · '+(a.id==='player'?'主角区':'敌人区'),a.id));
+  const zone=a.id==='player'?'主角区':a.id==='enemy'?'敌人一':a.id==='enemy2'?'敌人二':'敌人三';
+  loaded.add(new Option(desc+' · '+zone,a.id));
  }
  if([...loaded.options].some(x=>x.value===previous))slot=loaded.value=previous;
  else if(loaded.options.length)slot=loaded.value=loaded.options[0].value;
@@ -346,11 +348,11 @@ async function init(){
     c[face]=composite;
   }
  }
- for(const key of ['player','enemy']){
+ for(const key of GAME_SLOTS){
   const old=await get('slot:'+key);
   if(old?.id&&catalog.has(old.id))assigned[key]={id:old.id,side:old.side==='back'?'back':'front'};
  }
- for(const key of ['player','enemy']){
+ for(const key of GAME_SLOTS){
   const a=assigned[key];if(a?.id&&catalog.has(a.id)){
    try{await assign(key,a.id,a.side,false)}
    catch(e){console.error('[L2D] 游戏启动同步失败',e);note('L2D 加载失败：'+e.message);}
@@ -423,7 +425,7 @@ if(gameSync)gameSync.onmessage=event=>{
  if(msg.type!=='paperchalk:l2d-saved'||!valid(msg.id)||
     !['front','back'].includes(msg.face)||
     !['rig-saved','applied'].includes(msg.kind))return;
- if(msg.kind==='applied'&&!['player','enemy'].includes(msg.slot))return;
+ if(msg.kind==='applied'&&!GAME_SLOTS.includes(msg.slot))return;
  syncQueue=syncQueue.then(async()=>{
   if(!ready)return;
   if(msg.kind==='applied'){
