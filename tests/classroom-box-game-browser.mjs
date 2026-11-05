@@ -95,12 +95,15 @@ try{
    // 390px-tall phone the authentic 1024 source is rasterized smaller.
    // Require LIVE ready state, nonempty source, and an active display buffer.
    const minPixels=cfg.mobile?64*64:256*256;
+   // Canonical L2D studio composites may be browser data: URLs rather
+   // than /assets/characters/...; identify characters by saved L2D identity
+   // and live animated canvas, not by an assumed PNG path.
    assert.ok(data.enemy.canvasPixels>=minPixels &&
-     data.enemy.src.includes('/assets/characters/'),
-     'NPC must use the actual game L2D character');
+     data.enemy.character==='char-002' && !!data.enemy.src,
+     'NPC must use the actual CHAR-002 L2D, got '+JSON.stringify(data.enemy));
    assert.ok(data.player.canvasPixels>=minPixels &&
-     data.player.src.includes('/assets/characters/'),
-     'heroine must use the actual game L2D character');
+     data.player.character==='protagonist' && !!data.player.src,
+     'heroine must use the actual protagonist L2D, got '+JSON.stringify(data.player));
    // A real game character is attached by its shoe to the same 3D ground
    // that is drawn in the room background (not an independent 2D guess).
    const stage=await page.locator('#scene').boundingBox();
