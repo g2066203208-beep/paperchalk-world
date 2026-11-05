@@ -12,12 +12,17 @@ if(root)root.PaperWorldClassroomBox=api;
 })(typeof window!=='undefined'?window:null,function(){
 'use strict';
 const ROOM=Object.freeze({width:9.6,depth:8,height:3.2});
-const BASE_CAMERA=Object.freeze({x:0,y:1.22,z:-1.25,hFov:68});
+// Fixed cinematic encounter lens: a narrower field of view keeps the
+// 3D room supporting the cast instead of swallowing the composition.
+const BASE_CAMERA=Object.freeze({x:0,y:1.22,z:-1.25,hFov:60});
 const CHARACTERS=Object.freeze({
-  player:Object.freeze({x:-.58,y:0,z:.55,height:1.62,soleX:.51,soleY:.978,visible:.945}),
-  enemy:Object.freeze({x:1.12,y:0,z:2.6,height:1.58,soleX:.5,soleY:.978,visible:.95}),
-  enemy2:Object.freeze({x:.12,y:0,z:3.25,height:1.59,soleX:.5,soleY:.978,visible:.95}),
-  enemy3:Object.freeze({x:2.1,y:0,z:3.5,height:1.60,soleX:.5,soleY:.978,visible:.95})
+  // Back-facing heroine close to camera; legs deliberately leave the frame.
+  player:Object.freeze({x:-.84,y:0,z:.68,height:1.62,soleX:.51,soleY:.978,visible:.945}),
+  // Three separated screen columns, not a crowded cluster at the blackboard.
+  // CHAR-002 (near left), male lead (centre), teacher (right rear).
+  enemy:Object.freeze({x:-.16,y:0,z:2.9,height:1.58,soleX:.5,soleY:.978,visible:.95}),
+  enemy2:Object.freeze({x:1.02,y:0,z:3.25,height:1.59,soleX:.5,soleY:.978,visible:.95}),
+  enemy3:Object.freeze({x:2.05,y:0,z:3.45,height:1.60,soleX:.5,soleY:.978,visible:.95})
 });
 const COLORS=Object.freeze({
   ceiling:'#a8b1be',floor:'#bca17f',back:'#70899b',
@@ -253,7 +258,9 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   const actorWorld=Object.fromEntries(Object.entries(CHARACTERS).map(([id,a])=>[id,{...a}]));
   let geometry=buildMesh(actorWorld);
   // Versioned so prior two-character experimental positions cannot overwrite this composition.
-  const savedActorKey='paperchalk-classroom-3d-actor-world-v2';
+  // Intentional new authored composition. Earlier saved experiments should
+  // not silently force the old crowded arrangement on returning players.
+  const savedActorKey='paperchalk-classroom-3d-actor-world-v3';
   try{
     const stored=JSON.parse(localStorage.getItem(savedActorKey)||'null');
     if(stored&&typeof stored==='object'){
