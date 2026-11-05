@@ -2821,7 +2821,9 @@ void main(){
       stage.style.transform='none';
       enemyDepth.style.transform='none';
       cameraPlayer.style.transform='none';
-      boxScene.render(currentX,currentY);
+      // No mouse-follow parallax or CSS tilt for the true 3D scene.
+      // Only an explicit camera action in DEV moves the shared viewpoint.
+      boxScene.render();
       stage.dataset.cameraProfile='five-face-world-3d';
     }else{
       const camera=sceneCamera.pose(currentX,currentY,sizes.h);
