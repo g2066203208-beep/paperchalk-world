@@ -764,6 +764,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
 <script src="./game/classroom-box-runtime.js?v=four-enemy-row-v2"></script>
+<script src="./game/ring-arena-runtime.js?v=dual-orbit-webgl-v1"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -1935,9 +1936,11 @@ void main(){
   // Scene assets/content are data; rendering, 3D tilt and black fog are shared.
   // Only add an image to site/assets/scenes; CI auto-registers new scenes.
   // New rooms are declared ONLY by the compiled scene image catalog.
-  const SCENES=Object.freeze(window.PAPERWORLD_SCENE_MODULES.buildRegistry(
+  const SCENES=Object.freeze({...window.PAPERWORLD_SCENE_MODULES.buildRegistry(
     window.PAPERWORLD_SCENE_CATALOG
-  ));
+  ),'ring-arena':{id:'ring-arena',title:'圆环数字空间 · 3D',type:'environment',
+    image:'./assets/menu-wall.webp',alt:'WebGL程序生成的圆柱形真实三维战场',
+    layers:{player:false,enemy:false}}});
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
   const extraEnemies=['enemy2','enemy3','enemy4'].map(id=>document.getElementById('room-'+id+'-root'));
@@ -1946,6 +1949,9 @@ void main(){
     stage,view,playerRoot:cameraPlayer,enemyRoot:enemyDepth
   });
   window.PaperWorldGameRoomBox=boxScene;
+  const ringScene=window.PaperWorldRingArena.create({stage,view,
+    onExit:()=>changeScene('menu')});
+  window.PaperWorldGameRingArena=ringScene;
   const sceneMenu=document.getElementById('scene-menu');
   const mainOptions=document.getElementById('scene-menu-main');
   const settingsOptions=document.getElementById('scene-menu-settings');
@@ -1999,6 +2005,7 @@ void main(){
     enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
     extraEnemies.forEach(node=>node.hidden=name!=='classroom-box');
     boxScene.setActive(name==='classroom-box');
+    ringScene.setActive(name==='ring-arena');
     // The room now fills the viewport; legacy fog needs its saved safe-zone
     // bounds restored when we leave this scene without a window resize.
     if(frameNumber>0){half();applyFogSettings();}
@@ -3196,6 +3203,14 @@ void main(){
       // The menu is authored as a flat graphic; retain its original tilt.
       stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+
         'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    }else if(stage.dataset.scene==='ring-arena'){
+      // ALL people and surfaces belong to the same WebGL depth buffer.
+      // No DOM billboard offsets, CSS parallax or backdrop deformation.
+      stage.style.transform='none';
+      enemyDepth.style.transform='none';
+      cameraPlayer.style.transform='none';
+      ringScene.render(dt);
+      stage.dataset.cameraProfile='dual-concentric-orbit-webgl';
     }else if(stage.dataset.scene==='classroom-box'){
       // Genuine world X/Y/Z -> one pinhole perspective for BOTH surfaces and
       // the existing L2D player/enemy (same shoe coordinates on the floor).
@@ -3254,7 +3269,7 @@ void main(){
     }
     // No 10/16/24 FPS steps: every browser animation frame advances the SAME
     // persistent fluid density and composites the independent screen fog.
-    if(!reduced.matches||Math.abs(currentX)+Math.abs(currentY)>.001)raf=requestAnimationFrame(tick);
+    if(stage.dataset.scene==='ring-arena'||!reduced.matches||Math.abs(currentX)+Math.abs(currentY)>.001)raf=requestAnimationFrame(tick);
   }
   function start(){if(!raf)raf=requestAnimationFrame(tick)}
   window.addEventListener('pointermove',e=>{
