@@ -38,7 +38,7 @@ try{
  assert.equal(initial.mode,'outer');
  assert.equal(initial.camera.radius,9.55);
  await page.screenshot({path:'artifacts/ring-arena/outer-left.png'});
- await page.locator('[data-shift="1"]').click({clickCount:6,delay:15});
+ for(let i=0;i<6;i++)await page.locator('[data-shift="1"]').click();
  await page.waitForTimeout(800);
  const moved=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.ok(moved.actors.allies[0].x>initial.actors.allies[0].x+.25);
