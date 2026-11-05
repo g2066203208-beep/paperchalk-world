@@ -42,11 +42,14 @@ try{
      const room=window.PaperWorldGameRoomBox?.inspect();
      const player=window.PaperchalkL2D?.get('player');
      const enemy=window.PaperchalkL2D?.get('enemy');
-     return room?.active&&room.faceCount===5&&room.player&&room.enemy&&
+     const others=['enemy2','enemy3'].map(id=>window.PaperchalkL2D?.get(id));
+     return room?.active&&room.faceCount===5&&room.player&&room.enemy&&room.enemy2&&room.enemy3&&
        player?.root?.dataset.l2dState==='ready' &&
        room?.renderer==='webgl-3d-mesh' &&
        room.loadedMaterialCount===5 &&
        enemy?.root?.dataset.l2dState==='ready' &&
+       others.every(a=>a?.root?.dataset.l2dState==='ready' &&
+         a.root.dataset.l2dMode==='library-part-mesh'&&a.canvas.width>0) &&
        !!player.canvas?.width && !!enemy.canvas?.width &&
        !document.getElementById('camera-player-root').hidden &&
        !document.getElementById('enemy-depth-root').hidden;
@@ -58,6 +61,8 @@ try{
      const view=document.getElementById('view');
      const player=window.PaperchalkL2D.get('player');
      const enemy=window.PaperchalkL2D.get('enemy');
+     const enemy2=window.PaperchalkL2D.get('enemy2');
+     const enemy3=window.PaperchalkL2D.get('enemy3');
      const inspect=actor=>{
        const rect=actor.canvas.getBoundingClientRect();
        const img=actor.img.getBoundingClientRect();
@@ -70,14 +75,15 @@ try{
      return {room,canvas:{hidden:canvas.hidden,w:canvas.width,h:canvas.height},
       scene:document.getElementById('scene').dataset.scene,
       player:inspect(player),enemy:inspect(enemy),
+      enemy2:inspect(enemy2),enemy3:inspect(enemy3),
       fogFrames:Number(document.querySelector('#fog').dataset.frames),
       uiVisible:!document.querySelector('#novel-ui').hidden,
       roomClass:view.classList.contains('room-blockout-active'),
       originalImageVisibility:getComputedStyle(document.querySelector('#source')).visibility,
       cameraProfile:document.querySelector('#scene').dataset.cameraProfile,
       gameBackgroundTransform:document.querySelector('#scene').style.transform,
-      actorLayers:[document.querySelector('#enemy-depth-root').hidden,
-        document.querySelector('#camera-player-root').hidden],
+      actorLayers:['enemy-depth-root','room-enemy2-root','room-enemy3-root',
+        'camera-player-root'].map(id=>document.getElementById(id).hidden),
       scenePicker:!!document.querySelector('[data-scene-target="classroom-box"]')
      };
    });
@@ -100,8 +106,13 @@ try{
    assert.equal(data.gameBackgroundTransform,'none');
    assert.equal(data.cameraProfile,'five-face-world-3d');
    assert.ok(data.fogFrames>5);
-   assert.deepEqual(data.actorLayers,[false,false]);
-   assert.equal(data.enemy.state,'ready');
+   assert.deepEqual(data.actorLayers,[false,false,false,false]);
+   for(const id of ['player','enemy','enemy2','enemy3'])
+     assert.equal(data[id].state,'ready',id+' real L2D canvas is not ready');
+   for(const id of ['enemy2','enemy3']){
+     assert.equal(data[id].mode,'library-part-mesh','must animate genuine character layers: '+id);
+     assert.ok(data[id].src&&data[id].canvasPixels>0);
+   }
    assert.equal(data.player.state,'ready');
    // L2D backing resolution scales with physical viewport/DPR; on a
    // 390px-tall phone the authentic 1024 source is rasterized smaller.
@@ -120,7 +131,8 @@ try{
    // that is drawn in the room background (not an independent 2D guess).
    const stage=await page.locator('#scene').boundingBox();
    const playerRect=data.player.imgRect,enemyRect=data.enemy.imgRect;
-   for(const [id,rect] of [['player',playerRect],['enemy',enemyRect]]){
+   for(const [id,rect] of [['player',playerRect],['enemy',enemyRect],
+     ['enemy2',data.enemy2.imgRect],['enemy3',data.enemy3.imgRect]]){
      const actor=data.room[id];
      const shoeX=rect.x+rect.width*actor.soleX;
      const shoeY=rect.y+rect.height*actor.soleY;
@@ -132,6 +144,9 @@ try{
    }
    assert.ok(data.room.player.drawnHeight>data.room.enemy.drawnHeight,
      'near protagonist should be larger than midground opponent');
+   // The nearer front-row opponent must be visibly taller than the two behind.
+   assert.ok(data.room.enemy.drawnHeight>data.room.enemy2.drawnHeight);
+   assert.ok(data.room.enemy.drawnHeight>data.room.enemy3.drawnHeight);
    await page.screenshot({path:'artifacts/classroom-box/in-game-'+cfg.name+
      '-five-faces-l2d.png'});
    if(!cfg.mobile){
