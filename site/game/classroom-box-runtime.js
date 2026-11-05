@@ -88,7 +88,7 @@ function hexColor(hex,opacity=1){
 }
 function meshVertex(out,pt,color){out.push(pt[0],pt[1],pt[2],...color)}
 function buildMesh(){
-  const solids=[],edges=[],shadows=[],textured={},solidFaces={},edgeFaces={};
+  const solids=[],edges=[],shadows=[],guides=[],textured={},solidFaces={},edgeFaces={};
   const edgeColor=hexColor('#344251',.8);
   for(const face of FACES){
     const c=hexColor(COLORS[face.id]);
@@ -109,6 +109,20 @@ function buildMesh(){
     }
     edgeFaces[face.id]=new Float32Array(faceEdges);
   }
+  // Ground inspector guides exist as TRUE 3D line geometry at Y=0.016.
+  // They are drawn only when explicitly toggled in DEV.
+  const guideColor=hexColor('#d1e8dd',.58);
+  const axisColor=hexColor('#f2cc82',.8);
+  for(let x=-4;x<=4;x+=1){
+    const color=x===0?axisColor:guideColor;
+    meshVertex(guides,[x,.016,0],color);
+    meshVertex(guides,[x,.016,8],color);
+  }
+  for(let z=0;z<=8;z+=1){
+    const color=z===0?axisColor:guideColor;
+    meshVertex(guides,[-4.8,.016,z],color);
+    meshVertex(guides,[4.8,.016,z],color);
+  }
   for(const id of ['player','enemy']){
     const a=CHARACTERS[id],center=[a.x,.009,a.z];
     const tone=hexColor('#26313b',.58);
@@ -122,7 +136,8 @@ function buildMesh(){
     }
   }
   return {solids:new Float32Array(solids),edges:new Float32Array(edges),
-    shadows:new Float32Array(shadows),textured,solidFaces,edgeFaces,faceCount:5};
+    shadows:new Float32Array(shadows),guides:new Float32Array(guides),
+    textured,solidFaces,edgeFaces,faceCount:5};
 }
 const VS=[
 'attribute vec3 a_position;',
@@ -198,7 +213,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   let gl=null,program=null,buffers=null,positions=null,ctx=null,renderer='uninitialized';
   let cameraLoc=null,anglesLoc=null,tanLoc=null,enabled=false,lastKey='',lastState=null,frames=0;
   let texturedProgram=null,texturedLocations=null,materialBuffers=null,textureResources=null;
-  let debugMode=false,debugCamera=null,selectedFace=null;
+  let debugMode=false,debugCamera=null,selectedFace=null,guidesVisible=false;
   const visibleFaces=Object.fromEntries(FACES.map(face=>[face.id,true]));
   const materialStatus=Object.fromEntries(Object.keys(MATERIALS).map(id=>[id,'not-loaded']));
   const geometry=buildMesh();
@@ -254,7 +269,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     tanLoc=gl.getUniformLocation(program,'u_tanHalf');
     buffers={};
     const meshArrays={
-      solids:geometry.solids,edges:geometry.edges,shadows:geometry.shadows
+      solids:geometry.solids,edges:geometry.edges,
+      shadows:geometry.shadows,guides:geometry.guides
     };
     for(const face of FACES){
       meshArrays['solid-'+face.id]=geometry.solidFaces[face.id];
@@ -402,6 +418,8 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     for(const face of FACES){
       if(visibleFaces[face.id])draw('edge-'+face.id,gl.LINES,false);
     }
+    if(debugMode&&guidesVisible&&visibleFaces.floor)
+      draw('guides',gl.LINES,false);
     if(!debugMode)draw('shadows',gl.TRIANGLES,false);
     gl.depthMask(true);
     if(gl.getError()!==gl.NO_ERROR)throw Error('WebGL mesh draw failed');
@@ -419,6 +437,17 @@ function create({stage,view,playerRoot,enemyRoot}={}){
         ctx.fillStyle='#ffe1a347';ctx.fill();
       }
       ctx.strokeStyle='#344251';ctx.lineWidth=1;ctx.stroke();
+    }
+    if(debugMode&&guidesVisible&&visibleFaces.floor){
+      ctx.lineWidth=1;ctx.strokeStyle='#d1e8ddaa';
+      const lines=[];
+      for(let x=-4;x<=4;x++)lines.push([[x,.016,0],[x,.016,8]]);
+      for(let z=0;z<=8;z++)lines.push([[-4.8,.016,z],[4.8,.016,z]]);
+      for(const line of lines){
+        const a=project(line[0],cam,w,h),b=project(line[1],cam,w,h);
+        if(!a||!b)continue;
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      }
     }
     if(!debugMode)for(const a of Object.values(CHARACTERS)){
       const ring=[];
@@ -500,7 +529,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       renderer,meshFaceCount:5,vertexCount:geometry.solids.length/7,
       materialSources:MATERIALS,materials:{...materialStatus},
       loadedMaterialCount:Object.values(materialStatus).filter(v=>v==='ready').length,
-      debugMode,visibleFaces:{...visibleFaces},selectedFace,
+      debugMode,visibleFaces:{...visibleFaces},selectedFace,guidesVisible,
       projection:'physical-perspective-camera',frames,
       floorY:0,actorRendering:'real-game-l2d',canvasSize:{w:bw,h:bh}};
     return true;
@@ -508,7 +537,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   function setDevMode(active,settings){
     debugMode=!!active;
     if(!debugMode){
-      debugCamera=null;selectedFace=null;
+      debugCamera=null;selectedFace=null;guidesVisible=false;
       for(const face of FACES)visibleFaces[face.id]=true;
     }else if(settings){
       debugCamera={...BASE_CAMERA,...settings};
@@ -518,6 +547,11 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   function setDevCamera(settings){
     if(!debugMode)return false;
     debugCamera={...BASE_CAMERA,...settings};lastKey='';
+    if(enabled)render();
+    return true;
+  }
+  function setGuidesVisible(value){
+    guidesVisible=!!value;lastKey='';
     if(enabled)render();
     return true;
   }
@@ -547,7 +581,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     }else render(0,0);
   }
   return Object.freeze({setActive,setDevMode,setDevCamera,
-    setFaceVisible,selectFace,render,
+    setFaceVisible,setGuidesVisible,selectFace,render,
     inspect:()=>lastState||{active:false,faceCount:5,room:ROOM},
     get canvas(){return surface}
   });
