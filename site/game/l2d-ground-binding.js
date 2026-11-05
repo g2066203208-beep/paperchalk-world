@@ -293,7 +293,7 @@ function sync(){
         '｜最终 L2D 缩放 '+current.perspectiveScale+'×'+
         '｜脚底屏幕Y '+current.expectedFootY+
         '｜视平线Y '+current.horizonY+
-        '；背景图不参与计算。';
+        '；人物与背景共用摄影机投影，地面视平线以当前校准参数为准。';
     }
   }
   return last;
