@@ -103,7 +103,7 @@ assert.ok(shot.enemy3.shoe.x<shot.enemy4.shoe.x);
 // heroine must be a cropped close-up on the left, not a full-body doll.
 const projected=Object.fromEntries(ids.map(id=>[id,api.actorGeometry(id,base,1280,720)]));
 assert.ok(projected.player.head.x<300);
-assert.ok(projected.enemy.shoe.x>440&&projected.enemy.shoe.x<570);
+assert.ok(projected.enemy.shoe.x>375&&projected.enemy.shoe.x<455);
 assert.ok(projected.enemy2.shoe.x>640&&projected.enemy2.shoe.x<780);
 assert.ok(projected.enemy3.shoe.x>840&&projected.enemy3.shoe.x<1000);
 assert.ok(projected.enemy4.shoe.x>1050&&projected.enemy4.shoe.x<1210);
