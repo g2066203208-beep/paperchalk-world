@@ -39,13 +39,13 @@ assert.deepEqual(normalized.placement,{scaleX:4,scaleY:.25,offsetX:1024,offsetY:
 console.log('PASS isolated PartMesh scale X/Y + offsets, clamping, immutable pixels and UVs');
 
 const fs=require('node:fs');
-const folder='site/assets/l2d/library/female-06/front.rig.json';
+const folder='site/assets/l2d/library/female-06-outfit-02/front.rig.json';
 if(fs.existsSync(folder)){
  const base=JSON.parse(fs.readFileSync(folder,'utf8'));
  const source=Object.values(base.parts).map(x=>({partId:x.id,name:x.name,
   x:x.x,y:x.y,sourcePart:true,canvas:{width:x.w,height:x.h}}));
- const female=core.project(source,'female-06','front',base);
- const shorts=female.parts.pants_overlay,legs=female.parts.legwear;
+ const female=core.project(source,'female-06-outfit-02','front',base);
+ const shorts=female.parts.bottomwear,legs=female.parts.legwear;
  assert.ok(shorts&&legs&&shorts._garmentLegs===legs);
  shorts.placement={scaleX:.82,scaleY:1.11,offsetX:9,offsetY:-12};
  const idle=structuredClone(female.idleProfile);
@@ -56,13 +56,13 @@ if(fs.existsSync(folder)){
    const at=core.placedRestPoint(shorts,{x:shorts.x+u*shorts.w,y:shorts.y+v*shorts.h});
    const pant=core.warpPoint(shorts,u,v,phase,null,idle);
    const pose=core.humanPoseAt(shorts,phase,idle);
-   const body=v<=.42?core.hipPoint(at,pose):
-    v>=.84?core.parentPoint(legs,at,phase,idle):
+   const body=v<=.35?core.hipPoint(at,pose):
+    v>=.80?core.parentPoint(legs,at,phase,idle):
     core.garmentPoint(shorts,at,pose);
    assert.ok(Math.hypot(pant.x-body.x,pant.y-body.y)<.025,
     'shorts top MUST follow pelvis; hem follows legs while resizing');
    assert.equal(shorts.parentId,'pelvis');
   }
  }
- console.log('PASS female-six clothing width/height reposition uses stable pelvis waist and separately weighted thigh hems across 150 samples');
+ console.log('PASS female-six THIRD OUTFIT garment weight transfer uses pelvis and two original thigh bones across 150 samples');
 }
