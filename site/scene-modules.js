@@ -4,7 +4,7 @@
   'use strict';
   const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   const IMAGE = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:webp|png|jpe?g)$/;
-  const RESERVED = new Set(['menu', 'classroom', 'protagonist']);
+  const RESERVED = new Set(['menu', 'classroom', 'classroom-box', 'protagonist']);
   const LAYERS = Object.freeze({
     menu: Object.freeze({player: false, enemy: false, fog: true}),
     story: Object.freeze({player: true, enemy: true, fog: true}),
@@ -33,6 +33,13 @@
       '一面旧墙、一扇门和一盏灯', '主菜单', 'menu');
     result.classroom = define('classroom', './assets/classroom.webp',
       '空教室全景：黑板、课桌、左侧窗户', '教室', 'story');
+    // Integrated test room: same actual L2D game layers, 5 untextured 3D faces.
+    // Reuses a valid fallback image for preloading but replaces its display
+    // with a scene-local 3D canvas; never creates a second separate game.
+    result['classroom-box'] = define('classroom-box', './assets/classroom.webp',
+      '五面纯色三维教室，主角与敌人在真实地面上', '教室 · 3D 空间测试',
+      'environment', {layers:Object.freeze({player:true,enemy:true,fog:true}),
+        kind:'five-face-3d',version:'blockout-1'});
     for (const entry of catalog) {
       if (!entry || !SLUG.test(entry.id) || !IMAGE.test(entry.file)
           || RESERVED.has(entry.id) || result[entry.id]) {
