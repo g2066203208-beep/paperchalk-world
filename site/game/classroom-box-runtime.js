@@ -27,7 +27,7 @@ const COLORS=Object.freeze({
 const MATERIALS=Object.freeze({
   floor:'./assets/room-box/floor.svg',
   ceiling:'./assets/room-box/ceiling.svg',
-  back:'./assets/room-box/back.svg',
+  back:'./assets/room-box/back.png',
   left:'./assets/room-box/left.svg',
   right:'./assets/room-box/right.svg'
 });
