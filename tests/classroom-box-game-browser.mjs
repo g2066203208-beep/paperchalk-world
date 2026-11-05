@@ -91,8 +91,16 @@ try{
    assert.deepEqual(data.actorLayers,[false,false]);
    assert.equal(data.enemy.state,'ready');
    assert.equal(data.player.state,'ready');
-   assert.ok(data.enemy.canvasPixels>=256*256,'NPC must use real L2D mesh');
-   assert.ok(data.player.canvasPixels>=256*256,'heroine must use real L2D mesh');
+   // L2D backing resolution scales with physical viewport/DPR; on a
+   // 390px-tall phone the authentic 1024 source is rasterized smaller.
+   // Require LIVE ready state, nonempty source, and an active display buffer.
+   const minPixels=cfg.mobile?64*64:256*256;
+   assert.ok(data.enemy.canvasPixels>=minPixels &&
+     data.enemy.src.includes('/assets/characters/'),
+     'NPC must use the actual game L2D character');
+   assert.ok(data.player.canvasPixels>=minPixels &&
+     data.player.src.includes('/assets/characters/'),
+     'heroine must use the actual game L2D character');
    // A real game character is attached by its shoe to the same 3D ground
    // that is drawn in the room background (not an independent 2D guess).
    const stage=await page.locator('#scene').boundingBox();
