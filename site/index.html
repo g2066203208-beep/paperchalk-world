@@ -2311,6 +2311,8 @@ void main(){
     roomDevSurfaces.hidden=!room;
     if(!room)return;
     const state=boxScene.inspect();
+    const bgOption=devSelect.querySelector('option[value="bg"]');
+    if(bgOption)bgOption.textContent='01 / 三维场景（五个独立面）';
     for(const input of roomFaceToggles)
       input.checked=state.visibleFaces?.[input.dataset.roomFaceToggle]!==false;
     const count=state.loadedMaterialCount||0;
@@ -2488,11 +2490,13 @@ void main(){
     devActorControls.hidden=!(selectedLayer==='enemy'||selectedLayer==='player');
     const fogMode=selectedLayer==='fog';
     document.getElementById('dev-fog-tools').hidden=!fogMode;
-    document.getElementById('dev-z-control').hidden=fogMode;
-    document.getElementById('dev-layer-actions').hidden=fogMode;
+    const roomSurface=is3DRoom()&&(selectedLayer==='bg'||selectedLayer==='ground');
+    document.getElementById('dev-z-control').hidden=fogMode||roomSurface;
+    document.getElementById('dev-layer-actions').hidden=fogMode||roomSurface;
     document.getElementById('dev-3d-controls').hidden=fogMode;
     if(fogMode)refreshFogEditor();
-    devFloorControls.hidden=!['ground','enemy','player'].includes(selectedLayer);
+    devFloorControls.hidden=is3DRoom()||
+      !['ground','enemy','player'].includes(selectedLayer);
     document.getElementById('dev-ground-y').value=String(editorConfig.ground.y);
     document.getElementById('dev-ground-y-value').textContent=editorConfig.ground.y+'%';
     document.getElementById('dev-ground-horizon').value=String(editorConfig.ground.horizon);
@@ -2850,6 +2854,9 @@ void main(){
       paintDevPanelFog(overlayFrame.dt);
     }
     fog.dataset.frames=String(++frameNumber);
+    // Material loading is asynchronous. Keep the five independent DEV
+    // surface statuses synced after WebGL SVG textures actually upload.
+    if(editorActive&&is3DRoom()&&frameNumber%12===0)refreshRoomDev();
     if(editorActive && now-lastFogMirror>=85){
       lastFogMirror=now;
       try{
