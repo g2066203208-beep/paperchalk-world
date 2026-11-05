@@ -684,6 +684,18 @@ body.mobile-mode.virtual-landscape #view{
 #view #dev-tools .dev-object-glyph{width:15px;text-align:center;color:#a9cbd7}
 #view #dev-tools .dev-tree-actions{display:flex;gap:7px;margin:9px 0 5px}
 #view #dev-tools .dev-tree-actions button{flex:1}
+#view #dev-tools #dev-room-actor-tools{margin-top:6px;padding:7px 2px;border-top:1px solid var(--dev-border)}
+#view #dev-tools #dev-room-camera-tuning{padding:5px 2px;margin:5px 0}
+#view #dev-tools #dev-room-camera-tuning>summary{
+  cursor:pointer;color:#bdd8e3;font-weight:650;font-size:11.5px;
+  padding:9px 4px;border-top:1px solid var(--dev-border);
+}
+#view #dev-tools #dev-room-camera-tuning[open]{
+  border-bottom:1px solid var(--dev-border);padding-bottom:8px;
+}
+#view #dev-tools #dev-room-actor-tools label,
+#view #dev-tools #dev-room-camera-tuning label{display:flex;justify-content:space-between;gap:8px;margin-top:5px}
+#view #dev-tools #dev-room-actor-tools[hidden]{display:none!important}
 #view #dev-tools #dev-room-status,#view #dev-tools #dev-room-selection{display:block;
   font-size:10.5px;line-height:1.45;color:var(--dev-muted);padding:4px 0}
 #view #dev-tools #dev-3d-controls{padding:8px 0;margin:5px 0 7px;
@@ -889,6 +901,34 @@ body.mobile-mode.virtual-landscape #view{
       </div>
       <output id="dev-room-selection" role="status">选择任意对象，下面只显示相关属性</output>
       <output id="dev-room-status" role="status">读取三维房间材质…</output>
+      <div id="dev-room-actor-tools" hidden>
+        <div class="dev-tree-heading">所选 L2D · 世界坐标</div>
+        <label>水平 X <output data-room-actor-value="x"></output></label>
+        <input type="range" data-room-actor-field="x" min="-4.5" max="4.5" step=".1">
+        <label>进深 Z <output data-room-actor-value="z"></output></label>
+        <input type="range" data-room-actor-field="z" min=".1" max="7.8" step=".1">
+        <label>身高（米） <output data-room-actor-value="height"></output></label>
+        <input type="range" data-room-actor-field="height" min="1.2" max="1.95" step=".01">
+        <div class="dev-buttons"><button id="dev-room-actor-save" type="button">保存站位</button>
+        <button id="dev-room-actor-reset" type="button">重置站位</button></div>
+      </div>
+      <details id="dev-room-camera-tuning">
+        <summary>摄影机 · 坐标与视角</summary>
+        <label>左右 X <output data-room-camera-value="x"></output></label>
+        <input type="range" data-room-camera-field="x" min="-2.4" max="2.4" step=".05">
+        <label>高度 Y <output data-room-camera-value="y"></output></label>
+        <input type="range" data-room-camera-field="y" min=".55" max="2.7" step=".05">
+        <label>后退距离 <output data-room-camera-value="depth"></output></label>
+        <input type="range" data-room-camera-field="depth" min="1.2" max="5" step=".05">
+        <label>水平旋转 <output data-room-camera-value="yaw"></output></label>
+        <input type="range" data-room-camera-field="yaw" min="-55" max="55" step="1">
+        <label>俯仰角 <output data-room-camera-value="pitch"></output></label>
+        <input type="range" data-room-camera-field="pitch" min="-55" max="55" step="1">
+        <label>视角 FOV <output data-room-camera-value="fov"></output></label>
+        <input type="range" data-room-camera-field="fov" min="40" max="90" step="1">
+        <div class="dev-buttons"><button id="dev-room-camera-save" type="button">保存 DEV 机位</button>
+        <button id="dev-room-camera-restore" type="button">恢复正视角</button></div>
+      </details>
     </section>
     <div id="dev-3d-controls">
     <div class="dev-buttons">
