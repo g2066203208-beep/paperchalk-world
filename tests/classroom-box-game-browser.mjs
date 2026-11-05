@@ -9,7 +9,7 @@ import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright';
 const root=resolve('site');
 const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css',
- '.webp':'image/webp','.png':'image/png','.json':'application/json',
+ '.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml','.json':'application/json',
  '.woff2':'font/woff2'};
 const server=createServer((req,res)=>{
  const pathname=new URL(req.url,'http://localhost').pathname;
@@ -44,6 +44,8 @@ try{
      const enemy=window.PaperchalkL2D?.get('enemy');
      return room?.active&&room.faceCount===5&&room.player&&room.enemy&&
        player?.root?.dataset.l2dState==='ready' &&
+       room?.renderer==='webgl-3d-mesh' &&
+       room.loadedMaterialCount===5 &&
        enemy?.root?.dataset.l2dState==='ready' &&
        !!player.canvas?.width && !!enemy.canvas?.width &&
        !document.getElementById('camera-player-root').hidden &&
@@ -79,6 +81,11 @@ try{
       scenePicker:!!document.querySelector('[data-scene-target="classroom-box"]')
      };
    });
+   assert.deepEqual(Object.keys(data.room.materials).sort(),
+     ['back','ceiling','floor','left','right']);
+   assert.equal(data.room.loadedMaterialCount,5,
+     'all five separate orthographic wall/floor/ceiling images must be uploaded');
+   assert.ok(Object.values(data.room.materials).every(s=>s==='ready'));
    assert.equal(data.room.renderer,'webgl-3d-mesh',
      '3D room must render real GPU triangle faces, not a 2D painted image');
    assert.equal(data.room.vertexCount,30,
