@@ -2448,50 +2448,215 @@ void main(){
   let editorConfig=readEditor(),editorActive=false;
   let selectedLayer='enemy';
   const devCamera={yaw:-26,pitch:-17,zoom:.65,panX:-32,panY:-10};
+  const roomCameraSaveKey='paperchalk-classroom-dev-camera-v1';
+  let roomCameraFov=68;
+  let selectedRoomObject='floor';
   const roomDevSurfaces=document.getElementById('dev-room-surfaces');
   const roomDevStatus=document.getElementById('dev-room-status');
+  const roomDevSelection=document.getElementById('dev-room-selection');
   const roomFaceToggles=[...document.querySelectorAll('[data-room-face-toggle]')];
+  const roomLayerToggles=[...document.querySelectorAll('[data-room-layer-toggle]')];
+  const roomActorTools=document.getElementById('dev-room-actor-tools');
+  const roomCameraDetails=document.getElementById('dev-room-camera-tuning');
+  const roomLayerTargets={
+    enemy:[enemyDepth],player:[cameraPlayer],
+    fog:[fog,document.getElementById('ui-edge-fog')].filter(Boolean)
+  };
+  const roomInitialOpacity=Object.fromEntries(Object.entries(roomLayerTargets)
+    .map(([id,nodes])=>[id,nodes.map(node=>node.style.opacity)]));
+  const roomVisibleLayers={enemy:true,player:true,fog:true};
+  try{
+    const saved=JSON.parse(localStorage.getItem(roomCameraSaveKey)||'null');
+    if(saved&&typeof saved==='object'){
+      for(const key of ['yaw','pitch','zoom','panX','panY'])
+        if(Number.isFinite(Number(saved[key])))devCamera[key]=Number(saved[key]);
+      if(Number.isFinite(Number(saved.fov)))
+        roomCameraFov=clamp(Number(saved.fov),40,90);
+    }
+  }catch(_){}
   function is3DRoom(){return stage.dataset.scene==='classroom-box'}
+  function setRoomLayerVisible(id,visible){
+    if(!roomLayerTargets[id])return false;
+    roomVisibleLayers[id]=!!visible;
+    roomLayerTargets[id].forEach((node,i)=>{
+      node.style.opacity=visible?roomInitialOpacity[id][i]:'0';
+    });
+    return true;
+  }
+  function restoreRoomLayers(){
+    for(const id of Object.keys(roomLayerTargets))setRoomLayerVisible(id,true);
+  }
   function refreshRoomDev(){
-    const room=is3DRoom()&&editorActive;
-    roomDevSurfaces.hidden=!room;
-    if(!room)return;
+    const active=is3DRoom()&&editorActive;
+    roomDevSurfaces.hidden=!active;
+    if(!active)return;
     const state=boxScene.inspect();
-    const bgOption=devSelect.querySelector('option[value="bg"]');
-    if(bgOption)bgOption.textContent='01 / 三维场景（五个独立面）';
+    const option=devSelect.querySelector('option[value="bg"]');
+    if(option)option.textContent='01 / 三维房间 · 五面独立素材';
     for(const input of roomFaceToggles)
       input.checked=state.visibleFaces?.[input.dataset.roomFaceToggle]!==false;
-    const count=state.loadedMaterialCount||0;
-    roomDevStatus.textContent=
-      '五个独立三维面 · '+count+'/5 张材质已装载 · '+(state.renderer||'初始化中');
+    for(const input of roomLayerToggles)
+      input.checked=roomVisibleLayers[input.dataset.roomLayerToggle]!==false;
+    document.querySelector('[data-room-grid-toggle]').checked=!!state.guidesVisible;
+    for(const row of document.querySelectorAll('[data-dev-object]'))
+      row.dataset.selected=String(row.dataset.devObject===selectedRoomObject);
+    const actor=state.worldActors?.[selectedRoomObject];
+    roomActorTools.hidden=!actor;
+    const library=document.getElementById('dev-character-controls');
+    if(library)library.hidden=!actor;
+    if(actor){
+      for(const field of document.querySelectorAll('[data-room-actor-field]')){
+        const key=field.dataset.roomActorField;
+        field.value=String(actor[key]);
+        document.querySelector('[data-room-actor-value="'+key+'"]')
+          .textContent=Number(actor[key]).toFixed(2)+' m';
+      }
+      roomDevSelection.textContent='真实站位 · X '+actor.x.toFixed(2)+
+        ' m · Z '+actor.z.toFixed(2)+' m · 鞋底 Y = 0';
+    }else if(state.materialSources?.[selectedRoomObject]){
+      roomDevSelection.textContent='独立三维材质 · '+
+        state.materialSources[selectedRoomObject];
+    }else if(selectedRoomObject==='camera'){
+      roomDevSelection.textContent='单一三维摄影机 · 世界坐标与透视视角';
+    }else if(selectedRoomObject==='perspective'){
+      roomDevSelection.textContent='地面 Y=0 · 1 米网格 · 真实三维空间';
+    }else if(selectedRoomObject==='fog'){
+      roomDevSelection.textContent='动态黑雾是独立屏幕效果，下方可修改原有参数';
+    }else roomDevSelection.textContent='选择对象以查看属性';
+    const cam=state.camera||{};
+    const values={
+      x:Number(cam.x||0),y:Number(cam.y||1.5),
+      depth:-Number(cam.z||-1.25),
+      yaw:Number(cam.yaw||0)*180/Math.PI,
+      pitch:Number(cam.pitch||0)*180/Math.PI,
+      fov:Number(cam.hFov||68)
+    };
+    for(const field of document.querySelectorAll('[data-room-camera-field]')){
+      const key=field.dataset.roomCameraField,value=values[key];
+      field.value=String(value);
+      document.querySelector('[data-room-camera-value="'+key+'"]')
+        .textContent=value.toFixed(key==='fov'?0:2)+
+          (['yaw','pitch','fov'].includes(key)?'°':' m');
+    }
+    const pointer=document.getElementById('dev-room-pointer-strength');
+    pointer.value=String(Math.round((state.pointerStrength??1)*100));
+    document.getElementById('dev-room-pointer-strength-value')
+      .textContent=Math.round((state.pointerStrength??1)*100)+'%';
+    roomDevStatus.textContent='五面材质 '+(state.loadedMaterialCount||0)+
+      '/5 · '+(state.renderer||'初始化中')+
+      ' · '+(state.guidesVisible?'地面网格已显示':'地面网格已隐藏');
   }
-  for(const input of roomFaceToggles){
+  function focusRoomObject(id){
+    if(!is3DRoom())return;
+    selectedRoomObject=id;
+    boxScene.selectFace(['floor','ceiling','back','left','right'].includes(id)?id:null);
+    selectEditorLayer(['enemy','player','fog'].includes(id)?id:
+      id==='floor'||id==='perspective'?'ground':'bg');
+    if(id==='camera')roomCameraDetails.open=true;
+    refreshRoomDev();
+  }
+  document.querySelectorAll('[data-room-object-focus]').forEach(button=>{
+    button.addEventListener('click',()=>focusRoomObject(button.dataset.roomObjectFocus));
+  });
+  for(const input of roomFaceToggles)
     input.addEventListener('change',()=>{
       if(!is3DRoom())return;
       boxScene.setFaceVisible(input.dataset.roomFaceToggle,input.checked);
       refreshRoomDev();
     });
-  }
+  for(const input of roomLayerToggles)
+    input.addEventListener('change',()=>{
+      if(!is3DRoom())return;
+      setRoomLayerVisible(input.dataset.roomLayerToggle,input.checked);
+      refreshRoomDev();
+    });
+  document.querySelector('[data-room-grid-toggle]').addEventListener('change',event=>{
+    if(!is3DRoom())return;
+    boxScene.setGuidesVisible(event.target.checked);
+    refreshRoomDev();
+  });
   document.querySelectorAll('[data-room-isolate]').forEach(button=>{
     button.addEventListener('click',()=>{
       if(!is3DRoom())return;
       const id=button.dataset.roomIsolate;
-      for(const input of roomFaceToggles){
-        const visible=input.dataset.roomFaceToggle===id;
-        boxScene.setFaceVisible(input.dataset.roomFaceToggle,visible);
-      }
+      selectedRoomObject=id;
+      for(const input of roomFaceToggles)
+        boxScene.setFaceVisible(input.dataset.roomFaceToggle,
+          input.dataset.roomFaceToggle===id);
       boxScene.selectFace(id);
       refreshRoomDev();
-      setDevStatus('正在单独检查 '+button.previousElementSibling?.textContent.trim()+' 的三维材质');
+      setDevStatus('单独检查：'+
+        button.closest('[data-dev-object]').querySelector('[data-room-object-focus]')
+          .textContent.trim());
     });
   });
   document.getElementById('dev-room-show-all').addEventListener('click',()=>{
     if(!is3DRoom())return;
     for(const input of roomFaceToggles)
       boxScene.setFaceVisible(input.dataset.roomFaceToggle,true);
+    restoreRoomLayers();
     boxScene.selectFace(null);
+    selectedRoomObject=null;
     refreshRoomDev();
-    setDevStatus('已恢复五面独立材质和共同的三维空间');
+    setDevStatus('已恢复全部三维面、玩家、敌人和黑雾');
+  });
+  document.getElementById('dev-room-clear-selection').addEventListener('click',()=>{
+    if(!is3DRoom())return;
+    selectedRoomObject=null;boxScene.selectFace(null);refreshRoomDev();
+  });
+  document.querySelectorAll('[data-room-actor-field]').forEach(input=>{
+    input.addEventListener('input',()=>{
+      if(!is3DRoom()||!['player','enemy'].includes(selectedRoomObject))return;
+      boxScene.setActorWorld(selectedRoomObject,
+        {[input.dataset.roomActorField]:Number(input.value)});
+      refreshRoomDev();
+      setDevStatus('已预览真实三维站位 · 点击保存确认');
+    });
+  });
+  document.getElementById('dev-room-actor-save').addEventListener('click',()=>{
+    if(!is3DRoom())return;
+    const saved=boxScene.saveActorWorld();
+    setDevStatus(saved?'三维人物站位已保存到本机':'无法保存：请检查浏览器权限');
+  });
+  document.getElementById('dev-room-actor-reset').addEventListener('click',()=>{
+    if(!is3DRoom())return;
+    boxScene.resetActorWorld();refreshRoomDev();
+    setDevStatus('已恢复三维角色站位初始值');
+  });
+  document.getElementById('dev-room-pointer-strength').addEventListener('input',e=>{
+    if(!is3DRoom())return;
+    boxScene.setPointerStrength(Number(e.target.value)/100);
+    refreshRoomDev();
+    setDevStatus('已更新游戏摄影机安全活动范围');
+  });
+  document.querySelectorAll('[data-room-camera-field]').forEach(input=>{
+    input.addEventListener('input',()=>{
+      if(!is3DRoom())return;
+      const key=input.dataset.roomCameraField;
+      const val=Number(input.value);
+      if(key==='x')devCamera.panX=val*160;
+      if(key==='y')devCamera.panY=(1.50-val)*145;
+      if(key==='depth')devCamera.zoom=1.25/val;
+      if(key==='yaw')devCamera.yaw=val;
+      if(key==='pitch')devCamera.pitch=val;
+      if(key==='fov')roomCameraFov=val;
+      applyDevCamera();
+    });
+  });
+  document.getElementById('dev-room-camera-save').addEventListener('click',()=>{
+    if(!is3DRoom())return;
+    try{
+      localStorage.setItem(roomCameraSaveKey,JSON.stringify({
+        ...devCamera,fov:roomCameraFov
+      }));
+      setDevStatus('DEV 摄影机机位已保存，不影响游戏镜头');
+    }catch(_){setDevStatus('浏览器阻止了 DEV 机位保存')}
+  });
+  document.getElementById('dev-room-camera-restore').addEventListener('click',()=>{
+    if(!is3DRoom())return;
+    Object.assign(devCamera,{yaw:0,pitch:0,zoom:1,panX:0,panY:40.6});
+    roomCameraFov=68;applyDevCamera();
+    setDevStatus('已恢复三维摄影机的默认正视构图');
   });
   // Fog stays attached to its original view; only its live texture is mirrored.
   const devPlanes=[stage,enemyDepth,cameraPlayer];
@@ -2613,10 +2778,10 @@ void main(){
       boxScene.setDevCamera({
         x:clamp(devCamera.panX/160,-2.4,2.4),
         y:clamp(1.50-devCamera.panY/145,.55,2.7),
-        z:-clamp(1.25/Math.max(.36,devCamera.zoom),1.20,5),
+        z:-clamp(1.25/Math.max(.25,devCamera.zoom),1.20,5),
         yaw:clamp(devCamera.yaw,-55,55)*toRad,
         pitch:clamp(devCamera.pitch,-55,55)*toRad,
-        hFov:68
+        hFov:clamp(roomCameraFov,40,90)
       });
       devStage.dataset.yaw=String(devCamera.yaw);
       devStage.dataset.zoom=String(devCamera.zoom);
@@ -2727,6 +2892,7 @@ void main(){
     fogGuide.hidden=true;devTools.hidden=true;
     // An absent UI must leave ZERO residual sidebar fog, even for one frame.
     roomDevSurfaces.hidden=true;
+    restoreRoomLayers();
     resetDevPanelFog();start();
   }
   const fogGuide=document.getElementById('fog-safe-guide');
