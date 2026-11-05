@@ -596,6 +596,22 @@ body.mobile-mode.virtual-landscape #view{
 #view.room-blockout-active [data-l2d-actor] [data-l2d-v4]{
   transform:none!important;scale:1!important;
 }
+/* Two additional real L2D opponents share the same projected 3D room. */
+.room-extra-enemy{display:none;position:absolute;inset:0;z-index:2;pointer-events:none}
+.room-extra-enemy[hidden]{display:none!important}
+#view.room-blockout-active .room-extra-enemy:not([hidden]){display:block}
+#view.room-blockout-active .room-extra-enemy [data-l2d-image]{
+ position:absolute;display:block;bottom:auto!important;max-width:none!important;
+ aspect-ratio:1/1;object-fit:contain;transform:none!important;scale:1!important;
+}
+#view.room-blockout-active #actor-enemy2{
+ left:var(--room-enemy2-left,50%)!important;top:var(--room-enemy2-top,15%)!important;
+ width:var(--room-enemy2-size,360px)!important;height:var(--room-enemy2-size,360px)!important;
+}
+#view.room-blockout-active #actor-enemy3{
+ left:var(--room-enemy3-left,70%)!important;top:var(--room-enemy3-top,15%)!important;
+ width:var(--room-enemy3-size,360px)!important;height:var(--room-enemy3-size,360px)!important;
+}
 /* DEV classroom-box is the SAME WebGL scene as gameplay.
    Do not turn the real 3D room into a single legacy CSS background plane. */
 #dev-room-surfaces[hidden]{display:none!important}
@@ -732,7 +748,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/survival-state.js"></script>
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
-<script src="./game/classroom-box-runtime.js?v=anima-floor-1728-20261105"></script>
+<script src="./game/classroom-box-runtime.js?v=three-opponents-3d-20261105"></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=char001-confirmed-art-large-v3">
 <script src="./game/phone-ui.js?v=char001-confirmed-art-large-v3"></script>
 </head>
@@ -760,6 +776,14 @@ body.mobile-mode.virtual-landscape #view{
   <div id="enemy-depth-root" data-l2d-actor="enemy" aria-label="第二景深层：敌人（在黑雾后方）" hidden>
     <img id="actor-enemy" data-l2d-image alt="NPC 素材布局锚点" draggable="false" hidden>
     <canvas id="actor-enemy-l2d" data-l2d-canvas width="1024" height="1024" aria-label="NPC L2D 动画画布"></canvas>
+  </div>
+  <div id="room-enemy2-root" class="room-extra-enemy" data-l2d-actor="enemy2" aria-label="第二名敌人 L2D" hidden>
+    <img id="actor-enemy2" data-l2d-image alt="敌人二 L2D 定位源" draggable="false" hidden>
+    <canvas id="actor-enemy2-l2d" data-l2d-canvas width="1024" height="1024" aria-label="敌人二独立 L2D"></canvas>
+  </div>
+  <div id="room-enemy3-root" class="room-extra-enemy" data-l2d-actor="enemy3" aria-label="第三名敌人 L2D" hidden>
+    <img id="actor-enemy3" data-l2d-image alt="敌人三 L2D 定位源" draggable="false" hidden>
+    <canvas id="actor-enemy3-l2d" data-l2d-canvas width="1024" height="1024" aria-label="敌人三独立 L2D"></canvas>
   </div>
   <canvas id="fog" aria-hidden="true"></canvas>
   <!-- World-space dynamic UI fog is below the protagonist's complete L2D rig,
@@ -892,7 +916,9 @@ body.mobile-mode.virtual-landscape #view{
         <div class="dev-room-face-row" data-dev-object="right"><input type="checkbox" data-room-face-toggle="right" checked aria-label="显示右墙"><button type="button" data-room-object-focus="right">右墙 <small>Right</small></button><button type="button" data-room-isolate="right" title="仅显示此面">独看</button></div>
       </div>
       <div class="dev-tree-heading">人物 · 特效 · 空间辅助</div>
-      <div class="dev-room-face-row" data-dev-object="enemy"><input type="checkbox" data-room-layer-toggle="enemy" checked aria-label="显示敌人 L2D"><button type="button" data-room-object-focus="enemy">敌人 <small>L2D · 中景</small></button></div>
+      <div class="dev-room-face-row" data-dev-object="enemy"><input type="checkbox" data-room-layer-toggle="enemy" checked aria-label="显示敌人 L2D"><button type="button" data-room-object-focus="enemy">敌人一 <small>L2D · 前排</small></button></div>
+        <div class="dev-room-face-row" data-dev-object="enemy2"><button type="button" data-room-object-focus="enemy2">敌人二 <small>L2D · 左后</small></button></div>
+        <div class="dev-room-face-row" data-dev-object="enemy3"><button type="button" data-room-object-focus="enemy3">敌人三 <small>L2D · 右后</small></button></div>
       <div class="dev-room-face-row" data-dev-object="player"><input type="checkbox" data-room-layer-toggle="player" checked aria-label="显示玩家 L2D"><button type="button" data-room-object-focus="player">玩家 <small>L2D · 近景</small></button></div>
       <div class="dev-room-face-row" data-dev-object="fog"><input type="checkbox" data-room-layer-toggle="fog" checked aria-label="显示动态黑雾"><button type="button" data-room-object-focus="fog">动态黑雾 <small>屏幕特效</small></button></div>
       <div class="dev-room-face-row" data-dev-object="camera"><span class="dev-object-glyph" aria-hidden="true">◎</span><button type="button" data-room-object-focus="camera">摄影机 <small>世界坐标</small></button></div>
@@ -1894,6 +1920,7 @@ void main(){
   ));
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
+  const extraEnemies=['enemy2','enemy3'].map(id=>document.getElementById('room-'+id+'-root'));
   const cameraPlayer=document.getElementById('camera-player-root');
   const boxScene=window.PaperWorldClassroomBox.create({
     stage,view,playerRoot:cameraPlayer,enemyRoot:enemyDepth
@@ -1950,6 +1977,7 @@ void main(){
     // Per-scene layer contract; image files remain actor-free and unmodified.
     const hasPlayer=def.layers.player;
     enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
+    extraEnemies.forEach(node=>node.hidden=name!=='classroom-box');
     boxScene.setActive(name==='classroom-box');
     if(name!=='classroom-box')window.PaperWorldL2DGround?.sync?.();
     stage.dataset.sceneTitle=def.title;
@@ -2456,7 +2484,7 @@ void main(){
   const roomActorTools=document.getElementById('dev-room-actor-tools');
   const roomCameraDetails=document.getElementById('dev-room-camera-tuning');
   const roomLayerTargets={
-    enemy:[enemyDepth],player:[cameraPlayer],
+    enemy:[enemyDepth,...extraEnemies],player:[cameraPlayer],
     fog:[fog,document.getElementById('ui-edge-fog')].filter(Boolean)
   };
   const roomInitialOpacity=Object.fromEntries(Object.entries(roomLayerTargets)
@@ -2552,10 +2580,12 @@ void main(){
     if(!is3DRoom())return;
     selectedRoomObject=id;
     boxScene.selectFace(['floor','ceiling','back','left','right'].includes(id)?id:null);
-    boxScene.setReferenceLayer(['fog','enemy','player'].includes(id)?id:null);
+    boxScene.setReferenceLayer(['fog','enemy','enemy2','enemy3','player'].includes(id)?id:null);
     if(id==='floor'||id==='perspective')boxScene.setGuidesVisible(true);
-    selectEditorLayer(['enemy','player','fog'].includes(id)?id:
+    selectEditorLayer(['enemy','enemy2','enemy3'].includes(id)?'enemy':
+      ['player','fog'].includes(id)?id:
       id==='floor'||id==='perspective'?'ground':'bg');
+    if(['enemy2','enemy3'].includes(id))window.PaperchalkCharacterDev?.chooseLoaded(id);
     if(id==='camera')roomCameraDetails.open=true;
     refreshRoomDev();
   }
@@ -2611,7 +2641,7 @@ void main(){
   });
   document.querySelectorAll('[data-room-actor-field]').forEach(input=>{
     input.addEventListener('input',()=>{
-      if(!is3DRoom()||!['player','enemy'].includes(selectedRoomObject))return;
+      if(!is3DRoom()||!['player','enemy','enemy2','enemy3'].includes(selectedRoomObject))return;
       boxScene.setActorWorld(selectedRoomObject,
         {[input.dataset.roomActorField]:Number(input.value)});
       refreshRoomDev();
@@ -3229,7 +3259,7 @@ void main(){
 <script src="./l2d/runtime.js?v=sharp-gpu-affine-v4"></script>
 <script src="./l2d/part-rig.js?v=crouch-safe-anatomy-recovery-v3"></script>
 <script src="./l2d/library-player.js?v=studio-game-fidelity-20261105-v2"></script>
-<script src="./dev/character-bridge.js?v=studio-game-fidelity-20261105-v2"></script>
+<script src="./dev/character-bridge.js?v=three-opponents-3d-20261105"></script>
 <script src="./game/l2d-ground-binding.js?v=shoulder-camera-v7"></script>
 
 </body>
