@@ -60,10 +60,12 @@ const base='http://127.0.0.1:8134/';
    window.PaperchalkPartRigStudio.state.model.deletedParts?.includes('mouth'));
   assert.equal(await page.evaluate(()=>window.characterEditor.S.layers.front.some(p=>p.partId==='mouth')),false,
    'the source PNG layer must actually disappear');
+  await page.locator('#workspace-quick-more > summary').click();
   await page.locator('#easy-undo').click();
   await page.waitForFunction(()=>
    window.characterEditor.S.layers.front.some(p=>p.partId==='mouth')&&
    !!window.PaperchalkPartRigStudio.state.model.parts.mouth);
+  await page.locator('#workspace-quick-more > summary').click();
   await page.locator('#easy-redo').click();
   await page.waitForFunction(()=>
    !window.characterEditor.S.layers.front.some(p=>p.partId==='mouth')&&
