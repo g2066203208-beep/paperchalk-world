@@ -16,6 +16,9 @@
     if(!Number.isFinite(timeoutMs)||timeoutMs<=0)
       throw new RangeError('timeoutMs must be positive');
     const entries=new Map();
+    // A pending decode may be evicted from the completed-image LRU. Keep a
+    // separate in-flight index so rapid scene switching cannot decode it twice.
+    const inFlight=new Map();
     let requests=0,reuses=0,failures=0;
     function ensure(url){
       if(typeof url!=='string'||!url.trim())
@@ -25,6 +28,10 @@
         entries.delete(url);entries.set(url,cached);
         reuses++;
         return cached.promise;
+      }
+      if(inFlight.has(url)){
+        reuses++;
+        return inFlight.get(url);
       }
       requests++;
       const image=new ImageCtor();
@@ -50,6 +57,13 @@
           }
         }catch(error){complete(error)}
       });
+      inFlight.set(url,entry.promise);
+      // The promise owns cleanup on both success and failure, including when
+      // an evicted image completes asynchronously after a scene change.
+      const clearPending=()=>{
+        if(inFlight.get(url)===entry.promise)inFlight.delete(url);
+      };
+      entry.promise.then(clearPending,clearPending);
       entries.set(url,entry);
       while(entries.size>maxEntries)entries.delete(entries.keys().next().value);
       return entry.promise;
@@ -57,7 +71,8 @@
     return Object.freeze({
       ensure,
       prefetch(url){return ensure(url).catch(()=>null)},
-      inspect(){return {cached:entries.size,urls:[...entries.keys()],requests,reuses,failures}}
+      inspect(){return {cached:entries.size,pending:inFlight.size,
+        urls:[...entries.keys()],requests,reuses,failures}}
     });
   }
   return Object.freeze({create});
