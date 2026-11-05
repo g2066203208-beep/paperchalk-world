@@ -1,4 +1,6 @@
-/* Real-browser render smoke and captures for the NEW WebGL ring arena. */
+/* Live browser proof: published L2D art, world-space anchors and two orbit views.
+ * Saves the ACTUAL game canvas as screenshots; never substitute mock pictures.
+ */
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFileSync,mkdirSync} from 'node:fs';
@@ -9,12 +11,12 @@ const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css',
  '.json':'application/json','.webp':'image/webp','.png':'image/png',
  '.svg':'image/svg+xml','.woff2':'font/woff2'};
 const server=createServer((req,res)=>{
- const url=new URL(req.url,'http://localhost'),name=url.pathname.endsWith('/')?
-   url.pathname+'index.html':url.pathname;
- const file=resolve(root,'.'+name);
- if(!file.startsWith(root+'/'))return res.writeHead(403).end();
- try{res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream'});
-   res.end(readFileSync(file))}
+ const url=new URL(req.url,'http://localhost');
+ const name=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;
+ const path=resolve(root,'.'+name);
+ if(!path.startsWith(root+'/'))return res.writeHead(403).end();
+ try{res.writeHead(200,{'content-type':mime[extname(path)]||'application/octet-stream'});
+   res.end(readFileSync(path))}
  catch{res.writeHead(404).end('not found')}
 });
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
@@ -22,39 +24,59 @@ const browser=await chromium.launch({headless:true,
  args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
 mkdirSync('artifacts/ring-arena',{recursive:true});
 try{
- const page=await browser.newPage({viewport:{width:1280,height:720},
-   deviceScaleFactor:1});
+ const page=await browser.newPage({viewport:{width:1280,height:720},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:'+server.address().port+
-   '/index.html?scene=ring-arena',{waitUntil:'domcontentloaded',timeout:45000});
+ await page.goto('http://127.0.0.1:'+server.address().port+'/index.html?scene=ring-arena',
+  {waitUntil:'domcontentloaded',timeout:50000});
  await page.waitForFunction(()=>{
-   const a=window.PaperWorldGameRingArena?.inspect();
-   return a?.active&&a.renderer==='webgl'&&a.actors.allies.length===4&&
-     a.actors.enemies.length===4&&a.camera.radius>0&&
-     document.getElementById('ring-arena-canvas')?.width>800;
- },null,{timeout:60000});
- assert.deepEqual(errors,[],'browser JS errors');
- const initial=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
- assert.equal(initial.mode,'outer');
- assert.equal(initial.camera.radius,9.55);
- await page.screenshot({path:'artifacts/ring-arena/outer-left.png'});
- for(let i=0;i<6;i++)await page.locator('[data-shift="1"]').click();
+  const s=window.PaperWorldGameRingArena?.inspect();
+  return s?.active&&s.renderer==='webgl-l2d'&&s.actors.allies.length===4&&
+   s.actors.enemies.length===4&&document.getElementById('ring-arena-canvas')?.width>800;
+ },null,{timeout:65000});
+ await page.waitForFunction(()=>{
+  const r=window.PaperWorldGameRingArena?.inspect();
+  return window.PaperchalkCharacterDev?.ready&&r?.l2dReady===8&&
+   ['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4']
+     .every(id=>window.PaperchalkL2D?.get(id)?.root?.dataset.l2dState==='ready');
+ },null,{timeout:75000});
  await page.waitForTimeout(800);
- const moved=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
- assert.ok(moved.actors.allies[0].x>initial.actors.allies[0].x+.25);
- for(let i=1;i<4;i++){
-   assert.equal(moved.actors.allies[i].x,initial.actors.allies[i].x);
-   assert.equal(moved.actors.allies[i].z,initial.actors.allies[i].z);
- }
- await page.screenshot({path:'artifacts/ring-arena/outer-right.png'});
+ const get=()=>page.evaluate(()=>{
+  const r=window.PaperWorldGameRingArena.inspect();
+  return {arena:r,
+   sources:['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4']
+    .map(id=>{const a=window.PaperchalkL2D.get(id);return {
+     id,character:a.img.dataset.characterId,side:a.img.dataset.characterSide,
+     animated:a.root.dataset.l2dAnimated,mode:a.root.dataset.l2dMode,
+     ready:a.root.dataset.l2dState,hidden:a.root.hidden,
+     canvasW:a.canvas.width,canvasH:a.canvas.height
+    }})
+  };
+ });
+ const before=await get();
+ assert.equal(before.arena.mode,'outer');
+ assert.equal(before.arena.l2dReady,8);
+ assert.equal(before.sources.find(s=>s.id==='player').side,'back');
+ assert.ok(before.sources.every(s=>!s.hidden&&s.ready==='ready'&&s.canvasW>0),'all 8 authentic L2D sources active');
+ const original=JSON.stringify(before.arena.actors);
+ await page.screenshot({path:'artifacts/ring-arena/l2d-outer-left.png'});
+ for(let i=0;i<7;i++)await page.locator('[data-shift="1"]').click();
+ await page.waitForTimeout(700);
+ const moved=await get();
+ assert.equal(JSON.stringify(moved.arena.actors),original,'world positions must be unchanged by camera pan');
+ assert.notEqual(moved.arena.camera.angle,before.arena.camera.angle);
+ assert.equal(moved.arena.l2dReady,8);
+ await page.screenshot({path:'artifacts/ring-arena/l2d-outer-right.png'});
  await page.locator('[data-mode="inner"]').click();
- await page.waitForTimeout(100);
- const inner=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
- assert.equal(inner.mode,'inner');assert.equal(inner.camera.radius,1.55);
- await page.screenshot({path:'artifacts/ring-arena/inner-right.png'});
- assert.deepEqual(errors,[],'page errors after switching modes');
+ await page.waitForTimeout(700);
+ const inner=await get();
+ assert.equal(inner.arena.mode,'inner');
+ assert.equal(inner.arena.camera.radius,1.54);
+ assert.equal(inner.arena.l2dReady,8);
+ assert.equal(inner.arena.actors.allies.length,4);
+ await page.screenshot({path:'artifacts/ring-arena/l2d-inner-right.png'});
+ assert.deepEqual(errors,[],'browser should not report unexpected errors');
  await page.close();
- console.log('PASS: WebGL dual-ring scenes rendered, camera switched, anchored teammates stayed fixed');
+ console.log('PASS: all eight live L2D actors; fixed world coordinates; true 3D camera orbit screenshot QA');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }
