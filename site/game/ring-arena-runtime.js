@@ -13,16 +13,16 @@
  const TAU=Math.PI*2,clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
  const lerp=(a,b,t)=>a+(b-a)*t,rad=(d)=>d*Math.PI/180;
  const SPEC=Object.freeze({
-  wallRadius:11.4,wallHeight:6.3,outerRoleRadius:7.42,
-  innerRoleRadius:4.28,outerCameraRadius:9.0,
-  innerCameraRadius:2.45,verticalFov:61,
-  cameraStartAngle:rad(7),cameraEndAngle:rad(-7)
+  wallRadius:10.0,wallHeight:6.0,outerRoleRadius:6.65,
+  innerRoleRadius:5.10,outerCameraRadius:8.25,
+  innerCameraRadius:3.45,verticalFov:60,
+  cameraStartAngle:rad(9),cameraEndAngle:rad(-9)
  });
  // Deliberately human-authored STATIONARY formation angles; never derive
  // actors from camera interpolation or pointer delta.
  const formation=Object.freeze({
-  allies:Object.freeze([0,rad(-61),rad(-29),rad(37)]),
-  enemies:Object.freeze([rad(-51),rad(-17),rad(17),rad(52)])
+  allies:Object.freeze([0,rad(-23),rad(-11),rad(15)]),
+  enemies:Object.freeze([rad(-21),rad(-7),rad(7),rad(21)])
  });
  const bindings=Object.freeze({
   hero:'player', 'ally-2':'ally2','ally-3':'ally3','ally-4':'ally4',
@@ -77,10 +77,10 @@
  function camera(mode='outer',progress=0){
   const t=clamp(Number(progress)||0,0,1),outer=mode==='outer';
   const angle=outer?lerp(SPEC.cameraStartAngle,SPEC.cameraEndAngle,t):
-   lerp(rad(-8),rad(8),t);
+   lerp(rad(-9),rad(9),t);
   const R=outer?SPEC.outerCameraRadius:SPEC.innerCameraRadius;
   const eye=polar(R,angle,1.45);
-  const focus=polar(outer?2.9:8.0,angle,1.12);
+  const focus=polar(5.72,angle,1.12);
   return {mode,progress:t,radius:R,angle,eye,focus};
  }
  function project(p,cam,aspect=16/9){
@@ -121,13 +121,13 @@
   'void main(){vec3 color;',
   'if(uSurface==0){',
   'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
-  'float radial=line(r/11.4,24.0,.027);float spokes=line(a,48.0,.019);',
-  'float allies=1.0-smoothstep(.016,.053,abs(r-7.42));',
-  'float enemies=1.0-smoothstep(.016,.053,abs(r-4.28));',
+  'float radial=line(r/10.0,24.0,.027);float spokes=line(a,48.0,.019);',
+  'float allies=1.0-smoothstep(.016,.053,abs(r-6.65));',
+  'float enemies=1.0-smoothstep(.016,.053,abs(r-5.10));',
   'color=vec3(.006,.019,.023)+vec3(.02,.18,.14)*(radial*.6+spokes*.26)',
   '+vec3(.01,.16,.14)*(allies+enemies);',
-  'float innerCam=1.0-smoothstep(.01,.05,abs(r-1.54));',
-  'float outerCam=1.0-smoothstep(.01,.05,abs(r-9.78));',
+  'float innerCam=1.0-smoothstep(.01,.05,abs(r-3.45));',
+  'float outerCam=1.0-smoothstep(.01,.05,abs(r-8.25));',
   'color+=vec3(.25,.20,.04)*(innerCam+outerCam)*.35;',
   '}else{',
   'float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
