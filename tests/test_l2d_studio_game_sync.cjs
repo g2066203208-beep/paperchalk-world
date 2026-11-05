@@ -55,6 +55,13 @@ const art=(id,n)=>Array.from({length:n},(_,i)=>({
  img:'data:image/png;base64,AA==',visible:true,opacity:1
 }));
 async function main(){
+ // Tiny but legitimate published rigs must remain playable after edits.
+ // CI's qa-rig intentionally has only two genuine textures.
+ const mini=rig('mini',2);
+ mini.parts.part0.motion.angle=2.25;
+ const tiny=await api.attach('mini-slot','mini','front',null,mini,art('mini',2));
+ assert.equal(tiny.parts,2);
+ assert.equal(api.get('mini-slot').model.parts.part0.motion.angle,2.25);
  // Completely private L2D from Studio: before this repair, the game fell
  // back to a simplified PSD rig or an unrelated V4 because no hosted URL.
  const own=rig('local-user',8);
