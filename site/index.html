@@ -2500,6 +2500,7 @@ void main(){
       row.dataset.selected=String(row.dataset.devObject===selectedRoomObject);
     const actor=state.worldActors?.[selectedRoomObject];
     roomActorTools.hidden=!actor;
+    roomCameraDetails.hidden=selectedRoomObject!=='camera';
     const library=document.getElementById('dev-character-controls');
     if(library)library.hidden=!actor;
     if(actor){
