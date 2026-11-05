@@ -77,6 +77,11 @@ try{
       player:inspect(player),enemy:inspect(enemy),
       enemy2:inspect(enemy2),enemy3:inspect(enemy3),
       fogFrames:Number(document.querySelector('#fog').dataset.frames),
+      sceneRect:document.getElementById('scene').getBoundingClientRect().toJSON(),
+      viewportRect:view.getBoundingClientRect().toJSON(),
+      rimContent:getComputedStyle(document.getElementById('scene'),'::after').content,
+      fogVisibility:getComputedStyle(document.getElementById('fog')).visibility,
+      edgeFogDisplay:getComputedStyle(document.getElementById('ui-edge-fog')).display,
       uiVisible:!document.querySelector('#novel-ui').hidden,
       roomClass:view.classList.contains('room-blockout-active'),
       originalImageVisibility:getComputedStyle(document.querySelector('#source')).visibility,
@@ -100,6 +105,17 @@ try{
    assert.equal(data.scene,'classroom-box');
    assert.equal(data.canvas.hidden,false);
    assert.equal(data.roomClass,true);
+   // Full-bleed battle viewport: no surrounding 94% frame or letterbox,
+   // independent of desktop/mobile logical aspect ratio.
+   const sceneRect=data.sceneRect,viewportRect=data.viewportRect;
+   for(const field of ['x','y','width','height']){
+     assert.ok(Math.abs(sceneRect[field]-viewportRect[field])<2,
+       '3D camera has a black letterbox/margin on '+field+': '+
+       JSON.stringify({sceneRect,viewportRect}));
+   }
+   assert.equal(data.rimContent,'none','old black rounded frame is still painted');
+   assert.equal(data.fogVisibility,'hidden','edge fluid vignette must be hidden');
+   assert.equal(data.edgeFogDisplay,'none','foreground edge fog must not frame the scene');
    assert.equal(data.uiVisible,true);
    assert.equal(data.scenePicker,true,'game scene switcher must list test room');
    assert.equal(data.originalImageVisibility,'hidden');
