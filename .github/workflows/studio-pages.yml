@@ -460,31 +460,29 @@ jobs:
                     playerStyle:document.getElementById('camera-player-root').style.transform,
                     stageStyle:document.getElementById('scene').style.transform
                   }));
-                  assert.notEqual(a.playerStyle,b.playerStyle,
-                    'foreground player must now tilt subtly with the camera');
+                  assert.equal(a.playerStyle,b.playerStyle,
+                    'camera-mounted foreground heroine should stay locked to the lens');
                   assert.ok(Math.abs(a.player.x-b.player.x)<28&&Math.abs(a.player.y-b.player.y)<28,
-                    'camera-near player shifted too far rather than only tilting');
+                    'camera-near protagonist unexpectedly shifted away from the shoulder view');
                   assert.equal(await page.locator('#actor-enemy')
                     .evaluate(el=>Number(getComputedStyle(el).opacity)),0,
-                    'invisible L2D bitmap anchor must remain transparent during camera tilt');
-                  assert.notEqual(a.enemyStyle,b.enemyStyle,'enemy plane never tilts');
-                  const angles=(style,axis)=>{
-                    const part=style.match(new RegExp(axis+'\\((-?[\\d.]+)deg\\)'));
-                    assert.ok(part,'missing rotation '+axis+' in '+style);
-                    return Number(part[1]);
-                  };
-                  for(const frame of [a,b]){
-                    // Enemy uses a small depth-dependent parallax (up to +0.9 deg
-                    // yaw and +0.66 deg pitch at maximum mouse tilt).
-                    // This is intentional: the enemy is not painted into the
-                    // wall. Keep the authored 3D camera and bound the excess.
-                    assert.ok(Math.abs(angles(frame.enemyStyle,'rotateY')-
-                                       angles(frame.stageStyle,'rotateY'))<1.05,
-                      'enemy yaw exceeded the authored near/far parallax budget');
-                    assert.ok(Math.abs(angles(frame.enemyStyle,'rotateX')-
-                                       angles(frame.stageStyle,'rotateX'))<.81,
-                      'enemy pitch exceeded the authored near/far parallax budget');
-                  }
+                    'invisible L2D bitmap anchor must stay transparent under camera motion');
+                  assert.notEqual(a.enemyStyle,b.enemyStyle,
+                    'world-anchored enemy did not respond to camera translation');
+                  assert.notEqual(a.stageStyle,b.stageStyle,
+                    'distant background did not respond to camera orientation');
+                  assert.ok(a.stageStyle.startsWith('matrix3d(')&&
+                    b.stageStyle.startsWith('matrix3d('),
+                    'background must be a real projective plane');
+                  assert.ok(a.enemyStyle.includes('scale(')&&
+                    b.enemyStyle.includes('scale('),
+                    'enemy billboard must be projected from its physical depth');
+                  const cameraWorld=await page.evaluate(()=>
+                    window.PaperWorldSceneCameraState());
+                  assert.ok(cameraWorld.distances.background>
+                    cameraWorld.distances.enemy &&
+                    cameraWorld.distances.enemy>cameraWorld.distances.player,
+                    'single camera layer distances are reversed');
                   assert.deepEqual(a.fog,b.fog,'black fog moved with the world');
                 }
                 // The real GPU/CPU fog has an opaque pure-black perimeter
