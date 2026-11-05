@@ -289,6 +289,10 @@ jobs:
                 assert.equal(await page.locator('[data-quick="fringe"]').inputValue(),'900');
                 assert.equal(await page.locator('[data-quick="skirt"]').inputValue(),'1250');
                 assert.equal(await page.locator('[data-quick="breath"]').inputValue(),'235');
+                // Bone authoring is kept in the advanced palette. Opening
+                // it proves the original controls remain available.
+                await page.locator('#workspace-inspector-tabs [data-inspector="placement"]').click();
+                await page.locator('#workspace-rig-more > summary').click();
                 await page.locator('#rig-part').selectOption('rear_hair');
                 assert.equal(await page.locator('#rig-bone option').count(),6,'hair needs three independently skinned two-joint strands');
                 await page.locator('#rig-advanced').evaluate(el=>{el.open=true;});
