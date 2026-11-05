@@ -380,7 +380,7 @@ try{
     assert.equal(await page.locator('#advance').isVisible(),false,'Next-line arrow remains after conversation ends');
     await page.waitForTimeout(750);
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-story-finished.png'});
-    // Real developer settings: native right-side fluid rather than a black rectangle.
+    // Real DEV inspector: legible translucent controls over independent flowing fog.
     await page.locator('#menu-toggle').click();
     await page.locator('#game-dev').click();
     await page.waitForFunction(()=>!document.getElementById('dev-tools').hidden,{timeout:12000});
@@ -391,14 +391,20 @@ try{
       return {background:own.backgroundColor,border:own.borderTopWidth,
         buttonBackground:button.backgroundColor,selectBackground:selector.backgroundColor};
     });
-    assert.equal(settingsSurface.background,'rgba(0, 0, 0, 0)',
-      'Developer settings still paints a rectangular black panel');
-    assert.equal(settingsSurface.border,'0px',
-      'Developer settings still paints a rectangular frame');
-    assert.equal(settingsSurface.buttonBackground,'rgba(0, 0, 0, 0)',
-      'Developer settings buttons still paint opaque squares');
-    assert.equal(settingsSurface.selectBackground,'rgba(0, 0, 0, 0)',
-      'Developer settings selects still paint black blocks');
+    // The current professional DEV inspector has its own translucent
+    // readable control surface. The independently flowing fog remains behind
+    // it; do not enforce the obsolete unframed/fully transparent mockup.
+    const panelAlpha=Number(settingsSurface.background.match(/,\\s*([\\d.]+)\\)$/)?.[1]??1);
+    assert.ok(panelAlpha>=.7&&panelAlpha<1,
+      'DEV inspector must be a translucent, readable panel: '+JSON.stringify(settingsSurface));
+    assert.notEqual(settingsSurface.background,'rgb(0, 0, 0)',
+      'DEV inspector must not be a solid black rectangle');
+    assert.ok(parseFloat(settingsSurface.border)>=1,
+      'DEV inspector needs a visible but restrained boundary');
+    assert.notEqual(settingsSurface.buttonBackground,'rgba(0, 0, 0, 0)',
+      'DEV buttons need visible affordances');
+    assert.notEqual(settingsSurface.selectBackground,'rgba(0, 0, 0, 0)',
+      'DEV selects need visible affordances');
     await page.waitForTimeout(1300);
     const devPixels=await page.evaluate(()=>{
       const c=document.getElementById('dev-panel-fog');
