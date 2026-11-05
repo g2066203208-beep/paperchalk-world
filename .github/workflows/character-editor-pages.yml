@@ -1,4 +1,4 @@
-name: Publish game + all-character L2D DEV (fast Pages deploy)
+name: Publish game + all-character L2D DEV (quality-gated)
 on:
   push:
     branches: [main]
@@ -32,7 +32,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 24
     environment:
       name: github-pages
       url: https://g2066203208-beep.github.io/paperchalk-world/
@@ -102,6 +102,28 @@ jobs:
           if(game.includes('id="menu-character-breath"'))throw Error('legacy heroine-only link must be absent');
           console.log('PASS: game + L2D DEV scripts parse; all actor canvases and site assets retained');
           JS
+      # This deployment job is intentionally fail-closed: a successful
+      # asset build is not enough when the live DEV fog or Studio UI regresses.
+      # All checks run against the very same generated site we publish.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Gate release on game camera, L2D identity, persistence and frame budgets
+        run: |
+          node tests/game-runtime-modules.test.cjs
+          node tests/scene-camera.test.cjs
+          node tests/classroom-box-camera.test.cjs
+          node tests/test_l2d_canvas_budget.cjs
+          node tests/test_l2d_display_lifecycle.cjs
+          node tests/test_l2d_studio_game_sync.cjs
+      - name: Install Chromium for pre-deployment UI checks
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Gate release on real desktop and mobile fog + focused L2D Studio
+        run: |
+          node tests/ui-edge-fog-browser.mjs
+          node tests/test_l2d_focused_workspace_browser.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
