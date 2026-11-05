@@ -86,17 +86,32 @@
   return [mode,Object.freeze([scene.allies[0],...scene.enemies])];
  })));
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
- function camera(mode='outer',progress=0){
-  const t=clamp(Number(progress)||0,0,1),outer=mode==='outer';
-  // Camera travels in 3D on a short arc. Its optical axis is composed
-  // independently to keep original 4-enemy L2Ds in the shot.
-  const angle=outer?lerp(SPEC.cameraStartAngle,SPEC.cameraEndAngle,t):
-   lerp(rad(-18),rad(18),t);
-  const R=outer?SPEC.outerCameraRadius:SPEC.innerCameraRadius;
-  const eye=polar(R,angle,1.42);
-  const focus={x:(outer?0.0:-.40)*(1-2*t),
-   y:.95,z:outer?SPEC.battleFocusZ:10.7};
-  return {mode,progress:t,radius:R,angle,eye,focus};
+ // Three fixed authored camera stations. The rendered interpolation is not an input mode.
+ const SHOT_NAMES=Object.freeze(['左侧','全景','右侧']);
+ const CAMERA_STOPS=Object.freeze({
+  outer:Object.freeze([
+   Object.freeze({id:'left',angle:rad(20),radius:12.10,eyeY:1.40,focusX:1.10,focusY:1.00,focusZ:9.30,fov:43}),
+   Object.freeze({id:'center',angle:rad(16),radius:12.40,eyeY:1.44,focusX:-.50,focusY:1.00,focusZ:8.70,fov:49}),
+   Object.freeze({id:'right',angle:rad(-20),radius:12.10,eyeY:1.40,focusX:-1.10,focusY:1.00,focusZ:9.30,fov:43})
+  ]),
+  inner:Object.freeze([
+   Object.freeze({id:'left',angle:rad(-28),radius:7.45,eyeY:1.42,focusX:1.10,focusY:1.00,focusZ:11.10,fov:43}),
+   Object.freeze({id:'center',angle:rad(-24),radius:7.75,eyeY:1.45,focusX:1.00,focusY:1.00,focusZ:11.20,fov:49}),
+   Object.freeze({id:'right',angle:rad(28),radius:7.45,eyeY:1.42,focusX:-1.10,focusY:1.00,focusZ:11.10,fov:43})
+  ])
+ });
+ const stopIndex=n=>clamp(Math.round(Number(n)||0),0,2);
+ function camera(mode='outer',index=0){
+  const i=stopIndex(index),p=(CAMERA_STOPS[mode]||CAMERA_STOPS.outer)[i];
+  return {mode,index:i,shot:p.id,angle:p.angle,radius:p.radius,fov:p.fov,
+   eye:polar(p.radius,p.angle,p.eyeY),focus:{x:p.focusX,y:p.focusY,z:p.focusZ}};
+ }
+ function blendCamera(from,to,t){
+  const v=clamp(t,0,1),mix=(a,b)=>lerp(a,b,v);
+  return {mode:to.mode,index:to.index,shot:to.shot,fov:mix(from.fov,to.fov),
+   angle:mix(from.angle,to.angle),radius:mix(from.radius,to.radius),
+   eye:{x:mix(from.eye.x,to.eye.x),y:mix(from.eye.y,to.eye.y),z:mix(from.eye.z,to.eye.z)},
+   focus:{x:mix(from.focus.x,to.focus.x),y:mix(from.focus.y,to.focus.y),z:mix(from.focus.z,to.focus.z)}};
  }
  function project(p,cam,aspect=16/9){
   const vp=multiply(perspective(SPEC.verticalFov,aspect),lookAt(cam.eye,cam.focus));
@@ -173,6 +188,14 @@
   'void main(){vec4 t=texture2D(uTexture,vec2(vUv.x,1.0-vUv.y));',
   'if(t.a<.025)discard;gl_FragColor=t;}'
  ].join('\n');
+ // Physically reversed wall bend when viewed from the opposite side.
+ function backdropPoint(mode='outer',angle=0){
+  const a=clamp(angle,-SPEC.wallArcHalfAngle,SPEC.wallArcHalfAngle);
+  const bow=SPEC.wallRadius*(1-Math.cos(a));
+  return mode==='inner'
+   ? {x:SPEC.wallRadius*Math.sin(a),z:23.0-bow*.72}
+   : {x:SPEC.wallRadius*Math.sin(a),z:4.0-bow};
+ }
  function worldMesh(gl){
   const floor=[],backInner=[],backOuter=[];
   const push=(to,a,b,c)=>to.push(...a,...b,...c);
@@ -183,11 +206,7 @@
   // Each faces its respective camera mode, and both are real 3D surfaces.
   const N=160;
   const addWall=(dest,face)=>{
-   const point=angle=>({
-    x:SPEC.wallRadius*Math.sin(angle),
-    z:face==='inner'?SPEC.wallCenterZ+SPEC.wallRadius*Math.cos(angle):
-     15.2+SPEC.wallRadius*(1-Math.cos(angle))
-   });
+   const point=angle=>backdropPoint(face==='inner'?'outer':'inner',angle);
    for(let i=0;i<N;i++){
     const a=-SPEC.wallArcHalfAngle+i*2*SPEC.wallArcHalfAngle/N;
     const b=-SPEC.wallArcHalfAngle+(i+1)*2*SPEC.wallArcHalfAngle/N;
