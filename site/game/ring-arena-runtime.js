@@ -74,6 +74,15 @@
  })));
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
+ // Keep all eight immutable world anchors for the future full-team mode,
+ // but this cinematic rear-battle presentation draws ONLY the heroine and
+ // the four opponents. Allied teammates are intentionally invisible, not removed.
+ const HIDDEN_ALLY_IDS=Object.freeze(['ally-2','ally-3','ally-4']);
+ const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
+  const scene=layout(mode);
+  return [mode,Object.freeze([scene.allies[0],...scene.enemies])];
+ })));
+ function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
  function camera(mode='outer',progress=0){
   const t=clamp(Number(progress)||0,0,1),outer=mode==='outer';
   const angle=outer?lerp(SPEC.cameraStartAngle,SPEC.cameraEndAngle,t):
@@ -374,14 +383,14 @@
    gl.uniform1f(world.uTime,elapsed);
    drawWorld(floor,0,vp);drawWorld(wall,1,vp);
    gl.disableVertexAttribArray(world.aP);
-   const all=[...layout(mode).allies,...layout(mode).enemies];
+   const all=visibleActors(mode);
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
    drawActors(all,cam,vp);
    if(frames%12===0){
     const ready=all.filter(a=>textures.get(a.id).painted).length;
     status.textContent=(mode==='outer'?'外侧镜头':'内侧镜头')+
-     ' · L2D '+ready+'/8 · 相机 '+Math.round(cam.angle*180/Math.PI)+'°';
+     ' · L2D '+ready+'/'+all.length+' · 相机 '+Math.round(cam.angle*180/Math.PI)+'°';
     canvas.dataset.l2dReady=String(ready);
     canvas.dataset.renderedFrames=String(frames);
    }
@@ -394,12 +403,14 @@
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
    mode,progress:position,target,actors:layout(mode),
+   visibleActorIds:visibleActors(mode).map(a=>a.id),
+   hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:camera(mode,position),ring:SPEC,
-   l2dReady:[...textures.values()].filter(t=>t.painted).length,
+   l2dReady:visibleActors(mode).filter(a=>textures.get(a.id).painted).length,
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:'existing PaperchalkL2D actors; source assets unchanged'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
- return Object.freeze({SPEC,formation,bindings,layout,camera,lookAt,
+ return Object.freeze({SPEC,formation,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,camera,lookAt,
   perspective,multiply,project,create});
 });
