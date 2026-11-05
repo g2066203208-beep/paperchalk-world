@@ -1,0 +1,44 @@
+name: In-game 3D classroom + real L2D visual proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/index.html'
+      - 'site/scene-modules.js'
+      - 'site/game/classroom-box-runtime.js'
+      - 'site/game/l2d-ground-binding.js'
+      - 'site/l2d/**'
+      - 'site/dev/character-bridge.js'
+      - 'tests/classroom-box-game-browser.mjs'
+      - '.github/workflows/classroom-box-game.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  in-game-five-face-l2d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium for real-game scene screenshot
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Check in-game 3D module syntax
+        run: |
+          node --check site/game/classroom-box-runtime.js
+          node --check site/scene-modules.js
+          node tests/scene-modules.test.cjs
+      - name: Capture game with real protagonist and enemy L2D on 3D floor
+        run: node tests/classroom-box-game-browser.mjs
+      - name: Upload screenshot evidence even if test fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: classroom-five-face-real-L2D
+          path: artifacts/classroom-box/*.png
+          if-no-files-found: warn
+          retention-days: 7
