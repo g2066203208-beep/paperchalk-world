@@ -14,8 +14,10 @@ if(root)root.PaperWorldClassroomBox=api;
 const ROOM=Object.freeze({width:9.6,depth:8,height:3.2});
 const BASE_CAMERA=Object.freeze({x:0,y:1.22,z:-1.25,hFov:68});
 const CHARACTERS=Object.freeze({
-  player:Object.freeze({x:-.9,y:0,z:1,height:1.62,soleX:.51,soleY:.978,visible:.945}),
-  enemy:Object.freeze({x:1.3,y:0,z:2.4,height:1.55,soleX:.6,soleY:.987,visible:.95})
+  player:Object.freeze({x:-.58,y:0,z:.55,height:1.62,soleX:.51,soleY:.978,visible:.945}),
+  enemy:Object.freeze({x:1.12,y:0,z:2.6,height:1.58,soleX:.5,soleY:.978,visible:.95}),
+  enemy2:Object.freeze({x:.12,y:0,z:3.25,height:1.59,soleX:.5,soleY:.978,visible:.95}),
+  enemy3:Object.freeze({x:2.1,y:0,z:3.5,height:1.60,soleX:.5,soleY:.978,visible:.95})
 });
 const COLORS=Object.freeze({
   ceiling:'#a8b1be',floor:'#bca17f',back:'#70899b',
@@ -25,9 +27,9 @@ const COLORS=Object.freeze({
 // A matching PNG/WebP may replace any SVG without changing world geometry.
 // Game performs perspective; no camera perspective is baked into assets.
 const MATERIALS=Object.freeze({
-  floor:'./assets/room-box/floor.png',
+  floor:'./assets/room-box/floor.svg',
   ceiling:'./assets/room-box/ceiling.svg',
-  back:'./assets/room-box/back.png',
+  back:'./assets/room-box/back.svg',
   left:'./assets/room-box/left.svg',
   right:'./assets/room-box/right.svg'
 });
@@ -147,7 +149,7 @@ function buildMesh(actors=CHARACTERS){
     meshVertex(guides,[-4.8,.016,z],color);
     meshVertex(guides,[4.8,.016,z],color);
   }
-  for(const id of ['player','enemy']){
+  for(const id of Object.keys(actors)){
     const a=actors[id],center=[a.x,.009,a.z];
     const tone=hexColor('#26313b',.58);
     for(let i=0;i<32;i++){
@@ -250,11 +252,12 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   const materialStatus=Object.fromEntries(Object.keys(MATERIALS).map(id=>[id,'not-loaded']));
   const actorWorld=Object.fromEntries(Object.entries(CHARACTERS).map(([id,a])=>[id,{...a}]));
   let geometry=buildMesh(actorWorld);
-  const savedActorKey='paperchalk-classroom-3d-actor-world-v1';
+  // Versioned so prior two-character experimental positions cannot overwrite this composition.
+  const savedActorKey='paperchalk-classroom-3d-actor-world-v2';
   try{
     const stored=JSON.parse(localStorage.getItem(savedActorKey)||'null');
     if(stored&&typeof stored==='object'){
-      for(const id of ['player','enemy']){
+      for(const id of Object.keys(actorWorld)){
         const a=stored[id];if(!a)continue;
         for(const [key,lo,hi] of [['x',-4.5,4.5],['z',.1,7.8],['height',1.2,1.95]]){
           const n=Number(a[key]);
@@ -543,7 +546,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
         [actor.x-.43,actor.height,actor.z]];
       color=selectedReference==='player'?'#edc5a1':'#bde2c1';
       description=selectedReference==='player'?'玩家 L2D 参考平面':
-        '敌人 L2D 参考平面';
+        selectedReference+' L2D 参考平面';
     }
     const p=verts.map(v=>project(v,cam,w,h));
     if(p.some(q=>!q)){references.hidden=true;return}
@@ -570,7 +573,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   }
   function metrics(){
     const prior=window.PaperWorldL2DGround?.state?.();
-    return Object.fromEntries(['player','enemy'].map(id=>
+    return Object.fromEntries(Object.keys(actorWorld).map(id=>
       [id,prior?.actors?.find(a=>a.id===id)||null]));
   }
   function applyActor(id,geometry,offsetX,offsetY){
@@ -600,9 +603,13 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     const info=metrics();
     const player=actorGeometry('player',cam,w,h,info.player,actorWorld.player);
     const enemy=actorGeometry('enemy',cam,w,h,info.enemy,actorWorld.enemy);
+    const enemy2=actorGeometry('enemy2',cam,w,h,info.enemy2,actorWorld.enemy2);
+    const enemy3=actorGeometry('enemy3',cam,w,h,info.enemy3,actorWorld.enemy3);
     const left=(view.clientWidth-w)/2,top=(view.clientHeight-h)/2;
     applyActor('player',player,left,top);
     applyActor('enemy',enemy,left,top);
+    applyActor('enemy2',enemy2,left,top);
+    applyActor('enemy3',enemy3,left,top);
     const pixelRatio=Math.min(1.5,window.devicePixelRatio||1,
       Math.sqrt(2000000/(w*h)));
     const bw=Math.max(1,Math.round(w*pixelRatio));
@@ -629,13 +636,13 @@ function create({stage,view,playerRoot,enemyRoot}={}){
       }
     }
     drawReferences(cam,w,h);
-    lastState={active:true,faceCount:5,room:ROOM,camera:cam,player,enemy,
+    lastState={active:true,faceCount:5,room:ROOM,camera:cam,player,enemy,enemy2,enemy3,
       renderer,meshFaceCount:5,vertexCount:geometry.solids.length/7,
       materialSources:MATERIALS,materials:{...materialStatus},
       loadedMaterialCount:Object.values(materialStatus).filter(v=>v==='ready').length,
       debugMode,visibleFaces:{...visibleFaces},selectedFace,
       selectedReference,guidesVisible,
-      worldActors:{player:{...actorWorld.player},enemy:{...actorWorld.enemy}},
+      worldActors:Object.fromEntries(Object.entries(actorWorld).map(([id,a])=>[id,{...a}])),
       pointerStrength,cameraRig:CAMERA_RIG,
       projection:'physical-perspective-camera',frames,
       floorY:0,actorRendering:'real-game-l2d',canvasSize:{w:bw,h:bh}};
@@ -680,7 +687,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     catch(_){return false}
   }
   function resetActorWorld(){
-    for(const id of ['player','enemy'])Object.assign(actorWorld[id],CHARACTERS[id]);
+    for(const id of Object.keys(actorWorld))Object.assign(actorWorld[id],CHARACTERS[id]);
     geometry=buildMesh(actorWorld);
     if(gl&&buffers?.shadows){
       gl.bindBuffer(gl.ARRAY_BUFFER,buffers.shadows.buffer);
@@ -698,7 +705,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     return pointerStrength;
   }
   function setReferenceLayer(id){
-    if(id!==null&&!['fog','player','enemy'].includes(id))return false;
+    if(id!==null&&id!=='fog'&&!Object.hasOwn(actorWorld,id))return false;
     selectedReference=id;references.hidden=!debugMode||!id;lastKey='';
     if(enabled)render();
     return true;
@@ -730,7 +737,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     view.classList.toggle('room-blockout-active',enabled);
     if(!enabled){
       lastKey='';lastState=null;
-      for(const id of ['player','enemy'])for(const key of ['size','left','top'])
+      for(const id of Object.keys(actorWorld))for(const key of ['size','left','top'])
         view.style.removeProperty('--room-'+id+'-'+key);
     }else render(0,0);
   }
