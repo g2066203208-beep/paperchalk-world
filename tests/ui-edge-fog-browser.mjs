@@ -394,7 +394,8 @@ try{
     // The current professional DEV inspector has its own translucent
     // readable control surface. The independently flowing fog remains behind
     // it; do not enforce the obsolete unframed/fully transparent mockup.
-    const panelAlpha=Number(settingsSurface.background.match(/,\\s*([\\d.]+)\\)$/)?.[1]??1);
+    const panelAlpha=settingsSurface.background.startsWith('rgba(')
+      ?Number(settingsSurface.background.split(',').at(-1).replace(')','').trim()):1;
     assert.ok(panelAlpha>=.7&&panelAlpha<1,
       'DEV inspector must be a translucent, readable panel: '+JSON.stringify(settingsSurface));
     assert.notEqual(settingsSurface.background,'rgb(0, 0, 0)',
