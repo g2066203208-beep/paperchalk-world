@@ -2605,7 +2605,7 @@ void main(){
   });
   document.getElementById('dev-room-clear-selection').addEventListener('click',()=>{
     if(!is3DRoom())return;
-    selectedRoomObject=null;boxScene.selectFace(null);refreshRoomDev();
+    selectedRoomObject=null;boxScene.selectFace(null);boxScene.setReferenceLayer(null);refreshRoomDev();
   });
   document.querySelectorAll('[data-room-actor-field]').forEach(input=>{
     input.addEventListener('input',()=>{
