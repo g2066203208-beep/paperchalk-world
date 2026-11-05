@@ -14,7 +14,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    window.PaperchalkStudio?.current==='female-06'&&
    window.PaperchalkPartRigStudio.state.model.parts.pants_overlay,
    null,{timeout:50000});
-  // Safe canvas mode is the default; editing requires explicit unlock.
+  // Safe canvas mode is the default; the author opens Placement explicitly.
+  await page.locator('#workspace-inspector-tabs [data-inspector="placement"]').click();
   assert.equal(await page.locator('#rig-part').inputValue(),'pants_overlay');
   assert.equal(await page.locator('#rig-fit-handles').getAttribute('aria-pressed'),'false');
   await page.locator('#rig-fit-handles').click();
@@ -41,7 +42,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.locator('#rig-fit-height').fill('110');
   await page.locator('#rig-fit-x').fill('8');
   await page.locator('#rig-fit-y').fill('-11');
-  await page.locator('#rig-fit-help').click();
+  await page.locator('#rig-fit-panel .rig-fit-heading strong').click();
   let scaled=await page.evaluate(()=>{
    const ed=window.characterEditor,m=window.PaperchalkPartRigStudio.state.model;
    const p=m.parts.pants_overlay,part=ed.S.layers.front.find(x=>x.partId==='pants_overlay');
@@ -80,6 +81,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    window.PaperchalkPartRigStudio?.state?.active&&
    window.PaperchalkPartRigStudio.state.model.parts.pants_overlay.placement.scaleX===.86,
    null,{timeout:50000});
+  await page.locator('#workspace-inspector-tabs [data-inspector="placement"]').click();
   assert.equal(await page.locator('#rig-part').inputValue(),'pants_overlay');
   await page.locator('#rig-fit-precise summary').click();
   assert.equal(await page.locator('#rig-fit-width').inputValue(),'86');
