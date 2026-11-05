@@ -26,6 +26,7 @@ on:
       - 'tests/test_protagonist_crouch_studio_browser.mjs'
       - 'tests/test_protagonist_crouch_motion_browser.mjs'
       - 'tests/test_l2d_display_lifecycle.cjs'
+      - 'tests/test_l2d_studio_game_sync.cjs'
       - 'tests/test_battle_front_studio.js'
       - 'tests/test_female5_teacher_alias_browser.js'
       - 'tests/test_protagonist_unified.py'
@@ -72,6 +73,8 @@ jobs:
         run: node tests/test_l2d_idle.js
       - name: Validate L2D asset reuse and latest-selection stability
         run: node tests/test_l2d_display_lifecycle.cjs
+      - name: Ensure game renders saved Studio bones and textures (including unpublished rigs)
+        run: node tests/test_l2d_studio_game_sync.cjs
       - name: Verify separate protagonist battle-front PSD studio and ZIP isolation
         run: node tests/test_battle_front_studio.js
       - name: Rebuild existing original L2D safely
