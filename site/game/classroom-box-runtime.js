@@ -22,10 +22,10 @@ const CHARACTERS=Object.freeze({
   // Same ground depth => identical screen shoe Y and consistent perspective
   // at the neutral camera, unlike the old staggered triangular formation.
   // Keep each published L2D character's real physical height and appearance.
-  enemy:Object.freeze({x:-.55,y:0,z:3.05,height:1.58,soleX:.5,soleY:.978,visible:.95}),
-  enemy2:Object.freeze({x:.25,y:0,z:3.05,height:1.59,soleX:.5,soleY:.978,visible:.95}),
-  enemy3:Object.freeze({x:1.05,y:0,z:3.05,height:1.60,soleX:.5,soleY:.978,visible:.95}),
-  enemy4:Object.freeze({x:1.85,y:0,z:3.05,height:1.58,soleX:.5,soleY:.978,visible:.95})
+  enemy:Object.freeze({x:-.90,y:0,z:3.05,height:1.58,soleX:.5,soleY:.978,visible:.95}),
+  enemy2:Object.freeze({x:.08,y:0,z:3.05,height:1.59,soleX:.5,soleY:.978,visible:.95}),
+  enemy3:Object.freeze({x:1.06,y:0,z:3.05,height:1.60,soleX:.5,soleY:.978,visible:.95}),
+  enemy4:Object.freeze({x:2.04,y:0,z:3.05,height:1.58,soleX:.5,soleY:.978,visible:.95})
 });
 const COLORS=Object.freeze({
   ceiling:'#a8b1be',floor:'#bca17f',back:'#70899b',
@@ -271,7 +271,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   // Versioned so prior two-character experimental positions cannot overwrite this composition.
   // Intentional new authored composition. Earlier saved experiments should
   // not silently force the old crowded arrangement on returning players.
-  const savedActorKey='paperchalk-classroom-3d-actor-world-v5';
+  const savedActorKey='paperchalk-classroom-3d-actor-world-v6';
   try{
     const stored=JSON.parse(localStorage.getItem(savedActorKey)||'null');
     if(stored&&typeof stored==='object'){
