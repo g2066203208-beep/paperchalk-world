@@ -1,5 +1,8 @@
 # Paperchalk World｜GitHub 托管游戏与像素工作室
 
+> **人物 2048 重画 / Anima / Forge Neo 每次开工必读：** [已安装插件与 LoRA 逐项清单](docs/ANIMA_FORGE_NEO_INVENTORY_20261105.md) → [女主 CHAR-001 2048 保真精修 SOP（含可复制提示词、UI参数、透明化及验收）](docs/CHAR_001_2048_REPAINT_SOP_20261105.md) → [角色美术风格锁](docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md)。清单是 2026-11-05 用户截图快照，不等于软件安装状态实时自动同步；每次使用先核对实际本机界面，不能未经用户验收覆盖已批准 L2D/母图。
+
+
 当前 main 仓库同时包含横屏叙事场景、自动场景发布系统与独立美术工具；场景实验并不是完整的剧情游戏。
 
 [打开托管游戏](https://g2066203208-beep.github.io/paperchalk-world/) · [GitHub Actions 自动发布](https://github.com/g2066203208-beep/paperchalk-world/actions)
