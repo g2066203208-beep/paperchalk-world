@@ -701,6 +701,8 @@ body.mobile-mode.virtual-landscape #view{
 #view #dev-tools #dev-3d-controls{padding:8px 0;margin:5px 0 7px;
   border-top:1px solid var(--dev-border);border-bottom:1px solid var(--dev-border)}
 #view.room-dev-mode #dev-layer-select-wrap{display:none!important}
+#view.room-dev-mode #dev-3d-controls,#view.room-dev-mode #dev-layer-actions{display:none!important}
+#view.room-dev-mode #dev-room-camera-tuning[hidden]{display:none!important}
 #view.room-dev-mode #dev-actor-controls{display:none!important}
 #view.room-dev-mode #dev-floor-controls{display:none!important}
 #view.room-dev-mode #dev-z-control{display:none!important}
@@ -877,7 +879,7 @@ body.mobile-mode.virtual-landscape #view{
   </div>
   <canvas id="dev-panel-fog" aria-hidden="true"></canvas>
   <aside id="dev-tools" hidden aria-label="开发者分层编辑面板" data-ui-fog-edge="right">
-    <header><strong>DEV · 分层与黑雾</strong><button id="dev-exit" type="button">完成 / 返回</button></header>
+    <header><strong>DEV · 场景编辑</strong><button id="dev-exit" type="button">完成 / 返回</button></header>
     <p>普通场景保持原来的分层检查；五面教室在下方直接检查真实 3D 几何和独立贴图。</p>
     <section id="dev-room-surfaces" hidden aria-label="当前游戏场景对象和图层">
       <header class="dev-subhead"><strong>场景对象</strong><span>3D · 实时</span></header>
@@ -912,25 +914,17 @@ body.mobile-mode.virtual-landscape #view{
         <div class="dev-buttons"><button id="dev-room-actor-save" type="button">保存站位</button>
         <button id="dev-room-actor-reset" type="button">重置站位</button></div>
       </div>
-      <details id="dev-room-camera-tuning">
-        <summary>摄影机 · 坐标与视角</summary>
-        <label>游戏鼠标活动范围 <output id="dev-room-pointer-strength-value">100%</output></label>
-        <input id="dev-room-pointer-strength" type="range" min="0" max="150" value="100" step="5" aria-label="真实3D摄影机鼠标活动范围">
-        <p>游戏镜头最大移动：左右 ±27 cm、上下 ±9.5 cm（100%）。中心死区与视线锁定自动保持舒适构图。</p>
-        <label>左右 X <output data-room-camera-value="x"></output></label>
-        <input type="range" data-room-camera-field="x" min="-2.4" max="2.4" step=".05">
-        <label>高度 Y <output data-room-camera-value="y"></output></label>
-        <input type="range" data-room-camera-field="y" min=".55" max="2.7" step=".05">
-        <label>后退距离 <output data-room-camera-value="depth"></output></label>
-        <input type="range" data-room-camera-field="depth" min="1.2" max="5" step=".05">
-        <label>水平旋转 <output data-room-camera-value="yaw"></output></label>
-        <input type="range" data-room-camera-field="yaw" min="-55" max="55" step="1">
-        <label>俯仰角 <output data-room-camera-value="pitch"></output></label>
-        <input type="range" data-room-camera-field="pitch" min="-55" max="55" step="1">
-        <label>视角 FOV <output data-room-camera-value="fov"></output></label>
+      <details id="dev-room-camera-tuning" hidden>
+        <summary>摄影机 · 固定检查视角</summary>
+        <div class="dev-buttons"><button type="button" data-room-view="front">正视</button>
+        <button type="button" data-room-view="side">侧视</button>
+        <button type="button" data-room-view="top">俯视</button></div>
+        <label>游戏镜头移动幅度 <output id="dev-room-pointer-strength-value">100%</output></label>
+        <input id="dev-room-pointer-strength" type="range" min="0" max="150" value="100" step="5">
+        <label>摄影机 FOV <output data-room-camera-value="fov">68°</output></label>
         <input type="range" data-room-camera-field="fov" min="40" max="90" step="1">
-        <div class="dev-buttons"><button id="dev-room-camera-save" type="button">保存 DEV 机位</button>
-        <button id="dev-room-camera-restore" type="button">恢复正视角</button></div>
+        <div class="dev-buttons"><button id="dev-room-camera-save" type="button">保存参数</button>
+        <button id="dev-room-camera-restore" type="button">恢复默认</button></div>
       </details>
     </section>
     <div id="dev-3d-controls">
