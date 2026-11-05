@@ -83,6 +83,10 @@ try{
  });
  const before=await get();
  assert.equal(before.arena.mode,'outer');
+ assert.equal(before.arena.shotIndex,0);
+ assert.equal(before.arena.shotName,'左侧');
+ assert.equal(before.arena.camera.shot,'left');
+ assert.equal(await page.locator('[data-shot]').count(),3);
  assert.equal(before.arena.ring.stageType,'shallow-arc');
  assert.equal(before.arena.ring.verticalFov,46);
  assert.equal(before.arena.l2dReady,5);
@@ -92,9 +96,24 @@ try{
  assert.ok(before.sources.every(s=>!s.hidden&&s.ready==='ready'&&s.canvasW>0),'all 8 authentic L2D sources active');
  const original=JSON.stringify(before.arena.actors);
  await page.screenshot({path:'artifacts/ring-arena/l2d-outer-left.png'});
- for(let i=0;i<7;i++)await page.locator('[data-shift="1"]').click();
- await page.waitForTimeout(700);
+ // Moving the pointer cannot alter the camera; release snaps exactly one stop.
+ await page.mouse.move(540,250);
+ await page.mouse.down();
+ await page.mouse.move(735,250,{steps:7});
+ const whileDragging=await get();
+ assert.equal(whileDragging.arena.shotIndex,0,'pointermove may not freely pan camera');
+ await page.mouse.up();
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,{timeout:7000});
+ const middle=await get();
+ assert.equal(middle.arena.shotIndex,1,'one swipe advances exactly one fixed shot');
+ assert.equal(JSON.stringify(middle.arena.actors),original,'swiping must keep world anchors frozen');
+ await page.screenshot({path:'artifacts/ring-arena/l2d-outer-center.png'});
+ await page.locator('[data-shift="1"]').click();
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,{timeout:7000});
  const moved=await get();
+ assert.equal(moved.arena.shotIndex,2);
+ assert.equal(moved.arena.camera.shot,'right');
+ assert.equal(moved.arena.shotName,'右侧');
  assert.equal(JSON.stringify(moved.arena.actors),original,'world positions must be unchanged by camera pan');
  assert.notEqual(moved.arena.camera.angle,before.arena.camera.angle);
  assert.equal(moved.arena.l2dReady,5);
@@ -104,7 +123,20 @@ try{
  await page.waitForTimeout(700);
  const inner=await get();
  assert.equal(inner.arena.mode,'inner');
- assert.equal(inner.arena.camera.radius,6.0);
+ assert.equal(inner.arena.shotIndex,2,'mode switch retains approved shot index');
+ assert.equal(inner.arena.camera.shot,'right');
+ const curvature=await page.evaluate(()=>{
+  const p=window.PaperWorldRingArena;
+  return {outerNear:p.backdropPoint('outer',0).z,
+   outerSide:p.backdropPoint('outer',1).z,
+   innerNear:p.backdropPoint('inner',0).z,
+   innerSide:p.backdropPoint('inner',1).z};
+ });
+ assert.ok(curvature.outerNear>curvature.outerSide);
+ assert.ok(curvature.innerNear>curvature.innerSide);
+ assert.ok(curvature.innerNear>curvature.outerNear);
+ assert.equal(inner.arena.camera.radius,7.45);
+ assert.equal(inner.arena.camera.fov,43);
  assert.equal(inner.arena.ring.wallRadius,18);
  assert.equal(inner.arena.ring.outerRoleRadius,10.55);
  assert.equal(inner.arena.ring.innerRoleRadius,8.3);
@@ -113,9 +145,17 @@ try{
  assert.deepEqual(inner.arena.visibleActorIds,before.arena.visibleActorIds);
  assert.equal(inner.arena.actors.allies.length,4);
  await page.screenshot({path:'artifacts/ring-arena/l2d-inner-right.png'});
+ await page.locator('[data-shot="1"]').click();
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,{timeout:7000});
+ assert.equal((await get()).arena.shotIndex,1);
+ await page.screenshot({path:'artifacts/ring-arena/l2d-inner-center.png'});
+ await page.locator('[data-shot="0"]').click();
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,{timeout:7000});
+ assert.equal((await get()).arena.shotIndex,0);
+ await page.screenshot({path:'artifacts/ring-arena/l2d-inner-left.png');
  assert.deepEqual(errors,[],'browser should not report unexpected errors');
  await page.close();
- console.log('PASS: heroine + 4 enemies drawn; 3 allied teammates hidden; all world coordinates fixed; true 3D camera orbit');
+ console.log('PASS: cinematic left/center/right snaps, opposite inner wall curvature, heroine+4 enemies L2D and fixed 3D anchors');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }
