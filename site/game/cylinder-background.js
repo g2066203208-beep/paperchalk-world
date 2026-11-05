@@ -58,9 +58,10 @@
       if(canvas.width!==w)canvas.width=w;
       if(canvas.height!==h)canvas.height=h;
       width=w;height=h;imageIdentity=id;lastYaw=yaw;lastPitch=pitch;
-      ctx.clearRect(0,0,w,h);
-      ctx.imageSmoothingEnabled=true;
-      ctx.imageSmoothingQuality='high';
+      try{
+        ctx.clearRect(0,0,w,h);
+        ctx.imageSmoothingEnabled=true;
+        ctx.imageSmoothingQuality='medium';
       // Preserve object-fit:contain for non-16:9 artwork, including black bars.
       const sourceAspect=source.naturalWidth/source.naturalHeight;
       const frameAspect=w/h;
@@ -82,6 +83,12 @@
         ctx.drawImage(source,sx,sy,
           Math.min(sw,source.naturalWidth-sx),sh,
           x0+x,y0,strip+.35,dh);
+        }
+      }catch(_){
+        // Never stop the existing black-fog/actor frame loop if the canvas
+        // context is lost or a scene image becomes unavailable mid-frame.
+        fallback();
+        return false;
       }
       canvas.hidden=false;
       source.classList.add('scene-cylinder-source-hidden');
