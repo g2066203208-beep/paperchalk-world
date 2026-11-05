@@ -11,11 +11,12 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 # The oldest general-purpose release may be stuck on unrelated fog/studio UI
 # checks. A newly validated release must supersede older deployments, not
 # publish an outdated Pages snapshot after the latest 3D scene.
 concurrency:
-  group: paperchalk-world-pages
+  group: paperchalk-world-ring-fast-release
   cancel-in-progress: true
 jobs:
   deploy:
@@ -25,6 +26,14 @@ jobs:
       name: github-pages
       url: https://g2066203208-beep.github.io/paperchalk-world/
     steps:
+      - name: Cancel obsolete general Pages builds so an older revision cannot overwrite this release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/character-editor-pages.yml/runs?status=in_progress&per_page=50" --jq '.workflow_runs[] | select(.head_sha != env.GITHUB_SHA) | .id' | while read -r id; do
+            [ -n "$id" ] || continue
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${id}/cancel" || true
+          done
       - uses: actions/checkout@v4
       - name: Build the exact real game and authored Live2D assets
         run: |
