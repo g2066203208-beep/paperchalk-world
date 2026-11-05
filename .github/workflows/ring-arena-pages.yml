@@ -67,7 +67,7 @@ jobs:
             'site/dev/character-bridge.js'
           ])new Function(fs.readFileSync(path,'utf8'));
           const html=fs.readFileSync('site/index.html','utf8');
-          if(!html.includes('ring-arena-runtime.js?v=lunar-wide-staging-v8-20261106'))
+          if(!html.includes('ring-arena-runtime.js?v=lunar-camera-visible-v8b-20261106'))
             throw Error('Deployed HTML still points at stale ring-arena WebGL source');
           if(!html.includes("ringScene.setActive(name==='ring-arena')"))
             throw Error('3D ring scene was not integrated into the game');
