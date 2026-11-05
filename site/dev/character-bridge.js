@@ -166,9 +166,12 @@ async function assign(target,id,face='front',save=true){
  const [savedRig,savedArt]=await checked(Promise.all([
   get('part-rig:'+id+':'+face),getLocalArtwork(id,face)
  ]));
+ // A published test/special module may have fewer than eight original
+ // meshes; only unpublished user projects require a substantial source rig.
+ const minimumParts=published?.rig?.textures?1:8;
  const localRigAvailable=savedRig?.format==='paperchalk-part-rig-v1'&&
   savedRig.characterId===id&&savedRig.face===face&&
-  Object.keys(savedRig.parts||{}).length>=8;
+  Object.keys(savedRig.parts||{}).length>=minimumParts;
  if(savedRig&&!localRigAvailable)
   throw Error('发现本机 L2D 骨骼编辑稿，但人物/方向/格式不匹配；拒绝换回旧模型：'+id+'/'+face);
  // The artist can add/split/remove meshes without publishing binaries.
