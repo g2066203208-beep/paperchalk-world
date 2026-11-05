@@ -83,6 +83,8 @@ try{
  });
  const before=await get();
  assert.equal(before.arena.mode,'outer');
+ assert.equal(before.arena.ring.stageType,'shallow-arc');
+ assert.equal(before.arena.ring.verticalFov,46);
  assert.equal(before.arena.l2dReady,5);
  assert.deepEqual(before.arena.visibleActorIds,['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.deepEqual(before.arena.hiddenAlliedTeammateIds,['ally-2','ally-3','ally-4']);
@@ -102,10 +104,11 @@ try{
  await page.waitForTimeout(700);
  const inner=await get();
  assert.equal(inner.arena.mode,'inner');
- assert.equal(inner.arena.camera.radius,7.2);
+ assert.equal(inner.arena.camera.radius,6.0);
  assert.equal(inner.arena.ring.wallRadius,18);
- assert.equal(inner.arena.ring.outerRoleRadius,12);
- assert.equal(inner.arena.ring.innerRoleRadius,9.6);
+ assert.equal(inner.arena.ring.outerRoleRadius,10.55);
+ assert.equal(inner.arena.ring.innerRoleRadius,8.3);
+ assert.equal(inner.arena.ring.stageType,'shallow-arc');
  assert.equal(inner.arena.l2dReady,5);
  assert.deepEqual(inner.arena.visibleActorIds,before.arena.visibleActorIds);
  assert.equal(inner.arena.actors.allies.length,4);
