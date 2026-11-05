@@ -70,16 +70,11 @@ function camera(inputX=0,inputY=0,strength=1){
   const x=BASE_CAMERA.x+sx*CAMERA_RIG.xTravel*intensity;
   const y=BASE_CAMERA.y-sy*CAMERA_RIG.yTravel*intensity;
   const z=BASE_CAMERA.z;
-  const dz=CAMERA_RIG.focusZ-z;
-  const dx=CAMERA_RIG.focusX-x;
-  const dy=CAMERA_RIG.focusY-y;
-  const baseDx=CAMERA_RIG.focusX-BASE_CAMERA.x;
-  const baseDy=CAMERA_RIG.focusY-BASE_CAMERA.y;
-  const baselineYaw=Math.atan2(baseDx,dz);
-  const baselinePitch=Math.atan2(baseDy,Math.hypot(baseDx,dz));
-  const yaw=(Math.atan2(dx,dz)-baselineYaw)*CAMERA_RIG.focusLock;
-  const pitch=(Math.atan2(dy,Math.hypot(dx,dz))-baselinePitch)*
-    CAMERA_RIG.focusLock;
+  // Directional camera steering: pointer RIGHT => yaw RIGHT; pointer
+  // UP => pitch UP. The previous look-back compensation inverted yaw.
+  // Move and turn only this one real camera, never any scene object.
+  const yaw=sx*.022*intensity;
+  const pitch=sy*.014*intensity;
   return {x,y,z,yaw,pitch,hFov:BASE_CAMERA.hFov};
 }
 // Reference CPU projector matches the WebGL vertex shader exactly.
