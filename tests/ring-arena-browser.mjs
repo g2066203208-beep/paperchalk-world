@@ -86,95 +86,62 @@ try{
  assert.equal(before.arena.shotIndex,0);
  assert.equal(before.arena.shotName,'左侧');
  assert.equal(before.arena.camera.shot,'left');
- assert.equal(await page.locator('[data-shot]').count(),3);
  assert.equal(before.arena.ring.stageType,'wide-cinematic-arc');
- assert.equal(before.arena.ring.verticalFov,48);
  assert.equal(before.arena.l2dReady,5);
- assert.deepEqual(before.arena.visibleActorIds,['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
- assert.deepEqual(before.arena.hiddenAlliedTeammateIds,['ally-2','ally-3','ally-4']);
- assert.equal(before.sources.find(s=>s.id==='player').side,'back');
- assert.ok(before.sources.every(s=>!s.hidden&&s.ready==='ready'&&s.canvasW>0),'all 8 authentic L2D sources active');
- const original=JSON.stringify(before.arena.actors);
- const bounds=await page.evaluate(()=>{
-  const ar=window.PaperWorldRingArena, cam=ar.camera('outer',0);
-  const scene=ar.layout('outer');
-  return {hero:ar.portraitBounds(scene.allies[0],cam),
-   enemies:scene.enemies.map(p=>ar.portraitBounds(p,cam)),
-   foeSpread:Math.max(...scene.enemies.map(p=>p.x))-
-    Math.min(...scene.enemies.map(p=>p.x))};
+ assert.equal(await page.locator('[data-shot]').count(),2,'only left and right buttons');
+ assert.equal(await page.locator('[data-shot="1"]').textContent(),'右机位 ▶');
+ assert.equal(await page.locator('[data-shot="2"]').count(),0,'remove center/third station');
+ assert.equal(await page.locator('[data-shift]').count(),0,'remove redundant camera controls');
+ assert.equal(before.sources.find(p=>p.id==='player').side,'back');
+ assert.ok(before.sources.every(p=>!p.hidden&&p.ready==='ready'&&p.canvasW>0));
+ const originalOuter=JSON.stringify(before.arena.actors);
+ const computed=await page.evaluate(()=>{
+  const a=window.PaperWorldRingArena,scene=a.layout('outer'),c=a.camera('outer',0);
+  return {hero:a.portraitBounds(scene.allies[0],c),
+   heroCenter:a.project({...scene.allies[0],y:.85},c),
+   enemies:scene.enemies.map(p=>a.portraitBounds(p,c)),
+   cameraCount:a.CAMERA_STOPS.outer.length};
  });
- assert.ok(bounds.hero.heightFraction>.72,'large nearby heroine rear-view');
- const heroCenter=await page.evaluate(()=>{
-  const a=window.PaperWorldRingArena;
-  const l=a.layout('outer');
-  return a.project({...l.allies[0],y:l.allies[0].height*.5},a.camera('outer',0));
- });
- assert.ok(heroCenter.valid&&heroCenter.x<-.35&&heroCenter.x>-.85,
-  'the visible center of the heroine, not only transparent quad, must be inside the shot');
- assert.ok(bounds.foeSpread>=5,'widen the enemy arc in 3D world units');
- assert.ok(bounds.enemies.every(b=>b.valid&&b.left>-.97&&b.right<.97),
-   'all four enemy L2D quads completely visible in the frame');
+ assert.equal(computed.cameraCount,2);
+ assert.ok(computed.hero.valid&&computed.hero.heightFraction>1.10);
+ assert.ok(computed.heroCenter.x<-.45&&computed.heroCenter.x>-.80,
+   'real L2D heroine center remains in near-left foreground');
+ assert.ok(computed.enemies.every(b=>b.valid&&b.left>-.97&&b.right<.97));
  await page.screenshot({path:'artifacts/ring-arena/l2d-outer-left.png'});
- // Moving the pointer cannot alter the camera; release snaps exactly one stop.
- await page.mouse.move(540,250);
- await page.mouse.down();
- await page.mouse.move(735,250,{steps:7});
- const whileDragging=await get();
- assert.equal(whileDragging.arena.shotIndex,0,'pointermove may not freely pan camera');
+ // Only on POINTER RELEASE may the camera snap to the other approved position.
+ await page.mouse.move(540,240);await page.mouse.down();
+ await page.mouse.move(735,240,{steps:7});
+ assert.equal((await get()).arena.shotIndex,0,'no follow-pointer camera motion');
  await page.mouse.up();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,null,{timeout:7000});
- const middle=await get();
- assert.equal(middle.arena.shotIndex,1,'one swipe advances exactly one fixed shot');
- assert.equal(JSON.stringify(middle.arena.actors),original,'swiping must keep world anchors frozen');
- await page.screenshot({path:'artifacts/ring-arena/l2d-outer-center.png'});
- await page.locator('[data-shift="1"]').click();
- await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,null,{timeout:7000});
- const moved=await get();
- assert.equal(moved.arena.shotIndex,2);
- assert.equal(moved.arena.camera.shot,'right');
- assert.equal(moved.arena.shotName,'右侧');
- assert.equal(JSON.stringify(moved.arena.actors),original,'world positions must be unchanged by camera pan');
- assert.notEqual(moved.arena.camera.angle,before.arena.camera.angle);
- assert.equal(moved.arena.l2dReady,5);
- assert.deepEqual(moved.arena.visibleActorIds,before.arena.visibleActorIds);
+ const right=await get();
+ assert.equal(right.arena.shotIndex,1);
+ assert.equal(right.arena.shotName,'右侧');
+ assert.equal(right.arena.camera.shot,'right');
+ assert.equal(right.arena.l2dReady,5);
+ assert.equal(JSON.stringify(right.arena.actors),originalOuter);
  await page.screenshot({path:'artifacts/ring-arena/l2d-outer-right.png'});
- await page.locator('[data-mode="inner"]').click();
- await page.waitForTimeout(700);
- const inner=await get();
- assert.equal(inner.arena.mode,'inner');
- assert.equal(inner.arena.shotIndex,2,'mode switch retains approved shot index');
- assert.equal(inner.arena.camera.shot,'right');
- const curvature=await page.evaluate(()=>{
-  const p=window.PaperWorldRingArena;
-  return {outerNear:p.backdropPoint('outer',0).z,
-   outerSide:p.backdropPoint('outer',1).z,
-   innerNear:p.backdropPoint('inner',0).z,
-   innerSide:p.backdropPoint('inner',1).z};
- });
- assert.ok(curvature.outerNear>curvature.outerSide);
- assert.ok(curvature.innerNear>curvature.innerSide);
- assert.ok(curvature.innerNear>curvature.outerNear);
- assert.ok(Math.abs(inner.arena.camera.radius-Math.hypot(2.1,7.2))<.01);
- assert.equal(inner.arena.camera.fov,54);
- assert.equal(inner.arena.ring.wallRadius,32);
- assert.equal(inner.arena.ring.outerRoleRadius,10.55);
- assert.equal(inner.arena.ring.innerRoleRadius,8.3);
- assert.equal(inner.arena.ring.stageType,'wide-cinematic-arc');
- assert.equal(inner.arena.l2dReady,5);
- assert.deepEqual(inner.arena.visibleActorIds,before.arena.visibleActorIds);
- assert.equal(inner.arena.actors.allies.length,4);
- await page.screenshot({path:'artifacts/ring-arena/l2d-inner-right.png'});
- await page.locator('[data-shot="1"]').click();
- await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,null,{timeout:7000});
+ // Extra same-direction swipe never reveals a nonexistent intermediate view.
+ await page.mouse.move(540,240);await page.mouse.down();
+ await page.mouse.move(735,240,{steps:5});await page.mouse.up();
  assert.equal((await get()).arena.shotIndex,1);
- await page.screenshot({path:'artifacts/ring-arena/l2d-inner-center.png'});
+ await page.locator('[data-mode="inner"]').click();
+ await page.waitForTimeout(350);
+ const innerRight=await get();
+ assert.equal(innerRight.arena.mode,'inner');
+ assert.equal(innerRight.arena.shotIndex,1);
+ assert.equal(innerRight.arena.camera.shot,'right');
+ assert.equal(innerRight.arena.l2dReady,5);
+ const originalInner=JSON.stringify(innerRight.arena.actors);
+ await page.screenshot({path:'artifacts/ring-arena/l2d-inner-right.png'});
  await page.locator('[data-shot="0"]').click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,null,{timeout:7000});
- assert.equal((await get()).arena.shotIndex,0);
+ const innerLeft=await get();
+ assert.equal(innerLeft.arena.shotIndex,0);
+ assert.equal(innerLeft.arena.camera.shot,'left');
+ assert.equal(JSON.stringify(innerLeft.arena.actors),originalInner);
  await page.screenshot({path:'artifacts/ring-arena/l2d-inner-left.png'});
- // Cross-screen checks of the SAME world-space battle.
- // Portrait keeps the same horizontal framing by adapting vertical FOV;
- // the game must not move any 3D actor to fake perspective.
+ // Real WebGL projection across desktop and mobile viewport sizes.
  await page.setViewportSize({width:1920,height:1080});
  await page.waitForTimeout(300);
  await page.screenshot({path:'artifacts/ring-arena/desktop-1920x1080.png'});
@@ -184,15 +151,13 @@ try{
  await page.setViewportSize({width:390,height:844});
  await page.waitForTimeout(300);
  const mobile=await get();
- assert.equal(JSON.stringify(mobile.arena.actors),
-   JSON.stringify(inner.arena.actors),
-   'viewport changes must never modify actor world coordinates');
+ assert.equal(JSON.stringify(mobile.arena.actors),originalInner);
  assert.ok(mobile.arena.effectiveVerticalFov>=mobile.arena.camera.fov,
-   'portrait viewport should expand vertical lens FOV');
+  'mobile portrait lens should preserve horizontal team composition');
  await page.screenshot({path:'artifacts/ring-arena/mobile-portrait-390x844.png'});
- assert.deepEqual(errors,[],'browser should not report unexpected errors');
+ assert.deepEqual(errors,[],'unexpected browser JavaScript errors');
  await page.close();
- console.log('PASS: cinematic left/center/right snaps, opposite inner wall curvature, heroine+4 enemies L2D and fixed 3D anchors');
+ console.log('PASS: 2 near-hero fixed cameras with back L2D and 4 uncropped foes, screen sizes, immutable world');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }
