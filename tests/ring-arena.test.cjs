@@ -61,6 +61,10 @@ const mid=(actor,cam)=>arena.project({...actor,y:actor.height*.5},cam);
 for(const mode of ['outer','inner']){
  for(const p of [0,.25,.5,.75,1]){
   const cam=arena.camera(mode,p),enemies=arena.layout(mode).enemies;
+  // The heroine must NEVER disappear beyond the left/right screen edges.
+  const heroine=mid(arena.layout(mode).allies[0],cam);
+  assert.ok(heroine.valid&&Math.abs(heroine.x)<.8,
+   'heroine must stay inside safe framing margin even at camera orbit endpoints');
   const projected=enemies.map(a=>({
     mid:mid(a,cam),
     head:arena.project({...a,y:a.height},cam),
