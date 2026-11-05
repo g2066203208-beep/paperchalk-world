@@ -370,6 +370,10 @@ const SEGMENTS={
   ['coat-root',null,.67,.075,.42,.51,7.8,.80,.55,.36],
   ['coat-hem','coat-root',.42,.51,.69,.97,12.5,1.08,-.18,.30]
  ],
+ 'wing':[
+  ['shoulder',null,.5,.10,.5,.48,1.8,.75,0,.4],
+  ['feather','shoulder',.5,.48,.54,.92,5,.95,.5,.35]
+ ],
  'leg-combined':[
   ['left-knee',null,.37,.13,.36,.66,1.8,.76,0,.23],
   ['left-ankle','left-knee',.36,.66,.33,.92,3.5,.84,-.5,.21],
@@ -409,6 +413,7 @@ function jointGainFor(part,bone,idle){
   return /elbow|wrist|grip/.test(id)?finite(j.hands,0):finite(j.shoulders,0);
  if(kind==='torso'&&!bone.parent)return finite(j.shoulders,0)*.65;
  if(kind==='skirt'&&!bone.parent)return finite(j.hips,0);
+ if(kind==='wing')return finite(j.shoulders,0)*.85;
  if(kind==='leg-combined')return 0; // planted legs are governed by ankle IK
  return 0;
 }
@@ -786,14 +791,16 @@ function crouchDeform(part,point,u,v,phase){
 }
 function bindBodyHierarchy(model){
  const p=model?.parts;if(!p)return model;
+ const femaleSix=model.characterId==='female-06'||
+   String(model.characterId||'').startsWith('female-06-');
  const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
  const legs=pick('legs','legwear'),feet=pick('shoes','footwear','footwear_left','footwear_right'),
-  skirt=pick('skirt','bottomwear','pants_overlay')||(['char-004','female-06'].includes(model.characterId)?legs:null),
+  skirt=pick('skirt','bottomwear','pants_overlay')||(['char-004'].includes(model.characterId)||femaleSix?legs:null),
   torso=pick('jacket','topwear'),
   face=pick('face'),hair=pick('front_hair','rear_hair','back_hair','head_hair'),neck=pick('neck');
  // Female-06's original 17-part PSD has bare feet WITHIN the legwear mesh.
  // They are planted at the two ankle-chain tails, not a missing shoe layer.
- if(!legs||(!feet&&model.characterId!=='female-06')||!skirt||!torso)return model;
+ if(!legs||(!feet&&!femaleSix)||!skirt||!torso)return model;
  const xy=(part,u,v)=>({x:part.x+part.w*u,y:part.y+part.h*v});
  const get=id=>legs.bones?.find(b=>b.id===id);
  const chain=side=>{
@@ -806,7 +813,7 @@ function bindBodyHierarchy(model){
  const left=chain('left'),right=chain('right');if(!left||!right)return model;
  // Virtual pelvis comes from the original BODY, never a clothing overlay.
  // Female-six bare legs contain the actual ankles; no extra shoes are forged.
- const pelvis=model.characterId==='female-06'?
+ const pelvis=femaleSix?
   {x:(left.hip.x+right.hip.x)*.5,y:legs.y+Math.min(22,legs.h*.038)}:
   xy(skirt,.5,.08);
  const layout={pelvis,shoulder:xy(torso,.5,.12),shoulderHalfWidth:torso.w*.48,
