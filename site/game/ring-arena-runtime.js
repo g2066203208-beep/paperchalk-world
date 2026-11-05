@@ -224,6 +224,9 @@
     mode=b.dataset.mode;
     for(const choice of hud.querySelectorAll('[data-mode]'))
      choice.setAttribute('aria-pressed',String(choice.dataset.mode===mode));
+    // Reproject immediately when changing orbit modes, even if the host
+    // animation loop is throttled or the pointer is idle.
+    render(0);
    }
    if(b.hasAttribute('data-exit')&&typeof onExit==='function')onExit();
   });
@@ -275,7 +278,7 @@
    if(active)render(0);
   }
   const inspect=()=>({active,renderer:gl?'webgl':'unavailable',mode,progress,target,
-   rings:SPEC,actors:layout(mode,progress),camera:lastCamera||camera(mode,progress),
+   rings:SPEC,actors:layout(mode,progress),camera:camera(mode,progress),
    art:'3D proxy actors only; original L2D assets untouched'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
