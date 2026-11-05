@@ -269,7 +269,7 @@ document.addEventListener('keydown',e=>{
 requestAnimationFrame(()=>{
  syncSelection();
  const css=document.createElement('link');
- css.rel='stylesheet';css.href='./workspace-v3.css?v=focused-studio-20261105-v1';
+ css.rel='stylesheet';css.href='./workspace-v3.css?v=focused-studio-20261105-v2';
  css.dataset.workspaceStyle='v3';
  document.head.append(css); // later than runtime's other injected styles
 });
