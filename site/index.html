@@ -2884,6 +2884,7 @@ void main(){
     if(!editorActive)return;
     editorActive=false;useRig(false);
     roomView='front';
+    if(is3DRoom()){aimX=0;aimY=0;currentX=0;currentY=0;boxScene.render(0,0);}
     view.classList.remove('fog-edit-mode');
     fogGuide.hidden=true;devTools.hidden=true;
     // An absent UI must leave ZERO residual sidebar fog, even for one frame.
