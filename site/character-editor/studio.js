@@ -965,16 +965,16 @@ async function saveToGame(){
  await ed.save();
  if(rig?.state?.active||rig?.state?.dirty)await rig.save();
  if(v4)await persistCorrections();
- for(const f of ['front','back'])await persistEditedComponents(f);
- for(const f of ['front','back'])await persistSkeleton(f);
+ // Save only the active direction. Editing the front must never erase an
+ // already saved back PartRig or accidentally write a placeholder over it.
+ await persistEditedComponents(side);
+ await persistSkeleton(side);
  ed.S.derivedDirty=false;
  const motion=ed.motion?.()||{};
- for(const face of ['front','back']){
-  // Rendering reference is separate from the V4 animation itself; do NOT
-  // replace the approved 128-frame WebP with a flattened still image.
-  if(!v4||face!==side)await put('render:'+currentId+':'+face,ed.composite(face).toDataURL('image/png'));
-  if(motion[face])await put('l2d:'+currentId+':'+face,motion[face]);
- }
+ // The edited direction is the only one we mark as newly committed.
+ // Artwork and bone revisions for other faces keep their own last save.
+ if(!v4)await put('render:'+currentId+':'+side,ed.composite(side).toDataURL('image/png'));
+ if(motion[side])await put('l2d:'+currentId+':'+side,motion[side]);
  // This battle-front model is a separate authoring review, NOT a published
  // game character. Save locally, but never poison the canonical hero slot.
  if(currentId===BATTLE_FRONT_ID){
