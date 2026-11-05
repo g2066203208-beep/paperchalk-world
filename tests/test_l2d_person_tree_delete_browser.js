@@ -43,7 +43,7 @@ const base='http://127.0.0.1:8134/';
   const personTree=await page.locator('#studio-character-tree .character-family>summary').allTextContents();
   assert.equal(personTree.filter(t=>t==='女二').length,1,
     'three old female-two records must produce exactly one person root');
-  assert.equal(personTree.filter(t=>t==='男主角').length,1,
+  assert.equal(personTree.filter(t=>t==='男主').length,1,
     'old male-lead draft must not become a second person root');
   assert.equal(personTree.filter(t=>/旧拆分|旧版|草稿/.test(t)).length,0,
     'historical local artwork is not a top-level person');
