@@ -1,6 +1,7 @@
-/* Native WebGL dual-ring battle arena.
- * All actors, the floor and curved wall share one world coordinate system,
- * one view-projection matrix and one depth buffer. 3D stand-ins are temporary.
+/* Paperchalk World — circular battlefield with ORIGINAL running L2D canvases.
+ * Actors have immutable ground anchors. A single moving WebGL view/projection
+ * draws the cylindrical room AND the animated L2D textures. No CSS parallax,
+ * no flat proxy boxes, no portrait overwrites and no invented rear artwork.
  */
 (function(root,factory){
  'use strict';
@@ -9,278 +10,395 @@
  if(root)root.PaperWorldRingArena=api;
 })(typeof window!=='undefined'?window:null,function(){
  'use strict';
- const TAU=Math.PI*2,clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
- const lerp=(a,b,t)=>a+(b-a)*t;
- const SPEC=Object.freeze({wallRadius:11,wallHeight:6.2,outerRoleRadius:7.25,
-  innerRoleRadius:4.15,heroOuterRadius:7.42,heroInnerRadius:3.95,
-  outerCameraRadius:9.55,innerCameraRadius:1.55,verticalFov:64,
-  heroStartAngle:-1.13,heroEndAngle:1.13});
- const allyAngles=Object.freeze([-.70,.08,.86]);
- const enemyAngles=Object.freeze([-.91,-.31,.33,.94]);
+ const TAU=Math.PI*2,clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+ const lerp=(a,b,t)=>a+(b-a)*t,rad=(d)=>d*Math.PI/180;
+ const SPEC=Object.freeze({
+  wallRadius:11.4,wallHeight:6.3,outerRoleRadius:7.42,
+  innerRoleRadius:4.28,outerCameraRadius:9.78,
+  innerCameraRadius:1.54,verticalFov:61,
+  cameraStartAngle:rad(31),cameraEndAngle:rad(-38)
+ });
+ // Deliberately human-authored STATIONARY formation angles; never derive
+ // actors from camera interpolation or pointer delta.
+ const formation=Object.freeze({
+  allies:Object.freeze([0,rad(-61),rad(-29),rad(37)]),
+  enemies:Object.freeze([rad(-51),rad(-17),rad(17),rad(52)])
+ });
+ const bindings=Object.freeze({
+  hero:'player', 'ally-2':'ally2','ally-3':'ally3','ally-4':'ally4',
+  'enemy-1':'enemy','enemy-2':'enemy2','enemy-3':'enemy3','enemy-4':'enemy4'
+ });
+ const heights=Object.freeze({
+  hero:1.62,'ally-2':1.64,'ally-3':1.60,'ally-4':1.59,
+  'enemy-1':1.58,'enemy-2':1.59,'enemy-3':1.60,'enemy-4':1.58
+ });
  const polar=(r,a,y=0)=>({x:r*Math.sin(a),y,z:r*Math.cos(a)});
- function layout(mode='outer',progress=0){
-  if(!['outer','inner'].includes(mode))throw Error('Invalid ring mode');
-  const t=clamp(Number(progress)||0,0,1),outer=mode==='outer';
-  const angle=lerp(SPEC.heroStartAngle,SPEC.heroEndAngle,t);
-  const hero={id:'hero',team:'ally',angle,height:1.62,...polar(outer?SPEC.heroOuterRadius:SPEC.heroInnerRadius,angle)};
-  const allies=[hero,...allyAngles.map((a,i)=>({id:'ally-'+(i+2),team:'ally',angle:a,
-    height:1.59+i*.03,...polar(outer?SPEC.outerRoleRadius:SPEC.innerRoleRadius,a)}))];
-  const enemies=enemyAngles.map((a,i)=>({id:'enemy-'+(i+1),team:'enemy',
-    angle:a,height:1.65+i*.05,...polar(outer?SPEC.innerRoleRadius:SPEC.outerRoleRadius,a)}));
-  return {mode,progress:t,allies,enemies};
- }
- function camera(mode='outer',progress=0){
-  const t=clamp(Number(progress)||0,0,1),outer=mode==='outer';
-  const a=lerp(SPEC.heroStartAngle,SPEC.heroEndAngle,t)+(outer?1:-1)*lerp(.12,-.12,t);
-  const radius=outer?SPEC.outerCameraRadius:SPEC.innerCameraRadius;
-  return {angle:a,radius,eye:polar(radius,a,1.47),
-    focus:polar(outer?2.55:7.8,a,1.11),mode};
- }
+ const radius=v=>Math.hypot(v.x,v.z);
  const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
  const cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
- const unit=v=>{const d=Math.hypot(v.x,v.y,v.z)||1;return {x:v.x/d,y:v.y/d,z:v.z/d}};
+ const normalize=a=>{const m=Math.hypot(a.x,a.y,a.z)||1;return {x:a.x/m,y:a.y/m,z:a.z/m}};
  function lookAt(eye,target){
-  const f=unit({x:target.x-eye.x,y:target.y-eye.y,z:target.z-eye.z});
-  const s=unit(cross(f,{x:0,y:1,z:0})),u=cross(s,f);
+  const f=normalize({x:target.x-eye.x,y:target.y-eye.y,z:target.z-eye.z});
+  const s=normalize(cross(f,{x:0,y:1,z:0})),u=cross(s,f);
   return [s.x,u.x,-f.x,0,s.y,u.y,-f.y,0,s.z,u.z,-f.z,0,
     -dot(s,eye),-dot(u,eye),dot(f,eye),1];
  }
- function perspective(fov,aspect,near=.06,far=80){
+ function perspective(fov,aspect,near=.07,far=100){
   const f=1/Math.tan(fov*Math.PI/360);
   return [f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,2*far*near/(near-far),0];
  }
  function multiply(a,b){
-  const r=new Array(16).fill(0);
-  for(let c=0;c<4;c++)for(let row=0;row<4;row++)
-   for(let k=0;k<4;k++)r[c*4+row]+=a[k*4+row]*b[c*4+k];
-  return r;
+  const result=new Array(16).fill(0);
+  for(let c=0;c<4;c++)for(let r=0;r<4;r++)
+   for(let k=0;k<4;k++)result[c*4+r]+=a[k*4+r]*b[c*4+k];
+  return result;
  }
  const identity=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
- function model(actor,mode){
-  const facingIn=(actor.team==='ally')===(mode==='outer');
-  const a=actor.angle+(facingIn?Math.PI:0),c=Math.cos(a),s=Math.sin(a);
-  const h=actor.height/1.62;
-  return [c*h,0,-s*h,0,0,h,0,0,s*h,0,c*h,0,actor.x,0,actor.z,1];
+ function actor(id,team,r,angle){
+  const pos=polar(r,angle);
+  return Object.freeze({id,slot:bindings[id],team,angle,
+   height:heights[id],soleX:.5,soleY:.979,crownY:.028,
+   x:pos.x,y:0,z:pos.z});
  }
- function project(point,cam,aspect=16/9){
+ const LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
+  const outer=mode==='outer';
+  const allyRadius=outer?SPEC.outerRoleRadius:SPEC.innerRoleRadius;
+  const enemyRadius=outer?SPEC.innerRoleRadius:SPEC.outerRoleRadius;
+  return [mode,Object.freeze({
+   mode,
+   allies:Object.freeze(['hero','ally-2','ally-3','ally-4'].map((id,i)=>
+    actor(id,'ally',allyRadius,formation.allies[i]))),
+   enemies:Object.freeze(['enemy-1','enemy-2','enemy-3','enemy-4'].map((id,i)=>
+    actor(id,'enemy',enemyRadius,formation.enemies[i])))
+  })];
+ })));
+ // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
+ function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
+ function camera(mode='outer',progress=0){
+  const t=clamp(Number(progress)||0,0,1),outer=mode==='outer';
+  const angle=lerp(SPEC.cameraStartAngle,SPEC.cameraEndAngle,t);
+  const R=outer?SPEC.outerCameraRadius:SPEC.innerCameraRadius;
+  const eye=polar(R,angle,1.45);
+  const focus=polar(outer?2.9:8.0,angle,1.12);
+  return {mode,progress:t,radius:R,angle,eye,focus};
+ }
+ function project(p,cam,aspect=16/9){
   const vp=multiply(perspective(SPEC.verticalFov,aspect),lookAt(cam.eye,cam.focus));
-  const m=vp,x=point.x,y=point.y,z=point.z;
+  const x=p.x,y=p.y,z=p.z,m=vp;
   const w=m[3]*x+m[7]*y+m[11]*z+m[15];
   if(w<=0)return {valid:false};
   return {valid:true,x:(m[0]*x+m[4]*y+m[8]*z+m[12])/w,
-    y:(m[1]*x+m[5]*y+m[9]*z+m[13])/w,depth:w};
+   y:(m[1]*x+m[5]*y+m[9]*z+m[13])/w,depth:w};
  }
- const VS=[
- 'precision highp float;','attribute vec3 aPosition;','attribute vec3 aColor;',
- 'uniform mat4 uVP;','uniform mat4 uModel;','varying vec3 vWorld;','varying vec3 vColor;',
- 'void main(){vec4 p=uModel*vec4(aPosition,1.0);vWorld=p.xyz;vColor=aColor;gl_Position=uVP*p;}'
- ].join('\n');
- const FS=[
- 'precision highp float;','varying vec3 vWorld;','varying vec3 vColor;',
- 'uniform float uKind;','uniform float uTime;','uniform vec3 uTint;',
- 'float rnd(float n){return fract(sin(n*127.1+8.9)*43758.5453);}',
- 'float grid(float p,float n,float w){return 1.0-smoothstep(w,w+.022,abs(fract(p*n)-.5));}',
- 'void main(){vec3 color;',
- 'if(uKind<.5){',
- 'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
- 'float lines=max(grid(r/11.0,22.0,.026)*.70,grid(a,40.0,.018)*.40);',
- 'float outer=1.0-smoothstep(.018,.055,abs(r-7.25));',
- 'float inner=1.0-smoothstep(.018,.055,abs(r-4.15));',
- 'float camA=1.0-smoothstep(.015,.045,abs(r-9.55));',
- 'float camB=1.0-smoothstep(.015,.045,abs(r-1.55));',
- 'color=vec3(.004,.018,.018)+vec3(.019,.23,.135)*lines',
- '+vec3(.015,.39,.31)*(outer+inner)*.7+vec3(.41,.27,.05)*(camA+camB)*.7;',
- '}else if(uKind<1.5){',
- 'float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;float col=floor(a*116.0);',
- 'float v=vWorld.y*8.0+uTime*(.65+rnd(col)*1.7);float row=floor(v);',
- 'float x=fract(a*116.0);float y=fract(v);',
- 'float glyph=step(.18,x)*step(x,.83)*step(.16,y)*step(y,.81);',
- 'float bit=step(.52,rnd(col*19.0+row*7.3));',
- 'float streak=pow(max(0.0,sin(v*2.2+rnd(col)*6.283)),12.0);',
- 'color=vec3(.002,.012,.014)+vec3(.012,.08,.06)*grid(a,116.0,.014)',
- '+vec3(.012,.26,.15)*glyph*bit+vec3(.1,.72,.32)*glyph*bit*streak',
- '+vec3(.005,.09,.08)*grid(a,24.0,.009);',
- '}else{color=uTint*vColor*(.66+.34*smoothstep(0.0,1.65,vWorld.y));}',
- 'gl_FragColor=vec4(min(color,vec3(1.0)),1.0);}'
- ].join('\n');
- function compile(gl,type,src){
-  const sh=gl.createShader(type);gl.shaderSource(sh,src);gl.compileShader(sh);
-  if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));
-  return sh;
+ function shader(gl,type,source){
+  const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){
+   const info=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(info);
+  }
+  return s;
  }
- function initProgram(gl){
-  const p=gl.createProgram(),v=compile(gl,gl.VERTEX_SHADER,VS),f=compile(gl,gl.FRAGMENT_SHADER,FS);
+ function program(gl,vsource,fsource,attrs,uniforms){
+  const p=gl.createProgram();
+  const v=shader(gl,gl.VERTEX_SHADER,vsource),f=shader(gl,gl.FRAGMENT_SHADER,fsource);
   gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);
   gl.deleteShader(v);gl.deleteShader(f);
   if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));
-  return {p,pos:gl.getAttribLocation(p,'aPosition'),col:gl.getAttribLocation(p,'aColor'),
-   vp:gl.getUniformLocation(p,'uVP'),model:gl.getUniformLocation(p,'uModel'),
-   kind:gl.getUniformLocation(p,'uKind'),time:gl.getUniformLocation(p,'uTime'),
-   tint:gl.getUniformLocation(p,'uTint')};
+  const result={handle:p};
+  for(const name of attrs)result[name]=gl.getAttribLocation(p,name);
+  for(const name of uniforms)result[name]=gl.getUniformLocation(p,name);
+  return result;
  }
- function geometry(){
-  const g={floor:[],wall:[],person:[]};
-  function tri(dest,a,b,c,color){for(const v of [a,b,c])dest.push(...v,...color)}
-  for(let i=0;i<160;i++){
-   const a=i*TAU/160,b=(i+1)*TAU/160;
-   const p=[11*Math.sin(a),0,11*Math.cos(a)],q=[11*Math.sin(b),0,11*Math.cos(b)];
-   const pt=[p[0],SPEC.wallHeight,p[2]],qt=[q[0],SPEC.wallHeight,q[2]];
-   tri(g.floor,[0,0,0],p,q,[1,1,1]);
-   tri(g.wall,p,pt,qt,[1,1,1]);tri(g.wall,p,qt,q,[1,1,1]);
+ const worldVertex=[
+  'precision highp float;',
+  'attribute vec3 aP;uniform mat4 uVP;varying vec3 vWorld;',
+  'void main(){vWorld=aP;gl_Position=uVP*vec4(aP,1.0);}'
+ ].join('\n');
+ const worldFragment=[
+  'precision highp float;varying vec3 vWorld;uniform float uTime;uniform int uSurface;',
+  'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
+  'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
+  'void main(){vec3 color;',
+  'if(uSurface==0){',
+  'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
+  'float radial=line(r/11.4,24.0,.027);float spokes=line(a,48.0,.019);',
+  'float allies=1.0-smoothstep(.016,.053,abs(r-7.42));',
+  'float enemies=1.0-smoothstep(.016,.053,abs(r-4.28));',
+  'color=vec3(.006,.019,.023)+vec3(.02,.18,.14)*(radial*.6+spokes*.26)',
+  '+vec3(.01,.16,.14)*(allies+enemies);',
+  'float innerCam=1.0-smoothstep(.01,.05,abs(r-1.54));',
+  'float outerCam=1.0-smoothstep(.01,.05,abs(r-9.78));',
+  'color+=vec3(.25,.20,.04)*(innerCam+outerCam)*.35;',
+  '}else{',
+  'float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
+  'float col=floor(a*92.0);float v=vWorld.y*8.3+uTime*(.4+hash(col)*1.8);',
+  'float glyph=step(.19,fract(a*92.0))*step(fract(a*92.0),.82)',
+  '*step(.16,fract(v))*step(fract(v),.82);',
+  'float bit=step(.5,hash(col*11.1+floor(v)*3.4));',
+  'float bright=pow(max(0.0,sin(v*1.9+hash(col)*6.28)),12.0);',
+  'color=vec3(.003,.010,.014)+vec3(.008,.075,.06)*line(a,92.0,.012)',
+  '+glyph*bit*(vec3(.018,.20,.13)+vec3(.05,.48,.26)*bright);',
+  '}gl_FragColor=vec4(color,1.0);}'
+ ].join('\n');
+ // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
+ // Vertical pivot uses the source canvas's measured shoe & crown fractions.
+ // No regenerated textures or destructive crop operations.
+ const portraitVertex=[
+  'precision highp float;attribute vec2 aUv;',
+  'uniform mat4 uVP;uniform vec3 uFoot;uniform vec3 uRight;',
+  'uniform vec3 uUp;uniform float uHeight;uniform float uSoleX;',
+  'uniform float uSoleY;uniform float uCrownY;',
+  'varying vec2 vUv;',
+  'void main(){float H=uHeight/max(.01,uSoleY-uCrownY);',
+  'vec3 pos=uFoot+uRight*((aUv.x-uSoleX)*H)',
+  '+uUp*((uSoleY-aUv.y)*H);',
+  'vUv=aUv;gl_Position=uVP*vec4(pos,1.0);}'
+ ].join('\n');
+ const portraitFragment=[
+  'precision mediump float;varying vec2 vUv;uniform sampler2D uTexture;',
+  'void main(){vec4 t=texture2D(uTexture,vec2(vUv.x,1.0-vUv.y));',
+  'if(t.a<.025)discard;gl_FragColor=t;}'
+ ].join('\n');
+ function worldMesh(gl){
+  const floor=[],wall=[];
+  const push=(to,a,b,c)=>to.push(...a,...b,...c);
+  const N=160;
+  for(let i=0;i<N;i++){
+   const a=i*TAU/N,b=(i+1)*TAU/N;
+   const p=polar(SPEC.wallRadius,a),q=polar(SPEC.wallRadius,b);
+   push(floor,[0,0,0],[p.x,0,p.z],[q.x,0,q.z]);
+   push(wall,[p.x,0,p.z],[p.x,SPEC.wallHeight,p.z],[q.x,SPEC.wallHeight,q.z]);
+   push(wall,[p.x,0,p.z],[q.x,SPEC.wallHeight,q.z],[q.x,0,q.z]);
   }
-  function box(x0,y0,z0,x1,y1,z1,color){
-   const a=[x0,y0,z0],b=[x1,y0,z0],c=[x1,y1,z0],d=[x0,y1,z0];
-   const e=[x0,y0,z1],f=[x1,y0,z1],h=[x1,y1,z1],i=[x0,y1,z1];
-   for(const face of [[a,b,c,d],[f,e,i,h],[e,a,d,i],[b,f,h,c],[d,c,h,i],[e,f,b,a]]){
-    tri(g.person,face[0],face[1],face[2],color);
-    tri(g.person,face[0],face[2],face[3],color);
-   }
-  }
-  const core=[.72,.85,1],skin=[1,.95,.82],deep=[.26,.34,.40];
-  box(-.22,.71,-.14,.22,1.28,.14,core);
-  box(-.18,.04,-.12,-.035,.73,.13,deep);
-  box(.035,.04,-.12,.18,.73,.13,deep);
-  box(-.31,.75,-.105,-.215,1.25,.11,core);
-  box(.215,.75,-.105,.31,1.25,.11,core);
-  box(-.21,1.28,-.17,.21,1.64,.17,skin);
-  box(-.23,0,-.18,-.01,.12,.23,skin);
-  box(.01,0,-.18,.23,.12,.23,skin);
-  box(-.21,.92,-.176,.21,1.18,-.135,deep);
-  return g;
+  return [floor,wall].map(arr=>{
+   const buffer=gl.createBuffer(),data=new Float32Array(arr);
+   gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
+   return {buffer,count:data.length/3};
+  });
  }
- function makeMesh(gl,raw){
-  const data=new Float32Array(raw),buffer=gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
-  return {buffer,count:data.length/6};
+ function prepareTexture(gl){
+  const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,0]));
+  return {texture,painted:false,updated:-999,frames:0,source:null};
  }
  function create({stage,view,onExit}={}){
-  if(!stage||!view)throw Error('Ring arena must mount inside game stage');
-  const css=document.createElement('style');
-  css.textContent=[
+  if(!stage||!view)throw Error('Ring arena must mount in the real game');
+  const style=document.createElement('style');
+  style.textContent=[
    '#view.ring-arena-active #scene{width:100cqw!important;height:100cqh!important;max-width:none!important;aspect-ratio:auto!important;border-radius:0!important;overflow:hidden}',
    '#view.ring-arena-active #scene::after{content:none!important}',
    '#view.ring-arena-active #source{visibility:hidden!important}',
    '#view.ring-arena-active > #fog,#view.ring-arena-active > #ui-edge-fog,#view.ring-arena-active > #novel-ui{display:none!important}',
-   '#ring-arena-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none;cursor:grab;pointer-events:auto}',
+   '#ring-arena-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none;pointer-events:auto;cursor:grab}',
    '#ring-arena-canvas[hidden],#ring-arena-controls[hidden]{display:none!important}',
-   '#ring-arena-controls{position:absolute;z-index:13;inset:0;pointer-events:none;font:500 12px/1.5 system-ui,sans-serif;color:#d6ffef}',
-   '#ring-arena-controls .caption{position:absolute;left:14px;top:12px;background:rgba(0,17,17,.78);border:1px solid rgba(89,201,155,.36);border-radius:10px;padding:9px 12px;max-width:60%}',
-   '#ring-arena-controls .caption strong{display:block;color:#adffd0;font-size:14px}',
-   '#ring-arena-controls .caption small{display:block;opacity:.7;font-size:10px}',
-   '#ring-arena-controls .actions{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:7px;flex-wrap:wrap;justify-content:center;width:94%}',
-   '#ring-arena-controls button{pointer-events:auto;border:1px solid #378a72;background:rgba(0,23,25,.86);color:#dbfff2;border-radius:8px;padding:7px 10px;font:inherit;min-height:36px;cursor:pointer}',
-   '#ring-arena-controls button[aria-pressed=true]{background:#175b4c;border-color:#a5ffe0}',
-   '#ring-arena-controls .status{position:absolute;right:12px;top:12px;font:11px/1.5 monospace;text-align:right;color:#a8eacf}',
-   '@media(max-width:690px){#ring-arena-controls .caption small,#ring-arena-controls .status{display:none}#ring-arena-controls button{font-size:11px;padding:5px 8px}}'
+   // Keep existing L2D artists' exact original rigs animating while visually
+   // routing their finished canvases into WebGL instead of the old DOM stage.
+   '#view.ring-arena-active [data-l2d-actor]{display:block!important;position:absolute!important;left:-1500px!important;top:0!important;width:1024px!important;height:1024px!important;opacity:0!important;pointer-events:none!important;overflow:visible!important;transform:none!important;translate:none!important}',
+   '#view.ring-arena-active [data-l2d-actor] [data-l2d-image]{position:absolute!important;left:0!important;top:0!important;width:1024px!important;height:1024px!important;max-width:none!important;display:block!important;object-fit:fill!important;transform:none!important;scale:1!important}',
+   '#view.ring-arena-active [data-l2d-actor] [data-l2d-canvas]{transform:none!important;scale:1!important}',
+   '#ring-arena-controls{position:absolute;inset:0;z-index:15;pointer-events:none;color:#d9f6e9;font:500 12px/1.4 system-ui,sans-serif}',
+   '#ring-arena-controls .top{position:absolute;left:14px;top:12px;padding:8px 12px;background:rgba(1,14,18,.68);border-left:2px solid #81d8bb}',
+   '#ring-arena-controls .top b{display:block;letter-spacing:.15em;font-size:11px}',
+   '#ring-arena-controls .top small{font-size:10px;color:#99b5af}',
+   '#ring-arena-controls .bottom{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;width:94%}',
+   '#ring-arena-controls button{pointer-events:auto;min-height:38px;padding:8px 11px;border:1px solid rgba(118,196,166,.5);border-radius:7px;background:rgba(2,17,23,.86);font:inherit;color:#e7fff3;cursor:pointer}',
+   '#ring-arena-controls button[aria-pressed=true]{background:#185b4a;border-color:#aaf9d6}',
+   '#ring-arena-controls .status{position:absolute;right:14px;top:14px;font:11px/1.5 monospace;color:#b1dccc;text-align:right}',
+   '@media(max-width:690px){#ring-arena-controls .status,#ring-arena-controls .top small{display:none}#ring-arena-controls button{padding:6px 8px;min-height:35px}}'
   ].join('\n');
-  document.head.append(css);
+  document.head.append(style);
   const canvas=document.createElement('canvas');canvas.id='ring-arena-canvas';
-  canvas.hidden=true;canvas.setAttribute('aria-label','WebGL 3D 圆形战场，左右滑动让主角沿弧移动');stage.append(canvas);
+  canvas.hidden=true;canvas.setAttribute('aria-label','固定八人站位的圆形3D战场，滑动只移动摄像机');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="caption"><strong>RING / DIGITAL SPACE</strong>真实3D圆柱场景 · 四人弧阵',
-   '<small>左右滑动或 A / D、方向键移动主角，摄像机独立绕环跟随</small></div>',
-   '<div class="status" role="status"></div><div class="actions">',
-   '<button data-shift="-1" type="button">◀ 左移</button>',
-   '<button data-mode="outer" aria-pressed="true" type="button">我方外环</button>',
-   '<button data-mode="inner" aria-pressed="false" type="button">我方内环</button>',
-   '<button data-shift="1" type="button">右移 ▶</button>',
-   '<button data-exit type="button">返回场景</button></div>'
-  ].join('');stage.append(hud);
+   '<div class="top"><b>RING BATTLE / 3D</b><small>人物世界坐标固定 · 镜头沿圆环运动</small></div>',
+   '<div class="status" role="status"></div><div class="bottom">',
+   '<button data-shift="-1" type="button">◀ 镜头向左</button>',
+   '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
+   '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
+   '<button data-shift="1" type="button">镜头向右 ▶</button>',
+   '<button data-exit type="button">返回</button></div>'
+  ].join('');
+  stage.append(hud);
   const status=hud.querySelector('.status');
-  let gl=null,shader=null,floor=null,wall=null,person=null;
+  let gl=null,world=null,portrait=null,floor=null,wall=null,quad=null;
+  const textures=new Map();
   try{
-   gl=canvas.getContext('webgl',{depth:true,antialias:true,alpha:false});
-   if(!gl)throw Error('WebGL is unavailable');
-   shader=initProgram(gl);const g=geometry();
-   floor=makeMesh(gl,g.floor);wall=makeMesh(gl,g.wall);person=makeMesh(gl,g.person);
-  }catch(error){
-   gl=null;canvas.dataset.error=String(error.message||error);
-   status.textContent=String(error.message||error);
+   gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
+   if(!gl)throw Error('WebGL unavailable');
+   world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface']);
+   portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uTexture']);
+   [floor,wall]=worldMesh(gl);
+   quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
+   for(const id of Object.keys(bindings))textures.set(id,prepareTexture(gl));
+   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+  }catch(err){
+   canvas.dataset.error=String(err.message||err);status.textContent='WebGL failed '+String(err.message||err);
+   gl=null;
   }
-  let active=false,mode='outer',progress=0,target=0,seconds=0,lastCamera=null;
+  let active=false,mode='outer',position=0,target=.0,elapsed=0,frames=0,paintCount=0;
   let drag=null;
-  const shift=amount=>{target=clamp(target+amount,0,1)};
+  const shift=d=>{target=clamp(target+d,0,1)};
   canvas.addEventListener('pointerdown',e=>{
-   if(!active)return;
-   e.preventDefault();e.stopPropagation();
-   drag={id:e.pointerId,x:e.clientX,y:e.clientY,start:target};
+   if(!active)return;e.preventDefault();e.stopPropagation();
+   drag={id:e.pointerId,x:e.clientX,y:e.clientY,initial:target};
    canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove',e=>{
-   if(!drag||drag.id!==e.pointerId)return;
-   e.preventDefault();e.stopPropagation();
-   const vertical=view.classList.contains('virtual-landscape');
-   const delta=vertical?-(e.clientY-drag.y):(e.clientX-drag.x);
-   target=clamp(drag.start+delta/Math.max(250,canvas.clientWidth)*1.9,0,1);
+   if(!drag||drag.id!==e.pointerId)return;e.preventDefault();e.stopPropagation();
+   const dx=e.clientX-drag.x;
+   target=clamp(drag.initial+dx/Math.max(270,canvas.clientWidth)*1.5,0,1);
   });
-  for(const type of ['pointerup','pointercancel'])
-   canvas.addEventListener(type,e=>{if(drag&&e.pointerId===drag.id){drag=null;e.stopPropagation()}});
+  for(const type of ['pointerup','pointercancel']){
+   canvas.addEventListener(type,e=>{if(drag&&drag.id===e.pointerId){drag=null;e.stopPropagation()}});
+  }
   hud.addEventListener('click',e=>{
    const b=e.target.closest('button');if(!b)return;
    e.preventDefault();e.stopPropagation();
-   if(b.hasAttribute('data-shift'))shift(Number(b.dataset.shift)*.16);
+   if(b.hasAttribute('data-shift'))shift(Number(b.dataset.shift)*.14);
    if(b.hasAttribute('data-mode')){
     mode=b.dataset.mode;
-    for(const choice of hud.querySelectorAll('[data-mode]'))
-     choice.setAttribute('aria-pressed',String(choice.dataset.mode===mode));
-    // Reproject immediately when changing orbit modes, even if the host
-    // animation loop is throttled or the pointer is idle.
+    for(const option of hud.querySelectorAll('[data-mode]'))
+     option.setAttribute('aria-pressed',String(option.dataset.mode===mode));
     render(0);
    }
    if(b.hasAttribute('data-exit')&&typeof onExit==='function')onExit();
   });
   document.addEventListener('keydown',e=>{
-   if(!active||e.altKey||e.ctrlKey||e.metaKey||e.target.matches('input,textarea,select'))return;
-   if(['ArrowRight','d','D'].includes(e.key)){e.preventDefault();shift(.075)}
-   if(['ArrowLeft','a','A'].includes(e.key)){e.preventDefault();shift(-.075)}
+   if(!active||e.metaKey||e.ctrlKey||e.altKey)return;
+   if(['ArrowRight','d','D'].includes(e.key)){e.preventDefault();shift(.07)}
+   if(['ArrowLeft','a','A'].includes(e.key)){e.preventDefault();shift(-.07)}
   });
-  function draw(obj,transform,kind,tint){
-   gl.bindBuffer(gl.ARRAY_BUFFER,obj.buffer);
-   gl.enableVertexAttribArray(shader.pos);gl.enableVertexAttribArray(shader.col);
-   gl.vertexAttribPointer(shader.pos,3,gl.FLOAT,false,24,0);
-   gl.vertexAttribPointer(shader.col,3,gl.FLOAT,false,24,12);
-   gl.uniformMatrix4fv(shader.model,false,new Float32Array(transform));
-   gl.uniform1f(shader.kind,kind);
-   gl.uniform3fv(shader.tint,new Float32Array(tint));
-   gl.drawArrays(gl.TRIANGLES,0,obj.count);
+  function sourceFor(actor){
+   const runtime=window.PaperchalkL2D?.get(actor.slot);
+   if(!runtime||runtime.root.hidden||runtime.img.hidden||
+     runtime.root.dataset.l2dState!=='ready')return null;
+   const source=runtime.clip?.type==='native'?runtime.clip.img:runtime.canvas;
+   if(!source)return null;
+   const w=source.videoWidth||source.naturalWidth||source.width;
+   const h=source.videoHeight||source.naturalHeight||source.height;
+   if(!w||!h)return null;
+   return {runtime,source,w,h};
+  }
+  // Throttle pixel uploads, preserving the original 30 fps source animation.
+  // Uploads are a view of the real current L2D canvas, not a flattened art
+  // asset checked into the repository. Distinct characters keep distinct rigs.
+  function updateTexture(a,now){
+   const targetTexture=textures.get(a.id),desc=sourceFor(a);
+   if(!desc)return targetTexture.painted;
+   const interval=a.id==='hero'?50:78;
+   if(now-targetTexture.updated<interval&&targetTexture.painted)return true;
+   const size=a.id==='hero'?768:512;
+   if(!targetTexture.stage||targetTexture.stage.width!==size){
+    targetTexture.stage=document.createElement('canvas');
+    targetTexture.stage.width=size;targetTexture.stage.height=size;
+    targetTexture.ctx=targetTexture.stage.getContext('2d',{alpha:true});
+   }
+   const ctx=targetTexture.ctx;
+   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,size,size);
+   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+   try{
+    ctx.drawImage(desc.source,0,0,size,size);
+    gl.bindTexture(gl.TEXTURE_2D,targetTexture.texture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,targetTexture.stage);
+    targetTexture.updated=now;
+    targetTexture.painted=true;
+    targetTexture.frames++;
+    paintCount++;
+   }catch(error){
+    targetTexture.error=String(error.message||error);
+   }
+   return targetTexture.painted;
+  }
+  function drawWorld(mesh,kind,viewProjection){
+   gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
+   gl.vertexAttribPointer(world.aP,3,gl.FLOAT,false,12,0);
+   gl.uniform1i(world.uSurface,kind);
+   gl.drawArrays(gl.TRIANGLES,0,mesh.count);
+  }
+  function drawActors(actors,cam,vp){
+   // Transparent L2D textures are sorted far to near; pixels share the same
+   // depth-test as the floor and cylinder, no independent DOM z-index.
+   const ordered=actors.map(a=>({actor:a,d:Math.hypot(a.x-cam.eye.x,a.z-cam.eye.z)}))
+    .sort((a,b)=>b.d-a.d);
+   gl.useProgram(portrait.handle);
+   gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
+   gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+   gl.enableVertexAttribArray(portrait.aUv);
+   gl.vertexAttribPointer(portrait.aUv,2,gl.FLOAT,false,8,0);
+   const f=normalize({x:cam.focus.x-cam.eye.x,y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z});
+   const right=normalize(cross(f,{x:0,y:1,z:0}));
+   gl.uniform3fv(portrait.uRight,new Float32Array([right.x,right.y,right.z]));
+   gl.uniform3fv(portrait.uUp,new Float32Array([0,1,0]));
+   gl.activeTexture(gl.TEXTURE0);gl.uniform1i(portrait.uTexture,0);
+   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+   gl.depthMask(false);
+   for(const item of ordered){
+    const a=item.actor,t=textures.get(a.id);
+    if(!t.painted)continue;
+    gl.uniform3fv(portrait.uFoot,new Float32Array([a.x,a.y,a.z]));
+    gl.uniform1f(portrait.uHeight,a.height);
+    gl.uniform1f(portrait.uSoleX,a.soleX);
+    gl.uniform1f(portrait.uSoleY,a.soleY);
+    gl.uniform1f(portrait.uCrownY,a.crownY);
+    gl.bindTexture(gl.TEXTURE_2D,t.texture);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+   }
+   gl.depthMask(true);gl.disable(gl.BLEND);
   }
   function render(dt=1/60){
    if(!active)return false;
-   progress=lerp(progress,target,1-Math.exp(-clamp(dt,0,.06)*8));
-   if(Math.abs(target-progress)<.00005)progress=target;
-   seconds+=clamp(dt,0,.06);
-   const c=camera(mode,progress);lastCamera=c;
+   const k=1-Math.exp(-clamp(Number(dt)||0,0,.06)*7);
+   position=lerp(position,target,k);
+   if(Math.abs(position-target)<.00005)position=target;
+   elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
    if(w<2||h<2)return false;
-   const ratio=Math.min(2,window.devicePixelRatio||1),sw=Math.floor(w*ratio),sh=Math.floor(h*ratio);
-   if(canvas.width!==sw||canvas.height!==sh){canvas.width=sw;canvas.height=sh}
-   gl.viewport(0,0,sw,sh);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
-   gl.disable(gl.CULL_FACE);gl.clearColor(.001,.006,.009,1);
-   gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(shader.p);
-   gl.uniformMatrix4fv(shader.vp,false,new Float32Array(multiply(
-    perspective(SPEC.verticalFov,w/h),lookAt(c.eye,c.focus))));
-   gl.uniform1f(shader.time,seconds);
-   draw(floor,identity(),0,[1,1,1]);draw(wall,identity(),1,[1,1,1]);
-   const people=layout(mode,progress);
-   for(const a of people.enemies)draw(person,model(a,mode),2,[.98,.22,.25]);
-   for(const a of people.allies)draw(person,model(a,mode),2,
-    a.id==='hero'?[.98,.78,.30]:[.13,.80,.9]);
-   if(Math.floor(seconds*6)!==Math.floor((seconds-dt)*6))
-    status.textContent=(mode==='outer'?'外侧摄像机':'内侧摄像机')+' R '+c.radius+
-     'm | 主角 '+(people.allies[0].angle*180/Math.PI).toFixed(0)+'°';
+   const pixel=Math.min(window.devicePixelRatio||1,1.75);
+   const W=Math.floor(w*pixel),H=Math.floor(h*pixel);
+   if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
+   const cam=camera(mode,position),vp=multiply(perspective(SPEC.verticalFov,w/h),lookAt(cam.eye,cam.focus));
+   gl.viewport(0,0,W,H);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
+   gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
+   gl.clearColor(.001,.005,.008,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+   gl.useProgram(world.handle);gl.enableVertexAttribArray(world.aP);
+   gl.uniformMatrix4fv(world.uVP,false,new Float32Array(vp));
+   gl.uniform1f(world.uTime,elapsed);
+   drawWorld(floor,0,vp);drawWorld(wall,1,vp);
+   gl.disableVertexAttribArray(world.aP);
+   const all=[...layout(mode).allies,...layout(mode).enemies];
+   const now=performance.now();
+   for(const a of all)updateTexture(a,now);
+   drawActors(all,cam,vp);
+   if(frames%12===0){
+    const ready=all.filter(a=>textures.get(a.id).painted).length;
+    status.textContent=(mode==='outer'?'外侧镜头':'内侧镜头')+
+     ' · L2D '+ready+'/8 · 相机 '+Math.round(cam.angle*180/Math.PI)+'°';
+    canvas.dataset.l2dReady=String(ready);
+    canvas.dataset.renderedFrames=String(frames);
+   }
    return true;
   }
-  function setActive(on){
-   active=!!on;canvas.hidden=!active;hud.hidden=!active;
+  function setActive(value){
+   active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
-   if(active)render(0);
+   if(active){elapsed=0;frames=0;render(0)}
   }
-  const inspect=()=>({active,renderer:gl?'webgl':'unavailable',mode,progress,target,
-   rings:SPEC,actors:layout(mode,progress),camera:camera(mode,progress),
-   art:'3D proxy actors only; original L2D assets untouched'});
+  const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
+   mode,progress:position,target,actors:layout(mode),
+   camera:camera(mode,position),ring:SPEC,
+   l2dReady:[...textures.values()].filter(t=>t.painted).length,
+   l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
+   pixelsFrom:'existing PaperchalkL2D actors; source assets unchanged'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
- return Object.freeze({SPEC,layout,camera,lookAt,perspective,multiply,model,project,create});
+ return Object.freeze({SPEC,formation,bindings,layout,camera,lookAt,
+  perspective,multiply,project,create});
 });
