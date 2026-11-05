@@ -145,7 +145,7 @@ try{
   await page.locator('#dev-room-camera-restore').click();
   const cameraReset=(await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect())).camera;
   assert.ok(Math.abs(cameraReset.yaw)<.0001);
-  assert.equal(cameraReset.hFov,68);
+  assert.equal(cameraReset.hFov,60);
   await page.screenshot({path:'artifacts/classroom-box/in-game-dev-unified-scene-tree.png'});
 
   const before=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
