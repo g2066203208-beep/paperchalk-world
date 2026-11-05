@@ -49,7 +49,8 @@ const importAction=command('导入 PSD / ZIP',()=>{
  if(native?.tagName==='BUTTON')native.click();else native?.click();
 });
 const exportAction=command('导出合成 PNG',()=>{more.open=false;$('exportPng')?.click()});
-moreContents.append(importAction,exportAction);
+const v4ImportAction=command('导入动画工程 ZIP',()=>{more.open=false;$('studio-v4zip')?.click()});
+moreContents.append(importAction,exportAction,v4ImportAction);
 actions.append(more);
 $('btnRecovery')?.setAttribute('title','打开恢复、撤销和原版复原');
 $('btnRecovery')?.setAttribute('aria-label','复原工具');
@@ -164,6 +165,21 @@ if(quickbar){
  });
 }
 
+// The simple paint palette remains complete: rarely used selection/fill
+// tools are one optional expansion away, not disabled or deleted.
+const paintTools=$('tools');
+if(paintTools){
+ const paintMore=make('details','workspace-paint-more');
+ paintMore.id='workspace-paint-more';
+ paintMore.innerHTML='<summary>更多绘画与选区工具</summary>';
+ const advancedPaint=make('div','workspace-paint-more-grid');
+ for(const name of ['picker','fill','move','rect','lasso']){
+  const button=paintTools.querySelector('[data-tool="'+name+'"]');
+  if(button)advancedPaint.append(button);
+ }
+ paintMore.append(advancedPaint);
+ paintTools.after(paintMore);
+}
 // Existing phone tab bar gets a true overflow slot instead of 6 tiny
 // permanently visible targets; delegation still reaches its old handlers.
 const mobileTabs=$('mobile-studio-tabs');
