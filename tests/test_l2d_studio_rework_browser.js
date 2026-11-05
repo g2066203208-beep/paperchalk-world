@@ -16,7 +16,7 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   const original=await page.evaluate(()=>{
    const state=window.characterEditor.S,rig=window.PaperchalkPartRigStudio.state.model;
    const root=[...document.querySelectorAll('.character-family>summary')]
-      .filter(x=>x.textContent.includes('女主角'));
+      .filter(x=>x.closest('.character-family')?.dataset.family==='protagonist');
    return {order:[...rig.layerOrder],ui:state.layers.front.filter(x=>x.sourcePart).map(x=>x.partId),
       roots:root.length,tree:document.querySelector('#studio-character-tree')?.textContent||''};
   });
