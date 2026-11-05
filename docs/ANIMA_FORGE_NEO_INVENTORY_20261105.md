@@ -112,3 +112,19 @@
 每张候选 PNG 保留：角色ID、源图路径/内容哈希、尺寸与 Alpha、 checkpoint 文件名 + SHA256、文本编码器/VAE 名称、Forge Neo commit、扩展版本、LoRA **完整精确文件名、版本/权重/trigger**、Prompt 与 Negative、sampler/scheduler/shift/steps/CFG/denoise、resize mode、seed、ControlNet 模型和参数、参考图适配器模式、upscaler/倍率/二次重画参数、VRAM 条件、输出 PNG Info、主观问题与审核状态。记录到角色对应制作日志；**不保存用户私人服务密钥或个人账号信息**。
 
 每次开始：重新核对本文件中的截图快照与实际安装界面是否发生变化；新增/删去插件后更新**本表和日期**；**用户未确认前，严禁覆盖正式角色母版与正式 L2D 资产**。
+
+## 2026-11-05 追记：女主原版真实 Prompt 与参考适配器架构（优先于之前未测试的默认组合）
+
+用户亲自确认原生成 Prompt **原文**（永久保留，未经授权不修改）：
+
+~~~text
+masterpiece, best quality, score_7, safe, 1girl, solo, full body, standing, front view, looking at viewer, neutral expression, arms at sides, simple pose, plain white background, centered composition, full body visible, <lora:anima_ref_adapter_pilot_r32:1>@akipekostyle<lora:akipekoanima_v1_1:1>
+~~~
+
+**因此此前“默认只有一款风格LoRA、akipeko 权重0.8”的说明**只属于探索性基线，**不再是女主原稿复刻默认流程**。原女主使用：1) `pilot_r32:1`：参考适配器；2) `akipekoanima_v1_1:1` + `@akipekostyle`：风格；必须恢复原权重=1。不把卡片中 `akipekoanima_v1_1-step00003000` 与原标签自动视为同一权重，需在 LoRA 卡片核实 alias 和 hash。
+
+两个已安装扩展**机制不同**：
+- [anima-reference-forge-neo](https://github.com/eduardoabreu81/anima-reference-forge-neo)（eduardoabreu81）v0.2 的 **pilot LoRA 标签 + ImageStitch Integrated 开启/参考图**；这个扩展**没有单独参考面板**；另一个 `role-ref-kv` 为替代方法，不能和 pilot 同开。与用户原 Prompt 机制对应。
+- [sd-forge-anima-ref-adapter](https://github.com/ElectronGirl/sd-forge-anima-ref-adapter)（ElectronGirl）是独立的 **Anima Reference Adapter 面板 + v2_r64**；作者 README 称其本身只支持 v2，其 img2img / hires fix 未测试。恢复原始 pilot 的实验中**该 v2 面板保持不勾选**；无需卸载任何插件。
+
+用户强制最终目标：**2048×2048 工作画布/扩散重绘、最终 2048×2048 RGBA PNG**，不得以1024扩散作为强制中间输出。1024原始人像可按比例先用可靠插值2x形成2048输入底稿，插值不是“已新增细节”。该底稿仍是白底RGB，真实 alpha 需 Photopea 后处理；参考图1024通常可先用，改2048是否增益以同seed实验确定，不能凭尺寸声称参考变得更清晰。当前完整 SOP：[CHAR_001_2048_REPAINT_SOP_20261105.md](CHAR_001_2048_REPAINT_SOP_20261105.md)。
