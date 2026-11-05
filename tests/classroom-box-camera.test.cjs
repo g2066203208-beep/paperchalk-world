@@ -61,6 +61,21 @@ assert.deepEqual(ids,['player','enemy','enemy2','enemy3']);
 const shot=Object.fromEntries(ids.map(id=>[id,api.actorGeometry(id,base,1280,720)]));
 assert.ok(shot.player.head.y/720>.15&&shot.player.head.y/720<.25);
 assert.ok(shot.player.shoe.y>720*1.20,'foreground shoes are below camera frame');
+// Full-bleed ultrawide 844x390 must EXPAND the horizontal field of view,
+// not push enemy shoes under the screen or resize the cast relative to height.
+const wideW=844,wideH=390;
+const ultrawide=Object.fromEntries(ids.map(id=>[id,api.actorGeometry(id,base,wideW,wideH)]));
+close(api.focalLength(base,wideW,wideH)/wideH,
+      api.focalLength(base,1280,720)/720,1e-8);
+for(const id of ids){
+ close(ultrawide[id].drawnHeight/wideH,shot[id].drawnHeight/720,1e-8);
+}
+assert.ok(ultrawide.player.head.y/wideH>.15&&ultrawide.player.head.y/wideH<.25);
+for(const id of ['enemy','enemy2','enemy3']){
+ const shoe=ultrawide[id].shoe;
+ assert.ok(shoe.x>0&&shoe.x<wideW&&shoe.y>0&&shoe.y<wideH,
+   id+' must keep both shoes visible in full-bleed mobile landscape: '+JSON.stringify(shoe));
+}
 for(const id of ['enemy','enemy2','enemy3']){
  assert.ok(shot[id].shoe.y<720&&shot[id].shoe.y>720*.73,
   id+' foot must stay visible in midground');
