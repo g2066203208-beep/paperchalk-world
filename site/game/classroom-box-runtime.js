@@ -51,10 +51,11 @@ const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
 // composition target. This is an actual camera transform, NOT per-layer
 // parallax. The nearby L2D person and distant wall naturally diverge
 // because project() and the WebGL vertex shader share this camera.
+// First-person head look (Cinemachine-style Pan/Tilt): the camera pivot is
+// fixed in world space; ONLY orientation changes, never X/Y/Z position.
+// The bounds are deliberately small for an intimate visual novel room.
 const CAMERA_RIG=Object.freeze({
-  xTravel:.27, yTravel:.095, deadzone:.065,
-  focusX:0,focusY:1.30,focusZ:4.2,
-  focusLock:.64
+  yawLimitDeg:7, pitchLimitDeg:3.8, deadzone:.08
 });
 const smoothstep=t=>t*t*(3-2*t);
 function pointerAxis(value,deadzone=CAMERA_RIG.deadzone){
@@ -65,17 +66,15 @@ function pointerAxis(value,deadzone=CAMERA_RIG.deadzone){
   return Math.sign(v)*smoothstep(t);
 }
 function camera(inputX=0,inputY=0,strength=1){
+  // Pointer values are SCREEN coordinates: right positive, DOWN positive.
+  // Our camera convention is yaw positive = look right, pitch positive = up.
+  // Never use look-at compensation, dolly, pan, roll or per-layer offsets.
   const sx=pointerAxis(inputX),sy=pointerAxis(inputY);
   const intensity=clamp(Number(strength)||0,0,1.5);
-  const x=BASE_CAMERA.x+sx*CAMERA_RIG.xTravel*intensity;
-  const y=BASE_CAMERA.y-sy*CAMERA_RIG.yTravel*intensity;
-  const z=BASE_CAMERA.z;
-  // Directional camera steering: pointer RIGHT => yaw RIGHT; pointer
-  // UP => pitch UP. The previous look-back compensation inverted yaw.
-  // Move and turn only this one real camera, never any scene object.
-  const yaw=sx*.022*intensity;
-  const pitch=sy*.014*intensity;
-  return {x,y,z,yaw,pitch,hFov:BASE_CAMERA.hFov};
+  const yaw=sx*CAMERA_RIG.yawLimitDeg*Math.PI/180*intensity;
+  const pitch=-sy*CAMERA_RIG.pitchLimitDeg*Math.PI/180*intensity;
+  return {x:BASE_CAMERA.x,y:BASE_CAMERA.y,z:BASE_CAMERA.z,
+    yaw,pitch,hFov:BASE_CAMERA.hFov};
 }
 // Reference CPU projector matches the WebGL vertex shader exactly.
 function project(point,cam,width,height){
