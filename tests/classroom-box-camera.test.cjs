@@ -1,0 +1,41 @@
+'use strict';
+const assert=require('node:assert/strict');
+const api=require('../site/game/classroom-box-runtime.js');
+const near=(a,b,eps=1e-9)=>assert.ok(Math.abs(a-b)<eps,a+' != '+b);
+const base=api.camera(0,0);
+near(base.x,api.BASE_CAMERA.x);
+near(base.y,api.BASE_CAMERA.y);
+near(base.yaw,0);
+near(base.pitch,0);
+near(api.pointerAxis(.03),0);
+near(api.pointerAxis(-.06),0);
+near(api.pointerAxis(1),1);
+near(api.pointerAxis(-1),-1);
+const right=api.camera(1,0),left=api.camera(-1,0);
+near(right.x,api.BASE_CAMERA.x+api.CAMERA_RIG.xTravel);
+near(left.x,api.BASE_CAMERA.x-api.CAMERA_RIG.xTravel);
+assert.ok(right.yaw<0&&left.yaw>0,'real camera should look back toward focus');
+const bottom=api.camera(0,1),top=api.camera(0,-1);
+near(bottom.y,api.BASE_CAMERA.y-api.CAMERA_RIG.yTravel);
+near(top.y,api.BASE_CAMERA.y+api.CAMERA_RIG.yTravel);
+assert.ok(top.pitch<0&&bottom.pitch>0);
+near(api.camera(9,-99).x,right.x);
+near(api.camera(-9,99).x,left.x);
+near(api.camera(1,0,0).x,base.x);
+near(api.camera(1,0,1.5).x,
+  api.BASE_CAMERA.x+1.5*api.CAMERA_RIG.xTravel);
+for(const x of [-1,-.5,0,.5,1]){
+  const cam=api.camera(x,-.4);
+  assert.ok(Math.abs(cam.x-base.x)<=.28);
+  assert.ok(Math.abs(cam.y-base.y)<=.1);
+  const nearPoint=[-.9,0,1],farPoint=[-.9,0,8],w=1280,h=720;
+  const n0=api.project(nearPoint,base,w,h),f0=api.project(farPoint,base,w,h);
+  const n=api.project(nearPoint,cam,w,h),f=api.project(farPoint,cam,w,h);
+  if(x===0)continue;
+  const dn=Math.hypot(n.x-n0.x,n.y-n0.y);
+  const df=Math.hypot(f.x-f0.x,f.y-f0.y);
+  assert.ok(dn>df,'near geometry must have stronger natural displacement');
+}
+assert.equal(api.FACES.length,5);
+assert.equal(api.buildMesh().faceCount,5);
+console.log('PASS bounded physical 3D camera: dead-zone, inverse-depth parallax, look-at and no mesh animation');
