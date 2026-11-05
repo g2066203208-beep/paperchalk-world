@@ -83,7 +83,7 @@
     // Intersection between the center viewing ray and the near actor Z plane.
     const cy=Math.cos(cam.yaw),sy=Math.sin(cam.yaw);
     const cp=Math.cos(cam.pitch),sp=Math.sin(cam.pitch);
-    const rayX=-sy*cp,rayY=-sp,rayZ=-cy*cp;
+    const rayX=sy*cp,rayY=sp,rayZ=-cy*cp;
     const t=(z-FOCAL)/rayZ;
     return {x:cam.x+rayX*t,y:cam.y+rayY*t,z};
   }
