@@ -407,6 +407,13 @@ picker.addEventListener('change',()=>{if(assigned[picker.value])selectSlot(picke
 // Notifications contain no artwork; source pixels and rigs remain in IndexedDB.
 const gameSync=typeof BroadcastChannel==='function'
  ?new BroadcastChannel('paperchalk-l2d-live-v1'):null;
+async function ensureRecentlySavedLocalActor(id){
+ if(catalog.has(id))return;
+ const imports=await get('imported');
+ const entry=Array.isArray(imports)?imports.find(c=>c?.id===id):null;
+ if(entry&&valid(entry.id)&&(entry.front||entry.back))
+  catalog.set(id,{...entry});
+}
 let syncQueue=Promise.resolve();
 if(gameSync)gameSync.onmessage=event=>{
  const msg=event.data||{};
@@ -421,6 +428,9 @@ if(gameSync)gameSync.onmessage=event=>{
    // studio must have committed this slot assignment before notifying us.
    const binding=await get('slot:'+msg.slot);
    if(binding?.id!==msg.id||binding?.side!==msg.face)return;
+   // A complete new wardrobe/actor may have been registered by Studio
+   // seconds ago; don't require a full page reload to discover its identity.
+   await ensureRecentlySavedLocalActor(msg.id);
    await assign(msg.slot,msg.id,msg.face,false);
   }else{
    for(const [target,binding] of Object.entries(assigned)){
