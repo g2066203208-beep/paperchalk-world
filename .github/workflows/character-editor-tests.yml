@@ -437,12 +437,14 @@ jobs:
                 });
                 console.log('Draw diagnostic',painted);
                 assert.ok(painted.count>0,'brush stroke produced no pixels');
+                await page.locator('#workspace-quick-more > summary').click();
                 await page.locator('#easy-undo').click();
+                await page.locator('#workspace-quick-more > summary').click();
                 await page.locator('#easy-redo').click();
                 await page.locator('#btnSave').click();
                 await page.waitForFunction(()=>document.getElementById('status').textContent.includes('已保存'),null,{timeout:12000});
                 const dl=page.waitForEvent('download',{timeout:90000});
-                await page.locator('#easy-imports summary').click();
+                await page.locator('#workspace-more > summary').click();
                 await page.locator('#btnExport').click();
                 const downloaded=await dl.catch(async error=>{
                   console.error('ZIP EXPORT FAILURE',await page.locator('#status').textContent());
