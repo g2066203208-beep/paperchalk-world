@@ -29,7 +29,11 @@ const FALLBACK=[
  [/^(?:男主角?|男一)(?:\s|[·（(:：/-]|$)/,'char-003'],
  [/^男二(?:\s|[·（(:：/-]|$)/,'male2'],
  [/^女三(?:\s|[·（(:：/-]|$)/,'char-004'],
- [/^女老师(?:\s|[·（(:：/-]|$)/,'class-teacher-geography-candidate']
+ [/^男三(?:\s|[·（(:：/-]|$)/,'char-020'],
+ [/^女四(?:\s|[·（(:：/-]|$)/,'char-005'],
+ [/^女五(?:\s|[·（(:：/-]|$)/,'char-006'],
+ [/^女六(?:\s|[·（(:：/-]|$)/,'female-06'],
+ [/^女老师(?:\s|[·（(:：/-]|$)/,'char-006']
 ];
 function familyOf(record){
  const id=String(record?.id||''),raw=String(record?.familyId||id);
