@@ -6,6 +6,7 @@ on:
       - 'site/index.html'
       - 'site/scene-modules.js'
       - 'site/game/classroom-box-runtime.js'
+      - 'site/assets/room-box/**'
       - 'site/game/l2d-ground-binding.js'
       - 'site/l2d/**'
       - 'site/dev/character-bridge.js'
