@@ -1003,11 +1003,27 @@ jobs:
                     });
                     for(let j=0;j<4;j++){
                       const a=corners[j],b=corners[(j+1)%4];
-                      const x=(a[0]+b[0])*.5,y=(a[1]+b[1])*.5;
+                      // Projected photo edges can legitimately leave the viewport.
+                      // Clip each segment to the screenshot before reading pixels.
+                      const vx=b[0]-a[0],vy=b[1]-a[1];
+                      let enter=0,exit=1,visible=true;
+                      for(const [p,q] of [
+                        [-vx,a[0]],[vx,snapshot.width-1-a[0]],
+                        [-vy,a[1]],[vy,snapshot.height-1-a[1]]
+                      ]){
+                        if(Math.abs(p)<1e-10){if(q<0){visible=false;break;}continue;}
+                        const t=q/p;
+                        if(p<0)enter=Math.max(enter,t);
+                        else exit=Math.min(exit,t);
+                        if(enter>exit){visible=false;break;}
+                      }
+                      if(!visible)continue; // Offscreen image edges cannot leak visible pixels.
+                      const t=(enter+exit)*.5;
+                      const x=a[0]+vx*t,y=a[1]+vy*t;
                       const dx=cfg.width*.5-x,dy=cfg.height*.5-y;
-                      const len=Math.hypot(dx,dy);
-                      const sx=Math.round(x+dx/len*2),sy=Math.round(y+dy/len*2);
-                      assert.ok(sx>=0&&sx<snapshot.width&&sy>=0&&sy<snapshot.height,'edge test sample outside screen');
+                      const len=Math.max(.00001,Math.hypot(dx,dy));
+                      const sx=Math.max(0,Math.min(snapshot.width-1,Math.round(x+dx/len*2)));
+                      const sy=Math.max(0,Math.min(snapshot.height-1,Math.round(y+dy/len*2)));
                       const off=(sy*snapshot.width+sx)*4;
                       const rgb=[snapshot.data[off],snapshot.data[off+1],snapshot.data[off+2]];
                       assert.ok(rgb.every(v=>v<=12),'uncovered hard image border, pose '+k+', edge '+j+', RGB '+rgb);
@@ -1015,7 +1031,7 @@ jobs:
                   }
                   await page.locator('#fog').evaluate(el=>el.style.visibility='visible');
                   await page.locator('#novel-ui').evaluate(el=>el.style.visibility='visible');
-                  console.log('PASS: opaque black on all four scene edges at five maximum/mid tilt poses; smoke hidden for mask-only test');
+                  console.log('PASS: visible projected photo borders stay black at max/mid tilt; offscreen edges are ignored');
                 }
                 if(cfg.mobile){
                   // Feed emulated orientation events in both physical landscape
