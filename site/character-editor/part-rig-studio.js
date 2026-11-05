@@ -105,7 +105,7 @@ fitPanel.id='rig-fit-panel';
 fitPanel.innerHTML=`
 <div class="rig-fit-heading"><strong>↖ 直接在画布调整</strong><span>选择图层后自动出现四角手柄</span></div>
 <small id="rig-fit-help">点选人物上的部件 → 直接拖动位置；拖四角调整大小。无需填参数。完成后点顶部「保存并应用到游戏」。</small>
-<div class="rig-fit-actions"><button type="button" id="rig-fit-handles" aria-pressed="true">🔓 拖动已开启</button><button type="button" id="rig-fit-reset">↶ 恢复该部件原位</button></div>
+<div class="rig-fit-actions"><button type="button" id="rig-fit-handles" aria-pressed="false">🔒 开启部件调整</button><button type="button" id="rig-fit-reset">↶ 恢复该部件原位</button></div>
 <details id="rig-fit-precise"><summary>精确数字微调（可选）</summary>
  <div class="rig-fit-grid">
  <label>宽度 <input id="rig-fit-width" data-fit="scaleX" type="number" inputmode="decimal" min="25" max="400" step="1" value="100"> %</label>
@@ -606,10 +606,10 @@ function setFitMode(value){
   setPlaying(false);
  }
  $('rig-fit-handles').setAttribute('aria-pressed',String(state.fitMode));
- $('rig-fit-handles').textContent=state.fitMode?'🔓 拖动已开启':'🔒 锁定部件';
+ $('rig-fit-handles').textContent=state.fitMode?'🔓 正在调整部件':'🔒 开启部件调整';
  $('rig-fit-help').textContent=state.fitMode?
-  '点击部件直接选中，拖动移动，拉四角改大小；支持手机触摸，数字输入只是可选的高级微调。':
-  '当前部件已锁定；点击「锁定部件」恢复直接拖动。';
+  '调整模式已开启：仅所选部件可拖动、拉角缩放；完成后再次点击锁定。':
+  '安全浏览模式：单指平移画面，双指缩放。需要调整时先点“开启部件调整”。';
  ed.render();
 }
 $('rig-fit-handles').onclick=()=>setFitMode(!state.fitMode);
@@ -1010,9 +1010,11 @@ async function activate(openPanel=false){
  state.historyBaseline=state.openedRig;
  state.undoStack=[];state.redoStack=[];state.lastOperationAt=0;
  state.model.occlusionMasks=Array.isArray(state.model.occlusionMasks)?state.model.occlusionMasks:[];
- state.active=true;state.phase=0;state.playing=true;state.showGuides=false;state.fitMode=true;state.fitDrag=null;
- $('rig-fit-handles').setAttribute('aria-pressed','true');
- $('rig-fit-handles').textContent='🔓 拖动已开启';
+ state.active=true;state.phase=0;state.playing=true;state.showGuides=false;state.fitMode=false;state.fitDrag=null;
+ $('rig-fit-handles').setAttribute('aria-pressed','false');
+ $('rig-fit-handles').textContent='🔒 开启部件调整';
+ // Selecting a new model cannot ever start a destructive drag gesture.
+ ed.setTool('pan');
  quickPanel.hidden=false;
  $('rig-guides').checked=false;
  setInspectorOpen();
