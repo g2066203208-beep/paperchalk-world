@@ -52,17 +52,19 @@ for(const mode of ['outer','inner']){
  const end=arena.project(people[0],views[4]);
  assert.ok(Math.abs(start.x-end.x)>.10,'fixed hero shifts on SCREEN due to camera only');
 }
-// Combat staging has a tighter squad fan and true physical 3D spacing.
+// The broad arena keeps physical separation (not a tiny ring with overlapping L2Ds).
 const s=arena.SPEC;
 const ringGap=s.outerRoleRadius-s.innerRoleRadius;
-assert.ok(ringGap>=1.30&&ringGap<=1.80,'opposing rings must read as close combat, without intersecting');
+assert.ok(s.wallRadius>=17&&s.wallRadius>=s.outerRoleRadius+4.5,
+ 'battle must have genuine curved-wall clearance and broad circular floor');
+assert.ok(ringGap>=2.2&&ringGap<=2.8,'opposing rings need physical clearance without becoming distant');
 const angleRange=values=>(Math.max(...values)-Math.min(...values))*180/Math.PI;
 assert.ok(angleRange(arena.formation.allies)<45,'allied team no longer scatters around the arena');
 assert.ok(angleRange(arena.formation.enemies)<50,'enemy team no longer scatters around the arena');
 const minChord=(radius,angles)=>Math.min(...angles.flatMap((a,i)=>angles.slice(i+1).map(b=>2*radius*Math.sin(Math.abs(b-a)/2))));
-assert.ok(minChord(s.innerRoleRadius,arena.formation.enemies)>1.1,
+assert.ok(minChord(s.innerRoleRadius,arena.formation.enemies)>2.1,
  'adjacent enemy anchors must not intersect');
-assert.ok(minChord(s.innerRoleRadius,arena.formation.allies)>0.9,
+assert.ok(minChord(s.innerRoleRadius,arena.formation.allies)>1.8,
  'adjacent allied anchors must not intersect');
 for(const mode of ['outer','inner']){
   const hero=arena.layout(mode).allies[0];
@@ -73,4 +75,8 @@ for(const mode of ['outer','inner']){
 }
 assert.ok(arena.SPEC.innerCameraRadius<arena.SPEC.innerRoleRadius);
 assert.ok(arena.SPEC.outerCameraRadius>arena.SPEC.outerRoleRadius);
+assert.ok(arena.SPEC.outerCameraRadius<arena.SPEC.wallRadius-2.0,
+ 'camera must not approach or cut through cylindrical wall');
+assert.ok(arena.SPEC.innerCameraRadius<arena.SPEC.innerRoleRadius-2.0,
+ 'inner camera must remain clearly inside the front actor circle');
 console.log('PASS: fixed world-space L2D formation; only two real camera orbits move');
