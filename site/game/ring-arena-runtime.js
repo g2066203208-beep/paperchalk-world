@@ -1,6 +1,6 @@
-/* Paperchalk World — circular battlefield with ORIGINAL running L2D canvases.
+/* Paperchalk World — cinematic shallow-arc battlefield with ORIGINAL running L2D canvases.
  * Actors have immutable ground anchors. A single moving WebGL view/projection
- * draws the cylindrical room AND the animated L2D textures. No CSS parallax,
+ * draws a panoramic curved stage AND animated L2D textures. No CSS parallax,
  * no flat proxy boxes, no portrait overwrites and no invented rear artwork.
  */
 (function(root,factory){
@@ -13,19 +13,19 @@
  const TAU=Math.PI*2,clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
  const lerp=(a,b,t)=>a+(b-a)*t,rad=(d)=>d*Math.PI/180;
  const SPEC=Object.freeze({
-  wallRadius:18.0,wallHeight:6.0,outerRoleRadius:12.0,
-  innerRoleRadius:9.60,outerCameraRadius:14.60,
-  innerCameraRadius:7.20,verticalFov:60,
-  cameraStartAngle:rad(9),cameraEndAngle:rad(-9)
+  stageType:'shallow-arc',
+  wallRadius:18.0,wallHeight:12.0,wallCenterZ:-14.0,
+  wallArcHalfAngle:rad(85),floorWidth:70,floorFrontZ:42,floorBackZ:-42,
+  outerRoleRadius:10.55,innerRoleRadius:8.30,
+  outerCameraRadius:12.44,innerCameraRadius:6.00,
+  verticalFov:46,cameraStartAngle:rad(14.42),
+  cameraEndAngle:rad(-14.42),battleFocusZ:8.10
  });
- // Expanded 18m cylindrical world: larger circumference restores separation
- // between individual L2D actors without reducing their real heights.
- // Keep all four radius constants aligned with the floor shader's rings.
- // Deliberately human-authored STATIONARY formation angles; never derive
- // actors from camera interpolation or pointer delta.
+ // A real shallow combat arc: actors retain frozen world coordinates, while
+ // the camera can follow its own curved rail around the encounter.
  const formation=Object.freeze({
   allies:Object.freeze([0,rad(-23),rad(-11),rad(15)]),
-  enemies:Object.freeze([rad(-21),rad(-7),rad(7),rad(21)])
+  enemies:Object.freeze([rad(-10.8),rad(-3.6),rad(3.6),rad(10.8)])
  });
  const bindings=Object.freeze({
   hero:'player', 'ally-2':'ally2','ally-3':'ally3','ally-4':'ally4',
@@ -88,11 +88,14 @@
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
  function camera(mode='outer',progress=0){
   const t=clamp(Number(progress)||0,0,1),outer=mode==='outer';
+  // Camera travels in 3D on a short arc. Its optical axis is composed
+  // independently to keep original 4-enemy L2Ds in the shot.
   const angle=outer?lerp(SPEC.cameraStartAngle,SPEC.cameraEndAngle,t):
-   lerp(rad(-9),rad(9),t);
+   lerp(rad(-18),rad(18),t);
   const R=outer?SPEC.outerCameraRadius:SPEC.innerCameraRadius;
-  const eye=polar(R,angle,1.45);
-  const focus=polar(10.70,angle,1.12);
+  const eye=polar(R,angle,1.42);
+  const focus={x:(outer?1.40:-1.25)*(1-2*t),
+   y:.95,z:outer?SPEC.battleFocusZ:10.7};
   return {mode,progress:t,radius:R,angle,eye,focus};
  }
  function project(p,cam,aspect=16/9){
@@ -133,25 +136,24 @@
   'void main(){vec3 color;',
   'if(uSurface==0){',
   'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
-  'float radial=line(r/18.0,30.0,.027);float spokes=line(a,48.0,.019);',
-  'float allies=1.0-smoothstep(.016,.053,abs(r-12.00));',
-  'float enemies=1.0-smoothstep(.016,.053,abs(r-9.60));',
-  'color=vec3(.006,.019,.023)+vec3(.02,.18,.14)*(radial*.6+spokes*.26)',
-  '+vec3(.01,.16,.14)*(allies+enemies);',
-  'float innerCam=1.0-smoothstep(.01,.05,abs(r-7.20));',
-  'float outerCam=1.0-smoothstep(.01,.05,abs(r-14.60));',
-  'color+=vec3(.25,.20,.04)*(innerCam+outerCam)*.35;',
+  'float radial=line(r/18.0,32.0,.024);float spokes=line(a,64.0,.016);',
+  'float allies=1.0-smoothstep(.016,.065,abs(r-10.55));',
+  'float enemies=1.0-smoothstep(.016,.065,abs(r-8.30));',
+  'color=vec3(.005,.013,.016)+vec3(.010,.086,.072)*(radial*.55+spokes*.16)',
+  '+vec3(.006,.11,.10)*(allies+enemies)*.48;',
+  'float innerCam=1.0-smoothstep(.01,.06,abs(r-6.00));',
+  'float outerCam=1.0-smoothstep(.01,.06,abs(r-12.44));',
+  'color+=vec3(.12,.13,.03)*(innerCam+outerCam)*.22;',
   '}else{',
-  'float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
-  'float col=floor(a*92.0);float v=vWorld.y*8.3+uTime*(.4+hash(col)*1.8);',
-  'float glyph=step(.19,fract(a*92.0))*step(fract(a*92.0),.82)',
-  '*step(.16,fract(v))*step(fract(v),.82);',
-  'float bit=step(.5,hash(col*11.1+floor(v)*3.4));',
-  'float bright=pow(max(0.0,sin(v*1.9+hash(col)*6.28)),12.0);',
-  'color=vec3(.003,.010,.014)+vec3(.008,.075,.06)*line(a,92.0,.012)',
-  '+glyph*bit*(vec3(.018,.20,.13)+vec3(.05,.48,.26)*bright);',
+  'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
+  'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
+  'float glyph=step(.18,cellX)*step(cellX,.80)*step(.16,cellY)*step(cellY,.83);',
+  'float bit=step(.55,hash(col*11.1+floor(v)*3.4));',
+  'float bright=pow(max(0.0,sin(v*1.4+hash(col)*6.28)),13.0);',
+  'color=vec3(.003,.011,.014)+vec3(.006,.045,.038)*line(vWorld.x,3.0,.016)',
+  '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   '}gl_FragColor=vec4(color,1.0);}'
- ].join('\n');
+ ].join('\\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
  // Vertical pivot uses the source canvas's measured shoe & crown fractions.
  // No regenerated textures or destructive crop operations.
@@ -172,17 +174,30 @@
   'if(t.a<.025)discard;gl_FragColor=t;}'
  ].join('\n');
  function worldMesh(gl){
-  const floor=[],wall=[];
+  const floor=[],backInner=[],backOuter=[];
   const push=(to,a,b,c)=>to.push(...a,...b,...c);
+  const w=SPEC.floorWidth/2,z0=SPEC.floorFrontZ,z1=SPEC.floorBackZ;
+  push(floor,[-w,0,z0],[-w,0,z1],[w,0,z1]);
+  push(floor,[-w,0,z0],[w,0,z1],[w,0,z0]);
+  // A pair of broad curved BACKDROPS, not one enormous closed cylinder.
+  // Each faces its respective camera mode, and both are real 3D surfaces.
   const N=160;
-  for(let i=0;i<N;i++){
-   const a=i*TAU/N,b=(i+1)*TAU/N;
-   const p=polar(SPEC.wallRadius,a),q=polar(SPEC.wallRadius,b);
-   push(floor,[0,0,0],[p.x,0,p.z],[q.x,0,q.z]);
-   push(wall,[p.x,0,p.z],[p.x,SPEC.wallHeight,p.z],[q.x,SPEC.wallHeight,q.z]);
-   push(wall,[p.x,0,p.z],[q.x,SPEC.wallHeight,q.z],[q.x,0,q.z]);
-  }
-  return [floor,wall].map(arr=>{
+  const addWall=(dest,face)=>{
+   const point=angle=>({
+    x:SPEC.wallRadius*Math.sin(angle),
+    z:face==='inner'?SPEC.wallCenterZ+SPEC.wallRadius*Math.cos(angle):
+     15.2+SPEC.wallRadius*(1-Math.cos(angle))
+   });
+   for(let i=0;i<N;i++){
+    const a=-SPEC.wallArcHalfAngle+i*2*SPEC.wallArcHalfAngle/N;
+    const b=-SPEC.wallArcHalfAngle+(i+1)*2*SPEC.wallArcHalfAngle/N;
+    const p=point(a),q=point(b);
+    push(dest,[p.x,0,p.z],[p.x,SPEC.wallHeight,p.z],[q.x,SPEC.wallHeight,q.z]);
+    push(dest,[p.x,0,p.z],[q.x,SPEC.wallHeight,q.z],[q.x,0,q.z]);
+   }
+  };
+  addWall(backInner,'inner');addWall(backOuter,'outer');
+  return [floor,backInner,backOuter].map(arr=>{
    const buffer=gl.createBuffer(),data=new Float32Array(arr);
    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
    return {buffer,count:data.length/3};
@@ -224,10 +239,10 @@
   ].join('\n');
   document.head.append(style);
   const canvas=document.createElement('canvas');canvas.id='ring-arena-canvas';
-  canvas.hidden=true;canvas.setAttribute('aria-label','固定八人站位的圆形3D战场，滑动只移动摄像机');stage.append(canvas);
+  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D浅弧形战场，固定人物站位，滑动只移动摄像机');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="top"><b>RING BATTLE / 3D</b><small>人物世界坐标固定 · 镜头沿圆环运动</small></div>',
+   '<div class="top"><b>ARC BATTLE / 3D</b><small>真实弧形舞台 · 人物固定 · 镜头沿弧线运动</small></div>',
    '<div class="status" role="status"></div><div class="bottom">',
    '<button data-shift="-1" type="button">◀ 镜头向左</button>',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
@@ -237,7 +252,7 @@
   ].join('');
   stage.append(hud);
   const status=hud.querySelector('.status');
-  let gl=null,world=null,portrait=null,floor=null,wall=null,quad=null;
+  let gl=null,world=null,portrait=null,floor=null,backInner=null,backOuter=null,quad=null;
   const textures=new Map();
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
@@ -245,7 +260,7 @@
    world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uTexture']);
-   [floor,wall]=worldMesh(gl);
+   [floor,backInner,backOuter]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
    for(const id of Object.keys(bindings))textures.set(id,prepareTexture(gl));
@@ -384,7 +399,7 @@
    gl.useProgram(world.handle);gl.enableVertexAttribArray(world.aP);
    gl.uniformMatrix4fv(world.uVP,false,new Float32Array(vp));
    gl.uniform1f(world.uTime,elapsed);
-   drawWorld(floor,0,vp);drawWorld(wall,1,vp);
+   drawWorld(floor,0,vp);drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    gl.disableVertexAttribArray(world.aP);
    const all=visibleActors(mode);
    const now=performance.now();
