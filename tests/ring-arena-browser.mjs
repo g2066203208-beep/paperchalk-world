@@ -15,9 +15,10 @@ const server=createServer((req,res)=>{
  const name=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;
  const path=resolve(root,'.'+name);
  if(!path.startsWith(root+'/'))return res.writeHead(403).end();
- try{res.writeHead(200,{'content-type':mime[extname(path)]||'application/octet-stream'});
-   res.end(readFileSync(path))}
- catch{res.writeHead(404).end('not found')}
+ let bytes;
+ try{bytes=readFileSync(path)}catch{res.writeHead(404).end('not found');return}
+ res.writeHead(200,{'content-type':mime[extname(path)]||'application/octet-stream'});
+ res.end(bytes)
 });
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const browser=await chromium.launch({headless:true,
