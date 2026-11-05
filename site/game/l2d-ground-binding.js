@@ -14,7 +14,9 @@ if(!view||!rig||!floor)return;
 const ORIGIN=Object.freeze({y:77,z:-215});
 const projection=window.PaperWorldPerspectiveGround;
 const SHOULDER_CAMERA=projection.SHOULDER_CAMERA;
-const roots=()=>[...document.querySelectorAll('[data-l2d-actor]')];
+const roots=()=>[...document.querySelectorAll('[data-l2d-actor]')].filter(root=>
+  ['player','enemy'].includes(root.dataset.l2dActor)||
+  document.getElementById('scene')?.dataset.scene==='classroom-box');
 const actorInfo=new Map(),soleCache=new WeakMap();
 let last=null,requested=false;
 const fmt=n=>Number(n.toFixed(3));
