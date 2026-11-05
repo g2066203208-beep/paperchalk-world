@@ -487,7 +487,7 @@ async function init(){try{await defaults();const had=await loadSaved();S.sel=Mat
 for(const b of document.querySelectorAll('[data-tool]'))b.onclick=()=>setTool(b.dataset.tool);
 $('frontTab').onclick=()=>setSide('front');$('backTab').onclick=()=>setSide('back');
 $('partSearch').oninput=()=>renderList();
-$('clearPartSelection').onclick=()=>{clearPartSelection();setTool('select')};
+$('clearPartSelection').onclick=()=>{clearPartSelection();setTool('pan')};
 $('focusCurrent').onclick=()=>{
  const part=current();if(!part)return;
  const x=part.x+part.canvas.width/2,y=part.y+part.canvas.height/2;
