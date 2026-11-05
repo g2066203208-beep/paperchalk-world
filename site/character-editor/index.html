@@ -83,8 +83,16 @@ body.embedded #btnCloseInGame{background:#273244}
   <button id="recover-last" type="button">恢复上次保存稿</button>
   <button id="recover-previous" type="button">恢复更早保存稿</button>
   <button id="recover-layer-original" type="button">恢复本层原始贴图</button>
+  <button id="recover-original-placement" type="button">从原版恢复所选部件位置与大小</button>
+  <button id="recover-crouch-hairpin" type="button">女主蹲姿 · 发卡原位复原</button>
  </div><p id="recovery-status" role="status">自动保存不覆盖手动保存的检查点；原始 PSD、蒙版和其他人物不受影响。</p>
 </section>
+<nav id="mobile-studio-tabs" role="toolbar" aria-label="手机 L2D 快捷导航">
+ <button type="button" data-mobile-tab="canvas" aria-pressed="true">✥ 看画面</button>
+ <button type="button" data-mobile-tab="parts" aria-pressed="false">▤ 选部件</button>
+ <button type="button" data-mobile-tab="controls" aria-pressed="false">⚙ 动态/工具</button>
+ <button type="button" id="mobile-studio-recover">↩ 复原</button>
+</nav>
 <div class="layout">
 <aside class="left">
 <section><h3>人物方向</h3><div class="row"><button id="frontTab" class="active">正面</button><button id="backTab">背面</button></div><p class="tip">当前人物及方向来自上方全人物列表。PSD/分层 ZIP 导入后保留原图层坐标，真实分层用于动态预览和逐件精修；新版 L2D 是唯一动画编辑模式。</p></section>
@@ -483,6 +491,31 @@ let saveTimer=0;function autosave(){
 async function loadSaved(){const rec=await storage('readonly');if(!rec?.front?.length)return false;for(const side of ['front','back']){const arr=[];for(const p of rec[side]||[]){const im=await imgFrom(p.img);const q=layer(p.name,im,p.x,p.y,p.locked);q.visible=p.visible;q.opacity=p.opacity;q.sourcePart=!!p.sourcePart;q.partId=p.partId||'';q.role=p.role||'';arr.push(q)}if(arr.length)S.layers[side]=arr}return true}
 async function init(){try{await defaults();const had=await loadSaved();S.sel=Math.max(0,S.layers.front.length-1);renderList();fit();if(had)await seedRecoveryCheckpoint();status(had?'✓ 已恢复上次在此浏览器保存的全部分层工程':'初始人物已载入；可导入上次的分层 ZIP 继续修图')}catch(e){console.error(e);status('载入异常：'+e.message)}}
 for(const b of document.querySelectorAll('[data-tool]'))b.onclick=()=>setTool(b.dataset.tool);
+// Small screens stay canvas-first, with panels chosen explicitly; the stage
+// remains visible and never becomes an accidental mesh-transform surface.
+const mobileTabs=$('mobile-studio-tabs');
+function mobilePanel(name,scroll=false){
+ const pane=['canvas','parts','controls'].includes(name)?name:'canvas';
+ document.body.dataset.mobilePanel=pane;
+ for(const button of mobileTabs.querySelectorAll('[data-mobile-tab]'))
+  button.setAttribute('aria-pressed',String(button.dataset.mobileTab===pane));
+ setTool('pan');
+ const target=pane==='parts'?document.querySelector('.layout .left'):
+  pane==='controls'?document.querySelector('.layout .right'):$('stage');
+ if(scroll&&matchMedia('(max-width:710px)').matches)
+  requestAnimationFrame(()=>target?.scrollIntoView({behavior:'smooth',block:'start'}));
+ requestAnimationFrame(()=>{resize();if(pane==='canvas')fit()});
+}
+mobileTabs.querySelectorAll('[data-mobile-tab]').forEach(button=>{
+ button.onclick=()=>mobilePanel(button.dataset.mobileTab,true);
+});
+$('mobile-studio-recover').onclick=()=>{
+ setTool('pan');
+ $('studio-recovery').hidden=false;
+ $('btnRecovery').setAttribute('aria-expanded','true');
+ $('studio-recovery').scrollIntoView({behavior:'smooth',block:'start'});
+};
+document.body.dataset.mobilePanel='canvas';
 $('frontTab').onclick=()=>setSide('front');$('backTab').onclick=()=>setSide('back');
 $('partSearch').oninput=()=>renderList();
 $('clearPartSelection').onclick=()=>{clearPartSelection();setTool('select')};
@@ -517,6 +550,18 @@ $('recover-rig-open').onclick=()=>recoveryAction(()=>{
 $('recover-last').onclick=()=>recoveryAction(()=>restoreCheckpoint(false));
 $('recover-previous').onclick=()=>recoveryAction(()=>restoreCheckpoint(true));
 $('recover-layer-original').onclick=()=>recoveryAction(restoreSelectedOriginal);
+$('recover-original-placement').onclick=()=>recoveryAction(async()=>{
+ const rig=window.PaperchalkPartRigStudio;
+ if(!rig?.state?.active)throw Error('请先选择有真实分层的 L2D 人物');
+ await rig.restorePublishedPlacement();
+ recoverMsg('✓ 所选部件已恢复原画位置与大小（其他部件不变）');
+});
+$('recover-crouch-hairpin').onclick=()=>recoveryAction(async()=>{
+ const rig=window.PaperchalkPartRigStudio;
+ if(!rig?.state?.active)throw Error('先打开女主蹲姿持斧正面');
+ await rig.restoreCrouchHairpin();
+ recoverMsg('✓ 女主蹲姿发卡/头饰恢复到 GitHub 原版坐标与大小');
+});
 $('btnSave').onclick=async()=>{
  const button=$('btnSave');if(button.disabled)return;
  button.disabled=true;
