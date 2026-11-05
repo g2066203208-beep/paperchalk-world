@@ -4,7 +4,7 @@ Does not overwrite or modify character originals or L2D rigs.
 """
 from pathlib import Path
 import math,json,zipfile
-from PIL import Image
+from PIL import Image, ImageChops
 SOURCE=Path("site/assets/l2d/library/protagonist-battle-front")
 OUT=Path("site/assets/animations/protagonist-axe-attack")
 N=1024; PAD=128; SIZE=N+2*PAD; FILTER=Image.Resampling.BICUBIC
@@ -32,17 +32,51 @@ def paste_layer(layer):
     canvas.alpha_composite(im,(int(layer["x"])+PAD,int(layer["y"])+PAD))
     return canvas
 
-def arm_transform(im,shoulder,wrist,destination):
-    sx,sy=shoulder[0]+PAD,shoulder[1]+PAD
-    wx,wy=wrist[0]+PAD,wrist[1]+PAD
-    tx,ty=destination[0]+PAD,destination[1]+PAD
-    ux,uy=wx-sx,wy-sy;vx,vy=tx-sx,ty-sy
-    scale=max(.56,min(1.65,math.hypot(vx,vy)/max(1,math.hypot(ux,uy))))
-    ang=math.atan2(vy,vx)-math.atan2(uy,ux)
-    c=math.cos(ang)/scale;s=math.sin(ang)/scale
-    a,b,d,e=c,s,-s,c
+def bone_affine(im, A, B, dstA, dstB):
+    u=(B[0]-A[0],B[1]-A[1]);v=(dstB[0]-dstA[0],dstB[1]-dstA[1])
+    scale=max(.001,math.hypot(*v))/max(.001,math.hypot(*u))
+    angle=math.atan2(v[1],v[0])-math.atan2(u[1],u[0])
+    c=math.cos(angle)/scale;s=math.sin(angle)/scale
+    ax,ay=A[0]+PAD,A[1]+PAD;bx,by=dstA[0]+PAD,dstA[1]+PAD
     return im.transform((SIZE,SIZE),Image.Transform.AFFINE,
-                        (a,b,sx-a*sx-b*sy,d,e,sy-d*sx-e*sy),resample=FILTER)
+      (c,s,ax-c*bx-s*by,-s,c,ay+s*bx-c*by),resample=FILTER)
+
+def arm_transform(im, shoulder, source_hand, destination_hand, name):
+    # Two painted bone sections, not an isotropically enlarged hand or sleeve.
+    elbow={"handwear_r":(367,367),"handwear_l":(617,397)}[name]
+    S=shoulder;E=elbow;W=source_hand;T=destination_hand
+    l1=math.dist(S,E);l2=math.dist(E,W)
+    dx,dy=T[0]-S[0],T[1]-S[1];distance=max(.001,math.hypot(dx,dy))
+    d=max(abs(l1-l2)+.02,min(l1+l2-.02,distance))
+    ux,uy=dx/distance,dy/distance
+    along=(l1*l1-l2*l2+d*d)/(2*d)
+    height=math.sqrt(max(0,l1*l1-along*along))
+    cross=(W[0]-S[0])*(E[1]-S[1])-(W[1]-S[1])*(E[0]-S[0])
+    sign=1 if cross>=0 else -1
+    bent=(S[0]+ux*along-sign*uy*height,S[1]+uy*along+sign*ux*height)
+    reached=(S[0]+ux*d,S[1]+uy*d)
+    bbox=im.getbbox();x0,y0,x1,y1=bbox
+    crop=im.crop(bbox);alpha=crop.getchannel("A")
+    w,h=crop.size;mask=Image.new("L",(w,h));pix=mask.load()
+    S2=(S[0]+PAD,S[1]+PAD);E2=(E[0]+PAD,E[1]+PAD);W2=(W[0]+PAD,W[1]+PAD)
+    def dist(x,y,a,b):
+        vx,vy=b[0]-a[0],b[1]-a[1]
+        t=max(0,min(1,((x-a[0])*vx+(y-a[1])*vy)/max(1,vx*vx+vy*vy)))
+        return math.hypot(x-a[0]-t*vx,y-a[1]-t*vy)
+    for y in range(h):
+        for x in range(w):
+            xx,yy=x+x0,y+y0
+            top=dist(xx,yy,S2,E2);bottom=dist(xx,yy,E2,W2)
+            pix[x,y]=round(255*max(0,min(1,.5+(bottom-top)/40)))
+    parts=[]
+    for m in (mask,ImageChops.invert(mask)):
+        piece=crop.copy();piece.putalpha(ImageChops.multiply(alpha,m))
+        part=Image.new("RGBA",(SIZE,SIZE));part.paste(piece,(x0,y0))
+        parts.append(part)
+    upper=bone_affine(parts[0],S,E,S,bent)
+    lower=bone_affine(parts[1],E,W,bent,reached)
+    upper.alpha_composite(lower)
+    return upper
 
 def main():
     meta=json.loads((SOURCE/"layers.json").read_text(encoding="utf-8"))
@@ -59,7 +93,7 @@ def main():
                 part=src.rotate(angle,center=(PIVOT[0]+PAD,PIVOT[1]+PAD),resample=FILTER)
             elif name in GRIPS:
                 grip=rotate_point(GRIPS[name],PIVOT,angle)
-                part=arm_transform(src,SHOULDERS[name],GRIPS[name],grip)
+                part=arm_transform(src,SHOULDERS[name],GRIPS[name],grip,name)
             elif name in ("front_hair","back_hair","bottomwear"):
                 coefficient={"front_hair":-.6,"back_hair":.4,"bottomwear":.25}[name]
                 part=src.rotate(coefficient*max(-1,min(1,angle/24)),
