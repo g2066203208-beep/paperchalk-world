@@ -270,6 +270,14 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify real 3D cylindrical background camera and original image fidelity
         run: node tests/cylinder-background-browser.mjs
+      - name: Upload 3D cylinder vs original scene screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cylindrical-background-review
+          path: artifacts/cylinder-background/*.png
+          retention-days: 7
+          if-no-files-found: warn
       - name: Verify all four independent UI edge fogs in real browser and capture screenshots
         run: node tests/ui-edge-fog-browser.mjs
       - name: Upload early real UI fog screenshots for visual review
