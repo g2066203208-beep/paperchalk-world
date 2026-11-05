@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101924">
+<title>Paperchalk · 单点透视教室五面空间盒子</title>
+<style>
+:root{color-scheme:dark;font:14px/1.5 ui-sans-serif,system-ui,"Noto Sans SC","Microsoft YaHei",sans-serif;background:#101924;color:#e8edf1}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:#101924}
+main{max-width:1560px;margin:auto;padding:clamp(12px,2.2vw,28px)}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:clamp(19px,2.5vw,27px);line-height:1.2;margin:4px 0 0;font-weight:680}
+.kicker{font-size:11px;letter-spacing:.15em;font-weight:700;color:#a5bcce}
+.meta{font-size:12px;color:#b4c6d5}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:16px}
+.stage{position:relative;overflow:hidden;border:1px solid #456071;border-radius:12px;aspect-ratio:16/9;background:#1d2733}
+#viewport{display:block;width:100%;height:100%;touch-action:none}
+.stage-note{position:absolute;left:12px;bottom:12px;background:#0d1723c9;padding:5px 9px;border-radius:7px;font-size:11px;color:#dce9ef;pointer-events:none}
+aside{border:1px solid #30485b;border-radius:12px;padding:15px;background:#172431}
+h2{font-size:14px;margin:0 0 12px}.swatches{display:grid;gap:8px;padding:0;margin:0;list-style:none}
+.swatches li{display:flex;gap:9px;align-items:center;font-size:13px;color:#d9e3e8}
+.swatch{display:block;width:15px;height:15px;border-radius:3px;flex:none;border:1px solid #ffffff38}
+hr{border:0;border-top:1px solid #3b4e5c;margin:15px 0}
+label{font-size:12px;color:#bdcdd7;display:flex;justify-content:space-between;gap:8px}
+.controller{margin:12px 0}input[type="range"]{width:100%;accent-color:#9fcadf}
+.toggles{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;justify-content:flex-start}
+.toggles input{accent-color:#97c9db}
+strong{font-variant-numeric:tabular-nums;font-weight:650}
+.actions{display:flex;gap:7px;margin-top:13px}button{color:#e8f4fa;background:#203b4a;border:1px solid #4e6c7f;border-radius:7px;padding:9px 12px;cursor:pointer}
+button:hover{background:#2a4a5d}
+.foot{font-size:12px;color:#9eb3c2;margin-top:14px;max-width:850px}
+.legend-actors{display:flex;gap:15px;flex-wrap:wrap;margin-top:12px;color:#dce5eb;font-size:12px}
+.key{display:inline-block;border-radius:50%;width:9px;height:9px;margin-right:5px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.stage{width:100%}aside{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px}aside>h2,aside>hr,aside>.actions{grid-column:1/-1}.swatches{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}.foot{margin-top:9px}}
+@media(max-width:480px){aside{display:block}.swatches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.stage-note{font-size:9px}.meta{font-size:11px}}
+</style>
+</head>
+<body>
+<main>
+<header><div><div class="kicker">PAPERCHALK WORLD / 3D SPACE BLOCKOUT 01</div><h1>教室 · 单点透视空间灰模</h1></div><div class="meta">9.6 m × 8.0 m × 3.2 m · 5 个纯色面 · 摄影机正对后墙</div></header>
+<div class="layout">
+  <section>
+    <div class="stage"><canvas id="viewport" aria-label="真实针孔透视投影的教室五面纯色空间盒子"></canvas>
+      <div class="stage-note">真实三维平面投影｜无纹理、无预制透视、无原场景图</div></div>
+    <div class="legend-actors"><span><i class="key" style="background:#e8d49b"></i>主角脚点：(-2.4, 0, 1.0) m</span><span><i class="key" style="background:#bcdcef"></i>敌人脚点：(1.3, 0, 3.8) m</span></div>
+    <p class="foot">这是供确认空间比例的<strong>独立灰模</strong>，正式游戏的角色、黑雾、UI、背景原图均未替换。屏幕中心是唯一消失点；地板和天花板的透视由摄影机计算，未来直接用 Anima 无透视贴图替换面材质。</p>
+  </section>
+  <aside>
+    <h2>五面空间分色</h2>
+    <ul class="swatches">
+      <li><i class="swatch" style="background:#c6ac82"></i>地板 · 9.6×8.0 m</li>
+      <li><i class="swatch" style="background:#a3b0bc"></i>天花板 · 9.6×8.0 m</li>
+      <li><i class="swatch" style="background:#71899c"></i>后墙 · 9.6×3.2 m</li>
+      <li><i class="swatch" style="background:#81a59d"></i>左墙 · 8.0×3.2 m</li>
+      <li><i class="swatch" style="background:#b58d84"></i>右墙 · 8.0×3.2 m</li>
+    </ul>
+    <hr>
+    <h2>摄影机 · 水平正视（单点透视）</h2>
+    <div class="controller"><label for="fov">水平 FOV <strong id="fovLabel">68°</strong></label><input id="fov" type="range" min="52" max="85" value="68" step="1"></div>
+    <div class="controller"><label for="camX">相机水平位置 <strong id="camXLabel">-1.0 m</strong></label><input id="camX" type="range" min="-2.5" max="2.5" value="-1" step=".1"></div>
+    <div class="controller"><label for="camY">镜头高度 <strong id="camYLabel">1.55 m</strong></label><input id="camY" type="range" min=".6" max="2.2" value="1.55" step=".05"></div>
+    <div class="controller"><label for="camZ">距房间前沿 <strong id="camZLabel">1.8 m</strong></label><input id="camZ" type="range" min=".7" max="3.5" value="1.8" step=".1"></div>
+    <hr>
+    <label class="toggles"><input id="actors" type="checkbox" checked>显示主角 / 敌人站位</label>
+    <label class="toggles" style="margin-top:9px"><input id="labels" type="checkbox" checked>显示各平面名称</label>
+    <div class="actions"><button id="reset" type="button">恢复计算初值</button></div>
+  </aside>
+</div>
+</main>
+<script>
+(()=>{
+'use strict';
+// World: X horizontal, Y up, Z forward from the open front.
+// The camera's optical axis is exactly +Z: parallel edges meet at one VP.
+const ROOM={width:9.6,depth:8,height:3.2};
+const COLORS={floor:'#c6ac82',ceiling:'#a3b0bc',back:'#71899c',left:'#81a59d',right:'#b58d84'};
+const faces=[
+  {id:'back',title:'后墙',verts:[[-4.8,0,8],[4.8,0,8],[4.8,3.2,8],[-4.8,3.2,8]],tag:[0,2.25,8]},
+  {id:'floor',title:'地板',verts:[[-4.8,0,0],[-4.8,0,8],[4.8,0,8],[4.8,0,0]],tag:[0,0,4.0]},
+  {id:'ceiling',title:'天花板',verts:[[-4.8,3.2,0],[4.8,3.2,0],[4.8,3.2,8],[-4.8,3.2,8]],tag:[0,3.2,4.0]},
+  {id:'left',title:'左墙',verts:[[-4.8,0,0],[-4.8,3.2,0],[-4.8,3.2,8],[-4.8,0,8]],tag:[-4.8,1.65,4.2]},
+  {id:'right',title:'右墙',verts:[[4.8,0,0],[4.8,0,8],[4.8,3.2,8],[4.8,3.2,0]],tag:[4.8,1.65,4.2]}
+];
+const actorPts=[
+  {label:'主角',color:'#e8d49b',x:-2.4,z:1.0,h:1.62},
+  {label:'敌人',color:'#bcdcef',x:1.3,z:3.8,h:1.55}
+];
+const canvas=document.getElementById('viewport');
+const ctx=canvas.getContext('2d',{alpha:false});
+const controls={fov:document.getElementById('fov'),camX:document.getElementById('camX'),
+ camY:document.getElementById('camY'),camZ:document.getElementById('camZ')};
+let w=1280,h=720;
+const read=()=>({fov:Number(controls.fov.value),x:Number(controls.camX.value),
+ y:Number(controls.camY.value),z:-Number(controls.camZ.value)});
+function project([x,y,z],cam){
+  const d=z-cam.z;
+  if(d<.02)return null;
+  const f=w/(2*Math.tan(cam.fov*Math.PI/360));
+  return [w*.5+f*(x-cam.x)/d,h*.5-f*(y-cam.y)/d,d];
+}
+function polygon(points,fill,stroke='#182b3b'){
+  ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);
+  for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);
+  ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+  ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.9,w/1050);
+  ctx.stroke();
+}
+function pill(text,x,y,fill){
+  ctx.font=Math.round(Math.max(11,Math.min(17,w/72)))+'px system-ui,"Microsoft YaHei",sans-serif';
+  const t=ctx.measureText(text).width+22,ht=Math.max(24,Math.min(34,w/35));
+  x=Math.max(t/2+5,Math.min(w-t/2-5,x));y=Math.max(ht/2+5,Math.min(h-ht/2-5,y));
+  ctx.fillStyle='#0e1b2ccc';ctx.fillRect(x-t/2,y-ht/2,t,ht);
+  ctx.fillStyle=fill;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x,y+1);
+}
+function actor(person,cam){
+  // In-world standing rectangular blockout, vertically grounded at Y=0.
+  const {x,z,color,h:height,label}=person;
+  const wBody=label==='主角'?.38:.35;
+  const corners=[[-wBody/2,0],[wBody/2,0],[wBody/2,height],[-wBody/2,height]]
+    .map(([dx,y])=>project([x+dx,y,z],cam));
+  if(corners.some(p=>!p))return;
+  const shoe=project([x,0,z],cam),top=project([x,height,z],cam);
+  // small ground oval, projected in the same 3D floor
+  const disk=[];
+  for(let i=0;i<22;i++){
+    const a=Math.PI*2*i/22;
+    disk.push(project([x+Math.cos(a)*.34,.018,z+Math.sin(a)*.19],cam));
+  }
+  polygon(disk,'#131c2988','#12212a44');
+  polygon(corners,color,'#111c28');
+  const heightPx=Math.abs(shoe[1]-top[1]);
+  ctx.fillStyle='#17212a';ctx.fillRect(top[0]-Math.max(1,w/600),top[1],Math.max(2,w/300),heightPx);
+  pill(label+(label==='主角'?' · 近景':' · 中景'),top[0],top[1]-18,color);
+}
+function render(){
+  if(!ctx)return;
+  const cam=read();
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#132130';ctx.fillRect(0,0,w,h);
+  // Five planar surfaces in stationary 3D world geometry: no painted perspective.
+  for(const face of faces){
+    const pts=face.verts.map(v=>project(v,cam));if(pts.some(p=>!p))continue;
+    polygon(pts,COLORS[face.id]);
+  }
+  if(document.getElementById('actors').checked)
+    actorPts.slice().sort((a,b)=>b.z-a.z).forEach(p=>actor(p,cam));
+  if(document.getElementById('labels').checked){
+    for(const face of faces){
+      const p=project(face.tag,cam);if(!p)continue;
+      pill(face.title,p[0],p[1],'#eff5f7');
+    }
+  }
+  // Purely diagnostic vanishing point cross; the only VP is frame center.
+  const size=Math.max(4,w/160);
+  ctx.strokeStyle='#ffffffb0';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(w/2-size,h/2);ctx.lineTo(w/2+size,h/2);
+  ctx.moveTo(w/2,h/2-size);ctx.lineTo(w/2,h/2+size);ctx.stroke();
+  ctx.font=Math.max(10,w/120)+'px system-ui';
+  ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillStyle='#263748';
+  ctx.fillText('VANISHING POINT',w/2-12,h/2-10);
+  document.getElementById('fovLabel').textContent=cam.fov+'°';
+  document.getElementById('camXLabel').textContent=cam.x.toFixed(1)+' m';
+  document.getElementById('camYLabel').textContent=cam.y.toFixed(2)+' m';
+  document.getElementById('camZLabel').textContent=(-cam.z).toFixed(1)+' m';
+  canvas.dataset.geometry='real-3d-perspective-five-surfaces';
+  canvas.dataset.camera=JSON.stringify(cam);
+}
+function resize(){
+  const box=canvas.getBoundingClientRect();w=Math.max(1,box.width);h=Math.max(1,box.height);
+  const ratio=Math.min(2,window.devicePixelRatio||1);
+  canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  render();
+}
+for(const item of Object.values(controls))item.addEventListener('input',render);
+for(const id of ['actors','labels'])document.getElementById(id).addEventListener('change',render);
+document.getElementById('reset').addEventListener('click',()=>{
+  controls.fov.value=68;controls.camX.value=-1;controls.camY.value=1.55;controls.camZ.value=1.8;
+  document.getElementById('actors').checked=true;
+  document.getElementById('labels').checked=true;
+  render();
+});
+window.PaperchalkRoomBlockout=Object.freeze({
+  room:ROOM,faces,actorPts,project,render,inspect:()=>({camera:read(),faceCount:faces.length,
+    room:ROOM,actorPts,onePointPerspective:true,renderer:'exact-3d-pinhole-projection'})
+});
+if(typeof ResizeObserver==='function')new ResizeObserver(resize).observe(canvas);
+else window.addEventListener('resize',resize,{passive:true});
+resize();
+})();
+</script>
+</body>
+</html>
