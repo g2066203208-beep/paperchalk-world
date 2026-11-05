@@ -7,6 +7,7 @@ on:
       - 'scripts/bind_female06_pants.py'
       - 'tests/test_female06_pants_skin.cjs'
       - 'tests/test_female06_pants_wear_browser.js'
+      - 'tests/test_female06_second_outfit_local_import_browser.cjs'
       - 'tests/test_l2d_part_placement.cjs'
       - 'tests/test_l2d_part_resize_browser.js'
       - '.github/workflows/female06-body-hierarchy.yml'
@@ -45,6 +46,7 @@ jobs:
           python3 -m http.server 8134 --directory site >/tmp/female6-pelvis-server.log 2>&1 &
           node tests/test_female06_pants_wear_browser.js
           node tests/test_l2d_part_resize_browser.js
+          node tests/test_female06_second_outfit_local_import_browser.cjs
       - name: Save screenshots for inspection
         if: always()
         uses: actions/upload-artifact@v4
