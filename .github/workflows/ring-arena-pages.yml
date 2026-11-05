@@ -67,13 +67,13 @@ jobs:
             'site/dev/character-bridge.js'
           ])new Function(fs.readFileSync(path,'utf8'));
           const html=fs.readFileSync('site/index.html','utf8');
-          if(!html.includes('ring-arena-runtime.js?v=compact-combat-v3-20261105'))
+          if(!html.includes('ring-arena-runtime.js?v=hero-only-rear-view-v4-20261105'))
             throw Error('Deployed HTML still points at stale ring-arena WebGL source');
           if(!html.includes("ringScene.setActive(name==='ring-arena')"))
             throw Error('3D ring scene was not integrated into the game');
-          console.log('PASS: game links to compact 4v4 ring L2D source and camera-only motion');
+          console.log('PASS: hero-only cinematic rear view; three teammates hidden; enemy L2D and camera-only orbit retained');
           JS
-      # Real Chromium 8-L2D screenshot proof already runs separately in
+      # Real Chromium screenshot proof of heroine + 4 enemies runs separately in
       # ring-arena-proof.yml. Do not block a ring-only deploy behind the
       # unrelated full fog/editor browser suite.
       - uses: actions/configure-pages@v5
