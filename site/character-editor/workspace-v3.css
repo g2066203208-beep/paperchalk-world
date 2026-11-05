@@ -106,7 +106,11 @@ body.studio-page[data-focused-workspace="v3"] #studio-person-import-bar{
  background:transparent!important;border:0!important;
  padding:1px 0 7px!important;margin:0 0 4px!important
 }
-body.studio-page[data-focused-workspace="v3"] #studio-person-import-target{display:none!important}
+body.studio-page[data-focused-workspace="v3"] #studio-person-import-target{
+ display:block!important;font-size:10px!important;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ max-width:100%;color:#96adbe;min-height:15px
+}
 body.studio-page[data-focused-workspace="v3"] #studio-person-import{
  background:#223847;border-color:#39546a;font-size:11px;min-height:36px
 }
