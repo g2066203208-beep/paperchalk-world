@@ -10,6 +10,9 @@ const outfit=JSON.parse(fs.readFileSync(path.join(folder,'female-06-outfit-02/fr
 assert.equal(r.parts.pants_overlay.kind,'pants-bound');
 assert.equal(r.parts.pants_overlay.parentId,'pelvis','shorts waistband PRIMARY parent');
 assert.equal(r.parts.pants_overlay.skinBinding.method,'pelvis-waist-dual-thigh-v2');
+assert.equal(r.parts.pants_overlay.skinBinding.waistTuck,.075);
+assert.deepEqual(r.parts.pants_overlay.skinBinding.bodyOcclusion,
+ {mode:'pelvis-garment-stencil-v1',waistV:.105,hemV:.96});
 assert.deepEqual(r.parts.pants_overlay.skinBinding.transition,[.42,.84]);
 assert.equal(r.parts.pants_overlay.skinBinding.target,'legwear');
 assert.deepEqual(r.parts.pants_overlay.placement,{scaleX:1.2,scaleY:1,offsetX:-15,offsetY:-17});
@@ -35,6 +38,25 @@ assert.equal(rig.graph.shortsWaist.parent,'pelvis');
 assert.equal(rig.graph.shortsLeftHem.parent,'leftHip');
 assert.equal(rig.graph.shortsRightHem.parent,'rightHip');
 assert.equal(core.parentRole(pants),'garment');
+// A tight waistband and hidden-body stencil are calculated from EXACTLY
+// the same animated ArtMesh as the two IK-connected pants cuffs.
+const restTuck=core.garmentTuckGeometry(pants,0,model.idleProfile);
+assert.ok(restTuck&&restTuck.leftX<restTuck.rightX);
+const a=core.placedRestPoint(pants,{x:pants.x,y:pants.y});
+const b=core.placedRestPoint(pants,{x:pants.x+pants.w,y:pants.y});
+const topWidth=b.x-a.x,hemL=core.placedRestPoint(pants,{x:pants.x,y:pants.y+pants.h});
+const hemR=core.placedRestPoint(pants,{x:pants.x+pants.w,y:pants.y+pants.h});
+assert.ok(topWidth<hemR.x-hemL.x,
+ 'garment waist must cinch narrower than original hips');
+assert.ok(restTuck.waistY<restTuck.hemY);
+for(const u of [0,.2,.5,.8,1]){
+ for(const v of [0,.1,.35,.65,1]){
+  const p={x:pants.x+u*pants.w,y:pants.y+v*pants.h};
+  const placed=core.placedRestPoint(pants,p);
+  const inv=core.unplacedRestPoint(pants,placed);
+  assert.ok(Math.hypot(inv.x-p.x,inv.y-p.y)<.0001,'waist cinch inverse must preserve editor hit testing');
+ }
+}
 assert.equal(core.parentRole(legs),'legs');
 assert.equal(core.parentRole(torso),'torso');
 for(const id of ['wings_l','wings_r']){
@@ -54,6 +76,9 @@ idle.joints.hips=8;idle.joints.shoulders=8;idle.breath.amount=3;
 let traveled=0,maxWaist=0,maxHem=0;
 for(let frame=0;frame<42;frame++){
  const phase=frame*.37,pose=core.humanPoseAt(pants,phase,idle);
+ const tuck=core.garmentTuckGeometry(pants,phase,idle);
+ assert.ok(tuck&&tuck.leftX<tuck.rightX,'dynamic waistband stencil must exist every frame');
+ assert.ok(tuck.hemY>tuck.waistY+90,'hip/hem stencil cannot invert with IK');
  for(const u of [.18,.5,.82]){
   for(const v of [.03,.18,.38,.58,.75,.9,.97]){
    const rest=core.placedRestPoint(pants,{x:pants.x+u*pants.w,y:pants.y+v*pants.h});
