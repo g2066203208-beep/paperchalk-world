@@ -586,3 +586,20 @@ body.studio-page[data-focused-workspace="v3"] .workspace-paint-more-grid button{
 body.studio-page[data-focused-workspace="v3"][data-inspector="paint"] .workspace-paint-more{
  display:block!important
 }
+
+/* Minimum comfortable touch targets, including 320px-wide handsets. */
+@media(max-width:710px){
+ body.studio-page[data-focused-workspace="v3"] .stage-toolbar button{
+  min-height:44px!important;min-width:44px!important
+ }
+ body.studio-page[data-focused-workspace="v3"] #mobile-studio-tabs>button,
+ body.studio-page[data-focused-workspace="v3"] #workspace-mobile-more>summary{
+  min-height:44px!important
+ }
+ body.studio-page[data-focused-workspace="v3"] .workspace-more>summary{
+  width:42px!important;height:42px!important
+ }
+ body.studio-page[data-focused-workspace="v3"] #studio-back{
+  min-height:42px!important;min-width:38px!important
+ }
+}
