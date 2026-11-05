@@ -21,6 +21,11 @@ on:
       - 'tests/phone-ui-browser.mjs'
       - 'tests/ground-perspective.test.mjs'
       - '.github/workflows/ui-fog-smoke.yml'
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'tests/**'
+      - '.github/workflows/ui-fog-smoke.yml'
   workflow_dispatch:
 permissions:
   contents: read
