@@ -301,6 +301,8 @@ def build():
     # shorts to its source rig and re-composited its original portrait.
     # Restore from immutable original ZIPs above, then build WITHOUT overlays.
     # Wardrobe-specific skin weights live only inside each outfit's own rig.
+    from bind_female06_pants import install as bind_outfit_only
+    bind_outfit_only(LIBRARY)
     modules = []
     if LIBRARY.exists():
         for folder in sorted(LIBRARY.iterdir(),key=lambda f:f.name.lower()):
