@@ -122,6 +122,9 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Gate release on real desktop and mobile fog + focused L2D Studio
         run: |
+          # Focused Studio's E2E test expects the built site on port 8132.
+          python3 -m http.server 8132 --bind 127.0.0.1 --directory site >/tmp/paperchalk-release-http.log 2>&1 &
+          sleep 2
           node tests/ui-edge-fog-browser.mjs
           node tests/test_l2d_focused_workspace_browser.js
       - uses: actions/configure-pages@v5
