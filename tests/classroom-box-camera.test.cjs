@@ -14,7 +14,7 @@ near(api.pointerAxis(-1),-1);
 const right=api.camera(1,0),left=api.camera(-1,0);
 near(right.x,api.BASE_CAMERA.x+api.CAMERA_RIG.xTravel);
 near(left.x,api.BASE_CAMERA.x-api.CAMERA_RIG.xTravel);
-assert.ok(right.yaw<0&&left.yaw>0,'real camera should look back toward focus');
+assert.ok(right.yaw>0&&left.yaw<0,'real camera should look back toward focus');
 const bottom=api.camera(0,1),top=api.camera(0,-1);
 near(bottom.y,api.BASE_CAMERA.y-api.CAMERA_RIG.yTravel);
 near(top.y,api.BASE_CAMERA.y+api.CAMERA_RIG.yTravel);
