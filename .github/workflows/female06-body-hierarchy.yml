@@ -8,6 +8,7 @@ on:
       - 'tests/test_female06_pants_skin.cjs'
       - 'tests/test_female06_pants_wear_browser.js'
       - 'tests/test_female06_second_outfit_local_import_browser.cjs'
+      - 'tests/test_female06_existing_draft_migration_browser.js'
       - 'tests/test_l2d_part_placement.cjs'
       - 'tests/test_l2d_part_resize_browser.js'
       - '.github/workflows/female06-body-hierarchy.yml'
@@ -47,6 +48,7 @@ jobs:
           node tests/test_female06_pants_wear_browser.js
           node tests/test_l2d_part_resize_browser.js
           node tests/test_female06_second_outfit_local_import_browser.cjs
+          node tests/test_female06_existing_draft_migration_browser.js
       - name: Save screenshots for inspection
         if: always()
         uses: actions/upload-artifact@v4
