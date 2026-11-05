@@ -22,9 +22,14 @@ async function storage(mode,key,value){
   r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);
  });
  try{return await new Promise((ok,no)=>{
-  const q=db.transaction('kv',mode).objectStore('kv');
+  const tx=db.transaction('kv',mode),q=tx.objectStore('kv');
   const task=mode==='readonly'?q.get(key):q.put(value,key);
-  task.onsuccess=()=>ok(task.result);task.onerror=()=>no(task.error);
+  let result;
+  task.onsuccess=()=>{result=task.result};
+  task.onerror=()=>no(task.error);
+  tx.oncomplete=()=>ok(result);
+  tx.onabort=()=>no(tx.error||Error('L2D storage aborted'));
+  tx.onerror=()=>no(tx.error||Error('L2D storage failed'));
  });}finally{db.close();}
 }
 const get=key=>storage('readonly',key).catch(()=>null);
