@@ -515,6 +515,7 @@ jobs:
                 assert.deepEqual([female2.front,female2.back,female2.foot,female2.eye],
                   ['head','head','ground','head']);
                 if(vp.width<500)await secondaryPage.locator('[data-studio-pane="motion"]').click();
+                await secondaryPage.locator('#workspace-motion-more').click();
                 for(const id of ['fringe','rear','skirt','hands','shoulders','hips','breath','speed'])
                   assert.equal(await secondaryPage.locator('[data-quick="'+id+'"]').isVisible(),true,
                     'real PSD slider must be visible: '+id);
