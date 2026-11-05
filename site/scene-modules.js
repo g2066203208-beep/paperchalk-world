@@ -37,9 +37,9 @@
     // Reuses a valid fallback image for preloading but replaces its display
     // with a scene-local 3D canvas; never creates a second separate game.
     result['classroom-box'] = define('classroom-box', './assets/classroom.webp',
-      '三维战斗镜头：前景主角、横向错层的三名 L2D 敌人', '战斗构图 · 三敌人',
+      '三维战斗镜头：近景主角、同排等间距的四名 L2D 敌人', '战斗构图 · 四敌人',
       'environment', {layers:Object.freeze({player:true,enemy:true,fog:true}),
-        kind:'five-face-3d',version:'combat-composition-v2'});
+        kind:'five-face-3d',version:'four-enemy-straight-row-v1'});
     for (const entry of catalog) {
       if (!entry || !SLUG.test(entry.id) || !IMAGE.test(entry.file)
           || RESERVED.has(entry.id) || result[entry.id]) {
