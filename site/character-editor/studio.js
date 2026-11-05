@@ -32,8 +32,14 @@ function openDB(){return new Promise((ok,no)=>{
 async function kv(mode,key,data){
  const db=await openDB();
  try{return await new Promise((ok,no)=>{
-  const q=db.transaction('kv',mode).objectStore('kv'),r=mode==='readonly'?q.get(key):q.put(data,key);
-  r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);
+  const tx=db.transaction('kv',mode),q=tx.objectStore('kv');
+  const r=mode==='readonly'?q.get(key):q.put(data,key);
+  let result;
+  r.onsuccess=()=>{result=r.result};
+  r.onerror=()=>no(r.error);
+  tx.oncomplete=()=>ok(result);
+  tx.onabort=()=>no(tx.error||Error('L2D save aborted'));
+  tx.onerror=()=>no(tx.error||Error('L2D save failed'));
  });}finally{db.close();}
 }
 const get=k=>kv('readonly',k).catch(()=>null),put=(k,v)=>kv('readwrite',k,v);
