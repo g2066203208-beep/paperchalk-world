@@ -32,7 +32,7 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   const safe=await page.evaluate(()=>({tool:window.characterEditor.S.tool,
     personRect:document.getElementById('studio-character-tree').getBoundingClientRect().toJSON(),
     layerRect:document.getElementById('layers').getBoundingClientRect().toJSON()}));
-  assert.equal(safe.tool,'select','opening the editor must never arm a brush');
+  assert.equal(safe.tool,'pan','editor opens with safe canvas movement, never a brush or mesh transform');
   assert.ok(safe.personRect.width>=315,'person tree must have comfortable width');
   assert.ok(safe.personRect.height>=260,'person tree must have enough vertical room');
   assert.equal(await page.locator('#btnSave').isVisible(),true);
@@ -46,7 +46,7 @@ const base='http://127.0.0.1:8134/character-editor/?character=protagonist&side=f
   await page.locator('#layers .layer').first().click();
   await page.locator('#clearPartSelection').click();
   assert.equal(await page.evaluate(()=>window.characterEditor.S.sel),-1);
-  assert.equal(await page.evaluate(()=>window.characterEditor.S.tool),'select');
+  assert.equal(await page.evaluate(()=>window.characterEditor.S.tool),'pan');
   const before=await page.evaluate(()=>window.characterEditor.S.layers.front.find(p=>p.partId==='jacket').canvas.toDataURL());
   const rect=await page.locator('#view').boundingBox();
   await page.mouse.click(rect.x+rect.width*.5,rect.y+rect.height*.5);
