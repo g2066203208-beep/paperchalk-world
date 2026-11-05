@@ -96,14 +96,14 @@
   // The actress is close to the lens; the four opponents occupy the middle
   // distance and remain individually separated. No CSS sprite scaling.
   outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:2.391,eyeZ:11.249,eyeY:1.48,focusX:1.1,focusY:1,focusZ:8.8,fov:52}),
+   Object.freeze({id:'left',eyeX:2.10,eyeZ:11.70,eyeY:1.48,focusX:.6,focusY:1,focusZ:8.8,fov:52}),
    Object.freeze({id:'center',eyeX:2.05,eyeZ:12.2,eyeY:1.47,focusX:.35,focusY:1,focusZ:8.55,fov:50}),
-   Object.freeze({id:'right',eyeX:-2.391,eyeZ:11.249,eyeY:1.48,focusX:-1.1,focusY:1,focusZ:8.8,fov:52})
+   Object.freeze({id:'right',eyeX:-2.10,eyeZ:11.70,eyeY:1.48,focusX:-.6,focusY:1,focusZ:8.8,fov:52})
   ]),
   inner:Object.freeze([
-   Object.freeze({id:'left',eyeX:-2.6,eyeZ:7,eyeY:1.45,focusX:.2,focusY:1,focusZ:12,fov:42}),
+   Object.freeze({id:'left',eyeX:-2.10,eyeZ:7.20,eyeY:1.45,focusX:0,focusY:1,focusZ:10.4,fov:54}),
    Object.freeze({id:'center',eyeX:-2.6,eyeZ:6.8,eyeY:1.45,focusX:0,focusY:1,focusZ:11.8,fov:47}),
-   Object.freeze({id:'right',eyeX:2.6,eyeZ:7,eyeY:1.45,focusX:-.2,focusY:1,focusZ:12,fov:42})
+   Object.freeze({id:'right',eyeX:2.10,eyeZ:7.20,eyeY:1.45,focusX:0,focusY:1,focusZ:10.4,fov:54})
   ])
  });
  const stopIndex=n=>clamp(Math.round(Number(n)||0),0,2);
