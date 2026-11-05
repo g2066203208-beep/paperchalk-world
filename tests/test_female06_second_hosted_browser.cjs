@@ -35,7 +35,14 @@ const fs=require('node:fs');
   assert.equal(state.wingLeft,2);assert.equal(state.wingRight,2);
   assert.equal(state.shortsSkin,'pelvis-waist-dual-thigh-v2');
   assert.ok(state.legs>=4);
-  assert.equal(state.provenance,
+  // The runtime intentionally sanitizes untrusted metadata from its model.
+  // Verify the authored provenance on the actual deployed source rig instead.
+  const publishedRig=await page.evaluate(async()=>{
+    const r=await fetch('../assets/l2d/library/female-06-second-outfit/front.rig.json');
+    if(!r.ok)throw Error('Hosted wardrobe source rig HTTP '+r.status);
+    return r.json();
+  });
+  assert.equal(publishedRig.sourceSha256,
     'eedfee1ab0fa28a89ebe696c9824ddd3a9dda2460cb513584e1bf7c8408b71d8');
   assert.equal(state.outfitTree.length,1,
     'second costume must be a child of 女六, not a new person');
