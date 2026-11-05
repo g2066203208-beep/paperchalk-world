@@ -723,6 +723,9 @@ function create({stage,view,playerRoot,enemyRoot}={}){
     const next=clamp(Number(value)||0,0,1.5);
     pointerStrength=next;lastKey='';
     try{localStorage.setItem(pointerKey,String(pointerStrength))}catch(_){}
+    // DEV must see the new camera amplitude immediately, not on a later
+    // animation tick. Previously inspect() returned stale 1.0 after 1.25.
+    if(enabled)render();
     return pointerStrength;
   }
   function setReferenceLayer(id){
