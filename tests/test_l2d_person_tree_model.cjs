@@ -69,7 +69,7 @@ assert.deepEqual(roots.map(x=>x.name),
  'all canon roots use single short names, not descriptions or suffixes');
 const femaleSix=roots.find(x=>x.family==='female-06');
 assert.deepEqual(femaleSix.outfits.map(x=>x.id),['female-06-outfit-02']);
-assert.equal(femaleSix.outfits[0].label,'第二套 · 橙棕外套');
+assert.equal(femaleSix.outfits[0].label,'第三套 · 橙棕外套');
 assert.equal(roots.filter(x=>x.family==='female-06').length,1,
  'female-six second outfit must never become an extra person node');
 assert.ok(ids.indexOf('protagonist')<ids.indexOf('char-002'));
