@@ -18,11 +18,13 @@ const BASE_CAMERA=Object.freeze({x:0,y:1.22,z:-1.25,hFov:60});
 const CHARACTERS=Object.freeze({
   // Back-facing heroine close to camera; legs deliberately leave the frame.
   player:Object.freeze({x:-.84,y:0,z:.68,height:1.62,soleX:.51,soleY:.978,visible:.945}),
-  // Three separated screen columns, not a crowded cluster at the blackboard.
-  // CHAR-002 (near left), male lead (centre), teacher (right rear).
-  enemy:Object.freeze({x:-.16,y:0,z:2.9,height:1.58,soleX:.5,soleY:.978,visible:.95}),
-  enemy2:Object.freeze({x:1.02,y:0,z:3.25,height:1.59,soleX:.5,soleY:.978,visible:.95}),
-  enemy3:Object.freeze({x:2.05,y:0,z:3.45,height:1.60,soleX:.5,soleY:.978,visible:.95})
+  // Straight shared 3D baseline, evenly spaced from left to right.
+  // Same ground depth => identical screen shoe Y and consistent perspective
+  // at the neutral camera, unlike the old staggered triangular formation.
+  // Keep each published L2D character's real physical height and appearance.
+  enemy:Object.freeze({x:-.30,y:0,z:3.05,height:1.58,soleX:.5,soleY:.978,visible:.95}),
+  enemy2:Object.freeze({x:.86,y:0,z:3.05,height:1.59,soleX:.5,soleY:.978,visible:.95}),
+  enemy3:Object.freeze({x:2.02,y:0,z:3.05,height:1.60,soleX:.5,soleY:.978,visible:.95})
 });
 const COLORS=Object.freeze({
   ceiling:'#a8b1be',floor:'#bca17f',back:'#70899b',
@@ -268,7 +270,7 @@ function create({stage,view,playerRoot,enemyRoot}={}){
   // Versioned so prior two-character experimental positions cannot overwrite this composition.
   // Intentional new authored composition. Earlier saved experiments should
   // not silently force the old crowded arrangement on returning players.
-  const savedActorKey='paperchalk-classroom-3d-actor-world-v3';
+  const savedActorKey='paperchalk-classroom-3d-actor-world-v4';
   try{
     const stored=JSON.parse(localStorage.getItem(savedActorKey)||'null');
     if(stored&&typeof stored==='object'){
