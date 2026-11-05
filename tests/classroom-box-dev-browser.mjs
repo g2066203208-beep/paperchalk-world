@@ -135,7 +135,7 @@ try{
   await page.locator('#dev-room-show-all').click();
   const restored=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
   assert.ok(Object.values(restored.visibleFaces).every(Boolean));
-  await page.locator('#dev-side').click();
+  await page.locator('[data-room-view="side"]').click();
   const rotated=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
   assert.ok(Math.abs(rotated.camera.yaw)>.3,
     'DEV side view must move a real 3D camera, not CSS scene');
@@ -143,7 +143,7 @@ try{
   assert.equal(rotated.loadedMaterialCount,5);
   assert.equal(rotated.meshFaceCount,5);
   await page.screenshot({path:'artifacts/classroom-box/in-game-dev-real-3d-side.png'});
-  await page.locator('#dev-front').click();
+  await page.locator('[data-room-view="front"]').click();
   const front=await page.evaluate(()=>window.PaperWorldGameRoomBox.inspect());
   assert.ok(Math.abs(front.camera.yaw)<.0001);
   await page.locator('#dev-exit').click();
