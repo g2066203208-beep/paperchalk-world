@@ -15,9 +15,14 @@ const server=createServer((req,res)=>{
  const pathname=new URL(req.url,'http://localhost').pathname;
  const file=resolve(root,'.'+(pathname.endsWith('/')?pathname+'index.html':pathname));
  if(!file.startsWith(root+'/')){res.writeHead(403).end();return}
- try{res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream'});
-   res.end(readFileSync(file))}
- catch{res.writeHead(404).end('missing')}
+ try{
+   const bytes=readFileSync(file);
+   res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream'});
+   res.end(bytes);
+ }catch{
+   if(!res.headersSent)res.writeHead(404);
+   res.end('missing');
+ }
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const browser=await chromium.launch({headless:true,args:[
