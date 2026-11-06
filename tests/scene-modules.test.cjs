@@ -9,7 +9,24 @@ vm.runInNewContext(fs.readFileSync('site/scene-modules.js', 'utf8'), scope);
 const api = scope.window.PAPERWORLD_SCENE_MODULES;
 assert.equal(api.schema, 2);
 const rooms = api.buildRegistry(catalog.scenes);
-assert.equal(Object.keys(rooms).length, 3 + catalog.scenes.length);
+// Three legacy scenes, four approved home scenes and five new real
+// public location stages. The latter are explicitly registered (not room
+// catalog images) and may be swapped to final Anima artwork without editing
+// travel, fog, L2D or story code.
+assert.equal(Object.keys(rooms).length, 3 + catalog.scenes.length + 5);
+for(const [id,asset] of [
+  ['school','./assets/classroom.webp'],
+  ['convenience','./assets/locations/convenience.svg'],
+  ['cafe','./assets/locations/cafe.svg'],
+  ['mall','./assets/locations/mall.svg'],
+  ['park','./assets/locations/park.svg']
+]){
+  assert.equal(rooms[id].type,'environment','location scene type: '+id);
+  assert.equal(rooms[id].image,asset);
+  assert.equal(rooms[id].layers.player,false,'first-person city scene has no back combat cutout');
+  assert.equal(rooms[id].layers.fog,true);
+  assert.ok(fs.existsSync('site/'+asset.slice(2)), 'missing city stage art: '+id);
+}
 assert.equal(rooms['classroom-box'].kind,'five-face-3d');
 assert.equal(rooms['classroom-box'].layers.player,true);
 assert.equal(rooms['classroom-box'].layers.enemy,true);
