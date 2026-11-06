@@ -73,7 +73,7 @@ try{
  assert.equal(await page.locator('[data-director-enemy]').count(),4);
  await page.screenshot({path:'artifacts/ring-arena/director-attack-target-selection.png'});
  await page.locator('[data-director-enemy="2"]').click();
- // A 650ms action may complete while Chromium's software renderer yields.
+ // A 580ms action may complete while Chromium's software renderer yields.
  // Verify persistent HP/completed outcome, not a fleeting animation phase.
  // In slow software WebGL a single draw may skip across the entire
  // impact window. Validate the irrevocable, single target damage RESULT
@@ -210,8 +210,8 @@ try{
  assert.equal((await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['hero-attack'].uploads)),
  1,'hero attack art is uploaded just once');
- await qa.screenshot({path:'artifacts/ring-arena/v23-duel-center-hero-swing.png'});
- const frameHit=await invoke('enemy-2',365);
+ await qa.screenshot({path:'artifacts/ring-arena/v24-duel-center-hero-swing.png'});
+ const frameHit=await invoke('enemy-2',290);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
@@ -227,11 +227,11 @@ try{
  const duoFrame=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(duoFrame.duel.playedPositions.length,2);
  assert.ok(duoFrame.camera.fov<duoFrame.cameraTarget.fov);
- await qa.screenshot({path:'artifacts/ring-arena/v23-duel-center-simultaneous-impact.png'});
- const frameRecoil=await invoke('enemy-2',475);
+ await qa.screenshot({path:'artifacts/ring-arena/v24-duel-center-simultaneous-impact.png'});
+ const frameRecoil=await invoke('enemy-2',390);
  assert.equal(frameRecoil.phase,'reaction');
- await qa.screenshot({path:'artifacts/ring-arena/v23-duel-center-enemy-recoil.png'});
- const frameFemale=await invoke('enemy-3',475);
+ await qa.screenshot({path:'artifacts/ring-arena/v24-duel-center-enemy-recoil.png'});
+ const frameFemale=await invoke('enemy-3',390);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
  assert.equal(await qa.locator('[data-action-enemy]').evaluate(
   el=>getComputedStyle(el).display),'none',
@@ -245,7 +245,7 @@ try{
  assert.equal(await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['enemy-2-hit'].uploads),
  1,'male hurt artwork is uploaded only once');
- await qa.screenshot({path:'artifacts/ring-arena/v23-duel-center-female-original-reaction.png'});
+ await qa.screenshot({path:'artifacts/ring-arena/v24-duel-center-female-original-reaction.png'});
  assert.equal(await qa.locator('.director-stage-dark').evaluate(
   el=>getComputedStyle(el).display),'none',
   'full-screen cinematic black curtain is forbidden');
