@@ -144,7 +144,7 @@
     const map=h('div','daily-route-map');
     const paths=h('div','daily-map-lines');
     map.appendChild(paths);
-    const mapLocations=['bedroom','school','convenience','cafe','mall','park'];
+    const mapLocations=['entrance','school','convenience','cafe','mall','park'];
     for(const id of mapLocations){
       const loc=Core.LOCATIONS[id];
       const isWeekend=[0,6].includes(s.calendar.weekday);
@@ -314,7 +314,8 @@
   phone?.configure?.({
     getNarrative:()=>state.phoneInbox(),
     onPhoneRead:category=>state.markPhoneRead(category),
-    onPhoneReply:choice=>state.replyHomework(choice)
+    onPhoneReply:choice=>state.replyHomework(choice),
+    onOpenMap:()=>{phone.close();open('places');}
   });
   const unsubscribe=state.subscribe(()=>{
     phone?.refresh?.();
