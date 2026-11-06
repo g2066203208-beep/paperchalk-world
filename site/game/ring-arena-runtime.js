@@ -27,11 +27,11 @@
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[0,10.55],[-1.8,9.6],[1.8,9.6],[-3.5,9.0]]),
-   enemies:Object.freeze([[-2.55,6.2],[-.85,6.65],[.85,6.65],[2.55,6.2]])
+   enemies:Object.freeze([[-1.80,6.50],[-.60,6.10],[.60,6.10],[1.80,6.50]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[0,8.3],[-1.8,8.0],[1.8,8.0],[-3.5,7.7]]),
-   enemies:Object.freeze([[-2.1,12.8],[-.7,13.2],[.7,13.2],[2.1,12.8]])
+   enemies:Object.freeze([[-1.75,12.72],[-.60,13.12],[.60,13.12],[1.75,12.72]])
   })
  });
  const bindings=Object.freeze({
@@ -91,20 +91,20 @@
  })));
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
  // Two hand-authored over-shoulder camera stations only. The heroine's
- // distance to these cameras is ~40% shorter than the previous version.
+ // distance to these cameras is tuned against the L2D opaque silhouette.
  const SHOT_NAMES=Object.freeze(['左侧','右侧']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:1.05,eyeZ:11.40,eyeY:1.48,
-    focusX:.20,focusY:.78,focusZ:8.70,fov:56}),
-   Object.freeze({id:'right',eyeX:-1.05,eyeZ:11.40,eyeY:1.48,
-    focusX:-.20,focusY:.78,focusZ:8.70,fov:56})
+   Object.freeze({id:'left',eyeX:.70,eyeZ:11.35,eyeY:1.48,
+    focusX:-.10,focusY:.98,focusZ:8.70,fov:56}),
+   Object.freeze({id:'right',eyeX:-.70,eyeZ:11.35,eyeY:1.48,
+    focusX:.10,focusY:.98,focusZ:8.70,fov:56})
   ]),
   inner:Object.freeze([
-   Object.freeze({id:'left',eyeX:-1.20,eyeZ:7.15,eyeY:1.43,
-    focusX:.50,focusY:.45,focusZ:12.40,fov:48}),
-   Object.freeze({id:'right',eyeX:1.20,eyeZ:7.15,eyeY:1.43,
-    focusX:-.50,focusY:.45,focusZ:12.40,fov:48})
+   Object.freeze({id:'left',eyeX:-.70,eyeZ:7.15,eyeY:1.43,
+    focusX:.20,focusY:.75,focusZ:12.40,fov:48}),
+   Object.freeze({id:'right',eyeX:.70,eyeZ:7.15,eyeY:1.43,
+    focusX:-.20,focusY:.75,focusZ:12.40,fov:48})
   ])
  });
  const stopIndex=n=>clamp(Math.round(Number(n)||0),0,1);
