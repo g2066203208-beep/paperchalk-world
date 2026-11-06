@@ -41,7 +41,9 @@ try{
    const source=a?.clip?.type==='native'?a.clip.img:a?.canvas;
    const item={slot,actor:index+1,character:a?.img?.dataset?.characterId||null,
     side:a?.img?.dataset?.characterSide||null,
-    mode:a?.root?.dataset?.l2dMode||null};
+    mode:a?.root?.dataset?.l2dMode||null,
+    partIds:Object.keys(a?.libraryPlayer?.model?.parts||{}),
+    rigSource:a?.libraryPlayer?.model?.sourceCharacterId||null};
    if(!source)return item;
    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
    const ctx=canvas.getContext('2d');ctx.clearRect(0,0,512,512);
