@@ -15,6 +15,8 @@ try {
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(root+'/convenience-store/night/?qa=1',{waitUntil:'networkidle'});
+ await page.evaluate(()=>window.PaperWorldNightGame._qaFreeze(true));
+ console.log('NIGHT_QA_CLOCK',await page.evaluate(()=>window.PaperWorldNightGame._qaStatus()));
  assert.match(await page.title(),/深夜便利店/);
  await page.screenshot({path:dest+'/01-title-screen.png'});
  await page.locator('#begin').click();
@@ -75,7 +77,7 @@ try {
  await context.close();
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  mobile.on('pageerror',e=>errors.push(e.message));
- await mobile.goto(root+'/convenience-store/night/?qa=1',{waitUntil:'networkidle'});
+ await mobile.goto(root+'/convenience-store/night/?qa=1',{waitUntil:'networkidle'});await mobile.evaluate(()=>window.PaperWorldNightGame._qaFreeze(true));
  await mobile.locator('#begin').click();
  assert.equal(await mobile.locator('#cashier').isVisible(),true);
  await mobile.screenshot({path:dest+'/16-real-mobile-night-shift.png',fullPage:true});
