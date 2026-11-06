@@ -1,5 +1,6 @@
-/* Paperchalk V26 combat director: immediate impact, readable post-hit stage.
- * The prior Darkest Dungeon frame notes are references, NOT this game's timing.
+/* Paperchalk V27: 30 fps AUTHORABLE keyframes, hit-first, quick readable aftermath.
+ * Original Darkest Dungeon footage is not available in this repo: this is a
+ * measured 30fps game choreography draft, NOT a fake source-video transcription.
  * Attack choreography is performed WHILE both actors translate toward the
  * shared middle stage. The hit happens BEFORE arrival, NOT after a center
  * pause. Then both performers reverse to their immutable authored anchors.
@@ -14,9 +15,12 @@
  const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
  const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
  const CARD=Object.freeze({key:'slash',name:'斧柄横扫',type:'attack',damage:12,w:1,a:1,r:1});
- const DURATION=1500,REDUCED_DURATION=1200;
- // The 117ms strike remains responsive; the stage remains on screen after the hit.
- // Hold is a provisional gameplay timing, not a claim of frame-accurate original.
+ const FPS=30,FRAME_MS=1000/FPS,FRAME_COUNT=21;
+ const DURATION=FRAME_COUNT*FRAME_MS,REDUCED_DURATION=DURATION;
+ // KEYFRAME indices are 0..21 inclusive. Deliberately decoupled curves:
+ // attacker movement, victim movement, camera zoom, body lunge and hit recoil.
+ // One frame lasts 33.333ms. No "1 second freeze at center" is permitted.
+ // This is a game art-direction prototype until the user reference video is restored.
  // Reference frame markers: zoomed middle-stage entrances at frame
  // 79/178/315/416 and exits at frame 128/228/368/470.
  // These are capture timestamps, not the original game's internal tick clock.
@@ -27,15 +31,33 @@
   focus:Object.freeze({left:.365,right:.635})
  });
  const STAGES=Object.freeze([
-  Object.freeze({id:'lock',from:0,to:12}),
-  Object.freeze({id:'approach',from:12,to:50}),
-  Object.freeze({id:'windup',from:50,to:80}),
-  Object.freeze({id:'swing',from:80,to:117}),
-  Object.freeze({id:'impact',from:117,to:146}),
-  Object.freeze({id:'reaction',from:146,to:360}),
-  Object.freeze({id:'hold',from:360,to:1240}),
-  Object.freeze({id:'recover',from:1240,to:1500})
+  Object.freeze({id:'lock',from:0,to:1}),
+  Object.freeze({id:'approach',from:1,to:2}),
+  Object.freeze({id:'windup',from:2,to:3}),
+  Object.freeze({id:'swing',from:3,to:4}),
+  Object.freeze({id:'impact',from:4,to:5}),
+  Object.freeze({id:'reaction',from:5,to:9}),
+  Object.freeze({id:'hold',from:9,to:15}),
+  Object.freeze({id:'recover',from:15,to:21})
  ]);
+ // Every single authored frame has its OWN channel values; a browser running
+ // at 60/90/120Hz holds the same 30fps state rather than easing over 1.5s.
+ // These are screen-space/duel-relative fractions, not arbitrary world drift.
+ const TRACKS=Object.freeze({
+  hero:Object.freeze([0,.10,.44,.79,.95,1,1,1,1,1,1,1,1,1,1,1,.83,.51,.18,.025,0,0]),
+  victim:Object.freeze([0,.08,.47,.83,.97,1,1,1,1,1,1,1,1,1,1,1,.80,.46,.15,.015,0,0]),
+  camera:Object.freeze([0,.23,.64,.91,1,1,1,1,1,1,1,1,1,1,.97,.88,.58,.26,.08,0,0,0]),
+  lunge:Object.freeze([0,0,.10,.48,1,.43,.07,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
+  recoil:Object.freeze([0,0,0,0,0,.72,1,.88,.57,.24,.05,0,0,0,0,0,0,0,0,0,0,0]),
+  hitFlash:Object.freeze([0,0,0,0,.48,.16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
+  fx:Object.freeze([0,0,0,0,1,.60,.14,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
+  damage:Object.freeze([0,0,0,0,.45,1,1,1,.90,.75,.58,.43,.24,.06,0,0,0,0,0,0,0,0]),
+  damageRise:Object.freeze([0,0,0,0,0,.14,.28,.44,.60,.73,.84,.93,1,1,1,1,1,1,1,1,1,1])
+ });
+ for(const [name,values]of Object.entries(TRACKS)){
+  if(values.length!==FRAME_COUNT+1||values.some(v=>!Number.isFinite(v)||v<0||v>1))
+   throw Error('Invalid 30fps track '+name);
+ }
  const ART=Object.freeze({
   hero:'./assets/characters/hero-axe-attack.webp',
   maleEnemy:'./assets/characters/enemy-suit-hit-no-hud.webp',
@@ -57,37 +79,39 @@
  function hasEnemyHitPortrait(targetId){
   return ART.maleEnemyIds.includes(targetId);
  }
- // Every visual channel is sampled from ONE clock. No CSS-driven phase
- // animations: a dropped/late frame cannot restart a slash or float a number.
+ // Single deterministic frame clock. Real render may run at 60-120fps;
+ // compositor and damage settlement always observe the same sampled frame.
  function sample(attack,now){
-  if(!attack)return Object.freeze({stage:'idle',elapsed:0,finished:false,
+  if(!attack)return Object.freeze({stage:'idle',elapsed:0,frame:0,finished:false,
    hit:false,zoom:0,advance:0,recoil:0,hitFlash:0,shake:0,heroPose:0,
    victimPose:0,frameHold:false,cut:'none',stageStrength:0,
-   fxOpacity:0,damageOpacity:0,damageLift:0});
+   heroProgress:0,victimProgress:0,fxOpacity:0,damageOpacity:0,damageLift:0});
   const reduced=attack.reducedMotion;
-  const t=clamp((Number(now)-attack.startedAt)*(reduced?DURATION/REDUCED_DURATION:1),0,DURATION);
-  const finished=t>=DURATION;
-  const stage=finished?'done':STAGES.find(v=>t>=v.from&&t<v.to).id;
-  // Fast entrance and 117ms collision; after center arrival (~157ms),
-  // HOLD the completed result visibly until 1240ms, THEN depart briskly.
-  // The holding period is intentionally not a late attack or second hit.
-  const stageStrength=smooth((t-6)/151)*(1-smooth((t-1240)/260));
-  // Body drive and collision precede arrival; these do NOT make another hit.
-  const push=smooth((t-60)/50)*(1-smooth((t-117)/46));
-  const recoil=smooth((t-117)/12)*(1-smooth((t-230)/270));
-  const hit=t>=117;
-  const hitFlash=smooth((t-115)/5)*(1-smooth((t-125)/27))*.48;
-  const fxOpacity=smooth((t-115)/7)*(1-smooth((t-125)/37));
-  const damageOpacity=smooth((t-117)/11)*(1-smooth((t-1190)/230));
-  const cut=stage==='windup'||stage==='swing'?'attacker':
-   stage==='impact'||stage==='reaction'?'victim':'none';
-  return {stage,elapsed:t,finished,hit,stageStrength,zoom:stageStrength,
-   advance:push*(reduced?.70:1),recoil:recoil*(reduced?.70:1),
-   hitFlash,fxOpacity,damageOpacity,damageLift:smooth((t-121)/120),
-   shake:reduced?0:hitFlash*.06,
-   heroPose:t>=50&&t<146?1:0,
-   victimPose:t>=117&&t<360?1:0,
-   frameHold:false,cut,cue:''}; }
+  const raw=clamp(Number(now)-attack.startedAt,0,REDUCED_DURATION);
+  const frame=clamp(Math.floor(raw*FPS/1000+1e-8),0,FRAME_COUNT);
+  const t=frame*FRAME_MS;
+  const finished=frame>=FRAME_COUNT;
+  const stage=finished?'done':STAGES.find(v=>frame>=v.from&&frame<v.to).id;
+  const at=name=>TRACKS[name][frame];
+  const heroProgress=at('hero'),victimProgress=at('victim'),zoom=at('camera');
+  const hit=frame>=4;
+  const cut=frame>=2&&frame<4?'attacker':frame>=4&&frame<9?'victim':'none';
+  return {stage,elapsed:t,frame,finished,hit,heroProgress,victimProgress,
+   stageStrength:Math.min(heroProgress,victimProgress),zoom,
+   advance:at('lunge')*(reduced?.7:1),
+   recoil:at('recoil')*(reduced?.7:1),
+   hitFlash:at('hitFlash'),fxOpacity:at('fx'),
+   damageOpacity:at('damage'),damageLift:at('damageRise'),
+   shake:reduced?0:at('hitFlash')*.06,
+   heroPose:frame>=2&&frame<=4?1:0,
+   victimPose:frame>=4&&frame<=8?1:0,
+   frameHold:frame>=5&&frame<=6,cut,cue:''};
+ }
+ function sampleFrame(attack,frame){
+  if(!attack)throw Error('Cannot seek without an attack');
+  if(!Number.isInteger(frame)||frame<0||frame>FRAME_COUNT)throw Error('Invalid frame');
+  return sample(attack,attack.startedAt+frame*FRAME_MS);
+ }
  function stageAt(now,reduced=false){
   return sample(createAttack('enemy-1',0,{reducedMotion:reduced}),now).stage;
  }
@@ -103,9 +127,9 @@
   return {...base,fov:Math.max(30,base.fov-6),lensShift:.29,duel:true};
  }
  function cinematicCamera(base,attack,s,target){
-  if(!attack||!s||s.finished||s.stageStrength<=0)return base;
-  return {...base,fov:base.fov-6*s.stageStrength,
-   lensShift:.23+.06*s.stageStrength,cinematic:true};
+  if(!attack||!s||s.finished||s.zoom<=0)return base;
+  return {...base,fov:base.fov-6*s.zoom,
+   lensShift:.23+.06*s.zoom,cinematic:true};
  }
  // Screen-space ground-anchor solver. Converts exact target x positions
  // (36.5% / 63.5%) to WORLD coordinates on the common duel-depth plane.
@@ -140,15 +164,15 @@
   if(!attack||!s||s.finished||!duel)return {x:0,y:0,z:0,scale:1};
   const lerp=(a,b,t)=>a+(b-a)*t;
   if(actorId==='hero'){
-   const k=s.stageStrength;
+   const k=s.heroProgress;
    const touch=.24*s.advance*k;
    const x=lerp(hero.x,duel.hero.x,k)+(duel.target.x-duel.hero.x)*touch;
    const z=lerp(hero.z,duel.hero.z,k);
    return {x:x-hero.x,y:0,z:z-hero.z,scale:1};
   }
   if(actorId===attack.targetId){
-   const k=s.stageStrength;
-   const out=.085*s.recoil*k;
+   const k=s.victimProgress;
+   const out=.125*s.recoil*k;
    const x=lerp(target.x,duel.target.x,k)+
     (duel.target.x-duel.hero.x)*out;
    const z=lerp(target.z,duel.target.z,k);
@@ -160,7 +184,7 @@
   const p=project({x:actor.x,y:actor.height*.8,z:actor.z},cam,aspect);
   return {valid:!!p.valid,x:(p.x+1)*50,y:(1-p.y)*50};
  }
- return Object.freeze({CARD,DURATION,REDUCED_DURATION,STAGES,ART,REFERENCE,
-  pickCard,createAttack,hasEnemyHitPortrait,sample,stageAt,poseFor,duelCamera,
+ return Object.freeze({CARD,FPS,FRAME_MS,FRAME_COUNT,TRACKS,DURATION,REDUCED_DURATION,STAGES,ART,REFERENCE,
+  pickCard,createAttack,hasEnemyHitPortrait,sample,sampleFrame,stageAt,poseFor,duelCamera,
   cinematicCamera,duelLayout,actorMotion,projectScreen});
 });
