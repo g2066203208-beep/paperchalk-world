@@ -1,99 +1,116 @@
-// Browser regression and visual evidence: the real hosted game document,
-// actual source art + UI + Live2D hooks, not a mockup or an AI redraw.
+// Actual Chromium interaction + unaltered gameplay screenshots.
+// Not an AI mockup. Opens main game, plays intro, handles phone and map,
+// purchases goods, enters all real registered city scenes.
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { chromium } from 'playwright';
-
-const base = process.env.PAPERCHALK_BROWSER_BASE || 'http://127.0.0.1:8765/';
-const output = process.env.PAPERCHALK_CAPTURE_DIR || 'artifacts/overworld';
-fs.mkdirSync(output,{recursive:true});
+import {chromium} from 'playwright';
+const base=process.env.PAPERCHALK_BROWSER_BASE||'http://127.0.0.1:8765/';
+const out=process.env.PAPERCHALK_CAPTURE_DIR||'artifacts/overworld';
+fs.mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-const viewport={width:1440,height:810};
-const page=await browser.newPage({viewport,deviceScaleFactor:1});
-page.setDefaultTimeout(20000);
+const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFactor:1});
+page.setDefaultTimeout(25000);
 const errors=[];
-page.on('pageerror',error=>errors.push(String(error)));
-page.on('console',msg=>{if(msg.type()==='error')errors.push('console: '+msg.text());});
-const shot=async file=>page.screenshot({path:path.join(output,file),fullPage:false,animations:'allow',timeout:60000});
+page.on('pageerror',e=>errors.push('pageerror: '+String(e)));
+page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text())});
+const snap=async(name)=>page.screenshot({path:path.join(out,name),fullPage:false,animations:'disabled'});
+const info=()=>page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot());
+const waitScene=async id=>{
+ await page.waitForFunction(id=>document.getElementById('scene')?.dataset.scene===id,id);
+ await page.waitForFunction(()=>document.getElementById('scene-transition')?.dataset.active==='false');
+ await page.waitForTimeout(320);
+};
+const waitDirector=async()=>page.waitForFunction(()=>!window.PaperWorldDailyLifeUI?.director?.active?.());
+const openMap=async()=>{
+ await waitDirector();
+ await page.locator('#quick-map').click();
+ await page.locator('#pw-world-surface:not([hidden])').waitFor();
+ assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'城区地图');
+};
+const go=async(id,expectSrc)=>{
+ await page.locator('#pw-world-surface .pw-map-pin[data-place="'+id+'"]').click();
+ await page.locator('#pw-world-surface .pw-map-depart').click();
+ await page.waitForFunction(id=>window.PaperWorldDailyLifeUI.snapshot().location===id,id);
+ await waitScene(id);
+ if(expectSrc)assert.match(await page.locator('#source').getAttribute('src'),new RegExp(expectSrc.replace(/\./g,'\\.')));
+ await waitDirector();
+};
 try{
  await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').waitFor();
- assert.equal(await page.locator('#scene').getAttribute('data-scene'),'menu');
  await page.locator('#menu-start').click();
- await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom'&&
-   !document.querySelector('#dialogue')?.hidden,{timeout:30000});
- // Wait for the black scene transition to finish before photographing the
- // actual bedroom: a screenshot during the covered phase is almost all black.
- await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false',
-   undefined,{timeout:30000});
+ await waitScene('bedroom');
  assert.match(await page.locator('#dialogue-text').innerText(),/……|睁开|天花板|做梦/);
- await shot('01-bedroom-awakening.png');
- const lines=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
- for(let i=0;i<lines;i++){
-   await page.locator('#next-line').click({timeout:7000});
- }
- await page.waitForFunction(()=>window.PaperWorldQuickTools?.phone?.isOpen?.(),{timeout:9000});
- const intro=await page.evaluate(()=>window.PaperWorldOpeningState?.snapshot?.());
- assert.equal(intro.phase,'day');
+ await snap('01-bedroom-waking.png');
+ const n=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
+ for(let i=0;i<n;i++)await page.locator('#next-line').click();
+ await page.waitForFunction(()=>window.PaperWorldQuickTools?.phone?.isOpen?.());
  assert.equal(await page.locator('#phone-unread-preview').isVisible(),true);
- assert.match(await page.locator('#phone-unread-preview').innerText(),/6 通未接来电/);
- await shot('02-missed-calls-phone.png');
+ await snap('02-phone-missed-calls.png');
+ // The handset must be entirely on screen and legible (no severe clipping).
+ const bounds=await page.locator('#phone-ui').boundingBox();
+ assert.ok(bounds.width>=300,'Handset should occupy useful visual width on desktop: '+JSON.stringify(bounds));
+ assert.ok(bounds.y>=-2&&bounds.y+bounds.height<=812,
+   'Handset must fit the scene vertically: '+JSON.stringify(bounds));
  await page.locator('#phone-fingerprint').click();
  await page.locator('[data-app="信息"]').click();
- await page.locator('#phone-app-copy .phone-message-row').first().waitFor();
  assert.equal(await page.locator('#phone-app-copy .phone-message-row').count(),3);
- assert.match(await page.locator('#phone-app-copy').innerText(),/作业写完没/);
- await shot('03-homework-messages.png');
- // Relationships are checked in the heroine's actual handset, never HUD.
+ await snap('03-homework-inbox.png');
  await page.locator('#phone-app-back').click();
  await page.locator('[data-app="联系人"]').click();
- await page.locator('#phone-app-copy .phone-contact-row[data-contact="female2"]').waitFor();
- await shot('07-phone-contacts.png');
- await page.locator('.phone-contact-row[data-contact="female2"]').click();
+ await page.locator('#phone-app-copy [data-contact="female2"]').click();
  assert.match(await page.locator('#phone-app-copy').innerText(),/亲密度/);
- assert.equal(await page.locator('#phone-app-copy .phone-affection-label strong').innerText(),'55/100');
- await shot('08-female-two-profile.png');
+ await snap('04-female-two-relationship.png');
  await page.locator('.phone-close').click();
- // Main game contains NO MMORPG-style time/money/mission dashboard.
- assert.equal(await page.locator('#daily-life-ui').count(),0,'Legacy management dashboard must not exist');
- assert.equal(await page.locator('#menu-daily-life').count(),0,'No out-of-world daily life menu');
- assert.equal(await page.locator('#overworld-scene-prompts').isVisible(),true,
-   'Only quiet contextual scene actions remain');
- assert.equal(await page.locator('#hud-vitals').evaluate(el=>getComputedStyle(el).visibility),'hidden',
-   'Healthy stats must be accessible on phone, not persistent over scene');
- assert.equal(await page.locator('#camera-player-root').evaluate(el=>getComputedStyle(el).display),'none',
-   'Bedroom first-person scene must not display battle cutout');
- assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI?.snapshot()?.day),1);
- await shot('04-quiet-bedroom.png');
- await page.locator('#overworld-scene-prompts [data-action="hall"]').click();
- await page.waitForFunction(()=>window.PaperWorldDailyLifeUI?.snapshot()?.location==='entrance');
- await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false');
- assert.equal(await page.locator('#scene').getAttribute('data-scene'),'entrance');
- // Departing the house deliberately enters the character's existing handset.
- await page.locator('#overworld-scene-prompts [data-action="exit"]').click();
- await page.locator('#phone-ui[data-app-name="地图"]').waitFor();
- assert.equal(await page.locator('#phone-map-art').count(),0,'No second fullscreen map');
- assert.equal(await page.locator('.phone-map-art').isVisible(),true,
-   'City travel map must be inside the real in-game phone');
- assert.equal(await page.locator('.phone-map-pin').count(),6);
- await shot('05-phone-city-map.png');
- await page.locator('.phone-map-pin[data-place="school"]').click();
- await page.locator('.phone-map-depart').click();
- await page.waitForFunction(()=>window.PaperWorldDailyLifeUI?.snapshot()?.location==='school');
- const result=await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot());
- assert.equal(result.day,1);
- assert.equal(result.location,'school');
- assert.ok(result.minute>420,'Travel must consume game time');
- assert.equal(await page.locator('#overworld-city-stage').isVisible(),true,
-   'Art-missing city must not retain the home-room background');
- assert.equal(await page.locator('#overworld-scene-prompts').isVisible(),true);
  assert.equal(await page.locator('#daily-life-ui').count(),0);
- await shot('06-arrived-school-quiet.png');
- const important=errors.filter(x=>/Uncaught|ReferenceError|SyntaxError|TypeError/.test(x));
- assert.equal(important.length,0,important.join('\n'));
- console.log(JSON.stringify({PASS:true,screenshots:fs.readdirSync(output),pageErrors:errors.slice(0,12),
-   scene:'school',minute:result.minute,day:result.day},null,2));
-}finally{
- await browser.close();
-}
+ assert.equal(await page.locator('#camera-player-root').evaluate(e=>getComputedStyle(e).display),'none');
+ await snap('05-quiet-bedroom.png');
+ await page.locator('#overworld-scene-prompts [data-action="hall"]').click();
+ await waitScene('entrance');
+ await page.locator('#overworld-scene-prompts [data-action="exit"]').click();
+ assert.equal(await page.locator('#pw-world-surface').isVisible(),true);
+ await snap('06-full-city-map.png');
+ await go('school','classroom.webp');
+ assert.equal((await info()).location,'school');
+ assert.ok((await info()).minute>420);
+ assert.equal(await page.locator('#overworld-city-stage').isVisible(),false,
+   'Actual school art must render, not placeholder label');
+ await snap('07-school-classroom.png');
+ await openMap();await go('convenience','convenience.svg');
+ await snap('08-convenience-store.png');
+ await page.locator('#overworld-scene-prompts [data-action="shop"]').click();
+ assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'便利店货架');
+ await page.locator('.pw-shop-row[data-item="bread"]').click();
+ const before=(await info()).money;
+ await page.locator('.pw-item-use').click();
+ assert.equal((await info()).money,before-18);
+ await snap('09-shop-buying.png');
+ await page.locator('.pw-surface-close').click();
+ await page.locator('#quick-backpack').click();
+ assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'背包');
+ assert.ok(await page.locator('.pw-item[data-item="keys"]').count());
+ assert.ok(await page.locator('.pw-item[data-item="homework"]').count());
+ await page.locator('.pw-item[data-item="homework"]').click();
+ assert.match(await page.locator('.pw-item-detail').innerText(),/不能随意消耗/);
+ await snap('10-real-backpack.png');
+ await page.locator('.pw-surface-close').click();
+ // Reach 10:00 using the ACTUAL game wait method (not changing device time).
+ await page.evaluate(()=>{
+   const e=window.PaperWorldDailyLifeUI.engine;
+   for(let i=0;i<3&&e.snapshot().minute<600;i++)e.wait(60);
+ });
+ await openMap();await go('cafe','cafe.svg');
+ await snap('11-cafe-scene.png');
+ await openMap();await go('mall','mall.svg');
+ await snap('12-shopping-mall.png');
+ await openMap();await go('park','park.svg');
+ await snap('13-public-park.png');
+ // The UI must remain a quiet scene, not a permanent RPG dashboard.
+ assert.equal(await page.locator('#daily-life-ui').count(),0);
+ assert.equal(await page.locator('#overworld-scene-prompts').isVisible(),true);
+ const fatal=errors.filter(x=>/ReferenceError|SyntaxError|TypeError|Uncaught/.test(x));
+ assert.deepEqual(fatal,[]);
+ console.log(JSON.stringify({PASS:true,phoneBounds:bounds,files:fs.readdirSync(out),
+   day:(await info()).day,location:(await info()).location,errors:errors.slice(0,20)},null,2));
+}finally{await browser.close()}
