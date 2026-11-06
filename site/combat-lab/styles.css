@@ -277,21 +277,88 @@ h1{font-size:20px;font-weight:800;letter-spacing:-.03em}h1 span{font-size:11px;c
 .dual-row{display:grid;grid-template-columns:168px minmax(0,1fr) 22px}
 .dual-board{min-width:0}
 @media(max-width:700px){.dual-header{grid-template-columns:138px repeat(10,minmax(52px,1fr)) 22px}.dual-row{grid-template-columns:138px minmax(0,1fr) 22px}}
-
-/* V1.2: one persistent ID per character across lanes, target warnings and cards.
-   Keep the existing click/drag hit areas unchanged. */
-.avatar{position:relative;overflow:visible}
-.avatar-id{position:absolute;right:-7px;bottom:-6px;min-width:23px;height:15px;padding:0 3px;display:grid;place-items:center;border-radius:5px;background:#172f38;color:#b5f4df;border:1px solid #478d82;font-size:10px;line-height:1;font-weight:900;font-variant-numeric:tabular-nums;box-shadow:0 2px 5px #0008;pointer-events:none}
-.avatar.is-foe .avatar-id{background:#472c37;border-color:#a35d69;color:#ffd4cf}
-.person-serial{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:17px;padding:0 3px;border-radius:4px;background:#244d52;color:#bbf0e0;border:1px solid #3e777d;font-size:10px;font-weight:950;font-variant-numeric:tabular-nums}
-.enemyrow .person-serial{background:#4c303b;border-color:#8b4c5c;color:#ffd3d2}
-.threat-unit-number{display:inline-block;white-space:nowrap;font-size:12px;font-weight:950;letter-spacing:0;font-variant-numeric:tabular-nums}
-.threat-source .threat-unit-number{color:#ffb2b0}.threat-victim .threat-unit-number{color:#caedff}
-.intent-target-number{font-weight:900;letter-spacing:-.03em;font-size:9px;padding-left:1px;color:#edf4ff;opacity:.95}
+/* V1.3 clean combat HUD — reduce duplicated chrome, leave the 10-tick interaction model intact. */
+:root{--ink:#eff4f8;--muted:#8b9aaa;--panel:#151c29;--stroke:#303b4c;--gold:#e6c18b}
+body{background:#0e141e;color:var(--ink);font-family:system-ui,-apple-system,'Noto Sans SC','Microsoft YaHei',sans-serif}
+.app{max-width:1460px;padding:10px 14px 22px}
+.topbar{height:45px;padding:2px 0 7px;border-bottom:1px solid #ffffff14}
+.identity{gap:8px}.brandmark{width:27px;height:27px;border-radius:8px;font-size:15px;background:#252e3c;border-color:#4a5668}
+h1{font-size:17px}.eyebrow,.offline{display:none}.top-actions button{font-size:11px;padding:5px 10px;border-radius:7px;background:transparent;border-color:#2f3c4e}
+.setup-toggle{display:inline-flex!important;align-items:center;gap:5px;min-height:27px;margin:5px 0 4px;padding:4px 10px;border-radius:8px;background:#1a2634;color:#b6c6d3;border:1px solid #324357;font-size:11px}
+.setup{display:none!important;margin:4px 0 6px;padding:10px;background:#171f2c;border:1px solid #354252;border-radius:10px}
+.setup.is-open{display:flex!important}
+.setupnote{display:none}.setup select{height:32px}.setup .switch{padding-bottom:7px}
+.statusline{margin:0;padding:0 0 5px;border:0;border-radius:0;background:none;gap:8px}
+.statusline span:first-child{font-size:11px;color:#bfcbd5;font-weight:750}.statusline span:nth-child(2){background:none;border:0;padding:0;color:#82bcb1;font-size:10px}.statusline span:last-child{display:none}
+.runbar{padding:0 0 6px;margin:0;border:0;background:none;min-height:26px;gap:5px}
+.hud-chip{min-height:23px;font-size:11px;padding:3px 7px;background:#192331;border:1px solid #2a3c4f;border-radius:6px;box-shadow:none}
+.hud-chip:nth-child(3),.hud-chip:nth-child(4),.hud-chip:nth-child(6){display:none}
+.panel-label{display:none}.workspace{display:block}.rightbar{margin-top:4px}
+.timeline-section{background:#161f2d;border:1px solid #2b3d50;border-radius:12px;padding:10px 10px 8px;margin:0 0 7px;box-shadow:none}
+.timeline-heading{margin:0 0 7px;align-items:center}.timeline-heading h2{font-size:14px;font-weight:750;letter-spacing:0;margin:0}.timeline-heading p{font-size:10px;margin:2px 0 0;color:#839bad}.timeline-tag,.legend,.timeline-summary,.threat-strip{display:none!important}
+.timeline-wrap{padding:0;overflow-x:auto;overflow-y:auto;background:#111925;border:1px solid #2a394b;border-radius:9px;max-height:none;scrollbar-color:#33495f #111b28}
+.timeline{min-width:750px}
+.dual-header{height:25px;grid-template-columns:142px repeat(10,minmax(56px,1fr)) 18px;min-height:0;margin:0;background:#172233;border-radius:0;border-bottom:1px solid #334257}
+.dual-head-label{font-size:10px;color:#a3b3c2;padding-left:8px}.dual-hour{height:25px;min-height:0;font-size:10px;color:#96a8bb;border-left:1px solid #ffffff07;letter-spacing:0}
+.dual-hour.selected{background:#324e66;color:#e9f1fa}.dual-over-head{font-size:10px}
+.dual-row,.dual-row.enemyrow,.dual-row.allyrow,.dual-row.own-row{min-height:50px;margin:0;border:0;border-bottom:1px solid #293747;border-radius:0;background:#111b29;grid-template-columns:142px minmax(0,1fr) 18px;transition:background .12s}
+.dual-row.enemyrow{background:#171b28}.dual-row.allyrow{background:#102127}.dual-row.own-row{background:#152935}.dual-row:nth-child(6){border-top:2px solid #526277}
+.dual-row:hover{background:#223343;border-color:#3d5265}
+.dual-row.threat-focus{box-shadow:inset 2px 0 #d2a281}
+.dual-person{padding:5px 7px;gap:3px;border-right:1px solid #ffffff10;position:sticky;left:0;z-index:3;background:inherit}
+.person-top{gap:6px;align-items:center}.avatar,.avatar.is-foe,.avatar.is-hero{width:29px;height:29px;flex:0 0 29px;border-radius:7px;background:#213d43;border:1px solid #40666a;color:#aee6da;font-size:11px;font-weight:850;box-shadow:none}
+.avatar.is-foe{background:#402933;border-color:#785260;color:#ffbcc2}.avatar.is-hero{background:#2a4761;border-color:#477d9c;color:#d1edff}
+.person-name{font-size:10px;font-weight:750;letter-spacing:0;max-width:95px}.self-mark{display:none}
+.person-numbers{margin-top:1px;gap:4px;font-size:11px}.person-numbers strong{font-size:11px}.person-numbers strong.predicted{font-size:12px}.health-arrow{color:#718697;font-size:11px}.vital-delta{display:none}
+.vital-track{height:3px;border-radius:4px;background:#263744}.vital-track.friendly .vital-forecast{background:#83c9b8}.vital-track.hostile .vital-forecast{background:#df7f8b}
+.dual-board{grid-template-columns:repeat(10,minmax(0,1fr));gap:2px;padding:3px 3px;align-items:center;background:none}
+.dual-tick{height:43px;gap:2px}.dual-big{height:28px;min-height:28px;border-radius:3px;border:1px solid #ffffff09;background:#ffffff05;padding:0;transition:background .12s,border-color .12s}
+.dual-big:hover{background:#284053;border-color:#6491aa}.dual-plus{font-size:14px;color:#96bed2}.timeline.choosing .dual-row.legal-target .dual-plus{opacity:.72}
+.dual-big.filled{box-shadow:none;border-radius:3px}.dual-big.attack{--cell:#bd6776}.dual-big.defense{--cell:#599fc6}.dual-big.skill{--cell:#4ca994}.dual-big.power{--cell:#9e86b8}.dual-big.finisher{--cell:#caa16a}.dual-big.system{--cell:#7c8c9f}
+.dual-big.windup{background:color-mix(in srgb,var(--cell) 23%,#1b2734);border-color:transparent;color:#cad7e1}.dual-big.active{background:color-mix(in srgb,var(--cell) 75%,#16212f);border-color:color-mix(in srgb,var(--cell) 55%,#728399);color:#fff}.dual-big.recovery{background:color-mix(in srgb,var(--cell) 16%,#16212f);border-color:transparent;color:#798c9e}
+.dual-big.locked{box-shadow:inset 0 0 0 1px #dac18d77}.dual-big.playhead{outline:1px solid #b7cce1;outline-offset:-1px}
+.dual-row.targeting.legal-target .dual-big:not(.filled){background:#183947;border-color:#2d6577}.dual-row.targeting.invalid-target{opacity:.52}
+.phase-metric,.phase-mark{font-size:12px;gap:1px}.phase-metric svg{width:12px;height:12px}.dual-small{min-height:12px;height:13px;border-radius:2px;font-size:10px;background:#ffffff06}
+.dual-small.attack{background:#633843;color:#ffccd1}.dual-small.defense{background:#294c63;color:#c2e7ff}.dual-small.skill{background:#235349;color:#b4f1d9}.dual-small.enemy-intent.active{box-shadow:none}
+.dual-small.windup{opacity:.48}.dual-small.recovery{opacity:.26}.intent-metric{font-size:10px;font-weight:750;gap:2px;line-height:12px}.intent-metric svg{width:10px;height:10px}.intent-metric small{font-size:8px;color:#fff9;font-weight:800}.intent-phase{font-size:9px}
+.incoming-flag{cursor:pointer;display:flex;align-items:center;gap:2px;max-width:100%;padding:1px 2px;border:1px solid #ae6470;border-radius:4px;background:#693743;color:#ffd7d4;box-shadow:none}
+.incoming-flag b{font-size:11px}.incoming-flag small{font-size:8px;color:#ffb5bc;font-weight:800;overflow:hidden;white-space:nowrap}.incoming-flag svg{width:11px;height:11px}
+.dual-over{font-size:9px;background:#162335;border-left:1px dashed #31465b}
+.hand-panel{margin:7px 0;padding:9px 10px;border-radius:11px;background:#161f2d;border:1px solid #2b3d50}
+.hand-heading{margin:0 0 7px}.hand-heading h2{font-size:14px}.hand-heading h2 span{font-size:11px}.hand-heading p{display:none}.small-actions{gap:4px}.small-actions button{padding:5px 9px;border-radius:7px;font-size:11px}
+.hand{min-height:105px;gap:7px;padding:2px 1px 4px}.hand-card{flex:0 0 112px;width:112px;min-width:112px;min-height:101px;border:1px solid #3d4c60;border-radius:9px;background:#202b3a;box-shadow:none}
+.hand-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px #0005}.hand-card.selected{transform:translateY(-2px);box-shadow:0 0 0 2px #d5ae79}
+.card-art{height:51px;background:color-mix(in srgb,var(--ctype) 13%,#233144)}.card-art:before{display:none}.card-symbol svg{width:25px;height:25px;filter:none}.card-impact{font-size:12px;top:6px;right:6px;padding:1px 5px;border-radius:4px}
+.card-bottom{padding:6px;gap:3px}.card-bottom strong{font-size:11px}.card-metadata{font-size:10px;gap:7px}.hand-card .phase-track{height:4px;min-height:4px}
+.controls{margin:0;padding:7px 8px;min-height:51px;border-radius:11px;background:#161f2d;border-color:#2b3d50;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+.finisher-slot{border-radius:8px;background:#242834;border-color:#584c42;min-width:0;padding:4px 7px;gap:8px}.finisher-glyph{width:29px;height:29px;border-radius:7px;background:#534235;border-color:#7c6247}.finisher-glyph svg{width:18px;height:18px}.finisher-body strong{font-size:11px}.finisher-body small{font-size:9px}.finisher-slot button{border-radius:6px;padding:6px 8px;font-size:10px}
+.control-buttons{gap:6px}.control-buttons button{min-width:95px;padding:8px 11px;font-size:11px}.control-buttons .primary{min-width:112px;background:#a8d4e1;color:#183241;box-shadow:none}
+.rightbar .info-box{border-radius:8px;padding:8px;background:#121b27}.rightbar .info-fold summary{font-size:10px;color:#768b9d}
 @media(max-width:700px){
- .avatar-id{min-width:20px;height:14px;right:-5px;bottom:-5px;font-size:9px}
- .person-serial{min-width:23px;height:15px;font-size:9px}
- .person-name{gap:3px}
- .threat-unit-number{font-size:11px}
- .intent-target-number{font-size:8px}
+ .app{padding:6px 6px 141px}.topbar{height:40px}.identity{gap:5px}h1{font-size:15px}.brandmark{width:25px;height:25px;font-size:14px}.top-actions button{font-size:10px;padding:5px 7px}
+ .setup-toggle{min-height:23px;margin:3px 0 3px;padding:3px 7px;font-size:10px}.statusline{padding-bottom:3px}.runbar{gap:4px;padding-bottom:5px}
+ .timeline-section{padding:6px;border-radius:8px}.timeline-heading{margin-bottom:5px}.timeline-heading h2{font-size:13px}.timeline-heading p{font-size:9px}
+ .timeline-wrap{max-height:calc(100dvh - 245px);padding:0}.timeline{min-width:740px}.dual-header{grid-template-columns:121px repeat(10,minmax(56px,1fr)) 18px;height:25px}.dual-row,.dual-row.enemyrow,.dual-row.allyrow,.dual-row.own-row{grid-template-columns:121px minmax(0,1fr) 18px;min-height:47px}.dual-head-label{font-size:9px;padding-left:6px}.dual-person{padding:3px 5px}.avatar{width:24px!important;height:24px!important;flex-basis:24px!important;font-size:9px!important}.person-top{gap:5px}.person-name{font-size:9px}.person-numbers strong,.person-numbers strong.predicted{font-size:10px}.vital-track{height:3px}.dual-board{padding:3px 2px}.dual-tick{height:40px}.dual-big{height:25px;min-height:25px}.dual-small{height:12px;min-height:12px}.intent-metric{font-size:9px}.intent-metric svg{width:9px;height:9px}.incoming-flag b{font-size:9px}.incoming-flag small{font-size:7px}
+ .hand-panel{max-height:133px;padding:5px 6px;background:#161f2d}.hand-heading{margin-bottom:2px}.hand-heading h2{font-size:12px}.small-actions button{padding:4px 6px;font-size:10px}.hand{height:96px;min-height:96px;gap:5px}.hand-card{width:91px;min-width:91px;flex-basis:91px;min-height:94px;height:94px}.card-art{height:42px}.card-symbol svg{width:22px;height:22px}.card-bottom{padding:4px}.card-bottom strong{font-size:10px}.card-metadata{font-size:9px}
+ .controls{grid-template-columns:1fr;padding:6px}.control-buttons{display:grid;grid-template-columns:1fr 1fr}.control-buttons .primary{grid-column:1/-1}
+}
+
+/* V1.3 polish: neutral tracks, legible intentions, reachable mobile actions. */
+.dual-row.enemyrow,.dual-row.allyrow,.dual-row.own-row{background:#151e2b}
+.dual-row.own-row{background:#1a2532}
+.dual-row.enemyrow:hover,.dual-row.allyrow:hover,.dual-row.own-row:hover{background:#203043}
+.dual-row.enemyrow .dual-person,.dual-row.allyrow .dual-person,.dual-row.own-row .dual-person{background:inherit}
+.dual-tick{height:43px}.dual-big{height:26px;min-height:26px}.dual-small{height:15px;min-height:15px}
+.intent-metric{font-size:10px}.intent-metric small{font-size:9px}
+.dual-board{gap:3px}.dual-big:not(.filled){background:#ffffff06}
+@media(max-width:700px){
+ .app{padding-bottom:222px}
+ .timeline-wrap{max-height:calc(100dvh - 270px)}
+ .dual-tick{height:42px}.dual-big{height:25px;min-height:25px}.dual-small{height:14px;min-height:14px}
+ .hand-panel{position:fixed;left:0;right:0;bottom:59px;z-index:11;max-height:125px;height:125px;border-radius:12px 12px 0 0;padding:5px 6px;margin:0;border-bottom:0;box-shadow:0 -7px 16px #0007}
+ .hand{height:94px;min-height:94px}.hand-card{height:92px;min-height:92px}
+ .controls{position:fixed;left:0;right:0;bottom:0;z-index:12;min-height:58px;height:58px;margin:0;padding:5px 6px;border-radius:0;grid-template-columns:minmax(102px,1fr) minmax(0,2fr);display:grid;gap:5px;box-shadow:0 -2px 8px #0005}
+ .finisher-slot{min-height:46px;padding:3px 5px;gap:5px;overflow:hidden}.finisher-glyph{width:23px;height:23px}.finisher-body strong{font-size:10px}.finisher-body small{font-size:8px}.finisher-slot button{font-size:0;width:26px;padding:5px;flex:none}.finisher-slot button .ui-icon{width:14px;height:14px}
+ .control-buttons{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:5px}
+ .control-buttons .primary{grid-column:auto;min-width:0}.control-buttons button{min-width:0;font-size:11px;padding:6px 4px}
 }

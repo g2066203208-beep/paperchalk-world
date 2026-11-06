@@ -1,19 +1,19 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101823"><title>时序断点 · Paperchalk 战斗 Demo V1.2</title><link rel="stylesheet" href="styles.css?v=v1.2-numbered-ui-20261106"></head>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101823"><title>时序断点 · Paperchalk 战斗 Demo V1.3</title><link rel="stylesheet" href="styles.css?v=compact-v13"></head>
 <body><main class="app" id="app">
-<header class="topbar"><div class="identity"><div class="brandmark">◈</div><div><div class="eyebrow">PAPERCHALK / COMBAT</div><h1>时序断点 <span>V1.2</span></h1></div></div><div class="top-actions"><span class="offline">● 独立实验场景</span><button id="deckButton" class="ghost">牌组</button><button id="helpButton" class="ghost">帮助</button><button id="resetButton" class="ghost">重开</button></div></header>
+<header class="topbar"><div class="identity"><div class="brandmark">◈</div><div><div class="eyebrow">PAPERCHALK / COMBAT</div><h1>时序断点 <span>V1.3</span></h1></div></div><div class="top-actions"><span class="offline">● 独立实验场景</span><button id="deckButton" class="ghost">牌组</button><button id="helpButton" class="ghost">帮助</button><button id="resetButton" class="ghost">重开</button></div></header>
 <button class="setup-toggle" id="setupToggle" type="button" aria-expanded="false">⚙ 战斗配置</button><div class="setup"><label>操作角色<select id="classSelect"></select></label><label>卡组流派<select id="styleSelect"></select></label><label>战斗关卡<select id="encounterSelect"></select></label><label class="switch"><input type="checkbox" id="teamCheckbox"> 3名NPC队友</label><button class="secondary" id="createButton">应用配置</button><span class="setupnote">所有卡牌和敌人使用同一条10格时间轴 · 本页不改动主游戏</span></div>
 <div class="statusline"><span id="turnStatus">第 1 轮 · 游戏内 00:00–00:10</span><span id="phaseStatus">规划阶段 · 世界暂停</span><span id="hintStatus">选手牌 → 直接点击敌人/队友轨道的时间格</span></div>
 <div class="runbar" id="runStatus"></div>
 <div class="workspace"><section class="battle-area">
-<div class="panel-label"><span>战斗规划</span><span id="combatInfo">10 格同步执行</span></div>
 
-<div class="timeline-section"><div class="timeline-heading"><div><h2>战术时间轴 <span class="timeline-tag">LIVE FORECAST</span></h2><p>将卡牌放进目标轨道 · 下层展示目标行动</p></div><div class="legend"><b class="leg attack" title="攻击">⚔</b><b class="leg defense" title="防御">⬡</b><b class="leg skill" title="技能">✧</b><b class="leg finisher" title="绝杀">✦</b></div></div>
+
+<div class="timeline-section"><div class="timeline-heading"><div><h2>时间轴</h2><p>上轨放牌 · 下轨行动 · 点击受击提示快速护卫</p></div><div class="legend"><b class="leg attack" title="攻击">⚔</b><b class="leg defense" title="防御">⬡</b><b class="leg skill" title="技能">✧</b><b class="leg finisher" title="绝杀">✦</b></div></div>
 <div id="threatStrip" class="threat-strip" aria-label="敌人攻击目标及一键防御"></div><div id="timelineWrap" class="timeline-wrap"><div id="timeline" class="timeline"></div></div>
-<div class="timeline-summary"><span><i class="hint-dot own"></i> 大轨 · 你的卡牌</span><span><i class="hint-dot other"></i> 小轨 · 角色行动</span><span>浅色前摇 / 亮色生效 / 深色后摇</span></div>
+
 </div>
 <div class="hand-panel"><div class="hand-heading"><div><h2>手牌 <span id="handCounter"></span></h2><p>选择卡牌 → 点击目标与时间</p></div><div class="small-actions"><button id="shuffleButton" class="secondary">洗牌</button><button id="removeActionButton" class="ghost" disabled>取下</button><button id="undoButton" class="ghost">撤销</button></div></div><div id="hand" class="hand"></div></div>
 <div class="controls"><div id="finisherSlot" class="finisher-slot"></div><div class="control-buttons"><button id="autoplanButton" class="secondary">自动排程</button><button id="commitButton" class="primary">确认行动</button></div></div>
 </section><aside class="rightbar"><details class="info-box info-fold"><summary>详细战况、行动说明与战斗记录（可展开）</summary><div id="heroStatus"></div><div id="enemyIntents"></div><div id="combatLog" class="combat-log" aria-live="polite"></div></details><div id="forecastOutput" hidden></div></aside></div>
 <div class="overlay hidden" id="modal" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2 id="modalTitle">帮助</h2><button id="closeModal" class="ghost">✕</button></div><div id="modalBody"></div></div></div>
 <div id="toast" class="toast" role="status"></div></main>
-<script src="engine.js?v=v1.2-numbered-ui-20261106"></script><script src="campaign.js?v=v1.2-numbered-ui-20261106"></script><script src="ui.js?v=v1.2-numbered-ui-20261106"></script></body></html>
+<script src="engine.js"></script><script src="campaign.js"></script><script src="ui.js?v=compact-v13"></script></body></html>
