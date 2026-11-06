@@ -410,9 +410,20 @@
    // An IndexedDB scene assignment can outlive a previous DEV session.
    // A back-view battle must NEVER render another character or the front
    // portrait as the heroine while the canonical model is being reattached.
-   if(actor.id==='hero'&&(
-     runtime.img.dataset.characterId!=='protagonist'||
-     runtime.img.dataset.characterSide!=='back'))return null;
+   if(actor.id==='hero'){
+    if(runtime.img.dataset.characterId!=='protagonist'||
+       runtime.img.dataset.characterSide!=='back')return null;
+    // "ready" on a DOM image can occur BEFORE the latest genuine
+    // 2D L2D frame arrives. Do not upload the previous character's pixels.
+    if(runtime.clip?.type==='decoder'&&runtime.clip.frame<0)return null;
+    if(runtime.libraryPlayer&&(
+      runtime.libraryPlayer.disposed||
+      runtime.libraryPlayer.renderedFrames<1||
+      !['protagonist','protagonist-rig-v1','protagonist-unified-v1']
+       .includes(runtime.libraryPlayer.model?.characterId)))return null;
+    if(!runtime.clip&&!runtime.libraryPlayer&&
+       runtime.lastSource!==(runtime.img.currentSrc||runtime.img.src))return null;
+   }
    const source=runtime.clip?.type==='native'?runtime.clip.img:runtime.canvas;
    if(!source)return null;
    const w=source.videoWidth||source.naturalWidth||source.width;
