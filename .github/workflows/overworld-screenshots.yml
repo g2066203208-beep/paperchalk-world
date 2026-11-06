@@ -45,6 +45,27 @@ jobs:
         run: node --test tests/daily-life.test.cjs
       - name: Actually play and screenshot main game
         run: node tests/overworld-intro-browser.mjs
+      - name: Make review overview from real browser frames
+        if: success()
+        run: |
+          python3 - <<'PY'
+          from PIL import Image,ImageDraw,ImageFont
+          from pathlib import Path
+          shots=sorted(Path('artifacts/overworld').glob('[0-9][0-9]-*.png'))
+          assert len(shots)==6, f'Expected six real browser screens, got {shots}'
+          labels=['01 WAKING','02 MISSED CALLS','03 HOMEWORK MESSAGES','04 DAILY LIFE','05 CITY MAP','06 SCHOOL']
+          w,h=690,388
+          board=Image.new('RGB',(2*w+54,3*(h+46)+20),'#161b22')
+          draw=ImageDraw.Draw(board)
+          try: font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',17)
+          except OSError: font=ImageFont.load_default()
+          for i,shot in enumerate(shots):
+              im=Image.open(shot).convert('RGB');im.thumbnail((w,h),Image.Resampling.LANCZOS)
+              x=18+(i%2)*(w+18);y=12+(i//2)*(h+46)
+              draw.text((x,y),labels[i],font=font,fill='#e7e1d8')
+              board.paste(im,(x,y+27))
+          board.save('artifacts/overworld/00-overview-contact.png',optimize=True)
+          PY
       - name: Upload unaltered browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -58,6 +79,9 @@ jobs:
         run: |
           mkdir -p docs/screenshots/overworld
           cp artifacts/overworld/*.png docs/screenshots/overworld/
+          # Text transport allows the exact real screenshot to be surfaced
+          # inline in review tools without an inaccessible binary fetch.
+          base64 -w0 artifacts/overworld/00-overview-contact.png > docs/screenshots/overworld/00-overview-contact.base64.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/screenshots/overworld/
