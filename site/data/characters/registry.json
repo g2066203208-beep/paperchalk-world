@@ -330,6 +330,59 @@
           "Do not assume she is shy or warmhearted merely from reserved visual expression"
         ]
       }
+    },
+    {
+      "id": "female-seven",
+      "recordCode": "CHAR-049",
+      "role": "character_concept_not_playable",
+      "name": null,
+      "displayLabel": "女7（姓名未定）",
+      "aliases": [
+        "女7",
+        "Female 7"
+      ],
+      "status": {
+        "visual": "outfit_direction_reference_accepted_face_weapon_revision_pending",
+        "biography": "proposed_not_approved",
+        "name": "pending",
+        "personality": "proposed_not_approved",
+        "art": "no_published_source_asset",
+        "playable": "not_implemented"
+      },
+      "assets": {
+        "front": null,
+        "back": null,
+        "combatBack": null,
+        "l2dModule": null
+      },
+      "designDocument": "docs/characters/CHAR-049_FEMALE_SEVEN_PROFILE.md",
+      "profileDocument": "docs/characters/CHAR-049.profile.json",
+      "animaPromptReference": "docs/characters/CHAR-049_FEMALE_SEVEN_ANIMA_PROMPT_TEMPLATE.md",
+      "visualCanon": {
+        "confirmed": "服装大轮廓、女7角色身份及保留该人物的决定",
+        "outerwear": "炭黑短款宽松高立领工业工装夹克",
+        "underlayer": "独立深石墨色修身上衣",
+        "skirt": "单独的交叠式修身裹裙，下有隐藏贴身短裤；不是旗袍或连衣裙",
+        "stockings": "深色过膝压缩袜",
+        "boots": "黑色中筒工业靴",
+        "originalVisualReference": "user-uploaded 2048x2048 front/back concept on 2026-11-06",
+        "originalSha256": "8e6236f36c2161cc50d5c6cd45a481bbf8eaa3f3aa10ca9e5d10465f12196a33",
+        "sourceImagePublished": false
+      },
+      "pending": [
+        "替换旧脸型与五官",
+        "替换救援斧",
+        "精修口袋、拉链、胸口标识、面料和前后对应结构",
+        "生成最终单人背面战斗立绘",
+        "真实上传原图/PSD/L2D资源"
+      ],
+      "workflowConstraints": [
+        "不覆盖既有CHAR-007或其他角色",
+        "该候选只进入人物资料库，不进入已加载游戏演员目录",
+        "不得将原始裹裙改成旗袍",
+        "正/负面提示词作为范本；旧武器只是历史描述",
+        "新脸新武器必须单独验收后再锁定"
+      ]
     }
   ]
 }
