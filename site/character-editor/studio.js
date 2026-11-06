@@ -59,7 +59,7 @@ async function resetFemale06OriginalIfRequested(){
  const id='female-06',face='front',canonical=list.get(id);
  const published=canonical?.l2dModule?.front?.rig;
  if(!canonical?.front||!published?.url||!published?.textures)
-  throw Error('女6原版模块尚未部署，未删除任何本地修改');
+  throw Error('女六唯一基础模块（原第三套）尚未部署，未删除任何本地修改');
  // Fetch AND validate all source textures before any destructive write.
  const files=await hostedParts(id,face);
  const bytes=files.get('layers.json');
@@ -115,7 +115,7 @@ async function resetFemale06OriginalIfRequested(){
   });
  }finally{paintDb.close();}
  try{localStorage.setItem('paperchalk-studio-last',JSON.stringify({id,side:face}));}catch(_){}
- message('✓ 女6旧绘画、图层、骨骼和遮挡缓存已清除；正在重新导入 GitHub 原版 PSD 部件。');
+ message('✓ 女六本地修改已清除；正在从 GitHub 加载第三套作为唯一基础 L2D。');
  return true;
 }
 const female2PsdIds=['head_reference','back_hair','legwear','footwear','neck',
@@ -238,12 +238,12 @@ const selector=$('studio-character'),direction=$('studio-side');
 const female06ResetBtn=document.createElement('button');
 female06ResetBtn.id='studio-reset-female06';female06ResetBtn.type='button';
 female06ResetBtn.hidden=true;
-female06ResetBtn.textContent='恢复女6原版';
-female06ResetBtn.title='仅清除女6在本浏览器的绘画、图层、遮挡、骨骼修改；重新载入最初上传的 PSD 原位部件，不影响其他人物';
+female06ResetBtn.textContent='重置女六基础 L2D';
+female06ResetBtn.title='仅重置女六当前基础（原第三套）的本地修改，重新载入已发布的17部件原稿；不影响其他角色';
 $('studio-save')?.after(female06ResetBtn);
 female06ResetBtn.addEventListener('click',()=>{
  if(currentId!=='female-06')return;
- if(!confirm('恢复女6原版拆分？这会清除本浏览器中女6的绘画、图层顺序、局部遮挡和骨骼调整；其他人物不受影响。'))return;
+ if(!confirm('重置女六当前基础模型（原第三套）？会清除此人物的本地修改；其他人物不受影响。'))return;
  const url=new URL(location.href);
  url.searchParams.set('character','female-06');
  url.searchParams.set('side','front');
@@ -790,6 +790,7 @@ async function loadList(){
    familyId:'char-006',variantCategory:'outfit',editorOnly:true});
  }
  const canonicalFemale2=list.get('char-002');
+ await migrateFemaleSixThirdIntoBase();
  await resetFemale06OriginalIfRequested();
  await purgeUnrequestedQaDraft().catch(e=>console.warn('Retired See-through QA cleanup:',e));
  const imported=await get('imported');
@@ -806,13 +807,17 @@ async function loadList(){
   if(existing&&!existing.l2dModule?.front?.rig)
    Object.assign(existing,record);
  }
+ // Old local imported catalogue entries must NEVER resurrect deleted outfits.
+ list.delete('female-06-second-outfit');
+ list.delete('female-06-outfit-02');
  if(canonicalFemale2)list.set('char-002',canonicalFemale2);
  let last=null;try{last=JSON.parse(localStorage.getItem('paperchalk-studio-last')||'null')}catch(e){}
  const requestedId=args.get('character')||last?.id||'protagonist';
  // Preserve historical deep links while opening the one true male-lead
  // front model instead of creating a duplicate "new outfit" project.
  const id=requestedId==='class-teacher-geography-candidate'?'char-006':
-  requestedId==='char-003-outfit-02'?'char-003':requestedId;
+  requestedId==='char-003-outfit-02'?'char-003':
+  (requestedId==='female-06-outfit-02'||requestedId==='female-06-second-outfit')?'female-06':requestedId;
  await change(list.has(id)?id:'protagonist',args.get('side')||last?.side||'front');
 }
 const decodedPristine=new Map();
@@ -1438,62 +1443,8 @@ async function convertSeethroughArchive(raw){
 // a binary ZIP in GitHub first. This is an explicit user file-picker action:
 // it creates a LOCAL second wardrobe for the existing female-06 family.
 // Never replace female-06's base PSD or the existing orange-coat third outfit.
-async function importFemaleSixSecondOutfit(zipped){
- const id='female-06-second-outfit',root=id+'/';
- const header=zipped.get(root+'module.json'),body=zipped.get(root+'front.rig.json');
- if(!header||!body||!zipped.has(root+'front.png'))
-  throw Error('女六第二套缺少完整模型信息、原立绘或独立骨骼');
- const module=JSON.parse(new TextDecoder().decode(header));
- const rig=JSON.parse(new TextDecoder().decode(body));
- const view=module?.views?.front, textures=view?.rig?.textures;
- if(module.id!==id||module.familyId!=='female-06'||module.variantCategory!=='outfit'||
-    rig.format!=='paperchalk-part-rig-v1'||rig.characterId!==id||
-    rig.face!=='front'||!textures||!rig.parts)
-  throw Error('第二套 ZIP 的人物身份或 ArtMesh 格式不正确；禁止覆盖女六基础模型');
- const ids=Object.keys(textures),ordered=rig.layerOrder;
- if(ids.length<12||ids.length>64||new Set(ids).size!==ids.length||
-    !Array.isArray(ordered)||ordered.length!==ids.length||
-    ordered.some(name=>!rig.parts[name]||!textures[name]))
-  throw Error('第二套真实图层、骨骼和渲染顺序不匹配');
- const flat=new Map(),layers=[];
- for(const name of ordered){
-   const local=textures[name],part=rig.parts[name];
-   if(!/^(?:front)\/[a-z][a-z0-9_-]*\.png$/.test(local))
-    throw Error('第二套含非法 ArtMesh 路径：'+local);
-   const bytes=zipped.get(root+local);
-   if(!bytes||bytes.length<32||bytes[0]!==137||bytes[1]!==80||
-      bytes[2]!==78||bytes[3]!==71)
-    throw Error('第二套缺失真实独立 PNG 部件：'+name);
-   layers.push({partId:name,name:part.name||name,
-     x:part.x,y:part.y,file:local,role:'psd-part',
-     locked:false,visible:true,opacity:1});
-   flat.set(local,bytes);
- }
- flat.set('layers.json',new TextEncoder().encode(JSON.stringify({
-   characterId:id,layers:{front:layers,back:[]}
- })));
- if(list.get(id)?.l2dModule?.front?.rig)
-  throw Error('该人物的正式 L2D 已在云端发布，请使用其原有资源编辑，不覆盖官方工程');
- const portrait=await fileURL(new Blob([zipped.get(root+'front.png')],{type:'image/png'}));
- const record={id,label:'女六 · 第二套（翼羽姿态）',
-   familyId:'female-06',variantCategory:'outfit',
-   front:portrait,back:'',draft:false};
- // Register this outfit as a CHILD of female-06, never as another actor.
- list.set(id,record);
- const installed=await get('imported');
- const existing=Array.isArray(installed)?installed.filter(c=>c?.id!==id):[];
- await put('imported',[...existing,record]);
- await change(id,'front');
- await importComponentFiles(flat);
- await storePartRig(rig);
- window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{
-   detail:{id,side:'front'}
- }));
- renderFamilyTree();
- updatePartStatus();
- message('✓ 女六 → 第二套：'+ids.length+
-   ' 个原位 PSD ArtMesh 和独立骨骼已导入本机工作室。原版与第三套完全保留；点击保存应用到游戏。');
-}
+// Female-six is now a SINGLE canonical L2D. Obsolete second outfits are
+// intentionally refused rather than creating a hidden local duplicate.
 async function importComponentArchive(file){
  if(!file)return;
  await switchQueue; // Do not import into a half-loaded character or direction.
@@ -1534,10 +1485,8 @@ async function importComponentArchive(file){
  // 001.psd is the SECOND female-six outfit. Its self-contained archive
  // contains authored PNGs+rig, unlike older editable-parts nested ZIPs.
  // Install it into the selected browser's wardrobe with no fake extra person.
- if(zipped.has('female-06-second-outfit/module.json')){
-   await importFemaleSixSecondOutfit(zipped);
-   return;
- }
+ if(zipped.has('female-06-second-outfit/module.json'))
+   throw Error('女六第二套已删除；女六唯一基础 L2D 是原第三套橙棕外套。');
  // A ready-to-use independent PartRig module ZIP is importable by any
  // named actor or wardrobe child. It retains its original authored bones and
  // textures; never confuse one person's module with another's actor slot.
