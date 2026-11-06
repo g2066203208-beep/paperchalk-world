@@ -1,8 +1,8 @@
-/* Paperchalk V24 combat director. Reconstructed from the user's actual
+/* Paperchalk V25 combat director. Reconstructed from the user's actual
  * 699-frame, 30fps Darkest Dungeon reference recording (Nov 6 2026).
- * Main principle: fast, decisive ONE fixed middle DUEL STAGE. Both selected actors translate
- * into two opposing, screen-space-controlled WORLD positions, share a single
- * camera, exchange poses/hit FX, then restore exact authored ground anchors.
+ * Attack choreography is performed WHILE both actors translate toward the
+ * shared middle stage. The hit happens BEFORE arrival, NOT after a center
+ * pause. Then both performers reverse to their immutable authored anchors.
  */
 (function(root,factory){
  'use strict';
@@ -14,7 +14,7 @@
  const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
  const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
  const CARD=Object.freeze({key:'slash',name:'斧柄横扫',type:'attack',damage:12,w:1,a:1,r:1});
- const DURATION=580,REDUCED_DURATION=330;
+ const DURATION=400,REDUCED_DURATION=260;
  // Reference frame markers: zoomed middle-stage entrances at frame
  // 79/178/315/416 and exits at frame 128/228/368/470.
  // These are capture timestamps, not the original game's internal tick clock.
@@ -25,13 +25,13 @@
   focus:Object.freeze({left:.365,right:.635})
  });
  const STAGES=Object.freeze([
-  Object.freeze({id:'lock',from:0,to:24}),
-  Object.freeze({id:'approach',from:24,to:114}),
-  Object.freeze({id:'windup',from:114,to:184}),
-  Object.freeze({id:'swing',from:184,to:267}),
-  Object.freeze({id:'impact',from:267,to:315}),
-  Object.freeze({id:'reaction',from:315,to:445}),
-  Object.freeze({id:'recover',from:445,to:580})
+  Object.freeze({id:'lock',from:0,to:12}),
+  Object.freeze({id:'approach',from:12,to:50}),
+  Object.freeze({id:'windup',from:50,to:80}),
+  Object.freeze({id:'swing',from:80,to:117}),
+  Object.freeze({id:'impact',from:117,to:146}),
+  Object.freeze({id:'reaction',from:146,to:211}),
+  Object.freeze({id:'recover',from:211,to:400})
  ]);
  const ART=Object.freeze({
   hero:'./assets/characters/hero-axe-attack.webp',
@@ -65,25 +65,26 @@
   const t=clamp((Number(now)-attack.startedAt)*(reduced?DURATION/REDUCED_DURATION:1),0,DURATION);
   const finished=t>=DURATION;
   const stage=finished?'done':STAGES.find(v=>t>=v.from&&t<v.to).id;
-  // Two people ARRIVE together, strike promptly, then leave together.
-  // The world and non-participant anchors never move.
-  const stageStrength=smooth((t-22)/96)*(1-smooth((t-445)/125));
-  const push=smooth((t-195)/75)*(1-smooth((t-294)/58));
-  const recoil=smooth((t-267)/26)*(1-smooth((t-394)/73));
-  const hit=t>=267;
-  const hitFlash=smooth((t-265)/7)*(1-smooth((t-280)/47))*.48;
-  const fxOpacity=smooth((t-264)/9)*(1-smooth((t-286)/62));
-  const damageOpacity=smooth((t-267)/16)*(1-smooth((t-405)/62));
+  // IMPORTANT: the attack happens DURING transit. At center arrival
+  // (~157ms), the strike and damage are ALREADY COMPLETE. No center windup,
+  // no second strike, no freeze to pose, and no delayed damage settlement.
+  const stageStrength=smooth((t-6)/151)*(1-smooth((t-181)/175));
+  // Body drive and collision precede arrival; these do NOT make another hit.
+  const push=smooth((t-60)/50)*(1-smooth((t-117)/46));
+  const recoil=smooth((t-117)/12)*(1-smooth((t-184)/72));
+  const hit=t>=117;
+  const hitFlash=smooth((t-115)/5)*(1-smooth((t-125)/27))*.48;
+  const fxOpacity=smooth((t-115)/7)*(1-smooth((t-125)/37));
+  const damageOpacity=smooth((t-117)/11)*(1-smooth((t-250)/62));
   const cut=stage==='windup'||stage==='swing'?'attacker':
    stage==='impact'||stage==='reaction'?'victim':'none';
   return {stage,elapsed:t,finished,hit,stageStrength,zoom:stageStrength,
    advance:push*(reduced?.70:1),recoil:recoil*(reduced?.70:1),
-   hitFlash,fxOpacity,damageOpacity,damageLift:smooth((t-281)/145),
+   hitFlash,fxOpacity,damageOpacity,damageLift:smooth((t-121)/120),
    shake:reduced?0:hitFlash*.06,
-   heroPose:t>=114&&t<330?1:0,
-   victimPose:t>=267&&t<438?1:0,
-   frameHold:!reduced&&t>=267&&t<287,cut,cue:''};
- }
+   heroPose:t>=50&&t<146?1:0,
+   victimPose:t>=117&&t<211?1:0,
+   frameHold:false,cut,cue:''}; }
  function stageAt(now,reduced=false){
   return sample(createAttack('enemy-1',0,{reducedMotion:reduced}),now).stage;
  }
