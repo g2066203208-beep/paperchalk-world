@@ -51,6 +51,10 @@ try{
  await page.locator('#menu-daily-life').click();
  await page.locator('#daily-life-ui:not([hidden])').waitFor();
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI?.snapshot()?.day),1);
+ assert.equal(await page.locator('#daily-life-ui .daily-action').first().innerText().then(x=>x.includes('null')),false,
+   'No internal null labels in player-facing activity list');
+ assert.equal(await page.locator('#camera-player-root').evaluate(el=>getComputedStyle(el).display),'none',
+   'First-person daytime home must not show combat back cutout');
  await shot('04-morning-daily-life.png');
  await page.locator('.daily-tab').filter({hasText:'地点'}).click();
  await page.locator('.daily-route-map').waitFor();
@@ -66,6 +70,8 @@ try{
  assert.equal(result.day,1);
  assert.equal(result.location,'school');
  assert.ok(result.minute>420);
+ assert.equal(await page.locator('#daily-city-cover').isVisible(),true,
+   'Text-only school location must cover previous room background');
  await page.locator('.daily-tab').filter({hasText:'日程'}).click();
  await shot('06-arrived-at-school.png');
  const important=errors.filter(x=>/Uncaught|ReferenceError|SyntaxError|TypeError/.test(x));
