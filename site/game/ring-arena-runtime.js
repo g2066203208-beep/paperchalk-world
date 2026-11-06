@@ -241,9 +241,10 @@
   'uniform mat4 uVP;uniform vec3 uFoot;uniform vec3 uRight;',
   'uniform vec3 uUp;uniform float uHeight;uniform float uSoleX;',
   'uniform float uSoleY;uniform float uCrownY;uniform float uWidthScale;',
-  'varying vec2 vUv;',
+  'uniform float uLean;varying vec2 vUv;',
   'void main(){float H=uHeight/max(.01,uSoleY-uCrownY);',
-  'vec3 pos=uFoot+uRight*((aUv.x-uSoleX)*H*uWidthScale)',
+  'float bodyHeight=clamp((uSoleY-aUv.y)/max(.01,uSoleY-uCrownY),0.0,1.0);',
+  'vec3 pos=uFoot+uRight*((aUv.x-uSoleX)*H*uWidthScale+uLean*H*bodyHeight)',
   '+uUp*((uSoleY-aUv.y)*H);',
   'vUv=aUv;gl_Position=uVP*vec4(pos,1.0);}'
  ].join('\n');
@@ -399,18 +400,21 @@
   const enemyHitArt=hud.querySelector('[data-action-enemy]');
   const actionAssets=[heroActionArt,enemyHitArt];
   const targetButtons=[...hud.querySelectorAll('[data-director-enemy]')];
-  // Normal-eye-height three-quarter back pose is the default. The old V17
-  // low-angle 3/4 sprite is retained behind heroPose=3q for comparison;
-  // heroPose=original restores the untouched original animated L2D.
+  // User-approved FEMALE 07 rear battle cutout is the DEFAULT leading
+  // silhouette of the fixed-left, New-Moon-style shoulder-close camera.
+  // Old protagonist L2D is preserved behind heroPose=original, and legacy
+  // 3q/level camera studies stay available but never replace the new lead.
   const requestedPose=new URLSearchParams(window.location.search).get('heroPose');
-  const previewPose=requestedPose==='original'?'original':
-   requestedPose==='3q'?'3q':'level';
+  const previewPose=['original','3q','level'].includes(requestedPose)
+   ?requestedPose:'female7';
   const posePreviewEnabled=previewPose!=='original';
   const poseImage=new Image();
   poseImage.decoding='async';
-  if(posePreviewEnabled)poseImage.src=previewPose==='level'
-   ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
-   :'./assets/characters/protagonist-back-combat-3q-final.webp';
+  if(posePreviewEnabled)poseImage.src=previewPose==='female7'
+   ?'./assets/characters/female-07/back.webp'
+   :previewPose==='level'
+    ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
+    :'./assets/characters/protagonist-back-combat-3q-final.webp';
   let gl=null,world=null,portrait=null,shadow=null,floor=null,backInner=null,backOuter=null,quad=null;
   const textures=new Map();
   const actionTextures=new Map(); // separate GPU action poses at real 3D anchors
@@ -421,7 +425,7 @@
    world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface','uMode']);
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture','uHit','uDim','uBlur']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur']);
    [floor,backInner,backOuter]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -572,8 +576,8 @@
     if(!poseImage.complete||!poseImage.naturalWidth)return null;
     return {
      runtime:{
-      img:{dataset:{characterId:'protagonist-'+previewPose+'-fixed-left',characterSide:'back'}},
-      root:{dataset:{l2dEdition:'fixed-left-v17',l2dMode:'static-3q'}}
+      img:{dataset:{characterId:previewPose==='female7'?'female-07':'protagonist-'+previewPose+'-fixed-left',characterSide:'back'}},
+      root:{dataset:{l2dEdition:previewPose==='female7'?'female07-original-cutout':'fixed-left-v17',l2dMode:'static-camera-billboard'}}
      },
      source:poseImage,w:poseImage.naturalWidth,h:poseImage.naturalHeight
     };
@@ -684,7 +688,7 @@
      // The eye-level 3/4 source has a leftward ponytail silhouette.
      // Recenter its *transparent artwork inside the padded texture* rather
      // than moving the 3D camera away from the opponent eye line.
-     const portraitInsetX=previewPose==='level'?32:0;
+     const portraitInsetX=previewPose==='level'?32:0; // No offsets for female-07 original
      ctx.drawImage(desc.source,fitted.x+portraitInsetX,fitted.y,
       fitted.width,fitted.height);
     }else ctx.drawImage(desc.source,0,0,size,size);
@@ -797,11 +801,17 @@
    for(const item of ordered){
     const a=item.actor;
     const requested=director.poseFor(a.id,attack,attackSample);
-    const key=requested==='attack'?'hero-attack':
+    // This picture IS female-07. Never switch her to a completely different
+    // red-haired protagonist's axe poster during an attack. Keep the same
+    // original back-facing art on the real 3D actor and drive a grounded
+    // frame-timed lean, fast forward lunge, and the existing impact VFX.
+    const female07Actor=a.id==='hero'&&previewPose==='female7';
+    const key=requested==='attack'&&!female07Actor?'hero-attack':
      requested==='hurt-art'?'enemy-2-hit':null;
     const art=key?actionTextures.get(key):null;
     const t=art?.painted?art:textures.get(a.id);
-    drawnPoses[a.id]=art?.painted?requested:
+    drawnPoses[a.id]=female07Actor&&requested==='attack'?'female07-axe-lunge':
+     art?.painted?requested:
      requested==='hurt-original'?'hurt-original':'idle';
     if(!t?.painted)continue;
     gl.uniform3fv(portrait.uFoot,new Float32Array([a.x,a.y,a.z]));
@@ -810,6 +820,8 @@
     gl.uniform1f(portrait.uSoleY,a.soleY);
     gl.uniform1f(portrait.uCrownY,a.crownY);
     gl.uniform1f(portrait.uWidthScale,1);
+    gl.uniform1f(portrait.uLean,female07Actor&&attackSample
+     ? .095*attackSample.advance-.028*attackSample.recoil:0);
     gl.uniform1f(portrait.uHit,attack&&a.id===attack.targetId&&attackSample?
      attackSample.hitFlash:0);
     const duelPerformer=!!attack&&(a.id==='hero'||a.id===attack.targetId);
@@ -910,7 +922,7 @@
     const ready=all.filter(a=>textures.get(a.id).painted).length;
     status.textContent=(mode==='outer'?'外圈':'内圈')+
      ' · 固定左机位 · 人物 '+ready+'/'+all.length+
-     (posePreviewEnabled?' · 主角3/4 平视':' · 原版动态');
+     (previewPose==='female7'?' · 女七背面持斧':' · '+(posePreviewEnabled?'旧版3/4 平视':'原版动态'));
     canvas.dataset.l2dReady=String(ready);
     canvas.dataset.renderedFrames=String(frames);
    }
