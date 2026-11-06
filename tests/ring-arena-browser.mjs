@@ -273,6 +273,28 @@ try{
   el=>getComputedStyle(el).display),'none',
   'hero attack should NOT be a DOM poster');
  assert.deepEqual(qaErrors,[]);
+ // The opt-in frame-inspector must scrub REAL WebGL, not an image mock.
+ await qa.goto(origin+'/index.html?scene=ring-arena&directorQA=1&frameInspector=1',
+  {waitUntil:'domcontentloaded',timeout:50000});
+ await qa.waitForSelector('#ring-frame-inspector #fi-seek',{timeout:120000});
+ await qa.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.l2dReady===5,
+  null,{timeout:120000});
+ const scrub=async i=>qa.locator('#fi-seek').evaluate((el,frame)=>{
+  el.value=String(frame);
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+ },i);
+ await scrub(3);
+ assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.enemyHP['enemy-2'])),36,
+  'inspector frame 3 is still before impact');
+ await scrub(4);
+ assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.enemyHP['enemy-2'])),24,
+  'inspector frame 4 settles damage');
+ await scrub(10);
+ assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.phase)),'hold');
+ await scrub(21);
+ assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.phase)),'idle',
+  'end frame restores world view without retaining duel');
+ await qa.screenshot({path:'artifacts/ring-arena/v27-frame-inspector-real-webgl.png'});
  await qa.close();
  console.log('PASS: real WebGL eye-height 3/4 fixed-left heroine, four enemies, static GPU upload once, restored original L2D, desktop/mobile');
 }finally{
