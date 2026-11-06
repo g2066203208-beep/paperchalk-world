@@ -1,432 +1,75 @@
-/* Ring arena director V1 · clean attack-card cue, no global UI overrides. */
-#ring-arena-controls .director-deck{
+/* V24 | One real WebGL duel, not a screen-space portrait cutscene.
+   Only a compact attack selector and the victim-anchored hit FX use DOM.
+   Motion, pose, flash and damage timing all come from director.sample(). */
+#ring-arena-controls .director-deck {
  position:absolute;left:50%;bottom:70px;transform:translateX(-50%);
- display:flex;flex-direction:column;align-items:center;gap:6px;
- pointer-events:none;z-index:6
+ z-index:6;display:flex;flex-direction:column;align-items:center;gap:5px;
+ pointer-events:none
 }
-#ring-arena-controls .director-card{
- position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
- width:122px;min-height:142px;border:1px solid #c57784;
- border-radius:13px 13px 9px 9px;
- background:linear-gradient(154deg,rgba(79,31,43,.96),rgba(16,17,24,.96) 65%);
- box-shadow:0 12px 34px #020509a8,inset 0 1px 0 #f1b7bd55,0 0 24px #b8536440;
- cursor:pointer;pointer-events:auto;color:#fff4ee;isolation:isolate;
- transition:transform .2s ease,border-color .2s ease,filter .2s ease;
- overflow:hidden;touch-action:manipulation
-}
-#ring-arena-controls .director-card:before{
- content:'';position:absolute;inset:5px;border:1px solid rgba(244,174,170,.17);
- border-radius:10px 10px 6px 6px;pointer-events:none
+#ring-arena-controls .director-card {
+ pointer-events:auto;touch-action:manipulation;cursor:pointer;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+ width:112px;min-height:116px;padding:8px 7px;
+ background:linear-gradient(150deg,#361b26ed,#10151af4)!important;
+ border:1px solid #a46772!important;border-radius:9px!important;
+ box-shadow:0 7px 22px #0009,inset 0 0 0 1px #ffffff08;
+ color:#fce7da!important;transition:transform .10s ease,border-color .10s ease
 }
 #ring-arena-controls .director-card:hover:not(:disabled),
-#ring-arena-controls .director-card[aria-pressed=true]{
- transform:translateY(-7px);border-color:#ffd2c4;filter:brightness(1.14)
+#ring-arena-controls .director-card[aria-pressed=true] {
+ transform:translateY(-3px);border-color:#edabb1!important
+}
+#ring-arena-controls .director-card svg {
+ width:30px;height:30px;display:block;flex:none;stroke:#e6c6b6
+}
+#ring-arena-controls .director-card strong {
+ font-size:13px;font-weight:700;letter-spacing:.06em
+}
+#ring-arena-controls .director-card .director-stats {
+ color:#c6b3a9;font-size:10px;letter-spacing:0
+}
+#ring-arena-controls .director-card .director-card-type {
+ color:#be8c91;font-size:9px;letter-spacing:.16em
+}
+#ring-arena-controls .director-prompt {
+ color:#e4dfd8;white-space:nowrap;font:11px/1.4 system-ui,sans-serif;
+ text-shadow:0 2px 6px #000a
 }
 #ring-arena-controls .director-card:focus-visible,
-#ring-arena-controls .director-target:focus-visible{outline:3px solid #f2d3ae;outline-offset:3px}
-#ring-arena-controls .director-card:disabled{opacity:.44}
-#ring-arena-controls .director-card svg{height:40px;width:40px;color:#ffe2d1;filter:drop-shadow(0 0 7px #e9838d70);z-index:1}
-#ring-arena-controls .director-card strong{font-size:15px;font-weight:750;letter-spacing:.06em;z-index:1}
-#ring-arena-controls .director-card .director-stats{font-size:11px;color:#efbdaf;z-index:1;letter-spacing:.04em}
-#ring-arena-controls .director-card .director-card-type{font-size:9px;letter-spacing:.23em;color:#a98086;z-index:1}
-#ring-arena-controls .director-prompt{color:#d1dfda;text-shadow:0 1px 6px #000;
- font-size:11px;white-space:nowrap;background:#091312bd;border-radius:10px;padding:2px 10px}
-#ring-arena-controls .director-targets{position:absolute;inset:0;pointer-events:none;z-index:7}
-#ring-arena-controls .director-target{
- position:absolute;transform:translate(-50%,-100%);pointer-events:auto;
- display:flex;align-items:center;gap:7px;padding:6px 9px!important;
- color:#fff!important;font-weight:750!important;letter-spacing:.02em;
- background:#310c1de5!important;border:1px solid #ff8496!important;
- border-radius:25px!important;box-shadow:0 0 0 4px #a9273536,0 5px 19px #000a;
- white-space:nowrap;min-height:34px!important;touch-action:manipulation
+#ring-arena-controls .director-target:focus-visible {
+ outline:2px solid #ffceb3;outline-offset:3px
 }
-#ring-arena-controls .director-target .director-num{
- display:grid;place-items:center;background:#f093a0;color:#280a17;border-radius:50%;
- width:22px;height:22px;font-size:12px;font-weight:900
-}
-#ring-arena-controls .director-target[hidden],#ring-arena-controls .director-targets[hidden],
-#ring-arena-controls .director-fx[hidden]{display:none!important}
-#ring-arena-controls .director-hp{
- position:absolute;top:70px;right:14px;display:none;gap:6px;align-items:center;
- padding:6px 10px;background:#091317be;color:#efc6c4;font:600 11px/1.3 system-ui
-}
-#ring-arena-controls .director-cinematic{
- position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;
- --impact-x:55%;--impact-y:48%;
-}
-#ring-arena-controls .director-cinematic[hidden]{display:none!important}
-#ring-arena-controls .director-cue{
- position:absolute;top:10%;left:50%;transform:translateX(-50%);
- color:#fff0e3;padding:7px 18px;font-size:17px;font-weight:900;letter-spacing:.25em;
- text-shadow:0 2px 12px #000,0 0 18px #e2607e70;
- border-top:1px solid #ffa5aa50;border-bottom:1px solid #ffa5aa50;
- background:linear-gradient(90deg,transparent,#260b13c9,transparent);
- opacity:0;transition:opacity .11s ease;white-space:nowrap
-}
-#ring-arena-controls .director-cinematic[data-phase=windup] .director-cue,
-#ring-arena-controls .director-cinematic[data-phase=swing] .director-cue,
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-cue{opacity:1}
-#ring-arena-controls .director-impact{
- position:absolute;left:var(--impact-x);top:var(--impact-y);
- transform:translate(-50%,-50%);width:190px;height:190px;
- opacity:0;filter:drop-shadow(0 0 12px #ff647a);
-}
-#ring-arena-controls .director-impact svg{width:100%;height:100%;overflow:visible}
-#ring-arena-controls .director-cinematic[data-phase=swing] .director-impact{
- opacity:.88;animation:director-slice .27s ease-out both
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-impact{
- opacity:1;animation:director-flash .14s ease-out both
-}
-#ring-arena-controls .director-damage{
- position:absolute;left:var(--impact-x);top:calc(var(--impact-y) - 73px);
- transform:translate(-50%,-50%);font-size:44px;font-style:italic;
- color:#ffe2cf;font-weight:950;letter-spacing:-.06em;
- text-shadow:-2px 3px 0 #662b3c,0 0 21px #fd5977b5;opacity:0
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-damage,
-#ring-arena-controls .director-cinematic[data-phase=recover] .director-damage{
- opacity:1;animation:director-damage-rise .43s ease-out both
-}
-#ring-arena-controls .director-hit-vignette{
- position:absolute;inset:0;opacity:0;pointer-events:none;
- box-shadow:inset 0 0 120px 35px #b334464a
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-hit-vignette{opacity:1}
-@keyframes director-slice{from{transform:translate(-70%,-100%) rotate(-22deg) scale(.48)}to{transform:translate(-50%,-50%) rotate(4deg) scale(1.1)}}
-@keyframes director-flash{from{transform:translate(-50%,-50%) scale(.7)}to{transform:translate(-50%,-50%) scale(1.12)}}
-@keyframes director-damage-rise{from{transform:translate(-50%,-10%) scale(.7)}
- to{transform:translate(-50%,-80%) scale(1)}}
-@media(max-width:690px){
- #ring-arena-controls .director-deck{bottom:50px;left:51%;gap:2px}
- #ring-arena-controls .director-card{width:84px;min-height:93px;padding:4px!important}
- #ring-arena-controls .director-card svg{width:25px;height:25px}
- #ring-arena-controls .director-card strong{font-size:11px}
- #ring-arena-controls .director-card .director-stats{font-size:9px}
- #ring-arena-controls .director-card .director-card-type{font-size:8px}
- #ring-arena-controls .director-prompt{font-size:10px;padding:1px 5px}
- #ring-arena-controls .director-target{font-size:11px;padding:3px 5px!important;gap:4px;min-height:28px!important}
- #ring-arena-controls .director-cue{top:12%;font-size:12px}
- #ring-arena-controls .director-impact{width:125px;height:125px}
- #ring-arena-controls .director-damage{font-size:30px}
-}
-@media(prefers-reduced-motion:reduce){
- #ring-arena-controls .director-card{transition:none}
- #ring-arena-controls .director-impact,#ring-arena-controls .director-damage{animation:none!important}
-}
-
-
-/* V20 — pose-authored cinematic cut-in: deliberate staged painting swaps.
-   Separate transparent artwork is *never* flattened into the canonical rigs. */
-#ring-arena-controls .director-cinematic{
- isolation:isolate;--attack-intensity:0;--director-progress:0
-}
-#ring-arena-controls .director-stage-dark{
- position:absolute;inset:0;z-index:0;opacity:0;
- background:
-  linear-gradient(110deg,#05050c 3%,#160a13ed 46%,#030508ed 90%),
-  radial-gradient(ellipse at 45% 56%,#a42e4c68,transparent 64%);
- transition:opacity .08s ease
-}
-#ring-arena-controls .director-cinematic[data-cut=attacker] .director-stage-dark,
-#ring-arena-controls .director-cinematic[data-cut=victim] .director-stage-dark{
- opacity:.94
-}
-#ring-arena-controls .director-action-lines{
- position:absolute;inset:-30%;z-index:1;opacity:0;
- background:repeating-linear-gradient(-22deg,transparent 0 27px,#d9446340 28px 29px,transparent 30px 75px);
- transform:translateX(-8%);pointer-events:none
-}
-#ring-arena-controls .director-cinematic[data-phase=swing] .director-action-lines{
- opacity:.8;animation:director-speed-lines .38s cubic-bezier(.05,.6,.2,1) both
-}
-#ring-arena-controls .director-action-image{
- position:absolute;z-index:2;display:block;object-fit:contain;
- object-position:center bottom;pointer-events:none;will-change:transform,opacity;
- opacity:0;visibility:hidden;
- filter:drop-shadow(9px 12px 16px #000a)
-}
-#ring-arena-controls .director-action-hero{
- height:min(111%,900px);width:min(64%,900px);left:-4%;bottom:-9%;
- transform:translate3d(-9% ,6%,0) scale(.84)
-}
-#ring-arena-controls .director-action-enemy{
- height:min(112%,900px);width:min(57%,850px);right:-3%;bottom:-10%;
- transform:translate3d(16%,0,0) scale(1.12);
- filter:drop-shadow(-13px 9px 21px #000b)
-}
-#ring-arena-controls .director-cinematic[data-cut=attacker] .director-action-hero{
- visibility:visible;opacity:1;transition:opacity .05s linear
-}
-#ring-arena-controls .director-cinematic[data-phase=windup] .director-action-hero{
- animation:director-hero-windup .51s cubic-bezier(.11,.7,.22,1) both
-}
-#ring-arena-controls .director-cinematic[data-phase=swing] .director-action-hero{
- animation:director-hero-release .38s cubic-bezier(.09,.78,.12,1) both
-}
-#ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=yes] .director-action-enemy{
- visibility:visible;opacity:1
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-action-enemy{
- animation:director-victim-freeze .16s steps(2,end) both
-}
-#ring-arena-controls .director-cinematic[data-phase=reaction] .director-action-enemy{
- animation:director-victim-recoil .54s cubic-bezier(.06,.65,.23,1) both
-}
-#ring-arena-controls .director-white-hit{
- position:absolute;z-index:8;inset:0;opacity:0;background:#fff4ee;
- pointer-events:none;mix-blend-mode:screen
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-white-hit{
- animation:director-white-hit .16s steps(2,end) both
-}
-#ring-arena-controls .director-impact{z-index:5}
-#ring-arena-controls .director-cue{z-index:9}
-#ring-arena-controls .director-hit-vignette{z-index:3}
-#ring-arena-controls .director-damage{z-index:9}
-#ring-arena-controls .director-cinematic[data-hit-portrait=yes] .director-damage{
- display:none
-}
-#ring-arena-controls .director-attack-title{
- position:absolute;z-index:9;left:4%;top:10%;
- font:900 clamp(17px,2.6vw,36px)/1.1 system-ui,sans-serif;
- writing-mode:vertical-rl;letter-spacing:.30em;color:#fff0e3;
- text-shadow:1px 1px 0 #a93651,2px 4px 16px #000e;
- border-inline-start:3px solid #f3a7b0;
- padding:8px 6px;opacity:0
-}
-#ring-arena-controls .director-cinematic[data-cut=attacker] .director-attack-title{
- opacity:1
-}
-#ring-arena-controls .director-attack-target{
- position:absolute;z-index:9;right:4%;top:11%;display:flex;
- gap:9px;align-items:center;padding:5px 12px;color:#f4d9d7;
- font:800 clamp(11px,1.2vw,15px)/1.2 system-ui,sans-serif;
- background:linear-gradient(90deg,#1b0b13bb,#35101fc8);
- border-inline-start:2px solid #e97888;
- opacity:0
-}
-#ring-arena-controls .director-cinematic[data-cut=victim] .director-attack-target{opacity:1}
-#ring-arena-controls .director-hitframe{
- position:absolute;inset:0;z-index:7;pointer-events:none;
- box-shadow:inset 0 0 0 0 #e74269;opacity:0
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-hitframe{
- animation:director-border-hit .16s steps(2,end) both
-}
-#ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=no] .director-stage-dark{
- opacity:.36
-}
-@keyframes director-hero-windup{
- 0%{transform:translate3d(-17%,12%,0) scale(.78);filter:brightness(.68) contrast(1.18)}
- 65%{transform:translate3d(-5%,2%,0) scale(1.02);filter:brightness(.85) contrast(1.1)}
- 100%{transform:translate3d(-3%,0,0) scale(1.08);filter:brightness(1.05)}
-}
-@keyframes director-hero-release{
- 0%{transform:translate3d(-4%,1%,0) scale(1.06)}
- 30%{transform:translate3d(4%,-3%,0) scale(1.14)}
- 100%{transform:translate3d(16%,-9%,0) scale(1.30)}
-}
-@keyframes director-victim-freeze{
- 0%{transform:translate3d(11%,0,0) scale(1.26);filter:brightness(2) contrast(1.5)}
- 33%{transform:translate3d(-2%,-4%,0) scale(1.28);filter:brightness(1.7)}
- 100%{transform:translate3d(4%,-2%,0) scale(1.27);filter:brightness(1.20)}
-}
-@keyframes director-victim-recoil{
- 0%{transform:translate3d(4%,-2%,0) scale(1.27)}
- 55%{transform:translate3d(18%,-1%,0) scale(1.21)}
- 100%{transform:translate3d(12%,5%,0) scale(1.17)}
-}
-@keyframes director-speed-lines{
- 0%{transform:translateX(22%);opacity:0}
- 35%{opacity:1}
- 100%{transform:translateX(-12%);opacity:.1}
-}
-@keyframes director-white-hit{
- 0%{opacity:.88}25%{opacity:.95}50%{opacity:.28}100%{opacity:0}
-}
-@keyframes director-border-hit{
- 0%,35%{opacity:.94;box-shadow:inset 0 0 0 13px #d24e76}
- 100%{opacity:0;box-shadow:inset 0 0 0 1px #d24e76}
-}
-@media(max-width:690px){
- #ring-arena-controls .director-action-hero{height:115%;width:83%;left:-18%;bottom:-9%}
- #ring-arena-controls .director-action-enemy{height:112%;width:76%;right:-15%;bottom:-8%}
- #ring-arena-controls .director-attack-title{top:6%;left:2%;font-size:14px}
- #ring-arena-controls .director-attack-target{top:7%;right:2%;font-size:10px}
- #ring-arena-controls .director-stage-dark{background:#050509ef}
-}
-@media(prefers-reduced-motion:reduce){
- #ring-arena-controls .director-action-hero,
- #ring-arena-controls .director-action-enemy,
- #ring-arena-controls .director-white-hit,
- #ring-arena-controls .director-hitframe,
- #ring-arena-controls .director-action-lines{animation:none!important}
-}
-
-/* The supplied transparent action paintings already include slash arcs.
-   Don't stack the old geometric arc on top of the new illustrated one. */
-#ring-arena-controls .director-cinematic[data-cut=attacker] .director-impact,
-#ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=yes] .director-impact{
- display:none
-}
-
-
-/* V20.1: treat the director as a cutscene, not a gameplay overlay. */
+#ring-arena-controls .director-card:disabled {opacity:.36;cursor:default}
 #ring-arena-controls.director-playing .director-deck,
 #ring-arena-controls.director-playing .bottom,
 #ring-arena-controls.director-playing .top,
-#ring-arena-controls.director-playing .status{
+#ring-arena-controls.director-playing .status {
  opacity:0;pointer-events:none
 }
-/* A short RED-WHITE impact flicker, not a near-opaque white screen. */
-#ring-arena-controls .director-white-hit{
- background:#f9d1d5;mix-blend-mode:screen
+#ring-arena-controls .director-targets {
+ position:absolute;inset:0;z-index:7;pointer-events:none
 }
-@keyframes director-white-hit{
- 0%{opacity:.36}
- 24%{opacity:.48}
- 55%{opacity:.14}
- 100%{opacity:0}
+#ring-arena-controls .director-target {
+ position:absolute;transform:translate(-50%,-100%);
+ display:flex;align-items:center;gap:6px;white-space:nowrap;
+ min-height:31px!important;padding:5px 8px!important;pointer-events:auto;
+ touch-action:manipulation;color:#fff3e6!important;font-weight:700!important;
+ border:1px solid #d88a96!important;border-radius:17px!important;
+ background:#301924ed!important;box-shadow:0 4px 12px #0009
 }
-@keyframes director-border-hit{
- 0%,35%{opacity:.85;box-shadow:inset 0 0 0 7px #d24e76}
- 100%{opacity:0;box-shadow:inset 0 0 0 1px #d24e76}
+#ring-arena-controls .director-target .director-num {
+ display:grid;place-items:center;width:21px;height:21px;flex:none;
+ border-radius:50%;background:#e4a2a4;color:#2a1720;font-weight:800
 }
-
-
-/* V20.3 screenshot composition pass, measured against actual 1280x720 WebGL
-   captures: keep axe head, victim face and painted -12 INSIDE safe frame. */
-#ring-arena-controls .director-action-hero{
- width:min(62%,780px);height:100%;left:-1.5%;bottom:-4%
+#ring-arena-controls [hidden] {display:none!important}
+/* The real sprites are already on GPU billboards at the duel anchors.
+   Never display old gigantic attacker/victim posters or a screen blackout. */
+#ring-arena-controls .director-cinematic {
+ --impact-x:55%;--impact-y:48%;
+ --fx-opacity:0;--damage-opacity:0;--damage-shift:0px;
+ position:absolute;inset:0;z-index:5;overflow:hidden;
+ background:none!important;pointer-events:none;isolation:isolate
 }
-#ring-arena-controls .director-action-enemy{
- width:min(54%,720px);height:100%;right:8%;bottom:-6%
-}
-#ring-arena-controls .director-attack-title{display:none}
-#ring-arena-controls .director-attack-target{
- top:12%;left:5%;right:auto;font-size:12px
-}
-@keyframes director-hero-windup{
- 0%{transform:translate3d(-13%,6%,0) scale(.90);filter:brightness(.7)}
- 65%{transform:translate3d(-4%,0,0) scale(1.01);filter:brightness(.9)}
- 100%{transform:translate3d(0,0,0) scale(1.05);filter:brightness(1.08)}
-}
-@keyframes director-hero-release{
- 0%{transform:translate3d(0,0,0) scale(1.04)}
- 30%{transform:translate3d(5%,-1%,0) scale(1.08)}
- 100%{transform:translate3d(10%,2%,0) scale(1.10)}
-}
-@keyframes director-victim-freeze{
- 0%{transform:translate3d(-1%,0,0) scale(1.07);filter:brightness(1.55)}
- 33%{transform:translate3d(-3%,-2%,0) scale(1.09);filter:brightness(1.35)}
- 100%{transform:translate3d(-2%,0,0) scale(1.08);filter:brightness(1.15)}
-}
-@keyframes director-victim-recoil{
- 0%{transform:translate3d(-2%,0,0) scale(1.08)}
- 55%{transform:translate3d(1%,-1%,0) scale(1.08)}
- 100%{transform:translate3d(-3%,2%,0) scale(1.04)}
-}
-@media(max-width:690px){
- #ring-arena-controls .director-action-hero{
-  width:min(85%,460px);height:100%;left:-8%;bottom:-4%
- }
- #ring-arena-controls .director-action-enemy{
-  width:min(85%,460px);height:100%;right:1%;bottom:-4%
- }
- #ring-arena-controls .director-attack-target{
-  top:8%;left:3%;right:auto;font-size:10px
- }
-}
-
-
-/* V21: match the brisk paper-cut attack language of DD1.
-   One strong pose, one hit, one recoil. No blackout, slow drift or noisy lines. */
-#ring-arena-controls .director-stage-dark{
- background:linear-gradient(90deg,#050608a8,#090911b0 50%,#040408a6);
- transition:none!important
-}
-#ring-arena-controls .director-cinematic[data-cut=attacker] .director-stage-dark,
-#ring-arena-controls .director-cinematic[data-cut=victim] .director-stage-dark{
- opacity:.65
-}
-#ring-arena-controls .director-action-lines{display:none}
-#ring-arena-controls .director-action-image{
- transition:none!important;animation-fill-mode:both!important
-}
-#ring-arena-controls .director-cinematic[data-cut=attacker] .director-action-hero,
-#ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=yes] .director-action-enemy{
- opacity:1;visibility:visible;transition:none!important
-}
-#ring-arena-controls .director-cinematic[data-phase=windup] .director-action-hero{
- animation:director-quick-anticipation .095s steps(2,end) both
-}
-#ring-arena-controls .director-cinematic[data-phase=swing] .director-action-hero{
- animation:director-quick-swing .185s cubic-bezier(.10,.98,.28,1) both
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-action-enemy{
- animation:director-quick-hit .075s steps(2,end) both
-}
-#ring-arena-controls .director-cinematic[data-phase=reaction] .director-action-enemy{
- animation:director-quick-recoil .140s ease-out both
-}
-#ring-arena-controls .director-cue{
- font-size:clamp(12px,1.4vw,17px);letter-spacing:.12em;
- padding:3px 10px;border:0;transition:none!important
-}
-#ring-arena-controls .director-attack-target{
- background:transparent;border:0;text-shadow:0 2px 9px #000
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-white-hit{
- animation:director-quick-flash .075s steps(2,end) both
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-hitframe{
- animation:director-quick-outline .075s steps(2,end) both
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-hit-vignette{opacity:.46}
-#ring-arena-controls .director-cinematic[data-phase=reaction] .director-hit-vignette{opacity:0}
-#ring-arena-controls .director-cinematic[data-phase=swing] .director-impact{
- opacity:.68;animation:director-slice .13s ease-out both
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-impact{
- opacity:.5;animation:none
-}
-@keyframes director-quick-anticipation{
- from{transform:translate3d(-5%,1%,0) scale(1.00);filter:brightness(.89)}
- to{transform:translate3d(0,0,0) scale(1.04);filter:brightness(1)}
-}
-@keyframes director-quick-swing{
- 0%{transform:translate3d(-1%,0,0) scale(1.04)}
- 23%{transform:translate3d(2%,-1%,0) scale(1.08)}
- 100%{transform:translate3d(6%,0,0) scale(1.10)}
-}
-@keyframes director-quick-hit{
- 0%{transform:translate3d(2%,-1%,0) scale(1.07);filter:brightness(1.45)}
- 100%{transform:translate3d(-1%,0,0) scale(1.06);filter:brightness(1.08)}
-}
-@keyframes director-quick-recoil{
- 0%{transform:translate3d(-2%,-1%,0) scale(1.08)}
- 100%{transform:translate3d(1%,1%,0) scale(1.04)}
-}
-@keyframes director-quick-flash{
- 0%{opacity:.45}25%{opacity:.45}50%{opacity:.11}100%{opacity:0}
-}
-@keyframes director-quick-outline{
- 0%,40%{opacity:.7;box-shadow:inset 0 0 0 6px #d24e76}
- 100%{opacity:0;box-shadow:inset 0 0 0 1px #d24e76}
-}
-@media(prefers-reduced-motion:reduce){
- #ring-arena-controls .director-action-hero,
- #ring-arena-controls .director-action-enemy,
- #ring-arena-controls .director-white-hit,
- #ring-arena-controls .director-hitframe{
-  animation:none!important
- }
-}
-
-/* V22: all attack/hit POSES render as ground-anchored 3D actor textures.
-   Old poster art, full-screen curtain, titles, speed-lines and visual fluff
-   must not appear during this attack. Only the local hit contact remains. */
 #ring-arena-controls .director-cinematic .director-action-image,
 #ring-arena-controls .director-cinematic .director-stage-dark,
 #ring-arena-controls .director-cinematic .director-action-lines,
@@ -435,56 +78,43 @@
 #ring-arena-controls .director-cinematic .director-hit-vignette,
 #ring-arena-controls .director-cinematic .director-white-hit,
 #ring-arena-controls .director-cinematic .director-hitframe,
-#ring-arena-controls .director-cinematic .director-cue{
- display:none!important;animation:none!important
+#ring-arena-controls .director-cinematic .director-cue {
+ display:none!important
 }
-#ring-arena-controls .director-cinematic{
- background:transparent!important;opacity:1!important;
- filter:none!important;pointer-events:none!important
+/* Screen-space decoration only tracks the victim's actual projected torso.
+   Sampling drives opacity/position, so late frames cannot restart an animation. */
+#ring-arena-controls .director-impact {
+ position:absolute;left:var(--impact-x);top:var(--impact-y);
+ width:clamp(65px,9vw,118px);height:clamp(65px,9vw,118px);
+ opacity:var(--fx-opacity);pointer-events:none;
+ transform:translate(-50%,-50%) rotate(-11deg);
+ filter:drop-shadow(0 0 5px #cb526888);will-change:opacity
 }
-#ring-arena-controls .director-impact{
- width:105px!important;height:105px!important;
- filter:drop-shadow(0 0 5px #a9294daa)!important;
- left:var(--impact-x);top:var(--impact-y);
+#ring-arena-controls .director-impact svg {
+ width:100%;height:100%;display:block;overflow:visible
 }
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-impact{
- display:block!important;opacity:.85!important;
- animation:director-v22-impact .065s ease-out both!important
+#ring-arena-controls .director-damage {
+ position:absolute;left:var(--impact-x);top:calc(var(--impact-y) - 31px);
+ opacity:var(--damage-opacity);pointer-events:none;
+ transform:translate(-50%,calc(-50% - var(--damage-shift)));
+ white-space:nowrap;font:800 clamp(20px,2.5vw,30px)/1 system-ui,sans-serif;
+ color:#ffecdc;text-shadow:1px 2px 0 #310e18,0 3px 12px #000c;
+ letter-spacing:-.04em;will-change:opacity,transform
 }
-#ring-arena-controls .director-cinematic[data-phase=reaction] .director-impact,
-#ring-arena-controls .director-cinematic[data-phase=windup] .director-impact,
-#ring-arena-controls .director-cinematic[data-phase=swing] .director-impact,
-#ring-arena-controls .director-cinematic[data-phase=recover] .director-impact{
- display:none!important;opacity:0!important
-}
-#ring-arena-controls .director-damage,
-#ring-arena-controls .director-cinematic[data-hit-portrait=yes] .director-damage{
- position:absolute!important;left:var(--impact-x)!important;
- top:calc(var(--impact-y) - 39px)!important;
- font:bold 27px/1 system-ui,sans-serif!important;
- color:#ffe9d7!important;
- text-shadow:0 2px 3px #200811,0 0 12px #dd506d90!important;
- opacity:0!important;display:block!important;
- pointer-events:none!important;
-}
-#ring-arena-controls .director-cinematic[data-phase=impact] .director-damage,
-#ring-arena-controls .director-cinematic[data-phase=reaction] .director-damage{
- opacity:1!important;animation:director-v22-number .115s ease-out both!important
-}
-@keyframes director-v22-impact{
- from{transform:translate(-50%,-50%) scale(.5)}
- to{transform:translate(-50%,-50%) scale(1.04)}
-}
-@keyframes director-v22-number{
- from{transform:translate(-50%,-20%) scale(.85)}
- to{transform:translate(-50%,-72%) scale(1.04)}
-}
-@media(max-width:690px){
- #ring-arena-controls .director-impact{width:72px!important;height:72px!important}
- #ring-arena-controls .director-damage{font-size:19px!important}
-}
-@media(prefers-reduced-motion:reduce){
- #ring-arena-controls .director-damage,#ring-arena-controls .director-impact{
- animation:none!important
+@media(max-width:690px) {
+ #ring-arena-controls .director-deck {bottom:49px;gap:3px}
+ #ring-arena-controls .director-card {
+  width:80px;min-height:85px;padding:4px 5px!important;gap:3px
  }
+ #ring-arena-controls .director-card svg {width:22px;height:22px}
+ #ring-arena-controls .director-card strong {font-size:11px}
+ #ring-arena-controls .director-card .director-stats {font-size:8px}
+ #ring-arena-controls .director-card .director-card-type {font-size:8px}
+ #ring-arena-controls .director-prompt {font-size:9px}
+ #ring-arena-controls .director-target {font-size:10px;min-height:28px!important}
+ #ring-arena-controls .director-impact {width:72px;height:72px}
+ #ring-arena-controls .director-damage {font-size:20px}
+}
+@media(prefers-reduced-motion:reduce) {
+ #ring-arena-controls .director-card {transition:none}
 }
