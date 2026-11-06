@@ -756,7 +756,8 @@ body.mobile-mode.virtual-landscape #view{
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
-<script src="./game/story-content.js?v=runtime-architecture-1"></script>
+<script src="./game/story-content.js?v=bedroom-wake-v1"></script>
+<script src="./game/opening-flow.js?v=bedroom-wake-v1"></script>
 <script src="./game/scene-preloader.js?v=runtime-architecture-1"></script>
 <script src="./game/frame-budget.js?v=frame-time-telemetry-20261105"></script>
 <link rel="stylesheet" href="./game/dialogue-layout.css?v=runtime-architecture-1">
@@ -783,7 +784,6 @@ body.mobile-mode.virtual-landscape #view{
       <nav id="scene-menu-main" class="scene-menu-options" aria-label="主菜单选项">
         <button id="menu-start" type="button">开始游戏</button>
         <button id="menu-continue" type="button" disabled>继续游戏</button>
-        <button id="menu-life-start" type="button">表世界 · 日常生活</button>
         <button id="menu-settings-button" type="button">设置</button>
          <button id="menu-gallery-button" type="button">场景预览</button>
          <button id="menu-ring-arena" type="button">3D 圆环战场测试</button>
@@ -1964,6 +1964,7 @@ void main(){
   window.PaperWorldUIFog=Object.freeze({refresh:syncUiEdgeFog});
   syncUiEdgeFog();
   const lines=window.PaperWorldStoryContent.classroom;
+  const wakeupLines=window.PaperWorldStoryContent.wakeup;
   const sceneDemoDialogue=window.PaperWorldStoryContent.environment;
   let activeLines=lines;
   // Scene assets/content are data; rendering, 3D tilt and black fog are shared.
@@ -1995,6 +1996,15 @@ void main(){
   const topActions=document.getElementById('top-actions');
   const continueButton=document.getElementById('menu-continue');
   const tiltButton=document.getElementById('tilt-toggle');
+  // Full release: roguelike cold-open -> first death -> bedroom morning.
+  // Current production build skips the unfinished combat sequence only.
+  const opening=window.PaperWorldOpeningFlow.create({
+    storage:(()=>{try{return window.localStorage}catch(_){return null}})(),
+    lineCount:wakeupLines.length
+  });
+  let openingEntry=null;
+  const HOME_SCENES=new Set(['bedroom','living-room','kitchen','entrance']);
+  window.PaperWorldOpeningState=Object.freeze({snapshot:()=>opening.snapshot()});
   const SAVE_KEY='paperchalk-scene-v1';
   const TILT_KEY='paperchalk-tilt-v1';
   function loadSetting(){
@@ -2006,7 +2016,7 @@ void main(){
   const scenePreloader=window.PaperWorldScenePreloader.create({
     ImageCtor:Image,maxEntries:3,timeoutMs:6500
   });
-  scenePreloader.prefetch(SCENES.classroom.image);
+  scenePreloader.prefetch(SCENES.bedroom.image);
   scenePreloader.prefetch(SCENES.menu.image);
   window.PaperWorldSceneCache=Object.freeze({inspect:()=>scenePreloader.inspect()});
   function readSave(){
@@ -2036,6 +2046,7 @@ void main(){
     aimX=0;aimY=0;currentX=0;currentY=0;
     stage.style.transform='rotateY(0deg) rotateX(0deg)';
     const isStory=def.type==='story',isMenu=def.type==='menu';
+    const wakingHere=name==='bedroom'&&openingEntry==='intro';
     // Per-scene layer contract; image files remain actor-free and unmodified.
     const hasPlayer=def.layers.player;
     const ringActive=name==='ring-arena';
@@ -2068,14 +2079,14 @@ void main(){
     if(isMenu){
       cancelAuto();if(logOpen)toggleLog();
       mainOptions.hidden=false;settingsOptions.hidden=true;galleryOptions.hidden=true;
-      continueButton.disabled=!readSave();
+      continueButton.disabled=!opening.snapshot().hasSave;
     }else{
       cancelAuto();
       menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
       sceneSwitcher.hidden=true;sceneSwitcherToggle.setAttribute('aria-expanded','false');
       if(logOpen){logOpen=false;history.hidden=true;logButton.setAttribute('aria-pressed','false')}
-      activeLines=isStory?lines:(sceneDemoDialogue[name]||[]);
-      if(!isStory)dialogueIndex=0;
+      activeLines=wakingHere?wakeupLines:(isStory?lines:(sceneDemoDialogue[name]||[]));
+      dialogueIndex=wakingHere?opening.snapshot().line:0;
       textHidden=false;
       storyFinished=activeLines.length===0;
       dialogue.hidden=storyFinished;
@@ -2143,11 +2154,28 @@ void main(){
       transitioning=false;
     }
   }
-  function beginStory(resume){
-    if(transitioning)return;
-    const save=resume?readSave():null;
-    dialogueIndex=save?save.line:0;
-    changeScene('classroom');
+  async function beginStory(resume){
+    if(transitioning)return false;
+    const life=window.PaperWorldDailyLifeUI;
+    if(!resume){
+      opening.newGame();
+      life?.engine?.reset?.();
+      window.PaperWorldTopHUD?.reset?.();
+    }else if(!opening.snapshot().hasSave)return false;
+    const current=opening.snapshot();
+    openingEntry=current.phase==='waking'?'intro':null;
+    const savedLocation=life?.snapshot()?.location;
+    const target=openingEntry==='intro'?'bedroom':
+      (HOME_SCENES.has(savedLocation)?savedLocation:'entrance');
+    const changed=await changeScene(target);
+    if(changed||stage.dataset.scene===target){
+      if(!openingEntry){
+        life?.activate?.();
+        life?.open?.('schedule');
+      }
+      return true;
+    }
+    return false;
   }
   // Daytime activities are a separately persisted game-time layer. Existing
   // story, physical clock HUD, L2D scene layers and card combat remain intact.
@@ -2156,16 +2184,9 @@ void main(){
     if(stage.dataset.scene===scene)return true;
     return changeScene(scene);
   };
-  document.getElementById('menu-life-start').addEventListener('click',async()=>{
-    const home=window.PaperWorldDailyLifeUI?.snapshot()?.location;
-    const candidate=SCENES[home]&&SCENES[home].type==='environment'?home:'bedroom';
-    const success=await changeScene(candidate);
-    if(success||stage.dataset.scene===candidate)
-      window.PaperWorldDailyLifeUI?.open('schedule');
-  });
   document.getElementById('menu-start').addEventListener('click',()=>beginStory(false));
   document.getElementById('menu-ring-arena').addEventListener('click',()=>changeScene('ring-arena'));
-  continueButton.addEventListener('click',()=>{if(readSave())beginStory(true)});
+  continueButton.addEventListener('click',()=>{if(opening.snapshot().hasSave)beginStory(true)});
   function sceneButton(id,title,onPick){
     const button=document.createElement('button');
     button.type='button';button.textContent=title;
@@ -2206,7 +2227,7 @@ void main(){
     start();
   });
   tiltButton.textContent=tiltEnabled?'场景倾斜：开启':'场景倾斜：关闭';
-  continueButton.disabled=!readSave();
+  continueButton.disabled=!opening.snapshot().hasSave;
   function cancelAuto(){
     clearTimeout(autoTimer);autoTimer=0;autoEnabled=false;
     autoButton.setAttribute('aria-pressed','false');
@@ -2223,11 +2244,19 @@ void main(){
     dialogue.hidden=true;nextLineButton.parentElement.hidden=true;
     if(logOpen){history.hidden=true;logOpen=false}
     writeSave();syncUiEdgeFog();
+    if(stage.dataset.scene==='bedroom'&&openingEntry==='intro'){
+      opening.finish();openingEntry=null;
+      window.PaperWorldDailyLifeUI?.activate?.();
+      // The original character handset is a REAL interactive object.
+      // Missed calls and homework messages are not unskippable narration text.
+      toggleQuickPanel('phone');
+    }
   }
   function advanceDialogue(){
     if(logOpen||textHidden||storyFinished)return;
     if(dialogueIndex===activeLines.length-1){finishDialogue();return}
     dialogueIndex++;renderDialogue();writeSave();
+    if(openingEntry==='intro')opening.progress(dialogueIndex);
     if(autoEnabled)scheduleAuto();
   }
   function scheduleAuto(){
@@ -2277,7 +2306,10 @@ void main(){
     menuChoices.hidden=!opening;menuButton.setAttribute('aria-expanded',String(opening));
   });
   restartButton.addEventListener('click',()=>{
-    cancelAuto();activeLines=stage.dataset.scene==='classroom'?lines:(sceneDemoDialogue[stage.dataset.scene]||[]);
+    cancelAuto();
+    if(stage.dataset.scene==='bedroom'&&openingEntry==='intro'){
+      opening.newGame();activeLines=wakeupLines;
+    }else activeLines=stage.dataset.scene==='classroom'?lines:(sceneDemoDialogue[stage.dataset.scene]||[]);
     storyFinished=activeLines.length===0;dialogueIndex=0;
     if(!storyFinished)renderDialogue();
     writeSave();
