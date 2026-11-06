@@ -787,6 +787,7 @@ body.mobile-mode.virtual-landscape #view{
         <button id="menu-settings-button" type="button">设置</button>
          <button id="menu-gallery-button" type="button">场景预览</button>
          <button id="menu-ring-arena" type="button">3D 圆环战场测试</button>
+          <button id="menu-convenience" type="button" title="进入表世界便利店打工">便利店兼职 · 表世界</button>
       </nav>
       <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
@@ -3396,5 +3397,11 @@ void main(){
 <script src="./game/l2d-ground-binding.js?v=shoulder-camera-v7"></script>
 <script src="./game/overworld-runtime.js?v=diegetic-world-v1"></script>
 
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const b=document.getElementById('menu-convenience');
+ b?.addEventListener('click',()=>window.location.assign('./convenience-store/'));
+});
+</script>
 </body>
 </html>
