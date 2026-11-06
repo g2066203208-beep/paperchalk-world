@@ -1,0 +1,129 @@
+/* Overworld daily-life module: inside original 16:9 game viewport.
+ * One readable workspace, not a new global menu or extra HUD cluster.
+ */
+#daily-life-ui[hidden],#daily-city-cover[hidden]{display:none!important}
+#novel-ui > #daily-life-ui{
+  position:absolute;z-index:7!important;left:50%;top:50%;
+  width:min(850px,81cqw);height:min(570px,79cqh);
+  transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;
+  font-family:var(--font-ui,"PaperSans",sans-serif);
+  color:#f1efea;letter-spacing:.015em;
+  background:linear-gradient(155deg,rgba(23,27,33,.975),rgba(12,14,18,.985));
+  border:1px solid rgba(219,222,218,.21);
+  border-radius:12px;
+  box-shadow:0 20px 75px #000c,0 2px 10px #0008;
+  text-shadow:none;isolation:isolate;
+}
+#daily-life-ui *{box-sizing:border-box}
+#daily-life-ui button{font:inherit;cursor:pointer;color:inherit;
+  border:0;background:transparent;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent}
+#daily-life-ui button:focus-visible{outline:2px solid #d4c8a7;outline-offset:-2px}
+#daily-life-ui button:disabled{cursor:default;opacity:.37}
+#daily-life-ui .daily-head{
+  height:76px;min-height:76px;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 22px;border-bottom:1px solid rgba(242,239,231,.13);
+  background:linear-gradient(90deg,rgba(195,176,140,.095),transparent 65%);
+}
+#daily-life-ui .daily-head small{display:block;font-size:10px;color:#d0c5b2;
+  letter-spacing:.2em;margin-bottom:4px}
+#daily-life-ui .daily-head h2{font-size:21px;font-weight:550;margin:0;letter-spacing:.045em}
+#daily-life-ui .daily-head-right{display:flex;align-items:center;gap:18px}
+#daily-life-ui .daily-calendar{font-size:14px;font-variant-numeric:tabular-nums;
+  color:#ddd5ca;white-space:nowrap}
+#daily-life-ui .daily-close{width:34px;height:34px;border-radius:7px!important;
+  font-size:27px!important;line-height:1!important;color:#cbc9c4!important}
+#daily-life-ui .daily-close:hover{background:#fff2!important;color:white!important}
+#daily-life-ui .daily-body{display:grid;grid-template-columns:132px minmax(0,1fr);
+  min-height:0;flex:1}
+#daily-life-ui .daily-tabs{padding:11px 9px;border-right:1px solid rgba(242,239,231,.1);
+  display:flex;flex-direction:column;gap:2px}
+#daily-life-ui .daily-tab{width:100%;height:42px;min-height:42px;
+  padding:0 13px!important;letter-spacing:.06em;text-align:left!important;
+  border-radius:5px!important;font-size:14px!important;color:#bfc1c4!important}
+#daily-life-ui .daily-tab[data-current="true"]{
+  background:linear-gradient(90deg,#d0ba8950,transparent)!important;
+  color:#fff!important;border-left:2px solid #d4be94!important}
+#daily-life-ui .daily-tab:not(:disabled):hover{background:#ffffff12}
+#daily-life-ui .daily-main{display:flex;flex-direction:column;min-height:0;
+  padding:13px 18px 11px;min-width:0}
+#daily-life-ui .daily-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  border-bottom:1px solid #ffffff1d;padding:0 0 12px;gap:12px}
+#daily-life-ui .daily-stat{display:flex;flex-direction:column;gap:2px}
+#daily-life-ui .daily-stat small{font-size:11px;color:#aaa9a7}
+#daily-life-ui .daily-stat strong{font-size:17px;line-height:1.25;font-weight:550;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+#daily-life-ui .daily-location{display:flex;align-items:center;gap:9px;
+  padding:10px 0 11px;color:#dad6cd;font-size:12px}
+#daily-life-ui .daily-location span:first-child{font-size:16px;color:white;font-weight:600}
+#daily-life-ui .daily-location span+span{border-left:1px solid #777;padding-left:9px}
+#daily-life-ui .daily-content{overflow-y:auto;overflow-x:hidden;flex:1;
+  scrollbar-width:thin;scrollbar-color:#6d6964 transparent;padding-right:5px}
+#daily-life-ui .daily-section-title{margin:4px 0 7px;font-size:17px;
+  font-weight:550;letter-spacing:.04em}
+#daily-life-ui .daily-section-caption{font-size:12px;line-height:1.7;
+  color:#aaa9a7;margin:0 0 10px}
+#daily-life-ui .daily-action-list{display:flex;flex-direction:column;gap:3px;margin-bottom:17px}
+#daily-life-ui .daily-action{display:flex;width:100%;align-items:center;
+  justify-content:space-between;gap:10px;padding:9px 12px!important;
+  min-height:47px;text-align:left!important;border-radius:6px!important;
+  border:1px solid #f2f0eb18!important;background:#ffffff07!important}
+#daily-life-ui .daily-action:not(:disabled):hover{
+  border-color:#d5be9385!important;background:#dcc49b17!important}
+#daily-life-ui .daily-action:active:not(:disabled){transform:translateY(1px)}
+#daily-life-ui .daily-action-left{display:flex;flex-direction:column;min-width:0;gap:3px}
+#daily-life-ui .daily-action strong{font-size:13px;font-weight:500;line-height:1.35}
+#daily-life-ui .daily-action small{font-size:11px;color:#b6b6b3;line-height:1.45}
+#daily-life-ui .daily-chevron{color:#bdb09a;font-size:19px;flex-shrink:0}
+#daily-life-ui .daily-group-title{margin:10px 0 7px;font-size:12px;color:#c7bdac;
+  font-weight:500;letter-spacing:.1em}
+#daily-life-ui .daily-tip,
+#daily-life-ui .daily-summary,
+#daily-life-ui .daily-news-stage,
+#daily-life-ui .daily-log{display:flex;gap:4px;flex-direction:column;
+  padding:9px 12px;border-bottom:1px solid #ffffff17}
+#daily-life-ui .daily-tip{color:#c5b6a0}
+#daily-life-ui .daily-line-title{font-weight:500;font-size:13px}
+#daily-life-ui .daily-line-detail{font-size:11px;color:#aaa9a7;line-height:1.65}
+#daily-life-ui .daily-inline-news{margin:7px 0 13px;color:#ded4c1;line-height:1.6;font-size:13px}
+#daily-life-ui .daily-danger{font-size:13px;color:#e1b4a3;
+  border-left:2px solid #b87966;padding:8px 12px;line-height:1.6}
+#daily-life-ui .daily-news{margin:9px 0;padding:13px 14px;
+  border:1px solid #ffffff1c;border-radius:6px;background:#ffffff07}
+#daily-life-ui .daily-news small{font-size:10px;color:#bda987;letter-spacing:.08em}
+#daily-life-ui .daily-news h4{font-size:14px;line-height:1.55;font-weight:600;margin:6px 0}
+#daily-life-ui .daily-news p{font-size:11px;color:#aeaead;line-height:1.65;margin:0}
+#daily-life-ui .daily-feedback{flex:none;min-height:22px;margin:7px 0 0;
+  font-size:11px;color:#c5c0b6;line-height:1.5}
+#daily-life-ui .daily-feedback[data-status="warning"]{color:#e6b2a6}
+#daily-life-ui .daily-feedback[data-status="success"]{color:#bfd0b4}
+#daily-life-ui .daily-reset{margin:15px 0;border-color:#bf877355!important}
+#novel-ui > #daily-city-cover{
+  position:absolute;z-index:2!important;inset:0;pointer-events:none;
+  display:grid;place-items:center;background:
+    radial-gradient(ellipse 65% 70% at 35% 50%,#434b4a4a,transparent 74%),
+    linear-gradient(150deg,#12171b,#080b0e);
+  color:#eae6e0;font-family:var(--font-ui);
+}
+#daily-city-cover .daily-city-inner{display:flex;flex-direction:column;
+  gap:9px;align-items:center;text-align:center;max-width:70%}
+#daily-city-cover small{font-size:11px;color:#aaabac;letter-spacing:.18em}
+#daily-city-cover strong{font-size:clamp(23px,4cqh,36px);font-weight:400;letter-spacing:.15em}
+#daily-city-cover span{font-size:12px;color:#959b9e}
+@container (max-height:470px){
+  #novel-ui > #daily-life-ui{height:86cqh}
+  #daily-life-ui .daily-head{height:54px;min-height:54px;padding:8px 14px}
+  #daily-life-ui .daily-head h2{font-size:17px}
+  #daily-life-ui .daily-head small{font-size:9px}
+  #daily-life-ui .daily-body{grid-template-columns:104px minmax(0,1fr)}
+  #daily-life-ui .daily-tabs{gap:0;padding:6px}
+  #daily-life-ui .daily-tab{height:32px;min-height:32px;font-size:12px!important}
+  #daily-life-ui .daily-main{padding:7px 11px}
+  #daily-life-ui .daily-action{min-height:36px;padding:6px 10px!important}
+  #daily-life-ui .daily-stat strong{font-size:14px}
+  #daily-life-ui .daily-section-title{font-size:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  #daily-life-ui .daily-action:active{transform:none!important}
+}
