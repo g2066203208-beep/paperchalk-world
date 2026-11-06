@@ -293,16 +293,63 @@ def install_inbox():
             fail(archive,f"unreadable packaged module ({exc})")
 
 
+
+def promote_female06_third_to_base(library: Path) -> None:
+    """Make the user's THIRD wardrobe the one real female-six BASE L2D.
+
+    Only the surviving immutable third ZIP is used. Its PNGs are moved, not
+    repainted, cropped, resized or recompressed. Old outfit IDs never appear
+    in the published catalog or the studio resource tree.
+    """
+    src = library / "female-06-outfit-02"
+    if not src.exists():
+        return  # Synthetic test libraries need not contain female-six.
+    base = library / "female-06"
+    old_second = library / "female-06-second-outfit"
+    if base.exists() or old_second.exists():
+        fail(library, "retired female-six base/second modules must be removed")
+    module = read_json(src / "module.json")
+    rig_path = src / "front.rig.json"
+    rig = read_json(rig_path)
+    if module.get("id") != "female-06-outfit-02":
+        fail(src, "expected original THIRD orange-coat module")
+    if rig.get("characterId") != "female-06-outfit-02":
+        fail(rig_path, "expected original THIRD separate-part rig")
+    original_parts = set(rig.get("parts", {}))
+    if not {"bottomwear", "legwear", "handwear_l", "handwear_r"} <= original_parts:
+        fail(rig_path, "third wardrobe is missing important skin/rig layers")
+    # The prior install() already binds the third outfit trousers to pelvis
+    # and independently animates both sleeves. Keep that behavior intact.
+    if rig.get("weightBindingVersion") != "third-outfit-skin-weight-v1":
+        fail(rig_path, "third wardrobe skin hierarchy was not installed")
+    # Avoid stale source characters and wardrobe category at every level.
+    module["id"] = "female-06"
+    module["familyId"] = "female-06"
+    module["variantCategory"] = "default"
+    module["label"] = "女六"
+    rig["characterId"] = "female-06"
+    rig["baseAppearanceOrigin"] = "female-06-outfit-02"
+    rig["canonicalBasePromotion"] = "third-costume-orange-coat-v1"
+    src.rename(base)
+    write_json_file(base / "module.json", module)
+    write_json_file(base / "front.rig.json", rig)
+    # No second outfit, no costume child, no old baseline.
+    if (library / "female-06-outfit-02").exists():
+        fail(library, "obsolete third-wardrobe duplicate remains")
+    print("FEMALE SIX: third orange-coat 17-ArtMesh model is the only canonical base")
+
+
+def write_json_file(path: Path, data: dict) -> None:
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def build():
-    from bind_female06_pants import restore_original_inputs
-    restore_original_inputs(LIBRARY)
     install_inbox()
-    # Never alter the canonical female-06 body. The former compiler appended
-    # shorts to its source rig and re-composited its original portrait.
-    # Restore from immutable original ZIPs above, then build WITHOUT overlays.
-    # Wardrobe-specific skin weights live only inside each outfit's own rig.
-    from bind_female06_pants import install as bind_outfit_only
-    bind_outfit_only(LIBRARY)
+    # The original first and second outfits were explicitly retired.
+    # Keep the third costume's ORIGINAL PNG pixels and source hierarchy.
+    from bind_female06_pants import install as bind_third
+    bind_third(LIBRARY)
+    promote_female06_third_to_base(LIBRARY)
     modules = []
     if LIBRARY.exists():
         for folder in sorted(LIBRARY.iterdir(),key=lambda f:f.name.lower()):
