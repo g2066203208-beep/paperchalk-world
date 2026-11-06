@@ -188,7 +188,7 @@ try{
  },null,{timeout:100000});
  const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
   window.PaperWorldGameRingArena.qaFrame(t,at),[target,ms]);
- const frameHero=await invoke('enemy-2',185);
+ const frameHero=await invoke('enemy-2',260);
  assert.equal(frameHero.phase,'swing');
  assert.equal(frameHero.applied,false);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
@@ -199,11 +199,19 @@ try{
  assert.equal((await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses.hero)),
  'attack','hero attack artwork is rendered on its world-space billboard');
+ const enter=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.deepEqual(enter.duel.actorIds,['hero','enemy-2']);
+ assert.equal(enter.duel.playedPositions.length,2);
+ assert.ok(Math.abs(enter.duel.playedPositions[0].z-
+  enter.duel.playedPositions[1].z)<.20,
+  'BOTH characters must translate to one common duel depth, not stay in queues');
+ assert.equal(enter.directorCameraTemporary,true,
+  'duel center zoom activates while remaining left-side and eye-level');
  assert.equal((await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['hero-attack'].uploads)),
  1,'hero attack art is uploaded just once');
- await qa.screenshot({path:'artifacts/ring-arena/v22-world-hero-attack.png'});
- const frameHit=await invoke('enemy-2',290);
+ await qa.screenshot({path:'artifacts/ring-arena/v23-duel-center-hero-swing.png'});
+ const frameHit=await invoke('enemy-2',365);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
@@ -216,11 +224,14 @@ try{
  assert.equal(await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses.hero),
  'attack','hit frame must show BOTH attacker and victim together');
- await qa.screenshot({path:'artifacts/ring-arena/v22-world-simultaneous-impact.png'});
- const frameRecoil=await invoke('enemy-2',375);
+ const duoFrame=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(duoFrame.duel.playedPositions.length,2);
+ assert.ok(duoFrame.camera.fov<duoFrame.cameraTarget.fov);
+ await qa.screenshot({path:'artifacts/ring-arena/v23-duel-center-simultaneous-impact.png'});
+ const frameRecoil=await invoke('enemy-2',475);
  assert.equal(frameRecoil.phase,'reaction');
- await qa.screenshot({path:'artifacts/ring-arena/v22-world-hurt-recoil.png'});
- const frameFemale=await invoke('enemy-3',375);
+ await qa.screenshot({path:'artifacts/ring-arena/v23-duel-center-enemy-recoil.png'});
+ const frameFemale=await invoke('enemy-3',475);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
  assert.equal(await qa.locator('[data-action-enemy]').evaluate(
   el=>getComputedStyle(el).display),'none',
@@ -234,7 +245,7 @@ try{
  assert.equal(await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['enemy-2-hit'].uploads),
  1,'male hurt artwork is uploaded only once');
- await qa.screenshot({path:'artifacts/ring-arena/v22-female-original-l2d-reaction.png'});
+ await qa.screenshot({path:'artifacts/ring-arena/v23-duel-center-female-original-reaction.png'});
  assert.equal(await qa.locator('.director-stage-dark').evaluate(
   el=>getComputedStyle(el).display),'none',
   'full-screen cinematic black curtain is forbidden');

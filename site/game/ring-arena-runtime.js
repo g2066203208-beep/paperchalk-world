@@ -247,10 +247,12 @@
   'vUv=aUv;gl_Position=uVP*vec4(pos,1.0);}'
  ].join('\n');
  const portraitFragment=[
-  'precision mediump float;varying vec2 vUv;uniform sampler2D uTexture;uniform float uHit;',
+  'precision mediump float;varying vec2 vUv;uniform sampler2D uTexture;',
+  'uniform float uHit;uniform float uDim;',
   'void main(){vec4 t=texture2D(uTexture,vec2(vUv.x,1.0-vUv.y));',
   'if(t.a<.025)discard;',
   'vec3 rgb=mix(t.rgb,vec3(1.0,.81,.70),clamp(uHit,0.0,1.0));',
+  'rgb*=1.0-clamp(uDim,0.0,.80);',
   'gl_FragColor=vec4(rgb,t.a);}'
  ].join('\n');
  // Lightweight ground contact: one blended elliptical quad under each
@@ -409,7 +411,7 @@
    world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface','uMode']);
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture','uHit']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture','uHit','uDim']);
    [floor,backInner,backOuter]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -423,6 +425,7 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
+  let lastDuet=null,presentedActors=[];
   let armed=false,attack=null,attackApplied=false,attackSample=null,qaTimeMs=null;
   let completedAttacks=0,lastTarget=null;
   const enemyHP=new Map([1,2,3,4].map(i=>['enemy-'+i,36]));
@@ -772,6 +775,9 @@
     gl.uniform1f(portrait.uWidthScale,1);
     gl.uniform1f(portrait.uHit,attack&&a.id===attack.targetId&&attackSample?
      attackSample.hitFlash:0);
+    const duelPerformer=!!attack&&(a.id==='hero'||a.id===attack.targetId);
+    gl.uniform1f(portrait.uDim,!duelPerformer&&attackSample?
+     .65*attackSample.stageStrength:0);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -823,12 +829,18 @@
    for(const a of all)updateTexture(a,now);
    uploadActionImage('hero-attack',heroActionArt);
    uploadActionImage('enemy-2-hit',enemyHitArt);
-   // Only copies of the actors move; canonical ground anchors are immutable.
-   const presented=attack?all.map(a=>{
-    const motion=director.actorMotion(a.id,attack,attackSample,all[0],target);
+   // V23 shared duel center: selected attacker/target move together from
+   // their original queue to central opposing ground points (36.5% / 63.5%).
+   // Other actors stay at original anchors, subdued rather than removed.
+   const duet=attack&&attackSample&&target?
+    director.duelLayout(director.duelCamera(base),project,w/h,all[0],target):null;
+   lastDuet=duet;
+   const presented=duet?all.map(a=>{
+    const motion=director.actorMotion(a.id,attack,attackSample,all[0],target,duet);
     return {...a,x:a.x+motion.x,y:a.y+motion.y,
      z:a.z+motion.z,height:a.height*motion.scale};
    }):all;
+   presentedActors=presented;
    // BOTH participants stay visible at once, sharing ONE 3D camera.
    // Render a pose swap at the same anchor rather than a fullscreen cut.
    drawnPoses={};
@@ -882,6 +894,8 @@
     targetId:attack?.targetId||null,applied:attackApplied,
     completedAttacks,lastTarget,enemyHP:Object.fromEntries(enemyHP)},
    directorCameraTemporary:!!lens?.cinematic,
+   duel:lastDuet?{...lastDuet,playedPositions:presentedActors.filter(a=>
+    lastDuet.actorIds.includes(a.id)).map(a=>({id:a.id,x:a.x,z:a.z,height:a.height}))}:null,
    directorArt:{hero:{
      loaded:heroActionArt.complete&&heroActionArt.naturalWidth>0,
      src:heroActionArt.getAttribute('src')
