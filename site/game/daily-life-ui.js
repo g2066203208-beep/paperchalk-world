@@ -81,11 +81,36 @@
     cityCover.querySelector('strong').textContent=Core.LOCATIONS[s.location].label;
   }
   function renderSchedule(s){
-    sectionTitle('今日安排','行动消耗游戏时间、精力与物资。没有离线扣除，也没有随机金钱奖励。');
+    sectionTitle('今日安排','游戏日历会随活动推进，学校与商店有各自的开放时间。');
+    if(s.day===1&&!s.homework.handedIn){
+      const quest=h('div','daily-morning-task');
+      quest.appendChild(h('strong','','今天要交的作业'));
+      const detail=s.homework.status==='finished'?
+        '最后一页写好了。记得第一节课前交给老师。':
+        '女二早上连续打来六通电话：作业今天要交。到学校可以补最后一页。';
+      quest.appendChild(h('p','',detail));
+      quest.appendChild(h('small','','今日09:00之前交作业 · 学校07:00开放'));
+      content.appendChild(quest);
+    }
     const box=h('div','daily-action-list');
     const today=s.calendar.weekdayLabel;
     line(box,'daily-summary','第'+s.day+'天 · '+today,
       '当前'+Core.LOCATIONS[s.location].label+'，'+s.calendar.time);
+    if(s.day===1&&!s.homework.handedIn){
+      if(['bedroom','living-room'].includes(s.location)&&!s.homework.inspected)
+        button(box,'翻看书包','5分钟 · 确认作业有没有写完',
+          ()=>apply(()=>state.inspectHomework()));
+      if(s.location==='school'){
+        if(s.homework.status!=='finished')
+          button(box,'和女二一起补作业','25分钟 · 第一节课前完成',
+            ()=>apply(()=>state.finishHomework()));
+        else button(box,'交作业','5分钟 · 今日09:00前',
+          ()=>apply(()=>state.submitHomework()));
+      }
+    }
+    if(s.location==='entrance')
+      button(box,'出门 · 打开城市地图','选择学校、商场、便利店或打工地点',
+        ()=>{tab='places';draw();});
     const here=Object.entries(Core.ACTIONS).filter(([,a])=>a.location===s.location);
     for(const [id,a] of here){
       const used=a.limit&&(s.dailyUses[id]||0)>=a.limit;
@@ -115,7 +140,29 @@
       content.appendChild(h('p','daily-danger','22:00召回已经触发。正式夜间出入场尚未接入本生活模块，不能用跳过按钮绕开。'));
   }
   function renderPlaces(s){
-    sectionTitle('城市与家庭','家中地点沿用已绘制场景；城市地点先提供文字交互，不伪造背景美术。');
+    sectionTitle('城市地图','点击地点移动并消耗游戏时间。未制作的城市场景暂采用文字交互。');
+    const map=h('div','daily-route-map');
+    const paths=h('div','daily-map-lines');
+    map.appendChild(paths);
+    const mapLocations=['bedroom','school','convenience','cafe','mall','park'];
+    for(const id of mapLocations){
+      const loc=Core.LOCATIONS[id];
+      const isWeekend=[0,6].includes(s.calendar.weekday);
+      const open=(!loc.weekdaysOnly||!isWeekend)&&s.minute>=loc.open&&s.minute<loc.close;
+      const current=s.location===id;
+      const node=h('button','daily-map-node');
+      node.type='button';node.dataset.place=id;
+      node.dataset.current=String(current);
+      node.textContent=loc.label;
+      node.title=current?'当前位置':loc.label+' · 路程约'+loc.travel+'分钟';
+      node.disabled=current||!open;
+      if(!node.disabled)node.addEventListener('click',async()=>{
+        const result=apply(()=>state.travel(id));if(result.ok)await afterTravel(id);
+      });
+      map.appendChild(node);
+    }
+    content.appendChild(map);
+    content.appendChild(h('p','daily-section-caption','地图是城区交通示意图，尚非最终城市实景地图。'));
     for(const group of ['家','城区']){
       const list=h('div','daily-action-list');
       content.appendChild(h('h4','daily-group-title',group));
@@ -224,9 +271,14 @@
     panel.dataset.recalled=String(s.nightStatus==='recalled');
     refreshCity(s);
   }
-  function open(requested){
+  function activate(){
     if(root.hidden)return false;
-    mode=true;
+    mode=true;refreshCity(state.snapshot());
+    global.PaperWorldTopHUD?.refreshClock?.();
+    return true;
+  }
+  function open(requested){
+    if(!activate())return false;
     if(requested&&labels[requested])tab=requested;
     global.PaperWorldQuickTools?.close();
     const menu=document.getElementById('menu-choices');
@@ -258,7 +310,14 @@
     }
     open('schedule');
   });
+  const phone=global.PaperWorldQuickTools?.phone;
+  phone?.configure?.({
+    getNarrative:()=>state.phoneInbox(),
+    onPhoneRead:category=>state.markPhoneRead(category),
+    onPhoneReply:choice=>state.replyHomework(choice)
+  });
   const unsubscribe=state.subscribe(()=>{
+    phone?.refresh?.();
     if(!panel.hidden)draw();else refreshCity(state.snapshot());
     if(mode)global.PaperWorldTopHUD?.refreshClock?.();
   });
@@ -279,7 +338,8 @@
     }
   }
   global.PaperWorldDailyLifeUI=Object.freeze({
-    open,close,onGameScene,isOpen:()=>!panel.hidden,isModeActive:()=>mode,snapshot:()=>state.snapshot(),
+    open,close,activate,onGameScene,phoneSnapshot:()=>state.phoneInbox(),
+    isOpen:()=>!panel.hidden,isModeActive:()=>mode,snapshot:()=>state.snapshot(),
     engine:state,refresh:draw,dispose:()=>{unsubscribe();observer.disconnect()}
   });
 })(window);
