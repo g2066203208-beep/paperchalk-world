@@ -23,6 +23,10 @@ try{
  await page.locator('#menu-start').click();
  await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom'&&
    !document.querySelector('#dialogue')?.hidden,{timeout:30000});
+ // Wait for the black scene transition to finish before photographing the
+ // actual bedroom: a screenshot during the covered phase is almost all black.
+ await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false',
+   undefined,{timeout:30000});
  assert.match(await page.locator('#dialogue-text').innerText(),/……|睁开|天花板|做梦/);
  await shot('01-bedroom-awakening.png');
  const lines=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
