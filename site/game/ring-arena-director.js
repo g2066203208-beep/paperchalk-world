@@ -91,11 +91,12 @@
  }
  function duelCamera(base){
   // No orbit or pitch: a fast cropped view of the SAME left-side camera.
-  return {...base,fov:Math.max(30,base.fov-12),duel:true};
+  return {...base,fov:Math.max(30,base.fov-12),lensShift:.32,duel:true};
  }
  function cinematicCamera(base,attack,s,target){
   if(!attack||!s||s.finished||s.stageStrength<=0)return base;
-  return {...base,fov:base.fov-12*s.stageStrength,cinematic:true};
+  return {...base,fov:base.fov-12*s.stageStrength,
+   lensShift:.23+.09*s.stageStrength,cinematic:true};
  }
  // Screen-space ground-anchor solver. Converts exact target x positions
  // (36.5% / 63.5%) to WORLD coordinates on the common duel-depth plane.

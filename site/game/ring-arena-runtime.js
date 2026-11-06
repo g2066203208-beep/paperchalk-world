@@ -133,7 +133,8 @@
   // Off-axis lens: raise the composition without pitching the actual optical axis.
   // The EXACT same matrix is used by WebGL and 3D occlusion/safe-zone tests.
   const vp=multiply(perspective(responsiveFov(cam.fov||SPEC.verticalFov,aspect),aspect),lookAt(cam.eye,cam.focus));
-  for(const i of [0,4,8,12])vp[i+1]+=VERTICAL_LENS_SHIFT*vp[i+3];
+  const lensShift=Number.isFinite(cam.lensShift)?cam.lensShift:VERTICAL_LENS_SHIFT;
+   for(const i of [0,4,8,12])vp[i+1]+=lensShift*vp[i+3];
   return vp;
  }
  function project(p,cam,aspect=16/9){
