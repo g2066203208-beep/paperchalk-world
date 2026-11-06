@@ -1,9 +1,9 @@
-/* Paperchalk V28: 30fps performer poses LOCKED until return to original position.
- * Original Darkest Dungeon footage is not available in this repo: this is a
- * measured 30fps game choreography draft, NOT a fake source-video transcription.
- * Attack choreography is performed WHILE both actors translate toward the
- * shared middle stage. The hit happens BEFORE arrival, NOT after a center
- * pause. Then both performers reverse to their immutable authored anchors.
+/* Paperchalk V29: reviewed against the USER-PROVIDED actual 699-frame
+ * Darkest Dungeon pre-alpha recording (1272x702, 30fps, 23.3s).
+ * The frame data below records source-visible events, NOT engine internals.
+ * Keep the attack/hurt illustrations during the entire central duel AND
+ * retreat; restore normal L2D only AFTER reaching the original anchors.
+ * Frame-accurate camera/pacing is adapted to our art/geometry, not pixel-copy.
  */
 (function(root,factory){
  'use strict';
@@ -15,50 +15,79 @@
  const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
  const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
  const CARD=Object.freeze({key:'slash',name:'斧柄横扫',type:'attack',damage:12,w:1,a:1,r:1});
- const FPS=30,FRAME_MS=1000/FPS,FRAME_COUNT=21;
+ const FPS=30,FRAME_MS=1000/FPS,FRAME_COUNT=58;
  const DURATION=FRAME_COUNT*FRAME_MS,REDUCED_DURATION=DURATION;
- // KEYFRAME indices are 0..21 inclusive. Deliberately decoupled curves:
- // attacker movement, victim movement, camera zoom, body lunge and hit recoil.
- // One frame lasts 33.333ms. No "1 second freeze at center" is permitted.
- // This is a game art-direction prototype until the user reference video is restored.
- // Reference frame markers: zoomed middle-stage entrances at frame
- // 79/178/315/416 and exits at frame 128/228/368/470.
- // These are capture timestamps, not the original game's internal tick clock.
+ // Directly inspected source JPG indices. UI footage is 699 consecutive
+ // frames, from frame_0000 to frame_0698. Transition markers are empirical
+ // visual readings (±1 frame), not claims about hidden engine timing.
+ const ORIGINAL_CLIPS=Object.freeze([
+  Object.freeze({id:'gunshot-miss',entry:79,impact:81,holdEnd:127,
+   retreatStart:128,originalQueue:134,end:135,result:'miss'}),
+  Object.freeze({id:'goblet-hit',entry:178,impact:180,holdEnd:227,
+   retreatStart:228,originalQueue:234,end:235,result:'hit'}),
+  Object.freeze({id:'sword-miss',entry:315,impact:318,holdEnd:364,
+   retreatStart:365,originalQueue:372,end:373,result:'miss'}),
+  Object.freeze({id:'heavy-miss',entry:416,impact:418,holdEnd:464,
+   retreatStart:465,originalQueue:473,end:474,result:'miss'})
+ ]);
  const REFERENCE=Object.freeze({
   fps:30,frames:699,
-  entries:Object.freeze([79,178,315,416]),
-  exits:Object.freeze([128,228,368,470]),
-  focus:Object.freeze({left:.365,right:.635})
+  entries:Object.freeze(ORIGINAL_CLIPS.map(c=>c.entry)),
+  exits:Object.freeze(ORIGINAL_CLIPS.map(c=>c.retreatStart)),
+  focus:Object.freeze({left:.30,right:.70}),
+  clips:ORIGINAL_CLIPS,
+  source:'user-uploaded actual 699 JPEG frames, checked 2026-11-06'
  });
+ // Screen action starts in 2-3 frames; the hit/result is visible for ~46
+ // frames, then zoom and actor placement RETURN over ~7 frames. The central
+ // tableau is action/hurt art, NEVER normal idle art. It is NOT a pre-hit pause.
  const STAGES=Object.freeze([
   Object.freeze({id:'lock',from:0,to:1}),
   Object.freeze({id:'approach',from:1,to:2}),
-  Object.freeze({id:'windup',from:2,to:3}),
-  Object.freeze({id:'swing',from:3,to:4}),
-  Object.freeze({id:'impact',from:4,to:5}),
-  Object.freeze({id:'reaction',from:5,to:9}),
-  Object.freeze({id:'hold',from:9,to:15}),
-  Object.freeze({id:'recover',from:15,to:21})
+  Object.freeze({id:'swing',from:2,to:3}),
+  Object.freeze({id:'impact',from:3,to:4}),
+  Object.freeze({id:'reaction',from:4,to:9}),
+  Object.freeze({id:'hold',from:9,to:49}),
+  Object.freeze({id:'recover',from:49,to:56}),
+  Object.freeze({id:'settle',from:56,to:58})
  ]);
- // The actor tracks return to zero at frame 19 BEFORE any pose reset.
- // Camera zoom only returns to zero at frame 21, AFTER both actors return.
- // Every single authored frame has its OWN channel values; a browser running
- // at 60/90/120Hz holds the same 30fps state rather than easing over 1.5s.
- // These are screen-space/duel-relative fractions, not arbitrary world drift.
+ // Keyframe per channel, sampled at EXACT 30fps frame boundaries.
+ // These are separate controls: actor travel != camera lens != strike kick.
+ // The last screenshot is frame 58; the restored poses begin at frame 56.
+ function frameTrack(points){
+  const data=new Array(FRAME_COUNT+1);
+  const keys=Object.keys(points).map(Number).sort((a,b)=>a-b);
+  if(keys[0]!==0||keys[keys.length-1]!==FRAME_COUNT)
+   throw Error('Frame track endpoints required');
+  for(let j=0;j<keys.length-1;j++){
+   const a=keys[j],b=keys[j+1],v0=points[a],v1=points[b];
+   for(let i=a;i<b;i++){
+    const t=(i-a)/(b-a);
+    data[i]=+(v0+(v1-v0)*t).toFixed(6);
+   }
+  }
+  data[FRAME_COUNT]=points[FRAME_COUNT];
+  return Object.freeze(data);
+ }
  const TRACKS=Object.freeze({
-  hero:Object.freeze([0,.10,.44,.79,.95,1,1,1,1,1,1,1,1,1,1,.83,.51,.18,.025,0,0,0]),
-  victim:Object.freeze([0,.08,.47,.83,.97,1,1,1,1,1,1,1,1,1,1,.80,.46,.15,.015,0,0,0]),
-  camera:Object.freeze([0,.23,.64,.91,1,1,1,1,1,1,1,1,1,1,1,1,1,.95,.90,.78,.30,0]),
-  lunge:Object.freeze([0,0,.10,.48,1,.43,.07,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
-  recoil:Object.freeze([0,0,0,0,0,.72,1,.88,.57,.24,.05,0,0,0,0,0,0,0,0,0,0,0]),
-  hitFlash:Object.freeze([0,0,0,0,.48,.16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
-  fx:Object.freeze([0,0,0,0,1,.60,.14,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
-  damage:Object.freeze([0,0,0,0,.45,1,1,1,.90,.75,.58,.43,.24,.06,0,0,0,0,0,0,0,0]),
-  damageRise:Object.freeze([0,0,0,0,0,.14,.28,.44,.60,.73,.84,.93,1,1,1,1,1,1,1,1,1,1])
+  // Both travel to central safe zones; camera magnifies their clash.
+  hero:frameTrack({0:0,1:.48,2:.88,3:1,48:1,
+   49:1,50:.93,51:.79,52:.59,53:.34,54:.13,55:0,58:0}),
+  victim:frameTrack({0:0,1:.38,2:.82,3:1,48:1,
+   49:1,50:.95,51:.83,52:.63,53:.37,54:.15,55:0,58:0}),
+  camera:frameTrack({0:0,1:.54,2:.91,3:1,48:1,
+   49:1,50:.91,51:.74,52:.53,53:.32,54:.14,55:.04,56:.02,57:0,58:0}),
+  lunge:frameTrack({0:0,1:0,2:.36,3:1,4:.42,5:.08,6:0,58:0}),
+  recoil:frameTrack({0:0,2:0,3:.28,4:.86,5:1,6:.75,7:.44,8:.17,9:0,58:0}),
+  hitFlash:frameTrack({0:0,2:0,3:.5,4:.23,5:0,58:0}),
+  fx:frameTrack({0:0,2:0,3:1,4:.85,5:.40,6:0,58:0}),
+  damage:frameTrack({0:0,2:0,3:.85,4:1,6:1,8:.85,
+   10:.62,13:.24,16:0,58:0}),
+  damageRise:frameTrack({0:0,3:0,6:.28,10:.65,16:1,58:1})
  });
  for(const [name,values]of Object.entries(TRACKS)){
   if(values.length!==FRAME_COUNT+1||values.some(v=>!Number.isFinite(v)||v<0||v>1))
-   throw Error('Invalid 30fps track '+name);
+   throw Error('Invalid original-frame-referenced director channel '+name);
  }
  const ART=Object.freeze({
   hero:'./assets/characters/hero-axe-attack.webp',
@@ -96,8 +125,8 @@
   const stage=finished?'done':STAGES.find(v=>frame>=v.from&&frame<v.to).id;
   const at=name=>TRACKS[name][frame];
   const heroProgress=at('hero'),victimProgress=at('victim'),zoom=at('camera');
-  const hit=frame>=4;
-  const cut=frame>=2&&frame<4?'attacker':frame>=4&&frame<9?'victim':'none';
+  const hit=frame>=3;
+  const cut=frame>=2&&frame<3?'attacker':frame>=3&&frame<9?'victim':'none';
   return {stage,elapsed:t,frame,finished,hit,heroProgress,victimProgress,
    stageStrength:Math.min(heroProgress,victimProgress),zoom,
    advance:at('lunge')*(reduced?.7:1),
@@ -105,11 +134,11 @@
    hitFlash:at('hitFlash'),fxOpacity:at('fx'),
    damageOpacity:at('damage'),damageLift:at('damageRise'),
    shake:reduced?0:at('hitFlash')*.06,
-   // No pose restoration in the center. BOTH action silhouettes travel
-   // all the way back to their original queue anchors on frame 19.
-   // Only frame 20 may switch to canonical L2D; camera settles frame 21.
-   heroPose:frame>=2&&frame<=19?1:0,
-   victimPose:frame>=4&&frame<=19?1:0,
+   // Source-verified: f127/227/364/464 STILL hold battle silhouettes.
+   // Retreat f49..55 still uses attack/hurt art, f55 both back at base
+   // anchors, f56 FIRST idle art, camera fully settles f57.
+   heroPose:frame>=2&&frame<=55?1:0,
+   victimPose:frame>=3&&frame<=55?1:0,
    frameHold:frame>=5&&frame<=6,cut,cue:''};
  }
  function sampleFrame(attack,frame){
@@ -129,15 +158,15 @@
  }
  function duelCamera(base){
   // No orbit or pitch: a fast cropped view of the SAME left-side camera.
-  return {...base,fov:Math.max(30,base.fov-6),lensShift:.29,duel:true};
+  return {...base,fov:Math.max(28,base.fov-16),lensShift:.29,duel:true};
  }
  function cinematicCamera(base,attack,s,target){
   if(!attack||!s||s.finished||s.zoom<=0)return base;
-  return {...base,fov:base.fov-6*s.zoom,
+  return {...base,fov:base.fov-16*s.zoom,
    lensShift:.23+.06*s.zoom,cinematic:true};
  }
  // Screen-space ground-anchor solver. Converts exact target x positions
- // (36.5% / 63.5%) to WORLD coordinates on the common duel-depth plane.
+ // (30% / 70%) to WORLD coordinates on the common duel-depth plane.
  // It works for both outer/inner modes and landscape/portrait aspects.
  function solveX(clipX,z,cam,aspect,project){
   const p0=project({x:-6,y:1,z},cam,aspect);
@@ -156,8 +185,8 @@
  function duelLayout(cam,project,aspect,hero,target){
   if(!hero||!target)throw Error('Duel needs both combatants');
   const depth=hero.z*.33+target.z*.67;
-  const x0=solveX(-.27,depth,cam,aspect,project);
-  const x1=solveX(+.27,depth,cam,aspect,project);
+  const x0=solveX(-.40,depth,cam,aspect,project);
+  const x1=solveX(+.40,depth,cam,aspect,project);
   const duo=Object.freeze({
    hero:Object.freeze({x:x0,y:0,z:depth}),
    target:Object.freeze({x:x1,y:0,z:depth}),
@@ -189,7 +218,7 @@
   const p=project({x:actor.x,y:actor.height*.8,z:actor.z},cam,aspect);
   return {valid:!!p.valid,x:(p.x+1)*50,y:(1-p.y)*50};
  }
- return Object.freeze({CARD,FPS,FRAME_MS,FRAME_COUNT,TRACKS,DURATION,REDUCED_DURATION,STAGES,ART,REFERENCE,
+ return Object.freeze({CARD,FPS,FRAME_MS,FRAME_COUNT,TRACKS,DURATION,REDUCED_DURATION,STAGES,ART,REFERENCE,ORIGINAL_CLIPS,
   pickCard,createAttack,hasEnemyHitPortrait,sample,sampleFrame,stageAt,poseFor,duelCamera,
   cinematicCamera,duelLayout,actorMotion,projectScreen});
 });
