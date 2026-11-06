@@ -4,7 +4,7 @@
   'use strict';
   const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   const IMAGE = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:webp|png|jpe?g)$/;
-  const RESERVED = new Set(['menu', 'classroom', 'classroom-box', 'protagonist']);
+  const RESERVED = new Set(['menu', 'classroom', 'classroom-box', 'protagonist', 'school', 'convenience', 'cafe', 'mall', 'park']);
   const LAYERS = Object.freeze({
     menu: Object.freeze({player: false, enemy: false, fog: true}),
     story: Object.freeze({player: true, enemy: true, fog: true}),
@@ -33,6 +33,21 @@
       '一面旧墙、一扇门和一盏灯', '主菜单', 'menu');
     result.classroom = define('classroom', './assets/classroom.webp',
       '空教室全景：黑板、课桌、左侧窗户', '教室', 'story');
+    // Distinct public city locations are real renderer targets.
+    // School uses approved classroom art; others use independent editable
+    // architectural environment blockouts, never recycled home wallpaper.
+    const cityStages=[
+      ['school','./assets/classroom.webp','学校教室'],
+      ['convenience','./assets/locations/convenience.svg','便利店'],
+      ['cafe','./assets/locations/cafe.svg','咖啡店'],
+      ['mall','./assets/locations/mall.svg','商场'],
+      ['park','./assets/locations/park.svg','社区公园']
+    ];
+    for(const [id,image,title] of cityStages){
+      result[id]=define(id,image,title,title,'environment',
+        {kind:'surface-world',unlitEnvironment:true,
+         layers:Object.freeze({player:false,enemy:false,fog:true})});
+    }
     // Integrated test room: same actual L2D game layers, 5 untextured 3D faces.
     // Reuses a valid fallback image for preloading but replaces its display
     // with a scene-local 3D canvas; never creates a second separate game.
