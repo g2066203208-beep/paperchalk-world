@@ -507,7 +507,12 @@
    try{
     if(fixedPose){
      const fitted=portraitFit(desc.w,desc.h,size);
-     ctx.drawImage(desc.source,fitted.x,fitted.y,fitted.width,fitted.height);
+     // The eye-level 3/4 source has a leftward ponytail silhouette.
+     // Recenter its *transparent artwork inside the padded texture* rather
+     // than moving the 3D camera away from the opponent eye line.
+     const portraitInsetX=previewPose==='level'?32:0;
+     ctx.drawImage(desc.source,fitted.x+portraitInsetX,fitted.y,
+      fitted.width,fitted.height);
     }else ctx.drawImage(desc.source,0,0,size,size);
     gl.bindTexture(gl.TEXTURE_2D,targetTexture.texture);
     if(targetTexture.uploadedSize!==size){
