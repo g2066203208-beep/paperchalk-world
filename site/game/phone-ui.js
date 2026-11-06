@@ -283,10 +283,12 @@
     function open(){
       opened=true;section.hidden=false;pin='';updatePin();setPrompt();showPage('lock');
       drawClock();clearInterval(clockTimer);clockTimer=setInterval(drawClock,30000);
+      global.dispatchEvent(new CustomEvent('paperchalk:phone-visibility',{detail:{open:true}}));
     }
     function close(){
       opened=false;section.hidden=true;pin='';updatePin();showPage('lock');
       clearInterval(clockTimer);clockTimer=0;
+      global.dispatchEvent(new CustomEvent('paperchalk:phone-visibility',{detail:{open:false}}));
     }
     section.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',()=>input(b.dataset.key)));
     get('phone-fingerprint').addEventListener('click',()=>{if(opened&&page==='lock')unlock('simulated-fingerprint')});
