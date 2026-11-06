@@ -106,6 +106,8 @@
     }
     if(!here.length&&s.location!=='convenience'&&s.location!=='bedroom')
       line(box,'daily-tip','暂无固定活动','可以和在场人物交谈，或前往其他地点。');
+    button(box,'等待30分钟','推进游戏日程 · 不会加快现实设备时钟',
+      ()=>apply(()=>state.wait(30)),{arrow:'◷'});
     content.appendChild(box);
     sectionTitle('今日要闻');
     content.appendChild(h('p','daily-inline-news',s.news[0]));
