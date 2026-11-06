@@ -1056,6 +1056,8 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  if(part._crouchDynamics)inherited=crouchDeform(part,inherited,u,v,phase);
  if(part.id==='handwear'&&idle?.angelMotion?.enabled===true)
   inherited=angelShopHandsPoint(inherited,phase,idle);
+ if((part.id==='wing_left'||part.id==='wing_right')&&idle?.angelMotion?.enabled===true)
+  inherited=angelShopWingPoint(inherited,part,u,v,phase,idle);
  // Two parents in one deformation: pelvis->torso->coat, wrist->grasped fold.
  // Follow the authentic hand ArtMesh, never clone the hand onto the jacket.
  const link=part.followGrip,hand=part._gripParent;
@@ -1297,7 +1299,9 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
  const linked=!!part._bodyHierarchy&&role!=='none'&&role!=='ground'&&
   (Math.abs(idle?.joints?.hips||0)>0||Math.abs(idle?.joints?.shoulders||0)>0||
    Math.abs(idle?.breath?.amount||0)>0);
- const active=part.enabled&&(!!part._crouchDynamics||linked||jointsActive||Math.abs(idle?.body?.amount||0)>0||
+ const angelWingAnimated=(part.id==='wing_left'||part.id==='wing_right')&&
+  idle?.angelMotion?.enabled===true&&Number(idle.angelMotion.wings?.degrees)>0;
+ const active=part.enabled&&(angelWingAnimated||!!part._crouchDynamics||linked||jointsActive||Math.abs(idle?.body?.amount||0)>0||
   (strength>0&&(Object.values(part.motion).some((v,i)=>i<3&&Math.abs(v)>1e-5)||
   (part.bones||[]).some(b=>b.enabled!==false&&Math.abs(b.amplitude)>1e-5)||
   (weather==='windy'||weather==='breeze')&&
@@ -1512,17 +1516,8 @@ function applyAngelShopIdle(ctx,part,phase,idle){
   ctx.translate(pivot.x+pose.x,pivot.y+pose.y);
   ctx.rotate(pose.angle);
   ctx.translate(-pivot.x,-pivot.y);
- }else if(part.id==='wing_left'||part.id==='wing_right'){
-  const left=part.id==='wing_left';
-  const wing=setting.wings||{};
-  const degrees=clamp(finite(wing.degrees,4),0,8);
-  const bias=left?-1:1;
-  const angle=bias*degrees*(pose.wing+pose.flutter)*Math.PI/180;
-  const pivot=left?wing.leftPivot:wing.rightPivot;
-  const x=Array.isArray(pivot)&&pivot.length===2?finite(pivot[0],397):397;
-  const y=Array.isArray(pivot)&&pivot.length===2?finite(pivot[1],506):506;
-  ctx.translate(x,y);ctx.rotate(angle);ctx.translate(-x,-y);
  }
+ // Angel wings are bent locally by a pinned mesh, not rotated as rigid plates.
 }
 // The cheek-palm contact moves with the head. The TWO forearms are from a
 // single original PSD layer, so their elbows stay anchored while the upper
@@ -1537,6 +1532,26 @@ function angelShopHandsPoint(point,phase,idle){
  const q=angelShopTransformPoint(point,pose);
  return {x:point.x+(q.x-point.x)*influence,
          y:point.y+(q.y-point.y)*influence};
+}
+// The original source wing pixels join the upper back at their inner edge.
+// Pin that entire attachment zone and deform ONLY the free feather ends.
+// This prevents the gap caused by rotating two disconnected rigid rectangles.
+function angelShopWingPoint(point,part,u,v,phase,idle){
+ const setting=idle?.angelMotion;
+ if(!setting?.enabled)return point;
+ const left=part.id==='wing_left',right=part.id==='wing_right';
+ if(!left&&!right)return point;
+ const wing=setting.wings||{};
+ const gain=clamp(finite(wing.degrees,5.2),0,8)/5.2;
+ if(!gain)return point;
+ const t=left?clamp((.72-u)/.60,0,1):clamp((u-.28)/.60,0,1);
+ const free=smooth(t);
+ if(free<=0)return point;
+ const lower=.30+.70*smooth(clamp((v-.10)/.84,0,1));
+ const pose=angelShopPose(phase,setting);
+ const wave=pose.wing+pose.flutter;
+ return {x:point.x+(left?-1:1)*6*gain*free*wave,
+         y:point.y-5*gain*free*lower*wave};
 }
 // Body-surface and tailored garment share the SAME dynamic pelvis/leg pose.
 // Trim only the hidden body raster at draw time; no author PSD is destroyed.
@@ -1645,5 +1660,5 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
 
  }
 }
-root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,CROUCH_CONTACTS,CROUCH_KEYS,sanitizeCrouchDynamics,bindCrouchDynamics,crouchSpacePose,crouchSpacePoint,crouchSpacePartPoint,crouchWeaponPose,crouchWeaponPoint,crouchDeform,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,garmentPoint,hipPoint,legPoint,placedRestPoint,unplacedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,draw,drawPart,occlusionDiagnostics};
+root.PaperchalkPartRigCore={FRONT,BACK,CHAR002,CHAR004,PROTAGONIST_CROUCH,CROUCH_CONTACTS,CROUCH_KEYS,sanitizeCrouchDynamics,bindCrouchDynamics,crouchSpacePose,crouchSpacePoint,crouchSpacePartPoint,crouchWeaponPose,crouchWeaponPoint,crouchDeform,SEGMENTS,IDLE_PRESETS,IDLE_RATES,WEATHER_LIFT,approachIdle,bodyPoseAt,bodyPosePoint,windField,windPressure,FACE_STACK,BATTLE_FRONT_STACK,UNIFIED_FRONT_STACK,actionNames,actionPart,setAction,blinkAmount,defaultIdleProfile,sanitizeIdleProfile,presetIdle,idleGroup,jointGainFor,bindBodyHierarchy,bindGripParents,humanPoseAt,parentPoint,parentRole,garmentPoint,hipPoint,legPoint,placedRestPoint,unplacedRestPoint,placedBounds,kneeIK,neckPoint,headPoint,ribcagePoint,bodyIdleAt,defaultBones,normalizeBones,bonePoses,skinnedPoint,all,project,sanitize,warpPoint,angelShopWingPoint,draw,drawPart,occlusionDiagnostics};
 })(typeof window!=='undefined'?window:globalThis);
