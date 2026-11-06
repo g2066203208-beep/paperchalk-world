@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');const G=require('../engine.js');
+let g=G.create({seed:742,team:true,encounterId:'surround'}),a=g.actors[0];
+// Prepare a deliberately sparse committed plan: old card T5-7, wash at T9.
+let first=a.hand.find(x=>{const c=G.CARD[x.key];return c.type==='attack'&&G.cLen(c)<=3})||a.hand[0];
+a.hand=[first];const e=G.actorsOf(g,'enemy')[0],c=G.CARD[first.key];
+G.place(g,first.uid,5,e.id);
+G.shuffleHand(g,9);
+assert(a.actions.find(x=>x.card===first.key).locked,'old placed card locks');
+assert(a.hand.length>0,'wash drew new hand');
+let add=a.hand.find(x=>G.cLen(G.CARD[x.key])<=3) || a.hand[0];
+const friend=G.CARD[add.key].type==='defense'||G.CARD[add.key].heal||G.CARD[add.key].buff;
+const dest=friend?a.id:e.id;
+let next=G.place(g,add.uid,1,dest);
+assert.equal(next.start,g.now,'new card can backfill earlier empty T1');
+G.moveAction(g,next.id,2,dest);
+assert.equal(next.start,g.now+1,'new card in old gap can be moved');
+G.remove(g,next.id);assert(a.hand.some(x=>x.uid===add.uid),'new card can be taken down');
+assert.throws(()=>G.remove(g,a.actions.find(x=>x.locked&&x.card===first.key).id),/锁/);
+assert(a.actions.some(x=>x.source==='shuffle'&&x.locked),'wash consumes time and locks itself');
+console.log('PASS V1.0 hand-after-shuffle backfill and lock semantics');

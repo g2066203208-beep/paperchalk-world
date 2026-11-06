@@ -8,8 +8,9 @@ function options(select,records,selected){select.innerHTML=records.map(([value,n
 function refreshStyles(){const key=$('classSelect').value;options($('styleSelect'),Object.entries(G.CLASS[key].styles).map(([k,x])=>[k,x.name]),Object.keys(G.CLASS[key].styles)[0]);}
 function initializeControls(){options($('classSelect'),Object.entries(G.CLASS).map(([k,x])=>[k,x.name]),'axe');refreshStyles();options($('encounterSelect'),Object.entries(G.ENCOUNTERS).map(([k,v])=>[k,v.name]),'corridor');$('teamCheckbox').checked=false;
 $('classSelect').addEventListener('change',refreshStyles);
+$('setupToggle')?.addEventListener('click',()=>{const open=$('setupToggle').getAttribute('aria-expanded')!=='true';document.querySelector('.setup')?.classList.toggle('is-open',open);$('setupToggle').setAttribute('aria-expanded',String(open));});
 $('createButton').addEventListener('click',()=>newGame());$('resetButton').addEventListener('click',()=>newGame());
-$('shuffleButton').addEventListener('click',()=>{if(!isPlanning())return;placementMode='shuffle';selectedUid=null;selectedActionId=null;display();showToast('选择时间格：空手换手占1格，主动重整占2格。此前排程会锁定。');});
+$('shuffleButton').addEventListener('click',()=>{if(!isPlanning())return;placementMode='shuffle';selectedUid=null;selectedActionId=null;display();showToast('洗牌耗时1格（非空手2格），只锁已有动作；新牌可填前面空位。');});
 $('undoButton').addEventListener('click',()=>{const a=game.actors[0],tail=[...a.actions].filter(x=>!x.locked&&x.start>=game.now).sort((x,y)=>y.start-x.start)[0];if(!tail){showToast('没有可撤销的未锁定卡牌');return;}try{G.remove(game,tail.id);selectedUid=null;placementMode=null;display();}catch(e){showToast(e.message)}});
 
 $('autoplanButton').addEventListener('click',()=>{if(!isPlanning())return;try{G.autoPlan(game,'tactical');selectedUid=null;selectedActionId=null;placementMode=null;display();forecast();showToast('自动排程已生成，仍可调整未锁定的卡牌。');}catch(e){showToast(e.message)}});
@@ -33,6 +34,9 @@ $('timeline').addEventListener('keydown',e=>{const c=e.target.closest('[data-tim
 $('actorCards')?.addEventListener('click',e=>{const c=e.target.closest('[data-target]');if(!c)return;targetId=c.dataset.target;display();showToast('已选择目标：'+game.actors.find(x=>x.id===targetId).name);});
 $('finisherSlot').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(!isPlanning())return;placementMode='finisher';selectedUid=null;selectedActionId=null;display();showToast('先安排标记/充能，再把绝杀放到目标敌人的后续时间格。');});
 $('removeActionButton')?.addEventListener('click',()=>{if(!selectedActionId)return;try{G.remove(game,selectedActionId);selectedActionId=null;placementMode=null;display();showToast('已取下动作，退回手牌');}catch(err){showToast(err.message)}});
+$('threatStrip')?.addEventListener('click',e=>{const b=e.target.closest('[data-guard-target]');if(b)guardThreat(b.dataset.guardTarget,Number(b.dataset.guardTick));});
+$('threatStrip')?.addEventListener('pointerover',e=>{const b=e.target.closest('[data-guard-target]');if(!b)return;const row=$('timeline')?.querySelector(`[data-row-actor="${b.dataset.guardTarget}"]`);row?.classList.add('threat-focus');});
+$('threatStrip')?.addEventListener('pointerout',()=>{$('timeline')?.querySelectorAll('.threat-focus').forEach(r=>r.classList.remove('threat-focus'));});
 }
 function toast(s){if(toastHandle)clearTimeout(toastHandle);$('toast').textContent=s;$('toast').classList.add('show');toastHandle=setTimeout(()=>$('toast').classList.remove('show'),3600)}
 const showToast=toast;
@@ -58,6 +62,7 @@ function doPlace(relative,laneId){
   const hero=game.actors[0],it=hero.hand.find(c=>c.uid===selectedUid),card=G.CARD[it?.key];if(!card)throw Error('卡牌不存在');
   const friendly=card.type==='defense'||card.heal||card.buff;
   const dest=laneId==='hero'&&!friendly?targetId:laneId;
+  // The action's owner remains HERO regardless of the target lane (including allies).
   G.place(game,selectedUid,relative,dest);
  }
  placementMode=null;selectedUid=null;selectedActionId=null;playHead=-1;display();
@@ -81,50 +86,103 @@ function phaseBadge(phase,card,action,t,compact=false){
  const label=first?card.name:active?(card.damage?`⚔${card.damage}`:card.guard?`⬡${card.guard}`:card.mark?`⌖${card.mark}`:'◆'):(phase==='windup'?'·':'⌛');
  return `<span class="phase-text">${textEscape(compact?(active?(card.damage?'⚔':'●'):'·'):label)}</span>`;
 }
+/* Display every declared enemy hit at its actual activation tick. These are
+   scheduling warnings, not damage already taken: the HP projection uses the
+   authoritative engine and accounts for shields, speed and interrupts. */
+function scheduledThreats(){
+ const threats=[];
+ for(const source of game.actors.filter(a=>a.side==='enemy'&&!a.dead))for(const action of source.actions){
+  if(action.canceled)continue;
+  const c=G.CARD[action.card];if(!c||!c.damage)continue;
+  for(let tick=Math.max(game.now,action.start+c.w);tick<Math.min(game.now+10,action.start+c.w+c.a);tick++){
+   const victims=c.aoe?game.actors.filter(a=>a.side==='ally'&&!a.dead):[game.actors.find(a=>a.id===action.target)].filter(a=>a?.side==='ally'&&!a.dead);
+   for(const victim of victims)threats.push({tick:tick-game.now+1,absoluteTick:tick,source:source.id,sourceName:source.name,target:victim.id,targetName:victim.name,damage:G.predictHit(source,c,tick),card:c.name,speed:c.speed||6});
+  }
+ }
+ return threats.sort((a,b)=>a.tick-b.tick||b.speed-a.speed);
+}
+function shortActor(name){return String(name).split('·')[0].replace('走廊','').slice(0,4);}
+function plannedGuardFor(target,tick){return game.actors.some(a=>a.actions.some(x=>!x.canceled&&x.target===target&&G.CARD[x.card]?.type==='defense'&&G.phase(G.CARD[x.card],x.start,game.now+tick-1)==='active'));}
+/* One-click defense targets the threatened ally and lines up the active guard
+   segment with the enemy's announced hit. It always spends caster's time. */
+function guardThreat(targetId,hitTick){
+ if(!isPlanning())return;
+ const hero=game.actors[0];
+ let card=hero.hand.find(it=>it.uid===selectedUid&&G.CARD[it.key]?.type==='defense');
+ if(!card)card=hero.hand.find(it=>G.CARD[it.key]?.type==='defense');
+ if(!card){showToast('当前手牌没有防御牌。已定位该队友的受击时间。');playHead=hitTick;display();return;}
+ const c=G.CARD[card.key],end=hitTick-1;
+ // Latest active start first; fall back through other legal overlapping windows.
+ let lastError='当前没有足够的空闲时间放置这张防御牌';
+ for(let start=end-c.w;start>=end-c.w-c.a+1;start--){
+  const relative=start+1;if(relative<1||relative>10)continue;
+  try{
+   G.place(game,card.uid,relative,targetId);
+   selectedUid=null;selectedActionId=null;placementMode=null;playHead=hitTick;display();
+   showToast(`已为 ${game.actors.find(a=>a.id===targetId)?.name||'队友'} 排好防御，覆盖 T${hitTick}；占用的是你的时间`);
+   return;
+  }catch(error){lastError=error.message;}
+ }
+ showToast(lastError+'；可手动选择其他空格或先取下一张牌');playHead=hitTick;display();
+}
+function renderThreatStrip(threats){
+ const el=$('threatStrip');if(!el)return;
+ const keys=new Map();for(const t of threats){const key=t.tick+':'+t.target;if(keys.has(key)){const g=keys.get(key);g.damage+=t.damage;g.sources.add(t.sourceName);}else keys.set(key,{...t,sources:new Set([t.sourceName])});}
+ const list=[...keys.values()];
+ if(!list.length){el.innerHTML='<span class="threat-calm">✓ 本轮没有已宣告的攻击</span>';return;}
+ el.innerHTML=`<span class="threat-label">本轮攻击预告</span>${list.map(t=>{
+  const covered=plannedGuardFor(t.target,t.tick),mine=game.actors.find(a=>a.id===t.target);
+  return `<button class="threat-chip ${covered?'covered':''}" type="button" data-guard-target="${textEscape(t.target)}" data-guard-tick="${t.tick}" title="${[...t.sources].join('、')}在T${t.tick}攻击${t.targetName}，预计原始伤害${t.damage}。点击自动安排防御（占用你的行动时间）"><span class="threat-time">T${t.tick}</span><span class="threat-pair">${textEscape([...t.sources].map(shortActor).join('+'))} → ${textEscape(shortActor(mine?.name||t.targetName))}</span><strong>−${t.damage}</strong><span class="threat-guard">${covered?'已排防':'护卫 ›'}</span></button>`;
+ }).join('')}`;
+}
 function renderTimeline(){
  const start=game.now,times=Array.from({length:10},(_,i)=>i+1),hero=game.actors[0];
  const team=game.actors.filter(a=>a.side==='ally'),enemies=game.actors.filter(a=>a.side==='enemy');
  // Every actor uses the same dual-height unit: large editable targeted upper track + compact read-only own-action lower track.
- const units=[...enemies,...team];
- let rows=`<div class="dual-header"><div class="dual-head-label">血量预演</div>${times.map(i=>`<button type="button" class="dual-hour ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" title="查看第${i}格">${i}</button>`).join('')}<span class="dual-over-head">越界</span></div>`;
+ const units=[...enemies,...team],threats=scheduledThreats();
+ let rows=`<div class="dual-header"><div class="dual-head-label">角色 · 血量预演</div>${times.map(i=>`<button type="button" class="dual-hour ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" title="查看第${i}格">${i}</button>`).join('')}<span class="dual-over-head">越界</span></div>`;
  for(const actor of units){
   const enemy=actor.side==='enemy', own=actor.id==='hero',prediction=forecastState(actor),delta=prediction.hp-actor.hp;
-  const hpDrop=delta<0?`<strong class="hp-loss">预计承伤 ${-delta}</strong>`:delta>0?`<strong class="hp-gain">预计治疗 +${delta}</strong>`:'<span class="hp-safe">预计±0</span>';
-  const pct=Math.max(0,Math.min(100,prediction.hp/actor.maxHp*100)),currentPct=Math.max(0,Math.min(100,actor.hp/actor.maxHp*100)),lossPct=Math.max(0,currentPct-pct);
-  const targetActions=hero.actions.filter(a=>!a.canceled&&a.target===actor.id);
-  const head=`<div class="dual-person" title="${textEscape(actor.name)}：当前${actor.hp}/${actor.maxHp}，预计${prediction.hp}/${actor.maxHp}"><div class="dual-name"><span class="side-signal ${enemy?'foe':'friend'}"></span>${textEscape(actor.name)}${own?'<i>我</i>':''}</div><div class="dual-hp"><b>${actor.hp}</b><span class="hp-arr">→</span><b class="hp-future ${delta<0?'loss':delta>0?'heal':''}">${prediction.hp}</b><small>/${actor.maxHp}</small></div><div class="dual-health"><div class="hp-original ${enemy?'foe':'friend'}" style="width:${currentPct}%"></div><div class="hp-difference" style="left:${pct}%;width:${lossPct}%"></div><div class="hp-projected ${enemy?'foe':'friend'}" style="width:${pct}%"></div></div><div class="dual-result">${hpDrop}${prediction.dead?'<b class="hp-loss"> · 预计倒下</b>':''}${prediction.marked>0?' · 标记'+prediction.marked:''}</div></div>`;
-  rows+=`<div class="dual-row ${enemy?'enemyrow':'allyrow'} ${own?'own-row':''}">${head}<div class="dual-board">`;
+   const hpDrop=delta<0?`<strong class="hp-loss">预计−${-delta}</strong>`:delta>0?`<strong class="hp-gain">预计+${delta}</strong>`:'<span class="hp-safe">预计±0</span>';
+  const pct=Math.max(0,Math.min(100,prediction.hp/actor.maxHp*100));
+   const startPct=Math.max(0,Math.min(100,actor.hp/actor.maxHp*100));
+   const lostWidth=Math.max(0,startPct-pct);
+  const targetActions=hero.actions.filter(a=>!a.canceled&&a.target===actor.id),incoming=threats.filter(x=>x.target===actor.id),outgoing=threats.filter(x=>x.source===actor.id);
+  const cue=enemy?outgoing.slice(0,2).map(t=>`T${t.tick} →${shortActor(t.targetName)} ${t.damage}`).join(' · '):incoming.slice(0,2).map(t=>`T${t.tick} ${shortActor(t.sourceName)}→我 ${t.damage}`).join(' · ');
+   const head=`<div class="dual-person" title="${textEscape(actor.name)}：当前${actor.hp}/${actor.maxHp}，预计${prediction.hp}/${actor.maxHp}，${delta<0?'承伤'+(-delta):delta>0?'治疗'+delta:'无血量变化'}"><div class="dual-name"><span class="side-signal ${enemy?'foe':'friend'}"></span>${textEscape(actor.name)}${own?'<i>我</i>':''}</div><div class="dual-hp"><b>${actor.hp}</b><span class="hp-arr">→</span><b class="hp-future ${delta<0?'loss':delta>0?'heal':''}">${prediction.hp}</b><small>/ ${actor.maxHp}</small></div><div class="dual-health"><div class="hp-original ${enemy?'foe':'friend'}" style="width:${startPct}%"></div><div class="hp-difference" style="left:${pct}%;width:${lostWidth}%"></div><div class="hp-projected ${enemy?'foe':'friend'}" style="width:${pct}%"></div></div><div class="dual-result">${hpDrop}${prediction.dead?'<b class="hp-loss"> · 预计倒下</b>':''}${prediction.marked>0?' · 标记'+prediction.marked:''}</div><div class="dual-cue" title="${textEscape(cue)}">${textEscape(cue|| (enemy?'无攻击预告':'没有受击预告'))}</div></div>`;
+  rows+=`<div data-row-actor="${actor.id}" class="dual-row ${enemy?'enemyrow':'allyrow'} ${own?'own-row':''}">${head}<div class="dual-board">`;
   for(let i=1;i<=10;i++){
    const t=start+i-1,placed=targetActions.find(a=>G.phase(G.CARD[a.card],a.start,t));
-   const actionOwner=segmentAt(actor,t),ownAction=actionOwner?.kind==='action'?actionOwner:null;
+   const actionOwner=segmentAt(actor,t),ownAction=actionOwner?.kind==='action'?actionOwner:null,attacksHere=incoming.filter(q=>q.tick===i);
    let topClass='dual-big '+(enemy?'enemy-zone':'ally-zone'),chip='',topTitle=`${actor.name} / T${i} / 放置指向该角色的卡牌`,id='';
    if(placed){
     const c=G.CARD[placed.card],ph=G.phase(c,placed.start,t);topClass+=` filled ${c.type} ${ph}${placed.locked?' locked':''}`;
     chip=phaseBadge(ph,c,placed,t);id=` data-action-id="${placed.id}" draggable="${!placed.locked&&isPlanning()}"`;
     topTitle=`我的${c.name} → ${actor.name} / T${i} / ${ph==='windup'?'前摇':ph==='active'?'生效':'后摇'}`;
-   }else chip='<span class="dual-plus">＋</span>';
+   }else chip=attacksHere.length?`<span class="incoming-flag" title="${textEscape(attacksHere.map(q=>q.sourceName+'：'+q.damage+'伤害').join('、'))}">⚠ ${attacksHere.reduce((n,x)=>n+x.damage,0)}</span>`:'<span class="dual-plus">＋</span>';
    if(playHead===i)topClass+=' playhead';
    let bottomClass='dual-small',bottom='',bottomTitle=`${actor.name}在T${i}等待`;
    if(actionOwner?.kind==='recovering'){bottomClass+=' recovering';bottom='失能';bottomTitle=`${actor.name}失能恢复`}
    else if(ownAction){
     const c=ownAction.card,ph=ownAction.phase;
     bottomClass+=` ${c.type} ${ph} ${enemy?'enemy-intent':''}`;
-    const strike=c.damage?G.predictHit(actor,c,t):0;
-     bottom=ph==='active'?(c.damage?'⚔'+strike:c.guard?'盾'+c.guard:c.heal?'疗'+c.heal:c.mark?'标'+c.mark:'技'):ph==='windup'?(c.damage?'蓄'+strike:c.guard?'备'+c.guard:'前摇'):'收招';
+     const strike=c.damage?G.predictHit(actor,c,t):0;
+     const destName=game.actors.find(x=>x.id===ownAction.action.target)?.name||'全体';
+     bottom=ph==='active'?(c.damage?'⚔'+strike+'→'+shortActor(destName):c.guard?'盾'+c.guard+'→'+shortActor(destName):c.heal?'疗'+c.heal+'→'+shortActor(destName):c.mark?'标'+c.mark+'→'+shortActor(destName):'技'):ph==='windup'?'蓄':'收';
     const actualTarget=game.actors.find(x=>x.id===ownAction.action.target);
-    bottomTitle=`${actor.name}·${c.name}｜${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}｜${c.damage?'每格'+strike+'点伤害':c.guard?'共'+c.guard+'点防御':c.heal?'治疗'+c.heal+'点':'技能效果'}｜生效${c.a}格｜速度${c.speed}｜目标 ${actualTarget?.name||'全体'}`;
+    bottomTitle=`${actor.name}：${c.name}｜${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}｜${c.damage?'每格'+strike+'点伤害':c.guard?'共'+c.guard+'点防御':c.heal?'治疗'+c.heal+'点':'技能效果'}｜${c.a}格生效｜速度${c.speed}｜→${actualTarget?.name||'全体'}`;
    }
    rows+=`<div class="dual-tick"><div class="${topClass}" data-time="${i}" data-actor="${actor.id}" ${id} tabindex="0" role="button" aria-label="${textEscape(topTitle)}" title="${textEscape(topTitle)}">${chip}</div><div class="${bottomClass}" title="${textEscape(bottomTitle)}">${bottom}</div></div>`;
   }
   const cross=[...actor.actions,...targetActions].find(a=>!a.canceled&&a.start<start+10&&a.start+G.cLen(G.CARD[a.card])>start+10);
   rows+=`</div><div class="dual-over">${cross?'+'+(cross.start+G.cLen(G.CARD[cross.card])-(start+10)):'·'}</div></div>`;
  }
- $('timeline').innerHTML=rows;
+ $('timeline').innerHTML=rows; $('timeline').classList.toggle('choosing',!!placementMode);renderThreatStrip(threats);
 }
 function renderActors(){const team=game.actors.filter(a=>a.side==='ally'),enemy=game.actors.filter(a=>a.side==='enemy');let out='';for(const a of [...team,...enemy]){const isE=a.side==='enemy',id=a.id,percent=Math.max(0,a.hp/a.maxHp*100);out+=`<div class="actor ${isE?'enemy':''} ${id==='hero'?'current':''} ${a.dead?'dead':''}" ${isE?`data-target="${id}" style="cursor:pointer;${targetId===id?'outline:2px solid #d9b275;outline-offset:-2px':''}"`:''}><div class="actor-top"><div><span class="actor-icon">${isE?'☠':G.CLASS[id==='hero'?game.options.classId:id.replace('ai-','')]?.icon||'✦'}</span><span class="actor-name">${textEscape(a.name)}</span></div><span class="badge ${isE?'enemy':''}">${a.dead?'倒下':isE?'敌':'我'}</span></div><div class="healthline"><span>生命</span><strong>${a.hp}/${a.maxHp}</strong></div><div class="healthbar"><div style="width:${percent}%"></div></div><small>${a.stunUntil>game.now?'失能至 T'+a.stunUntil+' · ':''}${a.marked?'标记'+a.marked+' · ':''}${a.id==='hero'?'绝杀能量 '+a.energy+'/100':isE?'点击选择目标':'自动排程'}</small></div>`;}if($('actorCards'))$('actorCards').innerHTML=out;}
-function renderHand(){const hero=game.actors[0];$('handCounter').textContent=`${hero.hand.length} / ${G.HAND}`;$('hand').innerHTML=hero.hand.length?hero.hand.map(it=>{const c=G.CARD[it.key],len=G.cLen(c);return `<button draggable="true" class="hand-card ${selectedUid===it.uid?'selected':''}" data-uid="${textEscape(it.uid)}" style="--ctype:${G.COLORS[c.type]}"><div class="card-head"><span class="card-ico">${icon[c.type]||'▣'}</span><span class="length">${len}格</span></div><strong>${textEscape(c.name)}</strong><div class="card-desc">${c.aoe?'<b class="group-badge">全体攻击</b> ':''}${textEscape(c.desc||'逐格生效')}</div><div class="phase-track" title="浅色前摇/主色生效/深色后摇">${Array.from({length:len},(_,i)=>`<span class="${i<c.w?'windup':i<c.w+c.a?'active':'recovery'}"></span>`).join('')}</div><small style="color:#92a9bd">${c.w} 前摇 · ${c.a} 生效 · ${c.r} 后摇 · 速度 ${c.speed}</small></button>`}).join(''):'<div class="empty-hand">手牌已空。选择「洗牌」并点击后续空格，消耗1格，锁定前面所有卡，再抽新手牌。</div>';}
+function renderHand(){const hero=game.actors[0];$('handCounter').textContent=`${hero.hand.length} / ${G.HAND}`;$('hand').innerHTML=hero.hand.length?hero.hand.map(it=>{const c=G.CARD[it.key],len=G.cLen(c);return `<button draggable="true" class="hand-card ${selectedUid===it.uid?'selected':''}" data-uid="${textEscape(it.uid)}" style="--ctype:${G.COLORS[c.type]}"><div class="card-head"><span class="card-ico">${icon[c.type]||'▣'}</span><span class="length">${len}格</span></div><strong>${textEscape(c.name)}</strong><div class="card-desc">${c.aoe?'<b class="group-badge">全体攻击</b> ':''}${textEscape(c.desc||'逐格生效')}</div><div class="phase-track" title="浅色前摇/主色生效/深色后摇">${Array.from({length:len},(_,i)=>`<span class="${i<c.w?'windup':i<c.w+c.a?'active':'recovery'}"></span>`).join('')}</div><small style="color:#92a9bd">${c.w} 前摇 · ${c.a} 生效 · ${c.r} 后摇 · 速度 ${c.speed}</small></button>`}).join(''):'<div class="empty-hand">手牌已空。洗牌至少1格：只锁已排卡，新抽到的牌还能填之前留下的空格。</div>';}
 function renderStatus(){const hero=game.actors[0];$('turnStatus').textContent=`第 ${game.round+1} 轮 · 游戏内 ${String(Math.floor(game.now/60)).padStart(2,'0')}:${String(game.now%60).padStart(2,'0')}—${String(Math.floor((game.now+10)/60)).padStart(2,'0')}:${String((game.now+10)%60).padStart(2,'0')}`;
-$('phaseStatus').textContent=game.phase==='planning'?'规划阶段 · 世界暂停':game.phase==='win'?'已胜利 · 战斗结算':'已失败 · 战斗结束';$('hintStatus').textContent=placementMode==='card'?'选中卡牌，点目标上轨；给队友放技能只消耗施术者时间':placementMode==='shuffle'?'洗牌操作 → 选择空格':placementMode==='finisher'?'绝杀 → 放到敌人上轨时间格':placementMode==='move'?'移动选中动作 → 点新时间格':'选卡后点击目标轨道；血条直接显示当轮预计生命与承伤';
+$('phaseStatus').textContent=game.phase==='planning'?'规划阶段 · 世界暂停':game.phase==='win'?'已胜利 · 战斗结算':'已失败 · 战斗结束';$('hintStatus').textContent=placementMode==='card'?'点目标上轨放牌；即使给队友护盾，也只占用你的行动时间':placementMode==='shuffle'?'洗牌只锁已排卡；不会锁空格':placementMode==='finisher'?'绝杀 → 放到敌人上轨时间格':placementMode==='move'?'移动选中动作 → 点新时间格':'选择卡牌并点击目标上轨；技能占自己的时间；各角色血条即时显示预计承伤/治疗';
 $('commitButton').disabled=!isPlanning();$('shuffleButton').disabled=!isPlanning();$('autoplanButton').disabled=!isPlanning();$('undoButton').disabled=!isPlanning();
 $('runStatus').innerHTML=`<b>冒险第 ${run.stage+1}/${C.STAGES.length} 关</b><span>◈ 金币 ${run.gold}</span><span>▤ 牌组 ${C.cardCount(run)} 张</span><span>♢ 遗物 ${run.relics.length}/4</span><span>生命 ${run.hp}/${run.maxHp}</span><span>绝杀能量 ${hero.energy}/100</span>`;
 $('heroStatus').innerHTML=`<div class="info-key"><span>当前生命</span><span>${hero.hp} / ${hero.maxHp}</span></div><div class="info-key"><span>绝杀能量</span><span>${hero.energy} / 100</span></div><div class="info-key"><span>抽牌堆 / 弃牌堆</span><span>${hero.draw.length} / ${hero.discard.length}</span></div><div class="info-key"><span>洗牌次数</span><span>${game.stats.shuffle}</span></div><div class="info-key"><span>已锁排程</span><span>${hero.actions.filter(a=>a.locked).length}张</span></div><div class="info-key"><span>跨轮占用</span><span>${hero.actions.filter(a=>!a.canceled&&a.start<game.now+10&&a.start+G.cLen(G.CARD[a.card])>game.now+10).length}项</span></div>`;
@@ -137,7 +195,11 @@ function display(){
  renderTimeline();renderHand();renderStatus();renderIntents();renderLog();renderForecast();
  const remove=$('removeActionButton');if(remove){remove.disabled=!selectedActionId;remove.textContent=selectedActionId?'✕ 取下选中动作':'✕ 取下动作';}
 }
-function renderForecast(){const el=$('forecastOutput');if(el)el.textContent='实时预演已显示于每个角色的血条。';}
+function renderForecast(){
+ // Single source of truth: forecastState() reads the very same tick simulation used at execution.
+ // All projected HP is rendered in the corresponding actor's own health bar, not a separate table.
+ const out=$('forecastOutput');if(out&&projection)out.textContent='本轮逐格实时推演已同步更新在每个角色血条上。';
+}
 function forecast(){if(!isPlanning())return;playHead=-1;display();showToast('已经自动推演整段时间，鼠标移过格子或点击时间即可查看瞬时状态。');}
 function execute(){if(!isPlanning())return;const base=game.now;game=G.simulateRound(game);placementMode=null;selectedUid=null;playHead=-1;if(!G.actorsOf(game,'enemy').find(a=>a.id===targetId))targetId=G.actorsOf(game,'enemy')[0]?.id;
 $('forecastOutput').innerHTML=`<b>上一轮已结算</b> · 命中按时间先后执行；本轮产生 ${game.events.length} 条事件。`;

@@ -1,4 +1,4 @@
-/* Paperchalk World: Timegrid Combat Engine v0.6 — browser + Node, deterministic seed. */
+/* Paperchalk World: Timegrid Combat Engine v0.4 — browser + Node, deterministic seed. */
 (function(root,factory){const result=factory();if(typeof module==='object'&&module.exports)module.exports=result;root.Timegrid=result;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const ROUND=10,HAND=4,SHUFFLE_EMPTY=1,SHUFFLE_FORCED=2,BREAK_TICKS=3,FAINT_TICKS=6,FINISHER_NEED=100;
@@ -113,11 +113,11 @@ function scheduleAction(game,actor,card,start,target,source,locked=false,uid=nul
 if(end>game.now+ROUND&&already.some(a=>a.start>start))throw Error('跨回合的必须是最右端动作');
 if(already.some(a=>a.start+cLen(CARD[a.card])>game.now+ROUND&&a.start<start))throw Error('跨界动作后不能再安排新卡');
 const action={id:'a'+(++game.nextUid),card,start,target,source,locked,uid,guardLeft:(c.guard||0)+(c.guard&&actor.side==='ally'&&actor.relics?.includes('guard_plus')?4:0),canceled:false,started:false,done:false};actor.actions.push(action);actor.actions.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));return action;}
-function place(game,uid,startRelative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];if(a.dead||a.stunUntil>game.now+startRelative)throw Error('角色失能');if(!Number.isInteger(startRelative)||startRelative<1||startRelative>10)throw Error('请选择T1～T10');const ix=a.hand.findIndex(c=>c.uid===uid);if(ix<0)throw Error('手牌未找到');const card=a.hand[ix],c=CARD[card.key];const start=game.now+startRelative-1;/* 新手牌允许放在先前留下的空白格，不能动已锁卡牌；洗牌只锁动作，不锁空位。 */if(!c)throw Error('无效卡牌');if(c.type==='finisher')throw Error('绝杀为单独槽位');const friend=!!(c.type==='defense'||c.heal||c.buff);const dest=targetId||(friend?a.id:actorsOf(game,'enemy')[0]?.id);const t=game.actors.find(x=>x.id===dest);if(!t||t.dead||t.side!==(friend?'ally':'enemy'))throw Error(friend?'请拖到我方角色轨道':'请拖到敌方目标轨道');const action=scheduleAction(game,a,card.key,start,dest,'hand',false,card.uid);a.hand.splice(ix,1);return action;}
+function place(game,uid,startRelative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];if(a.dead||a.stunUntil>game.now+startRelative)throw Error('角色失能');if(!Number.isInteger(startRelative)||startRelative<1||startRelative>10)throw Error('请选择T1～T10');const ix=a.hand.findIndex(c=>c.uid===uid);if(ix<0)throw Error('手牌未找到');const card=a.hand[ix],c=CARD[card.key];const start=game.now+startRelative-1;/* 洗牌只锁已放动作，不锁时间格；新牌能倒填任何空格。洗牌耗时是真实成本。 */if(!c)throw Error('无效卡牌');if(c.type==='finisher')throw Error('绝杀为单独槽位');const friend=!!(c.type==='defense'||c.heal||c.buff);const dest=targetId||(friend?a.id:actorsOf(game,'enemy')[0]?.id);const t=game.actors.find(x=>x.id===dest);if(!t||t.dead||t.side!==(friend?'ally':'enemy'))throw Error(friend?'请拖到我方角色轨道':'请拖到敌方目标轨道');const action=scheduleAction(game,a,card.key,start,dest,'hand',false,card.uid);a.hand.splice(ix,1);return action;}
 function moveAction(game,actionId,startRelative,targetId){
  if(game.phase!=='planning')throw Error('不是规划阶段');
  const hero=game.actors[0],act=hero.actions.find(a=>a.id===actionId);
- if(!act||act.locked||act.start<=hero.lockedUntil||act.start<game.now)throw Error('该动作已锁定或不可移动');
+ if(!act||act.locked||act.start<game.now)throw Error('只有洗牌前已经放好的动作才被锁定；新牌可在旧空位自由移动');
  if(!Number.isInteger(startRelative)||startRelative<1||startRelative>ROUND)throw Error('目标时间必须在1—10格内');
  const card=CARD[act.card],friend=card.type==='defense'||card.heal||card.buff||act.source==='shuffle';
  const dest=targetId||act.target,target=game.actors.find(a=>a.id===dest);
@@ -134,7 +134,7 @@ function moveAction(game,actionId,startRelative,targetId){
  }
  hero.actions.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));return act;
 }
-function remove(game,actionId){const a=game.actors[0];const i=a.actions.findIndex(a=>a.id===actionId);if(i<0)throw Error('未找到卡牌');const act=a.actions[i];if(act.locked||act.start<=a.lockedUntil)throw Error('洗牌前排程已锁定');if(act.start<game.now)throw Error('跨回合动作不可移除');if(act.source==='hand')a.hand.push({uid:act.uid,key:act.card});a.actions.splice(i,1);return act;}
+function remove(game,actionId){const a=game.actors[0];const i=a.actions.findIndex(a=>a.id===actionId);if(i<0)throw Error('未找到卡牌');const act=a.actions[i];if(act.locked)throw Error('洗牌前已经放好的卡牌已锁定；新牌可移动、取下，也可填前面的空位');if(act.start<game.now)throw Error('跨回合动作不可移除');if(act.source==='hand')a.hand.push({uid:act.uid,key:act.card});a.actions.splice(i,1);return act;}
 function shuffleHand(game,relative){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];const start=game.now+relative-1;const cost=a.hand.length?SHUFFLE_FORCED:SHUFFLE_EMPTY;if(!Number.isInteger(relative)||relative<1||relative>10)throw Error('请选择T1～T10');const prev=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND);
 const latest=prev.reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));if(start<latest)throw Error('洗牌只能排在已安排动作之后；不能回到过去');if(start>=game.now+ROUND)throw Error('当前回合没有洗牌空间');if(!a.draw.length&&!a.discard.length&&!a.hand.length)throw Error('本轮牌库已被预留，请到下一回合自动补牌');
 const c=cost===1?'shuffle1':'shuffle2';// synthetic card definitions fixed time
@@ -328,7 +328,7 @@ function autoPlan(game,policy='tactical'){if(game.phase!=='planning')return game
 let tries=0;while(tries++<12){const cards=hero.hand.slice();if(!cards.length){const next=earliestShuffle(game);if(next>10)break;try{shuffleHand(game,next);}catch{break;}continue;}
 let best=null;
 for(const inst of cards){const card=CARD[inst.key];for(let relative=1;relative<=10;relative++){
- const start=game.now+relative-1,end=start+cLen(card);if(start<=hero.lockedUntil||start<hero.stunUntil||isBusy(hero,start,end))continue;
+ const start=game.now+relative-1,end=start+cLen(card);if(start<hero.stunUntil||isBusy(hero,start,end))continue;
  const overlapping=hero.actions.some(a=>!a.canceled&&a.start<game.now+10&&a.start+cLen(CARD[a.card])>game.now+10&&a.start<start);if(overlapping)continue;
  const attackTicks=enemies.flatMap(e=>e.actions.filter(a=>CARD[a.card].damage&&a.target===hero.id).flatMap(a=>Array.from({length:CARD[a.card].a},(_,i)=>a.start+CARD[a.card].w+i)));
  const actives=Array.from({length:card.a},(_,i)=>start+card.w+i);
