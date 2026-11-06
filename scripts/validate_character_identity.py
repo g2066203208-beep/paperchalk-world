@@ -43,7 +43,17 @@ for side in ("front", "back"):
 assert assets["front"] != assets["back"], "front/back assets must be distinct, not a mirrored reference"
 characters_dir = SITE / "assets/characters"
 actual = {p.name for p in characters_dir.glob("protagonist-*.webp") if p.is_file()}
-assert actual == {"protagonist-front.webp", "protagonist-back.webp"}, f"unregistered protagonist duplicate: {actual}"
+canonical = {"protagonist-front.webp", "protagonist-back.webp"}
+# Combat pose previews/finals are additional VIEWS of the SAME character.
+# They must never replace the two approved front/back identity anchors.
+known_combat_variants = {
+    "protagonist-back-combat-eye-level-preview.webp",
+    "protagonist-back-combat-3q-preview.webp",
+    "protagonist-back-combat-3q-final.webp",
+}
+assert canonical <= actual, f"missing canonical protagonist reference: {canonical - actual}"
+unexpected = actual - canonical - known_combat_variants
+assert not unexpected, f"unexpected protagonist duplicate: {unexpected}"
 assert "protagonist-back.webp" in (SITE / "index.html").read_text(encoding="utf-8")
 assert (SITE / "l2d/runtime.js").is_file(), "missing shared multi-actor L2D runtime"
 assert "protagonist-" in (SITE / "character-editor/index.html").read_text(encoding="utf-8"), "character editor must retain approved reference assets"
