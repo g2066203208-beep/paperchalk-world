@@ -362,3 +362,53 @@ h1{font-size:17px}.eyebrow,.offline{display:none}.top-actions button{font-size:1
  .control-buttons{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:5px}
  .control-buttons .primary{grid-column:auto;min-width:0}.control-buttons button{min-width:0;font-size:11px;padding:6px 4px}
 }
+
+/* V1.4: One caster clock shared across all target lanes. Strong, nondecorative occupancy affordances. */
+.dual-hour{position:relative;transition:background-color .11s,border-color .11s;box-shadow:none}
+.dual-hour.hour-busy{background:#415a6c;color:#f6fbff;box-shadow:inset 0 -4px #7db5cd;font-weight:900}
+.dual-hour.hour-locked{background:#625743;color:#fff1d4;box-shadow:inset 0 -4px #e0be7c;font-weight:900}
+.dual-hour.hour-stunned{background:#613944;color:#ffe2df;box-shadow:inset 0 -4px #e18493;font-weight:900}
+.dual-hour.hour-free{background:#192534;color:#8ea3b6}
+.dual-hour.selected{outline:2px solid #f9d48b;outline-offset:-2px;z-index:2}
+.dual-big{position:relative;isolation:isolate;transition:background-color .10s,border-color .10s,box-shadow .10s;touch-action:manipulation}
+/* The entire card duration is visibly booked, including the windup/recovery. */
+.dual-big.filled{border:1px solid color-mix(in srgb,var(--cell,#7eb6c7) 78%,#fff);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cell,#7eb6c7) 45%,transparent);opacity:1}
+.dual-big.filled.windup{background:color-mix(in srgb,var(--cell) 45%,#223041);color:#f3f8fc}
+.dual-big.filled.active{background:color-mix(in srgb,var(--cell) 89%,#182536);border-color:color-mix(in srgb,var(--cell) 77%,white);box-shadow:inset 0 -3px #ffffff75}
+.dual-big.filled.recovery{background:color-mix(in srgb,var(--cell) 38%,#1c2b39);color:#d4dce5}
+.dual-big.filled.locked{border:1px solid #e9c88b;box-shadow:inset 0 0 0 1px #edcb8d80;background-image:repeating-linear-gradient(135deg,transparent,transparent 7px,#f0d8a211 7px,#f0d8a211 10px)}
+.dual-big.caster-busy:not(.filled){background:#344759;border:1px solid #586e80;box-shadow:inset 0 2px #8aa8bd7d}
+.dual-big.caster-locked:not(.filled){background:#443e37;border-color:#8d7955;box-shadow:inset 0 2px #bda67d;background-image:repeating-linear-gradient(135deg,transparent,transparent 8px,#f1d0a210 8px,#f1d0a210 11px)}
+.dual-big.caster-stunned:not(.filled){background:#5a3642;border-color:#9e5d6b}
+.busy-glyph{width:6px;height:6px;background:#adc2d2;border-radius:2px;display:block;opacity:.8;pointer-events:none}
+.dual-big.caster-locked .busy-glyph{background:#efc78d}
+.dual-big:not(.filled):not(.caster-busy):not(.caster-locked):not(.caster-stunned){background:#141e2b;border:1px solid #2b3b4a}
+/* During card placement, display only genuine legal starts, based on full action length. */
+.timeline.choosing .dual-row.legal-target .dual-big.legal-start:not(.filled){background:#21423f;border:2px solid #56b8a4;box-shadow:inset 0 0 0 1px #9ef0d016}
+.timeline.choosing .dual-row .dual-big.conflict-start:not(.filled){background:#2c2830;border-color:#473f4a;box-shadow:none}
+.timeline.choosing .dual-big.conflict-start .dual-plus{display:none}
+.timeline.choosing .dual-big.legal-start .dual-plus{display:block;color:#a3f4df;opacity:1;font-size:17px;font-weight:800}
+.dual-big.footprint-valid{outline:2px solid #7ee8c5;outline-offset:-2px;background:#2a5550!important;z-index:2}
+.dual-big.footprint-invalid{outline:2px solid #e38b88;outline-offset:-2px;background:#563741!important;z-index:2}
+.timeline-heading p#occupancyStatus{font-size:11px;font-weight:700;letter-spacing:0;color:#accddc;margin:3px 0 0;max-width:none}
+.dual-small{border-top:1px solid #ffffff18}
+.dual-small.active{box-shadow:inset 0 -2px #ffffff55}
+.dual-big:focus-visible{outline:2px solid #f9d48b;outline-offset:-1px}
+@media(max-width:700px){
+ .timeline-heading p#occupancyStatus{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:330px}
+ .dual-hour.hour-busy{box-shadow:inset 0 -4px #7db5cd}.dual-hour.hour-locked{box-shadow:inset 0 -4px #e0be7c}
+ .dual-big.caster-busy:not(.filled){box-shadow:inset 0 2px #8aa8bd7d}
+}
+
+/* Focus: only the first recommended start is prominent. Valid starts stay visible without 40 competing plus icons. */
+.timeline.choosing .dual-row.legal-target .dual-big.legal-start:not(.filled){background:#1b3235;border:1px solid #315f5c;box-shadow:inset 0 -2px #47877d66}
+.timeline.choosing .dual-row.legal-target .dual-big.best-start:not(.filled){background:#244544;border:1px solid #5aa79b;box-shadow:inset 0 -3px #61bdad}
+.timeline.choosing .dual-row.legal-target .dual-big.recommended-start:not(.filled){background:#2b4b4a;border-color:#a1dcca;box-shadow:inset 0 -3px #a1dcca}
+.timeline.choosing .dual-big.legal-start .dual-plus{display:none;opacity:0}
+.timeline.choosing .dual-big.best-start .dual-plus,.timeline.choosing .dual-big.recommended-start .dual-plus{display:block;opacity:.82;font-size:14px}
+.busy-glyph{display:none}
+.dual-big.playhead:not(.filled){outline:none;box-shadow:inset 2px 0 #dac3897a}
+.dual-big.playhead.filled{outline:none;box-shadow:inset 2px 0 #edce8b, inset 0 -3px #ffffff65}
+.dual-row.targeting.invalid-target{opacity:1}
+.dual-row.targeting.invalid-target .dual-big:not(.filled){opacity:.5}
+.dual-big.footprint-valid,.dual-big.footprint-invalid{outline-offset:-2px!important;z-index:3}
