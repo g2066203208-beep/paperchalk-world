@@ -13,7 +13,7 @@ from build_l2d_library import build as build_l2d_library
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 ART=ROOT/'site'/'assets'/'characters'
 OUTPUT=ROOT/'site'/'characters.catalog.json'
-KNOWN={'protagonist':'女主','char-002':'女二','char-003':'男主','char-006':'女五','female-06':'女六'}
+KNOWN={'protagonist':'女主','char-002':'女二','char-003':'男主','char-006':'女五','female-06':'女六','female-07':'女七'}
 
 def discover():
     entries={}
