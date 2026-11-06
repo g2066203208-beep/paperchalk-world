@@ -214,7 +214,13 @@
       if(!dest)return fail('无效地点');
       if(location===state.location)return fail('已经在这里');
       if(!isOpen(location,state.minute))return fail('该地点现在尚未开放');
-      const cost=(LOCATIONS[state.location].group==='家'&&dest.group==='家')?10:dest.travel;
+      const current=LOCATIONS[state.location];
+      if(current.group==='家'&&dest.group==='城区'&&state.location!=='entrance')
+        return fail('先去玄关，从家门口出门后才能前往城区');
+      if(current.group==='城区'&&dest.group==='家'&&location!=='entrance')
+        return fail('从城区回家需要先经过玄关');
+      const cost=(current.group==='家'&&dest.group==='家')?10:
+        dest.group==='家'?current.travel:dest.travel;
       if(state.energy<3)return fail('太疲倦，先休息');
       if(!isOpen(location,state.minute+cost))return fail('到达时该地点已经关闭');
       const can=spend(cost);if(!can.ok)return can;
