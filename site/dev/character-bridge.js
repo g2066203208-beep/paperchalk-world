@@ -145,6 +145,20 @@ async function assign(target,id,face='front',save=true){
  const currentBinding=assigned[target];
  const previousAction=currentBinding?.id===id&&currentBinding?.side===face
   ?window.PaperchalkL2DLibrary?.getAction(target):null;
+ // Live 3D arena is composited from this slot's actual drawing surface.
+ // A handover from a different person/view must not carry one SINGLE frame
+ // of the previous model into the newly labeled heroine texture. The old
+ // Studio PartRig may normally remain until decode, but never in an arena.
+ if(target==='player'&&isArena()&&
+    (currentBinding?.id!==id||currentBinding?.side!==face)){
+  actor.root.dataset.l2dState='loading';
+  window.PaperchalkL2DLibrary?.detach(target);
+  await checked(window.PaperchalkL2D.setAnimationSource(target,null,
+    {suspendFallback:true}));
+  actor.rig?.stop();
+  actor.canvas.getContext('2d').clearRect(0,0,actor.canvas.width,actor.canvas.height);
+  delete actor.root.dataset.l2dFrame;
+ }
  const img=actor.img;assigned[target]={id,side:face};
  img.dataset.characterId=id;img.dataset.characterSide=face;
  if(img.src!==new URL(src,location.href).href){
