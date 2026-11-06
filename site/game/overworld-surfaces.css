@@ -225,3 +225,40 @@
  #pw-world-surface .pw-item{gap:2px;padding:5px!important}
  #pw-world-surface .pw-item-name{font-size:10px}
 }
+
+/* Immersive inventory polish. Map stays expansive, personal belongings do not. */
+#pw-world-surface .pw-surface-dim{background:#080b0fbd}
+#pw-world-surface .pw-surface-frame[data-view="bag"]{
+ width:min(840px,78cqw);height:min(535px,77cqh);
+}
+#pw-world-surface .pw-surface-frame[data-view="shop"]{
+ width:min(780px,77cqw);height:min(480px,73cqh);
+}
+#pw-world-surface .pw-surface-frame[data-view="bag"] .pw-item-grid{
+ grid-auto-rows:minmax(78px,17cqh);gap:8px;
+}
+#pw-world-surface .pw-item-symbol{border:none;background:transparent}
+#pw-world-surface .pw-item-symbol svg{
+ width:34px;height:34px;display:block;stroke:#ddd5c3;
+ filter:drop-shadow(0 1px 2px #0005)
+}
+#pw-world-surface .pw-item{
+ background:linear-gradient(138deg,#353c3899,#232b28a6)!important;
+ border-color:#e0d6c334!important;
+}
+#pw-world-surface .pw-item:hover,#pw-world-surface .pw-item[data-active=true]{
+ background:#5c64589a!important;border-color:#e1d0afbb!important
+}
+#pw-world-surface .pw-bag-left{padding:13px 15px}
+#pw-world-surface .pw-item-detail{padding:19px 17px}
+#pw-world-surface .pw-item-description{line-height:1.65}
+@container (max-height:480px){
+ #pw-world-surface .pw-surface-frame[data-view="bag"],
+ #pw-world-surface .pw-surface-frame[data-view="shop"]{
+  width:94cqw;height:91cqh;
+ }
+ #pw-world-surface .pw-item-symbol svg{width:24px;height:24px}
+ #pw-world-surface .pw-surface-frame[data-view="bag"] .pw-item-grid{
+  grid-auto-rows:minmax(53px,14cqh);gap:5px
+ }
+}
