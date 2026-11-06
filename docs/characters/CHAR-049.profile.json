@@ -1,0 +1,2520 @@
+{
+  "schemaVersion": 3,
+  "recordCode": "CHAR-049",
+  "canonicalId": "female-seven",
+  "recordState": "female7_visual_candidate_costume_direction_user_accepted_face_and_weapon_revision_pending",
+  "readableDocument": "docs/characters/CHAR-049_FEMALE_SEVEN_PROFILE.md",
+  "sourcePriority": [
+    "user_confirmed",
+    "approved_art_reference",
+    "approved_story_reference",
+    "proposed",
+    "unknown",
+    "not_applicable",
+    "rejected"
+  ],
+  "fields": {
+    "identity": {
+      "recordCode": {
+        "value": "CHAR-049",
+        "status": "user_confirmed",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "canonicalId": {
+        "value": "female-seven",
+        "status": "user_confirmed",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "displayName": {
+        "value": "女7（正式名待定）",
+        "status": "user_confirmed",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "legalName": {
+        "value": null,
+        "status": "unknown"
+      },
+      "nicknames": {
+        "value": null,
+        "status": "unknown"
+      },
+      "aliases": {
+        "value": [
+          "女7",
+          "Female 7"
+        ],
+        "status": "user_confirmed",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "pronouns": {
+        "value": null,
+        "status": "unknown"
+      },
+      "genderPresentation": {
+        "value": "成年女性",
+        "status": "user_confirmed",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "ageYears": {
+        "value": 22,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "birthDate": {
+        "value": null,
+        "status": "unknown"
+      },
+      "birthplace": {
+        "value": null,
+        "status": "unknown"
+      },
+      "currentResidence": {
+        "value": null,
+        "status": "unknown"
+      },
+      "era": {
+        "value": "当代都市怪谈世界",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "occupation": {
+        "value": "城市建筑/道路测绘与异常空间复核员（候选）",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "schoolYear": {
+        "value": "非学生（候选）",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "storyRole": {
+        "value": "独立女性角色；都市异常调查与战斗参与方向",
+        "status": "user_confirmed",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "designStatus": {
+        "value": "角色与服装大方向获用户保留；脸、武器需重设；图未单人透明化，未制PSD/L2D，未作为游戏可用演员",
+        "status": "user_confirmed",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      }
+    },
+    "family": {
+      "parents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "guardians": {
+        "value": null,
+        "status": "unknown"
+      },
+      "siblings": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relatives": {
+        "value": null,
+        "status": "unknown"
+      },
+      "familyStructure": {
+        "value": null,
+        "status": "unknown"
+      },
+      "childhoodEvents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upbringing": {
+        "value": null,
+        "status": "unknown"
+      },
+      "householdMembers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "livingSituation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "socioeconomicBackground": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "education": {
+      "school": {
+        "value": null,
+        "status": "unknown"
+      },
+      "className": {
+        "value": null,
+        "status": "unknown"
+      },
+      "club": {
+        "value": null,
+        "status": "unknown"
+      },
+      "grades": {
+        "value": null,
+        "status": "unknown"
+      },
+      "subjectStrengths": {
+        "value": null,
+        "status": "unknown"
+      },
+      "subjectWeaknesses": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workplace": {
+        "value": null,
+        "status": "unknown"
+      },
+      "jobTitle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "salaryRange": {
+        "value": null,
+        "status": "unknown"
+      },
+      "experience": {
+        "value": null,
+        "status": "unknown"
+      },
+      "professionalGoals": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "measurements": {
+      "heightCm": {
+        "value": 169,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "weightKg": {
+        "value": 53,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "headBodyRatio": {
+        "value": 7.25,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "shoulderWidthCm": {
+        "value": 37,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "chestCircumferenceCm": {
+        "value": 83,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "waistCircumferenceCm": {
+        "value": 65,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "hipCircumferenceCm": {
+        "value": 89,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "torsoLengthCm": {
+        "value": 47,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "armSpanCm": {
+        "value": 168,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "inseamCm": {
+        "value": 79,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "shoeSize": {
+        "value": 39,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "bodyBuild": {
+        "value": "修长、纤细但不是纸片体型",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "bodyMassDescription": {
+        "value": "肩背舒展、骨架中等、腿部修长；服装比例上宽下窄",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "posture": {
+        "value": "微侧重心、清醒警觉；不固定僵硬正背面",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "handDominance": {
+        "value": "右手（候选）",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "gait": {
+        "value": "轻、步长中短、步点准确",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "upperArmCircumferenceCm": {
+        "value": 25,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "forearmCircumferenceCm": {
+        "value": 22,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "wristCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "thighCircumferenceCm": {
+        "value": 49,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "calfCircumferenceCm": {
+        "value": 33,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "kneeCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ankleCircumferenceCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperArmLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forearmLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "handLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "palmWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperLegLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lowerLegLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeHeightCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipBreadthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderBreadthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "waistHeightCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ribcageDepthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipDepthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceWidthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footLengthCm": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footWidthCm": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "anatomy": {
+      "headShape": {
+        "value": "新脸候选：短菱形头形，颧骨存在细小转折",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "shoulderSlope": {
+        "value": "肩微微下斜；外套袖山制造宽肩轮廓",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "torsoDepth": {
+        "value": "正常胸廓体积",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "ribcageContour": {
+        "value": "自然立体，不夸大",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "waistContour": {
+        "value": "正常微收腰，外套不强行束腰",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "pelvisAndHips": {
+        "value": "中等宽度骨盆，外层裹裙自然包裹腰胯",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "backContour": {
+        "value": "背部自然，背衣有独立布料余量",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "bustThroughClothing": {
+        "value": "修身独立上衣中自然的服装形体，不刻意突出",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "limbProportions": {
+        "value": "自然修长，避免手脚缩短",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "handShape": {
+        "value": "指节细，手掌正常比例；握把不穿手",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "skinUndertone": {
+        "value": "低饱和自然偏暖",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "skinTexture": {
+        "value": "克制的平涂肤色，不使用塑料高光",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "scars": {
+        "value": null,
+        "status": "unknown"
+      },
+      "birthmarks": {
+        "value": null,
+        "status": "unknown"
+      },
+      "moles": {
+        "value": null,
+        "status": "unknown"
+      },
+      "freckles": {
+        "value": null,
+        "status": "unknown"
+      },
+      "postureAsymmetry": {
+        "value": "肩膀和胸廓可随着对敌姿势自然扭转",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "mobilityNeeds": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperArmShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "forearmShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wristShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "thighShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "calfShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ankleShape": {
+        "value": null,
+        "status": "unknown"
+      },
+      "legAxis": {
+        "value": null,
+        "status": "unknown"
+      },
+      "upperLimbTaper": {
+        "value": null,
+        "status": "unknown"
+      },
+      "lowerLimbTaper": {
+        "value": null,
+        "status": "unknown"
+      },
+      "legMuscleDistribution": {
+        "value": null,
+        "status": "unknown"
+      },
+      "armMuscleDistribution": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pelvisTilt": {
+        "value": null,
+        "status": "unknown"
+      },
+      "spinalCurve": {
+        "value": "自然S形，不强制肩线完全对称",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "handFingerLengthRatios": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodySilhouetteType": {
+        "value": "宽松高立领夹克、修身上衣、修长裹裙、厚底短靴",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "shoulderToHipWidthRatio": {
+        "value": 0.94,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "waistToHipWidthRatio": {
+        "value": 0.73,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "headToShoulderWidthRatio": {
+        "value": 0.4,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "face": {
+      "faceShape": {
+        "value": "新方案：短菱形窄脸，不沿用当前图的通用椭圆脸",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "forehead": {
+        "value": "偏低额头，刘海下眉形可辨",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "cheekbones": {
+        "value": "高颧点，侧脸颧骨过渡有一处转折",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "jawline": {
+        "value": "收窄较快但下颌下缘稍平直，不是尖V脸",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "chin": {
+        "value": "短钝、略偏方圆",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "noseBridge": {
+        "value": "偏低鼻根、鼻梁短直",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "noseTip": {
+        "value": "小而略钝的鼻尖",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "mouthShape": {
+        "value": "短平嘴，左侧唇角有轻微下压",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "lips": {
+        "value": "上唇薄，下唇略实，非嘟嘴",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "teeth": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ears": {
+        "value": "耳廓偏小且后退，侧面部分可见",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyebrows": {
+        "value": "低平微不对称；角色自身右眉眉尾有一处小断纹",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyelidShape": {
+        "value": "偏窄内双，外眼角短折线",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyeShape": {
+        "value": "细长菱形眼、内眼角圆而眼尾稍平",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyeSpacing": {
+        "value": "比原图略宽但不过分分离",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyeCornerAngle": {
+        "value": "眼尾略向下压，区别于女主上扬型",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyeColor": {
+        "value": "雾橄榄灰",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyeHex": {
+        "value": "#777B6A",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "pupilColor": {
+        "value": "#353930",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyeHighlights": {
+        "value": "极小单点高光，无星星眼",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyelashes": {
+        "value": "短直上睫毛，下睫毛很少",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "defaultExpression": {
+        "value": "冷静审视、似乎发现了细微错误，嘴角不笑",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "facialLandmarkSystem": {
+        "value": "新脸定稿后采用0-1归一化坐标；当前未精准标点",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "facialLandmarksNormalized": {
+        "value": null,
+        "status": "unknown"
+      },
+      "faceLengthToWidthRatio": {
+        "value": 1.4,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "foreheadToFaceHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "jawWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cheekboneWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeCenterHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "interocularSpacingRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyebrowEyeGapRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseTopHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseTipHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthCenterHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthWidthToFaceWidthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "philtrumLengthRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "earTopHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "earBottomHeightRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeTailSlantDeg": {
+        "value": -2,
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyelidOpennessBaseline": {
+        "value": "微垂上眼睑，遮住少量虹膜上缘",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "lipCornerSlopeDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "browAngleDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionLandmarkVariants": {
+        "value": null,
+        "status": "unknown"
+      },
+      "noseToMouthDistanceRatio": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "hair": {
+      "hairBaseColor": {
+        "value": "灰黑冷褐",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "hairHex": {
+        "value": "#2D2C31",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "hairHighlights": {
+        "value": "低饱和灰棕高光，不加油亮渐变",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "hairLength": {
+        "value": "后发束到肩胛上部",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "hairTexture": {
+        "value": "顺直发束，末端略分叉",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "hairDensity": {
+        "value": "中等偏厚",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "parting": {
+        "value": "非对称细碎分缝",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "bangs": {
+        "value": "斜向碎刘海，额前几束长短不同",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "sidelocks": {
+        "value": "一侧耳前垂发略长",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "ponytailCount": {
+        "value": 1,
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "ponytailPosition": {
+        "value": "后脑低位靠后颈",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "ponytailLength": {
+        "value": "发绳下约23cm",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "hairAccessories": {
+        "value": "窄幅深色发绳",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "accessorySide": {
+        "value": null,
+        "status": "unknown"
+      },
+      "accessoryPosition": {
+        "value": "后颈上方",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      },
+      "backSilhouette": {
+        "value": "低马尾在宽大领口外自然垂下，不穿插衣领",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+      }
+    },
+    "wardrobe": {
+      "outerwear": {
+        "value": "认可原图轮廓：黑色宽松高领工业工装夹克；细部口袋和拉链应作为精修候选，不能宣称旧图已画出这些细节",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 女7首版Anima原始提示词（生成了当前用户上传的正背角色参考图）"
+      },
+      "shirt": {
+        "value": "原始Anima提示词是fitted dark graphite inner top（独立修身上衣），不可改写为旗袍",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 女7首版Anima原始提示词（生成了当前用户上传的正背角色参考图）"
+      },
+      "blouse": {
+        "value": "无独立衬衫；可视作贴体上衣而非带盘扣的上衣",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "neckwear": {
+        "value": "外套本身的8cm高立领，领边略向外翻；没有独立围巾",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "skirt": {
+        "value": "原始Anima提示词是fitted wrap-skirt layer with hidden slim shorts underneath（独立裹裙与裙内短裤），不可改写为连衣旗袍",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 女7首版Anima原始提示词（生成了当前用户上传的正背角色参考图）"
+      },
+      "trousers": {
+        "value": "裹裙下隐藏贴身短裤 hidden slim shorts，不画成外露长裤",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "socks": {
+        "value": "原始Anima提示词是dark thigh-high compression stockings（深色过膝袜）",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 女7首版Anima原始提示词（生成了当前用户上传的正背角色参考图）"
+      },
+      "footwear": {
+        "value": "黑色工业风中筒靴 black mid-calf boots，厚而有抓地纹理的几何鞋底；侧面暗拉链",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "garmentLayerOrder": {
+        "value": "贴体上衣+独立交叠裹裙+裙内隐藏短裤+过膝深色袜+外层宽松工装夹克+中筒工装靴（人体穿着遮挡按实物结构处理）",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "paletteHex": {
+        "value": {
+          "jacket": "#25272A",
+          "reinforcement": "#35383C",
+          "undershirt": "#2A2A2E",
+          "wrapSkirt": "#202126",
+          "innerShorts": "#222329",
+          "stockings": "#292B30",
+          "boots": "#202125",
+          "metal": "#64686B",
+          "goldOrange": "#B88B49",
+          "warningOrange": "#B36D34"
+        },
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "fabrics": {
+        "value": "夹克哑光防撕裂尼龙+肩肘石墨色耐磨斜纹；贴身上衣细密弹力针织；裹裙哑光挺括斜纹；袜子不透明细针织；靴子磨砂皮",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "sewingDetails": {
+        "value": "工程候选：双头枪灰主拉链略偏角色右侧约1cm，可从下摆开启；宽肩拼缝穿过袖山；背部倒梯形育克片，下方2块大面料并有中间细纵缝；肘部一处活动省；铆钉和缝线必须遵守结构，不能随机堆叠",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "pleats": {
+        "value": "每侧宽袖约2-3组主褶，不使用噪点小皱褶；裹裙交叠处只有合理张力褶",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "buttons": {
+        "value": "内搭无盘扣；外套拉链开合，不加无功能装饰扣",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "pockets": {
+        "value": "夹克左右各一个斜插拉链手袋（约14cm口长），角色左胸一条纵向暗袋拉链（约9cm），角色左臂一个扁平工装拉链袋（约11x8cm）；裹裙默认无外露袋；需保持背面与正面结构对应",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "wearCondition": {
+        "value": "整体整洁，袖口轻微使用痕迹；不靠脏污制造细节",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "seasonalVariants": {
+        "value": "春秋标准衣装；加厚冬装为独立服装变体，非当前图",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "occasionVariants": {
+        "value": "常服与战斗服同一基础装，只更改持物姿势/拉链开合",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "permanentAccessories": {
+        "value": "左胸约35mm暗金橙色不闭合折线三角徽记（原图呈金色几何三角；具体工艺为候选），后肩两条极短暗橙加固线",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "temporaryProps": {
+        "value": "旧图为工业救援斧，用户要求替换，暂定新武器为折叠式工业测距轮杖",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "temperament": {
+      "coreConfirmedTraits": {
+        "value": [],
+        "status": "user_confirmed",
+        "source": "用户没有正式确认具体性格特征，仅认可人物美术方向"
+      },
+      "proposedTraits": {
+        "value": [
+          "冷静",
+          "观察敏锐",
+          "语气克制",
+          "对空间异常有职业直觉"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "strengths": {
+        "value": [
+          "复核细节",
+          "认真对待记录",
+          "沉稳"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "weaknesses": {
+        "value": [
+          "太信赖数据",
+          "遇到不可解释现象会短暂迟疑"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "socialEnergy": {
+        "value": "较低，但能进行专业交流",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "humorStyle": {
+        "value": "偶发冷幽默",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "conflictStyle": {
+        "value": "先核实再质疑",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "fears": {
+        "value": [
+          "存在不可能重返原地的道路"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "angerTriggers": {
+        "value": [
+          "有人故意篡改现场信息"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "stressResponse": {
+        "value": "把手移向身侧测距工具，视线继续搜索",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "defenseMechanism": {
+        "value": "通过测量行为获得控制感",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "moralLimits": {
+        "value": "不把无辜者当成调查工具",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "goals": {
+        "value": [
+          "确认被记录的道路为什么与现实不符"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "contradictions": {
+        "value": "相信测量精度却被异常空间逼迫改变方法",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "publicPersona": {
+        "value": "谨慎寡言、清晰可靠",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "privatePersona": {
+        "value": "有强烈好奇心，难以忍受无法解释的测量误差",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "emotionalBaseline": {
+        "value": "冷静的低张力",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "expressionRange": {
+        "value": "惊讶多通过眉眼和停顿表达",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "defaultMicroExpression": {
+        "value": "一侧眉尾轻微下压、嘴唇松闭",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "signatureMicroExpressions": {
+        "value": "听到不一致信息时瞳孔略偏移、嘴角不变",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyesExpression": {
+        "value": "窄眼低上睑",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyebrowsExpression": {
+        "value": "平眉偏低",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "mouthExpression": {
+        "value": "闭口短唇线",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "bodyLanguageMood": {
+        "value": "站姿从容但微有戒备",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "composureLevel": {
+        "value": "高",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "psychology": {
+      "innerNeed": {
+        "value": "能相信自己看到与记录的事实",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "externalGoal": {
+        "value": "追查同一街区出现的矛盾尺寸、重复出口与无效路线",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "secretGoal": {
+        "value": null,
+        "status": "unknown"
+      },
+      "belief": {
+        "value": "精确记录是抵御混乱的方式",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "selfImage": {
+        "value": "解决实际问题的人",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "insecurities": {
+        "value": "当自己的工具失效时怀疑判断",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "regrets": {
+        "value": null,
+        "status": "unknown"
+      },
+      "traumaIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      },
+      "attachmentStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trustPattern": {
+        "value": "相信可复核的证据多于单次证词",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "breakingPoint": {
+        "value": "同一路线不断自我闭合使她无法判断归途",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "growthArc": {
+        "value": "学会在数值失效时依靠同伴与经验",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "values": {
+        "value": [
+          "事实",
+          "责任",
+          "不伤害他人"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "dialogue": {
+      "voicePitch": {
+        "value": "女中低音",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "voiceTimbre": {
+        "value": "稍沙哑，靠前的自然声线",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "speechRate": {
+        "value": "偏慢",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "voiceVolume": {
+        "value": "偏轻",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "tone": {
+        "value": "克制、不夸张",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "accents": {
+        "value": null,
+        "status": "unknown"
+      },
+      "diction": {
+        "value": "句尾收得很干净",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "sentenceLength": {
+        "value": "短中句",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "vocabulary": {
+        "value": "测距、方位、路口等工作用语少量自然出现",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "habitualPhrases": {
+        "value": [
+          "这个距离不对。",
+          "先别动，我再量一次。"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "sarcasmLevel": {
+        "value": "低",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "laughStyle": {
+        "value": "很短的呼气笑",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "cryingStyle": {
+        "value": "更安静，不长时间啜泣",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "speechUnderStress": {
+        "value": "尽量把句子说完整",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "dialogueExamples": {
+        "value": [
+          "……刚才这条路有多长？",
+          "不是误差。路变了。"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "forbiddenVoicePatterns": {
+        "value": [
+          "机械冷酷AI口吻",
+          "所有台词都像数据报告"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "behavior": {
+      "idlePose": {
+        "value": "自然站立，重心略偏一侧",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "signatureGesture": {
+        "value": "视线发现异常时轻触衣领或停顿确认测距柄位置",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "greetingHabit": {
+        "value": "先看对方再点头",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "gazePattern": {
+        "value": "先观察物体边缘与周边参照物",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "blinkHabit": {
+        "value": "观察数据时眨眼减少",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eyebrowMotion": {
+        "value": "微低眉尾",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "headTilt": {
+        "value": "约小幅倾斜",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "walkCycle": {
+        "value": "小幅、有节制步伐",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "runningCycle": {
+        "value": "短促敏捷，不摆夸张手臂",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "nervousTics": {
+        "value": "反复确认是否握紧工具",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "sleepRhythm": {
+        "value": "夜间巡测任务可打乱作息",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "eatingStyle": {
+        "value": "速度正常，很少边走边吃",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "favoriteFoods": {
+        "value": "未定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "hobbies": {
+        "value": [
+          "步行地图",
+          "收集旧城市路牌照片"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "dailyRoutine": {
+        "value": "白天整理记录、按委托去实地复核，时间待剧情定稿",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "timeManagement": {
+        "value": "重视计划但能因异常中止",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "transportation": {
+        "value": "步行、地铁、公车",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "relationships": {
+      "familyRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "schoolRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "friendRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "rivalRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mentorRelations": {
+        "value": null,
+        "status": "unknown"
+      },
+      "romancesIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationshipToProtagonist": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationshipToMaleLead": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trustFlags": {
+        "value": null,
+        "status": "unknown"
+      },
+      "secretsShared": {
+        "value": null,
+        "status": "unknown"
+      },
+      "conflictHistory": {
+        "value": null,
+        "status": "unknown"
+      },
+      "relationProgression": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "skills": {
+      "talents": {
+        "value": [
+          "观察空间结构",
+          "测距记录",
+          "现场基础安全判断"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "weaknesses": {
+        "value": [
+          "应对无法测量的实体时短暂不适应"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "learnedSkills": {
+        "value": [
+          "地图测绘",
+          "简单维修",
+          "建筑安全常识"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "academicSkills": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workSkills": {
+        "value": [
+          "反复复核",
+          "位置记录",
+          "拍摄现场参照"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "combatAbility": {
+        "value": "战斗能力未定；区别于使用斧、枪、撬杆的其他角色",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "physicalEndurance": {
+        "value": "中等",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "agility": {
+        "value": "中上",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "perception": {
+        "value": "高",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "charisma": {
+        "value": "中等",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "supernaturalPowers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "powerCosts": {
+        "value": null,
+        "status": "unknown"
+      },
+      "equipment": {
+        "value": [
+          "折叠式测距轮杖（候选武器）",
+          "防水笔记本（工作物件）"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "inventory": {
+        "value": [
+          "简易记录工具（待决定是否常驻）"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "healthIfStoryApproved": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "story": {
+      "firstAppearance": {
+        "value": "候选：一段被改写的城市道路复测任务",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "locationEntrances": {
+        "value": null,
+        "status": "unknown"
+      },
+      "originStory": {
+        "value": "职业经历与家庭尚未锁定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "incitingEvent": {
+        "value": "复查普通城市道路时发现地图标注的距离连续变化",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "keyScenes": {
+        "value": [
+          "在雨后路口反复核实标记却找不到来路（候选）"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "storyGoals": {
+        "value": [
+          "找出城市尺度变化和怪异边界的原因"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "branchingChoices": {
+        "value": [
+          "是否信任自己的第二次测量结果"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "secrets": {
+        "value": "待定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "reveals": {
+        "value": "待定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "relationshipEvents": {
+        "value": "待定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "questEvents": {
+        "value": [
+          "异常街区测绘协作任务（候选）"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "alternateEndings": {
+        "value": "待定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "chronologicalHistory": {
+        "value": "待定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "environment": {
+      "home": {
+        "value": null,
+        "status": "unknown"
+      },
+      "school": {
+        "value": null,
+        "status": "unknown"
+      },
+      "workplace": {
+        "value": "城市建筑维护/测绘单位（候选）",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "roomOwnership": {
+        "value": null,
+        "status": "unknown"
+      },
+      "itemOwnership": {
+        "value": null,
+        "status": "unknown"
+      },
+      "furnitureConditions": {
+        "value": null,
+        "status": "unknown"
+      },
+      "weatherResponse": {
+        "value": "雨天测量易受干扰，会使用防水记录方式",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "locationsVisited": {
+        "value": [
+          "旧城区道路",
+          "楼道与建筑通道"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "npcSchedule": {
+        "value": null,
+        "status": "unknown"
+      },
+      "worldEra": {
+        "value": "当代架空城市，都市心理恐怖背景",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "visualProduction": {
+      "frontReference": {
+        "value": "用户上传的同画布双视图左侧正面参考；未在仓库发布原始PNG",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "backReference": {
+        "value": "用户上传的同画布双视图右侧背面参考；未在仓库发布原始PNG",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "sideReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "threeQuarterReference": {
+        "value": null,
+        "status": "unknown"
+      },
+      "poseReference": {
+        "value": "原始Anima提示词锁定为战斗背视角、自然持物；当前双视图属于中间样稿，不作为最终单人背战母图",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "expressionReferences": {
+        "value": null,
+        "status": "unknown"
+      },
+      "silhouetteLocked": {
+        "value": "仅宽松高领黑工装外套+窄长裹裙+低马尾+工业靴这一整体方向获保留",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "colorPalette": {
+        "value": {
+          "shell": "#25272A",
+          "inner": "#2A2A2E",
+          "skirt": "#202126",
+          "trim": "#B88B49"
+        },
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "artStyle": {
+        "value": "都市心理恐怖游戏二次元角色；压制大面积随机AI褶皱与噪点；口袋缝线连贯",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "imageAspectRatio": {
+        "value": "2048x2048 原始样稿；最终单人背战独立素材按实际画布",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "whiteBackgroundRule": {
+        "value": "纯白底是出图参考，不等于已透明",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "fullBodyRule": {
+        "value": "全身头脚必须完整且无截断",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "centeredRule": {
+        "value": "单人背战居中；双视图仅作为中间研究画稿",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "occlusionRule": {
+        "value": "衣领与发束、裙内短裤与裙摆以及手柄与手指遮挡必须自然",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "promptPositive": {
+        "value": "docs/characters/CHAR-049_FEMALE_SEVEN_ANIMA_PROMPT_TEMPLATE.md#positive-prompt",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 女7首版Anima原始提示词（生成了当前用户上传的正背角色参考图）"
+      },
+      "promptNegative": {
+        "value": "docs/characters/CHAR-049_FEMALE_SEVEN_ANIMA_PROMPT_TEMPLATE.md#negative-prompt",
+        "status": "approved_art_reference",
+        "source": "2026-11-06 女7首版Anima原始提示词（生成了当前用户上传的正背角色参考图）"
+      },
+      "modelVersion": {
+        "value": "Anima Base（用户已验证配置，具体checkpoint hash未知）",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "artistTag": {
+        "value": "@akipekostyle",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "lora": {
+        "value": "<lora:akipekoanima_v1_1:1>",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "seed": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sampler": {
+        "value": null,
+        "status": "unknown"
+      },
+      "resolution": {
+        "value": [
+          2048,
+          2048
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "sourceFileHash": {
+        "value": "sha256:8e6236f36c2161cc50d5c6cd45a481bbf8eaa3f3aa10ca9e5d10465f12196a33",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "assetApproval": {
+        "value": "认可角色与服装整体方向，脸与武器尚需重画；图未入仓",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "bodyFacingYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headFacingYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headPitchDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headRollDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pelvisYawDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gazeHorizontalDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "gazeVerticalDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cameraAngle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "cameraFocalStyle": {
+        "value": null,
+        "status": "unknown"
+      },
+      "projectionOrthoPerspective": {
+        "value": null,
+        "status": "unknown"
+      },
+      "visualStyleCategory": {
+        "value": "现代都市恐怖游戏高识别度动画立绘",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "lineWeightStyle": {
+        "value": "结构主线明显、褶皱次线更细，减少无意义多线",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "lineColor": {
+        "value": "深黑灰而非纯黑高密线",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "shadingMethod": {
+        "value": "受控色块赛璐璐，有限中间调",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "shadowDensity": {
+        "value": "中低，不能用噪点增加复杂感",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "highlightTreatment": {
+        "value": "低对比定向布料高光，不用塑料质感",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "textureComplexity": {
+        "value": "低噪点高结构清晰度",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "anatomicalStylization": {
+        "value": "自然七头身以上比例，真实运动关节",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "facialFeatureStylization": {
+        "value": null,
+        "status": "unknown"
+      },
+      "characterIdentityEmbeddingNotes": {
+        "value": "正背一致；新脸需在独立正面母图批准后锁定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "frontPosePoseCode": {
+        "value": null,
+        "status": "unknown"
+      },
+      "poseSilhouetteNotes": {
+        "value": "单人背面战斗准备，人物动作根据职业个性安排而不是固定3/4右背面",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "framingHeadroomRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "framingFootroomRatio": {
+        "value": null,
+        "status": "unknown"
+      },
+      "bodyAlignmentRule": {
+        "value": "自然骨盆/胸廓扭转，武器跟随手部真实力学",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "rigging": {
+      "layerSource": {
+        "value": null,
+        "status": "unknown"
+      },
+      "layerList": {
+        "value": null,
+        "status": "unknown"
+      },
+      "headJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "neckJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "shoulderJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "elbowJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "wristJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ankleJoint": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyeTrack": {
+        "value": null,
+        "status": "unknown"
+      },
+      "blink": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthShapes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hairPhysics": {
+        "value": null,
+        "status": "unknown"
+      },
+      "clothPhysics": {
+        "value": null,
+        "status": "unknown"
+      },
+      "breathingPhysics": {
+        "value": null,
+        "status": "unknown"
+      },
+      "skinningLimits": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionStates": {
+        "value": null,
+        "status": "unknown"
+      },
+      "actionStates": {
+        "value": null,
+        "status": "unknown"
+      },
+      "runtimePreview": {
+        "value": null,
+        "status": "unknown"
+      },
+      "occlusionRepair": {
+        "value": null,
+        "status": "unknown"
+      },
+      "qaAnimation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "armRotationBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "hipRotationBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "kneeFlexBoundsDeg": {
+        "value": null,
+        "status": "unknown"
+      },
+      "eyelidOpennessChannel": {
+        "value": null,
+        "status": "unknown"
+      },
+      "browDeformationChannels": {
+        "value": null,
+        "status": "unknown"
+      },
+      "mouthCornerChannels": {
+        "value": null,
+        "status": "unknown"
+      },
+      "expressionLandmarkMotion": {
+        "value": null,
+        "status": "unknown"
+      },
+      "frontSideBackProportionsQa": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "audio": {
+      "voiceCasting": {
+        "value": null,
+        "status": "unknown"
+      },
+      "pronunciation": {
+        "value": null,
+        "status": "unknown"
+      },
+      "multilingualNotes": {
+        "value": null,
+        "status": "unknown"
+      },
+      "recordedVoices": {
+        "value": null,
+        "status": "unknown"
+      },
+      "footstepSfx": {
+        "value": null,
+        "status": "unknown"
+      },
+      "costumeSfx": {
+        "value": null,
+        "status": "unknown"
+      },
+      "voiceVolume": {
+        "value": null,
+        "status": "unknown"
+      },
+      "ambienceRules": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "gameplay": {
+      "npcSchedule": {
+        "value": null,
+        "status": "unknown"
+      },
+      "dialogueTree": {
+        "value": null,
+        "status": "unknown"
+      },
+      "affinity": {
+        "value": null,
+        "status": "unknown"
+      },
+      "trust": {
+        "value": null,
+        "status": "unknown"
+      },
+      "playerControl": {
+        "value": null,
+        "status": "unknown"
+      },
+      "interactRange": {
+        "value": null,
+        "status": "unknown"
+      },
+      "characterSelection": {
+        "value": null,
+        "status": "unknown"
+      },
+      "sceneLayers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "collisionBounds": {
+        "value": null,
+        "status": "unknown"
+      },
+      "saveFlags": {
+        "value": null,
+        "status": "unknown"
+      },
+      "choiceTriggers": {
+        "value": null,
+        "status": "unknown"
+      },
+      "npcBrain": {
+        "value": null,
+        "status": "unknown"
+      },
+      "flagsVariables": {
+        "value": null,
+        "status": "unknown"
+      },
+      "inventoryRules": {
+        "value": null,
+        "status": "unknown"
+      }
+    },
+    "quality": {
+      "originalityCheck": {
+        "value": "未完成跨角色面相查重，必须复核",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "similarityCheck": {
+        "value": "原图脸型偏通用，待新版本与女主/女二/女六比对",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "faceConsistency": {
+        "value": "正背头发发束应一致；面部新设计尚未获批",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "hairSideCheck": {
+        "value": "低马尾不得穿过高领且左右刘海固定",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "visualIdentityCheck": {
+        "value": "衣装已可辨，但人物面容仍需独特化",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "handsCheck": {
+        "value": "握持改版武器需按重力和腕关节核查",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "feetCheck": {
+        "value": "两靴的方向和透视保持真实，无遮挡",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "fullBodyCheck": {
+        "value": "全身头脚不裁切",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "measurementProvenanceCheck": {
+        "value": "任何精确身材数值均为提案非照片实测",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "outfitCheck": {
+        "value": "原图不含盘扣旗袍；不得以作者臆测改变服装母版",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "sourceRightsCheck": {
+        "value": "用户提供的生成参考，仓库尚未存在图片文件",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "rigCheck": {
+        "value": "未拆分PSD/L2D，不能视为完成",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "poseCheck": {
+        "value": "背面对敌，动作自然持物；原图双视图不是最终单人背战",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "screenshotCheck": {
+        "value": "用户已提供双视图生成图作为参考",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "approvalRecord": {
+        "value": "用户保留人物与服装方向，脸、武器待新方案",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "rollbackReference": {
+        "value": "原始上传图hash和原始Anima提示词存档",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    },
+    "provenance": {
+      "createdAt": {
+        "value": "2026-11-06",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "updatedAt": {
+        "value": "2026-11-06",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "userConfirmedFields": {
+        "value": [
+          "female-seven角色成立",
+          "服装大轮廓保留",
+          "脸与武器需要换",
+          "原始Anima提示词作为以后范本"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "sourceCitations": {
+        "value": [
+          "2026-11-06 本轮用户提供的正背双视图，sha256 8e6236f36c2161cc50d5c6cd45a481bbf8eaa3f3aa10ca9e5d10465f12196a33",
+          "本对话的首次女7 Anima完整正负面提示词"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "proposedFields": {
+        "value": [
+          "职业与故事角色",
+          "脸部差异方案",
+          "新武器",
+          "口袋拉链与图案工艺",
+          "人体精确尺寸"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "unknownFields": {
+        "value": [
+          "正式姓名生日",
+          "家庭关系",
+          "超自然能力",
+          "交易与SAN数值",
+          "正式L2D素材"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "rejectedFields": {
+        "value": [
+          "把原始裹裙＋短裤改成旗袍连衣裙",
+          "继续复用原有救援斧为最终武器"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "revisionHistory": {
+        "value": [
+          "v1.0 2026-11-06 立档；恢复原始服装结构、设定精修提案、记录原始提示词范本"
+        ],
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "authorReviewer": {
+        "value": "ChatGPT方案整理；用户尚未确认新脸及武器",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "approvedBy": {
+        "value": "用户仅批准保留人物与服装整体方向",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "permissions": {
+        "value": "不覆盖既有演员及角色原图",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      },
+      "historyNotes": {
+        "value": "女7与CHAR-007不同；新增编码CHAR-049不改变原48人排期",
+        "status": "proposed",
+        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+      }
+    }
+  },
+  "extensions": {
+    "extensionSchema": "docs/characters/ANGEL_TRANSACTION_SAN_EXTENSION_V1.json",
+    "schemaVersion": 1,
+    "fields": {
+      "tradeEligibility": {
+        "participationRole": {
+          "value": "是否参与天使交易、是否为清道夫尚未设定；不得由“战斗角色”推断",
+          "status": "unknown",
+          "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        },
+        "recruitedBy": {
+          "value": null,
+          "status": "unknown"
+        },
+        "recruitmentVoluntary": {
+          "value": null,
+          "status": "unknown"
+        },
+        "dealOptIn": {
+          "value": null,
+          "status": "unknown"
+        },
+        "participationStatus": {
+          "value": null,
+          "status": "unknown"
+        },
+        "firstContact": {
+          "value": null,
+          "status": "unknown"
+        },
+        "eligibilityCriteria": {
+          "value": null,
+          "status": "unknown"
+        },
+        "civilianLifeStatus": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "tradeDesire": {
+        "lifeDeficit": {
+          "value": null,
+          "status": "unknown"
+        },
+        "outwardMask": {
+          "value": null,
+          "status": "unknown"
+        },
+        "trueWish": {
+          "value": null,
+          "status": "unknown"
+        },
+        "spokenWish": {
+          "value": null,
+          "status": "unknown"
+        },
+        "deepestFear": {
+          "value": null,
+          "status": "unknown"
+        },
+        "emotionalTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "desiredChange": {
+          "value": null,
+          "status": "unknown"
+        },
+        "desperationScale": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "tradeContract": {
+        "angelCounterparty": {
+          "value": null,
+          "status": "unknown"
+        },
+        "contractTerms": {
+          "value": null,
+          "status": "unknown"
+        },
+        "requestedBenefit": {
+          "value": null,
+          "status": "unknown"
+        },
+        "promisedReward": {
+          "value": null,
+          "status": "unknown"
+        },
+        "upfrontCost": {
+          "value": null,
+          "status": "unknown"
+        },
+        "hiddenCost": {
+          "value": null,
+          "status": "unknown"
+        },
+        "debtState": {
+          "value": null,
+          "status": "unknown"
+        },
+        "cancellationRule": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "sanityRules": {
+        "startingSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "baselineSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "minimumSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "maximumSan": {
+          "value": null,
+          "status": "unknown"
+        },
+        "monsterEncounterDelta": {
+          "value": null,
+          "status": "unknown"
+        },
+        "combatKillDelta": {
+          "value": null,
+          "status": "unknown"
+        },
+        "passiveDecayRule": {
+          "value": null,
+          "status": "unknown"
+        },
+        "otherNegativeEffectRule": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "fearAndCombat": {
+        "fearResponse": {
+          "value": null,
+          "status": "unknown"
+        },
+        "enemyClarityEffect": {
+          "value": null,
+          "status": "unknown"
+        },
+        "killSatisfactionEffect": {
+          "value": null,
+          "status": "unknown"
+        },
+        "battleMentalTrajectory": {
+          "value": null,
+          "status": "unknown"
+        },
+        "retreatTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "nonMonsterThreatResponse": {
+          "value": null,
+          "status": "unknown"
+        },
+        "panicThreshold": {
+          "value": null,
+          "status": "unknown"
+        },
+        "exceptions": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "mentalPresentation": {
+        "idleEmotion": {
+          "value": null,
+          "status": "unknown"
+        },
+        "threatExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "attackExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "victoryExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "lowSanExpression": {
+          "value": null,
+          "status": "unknown"
+        },
+        "socialMask": {
+          "value": null,
+          "status": "unknown"
+        },
+        "maskBreakTrigger": {
+          "value": null,
+          "status": "unknown"
+        },
+        "psychologicalAftereffect": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "plotTransaction": {
+        "preDealLife": {
+          "value": null,
+          "status": "unknown"
+        },
+        "incitingIncident": {
+          "value": null,
+          "status": "unknown"
+        },
+        "dealDecisionScene": {
+          "value": null,
+          "status": "unknown"
+        },
+        "turningPoint": {
+          "value": null,
+          "status": "unknown"
+        },
+        "characterArc": {
+          "value": null,
+          "status": "unknown"
+        },
+        "relationToHeroine": {
+          "value": null,
+          "status": "unknown"
+        },
+        "angelManipulationCounter": {
+          "value": null,
+          "status": "unknown"
+        },
+        "unresolvedQuestion": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "runtimeAndQA": {
+        "mechanicState": {
+          "value": "profile_only_no_implemented_gameplay",
+          "status": "proposed",
+          "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        },
+        "saveDataKey": {
+          "value": null,
+          "status": "unknown"
+        },
+        "currentSanStorage": {
+          "value": null,
+          "status": "unknown"
+        },
+        "clamping": {
+          "value": null,
+          "status": "unknown"
+        },
+        "combatEvents": {
+          "value": null,
+          "status": "unknown"
+        },
+        "guiRules": {
+          "value": null,
+          "status": "unknown"
+        },
+        "regressionTests": {
+          "value": null,
+          "status": "unknown"
+        },
+        "approvalStatus": {
+          "value": "character_outfit_direction_only_not_complete",
+          "status": "proposed",
+          "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        }
+      }
+    }
+  },
+  "updatedAt": "2026-11-06",
+  "recordVersion": "1.0.0",
+  "fieldCount": 512,
+  "fieldBreakdown": {
+    "base": 448,
+    "extension": 64
+  },
+  "sourceNotes": [
+    "女7是第7名女性角色的制作称谓，不等于CHAR-007。原有CHAR-007已分配给其他角色，所以新建独立CHAR-049，不覆盖旧48人角色规划。",
+    "原图由用户在2026-11-06聊天上传，2048x2048 PNG，sha256 8e6236f36c2161cc50d5c6cd45a481bbf8eaa3f3aa10ca9e5d10465f12196a33；此提交只登记元数据，原图二进制尚未推送到仓库。",
+    "用户确认保留这名新女角色及原图服装方向；原有面部和武器需替换。原始提示词中的衣着不是旗袍，而是工装夹克+修身内搭+裹裙+内藏贴身短裤+大腿袜+短靴。",
+    "原始Anima提示词原样另存为范本。历史提示词里的短柄救援斧是待替换旧版道具，不能视为新版武器定稿。",
+    "512字段来自原项目角色规范；无证据的身体实测、家庭、关系、超自然规则与SAN数值保持unknown/null。"
+  ]
+}
