@@ -25,3 +25,11 @@ Review `artifacts/ring-arena/final-left-3q-1280x720.png`, the inner-mode frame, 
 
 ## Authored CHAR-006 wings (preservation rule)
 Browser source diagnostics verified that the two gray side shapes beside CHAR-006 are **actual artist-supplied PSD meshes** named `wings_left` and `wings_right` in `class-teacher-geography-candidate.zip`. They are *not* GPU noise or an accidental transparent background. Do not automatically remove, crop, paint over or disable either wing to improve a camera screenshot. Wing visibility belongs to the character's authored pose/outfit state and can be changed independently in L2D only when requested.
+
+## V18 — Real eye-height correction
+The earlier V17 camera used eye/focus height **1.32 m** (shoulder level), which still looked from below when combined with a deliberately low-angle 3/4 illustration. A zero-degree *pitch* alone does not guarantee eye-level composition.
+- V18 places the **actual lens and optical target at 1.50 m**, without looking up or down.
+- Off-axis vertical framing is revised to 0.23 so the rear-view heroine's crown falls naturally lower in the foreground; the four enemies remain readable across viewport sizes.
+- The new **default is the existing artistically normal-eye-level 3/4 rear character image**, `protagonist-back-combat-eye-level-preview.webp`, which depicts human proportions without low-angle thigh enlargement.
+- Prior exaggerated 3/4 art remains available for comparison with `heroPose=3q`, while `heroPose=original` restores the original authored L2D.
+- There is still exactly one fixed left-side camera, never a camera-switch interaction. This is a source artwork plus camera-height fix, not a fake angle label.

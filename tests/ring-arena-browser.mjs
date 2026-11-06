@@ -30,7 +30,7 @@ try{
  await page.waitForFunction(()=>{
   const a=window.PaperWorldGameRingArena?.inspect();
   return a?.active&&a?.renderer==='webgl-l2d'&&a?.heroStatic===true&&
-   a?.previewPose==='3q'&&a?.l2dReady===5&&a?.heroTextureUploads>=1;
+   a?.previewPose==='level'&&a?.eyeLevel===true&&a?.l2dReady===5&&a?.heroTextureUploads>=1;
  },null,{timeout:100000});
  await page.waitForTimeout(650);
  const outer=await inspect();
@@ -38,6 +38,11 @@ try{
  assert.equal(outer.shotName,'固定左机位');
  assert.equal(outer.camera.shot,'left');
  assert.equal(outer.cameraCount,1);
+ assert.equal(outer.eyeLevel,true,'camera is at heroine true eye height');
+ assert.equal(outer.camera.eye.y,1.50);
+ assert.equal(outer.camera.focus.y,1.50);
+ assert.equal(outer.lensShift,.23);
+ assert.equal(outer.previewPose,'level');
  assert.ok(Math.abs(outer.cameraPitchDeg)<.001);
  assert.equal(outer.heroTextureUploads,1,'static heroine must not upload every frame');
  assert.deepEqual(outer.visibleActorIds,['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
@@ -48,7 +53,7 @@ try{
  assert.ok(await page.locator('[data-exit]').isVisible());
  const originalCamera=JSON.stringify(outer.camera);
  const originalActors=JSON.stringify(outer.actors);
- await page.screenshot({path:'artifacts/ring-arena/final-left-3q-1280x720.png'});
+ await page.screenshot({path:'artifacts/ring-arena/final-eye-level-3q-1280x720.png'});
  // Touch/keyboard inputs must never reveal a second camera.
  await page.mouse.move(420,250);await page.mouse.down();
  await page.mouse.move(850,260,{steps:7});await page.mouse.up();
@@ -65,6 +70,8 @@ try{
  const inner=await inspect();
  assert.equal(inner.mode,'inner');assert.equal(inner.shotIndex,0);
  assert.equal(inner.camera.shot,'left');assert.equal(inner.cameraCount,1);
+ assert.equal(inner.eyeLevel,true);
+ assert.equal(inner.camera.eye.y,1.50);
  assert.ok(Math.abs(inner.cameraPitchDeg)<.001);
  assert.ok(inner.safety.valid&&inner.safety.clear);
  assert.equal(inner.heroTextureUploads,1);
@@ -99,7 +106,7 @@ try{
  assert.ok(restored.safety.valid&&restored.safety.clear);
  await page.screenshot({path:'artifacts/ring-arena/final-original-L2D-recovery.png'});
  assert.deepEqual(errors,[],'unexpected JavaScript exceptions');
- console.log('PASS: real WebGL 3/4 fixed-left heroine, four enemies, static GPU upload once, restored original L2D, desktop/mobile');
+ console.log('PASS: real WebGL eye-height 3/4 fixed-left heroine, four enemies, static GPU upload once, restored original L2D, desktop/mobile');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }

@@ -91,12 +91,12 @@
  const SHOT_NAMES=Object.freeze(['固定左机位']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
-   id:'left',eyeX:1.30,eyeZ:11.55,eyeY:1.32,
-   focusX:0,focusY:1.32,focusZ:6.80,fov:56
+   id:'left',eyeX:1.30,eyeZ:11.55,eyeY:1.50,
+   focusX:0,focusY:1.50,focusZ:6.80,fov:56
   })]),
   inner:Object.freeze([Object.freeze({
-   id:'left',eyeX:-1.30,eyeZ:7.15,eyeY:1.32,
-   focusX:0,focusY:1.32,focusZ:12.50,fov:52
+   id:'left',eyeX:-1.30,eyeZ:7.15,eyeY:1.50,
+   focusX:0,focusY:1.50,focusZ:12.50,fov:52
   })])
  });
  const cameraPitchDeg=c=>Math.atan2(c.eye.y-c.focus.y,
@@ -128,7 +128,7 @@
   const raw=Math.max(.5,Math.min(Number(dpr)||1,1.75));
   return Math.max(.55,Math.min(raw,Math.sqrt(2400000/Math.max(1,w*h))));
  }
- const VERTICAL_LENS_SHIFT=.19;
+ const VERTICAL_LENS_SHIFT=.23;
  function cameraVP(cam,aspect=16/9){
   // Off-axis lens: raise the composition without pitching the actual optical axis.
   // The EXACT same matrix is used by WebGL and 3D occlusion/safe-zone tests.
@@ -339,7 +339,7 @@
   canvas.hidden=true;canvas.setAttribute('aria-label','真实3D战场，3/4背面主角，固定左侧平视过肩机位');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="top"><b>ARC BATTLE / 3D</b><small>3/4 背面 · 固定左机位</small></div>',
+   '<div class="top"><b>ARC BATTLE / 3D</b><small>平视 3/4 背面 · 固定左机位</small></div>',
    '<div class="status" role="status"></div><div class="bottom">',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
@@ -347,11 +347,12 @@
   ].join('');
   stage.append(hud);
   const status=hud.querySelector('.status');
-  // Approved 3/4 back pose is the default; original dynamic L2D can
-  // still be inspected by the developer using heroPose=original.
+  // Normal-eye-height three-quarter back pose is the default. The old V17
+  // low-angle 3/4 sprite is retained behind heroPose=3q for comparison;
+  // heroPose=original restores the untouched original animated L2D.
   const requestedPose=new URLSearchParams(window.location.search).get('heroPose');
   const previewPose=requestedPose==='original'?'original':
-   requestedPose==='level'?'level':'3q';
+   requestedPose==='3q'?'3q':'level';
   const posePreviewEnabled=previewPose!=='original';
   const poseImage=new Image();
   poseImage.decoding='async';
@@ -608,7 +609,7 @@
     const ready=all.filter(a=>textures.get(a.id).painted).length;
     status.textContent=(mode==='outer'?'外圈':'内圈')+
      ' · 固定左机位 · 人物 '+ready+'/'+all.length+
-     (posePreviewEnabled?' · 主角3/4':' · 原版动态');
+     (posePreviewEnabled?' · 主角3/4 平视':' · 原版动态');
     canvas.dataset.l2dReady=String(ready);
     canvas.dataset.renderedFrames=String(frames);
    }
@@ -626,7 +627,8 @@
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,0).eye.x,
      lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
-   cameraCount:1,heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero').frames,
+   cameraCount:1,eyeLevel:Math.abs((lens||camera(mode,0)).eye.y-1.50)<.001,
+   heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero').frames,
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,

@@ -26,6 +26,8 @@ for(const mode of ['outer','inner']){
   assert.deepEqual(arena.camera(mode,n).eye,c.eye);
  }
  approx(c.eye.y,c.focus.y);
+ approx(c.eye.y,1.50);
+ approx(arena.VERTICAL_LENS_SHIFT,.23);
  assert.ok(Math.abs(arena.cameraPitchDeg(c))<.001,'true horizontal eye-level optics');
  approx(c.focus.x,0);
  assert.ok(c.fov>=50&&c.fov<=60);
@@ -37,7 +39,8 @@ for(const mode of ['outer','inner']){
  const safety=arena.battleVisualSafety(mode,0);
  assert.ok(safety.valid&&safety.clear&&safety.gap>.045,
   'hero silhouette and all enemy quads need clear separated lanes');
- assert.ok(safety.hero.top>.5&&safety.hero.top<.85);
+ assert.ok(safety.hero.top>.35&&safety.hero.top<.65,
+  'eye-height over-shoulder framing must not put heroine head against ceiling');
  const centers=scene.enemies.map(e=>arena.project({...e,y:e.height*.5},c).x);
  const mean=centers.reduce((a,b)=>a+b,0)/4;
  assert.ok(Math.abs(mean)<.12,'enemy formation must face the fixed camera');
