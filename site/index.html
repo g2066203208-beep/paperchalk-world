@@ -2030,6 +2030,8 @@ void main(){
     // Swapping only image and scene content NEVER recreates the fluid simulator.
     sourceImage.src=def.image;sourceImage.alt=def.alt;
     stage.dataset.scene=name;stage.setAttribute('aria-label',def.alt);
+    // Leave the overworld dashboard when entering unrelated story or combat scenes.
+    window.PaperWorldDailyLifeUI?.onGameScene?.(name);
     // Prevent stale mouse position in the previous scene from tilting this one.
     aimX=0;aimY=0;currentX=0;currentY=0;
     stage.style.transform='rotateY(0deg) rotateX(0deg)';
