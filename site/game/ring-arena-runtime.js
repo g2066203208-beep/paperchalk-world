@@ -966,7 +966,7 @@
    // appears to inflict a second hit in screenshots.
    for(const id of enemyHP.keys())enemyHP.set(id,36);
    attack=director.createAttack(targetId,performance.now(),{mode,reducedMotion:false});
-   qaTimeMs=clamp(elapsedMs,0,director.DURATION-1);
+   qaTimeMs=clamp(elapsedMs,0,director.DURATION);
    attackApplied=false;armed=false;previousBeat='qa';
    cinematic.hidden=false;
    cinematic.dataset.hitPortrait=director.hasEnemyHitPortrait(targetId)?'yes':'no';
