@@ -171,8 +171,8 @@ try{
     assert.ok(phoneGeometry.frameImage.includes('char001-cat-ear-shell.webp')&&phoneGeometry.frameLoaded,
       'Original cat-ear smartphone art failed to load visibly: '+JSON.stringify(phoneGeometry));
     assert.equal(phoneGeometry.framePseudo,'none','Old fake CSS cat ears are still present');
-    assert.ok(phoneGeometry.height>phoneGeometry.root.height*.87&&phoneGeometry.height<=phoneGeometry.root.height*.92,
-      'Phone size is not scaled to logical game viewport: '+JSON.stringify(phoneGeometry));
+    assert.ok(phoneGeometry.height>phoneGeometry.root.height*.94&&phoneGeometry.height<=phoneGeometry.root.height*.98,
+      'Enlarged handset must fit 94-98% of logical viewport: '+JSON.stringify(phoneGeometry));
     assert.ok(phoneGeometry.screen.x>0&&phoneGeometry.screen.y>0&&
       phoneGeometry.screen.x+phoneGeometry.screen.width<=phoneGeometry.width&&
       phoneGeometry.screen.y+phoneGeometry.screen.height<=phoneGeometry.height,
