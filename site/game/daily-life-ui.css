@@ -127,3 +127,64 @@
 @media(prefers-reduced-motion:reduce){
   #daily-life-ui .daily-action:active{transform:none!important}
 }
+
+/* Day-one ordinary-school hook, deliberately not a horror jump-scare prompt. */
+#daily-life-ui .daily-morning-task{
+ margin:2px 0 13px;padding:12px 14px;
+ border-left:2px solid #c5b697;background:#d9cbb10d;
+}
+#daily-life-ui .daily-morning-task strong{display:block;font-size:14px;font-weight:600}
+#daily-life-ui .daily-morning-task p{margin:6px 0;line-height:1.65;font-size:12px;color:#dedbd4}
+#daily-life-ui .daily-morning-task small{font-size:10px;color:#a6a399}
+/* Schematic map is interactive. No nonexistent street background is invented. */
+#daily-life-ui .daily-route-map{
+ position:relative;margin:8px 0 9px;width:100%;height:clamp(190px,37cqh,290px);
+ overflow:hidden;border:1px solid #d1c7b62b;border-radius:9px;
+ background:
+   radial-gradient(ellipse at 18% 78%,#75847715,transparent 29%),
+   radial-gradient(ellipse at 79% 16%,#8392a311,transparent 30%),
+   repeating-linear-gradient(0deg,transparent 0px,transparent 34px,#f8f8f208 35px,#f8f8f208 36px),
+   repeating-linear-gradient(90deg,transparent 0px,transparent 38px,#f8f8f208 39px,#f8f8f208 40px),
+   #20262b;
+}
+#daily-life-ui .daily-route-map::before{
+ content:'CITY MAP / 表世界';position:absolute;top:12px;left:14px;
+ font:500 10px/1.5 var(--font-ui);letter-spacing:.12em;color:#ded5c8a8;pointer-events:none;
+}
+#daily-life-ui .daily-map-lines{
+ position:absolute;inset:13% 8%;pointer-events:none;opacity:.55;
+ background:
+ linear-gradient(155deg,transparent 49.5%,#a8b6a049 50%,transparent 50.5%),
+ linear-gradient(26deg,transparent 49.6%,#a8b6a047 50%,transparent 50.4%),
+ linear-gradient(95deg,transparent 49.7%,#a8b6a045 50%,transparent 50.3%);
+}
+#daily-life-ui .daily-map-node{
+ position:absolute;display:flex;align-items:center;justify-content:center;
+ border:1px solid #e2d8c980!important;border-radius:6px!important;
+ background:#30373de8!important;min-width:76px;min-height:34px;
+ padding:7px 8px!important;color:#eee9e1!important;
+ font-size:clamp(10px,1.6cqh,13px)!important;
+ transform:translate(-50%,-50%);white-space:nowrap;
+ box-shadow:0 4px 10px #0004;
+}
+#daily-life-ui .daily-map-node:not(:disabled):hover{
+ background:#4b544fee!important;border-color:#e2cfac!important;
+}
+#daily-life-ui .daily-map-node:disabled{
+ opacity:.45!important;
+}
+#daily-life-ui .daily-map-node[data-current="true"]{
+ opacity:1!important;background:#817459e8!important;
+ border-color:#e4cba0!important;
+}
+#daily-life-ui .daily-map-node[data-place="entrance"]{left:14%;top:70%}
+#daily-life-ui .daily-map-node[data-place="school"]{left:33%;top:25%}
+#daily-life-ui .daily-map-node[data-place="convenience"]{left:54%;top:55%}
+#daily-life-ui .daily-map-node[data-place="cafe"]{left:32%;top:85%}
+#daily-life-ui .daily-map-node[data-place="mall"]{left:83%;top:34%}
+#daily-life-ui .daily-map-node[data-place="park"]{left:80%;top:79%}
+@container (max-height:470px){
+ #daily-life-ui .daily-route-map{height:175px}
+ #daily-life-ui .daily-map-node{min-height:28px;min-width:60px;padding:4px 6px!important}
+ #daily-life-ui .daily-morning-task{padding:8px 10px}
+}
