@@ -436,11 +436,11 @@
     const osc=audioContext.createOscillator();
     const gain=audioContext.createGain();
     osc.type=kind==='impact'?'triangle':'sawtooth';
-    const duration=kind==='impact'?.27:kind==='swing'?.22:.16;
+    const duration=kind==='impact'?.13:kind==='swing'?.12:.07;
     osc.frequency.setValueAtTime(kind==='impact'?95:kind==='swing'?240:150,now);
     osc.frequency.exponentialRampToValueAtTime(kind==='impact'?42:kind==='swing'?90:75,now+duration);
     gain.gain.setValueAtTime(.0001,now);
-    gain.gain.exponentialRampToValueAtTime(kind==='impact'?.23:.075,now+.015);
+    gain.gain.exponentialRampToValueAtTime(kind==='impact'?.20:.085,now+.015);
     gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
     osc.connect(gain).connect(audioContext.destination);
     osc.start(now);osc.stop(now+duration+.02);
@@ -454,7 +454,7 @@
      filter.frequency.setValueAtTime(kind==='impact'?600:1250,now);
      const g=audioContext.createGain();
      g.gain.setValueAtTime(.0001,now);
-     g.gain.linearRampToValueAtTime(kind==='impact'?.12:.075,now+.018);
+     g.gain.linearRampToValueAtTime(kind==='impact'?.12:.068,now+.018);
      g.gain.exponentialRampToValueAtTime(.0001,now+duration);
      noise.connect(filter).connect(g).connect(audioContext.destination);
      noise.start(now);noise.stop(now+duration+.01);
@@ -806,7 +806,7 @@
     if(cinematic.dataset.phase!==attackSample.stage){
      cinematic.dataset.phase=attackSample.stage;
      cinematic.dataset.cut=attackSample.cut;
-     cinematicCue.textContent=attackSample.cue||'目标锁定';
+     cinematicCue.textContent=attackSample.cue||'';
     }
     cinematic.style.setProperty('--director-progress',(attackSample.elapsed/director.DURATION).toFixed(3));
     cinematic.style.setProperty('--attack-intensity',attackSample.hitFlash.toFixed(3));

@@ -73,11 +73,8 @@ try{
  assert.equal(await page.locator('[data-director-enemy]').count(),4);
  await page.screenshot({path:'artifacts/ring-arena/director-attack-target-selection.png'});
  await page.locator('[data-director-enemy="2"]').click();
- await page.waitForFunction(()=>{
-  const d=window.PaperWorldGameRingArena?.inspect()?.director;
-  return d?.playing===true&&d?.targetId==='enemy-2';
- },null,{timeout:12000});
- assert.equal(await page.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
+ // A 650ms action may complete while Chromium's software renderer yields.
+ // Verify persistent HP/completed outcome, not a fleeting animation phase.
  // In slow software WebGL a single draw may skip across the entire
  // impact window. Validate the irrevocable, single target damage RESULT
  // rather than waiting for a short-lived director.applied=true property.
@@ -112,11 +109,7 @@ try{
  // Do not miscast the suited male hit portrait as the third female enemy.
  await page.locator('[data-attack-card]').click();
  await page.locator('[data-director-enemy="3"]').click();
- await page.waitForFunction(()=>{
-  const d=window.PaperWorldGameRingArena?.inspect()?.director;
-  return d?.playing&&d?.targetId==='enemy-3';
- });
- assert.equal(await page.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
+ // Gender-safe art is asserted below with fixed-frame WebGL QA mode.
  await page.waitForFunction(()=>{
   const d=window.PaperWorldGameRingArena?.inspect()?.director;
   return d?.completedAttacks===2&&!d?.playing;
@@ -195,24 +188,24 @@ try{
  },null,{timeout:100000});
  const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
   window.PaperWorldGameRingArena.qaFrame(t,at),[target,ms]);
- const frameHero=await invoke('enemy-2',870);
+ const frameHero=await invoke('enemy-2',200);
  assert.equal(frameHero.phase,'swing');
  assert.equal(frameHero.applied,false);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
- await qa.screenshot({path:'artifacts/ring-arena/v20-real-hero-attack-pose.png'});
- const frameHit=await invoke('enemy-2',1090);
+ await qa.screenshot({path:'artifacts/ring-arena/v21-snap-hero-swing.png'});
+ const frameHit=await invoke('enemy-2',335);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
- await qa.screenshot({path:'artifacts/ring-arena/v20-real-enemy-impact-pose.png'});
- const frameRecoil=await invoke('enemy-2',1450);
+ await qa.screenshot({path:'artifacts/ring-arena/v21-snap-impact.png'});
+ const frameRecoil=await invoke('enemy-2',440);
  assert.equal(frameRecoil.phase,'reaction');
- await qa.screenshot({path:'artifacts/ring-arena/v20-real-enemy-hit-pose.png'});
- const frameFemale=await invoke('enemy-3',1420);
+ await qa.screenshot({path:'artifacts/ring-arena/v21-snap-enemy-recoil.png'});
+ const frameFemale=await invoke('enemy-3',440);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
  assert.equal(await qa.locator('[data-action-enemy]').evaluate(
   el=>getComputedStyle(el).visibility),'hidden');
- await qa.screenshot({path:'artifacts/ring-arena/v20-female-original-l2d-reaction.png'});
+ await qa.screenshot({path:'artifacts/ring-arena/v21-female-original-l2d-reaction.png'});
  assert.deepEqual(qaErrors,[]);
  await qa.close();
  console.log('PASS: real WebGL eye-height 3/4 fixed-left heroine, four enemies, static GPU upload once, restored original L2D, desktop/mobile');

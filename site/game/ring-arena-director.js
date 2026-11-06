@@ -12,16 +12,16 @@
  const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
  const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
  const CARD=Object.freeze({key:'slash',name:'斧柄横扫',type:'attack',damage:12,w:1,a:1,r:1});
- const DURATION=2400,REDUCED_DURATION=720;
+ const DURATION=650,REDUCED_DURATION=300;
  // A DD-style theatrical beat uses new drawn attack/hit poses, strong art cuts,
  // deliberately held impact and an exact return to the original eye-level view.
  const STAGES=Object.freeze([
-  Object.freeze({id:'lock',from:0,to:165}),
-  Object.freeze({id:'windup',from:165,to:670}),
-  Object.freeze({id:'swing',from:670,to:1050}),
-  Object.freeze({id:'impact',from:1050,to:1210}),
-  Object.freeze({id:'reaction',from:1210,to:1750}),
-  Object.freeze({id:'recover',from:1750,to:DURATION})
+  Object.freeze({id:'lock',from:0,to:35}),
+  Object.freeze({id:'windup',from:35,to:130}),
+  Object.freeze({id:'swing',from:130,to:315}),
+  Object.freeze({id:'impact',from:315,to:390}),
+  Object.freeze({id:'reaction',from:390,to:530}),
+  Object.freeze({id:'recover',from:530,to:DURATION})
  ]);
  const ART=Object.freeze({
   hero:'./assets/characters/hero-axe-attack.webp',
@@ -53,21 +53,24 @@
   const t=clamp((Number(now)-attack.startedAt)*scale,0,DURATION);
   const finished=t>=DURATION;
   const stage=finished?'done':(STAGES.find(s=>t>=s.from&&t<s.to)||STAGES[5]).id;
-  const zoom=smooth((t-65)/390)*(1-smooth((t-1650)/600));
-  const advance=smooth((t-500)/430)*(1-smooth((t-1250)/320));
-  const recoil=smooth((t-1050)/95)*(1-smooth((t-1750)/345));
-  const inImpact=t>=1050&&t<1210;
-  const heroPose=smooth((t-140)/160)*(1-smooth((t-1030)/135));
-  const victimPose=smooth((t-1010)/80)*(1-smooth((t-1720)/200));
-  const hitFlash=inImpact?(1-smooth((t-1050)/150))*.95:0;
-  const shake=reduced?0:inImpact?(1-smooth((t-1050)/155))*.95:0;
+  // Snapped camera emphasis; key poses do the acting, not slow interpolations.
+  const zoom=stage==='windup'?.68:stage==='swing'?1:
+   stage==='impact'?.93:stage==='reaction'?.57:0;
+  const advance=stage==='swing'?smooth((t-130)/72):
+   stage==='impact'?1:stage==='reaction'?.18:0;
+  const recoil=stage==='impact'?.95:stage==='reaction'?
+   1-smooth((t-425)/110):0;
+  const inImpact=t>=315&&t<390;
+  const heroPose=stage==='windup'||stage==='swing'?1:0;
+  const victimPose=stage==='impact'||stage==='reaction'?1:0;
+  const hitFlash=inImpact?(1-smooth((t-315)/68))*.70:0;
+  const shake=reduced?0:inImpact?(1-smooth((t-315)/65))*.65:0;
   const cut=(stage==='windup'||stage==='swing')?'attacker':
    (stage==='impact'||stage==='reaction')?'victim':'none';
-  return {stage,elapsed:t,finished,hit:t>=1050,
+  return {stage,elapsed:t,finished,hit:t>=315,
    zoom:zoom*(reduced?.45:1),advance:advance*(reduced?.4:1),
    recoil:recoil*(reduced?.4:1),hitFlash,shake,heroPose,victimPose,
-   cut,cue:stage==='windup'?'斧柄横扫':stage==='swing'?'断斩':
-    stage==='impact'?'命中':stage==='reaction'?'受击':'',
+   cut,cue:stage==='windup'?'斧柄横扫':stage==='impact'?'命中':'',
    frameHold:inImpact&&!reduced};
  }
  function stageAt(now,reduced=false){
@@ -77,9 +80,9 @@
   if(!attack||!s||s.finished)return {x:0,y:0,z:0,scale:1};
   const direction=attack.mode==='inner'?1:-1;
   if(actorId==='hero')return {x:0,y:s.advance*.08,
-   z:direction*(s.advance*.48),scale:1+s.advance*.055};
+   z:direction*(s.advance*.24),scale:1+s.advance*.035};
   if(actorId===attack.targetId)return {x:0,y:s.recoil*.03,
-   z:-direction*(s.recoil*.28),scale:1+s.recoil*.035};
+   z:-direction*(s.recoil*.18),scale:1+s.recoil*.025};
   return {x:0,y:0,z:0,scale:1};
  }
  // The only canonical camera is still the fixed LEFT shot. Temporary
@@ -88,15 +91,15 @@
   if(!attack||!s||s.finished)return base;
   const direction=attack.mode==='inner'?1:-1,z=s.zoom;
   const eye={...base.eye,
-   x:base.eye.x+(target.x-base.eye.x)*z*.055,
-   z:base.eye.z+direction*z*.24};
-  const focus={...base.focus,x:base.focus.x+target.x*z*.12};
+   x:base.eye.x+(target.x-base.eye.x)*z*.018,
+   z:base.eye.z+direction*z*.09};
+  const focus={...base.focus,x:base.focus.x+target.x*z*.05};
   if(s.shake){
    eye.x+=Math.sin(s.elapsed*.32)*.023*s.shake;
    eye.y+=Math.cos(s.elapsed*.45)*.014*s.shake;
    focus.y=eye.y;
   }
-  return {...base,eye,focus,fov:base.fov-z*6.7,cinematic:true};
+  return {...base,eye,focus,fov:base.fov-z*4.2,cinematic:true};
  }
  function projectScreen(project,actor,cam,aspect){
   const p=project({x:actor.x,y:actor.height*.8,z:actor.z},cam,aspect);

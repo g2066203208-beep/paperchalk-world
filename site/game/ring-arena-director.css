@@ -338,3 +338,88 @@
   top:8%;left:3%;right:auto;font-size:10px
  }
 }
+
+
+/* V21: match the brisk paper-cut attack language of DD1.
+   One strong pose, one hit, one recoil. No blackout, slow drift or noisy lines. */
+#ring-arena-controls .director-stage-dark{
+ background:linear-gradient(90deg,#050608a8,#090911b0 50%,#040408a6);
+ transition:none!important
+}
+#ring-arena-controls .director-cinematic[data-cut=attacker] .director-stage-dark,
+#ring-arena-controls .director-cinematic[data-cut=victim] .director-stage-dark{
+ opacity:.65
+}
+#ring-arena-controls .director-action-lines{display:none}
+#ring-arena-controls .director-action-image{
+ transition:none!important;animation-fill-mode:both!important
+}
+#ring-arena-controls .director-cinematic[data-cut=attacker] .director-action-hero,
+#ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=yes] .director-action-enemy{
+ opacity:1;visibility:visible;transition:none!important
+}
+#ring-arena-controls .director-cinematic[data-phase=windup] .director-action-hero{
+ animation:director-quick-anticipation .095s steps(2,end) both
+}
+#ring-arena-controls .director-cinematic[data-phase=swing] .director-action-hero{
+ animation:director-quick-swing .185s cubic-bezier(.10,.98,.28,1) both
+}
+#ring-arena-controls .director-cinematic[data-phase=impact] .director-action-enemy{
+ animation:director-quick-hit .075s steps(2,end) both
+}
+#ring-arena-controls .director-cinematic[data-phase=reaction] .director-action-enemy{
+ animation:director-quick-recoil .140s ease-out both
+}
+#ring-arena-controls .director-cue{
+ font-size:clamp(12px,1.4vw,17px);letter-spacing:.12em;
+ padding:3px 10px;border:0;transition:none!important
+}
+#ring-arena-controls .director-attack-target{
+ background:transparent;border:0;text-shadow:0 2px 9px #000
+}
+#ring-arena-controls .director-cinematic[data-phase=impact] .director-white-hit{
+ animation:director-quick-flash .075s steps(2,end) both
+}
+#ring-arena-controls .director-cinematic[data-phase=impact] .director-hitframe{
+ animation:director-quick-outline .075s steps(2,end) both
+}
+#ring-arena-controls .director-cinematic[data-phase=impact] .director-hit-vignette{opacity:.46}
+#ring-arena-controls .director-cinematic[data-phase=reaction] .director-hit-vignette{opacity:0}
+#ring-arena-controls .director-cinematic[data-phase=swing] .director-impact{
+ opacity:.68;animation:director-slice .13s ease-out both
+}
+#ring-arena-controls .director-cinematic[data-phase=impact] .director-impact{
+ opacity:.5;animation:none
+}
+@keyframes director-quick-anticipation{
+ from{transform:translate3d(-5%,1%,0) scale(1.00);filter:brightness(.89)}
+ to{transform:translate3d(0,0,0) scale(1.04);filter:brightness(1)}
+}
+@keyframes director-quick-swing{
+ 0%{transform:translate3d(-1%,0,0) scale(1.04)}
+ 23%{transform:translate3d(2%,-1%,0) scale(1.08)}
+ 100%{transform:translate3d(6%,0,0) scale(1.10)}
+}
+@keyframes director-quick-hit{
+ 0%{transform:translate3d(2%,-1%,0) scale(1.07);filter:brightness(1.45)}
+ 100%{transform:translate3d(-1%,0,0) scale(1.06);filter:brightness(1.08)}
+}
+@keyframes director-quick-recoil{
+ 0%{transform:translate3d(-2%,-1%,0) scale(1.08)}
+ 100%{transform:translate3d(1%,1%,0) scale(1.04)}
+}
+@keyframes director-quick-flash{
+ 0%{opacity:.45}25%{opacity:.45}50%{opacity:.11}100%{opacity:0}
+}
+@keyframes director-quick-outline{
+ 0%,40%{opacity:.7;box-shadow:inset 0 0 0 6px #d24e76}
+ 100%{opacity:0;box-shadow:inset 0 0 0 1px #d24e76}
+}
+@media(prefers-reduced-motion:reduce){
+ #ring-arena-controls .director-action-hero,
+ #ring-arena-controls .director-action-enemy,
+ #ring-arena-controls .director-white-hit,
+ #ring-arena-controls .director-hitframe{
+  animation:none!important
+ }
+}
