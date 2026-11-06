@@ -721,6 +721,28 @@
   }
   // The image stays on the actor's ground-anchored billboard, never a DOM
   // fullscreen illustration. One GPU upload is enough per static pose.
+  // Only transparent margins of the TEMPORARY GPU action texture are
+  // trimmed. The original L2D and saved action source are NEVER modified.
+  function actionOpaqueRect(img){
+   const n=256,probe=document.createElement('canvas');
+   probe.width=n;probe.height=n;
+   const ctx=probe.getContext('2d',{willReadFrequently:true});
+   ctx.drawImage(img,0,0,n,n);
+   const px=ctx.getImageData(0,0,n,n).data;
+   let l=n,t=n,r=-1,b=-1;
+   for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    if(px[(y*n+x)*4+3]<26)continue;
+    l=Math.min(l,x);r=Math.max(r,x);
+    t=Math.min(t,y);b=Math.max(b,y);
+   }
+   if(r<l)return null;
+   const padding=9;
+   l=Math.max(0,l-padding);r=Math.min(n-1,r+padding);
+   t=Math.max(0,t-padding);b=Math.min(n-1,b+padding);
+   const sx=Math.floor(l/n*img.naturalWidth),sy=Math.floor(t/n*img.naturalHeight);
+   return {sx,sy,sw:Math.min(img.naturalWidth-sx,Math.max(1,Math.ceil((r-l+1)/n*img.naturalWidth))),
+    sh:Math.min(img.naturalHeight-sy,Math.max(1,Math.ceil((b-t+1)/n*img.naturalHeight)))};
+  }
   function uploadActionImage(id,img){
    if(!gl||!img?.complete||!img.naturalWidth)return false;
    const t=actionTextures.get(id);if(!t)return false;
@@ -733,12 +755,17 @@
    }
    const ctx=t.ctx;ctx.clearRect(0,0,size,size);
    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-   const rect=portraitFit(img.naturalWidth,img.naturalHeight,size);
-   ctx.drawImage(img,rect.x,rect.y,rect.width,rect.height);
+   let crop={sx:0,sy:0,sw:img.naturalWidth,sh:img.naturalHeight};
+   try{crop=actionOpaqueRect(img)||crop}catch(_){/* use full art */}
+   const fit=portraitFit(crop.sw,crop.sh,size*.94),pad=size*.03;
+   ctx.drawImage(img,crop.sx,crop.sy,crop.sw,crop.sh,
+    fit.x+pad,fit.y+pad,fit.width,fit.height);
    try{
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,t.stage);
-    t.uploadedSize=size;t.painted=true;t.frames++;return true;
+    t.uploadedSize=size;t.painted=true;t.frames++;
+    t.alphaTrim={source:{width:img.naturalWidth,height:img.naturalHeight},crop};
+    return true;
    }catch(error){t.error=String(error);return false}
   }
   function drawActors(actors,cam,vp){
@@ -863,7 +890,9 @@
      cinematicCue.textContent=attackSample.cue||'';
     }
     cinematic.style.setProperty('--director-progress',(attackSample.elapsed/director.DURATION).toFixed(3));
-    cinematic.style.setProperty('--attack-intensity',attackSample.hitFlash.toFixed(3));
+    cinematic.style.setProperty('--fx-opacity',attackSample.fxOpacity.toFixed(3));
+    cinematic.style.setProperty('--damage-opacity',attackSample.damageOpacity.toFixed(3));
+    cinematic.style.setProperty('--damage-shift',(attackSample.damageLift*26).toFixed(2)+'px');
    }
    if(frames%12===0){
     const ready=all.filter(a=>textures.get(a.id).painted).length;
@@ -908,7 +937,7 @@
     drawnActorIds:[...drawnActorIds],
     renderedPoses:{...drawnPoses},
     spriteTextures:Object.fromEntries([...actionTextures].map(([id,t])=>[id,{
-     ready:!!t.painted,uploads:t.frames}]))},
+     ready:!!t.painted,uploads:t.frames,alphaTrim:t.alphaTrim||null}]))},
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,
