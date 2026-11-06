@@ -31,6 +31,10 @@ for(const mode of ['outer','inner']){
  const hero=scene.allies[0];
  for(const index of [0,1]){
   const c=arena.camera(mode,index);
+  const pitch=arena.cameraPitchDeg(c);
+  // No top-down arena viewpoint: measured by the actual camera view vector.
+  assert.ok(pitch>=2.0&&pitch<=5.5,
+    'battle reference uses a near-horizontal shoulder-height camera, got '+pitch.toFixed(2)+' degrees');
   const p=arena.project({...hero,y:hero.height*.52},c);
   const body=arena.portraitBounds(hero,c);
   assert.ok(body.valid&&p.valid);
@@ -43,6 +47,12 @@ for(const mode of ['outer','inner']){
   // not by trimming its L2D texture or editing the authoring rig.
   const foeBounds=scene.enemies.map(a=>arena.portraitBounds(a,c));
   const safety=arena.battleVisualSafety(mode,index);
+  // The player head stays near the upper portion of frame; enemy head/feet
+  // remain fully framed in the midground, not flattened on a floor plan.
+  assert.ok(safety.hero.top>.55&&safety.hero.top<.82,
+    'hero rear-view head must remain in cinematic upper foreground');
+  assert.ok(safety.foes.every(e=>e.top>.14&&e.top<.52&&e.bottom>-.52&&e.bottom<.08),
+    'the 4 enemies must remain upright and head-to-shoe visible');
   assert.ok(safety.valid&&safety.clear,'fixed 3D shot must have a clear actual-hero silhouette safe lane');
   assert.ok(safety.gap>=.045,'even the most-left/right full enemy quad may not intersect the heroine near shot');
   for(const aspect of [16/9,4/3,9/16]){
