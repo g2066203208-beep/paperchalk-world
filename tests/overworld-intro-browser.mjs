@@ -15,7 +15,7 @@ page.setDefaultTimeout(20000);
 const errors=[];
 page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',msg=>{if(msg.type()==='error')errors.push('console: '+msg.text());});
-const shot=async file=>page.screenshot({path:path.join(output,file),fullPage:false,animations:'disabled'});
+const shot=async file=>page.screenshot({path:path.join(output,file),fullPage:false,animations:'allow',timeout:60000});
 try{
  await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').waitFor();
