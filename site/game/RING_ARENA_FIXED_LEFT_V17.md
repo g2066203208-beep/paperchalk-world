@@ -15,7 +15,7 @@ This is a **single-camera** WebGL/L2D battle module. It is not the main campaign
 ## Encounter composition
 - `outer` enemies: (-1.65, 6.85), (-0.57, 6.47), (+0.57, 6.47), (+1.65, 6.85)
 - `inner` enemies: (-1.62, 12.48), (-0.55, 12.87), (+0.55, 12.87), (+1.62, 12.48)
-- Opponent heads/feet remain visible; camera-angle changes are not a reason to modify canonical character art.
+- The L2D alpha probe records the whole artwork *and* a separate upper-body reading lane. The long poleaxe may extend into the LOWER foreground without falsely failing the enemy-face readability check; its full alpha footprint remains available for visual QA. Camera-angle changes are never a reason to modify canonical source art.
 - Subtle geometry-only contact shading is drawn under the 5 visible actors. The scene's floor rings follow encounter mode, not the now-removed camera debug stations.
 
 ## Verify before publish

@@ -449,23 +449,35 @@
    ctx.drawImage(texture.stage,0,0,N,N);
    const data=ctx.getImageData(0,0,N,N).data;
    let x0=N,y0=N,x1=-1,y1=-1;
+   let combatX0=N,combatX1=-1;
+   const combatTopRows=Math.floor(N*.55);
    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
     if(data[(y*N+x)*4+3]<44)continue;
     x0=Math.min(x0,x);x1=Math.max(x1,x);
     y0=Math.min(y0,y);y1=Math.max(y1,y);
+    // Distinguish the readable upper-body lane from the long poleaxe blade
+    // crossing the LOWER foreground: full-body min/max is not a face blocker.
+    if(y<combatTopRows){
+     combatX0=Math.min(combatX0,x);combatX1=Math.max(combatX1,x);
+    }
    }
    if(x1<0)return;
    texture.opaqueUv={
     left:clamp(x0/N-.045,0,1),right:clamp((x1+1)/N+.045,0,1),
     top:clamp(y0/N-.025,0,1),bottom:clamp((y1+1)/N+.01,0,1)
    };
+   texture.opaqueCombatUv=combatX1>=0?{
+    left:clamp(combatX0/N-.018,0,1),
+    right:clamp((combatX1+1)/N+.018,0,1),
+    top:clamp(y0/N-.012,0,1),bottom:combatTopRows/N
+   }:texture.opaqueUv;
   }
   function updateTexture(a,now){
    const targetTexture=textures.get(a.id),desc=sourceFor(a);
    if(!desc){
     // Never show a stale wrong-identity WebGL texture.
     targetTexture.painted=false;
-    targetTexture.opaqueUv=null;
+    targetTexture.opaqueUv=null;targetTexture.opaqueCombatUv=null;
     return false;
    }
    const identity=desc.runtime.img.dataset.characterId+'|'+
@@ -474,7 +486,7 @@
     (desc.runtime.root.dataset.l2dMode||'');
    if(targetTexture.identity!==identity){
     targetTexture.identity=identity;
-    targetTexture.painted=false;targetTexture.opaqueUv=null;
+    targetTexture.painted=false;targetTexture.opaqueUv=null;targetTexture.opaqueCombatUv=null;
     targetTexture.nextProbe=0;targetTexture.updated=-999;
    }
    const fixedPose=a.id==='hero'&&posePreviewEnabled;
@@ -627,11 +639,12 @@
     side:window.PaperchalkL2D?.get('player')?.img?.dataset.characterSide||null,
     l2dMode:window.PaperchalkL2D?.get('player')?.root?.dataset.l2dMode||null,
     ready:textures.get('hero').painted,
-    sourceUv:textures.get('hero').opaqueUv||null
+    sourceUv:textures.get('hero').opaqueUv||null,
+    combatUpperUv:textures.get('hero').opaqueCombatUv||null
    },
    safety:battleVisualSafety(mode,shotIndex,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
-    textures.get('hero').opaqueUv||CANONICAL_BACK_UV),
+    textures.get('hero').opaqueCombatUv||CANONICAL_BACK_UV),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:posePreviewEnabled?'fixed-left 3/4 heroine + animated original enemy L2D':'original animated L2D actors'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
