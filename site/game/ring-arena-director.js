@@ -1,6 +1,6 @@
-/* Paperchalk V23 combat director. Reconstructed from the user's actual
+/* Paperchalk V24 combat director. Reconstructed from the user's actual
  * 699-frame, 30fps Darkest Dungeon reference recording (Nov 6 2026).
- * Main principle: ONE fixed middle DUEL STAGE. Both selected actors translate
+ * Main principle: fast, decisive ONE fixed middle DUEL STAGE. Both selected actors translate
  * into two opposing, screen-space-controlled WORLD positions, share a single
  * camera, exchange poses/hit FX, then restore exact authored ground anchors.
  */
@@ -14,7 +14,7 @@
  const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
  const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
  const CARD=Object.freeze({key:'slash',name:'斧柄横扫',type:'attack',damage:12,w:1,a:1,r:1});
- const DURATION=700,REDUCED_DURATION=410;
+ const DURATION=580,REDUCED_DURATION=330;
  // Reference frame markers: zoomed middle-stage entrances at frame
  // 79/178/315/416 and exits at frame 128/228/368/470.
  // These are capture timestamps, not the original game's internal tick clock.
@@ -25,13 +25,13 @@
   focus:Object.freeze({left:.365,right:.635})
  });
  const STAGES=Object.freeze([
-  Object.freeze({id:'lock',from:0,to:45}),
-  Object.freeze({id:'approach',from:45,to:140}),
-  Object.freeze({id:'windup',from:140,to:215}),
-  Object.freeze({id:'swing',from:215,to:335}),
-  Object.freeze({id:'impact',from:335,to:410}),
-  Object.freeze({id:'reaction',from:410,to:570}),
-  Object.freeze({id:'recover',from:570,to:700})
+  Object.freeze({id:'lock',from:0,to:24}),
+  Object.freeze({id:'approach',from:24,to:114}),
+  Object.freeze({id:'windup',from:114,to:184}),
+  Object.freeze({id:'swing',from:184,to:267}),
+  Object.freeze({id:'impact',from:267,to:315}),
+  Object.freeze({id:'reaction',from:315,to:445}),
+  Object.freeze({id:'recover',from:445,to:580})
  ]);
  const ART=Object.freeze({
   hero:'./assets/characters/hero-axe-attack.webp',
@@ -54,30 +54,35 @@
  function hasEnemyHitPortrait(targetId){
   return ART.maleEnemyIds.includes(targetId);
  }
+ // Every visual channel is sampled from ONE clock. No CSS-driven phase
+ // animations: a dropped/late frame cannot restart a slash or float a number.
  function sample(attack,now){
   if(!attack)return Object.freeze({stage:'idle',elapsed:0,finished:false,
    hit:false,zoom:0,advance:0,recoil:0,hitFlash:0,shake:0,heroPose:0,
-   victimPose:0,frameHold:false,cut:'none',stageStrength:0});
-  const reduced=attack.reducedMotion,scale=reduced?DURATION/REDUCED_DURATION:1;
-  const t=clamp((Number(now)-attack.startedAt)*scale,0,DURATION);
+   victimPose:0,frameHold:false,cut:'none',stageStrength:0,
+   fxOpacity:0,damageOpacity:0,damageLift:0});
+  const reduced=attack.reducedMotion;
+  const t=clamp((Number(now)-attack.startedAt)*(reduced?DURATION/REDUCED_DURATION:1),0,DURATION);
   const finished=t>=DURATION;
   const stage=finished?'done':STAGES.find(v=>t>=v.from&&t<v.to).id;
-  // Enter together in ~95ms, exit together after the strike. Avoid the
-  // former false 'short lunge from each character's own queue position'.
-  const stageStrength=smooth((t-35)/105)*(1-smooth((t-560)/140));
-  const attackPush=smooth((t-215)/80)*(1-smooth((t-385)/115));
-  const recoil=smooth((t-335)/45)*(1-smooth((t-445)/110));
-  const hit=stage==='impact',hitFlash=hit?(1-smooth((t-335)/72))*.72:0;
+  // Two people ARRIVE together, strike promptly, then leave together.
+  // The world and non-participant anchors never move.
+  const stageStrength=smooth((t-22)/96)*(1-smooth((t-445)/125));
+  const push=smooth((t-195)/75)*(1-smooth((t-294)/58));
+  const recoil=smooth((t-267)/26)*(1-smooth((t-394)/73));
+  const hit=t>=267;
+  const hitFlash=smooth((t-265)/7)*(1-smooth((t-280)/47))*.48;
+  const fxOpacity=smooth((t-264)/9)*(1-smooth((t-286)/62));
+  const damageOpacity=smooth((t-267)/16)*(1-smooth((t-405)/62));
   const cut=stage==='windup'||stage==='swing'?'attacker':
    stage==='impact'||stage==='reaction'?'victim':'none';
-  return {stage,elapsed:t,finished,hit:t>=335,
-   stageStrength:reduced?stageStrength*.92:stageStrength,
-   zoom:stageStrength,advance:attackPush*(reduced?.55:1),
-   recoil:recoil*(reduced?.55:1),hitFlash,
-   shake:reduced?0:hit?.12*(1-smooth((t-335)/50)):0,
-   heroPose:stage==='windup'||stage==='swing'||stage==='impact'?1:0,
-   victimPose:stage==='impact'||stage==='reaction'?1:0,
-   frameHold:hit&&!reduced,cut,cue:''};
+  return {stage,elapsed:t,finished,hit,stageStrength,zoom:stageStrength,
+   advance:push*(reduced?.70:1),recoil:recoil*(reduced?.70:1),
+   hitFlash,fxOpacity,damageOpacity,damageLift:smooth((t-281)/145),
+   shake:reduced?0:hitFlash*.06,
+   heroPose:t>=114&&t<330?1:0,
+   victimPose:t>=267&&t<438?1:0,
+   frameHold:!reduced&&t>=267&&t<287,cut,cue:''};
  }
  function stageAt(now,reduced=false){
   return sample(createAttack('enemy-1',0,{reducedMotion:reduced}),now).stage;
@@ -132,18 +137,18 @@
   const lerp=(a,b,t)=>a+(b-a)*t;
   if(actorId==='hero'){
    const k=s.stageStrength;
-   const touch=.12*s.advance*k;
+   const touch=.24*s.advance*k;
    const x=lerp(hero.x,duel.hero.x,k)+(duel.target.x-duel.hero.x)*touch;
    const z=lerp(hero.z,duel.hero.z,k);
-   return {x:x-hero.x,y:0,z:z-hero.z,scale:1+.05*k};
+   return {x:x-hero.x,y:0,z:z-hero.z,scale:1};
   }
   if(actorId===attack.targetId){
    const k=s.stageStrength;
-   const out=.10*s.recoil*k;
+   const out=.085*s.recoil*k;
    const x=lerp(target.x,duel.target.x,k)+
     (duel.target.x-duel.hero.x)*out;
    const z=lerp(target.z,duel.target.z,k);
-   return {x:x-target.x,y:0,z:z-target.z,scale:1+.05*k};
+   return {x:x-target.x,y:0,z:z-target.z,scale:1};
   }
   return {x:0,y:0,z:0,scale:1};
  }
