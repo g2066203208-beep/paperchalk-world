@@ -19,11 +19,11 @@
     'living-room':{label:'客厅',group:'家',scene:'living-room',open:0,close:1440,travel:10},
     kitchen:{label:'厨房',group:'家',scene:'kitchen',open:0,close:1440,travel:10},
     entrance:{label:'玄关',group:'家',scene:'entrance',open:0,close:1440,travel:10},
-    school:{label:'学校',group:'城区',scene:null,open:7*60,close:17*60,travel:35,weekdaysOnly:true},
-    convenience:{label:'便利店',group:'城区',scene:null,open:6*60,close:22*60,travel:25},
-    cafe:{label:'咖啡店',group:'城区',scene:null,open:10*60,close:21*60,travel:30},
-    park:{label:'社区公园',group:'城区',scene:null,open:6*60,close:21*60,travel:25},
-    mall:{label:'购物商场',group:'城区',scene:null,open:10*60,close:21*60,travel:40}
+    school:{label:'学校',group:'城区',scene:'school',open:7*60,close:17*60,travel:35,weekdaysOnly:true},
+    convenience:{label:'便利店',group:'城区',scene:'convenience',open:6*60,close:22*60,travel:25},
+    cafe:{label:'咖啡店',group:'城区',scene:'cafe',open:10*60,close:21*60,travel:30},
+    park:{label:'社区公园',group:'城区',scene:'park',open:6*60,close:21*60,travel:25},
+    mall:{label:'购物商场',group:'城区',scene:'mall',open:10*60,close:21*60,travel:40}
   });
   const NPCS=Object.freeze({
     female2:{label:'女二',location:'school',from:7*60+30,to:16*60,workdays:true},
@@ -75,7 +75,27 @@
       '邻居说只要街坊还在互相照顾，城市就没有彻底停下来。'
     ]
   });
-  const ITEM_META=Object.freeze({bread:{label:'简餐',price:18,hunger:28},water:{label:'饮用水',price:6,hunger:4}});
+  // Single inventory metadata table shared by the bag, shop, phone and save.
+  // Design-first item classes; only ordinary, plausible day-one possessions.
+  const ITEM_META=Object.freeze({
+    bread:{label:'简餐',category:'consumable',description:'便利店买来的简单早餐，拆开便能吃。',
+      price:18,store:['convenience'],stackMax:12,effect:{type:'eat',amount:28},useMinutes:10},
+    water:{label:'饮用水',category:'consumable',description:'一瓶普通的饮用水。',
+      price:6,store:['convenience','mall'],stackMax:12,effect:{type:'eat',amount:4},useMinutes:3},
+    bandage:{label:'急救包',category:'consumable',description:'随身携带的小型创伤处理包，用于简单包扎。',
+      price:42,store:['convenience','mall'],stackMax:4,effect:{type:'heal',amount:20},useMinutes:12},
+    keys:{label:'家门钥匙',category:'important',description:'回家会用到。钥匙圈边缘已经有些磨损。',
+      price:null,store:[],stackMax:1,effect:null,useMinutes:0},
+    homework:{label:'作业本',category:'important',description:'今天要交的作业，还差最后一页。',
+      price:null,store:[],stackMax:1,effect:null,useMinutes:0}
+  });
+  const CATEGORIES=Object.freeze({
+    all:'全部',consumable:'用品',important:'重要'
+  });
+  const STORE_ITEMS=Object.freeze({
+    convenience:['bread','water','bandage'],
+    mall:['water','bandage']
+  });
   const CLAMP=(x,a,b)=>Math.max(a,Math.min(b,x));
   const NUMBER=(x,f)=>Number.isFinite(x)?x:f;
   const INTEGER=(x,f)=>CLAMP(Math.trunc(NUMBER(x,f)),-1e9,1e9);
@@ -122,7 +142,7 @@
     return {version:VERSION,day:1,minute:7*60,location:'bedroom',
       money:260,energy:78,knowledge:0,evidence:0,worldPressure:2,
       relationships:{female2:55,classmate:0,clerk:0,neighbor:0},
-      inventory:{bread:1,water:1},dailyUses:{},nightStatus:'day',
+      inventory:{bread:1,water:1,bandage:1,keys:1,homework:1},dailyUses:{},nightStatus:'day',
       phone:{callsRead:false,messagesRead:false,reply:null},
       homework:{status:'unfinished',inspected:false,handedIn:false},
       log:[{day:1,minute:7*60,text:'新的一天开始了。先安排今天的生活。'}],
@@ -245,20 +265,30 @@
     }
     function buy(itemId){
       const item=ITEM_META[itemId];
-      if(!item)return fail('没有这种商品');
-      if(state.location!=='convenience')return fail('需要先到便利店');
+      if(!item||!STORE_ITEMS[state.location]?.includes(itemId)||!Number.isFinite(item.price))
+        return fail('这家店没有出售该物品');
       if(state.money<item.price)return fail('余额不足');
-      if(state.inventory[itemId]>=99)return fail('背包已满');
+      if((state.inventory[itemId]||0)>=item.stackMax)return fail('这件物品已达到可携带数量上限');
       const can=spend(10);if(!can.ok)return can;
-      state.money-=item.price;state.inventory[itemId]++;
-      return finish('buy','购买'+item.label+'，支付'+item.price+'元。');
+      state.money-=item.price;state.inventory[itemId]=(state.inventory[itemId]||0)+1;
+      return finish('buy','买下'+item.label+'，支付'+item.price+'元。');
     }
     function use(itemId){
       const item=ITEM_META[itemId];
-      if(!item||state.inventory[itemId]<1)return fail('背包没有这件物品');
-      const can=spend(10);if(!can.ok)return can;
+      if(!item||(state.inventory[itemId]||0)<1)return fail('背包没有这件物品');
+      if(!item.effect)return fail('这是重要物品，不能消耗');
+      const can=spend(item.useMinutes);if(!can.ok)return can;
       state.inventory[itemId]--;
-      return finish('eat','食用了'+item.label+'。',{type:'eat',amount:item.hunger});
+      const action=item.effect.type==='heal'?'apply-medical':'eat';
+      return finish(action,item.effect.type==='heal'?'使用'+item.label+'处理伤口。':
+        '使用了'+item.label+'。',item.effect);
+    }
+    function inspectItem(itemId){
+      const item=ITEM_META[itemId];
+      if(!item||(state.inventory[itemId]||0)<1)return fail('背包没有这件物品');
+      const text=itemId==='homework'&&state.homework.status==='finished'?
+        '作业已经补齐。记得交给老师。':item.description;
+      return {ok:true,message:text,itemId,description:text};
     }
     function talk(npcId){
       const npc=NPCS[npcId];
@@ -369,10 +399,10 @@
     function reset(){
       state=defaultState();persist();notify('reset');return snapshot();
     }
-    return Object.freeze({snapshot,subscribe,persist,travel,act,buy,use,talk,wait,sleep,
+    return Object.freeze({snapshot,subscribe,persist,travel,act,buy,use,inspectItem,talk,wait,sleep,
       phoneInbox,markPhoneRead,replyHomework,inspectHomework,finishHomework,submitHomework,
       recordNightReturn,reset,calendar:()=>calendar(state)});
   }
   return Object.freeze({VERSION,KEY,LOCATIONS,NPCS,ACTIONS,ITEM_META,STAGES,dayDate,
-    stageOf,headlines,defaultState,sanitize,create});
+    stageOf,headlines,defaultState,sanitize,create,CATEGORIES,STORE_ITEMS});
 });
