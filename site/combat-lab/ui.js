@@ -30,7 +30,14 @@ function uiIcon(name, size=18){
  return `<svg class="ui-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.skill}</svg>`;
 }
 function iconKind(c){return c.aoe?'all':c.heal?'heal':c.mark?'mark':c.type==='attack'?'attack':c.type==='defense'?'defense':c.type==='finisher'?'finisher':c.type==='system'?'system':'skill'}
-function nameTag(actor){return textEscape(String(actor?.name||'').split('·').pop().replace('走廊','').slice(0,4))}
+function unitNumber(actor){
+ if(!actor||!game)return '?';
+ const faction=actor.side==='enemy'?'敌':'友';
+ const n=game.actors.filter(x=>x.side===actor.side).findIndex(x=>x.id===actor.id);
+ return faction+(n>=0?n+1:'?');
+}
+function unitLabel(actor){return actor?unitNumber(actor)+' · '+actor.name:'全体';}
+function nameTag(actor){return textEscape(actor?.id?unitNumber(actor):String(actor?.name||'').split('·').pop().replace('走廊','').slice(0,4))}
 function healthGraphic(current,projected,max,enemy){
  const a=Math.max(0,Math.min(100,100*current/max)),b=Math.max(0,Math.min(100,100*projected/max));
  return `<div class="vital-track ${enemy?'hostile':'friendly'}" role="img" aria-label="当前${current}生命，预计${projected}生命"><span class="vital-base" style="width:${a}%"></span><span class="vital-loss" style="left:${Math.min(a,b)}%;width:${Math.abs(a-b)}%"></span><span class="vital-forecast" style="width:${b}%"></span></div>`;
@@ -63,7 +70,7 @@ else{playHead=Number(c.dataset.time);display();}
 });
 $('timeline').addEventListener('pointerover',e=>{const c=e.target.closest('[data-time]');if(!c||!isPlanning()||placementMode)return;const i=Number(c.dataset.time);if(i!==playHead){playHead=i;renderForecast();updateTimeHighlight();}});
 $('timeline').addEventListener('keydown',e=>{const c=e.target.closest('[data-time]');if(!c)return;if(e.key==='Enter'||e.key===' '){e.preventDefault();c.click()}});
-$('actorCards')?.addEventListener('click',e=>{const c=e.target.closest('[data-target]');if(!c)return;targetId=c.dataset.target;display();showToast('已选择目标：'+game.actors.find(x=>x.id===targetId).name);});
+$('actorCards')?.addEventListener('click',e=>{const c=e.target.closest('[data-target]');if(!c)return;targetId=c.dataset.target;display();showToast('已选择目标：'+unitLabel(game.actors.find(x=>x.id===targetId)));});
 $('finisherSlot').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(!isPlanning())return;placementMode='finisher';selectedUid=null;selectedActionId=null;display();showToast('先安排标记/充能，再把绝杀放到目标敌人的后续时间格。');});
 $('removeActionButton')?.addEventListener('click',()=>{if(!selectedActionId)return;try{G.remove(game,selectedActionId);selectedActionId=null;placementMode=null;display();showToast('已取下动作，退回手牌');}catch(err){showToast(err.message)}});
 $('threatStrip')?.addEventListener('click',e=>{const b=e.target.closest('[data-guard-target]');if(b)guardThreat(b.dataset.guardTarget,Number(b.dataset.guardTick));});
@@ -151,7 +158,7 @@ function guardThreat(targetId,hitTick){
   try{
    G.place(game,card.uid,relative,targetId);
    selectedUid=null;selectedActionId=null;placementMode=null;playHead=hitTick;display();
-   showToast(`已为 ${game.actors.find(a=>a.id===targetId)?.name||'队友'} 排好防御，覆盖 T${hitTick}；占用的是你的时间`);
+   showToast(`已为 ${unitLabel(game.actors.find(a=>a.id===targetId))} 排好防御，覆盖 T${hitTick}；占用的是你的时间`);
    return;
   }catch(error){lastError=error.message;}
  }
@@ -159,14 +166,18 @@ function guardThreat(targetId,hitTick){
 }
 function renderThreatStrip(threats){
  const el=$('threatStrip');if(!el)return;
- const keys=new Map();for(const t of threats){const key=t.tick+':'+t.target;const e=keys.get(key);if(e){e.damage+=t.damage;e.sources.add(t.sourceName)}else keys.set(key,{...t,sources:new Set([t.sourceName])})}
+ const keys=new Map();for(const t of threats){const key=t.tick+':'+t.target;const e=keys.get(key);if(e){e.damage+=t.damage;e.sources.add(t.source)}else keys.set(key,{...t,sources:new Set([t.source])})}
  const list=[...keys.values()];
  if(!list.length){el.innerHTML=`<span class="threat-calm">${uiIcon('check',16)} 本轮安全</span>`;return;}
  el.innerHTML=`<span class="threat-label">${uiIcon('alert',16)} 危险预告</span>${list.map(t=>{
   const covered=plannedGuardFor(t.target,t.tick),mine=game.actors.find(a=>a.id===t.target);
-  const sourceNames=[...t.sources],title=`${sourceNames.join('、')}在T${t.tick}攻击${t.targetName}，原始伤害${t.damage}。点按即可安排防御（使用自己的行动时间）`;
-  return `<button class="threat-chip ${covered?'covered':''}" type="button" data-guard-target="${textEscape(t.target)}" data-guard-tick="${t.tick}" title="${textEscape(title)}" aria-label="T${t.tick} ${textEscape(sourceNames.join('、'))}攻击${textEscape(t.targetName)} ${t.damage}伤害，点击安排防御">
-   <span class="threat-time"><small>T</small>${t.tick}</span><span class="threat-source">${uiIcon('attack',15)} ${nameTag({name:sourceNames[0]})}</span><span class="threat-vector">${uiIcon('arrow',15)}</span><span class="threat-victim">${nameTag(mine||{name:t.targetName})}</span><b class="threat-amount">${t.damage}</b><span class="threat-guard">${covered?uiIcon('check',16):uiIcon('defense',16)}</span>
+  const sources=[...t.sources].map(id=>game.actors.find(a=>a.id===id)).filter(Boolean);
+   const sourceNames=sources.map(a=>unitLabel(a));
+   const sourceCodes=sources.map(a=>unitNumber(a)).join('+');
+   const victim=game.actors.find(a=>a.id===t.target);
+   const title=`${sourceNames.join('、')}在T${t.tick}攻击${unitLabel(victim)}，原始伤害${t.damage}。点按即可安排防御（使用自己的行动时间）`;
+  return `<button class="threat-chip ${covered?'covered':''}" type="button" data-guard-target="${textEscape(t.target)}" data-guard-tick="${t.tick}" title="${textEscape(title)}" aria-label="T${t.tick} ${textEscape(sourceNames.join('、'))}攻击${textEscape(unitLabel(victim))} ${t.damage}伤害，点击安排防御">
+   <span class="threat-time"><small>T</small>${t.tick}</span><span class="threat-source">${uiIcon('attack',15)} <span class="threat-unit-number">${textEscape(sourceCodes)}</span></span><span class="threat-vector">${uiIcon('arrow',15)}</span><span class="threat-victim"><span class="threat-unit-number">${unitNumber(mine)}</span></span><b class="threat-amount">${t.damage}</b><span class="threat-guard">${covered?uiIcon('check',16):uiIcon('defense',16)}</span>
   </button>`;
  }).join('')}`;
 }
@@ -179,21 +190,21 @@ function renderTimeline(){
   const targetActions=hero.actions.filter(a=>!a.canceled&&a.target===actor.id),incoming=threats.filter(x=>x.target===actor.id),outgoing=threats.filter(x=>x.source===actor.id);
   const inbound=incoming.length?incoming.reduce((n,t)=>n+t.damage,0):0;
   const preview=delta<0?`<span class="vital-delta damage">${uiIcon('attack',12)} ${Math.abs(delta)}</span>`:delta>0?`<span class="vital-delta recover">${uiIcon('heal',12)} +${delta}</span>`:'<span class="vital-delta neutral">—</span>';
-  const identity=`<div class="dual-person" title="${textEscape(actor.name)} 生命${actor.hp}，预计${pred.hp}"><div class="person-top"><div class="avatar ${enemy?'is-foe':'is-friend'} ${own?'is-hero':''}">${uiIcon(enemy?'alert':own?'attack':actor.id.includes('guard')?'defense':'skill',17)}</div><div class="person-info"><div class="person-name">${textEscape(actor.name)}${own?'<span class="self-mark">你</span>':''}</div><div class="person-numbers"><strong>${actor.hp}</strong><span class="health-arrow">${uiIcon('arrow',12)}</span><strong class="predicted ${delta<0?'is-loss':delta>0?'is-heal':''}">${pred.hp}</strong><small>/${actor.maxHp}</small>${preview}</div></div></div>${healthGraphic(actor.hp,pred.hp,actor.maxHp,enemy)}</div>`;
+  const identity=`<div class="dual-person" title="${textEscape(unitLabel(actor))} 生命${actor.hp}，预计${pred.hp}"><div class="person-top"><div class="avatar ${enemy?'is-foe':'is-friend'} ${own?'is-hero':''}">${uiIcon(enemy?'alert':own?'attack':actor.id.includes('guard')?'defense':'skill',17)}<span class="avatar-id">${unitNumber(actor)}</span></div><div class="person-info"><div class="person-name"><span class="person-serial">${unitNumber(actor)}</span>${textEscape(actor.name)}${own?'<span class="self-mark">你</span>':''}</div><div class="person-numbers"><strong>${actor.hp}</strong><span class="health-arrow">${uiIcon('arrow',12)}</span><strong class="predicted ${delta<0?'is-loss':delta>0?'is-heal':''}">${pred.hp}</strong><small>/${actor.maxHp}</small>${preview}</div></div></div>${healthGraphic(actor.hp,pred.hp,actor.maxHp,enemy)}</div>`;
   const canUse=placementMode==='card'?(()=>{const it=hero.hand.find(x=>x.uid===selectedUid);const c=G.CARD[it?.key];if(!c)return false;return c.type==='defense'||c.heal||c.buff?actor.side==='ally':actor.side==='enemy'})():placementMode==='finisher'?enemy:true;
   rows+=`<div data-row-actor="${actor.id}" class="dual-row ${enemy?'enemyrow':'allyrow'} ${own?'own-row':''} ${placementMode?'targeting':''} ${canUse?'legal-target':'invalid-target'}">${identity}<div class="dual-board">`;
   for(let i=1;i<=10;i++){
    const t=start+i-1,placed=targetActions.find(a=>G.phase(G.CARD[a.card],a.start,t));
    const seg=segmentAt(actor,t),ownAction=seg?.kind==='action'?seg:null,attacksHere=incoming.filter(x=>x.tick===i);
-   let topClass='dual-big '+(enemy?'enemy-zone':'ally-zone'),chip='',id='',title=`${actor.name}，T${i}，可放置指向该角色的卡牌`;
+   let topClass='dual-big '+(enemy?'enemy-zone':'ally-zone'),chip='',id='',title=`${unitLabel(actor)}，T${i}，可放置指向该角色的卡牌`;
    if(placed){
      const c=G.CARD[placed.card],ph=G.phase(c,placed.start,t),actualHit=c.damage?G.predictHit(hero,c,t):0;
      topClass+=` filled ${c.type} ${ph}${placed.locked?' locked':''}`;
      const number=c.damage?actualHit:c.guard||c.heal||c.mark||0;
      chip=ph==='active'?`<span class="phase-metric">${uiIcon(iconKind(c),14)}${number||''}</span>`:ph==='windup'?`<span class="phase-mark">${i===placed.start-game.now+1?uiIcon(iconKind(c),13):''}</span>`:`<span class="phase-mark dim">${placed.locked?uiIcon('lock',12):''}</span>`;
      id=` data-action-id="${placed.id}" draggable="${!placed.locked&&isPlanning()}"`;
-     title=`你的${c.name} → ${actor.name}，T${i}：${ph==='active'?'造成/生效 '+number:ph==='windup'?'前摇':'后摇'}`;
-   }else if(attacksHere.length){chip=`<span class="incoming-flag" title="${textEscape(attacksHere.map(x=>x.sourceName+' '+x.damage+'伤害').join('、'))}">${uiIcon('alert',13)}<b>${attacksHere.reduce((n,x)=>n+x.damage,0)}</b></span>`}
+     title=`你的${c.name} → ${unitLabel(actor)}，T${i}：${ph==='active'?'造成/生效 '+number:ph==='windup'?'前摇':'后摇'}`;
+   }else if(attacksHere.length){chip=`<span class="incoming-flag" title="${textEscape(attacksHere.map(x=>unitLabel(game.actors.find(a=>a.id===x.source))+' '+x.damage+'伤害').join('、'))}">${uiIcon('alert',13)}<b>${attacksHere.reduce((n,x)=>n+x.damage,0)}</b></span>`}
    else chip='<span class="dual-plus">＋</span>';
    if(playHead===i)topClass+=' playhead';
    let bottomClass='dual-small',bottom='',bottomTitle=`${actor.name}在T${i}等待`;
@@ -202,10 +213,10 @@ function renderTimeline(){
      const c=ownAction.card,ph=ownAction.phase,strike=c.damage?G.predictHit(actor,c,t):0;
      const dest=game.actors.find(x=>x.id===ownAction.action.target);
      bottomClass+=` ${c.type} ${ph} ${enemy?'enemy-intent':''}`;
-     if(ph==='active')bottom=`<span class="intent-metric">${uiIcon(iconKind(c),12)}<b>${strike||c.guard||c.heal||c.mark||''}</b>${c.aoe?uiIcon('all',11):''}</span>`;
+     if(ph==='active')bottom=`<span class="intent-metric">${uiIcon(iconKind(c),12)}<b>${strike||c.guard||c.heal||c.mark||''}</b>${c.aoe?uiIcon('all',11):dest?`<small class="intent-target-number">→${unitNumber(dest)}</small>`:''}</span>`;
      else if(ph==='windup')bottom=`<span class="intent-phase windup-icon">${uiIcon('clock',12)}</span>`;
      else bottom=`<span class="intent-phase recovery-icon">·</span>`;
-     bottomTitle=`${actor.name} ${c.name} ${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}，${c.damage?'伤害'+strike:c.guard?'防御'+c.guard:'技能'}，目标${dest?.name||'全体'}，速度${c.speed}`;
+     bottomTitle=`${unitLabel(actor)} ${c.name} ${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}，${c.damage?'伤害'+strike:c.guard?'防御'+c.guard:'技能'}，目标${unitLabel(dest)}，速度${c.speed}`;
    }
    rows+=`<div class="dual-tick"><div class="${topClass}" data-time="${i}" data-actor="${actor.id}" ${id} tabindex="0" role="button" aria-label="${textEscape(title)}" title="${textEscape(title)}">${chip}</div><div class="${bottomClass}" title="${textEscape(bottomTitle)}">${bottom}</div></div>`;
   }
@@ -231,7 +242,7 @@ $('commitButton').disabled=!isPlanning();$('shuffleButton').disabled=!isPlanning
 $('runStatus').innerHTML=`<span class="hud-chip stage">${uiIcon('target',15)} ${run.stage+1}<small> / ${C.STAGES.length}</small></span><span class="hud-chip coin">◈ <b>${run.gold}</b></span><span class="hud-chip">${uiIcon('card',15)} <b>${C.cardCount(run)}</b></span><span class="hud-chip">${uiIcon('skill',15)} <b>${run.relics.length}</b><small>/4</small></span><span class="hud-chip hp">${uiIcon('heal',15)} <b>${run.hp}</b><small>/${run.maxHp}</small></span><span class="hud-chip meter">${uiIcon('finisher',15)} <b>${hero.energy}</b><small>/100</small></span>`;$('heroStatus').innerHTML=`<div class="info-key"><span>当前生命</span><span>${hero.hp} / ${hero.maxHp}</span></div><div class="info-key"><span>绝杀能量</span><span>${hero.energy} / 100</span></div><div class="info-key"><span>抽牌堆 / 弃牌堆</span><span>${hero.draw.length} / ${hero.discard.length}</span></div><div class="info-key"><span>洗牌次数</span><span>${game.stats.shuffle}</span></div><div class="info-key"><span>已锁排程</span><span>${hero.actions.filter(a=>a.locked).length}张</span></div><div class="info-key"><span>跨轮占用</span><span>${hero.actions.filter(a=>!a.canceled&&a.start<game.now+10&&a.start+G.cLen(G.CARD[a.card])>game.now+10).length}项</span></div>`;
 const fin=G.CARD[hero.fin],ready=hero.energy>=100 || (projection?.trace||[]).some(z=>z.actors.find(a=>a.id==='hero')?.energy>=100);$('finisherSlot').innerHTML=`<div class="finisher-glyph">${uiIcon('finisher',25)}</div><div class="finisher-body"><strong>${textEscape(fin.name)}</strong><div class="finisher-meter"><span style="width:${hero.energy}%"></span></div><small>${hero.energy} / 100</small></div><button type="button" ${ready?'':'disabled'} class="${placementMode==='finisher'?'selected':''}" title="绝杀：${fin.w}格前摇 / ${fin.a}格生效 / ${fin.r}格后摇">${uiIcon('target',16)} 放置</button>`;
 }
-function renderIntents(){let rows=[];for(const e of game.actors.filter(a=>a.side==='enemy')){if(e.dead)continue;const acts=e.actions.filter(a=>a.start>=game.now&&a.start<game.now+10&&!a.canceled);for(const a of acts){const c=G.CARD[a.card];rows.push(`<div class="enemy-intent"><strong>${textEscape(e.name)} · ${textEscape(c.name)}</strong><small>开始 T${a.start-game.now+1} → ${c.w}前摇 / ${c.a}作用 / ${c.r}后摇${c.damage?' · 每格'+c.damage+'伤害':''}${c.guard?' · 共'+c.guard+'防御':''} · 速度${c.speed}</small></div>`);}}$('enemyIntents').innerHTML=rows.join('')||'<p>此轮没有新行动；敌人可能正处于跨轮动作或失能恢复。</p>';}
+function renderIntents(){let rows=[];for(const e of game.actors.filter(a=>a.side==='enemy')){if(e.dead)continue;const acts=e.actions.filter(a=>a.start>=game.now&&a.start<game.now+10&&!a.canceled);for(const a of acts){const c=G.CARD[a.card];rows.push(`<div class="enemy-intent"><strong>${textEscape(unitLabel(e))} · ${textEscape(c.name)}</strong><small>开始 T${a.start-game.now+1} → ${c.w}前摇 / ${c.a}作用 / ${c.r}后摇${c.damage?' · 每格'+c.damage+'伤害':''}${c.guard?' · 共'+c.guard+'防御':''} · 速度${c.speed}</small></div>`);}}$('enemyIntents').innerHTML=rows.join('')||'<p>此轮没有新行动；敌人可能正处于跨轮动作或失能恢复。</p>';}
 function renderLog(records){const logs=records||game.events||[];const recent=logs.slice(-25);$('combatLog').innerHTML=recent.map(x=>`<div class="log-row ${x.kind}"><span class="tick">T${x.t-game.now+(game.round>0?10:0)}</span><span>${textEscape(x.text)}</span></div>`).join('')||'<p>等待战斗开始...</p>';}
 function display(){
  projection=isPlanning()?G.simulateRound(game,{preview:true,collectTrace:true}):null;
