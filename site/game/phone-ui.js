@@ -171,21 +171,28 @@
           def.group==='家'&&id!=='entrance';
         button.disabled=id===current||!open||needsDoor||needsReturn;
         button.title=!open?'现在还没营业':label;
-        button.addEventListener('click',async()=>{
+        button.addEventListener('click',()=>{
           const cost=locations[current].group==='家'&&def.group==='家'?10:
             def.group==='家'?locations[current].travel:def.travel;
-          const willTravel=window.confirm?
-            window.confirm('前往'+def.label+'？路程约'+cost+'分钟。'):true;
-          if(!willTravel)return;
-          button.disabled=true;
-          const res=await config.onTravel?.(id);
-          if(res?.ok){
-            close();
-            global.PaperWorldQuickTools?.close();
-          }else{
-            info.textContent=res?.reason||'暂时无法前往这个地点。';
-            renderApp('地图');
-          }
+          info.textContent='目的地 · '+def.label;
+          for(const selected of canvas.querySelectorAll('.phone-map-pin'))
+            selected.dataset.selected=String(selected.dataset.place===id);
+          const old=copy.querySelector('.phone-map-depart');
+          old?.remove();
+          const depart=document.createElement('button');
+          depart.className='phone-map-depart';depart.type='button';
+          depart.textContent='前往'+def.label+' · '+cost+'分钟';
+          depart.addEventListener('click',async()=>{
+            depart.disabled=true;depart.textContent='正在出发…';
+            const res=await config.onTravel?.(id);
+            if(res?.ok){
+              close();global.PaperWorldQuickTools?.close();
+            }else{
+              info.textContent=res?.reason||'暂时无法前往这个地点。';
+              depart.disabled=false;depart.textContent='重试 · '+def.label;
+            }
+          });
+          copy.appendChild(depart);
         });
         canvas.appendChild(button);
       }
