@@ -57,6 +57,40 @@ try{
  const originalCamera=JSON.stringify(outer.camera);
  const originalActors=JSON.stringify(outer.actors);
  await page.screenshot({path:'artifacts/ring-arena/final-eye-level-3q-1280x720.png'});
+ // Reproduce the user's ACTUAL 1917x906 screenshot dimensions. Measure the
+ // screen-space positions from the very projection matrix used by WebGL.
+ await page.setViewportSize({width:1917,height:906});
+ await page.waitForTimeout(380);
+ const groundProof=await page.evaluate(()=>{
+  const engine=window.PaperWorldRingArena;
+  const state=window.PaperWorldGameRingArena.inspect();
+  const aspects=state.projectionAspect,camera=state.camera;
+  const feet=state.actors.enemies.map(a=>
+   engine.project({x:a.x,y:0,z:a.z},camera,aspects));
+  const hero=engine.portraitVisibleBounds(state.actors.allies[0],
+   camera,engine.FEMALE07_BACK_UV,aspects);
+  return {aspect:aspects,feet,hero,safety:state.safety,
+   enemySizes:state.actors.enemies.map(a=>
+    engine.portraitBounds(a,camera,aspects).heightFraction)};
+ });
+ assert.ok(groundProof.feet.every(x=>x.valid));
+ assert.ok(Math.abs(groundProof.aspect-1917/906)<.001);
+ const midY=groundProof.feet[0].y;
+ assert.ok(groundProof.feet.every(x=>Math.abs(x.y-midY)<.001),
+  'user screenshot: all 4 opponents must stand on the same ground Y');
+ const centers=groundProof.feet.map(x=>x.x);
+ const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
+ assert.ok(gaps.every(x=>x>.20&&x<.29));
+ assert.ok(Math.max(...gaps)-Math.min(...gaps)<.001);
+ assert.ok(groundProof.hero.left>-.99&&groundProof.hero.right<-.23,
+  'the actual woman7 rear cutout must not be clipped or obstruct enemies');
+ assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
+  'weapon and enemy1 cannot overlap');
+ assert.ok(Math.max(...groundProof.enemySizes)-Math.min(...groundProof.enemySizes)<.005,
+  'foes must have coherent physical scale');
+ await page.screenshot({path:'artifacts/ring-arena/V31-woman7-four-enemies-ground-aligned-1917x906.png'});
+ await page.setViewportSize({width:1280,height:720});
+ await page.waitForTimeout(220);
  // Play the real authored Attack card, select explicitly numbered target #2,
  // and verify the complete director: lock, motion, impact, HP update, return.
  assert.equal(outer.director.card,'斧柄横扫');
@@ -145,6 +179,18 @@ try{
  assert.ok(inner.safety.valid&&inner.safety.clear);
  assert.equal(inner.heroTextureUploads,1);
  await page.screenshot({path:'artifacts/ring-arena/final-inner-fixed-left.png'});
+ await page.setViewportSize({width:1917,height:906});
+ await page.waitForTimeout(380);
+ const innerGround=await page.evaluate(()=>{
+  const engine=window.PaperWorldRingArena;
+  const state=window.PaperWorldGameRingArena.inspect();
+  const feet=state.actors.enemies.map(a=>
+   engine.project({x:a.x,y:0,z:a.z},state.camera,state.projectionAspect));
+  return {feet,safety:state.safety};
+ });
+ assert.ok(innerGround.feet.every(p=>Math.abs(p.y-innerGround.feet[0].y)<.001));
+ assert.ok(innerGround.safety.clear&&innerGround.safety.hero.left>-.99);
+ await page.screenshot({path:'artifacts/ring-arena/V31-inner-woman7-ground-aligned-1917x906.png'});
  // Responsive full stage, same perspective, no second camera or cutoff.
  await page.setViewportSize({width:1920,height:1080});
  await page.waitForTimeout(400);
