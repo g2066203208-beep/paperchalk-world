@@ -99,8 +99,8 @@
 #daily-life-ui .daily-feedback[data-status="warning"]{color:#e6b2a6}
 #daily-life-ui .daily-feedback[data-status="success"]{color:#bfd0b4}
 #daily-life-ui .daily-reset{margin:15px 0;border-color:#bf877355!important}
-#novel-ui > #daily-city-cover{
-  position:absolute;z-index:2!important;inset:0;pointer-events:none;
+#view > #daily-city-cover{
+  position:absolute;z-index:5!important;inset:0;pointer-events:none;
   display:grid;place-items:center;background:
     radial-gradient(ellipse 65% 70% at 35% 50%,#434b4a4a,transparent 74%),
     linear-gradient(150deg,#12171b,#080b0e);
@@ -188,3 +188,8 @@
  #daily-life-ui .daily-map-node{min-height:28px;min-width:60px;padding:4px 6px!important}
  #daily-life-ui .daily-morning-task{padding:8px 10px}
 }
+
+/* In the quiet real-world prologue the camera represents the heroine's eyes.
+   Never place her rear battle cutout in front of her own bed or the school map. */
+#view.intro-waking #camera-player-root,
+#view.overworld-life-active #camera-player-root{display:none!important}
