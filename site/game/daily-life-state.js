@@ -43,6 +43,29 @@
     rest:{label:'休息一小时',location:'bedroom',minutes:60,energy:22,hunger:5,
       note:'休息之后，精神和体力恢复了一些。'}
   });
+  const DIALOGUE=Object.freeze({
+    classmate:[
+      '同学提起了明天要交的作业，顺便问你周末准备做什么。',
+      '同学说有人把学校附近的监控故障剪成了恐怖视频。',
+      '同学担心最近的临时停课消息，希望你们还能正常见面。',
+      '同学认真讨论政府公布的避险地点，约好互相报平安。',
+      '同学说班上有些人离开了城市，剩下的人在互相照顾。'
+    ],
+    clerk:[
+      '店员一边找零一边抱怨今天的进货又晚了。',
+      '店员说有客人坚持夜里看见了不存在的路口。',
+      '店员担心货运路线改变会影响附近居民买到日用品。',
+      '店员在柜台旁贴上了正式避险公告。',
+      '店员和邻居商量给行动不便的人留出一份物资。'
+    ],
+    neighbor:[
+      '邻居正讨论社区公告和公园最近的维修计划。',
+      '邻居说楼下住户群又在争论一张模糊的夜间照片。',
+      '邻居希望有人协助核对临时疏散名单。',
+      '邻居邀请你参加社区应急物资分配。',
+      '邻居说只要街坊还在互相照顾，城市就没有彻底停下来。'
+    ]
+  });
   const ITEM_META=Object.freeze({bread:{label:'简餐',price:18,hunger:28},water:{label:'饮用水',price:6,hunger:4}});
   const CLAMP=(x,a,b)=>Math.max(a,Math.min(b,x));
   const NUMBER=(x,f)=>Number.isFinite(x)?x:f;
@@ -222,7 +245,13 @@
       const can=spend(25);if(!can.ok)return can;
       state.relationships[npcId]=CLAMP(state.relationships[npcId]+1,0,100);
       state.dailyUses['talk-'+npcId]=1;
-      return finish('social','和'+npc.label+'聊了一会儿。关系有所增进。');
+      return finish('social',npc.label+'：'+DIALOGUE[npcId][stageOf(state)-1]);
+    }
+    function wait(minutes=30){
+      if(![15,30,60].includes(minutes))return fail('只可等待15、30或60分钟');
+      const can=spend(minutes);if(!can.ok)return can;
+      state.energy=CLAMP(state.energy-Math.ceil(minutes/30),0,100);
+      return finish('wait','等待了'+minutes+'分钟。',{type:'exert',amount:minutes/30});
     }
     function sleep(){
       if(state.location!=='bedroom')return fail('请先回卧室睡觉');
@@ -252,7 +281,7 @@
     function reset(){
       state=defaultState();persist();notify('reset');return snapshot();
     }
-    return Object.freeze({snapshot,subscribe,persist,travel,act,buy,use,talk,sleep,
+    return Object.freeze({snapshot,subscribe,persist,travel,act,buy,use,talk,wait,sleep,
       recordNightReturn,reset,calendar:()=>calendar(state)});
   }
   return Object.freeze({VERSION,KEY,LOCATIONS,NPCS,ACTIONS,ITEM_META,STAGES,dayDate,
