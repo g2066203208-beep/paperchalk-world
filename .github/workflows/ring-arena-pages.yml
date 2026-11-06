@@ -6,6 +6,15 @@ on:
     branches: [main]
     paths:
       - 'site/game/ring-arena-runtime.js'
+      - 'site/character-editor/**'
+      - 'site/assets/l2d/inbox/**'
+      - 'site/assets/l2d/library/**'
+      - 'scripts/build_l2d_library.py'
+      - 'scripts/bind_female06_pants.py'
+      - 'scripts/build_character_catalog.py'
+      - 'tests/test_female06_base_immutable.py'
+      - 'tests/test_female06_pants_skin.cjs'
+      - 'tests/test_l2d_person_tree_model.cjs'
       - 'site/game/ring-arena-director.js'
       - 'site/game/ring-arena-director.css'
       - 'site/assets/characters/hero-axe-attack.webp'
@@ -77,6 +86,21 @@ jobs:
           node tests/scene-camera.test.cjs
           node tests/test_l2d_display_lifecycle.cjs
           node tests/test_l2d_studio_game_sync.cjs
+          python3 tests/test_female06_base_immutable.py
+          node tests/test_female06_pants_skin.cjs
+          node tests/test_l2d_person_tree_model.cjs
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          rows=json.loads(Path('site/characters.catalog.json').read_text())['characters']
+          selected=[x for x in rows if x['id'].startswith('female-06')]
+          assert [x['id'] for x in selected]==['female-06'],selected
+          six=selected[0]
+          assert six['l2dModule']['front']['rig']['partCount']==17
+          assert six['variantCategory']=='default'
+          assert six['front'].startswith('./assets/l2d/library/female-06/')
+          print('PASS deployed only female-six THIRD costume as one canonical 17-part L2D')
+          PY
           node - <<'JS'
           const fs=require('fs');
           for(const path of [
