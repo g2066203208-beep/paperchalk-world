@@ -256,6 +256,32 @@ try{
  assert.equal(recovered.arena.heroine.side,'back');
  assert.ok(recovered.arena.safety.clear,'stale local character binding must not make foes disappear');
  await page.screenshot({path:'artifacts/ring-arena/after-stale-player-slot-repair.png'});
+ // Opt-in art direction comparison. The canonical L2D must survive a
+ // static 3/4-rear pose preview and instantly return when switched off.
+ await page.setViewportSize({width:1280,height:720});
+ await page.goto('http://127.0.0.1:'+server.address().port+
+  '/index.html?scene=ring-arena&heroPose=3q',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>{
+  const r=window.PaperWorldGameRingArena?.inspect();
+  return r?.active&&r?.posePreviewEnabled===true&&r?.l2dReady===5&&
+   r?.l2dFrames?.hero>=3;
+ },null,{timeout:85000});
+ assert.equal(await page.locator('[data-pose="toggle"]').getAttribute('aria-pressed'),'true');
+ await page.screenshot({path:'artifacts/ring-arena/hero-3q-preview-left.png'});
+ await page.locator('[data-shot="1"]').click();
+ await page.waitForFunction(()=>{
+  const r=window.PaperWorldGameRingArena?.inspect();
+  return r?.shotIndex===1&&r?.settled&&r?.l2dReady===5;
+ },null,{timeout:8000});
+ await page.screenshot({path:'artifacts/ring-arena/hero-3q-preview-right.png'});
+ await page.locator('[data-pose="toggle"]').click();
+ await page.waitForFunction(()=>{
+  const r=window.PaperWorldGameRingArena?.inspect();
+  return r?.posePreviewEnabled===false&&r?.heroine?.ready&&r?.l2dReady===5;
+ },null,{timeout:30000});
+ assert.equal(await page.locator('[data-pose="toggle"]').getAttribute('aria-pressed'),'false');
+ await page.screenshot({path:'artifacts/ring-arena/hero-original-restored.png'});
+ assert.deepEqual(errors,[],'pose preview must not introduce browser JavaScript errors');
  await page.close();
  console.log('PASS: 2 near-hero fixed cameras with back L2D and 4 uncropped foes, screen sizes, immutable world');
 }finally{
