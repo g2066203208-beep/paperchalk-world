@@ -350,5 +350,5 @@ if(hero.energy>=100&&enemies.some(e=>e.hp<=35)){const e=enemies.find(e=>e.hp<=35
 return game;}
 function earliestShuffle(game){const a=game.actors[0];const last=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND).reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));return last-game.now+1;}
 function runAuto(opts,policy='tactical',maxRounds=14){const game=create(opts);while(game.phase==='planning'&&game.round<maxRounds){autoPlan(game,policy);simulateRound(game);}if(game.phase==='planning')game.phase='timeout';return game;}
-return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,cLen,phase,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,clone};
+return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,cLen,phase,predictHit:actorHitBuff,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,clone};
 });
