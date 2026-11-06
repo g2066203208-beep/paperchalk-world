@@ -25,6 +25,8 @@ try {
  assert.equal(await page.locator('.manual-note').count(),5);
  await page.screenshot({path:dest+'/03-five-normal-shift-rules.png'});
  await page.locator('#modal-close').click();
+ await page.locator('#scene-action-buttons button').filter({hasText:'结账'}).click();
+ assert.equal(await page.locator('#cashier').isVisible(),true,'cashier must restore after closing handbook');
  const first=(await page.evaluate(()=>window.PaperWorldNightGame.inspect())).order;
  for(const id of first.items){const label=await page.evaluate(id=>window.PaperWorldNightStore.PRODUCTS.find(x=>x.id===id).name,id);await page.locator('#product-buttons button').filter({hasText:label}).first().click();await page.locator('#checkout-scan').click()}
  await page.screenshot({path:dest+'/04-real-scan-and-counter-parts.png'});
