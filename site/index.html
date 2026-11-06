@@ -1469,6 +1469,15 @@ void main(){
   const weekdayNames=['周日','周一','周二','周三','周四','周五','周六'];
   let hudAnimation=0,hudClockMinuteKey='';
   function realClock(){
+    // Keep the previously requested actual device clock in normal story mode.
+    // During the explicit daily-life mode the same HUD mirrors game calendar.
+    const life=window.PaperWorldDailyLifeUI;
+    if(life?.isModeActive?.()){
+      const snapshot=life.snapshot(), c=snapshot.calendar;
+      return {year:c.year,month:c.month,day:c.date,
+        weekday:c.weekdayLabel,hour:Math.floor(snapshot.minute/60),
+        minute:snapshot.minute%60};
+    }
     const d=new Date();
     return {year:d.getFullYear(),month:d.getMonth()+1,day:d.getDate(),
       weekday:weekdayNames[d.getDay()],hour:d.getHours(),minute:d.getMinutes()};
@@ -1578,8 +1587,8 @@ void main(){
   });
   animateTopHudTo(survivalState.snapshot().stats,'init');
   refreshRealClock(true);
-  // Do not provide a setClock method: the displayed time is ALWAYS the
-  // device's real local calendar, never a scripted or preview date.
+  // No external setClock override: story HUD uses the actual device date;
+  // activated daily-life mode uses its independently persisted game calendar.
   window.PaperWorldTopHUD=Object.freeze({
     setStats:patch=>survivalState.setStats(patch),
     applyEvent:event=>survivalState.apply(event),
