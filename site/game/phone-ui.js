@@ -7,6 +7,7 @@
   'use strict';
   const ICONS={
     '信息':'<path d="M4 5h16v11H9l-5 4z"/>',
+    '联系人':'<circle cx="12" cy="7" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>',
     '电话':'<path d="M8 3l3 4-2 3c1 2 3 4 5 5l3-2 4 3-2 5C11 21 3 13 3 5z"/>',
     '相册':'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="9" r="2"/><path d="m4 18 6-6 3 3 3-3 4 5"/>',
     '地图':'<path d="m3 5 6-2 6 3 6-3v16l-6 3-6-3-6 2zM9 3v16M15 6v16"/>',
@@ -17,7 +18,8 @@
   };
   const svg=p=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>';
   const finger=svg('<path d="M12 11a2 2 0 0 1 2 2c0 2.5-.3 4.8-1.1 7M9 19.2c.6-2.1.9-4.2.9-6.3a2.1 2.1 0 0 1 4.2 0M6.5 17.5c.4-1.6.5-3 .5-4.5a5 5 0 0 1 10 0c0 2.7-.2 4.9-.7 7M4.5 13a7.5 7.5 0 0 1 15 0c0 1.7-.1 3.1-.3 4.4M12 3a10 10 0 0 0-9.6 7M7.6 21c.9-2.4 1.2-4.6 1.2-7.5"/>');
-  const defaultApps=Object.keys(ICONS);
+  // Social information is available through the handset, not the world HUD.
+  const defaultApps=['信息','电话','联系人','地图','备忘录','日历','相册','音乐','设置'];
   const defaultProfile={id:'protagonist',name:'女主角',passcode:'000000',
     apps:defaultApps,wallpaperUrl:null,shellUrl:'./assets/phones/char001-cat-ear-shell.webp?v=approved-0c8e0d-v3'};
   const weekdays=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
@@ -217,11 +219,76 @@
         copy.appendChild(b);
       }
     }
+    function renderContactProfile(contact,copy){
+      copy.replaceChildren();
+      const back=document.createElement('button');back.type='button';
+      back.className='phone-contact-return';back.textContent='‹ 联系人';
+      back.addEventListener('click',()=>renderApp('联系人'));
+      copy.appendChild(back);
+      const head=document.createElement('div');head.className='phone-contact-profile';
+      const avatar=document.createElement('div');avatar.className='phone-contact-avatar';
+      avatar.textContent=contact.display.slice(0,1);
+      const details=document.createElement('div');details.className='phone-contact-person';
+      const name=document.createElement('strong');name.textContent=contact.display;
+      const subtitle=document.createElement('small');subtitle.textContent=contact.relationship||'联系人';
+      details.append(name,subtitle);head.append(avatar,details);copy.appendChild(head);
+      const section=document.createElement('div');section.className='phone-affection';
+      const label=document.createElement('div');label.className='phone-affection-label';
+      const pct=Math.max(0,Math.min(100,Math.round(Number(contact.affinity)||0)));
+      const labelName=document.createElement('span');labelName.textContent='亲密度';
+      const score=document.createElement('strong');score.textContent=pct+'/100';
+      label.append(labelName,score);section.appendChild(label);
+      const track=document.createElement('div');track.className='phone-affection-track';
+      const fill=document.createElement('i');fill.style.width=pct+'%';
+      track.appendChild(fill);section.appendChild(track);copy.appendChild(section);
+      for(const [key,value] of [['联系人备注',contact.note||'—'],
+        ['关系',contact.relationship||'未记录'],['个人信息',contact.bio||'尚未了解']]){
+        const item=document.createElement('div');item.className='phone-profile-field';
+        const k=document.createElement('small');k.textContent=key;
+        const v=document.createElement('span');v.textContent=value;item.append(k,v);
+        copy.appendChild(item);
+      }
+      if(contact.chatAvailable){
+        const chat=document.createElement('button');chat.type='button';
+        chat.className='phone-contact-chat';chat.textContent='查看聊天记录';
+        chat.addEventListener('click',()=>renderApp('信息'));copy.appendChild(chat);
+      }
+    }
+    function renderContacts(copy){
+      const people=config.getContacts?.()||[];
+      if(!people.length){copy.textContent='联系人列表是空的。';return}
+      for(const contact of people){
+        const row=document.createElement('button');row.type='button';
+        row.className='phone-contact-row';row.dataset.contact=contact.id;
+        const avatar=document.createElement('span');avatar.className='phone-contact-row-avatar';
+        avatar.textContent=contact.display.slice(0,1);
+        const body=document.createElement('span');body.className='phone-contact-row-body';
+        const title=document.createElement('strong');title.textContent=contact.display;
+        const sub=document.createElement('small');sub.textContent=contact.relationship||'联系人';
+        body.append(title,sub);row.append(avatar,body);
+        row.addEventListener('click',()=>renderContactProfile(contact,copy));
+        copy.appendChild(row);
+      }
+    }
+    function renderMemo(copy){
+      const memo=config.getMemo?.();
+      if(!memo){copy.textContent='暂无记录';return}
+      const note=document.createElement('div');note.className='phone-memo-note';
+      const title=document.createElement('strong');title.textContent=memo.title;
+      const details=document.createElement('p');details.textContent=memo.text;
+      note.append(title,details);copy.appendChild(note);
+    }
     function renderApp(name){
       const inbox=getInbox(),copy=get('phone-app-copy');
       get('phone-app-title').textContent=name;
       section.dataset.appName=name;
       copy.replaceChildren();
+      if(name==='联系人'){
+        renderContacts(copy);showPage('app');return;
+      }
+      if(name==='备忘录'){
+        renderMemo(copy);showPage('app');return;
+      }
       if(name==='地图'){
         renderMap(copy);showPage('app');return;
       }
@@ -230,8 +297,13 @@
       }
       if(inbox&&['信息','电话'].includes(name)){
         const isMessage=name==='信息',key=isMessage?'messages':'missedCalls';
-        const label=document.createElement('div');label.className='phone-conversation-header';
-        label.textContent=inbox.contact+' · '+(isMessage?'消息':'未接来电');
+        const label=document.createElement('button');label.type='button';
+        label.className='phone-conversation-header';
+        label.textContent=inbox.contact+' · '+(isMessage?'消息':'未接来电')+' ›';
+        label.addEventListener('click',()=>{
+          const contact=(config.getContacts?.()||[]).find(x=>x.id==='female2');
+          if(contact)renderContactProfile(contact,copy);
+        });
         copy.appendChild(label);
         if(typeof config.onPhoneRead==='function')
           config.onPhoneRead(isMessage?'messages':'calls');
