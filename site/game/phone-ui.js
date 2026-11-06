@@ -8,6 +8,7 @@
   const ICONS={
     '信息':'<path d="M4 5h16v11H9l-5 4z"/>',
     '联系人':'<circle cx="12" cy="7" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>',
+    '状态':'<path d="M2 12h5l3-6 4 12 3-6h5"/>',
     '电话':'<path d="M8 3l3 4-2 3c1 2 3 4 5 5l3-2 4 3-2 5C11 21 3 13 3 5z"/>',
     '相册':'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="9" r="2"/><path d="m4 18 6-6 3 3 3-3 4 5"/>',
     '地图':'<path d="m3 5 6-2 6 3 6-3v16l-6 3-6-3-6 2zM9 3v16M15 6v16"/>',
@@ -19,7 +20,7 @@
   const svg=p=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>';
   const finger=svg('<path d="M12 11a2 2 0 0 1 2 2c0 2.5-.3 4.8-1.1 7M9 19.2c.6-2.1.9-4.2.9-6.3a2.1 2.1 0 0 1 4.2 0M6.5 17.5c.4-1.6.5-3 .5-4.5a5 5 0 0 1 10 0c0 2.7-.2 4.9-.7 7M4.5 13a7.5 7.5 0 0 1 15 0c0 1.7-.1 3.1-.3 4.4M12 3a10 10 0 0 0-9.6 7M7.6 21c.9-2.4 1.2-4.6 1.2-7.5"/>');
   // Social information is available through the handset, not the world HUD.
-  const defaultApps=['信息','电话','联系人','地图','备忘录','日历','相册','音乐','设置'];
+  const defaultApps=['信息','电话','联系人','地图','备忘录','状态','相册','日历','设置'];
   const defaultProfile={id:'protagonist',name:'女主角',passcode:'000000',
     apps:defaultApps,wallpaperUrl:null,shellUrl:'./assets/phones/char001-cat-ear-shell.webp?v=approved-0c8e0d-v3'};
   const weekdays=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
@@ -206,6 +207,9 @@
       const caption=document.createElement('p');caption.className='phone-map-location';
       caption.textContent='随身携带';
       copy.appendChild(caption);
+      const wallet=document.createElement('p');wallet.className='phone-map-info';
+      wallet.textContent='现金余额 · ¥ '+data.state.money;
+      copy.appendChild(wallet);
       for(const [key,item] of Object.entries(data.items)){
         const count=data.state.inventory?.[key]||0;
         if(count<1)continue;
@@ -278,6 +282,27 @@
       const details=document.createElement('p');details.textContent=memo.text;
       note.append(title,details);copy.appendChild(note);
     }
+    function renderStatus(copy){
+      const status=config.getStatus?.();
+      if(!status){copy.textContent='暂无状态资料';return}
+      const detail=document.createElement('div');detail.className='phone-private-status';
+      const rows=[
+        ['现金','¥ '+status.money],
+        ['精力',status.energy+'/100'],
+        ...(status.stats?[
+          ['生命',status.stats.health.current+'/'+status.stats.health.max],
+          ['饥饿',status.stats.hunger.current+'/'+status.stats.hunger.max],
+          ['理智',status.stats.sanity.current+'/'+status.stats.sanity.max]
+        ]:[])
+      ];
+      for(const [title,value] of rows){
+        const row=document.createElement('div');row.className='phone-status-row';
+        const name=document.createElement('span');name.textContent=title;
+        const amount=document.createElement('strong');amount.textContent=value;
+        row.append(name,amount);detail.appendChild(row);
+      }
+      copy.appendChild(detail);
+    }
     function renderApp(name){
       const inbox=getInbox(),copy=get('phone-app-copy');
       get('phone-app-title').textContent=name;
@@ -288,6 +313,9 @@
       }
       if(name==='备忘录'){
         renderMemo(copy);showPage('app');return;
+      }
+      if(name==='状态'){
+        renderStatus(copy);showPage('app');return;
       }
       if(name==='地图'){
         renderMap(copy);showPage('app');return;
