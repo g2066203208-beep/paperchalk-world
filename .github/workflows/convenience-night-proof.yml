@@ -1,0 +1,40 @@
+name: Night convenience store — complete first-night real browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/convenience-store/night/**'
+      - 'tests/convenience-night-browser.mjs'
+      - '.github/workflows/convenience-night-proof.yml'
+      - 'site/index.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: night-store-first-night-real-browser
+  cancel-in-progress: true
+jobs:
+  first-night:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate night-shift rule engine, inventory and all endings
+        run: node site/convenience-store/night/night-core.test.cjs
+      - name: Install real Chromium and game test runner
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Actually play first night in Chromium and capture 16 screenshots plus video
+        run: node tests/convenience-night-browser.mjs
+      - name: Preserve browser gameplay proof even if test fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: night-store-first-night-16-real-browser-screenshots-video
+          path: artifacts/convenience-night/
+          if-no-files-found: warn
+          retention-days: 14
