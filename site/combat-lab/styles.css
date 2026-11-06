@@ -134,3 +134,119 @@
 .dual-hour{height:29px}
 .timeline-heading p{max-width:760px}
 @media(max-width:700px){.dual-row{min-height:69px}.dual-big{height:38px}.dual-small{height:19px}.dual-hp b{font-size:12px}.dual-result{font-size:9px}.dual-person{padding:4px 6px}.timeline{min-width:790px}}
+
+/* V0.9 — editorial timeline redesign. Dense spreadsheet cells become continuous
+   action ribbons with three readable phases; every actor keeps equal dual rails. */
+:root{--panel:#151f2c;--panel2:#1c2937;--stroke:#334253;--muted:#9eacba;--gold:#e4be7d}
+body{background:#0f1722;color:#e9eff6}
+.app{max-width:1720px;padding:14px 24px 48px}
+.topbar{padding:6px 0 10px;border-bottom-color:#273648}
+.brandmark{width:38px;height:38px;border:1px solid #735b42;border-radius:10px;font-size:20px;background:#26292c}
+h1{font-size:21px}.setup{padding:9px 0}.setupnote{display:none}
+.statusline{background:none;border:0;border-radius:0;padding:4px 0 7px;margin:0;font-size:11px}
+.statusline span:nth-child(2){background:transparent;border:0;padding:0;border-radius:0}
+.runbar{border-color:#29394b}
+.workspace{display:block}.battle-area,.rightbar{width:100%}
+.panel-label{font-size:10px;letter-spacing:.08em;margin:5px 0 6px;color:#8495a8}
+.timeline-section{padding:16px 16px 11px;margin:8px 0;background:#151e2b;border:1px solid #334459;border-radius:14px}
+.timeline-heading{margin:0 0 12px;align-items:center}
+.timeline-heading h2{font-size:17px;font-weight:730;letter-spacing:.025em}
+.timeline-heading h2 small{font-size:11px;color:#a8b6c5;font-weight:500;margin-left:8px}
+.timeline-heading p{font-size:11px;color:#899eb1;margin:4px 0 0}
+.legend{opacity:.7}.leg{font-size:10px;padding:3px 6px;border-radius:4px}
+.timeline-wrap{border:1px solid #314252;border-radius:11px;overflow-x:auto;overflow-y:visible;background:#121d29;padding:0 0 3px}
+.timeline{min-width:930px;background:#131e2b}
+.dual-header,.dual-row{grid-template-columns:185px minmax(0,1fr) 28px}
+.dual-header:has(.dual-hour){grid-template-columns:185px repeat(10,minmax(0,1fr)) 28px}
+.dual-header{height:32px;background:#1b2939;border-bottom:1px solid #344355}
+.dual-head-label{padding:0 15px;font-size:11px;color:#cad8e4}
+.dual-head-label span{font-size:10px;color:#8393a5;font-weight:400;margin-left:6px}
+.dual-hour{height:32px;background:transparent;border:0;border-right:1px solid #354458;color:#99acbd;font-weight:650;font-size:11px;font-variant-numeric:tabular-nums;padding:0}
+.dual-hour:hover,.dual-hour.selected{background:#394e64;color:#f2d6a5}
+.dual-over-head{color:#93846c;font-size:12px}
+.dual-row{min-height:72px;border-bottom:1px solid #2b3c4c;background:#15202d!important}
+.dual-row.enemyrow{--row-accent:#cf777a}.dual-row.allyrow{--row-accent:#77bcb7}
+.dual-row:last-child{border-bottom:0}
+.dual-person{background:#1b2836!important;border-right:1px solid #354659;border-left:3px solid var(--row-accent);padding:7px 11px;gap:3px;position:sticky;left:0;z-index:6}
+.dual-name{font-size:11px;font-weight:750;color:#dce7ef;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;gap:6px}
+.side-signal{background:var(--row-accent)!important;width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dual-hp{gap:6px;font-size:14px;line-height:1.2;font-variant-numeric:tabular-nums}
+.dual-hp b{font-size:16px;font-weight:800;color:#e6f0f5}
+.dual-hp .hp-arr{font-size:13px;color:#738ba2}.dual-hp .hp-future.loss{color:#f19a98}.dual-hp .hp-future.heal{color:#94dabd}
+.dual-hp small{font-size:10px;color:#8d9ba7}
+.dual-health{height:5px;border-radius:5px;background:#324452;margin:0}
+.dual-health .hp-original.foe{background:#7e474f}.dual-health .hp-original.friend{background:#385e61}
+.dual-health .hp-projected.foe{background:#dc7679}.dual-health .hp-projected.friend{background:#75c6b9}
+.dual-result{font-size:10px;min-height:10px;color:#91a2b3;white-space:nowrap}
+.dual-result .hp-loss{color:#e89a95}.dual-result .hp-gain{color:#98d9b5}
+.dual-board{position:relative;min-width:0;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));overflow:hidden;background:#131d2a}
+.dual-tick{z-index:1;border-right:1px solid #2b3a49;min-width:0;display:flex;flex-direction:column}
+.dual-big{height:42px;background:transparent!important;border:0;box-shadow:none!important;filter:none!important;opacity:1!important;cursor:crosshair;touch-action:pan-x;position:relative;z-index:1;color:transparent!important}
+.dual-big::before{content:'';position:absolute;inset:5px 2px 5px;background:#1a2938;border-radius:3px;opacity:.3;pointer-events:none}
+.dual-big:hover::before{background:#627e92;opacity:.25}
+.dual-big.filled::before{opacity:0}
+.dual-big.playhead::before{box-shadow:inset 0 0 0 1px #e2bc7b;opacity:.5}
+.dual-big.drag-target::before,.dual-big:focus-visible::before{box-shadow:inset 0 0 0 2px #f8d69c;opacity:.6}
+.dual-big.locked{outline:none!important}
+.dual-small{height:19px;background:transparent!important;color:transparent!important;border-top:1px solid #344354;font-size:0;opacity:1!important;filter:none!important}
+.dual-small.recovering{background:#543544!important;color:#f4bec5!important;font-size:9px}
+.dual-over{border-left:1px solid #4c4a43;background:#222a31;color:#b6a080;font-size:10px}
+.ribbon-plane{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
+.top-plane{top:0;height:42px;z-index:3}.bottom-plane{top:42px;height:19px;z-index:3}
+.action-ribbon{--ribbon-color:#7f93ac;position:absolute;display:flex;align-items:stretch;overflow:hidden;box-shadow:0 2px 5px #0006;border:1px solid #ffffff20;border-radius:5px;color:#fff;isolation:isolate;white-space:nowrap;pointer-events:none}
+.action-ribbon.target-ribbon{top:4px;height:33px}
+.action-ribbon.own-ribbon{top:1px;height:17px;border-radius:3px;border-color:#ffffff14;box-shadow:none}
+.ribbon-part{height:100%;display:block;min-width:0}
+.ribbon-part.pre{background:color-mix(in srgb,var(--ribbon-color) 40%,#c2cbd2)}
+.ribbon-part.hit{background:color-mix(in srgb,var(--ribbon-color) 86%,#1c1b26)}
+.ribbon-part.post{background:color-mix(in srgb,var(--ribbon-color) 35%,#101827)}
+.ribbon-label{position:absolute;inset:0;display:flex;gap:8px;align-items:center;justify-content:center;padding:0 5px;text-shadow:0 1px 3px #000c;font-size:11px;font-weight:740;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ribbon-label b{padding:1px 5px;border-radius:4px;background:#101824aa;color:#fff;font-size:10px;font-variant-numeric:tabular-nums;flex-shrink:0}
+.own-ribbon .ribbon-label{font-size:9px;gap:4px;letter-spacing:0;font-weight:700}
+.own-ribbon .ribbon-label b{font-size:9px;padding:0;background:transparent}
+.action-ribbon.ribbon-locked{outline:1px dashed #f3d5a277;outline-offset:-2px}
+.action-ribbon.finisher{--ribbon-color:#d9a750}
+.timeline-summary{margin-top:9px;justify-content:space-between;color:#8297aa;font-size:10px}
+.timeline-summary span+span:before{content:''}
+.hand-panel,.controls{background:#151e2b;border:1px solid #334459;border-radius:13px}
+.hand-card{background:linear-gradient(160deg,#24364a,#182738);border:1px solid #485c72;border-top:3px solid var(--ctype,var(--gold));box-shadow:0 3px 10px #0002}
+.hand-card:hover{border-color:#bba17a}
+.rightbar{margin-top:7px}.rightbar>.info-box{border-color:#2c3b4b;background:#14202d}
+@media(max-width:700px){
+ .app{padding:8px}.timeline-section{padding:10px 7px}.timeline{min-width:860px}
+ .dual-header,.dual-row{grid-template-columns:160px minmax(0,1fr) 25px}
+ .dual-header:has(.dual-hour){grid-template-columns:160px repeat(10,minmax(0,1fr)) 25px}
+ .dual-person{padding:6px 8px}.dual-name{font-size:10px}.dual-hp b{font-size:14px}.dual-row{min-height:68px}
+ .dual-big{height:40px}.dual-small{height:18px}
+ .top-plane{height:40px}.bottom-plane{top:40px;height:18px}
+ .action-ribbon.target-ribbon{height:31px}.action-ribbon.own-ribbon{height:16px}
+ .timeline-heading p{max-width:300px}.legend{display:none}
+}
+/* Final readability pass: opponent intents must have legible numeric strength. */
+.dual-row{min-height:75px}
+.dual-big{height:40px}
+.dual-small{height:24px}
+.top-plane{height:40px}
+.bottom-plane{top:40px;height:24px}
+.action-ribbon.target-ribbon{top:4px;height:31px}
+.action-ribbon.own-ribbon{top:2px;height:20px}
+.own-ribbon .ribbon-label{font-size:10px;gap:5px}
+.own-ribbon .ribbon-label b{font-size:10px;font-weight:900}
+.dual-name{font-size:12px}.dual-result{font-size:10px}
+@media(max-width:700px){
+  .topbar{padding:5px 0 7px}.identity{gap:7px}.brandmark{width:31px;height:31px;font-size:18px}
+  h1{font-size:16px}.top-actions button{padding:5px 6px;font-size:10px;min-width:0}
+  .setup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:5px;padding:8px 0}
+  .setup label{min-width:0;width:100%;flex:auto!important}.setup label:nth-of-type(3){grid-column:1;grid-row:2}
+  .setup .switch{grid-column:2;grid-row:2;font-size:11px;align-items:center;padding:0 2px 6px}
+  .setup>button{grid-column:1/-1;min-height:29px;padding:5px 8px;font-size:12px}
+  .setup select{height:31px;padding:4px 7px;font-size:12px}
+  .statusline{padding:2px 0 5px;gap:7px}.statusline #hintStatus{display:none}
+  .timeline-heading p{display:none}.timeline-heading{margin-bottom:7px}
+  .timeline-section{padding:8px 6px}.timeline{min-width:860px}
+  .dual-row{min-height:69px}.dual-big{height:38px}.dual-small{height:22px}
+  .top-plane{height:38px}.bottom-plane{top:38px;height:22px}
+  .action-ribbon.target-ribbon{height:30px;top:3px}.action-ribbon.own-ribbon{height:18px;top:2px}
+  .dual-person{padding:5px 7px}.dual-name{font-size:11px}
+  .dual-result{font-size:9px}.timeline-summary{gap:3px}
+}

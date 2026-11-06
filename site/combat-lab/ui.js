@@ -81,43 +81,57 @@ function phaseBadge(phase,card,action,t,compact=false){
  const label=first?card.name:active?(card.damage?`⚔${card.damage}`:card.guard?`⬡${card.guard}`:card.mark?`⌖${card.mark}`:'◆'):(phase==='windup'?'·':'⌛');
  return `<span class="phase-text">${textEscape(compact?(active?(card.damage?'⚔':'●'):'·'):label)}</span>`;
 }
+function ribbonFor(action, owner, layer){
+ const c=G.CARD[action.card];if(!c||action.canceled)return '';
+ const length=G.cLen(c),relative=action.start-game.now;if(relative>=10||relative+length<=0)return '';
+ const hit=c.damage?G.predictHit(owner,c,action.start+c.w):0;
+ const effect=c.damage?`−${hit}${c.a>1?' ×'+c.a:''}`:c.guard?`盾${c.guard}`:c.heal?`+${c.heal}`:c.mark?`标记${c.mark}`:c.buff?`增益`:'效果';
+ const name=layer==='own'?c.name:c.name;
+ const detail=`${owner.name} · ${c.name}｜前摇${c.w} / 生效${c.a} / 后摇${c.r}｜${effect}｜速度${c.speed||6}`;
+ const make=(n,phase)=>n?`<i class="ribbon-part ${phase}" style="flex:${n}"></i>`:'';
+ const label=length<=1?effect:`${textEscape(name)} <b>${textEscape(effect)}</b>`;
+ return `<div class="action-ribbon ${layer==='own'?'own-ribbon':'target-ribbon'} ${c.type} ${action.locked?'ribbon-locked':''}" style="left:${relative*10}%;width:${length*10}%;--ribbon-color:${G.COLORS[c.type]||'#8e9aaa'}" title="${textEscape(detail)}" aria-hidden="true">${make(c.w,'pre')}${make(c.a,'hit')}${make(c.r,'post')}<span class="ribbon-label">${label}</span></div>`;
+}
 function renderTimeline(){
- const start=game.now,times=Array.from({length:10},(_,i)=>i+1),hero=game.actors[0];
+ const start=game.now,hero=game.actors[0];
  const team=game.actors.filter(a=>a.side==='ally'),enemies=game.actors.filter(a=>a.side==='enemy');
- // Every actor uses the same dual-height unit: large editable targeted upper track + compact read-only own-action lower track.
+ // Each actor gets an IDENTICAL two-lane group. Upper lane targets this actor;
+ // lower lane shows their own actions. Neither targeting nor visuals consume a target's time.
  const units=[...enemies,...team];
- let rows=`<div class="dual-header"><div class="dual-head-label">血量预演</div>${times.map(i=>`<button type="button" class="dual-hour ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" title="查看第${i}格">${i}</button>`).join('')}<span class="dual-over-head">越界</span></div>`;
+ let rows=`<div class="dual-header"><div class="dual-head-label">角色 <span>· 当前 → 预计</span></div>${Array.from({length:10},(_,i)=>`<button type="button" class="dual-hour ${playHead===i+1?'selected':''}" data-time="${i+1}" data-actor="hero" title="查看第${i+1}分钟">${String(i+1).padStart(2,'0')}</button>`).join('')}<span class="dual-over-head">↗</span></div>`;
  for(const actor of units){
-  const enemy=actor.side==='enemy', own=actor.id==='hero',prediction=forecastState(actor),delta=prediction.hp-actor.hp;
-  const hpDrop=delta<0?`<strong class="hp-loss">预计承伤 ${-delta}</strong>`:delta>0?`<strong class="hp-gain">预计治疗 +${delta}</strong>`:'<span class="hp-safe">预计±0</span>';
-  const pct=Math.max(0,Math.min(100,prediction.hp/actor.maxHp*100)),currentPct=Math.max(0,Math.min(100,actor.hp/actor.maxHp*100)),lossPct=Math.max(0,currentPct-pct);
+  const enemy=actor.side==='enemy',own=actor.id==='hero',prediction=forecastState(actor),delta=prediction.hp-actor.hp;
+  const currentPct=Math.max(0,Math.min(100,100*actor.hp/actor.maxHp));
+  const projectedPct=Math.max(0,Math.min(100,100*prediction.hp/actor.maxHp));
+  const loss=Math.max(0,currentPct-projectedPct);
+  const difference=delta<0?`<strong class="hp-loss">−${-delta} 预伤</strong>`:delta>0?`<strong class="hp-gain">+${delta} 治疗</strong>`:'<span class="hp-safe">无变化</span>';
   const targetActions=hero.actions.filter(a=>!a.canceled&&a.target===actor.id);
-  const head=`<div class="dual-person" title="${textEscape(actor.name)}：当前${actor.hp}/${actor.maxHp}，预计${prediction.hp}/${actor.maxHp}"><div class="dual-name"><span class="side-signal ${enemy?'foe':'friend'}"></span>${textEscape(actor.name)}${own?'<i>我</i>':''}</div><div class="dual-hp"><b>${actor.hp}</b><span class="hp-arr">→</span><b class="hp-future ${delta<0?'loss':delta>0?'heal':''}">${prediction.hp}</b><small>/${actor.maxHp}</small></div><div class="dual-health"><div class="hp-original ${enemy?'foe':'friend'}" style="width:${currentPct}%"></div><div class="hp-difference" style="left:${pct}%;width:${lossPct}%"></div><div class="hp-projected ${enemy?'foe':'friend'}" style="width:${pct}%"></div></div><div class="dual-result">${hpDrop}${prediction.dead?'<b class="hp-loss"> · 预计倒下</b>':''}${prediction.marked>0?' · 标记'+prediction.marked:''}</div></div>`;
+  const head=`<div class="dual-person" title="${textEscape(actor.name)} / 目前 ${actor.hp} / 预计 ${prediction.hp}"><div class="dual-name"><span class="side-signal ${enemy?'foe':'friend'}"></span><span>${textEscape(actor.name)}</span>${own?'<i>我</i>':''}</div><div class="dual-hp"><b>${actor.hp}</b><span class="hp-arr">→</span><b class="hp-future ${delta<0?'loss':delta>0?'heal':''}">${prediction.hp}</b><small>/${actor.maxHp}</small></div><div class="dual-health"><div class="hp-original ${enemy?'foe':'friend'}" style="width:${currentPct}%"></div><div class="hp-difference" style="left:${projectedPct}%;width:${loss}%"></div><div class="hp-projected ${enemy?'foe':'friend'}" style="width:${projectedPct}%"></div></div><div class="dual-result">${difference}${prediction.dead?'<b class="hp-loss"> · 倒下</b>':''}${prediction.marked?`<span> · 标记${prediction.marked}</span>`:''}</div></div>`;
   rows+=`<div class="dual-row ${enemy?'enemyrow':'allyrow'} ${own?'own-row':''}">${head}<div class="dual-board">`;
   for(let i=1;i<=10;i++){
    const t=start+i-1,placed=targetActions.find(a=>G.phase(G.CARD[a.card],a.start,t));
-   const actionOwner=segmentAt(actor,t),ownAction=actionOwner?.kind==='action'?actionOwner:null;
-   let topClass='dual-big '+(enemy?'enemy-zone':'ally-zone'),chip='',topTitle=`${actor.name} / T${i} / 放置指向该角色的卡牌`,id='';
+   const segment=segmentAt(actor,t),ownAction=segment?.kind==='action'?segment:null;
+   let topClass='dual-big '+(enemy?'enemy-zone':'ally-zone'),id='',topTitle=`向${actor.name}施放卡牌，时间${i}分钟`;
    if(placed){
-    const c=G.CARD[placed.card],ph=G.phase(c,placed.start,t);topClass+=` filled ${c.type} ${ph}${placed.locked?' locked':''}`;
-    chip=phaseBadge(ph,c,placed,t);id=` data-action-id="${placed.id}" draggable="${!placed.locked&&isPlanning()}"`;
-    topTitle=`我的${c.name} → ${actor.name} / T${i} / ${ph==='windup'?'前摇':ph==='active'?'生效':'后摇'}`;
-   }else chip='<span class="dual-plus">＋</span>';
-   if(playHead===i)topClass+=' playhead';
-   let bottomClass='dual-small',bottom='',bottomTitle=`${actor.name}在T${i}等待`;
-   if(actionOwner?.kind==='recovering'){bottomClass+=' recovering';bottom='失能';bottomTitle=`${actor.name}失能恢复`}
-   else if(ownAction){
-    const c=ownAction.card,ph=ownAction.phase;
-    bottomClass+=` ${c.type} ${ph} ${enemy?'enemy-intent':''}`;
-    const strike=c.damage?G.predictHit(actor,c,t):0;
-     bottom=ph==='active'?(c.damage?'⚔'+strike:c.guard?'盾'+c.guard:c.heal?'疗'+c.heal:c.mark?'标'+c.mark:'技'):ph==='windup'?(c.damage?'蓄'+strike:c.guard?'备'+c.guard:'前摇'):'收招';
-    const actualTarget=game.actors.find(x=>x.id===ownAction.action.target);
-    bottomTitle=`${actor.name}·${c.name}｜${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}｜${c.damage?'每格'+strike+'点伤害':c.guard?'共'+c.guard+'点防御':c.heal?'治疗'+c.heal+'点':'技能效果'}｜生效${c.a}格｜速度${c.speed}｜目标 ${actualTarget?.name||'全体'}`;
+    const c=G.CARD[placed.card],ph=G.phase(c,placed.start,t);
+    topClass+=` filled ${c.type} ${ph}${placed.locked?' locked':''}`;
+    id=` data-action-id="${placed.id}" draggable="${!placed.locked&&isPlanning()}"`;
+    topTitle=`我对${actor.name}使用${c.name}｜${ph==='windup'?'前摇':ph==='active'?'生效':'后摇'}｜第${i}格`;
    }
-   rows+=`<div class="dual-tick"><div class="${topClass}" data-time="${i}" data-actor="${actor.id}" ${id} tabindex="0" role="button" aria-label="${textEscape(topTitle)}" title="${textEscape(topTitle)}">${chip}</div><div class="${bottomClass}" title="${textEscape(bottomTitle)}">${bottom}</div></div>`;
+   if(playHead===i)topClass+=' playhead';
+   let bottomClass='dual-small',bottomTitle=`${actor.name}：第${i}格等待`;
+   if(segment?.kind==='recovering'){bottomClass+=' recovering';bottomTitle=`${actor.name}恢复失能`}
+   else if(ownAction){const c=ownAction.card,ph=ownAction.phase;bottomClass+=` ${c.type} ${ph} ${enemy?'enemy-intent':''}`;
+    const actualTarget=game.actors.find(x=>x.id===ownAction.action.target);
+    bottomTitle=`${actor.name} · ${c.name}｜${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}｜${c.damage?'每格'+G.predictHit(actor,c,t)+'伤害':c.guard?'防御'+c.guard:c.heal?'治疗'+c.heal:'技能'}｜速度${c.speed}｜目标${actualTarget?.name||'全体'}`;
+   }
+   rows+=`<div class="dual-tick"><div class="${topClass}" data-time="${i}" data-actor="${actor.id}" ${id} tabindex="0" role="button" aria-label="${textEscape(topTitle)}" title="${textEscape(topTitle)}"></div><div class="${bottomClass}" title="${textEscape(bottomTitle)}"></div></div>`;
   }
+  const topBars=targetActions.map(a=>ribbonFor(a,hero,'target')).join('');
+  const bottomBars=actor.actions.filter(a=>!a.canceled).map(a=>ribbonFor(a,actor,'own')).join('');
+  rows+=`<div class="ribbon-plane top-plane">${topBars}</div><div class="ribbon-plane bottom-plane">${bottomBars}</div></div>`;
   const cross=[...actor.actions,...targetActions].find(a=>!a.canceled&&a.start<start+10&&a.start+G.cLen(G.CARD[a.card])>start+10);
-  rows+=`</div><div class="dual-over">${cross?'+'+(cross.start+G.cLen(G.CARD[cross.card])-(start+10)):'·'}</div></div>`;
+  rows+=`<div class="dual-over">${cross?`+${cross.start+G.cLen(G.CARD[cross.card])-(start+10)}`:'·'}</div></div>`;
  }
  $('timeline').innerHTML=rows;
 }
