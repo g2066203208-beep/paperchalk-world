@@ -965,9 +965,8 @@ function resetPartPlacement(mode){
   p.placement.scaleX=Number(rest.scaleX)||1;
   p.placement.scaleY=Number(rest.scaleY)||1;
  }else{
-  const approved=studio.current==='female-06'&&p.id==='pants_overlay'?
-   {scaleX:1.20,scaleY:1,offsetX:-15,offsetY:-17}:
-   {scaleX:1,scaleY:1,offsetX:0,offsetY:0};
+  const approved={scaleX:1,scaleY:1,offsetX:0,offsetY:0};
+  // Old first-costume pants_overlay calibration was retired.
   p.placement={...approved};
  }
  if(prev===rigSnapshot())return false;
@@ -1076,8 +1075,8 @@ async function activate(openPanel=false){
  const selectNode=$('rig-part');selectNode.replaceChildren();
  for(const p of src)selectNode.add(new Option(p.name,p.partId||p.name));
  const preferred=S.layers[S.side][S.sel];
- const startingPart=id==='female-06'&&face==='front'&&state.model.parts.pants_overlay?
-  'pants_overlay':(state.model.parts[key(preferred||{})]?key(preferred):key(src[0]));
+ const startingPart=state.model.parts[key(preferred||{})]?
+  key(preferred):key(src[0]);
  select(startingPart);
  $('rig-source').textContent=id==='char-002'?
   '女二原始 PSD：24个图层记录，17个实际可见、独立运动的部件。':
