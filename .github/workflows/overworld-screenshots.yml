@@ -52,10 +52,11 @@ jobs:
           from PIL import Image,ImageDraw,ImageFont
           from pathlib import Path
           shots=sorted(Path('artifacts/overworld').glob('[0-9][0-9]-*.png'))
-          assert len(shots)==6, f'Expected six real browser screens, got {shots}'
-          labels=['01 WAKING','02 MISSED CALLS','03 HOMEWORK MESSAGES','04 DAILY LIFE','05 CITY MAP','06 SCHOOL']
+          assert len(shots)==8, f'Expected eight real browser screens, got {shots}'
+          labels=[p.stem.replace('-', ' ').upper() for p in shots]
           w,h=690,388
-          board=Image.new('RGB',(2*w+54,3*(h+46)+20),'#161b22')
+          rows=(len(shots)+1)//2
+          board=Image.new('RGB',(2*w+54,rows*(h+46)+20),'#161b22')
           draw=ImageDraw.Draw(board)
           try: font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',17)
           except OSError: font=ImageFont.load_default()
