@@ -27,11 +27,14 @@ const catalog=[
   editorOnly:true,front:'data:image/svg+xml,placeholder'},
  {id:'char-006',label:'女五 · 女老师',front:'teacher.png'},
  {id:'class-teacher-geography-candidate',label:'历史女老师别名',familyId:'char-006',editorOnly:true},
- {id:'female-06',label:'女六 · 原始彩绘＋黑色短裤',front:'base-female-six.png',
-   l2dModule:{front:{rig:{partCount:18}}}},
- {id:'female-06-outfit-02',label:'女六 · 橙棕外套黑色短裤',
-   familyId:'female-06',variantCategory:'outfit',front:'outfit-female-six.png',
-   l2dModule:{front:{rig:{partCount:17}}}}
+ {id:'female-06',label:'女六',front:'orange-coat-third-now-base.png',
+   familyId:'female-06',variantCategory:'default',
+   l2dModule:{front:{rig:{partCount:17}}}},
+ // Historical records cannot resurrect deleted outfits in the tree.
+ {id:'female-06-outfit-02',label:'女六 · 已撤销的旧服装节点',
+   familyId:'female-06',variantCategory:'outfit',front:'obsolete.png'},
+ {id:'female-06-second-outfit',label:'女六 · 已删除第二套',
+   familyId:'female-06',variantCategory:'outfit',front:'obsolete-second.png'}
 ];
 const roots=model.makeTree(catalog,'protagonist');
 const ids=roots.map(row=>row.family);
@@ -68,8 +71,10 @@ assert.deepEqual(roots.map(x=>x.name),
  ['女主','男主','女二','男二','女三','女五','女六'],
  'all canon roots use single short names, not descriptions or suffixes');
 const femaleSix=roots.find(x=>x.family==='female-06');
-assert.deepEqual(femaleSix.outfits.map(x=>x.id),['female-06-outfit-02']);
-assert.equal(femaleSix.outfits[0].label,'第三套 · 橙棕外套');
+assert.equal(femaleSix.primary.id,'female-06');
+assert.equal(femaleSix.primary.l2dModule.front.rig.partCount,17);
+assert.deepEqual(femaleSix.outfits,[],'third orange-coat is BASE and old outfits are deleted');
+assert.deepEqual(femaleSix.sources,[],'no historical female-six source projects in tree');
 assert.equal(roots.filter(x=>x.family==='female-06').length,1,
  'female-six second outfit must never become an extra person node');
 assert.ok(ids.indexOf('protagonist')<ids.indexOf('char-002'));
