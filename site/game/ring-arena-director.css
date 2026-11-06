@@ -270,3 +270,26 @@
 #ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=yes] .director-impact{
  display:none
 }
+
+
+/* V20.1: treat the director as a cutscene, not a gameplay overlay. */
+#ring-arena-controls.director-playing .director-deck,
+#ring-arena-controls.director-playing .bottom,
+#ring-arena-controls.director-playing .top,
+#ring-arena-controls.director-playing .status{
+ opacity:0;pointer-events:none
+}
+/* A short RED-WHITE impact flicker, not a near-opaque white screen. */
+#ring-arena-controls .director-white-hit{
+ background:#f9d1d5;mix-blend-mode:screen
+}
+@keyframes director-white-hit{
+ 0%{opacity:.36}
+ 24%{opacity:.48}
+ 55%{opacity:.14}
+ 100%{opacity:0}
+}
+@keyframes director-border-hit{
+ 0%,35%{opacity:.85;box-shadow:inset 0 0 0 7px #d24e76}
+ 100%{opacity:0;box-shadow:inset 0 0 0 1px #d24e76}
+}

@@ -78,18 +78,13 @@ try{
   return d?.playing===true&&d?.targetId==='enemy-2';
  },null,{timeout:12000});
  assert.equal(await page.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
- // These are actual, separately generated transparent action and hit sprites.
- // Chromium screenshots are from the live WebGL page, not a new AI mock.
- await page.waitForFunction(()=>{
-  return document.querySelector('[data-director-cinematic]')?.dataset.cut==='attacker';
- },null,{timeout:4500});
- await page.screenshot({path:'artifacts/ring-arena/v20-real-hero-attack-pose.png'});
+ // The normal player animation uses real time; don't block its 160ms
+ // impact window with a several-second software-GL screenshot. A separate
+ // fixed-clock QA page below captures the actual WebGL frames exactly.
  await page.waitForFunction(()=>{
   const d=window.PaperWorldGameRingArena?.inspect()?.director;
-  const cut=document.querySelector('[data-director-cinematic]')?.dataset.cut;
-  return d?.applied===true&&cut==='victim';
- },null,{timeout:6500});
- await page.screenshot({path:'artifacts/ring-arena/v20-real-enemy-hit-pose.png'});
+  return d?.applied===true;
+ },null,{timeout:10000});
  const impact=await inspect();
  assert.equal(impact.director.enemyHP['enemy-2'],24);
  assert.equal(impact.director.baseDamage,12);
@@ -183,6 +178,42 @@ try{
  assert.ok(restored.safety.valid&&restored.safety.clear);
  await page.screenshot({path:'artifacts/ring-arena/final-original-L2D-recovery.png'});
  assert.deepEqual(errors,[],'unexpected JavaScript exceptions');
+ // Repeat the QA capture on the same ACTUAL scene, but hold the
+ // deterministic director clock for screenshot generation only. Gameplay
+ // remains real-time and never exposes qaFrame without directorQA=1.
+ await page.close();
+ const qa=await browser.newPage({viewport:{width:1280,height:720},deviceScaleFactor:1});
+ const qaErrors=[];
+ qa.on('pageerror',e=>qaErrors.push(e.message));
+ await qa.goto(origin+'/index.html?scene=ring-arena&directorQA=1',
+  {waitUntil:'domcontentloaded',timeout:50000});
+ await qa.waitForFunction(()=>{
+  const game=window.PaperWorldGameRingArena;
+  return game?.inspect()?.active&&game?.inspect()?.l2dReady===5&&
+   game?.inspect()?.directorArt?.hero?.loaded&&game?.inspect()?.directorArt?.enemy?.loaded;
+ },null,{timeout:100000});
+ const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
+  window.PaperWorldGameRingArena.qaFrame(t,at),[target,ms]);
+ const frameHero=await invoke('enemy-2',870);
+ assert.equal(frameHero.phase,'swing');
+ assert.equal(frameHero.applied,false);
+ assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
+ await qa.screenshot({path:'artifacts/ring-arena/v20-real-hero-attack-pose.png'});
+ const frameHit=await invoke('enemy-2',1090);
+ assert.equal(frameHit.applied,true);
+ assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
+ assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
+ await qa.screenshot({path:'artifacts/ring-arena/v20-real-enemy-impact-pose.png'});
+ const frameRecoil=await invoke('enemy-2',1450);
+ assert.equal(frameRecoil.phase,'reaction');
+ await qa.screenshot({path:'artifacts/ring-arena/v20-real-enemy-hit-pose.png'});
+ const frameFemale=await invoke('enemy-3',1420);
+ assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
+ assert.equal(await qa.locator('[data-action-enemy]').evaluate(
+  el=>getComputedStyle(el).visibility),'hidden');
+ await qa.screenshot({path:'artifacts/ring-arena/v20-female-original-l2d-reaction.png'});
+ assert.deepEqual(qaErrors,[]);
+ await qa.close();
  console.log('PASS: real WebGL eye-height 3/4 fixed-left heroine, four enemies, static GPU upload once, restored original L2D, desktop/mobile');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));

@@ -57,7 +57,7 @@ assert.ok(director.sample(reduced,270).advance<director.sample(
 assert.equal(director.DURATION,2400);
 assert.equal(director.ART.hero,'./assets/characters/hero-axe-attack.webp');
 assert.equal(director.ART.maleEnemy,'./assets/characters/enemy-suit-hit.webp');
-assert.equal(director.hasEnemyHitPortrait('enemy-1'),true);
+assert.equal(director.hasEnemyHitPortrait('enemy-1'),false);
 assert.equal(director.hasEnemyHitPortrait('enemy-2'),true);
 assert.equal(director.hasEnemyHitPortrait('enemy-3'),false);
 assert.equal(director.hasEnemyHitPortrait('enemy-4'),false);

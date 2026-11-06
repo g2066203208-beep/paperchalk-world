@@ -27,8 +27,8 @@
   hero:'./assets/characters/hero-axe-attack.webp',
   maleEnemy:'./assets/characters/enemy-suit-hit.webp',
   // The new enemy reaction painting is of a suited male. Never display
-  // that male as a female enemy; their original L2D gets the hit reaction.
-  maleEnemyIds:Object.freeze(['enemy-1','enemy-2'])
+  // that male as any other enemy; their original L2D gets the hit reaction.
+  maleEnemyIds:Object.freeze(['enemy-2'])
  });
  function pickCard(source){
   const c=source?.slash;

@@ -372,6 +372,9 @@
   const status=hud.querySelector('.status');
   const director=window.PaperchalkBattleDirector;
   if(!director)throw Error('Battle director module was not loaded');
+  // QA-only fixed timeline frame: real WebGL draw and actual loaded artwork,
+  // but the clock is held so slow CI screenshots cannot skip a 160ms hit.
+  const directorQA=new URLSearchParams(window.location.search).get('directorQA')==='1';
   const attackCard=director.pickCard(window.Timegrid?.CARD);
   const attackButton=hud.querySelector('[data-attack-card]');
   const attackPrompt=hud.querySelector('[data-director-prompt]');
@@ -416,7 +419,7 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0;
-  let armed=false,attack=null,attackApplied=false,attackSample=null;
+  let armed=false,attack=null,attackApplied=false,attackSample=null,qaTimeMs=null;
   let completedAttacks=0,lastTarget=null;
   const enemyHP=new Map([1,2,3,4].map(i=>['enemy-'+i,36]));
   const actorForTarget=id=>layout(mode).enemies.find(a=>a.id===id);
@@ -459,7 +462,7 @@
    }catch(_){/* Audio is optional; never block the director. */}
   }
   function resetCombatPreview(){
-   attack=null;attackSample=null;attackApplied=false;armed=false;
+   attack=null;attackSample=null;attackApplied=false;armed=false;qaTimeMs=null;
    previousBeat='idle';lastTarget=null;completedAttacks=0;
    for(const id of enemyHP.keys())enemyHP.set(id,36);
    cinematic.hidden=true;cinematic.dataset.phase='idle';
@@ -467,6 +470,7 @@
    refreshDirectorUI();
   }
   function refreshDirectorUI(){
+   hud.classList.toggle('director-playing',!!attack);
    attackButton.disabled=!!attack||[...enemyHP.values()].every(n=>n<=0);
    attackButton.setAttribute('aria-pressed',String(armed));
    attackPrompt.textContent=attack?'导演演出中 · 自动回场':armed?
@@ -482,7 +486,7 @@
   }
   function startAttack(targetId){
    if(!armed||attack||!actorForTarget(targetId)||enemyHP.get(targetId)<=0)return false;
-   armed=false;
+   armed=false;qaTimeMs=null;
    attack=director.createAttack(targetId,performance.now(),
     {mode,reducedMotion:reducedMotion()});
    attackApplied=false;attackSample=director.sample(attack,attack.startedAt);
@@ -510,7 +514,7 @@
    const target=attack?.targetId||null;
    completedAttacks++;
    lastTarget=target;
-   attack=null;attackSample=null;attackApplied=false;
+   attack=null;attackSample=null;attackApplied=false;qaTimeMs=null;
    cinematic.hidden=true;cinematic.dataset.phase='idle';cinematic.dataset.cut='none';
    refreshDirectorUI();
   }
@@ -744,7 +748,8 @@
    if(!active)return false;
    const base=camera(mode,0);
    if(attack){
-    const frame=director.sample(attack,performance.now());
+    const frame=director.sample(attack,qaTimeMs===null?
+     performance.now():attack.startedAt+qaTimeMs);
     if(frame.finished)finishDirector();
     else{
      attackSample=frame;
@@ -862,7 +867,23 @@
     textures.get('hero').opaqueCombatUv||CANONICAL_BACK_UV),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:posePreviewEnabled?'fixed-left 3/4 heroine + animated original enemy L2D':'original animated L2D actors'});
-  return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
+  function qaFrame(targetId,elapsedMs){
+   if(!directorQA)throw Error('Director QA mode is disabled');
+   if(!actorForTarget(targetId)||!Number.isFinite(elapsedMs))throw Error('Invalid QA frame');
+   attack=director.createAttack(targetId,performance.now(),{mode,reducedMotion:false});
+   qaTimeMs=clamp(elapsedMs,0,director.DURATION-1);
+   attackApplied=false;armed=false;previousBeat='qa';
+   cinematic.hidden=false;
+   cinematic.dataset.hitPortrait=director.hasEnemyHitPortrait(targetId)?'yes':'no';
+   victimName.textContent='敌人 '+targetId.slice(-1)+' · 受击';
+   cinematicDamage.textContent='-'+attackCard.damage;
+   refreshDirectorUI();
+   render(0);
+   return inspect().director;
+  }
+  const api={setActive,render,inspect,get canvas(){return canvas}};
+  if(directorQA)api.qaFrame=qaFrame;
+  return Object.freeze(api);
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
   SHOT_NAMES,CAMERA_STOPS,cameraPitchDeg,backdropPoint,camera,portraitBounds,
