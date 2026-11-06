@@ -1,15 +1,15 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101823"><title>时序断点 · Paperchalk 战斗 Demo V0.9</title><link rel="stylesheet" href="styles.css"></head>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101823"><title>时序断点 · Paperchalk 战斗 Demo V0.8</title><link rel="stylesheet" href="styles.css"></head>
 <body><main class="app" id="app">
-<header class="topbar"><div class="identity"><div class="brandmark">▥</div><div><div class="eyebrow">PAPERCHALK WORLD · COMBAT LAB</div><h1>时序断点 <span>V0.9</span></h1></div></div><div class="top-actions"><span class="offline">● 独立实验场景</span><button id="deckButton" class="ghost">▤ 查看牌组</button><button id="helpButton" class="ghost">玩法说明</button><button id="resetButton" class="ghost">↻ 重开</button></div></header>
+<header class="topbar"><div class="identity"><div class="brandmark">▥</div><div><div class="eyebrow">PAPERCHALK WORLD · COMBAT LAB</div><h1>时序断点 <span>V0.8</span></h1></div></div><div class="top-actions"><span class="offline">● 独立实验场景</span><button id="deckButton" class="ghost">▤ 查看牌组</button><button id="helpButton" class="ghost">玩法说明</button><button id="resetButton" class="ghost">↻ 重开</button></div></header>
 <div class="setup"><label>操作角色<select id="classSelect"></select></label><label>卡组流派<select id="styleSelect"></select></label><label>战斗关卡<select id="encounterSelect"></select></label><label class="switch"><input type="checkbox" id="teamCheckbox"> 3名NPC队友</label><button class="secondary" id="createButton">应用配置</button><span class="setupnote">所有卡牌和敌人使用同一条10格时间轴 · 本页不改动主游戏</span></div>
 <div class="statusline"><span id="turnStatus">第 1 轮 · 游戏内 00:00–00:10</span><span id="phaseStatus">规划阶段 · 世界暂停</span><span id="hintStatus">选手牌 → 直接点击敌人/队友轨道的时间格</span></div>
 <div class="runbar" id="runStatus"></div>
 <div class="workspace"><section class="battle-area">
 <div class="panel-label"><span>01 / 同步战场</span><span id="combatInfo">所有角色独立行动，世界时间共享</span></div>
 
-<div class="timeline-section"><div class="timeline-heading"><div><h2>行动时间轴 <small>10分钟 / 轮</small></h2><p>上轨放牌指定目标 · 下轨预览角色行动 · 浅色蓄力 / 亮色生效 / 深色收招</p></div><div class="legend"><b class="leg attack">攻</b><b class="leg defense">防</b><b class="leg skill">技</b><b class="leg finisher">绝</b><b class="leg system">洗</b></div></div>
+<div class="timeline-section"><div class="timeline-heading"><div><h2>时间排程</h2><p>每人双轨：大轨放我施放的卡，小轨显示该角色自身行动。给队友用技能也只占我自己的行动时间。</p></div><div class="legend"><b class="leg attack">攻</b><b class="leg defense">防</b><b class="leg skill">技</b><b class="leg finisher">绝</b><b class="leg system">洗</b></div></div>
 <div id="timelineWrap" class="timeline-wrap"><div id="timeline" class="timeline"></div></div>
-<div class="timeline-summary"><span>点击或拖入上轨放牌 · 拖动已排卡换时刻，取下放回手牌区</span><span>攻击/治疗只占施术者时间，队友照常行动</span></div>
+<div class="timeline-summary"><span>上轨＝我对该角色的卡 · 下轨＝该角色自己的动作</span><span>◆ 红色标记 = 敌方真实作用格</span><span>尾牌可跨至下轮，后续不可加塞</span></div>
 </div>
 <div class="hand-panel"><div class="hand-heading"><div><h2>我的手牌 <span id="handCounter"></span></h2><p>每牌长度＝前摇 + 生效 + 后摇；出牌无需行动点</p></div><div class="small-actions"><button id="shuffleButton" class="secondary">↻ 洗牌</button><button id="removeActionButton" class="ghost" disabled>✕ 取下动作</button><button id="undoButton" class="ghost">↶ 撤销末张</button></div></div><div id="hand" class="hand"></div></div>
 <div class="controls"><div id="finisherSlot" class="finisher-slot"></div><div class="control-buttons"><button id="autoplanButton" class="secondary">✧ 自动排程</button><button id="commitButton" class="primary">▶ 全员提交 · 同步执行</button></div></div>
