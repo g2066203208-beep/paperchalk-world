@@ -51,8 +51,8 @@ try{
   if(i>=2)assert.equal(state.hp,24,'source A/B/D impact on native frame 2');
   if(i>=9&&i<=48)assert.equal(state.phase,'hold','source 46+ frame tableau');
   if(i>=49&&i<=55)assert.equal(state.phase,'recover','source 7-frame retreat');
-  if(i>=1&&i<=55)assert.equal(state.poses.hero,'attack',
-   'hero keeps action portrait through long tableau and retreat');
+  if(i>=1&&i<=55)assert.equal(state.poses.hero,'female07-axe-lunge',
+   'female07 original back portrait must remain stable through long tableau and retreat');
   if(i>=2&&i<=55)assert.equal(state.poses['enemy-2'],'hurt-art',
    'opponent keeps hurt portrait through long tableau and retreat');
   if(i===55){
