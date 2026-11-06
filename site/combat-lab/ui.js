@@ -11,7 +11,7 @@ $('classSelect').addEventListener('change',refreshStyles);
 $('createButton').addEventListener('click',()=>newGame());$('resetButton').addEventListener('click',()=>newGame());
 $('shuffleButton').addEventListener('click',()=>{if(!isPlanning())return;placementMode='shuffle';selectedUid=null;selectedActionId=null;display();showToast('选择时间格：空手换手占1格，主动重整占2格。此前排程会锁定。');});
 $('undoButton').addEventListener('click',()=>{const a=game.actors[0],tail=[...a.actions].filter(x=>!x.locked&&x.start>=game.now).sort((x,y)=>y.start-x.start)[0];if(!tail){showToast('没有可撤销的未锁定卡牌');return;}try{G.remove(game,tail.id);selectedUid=null;placementMode=null;display();}catch(e){showToast(e.message)}});
-$('forecastButton').addEventListener('click',forecast);
+
 $('autoplanButton').addEventListener('click',()=>{if(!isPlanning())return;try{G.autoPlan(game,'tactical');selectedUid=null;selectedActionId=null;placementMode=null;display();forecast();showToast('自动排程已生成，仍可调整未锁定的卡牌。');}catch(e){showToast(e.message)}});
 $('commitButton').addEventListener('click',execute);
 $('helpButton').addEventListener('click',()=>showHelp());$('deckButton').addEventListener('click',()=>showDeck());$('closeModal').addEventListener('click',closeModal);$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
@@ -29,7 +29,6 @@ if(placementMode)doPlace(Number(c.dataset.time),c.dataset.actor);
 else{playHead=Number(c.dataset.time);display();}
 });
 $('timeline').addEventListener('pointerover',e=>{const c=e.target.closest('[data-time]');if(!c||!isPlanning()||placementMode)return;const i=Number(c.dataset.time);if(i!==playHead){playHead=i;renderForecast();updateTimeHighlight();}});
-$('timeNav')?.addEventListener('click',e=>{const b=e.target.closest('[data-jump]');if(!b)return;const i=Number(b.dataset.jump);playHead=i;const el=$('timeline').querySelector(`.dual-big[data-time="${i}"]`);if(el){const sc=$('timelineWrap');sc.scrollTo({left:Math.max(0,el.offsetLeft-sc.clientWidth/2+el.clientWidth/2),behavior:'smooth'});}updateTimeHighlight();renderForecast();});
 $('timeline').addEventListener('keydown',e=>{const c=e.target.closest('[data-time]');if(!c)return;if(e.key==='Enter'||e.key===' '){e.preventDefault();c.click()}});
 $('actorCards')?.addEventListener('click',e=>{const c=e.target.closest('[data-target]');if(!c)return;targetId=c.dataset.target;display();showToast('已选择目标：'+game.actors.find(x=>x.id===targetId).name);});
 $('finisherSlot').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(!isPlanning())return;placementMode='finisher';selectedUid=null;selectedActionId=null;display();showToast('先安排标记/充能，再把绝杀放到目标敌人的后续时间格。');});
@@ -87,13 +86,13 @@ function renderTimeline(){
  const team=game.actors.filter(a=>a.side==='ally'),enemies=game.actors.filter(a=>a.side==='enemy');
  // Every actor uses the same dual-height unit: large editable targeted upper track + compact read-only own-action lower track.
  const units=[...enemies,...team];
- let rows=`<div class="dual-header"><div class="dual-head-label">角色 / 预计结果</div>${times.map(i=>`<button type="button" class="dual-hour ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" title="查看第${i}格">${i}</button>`).join('')}<span class="dual-over-head">越界</span></div>`;
+ let rows=`<div class="dual-header"><div class="dual-head-label">血量预演</div>${times.map(i=>`<button type="button" class="dual-hour ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" title="查看第${i}格">${i}</button>`).join('')}<span class="dual-over-head">越界</span></div>`;
  for(const actor of units){
   const enemy=actor.side==='enemy', own=actor.id==='hero',prediction=forecastState(actor),delta=prediction.hp-actor.hp;
-  const hpDrop=delta<0?`<strong class="hp-loss">−${-delta}</strong>`:delta>0?`<strong class="hp-gain">+${delta}</strong>`:'<span class="hp-safe">±0</span>';
-  const pct=Math.max(0,Math.min(100,prediction.hp/actor.maxHp*100));
+  const hpDrop=delta<0?`<strong class="hp-loss">预计承伤 ${-delta}</strong>`:delta>0?`<strong class="hp-gain">预计治疗 +${delta}</strong>`:'<span class="hp-safe">预计±0</span>';
+  const pct=Math.max(0,Math.min(100,prediction.hp/actor.maxHp*100)),currentPct=Math.max(0,Math.min(100,actor.hp/actor.maxHp*100)),lossPct=Math.max(0,currentPct-pct);
   const targetActions=hero.actions.filter(a=>!a.canceled&&a.target===actor.id);
-  const head=`<div class="dual-person"><div class="dual-name"><span class="side-signal ${enemy?'foe':'friend'}"></span>${textEscape(actor.name)}${own?'<i>我</i>':''}</div><div class="dual-hp">HP ${actor.hp} <span>→ ${prediction.hp}</span> ${hpDrop}</div><div class="dual-health"><div style="width:${pct}%" class="${enemy?'foe':'friend'}"></div></div></div>`;
+  const head=`<div class="dual-person" title="${textEscape(actor.name)}：当前${actor.hp}/${actor.maxHp}，预计${prediction.hp}/${actor.maxHp}"><div class="dual-name"><span class="side-signal ${enemy?'foe':'friend'}"></span>${textEscape(actor.name)}${own?'<i>我</i>':''}</div><div class="dual-hp"><b>${actor.hp}</b><span class="hp-arr">→</span><b class="hp-future ${delta<0?'loss':delta>0?'heal':''}">${prediction.hp}</b><small>/${actor.maxHp}</small></div><div class="dual-health"><div class="hp-original ${enemy?'foe':'friend'}" style="width:${currentPct}%"></div><div class="hp-difference" style="left:${pct}%;width:${lossPct}%"></div><div class="hp-projected ${enemy?'foe':'friend'}" style="width:${pct}%"></div></div><div class="dual-result">${hpDrop}${prediction.dead?'<b class="hp-loss"> · 预计倒下</b>':''}${prediction.marked>0?' · 标记'+prediction.marked:''}</div></div>`;
   rows+=`<div class="dual-row ${enemy?'enemyrow':'allyrow'} ${own?'own-row':''}">${head}<div class="dual-board">`;
   for(let i=1;i<=10;i++){
    const t=start+i-1,placed=targetActions.find(a=>G.phase(G.CARD[a.card],a.start,t));
@@ -110,9 +109,10 @@ function renderTimeline(){
    else if(ownAction){
     const c=ownAction.card,ph=ownAction.phase;
     bottomClass+=` ${c.type} ${ph} ${enemy?'enemy-intent':''}`;
-    bottom=ph==='active'?(c.damage?'⚔'+c.damage:c.guard?'⬡'+c.guard:c.mark?'⌖'+c.mark:'●'):ph==='windup'?'前':'后';
+    const strike=c.damage?G.predictHit(actor,c,t):0;
+     bottom=ph==='active'?(c.damage?'⚔'+strike:c.guard?'盾'+c.guard:c.heal?'疗'+c.heal:c.mark?'标'+c.mark:'技'):ph==='windup'?(c.damage?'蓄'+strike:c.guard?'备'+c.guard:'前摇'):'收招';
     const actualTarget=game.actors.find(x=>x.id===ownAction.action.target);
-    bottomTitle=`${actor.name}的${c.name} / ${ph} / →${actualTarget?.name||'全体'}`;
+    bottomTitle=`${actor.name}·${c.name}｜${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}｜${c.damage?'每格'+strike+'点伤害':c.guard?'共'+c.guard+'点防御':c.heal?'治疗'+c.heal+'点':'技能效果'}｜生效${c.a}格｜速度${c.speed}｜目标 ${actualTarget?.name||'全体'}`;
    }
    rows+=`<div class="dual-tick"><div class="${topClass}" data-time="${i}" data-actor="${actor.id}" ${id} tabindex="0" role="button" aria-label="${textEscape(topTitle)}" title="${textEscape(topTitle)}">${chip}</div><div class="${bottomClass}" title="${textEscape(bottomTitle)}">${bottom}</div></div>`;
   }
@@ -124,8 +124,8 @@ function renderTimeline(){
 function renderActors(){const team=game.actors.filter(a=>a.side==='ally'),enemy=game.actors.filter(a=>a.side==='enemy');let out='';for(const a of [...team,...enemy]){const isE=a.side==='enemy',id=a.id,percent=Math.max(0,a.hp/a.maxHp*100);out+=`<div class="actor ${isE?'enemy':''} ${id==='hero'?'current':''} ${a.dead?'dead':''}" ${isE?`data-target="${id}" style="cursor:pointer;${targetId===id?'outline:2px solid #d9b275;outline-offset:-2px':''}"`:''}><div class="actor-top"><div><span class="actor-icon">${isE?'☠':G.CLASS[id==='hero'?game.options.classId:id.replace('ai-','')]?.icon||'✦'}</span><span class="actor-name">${textEscape(a.name)}</span></div><span class="badge ${isE?'enemy':''}">${a.dead?'倒下':isE?'敌':'我'}</span></div><div class="healthline"><span>生命</span><strong>${a.hp}/${a.maxHp}</strong></div><div class="healthbar"><div style="width:${percent}%"></div></div><small>${a.stunUntil>game.now?'失能至 T'+a.stunUntil+' · ':''}${a.marked?'标记'+a.marked+' · ':''}${a.id==='hero'?'绝杀能量 '+a.energy+'/100':isE?'点击选择目标':'自动排程'}</small></div>`;}if($('actorCards'))$('actorCards').innerHTML=out;}
 function renderHand(){const hero=game.actors[0];$('handCounter').textContent=`${hero.hand.length} / ${G.HAND}`;$('hand').innerHTML=hero.hand.length?hero.hand.map(it=>{const c=G.CARD[it.key],len=G.cLen(c);return `<button draggable="true" class="hand-card ${selectedUid===it.uid?'selected':''}" data-uid="${textEscape(it.uid)}" style="--ctype:${G.COLORS[c.type]}"><div class="card-head"><span class="card-ico">${icon[c.type]||'▣'}</span><span class="length">${len}格</span></div><strong>${textEscape(c.name)}</strong><div class="card-desc">${c.aoe?'<b class="group-badge">全体攻击</b> ':''}${textEscape(c.desc||'逐格生效')}</div><div class="phase-track" title="浅色前摇/主色生效/深色后摇">${Array.from({length:len},(_,i)=>`<span class="${i<c.w?'windup':i<c.w+c.a?'active':'recovery'}"></span>`).join('')}</div><small style="color:#92a9bd">${c.w} 前摇 · ${c.a} 生效 · ${c.r} 后摇 · 速度 ${c.speed}</small></button>`}).join(''):'<div class="empty-hand">手牌已空。选择「洗牌」并点击后续空格，消耗1格，锁定前面所有卡，再抽新手牌。</div>';}
 function renderStatus(){const hero=game.actors[0];$('turnStatus').textContent=`第 ${game.round+1} 轮 · 游戏内 ${String(Math.floor(game.now/60)).padStart(2,'0')}:${String(game.now%60).padStart(2,'0')}—${String(Math.floor((game.now+10)/60)).padStart(2,'0')}:${String((game.now+10)%60).padStart(2,'0')}`;
-$('phaseStatus').textContent=game.phase==='planning'?'规划阶段 · 世界暂停':game.phase==='win'?'已胜利 · 战斗结算':'已失败 · 战斗结束';$('hintStatus').textContent=placementMode==='card'?'已选卡：点角色上轨时间格指定目标':placementMode==='shuffle'?'洗牌操作 → 选择空格':placementMode==='finisher'?'绝杀 → 放到敌人上轨时间格':placementMode==='move'?'移动选中动作 → 点新时间格':'选卡 → 点角色上轨任意时间格；血量和承伤自动预演';
-$('commitButton').disabled=!isPlanning();$('forecastButton').disabled=!isPlanning();$('shuffleButton').disabled=!isPlanning();$('autoplanButton').disabled=!isPlanning();$('undoButton').disabled=!isPlanning();
+$('phaseStatus').textContent=game.phase==='planning'?'规划阶段 · 世界暂停':game.phase==='win'?'已胜利 · 战斗结算':'已失败 · 战斗结束';$('hintStatus').textContent=placementMode==='card'?'选中卡牌，点目标上轨；给队友放技能只消耗施术者时间':placementMode==='shuffle'?'洗牌操作 → 选择空格':placementMode==='finisher'?'绝杀 → 放到敌人上轨时间格':placementMode==='move'?'移动选中动作 → 点新时间格':'选卡后点击目标轨道；血条直接显示当轮预计生命与承伤';
+$('commitButton').disabled=!isPlanning();$('shuffleButton').disabled=!isPlanning();$('autoplanButton').disabled=!isPlanning();$('undoButton').disabled=!isPlanning();
 $('runStatus').innerHTML=`<b>冒险第 ${run.stage+1}/${C.STAGES.length} 关</b><span>◈ 金币 ${run.gold}</span><span>▤ 牌组 ${C.cardCount(run)} 张</span><span>♢ 遗物 ${run.relics.length}/4</span><span>生命 ${run.hp}/${run.maxHp}</span><span>绝杀能量 ${hero.energy}/100</span>`;
 $('heroStatus').innerHTML=`<div class="info-key"><span>当前生命</span><span>${hero.hp} / ${hero.maxHp}</span></div><div class="info-key"><span>绝杀能量</span><span>${hero.energy} / 100</span></div><div class="info-key"><span>抽牌堆 / 弃牌堆</span><span>${hero.draw.length} / ${hero.discard.length}</span></div><div class="info-key"><span>洗牌次数</span><span>${game.stats.shuffle}</span></div><div class="info-key"><span>已锁排程</span><span>${hero.actions.filter(a=>a.locked).length}张</span></div><div class="info-key"><span>跨轮占用</span><span>${hero.actions.filter(a=>!a.canceled&&a.start<game.now+10&&a.start+G.cLen(G.CARD[a.card])>game.now+10).length}项</span></div>`;
 const fin=G.CARD[hero.fin],ready=hero.energy>=100 || (projection?.trace||[]).some(z=>z.actors.find(a=>a.id==='hero')?.energy>=100);$('finisherSlot').innerHTML=`<strong>◆ 独立绝杀槽 · ${fin.name}</strong><div class="meter"><div style="width:${hero.energy}%"></div></div><small>能量 ${hero.energy}/100 ｜目标生命≤55%或已标记/破防</small><button ${ready?'':'disabled'} class="${placementMode==='finisher'?'selected':''}">选中绝杀牌 · ${G.cLen(fin)}格（${fin.w}+${fin.a}+${fin.r}）</button>`;
@@ -137,19 +137,7 @@ function display(){
  renderTimeline();renderHand();renderStatus();renderIntents();renderLog();renderForecast();
  const remove=$('removeActionButton');if(remove){remove.disabled=!selectedActionId;remove.textContent=selectedActionId?'✕ 取下选中动作':'✕ 取下动作';}
 }
-function renderForecast(){
- const out=$('forecastOutput');if(!projection)return;
- const snap=playHead>0?projection.trace?.find(x=>x.tick===game.now+playHead):null;
- const actors=snap?.actors||projection.actors;
- const focus=snap?`第 ${playHead} 格`:'本轮结算';
- const summarize=side=>game.actors.filter(a=>a.side===side).map(a=>{
-  const x=actors.find(b=>b.id===a.id)||a,delta=x.hp-a.hp;
-  return `<div class="preview-actor ${side}"><span>${textEscape(a.name)}</span><strong>${a.hp} → ${x.hp}</strong><em class="${delta<0?'danger':delta>0?'benefit':'neutral'}">${delta<0?`预计承伤 ${-delta}`:delta>0?`预计治疗 +${delta}`:'无血量变化'}</em>${x.marked?`<small>标记${x.marked}</small>`:''}${x.dead?'<small>击败</small>':''}</div>`;
- }).join('');
- const base=game.actors.find(a=>a.id==='hero'),mine=actors.find(a=>a.id==='hero')||base;
- const events=snap?.events||projection.events,notable=events.filter(e=>['break','death','finish','heal','skill','damage'].includes(e.kind));
- out.innerHTML=`<div class="forecast-title">◉ 自动实时预演 <b>${focus}</b></div><div class="forecast-numbers"><span>绝杀能量 <b>${base.energy} → ${mine.energy}</b></span><span>速度相同同步结算</span></div><div class="preview-heading">敌人 · 预计剩余生命</div><div class="preview-grid">${summarize('enemy')}</div><div class="preview-heading">我方 · 预计承伤</div><div class="preview-grid">${summarize('ally')}</div><div class="forecast-note">${notable.length?notable.slice(-3).map(e=>textEscape(e.text)).join(' · '):'已按敌人的既定动作自动预测；添加卡牌、移动或取下都会立即重算。'}</div>`;
-}
+function renderForecast(){const el=$('forecastOutput');if(el)el.textContent='实时预演已显示于每个角色的血条。';}
 function forecast(){if(!isPlanning())return;playHead=-1;display();showToast('已经自动推演整段时间，鼠标移过格子或点击时间即可查看瞬时状态。');}
 function execute(){if(!isPlanning())return;const base=game.now;game=G.simulateRound(game);placementMode=null;selectedUid=null;playHead=-1;if(!G.actorsOf(game,'enemy').find(a=>a.id===targetId))targetId=G.actorsOf(game,'enemy')[0]?.id;
 $('forecastOutput').innerHTML=`<b>上一轮已结算</b> · 命中按时间先后执行；本轮产生 ${game.events.length} 条事件。`;
