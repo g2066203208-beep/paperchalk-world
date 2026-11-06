@@ -189,6 +189,37 @@ try{
   'mobile portrait lens should preserve horizontal team composition');
  await page.screenshot({path:'artifacts/ring-arena/mobile-portrait-390x844.png'});
  assert.deepEqual(errors,[],'unexpected browser JavaScript errors');
+ // Regression for an actual stale user-saved DEV slot: even when a previous
+ // session selected another person's FRONT, the arena reload must bind the
+ // approved protagonist BACK without destroying the saved assignment.
+ await page.evaluate(async()=>{
+  const db=await new Promise((resolve,reject)=>{
+   const request=indexedDB.open('paperchalk-dev-characters-v1',1);
+   request.onsuccess=()=>resolve(request.result);
+   request.onerror=()=>reject(request.error);
+  });
+  try{
+   await new Promise((resolve,reject)=>{
+    const tx=db.transaction('kv','readwrite');
+    tx.objectStore('kv').put({id:'char-002',side:'front'},'slot:player');
+    tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+   });
+  }finally{db.close()}
+ });
+ await page.reload({waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>{
+  const a=window.PaperchalkL2D?.get('player');
+  const r=window.PaperWorldGameRingArena?.inspect();
+  return window.PaperchalkCharacterDev?.ready&&r?.active&&
+   a?.img?.dataset.characterId==='protagonist'&&
+   a?.img?.dataset.characterSide==='back'&&
+   r.heroine?.ready&&r.l2dReady===5;
+ },null,{timeout:85000});
+ const recovered=await get();
+ assert.equal(recovered.arena.heroine.id,'protagonist');
+ assert.equal(recovered.arena.heroine.side,'back');
+ assert.ok(recovered.arena.safety.clear,'stale local character binding must not make foes disappear');
+ await page.screenshot({path:'artifacts/ring-arena/after-stale-player-slot-repair.png'});
  await page.close();
  console.log('PASS: 2 near-hero fixed cameras with back L2D and 4 uncropped foes, screen sizes, immutable world');
 }finally{
