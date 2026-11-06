@@ -30,10 +30,13 @@ jobs:
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
           python3 -m pip install --quiet 'Pillow>=10,<12'
-      - name: Generate current room/character catalogs
+      - name: Generate room catalog (retain approved L2D asset catalog)
         run: |
           python3 scripts/build_scene_catalog.py
-          python3 scripts/build_character_catalog.py
+          test -f site/character-catalog.generated.js || {
+            echo "Retained character catalog missing. Do not regenerate incomplete ArtMesh.";
+            exit 1;
+          }
       - name: Start real game server
         run: |
           python3 -m http.server 8765 --directory site >/tmp/paperchalk-web.log 2>&1 &
