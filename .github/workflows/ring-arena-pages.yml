@@ -1,3 +1,5 @@
+# Fresh deployment run after GitHub re-run generated duplicate 'github-pages'
+# artifacts under one run ID; never re-run failed deploy in the SAME run.
 name: Publish tested 3D L2D ring arena
 on:
   push:
