@@ -1,7 +1,7 @@
 /* Paperchalk Timegrid Combat demo interface. No framework, dependencies or network calls. */
 (function(){'use strict';
 const G=window.Timegrid,C=window.TimegridRun;const $=id=>document.getElementById(id);
-let game,run,selectedUid=null,selectedActionId=null,placementMode=null,targetId=null,playHead=-1,toastHandle=null,projection=null;
+let game,run,selectedUid=null,selectedActionId=null,placementMode=null,targetId=null,playHead=-1,toastHandle=null,projection=null,mobilePage=0;
 const icon={attack:'⚔',defense:'⬡',skill:'✧',power:'✦',finisher:'◆',system:'↻'};
 function textEscape(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function uiIcon(name, size=18){
@@ -29,7 +29,7 @@ function uiIcon(name, size=18){
  };
  return `<svg class="ui-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.skill}</svg>`;
 }
-function iconKind(c){return c.aoe?'all':c.heal?'heal':c.mark?'mark':c.type==='attack'?'attack':c.type==='defense'?'defense':c.type==='finisher'?'finisher':c.type==='system'?'system':'skill'}
+function iconKind(c){return c.aoe?'all':c.steady?'defense':c.heal?'heal':c.mark?'mark':c.type==='attack'?'attack':c.type==='defense'?'defense':c.type==='finisher'?'finisher':c.type==='system'?'system':'skill'}
 function unitCode(actor){if(!actor)return '—';const side=actor.side==='enemy'?'敌':'友';const n=game.actors.filter(a=>a.side===actor.side).findIndex(a=>a.id===actor.id);return side+(n>=0?n+1:'?');}
 function nameTag(actor){return textEscape(String(actor?.name||'').split('·').pop().replace('走廊','').slice(0,4))}
 function healthGraphic(current,projected,max,enemy){
@@ -43,6 +43,13 @@ function initializeControls(){options($('classSelect'),Object.entries(G.CLASS).m
 $('classSelect').addEventListener('change',refreshStyles);
 $('setupToggle')?.addEventListener('click',()=>{const open=$('setupToggle').getAttribute('aria-expanded')!=='true';document.querySelector('.setup')?.classList.toggle('is-open',open);$('setupToggle').setAttribute('aria-expanded',String(open));});
 $('createButton').addEventListener('click',()=>newGame());$('resetButton').addEventListener('click',()=>newGame());
+$('timePageSwitch')?.addEventListener('click',e=>{const b=e.target.closest('[data-half]');if(b)setMobilePage(Number(b.dataset.half));});
+const timelineWrap=$('timelineWrap');let swipeStart=null;
+timelineWrap?.addEventListener('touchstart',e=>{const t=e.touches[0];swipeStart={x:t.clientX,y:t.clientY};},{passive:true});
+timelineWrap?.addEventListener('touchend',e=>{if(!swipeStart||innerWidth>700)return;
+ const t=e.changedTouches[0],dx=t.clientX-swipeStart.x,dy=t.clientY-swipeStart.y;swipeStart=null;
+ if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.5)setMobilePage(dx<0?1:0);
+},{passive:true});
 $('shuffleButton').addEventListener('click',()=>{if(!isPlanning())return;placementMode='shuffle';selectedUid=null;selectedActionId=null;display();showToast('洗牌耗时1格（非空手2格），只锁已有动作；新牌可填前面空位。');});
 $('undoButton').addEventListener('click',()=>{const a=game.actors[0],tail=[...a.actions].filter(x=>!x.locked&&x.start>=game.now).sort((x,y)=>y.start-x.start)[0];if(!tail){showToast('没有可撤销的未锁定卡牌');return;}try{G.remove(game,tail.id);selectedUid=null;placementMode=null;display();}catch(e){showToast(e.message)}});
 
@@ -65,7 +72,7 @@ else{playHead=Number(c.dataset.time);display();}
 });
 $('timeline').addEventListener('pointerover',e=>{const c=e.target.closest('.dual-big[data-time]');if(!c||!isPlanning())return;const i=Number(c.dataset.time);if(placementMode){showFootprint(i,c.dataset.actor);return;}if(i!==playHead){playHead=i;renderForecast();updateTimeHighlight();}});
 $('timeline').addEventListener('pointerleave',clearFootprint);
-$('timeline').addEventListener('keydown',e=>{const c=e.target.closest('[data-time]');if(!c)return;if(e.key==='Enter'||e.key===' '){e.preventDefault();c.click();return;}if(e.key==='Delete'||e.key==='Backspace'){const id=c.dataset.actionId;if(id){e.preventDefault();try{G.remove(game,id);selectedActionId=null;placementMode=null;display();}catch(error){showToast(error.message)}}return;}if(['ArrowLeft','ArrowRight'].includes(e.key)&&c.dataset.actor){e.preventDefault();const t=Math.max(1,Math.min(10,Number(c.dataset.time)+(e.key==='ArrowRight'?1:-1)));$('timeline').querySelector('.dual-big[data-actor="'+c.dataset.actor+'"][data-time="'+t+'"]')?.focus();}});
+$('timeline').addEventListener('keydown',e=>{const c=e.target.closest('[data-time]');if(!c)return;if(e.key==='Enter'||e.key===' '){e.preventDefault();c.click();return;}if(e.key==='Delete'||e.key==='Backspace'){const id=c.dataset.actionId;if(id){e.preventDefault();try{G.remove(game,id);selectedActionId=null;placementMode=null;display();}catch(error){showToast(error.message)}}return;}if(['ArrowLeft','ArrowRight'].includes(e.key)&&c.dataset.actor){e.preventDefault();const t=Math.max(1,Math.min(10,Number(c.dataset.time)+(e.key==='ArrowRight'?1:-1)));$('timeline').querySelector(`.dual-big[data-actor="${c.dataset.actor}"][data-time="${t}"]`)?.focus();}});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&placementMode){placementMode=null;selectedUid=null;selectedActionId=null;clearFootprint();display();}});
 $('actorCards')?.addEventListener('click',e=>{const c=e.target.closest('[data-target]');if(!c)return;targetId=c.dataset.target;display();showToast('已选择目标：'+game.actors.find(x=>x.id===targetId).name);});
 $('finisherSlot').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(!isPlanning())return;placementMode='finisher';selectedUid=null;selectedActionId=null;display();showToast('先安排标记/充能，再把绝杀放到目标敌人的后续时间格。');});
@@ -77,7 +84,25 @@ $('threatStrip')?.addEventListener('pointerout',()=>{$('timeline')?.querySelecto
 function toast(s){if(toastHandle)clearTimeout(toastHandle);$('toast').textContent=s;$('toast').classList.add('show');toastHandle=setTimeout(()=>$('toast').classList.remove('show'),3600)}
 const showToast=toast;
 function isPlanning(){return game&&game.phase==='planning';}
-function newGame(extra={}){const choice={classId:$('classSelect').value,styleId:$('styleSelect').value,startEncounter:$('encounterSelect').value,team:$('teamCheckbox').checked,seed:extra.seed===undefined?Math.floor(Math.random()*1e9):extra.seed};run=C.start(choice);game=C.newBattle(run);selectedUid=null;selectedActionId=null;placementMode=null;targetId=G.actorsOf(game,'enemy')[0]?.id;playHead=-1;document.querySelector('.setup')?.classList.remove('is-open');$('setupToggle')?.setAttribute('aria-expanded','false');$('forecastOutput').innerHTML='这里会显示精确预演：我方与敌方血量、破防和预计命中。';closeModal();display();}
+function setMobilePage(next){
+ mobilePage=next?1:0;
+ const t=$('timeline');if(t)t.dataset.page=mobilePage?'late':'early';
+ $('timePageSwitch')?.querySelectorAll('[data-half]').forEach(btn=>{
+  btn.classList.toggle('active',Number(btn.dataset.half)===mobilePage);
+  btn.setAttribute('aria-pressed',String(Number(btn.dataset.half)===mobilePage));
+ });
+}
+function currentTrace(actor,t){const frame=projection?.trace?.find(e=>e.tick===t+1);
+ return frame?.actors?.find(a=>a.id===actor.id)||null;}
+function forecastCancellation(actor,action){return projection?.previewCanceled?.find(x=>x.actorId===actor.id&&x.actionId===action.id)||null;}
+function poiseGraphic(actor,pred){
+ const cap=actor.poiseMax||1,cur=Math.max(0,Math.min(100,actor.poise/cap*100)),end=Math.max(0,Math.min(100,(pred.poise??actor.poise)/cap*100));
+ const warning=end>=70?' hot':end>=40?' raised':'';
+ return `<div class="poise-row${warning}" role="img" aria-label="硬直积累 ${actor.poise}/${cap}，预计 ${pred.poise??actor.poise}/${cap}">
+  <span class="poise-label">稳</span><div class="poise-track"><i class="poise-base" style="width:${cur}%"></i><i class="poise-projected" style="width:${end}%"></i></div>
+  <span class="poise-value">${actor.poise}→${pred.poise??actor.poise}</span></div>`;
+}
+function newGame(extra={}){const choice={classId:$('classSelect').value,styleId:$('styleSelect').value,startEncounter:$('encounterSelect').value,team:$('teamCheckbox').checked,seed:extra.seed===undefined?Math.floor(Math.random()*1e9):extra.seed};run=C.start(choice);game=C.newBattle(run);selectedUid=null;selectedActionId=null;placementMode=null;targetId=G.actorsOf(game,'enemy')[0]?.id;playHead=-1;mobilePage=0;document.querySelector('.setup')?.classList.remove('is-open');$('setupToggle')?.setAttribute('aria-expanded','false');$('forecastOutput').innerHTML='这里会显示精确预演：我方与敌方血量、破防和预计命中。';closeModal();display();}
 function resolveLane(laneId){const target=game.actors.find(a=>a.id===laneId);if(!target||target.dead)throw Error('目标不可用');return target;}
 function doPlace(relative,laneId){
  if(!isPlanning())return;
@@ -174,7 +199,7 @@ function renderThreatStrip(threats){
   </button>`;
  }).join('')}`;
 }
-/* The caster has one shared clock; changing the target never creates extra time. */
+/* One shared caster clock: moving the target never grants extra actions. */
 function casterSlotAt(t,excludedId=null){
  const hero=game.actors[0];
  if(t<hero.stunUntil)return {state:'stunned'};
@@ -193,7 +218,7 @@ function placementVerdict(card,relative,target,exceptId=null){
  if(!card||relative<1||relative>10)return {ok:false,why:'未选有效卡牌'};
  const actor=game.actors.find(a=>a.id===target),hero=game.actors[0],start=game.now+relative-1,end=start+G.cLen(card),cutoff=game.now+10;
  if(!actor||actor.dead)return {ok:false,why:'目标不可用'};
- const friendly=card.type==='defense'||card.heal||card.buff||card.type==='system';
+ const friendly=card.type==='defense'||card.heal||card.buff||card.steady||card.type==='system';
  if(actor.side!==(friendly?'ally':'enemy'))return {ok:false,why:'目标阵营不符'};
  if(card.type==='system'&&placementMode==='shuffle'){
   if(target!=='hero')return {ok:false,why:'只能在自己轨道洗牌'};
@@ -219,9 +244,9 @@ function showFootprint(start,actorId){
  const card=selectedPlanCard();if(!card)return;
  const action=placementMode==='move'?game.actors[0].actions.find(a=>a.id===selectedActionId):null;
  const verdict=placementVerdict(card,start,actorId,action?.id);
- const row=$('timeline')?.querySelector('[data-row-actor="'+actorId+'"]');
+ const row=$('timeline')?.querySelector(`[data-row-actor="${actorId}"]`);
  if(!row)return;
- for(let i=start;i<Math.min(11,start+G.cLen(card));i++)row.querySelector('.dual-big[data-time="'+i+'"]')?.classList.add(verdict.ok?'footprint-valid':'footprint-invalid');
+ for(let i=start;i<Math.min(11,start+G.cLen(card));i++)row.querySelector(`.dual-big[data-time="${i}"]`)?.classList.add(verdict.ok?'footprint-valid':'footprint-invalid');
 }
 function updateOccupancySummary(slots){
  const occupied=slots.filter(x=>x.state!=='free').length;
@@ -229,8 +254,8 @@ function updateOccupancySummary(slots){
  const el=$('occupancyStatus');if(!el)return;
  const c=selectedPlanCard();
  if(c){const validStarts=Array.from({length:10},(_,i)=>i+1).filter(i=>game.actors.some(a=>placementVerdict(c,i,a.id,placementMode==='move'?selectedActionId:null).ok));
-  el.textContent='已占 '+occupied+'/10 · 此牌需'+G.cLen(c)+'格 · '+(validStarts.length?'淡绿色可放，深色不可放':'没有可放位置，可移走未锁卡');
- }else el.textContent='已占 '+occupied+'/10 · 剩余 '+(10-occupied)+'格'+(locked?' · 锁定 '+locked+'格':'');
+  el.textContent=`已占 ${occupied}/10 · 此牌需${G.cLen(c)}格 · ${validStarts.length?'淡绿色可放，深色不可放':'没有可放位置，可移走未锁卡'}`;
+ }else el.textContent=`已占 ${occupied}/10 · 剩余 ${10-occupied}格${locked?` · 锁定 ${locked}格`:''}`;
 }
 function renderTimeline(){
  const start=game.now,times=Array.from({length:10},(_,i)=>i+1),hero=game.actors[0];
@@ -238,27 +263,30 @@ function renderTimeline(){
  const slots=Array.from({length:10},(_,i)=>casterSlotAt(game.now+i));
  const cardToPlace=selectedPlanCard();
  updateOccupancySummary(slots);
- let rows=`<div class="dual-header"><div class="dual-head-label">${uiIcon('target',14)} 目标 / 预计生命</div>${times.map(i=>{const state=slots[i-1].state;return `<button type="button" class="dual-hour ${state==='locked'?'hour-locked':state==='busy'?'hour-busy':state==='stunned'?'hour-stunned':'hour-free'} ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" aria-label="时间${i}：${state==='free'?'可用':state==='locked'?'已锁定':state==='stunned'?'失能':'已占用'}" title="第${i}格：${state==='free'?'可用':state==='locked'?'已锁定':state==='stunned'?'失能':'已占用'}">${String(i).padStart(2,'0')}</button>`}).join('')}<span class="dual-over-head">＋</span></div>`;
+ let rows=`<div class="dual-header"><div class="dual-head-label">${uiIcon('target',14)} 目标 / 预计生命</div>${times.map(i=>{const s=slots[i-1];return `<button type="button" class="dual-hour ${s.state==='locked'?'hour-locked':s.state==='busy'?'hour-busy':s.state==='stunned'?'hour-stunned':'hour-free'} ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" aria-label="时间${i}：${s.state==='free'?'可用':s.state==='locked'?'已锁定':s.state==='stunned'?'失能':'已占用'}" title="第${i}格：${s.state==='free'?'可用':s.state==='locked'?'已锁定':s.state==='stunned'?'失能':'已占用'}">${String(i).padStart(2,'0')}</button>`}).join('')}<span class="dual-over-head">＋</span></div>`;
  for(const actor of units){
   const enemy=actor.side==='enemy',own=actor.id==='hero',pred=forecastState(actor),delta=pred.hp-actor.hp;
   const targetActions=hero.actions.filter(a=>!a.canceled&&a.target===actor.id),incoming=threats.filter(x=>x.target===actor.id),outgoing=threats.filter(x=>x.source===actor.id);
   const inbound=incoming.length?incoming.reduce((n,t)=>n+t.damage,0):0;
   const preview=delta<0?`<span class="vital-delta damage">${uiIcon('attack',12)} ${Math.abs(delta)}</span>`:delta>0?`<span class="vital-delta recover">${uiIcon('heal',12)} +${delta}</span>`:'<span class="vital-delta neutral">—</span>';
-  const identity=`<div class="dual-person" title="${textEscape(actor.name)}：${actor.hp} → ${pred.hp} HP"><div class="person-top"><div class="avatar ${enemy?'is-foe':'is-friend'} ${own?'is-hero':''}">${unitCode(actor)}</div><div class="person-info"><div class="person-name">${textEscape(actor.name)}</div><div class="person-numbers"><strong>${actor.hp}</strong><span class="health-arrow">→</span><strong class="predicted ${delta<0?'is-loss':delta>0?'is-heal':''}">${pred.hp}</strong></div></div></div>${healthGraphic(actor.hp,pred.hp,actor.maxHp,enemy)}</div>`;
-  const canUse=placementMode==='card'?(()=>{const it=hero.hand.find(x=>x.uid===selectedUid);const c=G.CARD[it?.key];if(!c)return false;return c.type==='defense'||c.heal||c.buff?actor.side==='ally':actor.side==='enemy'})():placementMode==='finisher'?enemy:true;
+  const identity=`<div class="dual-person" title="${textEscape(actor.name)}：${actor.hp} → ${pred.hp} HP"><div class="person-top"><div class="avatar ${enemy?'is-foe':'is-friend'} ${own?'is-hero':''}">${unitCode(actor)}</div><div class="person-info"><div class="person-name">${textEscape(actor.name)}</div><div class="person-numbers"><strong>${actor.hp}</strong><span class="health-arrow">→</span><strong class="predicted ${delta<0?'is-loss':delta>0?'is-heal':''}">${pred.hp}</strong></div></div></div>${healthGraphic(actor.hp,pred.hp,actor.maxHp,enemy)}${poiseGraphic(actor,pred)}</div>`;
+  const canUse=placementMode==='card'?(()=>{const it=hero.hand.find(x=>x.uid===selectedUid);const c=G.CARD[it?.key];if(!c)return false;return c.type==='defense'||c.heal||c.buff||c.steady?actor.side==='ally':actor.side==='enemy'})():placementMode==='finisher'?enemy:true;
   rows+=`<div data-row-actor="${actor.id}" class="dual-row ${enemy?'enemyrow':'allyrow'} ${own?'own-row':''} ${placementMode?'targeting':''} ${canUse?'legal-target':'invalid-target'}">${identity}<div class="dual-board">`;
   for(let i=1;i<=10;i++){
    const t=start+i-1,placed=targetActions.find(a=>G.phase(G.CARD[a.card],a.start,t));
    const seg=segmentAt(actor,t),ownAction=seg?.kind==='action'?seg:null,attacksHere=incoming.filter(x=>x.tick===i);
+   const traceUnit=currentTrace(actor,t),predictedRecover=!!traceUnit&&traceUnit.stunUntil>t;
    const used=slots[i-1],sameAction=targetActions.some(a=>used.action&&a.id===used.action.id);
    const exceptId=placementMode==='move'?selectedActionId:null;
    const potential=cardToPlace?placementVerdict(cardToPlace,i,actor.id,exceptId):null;
    let topClass='dual-big '+(enemy?'enemy-zone':'ally-zone'),chip='',id='',title=`${actor.name}，T${i}，可放置指向该角色的卡牌`;
    if(placed){
      const c=G.CARD[placed.card],ph=G.phase(c,placed.start,t),actualHit=c.damage?G.predictHit(hero,c,t):0;
-     topClass+=` filled ${c.type} ${ph}${placed.locked?' locked':''}`;
+     const willCancel=forecastCancellation(hero,placed);
+     topClass+=` filled ${c.type} ${ph}${placed.locked?' locked':''}${willCancel?' forecast-canceled':''}`;
      const number=c.damage?actualHit:c.guard||c.heal||c.mark||0;
-     chip=ph==='active'?`<span class="phase-metric">${uiIcon(iconKind(c),14)}${number||''}</span>`:ph==='windup'?`<span class="phase-mark">${i===placed.start-game.now+1?uiIcon(iconKind(c),13):''}</span>`:`<span class="phase-mark dim">${placed.locked?uiIcon('lock',12):''}</span>`;
+     chip=willCancel&&t>=willCancel.tick?`<span class="cancel-mark" title="预计被控制中断">×</span>`:
+      ph==='active'?`<span class="phase-metric">${uiIcon(iconKind(c),14)}${number||''}</span>`:ph==='windup'?`<span class="phase-mark">${i===placed.start-game.now+1?uiIcon(iconKind(c),13):''}</span>`:`<span class="phase-mark dim">${placed.locked?uiIcon('lock',12):''}</span>`;
      id=` data-action-id="${placed.id}" draggable="${!placed.locked&&isPlanning()}"`;
      title=`你的${c.name} → ${actor.name}，T${i}：${ph==='active'?'造成/生效 '+number:ph==='windup'?'前摇':'后摇'}`;
    }else if(attacksHere.length){chip=`<span class="incoming-flag" title="${textEscape(attacksHere.map(x=>unitCode(game.actors.find(a=>a.id===x.source))+' 攻击 '+x.damage).join('、'))}；点击自动安排护卫">${uiIcon('alert',12)}<b>${attacksHere.reduce((n,x)=>n+x.damage,0)}</b><small>${attacksHere.map(x=>unitCode(game.actors.find(a=>a.id===x.source))).filter((v,i,a)=>a.indexOf(v)===i).join('+')}</small></span>`}
@@ -266,42 +294,45 @@ function renderTimeline(){
    if(!placed&&used.state!=='free'&&!sameAction){
      topClass+=' caster-busy'+(used.state==='locked'?' caster-locked':used.state==='stunned'?' caster-stunned':'');
      if(!attacksHere.length)chip='<span class="busy-glyph" aria-hidden="true"></span>';
-     title+='；你此格'+(used.state==='locked'?'已锁定':used.state==='stunned'?'失能':'已安排其他动作');
+     title+=`；你此格${used.state==='locked'?'已锁定':used.state==='stunned'?'失能':'已安排其他动作'}`;
    }
    if(cardToPlace){
      topClass+=potential?.ok?' legal-start':' conflict-start';
      if(potential?.ok&&!Array.from({length:i-1},(_,n)=>n+1).some(k=>placementVerdict(cardToPlace,k,actor.id,exceptId).ok))topClass+=' best-start';
      if(potential?.ok&&cardToPlace.type==='defense'&&incoming.some(h=>h.tick>=i+cardToPlace.w&&h.tick<i+cardToPlace.w+cardToPlace.a))topClass+=' recommended-start';
      if(potential?.ok&&!placed&&!attacksHere.length)chip='<span class="dual-plus">＋</span>';
-     title+=potential?.ok?'；可在这里放牌':'；无法放牌：'+(potential?.why||'冲突');
+     title+=potential?.ok?'；可在这里放牌':`；无法放牌：${potential?.why||'冲突'}`;
    }
    if(playHead===i)topClass+=' playhead';
    let bottomClass='dual-small',bottom='',bottomTitle=`${actor.name}在T${i}等待`;
    if(seg?.kind==='recovering'){bottomClass+=' recovering';bottom=uiIcon('stun',13);bottomTitle=`${actor.name}失能恢复`}
    else if(ownAction){
+     const predictedCanceled=forecastCancellation(actor,ownAction.action);
      const c=ownAction.card,ph=ownAction.phase,strike=c.damage?G.predictHit(actor,c,t):0;
+     if(predictedCanceled&&t>=predictedCanceled.tick){bottomClass+=' predicted-canceled';bottom=uiIcon('stun',12);bottomTitle=`${unitCode(actor)}：此动作预计被控制取消，不会顺延`;}
      const dest=game.actors.find(x=>x.id===ownAction.action.target);
      bottomClass+=` ${c.type} ${ph} ${enemy?'enemy-intent':''}`;
-     if(ph==='active')bottom=`<span class="intent-metric">${uiIcon(iconKind(c),12)}<b>${strike||c.guard||c.heal||c.mark||''}</b>${dest?`<small>›${unitCode(dest)}</small>`:c.aoe?uiIcon('all',11):''}</span>`;
+     if(!predictedCanceled||t<predictedCanceled.tick){if(ph==='active')bottom=`<span class="intent-metric">${uiIcon(iconKind(c),12)}<b>${strike||c.guard||c.heal||c.mark||c.steady||''}</b>${dest?`<small>›${unitCode(dest)}</small>`:c.aoe?uiIcon('all',11):''}</span>`;
      else if(ph==='windup')bottom=`<span class="intent-phase windup-icon">${uiIcon('clock',12)}</span>`;
-     else bottom=`<span class="intent-phase recovery-icon">·</span>`;
+     else bottom=`<span class="intent-phase recovery-icon">·</span>`;} // forecast-canceled cells stay visibly crossed out
      bottomTitle=`${unitCode(actor)} ${c.name} ${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}，${c.damage?'伤害'+strike:c.guard?'防御'+c.guard:'技能'}，目标${dest?unitCode(dest):'全体'}，速度${c.speed}`;
    }
+   if(predictedRecover&&!seg){bottomClass+=' predicted-recovering';bottom=uiIcon('stun',12);bottomTitle=`${unitCode(actor)} 预计失稳/破防/晕倒占用此格`;}
    rows+=`<div class="dual-tick"><div class="${topClass}" data-time="${i}" data-actor="${actor.id}" data-slot-state="${placed?'my-card':used.state}" data-drop-ok="${potential?.ok===true}" ${id} tabindex="0" role="button" aria-label="${textEscape(title)}" title="${textEscape(title)}">${chip}</div><div class="${bottomClass}" title="${textEscape(bottomTitle)}">${bottom}</div></div>`;
   }
   const cross=[...actor.actions,...targetActions].find(a=>!a.canceled&&a.start<start+10&&a.start+G.cLen(G.CARD[a.card])>start+10);
   rows+=`</div><div class="dual-over">${cross?'+'+(cross.start+G.cLen(G.CARD[cross.card])-(start+10)):'·'}</div></div>`;
  }
- $('timeline').innerHTML=rows;$('timeline').classList.toggle('choosing',!!placementMode);renderThreatStrip(threats);
+ $('timeline').innerHTML=rows;$('timeline').classList.toggle('choosing',!!placementMode);setMobilePage(mobilePage);renderThreatStrip(threats);
 }
 function renderActors(){const team=game.actors.filter(a=>a.side==='ally'),enemy=game.actors.filter(a=>a.side==='enemy');let out='';for(const a of [...team,...enemy]){const isE=a.side==='enemy',id=a.id,percent=Math.max(0,a.hp/a.maxHp*100);out+=`<div class="actor ${isE?'enemy':''} ${id==='hero'?'current':''} ${a.dead?'dead':''}" ${isE?`data-target="${id}" style="cursor:pointer;${targetId===id?'outline:2px solid #d9b275;outline-offset:-2px':''}"`:''}><div class="actor-top"><div><span class="actor-icon">${isE?'☠':G.CLASS[id==='hero'?game.options.classId:id.replace('ai-','')]?.icon||'✦'}</span><span class="actor-name">${textEscape(a.name)}</span></div><span class="badge ${isE?'enemy':''}">${a.dead?'倒下':isE?'敌':'我'}</span></div><div class="healthline"><span>生命</span><strong>${a.hp}/${a.maxHp}</strong></div><div class="healthbar"><div style="width:${percent}%"></div></div><small>${a.stunUntil>game.now?'失能至 T'+a.stunUntil+' · ':''}${a.marked?'标记'+a.marked+' · ':''}${a.id==='hero'?'绝杀能量 '+a.energy+'/100':isE?'点击选择目标':'自动排程'}</small></div>`;}if($('actorCards'))$('actorCards').innerHTML=out;}
 function renderHand(){
  const hero=game.actors[0];$('handCounter').textContent=`${hero.hand.length} / ${G.HAND}`;
  $('hand').innerHTML=hero.hand.length?hero.hand.map(it=>{
-  const c=G.CARD[it.key],len=G.cLen(c),effect=c.damage?`${c.damage}${c.a>1?' ×'+c.a:''}`:c.guard?`${c.guard}`:c.heal?`+${c.heal}`:c.mark?`${c.mark}`:c.buff?`+${c.buff}`:'·';
+  const c=G.CARD[it.key],len=G.cLen(c),effect=c.damage?`${c.damage}${c.a>1?' ×'+c.a:''}`:c.guard?`${c.guard}`:c.heal?`+${c.heal}`:c.mark?`${c.mark}`:c.buff?`+${c.buff}`:c.steady?`稳−${c.steady}`:'·';
   return `<button type="button" draggable="true" class="hand-card ${c.type} ${selectedUid===it.uid?'selected':''}" data-uid="${textEscape(it.uid)}" style="--ctype:${G.COLORS[c.type]}" title="${textEscape(c.name+' — '+(c.desc||'')+'，前摇'+c.w+' / 生效'+c.a+' / 后摇'+c.r+'，速度'+c.speed)}" aria-pressed="${selectedUid===it.uid}">
   <div class="card-art"><span class="card-symbol">${uiIcon(iconKind(c),37)}</span><span class="card-impact">${effect}</span></div>
-  <div class="card-bottom"><strong>${textEscape(c.name)}</strong><div class="card-metadata"><span>${c.aoe?uiIcon('all',13):uiIcon('clock',13)} ${len}</span><span>${uiIcon('power',12)} ${c.speed}</span></div></div>
+  <div class="card-bottom"><strong>${textEscape(c.name)}</strong>${c.poisePower?`<span class="card-pressure">冲击 +${c.poisePower}</span>`:''}<div class="card-metadata"><span>${c.aoe?uiIcon('all',13):uiIcon('clock',13)} ${len}</span><span>${uiIcon('power',12)} ${c.speed}</span></div></div>
   <div class="phase-track" title="前摇 ${c.w} · 生效 ${c.a} · 后摇 ${c.r}">${Array.from({length:len},(_,i)=>`<span class="${i<c.w?'windup':i<c.w+c.a?'active':'recovery'}"></span>`).join('')}</div></button>`;
  }).join(''):`<div class="empty-hand">${uiIcon('system',28)}<span>手牌用尽 · 洗牌补充</span></div>`;
 }
@@ -357,7 +388,7 @@ function showRunComplete(){openModal('冒险完成 · 本轮构筑结果',`<div 
 function showDeck(){if(!run)return;const items=deckEntries();openModal('当前肉鸽牌组 · 可跨关强化',`<div class="run-summary"><p>职业 ${textEscape(G.CLASS[run.classId].name)} · ${G.CLASS[run.classId].styles[run.styleId].name} ｜共 ${C.cardCount(run)}张</p><p>金币 ${run.gold} · 生命 ${run.hp}/${run.maxHp} · 绝杀能量 ${run.energy}/100</p><p>遗物：${run.relics.length?run.relics.map(k=>textEscape(C.RELICS[k].name)).join('、'):'无'}</p></div><div class="deck-list">${items.map(({key,n,c})=>`<div><span>${textEscape(c.name)} ×${n}${c.aoe?' · 全体':''}</span><small>${C.rarityOf(key)} · ${G.cLen(c)}格</small></div>`).join('')}</div>`);}
 function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.remove('hidden');}
 function closeModal(){if(run&&(run.state==='reward'||run.state==='shop')){showToast('请先完成战利品选择，或跳过奖励并继续冒险。');return;}$('modal').classList.add('hidden');}
-function showHelp(){openModal('怎么玩 · 时间轴战斗 + 肉鸽成长',`<p>本 Demo 是原创战斗原型。目标是完成5场战斗，保留战后牌组、生命、绝杀能量、金币和遗物。</p><ul><li>每轮10格，选手牌点时间轴任意空位，浅色前摇→主色作用→深色后摇；攻击含全体攻击和逐格多段伤害。</li><li>每一<b>新回合开始自动免费补满手牌</b>（包括抽牌堆自动重洗）；不会消耗时间格。无须整手打空。</li><li><b>主动洗牌</b>：空手消耗1格，非空手消耗2格。所有<b>已放卡不可移动</b>，但<strong>之前留出的空格仍可用新牌补放</strong>，规划内不能让洗牌位与卡牌重叠。</li><li>防御共享防御值，耗尽触发破防并取消后续行动；晕倒占用更多时间。只有最右端卡牌可以跨轮。</li><li>同格生效的动作按<b>速度从高到低</b>结算；相同速度的伤害属于同一批次。敌我全部按同一规则运行。</li><li>每名敌人和队友的行完全等高，上层大轨放我打向TA的牌，下层小轨显示TA自己的行动；攻击拖敌人上轨，治疗/保护拖友方上轨。</li><li>进入战斗就自动显示预计承伤与目标血量变化，改牌后实时更新；点击时间刻度可查看当格预测。</li><li>预演会实时模拟之前安排的标记、减血和充能；可以先排标记后排绝杀，依预定时刻判定条件。</li><li>所有队友同步逐格结算；绝杀固定槽，积攒100能量并满足条件才能用，收尾提高评分和奖励。</li><li><b>胜利后</b>按评分抽取三张不同候选牌，任选一张或跳过，然后进入“深夜超市”：购买/删牌/升级/遗物/治疗，继续下一关。</li></ul><p>初始4职业×2预设流派，可以通过战利品构筑更多变体；这不是最终的职业平衡结论。NPC联机仅为模拟，尚非真实在线多人。</p>`);}
+function showHelp(){openModal('怎么玩 · 时间轴战斗 + 肉鸽成长',`<p>本 Demo 是原创战斗原型。目标是完成5场战斗，保留战后牌组、生命、绝杀能量、金币和遗物。</p><ul><li>每轮10格，选手牌点时间轴任意空位，浅色前摇→主色作用→深色后摇；攻击含全体攻击和逐格多段伤害。</li><li>每一<b>新回合开始自动免费补满手牌</b>（包括抽牌堆自动重洗）；不会消耗时间格。无须整手打空。</li><li><b>主动洗牌</b>：空手消耗1格，非空手消耗2格。所有<b>已放卡不可移动</b>，但<strong>之前留出的空格仍可用新牌补放</strong>，规划内不能让洗牌位与卡牌重叠。</li><li>防御值被打穿会破防；每次有效命中增加硬直，未被命中的格会恢复硬直。满硬直触发失稳2格，破防3格，晕倒6格。只取消与恢复占格重叠的动作，后面的动作不顺延、也不直接清空。恢复结束后的动作照旧执行。只有最右端卡牌可以跨轮。</li><li>同格生效的动作按<b>速度从高到低</b>结算；相同速度的伤害属于同一批次。敌我全部按同一规则运行。</li><li>每名敌人和队友的行等高：上轨为我对该角色施放的动作，下轨显示其自己的行动。攻击拖敌人上轨，治疗/保护/稳固拖友方上轨。手机每屏5格，点1–5或6–10切换；也能左右轻扫切换。</li><li>进入战斗就自动显示预计承伤与目标血量变化，改牌后实时更新；点击时间刻度可查看当格预测。</li><li>预演会实时模拟之前安排的标记、减血和充能；可以先排标记后排绝杀，依预定时刻判定条件。</li><li>所有队友同步逐格结算；绝杀固定槽，积攒100能量并满足条件才能用，收尾提高评分和奖励。</li><li><b>胜利后</b>按评分抽取三张不同候选牌，任选一张或跳过，然后进入“深夜超市”：购买/删牌/升级/遗物/治疗，继续下一关。</li></ul><p>初始4职业×2预设流派，可以通过战利品构筑更多变体；这不是最终的职业平衡结论。NPC联机仅为模拟，尚非真实在线多人。</p>`);}
 initializeControls();newGame({seed:123456});
 window.__TIMEGRID_DEBUG__={getGame:()=>game,getRun:()=>run,getPlacementVerdict:placementVerdict,getCardForPlacement:selectedPlanCard,getCasterSlot:casterSlotAt,render:display,auto:()=>{$('autoplanButton').click();},execute:()=>{$('commitButton').click();},newGame,showRewards,showShop,showDeck};
 })();

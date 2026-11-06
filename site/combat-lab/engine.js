@@ -1,40 +1,46 @@
 /* Paperchalk World: Timegrid Combat Engine v0.4 — browser + Node, deterministic seed. */
 (function(root,factory){const result=factory();if(typeof module==='object'&&module.exports)module.exports=result;root.Timegrid=result;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
-const ROUND=10,HAND=4,SHUFFLE_EMPTY=1,SHUFFLE_FORCED=2,BREAK_TICKS=3,FAINT_TICKS=6,FINISHER_NEED=100;
+const ROUND=10,HAND=4,SHUFFLE_EMPTY=1,SHUFFLE_FORCED=2,BREAK_TICKS=3,FAINT_TICKS=6,STAGGER_TICKS=2,POISE_DECAY=4,POISE_GRACE=2,FINISHER_NEED=100;
 const BALANCE={soloEnemyHp:0.78,soloEnemyDamage:0.55,teamEnemyHp:2.72,teamEnemyDamage:1.4};
+// Distinct presets keep solo viable without making 4v4 trivial. These are V1.5
+// benchmark parameters, not a claim of final human-tested balance.
+const ENCOUNTER_SCALING={
+ solo:{corridor:{hp:1.00,damage:.78,cap:1},twins:{hp:1.28,damage:.92,cap:2},siege:{hp:1.21,damage:.89,cap:2},surround:{hp:1.26,damage:.93,cap:2},boss:{hp:.98,damage:.78,cap:1}},
+ team:{corridor:{hp:3.0,damage:1.5},twins:{hp:3.25,damage:1.65},siege:{hp:3.6,damage:1.72},surround:{hp:2.85,damage:1.5},boss:{hp:3.50,damage:1.85}}
+};
 const COLORS={attack:'#d45c62',defense:'#4e95cc',skill:'#4aae99',power:'#9a75c4',special:'#d79b53',finisher:'#e6b968',system:'#81909e'};
 const CARD={
- sweep:{name:'长斧横扫·全体',type:'attack',w:1,a:1,r:2,damage:9,aoe:true,charge:10,desc:'全体敌人各7伤害，较长后摇'},
- buckshot:{name:'散射·全体',type:'attack',w:1,a:1,r:2,damage:9,aoe:true,charge:10,desc:'全体敌人各7伤害'},
+ sweep:{name:'长斧横扫·全体',type:'attack',w:1,a:1,r:2,damage:9,aoe:true,charge:10,desc:'全体敌人各9伤害，较长后摇'},
+ buckshot:{name:'散射·全体',type:'attack',w:1,a:1,r:2,damage:9,aoe:true,charge:10,desc:'全体敌人各9伤害'},
  shockwave:{name:'盾墙震荡·全体',type:'attack',w:2,a:1,r:2,damage:8,aoe:true,breakPower:2,charge:12,desc:'全体敌人各8伤害，追加2破防压力'},
- nova:{name:'群星共振·全体',type:'attack',w:1,a:2,r:2,damage:5,aoe:true,charge:6,desc:'全体敌人连续2格各5伤害'},
+ nova:{name:'群星共振·全体',type:'attack',w:1,a:2,r:2,damage:6,aoe:true,charge:6,desc:'全体敌人连续2格各5伤害'},
  cut:{name:'快速斩击',type:'attack',w:0,a:1,r:1,damage:8,charge:9,desc:'即刻伤害，后摇1'},
  slash:{name:'斧柄横扫',type:'attack',w:1,a:1,r:1,damage:12,charge:12,desc:'12伤害，前后摇各1'},
  heavy:{name:'破甲重斩',type:'attack',w:2,a:1,r:1,damage:20,charge:17,pierce:3,desc:'重伤害，穿透3防御'},
- whirl:{name:'连续回旋',type:'attack',w:1,a:3,r:1,damage:7,charge:5,desc:'连续3格、每格6伤害'},
+ whirl:{name:'连续回旋',type:'attack',w:1,a:3,r:1,damage:6,charge:5,desc:'连续3格、每格6伤害'},
  cleave:{name:'裂地猛击',type:'attack',w:2,a:1,r:1,damage:13,charge:15,breakPower:5,desc:'对防御额外5破防压力'},
  stance:{name:'举斧格挡',type:'defense',w:0,a:3,r:0,guard:13,charge:9,desc:'持续3格，共享13防御值'},
  brace:{name:'谨慎防御',type:'defense',w:0,a:3,r:1,guard:16,charge:9,desc:'持续3格，16防御值'},
  sidestep:{name:'侧身闪避',type:'defense',w:0,a:1,r:1,dodge:true,charge:9,desc:'生效格免疫伤害，后摇1'},
  feint:{name:'佯攻',type:'skill',w:0,a:1,r:1,damage:4,mark:2,charge:8,desc:'4伤害，目标获得2层标记'},
  shot:{name:'快速点射',type:'attack',w:0,a:1,r:1,damage:10,charge:9,desc:'行动快速，1格生效'},
- burst:{name:'三连射',type:'attack',w:1,a:3,r:1,damage:7,charge:5,desc:'连续3格各6伤害'},
+ burst:{name:'三连射',type:'attack',w:1,a:3,r:1,damage:7,charge:5,desc:'连续3格各7伤害'},
  aim:{name:'精确狙击',type:'attack',w:2,a:1,r:1,damage:22,charge:17,pierce:2,desc:'蓄力2格的高伤射击'},
  focus:{name:'目标标记',type:'skill',w:0,a:1,r:1,mark:3,charge:10,desc:'目标获得3层标记，下次受击+3'},
  cover:{name:'烟幕掩护',type:'defense',w:0,a:3,r:1,guard:14,charge:10,desc:'持续3格，共享14防御'},
  bulletguard:{name:'紧急掩体',type:'defense',w:0,a:2,r:0,guard:13,charge:8,desc:'立即掩护2格'},
  suppress:{name:'压制射击',type:'attack',w:1,a:2,r:1,damage:6,breakPower:3,charge:7,desc:'连续2格打击防御'},
- bash:{name:'盾击',type:'attack',w:1,a:1,r:1,damage:12,breakPower:4,charge:12,desc:'更擅长打破敌人防御'},
- guardwall:{name:'坚固防线',type:'defense',w:0,a:4,r:1,guard:16,charge:12,desc:'持续4格，共享21防御'},
- counter:{name:'反击架势',type:'defense',w:0,a:3,r:1,guard:12,counter:6,charge:11,desc:'格挡成功对攻击者反击8'},
+ bash:{name:'盾击',type:'attack',w:1,a:1,r:1,damage:13,breakPower:4,charge:12,desc:'更擅长打破敌人防御'},
+ guardwall:{name:'坚固防线',type:'defense',w:0,a:4,r:1,guard:16,charge:12,desc:'持续4格，共享16防御值'},
+ counter:{name:'反击架势',type:'defense',w:0,a:3,r:1,guard:12,counter:6,charge:11,desc:'格挡成功反击6伤害'},
  smash:{name:'盾墙冲击',type:'attack',w:2,a:1,r:1,damage:18,breakPower:5,charge:16,desc:'蓄力盾击与破防'},
  rally:{name:'恢复呼吸',type:'skill',w:0,a:1,r:1,heal:7,charge:7,desc:'立即回复7生命'},
  jab:{name:'短距离刺击',type:'attack',w:0,a:1,r:1,damage:8,charge:8,desc:'轻快出手'},
- pulse:{name:'异象冲击',type:'attack',w:1,a:1,r:1,damage:13,charge:12,desc:'单次灵能冲击'},
- echo:{name:'共振波',type:'attack',w:1,a:3,r:1,damage:7,charge:5,desc:'持续三格的波动'},
- rupture:{name:'失衡术',type:'skill',w:1,a:1,r:1,damage:12,breakPower:8,charge:14,desc:'对防御造成额外8压力'},
- remedy:{name:'应急治疗',type:'skill',w:0,a:1,r:1,heal:7,charge:9,desc:'回复9生命'},
+ pulse:{name:'异象冲击',type:'attack',w:1,a:1,r:1,damage:15,charge:12,desc:'单次灵能冲击'},
+ echo:{name:'共振波',type:'attack',w:1,a:3,r:1,damage:8,charge:5,desc:'持续三格的波动'},
+ rupture:{name:'失衡术',type:'skill',w:1,a:1,r:1,damage:14,breakPower:8,charge:14,desc:'对防御造成额外8压力'},
+ remedy:{name:'应急治疗',type:'skill',w:0,a:1,r:1,heal:7,charge:9,desc:'回复7生命'},
  seal:{name:'弱化咒印',type:'skill',w:0,a:1,r:1,weak:2,charge:10,desc:'目标接下来2次攻击各-3'},
  ward:{name:'薄暮防护',type:'defense',w:0,a:3,r:0,guard:14,charge:9,desc:'立刻防御，持续3格'},
  trance:{name:'精神凝聚',type:'power',w:1,a:1,r:1,buff:3,charge:12,desc:'随后攻击伤害+3，持续2次'},
@@ -54,21 +60,36 @@ const CARD={
  e_wound:{name:'虚空噬咬',type:'attack',w:1,a:2,r:1,damage:9},
  e_shock:{name:'晕厥冲击',type:'skill',w:2,a:1,r:1,damage:7,faint:6},
 };
+// The stun meter is independent of guard. Guard penetration can also create
+// poise pressure, but a successful dodge creates no contact.
+for(const [id,pressure] of Object.entries({
+  cut:2,slash:4,heavy:8,whirl:3,cleave:7,sweep:4,
+  shot:2,burst:2,aim:7,suppress:5,buckshot:3,
+  jab:2,bash:7,smash:9,shockwave:7,
+  pulse:4,echo:3,rupture:11,nova:3,
+  e_claw:3,e_double:2,e_lunge:7,e_smash:9,e_nail:5,e_roar:3,e_wound:4,e_shock:7
+}))CARD[id].poisePower=pressure;
+CARD.steady={name:'稳固呼吸',type:'skill',w:0,a:1,r:1,steady:14,charge:7,
+  desc:'给友方降低14点硬直积累；对失稳后的队友也可提供支援'};
+CARD.reversal={name:'断势冲击',type:'attack',w:1,a:1,r:1,damage:8,poisePower:10,charge:8,
+  desc:'8伤害与10点额外硬直压迫，适合配合队友打出失稳窗口'};
+CARD.respite={name:'回稳屏障',type:'defense',w:0,a:2,r:1,guard:11,steady:6,charge:8,
+  desc:'2格防御11点，进入作用格时降低目标6点硬直积累'};
 const CLASS={
  axe:{name:'女主 · 斧卫',icon:'🪓',hp:77,fin:'fin_axe',styles:{
-  strike:{name:'裂甲猛攻',description:'慢速重击、主动打穿防御',deck:{cut:2,slash:2,heavy:2,cleave:1,sweep:1,stance:2,feint:1,sidestep:1}},
+  strike:{name:'裂甲猛攻',description:'慢速重击、主动打穿防御',deck:{cut:2,slash:2,heavy:2,cleave:1,sweep:1,stance:1,feint:1,sidestep:1,reversal:1}},
   tempo:{name:'回旋连击',description:'多段攻击与快速衔接',deck:{cut:3,slash:1,whirl:2,heavy:1,sweep:1,stance:2,feint:1,sidestep:1}}
  }},
  gun:{name:'女二 · 枪手',icon:'🔫',hp:77,fin:'fin_gun',styles:{
-  tempo:{name:'快速连射',description:'低前摇与持续射击',deck:{shot:3,burst:2,aim:1,focus:1,buckshot:1,cover:2,bulletguard:1,sidestep:1}},
-  precision:{name:'精准狙击',description:'标记与蓄力狙击',deck:{shot:2,aim:2,focus:2,suppress:1,buckshot:1,cover:2,bulletguard:1,sidestep:1}}
+  tempo:{name:'快速连射',description:'低前摇与持续射击',deck:{shot:3,burst:2,aim:1,focus:1,buckshot:1,cover:1,bulletguard:1,sidestep:1,respite:1}},
+  precision:{name:'精准狙击',description:'标记与蓄力狙击',deck:{shot:2,aim:2,focus:2,suppress:1,buckshot:1,cover:1,bulletguard:1,sidestep:1,respite:1}}
  }},
  guard:{name:'男主 · 守护',icon:'🛡️',hp:74,fin:'fin_guard',styles:{
-  fortress:{name:'反击铁壁',description:'厚实格挡与反击',deck:{jab:2,bash:2,guardwall:2,counter:2,smash:2,shockwave:1,rally:1}},
-  crush:{name:'破势护卫',description:'盾击破防与稳健推进',deck:{jab:2,bash:3,smash:2,guardwall:2,counter:1,shockwave:1,rally:1}}
+  fortress:{name:'反击铁壁',description:'厚实格挡与反击',deck:{jab:2,bash:2,guardwall:2,counter:2,smash:2,shockwave:1,steady:1}},
+  crush:{name:'破势护卫',description:'盾击破防与稳健推进',deck:{jab:2,bash:3,smash:2,guardwall:2,counter:1,shockwave:1,steady:1}}
  }},
  mage:{name:'女三 · 调律',icon:'✦',hp:71,fin:'fin_mage',styles:{
-  control:{name:'失衡调律',description:'控制防御与弱化敌人',deck:{pulse:2,rupture:2,echo:1,seal:2,ward:2,nova:1,remedy:1,trance:1}},
+  control:{name:'失衡调律',description:'控制防御与弱化敌人',deck:{pulse:2,rupture:2,echo:1,seal:2,ward:2,nova:1,remedy:1,steady:1}},
   sustain:{name:'共振支援',description:'持续伤害与回复',deck:{pulse:1,echo:3,rupture:1,seal:1,ward:2,nova:1,remedy:2,trance:1}}
  }}
 };
@@ -92,16 +113,28 @@ function shuffle(array,rand){for(let i=array.length-1;i>0;i--){const j=Math.floo
 function clone(o){return JSON.parse(JSON.stringify(o));}
 function cLen(c){return c.w+c.a+c.r;}
 function phase(card,start,t){const i=t-start;if(i<0||i>=cLen(card))return null;return i<card.w?'windup':i<card.w+card.a?'active':'recovery';}
-function makeActor(id,side,name,hp,fin){return{id,side,name,hp,maxHp:hp,relics:[],fin,energy:0,dead:false,stunUntil:0,marked:0,weak:0,buff:0,buffHits:0,breaks:0,damageDealt:0,damageTaken:0,blocked:0,kills:0,actions:[],hand:[],draw:[],discard:[],exhaust:[],lockedUntil:-1};}
+function makeActor(id,side,name,hp,fin){
+  const poiseMax=side==='enemy'?Math.max(24,Math.min(42,Math.round(hp*.36))):id.includes('guard')?36:id.includes('mage')?24:id.includes('gun')?26:30;
+  return{id,side,name,hp,maxHp:hp,relics:[],fin,energy:0,dead:false,stunUntil:0,
+    poise:0,poiseMax,poiseImmuneUntil:0,lastPoiseHit:-1,staggerCount:0,
+    marked:0,weak:0,buff:0,buffHits:0,breaks:0,damageDealt:0,damageTaken:0,blocked:0,kills:0,
+    actions:[],hand:[],draw:[],discard:[],exhaust:[],lockedUntil:-1};
+}
 function addDeck(actor,def,rand){let uid=0;for(const [card,n]of Object.entries(def))for(let i=0;i<n;i++)actor.draw.push({uid:actor.id+'-c'+(uid++),key:card});shuffle(actor.draw,rand);}
 function drawHand(actor,rand){const limit=HAND+(actor.relics?.includes('extra_hand')?1:0);while(actor.hand.length<limit){if(!actor.draw.length){if(!actor.discard.length)break;actor.draw=shuffle(actor.discard.splice(0),rand);}actor.hand.push(actor.draw.pop());}}
 function create(opts={}){const options={classId:opts.classId||'axe',styleId:opts.styleId||'strike',encounterId:opts.encounterId||'corridor',team:!!opts.team,seed:opts.seed===undefined?86420:opts.seed,campaignBalance:!!opts.campaignBalance};const rand=rng(options.seed);
 let cd=CLASS[options.classId],style=cd.styles[options.styleId]||Object.values(cd.styles)[0],actors=[];
 const main=makeActor('hero','ally',cd.name,opts.maxHp||cd.hp,cd.fin);main.hp=Math.max(1,Math.min(main.maxHp,opts.heroHp||main.maxHp));main.energy=opts.demoEnergy===undefined?55:opts.demoEnergy;main.relics=(opts.relics||[]).slice();if(opts.deckSpec){addDeck(main,opts.deckSpec,rand);}else addDeck(main,style.deck,rand);drawHand(main,rand);actors.push(main);
 if(options.team){for(const key of Object.keys(CLASS).filter(x=>x!==options.classId)){const c=CLASS[key];let a=makeActor('ai-'+key,'ally',c.name,c.hp,c.fin);const st=Object.values(c.styles)[0];addDeck(a,st.deck,rand);drawHand(a,rand);actors.push(a);}}
-let encounterEnemies=ENCOUNTERS[options.encounterId].enemies;if(options.campaignBalance&&!options.team){const cap={corridor:1,twins:2,siege:2,surround:3,boss:1}[options.encounterId]||2;encounterEnemies=encounterEnemies.slice(0,cap);}
- for(const en of encounterEnemies){const hpMultiplier=options.campaignBalance?(options.team?BALANCE.teamEnemyHp:BALANCE.soloEnemyHp):(options.team?1.7:1);const a=makeActor('enemy-'+en.id,'enemy',en.name,Math.round(en.hp*hpMultiplier),null);a.pattern=en;a.enemyDamageScale=options.campaignBalance?(options.team?BALANCE.teamEnemyDamage:(options.encounterId==='corridor'?1:BALANCE.soloEnemyDamage)):1;actors.push(a);}
-const game={options,round:0,now:0,phase:'planning',actors,log:[],events:[],winner:null,finisherBy:null,score:null,turns:0,stats:{shuffle:0,attacks:0,blocks:0,breaks:0,faints:0,damage:0,heal:0,playerHit:0,finishers:0},nextUid:0,randState:options.seed>>>0};
+let encounterEnemies=ENCOUNTERS[options.encounterId].enemies;
+const tier=ENCOUNTER_SCALING[options.team?'team':'solo'][options.encounterId];
+if(options.campaignBalance&&!options.team)encounterEnemies=encounterEnemies.slice(0,tier.cap||2);
+for(const en of encounterEnemies){
+ const hpMultiplier=options.campaignBalance?tier.hp:(options.team?1.7:1);
+ const a=makeActor('enemy-'+en.id,'enemy',en.name,Math.round(en.hp*hpMultiplier),null);
+ a.pattern=en;a.enemyDamageScale=options.campaignBalance?tier.damage:1;actors.push(a);
+}
+const game={options,round:0,now:0,phase:'planning',actors,log:[],events:[],winner:null,finisherBy:null,score:null,turns:0,stats:{shuffle:0,attacks:0,blocks:0,breaks:0,staggers:0,faints:0,canceledActions:0,damage:0,heal:0,playerHit:0,finishers:0},nextUid:0,randState:options.seed>>>0};
 // Persist deterministic RNG state through an explicit incrementing generator (not Math.random).
 prepareRound(game);return game;
 }
@@ -113,13 +146,13 @@ function scheduleAction(game,actor,card,start,target,source,locked=false,uid=nul
 if(end>game.now+ROUND&&already.some(a=>a.start>start))throw Error('跨回合的必须是最右端动作');
 if(already.some(a=>a.start+cLen(CARD[a.card])>game.now+ROUND&&a.start<start))throw Error('跨界动作后不能再安排新卡');
 const action={id:'a'+(++game.nextUid),card,start,target,source,locked,uid,guardLeft:(c.guard||0)+(c.guard&&actor.side==='ally'&&actor.relics?.includes('guard_plus')?4:0),canceled:false,started:false,done:false};actor.actions.push(action);actor.actions.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));return action;}
-function place(game,uid,startRelative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];if(a.dead||a.stunUntil>game.now+startRelative)throw Error('角色失能');if(!Number.isInteger(startRelative)||startRelative<1||startRelative>10)throw Error('请选择T1～T10');const ix=a.hand.findIndex(c=>c.uid===uid);if(ix<0)throw Error('手牌未找到');const card=a.hand[ix],c=CARD[card.key];const start=game.now+startRelative-1;/* 洗牌只锁已放动作，不锁时间格；新牌能倒填任何空格。洗牌耗时是真实成本。 */if(!c)throw Error('无效卡牌');if(c.type==='finisher')throw Error('绝杀为单独槽位');const friend=!!(c.type==='defense'||c.heal||c.buff);const dest=targetId||(friend?a.id:actorsOf(game,'enemy')[0]?.id);const t=game.actors.find(x=>x.id===dest);if(!t||t.dead||t.side!==(friend?'ally':'enemy'))throw Error(friend?'请拖到我方角色轨道':'请拖到敌方目标轨道');const action=scheduleAction(game,a,card.key,start,dest,'hand',false,card.uid);a.hand.splice(ix,1);return action;}
+function place(game,uid,startRelative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];if(a.dead||a.stunUntil>game.now+startRelative)throw Error('角色失能');if(!Number.isInteger(startRelative)||startRelative<1||startRelative>10)throw Error('请选择T1～T10');const ix=a.hand.findIndex(c=>c.uid===uid);if(ix<0)throw Error('手牌未找到');const card=a.hand[ix],c=CARD[card.key];const start=game.now+startRelative-1;/* 洗牌只锁已放动作，不锁时间格；新牌能倒填任何空格。洗牌耗时是真实成本。 */if(!c)throw Error('无效卡牌');if(c.type==='finisher')throw Error('绝杀为单独槽位');const friend=!!(c.type==='defense'||c.heal||c.buff||c.steady);const dest=targetId||(friend?a.id:actorsOf(game,'enemy')[0]?.id);const t=game.actors.find(x=>x.id===dest);if(!t||t.dead||t.side!==(friend?'ally':'enemy'))throw Error(friend?'请拖到我方角色轨道':'请拖到敌方目标轨道');const action=scheduleAction(game,a,card.key,start,dest,'hand',false,card.uid);a.hand.splice(ix,1);return action;}
 function moveAction(game,actionId,startRelative,targetId){
  if(game.phase!=='planning')throw Error('不是规划阶段');
  const hero=game.actors[0],act=hero.actions.find(a=>a.id===actionId);
  if(!act||act.locked||act.start<game.now)throw Error('只有洗牌前已经放好的动作才被锁定；新牌可在旧空位自由移动');
  if(!Number.isInteger(startRelative)||startRelative<1||startRelative>ROUND)throw Error('目标时间必须在1—10格内');
- const card=CARD[act.card],friend=card.type==='defense'||card.heal||card.buff||act.source==='shuffle';
+ const card=CARD[act.card],friend=card.type==='defense'||card.heal||card.buff||card.steady||act.source==='shuffle';
  const dest=targetId||act.target,target=game.actors.find(a=>a.id===dest);
  if(!target||target.dead||target.side!==(friend?'ally':'enemy'))throw Error('目标轨道不符合卡牌类型');
  const start=game.now+startRelative-1,end=start+cLen(card);
@@ -170,20 +203,20 @@ function placeFinisher(game,relative,targetId){
 function enemyTarget(game,source){const ls=actorsOf(game,'ally');if(!ls.length)return null;return ls[(game.round+source.id.length)%ls.length].id;}
 function enemySchedule(game){const base=game.now;for(const e of actorsOf(game,'enemy')){let pat=e.pattern;if(!pat)continue;let entries=(game.round%2?pat.rotation:pat.patterns)||[];for(const [key,relative]of entries){const start=base+relative-1,c=CARD[key];if(start<e.stunUntil||isBusy(e,start,start+cLen(c)))continue;const target=c.type==='defense'?e.id:enemyTarget(game,e);try{scheduleAction(game,e,key,start,target,'enemy',true);}catch{}}
 }}
-function scoreCard(card,enemyNext){const c=CARD[card],len=cLen(c);let score=(c.damage||0)*c.a/Math.max(1,len)*1.4+(c.guard||0)/Math.max(1,len)*0.65+(c.heal||0)*0.7+(c.mark||0)*2.1+(c.breakPower||0)*0.65;return score;}
+function scoreCard(card,enemyNext){const c=CARD[card],len=cLen(c);let score=(c.damage||0)*c.a/Math.max(1,len)*1.4+(c.guard||0)/Math.max(1,len)*0.65+(c.heal||0)*0.7+(c.mark||0)*2.1+(c.breakPower||0)*0.65+(c.poisePower||0)*0.3+(c.steady||0)*0.2;return score;}
 function aiSchedule(game){for(const a of actorsOf(game,'ally').filter(x=>x.id!=='hero')){
   let next=game.now+1,hand=a.hand.slice();const enemyHits=actorsOf(game,'enemy').flatMap(e=>e.actions.filter(act=>CARD[act.card].damage).map(act=>act.start+CARD[act.card].w));
   let order=hand.sort((x,y)=>scoreCard(y.key)-scoreCard(x.key));let scheduled=0;
   for(const inst of order){const c=CARD[inst.key];const possibles=[];for(let t=next;t<game.now+ROUND;t++){
     if(t<a.stunUntil||isBusy(a,t,t+cLen(c)))continue;let val=scoreCard(inst.key);const ticks=Array.from({length:c.a},(_,i)=>t+c.w+i);
     if(c.guard){const covered=ticks.filter(k=>enemyHits.some(h=>Math.abs(k-h)<1)).length;val+=covered*9;if(!covered)val-=8;}
-    if(c.heal)val+=(a.maxHp-a.hp>8?7:-15);
+    if(c.heal)val+=(a.maxHp-a.hp>8?7:-15);if(c.steady)val+=a.poise>a.poiseMax*.5?8:-8;
     if(c.damage&&t>=game.now+9)val-=6;
     possibles.push({t,val});
   }
   possibles.sort((a,b)=>b.val-a.val||a.t-b.t);if(!possibles.length)continue;
   if(c.type==='defense'&&possibles[0].val<3)continue;
-  const start=possibles[0].t;const target=c.type==='defense'||c.heal||c.buff?a.id:actorsOf(game,'enemy')[0]?.id;
+  const start=possibles[0].t;const target=c.type==='defense'||c.heal||c.buff||c.steady?a.id:actorsOf(game,'enemy')[0]?.id;
   if(!target)continue;try{scheduleAction(game,a,inst.key,start,target,'ai',true,inst.uid);a.hand=a.hand.filter(z=>z.uid!==inst.uid);scheduled++;next=start+cLen(c);if(next>=game.now+ROUND||scheduled>=4)break;}catch{}
   }
 }}
@@ -196,16 +229,52 @@ function findDefense(game,actor,t,attackSpeed=0){
 }
 function actorHitBuff(actor,c,t){let n=(c.damage||0)+(actor.buffHits>0?actor.buff:0);if(actor.weak>0)n=Math.max(1,n-3);if(actor.side==='enemy'&&actor.enemyDamageScale)n=Math.max(1,Math.round(n*actor.enemyDamageScale));return n;}
 function log(game,t,message,kind='info'){const item={t:t+1,text:message,kind};game.events.push(item);if(game.log.length<600)game.log.push(item);}
-function interrupt(game,target,t,cause,faint=false){const duration=faint?FAINT_TICKS:BREAK_TICKS;target.stunUntil=Math.max(target.stunUntil,t+duration);target.breaks++;game.stats.breaks++;if(faint)game.stats.faints++;for(const ac of target.actions){if(!ac.canceled&&(ac.start+cLen(CARD[ac.card])>t)){ac.canceled=true;ac.canceledAt=t;}}
-log(game,t,target.name+(faint?' 晕倒':' 破防')+'！后续动作中断，失能'+duration+'格','break');}
+// Fixed-slot control: only the current action and future actions that overlap
+// the recovery window are canceled. No action is shifted. A later non-overlap
+// action remains at its original tick, even if a previous action was canceled.
+function interrupt(game,target,t,cause,faint=false){
+ const duration=faint?FAINT_TICKS:cause==='stagger'?STAGGER_TICKS:BREAK_TICKS;
+ const end=t+duration;
+ // The original recovery may already be in progress; extending it only cancels
+ // newly overlapping actions; it never drags other actions forward.
+ target.stunUntil=Math.max(target.stunUntil,end);
+ target.poise=0;target.poiseImmuneUntil=Math.max(target.poiseImmuneUntil,target.stunUntil+POISE_GRACE);
+ target.breaks++;game.stats.breaks++;
+ if(faint)game.stats.faints++;
+ if(cause==='stagger'){game.stats.staggers++;target.staggerCount++;}
+ let canceled=0;
+ for(const ac of target.actions){
+  if(ac.canceled)continue;
+  const acEnd=ac.start+cLen(CARD[ac.card]);
+  if(ac.start<target.stunUntil&&acEnd>t){
+   ac.canceled=true;ac.canceledAt=t;ac.cancelReason=cause;canceled++;
+   if(game.previewCanceled)game.previewCanceled.push({actorId:target.id,actionId:ac.id,tick:t,start:ac.start,reason:cause});
+  }
+ }
+ game.stats.canceledActions+=canceled;
+ const state=faint?'晕倒':cause==='stagger'?'失稳':'破防';
+ log(game,t,target.name+' '+state+'！恢复'+duration+'格，只取消重叠的'+canceled+'项动作','break');
+}
+function applyPoise(game,target,t,damage,blocked,pressure){
+ if(target.dead)return;
+ // Every connecting hit freezes passive decay. A full guard absorbs most of
+ // the impact; a dodge never reaches this function.
+ target.lastPoiseHit=t;
+ if(t<target.stunUntil||t<target.poiseImmuneUntil)return;
+ const impact=Math.ceil(damage*.48)+Math.ceil(blocked*.14)+pressure;
+ if(impact<=0)return;
+ target.poise=Math.min(target.poiseMax,target.poise+impact);
+ if(target.poise>=target.poiseMax)interrupt(game,target,t,'stagger');
+}
 function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
  const game=preview?clone(input):input;
- if(collectTrace)game.trace=[];
+ if(collectTrace){game.trace=[];game.previewCanceled=[];}
  game.events=[];const aEnd=game.now+ROUND;
  const endTick=stopAt===null?aEnd-1:Math.min(stopAt,aEnd-1);
  // A projection of the state just before this round starts is valid.
  for(let tick=game.now;tick<=endTick;tick++){
   const active=[];
+  const contacted=new Set();
   for(const actor of game.actors){
    if(actor.dead||tick<actor.stunUntil)continue;
    for(const action of actor.actions){
@@ -235,6 +304,9 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
     const dest=game.actors.find(x=>x.id===action.target);
     if(first&&card.heal&&dest&&!dest.dead){const delta=Math.min(card.heal,dest.maxHp-dest.hp);dest.hp+=delta;game.stats.heal+=delta;if(delta){actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,actor.name+' 为 '+dest.name+' 回复 '+delta+'生命','heal');}}
     if(first&&card.buff&&dest&&!dest.dead){dest.buff=card.buff;dest.buffHits=2;log(game,tick,actor.name+' 强化 '+dest.name,'skill');}
+    if(first&&card.steady&&dest&&!dest.dead){const previous=dest.poise;dest.poise=Math.max(0,dest.poise-card.steady);
+      actor.energy=Math.min(100,actor.energy+(card.charge||0));
+      log(game,tick,actor.name+' 为 '+dest.name+' 稳固硬直 '+(previous-dest.poise),'skill');}
     if(first&&card.mark&&dest&&!dest.dead){dest.marked+=card.mark;actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,dest.name+' 获得标记 '+card.mark,'skill');}
     if(first&&card.weak&&dest&&!dest.dead){dest.weak+=card.weak;actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,dest.name+' 被弱化','skill');}
    }
@@ -265,7 +337,7 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
      defense.guardLeft=Math.max(0,guardAvailable-guardable-pressure);
      broken=guardAvailable>0&&guardable+pressure>=guardAvailable;
     }
-    outcomes.push({dest,hpBefore:dest.hp,damage,blocked,list,broken,defense});
+    outcomes.push({dest,hpBefore:dest.hp,damage,blocked,list,broken,defense,pressure:list.reduce((sum,h)=>sum+(h.card.poisePower||0)+(h.dest.marked>0?2:0)+(h.actor.relics?.includes('poise_strike')?2:0),0)});
    }
    // Equal-speed damage is committed as one batch before breaks cancel future actions.
    for(const {dest,damage,blocked,list} of outcomes){
@@ -279,16 +351,19 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
      hit.actor.damageDealt+=Math.round(damage*hit.raw/Math.max(1,shareSum));
      if(hit.actor.side==='ally'&&(damage>0||blocked>0))hit.actor.energy=Math.min(100,hit.actor.energy+(hit.card.charge||0));
     }
-    if(blocked&&dest.side==='ally')dest.energy=Math.min(100,dest.energy+Math.min(12,5+Math.ceil(blocked/3)));
+    if(blocked&&dest.side==='ally'){dest.energy=Math.min(100,dest.energy+Math.min(12,5+Math.ceil(blocked/3)));if(dest.relics?.includes('calm_bell'))dest.poise=Math.max(0,dest.poise-3);}
     if(damage)log(game,tick,list.map(h=>h.actor.name).join('、')+' → '+dest.name+'：'+damage+'伤害'+(blocked?'（抵消'+blocked+'）':''),'damage');
     else if(blocked)log(game,tick,dest.name+' 格挡 '+blocked,'block');
     if(dest.hp<=0){dest.dead=true;log(game,tick,dest.name+' 被击败','death');}
    }
    for(const result of outcomes){
+    if((result.damage>0||result.blocked>0)&&!result.defense?.dodge)contacted.add(result.dest.id);
     if(result.broken&&!result.dest.dead)interrupt(game,result.dest,tick,'guard',false);
+    if(!result.broken&&(!result.defense||!CARD[result.defense.card].dodge))
+      applyPoise(game,result.dest,tick,result.damage,result.blocked,result.pressure);
     if(result.blocked>0&&result.defense&&CARD[result.defense.card].counter){
      const attacker=result.list.find(h=>!h.actor.dead)?.actor,counter=CARD[result.defense.card].counter;
-     if(attacker){attacker.hp=Math.max(0,attacker.hp-counter);attacker.damageTaken+=counter;result.dest.damageDealt+=counter;
+     if(attacker){attacker.hp=Math.max(0,attacker.hp-counter);attacker.damageTaken+=counter;result.dest.damageDealt+=counter;applyPoise(game,attacker,tick,counter,0,2);
        if(!attacker.hp){attacker.dead=true;log(game,tick,attacker.name+' 被反击击败','death');}
        else log(game,tick,result.dest.name+' 反击 '+attacker.name+' '+counter,'damage');}
     }
@@ -304,7 +379,11 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
    }
    for(const actor of game.actors)if(actor.dead)for(const action of actor.actions)if(action.start+cLen(CARD[action.card])>tick)action.canceled=true;
   }
-  if(collectTrace){game.trace.push({tick:tick+1,actors:game.actors.map(a=>({id:a.id,hp:a.hp,energy:a.energy,marked:a.marked,dead:a.dead,stunUntil:a.stunUntil})),events:game.events.filter(e=>e.t===tick+1).map(e=>({...e}))});}
+  // Decay at the end of each quiet tick, including during recovery.
+  for(const actor of game.actors){if(actor.dead)continue;
+    if(!contacted.has(actor.id))actor.poise=Math.max(0,actor.poise-POISE_DECAY);
+  }
+  if(collectTrace){game.trace.push({tick:tick+1,actors:game.actors.map(a=>({id:a.id,hp:a.hp,energy:a.energy,marked:a.marked,dead:a.dead,stunUntil:a.stunUntil,poise:a.poise,poiseMax:a.poiseMax,poiseImmuneUntil:a.poiseImmuneUntil})),events:game.events.filter(e=>e.t===tick+1).map(e=>({...e}))});}
   if(!actorsOf(game,'enemy').length||!actorsOf(game,'ally').length)break;
  }
  if(stopAt!==null)return game;
@@ -342,7 +421,7 @@ for(const inst of cards){const card=CARD[inst.key];for(let relative=1;relative<=
  }}
  if(!best)break;
  if(best.score<0)break;
- try{place(game,best.inst.uid,best.relative,enemies[0].id);}catch{break;}
+ try{const nextCard=CARD[best.inst.key];const friend=nextCard.type==='defense'||nextCard.heal||nextCard.buff||nextCard.steady;place(game,best.inst.uid,best.relative,friend?hero.id:enemies[0].id);}catch{break;}
  // Avoid overcommitting weak hands; allow artificial idle gaps.
  if(hero.actions.filter(a=>a.start>=game.now).length>=6)break;
 }
@@ -350,5 +429,5 @@ if(hero.energy>=100&&enemies.some(e=>e.hp<=35)){const e=enemies.find(e=>e.hp<=35
 return game;}
 function earliestShuffle(game){const a=game.actors[0];const last=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND).reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));return last-game.now+1;}
 function runAuto(opts,policy='tactical',maxRounds=14){const game=create(opts);while(game.phase==='planning'&&game.round<maxRounds){autoPlan(game,policy);simulateRound(game);}if(game.phase==='planning')game.phase='timeout';return game;}
-return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,cLen,phase,predictHit:actorHitBuff,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,clone};
+return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,ENCOUNTER_SCALING,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,STAGGER_TICKS,POISE_DECAY,POISE_GRACE,cLen,phase,predictHit:actorHitBuff,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,clone};
 });

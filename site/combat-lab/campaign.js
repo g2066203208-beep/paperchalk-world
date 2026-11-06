@@ -4,21 +4,23 @@ const REWARDS={C:{common:92,uncommon:8,rare:0},B:{common:76,uncommon:24,rare:0},
 const RANK_GOLD={C:0,B:2,A:5,S:8,SS:12};
 const STAGES=['corridor','twins','siege','surround','boss'];
 const RARITY={
- cut:'common',slash:'common',stance:'common',feint:'common',sidestep:'common',heavy:'uncommon',cleave:'uncommon',whirl:'uncommon',brace:'uncommon',sweep:'rare',
- shot:'common',bulletguard:'common',cover:'common',focus:'uncommon',burst:'uncommon',suppress:'uncommon',aim:'rare',buckshot:'rare',
- jab:'common',bash:'common',guardwall:'common',rally:'common',counter:'uncommon',smash:'uncommon',shockwave:'rare',
- pulse:'common',ward:'common',remedy:'common',seal:'uncommon',rupture:'uncommon',echo:'uncommon',trance:'rare',nova:'rare'
+ reversal:'uncommon',cut:'common',slash:'common',stance:'common',feint:'common',sidestep:'common',heavy:'uncommon',cleave:'uncommon',whirl:'uncommon',brace:'uncommon',sweep:'rare',
+ respite:'uncommon',shot:'common',bulletguard:'common',cover:'common',focus:'uncommon',burst:'uncommon',suppress:'uncommon',aim:'rare',buckshot:'rare',
+ steady:'common',jab:'common',bash:'common',guardwall:'common',rally:'common',counter:'uncommon',smash:'uncommon',shockwave:'rare',
+ pulse:'common',steady:'common',ward:'common',remedy:'common',seal:'uncommon',rupture:'uncommon',echo:'uncommon',trance:'rare',nova:'rare'
 };
 const POOLS={
- axe:['cut','slash','stance','feint','sidestep','heavy','cleave','whirl','brace','sweep'],
- gun:['shot','sidestep','bulletguard','cover','focus','burst','suppress','aim','buckshot'],
- guard:['jab','bash','guardwall','rally','counter','smash','shockwave','sidestep'],
- mage:['pulse','ward','remedy','seal','rupture','echo','trance','nova','sidestep']
+ axe:['cut','slash','stance','feint','sidestep','heavy','cleave','whirl','brace','sweep','reversal'],
+ gun:['shot','sidestep','bulletguard','cover','focus','burst','suppress','aim','buckshot','respite'],
+ guard:['jab','bash','guardwall','rally','counter','smash','shockwave','sidestep','steady'],
+ mage:['pulse','ward','remedy','seal','rupture','echo','trance','nova','sidestep','steady']
 };
 const RELICS={
  guard_plus:{name:'守夜徽章',text:'所有防御牌的共享格挡值 +4',cost:17},
  attack_plus:{name:'锈红吊坠',text:'每次攻击生效格伤害 +2',cost:19},
  break_plus:{name:'碎甲刻印',text:'每次命中增加2破防压力（仅有防御时）',cost:16},
+ calm_bell:{name:'回响怀表',text:'角色每次主动格挡后额外降低3点硬直积累',cost:17},
+ poise_strike:{name:'裂隙骨针',text:'攻击命中时额外造成2点硬直压力（仍受抗失稳保护）',cost:19},
  extra_hand:{name:'整理背包',text:'每次换手和新回合的手牌上限 +1',cost:18},
  round_regen:{name:'暖茶瓶',text:'每回合开始回复2生命',cost:18},
  meter_regen:{name:'旧电池',text:'每回合开始绝杀能量 +5',cost:18}
