@@ -95,18 +95,24 @@
  const SHOT_NAMES=Object.freeze(['左侧','右侧']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:1.60,eyeZ:11.55,eyeY:1.45,
-    focusX:.20,focusY:.60,focusZ:8.70,fov:56}),
-   Object.freeze({id:'right',eyeX:-1.60,eyeZ:11.55,eyeY:1.45,
-    focusX:-.20,focusY:.60,focusZ:8.70,fov:56})
+   Object.freeze({id:'left',eyeX:1.60,eyeZ:11.55,eyeY:1.20,
+    focusX:.20,focusY:.95,focusZ:8.70,fov:56}),
+   Object.freeze({id:'right',eyeX:-1.60,eyeZ:11.55,eyeY:1.20,
+    focusX:-.20,focusY:.95,focusZ:8.70,fov:56})
   ]),
   inner:Object.freeze([
-   Object.freeze({id:'left',eyeX:-1.60,eyeZ:7.15,eyeY:1.43,
-    focusX:.80,focusY:.45,focusZ:12.40,fov:52}),
-   Object.freeze({id:'right',eyeX:1.60,eyeZ:7.15,eyeY:1.43,
-    focusX:-.80,focusY:.45,focusZ:12.40,fov:52})
+   Object.freeze({id:'left',eyeX:-1.60,eyeZ:7.15,eyeY:1.15,
+    focusX:.80,focusY:.85,focusZ:12.40,fov:52}),
+   Object.freeze({id:'right',eyeX:1.60,eyeZ:7.15,eyeY:1.15,
+    focusX:-.80,focusY:.85,focusZ:12.40,fov:52})
   ])
  });
+ // Cinematic shoulder-height framing (in metres, immutable actors):
+ // OUTER: eye y 1.20 -> focus y 0.95 (downward ~4.5 degrees).
+ // INNER: eye y 1.15 -> focus y 0.85 (downward ~3.0 degrees).
+ // A low, almost level viewpoint shows actors' faces/fronts, not the arena floor.
+ const cameraPitchDeg=c=>Math.atan2(c.eye.y-c.focus.y,
+  Math.hypot(c.focus.x-c.eye.x,c.focus.z-c.eye.z))*180/Math.PI;
  const stopIndex=n=>clamp(Math.round(Number(n)||0),0,1);
  function camera(mode='outer',index=0){
   const i=stopIndex(index),p=(CAMERA_STOPS[mode]||CAMERA_STOPS.outer)[i];
@@ -590,6 +596,7 @@
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],
    cameraTarget:camera(mode,shotIndex),
+   cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,shotIndex).eye.x,
      lens.eye.z-camera(mode,shotIndex).eye.z)<.001,actors:layout(mode),
    visibleActorIds:visibleActors(mode).map(a=>a.id),
@@ -614,7 +621,7 @@
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
-  SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,portraitBounds,
+  SHOT_NAMES,CAMERA_STOPS,cameraPitchDeg,backdropPoint,camera,blendCamera,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,responsiveFov,lookAt,
   perspective,multiply,project,create});
 });
