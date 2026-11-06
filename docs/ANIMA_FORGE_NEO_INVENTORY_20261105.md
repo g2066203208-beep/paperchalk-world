@@ -128,3 +128,54 @@ masterpiece, best quality, score_7, safe, 1girl, solo, full body, standing, fron
 - [sd-forge-anima-ref-adapter](https://github.com/ElectronGirl/sd-forge-anima-ref-adapter)（ElectronGirl）是独立的 **Anima Reference Adapter 面板 + v2_r64**；作者 README 称其本身只支持 v2，其 img2img / hires fix 未测试。恢复原始 pilot 的实验中**该 v2 面板保持不勾选**；无需卸载任何插件。
 
 用户强制最终目标：**2048×2048 工作画布/扩散重绘、最终 2048×2048 RGBA PNG**，不得以1024扩散作为强制中间输出。1024原始人像可按比例先用可靠插值2x形成2048输入底稿，插值不是“已新增细节”。该底稿仍是白底RGB，真实 alpha 需 Photopea 后处理；参考图1024通常可先用，改2048是否增益以同seed实验确定，不能凭尺寸声称参考变得更清晰。当前完整 SOP：[CHAR_001_2048_REPAINT_SOP_20261105.md](CHAR_001_2048_REPAINT_SOP_20261105.md)。
+
+## 2026-11-06｜用户再次截图核对与双 Checkpoint 确认（当前最新快照）
+
+> 用户明确指出：**本机同时有 Anima Base 和 Anima Turbo**。本节覆盖本文开头此前“只可从截图确认 Turbo”的不完整认识；不得再误称 Base 未安装，也不得让用户重复提供已经保存在本文件的插件/LoRA 截图。确认安装不等于此刻在 UI 里已加载。来自本次对话的 9 张 SD UI 截图；本仓库文本是手工记录，不是本机目录扫描或自动同步。
+
+### 当前模型状态
+
+| 项目 | 核实方式 | 记录 |
+|---|---|---|
+| **Anima Base** | **2026-11-06 用户明确确认已安装** | Base checkpoint 具体 `.safetensors` 文件名 / hash **截图未显示，待通过 Checkpoint 下拉和本地模型文件核对**；不得凭空编造具体文件名 |
+| **Anima Turbo** | 2026-11-06 截图当前选中 | `anima_turboV11.safetensors`（当前选择的 checkpoint；不是 Base） |
+| 当前 VAE | 截图 | `qwen_image_vae_2004692.safetensors` |
+| 当前文本编码器 | 截图 | `anima_baseV10_txt.safetensors`（仅以本次截图字样为准；本文历史记录 `anima_base/v10_txt.safetensors` 是否同一个文件待核） |
+| UI / 框架 | 截图 | Forge Neo，Anima UI Preset；img2img；Python 3.13.18、torch 2.14.0+cu130、Gradio 4.40.0（界面底栏显示） |
+| 重绘设置（问题配置，**非推荐方案**） | 截图 | ER SDE / Beta / 32 steps / CFG 4 / Shift 3 / denoise 0.6 / Crop and Resize / 随机 Seed；Turbo 高保真重绘不应直接照抄 |
+| 分辨率框 | 截图 | Width=2048，Height 输入框底部露出 `64`；这是**局部截屏，不能确定完整高度**，需检查确实是2048×2048，不能据此断言“高度=64” |
+| 透明通道 | 截图 | 主图预览棋盘格只表示编辑器背景；必须检查导出的 PNG Alpha，不能假定实际已透明 |
+
+### 已安装插件：本次截图再次确认
+
+- **内置 / 集成（22 项）**：`extra-options-section`、`forge_legacy_preprocessors`、`forge_preprocessor_inpaint`、`forge_preprocessor_reference`、`forge_preprocessor_tile`、`mobile`、`prompt-bracket-checker`、`sd_forge_compile`、`sd_forge_controlllite`、`sd_forge_controlnet`、`sd_forge_image_stitch`、`sd_forge_ipadapter`、`sd_forge_json_builder`、`sd_forge_lora`、`sd_forge_lora_schedule`、`sd_forge_multidiffusion`、`sd_forge_neveroom`、`sd_forge_pid`、`sd_forge_radial`、`sd_forge_sparse`、`sd_forge_spectrum`、`soft-inpainting`。
+- **外部扩展（14 项）**：`ADetailer-Neo`、`anima-reference-forge-neo`、`composer_forge_neo`、`forge-neo-lama-cleaner`、`img2img-hires-fix`、`sd-forge-anima-ref-adapter`、`sd-forge-couple`、`sd-webui-3d-open-pose-editor`、`sd-webui-photopea-embed-ReForge-Neo`、`sd-webui-regional-prompter`、`sd-webui-state-manager-neo`、`sd-webui-tagcomplete-neo`、`sd-webui-zh-tag-autocomplete`、`stable-diffusion-webui-wd14-tagger`。
+- 扩展列表的勾选代表 WebUI **已启用/加载资格**，不是每个插件在 img2img 生成时都被勾选执行。具体技术用途详见 §2。
+
+### LoRA / 参考权重（15 张可见卡片）
+
+1. `AnimeEditV2`
+2. `Smooth_Booster_Anima`
+3. `Anima Bold v1`
+4. `anima_base_slider_step800`
+5. `Character Sheet for Anima`
+6. `Dark (Anima) v1`
+7. `Rotation_SliderLeft_RightV2`
+8. `screenshot_v5-000009`
+9. `akipekoanima_v1_1-step00003000`
+10. `anima-aesthetic-improvement-v1.2`
+11. `anima-highres-aesthetic-boost`
+12. `saturation_v6`
+13. `anima-role-ref-kv-v1.0`
+14. `anima_ref_adapter_pilot_r32`
+15. `anima_ref_adapter_v2_r64`
+
+这些是**LoRA 面板卡片显示名**，不等于所有项目都是普通风格 LoRA；其中有参考适配器权重和其他专用权重，具体触发和兼容性见本文 §3–4。历史原 Prompt 使用的 `<lora:akipekoanima_v1_1:1>` 别名与截图里的 `akipekoanima_v1_1-step00003000` 是否同文件仍要核验。
+
+### 开工约束（后续对话默认遵循）
+
+1. 回答“我有哪些模型、插件、LoRA”之前先读 **README → 本清单 → 女主 SOP**，不要要求用户重复提供已经登记的截图。
+2. **Base 与 Turbo 必须分开配方**：Base 先从 30–50 steps / CFG 4–5 测，Turbo 先从 8–12 steps / CFG 1 测；不要拿截图中 Turbo 的 32 steps / CFG4 / denoise0.6 当精修基线。
+3. 女主母版必须对照已批准角色参考，**2048×2048 工作与输出、保真眼型/嘴型/手脚、透明 RGBA**；不擅自覆盖原图或 L2D。
+4. 原女主 Prompt / 风格权重与 pilot 参考路径，以 §7 追记和 [CHAR-001 SOP](CHAR_001_2048_REPAINT_SOP_20261105.md) 为准；不再推断“只有 akipeko 0.8”。
+5. 若用户再提供新的本机截图，应在本文件增量记录日期、真实文件名、启用状态，并同步角色 SOP；未能核验的内容写“待核”，禁止当作事实。
