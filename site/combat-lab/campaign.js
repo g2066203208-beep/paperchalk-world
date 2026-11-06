@@ -1,5 +1,5 @@
 /* Paperchalk Timegrid Roguelike v0.5: deterministic run progression + rewards + shop. */
-(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./engine.js'):root.Timegrid);if(typeof module==='object'&&module.exports)module.exports=api;root.TimegridRun=api;})(typeof globalThis!=='undefined'?globalThis:this,function(G){'use strict';
+(function(root,factory){const isNode=typeof module==='object'&&module.exports;const G=isNode?require('./engine.js'):root.Timegrid;const expansion=isNode?require('./cards-expansion.js'):root.PaperchalkCards;if(!expansion)throw Error('卡池扩展脚本未加载');expansion.install(G);const api=factory(G,expansion);if(isNode)module.exports=api;root.TimegridRun=api;})(typeof globalThis!=='undefined'?globalThis:this,function(G,EXP){'use strict';
 const REWARDS={C:{common:92,uncommon:8,rare:0},B:{common:76,uncommon:24,rare:0},A:{common:52,uncommon:43,rare:5},S:{common:32,uncommon:53,rare:15},SS:{common:18,uncommon:49,rare:33}};
 const RANK_GOLD={C:0,B:2,A:5,S:8,SS:12};
 const STAGES=['corridor','twins','siege','surround','boss'];
@@ -15,6 +15,9 @@ const POOLS={
  guard:['jab','bash','guardwall','rally','counter','smash','shockwave','sidestep','steady'],
  mage:['pulse','ward','remedy','seal','rupture','echo','trance','nova','sidestep','steady']
 };
+// Card atlas is the single canonical source for the complete per-class reward pool.
+for(const [k,v] of Object.entries(EXP.rarity))RARITY[k]=v;
+for(const [k,ids] of Object.entries(EXP.pools))POOLS[k]=ids.slice();
 const RELICS={
  guard_plus:{name:'守夜徽章',text:'所有防御牌的共享格挡值 +4',cost:17},
  attack_plus:{name:'锈红吊坠',text:'每次攻击生效格伤害 +2',cost:19},
@@ -59,7 +62,7 @@ function generateShop(run){const used=new Set(),cardPool=POOLS[run.classId],avai
  offers.push({kind:'remove',key:'remove',name:'清理废牌',description:'从牌组永久移除1张牌',cost:10,sold:false});
  run.shop=offers;return offers;
 }
-function upgradeKey(key){if(key.endsWith('+'))return key;const original=G.CARD[key];if(!original||original.type==='finisher'||original.type==='system')throw Error('这张牌不能升级');const newKey=key+'+';if(!G.CARD[newKey]){const c={...original,name:original.name+' ＋',desc:original.desc+' · 已强化'};if(c.damage)c.damage+=Math.max(2,Math.ceil(c.damage*.23));if(c.guard)c.guard+=Math.max(3,Math.ceil(c.guard*.24));if(c.heal)c.heal+=3;if(c.mark)c.mark+=1;if(c.breakPower)c.breakPower+=2;if(c.weak)c.weak+=1;if(c.counter)c.counter+=2;G.CARD[newKey]=c;RARITY[newKey]=RARITY[key];}return newKey;}
+function upgradeKey(key){if(key.endsWith('+'))return key;const original=G.CARD[key];if(!original||original.type==='finisher'||original.type==='system')throw Error('这张牌不能升级');const newKey=key+'+';if(!G.CARD[newKey]){const c={...original,name:original.name+' ＋',desc:original.desc+' · 已强化'};if(c.damage)c.damage+=Math.max(2,Math.ceil(c.damage*.23));if(c.guard)c.guard+=Math.max(3,Math.ceil(c.guard*.24));if(c.heal)c.heal+=3;if(c.mark)c.mark+=1;if(c.breakPower)c.breakPower+=2;if(c.weak)c.weak+=1;if(c.counter)c.counter+=2;if(c.bleed)c.bleed+=1;if(c.poisePower)c.poisePower+=2;if(c.meter)c.meter+=2;if(c.steady)c.steady+=3;if(c.bonusMarked)c.bonusMarked+=2;if(c.bonusCombo)c.bonusCombo+=2;if(c.bonusExecute)c.bonusExecute+=3;if(c.bonusBleed)c.bonusBleed+=2;if(c.bonusWindup)c.bonusWindup+=2;if(c.bonusStaggered)c.bonusStaggered+=2;G.CARD[newKey]=c;RARITY[newKey]=RARITY[key];}return newKey;}
 function buy(run,index,target=null){if(run.state!=='shop')throw Error('只有商店阶段能购买');const item=run.shop[index];if(!item||item.sold)throw Error('商品已经卖出');if(run.gold<item.cost)throw Error('金币不足');
  if(item.kind==='relic'&&run.relics.length>=4)throw Error('遗物最多4件');
  if(item.kind==='upgrade'&&(!target||!run.deck[target]||target.endsWith('+')))throw Error('请选择可升级的普通卡');
@@ -77,5 +80,5 @@ function reroll(run){if(run.state!=='shop')throw Error('只有商店阶段可刷
 function next(run){if(run.state!=='shop')throw Error('先完成奖励结算');run.stage++;run.rerolls=0;run.shop=[];run.pending=null;if(run.stage>=STAGES.length){run.state='complete';return null;}return newBattle(run);}
 function rarityOf(key){return RARITY[key.replace(/\+$/,'')]||'common';}
 function cardCount(run){return Object.values(run.deck).reduce((a,b)=>a+b,0);}
-return{STAGES,REWARDS,RANK_GOLD,RARITY,POOLS,RELICS,rarityOf,cardCount,start,newBattle,win,choose,generateShop,buy,reroll,next,upgradeKey,cardReward};
+return{STAGES,REWARDS,RANK_GOLD,RARITY,POOLS,RELICS,ATLAS:EXP,rarityOf,cardCount,start,newBattle,win,choose,generateShop,buy,reroll,next,upgradeKey,cardReward};
 });

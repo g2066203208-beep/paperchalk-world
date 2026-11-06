@@ -55,7 +55,7 @@ $('undoButton').addEventListener('click',()=>{const a=game.actors[0],tail=[...a.
 
 $('autoplanButton').addEventListener('click',()=>{if(!isPlanning())return;try{G.autoPlan(game,'tactical');selectedUid=null;selectedActionId=null;placementMode=null;display();forecast();showToast('自动排程已生成，仍可调整未锁定的卡牌。');}catch(e){showToast(e.message)}});
 $('commitButton').addEventListener('click',execute);
-$('helpButton').addEventListener('click',()=>showHelp());$('deckButton').addEventListener('click',()=>showDeck());$('closeModal').addEventListener('click',closeModal);$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+$('helpButton').addEventListener('click',()=>showHelp());$('deckButton').addEventListener('click',()=>showDeck());$('catalogButton')?.addEventListener('click',()=>showAtlas());$('closeModal').addEventListener('click',closeModal);$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('hand').addEventListener('click',e=>{const b=e.target.closest('[data-uid]');if(!b||!isPlanning())return;selectedUid=b.dataset.uid;selectedActionId=null;placementMode='card';display();showToast('已选卡：点任意角色的上轨时间格，或直接拖到上轨。');});
 $('hand').addEventListener('dragstart',e=>{const b=e.target.closest('[data-uid]');if(!b||!isPlanning())return;selectedUid=b.dataset.uid;selectedActionId=null;placementMode='card';e.dataTransfer.setData('text/plain','card:'+selectedUid);e.dataTransfer.effectAllowed='copy';});
 $('hand').addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('text/plain'))e.preventDefault();});
@@ -331,7 +331,7 @@ function renderHand(){
  $('hand').innerHTML=hero.hand.length?hero.hand.map(it=>{
   const c=G.CARD[it.key],len=G.cLen(c),effect=c.damage?`${c.damage}${c.a>1?' ×'+c.a:''}`:c.guard?`${c.guard}`:c.heal?`+${c.heal}`:c.mark?`${c.mark}`:c.buff?`+${c.buff}`:c.steady?`稳−${c.steady}`:'·';
   return `<button type="button" draggable="true" class="hand-card ${c.type} ${selectedUid===it.uid?'selected':''}" data-uid="${textEscape(it.uid)}" style="--ctype:${G.COLORS[c.type]}" title="${textEscape(c.name+' — '+(c.desc||'')+'，前摇'+c.w+' / 生效'+c.a+' / 后摇'+c.r+'，速度'+c.speed)}" aria-pressed="${selectedUid===it.uid}">
-  <div class="card-art"><span class="card-symbol">${uiIcon(iconKind(c),37)}</span><span class="card-impact">${effect}</span></div>
+  <div class="card-art"><span class="hand-rarity ${C.rarityOf(it.key)}">${{common:"普",uncommon:"进",rare:"稀"}[C.rarityOf(it.key)]||"普"}</span><span class="card-symbol">${uiIcon(iconKind(c),37)}</span><span class="card-impact">${effect}</span></div>
   <div class="card-bottom"><strong>${textEscape(c.name)}</strong>${c.poisePower?`<span class="card-pressure">冲击 +${c.poisePower}</span>`:''}<div class="card-metadata"><span>${c.aoe?uiIcon('all',13):uiIcon('clock',13)} ${len}</span><span>${uiIcon('power',12)} ${c.speed}</span></div></div>
   <div class="phase-track" title="前摇 ${c.w} · 生效 ${c.a} · 后摇 ${c.r}">${Array.from({length:len},(_,i)=>`<span class="${i<c.w?'windup':i<c.w+c.a?'active':'recovery'}"></span>`).join('')}</div></button>`;
  }).join(''):`<div class="empty-hand">${uiIcon('system',28)}<span>手牌用尽 · 洗牌补充</span></div>`;
@@ -385,10 +385,36 @@ function showShop(){
  display();
 }
 function showRunComplete(){openModal('冒险完成 · 本轮构筑结果',`<div class="run-summary"><span class="result-letter">★</span><h3>五关挑战完成</h3><p>最终卡组 ${C.cardCount(run)}张，遗物 ${run.relics.length}件，剩余金币 ${run.gold}，生命 ${run.hp}/${run.maxHp}</p><p>${run.completed.map((c,i)=>`第${i+1}关 ${c.rank}·${c.score}分`).join(' ｜ ')}</p><button class="primary" id="newRun">开始新的冒险</button></div>`);$('newRun').addEventListener('click',()=>newGame());}
+function showAtlas(classKey=run?.classId||'axe',rarityFilter='all',trackFilter='all'){
+ if(!C.ATLAS||!C.POOLS[classKey])return;
+ const tiers=['all','common','uncommon','rare'],labels={all:'全部',common:'普通',uncommon:'进阶',rare:'稀有'};
+ const tags={all:'全部流派',starter:'基础'};
+ for(const x of C.ATLAS.tracks[classKey])if(x.archetype)tags[x.archetype]=({fracture:'裂甲',pierce:'穿甲',bleed:'裂伤',combo:'连携',guard:'反击/守护',execute:'收尾',stagger:'硬直',meter:'绝杀蓄能',mark:'标记',steady:'回稳'})[x.archetype]||x.archetype;
+ const rows=C.POOLS[classKey].filter(k=>{
+  const c=G.CARD[k];return(rarityFilter==='all'||C.rarityOf(k)===rarityFilter)&&(trackFilter==='all'||(c.archetype||'starter')===trackFilter);
+ });
+ const classItems=Object.keys(C.POOLS).map(k=>`<option value="${k}" ${k===classKey?'selected':''}>${textEscape(G.CLASS[k].name)} (${C.POOLS[k].length})</option>`).join('');
+ const tierItems=tiers.map(k=>`<option value="${k}" ${k===rarityFilter?'selected':''}>${labels[k]}</option>`).join('');
+ const tagItems=Object.entries(tags).map(([k,label])=>`<option value="${textEscape(k)}" ${k===trackFilter?'selected':''}>${textEscape(label)}</option>`).join('');
+ const counts=tiers.slice(1).map(k=>`<span class="atlas-count ${k}">${labels[k]} ${C.POOLS[classKey].filter(id=>C.rarityOf(id)===k).length}</span>`).join('');
+ const cards=rows.map(k=>{const c=G.CARD[k],r=C.rarityOf(k),len=G.cLen(c),owned=run?.deck?.[k]||0;
+  return `<article class="atlas-card ${r}" title="${textEscape(c.desc||'')}" style="--ctype:${G.COLORS[c.type]||'#9da4b4'}">
+   <div class="atlas-glyph">${uiIcon(iconKind(c),24)}</div>
+   <div class="atlas-copy"><div class="atlas-name"><strong>${textEscape(c.name)}</strong>${owned?`<span class="atlas-owned">持有×${owned}</span>`:''}</div>
+    <div class="atlas-desc">${textEscape(c.desc||c.name)}</div>
+    <div class="atlas-stats"><span>前${c.w} · 效${c.a} · 后${c.r}</span><span>用时${len}格</span><span>速度${c.speed}</span></div>
+   </div><span class="atlas-rarity">${labels[r]}</span></article>`;}).join('');
+ openModal('职业卡池 · 90张/职业',`<div class="atlas-intro">本图鉴展示可在战后奖励与超市获得的卡牌；不包含固定绝杀牌。<div class="atlas-counts">${counts}</div></div>
+ <div class="atlas-filters"><label>职业<select id="atlasClass">${classItems}</select></label><label>稀有度<select id="atlasRarity">${tierItems}</select></label><label>战术主题<select id="atlasTrack">${tagItems}</select></label></div>
+ <div class="atlas-total">${rows.length} / 90 张</div><div class="atlas-grid">${cards}</div>`);
+ $('atlasClass')?.addEventListener('change',e=>showAtlas(e.target.value,'all','all'));
+ $('atlasRarity')?.addEventListener('change',e=>showAtlas(classKey,e.target.value,trackFilter));
+ $('atlasTrack')?.addEventListener('change',e=>showAtlas(classKey,rarityFilter,e.target.value));
+}
 function showDeck(){if(!run)return;const items=deckEntries();openModal('当前肉鸽牌组 · 可跨关强化',`<div class="run-summary"><p>职业 ${textEscape(G.CLASS[run.classId].name)} · ${G.CLASS[run.classId].styles[run.styleId].name} ｜共 ${C.cardCount(run)}张</p><p>金币 ${run.gold} · 生命 ${run.hp}/${run.maxHp} · 绝杀能量 ${run.energy}/100</p><p>遗物：${run.relics.length?run.relics.map(k=>textEscape(C.RELICS[k].name)).join('、'):'无'}</p></div><div class="deck-list">${items.map(({key,n,c})=>`<div><span>${textEscape(c.name)} ×${n}${c.aoe?' · 全体':''}</span><small>${C.rarityOf(key)} · ${G.cLen(c)}格</small></div>`).join('')}</div>`);}
 function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.remove('hidden');}
 function closeModal(){if(run&&(run.state==='reward'||run.state==='shop')){showToast('请先完成战利品选择，或跳过奖励并继续冒险。');return;}$('modal').classList.add('hidden');}
-function showHelp(){openModal('怎么玩 · 时间轴战斗 + 肉鸽成长',`<p>本 Demo 是原创战斗原型。目标是完成5场战斗，保留战后牌组、生命、绝杀能量、金币和遗物。</p><ul><li>每轮10格，选手牌点时间轴任意空位，浅色前摇→主色作用→深色后摇；攻击含全体攻击和逐格多段伤害。</li><li>每一<b>新回合开始自动免费补满手牌</b>（包括抽牌堆自动重洗）；不会消耗时间格。无须整手打空。</li><li><b>主动洗牌</b>：空手消耗1格，非空手消耗2格。所有<b>已放卡不可移动</b>，但<strong>之前留出的空格仍可用新牌补放</strong>，规划内不能让洗牌位与卡牌重叠。</li><li>防御值被打穿会破防；每次有效命中增加硬直，未被命中的格会恢复硬直。满硬直触发失稳2格，破防3格，晕倒6格。只取消与恢复占格重叠的动作，后面的动作不顺延、也不直接清空。恢复结束后的动作照旧执行。只有最右端卡牌可以跨轮。</li><li>同格生效的动作按<b>速度从高到低</b>结算；相同速度的伤害属于同一批次。敌我全部按同一规则运行。</li><li>每名敌人和队友的行等高：上轨为我对该角色施放的动作，下轨显示其自己的行动。攻击拖敌人上轨，治疗/保护/稳固拖友方上轨。手机每屏5格，点1–5或6–10切换；也能左右轻扫切换。</li><li>进入战斗就自动显示预计承伤与目标血量变化，改牌后实时更新；点击时间刻度可查看当格预测。</li><li>预演会实时模拟之前安排的标记、减血和充能；可以先排标记后排绝杀，依预定时刻判定条件。</li><li>所有队友同步逐格结算；绝杀固定槽，积攒100能量并满足条件才能用，收尾提高评分和奖励。</li><li><b>胜利后</b>按评分抽取三张不同候选牌，任选一张或跳过，然后进入“深夜超市”：购买/删牌/升级/遗物/治疗，继续下一关。</li></ul><p>初始4职业×2预设流派，可以通过战利品构筑更多变体；这不是最终的职业平衡结论。NPC联机仅为模拟，尚非真实在线多人。</p>`);}
+function showHelp(){openModal('怎么玩 · 时间轴战斗 + 肉鸽成长',`<p>本 Demo 是原创战斗原型。目标是完成5场战斗，保留战后牌组、生命、绝杀能量、金币和遗物。</p><ul><li>每轮10格，选手牌点时间轴任意空位，浅色前摇→主色作用→深色后摇；攻击含全体攻击和逐格多段伤害。</li><li>每一<b>新回合开始自动免费补满手牌</b>（包括抽牌堆自动重洗）；不会消耗时间格。无须整手打空。</li><li><b>主动洗牌</b>：空手消耗1格，非空手消耗2格。所有<b>已放卡不可移动</b>，但<strong>之前留出的空格仍可用新牌补放</strong>，规划内不能让洗牌位与卡牌重叠。</li><li>防御值被打穿会破防；每次有效命中增加硬直，未被命中的格会恢复硬直。满硬直触发失稳2格，破防3格，晕倒6格。只取消与恢复占格重叠的动作，后面的动作不顺延、也不直接清空。恢复结束后的动作照旧执行。只有最右端卡牌可以跨轮。</li><li>同格生效的动作按<b>速度从高到低</b>结算；相同速度的伤害属于同一批次。敌我全部按同一规则运行。</li><li>每名敌人和队友的行等高：上轨为我对该角色施放的动作，下轨显示其自己的行动。攻击拖敌人上轨，治疗/保护/稳固拖友方上轨。手机每屏5格，点1–5或6–10切换；也能左右轻扫切换。</li><li>进入战斗就自动显示预计承伤与目标血量变化，改牌后实时更新；点击时间刻度可查看当格预测。</li><li>预演会实时模拟之前安排的标记、减血和充能；可以先排标记后排绝杀，依预定时刻判定条件。</li><li>所有队友同步逐格结算；绝杀固定槽，积攒100能量并满足条件才能用，收尾提高评分和奖励。</li><li><b>胜利后</b>按评分抽取三张不同候选牌，任选一张或跳过，然后进入“深夜超市”：购买/删牌/升级/遗物/治疗，继续下一关。</li></ul><p>初始4职业×5预设流派；每职业90张卡可在战利品/超市获得，可以通过战利品构筑更多变体；这不是最终的职业平衡结论。NPC联机仅为模拟，尚非真实在线多人。</p>`);}
 initializeControls();newGame({seed:123456});
 window.__TIMEGRID_DEBUG__={getGame:()=>game,getRun:()=>run,getPlacementVerdict:placementVerdict,getCardForPlacement:selectedPlanCard,getCasterSlot:casterSlotAt,render:display,auto:()=>{$('autoplanButton').click();},execute:()=>{$('commitButton').click();},newGame,showRewards,showShop,showDeck};
 })();

@@ -455,3 +455,26 @@ h1{font-size:17px}.eyebrow,.offline{display:none}.top-actions button{font-size:1
  .timeline-wrap{max-height:calc(100dvh - 280px)!important}
 }
 @media(max-width:370px){.dual-header{grid-template-columns:98px repeat(5,minmax(0,1fr)) 10px!important}.dual-row,.dual-row.enemyrow,.dual-row.allyrow,.dual-row.own-row{grid-template-columns:98px minmax(0,1fr) 10px!important}.dual-person{padding:3px!important}.person-name{max-width:65px!important}}
+
+/* V1.6 collectible atlas: compact, readable, responsive. No overlay over combat grid. */
+.modal-card:has(.atlas-grid){max-width:min(980px,96vw);height:min(88dvh,900px);display:flex;flex-direction:column;overflow:hidden}
+.modal-card:has(.atlas-grid) #modalBody{min-height:0;display:flex;flex-direction:column;overflow:hidden;flex:1}
+.atlas-intro{font-size:12px;color:#b2c6d6;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 0}
+.atlas-counts{display:flex;gap:7px;align-items:center}.atlas-count{font-size:11px;font-weight:800;border-radius:6px;padding:3px 7px;background:#2a3b4b}
+.atlas-count.uncommon{color:#8bbce5}.atlas-count.rare{color:#f5cf82}
+.atlas-filters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin:6px 0 8px}
+.atlas-filters label{font-size:11px;color:#abbccc;display:flex;flex-direction:column;gap:4px}
+.atlas-filters select{background:#203445;color:#eaf6ff;border:1px solid #416178;padding:9px 7px;border-radius:8px;width:100%;min-width:0}
+.atlas-total{color:#9fc6cb;font-size:12px;margin-bottom:7px;font-weight:750}
+.atlas-grid{overflow:auto;overscroll-behavior:contain;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:9px;padding:2px 5px 12px 1px}
+.atlas-card{display:grid;grid-template-columns:43px minmax(0,1fr) auto;gap:9px;border:1px solid #354c5d;border-left:4px solid var(--ctype);border-radius:10px;padding:11px 9px;background:#1d2b3c;min-width:0;align-items:center}
+.atlas-card.uncommon{border-top:1px solid #4b7399}.atlas-card.rare{border-top:1px solid #af864a;background:#282b38}
+.atlas-glyph{background:color-mix(in srgb,var(--ctype) 22%,#152433);width:42px;height:45px;border-radius:8px;display:grid;place-items:center;color:var(--ctype)}
+.atlas-copy{min-width:0}.atlas-name{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:13px;color:#f3f7ff}.atlas-owned{font-size:10px;color:#a5dfcb;background:#2a534b;border-radius:4px;padding:2px 4px}
+.atlas-desc{color:#bfd0dc;font-size:11px;line-height:1.55;overflow-wrap:anywhere;margin:5px 0}.atlas-stats{display:flex;gap:9px;flex-wrap:wrap;color:#829bab;font-size:10px}
+.atlas-rarity{font-size:10px;color:#a8bdcd;font-weight:800;align-self:start}.atlas-card.uncommon .atlas-rarity{color:#8dbfee}.atlas-card.rare .atlas-rarity{color:#efc77e}
+.hand-rarity{position:absolute;top:3px;right:4px;border-radius:5px;background:#283e4b;color:#d5e9f4;font-size:9px;padding:2px 4px;font-weight:850;z-index:1}.card-art{position:relative}.hand-rarity.uncommon{background:#234665;color:#b5ddfb}.hand-rarity.rare{background:#6d4e2c;color:#ffe0a0}
+@media(max-width:700px){.modal-card:has(.atlas-grid){width:100%;max-width:100%;height:min(92dvh,960px);padding:12px}.atlas-grid{grid-template-columns:1fr;gap:7px}.atlas-card{padding:9px 6px}.atlas-filters{gap:4px}.atlas-filters select{font-size:12px;padding:8px 3px}.atlas-counts{gap:4px}.atlas-intro{font-size:11px}}
+/* Modal must cover the docked hand and confirm controls on phones. */
+.overlay{z-index:120!important}
+.toast{z-index:150!important}

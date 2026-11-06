@@ -1,0 +1,171 @@
+{
+  "version": "1.6",
+  "runs": 160,
+  "clears": 8,
+  "clearPct": 5,
+  "completedStages": 391,
+  "rewardCards": 391,
+  "shopCards": 164,
+  "group": [
+    {
+      "classId": "axe",
+      "styleId": "strike",
+      "fullClear": 0,
+      "completedStages": 13,
+      "rewardCards": 13,
+      "shopCards": 8
+    },
+    {
+      "classId": "axe",
+      "styleId": "tempo",
+      "fullClear": 0,
+      "completedStages": 18,
+      "rewardCards": 18,
+      "shopCards": 8
+    },
+    {
+      "classId": "axe",
+      "styleId": "atlas_bleed",
+      "fullClear": 0,
+      "completedStages": 18,
+      "rewardCards": 18,
+      "shopCards": 8
+    },
+    {
+      "classId": "axe",
+      "styleId": "atlas_stagger",
+      "fullClear": 0,
+      "completedStages": 18,
+      "rewardCards": 18,
+      "shopCards": 8
+    },
+    {
+      "classId": "axe",
+      "styleId": "atlas_guard",
+      "fullClear": 0,
+      "completedStages": 17,
+      "rewardCards": 17,
+      "shopCards": 8
+    },
+    {
+      "classId": "gun",
+      "styleId": "tempo",
+      "fullClear": 1,
+      "completedStages": 22,
+      "rewardCards": 22,
+      "shopCards": 10
+    },
+    {
+      "classId": "gun",
+      "styleId": "precision",
+      "fullClear": 1,
+      "completedStages": 27,
+      "rewardCards": 27,
+      "shopCards": 10
+    },
+    {
+      "classId": "gun",
+      "styleId": "atlas_mark",
+      "fullClear": 0,
+      "completedStages": 20,
+      "rewardCards": 20,
+      "shopCards": 8
+    },
+    {
+      "classId": "gun",
+      "styleId": "atlas_stagger",
+      "fullClear": 1,
+      "completedStages": 28,
+      "rewardCards": 28,
+      "shopCards": 8
+    },
+    {
+      "classId": "gun",
+      "styleId": "atlas_guard",
+      "fullClear": 0,
+      "completedStages": 19,
+      "rewardCards": 19,
+      "shopCards": 8
+    },
+    {
+      "classId": "guard",
+      "styleId": "fortress",
+      "fullClear": 0,
+      "completedStages": 16,
+      "rewardCards": 16,
+      "shopCards": 8
+    },
+    {
+      "classId": "guard",
+      "styleId": "crush",
+      "fullClear": 0,
+      "completedStages": 15,
+      "rewardCards": 15,
+      "shopCards": 8
+    },
+    {
+      "classId": "guard",
+      "styleId": "atlas_steady",
+      "fullClear": 2,
+      "completedStages": 27,
+      "rewardCards": 27,
+      "shopCards": 8
+    },
+    {
+      "classId": "guard",
+      "styleId": "atlas_combo",
+      "fullClear": 0,
+      "completedStages": 22,
+      "rewardCards": 22,
+      "shopCards": 8
+    },
+    {
+      "classId": "guard",
+      "styleId": "atlas_meter",
+      "fullClear": 2,
+      "completedStages": 25,
+      "rewardCards": 25,
+      "shopCards": 8
+    },
+    {
+      "classId": "mage",
+      "styleId": "control",
+      "fullClear": 0,
+      "completedStages": 21,
+      "rewardCards": 21,
+      "shopCards": 8
+    },
+    {
+      "classId": "mage",
+      "styleId": "sustain",
+      "fullClear": 1,
+      "completedStages": 23,
+      "rewardCards": 23,
+      "shopCards": 8
+    },
+    {
+      "classId": "mage",
+      "styleId": "atlas_bleed",
+      "fullClear": 0,
+      "completedStages": 17,
+      "rewardCards": 17,
+      "shopCards": 8
+    },
+    {
+      "classId": "mage",
+      "styleId": "atlas_mark",
+      "fullClear": 0,
+      "completedStages": 11,
+      "rewardCards": 11,
+      "shopCards": 8
+    },
+    {
+      "classId": "mage",
+      "styleId": "atlas_meter",
+      "fullClear": 0,
+      "completedStages": 14,
+      "rewardCards": 14,
+      "shopCards": 8
+    }
+  ]
+}

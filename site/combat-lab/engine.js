@@ -117,7 +117,7 @@ function makeActor(id,side,name,hp,fin){
   const poiseMax=side==='enemy'?Math.max(24,Math.min(42,Math.round(hp*.36))):id.includes('guard')?36:id.includes('mage')?24:id.includes('gun')?26:30;
   return{id,side,name,hp,maxHp:hp,relics:[],fin,energy:0,dead:false,stunUntil:0,
     poise:0,poiseMax,poiseImmuneUntil:0,lastPoiseHit:-1,staggerCount:0,
-    marked:0,weak:0,buff:0,buffHits:0,breaks:0,damageDealt:0,damageTaken:0,blocked:0,kills:0,
+    marked:0,weak:0,bleed:0,lastHitTick:-10,lastHitBy:null,buff:0,buffHits:0,breaks:0,damageDealt:0,damageTaken:0,blocked:0,kills:0,
     actions:[],hand:[],draw:[],discard:[],exhaust:[],lockedUntil:-1};
 }
 function addDeck(actor,def,rand){let uid=0;for(const [card,n]of Object.entries(def))for(let i=0;i<n;i++)actor.draw.push({uid:actor.id+'-c'+(uid++),key:card});shuffle(actor.draw,rand);}
@@ -203,7 +203,7 @@ function placeFinisher(game,relative,targetId){
 function enemyTarget(game,source){const ls=actorsOf(game,'ally');if(!ls.length)return null;return ls[(game.round+source.id.length)%ls.length].id;}
 function enemySchedule(game){const base=game.now;for(const e of actorsOf(game,'enemy')){let pat=e.pattern;if(!pat)continue;let entries=(game.round%2?pat.rotation:pat.patterns)||[];for(const [key,relative]of entries){const start=base+relative-1,c=CARD[key];if(start<e.stunUntil||isBusy(e,start,start+cLen(c)))continue;const target=c.type==='defense'?e.id:enemyTarget(game,e);try{scheduleAction(game,e,key,start,target,'enemy',true);}catch{}}
 }}
-function scoreCard(card,enemyNext){const c=CARD[card],len=cLen(c);let score=(c.damage||0)*c.a/Math.max(1,len)*1.4+(c.guard||0)/Math.max(1,len)*0.65+(c.heal||0)*0.7+(c.mark||0)*2.1+(c.breakPower||0)*0.65+(c.poisePower||0)*0.3+(c.steady||0)*0.2;return score;}
+function scoreCard(card,enemyNext){const c=CARD[card],len=cLen(c);let score=(c.damage||0)*c.a/Math.max(1,len)*1.4+(c.guard||0)/Math.max(1,len)*0.65+(c.heal||0)*0.7+(c.mark||0)*2.1+(c.breakPower||0)*0.65+(c.poisePower||0)*0.3+(c.steady||0)*0.2+(c.bleed||0)*1.7+(c.meter||0)*.25+(c.buff||0)*1.8+(c.bonusCombo||0)*.45+(c.bonusMarked||0)*.38;return score;}
 function aiSchedule(game){for(const a of actorsOf(game,'ally').filter(x=>x.id!=='hero')){
   let next=game.now+1,hand=a.hand.slice();const enemyHits=actorsOf(game,'enemy').flatMap(e=>e.actions.filter(act=>CARD[act.card].damage).map(act=>act.start+CARD[act.card].w));
   let order=hand.sort((x,y)=>scoreCard(y.key)-scoreCard(x.key));let scheduled=0;
@@ -228,6 +228,8 @@ function findDefense(game,actor,t,attackSpeed=0){
  return game.actors.flatMap(owner=>owner.actions.filter(a=>!a.canceled&&a.target===actor.id&&a.start<=t&&phase(CARD[a.card],a.start,t)==='active'&&CARD[a.card].type==='defense'&&(a.start+CARD[a.card].w<t||(CARD[a.card].speed||0)>=attackSpeed))).sort((a,b)=>(CARD[b.card].speed||0)-(CARD[a.card].speed||0))[0];
 }
 function actorHitBuff(actor,c,t){let n=(c.damage||0)+(actor.buffHits>0?actor.buff:0);if(actor.weak>0)n=Math.max(1,n-3);if(actor.side==='enemy'&&actor.enemyDamageScale)n=Math.max(1,Math.round(n*actor.enemyDamageScale));return n;}
+function conditionalDamage(card,attacker,target,tick){let extra=0;if(target.marked>0)extra+=card.bonusMarked||0;if(target.bleed>0)extra+=card.bonusBleed||0;if(target.stunUntil>tick)extra+=card.bonusStaggered||0;if(target.hp>0&&target.hp<=target.maxHp*.35)extra+=card.bonusExecute||0;if(attacker.hp<=attacker.maxHp*.45)extra+=card.bonusLowHp||0;if(target.lastHitTick===tick-1)extra+=card.bonusCombo||0;if(target.actions.some(a=>!a.canceled&&phase(CARD[a.card],a.start,tick)==='windup'))extra+=card.bonusWindup||0;return extra;}
+
 function log(game,t,message,kind='info'){const item={t:t+1,text:message,kind};game.events.push(item);if(game.log.length<600)game.log.push(item);}
 // Fixed-slot control: only the current action and future actions that overlap
 // the recovery window are canceled. No action is shifted. A later non-overlap
@@ -309,6 +311,10 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
       log(game,tick,actor.name+' 为 '+dest.name+' 稳固硬直 '+(previous-dest.poise),'skill');}
     if(first&&card.mark&&dest&&!dest.dead){dest.marked+=card.mark;actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,dest.name+' 获得标记 '+card.mark,'skill');}
     if(first&&card.weak&&dest&&!dest.dead){dest.weak+=card.weak;actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,dest.name+' 被弱化','skill');}
+    if(first&&card.meter){actor.energy=Math.min(100,actor.energy+card.meter);log(game,tick,actor.name+' 积累绝杀能量 '+card.meter,'skill');}
+    if(first&&card.cleanse&&dest&&!dest.dead){dest.weak=0;dest.bleed=0;log(game,tick,actor.name+' 清除 '+dest.name+' 的负面状态','heal');}
+    if(first&&card.recoil){actor.hp=Math.max(1,actor.hp-card.recoil);log(game,tick,actor.name+' 承受反噬 '+card.recoil,'damage');}
+    if(first&&card.bleed&&!card.damage&&dest&&!dest.dead){dest.bleed=Math.min(18,(dest.bleed||0)+card.bleed);log(game,tick,dest.name+' 裂伤+'+card.bleed,'skill');}
    }
    const groups=new Map();
    for(const {actor,action,card} of tier){
@@ -316,7 +322,7 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
     const targets=card.aoe?actorsOf(game,actor.side==='ally'?'enemy':'ally'):[game.actors.find(x=>x.id===action.target)].filter(Boolean);
     for(const dest of targets){
      if(dest.dead)continue;
-     let raw=actorHitBuff(actor,card,tick);
+     let raw=actorHitBuff(actor,card,tick)+conditionalDamage(card,actor,dest,tick);
      if(actor.side==='ally'&&actor.relics?.includes('attack_plus'))raw+=2;
      if(dest.marked>0)raw+=3;
      const hit={actor,dest,raw,pierce:card.pierce||0,pressure:(card.breakPower||0)+(actor.relics?.includes('break_plus')?2:0),finisher:card.type==='finisher',action,card};
@@ -350,9 +356,11 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
      if(hit.actor.buffHits>0)hit.actor.buffHits--;
      hit.actor.damageDealt+=Math.round(damage*hit.raw/Math.max(1,shareSum));
      if(hit.actor.side==='ally'&&(damage>0||blocked>0))hit.actor.energy=Math.min(100,hit.actor.energy+(hit.card.charge||0));
+     if(damage>0&&hit.card.bleed&&tick===hit.action.start+hit.card.w){dest.bleed=Math.min(18,(dest.bleed||0)+hit.card.bleed);}
     }
     if(blocked&&dest.side==='ally'){dest.energy=Math.min(100,dest.energy+Math.min(12,5+Math.ceil(blocked/3)));if(dest.relics?.includes('calm_bell'))dest.poise=Math.max(0,dest.poise-3);}
     if(damage)log(game,tick,list.map(h=>h.actor.name).join('、')+' → '+dest.name+'：'+damage+'伤害'+(blocked?'（抵消'+blocked+'）':''),'damage');
+    if(damage>0){dest.lastHitTick=tick;dest.lastHitBy=list.map(h=>h.actor.id).join(',');}
     else if(blocked)log(game,tick,dest.name+' 格挡 '+blocked,'block');
     if(dest.hp<=0){dest.dead=true;log(game,tick,dest.name+' 被击败','death');}
    }
@@ -379,11 +387,14 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
    }
    for(const actor of game.actors)if(actor.dead)for(const action of actor.actions)if(action.start+cLen(CARD[action.card])>tick)action.canceled=true;
   }
+  // End-of-tick persistent bleeding: dealt only after speed-tier attacks; cap prevents
+  // runaway stacking. Poison/bleed is deterministic in preview and execution.
+  for(const actor of game.actors){if(actor.dead||!actor.bleed)continue;const loss=Math.min(6,Math.ceil(actor.bleed/2));actor.bleed--;actor.hp=Math.max(0,actor.hp-loss);actor.damageTaken+=loss;game.stats.damage+=loss;log(game,tick,actor.name+' 裂伤 '+loss,'damage');if(!actor.hp){actor.dead=true;for(const ac of actor.actions)if(ac.start+cLen(CARD[ac.card])>tick)ac.canceled=true;log(game,tick,actor.name+' 因裂伤倒下','death');}}
   // Decay at the end of each quiet tick, including during recovery.
   for(const actor of game.actors){if(actor.dead)continue;
     if(!contacted.has(actor.id))actor.poise=Math.max(0,actor.poise-POISE_DECAY);
   }
-  if(collectTrace){game.trace.push({tick:tick+1,actors:game.actors.map(a=>({id:a.id,hp:a.hp,energy:a.energy,marked:a.marked,dead:a.dead,stunUntil:a.stunUntil,poise:a.poise,poiseMax:a.poiseMax,poiseImmuneUntil:a.poiseImmuneUntil})),events:game.events.filter(e=>e.t===tick+1).map(e=>({...e}))});}
+  if(collectTrace){game.trace.push({tick:tick+1,actors:game.actors.map(a=>({id:a.id,hp:a.hp,energy:a.energy,marked:a.marked,bleed:a.bleed,weak:a.weak,dead:a.dead,stunUntil:a.stunUntil,poise:a.poise,poiseMax:a.poiseMax,poiseImmuneUntil:a.poiseImmuneUntil})),events:game.events.filter(e=>e.t===tick+1).map(e=>({...e}))});}
   if(!actorsOf(game,'enemy').length||!actorsOf(game,'ally').length)break;
  }
  if(stopAt!==null)return game;
@@ -393,7 +404,7 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
    const finished=act.start+cLen(CARD[act.card])<=aEnd||act.canceled;if(!finished)continue;
    act._processed=true;
    const inDraw=a.draw.some(x=>x.uid===act.uid),inDiscard=a.discard.some(x=>x.uid===act.uid),inHand=a.hand.some(x=>x.uid===act.uid);
-   if(!(inDraw||inDiscard||inHand)){if(act.canceled&&!act.started)a.hand.push({uid:act.uid,key:act.card});else a.discard.push({uid:act.uid,key:act.card});}
+   if(!(inDraw||inDiscard||inHand)){if(act.canceled&&!act.started)a.hand.push({uid:act.uid,key:act.card});else if(CARD[act.card].exhaust)a.exhaust.push({uid:act.uid,key:act.card});else a.discard.push({uid:act.uid,key:act.card});}
   }
  }
  const enemies=actorsOf(game,'enemy'),team=actorsOf(game,'ally');
