@@ -95,19 +95,22 @@
  const SHOT_NAMES=Object.freeze(['左侧','右侧']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:1.60,eyeZ:11.55,eyeY:1.32,
-    focusX:.20,focusY:1.32,focusZ:8.70,fov:56}),
-   Object.freeze({id:'right',eyeX:-1.60,eyeZ:11.55,eyeY:1.32,
-    focusX:-.20,focusY:1.32,focusZ:8.70,fov:56})
+   Object.freeze({id:'left',eyeX:1.30,eyeZ:11.55,eyeY:1.32,
+    focusX:0,focusY:1.32,focusZ:6.80,fov:56}),
+   Object.freeze({id:'right',eyeX:-1.30,eyeZ:11.55,eyeY:1.32,
+    focusX:0,focusY:1.32,focusZ:6.80,fov:56})
   ]),
   inner:Object.freeze([
-   Object.freeze({id:'left',eyeX:-1.60,eyeZ:7.15,eyeY:1.32,
-    focusX:.80,focusY:1.32,focusZ:12.40,fov:52}),
-   Object.freeze({id:'right',eyeX:1.60,eyeZ:7.15,eyeY:1.32,
-    focusX:-.80,focusY:1.32,focusZ:12.40,fov:52})
+   Object.freeze({id:'left',eyeX:-1.30,eyeZ:7.15,eyeY:1.32,
+    focusX:0,focusY:1.32,focusZ:12.50,fov:52}),
+   Object.freeze({id:'right',eyeX:1.30,eyeZ:7.15,eyeY:1.32,
+    focusX:0,focusY:1.32,focusZ:12.50,fov:52})
   ])
  });
- // True shoulder-level view: eye and focus are at the SAME world height.
+ // Two fixed shoulder-level shots of the SAME enemy formation, not the side wall.
+ // Optical axes target the four-enemy centerline (x=0) in either encounter mode.
+ // Eye and focus remain at the SAME height. The protagonist's original back
+ // L2D stays camera-facing, so both left/right shots remain compatible.
  // Sensor-shift projection frames the cast without tilting the camera down.
  const cameraPitchDeg=c=>Math.atan2(c.eye.y-c.focus.y,
   Math.hypot(c.focus.x-c.eye.x,c.focus.z-c.eye.z))*180/Math.PI;

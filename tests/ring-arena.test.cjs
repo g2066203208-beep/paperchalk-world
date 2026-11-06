@@ -76,6 +76,13 @@ for(const mode of ['outer','inner']){
   // projected slots; this catches a small ring or a camerawise pile-up.
   const xCenters=scene.enemies.map(enemy=>
    arena.project({...enemy,y:enemy.height*.5},c).x).sort((a,b)=>a-b);
+  const groupScreenX=xCenters.reduce((total,x)=>total+x,0)/xCenters.length;
+  const groupGroundZ=scene.enemies.reduce((total,e)=>total+e.z,0)/scene.enemies.length;
+  assert.ok(Math.abs(c.focus.x)<1e-8,'both shots must actually aim at the enemy formation');
+  assert.ok(Math.abs(c.focus.z-groupGroundZ)<.85,
+   'camera must face the enemies, not focus on empty space between teams');
+  assert.ok(Math.abs(groupScreenX)<.12,
+   'the enemy group must stay near the center of both fixed camera shots');
   for(let i=1;i<xCenters.length;i++)
    assert.ok(xCenters[i]-xCenters[i-1]>.20,
     'adjacent enemies must be visibly spaced in the final camera');
