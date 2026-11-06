@@ -1503,6 +1503,11 @@ void main(){
     container.dataset.fitScale=scale.toFixed(3);
   }
   function paintTopHudValues(values,force){
+    // In immersive daytime scenes healthy stats stay invisible. Low health,
+    // hunger or sanity instantly restores the existing truthful HUD meters.
+    const urgent=hudKeys.some(key=>
+      values[key].max>0&&values[key].current/values[key].max<=.3);
+    document.getElementById('hud-vitals').dataset.urgent=String(urgent);
     for(const key of hudKeys){
       const stat=values[key];
       const meter=document.getElementById('hud-'+key+'-meter');
