@@ -52,6 +52,10 @@ try{
  await page.screenshot({path:dir+'/04-completed-five-customer-shift.png',fullPage:true});
  await page.reload({waitUntil:'networkidle'});
  assert.equal((await page.evaluate(()=>window.PaperWorldConvenienceGame.inspect())).wallet,result.wallet,'wallet persisted');
+ // Reload intentionally restores the STORY tab. Re-enter WORK to view the
+ // persisted finished shift, then click the visible next-shift button.
+ await page.locator('[data-view="work"]').click();
+ assert.equal(await page.locator('#shift-summary').isVisible(),true);
  await page.locator('#summary-next').click();
  await page.locator('[data-shift="早班"]').click();
  await page.screenshot({path:dir+'/05-second-shift-and-save.png',fullPage:true});
