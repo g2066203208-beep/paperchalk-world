@@ -20,7 +20,7 @@ const server=createServer((req,res)=>{
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const browser=await chromium.launch({headless:true,
  args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
-mkdirSync('artifacts/ring-arena/v26-full-sequence',{recursive:true});
+mkdirSync('artifacts/ring-arena/v27-frame-by-frame',{recursive:true});
 try{
  const page=await browser.newPage({viewport:{width:1280,height:720},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -32,8 +32,8 @@ try{
   return s?.active&&s?.renderer==='webgl-l2d'&&s?.l2dReady===5&&
    s.directorArt?.hero?.loaded&&s.directorArt?.enemy?.loaded;
  },null,{timeout:100000});
- const duration=1500,fps=30,record=[];
- for(let i=0;i<=45;i++){
+ const duration=700,fps=30,frameCount=21,record=[];
+ for(let i=0;i<=frameCount;i++){
   const at=Math.min(duration-1,Math.round(i*1000/fps));
   const state=await page.evaluate(ms=>{
     const app=window.PaperWorldGameRingArena;
@@ -46,20 +46,21 @@ try{
      positions:snap.duel?.playedPositions};
   },at);
   if(i===0)assert.equal(state.hp,36);
-  if(at>=117)assert.equal(state.hp,24);
-  if(at>=350&&at<1240)assert.equal(state.phase,'hold');
+  if(i>=4)assert.equal(state.hp,24);
+  if(i>=9&&i<=14)assert.equal(state.phase,'hold');
+  if(i>=15&&i<frameCount)assert.equal(state.phase,'recover');
   const filename='frame-'+String(i).padStart(3,'0')+'.png';
-  await page.screenshot({path:'artifacts/ring-arena/v26-full-sequence/'+filename,
+  await page.screenshot({path:'artifacts/ring-arena/v27-frame-by-frame/'+filename,
    animations:'disabled',timeout:60000});
   record.push({frame:i,timeMs:at,filename,...state});
-  if(i%10===0)console.log('V26 storyboard',i,'/',45,state.phase,at+'ms');
+  console.log('V27 frame',i,'/',frameCount,state.phase,at+'ms');
  }
  assert.deepEqual(errors,[]);
- writeFileSync('artifacts/ring-arena/v26-full-sequence/timeline.json',
+ writeFileSync('artifacts/ring-arena/v27-frame-by-frame/timeline.json',
   JSON.stringify({description:'REAL game WebGL fixed 30fps QA snapshots; not original Darkest Dungeon source video',
    fps,nominalDurationMs:duration,frames:record},null,2));
  await page.close();
- console.log('PASS: 46 full battle frames, 0-1499ms incl post-hit hold');
+ console.log('PASS: 22 frame-authored game battle snapshots, 30fps, 0-699ms');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }
