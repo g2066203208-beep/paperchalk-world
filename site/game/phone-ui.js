@@ -141,12 +141,85 @@
       }
       return true;
     }
+    function renderMap(copy){
+      const data=config.getMapState?.();
+      if(!data){copy.textContent='暂时没有地图资料。';return;}
+      const current=data.state.location,locations=data.locations;
+      const caption=document.createElement('p');
+      caption.className='phone-map-location';
+      caption.textContent='当前位置 · '+locations[current].label;
+      copy.appendChild(caption);
+      const canvas=document.createElement('div');canvas.className='phone-map-art';
+      canvas.innerHTML='<svg viewBox="0 0 200 220" aria-hidden="true"><path d="M17 176 L58 54 L113 110 L177 41 M17 176 L104 176 L177 41 M58 54 L169 172 L104 176" fill="none" stroke="#9da7a7" stroke-width="2" stroke-dasharray="4 5" opacity=".4"/><path d="M16 154 L114 110 L167 173" fill="none" stroke="#c2a97e" stroke-width="1" stroke-dasharray="3 6" opacity=".55"/></svg>';
+      const pins=[['entrance','家',13,80],['school','学校',30,23],
+        ['convenience','便利店',61,49],['cafe','咖啡店',37,81],
+        ['mall','商场',83,18],['park','公园',84,81]];
+      const info=document.createElement('p');info.className='phone-map-info';
+      info.textContent=current==='entrance'?'选一个要去的地方。':
+        locations[current].group==='家'?'先到玄关，从家门口出门。':'选择目的地，路程将消耗时间。';
+      for(const [id,label,x,y] of pins){
+        const def=locations[id],button=document.createElement('button');
+        button.type='button';button.className='phone-map-pin';
+        button.dataset.place=id;button.style.left=x+'%';button.style.top=y+'%';
+        button.textContent=label;
+        if(id===current)button.dataset.current='true';
+        const now=data.state.minute,dow=data.state.calendar.weekday;
+        const open=(!def.weekdaysOnly||(dow!==0&&dow!==6))&&now>=def.open&&now<def.close;
+        const needsDoor=locations[current].group==='家'&&
+          def.group==='城区'&&current!=='entrance';
+        const needsReturn=locations[current].group==='城区'&&
+          def.group==='家'&&id!=='entrance';
+        button.disabled=id===current||!open||needsDoor||needsReturn;
+        button.title=!open?'现在还没营业':label;
+        button.addEventListener('click',async()=>{
+          const cost=locations[current].group==='家'&&def.group==='家'?10:
+            def.group==='家'?locations[current].travel:def.travel;
+          const willTravel=window.confirm?
+            window.confirm('前往'+def.label+'？路程约'+cost+'分钟。'):true;
+          if(!willTravel)return;
+          button.disabled=true;
+          const res=await config.onTravel?.(id);
+          if(res?.ok){
+            close();
+            global.PaperWorldQuickTools?.close();
+          }else{
+            info.textContent=res?.reason||'暂时无法前往这个地点。';
+            renderApp('地图');
+          }
+        });
+        canvas.appendChild(button);
+      }
+      copy.append(canvas,info);
+    }
+    function renderInventory(copy){
+      const data=config.getInventory?.();
+      if(!data){copy.textContent='背包还没有整理好。';return;}
+      const caption=document.createElement('p');caption.className='phone-map-location';
+      caption.textContent='随身携带';
+      copy.appendChild(caption);
+      for(const [key,item] of Object.entries(data.items)){
+        const count=data.state.inventory?.[key]||0;
+        if(count<1)continue;
+        const b=document.createElement('button');
+        b.type='button';b.className='phone-item';
+        b.textContent=item.label+' ×'+count;
+        b.addEventListener('click',()=>{
+          const result=config.onUseItem?.(key);
+          if(result?.ok)renderApp('背包');
+        });
+        copy.appendChild(b);
+      }
+    }
     function renderApp(name){
       const inbox=getInbox(),copy=get('phone-app-copy');
       get('phone-app-title').textContent=name;
+      section.dataset.appName=name;
       copy.replaceChildren();
-      if(name==='地图'&&typeof config.onOpenMap==='function'){
-        config.onOpenMap();return;
+      if(name==='地图'){
+        renderMap(copy);showPage('app');return;
+      }
+      if(name==='背包'){
+        renderInventory(copy);showPage('app');return;
       }
       if(inbox&&['信息','电话'].includes(name)){
         const isMessage=name==='信息',key=isMessage?'messages':'missedCalls';
@@ -230,7 +303,12 @@
     }
     configure({});
     function refresh(){drawApps();drawClock();}
-    return Object.freeze({open,close,configure,refresh,input,isOpen:()=>opened,page:()=>page,
+    function openApp(name){
+      if(!opened)open();
+      if(page==='lock')unlock('local-quick-access');
+      renderApp(name);return true;
+    }
+    return Object.freeze({open,close,openApp,configure,refresh,input,isOpen:()=>opened,page:()=>page,
       snapshot:()=>({owner:config.id,open:opened,page,pinLength:pin.length,unlockedBy:section.dataset.unlockedBy||null})});
   }
   global.PaperWorldPhoneUI=Object.freeze({create});
