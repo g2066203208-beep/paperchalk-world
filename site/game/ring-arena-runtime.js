@@ -249,8 +249,17 @@
  ].join('\n');
  const portraitFragment=[
   'precision mediump float;varying vec2 vUv;uniform sampler2D uTexture;',
-  'uniform float uHit;uniform float uDim;',
-  'void main(){vec4 t=texture2D(uTexture,vec2(vUv.x,1.0-vUv.y));',
+  'uniform float uHit;uniform float uDim;uniform float uBlur;',
+  'void main(){vec2 uv=vec2(vUv.x,1.0-vUv.y);',
+  'vec4 t=texture2D(uTexture,uv);',
+  'if(uBlur>0.01){',
+  'vec2 d=vec2(.0028,.0028);',
+  'vec4 soft=(texture2D(uTexture,uv+vec2(d.x,0.0))+',
+  'texture2D(uTexture,uv-vec2(d.x,0.0))+',
+  'texture2D(uTexture,uv+vec2(0.0,d.y))+',
+  'texture2D(uTexture,uv-vec2(0.0,d.y)))*.25;',
+  't=mix(t,soft,clamp(uBlur,0.0,1.0)*.78);',
+  '}',
   'if(t.a<.025)discard;',
   'vec3 rgb=mix(t.rgb,vec3(1.0,.81,.70),clamp(uHit,0.0,1.0));',
   'rgb*=1.0-clamp(uDim,0.0,.80);',
@@ -412,7 +421,7 @@
    world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface','uMode']);
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture','uHit','uDim']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture','uHit','uDim','uBlur']);
    [floor,backInner,backOuter]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -804,8 +813,11 @@
     gl.uniform1f(portrait.uHit,attack&&a.id===attack.targetId&&attackSample?
      attackSample.hitFlash:0);
     const duelPerformer=!!attack&&(a.id==='hero'||a.id===attack.targetId);
-    gl.uniform1f(portrait.uDim,!duelPerformer&&attackSample?
-     .65*attackSample.stageStrength:0);
+    // DD source: spectator queue remains faint and softly out of focus
+    // during the 46-frame central shot, not erased or moved to DOM.
+    const backgroundCue=!duelPerformer&&attackSample?attackSample.zoom:0;
+    gl.uniform1f(portrait.uDim,.72*backgroundCue);
+    gl.uniform1f(portrait.uBlur,.88*backgroundCue);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -857,8 +869,8 @@
    for(const a of all)updateTexture(a,now);
    uploadActionImage('hero-attack',heroActionArt);
    uploadActionImage('enemy-2-hit',enemyHitArt);
-   // V23 shared duel center: selected attacker/target move together from
-   // their original queue to central opposing ground points (36.5% / 63.5%).
+   // V29 original-source measured shared center: performers at 30% / 70%.
+   // Their portraits stay in ACTION form through the entire 7-frame retreat.
    // Other actors stay at original anchors, subdued rather than removed.
    const duet=attack&&attackSample&&target?
     director.duelLayout(director.duelCamera(base),project,w/h,all[0],target):null;
