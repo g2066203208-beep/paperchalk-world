@@ -242,10 +242,10 @@
   'precision highp float;attribute vec2 aUv;',
   'uniform mat4 uVP;uniform vec3 uFoot;uniform vec3 uRight;',
   'uniform vec3 uUp;uniform float uHeight;uniform float uSoleX;',
-  'uniform float uSoleY;uniform float uCrownY;',
+  'uniform float uSoleY;uniform float uCrownY;uniform float uWidthScale;',
   'varying vec2 vUv;',
   'void main(){float H=uHeight/max(.01,uSoleY-uCrownY);',
-  'vec3 pos=uFoot+uRight*((aUv.x-uSoleX)*H)',
+  'vec3 pos=uFoot+uRight*((aUv.x-uSoleX)*H*uWidthScale)',
   '+uUp*((uSoleY-aUv.y)*H);',
   'vUv=aUv;gl_Position=uVP*vec4(pos,1.0);}'
  ].join('\n');
@@ -334,10 +334,22 @@
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
    '<button data-shot="0" aria-pressed="true" type="button">◀ 左机位</button>',
    '<button data-shot="1" aria-pressed="false" type="button">右机位 ▶</button>',
+   '<button data-pose="toggle" aria-pressed="false" type="button">试用斜背面</button>',
    '<button data-exit type="button">返回</button></div>'
   ].join('');
   stage.append(hud);
   const status=hud.querySelector('.status');
+  // A non-destructive pose comparison, never a replacement for the approved L2D rig.
+  const poseImage=new Image();
+  poseImage.decoding='async';
+  poseImage.src='./assets/characters/protagonist-back-combat-3q-preview.webp';
+  let posePreviewEnabled=new URLSearchParams(window.location.search).get('heroPose')==='3q';
+  const poseButton=hud.querySelector('[data-pose]');
+  function syncPoseButton(){
+   poseButton.textContent=posePreviewEnabled?'恢复原背面':'试用斜背面';
+   poseButton.setAttribute('aria-pressed',String(posePreviewEnabled));
+  }
+  syncPoseButton();
   let gl=null,world=null,portrait=null,floor=null,backInner=null,backOuter=null,quad=null;
   const textures=new Map();
   try{
@@ -345,7 +357,7 @@
    if(!gl)throw Error('WebGL unavailable');
    world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uTexture']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture']);
    [floor,backInner,backOuter]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -393,6 +405,12 @@
    const b=e.target.closest('button');if(!b)return;
    e.preventDefault();e.stopPropagation();
    if(b.hasAttribute('data-shot'))goShot(Number(b.dataset.shot));
+   if(b.hasAttribute('data-pose')){
+    posePreviewEnabled=!posePreviewEnabled;
+    syncPoseButton();
+    textures.get('hero').updated=-999;
+    render(0);
+   }
    if(b.hasAttribute('data-mode')){
     mode=b.dataset.mode;
     transitionFrom=null;lens=camera(mode,shotIndex);
@@ -410,6 +428,16 @@
   });
   syncButtons();
   function sourceFor(actor){
+   if(actor.id==='hero'&&posePreviewEnabled){
+    if(!poseImage.complete||!poseImage.naturalWidth)return null;
+    return {
+     runtime:{
+      img:{dataset:{characterId:'protagonist-3q-pose-preview',characterSide:'back'}},
+      root:{dataset:{l2dEdition:'pose-preview-v1',l2dMode:'static-image'}}
+     },
+     source:poseImage,w:poseImage.naturalWidth,h:poseImage.naturalHeight
+    };
+   }
    const runtime=window.PaperchalkL2D?.get(actor.slot);
    if(!runtime||runtime.root.hidden||runtime.img.hidden||
      runtime.root.dataset.l2dState!=='ready')return null;
@@ -543,6 +571,7 @@
     gl.uniform1f(portrait.uSoleX,a.soleX);
     gl.uniform1f(portrait.uSoleY,a.soleY);
     gl.uniform1f(portrait.uCrownY,a.crownY);
+    gl.uniform1f(portrait.uWidthScale,a.id==='hero'&&posePreviewEnabled ? 0.82 : 1);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -594,7 +623,7 @@
     lens=camera(mode,0);syncButtons();render(0)}
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
-   mode,shotIndex,shotName:SHOT_NAMES[shotIndex],
+   mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,
    cameraTarget:camera(mode,shotIndex),
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,shotIndex).eye.x,
