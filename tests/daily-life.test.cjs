@@ -24,6 +24,7 @@ test('validates travel, location opening time and coherent end arrival',()=>{
   assert.equal(g.travel('invalid').ok,false);
   assert.equal(g.travel('school').ok,false);
   assert.equal(g.act('rest').ok,true);
+  assert.equal(g.travel('entrance').ok,true);
   assert.equal(g.travel('school').ok,true);
   assert.equal(g.snapshot().location,'school');
   assert.equal(g.act('study').ok,true);
@@ -33,6 +34,7 @@ test('side job wages, single shift per day and travel location restrictions',()=
   const g=Life.create();
   assert.equal(g.act('shift').ok,false);
   for(let i=0;i<3;i++)assert.equal(g.act('rest').ok,true);
+  assert.equal(g.travel('entrance').ok,true);
   assert.equal(g.travel('cafe').ok,true);
   assert.equal(g.act('shift').ok,true);
   assert.equal(g.snapshot().money,350);
@@ -45,6 +47,7 @@ test('buying, eating and existing survival hunger HUD bridge',()=>{
   assert.equal(g.snapshot().inventory.bread,0);
   assert.equal(g.use('bread').ok,false);
   for(let i=0;i<3;i++)g.act('rest');
+  assert.equal(g.travel('entrance').ok,true);
   assert.equal(g.travel('convenience').ok,true);
   const before=g.snapshot().money;
   assert.equal(g.buy('bread').ok,true);
@@ -53,7 +56,7 @@ test('buying, eating and existing survival hunger HUD bridge',()=>{
 });
 test('NPC has time, place, workday and once per day constraints',()=>{
   const g=Life.create();
-  g.act('rest');g.travel('school');
+  g.act('rest');g.travel('entrance');g.travel('school');
   assert.equal(g.talk('classmate').ok,false);
   g.act('study');
   assert.equal(g.talk('classmate').ok,true);
@@ -92,7 +95,7 @@ test('staying awake to 22:00 triggers mandatory recall; cannot use late sleep to
 });
 test('game save is isolated and persists money, relationships, usage and date',()=>{
   const storage=memory(),g=Life.create({storage});
-  g.act('rest');g.travel('school');g.act('study');g.talk('classmate');
+  g.act('rest');g.travel('entrance');g.travel('school');g.act('study');g.talk('classmate');
   const original=g.snapshot();
   const reloaded=Life.create({storage}).snapshot();
   assert.equal(reloaded.day,original.day);
@@ -124,4 +127,45 @@ test('misconfigured storage and unknown actions fail safely',()=>{
   assert.equal(g.act('infinite-money').ok,false);
   assert.equal(g.buy('expensive-gun').ok,false);
   assert.equal(g.talk('unknown-person').ok,false);
+});
+
+test('morning phone contains six missed calls and three homework reminders',()=>{
+  const store=memory(),g=Life.create({storage:store});
+  const inbox=g.phoneInbox();
+  assert.equal(inbox.contact,'女二');
+  assert.equal(inbox.missedCalls.length,6);
+  assert.equal(inbox.messages.length,3);
+  assert.match(inbox.messages[2].text,/学校/);
+  assert.equal(g.replyHomework('coming').ok,false);
+  assert.equal(g.markPhoneRead('messages').ok,true);
+  assert.equal(g.replyHomework('coming').ok,true);
+  assert.equal(g.snapshot().phone.reply,'coming');
+  assert.equal(Life.create({storage:store}).snapshot().phone.reply,'coming');
+});
+test('school gate and 09:00 assignment deadline are real game-time rules',()=>{
+  const g=Life.create();
+  assert.equal(g.travel('school').ok,false,'home needs exit first');
+  assert.equal(g.inspectHomework().ok,true);
+  assert.equal(g.snapshot().homework.inspected,true);
+  assert.equal(g.travel('entrance').ok,true);
+  assert.equal(g.travel('school').ok,true);
+  assert.equal(g.snapshot().calendar.time,'07:50');
+  assert.equal(g.finishHomework().ok,true);
+  assert.equal(g.submitHomework().ok,true);
+  assert.equal(g.snapshot().homework.handedIn,true);
+  assert.equal(g.snapshot().relationships.female2,2);
+  assert.equal(g.submitHomework().ok,false);
+});
+test('shopping mall travel is supported, and city return requires entrance',()=>{
+  const g=Life.create();
+  assert.equal(g.travel('mall').ok,false,'cannot teleport out of bedroom');
+  assert.equal(g.travel('entrance').ok,true);
+  assert.equal(g.travel('mall').ok,false,'mall is not open early morning');
+  assert.equal(g.travel('bedroom').ok,true);
+  g.act('rest');g.act('rest');g.act('rest');
+  assert.equal(g.travel('entrance').ok,true);
+  assert.equal(g.travel('mall').ok,true);
+  assert.equal(g.travel('bedroom').ok,false,'city cannot teleport straight into bedroom');
+  assert.equal(g.travel('entrance').ok,true);
+  assert.equal(g.snapshot().location,'entrance');
 });
