@@ -1,0 +1,719 @@
+{
+  "version": "1.7",
+  "scope": "exhaustive legal 3-distinct-card combos for each single-class 90-card pool, all two-card pairs, all 4-of-12 starter subsets; 3 actual runtime placements per collectible pool position; not exhaustive full combat",
+  "totals": {
+    "distinctTriples": 469920,
+    "timeFeasibleTriples": 278658,
+    "orderedTriplePlans": 1671948,
+    "unorderedPairs": 16020,
+    "starterHandChoices": 9900,
+    "cardTickSimulations": 1080,
+    "traceMismatches": 0
+  },
+  "rarityEfficiency": [
+    {
+      "classId": "axe",
+      "rarity": "common",
+      "count": 30,
+      "min": {
+        "id": "sidestep",
+        "name": "侧身闪避",
+        "utility": 0,
+        "valueSolo": 0,
+        "type": "defense",
+        "len": 2
+      },
+      "median": 3.6,
+      "max": {
+        "id": "c_axe_02_01",
+        "name": "薄刃割伤",
+        "utility": 6,
+        "valueSolo": 6,
+        "type": "attack",
+        "len": 2
+      },
+      "range": 6
+    },
+    {
+      "classId": "axe",
+      "rarity": "uncommon",
+      "count": 40,
+      "min": {
+        "id": "brace",
+        "name": "谨慎防御",
+        "utility": 2.2,
+        "valueSolo": 2.2,
+        "type": "defense",
+        "len": 4
+      },
+      "median": 5.3333,
+      "max": {
+        "id": "c_axe_02_04",
+        "name": "深红切线",
+        "utility": 7,
+        "valueSolo": 7,
+        "type": "attack",
+        "len": 3
+      },
+      "range": 4.8
+    },
+    {
+      "classId": "axe",
+      "rarity": "rare",
+      "count": 20,
+      "min": {
+        "id": "c_axe_05_09",
+        "name": "月下断章",
+        "utility": 5.43,
+        "valueSolo": 5.43,
+        "type": "attack",
+        "len": 5
+      },
+      "median": 7.35,
+      "max": {
+        "id": "c_axe_03_10",
+        "name": "百重斧影",
+        "utility": 13.6,
+        "valueSolo": 6.8,
+        "type": "attack",
+        "len": 5
+      },
+      "range": 8.17
+    },
+    {
+      "classId": "gun",
+      "rarity": "common",
+      "count": 30,
+      "min": {
+        "id": "sidestep",
+        "name": "侧身闪避",
+        "utility": 0,
+        "valueSolo": 0,
+        "type": "defense",
+        "len": 2
+      },
+      "median": 3.3333,
+      "max": {
+        "id": "c_gun_04_02",
+        "name": "压制点射",
+        "utility": 5.425,
+        "valueSolo": 5.425,
+        "type": "skill",
+        "len": 2
+      },
+      "range": 5.425
+    },
+    {
+      "classId": "gun",
+      "rarity": "uncommon",
+      "count": 40,
+      "min": {
+        "id": "respite",
+        "name": "回稳屏障",
+        "utility": 2.8167,
+        "valueSolo": 2.8167,
+        "type": "defense",
+        "len": 3
+      },
+      "median": 4.4375,
+      "max": {
+        "id": "c_gun_08_08",
+        "name": "最后掩护",
+        "utility": 7.845,
+        "valueSolo": 7.845,
+        "type": "skill",
+        "len": 2
+      },
+      "range": 5.0283
+    },
+    {
+      "classId": "gun",
+      "rarity": "rare",
+      "count": 20,
+      "min": {
+        "id": "c_gun_01_09",
+        "name": "残影连射",
+        "utility": 4.83,
+        "valueSolo": 4.83,
+        "type": "attack",
+        "len": 5
+      },
+      "median": 6.75,
+      "max": {
+        "id": "c_gun_03_10",
+        "name": "直线穿城",
+        "utility": 12.48,
+        "valueSolo": 6.48,
+        "type": "attack",
+        "len": 5
+      },
+      "range": 7.65
+    },
+    {
+      "classId": "guard",
+      "rarity": "common",
+      "count": 30,
+      "min": {
+        "id": "sidestep",
+        "name": "侧身闪避",
+        "utility": 0,
+        "valueSolo": 0,
+        "type": "defense",
+        "len": 2
+      },
+      "median": 3.525,
+      "max": {
+        "id": "bash",
+        "name": "盾击",
+        "utility": 5.6833,
+        "valueSolo": 5.6833,
+        "type": "attack",
+        "len": 3
+      },
+      "range": 5.6833
+    },
+    {
+      "classId": "guard",
+      "rarity": "uncommon",
+      "count": 40,
+      "min": {
+        "id": "counter",
+        "name": "反击架势",
+        "utility": 2.625,
+        "valueSolo": 2.625,
+        "type": "defense",
+        "len": 4
+      },
+      "median": 5.25,
+      "max": {
+        "id": "c_guard_06_08",
+        "name": "硬盾救援",
+        "utility": 8.615,
+        "valueSolo": 8.615,
+        "type": "skill",
+        "len": 2
+      },
+      "range": 5.99
+    },
+    {
+      "classId": "guard",
+      "rarity": "rare",
+      "count": 20,
+      "min": {
+        "id": "c_guard_01_09",
+        "name": "无懈坚城",
+        "utility": 5.23,
+        "valueSolo": 5.23,
+        "type": "attack",
+        "len": 5
+      },
+      "median": 6.2,
+      "max": {
+        "id": "c_guard_07_10",
+        "name": "万刺归盾",
+        "utility": 14.4,
+        "valueSolo": 8,
+        "type": "attack",
+        "len": 5
+      },
+      "range": 9.17
+    },
+    {
+      "classId": "mage",
+      "rarity": "common",
+      "count": 30,
+      "min": {
+        "id": "sidestep",
+        "name": "侧身闪避",
+        "utility": 0,
+        "valueSolo": 0,
+        "type": "defense",
+        "len": 2
+      },
+      "median": 3.5,
+      "max": {
+        "id": "pulse",
+        "name": "异象冲击",
+        "utility": 6.1333,
+        "valueSolo": 6.1333,
+        "type": "attack",
+        "len": 3
+      },
+      "range": 6.1333
+    },
+    {
+      "classId": "mage",
+      "rarity": "uncommon",
+      "count": 40,
+      "min": {
+        "id": "seal",
+        "name": "弱化咒印",
+        "utility": 1.9,
+        "valueSolo": 1.9,
+        "type": "skill",
+        "len": 2
+      },
+      "median": 5.36,
+      "max": {
+        "id": "c_mage_02_08",
+        "name": "同频共护",
+        "utility": 8.615,
+        "valueSolo": 8.615,
+        "type": "skill",
+        "len": 2
+      },
+      "range": 6.715
+    },
+    {
+      "classId": "mage",
+      "rarity": "rare",
+      "count": 20,
+      "min": {
+        "id": "trance",
+        "name": "精神凝聚",
+        "utility": 4.75,
+        "valueSolo": 4.75,
+        "type": "power",
+        "len": 3
+      },
+      "median": 7.15,
+      "max": {
+        "id": "c_mage_03_10",
+        "name": "渗透终点",
+        "utility": 13.6,
+        "valueSolo": 7.6,
+        "type": "attack",
+        "len": 5
+      },
+      "range": 8.85
+    }
+  ],
+  "heuristicOutliers": [
+    {
+      "id": "c_axe_03_10",
+      "name": "百重斧影",
+      "utility": 13.6,
+      "valueSolo": 6.8,
+      "type": "attack",
+      "len": 5,
+      "classId": "axe",
+      "rarity": "rare",
+      "median": 7.35,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "c_gun_04_10",
+      "name": "雷霆禁区",
+      "utility": 11.97,
+      "valueSolo": 6.37,
+      "type": "attack",
+      "len": 5,
+      "classId": "gun",
+      "rarity": "rare",
+      "median": 6.75,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "c_gun_03_10",
+      "name": "直线穿城",
+      "utility": 12.48,
+      "valueSolo": 6.48,
+      "type": "attack",
+      "len": 5,
+      "classId": "gun",
+      "rarity": "rare",
+      "median": 6.75,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "c_guard_01_10",
+      "name": "不落壁垒",
+      "utility": 11.2,
+      "valueSolo": 5.6,
+      "type": "attack",
+      "len": 5,
+      "classId": "guard",
+      "rarity": "rare",
+      "median": 6.2,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "c_guard_05_10",
+      "name": "黎明誓约",
+      "utility": 11.55,
+      "valueSolo": 5.95,
+      "type": "attack",
+      "len": 5,
+      "classId": "guard",
+      "rarity": "rare",
+      "median": 6.2,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "c_guard_04_10",
+      "name": "静止禁域",
+      "utility": 12.77,
+      "valueSolo": 6.77,
+      "type": "attack",
+      "len": 5,
+      "classId": "guard",
+      "rarity": "rare",
+      "median": 6.2,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "c_guard_03_10",
+      "name": "断壁之拳",
+      "utility": 13.28,
+      "valueSolo": 6.88,
+      "type": "attack",
+      "len": 5,
+      "classId": "guard",
+      "rarity": "rare",
+      "median": 6.2,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "c_guard_07_10",
+      "name": "万刺归盾",
+      "utility": 14.4,
+      "valueSolo": 8,
+      "type": "attack",
+      "len": 5,
+      "classId": "guard",
+      "rarity": "rare",
+      "median": 6.2,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "pulse",
+      "name": "异象冲击",
+      "utility": 6.1333,
+      "valueSolo": 6.1333,
+      "type": "attack",
+      "len": 3,
+      "classId": "mage",
+      "rarity": "common",
+      "median": 3.5,
+      "flag": "attack_dps_outlier"
+    },
+    {
+      "id": "c_mage_03_10",
+      "name": "渗透终点",
+      "utility": 13.6,
+      "valueSolo": 7.6,
+      "type": "attack",
+      "len": 5,
+      "classId": "mage",
+      "rarity": "rare",
+      "median": 7.15,
+      "flag": "attack_dps_outlier"
+    }
+  ],
+  "bestPotentialSequences": [
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_03_08",
+        "c_axe_03_10",
+        "c_axe_05_08"
+      ],
+      "length": 9,
+      "heuristic": 35.67
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_02_10",
+        "c_axe_03_08",
+        "c_axe_05_08"
+      ],
+      "length": 9,
+      "heuristic": 34.87
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_03_08",
+        "c_axe_04_10",
+        "c_axe_05_08"
+      ],
+      "length": 9,
+      "heuristic": 34.87
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_01_10",
+        "c_axe_03_08",
+        "c_axe_05_08"
+      ],
+      "length": 9,
+      "heuristic": 34.55
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_03_08",
+        "c_axe_05_08",
+        "c_axe_05_10"
+      ],
+      "length": 9,
+      "heuristic": 34.07
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_03_08",
+        "c_axe_05_08",
+        "c_axe_06_10"
+      ],
+      "length": 9,
+      "heuristic": 34.04
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_02_04",
+        "c_axe_03_10",
+        "c_axe_05_08"
+      ],
+      "length": 10,
+      "heuristic": 32.92
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_02_04",
+        "c_axe_02_10",
+        "c_axe_05_08"
+      ],
+      "length": 10,
+      "heuristic": 32.82
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_05_08",
+        "c_axe_06_04",
+        "c_axe_03_10"
+      ],
+      "length": 10,
+      "heuristic": 32.52
+    },
+    {
+      "classId": "axe",
+      "ids": [
+        "c_axe_02_04",
+        "c_axe_03_10",
+        "c_axe_03_08"
+      ],
+      "length": 10,
+      "heuristic": 32.15
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_02_08",
+        "c_guard_05_08",
+        "c_guard_07_10"
+      ],
+      "length": 9,
+      "heuristic": 32.03
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_05_08",
+        "c_guard_06_08",
+        "c_guard_07_10"
+      ],
+      "length": 9,
+      "heuristic": 32.03
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_02_08",
+        "c_guard_06_08",
+        "c_guard_07_10"
+      ],
+      "length": 9,
+      "heuristic": 31.63
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_05_08",
+        "c_guard_07_04",
+        "c_guard_07_10"
+      ],
+      "length": 10,
+      "heuristic": 31.35
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_05_08",
+        "c_guard_07_06",
+        "c_guard_07_10"
+      ],
+      "length": 10,
+      "heuristic": 31.35
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_02_08",
+        "c_guard_07_04",
+        "c_guard_07_10"
+      ],
+      "length": 10,
+      "heuristic": 30.95
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_02_08",
+        "c_guard_07_06",
+        "c_guard_07_10"
+      ],
+      "length": 10,
+      "heuristic": 30.95
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_06_08",
+        "c_guard_07_04",
+        "c_guard_07_10"
+      ],
+      "length": 10,
+      "heuristic": 30.95
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_06_08",
+        "c_guard_07_06",
+        "c_guard_07_10"
+      ],
+      "length": 10,
+      "heuristic": 30.95
+    },
+    {
+      "classId": "guard",
+      "ids": [
+        "c_guard_02_08",
+        "c_guard_03_10",
+        "c_guard_05_08"
+      ],
+      "length": 9,
+      "heuristic": 30.91
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_02_08",
+        "c_mage_03_04",
+        "c_mage_03_10"
+      ],
+      "length": 10,
+      "heuristic": 30.82
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_02_08",
+        "c_mage_03_06",
+        "c_mage_03_10"
+      ],
+      "length": 10,
+      "heuristic": 30.82
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_02_08",
+        "c_mage_03_10",
+        "c_mage_08_08"
+      ],
+      "length": 9,
+      "heuristic": 30.06
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_03_04",
+        "c_mage_03_10",
+        "c_mage_08_08"
+      ],
+      "length": 10,
+      "heuristic": 30.05
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_03_06",
+        "c_mage_03_10",
+        "c_mage_08_08"
+      ],
+      "length": 10,
+      "heuristic": 30.05
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_02_08",
+        "c_mage_03_10",
+        "c_mage_05_08"
+      ],
+      "length": 9,
+      "heuristic": 30.04
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_03_04",
+        "c_mage_03_10",
+        "c_mage_05_08"
+      ],
+      "length": 10,
+      "heuristic": 30.02
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_03_06",
+        "c_mage_03_10",
+        "c_mage_05_08"
+      ],
+      "length": 10,
+      "heuristic": 30.02
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "rupture",
+        "c_mage_02_08",
+        "c_mage_03_10"
+      ],
+      "length": 10,
+      "heuristic": 29.9
+    },
+    {
+      "classId": "mage",
+      "ids": [
+        "c_mage_02_08",
+        "c_mage_03_02",
+        "c_mage_03_10"
+      ],
+      "length": 9,
+      "heuristic": 29.59
+    }
+  ],
+  "limits": [
+    "simultaneous 4P card scheduling, alternative target sets, thousands of draw and reward RNG sequences, relic combinations, build upgrade paths, varying player skill and all possible enemy states are not exhaustively covered",
+    "combo heuristic gives an opportunity upper bound, not guaranteed real damage; fastest-value combos require exact positioning and speed-order simulation"
+  ]
+}

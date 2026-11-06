@@ -204,22 +204,59 @@ function enemyTarget(game,source){const ls=actorsOf(game,'ally');if(!ls.length)r
 function enemySchedule(game){const base=game.now;for(const e of actorsOf(game,'enemy')){let pat=e.pattern;if(!pat)continue;let entries=(game.round%2?pat.rotation:pat.patterns)||[];for(const [key,relative]of entries){const start=base+relative-1,c=CARD[key];if(start<e.stunUntil||isBusy(e,start,start+cLen(c)))continue;const target=c.type==='defense'?e.id:enemyTarget(game,e);try{scheduleAction(game,e,key,start,target,'enemy',true);}catch{}}
 }}
 function scoreCard(card,enemyNext){const c=CARD[card],len=cLen(c);let score=(c.damage||0)*c.a/Math.max(1,len)*1.4+(c.guard||0)/Math.max(1,len)*0.65+(c.heal||0)*0.7+(c.mark||0)*2.1+(c.breakPower||0)*0.65+(c.poisePower||0)*0.3+(c.steady||0)*0.2+(c.bleed||0)*1.7+(c.meter||0)*.25+(c.buff||0)*1.8+(c.bonusCombo||0)*.45+(c.bonusMarked||0)*.38;return score;}
-function aiSchedule(game){for(const a of actorsOf(game,'ally').filter(x=>x.id!=='hero')){
-  let next=game.now+1,hand=a.hand.slice();const enemyHits=actorsOf(game,'enemy').flatMap(e=>e.actions.filter(act=>CARD[act.card].damage).map(act=>act.start+CARD[act.card].w));
-  let order=hand.sort((x,y)=>scoreCard(y.key)-scoreCard(x.key));let scheduled=0;
-  for(const inst of order){const c=CARD[inst.key];const possibles=[];for(let t=next;t<game.now+ROUND;t++){
-    if(t<a.stunUntil||isBusy(a,t,t+cLen(c)))continue;let val=scoreCard(inst.key);const ticks=Array.from({length:c.a},(_,i)=>t+c.w+i);
-    if(c.guard){const covered=ticks.filter(k=>enemyHits.some(h=>Math.abs(k-h)<1)).length;val+=covered*9;if(!covered)val-=8;}
-    if(c.heal)val+=(a.maxHp-a.hp>8?7:-15);if(c.steady)val+=a.poise>a.poiseMax*.5?8:-8;
-    if(c.damage&&t>=game.now+9)val-=6;
-    possibles.push({t,val});
+function aiSchedule(game){
+ // NPC allies use their own clock.  Defensive/healing cards may protect an
+ // endangered teammate; never consume the target ally's scheduled time slots.
+ const allies=actorsOf(game,'ally'),foes=actorsOf(game,'enemy');
+ const threats=[];
+ for(const e of foes)for(const action of e.actions){
+  if(action.canceled)continue;
+  const card=CARD[action.card];if(!card.damage)continue;
+  for(let tick=action.start+card.w;tick<action.start+card.w+card.a;tick++){
+   for(const target of (card.aoe?allies:allies.filter(a=>a.id===action.target))){
+    threats.push({tick,targetId:target.id,damage:card.damage});
+   }
   }
-  possibles.sort((a,b)=>b.val-a.val||a.t-b.t);if(!possibles.length)continue;
-  if(c.type==='defense'&&possibles[0].val<3)continue;
-  const start=possibles[0].t;const target=c.type==='defense'||c.heal||c.buff||c.steady?a.id:actorsOf(game,'enemy')[0]?.id;
-  if(!target)continue;try{scheduleAction(game,a,inst.key,start,target,'ai',true,inst.uid);a.hand=a.hand.filter(z=>z.uid!==inst.uid);scheduled++;next=start+cLen(c);if(next>=game.now+ROUND||scheduled>=4)break;}catch{}
+ }
+ for(const actor of allies.filter(x=>x.id!=='hero')){
+  let next=game.now+1,scheduled=0;
+  const hand=actor.hand.slice().sort((a,b)=>scoreCard(b.key)-scoreCard(a.key));
+  for(const inst of hand){
+   const card=CARD[inst.key],friendly=card.type==='defense'||card.heal||card.buff||card.steady;
+   const targets=friendly?(card.dodge?[actor]:allies):foes;
+   let best=null;
+   for(let start=next;start<game.now+ROUND;start++){
+    if(start<actor.stunUntil||isBusy(actor,start,start+cLen(card)))continue;
+    const active=Array.from({length:card.a},(_,i)=>start+card.w+i);
+    for(const target of targets){
+     let val=scoreCard(inst.key);
+     if(card.guard||card.dodge){
+      const incoming=threats.filter(x=>x.targetId===target.id&&active.includes(x.tick));
+      const danger=incoming.reduce((sum,x)=>sum+x.damage,0);
+      val+=Math.min(danger,card.guard||danger||0)*1.5;
+      if(incoming.length===0)val-=11;
+      if(target.id==='hero'&&incoming.length>0)val+=3;
+     }
+     if(card.heal)val+=target.maxHp-target.hp>8?Math.min(14,(target.maxHp-target.hp)*.3):-18;
+     if(card.steady)val+=target.poise>target.poiseMax*.45?9:-9;
+     if(card.damage){val+=(foes.length>1&&card.aoe?7:0);val+=Math.max(0,12-target.hp)*.2;}
+     if(card.mark&&target.marked>0)val-=2;
+     if(card.buff&&target.id==='hero')val+=2;
+     if(start+card.w>=game.now+ROUND)val-=8;
+     if(best===null||val>best.val)best={start,target,val};
+    }
+   }
+   if(!best)continue;
+   if(card.type==='defense'&&best.val<4)continue;
+   try{
+    scheduleAction(game,actor,inst.key,best.start,best.target.id,'ai',true,inst.uid);
+    actor.hand=actor.hand.filter(z=>z.uid!==inst.uid);
+    scheduled++;next=best.start+cLen(card);
+    if(next>=game.now+ROUND||scheduled>=4)break;
+   }catch{}
   }
-}}
+ }
+}
 function prepareRound(game){if(game.phase==='win'||game.phase==='lost')return;game.phase='planning';game.now=game.round*ROUND;
 for(const a of game.actors){a.actions=a.actions.filter(x=>!x.canceled&&x.start+cLen(CARD[x.card])>game.now);a.lockedUntil=game.now-1;if(a.side==='ally'&&!a.dead){drawGame(a,game);if(a.id==='hero'&&a.relics?.includes('round_regen'))a.hp=Math.min(a.maxHp,a.hp+2);if(a.id==='hero'&&a.relics?.includes('meter_regen'))a.energy=Math.min(100,a.energy+5);}}
 enemySchedule(game);aiSchedule(game);}
@@ -420,19 +457,31 @@ let best=null;
 for(const inst of cards){const card=CARD[inst.key];for(let relative=1;relative<=10;relative++){
  const start=game.now+relative-1,end=start+cLen(card);if(start<hero.stunUntil||isBusy(hero,start,end))continue;
  const overlapping=hero.actions.some(a=>!a.canceled&&a.start<game.now+10&&a.start+cLen(CARD[a.card])>game.now+10&&a.start<start);if(overlapping)continue;
- const attackTicks=enemies.flatMap(e=>e.actions.filter(a=>CARD[a.card].damage&&a.target===hero.id).flatMap(a=>Array.from({length:CARD[a.card].a},(_,i)=>a.start+CARD[a.card].w+i)));
+ const allies=actorsOf(game,'ally'),friendly=card.type==='defense'||card.heal||card.buff||card.steady;
+ const options=friendly?(card.dodge?[hero]:allies):enemies;
  const actives=Array.from({length:card.a},(_,i)=>start+card.w+i);
- let score=scoreCard(inst.key);if(card.guard||card.dodge){const threats=actives.filter(t=>attackTicks.includes(t)).length;score+=threats*(card.dodge?19:13);if(!threats)score-=12;}
- if(card.damage){const alive=enemies[0];score+=Math.max(0,10-alive.hp)*.12;if(policy==='novice')score=score*.5+gameRand(game)*14;}
- if(card.heal)score+=hero.hp<hero.maxHp-8?10:-25;
- if(card.mark)score+=5;
- if(end>game.now+10)score-=1.5*(end-(game.now+10));
- if(relative<=2&&policy==='novice')score+=2;
- if(best===null||score>best.score)best={inst,relative,score};
+ for(const chosenTarget of options){
+  let score=scoreCard(inst.key);
+  if(card.guard||card.dodge){
+   const incoming=enemies.flatMap(e=>e.actions.filter(a=>!a.canceled&&CARD[a.card].damage&&(a.target===chosenTarget.id||CARD[a.card].aoe)).flatMap(a=>Array.from({length:CARD[a.card].a},(_,i)=>({tick:a.start+CARD[a.card].w+i,damage:CARD[a.card].damage})))).filter(h=>actives.includes(h.tick));
+   const protectedDamage=incoming.reduce((x,y)=>x+y.damage,0);
+   score+=Math.min(protectedDamage,card.guard||protectedDamage)*1.35;
+   if(!incoming.length)score-=12;
+   if(chosenTarget.id==='hero'&&incoming.length)score+=2;
+  }
+  if(card.heal)score+=chosenTarget.maxHp-chosenTarget.hp>8?Math.min(12,(chosenTarget.maxHp-chosenTarget.hp)*.35):-25;
+  if(card.steady)score+=chosenTarget.poise>chosenTarget.poiseMax*.55?9:-8;
+  if(card.damage){score+=Math.max(0,10-chosenTarget.hp)*.12;if(policy==='novice')score=score*.90+gameRand(game)*4;}
+  if(card.mark)score+=5+(chosenTarget.marked>0?0:2);
+  if(card.buff&&chosenTarget.id==='hero')score+=2;
+  if(end>game.now+10)score-=1.5*(end-(game.now+10));
+  if(relative<=2&&policy==='novice')score+=2;
+ if(best===null||score>best.score)best={inst,relative,score,target:chosenTarget.id};
+ }
  }}
  if(!best)break;
  if(best.score<0)break;
- try{const nextCard=CARD[best.inst.key];const friend=nextCard.type==='defense'||nextCard.heal||nextCard.buff||nextCard.steady;place(game,best.inst.uid,best.relative,friend?hero.id:enemies[0].id);}catch{break;}
+ try{place(game,best.inst.uid,best.relative,best.target);}catch{break;}
  // Avoid overcommitting weak hands; allow artificial idle gaps.
  if(hero.actions.filter(a=>a.start>=game.now).length>=6)break;
 }
@@ -440,5 +489,5 @@ if(hero.energy>=100&&enemies.some(e=>e.hp<=35)){const e=enemies.find(e=>e.hp<=35
 return game;}
 function earliestShuffle(game){const a=game.actors[0];const last=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND).reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));return last-game.now+1;}
 function runAuto(opts,policy='tactical',maxRounds=14){const game=create(opts);while(game.phase==='planning'&&game.round<maxRounds){autoPlan(game,policy);simulateRound(game);}if(game.phase==='planning')game.phase='timeout';return game;}
-return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,ENCOUNTER_SCALING,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,STAGGER_TICKS,POISE_DECAY,POISE_GRACE,cLen,phase,predictHit:actorHitBuff,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,clone};
+return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,ENCOUNTER_SCALING,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,STAGGER_TICKS,POISE_DECAY,POISE_GRACE,cLen,phase,predictHit:actorHitBuff,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,aiSchedule,clone};
 });

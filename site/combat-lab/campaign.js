@@ -1,8 +1,10 @@
 /* Paperchalk Timegrid Roguelike v0.5: deterministic run progression + rewards + shop. */
-(function(root,factory){const isNode=typeof module==='object'&&module.exports;const G=isNode?require('./engine.js'):root.Timegrid;const expansion=isNode?require('./cards-expansion.js'):root.PaperchalkCards;if(!expansion)throw Error('卡池扩展脚本未加载');expansion.install(G);const api=factory(G,expansion);if(isNode)module.exports=api;root.TimegridRun=api;})(typeof globalThis!=='undefined'?globalThis:this,function(G,EXP){'use strict';
+(function(root,factory){const isNode=typeof module==='object'&&module.exports;const G=isNode?require('./engine.js'):root.Timegrid;const expansion=isNode?require('./cards-expansion.js'):root.PaperchalkCards;if(!expansion)throw Error('卡池扩展脚本未加载');expansion.install(G);const balance=isNode?require('./balance-v17.js'):root.PaperchalkBalance;if(!balance)throw Error('V1.7 数值层未加载');balance.apply(G,expansion);const api=factory(G,expansion);if(isNode)module.exports=api;root.TimegridRun=api;})(typeof globalThis!=='undefined'?globalThis:this,function(G,EXP){'use strict';
 const REWARDS={C:{common:92,uncommon:8,rare:0},B:{common:76,uncommon:24,rare:0},A:{common:52,uncommon:43,rare:5},S:{common:32,uncommon:53,rare:15},SS:{common:18,uncommon:49,rare:33}};
 const RANK_GOLD={C:0,B:2,A:5,S:8,SS:12};
 const STAGES=['corridor','twins','siege','surround','boss'];
+// Editable and deterministic V1.7 campaign-balance parameters.
+const RUN_BALANCE={healBase:15,healScoreDivisor:10,healMissingFraction:0.09,stageHealReduction:1,shopHealAmount:18,shopHealCost:8};
 const RARITY={
  reversal:'uncommon',cut:'common',slash:'common',stance:'common',feint:'common',sidestep:'common',heavy:'uncommon',cleave:'uncommon',whirl:'uncommon',brace:'uncommon',sweep:'rare',
  respite:'uncommon',shot:'common',bulletguard:'common',cover:'common',focus:'uncommon',burst:'uncommon',suppress:'uncommon',aim:'rare',buckshot:'rare',
@@ -50,14 +52,14 @@ function weightedCard(run,rank,excluded=new Set(),pool=POOLS[run.classId]){
 function cardReward(run,rank,count=3){const excluded=new Set(),choices=[];for(let i=0;i<count;i++){let key=weightedCard(run,rank,excluded);excluded.add(key);choices.push(key);}return choices;}
 function win(run,game){if(game.phase!=='win')throw Error('战斗尚未胜利');if(run.state!=='fight')throw Error('战斗已经结算');const hero=game.actors.find(a=>a.id==='hero'),s=game.score||G.scoreResult(game),fin=game.finisherBy===hero.id;
  run.energy=hero.energy;run.hp=Math.max(1,hero.hp);const award=10+run.stage*3+RANK_GOLD[s.rank]+(fin?4:0);run.gold+=award;
- const recover=Math.min(run.maxHp-run.hp,6+Math.floor(s.points/15));run.hp+=recover;
+ const missing=run.maxHp-run.hp;const recover=Math.min(missing,Math.max(0,RUN_BALANCE.healBase+Math.floor(s.points/RUN_BALANCE.healScoreDivisor)+Math.floor(missing*RUN_BALANCE.healMissingFraction)-run.stage*RUN_BALANCE.stageHealReduction));run.hp+=recover;
  const choices=cardReward(run,s.rank,3);run.pending={rank:s.rank,points:s.points,choices,bonusGold:award,recover,finisher:fin};run.lastResult={...s,award,recover,choices};run.completed.push({stage:run.stage,rank:s.rank,score:s.points,bonusGold:award,recover,finisher:fin});run.state='reward';return run.pending;
 }
 function choose(run,key){if(run.state!=='reward')throw Error('没有可选奖励');if(key!==null&&!run.pending.choices.includes(key))throw Error('无效奖励牌');if(key)run.deck[key]=(run.deck[key]||0)+1;else run.gold+=2;run.pending.chosen=key;run.state='shop';generateShop(run);return run;}
 function generateShop(run){const used=new Set(),cardPool=POOLS[run.classId],availableRelic=Object.keys(RELICS).filter(x=>!run.relics.includes(x));let offers=[];
  for(let i=0;i<3;i++){let key=takeRandom(run,cardPool.filter(k=>!used.has(k)));used.add(key);offers.push({kind:'card',key,name:G.CARD[key].name,description:G.CARD[key].desc||'',cost:RARITY[key]==='rare'?15:RARITY[key]==='uncommon'?10:6,rarity:RARITY[key],sold:false});}
  if(availableRelic.length){const rel=takeRandom(run,availableRelic);offers.push({kind:'relic',key:rel,name:RELICS[rel].name,description:RELICS[rel].text,cost:RELICS[rel].cost,sold:false});}
- offers.push({kind:'heal',key:'heal',name:'急救绷带',description:'立即恢复18点生命（不超过上限）',cost:8,sold:false});
+ offers.push({kind:'heal',key:'heal',name:'急救绷带',description:'立即恢复18点生命（不超过上限）',cost:RUN_BALANCE.shopHealCost,sold:false});
  offers.push({kind:'upgrade',key:'upgrade',name:'磨砺卡牌',description:'选择1张非升级卡永久提升效能',cost:12,sold:false});
  offers.push({kind:'remove',key:'remove',name:'清理废牌',description:'从牌组永久移除1张牌',cost:10,sold:false});
  run.shop=offers;return offers;
@@ -71,7 +73,7 @@ function buy(run,index,target=null){if(run.state!=='shop')throw Error('只有商
  run.gold-=item.cost;item.sold=true;
  if(item.kind==='card')run.deck[item.key]=(run.deck[item.key]||0)+1;
  if(item.kind==='relic'){run.relics.push(item.key);if(item.key==='extra_hand'){} }
- if(item.kind==='heal')run.hp=Math.min(run.maxHp,run.hp+18);
+ if(item.kind==='heal')run.hp=Math.min(run.maxHp,run.hp+RUN_BALANCE.shopHealAmount);
  if(item.kind==='upgrade'){const k=upgradeKey(target);run.deck[target]--;if(!run.deck[target])delete run.deck[target];run.deck[k]=(run.deck[k]||0)+1;}
  if(item.kind==='remove'){run.deck[target]--;if(!run.deck[target])delete run.deck[target];}
  return item;
@@ -80,5 +82,5 @@ function reroll(run){if(run.state!=='shop')throw Error('只有商店阶段可刷
 function next(run){if(run.state!=='shop')throw Error('先完成奖励结算');run.stage++;run.rerolls=0;run.shop=[];run.pending=null;if(run.stage>=STAGES.length){run.state='complete';return null;}return newBattle(run);}
 function rarityOf(key){return RARITY[key.replace(/\+$/,'')]||'common';}
 function cardCount(run){return Object.values(run.deck).reduce((a,b)=>a+b,0);}
-return{STAGES,REWARDS,RANK_GOLD,RARITY,POOLS,RELICS,ATLAS:EXP,rarityOf,cardCount,start,newBattle,win,choose,generateShop,buy,reroll,next,upgradeKey,cardReward};
+return{STAGES,REWARDS,RANK_GOLD,RARITY,POOLS,RELICS,ATLAS:EXP,RUN_BALANCE,rarityOf,cardCount,start,newBattle,win,choose,generateShop,buy,reroll,next,upgradeKey,cardReward};
 });

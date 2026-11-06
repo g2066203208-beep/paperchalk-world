@@ -1,0 +1,14 @@
+{
+  "version": "1.7",
+  "scope": "one card from each 90-card class pool, fixed class order axe/gun/guard/mage, no draw order/slots/relics/targets/timing simulation",
+  "combinations": 65610000,
+  "bestProxy": 55.68,
+  "maxProxyCardIds": [
+    "c_axe_02_10",
+    "c_gun_06_10",
+    "c_guard_07_10",
+    "c_mage_03_10"
+  ],
+  "aboveProxy40": 3868,
+  "note": "Upper-bound potential only. Some cards cannot simultaneously target the same actor, and game timing can prevent proposed combos; do not treat this as a true win-rate or metagame balance guarantee."
+}
