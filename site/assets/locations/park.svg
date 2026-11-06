@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1728 972" role="img" aria-label="城市公园阴天步道">
+<defs>
+<linearGradient id="wall" x2="0" y2="1"><stop stop-color="#565b5a"/><stop offset=".58" stop-color="#666861"/><stop offset="1" stop-color="#454843"/></linearGradient>
+<linearGradient id="floor" x2="0" y2="1"><stop stop-color="#595b57"/><stop offset="1" stop-color="#292a2b"/></linearGradient>
+<linearGradient id="glass" x2=".1" y2="1"><stop stop-color="#738487"/><stop offset=".54" stop-color="#57666d"/><stop offset="1" stop-color="#29383a"/></linearGradient>
+<linearGradient id="metal" x2="0" y2="1"><stop stop-color="#7b8182"/><stop offset="1" stop-color="#333b3e"/></linearGradient>
+<linearGradient id="ceiling" x2="0" y2="1"><stop stop-color="#5d6060"/><stop offset="1" stop-color="#383c3d"/></linearGradient>
+<radialGradient id="vignette"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#080b0e" stop-opacity=".3"/></radialGradient>
+<filter id="grain"><feTurbulence baseFrequency=".035" numOctaves="2" seed="7" result="noise"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".05"/></feComponentTransfer></filter>
+</defs>
+
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#71818a"/><stop offset="1" stop-color="#adb0a7"/></linearGradient>
+<linearGradient id="path" x2="0" y2="1"><stop stop-color="#8b8a80"/><stop offset="1" stop-color="#545957"/></linearGradient></defs>
+<rect width="1728" height="972" fill="url(#sky)"/>
+<g fill="#606f76" opacity=".67">
+<rect x="-50" y="300" width="150" height="340"/><rect x="147" y="339" width="187" height="357"/><rect x="344" y="378" width="174" height="374"/><rect x="541" y="327" width="161" height="391"/><rect x="738" y="366" width="198" height="408"/><rect x="935" y="315" width="185" height="340"/><rect x="1132" y="354" width="172" height="357"/><rect x="1329" y="303" width="159" height="374"/><rect x="1526" y="342" width="196" height="391"/><rect x="1723" y="381" width="183" height="408"/></g>
+<path d="M0 573Q500 525 950 570T1728 560V972H0Z" fill="#526658"/>
+<path d="M0 648Q250 599 425 643L577 972H0Z" fill="#425a48"/>
+<path d="M1728 641Q1450 592 1290 644L1163 972H1728Z" fill="#3d5748"/>
+<path d="M746 579L975 579L1531 972H214Z" fill="url(#path)" stroke="#a6aca0" stroke-width="9"/>
+<path d="M818 582L461 972M904 582L1234 972" stroke="#d3d1c2" opacity=".17" stroke-width="4"/>
+<path d="M780 600H948" stroke="#343e3d" stroke-width="1" opacity=".22"/><path d="M630 627H1098" stroke="#343e3d" stroke-width="2" opacity=".22"/><path d="M480 708H1248" stroke="#343e3d" stroke-width="3" opacity=".22"/><path d="M330 843H1398" stroke="#343e3d" stroke-width="4" opacity=".22"/>
+<g stroke="#343d39" stroke-width="20" fill="none">
+<path d="M215 700Q240 480 218 279M1458 729Q1432 485 1464 272M425 608Q392 443 431 340M1236 619Q1289 426 1275 324"/>
+</g>
+<g fill="#425746" opacity=".98">
+<ellipse cx="216" cy="279" rx="160" ry="165"/>
+<ellipse cx="1463" cy="277" rx="186" ry="169"/>
+<ellipse cx="427" cy="336" rx="108" ry="122"/>
+<ellipse cx="1275" cy="321" rx="126" ry="130"/>
+</g>
+<g fill="#6b7964" opacity=".62">
+<ellipse cx="160" cy="249" rx="95" ry="93"/>
+<ellipse cx="1400" cy="249" rx="130" ry="104"/>
+<ellipse cx="400" cy="303" rx="70" ry="78"/>
+</g>
+<g stroke="#353d3b" fill="#7b8075" stroke-width="10">
+<rect x="93" y="731" width="299" height="29"/><path d="M125 759L96 880M350 759L383 880"/>
+<rect x="1317" y="742" width="284" height="28"/><path d="M1351 770L1322 886M1555 770L1582 888"/>
+</g>
+<path d="M0 591H1728" stroke="#a9aea7" opacity=".12" stroke-width="4"/>
+
+<rect width="1728" height="972" fill="url(#vignette)" pointer-events="none"/>
+<rect width="1728" height="972" filter="url(#grain)" opacity=".3" pointer-events="none"/>
+</svg>
