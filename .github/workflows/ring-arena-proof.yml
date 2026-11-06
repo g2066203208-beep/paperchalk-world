@@ -9,6 +9,7 @@ on:
       - 'site/dev/character-bridge.js'
       - 'tests/ring-arena*'
       - 'site/game/ring-arena-director.js'
+      - 'site/game/ring-arena-frame-inspector.js'
       - 'site/game/ring-arena-director.css'
       - 'site/assets/characters/hero-axe-attack.webp'
       - 'site/assets/characters/enemy-suit-hit.webp'
@@ -48,7 +49,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Render actual 3D with static 3/4 heroine and animated enemy L2D
         run: node tests/ring-arena-browser.mjs
-      - name: Capture entire V26 30fps battle sequence in REAL Chromium/WebGL
+      - name: Capture every authored V27 30fps battle frame in REAL Chromium/WebGL
         run: node tests/ring-arena-storyboard.mjs
       - name: Preserve real rendered game screenshots even on failed test
         if: always()
