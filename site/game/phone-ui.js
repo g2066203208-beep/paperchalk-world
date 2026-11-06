@@ -273,6 +273,7 @@
         renderStatus(copy);showPage('app');return;
       }
       if(name==='地图'){
+        if(typeof config.onOpenMap==='function'){config.onOpenMap();return}
         renderMap(copy);showPage('app');return;
       }
       if(name==='背包'){
