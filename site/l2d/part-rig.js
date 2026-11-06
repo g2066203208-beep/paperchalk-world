@@ -1052,6 +1052,8 @@ function warpPoint(part,u,v,phase=0,posed=null,idle=null){
  const placed=placedRestPoint(part,{x:px,y:py});
  let inherited=parentPoint(part,bodyPosePoint(placed.x,placed.y,phase,idle),phase,idle);
  if(part._crouchDynamics)inherited=crouchDeform(part,inherited,u,v,phase);
+ if(part.id==='handwear'&&idle?.angelMotion?.enabled===true)
+  inherited=angelShopHandsPoint(inherited,phase,idle);
  // Two parents in one deformation: pelvis->torso->coat, wrist->grasped fold.
  // Follow the authentic hand ArtMesh, never clone the hand onto the jacket.
  const link=part.followGrip,hand=part._gripParent;
@@ -1478,10 +1480,67 @@ function occlusionDiagnostics(layers,model){
   return {source:id,conflicts:plan?.conflicts||0,moved:plan?.moved||0};
  });
 }
+// Optional idle animation for the angel-shopkeeper only. Never applied to any
+// other character; all movements preserve the original RGBA ArtMesh layers.
+function angelShopPose(phase,setting){
+ const t=finite(phase,0)*clamp(finite(setting?.cadence,.75),.15,2.0);
+ const sway=Math.sin(t*.92);
+ const head=setting?.head||{};
+ return {
+  x:clamp(finite(head.shiftX,3.2),0,7)*sway,
+  y:clamp(finite(head.shiftY,1.1),0,3)*Math.sin(t*.58),
+  angle:clamp(finite(head.degrees,1.5),0,3)*Math.PI/180*sway,
+  wing:Math.sin(t*.8),
+  flutter:Math.sin(t*1.66)*.16
+ };
+}
+function angelShopTransformPoint(point,pose,pivot={x:514,y:486}){
+ const dx=point.x-pivot.x,dy=point.y-pivot.y;
+ const c=Math.cos(pose.angle),s=Math.sin(pose.angle);
+ return {x:pivot.x+dx*c-dy*s+pose.x,
+         y:pivot.y+dx*s+dy*c+pose.y};
+}
+function applyAngelShopIdle(ctx,part,phase,idle){
+ const setting=idle?.angelMotion;
+ if(!setting||setting.enabled!==true)return;
+ const pose=angelShopPose(phase,setting);
+ if(['back_hair','ears','face','mouth','eyebrow','eyewhite',
+     'irides','eyelash','front_hair'].includes(part.id)){
+  const pivot={x:514,y:486};
+  ctx.translate(pivot.x+pose.x,pivot.y+pose.y);
+  ctx.rotate(pose.angle);
+  ctx.translate(-pivot.x,-pivot.y);
+ }else if(part.id==='wing_left'||part.id==='wing_right'){
+  const left=part.id==='wing_left';
+  const wing=setting.wings||{};
+  const degrees=clamp(finite(wing.degrees,4),0,8);
+  const bias=left?-1:1;
+  const angle=bias*degrees*(pose.wing+pose.flutter)*Math.PI/180;
+  const pivot=left?wing.leftPivot:wing.rightPivot;
+  const x=Array.isArray(pivot)&&pivot.length===2?finite(pivot[0],397):397;
+  const y=Array.isArray(pivot)&&pivot.length===2?finite(pivot[1],506):506;
+  ctx.translate(x,y);ctx.rotate(angle);ctx.translate(-x,-y);
+ }
+}
+// The cheek-palm contact moves with the head. The TWO forearms are from a
+// single original PSD layer, so their elbows stay anchored while the upper
+// pixels follow the same rigid head pose with a smooth weight field.
+function angelShopHandsPoint(point,phase,idle){
+ const setting=idle?.angelMotion;if(!setting||setting.enabled!==true)return point;
+ const pose=angelShopPose(phase,setting),arms=setting.hands||{};
+ const y0=clamp(finite(arms.pinFromY,560),500,660),
+       y1=clamp(finite(arms.pinAtY,740),690,850);
+ const contact=1-smooth(clamp((point.y-y0)/Math.max(20,y1-y0),0,1));
+ const influence=contact*clamp(finite(arms.follow,.98),0,1);
+ const q=angelShopTransformPoint(point,pose);
+ return {x:point.x+(q.x-point.x)*influence,
+         y:point.y+(q.y-point.y)*influence};
+}
 // Body-surface and tailored garment share the SAME dynamic pelvis/leg pose.
 // Trim only the hidden body raster at draw time; no author PSD is destroyed.
 function renderArtPart(ctx,source,part,motion,mount,phase,idle,selected=false){
  ctx.save();
+ applyAngelShopIdle(ctx,part,phase,idle);
  if(motion.x||motion.y||motion.angle){
   const anchorX=mount.x+mount.w*mount.pivot.x,anchorY=mount.y+mount.h*mount.pivot.y;
   ctx.translate(anchorX+motion.x,anchorY+motion.y);
@@ -1508,6 +1567,10 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
   const ai=order.get(String(a.partId||a.name)),bi=order.get(String(b.partId||b.name));
   return (ai??100)-(bi??100);
  }):layers;
+ const angelIdle=model.characterId==='angel-shopkeeper'&&model.face==='front'&&
+  model.angelMotion?.enabled===true
+   ?{...(model.idleProfile||{}),angelMotion:model.angelMotion}
+   :(model.idleProfile||null);
  const ids=drawLayers.map(p=>String(p.partId||p.name));
  const visible=new Set(drawLayers.filter(p=>p.visible&&p.sourcePart&&p.canvas&&
     model.parts[String(p.partId||p.name)]?.enabled!==false)
@@ -1538,7 +1601,7 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
    // Draw every source body ArtMesh intact. The outfit follows joints by
    // weighted vertices; never clip or erase the canonical model.
    renderArtPart(ctx,{...part,canvas:texture,opacity:(part.opacity??1)*pose.opacity},
-    b,motion,attached||b,phase,model.idleProfile||null,
+    b,motion,attached||b,phase,angelIdle,
     id===selectedId&&slot===2*ids.indexOf(id)+1);
   }
   if(slot%2!==1)continue;
