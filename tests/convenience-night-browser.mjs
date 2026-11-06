@@ -8,13 +8,13 @@ const server=spawn('python3',['-m','http.server','8168','--bind','127.0.0.1','--
 let browser;
 const delay=n=>new Promise(resolve=>setTimeout(resolve,n));
 try {
- let ready=false;for(let i=0;i<70;i++){try{if((await fetch(root+'/convenience-store/night/')).ok){ready=true;break}}catch{}await delay(200)}
+ let ready=false;for(let i=0;i<70;i++){try{if((await fetch(root+'/convenience-store/night/?qa=1')).ok){ready=true;break}}catch{}await delay(200)}
  assert.ok(ready,'night-shift game must load over real HTTP');
  browser=await chromium.launch({headless:true});
  const context=await browser.newContext({viewport:{width:1440,height:900},recordVideo:{dir:dest,size:{width:1440,height:900}}});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.goto(root+'/convenience-store/night/',{waitUntil:'networkidle'});
+ await page.goto(root+'/convenience-store/night/?qa=1',{waitUntil:'networkidle'});
  assert.match(await page.title(),/深夜便利店/);
  await page.screenshot({path:dest+'/01-title-screen.png'});
  await page.locator('#begin').click();
@@ -75,7 +75,7 @@ try {
  await context.close();
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  mobile.on('pageerror',e=>errors.push(e.message));
- await mobile.goto(root+'/convenience-store/night/',{waitUntil:'networkidle'});
+ await mobile.goto(root+'/convenience-store/night/?qa=1',{waitUntil:'networkidle'});
  await mobile.locator('#begin').click();
  assert.equal(await mobile.locator('#cashier').isVisible(),true);
  await mobile.screenshot({path:dest+'/16-real-mobile-night-shift.png',fullPage:true});
