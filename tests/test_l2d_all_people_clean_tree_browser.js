@@ -15,7 +15,6 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    ['male2','male2','男二'],
    ['char-004','char-004','女三'],
    ['female-06','female-06','女六'],
-   ['female-06-outfit-02','female-06','女六'],
    ['char-006','char-006','女五'],
    ['protagonist-sleepwear','protagonist','女主'],
    ['char-003','char-003','男主']
@@ -76,12 +75,15 @@ const BASE='http://127.0.0.1:8134/character-editor/';
      assert.equal(audit.rootNames[audit.roots.indexOf('char-006')],'女五',
        'female five is exactly 女五 without descriptive suffix');
    }
-   if(id==='female-06-outfit-02'){
-    assert.equal(await page.locator('.character-family[data-family="female-06"]').count(),1,
-      'new dress is NOT a second female6 character');
-    assert.match(await page.locator('.character-family[data-family="female-06"] [data-category="outfit"] button[data-character="female-06-outfit-02"]').textContent(),/第三套 · 橙棕外套/);
-    assert.equal(await page.locator('.character-family[data-family="female-06"] [data-category="outfit"] button[data-character="female-06-outfit-02"]').count(),1,
-      'new clothes must appear under 女六 → 服装');
+   if(id==='female-06'){
+    const femaleSix=page.locator('.character-family[data-family="female-06"]');
+    assert.equal(await femaleSix.count(),1);
+    assert.equal(await femaleSix.locator('[data-category="outfit"] button').count(),0,
+      'only the third costume as base, no former wardrobe');
+    assert.equal(await femaleSix.locator('button[data-character="female-06"]').count(),1,
+      'exactly one real female-six base node');
+    assert.ok(!audit.tree.includes('第二套')&&!audit.tree.includes('第三套'),
+      'retired wardrobe text cannot appear in tree');
    }
    console.log('PASS actor tree',id,'=>',family,'import',audit.importTarget);
   }
@@ -92,6 +94,13 @@ const BASE='http://127.0.0.1:8134/character-editor/';
    null,{timeout:35000});
   assert.equal(await page.locator('.character-family[data-family="char-003"]').count(),1);
   assert.equal(await page.locator('.character-family[data-family="char-003"] [data-category="outfit"] button[data-character="char-003-outfit-02"]').count(),0);
+  // Former second/third wardrobe deep links now enter the sole base model.
+  for(const legacy of ['female-06-second-outfit','female-06-outfit-02']){
+    await page.goto(BASE+'?character='+legacy+'&side=front',{waitUntil:'load'});
+    await page.waitForFunction(()=>window.PaperchalkStudio?.current==='female-06',
+      null,{timeout:45000});
+    assert.equal(await page.locator('.character-family[data-family="female-06"] [data-category="outfit"] button').count(),0);
+  }
   // Old teacher URL must select the same CHAR-006, not create a second playable teacher.
   await page.goto(BASE+'?character=class-teacher-geography-candidate&side=front',
     {waitUntil:'load'});
