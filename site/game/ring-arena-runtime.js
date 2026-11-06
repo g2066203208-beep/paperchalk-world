@@ -95,16 +95,16 @@
  const SHOT_NAMES=Object.freeze(['左侧','右侧']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:.70,eyeZ:11.35,eyeY:1.48,
-    focusX:-.10,focusY:.98,focusZ:8.70,fov:56}),
-   Object.freeze({id:'right',eyeX:-.70,eyeZ:11.35,eyeY:1.48,
-    focusX:.10,focusY:.98,focusZ:8.70,fov:56})
+   Object.freeze({id:'left',eyeX:1.60,eyeZ:11.55,eyeY:1.45,
+    focusX:.20,focusY:.60,focusZ:8.70,fov:56}),
+   Object.freeze({id:'right',eyeX:-1.60,eyeZ:11.55,eyeY:1.45,
+    focusX:-.20,focusY:.60,focusZ:8.70,fov:56})
   ]),
   inner:Object.freeze([
-   Object.freeze({id:'left',eyeX:-.70,eyeZ:7.15,eyeY:1.43,
-    focusX:.20,focusY:.75,focusZ:12.40,fov:48}),
-   Object.freeze({id:'right',eyeX:.70,eyeZ:7.15,eyeY:1.43,
-    focusX:-.20,focusY:.75,focusZ:12.40,fov:48})
+   Object.freeze({id:'left',eyeX:-1.60,eyeZ:7.15,eyeY:1.43,
+    focusX:.80,focusY:.45,focusZ:12.40,fov:52}),
+   Object.freeze({id:'right',eyeX:1.60,eyeZ:7.15,eyeY:1.43,
+    focusX:-.80,focusY:.45,focusZ:12.40,fov:52})
   ])
  });
  const stopIndex=n=>clamp(Math.round(Number(n)||0),0,1);
@@ -154,6 +154,32 @@
   return {valid:true,left:Math.min(...xs),right:Math.max(...xs),
    top:Math.max(...ys),bottom:Math.min(...ys),
    heightFraction:(Math.max(...ys)-Math.min(...ys))/2};
+ }
+ // Protagonist original back art occupies x≈377..655 of its untouched 1024
+ // RGBA canvas. This padded *measurement* is for overlap checks only, never
+ // crops, paints, or replaces any of the user's 3D/L2D source pixels.
+ const CANONICAL_BACK_UV=Object.freeze({left:.32,right:.68,top:.02,bottom:.985});
+ function portraitVisibleBounds(actor,cam,uv=CANONICAL_BACK_UV,aspect=16/9){
+  const f=normalize({x:cam.focus.x-cam.eye.x,y:0,z:cam.focus.z-cam.eye.z});
+  const right=normalize(cross(f,{x:0,y:1,z:0}));
+  const h=actor.height/Math.max(.01,actor.soleY-actor.crownY),pts=[];
+  for(const u of [uv.left,uv.right])for(const v of [uv.top,uv.bottom])
+   pts.push(project({x:actor.x+right.x*(u-actor.soleX)*h,
+    y:actor.y+(actor.soleY-v)*h,z:actor.z+right.z*(u-actor.soleX)*h},
+    cam,aspect));
+  if(pts.some(p=>!p.valid))return {valid:false};
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  return {valid:true,left:Math.min(...xs),right:Math.max(...xs),
+   top:Math.max(...ys),bottom:Math.min(...ys)};
+ }
+ function battleVisualSafety(mode='outer',index=0,aspect=16/9,heroUv=CANONICAL_BACK_UV){
+  const c=camera(mode,index),actors=layout(mode),hero=portraitVisibleBounds(actors.allies[0],c,heroUv,aspect);
+  const foes=actors.enemies.map(a=>portraitBounds(a,c,aspect));
+  const gap=index===0
+   ?Math.min(...foes.map(b=>b.left))-hero.right
+   :hero.left-Math.max(...foes.map(b=>b.right));
+  return {valid:hero.valid&&foes.every(b=>b.valid),gap,hero,foes,
+   clear:gap>=.045&&foes.every(b=>b.left>=-.93&&b.right<=.93)};
  }
  function shader(gl,type,source){
   const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);
@@ -516,6 +542,7 @@
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
-  SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,portraitBounds,responsiveFov,lookAt,
+  SHOT_NAMES,CAMERA_STOPS,backdropPoint,camera,blendCamera,portraitBounds,
+  portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,responsiveFov,lookAt,
   perspective,multiply,project,create});
 });
