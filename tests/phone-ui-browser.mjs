@@ -50,8 +50,12 @@ try{
       'Original cat-ear phone image must be visibly loaded: '+JSON.stringify(state));
     assert.equal(state.shellPseudo,'none','The approved phone has no fabricated CSS ears');
     assert.ok(state.ratio>.47&&state.ratio<.53,'Incorrect smartphone silhouette ratio');
-    assert.ok(state.height>state.rootHeight*.87&&state.height<=state.rootHeight*.92,
-      'Phone is incorrectly scaled for this logical game viewport: '+JSON.stringify(state));
+    // Enlarged in-world handset intentionally uses 96% of logical viewport.
+    // Keep the user-approved original shell aspect ratio and prevent clipping.
+    assert.ok(state.height>state.rootHeight*.94&&state.height<=state.rootHeight*.98,
+      'Enlarged phone is incorrectly scaled for this logical game viewport: '+JSON.stringify(state));
+    assert.ok(state.phoneRect.top>=-2&&state.phoneRect.bottom<=state.rootHeight+2,
+      'Handset is clipped vertically: '+JSON.stringify(state));
     assert.equal(await page.locator('#phone-ui .phone-charm').count(),0,'Unwanted hanging accessory');
     assert.equal(await page.locator('#phone-ui .phone-dot').count(),6);
     assert.equal(await page.locator('#phone-ui [data-key]').count(),11);
