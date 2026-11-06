@@ -5,6 +5,7 @@ on:
     paths:
       - 'site/index.html'
       - 'site/game/daily-life-*'
+      - 'site/game/overworld*'
       - 'site/game/story-content.js'
       - 'site/game/opening-flow.js'
       - 'site/game/phone-ui*'
