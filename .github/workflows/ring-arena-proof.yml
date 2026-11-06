@@ -41,6 +41,16 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Render actual 3D with static 3/4 heroine and animated enemy L2D
         run: node tests/ring-arena-browser.mjs
+      # Temporary source diagnostic: confirm which authored CHAR-006 part contains
+      # the unexplained gray side mattes. This does NOT mutate any PSD pixels.
+      - name: Preserve original CHAR-006 source parts for visual diagnosis
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: char006-unmodified-source-diagnostic
+          path: site/assets/l2d/inbox/class-teacher-geography-candidate.zip
+          retention-days: 1
+          if-no-files-found: warn
       - name: Preserve real rendered game screenshots even on failed test
         if: always()
         uses: actions/upload-artifact@v4
