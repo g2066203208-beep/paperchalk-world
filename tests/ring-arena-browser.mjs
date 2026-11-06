@@ -93,6 +93,12 @@ try{
  assert.equal(await page.locator('[data-shot="2"]').count(),0,'remove center/third station');
  assert.equal(await page.locator('[data-shift]').count(),0,'remove redundant camera controls');
  assert.equal(before.sources.find(p=>p.id==='player').side,'back');
+ assert.equal(before.sources.find(p=>p.id==='player').character,'protagonist');
+ assert.equal(before.arena.heroine.id,'protagonist');
+ assert.equal(before.arena.heroine.side,'back');
+ assert.ok(before.arena.heroine.ready,'approved original L2D back must be rendered');
+ assert.ok(before.arena.safety.clear&&before.arena.safety.gap>.045,
+  'real transparent heroine silhouette must NOT cover opponent number one');
  assert.ok(before.sources.every(p=>!p.hidden&&p.ready==='ready'&&p.canvasW>0));
  const originalOuter=JSON.stringify(before.arena.actors);
  const computed=await page.evaluate(()=>{
@@ -103,11 +109,11 @@ try{
    cameraCount:a.CAMERA_STOPS.outer.length};
  });
  assert.equal(computed.cameraCount,2);
- assert.ok(computed.hero.valid&&computed.hero.heightFraction>1.10);
- assert.ok(computed.heroCenter.x<-.38&&computed.heroCenter.x>-.55,
+ assert.ok(computed.hero.valid&&computed.hero.heightFraction>.78);
+ assert.ok(computed.heroCenter.x<-.50&&computed.heroCenter.x>-.82,
    'real L2D heroine center remains in near-left foreground');
  assert.ok(computed.enemies.every(b=>b.valid&&b.left>-.90&&b.right<.90));
- assert.ok(computed.hero.heightFraction>1.25&&computed.hero.heightFraction<1.55,
+ assert.ok(computed.hero.heightFraction>.78&&computed.hero.heightFraction<1.30,
   'heroine should feel camera-close, with intentional below-screen crop');
  const staging=await page.evaluate(()=>{
   const a=window.PaperWorldRingArena,scene=a.layout('outer'),c=a.camera('outer',0);
@@ -135,6 +141,10 @@ try{
  assert.equal(right.arena.camera.shot,'right');
  assert.equal(right.arena.l2dReady,5);
  assert.equal(JSON.stringify(right.arena.actors),originalOuter);
+ assert.equal(right.arena.heroine.id,'protagonist');
+ assert.equal(right.arena.heroine.side,'back');
+ assert.ok(right.arena.safety.clear&&right.arena.safety.gap>.045,
+  'right view near-hero L2D must leave all enemy sprites uncovered');
  await page.screenshot({path:'artifacts/ring-arena/l2d-outer-right.png'});
  // Extra same-direction swipe never reveals a nonexistent intermediate view.
  await page.mouse.move(540,240);await page.mouse.down();
@@ -148,6 +158,8 @@ try{
  assert.equal(innerRight.arena.camera.shot,'right');
  assert.equal(innerRight.arena.l2dReady,5);
  const originalInner=JSON.stringify(innerRight.arena.actors);
+ assert.ok(innerRight.arena.safety.clear&&innerRight.arena.safety.gap>.045,
+  'inner right surround must preserve readable four enemies');
  await page.screenshot({path:'artifacts/ring-arena/l2d-inner-right.png'});
  await page.locator('[data-shot="0"]').click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().settled,null,{timeout:7000});
@@ -155,6 +167,8 @@ try{
  assert.equal(innerLeft.arena.shotIndex,0);
  assert.equal(innerLeft.arena.camera.shot,'left');
  assert.equal(JSON.stringify(innerLeft.arena.actors),originalInner);
+ assert.ok(innerLeft.arena.safety.clear&&innerLeft.arena.safety.gap>.045,
+  'inner left surround must preserve readable four enemies');
  await page.screenshot({path:'artifacts/ring-arena/l2d-inner-left.png'});
  // Real WebGL projection across desktop and mobile viewport sizes.
  await page.setViewportSize({width:1920,height:1080});
@@ -167,6 +181,10 @@ try{
  await page.waitForTimeout(300);
  const mobile=await get();
  assert.equal(JSON.stringify(mobile.arena.actors),originalInner);
+ assert.equal(mobile.arena.heroine.id,'protagonist');
+ assert.equal(mobile.arena.heroine.side,'back');
+ assert.ok(mobile.arena.safety.clear&&mobile.arena.safety.gap>.045,
+  'mobile portrait aspect must retain heroine/enemy screen-safe separation');
  assert.ok(mobile.arena.effectiveVerticalFov>=mobile.arena.camera.fov,
   'mobile portrait lens should preserve horizontal team composition');
  await page.screenshot({path:'artifacts/ring-arena/mobile-portrait-390x844.png'});
