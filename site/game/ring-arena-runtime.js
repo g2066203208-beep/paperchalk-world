@@ -970,9 +970,12 @@
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
    l2dReady:visibleActors(mode).filter(a=>textures.get(a.id).painted).length,
    heroine:{
-    id:window.PaperchalkL2D?.get('player')?.img?.dataset.characterId||null,
-    side:window.PaperchalkL2D?.get('player')?.img?.dataset.characterSide||null,
-    l2dMode:window.PaperchalkL2D?.get('player')?.root?.dataset.l2dMode||null,
+    id:previewPose==='female7'?'female-07':
+     window.PaperchalkL2D?.get('player')?.img?.dataset.characterId||null,
+    side:previewPose==='female7'?'back':
+     window.PaperchalkL2D?.get('player')?.img?.dataset.characterSide||null,
+    l2dMode:previewPose==='female7'?'static-back-battle-cutout':
+     window.PaperchalkL2D?.get('player')?.root?.dataset.l2dMode||null,
     ready:textures.get('hero').painted,
     sourceUv:textures.get('hero').opaqueUv||null,
     combatUpperUv:textures.get('hero').opaqueCombatUv||null
@@ -981,7 +984,9 @@
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
     textures.get('hero').opaqueCombatUv||CANONICAL_BACK_UV),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
-   pixelsFrom:posePreviewEnabled?'fixed-left 3/4 heroine + animated original enemy L2D':'original animated L2D actors'});
+   pixelsFrom:previewPose==='female7'?'user-approved female-07 original back art (static), four animated enemy L2D actors':
+    posePreviewEnabled?'legacy fixed-left 3/4 heroine + animated original enemy L2D':
+    'original animated L2D actors'});
   function qaFrame(targetId,elapsedMs){
    if(!directorQA)throw Error('Director QA mode is disabled');
    if(!actorForTarget(targetId)||!Number.isFinite(elapsedMs))throw Error('Invalid QA frame');
