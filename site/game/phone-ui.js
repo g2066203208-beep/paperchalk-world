@@ -147,59 +147,14 @@
     function renderMap(copy){
       const data=config.getMapState?.();
       if(!data){copy.textContent='暂时没有地图资料。';return;}
-      const current=data.state.location,locations=data.locations;
-      const caption=document.createElement('p');
-      caption.className='phone-map-location';
-      caption.textContent='当前位置 · '+locations[current].label;
-      copy.appendChild(caption);
-      const canvas=document.createElement('div');canvas.className='phone-map-art';
-      canvas.innerHTML='<svg viewBox="0 0 200 220" aria-hidden="true"><path d="M17 176 L58 54 L113 110 L177 41 M17 176 L104 176 L177 41 M58 54 L169 172 L104 176" fill="none" stroke="#9da7a7" stroke-width="2" stroke-dasharray="4 5" opacity=".4"/><path d="M16 154 L114 110 L167 173" fill="none" stroke="#c2a97e" stroke-width="1" stroke-dasharray="3 6" opacity=".55"/></svg>';
-      const pins=[['entrance','家',13,80],['school','学校',30,23],
-        ['convenience','便利店',61,49],['cafe','咖啡店',37,81],
-        ['mall','商场',83,18],['park','公园',84,81]];
-      const info=document.createElement('p');info.className='phone-map-info';
-      info.textContent=current==='entrance'?'选一个要去的地方。':
-        locations[current].group==='家'?'先到玄关，从家门口出门。':'选择目的地，路程将消耗时间。';
-      for(const [id,label,x,y] of pins){
-        const def=locations[id],button=document.createElement('button');
-        button.type='button';button.className='phone-map-pin';
-        button.dataset.place=id;button.style.left=x+'%';button.style.top=y+'%';
-        button.textContent=label;
-        if(id===current)button.dataset.current='true';
-        const now=data.state.minute,dow=data.state.calendar.weekday;
-        const open=(!def.weekdaysOnly||(dow!==0&&dow!==6))&&now>=def.open&&now<def.close;
-        const needsDoor=locations[current].group==='家'&&
-          def.group==='城区'&&current!=='entrance';
-        const needsReturn=locations[current].group==='城区'&&
-          def.group==='家'&&id!=='entrance';
-        button.disabled=id===current||!open||needsDoor||needsReturn;
-        button.title=!open?'现在还没营业':label;
-        button.addEventListener('click',()=>{
-          const cost=locations[current].group==='家'&&def.group==='家'?10:
-            def.group==='家'?locations[current].travel:def.travel;
-          info.textContent='目的地 · '+def.label;
-          for(const selected of canvas.querySelectorAll('.phone-map-pin'))
-            selected.dataset.selected=String(selected.dataset.place===id);
-          const old=copy.querySelector('.phone-map-depart');
-          old?.remove();
-          const depart=document.createElement('button');
-          depart.className='phone-map-depart';depart.type='button';
-          depart.textContent='前往'+def.label+' · '+cost+'分钟';
-          depart.addEventListener('click',async()=>{
-            depart.disabled=true;depart.textContent='正在出发…';
-            const res=await config.onTravel?.(id);
-            if(res?.ok){
-              close();global.PaperWorldQuickTools?.close();
-            }else{
-              info.textContent=res?.reason||'暂时无法前往这个地点。';
-              depart.disabled=false;depart.textContent='重试 · '+def.label;
-            }
-          });
-          copy.appendChild(depart);
+      const city=root.PaperWorldCityMap;
+      if(city?.show){
+        city.show(copy,data,id=>config.onTravel?.(id),()=>{
+          close();root.PaperWorldQuickTools?.close?.();
         });
-        canvas.appendChild(button);
+        return;
       }
-      copy.append(canvas,info);
+      copy.textContent='城市地图尚未加载。';
     }
     function renderInventory(copy){
       const data=config.getInventory?.();
