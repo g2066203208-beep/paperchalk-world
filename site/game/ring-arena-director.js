@@ -43,10 +43,9 @@
  // tableau is action/hurt art, NEVER normal idle art. It is NOT a pre-hit pause.
  const STAGES=Object.freeze([
   Object.freeze({id:'lock',from:0,to:1}),
-  Object.freeze({id:'approach',from:1,to:2}),
-  Object.freeze({id:'swing',from:2,to:3}),
-  Object.freeze({id:'impact',from:3,to:4}),
-  Object.freeze({id:'reaction',from:4,to:9}),
+  Object.freeze({id:'swing',from:1,to:2}),
+  Object.freeze({id:'impact',from:2,to:3}),
+  Object.freeze({id:'reaction',from:3,to:9}),
   Object.freeze({id:'hold',from:9,to:49}),
   Object.freeze({id:'recover',from:49,to:56}),
   Object.freeze({id:'settle',from:56,to:58})
