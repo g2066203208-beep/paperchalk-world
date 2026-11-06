@@ -113,3 +113,8 @@
 }
 #view.overworld-life-active #hud-clock{opacity:.88}
 #view.overworld-life-active #hud-weekday{opacity:.78}
+
+/* Map pins must receive direct taps even over the decorative route SVG. */
+#phone-ui .phone-map-art{isolation:isolate}
+#phone-ui .phone-map-art > svg{pointer-events:none!important}
+#phone-ui .phone-map-pin{z-index:2;pointer-events:auto!important;touch-action:manipulation}
