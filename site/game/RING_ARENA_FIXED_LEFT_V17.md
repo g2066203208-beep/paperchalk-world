@@ -22,3 +22,6 @@ This is a **single-camera** WebGL/L2D battle module. It is not the main campaign
 Run `node tests/ring-arena.test.cjs` for one-camera, enemy focus, art proportions, screen safety and DPR budget.
 Run `node tests/ring-arena-browser.mjs` with Playwright/Chromium after building the authored L2D assets.
 Review `artifacts/ring-arena/final-left-3q-1280x720.png`, the inner-mode frame, 1920x1080, mobile landscape/portrait and the original-L2D rollback screenshot. Never use AI concept art as proof of the shipped WebGL frame.
+
+## Authored CHAR-006 wings (preservation rule)
+Browser source diagnostics verified that the two gray side shapes beside CHAR-006 are **actual artist-supplied PSD meshes** named `wings_left` and `wings_right` in `class-teacher-geography-candidate.zip`. They are *not* GPU noise or an accidental transparent background. Do not automatically remove, crop, paint over or disable either wing to improve a camera screenshot. Wing visibility belongs to the character's authored pose/outfit state and can be changed independently in L2D only when requested.

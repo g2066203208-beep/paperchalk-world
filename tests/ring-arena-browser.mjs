@@ -1,7 +1,7 @@
 /* Actual Chromium proof: never substitute an AI mock for the real game. */
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+import {readFileSync,mkdirSync} from 'node:fs';
 import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright';
 const root=resolve('site');
@@ -33,30 +33,6 @@ try{
    a?.previewPose==='3q'&&a?.l2dReady===5&&a?.heroTextureUploads>=1;
  },null,{timeout:100000});
  await page.waitForTimeout(650);
- // Export actual source canvases so unexpected clouds/mattes can be diagnosed
- // without guessing from the composed 3D screenshot or altering source art.
- const castCaptures=await page.evaluate(()=>{
-  return ['enemy','enemy2','enemy3','enemy4'].map((slot,index)=>{
-   const a=window.PaperchalkL2D?.get(slot);
-   const source=a?.clip?.type==='native'?a.clip.img:a?.canvas;
-   const item={slot,actor:index+1,character:a?.img?.dataset?.characterId||null,
-    side:a?.img?.dataset?.characterSide||null,
-    mode:a?.root?.dataset?.l2dMode||null,
-    partIds:Object.keys(a?.libraryPlayer?.model?.parts||{}),
-    rigSource:a?.libraryPlayer?.model?.sourceCharacterId||null};
-   if(!source)return item;
-   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
-   const ctx=canvas.getContext('2d');ctx.clearRect(0,0,512,512);
-   try{ctx.drawImage(source,0,0,512,512);item.png=canvas.toDataURL('image/png')}
-   catch(e){item.error=String(e)}
-   return item;
-  });
- });
- for(const item of castCaptures){
-  const {png,...meta}=item;console.log('CAST_SOURCE',JSON.stringify(meta));
-  if(png)writeFileSync('artifacts/ring-arena/cast-source-'+item.actor+'.png',
-   Buffer.from(png.split(',')[1],'base64'));
- }
  const outer=await inspect();
  assert.equal(outer.mode,'outer');assert.equal(outer.shotIndex,0);
  assert.equal(outer.shotName,'固定左机位');
