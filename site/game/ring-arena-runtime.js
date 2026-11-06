@@ -822,8 +822,16 @@
     gl.uniform3fv(portrait.uFoot,new Float32Array([a.x,a.y,a.z]));
     gl.uniform1f(portrait.uHeight,a.height);
     gl.uniform1f(portrait.uSoleX,a.soleX);
-    gl.uniform1f(portrait.uSoleY,a.soleY);
-    gl.uniform1f(portrait.uCrownY,a.crownY);
+    // Authentic L2D artwork contains wildly different transparent shoe
+    // margins. Using .979 for all actors made the visible boots hover above
+    // their physically correct y=0 world foot. This ALPHA-derived pivot
+    // makes the visible shoes TOUCH the actual 3D floor with unchanged
+    // artist source PNGs, character height and world-space ground anchors.
+    const alphaPivot=art?.painted?null:textures.get(a.id)?.opaqueUv;
+    const crown=alphaPivot?clamp(alphaPivot.top,0,.40):a.crownY;
+    const sole=alphaPivot?clamp(alphaPivot.bottom,crown+.20,1):a.soleY;
+    gl.uniform1f(portrait.uSoleY,sole);
+    gl.uniform1f(portrait.uCrownY,crown);
     gl.uniform1f(portrait.uWidthScale,1);
     gl.uniform1f(portrait.uLean,female07Actor&&attackSample
      ? .095*attackSample.advance-.028*attackSample.recoil:0);
@@ -973,6 +981,12 @@
    projectionAspect:canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
    effectiveVerticalFov:responsiveFov((lens||camera(mode,shotIndex)).fov,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
+   // Per-actor true alpha shoe edges; separately inspectable in browser QA.
+   measuredShoePivots:Object.fromEntries(visibleActors(mode).map(a=>{
+    const uv=textures.get(a.id)?.opaqueUv;
+    return [a.id,{crownY:uv?.top??a.crownY,
+     soleY:uv?.bottom??a.soleY,fromAlpha:!!uv}];
+   })),
    l2dReady:visibleActors(mode).filter(a=>textures.get(a.id).painted).length,
    heroine:{
     id:previewPose==='female7'?'female-07':
