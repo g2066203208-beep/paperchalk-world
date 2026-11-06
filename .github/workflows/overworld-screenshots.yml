@@ -12,6 +12,7 @@ on:
       - 'site/scene-modules.js'
       - 'site/assets/locations/**'
       - 'tests/overworld-intro-browser.mjs'
+      - 'tests/overworld-mobile-browser.mjs'
       - '.github/workflows/overworld-screenshots.yml'
   workflow_dispatch:
 permissions:
@@ -48,6 +49,8 @@ jobs:
         run: node --test tests/daily-life.test.cjs
       - name: Actually play and screenshot main game
         run: node tests/overworld-intro-browser.mjs
+      - name: Validate landscape phone UX and capture mobile screens
+        run: node tests/overworld-mobile-browser.mjs
       - name: Make review overview from real browser frames
         if: success()
         run: |
@@ -55,7 +58,7 @@ jobs:
           from PIL import Image,ImageDraw,ImageFont
           from pathlib import Path
           shots=sorted(Path('artifacts/overworld').glob('[0-9][0-9]-*.png'))
-          assert len(shots)>=13, f'Expected at least thirteen real browser screens, got {shots}'
+          assert len(shots)>=17, f'Expected desktop and mobile real browser screens, got {shots}'
           labels=[p.stem.replace('-', ' ').upper() for p in shots]
           w,h=690,388
           rows=(len(shots)+1)//2
