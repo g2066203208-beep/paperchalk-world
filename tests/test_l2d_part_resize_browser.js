@@ -1,5 +1,5 @@
-/* Real Chromium: garment sizing belongs to the THIRD outfit, not the
- * original female-06 body. Shares weights; source pixels and rig persist. */
+/* Real Chromium: the THIRD outfit is female-06's ONLY canonical BASE.
+ * Full-size part editing must preserve connected pelvis/thigh weights. */
 'use strict';
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 (async()=>{
@@ -7,11 +7,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  try{
   const page=await browser.newPage({viewport:{width:1440,height:920}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  const id='female-06-outfit-02',piece='bottomwear';
+  const id='female-06',piece='bottomwear';
   const url='http://127.0.0.1:8134/character-editor/?character='+id+'&side=front';
   await page.goto(url,{waitUntil:'load'});
   await page.waitForFunction(()=>window.PaperchalkPartRigStudio?.state?.active&&
-   window.PaperchalkStudio?.current==='female-06-outfit-02'&&
+   window.PaperchalkStudio?.current==='female-06'&&
    window.PaperchalkPartRigStudio.state.model.parts.bottomwear?._garmentLegs===
    window.PaperchalkPartRigStudio.state.model.parts.legwear,null,{timeout:60000});
   await page.locator('#workspace-inspector-tabs [data-inspector="placement"]').click();
@@ -37,12 +37,12 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.ok(result.bitmap.w>0&&result.bitmap.h>0);
   await page.locator('#btnSave').click();
   await page.waitForFunction(async()=>{
-   const rig=await window.PaperchalkStudio.readPartRig('female-06-outfit-02','front');
+   const rig=await window.PaperchalkStudio.readPartRig('female-06','front');
    return rig?.parts?.bottomwear?.placement?.scaleX===.86&&
      rig?.parts?.bottomwear?.placement?.offsetY===-11;
   },null,{timeout:35000});
   await page.reload({waitUntil:'load'});
-  await page.waitForFunction(()=>window.PaperchalkStudio?.current==='female-06-outfit-02'&&
+  await page.waitForFunction(()=>window.PaperchalkStudio?.current==='female-06'&&
    window.PaperchalkPartRigStudio?.state?.active&&
    window.PaperchalkPartRigStudio.state.model.parts.bottomwear?.placement?.scaleX===.86,
    null,{timeout:50000});
@@ -66,7 +66,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.ok(resized>.86,'user drag handle must resize only the selected outfit');
   await page.locator('#rig-fit-reset').click();await page.locator('#btnSave').click();
   await page.waitForFunction(async()=>{
-   const rig=await window.PaperchalkStudio.readPartRig('female-06-outfit-02','front');
+   const rig=await window.PaperchalkStudio.readPartRig('female-06','front');
    const t=rig?.parts?.bottomwear?.placement;
    return t&&t.scaleX===1&&t.scaleY===1&&t.offsetX===0&&t.offsetY===0;
   },null,{timeout:35000});
