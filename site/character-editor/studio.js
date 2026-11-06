@@ -758,6 +758,9 @@ async function purgeUnrequestedQaDraft(){
 async function migrateFemaleSixThirdIntoBase(){
  const old='female-06-outfit-02',old2='female-06-second-outfit',id='female-06';
  const marker='migration:female06-third-only-v1';
+ // Once migrated, NEVER touch the canonical user's new base paintings on
+ // later visits. Otherwise opening Studio twice would erase the new work.
+ if(await get(marker)===true)return;
  const db=await openDB();
  try{
   await new Promise((resolve,reject)=>{
