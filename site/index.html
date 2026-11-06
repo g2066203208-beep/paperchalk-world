@@ -763,7 +763,7 @@ body.mobile-mode.virtual-landscape #view{
 <link rel="stylesheet" href="./game/dialogue-layout.css?v=runtime-architecture-1">
 <script src="./game/survival-state.js"></script>
 <script src="./game/daily-life-state.js?v=overworld-life-v1"></script>
-<link rel="stylesheet" href="./game/daily-life-ui.css?v=overworld-life-v1">
+<link rel="stylesheet" href="./game/overworld.css?v=diegetic-world-v1">
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
 <script src="./game/classroom-box-runtime.js?v=four-enemy-row-v2"></script>
@@ -920,7 +920,6 @@ body.mobile-mode.virtual-landscape #view{
       <button id="restart-button" type="button">重新开始</button>
       <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
-       <button id="menu-daily-life" type="button">日常生活</button>
        <button id="game-dev" type="button" aria-controls="dev-tools">开发者 DEV</button>
        <button id="scene-switcher-toggle" type="button" aria-expanded="false">切换场景</button>
        <div id="scene-switcher" aria-label="已安装场景" hidden></div>
@@ -2172,7 +2171,6 @@ void main(){
     if(changed||stage.dataset.scene===target){
       if(!openingEntry){
         life?.activate?.();
-        life?.open?.('schedule');
       }
       return true;
     }
@@ -3396,7 +3394,7 @@ void main(){
 <script src="./l2d/library-player.js?v=studio-game-fidelity-20261105-v2"></script>
 <script src="./dev/character-bridge.js?v=hero-handoff-v12-20261106"></script>
 <script src="./game/l2d-ground-binding.js?v=shoulder-camera-v7"></script>
-<script src="./game/daily-life-ui.js?v=overworld-life-v1"></script>
+<script src="./game/overworld-runtime.js?v=diegetic-world-v1"></script>
 
 </body>
 </html>
