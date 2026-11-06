@@ -761,6 +761,8 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/frame-budget.js?v=frame-time-telemetry-20261105"></script>
 <link rel="stylesheet" href="./game/dialogue-layout.css?v=runtime-architecture-1">
 <script src="./game/survival-state.js"></script>
+<script src="./game/daily-life-state.js?v=overworld-life-v1"></script>
+<link rel="stylesheet" href="./game/daily-life-ui.css?v=overworld-life-v1">
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
 <script src="./game/classroom-box-runtime.js?v=four-enemy-row-v2"></script>
@@ -781,6 +783,7 @@ body.mobile-mode.virtual-landscape #view{
       <nav id="scene-menu-main" class="scene-menu-options" aria-label="主菜单选项">
         <button id="menu-start" type="button">开始游戏</button>
         <button id="menu-continue" type="button" disabled>继续游戏</button>
+        <button id="menu-life-start" type="button">表世界 · 日常生活</button>
         <button id="menu-settings-button" type="button">设置</button>
          <button id="menu-gallery-button" type="button">场景预览</button>
          <button id="menu-ring-arena" type="button">3D 圆环战场测试</button>
@@ -917,6 +920,7 @@ body.mobile-mode.virtual-landscape #view{
       <button id="restart-button" type="button">重新开始</button>
       <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
+       <button id="menu-daily-life" type="button">日常生活</button>
        <button id="game-dev" type="button" aria-controls="dev-tools">开发者 DEV</button>
        <button id="scene-switcher-toggle" type="button" aria-expanded="false">切换场景</button>
        <div id="scene-switcher" aria-label="已安装场景" hidden></div>
@@ -2134,6 +2138,20 @@ void main(){
     dialogueIndex=save?save.line:0;
     changeScene('classroom');
   }
+  // Daytime activities are a separately persisted game-time layer. Existing
+  // story, physical clock HUD, L2D scene layers and card combat remain intact.
+  window.PaperWorldDailyLifeScene=async scene=>{
+    if(!SCENES[scene])return false;
+    if(stage.dataset.scene===scene)return true;
+    return changeScene(scene);
+  };
+  document.getElementById('menu-life-start').addEventListener('click',async()=>{
+    const home=window.PaperWorldDailyLifeUI?.snapshot()?.location;
+    const candidate=SCENES[home]&&SCENES[home].type==='environment'?home:'bedroom';
+    const success=await changeScene(candidate);
+    if(success||stage.dataset.scene===candidate)
+      window.PaperWorldDailyLifeUI?.open('schedule');
+  });
   document.getElementById('menu-start').addEventListener('click',()=>beginStory(false));
   document.getElementById('menu-ring-arena').addEventListener('click',()=>changeScene('ring-arena'));
   continueButton.addEventListener('click',()=>{if(readSave())beginStory(true)});
@@ -3333,6 +3351,7 @@ void main(){
 <script src="./l2d/library-player.js?v=studio-game-fidelity-20261105-v2"></script>
 <script src="./dev/character-bridge.js?v=hero-handoff-v12-20261106"></script>
 <script src="./game/l2d-ground-binding.js?v=shoulder-camera-v7"></script>
+<script src="./game/daily-life-ui.js?v=overworld-life-v1"></script>
 
 </body>
 </html>
