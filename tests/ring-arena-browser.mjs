@@ -59,6 +59,13 @@ try{
  assert.equal(outer.director.card,'斧柄横扫');
  assert.equal(outer.director.baseDamage,12);
  assert.equal(outer.director.playing,false);
+ await page.waitForFunction(()=>{
+  const a=window.PaperWorldGameRingArena?.inspect()?.directorArt;
+  return a?.hero?.loaded&&a?.enemy?.loaded;
+ },null,{timeout:12000});
+ const art=await inspect();
+ assert.ok(art.directorArt.hero.src.endsWith('/hero-axe-attack.webp'));
+ assert.ok(art.directorArt.enemy.src.endsWith('/enemy-suit-hit.webp'));
  assert.equal(await page.locator('[data-attack-card]').count(),1);
  await page.locator('[data-attack-card]').click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.director?.armed);
@@ -70,10 +77,19 @@ try{
   const d=window.PaperWorldGameRingArena?.inspect()?.director;
   return d?.playing===true&&d?.targetId==='enemy-2';
  },null,{timeout:12000});
+ assert.equal(await page.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
+ // These are actual, separately generated transparent action and hit sprites.
+ // Chromium screenshots are from the live WebGL page, not a new AI mock.
+ await page.waitForFunction(()=>{
+  return document.querySelector('[data-director-cinematic]')?.dataset.cut==='attacker';
+ },null,{timeout:4500});
+ await page.screenshot({path:'artifacts/ring-arena/v20-real-hero-attack-pose.png'});
  await page.waitForFunction(()=>{
   const d=window.PaperWorldGameRingArena?.inspect()?.director;
-  return d?.applied===true;
- },null,{timeout:20000});
+  const cut=document.querySelector('[data-director-cinematic]')?.dataset.cut;
+  return d?.applied===true&&cut==='victim';
+ },null,{timeout:6500});
+ await page.screenshot({path:'artifacts/ring-arena/v20-real-enemy-hit-pose.png'});
  const impact=await inspect();
  assert.equal(impact.director.enemyHP['enemy-2'],24);
  assert.equal(impact.director.baseDamage,12);
@@ -93,7 +109,28 @@ try{
  assert.equal(JSON.stringify(returned.actors),originalActors);
  assert.equal(returned.heroTextureUploads,1);
  assert.equal(returned.directorCameraTemporary,false);
+ assert.equal(returned.directorArt.cut,'none');
+ assert.equal(returned.directorArt.hero.loaded,true);
+ assert.equal(returned.directorArt.enemy.loaded,true);
  await page.screenshot({path:'artifacts/ring-arena/director-attack-return.png'});
+ // Do not miscast the suited male hit portrait as the third female enemy.
+ await page.locator('[data-attack-card]').click();
+ await page.locator('[data-director-enemy="3"]').click();
+ await page.waitForFunction(()=>{
+  const d=window.PaperWorldGameRingArena?.inspect()?.director;
+  return d?.playing&&d?.targetId==='enemy-3';
+ });
+ assert.equal(await page.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
+ await page.waitForFunction(()=>{
+  const d=window.PaperWorldGameRingArena?.inspect()?.director;
+  return d?.completedAttacks===2&&!d?.playing;
+ },null,{timeout:20000});
+ const followup=await inspect();
+ assert.equal(followup.director.enemyHP['enemy-2'],24);
+ assert.equal(followup.director.enemyHP['enemy-3'],24);
+ assert.equal(followup.director.enemyHP['enemy-4'],36);
+ assert.equal(JSON.stringify(followup.camera),originalCamera);
+ assert.equal(JSON.stringify(followup.actors),originalActors);
  // Touch/keyboard inputs must never reveal a second camera.
  await page.mouse.move(420,250);await page.mouse.down();
  await page.mouse.move(850,260,{steps:7});await page.mouse.up();

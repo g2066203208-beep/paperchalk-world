@@ -114,3 +114,159 @@
  #ring-arena-controls .director-card{transition:none}
  #ring-arena-controls .director-impact,#ring-arena-controls .director-damage{animation:none!important}
 }
+
+
+/* V20 — pose-authored cinematic cut-in: deliberate staged painting swaps.
+   Separate transparent artwork is *never* flattened into the canonical rigs. */
+#ring-arena-controls .director-cinematic{
+ isolation:isolate;--attack-intensity:0;--director-progress:0
+}
+#ring-arena-controls .director-stage-dark{
+ position:absolute;inset:0;z-index:0;opacity:0;
+ background:
+  linear-gradient(110deg,#05050c 3%,#160a13ed 46%,#030508ed 90%),
+  radial-gradient(ellipse at 45% 56%,#a42e4c68,transparent 64%);
+ transition:opacity .08s ease
+}
+#ring-arena-controls .director-cinematic[data-cut=attacker] .director-stage-dark,
+#ring-arena-controls .director-cinematic[data-cut=victim] .director-stage-dark{
+ opacity:.94
+}
+#ring-arena-controls .director-action-lines{
+ position:absolute;inset:-30%;z-index:1;opacity:0;
+ background:repeating-linear-gradient(-22deg,transparent 0 27px,#d9446340 28px 29px,transparent 30px 75px);
+ transform:translateX(-8%);pointer-events:none
+}
+#ring-arena-controls .director-cinematic[data-phase=swing] .director-action-lines{
+ opacity:.8;animation:director-speed-lines .38s cubic-bezier(.05,.6,.2,1) both
+}
+#ring-arena-controls .director-action-image{
+ position:absolute;z-index:2;display:block;object-fit:contain;
+ object-position:center bottom;pointer-events:none;will-change:transform,opacity;
+ opacity:0;visibility:hidden;
+ filter:drop-shadow(9px 12px 16px #000a)
+}
+#ring-arena-controls .director-action-hero{
+ height:min(111%,900px);width:min(64%,900px);left:-4%;bottom:-9%;
+ transform:translate3d(-9% ,6%,0) scale(.84)
+}
+#ring-arena-controls .director-action-enemy{
+ height:min(112%,900px);width:min(57%,850px);right:-3%;bottom:-10%;
+ transform:translate3d(16%,0,0) scale(1.12);
+ filter:drop-shadow(-13px 9px 21px #000b)
+}
+#ring-arena-controls .director-cinematic[data-cut=attacker] .director-action-hero{
+ visibility:visible;opacity:1;transition:opacity .05s linear
+}
+#ring-arena-controls .director-cinematic[data-phase=windup] .director-action-hero{
+ animation:director-hero-windup .51s cubic-bezier(.11,.7,.22,1) both
+}
+#ring-arena-controls .director-cinematic[data-phase=swing] .director-action-hero{
+ animation:director-hero-release .38s cubic-bezier(.09,.78,.12,1) both
+}
+#ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=yes] .director-action-enemy{
+ visibility:visible;opacity:1
+}
+#ring-arena-controls .director-cinematic[data-phase=impact] .director-action-enemy{
+ animation:director-victim-freeze .16s steps(2,end) both
+}
+#ring-arena-controls .director-cinematic[data-phase=reaction] .director-action-enemy{
+ animation:director-victim-recoil .54s cubic-bezier(.06,.65,.23,1) both
+}
+#ring-arena-controls .director-white-hit{
+ position:absolute;z-index:8;inset:0;opacity:0;background:#fff4ee;
+ pointer-events:none;mix-blend-mode:screen
+}
+#ring-arena-controls .director-cinematic[data-phase=impact] .director-white-hit{
+ animation:director-white-hit .16s steps(2,end) both
+}
+#ring-arena-controls .director-impact{z-index:5}
+#ring-arena-controls .director-cue{z-index:9}
+#ring-arena-controls .director-hit-vignette{z-index:3}
+#ring-arena-controls .director-damage{z-index:9}
+#ring-arena-controls .director-cinematic[data-hit-portrait=yes] .director-damage{
+ display:none
+}
+#ring-arena-controls .director-attack-title{
+ position:absolute;z-index:9;left:4%;top:10%;
+ font:900 clamp(17px,2.6vw,36px)/1.1 system-ui,sans-serif;
+ writing-mode:vertical-rl;letter-spacing:.30em;color:#fff0e3;
+ text-shadow:1px 1px 0 #a93651,2px 4px 16px #000e;
+ border-inline-start:3px solid #f3a7b0;
+ padding:8px 6px;opacity:0
+}
+#ring-arena-controls .director-cinematic[data-cut=attacker] .director-attack-title{
+ opacity:1
+}
+#ring-arena-controls .director-attack-target{
+ position:absolute;z-index:9;right:4%;top:11%;display:flex;
+ gap:9px;align-items:center;padding:5px 12px;color:#f4d9d7;
+ font:800 clamp(11px,1.2vw,15px)/1.2 system-ui,sans-serif;
+ background:linear-gradient(90deg,#1b0b13bb,#35101fc8);
+ border-inline-start:2px solid #e97888;
+ opacity:0
+}
+#ring-arena-controls .director-cinematic[data-cut=victim] .director-attack-target{opacity:1}
+#ring-arena-controls .director-hitframe{
+ position:absolute;inset:0;z-index:7;pointer-events:none;
+ box-shadow:inset 0 0 0 0 #e74269;opacity:0
+}
+#ring-arena-controls .director-cinematic[data-phase=impact] .director-hitframe{
+ animation:director-border-hit .16s steps(2,end) both
+}
+#ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=no] .director-stage-dark{
+ opacity:.36
+}
+@keyframes director-hero-windup{
+ 0%{transform:translate3d(-17%,12%,0) scale(.78);filter:brightness(.68) contrast(1.18)}
+ 65%{transform:translate3d(-5%,2%,0) scale(1.02);filter:brightness(.85) contrast(1.1)}
+ 100%{transform:translate3d(-3%,0,0) scale(1.08);filter:brightness(1.05)}
+}
+@keyframes director-hero-release{
+ 0%{transform:translate3d(-4%,1%,0) scale(1.06)}
+ 30%{transform:translate3d(4%,-3%,0) scale(1.14)}
+ 100%{transform:translate3d(16%,-9%,0) scale(1.30)}
+}
+@keyframes director-victim-freeze{
+ 0%{transform:translate3d(11%,0,0) scale(1.26);filter:brightness(2) contrast(1.5)}
+ 33%{transform:translate3d(-2%,-4%,0) scale(1.28);filter:brightness(1.7)}
+ 100%{transform:translate3d(4%,-2%,0) scale(1.27);filter:brightness(1.20)}
+}
+@keyframes director-victim-recoil{
+ 0%{transform:translate3d(4%,-2%,0) scale(1.27)}
+ 55%{transform:translate3d(18%,-1%,0) scale(1.21)}
+ 100%{transform:translate3d(12%,5%,0) scale(1.17)}
+}
+@keyframes director-speed-lines{
+ 0%{transform:translateX(22%);opacity:0}
+ 35%{opacity:1}
+ 100%{transform:translateX(-12%);opacity:.1}
+}
+@keyframes director-white-hit{
+ 0%{opacity:.88}25%{opacity:.95}50%{opacity:.28}100%{opacity:0}
+}
+@keyframes director-border-hit{
+ 0%,35%{opacity:.94;box-shadow:inset 0 0 0 13px #d24e76}
+ 100%{opacity:0;box-shadow:inset 0 0 0 1px #d24e76}
+}
+@media(max-width:690px){
+ #ring-arena-controls .director-action-hero{height:115%;width:83%;left:-18%;bottom:-9%}
+ #ring-arena-controls .director-action-enemy{height:112%;width:76%;right:-15%;bottom:-8%}
+ #ring-arena-controls .director-attack-title{top:6%;left:2%;font-size:14px}
+ #ring-arena-controls .director-attack-target{top:7%;right:2%;font-size:10px}
+ #ring-arena-controls .director-stage-dark{background:#050509ef}
+}
+@media(prefers-reduced-motion:reduce){
+ #ring-arena-controls .director-action-hero,
+ #ring-arena-controls .director-action-enemy,
+ #ring-arena-controls .director-white-hit,
+ #ring-arena-controls .director-hitframe,
+ #ring-arena-controls .director-action-lines{animation:none!important}
+}
+
+/* The supplied transparent action paintings already include slash arcs.
+   Don't stack the old geometric arc on top of the new illustrated one. */
+#ring-arena-controls .director-cinematic[data-cut=attacker] .director-impact,
+#ring-arena-controls .director-cinematic[data-cut=victim][data-hit-portrait=yes] .director-impact{
+ display:none
+}

@@ -10,6 +10,8 @@ on:
       - 'tests/ring-arena*'
       - 'site/game/ring-arena-director.js'
       - 'site/game/ring-arena-director.css'
+      - 'site/assets/characters/hero-axe-attack.webp'
+      - 'site/assets/characters/enemy-suit-hit.webp'
       - '.github/workflows/ring-arena-proof.yml'
   workflow_dispatch:
 permissions:

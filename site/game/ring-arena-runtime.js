@@ -354,7 +354,13 @@
    '<span class="director-prompt" data-director-prompt>攻击牌演出预览 · 点牌选目标</span></div>',
    '<div class="director-targets" data-director-targets hidden>',
    ...[1,2,3,4].map(i=>'<button class="director-target" type="button" data-director-enemy="'+i+'" aria-label="攻击'+i+'号敌人"><span class="director-num">'+i+'</span><span>敌人 '+i+'</span></button>'),
-   '</div><div class="director-cinematic" data-director-cinematic data-phase="idle" hidden>',
+   '</div><div class="director-cinematic" data-director-cinematic data-phase="idle" data-cut="none" data-hit-portrait="no" hidden>',
+   '<div class="director-stage-dark"></div><div class="director-action-lines"></div>',
+   '<img class="director-action-image director-action-hero" data-action-hero src="./assets/characters/hero-axe-attack.webp" alt="" draggable="false" decoding="async">',
+   '<img class="director-action-image director-action-enemy" data-action-enemy src="./assets/characters/enemy-suit-hit.webp" alt="" draggable="false" decoding="async">',
+   '<div class="director-attack-title">斧柄横扫</div>',
+   '<div class="director-attack-target" data-director-victim-name>敌人 1 · 受击</div>',
+   '<div class="director-hitframe"></div><div class="director-white-hit"></div>',
    '<div class="director-hit-vignette"></div><div class="director-cue" data-director-cue></div>',
    '<div class="director-impact"><svg viewBox="0 0 200 200" fill="none" aria-hidden="true">',
    '<path d="M18 159 Q80 99 178 23" stroke="#fdf7ee" stroke-width="9" stroke-linecap="round"/>',
@@ -373,6 +379,10 @@
   const cinematic=hud.querySelector('[data-director-cinematic]');
   const cinematicCue=hud.querySelector('[data-director-cue]');
   const cinematicDamage=hud.querySelector('[data-director-damage]');
+  const victimName=hud.querySelector('[data-director-victim-name]');
+  const heroActionArt=hud.querySelector('[data-action-hero]');
+  const enemyHitArt=hud.querySelector('[data-action-enemy]');
+  const actionAssets=[heroActionArt,enemyHitArt];
   const targetButtons=[...hud.querySelectorAll('[data-director-enemy]')];
   // Normal-eye-height three-quarter back pose is the default. The old V17
   // low-angle 3/4 sprite is retained behind heroPose=3q for comparison;
@@ -411,11 +421,49 @@
   const enemyHP=new Map([1,2,3,4].map(i=>['enemy-'+i,36]));
   const actorForTarget=id=>layout(mode).enemies.find(a=>a.id===id);
   const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
+  let audioContext=null,previousBeat='idle';
+  // Original, synthesized-only battle effects. No third-party copyrighted audio.
+  function playDirectorSound(kind){
+   try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx)return;
+    if(!audioContext)audioContext=new Ctx();
+    if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+    const now=audioContext.currentTime;
+    const osc=audioContext.createOscillator();
+    const gain=audioContext.createGain();
+    osc.type=kind==='impact'?'triangle':'sawtooth';
+    const duration=kind==='impact'?.27:kind==='swing'?.22:.16;
+    osc.frequency.setValueAtTime(kind==='impact'?95:kind==='swing'?240:150,now);
+    osc.frequency.exponentialRampToValueAtTime(kind==='impact'?42:kind==='swing'?90:75,now+duration);
+    gain.gain.setValueAtTime(.0001,now);
+    gain.gain.exponentialRampToValueAtTime(kind==='impact'?.23:.075,now+.015);
+    gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
+    osc.connect(gain).connect(audioContext.destination);
+    osc.start(now);osc.stop(now+duration+.02);
+    if(kind==='impact'||kind==='swing'){
+     const n=audioContext.createBuffer(1,Math.ceil(audioContext.sampleRate*duration),audioContext.sampleRate);
+     const buffer=n.getChannelData(0);
+     for(let i=0;i<buffer.length;i++)buffer[i]=(Math.random()*2-1);
+     const noise=audioContext.createBufferSource();noise.buffer=n;
+     const filter=audioContext.createBiquadFilter();
+     filter.type=kind==='impact'?'lowpass':'highpass';
+     filter.frequency.setValueAtTime(kind==='impact'?600:1250,now);
+     const g=audioContext.createGain();
+     g.gain.setValueAtTime(.0001,now);
+     g.gain.linearRampToValueAtTime(kind==='impact'?.12:.075,now+.018);
+     g.gain.exponentialRampToValueAtTime(.0001,now+duration);
+     noise.connect(filter).connect(g).connect(audioContext.destination);
+     noise.start(now);noise.stop(now+duration+.01);
+    }
+   }catch(_){/* Audio is optional; never block the director. */}
+  }
   function resetCombatPreview(){
    attack=null;attackSample=null;attackApplied=false;armed=false;
-   lastTarget=null;completedAttacks=0;
+   previousBeat='idle';lastTarget=null;completedAttacks=0;
    for(const id of enemyHP.keys())enemyHP.set(id,36);
    cinematic.hidden=true;cinematic.dataset.phase='idle';
+   cinematic.dataset.cut='none';
    refreshDirectorUI();
   }
   function refreshDirectorUI(){
@@ -438,8 +486,11 @@
    attack=director.createAttack(targetId,performance.now(),
     {mode,reducedMotion:reducedMotion()});
    attackApplied=false;attackSample=director.sample(attack,attack.startedAt);
-   cinematic.hidden=false;cinematic.dataset.phase='lock';
+   previousBeat='lock';playDirectorSound('windup');
+   cinematic.hidden=false;cinematic.dataset.phase='lock';cinematic.dataset.cut='none';
+   cinematic.dataset.hitPortrait=director.hasEnemyHitPortrait(targetId)?'yes':'no';
    cinematicCue.textContent='目标锁定';
+   victimName.textContent='敌人 '+targetId.slice(-1)+' · 受击';
    cinematicDamage.textContent='-'+attackCard.damage;
    refreshDirectorUI();
    render(0);
@@ -460,7 +511,7 @@
    completedAttacks++;
    lastTarget=target;
    attack=null;attackSample=null;attackApplied=false;
-   cinematic.hidden=true;cinematic.dataset.phase='idle';
+   cinematic.hidden=true;cinematic.dataset.phase='idle';cinematic.dataset.cut='none';
    refreshDirectorUI();
   }
   function onDirectorKey(e){
@@ -697,9 +748,14 @@
     if(frame.finished)finishDirector();
     else{
      attackSample=frame;
+     if(frame.stage!==previousBeat){
+      previousBeat=frame.stage;
+      if(frame.stage==='swing')playDirectorSound('swing');
+     }
      if(frame.hit&&!attackApplied){
       enemyHP.set(attack.targetId,Math.max(0,enemyHP.get(attack.targetId)-attackCard.damage));
       attackApplied=true;
+      playDirectorSound('impact');
      }
     }
    }
@@ -742,8 +798,11 @@
     }
     if(cinematic.dataset.phase!==attackSample.stage){
      cinematic.dataset.phase=attackSample.stage;
+     cinematic.dataset.cut=attackSample.cut;
      cinematicCue.textContent=attackSample.cue||'目标锁定';
     }
+    cinematic.style.setProperty('--director-progress',(attackSample.elapsed/director.DURATION).toFixed(3));
+    cinematic.style.setProperty('--attack-intensity',attackSample.hitFlash.toFixed(3));
    }
    if(frames%12===0){
     const ready=all.filter(a=>textures.get(a.id).painted).length;
@@ -775,6 +834,14 @@
     targetId:attack?.targetId||null,applied:attackApplied,
     completedAttacks,lastTarget,enemyHP:Object.fromEntries(enemyHP)},
    directorCameraTemporary:!!lens?.cinematic,
+   directorArt:{hero:{
+     loaded:heroActionArt.complete&&heroActionArt.naturalWidth>0,
+     src:heroActionArt.getAttribute('src')
+    },enemy:{
+     loaded:enemyHitArt.complete&&enemyHitArt.naturalWidth>0,
+     src:enemyHitArt.getAttribute('src')
+    },
+    cut:cinematic.dataset.cut,hitPortrait:cinematic.dataset.hitPortrait},
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,

@@ -9,7 +9,7 @@ assert.deepEqual(director.pickCard(CARD),{
 });
 assert.equal(CARD.slash.damage,12);
 assert.equal(director.CARD.damage,CARD.slash.damage);
-assert.deepEqual(director.STAGES.map(x=>x.id),['lock','windup','swing','impact','recover']);
+assert.deepEqual(director.STAGES.map(x=>x.id),['lock','windup','swing','impact','reaction','recover']);
 assert.equal(director.STAGES[0].from,0);
 assert.equal(director.STAGES.at(-1).to,director.DURATION);
 assert.equal(director.sample(null,0).stage,'idle');
@@ -24,13 +24,13 @@ for(const mode of ['outer','inner']){
  const attack=director.createAttack('enemy-2',0,{mode});
  assert.equal(attack.mode,mode);
  let phases=[];
- for(const [t,phase] of [[0,'lock'],[250,'windup'],[630,'swing'],
-  [800,'impact'],[1060,'recover'],[1540,'done']]){
+ for(const [t,phase] of [[0,'lock'],[250,'windup'],[820,'swing'],
+  [1090,'impact'],[1400,'reaction'],[1970,'recover'],[2400,'done']]){
   const state=director.sample(attack,t);
   assert.equal(state.stage,phase);
   phases.push(state.stage);
   assert.ok(state.zoom>=0&&state.zoom<=1);
-  assert.equal(state.hit,t>=800);
+  assert.equal(state.hit,t>=1090);
   const heroM=director.actorMotion('hero',attack,state);
   const victim=director.actorMotion('enemy-2',attack,state);
   assert.ok(Number.isFinite(heroM.z)&&Number.isFinite(victim.z));
@@ -42,16 +42,26 @@ for(const mode of ['outer','inner']){
    'director must retain eye-level, not tilt up or down');
   assert.ok(cine.fov<=camera.fov);
   assert.equal(arena.cameraPitchDeg(cine),0);
-  if(t>=1540)assert.deepEqual(cine,camera,'exact return to canonical rest camera');
+  if(t>=2400)assert.deepEqual(cine,camera,'exact return to canonical rest camera');
  }
- assert.deepEqual(phases,['lock','windup','swing','impact','recover','done']);
+ assert.deepEqual(phases,['lock','windup','swing','impact','reaction','recover','done']);
  assert.equal(JSON.stringify(scene),old,'camera, actors and formation are immutable');
  const p=director.projectScreen(arena.project,target,camera,16/9);
  assert.ok(p.valid&&p.x>5&&p.x<95&&p.y>0&&p.y<90);
 }
 const reduced=director.createAttack('enemy-1',0,{reducedMotion:true});
-assert.equal(director.sample(reduced,460).finished,true);
+assert.equal(director.sample(reduced,720).finished,true);
 assert.equal(director.sample(reduced,300).shake,0);
 assert.ok(director.sample(reduced,270).advance<director.sample(
  director.createAttack('enemy-1',0),900).advance+1);
-console.log('PASS director: canonical slash card, deterministic 5 beats, target-only motion, eye-line, exact reset and reduced motion');
+assert.equal(director.DURATION,2400);
+assert.equal(director.ART.hero,'./assets/characters/hero-axe-attack.webp');
+assert.equal(director.ART.maleEnemy,'./assets/characters/enemy-suit-hit.webp');
+assert.equal(director.hasEnemyHitPortrait('enemy-1'),true);
+assert.equal(director.hasEnemyHitPortrait('enemy-2'),true);
+assert.equal(director.hasEnemyHitPortrait('enemy-3'),false);
+assert.equal(director.hasEnemyHitPortrait('enemy-4'),false);
+assert.equal(director.sample(director.createAttack('enemy-2',0),450).cut,'attacker');
+assert.equal(director.sample(director.createAttack('enemy-2',0),1390).cut,'victim');
+assert.equal(director.sample(director.createAttack('enemy-2',0),2200).cut,'none');
+console.log('PASS director V20: art-directed 6 beats, real slash values, no incorrect female hit portrait, exact reset');
