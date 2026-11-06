@@ -6,10 +6,10 @@ const arena=require('../site/game/ring-arena-runtime.js');
 assert.deepEqual(director.pickCard(CARD),{
  key:'slash',name:CARD.slash.name,type:'attack',damage:12,w:1,a:1,r:1
 });
-assert.equal(director.DURATION,400);
-assert.equal(director.REDUCED_DURATION,260);
+assert.equal(director.DURATION,1500);
+assert.equal(director.REDUCED_DURATION,1200);
 assert.deepEqual(director.STAGES.map(x=>x.id),[
- 'lock','approach','windup','swing','impact','reaction','recover']);
+ 'lock','approach','windup','swing','impact','reaction','hold','recover']);
 assert.equal(director.REFERENCE.fps,30);
 assert.equal(director.REFERENCE.frames,699);
 assert.deepEqual(director.REFERENCE.entries,[79,178,315,416]);
@@ -65,7 +65,14 @@ for(const mode of ['outer','inner']){
   assert.equal(arena.cameraPitchDeg(displayCamera),0);
   const spectator=director.actorMotion('enemy-3',attack,center,hero,target,duet);
   assert.deepEqual(spectator,{x:0,y:0,z:0,scale:1});
-  const final=director.sample(attack,400);
+  const held=director.sample(attack,860);
+  assert.equal(held.stage,'hold');
+  assert.ok(held.stageStrength>.99,'stage still centered for readable result');
+  assert.equal(held.hit,true);
+  assert.equal(director.poseFor('hero',attack,held),'idle','the hold is after the attack, not a late strike');
+  assert.equal(director.poseFor('enemy-2',attack,held),'idle');
+  assert.ok(held.damageOpacity>.99,'hit number remains readable during aftermath');
+  const final=director.sample(attack,1500);
   assert.equal(final.finished,true);
   assert.deepEqual(director.actorMotion('hero',attack,final,hero,target,duet),
    {x:0,y:0,z:0,scale:1});
@@ -73,7 +80,8 @@ for(const mode of ['outer','inner']){
    'exactly return to canonical eye-height rest camera');
  }
  for(const [ms,stage] of [[0,'lock'],[40,'approach'],[65,'windup'],
-  [100,'swing'],[130,'impact'],[175,'reaction'],[270,'recover'],[400,'done']]){
+  [100,'swing'],[130,'impact'],[175,'reaction'],[270,'reaction'],
+  [500,'hold'],[1200,'hold'],[1300,'recover'],[1500,'done']]){
   assert.equal(director.sample(attack,ms).stage,stage);
  }
  assert.equal(director.sample(attack,116).hit,false);
@@ -93,8 +101,8 @@ assert.equal(contact.hit,true);
 assert.ok(contact.fxOpacity>0&&contact.damageOpacity>0);
 assert.equal(aftermath.fxOpacity,0);
 assert.ok(aftermath.damageOpacity>0);
-assert.equal(director.sample(director.createAttack('enemy-2',0),400).stageStrength,0);
+assert.equal(director.sample(director.createAttack('enemy-2',0),1500).stageStrength,0);
 const reduced=director.createAttack('enemy-1',0,{reducedMotion:true});
-assert.equal(director.sample(reduced,260).finished,true);
+assert.equal(director.sample(reduced,1200).finished,true);
 assert.equal(director.sample(reduced,200).shake,0);
-console.log('PASS V25: video-referenced center stage, BOTH actor silhouettes 36.5%/63.5%, responsive views, exact restoration');
+console.log('PASS V26: hit at 117ms, visible 880ms post-hit hold, smooth 260ms exit, exact return');
