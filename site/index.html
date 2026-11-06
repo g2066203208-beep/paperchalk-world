@@ -2047,6 +2047,7 @@ void main(){
     stage.style.transform='rotateY(0deg) rotateX(0deg)';
     const isStory=def.type==='story',isMenu=def.type==='menu';
     const wakingHere=name==='bedroom'&&openingEntry==='intro';
+    view.classList.toggle('intro-waking',wakingHere);
     // Per-scene layer contract; image files remain actor-free and unmodified.
     const hasPlayer=def.layers.player;
     const ringActive=name==='ring-arena';
@@ -2246,6 +2247,7 @@ void main(){
     writeSave();syncUiEdgeFog();
     if(stage.dataset.scene==='bedroom'&&openingEntry==='intro'){
       opening.finish();openingEntry=null;
+      view.classList.remove('intro-waking');
       window.PaperWorldDailyLifeUI?.activate?.();
       // The original character handset is a REAL interactive object.
       // Missed calls and homework messages are not unskippable narration text.
