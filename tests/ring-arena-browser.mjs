@@ -50,6 +50,15 @@ try{
  assert.equal(outer.heroTextureUploads,1,'static heroine must not upload every frame');
  assert.deepEqual(outer.visibleActorIds,['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.ok(outer.safety.valid&&outer.safety.clear,'actual alpha must preserve enemy view');
+ // The source painter's actual RGBA shoe/crown fractions MUST drive real
+ // WebGL foot placement, not the old hard-coded source .979 fraction.
+ assert.deepEqual(Object.keys(outer.measuredShoePivots).sort(),
+  ['hero','enemy-1','enemy-2','enemy-3','enemy-4'].sort());
+ for(const [actor,pivot]of Object.entries(outer.measuredShoePivots)){
+  assert.ok(pivot.fromAlpha,'pixel alpha must be inspected for '+actor);
+  assert.ok(pivot.soleY>.55&&pivot.soleY<=1,'valid true shoe pivot: '+actor);
+  assert.ok(pivot.crownY>=0&&pivot.crownY<pivot.soleY);
+ }
  assert.equal(await page.locator('[data-shot]').count(),0,'remove BOTH camera-switch buttons');
  assert.equal(await page.locator('[data-pose]').count(),0,'no redundant pose toggle');
  assert.equal(await page.locator('[data-mode]').count(),2);
