@@ -119,6 +119,9 @@
     }
     function showPage(next){
       page=next;
+      // While reading apps, the camera looks closer at the SAME phone screen.
+      // The approved cat-ear shell remains unchanged on the lock view.
+      section.dataset.focus=next==='lock'?'false':'true';
       for(const element of pages)element.hidden=element.dataset.phonePage!==next;
       section.dataset.page=next;
     }
