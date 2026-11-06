@@ -215,3 +215,109 @@
   gap:10px;padding:9px 0;border-bottom:1px solid #ffffff23;
   font-size:clamp(10px,1.65cqh,12px)}
 #phone-ui .phone-status-row strong{font-weight:500;font-variant-numeric:tabular-nums}
+
+/* V4: handset fills the available immersive game height, screen is legible.
+ * Do not distort or redraw the user-approved shell or lock wallpaper.
+ * The shell is still the original image; all apps are live DOM inside it.
+ */
+#novel-ui>#phone-ui{
+  top:50%!important;
+  right:calc(max(6px,1.5cqw) + var(--game-control-size) + clamp(8px,1.3cqw,18px))!important;
+  height:min(96cqh,940px)!important;
+  aspect-ratio:1 / 2!important;
+  transform:translateY(-50%)!important;
+  filter:drop-shadow(0 12px 28px #000a)!important;
+}
+#phone-ui .phone-screen{
+  background:linear-gradient(160deg,#171d20,#101417)!important;
+}
+#phone-ui .phone-home{
+  padding:clamp(36px,6.6cqh,51px) 8% 9%;
+  gap:clamp(10px,1.8cqh,15px);
+}
+#phone-ui .phone-apps{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  column-gap:clamp(7px,1.7cqw,14px);
+  row-gap:clamp(12px,2.3cqh,20px);
+}
+#phone-ui .phone-app-icon{
+  width:clamp(34px,6.8cqh,53px);
+  height:clamp(34px,6.8cqh,53px);
+  border-radius:12px;
+  background:#cad0c41e!important;
+  border:1px solid #e4e7dc31!important;
+  backdrop-filter:none!important;
+}
+#phone-ui .phone-app-icon svg{
+  width:55%;height:55%;stroke-width:1.65;
+}
+#phone-ui .phone-app-label{
+  font-size:clamp(11px,1.9cqh,14px)!important;
+  letter-spacing:0!important;
+}
+#phone-ui .phone-app-view[data-phone-page="app"]{
+  padding:clamp(43px,7cqh,58px) 9% 9%!important;
+  gap:8px;
+}
+#phone-ui .phone-app-title{
+  font-size:clamp(15px,2.65cqh,20px)!important;
+  font-weight:500;
+}
+#phone-ui .phone-app-copy{
+  font-size:clamp(12px,2.2cqh,16px)!important;
+  line-height:1.6!important;scrollbar-width:thin!important;
+  scroll-behavior:smooth;
+  overscroll-behavior:contain;
+}
+#phone-ui .phone-conversation-header{
+  font-size:clamp(12px,2.0cqh,16px)!important;
+}
+#phone-ui .phone-message-row{
+  padding:10px!important;margin:4px 0!important;
+  border-radius:9px!important;
+  background:#d5d7ce10!important;
+  border:1px solid #d9e0d51b;
+}
+#phone-ui .phone-message-row span{font-size:clamp(12px,1.95cqh,15px)}
+#phone-ui .phone-message-row small{font-size:clamp(10px,1.55cqh,12px)}
+#phone-ui .phone-reply{
+  min-height:44px!important;
+  background:#d3c5b926!important;
+  border:1px solid #e9dfcc33!important;
+  color:#f8eee0!important;
+  font-size:clamp(12px,2.0cqh,15px)!important;
+}
+#phone-ui .phone-contact-row{
+  min-height:56px!important;
+}
+#phone-ui .phone-contact-row-body strong,
+#phone-ui .phone-contact-person strong{
+  font-size:clamp(13px,2.1cqh,16px)!important;
+}
+#phone-ui .phone-contact-avatar,
+#phone-ui .phone-contact-row-avatar{
+  width:clamp(40px,6.3cqh,50px)!important;
+  height:clamp(40px,6.3cqh,50px)!important;
+}
+#phone-ui .phone-private-status{width:100%}
+#phone-ui .phone-status-row{font-size:clamp(12px,2.0cqh,15px)}
+#phone-ui .phone-contact-chat{
+  min-height:42px!important;
+  font-size:clamp(12px,2.0cqh,15px)!important;
+}
+@container (max-height:510px){
+  #novel-ui>#phone-ui{
+    height:96cqh!important;
+    right:calc(max(5px,1cqw) + var(--game-control-size) + 7px)!important;
+  }
+  #phone-ui .phone-app-view[data-phone-page="app"]{
+    padding:35px 7% 7%!important;gap:4px;
+  }
+  #phone-ui .phone-message-row{padding:6px!important}
+  #phone-ui .phone-app-icon{
+    width:clamp(27px,7cqh,35px);
+    height:clamp(27px,7cqh,35px);
+  }
+  #phone-ui .phone-apps{row-gap:7px}
+  #phone-ui .phone-app-label{font-size:10px!important}
+}
