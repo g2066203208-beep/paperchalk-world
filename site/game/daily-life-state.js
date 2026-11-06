@@ -121,7 +121,7 @@
   function defaultState(){
     return {version:VERSION,day:1,minute:7*60,location:'bedroom',
       money:260,energy:78,knowledge:0,evidence:0,worldPressure:2,
-      relationships:{female2:0,classmate:0,clerk:0,neighbor:0},
+      relationships:{female2:55,classmate:0,clerk:0,neighbor:0},
       inventory:{bread:1,water:1},dailyUses:{},nightStatus:'day',
       phone:{callsRead:false,messagesRead:false,reply:null},
       homework:{status:'unfinished',inspected:false,handedIn:false},
@@ -141,7 +141,7 @@
     s.evidence=CLAMP(INTEGER(raw.evidence,0),0,10000);
     s.worldPressure=CLAMP(INTEGER(raw.worldPressure,2),0,9999);
     for(const k of Object.keys(s.relationships))
-      s.relationships[k]=CLAMP(INTEGER(raw.relationships?.[k],0),0,100);
+      s.relationships[k]=CLAMP(INTEGER(raw.relationships?.[k],s.relationships[k]),0,100);
     for(const k of Object.keys(s.inventory))
       s.inventory[k]=CLAMP(INTEGER(raw.inventory?.[k],s.inventory[k]),0,999);
     for(const k of Object.keys(ACTIONS))
