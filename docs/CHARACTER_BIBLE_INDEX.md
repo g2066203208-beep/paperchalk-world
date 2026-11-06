@@ -14,6 +14,7 @@
 | **CHAR-020 男三设计档案** | `male-third-youthful-candidate`（尚未游戏注册） | 男三：可爱小正太系男高中生，浅茶棕短发和灰绿眼为候选 | **没有已验收原画**，人物信息、模型参数未获审批 | **22类448项候选已建立** | [机器档案](characters/CHAR-020.profile.json) · [448项逐条可读](characters/CHAR-020_MALE_THIRD_PROFILE.md) |
 | **CHAR-005 女四人设** | `female-fourth-capable-tsundere-heiress-candidate`（未正式注册） | **全能能干的傲娇大小姐**；旧纪律委员设定已否决 | **无已验收原画**，具体造型仍为提案 | 22类448字段候选；双手空着、同校制服 | [448字段](characters/CHAR-005.profile.json) · [逐项可读档案](characters/CHAR-005_FEMALE_FOURTH_PROFILE.md) |
 | **CHAR-008 教师候选** | `class-teacher-geography-candidate`（未正式注册游戏） | 成年女教师兼班主任，科目暂拟地理，28岁、温和幽默、独立生活（均为方案） | 无用户已验收正背面原画、PSD、L2D | **448项人设已建立** | [逐条档案](characters/CHAR-008_FEMALE_TEACHER_PROFILE.md) · [机器448字段](characters/CHAR-008.profile.json) |
+| **CHAR-049 新增女7（角色服装方向已确认）** | `female-seven`（不占用已有 CHAR-007） | 女7：成年人，职业及姓名待定；计划作为都市异常场景战斗角色 | **用户确认保留2048双视图参考角色及黑色高领工装夹克＋修身内搭上衣＋交叠裹裙＋隐藏短裤＋过膝袜＋黑靴的整体服装方向；脸与救援斧必须重设计，原PNG尚未上传GitHub** | **30类512字段建档；服装方向保留，武器/新脸未验收，无PSD/L2D** | [512项机器档案](characters/CHAR-049.profile.json) · [服装与人设](characters/CHAR-049_FEMALE_SEVEN_PROFILE.md) · [Anima成功提示词范本](characters/CHAR-049_FEMALE_SEVEN_ANIMA_PROMPT_TEMPLATE.md) |
 | CHAR-006～007、CHAR-009～015、CHAR-017～019、CHAR-021起 | 尚未分配正式身份 | 其余规划人物 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
 
 **重要：** “教室主角”“卧室主角”“正面主角”“背面主角”“L2D 主角”都不是新身份，只能引用 `protagonist`。旧临时恐怖敌人没有独立的正式人物身份，也不得因为历史素材名称而复活。
@@ -100,3 +101,11 @@
 用户已确认：**后续每名新角色必须写死身份与年龄、身高体重和头身比、躯干四肢比例、五官骨相与坐标、眼口鼻眉细节、发色发束位置、左右不对称识别点、色值、常态表情、镜头尺度与固定生成参数**；服装作为独立可替换模块，角色身材及脸不能随换装改变。具体执行要求见 [Anima 人物严格定型规范 V1.0](characters/ANIMA_CHARACTER_IDENTITY_LOCK_STANDARD_V1.md)。
 
 注意：对未经用户确认的精确尺寸只能标候选或 unknown；优先使用用户批准的原画母图与参考约束，不能声称文本提示词可保证精确厘米尺寸。
+
+## 2026-11-06｜女7（新增 CHAR-049）及 Anima 背战范本
+
+- 用户保留了女7双视图参考中人物与服装大方向。真实原图只在本轮会话，GitHub目前只有元数据与 SHA256，不是已经发布可加载PNG。
+- **原始服装不是旗袍**：短宽松高领工业工装夹克 + 修身独立上衣 + 单独交叠裹裙（内藏贴身短裤） + 过膝压缩袜 + 中筒工业靴。精修包袋拉链/三角胸标属于候选细节。
+- 脸型与武器必须另行重新设计；当前救援斧仅保留在原提示词历史记录中，不应作为新版武器锁定。
+- [女7 512字段](characters/CHAR-049.profile.json) · [女7可读档案](characters/CHAR-049_FEMALE_SEVEN_PROFILE.md) · **[用户指定保存的Anima提示词成功范本](characters/CHAR-049_FEMALE_SEVEN_ANIMA_PROMPT_TEMPLATE.md)**。
+- 女7是第七名女角色的称谓；为不覆盖旧`CHAR-007`剧情人物，该新增档案以`CHAR-049/female-seven`单独登记，不修改原48人排期及游戏已加载角色素材。
