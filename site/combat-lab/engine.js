@@ -1,4 +1,4 @@
-/* Paperchalk World: Timegrid Combat Engine v0.4 — browser + Node, deterministic seed. */
+/* Paperchalk World: Timegrid Combat Engine v0.6 — browser + Node, deterministic seed. */
 (function(root,factory){const result=factory();if(typeof module==='object'&&module.exports)module.exports=result;root.Timegrid=result;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const ROUND=10,HAND=4,SHUFFLE_EMPTY=1,SHUFFLE_FORCED=2,BREAK_TICKS=3,FAINT_TICKS=6,FINISHER_NEED=100;
@@ -72,6 +72,14 @@ const CLASS={
   sustain:{name:'共振支援',description:'持续伤害与回复',deck:{pulse:1,echo:3,rupture:1,seal:1,ward:2,nova:1,remedy:2,trance:1}}
  }}
 };
+// Same-tick initiative: higher speed resolves first; ties share a damage batch.
+// Speed affects order, never the number of occupied timeline ticks.
+const SPEED={default:6,quick:9,focused:8,heavy:4};
+for(const [key,card] of Object.entries(CARD)){
+  card.speed=card.speed??(card.type==='defense'?8:card.w===0?9:card.w===1?6:4);
+}
+CARD.focus.speed=10; CARD.feint.speed=9; CARD.shot.speed=10;
+CARD.fin_axe.speed=5;CARD.fin_gun.speed=9;CARD.fin_guard.speed=5;CARD.fin_mage.speed=7;
 const ENCOUNTERS={
  corridor:{name:'走廊袭击 · 基础',difficulty:1,enemies:[{id:'stalker',name:'走廊追猎者',hp:65,patterns:[['e_claw',4],['e_double',8]],rotation:[['e_lunge',5],['e_claw',9]],guardPeriod:3}]},
  twins:{name:'双影围攻 · 标准',difficulty:2,enemies:[{id:'stalker1',name:'潜行体',hp:47,patterns:[['e_claw',4],['e_double',8]],rotation:[['e_double',3],['e_claw',8]]},{id:'armor',name:'甲壳异变体',hp:60,patterns:[['e_hide',2],['e_nail',7]],rotation:[['e_mantle',3],['e_smash',8]]}]},
@@ -105,8 +113,28 @@ function scheduleAction(game,actor,card,start,target,source,locked=false,uid=nul
 if(end>game.now+ROUND&&already.some(a=>a.start>start))throw Error('跨回合的必须是最右端动作');
 if(already.some(a=>a.start+cLen(CARD[a.card])>game.now+ROUND&&a.start<start))throw Error('跨界动作后不能再安排新卡');
 const action={id:'a'+(++game.nextUid),card,start,target,source,locked,uid,guardLeft:(c.guard||0)+(c.guard&&actor.side==='ally'&&actor.relics?.includes('guard_plus')?4:0),canceled:false,started:false,done:false};actor.actions.push(action);actor.actions.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));return action;}
-function place(game,uid,startRelative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];if(a.dead||a.stunUntil>game.now+startRelative)throw Error('角色失能');if(!Number.isInteger(startRelative)||startRelative<1||startRelative>10)throw Error('请选择T1～T10');const ix=a.hand.findIndex(c=>c.uid===uid);if(ix<0)throw Error('手牌未找到');const card=a.hand[ix],c=CARD[card.key];const start=game.now+startRelative-1;/* 新手牌允许放在先前留下的空白格，不能动已锁卡牌；洗牌只锁动作，不锁空位。 */if(!c)throw Error('无效卡牌');if(c.type==='finisher')throw Error('绝杀为单独槽位');const dest=c.type==='defense'||c.heal||c.buff?a.id:targetId||actorsOf(game,'enemy')[0]?.id;const t=game.actors.find(x=>x.id===dest);if(!t||t.dead)throw Error('请先选择有效目标');const action=scheduleAction(game,a,card.key,start,dest,'hand',false,card.uid);a.hand.splice(ix,1);return action;}
-function remove(game,actionId){const a=game.actors[0];const i=a.actions.findIndex(a=>a.id===actionId);if(i<0)throw Error('未找到卡牌');const act=a.actions[i];if(act.locked||act.start<=a.lockedUntil)throw Error('洗牌前排程已锁定');if(act.start<game.now)throw Error('跨回合动作不可移除');if(act.source==='finisher')a.energy=act.meterBefore;else if(act.source==='hand')a.hand.push({uid:act.uid,key:act.card});a.actions.splice(i,1);return act;}
+function place(game,uid,startRelative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];if(a.dead||a.stunUntil>game.now+startRelative)throw Error('角色失能');if(!Number.isInteger(startRelative)||startRelative<1||startRelative>10)throw Error('请选择T1～T10');const ix=a.hand.findIndex(c=>c.uid===uid);if(ix<0)throw Error('手牌未找到');const card=a.hand[ix],c=CARD[card.key];const start=game.now+startRelative-1;/* 新手牌允许放在先前留下的空白格，不能动已锁卡牌；洗牌只锁动作，不锁空位。 */if(!c)throw Error('无效卡牌');if(c.type==='finisher')throw Error('绝杀为单独槽位');const friend=!!(c.type==='defense'||c.heal||c.buff);const dest=targetId||(friend?a.id:actorsOf(game,'enemy')[0]?.id);const t=game.actors.find(x=>x.id===dest);if(!t||t.dead||t.side!==(friend?'ally':'enemy'))throw Error(friend?'请拖到我方角色轨道':'请拖到敌方目标轨道');const action=scheduleAction(game,a,card.key,start,dest,'hand',false,card.uid);a.hand.splice(ix,1);return action;}
+function moveAction(game,actionId,startRelative,targetId){
+ if(game.phase!=='planning')throw Error('不是规划阶段');
+ const hero=game.actors[0],act=hero.actions.find(a=>a.id===actionId);
+ if(!act||act.locked||act.start<=hero.lockedUntil||act.start<game.now)throw Error('该动作已锁定或不可移动');
+ if(!Number.isInteger(startRelative)||startRelative<1||startRelative>ROUND)throw Error('目标时间必须在1—10格内');
+ const card=CARD[act.card],friend=card.type==='defense'||card.heal||card.buff||act.source==='shuffle';
+ const dest=targetId||act.target,target=game.actors.find(a=>a.id===dest);
+ if(!target||target.dead||target.side!==(friend?'ally':'enemy'))throw Error('目标轨道不符合卡牌类型');
+ const start=game.now+startRelative-1,end=start+cLen(card);
+ if(start<hero.stunUntil||isBusy(hero,start,end,act))throw Error('此处有其他动作占用');
+ const other=hero.actions.filter(a=>a!==act&&!a.canceled&&a.start>=game.now&&a.start<game.now+ROUND);
+ if(end>game.now+ROUND&&other.some(a=>a.start>start))throw Error('跨轮卡必须是时间轴最右一张');
+ if(other.some(a=>a.start+cLen(CARD[a.card])>game.now+ROUND&&a.start<start))throw Error('其他跨轮动作后不能追加');
+ const prevS=act.start,prevT=act.target;act.start=start;act.target=dest;
+ if(act.source==='finisher'){
+   const status=finisherCondition(game,start,dest,act);
+   if(!status.ok){act.start=prevS;act.target=prevT;throw Error(status.message);}
+ }
+ hero.actions.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));return act;
+}
+function remove(game,actionId){const a=game.actors[0];const i=a.actions.findIndex(a=>a.id===actionId);if(i<0)throw Error('未找到卡牌');const act=a.actions[i];if(act.locked||act.start<=a.lockedUntil)throw Error('洗牌前排程已锁定');if(act.start<game.now)throw Error('跨回合动作不可移除');if(act.source==='hand')a.hand.push({uid:act.uid,key:act.card});a.actions.splice(i,1);return act;}
 function shuffleHand(game,relative){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];const start=game.now+relative-1;const cost=a.hand.length?SHUFFLE_FORCED:SHUFFLE_EMPTY;if(!Number.isInteger(relative)||relative<1||relative>10)throw Error('请选择T1～T10');const prev=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND);
 const latest=prev.reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));if(start<latest)throw Error('洗牌只能排在已安排动作之后；不能回到过去');if(start>=game.now+ROUND)throw Error('当前回合没有洗牌空间');if(!a.draw.length&&!a.discard.length&&!a.hand.length)throw Error('本轮牌库已被预留，请到下一回合自动补牌');
 const c=cost===1?'shuffle1':'shuffle2';// synthetic card definitions fixed time
@@ -117,7 +145,28 @@ for(const p of prev){p.locked=true;} // 已排牌仍为预留资源，直到执�
 if(a.hand.length){for(const c of a.hand)a.discard.push(c);a.hand=[];}
 a.lockedUntil=start+cost-1;drawGame(a,game);act.grantedCards=a.hand.map(c=>({...c}));game.stats.shuffle++;return act;
 }
-function placeFinisher(game,relative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0],dest=game.actors.find(x=>x.id===targetId);if(a.energy<FINISHER_NEED)throw Error('绝杀能量不足');if(!dest||dest.dead||dest.side!=='enemy')throw Error('请选择敌人');if(dest.hp>Math.ceil(dest.maxHp*0.55)&&dest.marked<=0&&dest.stunUntil<=game.now)throw Error('绝杀启动条件：目标血量≤55%，或已被标记、处于破防状态');const start=game.now+relative-1;/* 绝杀也可安排在未占用的旧空格，已放动作仍锁定。 */const act=scheduleAction(game,a,a.fin,start,targetId,'finisher',false);act.meterBefore=a.energy;a.energy-=100;return act;}
+function finisherCondition(game,start,destId,excludeAction=null){
+ const enemy=game.actors.find(a=>a.id===destId),hero=game.actors[0];
+ if(!enemy||enemy.side!=='enemy'||enemy.dead)return{ok:false,message:'请选择有效敌人'};
+ const temp=clone(game);const player=temp.actors[0];
+ if(excludeAction)player.actions=player.actions.filter(a=>a.id!==excludeAction.id);
+ const projected=start>game.now?simulateRound(temp,{preview:false,stopAt:start-1}):temp;
+ const target=projected.actors.find(a=>a.id===destId),who=projected.actors[0];
+ if(who.dead)return{ok:false,message:'预计绝杀开始前施术者已倒下'};
+ if(!target||target.dead)return{ok:false,message:'绝杀开始前目标已被击败'};
+ if(who.energy<FINISHER_NEED)return{ok:false,message:'到该时间格时绝杀能量不足（预计 '+who.energy+'/100）'};
+ if(target.hp>Math.ceil(target.maxHp*0.55)&&target.marked<=0&&target.stunUntil<=start)return{ok:false,message:'绝杀启动条件：到该格目标尚未标记/破防，且生命大于55%'};
+ return{ok:true,energy:who.energy,targetHp:target.hp,marked:target.marked};
+}
+function placeFinisher(game,relative,targetId){
+ if(game.phase!=='planning')throw Error('不是规划阶段');
+ if(!Number.isInteger(relative)||relative<1||relative>ROUND)throw Error('请选择时间格');
+ const a=game.actors[0],start=game.now+relative-1;
+ if(a.actions.some(x=>!x.canceled&&x.source==='finisher'&&x.start>=game.now))throw Error('本轮已有一张绝杀牌');
+ const condition=finisherCondition(game,start,targetId);
+ if(!condition.ok)throw Error(condition.message);
+ return scheduleAction(game,a,a.fin,start,targetId,'finisher',false);
+}
 function enemyTarget(game,source){const ls=actorsOf(game,'ally');if(!ls.length)return null;return ls[(game.round+source.id.length)%ls.length].id;}
 function enemySchedule(game){const base=game.now;for(const e of actorsOf(game,'enemy')){let pat=e.pattern;if(!pat)continue;let entries=(game.round%2?pat.rotation:pat.patterns)||[];for(const [key,relative]of entries){const start=base+relative-1,c=CARD[key];if(start<e.stunUntil||isBusy(e,start,start+cLen(c)))continue;const target=c.type==='defense'?e.id:enemyTarget(game,e);try{scheduleAction(game,e,key,start,target,'enemy',true);}catch{}}
 }}
@@ -141,62 +190,139 @@ function aiSchedule(game){for(const a of actorsOf(game,'ally').filter(x=>x.id!==
 function prepareRound(game){if(game.phase==='win'||game.phase==='lost')return;game.phase='planning';game.now=game.round*ROUND;
 for(const a of game.actors){a.actions=a.actions.filter(x=>!x.canceled&&x.start+cLen(CARD[x.card])>game.now);a.lockedUntil=game.now-1;if(a.side==='ally'&&!a.dead){drawGame(a,game);if(a.id==='hero'&&a.relics?.includes('round_regen'))a.hp=Math.min(a.maxHp,a.hp+2);if(a.id==='hero'&&a.relics?.includes('meter_regen'))a.energy=Math.min(100,a.energy+5);}}
 enemySchedule(game);aiSchedule(game);}
-function findDefense(actor,t){return actor.actions.find(a=>!a.canceled&&a.start<=t&&phase(CARD[a.card],a.start,t)==='active'&&CARD[a.card].type==='defense');}
+function findDefense(game,actor,t,attackSpeed=0){
+ // A shield placed on an ally's small lane protects that ally while occupying caster time.
+ return game.actors.flatMap(owner=>owner.actions.filter(a=>!a.canceled&&a.target===actor.id&&a.start<=t&&phase(CARD[a.card],a.start,t)==='active'&&CARD[a.card].type==='defense'&&(a.start+CARD[a.card].w<t||(CARD[a.card].speed||0)>=attackSpeed))).sort((a,b)=>(CARD[b.card].speed||0)-(CARD[a.card].speed||0))[0];
+}
 function actorHitBuff(actor,c,t){let n=(c.damage||0)+(actor.buffHits>0?actor.buff:0);if(actor.weak>0)n=Math.max(1,n-3);if(actor.side==='enemy'&&actor.enemyDamageScale)n=Math.max(1,Math.round(n*actor.enemyDamageScale));return n;}
 function log(game,t,message,kind='info'){const item={t:t+1,text:message,kind};game.events.push(item);if(game.log.length<600)game.log.push(item);}
 function interrupt(game,target,t,cause,faint=false){const duration=faint?FAINT_TICKS:BREAK_TICKS;target.stunUntil=Math.max(target.stunUntil,t+duration);target.breaks++;game.stats.breaks++;if(faint)game.stats.faints++;for(const ac of target.actions){if(!ac.canceled&&(ac.start+cLen(CARD[ac.card])>t)){ac.canceled=true;ac.canceledAt=t;}}
 log(game,t,target.name+(faint?' 晕倒':' 破防')+'！后续动作中断，失能'+duration+'格','break');}
-function simulateRound(input,{preview=false}={}){const game=preview?clone(input):input;game.events=[];const aEnd=game.now+ROUND;
-for(let tick=game.now;tick<aEnd;tick++){
- const active=[],groups=new Map();const alive=game.actors.filter(a=>!a.dead&&tick>=a.stunUntil);
- for(const actor of alive){for(const action of actor.actions){if(action.canceled||!phase(CARD[action.card],action.start,tick))continue;const card=CARD[action.card];if(tick===action.start){action.started=true;if(action.source==='finisher'){game.stats.finishers++;log(game,tick,actor.name+' 发动 '+card.name+'！','finish');}}
- if(phase(card,action.start,tick)==='active')active.push({actor,action,card});}}
- // First activate support actions; defensive states are detected from active tracks regardless of order.
- for(const item of active){const {actor,action,card}=item;const first=tick===action.start+card.w;if(card.heal&&first){const delta=Math.min(card.heal,actor.maxHp-actor.hp);actor.hp+=delta;game.stats.heal+=delta;if(delta){actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,actor.name+' 回复 '+delta+'生命','heal');}}
- if(card.buff&&first){actor.buff=card.buff;actor.buffHits=2;}
- if(card.mark&&first){const dest=game.actors.find(x=>x.id===action.target);if(dest&&!dest.dead){dest.marked+=card.mark;actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,dest.name+' 获得标记 '+card.mark,'skill');}}
- if(card.weak&&first){const dest=game.actors.find(x=>x.id===action.target);if(dest&&!dest.dead){dest.weak+=card.weak;actor.energy=Math.min(100,actor.energy+(card.charge||0));}}}
- const hits=[];for(const {actor,action,card}of active){if(!card.damage||!actor||actor.dead)continue;const targets=card.aoe?actorsOf(game,actor.side==='ally'?'enemy':'ally'):[game.actors.find(x=>x.id===action.target)].filter(Boolean);
- for(const dest of targets){if(dest.dead)continue;let raw=actorHitBuff(actor,card,tick);if(actor.side==='ally'&&actor.relics?.includes('attack_plus'))raw+=2;if(dest.marked>0)raw+=3;hits.push({actor,dest,raw,pierce:card.pierce||0,pressure:(card.breakPower||0)+(actor.relics?.includes('break_plus')?2:0),finisher:card.type==='finisher',action,card});}}
- // Simultaneous batch. Evaluate all hits from alive-at-tick-start actors before applying HP death.
- for(const h of hits){const k=h.dest.id;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(h);}
- const outcomes=[];for(const [targetId,list]of groups){const dest=game.actors.find(a=>a.id===targetId);if(!dest||dest.dead)continue;const defense=findDefense(dest,tick);let guardAvailable=defense?defense.guardLeft:0;const dodge=defense&&CARD[defense.card].dodge;const total=list.reduce((s,h)=>s+h.raw,0);
- let protectedAmount=0,damage=0;
- if(dodge){protectedAmount=total;damage=0;}
- else if(defense){const bypass=list.reduce((s,h)=>s+Math.min(h.raw,h.pierce),0),guardable=total-bypass;const pressure=list.reduce((s,h)=>s+h.pressure,0);protectedAmount=Math.min(guardAvailable,guardable);damage=total-protectedAmount;defense.guardLeft=Math.max(0,guardAvailable-guardable-pressure);
- if(guardAvailable>0&&guardable+pressure>=guardAvailable){outcomes.push({type:'break',dest,actor:list[0].actor});}}
- else damage=total;
- outcomes.push({type:'damage',dest,damage,blocked:protectedAmount,list});
+function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
+ const game=preview?clone(input):input;
+ if(collectTrace)game.trace=[];
+ game.events=[];const aEnd=game.now+ROUND;
+ const endTick=stopAt===null?aEnd-1:Math.min(stopAt,aEnd-1);
+ // A projection of the state just before this round starts is valid.
+ for(let tick=game.now;tick<=endTick;tick++){
+  const active=[];
+  for(const actor of game.actors){
+   if(actor.dead||tick<actor.stunUntil)continue;
+   for(const action of actor.actions){
+    if(action.canceled||!phase(CARD[action.card],action.start,tick))continue;
+    const card=CARD[action.card];
+    if(tick===action.start){
+     action.started=true;
+     if(action.source==='finisher'){
+      const enemy=game.actors.find(a=>a.id===action.target);
+      if(actor.energy<FINISHER_NEED||!enemy||enemy.dead||enemy.hp>Math.ceil(enemy.maxHp*.55)&&enemy.marked<=0&&enemy.stunUntil<=tick){
+       action.canceled=true;log(game,tick,actor.name+' 绝杀发动失败：条件在行动时未满足','info');continue;
+      }
+      actor.energy-=FINISHER_NEED;game.stats.finishers++;
+      log(game,tick,actor.name+' 发动 '+card.name+'！','finish');
+     }
+    }
+    if(phase(card,action.start,tick)==='active')active.push({actor,action,card});
+   }
+  }
+  // Highest-speed actions win genuine same-tick races. Equal-speed hits remain simultaneous.
+  const speeds=[...new Set(active.map(x=>x.card.speed||6))].sort((a,b)=>b-a);
+  for(const speed of speeds){
+   const tier=active.filter(x=>(x.card.speed||6)===speed&&!x.actor.dead&&!x.action.canceled&&tick>=x.actor.stunUntil);
+   if(!tier.length)continue;
+   for(const {actor,action,card} of tier){
+    const first=tick===action.start+card.w;
+    const dest=game.actors.find(x=>x.id===action.target);
+    if(first&&card.heal&&dest&&!dest.dead){const delta=Math.min(card.heal,dest.maxHp-dest.hp);dest.hp+=delta;game.stats.heal+=delta;if(delta){actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,actor.name+' 为 '+dest.name+' 回复 '+delta+'生命','heal');}}
+    if(first&&card.buff&&dest&&!dest.dead){dest.buff=card.buff;dest.buffHits=2;log(game,tick,actor.name+' 强化 '+dest.name,'skill');}
+    if(first&&card.mark&&dest&&!dest.dead){dest.marked+=card.mark;actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,dest.name+' 获得标记 '+card.mark,'skill');}
+    if(first&&card.weak&&dest&&!dest.dead){dest.weak+=card.weak;actor.energy=Math.min(100,actor.energy+(card.charge||0));log(game,tick,dest.name+' 被弱化','skill');}
+   }
+   const groups=new Map();
+   for(const {actor,action,card} of tier){
+    if(!card.damage||actor.dead||action.canceled)continue;
+    const targets=card.aoe?actorsOf(game,actor.side==='ally'?'enemy':'ally'):[game.actors.find(x=>x.id===action.target)].filter(Boolean);
+    for(const dest of targets){
+     if(dest.dead)continue;
+     let raw=actorHitBuff(actor,card,tick);
+     if(actor.side==='ally'&&actor.relics?.includes('attack_plus'))raw+=2;
+     if(dest.marked>0)raw+=3;
+     const hit={actor,dest,raw,pierce:card.pierce||0,pressure:(card.breakPower||0)+(actor.relics?.includes('break_plus')?2:0),finisher:card.type==='finisher',action,card};
+     if(!groups.has(dest.id))groups.set(dest.id,[]);groups.get(dest.id).push(hit);
+    }
+   }
+   const outcomes=[];
+   for(const [targetId,list] of groups){
+    const dest=game.actors.find(a=>a.id===targetId);if(!dest||dest.dead)continue;
+    const defense=findDefense(game,dest,tick,speed),total=list.reduce((sum,h)=>sum+h.raw,0);
+    const guardAvailable=defense?defense.guardLeft:0,dodge=defense&&CARD[defense.card].dodge;
+    let blocked=0,damage=total,broken=false;
+    if(dodge){blocked=total;damage=0;}
+    else if(defense){
+     const bypass=list.reduce((sum,h)=>sum+Math.min(h.raw,h.pierce),0);
+     const guardable=total-bypass,pressure=list.reduce((sum,h)=>sum+h.pressure,0);
+     blocked=Math.min(guardAvailable,guardable);damage=total-blocked;
+     defense.guardLeft=Math.max(0,guardAvailable-guardable-pressure);
+     broken=guardAvailable>0&&guardable+pressure>=guardAvailable;
+    }
+    outcomes.push({dest,hpBefore:dest.hp,damage,blocked,list,broken,defense});
+   }
+   // Equal-speed damage is committed as one batch before breaks cancel future actions.
+   for(const {dest,damage,blocked,list} of outcomes){
+    dest.hp=Math.max(0,dest.hp-damage);dest.damageTaken+=damage;dest.blocked+=blocked;
+    game.stats.damage+=damage;game.stats.blocks+=blocked;
+    const shareSum=list.reduce((sum,x)=>sum+x.raw,0);
+    for(const hit of list){
+     if(dest.marked>0)dest.marked--;
+     if(hit.actor.weak>0)hit.actor.weak--;
+     if(hit.actor.buffHits>0)hit.actor.buffHits--;
+     hit.actor.damageDealt+=Math.round(damage*hit.raw/Math.max(1,shareSum));
+     if(hit.actor.side==='ally'&&(damage>0||blocked>0))hit.actor.energy=Math.min(100,hit.actor.energy+(hit.card.charge||0));
+    }
+    if(blocked&&dest.side==='ally')dest.energy=Math.min(100,dest.energy+Math.min(12,5+Math.ceil(blocked/3)));
+    if(damage)log(game,tick,list.map(h=>h.actor.name).join('、')+' → '+dest.name+'：'+damage+'伤害'+(blocked?'（抵消'+blocked+'）':''),'damage');
+    else if(blocked)log(game,tick,dest.name+' 格挡 '+blocked,'block');
+    if(dest.hp<=0){dest.dead=true;log(game,tick,dest.name+' 被击败','death');}
+   }
+   for(const result of outcomes){
+    if(result.broken&&!result.dest.dead)interrupt(game,result.dest,tick,'guard',false);
+    if(result.blocked>0&&result.defense&&CARD[result.defense.card].counter){
+     const attacker=result.list.find(h=>!h.actor.dead)?.actor,counter=CARD[result.defense.card].counter;
+     if(attacker){attacker.hp=Math.max(0,attacker.hp-counter);attacker.damageTaken+=counter;result.dest.damageDealt+=counter;
+       if(!attacker.hp){attacker.dead=true;log(game,tick,attacker.name+' 被反击击败','death');}
+       else log(game,tick,result.dest.name+' 反击 '+attacker.name+' '+counter,'damage');}
+    }
+   }
+   for(const {actor,action,card} of tier){
+    if(actor.dead||action.canceled)continue;
+    if(card.faint&&tick===action.start+card.w){const dest=game.actors.find(a=>a.id===action.target);if(dest&&!dest.dead)interrupt(game,dest,tick,'status',true);}
+   }
+   // A finisher earns the special ending only if it delivered the killing blow.
+   if(!actorsOf(game,'enemy').length){
+    const candidates=outcomes.flatMap(x=>{const total=x.list.reduce((sum,h)=>sum+h.raw,0),finRaw=x.list.filter(h=>h.finisher).reduce((sum,h)=>sum+h.raw,0);const finEffective=x.damage*finRaw/Math.max(1,total);return x.dest.dead&&x.hpBefore>x.damage-finEffective?x.list.filter(h=>h.finisher):[];});
+    if(candidates.length)game.finisherBy=candidates[0].actor.id;
+   }
+   for(const actor of game.actors)if(actor.dead)for(const action of actor.actions)if(action.start+cLen(CARD[action.card])>tick)action.canceled=true;
+  }
+  if(collectTrace){game.trace.push({tick:tick+1,actors:game.actors.map(a=>({id:a.id,hp:a.hp,energy:a.energy,marked:a.marked,dead:a.dead,stunUntil:a.stunUntil})),events:game.events.filter(e=>e.t===tick+1).map(e=>({...e}))});}
+  if(!actorsOf(game,'enemy').length||!actorsOf(game,'ally').length)break;
  }
- for(const result of outcomes){if(result.type!=='damage')continue;const {dest,damage,blocked,list}=result;dest.hp=Math.max(0,dest.hp-damage);dest.damageTaken+=damage;dest.blocked+=blocked;game.stats.damage+=damage;game.stats.blocks+=blocked;
- for(const h of list){if(h.dest.marked>0)h.dest.marked--;if(h.actor.weak>0)h.actor.weak--;if(h.actor.buffHits>0)h.actor.buffHits--;h.actor.damageDealt+=Math.round(damage*h.raw/Math.max(1,list.reduce((s,x)=>s+x.raw,0)));if(h.actor.side==='ally'&&(damage>0||blocked>0)){h.actor.energy=Math.min(100,h.actor.energy+(h.card.charge||0));}}
- if(blocked&&dest.side==='ally')dest.energy=Math.min(100,dest.energy+Math.min(12,5+Math.ceil(blocked/3)));if(damage)log(game,tick,list.map(h=>h.actor.name).join('、')+' → '+dest.name+'：'+damage+'伤害'+(blocked?'（抵消'+blocked+'）':''),'damage');else if(blocked)log(game,tick,dest.name+' 格挡 '+blocked,'block');
- if(dest.hp<=0){dest.dead=true;log(game,tick,dest.name+' 被击败','death');const winner=list.find(h=>h.finisher);if(winner&&actorsOf(game,'enemy').every(e=>e.dead))game.finisherBy=winner.actor.id;}}
- for(const o of outcomes){if(o.type==='break'&&!o.dest.dead)interrupt(game,o.dest,tick,'guard',false);}
- // Counter-defense retaliates only when it actually absorbed damage; avoids zero-cost passive damage.
- for(const o of outcomes){if(o.type!=='damage'||o.blocked<=0)continue;const defend=findDefense(o.dest,tick),counter=defend?CARD[defend.card].counter||0:0;if(!counter)continue;const attacker=o.list.find(h=>!h.actor.dead)?.actor;if(attacker){attacker.hp=Math.max(0,attacker.hp-counter);attacker.damageTaken+=counter;o.dest.damageDealt+=counter;if(attacker.hp===0){attacker.dead=true;log(game,tick,attacker.name+' 被反击击败','death');}else log(game,tick,o.dest.name+' 反击 '+attacker.name+'，造成'+counter+'伤害','damage');}}
- for(const {actor,action,card} of active){if(actor.dead||action.canceled)continue;if(card.faint&&tick===action.start+card.w){const dest=game.actors.find(a=>a.id===action.target);if(dest&&!dest.dead)interrupt(game,dest,tick,'status',true);}}
- // Meter is earned only from effective damage, real blocking, healing or debuffs; idle guarding gives zero charge.
- for(const actor of game.actors){if(actor.dead){for(const act of actor.actions)if(act.start+cLen(CARD[act.card])>tick)act.canceled=true;}}
- if(!actorsOf(game,'enemy').length||!actorsOf(game,'ally').length)break;
-}
-game.turns++;
- // 洗牌是规划阶段的卡组重整并占用一格；抽卡在确认时完成。
- // 新牌可合法补放在洗牌之前的空格，因此执行阶段不能在中断时撤销已经预排的抽牌。
-// Finalize cards for completed segments. Reserved cards from interrupted plan go back to hand if possible.
-for(const a of game.actors.filter(a=>a.side==='ally')){
- for(const act of a.actions){if(!act.uid||act._processed||act.source==='enemy')continue;
- const finished=act.start+cLen(CARD[act.card])<=aEnd || act.canceled;
- if(!finished)continue;act._processed=true;
- const inDraw=a.draw.some(x=>x.uid===act.uid),inDiscard=a.discard.some(x=>x.uid===act.uid),inHand=a.hand.some(x=>x.uid===act.uid);
- if(!(inDraw||inDiscard||inHand)){if(act.canceled&&!act.started)a.hand.push({uid:act.uid,key:act.card});else a.discard.push({uid:act.uid,key:act.card});}
+ if(stopAt!==null)return game;
+ game.turns++;
+ for(const a of game.actors.filter(a=>a.side==='ally')){
+  for(const act of a.actions){if(!act.uid||act._processed||act.source==='enemy')continue;
+   const finished=act.start+cLen(CARD[act.card])<=aEnd||act.canceled;if(!finished)continue;
+   act._processed=true;
+   const inDraw=a.draw.some(x=>x.uid===act.uid),inDiscard=a.discard.some(x=>x.uid===act.uid),inHand=a.hand.some(x=>x.uid===act.uid);
+   if(!(inDraw||inDiscard||inHand)){if(act.canceled&&!act.started)a.hand.push({uid:act.uid,key:act.card});else a.discard.push({uid:act.uid,key:act.card});}
+  }
  }
+ const enemies=actorsOf(game,'enemy'),team=actorsOf(game,'ally');
+ if(!enemies.length){game.phase='win';game.winner='ally';game.score=scoreResult(game);log(game,Math.min(aEnd-1,game.now+9),'战斗结束！结算评分 '+game.score.rank,'win');}
+ else if(!team.length){game.phase='lost';game.winner='enemy';game.score=scoreResult(game);}
+ else{game.round++;prepareRound(game);}
+ return game;
 }
-const enemies=actorsOf(game,'enemy'),team=actorsOf(game,'ally');
-if(!enemies.length){game.phase='win';game.winner='ally';game.score=scoreResult(game);log(game,Math.min(aEnd-1,game.now+9),'战斗结束！结算评分 '+game.score.rank,'win');}
-else if(!team.length){game.phase='lost';game.winner='enemy';game.score=scoreResult(game);}
-else{game.round++;prepareRound(game);}
-return game;}
 function scoreResult(game){const living=game.actors.filter(a=>a.side==='ally'),baseHealth=living.reduce((sum,a)=>sum+a.maxHp,0),remain=living.reduce((sum,a)=>sum+a.hp,0);const efficiency=Math.max(4,20-Math.max(0,game.turns-2)*3);const survival=Math.round(25*remain/baseHealth);const tactics=Math.min(35,8+game.stats.blocks/7+game.stats.breaks*4+game.stats.heal/5);const finisher=game.finisherBy?20:0;const pts=Math.min(100,Math.round(efficiency+survival+tactics+finisher));const rank=pts>=90?'SS':pts>=76?'S':pts>=61?'A':pts>=42?'B':'C';const prob={SS:[8,22,70],S:[20,35,45],A:[38,42,20],B:[55,35,10],C:[75,22,3]}[rank];return{points:pts,rank,rewardProb:prob,finisherBy:game.finisherBy,breakdown:{efficiency,survival,tactics,finisher},range:'仅限当前关卡奖励池'};}
 function autoPlan(game,policy='tactical'){if(game.phase!=='planning')return game;const hero=game.actors[0];const enemies=actorsOf(game,'enemy');if(!enemies.length)return game;
 let tries=0;while(tries++<12){const cards=hero.hand.slice();if(!cards.length){const next=earliestShuffle(game);if(next>10)break;try{shuffleHand(game,next);}catch{break;}continue;}
@@ -224,5 +350,5 @@ if(hero.energy>=100&&enemies.some(e=>e.hp<=35)){const e=enemies.find(e=>e.hp<=35
 return game;}
 function earliestShuffle(game){const a=game.actors[0];const last=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND).reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));return last-game.now+1;}
 function runAuto(opts,policy='tactical',maxRounds=14){const game=create(opts);while(game.phase==='planning'&&game.round<maxRounds){autoPlan(game,policy);simulateRound(game);}if(game.phase==='planning')game.phase='timeout';return game;}
-return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,cLen,phase,create,place,remove,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,clone};
+return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,cLen,phase,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,clone};
 });

@@ -6,3 +6,43 @@
 .runbar{display:flex;flex-wrap:wrap;gap:9px;padding:10px 14px;border:1px solid #5b5142;border-radius:10px;background:#242b31;margin-bottom:12px;align-items:center;color:#bdd2df;font-size:12px}.runbar b{color:#f0d39c}.runbar span{padding:2px 7px;border-left:1px solid #47515a}
 .group-badge{font-size:10px;color:#ffd6a2;background:#5b4038;border-radius:3px;padding:2px 4px}.reward-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.reward-card{text-align:left;min-height:183px;padding:13px;background:#2b3b4d;display:flex;flex-direction:column;gap:8px;border-top:4px solid #8491a0}.reward-card.uncommon{border-top-color:#6aaddd}.reward-card.rare{border-top-color:#d9ac6e}.reward-card strong{font-size:14px}.reward-card span:not(.rarity){font-size:12px;color:#bbccd9;flex:1}.reward-card .rarity{font-size:10px;color:#f1d5a5;font-weight:bold}.reward-card small{color:#9db2bf;font-size:10px}.reward-card em{font-style:normal;color:#eac889;font-size:11px}.shop-heading{display:flex;justify-content:space-between;gap:10px;font-size:21px;font-weight:900;color:#f0d29a}.shop-heading b{font-size:15px}.shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-height:42vh;overflow:auto;padding-right:2px}.shop-item{padding:12px;border:1px solid #4b5a67;border-radius:10px;background:#273746;display:flex;flex-direction:column;gap:5px}.shop-title{display:flex;justify-content:space-between;gap:9px;font-size:12px;color:#f0d69f}.shop-title strong{white-space:nowrap}.shop-item p{font-size:11px;line-height:1.4;margin:3px 0;color:#c5d3de;flex:1}.shop-item small{font-size:10px;color:#9daebe}.shop-buy{padding:8px}.deck-choose{width:100%;padding:6px;color:#fff;background:#33485c;border:1px solid #668096;border-radius:6px;font-size:11px}.modal-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:14px}.run-summary{padding:9px 5px;text-align:center}.result-letter{font-size:48px;color:#f4cc8f;font-weight:900}.run-summary h3{font-size:18px;color:#f9e2bd}.run-summary p{margin:4px 0 9px}.deck-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:45vh;overflow:auto}.deck-list>div{display:flex;flex-direction:column;background:#2b3947;padding:8px;border:1px solid #45596b;border-radius:6px;font-size:12px}.deck-list small{font-size:10px;color:#9fbcce}
 @media(max-width:560px){.reward-grid{grid-template-columns:1fr}.reward-card{min-height:110px}.shop-grid{grid-template-columns:1fr}.deck-list{grid-template-columns:1fr}.runbar{font-size:11px;padding:7px;gap:4px}.runbar span{padding:2px 5px}}
+
+/* V0.6: DAW-inspired personal large lane + compact target tracks; both touch & desktop. */
+.timeline-wrap{padding-bottom:4px;scroll-behavior:smooth;overscroll-behavior-x:contain}
+.time-row.hero-large{background:#243747;box-shadow:inset 3px 0 #d7b77e;border-bottom:2px solid #57738a;min-height:73px}
+.time-row.hero-large .time-cell{min-height:68px;font-size:11px;cursor:pointer}
+.time-row.hero-large .person{background:#293e51;color:#fff;font-weight:800}
+.time-row.targetrow{min-height:34px;border-bottom:1px solid #253b48;background:#14202d}
+.time-row.targetrow .person{padding-top:5px;padding-bottom:5px}
+.time-row.targetrow .person small{font-size:9px;color:#8398a8}
+.time-row.targetrow .time-cell{min-height:34px;max-height:40px;cursor:pointer;position:relative;font-size:10px;overflow:hidden}
+.time-row.targetrow .time-cell span:not(.target-pip){white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.time-row.targetrow.enemyrow{border-left:3px solid #bc6874}
+.time-row.targetrow.allyrow{border-left:3px solid #62a39c}
+.time-cell:focus-visible,.time-cell.drag-target{outline:2px solid #f2c67c;outline-offset:-2px;z-index:1}
+.time-cell.targeted{background:color-mix(in srgb,var(--cell,#e5bd7c) 32%,#1d3140);border-bottom:2px solid #eac07c}
+.target-pip{position:absolute;right:0;bottom:0;font-size:11px;color:#ffe0aa;font-weight:bold}
+.time-cell[data-action-id]{touch-action:manipulation}
+.time-cell[data-action-id]:not(.locked){cursor:grab}
+.time-cell[data-action-id]:not(.locked):active{cursor:grabbing}
+.time-cell.locked{cursor:not-allowed}
+.forecast-title{font-size:13px;color:#f1d8ad;font-weight:700;display:flex;justify-content:space-between;gap:8px}
+.forecast-title b{font-size:12px}
+.forecast-numbers{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;padding:7px 0;border-bottom:1px solid #354557}
+.forecast-numbers b{color:#f3d297}
+.forecast-target{display:flex;flex-wrap:wrap;gap:5px 12px;margin:9px 0}
+.forecast-target span{font-size:11px;background:#243749;border-radius:6px;padding:4px 7px}
+.forecast-target em{font-style:normal;color:#f0cc81}
+.forecast-note{font-size:11px;line-height:1.6;color:#abc1d1;padding:3px 0}
+.hand{border:1px dashed transparent;border-radius:8px}
+.hand:has(+*){transition:border-color .15s}
+#removeActionButton:disabled{opacity:.35}
+@media(max-width:690px){.time-row.hero-large .time-cell{min-height:60px}.time-row.targetrow .time-cell{min-height:34px}.time-row.targetrow .person{min-width:99px;font-size:10px}.small-actions button{min-height:32px}}
+
+/* One glance: real-time forecast is the first visible intelligence panel. */
+.rightbar{display:flex;flex-direction:column}.rightbar>.live-forecast{order:-1;border-color:#70866c;background:linear-gradient(160deg,#1d343b,#192838)}
+.info-fold{padding:0;overflow:hidden}.info-fold summary{cursor:pointer;padding:13px 14px;font-size:12px;font-weight:700;color:#cbd9e5;list-style:none;user-select:none;display:flex;align-items:center;justify-content:space-between}.info-fold summary:after{content:'⌄';color:#9cb9c9}.info-fold[open] summary:after{content:'⌃'}.info-fold summary::-webkit-details-marker{display:none}.info-fold #heroStatus,.info-fold #enemyIntents{padding:0 14px 12px}
+.time-nav{display:flex;gap:3px;margin:5px 0 8px;width:100%}.time-nav button{flex:1;min-width:0;height:28px;padding:0;background:#23384a;border:1px solid #3b5365;color:#b7cada;border-radius:4px;font-size:11px}.time-nav button.selected{background:#b78b54;color:#172431;border-color:#ffd595;font-weight:900}
+.timeline-wrap{border-radius:6px}.time-row .person{position:sticky;left:0;z-index:3;box-shadow:2px 0 7px #07121eaa}
+@media(max-width:1170px){.rightbar{display:flex;flex-direction:column}.info-fold{min-height:0}.rightbar>.panel-label{display:none}}
+@media(max-width:690px){.time-nav button{height:32px}.time-row.hero-large .time-cell{min-width:46px}.time-row.targetrow .time-cell{min-width:46px}.rightbar>.live-forecast{margin-top:6px}.info-fold summary{padding:10px 12px}}
