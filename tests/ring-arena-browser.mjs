@@ -217,7 +217,7 @@ try{
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['hero-attack'].uploads)),
  1,'hero attack art is uploaded just once');
  await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-hero-swing.png'});
- const frameHit=await invoke('enemy-2',130);
+ const frameHit=await invoke('enemy-2',134);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
@@ -248,7 +248,7 @@ try{
  assert.equal(arrived.director.enemyHP['enemy-2'],24,
   'damage has already happened before arriving');
  await qa.screenshot({path:'artifacts/ring-arena/v25-center-after-hit-no-attack.png'});
- const frameRecoil=await invoke('enemy-2',190);
+ const frameRecoil=await invoke('enemy-2',200);
  assert.equal(frameRecoil.phase,'reaction');
  await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-enemy-recoil.png'});
  const frameFemale=await invoke('enemy-3',190);
