@@ -20,7 +20,7 @@ const server=createServer((req,res)=>{
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const browser=await chromium.launch({headless:true,
  args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
-mkdirSync('artifacts/ring-arena/v27-frame-by-frame',{recursive:true});
+mkdirSync('artifacts/ring-arena/v29-699-source-timing-59frames',{recursive:true});
 try{
  const page=await browser.newPage({viewport:{width:1280,height:720},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -32,7 +32,9 @@ try{
   return s?.active&&s?.renderer==='webgl-l2d'&&s?.l2dReady===5&&
    s.directorArt?.hero?.loaded&&s.directorArt?.enemy?.loaded;
  },null,{timeout:100000});
- const duration=700,fps=30,frameCount=21,record=[];
+ const initial=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect().actors);
+ const heroOrigin=initial.allies[0],enemyOrigin=initial.enemies[1];
+ const fps=30,frameCount=58,duration=frameCount*1000/fps,record=[];
  for(let i=0;i<=frameCount;i++){
   const at=Math.min(duration,Math.ceil(i*1000/fps));
   const state=await page.evaluate(ms=>{
@@ -46,21 +48,43 @@ try{
      positions:snap.duel?.playedPositions};
   },at);
   if(i===0)assert.equal(state.hp,36);
-  if(i>=4)assert.equal(state.hp,24);
-  if(i>=9&&i<=14)assert.equal(state.phase,'hold');
-  if(i>=15&&i<frameCount)assert.equal(state.phase,'recover');
+  if(i>=3)assert.equal(state.hp,24,'source-referenced impact frame 3');
+  if(i>=9&&i<=48)assert.equal(state.phase,'hold','source 46+ frame tableau');
+  if(i>=49&&i<=55)assert.equal(state.phase,'recover','source 7-frame retreat');
+  if(i>=2&&i<=55)assert.equal(state.poses.hero,'attack',
+   'hero keeps action portrait through long tableau and retreat');
+  if(i>=3&&i<=55)assert.equal(state.poses['enemy-2'],'hurt-art',
+   'opponent keeps hurt portrait through long tableau and retreat');
+  if(i===55){
+   assert.equal(state.positions[0].x,heroOrigin.x,'hero home with action artwork');
+   assert.equal(state.positions[0].z,heroOrigin.z,'hero home with action artwork');
+   assert.equal(state.positions[1].x,enemyOrigin.x,'target home with hurt artwork');
+   assert.equal(state.positions[1].z,enemyOrigin.z,'target home with hurt artwork');
+  }
+  if(i===56){
+   assert.equal(state.poses.hero,'idle','restore HERO only AFTER home');
+   assert.equal(state.poses['enemy-2'],'idle','restore ENEMY only AFTER home');
+  }
   const filename='frame-'+String(i).padStart(3,'0')+'.png';
-  await page.screenshot({path:'artifacts/ring-arena/v27-frame-by-frame/'+filename,
+  await page.screenshot({path:'artifacts/ring-arena/v29-699-source-timing-59frames/'+filename,
    animations:'disabled',timeout:60000});
   record.push({frame:i,timeMs:at,filename,...state});
-  console.log('V27 frame',i,'/',frameCount,state.phase,at+'ms');
+  if(i%10===0||i>=49)console.log('V29 DD-699-matched frame',i,'/',frameCount,state.phase,at+'ms');
  }
  assert.deepEqual(errors,[]);
- writeFileSync('artifacts/ring-arena/v27-frame-by-frame/timeline.json',
-  JSON.stringify({description:'REAL game WebGL fixed 30fps QA snapshots; not original Darkest Dungeon source video',
+ writeFileSync('artifacts/ring-arena/v29-699-source-timing-59frames/timeline.json',
+  JSON.stringify({
+   description:'REAL WebGL game rendered at 30fps, synchronized with verified user-provided DD 699 JPEG visual timing; NOT game frames from the original footage',
+   sourceReferenceFrames:699,sourceReferenceFps:30,
+   sourceClips:[
+    {id:'gunshot-miss',entry:79,impact:81,holdEnd:127,retreat:128,queue:134},
+    {id:'goblet-hit',entry:178,impact:180,holdEnd:227,retreat:228,queue:234},
+    {id:'sword-miss',entry:315,impact:318,holdEnd:364,retreat:365,queue:372},
+    {id:'heavy-miss',entry:416,impact:418,holdEnd:464,retreat:465,queue:473}
+   ],
    fps,nominalDurationMs:duration,frames:record},null,2));
  await page.close();
- console.log('PASS: 22 frame-authored game battle snapshots, 30fps, 0-699ms');
+ console.log('PASS: 59 actual WebGL screenshots, 30fps, long source-verified central result, fast retreat, pose switch AFTER original anchors');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }
