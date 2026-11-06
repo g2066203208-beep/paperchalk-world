@@ -73,6 +73,7 @@ jobs:
       - name: Gate release on fixed actors, authored L2D and real 3D camera
         run: |
           node tests/ring-arena.test.cjs
+          node tests/ring-arena-director.test.cjs
           node tests/scene-camera.test.cjs
           node tests/test_l2d_display_lifecycle.cjs
           node tests/test_l2d_studio_game_sync.cjs
@@ -84,7 +85,7 @@ jobs:
             'site/dev/character-bridge.js'
           ])new Function(fs.readFileSync(path,'utf8'));
           const html=fs.readFileSync('site/index.html','utf8');
-          if(!html.includes('ring-arena-runtime.js?v=center-duel-stage-v23-1-20261106'))
+          if(!html.includes('ring-arena-runtime.js?v=brisk-duel-v24-20261106'))
             throw Error('Deployed HTML still points at stale ring-arena WebGL source');
           if(!html.includes("ringScene.setActive(name==='ring-arena')"))
             throw Error('3D ring scene was not integrated into the game');
