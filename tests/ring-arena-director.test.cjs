@@ -51,7 +51,7 @@ for(const mode of ['outer','inner']){
   const pHero=arena.project({...hWorld,y:1},displayCamera,aspect);
   const pEnemy=arena.project({...eWorld,y:1},displayCamera,aspect);
   assert.ok(pHero.valid&&pEnemy.valid);
-  assert.ok(pHero.x<-.15&&pHero.x>-.45,'hero enters left-center stage');
+  assert.ok(pHero.x<-.10&&pHero.x>-.28,'hero lunges from left-center toward target');
   assert.ok(pEnemy.x>.15&&pEnemy.x<.55,'target enters right-center stage');
   assert.equal(arena.cameraPitchDeg(displayCamera),0);
   const spectator=director.actorMotion('enemy-3',attack,center,hero,target,duet);
