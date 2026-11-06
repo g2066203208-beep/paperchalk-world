@@ -38,9 +38,11 @@
   const city=h('div','overworld-city-stage');
   city.id='overworld-city-stage';city.hidden=true;
   city.setAttribute('aria-label','尚未完成场景美术的城市地点');
-  const cityLabel=h('span','overworld-city-label');
-  city.appendChild(cityLabel);
+  const cityArt=h('div','overworld-city-art');
+  city.appendChild(cityArt);
   view.appendChild(city);
+  const director=global.PaperWorldCinematics?.create?.(view)||null;
+  let paintedCity='',cityTime=-1;
   const phone=global.PaperWorldQuickTools?.phone;
   function say(text){
     if(hideTimer)global.clearTimeout(hideTimer);
@@ -64,19 +66,27 @@
     if(traveling)return {ok:false,reason:'正在前往目的地'};
     const dest=Core.LOCATIONS[place];
     if(!dest)return {ok:false,reason:'没有这个目的地'};
-    const result=engine.travel(place);
-    if(!result.ok){say(result.reason);return result}
+    const current=engine.snapshot();
     traveling=true;
+    const result=engine.travel(place);
+    if(!result.ok){traveling=false;say(result.reason);return result}
     try{
-      if(dest.scene){
-        const changed=await global.PaperWorldDailyLifeScene?.(dest.scene);
-        if(changed===false&&stage.dataset.scene!==dest.scene)
-          say('场景美术加载失败，请从地图重试。');
-      }
-      draw();
+      const swap=async()=>{
+        if(dest.scene){
+          const changed=await global.PaperWorldDailyLifeScene?.(dest.scene);
+          if(changed===false&&stage.dataset.scene!==dest.scene)
+            say('场景加载失败；请从地图重试。');
+        }
+        paintedCity='';draw();
+      };
+      if(director)await director.transition({label:'',onCovered:swap});
+      else await swap();
       say('到达'+dest.label+'。');
+      if(dest.group==='城区'&&director){
+        global.setTimeout(()=>{if(mode)director.enter(place,current.day,current.stage,say)},320);
+      }
       return result;
-    }finally{traveling=false}
+    }finally{traveling=false;draw()}
   }
   function addAction(label,action,fn){
     const button=h('button','overworld-scene-action',label);
@@ -88,9 +98,13 @@
     const s=engine.snapshot();
     const isCity=mode&&!root.hidden&&Core.LOCATIONS[s.location]?.group==='城区';
     city.hidden=!isCity;
-    if(isCity){
-      cityLabel.textContent=Core.LOCATIONS[s.location].label;
-      city.dataset.location=s.location;
+    if(isCity&&!traveling){
+      const signature=s.location+'/'+Math.floor(s.minute/60);
+      if(signature!==paintedCity){
+        cityArt.innerHTML=global.PaperWorldCityScenes?.markup?.(s.location,s.minute)||'';
+        city.dataset.location=s.location;
+        paintedCity=signature;
+      }
     }
     prompts.replaceChildren();
     prompts.hidden=!mode||root.hidden||s.nightStatus==='recalled';
@@ -141,6 +155,7 @@
   function deactivate(){
     mode=false;
     prompts.hidden=true;city.hidden=true;caption.hidden=true;
+    director?.cancel?.();global.PaperWorldInventoryUI?.close?.();
     view.classList.remove('overworld-life-active');
     global.PaperWorldTopHUD?.refreshClock?.();
   }
@@ -201,16 +216,16 @@
       return res;
     }
   });
-  function intercept(id,app){
+  function intercept(id,opener){
     const button=document.getElementById(id);
     button?.addEventListener('click',event=>{
       if(!mode||root.hidden)return;
       event.preventDefault();event.stopImmediatePropagation();
-      openPhoneApp(app);
+      opener();
     },true);
   }
-  intercept('quick-map','地图');
-  intercept('quick-backpack','背包');
+  intercept('quick-map',()=>openPhoneApp('地图'));
+  intercept('quick-backpack',()=>global.PaperWorldInventoryUI?.toggle?.());
   global.addEventListener('paperchalk:phone-visibility',()=>{
     if(mode)draw();
   });
