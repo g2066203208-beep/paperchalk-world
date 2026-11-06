@@ -166,11 +166,10 @@
       if(!dest)return fail('无效地点');
       if(location===state.location)return fail('已经在这里');
       if(!isOpen(location,state.minute))return fail('该地点现在尚未开放');
-      const cost=Object.values(LOCATIONS).some(()=>false)?0:
-        ((LOCATIONS[state.location].group==='家'&&dest.group==='家')?10:dest.travel);
+      const cost=(LOCATIONS[state.location].group==='家'&&dest.group==='家')?10:dest.travel;
       if(state.energy<3)return fail('太疲倦，先休息');
+      if(!isOpen(location,state.minute+cost))return fail('到达时该地点已经关闭');
       const can=spend(cost);if(!can.ok)return can;
-      if(!isOpen(location,state.minute))return fail('到达时该地点已经关闭');
       state.energy=CLAMP(state.energy-3,0,100);state.location=location;
       return finish('travel','到达'+dest.label+'，路上用了'+cost+'分钟。');
     }
@@ -215,6 +214,7 @@
       if(npc.workdays&&(dow===0||dow===6))return fail('今天对方不在这里');
       if(state.minute<npc.from||state.minute>=npc.to)return fail('对方现在不在');
       if(state.dailyUses['talk-'+npcId])return fail('今天已经聊过了');
+      if(state.minute+25>npc.to)return fail('对方马上要离开了');
       const can=spend(25);if(!can.ok)return can;
       state.relationships[npcId]=CLAMP(state.relationships[npcId]+1,0,100);
       state.dailyUses['talk-'+npcId]=1;
