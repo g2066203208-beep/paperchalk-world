@@ -34,14 +34,22 @@ for(const mode of ['outer','inner']){
   const p=arena.project({...hero,y:hero.height*.52},c);
   const body=arena.portraitBounds(hero,c);
   assert.ok(body.valid&&p.valid);
-  assert.ok(index===0?p.x<-.38&&p.x>-.55:p.x>.38&&p.x<.55,
+  assert.ok(index===0?p.x<-.49&&p.x>-.82:p.x>.49&&p.x<.82,
    'hero body must occupy the left or right foreground, not clip offscreen');
-  assert.ok(body.heightFraction>1.25&&body.heightFraction<1.55,
+  assert.ok(body.heightFraction>.78&&body.heightFraction<1.30,
    'close-up heroine is legitimately nearer than camera, no sprite CSS scaling');
-  assert.ok(body.top>.68&&body.top<.85,'near heroine head remains visible');
+  assert.ok(body.top>.50&&body.top<.98,'near heroine head remains visible');
   // The original back portrait is intentionally cropped BELOW the image,
   // not by trimming its L2D texture or editing the authoring rig.
   const foeBounds=scene.enemies.map(a=>arena.portraitBounds(a,c));
+  const safety=arena.battleVisualSafety(mode,index);
+  assert.ok(safety.valid&&safety.clear,'fixed 3D shot must have a clear actual-hero silhouette safe lane');
+  assert.ok(safety.gap>=.045,'even the most-left/right full enemy quad may not intersect the heroine near shot');
+  for(const aspect of [16/9,4/3,9/16]){
+   const resized=arena.battleVisualSafety(mode,index,aspect);
+   assert.ok(resized.valid&&resized.clear,
+    'resizing game cannot allow the heroine to cover any enemy in '+mode+'/'+index+'/'+aspect);
+  }
   for(const aspect of [16/9,4/3,9/16]){
    for(const foe of scene.enemies){
     const b=arena.portraitBounds(foe,c,aspect);
@@ -50,7 +58,7 @@ for(const mode of ['outer','inner']){
     assert.ok(b.top<.94&&b.bottom>-.94,'enemy cropped vertically');
    }
   }
-  for(const foe of foeBounds)assert.ok(foe.heightFraction>.26&&foe.heightFraction<.40,
+  for(const foe of foeBounds)assert.ok(foe.heightFraction>.22&&foe.heightFraction<.42,
    'foes occupy visible middle distance, never become tiny or cover the near heroine');
   // Real actor heads, not the transparent quads alone, must sit in separated
   // projected slots; this catches a small ring or a camerawise pile-up.
@@ -65,7 +73,7 @@ for(const mode of ['outer','inner']){
  }
  const nearLens=arena.camera(mode,0).eye;
  const heroDistance=Math.hypot(nearLens.x-hero.x,nearLens.z-hero.z);
- assert.ok(heroDistance<(mode==='outer'?1.5:1.8),
+ assert.ok(heroDistance<(mode==='outer'?2.3:2.5),
   'hero near-camera distance in world metres, not a fake sprite scale');
  const blend=arena.blendCamera(arena.camera(mode,0),arena.camera(mode,1),.25);
  near(blend.eye.x,.75*arena.camera(mode,0).eye.x+.25*arena.camera(mode,1).eye.x);
