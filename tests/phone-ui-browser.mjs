@@ -44,6 +44,8 @@ try{
         art:shell?.currentSrc||'',imageLoaded:!!shell?.complete&&shell.naturalWidth>0,
         imageRect:screen.getBoundingClientRect().toJSON(),
         phoneRect:rect.toJSON(),quickRect:quick.toJSON(),
+         logicalTop:n.offsetTop-n.offsetHeight*.5,
+         logicalBottom:n.offsetTop+n.offsetHeight*.5,
         shellPseudo:getComputedStyle(frame,'::before').content};
     });
     assert.ok(state.art.includes('char001-cat-ear-shell.webp')&&state.imageLoaded,
@@ -54,8 +56,11 @@ try{
     // Keep the user-approved original shell aspect ratio and prevent clipping.
     assert.ok(state.height>state.rootHeight*.94&&state.height<=state.rootHeight*.98,
       'Enlarged phone is incorrectly scaled for this logical game viewport: '+JSON.stringify(state));
-    assert.ok(state.phoneRect.top>=-2&&state.phoneRect.bottom<=state.rootHeight+2,
-      'Handset is clipped vertically: '+JSON.stringify(state));
+    // Android virtual landscape rotates the logical viewport. The DOM
+    // bounding rectangle is in portrait page coordinates, but the handset's
+    // local top/bottom are relative to the rotated game surface.
+    assert.ok(state.logicalTop>=-2&&state.logicalBottom<=state.rootHeight+2,
+      'Handset is clipped inside logical game viewport: '+JSON.stringify(state));
     assert.equal(await page.locator('#phone-ui .phone-charm').count(),0,'Unwanted hanging accessory');
     assert.equal(await page.locator('#phone-ui .phone-dot').count(),6);
     assert.equal(await page.locator('#phone-ui [data-key]').count(),11);
