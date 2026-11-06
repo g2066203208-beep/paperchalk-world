@@ -192,11 +192,17 @@ try{
  assert.equal(frameHero.phase,'swing');
  assert.equal(frameHero.applied,false);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
+ assert.equal(await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds.includes('hero')),false,
+  'attacking illustration replaces the idle hero, not duplicates it');
  await qa.screenshot({path:'artifacts/ring-arena/v21-snap-hero-swing.png'});
  const frameHit=await invoke('enemy-2',335);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
+ assert.equal(await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds.includes('enemy-2')),false,
+  'hurt illustration replaces the original target for its brief hit pose');
  await qa.screenshot({path:'artifacts/ring-arena/v21-snap-impact.png'});
  const frameRecoil=await invoke('enemy-2',440);
  assert.equal(frameRecoil.phase,'reaction');
@@ -205,6 +211,9 @@ try{
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
  assert.equal(await qa.locator('[data-action-enemy]').evaluate(
   el=>getComputedStyle(el).visibility),'hidden');
+ assert.equal(await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds.includes('enemy-3')),true,
+  'female target keeps her original L2D without a male substituted pose');
  await qa.screenshot({path:'artifacts/ring-arena/v21-female-original-l2d-reaction.png'});
  assert.deepEqual(qaErrors,[]);
  await qa.close();

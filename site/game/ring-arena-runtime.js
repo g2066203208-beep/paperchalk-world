@@ -418,7 +418,7 @@
    canvas.dataset.error=String(err.message||err);status.textContent='WebGL failed '+String(err.message||err);
    gl=null;
   }
-  let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0;
+  let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let armed=false,attack=null,attackApplied=false,attackSample=null,qaTimeMs=null;
   let completedAttacks=0,lastTarget=null;
   const enemyHP=new Map([1,2,3,4].map(i=>['enemy-'+i,36]));
@@ -795,7 +795,16 @@
     return {...a,x:a.x+motion.x,y:a.y+motion.y,
      z:a.z+motion.z,height:a.height*motion.scale};
    }):all;
-   drawActors(presented,cam,vp);
+   // A cut-in REPLACES the current idle pose; no doubled character ghosts.
+   // Keep the original if the authored pose file failed to load.
+   let cast=presented;
+   if(attack&&attackSample?.cut==='attacker'&&heroActionArt.complete&&heroActionArt.naturalWidth)
+    cast=presented.filter(a=>a.id!=='hero');
+   else if(attack&&attackSample?.cut==='victim'&&director.hasEnemyHitPortrait(attack.targetId)&&
+     enemyHitArt.complete&&enemyHitArt.naturalWidth)
+    cast=presented.filter(a=>a.id!==attack.targetId);
+   drawnActorIds=cast.map(a=>a.id);
+   drawActors(cast,cam,vp);
    if(armed)updateTargetPositions(base,w/h);
    if(attack&&attackSample){
     const impact=project({x:target.x,y:target.height*.73,z:target.z},cam,w/h);
@@ -848,7 +857,8 @@
      loaded:enemyHitArt.complete&&enemyHitArt.naturalWidth>0,
      src:enemyHitArt.getAttribute('src')
     },
-    cut:cinematic.dataset.cut,hitPortrait:cinematic.dataset.hitPortrait},
+    cut:cinematic.dataset.cut,hitPortrait:cinematic.dataset.hitPortrait,
+    drawnActorIds:[...drawnActorIds]},
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,
