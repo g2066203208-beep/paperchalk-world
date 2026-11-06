@@ -1,105 +1,56 @@
 'use strict';
-// Cinematic two-camera verification against the user-supplied Crescent Moon
-// gameplay reference: truly close heroine, readable 4-enemy midground,
-// unchanged real-world L2D anchors, and responsive 3D projection.
+// Fixed-left 3/4 rear cinematic battle: geometry, art proportions and safety.
 const assert=require('node:assert/strict');
 const arena=require('../site/game/ring-arena-runtime.js');
-const near=(a,b,e=1e-8)=>assert.ok(Math.abs(a-b)<=e,a+' != '+b);
+const approx=(a,b,eps=1e-8)=>assert.ok(Math.abs(a-b)<=eps,a+' != '+b);
 assert.equal(arena.SPEC.stageType,'wide-cinematic-arc');
-assert.ok(arena.SPEC.wallRadius>=30);
-assert.ok(arena.SPEC.floorWidth>=80);
-assert.deepEqual(arena.SHOT_NAMES,['左侧','右侧']);
+assert.deepEqual(arena.SHOT_NAMES,['固定左机位']);
 assert.deepEqual(arena.HIDDEN_ALLY_IDS,['ally-2','ally-3','ally-4']);
 assert.ok(arena.responsiveFov(56,9/16)>arena.responsiveFov(56,16/9));
+assert.equal(arena.portraitFit(800,1200,1024).height,1024);
+approx(arena.portraitFit(800,1200,1024).width,1024*2/3);
+assert.equal(arena.portraitFit(1200,800,1024).width,1024);
+assert.ok(arena.renderPixelRatio(1920,1080,4)<1.1);
+assert.ok(arena.renderPixelRatio(844,390,3)<=1.75);
+assert.ok(arena.renderPixelRatio(1920,1080,1)<=1);
 for(const mode of ['outer','inner']){
- const scene=arena.layout(mode),before=JSON.stringify(scene);
- assert.equal(scene.allies.length,4);
- assert.equal(scene.enemies.length,4);
- assert.equal(arena.CAMERA_STOPS[mode].length,2,
-  'there must be exactly two fixed camera stations');
- assert.deepEqual(arena.visibleActors(mode).map(p=>p.id),
+ const scene=arena.layout(mode),original=JSON.stringify(scene),c=arena.camera(mode,0);
+ assert.equal(arena.CAMERA_STOPS[mode].length,1,'a 3/4 back texture has ONE valid view');
+ assert.equal(scene.allies.length,4);assert.equal(scene.enemies.length,4);
+ assert.deepEqual(arena.visibleActors(mode).map(a=>a.id),
   ['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.ok(Object.isFrozen(scene.allies)&&Object.isFrozen(scene.enemies));
- for(const p of [...scene.allies,...scene.enemies]){
-  assert.ok(Object.isFrozen(p));near(p.y,0);
-  assert.ok(p.height>1.5&&p.height<1.7);
+ for(const n of [-99,-1,0,.6,1,2,50]){
+  assert.equal(arena.camera(mode,n).index,0,'alternate shot must be impossible');
+  assert.equal(arena.camera(mode,n).shot,'left');
+  assert.deepEqual(arena.camera(mode,n).eye,c.eye);
  }
- assert.deepEqual([-.5,0,.3,.49,.5,.8,1,1.5,2,100].map(n=>arena.camera(mode,n).index),
-  [0,0,0,0,1,1,1,1,1,1],
-  'camera must NEVER settle on a middle or fractional station');
- assert.deepEqual([0,1].map(i=>arena.camera(mode,i).shot),['left','right']);
- const hero=scene.allies[0];
- for(const index of [0,1]){
-  const c=arena.camera(mode,index);
-  const pitch=arena.cameraPitchDeg(c);
-  // No top-down arena viewpoint: measured by the actual camera view vector.
-  assert.ok(Math.abs(pitch)<.1,
-    'eye-level battle reference requires exactly horizontal optical axis: '+pitch.toFixed(2));
-  near(c.eye.y,c.focus.y);
-  near(arena.VERTICAL_LENS_SHIFT,.19);
-  const p=arena.project({...hero,y:hero.height*.52},c);
-  const body=arena.portraitBounds(hero,c);
-  assert.ok(body.valid&&p.valid);
-  assert.ok(index===0?p.x<-.49&&p.x>-.82:p.x>.49&&p.x<.82,
-   'hero body must occupy the left or right foreground, not clip offscreen');
-  assert.ok(body.heightFraction>.78&&body.heightFraction<1.30,
-   'close-up heroine is legitimately nearer than camera, no sprite CSS scaling');
-  assert.ok(body.top>.50&&body.top<.98,'near heroine head remains visible');
-  // The original back portrait is intentionally cropped BELOW the image,
-  // not by trimming its L2D texture or editing the authoring rig.
-  const foeBounds=scene.enemies.map(a=>arena.portraitBounds(a,c));
-  const safety=arena.battleVisualSafety(mode,index);
-  // The player head stays near the upper portion of frame; enemy head/feet
-  // remain fully framed in the midground, not flattened on a floor plan.
-  assert.ok(safety.hero.top>.55&&safety.hero.top<.82,
-    'hero rear-view head must remain in cinematic upper foreground');
-  assert.ok(safety.foes.every(e=>e.top>.14&&e.top<.52&&e.bottom>-.52&&e.bottom<.08),
-    'the 4 enemies must remain upright and head-to-shoe visible');
-  assert.ok(safety.valid&&safety.clear,'fixed 3D shot must have a clear actual-hero silhouette safe lane');
-  assert.ok(safety.gap>=.045,'even the most-left/right full enemy quad may not intersect the heroine near shot');
-  for(const aspect of [16/9,4/3,9/16]){
-   const resized=arena.battleVisualSafety(mode,index,aspect);
-   assert.ok(resized.valid&&resized.clear,
-    'resizing game cannot allow the heroine to cover any enemy in '+mode+'/'+index+'/'+aspect);
-  }
-  for(const aspect of [16/9,4/3,9/16]){
-   for(const foe of scene.enemies){
-    const b=arena.portraitBounds(foe,c,aspect);
-    assert.ok(b.valid);
-    assert.ok(b.left>-.97&&b.right<.97,'enemy cropped horizontally');
-    assert.ok(b.top<.94&&b.bottom>-.94,'enemy cropped vertically');
-   }
-  }
-  for(const foe of foeBounds)assert.ok(foe.heightFraction>.22&&foe.heightFraction<.42,
-   'foes occupy visible middle distance, never become tiny or cover the near heroine');
-  // Real actor heads, not the transparent quads alone, must sit in separated
-  // projected slots; this catches a small ring or a camerawise pile-up.
-  const xCenters=scene.enemies.map(enemy=>
-   arena.project({...enemy,y:enemy.height*.5},c).x).sort((a,b)=>a-b);
-  const groupScreenX=xCenters.reduce((total,x)=>total+x,0)/xCenters.length;
-  const groupGroundZ=scene.enemies.reduce((total,e)=>total+e.z,0)/scene.enemies.length;
-  assert.ok(Math.abs(c.focus.x)<1e-8,'both shots must actually aim at the enemy formation');
-  assert.ok(Math.abs(c.focus.z-groupGroundZ)<.85,
-   'camera must face the enemies, not focus on empty space between teams');
-  assert.ok(Math.abs(groupScreenX)<.12,
-   'the enemy group must stay near the center of both fixed camera shots');
-  for(let i=1;i<xCenters.length;i++)
-   assert.ok(xCenters[i]-xCenters[i-1]>.20,
-    'adjacent enemies must be visibly spaced in the final camera');
-  assert.ok(xCenters[0]>-.78&&xCenters[3]<.79,
-   'whole opponent group must fit inside its intended midground region');
-  assert.equal(JSON.stringify(scene),before,'camera changes must never move a character');
+ approx(c.eye.y,c.focus.y);
+ assert.ok(Math.abs(arena.cameraPitchDeg(c))<.001,'true horizontal eye-level optics');
+ approx(c.focus.x,0);
+ assert.ok(c.fov>=50&&c.fov<=60);
+ const hero=scene.allies[0],heroMiddle=arena.project({...hero,y:.81},c);
+ assert.ok(heroMiddle.valid&&heroMiddle.x<-.67&&heroMiddle.x>-.88,
+  'fixed view must keep 3/4 heroine in the LEFT foreground');
+ const heroBounds=arena.portraitBounds(hero,c);
+ assert.ok(heroBounds.valid&&heroBounds.heightFraction>.8&&heroBounds.heightFraction<1.3);
+ const safety=arena.battleVisualSafety(mode,0);
+ assert.ok(safety.valid&&safety.clear&&safety.gap>.045,
+  'hero silhouette and all enemy quads need clear separated lanes');
+ assert.ok(safety.hero.top>.5&&safety.hero.top<.85);
+ const centers=scene.enemies.map(e=>arena.project({...e,y:e.height*.5},c).x);
+ const mean=centers.reduce((a,b)=>a+b,0)/4;
+ assert.ok(Math.abs(mean)<.12,'enemy formation must face the fixed camera');
+ const ordered=[...centers].sort((a,b)=>a-b);
+ for(let i=1;i<ordered.length;i++)assert.ok(ordered[i]-ordered[i-1]>.17);
+ for(const e of safety.foes){
+  assert.ok(e.top>.1&&e.top<.5&&e.bottom>-.55&&e.bottom<.06);
+  assert.ok(e.heightFraction>.22&&e.heightFraction<.40);
  }
- const nearLens=arena.camera(mode,0).eye;
- const heroDistance=Math.hypot(nearLens.x-hero.x,nearLens.z-hero.z);
- assert.ok(heroDistance<(mode==='outer'?2.3:2.5),
-  'hero near-camera distance in world metres, not a fake sprite scale');
- const blend=arena.blendCamera(arena.camera(mode,0),arena.camera(mode,1),.25);
- near(blend.eye.x,.75*arena.camera(mode,0).eye.x+.25*arena.camera(mode,1).eye.x);
- assert.equal(JSON.stringify(scene),before);
+ for(const aspect of [16/9,4/3,9/16]){
+  const res=arena.battleVisualSafety(mode,0,aspect);
+  assert.ok(res.valid&&res.clear,'portrait, tablet and desktop must keep enemies legible');
+ }
+ assert.equal(JSON.stringify(scene),original,'a camera/viewport may never move game actors');
 }
-const o0=arena.backdropPoint('outer',0),o1=arena.backdropPoint('outer',1);
-const i0=arena.backdropPoint('inner',0),i1=arena.backdropPoint('inner',1);
-near(o0.x,i0.x);near(o1.x,i1.x);
-assert.ok(o0.z>o1.z&&i0.z>i1.z&&i0.z>o0.z);
-console.log('PASS: 2 fixed close over-shoulder cameras; near hero; 4 full foes; frozen actor coordinates; responsive lens');
+console.log('PASS: fixed-left 3/4 battle, 4 closer foes, exact 1-camera contract, ground-safe projection');

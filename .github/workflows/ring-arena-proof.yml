@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'site/game/ring-arena-runtime.js'
+      - 'site/assets/characters/protagonist-back-combat-3q-final.webp'
       - 'site/index.html'
       - 'site/dev/character-bridge.js'
       - 'tests/ring-arena*'
@@ -32,19 +33,19 @@ jobs:
           python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_character_catalog.py
           python3 scripts/build_scene_catalog.py
-      - name: Verify eight immutable world anchors and camera-only orbit
+      - name: Verify one locked camera, 4 opponents, fixed anchors and portrait proportion
         run: node tests/ring-arena.test.cjs
       - name: Install real Chromium renderer
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Render and capture original eight L2D actors in true 3D
+      - name: Render actual 3D with static 3/4 heroine and animated enemy L2D
         run: node tests/ring-arena-browser.mjs
       - name: Preserve real rendered game screenshots even on failed test
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ring-arena-original-l2d-actual-browser
+          name: ring-arena-fixed-left-3q-real-browser
           path: artifacts/ring-arena/*.png
           if-no-files-found: warn
           retention-days: 7

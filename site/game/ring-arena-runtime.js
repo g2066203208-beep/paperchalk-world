@@ -10,16 +10,15 @@
  if(root)root.PaperWorldRingArena=api;
 })(typeof window!=='undefined'?window:null,function(){
  'use strict';
- const TAU=Math.PI*2,clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
- const lerp=(a,b,t)=>a+(b-a)*t,rad=(d)=>d*Math.PI/180;
+ const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+ const rad=d=>d*Math.PI/180;
  const SPEC=Object.freeze({
   stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:13,
   wallCenterZ:-16,wallArcHalfAngle:rad(78),
   floorWidth:96,floorFrontZ:48,floorBackZ:-55,
   outerRoleRadius:10.55,innerRoleRadius:8.30,
   outerCameraRadius:11.5,innerCameraRadius:7.47,
-  verticalFov:48,cameraStartAngle:rad(12),
-  cameraEndAngle:rad(-12),battleFocusZ:8.8
+  verticalFov:48,battleFocusZ:6.8
  });
  // Art-directed 3D footholds: four enemies occupy a deliberately WIDER
  // shallow arc. Unlike the old small circle, everyone keeps an independent,
@@ -27,11 +26,11 @@
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[0,10.55],[-1.8,9.6],[1.8,9.6],[-3.5,9.0]]),
-   enemies:Object.freeze([[-1.80,6.50],[-.60,6.10],[.60,6.10],[1.80,6.50]])
+   enemies:Object.freeze([[-1.65,6.85],[-.57,6.47],[.57,6.47],[1.65,6.85]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[0,8.3],[-1.8,8.0],[1.8,8.0],[-3.5,7.7]]),
-   enemies:Object.freeze([[-1.75,12.72],[-.60,13.12],[.60,13.12],[1.75,12.72]])
+   enemies:Object.freeze([[-1.62,12.48],[-.55,12.87],[.55,12.87],[1.62,12.48]])
   })
  });
  const bindings=Object.freeze({
@@ -42,8 +41,6 @@
   hero:1.62,'ally-2':1.64,'ally-3':1.60,'ally-4':1.59,
   'enemy-1':1.58,'enemy-2':1.59,'enemy-3':1.60,'enemy-4':1.58
  });
- const polar=(r,a,y=0)=>({x:r*Math.sin(a),y,z:r*Math.cos(a)});
- const radius=v=>Math.hypot(v.x,v.z);
  const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
  const cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
  const normalize=a=>{const m=Math.hypot(a.x,a.y,a.z)||1;return {x:a.x/m,y:a.y/m,z:a.z/m}};
@@ -63,7 +60,6 @@
    for(let k=0;k<4;k++)result[c*4+r]+=a[k*4+r]*b[c*4+k];
   return result;
  }
- const identity=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
  function actor(id,team,position){
   const [x,z]=position;
   return Object.freeze({id,slot:bindings[id],team,
@@ -90,31 +86,22 @@
   return [mode,Object.freeze([scene.allies[0],...scene.enemies])];
  })));
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
- // Two hand-authored over-shoulder camera stations only. The heroine's
- // distance to these cameras is tuned against the L2D opaque silhouette.
- const SHOT_NAMES=Object.freeze(['左侧','右侧']);
+ // One fixed left-foreground camera per battle mode; both look straight
+ // at the center of the enemy formation on a horizontal optical axis.
+ const SHOT_NAMES=Object.freeze(['固定左机位']);
  const CAMERA_STOPS=Object.freeze({
-  outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:1.30,eyeZ:11.55,eyeY:1.32,
-    focusX:0,focusY:1.32,focusZ:6.80,fov:56}),
-   Object.freeze({id:'right',eyeX:-1.30,eyeZ:11.55,eyeY:1.32,
-    focusX:0,focusY:1.32,focusZ:6.80,fov:56})
-  ]),
-  inner:Object.freeze([
-   Object.freeze({id:'left',eyeX:-1.30,eyeZ:7.15,eyeY:1.32,
-    focusX:0,focusY:1.32,focusZ:12.50,fov:52}),
-   Object.freeze({id:'right',eyeX:1.30,eyeZ:7.15,eyeY:1.32,
-    focusX:0,focusY:1.32,focusZ:12.50,fov:52})
-  ])
+  outer:Object.freeze([Object.freeze({
+   id:'left',eyeX:1.30,eyeZ:11.55,eyeY:1.32,
+   focusX:0,focusY:1.32,focusZ:6.80,fov:56
+  })]),
+  inner:Object.freeze([Object.freeze({
+   id:'left',eyeX:-1.30,eyeZ:7.15,eyeY:1.32,
+   focusX:0,focusY:1.32,focusZ:12.50,fov:52
+  })])
  });
- // Two fixed shoulder-level shots of the SAME enemy formation, not the side wall.
- // Optical axes target the four-enemy centerline (x=0) in either encounter mode.
- // Eye and focus remain at the SAME height. The protagonist's original back
- // L2D stays camera-facing, so both left/right shots remain compatible.
- // Sensor-shift projection frames the cast without tilting the camera down.
  const cameraPitchDeg=c=>Math.atan2(c.eye.y-c.focus.y,
   Math.hypot(c.focus.x-c.eye.x,c.focus.z-c.eye.z))*180/Math.PI;
- const stopIndex=n=>clamp(Math.round(Number(n)||0),0,1);
+ const stopIndex=()=>0;
  function camera(mode='outer',index=0){
   const i=stopIndex(index),p=(CAMERA_STOPS[mode]||CAMERA_STOPS.outer)[i];
   const eye={x:p.eyeX,y:p.eyeY,z:p.eyeZ};
@@ -122,19 +109,24 @@
    angle:Math.atan2(eye.x,eye.z),radius:Math.hypot(eye.x,eye.z),fov:p.fov,
    eye,focus:{x:p.focusX,y:p.focusY,z:p.focusZ}};
  }
- function blendCamera(from,to,t){
-  const v=clamp(t,0,1),mix=(a,b)=>lerp(a,b,v);
-  return {mode:to.mode,index:to.index,shot:to.shot,fov:mix(from.fov,to.fov),
-   angle:mix(from.angle,to.angle),radius:mix(from.radius,to.radius),
-   eye:{x:mix(from.eye.x,to.eye.x),y:mix(from.eye.y,to.eye.y),z:mix(from.eye.z,to.eye.z)},
-   focus:{x:mix(from.focus.x,to.focus.x),y:mix(from.focus.y,to.focus.y),z:mix(from.focus.z,to.focus.z)}};
- }
  // Preserve the DESIGNED horizontal battle framing when a browser or
  // device changes aspect ratio. Portrait canvases no longer crop half the
  // team by reusing a desktop vertical field of view.
  function responsiveFov(fov,aspect=16/9){
   const valid=clamp(Number(aspect)||16/9,.35,3.5);
   return clamp(2*Math.atan(Math.tan(rad(fov/2))*(16/9)/valid)*180/Math.PI,25,125);
+ }
+ // Tall character source images must retain their authored aspect ratio.
+ function portraitFit(w,h,size){
+  const width=Math.max(1,Number(w)||1),height=Math.max(1,Number(h)||1);
+  const scale=size/Math.max(width,height);
+  const drawW=width*scale,drawH=height*scale;
+  return {x:(size-drawW)/2,y:(size-drawH)/2,width:drawW,height:drawH};
+ }
+ // Cap rendered output pixels on high-DPR devices, without CSS distortion.
+ function renderPixelRatio(w,h,dpr=1){
+  const raw=Math.max(.5,Math.min(Number(dpr)||1,1.75));
+  return Math.max(.55,Math.min(raw,Math.sqrt(2400000/Math.max(1,w*h))));
  }
  const VERTICAL_LENS_SHIFT=.19;
  function cameraVP(cam,aspect=16/9){
@@ -190,9 +182,7 @@
  function battleVisualSafety(mode='outer',index=0,aspect=16/9,heroUv=CANONICAL_BACK_UV){
   const c=camera(mode,index),actors=layout(mode),hero=portraitVisibleBounds(actors.allies[0],c,heroUv,aspect);
   const foes=actors.enemies.map(a=>portraitBounds(a,c,aspect));
-  const gap=index===0
-   ?Math.min(...foes.map(b=>b.left))-hero.right
-   :hero.left-Math.max(...foes.map(b=>b.right));
+  const gap=Math.min(...foes.map(b=>b.left))-hero.right;
   return {valid:hero.valid&&foes.every(b=>b.valid),gap,hero,foes,
    clear:gap>=.045&&foes.every(b=>b.left>=-.93&&b.right<=.93)};
  }
@@ -220,20 +210,18 @@
   'void main(){vWorld=aP;gl_Position=uVP*vec4(aP,1.0);}'
  ].join('\n');
  const worldFragment=[
-  'precision highp float;varying vec3 vWorld;uniform float uTime;uniform int uSurface;',
+  'precision highp float;varying vec3 vWorld;uniform float uTime;uniform int uSurface;uniform float uMode;',
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
   'void main(){vec3 color;',
   'if(uSurface==0){',
   'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
   'float radial=line(r/32.0,40.0,.016);float spokes=line(a,78.0,.013);',
-  'float allies=1.0-smoothstep(.016,.065,abs(r-10.55));',
-  'float enemies=1.0-smoothstep(.016,.065,abs(r-13.0));',
+  'float allies=1.0-smoothstep(.016,.065,abs(r-mix(10.55,8.3,uMode)));',
+  'float enemies=1.0-smoothstep(.016,.065,abs(r-mix(6.65,12.9,uMode)));',
   'color=vec3(.005,.013,.016)+vec3(.009,.055,.049)*(radial*.40+spokes*.10)',
   '+vec3(.006,.085,.08)*(allies+enemies)*.22;',
-  'float innerCam=1.0-smoothstep(.01,.06,abs(r-7.47));',
-  'float outerCam=1.0-smoothstep(.01,.06,abs(r-11.50));',
-  'color+=vec3(.12,.13,.03)*(innerCam+outerCam)*.22;',
+  'color+=vec3(.008,.019,.016)*(allies+enemies)*.18;',
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
   'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
@@ -262,6 +250,20 @@
   'precision mediump float;varying vec2 vUv;uniform sampler2D uTexture;',
   'void main(){vec4 t=texture2D(uTexture,vec2(vUv.x,1.0-vUv.y));',
   'if(t.a<.025)discard;gl_FragColor=t;}'
+ ].join('\n');
+ // Lightweight ground contact: one blended elliptical quad under each
+ // visible actor, leaving all original L2D textures and lights untouched.
+ const shadowVertex=[
+  'precision highp float;attribute vec2 aUv;uniform mat4 uVP;',
+  'uniform vec3 uFoot;uniform float uRadius;varying vec2 vLocal;',
+  'void main(){vLocal=aUv*2.0-1.0;',
+  'vec3 p=uFoot+vec3(vLocal.x*uRadius,0.016,vLocal.y*uRadius*.55);',
+  'gl_Position=uVP*vec4(p,1.0);}'
+ ].join('\n');
+ const shadowFragment=[
+  'precision mediump float;varying vec2 vLocal;',
+  'void main(){float d=dot(vLocal,vLocal);float w=1.0-smoothstep(.14,1.0,d);',
+  'gl_FragColor=vec4(.010,.035,.029,.23*w);}'
  ].join('\n');
  // Physically reversed wall bend when viewed from the opposite side.
  function backdropPoint(mode='outer',angle=0){
@@ -304,7 +306,7 @@
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,0]));
-  return {texture,painted:false,updated:-999,frames:0,source:null};
+  return {texture,painted:false,updated:-999,frames:0,source:null,uploadedSize:0};
  }
  function create({stage,view,onExit}={}){
   if(!stage||!view)throw Error('Ring arena must mount in the real game');
@@ -314,7 +316,7 @@
    '#view.ring-arena-active #scene::after{content:none!important}',
    '#view.ring-arena-active #source{visibility:hidden!important}',
    '#view.ring-arena-active > #fog,#view.ring-arena-active > #ui-edge-fog,#view.ring-arena-active > #novel-ui{display:none!important}',
-   '#ring-arena-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none;pointer-events:auto;cursor:grab}',
+   '#ring-arena-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:manipulation;pointer-events:auto;cursor:default}',
    '#ring-arena-canvas[hidden],#ring-arena-controls[hidden]{display:none!important}',
    // Keep existing L2D artists' exact original rigs animating while visually
    // routing their finished canvases into WebGL instead of the old DOM stage.
@@ -322,53 +324,47 @@
    '#view.ring-arena-active [data-l2d-actor] [data-l2d-image]{position:absolute!important;left:0!important;top:0!important;width:1024px!important;height:1024px!important;max-width:none!important;display:block!important;object-fit:fill!important;transform:none!important;scale:1!important}',
    '#view.ring-arena-active [data-l2d-actor] [data-l2d-canvas]{transform:none!important;scale:1!important}',
    '#ring-arena-controls{position:absolute;inset:0;z-index:15;pointer-events:none;color:#d9f6e9;font:500 12px/1.4 system-ui,sans-serif}',
-   '#ring-arena-controls .top{position:absolute;left:14px;top:12px;padding:8px 12px;background:rgba(1,14,18,.68);border-left:2px solid #81d8bb}',
+   '#ring-arena-controls .top{position:absolute;left:14px;top:12px;padding:6px 9px;background:rgba(1,14,18,.52);border-left:2px solid #81d8bb}',
    '#ring-arena-controls .top b{display:block;letter-spacing:.15em;font-size:11px}',
    '#ring-arena-controls .top small{font-size:10px;color:#99b5af}',
    '#ring-arena-controls .bottom{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;width:94%}',
-   '#ring-arena-controls button{pointer-events:auto;min-height:38px;padding:8px 11px;border:1px solid rgba(118,196,166,.5);border-radius:7px;background:rgba(2,17,23,.86);font:inherit;color:#e7fff3;cursor:pointer}',
+   '#ring-arena-controls button{pointer-events:auto;min-height:40px;padding:8px 12px;border:1px solid rgba(118,196,166,.4);border-radius:8px;background:rgba(2,17,23,.85);font:inherit;color:#e7fff3;cursor:pointer}',
    '#ring-arena-controls button[aria-pressed=true]{background:#185b4a;border-color:#aaf9d6}',
    '#ring-arena-controls button:disabled{opacity:.36;cursor:default}',
    '#ring-arena-controls .status{position:absolute;right:14px;top:14px;font:11px/1.5 monospace;color:#b1dccc;text-align:right}',
-   '@media(max-width:690px){#ring-arena-controls .status,#ring-arena-controls .top small{display:none}#ring-arena-controls button{padding:6px 8px;min-height:35px}}'
+   '@media(max-width:690px){#ring-arena-controls .status,#ring-arena-controls .top small{display:none}#ring-arena-controls button{padding:6px 8px;min-height:36px}#ring-arena-controls .bottom{gap:5px;bottom:max(8px,env(safe-area-inset-bottom))}}'
   ].join('\n');
   document.head.append(style);
   const canvas=document.createElement('canvas');canvas.id='ring-arena-canvas';
-  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D浅弧形战场，固定人物站位，只切换左右镜头');stage.append(canvas);
+  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D战场，3/4背面主角，固定左侧平视过肩机位');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="top"><b>ARC BATTLE / 3D</b><small>世界坐标固定 · 左右双机位</small></div>',
+   '<div class="top"><b>ARC BATTLE / 3D</b><small>3/4 背面 · 固定左机位</small></div>',
    '<div class="status" role="status"></div><div class="bottom">',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
-   '<button data-shot="0" aria-pressed="true" type="button">◀ 左机位</button>',
-   '<button data-shot="1" aria-pressed="false" type="button">右机位 ▶</button>',
-   '<button data-pose="toggle" aria-pressed="false" type="button">试用斜背面</button>',
    '<button data-exit type="button">返回</button></div>'
   ].join('');
   stage.append(hud);
   const status=hud.querySelector('.status');
-  // A non-destructive pose comparison, never a replacement for the approved L2D rig.
+  // Approved 3/4 back pose is the default; original dynamic L2D can
+  // still be inspected by the developer using heroPose=original.
+  const requestedPose=new URLSearchParams(window.location.search).get('heroPose');
+  const previewPose=requestedPose==='original'?'original':
+   requestedPose==='level'?'level':'3q';
+  const posePreviewEnabled=previewPose!=='original';
   const poseImage=new Image();
   poseImage.decoding='async';
-  const requestedPose=new URLSearchParams(window.location.search).get('heroPose');
-  const previewPose=requestedPose==='3q'?'3q':'level';
-  poseImage.src=previewPose==='3q'
-   ?'./assets/characters/protagonist-back-combat-3q-preview.webp'
-   :'./assets/characters/protagonist-back-combat-eye-level-preview.webp';
-  let posePreviewEnabled=requestedPose==='3q'||requestedPose==='level';
-  const poseButton=hud.querySelector('[data-pose]');
-  function syncPoseButton(){
-   poseButton.textContent=posePreviewEnabled?'恢复原背面':'试用平视背面';
-   poseButton.setAttribute('aria-pressed',String(posePreviewEnabled));
-  }
-  syncPoseButton();
-  let gl=null,world=null,portrait=null,floor=null,backInner=null,backOuter=null,quad=null;
+  if(posePreviewEnabled)poseImage.src=previewPose==='level'
+   ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
+   :'./assets/characters/protagonist-back-combat-3q-final.webp';
+  let gl=null,world=null,portrait=null,shadow=null,floor=null,backInner=null,backOuter=null,quad=null;
   const textures=new Map();
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface']);
+   world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface','uMode']);
+   shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture']);
    [floor,backInner,backOuter]=worldMesh(gl);
@@ -382,71 +378,27 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0;
-  let transitionFrom=null,transitionStart=0;
-  let drag=null;
-  function syncButtons(){
-   for(const button of hud.querySelectorAll('[data-shot]'))
-    button.setAttribute('aria-pressed',String(Number(button.dataset.shot)===shotIndex));
-
-  }
-  function goShot(index){
-   const next=stopIndex(index);
-   if(next===shotIndex)return;
-   transitionFrom=lens||camera(mode,shotIndex);
-   transitionStart=performance.now();
-   shotIndex=next;syncButtons();
-  }
-  const shift=dir=>goShot(shotIndex+Math.sign(dir));
-  // Only gesture RELEASE selects a new fixed camera shot; no pointer-follow.
-  canvas.addEventListener('pointerdown',e=>{
-   if(!active)return;e.preventDefault();e.stopPropagation();
-   drag={id:e.pointerId,x:e.clientX,y:e.clientY};
-   canvas.setPointerCapture(e.pointerId);
-  });
-  canvas.addEventListener('pointermove',e=>{
-   if(drag&&drag.id===e.pointerId){e.preventDefault();e.stopPropagation()}
-  });
-  for(const type of ['pointerup','pointercancel'])canvas.addEventListener(type,e=>{
-   if(!drag||e.pointerId!==drag.id)return;
-   e.preventDefault();e.stopPropagation();
-   const delta=view.classList.contains('virtual-landscape')?
-    -(e.clientY-drag.y):(e.clientX-drag.x);
-   if(type==='pointerup'&&Math.abs(delta)>55)shift(delta>0?1:-1);
-   drag=null;
-  });
   hud.addEventListener('click',e=>{
    const b=e.target.closest('button');if(!b)return;
    e.preventDefault();e.stopPropagation();
-   if(b.hasAttribute('data-shot'))goShot(Number(b.dataset.shot));
-   if(b.hasAttribute('data-pose')){
-    posePreviewEnabled=!posePreviewEnabled;
-    syncPoseButton();
-    textures.get('hero').updated=-999;
-    render(0);
-   }
    if(b.hasAttribute('data-mode')){
-    mode=b.dataset.mode;
-    transitionFrom=null;lens=camera(mode,shotIndex);
+    const requestedMode=b.dataset.mode;
+    if(requestedMode!=='outer'&&requestedMode!=='inner')return;
+    mode=requestedMode;
+    lens=camera(mode,0);
     for(const option of hud.querySelectorAll('[data-mode]'))
      option.setAttribute('aria-pressed',String(option.dataset.mode===mode));
     render(0);
    }
    if(b.hasAttribute('data-exit')&&typeof onExit==='function')onExit();
   });
-  document.addEventListener('keydown',e=>{
-   if(!active||e.metaKey||e.ctrlKey||e.altKey||
-      e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;
-   if(['ArrowRight','d','D'].includes(e.key)){e.preventDefault();shift(1)}
-   if(['ArrowLeft','a','A'].includes(e.key)){e.preventDefault();shift(-1)}
-  });
-  syncButtons();
   function sourceFor(actor){
    if(actor.id==='hero'&&posePreviewEnabled){
     if(!poseImage.complete||!poseImage.naturalWidth)return null;
     return {
      runtime:{
-      img:{dataset:{characterId:'protagonist-3q-pose-preview',characterSide:'back'}},
-      root:{dataset:{l2dEdition:'pose-preview-v1',l2dMode:'static-image'}}
+      img:{dataset:{characterId:'protagonist-'+previewPose+'-fixed-left',characterSide:'back'}},
+      root:{dataset:{l2dEdition:'fixed-left-v17',l2dMode:'static-3q'}}
      },
      source:poseImage,w:poseImage.naturalWidth,h:poseImage.naturalHeight
     };
@@ -525,9 +477,12 @@
     targetTexture.painted=false;targetTexture.opaqueUv=null;
     targetTexture.nextProbe=0;targetTexture.updated=-999;
    }
+   const fixedPose=a.id==='hero'&&posePreviewEnabled;
+   // Static heroine: one GPU upload only. All animated L2D remain dynamic.
+   if(fixedPose&&targetTexture.painted)return true;
    const interval=a.id==='hero'?50:78;
    if(now-targetTexture.updated<interval&&targetTexture.painted)return true;
-   const size=a.id==='hero'?768:512;
+   const size=a.id==='hero'?(fixedPose?1024:768):512;
    if(!targetTexture.stage||targetTexture.stage.width!==size){
     targetTexture.stage=document.createElement('canvas');
     targetTexture.stage.width=size;targetTexture.stage.height=size;
@@ -537,9 +492,15 @@
    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,size,size);
    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
    try{
-    ctx.drawImage(desc.source,0,0,size,size);
+    if(fixedPose){
+     const fitted=portraitFit(desc.w,desc.h,size);
+     ctx.drawImage(desc.source,fitted.x,fitted.y,fitted.width,fitted.height);
+    }else ctx.drawImage(desc.source,0,0,size,size);
     gl.bindTexture(gl.TEXTURE_2D,targetTexture.texture);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,targetTexture.stage);
+    if(targetTexture.uploadedSize!==size){
+     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,targetTexture.stage);
+     targetTexture.uploadedSize=size;
+    }else gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,targetTexture.stage);
     targetTexture.updated=now;
     targetTexture.painted=true;
     targetTexture.frames++;
@@ -558,6 +519,22 @@
    gl.vertexAttribPointer(world.aP,3,gl.FLOAT,false,12,0);
    gl.uniform1i(world.uSurface,kind);
    gl.drawArrays(gl.TRIANGLES,0,mesh.count);
+  }
+  function drawContactShadows(actors,vp){
+   gl.useProgram(shadow.handle);
+   gl.uniformMatrix4fv(shadow.uVP,false,new Float32Array(vp));
+   gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+   gl.enableVertexAttribArray(shadow.aUv);
+   gl.vertexAttribPointer(shadow.aUv,2,gl.FLOAT,false,8,0);
+   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+   gl.depthMask(false);
+   for(const a of actors){
+    gl.uniform3fv(shadow.uFoot,new Float32Array([a.x,0,a.z]));
+    gl.uniform1f(shadow.uRadius,a.id==='hero'?.46:.35);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+   }
+   gl.depthMask(true);gl.disable(gl.BLEND);
+   gl.disableVertexAttribArray(shadow.aUv);
   }
   function drawActors(actors,cam,vp){
    // Transparent L2D textures are sorted far to near; pixels share the same
@@ -584,7 +561,7 @@
     gl.uniform1f(portrait.uSoleX,a.soleX);
     gl.uniform1f(portrait.uSoleY,a.soleY);
     gl.uniform1f(portrait.uCrownY,a.crownY);
-    gl.uniform1f(portrait.uWidthScale,a.id==='hero'&&posePreviewEnabled&&previewPose==='3q' ? 0.82 : 1);
+    gl.uniform1f(portrait.uWidthScale,1);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -592,19 +569,12 @@
   }
   function render(dt=1/60){
    if(!active)return false;
-   const approved=camera(mode,shotIndex);
-   if(transitionFrom){
-    // 260ms cinematic ease measured in WALL-CLOCK time, not frame count.
-    // SwiftShader and slow mobile devices must still reach their final shot.
-    const u=clamp((performance.now()-transitionStart)/260,0,1);
-    lens=u>=1?approved:blendCamera(transitionFrom,approved,u*u*(3-2*u));
-    if(u>=1)transitionFrom=null;
-   }else lens=approved;
+   lens=camera(mode,0);
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
    if(w<2||h<2)return false;
-   const pixel=Math.min(window.devicePixelRatio||1,1.75);
+   const pixel=renderPixelRatio(w,h,window.devicePixelRatio||1);
    const W=Math.floor(w*pixel),H=Math.floor(h*pixel);
    if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
    const cam=lens,vp=cameraVP(cam,w/h);
@@ -614,16 +584,19 @@
    gl.useProgram(world.handle);gl.enableVertexAttribArray(world.aP);
    gl.uniformMatrix4fv(world.uVP,false,new Float32Array(vp));
    gl.uniform1f(world.uTime,elapsed);
+   gl.uniform1f(world.uMode,mode==='inner'?1:0);
    drawWorld(floor,0,vp);drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    gl.disableVertexAttribArray(world.aP);
+   drawContactShadows(visibleActors(mode),vp);
    const all=visibleActors(mode);
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
    drawActors(all,cam,vp);
    if(frames%12===0){
     const ready=all.filter(a=>textures.get(a.id).painted).length;
-    status.textContent=(mode==='outer'?'外侧机位':'内侧机位')+
-     ' · '+SHOT_NAMES[shotIndex]+' · L2D '+ready+'/'+all.length;
+    status.textContent=(mode==='outer'?'外圈':'内圈')+
+     ' · 固定左机位 · 人物 '+ready+'/'+all.length+
+     (posePreviewEnabled?' · 主角3/4':' · 原版动态');
     canvas.dataset.l2dReady=String(ready);
     canvas.dataset.renderedFrames=String(frames);
    }
@@ -632,15 +605,16 @@
   function setActive(value){
    active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
-   if(active){elapsed=0;frames=0;shotIndex=0;transitionFrom=null;
-    lens=camera(mode,0);syncButtons();render(0)}
+   if(active){elapsed=0;frames=0;shotIndex=0;
+    lens=camera(mode,0);render(0)}
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:VERTICAL_LENS_SHIFT,
    cameraTarget:camera(mode,shotIndex),
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
-   settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,shotIndex).eye.x,
-     lens.eye.z-camera(mode,shotIndex).eye.z)<.001,actors:layout(mode),
+   settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,0).eye.x,
+     lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
+   cameraCount:1,heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero').frames,
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,
@@ -659,11 +633,11 @@
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
     textures.get('hero').opaqueUv||CANONICAL_BACK_UV),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
-   pixelsFrom:'existing PaperchalkL2D actors; source assets unchanged'});
+   pixelsFrom:posePreviewEnabled?'fixed-left 3/4 heroine + animated original enemy L2D':'original animated L2D actors'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
-  SHOT_NAMES,CAMERA_STOPS,cameraPitchDeg,backdropPoint,camera,blendCamera,portraitBounds,
-  portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,responsiveFov,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
+  SHOT_NAMES,CAMERA_STOPS,cameraPitchDeg,backdropPoint,camera,portraitBounds,
+  portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });
