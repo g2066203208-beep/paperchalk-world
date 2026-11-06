@@ -34,11 +34,11 @@ for(const mode of ['outer','inner']){
   const p=arena.project({...hero,y:hero.height*.52},c);
   const body=arena.portraitBounds(hero,c);
   assert.ok(body.valid&&p.valid);
-  assert.ok(index===0?p.x<-.48&&p.x>-.78:p.x>.48&&p.x<.78,
+  assert.ok(index===0?p.x<-.38&&p.x>-.55:p.x>.38&&p.x<.55,
    'hero body must occupy the left or right foreground, not clip offscreen');
-  assert.ok(body.heightFraction>1.10,
+  assert.ok(body.heightFraction>1.25&&body.heightFraction<1.55,
    'close-up heroine is legitimately nearer than camera, no sprite CSS scaling');
-  assert.ok(body.top>.67&&body.top<.90,'near heroine head remains visible');
+  assert.ok(body.top>.68&&body.top<.85,'near heroine head remains visible');
   // The original back portrait is intentionally cropped BELOW the image,
   // not by trimming its L2D texture or editing the authoring rig.
   const foeBounds=scene.enemies.map(a=>arena.portraitBounds(a,c));
@@ -50,8 +50,17 @@ for(const mode of ['outer','inner']){
     assert.ok(b.top<.94&&b.bottom>-.94,'enemy cropped vertically');
    }
   }
-  for(const foe of foeBounds)assert.ok(foe.heightFraction>.24&&foe.heightFraction<.47,
+  for(const foe of foeBounds)assert.ok(foe.heightFraction>.26&&foe.heightFraction<.40,
    'foes occupy visible middle distance, never become tiny or cover the near heroine');
+  // Real actor heads, not the transparent quads alone, must sit in separated
+  // projected slots; this catches a small ring or a camerawise pile-up.
+  const xCenters=scene.enemies.map(enemy=>
+   arena.project({...enemy,y:enemy.height*.5},c).x).sort((a,b)=>a-b);
+  for(let i=1;i<xCenters.length;i++)
+   assert.ok(xCenters[i]-xCenters[i-1]>.20,
+    'adjacent enemies must be visibly spaced in the final camera');
+  assert.ok(xCenters[0]>-.78&&xCenters[3]<.79,
+   'whole opponent group must fit inside its intended midground region');
   assert.equal(JSON.stringify(scene),before,'camera changes must never move a character');
  }
  const nearLens=arena.camera(mode,0).eye;
