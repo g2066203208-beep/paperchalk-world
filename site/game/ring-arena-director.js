@@ -1,5 +1,5 @@
-/* Paperchalk V25 combat director. Reconstructed from the user's actual
- * 699-frame, 30fps Darkest Dungeon reference recording (Nov 6 2026).
+/* Paperchalk V26 combat director: immediate impact, readable post-hit stage.
+ * The prior Darkest Dungeon frame notes are references, NOT this game's timing.
  * Attack choreography is performed WHILE both actors translate toward the
  * shared middle stage. The hit happens BEFORE arrival, NOT after a center
  * pause. Then both performers reverse to their immutable authored anchors.
@@ -14,7 +14,9 @@
  const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
  const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
  const CARD=Object.freeze({key:'slash',name:'斧柄横扫',type:'attack',damage:12,w:1,a:1,r:1});
- const DURATION=400,REDUCED_DURATION=260;
+ const DURATION=1500,REDUCED_DURATION=1200;
+ // The 117ms strike remains responsive; the stage remains on screen after the hit.
+ // Hold is a provisional gameplay timing, not a claim of frame-accurate original.
  // Reference frame markers: zoomed middle-stage entrances at frame
  // 79/178/315/416 and exits at frame 128/228/368/470.
  // These are capture timestamps, not the original game's internal tick clock.
@@ -30,8 +32,9 @@
   Object.freeze({id:'windup',from:50,to:80}),
   Object.freeze({id:'swing',from:80,to:117}),
   Object.freeze({id:'impact',from:117,to:146}),
-  Object.freeze({id:'reaction',from:146,to:211}),
-  Object.freeze({id:'recover',from:211,to:400})
+  Object.freeze({id:'reaction',from:146,to:360}),
+  Object.freeze({id:'hold',from:360,to:1240}),
+  Object.freeze({id:'recover',from:1240,to:1500})
  ]);
  const ART=Object.freeze({
   hero:'./assets/characters/hero-axe-attack.webp',
@@ -65,17 +68,17 @@
   const t=clamp((Number(now)-attack.startedAt)*(reduced?DURATION/REDUCED_DURATION:1),0,DURATION);
   const finished=t>=DURATION;
   const stage=finished?'done':STAGES.find(v=>t>=v.from&&t<v.to).id;
-  // IMPORTANT: the attack happens DURING transit. At center arrival
-  // (~157ms), the strike and damage are ALREADY COMPLETE. No center windup,
-  // no second strike, no freeze to pose, and no delayed damage settlement.
-  const stageStrength=smooth((t-6)/151)*(1-smooth((t-181)/175));
+  // Fast entrance and 117ms collision; after center arrival (~157ms),
+  // HOLD the completed result visibly until 1240ms, THEN depart briskly.
+  // The holding period is intentionally not a late attack or second hit.
+  const stageStrength=smooth((t-6)/151)*(1-smooth((t-1240)/260));
   // Body drive and collision precede arrival; these do NOT make another hit.
   const push=smooth((t-60)/50)*(1-smooth((t-117)/46));
-  const recoil=smooth((t-117)/12)*(1-smooth((t-184)/72));
+  const recoil=smooth((t-117)/12)*(1-smooth((t-230)/270));
   const hit=t>=117;
   const hitFlash=smooth((t-115)/5)*(1-smooth((t-125)/27))*.48;
   const fxOpacity=smooth((t-115)/7)*(1-smooth((t-125)/37));
-  const damageOpacity=smooth((t-117)/11)*(1-smooth((t-250)/62));
+  const damageOpacity=smooth((t-117)/11)*(1-smooth((t-1190)/230));
   const cut=stage==='windup'||stage==='swing'?'attacker':
    stage==='impact'||stage==='reaction'?'victim':'none';
   return {stage,elapsed:t,finished,hit,stageStrength,zoom:stageStrength,
@@ -83,7 +86,7 @@
    hitFlash,fxOpacity,damageOpacity,damageLift:smooth((t-121)/120),
    shake:reduced?0:hitFlash*.06,
    heroPose:t>=50&&t<146?1:0,
-   victimPose:t>=117&&t<211?1:0,
+   victimPose:t>=117&&t<360?1:0,
    frameHold:false,cut,cue:''}; }
  function stageAt(now,reduced=false){
   return sample(createAttack('enemy-1',0,{reducedMotion:reduced}),now).stage;
