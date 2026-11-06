@@ -22,6 +22,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Build actual main game's dynamic scene catalog
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_scene_catalog.py
       - name: Test deterministic convenience-store economy and save
         run: node site/convenience-store/store-core.test.cjs
       - name: Install actual Chrome browser for gameplay screenshot
