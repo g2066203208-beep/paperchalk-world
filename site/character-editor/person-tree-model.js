@@ -13,7 +13,7 @@ const NAMES=Object.freeze({
  'char-004':'女三','char-020':'男三',
  'char-005':'女四','male4':'男四',
  'char-006':'女五','male5':'男五',
- 'female-06':'女六','male6':'男六'
+ 'female-06':'女六','male6':'男六','female-07':'女七'
 });
 const ORDER=[
  'protagonist','char-003',
@@ -21,7 +21,8 @@ const ORDER=[
  'char-004','char-020',
  'char-005','male4',
  'char-006','male5',
- 'female-06','male6'
+ 'female-06','male6',
+ 'female-07'
 ];
 const FALLBACK=[
  [/^(?:女主角?|女一)(?:\s|[·（(:：/-]|$)/,'protagonist'],
@@ -49,6 +50,7 @@ if(id==='male2'||raw==='male2')return 'male2';
  if(id==='class-teacher-geography-candidate'||raw==='class-teacher-geography-candidate')return 'char-006';
  if(raw==='char-006'||id==='char-006'||id.startsWith('char-006-'))return 'char-006';
  if(id==='female-06'||id.startsWith('female-06-')||raw==='female-06')return 'female-06';
+ if(id==='female-07'||id.startsWith('female-07-')||raw==='female-07')return 'female-07';
  for(const [pattern,canonical] of FALLBACK)
   if(pattern.test(String(record?.label||'').trim()))return canonical;
  return raw;
