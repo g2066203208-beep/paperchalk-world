@@ -1,4 +1,4 @@
-/* Paperchalk V27: 30 fps AUTHORABLE keyframes, hit-first, quick readable aftermath.
+/* Paperchalk V28: 30fps performer poses LOCKED until return to original position.
  * Original Darkest Dungeon footage is not available in this repo: this is a
  * measured 30fps game choreography draft, NOT a fake source-video transcription.
  * Attack choreography is performed WHILE both actors translate toward the
@@ -40,13 +40,15 @@
   Object.freeze({id:'hold',from:9,to:15}),
   Object.freeze({id:'recover',from:15,to:21})
  ]);
+ // The actor tracks return to zero at frame 19 BEFORE any pose reset.
+ // Camera zoom only returns to zero at frame 21, AFTER both actors return.
  // Every single authored frame has its OWN channel values; a browser running
  // at 60/90/120Hz holds the same 30fps state rather than easing over 1.5s.
  // These are screen-space/duel-relative fractions, not arbitrary world drift.
  const TRACKS=Object.freeze({
-  hero:Object.freeze([0,.10,.44,.79,.95,1,1,1,1,1,1,1,1,1,1,1,.83,.51,.18,.025,0,0]),
-  victim:Object.freeze([0,.08,.47,.83,.97,1,1,1,1,1,1,1,1,1,1,1,.80,.46,.15,.015,0,0]),
-  camera:Object.freeze([0,.23,.64,.91,1,1,1,1,1,1,1,1,1,1,.97,.88,.58,.26,.08,0,0,0]),
+  hero:Object.freeze([0,.10,.44,.79,.95,1,1,1,1,1,1,1,1,1,1,.83,.51,.18,.025,0,0,0]),
+  victim:Object.freeze([0,.08,.47,.83,.97,1,1,1,1,1,1,1,1,1,1,.80,.46,.15,.015,0,0,0]),
+  camera:Object.freeze([0,.23,.64,.91,1,1,1,1,1,1,1,1,1,1,1,1,1,.95,.90,.78,.30,0]),
   lunge:Object.freeze([0,0,.10,.48,1,.43,.07,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
   recoil:Object.freeze([0,0,0,0,0,.72,1,.88,.57,.24,.05,0,0,0,0,0,0,0,0,0,0,0]),
   hitFlash:Object.freeze([0,0,0,0,.48,.16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
@@ -103,8 +105,11 @@
    hitFlash:at('hitFlash'),fxOpacity:at('fx'),
    damageOpacity:at('damage'),damageLift:at('damageRise'),
    shake:reduced?0:at('hitFlash')*.06,
-   heroPose:frame>=2&&frame<=4?1:0,
-   victimPose:frame>=4&&frame<=8?1:0,
+   // No pose restoration in the center. BOTH action silhouettes travel
+   // all the way back to their original queue anchors on frame 19.
+   // Only frame 20 may switch to canonical L2D; camera settles frame 21.
+   heroPose:frame>=2&&frame<=19?1:0,
+   victimPose:frame>=4&&frame<=19?1:0,
    frameHold:frame>=5&&frame<=6,cut,cue:''};
  }
  function sampleFrame(attack,frame){
