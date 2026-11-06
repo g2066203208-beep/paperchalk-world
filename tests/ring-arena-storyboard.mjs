@@ -34,7 +34,7 @@ try{
  },null,{timeout:100000});
  const duration=700,fps=30,frameCount=21,record=[];
  for(let i=0;i<=frameCount;i++){
-  const at=Math.min(duration-1,Math.round(i*1000/fps));
+  const at=Math.min(duration,Math.round(i*1000/fps));
   const state=await page.evaluate(ms=>{
     const app=window.PaperWorldGameRingArena;
     app.qaFrame('enemy-2',ms);
