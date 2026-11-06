@@ -125,8 +125,8 @@
   const stage=finished?'done':STAGES.find(v=>frame>=v.from&&frame<v.to).id;
   const at=name=>TRACKS[name][frame];
   const heroProgress=at('hero'),victimProgress=at('victim'),zoom=at('camera');
-  const hit=frame>=3;
-  const cut=frame>=2&&frame<3?'attacker':frame>=3&&frame<9?'victim':'none';
+  const hit=frame>=2;
+  const cut=frame===1?'attacker':frame>=2&&frame<9?'victim':'none';
   return {stage,elapsed:t,frame,finished,hit,heroProgress,victimProgress,
    stageStrength:Math.min(heroProgress,victimProgress),zoom,
    advance:at('lunge')*(reduced?.7:1),
@@ -137,8 +137,8 @@
    // Source-verified: f127/227/364/464 STILL hold battle silhouettes.
    // Retreat f49..55 still uses attack/hurt art, f55 both back at base
    // anchors, f56 FIRST idle art, camera fully settles f57.
-   heroPose:frame>=2&&frame<=55?1:0,
-   victimPose:frame>=3&&frame<=55?1:0,
+   heroPose:frame>=1&&frame<=55?1:0,
+   victimPose:frame>=2&&frame<=55?1:0,
    frameHold:frame>=5&&frame<=6,cut,cue:''};
  }
  function sampleFrame(attack,frame){
