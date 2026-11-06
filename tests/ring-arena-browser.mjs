@@ -81,6 +81,14 @@ try{
     }})
   };
  });
+ const heroinePixelSignature=()=>page.evaluate(()=>{
+  const actor=window.PaperchalkL2D.get('player');
+  const source=actor.clip?.type==='native'?actor.clip.img:actor.canvas;
+  const c=document.createElement('canvas');c.width=48;c.height=48;
+  const ctx=c.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(source,0,0,48,48);
+  return [...ctx.getImageData(0,0,48,48).data];
+ });
  const before=await get();
  assert.equal(before.arena.mode,'outer');
  assert.equal(before.arena.shotIndex,0);
@@ -101,6 +109,7 @@ try{
   'real transparent heroine silhouette must NOT cover opponent number one');
  assert.ok(before.sources.every(p=>!p.hidden&&p.ready==='ready'&&p.canvasW>0));
  const originalOuter=JSON.stringify(before.arena.actors);
+ const approvedBackPixels=await heroinePixelSignature();
  const computed=await page.evaluate(()=>{
   const a=window.PaperWorldRingArena,scene=a.layout('outer'),c=a.camera('outer',0);
   return {hero:a.portraitBounds(scene.allies[0],c),
@@ -215,6 +224,25 @@ try{
    a?.img?.dataset.characterSide==='back'&&
    r.heroine?.ready&&r.l2dReady===5;
  },null,{timeout:85000});
+ await page.waitForFunction(()=>{
+  const runtime=window.PaperchalkL2D.get('player');
+  return (!runtime.clip||runtime.clip.type!=='decoder'||runtime.clip.frame>=0)&&
+   (!runtime.libraryPlayer||runtime.libraryPlayer.renderedFrames>2)&&
+   window.PaperWorldGameRingArena.inspect().l2dFrames.hero>=3;
+ },null,{timeout:30000});
+ await page.waitForTimeout(250);
+ const newBackPixels=await heroinePixelSignature();
+ let alphaSamples=0,errorSum=0;
+ for(let k=0;k<approvedBackPixels.length;k+=4){
+  if(approvedBackPixels[k+3]<75)continue;
+  alphaSamples++;
+  for(let c=0;c<3;c++)errorSum+=Math.abs(approvedBackPixels[k+c]-newBackPixels[k+c]);
+  errorSum+=Math.abs(approvedBackPixels[k+3]-newBackPixels[k+3]);
+ }
+ assert.ok(alphaSamples>70,'expected authentic opaque actress pixels in the first screenshot');
+ const perChannelError=errorSum/(alphaSamples*4);
+ assert.ok(perChannelError<54,
+  'recovered rear L2D must match real original heroine pixels, not just a changed metadata id: '+perChannelError);
  const recovered=await get();
  assert.equal(recovered.arena.heroine.id,'protagonist');
  assert.equal(recovered.arena.heroine.side,'back');
