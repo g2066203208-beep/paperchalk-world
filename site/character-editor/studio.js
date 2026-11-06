@@ -750,6 +750,97 @@ async function purgeUnrequestedQaDraft(){
   if(last?.id===retired)localStorage.removeItem('paperchalk-studio-last');
  }catch(e){}
 }
+/* One-time migration: the user's approved THIRD wardrobe is NOW the sole
+ * female-six base. Keep its authored local bones/paint and NEVER let a former
+ * base or a second outfit resurrect from IndexedDB. The transaction is atomic
+ * and deliberately scoped to female-six; other actors' records are untouched.
+ */
+async function migrateFemaleSixThirdIntoBase(){
+ const old='female-06-outfit-02',old2='female-06-second-outfit',id='female-06';
+ const marker='migration:female06-third-only-v1';
+ const db=await openDB();
+ try{
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction('kv','readwrite'),store=tx.objectStore('kv');
+   const moves=[];
+   const req=store.get(marker);
+   req.onsuccess=()=>{
+    if(req.result===true)return;
+    const cursor=store.openCursor();
+    cursor.onsuccess=()=>{
+     const row=cursor.result;
+     if(!row){
+      for(const [key,value]of moves)store.put(value,key);
+      store.put(true,marker);
+      return;
+     }
+     const key=String(row.key),value=row.value;
+     if(key==='imported'||key==='overrides'){
+      if(Array.isArray(value)){
+       const filtered=value.filter(item=>!['female-06',old,old2].includes(item?.id));
+       if(filtered.length!==value.length)row.update(filtered);
+      }
+     }else if(key.includes(old)||key.includes(old2)){
+      if(key.includes(old)&&!key.includes(old2)){
+       const to=key.replaceAll(old,id);
+       if(to!==key){
+        let cloned=value;
+        if(cloned&&typeof cloned==='object'&&!Array.isArray(cloned)){
+         cloned={...cloned};
+         if(cloned.characterId===old)cloned.characterId=id;
+         if(cloned.id===old)cloned.id=id;
+         if(cloned.model?.characterId===old)
+          cloned.model={...cloned.model,characterId:id};
+        }
+        moves.push([to,cloned]);
+       }
+      }
+      row.delete();
+     }else if(key===id||key.startsWith(id+':')||
+              key.endsWith(':'+id)||key.includes(':'+id+':')){
+      row.delete();
+     }
+     row.continue();
+    };
+    cursor.onerror=()=>reject(cursor.error||Error('旧女六工程扫描失败'));
+   };
+   req.onerror=()=>reject(req.error||Error('女六迁移状态读取失败'));
+   tx.oncomplete=resolve;
+   tx.onerror=()=>reject(tx.error||Error('女六工程迁移失败'));
+   tx.onabort=()=>reject(tx.error||Error('女六工程迁移被中断'));
+  });
+ }finally{db.close();}
+ // The paint canvas lives in its own DB; migrate the third outfit's actual
+ // bitmap record rather than replacing it with the deleted first outfit.
+ const paintDb=await new Promise((yes,no)=>{
+  const req=indexedDB.open('pixelatelier-character-v1',1);
+  req.onupgradeneeded=()=>{
+   if(!req.result.objectStoreNames.contains('art'))req.result.createObjectStore('art');
+  };
+  req.onsuccess=()=>yes(req.result);req.onerror=()=>no(req.error);
+ });
+ try{
+  await new Promise((resolve,reject)=>{
+   const tx=paintDb.transaction('art','readwrite'),store=tx.objectStore('art');
+   const src=store.get('character:'+old);
+   src.onsuccess=()=>{
+    store.delete('character:'+id);
+    if(src.result!=null)store.put(src.result,'character:'+id);
+    store.delete('character:'+old);
+    store.delete('character:'+old2);
+   };
+   tx.oncomplete=resolve;
+   tx.onerror=()=>reject(tx.error||Error('女六像素底稿迁移失败'));
+   tx.onabort=()=>reject(tx.error||Error('女六像素底稿迁移中止'));
+  });
+ }finally{paintDb.close()}
+ try{
+  const last=JSON.parse(localStorage.getItem('paperchalk-studio-last')||'null');
+  if(last&&[old,old2].includes(last.id))
+   localStorage.setItem('paperchalk-studio-last',JSON.stringify({...last,id}));
+ }catch(_){}
+}
+
 async function loadList(){
  list.set('protagonist',{id:'protagonist',label:'女主角',front:'../assets/characters/protagonist-front.webp',back:'../assets/characters/protagonist-back.webp'});
  // A separate, local-only authoring slot; the published protagonist model,
