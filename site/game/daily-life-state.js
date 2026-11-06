@@ -19,12 +19,14 @@
     'living-room':{label:'客厅',group:'家',scene:'living-room',open:0,close:1440,travel:10},
     kitchen:{label:'厨房',group:'家',scene:'kitchen',open:0,close:1440,travel:10},
     entrance:{label:'玄关',group:'家',scene:'entrance',open:0,close:1440,travel:10},
-    school:{label:'学校',group:'城区',scene:null,open:8*60,close:17*60,travel:35,weekdaysOnly:true},
+    school:{label:'学校',group:'城区',scene:null,open:7*60,close:17*60,travel:35,weekdaysOnly:true},
     convenience:{label:'便利店',group:'城区',scene:null,open:6*60,close:22*60,travel:25},
     cafe:{label:'咖啡店',group:'城区',scene:null,open:10*60,close:21*60,travel:30},
-    park:{label:'社区公园',group:'城区',scene:null,open:6*60,close:21*60,travel:25}
+    park:{label:'社区公园',group:'城区',scene:null,open:6*60,close:21*60,travel:25},
+    mall:{label:'购物商场',group:'城区',scene:null,open:10*60,close:21*60,travel:40}
   });
   const NPCS=Object.freeze({
+    female2:{label:'女二',location:'school',from:7*60+30,to:16*60,workdays:true},
     classmate:{label:'同班同学',location:'school',from:9*60,to:16*60,workdays:true},
     clerk:{label:'便利店店员',location:'convenience',from:6*60,to:21*60},
     neighbor:{label:'邻居',location:'park',from:16*60,to:19*60}
@@ -44,6 +46,13 @@
       note:'休息之后，精神和体力恢复了一些。'}
   });
   const DIALOGUE=Object.freeze({
+    female2:[
+      '你来了！作业呢？别再发呆，老师第一节课就要收。',
+      '听说昨天值日生在楼梯口见过一个穿校服的陌生人。',
+      '你觉得学校的公告为什么突然变得这么多？',
+      '今天早点回家。官方说部分路段要绕行。',
+      '现在最重要的是确认大家都平安，不是作业了。'
+    ],
     classmate:[
       '同学提起了明天要交的作业，顺便问你周末准备做什么。',
       '同学说有人把学校附近的监控故障剪成了恐怖视频。',
@@ -114,6 +123,8 @@
       money:260,energy:78,knowledge:0,evidence:0,worldPressure:2,
       relationships:{classmate:0,clerk:0,neighbor:0},
       inventory:{bread:1,water:1},dailyUses:{},nightStatus:'day',
+      phone:{callsRead:false,messagesRead:false,reply:null},
+      homework:{status:'unfinished',inspected:false,handedIn:false},
       log:[{day:1,minute:7*60,text:'新的一天开始了。先安排今天的生活。'}],
       updatedBy:'new-game'};
   }
@@ -139,6 +150,16 @@
     // otherwise reloading the page would reset NPC conversation limits.
     for(const k of Object.keys(NPCS))
       s.dailyUses['talk-'+k]=CLAMP(INTEGER(raw.dailyUses?.['talk-'+k],0),0,1);
+    s.phone={
+      callsRead:raw.phone?.callsRead===true,
+      messagesRead:raw.phone?.messagesRead===true,
+      reply:['coming','checking'].includes(raw.phone?.reply)?raw.phone.reply:null
+    };
+    s.homework={
+      status:raw.homework?.status==='finished'?'finished':'unfinished',
+      inspected:raw.homework?.inspected===true,
+      handedIn:raw.homework?.handedIn===true
+    };
     s.nightStatus=raw.nightStatus==='recalled'?'recalled':'day';
     if(s.minute>=NIGHT)s.nightStatus='recalled';
     if(Array.isArray(raw.log))s.log=raw.log.slice(-40).filter(x=>
@@ -247,6 +268,67 @@
       state.dailyUses['talk-'+npcId]=1;
       return finish('social',npc.label+'：'+DIALOGUE[npcId][stageOf(state)-1]);
     }
+    // Day-one homework hook. The second female character is an established
+    // cast slot; deliberately do not invent a personal name or new family.
+    function phoneInbox(){
+      return {contact:'女二',
+        missedCalls:[
+          {time:'06:43',text:'未接来电'},
+          {time:'06:47',text:'未接来电'},
+          {time:'06:51',text:'未接来电'},
+          {time:'06:54',text:'未接来电'},
+          {time:'06:57',text:'未接来电'},
+          {time:'06:59',text:'未接来电'}
+        ],
+        messages:[
+          {time:'06:44',text:'起床了吗？！'},
+          {time:'06:49',text:'作业写完没？今天要交！'},
+          {time:'06:58',text:'没写就早点来学校补啊，我在教室等你。'}
+        ],
+        phone:{...state.phone},homework:{...state.homework}};
+    }
+    function markPhoneRead(which){
+      if(!['calls','messages'].includes(which))return fail('无效的手机通知');
+      state.phone[which==='calls'?'callsRead':'messagesRead']=true;
+      return finish('phone-read',which==='calls'?'查看了女二的未接来电。':'读完了女二发来的消息。');
+    }
+    function replyHomework(choice){
+      if(!['coming','checking'].includes(choice))return fail('无效回复');
+      if(state.day!==1)return fail('这条消息已经过期');
+      if(!state.phone.messagesRead)return fail('请先查看消息');
+      state.phone.reply=choice;
+      return finish('phone-reply',choice==='coming'?
+        '回复女二：还没写，我现在过去！':'回复女二：我先看看书包，马上出门。');
+    }
+    function inspectHomework(){
+      if(!['bedroom','living-room'].includes(state.location))return fail('书包留在卧室，先回去看看');
+      if(state.day!==1)return fail('这是第一天的作业事件');
+      if(state.homework.inspected)return fail('已经检查过书包');
+      const can=spend(5);if(!can.ok)return can;
+      state.homework.inspected=true;
+      return finish('homework-inspect','翻了翻书包：作业还差最后一页。');
+    }
+    function finishHomework(){
+      if(state.day!==1)return fail('这份作业已过期');
+      if(state.location!=='school')return fail('女二在学校等你补作业');
+      if(state.homework.status==='finished')return fail('作业已经补完了');
+      if(state.minute+25>9*60)return fail('第一节课前已经来不及补完');
+      const can=spend(25);if(!can.ok)return can;
+      state.homework.status='finished';
+      state.energy=CLAMP(state.energy-6,0,100);
+      return finish('homework-finish','在女二旁边补好了最后一页作业。',{type:'exert',amount:2});
+    }
+    function submitHomework(){
+      if(state.day!==1)return fail('作业已经过了截止日期');
+      if(state.location!=='school')return fail('需要先到学校');
+      if(state.homework.status!=='finished')return fail('作业还没有写完');
+      if(state.homework.handedIn)return fail('已经交过作业');
+      if(state.minute+5>9*60)return fail('已经错过第一节课的收作业时间');
+      const can=spend(5);if(!can.ok)return can;
+      state.homework.handedIn=true;
+      state.relationships.female2=CLAMP(state.relationships.female2+2,0,100);
+      return finish('homework-submitted','作业交上去了。女二终于松了口气。');
+    }
     function wait(minutes=30){
       if(![15,30,60].includes(minutes))return fail('只可等待15、30或60分钟');
       const can=spend(minutes);if(!can.ok)return can;
@@ -282,6 +364,7 @@
       state=defaultState();persist();notify('reset');return snapshot();
     }
     return Object.freeze({snapshot,subscribe,persist,travel,act,buy,use,talk,wait,sleep,
+      phoneInbox,markPhoneRead,replyHomework,inspectHomework,finishHomework,submitHomework,
       recordNightReturn,reset,calendar:()=>calendar(state)});
   }
   return Object.freeze({VERSION,KEY,LOCATIONS,NPCS,ACTIONS,ITEM_META,STAGES,dayDate,
