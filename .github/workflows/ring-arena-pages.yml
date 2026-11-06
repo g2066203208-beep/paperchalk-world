@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - 'site/game/ring-arena-runtime.js'
+      - 'site/assets/characters/female-07/**'
+      - 'site/index.html'
       - 'site/character-editor/**'
       - 'site/assets/l2d/inbox/**'
       - 'site/assets/l2d/library/**'
@@ -70,6 +72,7 @@ jobs:
           test -s site/game/ring-arena-runtime.js
           test -s site/game/ring-arena-director.js
           test -s site/game/ring-arena-director.css
+          test -s site/assets/characters/female-07/back.webp
           test -s site/assets/characters/hero-axe-attack.webp
           test -s site/assets/characters/enemy-suit-hit.webp
           test -s site/assets/characters/enemy-suit-hit-no-hud.webp
@@ -90,6 +93,21 @@ jobs:
           node tests/test_female06_pants_skin.cjs
           node tests/test_l2d_person_tree_model.cjs
           python3 - <<'PY'
+          from PIL import Image
+          import json
+          from pathlib import Path
+          p=Path('site/assets/characters/female-07/back.webp')
+          with Image.open(p) as im:
+              assert im.size==(800,1436), im.size
+              assert im.mode=='RGBA', im.mode
+              assert im.getextrema()[-1][0]==0,'white source paper was not removed'
+          catalog=json.loads(Path('site/characters.catalog.json').read_text())['characters']
+          girl=next(row for row in catalog if row['id']=='female-07')
+          assert girl['label']=='女七' and girl['back']=='./assets/characters/female-07/back.webp'
+          assert not girl.get('front'), 'no unprovided front art is fabricated'
+          print('PASS female07 original back axe portrait, alpha, catalog, role-ready')
+          PY
+          python3 - <<'PY'
           import json
           from pathlib import Path
           rows=json.loads(Path('site/characters.catalog.json').read_text())['characters']
@@ -109,7 +127,7 @@ jobs:
             'site/dev/character-bridge.js'
           ])new Function(fs.readFileSync(path,'utf8'));
           const html=fs.readFileSync('site/index.html','utf8');
-          if(!html.includes('ring-arena-runtime.js?v=dd699-camera-retreat-v29b-20261106'))
+          if(!html.includes('ring-arena-runtime.js?v=female07-rear-combat-v30-20261106'))
             throw Error('Deployed HTML still points at stale ring-arena WebGL source');
           if(!html.includes("ringScene.setActive(name==='ring-arena')"))
             throw Error('3D ring scene was not integrated into the game');
