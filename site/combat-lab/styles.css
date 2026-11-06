@@ -277,3 +277,21 @@ h1{font-size:20px;font-weight:800;letter-spacing:-.03em}h1 span{font-size:11px;c
 .dual-row{display:grid;grid-template-columns:168px minmax(0,1fr) 22px}
 .dual-board{min-width:0}
 @media(max-width:700px){.dual-header{grid-template-columns:138px repeat(10,minmax(52px,1fr)) 22px}.dual-row{grid-template-columns:138px minmax(0,1fr) 22px}}
+
+/* V1.2: one persistent ID per character across lanes, target warnings and cards.
+   Keep the existing click/drag hit areas unchanged. */
+.avatar{position:relative;overflow:visible}
+.avatar-id{position:absolute;right:-7px;bottom:-6px;min-width:23px;height:15px;padding:0 3px;display:grid;place-items:center;border-radius:5px;background:#172f38;color:#b5f4df;border:1px solid #478d82;font-size:10px;line-height:1;font-weight:900;font-variant-numeric:tabular-nums;box-shadow:0 2px 5px #0008;pointer-events:none}
+.avatar.is-foe .avatar-id{background:#472c37;border-color:#a35d69;color:#ffd4cf}
+.person-serial{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:17px;padding:0 3px;border-radius:4px;background:#244d52;color:#bbf0e0;border:1px solid #3e777d;font-size:10px;font-weight:950;font-variant-numeric:tabular-nums}
+.enemyrow .person-serial{background:#4c303b;border-color:#8b4c5c;color:#ffd3d2}
+.threat-unit-number{display:inline-block;white-space:nowrap;font-size:12px;font-weight:950;letter-spacing:0;font-variant-numeric:tabular-nums}
+.threat-source .threat-unit-number{color:#ffb2b0}.threat-victim .threat-unit-number{color:#caedff}
+.intent-target-number{font-weight:900;letter-spacing:-.03em;font-size:9px;padding-left:1px;color:#edf4ff;opacity:.95}
+@media(max-width:700px){
+ .avatar-id{min-width:20px;height:14px;right:-5px;bottom:-5px;font-size:9px}
+ .person-serial{min-width:23px;height:15px;font-size:9px}
+ .person-name{gap:3px}
+ .threat-unit-number{font-size:11px}
+ .intent-target-number{font-size:8px}
+}
