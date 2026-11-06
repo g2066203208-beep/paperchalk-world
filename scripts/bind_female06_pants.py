@@ -65,14 +65,12 @@ def arm_bones(side:str)->list:
     ]
 
 def install(library:Path)->bool:
-    """Only third wardrobe rig is changed; base and both PSDs stay original."""
-    base=library/BASE_ID
+    """Bind authentic THIRD wardrobe rig; it will become the only canonical base."""
     outfit=library/THIRD_OUTFIT_ID
-    if not (base/"module.json").is_file() or not (outfit/"module.json").is_file():
+    if not (outfit/"module.json").is_file():
         return False
-    original=read(base/"front.rig.json")
-    if "pants_overlay" in original.get("parts",{}) or original.get("wearableSource"):
-        raise ValueError("Refusing to publish modified female-six BASE; restore source ZIP first")
+    if (library/BASE_ID).exists() or (library/"female-06-second-outfit").exists():
+        raise ValueError("Female-six first/second wardrobe must not be published")
     rig_path=outfit/"front.rig.json"
     rig=read(rig_path)
     if rig.get("characterId")!=THIRD_OUTFIT_ID:
@@ -111,7 +109,7 @@ def install(library:Path)->bool:
     rig["sleeveRigFix"]="paired-shoulder-elbow-v1"
     rig["weightBindingVersion"]=BINDING_VERSION
     write(rig_path,rig)
-    print("FEMALE06: original base preserved; THIRD COSTUME pants weighted pelvis-to-two-thighs, zero clipping")
+    print("FEMALE06: THIRD costume authentic rig bound to pelvis/thighs; next becomes canonical base, zero clipping")
     return True
 
 if __name__=="__main__":
