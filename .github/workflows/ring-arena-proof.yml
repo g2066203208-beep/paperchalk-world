@@ -12,6 +12,7 @@ on:
       - 'site/game/ring-arena-director.css'
       - 'site/assets/characters/hero-axe-attack.webp'
       - 'site/assets/characters/enemy-suit-hit.webp'
+      - 'site/assets/characters/enemy-suit-hit-no-hud.webp'
       - '.github/workflows/ring-arena-proof.yml'
   workflow_dispatch:
 permissions:

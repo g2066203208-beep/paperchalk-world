@@ -65,7 +65,7 @@ try{
  },null,{timeout:12000});
  const art=await inspect();
  assert.ok(art.directorArt.hero.src.endsWith('/hero-axe-attack.webp'));
- assert.ok(art.directorArt.enemy.src.endsWith('/enemy-suit-hit.webp'));
+ assert.ok(art.directorArt.enemy.src.endsWith('/enemy-suit-hit-no-hud.webp'));
  assert.equal(await page.locator('[data-attack-card]').count(),1);
  await page.locator('[data-attack-card]').click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.director?.armed);
@@ -188,33 +188,59 @@ try{
  },null,{timeout:100000});
  const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
   window.PaperWorldGameRingArena.qaFrame(t,at),[target,ms]);
- const frameHero=await invoke('enemy-2',200);
+ const frameHero=await invoke('enemy-2',185);
  assert.equal(frameHero.phase,'swing');
  assert.equal(frameHero.applied,false);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
- assert.equal(await qa.evaluate(()=>
-  window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds.includes('hero')),false,
-  'attacking illustration replaces the idle hero, not duplicates it');
- await qa.screenshot({path:'artifacts/ring-arena/v21-snap-hero-swing.png'});
- const frameHit=await invoke('enemy-2',335);
+ assert.deepEqual((await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds)).sort(),
+ ['enemy-1','enemy-2','enemy-3','enemy-4','hero'].sort(),
+ 'same five actors must remain in the SAME 3D scene');
+ assert.equal((await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses.hero)),
+ 'attack','hero attack artwork is rendered on its world-space billboard');
+ assert.equal((await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['hero-attack'].uploads)),
+ 1,'hero attack art is uploaded just once');
+ await qa.screenshot({path:'artifacts/ring-arena/v22-world-hero-attack.png'});
+ const frameHit=await invoke('enemy-2',290);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
  assert.equal(await qa.evaluate(()=>
-  window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds.includes('enemy-2')),false,
-  'hurt illustration replaces the original target for its brief hit pose');
- await qa.screenshot({path:'artifacts/ring-arena/v21-snap-impact.png'});
- const frameRecoil=await invoke('enemy-2',440);
+  window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds.includes('enemy-2')),true,
+  'victim must stay in 3D scene, not vanish behind an overlay poster');
+ assert.equal(await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses['enemy-2']),
+ 'hurt-art','own hurt sprite is used on the enemy world-space quad');
+ assert.equal(await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses.hero),
+ 'attack','hit frame must show BOTH attacker and victim together');
+ await qa.screenshot({path:'artifacts/ring-arena/v22-world-simultaneous-impact.png'});
+ const frameRecoil=await invoke('enemy-2',375);
  assert.equal(frameRecoil.phase,'reaction');
- await qa.screenshot({path:'artifacts/ring-arena/v21-snap-enemy-recoil.png'});
- const frameFemale=await invoke('enemy-3',440);
+ await qa.screenshot({path:'artifacts/ring-arena/v22-world-hurt-recoil.png'});
+ const frameFemale=await invoke('enemy-3',375);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
  assert.equal(await qa.locator('[data-action-enemy]').evaluate(
-  el=>getComputedStyle(el).visibility),'hidden');
+  el=>getComputedStyle(el).display),'none',
+  'viewport-sized art overlay must remain disabled');
  assert.equal(await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds.includes('enemy-3')),true,
-  'female target keeps her original L2D without a male substituted pose');
- await qa.screenshot({path:'artifacts/ring-arena/v21-female-original-l2d-reaction.png'});
+  'female target remains anchored in the original L2D line');
+ assert.equal(await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses['enemy-3']),
+ 'hurt-original','female target never inherits male hurt artwork');
+ assert.equal(await qa.evaluate(()=>
+  window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['enemy-2-hit'].uploads),
+ 1,'male hurt artwork is uploaded only once');
+ await qa.screenshot({path:'artifacts/ring-arena/v22-female-original-l2d-reaction.png'});
+ assert.equal(await qa.locator('.director-stage-dark').evaluate(
+  el=>getComputedStyle(el).display),'none',
+  'full-screen cinematic black curtain is forbidden');
+ assert.equal(await qa.locator('[data-action-hero]').evaluate(
+  el=>getComputedStyle(el).display),'none',
+  'hero attack should NOT be a DOM poster');
  assert.deepEqual(qaErrors,[]);
  await qa.close();
  console.log('PASS: real WebGL eye-height 3/4 fixed-left heroine, four enemies, static GPU upload once, restored original L2D, desktop/mobile');

@@ -24,13 +24,13 @@ for(const mode of ['outer','inner']){
  const attack=director.createAttack('enemy-2',0,{mode});
  assert.equal(attack.mode,mode);
  let phases=[];
- for(const [t,phase] of [[0,'lock'],[70,'windup'],[200,'swing'],
-  [335,'impact'],[460,'reaction'],[575,'recover'],[650,'done']]){
+ for(const [t,phase] of [[0,'lock'],[65,'windup'],[185,'swing'],
+  [290,'impact'],[375,'reaction'],[470,'recover'],[520,'done']]){
   const state=director.sample(attack,t);
   assert.equal(state.stage,phase);
   phases.push(state.stage);
   assert.ok(state.zoom>=0&&state.zoom<=1);
-  assert.equal(state.hit,t>=335);
+  assert.equal(state.hit,t>=290);
   const heroM=director.actorMotion('hero',attack,state);
   const victim=director.actorMotion('enemy-2',attack,state);
   assert.ok(Number.isFinite(heroM.z)&&Number.isFinite(victim.z));
@@ -42,7 +42,7 @@ for(const mode of ['outer','inner']){
    'director must retain eye-level, not tilt up or down');
   assert.ok(cine.fov<=camera.fov);
   assert.equal(arena.cameraPitchDeg(cine),0);
-  if(t>=650)assert.deepEqual(cine,camera,'exact return to canonical rest camera');
+  if(t>=520)assert.deepEqual(cine,camera,'exact return to canonical rest camera');
  }
  assert.deepEqual(phases,['lock','windup','swing','impact','reaction','recover','done']);
  assert.equal(JSON.stringify(scene),old,'camera, actors and formation are immutable');
@@ -50,23 +50,31 @@ for(const mode of ['outer','inner']){
  assert.ok(p.valid&&p.x>5&&p.x<95&&p.y>0&&p.y<90);
 }
 const reduced=director.createAttack('enemy-1',0,{reducedMotion:true});
-assert.equal(director.sample(reduced,300).finished,true);
+assert.equal(director.sample(reduced,280).finished,true);
 assert.equal(director.sample(reduced,200).shake,0);
 assert.ok(director.sample(reduced,270).advance<director.sample(
  director.createAttack('enemy-1',0),900).advance+1);
-assert.equal(director.DURATION,650);
+assert.equal(director.DURATION,520);
 assert.equal(director.ART.hero,'./assets/characters/hero-axe-attack.webp');
-assert.equal(director.ART.maleEnemy,'./assets/characters/enemy-suit-hit.webp');
+assert.equal(director.ART.maleEnemy,'./assets/characters/enemy-suit-hit-no-hud.webp');
 assert.equal(director.hasEnemyHitPortrait('enemy-1'),false);
 assert.equal(director.hasEnemyHitPortrait('enemy-2'),true);
 assert.equal(director.hasEnemyHitPortrait('enemy-3'),false);
 assert.equal(director.hasEnemyHitPortrait('enemy-4'),false);
 assert.equal(director.sample(director.createAttack('enemy-2',0),200).cut,'attacker');
-assert.equal(director.sample(director.createAttack('enemy-2',0),455).cut,'victim');
-assert.equal(director.sample(director.createAttack('enemy-2',0),575).cut,'none');
-assert.equal(director.STAGES[2].to-director.STAGES[2].from,185);
-assert.equal(director.STAGES[3].to-director.STAGES[3].from,75);
-assert.equal(director.sample(director.createAttack('enemy-2',0),314).hit,false);
-assert.equal(director.sample(director.createAttack('enemy-2',0),315).hit,true);
-assert.equal(director.sample(director.createAttack('enemy-2',0),650).cut,'none');
-console.log('PASS director V21: 650ms decisive hard cuts, 75ms impact, exact restoration and identity-safe art');
+assert.equal(director.sample(director.createAttack('enemy-2',0),375).cut,'victim');
+assert.equal(director.sample(director.createAttack('enemy-2',0),470).cut,'none');
+assert.equal(director.STAGES[2].to-director.STAGES[2].from,150);
+assert.equal(director.STAGES[3].to-director.STAGES[3].from,65);
+assert.equal(director.sample(director.createAttack('enemy-2',0),264).hit,false);
+assert.equal(director.sample(director.createAttack('enemy-2',0),265).hit,true);
+assert.equal(director.sample(director.createAttack('enemy-2',0),520).cut,'none');
+assert.equal(director.poseFor('hero',director.createAttack('enemy-2',0),
+ director.sample(director.createAttack('enemy-2',0),190)),'attack');
+assert.equal(director.poseFor('enemy-2',director.createAttack('enemy-2',0),
+ director.sample(director.createAttack('enemy-2',0),285)),'hurt-art');
+assert.equal(director.poseFor('enemy-1',director.createAttack('enemy-2',0),
+ director.sample(director.createAttack('enemy-2',0),285)),'idle');
+assert.equal(director.poseFor('enemy-3',director.createAttack('enemy-3',0),
+ director.sample(director.createAttack('enemy-3',0),285)),'hurt-original');
+console.log('PASS director V22: 520ms, synchronized actor poses, original anchors, clean independent damage art');

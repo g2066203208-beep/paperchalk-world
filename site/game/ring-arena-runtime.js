@@ -357,7 +357,7 @@
    '</div><div class="director-cinematic" data-director-cinematic data-phase="idle" data-cut="none" data-hit-portrait="no" hidden>',
    '<div class="director-stage-dark"></div><div class="director-action-lines"></div>',
    '<img class="director-action-image director-action-hero" data-action-hero src="./assets/characters/hero-axe-attack.webp" alt="" draggable="false" decoding="async">',
-   '<img class="director-action-image director-action-enemy" data-action-enemy src="./assets/characters/enemy-suit-hit.webp" alt="" draggable="false" decoding="async">',
+   '<img class="director-action-image director-action-enemy" data-action-enemy src="./assets/characters/enemy-suit-hit-no-hud.webp" alt="" draggable="false" decoding="async">',
    '<div class="director-attack-title">斧柄横扫</div>',
    '<div class="director-attack-target" data-director-victim-name>敌人 1 · 受击</div>',
    '<div class="director-hitframe"></div><div class="director-white-hit"></div>',
@@ -401,6 +401,8 @@
    :'./assets/characters/protagonist-back-combat-3q-final.webp';
   let gl=null,world=null,portrait=null,shadow=null,floor=null,backInner=null,backOuter=null,quad=null;
   const textures=new Map();
+  const actionTextures=new Map(); // separate GPU action poses at real 3D anchors
+  let drawnPoses={};
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
@@ -412,6 +414,8 @@
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
    for(const id of Object.keys(bindings))textures.set(id,prepareTexture(gl));
+   actionTextures.set('hero-attack',prepareTexture(gl));
+   actionTextures.set('enemy-2-hit',prepareTexture(gl));
    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
   }catch(err){
@@ -711,6 +715,28 @@
    gl.depthMask(true);gl.disable(gl.BLEND);
    gl.disableVertexAttribArray(shadow.aUv);
   }
+  // The image stays on the actor's ground-anchored billboard, never a DOM
+  // fullscreen illustration. One GPU upload is enough per static pose.
+  function uploadActionImage(id,img){
+   if(!gl||!img?.complete||!img.naturalWidth)return false;
+   const t=actionTextures.get(id);if(!t)return false;
+   if(t.painted)return true;
+   const size=768;
+   if(!t.stage){
+    t.stage=document.createElement('canvas');
+    t.stage.width=size;t.stage.height=size;
+    t.ctx=t.stage.getContext('2d',{alpha:true});
+   }
+   const ctx=t.ctx;ctx.clearRect(0,0,size,size);
+   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+   const rect=portraitFit(img.naturalWidth,img.naturalHeight,size);
+   ctx.drawImage(img,rect.x,rect.y,rect.width,rect.height);
+   try{
+    gl.bindTexture(gl.TEXTURE_2D,t.texture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,t.stage);
+    t.uploadedSize=size;t.painted=true;t.frames++;return true;
+   }catch(error){t.error=String(error);return false}
+  }
   function drawActors(actors,cam,vp){
    // Transparent L2D textures are sorted far to near; pixels share the same
    // depth-test as the floor and cylinder, no independent DOM z-index.
@@ -729,8 +755,15 @@
    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
    gl.depthMask(false);
    for(const item of ordered){
-    const a=item.actor,t=textures.get(a.id);
-    if(!t.painted)continue;
+    const a=item.actor;
+    const requested=director.poseFor(a.id,attack,attackSample);
+    const key=requested==='attack'?'hero-attack':
+     requested==='hurt-art'?'enemy-2-hit':null;
+    const art=key?actionTextures.get(key):null;
+    const t=art?.painted?art:textures.get(a.id);
+    drawnPoses[a.id]=art?.painted?requested:
+     requested==='hurt-original'?'hurt-original':'idle';
+    if(!t?.painted)continue;
     gl.uniform3fv(portrait.uFoot,new Float32Array([a.x,a.y,a.z]));
     gl.uniform1f(portrait.uHeight,a.height);
     gl.uniform1f(portrait.uSoleX,a.soleX);
@@ -786,28 +819,27 @@
    drawWorld(floor,0,vp);drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    gl.disableVertexAttribArray(world.aP);
    const all=visibleActors(mode);
-   drawContactShadows(all,vp);
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
+   uploadActionImage('hero-attack',heroActionArt);
+   uploadActionImage('enemy-2-hit',enemyHitArt);
    // Only copies of the actors move; canonical ground anchors are immutable.
    const presented=attack?all.map(a=>{
-    const motion=director.actorMotion(a.id,attack,attackSample);
+    const motion=director.actorMotion(a.id,attack,attackSample,all[0],target);
     return {...a,x:a.x+motion.x,y:a.y+motion.y,
      z:a.z+motion.z,height:a.height*motion.scale};
    }):all;
-   // A cut-in REPLACES the current idle pose; no doubled character ghosts.
-   // Keep the original if the authored pose file failed to load.
-   let cast=presented;
-   if(attack&&attackSample?.cut==='attacker'&&heroActionArt.complete&&heroActionArt.naturalWidth)
-    cast=presented.filter(a=>a.id!=='hero');
-   else if(attack&&attackSample?.cut==='victim'&&director.hasEnemyHitPortrait(attack.targetId)&&
-     enemyHitArt.complete&&enemyHitArt.naturalWidth)
-    cast=presented.filter(a=>a.id!==attack.targetId);
-   drawnActorIds=cast.map(a=>a.id);
-   drawActors(cast,cam,vp);
+   // BOTH participants stay visible at once, sharing ONE 3D camera.
+   // Render a pose swap at the same anchor rather than a fullscreen cut.
+   drawnPoses={};
+   drawnActorIds=presented.map(a=>a.id);
+   // The same temporary lunge transforms affect cast shadows and portraits.
+   drawContactShadows(presented,vp);
+   drawActors(presented,cam,vp);
    if(armed)updateTargetPositions(base,w/h);
    if(attack&&attackSample){
-    const impact=project({x:target.x,y:target.height*.73,z:target.z},cam,w/h);
+    const victim=presented.find(a=>a.id===target.id)||target;
+    const impact=project({x:victim.x,y:victim.y+victim.height*.68,z:victim.z},cam,w/h);
     if(impact.valid){
      cinematic.style.setProperty('--impact-x',((impact.x+1)*50).toFixed(2)+'%');
      cinematic.style.setProperty('--impact-y',((1-impact.y)*50).toFixed(2)+'%');
@@ -858,7 +890,10 @@
      src:enemyHitArt.getAttribute('src')
     },
     cut:cinematic.dataset.cut,hitPortrait:cinematic.dataset.hitPortrait,
-    drawnActorIds:[...drawnActorIds]},
+    drawnActorIds:[...drawnActorIds],
+    renderedPoses:{...drawnPoses},
+    spriteTextures:Object.fromEntries([...actionTextures].map(([id,t])=>[id,{
+     ready:!!t.painted,uploads:t.frames}]))},
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,

@@ -10,6 +10,7 @@ on:
       - 'site/game/ring-arena-director.css'
       - 'site/assets/characters/hero-axe-attack.webp'
       - 'site/assets/characters/enemy-suit-hit.webp'
+      - 'site/assets/characters/enemy-suit-hit-no-hud.webp'
       - 'tests/ring-arena-director.test.cjs'
       - 'site/assets/characters/protagonist-back-combat-3q-final.webp'
       - 'site/assets/characters/protagonist-back-combat-eye-level-preview.webp'
@@ -62,6 +63,7 @@ jobs:
           test -s site/game/ring-arena-director.css
           test -s site/assets/characters/hero-axe-attack.webp
           test -s site/assets/characters/enemy-suit-hit.webp
+          test -s site/assets/characters/enemy-suit-hit-no-hud.webp
           test -s site/assets/characters/protagonist-back-combat-3q-final.webp
           test -s site/assets/characters/protagonist-back-combat-eye-level-preview.webp
           test -s site/assets/l2d/v4/back.webp
@@ -82,7 +84,7 @@ jobs:
             'site/dev/character-bridge.js'
           ])new Function(fs.readFileSync(path,'utf8'));
           const html=fs.readFileSync('site/index.html','utf8');
-          if(!html.includes('ring-arena-runtime.js?v=snappy-hard-cuts-v21-1-20261106'))
+          if(!html.includes('ring-arena-runtime.js?v=worldspace-strike-v22-20261106'))
             throw Error('Deployed HTML still points at stale ring-arena WebGL source');
           if(!html.includes("ringScene.setActive(name==='ring-arena')"))
             throw Error('3D ring scene was not integrated into the game');
