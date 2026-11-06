@@ -594,6 +594,8 @@ function project(parts,characterId,face,previous=null){
  const entries=base.map(p=>[p.id,sanitize(prev[p.id],p)]);
  return bindCrouchDynamics(bindGripParents(bindBodyHierarchy({format:'paperchalk-part-rig-v1',characterId,face,canvas:[1024,1024],
   idleProfile:sanitizeIdleProfile(previous?.idleProfile||defaultIdleProfile()),
+  ...(characterId==='angel-shopkeeper'&&face==='front'&&previous?.angelMotion?.enabled===true
+   ?{angelMotion:previous.angelMotion}:{}),
   ...(previous?.actionProfiles?{actionProfiles:previous.actionProfiles}:{}),
   ...(previous?.layerOrder?{layerOrder:previous.layerOrder}:{}),
   ...(previous?.partLayerGroups?{partLayerGroups:previous.partLayerGroups}:{}),
