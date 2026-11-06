@@ -4,6 +4,38 @@ const G=window.Timegrid,C=window.TimegridRun;const $=id=>document.getElementById
 let game,run,selectedUid=null,selectedActionId=null,placementMode=null,targetId=null,playHead=-1,toastHandle=null,projection=null;
 const icon={attack:'⚔',defense:'⬡',skill:'✧',power:'✦',finisher:'◆',system:'↻'};
 function textEscape(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function uiIcon(name, size=18){
+ const paths={
+  attack:'<path d="m14 4 6 6-8.3 8.3-5-5L15 5"/><path d="m5 13-2 3 5 5 3-2"/><path d="M15.5 6.5 18 4"/>',
+  defense:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+  skill:'<path d="m12 3 1.5 6.5L20 11l-6.5 1.5L12 19l-1.5-6.5L4 11l6.5-1.5L12 3Z"/><path d="M19 18v4M17 20h4"/>',
+  power:'<path d="M12 2v8l-7 3 7 9v-8l7-3-7-9Z"/>',
+  finisher:'<path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7Z"/>',
+  system:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.7 9a7 7 0 0 1 12-2L20 12"/><path d="M18.3 15A7 7 0 0 1 6 17l-2-5"/>',
+  arrow:'<path d="M4 12h16m-7-7 7 7-7 7"/>',
+  guard:'<path d="M4 12h5l2 4 2-9 2 5h5"/><path d="M3 4h18v16H3z"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  heal:'<path d="M12 21s-9-5.4-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.6-9 12-9 12Z"/><path d="M12 8v8m-4-4h8"/>',
+  alert:'<path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5M12 18h.01"/>',
+  lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  mark:'<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><circle cx="12" cy="12" r="3"/>',
+  all:'<circle cx="12" cy="6" r="2"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><path d="m10 8-3 7m7-7 3 7M8 17h8"/>',
+  stun:'<path d="m13 2-6 10h5l-2 10 7-12h-5l1-8Z"/>',
+  play:'<path d="m7 3 13 9-13 9V3Z"/>',
+  card:'<rect x="4" y="4" width="13" height="17" rx="2"/><path d="M9 8h4M9 12h4M20 7v13"/>',
+  check:'<path d="m5 12 4 4L19 6"/>',
+  undo:'<path d="M3 7v6h6"/><path d="M4 13a8 8 0 1 0 2-7"/>'
+ };
+ return `<svg class="ui-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.skill}</svg>`;
+}
+function iconKind(c){return c.aoe?'all':c.heal?'heal':c.mark?'mark':c.type==='attack'?'attack':c.type==='defense'?'defense':c.type==='finisher'?'finisher':c.type==='system'?'system':'skill'}
+function nameTag(actor){return textEscape(String(actor?.name||'').split('·').pop().replace('走廊','').slice(0,4))}
+function healthGraphic(current,projected,max,enemy){
+ const a=Math.max(0,Math.min(100,100*current/max)),b=Math.max(0,Math.min(100,100*projected/max));
+ return `<div class="vital-track ${enemy?'hostile':'friendly'}" role="img" aria-label="当前${current}生命，预计${projected}生命"><span class="vital-base" style="width:${a}%"></span><span class="vital-loss" style="left:${Math.min(a,b)}%;width:${Math.abs(a-b)}%"></span><span class="vital-forecast" style="width:${b}%"></span></div>`;
+}
+
 function options(select,records,selected){select.innerHTML=records.map(([value,name])=>`<option value="${textEscape(value)}" ${value===selected?'selected':''}>${textEscape(name)}</option>`).join('');}
 function refreshStyles(){const key=$('classSelect').value;options($('styleSelect'),Object.entries(G.CLASS[key].styles).map(([k,x])=>[k,x.name]),Object.keys(G.CLASS[key].styles)[0]);}
 function initializeControls(){options($('classSelect'),Object.entries(G.CLASS).map(([k,x])=>[k,x.name]),'axe');refreshStyles();options($('encounterSelect'),Object.entries(G.ENCOUNTERS).map(([k,v])=>[k,v.name]),'corridor');$('teamCheckbox').checked=false;
@@ -127,66 +159,77 @@ function guardThreat(targetId,hitTick){
 }
 function renderThreatStrip(threats){
  const el=$('threatStrip');if(!el)return;
- const keys=new Map();for(const t of threats){const key=t.tick+':'+t.target;if(keys.has(key)){const g=keys.get(key);g.damage+=t.damage;g.sources.add(t.sourceName);}else keys.set(key,{...t,sources:new Set([t.sourceName])});}
+ const keys=new Map();for(const t of threats){const key=t.tick+':'+t.target;const e=keys.get(key);if(e){e.damage+=t.damage;e.sources.add(t.sourceName)}else keys.set(key,{...t,sources:new Set([t.sourceName])})}
  const list=[...keys.values()];
- if(!list.length){el.innerHTML='<span class="threat-calm">✓ 本轮没有已宣告的攻击</span>';return;}
- el.innerHTML=`<span class="threat-label">本轮攻击预告</span>${list.map(t=>{
+ if(!list.length){el.innerHTML=`<span class="threat-calm">${uiIcon('check',16)} 本轮安全</span>`;return;}
+ el.innerHTML=`<span class="threat-label">${uiIcon('alert',16)} 危险预告</span>${list.map(t=>{
   const covered=plannedGuardFor(t.target,t.tick),mine=game.actors.find(a=>a.id===t.target);
-  return `<button class="threat-chip ${covered?'covered':''}" type="button" data-guard-target="${textEscape(t.target)}" data-guard-tick="${t.tick}" title="${[...t.sources].join('、')}在T${t.tick}攻击${t.targetName}，预计原始伤害${t.damage}。点击自动安排防御（占用你的行动时间）"><span class="threat-time">T${t.tick}</span><span class="threat-pair">${textEscape([...t.sources].map(shortActor).join('+'))} → ${textEscape(shortActor(mine?.name||t.targetName))}</span><strong>−${t.damage}</strong><span class="threat-guard">${covered?'已排防':'护卫 ›'}</span></button>`;
+  const sourceNames=[...t.sources],title=`${sourceNames.join('、')}在T${t.tick}攻击${t.targetName}，原始伤害${t.damage}。点按即可安排防御（使用自己的行动时间）`;
+  return `<button class="threat-chip ${covered?'covered':''}" type="button" data-guard-target="${textEscape(t.target)}" data-guard-tick="${t.tick}" title="${textEscape(title)}" aria-label="T${t.tick} ${textEscape(sourceNames.join('、'))}攻击${textEscape(t.targetName)} ${t.damage}伤害，点击安排防御">
+   <span class="threat-time"><small>T</small>${t.tick}</span><span class="threat-source">${uiIcon('attack',15)} ${nameTag({name:sourceNames[0]})}</span><span class="threat-vector">${uiIcon('arrow',15)}</span><span class="threat-victim">${nameTag(mine||{name:t.targetName})}</span><b class="threat-amount">${t.damage}</b><span class="threat-guard">${covered?uiIcon('check',16):uiIcon('defense',16)}</span>
+  </button>`;
  }).join('')}`;
 }
 function renderTimeline(){
  const start=game.now,times=Array.from({length:10},(_,i)=>i+1),hero=game.actors[0];
- const team=game.actors.filter(a=>a.side==='ally'),enemies=game.actors.filter(a=>a.side==='enemy');
- // Every actor uses the same dual-height unit: large editable targeted upper track + compact read-only own-action lower track.
- const units=[...enemies,...team],threats=scheduledThreats();
- let rows=`<div class="dual-header"><div class="dual-head-label">角色 · 血量预演</div>${times.map(i=>`<button type="button" class="dual-hour ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" title="查看第${i}格">${i}</button>`).join('')}<span class="dual-over-head">越界</span></div>`;
+ const units=[...game.actors.filter(a=>a.side==='enemy'),...game.actors.filter(a=>a.side==='ally')],threats=scheduledThreats();
+ let rows=`<div class="dual-header"><div class="dual-head-label">${uiIcon('target',14)} 目标 / 预计生命</div>${times.map(i=>`<button type="button" class="dual-hour ${playHead===i?'selected':''}" data-time="${i}" data-actor="hero" title="时间第${i}格">${String(i).padStart(2,'0')}</button>`).join('')}<span class="dual-over-head">＋</span></div>`;
  for(const actor of units){
-  const enemy=actor.side==='enemy', own=actor.id==='hero',prediction=forecastState(actor),delta=prediction.hp-actor.hp;
-   const hpDrop=delta<0?`<strong class="hp-loss">预计−${-delta}</strong>`:delta>0?`<strong class="hp-gain">预计+${delta}</strong>`:'<span class="hp-safe">预计±0</span>';
-  const pct=Math.max(0,Math.min(100,prediction.hp/actor.maxHp*100));
-   const startPct=Math.max(0,Math.min(100,actor.hp/actor.maxHp*100));
-   const lostWidth=Math.max(0,startPct-pct);
+  const enemy=actor.side==='enemy',own=actor.id==='hero',pred=forecastState(actor),delta=pred.hp-actor.hp;
   const targetActions=hero.actions.filter(a=>!a.canceled&&a.target===actor.id),incoming=threats.filter(x=>x.target===actor.id),outgoing=threats.filter(x=>x.source===actor.id);
-  const cue=enemy?outgoing.slice(0,2).map(t=>`T${t.tick} →${shortActor(t.targetName)} ${t.damage}`).join(' · '):incoming.slice(0,2).map(t=>`T${t.tick} ${shortActor(t.sourceName)}→我 ${t.damage}`).join(' · ');
-   const head=`<div class="dual-person" title="${textEscape(actor.name)}：当前${actor.hp}/${actor.maxHp}，预计${prediction.hp}/${actor.maxHp}，${delta<0?'承伤'+(-delta):delta>0?'治疗'+delta:'无血量变化'}"><div class="dual-name"><span class="side-signal ${enemy?'foe':'friend'}"></span>${textEscape(actor.name)}${own?'<i>我</i>':''}</div><div class="dual-hp"><b>${actor.hp}</b><span class="hp-arr">→</span><b class="hp-future ${delta<0?'loss':delta>0?'heal':''}">${prediction.hp}</b><small>/ ${actor.maxHp}</small></div><div class="dual-health"><div class="hp-original ${enemy?'foe':'friend'}" style="width:${startPct}%"></div><div class="hp-difference" style="left:${pct}%;width:${lostWidth}%"></div><div class="hp-projected ${enemy?'foe':'friend'}" style="width:${pct}%"></div></div><div class="dual-result">${hpDrop}${prediction.dead?'<b class="hp-loss"> · 预计倒下</b>':''}${prediction.marked>0?' · 标记'+prediction.marked:''}</div><div class="dual-cue" title="${textEscape(cue)}">${textEscape(cue|| (enemy?'无攻击预告':'没有受击预告'))}</div></div>`;
-  rows+=`<div data-row-actor="${actor.id}" class="dual-row ${enemy?'enemyrow':'allyrow'} ${own?'own-row':''}">${head}<div class="dual-board">`;
+  const inbound=incoming.length?incoming.reduce((n,t)=>n+t.damage,0):0;
+  const preview=delta<0?`<span class="vital-delta damage">${uiIcon('attack',12)} ${Math.abs(delta)}</span>`:delta>0?`<span class="vital-delta recover">${uiIcon('heal',12)} +${delta}</span>`:'<span class="vital-delta neutral">—</span>';
+  const identity=`<div class="dual-person" title="${textEscape(actor.name)} 生命${actor.hp}，预计${pred.hp}"><div class="person-top"><div class="avatar ${enemy?'is-foe':'is-friend'} ${own?'is-hero':''}">${uiIcon(enemy?'alert':own?'attack':actor.id.includes('guard')?'defense':'skill',17)}</div><div class="person-info"><div class="person-name">${textEscape(actor.name)}${own?'<span class="self-mark">你</span>':''}</div><div class="person-numbers"><strong>${actor.hp}</strong><span class="health-arrow">${uiIcon('arrow',12)}</span><strong class="predicted ${delta<0?'is-loss':delta>0?'is-heal':''}">${pred.hp}</strong><small>/${actor.maxHp}</small>${preview}</div></div></div>${healthGraphic(actor.hp,pred.hp,actor.maxHp,enemy)}</div>`;
+  const canUse=placementMode==='card'?(()=>{const it=hero.hand.find(x=>x.uid===selectedUid);const c=G.CARD[it?.key];if(!c)return false;return c.type==='defense'||c.heal||c.buff?actor.side==='ally':actor.side==='enemy'})():placementMode==='finisher'?enemy:true;
+  rows+=`<div data-row-actor="${actor.id}" class="dual-row ${enemy?'enemyrow':'allyrow'} ${own?'own-row':''} ${placementMode?'targeting':''} ${canUse?'legal-target':'invalid-target'}">${identity}<div class="dual-board">`;
   for(let i=1;i<=10;i++){
    const t=start+i-1,placed=targetActions.find(a=>G.phase(G.CARD[a.card],a.start,t));
-   const actionOwner=segmentAt(actor,t),ownAction=actionOwner?.kind==='action'?actionOwner:null,attacksHere=incoming.filter(q=>q.tick===i);
-   let topClass='dual-big '+(enemy?'enemy-zone':'ally-zone'),chip='',topTitle=`${actor.name} / T${i} / 放置指向该角色的卡牌`,id='';
+   const seg=segmentAt(actor,t),ownAction=seg?.kind==='action'?seg:null,attacksHere=incoming.filter(x=>x.tick===i);
+   let topClass='dual-big '+(enemy?'enemy-zone':'ally-zone'),chip='',id='',title=`${actor.name}，T${i}，可放置指向该角色的卡牌`;
    if(placed){
-    const c=G.CARD[placed.card],ph=G.phase(c,placed.start,t);topClass+=` filled ${c.type} ${ph}${placed.locked?' locked':''}`;
-    chip=phaseBadge(ph,c,placed,t);id=` data-action-id="${placed.id}" draggable="${!placed.locked&&isPlanning()}"`;
-    topTitle=`我的${c.name} → ${actor.name} / T${i} / ${ph==='windup'?'前摇':ph==='active'?'生效':'后摇'}`;
-   }else chip=attacksHere.length?`<span class="incoming-flag" title="${textEscape(attacksHere.map(q=>q.sourceName+'：'+q.damage+'伤害').join('、'))}">⚠ ${attacksHere.reduce((n,x)=>n+x.damage,0)}</span>`:'<span class="dual-plus">＋</span>';
+     const c=G.CARD[placed.card],ph=G.phase(c,placed.start,t),actualHit=c.damage?G.predictHit(hero,c,t):0;
+     topClass+=` filled ${c.type} ${ph}${placed.locked?' locked':''}`;
+     const number=c.damage?actualHit:c.guard||c.heal||c.mark||0;
+     chip=ph==='active'?`<span class="phase-metric">${uiIcon(iconKind(c),14)}${number||''}</span>`:ph==='windup'?`<span class="phase-mark">${i===placed.start-game.now+1?uiIcon(iconKind(c),13):''}</span>`:`<span class="phase-mark dim">${placed.locked?uiIcon('lock',12):''}</span>`;
+     id=` data-action-id="${placed.id}" draggable="${!placed.locked&&isPlanning()}"`;
+     title=`你的${c.name} → ${actor.name}，T${i}：${ph==='active'?'造成/生效 '+number:ph==='windup'?'前摇':'后摇'}`;
+   }else if(attacksHere.length){chip=`<span class="incoming-flag" title="${textEscape(attacksHere.map(x=>x.sourceName+' '+x.damage+'伤害').join('、'))}">${uiIcon('alert',13)}<b>${attacksHere.reduce((n,x)=>n+x.damage,0)}</b></span>`}
+   else chip='<span class="dual-plus">＋</span>';
    if(playHead===i)topClass+=' playhead';
    let bottomClass='dual-small',bottom='',bottomTitle=`${actor.name}在T${i}等待`;
-   if(actionOwner?.kind==='recovering'){bottomClass+=' recovering';bottom='失能';bottomTitle=`${actor.name}失能恢复`}
+   if(seg?.kind==='recovering'){bottomClass+=' recovering';bottom=uiIcon('stun',13);bottomTitle=`${actor.name}失能恢复`}
    else if(ownAction){
-    const c=ownAction.card,ph=ownAction.phase;
-    bottomClass+=` ${c.type} ${ph} ${enemy?'enemy-intent':''}`;
-     const strike=c.damage?G.predictHit(actor,c,t):0;
-     const destName=game.actors.find(x=>x.id===ownAction.action.target)?.name||'全体';
-     bottom=ph==='active'?(c.damage?'⚔'+strike+'→'+shortActor(destName):c.guard?'盾'+c.guard+'→'+shortActor(destName):c.heal?'疗'+c.heal+'→'+shortActor(destName):c.mark?'标'+c.mark+'→'+shortActor(destName):'技'):ph==='windup'?'蓄':'收';
-    const actualTarget=game.actors.find(x=>x.id===ownAction.action.target);
-    bottomTitle=`${actor.name}：${c.name}｜${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}｜${c.damage?'每格'+strike+'点伤害':c.guard?'共'+c.guard+'点防御':c.heal?'治疗'+c.heal+'点':'技能效果'}｜${c.a}格生效｜速度${c.speed}｜→${actualTarget?.name||'全体'}`;
+     const c=ownAction.card,ph=ownAction.phase,strike=c.damage?G.predictHit(actor,c,t):0;
+     const dest=game.actors.find(x=>x.id===ownAction.action.target);
+     bottomClass+=` ${c.type} ${ph} ${enemy?'enemy-intent':''}`;
+     if(ph==='active')bottom=`<span class="intent-metric">${uiIcon(iconKind(c),12)}<b>${strike||c.guard||c.heal||c.mark||''}</b>${c.aoe?uiIcon('all',11):''}</span>`;
+     else if(ph==='windup')bottom=`<span class="intent-phase windup-icon">${uiIcon('clock',12)}</span>`;
+     else bottom=`<span class="intent-phase recovery-icon">·</span>`;
+     bottomTitle=`${actor.name} ${c.name} ${ph==='active'?'生效':ph==='windup'?'前摇':'后摇'}，${c.damage?'伤害'+strike:c.guard?'防御'+c.guard:'技能'}，目标${dest?.name||'全体'}，速度${c.speed}`;
    }
-   rows+=`<div class="dual-tick"><div class="${topClass}" data-time="${i}" data-actor="${actor.id}" ${id} tabindex="0" role="button" aria-label="${textEscape(topTitle)}" title="${textEscape(topTitle)}">${chip}</div><div class="${bottomClass}" title="${textEscape(bottomTitle)}">${bottom}</div></div>`;
+   rows+=`<div class="dual-tick"><div class="${topClass}" data-time="${i}" data-actor="${actor.id}" ${id} tabindex="0" role="button" aria-label="${textEscape(title)}" title="${textEscape(title)}">${chip}</div><div class="${bottomClass}" title="${textEscape(bottomTitle)}">${bottom}</div></div>`;
   }
   const cross=[...actor.actions,...targetActions].find(a=>!a.canceled&&a.start<start+10&&a.start+G.cLen(G.CARD[a.card])>start+10);
   rows+=`</div><div class="dual-over">${cross?'+'+(cross.start+G.cLen(G.CARD[cross.card])-(start+10)):'·'}</div></div>`;
  }
- $('timeline').innerHTML=rows; $('timeline').classList.toggle('choosing',!!placementMode);renderThreatStrip(threats);
+ $('timeline').innerHTML=rows;$('timeline').classList.toggle('choosing',!!placementMode);renderThreatStrip(threats);
 }
 function renderActors(){const team=game.actors.filter(a=>a.side==='ally'),enemy=game.actors.filter(a=>a.side==='enemy');let out='';for(const a of [...team,...enemy]){const isE=a.side==='enemy',id=a.id,percent=Math.max(0,a.hp/a.maxHp*100);out+=`<div class="actor ${isE?'enemy':''} ${id==='hero'?'current':''} ${a.dead?'dead':''}" ${isE?`data-target="${id}" style="cursor:pointer;${targetId===id?'outline:2px solid #d9b275;outline-offset:-2px':''}"`:''}><div class="actor-top"><div><span class="actor-icon">${isE?'☠':G.CLASS[id==='hero'?game.options.classId:id.replace('ai-','')]?.icon||'✦'}</span><span class="actor-name">${textEscape(a.name)}</span></div><span class="badge ${isE?'enemy':''}">${a.dead?'倒下':isE?'敌':'我'}</span></div><div class="healthline"><span>生命</span><strong>${a.hp}/${a.maxHp}</strong></div><div class="healthbar"><div style="width:${percent}%"></div></div><small>${a.stunUntil>game.now?'失能至 T'+a.stunUntil+' · ':''}${a.marked?'标记'+a.marked+' · ':''}${a.id==='hero'?'绝杀能量 '+a.energy+'/100':isE?'点击选择目标':'自动排程'}</small></div>`;}if($('actorCards'))$('actorCards').innerHTML=out;}
-function renderHand(){const hero=game.actors[0];$('handCounter').textContent=`${hero.hand.length} / ${G.HAND}`;$('hand').innerHTML=hero.hand.length?hero.hand.map(it=>{const c=G.CARD[it.key],len=G.cLen(c);return `<button draggable="true" class="hand-card ${selectedUid===it.uid?'selected':''}" data-uid="${textEscape(it.uid)}" style="--ctype:${G.COLORS[c.type]}"><div class="card-head"><span class="card-ico">${icon[c.type]||'▣'}</span><span class="length">${len}格</span></div><strong>${textEscape(c.name)}</strong><div class="card-desc">${c.aoe?'<b class="group-badge">全体攻击</b> ':''}${textEscape(c.desc||'逐格生效')}</div><div class="phase-track" title="浅色前摇/主色生效/深色后摇">${Array.from({length:len},(_,i)=>`<span class="${i<c.w?'windup':i<c.w+c.a?'active':'recovery'}"></span>`).join('')}</div><small style="color:#92a9bd">${c.w} 前摇 · ${c.a} 生效 · ${c.r} 后摇 · 速度 ${c.speed}</small></button>`}).join(''):'<div class="empty-hand">手牌已空。洗牌至少1格：只锁已排卡，新抽到的牌还能填之前留下的空格。</div>';}
+function renderHand(){
+ const hero=game.actors[0];$('handCounter').textContent=`${hero.hand.length} / ${G.HAND}`;
+ $('hand').innerHTML=hero.hand.length?hero.hand.map(it=>{
+  const c=G.CARD[it.key],len=G.cLen(c),effect=c.damage?`${c.damage}${c.a>1?' ×'+c.a:''}`:c.guard?`${c.guard}`:c.heal?`+${c.heal}`:c.mark?`${c.mark}`:c.buff?`+${c.buff}`:'·';
+  return `<button type="button" draggable="true" class="hand-card ${c.type} ${selectedUid===it.uid?'selected':''}" data-uid="${textEscape(it.uid)}" style="--ctype:${G.COLORS[c.type]}" title="${textEscape(c.name+' — '+(c.desc||'')+'，前摇'+c.w+' / 生效'+c.a+' / 后摇'+c.r+'，速度'+c.speed)}" aria-pressed="${selectedUid===it.uid}">
+  <div class="card-art"><span class="card-symbol">${uiIcon(iconKind(c),37)}</span><span class="card-impact">${effect}</span></div>
+  <div class="card-bottom"><strong>${textEscape(c.name)}</strong><div class="card-metadata"><span>${c.aoe?uiIcon('all',13):uiIcon('clock',13)} ${len}</span><span>${uiIcon('power',12)} ${c.speed}</span></div></div>
+  <div class="phase-track" title="前摇 ${c.w} · 生效 ${c.a} · 后摇 ${c.r}">${Array.from({length:len},(_,i)=>`<span class="${i<c.w?'windup':i<c.w+c.a?'active':'recovery'}"></span>`).join('')}</div></button>`;
+ }).join(''):`<div class="empty-hand">${uiIcon('system',28)}<span>手牌用尽 · 洗牌补充</span></div>`;
+}
 function renderStatus(){const hero=game.actors[0];$('turnStatus').textContent=`第 ${game.round+1} 轮 · 游戏内 ${String(Math.floor(game.now/60)).padStart(2,'0')}:${String(game.now%60).padStart(2,'0')}—${String(Math.floor((game.now+10)/60)).padStart(2,'0')}:${String((game.now+10)%60).padStart(2,'0')}`;
 $('phaseStatus').textContent=game.phase==='planning'?'规划阶段 · 世界暂停':game.phase==='win'?'已胜利 · 战斗结算':'已失败 · 战斗结束';$('hintStatus').textContent=placementMode==='card'?'点目标上轨放牌；即使给队友护盾，也只占用你的行动时间':placementMode==='shuffle'?'洗牌只锁已排卡；不会锁空格':placementMode==='finisher'?'绝杀 → 放到敌人上轨时间格':placementMode==='move'?'移动选中动作 → 点新时间格':'选择卡牌并点击目标上轨；技能占自己的时间；各角色血条即时显示预计承伤/治疗';
 $('commitButton').disabled=!isPlanning();$('shuffleButton').disabled=!isPlanning();$('autoplanButton').disabled=!isPlanning();$('undoButton').disabled=!isPlanning();
-$('runStatus').innerHTML=`<b>冒险第 ${run.stage+1}/${C.STAGES.length} 关</b><span>◈ 金币 ${run.gold}</span><span>▤ 牌组 ${C.cardCount(run)} 张</span><span>♢ 遗物 ${run.relics.length}/4</span><span>生命 ${run.hp}/${run.maxHp}</span><span>绝杀能量 ${hero.energy}/100</span>`;
-$('heroStatus').innerHTML=`<div class="info-key"><span>当前生命</span><span>${hero.hp} / ${hero.maxHp}</span></div><div class="info-key"><span>绝杀能量</span><span>${hero.energy} / 100</span></div><div class="info-key"><span>抽牌堆 / 弃牌堆</span><span>${hero.draw.length} / ${hero.discard.length}</span></div><div class="info-key"><span>洗牌次数</span><span>${game.stats.shuffle}</span></div><div class="info-key"><span>已锁排程</span><span>${hero.actions.filter(a=>a.locked).length}张</span></div><div class="info-key"><span>跨轮占用</span><span>${hero.actions.filter(a=>!a.canceled&&a.start<game.now+10&&a.start+G.cLen(G.CARD[a.card])>game.now+10).length}项</span></div>`;
-const fin=G.CARD[hero.fin],ready=hero.energy>=100 || (projection?.trace||[]).some(z=>z.actors.find(a=>a.id==='hero')?.energy>=100);$('finisherSlot').innerHTML=`<strong>◆ 独立绝杀槽 · ${fin.name}</strong><div class="meter"><div style="width:${hero.energy}%"></div></div><small>能量 ${hero.energy}/100 ｜目标生命≤55%或已标记/破防</small><button ${ready?'':'disabled'} class="${placementMode==='finisher'?'selected':''}">选中绝杀牌 · ${G.cLen(fin)}格（${fin.w}+${fin.a}+${fin.r}）</button>`;
+$('runStatus').innerHTML=`<span class="hud-chip stage">${uiIcon('target',15)} ${run.stage+1}<small> / ${C.STAGES.length}</small></span><span class="hud-chip coin">◈ <b>${run.gold}</b></span><span class="hud-chip">${uiIcon('card',15)} <b>${C.cardCount(run)}</b></span><span class="hud-chip">${uiIcon('skill',15)} <b>${run.relics.length}</b><small>/4</small></span><span class="hud-chip hp">${uiIcon('heal',15)} <b>${run.hp}</b><small>/${run.maxHp}</small></span><span class="hud-chip meter">${uiIcon('finisher',15)} <b>${hero.energy}</b><small>/100</small></span>`;$('heroStatus').innerHTML=`<div class="info-key"><span>当前生命</span><span>${hero.hp} / ${hero.maxHp}</span></div><div class="info-key"><span>绝杀能量</span><span>${hero.energy} / 100</span></div><div class="info-key"><span>抽牌堆 / 弃牌堆</span><span>${hero.draw.length} / ${hero.discard.length}</span></div><div class="info-key"><span>洗牌次数</span><span>${game.stats.shuffle}</span></div><div class="info-key"><span>已锁排程</span><span>${hero.actions.filter(a=>a.locked).length}张</span></div><div class="info-key"><span>跨轮占用</span><span>${hero.actions.filter(a=>!a.canceled&&a.start<game.now+10&&a.start+G.cLen(G.CARD[a.card])>game.now+10).length}项</span></div>`;
+const fin=G.CARD[hero.fin],ready=hero.energy>=100 || (projection?.trace||[]).some(z=>z.actors.find(a=>a.id==='hero')?.energy>=100);$('finisherSlot').innerHTML=`<div class="finisher-glyph">${uiIcon('finisher',25)}</div><div class="finisher-body"><strong>${textEscape(fin.name)}</strong><div class="finisher-meter"><span style="width:${hero.energy}%"></span></div><small>${hero.energy} / 100</small></div><button type="button" ${ready?'':'disabled'} class="${placementMode==='finisher'?'selected':''}" title="绝杀：${fin.w}格前摇 / ${fin.a}格生效 / ${fin.r}格后摇">${uiIcon('target',16)} 放置</button>`;
 }
 function renderIntents(){let rows=[];for(const e of game.actors.filter(a=>a.side==='enemy')){if(e.dead)continue;const acts=e.actions.filter(a=>a.start>=game.now&&a.start<game.now+10&&!a.canceled);for(const a of acts){const c=G.CARD[a.card];rows.push(`<div class="enemy-intent"><strong>${textEscape(e.name)} · ${textEscape(c.name)}</strong><small>开始 T${a.start-game.now+1} → ${c.w}前摇 / ${c.a}作用 / ${c.r}后摇${c.damage?' · 每格'+c.damage+'伤害':''}${c.guard?' · 共'+c.guard+'防御':''} · 速度${c.speed}</small></div>`);}}$('enemyIntents').innerHTML=rows.join('')||'<p>此轮没有新行动；敌人可能正处于跨轮动作或失能恢复。</p>';}
 function renderLog(records){const logs=records||game.events||[];const recent=logs.slice(-25);$('combatLog').innerHTML=recent.map(x=>`<div class="log-row ${x.kind}"><span class="tick">T${x.t-game.now+(game.round>0?10:0)}</span><span>${textEscape(x.text)}</span></div>`).join('')||'<p>等待战斗开始...</p>';}
