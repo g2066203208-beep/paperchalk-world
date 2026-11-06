@@ -150,7 +150,7 @@ try{
  assert.equal(right.arena.shotIndex,1);
  assert.equal(right.arena.shotName,'右侧');
  assert.equal(right.arena.camera.shot,'right');
- assert.ok(right.arena.Math.abs(right.arena.cameraPitchDeg)<.1,
+ assert.ok(Math.abs(right.arena.cameraPitchDeg)<.1,
   'right shot camera must use identical low cinematic pitch');
  assert.equal(right.arena.l2dReady,5);
  assert.equal(JSON.stringify(right.arena.actors),originalOuter);
@@ -169,7 +169,7 @@ try{
  assert.equal(innerRight.arena.mode,'inner');
  assert.equal(innerRight.arena.shotIndex,1);
  assert.equal(innerRight.arena.camera.shot,'right');
- assert.ok(innerRight.arena.Math.abs(innerRight.arena.cameraPitchDeg)<.1,
+ assert.ok(Math.abs(innerRight.arena.cameraPitchDeg)<.1,
   'inner surround shot must not be top-down');
  assert.equal(innerRight.arena.l2dReady,5);
  const originalInner=JSON.stringify(innerRight.arena.actors);
@@ -181,7 +181,7 @@ try{
  const innerLeft=await get();
  assert.equal(innerLeft.arena.shotIndex,0);
  assert.equal(innerLeft.arena.camera.shot,'left');
- assert.ok(innerLeft.arena.Math.abs(innerLeft.arena.cameraPitchDeg)<.1,
+ assert.ok(Math.abs(innerLeft.arena.cameraPitchDeg)<.1,
   'inner left camera must share low camera pitch');
  assert.equal(JSON.stringify(innerLeft.arena.actors),originalInner);
  assert.ok(innerLeft.arena.safety.clear&&innerLeft.arena.safety.gap>.045,
