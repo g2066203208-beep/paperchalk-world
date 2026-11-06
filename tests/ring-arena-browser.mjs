@@ -30,7 +30,7 @@ try{
  await page.waitForFunction(()=>{
   const a=window.PaperWorldGameRingArena?.inspect();
   return a?.active&&a?.renderer==='webgl-l2d'&&a?.heroStatic===true&&
-   a?.previewPose==='level'&&a?.eyeLevel===true&&a?.l2dReady===5&&a?.heroTextureUploads>=1;
+   a?.previewPose==='female7'&&a?.eyeLevel===true&&a?.l2dReady===5&&a?.heroTextureUploads>=1;
  },null,{timeout:100000});
  await page.waitForTimeout(650);
  const outer=await inspect();
@@ -42,7 +42,10 @@ try{
  assert.equal(outer.camera.eye.y,1.50);
  assert.equal(outer.camera.focus.y,1.50);
  assert.equal(outer.lensShift,.23);
- assert.equal(outer.previewPose,'level');
+ assert.equal(outer.previewPose,'female7');
+ assert.equal(outer.heroine.id,'female-07');
+ assert.equal(outer.heroine.side,'back');
+ assert.equal(outer.heroine.l2dMode,'static-back-battle-cutout');
  assert.ok(Math.abs(outer.cameraPitchDeg)<.001);
  assert.equal(outer.heroTextureUploads,1,'static heroine must not upload every frame');
  assert.deepEqual(outer.visibleActorIds,['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
@@ -198,7 +201,7 @@ try{
  'same five actors must remain in the SAME 3D scene');
  assert.equal((await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses.hero)),
- 'attack','hero attack artwork is rendered on its world-space billboard');
+ 'female07-axe-lunge','same female07 back art remains on its world-space billboard');
  const enter=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.deepEqual(enter.duel.actorIds,['hero','enemy-2']);
  assert.equal(enter.duel.playedPositions.length,2);
@@ -215,7 +218,7 @@ try{
   'duel center zoom activates while remaining left-side and eye-level');
  assert.equal((await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['hero-attack'].uploads)),
- 1,'hero attack art is uploaded just once');
+ 1,'legacy hero action art remains cached but is never drawn for female07');
  await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-hero-swing.png'});
  const frameHit=await invoke('enemy-2',70);
  assert.equal(frameHit.applied,true);
@@ -229,7 +232,7 @@ try{
  'hurt-art','own hurt sprite is used on the enemy world-space quad');
  assert.equal(await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses.hero),
- 'attack','hit frame must show BOTH attacker and victim together');
+ 'female07-axe-lunge','hit frame must keep user approved female07 while showing victim');
  const duoFrame=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(duoFrame.duel.playedPositions.length,2);
  assert.ok(duoFrame.camera.fov<duoFrame.cameraTarget.fov);
@@ -243,7 +246,7 @@ try{
  assert.ok(Math.abs(arrived.duel.playedPositions[0].z-
   arrived.duel.playedPositions[1].z)<.20,
   'both performers arrive at the same central duel plane');
- assert.equal(arrived.directorArt.renderedPoses.hero,'attack',
+ assert.equal(arrived.directorArt.renderedPoses.hero,'female07-axe-lunge',
   'attacker MUST RETAIN action portrait at center, until original queue return');
  assert.equal(arrived.director.enemyHP['enemy-2'],24,
   'damage has already happened before arriving');
@@ -256,7 +259,7 @@ try{
  const held=await invoke('enemy-2',46*(1000/30)+.01);
  assert.equal(held.phase,'hold');
  const heldSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
- assert.equal(heldSnap.directorArt.renderedPoses.hero,'attack',
+ assert.equal(heldSnap.directorArt.renderedPoses.hero,'female07-axe-lunge',
   'never switch to idle during original 46-frame tableau');
  assert.equal(heldSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
  assert.ok(heldSnap.camera.fov<heldSnap.cameraTarget.fov-10,
@@ -267,14 +270,14 @@ try{
  const retreat=await invoke('enemy-2',52*(1000/30)+.01);
  assert.equal(retreat.phase,'recover');
  const retreatSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
- assert.equal(retreatSnap.directorArt.renderedPoses.hero,'attack');
+ assert.equal(retreatSnap.directorArt.renderedPoses.hero,'female07-axe-lunge');
  assert.equal(retreatSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
  assert.notEqual(retreatSnap.duel.playedPositions[0].z,retreatSnap.actors.allies[0].z);
  await qa.screenshot({path:'artifacts/ring-arena/v29-frame52-backward-motion-still-action.png'});
  const home=await invoke('enemy-2',55*(1000/30)+.01);
  assert.equal(home.phase,'recover');
  const homeSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
- assert.equal(homeSnap.directorArt.renderedPoses.hero,'attack');
+ assert.equal(homeSnap.directorArt.renderedPoses.hero,'female07-axe-lunge');
  assert.equal(homeSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
  assert.equal(homeSnap.duel.playedPositions[0].x,homeSnap.actors.allies[0].x);
  assert.equal(homeSnap.duel.playedPositions[0].z,homeSnap.actors.allies[0].z);
@@ -342,7 +345,7 @@ try{
   'end frame restores world view without retaining duel');
  await qa.screenshot({path:'artifacts/ring-arena/v29-59frame-inspector-real-webgl.png'});
  await qa.close();
- console.log('PASS: real WebGL eye-height 3/4 fixed-left heroine, four enemies, static GPU upload once, restored original L2D, desktop/mobile');
+ console.log('PASS: user female07 original rear axe art is default heroine, unchanged identity through attack, 4 enemies, old protagonist original L2D recoverable, responsive');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }
