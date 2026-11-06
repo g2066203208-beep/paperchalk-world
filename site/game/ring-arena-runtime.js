@@ -20,17 +20,18 @@
   outerCameraRadius:11.5,innerCameraRadius:7.47,
   verticalFov:48,battleFocusZ:6.8
  });
- // Art-directed 3D footholds: four enemies occupy a deliberately WIDER
- // shallow arc. Unlike the old small circle, everyone keeps an independent,
- // immutable position, and perspective is made by a real shared camera.
+ // V31: projection-correct four-opponent row at camera-equal ground depth.
+ // All shoes rest on a common real-world y=0 ground plane and at the same
+ // view-space depth, unlike the old 0.8m staggered arc. Four distinct x
+ // anchors are spaced on screen RIGHT of the close rear hero, not over her.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[0,10.55],[-1.8,9.6],[1.8,9.6],[-3.5,9.0]]),
-   enemies:Object.freeze([[-1.65,6.85],[-.57,6.47],[.57,6.47],[1.65,6.85]])
+   allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
+   enemies:Object.freeze([[.55,5.70],[1.90,5.70],[3.25,5.70],[4.60,5.70]])
   }),
   inner:Object.freeze({
-   allies:Object.freeze([[0,8.3],[-1.8,8.0],[1.8,8.0],[-3.5,7.7]]),
-   enemies:Object.freeze([[-1.62,12.48],[-.55,12.87],[.55,12.87],[1.62,12.48]])
+   allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
+   enemies:Object.freeze([[1.05,13.0],[-.29,13.0],[-1.63,13.0],[-2.97,13.0]])
   })
  });
  const bindings=Object.freeze({
@@ -86,17 +87,17 @@
   return [mode,Object.freeze([scene.allies[0],...scene.enemies])];
  })));
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
- // One fixed left-foreground camera per battle mode; both look straight
- // at the center of the enemy formation on a horizontal optical axis.
+ // One fixed near-shoulder shot: the camera is level and its optical
+ // axis is parallel to the row, avoiding false perspective-sized enemies.
  const SHOT_NAMES=Object.freeze(['固定左机位']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
-   id:'left',eyeX:1.30,eyeZ:11.55,eyeY:1.50,
-   focusX:0,focusY:1.50,focusZ:6.80,fov:56
+   id:'left',eyeX:.78,eyeZ:11.55,eyeY:1.50,
+   focusX:.78,focusY:1.50,focusZ:5.70,fov:56
   })]),
   inner:Object.freeze([Object.freeze({
-   id:'left',eyeX:-1.30,eyeZ:7.15,eyeY:1.50,
-   focusX:0,focusY:1.50,focusZ:12.50,fov:52
+   id:'left',eyeX:.78,eyeZ:7.15,eyeY:1.50,
+   focusX:.78,focusY:1.50,focusZ:13.0,fov:52
   })])
  });
  const cameraPitchDeg=c=>Math.atan2(c.eye.y-c.focus.y,
@@ -167,6 +168,10 @@
  // RGBA canvas. This padded *measurement* is for overlap checks only, never
  // crops, paints, or replaces any of the user's 3D/L2D source pixels.
  const CANONICAL_BACK_UV=Object.freeze({left:.32,right:.68,top:.02,bottom:.985});
+ // The user-approved 1141x2048 female07 RGBA alpha bbox x=12..1117,
+ // y=34..2048, square-fitted to the GPU stage; include actual weapon
+ // extents in screen safety rather than the former protagonist's narrow UV.
+ const FEMALE07_BACK_UV=Object.freeze({left:.222,right:.775,top:.012,bottom:1});
  function portraitVisibleBounds(actor,cam,uv=CANONICAL_BACK_UV,aspect=16/9){
   const f=normalize({x:cam.focus.x-cam.eye.x,y:0,z:cam.focus.z-cam.eye.z});
   const right=normalize(cross(f,{x:0,y:1,z:0}));
@@ -982,7 +987,8 @@
    },
    safety:battleVisualSafety(mode,shotIndex,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
-    textures.get('hero').opaqueCombatUv||CANONICAL_BACK_UV),
+    previewPose==='female7'?FEMALE07_BACK_UV:
+     textures.get('hero').opaqueCombatUv||CANONICAL_BACK_UV),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:previewPose==='female7'?'user-approved female-07 original back art (static), four animated enemy L2D actors':
     posePreviewEnabled?'legacy fixed-left 3/4 heroine + animated original enemy L2D':
@@ -1011,6 +1017,6 @@
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
   SHOT_NAMES,CAMERA_STOPS,cameraPitchDeg,backdropPoint,camera,portraitBounds,
-  portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
+  portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });
