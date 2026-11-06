@@ -11,3 +11,17 @@ test('support card dropped on ally lane heals the ally not the caster',()=>{cons
 test('guard on ally lane protects teammate and is not shown as owner target change',()=>{const g=base({team:true}),friend=g.actors.find(a=>a.id==='ai-gun');hand(g,['stance']);G.place(g,'T0',2,friend.id);enemyAction(g,'e_claw',1,friend.id);const result=G.simulateRound(g,{preview:true});const ally=result.actors.find(a=>a.id===friend.id);assert.equal(ally.hp,friend.hp);});
 test('preview trace and actual execution have the same HP/mark effects',()=>{const g=base(),en=G.actorsOf(g,'enemy')[0];hand(g,['focus']);G.place(g,'T0',1,en.id);const preview=G.simulateRound(g,{preview:true,collectTrace:true});assert.equal(preview.trace.length,10);const result=G.simulateRound(g);for(const a of result.actors)assert.equal(a.hp,preview.actors.find(x=>x.id===a.id).hp);});
 console.log('PASS '+n+' speed/track tests');
+test('support on a teammate who is already acting never reserves teammate time',()=>{
+ const g=base({team:true});const hero=g.actors[0],ally=g.actors.find(x=>x.id==='ai-gun'),foe=G.actorsOf(g,'enemy')[0];
+ ally.actions=[{id:'teammate-busy',card:'shot',start:g.now+1,target:foe.id,canceled:false,locked:true}];
+ const original=JSON.stringify(ally.actions);
+ hand(g,['stance']);const aid=G.place(g,'T0',2,ally.id);
+ assert.equal(aid.target,ally.id);assert.ok(hero.actions.includes(aid));
+ assert.equal(JSON.stringify(ally.actions),original);
+ assert.equal(aid.start,ally.actions[0].start);
+});
+test('caster cannot reserve the same time twice even across different target lanes',()=>{
+ const g=base({team:true});const ally=g.actors.find(x=>x.id==='ai-gun'),foe=G.actorsOf(g,'enemy')[0];
+ hand(g,['stance','cut']);G.place(g,'T0',2,ally.id);
+ assert.throws(()=>G.place(g,'T1',2,foe.id),/占用/);
+});
