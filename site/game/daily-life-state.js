@@ -112,6 +112,10 @@
       s.inventory[k]=CLAMP(INTEGER(raw.inventory?.[k],s.inventory[k]),0,999);
     for(const k of Object.keys(ACTIONS))
       s.dailyUses[k]=CLAMP(INTEGER(raw.dailyUses?.[k],0),0,100);
+    // Dialogue visits use a separate daily key and must survive reload:
+    // otherwise reloading the page would reset NPC conversation limits.
+    for(const k of Object.keys(NPCS))
+      s.dailyUses['talk-'+k]=CLAMP(INTEGER(raw.dailyUses?.['talk-'+k],0),0,1);
     s.nightStatus=raw.nightStatus==='recalled'?'recalled':'day';
     if(s.minute>=NIGHT)s.nightStatus='recalled';
     if(Array.isArray(raw.log))s.log=raw.log.slice(-40).filter(x=>
