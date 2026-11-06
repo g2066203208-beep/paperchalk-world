@@ -78,9 +78,9 @@
         "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
       },
       "occupation": {
-        "value": "城市建筑/道路测绘与异常空间复核员（候选）",
+        "value": "衡川集团直属特别行动组副队长（故事设计候选；公司名称暂定）",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "schoolYear": {
         "value": "非学生（候选）",
@@ -88,9 +88,9 @@
         "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
       },
       "storyRole": {
-        "value": "独立女性角色；都市异常调查与战斗参与方向",
-        "status": "user_confirmed",
-        "source": "2026-11-06 用户明确认可女7人物及服装整体方向；要求保留、精修并改五官与武器"
+        "value": "有大型企业势力背景的精锐外勤成员；与企业内部合规、风险、公共安全冲突有关",
+        "status": "proposed",
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "designStatus": {
         "value": "角色与服装大方向获用户保留；脸、武器需重设；图未单人透明化，未制PSD/L2D，未作为游戏可用演员",
@@ -166,20 +166,23 @@
         "status": "unknown"
       },
       "workplace": {
-        "value": null,
-        "status": "unknown"
+        "value": "衡川集团（暂定名）安全事务总部，直属特别行动组",
+        "status": "proposed",
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "jobTitle": {
-        "value": null,
-        "status": "unknown"
+        "value": "小队副队长（6—8人小队，非整个集团部门二把手；候选）",
+        "status": "proposed",
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "salaryRange": {
         "value": null,
         "status": "unknown"
       },
       "experience": {
-        "value": null,
-        "status": "unknown"
+        "value": "年轻外勤骨干；教育与资历待补，不能以22岁直接推断高阶军衔",
+        "status": "proposed",
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "professionalGoals": {
         "value": null,
@@ -936,9 +939,9 @@
         "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
       },
       "temporaryProps": {
-        "value": "旧图为工业救援斧，用户要求替换，暂定新武器为折叠式工业测距轮杖",
+        "value": "公司制式紧凑型卡宾枪仅在任务或战斗准备立绘中出现，常服不强制携带；旧救援斧与测距轮已废弃",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       }
     },
     "temperament": {
@@ -949,13 +952,13 @@
       },
       "proposedTraits": {
         "value": [
-          "冷静",
-          "观察敏锐",
-          "语气克制",
-          "对空间异常有职业直觉"
+          "可靠",
+          "有原则",
+          "厌恶被含糊搪塞",
+          "对组织有归属感但不盲从"
         ],
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "strengths": {
         "value": [
@@ -1020,10 +1023,11 @@
       },
       "goals": {
         "value": [
-          "确认被记录的道路为什么与现实不符"
+          "让组织完成真实的保护职责",
+          "追查本人参与事件的记录差异"
         ],
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "contradictions": {
         "value": "相信测量精度却被异常空间逼迫改变方法",
@@ -1088,23 +1092,23 @@
     },
     "psychology": {
       "innerNeed": {
-        "value": "能相信自己看到与记录的事实",
+        "value": "相信自己忠诚的组织能够在事实与利益冲突时承担责任",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "externalGoal": {
-        "value": "追查同一街区出现的矛盾尺寸、重复出口与无效路线",
+        "value": "确保证据完整、保护队员，并查清被重新归档的行动记录",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "secretGoal": {
         "value": null,
         "status": "unknown"
       },
       "belief": {
-        "value": "精确记录是抵御混乱的方式",
+        "value": "工作效率不能凌驾于具体受害者和真实证据",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "selfImage": {
         "value": "解决实际问题的人",
@@ -1139,9 +1143,9 @@
         "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
       },
       "growthArc": {
-        "value": "学会在数值失效时依靠同伴与经验",
+        "value": "从相信内部程序足以解决问题，到学会平衡内部改革、公开责任与队员安全",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "values": {
         "value": [
@@ -1245,14 +1249,14 @@
     },
     "behavior": {
       "idlePose": {
-        "value": "自然站立，重心略偏一侧",
+        "value": "背视角自然站姿，双手合理持原创紧凑型卡宾枪低位警戒；不设计卡牌战斗参数",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "signatureGesture": {
-        "value": "视线发现异常时轻触衣领或停顿确认测距柄位置",
+        "value": "发现现场信息不符时短暂沉默，先检查已有记录；不沿用原测距轮动作",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "greetingHabit": {
         "value": "先看对方再点头",
@@ -1343,24 +1347,27 @@
         "status": "unknown"
       },
       "friendRelations": {
-        "value": null,
-        "status": "unknown"
+        "value": "与行动队同事存在工作与生活关系，具体人选待人物表规划（候选）",
+        "status": "proposed",
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "rivalRelations": {
         "value": null,
         "status": "unknown"
       },
       "mentorRelations": {
-        "value": null,
-        "status": "unknown"
+        "value": "与直属小队队长既互相信任又在事故报告签批上出现分歧（候选）",
+        "status": "proposed",
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "romancesIfStoryApproved": {
         "value": null,
         "status": "unknown"
       },
       "relationshipToProtagonist": {
-        "value": null,
-        "status": "unknown"
+        "value": "初期以现场证词核验与女主交集，逐步建立合作但不强制其入职（候选）",
+        "status": "proposed",
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "relationshipToMaleLead": {
         "value": null,
@@ -1375,8 +1382,9 @@
         "status": "unknown"
       },
       "conflictHistory": {
-        "value": null,
-        "status": "unknown"
+        "value": "调查事故与组织内部风险处理口径不一致（候选）",
+        "status": "proposed",
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "relationProgression": {
         "value": null,
@@ -1423,9 +1431,9 @@
         "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
       },
       "combatAbility": {
-        "value": "战斗能力未定；区别于使用斧、枪、撬杆的其他角色",
+        "value": "职业化武装任务执行与团队掩护经验（故事特征），不改动已定卡牌战斗或伤害机制",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "physicalEndurance": {
         "value": "中等",
@@ -1457,11 +1465,11 @@
       },
       "equipment": {
         "value": [
-          "折叠式测距轮杖（候选武器）",
-          "防水笔记本（工作物件）"
+          "集团原创制式紧凑型卡宾枪（视觉研发方向，精确型号未定）",
+          "合法外勤随身通信与记录装备（细节待定）"
         ],
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "inventory": {
         "value": [
@@ -1477,44 +1485,48 @@
     },
     "story": {
       "firstAppearance": {
-        "value": "候选：一段被改写的城市道路复测任务",
+        "value": "候选：衡川集团承包的城市设施事故后，带队保护现场并调查互相矛盾的记录",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "locationEntrances": {
         "value": null,
         "status": "unknown"
       },
       "originStory": {
-        "value": "职业经历与家庭尚未锁定",
+        "value": "候选：集团内部历练晋升，担任6-8人外勤小队副队长；22岁与晋升逻辑待细化，不虚构天才军官",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "incitingEvent": {
-        "value": "复查普通城市道路时发现地图标注的距离连续变化",
+        "value": "候选：一份本人参与签字的现场报告附件遭到调整或缩减，涉及真实受害者",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "keyScenes": {
         "value": [
-          "在雨后路口反复核实标记却找不到来路（候选）"
+          "封闭通道事故取证（候选）",
+          "与女主因现场证词接触（候选）",
+          "内部审计与事故责任冲突（候选）"
         ],
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "storyGoals": {
         "value": [
-          "找出城市尺度变化和怪异边界的原因"
+          "在保护同事与守护组织信誉的同时查清被归档的事故真相（候选）"
         ],
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "branchingChoices": {
         "value": [
-          "是否信任自己的第二次测量结果"
+          "保全现场记录",
+          "是否按内部途径申诉",
+          "是否与受害者及外部组织合作"
         ],
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "secrets": {
         "value": "待定",
@@ -1811,9 +1823,9 @@
         "status": "unknown"
       },
       "characterIdentityEmbeddingNotes": {
-        "value": "正背一致；新脸需在独立正面母图批准后锁定",
+        "value": "组织背景候选：衡川集团直属行动组副队长；枪械为集团原创紧凑型卡宾枪，服装大方向仍沿用原工装夹克+独立上衣+独立裹裙+短裤，不是旗袍；人物新脸未获最终验收",
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "frontPosePoseCode": {
         "value": null,
@@ -2187,11 +2199,15 @@
       },
       "rejectedFields": {
         "value": [
-          "把原始裹裙＋短裤改成旗袍连衣裙",
-          "继续复用原有救援斧为最终武器"
+          "误将原裹裙+短裤改为旗袍连衣裙",
+          "救援斧复用为女7正式武器",
+          "折叠测距轮/测距轮杖（无故事依据）",
+          "消防挠钩（无故事依据）",
+          "侧柄警棍（不符合强大组织精锐定位）",
+          "单独为女7虚构的普通空间校核公司"
         ],
         "status": "proposed",
-        "source": "2026-11-06 设计候选；未获用户定稿，禁止标记为实测或锁定"
+        "source": "2026-11-06 女7组织与武器方向后续对话；衡川集团细化参见docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md；具体履历及组织业务均未最终锁定"
       },
       "revisionHistory": {
         "value": [
@@ -2504,7 +2520,7 @@
     }
   },
   "updatedAt": "2026-11-06",
-  "recordVersion": "1.0.0",
+  "recordVersion": "1.1.0",
   "fieldCount": 512,
   "fieldBreakdown": {
     "base": 448,
@@ -2515,6 +2531,8 @@
     "原图由用户在2026-11-06聊天上传，2048x2048 PNG，sha256 8e6236f36c2161cc50d5c6cd45a481bbf8eaa3f3aa10ca9e5d10465f12196a33；此提交只登记元数据，原图二进制尚未推送到仓库。",
     "用户确认保留这名新女角色及原图服装方向；原有面部和武器需替换。原始提示词中的衣着不是旗袍，而是工装夹克+修身内搭+裹裙+内藏贴身短裤+大腿袜+短靴。",
     "原始Anima提示词原样另存为范本。历史提示词里的短柄救援斧是待替换旧版道具，不能视为新版武器定稿。",
-    "512字段来自原项目角色规范；无证据的身体实测、家庭、关系、超自然规则与SAN数值保持unknown/null。"
+    "512字段来自原项目角色规范；无证据的身体实测、家庭、关系、超自然规则与SAN数值保持unknown/null。",
+    "2026-11-06 后续设定改为衡川集团直属特别行动组副队长（候选），以集团原创紧凑型卡宾枪作为武器造型方向；测距轮等旧提案已淘汰；不修改卡牌战斗机制。",
+    "集团完整候选档案：docs/HENGCHUAN_GROUP_ORGANIZATION_PROPOSAL_V1.md。"
   ]
 }
