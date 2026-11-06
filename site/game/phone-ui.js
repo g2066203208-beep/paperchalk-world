@@ -49,6 +49,7 @@
               <div class="phone-big-time" id="phone-clock">14:50</div>
               <div class="phone-date" id="phone-date">11月3日 星期二</div>
             </div>
+            <div class="phone-unread-preview" id="phone-unread-preview" hidden></div>
             <div class="phone-password" aria-live="polite">
               <div id="phone-prompt" class="phone-prompt">输入六位密码</div>
               <div class="phone-dots" aria-label="已输入0位密码">${'<span class="phone-dot"></span>'.repeat(6)}</div>
@@ -91,12 +92,27 @@
       }
       wall.style.setProperty('--phone-lock-image',config.wallpaperUrl?'url("'+encodeURI(config.wallpaperUrl).replace(/"/g,'%22')+'")':'none');
     }
+    function getInbox(){
+      try{return typeof config.getNarrative==='function'?config.getNarrative():null}
+      catch(_){return null}
+    }
     function drawClock(){
+      const life=global.PaperWorldDailyLifeUI;
+      const state=life?.isModeActive?.()?life.snapshot():null;
       const now=new Date();
-      const time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+      const time=state?.calendar?.time||
+        String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
       get('phone-clock').textContent=time;
       get('phone-status-time').textContent=time;
-      get('phone-date').textContent=(now.getMonth()+1)+'月'+now.getDate()+'日 '+weekdays[now.getDay()];
+      get('phone-date').textContent=state?
+        state.calendar.month+'月'+state.calendar.date+'日 '+state.calendar.weekdayLabel:
+        (now.getMonth()+1)+'月'+now.getDate()+'日 '+weekdays[now.getDay()];
+      const inbox=getInbox(),badge=get('phone-unread-preview');
+      const count=inbox?((inbox.phone?.callsRead?0:inbox.missedCalls.length)+
+        (inbox.phone?.messagesRead?0:inbox.messages.length)):0;
+      badge.hidden=count===0;
+      if(count)badge.textContent=inbox.contact+' · '+(inbox.phone?.callsRead?0:inbox.missedCalls.length)+
+        ' 通未接来电 · '+(inbox.phone?.messagesRead?0:inbox.messages.length)+' 条消息';
     }
     function showPage(next){
       page=next;
@@ -125,6 +141,46 @@
       }
       return true;
     }
+    function renderApp(name){
+      const inbox=getInbox(),copy=get('phone-app-copy');
+      get('phone-app-title').textContent=name;
+      copy.replaceChildren();
+      if(name==='地图'&&typeof config.onOpenMap==='function'){
+        config.onOpenMap();return;
+      }
+      if(inbox&&['信息','电话'].includes(name)){
+        const isMessage=name==='信息',key=isMessage?'messages':'missedCalls';
+        const label=document.createElement('div');label.className='phone-conversation-header';
+        label.textContent=inbox.contact+' · '+(isMessage?'消息':'未接来电');
+        copy.appendChild(label);
+        if(typeof config.onPhoneRead==='function')
+          config.onPhoneRead(isMessage?'messages':'calls');
+        for(const entry of inbox[key]){
+          const item=document.createElement('div');item.className='phone-message-row';
+          const time=document.createElement('small');time.textContent=entry.time;
+          const message=document.createElement('span');message.textContent=entry.text;
+          item.append(time,message);copy.appendChild(item);
+        }
+        if(isMessage){
+          if(inbox.phone?.reply){
+            const message=document.createElement('p');message.className='phone-my-reply';
+            message.textContent=inbox.phone.reply==='coming'?
+              '我：还没写，我现在过去！':'我：我先看看书包，马上出门。';
+            copy.appendChild(message);
+          }else{
+            for(const [id,text] of [['coming','还没写，我现在过去！'],['checking','我先看看书包']]){
+              const button=document.createElement('button');button.className='phone-reply';
+              button.type='button';button.textContent=text;
+              button.addEventListener('click',()=>{
+                config.onPhoneReply?.(id);renderApp('信息');
+              });
+              copy.appendChild(button);
+            }
+          }
+        }
+      }else copy.textContent='暂无内容';
+      showPage('app');
+    }
     function drawApps(){
       const items=get('phone-apps');items.replaceChildren();
       for(const name of config.apps){
@@ -133,8 +189,14 @@
         button.innerHTML='<span class="phone-app-icon">'+svg(ICONS[name]||ICONS['备忘录'])+'</span>';
         const label=document.createElement('span');label.className='phone-app-label';label.textContent=name;
         button.appendChild(label);
-        button.addEventListener('click',()=>{get('phone-app-title').textContent=name;
-          get('phone-app-copy').textContent='暂无内容';showPage('app')});
+        const inbox=getInbox();
+        const unread=name==='信息'&&!inbox?.phone?.messagesRead?inbox?.messages?.length:
+          name==='电话'&&!inbox?.phone?.callsRead?inbox?.missedCalls?.length:0;
+        if(unread){
+          const mark=document.createElement('span');mark.className='phone-app-badge';
+          mark.textContent=unread;button.appendChild(mark);
+        }
+        button.addEventListener('click',()=>renderApp(name));
         items.appendChild(button);
       }
     }
@@ -167,7 +229,8 @@
       return true;
     }
     configure({});
-    return Object.freeze({open,close,configure,input,isOpen:()=>opened,page:()=>page,
+    function refresh(){drawApps();drawClock();}
+    return Object.freeze({open,close,configure,refresh,input,isOpen:()=>opened,page:()=>page,
       snapshot:()=>({owner:config.id,open:opened,page,pinLength:pin.length,unlockedBy:section.dataset.unlockedBy||null})});
   }
   global.PaperWorldPhoneUI=Object.freeze({create});
