@@ -102,3 +102,35 @@
 .hand-panel{padding:8px 9px;margin:7px 0}.hand-heading{margin-bottom:4px}.hand{min-height:122px;padding:4px 2px 6px}.hand-card{min-height:116px;padding:7px;gap:3px;flex-basis:137px;width:137px}.hand-card .card-desc{font-size:10px}.hand-card .card-ico{font-size:17px}
 .controls{padding:8px;margin:6px 0;gap:7px}.finisher-slot{padding:8px;gap:5px}.control-buttons button{padding:8px}.info-box{padding:10px;margin-bottom:8px}.preview-actor{padding:5px 6px}
 @media(max-width:690px){.app{padding:7px}.setup{padding:5px 0;gap:6px}.setup>button{padding:6px;min-height:30px}.setup select{height:31px}.statusline{padding:6px;margin-bottom:6px}.runbar{margin-bottom:6px}.timeline-section{padding:7px;margin:5px 0}.dual-row{min-height:54px}.dual-big{height:35px}.dual-small{height:17px}.hand{min-height:116px}.hand-card{min-height:118px;flex-basis:126px;width:126px}.controls{margin:5px 0;padding:7px}}
+
+/* V0.8 — one ruler, full-width 8-person dual lanes and on-bar damage forecasts. */
+.workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+.rightbar{display:block;margin-top:4px}
+.rightbar>.info-box{margin-bottom:0;padding:0 12px}
+.rightbar>.info-box>summary{cursor:pointer;padding:9px 0;color:#91a6bb;font-size:11px}
+#forecastOutput[hidden]{display:none!important}
+.dual-person{gap:3px;padding:6px 9px}
+.dual-hp{display:flex;align-items:baseline;gap:4px;font-variant-numeric:tabular-nums;line-height:1.15;font-size:13px}
+.dual-hp b{font-size:15px;font-weight:850;color:#e7edf4}
+.dual-hp .hp-future{color:#a4d6c9}
+.dual-hp .hp-future.loss{color:#ffaaa9}
+.dual-hp .hp-future.heal{color:#a0e8be}
+.dual-hp .hp-arr{font-weight:600;color:#6f8ea0;font-size:12px}
+.dual-hp small{font-size:9px;color:#889fb3}
+.dual-result{font-size:10px;min-height:12px;line-height:1.15;color:#97b1c0}
+.dual-result .hp-loss{color:#f4a0a0}
+.dual-result .hp-gain{color:#8addae}
+.dual-health{height:7px;position:relative;overflow:hidden;border-radius:4px;margin:1px 0 0}
+.dual-health>div{position:absolute;left:0;top:0;height:100%;border-radius:0}
+.dual-health .hp-original.foe{background:#76444d}
+.dual-health .hp-original.friend{background:#376a68}
+.dual-health .hp-projected.foe{background:#e0757f}
+.dual-health .hp-projected.friend{background:#7bd1c1}
+.dual-health .hp-difference{background:repeating-linear-gradient(120deg,#f1a3a4 0 3px,#823e4d 3px 6px);opacity:.9}
+.dual-row{min-height:73px}
+.dual-big{height:43px}
+.dual-small{height:21px;font-size:10px;font-weight:800}
+.dual-header{height:29px}
+.dual-hour{height:29px}
+.timeline-heading p{max-width:760px}
+@media(max-width:700px){.dual-row{min-height:69px}.dual-big{height:38px}.dual-small{height:19px}.dual-hp b{font-size:12px}.dual-result{font-size:9px}.dual-person{padding:4px 6px}.timeline{min-width:790px}}
