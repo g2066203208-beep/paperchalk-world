@@ -49,7 +49,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Render actual 3D with static 3/4 heroine and animated enemy L2D
         run: node tests/ring-arena-browser.mjs
-      - name: Capture every authored V27 30fps battle frame in REAL Chromium/WebGL
+      - name: Capture all 59 DD699-reviewed V29 battle frames in REAL Chromium/WebGL
         run: node tests/ring-arena-storyboard.mjs
       - name: Preserve real rendered game screenshots even on failed test
         if: always()
