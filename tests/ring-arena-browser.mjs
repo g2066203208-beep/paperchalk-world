@@ -243,14 +243,41 @@ try{
  assert.ok(Math.abs(arrived.duel.playedPositions[0].z-
   arrived.duel.playedPositions[1].z)<.20,
   'both performers arrive at the same central duel plane');
- assert.equal(arrived.directorArt.renderedPoses.hero,'idle',
-  'heroine has already FINISHED the swing upon arrival');
+ assert.equal(arrived.directorArt.renderedPoses.hero,'attack',
+  'attacker MUST RETAIN action portrait at center, until original queue return');
  assert.equal(arrived.director.enemyHP['enemy-2'],24,
   'damage has already happened before arriving');
  await qa.screenshot({path:'artifacts/ring-arena/v25-center-after-hit-no-attack.png'});
  const frameRecoil=await invoke('enemy-2',200);
  assert.equal(frameRecoil.phase,'reaction');
  await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-enemy-recoil.png'});
+ // Correct V28 image ordering: never swap textures while moving.
+ const home=await invoke('enemy-2',19*(1000/30)+.01);
+ assert.equal(home.phase,'recover');
+ const homeSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(homeSnap.directorArt.renderedPoses.hero,'attack');
+ assert.equal(homeSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
+ assert.equal(homeSnap.duel.playedPositions[0].x,homeSnap.actors.allies[0].x);
+ assert.equal(homeSnap.duel.playedPositions[0].z,homeSnap.actors.allies[0].z);
+ assert.equal(homeSnap.duel.playedPositions[1].x,homeSnap.actors.enemies[1].x);
+ assert.equal(homeSnap.duel.playedPositions[1].z,homeSnap.actors.enemies[1].z);
+ assert.equal(homeSnap.directorCameraTemporary,true,
+  'camera must keep the duel composition until actors are already home');
+ await qa.screenshot({path:'artifacts/ring-arena/v28-frame19-original-positions-action-portraits.png'});
+ const afterHome=await invoke('enemy-2',20*(1000/30)+.01);
+ assert.equal(afterHome.phase,'recover');
+ const afterSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(afterSnap.directorArt.renderedPoses.hero,'idle');
+ assert.equal(afterSnap.directorArt.renderedPoses['enemy-2'],'idle');
+ assert.ok(afterSnap.camera.fov<afterSnap.cameraTarget.fov,
+  'camera finishes retracting only AFTER character images have switched');
+ await qa.screenshot({path:'artifacts/ring-arena/v28-frame20-original-portraits-after-home.png'});
+ const finalFrame=await invoke('enemy-2',21*(1000/30));
+ assert.equal(finalFrame.phase,'idle');
+ const settled=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(settled.directorCameraTemporary,false);
+ assert.equal(settled.camera.fov,settled.cameraTarget.fov);
+ await qa.screenshot({path:'artifacts/ring-arena/v28-frame21-full-queue-restored.png'});
  const frameFemale=await invoke('enemy-3',190);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
  assert.equal(await qa.locator('[data-action-enemy]').evaluate(
