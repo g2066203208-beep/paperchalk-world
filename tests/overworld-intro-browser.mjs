@@ -45,12 +45,23 @@ try{
  assert.equal(await page.locator('#phone-app-copy .phone-message-row').count(),3);
  assert.match(await page.locator('#phone-app-copy').innerText(),/作业写完没/);
  await shot('03-homework-messages.png');
+ // Relationships are checked in the heroine's actual handset, never HUD.
+ await page.locator('#phone-app-back').click();
+ await page.locator('[data-app="联系人"]').click();
+ await page.locator('#phone-app-copy .phone-contact-row[data-contact="female2"]').waitFor();
+ await shot('07-phone-contacts.png');
+ await page.locator('.phone-contact-row[data-contact="female2"]').click();
+ assert.match(await page.locator('#phone-app-copy').innerText(),/亲密度/);
+ assert.equal(await page.locator('#phone-app-copy .phone-affection-label strong').innerText(),'55/100');
+ await shot('08-female-two-profile.png');
  await page.locator('.phone-close').click();
  // Main game contains NO MMORPG-style time/money/mission dashboard.
  assert.equal(await page.locator('#daily-life-ui').count(),0,'Legacy management dashboard must not exist');
  assert.equal(await page.locator('#menu-daily-life').count(),0,'No out-of-world daily life menu');
  assert.equal(await page.locator('#overworld-scene-prompts').isVisible(),true,
    'Only quiet contextual scene actions remain');
+ assert.equal(await page.locator('#hud-vitals').evaluate(el=>getComputedStyle(el).visibility),'hidden',
+   'Healthy stats must be accessible on phone, not persistent over scene');
  assert.equal(await page.locator('#camera-player-root').evaluate(el=>getComputedStyle(el).display),'none',
    'Bedroom first-person scene must not display battle cutout');
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI?.snapshot()?.day),1);
