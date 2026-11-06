@@ -54,6 +54,46 @@ try{
  const originalCamera=JSON.stringify(outer.camera);
  const originalActors=JSON.stringify(outer.actors);
  await page.screenshot({path:'artifacts/ring-arena/final-eye-level-3q-1280x720.png'});
+ // Play the real authored Attack card, select explicitly numbered target #2,
+ // and verify the complete director: lock, motion, impact, HP update, return.
+ assert.equal(outer.director.card,'斧柄横扫');
+ assert.equal(outer.director.baseDamage,12);
+ assert.equal(outer.director.playing,false);
+ assert.equal(await page.locator('[data-attack-card]').count(),1);
+ await page.locator('[data-attack-card]').click();
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.director?.armed);
+ assert.equal(await page.locator('[data-director-targets]').isVisible(),true);
+ assert.equal(await page.locator('[data-director-enemy]').count(),4);
+ await page.screenshot({path:'artifacts/ring-arena/director-attack-target-selection.png'});
+ await page.locator('[data-director-enemy="2"]').click();
+ await page.waitForFunction(()=>{
+  const d=window.PaperWorldGameRingArena?.inspect()?.director;
+  return d?.playing===true&&d?.targetId==='enemy-2';
+ },null,{timeout:12000});
+ await page.waitForFunction(()=>{
+  const d=window.PaperWorldGameRingArena?.inspect()?.director;
+  return d?.applied===true;
+ },null,{timeout:20000});
+ const impact=await inspect();
+ assert.equal(impact.director.enemyHP['enemy-2'],24);
+ assert.equal(impact.director.baseDamage,12);
+ await page.screenshot({path:'artifacts/ring-arena/director-attack-impact.png'});
+ await page.waitForFunction(()=>{
+  const d=window.PaperWorldGameRingArena?.inspect()?.director;
+  return d?.completedAttacks===1&&!d?.playing;
+ },null,{timeout:15000});
+ const returned=await inspect();
+ assert.equal(returned.director.phase,'idle');
+ assert.equal(returned.director.lastTarget,'enemy-2');
+ assert.equal(returned.director.enemyHP['enemy-1'],36);
+ assert.equal(returned.director.enemyHP['enemy-2'],24);
+ assert.equal(returned.director.enemyHP['enemy-3'],36);
+ assert.equal(returned.director.enemyHP['enemy-4'],36);
+ assert.equal(JSON.stringify(returned.camera),originalCamera);
+ assert.equal(JSON.stringify(returned.actors),originalActors);
+ assert.equal(returned.heroTextureUploads,1);
+ assert.equal(returned.directorCameraTemporary,false);
+ await page.screenshot({path:'artifacts/ring-arena/director-attack-return.png'});
  // Touch/keyboard inputs must never reveal a second camera.
  await page.mouse.move(420,250);await page.mouse.down();
  await page.mouse.move(850,260,{steps:7});await page.mouse.up();

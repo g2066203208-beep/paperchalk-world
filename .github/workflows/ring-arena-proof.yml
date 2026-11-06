@@ -8,6 +8,8 @@ on:
       - 'site/index.html'
       - 'site/dev/character-bridge.js'
       - 'tests/ring-arena*'
+      - 'site/game/ring-arena-director.js'
+      - 'site/game/ring-arena-director.css'
       - '.github/workflows/ring-arena-proof.yml'
   workflow_dispatch:
 permissions:
@@ -34,7 +36,9 @@ jobs:
           python3 scripts/build_character_catalog.py
           python3 scripts/build_scene_catalog.py
       - name: Verify one locked camera, 4 opponents, fixed anchors and portrait proportion
-        run: node tests/ring-arena.test.cjs
+        run: |
+          node tests/ring-arena.test.cjs
+          node tests/ring-arena-director.test.cjs
       - name: Install real Chromium renderer
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1

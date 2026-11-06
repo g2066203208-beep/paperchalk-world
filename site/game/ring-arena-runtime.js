@@ -247,9 +247,11 @@
   'vUv=aUv;gl_Position=uVP*vec4(pos,1.0);}'
  ].join('\n');
  const portraitFragment=[
-  'precision mediump float;varying vec2 vUv;uniform sampler2D uTexture;',
+  'precision mediump float;varying vec2 vUv;uniform sampler2D uTexture;uniform float uHit;',
   'void main(){vec4 t=texture2D(uTexture,vec2(vUv.x,1.0-vUv.y));',
-  'if(t.a<.025)discard;gl_FragColor=t;}'
+  'if(t.a<.025)discard;',
+  'vec3 rgb=mix(t.rgb,vec3(1.0,.81,.70),clamp(uHit,0.0,1.0));',
+  'gl_FragColor=vec4(rgb,t.a);}'
  ].join('\n');
  // Lightweight ground contact: one blended elliptical quad under each
  // visible actor, leaving all original L2D textures and lights untouched.
@@ -343,10 +345,35 @@
    '<div class="status" role="status"></div><div class="bottom">',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
-   '<button data-exit type="button">返回</button></div>'
+   '<button data-exit type="button">返回</button></div>',
+   '<div class="director-deck"><button class="director-card" data-attack-card="slash" aria-pressed="false" type="button" aria-label="攻击牌：斧柄横扫，基础伤害12。选择后点击敌人">',
+   '<span class="director-card-type">ATTACK / 01</span>',
+   '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">',
+   '<path d="M10 9 29 28M8 12l5-5M7 7l5 5M28 28l8 8M36 32l-4 4M38 9 19 28M40 12l-5-5M41 7l-5 5M20 28l-8 8M12 32l4 4"/>',
+   '</svg><strong>斧柄横扫</strong><span class="director-stats">12 伤害 · 1 / 1 / 1</span></button>',
+   '<span class="director-prompt" data-director-prompt>攻击牌演出预览 · 点牌选目标</span></div>',
+   '<div class="director-targets" data-director-targets hidden>',
+   ...[1,2,3,4].map(i=>'<button class="director-target" type="button" data-director-enemy="'+i+'" aria-label="攻击'+i+'号敌人"><span class="director-num">'+i+'</span><span>敌人 '+i+'</span></button>'),
+   '</div><div class="director-cinematic" data-director-cinematic data-phase="idle" hidden>',
+   '<div class="director-hit-vignette"></div><div class="director-cue" data-director-cue></div>',
+   '<div class="director-impact"><svg viewBox="0 0 200 200" fill="none" aria-hidden="true">',
+   '<path d="M18 159 Q80 99 178 23" stroke="#fdf7ee" stroke-width="9" stroke-linecap="round"/>',
+   '<path d="M35 173 Q94 113 189 47" stroke="#ee647b" stroke-width="5" stroke-linecap="round"/>',
+   '<path d="M40 55 174 146M49 25 145 172" stroke="#fff7e4" stroke-width="2" opacity=".9"/>',
+   '</svg></div><strong class="director-damage" data-director-damage>-12</strong></div>'
   ].join('');
   stage.append(hud);
   const status=hud.querySelector('.status');
+  const director=window.PaperchalkBattleDirector;
+  if(!director)throw Error('Battle director module was not loaded');
+  const attackCard=director.pickCard(window.Timegrid?.CARD);
+  const attackButton=hud.querySelector('[data-attack-card]');
+  const attackPrompt=hud.querySelector('[data-director-prompt]');
+  const targets=hud.querySelector('[data-director-targets]');
+  const cinematic=hud.querySelector('[data-director-cinematic]');
+  const cinematicCue=hud.querySelector('[data-director-cue]');
+  const cinematicDamage=hud.querySelector('[data-director-damage]');
+  const targetButtons=[...hud.querySelectorAll('[data-director-enemy]')];
   // Normal-eye-height three-quarter back pose is the default. The old V17
   // low-angle 3/4 sprite is retained behind heroPose=3q for comparison;
   // heroPose=original restores the untouched original animated L2D.
@@ -367,7 +394,7 @@
    world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface','uMode']);
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uTexture','uHit']);
    [floor,backInner,backOuter]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -379,19 +406,94 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0;
+  let armed=false,attack=null,attackApplied=false,attackSample=null;
+  let completedAttacks=0,lastTarget=null;
+  const enemyHP=new Map([1,2,3,4].map(i=>['enemy-'+i,36]));
+  const actorForTarget=id=>layout(mode).enemies.find(a=>a.id===id);
+  const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
+  function resetCombatPreview(){
+   attack=null;attackSample=null;attackApplied=false;armed=false;
+   lastTarget=null;completedAttacks=0;
+   for(const id of enemyHP.keys())enemyHP.set(id,36);
+   cinematic.hidden=true;cinematic.dataset.phase='idle';
+   refreshDirectorUI();
+  }
+  function refreshDirectorUI(){
+   attackButton.disabled=!!attack||[...enemyHP.values()].every(n=>n<=0);
+   attackButton.setAttribute('aria-pressed',String(armed));
+   attackPrompt.textContent=attack?'导演演出中 · 自动回场':armed?
+    '选择敌人 1～4 · Esc 取消':'攻击牌演出预览 · 点牌选目标';
+   targets.hidden=!armed||!!attack;
+   for(const button of targetButtons){
+    const hp=enemyHP.get('enemy-'+button.dataset.directorEnemy);
+    button.disabled=hp<=0;
+    button.title='敌方生命 '+hp+'/36';
+   }
+   for(const b of hud.querySelectorAll('[data-mode]'))b.disabled=!!attack;
+   hud.querySelector('[data-exit]').disabled=!!attack;
+  }
+  function startAttack(targetId){
+   if(!armed||attack||!actorForTarget(targetId)||enemyHP.get(targetId)<=0)return false;
+   armed=false;
+   attack=director.createAttack(targetId,performance.now(),
+    {mode,reducedMotion:reducedMotion()});
+   attackApplied=false;attackSample=director.sample(attack,attack.startedAt);
+   cinematic.hidden=false;cinematic.dataset.phase='lock';
+   cinematicCue.textContent='目标锁定';
+   cinematicDamage.textContent='-'+attackCard.damage;
+   refreshDirectorUI();
+   render(0);
+   return true;
+  }
+  function updateTargetPositions(cam,aspect){
+   if(!armed)return;
+   for(const button of targetButtons){
+    const actor=actorForTarget('enemy-'+button.dataset.directorEnemy);
+    const p=director.projectScreen(project,actor,cam,aspect);
+    button.hidden=!p.valid||p.x<7||p.x>93||p.y<5||p.y>86;
+    if(p.valid){button.style.left=p.x.toFixed(2)+'%';
+     button.style.top=(p.y-4).toFixed(2)+'%';}
+   }
+  }
+  function finishDirector(){
+   const target=attack?.targetId||null;
+   completedAttacks++;
+   lastTarget=target;
+   attack=null;attackSample=null;attackApplied=false;
+   cinematic.hidden=true;cinematic.dataset.phase='idle';
+   refreshDirectorUI();
+  }
+  function onDirectorKey(e){
+   if(!active||e.altKey||e.ctrlKey||e.metaKey||
+      e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;
+   if(e.key==='Escape'&&armed){e.preventDefault();armed=false;refreshDirectorUI();return;}
+   if(armed&&/^[1-4]$/.test(e.key)){e.preventDefault();startAttack('enemy-'+e.key);}
+  }
+  window.addEventListener('keydown',onDirectorKey);
+  refreshDirectorUI();
   hud.addEventListener('click',e=>{
    const b=e.target.closest('button');if(!b)return;
    e.preventDefault();e.stopPropagation();
+   if(b.hasAttribute('data-attack-card')){
+    if(!attack){armed=!armed;refreshDirectorUI();render(0);}
+    return;
+   }
+   if(b.hasAttribute('data-director-enemy')){
+    startAttack('enemy-'+b.dataset.directorEnemy);
+    return;
+   }
    if(b.hasAttribute('data-mode')){
+    if(attack)return;
     const requestedMode=b.dataset.mode;
     if(requestedMode!=='outer'&&requestedMode!=='inner')return;
     mode=requestedMode;
     lens=camera(mode,0);
+    resetCombatPreview();
     for(const option of hud.querySelectorAll('[data-mode]'))
      option.setAttribute('aria-pressed',String(option.dataset.mode===mode));
     render(0);
    }
-   if(b.hasAttribute('data-exit')&&typeof onExit==='function')onExit();
+   if(b.hasAttribute('data-exit')&&!attack&&typeof onExit==='function')onExit();
   });
   function sourceFor(actor){
    if(actor.id==='hero'&&posePreviewEnabled){
@@ -580,6 +682,8 @@
     gl.uniform1f(portrait.uSoleY,a.soleY);
     gl.uniform1f(portrait.uCrownY,a.crownY);
     gl.uniform1f(portrait.uWidthScale,1);
+    gl.uniform1f(portrait.uHit,attack&&a.id===attack.targetId&&attackSample?
+     attackSample.hitFlash:0);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -587,7 +691,20 @@
   }
   function render(dt=1/60){
    if(!active)return false;
-   lens=camera(mode,0);
+   const base=camera(mode,0);
+   if(attack){
+    const frame=director.sample(attack,performance.now());
+    if(frame.finished)finishDirector();
+    else{
+     attackSample=frame;
+     if(frame.hit&&!attackApplied){
+      enemyHP.set(attack.targetId,Math.max(0,enemyHP.get(attack.targetId)-attackCard.damage));
+      attackApplied=true;
+     }
+    }
+   }
+   const target=attack?actorForTarget(attack.targetId):null;
+   lens=target?director.cinematicCamera(base,attack,attackSample,target):base;
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
@@ -605,11 +722,29 @@
    gl.uniform1f(world.uMode,mode==='inner'?1:0);
    drawWorld(floor,0,vp);drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    gl.disableVertexAttribArray(world.aP);
-   drawContactShadows(visibleActors(mode),vp);
    const all=visibleActors(mode);
+   drawContactShadows(all,vp);
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
-   drawActors(all,cam,vp);
+   // Only copies of the actors move; canonical ground anchors are immutable.
+   const presented=attack?all.map(a=>{
+    const motion=director.actorMotion(a.id,attack,attackSample);
+    return {...a,x:a.x+motion.x,y:a.y+motion.y,
+     z:a.z+motion.z,height:a.height*motion.scale};
+   }):all;
+   drawActors(presented,cam,vp);
+   if(armed)updateTargetPositions(base,w/h);
+   if(attack&&attackSample){
+    const impact=project({x:target.x,y:target.height*.73,z:target.z},cam,w/h);
+    if(impact.valid){
+     cinematic.style.setProperty('--impact-x',((impact.x+1)*50).toFixed(2)+'%');
+     cinematic.style.setProperty('--impact-y',((1-impact.y)*50).toFixed(2)+'%');
+    }
+    if(cinematic.dataset.phase!==attackSample.stage){
+     cinematic.dataset.phase=attackSample.stage;
+     cinematicCue.textContent=attackSample.cue||'目标锁定';
+    }
+   }
    if(frames%12===0){
     const ready=all.filter(a=>textures.get(a.id).painted).length;
     status.textContent=(mode==='outer'?'外圈':'内圈')+
@@ -624,7 +759,8 @@
    active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
    if(active){elapsed=0;frames=0;shotIndex=0;
-    lens=camera(mode,0);render(0)}
+    resetCombatPreview();lens=camera(mode,0);render(0)}
+   else resetCombatPreview();
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:VERTICAL_LENS_SHIFT,
@@ -634,6 +770,11 @@
      lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
    cameraCount:1,eyeLevel:Math.abs((lens||camera(mode,0)).eye.y-1.50)<.001,
    heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero').frames,
+   director:{card:attackCard.name,baseDamage:attackCard.damage,
+    armed,playing:!!attack,phase:attackSample?.stage||'idle',
+    targetId:attack?.targetId||null,applied:attackApplied,
+    completedAttacks,lastTarget,enemyHP:Object.fromEntries(enemyHP)},
+   directorCameraTemporary:!!lens?.cinematic,
    visibleActorIds:visibleActors(mode).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,
