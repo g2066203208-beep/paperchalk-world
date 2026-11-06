@@ -9,6 +9,8 @@ on:
       - 'site/game/story-content.js'
       - 'site/game/opening-flow.js'
       - 'site/game/phone-ui*'
+      - 'site/scene-modules.js'
+      - 'site/assets/locations/**'
       - 'tests/overworld-intro-browser.mjs'
       - '.github/workflows/overworld-screenshots.yml'
   workflow_dispatch:
@@ -53,7 +55,7 @@ jobs:
           from PIL import Image,ImageDraw,ImageFont
           from pathlib import Path
           shots=sorted(Path('artifacts/overworld').glob('[0-9][0-9]-*.png'))
-          assert len(shots)==8, f'Expected eight real browser screens, got {shots}'
+          assert len(shots)>=13, f'Expected at least thirteen real browser screens, got {shots}'
           labels=[p.stem.replace('-', ' ').upper() for p in shots]
           w,h=690,388
           rows=(len(shots)+1)//2
