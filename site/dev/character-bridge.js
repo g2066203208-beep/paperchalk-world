@@ -14,6 +14,8 @@ const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},
 const GAME_SLOTS=['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4'];
 const DB='paperchalk-dev-characters-v1';
 const assignmentVersions=Object.fromEntries(GAME_SLOTS.map(id=>[id,0]));
+let battleRestoration=null;
+const isArena=()=>document.getElementById('scene')?.dataset.scene==='ring-arena';
 let slot='player',ready=false,heroineRenderer=
   (sessionStorage.getItem('paperchalk-heroine-renderer-mode')==='v4'?'v4':'bones');
 function note(s){status.textContent=s;}
@@ -274,6 +276,25 @@ async function assign(target,id,face='front',save=true){
    (live?(live.model?.characterId===id?' · 工作室/游戏同一 PartRig':' · 发布版 PartRig'):
     usesPsdRig?' · 简化 PSD 骨骼':source?' · V4 备份':' · 通用程序网格'));
 }
+// Only the battle scene requires the approved protagonist BACK. Preserve the
+// user's normal DEV slot choice in memory and restore it on leaving the arena.
+// This uses the SAME game/Studio L2D pipeline; no impostor static sprite.
+async function ensureBattleHero(){
+ if(!ready||!isArena())return false;
+ const old=assigned.player;
+ if(old?.id==='protagonist'&&old.side==='back')return true;
+ if(!battleRestoration&&old)battleRestoration={...old};
+ await assign('player','protagonist','back',false);
+ return true;
+}
+async function restoreBattleHero(){
+ if(!ready||isArena()||!battleRestoration)return false;
+ const saved=battleRestoration;battleRestoration=null;
+ if(catalog.has(saved.id)&&
+   (assigned.player?.id!==saved.id||assigned.player?.side!==saved.side))
+  await assign('player',saved.id,saved.side,false);
+ return true;
+}
 async function setHeroineRenderer(mode){
  if(mode!=='bones'&&mode!=='v4')throw Error('只能选择逐部件骨骼或原版 V4 备份');
  heroineRenderer=mode;
@@ -370,6 +391,9 @@ async function init(){
   }
  }
  ready=true;
+ // The scene can already be rendering before the asynchronous catalog boot.
+ // Correct an old local player-slot assignment before the next battle frame.
+ if(isArena())await ensureBattleHero();
  // Match the scene DEV layer already selected before this script boots.
  // Previously the scene could say "enemy" while the actor selector kept
  // editing "player", leading to edits landing in the wrong slot.
@@ -461,7 +485,8 @@ window.PaperchalkCharacterDev={
  get characters(){return [...catalog.values()]},
  get assigned(){return assigned},
  get loaded(){return actualActors().map(a=>a.id)},
- assign,chooseLoaded:selectSlot,openEditor:openStudio,setHeroineRenderer,get heroineRenderer(){return heroineRenderer},
+ assign,ensureBattleHero,restoreBattleHero,chooseLoaded:selectSlot,openEditor:openStudio,
+ setHeroineRenderer,get heroineRenderer(){return heroineRenderer},
  setAction:(action,target=slot)=>window.PaperchalkL2DLibrary?.setAction(target,action)||false,
  openFileUpload:()=>$('dev-character-import').click()
 };
