@@ -1,0 +1,41 @@
+{
+  "total": 16588,
+  "maxCardRewards": 5,
+  "definition": "unique card-count multisets from up to five rewards; ignores rarity restrictions, shop, upgrades, relics, and order; these are deck composition variations, not individually validated archetypes",
+  "exactFive": 10736,
+  "invalid": 0,
+  "summary": [
+    {
+      "classId": "axe",
+      "poolSize": 10,
+      "predefinedStyles": 2,
+      "uniqueAdditionsAtMostFivePerStyle": 3003,
+      "uniqueAdditionsExactlyFivePerStyle": 2002,
+      "acrossTwoStyles": 6006
+    },
+    {
+      "classId": "gun",
+      "poolSize": 9,
+      "predefinedStyles": 2,
+      "uniqueAdditionsAtMostFivePerStyle": 2002,
+      "uniqueAdditionsExactlyFivePerStyle": 1287,
+      "acrossTwoStyles": 4004
+    },
+    {
+      "classId": "guard",
+      "poolSize": 8,
+      "predefinedStyles": 2,
+      "uniqueAdditionsAtMostFivePerStyle": 1287,
+      "uniqueAdditionsExactlyFivePerStyle": 792,
+      "acrossTwoStyles": 2574
+    },
+    {
+      "classId": "mage",
+      "poolSize": 9,
+      "predefinedStyles": 2,
+      "uniqueAdditionsAtMostFivePerStyle": 2002,
+      "uniqueAdditionsExactlyFivePerStyle": 1287,
+      "acrossTwoStyles": 4004
+    }
+  ]
+}

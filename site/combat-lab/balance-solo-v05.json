@@ -1,0 +1,1329 @@
+{
+  "version": "0.5",
+  "seedCount": 100,
+  "policies": [
+    "damage",
+    "survival",
+    "balanced",
+    "random"
+  ],
+  "definition": "solo 5-stage roguelike; AI tactical/novice; no human playtest",
+  "simulatedRuns": 3200,
+  "encounterResults": {
+    "axe/strike/damage/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/damage/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/damage/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/damage/3": {
+      "games": 100,
+      "win": 69,
+      "lost": 31,
+      "timeout": 0
+    },
+    "axe/strike/damage/4": {
+      "games": 69,
+      "win": 33,
+      "lost": 36,
+      "timeout": 0
+    },
+    "axe/strike/survival/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/survival/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/survival/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/survival/3": {
+      "games": 100,
+      "win": 84,
+      "lost": 16,
+      "timeout": 0
+    },
+    "axe/strike/survival/4": {
+      "games": 84,
+      "win": 60,
+      "lost": 24,
+      "timeout": 0
+    },
+    "axe/strike/balanced/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/balanced/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/balanced/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/balanced/3": {
+      "games": 100,
+      "win": 96,
+      "lost": 4,
+      "timeout": 0
+    },
+    "axe/strike/balanced/4": {
+      "games": 96,
+      "win": 71,
+      "lost": 25,
+      "timeout": 0
+    },
+    "axe/strike/random/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/random/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/random/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/strike/random/3": {
+      "games": 100,
+      "win": 57,
+      "lost": 43,
+      "timeout": 0
+    },
+    "axe/strike/random/4": {
+      "games": 57,
+      "win": 6,
+      "lost": 51,
+      "timeout": 0
+    },
+    "axe/tempo/damage/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/damage/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/damage/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/damage/3": {
+      "games": 100,
+      "win": 58,
+      "lost": 42,
+      "timeout": 0
+    },
+    "axe/tempo/damage/4": {
+      "games": 58,
+      "win": 21,
+      "lost": 37,
+      "timeout": 0
+    },
+    "axe/tempo/survival/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/survival/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/survival/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/survival/3": {
+      "games": 100,
+      "win": 80,
+      "lost": 20,
+      "timeout": 0
+    },
+    "axe/tempo/survival/4": {
+      "games": 80,
+      "win": 58,
+      "lost": 22,
+      "timeout": 0
+    },
+    "axe/tempo/balanced/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/balanced/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/balanced/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/balanced/3": {
+      "games": 100,
+      "win": 94,
+      "lost": 6,
+      "timeout": 0
+    },
+    "axe/tempo/balanced/4": {
+      "games": 94,
+      "win": 67,
+      "lost": 27,
+      "timeout": 0
+    },
+    "axe/tempo/random/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/random/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "axe/tempo/random/2": {
+      "games": 100,
+      "win": 99,
+      "lost": 1,
+      "timeout": 0
+    },
+    "axe/tempo/random/3": {
+      "games": 99,
+      "win": 52,
+      "lost": 47,
+      "timeout": 0
+    },
+    "axe/tempo/random/4": {
+      "games": 52,
+      "win": 8,
+      "lost": 44,
+      "timeout": 0
+    },
+    "gun/tempo/damage/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/damage/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/damage/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/damage/3": {
+      "games": 100,
+      "win": 73,
+      "lost": 27,
+      "timeout": 0
+    },
+    "gun/tempo/damage/4": {
+      "games": 73,
+      "win": 40,
+      "lost": 33,
+      "timeout": 0
+    },
+    "gun/tempo/survival/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/survival/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/survival/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/survival/3": {
+      "games": 100,
+      "win": 91,
+      "lost": 9,
+      "timeout": 0
+    },
+    "gun/tempo/survival/4": {
+      "games": 91,
+      "win": 78,
+      "lost": 12,
+      "timeout": 1
+    },
+    "gun/tempo/balanced/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/balanced/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/balanced/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/balanced/3": {
+      "games": 100,
+      "win": 94,
+      "lost": 6,
+      "timeout": 0
+    },
+    "gun/tempo/balanced/4": {
+      "games": 94,
+      "win": 84,
+      "lost": 10,
+      "timeout": 0
+    },
+    "gun/tempo/random/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/random/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/random/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/tempo/random/3": {
+      "games": 100,
+      "win": 67,
+      "lost": 33,
+      "timeout": 0
+    },
+    "gun/tempo/random/4": {
+      "games": 67,
+      "win": 27,
+      "lost": 40,
+      "timeout": 0
+    },
+    "gun/precision/damage/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/damage/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/damage/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/damage/3": {
+      "games": 100,
+      "win": 72,
+      "lost": 28,
+      "timeout": 0
+    },
+    "gun/precision/damage/4": {
+      "games": 72,
+      "win": 42,
+      "lost": 30,
+      "timeout": 0
+    },
+    "gun/precision/survival/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/survival/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/survival/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/survival/3": {
+      "games": 100,
+      "win": 88,
+      "lost": 12,
+      "timeout": 0
+    },
+    "gun/precision/survival/4": {
+      "games": 88,
+      "win": 60,
+      "lost": 25,
+      "timeout": 3
+    },
+    "gun/precision/balanced/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/balanced/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/balanced/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/balanced/3": {
+      "games": 100,
+      "win": 91,
+      "lost": 9,
+      "timeout": 0
+    },
+    "gun/precision/balanced/4": {
+      "games": 91,
+      "win": 80,
+      "lost": 11,
+      "timeout": 0
+    },
+    "gun/precision/random/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/random/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/random/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "gun/precision/random/3": {
+      "games": 100,
+      "win": 71,
+      "lost": 29,
+      "timeout": 0
+    },
+    "gun/precision/random/4": {
+      "games": 71,
+      "win": 25,
+      "lost": 46,
+      "timeout": 0
+    },
+    "guard/fortress/damage/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/damage/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/damage/2": {
+      "games": 100,
+      "win": 99,
+      "lost": 1,
+      "timeout": 0
+    },
+    "guard/fortress/damage/3": {
+      "games": 99,
+      "win": 88,
+      "lost": 11,
+      "timeout": 0
+    },
+    "guard/fortress/damage/4": {
+      "games": 88,
+      "win": 58,
+      "lost": 30,
+      "timeout": 0
+    },
+    "guard/fortress/survival/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/survival/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/survival/2": {
+      "games": 100,
+      "win": 96,
+      "lost": 0,
+      "timeout": 4
+    },
+    "guard/fortress/survival/3": {
+      "games": 96,
+      "win": 88,
+      "lost": 8,
+      "timeout": 0
+    },
+    "guard/fortress/survival/4": {
+      "games": 88,
+      "win": 76,
+      "lost": 2,
+      "timeout": 10
+    },
+    "guard/fortress/balanced/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/balanced/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/balanced/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/balanced/3": {
+      "games": 100,
+      "win": 98,
+      "lost": 2,
+      "timeout": 0
+    },
+    "guard/fortress/balanced/4": {
+      "games": 98,
+      "win": 90,
+      "lost": 8,
+      "timeout": 0
+    },
+    "guard/fortress/random/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/random/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/random/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/fortress/random/3": {
+      "games": 100,
+      "win": 72,
+      "lost": 28,
+      "timeout": 0
+    },
+    "guard/fortress/random/4": {
+      "games": 72,
+      "win": 53,
+      "lost": 19,
+      "timeout": 0
+    },
+    "guard/crush/damage/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/damage/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/damage/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/damage/3": {
+      "games": 100,
+      "win": 69,
+      "lost": 31,
+      "timeout": 0
+    },
+    "guard/crush/damage/4": {
+      "games": 69,
+      "win": 35,
+      "lost": 34,
+      "timeout": 0
+    },
+    "guard/crush/survival/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/survival/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/survival/2": {
+      "games": 100,
+      "win": 99,
+      "lost": 0,
+      "timeout": 1
+    },
+    "guard/crush/survival/3": {
+      "games": 99,
+      "win": 90,
+      "lost": 9,
+      "timeout": 0
+    },
+    "guard/crush/survival/4": {
+      "games": 90,
+      "win": 80,
+      "lost": 0,
+      "timeout": 10
+    },
+    "guard/crush/balanced/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/balanced/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/balanced/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/balanced/3": {
+      "games": 100,
+      "win": 92,
+      "lost": 8,
+      "timeout": 0
+    },
+    "guard/crush/balanced/4": {
+      "games": 92,
+      "win": 85,
+      "lost": 7,
+      "timeout": 0
+    },
+    "guard/crush/random/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/random/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/random/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "guard/crush/random/3": {
+      "games": 100,
+      "win": 61,
+      "lost": 39,
+      "timeout": 0
+    },
+    "guard/crush/random/4": {
+      "games": 61,
+      "win": 30,
+      "lost": 31,
+      "timeout": 0
+    },
+    "mage/control/damage/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/damage/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/damage/2": {
+      "games": 100,
+      "win": 99,
+      "lost": 1,
+      "timeout": 0
+    },
+    "mage/control/damage/3": {
+      "games": 99,
+      "win": 47,
+      "lost": 52,
+      "timeout": 0
+    },
+    "mage/control/damage/4": {
+      "games": 47,
+      "win": 18,
+      "lost": 29,
+      "timeout": 0
+    },
+    "mage/control/survival/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/survival/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/survival/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/survival/3": {
+      "games": 100,
+      "win": 92,
+      "lost": 8,
+      "timeout": 0
+    },
+    "mage/control/survival/4": {
+      "games": 92,
+      "win": 65,
+      "lost": 13,
+      "timeout": 14
+    },
+    "mage/control/balanced/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/balanced/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/balanced/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/balanced/3": {
+      "games": 100,
+      "win": 90,
+      "lost": 10,
+      "timeout": 0
+    },
+    "mage/control/balanced/4": {
+      "games": 90,
+      "win": 71,
+      "lost": 19,
+      "timeout": 0
+    },
+    "mage/control/random/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/random/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/random/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/control/random/3": {
+      "games": 100,
+      "win": 72,
+      "lost": 28,
+      "timeout": 0
+    },
+    "mage/control/random/4": {
+      "games": 72,
+      "win": 25,
+      "lost": 47,
+      "timeout": 0
+    },
+    "mage/sustain/damage/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/damage/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/damage/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/damage/3": {
+      "games": 100,
+      "win": 87,
+      "lost": 13,
+      "timeout": 0
+    },
+    "mage/sustain/damage/4": {
+      "games": 87,
+      "win": 40,
+      "lost": 47,
+      "timeout": 0
+    },
+    "mage/sustain/survival/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/survival/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/survival/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/survival/3": {
+      "games": 100,
+      "win": 92,
+      "lost": 8,
+      "timeout": 0
+    },
+    "mage/sustain/survival/4": {
+      "games": 92,
+      "win": 81,
+      "lost": 2,
+      "timeout": 9
+    },
+    "mage/sustain/balanced/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/balanced/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/balanced/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/balanced/3": {
+      "games": 100,
+      "win": 97,
+      "lost": 3,
+      "timeout": 0
+    },
+    "mage/sustain/balanced/4": {
+      "games": 97,
+      "win": 83,
+      "lost": 14,
+      "timeout": 0
+    },
+    "mage/sustain/random/0": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/random/1": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/random/2": {
+      "games": 100,
+      "win": 100,
+      "lost": 0,
+      "timeout": 0
+    },
+    "mage/sustain/random/3": {
+      "games": 100,
+      "win": 82,
+      "lost": 18,
+      "timeout": 0
+    },
+    "mage/sustain/random/4": {
+      "games": 82,
+      "win": 40,
+      "lost": 41,
+      "timeout": 1
+    }
+  },
+  "byArchetype": [
+    {
+      "classId": "axe",
+      "styleId": "strike",
+      "policy": "damage",
+      "samples": 100,
+      "fullWin": 33,
+      "avgStages": 4.02,
+      "avgFinalHp": 36.5,
+      "avgDeck": 20.04,
+      "avgRelics": 0.43
+    },
+    {
+      "classId": "axe",
+      "styleId": "strike",
+      "policy": "survival",
+      "samples": 100,
+      "fullWin": 60,
+      "avgStages": 4.44,
+      "avgFinalHp": 47.87,
+      "avgDeck": 19.52,
+      "avgRelics": 1.83
+    },
+    {
+      "classId": "axe",
+      "styleId": "strike",
+      "policy": "balanced",
+      "samples": 100,
+      "fullWin": 71,
+      "avgStages": 4.67,
+      "avgFinalHp": 39.85,
+      "avgDeck": 20,
+      "avgRelics": 1.71
+    },
+    {
+      "classId": "axe",
+      "styleId": "strike",
+      "policy": "random",
+      "samples": 100,
+      "fullWin": 6,
+      "avgStages": 3.63,
+      "avgFinalHp": 42.38,
+      "avgDeck": 19.15,
+      "avgRelics": 0.02
+    },
+    {
+      "classId": "axe",
+      "styleId": "tempo",
+      "policy": "damage",
+      "samples": 100,
+      "fullWin": 21,
+      "avgStages": 3.79,
+      "avgFinalHp": 35.38,
+      "avgDeck": 19.58,
+      "avgRelics": 0.35
+    },
+    {
+      "classId": "axe",
+      "styleId": "tempo",
+      "policy": "survival",
+      "samples": 100,
+      "fullWin": 58,
+      "avgStages": 4.38,
+      "avgFinalHp": 46.66,
+      "avgDeck": 19.33,
+      "avgRelics": 1.82
+    },
+    {
+      "classId": "axe",
+      "styleId": "tempo",
+      "policy": "balanced",
+      "samples": 100,
+      "fullWin": 67,
+      "avgStages": 4.61,
+      "avgFinalHp": 39.63,
+      "avgDeck": 19.78,
+      "avgRelics": 1.68
+    },
+    {
+      "classId": "axe",
+      "styleId": "tempo",
+      "policy": "random",
+      "samples": 100,
+      "fullWin": 8,
+      "avgStages": 3.59,
+      "avgFinalHp": 43.17,
+      "avgDeck": 19.04,
+      "avgRelics": 0.03
+    },
+    {
+      "classId": "gun",
+      "styleId": "tempo",
+      "policy": "damage",
+      "samples": 100,
+      "fullWin": 40,
+      "avgStages": 4.13,
+      "avgFinalHp": 36.65,
+      "avgDeck": 20.26,
+      "avgRelics": 0.45
+    },
+    {
+      "classId": "gun",
+      "styleId": "tempo",
+      "policy": "survival",
+      "samples": 100,
+      "fullWin": 78,
+      "avgStages": 4.69,
+      "avgFinalHp": 50.55,
+      "avgDeck": 19.75,
+      "avgRelics": 2.68
+    },
+    {
+      "classId": "gun",
+      "styleId": "tempo",
+      "policy": "balanced",
+      "samples": 100,
+      "fullWin": 84,
+      "avgStages": 4.78,
+      "avgFinalHp": 49.08,
+      "avgDeck": 19.77,
+      "avgRelics": 2.34
+    },
+    {
+      "classId": "gun",
+      "styleId": "tempo",
+      "policy": "random",
+      "samples": 100,
+      "fullWin": 27,
+      "avgStages": 3.94,
+      "avgFinalHp": 44.57,
+      "avgDeck": 19.84,
+      "avgRelics": 0.23
+    },
+    {
+      "classId": "gun",
+      "styleId": "precision",
+      "policy": "damage",
+      "samples": 100,
+      "fullWin": 42,
+      "avgStages": 4.14,
+      "avgFinalHp": 35.89,
+      "avgDeck": 20.26,
+      "avgRelics": 0.36
+    },
+    {
+      "classId": "gun",
+      "styleId": "precision",
+      "policy": "survival",
+      "samples": 100,
+      "fullWin": 60,
+      "avgStages": 4.48,
+      "avgFinalHp": 49.87,
+      "avgDeck": 19.55,
+      "avgRelics": 2.24
+    },
+    {
+      "classId": "gun",
+      "styleId": "precision",
+      "policy": "balanced",
+      "samples": 100,
+      "fullWin": 80,
+      "avgStages": 4.71,
+      "avgFinalHp": 48.09,
+      "avgDeck": 19.93,
+      "avgRelics": 2.11
+    },
+    {
+      "classId": "gun",
+      "styleId": "precision",
+      "policy": "random",
+      "samples": 100,
+      "fullWin": 25,
+      "avgStages": 3.96,
+      "avgFinalHp": 44.05,
+      "avgDeck": 19.85,
+      "avgRelics": 0.22
+    },
+    {
+      "classId": "guard",
+      "styleId": "fortress",
+      "policy": "damage",
+      "samples": 100,
+      "fullWin": 58,
+      "avgStages": 4.45,
+      "avgFinalHp": 36.29,
+      "avgDeck": 20.9,
+      "avgRelics": 0.88
+    },
+    {
+      "classId": "guard",
+      "styleId": "fortress",
+      "policy": "survival",
+      "samples": 100,
+      "fullWin": 76,
+      "avgStages": 4.6,
+      "avgFinalHp": 62.59,
+      "avgDeck": 19.92,
+      "avgRelics": 3.14
+    },
+    {
+      "classId": "guard",
+      "styleId": "fortress",
+      "policy": "balanced",
+      "samples": 100,
+      "fullWin": 90,
+      "avgStages": 4.88,
+      "avgFinalHp": 51.56,
+      "avgDeck": 19.92,
+      "avgRelics": 2.81
+    },
+    {
+      "classId": "guard",
+      "styleId": "fortress",
+      "policy": "random",
+      "samples": 100,
+      "fullWin": 53,
+      "avgStages": 4.25,
+      "avgFinalHp": 43.66,
+      "avgDeck": 20.45,
+      "avgRelics": 0.29
+    },
+    {
+      "classId": "guard",
+      "styleId": "crush",
+      "policy": "damage",
+      "samples": 100,
+      "fullWin": 35,
+      "avgStages": 4.04,
+      "avgFinalHp": 37.05,
+      "avgDeck": 20.08,
+      "avgRelics": 0.53
+    },
+    {
+      "classId": "guard",
+      "styleId": "crush",
+      "policy": "survival",
+      "samples": 100,
+      "fullWin": 80,
+      "avgStages": 4.69,
+      "avgFinalHp": 61.06,
+      "avgDeck": 19.8,
+      "avgRelics": 3.14
+    },
+    {
+      "classId": "guard",
+      "styleId": "crush",
+      "policy": "balanced",
+      "samples": 100,
+      "fullWin": 85,
+      "avgStages": 4.77,
+      "avgFinalHp": 49.1,
+      "avgDeck": 19.8,
+      "avgRelics": 2.41
+    },
+    {
+      "classId": "guard",
+      "styleId": "crush",
+      "policy": "random",
+      "samples": 100,
+      "fullWin": 30,
+      "avgStages": 3.91,
+      "avgFinalHp": 44.08,
+      "avgDeck": 19.71,
+      "avgRelics": 0.18
+    },
+    {
+      "classId": "mage",
+      "styleId": "control",
+      "policy": "damage",
+      "samples": 100,
+      "fullWin": 18,
+      "avgStages": 3.64,
+      "avgFinalHp": 37.61,
+      "avgDeck": 19.27,
+      "avgRelics": 0.47
+    },
+    {
+      "classId": "mage",
+      "styleId": "control",
+      "policy": "survival",
+      "samples": 100,
+      "fullWin": 65,
+      "avgStages": 4.57,
+      "avgFinalHp": 52.77,
+      "avgDeck": 19.76,
+      "avgRelics": 2.68
+    },
+    {
+      "classId": "mage",
+      "styleId": "control",
+      "policy": "balanced",
+      "samples": 100,
+      "fullWin": 71,
+      "avgStages": 4.61,
+      "avgFinalHp": 46.12,
+      "avgDeck": 19.59,
+      "avgRelics": 2.26
+    },
+    {
+      "classId": "mage",
+      "styleId": "control",
+      "policy": "random",
+      "samples": 100,
+      "fullWin": 25,
+      "avgStages": 3.97,
+      "avgFinalHp": 43.68,
+      "avgDeck": 19.75,
+      "avgRelics": 0.26
+    },
+    {
+      "classId": "mage",
+      "styleId": "sustain",
+      "policy": "damage",
+      "samples": 100,
+      "fullWin": 40,
+      "avgStages": 4.27,
+      "avgFinalHp": 35.13,
+      "avgDeck": 20.52,
+      "avgRelics": 0.73
+    },
+    {
+      "classId": "mage",
+      "styleId": "sustain",
+      "policy": "survival",
+      "samples": 100,
+      "fullWin": 81,
+      "avgStages": 4.73,
+      "avgFinalHp": 57.43,
+      "avgDeck": 19.78,
+      "avgRelics": 3.15
+    },
+    {
+      "classId": "mage",
+      "styleId": "sustain",
+      "policy": "balanced",
+      "samples": 100,
+      "fullWin": 83,
+      "avgStages": 4.8,
+      "avgFinalHp": 48.66,
+      "avgDeck": 20.01,
+      "avgRelics": 2.45
+    },
+    {
+      "classId": "mage",
+      "styleId": "sustain",
+      "policy": "random",
+      "samples": 100,
+      "fullWin": 40,
+      "avgStages": 4.22,
+      "avgFinalHp": 42.96,
+      "avgDeck": 20.32,
+      "avgRelics": 0.42
+    }
+  ],
+  "elapsedMs": 13428
+}
