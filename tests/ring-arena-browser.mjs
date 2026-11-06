@@ -94,6 +94,8 @@ try{
  assert.equal(before.arena.shotIndex,0);
  assert.equal(before.arena.shotName,'左侧');
  assert.equal(before.arena.camera.shot,'left');
+ assert.ok(before.arena.cameraPitchDeg>=2&&before.arena.cameraPitchDeg<=5.5,
+  'outer camera must no longer look down at the battle floor');
  assert.equal(before.arena.ring.stageType,'wide-cinematic-arc');
  assert.equal(before.arena.l2dReady,5);
  assert.equal(await page.locator('[data-shot]').count(),2,'only left and right buttons');
@@ -148,6 +150,8 @@ try{
  assert.equal(right.arena.shotIndex,1);
  assert.equal(right.arena.shotName,'右侧');
  assert.equal(right.arena.camera.shot,'right');
+ assert.ok(right.arena.cameraPitchDeg>=2&&right.arena.cameraPitchDeg<=5.5,
+  'right shot camera must use identical low cinematic pitch');
  assert.equal(right.arena.l2dReady,5);
  assert.equal(JSON.stringify(right.arena.actors),originalOuter);
  assert.equal(right.arena.heroine.id,'protagonist');
@@ -165,6 +169,8 @@ try{
  assert.equal(innerRight.arena.mode,'inner');
  assert.equal(innerRight.arena.shotIndex,1);
  assert.equal(innerRight.arena.camera.shot,'right');
+ assert.ok(innerRight.arena.cameraPitchDeg>=2&&innerRight.arena.cameraPitchDeg<=5.5,
+  'inner surround shot must not be top-down');
  assert.equal(innerRight.arena.l2dReady,5);
  const originalInner=JSON.stringify(innerRight.arena.actors);
  assert.ok(innerRight.arena.safety.clear&&innerRight.arena.safety.gap>.045,
@@ -175,6 +181,8 @@ try{
  const innerLeft=await get();
  assert.equal(innerLeft.arena.shotIndex,0);
  assert.equal(innerLeft.arena.camera.shot,'left');
+ assert.ok(innerLeft.arena.cameraPitchDeg>=2&&innerLeft.arena.cameraPitchDeg<=5.5,
+  'inner left camera must share low camera pitch');
  assert.equal(JSON.stringify(innerLeft.arena.actors),originalInner);
  assert.ok(innerLeft.arena.safety.clear&&innerLeft.arena.safety.gap>.045,
   'inner left surround must preserve readable four enemies');
