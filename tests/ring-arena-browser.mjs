@@ -94,8 +94,8 @@ try{
  assert.equal(before.arena.shotIndex,0);
  assert.equal(before.arena.shotName,'左侧');
  assert.equal(before.arena.camera.shot,'left');
- assert.ok(before.arena.cameraPitchDeg>=2&&before.arena.cameraPitchDeg<=5.5,
-  'outer camera must no longer look down at the battle floor');
+ assert.ok(Math.abs(before.arena.cameraPitchDeg)<.1,
+  'outer camera must be exactly level with the battle horizon');
  assert.equal(before.arena.ring.stageType,'wide-cinematic-arc');
  assert.equal(before.arena.l2dReady,5);
  assert.equal(await page.locator('[data-shot]').count(),2,'only left and right buttons');
