@@ -188,7 +188,7 @@ try{
  },null,{timeout:100000});
  const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
   window.PaperWorldGameRingArena.qaFrame(t,at),[target,ms]);
- const frameHero=await invoke('enemy-2',70);
+ const frameHero=await invoke('enemy-2',38);
  assert.equal(frameHero.phase,'swing');
  assert.equal(frameHero.applied,false);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
@@ -217,7 +217,7 @@ try{
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['hero-attack'].uploads)),
  1,'hero attack art is uploaded just once');
  await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-hero-swing.png'});
- const frameHit=await invoke('enemy-2',101);
+ const frameHit=await invoke('enemy-2',70);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
@@ -329,12 +329,12 @@ try{
   el.value=String(frame);
   el.dispatchEvent(new Event('input',{bubbles:true}));
  },i);
- await scrub(2);
+ await scrub(1);
  assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.enemyHP['enemy-2'])),36,
-  'inspector frame 2 before first 100ms hit');
- await scrub(3);
+  'inspector frame 1 before 67ms source-frame impact');
+ await scrub(2);
  assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.enemyHP['enemy-2'])),24,
-  'inspector frame 3 settles damage');
+  'inspector frame 2 settles damage while both actors still in transit');
  await scrub(10);
  assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.phase)),'hold');
  await scrub(58);
