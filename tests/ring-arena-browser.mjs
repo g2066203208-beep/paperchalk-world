@@ -104,9 +104,24 @@ try{
  });
  assert.equal(computed.cameraCount,2);
  assert.ok(computed.hero.valid&&computed.hero.heightFraction>1.10);
- assert.ok(computed.heroCenter.x<-.45&&computed.heroCenter.x>-.80,
+ assert.ok(computed.heroCenter.x<-.38&&computed.heroCenter.x>-.55,
    'real L2D heroine center remains in near-left foreground');
- assert.ok(computed.enemies.every(b=>b.valid&&b.left>-.97&&b.right<.97));
+ assert.ok(computed.enemies.every(b=>b.valid&&b.left>-.90&&b.right<.90));
+ assert.ok(computed.hero.heightFraction>1.25&&computed.hero.heightFraction<1.55,
+  'heroine should feel camera-close, with intentional below-screen crop');
+ const staging=await page.evaluate(()=>{
+  const a=window.PaperWorldRingArena,scene=a.layout('outer'),c=a.camera('outer',0);
+  return {positions:scene.enemies.map(p=>[p.x,p.z]),
+   centers:scene.enemies.map(p=>a.project({...p,y:p.height*.5},c).x)};
+ });
+ assert.ok(Math.max(...staging.positions.map(p=>p[0]))-
+  Math.min(...staging.positions.map(p=>p[0]))>=3.5);
+ assert.ok(Math.max(...staging.positions.map(p=>p[1]))-
+  Math.min(...staging.positions.map(p=>p[1]))>=.3,
+  'enemies must visibly stagger along the shallow 3D arc');
+ const sortedCenters=staging.centers.slice().sort((a,b)=>a-b);
+ assert.ok(sortedCenters.slice(1).every((x,i)=>x-sortedCenters[i]>.20),
+  'foe screen centers should never stack on top of each other');
  await page.screenshot({path:'artifacts/ring-arena/l2d-outer-left.png'});
  // Only on POINTER RELEASE may the camera snap to the other approved position.
  await page.mouse.move(540,240);await page.mouse.down();
