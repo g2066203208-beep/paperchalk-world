@@ -12,7 +12,7 @@ approx(director.FRAME_MS,1000/30);
 approx(director.DURATION,1933.3333333333335);
 assert.equal(director.REDUCED_DURATION,director.DURATION);
 assert.deepEqual(director.STAGES.map(x=>x.id),[
- 'lock','approach','swing','impact','reaction','hold','recover','settle'
+ 'lock','swing','impact','reaction','hold','recover','settle'
 ]);
 assert.equal(director.REFERENCE.fps,30);
 assert.equal(director.REFERENCE.frames,699);
@@ -38,15 +38,17 @@ for(let i=0;i<=director.FRAME_COUNT;i++){
  assert.equal(v.frame,i,'exact original 30fps sampling index');
  assert.equal(v.stage,i===58?'done':
   director.STAGES.find(s=>i>=s.from&&i<s.to).id);
- assert.equal(v.hit,i>=3,'single hit before arrival, native frame '+i);
+ assert.equal(v.hit,i>=2,'real source A/B/D hit in TWO original frames '+i);
  if(i<58)assert.equal(director.sample(attack,i*director.FRAME_MS+1).frame,i);
 }
 assert.equal(frames[0].stage,'lock');
 assert.ok(frames[1].heroProgress>0.40,'fast approach in one 30fps frame');
 assert.ok(frames[2].heroProgress>0.80&&frames[2].heroProgress<1);
 assert.equal(director.poseFor('hero',attack,frames[2]),'attack');
-assert.equal(frames[3].stage,'impact');
-assert.equal(frames[3].hit,true);
+assert.equal(frames[2].stage,'impact');
+assert.equal(frames[2].hit,true);
+assert.ok(frames[2].heroProgress<1,'hit occurs DURING fast transit');
+assert.equal(frames[3].stage,'reaction');
 assert.equal(frames[3].heroProgress,1);
 assert.ok(frames[4].recoil>frames[3].recoil);
 assert.equal(director.poseFor('enemy-2',attack,frames[3]),'hurt-art');
@@ -85,8 +87,8 @@ assert.equal(frames[58].heroProgress,0);
 assert.equal(frames[58].victimProgress,0);
 assert.equal(frames[58].zoom,0);
 assert.equal(frames[20].damageOpacity,0);
-assert.equal(frames.filter(s=>s.heroPose).length,54);
-assert.equal(frames.filter(s=>s.victimPose).length,53);
+assert.equal(frames.filter(s=>s.heroPose).length,55);
+assert.equal(frames.filter(s=>s.victimPose).length,54);
 assert.throws(()=>director.sampleFrame(attack,59),/Invalid frame/);
 for(const mode of ['outer','inner']){
  const original=arena.layout(mode),snap=JSON.stringify(original);
