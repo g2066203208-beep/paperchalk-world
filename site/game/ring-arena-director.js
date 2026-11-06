@@ -76,13 +76,13 @@
    49:1,50:.95,51:.83,52:.63,53:.37,54:.15,55:0,58:0}),
   camera:frameTrack({0:0,1:.54,2:.91,3:1,48:1,
    49:1,50:.91,51:.74,52:.53,53:.32,54:.14,55:.04,56:.02,57:0,58:0}),
-  lunge:frameTrack({0:0,1:0,2:.36,3:1,4:.42,5:.08,6:0,58:0}),
-  recoil:frameTrack({0:0,2:0,3:.28,4:.86,5:1,6:.75,7:.44,8:.17,9:0,58:0}),
-  hitFlash:frameTrack({0:0,2:0,3:.5,4:.23,5:0,58:0}),
-  fx:frameTrack({0:0,2:0,3:1,4:.85,5:.40,6:0,58:0}),
-  damage:frameTrack({0:0,2:0,3:.85,4:1,6:1,8:.85,
+  lunge:frameTrack({0:0,1:.36,2:1,3:.42,4:.08,5:0,58:0}),
+  recoil:frameTrack({0:0,1:0,2:.28,3:.86,4:1,5:.75,6:.44,7:.17,8:0,58:0}),
+  hitFlash:frameTrack({0:0,1:0,2:.5,3:.23,4:0,58:0}),
+  fx:frameTrack({0:0,1:0,2:1,3:.85,4:.40,5:0,58:0}),
+  damage:frameTrack({0:0,1:0,2:.85,3:1,6:1,8:.85,
    10:.62,13:.24,16:0,58:0}),
-  damageRise:frameTrack({0:0,3:0,6:.28,10:.65,16:1,58:1})
+  damageRise:frameTrack({0:0,2:0,5:.28,10:.65,16:1,58:1})
  });
  for(const [name,values]of Object.entries(TRACKS)){
   if(values.length!==FRAME_COUNT+1||values.some(v=>!Number.isFinite(v)||v<0||v>1))
@@ -138,7 +138,7 @@
    // anchors, f56 FIRST idle art, camera fully settles f57.
    heroPose:frame>=1&&frame<=55?1:0,
    victimPose:frame>=2&&frame<=55?1:0,
-   frameHold:frame>=5&&frame<=6,cut,cue:''};
+   frameHold:frame>=4&&frame<=5,cut,cue:''};
  }
  function sampleFrame(attack,frame){
   if(!attack)throw Error('Cannot seek without an attack');
