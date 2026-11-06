@@ -162,6 +162,33 @@
     getNarrative:()=>engine.phoneInbox(),
     onPhoneRead:kind=>engine.markPhoneRead(kind),
     onPhoneReply:choice=>engine.replyHomework(choice),
+    getContacts:()=>{
+      const saved=engine.snapshot();
+      // Phone book contains actual known contacts, not every stranger/NPC.
+      // Female two's approved real name and biography are not yet confirmed.
+      return [{
+        id:'female2',display:'女二',note:'学校同学',
+        relationship:'同学 · 熟悉',
+        affinity:saved.relationships.female2,
+        bio:'在学校等你，早上连续打来电话提醒交作业。',
+        chatAvailable:true
+      }];
+    },
+    getMemo:()=>{
+      const s=engine.snapshot();
+      if(s.day===1&&!s.homework.handedIn){
+        return {title:'今天 · 作业',
+          text:s.homework.status==='finished'?
+            '作业已经补完。上午第一节课前交给老师。':
+            '作业还差最后一页。女二说早点到学校一起补。'};
+      }
+      return {title:'今天',text:'没有必须完成的待办。可以照自己的安排生活。'};
+    },
+    getStatus:()=>{
+      const current=engine.snapshot(),survival=global.PaperWorldTopHUD?.snapshot?.();
+      return {money:current.money,energy:current.energy,
+        stats:survival?.stats||null};
+    },
     getMapState:()=>({state:engine.snapshot(),locations:Core.LOCATIONS}),
     onTravel:navigate,
     getInventory:()=>({
