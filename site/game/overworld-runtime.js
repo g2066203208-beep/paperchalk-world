@@ -41,7 +41,10 @@
   const cityArt=h('div','overworld-city-art');
   city.appendChild(cityArt);
   view.appendChild(city);
-  const director=global.PaperWorldCinematics?.create?.(view)||null;
+  const director=global.PaperWorldOverworldDirector?.create?.({root})||null;
+  const surfaces=global.PaperWorldOverworldSurfaces?.create?.({
+    engine,onTravel:place=>travel(place),onFeedback:message=>say(message)
+  })||null;
   let paintedCity='',cityTime=-1;
   const phone=global.PaperWorldQuickTools?.phone;
   function say(text){
@@ -79,12 +82,12 @@
         }
         paintedCity='';draw();
       };
-      if(director)await director.transition({label:'',onCovered:swap});
-      else await swap();
+      // The host's existing scene transition owns the fade and source image.
+      // Avoid layering another full-screen fade or fake home backdrop.
+      await swap();
       say('到达'+dest.label+'。');
-      if(dest.group==='城区'&&director){
-        global.setTimeout(()=>{if(mode)director.enter(place,current.day,current.stage,say)},320);
-      }
+      if(dest.group==='城区'&&director)
+        global.setTimeout(()=>{if(mode)director.playLocation(place,engine.snapshot())},260);
       return result;
     }finally{traveling=false;draw()}
   }
@@ -96,7 +99,8 @@
   }
   function draw(){
     const s=engine.snapshot();
-    const isCity=mode&&!root.hidden&&Core.LOCATIONS[s.location]?.group==='城区';
+    const isCity=mode&&!root.hidden&&
+      Core.LOCATIONS[s.location]?.group==='城区'&&!Core.LOCATIONS[s.location]?.scene;
     city.hidden=!isCity;
     if(isCity&&!traveling){
       const signature=s.location+'/'+Math.floor(s.minute/60);
@@ -123,7 +127,7 @@
       addAction('回卧室','bedroom',()=>travel('bedroom'));
       addAction('去玄关','hall',()=>travel('entrance'));
     }else if(s.location==='entrance'){
-      addAction('出门','exit',()=>openPhoneApp('地图'));
+      addAction('出门','exit',()=>surfaces?.openMap());
       addAction('回卧室','bedroom',()=>travel('bedroom'));
     }else if(s.location==='school'){
       if(s.day===1&&!s.homework.handedIn){
@@ -131,19 +135,22 @@
           addAction('补完作业','homework',()=>run(()=>engine.finishHomework()));
         else addAction('交作业','submit',()=>run(()=>engine.submitHomework()));
       }
-      addAction('找女二','female2',()=>run(()=>engine.talk('female2')));
-      addAction('离开学校','exit',()=>openPhoneApp('地图'));
+      addAction('找女二','female2',()=>run(()=>engine.talk('female2'),res=>{
+        director?.playSocial(res.message);
+      }));
+      addAction('离开学校','exit',()=>surfaces?.openMap());
     }else if(s.location==='convenience'){
-      addAction('买份简餐','buy-bread',()=>run(()=>engine.buy('bread')));
-      addAction('看看地图','exit',()=>openPhoneApp('地图'));
+      addAction('看看货架','shop',()=>surfaces?.openShop());
+      addAction('离开便利店','exit',()=>surfaces?.openMap());
     }else if(s.location==='cafe'){
       addAction('开始兼职','shift',()=>run(()=>engine.act('shift')));
-      addAction('离开店里','exit',()=>openPhoneApp('地图'));
+      addAction('离开店里','exit',()=>surfaces?.openMap());
     }else if(s.location==='park'){
       addAction('散散步','walk',()=>run(()=>engine.act('exercise')));
-      addAction('查看地图','exit',()=>openPhoneApp('地图'));
+      addAction('查看地图','exit',()=>surfaces?.openMap());
     }else if(s.location==='mall'){
-      addAction('查看地图','exit',()=>openPhoneApp('地图'));
+      addAction('进入商店','shop',()=>surfaces?.openShop());
+      addAction('离开商场','exit',()=>surfaces?.openMap());
     }
   }
   function activate(){
@@ -155,14 +162,13 @@
   function deactivate(){
     mode=false;
     prompts.hidden=true;city.hidden=true;caption.hidden=true;
-    director?.cancel?.();global.PaperWorldInventoryUI?.close?.();
+    director?.close?.();surfaces?.close?.();
     view.classList.remove('overworld-life-active');
     global.PaperWorldTopHUD?.refreshClock?.();
   }
   function onGameScene(name){
     if(name==='menu'||view.classList.contains('intro-waking')||
-      (mode&&name!=='bedroom'&&name!=='living-room'&&
-       name!=='kitchen'&&name!=='entrance')){
+      (mode&&!Object.hasOwn(Core.LOCATIONS,name))){
       deactivate();return;
     }
     draw();
@@ -205,6 +211,8 @@
         stats:survival?.stats||null};
     },
     getMapState:()=>({state:engine.snapshot(),locations:Core.LOCATIONS}),
+    onOpenMap:()=>{phone?.close?.();surfaces?.openMap?.();},
+    onOpenBag:()=>{phone?.close?.();surfaces?.openBag?.();},
     onTravel:navigate,
     getInventory:()=>({
       state:engine.snapshot(),items:Core.ITEM_META
@@ -224,8 +232,8 @@
       opener();
     },true);
   }
-  intercept('quick-map',()=>openPhoneApp('地图'));
-  intercept('quick-backpack',()=>global.PaperWorldInventoryUI?.toggle?.());
+  intercept('quick-map',()=>surfaces?.openMap?.());
+  intercept('quick-backpack',()=>surfaces?.openBag?.());
   global.addEventListener('paperchalk:phone-visibility',()=>{
     if(mode)draw();
   });
@@ -233,6 +241,7 @@
     if(mode){
       draw();global.PaperWorldTopHUD?.refreshClock?.();
       phone?.refresh?.();
+      surfaces?.refresh?.();
     }
   });
   // Existing dev or story scene-switch must not leave our caption behind.
@@ -245,6 +254,6 @@
   global.PaperWorldDailyLifeUI=Object.freeze({
     activate,deactivate,onGameScene,
     snapshot:()=>engine.snapshot(),isModeActive:()=>mode,
-    engine,navigate,showCaption:say
+    engine,navigate,showCaption:say,surfaces,director
   });
 })(window);
