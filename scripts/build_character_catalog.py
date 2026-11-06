@@ -215,13 +215,17 @@ def discover():
     for canonical,label in KNOWN.items():
         if canonical in entries:
             entries[canonical]['label']=label
-    # The source package still has the historical outfit-02 ID. Renaming the
-    # rig would lose local Studio bone/paint drafts; only its DISPLAY name
-    # changes. The orange-coat model is outfit THREE, not outfit two.
-    if 'female-06-outfit-02' in entries:
-        entries['female-06-outfit-02']['label']='女六 · 第三套（橙棕外套）'
-        entries['female-06-outfit-02']['familyId']='female-06'
-        entries['female-06-outfit-02']['variantCategory']='outfit'
+    # The USER'S THIRD outfit is the single female-six canonical base.
+    # No extra outfit nodes may be exported by the game or studio catalogue.
+    for obsolete in ('female-06-outfit-02','female-06-second-outfit'):
+        if obsolete in entries:
+            raise ValueError('Retired female-six wardrobe leaked into catalog: '+obsolete)
+    six=entries.get('female-06')
+    if six:
+        if (six.get('variantCategory')!='default' or
+            six.get('l2dModule',{}).get('front',{}).get('renderer')!='part-mesh' or
+            six['l2dModule']['front']['rig']['partCount']!=17):
+            raise ValueError('Female-six must have only the approved THIRD 17-part base')
     return {'version':3,'characters':list(entries.values())}
 
 if __name__=='__main__':
