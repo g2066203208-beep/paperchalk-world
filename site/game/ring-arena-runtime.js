@@ -407,6 +407,12 @@
    const runtime=window.PaperchalkL2D?.get(actor.slot);
    if(!runtime||runtime.root.hidden||runtime.img.hidden||
      runtime.root.dataset.l2dState!=='ready')return null;
+   // An IndexedDB scene assignment can outlive a previous DEV session.
+   // A back-view battle must NEVER render another character or the front
+   // portrait as the heroine while the canonical model is being reattached.
+   if(actor.id==='hero'&&(
+     runtime.img.dataset.characterId!=='protagonist'||
+     runtime.img.dataset.characterSide!=='back'))return null;
    const source=runtime.clip?.type==='native'?runtime.clip.img:runtime.canvas;
    if(!source)return null;
    const w=source.videoWidth||source.naturalWidth||source.width;
@@ -417,9 +423,50 @@
   // Throttle pixel uploads, preserving the original 30 fps source animation.
   // Uploads are a view of the real current L2D canvas, not a flattened art
   // asset checked into the repository. Distinct characters keep distinct rigs.
+  // Derive the runtime's REAL transparent-art footprint at low resolution.
+  // An entire 1024x1024 transparent canvas is never a valid collision box.
+  // Sampling is throttled; original L2D canvases and textures are untouched.
+  function probeOpaqueUv(texture,now){
+   if(texture.nextProbe&&now<texture.nextProbe)return;
+   texture.nextProbe=now+1700;
+   if(!texture.probe){
+    texture.probe=document.createElement('canvas');
+    texture.probe.width=96;texture.probe.height=96;
+    texture.probeCtx=texture.probe.getContext('2d',{willReadFrequently:true});
+   }
+   const ctx=texture.probeCtx,N=96;
+   ctx.clearRect(0,0,N,N);
+   ctx.drawImage(texture.stage,0,0,N,N);
+   const data=ctx.getImageData(0,0,N,N).data;
+   let x0=N,y0=N,x1=-1,y1=-1;
+   for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    if(data[(y*N+x)*4+3]<44)continue;
+    x0=Math.min(x0,x);x1=Math.max(x1,x);
+    y0=Math.min(y0,y);y1=Math.max(y1,y);
+   }
+   if(x1<0)return;
+   texture.opaqueUv={
+    left:clamp(x0/N-.045,0,1),right:clamp((x1+1)/N+.045,0,1),
+    top:clamp(y0/N-.025,0,1),bottom:clamp((y1+1)/N+.01,0,1)
+   };
+  }
   function updateTexture(a,now){
    const targetTexture=textures.get(a.id),desc=sourceFor(a);
-   if(!desc)return targetTexture.painted;
+   if(!desc){
+    // Never show a stale wrong-identity WebGL texture.
+    targetTexture.painted=false;
+    targetTexture.opaqueUv=null;
+    return false;
+   }
+   const identity=desc.runtime.img.dataset.characterId+'|'+
+    desc.runtime.img.dataset.characterSide+'|'+
+    (desc.runtime.root.dataset.l2dEdition||'')+'|'+
+    (desc.runtime.root.dataset.l2dMode||'');
+   if(targetTexture.identity!==identity){
+    targetTexture.identity=identity;
+    targetTexture.painted=false;targetTexture.opaqueUv=null;
+    targetTexture.nextProbe=0;targetTexture.updated=-999;
+   }
    const interval=a.id==='hero'?50:78;
    if(now-targetTexture.updated<interval&&targetTexture.painted)return true;
    const size=a.id==='hero'?768:512;
@@ -439,6 +486,10 @@
     targetTexture.painted=true;
     targetTexture.frames++;
     paintCount++;
+    // The latest real ArtMesh pose defines its own visible screen silhouette.
+    try{probeOpaqueUv(targetTexture,now)}catch(error){
+     targetTexture.probeError=String(error.message||error);
+    }
    }catch(error){
     targetTexture.error=String(error.message||error);
    }
@@ -537,6 +588,16 @@
    effectiveVerticalFov:responsiveFov((lens||camera(mode,shotIndex)).fov,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
    l2dReady:visibleActors(mode).filter(a=>textures.get(a.id).painted).length,
+   heroine:{
+    id:window.PaperchalkL2D?.get('player')?.img?.dataset.characterId||null,
+    side:window.PaperchalkL2D?.get('player')?.img?.dataset.characterSide||null,
+    l2dMode:window.PaperchalkL2D?.get('player')?.root?.dataset.l2dMode||null,
+    ready:textures.get('hero').painted,
+    sourceUv:textures.get('hero').opaqueUv||null
+   },
+   safety:battleVisualSafety(mode,shotIndex,
+    canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
+    textures.get('hero').opaqueUv||CANONICAL_BACK_UV),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:'existing PaperchalkL2D actors; source assets unchanged'});
   return Object.freeze({setActive,render,inspect,get canvas(){return canvas}});
