@@ -150,7 +150,7 @@ try{
  assert.equal(right.arena.shotIndex,1);
  assert.equal(right.arena.shotName,'右侧');
  assert.equal(right.arena.camera.shot,'right');
- assert.ok(right.arena.cameraPitchDeg>=2&&right.arena.cameraPitchDeg<=5.5,
+ assert.ok(right.arena.Math.abs(right.arena.cameraPitchDeg)<.1,
   'right shot camera must use identical low cinematic pitch');
  assert.equal(right.arena.l2dReady,5);
  assert.equal(JSON.stringify(right.arena.actors),originalOuter);
@@ -169,7 +169,7 @@ try{
  assert.equal(innerRight.arena.mode,'inner');
  assert.equal(innerRight.arena.shotIndex,1);
  assert.equal(innerRight.arena.camera.shot,'right');
- assert.ok(innerRight.arena.cameraPitchDeg>=2&&innerRight.arena.cameraPitchDeg<=5.5,
+ assert.ok(innerRight.arena.Math.abs(innerRight.arena.cameraPitchDeg)<.1,
   'inner surround shot must not be top-down');
  assert.equal(innerRight.arena.l2dReady,5);
  const originalInner=JSON.stringify(innerRight.arena.actors);
@@ -181,7 +181,7 @@ try{
  const innerLeft=await get();
  assert.equal(innerLeft.arena.shotIndex,0);
  assert.equal(innerLeft.arena.camera.shot,'left');
- assert.ok(innerLeft.arena.cameraPitchDeg>=2&&innerLeft.arena.cameraPitchDeg<=5.5,
+ assert.ok(innerLeft.arena.Math.abs(innerLeft.arena.cameraPitchDeg)<.1,
   'inner left camera must share low camera pitch');
  assert.equal(JSON.stringify(innerLeft.arena.actors),originalInner);
  assert.ok(innerLeft.arena.safety.clear&&innerLeft.arena.safety.gap>.045,
@@ -260,20 +260,21 @@ try{
  // static 3/4-rear pose preview and instantly return when switched off.
  await page.setViewportSize({width:1280,height:720});
  await page.goto('http://127.0.0.1:'+server.address().port+
-  '/index.html?scene=ring-arena&heroPose=3q',{waitUntil:'domcontentloaded'});
+  '/index.html?scene=ring-arena&heroPose=level',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>{
   const r=window.PaperWorldGameRingArena?.inspect();
-  return r?.active&&r?.posePreviewEnabled===true&&r?.l2dReady===5&&
+  return r?.active&&r?.posePreviewEnabled===true&&r?.previewPose==='level'&&
+   Math.abs(r?.cameraPitchDeg)<.1&&r?.lensShift===.19&&r?.l2dReady===5&&
    r?.l2dFrames?.hero>=3;
  },null,{timeout:85000});
  assert.equal(await page.locator('[data-pose="toggle"]').getAttribute('aria-pressed'),'true');
- await page.screenshot({path:'artifacts/ring-arena/hero-3q-preview-left.png'});
+ await page.screenshot({path:'artifacts/ring-arena/hero-eye-level-preview-left.png'});
  await page.locator('[data-shot="1"]').click();
  await page.waitForFunction(()=>{
   const r=window.PaperWorldGameRingArena?.inspect();
   return r?.shotIndex===1&&r?.settled&&r?.l2dReady===5;
  },null,{timeout:8000});
- await page.screenshot({path:'artifacts/ring-arena/hero-3q-preview-right.png'});
+ await page.screenshot({path:'artifacts/ring-arena/hero-eye-level-preview-right.png'});
  await page.locator('[data-pose="toggle"]').click();
  await page.waitForFunction(()=>{
   const r=window.PaperWorldGameRingArena?.inspect();

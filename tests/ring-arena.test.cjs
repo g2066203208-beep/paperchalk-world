@@ -33,8 +33,10 @@ for(const mode of ['outer','inner']){
   const c=arena.camera(mode,index);
   const pitch=arena.cameraPitchDeg(c);
   // No top-down arena viewpoint: measured by the actual camera view vector.
-  assert.ok(pitch>=2.0&&pitch<=5.5,
-    'battle reference uses a near-horizontal shoulder-height camera, got '+pitch.toFixed(2)+' degrees');
+  assert.ok(Math.abs(pitch)<.1,
+    'eye-level battle reference requires exactly horizontal optical axis: '+pitch.toFixed(2));
+  near(c.eye.y,c.focus.y);
+  near(arena.VERTICAL_LENS_SHIFT,.19);
   const p=arena.project({...hero,y:hero.height*.52},c);
   const body=arena.portraitBounds(hero,c);
   assert.ok(body.valid&&p.valid);

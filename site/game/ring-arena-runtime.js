@@ -95,22 +95,20 @@
  const SHOT_NAMES=Object.freeze(['左侧','右侧']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([
-   Object.freeze({id:'left',eyeX:1.60,eyeZ:11.55,eyeY:1.20,
-    focusX:.20,focusY:.95,focusZ:8.70,fov:56}),
-   Object.freeze({id:'right',eyeX:-1.60,eyeZ:11.55,eyeY:1.20,
-    focusX:-.20,focusY:.95,focusZ:8.70,fov:56})
+   Object.freeze({id:'left',eyeX:1.60,eyeZ:11.55,eyeY:1.32,
+    focusX:.20,focusY:1.32,focusZ:8.70,fov:56}),
+   Object.freeze({id:'right',eyeX:-1.60,eyeZ:11.55,eyeY:1.32,
+    focusX:-.20,focusY:1.32,focusZ:8.70,fov:56})
   ]),
   inner:Object.freeze([
-   Object.freeze({id:'left',eyeX:-1.60,eyeZ:7.15,eyeY:1.15,
-    focusX:.80,focusY:.85,focusZ:12.40,fov:52}),
-   Object.freeze({id:'right',eyeX:1.60,eyeZ:7.15,eyeY:1.15,
-    focusX:-.80,focusY:.85,focusZ:12.40,fov:52})
+   Object.freeze({id:'left',eyeX:-1.60,eyeZ:7.15,eyeY:1.32,
+    focusX:.80,focusY:1.32,focusZ:12.40,fov:52}),
+   Object.freeze({id:'right',eyeX:1.60,eyeZ:7.15,eyeY:1.32,
+    focusX:-.80,focusY:1.32,focusZ:12.40,fov:52})
   ])
  });
- // Cinematic shoulder-height framing (in metres, immutable actors):
- // OUTER: eye y 1.20 -> focus y 0.95 (downward ~4.5 degrees).
- // INNER: eye y 1.15 -> focus y 0.85 (downward ~3.0 degrees).
- // A low, almost level viewpoint shows actors' faces/fronts, not the arena floor.
+ // True shoulder-level view: eye and focus are at the SAME world height.
+ // Sensor-shift projection frames the cast without tilting the camera down.
  const cameraPitchDeg=c=>Math.atan2(c.eye.y-c.focus.y,
   Math.hypot(c.focus.x-c.eye.x,c.focus.z-c.eye.z))*180/Math.PI;
  const stopIndex=n=>clamp(Math.round(Number(n)||0),0,1);
@@ -135,8 +133,16 @@
   const valid=clamp(Number(aspect)||16/9,.35,3.5);
   return clamp(2*Math.atan(Math.tan(rad(fov/2))*(16/9)/valid)*180/Math.PI,25,125);
  }
- function project(p,cam,aspect=16/9){
+ const VERTICAL_LENS_SHIFT=.19;
+ function cameraVP(cam,aspect=16/9){
+  // Off-axis lens: raise the composition without pitching the actual optical axis.
+  // The EXACT same matrix is used by WebGL and 3D occlusion/safe-zone tests.
   const vp=multiply(perspective(responsiveFov(cam.fov||SPEC.verticalFov,aspect),aspect),lookAt(cam.eye,cam.focus));
+  for(const i of [0,4,8,12])vp[i+1]+=VERTICAL_LENS_SHIFT*vp[i+3];
+  return vp;
+ }
+ function project(p,cam,aspect=16/9){
+  const vp=cameraVP(cam,aspect);
   const x=p.x,y=p.y,z=p.z,m=vp;
   const w=m[3]*x+m[7]*y+m[11]*z+m[15];
   if(w<=0)return {valid:false};
@@ -342,11 +348,15 @@
   // A non-destructive pose comparison, never a replacement for the approved L2D rig.
   const poseImage=new Image();
   poseImage.decoding='async';
-  poseImage.src='./assets/characters/protagonist-back-combat-3q-preview.webp';
-  let posePreviewEnabled=new URLSearchParams(window.location.search).get('heroPose')==='3q';
+  const requestedPose=new URLSearchParams(window.location.search).get('heroPose');
+  const previewPose=requestedPose==='3q'?'3q':'level';
+  poseImage.src=previewPose==='3q'
+   ?'./assets/characters/protagonist-back-combat-3q-preview.webp'
+   :'./assets/characters/protagonist-back-combat-eye-level-preview.webp';
+  let posePreviewEnabled=requestedPose==='3q'||requestedPose==='level';
   const poseButton=hud.querySelector('[data-pose]');
   function syncPoseButton(){
-   poseButton.textContent=posePreviewEnabled?'恢复原背面':'试用斜背面';
+   poseButton.textContent=posePreviewEnabled?'恢复原背面':'试用平视背面';
    poseButton.setAttribute('aria-pressed',String(posePreviewEnabled));
   }
   syncPoseButton();
@@ -571,7 +581,7 @@
     gl.uniform1f(portrait.uSoleX,a.soleX);
     gl.uniform1f(portrait.uSoleY,a.soleY);
     gl.uniform1f(portrait.uCrownY,a.crownY);
-    gl.uniform1f(portrait.uWidthScale,a.id==='hero'&&posePreviewEnabled ? 0.82 : 1);
+    gl.uniform1f(portrait.uWidthScale,a.id==='hero'&&posePreviewEnabled&&previewPose==='3q' ? 0.82 : 1);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -594,7 +604,7 @@
    const pixel=Math.min(window.devicePixelRatio||1,1.75);
    const W=Math.floor(w*pixel),H=Math.floor(h*pixel);
    if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
-   const cam=lens,vp=multiply(perspective(responsiveFov(cam.fov,w/h),w/h),lookAt(cam.eye,cam.focus));
+   const cam=lens,vp=cameraVP(cam,w/h);
    gl.viewport(0,0,W,H);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
    gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
    gl.clearColor(.001,.005,.008,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -623,7 +633,7 @@
     lens=camera(mode,0);syncButtons();render(0)}
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
-   mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,
+   mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:VERTICAL_LENS_SHIFT,
    cameraTarget:camera(mode,shotIndex),
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,shotIndex).eye.x,
@@ -651,6 +661,6 @@
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
   SHOT_NAMES,CAMERA_STOPS,cameraPitchDeg,backdropPoint,camera,blendCamera,portraitBounds,
-  portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,responsiveFov,lookAt,
+  portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,responsiveFov,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });
