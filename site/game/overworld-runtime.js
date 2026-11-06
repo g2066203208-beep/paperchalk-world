@@ -184,6 +184,9 @@
   }
   intercept('quick-map','地图');
   intercept('quick-backpack','背包');
+  global.addEventListener('paperchalk:phone-visibility',()=>{
+    if(mode)draw();
+  });
   engine.subscribe(()=>{
     if(mode){
       draw();global.PaperWorldTopHUD?.refreshClock?.();
