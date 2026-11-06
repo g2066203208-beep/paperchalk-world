@@ -1331,6 +1331,20 @@ async function ensureHostedParts(id){
  const repairFemale3=id==='char-004'&&side==='front'&&
   !hasFemale3SourceRig(currentSource);
  const upgrade=id==='char-002'&&!hasFemale2Psd(currentSource);
+ const angelNeedsWings=id==='angel-shopkeeper'&&side==='front'&&front&&
+  (!currentSource.includes('wing_left')||!currentSource.includes('wing_right'));
+ if(angelNeedsWings){
+  const backupKey='archived-angel-shopkeeper:front:pre-wings-v2';
+  if(!(await get(backupKey))){
+   const previous=await get('part-rig:'+id+':front');
+   const layers=ed.S.layers.front.filter(p=>p.sourcePart).map(p=>({
+    id:String(p.partId||p.name),name:p.name,x:p.x,y:p.y,
+    image:p.canvas.toDataURL('image/png'),visible:p.visible!==false,
+    opacity:Number(p.opacity??1)}));
+   await put(backupKey,{layers,rig:previous});
+  }
+  await dropDraft('part-rig:'+id+':front');
+ }
  // Authored CHAR-004 layers are not "broken" merely because the user
  // moved a mesh forward/backward. Never fetch and replace a valid local stack.
  if(front&&!upgrade&&!needsHeroArms&&
@@ -1340,7 +1354,7 @@ async function ensureHostedParts(id){
  try{
   const source=await hostedParts(id,side);
   if(currentId!==id)return;
-  await importComponentFiles(source,{missingOnly:!upgrade&&!needsHeroArms&&!repairFemale3,
+  await importComponentFiles(source,{missingOnly:!angelNeedsWings&&!upgrade&&!needsHeroArms&&!repairFemale3,
    appendMissingParts:needsHeroArms,quiet:true});
   message(id==='char-002'?
    '✓ 女二已加载 24 层原始记录和 18 个可动部件，两只手臂独立绑定。':
