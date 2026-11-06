@@ -78,13 +78,14 @@ try{
   return d?.playing===true&&d?.targetId==='enemy-2';
  },null,{timeout:12000});
  assert.equal(await page.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
- // The normal player animation uses real time; don't block its 160ms
- // impact window with a several-second software-GL screenshot. A separate
- // fixed-clock QA page below captures the actual WebGL frames exactly.
+ // In slow software WebGL a single draw may skip across the entire
+ // impact window. Validate the irrevocable, single target damage RESULT
+ // rather than waiting for a short-lived director.applied=true property.
+ // The frozen real-WebGL QA scene below verifies visible impact frames.
  await page.waitForFunction(()=>{
   const d=window.PaperWorldGameRingArena?.inspect()?.director;
-  return d?.applied===true;
- },null,{timeout:10000});
+  return d?.enemyHP?.['enemy-2']===24;
+ },null,{timeout:14000});
  const impact=await inspect();
  assert.equal(impact.director.enemyHP['enemy-2'],24);
  assert.equal(impact.director.baseDamage,12);

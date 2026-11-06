@@ -750,17 +750,19 @@
    if(attack){
     const frame=director.sample(attack,qaTimeMs===null?
      performance.now():attack.startedAt+qaTimeMs);
+    // Gameplay may run at 10FPS or worse in software WebGL. A skipped
+    // impact *visual* frame must NEVER skip the event/damage settlement.
+    if(frame.hit&&!attackApplied){
+     enemyHP.set(attack.targetId,Math.max(0,enemyHP.get(attack.targetId)-attackCard.damage));
+     attackApplied=true;
+     if(!frame.finished)playDirectorSound('impact');
+    }
     if(frame.finished)finishDirector();
     else{
      attackSample=frame;
      if(frame.stage!==previousBeat){
       previousBeat=frame.stage;
       if(frame.stage==='swing')playDirectorSound('swing');
-     }
-     if(frame.hit&&!attackApplied){
-      enemyHP.set(attack.targetId,Math.max(0,enemyHP.get(attack.targetId)-attackCard.damage));
-      attackApplied=true;
-      playDirectorSound('impact');
      }
     }
    }
