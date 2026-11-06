@@ -1,0 +1,103 @@
+/* OVERWORLD: nearly invisible interactions, no life-management dashboard.
+   Preserve room artwork, original HUD, existing telephone illustration.
+   Only contextual verbs and short feedback appear over the scene. */
+#novel-ui > #overworld-scene-prompts{
+ position:absolute;z-index:4!important;right:6cqw;bottom:14cqh;
+ display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+ max-width:min(32cqw,310px);pointer-events:none;
+}
+#overworld-scene-prompts[hidden],#overworld-scene-caption[hidden],
+#overworld-city-stage[hidden]{display:none!important}
+#overworld-scene-prompts > .overworld-scene-action{
+ pointer-events:auto;cursor:pointer;touch-action:manipulation;
+ appearance:none;background:transparent!important;border:0!important;
+ padding:5px 2px!important;color:#eeeae5!important;
+ font:400 clamp(12px,1.8cqh,16px)/1.5 "PaperSans",sans-serif!important;
+ letter-spacing:.08em;text-shadow:0 2px 7px #000,0 0 14px #000b;
+ opacity:.84;max-width:100%;text-align:right;
+}
+#overworld-scene-prompts > .overworld-scene-action:before{
+ content:'›';display:inline-block;padding-right:7px;opacity:.6;
+}
+#overworld-scene-prompts > .overworld-scene-action:hover,
+#overworld-scene-prompts > .overworld-scene-action:focus-visible{
+ opacity:1;text-decoration:underline;text-underline-offset:5px;
+ text-decoration-color:#ede2d3;text-shadow:0 0 14px #000;
+ outline:0!important;
+}
+#novel-ui > #overworld-scene-caption{
+ position:absolute;left:17cqw;right:17cqw;bottom:12.5cqh;
+ z-index:4!important;pointer-events:none;text-align:center;
+ padding:0;background:transparent!important;
+ color:#f4f0e8;font:400 clamp(13px,2cqh,18px)/1.55 "PaperSans",sans-serif;
+ text-shadow:0 3px 10px #000,0 2px 6px #000e;
+ letter-spacing:.02em;
+}
+#view > #overworld-city-stage{
+ position:absolute;inset:0;z-index:4;pointer-events:none;
+ display:grid;place-items:center;overflow:hidden;
+ background:
+  radial-gradient(ellipse 60% 80% at 48% 45%,#31373b,transparent 80%),
+  linear-gradient(145deg,#11171b,#080a0e);
+}
+#overworld-city-stage > .overworld-city-label{
+ color:#f1eee9;opacity:.79;
+ font:400 clamp(16px,3cqh,26px)/1.4 "PaperSans",sans-serif;
+ letter-spacing:.18em;text-shadow:0 3px 15px #000b;
+}
+/* Daytime camera is heroine first-person, never the battle cutout. */
+#view.intro-waking #camera-player-root,
+#view.overworld-life-active #camera-player-root{display:none!important}
+/* The in-world phone is the actual map; no separate full-screen planner.
+   Routes appear as small readable buttons physically INSIDE the handset. */
+#phone-ui .phone-app-view[data-phone-page="app"]{
+ padding:clamp(42px,7cqh,56px) 8% 8%;
+ gap:clamp(4px,.8cqh,7px);
+}
+#phone-ui .phone-app-title{font-size:clamp(13px,2.5cqh,18px);margin-top:0}
+#phone-ui .phone-app-copy{width:100%;flex:1;min-height:0;
+ overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;opacity:1;
+ display:flex;flex-direction:column;align-items:stretch;gap:4px;
+}
+#phone-ui .phone-map-location{font-size:clamp(9px,1.55cqh,12px);text-align:left;
+ margin:0;color:#dfd9d0}
+#phone-ui .phone-map-art{
+ position:relative;flex:none;width:100%;height:clamp(125px,25cqh,195px);
+ border-radius:5px;background:#242a2b;overflow:hidden;
+ border:1px solid #bab6ac3b;
+}
+#phone-ui .phone-map-art > svg{width:100%;height:100%;display:block}
+#phone-ui .phone-map-pin{
+ position:absolute;transform:translate(-50%,-50%);
+ border:1px solid #9fa5a58c!important;
+ border-radius:3px!important;background:#323a3ceb!important;
+ padding:3px 4px!important;min-width:24px;min-height:18px;
+ color:#f5f1eb!important;
+ font:400 clamp(8px,1.2cqh,10px)/1.2 "PaperSans",sans-serif!important;
+ white-space:nowrap;
+}
+#phone-ui .phone-map-pin:disabled{opacity:.46;cursor:default}
+#phone-ui .phone-map-pin[data-current="true"],
+#phone-ui .phone-map-pin[data-selected="true"]{
+ background:#87795fe8!important;border-color:#e3d5b8!important;opacity:1}
+#phone-ui .phone-map-pin:focus-visible{outline:1px solid #f7e5c3}
+#phone-ui .phone-map-info{
+ margin:3px 0 0;font-size:clamp(8px,1.3cqh,10px);
+ color:#cbc7c1;text-align:left;line-height:1.55;
+}
+#phone-ui .phone-map-depart,
+#phone-ui .phone-item{
+ display:block;flex:none;width:100%;
+ margin:2px 0!important;min-height:30px;padding:6px!important;
+ background:#a8a69e24!important;border:1px solid #e6e0d343!important;
+ border-radius:4px!important;color:#f7f2ea!important;
+ font:500 clamp(9px,1.6cqh,12px)/1.4 "PaperSans",sans-serif!important;
+}
+#phone-ui .phone-map-depart:disabled{opacity:.5}
+@container (max-height:500px){
+ #novel-ui > #overworld-scene-prompts{bottom:15cqh;right:8cqw}
+ #phone-ui .phone-map-art{height:120px}
+}
+@media(prefers-reduced-motion:reduce){
+ #overworld-scene-prompts > .overworld-scene-action{transition:none}
+}
