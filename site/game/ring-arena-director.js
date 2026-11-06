@@ -202,7 +202,12 @@
    const touch=.24*s.advance*k;
    const x=lerp(hero.x,duel.hero.x,k)+(duel.target.x-duel.hero.x)*touch;
    const z=lerp(hero.z,duel.hero.z,k);
-   return {x:x-hero.x,y:0,z:z-hero.z,scale:1};
+   // In our shoulder-close rest camera, the authored slash artwork extends
+   // much wider than the canonical back L2D. Recede its screen footprint while
+   // it travels HOME, rather than clipping a giant attack poster at screen edge.
+   // No source texture or original ground anchor is edited.
+   const scale=s.stage==='recover'?.64+.36*k:1;
+   return {x:x-hero.x,y:0,z:z-hero.z,scale};
   }
   if(actorId===attack.targetId){
    const k=s.victimProgress;
@@ -210,7 +215,8 @@
    const x=lerp(target.x,duel.target.x,k)+
     (duel.target.x-duel.hero.x)*out;
    const z=lerp(target.z,duel.target.z,k);
-   return {x:x-target.x,y:0,z:z-target.z,scale:1};
+   const scale=s.stage==='recover'?.84+.16*k:1;
+   return {x:x-target.x,y:0,z:z-target.z,scale};
   }
   return {x:0,y:0,z:0,scale:1};
  }
