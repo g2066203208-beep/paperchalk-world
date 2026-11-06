@@ -101,3 +101,15 @@
 @media(prefers-reduced-motion:reduce){
  #overworld-scene-prompts > .overworld-scene-action{transition:none}
 }
+
+/* Only life-critical exceptions occupy the existing HUD during quiet daytime.
+   No floating income, relationship, task or attribute values. */
+#view.intro-waking #hud-vitals,
+#view.overworld-life-active #hud-vitals:not([data-urgent="true"]){
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+}
+#view.overworld-life-active #hud-vitals[data-urgent="true"]{
+  opacity:1!important;visibility:visible!important;
+}
+#view.overworld-life-active #hud-clock{opacity:.88}
+#view.overworld-life-active #hud-weekday{opacity:.78}
