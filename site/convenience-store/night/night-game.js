@@ -16,7 +16,7 @@ function toggleSound(){muted=!muted;const btn=$('#toggle-sound');btn.textContent
  try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();audio.resume();sound(380,.17)}catch(_){muted=true;btn.textContent='♪ 音效：不可用'}}
 function act(fn,...args){const r=game[fn](...args);if(r?.note)note(r.note);if(r?.ok)sound(fn==='scan'?680:fn==='charge'?520:fn==='handoff'?390:260,.14);render();return r?.ok}
 function openModal(which){modal=which;$('#modal-layer').hidden=false;$('#cashier').hidden=true;renderModal();sound(330,.1)}
-function closeModal(){modal='';$('#modal-layer').hidden=true;render();}
+function closeModal(){modal='';$('#modal-layer').hidden=true;const s=game.snapshot();if(s.scene==='counter'&&s.order&&!s.finished){$('#cashier').dataset.opened='1';$('#cashier').hidden=false;}render();}
 function renderModal(){if(!modal)return;const s=game.snapshot(),title=$('#modal-heading'),body=$('#modal-content');body.replaceChildren();
  const p=(text,style='modal-desc')=>body.append($el('p',style,text));
  const btn=(label,callback)=>{const b=$el('button','modal-action',label);b.addEventListener('click',callback);body.append(b);return b};
