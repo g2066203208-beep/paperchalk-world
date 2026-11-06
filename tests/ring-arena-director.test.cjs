@@ -7,127 +7,122 @@ const approx=(a,b,eps=.0001)=>assert.ok(Math.abs(a-b)<eps,a+' != '+b);
 assert.deepEqual(director.pickCard(CARD),
  {key:'slash',name:CARD.slash.name,type:'attack',damage:12,w:1,a:1,r:1});
 assert.equal(director.FPS,30);
-assert.equal(director.FRAME_COUNT,21);
+assert.equal(director.FRAME_COUNT,58);
 approx(director.FRAME_MS,1000/30);
-assert.equal(director.DURATION,700);
-assert.equal(director.REDUCED_DURATION,700);
-assert.deepEqual(director.STAGES.map(x=>x.id),
- ['lock','approach','windup','swing','impact','reaction','hold','recover']);
+approx(director.DURATION,1933.3333333333335);
+assert.equal(director.REDUCED_DURATION,director.DURATION);
+assert.deepEqual(director.STAGES.map(x=>x.id),[
+ 'lock','approach','swing','impact','reaction','hold','recover','settle'
+]);
 assert.equal(director.REFERENCE.fps,30);
 assert.equal(director.REFERENCE.frames,699);
 assert.deepEqual(director.REFERENCE.entries,[79,178,315,416]);
-assert.deepEqual(director.REFERENCE.exits,[128,228,368,470]);
+assert.deepEqual(director.REFERENCE.exits,[128,228,365,465]);
+assert.deepEqual(director.ORIGINAL_CLIPS.map(x=>x.impact),[81,180,318,418]);
+assert.deepEqual(director.ORIGINAL_CLIPS.map(x=>x.holdEnd),[127,227,364,464]);
+assert.deepEqual(director.ORIGINAL_CLIPS.map(x=>x.originalQueue),[134,234,372,473]);
 assert.throws(()=>director.createAttack('enemy-5',0),/Invalid/);
 assert.throws(()=>director.createAttack('enemy-1',NaN),/clock/);
 assert.equal(director.hasEnemyHitPortrait('enemy-2'),true);
 assert.equal(director.hasEnemyHitPortrait('enemy-3'),false);
 assert.equal(director.ART.maleEnemy,'./assets/characters/enemy-suit-hit-no-hud.webp');
 for(const [name,track]of Object.entries(director.TRACKS)){
- assert.equal(track.length,22,'every '+name+' frame explicitly authored');
- assert.ok(track.every(x=>x>=0&&x<=1));
+ assert.equal(track.length,59,'ALL source-reference-authorable frames '+name);
+ assert.ok(track.every(x=>Number.isFinite(x)&&x>=0&&x<=1));
+ assert.equal(track[0],name==='damageRise'?0:0);
 }
 const attack=director.createAttack('enemy-2',0);
-const frames=Array.from({length:22},(_,i)=>director.sampleFrame(attack,i));
-for(let i=0;i<frames.length;i++){
- assert.equal(frames[i].frame,i);
- assert.equal(frames[i].stage,i===21?'done':director.STAGES.find(s=>i>=s.from&&i<s.to).id);
- assert.equal(frames[i].hit,i>=4,'damage threshold frame only');
- assert.equal(director.sample(attack,i*director.FRAME_MS+1).frame,i,
-  'sub-frame game render must not advance an authored keyframe');
+const frames=Array.from({length:59},(_,i)=>director.sampleFrame(attack,i));
+for(let i=0;i<=director.FRAME_COUNT;i++){
+ const v=frames[i];
+ assert.equal(v.frame,i,'exact original 30fps sampling index');
+ assert.equal(v.stage,i===58?'done':
+  director.STAGES.find(s=>i>=s.from&&i<s.to).id);
+ assert.equal(v.hit,i>=3,'single hit before arrival, native frame '+i);
+ if(i<58)assert.equal(director.sample(attack,i*director.FRAME_MS+1).frame,i);
 }
-assert.equal(frames[0].heroProgress,0);
-assert.ok(frames[2].heroProgress>0);
-assert.ok(frames[3].heroProgress<1,'attack begins during transit');
-assert.equal(frames[3].stage,'swing');
-assert.equal(director.poseFor('hero',attack,frames[3]),'attack');
-assert.equal(frames[4].hit,true);
-assert.ok(frames[4].heroProgress<1,'collision precedes arrival');
-assert.equal(director.poseFor('enemy-2',attack,frames[4]),'hurt-art');
-assert.equal(frames[5].stage,'reaction');
-assert.equal(frames[5].heroProgress,1);
-assert.equal(director.poseFor('hero',attack,frames[5]),'attack',
- 'do NOT change attack portrait merely because the attacker reached center');
-assert.ok(frames[6].recoil>frames[5].recoil,'target recoils AFTER contact');
-assert.equal(frames[10].stage,'hold');
-assert.equal(frames[10].heroProgress,1);
-assert.equal(frames[10].victimProgress,1);
-assert.equal(director.poseFor('enemy-2',attack,frames[10]),'hurt-art',
- 'do NOT change hurt portrait while still in middle stage');
-assert.ok(frames[12].damageOpacity>0,'a few frames retain damage result');
-assert.equal(frames[14].damageOpacity,0);
-assert.equal(frames[15].stage,'recover');
-assert.ok(frames[17].heroProgress<frames[16].heroProgress);
-assert.equal(frames[19].heroProgress,0);
-assert.equal(frames[19].victimProgress,0);
-assert.equal(director.poseFor('hero',attack,frames[19]),'attack',
- 'attacker still uses combat portrait on first frame BACK at authored anchor');
-assert.equal(director.poseFor('enemy-2',attack,frames[19]),'hurt-art',
- 'victim still uses hit portrait on first frame BACK at authored anchor');
-for(let i=2;i<19;i++){
+assert.equal(frames[0].stage,'lock');
+assert.ok(frames[1].heroProgress>0.40,'fast approach in one 30fps frame');
+assert.ok(frames[2].heroProgress>0.80&&frames[2].heroProgress<1);
+assert.equal(director.poseFor('hero',attack,frames[2]),'attack');
+assert.equal(frames[3].stage,'impact');
+assert.equal(frames[3].hit,true);
+assert.equal(frames[3].heroProgress,1);
+assert.ok(frames[4].recoil>frames[3].recoil);
+assert.equal(director.poseFor('enemy-2',attack,frames[3]),'hurt-art');
+for(let i=9;i<=48;i++){
+ assert.equal(frames[i].stage,'hold','hold is the BATTLE artwork result, not idle');
+ assert.equal(frames[i].heroProgress,1);
+ assert.equal(frames[i].victimProgress,1);
+ assert.ok(frames[i].zoom>=.99);
+ assert.equal(director.poseFor('hero',attack,frames[i]),'attack');
+ assert.equal(director.poseFor('enemy-2',attack,frames[i]),'hurt-art');
+}
+assert.equal(frames.filter(v=>v.stage==='hold').length,40);
+assert.equal(frames[49].stage,'recover');
+assert.equal(frames[49].heroProgress,1);
+for(let i=49;i<=55;i++){
  assert.equal(director.poseFor('hero',attack,frames[i]),'attack',
-  'hero original portrait must NEVER appear before returning; frame '+i);
-}
-for(let i=4;i<19;i++){
+  'attacker keeps combat artwork through return frame '+i);
  assert.equal(director.poseFor('enemy-2',attack,frames[i]),'hurt-art',
-  'target original portrait must NEVER appear before returning; frame '+i);
+  'victim keeps hurt artwork through return frame '+i);
 }
-assert.equal(frames[20].heroProgress,0);
-assert.equal(frames[20].victimProgress,0);
-assert.equal(director.poseFor('hero',attack,frames[20]),'idle',
- 'hero restores original portrait ONLY AFTER arrival at original anchor');
-assert.equal(director.poseFor('enemy-2',attack,frames[20]),'idle',
- 'victim restores original portrait ONLY AFTER arrival at original anchor');
-assert.ok(frames[19].zoom>0&&frames[20].zoom>0,
- 'camera framing must stay cinematic until BOTH portraits have returned');
-assert.equal(frames[21].zoom,0,'camera resets after pose restoration');
-assert.equal(frames[21].stage,'done');
-assert.equal(frames[21].stageStrength,0);
-assert.equal(frames[21].finished,true);
-assert.equal(frames.filter(s=>s.stage==='hold').length,6,
- 'no prolonged 1-second static center pose');
-assert.equal(frames.filter(s=>s.victimPose).length,16);
-assert.equal(frames.filter(s=>s.heroPose).length,18);
-assert.throws(()=>director.sampleFrame(attack,22),/Invalid frame/);
+assert.ok(frames[51].heroProgress<frames[50].heroProgress);
+assert.equal(frames[55].heroProgress,0,'attacker is back at ORIGINAL ground anchor');
+assert.equal(frames[55].victimProgress,0,'victim is back at ORIGINAL ground anchor');
+assert.equal(director.poseFor('hero',attack,frames[55]),'attack');
+assert.equal(director.poseFor('enemy-2',attack,frames[55]),'hurt-art');
+assert.equal(frames[56].stage,'settle');
+assert.equal(director.poseFor('hero',attack,frames[56]),'idle',
+ 'ONLY after reaching anchor does original heroine L2D return');
+assert.equal(director.poseFor('enemy-2',attack,frames[56]),'idle',
+ 'ONLY after reaching anchor does original opponent L2D return');
+assert.ok(frames[56].zoom>0,'camera is last to settle');
+assert.equal(frames[57].zoom,0);
+assert.equal(frames[58].stage,'done');
+assert.equal(frames[58].finished,true);
+assert.equal(frames[58].heroProgress,0);
+assert.equal(frames[58].victimProgress,0);
+assert.equal(frames[58].zoom,0);
+assert.equal(frames[20].damageOpacity,0);
+assert.equal(frames.filter(s=>s.heroPose).length,54);
+assert.equal(frames.filter(s=>s.victimPose).length,53);
+assert.throws(()=>director.sampleFrame(attack,59),/Invalid frame/);
 for(const mode of ['outer','inner']){
  const original=arena.layout(mode),snap=JSON.stringify(original);
- const hero=original.allies[0],target=original.enemies[1],camera=arena.camera(mode,0);
+ const hero=original.allies[0],target=original.enemies[1],base=arena.camera(mode,0);
  const curr=director.createAttack('enemy-2',0,{mode});
- const shot=director.duelCamera(camera);
+ const shot=director.duelCamera(base);
  assert.equal(shot.shot,'left');
- approx(camera.eye.y,camera.focus.y);
- approx(shot.eye.y,camera.eye.y);
+ approx(base.eye.y,base.focus.y);
+ approx(shot.eye.y,base.eye.y);
+ assert.ok(shot.fov<=base.fov-14,'match large original cinematic zoom');
  for(const aspect of [16/9,4/3,9/16]){
   const duet=director.duelLayout(shot,arena.project,aspect,hero,target);
   const p1=arena.project({...duet.hero,y:1},shot,aspect);
   const p2=arena.project({...duet.target,y:1},shot,aspect);
   assert.ok(p1.valid&&p2.valid);
-  approx(p1.x,-.27);approx(p2.x,+.27);
+  approx(p1.x,-.40);approx(p2.x,.40);
   assert.deepEqual(duet.actorIds,['hero','enemy-2']);
   approx(duet.hero.z,duet.target.z);
-  const moving=director.sampleFrame(curr,3),center=director.sampleFrame(curr,5);
-  const before=director.actorMotion('hero',curr,moving,hero,target,duet);
-  assert.notEqual(before.x,0);
-  assert.ok(moving.heroProgress<1&&moving.victimProgress<1);
-  const hm=director.actorMotion('hero',curr,center,hero,target,duet);
-  const vm=director.actorMotion('enemy-2',curr,center,hero,target,duet);
-  const hWorld={...hero,x:hero.x+hm.x,z:hero.z+hm.z};
-  const eWorld={...target,x:target.x+vm.x,z:target.z+vm.z};
-  const displayCamera=director.cinematicCamera(camera,curr,center,target);
-  const pHero=arena.project({...hWorld,y:1},displayCamera,aspect);
-  const pEnemy=arena.project({...eWorld,y:1},displayCamera,aspect);
-  assert.ok(pHero.valid&&pEnemy.valid);
-  assert.ok(pHero.x<-.10&&pHero.x>-.28);
-  assert.ok(pEnemy.x>.15&&pEnemy.x<.55);
-  assert.equal(arena.cameraPitchDeg(displayCamera),0);
-  assert.deepEqual(director.actorMotion('enemy-3',curr,center,hero,target,duet),
+  const mid=frames[20],heroDelta=director.actorMotion('hero',curr,mid,hero,target,duet);
+  const victimDelta=director.actorMotion('enemy-2',curr,mid,hero,target,duet);
+  const display=director.cinematicCamera(base,curr,mid,target);
+  const left=arena.project({x:hero.x+heroDelta.x,y:1,z:hero.z+heroDelta.z},display,aspect);
+  const right=arena.project({x:target.x+victimDelta.x,y:1,z:target.z+victimDelta.z},display,aspect);
+  assert.ok(left.valid&&right.valid);
+  assert.ok(left.x<-.35&&left.x>-.45,'left safe duel point');
+  assert.ok(right.x>.35&&right.x<.45,'right safe duel point');
+  assert.equal(arena.cameraPitchDeg(display),0);
+  assert.deepEqual(director.actorMotion('enemy-3',curr,mid,hero,target,duet),
    {x:0,y:0,z:0,scale:1});
-  assert.deepEqual(director.actorMotion('hero',curr,frames[21],hero,target,duet),
+  assert.deepEqual(director.actorMotion('hero',curr,frames[58],hero,target,duet),
    {x:0,y:0,z:0,scale:1});
-  assert.deepEqual(director.cinematicCamera(camera,curr,frames[21],target),camera);
+  assert.deepEqual(director.cinematicCamera(base,curr,frames[58],target),base);
  }
- assert.equal(JSON.stringify(original),snap);
+ assert.equal(JSON.stringify(original),snap,'no source L2D ground-anchor edits');
 }
 const reduced=director.createAttack('enemy-1',0,{reducedMotion:true});
-assert.equal(director.sample(reduced,700).finished,true);
-assert.equal(director.sample(reduced,133.34).shake,0);
-console.log('PASS V28: 22 authored 30fps frames, action/hurt art persist UNTIL origin, then original L2D returns before camera reset');
+assert.equal(director.sample(reduced,director.DURATION).finished,true);
+assert.equal(director.sampleFrame(reduced,3).shake,0);
+console.log('PASS V29: 699-frame SOURCE timing, 59 authored 30fps samples, 46+ focus frames, single-frame hit, action poses persist until home and lens fully settles last');
