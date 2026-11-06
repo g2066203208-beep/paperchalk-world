@@ -2026,6 +2026,15 @@ void main(){
     extraEnemies.forEach(node=>node.hidden=name!=='classroom-box'&&!ringActive);
     boxScene.setActive(name==='classroom-box');
     ringScene.setActive(name==='ring-arena');
+    // A saved DEV slot may point to another character or FRONT art. In the
+    // actual battle, use the approved heroine BACK, retaining the player's
+    // non-battle binding and all edited L2D texture/rig data.
+    const actorBridge=window.PaperchalkCharacterDev;
+    const synchronize=ringActive
+      ?actorBridge?.ensureBattleHero?.()
+      :actorBridge?.restoreBattleHero?.();
+    if(synchronize?.catch)synchronize.catch(error=>
+      console.warn('[arena] canonical protagonist synchronization failed',error));
     // The room now fills the viewport; legacy fog needs its saved safe-zone
     // bounds restored when we leave this scene without a window resize.
     if(frameNumber>0){half();applyFogSettings();}
