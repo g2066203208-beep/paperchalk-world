@@ -8,6 +8,7 @@ on:
       - 'tests/scene-camera*'
       - 'tests/ring-arena*'
       - 'tests/daily-life.test.cjs'
+      - 'tests/opening-flow.test.cjs'
       - 'tests/character-camera-browser.mjs'
       - 'scripts/fetch-game-fonts.sh'
       - 'scripts/build_scene_catalog.py'
@@ -56,6 +57,7 @@ jobs:
           node tests/ground-perspective.test.mjs
           node tests/ring-arena.test.cjs
           node tests/daily-life.test.cjs
+          node --test tests/opening-flow.test.cjs
       - name: Prove adding PNG or WebP auto-registers new scene IDs
         run: |
           python3 - <<'PY'
