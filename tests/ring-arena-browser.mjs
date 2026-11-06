@@ -73,7 +73,7 @@ try{
  assert.equal(await page.locator('[data-director-enemy]').count(),4);
  await page.screenshot({path:'artifacts/ring-arena/director-attack-target-selection.png'});
  await page.locator('[data-director-enemy="2"]').click();
- // A 580ms action may complete while Chromium's software renderer yields.
+ // A 400ms action may complete while Chromium's software renderer yields.
  // Verify persistent HP/completed outcome, not a fleeting animation phase.
  // In slow software WebGL a single draw may skip across the entire
  // impact window. Validate the irrevocable, single target damage RESULT
@@ -188,7 +188,7 @@ try{
  },null,{timeout:100000});
  const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
   window.PaperWorldGameRingArena.qaFrame(t,at),[target,ms]);
- const frameHero=await invoke('enemy-2',260);
+ const frameHero=await invoke('enemy-2',100);
  assert.equal(frameHero.phase,'swing');
  assert.equal(frameHero.applied,false);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
@@ -203,15 +203,21 @@ try{
  assert.deepEqual(enter.duel.actorIds,['hero','enemy-2']);
  assert.equal(enter.duel.playedPositions.length,2);
  assert.ok(Math.abs(enter.duel.playedPositions[0].z-
-  enter.duel.playedPositions[1].z)<.20,
-  'BOTH characters must translate to one common duel depth, not stay in queues');
+  enter.duel.playedPositions[1].z)>.20,
+  'the swing is in TRANSIT: both characters are not at the center yet');
+ assert.ok(Math.abs(enter.duel.playedPositions[0].z-
+  enter.actors.allies[0].z)>.3,
+  'hero is actually moving while swinging');
+ assert.ok(Math.abs(enter.duel.playedPositions[1].z-
+  enter.actors.enemies[1].z)>.3,
+  'target is also moving into the same encounter');
  assert.equal(enter.directorCameraTemporary,true,
   'duel center zoom activates while remaining left-side and eye-level');
  assert.equal((await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['hero-attack'].uploads)),
  1,'hero attack art is uploaded just once');
- await qa.screenshot({path:'artifacts/ring-arena/v24-duel-center-hero-swing.png'});
- const frameHit=await invoke('enemy-2',290);
+ await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-hero-swing.png'});
+ const frameHit=await invoke('enemy-2',130);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
@@ -227,11 +233,25 @@ try{
  const duoFrame=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(duoFrame.duel.playedPositions.length,2);
  assert.ok(duoFrame.camera.fov<duoFrame.cameraTarget.fov);
- await qa.screenshot({path:'artifacts/ring-arena/v24-duel-center-simultaneous-impact.png'});
- const frameRecoil=await invoke('enemy-2',390);
+ await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-simultaneous-impact.png'});
+ // Arrival happens AFTER the hit: no new attack pose or delayed hit in
+ // the center. It is already resolved and the damage may not repeat.
+ const arrival=await invoke('enemy-2',170);
+ assert.equal(arrival.phase,'reaction');
+ assert.equal(arrival.applied,true);
+ const arrived=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.ok(Math.abs(arrived.duel.playedPositions[0].z-
+  arrived.duel.playedPositions[1].z)<.20,
+  'both performers arrive at the same central duel plane');
+ assert.equal(arrived.directorArt.renderedPoses.hero,'idle',
+  'heroine has already FINISHED the swing upon arrival');
+ assert.equal(arrived.director.enemyHP['enemy-2'],24,
+  'damage has already happened before arriving');
+ await qa.screenshot({path:'artifacts/ring-arena/v25-center-after-hit-no-attack.png'});
+ const frameRecoil=await invoke('enemy-2',190);
  assert.equal(frameRecoil.phase,'reaction');
- await qa.screenshot({path:'artifacts/ring-arena/v24-duel-center-enemy-recoil.png'});
- const frameFemale=await invoke('enemy-3',390);
+ await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-enemy-recoil.png'});
+ const frameFemale=await invoke('enemy-3',190);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
  assert.equal(await qa.locator('[data-action-enemy]').evaluate(
   el=>getComputedStyle(el).display),'none',
@@ -245,7 +265,7 @@ try{
  assert.equal(await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['enemy-2-hit'].uploads),
  1,'male hurt artwork is uploaded only once');
- await qa.screenshot({path:'artifacts/ring-arena/v24-duel-center-female-original-reaction.png'});
+ await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-female-original-reaction.png'});
  assert.equal(await qa.locator('.director-stage-dark').evaluate(
   el=>getComputedStyle(el).display),'none',
   'full-screen cinematic black curtain is forbidden');
