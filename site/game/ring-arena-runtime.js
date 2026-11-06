@@ -961,6 +961,10 @@
   function qaFrame(targetId,elapsedMs){
    if(!directorQA)throw Error('Director QA mode is disabled');
    if(!actorForTarget(targetId)||!Number.isFinite(elapsedMs))throw Error('Invalid QA frame');
+   // QA snapshots are INDEPENDENT frozen render frames, not a series of
+   // real attacks. Reset enemy HP so advancing from impact to arrival never
+   // appears to inflict a second hit in screenshots.
+   for(const id of enemyHP.keys())enemyHP.set(id,36);
    attack=director.createAttack(targetId,performance.now(),{mode,reducedMotion:false});
    qaTimeMs=clamp(elapsedMs,0,director.DURATION-1);
    attackApplied=false;armed=false;previousBeat='qa';
