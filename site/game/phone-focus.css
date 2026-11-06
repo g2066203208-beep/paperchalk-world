@@ -1,0 +1,125 @@
+/* Optical close-up of the EXISTING phone screen.
+ * Before unlock the approved cat-ear image remains 100% intact.
+ * While reading an app, foreground camera focuses on the glass for legibility.
+ * This is still the heroine's handset, not a global stat dashboard.
+ */
+#novel-ui>#phone-ui[data-focus="true"]{
+ width:min(52cqw,670px)!important;
+ height:min(93cqh,890px)!important;
+ aspect-ratio:auto!important;
+ right:clamp(58px,10.5cqw,175px)!important;
+ top:50%!important;transform:translateY(-50%)!important;
+ filter:drop-shadow(0 22px 38px #000b)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-device{
+ background:linear-gradient(145deg,#303336,#15191c 70%)!important;
+ border-radius:27px!important;
+ border:2px solid #bbc2c069!important;
+ box-shadow:inset 0 0 0 4px #12181b,0 0 1px 1px #89938b57!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-shell-art{display:none!important}
+#novel-ui>#phone-ui[data-focus="true"] .phone-screen{
+ left:2.7%!important;top:2.9%!important;width:94.6%!important;height:94.2%!important;
+ border-radius:21px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-camera{z-index:4!important}
+#novel-ui>#phone-ui[data-focus="true"] .phone-status{
+ font-size:clamp(12px,1.9cqh,15px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-home{
+ padding:clamp(48px,8cqh,67px) 9% 8%!important;
+ gap:clamp(15px,2.8cqh,27px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-home-head{
+ font-size:clamp(17px,2.5cqh,22px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-apps{
+ gap:clamp(20px,4.1cqh,33px) clamp(12px,2.2cqw,27px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-icon{
+ width:clamp(50px,8.6cqh,72px)!important;
+ height:clamp(50px,8.6cqh,72px)!important;
+ border-radius:16px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-label{
+ font-size:clamp(15px,2.2cqh,19px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-view{
+ padding:clamp(49px,8cqh,72px) 7.5% 6%!important;
+ gap:13px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-back{
+ font-size:clamp(15px,2.2cqh,18px)!important;
+ min-height:34px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-title{
+ font-size:clamp(21px,3.3cqh,28px)!important;
+ margin-top:0!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-copy{
+ font-size:clamp(15px,2.35cqh,19px)!important;
+ line-height:1.65!important;
+ gap:9px!important;
+ padding-right:3px;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-message-row{
+ padding:12px 13px!important;
+ gap:14px!important;
+ border-radius:12px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-message-row span{
+ font-size:clamp(15px,2.3cqh,18px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-message-row small{
+ font-size:clamp(12px,1.8cqh,15px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-conversation-header{
+ font-size:clamp(16px,2.45cqh,20px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-reply{
+ min-height:47px!important;
+ font-size:clamp(15px,2.4cqh,19px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-contact-row{
+ min-height:66px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-contact-row-body strong,
+#novel-ui>#phone-ui[data-focus="true"] .phone-contact-person strong{
+ font-size:clamp(16px,2.4cqh,19px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-contact-row-body small,
+#novel-ui>#phone-ui[data-focus="true"] .phone-contact-person small{
+ font-size:clamp(13px,2.1cqh,17px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-profile-field,
+#novel-ui>#phone-ui[data-focus="true"] .phone-affection-label{
+ font-size:clamp(15px,2.2cqh,18px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-contact-chat{
+ font-size:clamp(15px,2.3cqh,18px)!important;min-height:46px!important;
+}
+@container (max-height:560px){
+ #novel-ui>#phone-ui[data-focus="true"]{
+   width:min(86cqw,630px)!important;
+   height:92cqh!important;
+   right:7cqw!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-home{
+   padding:40px 7% 4%!important;gap:7px!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-app-icon{
+   width:clamp(36px,9cqh,51px)!important;height:clamp(36px,9cqh,51px)!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-apps{gap:6px 12px!important}
+ #novel-ui>#phone-ui[data-focus="true"] .phone-app-copy{
+   font-size:clamp(12px,3cqh,16px)!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-app-view{
+   padding:31px 6% 3%!important;gap:2px!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-message-row{padding:5px 8px!important}
+ #novel-ui>#phone-ui[data-focus="true"] .phone-app-title{font-size:17px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ #novel-ui>#phone-ui[data-focus="true"]{transition:none!important}
+}
