@@ -34,6 +34,7 @@
   const calendarEl=panel.querySelector('.daily-calendar');
   const locationEl=panel.querySelector('.daily-location');
   const statsEl=panel.querySelector('.daily-stats');
+  const HOME_SCENES=new Set(['bedroom','living-room','kitchen','entrance']);
   const labels={schedule:'日程',places:'地点',people:'人物',news:'新闻',inventory:'背包',journal:'记录'};
   let tab='schedule',resetArmed=false,mode=false;
   function line(parent,cls,title,detail){
@@ -247,7 +248,14 @@
     },true);
   }
   const onMenuBtn=document.getElementById('menu-daily-life');
-  if(onMenuBtn)onMenuBtn.addEventListener('click',()=>open('schedule'));
+  if(onMenuBtn)onMenuBtn.addEventListener('click',async()=>{
+    const scene=document.getElementById('scene')?.dataset.scene;
+    if(!HOME_SCENES.has(scene)){
+      const ok=await global.PaperWorldDailyLifeScene?.('bedroom');
+      if(!ok)return;
+    }
+    open('schedule');
+  });
   const unsubscribe=state.subscribe(()=>{
     if(!panel.hidden)draw();else refreshCity(state.snapshot());
     if(mode)global.PaperWorldTopHUD?.refreshClock?.();
@@ -262,8 +270,14 @@
   const observer=new MutationObserver(onSceneChange);
   observer.observe(root,{attributes:true,attributeFilter:['hidden']});
   draw();
+  function onGameScene(name){
+    if(name==='menu'||(mode&&!HOME_SCENES.has(name))){
+      panel.hidden=true;cityCover.hidden=true;mode=false;
+      global.PaperWorldTopHUD?.refreshClock?.();
+    }
+  }
   global.PaperWorldDailyLifeUI=Object.freeze({
-    open,close,isOpen:()=>!panel.hidden,isModeActive:()=>mode,snapshot:()=>state.snapshot(),
+    open,close,onGameScene,isOpen:()=>!panel.hidden,isModeActive:()=>mode,snapshot:()=>state.snapshot(),
     engine:state,refresh:draw,dispose:()=>{unsubscribe();observer.disconnect()}
   });
 })(window);
