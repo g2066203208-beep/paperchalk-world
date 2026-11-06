@@ -11,6 +11,13 @@
     const meta=global.PaperWorldDailyLife.ITEM_META;
     const categories=global.PaperWorldDailyLife.CATEGORIES;
     const stock=global.PaperWorldDailyLife.STORE_ITEMS;
+    const ICONS=Object.freeze({
+      bread:'<path d="M4 11c-3-7 3-9 8-9s11 2 8 9l-2 10H6zM4 11h16M9 16v3M15 16v3"/>',
+      water:'<path d="M9 3h6M10 5h4v3l4 4v8H6v-8l4-4zM7 14h10"/>',
+      bandage:'<rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/><path d="m10 9 4 6M9 12h6"/>',
+      keys:'<circle cx="7" cy="8" r="4"/><path d="M10 11l10 10m-4-4 3-3"/>',
+      homework:'<path d="M6 2h12v20H6zM9 7h6M9 11h6M9 15h4"/>'
+    });
     if(!parent)return null;
     const el=(tag,cls,txt)=>{
       const a=document.createElement(tag);
@@ -171,8 +178,10 @@
       for(const [id,item] of items){
         const b=button('',()=>{choice=id;draw()},'pw-item');
         b.dataset.item=id;b.dataset.active=String(choice===id);
-        const icon=el('span','pw-item-symbol',
-          item.category==='important'?'◇':item.effect?.type==='heal'?'+':'◻');
+        const icon=el('span','pw-item-symbol');
+        icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+          'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+          (ICONS[id]||'<circle cx="12" cy="12" r="9"/>')+'</svg>';
         const label=el('span','pw-item-name',item.label);
         const qty=el('span','pw-item-quantity','×'+s.inventory[id]);
         b.append(icon,label,qty);grid.appendChild(b);
