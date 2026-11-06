@@ -45,25 +45,48 @@ assert.ok(frames[4].heroProgress<1,'collision precedes arrival');
 assert.equal(director.poseFor('enemy-2',attack,frames[4]),'hurt-art');
 assert.equal(frames[5].stage,'reaction');
 assert.equal(frames[5].heroProgress,1);
-assert.equal(director.poseFor('hero',attack,frames[5]),'idle',
- 'arrival after attack, never charge in the center');
+assert.equal(director.poseFor('hero',attack,frames[5]),'attack',
+ 'do NOT change attack portrait merely because the attacker reached center');
 assert.ok(frames[6].recoil>frames[5].recoil,'target recoils AFTER contact');
 assert.equal(frames[10].stage,'hold');
 assert.equal(frames[10].heroProgress,1);
 assert.equal(frames[10].victimProgress,1);
-assert.equal(director.poseFor('enemy-2',attack,frames[10]),'idle',
- 'the very brief hold shows the completed result');
+assert.equal(director.poseFor('enemy-2',attack,frames[10]),'hurt-art',
+ 'do NOT change hurt portrait while still in middle stage');
 assert.ok(frames[12].damageOpacity>0,'a few frames retain damage result');
 assert.equal(frames[14].damageOpacity,0);
 assert.equal(frames[15].stage,'recover');
 assert.ok(frames[17].heroProgress<frames[16].heroProgress);
+assert.equal(frames[19].heroProgress,0);
+assert.equal(frames[19].victimProgress,0);
+assert.equal(director.poseFor('hero',attack,frames[19]),'attack',
+ 'attacker still uses combat portrait on first frame BACK at authored anchor');
+assert.equal(director.poseFor('enemy-2',attack,frames[19]),'hurt-art',
+ 'victim still uses hit portrait on first frame BACK at authored anchor');
+for(let i=2;i<19;i++){
+ assert.equal(director.poseFor('hero',attack,frames[i]),'attack',
+  'hero original portrait must NEVER appear before returning; frame '+i);
+}
+for(let i=4;i<19;i++){
+ assert.equal(director.poseFor('enemy-2',attack,frames[i]),'hurt-art',
+  'target original portrait must NEVER appear before returning; frame '+i);
+}
 assert.equal(frames[20].heroProgress,0);
+assert.equal(frames[20].victimProgress,0);
+assert.equal(director.poseFor('hero',attack,frames[20]),'idle',
+ 'hero restores original portrait ONLY AFTER arrival at original anchor');
+assert.equal(director.poseFor('enemy-2',attack,frames[20]),'idle',
+ 'victim restores original portrait ONLY AFTER arrival at original anchor');
+assert.ok(frames[19].zoom>0&&frames[20].zoom>0,
+ 'camera framing must stay cinematic until BOTH portraits have returned');
+assert.equal(frames[21].zoom,0,'camera resets after pose restoration');
 assert.equal(frames[21].stage,'done');
 assert.equal(frames[21].stageStrength,0);
 assert.equal(frames[21].finished,true);
 assert.equal(frames.filter(s=>s.stage==='hold').length,6,
  'no prolonged 1-second static center pose');
-assert.equal(frames.filter(s=>s.victimPose).length,5);
+assert.equal(frames.filter(s=>s.victimPose).length,16);
+assert.equal(frames.filter(s=>s.heroPose).length,18);
 assert.throws(()=>director.sampleFrame(attack,22),/Invalid frame/);
 for(const mode of ['outer','inner']){
  const original=arena.layout(mode),snap=JSON.stringify(original);
@@ -107,4 +130,4 @@ for(const mode of ['outer','inner']){
 const reduced=director.createAttack('enemy-1',0,{reducedMotion:true});
 assert.equal(director.sample(reduced,700).finished,true);
 assert.equal(director.sample(reduced,133.34).shake,0);
-console.log('PASS V27: all 22 authored frames (30fps), independent actor/camera tracks, hit during transit, short result pause, fast exit and rest camera');
+console.log('PASS V28: 22 authored 30fps frames, action/hurt art persist UNTIL origin, then original L2D returns before camera reset');
