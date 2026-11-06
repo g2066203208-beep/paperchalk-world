@@ -121,7 +121,7 @@
   function defaultState(){
     return {version:VERSION,day:1,minute:7*60,location:'bedroom',
       money:260,energy:78,knowledge:0,evidence:0,worldPressure:2,
-      relationships:{classmate:0,clerk:0,neighbor:0},
+      relationships:{female2:0,classmate:0,clerk:0,neighbor:0},
       inventory:{bread:1,water:1},dailyUses:{},nightStatus:'day',
       phone:{callsRead:false,messagesRead:false,reply:null},
       homework:{status:'unfinished',inspected:false,handedIn:false},
