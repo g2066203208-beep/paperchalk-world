@@ -188,7 +188,7 @@ try{
  },null,{timeout:100000});
  const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
   window.PaperWorldGameRingArena.qaFrame(t,at),[target,ms]);
- const frameHero=await invoke('enemy-2',100);
+ const frameHero=await invoke('enemy-2',70);
  assert.equal(frameHero.phase,'swing');
  assert.equal(frameHero.applied,false);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
@@ -217,7 +217,7 @@ try{
   window.PaperWorldGameRingArena.inspect().directorArt.spriteTextures['hero-attack'].uploads)),
  1,'hero attack art is uploaded just once');
  await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-hero-swing.png'});
- const frameHit=await invoke('enemy-2',134);
+ const frameHit=await invoke('enemy-2',101);
  assert.equal(frameHit.applied,true);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'victim');
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'yes');
@@ -251,8 +251,27 @@ try{
  const frameRecoil=await invoke('enemy-2',200);
  assert.equal(frameRecoil.phase,'reaction');
  await qa.screenshot({path:'artifacts/ring-arena/v25-strike-while-moving-enemy-recoil.png'});
- // Correct V28 image ordering: never swap textures while moving.
- const home=await invoke('enemy-2',19*(1000/30)+.01);
+ // The user-supplied DD sequence visibly remains enlarged for about 46
+ // frames after the opening strike. Verify BOTH sprites remain action art.
+ const held=await invoke('enemy-2',46*(1000/30)+.01);
+ assert.equal(held.phase,'hold');
+ const heldSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(heldSnap.directorArt.renderedPoses.hero,'attack',
+  'never switch to idle during original 46-frame tableau');
+ assert.equal(heldSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
+ assert.ok(heldSnap.camera.fov<heldSnap.cameraTarget.fov-10,
+  'original cinematic is an actual strong enlargement, not a tiny FOV twitch');
+ await qa.screenshot({path:'artifacts/ring-arena/v29-frame46-source-matched-central-held-art.png'});
+ // Both performers must RETREAT still in action art. The poses change only
+ // after their ORIGINAL immutable world anchors are restored.
+ const retreat=await invoke('enemy-2',52*(1000/30)+.01);
+ assert.equal(retreat.phase,'recover');
+ const retreatSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(retreatSnap.directorArt.renderedPoses.hero,'attack');
+ assert.equal(retreatSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
+ assert.notEqual(retreatSnap.duel.playedPositions[0].z,retreatSnap.actors.allies[0].z);
+ await qa.screenshot({path:'artifacts/ring-arena/v29-frame52-backward-motion-still-action.png'});
+ const home=await invoke('enemy-2',55*(1000/30)+.01);
  assert.equal(home.phase,'recover');
  const homeSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(homeSnap.directorArt.renderedPoses.hero,'attack');
@@ -263,21 +282,21 @@ try{
  assert.equal(homeSnap.duel.playedPositions[1].z,homeSnap.actors.enemies[1].z);
  assert.equal(homeSnap.directorCameraTemporary,true,
   'camera must keep the duel composition until actors are already home');
- await qa.screenshot({path:'artifacts/ring-arena/v28-frame19-original-positions-action-portraits.png'});
- const afterHome=await invoke('enemy-2',20*(1000/30)+.01);
- assert.equal(afterHome.phase,'recover');
+ await qa.screenshot({path:'artifacts/ring-arena/v29-frame55-home-but-still-action-art.png'});
+ const afterHome=await invoke('enemy-2',56*(1000/30)+.01);
+ assert.equal(afterHome.phase,'settle');
  const afterSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(afterSnap.directorArt.renderedPoses.hero,'idle');
  assert.equal(afterSnap.directorArt.renderedPoses['enemy-2'],'idle');
  assert.ok(afterSnap.camera.fov<afterSnap.cameraTarget.fov,
   'camera finishes retracting only AFTER character images have switched');
- await qa.screenshot({path:'artifacts/ring-arena/v28-frame20-original-portraits-after-home.png'});
- const finalFrame=await invoke('enemy-2',21*(1000/30));
+ await qa.screenshot({path:'artifacts/ring-arena/v29-frame56-idle-art-after-origin.png'});
+ const finalFrame=await invoke('enemy-2',58*(1000/30));
  assert.equal(finalFrame.phase,'idle');
  const settled=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(settled.directorCameraTemporary,false);
  assert.equal(settled.camera.fov,settled.cameraTarget.fov);
- await qa.screenshot({path:'artifacts/ring-arena/v28-frame21-full-queue-restored.png'});
+ await qa.screenshot({path:'artifacts/ring-arena/v29-frame58-full-queue-restored.png'});
  const frameFemale=await invoke('enemy-3',190);
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-hit-portrait'),'no');
  assert.equal(await qa.locator('[data-action-enemy]').evaluate(
@@ -310,18 +329,18 @@ try{
   el.value=String(frame);
   el.dispatchEvent(new Event('input',{bubbles:true}));
  },i);
- await scrub(3);
+ await scrub(2);
  assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.enemyHP['enemy-2'])),36,
-  'inspector frame 3 is still before impact');
- await scrub(4);
+  'inspector frame 2 before first 100ms hit');
+ await scrub(3);
  assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.enemyHP['enemy-2'])),24,
-  'inspector frame 4 settles damage');
+  'inspector frame 3 settles damage');
  await scrub(10);
  assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.phase)),'hold');
- await scrub(21);
+ await scrub(58);
  assert.equal((await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect().director.phase)),'idle',
   'end frame restores world view without retaining duel');
- await qa.screenshot({path:'artifacts/ring-arena/v27-frame-inspector-real-webgl.png'});
+ await qa.screenshot({path:'artifacts/ring-arena/v29-59frame-inspector-real-webgl.png'});
  await qa.close();
  console.log('PASS: real WebGL eye-height 3/4 fixed-left heroine, four enemies, static GPU upload once, restored original L2D, desktop/mobile');
 }finally{
