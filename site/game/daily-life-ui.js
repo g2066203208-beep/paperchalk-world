@@ -10,7 +10,7 @@
   const h=(tag,cls,text)=>{
     const el=document.createElement(tag);
     if(cls)el.className=cls;
-    if(text!==undefined)el.textContent=String(text);
+    if(text!==undefined&&text!==null)el.textContent=String(text);
     return el;
   };
   const root=document.getElementById('novel-ui');
@@ -27,7 +27,7 @@
   const cityCover=h('div','daily-city-cover');
   cityCover.hidden=true;cityCover.setAttribute('aria-label','尚未配备美术素材的城市生活地点');
   cityCover.innerHTML='<div class="daily-city-inner"><small>表世界 / 城市生活</small><strong></strong><span>当前地点已接入日程与交互，场景美术尚待制作。</span></div>';
-  root.insertBefore(cityCover,panel);
+  document.getElementById('view').appendChild(cityCover);
   const tabs=panel.querySelector('.daily-tabs');
   const content=panel.querySelector('.daily-content');
   const feedback=panel.querySelector('.daily-feedback');
@@ -273,7 +273,8 @@
   }
   function activate(){
     if(root.hidden)return false;
-    mode=true;refreshCity(state.snapshot());
+    mode=true;document.getElementById('view').classList.add('overworld-life-active');
+    refreshCity(state.snapshot());
     global.PaperWorldTopHUD?.refreshClock?.();
     return true;
   }
@@ -327,6 +328,7 @@
   // The main scene router should call this when returning to the main menu.
   function onSceneChange(){if(root.hidden){
     panel.hidden=true;cityCover.hidden=true;mode=false;
+    document.getElementById('view').classList.remove('overworld-life-active');
     global.PaperWorldTopHUD?.refreshClock?.();
   }else refreshCity(state.snapshot())}
   const observer=new MutationObserver(onSceneChange);
@@ -335,6 +337,7 @@
   function onGameScene(name){
     if(name==='menu'||(mode&&!HOME_SCENES.has(name))){
       panel.hidden=true;cityCover.hidden=true;mode=false;
+      document.getElementById('view').classList.remove('overworld-life-active');
       global.PaperWorldTopHUD?.refreshClock?.();
     }
   }
