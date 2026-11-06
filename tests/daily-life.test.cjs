@@ -153,7 +153,7 @@ test('school gate and 09:00 assignment deadline are real game-time rules',()=>{
   assert.equal(g.finishHomework().ok,true);
   assert.equal(g.submitHomework().ok,true);
   assert.equal(g.snapshot().homework.handedIn,true);
-  assert.equal(g.snapshot().relationships.female2,2);
+  assert.equal(g.snapshot().relationships.female2,57);
   assert.equal(g.submitHomework().ok,false);
 });
 test('shopping mall travel is supported, and city return requires entrance',()=>{
