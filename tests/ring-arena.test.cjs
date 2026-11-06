@@ -29,10 +29,11 @@ for(const mode of ['outer','inner']){
  approx(c.eye.y,1.50);
  approx(arena.VERTICAL_LENS_SHIFT,.23);
  assert.ok(Math.abs(arena.cameraPitchDeg(c))<.001,'true horizontal eye-level optics');
- approx(c.focus.x,0);
+ approx(c.focus.x,.78);
+ approx(c.eye.x,c.focus.x);
  assert.ok(c.fov>=50&&c.fov<=60);
  const hero=scene.allies[0],heroMiddle=arena.project({...hero,y:.81},c);
- assert.ok(heroMiddle.valid&&heroMiddle.x<-.67&&heroMiddle.x>-.88,
+ assert.ok(heroMiddle.valid&&heroMiddle.x<-.50&&heroMiddle.x>-.70,
   'fixed view must keep 3/4 heroine in the LEFT foreground');
  const heroBounds=arena.portraitBounds(hero,c);
  assert.ok(heroBounds.valid&&heroBounds.heightFraction>.8&&heroBounds.heightFraction<1.3);
@@ -43,9 +44,13 @@ for(const mode of ['outer','inner']){
   'eye-height over-shoulder framing must not put heroine head against ceiling');
  const centers=scene.enemies.map(e=>arena.project({...e,y:e.height*.5},c).x);
  const mean=centers.reduce((a,b)=>a+b,0)/4;
- assert.ok(Math.abs(mean)<.12,'enemy formation must face the fixed camera');
+ assert.ok(mean>.29&&mean<.37,'all four enemies belong in the RIGHT battle lane');
  const ordered=[...centers].sort((a,b)=>a-b);
- for(let i=1;i<ordered.length;i++)assert.ok(ordered[i]-ordered[i-1]>.17);
+ for(let i=1;i<ordered.length;i++)assert.ok(ordered[i]-ordered[i-1]>.20);
+ const feet=scene.enemies.map(e=>arena.project({x:e.x,y:0,z:e.z},c));
+ for(let i=1;i<feet.length;i++)
+  assert.ok(Math.abs(feet[i].y-feet[0].y)<.0001,
+   'ALL FOUR shoes stand on the exact same real 3D projected floor line');
  for(const e of safety.foes){
   assert.ok(e.top>.1&&e.top<.5&&e.bottom>-.55&&e.bottom<.06);
   assert.ok(e.heightFraction>.22&&e.heightFraction<.40);
