@@ -15,19 +15,23 @@
     '备忘录':'<path d="M6 3h12v18H6zM9 9h6M9 13h6M9 17h4"/>',
     '日历':'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',
     '音乐':'<path d="M9 18V5l12-2v13M9 18c0 3-6 4-6 1s6-4 6-1ZM21 16c0 3-6 4-6 1s6-4 6-1Z"/>',
+    '相机':'<path d="M3 7h5l2-3h5l2 3h4v13H3z"/><circle cx="12" cy="13" r="4"/>',
+    '城市论坛':'<path d="M3 4h18v13H9l-5 4v-4H3zM7 9h10M7 13h7"/>',
+    '新闻':'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h7v5H7zM16 7h2M16 11h2M7 15h11M7 18h11"/>',
+    '直播':'<rect x="4" y="6" width="16" height="13" rx="2"/><path d="m10 10 5 3-5 3zM2 3l2-1M22 3l-2-1"/>',
     '设置':'<circle cx="12" cy="12" r="3"/><path d="m10 2-1 3-3 1-3-1-2 4 3 2v3l-3 2 2 4 3-1 3 1 1 3h4l1-3 3-1 3 1 2-4-3-2v-3l3-2-2-4-3 1-3-1-1-3z"/>'
   };
   const svg=p=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>';
   const finger=svg('<path d="M12 11a2 2 0 0 1 2 2c0 2.5-.3 4.8-1.1 7M9 19.2c.6-2.1.9-4.2.9-6.3a2.1 2.1 0 0 1 4.2 0M6.5 17.5c.4-1.6.5-3 .5-4.5a5 5 0 0 1 10 0c0 2.7-.2 4.9-.7 7M4.5 13a7.5 7.5 0 0 1 15 0c0 1.7-.1 3.1-.3 4.4M12 3a10 10 0 0 0-9.6 7M7.6 21c.9-2.4 1.2-4.6 1.2-7.5"/>');
   // Social information is available through the handset, not the world HUD.
-  const defaultApps=['信息','电话','联系人','地图','备忘录','状态','相册','日历','设置'];
+  const defaultApps=['信息','电话','联系人','相机','相册','城市论坛','新闻','直播','地图','备忘录','日历','设置'];
   const defaultProfile={id:'protagonist',name:'女主角',passcode:'000000',
     apps:defaultApps,wallpaperUrl:null,shellUrl:'./assets/phones/char001-cat-ear-shell.webp?v=approved-0c8e0d-v3'};
   const weekdays=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
   function create({root,profile={}}={}){
     if(!root)throw new Error('Phone requires #novel-ui root');
     let config={...defaultProfile,...profile};
-    let pin='',page='lock',opened=false,clockTimer=0;
+    let pin='',page='lock',opened=false,clockTimer=0,mediaStream=null;
     const section=document.createElement('section');
     section.id='phone-ui';section.hidden=true;
     section.dataset.uiFogEdge='right';
@@ -80,7 +84,6 @@
             <span class="phone-home-indicator" aria-hidden="true"></span>
           </div>
         </div>
-        <button class="phone-close" type="button" aria-label="收起手机">×</button>
       </div>`;
     root.appendChild(section);
     const get=id=>section.querySelector('#'+id);
@@ -94,6 +97,27 @@
         if(shellImage.src!==src)shellImage.src=src;
       }
       wall.style.setProperty('--phone-lock-image',config.wallpaperUrl?'url("'+encodeURI(config.wallpaperUrl).replace(/"/g,'%22')+'")':'none');
+    }
+    function stopCamera(){
+      if(mediaStream){for(const track of mediaStream.getTracks())track.stop();mediaStream=null;}
+    }
+    function world(){
+      try{return typeof config.getPhoneWorld==='function'?config.getPhoneWorld():null}
+      catch(_){return null;}
+    }
+    const make=(tag,cls,txt)=>{
+      const e=document.createElement(tag);
+      if(cls)e.className=cls;
+      if(txt!==undefined)e.textContent=String(txt);
+      return e;
+    };
+    function appButton(label,fn,cls='phone-native-action'){
+      const b=make('button',cls,label);
+      b.type='button';b.addEventListener('click',fn);return b;
+    }
+    function panelNote(copy,title,body){
+      const p=make('div','phone-news-card');
+      p.append(make('small','',title),make('p','',body));copy.appendChild(p);return p;
     }
     function getInbox(){
       try{return typeof config.getNarrative==='function'?config.getNarrative():null}
@@ -118,6 +142,7 @@
         ' 通未接来电 · '+(inbox.phone?.messagesRead?0:inbox.messages.length)+' 条消息';
     }
     function showPage(next){
+      if(next!=='app')stopCamera();
       page=next;
       // While reading apps, the camera looks closer at the SAME phone screen.
       // The approved cat-ear shell remains unchanged on the lock view.
@@ -181,6 +206,243 @@
         copy.appendChild(b);
       }
     }
+    function renderConversation(copy){
+      const inbox=getInbox();
+      const state=world();
+      const title=make('div','phone-chat-header');
+      title.append(make('strong','','女二'),make('small','','同班同学 · 私人聊天'));
+      copy.appendChild(title);
+      const thread=make('div','phone-chat-thread');
+      for(const msg of inbox?.messages||[]){
+        const line=make('div','phone-chat-bubble is-them');
+        line.append(make('small','',msg.time),make('span','',msg.text));thread.appendChild(line);
+      }
+      if(inbox?.phone?.reply){
+        const outgoing=make('div','phone-chat-bubble is-me');
+        outgoing.append(make('small','','我'),make('span','',
+          inbox.phone.reply==='coming'?'还没写，我现在过去！':'我先看看书包，马上出门。'));
+        thread.appendChild(outgoing);
+      }
+      for(const msg of state?.phoneThreads?.female2||[]){
+        const line=make('div','phone-chat-bubble '+(msg.from==='me'?'is-me':'is-them'));
+        const time=String(Math.floor(msg.minute/60)).padStart(2,'0')+':'+
+          String(msg.minute%60).padStart(2,'0');
+        line.append(make('small','',msg.from==='me'?'我 · '+time:time),
+          make('span','',msg.text));
+        thread.appendChild(line);
+      }
+      copy.appendChild(thread);
+      const composer=make('form','phone-chat-composer');
+      const input=make('textarea','phone-chat-input');
+      input.placeholder='发送消息…';input.rows=2;input.maxLength=180;
+      input.setAttribute('aria-label','输入聊天消息');
+      const submit=make('button','','发送');submit.type='submit';
+      composer.addEventListener('submit',event=>{
+        event.preventDefault();const body=input.value.trim();
+        if(!body)return;
+        const res=config.onSendMessage?.('female2',body);
+        if(res?.ok)renderApp('信息');
+        else panelNote(copy,'发送失败',res?.reason||'消息无法发送');
+      });
+      composer.append(input,submit);copy.appendChild(composer);
+      if(typeof config.onPhoneRead==='function')config.onPhoneRead('messages');
+      if(inbox?.phone&&!inbox.phone.reply){
+        const quick=make('div','phone-chat-quick');
+        for(const [id,txt] of [['coming','还没写，我现在过去！'],['checking','我先看看书包']]){
+          quick.appendChild(appButton(txt,()=>{
+            const res=config.onPhoneReply?.(id);
+            if(res?.ok)renderApp('信息');
+          },'phone-quick-reply'));
+        }
+        copy.appendChild(quick);
+      }
+      thread.scrollTop=thread.scrollHeight;
+    }
+    function renderCall(copy){
+      const state=world(),inbox=getInbox();
+      const head=make('div','phone-call-contact');
+      head.append(make('div','phone-call-avatar','女'),make('strong','','女二'),
+        make('small','','同班同学'));
+      copy.appendChild(head);
+      const controls=make('div','phone-call-actions');
+      const call=video=>{
+        const result=config.onPhoneCall?.('female2',video);
+        if(!result?.ok){panelNote(copy,'通话失败',result?.reason||'无法发起通话');return;}
+        copy.replaceChildren();
+        const screen=make('div','phone-call-screen');
+        if(video){
+          const heading=make('strong','','剧情视频通话 · 女二');
+          screen.appendChild(heading);
+          const avatar=make('div','phone-call-video-avatar','女');
+          screen.appendChild(avatar);
+          const caption=make('small','',result.answered?'对方正在通话 · 剧情画面':'无人接听');
+          screen.appendChild(caption);
+          const selfPreview=make('video','phone-call-self');
+          selfPreview.autoplay=true;selfPreview.muted=true;selfPreview.playsInline=true;
+          screen.appendChild(selfPreview);
+          if(navigator.mediaDevices?.getUserMedia){
+            navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false})
+              .then(stream=>{
+                if(!opened||!selfPreview.isConnected){stream.getTracks().forEach(t=>t.stop());return;}
+                stopCamera();mediaStream=stream;selfPreview.srcObject=stream;
+                selfPreview.play().catch(()=>{});
+              }).catch(()=>{selfPreview.hidden=true});
+          }else selfPreview.hidden=true;
+        }else screen.append(make('strong','','正在与女二通话'));
+        screen.append(make('p','',result.text));
+        copy.appendChild(screen);
+        copy.appendChild(appButton('结束通话',()=>{stopCamera();renderApp('电话')},'phone-hangup'));
+      };
+      controls.append(appButton('语音通话',()=>call(false)),
+        appButton('视频通话',()=>call(true)));
+      copy.appendChild(controls);
+      panelNote(copy,'近期通话','与游戏世界角色通话，通话会占用游戏时间。');
+      for(const c of (state?.phoneCalls||[]).slice(-7).reverse()){
+        const row=make('div','phone-call-history',
+          (c.video?'视频':'语音')+' · '+(c.answered?'已接通':'未接听')+' · 第'+c.day+'天');
+        copy.appendChild(row);
+      }
+      if(inbox?.missedCalls?.length){
+        panelNote(copy,'女二','早上有 '+inbox.missedCalls.length+' 通未接来电。');
+        config.onPhoneRead?.('calls');
+      }
+    }
+    function renderNews(copy){
+      const s=world();
+      const hdr=make('p','phone-feed-intro','市民资讯 · 游戏世界内的新闻');
+      copy.appendChild(hdr);
+      const items=s?.news||['今天的城市生活继续。'];
+      items.forEach((text,i)=>panelNote(copy,i===0?'最新消息':'城市快讯',text));
+      if(s?.transitRumors?.length){
+        copy.appendChild(make('h3','phone-feed-heading','车厢见闻'));
+        for(const item of s.transitRumors.slice(-12).reverse())
+          panelNote(copy,'第'+item.day+'天 · 乘客谈话',item.text);
+      }
+    }
+    function renderGallery(copy,allowSelect=false,onSelect=null){
+      const photos=world()?.mediaPhotos||[];
+      if(!photos.length){panelNote(copy,'相册','还没有照片。可以使用相机拍摄或从设备选取。');return}
+      const grid=make('div','phone-gallery-grid');
+      for(const item of photos.slice().reverse()){
+        const tile=make('button','phone-photo-tile');
+        tile.type='button';
+        const photo=make('img');photo.src=item.data;photo.alt='第'+item.day+'天拍摄';
+        tile.append(photo,make('small','','第'+item.day+'天'));
+        tile.addEventListener('click',()=>{
+          if(allowSelect&&onSelect){onSelect(item.id);return}
+          copy.replaceChildren();
+          const larger=make('img','phone-photo-preview');
+          larger.src=item.data;larger.alt='拍摄的照片';
+          copy.append(larger,appButton('返回相册',()=>renderApp('相册')));
+        });
+        grid.appendChild(tile);
+      }
+      copy.appendChild(grid);
+    }
+    async function openRealCamera(copy,live=false){
+      const preview=make('div','phone-camera-stage');
+      const video=make('video','phone-camera-live');
+      video.autoplay=true;video.muted=true;video.playsInline=true;
+      preview.appendChild(video);copy.appendChild(preview);
+      const status=make('p','phone-camera-status',
+        live?'游戏世界直播预览 · 不会上传到现实网络':'使用设备摄像头，图片只保存到游戏存档');
+      copy.appendChild(status);
+      const controls=make('div','phone-camera-actions');
+      copy.appendChild(controls);
+      const take=()=>{
+        if(!video.videoWidth){status.textContent='相机尚未就绪';return}
+        const canvas=document.createElement('canvas');
+        canvas.width=320;canvas.height=Math.round(320*video.videoHeight/video.videoWidth);
+        canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+        const image=canvas.toDataURL('image/jpeg',.62);
+        const res=config.onTakePhoto?.(image);
+        status.textContent=res?.ok?'照片已保存到相册':res?.reason||'存储失败';
+        if(res?.ok&&!live)renderApp('相册');
+      };
+      if(live){
+        let broadcasting=false;
+        const start=appButton('开始游戏内直播',()=>{
+          broadcasting=!broadcasting;
+          start.textContent=broadcasting?'结束直播':'开始游戏内直播';
+          status.textContent=broadcasting?
+            '直播中 · 游戏世界模拟观众：今天街区有什么新鲜事？':
+            '直播已结束 · 未连接真实直播平台';
+        });
+        controls.appendChild(start);
+      }
+      controls.appendChild(appButton(live?'拍摄直播截图':'拍照',take));
+      if(!live){
+        const importBtn=make('label','phone-import-label','从设备选取照片');
+        const input=make('input');input.type='file';input.accept='image/*';
+        input.addEventListener('change',event=>{
+          const file=event.target.files?.[0];if(!file)return;
+          const img=new Image();const url=URL.createObjectURL(file);
+          img.onload=()=>{
+            const c=document.createElement('canvas');c.width=320;
+            c.height=Math.max(1,Math.round(320*img.height/img.width));
+            c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+            URL.revokeObjectURL(url);
+            const res=config.onTakePhoto?.(c.toDataURL('image/jpeg',.58));
+            if(res?.ok)renderApp('相册');
+            else status.textContent=res?.reason||'无法导入照片';
+          };
+          img.onerror=()=>URL.revokeObjectURL(url);
+          img.src=url;
+        });
+        importBtn.appendChild(input);controls.appendChild(importBtn);
+      }
+      if(!navigator.mediaDevices?.getUserMedia){
+        video.hidden=true;
+        status.textContent='当前设备不支持网页相机，可以从设备选取照片。';
+        return;
+      }
+      try{
+        stopCamera();
+        const stream=await navigator.mediaDevices.getUserMedia({
+          video:{facingMode:live?'user':'environment'},audio:false});
+        if(!opened||!video.isConnected){stream.getTracks().forEach(t=>t.stop());return}
+        mediaStream=stream;video.srcObject=stream;
+        await video.play().catch(()=>{});
+      }catch(error){
+        video.hidden=true;
+        status.textContent='相机未授权或不可用；可使用设备照片。';
+      }
+    }
+    function renderForum(copy){
+      const s=world();
+      copy.appendChild(make('p','phone-feed-intro','城市论坛 · 仅在游戏世界内发布'));
+      const form=make('form','phone-forum-composer');
+      const field=make('textarea');field.placeholder='分享你在城里看到的事…';
+      field.maxLength=180;field.rows=3;
+      const photoLabel=make('small','','未选择照片');
+      const selection=make('button','', '选择相册照片');
+      selection.type='button';
+      let photoId='';
+      selection.addEventListener('click',()=>{
+        copy.replaceChildren();
+        copy.appendChild(appButton('‹ 返回论坛',()=>renderApp('城市论坛')));
+        renderGallery(copy,true,id=>{photoId=id;renderApp('城市论坛');});
+      });
+      // Album selection is stored on this handset until the next post.
+      photoId=section.dataset.forumPhoto||'';
+      if(photoId)photoLabel.textContent='已添加照片';
+      selection.addEventListener('click',()=>{});
+      form.addEventListener('submit',event=>{
+        event.preventDefault();
+        const result=config.onPublishPost?.(field.value,section.dataset.forumPhoto||'');
+        if(result?.ok){delete section.dataset.forumPhoto;renderApp('城市论坛')}
+        else panelNote(copy,'发布失败',result?.reason||'暂时无法发布');
+      });
+      const submit=make('button','', '发布');submit.type='submit';
+      form.append(field,photoLabel,selection,submit);copy.appendChild(form);
+      for(const post of s?.socialPosts||[]){
+        const card=panelNote(copy,'我 · 第'+post.day+'天',post.text||'分享了一张照片');
+        const photo=s?.mediaPhotos?.find(p=>p.id===post.photoId);
+        if(photo){const image=make('img','phone-post-image');image.src=photo.data;image.alt='帖子图片';card.appendChild(image)}
+      }
+      (s?.news||[]).slice(0,2).forEach((txt,i)=>panelNote(copy,
+        i?'城内讨论 · 热帖':'城内讨论 · 置顶',txt));
+    }
     function renderContactProfile(contact,copy){
       copy.replaceChildren();
       const back=document.createElement('button');back.type='button';
@@ -210,6 +472,12 @@
         const v=document.createElement('span');v.textContent=value;item.append(k,v);
         copy.appendChild(item);
       }
+      const actions=make('div','phone-contact-actions');
+      actions.append(appButton('语音通话',()=>renderApp('电话')),
+        appButton('视频通话',()=>{renderApp('电话');const b=get('phone-app-copy')
+          .querySelectorAll('.phone-call-actions button')[1];b?.click();}),
+        appButton('发消息',()=>renderApp('信息')));
+      copy.appendChild(actions);
       if(contact.chatAvailable){
         const chat=document.createElement('button');chat.type='button';
         chat.className='phone-contact-chat';chat.textContent='查看聊天记录';
@@ -266,8 +534,38 @@
       get('phone-app-title').textContent=name;
       section.dataset.appName=name;
       copy.replaceChildren();
+      if(name!=='相机'&&name!=='直播'&&name!=='电话')stopCamera();
       if(name==='联系人'){
         renderContacts(copy);showPage('app');return;
+      }
+      if(name==='信息'){
+        renderConversation(copy);showPage('app');return;
+      }
+      if(name==='电话'){
+        renderCall(copy);showPage('app');return;
+      }
+      if(name==='新闻'){
+        renderNews(copy);showPage('app');return;
+      }
+      if(name==='城市论坛'){
+        renderForum(copy);showPage('app');return;
+      }
+      if(name==='相册'){
+        renderGallery(copy);showPage('app');return;
+      }
+      if(name==='相机'||name==='直播'){
+        showPage('app');openRealCamera(copy,name==='直播');return;
+      }
+      if(name==='日历'){
+        const state=world();
+        panelNote(copy,'游戏日历',state?
+          state.calendar.month+'月'+state.calendar.date+'日 · '+state.calendar.weekdayLabel:
+          '尚未进入日常生活');
+        showPage('app');return;
+      }
+      if(name==='设置'){
+        panelNote(copy,'手机设置','点击手机外侧区域即可收起，应用内使用返回键。');
+        showPage('app');return;
       }
       if(name==='备忘录'){
         renderMemo(copy);showPage('app');return;
@@ -345,18 +643,27 @@
       global.dispatchEvent(new CustomEvent('paperchalk:phone-visibility',{detail:{open:true}}));
     }
     function close(){
-      opened=false;section.hidden=true;pin='';updatePin();showPage('lock');
+      if(!opened)return;
+      stopCamera();opened=false;section.hidden=true;pin='';updatePin();showPage('lock');
       clearInterval(clockTimer);clockTimer=0;
       global.dispatchEvent(new CustomEvent('paperchalk:phone-visibility',{detail:{open:false}}));
     }
     section.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',()=>input(b.dataset.key)));
     get('phone-fingerprint').addEventListener('click',()=>{if(opened&&page==='lock')unlock('simulated-fingerprint')});
     get('phone-app-back').addEventListener('click',()=>showPage('home'));
-    section.querySelector('.phone-close').addEventListener('click',()=>{
-      close();global.PaperWorldQuickTools?.close();
-    });
+    // A handset closes by tapping anywhere outside its silhouette.
+    const view=document.getElementById('view');
+    view?.addEventListener('pointerdown',event=>{
+      if(!opened||section.contains(event.target)||event.target.closest('#quick-phone'))return;
+      close();
+      global.PaperWorldQuickTools?.close?.();
+    },true);
     global.addEventListener('keydown',event=>{
       if(!opened)return;
+      if(event.key==='Escape'){
+        close();global.PaperWorldQuickTools?.close?.();
+        event.preventDefault();event.stopImmediatePropagation();return;
+      }
       if(page==='lock'&&(/^\d$/.test(event.key)||event.key==='Backspace')){
         if(input(event.key==='Backspace'?'erase':event.key)){event.preventDefault();event.stopImmediatePropagation()}
       }else if([' ','Enter'].includes(event.key)&&event.target===document.body){
@@ -370,7 +677,7 @@
       return true;
     }
     configure({});
-    function refresh(){drawApps();drawClock();}
+    function refresh(){if(!opened)return;drawApps();drawClock();}
     function openApp(name){
       if(!opened)open();
       if(page==='lock')unlock('local-quick-access');
