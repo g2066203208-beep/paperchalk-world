@@ -3308,8 +3308,9 @@ void main(){
     // No individual L2D, fog or material-layer parallax.
     const roomMove=stage.dataset.scene==='classroom-box';
     const worldLook=roomMove||stage.dataset.scene==='ring-arena';
-    const kx=1-Math.exp(-cameraFrameDt*(roomMove?10:7));
-    const ky=1-Math.exp(-cameraFrameDt*(roomMove?9:7));
+    const lookRate=stage.dataset.scene==='ring-arena'?10:7;
+    const kx=1-Math.exp(-cameraFrameDt*(roomMove?10:lookRate));
+    const ky=1-Math.exp(-cameraFrameDt*(roomMove?9:lookRate));
     // Old flat-scene tilt only affects 2D. The WebGL room uses the
     // independently bounded first-person PAN/TILT angles.
     if(reduced.matches||editorActive||(!worldLook&&!tiltEnabled)){

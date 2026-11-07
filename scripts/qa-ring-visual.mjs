@@ -83,10 +83,14 @@ try{
  // floor, wall, light or shadow anchor. Capture two real opposing look poses.
  if(ready){
   const anchors=JSON.stringify(report.outer.actors),origin=report.outer.camera.eye;
-  await page.mouse.move(75,435);await page.waitForTimeout(520);
+  await page.mouse.move(75,435);
+  await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.cameraLook?.yawDeg< -1.2,
+   null,{timeout:45000});
   report.mouseLeft=await inspect();
   await page.screenshot({path:resolve(out,'10-mouse-look-left-1917x906.png')});
-  await page.mouse.move(1840,435);await page.waitForTimeout(560);
+  await page.mouse.move(1840,435);
+  await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.cameraLook?.yawDeg>1.2,
+   null,{timeout:45000});
   report.mouseRight=await inspect();
   await page.screenshot({path:resolve(out,'11-mouse-look-right-1917x906.png')});
   if(JSON.stringify(report.mouseLeft.actors)!==anchors||
@@ -98,7 +102,9 @@ try{
   if(!(report.mouseLeft.cameraLook.yawDeg<-1.2&&
        report.mouseRight.cameraLook.yawDeg>1.2))
    validationErrors.push('cursor does not turn camera in the correct direction');
-  await page.mouse.move(958,453);await page.waitForTimeout(760);
+  await page.mouse.move(958,453);
+  await page.waitForFunction(()=>Math.abs(window.PaperWorldGameRingArena?.inspect()?.cameraLook?.yawDeg||0)<.10,
+   null,{timeout:45000});
  }
 
  if(ready){
