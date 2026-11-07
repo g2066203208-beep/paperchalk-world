@@ -34,7 +34,8 @@
  letter-spacing:.02em;
 }
 #view > #overworld-city-stage{
- position:absolute;inset:0;z-index:4;pointer-events:none;
+ /* Fallbacks stay BELOW the existing real-time screen-space fog (#fog z=3). */
+ position:absolute;inset:0;z-index:2;pointer-events:none;
  display:grid;place-items:center;overflow:hidden;
  background:
   radial-gradient(ellipse 60% 80% at 48% 45%,#31373b,transparent 80%),
