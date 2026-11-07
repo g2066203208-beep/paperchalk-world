@@ -34,7 +34,7 @@ for(const mode of ['outer','inner']){
   assert.ok(feet.every(p=>p.valid));
   assert.ok(feet.every(p=>Math.abs(p.y-feet[0].y)<.001),
    'foe shoe bottoms must align on one projected floor line at aspect '+aspect);
-  assert.ok(spacing.every(d=>d>.20&&d<.29),
+  assert.ok(spacing.every(d=>d>.185&&d<.235),
    'four distinct enemies with comfortable even foot spacing at aspect '+aspect);
   assert.ok(Math.max(...spacing)-Math.min(...spacing)<.001,
    'opponent row must be truly even, not visually random perspective');
@@ -54,11 +54,11 @@ for(const mode of ['outer','inner']){
    'same-depth opponents must have identical per-meter screen scale');
   if(aspect===1917/906){
    // Real 1.58-1.60m bodies are physically closer, not multiplied by CSS.
-   // More readable than V10's ~0.331/0.353 full body height fractions.
-   assert.ok(heightFractions[0]>(mode==='outer'?.40:.43),
+   // Closer to the camera than V13 with actual 1.58m people, not sprite scaling.
+   assert.ok(heightFractions[0]>(mode==='outer'?.485:.516),
     'opponents must be materially larger and clearly legible');
-   assert.ok(heightFractions[0]<(mode==='outer'?.44:.47),
-    'opponents should not tower over the authored 3.2m room');
+   assert.ok(heightFractions[0]<(mode==='outer'?.52:.555),
+    'foes should keep human scale under the new 2.85m ceiling');
   }
   if(aspect===1917/906)
    console.log('V31 '+mode+' 1917x906:',{
