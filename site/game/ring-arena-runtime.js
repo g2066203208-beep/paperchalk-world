@@ -292,7 +292,7 @@
    const p=((Number(seconds)||0)%6.2+6.2)%6.2;
    // Faulty ballast: sporadic 50-300ms interruptions and a rare long dip.
    levels[1]=(p>1.62&&p<1.78)||(p>1.9&&p<2.25)||(p>4.86&&p<5.24)?0.0:1.0;
-   levels[4]=p>4.83&&p<5.36?.07:1.0;
+   levels[4]=(p>4.83&&p<5.36)?0.07:1.0;
   }
   const emergency=valid==='outage'?1:valid==='flicker'?.12:0;
   const ambient=valid==='outage'?[.017,.024,.038]:
@@ -446,7 +446,7 @@
  // dark when its light level is zero and emits only while powered.
  const fixtureVertex=[
   'precision highp float;attribute vec2 aUv;',
-  'uniform mat4 uVP;uniform vec3 uCenter;uniform vec2 uSize;'
+  'uniform mat4 uVP;uniform vec3 uCenter;uniform vec2 uSize;',
   'varying vec2 vUv;',
   'void main(){vUv=aUv;',
   'vec3 pos=uCenter+vec3((aUv.x-.5)*uSize.x,-.018,(aUv.y-.5)*uSize.y);',
