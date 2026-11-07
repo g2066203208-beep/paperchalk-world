@@ -22,8 +22,19 @@
    geometry:Object.freeze({shape:'strip',widthMeters:8.6,depthMeters:3.85,
     heightMeters:2.85,backZ:8.0}),
    // Per-scene staging is data, not a separate game-mode rendering path.
-   camera:Object.freeze({lensShift:.085}),
-   actors:Object.freeze({visible:Object.freeze(['hero'])}),
+   camera:Object.freeze({
+    // Passenger eye sees a believable 2.85m-high train, not the battle
+    // over-shoulder lens/giant foreground heroine.
+    mode:'fixed',eye:Object.freeze({x:0,y:1.52,z:15.1}),
+    focus:Object.freeze({x:0,y:1.38,z:7.3}),fov:56,lensShift:.035
+   }),
+   actors:Object.freeze({
+    visible:Object.freeze(['hero']),
+    positions:Object.freeze({
+     hero:Object.freeze({x:-1.9,y:0,z:10.1,height:1.63})
+    })
+   }),
+   ends:'./assets/metro/side/metro-gangway.svg',
    wall:Object.freeze({url:'./assets/metro/side/cabin-master.webp',
     width:2048,height:1024,repeats:1,heightMeters:2.85}),
    // Geometry is different, renderer/shaders/lighting/shadows are identical.
