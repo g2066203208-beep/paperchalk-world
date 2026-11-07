@@ -336,6 +336,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(metro.STATIONS[p.id]||!locations[p.id])continue;
   const node=element('button','pw-dot-poi pw-transit-place');
   node.type='button';node.dataset.place=p.id;node.dataset.city=p.city;
+  node.dataset.current=String(p.id===here);
   node.dataset.kind=p.kind||'';
   const src=atlas.PHOTOS[p.photo]?.url;
   photo(node,[src,PLACEHOLDER]);
@@ -363,6 +364,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    ]);
   });
  }
+ // Always keep the actual current place legible under photo-pin decluttering.
+ worldNodes.sort((a,b)=>Number(b.poi.id===here)-Number(a.poi.id===here));
  const caption=element('span','pw-transit-caption','');
  const sub=element('span','pw-transit-tip','');
  map.append(caption,sub);
@@ -429,7 +432,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   lastW=v.w;lastH=v.h;
   if(first){
    const local=Math.min((v.w-60)/570,(v.h-80)/310);
-   centerOn(hereCity,Math.max(minScale,Math.min(2.6,local)));
+   const targetZoom=currentCity==='kirihama'?Math.min(2.6,local):Math.max(2.85,local);
+   centerOn(currentCity==='kirihama'?hereCity:(herePoi||hereCity),Math.max(minScale,targetZoom));
   }else if(overview){
    centerOn({x:W*.5,y:H*.5},minScale);
   }else{
