@@ -239,6 +239,24 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
  assert.ok(afterStation.actionWidth<=300,
   '1536x691 user screen must not show >500px-wide actions: '+JSON.stringify(afterStation));
  await shot('24-metro-real-user-widescreen-after-next-stop.png');
+ // A 1536x691 image may come from a 768x346 CSS viewport at DPR=2;
+ // this is the responsive query that previously expanded three options
+ // into nearly half the image. Test the REAL CSS viewport too.
+ await page.setViewportSize({width:768,height:346});
+ await page.waitForTimeout(260);
+ const landscape=await page.evaluate(()=>{
+  const ui=document.querySelector('#pw-metro-cabin .pw-cabin-actions button');
+  const room=window.PaperWorldGameRingArena.inspect();
+  return {width:innerWidth,height:innerHeight,
+   buttonWidth:ui?.getBoundingClientRect().width,
+   heroReady:room.heroine.ready,
+   canvasVisible:getComputedStyle(document.getElementById('ring-arena-canvas')).display!=='none'};
+ });
+ assert.ok(landscape.heroReady&&landscape.canvasVisible,
+  'genuine mobile landscape keeps hero and 3D world: '+JSON.stringify(landscape));
+ assert.ok(landscape.buttonWidth<=210,
+  'mobile CSS viewport should make only ~300px physical buttons at DPR2: '+JSON.stringify(landscape));
+ await shot('26-metro-user-mobile-landscape-768x346-2x-equivalent.png');
  // The user's local browser may have an old/unloaded L2D library state.
  // Simulate that exact case. Never let a missing IndexedDB rig create
  // a permanently empty carriage: upload original canonical back art.
