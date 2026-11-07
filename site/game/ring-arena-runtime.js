@@ -741,6 +741,8 @@
    '#view.ring-arena-transit #pw-metro-cabin{background:transparent!important}',
    '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-canvas{display:none!important}',
    '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-foreground{display:none!important}',
+   '#view.ring-arena-transit #novel-ui>:not(#pw-metro-cabin){visibility:hidden!important;pointer-events:none!important}',
+   '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat[hidden]{display:none!important}',
    '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat{position:absolute!important;left:var(--metro-seat-x)!important;top:31%!important;width:15%!important;height:54%!important;opacity:1!important;transform:translateX(-50%)!important;overflow:hidden!important;pointer-events:none!important}',
    '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat [data-l2d-image]{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:100%!important;object-fit:contain!important;opacity:1!important}',
    '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat [data-l2d-canvas]{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:100%!important}',
@@ -1558,7 +1560,7 @@
     }
    }
    const target=attack?actorForTarget(attack.targetId):null;
-   lens=target?director.cinematicCamera(base,attack,attackSample,target):
+   lens=transitMode?transitCamera:target?director.cinematicCamera(base,attack,attackSample,target):
     immersiveCamera(base,mouseLookX,mouseLookY);
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    currentLighting=lightingFrame(lightState,
@@ -1697,6 +1699,15 @@
    }
    return true;
   }
+  // An actual rail carriage is only 2.7–3m wide, not the 11m-wide
+  // convenience store. Position the same 3D camera closer to its long wall:
+  // no scene texture scaling, camera cropping or fake CSS 3D.
+  const transitCamera=Object.freeze({
+   mode:'outer',index:0,shot:'metro-passenger-eye',
+   fov:54,
+   eye:{x:.78,y:1.45,z:8.65},
+   focus:{x:.78,y:1.45,z:5.55}
+  });
   function enterTransit(){
    if(active&&!transitMode)return false;
    if(!changeEnvironment('metro'))return false;
@@ -1704,7 +1715,7 @@
    canvas.hidden=false;hud.hidden=true;
    view.classList.add('ring-arena-active','ring-arena-transit');
    elapsed=0;frames=0;mouseLookX=0;mouseLookY=0;
-   lens=camera(mode,0);setLighting('on');render(0,0,0);
+   lens=transitCamera;setLighting('on');render(0,0,0);
    return true;
   }
   function exitTransit(){
