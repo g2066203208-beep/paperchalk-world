@@ -25,13 +25,13 @@
    camera:Object.freeze({
     // Passenger eye sees a believable 2.85m-high train, not the battle
     // over-shoulder lens/giant foreground heroine.
-    mode:'fixed',eye:Object.freeze({x:0,y:1.52,z:15.1}),
-    focus:Object.freeze({x:0,y:1.38,z:7.3}),fov:56,lensShift:.035
+    mode:'fixed',eye:Object.freeze({x:0,y:1.52,z:11.68}),
+    focus:Object.freeze({x:0,y:1.42,z:7.65}),fov:66,lensShift:.035
    }),
    actors:Object.freeze({
     visible:Object.freeze(['hero']),
     positions:Object.freeze({
-     hero:Object.freeze({x:-1.9,y:0,z:10.1,height:1.63})
+     hero:Object.freeze({x:-1.6,y:0,z:8.94,height:1.63})
     })
    }),
    ends:'./assets/metro/side/metro-gangway.svg',
