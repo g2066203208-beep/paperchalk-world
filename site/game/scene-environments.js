@@ -19,8 +19,8 @@
   }),
   metro:Object.freeze({
    id:'metro',name:'地铁车厢 · 长条形场景',
-   geometry:Object.freeze({shape:'strip',widthMeters:15.5,depthMeters:8.1,
-    heightMeters:2.85,backZ:5.3}),
+   geometry:Object.freeze({shape:'strip',widthMeters:8.6,depthMeters:3.85,
+    heightMeters:2.85,backZ:8.0}),
    wall:Object.freeze({url:'./assets/metro/side/cabin-master.webp',
     width:2048,height:1024,repeats:1,heightMeters:2.85}),
    // Geometry is different, renderer/shaders/lighting/shadows are identical.
