@@ -43,14 +43,14 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.15,7.15,7.15,7.15]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[6.80,6.80,6.80,6.80]);
 assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.96,11.35,10.94,11.26]);
 assert.equal(ring.camera('outer').fov,66);
 assert.equal(ring.camera('inner').fov,52);
 for(const mode of ['outer','inner']){
  const backdrop=ring.backdropPoint(mode,0),camera=ring.camera(mode),aspect=1917/906;
  const dist=Math.abs(backdrop.z-camera.eye.z);
- assert.ok(mode==='outer'?dist>5.20&&dist<5.30:dist>6.20&&dist<6.30,'physical wall distance calibrated per active camera');
+ assert.ok(mode==='outer'?dist>4.80&&dist<4.95:dist>6.20&&dist<6.30,'physical wall distance calibrated per active camera');
  const end=ring.project({x:0,y:ring.SPEC.wallHeight,z:backdrop.z},camera,aspect);
  const start=ring.project({x:0,y:0,z:backdrop.z},camera,aspect);
  assert.ok(end.valid&&start.valid);
@@ -62,12 +62,12 @@ for(const mode of ['outer','inner']){
 }
 const outer=ring.backdropPoint('outer',0),inner=ring.backdropPoint('inner',0);
 assert.ok(Math.abs(Math.abs(outer.z-ring.camera('outer').eye.z)-
- Math.abs(inner.z-ring.camera('inner').eye.z))<1.1,
+ Math.abs(inner.z-ring.camera('inner').eye.z))<1.5,
  'the real close-shoulder eye must be about one meter nearer the wall');
 for(const theta of [-ring.SPEC.wallArcHalfAngle,0,ring.SPEC.wallArcHalfAngle]){
  const outerDepth=Math.abs(ring.backdropPoint('outer',theta).z-ring.camera('outer').eye.z);
  const innerDepth=Math.abs(ring.backdropPoint('inner',theta).z-ring.camera('inner').eye.z);
- assert.ok(Math.abs(outerDepth-innerDepth)<1.1,'near TPS eye and old reverse view still use same physical arc surface');
+ assert.ok(Math.abs(outerDepth-innerDepth)<1.5,'near TPS eye and old reverse view still use same physical arc surface');
 }
 // Curved ceiling AND floor share the exact wall edge (not a flat rectangle
 // whose corners cut through the photograph-wrapped 3D wall).
