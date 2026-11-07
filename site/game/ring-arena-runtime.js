@@ -989,7 +989,7 @@
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
-  let environmentLightRig=null;
+  let environmentLightRig=null,environmentActorIds=null;
   const sceneRig=whichMode=>environmentLightRig||lightRigs[whichMode]||lightRigs.outer;
   let mouseLookX=0,mouseLookY=0;
   const params=new URLSearchParams(window.location.search);
@@ -1609,6 +1609,11 @@
    lens=target?director.cinematicCamera(base,attack,attackSample,target):
     shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
+   // Same lens and 3D projection for all assets; each environment can tune
+   // framing without changing camera implementation or creating CSS layers.
+   const lensPreset=window.PaperWorldEnvironments?.get?.(environmentId)?.camera;
+   if(Number.isFinite(lensPreset?.lensShift))
+    lens={...lens,lensShift:lensPreset.lensShift};
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    currentLighting=lightingFrame(lightState,
     lightingPhasePreview??(performance.now()/1000-lightingStartedAt),mode);
@@ -1647,7 +1652,7 @@
    drawWorld(mode==='outer'?wingOuter:wingInner,3,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
    drawFixtures(vp);
-   const all=visibleActors(mode);
+   const all=visibleActors(mode).filter(a=>!environmentActorIds||environmentActorIds.has(a.id));
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
    uploadActionImage('hero-attack',heroActionArt);
@@ -1709,6 +1714,8 @@
    ACTIVE_GEOMETRY=pack.geometry||{shape:'arc'};
    environmentLightRig=ACTIVE_GEOMETRY.shape==='arc'?null:
     window.PaperWorldSceneGeometry?.lightRig?.(ACTIVE_GEOMETRY)||null;
+   environmentActorIds=Array.isArray(pack.actors?.visible)?
+    new Set(pack.actors.visible):null;
    const epoch=++environmentEpoch;
    const oldMeshes=[floorOuter,floorInner,backInner,backOuter,
     ceilingOuter,ceilingInner,wingOuter,wingInner];
@@ -1815,7 +1822,7 @@
      orbitAroundHero:!!lens?.shoulderRig,heroRootWorldStatic:true,
      sharedProjection:true},
     initError:canvas.dataset.error||null,
-   mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:VERTICAL_LENS_SHIFT,
+   mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:lens?.lensShift??VERTICAL_LENS_SHIFT,
    cameraTarget:camera(mode,shotIndex),
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,0).eye.x,
@@ -1871,7 +1878,7 @@
     renderedPoses:{...drawnPoses},
     spriteTextures:Object.fromEntries([...actionTextures].map(([id,t])=>[id,{
      ready:!!t.painted,uploads:t.frames,alphaTrim:t.alphaTrim||null}]))},
-   visibleActorIds:visibleActors(mode).map(a=>a.id),
+   visibleActorIds:visibleActors(mode).filter(a=>!environmentActorIds||environmentActorIds.has(a.id)).map(a=>a.id),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,
    projectionAspect:canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
