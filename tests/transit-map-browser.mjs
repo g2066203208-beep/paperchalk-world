@@ -63,7 +63,7 @@ try{
     return distance(slot,{x:b.left+b.width/2-rect.left,y:b.top+b.height/2-rect.top});
    });
   return {grid:element.dataset.grid,cell:space.cell,
-   dots:dotError.length,stations:markerError.length,photos:photoError.length,
+   dots:dotError.length,stations:markerError.length,photos:photoError.length,rows,
    dotError:Math.max(...dotError),stationError:Math.max(...markerError),
    photoError:Math.max(...photoError)};
  });
