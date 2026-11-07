@@ -71,6 +71,15 @@ try{
  await popup.locator('.pw-transit-menu-item.is-primary').first().click();
  await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro?.onboard===true);
  await page.locator('#pw-metro-cabin:not([hidden])').waitFor();
+ // The actual carriage painting cannot be an all-black empty canvas.
+ await page.waitForFunction(()=>{
+  const c=document.querySelector('#pw-metro-cabin .pw-cabin-canvas');
+  const painter=window.PaperWorldMetroSideRenderer;
+  if(!c||!painter||c.width<100||c.height<100)return false;
+  const rgba=c.getContext('2d').getImageData(Math.floor(c.width*.5),
+    Math.floor(c.height*.43),1,1).data;
+  return rgba[0]>65&&rgba[1]>65&&rgba[2]>65;
+ },null,{timeout:12000});
  await shot('21-dot-map-real-metro-carriage.png');
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
