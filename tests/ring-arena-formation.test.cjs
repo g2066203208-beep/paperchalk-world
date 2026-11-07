@@ -6,6 +6,9 @@ const scene=r.layout('outer'),hero=scene.allies[0],base=r.camera('outer');
 const before=JSON.stringify(scene);
 assert.ok(scene.enemies.every(a=>a.y===0&&a.z===6.80));
 assert.ok(Math.abs(scene.enemies[3].x-scene.enemies[0].x-3.84)<.001);
+assert.deepEqual(scene.allies.slice(1).map(a=>[a.x,a.z]),
+ [[-3.70,7.95],[-2.65,7.75],[-1.55,7.55]],
+ 'the three squadmates form a shallow left-wing stagger, not a second enemy row');
 const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
  'enemy-2':{left:.32,right:.69,top:0,bottom:1},
  'enemy-3':{left:.30,right:.76,top:0,bottom:1},
@@ -15,6 +18,8 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  const feet=scene.enemies.map(a=>r.project({x:a.x,y:0,z:a.z},cam,aspect));
  assert.ok(feet.every(x=>x.valid));
  const silhouettes=scene.enemies.map(a=>r.portraitVisibleBounds(a,cam,uv[a.id],aspect));
+ const allies=scene.allies.slice(1).map(a=>r.portraitBounds(a,cam,aspect));
+ assert.ok(allies.every(a=>a.valid),'three allies must use the same camera and ground geometry');
  assert.ok(silhouettes.slice(1).every((b,i)=>b.left-silhouettes[i].right>.035),
   'enemy source-alpha outlines are distinct under true perspective');
  const safe=r.battleVisualSafety('outer',0,aspect,r.FEMALE07_BACK_UV,cam);
@@ -36,4 +41,4 @@ for(const x of [-1,-.5,0,.5,1]){
  assert.ok(Math.abs(Math.hypot(relX,relZ)-cam.shoulderBoomMeters)<.00001);
 }
 assert.equal(JSON.stringify(scene),before);
-console.log('PASS hero stays foreground in rigid third-person shoulder rig, foes grounded with individual contours');
+console.log('PASS 4 friendly + 4 enemy ground anchors with staggered friendly wing');
