@@ -117,8 +117,13 @@ for(const mode of ['outer','inner']){
 }
 assert.match(src,/uLampPositions\[6\]/);
 assert.match(src,/uLampColors\[6\]/);
-assert.match(src,/ringShade\(color,vWorld,normal\)/);
-assert.match(src,/ringShade\(rgb,vWorld,pseudoNormal\)/);
+assert.match(src,/vIrradiance=ringIrradiance\(aP,n\)/,
+ 'static 3D surfaces must evaluate lamps at mesh vertices, not every pixel');
+assert.match(src,/ringTone\(color,vIrradiance\)/,
+ 'fragment shader must interpolate physical lamp irradiance');
+assert.doesNotMatch(src,/color=ringShade\(color,vWorld,normal\)/);
+assert.match(src,/ringShade\(rgb,vWorld,pseudoNormal\)/,
+ 'original L2D portraits must still receive pixel-wise dynamic lighting');
 assert.match(src,/uShadowLight/);
 assert.equal(ring.SURFACE_TEXTURES.floor,'./assets/ring-arena/convenience-floor.svg');
 assert.equal(ring.SURFACE_TEXTURES.ceiling,'./assets/ring-arena/convenience-ceiling.svg');
