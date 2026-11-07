@@ -1056,17 +1056,23 @@
     return true;
    }catch(error){t.error=String(error);return false}
   }
+  // Use the VIEW-DIRECTION dot product, never radial 3D distance.
+  // In our eye-level composition all four opponents have identical depth
+  // and must retain their authored source stacking order.
+  function sortActorsForAlpha(actors,cam){
+   const facing=normalize({x:cam.focus.x-cam.eye.x,
+    y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z});
+   return actors.map((a,i)=>({actor:a,index:i,
+    depth:(a.x-cam.eye.x)*facing.x+(a.y-cam.eye.y)*facing.y+
+     (a.z-cam.eye.z)*facing.z}))
+    .sort((a,b)=>(b.depth-a.depth)||(a.index-b.index));
+  }
   function drawActors(actors,cam,vp){
    // Transparent L2D textures MUST sort by CAMERA VIEW DEPTH, not by
    // Euclidean radial distance (which falsely reorders a same-Z four-person
    // row by x-distance and paints one actor's attached fog OVER the next).
    // Stable source order for equal depths puts the final character last.
-   const facing=normalize({x:cam.focus.x-cam.eye.x,
-    y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z});
-   const ordered=actors.map((a,i)=>({actor:a,index:i,
-    depth:(a.x-cam.eye.x)*facing.x+(a.y-cam.eye.y)*facing.y+
-     (a.z-cam.eye.z)*facing.z}))
-    .sort((a,b)=>(b.depth-a.depth)||(a.index-b.index));
+   const ordered=sortActorsForAlpha(actors,cam);
    gl.useProgram(portrait.handle);
    gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
@@ -1342,7 +1348,7 @@
   return Object.freeze(api);
  }
  return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
-  SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,portraitBounds,
+  SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });
