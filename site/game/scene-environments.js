@@ -28,11 +28,14 @@
     // Keep the 1.63m heroine physically real, but move the passenger
     // camera closer and aim low enough for her actual shoes to remain visible.
     // Portrait devices crop the carriage horizontally, not the human vertically.
-    mode:'fixed',eye:Object.freeze({x:-.72,y:1.50,z:10.77}),
-    focus:Object.freeze({x:-.25,y:.80,z:7.70}),fov:66,lensShift:.04,
+    // Square-on passenger view: horizontal back-wall/floor connection.
+    // Slight closer distance makes the 1.63m human ~68% frame tall, while
+    // looking higher exposes less empty floor without losing the shoes.
+    mode:'fixed',eye:Object.freeze({x:-1.00,y:1.50,z:10.60}),
+    focus:Object.freeze({x:-1.00,y:.95,z:7.70}),fov:66,lensShift:.04,
     fovMode:'vertical',
-    phoneEye:Object.freeze({x:-1.39,y:1.50,z:10.77}),
-    phoneFocus:Object.freeze({x:-1.39,y:.80,z:7.70})
+    phoneEye:Object.freeze({x:-1.48,y:1.50,z:10.60}),
+    phoneFocus:Object.freeze({x:-1.48,y:.95,z:7.70})
    }),
    actors:Object.freeze({
     visible:Object.freeze(['hero']),
