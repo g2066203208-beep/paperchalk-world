@@ -60,7 +60,7 @@
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-3.80,7.00],[-1.25,7.10],[-1.55,7.55]]),
+   allies:Object.freeze([[-1.05,9.30],[-3.80,7.00],[-1.25,7.10],[-1.10,7.65]]),
    enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
   }),
   inner:Object.freeze({
