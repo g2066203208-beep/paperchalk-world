@@ -145,7 +145,7 @@ jobs:
             'site/dev/character-bridge.js'
           ])new Function(fs.readFileSync(path,'utf8'));
           const html=fs.readFileSync('site/index.html','utf8');
-          if(!html.includes('ring-arena-runtime.js?v=universal-2p5d-strip-real-lights-v34-20261107'))
+          if(!html.includes('ring-arena-runtime.js?v=universal-2p5d-strip-camera-actors-v35-20261107'))
             throw Error('Deployed HTML still points at stale ring-arena WebGL source');
           if(!html.includes("ringScene.setActive(name==='ring-arena')"))
             throw Error('3D ring scene was not integrated into the game');
