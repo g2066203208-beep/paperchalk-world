@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - 'site/game/ring-arena-runtime.js'
+      - 'site/game/scene-geometry.js'
+      - 'site/game/scene-environments.js'
       - 'site/dev/character-bridge.js'
       - 'site/assets/ring-arena/**'
       - 'site/assets/characters/female-07/**'
@@ -143,7 +145,7 @@ jobs:
             'site/dev/character-bridge.js'
           ])new Function(fs.readFileSync(path,'utf8'));
           const html=fs.readFileSync('site/index.html','utf8');
-          if(!html.includes('ring-arena-runtime.js?v=tps-shoulder-enclosed-v34-20261107'))
+          if(!html.includes('ring-arena-runtime.js?v=universal-2p5d-strip-real-lights-v34-20261107'))
             throw Error('Deployed HTML still points at stale ring-arena WebGL source');
           if(!html.includes("ringScene.setActive(name==='ring-arena')"))
             throw Error('3D ring scene was not integrated into the game');
