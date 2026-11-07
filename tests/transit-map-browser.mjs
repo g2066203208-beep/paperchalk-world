@@ -50,7 +50,13 @@ try{
    const move=n?.getAttribute('transform')?.replace('translate(','')?.replace(')','')?.split(',');
    return move?.length===2?distance(p,{x:+move[0],y:+move[1]}):999;
   });
-  const photoError=[...element.querySelectorAll('.pw-transit-place[data-photograph=true]')]
+  const photoCards=[...element.querySelectorAll('.pw-transit-place[data-photograph=true]')];
+  const rows={};
+  for(const card of photoCards){
+   const key=card.dataset.gridRow;
+   rows[key]=(rows[key]||0)+1;
+  }
+  const photoError=photoCards
    .map(n=>{
     const st=metro.STATIONS[n.dataset.place],b=n.getBoundingClientRect();
     const slot=geo.point(st.gx,st.gy-1,space);
@@ -64,7 +70,8 @@ try{
  assert.equal(gridCheck.grid,'12x6');
  assert.equal(gridCheck.dots,91);
  assert.equal(gridCheck.stations,11);
- assert.equal(gridCheck.photos,6);
+ assert.equal(gridCheck.photos,9);
+ assert.deepEqual(gridCheck.rows,{'1':3,'3':3,'5':3});
  assert.ok(gridCheck.dotError<.05,JSON.stringify(gridCheck));
  assert.ok(gridCheck.stationError<.05,JSON.stringify(gridCheck));
  assert.ok(gridCheck.photoError<1.5,JSON.stringify(gridCheck));
