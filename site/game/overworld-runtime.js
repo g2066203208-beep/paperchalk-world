@@ -288,15 +288,27 @@
     onPhoneReply:choice=>engine.replyHomework(choice),
     getContacts:()=>{
       const saved=engine.snapshot();
-      // Phone book contains actual known contacts, not every stranger/NPC.
-      // Female two's approved real name and biography are not yet confirmed.
-      return [{
+      // Contacts appear when the protagonist actually knows a person.
+      const contacts=[{
         id:'female2',display:'女二',note:'学校同学',
-        relationship:'同学 · 熟悉',
-        affinity:saved.relationships.female2,
-        bio:'在学校等你，早上连续打来电话提醒交作业。',
+        relationship:'同学 · 熟悉',affinity:saved.relationships.female2,
+        bio:'早上连续打来电话提醒交作业。平时经常保持联系。',
         chatAvailable:true
       }];
+      const discoveries=[
+        ['classmate','同班同学','学校','同学 · 初识',
+          '同班的同学，课间经常会讨论学校发生的事。'],
+        ['clerk','便利店店员','便利店','认识的人',
+          '在附近便利店工作的店员，对街区消息很敏感。'],
+        ['neighbor','邻居','住宅区','邻里关系',
+          '住在附近的邻居，经常在公园里碰到。']
+      ];
+      for(const [id,display,note,relationship,bio] of discoveries){
+        const affinity=saved.relationships[id]||0;
+        if(affinity>0)contacts.push({id,display,note,relationship,bio,
+          affinity,chatAvailable:true});
+      }
+      return contacts;
     },
     getMemo:()=>{
       const s=engine.snapshot();
