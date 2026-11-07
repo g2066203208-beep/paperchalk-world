@@ -10,6 +10,7 @@
  const environments=Object.freeze({
   convenience:Object.freeze({
    id:'convenience',name:'便利店 · 圆环场景',
+   geometry:Object.freeze({shape:'arc'}),
    wall:Object.freeze({url:'./assets/ring-arena/convenience-wall.webp',
     width:2172,height:724,repeats:9,heightMeters:2.85}),
    floor:'./assets/ring-arena/convenience-floor.svg',
@@ -17,14 +18,15 @@
    lighting:'commercial'
   }),
   metro:Object.freeze({
-   id:'metro',name:'地铁车厢 · 圆环场景',
+   id:'metro',name:'地铁车厢 · 长条形场景',
+   geometry:Object.freeze({shape:'strip',widthMeters:15.5,depthMeters:8.1,
+    heightMeters:2.85,backZ:5.3}),
    wall:Object.freeze({url:'./assets/metro/side/cabin-master.webp',
-    width:2048,height:1024,repeats:13,heightMeters:2.85}),
-   // SAME meshes, surface materials and lighting as the already-approved
-   // battle ring: only the wall artwork changes between these two packs.
-   floor:'./assets/ring-arena/convenience-floor.svg',
-   ceiling:'./assets/ring-arena/convenience-ceiling.svg',
-   lighting:'commercial'
+    width:2048,height:1024,repeats:1,heightMeters:2.85}),
+   // Geometry is different, renderer/shaders/lighting/shadows are identical.
+   floor:'./assets/metro/side/metro-floor.svg',
+   ceiling:'./assets/metro/side/metro-ceiling.svg',
+   lighting:'fluorescent'
   })
  });
  function get(id){return environments[id]||null}
