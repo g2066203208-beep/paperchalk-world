@@ -29,7 +29,7 @@ const openMap=async()=>{
  assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'城区交通');
 };
 const tapScene=async action=>{
- await page.mouse.click(115,155);
+ await page.mouse.click(350,300);
  await page.locator('#overworld-scene-prompts [data-action="'+action+'"]').waitFor({state:'visible'});
  await page.locator('#overworld-scene-prompts [data-action="'+action+'"]').click();
 };
