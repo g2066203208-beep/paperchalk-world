@@ -31,7 +31,7 @@
   function create({root,profile={}}={}){
     if(!root)throw new Error('Phone requires #novel-ui root');
     let config={...defaultProfile,...profile};
-    let pin='',page='lock',opened=false,clockTimer=0,mediaStream=null;
+    let pin='',page='lock',opened=false,clockTimer=0,mediaStream=null,selectedContact='female2';
     const section=document.createElement('section');
     section.id='phone-ui';section.hidden=true;
     section.dataset.uiFogEdge='right';
@@ -209,21 +209,24 @@
     function renderConversation(copy){
       const inbox=getInbox();
       const state=world();
+      const person=(config.getContacts?.()||[]).find(c=>c.id===selectedContact)||
+        {id:'female2',display:'女二',relationship:'学校同学'};
       const title=make('div','phone-chat-header');
-      title.append(make('strong','','女二'),make('small','','同班同学 · 私人聊天'));
+      title.append(make('strong','',person.display),make('small','',person.relationship+' · 私人聊天'));
+      if(selectedContact!=='female2')title.appendChild(make('small','','通过相识角色的联系方式进行交流'));
       copy.appendChild(title);
       const thread=make('div','phone-chat-thread');
-      for(const msg of inbox?.messages||[]){
+      for(const msg of selectedContact==='female2'?(inbox?.messages||[]):[]){
         const line=make('div','phone-chat-bubble is-them');
         line.append(make('small','',msg.time),make('span','',msg.text));thread.appendChild(line);
       }
-      if(inbox?.phone?.reply){
+      if(selectedContact==='female2'&&inbox?.phone?.reply){
         const outgoing=make('div','phone-chat-bubble is-me');
         outgoing.append(make('small','','我'),make('span','',
           inbox.phone.reply==='coming'?'还没写，我现在过去！':'我先看看书包，马上出门。'));
         thread.appendChild(outgoing);
       }
-      for(const msg of state?.phoneThreads?.female2||[]){
+      for(const msg of state?.phoneThreads?.[selectedContact]||[]){
         const line=make('div','phone-chat-bubble '+(msg.from==='me'?'is-me':'is-them'));
         const time=String(Math.floor(msg.minute/60)).padStart(2,'0')+':'+
           String(msg.minute%60).padStart(2,'0');
@@ -240,13 +243,13 @@
       composer.addEventListener('submit',event=>{
         event.preventDefault();const body=input.value.trim();
         if(!body)return;
-        const res=config.onSendMessage?.('female2',body);
+        const res=config.onSendMessage?.(selectedContact,body);
         if(res?.ok)renderApp('信息');
         else panelNote(copy,'发送失败',res?.reason||'消息无法发送');
       });
       composer.append(input,submit);copy.appendChild(composer);
-      if(typeof config.onPhoneRead==='function')config.onPhoneRead('messages');
-      if(inbox?.phone&&!inbox.phone.reply){
+      if(selectedContact==='female2'&&typeof config.onPhoneRead==='function')config.onPhoneRead('messages');
+      if(selectedContact==='female2'&&inbox?.phone&&!inbox.phone.reply){
         const quick=make('div','phone-chat-quick');
         for(const [id,txt] of [['coming','还没写，我现在过去！'],['checking','我先看看书包']]){
           quick.appendChild(appButton(txt,()=>{
@@ -260,20 +263,21 @@
     }
     function renderCall(copy){
       const state=world(),inbox=getInbox();
+      const person=(config.getContacts?.()||[]).find(c=>c.id===selectedContact)||{display:'女二'};
       const head=make('div','phone-call-contact');
-      head.append(make('div','phone-call-avatar','女'),make('strong','','女二'),
+      head.append(make('div','phone-call-avatar',person.display.slice(0,1)),make('strong','',person.display),
         make('small','','同班同学'));
       copy.appendChild(head);
       const controls=make('div','phone-call-actions');
       const call=video=>{
-        const result=config.onPhoneCall?.('female2',video);
+        const result=config.onPhoneCall?.(selectedContact,video);
         if(!result?.ok){panelNote(copy,'通话失败',result?.reason||'无法发起通话');return;}
         copy.replaceChildren();
         const screen=make('div','phone-call-screen');
         if(video){
-          const heading=make('strong','','剧情视频通话 · 女二');
+          const heading=make('strong','','游戏内视频通话 · '+person.display);
           screen.appendChild(heading);
-          const avatar=make('div','phone-call-video-avatar','女');
+          const avatar=make('div','phone-call-video-avatar',person.display.slice(0,1));
           screen.appendChild(avatar);
           const caption=make('small','',result.answered?'对方正在通话 · 剧情画面':'无人接听');
           screen.appendChild(caption);
@@ -288,7 +292,7 @@
                 selfPreview.play().catch(()=>{});
               }).catch(()=>{selfPreview.hidden=true});
           }else selfPreview.hidden=true;
-        }else screen.append(make('strong','','正在与女二通话'));
+        }else screen.append(make('strong','','正在与'+person.display+'通话'));
         screen.append(make('p','',result.text));
         copy.appendChild(screen);
         copy.appendChild(appButton('结束通话',()=>{stopCamera();renderApp('电话')},'phone-hangup'));
@@ -297,12 +301,12 @@
         appButton('视频通话',()=>call(true)));
       copy.appendChild(controls);
       panelNote(copy,'近期通话','与游戏世界角色通话，通话会占用游戏时间。');
-      for(const c of (state?.phoneCalls||[]).slice(-7).reverse()){
+      for(const c of (state?.phoneCalls||[]).filter(c=>c.to===selectedContact).slice(-7).reverse()){
         const row=make('div','phone-call-history',
           (c.video?'视频':'语音')+' · '+(c.answered?'已接通':'未接听')+' · 第'+c.day+'天');
         copy.appendChild(row);
       }
-      if(inbox?.missedCalls?.length){
+      if(selectedContact==='female2'&&inbox?.missedCalls?.length){
         panelNote(copy,'女二','早上有 '+inbox.missedCalls.length+' 通未接来电。');
         config.onPhoneRead?.('calls');
       }
@@ -443,6 +447,7 @@
         i?'城内讨论 · 热帖':'城内讨论 · 置顶',txt));
     }
     function renderContactProfile(contact,copy){
+      selectedContact=contact.id;
       copy.replaceChildren();
       const back=document.createElement('button');back.type='button';
       back.className='phone-contact-return';back.textContent='‹ 联系人';
