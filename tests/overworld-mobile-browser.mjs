@@ -40,7 +40,7 @@ try{
  await page.locator('#pw-world-surface .pw-surface-dim').click({position:{x:3,y:3}});
  await page.locator('#quick-map').click();
  await page.locator('#pw-world-surface:not([hidden])').waitFor();
- assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'地区选择');
+ assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'城区交通');
  await shot('17-mobile-city-map.png');
  assert.deepEqual(errors.filter(x=>/TypeError|ReferenceError|SyntaxError/.test(x)),[]);
  console.log(JSON.stringify({PASS:true,viewport:'844x390',phoneFocusedBounds:bounds,screenshots:4}));
