@@ -76,9 +76,13 @@ try{
   const c=document.querySelector('#pw-metro-cabin .pw-cabin-canvas');
   const painter=window.PaperWorldMetroSideRenderer;
   if(!c||!painter||c.width<100||c.height<100)return false;
-  const rgba=c.getContext('2d').getImageData(Math.floor(c.width*.5),
-    Math.floor(c.height*.43),1,1).data;
-  return rgba[0]>65&&rgba[1]>65&&rgba[2]>65;
+  const ctx=c.getContext('2d');
+  // Windows are intentionally dark: sample illuminated wall/bench regions
+  // instead of falsely treating the dark exterior as a black frame.
+  return [[.3,.21],[.55,.22],[.5,.7],[.9,.55]].some(([u,v])=>{
+   const rgba=ctx.getImageData(Math.floor(c.width*u),Math.floor(c.height*v),1,1).data;
+   return rgba[0]+rgba[1]+rgba[2]>260;
+  });
  },null,{timeout:12000});
  await shot('21-dot-map-real-metro-carriage.png');
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
