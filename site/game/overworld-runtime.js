@@ -63,6 +63,16 @@
     onBoard:(lineId,direction)=>boardMetro(lineId,direction),
     onFeedback:message=>say(message)
   })||null;
+  // Route all authored locations (including future atlas POIs) through the
+  // SAME auto-generated scene registry, transition, image stage and realtime fog.
+  // Unillustrated locations alone use the temporary city backdrop.
+  function resolvedScene(place){
+    const def=Core.LOCATIONS[place];
+    if(!def)return null;
+    const registered=global.PaperWorldSceneRegistry;
+    const id=registered?.[place]?place:def.scene;
+    return id&&registered?.[id]?id:null;
+  }
   let paintedCity='',cityTime=-1;
   const phone=global.PaperWorldQuickTools?.phone;
   function say(text){
@@ -104,7 +114,7 @@
     const next=transit.querySelector('.pw-transit-next');
     transit.querySelector('.pw-transit-line').textContent=route.lines.join('  /  ');
     transit.querySelector('.pw-transit-stops').textContent=
-      route.stops.map(id=>metro.STATIONS[id]?.label||id).join('  ·  ');
+      route.stops.map(id=>metro.STATIONS[id]?.label||global.PaperWorldAtlas?.CITY_BY_ID?.[id]?.name||id).join('  ·  ');
     transit.hidden=false;
     view.classList.add('pw-traveling');
     contextOpen=false;prompts.hidden=true;
@@ -149,9 +159,10 @@
   async function exitFromMetro(station){
     const dest=Core.LOCATIONS[station];
     if(!dest)return;
-    if(dest.scene){
-      const result=await global.PaperWorldDailyLifeScene?.(dest.scene);
-      if(result===false&&stage.dataset.scene!==dest.scene)
+    const scene=resolvedScene(station);
+    if(scene){
+      const result=await global.PaperWorldDailyLifeScene?.(scene);
+      if(result===false&&stage.dataset.scene!==scene)
         say('场景未能加载，请重试。');
     }
     paintedCity='';draw();
@@ -173,9 +184,9 @@
     // World travel is a genuine dated journey with an intercity route cost,
     // not an immediate jump to a map marker.
     if(!route)return {ok:false,reason:'此地点尚未接入公共交通'};
-    return travel(place,null);
+    return travel(place,null,route);
   }
-  async function travel(place,route=null){
+  async function travel(place,route=null,regionalRoute=null){
     if(traveling)return {ok:false,reason:'正在前往目的地'};
     const dest=Core.LOCATIONS[place];
     if(!dest)return {ok:false,reason:'没有这个目的地'};
@@ -201,13 +212,28 @@
       }
       const result=engine.travel(place);
       if(!result.ok){say(result.reason);return result}
-      if(route?.segments?.length&&
+      if(regionalRoute?.legs?.length){
+        // Intercity rail has a real side-view cabin, not a jump from map to photo.
+        // Bus/ferry journeys use the route-specific travel matte, never a subway.
+        const rail=regionalRoute.legs.every(leg=>
+          ['regional','localrail'].includes(leg.line?.mode));
+        if(rail&&cabin?.playRegionalJourney)
+          await cabin.playRegionalJourney(regionalRoute);
+        else await presentTransit({
+          from:previous.location,to:place,
+          segments:regionalRoute.legs,connections:regionalRoute.legs.length,
+          transfers:[],lines:[...new Set(regionalRoute.legs.map(leg=>leg.line.name))],
+          stops:[regionalRoute.legs[0].from,
+            ...regionalRoute.legs.map(leg=>leg.to)]
+        },previous);
+      }else if(route?.segments?.length&&
           (Core.LOCATIONS[previous.location]?.group==='城区'||dest.group==='城区'))
         await presentTransit(route,previous);
       // Keep the train matte over the scene until scene swap completes.
-      if(dest.scene){
-        const changed=await global.PaperWorldDailyLifeScene?.(dest.scene);
-        if(changed===false&&stage.dataset.scene!==dest.scene)
+      const scene=resolvedScene(place);
+      if(scene){
+        const changed=await global.PaperWorldDailyLifeScene?.(scene);
+        if(changed===false&&stage.dataset.scene!==scene)
           say('场景加载失败；请从地图重试。');
       }
       paintedCity='';draw();
@@ -232,7 +258,7 @@
     const worldPoi=global.PaperWorldAtlas?.POI_BY_ID?.[s.location];
     const isCity=mode&&!root.hidden&&
       ['城区','世界'].includes(Core.LOCATIONS[s.location]?.group)&&
-      !Core.LOCATIONS[s.location]?.scene;
+      !resolvedScene(s.location);
     city.hidden=!isCity;
     if(isCity&&!traveling){
       const signature=s.location+'/'+Math.floor(s.minute/60);
