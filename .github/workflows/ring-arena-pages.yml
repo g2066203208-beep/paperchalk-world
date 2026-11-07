@@ -30,6 +30,8 @@ on:
       - 'site/assets/characters/protagonist-back-combat-eye-level-preview.webp'
       - 'tests/ring-arena.test.cjs'
       - 'tests/ring-arena-formation.test.cjs'
+      - 'tests/ring-arena-wall.test.cjs'
+      - 'tests/ring-arena-browser.mjs'
       - '.github/workflows/ring-arena-pages.yml'
   workflow_dispatch:
 permissions:
