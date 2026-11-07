@@ -105,12 +105,22 @@ try{
    room.environment==='metro'&&room.geometry?.shape==='strip'&&
    room.canvasParent==='pw-metro-cabin'&&
    room.roomSurfaces?.floor?.ready&&room.roomSurfaces?.ceiling?.ready&&
+   room.connectionMaterial?.ready&&
    room.wallMaterial?.ready===true&&
    room.wallMaterial.url.endsWith('cabin-master.webp')&&
    document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready';
  },null,{timeout:25000});
  const room3d=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(room3d.geometry.shape,'strip');
+ assert.ok(room3d.connectionMaterial.ready,
+  'both physical end walls must show painted gangways to adjacent cars');
+ assert.match(room3d.connectionMaterial.url,/metro-gangway\.svg$/);
+ assert.ok(Math.abs(room3d.actorAnchors.hero.height-1.63)<.001,
+  'grounded heroine must be real 1.63m human, not a giant screen-plane cutout');
+ assert.equal(await page.locator('#pw-metro-cabin .pw-cabin-speech').count(),0,
+  'subway does NOT have a dialogue UI');
+ assert.equal(await page.locator('#pw-metro-cabin .pw-cabin-person,#pw-metro-cabin .pw-cabin-words').count(),0);
+
  assert.deepEqual(room3d.visibleActorIds,['hero'],
   'metro keeps the real grounded hero, not unrelated combat enemy rigs');
  assert.ok(room3d.lensShift<.13,
