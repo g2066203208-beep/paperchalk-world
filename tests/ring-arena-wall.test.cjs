@@ -43,7 +43,10 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[5.7,5.7,5.7,5.7]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[5.82,5.82,5.82,5.82]);
+assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[12.9,12.9,12.9,12.9]);
+assert.equal(ring.camera('outer').fov,55);
+assert.equal(ring.camera('inner').fov,52);
 for(const mode of ['outer','inner']){
  const backdrop=ring.backdropPoint(mode,0),camera=ring.camera(mode),aspect=1917/906;
  const dist=Math.abs(backdrop.z-camera.eye.z);
@@ -67,8 +70,15 @@ for(const theta of [-ring.SPEC.wallArcHalfAngle,0,ring.SPEC.wallArcHalfAngle]){
 }
 // Curved ceiling AND floor share the exact wall edge (not a flat rectangle
 // whose corners cut through the photograph-wrapped 3D wall).
-assert.equal(ring.SPEC.surfaceTileMeters,4);
-assert.equal(ring.SPEC.surfaceDepth,34);
+assert.equal(ring.SPEC.floorTileMeters,1.2);
+assert.equal(ring.SPEC.ceilingTileMeters,1.9);
+assert.equal(ring.SPEC.surfaceDepth,18);
+assert.equal(ring.SPEC.arcSegments,160);
+assert.equal(ring.SPEC.surfaceSegments,20);
+// The 1024px assets contain a 2x2 panel grid; each ground tile is 0.6m,
+// each ceiling module 0.95m, and the fixture artwork is roughly 1.0m long.
+assert.ok(Math.abs(ring.SPEC.floorTileMeters/2-.6)<1e-7);
+assert.ok(Math.abs(ring.SPEC.ceilingTileMeters/2-.95)<1e-7);
 for(const kind of ['floor','ceiling']){
  const file=path.resolve(__dirname,'../site/assets/ring-arena/'+
   (kind==='floor'?'convenience-floor.svg':'convenience-ceiling.svg'));
@@ -88,8 +98,12 @@ for(const mode of ['outer','inner']){
   assert.equal(foot.y,0);assert.equal(roof.y,ring.SPEC.wallHeight);
   const distance=ring.SPEC.surfaceDepth,far=ring.curvedSurfacePoint(mode,theta,distance,0);
   assert.equal(far.z-wall.z,mode==='inner'?-distance:distance);
-  assert.equal(ring.curvedSurfaceUV(mode,theta,distance).v,distance/4);
-  assert.equal(ring.curvedSurfaceUV(mode,theta,0).v,0);
+  assert.equal(ring.curvedSurfaceUV(mode,theta,distance,'floor').v,
+   distance/ring.SPEC.floorTileMeters);
+  assert.equal(ring.curvedSurfaceUV(mode,theta,distance,'ceiling').v,
+   distance/ring.SPEC.ceilingTileMeters);
+  assert.equal(ring.curvedSurfaceUV(mode,theta,0,'floor').v,0);
+  assert.equal(ring.curvedSurfaceUV(mode,theta,0,'ceiling').v,0);
  }
  const actors=ring.visibleActors(mode);
  for(const actor of actors){
