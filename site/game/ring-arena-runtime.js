@@ -644,6 +644,7 @@
    '<div class="status" role="status"></div><div class="bottom">',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
+   '<button data-lighting type="button" title="正常 / 部分熄灭 / 故障闪烁 / 停电，按 L 可切换">灯光：正常</button>',
    '<button data-exit type="button">返回</button></div>',
    '<div class="director-deck"><button class="director-card" data-attack-card="slash" aria-pressed="false" type="button" aria-label="攻击牌：斧柄横扫，基础伤害12。选择后点击敌人">',
    '<span class="director-card-type">ATTACK / 01</span>',
@@ -701,7 +702,7 @@
    :previewPose==='level'
     ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
     :'./assets/characters/protagonist-back-combat-3q-final.webp';
-  let gl=null,world=null,portrait=null,shadow=null,backInner=null,backOuter=null,quad=null;
+  let gl=null,world=null,portrait=null,shadow=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,quad=null;
    let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null;
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
    const surfaceMaterials=Object.fromEntries(Object.entries(SURFACE_TEXTURES)
@@ -712,11 +713,16 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uShadowLight','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
+   fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
+    ['uVP','uCenter','uLevel','uEmergency']);
+   projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
+    ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uTexture','uStrength']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner]=worldMesh(gl);
+   shadowGrid=projectedShadowMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
    for(const id of Object.keys(bindings))textures.set(id,prepareTexture(gl));
@@ -793,6 +799,20 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
+  const params=new URLSearchParams(window.location.search);
+  let lightState=LIGHT_STATES.includes(params.get('lights'))?params.get('lights'):'on';
+  let currentLighting=lightingFrame(lightState,0,mode);
+  const lightLabel=hud.querySelector('[data-lighting]');
+  const lightStateNames={on:'正常',partial:'部分熄灭',flicker:'故障闪烁',outage:'停电'};
+  function setLighting(state){
+   lightState=LIGHT_STATES.includes(state)?state:'on';
+   currentLighting=lightingFrame(lightState,elapsed,mode);
+   lightLabel.textContent='灯光：'+lightStateNames[lightState];
+   lightLabel.setAttribute('aria-label','灯光状态 '+lightStateNames[lightState]+',点击切换');
+   if(active)render(0);
+   return lightState;
+  }
+  lightLabel.textContent='灯光：'+lightStateNames[lightState];
   let lastDuet=null,presentedActors=[];
   let armed=false,attack=null,attackApplied=false,attackSample=null,qaTimeMs=null;
   let completedAttacks=0,lastTarget=null;
@@ -898,8 +918,12 @@
       e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;
    if(e.key==='Escape'&&armed){e.preventDefault();armed=false;refreshDirectorUI();return;}
    if(armed&&/^[1-4]$/.test(e.key)){e.preventDefault();startAttack('enemy-'+e.key);}
+   if(e.key.toLowerCase()==='l'&&!e.repeat){e.preventDefault();setLighting(LIGHT_STATES[(LIGHT_STATES.indexOf(lightState)+1)%LIGHT_STATES.length]);}
   }
   window.addEventListener('keydown',onDirectorKey);
+  window.addEventListener('paperworld:lighting',e=>{
+   if(e.detail?.state)setLighting(e.detail.state);
+  });
   refreshDirectorUI();
   hud.addEventListener('click',e=>{
    const b=e.target.closest('button');if(!b)return;
@@ -910,6 +934,10 @@
    }
    if(b.hasAttribute('data-director-enemy')){
     startAttack('enemy-'+b.dataset.directorEnemy);
+    return;
+   }
+   if(b.hasAttribute('data-lighting')){
+    setLighting(LIGHT_STATES[(LIGHT_STATES.indexOf(lightState)+1)%LIGHT_STATES.length]);
     return;
    }
    if(b.hasAttribute('data-mode')){
