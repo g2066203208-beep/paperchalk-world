@@ -25,8 +25,14 @@
    camera:Object.freeze({
     // Passenger eye sees a believable 2.85m-high train, not the battle
     // over-shoulder lens/giant foreground heroine.
-    mode:'fixed',eye:Object.freeze({x:0,y:1.52,z:11.68}),
-    focus:Object.freeze({x:0,y:1.42,z:7.65}),fov:66,lensShift:.035
+    // Keep the 1.63m heroine physically real, but move the passenger
+    // camera closer and aim low enough for her actual shoes to remain visible.
+    // Portrait devices crop the carriage horizontally, not the human vertically.
+    mode:'fixed',eye:Object.freeze({x:-.72,y:1.50,z:10.77}),
+    focus:Object.freeze({x:-.25,y:.80,z:7.70}),fov:66,lensShift:.04,
+    fovMode:'vertical',
+    phoneEye:Object.freeze({x:-1.39,y:1.50,z:10.77}),
+    phoneFocus:Object.freeze({x:-1.39,y:.80,z:7.70})
    }),
    actors:Object.freeze({
     visible:Object.freeze(['hero']),
