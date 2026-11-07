@@ -284,6 +284,12 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
   p.root.dataset.l2dState=old.old;
   window.PaperWorldGameRingArena.render(0);
  },fallbackInfo);
+ // Return to the normal desktop gameplay viewport before testing the
+ // exit interaction. Chromium's force-click on the 768x346 rapidly resized
+ // compositor was unstable even though the button was visible and correctly
+ // positioned. The mobile visual layout is already proven above.
+ await page.setViewportSize({width:1440,height:810});
+ await page.waitForTimeout(240);
  const stateAfterNext=await page.evaluate(()=>{
   const s=window.PaperWorldDailyLifeUI.snapshot();
   const btn=[...document.querySelectorAll('#pw-metro-cabin .pw-cabin-actions button')]
