@@ -50,7 +50,28 @@
    // Geometry is different, renderer/shaders/lighting/shadows are identical.
    floor:'./assets/metro/side/metro-floor.svg',
    ceiling:'./assets/metro/side/metro-ceiling.svg',
-   lighting:'fluorescent'
+   lighting:'fluorescent',
+   // Four real world-space station light sources: three across the visible
+   // left/right glass groups, one from the opposite (off-camera) platform.
+   // No baked window glow or flat screen overlay. Their radiation reaches
+   // the same floor, wall and live L2D lighting code as the ceiling fixtures.
+   platformLighting:Object.freeze({
+    backZ:8.0,
+    positions:Object.freeze([
+     -2.85,2.55,7.02,
+     0.92,2.56,7.06,
+     2.62,2.48,7.00,
+     -1.92,2.55,12.66
+    ]),
+    colors:Object.freeze([
+     3.40,3.22,2.80,
+     3.15,3.41,3.48,
+     3.28,3.44,3.34,
+     2.44,2.82,3.20
+    ]),
+    visibleSide:'rear-window-and-door-glass',
+    oppositeSide:'off-camera-side-platform-windows'
+   })
   })
  });
  function get(id){return environments[id]||null}
