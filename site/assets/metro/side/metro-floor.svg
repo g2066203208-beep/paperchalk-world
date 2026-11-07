@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
  <defs>
  <pattern id="grain" width="70" height="70" patternUnits="userSpaceOnUse">
- <rect width="70" height="70" fill="#434f51"/>
+ <rect width="70" height="70" fill="#354245"/>
  <g fill="#81908d" opacity=".24"><circle cx="8" cy="11" r="1.7"/><circle cx="34" cy="17" r="1.1"/><circle cx="53" cy="44" r="1.8"/><circle cx="16" cy="56" r="1.2"/><circle cx="67" cy="5" r="1.2"/></g>
  <g fill="#22353a" opacity=".32"><circle cx="21" cy="24" r="1.7"/><circle cx="59" cy="26" r="1.5"/><circle cx="43" cy="62" r="1.2"/></g>
  </pattern>
