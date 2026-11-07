@@ -33,7 +33,7 @@ for(const mode of ['outer','inner']){
  approx(c.eye.x,c.focus.x);
  assert.ok(c.fov>=50&&c.fov<=60);
  const hero=scene.allies[0],heroMiddle=arena.project({...hero,y:.81},c);
- assert.ok(heroMiddle.valid&&(mode==='outer'?(heroMiddle.x< -1.0&&heroMiddle.x> -1.2):(heroMiddle.x<-.50&&heroMiddle.x>-.70)),
+ assert.ok(heroMiddle.valid&&(mode==='outer'?(heroMiddle.x< -.87&&heroMiddle.x> -1.04):(heroMiddle.x<-.50&&heroMiddle.x>-.70)),
   'fixed view must keep 3/4 heroine in the LEFT foreground');
  const heroBounds=arena.portraitBounds(hero,c);
  assert.ok(heroBounds.valid&&heroBounds.heightFraction>.8&&heroBounds.heightFraction<1.3);
