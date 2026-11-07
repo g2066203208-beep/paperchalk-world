@@ -1,6 +1,26 @@
-/* Photographic urban transit map; geometry and controls are never baked into artwork. */
+/* Paperchalk World — ONE continuous dot-matrix map.
+ * From the local 12x6 subway grid to ten cities and 120+ visitable points,
+ * every rail, photo pin and station aligns to one square lattice. There is
+ * no separate regional atlas, no geographic wallpaper, and no map-mode switch.
+ */
 (function(global){
 'use strict';
+const NS='http://www.w3.org/2000/svg';
+const CELL=40,W=2000,H=1280,LOCAL_X=840,LOCAL_Y=480;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const snap=x=>Math.round(x/CELL)*CELL;
+const element=(tag,cls,label)=>{
+ const e=document.createElement(tag);
+ if(cls)e.className=cls;
+ if(label!==undefined)e.textContent=String(label);
+ return e;
+};
+const vector=(tag,attrs={},cls)=>{
+ const e=document.createElementNS(NS,tag);
+ if(cls)e.setAttribute('class',cls);
+ for(const [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));
+ return e;
+};
 const PHOTO=Object.freeze({
  entrance:['https://commons.wikimedia.org/wiki/Special:FilePath/Residential_area.jpg?width=540','./assets/scenes/entrance.webp'],
  school:['https://commons.wikimedia.org/wiki/Special:FilePath/Horikoshi_High_School_(external_appearance).jpg?width=540','./assets/classroom.webp'],
@@ -9,299 +29,405 @@ const PHOTO=Object.freeze({
  mall:['https://commons.wikimedia.org/wiki/Special:FilePath/Shinjuku_Keio-Department-store.jpg?width=540','./assets/locations/mall.svg'],
  park:['https://commons.wikimedia.org/wiki/Special:FilePath/Fuchu-city.Tokyo.Japan.Keyaki.namiki.dori.fuchu.jpg?width=540','./assets/locations/park.svg']
 });
-const names={entrance:'家',school:'学校',convenience:'便利店',cafe:'咖啡厅',mall:'商场',park:'公园',central:'中央站',northgate:'北街口',hospital:'医院',station:'车站',police:'警察局'};
-const create=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n};
-const NS='http://www.w3.org/2000/svg';
-function draw({body,snapshot,locations,availability,onTravel,onBoard}){
- const metro=global.PaperWorldMetro;
- if(!metro){body.textContent='交通网络尚未加载';return}
- const current=['bedroom','living-room','kitchen'].includes(snapshot.location)?'entrance':snapshot.location;
- const map=create('div','pw-transit-map');
- map.setAttribute('aria-label','城市地铁图，点击地点照片或线路');
- const svg=document.createElementNS(NS,'svg');
- svg.classList.add('pw-transit-lines');svg.setAttribute('viewBox','0 0 100 100');
- svg.setAttribute('preserveAspectRatio','none');map.appendChild(svg);
- const popup=create('div','pw-transit-popup');popup.hidden=true;
- popup.setAttribute('role','group');
- let busy=false,popupOrigin=null;
- const clear=()=>{
-  popup.hidden=true;popupOrigin=null;
-  map.querySelectorAll('[data-selected]').forEach(n=>n.dataset.selected='false');
- };
- map.addEventListener('click',e=>{
-  if(e.target===map||e.target===svg)clear();
+const PLACE_NAMES=Object.freeze({
+ entrance:'家',school:'学校',convenience:'便利店',cafe:'咖啡厅',
+ mall:'商场',park:'公园',central:'中央换乘站',northgate:'北街口'
+});
+const HOME=new Set(['bedroom','living-room','kitchen']);
+const PLACEHOLDER='./assets/locations/park.svg';
+function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldTravel,onFeedback}){
+ const metro=global.PaperWorldMetro,atlas=global.PaperWorldAtlas,geometry=global.PaperWorldMetroGeometry;
+ if(!metro||!atlas||!geometry){body.textContent='交通地图尚未加载';return}
+ global.PaperWorldTransitMap?._cleanup?.();
+ const here=HOME.has(snapshot?.location)?'entrance':snapshot?.location||'entrance';
+ const herePoi=atlas.POI_BY_ID[here];
+ const currentCity=herePoi?.city||'kirihama';
+ const hereCity=atlas.CITY_BY_ID[currentCity]||atlas.CITIES[0];
+ const map=element('section','pw-transit-map pw-dot-world-map');
+ map.setAttribute('aria-label','唯一的可缩放点阵城市及全国交通地图');
+ map.dataset.grid='50x32';
+ const canvas=element('div','pw-dot-world-canvas');
+ const svg=vector('svg',{viewBox:'0 0 '+W+' '+H,width:W,height:H},'pw-transit-lines pw-dot-rail-canvas');
+ const dots=vector('g',{},'pw-transit-dot-matrix');
+ const regional=vector('g',{},'pw-dot-regional-lines');
+ const urban=vector('g',{},'pw-dot-urban-lines');
+ const metroNetwork=vector('g',{},'pw-dot-planned-metro');
+ const stops=vector('g',{},'pw-dot-stations');
+ svg.append(dots,regional,metroNetwork,urban,stops);
+ const cityLayer=element('div','pw-dot-cities');
+ const placeLayer=element('div','pw-dot-places');
+ const metroLayer=element('div','pw-dot-local-places');
+ canvas.append(svg,cityLayer,placeLayer,metroLayer);
+ map.append(canvas);
+ const chrome=element('header','pw-dot-chrome');
+ const heading=element('div','pw-dot-heading');
+ heading.append(element('strong','pw-dot-title','交通图'),
+  element('small','pw-dot-subtitle','点阵 · 城市与城际交通'));
+ const tools=element('div','pw-dot-tools');
+ const buttons=[['−','缩小地图'],['+','放大地图'],['全域','查看整个区域'],['定位','返回当前位置']];
+ const toolBtns=buttons.map(([name,title])=>{
+  const b=element('button','pw-dot-tool',name);
+  b.type='button';b.setAttribute('aria-label',title);tools.append(b);return b;
  });
- function positionPopup(){
-  if(popup.hidden||!popupOrigin)return;
-  const rect=map.getBoundingClientRect();
-  const w=Math.min(210,Math.max(148,rect.width*.24));
+ chrome.append(heading,tools);
+ const hint=element('div','pw-dot-hint','滚轮缩放 · 拖动地图 · 点击站点与地点');
+ const popup=element('div','pw-transit-popup pw-dot-popup');
+ popup.hidden=true;popup.setAttribute('role','group');
+ map.append(chrome,hint,popup);
+ body.replaceChildren(map);
+ let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,focused=false;
+ const cleanupListeners=[];
+ function notify(msg){onFeedback?.(msg)}
+ function clear(){
+  popup.hidden=true;selected?.removeAttribute('data-selected');
+  selected=null;
+ }
+ function positionPopup(event,node){
+  const outer=map.getBoundingClientRect();
+  const r=node?.getBoundingClientRect();
+  const w=Math.min(236,Math.max(155,outer.width*.27));
+  const h=popup.offsetHeight||124;
+  const left=r?(r.right-outer.left+12):(event.clientX-outer.left+12);
+  const top=r?(r.top-outer.top+r.height*.45):(event.clientY-outer.top);
   popup.style.width=w+'px';
-  const h=popup.offsetHeight||122;
-  const clamp=(v,min,max)=>Math.max(min,Math.min(Math.max(min,max),v));
-  const card=popupOrigin.card;
-  if(card?.isConnected){
-   const anchor=card.getBoundingClientRect();
-   const leftEdge=anchor.left-rect.left,rightEdge=anchor.right-rect.left;
-   const roomRight=rect.width-rightEdge-10;
-   const roomLeft=leftEdge-10;
-   const right=roomRight>=w||roomRight>=roomLeft;
-   const x=right?rightEdge+12:leftEdge-w-12;
-   popup.style.left=clamp(x,5,rect.width-w-5)+'px';
-   popup.style.top=clamp(anchor.top-rect.top+anchor.height*.5-h*.5,
-     34,rect.height-h-7)+'px';
-  }else{
-   const x=popupOrigin.x*rect.width;
-   const y=popupOrigin.y*rect.height;
-   popup.style.left=clamp((x+w+24>rect.width?x-w-16:x+16),
-     5,rect.width-w-5)+'px';
-   popup.style.top=clamp(y-h*.35,34,rect.height-h-7)+'px';
-  }
+  popup.style.left=clamp(left+w>outer.width?left-w-(r?.width||0)-24:left,
+   5,Math.max(5,outer.width-w-5))+'px';
+  popup.style.top=clamp(top-h*.3,5,Math.max(5,outer.height-h-5))+'px';
  }
- function menu(e,name,details,commands){
-  clear();
-  popup.replaceChildren(create('strong','pw-transit-popup-name',name));
-  if(details)popup.append(create('small','pw-transit-popup-sub',details));
-  const group=create('div','pw-transit-popup-buttons');
-  for(const command of commands||[]){
-   const btn=create('button','pw-transit-menu-item'+(command.primary?' is-primary':''),command.label);
-   btn.type='button';btn.disabled=!!command.disabled;
-   btn.addEventListener('click',event=>{event.stopPropagation();command.run()});
-   group.append(btn);
+ function showMenu(e,node,title,detail,commands){
+  clear();e.stopPropagation();
+  popup.replaceChildren(element('strong','pw-transit-popup-name',title),
+   element('small','pw-transit-popup-sub',detail));
+  const group=element('div','pw-transit-popup-buttons');
+  for(const a of commands){
+   const b=element('button','pw-transit-menu-item'+(a.primary?' is-primary':''),a.label);
+   b.type='button';b.disabled=!!a.disabled;
+   b.addEventListener('click',ev=>{ev.stopPropagation();a.run()});group.append(b);
   }
-  popup.append(group);map.append(popup);popup.hidden=false;
-  const rect=map.getBoundingClientRect();
-  popupOrigin={
-   card:e.currentTarget?.closest?.('.pw-transit-place')||null,
-   x:(e.clientX-rect.left)/Math.max(rect.width,1),
-   y:(e.clientY-rect.top)/Math.max(rect.height,1)
-  };
-  positionPopup();
+  popup.append(group);
+  popup.hidden=false;selected=node;node?.setAttribute('data-selected','true');
+  positionPopup(e,node);
  }
- // The rail canvas is drawn in real CSS-pixel coordinates, so 90° corners
- // remain circular at every aspect ratio. No skewed diagonals or sharp joins.
- const geometry=global.PaperWorldMetroGeometry;
- const segments=[],stationMarkers=[],gridDots=[],photoNodes=[];
- const dotLayer=document.createElementNS(NS,'g');
- dotLayer.classList.add('pw-transit-dot-matrix');
- svg.appendChild(dotLayer);
- // Dedicated neutral leader strokes connect each photo grid slot to its
- // exact station intersection. No independent percentage placement.
- const photoLayer=document.createElementNS(NS,'g');
- photoLayer.classList.add('pw-transit-photo-leaders');
- svg.appendChild(photoLayer);
- const photoLeaders=new Map();
- for(let row=0;row<=geometry.GRID.rows;row++){
-  for(let col=0;col<=geometry.GRID.columns;col++){
-   const dot=document.createElementNS(NS,'circle');
-   dot.classList.add('pw-transit-grid-dot');
-   dot.dataset.column=String(col);dot.dataset.row=String(row);
-   dot.setAttribute('r','1.4');
-   dotLayer.append(dot);gridDots.push({col,row,dot});
-  }
+ function put(node,p,layer){
+  node.style.left=p.x+'px';node.style.top=p.y+'px';
+  layer.append(node);
  }
-
- function lineSegment(line,a,b){
-  const group=document.createElementNS(NS,'g');
-  group.classList.add('pw-transit-segment');
-  group.dataset.line=line.id;group.dataset.from=a;group.dataset.to=b;
-  if(line.locked)group.dataset.locked='true';
-  const createStroke=(cls,stroke)=>{
-   const path=document.createElementNS(NS,'path');
-   path.classList.add(cls);path.setAttribute('stroke',stroke);
-   group.appendChild(path);return path;
-  };
-  const casing=createStroke('pw-transit-rail-casing','#0f1b21');
-  const core=createStroke('pw-transit-rail',line.color);
-  const glint=createStroke('pw-transit-rail-glint','#e4eeed');
-  const hit=createStroke('pw-transit-line-hit','transparent');
-  hit.setAttribute('role','button');hit.setAttribute('tabindex','0');
-  hit.setAttribute('aria-label','乘坐'+line.name);
-  hit.style.pointerEvents='stroke';
-  hit.addEventListener('pointerenter',()=>group.dataset.hover='true');
-  hit.addEventListener('pointerleave',()=>group.dataset.hover='false');
-  hit.addEventListener('keydown',event=>{
-   if(event.key==='Enter'||event.key===' '){event.preventDefault();hit.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:hit.getBoundingClientRect().x+hit.getBoundingClientRect().width/2,clientY:hit.getBoundingClientRect().y+hit.getBoundingClientRect().height/2}));}
-  });
-  hit.addEventListener('click',event=>{
-   event.stopPropagation();
-   const options=metro.boardingChoices(current).find(v=>v.id===line.id);
-   if(!options){
-    menu(event,line.name,line.locked?'尚未运营':'请先到此线的车站换乘',[]);
-    return;
+ // The same integer lattice owns regional routes, subway turns and every pin.
+ for(let cy=0;cy<=H;cy+=CELL)for(let cx=0;cx<=W;cx+=CELL)
+  dots.append(vector('circle',{cx,cy,r:1.85},'pw-transit-grid-dot'));
+ function rounded(points,radius=13){
+  if(!points?.length)return '';
+  const result=['M'+points[0].x+' '+points[0].y];
+  for(let i=1;i<points.length-1;i++){
+   const a=points[i-1],p=points[i],b=points[i+1];
+   const ax=p.x-a.x,ay=p.y-a.y,bx=b.x-p.x,by=b.y-p.y;
+   const da=Math.hypot(ax,ay),db=Math.hypot(bx,by);
+   if(da<1||db<1||ax*bx+ay*by>da*db*.999){
+    result.push('L'+p.x+' '+p.y);continue;
    }
-   menu(event,line.name,'当前站 · '+metro.STATIONS[current].label,
-    options.directions.map(dir=>({
-     label:dir.label,primary:true,run:async()=>{
-      if(busy)return;busy=true;clear();
-      let result;
-      try{result=await onBoard(line.id,dir.direction)}
-      catch(_){result={ok:false,reason:'上车失败'}}
-      busy=false;
-      if(!result?.ok)menu(event,line.name,result?.reason||'无法乘车',[]);
-     }
-    })));
-   group.dataset.selected='true';
+   const r=Math.min(radius,da*.44,db*.44);
+   result.push('L'+(p.x-ax/da*r)+' '+(p.y-ay/da*r));
+   result.push('Q'+p.x+' '+p.y+' '+(p.x+bx/db*r)+' '+(p.y+by/db*r));
+  }
+  const last=points[points.length-1];
+  result.push('L'+last.x+' '+last.y);
+  return result.join(' ');
+ }
+ const location=p=>({x:snap(p.x),y:snap(p.y)});
+ function orthogonal(a,b,offset=0){
+  const start=location(a),end=location(b);
+  if(start.x===end.x||start.y===end.y)return [start,end];
+  // Map-network curves are always orthogonal, with rounded 90-degree corners.
+  const mid=snap((start.x+end.x)*.5+offset);
+  return [start,{x:mid,y:start.y},{x:mid,y:end.y},end]
+   .filter((p,i,arr)=>i===0||p.x!==arr[i-1].x||p.y!==arr[i-1].y);
+ }
+ function lineGroup(parent,line,from,to,points,kind,hitCallback){
+  const g=vector('g',{'data-line':line.id,'data-from':from,'data-to':to,
+   'data-kind':kind,'data-mode':line.mode||'metro'},'pw-transit-segment pw-dot-segment');
+  const d=rounded(points,kind==='metro'?15:20);
+  g.append(vector('path',{d,stroke:'#0e1822'},'pw-transit-rail-casing'));
+  g.append(vector('path',{d,stroke:line.color||'#b7cbc7'},'pw-transit-rail'));
+  g.append(vector('path',{d,stroke:'#eff6ed'},'pw-transit-rail-glint'));
+  if(hitCallback){
+   const hit=vector('path',{d,stroke:'transparent',tabindex:0,role:'button',
+    'aria-label':line.name},'pw-transit-line-hit');
+   hit.addEventListener('click',e=>{if(drag?.moved)return;hitCallback(e,g)});
+   hit.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){
+    e.preventDefault();const r=hit.getBoundingClientRect();
+    hit.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:r.x+r.width/2,
+     clientY:r.y+r.height/2}));
+   }});
+   g.append(hit);
+  }
+  parent.append(g);
+  return g;
+ }
+ for(const l of atlas.LINKS){
+  for(let i=1;i<l.stops.length;i++){
+   const from=l.stops[i-1],to=l.stops[i],a=atlas.CITY_BY_ID[from],b=atlas.CITY_BY_ID[to];
+   if(!a||!b)continue;
+   const mode=l.mode==='highway'?'road':l.mode;
+   const points=orthogonal(a,b,((atlas.LINKS.indexOf(l)%3)-1)*CELL);
+   const pseudo={...l,mode};
+   lineGroup(regional,pseudo,from,to,points,'regional',(e,node)=>{
+    const route=atlas.route(currentCity,to,['highway','coach','bus'].includes(l.mode)?'road':'rail');
+    showMenu(e,node,l.name,route?
+     '城际交通 · '+(atlas.SERVICE_LABELS[l.mode]||l.mode)+' · 约 '+route.minutes+' 分钟':
+     '当前位置需要先换乘',[
+      {label:'查看 '+b.name,primary:true,run:()=>{clear();focus(b,Math.max(minScale*2,1.7))}}
+     ]);
+   });
+  }
+ }
+ // Expanded municipal services exist as planned topology. Only actually
+ // implemented local routes offer boarding; planned lines never fake rides.
+ for(const l of atlas.METRO_LINES){
+  const pts=l.coords.map(location);
+  const d=rounded(pts,7);
+  const g=vector('g',{'data-line':l.id,'data-city':l.city},'pw-dot-planned-line');
+  g.append(vector('path',{d,stroke:l.color},'pw-dot-planned-track'));
+  metroNetwork.append(g);
+  l.coords.forEach((p,i)=>{
+   if(i%2&&i!==l.coords.length-1)return;
+   const s=location(p);
+   g.append(vector('circle',{cx:s.x,cy:s.y,r:3.6},'pw-dot-planned-stop'));
   });
-  svg.appendChild(group);
-  segments.push({line,a,b,parts:[casing,core,glint,hit]});
  }
- for(const line of metro.LINES){
-  for(const [a,b] of (geometry?.segments(line)||[]))lineSegment(line,a,b);
+ const localPoint=p=>({x:LOCAL_X+p.gx*CELL,y:LOCAL_Y+p.gy*CELL});
+ for(const l of metro.LINES){
+  for(const [from,to] of geometry.segments(l)){
+   const a=metro.STATIONS[from],b=metro.STATIONS[to];
+   const via=geometry.routes[l.id+':'+from+':'+to]||[];
+   const ps=[localPoint(a),...via.map(p=>localPoint({gx:p[0],gy:p[1]})),localPoint(b)];
+   lineGroup(urban,l,from,to,ps,'metro',(e,node)=>{
+    const choice=metro.boardingChoices(here).find(p=>p.id===l.id);
+    if(!choice){showMenu(e,node,l.name,'请先到这条线路的站点',[]);return}
+    showMenu(e,node,l.name,'当前站 · '+metro.STATIONS[here].label,
+     choice.directions.map(dir=>({
+      label:dir.label,primary:true,run:async()=>{
+       if(busy)return;busy=true;clear();
+       try{const res=await onBoard?.(l.id,dir.direction);
+        if(!res?.ok)notify(res?.reason||'无法登车');
+       }catch(err){notify('乘车失败')}finally{busy=false}
+      }
+     })));
+   });
+  }
  }
- for(const [id,station] of Object.entries(metro.STATIONS)){
-  const group=document.createElementNS(NS,'g');
-  group.classList.add('pw-transit-stop-group');
-  group.dataset.stop=id;
-  if(station.locked)group.dataset.locked='true';
-  if(station.transfer)group.dataset.transfer='true';
-  if(current===id)group.dataset.current='true';
-  const makeCircle=(cls)=>{
-   const c=document.createElementNS(NS,'circle');
-   c.classList.add(cls);c.setAttribute('r',cls==='pw-transit-stop-halo'?13:
-     cls==='pw-transit-transfer-core'?3.2:station.transfer?8:5.5);
-   group.appendChild(c);return c;
-  };
-  if(current===id)makeCircle('pw-transit-stop-halo');
-  const circle=makeCircle('pw-transit-stop-circle');
-  if(station.transfer)makeCircle('pw-transit-transfer-core');
-  svg.appendChild(group);
-  stationMarkers.push({station,group});
+ for(const [id,s] of Object.entries(metro.STATIONS)){
+  if(s.locked)continue; // No fabricated empty southern line / fake stations.
+  const p=localPoint(s);
+  const g=vector('g',{'data-stop':id,'data-current':id===here},
+   'pw-transit-stop-group');
+  if(id===here)g.append(vector('circle',{cx:p.x,cy:p.y,r:12},'pw-transit-stop-halo'));
+  g.append(vector('circle',{cx:p.x,cy:p.y,r:s.transfer?6.5:5},
+   'pw-transit-stop-circle'));
+  if(s.transfer)g.append(vector('circle',{cx:p.x,cy:p.y,r:2.6},
+   'pw-transit-transfer-core'));
+  stops.append(g);
  }
- function drawLines(){
-  if(!map.isConnected)return;
-  const rect=map.getBoundingClientRect();
-  const width=Math.max(1,rect.width),height=Math.max(1,rect.height);
-  const matrix=geometry.layout(width,height);
-  map.style.setProperty('--metro-grid-cell',matrix.cell+'px');
-  map.dataset.grid=matrix.columns+'x'+matrix.rows;
-  svg.setAttribute('viewBox','0 0 '+width+' '+height);
-  for(const {col,row,dot} of gridDots){
-   const p=geometry.point(col,row,matrix);
-   dot.setAttribute('cx',p.x);dot.setAttribute('cy',p.y);
+ function previewImage(image,sources){
+  const srcs=[...new Set(sources.filter(Boolean))];
+  if(!srcs.length)return;
+  image.src=srcs[srcs.length-1];
+  let index=0;
+  function next(){
+   if(index>=srcs.length)return;
+   const src=srcs[index++];
+   const loader=new Image();
+   loader.referrerPolicy='no-referrer';
+   loader.onload=()=>{if(image.isConnected&&loader.naturalWidth)image.src=src};
+   loader.onerror=next;loader.src=src;
   }
-  for(const seg of segments){
-   const d=geometry.pathFor(seg.line.id,seg.a,seg.b,
-      metro.STATIONS,width,height,Math.min(22,matrix.cell*.29));
-   for(const p of seg.parts)p.setAttribute('d',d);
-  }
-  for(const {station,group} of stationMarkers){
-   const p=geometry.stationPoint(station,matrix);
-   group.setAttribute('transform','translate('+p.x+','+p.y+')');
-  }
-  for(const {node,station,slot,leader} of photoNodes){
-   const photo=geometry.point(slot.gx,slot.gy,matrix);
-   node.style.left=photo.x+'px';node.style.top=photo.y+'px';
-   if(node.dataset.photograph==='true'){
-    node.style.width=Math.min(170,Math.max(68,matrix.cell*1.52))+'px';
-    const stationPos=geometry.stationPoint(station,matrix);
-    const b=node.getBoundingClientRect();
-    const nodeBottom=b.bottom-rect.top;
-    const top=Math.min(stationPos.y-5,nodeBottom);
-    leader.setAttribute('d','M'+photo.x+' '+top+
-      ' L'+stationPos.x+' '+(stationPos.y-6));
-   }
-  }
-  for(const {label,slot} of gridLabels){
-   const p=geometry.point(slot.gx,slot.gy,matrix);
-   label.style.left=p.x+'px';label.style.top=p.y+'px';
-  }
-  positionPopup();
+  next();
  }
- // One compact route label per colored service, attached to its geography.
- const gridLabels=[];
- const keyPositions={
-  a:{gx:4,gy:3},
-  b:{gx:8,gy:5},
-  c:{gx:1,gy:6}
- };
- for(const line of metro.LINES){
-  const label=create('span','pw-transit-line-key',line.name);
-  label.dataset.line=line.id;
-  label.style.setProperty('--route-color',line.color);
-  label.dataset.gridColumn=String(keyPositions[line.id].gx);
-  label.dataset.gridRow=String(keyPositions[line.id].gy);
-  gridLabels.push({label,slot:keyPositions[line.id]});
-  if(line.locked)label.dataset.locked='true';
-  map.append(label);
+ function photo(node,sources){
+  const pic=element('span','pw-transit-photo'),img=element('img');
+  img.alt='';img.decoding='async';img.loading='lazy';img.referrerPolicy='no-referrer';
+  pic.append(img);node.append(pic);previewImage(img,sources);
  }
- for(const [id,station] of Object.entries(metro.STATIONS)){
-  const name=names[id]||station.label;
-  const photoSlot=!!PHOTO[id]||!!station.locked;
-  const node=create('button','pw-transit-place'+(!photoSlot?' is-station':'')+
-    (station.locked?' is-future-location':''));
-  node.type='button';node.dataset.place=id;node.dataset.current=String(id===current);
-  node.dataset.locked=String(!!station.locked);node.dataset.selected='false';
-  const slot=photoSlot?{gx:station.gx,gy:station.gy-1}:
-    {gx:station.gx,gy:station.gy};
-  node.dataset.gridColumn=String(slot.gx);
-  node.dataset.gridRow=String(slot.gy);
-  node.dataset.photograph=String(photoSlot);
-  let leader=null;
-  if(photoSlot){
-   leader=document.createElementNS(NS,'path');
-   leader.classList.add('pw-transit-photo-leader');
-   leader.dataset.place=id;
-   photoLayer.appendChild(leader);
-  }
-  photoNodes.push({node,station,slot,leader});
-  node.setAttribute('aria-label',name+(station.locked?'，未开放':''));
-  if(PHOTO[id]){
-   const pic=create('span','pw-transit-photo'),img=create('img');
-   img.alt='';img.loading='eager';img.decoding='async';img.referrerPolicy='no-referrer';
-   const [src,fallback]=PHOTO[id];
-   // Local visual first: an offline or stalled photo server never leaves a
-   // dark empty card. Only swap to online reference after its pixels load.
-   img.src=fallback;pic.append(img);node.append(pic);
-   const remote=new Image();remote.decoding='async';
-   remote.referrerPolicy='no-referrer';
-   remote.onload=()=>{if(img.isConnected&&remote.naturalWidth>0)img.src=src};
-   remote.onerror=()=>{};
-   remote.src=src;
-   img.addEventListener('error',()=>{if(img.src!==new URL(fallback,document.baseURI).href)img.src=fallback});
-  }else if(station.locked){
-   const pic=create('span','pw-transit-photo pw-transit-future-photo');
-   pic.append(create('span','pw-transit-future-symbol','···'));
-   node.append(pic);
-  }else node.append(create('span','pw-transit-station-dot',station.transfer?'◎':'•'));
-  node.append(create('span','pw-transit-place-name',name));
-  // The photo-to-stop connector lives in the SVG grid layer, not an
-  // independent CSS stem with fixed pixels.
+ function localPlace(id,s){
+  const p=localPoint(s),visible=!!PHOTO[id];
+  const name=PLACE_NAMES[id]||s.label;
+  const node=element('button','pw-transit-place pw-dot-place'+(visible?'':' is-station'));
+  node.type='button';node.dataset.place=id;node.dataset.local='true';
+  node.dataset.current=String(here===id);node.dataset.photograph=String(visible);
+  node.dataset.gridColumn=s.gx;node.dataset.gridRow=s.gy;
+  if(visible){const q=PHOTO[id];photo(node,[q[0],q[1]])}
+  else node.append(element('span','pw-transit-station-dot',s.transfer?'◎':'•'));
+  node.append(element('span','pw-transit-place-name',name));
+  const at={x:p.x,y:p.y-(visible?CELL:0)};
+  put(node,at,metroLayer);
   node.addEventListener('click',e=>{
+   if(drag?.moved)return;
    e.stopPropagation();
-   const def=locations[id];
-   const status=station.locked?{ok:false,reason:'尚未开放'}:
-      id===current?{ok:false,reason:'当前位置'}:availability(id,snapshot);
-   const subtitle=status.ok?'预计 '+status.cost+' 分钟':status.reason;
-   menu(e,name,subtitle,[
-    {label:'前往',primary:true,disabled:!status.ok,run:async()=>{
+   const loc=locations[id];
+   const status=id===here?{ok:false,reason:'当前位置'}:
+    loc?availability?.(id,snapshot):{ok:false,reason:'请先到达此站'};
+   const route=metro.path(here,id);
+   showMenu(e,node,name,status?.ok?'预计 '+status.cost+' 分钟':status?.reason||'暂不可达',[
+    {label:'前往',primary:true,disabled:!status?.ok||!route,run:async()=>{
      if(busy)return;busy=true;clear();
-     let result;try{result=await onTravel(id,metro.path(current,id))}
-     catch(_){result={ok:false,reason:'场景加载失败'}}
-     busy=false;if(!result?.ok)menu(e,name,result?.reason||'无法抵达',[]);
+     try{const res=await onTravel?.(id,route);if(!res?.ok)notify(res?.reason||'无法到达')}
+     catch(_){notify('场景加载失败')}finally{busy=false}
     }},
-    {label:'详情',run:()=>{
-      const p=metro.path(current,id);
-      const open=def?String(Math.floor(def.open/60)).padStart(2,'0')+':00—'+
-        String(Math.floor(def.close/60)).padStart(2,'0')+':00':'尚未开放';
-      menu(e,name,def?'开放 '+open+
-        (p?.segments.length?' · '+p.lines.join(' / ')+(p.transfers.length?' · 需换乘':' · 直达'):''):'尚未开放',
-        [{label:'返回',run:()=>clear()}]);
-    }}
-   ]);node.dataset.selected='true';
+    {label:'详情',run:()=>showMenu(e,node,name,
+     '市内交通 · '+(route?.lines.join(' / ')||'步行')+
+     (route?.transfers.length?' · 需要换乘':''),[])}
+   ]);
   });
-  map.append(node);
  }
- map.append(create('span','pw-transit-caption','城区交通'));
- map.append(create('span','pw-transit-tip','点击地点或线路'));
- map.append(popup);body.replaceChildren(map);
- drawLines();
+ for(const [id,s] of Object.entries(metro.STATIONS))if(!s.locked)localPlace(id,s);
+ const cityNodes=[];
+ for(const c of atlas.CITIES){
+  const node=element('button','pw-dot-city');
+  node.type='button';node.dataset.city=c.id;
+  const thumb=atlas.PHOTOS[c.id==='kirihama'?'metropolis':
+   c.id==='misaki'||c.id==='urasima'?'coast':
+   c.id==='naruba'||c.id==='okuzawa'?'mountain':
+   c.id==='homori'||c.id==='mizuho'?'rice':'street'];
+  photo(node,[thumb?.url,PLACEHOLDER]);
+  node.append(element('span','pw-transit-place-name',c.name));
+  put(node,location(c),cityLayer);
+  cityNodes.push({node,city:c});
+  node.addEventListener('click',e=>{
+   if(drag?.moved)return;
+   showMenu(e,node,c.name,c.sub+' · '+c.region,[
+    {label:'查看城区',primary:true,run:()=>{clear();focus(c,Math.max(1.9,minScale*2.6))}}
+   ]);
+  });
+ }
+ const worldNodes=[];
+ for(const p of atlas.POIS){
+  if(metro.STATIONS[p.id]||!locations[p.id])continue;
+  const node=element('button','pw-dot-poi pw-transit-place');
+  node.type='button';node.dataset.place=p.id;node.dataset.city=p.city;
+  node.dataset.kind=p.kind||'';
+  const src=atlas.PHOTOS[p.photo]?.url;
+  photo(node,[src,PLACEHOLDER]);
+  node.append(element('span','pw-transit-place-name',p.name));
+  put(node,location(p),placeLayer);
+  worldNodes.push({node,poi:p});
+  node.addEventListener('click',e=>{
+   if(drag?.moved)return;
+   const route=atlas.route(currentCity,p.city);
+   const hereNow=here===p.id;
+   const dest=locations[p.id];
+   const cost=p.city!==currentCity?Math.max(18,Math.round((route?.minutes||0)+18)):dest.travel;
+   const canTravel=!hereNow&&!!route&&snapshot.nightStatus!=='recalled'&&
+    snapshot.minute+cost<dest.close;
+   showMenu(e,node,p.name,(atlas.CITY_BY_ID[p.city]?.name||'城市')+
+    ' · '+(route?.legs.length?route.legs.map(l=>l.line.name).filter((v,i,a)=>a.indexOf(v)===i).join(' → '):
+      '同城区域')+(canTravel?' · 约 '+cost+' 分钟':' · 当前不可前往'),[
+    {label:'前往',primary:true,disabled:!canTravel,run:async()=>{
+     if(busy)return;busy=true;clear();
+     try{const res=await onWorldTravel?.(p.id,route);
+      if(!res?.ok)notify(res?.reason||'尚无法前往')}
+     catch(_){notify('场景加载失败')}finally{busy=false}
+    }},
+    {label:'查看地点',run:()=>{clear();focus(p,Math.max(scale,2.5))}}
+   ]);
+  });
+ }
+ const caption=element('span','pw-transit-caption','');
+ const sub=element('span','pw-transit-tip','');
+ map.append(caption,sub);
+ function viewport(){const r=map.getBoundingClientRect();return {w:r.width||844,h:r.height||390}}
+ function centerOn(p,s){
+  const v=viewport();scale=clamp(s,minScale,4.5);
+  x=v.w*.5-location(p).x*scale;y=v.h*.5-location(p).y*scale;
+  constrain();position();
+ }
+ function constrain(){
+  const v=viewport(),pad=22;
+  x=(W*scale<v.w)?(v.w-W*scale)*.5:clamp(x,v.w-W*scale-pad,pad);
+  y=(H*scale<v.h)?(v.h-H*scale)*.5:clamp(y,v.h-H*scale-pad,pad);
+ }
+ function position(){
+  const v=viewport();
+  canvas.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
+  const zoom=scale<1.15?'region':scale<2.3?'city':'detail';
+  map.dataset.zoom=zoom;
+  // Regions and city districts are zoom layers of the SAME physical lattice.
+  caption.textContent=zoom==='region'?'都市圈交通':zoom==='city'?'城市交通':'街区交通';
+  sub.textContent=zoom==='region'?'点击城市放大 · 城际铁路 / 巴士 / 渡轮':
+   zoom==='city'?'点击地点乘车 · 缩放查看全域':'点击地点调查 · 拖动继续探索';
+  for(const {node,city} of cityNodes){
+   const onScreen=(x+city.x*scale)>-100&&(x+city.x*scale)<v.w+100&&
+    (y+city.y*scale)>-100&&(y+city.y*scale)<v.h+100;
+   node.hidden=!onScreen||scale>=1.55;
+  }
+  for(const {node,poi} of worldNodes){
+   const p=location(poi),px=x+p.x*scale,py=y+p.y*scale;
+   const visible=scale>=2.65&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
+   // Spatial decluttering: do not show 100 overlapping photographs.
+   node.hidden=!visible;
+  }
+  metroLayer.hidden=scale<1.22||scale>4.5;
+  urban.style.display=scale<1.22?'none':'';
+  stops.style.display=scale<1.22?'none':'';
+  metroNetwork.style.display=scale<1.85?'none':'';
+  regional.style.opacity=scale>2.55?'.13':'.86';
+  hint.hidden=scale>2.3;
+  clear();
+ }
+ function focus(p,zoom){centerOn(p,zoom)}
+ function zoomBy(factor,atX,atY){
+  const v=viewport(),old=scale;
+  const px=atX??v.w*.5,py=atY??v.h*.5;
+  const next=clamp(old*factor,minScale,4.5);
+  x=px-(px-x)*next/old;y=py-(py-y)*next/old;scale=next;
+  constrain();position();
+ }
+ function measure(first){
+  const v=viewport();
+  minScale=Math.min((v.w-28)/W,(v.h-22)/H);
+  if(first){
+   const local=Math.min((v.w-60)/570,(v.h-80)/310);
+   centerOn(hereCity,Math.max(minScale,Math.min(2.6,local)));
+  }else{scale=Math.max(minScale,scale);constrain();position()}
+ }
+ toolBtns[0].addEventListener('click',()=>zoomBy(1/1.37));
+ toolBtns[1].addEventListener('click',()=>zoomBy(1.37));
+ toolBtns[2].addEventListener('click',()=>centerOn({x:W/2,y:H/2},minScale));
+ toolBtns[3].addEventListener('click',()=>centerOn(herePoi||hereCity,Math.max(1.8,minScale*2.6)));
+ const wheel=e=>{e.preventDefault();
+  const r=map.getBoundingClientRect();
+  zoomBy(Math.exp(-clamp(e.deltaY,-500,500)*.0014),e.clientX-r.left,e.clientY-r.top);
+ };
+ map.addEventListener('wheel',wheel,{passive:false});
+ map.addEventListener('pointerdown',e=>{
+  if(e.button!==0||e.target.closest('button,.pw-dot-chrome,.pw-transit-popup'))return;
+  drag={id:e.pointerId,cx:e.clientX,cy:e.clientY,x,y,moved:false};
+  map.setPointerCapture?.(e.pointerId);
+ });
+ map.addEventListener('pointermove',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  const dx=e.clientX-drag.cx,dy=e.clientY-drag.cy;
+  if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;
+  x=drag.x+dx;y=drag.y+dy;constrain();
+  canvas.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
+ });
+ map.addEventListener('pointerup',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  const hadMove=drag.moved;
+  drag=null;
+  if(hadMove)position();
+ });
+ map.addEventListener('pointercancel',()=>{drag=null});
+ map.addEventListener('click',e=>{if(e.target===map||e.target===canvas||e.target===svg)clear()});
+ let observer=null;
  if(typeof ResizeObserver==='function'){
-  const ro=new ResizeObserver(drawLines);ro.observe(map);
-  // The next render disconnects the old observer when opening a fresh map.
-  if(global.PaperWorldTransitMap?._disconnect)
-   global.PaperWorldTransitMap._disconnect();
-  global.PaperWorldTransitMap._disconnect=()=>ro.disconnect();
+  observer=new ResizeObserver(()=>measure(false));observer.observe(map);
+ }else{
+  const onResize=()=>measure(false);
+  global.addEventListener('resize',onResize);cleanupListeners.push(()=>global.removeEventListener('resize',onResize));
  }
+ measure(true);
+ global.PaperWorldTransitMap._cleanup=()=>{
+  observer?.disconnect();cleanupListeners.forEach(fn=>fn());
+ };
 }
-global.PaperWorldTransitMap={PHOTO,draw,_disconnect:null};
+global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null};
 })(window);
