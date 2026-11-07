@@ -30,7 +30,8 @@ try{
  try{
   await page.waitForFunction(()=>{
    const s=window.PaperWorldGameRingArena?.inspect?.();
-   return s?.active&&s?.renderer==='webgl-l2d'&&s?.l2dReady===5&&s?.wallMaterial?.ready;
+   return s?.active&&s?.renderer==='webgl-l2d'&&s?.l2dReady===5&&s?.wallMaterial?.ready&&
+    s?.roomSurfaces?.floor?.ready&&s?.roomSurfaces?.ceiling?.ready;
   },null,{timeout:85000});
   ready=true;
  }catch(e){errors.push('ready condition: '+e.message)}
@@ -47,9 +48,13 @@ try{
  report.ready=ready;report.errors=errors;report.pageErrors=pageErrors;
  writeFileSync(resolve(out,'report.json'),JSON.stringify(report,null,2));
  if(!ready||report.outer?.wallMaterial?.heightMeters!==3.2||
-  report.outer?.wallMaterial?.repeats!==8||pageErrors.length)
+  report.outer?.wallMaterial?.repeats!==8||
+  !report.outer?.roomSurfaces?.floor?.ready||!report.outer?.roomSurfaces?.ceiling?.ready||
+  !report.inner?.roomSurfaces?.floor?.ready||!report.inner?.roomSurfaces?.ceiling?.ready||
+  report.outer?.roomSurfaces?.floor?.vertices<15000||
+  report.inner?.roomSurfaces?.ceiling?.vertices<15000||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+errors.join('; '));
- console.log('PASS actual rendered WebGL 3D room screenshots: matched 3.2m walls and 8 physical UV repeats in outer and inner view');
+ console.log('PASS actual WebGL screenshots: two curved wall-matched rectangular image surfaces + 3.2m walls, both orientations, 5 actors');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }
