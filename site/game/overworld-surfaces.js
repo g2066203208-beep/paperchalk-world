@@ -4,7 +4,7 @@
  */
 (function(global){
   'use strict';
-  function create({engine,onTravel,onBoard,onFeedback}){
+  function create({engine,onTravel,onBoard,onWorldTravel,onFeedback}){
     if(!engine||typeof engine.snapshot!=='function')throw Error('OverworldSurfaces requires saved state');
     const parent=document.getElementById('novel-ui');
     const locs=global.PaperWorldDailyLife.LOCATIONS;
@@ -124,16 +124,19 @@
       frame.dataset.view='map';heading.textContent='城区交通';
       note.textContent=snapshot.calendar.time;
       foot.textContent='';
-      global.PaperWorldTransitMap.draw({
+      const painter=global.PaperWorldRegionalMap||global.PaperWorldTransitMap;
+      painter.draw({
         body,snapshot,locations:locs,availability,
         onTravel:async(place,route)=>{
-          closeSurface();
-          return onTravel?.(place,route);
+          closeSurface();return onTravel?.(place,route);
+        },
+        onWorldTravel:async(place,route)=>{
+          closeSurface();return onWorldTravel?.(place,route);
         },
         onBoard:async(lineId,direction)=>{
-          closeSurface();
-          return onBoard?.(lineId,direction);
-        }
+          closeSurface();return onBoard?.(lineId,direction);
+        },
+        onFeedback:message=>onFeedback?.(message)
       });
     }
     function drawBag(){
