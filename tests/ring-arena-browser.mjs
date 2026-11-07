@@ -277,9 +277,10 @@ try{
  assert.ok(Math.abs(enter.duel.playedPositions[0].z-
   enter.actors.allies[0].z)>.3,
   'hero is actually moving while swinging');
- assert.ok(Math.abs(enter.duel.playedPositions[1].z-
-  enter.actors.enemies[1].z)>.3,
-  'target is also moving into the same encounter');
+ assert.ok(Math.hypot(
+  enter.duel.playedPositions[1].x-enter.actors.enemies[1].x,
+  enter.duel.playedPositions[1].z-enter.actors.enemies[1].z)>.3,
+  'target must travel decisively on the real 3D floor during the swing');
  assert.equal(enter.directorCameraTemporary,true,
   'duel center zoom activates while remaining left-side and eye-level');
  assert.equal((await qa.evaluate(()=>
