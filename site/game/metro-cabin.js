@@ -215,6 +215,7 @@ function create({root,engine,onExit,onFeedback}){
   if(!ride?.onboard)return false;
   visible=true;section.hidden=false;anomalyEventSent=false;
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
+  if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Metro L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
   refresh();return true;
@@ -233,6 +234,7 @@ function create({root,engine,onExit,onFeedback}){
   regionalRide={legs:route.legs,index:0};
   visible=true;section.hidden=false;anomalyEventSent=false;auto=true;
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
+  if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Regional rail L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
   try{
