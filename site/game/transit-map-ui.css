@@ -665,3 +665,16 @@
 #pw-world-surface .pw-dot-world-map .pw-dot-poi[data-transit-stop="true"] .pw-transit-place-name{
  border-left:2px solid #91bdb6;padding-left:5px
 }
+
+/* Station names never shrink into "北部道..." or unreadable ellipses.
+   Cards remain 60px but captions may extend to their true text width. */
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-place-name,
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place-name{
+ box-sizing:border-box;width:max-content!important;min-width:0;
+ max-width:142px!important;overflow:visible!important;
+ text-overflow:clip!important;white-space:normal!important;
+ line-height:1.24!important;text-align:center;
+ overflow-wrap:normal;word-break:keep-all;
+ font-size:11px!important;
+ box-shadow:0 2px 5px #0b111c55
+}
