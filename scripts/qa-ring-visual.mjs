@@ -186,7 +186,7 @@ try{
   report.outer?.safety?.clear!==true||
   report.outer?.l2dReady!==5||
   report.outer?.encounterControls!==0||
-  report.outer?.encounter!=='one-standard-wide-spaced-world'||
+  report.outer?.encounter!=='one-centered-grounded-opponents'||
   Math.abs(report.geometry.floorPanelMeters-.6)>.001||
   Math.abs(report.geometry.ceilingPanelMeters-.95)>.001||
   report.geometry.floorRoofDepthMeters!==10||
@@ -200,22 +200,22 @@ try{
   report.outer?.lighting?.contactShadow!=='original-L2D-shoe-alpha-no-ellipse'||
   report.horrorFlicker?.lighting?.state!=='horror'||
   report.horrorFlicker?.lighting?.levels?.[1]>.1||
-  report.horrorDark?.lighting?.levels?.some(x=>x>.001)||
-  report.horrorDark?.lighting?.physicallyGroundedShadows!==0||
-  report.horrorDark?.lighting?.emergencyPower!==1||
+  report.horrorDark?.lighting?.redMix?.[1]!==1||
+  report.horrorDark?.lighting?.redMix?.[4]!==1||
+  report.horrorDark?.lighting?.noDetachedRedLight!==true||
   report.horrorRecovery?.lighting?.levels?.filter(x=>x===0).length<2||
   report.partial?.lighting?.state!=='partial'||
   report.partial?.lighting?.levels?.filter(x=>x===0).length<2||
   report.flicker?.lighting?.state!=='flicker'||
   report.flicker?.lighting?.levels?.[1]>.1||
   report.outage?.lighting?.state!=='outage'||
-  report.outage?.lighting?.levels?.some(x=>x>.001)||
-  report.outage?.lighting?.physicallyGroundedShadows!==0||
-  report.outage?.lighting?.emergencyPower!==1||
+  report.outage?.lighting?.redMix?.[1]!==1||
+  report.outage?.lighting?.redMix?.[4]!==1||
+  report.outage?.lighting?.noDetachedRedLight!==true||
   report.restored?.mode!=='outer'||
   validationErrors.length||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+validationErrors.concat(pageErrors).join('; '));
- console.log('PASS real Chromium single encounter, full-width 4 foes, wide fixed-eye mouse turn, accurate ArtMesh shadows and lamps');
+ console.log('PASS real Chromium centered 4 foes, original L2D, fixed 3D camera and red existing ceiling fixtures');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }
