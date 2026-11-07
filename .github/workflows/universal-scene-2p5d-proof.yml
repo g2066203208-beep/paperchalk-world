@@ -1,0 +1,57 @@
+name: Universal 2.5D environments - metro strip Chrome proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/index.html'
+      - 'site/game/scene-geometry.js'
+      - 'site/game/scene-environments.js'
+      - 'site/game/ring-arena-runtime.js'
+      - 'site/game/metro-cabin.js'
+      - 'site/assets/metro/side/**'
+      - 'tests/scene-geometry.test.cjs'
+      - 'tests/transit-map-browser.mjs'
+      - '.github/workflows/universal-scene-2p5d-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: paperchalk-universal-2p5d-proof
+  cancel-in-progress: true
+jobs:
+  real-scene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium and image inspector
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+          python3 -m pip install -q 'Pillow>=10,<12'
+      - name: Generate scene catalog
+        run: python3 scripts/build_scene_catalog.py
+      - name: Start actual GitHub Pages game
+        run: |
+          python3 -m http.server 8765 --directory site >/tmp/scene-2p5d.log 2>&1 &
+          for i in $(seq 1 35); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/scene-2p5d.log
+          exit 1
+      - name: Check interchangeable 2.5D arc strip box meshes and 3D lamps
+        run: node --test tests/scene-geometry.test.cjs tests/scene-environments.test.cjs
+      - name: Drive actual subway, inspect floor/ceiling lighting and capture Chrome screenshots
+        run: node tests/transit-map-browser.mjs
+      - name: Archive exact real 3D game frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-2p5d-metro-real-chromium
+          path: artifacts/overworld/*.png
+          if-no-files-found: warn
+          retention-days: 14
