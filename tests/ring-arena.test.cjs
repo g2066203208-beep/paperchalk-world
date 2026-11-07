@@ -4,13 +4,13 @@ const assert=require('node:assert/strict');
 const arena=require('../site/game/ring-arena-runtime.js');
 const close=(a,b,eps=1e-6)=>assert.ok(Math.abs(a-b)<=eps,a+' != '+b);
 assert.equal(arena.SPEC.stageType,'compact-convenience-curved-aisle');
-assert.deepEqual(arena.HIDDEN_ALLY_IDS,['ally-2','ally-3','ally-4']);
+assert.deepEqual(arena.HIDDEN_ALLY_IDS,[],'all four friendly actors must take part in the battle');
 assert.equal(arena.portraitFit(800,1200,1024).height,1024);
 assert.ok(arena.renderPixelRatio(1920,1080,4)<1.1);
 assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shoulder camera base, not switching angles');
 const base=arena.camera('outer'),scene=arena.layout('outer'),hero=scene.allies[0];
 assert.deepEqual(arena.visibleActors('outer').map(a=>a.id),
- ['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
+ ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
 assert.ok(scene.enemies.every(a=>a.y===0&&a.z===6.80));
 close(base.eye.y,1.5);close(base.eye.x,-.28);close(base.eye.z,10.40);
 close(base.fov,66);
@@ -27,6 +27,8 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  const visibleWidth=Math.max(0,Math.min(1,safe.hero.right)-Math.max(-1,safe.hero.left));
  assert.ok(visibleWidth>.25,'foreground heroine remains visibly large');
  const heel=scene.enemies.map(a=>arena.project({x:a.x,y:0,z:a.z},cam,aspect));
+ const squad=scene.allies.slice(1).map(a=>arena.project({x:a.x,y:0,z:a.z},cam,aspect));
+ assert.ok(squad.every(p=>p.valid),'three squadmates share the actual 3D floor');
  assert.ok(heel.every(p=>p.valid),'all 4 enemies grounded and in front of camera');
 }
 const c=arena.shoulderCamera(base,hero,0,0,1917/906);
@@ -62,4 +64,4 @@ for(const yaw of [-1,-.5,0,.5,1])for(const pitch of [-1,0,1]){
 assert.equal(JSON.stringify(scene),initial,'third-person camera must NEVER move actors');
 const inner=arena.camera('inner');
 assert.equal(inner.fov,52,'legacy opposite-direction environment remains intact');
-console.log('PASS readable larger heroine with full head and weapon, grounded distant foes, stable pose and one moving camera');
+console.log('PASS 4v4 authored world-space actors and realistic shoulder foreground');
