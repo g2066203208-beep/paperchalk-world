@@ -981,6 +981,35 @@
    source:metroCanonicalBack,w:metroCanonicalBack.naturalWidth,
    h:metroCanonicalBack.naturalHeight
   }:null;
+  // "L2D ready" previously only meant texImage2D did not throw. Transparent
+  // 1024x1024 canvases were therefore counted as actual passengers. Probe
+  // source ALPHA, not metadata, before replacing the guaranteed canonical
+  // rear illustration with an animated L2D frame. Mobile/IndexedDB rigs may
+  // be ready-but-blank while their first part sprites are still resolving.
+  const metroAlphaProbe=document.createElement('canvas');
+  metroAlphaProbe.width=48;metroAlphaProbe.height=48;
+  const metroAlphaCtx=metroAlphaProbe.getContext('2d',{willReadFrequently:true});
+  let metroAlphaStamp=0,metroAlphaSource=null,metroAlphaVisible=false;
+  function metroLivePortraitHasPixels(source){
+   const now=performance.now();
+   if(source===metroAlphaSource&&now-metroAlphaStamp<180)return metroAlphaVisible;
+   metroAlphaSource=source;metroAlphaStamp=now;
+   if(!metroAlphaCtx)return false;
+   try{
+    metroAlphaCtx.clearRect(0,0,48,48);
+    metroAlphaCtx.drawImage(source,0,0,48,48);
+    const alpha=metroAlphaCtx.getImageData(0,0,48,48).data;
+    let filled=0;
+    for(let i=3;i<alpha.length;i+=4){
+     if(alpha[i]>48&&++filled>=14)break;
+    }
+    metroAlphaVisible=filled>=14;
+    return metroAlphaVisible;
+   }catch(error){
+    metroAlphaVisible=false;
+    return false;
+   }
+  }
   const requestedPose=new URLSearchParams(window.location.search).get('heroPose');
   const previewPose=['original','3q','level'].includes(requestedPose)
    ?requestedPose:'female7';
@@ -1323,6 +1352,8 @@
    const w=source.videoWidth||source.naturalWidth||source.width;
    const h=source.videoHeight||source.naturalHeight||source.height;
    if(!w||!h)return safeHero();
+   if(actor.id==='hero'&&transitMode&&!metroLivePortraitHasPixels(source))
+    return safeHero();
    return {runtime,source,w,h};
   }
   // Throttle pixel uploads, preserving the original 30 fps source animation.
@@ -1448,7 +1479,11 @@
    }
    const fixedPose=a.id==='hero'&&posePreviewEnabled&&!transitMode;
    // Static heroine: one GPU upload only. All animated L2D remain dynamic.
-   if(fixedPose&&targetTexture.painted)return true;
+   const canonicalMetroFallback=actor.id==='hero'&&transitMode&&
+    desc.runtime.root.dataset.l2dMode==='original-source-fallback-waiting-for-live-l2d';
+   // A static source fallback needs ONE upload, not repeated GPU uploads.
+   // sourceFor still checks for an eventual nonblank true L2D on every render.
+   if((fixedPose||canonicalMetroFallback)&&targetTexture.painted)return true;
    const interval=a.id==='hero'?50:78;
    if(now-targetTexture.updated<interval&&targetTexture.painted)return true;
    const size=a.id==='hero'?(fixedPose?1024:768):512;
