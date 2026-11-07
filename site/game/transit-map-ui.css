@@ -1,0 +1,201 @@
+/* V4: no bottom inspector, no separate page of controls. Everything
+   belongs to the precise photo/rail position the player clicked. */
+#novel-ui #pw-world-surface .pw-surface-frame[data-view="map"]{
+ width:min(1320px,98cqw)!important;height:min(790px,94cqh)!important;
+ border:0!important;border-radius:0!important;
+ background:#1b252a!important;box-shadow:0 12px 70px #000b!important;
+}
+#pw-world-surface .pw-surface-frame[data-view="map"] .pw-surface-head,
+#pw-world-surface .pw-surface-frame[data-view="map"] .pw-surface-foot{display:none!important}
+#pw-world-surface .pw-surface-frame[data-view="map"] .pw-surface-body{
+ padding:0!important;background:transparent!important;overflow:hidden!important;
+}
+#pw-world-surface .pw-transit-map{
+ position:relative;flex:1;width:100%;height:100%;isolation:isolate;
+ background:#202b32;
+ background-image:radial-gradient(ellipse at 47% 55%,#30404724,transparent 72%);
+ font-family:"PaperSans","Noto Sans CJK SC",sans-serif!important;
+ overflow:hidden;user-select:none;
+}
+#pw-world-surface .pw-transit-map::before{
+ content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+ border:1px solid #b7c5c03d;
+ box-shadow:inset 0 0 80px #0c171b66;
+}
+#pw-world-surface .pw-transit-lines{
+ position:absolute;inset:0;width:100%;height:100%;z-index:1;
+ pointer-events:none;
+}
+#pw-world-surface .pw-transit-rail{
+ fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
+ vector-effect:non-scaling-stroke;opacity:.94;pointer-events:none;
+}
+#pw-world-surface .pw-transit-rail.is-locked{
+ opacity:.32;stroke-dasharray:5 7;stroke-width:1.7;
+}
+#pw-world-surface .pw-transit-line-hit{
+ fill:none;stroke-width:20px;opacity:0;
+ vector-effect:non-scaling-stroke;
+ cursor:pointer;pointer-events:stroke!important;
+}
+#pw-world-surface .pw-transit-line-hit:hover+path{opacity:1}
+#pw-world-surface .pw-transit-map .pw-transit-caption{
+ position:absolute;z-index:3;top:15px;left:23px;
+ color:#edeae2;font-size:clamp(14px,2.9cqh,21px);
+ letter-spacing:.14em;font-weight:500;pointer-events:none;
+ text-shadow:0 3px 9px #000a;
+}
+#pw-world-surface .pw-transit-map .pw-transit-tip{
+ position:absolute;z-index:3;bottom:13px;left:22px;
+ color:#bbc7c6a6;font-size:clamp(10px,1.7cqh,13px);
+ letter-spacing:.015em;pointer-events:none;
+}
+#pw-world-surface .pw-transit-line-key{
+ position:absolute;z-index:2;right:18px;top:16px;
+ color:#e6ece9;font-size:clamp(10px,1.6cqh,13px);
+ padding:3px 4px;display:flex;align-items:center;gap:6px;
+ background:#18272abc;pointer-events:none;
+ text-shadow:0 2px 5px #000a;
+}
+#pw-world-surface .pw-transit-line-key::before{
+ content:"";display:inline-block;background:var(--route-color);
+ width:22px;height:4px;border-radius:7px;
+}
+#pw-world-surface .pw-transit-line-key[data-line=b]{top:40px}
+#pw-world-surface .pw-transit-line-key[data-line=c]{top:64px}
+#pw-world-surface .pw-transit-line-key[data-locked=true]{opacity:.4}
+#novel-ui #pw-world-surface .pw-transit-place{
+ position:absolute;z-index:4;transform:translate(-50%,-50%);
+ display:flex;flex-direction:column;align-items:center;
+ padding:0!important;margin:0!important;
+ width:clamp(80px,12.2cqw,155px);
+ max-width:none;min-height:46px;border:0!important;
+ border-radius:0!important;background:transparent!important;
+ text-align:center;box-shadow:none!important;
+ transition:transform .13s ease;
+}
+#novel-ui #pw-world-surface .pw-transit-place:hover,
+#novel-ui #pw-world-surface .pw-transit-place[data-selected=true]{
+ transform:translate(-50%,-50%) scale(1.035);
+}
+#pw-world-surface .pw-transit-place .pw-transit-photo{
+ width:100%;aspect-ratio:1.64;
+ display:block;overflow:hidden;
+ border:1px solid #c1d0d0b9;position:relative;
+ background:#2b373c;box-shadow:0 5px 14px #0c161ab3;
+}
+#pw-world-surface .pw-transit-photo img{
+ width:100%;height:100%;display:block;
+ object-fit:cover;filter:saturate(.60) contrast(1.08) brightness(.84);
+ transition:filter .12s ease;
+}
+#pw-world-surface .pw-transit-place:hover .pw-transit-photo img,
+#pw-world-surface .pw-transit-place[data-selected=true] .pw-transit-photo img{
+ filter:saturate(.83) contrast(1.06) brightness(.98);
+}
+#pw-world-surface .pw-transit-place[data-current=true] .pw-transit-photo,
+#pw-world-surface .pw-transit-place[data-selected=true] .pw-transit-photo{
+ border:2px solid #e6c7b1;
+ box-shadow:0 0 0 1px #dbc6b8,0 0 12px #d9a78e66;
+}
+#pw-world-surface .pw-transit-place-name{
+ width:max-content;max-width:100%;min-width:38px;
+ background:#18252aea;color:#f0efea!important;
+ padding:2px 5px 3px;
+ font-size:clamp(11px,1.9cqh,15px);line-height:1.25;
+ font-weight:500;letter-spacing:.04em;white-space:nowrap;
+ text-shadow:0 1px 4px #050a0c;
+}
+#pw-world-surface .pw-transit-place[data-current=true] .pw-transit-place-name::before{
+ content:"● ";font-size:.68em;color:#c6e4da;
+}
+#novel-ui #pw-world-surface .pw-transit-place.is-station{
+ width:clamp(54px,9cqw,94px);
+}
+#pw-world-surface .pw-transit-station-dot{
+ display:grid;place-items:center;
+ width:23px;height:23px;border:3px solid #d7e4e5;
+ background:#1e3039;color:#ebf0ed;
+ border-radius:50%;font-size:12px;line-height:1;
+ box-shadow:0 0 0 2px #182a32,0 3px 7px #0008;
+}
+#pw-world-surface .pw-transit-place.is-station[data-current=true] .pw-transit-station-dot{
+ border-color:#e0c1a6;color:#efcbaa;
+}
+#pw-world-surface .pw-transit-place.is-station[data-locked=true]{
+ opacity:.5;
+}
+#pw-world-surface .pw-transit-place.is-station .pw-transit-place-name{
+ font-size:clamp(9px,1.65cqh,12px);background:#1a272acf;
+}
+#pw-world-surface .pw-transit-popup[hidden]{display:none!important}
+#pw-world-surface .pw-transit-popup{
+ position:absolute;z-index:20;
+ min-width:140px;max-width:220px;
+ background:#152127f4;border:1px solid #a7b9ba99;
+ border-left:2px solid #c4a2a2;
+ padding:10px 10px 8px;
+ box-shadow:0 6px 19px #020608b3;
+ color:#f0f0eb!important;
+ font-family:"PaperSans","Noto Sans CJK SC",sans-serif;
+ backdrop-filter:blur(4px);
+}
+#pw-world-surface .pw-transit-popup-name{
+ display:block;font-weight:500;font-size:clamp(13px,2.1cqh,17px);
+ letter-spacing:.03em;
+}
+#pw-world-surface .pw-transit-popup-sub{
+ display:block;line-height:1.45;margin-top:6px;
+ font-size:clamp(10px,1.65cqh,12px);color:#bbcacc;
+ white-space:normal;overflow-wrap:anywhere;
+}
+#pw-world-surface .pw-transit-popup-buttons{
+ display:flex;flex-direction:column;gap:4px;margin-top:8px;
+}
+#novel-ui #pw-world-surface .pw-transit-menu-item{
+ appearance:none;display:block;width:100%;
+ min-height:32px;padding:5px 7px!important;
+ border:1px solid #8fa2a14b!important;
+ border-radius:1px!important;
+ background:#293a40b9!important;
+ color:#f1f3ec!important;text-align:left!important;
+ font:500 clamp(11px,1.75cqh,14px)/1.4 "PaperSans",sans-serif!important;
+}
+#novel-ui #pw-world-surface .pw-transit-menu-item.is-primary{
+ background:#344950c9!important;border-color:#b4c6bf7e!important;
+}
+#novel-ui #pw-world-surface .pw-transit-menu-item:disabled{
+ opacity:.45!important;cursor:default;
+}
+#novel-ui #pw-world-surface .pw-transit-menu-item:not(:disabled):hover{
+ background:#62777b!important;
+}
+@container (max-width:800px){
+ #novel-ui #pw-world-surface .pw-transit-place{
+  width:clamp(70px,10.5cqw,102px);
+ }
+ #novel-ui #pw-world-surface .pw-transit-place.is-station{
+  width:clamp(43px,6.4cqw,62px);
+ }
+ #pw-world-surface .pw-transit-map .pw-transit-caption{
+  top:5px;left:9px;font-size:13px;
+ }
+ #pw-world-surface .pw-transit-map .pw-transit-tip{
+  bottom:4px;left:8px;font-size:9px;
+ }
+ #pw-world-surface .pw-transit-line-key{
+  right:5px;top:3px;font-size:9px;padding:1px 2px;
+ }
+ #pw-world-surface .pw-transit-line-key[data-line=b]{top:20px}
+ #pw-world-surface .pw-transit-line-key[data-line=c]{top:37px}
+ #pw-world-surface .pw-transit-line-key::before{width:12px;height:3px}
+ #pw-world-surface .pw-transit-place-name{font-size:10px}
+ #pw-world-surface .pw-transit-station-dot{width:16px;height:16px;border-width:2px}
+ #pw-world-surface .pw-transit-popup{padding:7px 8px;max-width:175px}
+ #novel-ui #pw-world-surface .pw-transit-menu-item{min-height:29px;font-size:10px!important}
+ #pw-world-surface .pw-transit-popup-sub{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+ #novel-ui #pw-world-surface .pw-transit-place,
+ #pw-world-surface .pw-transit-photo img{transition:none}
+}
