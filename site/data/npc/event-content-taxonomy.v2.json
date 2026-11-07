@@ -1,0 +1,707 @@
+{
+  "version": "2.0.0",
+  "date": "2026-11-07",
+  "status": "design_and_data_only_not_runtime_wired",
+  "description": "A content-first classification for all NPCs: observable event/message semantic content -> physical immediacy -> public safety -> group pose & actions; personality only modifies individual gestures. Replaces emotion-first grouping in v1.",
+  "appliesTo": "trio NPC-G001 and all future ordinary NPC groups/singles",
+  "schema": {
+    "event": {
+      "id": "string",
+      "contentType": "one of contentCategories[].id",
+      "channel": "in_person|eyewitness|phone|media|official_broadcast|hearsay",
+      "immediacy": "live|recent|historical|hypothetical",
+      "severity": "0..3",
+      "distance": "near|remote",
+      "affected": "self|friend|local|stranger|public",
+      "credibility": "unverified|reported|confirmed",
+      "scene": "metro|school|street|shop|home|other",
+      "timestamp": "game-time"
+    },
+    "result": {
+      "selectedPose": "groupPoses[].id",
+      "steps": [
+        "stop or continue ongoing activity",
+        "orient to information source",
+        "perform content-specific group response",
+        "react to severity and safety",
+        "resume or transition to help/leave"
+      ],
+      "members": {
+        "A": "reactionBeat",
+        "B": "reactionBeat",
+        "C": "reactionBeat"
+      },
+      "nextIntent": "chat|verify|comfort|help|leave|resume"
+    }
+  },
+  "classificationRules": [
+    "先根据事实内容选择 contentType（如车祸=accident），不从开心/伤心/惊讶等情绪倒推事件。",
+    "同一内容还需区分媒介转述与现场目击：远处事故新闻用 concern，现场车祸优先 protect / emergency.",
+    "现场正在发生的危险优先于手机资讯、闲聊、喜剧；安全动作不可被八卦喜好覆盖。",
+    "传播可信度低时先质疑或查证，不允许NPC直接将网络传言当真实事实向其他NPC传播。",
+    "严重事件优先保持尊重：真实伤亡/失踪/悲剧禁止触发爆笑/起哄；搞笑题材不能覆盖现场风险。",
+    "个体性格最后参与同一剧本内动作的微差异，而不是决定是什么内容类别。",
+    "同组A/B/C可异步反应与相互交接话题，但动作的主语义应一致，不要复制三套同动作。",
+    "通用NPC缺席某个特定动作素材时，回退至defaultPose近义组姿，而不是生成随机情绪。"
+  ],
+  "groupPoses": [
+    {
+      "id": "chat",
+      "label": "自然闲聊",
+      "stage": "三人自然交谈",
+      "usage": "A贴近插话，B讲述，C旁听"
+    },
+    {
+      "id": "laugh",
+      "label": "大笑起哄",
+      "stage": "笑弯腰、捂嘴笑、忍笑",
+      "usage": "群体轻松/搞笑"
+    },
+    {
+      "id": "gossip",
+      "label": "八卦围聊",
+      "stage": "靠近交换手机或低声交谈",
+      "usage": "社交/真假讨论"
+    },
+    {
+      "id": "surprised",
+      "label": "震惊反问",
+      "stage": "动作短暂停顿、睁眼、回看同伴",
+      "usage": "惊人新消息"
+    },
+    {
+      "id": "disbelief",
+      "label": "不敢相信",
+      "stage": "愣住、挑眉、互相求证",
+      "usage": "荒诞不合理"
+    },
+    {
+      "id": "admire",
+      "label": "欣赏讨论",
+      "stage": "看屏幕、羡慕赞叹、指点",
+      "usage": "明星颜值/厉害表现"
+    },
+    {
+      "id": "celebrate",
+      "label": "开心庆祝",
+      "stage": "鼓掌、小幅跳起、互相祝贺",
+      "usage": "喜事和成绩"
+    },
+    {
+      "id": "embarrassed",
+      "label": "尴尬打闹",
+      "stage": "遮脸、抗议、损友笑",
+      "usage": "朋友玩笑与出糗"
+    },
+    {
+      "id": "concern",
+      "label": "沉重担忧",
+      "stage": "笑容收起、眉头紧、低声商量",
+      "usage": "事故/坏消息"
+    },
+    {
+      "id": "check",
+      "label": "认真核实",
+      "stage": "拿手机、互相确认、放缓讲话",
+      "usage": "新闻求证/公告"
+    },
+    {
+      "id": "anger",
+      "label": "不满争论",
+      "stage": "皱眉、讨论、轻微摇头",
+      "usage": "不公/伤害/丑闻"
+    },
+    {
+      "id": "startle",
+      "label": "瞬间受惊",
+      "stage": "缩肩、回头、停止手上动作",
+      "usage": "突然响声/现场冲突"
+    },
+    {
+      "id": "protect",
+      "label": "警觉互助",
+      "stage": "提醒后退、搀扶、求助",
+      "usage": "现场风险/伤者"
+    },
+    {
+      "id": "retreat",
+      "label": "紧急离开",
+      "stage": "互相招呼、避让、走向出口",
+      "usage": "危险撤离"
+    },
+    {
+      "id": "sad_support",
+      "label": "难过安慰",
+      "stage": "低头、握手或轻扶同伴",
+      "usage": "严重坏消息/悲痛"
+    },
+    {
+      "id": "uneasy",
+      "label": "怪异不安",
+      "stage": "停下动作、互看、观察周围",
+      "usage": "怪谈/异常"
+    }
+  ],
+  "contentCategories": [
+    {
+      "id": "mundane_chat",
+      "label": "日常琐事",
+      "domain": "daily",
+      "examples": [
+        "作业没写完",
+        "今天吃什么",
+        "天气不错"
+      ],
+      "defaultPose": "chat",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "笑着插嘴",
+        "B": "顺畅讲述",
+        "C": "淡淡接话"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "humorous_media",
+      "label": "搞笑新闻/趣闻视频",
+      "domain": "entertainment",
+      "examples": [
+        "奇怪的动物搞笑视频",
+        "网络整活",
+        "滑稽电视新闻"
+      ],
+      "defaultPose": "laugh",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "笑得前仰后合",
+        "B": "边笑边给两人解释笑点",
+        "C": "想憋笑最后破功"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "friendly_prank",
+      "label": "恶作剧/朋友互坑",
+      "domain": "social",
+      "examples": [
+        "朋友被整蛊",
+        "说漏嘴出糗",
+        "互相起外号"
+      ],
+      "defaultPose": "embarrassed",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "坏笑起哄",
+        "B": "慌张抗议或反击",
+        "C": "挑眉看热闹"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "absurd_news",
+      "label": "荒诞离谱的报道",
+      "domain": "entertainment",
+      "examples": [
+        "有人把冰箱当宠物遛",
+        "荒谬行政乌龙",
+        "逻辑不通的奇怪新闻"
+      ],
+      "defaultPose": "disbelief",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "瞪眼大喊这也行",
+        "B": "认真复述荒唐细节",
+        "C": "皱眉怀疑是假消息"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "sensational_claim",
+      "label": "夸张劲爆消息/破纪录",
+      "domain": "entertainment",
+      "examples": [
+        "令人难以置信的纪录",
+        "夸张的热搜标题",
+        "难得一见的大场面"
+      ],
+      "defaultPose": "surprised",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "瞪大眼夸张比划",
+        "B": "兴奋解释怎么回事",
+        "C": "要求查来源别轻信"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "celebrity_crush",
+      "label": "帅气明星/偶像颜值",
+      "domain": "entertainment",
+      "examples": [
+        "帅气演员的新剧照",
+        "偶像走红毯",
+        "明星路透"
+      ],
+      "defaultPose": "admire",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "兴奋拉朋友看手机",
+        "B": "滔滔不绝介绍",
+        "C": "嘴硬地评价或顺势调侃"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "celebrity_scandal",
+      "label": "明星丑闻/塌房",
+      "domain": "entertainment",
+      "examples": [
+        "明星不当言论",
+        "粉丝争议",
+        "偶像被曝光负面事件"
+      ],
+      "defaultPose": "check",
+      "defaultSeverity": 1,
+      "trio": {
+        "A": "惊讶转认真",
+        "B": "核对事件时间线",
+        "C": "提醒别转未经证实的指控"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "romance_gossip",
+      "label": "恋爱八卦/表白",
+      "domain": "social",
+      "examples": [
+        "同学表白",
+        "恋爱传闻",
+        "情侣约会被撞见"
+      ],
+      "defaultPose": "gossip",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "爱起哄凑近",
+        "B": "好奇问当事人如何回应",
+        "C": "吐槽不靠谱传言"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "school_success",
+      "label": "校园喜讯/考试进步",
+      "domain": "school",
+      "examples": [
+        "班级获奖",
+        "考试进步",
+        "放假通知"
+      ],
+      "defaultPose": "celebrate",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "开心拍手",
+        "B": "分享详细好消息",
+        "C": "调侃之后也祝贺"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "school_pressure",
+      "label": "校园压力/批评处分",
+      "domain": "school",
+      "examples": [
+        "突然考试",
+        "作业大增",
+        "社团经费取消"
+      ],
+      "defaultPose": "concern",
+      "defaultSeverity": 1,
+      "trio": {
+        "A": "抱怨或慌张",
+        "B": "讨论对策",
+        "C": "务实提出解决方案"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "good_personal_news",
+      "label": "朋友家人好消息",
+      "domain": "social",
+      "examples": [
+        "找到工作",
+        "比赛晋级",
+        "失物找回"
+      ],
+      "defaultPose": "celebrate",
+      "defaultSeverity": 0,
+      "trio": {
+        "A": "第一时间庆祝",
+        "B": "追问过程",
+        "C": "认真祝贺"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "bad_personal_news",
+      "label": "朋友家人坏消息",
+      "domain": "social",
+      "examples": [
+        "被辞退",
+        "严重吵架",
+        "亲人住院消息"
+      ],
+      "defaultPose": "concern",
+      "defaultSeverity": 2,
+      "trio": {
+        "A": "笑容消失关切询问",
+        "B": "低声问信息来源",
+        "C": "停止玩笑考虑提供帮助"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "traffic_accident_report",
+      "label": "车祸/交通事故新闻",
+      "domain": "safety",
+      "examples": [
+        "手机上刷到车祸",
+        "电视播报道路事故",
+        "朋友转发交通事故"
+      ],
+      "defaultPose": "concern",
+      "defaultSeverity": 2,
+      "trio": {
+        "A": "吃惊后问是否有人受伤",
+        "B": "查地点时间及权威消息",
+        "C": "提醒不要传播伤者画面"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "traffic_accident_scene",
+      "label": "现场目击车祸",
+      "domain": "safety",
+      "examples": [
+        "眼前车辆碰撞",
+        "自行车被撞倒",
+        "路口有人受伤"
+      ],
+      "defaultPose": "protect",
+      "defaultSeverity": 3,
+      "trio": {
+        "A": "本能受惊后远离车流",
+        "B": "确认是否需要呼救或急救",
+        "C": "优先提醒他人避险并协助报警"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "medical_emergency_scene",
+      "label": "现场昏倒/受伤",
+      "domain": "safety",
+      "examples": [
+        "身旁有人突然晕倒",
+        "乘客跌倒受伤",
+        "学生意外流血"
+      ],
+      "defaultPose": "protect",
+      "defaultSeverity": 3,
+      "trio": {
+        "A": "吓到后让出空间",
+        "B": "询问是否有人求助医务人员",
+        "C": "冷静联系急救并引导避让"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "disaster_warning",
+      "label": "火灾/地震/灾害警报",
+      "domain": "safety",
+      "examples": [
+        "火警",
+        "台风/暴雨预警",
+        "地震警报"
+      ],
+      "defaultPose": "retreat",
+      "defaultSeverity": 3,
+      "trio": {
+        "A": "跟随指示撤离",
+        "B": "检查警报和安全通道",
+        "C": "提醒同伴不要拥挤"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "crime_report",
+      "label": "暴力犯罪/治安新闻",
+      "domain": "society",
+      "examples": [
+        "警察通报抢劫",
+        "新闻报道伤害事件",
+        "社区安全提醒"
+      ],
+      "defaultPose": "concern",
+      "defaultSeverity": 2,
+      "trio": {
+        "A": "紧张询问附近安全吗",
+        "B": "查官方报道",
+        "C": "提醒同伴注意安全"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "injustice_expose",
+      "label": "社会不公/令人愤怒新闻",
+      "domain": "society",
+      "examples": [
+        "欺凌被揭露",
+        "虐待事件",
+        "重大失职"
+      ],
+      "defaultPose": "anger",
+      "defaultSeverity": 2,
+      "trio": {
+        "A": "生气指责不妥行为",
+        "B": "复述关键信息核对事实",
+        "C": "追问可行的帮助途径"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "missing_person",
+      "label": "失踪寻人消息",
+      "domain": "safety",
+      "examples": [
+        "失踪者寻人公告",
+        "同学联系不上",
+        "车站寻人启事"
+      ],
+      "defaultPose": "concern",
+      "defaultSeverity": 2,
+      "trio": {
+        "A": "收起笑容惊慌询问",
+        "B": "检查最后出现时间地点",
+        "C": "提醒确认可靠信息并可提供线索"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "social_conflict_scene",
+      "label": "现场争吵/欺凌",
+      "domain": "safety",
+      "examples": [
+        "车厢吵架",
+        "街头推搡",
+        "校园欺凌"
+      ],
+      "defaultPose": "startle",
+      "defaultSeverity": 2,
+      "trio": {
+        "A": "不再起哄、后撤",
+        "B": "观察是否升级",
+        "C": "在安全前提下寻找老师/保安帮忙"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "city_disruption",
+      "label": "交通故障/停水停电",
+      "domain": "city",
+      "examples": [
+        "列车延误",
+        "站台临时关闭",
+        "街区停电"
+      ],
+      "defaultPose": "check",
+      "defaultSeverity": 1,
+      "trio": {
+        "A": "抱怨会不会迟到",
+        "B": "查询换乘或通知",
+        "C": "提出绕行方案"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "official_notice",
+      "label": "官方通知/避险安排",
+      "domain": "city",
+      "examples": [
+        "停课",
+        "交通管制",
+        "疏散公告"
+      ],
+      "defaultPose": "check",
+      "defaultSeverity": 2,
+      "trio": {
+        "A": "询问怎么办",
+        "B": "核对通知和范围",
+        "C": "判断下一步行动"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "supernatural_rumor",
+      "label": "都市怪谈/未证实灵异传闻",
+      "domain": "horror",
+      "examples": [
+        "末班地铁多出一站",
+        "走廊半夜有脚步声",
+        "学校镜子传说"
+      ],
+      "defaultPose": "gossip",
+      "defaultSeverity": 1,
+      "trio": {
+        "A": "压低声音兴奋害怕",
+        "B": "讲述细节并问谁亲眼看到",
+        "C": "半信半疑指出疑点"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "witnessed_anomaly",
+      "label": "亲眼看到无法解释的异象",
+      "domain": "horror",
+      "examples": [
+        "重复的乘客",
+        "不存在的车站",
+        "方向突然扭曲"
+      ],
+      "defaultPose": "uneasy",
+      "defaultSeverity": 2,
+      "trio": {
+        "A": "停止说笑靠近同伴",
+        "B": "确认别人是否也看到了",
+        "C": "环顾环境寻找安全出口"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "immediate_threat",
+      "label": "突然逼近的现实危险",
+      "domain": "safety",
+      "examples": [
+        "尖叫和撞击",
+        "陌生人攻击",
+        "浓烟逼近"
+      ],
+      "defaultPose": "retreat",
+      "defaultSeverity": 3,
+      "trio": {
+        "A": "受惊后跟随撤离",
+        "B": "提醒其他人快离开",
+        "C": "迅速判断路线并带同伴走"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    },
+    {
+      "id": "sad_loss",
+      "label": "离世/重大损失的消息",
+      "domain": "society",
+      "examples": [
+        "同学家人去世",
+        "事故伤亡确认",
+        "重大公共悲剧"
+      ],
+      "defaultPose": "sad_support",
+      "defaultSeverity": 3,
+      "trio": {
+        "A": "沉默不再嬉闹",
+        "B": "轻声确认并避免追问隐私",
+        "C": "关心身边人是否需要帮助"
+      },
+      "contentPolicy": "Classify based on what happened/what is reported, not what the NPC feels. Expressive variation is secondary."
+    }
+  ],
+  "overrides": [
+    {
+      "when": "contentType=traffic_accident_report AND channel=eyewitness AND immediacy=live",
+      "resolveAs": "traffic_accident_scene"
+    },
+    {
+      "when": "contentType=crime_report AND channel=eyewitness AND immediacy=live",
+      "resolveAs": "social_conflict_scene"
+    },
+    {
+      "when": "contentType=supernatural_rumor AND channel=eyewitness AND immediacy=live",
+      "resolveAs": "witnessed_anomaly"
+    },
+    {
+      "when": "any live event with immediate credible danger",
+      "defaultPose": "retreat",
+      "nextIntent": "leave"
+    },
+    {
+      "when": "any live event with injured people and scene safe",
+      "defaultPose": "protect",
+      "nextIntent": "help"
+    },
+    {
+      "when": "unverified sensational_or_crime_or_scandal_report",
+      "defaultPose": "check",
+      "nextIntent": "verify"
+    }
+  ],
+  "policy": {
+    "userApproval": "all trio facial models and poses are unapproved until explicitly accepted",
+    "graphics": "16 reusable pose themes, NOT 26 individually rendered illustrations; first author 8 key whole-group scenes, then expand by priority",
+    "eventContentIsPrimary": true,
+    "imageSize": "group full-body portrait, composition fit, white-to-transparent after matting",
+    "artGuide": "docs/NPC-G001_AND_UNIVERSAL_REACTIONS_V1.md"
+  },
+  "examples": [
+    {
+      "input": "女生刷到某路口车祸的新闻",
+      "type": "traffic_accident_report",
+      "pose": "concern",
+      "next": "verify"
+    },
+    {
+      "input": "女生就在路口看见两辆车相撞",
+      "type": "traffic_accident_scene",
+      "pose": "protect",
+      "next": "help"
+    },
+    {
+      "input": "女生分享搞笑视频",
+      "type": "humorous_media",
+      "pose": "laugh",
+      "next": "chat"
+    },
+    {
+      "input": "女生刷到离谱报道",
+      "type": "absurd_news",
+      "pose": "disbelief",
+      "next": "verify"
+    },
+    {
+      "input": "女生刷到夸张的世界纪录",
+      "type": "sensational_claim",
+      "pose": "surprised",
+      "next": "verify"
+    },
+    {
+      "input": "女生刷到帅气演员的照片",
+      "type": "celebrity_crush",
+      "pose": "admire",
+      "next": "chat"
+    },
+    {
+      "input": "女生听到朋友失踪",
+      "type": "missing_person",
+      "pose": "concern",
+      "next": "verify"
+    },
+    {
+      "input": "地铁里突然出现不存在的车站",
+      "type": "witnessed_anomaly",
+      "pose": "uneasy",
+      "next": "leave"
+    },
+    {
+      "input": "有人在地铁车厢旁边晕倒",
+      "type": "medical_emergency_scene",
+      "pose": "protect",
+      "next": "help"
+    }
+  ]
+}
