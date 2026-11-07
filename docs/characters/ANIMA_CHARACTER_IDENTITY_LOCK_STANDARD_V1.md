@@ -63,3 +63,9 @@
 - **多人物故障**用 `1girl, solo`，负面补`multiple girls, duplicate, collage, character sheet`；SD WebUI 的 Batch size/count 另检查。绝不把四视图、四宫格语义加入正向。
 - **技术边界：** 提示词长度上限是用户当前工作流要求，不能冒充官方 Anima 模型硬限制；精确体态要参考图/结构控制，不能单靠多写数字做到。
 - **服装换装：** 正向保留中文 `【在这里填写服装描述】`；换装优先原图Inpaint，禁止覆盖已验收人物母图。
+
+
+## 2026-11-07｜官方 Anima Prompting 改写规则（覆盖此前『把具体厘米公斤写进 Prompt』的字面理解）
+**角色数据库继续记录年龄、身高体重、比例及坐标，但这些是身份/场景量尺，不是必须原样输入扩散模型的有效图像标签。** 按 [CircleStone Labs 官方 Anima 模型卡](https://huggingface.co/circlestone-labs/Anima)，优先用 booru 风格小写标签（空格代替下划线，score_X除外）描述**可见的**脸型、眼睛、发型、体型、服装、表情和动作；多人左右位置、衣服扣子结构、人物相互关系则用简短完整自然语言英文句。不要在生成提示词填入 `158cm, 168cm, 52kg, 6.7 heads tall` 等试图精确指挥模型的测量数值，更不要塞入 `rumor spreader, recurring background actor, event reaction contract` 这类不可直接可视化内容。性格和人物故事仍存角色档案，而不是当画面Prompt。
+
+官方 Base 30–50 Steps/CFG4–5、Turbo8–12 Steps/CFG1；首试单人1024²、三人组1536×1024均是工作建议，2048不是官方保证原生质量。项目风格提示词 `@akipekostyle` 及对应真实已安装 LoRA alias 必须保留。多图同身份由已验收母版/兼容参考模型/局部重绘控制，不能单靠种子和长Prompt保证。新人物严格定型原则仍然有效，只是数据记录精度不能被误当成 Anima 自然语言识别精度。三人组完整模板请见 [9套V2](../NPC-G001_ANIMA_PROMPTS_V2_OFFICIAL.md)。
