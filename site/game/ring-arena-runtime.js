@@ -726,8 +726,12 @@
     const p=curvedSurfacePoint(whichMode,angle,depth,y);
     return [p.x,p.y,p.z,baseU+sign*side*depth/texW,y/SPEC.wallHeight];
    };
+   // The shoulder rig can see beyond the old 10m end walls at ±22°.
+   // Extend only the real vertical boundary meshes (not fake screen masks),
+   // keeping the floor/ceiling and source art at their original scale.
+   const capDepth=16.5;
    for(let j=0;j<D;j++){
-    const z0=SPEC.surfaceDepth*j/D,z1=SPEC.surfaceDepth*(j+1)/D;
+    const z0=capDepth*j/D,z1=capDepth*(j+1)/D;
     const a=vertex(z0,0),b=vertex(z0,SPEC.wallHeight);
     const c=vertex(z1,SPEC.wallHeight),d=vertex(z1,0);
     push(dest,a,b,c);push(dest,a,c,d);
@@ -1797,7 +1801,7 @@
      lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
    sideWalls:{vertices:(mode==='outer'?wingOuter:wingInner)?.count||0,
      kind:'real-textured-end-wall-mesh',closedSides:2,
-     physicalDepth:SPEC.surfaceDepth},
+     physicalDepth:16.5},
     roomSurfaces:Object.fromEntries(Object.entries(surfaceMaterials).map(([kind,s])=>
      [kind,{url:s.url,ready:s.ready,error:s.error,
       size:s.image?.naturalWidth?[s.image.naturalWidth,s.image.naturalHeight]:null,

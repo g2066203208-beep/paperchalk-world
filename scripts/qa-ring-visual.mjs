@@ -94,6 +94,17 @@ try{
    null,{timeout:45000});
   report.mouseRight=await inspect();
   await page.screenshot({path:resolve(out,'11-mouse-look-right-1917x906.png')});
+  report.cameraOrbitProof={
+   leftBoomMeters:report.mouseLeft.cameraLook.shoulderBoomMeters,
+   rightBoomMeters:report.mouseRight.cameraLook.shoulderBoomMeters,
+   bodyLeft:report.mouseLeft.cameraLook.heroYawDeg,
+   bodyRight:report.mouseRight.cameraLook.heroYawDeg,
+   endWallsLeft:report.mouseLeft.sideWalls.physicalDepth,
+   endWallsRight:report.mouseRight.sideWalls.physicalDepth};
+  if(report.cameraOrbitProof.endWallsLeft<16||
+     report.cameraOrbitProof.endWallsRight<16)
+   validationErrors.push('real 3D side walls stop before the visible shoulder orbit');
+
   if(JSON.stringify(report.mouseLeft.actors)!==anchors||
      JSON.stringify(report.mouseRight.actors)!==anchors)
    validationErrors.push('mouse look mutated physical character world anchors');

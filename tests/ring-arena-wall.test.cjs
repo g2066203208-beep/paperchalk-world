@@ -217,6 +217,8 @@ assert.ok(Math.abs(ring.STAGING.inner.enemies[1][0]-
  'the reverse battle line needs the same visual clearance');
 assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
  ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[22,22,12,12]);
+assert.match(src,/const capDepth=16\.5/,
+ 'left and right TPS room boundaries must cover the full ±22 degree camera orbit');
 assert.match(src,/drawWorld\(mode==='outer'\?wingOuter:wingInner,3,vp\)/,
  'real side wall caps must close the curved shop and prevent black void');
 assert.match(src,/uSurface==3\?vec3\(aP.x>0.0\?-1.0:1.0,0.0,0.0\)/,
