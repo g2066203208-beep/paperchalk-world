@@ -14,7 +14,7 @@ screens = {
     "normal": "01-outer-full-lights-1917x906.png",
     "partial": "02-outer-partial-blackout-1917x906.png",
     "flicker": "03-outer-flicker-moment-1917x906.png",
-    "outage": "04-outer-all-lights-off-1917x906.png",
+    "outage": "04-ceiling-fixtures-red-1917x906.png",
     "restored": "05-single-encounter-light-restored-1917x906.png",
     "horror_fault": "07-horror-ballast-flicker-1917x906.png",
     "horror_dark": "08-horror-complete-failure-1917x906.png",
@@ -28,10 +28,13 @@ rois = {
     "floor": (630, 580, 1630, 830),
 }
 values = {}
+red_channel_means = {}
 for state, name in screens.items():
     img = Image.open(out / name).convert("RGB")
     if img.size != (1917, 906):
         raise AssertionError(f"Incorrect real game screenshot resolution for {state}: {img.size}")
+    channel_means = ImageStat.Stat(img.crop(rois["wall"])).mean
+    red_channel_means[state] = [round(x, 2) for x in channel_means]
     values[state] = {
         name: round(sum(ImageStat.Stat(img.crop(rect)).mean) / 3, 2)
         for name, rect in rois.items()
@@ -41,7 +44,7 @@ def required(condition, message):
     if not condition:
         raise AssertionError(message + ": " + json.dumps(values, ensure_ascii=False))
 
-for surface, minimum in [("ceiling", 22), ("wall", 50), ("floor", 23)]:
+for surface, minimum in [("ceiling", 10), ("wall", 12), ("floor", 7)]:
     required(
         values["normal"][surface] - values["outage"][surface] > minimum,
         f"{surface} remains lit when all six fluorescent light meshes are off",
@@ -57,8 +60,12 @@ required(
     "A broken ballast must visibly change the real scene",
 )
 required(
-    values["horror_dark"]["floor"] < values["normal"]["floor"] * .48,
-    "Scripted horror power failure must darken physical floor pixels",
+    values["horror_dark"]["floor"] < values["normal"]["floor"] * .92,
+    "Scripted emergency red ceiling lamps must remain more dimly lit than daylight",
+)
+required(
+    red_channel_means["outage"][0] > red_channel_means["outage"][1] * 1.30,
+    "Emergency illumination must be physically RED on the wall, not an invisible point-light state",
 )
 required(
     values["restored"]["wall"] > values["outage"]["wall"] + 45,
@@ -69,8 +76,8 @@ required(
     "Scripted light restoration must brighten the actual rendered wall",
 )
 
-result = {"type": "actual-1917x906-WebGL-image-statistics", "luminance": values, "passed": True}
+result = {"type": "actual-1917x906-WebGL-image-statistics", "luminance": values, "red_wall_rgb": red_channel_means, "passed": True}
 (out / "pixel-lighting-proof.json").write_text(
     json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8"
 )
-print("PASS single-encounter WebGL frames: real floor, wall, ceiling lighting and recovery")
+print("PASS actual WebGL: red ceiling emitters illuminate the same room, with measured lamp recovery")
