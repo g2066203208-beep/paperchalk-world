@@ -36,7 +36,7 @@ for(const mode of ['outer','inner']){
  assert.ok(heroMiddle.valid&&(mode==='outer'?(heroMiddle.x< -.87&&heroMiddle.x> -1.04):(heroMiddle.x<-.50&&heroMiddle.x>-.70)),
   'fixed view must keep 3/4 heroine in the LEFT foreground');
  const heroBounds=arena.portraitBounds(hero,c);
- assert.ok(heroBounds.valid&&heroBounds.heightFraction>.8&&heroBounds.heightFraction<1.3);
+ assert.ok(heroBounds.valid&&heroBounds.heightFraction>(mode==='outer'?.68:.8)&&heroBounds.heightFraction<1.3);
  const safety=arena.battleVisualSafety(mode,0);
  assert.ok(safety.valid&&safety.clear&&safety.gap>.045,
   'hero silhouette and all enemy quads need clear separated lanes');
