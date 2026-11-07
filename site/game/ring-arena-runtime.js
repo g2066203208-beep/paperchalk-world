@@ -1678,8 +1678,8 @@
   const transitCamera=Object.freeze({
    mode:'outer',index:0,shot:'metro-passenger-eye',
    fov:54,
-   eye:{x:.78,y:1.45,z:8.65},
-   focus:{x:.78,y:1.45,z:5.55}
+   eye:{x:0,y:1.45,z:8.04},
+   focus:{x:0,y:1.45,z:5.30}
   });
   function enterTransit(){
    if(active&&!transitMode)return false;
