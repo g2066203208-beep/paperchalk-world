@@ -1141,6 +1141,19 @@ jobs:
             } finally {await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
+      - name: Verify restored city dot matrix, real metro carriage and regional atlas
+        run: |
+          python3 -m http.server 8765 --directory site >/tmp/metro-http.log 2>&1 &
+          node tests/transit-map-browser.mjs
+          node tests/world-map-browser.mjs
+      - name: Upload metro and atlas regression screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restored-metro-and-atlas
+          path: artifacts/overworld/*.png
+          retention-days: 7
+          if-no-files-found: warn
       - name: Store browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
