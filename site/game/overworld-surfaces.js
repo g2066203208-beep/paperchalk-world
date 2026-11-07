@@ -182,11 +182,6 @@
         b.setAttribute('aria-pressed',String(choice===p.id));
         const picture=el('span','pw-photo-map-picture');
         if(p.photo){
-          const img=el('img','pw-photo-map-photo');
-          img.src=p.photo;img.alt='';
-          img.loading='eager';img.decoding='async';img.referrerPolicy='no-referrer';
-          // Reference photo networks can fail on some browsers; fall back to
-          // an actual local game scene, not a broken image icon or empty tile.
           const localScene={
             entrance:'./assets/scenes/entrance.webp',
             school:'./assets/classroom.webp',
@@ -195,13 +190,20 @@
             mall:'./assets/locations/mall.svg',
             park:'./assets/locations/park.svg'
           }[p.id];
-          img.addEventListener('error',()=>{
-            if(img.dataset.fallback!=='true'&&localScene){
-              img.dataset.fallback='true';img.src=localScene;return;
-            }
-            img.hidden=true;picture.dataset.imageFailed='true';
-          });
+          const img=el('img','pw-photo-map-photo');
+          img.alt='';img.loading='eager';img.decoding='async';
+          img.src=localScene||p.photo;
+          img.onerror=()=>{img.hidden=true;picture.dataset.imageFailed='true'};
           picture.appendChild(img);
+          // Never allow a slow external photograph to leave an empty map card.
+          // Swap only after its pixels have loaded successfully.
+          if(p.photo!==localScene){
+            const photo=new Image();
+            photo.referrerPolicy='no-referrer';
+            photo.decoding='async';
+            photo.onload=()=>{if(img.isConnected&&photo.naturalWidth>0)img.src=p.photo};
+            photo.src=p.photo;
+          }
         }
         const placeholder=el('span','pw-photo-map-placeholder',locked?'·':'◇');
         picture.appendChild(placeholder);
