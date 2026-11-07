@@ -39,3 +39,41 @@ test('train conversations derive from day and pressure stage',()=>{
    metro.path('school','mall'));
  assert.match(later[2].text,/联合调查/);
 });
+
+test('line segment neighbors offer both real directions at intermediate stations',()=>{
+ const line=metro.getLine('a'),options=metro.neighbors(line,'school');
+ assert.equal(options.length,2);
+ assert.deepEqual(options.map(o=>o.to),['central','entrance']);
+ const ring=metro.getLine('b');
+ assert.equal(ring.ring,true);
+ assert.equal(metro.nextStop('b','northgate',1),'central');
+ assert.equal(metro.nextStop('b','central',-1),'northgate');
+});
+test('metro board, next stop, transfer and 22:00 loop persist in world state',()=>{
+ const world={window:{}};
+ vm.runInNewContext(fs.readFileSync(core,'utf8'),world);
+ const filename=path.join(__dirname,'../site/game/daily-life-state.js');
+ world.module={exports:{}};
+ vm.runInNewContext(fs.readFileSync(filename,'utf8'),world);
+ const life=world.module.exports;
+ const storeData=new Map(),store={
+  getItem:key=>storeData.get(key)||null,setItem:(key,val)=>storeData.set(key,val)
+ };
+ const e=life.create({storage:store});
+ assert.equal(e.metroBoard('a',1).ok,false,'bedroom cannot board');
+ assert.equal(e.travel('entrance').ok,true);
+ assert.equal(e.metroBoard('a',1).ok,true);
+ assert.equal(e.metroNext().station,'school');
+ assert.equal(e.metroNext().station,'central');
+ assert.equal(e.metroExit().station,'central');
+ assert.equal(e.snapshot().location,'central');
+ assert.equal(e.metroBoard('b',1).ok,true);
+ assert.equal(e.metroNext().station,'cafe');
+ const anomaly=e.metroRideToNight();
+ assert.equal(anomaly.ok,true);
+ assert.equal(anomaly.anomaly,true);
+ assert.equal(e.snapshot().minute,1320);
+ assert.equal(e.snapshot().nightStatus,'recalled');
+ assert.equal(e.snapshot().metro.onboard,true);
+ assert.equal(life.create({storage:store}).snapshot().metro.anomaly,true);
+});
