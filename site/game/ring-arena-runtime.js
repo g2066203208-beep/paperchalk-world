@@ -53,18 +53,17 @@
   const u=sign*wallArcMeters(theta)/tileWidth+WALL_TEXTURE.repeats/2;
   return {u:u-Math.floor(u),v:clamp(y/WALL_TEXTURE.heightMeters,0,1)};
  }
- // V31: projection-correct four-opponent row at camera-equal ground depth.
- // All shoes rest on a common real-world y=0 ground plane and at the same
- // view-space depth, unlike the old 0.8m staggered arc. Four distinct x
- // anchors are spaced on screen RIGHT of the close rear hero, not over her.
+ // Organic, shallow near/far battle composition. ALL soles stay on y=0,
+ // with small real world-Z changes instead of card-like uniform screen depth.
+ // Every character's original 3D anchor stays immutable when mouse looks.
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[.935,7.70],[1.740,7.70],[2.545,7.70],[3.515,7.70]])
+   enemies:Object.freeze([[1.03,7.86],[1.82,7.43],[2.58,7.87],[3.55,7.57]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
-   enemies:Object.freeze([[.644,11.0],[-.14,11.0],[-.924,11.0],[-1.86,11.0]])
+   enemies:Object.freeze([[.73,10.96],[-.15,11.35],[-.95,10.94],[-1.91,11.26]])
   })
  });
  const bindings=Object.freeze({
@@ -142,6 +141,26 @@
   return {mode,index:i,shot:p.id,
    angle:Math.atan2(eye.x,eye.z),radius:Math.hypot(eye.x,eye.z),fov:p.fov,
    eye,focus:{x:p.focusX,y:p.focusY,z:p.focusZ}};
+ }
+ // One stationary eye pivot; only camera.focus rotates. The real room,
+ // animated L2D quads, world-space shadow geometry and targets project via
+ // exactly ONE shared cameraVP. Never reposition individual layers.
+ const LOOK_LIMITS=Object.freeze({yawLeftDeg:3.0,yawRightDeg:2.6,
+  pitchUpDeg:1.65,pitchDownDeg:1.55});
+ function immersiveCamera(base,cursorX=0,cursorY=0){
+  const x=clamp(Number(cursorX)||0,-1,1),y=clamp(Number(cursorY)||0,-1,1);
+  if(Math.abs(x)+Math.abs(y)<1e-9)return base;
+  const yaw=rad((x<0?LOOK_LIMITS.yawLeftDeg:LOOK_LIMITS.yawRightDeg)*x);
+  const pitch=rad((y<0?LOOK_LIMITS.pitchUpDeg:LOOK_LIMITS.pitchDownDeg)*y);
+  const f=normalize({x:base.focus.x-base.eye.x,y:0,z:base.focus.z-base.eye.z});
+  const right=normalize(cross(f,{x:0,y:1,z:0}));
+  const distance=Math.hypot(base.focus.x-base.eye.x,base.focus.z-base.eye.z);
+  const cp=Math.cos(pitch);
+  return {...base,focus:{
+   x:base.eye.x+distance*cp*(f.x*Math.cos(yaw)+right.x*Math.sin(yaw)),
+   y:base.eye.y-distance*Math.sin(pitch),
+   z:base.eye.z+distance*cp*(f.z*Math.cos(yaw)+right.z*Math.sin(yaw))
+  },lookYawDeg:yaw*180/Math.PI,lookPitchDeg:pitch*180/Math.PI};
  }
  // Preserve the DESIGNED horizontal battle framing when a browser or
  // device changes aspect ratio. Portrait canvases no longer crop half the
@@ -235,8 +254,8 @@
   'enemy-3':Object.freeze({left:.30,right:.76,top:0,bottom:1}),
   'enemy-4':Object.freeze({left:0,right:.58,top:0,bottom:1})
  });
- function battleVisualSafety(mode='outer',index=0,aspect=16/9,heroUv=CANONICAL_BACK_UV){
-  const c=camera(mode,index),actors=layout(mode),hero=portraitVisibleBounds(actors.allies[0],c,heroUv,aspect);
+ function battleVisualSafety(mode='outer',index=0,aspect=16/9,heroUv=CANONICAL_BACK_UV,overrideCamera=null){
+  const c=overrideCamera||camera(mode,index),actors=layout(mode),hero=portraitVisibleBounds(actors.allies[0],c,heroUv,aspect);
   const foes=actors.enemies.map(a=>{
    const raw=portraitBounds(a,c,aspect);
    const cropped=portraitVisibleBounds(a,c,ENEMY_VISIBLE_SAFETY_UV[a.id],aspect);
@@ -719,7 +738,7 @@
   canvas.hidden=true;canvas.setAttribute('aria-label','真实3D战场，3/4背面主角，固定左侧平视过肩机位');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="top"><b>ARC BATTLE / 3D</b><small>平视 3/4 背面 · 固定左机位</small></div>',
+   '<div class="top"><b>ARC BATTLE / 3D</b><small>原地环顾 · 鼠标轻微转头</small></div>',
    '<div class="status" role="status"></div><div class="bottom">',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
@@ -880,6 +899,7 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
+  let mouseLookX=0,mouseLookY=0;
   const params=new URLSearchParams(window.location.search);
   let lightState=LIGHT_STATES.includes(params.get('lights'))?params.get('lights'):'on';
   let currentLighting=lightingFrame(lightState,0,mode);
@@ -1494,8 +1514,10 @@
    }
    gl.depthMask(true);gl.disable(gl.BLEND);
   }
-  function render(dt=1/60){
+  function render(dt=1/60,inputX=mouseLookX,inputY=mouseLookY){
    if(!active)return false;
+   mouseLookX=clamp(Number(inputX)||0,-1,1);
+   mouseLookY=clamp(Number(inputY)||0,-1,1);
    const base=camera(mode,0);
    if(attack){
     const frame=director.sample(attack,qaTimeMs===null?
@@ -1517,7 +1539,8 @@
     }
    }
    const target=attack?actorForTarget(attack.targetId):null;
-   lens=target?director.cinematicCamera(base,attack,attackSample,target):base;
+   lens=target?director.cinematicCamera(base,attack,attackSample,target):
+    immersiveCamera(base,mouseLookX,mouseLookY);
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    currentLighting=lightingFrame(lightState,
     lightingPhasePreview??(performance.now()/1000-lightingStartedAt),mode);
@@ -1578,7 +1601,7 @@
    // The same temporary lunge transforms affect cast shadows and portraits.
    drawProjectedShadows(presented,cam,vp);
    drawActors(presented,cam,vp);
-   if(armed)updateTargetPositions(base,w/h);
+   if(armed)updateTargetPositions(cam,w/h);
    if(attack&&attackSample){
     const victim=presented.find(a=>a.id===target.id)||target;
     const impact=project({x:victim.x,y:victim.y+victim.height*.68,z:victim.z},cam,w/h);
@@ -1609,11 +1632,14 @@
   function setActive(value){
    active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
-   if(active){elapsed=0;frames=0;shotIndex=0;
+   if(active){elapsed=0;frames=0;shotIndex=0;mouseLookX=0;mouseLookY=0;
     resetCombatPreview();lens=camera(mode,0);render(0)}
    else resetCombatPreview();
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
+    cameraLook:{mode:'stationary-world-eye',yawDeg:lens?.lookYawDeg||0,
+     pitchDeg:lens?.lookPitchDeg||0,inputX:mouseLookX,inputY:mouseLookY,
+     fixedEye:!attack,actorsStatic:true,sharedProjection:true},
     initError:canvas.dataset.error||null,
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:VERTICAL_LENS_SHIFT,
    cameraTarget:camera(mode,shotIndex),
@@ -1702,7 +1728,8 @@
    safety:battleVisualSafety(mode,shotIndex,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
     previewPose==='female7'?FEMALE07_BACK_UV:
-     textures.get('hero')?.opaqueCombatUv||CANONICAL_BACK_UV),
+     textures.get('hero')?.opaqueCombatUv||CANONICAL_BACK_UV,
+     lens?.cinematic?null:lens),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:previewPose==='female7'?'user-approved female-07 original back art (static), four animated enemy L2D actors':
     posePreviewEnabled?'legacy fixed-left 3/4 heroine + animated original enemy L2D':
@@ -1730,7 +1757,7 @@
   return Object.freeze(api);
  }
  return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,LIGHT_STATES,lightingFrame,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
-  SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
+  SHOT_NAMES,CAMERA_STOPS,LOOK_LIMITS,immersiveCamera,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });

@@ -774,7 +774,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./combat-lab/engine.js?v=attack-director-v1"></script>
 <link rel="stylesheet" href="./game/ring-arena-director.css?v=hit-result-hold-v26-20261106">
 <script src="./game/ring-arena-director.js?v=dd699-compact-v29c-20261107"></script>
-<script src="./game/ring-arena-runtime.js?v=stable-shadow-mask-dual-formation-v24-20261107"></script>
+<script src="./game/ring-arena-runtime.js?v=natural-staging-world-mouse-look-v25-20261107"></script>
 <script src="./game/ring-arena-frame-inspector.js?v=dd699-camera-retreat-v29b-20261106" defer></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=phone-world-20261107-r2">
 <link rel="stylesheet" href="./game/phone-focus.css?v=phone-world-20261107-r2">
@@ -3302,11 +3302,12 @@ void main(){
     // pivot, not a dolly. This is the sole frame-time-based damping pass.
     // No individual L2D, fog or material-layer parallax.
     const roomMove=stage.dataset.scene==='classroom-box';
+    const worldLook=roomMove||stage.dataset.scene==='ring-arena';
     const kx=1-Math.exp(-dt*(roomMove?10:7));
     const ky=1-Math.exp(-dt*(roomMove?9:7));
     // Old flat-scene tilt only affects 2D. The WebGL room uses the
     // independently bounded first-person PAN/TILT angles.
-    if(reduced.matches||editorActive||(!roomMove&&!tiltEnabled)){
+    if(reduced.matches||editorActive||(!worldLook&&!tiltEnabled)){
       aimX=0;aimY=0;
     }
     currentX+=(aimX-currentX)*kx;currentY+=(aimY-currentY)*ky;
@@ -3320,8 +3321,8 @@ void main(){
       stage.style.transform='none';
       enemyDepth.style.transform='none';
       cameraPlayer.style.transform='none';
-      ringScene.render(dt);
-      stage.dataset.cameraProfile='dual-concentric-orbit-webgl';
+      ringScene.render(dt,currentX,currentY);
+      stage.dataset.cameraProfile='stationary-eye-mouse-look-webgl';
     }else if(stage.dataset.scene==='classroom-box'){
       // Genuine world X/Y/Z -> one pinhole perspective for BOTH surfaces and
       // the existing L2D player/enemy (same shoe coordinates on the floor).
