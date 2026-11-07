@@ -16,10 +16,7 @@ const GRID_STATIONS=Object.freeze({
  cafe:{label:'咖啡街',gx:2,gy:4},
  park:{label:'河岸公园',gx:6,gy:4},
  mall:{label:'中央商场',gx:10,gy:4},
- northgate:{label:'北街口',gx:8,gy:1},
- hospital:{label:'医院前',gx:2,gy:6,locked:true},
- station:{label:'南站',gx:6,gy:6,locked:true},
- police:{label:'警察署前',gx:10,gy:6,locked:true}
+ northgate:{label:'北街口',gx:8,gy:1}
 });
 const STATIONS=Object.freeze(Object.fromEntries(Object.entries(GRID_STATIONS)
  .map(([id,station])=>[id,Object.freeze({...station,
@@ -30,9 +27,7 @@ const LINES=Object.freeze([
  Object.freeze({id:'a',name:'住宅线',color:'#E45B70',
    stops:['entrance','school','central','convenience'],ring:false}),
  Object.freeze({id:'b',name:'环城线',color:'#7DA9DE',
-   stops:['central','cafe','park','mall','convenience','northgate'],ring:true}),
- Object.freeze({id:'c',name:'南部线',color:'#AEC792',
-   stops:['hospital','station','police'],ring:false,locked:true})
+   stops:['central','cafe','park','mall','convenience','northgate'],ring:true})
 ]);
 const getLine=id=>LINES.find(l=>l.id===id)||null;
 function neighbors(line,station){
