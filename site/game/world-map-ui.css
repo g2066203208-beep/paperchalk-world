@@ -345,3 +345,31 @@
  #pw-world-surface .pw-world-player-ring{animation:none}
  #pw-world-surface *{transition:none!important}
 }
+
+/* Provisional photographic arrival at a region with no finished Anima scene. */
+#overworld-city-stage[data-world-scene="true"] > .overworld-city-art{
+ position:absolute;inset:0;overflow:hidden;
+ display:flex;align-items:center;justify-content:center;flex-direction:column;
+ background:#14212b;
+}
+#overworld-city-stage[data-world-scene="true"] .pw-world-preview-image{
+ position:absolute;inset:0;width:100%;height:100%;
+ object-fit:cover;filter:brightness(.56) saturate(.57) contrast(1.11);
+}
+#overworld-city-stage[data-world-scene="true"] > .overworld-city-art::after{
+ position:absolute;inset:0;content:"";pointer-events:none;
+ background:linear-gradient(0deg,#0a151d8c,transparent 65%),
+  radial-gradient(ellipse at center,transparent 37%,#0a151c89);
+}
+#overworld-city-stage .pw-world-preview-label{
+ z-index:2;position:absolute;bottom:12%;left:8%;
+ color:#f6f0e8;letter-spacing:.14em;
+ font:500 clamp(22px,4cqh,39px)/1.1 "PaperSans",sans-serif;
+ text-shadow:0 3px 14px #000e;
+}
+#overworld-city-stage .pw-world-preview-subtitle{
+ z-index:2;position:absolute;bottom:7%;left:8%;
+ color:#bdc9c9;letter-spacing:.1em;
+ font:400 clamp(12px,2cqh,17px)/1.2 "PaperSans",sans-serif;
+ text-shadow:0 2px 9px #000b;
+}
