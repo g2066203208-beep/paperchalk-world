@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict');
 const arena=require('../site/game/ring-arena-runtime.js');
 const approx=(a,b,eps=1e-8)=>assert.ok(Math.abs(a-b)<=eps,a+' != '+b);
-assert.equal(arena.SPEC.stageType,'wide-cinematic-arc');
+assert.equal(arena.SPEC.stageType,'compact-convenience-curved-aisle');
 assert.deepEqual(arena.SHOT_NAMES,['固定左机位']);
 assert.deepEqual(arena.HIDDEN_ALLY_IDS,['ally-2','ally-3','ally-4']);
 assert.ok(arena.responsiveFov(56,9/16)>arena.responsiveFov(56,16/9));
@@ -46,14 +46,14 @@ for(const mode of ['outer','inner']){
  const mean=centers.reduce((a,b)=>a+b,0)/4;
  assert.ok(mean>.29&&mean<.37,'all four enemies belong in the RIGHT battle lane');
  const ordered=[...centers].sort((a,b)=>a-b);
- for(let i=1;i<ordered.length;i++)assert.ok(ordered[i]-ordered[i-1]>.20);
+ for(let i=1;i<ordered.length;i++)assert.ok(ordered[i]-ordered[i-1]>.185);
  const feet=scene.enemies.map(e=>arena.project({x:e.x,y:0,z:e.z},c));
  for(let i=1;i<feet.length;i++)
   assert.ok(Math.abs(feet[i].y-feet[0].y)<.0001,
    'ALL FOUR shoes stand on the exact same real 3D projected floor line');
  for(const e of safety.foes){
-  assert.ok(e.top>.1&&e.top<.5&&e.bottom>-.55&&e.bottom<.06);
-  assert.ok(e.heightFraction>.22&&e.heightFraction<.40);
+  assert.ok(e.top>.1&&e.top<.5&&e.bottom>-.62&&e.bottom<.06);
+  assert.ok(e.heightFraction>.40&&e.heightFraction<.49);
  }
  for(const aspect of [16/9,4/3,9/16]){
   const res=arena.battleVisualSafety(mode,0,aspect);
