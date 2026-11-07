@@ -65,9 +65,16 @@ try{
   report.outer?.l2dReady!==5||report.inner?.l2dReady!==5||
   Math.abs(report.geometry.floorPanelMeters-.6)>.001||
   Math.abs(report.geometry.ceilingPanelMeters-.95)>.001||
-  report.geometry.floorRoofDepthMeters!==18||pageErrors.length)
+  report.geometry.floorRoofDepthMeters!==18||
+  report.outer?.lighting?.count!==6||report.inner?.lighting?.count!==6||
+  report.outer?.lighting?.positions?.length!==18||
+  report.inner?.lighting?.positions?.length!==18||
+  report.outer?.safety?.gap<.07||report.inner?.safety?.gap<.07||
+  report.outer?.safety?.foes?.[0]?.heightFraction<.40||
+  report.inner?.safety?.foes?.[0]?.heightFraction<.43||
+  pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+errors.join('; '));
- console.log('PASS real 1917x906 WebGL: 0.60m floor, 0.95m roof, both camera modes safely display five original actors');
+ console.log('PASS: six position-matched 3D lights illuminate L2D and real surfaces; all five characters 25% larger with safe 1917x906 framing');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }
