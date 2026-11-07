@@ -35,9 +35,10 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
     btn.addEventListener('click',ev=>{ev.stopPropagation();action.run()});group.append(btn);
   }
   popup.append(group);map.append(popup);popup.hidden=false;
-  const rect=map.getBoundingClientRect(),w=Math.min(210,Math.max(148,rect.width*.24)),h=popup.offsetHeight||122;
-  const x=e.clientX-rect.left,y=e.clientY-rect.top;
+  const rect=map.getBoundingClientRect(),w=Math.min(210,Math.max(148,rect.width*.24));
   popup.style.width=w+'px';
+  const h=popup.offsetHeight||122;
+  const x=e.clientX-rect.left,y=e.clientY-rect.top;
   popup.style.left=Math.max(6,Math.min(rect.width-w-6,(x+w+22>rect.width?x-w-15:x+15)))+'px';
   popup.style.top=Math.max(38,Math.min(rect.height-h-7,y-h*.33))+'px';
  }
