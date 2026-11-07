@@ -37,8 +37,10 @@ try{
  await page.waitForTimeout(650);
  const outer=await inspect();
  assert.equal(outer.wallMaterial.kind,'curved-webgl-wall');
- assert.equal(outer.wallMaterial.repeats,8);
- assert.equal(outer.wallMaterial.heightMeters,3.2);
+ assert.equal(outer.wallMaterial.repeats,9);
+ assert.equal(outer.wallMaterial.heightMeters,2.85);
+ assert.ok(outer.lighting.physicallyGroundedShadows>=5,'original 3D L2D silhouettes must cast on floor');
+ assert.equal(outer.lighting.state,'on');
  assert.deepEqual(outer.wallMaterial.sourceSize,[2172,724]);
  assert.equal(await page.locator('#ring-arena-canvas').getAttribute('data-wall-texture'),'ready');
  assert.equal(outer.mode,'outer');assert.equal(outer.shotIndex,0);
@@ -96,7 +98,7 @@ try{
   'user screenshot: all 4 opponents must stand on the same ground Y');
  const centers=groundProof.feet.map(x=>x.x);
  const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
- assert.ok(gaps.every(x=>x>.20&&x<.29));
+ assert.ok(gaps.every(x=>x>.185&&x<.235));
  assert.ok(Math.max(...gaps)-Math.min(...gaps)<.001);
  assert.ok(groundProof.hero.left>-.99&&groundProof.hero.right<-.23,
   'the actual woman7 rear cutout must not be clipped or obstruct enemies');
