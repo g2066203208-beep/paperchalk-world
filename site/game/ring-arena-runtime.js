@@ -537,22 +537,35 @@
   'p.xz=mix(p.xz,uFoot.xz,uContact*.82);',
   'p.y=.022+uContact*.003;vUv=aUv;gl_Position=uVP*vec4(p,1.0);}'
  ].join('\n');
+ // Distance-dependent area-light penumbra from the actual animated L2D
+ // alpha occluder. The shoe contact stays tight; projected head/hair edges
+ // spread wider. No painted ground ellipse or binary cutout.
  const projectedShadowFragment=[
   'precision mediump float;varying vec2 vUv;',
   'uniform sampler2D uTexture;uniform float uStrength;uniform highp float uContact;',
   'void main(){',
   'vec2 uv=vec2(vUv.x,1.0-vUv.y);',
-  'float foot=smoothstep(.48,.92,vUv.y);',
-  'float radius=mix(.012,.0038,foot);',
-  'float a=texture2D(uTexture,uv).a*.46;',
-  'a+=texture2D(uTexture,uv+vec2(radius,0.0)).a*.135;',
-  'a+=texture2D(uTexture,uv-vec2(radius,0.0)).a*.135;',
-  'a+=texture2D(uTexture,uv+vec2(0.0,radius)).a*.135;',
-  'a+=texture2D(uTexture,uv-vec2(0.0,radius)).a*.135;',
-  'float edge=smoothstep(.13,.82,a);',
-  'float shoes=smoothstep(.68,.94,vUv.y);',
-  'edge*=mix(1.0,shoes,uContact);',
-  'gl_FragColor=vec4(.008,.012,.018,edge*uStrength);}'
+  'float sole=smoothstep(.50,.96,vUv.y);',
+  'float radius=mix(mix(.047,.0030,sole),.0025,uContact);',
+  'vec2 d=vec2(radius,radius);',
+  'float a=texture2D(uTexture,uv).a*.16;',
+  'a+=texture2D(uTexture,uv+vec2(d.x,0.0)).a*.11;',
+  'a+=texture2D(uTexture,uv-vec2(d.x,0.0)).a*.11;',
+  'a+=texture2D(uTexture,uv+vec2(0.0,d.y)).a*.11;',
+  'a+=texture2D(uTexture,uv-vec2(0.0,d.y)).a*.11;',
+  'a+=texture2D(uTexture,uv+vec2(d.x*.72,d.y*.72)).a*.075;',
+  'a+=texture2D(uTexture,uv+vec2(-d.x*.72,d.y*.72)).a*.075;',
+  'a+=texture2D(uTexture,uv+vec2(d.x*.72,-d.y*.72)).a*.075;',
+  'a+=texture2D(uTexture,uv+vec2(-d.x*.72,-d.y*.72)).a*.075;',
+  'a+=texture2D(uTexture,uv+vec2(d.x*1.85,0.0)).a*.025;',
+  'a+=texture2D(uTexture,uv-vec2(d.x*1.85,0.0)).a*.025;',
+  'a+=texture2D(uTexture,uv+vec2(0.0,d.y*1.85)).a*.025;',
+  'a+=texture2D(uTexture,uv-vec2(0.0,d.y*1.85)).a*.025;',
+  'float shadow=smoothstep(.07,.94,clamp(a,0.0,1.0));',
+  'float shoes=smoothstep(.81,.98,vUv.y);',
+  'shadow*=mix(1.0,shoes,uContact);',
+  'float softFade=mix(.90,1.0,sole);',
+  'gl_FragColor=vec4(.008,.012,.018,shadow*uStrength*softFade);}',
  ].join('\n');
  function projectedShadowMesh(gl){
   const data=[],N=28,M=36;
@@ -1532,6 +1545,7 @@
      silhouetteProjection:'original-L2D-alpha-ray-intersection-y0',
      contactShadow:'original-L2D-shoe-alpha-no-ellipse',
      shadowMode:'live-ceiling-source-world-planar-occlusion',
+     shadowFilter:'13-tap-distance-dependent-area-light-penumbra',
      switchableFixtures:true,
      fixtureHeight:LIGHTING.height,
      positions:[...lightRigs[mode].positions],

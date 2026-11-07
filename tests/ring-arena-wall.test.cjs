@@ -101,6 +101,16 @@ assert.match(src,/drawProjectedShadows\(presented,cam,vp\)/,
 assert.match(src,/texture2D\(uTexture,uv\)\.a/,
  'real L2D alpha drives physical projected floor shadow coverage');
 assert.match(src,/uLampLevels\[6\]/,'each fluorescent lamp independently switchable');
+assert.match(src,/float radius=mix\(mix\(\.047,\.0030,sole\),\.0025,uContact\)/,
+ 'cast edge softness must increase with height while shoes stay grounded');
+const shadowProgram=src.split('const projectedShadowFragment=[')[1].split('function projectedShadowMesh(gl)')[0];
+assert.equal((shadowProgram.match(/texture2D\(uTexture,uv/g)||[]).length,13,
+ '13 source-alpha samples are required for the soft penumbra');
+assert.match(src,/float shadow=smoothstep\(\.07,\.94,clamp\(a,0\.0,1\.0\)\)/,
+ 'do not re-quantize alpha into a sharp silhouette edge');
+assert.match(src,/float shoes=smoothstep\(\.81,\.98,vUv\.y\)/,
+ 'shoe contact cannot become a solid all-body ellipse');
+
 // Real-time light fixtures must occupy the physical emissive centers of the
 // actual same curved 3D ceiling, in BOTH camera orientations. The texture,
  // environment and original L2D sprites must share one light rig.

@@ -59,6 +59,8 @@ try{
  const setLighting=(state,phase=null)=>page.evaluate(({state,phase})=>
   window.PaperWorldGameRingArena.setLighting(state,phase),{state,phase});
  report.outer=await inspect();
+ if(report.outer?.lighting?.shadowFilter!=='13-tap-distance-dependent-area-light-penumbra')
+  throw Error('Actual WebGL scene is still using old hard-edge shadows');
  await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});
  if(ready){
   await setLighting('partial');
