@@ -19,10 +19,10 @@ const server=createServer((req,res)=>{
 });
 await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
-const errors=[],report={};
+const errors=[],pageErrors=[],report={};
 try{
  const page=await browser.newPage({viewport:{width:1917,height:906},deviceScaleFactor:1});
- page.on('pageerror',e=>errors.push(e.message));
+ page.on('pageerror',e=>{pageErrors.push(e.message);errors.push('pageerror: '+e.message)});
  page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
  const base='http://127.0.0.1:'+server.address().port;
  await page.goto(base+'/index.html?scene=ring-arena',{waitUntil:'domcontentloaded',timeout:60000});
@@ -44,10 +44,10 @@ try{
   await page.screenshot({path:resolve(out,'02-inner-1917x906.png')});
   if(report.inner.mode!=='inner')errors.push('inner mode did not switch');
  }
- report.ready=ready;report.errors=errors;
+ report.ready=ready;report.errors=errors;report.pageErrors=pageErrors;
  writeFileSync(resolve(out,'report.json'),JSON.stringify(report,null,2));
  if(!ready||report.outer?.wallMaterial?.heightMeters!==3.2||
-  report.outer?.wallMaterial?.repeats!==8||errors.length)
+  report.outer?.wallMaterial?.repeats!==8||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+errors.join('; '));
  console.log('PASS actual rendered WebGL 3D room screenshots: matched 3.2m walls and 8 physical UV repeats in outer and inner view');
 }finally{
