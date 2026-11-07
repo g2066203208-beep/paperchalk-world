@@ -98,8 +98,10 @@ try{
   'user screenshot: all 4 opponents must stand on the same ground Y');
  const centers=groundProof.feet.map(x=>x.x);
  const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
- assert.ok(gaps.every(x=>x>.185&&x<.235));
- assert.ok(Math.max(...gaps)-Math.min(...gaps)<.001);
+ assert.ok(gaps[0]>.22&&gaps[0]<.24&&gaps[1]>.22&&gaps[1]<.24);
+ assert.ok(Math.abs(gaps[0]-gaps[1])<.002);
+ assert.ok(gaps[2]>.26&&gaps[2]<.29,
+  'wider fourth enemy must not obscure the third enemy');
  assert.ok(groundProof.hero.left>-.99&&groundProof.hero.right<-.23,
   'the actual woman7 rear cutout must not be clipped or obstruct enemies');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,

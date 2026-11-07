@@ -208,8 +208,11 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id\)/,
  'real animated source must pass through non-destructive battle mask before upload');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
- ring.STAGING.outer.enemies[0][0]-.765)<1e-7,
+ ring.STAGING.outer.enemies[0][0]-.805)<1e-7,
  'outer enemy standing distance should not overlap broad coats');
+assert.ok(Math.abs(ring.STAGING.outer.enemies[3][0]-
+ ring.STAGING.outer.enemies[2][0]-.970)<1e-7,
+ 'fourth character broad sleeves need a wider last gap');
 assert.match(src,/shadowClipUv=/,
  'the shadow penumbra must have a separately padded alpha crop');
 assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,

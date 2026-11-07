@@ -60,7 +60,7 @@
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[.935,7.70],[1.700,7.70],[2.465,7.70],[3.230,7.70]])
+   enemies:Object.freeze([[.935,7.70],[1.740,7.70],[2.545,7.70],[3.515,7.70]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
