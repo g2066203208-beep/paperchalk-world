@@ -3297,14 +3297,19 @@ void main(){
   function tick(now){
     raf=0;if(document.hidden)return;
     frameTiming.record(now);
-    let dt=last?clamp((now-last)/1000,.001,.055):1/60;last=now;
+    // Simulation time remains capped for animation and damage stability.
+    // Camera look alone uses real elapsed wall time: a slow WebGL frame
+    // must not strand the cursor/look direction far behind the mouse.
+    const rawFrameDt=last?Math.max(0,(now-last)/1000):1/60;
+    let dt=clamp(rawFrameDt,.001,.055);last=now;
+    const cameraFrameDt=Math.min(.25,Math.max(0,rawFrameDt));
     // First-person mouse look: smooth yaw/pitch at ONE stationary camera
     // pivot, not a dolly. This is the sole frame-time-based damping pass.
     // No individual L2D, fog or material-layer parallax.
     const roomMove=stage.dataset.scene==='classroom-box';
     const worldLook=roomMove||stage.dataset.scene==='ring-arena';
-    const kx=1-Math.exp(-dt*(roomMove?10:7));
-    const ky=1-Math.exp(-dt*(roomMove?9:7));
+    const kx=1-Math.exp(-cameraFrameDt*(roomMove?10:7));
+    const ky=1-Math.exp(-cameraFrameDt*(roomMove?9:7));
     // Old flat-scene tilt only affects 2D. The WebGL room uses the
     // independently bounded first-person PAN/TILT angles.
     if(reduced.matches||editorActive||(!worldLook&&!tiltEnabled)){

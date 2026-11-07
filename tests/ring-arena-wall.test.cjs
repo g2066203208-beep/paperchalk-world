@@ -268,4 +268,9 @@ for(const side of ['outer','inner']){
   assert.ok(safe.valid&&safe.clear,'all enemies must remain visible under mouse look');
  }
 }
+const gameHtml=fs.readFileSync(path.resolve(__dirname,'../site/index.html'),'utf8');
+assert.match(gameHtml,/const cameraFrameDt=Math.min\(\.25,Math.max\(0,rawFrameDt\)\)/,
+ 'mouse-look easing must use actual elapsed time even with slow software WebGL');
+assert.match(gameHtml,/ringScene\.render\(dt,currentX,currentY\)/,
+ 'only one shared 3D world-camera receives smoothed cursor direction');
 console.log('PASS compact 2.85m convenience-store bay, nine aspect-correct wall sections, four closer actors and switchable shadow-casting lights');

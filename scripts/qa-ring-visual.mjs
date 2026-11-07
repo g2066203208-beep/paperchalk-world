@@ -84,8 +84,8 @@ try{
   if(JSON.stringify(report.mouseLeft.camera.eye)!==JSON.stringify(origin)||
      JSON.stringify(report.mouseRight.camera.eye)!==JSON.stringify(origin))
    validationErrors.push('mouse look translated the eye instead of rotating');
-  if(!(report.mouseLeft.cameraLook.yawDeg<-.7&&
-       report.mouseRight.cameraLook.yawDeg>.7))
+  if(!(report.mouseLeft.cameraLook.yawDeg<-1.2&&
+       report.mouseRight.cameraLook.yawDeg>1.2))
    validationErrors.push('cursor does not turn camera in the correct direction');
   await page.mouse.move(958,453);await page.waitForTimeout(760);
  }
