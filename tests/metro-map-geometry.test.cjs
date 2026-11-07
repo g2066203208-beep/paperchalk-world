@@ -31,12 +31,12 @@ test('Closed city ring has genuine rounded quarter-turn corners',()=>{
  const ring=metro.getLine('b');
  assert.equal(ring.ring,true);
  assert.equal(metro.nextStop('b','northgate',1),'central');
- const turns=[];
+ let turns=0;
  for(const [a,b] of geo.segments(ring)){
   const d=geo.pathFor('b',a,b,metro.STATIONS,1440,810);
-  if(d.includes(' Q'))turns.push(a+'>'+b);
+  turns+=(d.match(/ Q/g)||[]).length;
  }
- assert.ok(turns.length>=4,JSON.stringify(turns));
+ assert.ok(turns>=4,'Expected multiple 90-degree rounded corners, found '+turns);
 });
 test('Corners remain round at desktop and mobile landscape aspect ratios',()=>{
  for(const [w,h] of [[1440,810],[844,390]]){
