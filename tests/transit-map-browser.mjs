@@ -2,6 +2,7 @@
 // real route clicks, stateful side-on L2D cabin and mobile layout screenshots.
 import fs from 'node:fs';
 import path from 'node:path';
+import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
@@ -101,17 +102,38 @@ try{
   const cab=document.querySelector('#pw-metro-cabin:not([hidden])');
   const room=window.PaperWorldGameRingArena?.inspect?.();
   return cab?.dataset.renderer==='ring-3d'&&room?.transitMode===true&&
-   room.environment==='metro'&&room.wallMaterial?.ready===true&&
+   room.environment==='metro'&&room.canvasParent==='pw-metro-cabin'&&
+   room.wallMaterial?.ready===true&&
    room.wallMaterial.url.endsWith('cabin-master.webp')&&
    document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready';
  },null,{timeout:25000});
  await shot('21-dot-map-real-metro-carriage.png');
+ // A texture upload is NOT proof of a visible carriage. Check actual
+ // composited screenshot pixels, so a black screenshot like the user's Edge
+ // capture cannot pass this Chromium regression ever again.
+ const pixQA=JSON.parse(execFileSync('python3',['-c',`
+from PIL import Image
+import json,sys
+im=Image.open(sys.argv[1]).convert('RGB')
+points=[(.33,.28),(.45,.30),(.60,.27),(.77,.40)]
+samples=[]
+for x,y in points:
+ r,g,b=im.getpixel((int(im.width*x),int(im.height*y)))
+ samples.append(round((r+g+b)/3))
+print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
+`,path.join(out,'21-dot-map-real-metro-carriage.png')],{encoding:'utf8'}));
+ assert.ok(pixQA.bright>=2,
+  '3D metro cabin must be VISIBLY lit in the final composed screenshot, not just load textures: '+JSON.stringify(pixQA));
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'school');
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'下车'}).click();
  await page.waitForFunction(()=>!window.PaperWorldDailyLifeUI.snapshot().metro?.onboard);
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location),'school');
+ const parked=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(parked.transitMode,false);
+ assert.equal(parked.canvasParent,'scene',
+  'on subway exit the same WebGL canvas must return to its battle-stage parent');
  assert.deepEqual(errors.filter(v=>/ReferenceError|TypeError|SyntaxError/.test(v)),[]);
  console.log('SINGLE DOT METRO QA PASS',JSON.stringify({lattice,ended:'school',errors}));
 }finally{await browser.close()}
