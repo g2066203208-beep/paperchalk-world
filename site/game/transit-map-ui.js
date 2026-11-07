@@ -47,7 +47,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.setAttribute('aria-label','唯一的可缩放点阵城市及全国交通地图');
  map.dataset.grid='50x32';
  const canvas=element('div','pw-dot-world-canvas');
- const svg=vector('svg',{viewBox:'0 0 '+W+' '+H,width:W,height:H},'pw-transit-lines pw-dot-rail-canvas');
+ const svg=vector('svg',{viewBox:'0 0 '+W+' '+H,preserveAspectRatio:'none'},'pw-transit-lines pw-dot-rail-canvas');
  const dots=vector('g',{},'pw-transit-dot-matrix');
  const regional=vector('g',{},'pw-dot-regional-lines');
  const urban=vector('g',{},'pw-dot-urban-lines');
@@ -110,8 +110,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   popup.hidden=false;selected=node;node?.setAttribute('data-selected','true');
   positionPopup(e,node);
  }
+ const anchored=[];
  function put(node,p,layer){
-  node.style.left=p.x+'px';node.style.top=p.y+'px';
+  // Store geometry separately: UI nodes stay at native CSS pixel resolution.
+  node.dataset.worldX=p.x;node.dataset.worldY=p.y;
+  anchored.push({node,p});
   layer.append(node);
  }
  // The same integer lattice owns regional routes, subway turns and every pin.
@@ -382,10 +385,18 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  }
  function position(){
   const v=viewport();
-  canvas.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
-  canvas.style.setProperty('--dot-city-label-size',scale<.5?'40px':'24px');
-  canvas.style.setProperty('--dot-area-label-size',scale<.5?'34px':'23px');
-  canvas.style.setProperty('--dot-poi-label-size',Math.max(2.2,11/scale)+'px');
+  // SVG viewBox is recreated for the actual viewport on every zoom.
+  // No scaled CSS compositor layer: vectors remain crisp and all labels,
+  // photo cards and clickable targets are painted at native screen pixels.
+  svg.setAttribute('viewBox',(-x/scale)+' '+(-y/scale)+' '+(v.w/scale)+' '+(v.h/scale));
+  svg.style.width=v.w+'px';svg.style.height=v.h+'px';
+  for(const {node,p} of anchored){
+   node.style.left=(x+p.x*scale)+'px';
+   node.style.top=(y+p.y*scale)+'px';
+  }
+  canvas.style.setProperty('--dot-city-label-size','17px');
+  canvas.style.setProperty('--dot-area-label-size','16px');
+  canvas.style.setProperty('--dot-poi-label-size','11px');
   const zoom=scale<1.15?'region':scale<2.3?'city':'detail';
   map.dataset.zoom=zoom;
   // Regions and city districts are zoom layers of the SAME physical lattice.
@@ -462,7 +473,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const dx=e.clientX-drag.cx,dy=e.clientY-drag.cy;
   if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;
   x=drag.x+dx;y=drag.y+dy;constrain();
-  canvas.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
+  position();
  });
  map.addEventListener('pointerup',e=>{
   if(!drag||drag.id!==e.pointerId)return;
