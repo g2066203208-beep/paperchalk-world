@@ -56,7 +56,8 @@ try{
   await page.waitForTimeout(220);
  }
 
- const setLighting=state=>page.evaluate(s=>window.PaperWorldGameRingArena.setLighting(s),state);
+ const setLighting=(state,phase=null)=>page.evaluate(({state,phase})=>
+  window.PaperWorldGameRingArena.setLighting(state,phase),{state,phase});
  report.outer=await inspect();
  await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});
  if(ready){
@@ -64,7 +65,7 @@ try{
   await page.waitForTimeout(150);
   report.partial=await inspect();
   await page.screenshot({path:resolve(out,'02-outer-partial-blackout-1917x906.png')});
-  await setLighting('flicker');
+  await setLighting('flicker',2.0); // exact unpowered ballast moment
   await page.waitForFunction(()=>{
    const l=window.PaperWorldGameRingArena?.inspect()?.lighting;
    return l?.state==='flicker'&&l.levels[1]<.1;
