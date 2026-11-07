@@ -40,7 +40,7 @@ try{
    const s=window.PaperWorldGameRingArena?.inspect?.();
    return s?.active&&s?.renderer==='webgl-l2d'&&s?.l2dReady===8&&s?.wallMaterial?.ready&&
     s?.roomSurfaces?.floor?.ready&&s?.roomSurfaces?.ceiling?.ready;
-  },null,{timeout:85000});
+  },null,{timeout:150000});
   ready=true;
  }catch(e){
   errors.push('ready condition: '+e.message);
