@@ -242,6 +242,62 @@
   for(const name of uniforms)result[name]=gl.getUniformLocation(p,name);
   return result;
  }
+ // The very same world-space luminaires illuminating walls and sprite
+ // billboards sit below the six actual emissive ceiling fixtures. 3 columns
+ // across the wall arc (5.7m apart), two rows into the shop (4.75m apart).
+ // This is a performance-bounded analytic lighting approximation, NOT a
+ // fake fullscreen color overlay or an invented L2D normal map.
+ const LIGHTING=Object.freeze({
+  kind:'world-space-six-motivated-fluorescents',
+  columns:Object.freeze([-5.7,0,5.7]),
+  depths:Object.freeze([2.375,7.125]),
+  height:SPEC.ceilingHeight-.07,
+  coolAmbient:Object.freeze([.47,.53,.62]),
+  color:Object.freeze([1.00,.94,.86]),
+  strength:1
+ });
+ function angleForArcMeters(meters){
+  let lo=-SPEC.wallArcHalfAngle,hi=SPEC.wallArcHalfAngle;
+  for(let i=0;i<22;i++){
+   const mid=(lo+hi)/2;
+   if(wallArcMeters(mid)<meters)lo=mid;
+   else hi=mid;
+  }
+  return (lo+hi)/2;
+ }
+ function lightRig(mode='outer'){
+  const positions=[],colors=[];
+  // Stable index ordering: all three lamps along first row, then second.
+  for(const depth of LIGHTING.depths)for(const arc of LIGHTING.columns){
+   const p=curvedSurfacePoint(mode,angleForArcMeters(arc),depth,LIGHTING.height);
+   positions.push(p.x,p.y,p.z);
+   // A slightly warmer leading row; farther row acts as soft neutral fill.
+   const intensity=depth===LIGHTING.depths[0]?1.04:.83;
+   colors.push(...LIGHTING.color.map(c=>c*intensity));
+  }
+  return Object.freeze({mode,positions:new Float32Array(positions),
+   colors:new Float32Array(colors),count:6});
+ }
+ const lightRigs=Object.freeze({outer:lightRig('outer'),inner:lightRig('inner')});
+ const lightingGLSL=[
+  'uniform vec3 uLampPositions[6];uniform vec3 uLampColors[6];',
+  'vec3 ringIrradiance(vec3 p,vec3 n){',
+  'vec3 ambient=vec3(.47,.53,.62);',
+  'vec3 normal=normalize(n);',
+  'for(int i=0;i<6;i++){',
+  'vec3 d=uLampPositions[i]-p;',
+  'float ds=max(dot(d,d),.01);',
+  'float cosine=max(dot(normal,d*inversesqrt(ds)),0.0);',
+  'float attenuation=1.0/(1.0+ds*.14);',
+  'ambient+=uLampColors[i]*(cosine*.92+.075)*attenuation;',
+  '}return ambient;',
+  '}',
+  'vec3 ringShade(vec3 paint,vec3 p,vec3 n){',
+  'vec3 linearPaint=pow(clamp(paint,0.0,1.0),vec3(2.2));',
+  'vec3 hdr=linearPaint*ringIrradiance(p,n);',
+  'return pow(hdr/(vec3(1.0)+hdr*.14),vec3(.45454545));',
+  '}'
+ ].join('\\n');
  const worldVertex=[
   'precision highp float;',
   'attribute vec3 aP;attribute vec2 aUv;',
@@ -253,9 +309,10 @@
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;',
   'uniform float uFloorReady;uniform float uCeilingReady;',
+  lightingGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
-  'void main(){vec3 color;',
+  'void main(){vec3 color;float emissive=0.0;',
   'if(uSurface==0){',
   'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
   'float radial=line(r/32.0,40.0,.016);float spokes=line(a,78.0,.013);',
@@ -271,13 +328,14 @@
   // The ceiling bitmap only has 0.95m panels. Lights are independent:
   // approximately 1.1m long, 0.17m wide, spaced 5.7m x 4.75m.
   // Never stamp 2 fixtures onto every 1.9m source texture repetition.
-  'vec2 lampUv=abs(fract(vWallUv/vec2(3.0,2.5))-vec2(.5));',
+  'vec2 lampUv=abs(fract((vWallUv+vec2(1.5,0.0))/vec2(3.0,2.5))-vec2(.5));',
   'float housing=(1.0-smoothstep(.022,.027,lampUv.x))',
   '*(1.0-smoothstep(.135,.144,lampUv.y));',
   'float emitting=(1.0-smoothstep(.015,.019,lampUv.x))',
   '*(1.0-smoothstep(.113,.124,lampUv.y));',
   'color=mix(color,vec3(.18,.19,.21),housing*.88);',
-  'color=mix(color,vec3(.87,.88,.83),emitting*.94);',
+  'color=mix(color,vec3(.75,.78,.75),emitting*.60);',
+  'emissive=emitting;'
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
   'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
@@ -292,8 +350,14 @@
    // Source art 2172x724 is 3:1. Eight real arc-length repeats across
    // the 76.7m curved surface = 9.58m x 3.2m (aspect preserved).
   '}',
+  'vec3 normal=uSurface==0?vec3(0.0,1.0,0.0):',
+  'uSurface==2?vec3(0.0,-1.0,0.0):',
+  'normalize(vec3(.7*sin(asin(clamp(vWorld.x/32.0,-.975,.975))),0.0,',
+  '(uMode>.5?-1.0:1.0)*sqrt(max(.001,1.0-pow(vWorld.x/32.0,2.0)))));',
+  'color=ringShade(color,vWorld,normal);',
+  'if(uSurface==2)color=mix(color,vec3(.96,.95,.87),emissive*.90);',
   '}gl_FragColor=vec4(color,1.0);}'
- ].join('\n');
+ ].join('\\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
  // Vertical pivot uses the source canvas's measured shoe & crown fractions.
  // No regenerated textures or destructive crop operations.
@@ -302,16 +366,19 @@
   'uniform mat4 uVP;uniform vec3 uFoot;uniform vec3 uRight;',
   'uniform vec3 uUp;uniform float uHeight;uniform float uSoleX;',
   'uniform float uSoleY;uniform float uCrownY;uniform float uWidthScale;',
-  'uniform float uLean;varying vec2 vUv;',
+  'uniform float uLean;varying vec2 vUv;varying vec3 vWorld;',
   'void main(){float H=uHeight/max(.01,uSoleY-uCrownY);',
   'float bodyHeight=clamp((uSoleY-aUv.y)/max(.01,uSoleY-uCrownY),0.0,1.0);',
   'vec3 pos=uFoot+uRight*((aUv.x-uSoleX)*H*uWidthScale+uLean*H*bodyHeight)',
   '+uUp*((uSoleY-aUv.y)*H);',
-  'vUv=aUv;gl_Position=uVP*vec4(pos,1.0);}'
+  'vUv=aUv;vWorld=pos;gl_Position=uVP*vec4(pos,1.0);}'
  ].join('\n');
  const portraitFragment=[
-  'precision mediump float;varying vec2 vUv;uniform sampler2D uTexture;',
+  'precision highp float;varying vec2 vUv;varying vec3 vWorld;',
+  'uniform sampler2D uTexture;',
   'uniform float uHit;uniform float uDim;uniform float uBlur;',
+  'uniform vec3 uFacing;uniform vec3 uRightDir;',
+  lightingGLSL,
   'void main(){vec2 uv=vec2(vUv.x,1.0-vUv.y);',
   'vec4 t=texture2D(uTexture,uv);',
   'if(uBlur>0.01){',
@@ -324,6 +391,14 @@
   '}',
   'if(t.a<.025)discard;',
   'vec3 rgb=mix(t.rgb,vec3(1.0,.81,.70),clamp(uHit,0.0,1.0));',
+  'vec3 pseudoNormal=normalize(uFacing+vec3(0.0,.38,0.0)',
+  '+uRightDir*(vUv.x-.5)*.17);',
+  'rgb=ringShade(rgb,vWorld,pseudoNormal);',
+  // Preserve painted linework; rim only traces the true alpha silhouette,
+  // not a white outline drawn across interior facial/body details.
+  'float nearbyAlpha=texture2D(uTexture,uv+vec2(.004,0.0)).a;',
+  'float edge=clamp((t.a-nearbyAlpha)*1.6,0.0,1.0);',
+  'rgb+=vec3(.045,.055,.067)*edge;',
   'rgb*=1.0-clamp(uDim,0.0,.80);',
   'gl_FragColor=vec4(rgb,t.a);}'
  ].join('\n');
@@ -331,15 +406,16 @@
  // visible actor, leaving all original L2D textures and lights untouched.
  const shadowVertex=[
   'precision highp float;attribute vec2 aUv;uniform mat4 uVP;',
-  'uniform vec3 uFoot;uniform float uRadius;varying vec2 vLocal;',
+  'uniform vec3 uFoot;uniform vec3 uShadowLight;uniform float uRadius;varying vec2 vLocal;',
   'void main(){vLocal=aUv*2.0-1.0;',
-  'vec3 p=uFoot+vec3(vLocal.x*uRadius,0.016,vLocal.y*uRadius*.55);',
+  'vec2 sl=(uFoot.xz-uShadowLight.xz)*.065;',
+  'vec3 p=uFoot+vec3(sl.x+vLocal.x*uRadius,0.016,sl.y+vLocal.y*uRadius*.72);',
   'gl_Position=uVP*vec4(p,1.0);}'
  ].join('\n');
  const shadowFragment=[
   'precision mediump float;varying vec2 vLocal;',
   'void main(){float d=dot(vLocal,vLocal);float w=1.0-smoothstep(.14,1.0,d);',
-  'gl_FragColor=vec4(.010,.035,.029,.23*w);}'
+  'gl_FragColor=vec4(.014,.020,.030,.31*w);}'
  ].join('\n');
  // Physically reversed wall bend when viewed from the opposite side.
  function backdropPoint(mode='outer',angle=0){
@@ -366,7 +442,7 @@
   const tile=kind==='ceiling'?SPEC.ceilingTileMeters:SPEC.floorTileMeters;
   // Each original rectangle is painted as a 2x2 module sheet: physically
   // 0.6m floor tiles and 0.95m ceiling tiles, not 2m oversized blocks.
-  return {u:sign*wallArcMeters(angle)/tile+8,v:depth/tile};
+  return {u:sign*wallArcMeters(angle)/tile+9,v:depth/tile};
  }
  function worldMesh(gl){
   const floorOuter=[],floorInner=[],backInner=[],backOuter=[],ceilingOuter=[],ceilingInner=[];
