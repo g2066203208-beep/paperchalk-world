@@ -61,6 +61,10 @@ try{
  report.outer=await inspect();
  report.initialProjectors=report.outer.lighting.shadowLampAssignments;
  report.alphaClips=report.outer.actorVisibleUv;
+ const masked=report.alphaClips?.['enemy-3'];
+ if(!masked?.clip||masked.clip.right-masked.clip.left>.55||
+  masked.sourceMask!=='battle-only-feathered-subject-separates-opaque-clouds')
+  validationErrors.push('enemy 3 opaque painted cloud still leaks outside the cropped figure');
  if(report.outer?.lighting?.shadowFilter!=='13-tap-distance-dependent-area-light-penumbra')
   throw Error('Actual WebGL scene is still using old hard-edge shadows');
  await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});

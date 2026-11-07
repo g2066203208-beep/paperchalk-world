@@ -201,6 +201,15 @@ assert.match(src,/shadowLampAssignments:\{\.\.\.shadowLampAssignments\}/,
  'real browser QA must inspect stable per-actor projector identity');
 assert.match(src,/vec2 uv=mix\(uClipUv.xy,uClipUv.zw,aUv\)/,
  'projected quads sample only actual alpha content UV');
+assert.match(src,/function maskEmbeddedFogForBattle\(tex,ctx,size,id\)/,
+ 'prepainted opaque fog must be excluded from the temporary battle texture');
+assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
+ 'fog removal must be an alpha mask, not paint-over on source art');
+assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id\)/,
+ 'real animated source must pass through non-destructive battle mask before upload');
+assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
+ ring.STAGING.outer.enemies[0][0]-.765)<1e-7,
+ 'outer enemy standing distance should not overlap broad coats');
 assert.match(src,/shadowClipUv=/,
  'the shadow penumbra must have a separately padded alpha crop');
 assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,

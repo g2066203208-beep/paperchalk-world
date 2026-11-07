@@ -60,7 +60,7 @@
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[.945,7.70],[1.639,7.70],[2.333,7.70],[3.027,7.70]])
+   enemies:Object.freeze([[.935,7.70],[1.700,7.70],[2.465,7.70],[3.230,7.70]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
@@ -1135,6 +1135,38 @@
     top:texture.opaqueUv.top,bottom:combatTopRows/N
    }:texture.opaqueUv;
   }
+  // Source 3rd enemy includes TWO large, opaque, prepainted fog clouds.
+  // A normal alpha bbox cannot remove them (their alpha exceeds 168/255).
+  // For the 3D BATTLE texture ONLY, apply a feathered body-shaped alpha mask;
+  // the original story L2D image, rig, poses and saved pixels remain intact.
+  function maskEmbeddedFogForBattle(tex,ctx,size,id){
+   if(id!=='enemy-3')return;
+   if(!tex.subjectMask||tex.subjectMask.width!==size){
+    const mask=document.createElement('canvas');
+    mask.width=size;mask.height=size;
+    const m=mask.getContext('2d',{alpha:true});
+    const profile=[
+     [0,.395,.634],[.12,.39,.635],[.23,.355,.655],
+     [.39,.332,.665],[.52,.350,.665],[.60,.365,.720],
+     [.75,.38,.720],[.84,.39,.68],[1,.40,.59]
+    ];
+    m.save();
+    m.filter='blur('+Math.max(3,Math.round(size*.008))+'px)';
+    m.beginPath();
+    for(const [y,left]of profile)m.lineTo(left*size,y*size);
+    for(let i=profile.length-1;i>=0;i--){
+     const [y,,right]=profile[i];m.lineTo(right*size,y*size);
+    }
+    m.closePath();m.fillStyle='white';m.fill();
+    m.restore();
+    tex.subjectMask=mask;
+   }
+   ctx.save();
+   ctx.globalCompositeOperation='destination-in';
+   ctx.drawImage(tex.subjectMask,0,0,size,size);
+   ctx.restore();
+   tex.sourceMask='battle-only-feathered-subject-separates-opaque-clouds';
+  }
   function updateTexture(a,now){
    const targetTexture=textures.get(a.id),desc=sourceFor(a);
    if(!desc){
@@ -1178,6 +1210,7 @@
      ctx.drawImage(desc.source,fitted.x+portraitInsetX,fitted.y,
       fitted.width,fitted.height);
     }else ctx.drawImage(desc.source,0,0,size,size);
+    maskEmbeddedFogForBattle(targetTexture,ctx,size,a.id);
     gl.bindTexture(gl.TEXTURE_2D,targetTexture.texture);
     if(targetTexture.uploadedSize!==size){
      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,targetTexture.stage);
@@ -1634,7 +1667,7 @@
      return [a.id,{clip:t?.visibleUv||null,
       shadowClip:t?.shadowClipUv||null,
       originalQuadKept:false,
-      sourcePixelsUntouched:true}];
+      sourcePixelsUntouched:true,sourceMask:t?.sourceMask||null}];
     })),
     measuredShoePivots:Object.fromEntries(visibleActors(mode).map(a=>{
     const uv=textures.get(a.id)?.opaqueUv;
