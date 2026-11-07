@@ -16,15 +16,13 @@
    <stop offset="1" stop-color="#10191d" stop-opacity=".15"/>
   </radialGradient>
   <!-- Fine raised non-slip stipple: no giant checkerboard or tile seams. -->
-  <pattern id="rubberPips" width="32" height="32" patternUnits="userSpaceOnUse">
-   <path d="M0 0H32V32H0Z" fill="none"/>
-   <g fill="#98a19d" opacity=".17">
-    <circle cx="8" cy="8" r="1.7"/><circle cx="24" cy="24" r="1.6"/>
-    <circle cx="24" cy="8" r="1.55"/><circle cx="8" cy="24" r="1.6"/>
-   </g>
-   <g fill="#232d31" opacity=".24">
-    <path d="M6 10q2 2 4 0M22 26q2 2 4 0M22 10q2 2 4 0M6 26q2 2 4 0"
-     fill="none" stroke="#263133" stroke-width=".8"/>
+  <pattern id="rubberPips" width="18" height="18" patternUnits="userSpaceOnUse">
+   <!-- Tiny 1px-scale diamond-offset embossing, NOT broad white dots. -->
+   <g fill="#9fa8a1" opacity=".085">
+    <circle cx="4.5" cy="4.5" r=".83"/>
+    <circle cx="13.5" cy="13.5" r=".83"/>
+    <circle cx="13.5" cy="4.5" r=".69"/>
+    <circle cx="4.5" cy="13.5" r=".69"/>
    </g>
   </pattern>
   <!-- Fine industrial embossed rubber grain. Generated once into the
