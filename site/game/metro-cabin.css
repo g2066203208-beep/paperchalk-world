@@ -90,7 +90,9 @@
 @container (max-height:500px){
  #pw-metro-cabin .pw-cabin-top{top:3%;left:4%;right:4%}
  #pw-metro-cabin .pw-cabin-station{top:10%;padding:4px 9px}
-   #pw-metro-cabin .pw-cabin-actions{bottom:4%;right:4%;width:35%;max-height:60%;gap:3px}
+   #pw-metro-cabin .pw-cabin-actions{
+    bottom:4%;right:3.6%;width:clamp(160px,26%,280px);
+    max-height:52%;gap:4px}
  #novel-ui #pw-metro-cabin .pw-cabin-actions button{
   min-height:30px;padding:5px 8px!important;font-size:10px!important;
  }
@@ -123,4 +125,20 @@
 #pw-metro-cabin[data-renderer="ring-3d"]>.pw-cabin-canvas,
 #pw-metro-cabin[data-renderer="ring-3d"]>.pw-cabin-foreground{
  display:none!important
+}
+
+/* The 1536x691 player window is a SHORT widescreen viewport. Previous
+   max-height container rule stretched action panels to 35% (=538px).
+   Keep controls readable but stop them blotting out the real 3D floor. */
+@media(min-aspect-ratio:2/1){
+ #pw-metro-cabin .pw-cabin-actions{
+  width:min(26%,280px)!important;
+  max-height:47%!important;
+  right:3.5%!important;
+  bottom:4%!important;
+ }
+ #novel-ui #pw-metro-cabin .pw-cabin-actions button{
+  min-height:31px;
+  padding:5px 10px!important;
+ }
 }
