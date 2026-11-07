@@ -60,7 +60,7 @@
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
+   allies:Object.freeze([[-1.05,9.30],[-3.70,7.95],[-2.65,7.75],[-1.55,7.55]]),
    enemies:Object.freeze([[-.68,6.80],[.51,6.80],[1.70,6.80],[3.16,6.80]])
   }),
   inner:Object.freeze({
@@ -112,13 +112,14 @@
  })));
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
- // Keep all eight immutable world anchors for the future full-team mode,
- // but this cinematic rear-battle presentation draws ONLY the heroine and
- // the four opponents. Allied teammates are intentionally invisible, not removed.
- const HIDDEN_ALLY_IDS=Object.freeze(['ally-2','ally-3','ally-4']);
+ // All four existing allied ArtMeshes now participate in the same 3D battle.
+ // Heroine remains the close left-shoulder foreground subject; the other three
+ // stand as a smaller, staggered left wing without enlarging or faking textures.
+ // Metro still chooses only its one named passenger via scene actors.visible.
+ const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
   const scene=layout(mode);
-  return [mode,Object.freeze([scene.allies[0],...scene.enemies])];
+  return [mode,Object.freeze([...scene.allies,...scene.enemies])];
  })));
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
  // Single cinematic TPS right-shoulder rig. The authored rear ArtMesh is
@@ -1877,7 +1878,7 @@
    }
    if(frames%12===0){
     const ready=all.filter(a=>textures.get(a.id).painted).length;
-    status.textContent='标准遭遇 · 原地环顾 · 人物 '+ready+'/'+all.length+
+    status.textContent='4v4 标准遭遇 · 原地环顾 · 人物 '+ready+'/'+all.length+
      (previewPose==='female7'?' · 女七背面持斧':' · '+(posePreviewEnabled?'旧版3/4 平视':'原版动态'));
     canvas.dataset.l2dReady=String(ready);
     canvas.dataset.renderedFrames=String(frames);
