@@ -88,7 +88,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - name: Preserve screenshots for GitHub review
-        if: success() && github.ref == 'refs/heads/main'
+        if: success() && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         run: |
           mkdir -p docs/screenshots/overworld
           cp artifacts/overworld/*.png docs/screenshots/overworld/
