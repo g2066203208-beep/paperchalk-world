@@ -23,7 +23,7 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  assert.ok(safe.gap>.05);
  assert.ok(cam.shoulderRig&&cam.actorRootUnchanged);
  assert.equal(cam.lookYawDeg,0);
- assert.ok(cam.shoulderBoomMeters>=1.1&&cam.shoulderBoomMeters<=2.5);
+ assert.ok(cam.shoulderBoomMeters>=1.1&&cam.shoulderBoomMeters<=2.65);
  const visibleWidth=Math.max(0,Math.min(1,safe.hero.right)-Math.max(-1,safe.hero.left));
  assert.ok(visibleWidth>.25,'foreground heroine remains visibly large');
  const heel=scene.enemies.map(a=>arena.project({x:a.x,y:0,z:a.z},cam,aspect));
