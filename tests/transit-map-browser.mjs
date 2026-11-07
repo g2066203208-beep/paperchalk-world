@@ -201,7 +201,10 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
   'Unexpected subway state after first station');
  if(stateAfterNext.onboard){
   await page.locator('#pw-metro-cabin .pw-cabin-actions button')
-   .filter({hasText:'下车'}).click({timeout:15000});
+   // The previous elementFromPoint verified that the real button is at
+   // the clickable point. WebGL frame churn can keep Playwright's
+   // two-animation-frame "stable" heuristic from settling in CI.
+   .filter({hasText:'下车'}).click({force:true,timeout:15000});
  }
  await page.waitForFunction(()=>!window.PaperWorldDailyLifeUI.snapshot().metro?.onboard);
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location),'school');
