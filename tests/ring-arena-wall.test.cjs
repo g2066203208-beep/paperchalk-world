@@ -29,4 +29,27 @@ assert.match(src,/float v=clamp\(vWorld\.y\/4\.15/);
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
 assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[5.7,5.7,5.7,5.7]);
+// Both battle orientations must film the authored wall from comparable
+// distances. Previously the inner orientation placed its wall at z=26,
+// exposing ~190px of empty overhead in the 1917x906 battle composition.
+const outerWall=ring.backdropPoint('outer',0);
+const innerWall=ring.backdropPoint('inner',0);
+const outerShot=ring.camera('outer');
+const innerShot=ring.camera('inner');
+const outerWallDistance=Math.abs(outerShot.eye.z-outerWall.z);
+const innerWallDistance=Math.abs(innerShot.eye.z-innerWall.z);
+assert.ok(Math.abs(outerWallDistance-innerWallDistance)<.15,
+ 'both orientations must keep the 3D wall at nearly equal camera distance');
+assert.ok(innerWall.z>ring.STAGING.inner.enemies[0][1]+1.8,
+ 'inner wall must remain behind all four opponent anchors');
+for(const angle of [-ring.SPEC.wallArcHalfAngle,0,ring.SPEC.wallArcHalfAngle]){
+ const p=ring.backdropPoint('inner',angle);
+ assert.ok(p.z>innerShot.eye.z+1.5,
+  'full reverse arc must stay beyond the inner camera near field');
+}
+const innerPaintTop=ring.project({
+ x:0,y:ring.WALL_TEXTURE.heightMeters,z:innerWall.z
+},innerShot,1917/906);
+assert.ok(innerPaintTop.valid&&innerPaintTop.y>.99,
+ 'wide-screen inner wall must fill the former empty upper band');
 console.log('PASS authored WebP + curved 3D wall UV + GPU shader + unchanged actors');
