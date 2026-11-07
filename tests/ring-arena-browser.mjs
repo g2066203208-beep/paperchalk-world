@@ -102,8 +102,10 @@ try{
   'the actual woman7 rear cutout must not be clipped or obstruct enemies');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
   'weapon and enemy1 cannot overlap');
- assert.ok(Math.max(...groundProof.enemySizes)-Math.min(...groundProof.enemySizes)<.005,
-  'foes must have coherent physical scale');
+ const foemeter=groundProof.enemySizes.map((h,i)=>
+  h/outer.actors.enemies[i].height);
+ assert.ok(Math.max(...foemeter)-Math.min(...foemeter)<.001,
+  'foes of different real heights must share one true perspective scale');
  await page.screenshot({path:'artifacts/ring-arena/V31-woman7-four-enemies-ground-aligned-1917x906.png'});
  await page.setViewportSize({width:1280,height:720});
  await page.waitForTimeout(220);
