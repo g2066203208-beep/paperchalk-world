@@ -31,6 +31,8 @@ try{
  const metro=page.locator('.pw-transit-map');
  await metro.waitFor({state:'visible'});
  assert.equal(await page.locator('.pw-transit-grid-dot').count(),91);
+ await page.waitForTimeout(220);
+ await shot('23-original-dot-matrix-metro.png');
  await page.locator('.pw-map-mode-toggle').click();
  const map=page.locator('.pw-world-map');
  await map.waitFor({state:'visible'});
