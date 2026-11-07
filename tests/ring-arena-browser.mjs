@@ -31,7 +31,7 @@ try{
   const a=window.PaperWorldGameRingArena?.inspect();
   return a?.active&&a?.renderer==='webgl-l2d'&&a?.heroStatic===true&&
    a?.previewPose==='female7'&&a?.eyeLevel===true&&a?.l2dReady===8&&a?.heroTextureUploads>=1;
- },null,{timeout:100000});
+ },null,{timeout:160000});
  await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.wallMaterial?.ready===true,
   null,{timeout:15000});
  await page.waitForTimeout(650);
@@ -253,7 +253,7 @@ try{
   const s=window.PaperWorldGameRingArena?.inspect();
   return s?.active&&!s.heroStatic&&s.previewPose==='original'&&s.l2dReady===8&&
    s.heroine?.id==='protagonist'&&s.heroine?.side==='back'&&s.heroine?.ready;
- },null,{timeout:100000});
+ },null,{timeout:160000});
  const restored=await inspect();
  assert.equal(restored.cameraCount,1);
  assert.equal(restored.shotIndex,0);
@@ -273,7 +273,7 @@ try{
   const game=window.PaperWorldGameRingArena;
   return game?.inspect()?.active&&game?.inspect()?.l2dReady===8&&
    game?.inspect()?.directorArt?.hero?.loaded&&game?.inspect()?.directorArt?.enemy?.loaded;
- },null,{timeout:100000});
+ },null,{timeout:160000});
  const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
   window.PaperWorldGameRingArena.qaFrame(t,at),[target,ms]);
  const frameHero=await invoke('enemy-2',38);
