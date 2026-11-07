@@ -1,17 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+ <title>地铁车厢 · 一体式细纹防滑橡胶地板 · 哑光石墨青灰</title>
  <defs>
- <pattern id="grain" width="70" height="70" patternUnits="userSpaceOnUse">
- <rect width="70" height="70" fill="#354245"/>
- <g fill="#81908d" opacity=".24"><circle cx="8" cy="11" r="1.7"/><circle cx="34" cy="17" r="1.1"/><circle cx="53" cy="44" r="1.8"/><circle cx="16" cy="56" r="1.2"/><circle cx="67" cy="5" r="1.2"/></g>
- <g fill="#22353a" opacity=".32"><circle cx="21" cy="24" r="1.7"/><circle cx="59" cy="26" r="1.5"/><circle cx="43" cy="62" r="1.2"/></g>
- </pattern>
- <linearGradient id="wear" x2="1" y2="1"><stop stop-color="#586563" stop-opacity=".22"/><stop offset=".65" stop-color="#253338" stop-opacity=".05"/><stop offset="1" stop-color="#87938b" stop-opacity=".13"/></linearGradient>
+  <!-- Neutral graphite rubber, visually keyed to the stainless-steel
+       door skirts and desaturated petrol-blue bench upholstery. -->
+  <linearGradient id="rubber" x1="0" y1="0" x2=".16" y2="1">
+   <stop stop-color="#535b5d"/>
+   <stop offset=".19" stop-color="#59605f"/>
+   <stop offset=".53" stop-color="#585e5d"/>
+   <stop offset=".84" stop-color="#505759"/>
+   <stop offset="1" stop-color="#484f52"/>
+  </linearGradient>
+  <radialGradient id="softWear" cx=".52" cy=".45" r=".71">
+   <stop stop-color="#a6aca3" stop-opacity=".105"/>
+   <stop offset=".46" stop-color="#9da39b" stop-opacity=".042"/>
+   <stop offset="1" stop-color="#10191d" stop-opacity=".15"/>
+  </radialGradient>
+  <!-- Fine raised non-slip stipple: no giant checkerboard or tile seams. -->
+  <pattern id="rubberPips" width="32" height="32" patternUnits="userSpaceOnUse">
+   <path d="M0 0H32V32H0Z" fill="none"/>
+   <g fill="#98a19d" opacity=".17">
+    <circle cx="8" cy="8" r="1.7"/><circle cx="24" cy="24" r="1.6"/>
+    <circle cx="24" cy="8" r="1.55"/><circle cx="8" cy="24" r="1.6"/>
+   </g>
+   <g fill="#232d31" opacity=".24">
+    <path d="M6 10q2 2 4 0M22 26q2 2 4 0M22 10q2 2 4 0M6 26q2 2 4 0"
+     fill="none" stroke="#263133" stroke-width=".8"/>
+   </g>
+  </pattern>
+  <!-- Fine industrial embossed rubber grain. Generated once into the
+       texture; all directional station light is calculated by WebGL. -->
+  <filter id="subtleGrain" x="0" y="0" width="100%" height="100%">
+   <feTurbulence type="fractalNoise" baseFrequency=".48" numOctaves="3" seed="19" stitchTiles="stitch" result="noise"/>
+   <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
+   <feComponentTransfer in="mono">
+    <feFuncR type="linear" slope=".7" intercept=".10"/>
+    <feFuncG type="linear" slope=".7" intercept=".10"/>
+    <feFuncB type="linear" slope=".7" intercept=".10"/>
+    <feFuncA type="linear" slope=".09" intercept="0"/>
+   </feComponentTransfer>
+  </filter>
+  <linearGradient id="shoeTrack" x1="0" y1="0" x2="1" y2="1">
+   <stop stop-color="#222d30" stop-opacity="0"/>
+   <stop offset=".5" stop-color="#232f31" stop-opacity=".035"/>
+   <stop offset="1" stop-color="#222d30" stop-opacity="0"/>
+  </linearGradient>
  </defs>
- <!-- Quiet one-piece dark anti-slip rubber vinyl as a real 3D floor material.
-      No big office ceramic tiles, no wooden planks or baked-in shadows. -->
- <rect width="1024" height="1024" fill="url(#grain)"/>
- <rect width="1024" height="1024" fill="url(#wear)"/>
- <!-- Continuous rubber floor, not ceramic/wood planks. No artificial
-      high-contrast rectangular tile boundaries at each texture repeat. -->
- <path d="M80 340L134 364M343 600L385 616M700 143L750 166M892 781L937 807" stroke="#82908b" stroke-width="8" opacity=".14"/>
- </svg>
+ <!-- SINGLE sheet, UV 0..1 across the complete rectangular train floor.
+      Absolutely no painted-in flashlight cones, shadows or station lights. -->
+ <rect width="1024" height="1024" fill="url(#rubber)"/>
+ <rect width="1024" height="1024" fill="url(#softWear)"/>
+ <rect width="1024" height="1024" fill="url(#rubberPips)"/>
+ <rect width="1024" height="1024" fill="#aeb3aa" filter="url(#subtleGrain)" opacity=".45"/>
+ <!-- Natural, extremely faint traffic wear. No office floor grid. -->
+ <path d="M143 0C194 264 183 593 142 1024H313C331 719 308 340 280 0Z" fill="url(#shoeTrack)"/>
+ <path d="M716 0C682 245 704 735 740 1024H908C866 655 871 274 887 0Z" fill="url(#shoeTrack)"/>
+ <g stroke="#aab1a9" stroke-linecap="round" fill="none" opacity=".10">
+  <path d="M143 194l43 4M385 498l34 7M619 182l51 4M738 769l43 6M207 885l46-5"
+   stroke-width="1.6"/>
+  <path d="M490 370l25 0M538 621l49-2M936 328l37 4M82 711l37-1" stroke-width="1.1"/>
+ </g>
+</svg>
