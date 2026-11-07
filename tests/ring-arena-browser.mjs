@@ -105,7 +105,7 @@ try{
   centers.reduce((sum,x)=>sum+x,0)/4>.15&&
   centers.reduce((sum,x)=>sum+x,0)/4<.40,
   'four distinct fighters should spread symmetrically around visual center');
- assert.ok(groundProof.hero.left< -.95&&groundProof.hero.right<-.40&&groundProof.hero.right>-.55,
+ assert.ok(groundProof.hero.left< -.95&&groundProof.hero.right<-.28&&groundProof.hero.right>-.42,
   'foreground heroine can crop naturally on the left without obscuring any centered enemy');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
   'weapon and enemy1 cannot overlap');
@@ -194,8 +194,8 @@ try{
   stable.camera.eye.z-outer.camera.eye.z)>.02,
   'true third-person camera must orbit the protagonist shoulder, not pivot from a fixed eye');
  assert.equal(stable.cameraLook.mode,'hero-root-tps-shoulder-rig');
- assert.ok(Math.abs(stable.cameraLook.heroYawDeg)>.15,
-  'protagonist BODY must follow camera yaw, not stay as a static overlay');
+ assert.equal(stable.cameraLook.heroYawDeg,0,
+  'protagonist world orientation must remain locked during mouse orbit');
  assert.ok(Math.abs(stable.cameraLook.yawDeg)>.35,
   'the mouse should now truly rotate the 3D camera focus');
  assert.equal(stable.cameraLook.sharedProjection,true);
@@ -215,7 +215,7 @@ try{
  const foeSpots=standard.actors.enemies.map(a=>a.x);
  assert.ok(Math.max(...foeSpots)-Math.min(...foeSpots)>3.7&&
   Math.max(...foeSpots)-Math.min(...foeSpots)<4,
-  'four enemies hold a tighter 3.81m single rank without colliding');
+  'four enemies stand farther back on a 3.84m single rank');
  assert.deepEqual(standard.actors,outer.actors,
   'all world-space actors must stay fixed after mouse look and attack');
  await page.screenshot({path:'artifacts/ring-arena/V32-single-encounter-wide-1917x906.png'});
