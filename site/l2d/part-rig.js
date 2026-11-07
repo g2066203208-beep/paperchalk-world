@@ -1240,7 +1240,7 @@ function drawFacePart(ctx,source,part,phase,idle){
  }else ctx.drawImage(img,part.x,part.y);
  ctx.restore();
 }
-function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
+function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null,continuous=false){
  if(!source?.canvas||!part)return;
  if(FACE_MICRO.has(part.id)||part.kind==='eyes-combined'){
   drawFacePart(ctx,source,part,phase,idle);
@@ -1313,6 +1313,19 @@ function drawPart(ctx,source,part,phase=0,drawMesh=false,idle=null){
    const b=placedBounds(part);
    ctx.drawImage(image,b.x,b.y,b.w,b.h);
   }else ctx.drawImage(image,part.x,part.y);
+ }else if(continuous){
+  // In close 3D dialogue/transit shots, repeatedly alpha-compositing
+  // overlapping triangles draws visible grey mesh lines on translucent
+  // skin and hair. Render each original PART once, with a coherent affine
+  // pose from its existing parent/bone rig. This preserves independent
+  // garment/limb motion and painted pixels without a screen-space sticker.
+  const posed=bonePoses(part,phase,idle),w=Math.max(1,part.w),h=Math.max(1,part.h);
+  const a=warpPoint(part,0,0,phase,posed,idle);
+  const b=warpPoint(part,1,0,phase,posed,idle);
+  const c=warpPoint(part,0,1,phase,posed,idle);
+  ctx.transform((b.x-a.x)/w,(b.y-a.y)/w,
+   (c.x-a.x)/h,(c.y-a.y)/h,a.x,a.y);
+  ctx.drawImage(image,0,0,w,h);
  }else{
   const posed=bonePoses(part,phase,idle);
   const vertices=[];
@@ -1555,7 +1568,7 @@ function angelShopWingPoint(point,part,u,v,phase,idle){
 }
 // Body-surface and tailored garment share the SAME dynamic pelvis/leg pose.
 // Trim only the hidden body raster at draw time; no author PSD is destroyed.
-function renderArtPart(ctx,source,part,motion,mount,phase,idle,selected=false){
+function renderArtPart(ctx,source,part,motion,mount,phase,idle,selected=false,continuous=false){
  ctx.save();
  applyAngelShopIdle(ctx,part,phase,idle);
  if(motion.x||motion.y||motion.angle){
@@ -1564,10 +1577,10 @@ function renderArtPart(ctx,source,part,motion,mount,phase,idle,selected=false){
   ctx.rotate(motion.angle*Math.PI/180);
   ctx.translate(-anchorX,-anchorY);
  }
- drawPart(ctx,source,part,phase,selected,idle);
+ drawPart(ctx,source,part,phase,selected,idle,continuous);
  ctx.restore();
 }
-function draw(ctx,layers,model,phase=0,selectedId=''){
+function draw(ctx,layers,model,phase=0,selectedId='',options=null){
  if(!model)return;
  // The imported ZIP enumerates eyebrows BEFORE opaque face texture.
  // Draw them after the face: do not let the head erase the eyebrows/nose.
@@ -1619,7 +1632,7 @@ function draw(ctx,layers,model,phase=0,selectedId=''){
    // weighted vertices; never clip or erase the canonical model.
    renderArtPart(ctx,{...part,canvas:texture,opacity:(part.opacity??1)*pose.opacity},
     b,motion,attached||b,phase,angelIdle,
-    id===selectedId&&slot===2*ids.indexOf(id)+1);
+    id===selectedId&&slot===2*ids.indexOf(id)+1,options?.continuousParts===true);
   }
   if(slot%2!==1)continue;
   const id=ids[(slot-1)/2];
