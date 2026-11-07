@@ -107,11 +107,14 @@ try{
    room.roomSurfaces?.floor?.ready&&room.roomSurfaces?.ceiling?.ready&&
    room.connectionMaterial?.ready&&
    room.wallMaterial?.ready===true&&
-   room.wallMaterial.url.endsWith('cabin-master.webp')&&
+   room.wallMaterial.url.endsWith('cabin-master-illustrated.webp')&&
    document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready';
  },null,{timeout:25000});
  const room3d=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(room3d.geometry.shape,'strip');
+ assert.equal(room3d.windowOpenings.alpha,true);
+ assert.ok(room3d.windowOpenings.exteriorMeshVertices>100,
+  'Actual transparent windows must reveal a separate world-space exterior');
  assert.ok(room3d.connectionMaterial.ready,
   'both physical end walls must show painted gangways to adjacent cars');
  assert.match(room3d.connectionMaterial.url,/metro-gangway\.svg$/);
