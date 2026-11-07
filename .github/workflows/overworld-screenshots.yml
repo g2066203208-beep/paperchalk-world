@@ -17,6 +17,10 @@ on:
       - 'tests/overworld-intro-browser.mjs'
       - 'tests/overworld-mobile-browser.mjs'
       - 'tests/transit-map-browser.mjs'
+      - 'tests/metro-map-geometry.test.cjs'
+      - 'site/game/metro-map-geometry.js'
+      - 'site/game/transit-map-ui.js'
+      - 'site/game/transit-map-ui.css'
       - '.github/workflows/overworld-screenshots.yml'
   workflow_dispatch:
 permissions:
@@ -50,7 +54,7 @@ jobs:
           cat /tmp/paperchalk-web.log
           exit 1
       - name: Verify daytime state rules
-        run: node --test tests/daily-life.test.cjs tests/metro-graph.test.cjs tests/phone-life.test.cjs
+        run: node --test tests/daily-life.test.cjs tests/metro-graph.test.cjs tests/metro-map-geometry.test.cjs tests/phone-life.test.cjs
       - name: Capture photographic transit map, local menus, rail directions and carriage first
         run: node tests/transit-map-browser.mjs
       - name: Actually play and screenshot main game
