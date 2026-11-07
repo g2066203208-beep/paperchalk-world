@@ -773,6 +773,7 @@
    '#view.ring-arena-transit #pw-metro-cabin{background:transparent!important}',
    '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-canvas{display:none!important}',
    '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-foreground{display:none!important}',
+   '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-live-actors{display:none!important}',
    // The WebGL canvas MUST physically live in the same stacking context as
    // the transit interface. Otherwise other higher-level overlays can cover
    // the whole textured 3D room while leaving passengers and controls visible.
@@ -1582,7 +1583,9 @@
    const target=attack?actorForTarget(attack.targetId):null;
    // One articulated TPS camera anchored to the real heroine, not a screen
    // overlay. Attack direction remains under the existing action director.
-   lens=transitMode?transitCamera:target?director.cinematicCamera(base,attack,attackSample,target):
+   // One identical real battle shoulder camera for every environment.
+   // Only an actual combat attack uses the existing cinematic director.
+   lens=target?director.cinematicCamera(base,attack,attackSample,target):
     shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
@@ -1644,7 +1647,9 @@
    drawnPoses={};
    drawnActorIds=presented.map(a=>a.id);
    // The same temporary lunge transforms affect cast shadows and portraits.
-   if(!transitMode){drawProjectedShadows(presented,cam,vp);drawActors(presented,cam,vp)}
+   // Reuse the exact 3D grounded actors, L2D UVs and projected light shadows.
+   // No flat portrait DOM plane just because this is a metro wall texture.
+   drawProjectedShadows(presented,cam,vp);drawActors(presented,cam,vp);
    if(armed)updateTargetPositions(cam,w/h);
    if(attack&&attackSample){
     const victim=presented.find(a=>a.id===target.id)||target;
@@ -1722,15 +1727,8 @@
    }
    return true;
   }
-  // An actual rail carriage is only 2.7–3m wide, not the 11m-wide
-  // convenience store. Position the same 3D camera closer to its long wall:
-  // no scene texture scaling, camera cropping or fake CSS 3D.
-  const transitCamera=Object.freeze({
-   mode:'outer',index:0,shot:'metro-passenger-eye',
-   fov:54,
-   eye:{x:0,y:1.45,z:8.04},
-   focus:{x:0,y:1.45,z:5.30}
-  });
+  // Transit has NO bespoke camera, projection, world scale or actor placement.
+  // Its scene is the real battlefield with one different author-painted wall.
   function enterTransit(){
    if(active&&!transitMode)return false;
    const carriage=document.getElementById('pw-metro-cabin');
@@ -1744,7 +1742,7 @@
    canvas.hidden=false;hud.hidden=true;
    view.classList.add('ring-arena-active','ring-arena-transit');
    elapsed=0;frames=0;mouseLookX=0;mouseLookY=0;
-   lens=transitCamera;setLighting('on');render(0,0,0);
+   resetCombatPreview();lens=camera(mode,0);setLighting('on');render(0,0,0);
    return true;
   }
   function exitTransit(){
@@ -1767,7 +1765,21 @@
     resetCombatPreview();lens=camera(mode,0);render(0)}
    else resetCombatPreview();
   }
-  const inspect=()=>({active,transitMode,canvasParent:canvas.parentElement?.id||null,environment:environmentId,encounter:'one-centered-grounded-opponents',encounterControls:0,
+  const inspect=()=>({active,transitMode,canvasParent:canvas.parentElement?.id||null,
+   cameraParity:(()=>{
+    if(!lens||lens.cinematic)return false;
+    const base=camera(mode,0);
+    const actual=shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
+     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
+    return Math.abs(lens.eye.x-actual.eye.x)<.00001&&
+     Math.abs(lens.eye.y-actual.eye.y)<.00001&&
+     Math.abs(lens.eye.z-actual.eye.z)<.00001&&
+     Math.abs(lens.focus.x-actual.focus.x)<.00001&&
+     Math.abs(lens.focus.y-actual.focus.y)<.00001&&
+     Math.abs(lens.focus.z-actual.focus.z)<.00001&&
+     Math.abs(lens.fov-actual.fov)<.00001;
+   })(),
+   environment:environmentId,encounter:'one-centered-grounded-opponents',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
     cameraLook:{mode:'hero-root-tps-shoulder-rig',
      yawDeg:lens?.lookYawDeg||0,pitchDeg:lens?.lookPitchDeg||0,
