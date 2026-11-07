@@ -678,3 +678,18 @@
  font-size:11px!important;
  box-shadow:0 2px 5px #0b111c55
 }
+
+/* Compact tiny-scale regional card layout: all ten cities stay individually
+   tappable on 844x390 landscape, including nearby peninsula and island. */
+#novel-ui #pw-world-surface .pw-dot-world-map[data-compact="true"] .pw-dot-city{
+ width:56px!important;min-width:56px!important;max-width:56px!important;
+}
+#pw-world-surface .pw-dot-world-map[data-compact="true"] .pw-dot-city .pw-transit-photo{
+ width:56px!important;height:31px!important;aspect-ratio:unset!important;
+ padding:1px!important;border-radius:2px
+}
+#pw-world-surface .pw-dot-world-map[data-compact="true"] .pw-dot-city .pw-transit-place-name{
+ font-size:10px!important;padding:1px 2px!important;margin-top:1px!important;
+ white-space:nowrap!important;line-height:1.2!important;
+ letter-spacing:0!important;
+}
