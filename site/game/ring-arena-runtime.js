@@ -515,7 +515,12 @@
   'color=vec3(.003,.011,.014)+vec3(.006,.045,.038)*line(vWorld.x,3.0,.016)',
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   'if(uWallReady>.5){',
-  'vec4 wallSample=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(vWallUv.y,.003,.997)));',
+  // The Anima train wall has a transparent 8-10% LOWER export margin.
+  // Sample from the first actual painted row at physical floor height:
+  // otherwise an opaque flat grey trench floats between seats and floor.
+  'float wallV=(uSurface==1&&uGeometry>.5&&uGeometry<1.5)?',
+  '(.10+.90*vWallUv.y):vWallUv.y;',
+  'vec4 wallSample=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(wallV,.003,.997)));',
   'if(uSurface==1&&uWindowCutouts>.5&&wallSample.a<.70){',
   // Empty source-image margin is not an exterior WINDOW. It belongs to
   // the lower wall trim and must not show a bright tunnel through the floor.
@@ -529,7 +534,7 @@
   // A continuous real painted lower-wall apron replaces source alpha holes.
   // The one-piece vinyl floor meets this skirting at world y=0 (no black moat).
   'if(uSurface==1&&uGeometry>.5&&uGeometry<1.5)',
-  'color=mix(vec3(.37,.42,.43),color,smoothstep(.05,.29,vWorld.y));',
+  'color=mix(vec3(.37,.42,.43),color,smoothstep(.008,.07,vWorld.y));',
   'if(uSurface==3&&uWingReady>.5){',
   'color=texture2D(uWingTexture,vec2(clamp(vWallUv.x,.001,.999),clamp(vWallUv.y,.001,.999))).rgb*.89;',
   '}',
