@@ -288,7 +288,7 @@
    colors:new Float32Array(colors),count:6});
  }
  const lightRigs=Object.freeze({outer:lightRig('outer'),inner:lightRig('inner')});
- const LIGHT_STATES=Object.freeze(['on','partial','flicker','outage']);
+ const LIGHT_STATES=Object.freeze(['on','partial','flicker','outage','horror']);
  function lightingFrame(state='on',seconds=0,whichMode='outer'){
   const valid=LIGHT_STATES.includes(state)?state:'on';
   const levels=new Float32Array(6).fill(1);
@@ -298,13 +298,36 @@
    levels.fill(0);
   }else if(valid==='flicker'){
    const p=((Number(seconds)||0)%6.2+6.2)%6.2;
-   // Faulty ballast: sporadic 50-300ms interruptions and a rare long dip.
    levels[1]=(p>1.62&&p<1.78)||(p>1.9&&p<2.25)||(p>4.86&&p<5.24)?0.0:1.0;
    levels[4]=(p>4.83&&p<5.36)?0.07:1.0;
+  }else if(valid==='horror'){
+   const t=Math.max(0,Number(seconds)||0);
+   // Eight-second narrative lighting beat with deterministic switch stages.
+   // This is an in-world power event; no full-screen black card is drawn.
+   if(t>=.95&&t<1.68){
+    const pulse=Math.sin(t*81)*.5+.5;
+    levels[1]=pulse>.64?.98:.025;
+    levels[4]=pulse>.72?.78:0;
+   }else if(t>=1.68&&t<2.36){
+    levels.set([1,0,.65,.15,0,.22]);
+   }else if(t>=2.36&&t<4.42){
+    levels.fill(0);
+    if(t>3.70&&t<3.77)levels[2]=.92;
+   }else if(t>=4.42&&t<5.08){
+    const surge=t<4.70?.82:.05;
+    levels.set([surge,0,surge*.9,0,0,surge*.4]);
+   }else if(t>=5.08&&t<5.66){
+    levels.fill(0);
+   }else if(t>=5.66){
+    levels.set([.7,0,.55,.20,0,.28]);
+   }
   }
-  const emergency=valid==='outage'?1:valid==='flicker'?.12:0;
-  const ambient=valid==='outage'?[.017,.024,.038]:
-   valid==='partial'?[.11,.15,.19]:[...LIGHTING.coolAmbient];
+  const t=Number(seconds)||0;
+  const horrorOutage=valid==='horror'&&levels.every(x=>x<.08);
+  const emergency=valid==='outage'?1:valid==='horror'&&t>=2.75?1:valid==='flicker'?.12:0;
+  const ambient=valid==='outage'||horrorOutage?[.010,.014,.024]:
+   valid==='partial'||valid==='horror'&&t>=1.68?[.09,.12,.15]:
+   [...LIGHTING.coolAmbient];
   const door=curvedSurfacePoint(whichMode,angleForArcMeters(-3.5),.12,
    SPEC.ceilingHeight-.34);
   return {state:valid,levels,ambient:new Float32Array(ambient),
@@ -642,7 +665,7 @@
    '<div class="status" role="status"></div><div class="bottom">',
    '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
    '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
-   '<button data-lighting type="button" title="正常 / 部分熄灭 / 故障闪烁 / 停电，按 L 可切换">灯光：正常</button>',
+   '<button data-lighting type="button" title="正常 / 部分熄灭 / 故障闪烁 / 停电 / 恐怖演出，按 L 可切换">灯光：正常</button>',
    '<button data-exit type="button">返回</button></div>',
    '<div class="director-deck"><button class="director-card" data-attack-card="slash" aria-pressed="false" type="button" aria-label="攻击牌：斧柄横扫，基础伤害12。选择后点击敌人">',
    '<span class="director-card-type">ATTACK / 01</span>',
@@ -801,7 +824,7 @@
   let lightState=LIGHT_STATES.includes(params.get('lights'))?params.get('lights'):'on';
   let currentLighting=lightingFrame(lightState,0,mode);
   const lightLabel=hud.querySelector('[data-lighting]');
-  const lightStateNames={on:'正常',partial:'部分熄灭',flicker:'故障闪烁',outage:'停电'};
+  const lightStateNames={on:'正常',partial:'部分熄灭',flicker:'故障闪烁',outage:'停电',horror:'恐怖演出'};
   let lightingStartedAt=performance.now()/1000;
   let lightingPhasePreview=null;
   function setLighting(state,previewPhase=null){
