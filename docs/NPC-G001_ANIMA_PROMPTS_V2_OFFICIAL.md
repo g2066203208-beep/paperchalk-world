@@ -14,9 +14,22 @@
 - 右高：taller, slightly broader; squarer long face, thick low black braid, narrow half-lidded brown eyes。
 - 校服：dark navy two-button blazers、matte dark buttons、white shirts、burgundy ties、charcoal pleated skirts、dark socks、dark loafers。每张都要检查原人物的正式制服母图；**文字对扣子数目不能保证100%成功**。
 
-## 01 中性 / neutral
+## 01 中性 / neutral — 关系亲密的日常聊天（V3：自然活力优先）
+**2026-11-07 用户反馈：上一张虽然有身高差，却三人站桩。左A不主动，中B独白发呆，右C置身事外；B未佩戴领带、衬衫没有收进裙腰。当前首要目标是通过肢体交互构成真正的朋友关系，而不是静态站姿。**
 ```text
-masterpiece, best quality, score_7, safe, 3girls, @akipekostyle, <lora:akipekoanima_v1_1:1>, high school girls, school uniform, full body, standing, group, height difference, looking at each other, white background, simple background, clean lineart, simple shading. talking, relaxed, slight smile. Three classmates stand together in one full-body illustration, with their heads, hands and shoes visible. The short girl on the left has a slightly plump build, a round face, short chestnut bob hair and small round brown eyes. The slim girl in the middle has a longer oval face, shoulder-length wavy ash-brown hair and small drooping brown eyes. The tall girl on the right has a slightly broader frame, a squarer long face, a thick low black braid and narrow half-lidded brown eyes. Their identical school uniforms have dark navy blazers, white collared shirts, burgundy neckties, charcoal pleated skirts, dark socks and dark loafers. Each blazer has two small matte dark front buttons. The short girl leans toward the middle girl and smiles softly. The middle girl talks with one palm turned upward. The tall girl listens with her head turned toward them, her arms relaxed.
+masterpiece, best quality, score_7, safe, 3girls, @akipekostyle, <lora:akipekoanima_v1_1:1>, full body, group, school uniforms, height difference, friends, chatting, smiling, laughing, looking at each other, leaning toward another, hand gestures, cheerful, white background, simple background, clean lineart, cel shading.
+
+Three close high school friends are chatting and joking together in a spontaneous moment, not posing for a photograph. They form one lively, close-knit group. All three are involved in the same conversation, reacting to one another.
+
+LEFT: the shortest girl, petite with soft round cheeks, short dark chestnut bob, small round brown eyes. She grins mischievously and leans slightly toward her friend, playfully nudging the middle girl's elbow with one hand, her other arm relaxed.
+
+MIDDLE: the medium-height slim girl, long oval face, shoulder-length wavy ash-brown hair, small drooping brown eyes. She turns toward the left girl, smiling with her mouth open in mid-sentence, gesturing animatedly with one raised open palm as if telling a funny story. She looks at her friend, not the viewer.
+
+RIGHT: the tallest girl, slightly wider shoulders, squarer face, thick low black braid, narrow half-lidded brown eyes. She leans slightly closer into the conversation, looking toward the other two with a teasing sideways grin and one eyebrow raised, making a small playful response with one hand. She is participating, not standing aside.
+
+Clearly different expressions and hand gestures. The three classmates look comfortable around each other, with natural asymmetrical poses and easy friendly teasing. Same school uniform on all three: dark navy notched blazers with two small matte dark front buttons, white collared shirts tucked neatly into charcoal gray pleated skirts, dark burgundy neckties clearly visible on every girl, dark socks, dark brown loafers.
+
+The left girl is visibly the shortest, the middle girl intermediate, the right girl clearly tallest. Feet on the same ground level, full shoes visible, empty white space above their heads and below their shoes, balanced three-person composition.
 ```
 
 ## 02 喜悦 / joy
