@@ -693,3 +693,154 @@
  white-space:nowrap!important;line-height:1.2!important;
  letter-spacing:0!important;
 }
+
+
+/* V13 — readability is defined in SCREEN pixels, independent of SVG zoom.
+ * Map dots are subtle; transit routes, city labels and boarding controls
+ * remain prominent at overview, municipal and street scales. */
+#pw-world-surface .pw-dot-world-map{
+ --metro-city-label:19px;
+ --metro-place-label:16px;
+ --metro-station-label:15px;
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-rail-casing,
+#pw-world-surface .pw-dot-world-map .pw-transit-rail,
+#pw-world-surface .pw-dot-world-map .pw-transit-rail-glint,
+#pw-world-surface .pw-dot-world-map .pw-transit-line-hit,
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-stop,
+#pw-world-surface .pw-dot-world-map .pw-transit-stop-circle,
+#pw-world-surface .pw-dot-world-map .pw-transit-stop-halo,
+#pw-world-surface .pw-dot-world-map .pw-transit-transfer-core{
+ vector-effect:non-scaling-stroke!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-rail-casing{
+ stroke-width:14px!important;opacity:1!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-rail{
+ stroke-width:8px!important;opacity:1!important;stroke-linecap:round;
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-rail-glint{
+ stroke-width:1.4px!important;opacity:.32!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines .pw-transit-rail-casing{
+ stroke-width:12px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines .pw-transit-rail{
+ stroke-width:6.6px!important;opacity:1!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-urban-lines .pw-transit-rail-casing{
+ stroke-width:16px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-urban-lines .pw-transit-rail{
+ stroke-width:9px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines .pw-transit-rail-casing{
+ stroke-width:12px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines .pw-transit-rail{
+ stroke-width:7px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines [data-mode="bus"] .pw-transit-rail{
+ stroke-width:5px!important;stroke-dasharray:11 8;opacity:.94!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines [data-mode="tram"] .pw-transit-rail{
+ stroke-width:6.2px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines [data-mode="road"] .pw-transit-rail,
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines [data-mode="coach"] .pw-transit-rail,
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines [data-mode="bus"] .pw-transit-rail{
+ stroke-width:5px!important;stroke-dasharray:12 9;opacity:.95!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines [data-mode="ferry"] .pw-transit-rail{
+ stroke-width:5.6px!important;stroke-dasharray:2 12;opacity:1!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-stop-circle{
+ stroke-width:3px!important;fill:#13242b!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-transfer-core{
+ stroke-width:2px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-stop{
+ stroke-width:2.8px!important;fill:#e7f4ed!important;stroke:#152934!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-line-hit{
+ stroke-width:30px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-grid-dot{
+ opacity:.40!important
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-transit-place:not(.pw-dot-poi){
+ width:108px!important
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-transit-place.is-station{
+ width:106px!important
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-poi{
+ width:100px!important
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-city{
+ width:166px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-place-name{
+ font-size:var(--metro-place-label)!important;
+ line-height:1.25!important;font-weight:600!important;
+ padding:4px 7px!important;letter-spacing:.015em!important;
+ text-overflow:clip!important;
+ overflow:visible!important;
+ width:max-content!important;max-width:170px!important;
+ white-space:normal!important;word-break:keep-all!important;
+ color:#f7faf5!important;
+ border:1px solid #99adb663!important;
+ background:#10222cf4!important;text-shadow:0 1px 3px #05090b
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-place-name{
+ font-size:var(--metro-city-label)!important;
+ font-weight:700!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-place-name{
+ font-size:var(--metro-place-label)!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-place.is-station .pw-transit-place-name{
+ font-size:var(--metro-station-label)!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-place .pw-transit-photo,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-photo{
+ border-width:2px!important;padding:2px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-photo{
+ border-width:2px!important;padding:2px!important
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-tool{
+ min-width:40px!important;min-height:38px!important;
+ font-size:15px!important;padding:7px 10px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-title{
+ font-size:clamp(17px,3cqh,24px)!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-subtitle{
+ font-size:12px!important
+}
+/* On mobile overview, cards are still finger-sized; compact does not mean
+ * illegible. Collision avoidance occurs in position() on the screen plane. */
+#pw-world-surface .pw-dot-world-map[data-small-screen="true"]{
+ --metro-city-label:16px;
+ --metro-place-label:15px;
+ --metro-station-label:14px;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map[data-compact="true"] .pw-dot-city{
+ width:96px!important;min-width:96px!important;max-width:96px!important
+}
+#pw-world-surface .pw-dot-world-map[data-compact="true"] .pw-dot-city .pw-transit-photo{
+ width:96px!important;height:48px!important;
+ aspect-ratio:unset!important;padding:2px!important
+}
+#pw-world-surface .pw-dot-world-map[data-compact="true"] .pw-dot-city .pw-transit-place-name{
+ font-size:16px!important;min-height:24px;line-height:1.2!important;
+ padding:3px 5px!important;white-space:nowrap!important
+}
+@container(max-height:430px){
+ #novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-tool{
+  min-height:32px!important;min-width:36px!important;
+  font-size:13px!important;padding:5px 8px!important
+ }
+}
