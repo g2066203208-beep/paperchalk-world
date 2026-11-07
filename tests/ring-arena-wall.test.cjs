@@ -115,6 +115,10 @@ for(const mode of ['outer','inner']){
   assert.ok(Math.abs(frac(uv.v/2.5)-.5)<.0001);
  }
 }
+assert.match(src,/uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;/,
+ '3D vertex shader must use highp int matching the fragment shader');
+assert.match(src,/vIrradiance;uniform float uTime;uniform highp int uSurface;/,
+ '3D fragment shader must use matching highp precision under ANGLE');
 assert.match(src,/uLampPositions\[6\]/);
 assert.match(src,/uLampColors\[6\]/);
 assert.match(src,/vIrradiance=ringIrradiance\(aP,n\)/,
