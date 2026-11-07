@@ -53,6 +53,7 @@ function create({root,engine,onExit,onFeedback}){
  const actions=section.querySelector('.pw-cabin-actions');
  const anomaly=section.querySelector('.pw-cabin-anomaly');
  let raf=0,last=0,visible=false,speakerIndex=0,auto=false,frame=0,anomalyEventSent=false;
+ let regionalRide=null;
  const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);return b};
  // A single FRONT-facing side-elevation canvas. Never project train depth
  // toward a vanishing point or transform an existing character portrait.
@@ -114,6 +115,20 @@ function create({root,engine,onExit,onFeedback}){
   }finally{seatLoading=false}
  }
  function refresh(){
+  if(regionalRide){
+   const atlas=global.PaperWorldAtlas;
+   const s=engine.snapshot(),leg=regionalRide.legs[regionalRide.index];
+   const dest=atlas?.CITY_BY_ID?.[leg.to];
+   lineLabel.textContent=leg.line.name+' · '+(atlas?.SERVICE_LABELS?.[leg.line.mode]||'铁路');
+   lineLabel.style.borderLeftColor=leg.line.color||'#8fbab8';
+   clock.textContent=s.calendar.time;
+   nextLabel.textContent=dest?.name||leg.to;
+   anomaly.hidden=true;section.dataset.night='false';
+   person.textContent='车内广播';
+   words.textContent='下一站，'+(dest?.name||leg.to)+'。请留意随身物品。';
+   actions.replaceChildren();
+   return;
+  }
   const s=engine.snapshot(),ride=s.metro||{};
   if(!ride.onboard){close();return}
   const line=metro.getLine(ride.lineId);
@@ -203,6 +218,25 @@ function create({root,engine,onExit,onFeedback}){
   visible=false;section.hidden=true;
   if(raf)cancelAnimationFrame(raf);raf=0;
  }
+ // Regional rail shares the existing side-on 2.5D carriage and authentic
+ // L2D seats, without mutating the separate urban-subway boarding state.
+ async function playRegionalJourney(route){
+  if(!route?.legs?.length)return {ok:false,reason:'没有城际铁路行程'};
+  if(visible||auto)return {ok:false,reason:'列车正在行驶'};
+  regionalRide={legs:route.legs,index:0};
+  visible=true;section.hidden=false;anomalyEventSent=false;auto=true;
+  populatePassengers().catch(error=>console.warn('[Regional rail L2D]',error));
+  if(!raf)raf=requestAnimationFrame(render);
+  try{
+   for(let i=0;i<route.legs.length;i++){
+    regionalRide.index=i;refresh();
+    await new Promise(resolve=>global.setTimeout(resolve,1600));
+   }
+   return {ok:true};
+  }finally{
+   auto=false;regionalRide=null;close();
+  }
+ }
  // Directly choosing a destination uses the same actual rolling train.
  // Auto travel never teleports the player or creates a second fake carriage.
  async function playRoute(route){
@@ -240,7 +274,7 @@ function create({root,engine,onExit,onFeedback}){
    else refresh();
   }
  }
- return Object.freeze({open,close,refresh,playRoute,isOpen:()=>visible});
+ return Object.freeze({open,close,refresh,playRoute,playRegionalJourney,isOpen:()=>visible});
 }
 global.PaperWorldMetroCabin=Object.freeze({create});
 })(window);
