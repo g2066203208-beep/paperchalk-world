@@ -13,10 +13,11 @@
  const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
  const rad=d=>d*Math.PI/180;
  const SPEC=Object.freeze({
-  stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:3.2,ceilingHeight:3.2,wallBend:.7,
+  stageType:'compact-convenience-curved-aisle',wallRadius:32,wallHeight:2.85,ceilingHeight:2.85,wallBend:.7,
   wallCenterZ:-16,wallArcHalfAngle:rad(78),
   floorWidth:96,floorFrontZ:48,floorBackZ:-55,
-  surfaceDepth:18,floorTileMeters:1.2,ceilingTileMeters:1.9,surfaceSegments:20,arcSegments:160,
+  surfaceDepth:10.0,floorTileMeters:1.2,ceilingTileMeters:1.9,surfaceSegments:24,arcSegments:160,
+  roomWidthMeters:11.5,roomLengthMeters:7.6,
   outerRoleRadius:10.55,innerRoleRadius:8.30,
   outerCameraRadius:11.5,innerCameraRadius:7.47,
   verticalFov:48,battleFocusZ:6.8
@@ -24,7 +25,7 @@
  // The authored convenience-store wall image is drawn on the existing curved
  // 3D backdrops; actor anchors, depth and camera remain exactly unchanged.
  const WALL_TEXTURE=Object.freeze({
-  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:8,heightMeters:3.2
+  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:9,heightMeters:2.85
  });
  const SURFACE_TEXTURES=Object.freeze({
   floor:'./assets/ring-arena/convenience-floor.svg',
@@ -49,7 +50,7 @@
   // When the camera looks toward +Z in inner mode, screen-right is world -X.
   // Reverse the UV run so all shop signs stay legible, never mirror text.
   const sign=mode==='inner'?-1:1;
-  const u=sign*wallArcMeters(theta)/tileWidth+WALL_TEXTURE.repeats/2+.5;
+  const u=sign*wallArcMeters(theta)/tileWidth+WALL_TEXTURE.repeats/2;
   return {u:u-Math.floor(u),v:clamp(y/WALL_TEXTURE.heightMeters,0,1)};
  }
  // V31: projection-correct four-opponent row at camera-equal ground depth.
@@ -59,11 +60,11 @@
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[.839,6.966],[1.757,6.966],[2.675,6.966],[3.593,6.966]])
+   enemies:Object.freeze([[.945,7.70],[1.639,7.70],[2.333,7.70],[3.027,7.70]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
-   enemies:Object.freeze([[.755,11.750],[-.156,11.750],[-1.068,11.750],[-1.979,11.750]])
+   enemies:Object.freeze([[.644,11.0],[-.044,11.0],[-.734,11.0],[-1.422,11.0]])
   })
  });
  const bindings=Object.freeze({
@@ -249,11 +250,11 @@
  // fake fullscreen color overlay or an invented L2D normal map.
  const LIGHTING=Object.freeze({
   kind:'world-space-six-motivated-fluorescents',
-  columns:Object.freeze([-5.7,0,5.7]),
-  depths:Object.freeze([2.375,7.125]),
+  columns:Object.freeze([-3.5,0,3.5]),
+  depths:Object.freeze([1.65,4.25]),
   height:SPEC.ceilingHeight-.07,
-  coolAmbient:Object.freeze([.47,.53,.62]),
-  color:Object.freeze([1.00,.94,.86]),
+  coolAmbient:Object.freeze([.23,.27,.34]),
+  color:Object.freeze([2.00,1.88,1.72]),
   strength:1
  });
  function angleForArcMeters(meters){
@@ -447,8 +448,8 @@
    // camera-to-wall distance without touching actor anchors or optics.
    // Mirror the outer arc's depth curvature, maintaining equal perspective
    // scale across the wall in both camera directions.
-   ? {x:SPEC.wallRadius*Math.sin(a),z:15.35+bow*SPEC.wallBend}
-   : {x:SPEC.wallRadius*Math.sin(a),z:3.4-bow*SPEC.wallBend};
+   ? {x:SPEC.wallRadius*Math.sin(a),z:13.40+bow*SPEC.wallBend}
+   : {x:SPEC.wallRadius*Math.sin(a),z:5.30-bow*SPEC.wallBend};
  }
  // The ceiling and floor begin as rectangular 1024x1024 source images.
  // Their far edges follow the curved wall exactly at all 160 wall joints.
@@ -489,7 +490,7 @@
     const tileWidth=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
     const signed=face==='outer'?-1:1;
     return [p.x,y,p.z,signed*wallArcMeters(angle)/tileWidth+
-     WALL_TEXTURE.repeats/2+.5,tex.v];
+     WALL_TEXTURE.repeats/2,tex.v];
    };
    for(let i=0;i<N;i++){
     const a=theta(i),b=theta(i+1),p=point(a),q=point(b);
