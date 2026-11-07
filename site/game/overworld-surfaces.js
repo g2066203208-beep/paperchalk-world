@@ -146,7 +146,11 @@
         mapMode=mapMode==='metro'?'regional':'metro';draw();
       },'pw-map-mode-toggle');
       changeLayer.setAttribute('aria-label',mapMode==='metro'?'切换到跨城交通地图':'恢复原版点阵地铁图');
-      body.append(changeLayer);
+      // The regional atlas owns its toolbar; do not overlay its zoom buttons
+      // or its city title with a floating map-mode button.
+      const atlasControls=mapMode==='regional'?body.querySelector('.pw-world-controls'):null;
+      if(atlasControls)atlasControls.prepend(changeLayer);
+      else body.append(changeLayer);
     }
     function drawBag(){
       const s=get(),items=Object.entries(meta).filter(([key,m])=>
