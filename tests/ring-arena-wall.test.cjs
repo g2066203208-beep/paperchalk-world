@@ -170,6 +170,10 @@ assert.match(src,/gl\.uniform1f\(projectedShadow\.uContact,0\)/,
  'project main original-L2D silhouette');
 assert.match(src,/gl\.uniform1f\(projectedShadow\.uContact,1\)/,
  'shoe contact must also use L2D alpha instead of synthetic circle');
+assert.match(src,/const data=\[\],N=22,M=28/,
+ 'silhouette projection needs adequately subdivided ground geometry');
+assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,
+ 'cast lamps must be selected by real projected body silhouette geometry');
 assert.match(src,/float shoes=smoothstep\(\.68,\.94,vUv\.y\)/,
  'contact shader must be limited to real shoe / trouser alpha');
 assert.equal(ring.SURFACE_TEXTURES.floor,'./assets/ring-arena/convenience-floor.svg');
