@@ -49,6 +49,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const canvas=element('div','pw-dot-world-canvas');
  const svg=vector('svg',{viewBox:'0 0 '+W+' '+H,preserveAspectRatio:'none'},'pw-transit-lines pw-dot-rail-canvas');
  const dots=vector('g',{},'pw-transit-dot-matrix');
+ let previousDotScale=-1;
  const regional=vector('g',{},'pw-dot-regional-lines');
  const urban=vector('g',{},'pw-dot-urban-lines');
  const metroNetwork=vector('g',{},'pw-dot-planned-metro');
@@ -398,6 +399,13 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // photo cards and clickable targets are painted at native screen pixels.
   svg.setAttribute('viewBox',(-x/scale)+' '+(-y/scale)+' '+(v.w/scale)+' '+(v.h/scale));
   svg.style.width=v.w+'px';svg.style.height=v.h+'px';
+  // A 1.7px screen-space dot is the same size at every zoom, never a
+  // five-pixel blurry disc just because the SVG logical view grew.
+  if(Math.abs(scale-previousDotScale)>.0005){
+   previousDotScale=scale;
+   const worldRadius=1.7/scale;
+   for(const dot of dots.children)dot.setAttribute('r',worldRadius.toFixed(4));
+  }
   for(const {node,p} of anchored){
    node.style.left=(x+p.x*scale)+'px';
    node.style.top=(y+p.y*scale)+'px';
