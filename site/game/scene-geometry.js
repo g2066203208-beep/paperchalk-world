@@ -11,13 +11,13 @@
 })(typeof window!=='undefined'?window:null,function(){
  'use strict';
  const TYPES=Object.freeze(['arc','strip','box']);
- const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||a));
+ const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number.isFinite(Number(v))?Number(v):a));
  function geometry(input={}){
   const shape=TYPES.includes(input.shape)?input.shape:'arc';
   if(shape==='arc')return Object.freeze({shape});
-  const width=clamp(input.widthMeters,5,40);
-  const depth=clamp(input.depthMeters,3,16);
-  const height=clamp(input.heightMeters,2.2,4.2);
+  const width=clamp(input.widthMeters??input.width,5,40);
+  const depth=clamp(input.depthMeters??input.depth,3,16);
+  const height=clamp(input.heightMeters??input.height,2.2,4.2);
   const backZ=clamp(input.backZ,-2,16);
   return Object.freeze({shape,width,depth,height,backZ,frontZ:backZ+depth});
  }
