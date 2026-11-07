@@ -15,8 +15,7 @@ screens = {
     "partial": "02-outer-partial-blackout-1917x906.png",
     "flicker": "03-outer-flicker-moment-1917x906.png",
     "outage": "04-outer-all-lights-off-1917x906.png",
-    "inner_outage": "05-inner-lights-off-1917x906.png",
-    "inner_normal": "06-inner-full-lights-1917x906.png",
+    "restored": "05-single-encounter-light-restored-1917x906.png",
     "horror_fault": "07-horror-ballast-flicker-1917x906.png",
     "horror_dark": "08-horror-complete-failure-1917x906.png",
     "horror_restore": "09-horror-partial-restore-1917x906.png",
@@ -62,8 +61,8 @@ required(
     "Scripted horror power failure must darken physical floor pixels",
 )
 required(
-    values["inner_normal"]["wall"] > values["inner_outage"]["wall"] + 45,
-    "Reverse-facing battle must share real powered lighting",
+    values["restored"]["wall"] > values["outage"]["wall"] + 45,
+    "Real shop lighting must recover in the same one encounter",
 )
 required(
     values["horror_restore"]["wall"] > values["horror_dark"]["wall"] + 20,
@@ -74,4 +73,4 @@ result = {"type": "actual-1917x906-WebGL-image-statistics", "luminance": values,
 (out / "pixel-lighting-proof.json").write_text(
     json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8"
 )
-print("PASS nine actual WebGL frames: fluorescent power drives visible floor reflections, wall exposure, ceiling and recovery")
+print("PASS single-encounter WebGL frames: real floor, wall, ceiling lighting and recovery")

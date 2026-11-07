@@ -217,7 +217,11 @@ assert.ok(Math.abs(ring.STAGING.inner.enemies[1][0]-
  ring.STAGING.inner.enemies[0][0]+.88)<1e-7,
  'the reverse battle line needs the same visual clearance');
 assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
- ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[24,24,12,12]);
+ ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[22,22,12,12]);
+assert.match(src,/drawWorld\(mode==='outer'\?wingOuter:wingInner,3,vp\)/,
+ 'real side wall caps must close the curved shop and prevent black void');
+assert.match(src,/uSurface==3\?vec3\(aP.x>0.0\?-1.0:1.0,0.0,0.0\)/,
+ 'side walls receive inward-facing 3D diffuse lamp normals');
 assert.match(src,/shadowClipUv=/,
  'the shadow penumbra must have a separately padded alpha crop');
 assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,

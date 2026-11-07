@@ -12,7 +12,7 @@ assert.ok(Math.max(...foes.map(a=>a.x))-Math.min(...foes.map(a=>a.x))>4,'use sho
 assert.ok(Math.max(...foes.map(a=>a.z))-Math.min(...foes.map(a=>a.z))>1,'natural staggered depth');
 assert.ok(new Set(foes.map(a=>a.z)).size===4,'not a uniform lineup');
 assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
- ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[24,24,12,12]);
+ ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[22,22,12,12]);
 const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
  'enemy-2':{left:.32,right:.69,top:0,bottom:1},
  'enemy-3':{left:.30,right:.76,top:0,bottom:1},

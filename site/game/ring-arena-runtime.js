@@ -145,7 +145,7 @@
  // One stationary eye pivot; only camera.focus rotates. The real room,
  // animated L2D quads, world-space shadow geometry and targets project via
  // exactly ONE shared cameraVP. Never reposition individual layers.
- const LOOK_LIMITS=Object.freeze({yawLeftDeg:24,yawRightDeg:24,
+ const LOOK_LIMITS=Object.freeze({yawLeftDeg:22,yawRightDeg:22,
   pitchUpDeg:12,pitchDownDeg:12});
  function immersiveCamera(base,cursorX=0,cursorY=0){
   const x=clamp(Number(cursorX)||0,-1,1),y=clamp(Number(cursorY)||0,-1,1);
@@ -411,6 +411,7 @@
   'float theta=asin(clamp(aP.x/32.0,-.975,.975));',
   'vec3 n=uSurface==0?vec3(0.0,1.0,0.0):',
   'uSurface==2?vec3(0.0,-1.0,0.0):',
+  'uSurface==3?vec3(aP.x>0.0?-1.0:1.0,0.0,0.0):',
   'normalize(vec3(.7*sin(theta),0.0,(uMode>.5?-1.0:1.0)*cos(theta)));',
   'vIrradiance=ringIrradiance(aP,n);',
   'vFloorSpecular=0.0;',
@@ -646,7 +647,7 @@
   return {u:sign*wallArcMeters(angle)/tile+9,v:depth/tile};
  }
  function worldMesh(gl){
-  const floorOuter=[],floorInner=[],backInner=[],backOuter=[],ceilingOuter=[],ceilingInner=[];
+  const floorOuter=[],floorInner=[],backInner=[],backOuter=[],ceilingOuter=[],ceilingInner=[],wingOuter=[],wingInner=[];
   const push=(to,a,b,c)=>{for(const v of [a,b,c])to.push(...v,...(v.length===3?[0,0]:[]));};
   const N=SPEC.arcSegments,D=SPEC.surfaceSegments;
   const theta=i=>-SPEC.wallArcHalfAngle+i*2*SPEC.wallArcHalfAngle/N;
@@ -680,7 +681,27 @@
    }
   };
   addWall(backInner,'inner');addWall(backOuter,'outer');
-  return [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner].map(arr=>{
+  // Fill the actual left/right end walls of the curved 3D shop, closed from
+  // the backdrop all the way to the same physical floor/ceiling front edge.
+  // A ±24° pan used to expose empty black space where the arc mesh stopped.
+  const addWing=(dest,whichMode,side)=>{
+   const angle=side*SPEC.wallArcHalfAngle;
+   const texW=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
+   const sign=whichMode==='outer'?1:-1;
+   const baseU=sign*wallArcMeters(angle)/texW+WALL_TEXTURE.repeats/2;
+   const vertex=(depth,y)=>{
+    const p=curvedSurfacePoint(whichMode,angle,depth,y);
+    return [p.x,p.y,p.z,baseU+sign*side*depth/texW,y/SPEC.wallHeight];
+   };
+   for(let j=0;j<D;j++){
+    const z0=SPEC.surfaceDepth*j/D,z1=SPEC.surfaceDepth*(j+1)/D;
+    const a=vertex(z0,0),b=vertex(z0,SPEC.wallHeight);
+    const c=vertex(z1,SPEC.wallHeight),d=vertex(z1,0);
+    push(dest,a,b,c);push(dest,a,c,d);
+   }
+  };
+  for(const side of [-1,1]){addWing(wingOuter,'outer',side);addWing(wingInner,'inner',side);}
+  return [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner,wingOuter,wingInner].map(arr=>{
    const buffer=gl.createBuffer(),data=new Float32Array(arr);
    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
    return {buffer,count:data.length/5};
@@ -797,7 +818,7 @@
    :previewPose==='level'
     ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
     :'./assets/characters/protagonist-back-combat-3q-final.webp';
-  let gl=null,world=null,portrait=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,quad=null;
+  let gl=null,world=null,portrait=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,wingOuter=null,wingInner=null,quad=null;
    let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null;
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
    const surfaceMaterials=Object.fromEntries(Object.entries(SURFACE_TEXTURES)
@@ -817,7 +838,7 @@
     ['uVP','uCenter','uSize','uLevel','uEmergency','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
     ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uClipUv','uTexture','uStrength','uContact']);
-   [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner]=worldMesh(gl);
+   [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner,wingOuter,wingInner]=worldMesh(gl);
    shadowGrid=projectedShadowMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -1560,6 +1581,7 @@
    drawWorld(mode==='outer'?floorOuter:floorInner,0,vp);
    drawWorld(mode==='outer'?ceilingOuter:ceilingInner,2,vp);
    drawWorld(mode==='outer'?backInner:backOuter,1,vp);
+   drawWorld(mode==='outer'?wingOuter:wingInner,3,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
    drawFixtures(vp);
    const all=visibleActors(mode);
@@ -1632,7 +1654,10 @@
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,0).eye.x,
      lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
-   roomSurfaces:Object.fromEntries(Object.entries(surfaceMaterials).map(([kind,s])=>
+   sideWalls:{vertices:(mode==='outer'?wingOuter:wingInner)?.count||0,
+     kind:'real-textured-end-wall-mesh',closedSides:2,
+     physicalDepth:SPEC.surfaceDepth},
+    roomSurfaces:Object.fromEntries(Object.entries(surfaceMaterials).map(([kind,s])=>
      [kind,{url:s.url,ready:s.ready,error:s.error,
       size:s.image?.naturalWidth?[s.image.naturalWidth,s.image.naturalHeight]:null,
       vertices:kind==='floor'?(mode==='outer'?floorOuter:floorInner)?.count:
