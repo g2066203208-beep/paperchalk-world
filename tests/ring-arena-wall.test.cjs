@@ -105,6 +105,8 @@ assert.match(src,/uLampLevels\[6\]/,'each fluorescent lamp independently switcha
 // actual same curved 3D ceiling, in BOTH camera orientations. The texture,
  // environment and original L2D sprites must share one light rig.
 assert.equal(ring.LIGHTING.kind,'world-space-six-motivated-fluorescents');
+assert.ok(ring.LIGHTING.depths[1]-ring.LIGHTING.depths[0]>4.0,
+ 'ceiling lamp rows must have enough real depth for legible cast silhouette geometry');
 for(const mode of ['outer','inner']){
  const rig=ring.lightRig(mode);
  assert.equal(rig.count,6);assert.equal(rig.positions.length,18);
