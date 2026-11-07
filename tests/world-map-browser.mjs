@@ -88,7 +88,14 @@ try{
  assert.equal(cardSizes.nearbyCityOverlap,0,
   'island and peninsula city cards must be large and independently tappable');
  await shot('28-dot-world-mobile-overview.png');
- await page.locator('.pw-dot-city[data-city="misaki"]').click();
+ const misakiBox=await page.locator('.pw-dot-city[data-city="misaki"]').boundingBox();
+ assert.ok(misakiBox,'岬崎市 must remain visible in mobile overview');
+ const mx=misakiBox.x+misakiBox.width/2;
+ const my=misakiBox.y+Math.min(25,misakiBox.height/3);
+ const hitCity=await page.evaluate(({mx,my})=>
+  document.elementFromPoint(mx,my)?.closest('.pw-dot-city')?.dataset.city||null,{mx,my});
+ assert.equal(hitCity,'misaki','mobile city touch point must not be intercepted');
+ await page.mouse.click(mx,my);
  await popup.waitFor();
  assert.match(await popup.innerText(),/岬崎市/);
  await shot('29-dot-world-mobile-city-menu.png');
