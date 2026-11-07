@@ -280,18 +280,48 @@
    colors:new Float32Array(colors),count:6});
  }
  const lightRigs=Object.freeze({outer:lightRig('outer'),inner:lightRig('inner')});
+ const LIGHT_STATES=Object.freeze(['on','partial','flicker','outage']);
+ function lightingFrame(state='on',seconds=0,whichMode='outer'){
+  const valid=LIGHT_STATES.includes(state)?state:'on';
+  const levels=new Float32Array(6).fill(1);
+  if(valid==='partial'){
+   levels.set([1,.0,.95,.3,0,.65]);
+  }else if(valid==='outage'){
+   levels.fill(0);
+  }else if(valid==='flicker'){
+   const p=((Number(seconds)||0)%6.2+6.2)%6.2;
+   // Faulty ballast: sporadic 50-300ms interruptions and a rare long dip.
+   levels[1]=(p>1.62&&p<1.78)||(p>1.9&&p<2.25)||(p>4.86&&p<5.24)?0.0:1.0;
+   levels[4]=p>4.83&&p<5.36?.07:1.0;
+  }
+  const emergency=valid==='outage'?1:valid==='flicker'?.12:0;
+  const ambient=valid==='outage'?[.017,.024,.038]:
+   valid==='partial'?[.11,.15,.19]:[...LIGHTING.coolAmbient];
+  const door=curvedSurfacePoint(whichMode,angleForArcMeters(-3.5),.12,
+   SPEC.ceilingHeight-.34);
+  return {state:valid,levels,ambient:new Float32Array(ambient),
+   emergencyPosition:new Float32Array([door.x,door.y,door.z]),
+   emergencyPower:emergency};
+ }
  const lightingGLSL=[
   'uniform vec3 uLampPositions[6];uniform vec3 uLampColors[6];',
+  'uniform float uLampLevels[6];uniform vec3 uAmbient;',
+  'uniform vec3 uEmergencyPosition;uniform float uEmergencyPower;',
   'vec3 ringIrradiance(vec3 p,vec3 n){',
-  'vec3 ambient=vec3(.47,.53,.62);',
+  'vec3 ambient=uAmbient;',
   'vec3 normal=normalize(n);',
   'for(int i=0;i<6;i++){',
   'vec3 d=uLampPositions[i]-p;',
   'float ds=max(dot(d,d),.01);',
   'float cosine=max(dot(normal,d*inversesqrt(ds)),0.0);',
-  'float attenuation=1.0/(1.0+ds*.14);',
-  'ambient+=uLampColors[i]*(cosine*.92+.075)*attenuation;',
-  '}return ambient;',
+  'float attenuation=1.0/(1.0+ds*.22);',
+  'ambient+=uLampColors[i]*uLampLevels[i]*(cosine*1.25+.025)*attenuation;',
+  '}',
+  'vec3 e=uEmergencyPosition-p;',
+  'float ed=max(dot(e,e),.01);',
+  'float ec=max(dot(normal,e*inversesqrt(ed)),0.0);',
+  'ambient+=vec3(.75,.10,.055)*uEmergencyPower*(ec+.09)/(1.0+.35*ed);',
+  'return ambient;',
   '}',
   'vec3 ringTone(vec3 paint,vec3 irradiance){',
   'vec3 linearPaint=pow(clamp(paint,0.0,1.0),vec3(2.2));',
@@ -335,7 +365,7 @@
   worldColorGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
-  'void main(){vec3 color;float emissive=0.0;',
+  'void main(){vec3 color;',
   'if(uSurface==0){',
   'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
   'float radial=line(r/32.0,40.0,.016);float spokes=line(a,78.0,.013);',
@@ -348,17 +378,6 @@
   '}else if(uSurface==2){',
   'color=vec3(.46,.48,.51);',
   'if(uCeilingReady>.5)color=texture2D(uCeilingTexture,fract(vWallUv)).rgb*.83;',
-  // The ceiling bitmap only has 0.95m panels. Lights are independent:
-  // approximately 1.1m long, 0.17m wide, spaced 5.7m x 4.75m.
-  // Never stamp 2 fixtures onto every 1.9m source texture repetition.
-  'vec2 lampUv=abs(fract((vWallUv+vec2(1.5,0.0))/vec2(3.0,2.5))-vec2(.5));',
-  'float housing=(1.0-smoothstep(.022,.027,lampUv.x))',
-  '*(1.0-smoothstep(.135,.144,lampUv.y));',
-  'float emitting=(1.0-smoothstep(.015,.019,lampUv.x))',
-  '*(1.0-smoothstep(.113,.124,lampUv.y));',
-  'color=mix(color,vec3(.18,.19,.21),housing*.88);',
-  'color=mix(color,vec3(.75,.78,.75),emitting*.60);',
-  'emissive=emitting;',
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
   'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
@@ -375,7 +394,7 @@
   '}',
   '}',
   'color=ringTone(color,vIrradiance);',
-  'if(uSurface==2)color=mix(color,vec3(.96,.95,.87),emissive*.90);',
+  // Emissive ceiling fixtures are separate world-space 3D geometry.
   'gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
@@ -422,6 +441,29 @@
   'rgb*=1.0-clamp(uDim,0.0,.80);',
   'gl_FragColor=vec4(rgb,t.a);}'
  ].join('\n');
+ // A physical luminaire is independent 3D geometry, not a periodically
+ // repeating bright pixel painted into the ceiling texture. It remains
+ // dark when its light level is zero and emits only while powered.
+ const fixtureVertex=[
+  'precision highp float;attribute vec2 aUv;',
+  'uniform mat4 uVP;uniform vec3 uCenter;',
+  'varying vec2 vUv;',
+  'void main(){vUv=aUv;',
+  'vec3 pos=uCenter+vec3((aUv.x-.5)*.21,-.018,(aUv.y-.5)*1.08);',
+  'gl_Position=uVP*vec4(pos,1.0);}'
+ ].join('\\n');
+ const fixtureFragment=[
+  'precision mediump float;varying vec2 vUv;',
+  'uniform float uLevel;uniform float uEmergency;',
+  'void main(){',
+  'float edge=max(abs(vUv.x-.5)*2.0,abs(vUv.y-.5)*2.0);',
+  'float core=1.0-smoothstep(.68,.85,edge);',
+  'vec3 dark=vec3(.10,.12,.14);',
+  'vec3 lit=mix(vec3(.88,.91,.89),vec3(1.0,.95,.83),core);',
+  'vec3 color=mix(dark,lit,clamp(uLevel,0.0,1.0));',
+  'if(uEmergency>.5)color=mix(vec3(.17,.025,.025),vec3(.95,.08,.035),uLevel);',
+  'gl_FragColor=vec4(color,1.0);}'
+ ].join('\\n');
  // Lightweight ground contact: one blended elliptical quad under each
  // visible actor, leaving all original L2D textures and lights untouched.
  const shadowVertex=[
