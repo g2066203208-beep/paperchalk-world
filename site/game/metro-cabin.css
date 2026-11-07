@@ -121,3 +121,29 @@
 @media(prefers-reduced-motion:reduce){
  #pw-metro-cabin *{transition:none!important}
 }
+
+/* Shared ring-scene WebGL paints depth and shadows; only actual 2D
+   L2D passenger content and compact transit verbs sit above it. */
+#pw-metro-cabin .pw-cabin-live-actors{
+ position:absolute;inset:0;z-index:2;pointer-events:none;
+}
+#pw-metro-cabin .pw-cabin-l2d-seat{
+ position:absolute;top:31%;width:15%;height:54%;
+ transform:translateX(-50%);overflow:hidden;pointer-events:none
+}
+#pw-metro-cabin .pw-cabin-l2d-seat img,
+#pw-metro-cabin .pw-cabin-l2d-seat canvas{
+ display:block;position:absolute;inset:0;width:100%;height:100%;
+ object-fit:contain;pointer-events:none
+}
+#pw-metro-cabin .pw-cabin-foreground{
+ position:absolute;inset:0;width:100%;height:100%;
+ z-index:3;pointer-events:none
+}
+#pw-metro-cabin[data-renderer="ring-3d"]{
+ background:transparent!important
+}
+#pw-metro-cabin[data-renderer="ring-3d"]>.pw-cabin-canvas,
+#pw-metro-cabin[data-renderer="ring-3d"]>.pw-cabin-foreground{
+ display:none!important
+}
