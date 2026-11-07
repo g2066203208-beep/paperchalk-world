@@ -7,10 +7,12 @@ const env=require('../site/game/scene-environments.js');
 test('the train is a replaceable 3D environment asset on the original battle geometry',()=>{
  const metro=env.get('metro'),shop=env.get('convenience');
  assert.ok(metro&&shop);
- assert.equal(metro.wall.width,2048);
- assert.equal(metro.wall.height,1024);
- assert.match(metro.wall.url,/cabin-master\.webp$/);
+ assert.equal(metro.wall.width,2172);
+ assert.equal(metro.wall.height,724);
+ assert.match(metro.wall.url,/cabin-master-illustrated\.webp$/);
  assert.notEqual(metro.wall.url,shop.wall.url);
+ assert.equal(metro.wall.alphaWindows,true);
+ assert.ok(Math.abs(metro.geometry.widthMeters/metro.geometry.heightMeters-(2172/724))<.06);
  for(const id of ['metro','convenience']){
   const e=env.get(id);
   for(const file of [e.wall.url,e.floor,e.ceiling])
