@@ -107,6 +107,14 @@ try{
  assert.equal(await page.locator('#daily-life-ui').count(),0);
  assert.equal(await page.locator('#camera-player-root').evaluate(e=>getComputedStyle(e).display),'none');
  await snap('05-quiet-bedroom.png');
+ // Capture the actual new map even if a later story interaction fails.
+ await page.locator('#quick-map').click();
+ await page.locator('.pw-transit-map').waitFor({state:'visible'});
+ await snap('05a-minimal-photo-transit-map.png');
+ await page.locator('.pw-transit-place[data-place="school"]').click();
+ await page.locator('.pw-transit-popup:not([hidden])').waitFor();
+ await snap('05b-contextual-location-menu.png');
+ await dismissSurface();
  await tapScene('hall');
  await waitScene('entrance');
  await tapScene('exit');
