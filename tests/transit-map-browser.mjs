@@ -35,6 +35,40 @@ try{
  assert.equal(await page.locator('.pw-transit-place').count(),11);
  assert.ok(await page.locator('.pw-transit-line-hit').count()>=10);
  assert.ok(await page.locator('.pw-transit-rail-glint').count()>=10);
+ const gridCheck=await page.evaluate(()=>{
+  const metro=window.PaperWorldMetro,geo=window.PaperWorldMetroGeometry;
+  const element=document.querySelector('.pw-transit-map');
+  const rect=element.getBoundingClientRect();
+  const space=geo.layout(rect.width,rect.height);
+  const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const dotError=[...element.querySelectorAll('.pw-transit-grid-dot')]
+   .map(n=>distance({x:+n.getAttribute('cx'),y:+n.getAttribute('cy')},
+     geo.point(+n.dataset.column,+n.dataset.row,space)));
+  const markerError=Object.entries(metro.STATIONS).map(([id,st])=>{
+   const n=element.querySelector('.pw-transit-stop-group[data-stop="'+id+'"]');
+   const p=geo.stationPoint(st,space);
+   const move=n?.getAttribute('transform')?.match(/translate\\(([^,]+),([^\\)]+)\\)/);
+   return move?distance(p,{x:+move[1],y:+move[2]}):999;
+  });
+  const photoError=[...element.querySelectorAll('.pw-transit-place[data-photograph=true]')]
+   .map(n=>{
+    const st=metro.STATIONS[n.dataset.place],b=n.getBoundingClientRect();
+    const slot=geo.point(st.gx,st.gy-1,space);
+    return distance(slot,{x:b.left+b.width/2-rect.left,y:b.top+b.height/2-rect.top});
+   });
+  return {grid:element.dataset.grid,cell:space.cell,
+   dots:dotError.length,stations:markerError.length,photos:photoError.length,
+   dotError:Math.max(...dotError),stationError:Math.max(...markerError),
+   photoError:Math.max(...photoError)};
+ });
+ assert.equal(gridCheck.grid,'12x6');
+ assert.equal(gridCheck.dots,91);
+ assert.equal(gridCheck.stations,11);
+ assert.equal(gridCheck.photos,6);
+ assert.ok(gridCheck.dotError<.05,JSON.stringify(gridCheck));
+ assert.ok(gridCheck.stationError<.05,JSON.stringify(gridCheck));
+ assert.ok(gridCheck.photoError<1.5,JSON.stringify(gridCheck));
+ console.log('STRICT GRID ALIGNMENT',JSON.stringify(gridCheck));
  await shot('19-transit-map-desktop.png');
  await page.locator('.pw-transit-place[data-place="school"]').click();
  await page.locator('.pw-transit-popup:not([hidden])').waitFor();
