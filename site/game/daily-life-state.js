@@ -14,7 +14,14 @@
   const START_UTC=Date.UTC(2026,3,13);
   const WEEK=['周日','周一','周二','周三','周四','周五','周六'];
   const HOUR=60, NIGHT=22*HOUR, DAY_START=6*HOUR;
+  const ATLAS=typeof window!=='undefined'?window.PaperWorldAtlas:null;
+  const ATLAS_LOCATIONS=Object.fromEntries((ATLAS?.POIS||[])
+    .filter(p=>!['entrance','school','convenience','cafe','mall','park',
+      'hospital','station','police'].includes(p.id))
+    .map(p=>[p.id,{label:p.name,group:'世界',scene:null,
+      open:0,close:1320,travel:30}]));
   const LOCATIONS=Object.freeze({
+    ...ATLAS_LOCATIONS,
     bedroom:{label:'卧室',group:'家',scene:'bedroom',open:0,close:1440,travel:10},
     'living-room':{label:'客厅',group:'家',scene:'living-room',open:0,close:1440,travel:10},
     kitchen:{label:'厨房',group:'家',scene:'kitchen',open:0,close:1440,travel:10},
@@ -285,12 +292,19 @@
       if(location===state.location)return fail('已经在这里');
       if(!isOpen(location,state.minute))return fail('该地点现在尚未开放');
       const current=LOCATIONS[state.location];
-      if(current.group==='家'&&dest.group==='城区'&&state.location!=='entrance')
+      if(current.group==='家'&&dest.group!=='家'&&state.location!=='entrance')
         return fail('先去玄关，从家门口出门后才能前往城区');
-      if(current.group==='城区'&&dest.group==='家'&&location!=='entrance')
+      if(current.group!=='家'&&dest.group==='家'&&location!=='entrance')
         return fail('从城区回家需要先经过玄关');
-      const cost=(current.group==='家'&&dest.group==='家')?10:
+      let cost=(current.group==='家'&&dest.group==='家')?10:
         dest.group==='家'?current.travel:dest.travel;
+      if((current.group==='世界'||dest.group==='世界')&&ATLAS){
+        const fromCity=ATLAS.POI_BY_ID[state.location]?.city||'kirihama';
+        const toCity=ATLAS.POI_BY_ID[location]?.city||'kirihama';
+        const route=ATLAS.route(fromCity,toCity);
+        if(!route)return fail('该区域暂时没有可用的城际公共交通线路');
+        cost=Math.max(18,Math.round(route.minutes+18));
+      }
       if(state.energy<3)return fail('太疲倦，先休息');
       if(!isOpen(location,state.minute+cost))return fail('到达时该地点已经关闭');
       const can=spend(cost);if(!can.ok)return can;
