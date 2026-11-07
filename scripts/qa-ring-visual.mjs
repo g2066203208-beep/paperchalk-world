@@ -44,11 +44,26 @@ try{
   ready=true;
  }catch(e){errors.push('ready condition: '+e.message)}
  const inspect=()=>page.evaluate(()=>window.PaperWorldGameRingArena?.inspect?.());
+ // Require actual ORIGINAL L2D updates for all four independent actors,
+ // not a single almost-transparent first-frame texture that happens to count
+ // as 'ready'. A stable 4+ GPU frame handshake avoids the ghost-on-load shot.
+ if(ready){
+  await page.waitForFunction(()=>{
+   const a=window.PaperWorldGameRingArena?.inspect?.();
+   return a?.l2dReady===5&&['enemy-1','enemy-2','enemy-3','enemy-4']
+    .every(id=>(a.l2dFrames?.[id]||0)>=4);
+  },null,{timeout:60000});
+  await page.waitForTimeout(220);
+ }
  report.outer=await inspect();
  await page.screenshot({path:resolve(out,'01-outer-1917x906.png')});
  if(ready){
   await page.locator('[data-mode="inner"]').click();
-  await page.waitForTimeout(250);
+  await page.waitForFunction(()=>{
+   const a=window.PaperWorldGameRingArena?.inspect?.();
+   return a?.mode==='inner'&&a?.l2dReady===5;
+  },null,{timeout:20000});
+  await page.waitForTimeout(220);
   report.inner=await inspect();
   await page.screenshot({path:resolve(out,'02-inner-1917x906.png')});
   if(report.inner.mode!=='inner')errors.push('inner mode did not switch');
