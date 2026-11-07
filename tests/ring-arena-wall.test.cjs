@@ -134,6 +134,20 @@ for(const mode of ['outer','inner']){
  assert.ok([...off.ambient].every(x=>x<.04));
  assert.ok(flicker.levels[1]<.1);
  assert.equal(off.emergencyPosition.length,3);
+ const story0=ring.lightingFrame('horror',0,mode);
+ const storyFault=ring.lightingFrame('horror',1.3,mode);
+ const storyFailure=ring.lightingFrame('horror',2.8,mode);
+ const storyReturn=ring.lightingFrame('horror',6.0,mode);
+ assert.deepEqual([...story0.levels],[1,1,1,1,1,1]);
+ assert.ok(storyFault.levels[1]<.1&&storyFault.levels[4]<.1,
+  'ballast strobe needs a visibly failed pair of lamps');
+ assert.deepEqual([...storyFailure.levels],[0,0,0,0,0,0],
+  'horror beat must truly kill all six luminaires, not draw an overlay');
+ assert.equal(storyFailure.emergencyPower,1,
+  'late red emergency light must be independently controllable');
+ assert.ok([...storyReturn.levels].some(x=>x>0)&&
+  [...storyReturn.levels].some(x=>x===0),
+  'partial restoration must not silently bring all lights back');
 }
 assert.match(src,/uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;/,
  '3D vertex shader must use highp int matching the fragment shader');
@@ -148,7 +162,16 @@ assert.match(src,/ringTone\(color,vIrradiance\)/,
 assert.doesNotMatch(src,/color=ringShade\(color,vWorld,normal\)/);
 assert.match(src,/ringShade\(rgb,vWorld,pseudoNormal\)/,
  'original L2D portraits must still receive pixel-wise dynamic lighting');
-assert.match(src,/uShadowLight/);
+assert.doesNotMatch(src,/function drawContactShadows\(/,
+ 'fake circular contact shadow path must be gone');
+assert.doesNotMatch(src,/shadowVertex=\[/,
+ 'ellipse sprite shader must be removed entirely');
+assert.match(src,/gl\.uniform1f\(projectedShadow\.uContact,0\)/,
+ 'project main original-L2D silhouette');
+assert.match(src,/gl\.uniform1f\(projectedShadow\.uContact,1\)/,
+ 'shoe contact must also use L2D alpha instead of synthetic circle');
+assert.match(src,/float shoes=smoothstep\(\.68,\.94,vUv\.y\)/,
+ 'contact shader must be limited to real shoe / trouser alpha');
 assert.equal(ring.SURFACE_TEXTURES.floor,'./assets/ring-arena/convenience-floor.svg');
 assert.equal(ring.SURFACE_TEXTURES.ceiling,'./assets/ring-arena/convenience-ceiling.svg');
 for(const mode of ['outer','inner']){
