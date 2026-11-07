@@ -55,17 +55,37 @@ try{
   },null,{timeout:60000});
   await page.waitForTimeout(220);
  }
+
+ const setLighting=state=>page.evaluate(s=>window.PaperWorldGameRingArena.setLighting(s),state);
  report.outer=await inspect();
- await page.screenshot({path:resolve(out,'01-outer-1917x906.png')});
+ await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});
  if(ready){
+  await setLighting('partial');
+  await page.waitForTimeout(150);
+  report.partial=await inspect();
+  await page.screenshot({path:resolve(out,'02-outer-partial-blackout-1917x906.png')});
+  await setLighting('flicker');
+  await page.waitForFunction(()=>{
+   const l=window.PaperWorldGameRingArena?.inspect()?.lighting;
+   return l?.state==='flicker'&&l.levels[1]<.1;
+  },null,{timeout:9000});
+  report.flicker=await inspect();
+  await page.screenshot({path:resolve(out,'03-outer-flicker-moment-1917x906.png')});
+  await setLighting('outage');
+  await page.waitForTimeout(160);
+  report.outage=await inspect();
+  await page.screenshot({path:resolve(out,'04-outer-all-lights-off-1917x906.png')});
   await page.locator('[data-mode="inner"]').click();
   await page.waitForFunction(()=>{
    const a=window.PaperWorldGameRingArena?.inspect?.();
    return a?.mode==='inner'&&a?.l2dReady===5;
   },null,{timeout:20000});
-  await page.waitForTimeout(220);
+  report.innerOutage=await inspect();
+  await page.screenshot({path:resolve(out,'05-inner-lights-off-1917x906.png')});
+  await setLighting('on');
+  await page.waitForTimeout(150);
   report.inner=await inspect();
-  await page.screenshot({path:resolve(out,'02-inner-1917x906.png')});
+  await page.screenshot({path:resolve(out,'06-inner-full-lights-1917x906.png')});
   if(report.inner.mode!=='inner')errors.push('inner mode did not switch');
  }
  report.geometry={
@@ -78,8 +98,8 @@ try{
  };
  report.ready=ready;report.errors=errors;report.pageErrors=pageErrors;
  writeFileSync(resolve(out,'report.json'),JSON.stringify(report,null,2));
- if(!ready||report.outer?.wallMaterial?.heightMeters!==3.2||
-  report.outer?.wallMaterial?.repeats!==8||
+ if(!ready||report.outer?.wallMaterial?.heightMeters!==2.85||
+  report.outer?.wallMaterial?.repeats!==9||
   !report.outer?.roomSurfaces?.floor?.ready||!report.outer?.roomSurfaces?.ceiling?.ready||
   !report.inner?.roomSurfaces?.floor?.ready||!report.inner?.roomSurfaces?.ceiling?.ready||
   report.outer?.roomSurfaces?.floor?.vertices<15000||
@@ -88,16 +108,27 @@ try{
   report.outer?.l2dReady!==5||report.inner?.l2dReady!==5||
   Math.abs(report.geometry.floorPanelMeters-.6)>.001||
   Math.abs(report.geometry.ceilingPanelMeters-.95)>.001||
-  report.geometry.floorRoofDepthMeters!==18||
+  report.geometry.floorRoofDepthMeters!==10||
   report.outer?.lighting?.count!==6||report.inner?.lighting?.count!==6||
   report.outer?.lighting?.positions?.length!==18||
   report.inner?.lighting?.positions?.length!==18||
   report.outer?.safety?.gap<.07||report.inner?.safety?.gap<.07||
-  report.outer?.safety?.foes?.[0]?.heightFraction<.40||
-  report.inner?.safety?.foes?.[0]?.heightFraction<.43||
+  report.outer?.safety?.foes?.[0]?.heightFraction<.48||
+  report.inner?.safety?.foes?.[0]?.heightFraction<.52||
+  report.outer?.lighting?.physicallyGroundedShadows<5||
+  report.inner?.lighting?.physicallyGroundedShadows<5||
+  report.partial?.lighting?.state!=='partial'||
+  report.partial?.lighting?.levels?.filter(x=>x===0).length<2||
+  report.flicker?.lighting?.state!=='flicker'||
+  report.flicker?.lighting?.levels?.[1]>.1||
+  report.outage?.lighting?.state!=='outage'||
+  report.outage?.lighting?.levels?.some(x=>x>.001)||
+  report.outage?.lighting?.physicallyGroundedShadows!==0||
+  report.outage?.lighting?.emergencyPower!==1||
+  report.innerOutage?.lighting?.state!=='outage'||
   pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+errors.join('; '));
- console.log('PASS: six position-matched 3D lights illuminate L2D and real surfaces; all five characters 25% larger with safe 1917x906 framing');
+ console.log('PASS six 1917x906 real screenshots: 2.85m compact room; full/partial/flicker/outage; accurate L2D alpha shadows vanish with lights; five uncropped actors');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }
