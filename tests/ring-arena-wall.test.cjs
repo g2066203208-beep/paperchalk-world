@@ -204,7 +204,7 @@ assert.match(src,/function maskEmbeddedFogForBattle\(tex,ctx,size,id\)/,
  'prepainted opaque fog must be excluded from the temporary battle texture');
 assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
  'fog removal must be an alpha mask, not paint-over on source art');
-assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id\)/,
+assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id,/,
  'real animated source must pass through non-destructive battle mask before upload');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
  ring.STAGING.outer.enemies[0][0]-1.19)<1e-7,
