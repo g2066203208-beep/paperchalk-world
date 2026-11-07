@@ -105,10 +105,10 @@ try{
   centers.reduce((sum,x)=>sum+x,0)/4>.15&&
   centers.reduce((sum,x)=>sum+x,0)/4<.40,
   'four distinct fighters should spread symmetrically around visual center');
- assert.ok(groundProof.hero.left< -1.35&&groundProof.hero.right<-.28&&groundProof.hero.right>-.36,
+ assert.ok(groundProof.hero.left< -.99&&groundProof.hero.right<-.20&&groundProof.hero.right>-.28,
   'foreground heroine can crop naturally on the left without obscuring any centered enemy');
- assert.ok(groundProof.hero.top>.56,
-  'default hero head should now be visibly closer, not an undersized distant silhouette');
+ assert.ok(groundProof.hero.top>.47,
+  'the heroine is enlarged yet fully composed, with head and axe inside the default shot');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
   'weapon and enemy1 cannot overlap');
  const foemeter=groundProof.enemySizes.map((h,i)=>
