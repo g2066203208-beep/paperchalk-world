@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'site/game/ring-arena-runtime.js'
+      - 'site/dev/character-bridge.js'
       - 'site/assets/ring-arena/**'
       - 'site/assets/characters/female-07/**'
       - 'site/index.html'

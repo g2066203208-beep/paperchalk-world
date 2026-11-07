@@ -42,7 +42,18 @@ try{
     s?.roomSurfaces?.floor?.ready&&s?.roomSurfaces?.ceiling?.ready;
   },null,{timeout:85000});
   ready=true;
- }catch(e){errors.push('ready condition: '+e.message)}
+ }catch(e){
+  errors.push('ready condition: '+e.message);
+  report.l2dBoot=await page.evaluate(()=>Object.fromEntries(
+   ['player','enemy','enemy2','enemy3','enemy4'].map(slot=>{
+    const a=window.PaperchalkL2D?.get(slot);
+    return [slot,{present:!!a,state:a?.root?.dataset?.l2dState||null,
+     mode:a?.root?.dataset?.l2dMode||null,rootHidden:a?.root?.hidden,
+     imgHidden:a?.img?.hidden,characterId:a?.img?.dataset?.characterId||null,
+     clipFrame:a?.clip?.frame??null}];
+   })
+  ));
+ }
  const inspect=()=>page.evaluate(()=>window.PaperWorldGameRingArena?.inspect?.());
  // Require actual ORIGINAL L2D updates for all four independent actors,
  // not a single almost-transparent first-frame texture that happens to count

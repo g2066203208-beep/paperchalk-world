@@ -398,7 +398,12 @@ async function init(){
    if(fallback)assigned[key]={id:fallback,side:'front'};
   }
  }
- for(const key of GAME_SLOTS){
+ // Prioritize the five actually visible original L2D battle actors before
+ // the three hidden reserve allies. Serial loading avoids huge parallel
+ // decoded RGBA spikes on mobile while preventing late enemy #4 first-frame.
+ const visibleFirst=['player','enemy','enemy2','enemy3','enemy4',
+  'ally2','ally3','ally4'];
+ for(const key of visibleFirst){
   const a=assigned[key];if(a?.id&&catalog.has(a.id)){
    try{await assign(key,a.id,a.side,false)}
    catch(e){console.error('[L2D] 游戏启动同步失败',e);note('L2D 加载失败：'+e.message);}

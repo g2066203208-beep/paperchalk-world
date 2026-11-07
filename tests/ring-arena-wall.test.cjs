@@ -273,4 +273,7 @@ assert.match(gameHtml,/const cameraFrameDt=Math.min\(\.25,Math.max\(0,rawFrameDt
  'mouse-look easing must use actual elapsed time even with slow software WebGL');
 assert.match(gameHtml,/ringScene\.render\(dt,currentX,currentY\)/,
  'only one shared 3D world-camera receives smoothed cursor direction');
+const bridgeSource=fs.readFileSync(path.resolve(__dirname,'../site/dev/character-bridge.js'),'utf8');
+assert.match(bridgeSource,/const visibleFirst=\['player','enemy','enemy2','enemy3','enemy4'/,
+ 'all five visible 3D battle L2D must load before non-visible reserve allies');
 console.log('PASS compact 2.85m convenience-store bay, nine aspect-correct wall sections, four closer actors and switchable shadow-casting lights');
