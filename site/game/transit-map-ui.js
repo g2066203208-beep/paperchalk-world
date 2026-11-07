@@ -21,45 +21,61 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
  const svg=document.createElementNS(NS,'svg');
  svg.classList.add('pw-transit-lines');svg.setAttribute('viewBox','0 0 100 100');
  svg.setAttribute('preserveAspectRatio','none');map.appendChild(svg);
- const popup=create('div','pw-transit-popup');popup.hidden=true;popup.setAttribute('role','group');
- let busy=false;
+ const popup=create('div','pw-transit-popup');popup.hidden=true;
+ popup.setAttribute('role','group');
+ let busy=false,popupOrigin=null;
  const clear=()=>{
-   popup.hidden=true;
-   map.querySelectorAll('[data-selected]').forEach(n=>n.dataset.selected='false');
+  popup.hidden=true;popupOrigin=null;
+  map.querySelectorAll('[data-selected]').forEach(n=>n.dataset.selected='false');
  };
- map.addEventListener('click',e=>{if(e.target===map||e.target===svg)clear()});
- function menu(e,name,details,actions){
-  clear();popup.replaceChildren(create('strong','pw-transit-popup-name',name));
-  if(details)popup.append(create('small','pw-transit-popup-sub',details));
-  const group=create('div','pw-transit-popup-buttons');
-  for(const action of actions||[]){
-    const btn=create('button','pw-transit-menu-item'+(action.primary?' is-primary':''),action.label);
-    btn.type='button';btn.disabled=!!action.disabled;
-    btn.addEventListener('click',ev=>{ev.stopPropagation();action.run()});group.append(btn);
-  }
-  popup.append(group);map.append(popup);popup.hidden=false;
-  const rect=map.getBoundingClientRect(),w=Math.min(210,Math.max(148,rect.width*.24));
+ map.addEventListener('click',e=>{
+  if(e.target===map||e.target===svg)clear();
+ });
+ function positionPopup(){
+  if(popup.hidden||!popupOrigin)return;
+  const rect=map.getBoundingClientRect();
+  const w=Math.min(210,Math.max(148,rect.width*.24));
   popup.style.width=w+'px';
   const h=popup.offsetHeight||122;
-  const x=e.clientX-rect.left,y=e.clientY-rect.top;
-  // Node popovers sit OUTSIDE the photograph's full bounding box.
-  // Clicking on a photo's left/right edge must never cover that same photo.
-  const locationCard=e.currentTarget?.closest?.('.pw-transit-place');
-  if(locationCard){
-   const anchor=locationCard.getBoundingClientRect();
+  const clamp=(v,min,max)=>Math.max(min,Math.min(Math.max(min,max),v));
+  const card=popupOrigin.card;
+  if(card?.isConnected){
+   const anchor=card.getBoundingClientRect();
    const leftEdge=anchor.left-rect.left,rightEdge=anchor.right-rect.left;
    const roomRight=rect.width-rightEdge-10;
    const roomLeft=leftEdge-10;
-   const preferRight=roomRight>=w||roomRight>=roomLeft;
-   const left=preferRight?rightEdge+12:leftEdge-w-12;
-   popup.style.left=Math.max(6,Math.min(rect.width-w-6,left))+'px';
-   popup.style.top=Math.max(38,Math.min(rect.height-h-7,
-     anchor.top-rect.top+anchor.height*.5-h*.5))+'px';
+   const right=roomRight>=w||roomRight>=roomLeft;
+   const x=right?rightEdge+12:leftEdge-w-12;
+   popup.style.left=clamp(x,5,rect.width-w-5)+'px';
+   popup.style.top=clamp(anchor.top-rect.top+anchor.height*.5-h*.5,
+     34,rect.height-h-7)+'px';
   }else{
-   popup.style.left=Math.max(6,Math.min(rect.width-w-6,
-    (x+w+22>rect.width?x-w-15:x+15)))+'px';
-   popup.style.top=Math.max(38,Math.min(rect.height-h-7,y-h*.33))+'px';
+   const x=popupOrigin.x*rect.width;
+   const y=popupOrigin.y*rect.height;
+   popup.style.left=clamp((x+w+24>rect.width?x-w-16:x+16),
+     5,rect.width-w-5)+'px';
+   popup.style.top=clamp(y-h*.35,34,rect.height-h-7)+'px';
   }
+ }
+ function menu(e,name,details,commands){
+  clear();
+  popup.replaceChildren(create('strong','pw-transit-popup-name',name));
+  if(details)popup.append(create('small','pw-transit-popup-sub',details));
+  const group=create('div','pw-transit-popup-buttons');
+  for(const command of commands||[]){
+   const btn=create('button','pw-transit-menu-item'+(command.primary?' is-primary':''),command.label);
+   btn.type='button';btn.disabled=!!command.disabled;
+   btn.addEventListener('click',event=>{event.stopPropagation();command.run()});
+   group.append(btn);
+  }
+  popup.append(group);map.append(popup);popup.hidden=false;
+  const rect=map.getBoundingClientRect();
+  popupOrigin={
+   card:e.currentTarget?.closest?.('.pw-transit-place')||null,
+   x:(e.clientX-rect.left)/Math.max(rect.width,1),
+   y:(e.clientY-rect.top)/Math.max(rect.height,1)
+  };
+  positionPopup();
  }
  // The rail canvas is drawn in real CSS-pixel coordinates, so 90° corners
  // remain circular at every aspect ratio. No skewed diagonals or sharp joins.
@@ -146,6 +162,7 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
    group.setAttribute('transform','translate('+
     (station.x*width/100)+','+(station.y*height/100)+')');
   }
+  positionPopup();
  }
  // One compact route label per colored service, attached to its geography.
  const keyPositions={a:[60,35],b:[57,85],c:[20,85]};
