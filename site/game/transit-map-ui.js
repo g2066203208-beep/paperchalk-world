@@ -63,11 +63,14 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   const core=createStroke('pw-transit-rail',line.color);
   const glint=createStroke('pw-transit-rail-glint','#e4eeed');
   const hit=createStroke('pw-transit-line-hit','transparent');
-  hit.setAttribute('role','button');
+  hit.setAttribute('role','button');hit.setAttribute('tabindex','0');
   hit.setAttribute('aria-label','乘坐'+line.name);
   hit.style.pointerEvents='stroke';
   hit.addEventListener('pointerenter',()=>group.dataset.hover='true');
   hit.addEventListener('pointerleave',()=>group.dataset.hover='false');
+  hit.addEventListener('keydown',event=>{
+   if(event.key==='Enter'||event.key===' '){event.preventDefault();hit.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:hit.getBoundingClientRect().x+hit.getBoundingClientRect().width/2,clientY:hit.getBoundingClientRect().y+hit.getBoundingClientRect().height/2}));}
+  });
   hit.addEventListener('click',event=>{
    event.stopPropagation();
    const options=metro.boardingChoices(current).find(v=>v.id===line.id);
@@ -104,7 +107,7 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   const makeCircle=(cls)=>{
    const c=document.createElementNS(NS,'circle');
    c.classList.add(cls);c.setAttribute('r',cls==='pw-transit-stop-halo'?13:
-     station.transfer?8:5.5);
+     cls==='pw-transit-transfer-core'?3.2:station.transfer?8:5.5);
    group.appendChild(c);return c;
   };
   if(current===id)makeCircle('pw-transit-stop-halo');
