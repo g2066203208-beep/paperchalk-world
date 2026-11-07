@@ -1,0 +1,67 @@
+// Focused real-browser transit map screenshot QA. State fixture only moves from
+// bedroom to the real home entrance, then all map/rail/train actions are clicks.
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
+const base=process.env.PAPERCHALK_BROWSER_BASE||'http://127.0.0.1:8765/';
+const out=process.env.PAPERCHALK_CAPTURE_DIR||'artifacts/overworld';
+fs.mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFactor:1});
+page.setDefaultTimeout(17000);
+const errors=[];
+page.on('pageerror',error=>errors.push(String(error)));
+const shot=async name=>page.screenshot({path:path.join(out,name),animations:'disabled',timeout:16000});
+try{
+ await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
+ await page.locator('#menu-start').click();
+ await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom');
+ await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false');
+ const num=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
+ for(let i=0;i<num;i++)await page.locator('#next-line').click();
+ await page.waitForFunction(()=>window.PaperWorldQuickTools?.phone?.isOpen?.());
+ await page.evaluate(()=>{
+   window.PaperWorldQuickTools.close();
+   const g=window.PaperWorldDailyLifeUI.engine;
+   const result=g.travel('entrance');
+   if(!result.ok)throw Error(result.reason);
+ });
+ await page.locator('#quick-map').click();
+ const map=page.locator('.pw-transit-map');
+ await map.waitFor({state:'visible'});
+ assert.equal(await page.locator('.pw-photo-map-info').count(),0);
+ assert.equal(await page.locator('.pw-transit-place').count(),11);
+ assert.ok(await page.locator('.pw-transit-line-hit').count()>=10);
+ await shot('19-transit-map-desktop.png');
+ await page.locator('.pw-transit-place[data-place="school"]').click();
+ await page.locator('.pw-transit-popup:not([hidden])').waitFor();
+ assert.equal(await page.locator('.pw-transit-menu-item').count(),2);
+ await shot('20-near-photo-actions.png');
+ await page.setViewportSize({width:844,height:390});
+ await page.waitForTimeout(250);
+ await shot('21-transit-map-mobile.png');
+ await page.setViewportSize({width:1440,height:810});
+ await page.waitForTimeout(250);
+ const mapRect=await map.boundingBox();
+ await page.mouse.click(mapRect.x+mapRect.width*.225,mapRect.y+mapRect.height*.295);
+ await page.locator('.pw-transit-popup:not([hidden])').waitFor();
+ const label=await page.locator('.pw-transit-popup').innerText();
+ assert.match(label,/住宅线/);
+ assert.match(label,/学园前/);
+ await shot('22-near-line-directions.png');
+ await page.locator('.pw-transit-popup .pw-transit-menu-item.is-primary').first().click();
+ await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro?.onboard===true);
+ await page.locator('#pw-metro-cabin:not([hidden])').waitFor();
+ await page.waitForTimeout(400);
+ await shot('23-procedural-metro-carriage.png');
+ assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
+ await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
+ assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'school');
+ await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'下车'}).click();
+ await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro?.onboard===false);
+ assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location),'school');
+ assert.deepEqual(errors.filter(v=>/ReferenceError|TypeError|SyntaxError/.test(v)),[]);
+ console.log(JSON.stringify({PASS:true,frames:5,endingStation:'school'}));
+}finally{await browser.close()}
