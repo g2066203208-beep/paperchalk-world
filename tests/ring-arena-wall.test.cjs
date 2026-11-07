@@ -40,7 +40,7 @@ assert.match(src,/texture2D\(uWallTexture,vec2\(clamp\(fract\(vWallUv.x\)/);
 assert.match(src,/gl\.vertexAttribPointer\(world\.aUv,2,gl\.FLOAT,false,20,12\)/);
 assert.match(src,/return \{buffer,count:data\.length\/5\};/,'five-component geometry must render only actual vertices');
 assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighting material');
-assert.match(src,/drawWorld\(ceiling,2,vp\)/,'ceiling triangles must be rendered');
+assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
 assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[5.7,5.7,5.7,5.7]);
