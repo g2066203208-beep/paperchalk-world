@@ -267,7 +267,7 @@ for(const side of ['outer','inner']){
    'mouse is allowed to rotate view but must never translate world camera');
   assert.equal(looked.fov,base.fov);
   // At extreme yaw players may look away from enemies toward the shop wall.
-  const roomPoint=ring.project({x:0,y:1.5,z:0},looked);
+  const roomPoint=ring.project(looked.focus,looked);
   assert.ok(roomPoint.valid,'real world must remain visible under camera turn');
   assert.ok(Math.abs(ring.cameraPitchDeg(looked))<=12.0001);
  }
