@@ -268,6 +268,16 @@
   '}else if(uSurface==2){',
   'color=vec3(.46,.48,.51);',
   'if(uCeilingReady>.5)color=texture2D(uCeilingTexture,fract(vWallUv)).rgb*.83;',
+  // The ceiling bitmap only has 0.95m panels. Lights are independent:
+  // approximately 1.1m long, 0.17m wide, spaced 5.7m x 4.75m.
+  // Never stamp 2 fixtures onto every 1.9m source texture repetition.
+  'vec2 lampUv=abs(fract(vWallUv/vec2(3.0,2.5))-vec2(.5));',
+  'float housing=(1.0-smoothstep(.022,.027,lampUv.x))',
+  '*(1.0-smoothstep(.135,.144,lampUv.y));',
+  'float emitting=(1.0-smoothstep(.015,.019,lampUv.x))',
+  '*(1.0-smoothstep(.113,.124,lampUv.y));',
+  'color=mix(color,vec3(.18,.19,.21),housing*.88);',
+  'color=mix(color,vec3(.87,.88,.83),emitting*.94);',
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
   'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
