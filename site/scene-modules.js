@@ -4,7 +4,7 @@
   'use strict';
   const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   const IMAGE = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:webp|png|jpe?g)$/;
-  const RESERVED = new Set(['menu', 'classroom', 'classroom-box', 'protagonist', 'school', 'convenience', 'cafe', 'mall', 'park']);
+  const RESERVED = new Set(['menu', 'classroom', 'classroom-box', 'protagonist']);
   const LAYERS = Object.freeze({
     menu: Object.freeze({player: false, enemy: false, fog: true}),
     story: Object.freeze({player: true, enemy: true, fog: true}),
@@ -55,9 +55,11 @@
       '三维战斗镜头：近景主角、同排等间距的四名 L2D 敌人', '战斗构图 · 四敌人',
       'environment', {layers:Object.freeze({player:true,enemy:true,fog:true}),
         kind:'five-face-3d',version:'four-enemy-straight-row-v1'});
+    const seen = new Set();
     for (const entry of catalog) {
       if (!entry || !SLUG.test(entry.id) || !IMAGE.test(entry.file)
-          || RESERVED.has(entry.id) || result[entry.id]) {
+          || RESERVED.has(entry.id) || (result[entry.id] && result[entry.id].kind !== 'surface-world')
+          || seen.has(entry.id)) {
         throw new Error('Invalid or duplicated scene catalog entry: ' + String(entry?.id));
       }
       if (!Number.isSafeInteger(entry.width) || !Number.isSafeInteger(entry.height)
@@ -70,11 +72,15 @@
       if (entry.file.slice(0, entry.file.lastIndexOf('.')) !== entry.id) {
         throw new Error('Scene ID and asset filename mismatch: ' + entry.id);
       }
+      const cityStage=result[entry.id]?.kind === 'surface-world';
       result[entry.id] = define(
         entry.id, './assets/scenes/' + entry.file,
-        entry.title + '：空室内场景', entry.title, 'environment',
-        {width: entry.width, height: entry.height, version: entry.version}
+        entry.title + '：场景', entry.title, 'environment',
+        {width: entry.width, height: entry.height, version: entry.version,
+         ...(cityStage?{kind:'surface-world',unlitEnvironment:true,
+           layers:Object.freeze({player:false,enemy:false,fog:true})}:{})}
       );
+      seen.add(entry.id);
     }
     return Object.freeze(result);
   }
