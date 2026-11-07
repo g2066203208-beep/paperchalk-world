@@ -79,8 +79,9 @@ try{
  if(report.outer?.lighting?.shadowFilter!=='13-tap-distance-dependent-area-light-penumbra')
   throw Error('Actual WebGL scene is still using old hard-edge shadows');
  await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});
- // Actual mouse movement should rotate ONE stationary camera, not any actor,
- // floor, wall, light or shadow anchor. Capture two real opposing look poses.
+ // Actual mouse motion must ORBIT the heroine's original 3D world root while
+ // rotating her body-facing ArtMesh and all real projected alpha shadows.
+ // Enemy world coordinates never shift, and no scene layers are translated.
  if(ready){
   const anchors=JSON.stringify(report.outer.actors),origin=report.outer.camera.eye;
   await page.mouse.move(75,435);
@@ -96,9 +97,24 @@ try{
   if(JSON.stringify(report.mouseLeft.actors)!==anchors||
      JSON.stringify(report.mouseRight.actors)!==anchors)
    validationErrors.push('mouse look mutated physical character world anchors');
-  if(JSON.stringify(report.mouseLeft.camera.eye)!==JSON.stringify(origin)||
-     JSON.stringify(report.mouseRight.camera.eye)!==JSON.stringify(origin))
-   validationErrors.push('mouse look translated the eye instead of rotating');
+  const shoulderPivot=report.outer.actors.allies[0];
+  const baseBoom=Math.hypot(origin.x-shoulderPivot.x,origin.z-shoulderPivot.z);
+  const leftBoom=Math.hypot(report.mouseLeft.camera.eye.x-shoulderPivot.x,
+   report.mouseLeft.camera.eye.z-shoulderPivot.z);
+  const rightBoom=Math.hypot(report.mouseRight.camera.eye.x-shoulderPivot.x,
+   report.mouseRight.camera.eye.z-shoulderPivot.z);
+  if(Math.abs(leftBoom-baseBoom)>.005||Math.abs(rightBoom-baseBoom)>.005)
+   validationErrors.push('camera boom detached from grounded heroine');
+  if(Math.hypot(report.mouseLeft.camera.eye.x-origin.x,
+     report.mouseLeft.camera.eye.z-origin.z)<.02||
+     Math.hypot(report.mouseRight.camera.eye.x-origin.x,
+     report.mouseRight.camera.eye.z-origin.z)<.02)
+   validationErrors.push('mouse look is still a fixed eye, not a TPS orbit');
+  if(report.mouseLeft.cameraLook.mode!=='hero-root-tps-shoulder-rig'||
+     !report.mouseRight.cameraLook.orbitAroundHero||
+     !(report.mouseLeft.cameraLook.heroYawDeg<-.5&&
+       report.mouseRight.cameraLook.heroYawDeg>.5))
+   validationErrors.push('hero body is not turning with the real orbiting shoulder camera');
   if(!(report.mouseLeft.cameraLook.yawDeg<-1.2&&
        report.mouseRight.cameraLook.yawDeg>1.2))
    validationErrors.push('cursor does not turn camera in the correct direction');
@@ -215,7 +231,7 @@ try{
   report.restored?.mode!=='outer'||
   validationErrors.length||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+validationErrors.concat(pageErrors).join('; '));
- console.log('PASS real Chromium centered 4 foes, original L2D, fixed 3D camera and red existing ceiling fixtures');
+ console.log('PASS true close TPS camera orbit, heroine body yaw follow, original L2D four foes, real alpha shadows and red ceiling lamps');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }

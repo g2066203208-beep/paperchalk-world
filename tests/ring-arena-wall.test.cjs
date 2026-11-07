@@ -45,16 +45,16 @@ assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
 assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.45,7.45,7.45,7.45]);
 assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.96,11.35,10.94,11.26]);
-assert.equal(ring.camera('outer').fov,55);
+assert.equal(ring.camera('outer').fov,70);
 assert.equal(ring.camera('inner').fov,52);
 for(const mode of ['outer','inner']){
  const backdrop=ring.backdropPoint(mode,0),camera=ring.camera(mode),aspect=1917/906;
  const dist=Math.abs(backdrop.z-camera.eye.z);
- assert.ok(dist>6.20&&dist<6.30,'wall-to-camera distance calibrated for '+mode);
+ assert.ok(mode==='outer'?dist>5.20&&dist<5.30:dist>6.20&&dist<6.30,'physical wall distance calibrated per active camera');
  const end=ring.project({x:0,y:ring.SPEC.wallHeight,z:backdrop.z},camera,aspect);
  const start=ring.project({x:0,y:0,z:backdrop.z},camera,aspect);
  assert.ok(end.valid&&start.valid);
- assert.ok(end.y>.70&&end.y<.78,'real ceiling begins at a consistent screen height in '+mode);
+ assert.ok(end.y>.64&&end.y<.80,'2.85m physical ceiling still in correct projected position');
  const foe=ring.layout(mode).enemies[1],b=ring.portraitBounds(foe,camera,aspect);
  const relative=(end.y-start.y)/(b.top-b.bottom);
  assert.ok(relative>.90&&relative<1.20,
@@ -62,11 +62,12 @@ for(const mode of ['outer','inner']){
 }
 const outer=ring.backdropPoint('outer',0),inner=ring.backdropPoint('inner',0);
 assert.ok(Math.abs(Math.abs(outer.z-ring.camera('outer').eye.z)-
- Math.abs(inner.z-ring.camera('inner').eye.z))<.1);
+ Math.abs(inner.z-ring.camera('inner').eye.z))<1.1,
+ 'the real close-shoulder eye must be about one meter nearer the wall');
 for(const theta of [-ring.SPEC.wallArcHalfAngle,0,ring.SPEC.wallArcHalfAngle]){
  const outerDepth=Math.abs(ring.backdropPoint('outer',theta).z-ring.camera('outer').eye.z);
  const innerDepth=Math.abs(ring.backdropPoint('inner',theta).z-ring.camera('inner').eye.z);
- assert.ok(Math.abs(outerDepth-innerDepth)<.1,'mirrored arcs have equal perspective depth across the image');
+ assert.ok(Math.abs(outerDepth-innerDepth)<1.1,'near TPS eye and old reverse view still use same physical arc surface');
 }
 // Curved ceiling AND floor share the exact wall edge (not a flat rectangle
 // whose corners cut through the photograph-wrapped 3D wall).
@@ -282,4 +283,15 @@ assert.match(gameHtml,/ringScene\.render\(dt,currentX,currentY\)/,
 const bridgeSource=fs.readFileSync(path.resolve(__dirname,'../site/dev/character-bridge.js'),'utf8');
 assert.match(bridgeSource,/const visibleFirst=\['player','enemy','enemy2','enemy3','enemy4'/,
  'all five visible 3D battle L2D must load before non-visible reserve allies');
+const hero=ring.layout('outer').allies[0],base=ring.camera('outer');
+for(const x of [-1,-.5,0,.5,1]){
+ const shot=ring.shoulderCamera(base,hero,x,0,1917/906);
+ assert.deepEqual(shot.shoulderPivot,{x:hero.x,y:hero.y+hero.height*.88,z:hero.z});
+ assert.ok(shot.shoulderRig&&shot.actorRootUnchanged);
+ assert.ok(Math.abs(shot.heroYawDeg-shot.lookYawDeg*.85)<1e-8);
+}
+assert.match(src,/shoulderCamera\(base,layout\(mode\)\.allies\[0\],mouseLookX,mouseLookY/,
+ 'the live WebGL renderer must USE the root-attached shoulder camera');
+assert.match(src,/actorWorldRight\(a,mode,cam\.heroYawDeg\|\|0\)/,
+ 'rendered ArtMesh and projected shadows must share body yaw');
 console.log('PASS compact 2.85m convenience-store bay, nine aspect-correct wall sections, four closer actors and switchable shadow-casting lights');

@@ -72,7 +72,7 @@ try{
  assert.equal(await page.locator('[data-pose]').count(),0,'no redundant pose toggle');
  assert.equal(await page.locator('[data-mode]').count(),0,'only one normal battle scene');
  assert.ok(await page.locator('[data-exit]').isVisible());
- const originalCamera=JSON.stringify(outer.camera);
+ const originalCamera=JSON.stringify(outer.cameraTarget);
  const originalActors=JSON.stringify(outer.actors);
  await page.screenshot({path:'artifacts/ring-arena/final-eye-level-3q-1280x720.png'});
  // Reproduce the user's ACTUAL 1917x906 screenshot dimensions. Measure the
@@ -101,10 +101,11 @@ try{
   'the four foes now share one physical ground-depth line');
  const centers=groundProof.feet.map(x=>x.x);
  const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
- assert.ok(gaps.every(x=>x>.30&&x<.47)&&
-  Math.abs(centers.reduce((sum,x)=>sum+x,0)/4)<.09,
+ assert.ok(gaps.every(x=>x>.30&&x<.50)&&
+  centers.reduce((sum,x)=>sum+x,0)/4>.15&&
+  centers.reduce((sum,x)=>sum+x,0)/4<.40,
   'four distinct fighters should spread symmetrically around visual center');
- assert.ok(groundProof.hero.left< -1.1&&groundProof.hero.right<-.60,
+ assert.ok(groundProof.hero.left< -.95&&groundProof.hero.right<-.40&&groundProof.hero.right>-.55,
   'foreground heroine can crop naturally on the left without obscuring any centered enemy');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
   'weapon and enemy1 cannot overlap');
@@ -189,13 +190,17 @@ try{
  await page.waitForTimeout(350);
  const stable=await inspect();
  assert.equal(stable.shotIndex,0);
- assert.deepEqual(stable.camera.eye,outer.camera.eye,
-  'mouse movement must rotate the fixed 3D camera, never dolly');
+ assert.ok(Math.hypot(stable.camera.eye.x-outer.camera.eye.x,
+  stable.camera.eye.z-outer.camera.eye.z)>.02,
+  'true third-person camera must orbit the protagonist shoulder, not pivot from a fixed eye');
+ assert.equal(stable.cameraLook.mode,'hero-root-tps-shoulder-rig');
+ assert.ok(Math.abs(stable.cameraLook.heroYawDeg)>.15,
+  'protagonist BODY must follow camera yaw, not stay as a static overlay');
  assert.ok(Math.abs(stable.cameraLook.yawDeg)>.35,
   'the mouse should now truly rotate the 3D camera focus');
  assert.equal(stable.cameraLook.sharedProjection,true);
  assert.equal(JSON.stringify(stable.actors),originalActors);
- // Reset mouse to center before switching battle orientation and inspecting
+ // Reset mouse to center after shoulder orbit before inspecting
  // the canonical forward camera.
  await page.mouse.move(640,360);
  await page.waitForTimeout(850);

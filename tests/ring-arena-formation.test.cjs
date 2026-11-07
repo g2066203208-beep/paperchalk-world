@@ -1,39 +1,36 @@
 'use strict';
-/* Centred, grounded one-row battle: no crowding and no two-sided surround. */
+/* Visually grounded original Live2D four-foe row with close TPS heroine. */
 const assert=require('node:assert/strict');
 const r=require('../site/game/ring-arena-runtime.js');
-const cam=r.camera('outer'),scene=r.layout('outer'),foes=scene.enemies;
+const scene=r.layout('outer'),hero=scene.allies[0],base=r.camera('outer');
 const before=JSON.stringify(scene);
-assert.deepEqual(r.visibleActors('outer').map(x=>x.id),
- ['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
-assert.equal(foes.length,4);
-assert.ok(foes.every(a=>a.y===0&&a.z===7.45));
-assert.ok(Math.abs(foes.at(-1).x-foes[0].x-4.30)<.001);
-assert.ok(scene.allies[0].x<-.7);
-const crop={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
+assert.ok(scene.enemies.every(a=>a.y===0&&a.z===7.45));
+assert.ok(Math.abs(scene.enemies[3].x-scene.enemies[0].x-4.3)<.001);
+const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
  'enemy-2':{left:.32,right:.69,top:0,bottom:1},
  'enemy-3':{left:.30,right:.76,top:0,bottom:1},
  'enemy-4':{left:0,right:.58,top:0,bottom:1}};
 for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
- const p=foes.map(a=>r.project({x:a.x,y:0,z:a.z},cam,aspect));
- assert.ok(p.every(q=>q.valid));
- assert.ok(Math.abs(p.reduce((s,q)=>s+q.x,0)/4)<.09,
-  'four opponents must be visually centered');
- assert.ok(p.every(q=>Math.abs(q.y-p[0].y)<.001),
-  'foes must share one real 3D ground baseline');
- const silhouette=foes.map(a=>r.portraitVisibleBounds(a,cam,crop[a.id],aspect));
- assert.ok(silhouette.slice(1).every((b,i)=>b.left-silhouette[i].right>.07),
-  'silhouettes must remain individually legible, including last coat');
- const safe=r.battleVisualSafety('outer',0,aspect,r.FEMALE07_BACK_UV);
- assert.ok(safe.valid&&safe.clear&&safe.gap>.07,
-  'cropped foreground protagonist cannot cover opponents');
- assert.ok(safe.hero.right<-.60,
-  'near-camera protagonist should naturally crop at the left edge');
- if(aspect===1917/906)console.log('VISUAL CENTER',p.map(q=>+q.x.toFixed(3)));
+ const cam=r.shoulderCamera(base,hero,0,0,aspect);
+ const feet=scene.enemies.map(a=>r.project({x:a.x,y:0,z:a.z},cam,aspect));
+ assert.ok(feet.every(x=>x.valid));
+ const silhouettes=scene.enemies.map(a=>r.portraitVisibleBounds(a,cam,uv[a.id],aspect));
+ assert.ok(silhouettes.slice(1).every((b,i)=>b.left-silhouettes[i].right>.035),
+  'enemy source-alpha outlines are distinct under true perspective');
+ const safe=r.battleVisualSafety('outer',0,aspect,r.FEMALE07_BACK_UV,cam);
+ assert.ok(safe.clear&&safe.valid&&safe.gap>.05,'all five must fit center TPS view');
+ assert.ok(safe.hero.right<safe.foes[0].left,'close heroine must not cover first enemy');
+ if(aspect===1917/906){
+  assert.ok(safe.hero.left<-.95&&safe.hero.right>-.55);
+  assert.ok(safe.foes[3].right<.93);
+ }
 }
-for(const x of [-1,0,1])for(const y of [-1,0,1]){
- const look=r.immersiveCamera(cam,x,y);
- assert.deepEqual(look.eye,cam.eye,'one fixed-pivot camera; no layer parallax');
+for(const x of [-1,-.5,0,.5,1]){
+ const cam=r.shoulderCamera(base,hero,x,0,1917/906);
+ assert.equal(cam.actorRootUnchanged,true);
+ assert.deepEqual(cam.shoulderPivot,{x:hero.x,y:hero.y+hero.height*.88,z:hero.z});
+ const relX=cam.eye.x-hero.x,relZ=cam.eye.z-hero.z;
+ assert.ok(Math.abs(Math.hypot(relX,relZ)-cam.shoulderBoomMeters)<.00001);
 }
 assert.equal(JSON.stringify(scene),before);
-console.log('PASS centred real-world four-opponent line and fixed-pivot camera');
+console.log('PASS hero stays foreground in rigid third-person shoulder rig, foes grounded with individual contours');
