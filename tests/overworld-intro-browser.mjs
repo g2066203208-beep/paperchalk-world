@@ -29,7 +29,7 @@ const openMap=async()=>{
  assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'城区交通');
 };
 const tapScene=async action=>{
- await page.locator('#scene').click({position:{x:80,y:80}});
+ await page.mouse.click(115,155);
  await page.locator('#overworld-scene-prompts [data-action="'+action+'"]').waitFor({state:'visible'});
  await page.locator('#overworld-scene-prompts [data-action="'+action+'"]').click();
 };
@@ -91,7 +91,7 @@ try{
  await page.locator('#phone-app-copy [data-contact="female2"]').click();
  assert.match(await page.locator('#phone-app-copy').innerText(),/亲密度/);
  await snap('04-female-two-relationship.png');
- await page.locator('#scene').click({position:{x:65,y:65}});
+ await page.mouse.click(75,90);
  await page.waitForFunction(()=>!window.PaperWorldQuickTools.phone.isOpen());
  assert.equal(await page.locator('#daily-life-ui').count(),0);
  assert.equal(await page.locator('#camera-player-root').evaluate(e=>getComputedStyle(e).display),'none');
