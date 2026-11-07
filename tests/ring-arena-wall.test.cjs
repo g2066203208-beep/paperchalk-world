@@ -43,8 +43,8 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[5.82,5.82,5.82,5.82]);
-assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[12.9,12.9,12.9,12.9]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[6.966,6.966,6.966,6.966]);
+assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[11.75,11.75,11.75,11.75]);
 assert.equal(ring.camera('outer').fov,55);
 assert.equal(ring.camera('inner').fov,52);
 for(const mode of ['outer','inner']){
@@ -57,7 +57,7 @@ for(const mode of ['outer','inner']){
  assert.ok(end.y>.65&&end.y<.80,'real ceiling begins at a consistent screen height in '+mode);
  const foe=ring.layout(mode).enemies[1],b=ring.portraitBounds(foe,camera,aspect);
  const relative=(end.y-start.y)/(b.top-b.bottom);
- assert.ok(relative>1.25&&relative<1.65,
+ assert.ok(relative>1.00&&relative<1.45,
   'a 3.2m wall must not make 1.6m enemies look like miniature people in '+mode+': '+relative);
 }
 const outer=ring.backdropPoint('outer',0),inner=ring.backdropPoint('inner',0);
@@ -91,8 +91,35 @@ const ceilingSource=fs.readFileSync(path.resolve(__dirname,
  '../site/assets/ring-arena/convenience-ceiling.svg'),'utf8');
 assert.doesNotMatch(ceilingSource,/fill="url\(#lamp\)"/,
  'ceiling texture cannot contain two lamps repeated every 1.9 meters');
-assert.match(src,/vec2 lampUv=abs\(fract\(vWallUv\/vec2\(3\.0,2\.5\)\)/,
+assert.match(src,/vec2 lampUv=abs\(fract\(\(vWallUv\+vec2\(1\.5,0\.0\)\)\/vec2\(3\.0,2\.5\)\)/,
  'roof shader should place luminaires separately on 5.7 x 4.75m spacing');
+// Real-time light fixtures must occupy the physical emissive centers of the
+// actual same curved 3D ceiling, in BOTH camera orientations. The texture,
+ // environment and original L2D sprites must share one light rig.
+assert.equal(ring.LIGHTING.kind,'world-space-six-motivated-fluorescents');
+for(const mode of ['outer','inner']){
+ const rig=ring.lightRig(mode);
+ assert.equal(rig.count,6);assert.equal(rig.positions.length,18);
+ assert.equal(rig.colors.length,18);
+ for(let i=0;i<rig.count;i++){
+  assert.ok(Math.abs(rig.positions[i*3+1]-(ring.SPEC.ceilingHeight-.07))<.001);
+  const arc=ring.LIGHTING.columns[i%3];
+  const depth=ring.LIGHTING.depths[Math.floor(i/3)];
+  const angle=ring.angleForArcMeters(arc);
+  const geom=ring.curvedSurfacePoint(mode,angle,depth,ring.LIGHTING.height);
+  assert.ok(Math.abs(geom.x-rig.positions[i*3])<.00001);
+  assert.ok(Math.abs(geom.z-rig.positions[i*3+2])<.00001);
+  const uv=ring.curvedSurfaceUV(mode,angle,depth,'ceiling');
+  const frac=x=>x-Math.floor(x);
+  assert.ok(Math.abs(frac((uv.u+1.5)/3)-.5)<.0001);
+  assert.ok(Math.abs(frac(uv.v/2.5)-.5)<.0001);
+ }
+}
+assert.match(src,/uLampPositions\[6\]/);
+assert.match(src,/uLampColors\[6\]/);
+assert.match(src,/ringShade\(color,vWorld,normal\)/);
+assert.match(src,/ringShade\(rgb,vWorld,pseudoNormal\)/);
+assert.match(src,/uShadowLight/);
 assert.equal(ring.SURFACE_TEXTURES.floor,'./assets/ring-arena/convenience-floor.svg');
 assert.equal(ring.SURFACE_TEXTURES.ceiling,'./assets/ring-arena/convenience-ceiling.svg');
 for(const mode of ['outer','inner']){
