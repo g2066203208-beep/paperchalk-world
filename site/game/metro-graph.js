@@ -1,91 +1,107 @@
-/* Paperchalk World — a shared schematic subway graph.
- * Pure data and deterministic shortest routes; no geography image baked in.
- * Named transfer nodes exist even when a station scene is not authored.
- */
+/* Paperchalk World / transport network: authored route data, not a map image.
+   A visual line is also a clickable, directional, physical train service.
+   "Ring" is a true closed route: it has no artificial terminal. */
 (function(global){
 'use strict';
 const STATIONS=Object.freeze({
- entrance:{label:'住宅前',x:12,y:23},school:{label:'学园前',x:33,y:23},
- central:{label:'中央换乘站',x:53,y:23,transfer:true},
- convenience:{label:'商业街',x:79,y:23},
- cafe:{label:'咖啡街',x:40,y:53},mall:{label:'中央商场',x:68,y:53},
- park:{label:'河岸公园',x:87,y:73},
- hospital:{label:'医院前',x:14,y:74,locked:true},
- station:{label:'南站',x:41,y:74,locked:true},
- police:{label:'警察署前',x:67,y:74,locked:true}
+ entrance:{label:'住宅前',x:13,y:39},school:{label:'学园前',x:32,y:20},
+ central:{label:'中央换乘站',x:51,y:43,transfer:true},
+ convenience:{label:'商业街',x:79,y:20},
+ cafe:{label:'咖啡街',x:28,y:64},mall:{label:'中央商场',x:79,y:48},
+ park:{label:'河岸公园',x:79,y:73},
+ northgate:{label:'北街口',x:55,y:12},
+ hospital:{label:'医院前',x:13,y:79,locked:true},
+ station:{label:'南站',x:42,y:84,locked:true},
+ police:{label:'警察署前',x:64,y:88,locked:true}
 });
 const LINES=Object.freeze([
- {id:'a',name:'住宅线',color:'#B6C79D',stops:['entrance','school','central','convenience']},
- {id:'b',name:'环城线',color:'#88B5C3',stops:['central','cafe','mall','park']},
- {id:'c',name:'南部线',color:'#B4A0B9',locked:true,stops:['hospital','station','police']}
+ Object.freeze({id:'a',name:'住宅线',color:'#D36C78',
+   stops:['entrance','school','central','convenience'],ring:false}),
+ Object.freeze({id:'b',name:'环城线',color:'#7EAFC6',
+   stops:['central','cafe','park','mall','convenience','northgate'],ring:true}),
+ Object.freeze({id:'c',name:'南部线',color:'#A0B699',
+   stops:['hospital','station','police'],ring:false,locked:true})
 ]);
+const getLine=id=>LINES.find(l=>l.id===id)||null;
+function neighbors(line,station){
+ if(!line||line.locked)return [];
+ const i=line.stops.indexOf(station);
+ if(i<0)return [];
+ const n=line.stops.length;
+ const forward=i+1<n?line.stops[i+1]:line.ring?line.stops[0]:null;
+ const backward=i>0?line.stops[i-1]:line.ring?line.stops[n-1]:null;
+ return [{direction:1,to:forward},{direction:-1,to:backward}]
+  .filter(x=>!!x.to).map(x=>({
+    ...x,name:STATIONS[x.to]?.label||x.to,
+    label:(line.ring?(x.direction===1?'顺时针 · ':'逆时针 · '):'')+
+      '往 '+(STATIONS[x.to]?.label||x.to)+' 方向'
+  }));
+}
+function nextStop(lineId,station,direction){
+ return neighbors(getLine(lineId),station).find(x=>x.direction===direction)?.to||null;
+}
+function boardingChoices(station){
+ if(!STATIONS[station]||STATIONS[station].locked)return [];
+ return LINES.filter(l=>!l.locked&&l.stops.includes(station))
+   .map(line=>({...line,directions:neighbors(line,station)}));
+}
 function path(from,to){
- if(!STATIONS[from]||!STATIONS[to])return null;
+ if(!STATIONS[from]||!STATIONS[to]||STATIONS[to].locked)return null;
  if(from===to)return {from,to,stops:[from],segments:[],transfers:[],lines:[],connections:0};
- const adjacency=new Map();
- function edge(a,b,line){
-   if(!adjacency.has(a))adjacency.set(a,[]);
-   adjacency.get(a).push({to:b,line});
- }
- for(const line of LINES){
-   if(line.locked)continue;
-   for(let i=0;i<line.stops.length-1;i++){
-     edge(line.stops[i],line.stops[i+1],line);
-     edge(line.stops[i+1],line.stops[i],line);
-   }
- }
- // Dijkstra state includes line to count a real platform transfer.
- const queue=[{at:from,line:null,cost:0,nodes:[from],segments:[],transfers:[]}];
- const seen=new Map();
- while(queue.length){
-   queue.sort((a,b)=>a.cost-b.cost);
-   const cur=queue.shift();
-   const key=cur.at+'|'+(cur.line?.id||'');
-   if(seen.has(key)&&seen.get(key)<=cur.cost)continue;
-   seen.set(key,cur.cost);
-   if(cur.at===to){
-     return {from,to,stops:cur.nodes,segments:cur.segments,
-       transfers:cur.transfers,lines:[...new Set(cur.segments.map(s=>s.line.name))],
-       connections:cur.segments.length};
-   }
-   for(const next of adjacency.get(cur.at)||[]){
-     const changing=!!cur.line&&cur.line.id!==next.line.id;
-     const cost=cur.cost+1+(changing?4:0);
-     queue.push({at:next.to,line:next.line,cost,
-       nodes:[...cur.nodes,next.to],
-       segments:[...cur.segments,{from:cur.at,to:next.to,line:next.line}],
-       transfers:changing?[...cur.transfers,cur.at]:cur.transfers});
+ const q=[{at:from,line:null,cost:0,stops:[from],segments:[],transfers:[]}];
+ const best=new Map();
+ while(q.length){
+   q.sort((a,b)=>a.cost-b.cost);
+   const current=q.shift();
+   const key=current.at+'|'+(current.line?.id||'');
+   if(best.has(key)&&best.get(key)<=current.cost)continue;
+   best.set(key,current.cost);
+   if(current.at===to)return {from,to,stops:current.stops,segments:current.segments,
+    transfers:current.transfers,lines:[...new Set(current.segments.map(v=>v.line.name))],
+    connections:current.segments.length};
+   for(const line of LINES){
+     if(line.locked||!line.stops.includes(current.at))continue;
+     for(const direction of neighbors(line,current.at)){
+       const change=!!current.line&&current.line.id!==line.id;
+       q.push({at:direction.to,line,cost:current.cost+1+(change?4:0),
+        stops:[...current.stops,direction.to],
+        segments:[...current.segments,{from:current.at,to:direction.to,line}],
+        transfers:change?[...current.transfers,current.at]:current.transfers});
+     }
    }
  }
  return null;
 }
 const TRANSIT_TALK=Object.freeze({
-  everyday:[
-   ['上班族','今天的电车比平时空了点。','高中生','听说学校附近新开了一家咖啡厅。'],
-   ['学生','作业交了没有？','学生','别提醒我，我在电车上补呢。'],
-   ['乘客','今早的路口又在施工。','乘客','好像这周已经修过两次了。']
-  ],
-  strange:[
-   ['乘客','昨天晚上那条路明明已经封了。','上班族','我也看到了，早上又恢复了。'],
-   ['高中生','有人拍到站牌上多出一站。','高中生','先别转，可能是剪辑。'],
-   ['乘客','街口摄像头又坏了？','乘客','公告说还在检修。']
-  ],
-  alert:[
-   ['乘客','听说有几条线路要临时改道。','工作人员','请留意站内通知。'],
-   ['学生','学校群又有人发那个视频。','学生','老师让我们别单独外出。'],
-   ['上班族','新闻说调查组已经到了。','乘客','但他们还没公布具体原因。']
-  ]
+ everyday:[
+  ['上班族','今天这趟车比平时空了些。','高中生','是啊，可能大家都改坐上一班了。'],
+  ['学生','我作业还没写完呢。','学生','等到学校再补应该来得及吧。'],
+  ['乘客','社区公园那边这两天在修路。','乘客','希望别耽误末班车。']
+ ],
+ strange:[
+  ['乘客','昨天晚上的站台上好像多了块牌子。','上班族','别是广告贴错了吧。'],
+  ['高中生','有人拍到站牌上多出一站。','高中生','先别传，可能是剪辑。'],
+  ['乘客','街口摄像头又坏了？','乘客','公告说还在检修。']
+ ],
+ alert:[
+  ['乘客','听说有几条线路要临时改道。','工作人员','请留意站内通知。'],
+  ['学生','学校群又有人发那个视频。','学生','老师让我们别单独出门。'],
+  ['上班族','新闻说调查组已经到了。','乘客','但他们还没公布具体原因。']
+ ]
 });
 function conversation(snapshot,route){
  const stage=Number(snapshot?.stage)||1;
  const bank=stage<=1?'everyday':stage<=2?'strange':'alert';
  const collection=TRANSIT_TALK[bank];
- const chosen=collection[((Number(snapshot?.day)||1)+route.connections+(route.transfers?.length||0))%collection.length];
+ const chosen=collection[((Number(snapshot?.day)||1)+
+   (route.connections||0)+(route.transfers?.length||0))%collection.length];
  return [
   {speaker:chosen[0],text:chosen[1]},
   {speaker:chosen[2],text:chosen[3]},
-  {speaker:'车厢屏幕',text:snapshot?.news?.[0]||'下一站请留意车内广播。'}
+  {speaker:'车厢新闻屏',text:snapshot?.news?.[0]||'请注意车厢内的广播。'}
  ];
 }
-global.PaperWorldMetro=Object.freeze({STATIONS,LINES,path,conversation});
+global.PaperWorldMetro=Object.freeze({
+ STATIONS,LINES,getLine,neighbors,nextStop,boardingChoices,path,conversation
+});
 })(window);
