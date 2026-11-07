@@ -438,14 +438,45 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
     (y+city.y*scale)>-100&&(y+city.y*scale)<v.h+100;
    node.hidden=!onScreen||scale>=1.55;
   }
+  // Atlas city cards have fixed *readable* screen sizes. Resolve the few
+  // close-city overlaps in screen space rather than making ALL cities tiny.
+  // Keep each card as close as possible to its snapped geographic anchor.
+  const cityCardWidth=scale<.55?96:166;
+  const cityCardHeight=scale<.55?82:125;
+  const placedCities=[];
+  for(const {node,city} of cityNodes){
+   if(node.hidden)continue;
+   const anchorX=x+location(city).x*scale;
+   const anchorY=y+location(city).y*scale;
+   const offsets=[[0,0],[0,-74],[0,74],[105,0],[-105,0],
+    [105,-65],[-105,-65],[105,65],[-105,65],
+    [0,-144],[0,144],[145,0],[-145,0]];
+   let best=null;
+   for(const [dx,dy] of offsets){
+    const cx=clamp(anchorX+dx,cityCardWidth/2+8,v.w-cityCardWidth/2-8);
+    const cy=clamp(anchorY+dy,cityCardHeight/2+48,v.h-cityCardHeight/2-8);
+    const overlap=placedCities.reduce((sum,q)=>{
+     const ow=Math.max(0,(cityCardWidth+q.w)/2+8-Math.abs(cx-q.x));
+     const oh=Math.max(0,(cityCardHeight+q.h)/2+6-Math.abs(cy-q.y));
+     return sum+ow*oh;
+    },0);
+    const score=overlap*6+Math.hypot(cx-anchorX,cy-anchorY)*.7;
+    if(!best||score<best.score)best={x:cx,y:cy,score};
+    if(overlap===0&&Math.hypot(cx-anchorX,cy-anchorY)<8)break;
+   }
+   if(best){
+    node.style.left=best.x+'px';node.style.top=best.y+'px';
+    placedCities.push({x:best.x,y:best.y,w:cityCardWidth,h:cityCardHeight});
+   }
+  }
   const occupied=[];
   for(const {node,poi} of worldNodes){
    const p=location(poi),px=x+p.x*scale,py=y+p.y*scale;
    let visible=scale>=(transitPOIs.has(poi.id)?1.9:2.45)&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
    // Real screen-space occupancy, not piles of overlapping photo cards.
    if(visible){
-    visible=!occupied.some(q=>Math.abs(q.x-px)<88&&
-      Math.abs(q.y-py)<74);
+    visible=!occupied.some(q=>Math.abs(q.x-px)<112&&
+      Math.abs(q.y-py)<93);
     if(visible)occupied.push({x:px,y:py});
    }
    node.hidden=!visible;
