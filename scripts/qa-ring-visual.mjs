@@ -45,6 +45,14 @@ try{
   await page.screenshot({path:resolve(out,'02-inner-1917x906.png')});
   if(report.inner.mode!=='inner')errors.push('inner mode did not switch');
  }
+ report.geometry={
+  floorPanelMeters:report.outer?.ring?.floorTileMeters/2,
+  ceilingPanelMeters:report.outer?.ring?.ceilingTileMeters/2,
+  ceilingHeightMeters:report.outer?.ring?.ceilingHeight,
+  floorRoofDepthMeters:report.outer?.ring?.surfaceDepth,
+  outerEnemyDepth:report.outer?.actors?.enemies?.[0]?.z,
+  innerEnemyDepth:report.inner?.actors?.enemies?.[0]?.z
+ };
  report.ready=ready;report.errors=errors;report.pageErrors=pageErrors;
  writeFileSync(resolve(out,'report.json'),JSON.stringify(report,null,2));
  if(!ready||report.outer?.wallMaterial?.heightMeters!==3.2||
@@ -52,9 +60,14 @@ try{
   !report.outer?.roomSurfaces?.floor?.ready||!report.outer?.roomSurfaces?.ceiling?.ready||
   !report.inner?.roomSurfaces?.floor?.ready||!report.inner?.roomSurfaces?.ceiling?.ready||
   report.outer?.roomSurfaces?.floor?.vertices<15000||
-  report.inner?.roomSurfaces?.ceiling?.vertices<15000||pageErrors.length)
+  report.inner?.roomSurfaces?.ceiling?.vertices<15000||
+  report.outer?.safety?.clear!==true||report.inner?.safety?.clear!==true||
+  report.outer?.l2dReady!==5||report.inner?.l2dReady!==5||
+  Math.abs(report.geometry.floorPanelMeters-.6)>.001||
+  Math.abs(report.geometry.ceilingPanelMeters-.95)>.001||
+  report.geometry.floorRoofDepthMeters!==18||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+errors.join('; '));
- console.log('PASS actual WebGL screenshots: two curved wall-matched rectangular image surfaces + 3.2m walls, both orientations, 5 actors');
+ console.log('PASS real 1917x906 WebGL: 0.60m floor, 0.95m roof, both camera modes safely display five original actors');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }
