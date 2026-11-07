@@ -121,7 +121,7 @@
     }
     function drawMap(){
       const snapshot=get();
-      frame.dataset.view='map';heading.textContent='点阵交通图';
+      frame.dataset.view='map';heading.textContent='城区交通';
       note.textContent=snapshot.calendar.time;
       foot.textContent='';
       const painter=global.PaperWorldTransitMap;
