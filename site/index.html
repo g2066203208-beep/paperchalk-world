@@ -775,7 +775,7 @@ body.mobile-mode.virtual-landscape #view{
 <link rel="stylesheet" href="./game/ring-arena-director.css?v=hit-result-hold-v26-20261106">
 <script src="./game/ring-arena-director.js?v=dd699-compact-v29c-20261107"></script>
 <script src="./game/scene-environments.js?v=metro3d-registry-20261107"></script>
-<script src="./game/ring-arena-runtime.js?v=metro-canvas-in-foreground-ui-v30-20261107"></script>
+<script src="./game/ring-arena-runtime.js?v=tps-shoulder-follow-v33-20261107"></script>
 <script src="./game/ring-arena-frame-inspector.js?v=dd699-camera-retreat-v29b-20261106" defer></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=phone-world-20261107-r2">
 <link rel="stylesheet" href="./game/phone-focus.css?v=phone-world-20261107-r2">
@@ -3329,7 +3329,7 @@ void main(){
       enemyDepth.style.transform='none';
       cameraPlayer.style.transform='none';
       ringScene.render(dt,currentX,currentY);
-      stage.dataset.cameraProfile='stationary-eye-mouse-look-webgl';
+      stage.dataset.cameraProfile='hero-root-tps-shoulder-webgl';
     }else if(stage.dataset.scene==='classroom-box'){
       // Genuine world X/Y/Z -> one pinhole perspective for BOTH surfaces and
       // the existing L2D player/enemy (same shoe coordinates on the floor).

@@ -120,13 +120,15 @@
   return [mode,Object.freeze([scene.allies[0],...scene.enemies])];
  })));
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
- // One fixed near-shoulder shot: the camera is level and its optical
- // axis is parallel to the row, avoiding false perspective-sized enemies.
+ // Single cinematic TPS right-shoulder rig. The authored rear ArtMesh is
+ // physically grounded and remains part of the SAME 3D world as all foes.
+ // The camera stays close behind her and ORBITS her world-space root;
+ // it is not a fixed eye with the heroine pushed out to the left.
  const SHOT_NAMES=Object.freeze(['固定左机位']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
-   id:'left',eyeX:.78,eyeZ:11.55,eyeY:1.50,
-   focusX:.78,focusY:1.50,focusZ:5.70,fov:55
+   id:'left',eyeX:.20,eyeZ:10.55,eyeY:1.50,
+   focusX:0,focusY:1.50,focusZ:5.40,fov:70
   })]),
   inner:Object.freeze([Object.freeze({
    id:'left',eyeX:.78,eyeZ:7.15,eyeY:1.50,
@@ -162,6 +164,41 @@
    y:base.eye.y-distance*Math.sin(pitch),
    z:base.eye.z+distance*cp*(f.z*Math.cos(yaw)+right.z*Math.sin(yaw))
   },lookYawDeg:yaw*180/Math.PI,lookPitchDeg:pitch*180/Math.PI};
+ }
+ // SHOULDER RIG:
+ // hero world root is fixed, but its body orientation follows 85% of mouse
+ // yaw. The camera follows a rotated local shoulder offset from that root,
+ // so the player remains LARGE in frame while wall/foes move via true parallax.
+ // World-space quads and original alpha shadows always use the same VP matrix.
+ // On portrait phones the shoulder boom extends to show all four opponents.
+ function shoulderCamera(base,hero,cursorX=0,cursorY=0,aspect=16/9){
+  const x=clamp(Number(cursorX)||0,-1,1);
+  const y=clamp(Number(cursorY)||0,-1,1);
+  const yaw=rad((x<0?LOOK_LIMITS.yawLeftDeg:LOOK_LIMITS.yawRightDeg)*x);
+  const pitch=rad((y<0?LOOK_LIMITS.pitchUpDeg:LOOK_LIMITS.pitchDownDeg)*y);
+  const phone=clamp((.85-clamp(Number(aspect)||16/9,.35,3.5))/.25,0,1);
+  const x0=base.eye.x+(.60-base.eye.x)*phone;
+  const z0=base.eye.z+(11.20-base.eye.z)*phone;
+  const fx0=base.focus.x+(.75-base.focus.x)*phone;
+  const fz0=base.focus.z;
+  const pivot={x:hero.x,y:hero.y+hero.height*.88,z:hero.z};
+  const dx=x0-hero.x,dz=z0-hero.z,cs=Math.cos(yaw),sn=Math.sin(yaw);
+  const eye={x:pivot.x+dx*cs-dz*sn,y:base.eye.y,
+   z:pivot.z+dx*sn+dz*cs};
+  const f=normalize({x:fx0-x0,y:0,z:fz0-z0});
+  const right=normalize(cross(f,{x:0,y:1,z:0}));
+  const worldF={x:f.x*cs+right.x*sn,z:f.z*cs+right.z*sn};
+  const d=Math.hypot(fx0-x0,fz0-z0);
+  const focus={x:eye.x+d*Math.cos(pitch)*worldF.x,
+   y:eye.y-d*Math.sin(pitch),
+   z:eye.z+d*Math.cos(pitch)*worldF.z};
+  const yawDeg=yaw*180/Math.PI;
+  return {...base,eye,focus,
+   shoulderRig:true,shoulderPivot:pivot,
+   shoulderBoomMeters:Math.hypot(dx,dz),
+   heroYawDeg:yawDeg*.85,lookYawDeg:yawDeg,
+   lookPitchDeg:pitch*180/Math.PI,
+   phoneShoulderFit:phone,actorRootUnchanged:true};
  }
  // Preserve the DESIGNED horizontal battle framing when a browser or
  // device changes aspect ratio. Portrait canvases no longer crop half the
@@ -203,16 +240,18 @@
  // They are NOT screen overlays and do NOT swivel to chase the camera when
  // an attack temporarily changes the view. Their local yaw preserves the
  // original authored rear/side pose while providing real foreshortening.
- function actorWorldRight(actor,mode='outer'){
+ function actorWorldRight(actor,mode='outer',heroYawDeg=0){
   const flip=mode==='inner'?-1:1;
-  // Same-depth opponents retain one world yaw and exact scale.
-  const yaw=actor?.id==='hero'?-0.05:0;
+  // Enemies keep original world-facing ArtMesh normals. Only the heroine's
+  // grounded body pivots to follow the shoulder camera (original 2D art stays
+  // unmodified and does NOT become a screen-space billboard).
+  const yaw=actor?.id==='hero'?-0.05+rad(heroYawDeg):0;
   return {x:flip*Math.cos(yaw),y:0,z:Math.sin(yaw)};
  }
  // Actual WebGL billboard quad bounds from the SAME 3D projection used in
  // the render shader. Used to prevent enemy clipping on authored camera stops.
  function portraitBounds(actor,cam,aspect=16/9){
-  const right=actorWorldRight(actor,cam.mode);
+  const right=actorWorldRight(actor,cam.mode,cam.heroYawDeg||0);
   const h=actor.height/Math.max(.01,actor.soleY-actor.crownY),points=[];
   for(const u of [0,1])for(const v of [0,1])
    points.push(project({
@@ -235,7 +274,7 @@
  // extents in screen safety rather than the former protagonist's narrow UV.
  const FEMALE07_BACK_UV=Object.freeze({left:.222,right:.775,top:.012,bottom:1});
  function portraitVisibleBounds(actor,cam,uv=CANONICAL_BACK_UV,aspect=16/9){
-  const right=actorWorldRight(actor,cam.mode);
+  const right=actorWorldRight(actor,cam.mode,cam.heroYawDeg||0);
   const h=actor.height/Math.max(.01,actor.soleY-actor.crownY),pts=[];
   for(const u of [uv.left,uv.right])for(const v of [uv.top,uv.bottom])
    pts.push(project({x:actor.x+right.x*(u-actor.soleX)*h,
@@ -764,7 +803,7 @@
   ].join('\n');
   document.head.append(style);
   const canvas=document.createElement('canvas');canvas.id='ring-arena-canvas';
-  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D战斗场景，单一遭遇战，鼠标原地环顾');stage.append(canvas);
+  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D越肩战斗场景，摄像机围绕主角肩后转动，主角身体跟随鼠标');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
    '<div class="status" role="status" hidden></div><div class="bottom">',
@@ -1367,7 +1406,7 @@
     const pivot=tex.opaqueUv;
     const crown=pivot?clamp(pivot.top,0,.40):a.crownY;
     const sole=pivot?clamp(pivot.bottom,crown+.20,1):a.soleY;
-    const right=actorWorldRight(a,mode);
+    const right=actorWorldRight(a,mode,cam.heroYawDeg||0);
     gl.uniform3fv(projectedShadow.uRight,new Float32Array([right.x,0,right.z]));
     gl.uniform3fv(projectedShadow.uFoot,new Float32Array([a.x,a.y,a.z]));
     gl.uniform1f(projectedShadow.uHeight,a.height);
@@ -1476,7 +1515,7 @@
      art?.painted?requested:
      requested==='hurt-original'?'hurt-original':'idle';
     if(!t?.painted)continue;
-    const right=actorWorldRight(a,mode);
+    const right=actorWorldRight(a,mode,cam.heroYawDeg||0);
     const forward=normalize(cross(right,{x:0,y:1,z:0}));
     gl.uniform3fv(portrait.uRight,new Float32Array([right.x,0,right.z]));
     gl.uniform3fv(portrait.uRightDir,new Float32Array([right.x,0,right.z]));
@@ -1498,8 +1537,11 @@
      t.visibleUv||{left:0,top:0,right:1,bottom:1};
     gl.uniform4f(portrait.uClipUv,clip.left,clip.top,clip.right,clip.bottom);
     gl.uniform1f(portrait.uWidthScale,1);
-    gl.uniform1f(portrait.uLean,female07Actor&&attackSample
-     ? .095*attackSample.advance-.028*attackSample.recoil:0);
+    gl.uniform1f(portrait.uLean,
+     (female07Actor&&attackSample?.advance
+      ? .095*attackSample.advance-.028*attackSample.recoil:0)+
+     (a.id==='hero'&&!attack?.targetId?.length
+      ? .010*Math.sin(rad(cam.heroYawDeg||0)):0));
     gl.uniform1f(portrait.uHit,attack&&a.id===attack.targetId&&attackSample?
      attackSample.hitFlash:0);
     const duelPerformer=!!attack&&(a.id==='hero'||a.id===attack.targetId);
@@ -1538,8 +1580,11 @@
     }
    }
    const target=attack?actorForTarget(attack.targetId):null;
+   // One articulated TPS camera anchored to the real heroine, not a screen
+   // overlay. Attack direction remains under the existing action director.
    lens=transitMode?transitCamera:target?director.cinematicCamera(base,attack,attackSample,target):
-    immersiveCamera(base,mouseLookX,mouseLookY);
+    shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
+     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
    currentLighting=lightingFrame(lightState,
     lightingPhasePreview??(performance.now()/1000-lightingStartedAt),mode);
@@ -1724,9 +1769,14 @@
   }
   const inspect=()=>({active,transitMode,canvasParent:canvas.parentElement?.id||null,environment:environmentId,encounter:'one-centered-grounded-opponents',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
-    cameraLook:{mode:'stationary-world-eye',yawDeg:lens?.lookYawDeg||0,
-     pitchDeg:lens?.lookPitchDeg||0,inputX:mouseLookX,inputY:mouseLookY,
-     fixedEye:!attack,actorsStatic:true,sharedProjection:true},
+    cameraLook:{mode:'hero-root-tps-shoulder-rig',
+     yawDeg:lens?.lookYawDeg||0,pitchDeg:lens?.lookPitchDeg||0,
+     heroYawDeg:lens?.heroYawDeg||0,
+     pivot:lens?.shoulderPivot||null,
+     shoulderBoomMeters:lens?.shoulderBoomMeters||null,
+     inputX:mouseLookX,inputY:mouseLookY,
+     orbitAroundHero:!!lens?.shoulderRig,heroRootWorldStatic:true,
+     sharedProjection:true},
     initError:canvas.dataset.error||null,
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:VERTICAL_LENS_SHIFT,
    cameraTarget:camera(mode,shotIndex),
@@ -1847,7 +1897,7 @@
   return Object.freeze(api);
  }
  return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,LIGHT_STATES,lightingFrame,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
-  SHOT_NAMES,CAMERA_STOPS,LOOK_LIMITS,immersiveCamera,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
+  SHOT_NAMES,CAMERA_STOPS,LOOK_LIMITS,immersiveCamera,shoulderCamera,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });
