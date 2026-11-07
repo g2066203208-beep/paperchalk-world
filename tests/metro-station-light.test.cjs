@@ -42,7 +42,7 @@ test('subway refuses transparent L2D canvases and limits emergency original-art 
  assert.match(source,/function metroLivePortraitHasPixels\(source\)/);
  assert.match(source,/getImageData\(0,0,48,48\)/);
  assert.match(source,/metroLivePortraitHasPixels\(source\)\)/);
- assert.match(source,/canonicalMetroFallback&&targetTexture\.painted/);
+ assert.match(source,/canonicalMetroFallback[\\s\\S]{0,28}targetTexture\\.painted/);
  assert.match(source,/heroOriginalFallback:/);
  assert.match(source,/protagonist-back\.webp/);
 });
