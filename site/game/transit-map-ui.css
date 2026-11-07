@@ -376,3 +376,206 @@
  stroke-dasharray:2 4;
  opacity:.34;
 }
+
+
+/* DOT WORLD V9 — one map, one aligned square-dot universe at EVERY scale. */
+#pw-world-surface .pw-transit-map.pw-dot-world-map{
+ touch-action:none;cursor:grab;overscroll-behavior:contain;
+ background:#18232d;
+ background-image:radial-gradient(ellipse at 52% 54%,#29394680,#121c26 85%);
+}
+#pw-world-surface .pw-dot-world-map:active{cursor:grabbing}
+#pw-world-surface .pw-dot-world-canvas{
+ position:absolute;top:0;left:0;
+ width:2000px;height:1280px;transform-origin:0 0;
+ will-change:transform;isolation:isolate;
+}
+#pw-world-surface .pw-dot-rail-canvas{
+ position:absolute!important;inset:0!important;
+ width:2000px!important;height:1280px!important;
+ overflow:visible!important;z-index:1!important;
+ pointer-events:none;
+}
+#pw-world-surface .pw-dot-cities,
+#pw-world-surface .pw-dot-places,
+#pw-world-surface .pw-dot-local-places{
+ position:absolute;inset:0;pointer-events:none;
+}
+#pw-world-surface .pw-dot-cities{z-index:2}
+#pw-world-surface .pw-dot-places{z-index:3}
+#pw-world-surface .pw-dot-local-places{z-index:4}
+#pw-world-surface .pw-dot-world-map .pw-transit-grid-dot{
+ fill:#8499a95d;opacity:.78;stroke:none
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines .pw-transit-rail{
+ stroke-width:3.5px;opacity:.93
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines .pw-transit-rail-casing{
+ stroke-width:7.5px;opacity:.9
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines .pw-transit-rail-glint{
+ stroke-width:.7px;opacity:.19
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines [data-mode="road"] .pw-transit-rail,
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines [data-mode="coach"] .pw-transit-rail,
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines [data-mode="bus"] .pw-transit-rail{
+ stroke-dasharray:8 7;stroke-width:2.8px;opacity:.63
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-regional-lines [data-mode="ferry"] .pw-transit-rail{
+ stroke-dasharray:2 11;stroke-width:3.1px;opacity:.73
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-urban-lines .pw-transit-rail{
+ stroke-width:3.7px;opacity:.98
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-urban-lines .pw-transit-rail-casing{
+ stroke-width:7.4px
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-urban-lines .pw-transit-rail-glint{
+ stroke-width:.9px
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-planned-metro{
+ opacity:.46;pointer-events:none
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-planned-track{
+ fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+ stroke-dasharray:4 5;vector-effect:non-scaling-stroke
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-planned-stop{
+ fill:#a6bab8;stroke:#1b2a32;stroke-width:1.4;
+ vector-effect:non-scaling-stroke
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-stop-circle{
+ stroke-width:2;fill:#1b2934
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-stop-halo{
+ stroke-width:1.2;filter:drop-shadow(0 0 3px #e66b79)
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-transit-place,
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-city,
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-poi{
+ position:absolute;display:flex;flex-direction:column;
+ align-items:center;gap:0;
+ border:0!important;background:transparent!important;
+ padding:0!important;margin:0!important;
+ height:auto;min-height:0;max-height:none;
+ transform:translate(-50%,-50%);
+ text-align:center;pointer-events:auto;
+ font-family:"PaperSans","Noto Sans CJK SC",sans-serif!important;
+ text-shadow:0 2px 5px #071018;
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-place[hidden],
+#pw-world-surface .pw-dot-world-map .pw-dot-city[hidden],
+#pw-world-surface .pw-dot-world-map .pw-dot-poi[hidden],
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places[hidden]{
+ display:none!important
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-transit-place{
+ width:64px!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-transit-place.is-station{
+ width:62px!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-city{
+ width:168px!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-poi{
+ width:60px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-photo,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-photo{
+ display:block;width:100%;aspect-ratio:1.7;
+ overflow:hidden;border:1px solid #b9d1d4;
+ border-radius:3px;padding:3px;
+ background:#34444a;
+ box-shadow:0 3px 13px #051016ba
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-photo img,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-photo img{
+ display:block;width:100%;height:100%;object-fit:cover;
+ filter:grayscale(.40) contrast(1.08) brightness(.85)
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-place .pw-transit-photo{
+ width:100%;aspect-ratio:1.65
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-place-name{
+ display:block;max-width:100%;white-space:nowrap;
+ margin-top:3px;padding:2px 4px;
+ background:#13212aef;color:#eff5f1!important;
+ font-size:10px!important;line-height:1.3;
+ border-radius:2px;
+ overflow:hidden;text-overflow:ellipsis
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-place-name{
+ font-size:18px!important;font-weight:600
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-place-name{
+ font-size:10px!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-place.is-station .pw-transit-place-name{
+ font-size:10px!important;white-space:normal
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-place:hover,
+#pw-world-surface .pw-dot-world-map .pw-dot-city:hover,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi:hover{
+ filter:brightness(1.18);
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-chrome{
+ position:absolute;z-index:24;inset:0 0 auto 0;
+ min-height:47px;display:flex;justify-content:space-between;
+ align-items:flex-start;gap:12px;padding:12px 15px;
+ pointer-events:none;
+ background:linear-gradient(#0b1721dd,#0b172100)
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-heading{
+ display:flex;flex-direction:column;gap:3px;
+ color:#eef2ef;pointer-events:none
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-title{
+ font:600 clamp(14px,2.4cqh,20px)/1.1 "PaperSans",sans-serif;
+ letter-spacing:.1em;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-subtitle{
+ font:400 clamp(9px,1.4cqh,11px)/1.2 "PaperSans",sans-serif;
+ letter-spacing:.06em;color:#acbcb9
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-tools{
+ display:flex;align-items:center;gap:5px;pointer-events:auto
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-tool{
+ min-height:30px;min-width:34px;padding:5px 8px!important;
+ border:1px solid #718e9b88!important;border-radius:3px!important;
+ background:#1b2b34ee!important;color:#eef3ed!important;
+ font:500 clamp(11px,1.65cqh,15px)/1.1 "PaperSans",sans-serif!important;
+ text-shadow:none!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-tool:hover{
+ background:#344955!important;border-color:#b4d1cb!important
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-caption{
+ z-index:14;top:auto;left:15px;bottom:10px;
+ font-size:11px!important;letter-spacing:.05em
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-tip{
+ z-index:14;top:auto;left:15px;bottom:25px;
+ font-size:10px!important;letter-spacing:.01em
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-hint{
+ position:absolute;z-index:10;right:16px;bottom:12px;
+ color:#b5c6c8a9;pointer-events:none;
+ font:400 10px/1.3 "PaperSans",sans-serif
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-popup{
+ position:absolute;z-index:50;max-width:236px;transform:none!important
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-popup[hidden]{display:none!important}
+#pw-world-surface .pw-dot-world-map .pw-transit-line-hit{
+ pointer-events:stroke!important;cursor:pointer;stroke-width:23px;
+}
+@container(max-height:430px){
+ #pw-world-surface .pw-dot-world-map .pw-dot-chrome{padding:6px 9px;min-height:34px}
+ #novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-tool{
+  min-height:26px;min-width:29px;padding:3px 6px!important;font-size:11px!important
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-subtitle{display:none}
+ #pw-world-surface .pw-dot-world-map .pw-dot-hint{display:none}
+}
