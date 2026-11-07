@@ -473,7 +473,7 @@
  const worldFragment=[
   'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;varying float vFloorSpecular;uniform float uTime;uniform highp int uSurface;uniform float uMode;uniform float uGeometry;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
-  'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;',
+  'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;uniform sampler2D uWingTexture;uniform float uWingReady;',
   'uniform float uFloorReady;uniform float uCeilingReady;',
   worldColorGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
@@ -503,6 +503,9 @@
   'vec3 wallArt=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(vWallUv.y,.003,.997))).rgb;',
   'float footAO=mix(.75,1.0,smoothstep(.04,.82,vWorld.y));',
   'color=wallArt*vec3(.81,.83,.88)*footAO;',
+  'if(uSurface==3&&uWingReady>.5){',
+  'color=texture2D(uWingTexture,vec2(clamp(vWallUv.x,.001,.999),clamp(vWallUv.y,.001,.999))).rgb*.89;',
+  '}',
    // Source art 2172x724 is 3:1. Eight real arc-length repeats across
    // the 76.7m curved surface = 9.58m x 3.2m (aspect preserved).
   '}',
@@ -888,7 +891,7 @@
   let gl=null,world=null,portrait=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,wingOuter=null,wingInner=null,quad=null;
    let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null;
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
-   const surfaceMaterials=Object.fromEntries(Object.entries(SURFACE_TEXTURES)
+   const surfaceMaterials=Object.fromEntries(Object.entries({...SURFACE_TEXTURES,wing:null})
     .map(([kind,url])=>[kind,{url,texture:null,image:null,ready:false,error:null}]));
   let projectedShadowDraws=0;
   let shadowLampAssignments={};
@@ -898,7 +901,7 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uViewEye','uGeometry']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uViewEye','uGeometry']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
@@ -949,7 +952,7 @@
    };
    wallImage.src=WALL_TEXTURE.url;
    // The source art stays 2D and rectangular. Surface meshes bend its UVs.
-   for(const [kind,unit] of [['floor',1],['ceiling',2]]){
+   for(const [kind,unit] of [['floor',1],['ceiling',2],['wing',3]]){
     const material=surfaceMaterials[kind];
     material.texture=gl.createTexture();
     gl.activeTexture(gl.TEXTURE0+unit);
@@ -981,7 +984,7 @@
     };
     canvas.dataset[kind+'Texture']='loading';
     // The worn floor art changed; invalidate long-lived browser texture caches.
-    material.image.src=material.url+(kind==='floor'?'?v=cinematic-floor-v19-20261107':'');
+    if(material.url)material.image.src=material.url+(kind==='floor'?'?v=cinematic-floor-v19-20261107':'');
    }
   }catch(err){
    canvas.dataset.error=String(err.message||err);status.textContent='WebGL failed '+String(err.message||err);
@@ -1646,6 +1649,10 @@
    gl.bindTexture(gl.TEXTURE_2D,surfaceMaterials.ceiling.texture);
    gl.uniform1i(world.uCeilingTexture,2);
    gl.uniform1f(world.uCeilingReady,surfaceMaterials.ceiling.ready?1:0);
+   gl.activeTexture(gl.TEXTURE3);
+   gl.bindTexture(gl.TEXTURE_2D,surfaceMaterials.wing.texture);
+   gl.uniform1i(world.uWingTexture,3);
+   gl.uniform1f(world.uWingReady,surfaceMaterials.wing.ready?1:0);
    drawWorld(mode==='outer'?floorOuter:floorInner,0,vp);
    drawWorld(mode==='outer'?ceilingOuter:ceilingInner,2,vp);
    drawWorld(mode==='outer'?backInner:backOuter,1,vp);
@@ -1739,10 +1746,11 @@
     wallMaterialError='Unable to load '+pack.wall.url;canvas.dataset.wallTexture='error';
    }};
    picture.src=pack.wall.url;
-   for(const [kind,path,unit] of [['floor',pack.floor,1],['ceiling',pack.ceiling,2]]){
+   for(const [kind,path,unit] of [['floor',pack.floor,1],['ceiling',pack.ceiling,2],['wing',pack.ends||null,3]]){
     const target=surfaceMaterials[kind],im=new Image();
     target.url=path;target.ready=false;target.error=null;target.image=im;
-    canvas.dataset[kind+'Texture']='loading';
+    canvas.dataset[kind+'Texture']=path?'loading':'unused';
+    if(!path)continue;
     im.onload=()=>{
      if(environmentEpoch!==epoch)return;
      try{
