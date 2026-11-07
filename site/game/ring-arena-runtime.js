@@ -528,7 +528,7 @@
   'gl_FragColor=vec4(.008,.012,.018,edge*uStrength);}'
  ].join('\n');
  function projectedShadowMesh(gl){
-  const data=[],N=12,M=18;
+  const data=[],N=22,M=28;
   const v=(x,y)=>[x/N,y/M];
   for(let y=0;y<M;y++)for(let x=0;x<N;x++){
    const a=v(x,y),b=v(x+1,y),c=v(x+1,y+1),d=v(x,y+1);
@@ -1135,6 +1135,11 @@
    gl.uniform3fv(prog.uEmergencyPosition,currentLighting.emergencyPosition);
    gl.uniform1f(prog.uEmergencyPower,currentLighting.emergencyPower);
   }
+  // Hero and four foes retain their REAL 3D silhouettes. A lamp almost
+  // directly above a body produces a featureless foreshortened footprint.
+  // For readable horror staging, choose an ACTUAL POWERED fixture giving
+  // approximately 2.6m head displacement on the 3D floor. This is still
+  // ray-intersection alpha projection from the genuine ceiling light.
   function nearestLitLamps(p,whichMode=mode){
    const rig=lightRigs[whichMode];
    const choices=[];
@@ -1143,11 +1148,17 @@
     if(level<.08)continue;
     const dx=p.x-rig.positions[i*3],dz=p.z-rig.positions[i*3+2];
     const distance=dx*dx+dz*dz;
-    const strength=level/(1.0+.16*distance);
-    choices.push({index:i,distance,strength,
-     position:rig.positions.subarray(3*i,3*i+3)});
+    const headY=Math.min(LIGHTING.height-.20,p.height*.88);
+    const projectedHeadOffset=Math.sqrt(distance)*
+     headY/Math.max(.20,rig.positions[i*3+1]-headY);
+    const readability=Math.exp(-2.3*Math.abs(projectedHeadOffset-2.6));
+    const intensity=level/(1.0+.16*distance);
+    const score=readability*(.25+.75*level)/
+     (1+.085*distance);
+    choices.push({index:i,distance,strength:intensity,score,
+     projectedHeadOffset,position:rig.positions.subarray(3*i,3*i+3)});
    }
-   choices.sort((a,b)=>b.strength-a.strength);
+   choices.sort((a,b)=>b.score-a.score);
    return choices.slice(0,1);
   }
   function drawFixtures(vp){
@@ -1202,11 +1213,11 @@
     for(let i=0;i<lamps.length;i++){
      gl.uniform3fv(projectedShadow.uLamp,lamps[i].position);
      gl.uniform1f(projectedShadow.uContact,0);
-     gl.uniform1f(projectedShadow.uStrength,Math.min(.47,lamps[i].strength*.55));
+     gl.uniform1f(projectedShadow.uStrength,Math.min(.34,.10+lamps[i].strength*.37));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
      gl.uniform1f(projectedShadow.uContact,1);
-     gl.uniform1f(projectedShadow.uStrength,Math.min(.58,lamps[i].strength*.74));
+     gl.uniform1f(projectedShadow.uStrength,Math.min(.43,.15+lamps[i].strength*.45));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
     }
