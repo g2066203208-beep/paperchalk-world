@@ -179,11 +179,20 @@
   return {valid:true,x:(m[0]*x+m[4]*y+m[8]*z+m[12])/w,
    y:(m[1]*x+m[5]*y+m[9]*z+m[13])/w,depth:w};
  }
+ // Live2D ArtMesh textures are rigid, WORLD-ORIENTED 3D portrait planes.
+ // They are NOT screen overlays and do NOT swivel to chase the camera when
+ // an attack temporarily changes the view. Their local yaw preserves the
+ // original authored rear/side pose while providing real foreshortening.
+ function actorWorldRight(actor,mode='outer'){
+  const flip=mode==='inner'?-1:1;
+  const i=Number(actor?.id?.split('-')[1])||0;
+  const yaw=actor?.id==='hero'?-0.105:[0,-.045,-.014,.020,.046][i]||0;
+  return {x:flip*Math.cos(yaw),y:0,z:Math.sin(yaw)};
+ }
  // Actual WebGL billboard quad bounds from the SAME 3D projection used in
  // the render shader. Used to prevent enemy clipping on authored camera stops.
  function portraitBounds(actor,cam,aspect=16/9){
-  const forward=normalize({x:cam.focus.x-cam.eye.x,y:0,z:cam.focus.z-cam.eye.z});
-  const right=normalize(cross(forward,{x:0,y:1,z:0}));
+  const right=actorWorldRight(actor,cam.mode);
   const h=actor.height/Math.max(.01,actor.soleY-actor.crownY),points=[];
   for(const u of [0,1])for(const v of [0,1])
    points.push(project({
@@ -206,8 +215,7 @@
  // extents in screen safety rather than the former protagonist's narrow UV.
  const FEMALE07_BACK_UV=Object.freeze({left:.222,right:.775,top:.012,bottom:1});
  function portraitVisibleBounds(actor,cam,uv=CANONICAL_BACK_UV,aspect=16/9){
-  const f=normalize({x:cam.focus.x-cam.eye.x,y:0,z:cam.focus.z-cam.eye.z});
-  const right=normalize(cross(f,{x:0,y:1,z:0}));
+  const right=actorWorldRight(actor,cam.mode);
   const h=actor.height/Math.max(.01,actor.soleY-actor.crownY),pts=[];
   for(const u of [uv.left,uv.right])for(const v of [uv.top,uv.bottom])
    pts.push(project({x:actor.x+right.x*(u-actor.soleX)*h,
@@ -1148,12 +1156,8 @@
   function drawProjectedShadows(actors,cam,vp){
    projectedShadowDraws=0;
    if(!shadowGrid)return;
-   const facing=normalize({x:cam.focus.x-cam.eye.x,
-    y:0,z:cam.focus.z-cam.eye.z});
-   const right=normalize(cross(facing,{x:0,y:1,z:0}));
    gl.useProgram(projectedShadow.handle);
    gl.uniformMatrix4fv(projectedShadow.uVP,false,new Float32Array(vp));
-   gl.uniform3fv(projectedShadow.uRight,new Float32Array([right.x,right.y,right.z]));
    gl.activeTexture(gl.TEXTURE0);
    gl.uniform1i(projectedShadow.uTexture,0);
    gl.bindBuffer(gl.ARRAY_BUFFER,shadowGrid.buffer);
@@ -1168,6 +1172,8 @@
     const pivot=tex.opaqueUv;
     const crown=pivot?clamp(pivot.top,0,.40):a.crownY;
     const sole=pivot?clamp(pivot.bottom,crown+.20,1):a.soleY;
+    const right=actorWorldRight(a,mode);
+    gl.uniform3fv(projectedShadow.uRight,new Float32Array([right.x,0,right.z]));
     gl.uniform3fv(projectedShadow.uFoot,new Float32Array([a.x,a.y,a.z]));
     gl.uniform1f(projectedShadow.uHeight,a.height);
     gl.uniform1f(projectedShadow.uSoleX,a.soleX);
@@ -1265,12 +1271,7 @@
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.enableVertexAttribArray(portrait.aUv);
    gl.vertexAttribPointer(portrait.aUv,2,gl.FLOAT,false,8,0);
-   const f=normalize({x:cam.focus.x-cam.eye.x,y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z});
-   const right=normalize(cross(f,{x:0,y:1,z:0}));
-   gl.uniform3fv(portrait.uRight,new Float32Array([right.x,right.y,right.z]));
    gl.uniform3fv(portrait.uUp,new Float32Array([0,1,0]));
-   gl.uniform3fv(portrait.uRightDir,new Float32Array([right.x,right.y,right.z]));
-   gl.uniform3fv(portrait.uFacing,new Float32Array([-f.x,-f.y,-f.z]));
    setSceneLighting(portrait,mode);
    gl.activeTexture(gl.TEXTURE0);gl.uniform1i(portrait.uTexture,0);
    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -1291,6 +1292,11 @@
      art?.painted?requested:
      requested==='hurt-original'?'hurt-original':'idle';
     if(!t?.painted)continue;
+    const right=actorWorldRight(a,mode);
+    const forward=normalize(cross(right,{x:0,y:1,z:0}));
+    gl.uniform3fv(portrait.uRight,new Float32Array([right.x,0,right.z]));
+    gl.uniform3fv(portrait.uRightDir,new Float32Array([right.x,0,right.z]));
+    gl.uniform3fv(portrait.uFacing,new Float32Array([forward.x,0,forward.z]));
     gl.uniform3fv(portrait.uFoot,new Float32Array([a.x,a.y,a.z]));
     gl.uniform1f(portrait.uHeight,a.height);
     gl.uniform1f(portrait.uSoleX,a.soleX);
@@ -1544,7 +1550,7 @@
   return Object.freeze(api);
  }
  return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,LIGHT_STATES,lightingFrame,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
-  SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,portraitBounds,
+  SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });
