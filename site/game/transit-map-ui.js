@@ -76,6 +76,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.append(chrome,hint,popup);
  body.replaceChildren(map);
  let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,focused=false;
+ let lastW=844,lastH=390;
  const cleanupListeners=[];
  function notify(msg){onFeedback?.(msg)}
  function clear(){
@@ -396,12 +397,19 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   constrain();position();
  }
  function measure(first){
-  const v=viewport();
+  const v=viewport(),previousMinimum=minScale;
+  const overview=!first&&Math.abs(scale-previousMinimum)<.012;
+  const oldCenter={x:(lastW*.5-x)/scale,y:(lastH*.5-y)/scale};
   minScale=Math.min((v.w-28)/W,(v.h-22)/H);
+  lastW=v.w;lastH=v.h;
   if(first){
    const local=Math.min((v.w-60)/570,(v.h-80)/310);
    centerOn(hereCity,Math.max(minScale,Math.min(2.6,local)));
-  }else{scale=Math.max(minScale,scale);constrain();position()}
+  }else if(overview){
+   centerOn({x:W*.5,y:H*.5},minScale);
+  }else{
+   centerOn(oldCenter,Math.max(minScale,scale));
+  }
  }
  toolBtns[0].addEventListener('click',()=>zoomBy(1/1.37));
  toolBtns[1].addEventListener('click',()=>zoomBy(1.37));
