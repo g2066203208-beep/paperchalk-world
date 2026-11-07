@@ -43,7 +43,7 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.68,7.68,7.68,7.68]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.15,7.15,7.15,7.15]);
 assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.96,11.35,10.94,11.26]);
 assert.equal(ring.camera('outer').fov,66);
 assert.equal(ring.camera('inner').fov,52);
@@ -207,10 +207,10 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id\)/,
  'real animated source must pass through non-destructive battle mask before upload');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
- ring.STAGING.outer.enemies[0][0]-1.18)<1e-7,
+ ring.STAGING.outer.enemies[0][0]-1.19)<1e-7,
  'the first two fighters have a full meter of width');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[3][0]-
- ring.STAGING.outer.enemies[2][0]-1.45)<1e-7,
+ ring.STAGING.outer.enemies[2][0]-1.46)<1e-7,
  'broad fourth coat needs extra world-space width');
 assert.ok(Math.abs(ring.STAGING.inner.enemies[1][0]-
  ring.STAGING.inner.enemies[0][0]+.88)<1e-7,
@@ -290,10 +290,10 @@ for(const x of [-1,-.5,0,.5,1]){
  const shot=ring.shoulderCamera(base,hero,x,0,1917/906);
  assert.deepEqual(shot.shoulderPivot,{x:hero.x,y:hero.y+hero.height*.88,z:hero.z});
  assert.ok(shot.shoulderRig&&shot.actorRootUnchanged);
- assert.ok(Math.abs(shot.heroYawDeg-shot.lookYawDeg*.85)<1e-8);
+ assert.ok(Math.abs(shot.heroYawDeg)<1e-8);
 }
 assert.match(src,/shoulderCamera\(base,layout\(mode\)\.allies\[0\],mouseLookX,mouseLookY/,
  'the live WebGL renderer must USE the root-attached shoulder camera');
-assert.match(src,/actorWorldRight\(a,mode,cam\.heroYawDeg\|\|0\)/,
- 'rendered ArtMesh and projected shadows must share body yaw');
+assert.match(src,/actorWorldRight\(a,mode\)/,
+ 'rendered ArtMesh and shadows share a stable world orientation');
 console.log('PASS compact 2.85m convenience-store bay, nine aspect-correct wall sections, four closer actors and switchable shadow-casting lights');
