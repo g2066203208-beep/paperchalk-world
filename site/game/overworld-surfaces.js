@@ -4,7 +4,7 @@
  */
 (function(global){
   'use strict';
-  function create({engine,onTravel,onFeedback}){
+  function create({engine,onTravel,onBoard,onFeedback}){
     if(!engine||typeof engine.snapshot!=='function')throw Error('OverworldSurfaces requires saved state');
     const parent=document.getElementById('novel-ui');
     const locs=global.PaperWorldDailyLife.LOCATIONS;
@@ -120,159 +120,21 @@
       return {ok:true,reason:'可以前往',cost};
     }
     function drawMap(){
-      const s=get();
-      heading.textContent='地区选择';
-      note.textContent=s.calendar.month+'月'+s.calendar.date+'日  '+s.calendar.time;
-      frame.dataset.view='map';
-      // No geographic wallpaper: one restrained color, photographic nodes.
-      const stage=el('div','pw-photo-map');
-      stage.setAttribute('aria-label','城区地点选择');
-      const routeSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-      routeSvg.setAttribute('viewBox','0 0 100 100');
-      routeSvg.setAttribute('preserveAspectRatio','none');
-      routeSvg.setAttribute('aria-hidden','true');
-      routeSvg.classList.add('pw-photo-map-routes');
-      const metro=global.PaperWorldMetro;
-      const byId=Object.fromEntries(pinData.map(p=>[p.id,p]));
-      const currentCity=['bedroom','living-room','kitchen'].includes(s.location)?'entrance':s.location;
-      const route=choice&&!byId[choice]?.locked?metro?.path(currentCity,choice):null;
-      function addTrack(a,b,line,selected=false){
-        const p=metro.STATIONS[a],q=metro.STATIONS[b];
-        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-        path.setAttribute('d','M'+p.x+','+p.y+' L'+q.x+','+q.y);
-        path.setAttribute('class','pw-metro-track'+(selected?' is-selected':'')+(line.locked?' is-future':''));
-        path.setAttribute('stroke',line.color);
-        routeSvg.appendChild(path);
-      }
-      for(const line of metro?.LINES||[]){
-        for(let i=0;i<line.stops.length-1;i++){
-          addTrack(line.stops[i],line.stops[i+1],line);
-        }
-      }
-      for(const seg of route?.segments||[])addTrack(seg.from,seg.to,seg.line,true);
-      for(const station of Object.values(metro?.STATIONS||{})){
-        if(!station.transfer)continue;
-        const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
-        dot.setAttribute('cx',station.x);dot.setAttribute('cy',station.y);
-        dot.setAttribute('r','1.0');dot.setAttribute('class','pw-metro-transfer');
-        routeSvg.appendChild(dot);
-      }
-      stage.appendChild(routeSvg);
-      const activeChoice=pinData.find(p=>p.id===choice)||null;
-      const legend=el('div','pw-photo-map-legend');
-      for(const line of metro?.LINES||[]){
-        const tag=el('span','pw-photo-map-line',line.name);
-        tag.style.setProperty('--line-color',line.color);
-        if(line.locked)tag.dataset.locked='true';
-        legend.appendChild(tag);
-      }
-      stage.appendChild(legend);
-
-      for(const p of pinData){
-        const locked=!!p.locked;
-        const b=button('',()=>{
-          choice=p.id;draw();
-        },'pw-photo-map-node');
-        b.style.left=p.x+'%';b.style.top=p.y+'%';
-        b.dataset.place=p.id;
-        b.dataset.selected=String(choice===p.id);
-        b.dataset.current=String(currentCity===p.id);
-        b.dataset.locked=String(locked);
-        b.setAttribute('aria-label',p.name+(locked?'，尚未开放':currentCity===p.id?'，当前位置':''));
-        b.setAttribute('aria-pressed',String(choice===p.id));
-        const picture=el('span','pw-photo-map-picture');
-        if(p.photo){
-          const localScene={
-            entrance:'./assets/scenes/entrance.webp',
-            school:'./assets/classroom.webp',
-            convenience:'./assets/locations/convenience.svg',
-            cafe:'./assets/locations/cafe.svg',
-            mall:'./assets/locations/mall.svg',
-            park:'./assets/locations/park.svg'
-          }[p.id];
-          const img=el('img','pw-photo-map-photo');
-          img.alt='';img.loading='eager';img.decoding='async';
-          img.src=localScene||p.photo;
-          img.onerror=()=>{img.hidden=true;picture.dataset.imageFailed='true'};
-          picture.appendChild(img);
-          // Never allow a slow external photograph to leave an empty map card.
-          // Swap only after its pixels have loaded successfully.
-          if(p.photo!==localScene){
-            const photo=new Image();
-            photo.referrerPolicy='no-referrer';
-            photo.decoding='async';
-            photo.onload=()=>{if(img.isConnected&&photo.naturalWidth>0)img.src=p.photo};
-            photo.src=p.photo;
-          }
-        }
-        const placeholder=el('span','pw-photo-map-placeholder',locked?'·':'◇');
-        picture.appendChild(placeholder);
-        const pin=el('span','pw-photo-map-anchor');
-        const textName=el('span','pw-photo-map-name',p.name);
-        b.append(picture,pin,textName);
-        if(locked)b.title='计划中的地点，暂不能前往';
-        stage.appendChild(b);
-      }
-      const info=el('div','pw-photo-map-info');
-      const identity=el('div','pw-photo-map-identity');
-      identity.appendChild(el('span','pw-photo-map-kicker','当前地点'));
-      identity.appendChild(el('strong','pw-photo-map-current',locs[s.location].label));
-      info.appendChild(identity);
-      const selected=el('div','pw-photo-map-target');
-      if(!activeChoice){
-        selected.appendChild(el('span','pw-photo-map-kicker','目的地'));
-        selected.appendChild(el('strong','','选择照片上的地点'));
-        selected.appendChild(el('small','','可查看到达时间与开放状态'));
-      }else if(activeChoice.locked){
-        selected.appendChild(el('span','pw-photo-map-kicker','未开放地区'));
-        selected.appendChild(el('strong','',activeChoice.name));
-        selected.appendChild(el('small','','场景尚未制作，不能移动'));
-      }else{
-        const def=locs[activeChoice.id],a=availability(activeChoice.id,s);
-        selected.appendChild(el('span','pw-photo-map-kicker','目的地 · '+activeChoice.name));
-        selected.appendChild(el('strong','',a.ok?'预计 '+a.cost+' 分钟':a.reason));
-        const hours=String(Math.floor(def.open/60)).padStart(2,'0')+':'+
-          String(def.open%60).padStart(2,'0')+'–'+
-          String(Math.floor(def.close/60)).padStart(2,'0')+':'+
-          String(def.close%60).padStart(2,'0');
-        selected.appendChild(el('small','',def.group==='家'?'回到家中':('开放 '+hours)));
-        if(route&&route.segments.length){
-          const pathText=route.lines.join(' → ')+
-            (route.transfers.length?' · '+route.transfers.map(id=>metro.STATIONS[id].label+'换乘').join('、'):' · 直达')+
-            ' · '+route.connections+' 站';
-          selected.appendChild(el('small','pw-map-route-summary',pathText));
-        }
-      }
-      info.appendChild(selected);
-      const actions=el('div','pw-photo-map-actions');
-      if(activeChoice&&!activeChoice.locked){
-        const avail=availability(activeChoice.id,s);
-        const go=button('前往',async()=>{
-          if(busy)return;
-          const dest=choice,chosenRoute=route;
-          busy=true;
-          // Crucial: close before the engine commits travel. Engine subscriber
-          // redraws on every state change and used to flash the open map.
+      const snapshot=get();
+      frame.dataset.view='map';heading.textContent='城区交通';
+      note.textContent=snapshot.calendar.time;
+      foot.textContent='';
+      global.PaperWorldTransitMap.draw({
+        body,snapshot,locations:locs,availability,
+        onTravel:async(place,route)=>{
           closeSurface();
-          let response;
-          try{response=await onTravel?.(dest,chosenRoute)}
-          catch(error){response={ok:false,reason:'场景移动失败'};}
-          busy=false;
-          if(!response?.ok){
-            open('map');choice=dest;draw();
-            text(response?.reason||'无法抵达目的地',true);
-          }
-        },'pw-photo-map-go',!avail.ok);
-        actions.appendChild(go);
-      }else{
-        const go=button(activeChoice?'暂未开放':'选择地点',null,'pw-photo-map-go',true);
-        actions.appendChild(go);
-      }
-      info.appendChild(actions);
-      stage.appendChild(info);
-      const credit=el('span','pw-photo-map-credit','地点照片为临时实景参考，不代表游戏设定中的真实地点');
-      stage.appendChild(credit);
-      body.replaceChildren(stage);
+          return onTravel?.(place,route);
+        },
+        onBoard:async(lineId,direction)=>{
+          closeSurface();
+          return onBoard?.(lineId,direction);
+        }
+      });
     }
     function drawBag(){
       const s=get(),items=Object.entries(meta).filter(([key,m])=>
