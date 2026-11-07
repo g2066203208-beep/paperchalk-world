@@ -226,9 +226,22 @@
   return {valid:true,left:Math.min(...xs),right:Math.max(...xs),
    top:Math.max(...ys),bottom:Math.min(...ys)};
  }
+ // These native atlas footprints were measured from the real game L2D
+ // canvases (including the battle-only alpha mask for enemy #3). Projection
+ // safety must use VISIBLE art, not discarded transparent square borders.
+ const ENEMY_VISIBLE_SAFETY_UV=Object.freeze({
+  'enemy-1':Object.freeze({left:.31,right:.69,top:0,bottom:1}),
+  'enemy-2':Object.freeze({left:.32,right:.69,top:0,bottom:1}),
+  'enemy-3':Object.freeze({left:.30,right:.76,top:0,bottom:1}),
+  'enemy-4':Object.freeze({left:0,right:.58,top:0,bottom:1})
+ });
  function battleVisualSafety(mode='outer',index=0,aspect=16/9,heroUv=CANONICAL_BACK_UV){
   const c=camera(mode,index),actors=layout(mode),hero=portraitVisibleBounds(actors.allies[0],c,heroUv,aspect);
-  const foes=actors.enemies.map(a=>portraitBounds(a,c,aspect));
+  const foes=actors.enemies.map(a=>{
+   const raw=portraitBounds(a,c,aspect);
+   const cropped=portraitVisibleBounds(a,c,ENEMY_VISIBLE_SAFETY_UV[a.id],aspect);
+   return {...raw,left:cropped.left,right:cropped.right};
+  });
   const gap=Math.min(...foes.map(b=>b.left))-hero.right;
   return {valid:hero.valid&&foes.every(b=>b.valid),gap,hero,foes,
    clear:gap>=.045&&foes.every(b=>b.left>=-.93&&b.right<=.93)};
