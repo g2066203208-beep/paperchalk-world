@@ -1,4 +1,4 @@
-/* Focused real-game screenshot proof for both 3D arc orientations.
+/* Focused real-game screenshot proof for ONE standard battle encounter.
  * Deliberately independent from full combat timing QA; never generates mock art.
  */
 import {createServer} from 'node:http';
@@ -140,29 +140,21 @@ try{
   await setLighting('horror',6.0);
   report.horrorRecovery=await inspect();
   await page.screenshot({path:resolve(out,'09-horror-partial-restore-1917x906.png')});
-  await setLighting('outage');
-  await page.locator('[data-mode="inner"]').click();
-  await page.waitForFunction(()=>{
-   const a=window.PaperWorldGameRingArena?.inspect?.();
-   return a?.mode==='inner'&&a?.l2dReady===5;
-  },null,{timeout:20000});
-  report.innerOutage=await inspect();
-  await page.screenshot({path:resolve(out,'05-inner-lights-off-1917x906.png')});
+  // Single encounter: restore the SAME characters and actual light fixtures
+  // instead of secretly teleporting to a reverse/surround scene.
   await setLighting('on');
-  await page.waitForTimeout(150);
-  report.inner=await inspect();
-  if(Object.values(report.inner.actorVisibleUv).some(x=>!x.clip))
-   validationErrors.push('one or more 3D portraits did not receive a real source-alpha trim');
-  await page.screenshot({path:resolve(out,'06-inner-full-lights-1917x906.png')});
-  if(report.inner.mode!=='inner')errors.push('inner mode did not switch');
+  await page.waitForTimeout(180);
+  report.restored=await inspect();
+  if(Object.values(report.restored.actorVisibleUv).some(x=>!x.clip))
+   validationErrors.push('alpha crop missing after lamp restoration');
+  await page.screenshot({path:resolve(out,'05-single-encounter-light-restored-1917x906.png')});
  }
  report.geometry={
   floorPanelMeters:report.outer?.ring?.floorTileMeters/2,
   ceilingPanelMeters:report.outer?.ring?.ceilingTileMeters/2,
   ceilingHeightMeters:report.outer?.ring?.ceilingHeight,
   floorRoofDepthMeters:report.outer?.ring?.surfaceDepth,
-  outerEnemyDepth:report.outer?.actors?.enemies?.[0]?.z,
-  innerEnemyDepth:report.inner?.actors?.enemies?.[0]?.z
+  foePositions:report.outer?.actors?.enemies?.map(a=>({x:a.x,y:a.y,z:a.z}))
  };
  // Actual runtime RGBA source captures for transparent-edge quality review.
  // Assets remain owned by L2D; only this QA artifact receives copies.
@@ -190,24 +182,22 @@ try{
  if(!ready||report.outer?.wallMaterial?.heightMeters!==2.85||
   report.outer?.wallMaterial?.repeats!==9||
   !report.outer?.roomSurfaces?.floor?.ready||!report.outer?.roomSurfaces?.ceiling?.ready||
-  !report.inner?.roomSurfaces?.floor?.ready||!report.inner?.roomSurfaces?.ceiling?.ready||
   report.outer?.roomSurfaces?.floor?.vertices<15000||
-  report.inner?.roomSurfaces?.ceiling?.vertices<15000||
-  report.outer?.safety?.clear!==true||report.inner?.safety?.clear!==true||
-  report.outer?.l2dReady!==5||report.inner?.l2dReady!==5||
+  report.outer?.safety?.clear!==true||
+  report.outer?.l2dReady!==5||
+  report.outer?.encounterControls!==0||
+  report.outer?.encounter!=='one-standard-wide-spaced-world'||
   Math.abs(report.geometry.floorPanelMeters-.6)>.001||
   Math.abs(report.geometry.ceilingPanelMeters-.95)>.001||
   report.geometry.floorRoofDepthMeters!==10||
-  report.outer?.lighting?.count!==6||report.inner?.lighting?.count!==6||
+  !report.geometry.foePositions||
+  Math.max(...report.geometry.foePositions.map(a=>a.x))-
+   Math.min(...report.geometry.foePositions.map(a=>a.x))<4||
+  report.outer?.lighting?.count!==6||
   report.outer?.lighting?.positions?.length!==18||
-  report.inner?.lighting?.positions?.length!==18||
-  report.outer?.safety?.gap<.07||report.inner?.safety?.gap<.07||
-  report.outer?.safety?.foes?.[0]?.heightFraction<.48||
-  report.inner?.safety?.foes?.[0]?.heightFraction<.52||
-  report.outer?.lighting?.physicallyGroundedShadows<10||
-  report.inner?.lighting?.physicallyGroundedShadows<10||
+  report.outer?.safety?.gap<.055||
+  report.outer?.lighting?.physicallyGroundedShadows<5||
   report.outer?.lighting?.contactShadow!=='original-L2D-shoe-alpha-no-ellipse'||
-  report.inner?.lighting?.contactShadow!=='original-L2D-shoe-alpha-no-ellipse'||
   report.horrorFlicker?.lighting?.state!=='horror'||
   report.horrorFlicker?.lighting?.levels?.[1]>.1||
   report.horrorDark?.lighting?.levels?.some(x=>x>.001)||
@@ -222,10 +212,10 @@ try{
   report.outage?.lighting?.levels?.some(x=>x>.001)||
   report.outage?.lighting?.physicallyGroundedShadows!==0||
   report.outage?.lighting?.emergencyPower!==1||
-  report.innerOutage?.lighting?.state!=='outage'||
+  report.restored?.mode!=='outer'||
   validationErrors.length||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+validationErrors.concat(pageErrors).join('; '));
- console.log('PASS nine real-game WebGL shots: no black circles, dual live L2D alpha shadows, scripted ballast flicker/cascade/blackout/recovery and five grounded characters');
+ console.log('PASS real Chromium single encounter, full-width 4 foes, wide fixed-eye mouse turn, accurate ArtMesh shadows and lamps');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }

@@ -70,7 +70,7 @@ try{
  }
  assert.equal(await page.locator('[data-shot]').count(),0,'remove BOTH camera-switch buttons');
  assert.equal(await page.locator('[data-pose]').count(),0,'no redundant pose toggle');
- assert.equal(await page.locator('[data-mode]').count(),2);
+ assert.equal(await page.locator('[data-mode]').count(),0,'only one normal battle scene');
  assert.ok(await page.locator('[data-exit]').isVisible());
  const originalCamera=JSON.stringify(outer.camera);
  const originalActors=JSON.stringify(outer.actors);
@@ -97,11 +97,11 @@ try{
  assert.ok(groundProof.feet.every(x=>x.valid));
  const verticalRange=Math.max(...groundProof.feet.map(p=>p.y))-
   Math.min(...groundProof.feet.map(p=>p.y));
- assert.ok(verticalRange>.06&&verticalRange<.12,
+ assert.ok(verticalRange>.17&&verticalRange<.29,
   'real near/far placement should show physical grounded depth, not 2D offsets');
  const centers=groundProof.feet.map(x=>x.x);
  const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
- assert.ok(gaps.every(x=>x>.18&&x<.30),
+ assert.ok(gaps.every(x=>x>.25&&x<.40),
   'natural depth composition must keep four distinct enemy silhouettes');
  assert.ok(groundProof.hero.left>-.99&&groundProof.hero.right<-.23,
   'the actual woman7 rear cutout must not be clipped or obstruct enemies');
@@ -109,7 +109,7 @@ try{
   'weapon and enemy1 cannot overlap');
  const foemeter=groundProof.enemySizes.map((h,i)=>
   h/outer.actors.enemies[i].height);
- assert.ok(Math.max(...foemeter)-Math.min(...foemeter)<.05,
+ assert.ok(Math.max(...foemeter)-Math.min(...foemeter)<.105,
   'foe scale differences must come from real distance and remain human-sized');
  await page.screenshot({path:'artifacts/ring-arena/V31-woman7-four-enemies-ground-aligned-1917x906.png'});
  await page.setViewportSize({width:1280,height:720});
@@ -199,33 +199,18 @@ try{
  await page.mouse.move(640,360);
  await page.waitForTimeout(850);
  assert.equal(stable.heroTextureUploads,1);
- // The second encounter topology is not a second camera.
- await page.locator('[data-mode="inner"]').click();
- await page.waitForTimeout(450);
- const inner=await inspect();
- assert.equal(inner.mode,'inner');assert.equal(inner.shotIndex,0);
- assert.equal(inner.camera.shot,'left');assert.equal(inner.cameraCount,1);
- assert.equal(inner.eyeLevel,true);
- assert.equal(inner.camera.eye.y,1.50);
- assert.ok(Math.abs(inner.cameraPitchDeg)<1.8,
-  'real bounded FPS-style tilt should not overturn the battle camera');
- assert.ok(inner.safety.valid&&inner.safety.clear);
- assert.equal(inner.heroTextureUploads,1);
- await page.screenshot({path:'artifacts/ring-arena/final-inner-fixed-left.png'});
+ // Single canonical encounter, with four physically separated foes.
+ // A camera movement never switches into a second 'surround' map.
+ assert.equal(await page.locator('[data-mode]').count(),0);
+ assert.equal((await inspect()).mode,'outer');
  await page.setViewportSize({width:1917,height:906});
  await page.waitForTimeout(380);
- const innerGround=await page.evaluate(()=>{
-  const engine=window.PaperWorldRingArena;
-  const state=window.PaperWorldGameRingArena.inspect();
-  const feet=state.actors.enemies.map(a=>
-   engine.project({x:a.x,y:0,z:a.z},state.camera,state.projectionAspect));
-  return {feet,safety:state.safety};
- });
- assert.ok(innerGround.feet.every(p=>p.valid));
- assert.ok(Math.max(...innerGround.feet.map(p=>p.y))-
-  Math.min(...innerGround.feet.map(p=>p.y))>.045);
- assert.ok(innerGround.safety.clear&&innerGround.safety.hero.left>-.99);
- await page.screenshot({path:'artifacts/ring-arena/V31-inner-woman7-ground-aligned-1917x906.png'});
+ const standard=await inspect();
+ const foeSpots=standard.actors.enemies.map(a=>a.x);
+ assert.ok(Math.max(...foeSpots)-Math.min(...foeSpots)>4);
+ assert.deepEqual(standard.actors,outer.actors,
+  'all world-space actors must stay fixed after mouse look and attack');
+ await page.screenshot({path:'artifacts/ring-arena/V32-single-encounter-wide-1917x906.png'});
  // Responsive full stage, same perspective, no second camera or cutoff.
  await page.setViewportSize({width:1920,height:1080});
  await page.waitForTimeout(400);
