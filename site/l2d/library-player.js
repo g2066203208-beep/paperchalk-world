@@ -318,7 +318,14 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
   if(state.previousTime)state.elapsedMs+=Math.min(80,Math.max(0,t-state.previousTime));
   state.previousTime=t;
   // Clock pauses while hidden: waking a phone cannot jump hair/skirt phase.
-  root.PaperchalkPartRigCore.draw(ctx,layers,model,state.elapsedMs*Math.PI*2/3600);
+  // One original textured part = one continuous draw in close-range metro;
+  // no double-alpha triangle edges on skin, skirt or hair. The Studio
+  // retains full nonrigid meshes, and battle rendering is untouched.
+  const carriage=document.getElementById('pw-metro-cabin');
+  const metroCloseup=slot==='player'&&carriage&&!carriage.hidden&&
+   carriage.dataset.renderer==='ring-3d';
+  root.PaperchalkPartRigCore.draw(ctx,layers,model,
+   state.elapsedMs*Math.PI*2/3600,'',{continuousParts:!!metroCloseup});
   // Existing hand-painted correction layers must remain visible when the
   // original heroine switches from V4 to articulated parts. These overlays
   // are stored separately; none of the original source PNGs are modified.
