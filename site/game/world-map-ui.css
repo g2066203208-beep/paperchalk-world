@@ -26,6 +26,19 @@
  font-family:"PaperSans","Noto Sans CJK SC",sans-serif!important;
 }
 #pw-world-surface .pw-world-map:active{cursor:grabbing}
+/* Minimal map-mode switch; the original strict 12×6 dot matrix stays untouched. */
+#novel-ui #pw-world-surface .pw-map-mode-toggle{
+ position:absolute;right:10px;top:10px;z-index:30;
+ width:auto;max-width:180px;min-height:31px;padding:6px 12px!important;
+ border:1px solid #91a4ab7f!important;border-radius:3px!important;
+ background:#17252ce8!important;color:#eaf0ed!important;
+ font:500 clamp(11px,1.5cqh,13px)/1.2 "PaperSans",sans-serif!important;
+ letter-spacing:.04em;box-shadow:0 2px 12px #0008!important;
+}
+#novel-ui #pw-world-surface .pw-map-mode-toggle:hover,
+#novel-ui #pw-world-surface .pw-map-mode-toggle:focus-visible{
+ background:#32464de8!important;border-color:#d8e1df!important;
+}
 #pw-world-surface .pw-world-map::after{
  content:"";position:absolute;inset:0;
  pointer-events:none;z-index:2;
