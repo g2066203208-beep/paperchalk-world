@@ -76,6 +76,18 @@ try{
   await page.waitForTimeout(160);
   report.outage=await inspect();
   await page.screenshot({path:resolve(out,'04-outer-all-lights-off-1917x906.png')});
+  // Three real frames from the exact same running WebGL + original L2D
+  // textures. Story moments remain unedited: the power system drives them.
+  await setLighting('horror',1.3);
+  report.horrorFlicker=await inspect();
+  await page.screenshot({path:resolve(out,'07-horror-ballast-flicker-1917x906.png')});
+  await setLighting('horror',2.8);
+  report.horrorDark=await inspect();
+  await page.screenshot({path:resolve(out,'08-horror-complete-failure-1917x906.png')});
+  await setLighting('horror',6.0);
+  report.horrorRecovery=await inspect();
+  await page.screenshot({path:resolve(out,'09-horror-partial-restore-1917x906.png')});
+  await setLighting('outage');
   await page.locator('[data-mode="inner"]').click();
   await page.waitForFunction(()=>{
    const a=window.PaperWorldGameRingArena?.inspect?.();
@@ -116,8 +128,16 @@ try{
   report.outer?.safety?.gap<.07||report.inner?.safety?.gap<.07||
   report.outer?.safety?.foes?.[0]?.heightFraction<.48||
   report.inner?.safety?.foes?.[0]?.heightFraction<.52||
-  report.outer?.lighting?.physicallyGroundedShadows<5||
-  report.inner?.lighting?.physicallyGroundedShadows<5||
+  report.outer?.lighting?.physicallyGroundedShadows<10||
+  report.inner?.lighting?.physicallyGroundedShadows<10||
+  report.outer?.lighting?.contactShadow!=='original-L2D-shoe-alpha-no-ellipse'||
+  report.inner?.lighting?.contactShadow!=='original-L2D-shoe-alpha-no-ellipse'||
+  report.horrorFlicker?.lighting?.state!=='horror'||
+  report.horrorFlicker?.lighting?.levels?.[1]>.1||
+  report.horrorDark?.lighting?.levels?.some(x=>x>.001)||
+  report.horrorDark?.lighting?.physicallyGroundedShadows!==0||
+  report.horrorDark?.lighting?.emergencyPower!==1||
+  report.horrorRecovery?.lighting?.levels?.filter(x=>x===0).length<2||
   report.partial?.lighting?.state!=='partial'||
   report.partial?.lighting?.levels?.filter(x=>x===0).length<2||
   report.flicker?.lighting?.state!=='flicker'||
@@ -129,7 +149,7 @@ try{
   report.innerOutage?.lighting?.state!=='outage'||
   pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+errors.join('; '));
- console.log('PASS six 1917x906 real screenshots: 2.85m compact room; full/partial/flicker/outage; accurate L2D alpha shadows vanish with lights; five uncropped actors');
+ console.log('PASS nine real-game WebGL shots: no black circles, dual live L2D alpha shadows, scripted ballast flicker/cascade/blackout/recovery and five grounded characters');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }
