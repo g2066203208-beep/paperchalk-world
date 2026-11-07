@@ -121,6 +121,27 @@ try{
   outerEnemyDepth:report.outer?.actors?.enemies?.[0]?.z,
   innerEnemyDepth:report.inner?.actors?.enemies?.[0]?.z
  };
+ // Actual runtime RGBA source captures for transparent-edge quality review.
+ // Assets remain owned by L2D; only this QA artifact receives copies.
+ if(ready){
+  const sources=await page.evaluate(()=>{
+   const result={};
+   for(const [name,slot]of Object.entries({
+    'enemy-1':'enemy','enemy-2':'enemy2','enemy-3':'enemy3','enemy-4':'enemy4'
+   })){
+    const live=window.PaperchalkL2D?.get(slot);
+    const canvas=live?.canvas;
+    try{result[name]=canvas?.toDataURL?.('image/png')||null}
+    catch(e){result[name]=null}
+   }
+   return result;
+  });
+  for(const [id,uri]of Object.entries(sources)){
+   if(typeof uri!=='string'||!uri.startsWith('data:image/png;base64,'))continue;
+   writeFileSync(resolve(out,'10-source-RGBA-'+id+'.png'),
+    Buffer.from(uri.slice(uri.indexOf(',')+1),'base64'));
+  }
+ }
  report.ready=ready;report.errors=errors;report.validationErrors=validationErrors;report.pageErrors=pageErrors;
  writeFileSync(resolve(out,'report.json'),JSON.stringify(report,null,2));
  if(!ready||report.outer?.wallMaterial?.heightMeters!==2.85||
