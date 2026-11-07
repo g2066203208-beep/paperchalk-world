@@ -223,15 +223,24 @@ try{
  await page.setViewportSize({width:1920,height:1080});
  await page.waitForTimeout(400);
  assert.ok((await inspect()).safety.clear);
+ const desktopCard=await page.locator('[data-attack-card]').boundingBox();
+ assert.ok(desktopCard&&desktopCard.x>1550&&desktopCard.y>700,
+  'attack selector belongs in the quiet right margin, never over the centered fighters');
  await page.screenshot({path:'artifacts/ring-arena/final-desktop-1920x1080.png'});
  await page.setViewportSize({width:844,height:390});
  await page.waitForTimeout(400);
  const landscape=await inspect();assert.equal(landscape.shotIndex,0);
+ const landCard=await page.locator('[data-attack-card]').boundingBox();
+ assert.ok(landCard&&landCard.x>700&&landCard.y<95&&landCard.height<90,
+  'on short landscape screens the attack card must not cover opponent torsos');
  assert.ok(landscape.safety.clear);
  await page.screenshot({path:'artifacts/ring-arena/final-mobile-landscape.png'});
  await page.setViewportSize({width:390,height:844});
  await page.waitForTimeout(400);
  const portrait=await inspect();
+ const portraitCard=await page.locator('[data-attack-card]').boundingBox();
+ assert.ok(portraitCard&&portraitCard.x>280&&portraitCard.y<100&&portraitCard.height<90,
+  'portrait mode keeps action controls above the tiny 4-foe lineup');
  assert.equal(portrait.shotIndex,0);
  assert.ok(portrait.safety.clear);
  await page.screenshot({path:'artifacts/ring-arena/final-mobile-portrait.png'});
