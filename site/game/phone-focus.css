@@ -179,3 +179,27 @@
  #novel-ui>#phone-ui[data-focus="true"] .phone-app-label{font-size:11px!important}
  #novel-ui>#phone-ui[data-focus="true"] .phone-chat-thread{max-height:27cqh}
 }
+
+/* Visual QA V6: preserve a portrait handset silhouette, not a squarish tablet.
+   The optical close-up is larger than the approved lock-phone screen while
+   keeping a recognizably upright phone form on desktop and landscape mobile. */
+#novel-ui>#phone-ui[data-focus="true"]{
+ width:min(36cqw,560px)!important;
+ height:min(96cqh,980px)!important;
+ right:clamp(66px,9cqw,160px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-device{
+ border-radius:37px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-screen{
+ border-radius:29px!important;
+}
+@container (max-height:560px){
+ #novel-ui>#phone-ui[data-focus="true"]{
+  width:min(44cqw,460px)!important;
+  height:97cqh!important;
+  right:6cqw!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-device{border-radius:23px!important}
+ #novel-ui>#phone-ui[data-focus="true"] .phone-screen{border-radius:18px!important}
+}
