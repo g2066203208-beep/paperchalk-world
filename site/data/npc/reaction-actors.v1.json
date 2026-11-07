@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "date": "2026-11-07",
-  "purpose": "Reusable anonymous NPC-group actor prototypes and universal event-to-reaction data. Art NOT approved; no production assets registered.",
+  "purpose": "Reusable actors + base behaviors. Content semantics and scene-to-pose mappings are canonical in event-content-taxonomy.v2.json. Message/event content selects response first; persona affects only micro-performance.",
   "status": "design_candidate_rejected_images_pending_redraw",
   "referenceRules": {
     "canonicalStyle": "docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md",
@@ -218,229 +218,35 @@
       "type": "base"
     }
   ],
-  "eventKinds": [
-    {
-      "kind": "ordinary_chat",
-      "examples": [
-        "闲聊",
-        "天气",
-        "课业",
-        "笑话"
-      ],
-      "suggest": [
-        "chat_casual",
-        "laugh_small",
-        "question_lean"
-      ]
-    },
-    {
-      "kind": "rumor",
-      "examples": [
-        "校园传闻",
-        "社交媒体",
-        "目击证词"
-      ],
-      "suggest": [
-        "whisper",
-        "question_lean",
-        "doubt",
-        "check_news"
-      ]
-    },
-    {
-      "kind": "good_news",
-      "examples": [
-        "考试过关",
-        "活动成功"
-      ],
-      "suggest": [
-        "laugh_group",
-        "chat_casual"
-      ]
-    },
-    {
-      "kind": "teasing",
-      "examples": [
-        "恶作剧",
-        "说漏嘴",
-        "被朋友整蛊"
-      ],
-      "suggest": [
-        "tease",
-        "embarrassed",
-        "laugh_group"
-      ]
-    },
-    {
-      "kind": "surprising_fact",
-      "examples": [
-        "意外消息",
-        "矛盾证据",
-        "意想不到的相遇"
-      ],
-      "suggest": [
-        "surprise",
-        "question_lean",
-        "doubt"
-      ]
-    },
-    {
-      "kind": "disruption",
-      "examples": [
-        "列车延误",
-        "撞到人",
-        "有人掉东西"
-      ],
-      "suggest": [
-        "startle",
-        "worry",
-        "help"
-      ]
-    },
-    {
-      "kind": "danger_signal",
-      "examples": [
-        "尖叫",
-        "突发熄灯",
-        "有人奔跑"
-      ],
-      "suggest": [
-        "startle",
-        "fear_freeze",
-        "retreat"
-      ]
-    },
-    {
-      "kind": "official_alert",
-      "examples": [
-        "疏散广播",
-        "停课公告",
-        "治安通报"
-      ],
-      "suggest": [
-        "check_news",
-        "worry",
-        "leave"
-      ]
-    },
-    {
-      "kind": "loss_or_injury",
-      "examples": [
-        "有人受伤",
-        "朋友失联",
-        "物品遗失"
-      ],
-      "suggest": [
-        "worry",
-        "help",
-        "check_news"
-      ]
-    },
-    {
-      "kind": "resolved",
-      "examples": [
-        "找到失物",
-        "险情解除",
-        "误会澄清"
-      ],
-      "suggest": [
-        "laugh_small",
-        "help",
-        "chat_casual"
-      ]
-    }
-  ],
   "reactionContract": {
-    "incoming": {
-      "kind": "eventKinds[].kind",
-      "severity": "0..3",
-      "visibility": "0..1",
-      "credibility": "0..1",
-      "relation": "self/friend/acquaintance/stranger",
-      "knowledge": "unknown/heard/verified",
-      "safety": "safe/uncertain/unsafe",
-      "scene": "metro/school/street/other",
-      "timeOfDay": "morning/day/evening/night"
-    },
-    "selection": "Base activity + event response. First gate by scene/safety/relevance and event severity; personality biases modify the chosen expression, not the observed physical facts. Ignore weak/unverified rumor or react skeptically; events in immediate danger override conversation.",
-    "composition": "For three-person group apply one shared event plus three DIFFERENT emotional responses; do not synchronize gesture or expression. Allow staggered 0.2~1.1s reaction offsets (planning values, not implemented).",
-    "priority": [
-      "immediate danger",
-      "help injured",
-      "official evacuation",
-      "surprise",
-      "social/rumor",
-      "base activity"
+    "canonicalSource": "event-content-taxonomy.v2.json",
+    "priority": "contentType -> channel/live-vs-news -> credibility/severity/safety -> shared groupPose -> per-person expression -> continue/resume",
+    "contentFirst": true,
+    "processing": [
+      "classify news or witnessed event by contentType",
+      "check if on-site and urgent",
+      "resolve group pose using taxonomy and overrides",
+      "make A/B/C perform distinct beats within same event meaning",
+      "transition toward verify/help/leave/chat"
     ],
-    "output": [
-      "actionId",
-      "emotion",
-      "intensity",
-      "speakerSlot",
-      "listenerSlots",
-      "gesture",
-      "gazeTarget",
-      "exitIntent",
-      "durationMs"
-    ],
-    "productionState": "planning data only — not wired to metro/scene runtime; no new L2D or PNG exists."
+    "eventOrInformationNotEmotion": true,
+    "performanceRule": "Never route by NPC mood alone. Joy/fear/doubt are not event types and may only adjust execution."
   },
-  "trioReactionExamples": [
-    {
-      "event": "普通校园八卦",
-      "action": "whisper",
-      "A": "瞪圆眼兴奋追问并身体凑近",
-      "B": "讲故事手比划",
-      "C": "眯眼抿笑吐槽"
-    },
-    {
-      "event": "好笑的糗事",
-      "action": "laugh_group",
-      "A": "笑弯腰",
-      "B": "捂嘴大笑",
-      "C": "侧过头憋笑破功"
-    },
-    {
-      "event": "朋友互坑",
-      "action": "tease",
-      "A": "指着朋友坏笑",
-      "B": "先愣住再鼓脸抗议",
-      "C": "抱臂挑眉忍笑"
-    },
-    {
-      "event": "听闻失踪",
-      "action": "worry",
-      "A": "笑容收起低声发问",
-      "B": "停下讲述看手机求证",
-      "C": "认真提醒别乱传"
-    },
-    {
-      "event": "地铁突然熄灯",
-      "action": "startle",
-      "A": "缩肩抓同伴",
-      "B": "话音卡住后看向灯",
-      "C": "迅速看向车门与周围"
-    },
-    {
-      "event": "车厢出现尖叫",
-      "action": "fear_freeze",
-      "A": "惊叫并退半步",
-      "B": "捂住嘴",
-      "C": "挡在前面评估退路"
-    },
-    {
-      "event": "广播要求撤离",
-      "action": "leave",
-      "A": "跟紧同伴",
-      "B": "确认通知与方向",
-      "C": "带队离开"
-    },
-    {
-      "event": "危机消除",
-      "action": "laugh_small",
-      "A": "松口气笑出来",
-      "B": "复盘刚才发生什么",
-      "C": "叹气并轻吐槽"
-    }
-  ]
+  "eventTaxonomyRef": "site/data/npc/event-content-taxonomy.v2.json",
+  "eventKindsV1Deprecated": {
+    "reason": "Replaced by specific information/incident taxonomy v2; legacy categories ambiguous (e.g. accident news vs witnessing accident).",
+    "previousIds": [
+      "ordinary_chat",
+      "rumor",
+      "good_news",
+      "teasing",
+      "surprising_fact",
+      "disruption",
+      "danger_signal",
+      "official_alert",
+      "loss_or_injury",
+      "resolved"
+    ]
+  },
+  "trioReactionExamplesV1Deprecated": 8
 }
