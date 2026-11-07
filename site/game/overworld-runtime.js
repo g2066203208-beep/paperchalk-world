@@ -54,8 +54,13 @@
     '<button type="button" class="pw-transit-next" aria-label="继续车厢对话">继续 ›</button>';
   root.appendChild(transit);
   const director=global.PaperWorldOverworldDirector?.create?.({root})||null;
+  const cabin=global.PaperWorldMetroCabin?.create?.({
+    root,engine,onExit:exitFromMetro,onFeedback:message=>say(message)
+  })||null;
   const surfaces=global.PaperWorldOverworldSurfaces?.create?.({
-    engine,onTravel:place=>travel(place),onFeedback:message=>say(message)
+    engine,onTravel:(place,route)=>travel(place,route),
+    onBoard:(lineId,direction)=>boardMetro(lineId,direction),
+    onFeedback:message=>say(message)
   })||null;
   let paintedCity='',cityTime=-1;
   const phone=global.PaperWorldQuickTools?.phone;
@@ -140,6 +145,29 @@
       show();
     });
   }
+  async function exitFromMetro(station){
+    const dest=Core.LOCATIONS[station];
+    if(!dest)return;
+    if(dest.scene){
+      const result=await global.PaperWorldDailyLifeScene?.(dest.scene);
+      if(result===false&&stage.dataset.scene!==dest.scene)
+        say('场景未能加载，请重试。');
+    }
+    paintedCity='';draw();
+    if(dest.group==='城区'&&director){
+      global.setTimeout(()=>{if(mode)director.playLocation(station,engine.snapshot())},400);
+    }
+  }
+  async function boardMetro(lineId,direction){
+    if(traveling||!mode)return {ok:false,reason:'当前无法乘车'};
+    surfaces?.close?.();
+    const result=engine.metroBoard(lineId,direction);
+    if(result.ok){
+      contextOpen=false;prompts.hidden=true;
+      cabin?.open();draw();
+    }else say(result.reason);
+    return result;
+  }
   async function travel(place,route=null){
     if(traveling)return {ok:false,reason:'正在前往目的地'};
     const dest=Core.LOCATIONS[place];
@@ -151,6 +179,19 @@
     // The old order redrew the map above the new scene and caused flashes.
     surfaces?.close?.();
     try{
+      // A selected photo uses precisely the same physical train as clicking a
+      // line, not the old flat passenger-shadow transition.
+      if(route?.segments?.length&&route.from===previous.location&&cabin){
+        const first=route.segments[0];
+        const dir=global.PaperWorldMetro.neighbors(first.line,route.from)
+          .find(x=>x.to===first.to)?.direction;
+        if(!dir)return {ok:false,reason:'交通线路方向不可达'};
+        const boarded=engine.metroBoard(first.line.id,dir);
+        if(!boarded.ok)return boarded;
+        const journey=await cabin.playRoute(route);
+        if(!journey.ok)say(journey.reason||'列车运行受阻');
+        return journey;
+      }
       const result=engine.travel(place);
       if(!result.ok){say(result.reason);return result}
       if(route?.segments?.length&&
@@ -194,7 +235,8 @@
     }
     prompts.replaceChildren();
     const available=mode&&!root.hidden&&s.nightStatus!=='recalled';
-    prompts.hidden=!available||!contextOpen||traveling||phone?.isOpen?.()||surfaces?.isOpen?.();
+    prompts.hidden=!available||!contextOpen||traveling||phone?.isOpen?.()||
+      surfaces?.isOpen?.()||cabin?.isOpen?.();
     if(!available)return;
     // No persistent list of time, wealth, energy, relations or missions:
     // only two or three natural interactions in the current room.
@@ -238,7 +280,8 @@
   // No permanent bottom-right menu. In-world click/tap reveals a tiny
   // transient contextual list where the player actually touched the scene.
   view.addEventListener('click',event=>{
-    if(!mode||traveling||root.hidden||phone?.isOpen?.()||surfaces?.isOpen?.()||!transit.hidden)return;
+    if(!mode||traveling||root.hidden||phone?.isOpen?.()||surfaces?.isOpen?.()||
+       cabin?.isOpen?.()||!transit.hidden)return;
     if(performance.now()<suppressContextTapUntil)return;
     if(event.target.closest('button,#novel-ui,#dev-tools,#dev-stage,#scene-menu'))return;
     if(event.target.closest('#pw-world-director'))return;
@@ -253,11 +296,13 @@
     function activate(){
     if(root.hidden)return false;
     mode=true;contextOpen=false;view.classList.add('overworld-life-active');
+    if(engine.snapshot().metro?.onboard)cabin?.open();
     draw();global.PaperWorldTopHUD?.refreshClock?.();
     phone?.refresh?.();return true;
   }
   function deactivate(){
     mode=false;contextOpen=false;endTransit?.();endTransit=null;
+    cabin?.close();
     transit.hidden=true;view.classList.remove('pw-traveling','overworld-phone-open');
     prompts.hidden=true;city.hidden=true;caption.hidden=true;
     director?.close?.();surfaces?.close?.();
@@ -372,6 +417,6 @@
   global.PaperWorldDailyLifeUI=Object.freeze({
     activate,deactivate,onGameScene,
     snapshot:()=>engine.snapshot(),isModeActive:()=>mode,
-    engine,navigate,showCaption:say,surfaces,director
+    engine,navigate,showCaption:say,surfaces,director,cabin
   });
 })(window);
