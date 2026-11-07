@@ -292,24 +292,46 @@
   'ambient+=uLampColors[i]*(cosine*.92+.075)*attenuation;',
   '}return ambient;',
   '}',
-  'vec3 ringShade(vec3 paint,vec3 p,vec3 n){',
+  'vec3 ringTone(vec3 paint,vec3 irradiance){',
   'vec3 linearPaint=pow(clamp(paint,0.0,1.0),vec3(2.2));',
-  'vec3 hdr=linearPaint*ringIrradiance(p,n);',
+  'vec3 hdr=linearPaint*irradiance;',
   'return pow(hdr/(vec3(1.0)+hdr*.14),vec3(.45454545));',
+  '}',
+  'vec3 ringShade(vec3 paint,vec3 p,vec3 n){',
+  'return ringTone(paint,ringIrradiance(p,n));',
   '}'
  ].join('\n');
+ // Six analytic lamps are evaluated PER 3D VERTEX, never per wall/floor pixel.
+ // Original 160x20 curved meshes offer fine enough geometric interpolation
+ // for broad overhead fluorescent pools, including software WebGL.
  const worldVertex=[
   'precision highp float;',
   'attribute vec3 aP;attribute vec2 aUv;',
-  'uniform mat4 uVP;varying vec3 vWorld;varying vec2 vWallUv;',
-  'void main(){vWorld=aP;vWallUv=aUv;gl_Position=uVP*vec4(aP,1.0);}'
+  'uniform mat4 uVP;uniform int uSurface;uniform float uMode;',
+  'varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;',
+  lightingGLSL,
+  'void main(){',
+  'vWorld=aP;vWallUv=aUv;',
+  'float theta=asin(clamp(aP.x/32.0,-.975,.975));',
+  'vec3 n=uSurface==0?vec3(0.0,1.0,0.0):',
+  'uSurface==2?vec3(0.0,-1.0,0.0):',
+  'normalize(vec3(.7*sin(theta),0.0,(uMode>.5?-1.0:1.0)*cos(theta)));',
+  'vIrradiance=ringIrradiance(aP,n);',
+  'gl_Position=uVP*vec4(aP,1.0);}'
+ ].join('\n');
+ const worldColorGLSL=[
+  'vec3 ringTone(vec3 paint,vec3 irradiance){',
+  'vec3 linearPaint=pow(clamp(paint,0.0,1.0),vec3(2.2));',
+  'vec3 hdr=linearPaint*irradiance;',
+  'return pow(hdr/(vec3(1.0)+hdr*.14),vec3(.45454545));',
+  '}'
  ].join('\n');
  const worldFragment=[
-  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;uniform float uTime;uniform int uSurface;uniform float uMode;',
+  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;uniform float uTime;uniform int uSurface;uniform float uMode;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;',
   'uniform float uFloorReady;uniform float uCeilingReady;',
-  lightingGLSL,
+  worldColorGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
   'void main(){vec3 color;float emissive=0.0;',
@@ -351,11 +373,7 @@
    // the 76.7m curved surface = 9.58m x 3.2m (aspect preserved).
   '}',
   '}',
-  'vec3 normal=uSurface==0?vec3(0.0,1.0,0.0):',
-  'uSurface==2?vec3(0.0,-1.0,0.0):',
-  'normalize(vec3(.7*sin(asin(clamp(vWorld.x/32.0,-.975,.975))),0.0,',
-  '(uMode>.5?-1.0:1.0)*sqrt(max(.001,1.0-pow(vWorld.x/32.0,2.0)))));',
-  'color=ringShade(color,vWorld,normal);',
+  'color=ringTone(color,vIrradiance);',
   'if(uSurface==2)color=mix(color,vec3(.96,.95,.87),emissive*.90);',
   'gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
