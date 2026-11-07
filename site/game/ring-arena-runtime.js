@@ -56,12 +56,12 @@
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
  // ONE playable, standard encounter (not alternating 'surround' patterns).
- // Four foes form a centred 4.30m line on the same real floor y=0.
+ // Four foes hold one tighter 3.81m rank on the same real floor y=0.
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-1.05,9.30],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[-1.05,7.45],[.25,7.45],[1.55,7.45],[3.25,7.45]])
+   enemies:Object.freeze([[-.96,7.68],[.22,7.68],[1.40,7.68],[2.85,7.68]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
@@ -128,8 +128,8 @@
  const SHOT_NAMES=Object.freeze(['固定左机位']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
-   id:'left',eyeX:.20,eyeZ:10.55,eyeY:1.50,
-   focusX:0,focusY:1.50,focusZ:5.40,fov:70
+   id:'left',eyeX:.20,eyeZ:10.58,eyeY:1.50,
+   focusX:.18,focusY:1.50,focusZ:5.40,fov:66
   })]),
   inner:Object.freeze([Object.freeze({
    id:'left',eyeX:.78,eyeZ:7.15,eyeY:1.50,
