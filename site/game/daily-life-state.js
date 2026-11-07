@@ -144,6 +144,8 @@
       relationships:{female2:55,classmate:0,clerk:0,neighbor:0},
       inventory:{bread:1,water:1,bandage:1,keys:1,homework:1},dailyUses:{},nightStatus:'day',
       phone:{callsRead:false,messagesRead:false,reply:null},
+      phoneThreads:{female2:[]},phoneCalls:[],transitRumors:[],
+      mediaPhotos:[],socialPosts:[],
       homework:{status:'unfinished',inspected:false,handedIn:false},
       log:[{day:1,minute:7*60,text:'新的一天开始了。先安排今天的生活。'}],
       updatedBy:'new-game'};
@@ -180,6 +182,38 @@
       inspected:raw.homework?.inspected===true,
       handedIn:raw.homework?.handedIn===true
     };
+    // Bounded in-world phone/social state; never treat player text as HTML.
+    if(Array.isArray(raw.phoneThreads?.female2))
+      s.phoneThreads.female2=raw.phoneThreads.female2.slice(-40).filter(m=>
+        m&&typeof m.text==='string'&&m.text.length<=200&&
+        ['me','female2'].includes(m.from)&&Number.isFinite(m.day))
+        .map(m=>({from:m.from,text:m.text,day:CLAMP(INTEGER(m.day,1),1,9999),
+          minute:CLAMP(INTEGER(m.minute,0),0,1440)}));
+    if(Array.isArray(raw.phoneCalls))
+      s.phoneCalls=raw.phoneCalls.slice(-24).filter(m=>
+        m&&m.to==='female2'&&Number.isFinite(m.day)).map(m=>({
+          to:'female2',video:m.video===true,answered:m.answered===true,
+          day:CLAMP(INTEGER(m.day,1),1,9999),minute:CLAMP(INTEGER(m.minute,0),0,1440)
+        }));
+    if(Array.isArray(raw.transitRumors))
+      s.transitRumors=raw.transitRumors.slice(-40).filter(m=>
+        m&&typeof m.id==='string'&&m.id.length<90&&typeof m.text==='string'&&m.text.length<240&&
+        Number.isFinite(m.day)).map(m=>({
+          id:m.id,text:m.text,day:CLAMP(INTEGER(m.day,1),1,9999)
+        }));
+    if(Array.isArray(raw.mediaPhotos))
+      s.mediaPhotos=raw.mediaPhotos.slice(-8).filter(m=>
+        m&&typeof m.id==='string'&&m.id.length<70&&
+        typeof m.data==='string'&&m.data.length<175000&&
+        /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(m.data)).map(m=>({
+          id:m.id,data:m.data,day:CLAMP(INTEGER(m.day,1),1,9999),
+          minute:CLAMP(INTEGER(m.minute,0),0,1440)
+        }));
+    if(Array.isArray(raw.socialPosts))
+      s.socialPosts=raw.socialPosts.slice(-24).filter(m=>
+        m&&typeof m.text==='string'&&m.text.length<=180&&typeof m.photoId==='string')
+        .map(m=>({text:m.text,photoId:m.photoId.slice(0,70),
+          day:CLAMP(INTEGER(m.day,1),1,9999),minute:CLAMP(INTEGER(m.minute,0),0,1440)}));
     s.nightStatus=raw.nightStatus==='recalled'?'recalled':'day';
     if(s.minute>=NIGHT)s.nightStatus='recalled';
     if(Array.isArray(raw.log))s.log=raw.log.slice(-40).filter(x=>
@@ -336,6 +370,64 @@
       return finish('phone-reply',choice==='coming'?
         '回复女二：还没写，我现在过去！':'回复女二：我先看看书包，马上出门。');
     }
+    function sendPhoneMessage(to,text){
+      if(to!=='female2')return fail('联系人不存在');
+      const body=String(text||'').trim().slice(0,180);
+      if(!body)return fail('消息不能为空');
+      const stamp={day:state.day,minute:state.minute};
+      state.phoneThreads.female2.push({...stamp,from:'me',text:body});
+      // Available classmates respond in their own voice and according to the day.
+      const replies=stageOf(state)===1?
+        ['看到啦。今天作业可别忘了！','好，我在学校等你。','你又在路上玩手机？小心迟到。','那我们放学再聊。']:
+        ['我也看到消息了，先别一个人去那边。','听起来有点奇怪，我们到学校再说。','我正准备确认消息来源，别急着传。'];
+      const reply=replies[(state.phoneThreads.female2.filter(m=>m.from==='me').length-1)%replies.length];
+      state.phoneThreads.female2.push({...stamp,from:'female2',text:reply});
+      state.phoneThreads.female2=state.phoneThreads.female2.slice(-40);
+      return finish('phone-message','给女二发送了一条消息。',{type:'phone',action:'message'});
+    }
+    function phoneCall(to,video=false){
+      if(to!=='female2')return fail('联系人不存在');
+      const now=state.minute;
+      const answered=now>=6*60+30&&now<21*60&&state.nightStatus==='day';
+      const note=answered?
+        stageOf(state)===1?'女二：你终于打电话了。今天早点来学校，我有事找你。':
+        '女二：你现在在哪儿？最近的传闻越来越奇怪了，先确认安全。':
+        '对方没有接听，已记入通话记录。';
+      const cost=answered?4:1;
+      const time=spend(cost);if(!time.ok)return time;
+      state.phoneCalls.push({to,video:!!video,answered,day:state.day,minute:now});
+      state.phoneCalls=state.phoneCalls.slice(-24);
+      const res=finish('phone-call',note);
+      return {...res,answered,video:!!video,speaker:answered?'女二':'通话记录',text:note};
+    }
+    function recordTransitRumor(id,text){
+      const key=String(id||'').slice(0,80),body=String(text||'').slice(0,220);
+      if(!key||!body)return fail('无效的见闻');
+      if(state.transitRumors.some(p=>p.id===key))return {ok:true,alreadyKnown:true};
+      state.transitRumors.push({id:key,text:body,day:state.day});
+      state.transitRumors=state.transitRumors.slice(-40);
+      state.updatedBy='metro-rumor';persist();notify('metro-rumor');
+      return {ok:true,discovered:true};
+    }
+    function addPhonePhoto(data){
+      const bytes=String(data||'');
+      if(bytes.length>175000||!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(bytes))
+        return fail('照片需要是压缩后的 JPEG 图片');
+      const id='photo-'+state.day+'-'+state.minute+'-'+Math.round(Math.random()*1000000);
+      state.mediaPhotos.push({id,data:bytes,day:state.day,minute:state.minute});
+      state.mediaPhotos=state.mediaPhotos.slice(-8);
+      const res=finish('phone-photo','保存了一张手机照片。');
+      return {...res,photoId:id};
+    }
+    function publishSocial(text,photoId=''){
+      const body=String(text||'').trim().slice(0,180);
+      const id=String(photoId||'').slice(0,70);
+      if(!body&&!id)return fail('请输入文字或选择照片');
+      if(id&&!state.mediaPhotos.some(p=>p.id===id))return fail('照片已经不在相册里');
+      state.socialPosts.unshift({text:body,photoId:id,day:state.day,minute:state.minute});
+      state.socialPosts=state.socialPosts.slice(0,24);
+      return finish('phone-post','已发布到游戏世界的城市论坛。');
+    }
     function inspectHomework(){
       if(!['bedroom','living-room'].includes(state.location))return fail('书包留在卧室，先回去看看');
       if(state.day!==1)return fail('这是第一天的作业事件');
@@ -400,7 +492,9 @@
       state=defaultState();persist();notify('reset');return snapshot();
     }
     return Object.freeze({snapshot,subscribe,persist,travel,act,buy,use,inspectItem,talk,wait,sleep,
-      phoneInbox,markPhoneRead,replyHomework,inspectHomework,finishHomework,submitHomework,
+      phoneInbox,markPhoneRead,replyHomework,sendPhoneMessage,phoneCall,
+      recordTransitRumor,addPhonePhoto,publishSocial,
+      inspectHomework,finishHomework,submitHomework,
       recordNightReturn,reset,calendar:()=>calendar(state)});
   }
   return Object.freeze({VERSION,KEY,LOCATIONS,NPCS,ACTIONS,ITEM_META,STAGES,dayDate,
