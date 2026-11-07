@@ -10,8 +10,8 @@ function setup(){
     naturalWidth=0;naturalHeight=0;
     set src(value){
       this.url=value;
-      if(value.endsWith('/cabin-master.webp')){
-        this.naturalWidth=2048;this.naturalHeight=1024;
+      if(value.endsWith('/cabin-master-illustrated.webp')){
+        this.naturalWidth=2172;this.naturalHeight=724;
         this.onload?.();
       }else this.onerror?.();
     }
@@ -34,17 +34,17 @@ function canvas(){
 }
 test('the Anima master scene points to a separate reviewed asset, not a hard-coded image data string',()=>{
  const painter=setup();
- assert.equal(painter.ART.master,'./assets/metro/side/cabin-master.webp');
+ assert.equal(painter.ART.master,'./assets/metro/side/cabin-master-illustrated.webp');
  assert.equal(painter.hasMaster(),false);
 });
-test('2048x1024 artwork is shown without distortion on a 16:9 game viewport',()=>{
+test('2172x724 painted subway wall preserves exact aspect on 16:9 viewport',()=>{
  const painter=setup(),ctx=canvas();
  painter.drawBackground(ctx,1440,810,0,false);
  ctx.ops.length=0;
  painter.drawBackground(ctx,1440,810,0,false);
  const entry=ctx.ops.find(o=>o[0]==='drawImage');
  assert.ok(entry,'the loaded Anima scene should replace procedural geometry');
- assert.deepEqual(entry.slice(2),[0,45,1440,720]);
+ assert.deepEqual(entry.slice(2),[0,165,1440,480]);
  assert.equal(painter.hasMaster(),true);
 });
 test('full illustration never receives a fake foreground bench on top of its built-in seat art',()=>{
