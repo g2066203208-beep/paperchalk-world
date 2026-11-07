@@ -213,6 +213,9 @@ assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
 assert.ok(Math.abs(ring.STAGING.outer.enemies[3][0]-
  ring.STAGING.outer.enemies[2][0]-.970)<1e-7,
  'fourth character broad sleeves need a wider last gap');
+assert.ok(Math.abs(ring.STAGING.inner.enemies[1][0]-
+ ring.STAGING.inner.enemies[0][0]+.784)<1e-7,
+ 'the reverse battle line needs the same visual clearance');
 assert.match(src,/shadowClipUv=/,
  'the shadow penumbra must have a separately padded alpha crop');
 assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,

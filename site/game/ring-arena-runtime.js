@@ -64,7 +64,7 @@
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
-   enemies:Object.freeze([[.644,11.0],[-.044,11.0],[-.734,11.0],[-1.422,11.0]])
+   enemies:Object.freeze([[.644,11.0],[-.14,11.0],[-.924,11.0],[-1.86,11.0]])
   })
  });
  const bindings=Object.freeze({

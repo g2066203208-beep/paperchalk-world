@@ -44,8 +44,8 @@ for(const mode of ['outer','inner']){
   'eye-height over-shoulder framing must not put heroine head against ceiling');
  const centers=scene.enemies.map(e=>arena.project({...e,y:e.height*.5},c).x);
  const mean=centers.reduce((a,b)=>a+b,0)/4;
- assert.ok(mean>(mode==='outer'?.36:.29)&&mean<(mode==='outer'?.43:.37),
-   'all four enemy bodies occupy the right lane after wide-sleeve clearance');
+ assert.ok(mean>.36&&mean<.43,
+   'both four-enemy rows occupy the right battle lane after silhouette spacing');
  const ordered=[...centers].sort((a,b)=>a-b);
  for(let i=1;i<ordered.length;i++)assert.ok(ordered[i]-ordered[i-1]>.185);
  const feet=scene.enemies.map(e=>arena.project({x:e.x,y:0,z:e.z},c));

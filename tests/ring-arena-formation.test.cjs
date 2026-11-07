@@ -34,17 +34,11 @@ for(const mode of ['outer','inner']){
   assert.ok(feet.every(p=>p.valid));
   assert.ok(feet.every(p=>Math.abs(p.y-feet[0].y)<.001),
    'foe shoe bottoms must align on one projected floor line at aspect '+aspect);
-  if(mode==='outer'){
-   // The last actor's coat is physically wider than the three slim poses.
-   assert.ok(spacing[0]>.22&&spacing[0]<.25&&spacing[1]>.22&&spacing[1]<.25);
-   assert.ok(Math.abs(spacing[0]-spacing[1])<.002);
-   assert.ok(spacing[2]>.26&&spacing[2]<.30,
-    'give the fourth character additional lateral clearance');
-  }else{
-   assert.ok(spacing.every(d=>d>.185&&d<.235),
-    'reverse formation retains even spacing');
-   assert.ok(Math.max(...spacing)-Math.min(...spacing)<.002);
-  }
+  // Each view reserves extra clearance for the fourth actor's wide coat.
+  assert.ok(spacing[0]>.22&&spacing[0]<.25&&spacing[1]>.22&&spacing[1]<.25);
+  assert.ok(Math.abs(spacing[0]-spacing[1])<.002);
+  assert.ok(spacing[2]>.26&&spacing[2]<.30,
+   'fourth character coat must not overlap the shopping-bag actor');
   const safety=ring.battleVisualSafety(mode,0,aspect,ring.FEMALE07_BACK_UV);
   assert.ok(safety.valid&&safety.clear,'actual female07 weapon + enemy bounds in safe zone');
   assert.ok(safety.hero.left>-.99,'left shoulder/head/ponytail must not be cropped');
