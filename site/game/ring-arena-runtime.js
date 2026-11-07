@@ -56,12 +56,12 @@
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
  // ONE playable, standard encounter (not alternating 'surround' patterns).
- // Four foes hold one tighter 3.81m rank on the same real floor y=0.
+ // Four foes share one 3.84m rank, backed off to restore breathing room in front of the camera.
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-1.05,9.30],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[-.96,7.68],[.22,7.68],[1.40,7.68],[2.85,7.68]])
+   enemies:Object.freeze([[-.90,7.15],[.29,7.15],[1.48,7.15],[2.94,7.15]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
@@ -128,8 +128,8 @@
  const SHOT_NAMES=Object.freeze(['固定左机位']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
-   id:'left',eyeX:.20,eyeZ:10.58,eyeY:1.50,
-   focusX:.18,focusY:1.50,focusZ:5.40,fov:66
+   id:'left',eyeX:-.05,eyeZ:10.52,eyeY:1.50,
+   focusX:-.10,focusY:1.50,focusZ:5.40,fov:66
   })]),
   inner:Object.freeze([Object.freeze({
    id:'left',eyeX:.78,eyeZ:7.15,eyeY:1.50,
@@ -167,10 +167,10 @@
   },lookYawDeg:yaw*180/Math.PI,lookPitchDeg:pitch*180/Math.PI};
  }
  // SHOULDER RIG:
- // hero world root is fixed, but its body orientation follows 85% of mouse
- // yaw. The camera follows a rotated local shoulder offset from that root,
- // so the player remains LARGE in frame while wall/foes move via true parallax.
- // World-space quads and original alpha shadows always use the same VP matrix.
+ // The heroine is fixed in WORLD POSITION and WORLD ORIENTATION for all mouse
+ // inputs. Only the camera orbits her shoulder pivot: no turn-to-cursor,
+ // cursor-linked sprite lean, or screen-space portrait translation.
+ // Every actor, shadow and surface still shares the exact same WebGL VP.
  // On portrait phones the shoulder boom extends to show all four opponents.
  function shoulderCamera(base,hero,cursorX=0,cursorY=0,aspect=16/9){
   const x=clamp(Number(cursorX)||0,-1,1);
@@ -197,7 +197,7 @@
   return {...base,eye,focus,
    shoulderRig:true,shoulderPivot:pivot,
    shoulderBoomMeters:Math.hypot(dx,dz),
-   heroYawDeg:yawDeg*.85,lookYawDeg:yawDeg,
+   heroYawDeg:0,lookYawDeg:yawDeg,
    lookPitchDeg:pitch*180/Math.PI,
    phoneShoulderFit:phone,actorRootUnchanged:true};
  }
@@ -241,18 +241,17 @@
  // They are NOT screen overlays and do NOT swivel to chase the camera when
  // an attack temporarily changes the view. Their local yaw preserves the
  // original authored rear/side pose while providing real foreshortening.
- function actorWorldRight(actor,mode='outer',heroYawDeg=0){
+ function actorWorldRight(actor,mode='outer'){
   const flip=mode==='inner'?-1:1;
-  // Enemies keep original world-facing ArtMesh normals. Only the heroine's
-  // grounded body pivots to follow the shoulder camera (original 2D art stays
-  // unmodified and does NOT become a screen-space billboard).
-  const yaw=actor?.id==='hero'?-0.05+rad(heroYawDeg):0;
+  // All actors, including the heroine, retain one stable world orientation.
+  // Moving the mouse may orbit the camera but cannot rotate the painted art.
+  const yaw=actor?.id==='hero'?-0.05:0;
   return {x:flip*Math.cos(yaw),y:0,z:Math.sin(yaw)};
  }
  // Actual WebGL billboard quad bounds from the SAME 3D projection used in
  // the render shader. Used to prevent enemy clipping on authored camera stops.
  function portraitBounds(actor,cam,aspect=16/9){
-  const right=actorWorldRight(actor,cam.mode,cam.heroYawDeg||0);
+  const right=actorWorldRight(actor,cam.mode);
   const h=actor.height/Math.max(.01,actor.soleY-actor.crownY),points=[];
   for(const u of [0,1])for(const v of [0,1])
    points.push(project({
@@ -275,7 +274,7 @@
  // extents in screen safety rather than the former protagonist's narrow UV.
  const FEMALE07_BACK_UV=Object.freeze({left:.222,right:.775,top:.012,bottom:1});
  function portraitVisibleBounds(actor,cam,uv=CANONICAL_BACK_UV,aspect=16/9){
-  const right=actorWorldRight(actor,cam.mode,cam.heroYawDeg||0);
+  const right=actorWorldRight(actor,cam.mode);
   const h=actor.height/Math.max(.01,actor.soleY-actor.crownY),pts=[];
   for(const u of [uv.left,uv.right])for(const v of [uv.top,uv.bottom])
    pts.push(project({x:actor.x+right.x*(u-actor.soleX)*h,
@@ -1450,7 +1449,7 @@
     const pivot=tex.opaqueUv;
     const crown=pivot?clamp(pivot.top,0,.40):a.crownY;
     const sole=pivot?clamp(pivot.bottom,crown+.20,1):a.soleY;
-    const right=actorWorldRight(a,mode,cam.heroYawDeg||0);
+    const right=actorWorldRight(a,mode);
     gl.uniform3fv(projectedShadow.uRight,new Float32Array([right.x,0,right.z]));
     gl.uniform3fv(projectedShadow.uFoot,new Float32Array([a.x,a.y,a.z]));
     gl.uniform1f(projectedShadow.uHeight,a.height);
@@ -1559,7 +1558,7 @@
      art?.painted?requested:
      requested==='hurt-original'?'hurt-original':'idle';
     if(!t?.painted)continue;
-    const right=actorWorldRight(a,mode,cam.heroYawDeg||0);
+    const right=actorWorldRight(a,mode);
     const forward=normalize(cross(right,{x:0,y:1,z:0}));
     gl.uniform3fv(portrait.uRight,new Float32Array([right.x,0,right.z]));
     gl.uniform3fv(portrait.uRightDir,new Float32Array([right.x,0,right.z]));
@@ -1581,11 +1580,11 @@
      t.visibleUv||{left:0,top:0,right:1,bottom:1};
     gl.uniform4f(portrait.uClipUv,clip.left,clip.top,clip.right,clip.bottom);
     gl.uniform1f(portrait.uWidthScale,1);
+    // Mouse movement does not animate, tilt or translate the heroine.
+    // An actual attack still has its authored one-shot physical lunge.
     gl.uniform1f(portrait.uLean,
-     (female07Actor&&attackSample?.advance
-      ? .095*attackSample.advance-.028*attackSample.recoil:0)+
-     (a.id==='hero'&&!attack?.targetId?.length
-      ? .010*Math.sin(rad(cam.heroYawDeg||0)):0));
+     female07Actor&&attackSample?.advance
+      ? .095*attackSample.advance-.028*attackSample.recoil:0);
     gl.uniform1f(portrait.uHit,attack&&a.id===attack.targetId&&attackSample?
      attackSample.hitFlash:0);
     const duelPerformer=!!attack&&(a.id==='hero'||a.id===attack.targetId);
