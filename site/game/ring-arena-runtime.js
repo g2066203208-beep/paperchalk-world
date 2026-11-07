@@ -479,18 +479,19 @@
   'precision highp float;attribute vec2 aUv;uniform mat4 uVP;',
   'uniform vec3 uFoot;uniform vec3 uRight;uniform vec3 uLamp;',
   'uniform float uHeight;uniform float uSoleX;uniform float uSoleY;',
-  'uniform float uCrownY;varying vec2 vUv;',
+  'uniform float uCrownY;uniform float uContact;varying vec2 vUv;',
   'void main(){',
   'float h=uHeight/max(.01,uSoleY-uCrownY);',
   'vec3 person=uFoot+uRight*(aUv.x-uSoleX)*h',
   '+vec3(0.0,(uSoleY-aUv.y)*h,0.0);',
   'float factor=uLamp.y/max(.15,uLamp.y-person.y);',
   'vec3 p=uLamp+(person-uLamp)*factor;',
-  'p.y=.022;vUv=aUv;gl_Position=uVP*vec4(p,1.0);}'
+  'p.xz=mix(p.xz,uFoot.xz,uContact*.82);',
+  'p.y=.022+uContact*.003;vUv=aUv;gl_Position=uVP*vec4(p,1.0);}'
  ].join('\n');
  const projectedShadowFragment=[
   'precision mediump float;varying vec2 vUv;',
-  'uniform sampler2D uTexture;uniform float uStrength;',
+  'uniform sampler2D uTexture;uniform float uStrength;uniform float uContact;',
   'void main(){',
   'vec2 uv=vec2(vUv.x,1.0-vUv.y);',
   'float a=texture2D(uTexture,uv).a*.38;',
@@ -498,7 +499,9 @@
   'a+=texture2D(uTexture,uv-vec2(.011,0.0)).a*.155;',
   'a+=texture2D(uTexture,uv+vec2(0.0,.011)).a*.155;',
   'a+=texture2D(uTexture,uv-vec2(0.0,.011)).a*.155;',
-  'float edge=smoothstep(.16,.85,a);',
+  'float edge=smoothstep(.10,.82,a);',
+  'float shoes=smoothstep(.68,.94,vUv.y);',
+  'edge*=mix(1.0,shoes,uContact);',
   'gl_FragColor=vec4(.008,.012,.018,edge*uStrength);}'
  ].join('\n');
  function projectedShadowMesh(gl){
@@ -513,21 +516,8 @@
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);
   return {buffer,count:data.length/2};
  }
- // Lightweight ground contact: one blended elliptical quad under each
- // visible actor, leaving all original L2D textures and lights untouched.
- const shadowVertex=[
-  'precision highp float;attribute vec2 aUv;uniform mat4 uVP;',
-  'uniform vec3 uFoot;uniform vec3 uShadowLight;uniform float uRadius;varying vec2 vLocal;',
-  'void main(){vLocal=aUv*2.0-1.0;',
-  'vec2 sl=(uFoot.xz-uShadowLight.xz)*.065;',
-  'vec3 p=uFoot+vec3(sl.x*.43+vLocal.x*uRadius,0.016,sl.y*.43+vLocal.y*uRadius*.72);',
-  'gl_Position=uVP*vec4(p,1.0);}'
- ].join('\n');
- const shadowFragment=[
-  'precision mediump float;varying vec2 vLocal;uniform float uStrength;',
-  'void main(){float d=dot(vLocal,vLocal);float w=1.0-smoothstep(.08,1.0,d);',
-  'gl_FragColor=vec4(.008,.012,.019,uStrength*w);}'
- ].join('\n');
+ // Contact and cast shadows now BOTH use the original L2D texture alpha;
+ // fake circular/elliptical ground shadows are never drawn.
  // Physically reversed wall bend when viewed from the opposite side.
  function backdropPoint(mode='outer',angle=0){
   const a=clamp(angle,-SPEC.wallArcHalfAngle,SPEC.wallArcHalfAngle);
@@ -710,7 +700,7 @@
    :previewPose==='level'
     ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
     :'./assets/characters/protagonist-back-combat-3q-final.webp';
-  let gl=null,world=null,portrait=null,shadow=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,quad=null;
+  let gl=null,world=null,portrait=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,quad=null;
    let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null;
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
    const surfaceMaterials=Object.fromEntries(Object.entries(SURFACE_TEXTURES)
@@ -723,13 +713,12 @@
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
    world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
-   shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uShadowLight','uRadius','uStrength']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
     ['uVP','uCenter','uSize','uLevel','uEmergency']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
-    ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uTexture','uStrength']);
+    ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uTexture','uStrength','uContact']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner]=worldMesh(gl);
    shadowGrid=projectedShadowMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
@@ -1189,33 +1178,18 @@
     const lamps=nearestLitLamps(a,mode);
     for(let i=0;i<lamps.length;i++){
      gl.uniform3fv(projectedShadow.uLamp,lamps[i].position);
-     gl.uniform1f(projectedShadow.uStrength,
-      Math.min(.22,lamps[i].strength*.27));
+     gl.uniform1f(projectedShadow.uContact,0);
+     gl.uniform1f(projectedShadow.uStrength,Math.min(.47,lamps[i].strength*.55));
+     gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
+     projectedShadowDraws++;
+     gl.uniform1f(projectedShadow.uContact,1);
+     gl.uniform1f(projectedShadow.uStrength,Math.min(.58,lamps[i].strength*.74));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
     }
    }
    gl.depthMask(true);gl.disable(gl.BLEND);
    gl.disableVertexAttribArray(projectedShadow.aUv);
-  }
-  function drawContactShadows(actors,vp){
-   gl.useProgram(shadow.handle);
-   gl.uniformMatrix4fv(shadow.uVP,false,new Float32Array(vp));
-   gl.bindBuffer(gl.ARRAY_BUFFER,quad);
-   gl.enableVertexAttribArray(shadow.aUv);
-   gl.vertexAttribPointer(shadow.aUv,2,gl.FLOAT,false,8,0);
-   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-   gl.depthMask(false);
-   for(const a of actors){
-    gl.uniform3fv(shadow.uFoot,new Float32Array([a.x,0,a.z]));
-    const nearest=nearestLitLamps(a,mode)[0];
-    gl.uniform3fv(shadow.uShadowLight,nearest?.position||currentLighting.emergencyPosition);
-    gl.uniform1f(shadow.uStrength,lightState==='outage'?.16:.48);
-    gl.uniform1f(shadow.uRadius,a.id==='hero'?.46:.35);
-    gl.drawArrays(gl.TRIANGLES,0,6);
-   }
-   gl.depthMask(true);gl.disable(gl.BLEND);
-   gl.disableVertexAttribArray(shadow.aUv);
   }
   // The image stays on the actor's ground-anchored billboard, never a DOM
   // fullscreen illustration. One GPU upload is enough per static pose.
@@ -1414,7 +1388,6 @@
    drawnActorIds=presented.map(a=>a.id);
    // The same temporary lunge transforms affect cast shadows and portraits.
    drawProjectedShadows(presented,cam,vp);
-   drawContactShadows(presented,vp);
    drawActors(presented,cam,vp);
    if(armed)updateTargetPositions(base,w/h);
    if(attack&&attackSample){
@@ -1470,6 +1443,7 @@
      emergencyPower:currentLighting.emergencyPower,
      physicallyGroundedShadows:projectedShadowDraws,
      silhouetteProjection:'original-L2D-alpha-ray-intersection-y0',
+     contactShadow:'original-L2D-shoe-alpha-no-ellipse',
      shadowMode:'live-ceiling-source-world-planar-occlusion',
      switchableFixtures:true,
      fixtureHeight:LIGHTING.height,
