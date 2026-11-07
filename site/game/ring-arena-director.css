@@ -2,14 +2,14 @@
    Only a compact attack selector and the victim-anchored hit FX use DOM.
    Motion, pose, flash and damage timing all come from director.sample(). */
 #ring-arena-controls .director-deck {
- position:absolute;left:50%;bottom:70px;transform:translateX(-50%);
- z-index:6;display:flex;flex-direction:column;align-items:center;gap:5px;
+ position:absolute;right:24px;bottom:24px;
+ z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:5px;
  pointer-events:none
 }
 #ring-arena-controls .director-card {
  pointer-events:auto;touch-action:manipulation;cursor:pointer;
  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
- width:112px;min-height:116px;padding:8px 7px;
+ width:100px;min-height:98px;padding:7px 6px;
  background:linear-gradient(150deg,#361b26ed,#10151af4)!important;
  border:1px solid #a46772!important;border-radius:9px!important;
  box-shadow:0 7px 22px #0009,inset 0 0 0 1px #ffffff08;
@@ -20,7 +20,7 @@
  transform:translateY(-3px);border-color:#edabb1!important
 }
 #ring-arena-controls .director-card svg {
- width:30px;height:30px;display:block;flex:none;stroke:#e6c6b6
+ width:26px;height:26px;display:block;flex:none;stroke:#e6c6b6
 }
 #ring-arena-controls .director-card strong {
  font-size:13px;font-weight:700;letter-spacing:.06em
@@ -32,7 +32,7 @@
  color:#be8c91;font-size:9px;letter-spacing:.16em
 }
 #ring-arena-controls .director-prompt {
- color:#e4dfd8;white-space:nowrap;font:11px/1.4 system-ui,sans-serif;
+ color:#e4dfd8;white-space:normal;max-width:180px;text-align:right;font:11px/1.4 system-ui,sans-serif;
  text-shadow:0 2px 6px #000a
 }
 #ring-arena-controls .director-card:focus-visible,
@@ -101,16 +101,21 @@
  color:#ffecdc;text-shadow:1px 2px 0 #310e18,0 3px 12px #000c;
  letter-spacing:-.04em;will-change:opacity,transform
 }
-@media(max-width:690px) {
- #ring-arena-controls .director-deck {bottom:49px;gap:3px}
- #ring-arena-controls .director-card {
-  width:80px;min-height:85px;padding:4px 5px!important;gap:3px
+/* Keep the combatants unobstructed on narrow/short screens: the card lives
+   in the empty ceiling corner, not across the central character silhouettes. */
+@media(max-width:690px), (max-height:520px) {
+ #ring-arena-controls .director-deck {
+  top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));
+  bottom:auto;gap:0;align-items:flex-end
  }
- #ring-arena-controls .director-card svg {width:22px;height:22px}
+ #ring-arena-controls .director-card {
+  width:74px;min-height:64px;padding:5px 4px!important;gap:2px
+ }
+ #ring-arena-controls .director-card svg {width:20px;height:20px}
  #ring-arena-controls .director-card strong {font-size:11px}
- #ring-arena-controls .director-card .director-stats {font-size:8px}
- #ring-arena-controls .director-card .director-card-type {font-size:8px}
- #ring-arena-controls .director-prompt {font-size:9px}
+ #ring-arena-controls .director-card .director-stats,
+ #ring-arena-controls .director-card .director-card-type,
+ #ring-arena-controls .director-prompt {display:none}
  #ring-arena-controls .director-target {font-size:10px;min-height:28px!important}
  #ring-arena-controls .director-impact {width:72px;height:72px}
  #ring-arena-controls .director-damage {font-size:20px}
