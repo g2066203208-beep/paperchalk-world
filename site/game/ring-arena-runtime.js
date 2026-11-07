@@ -1293,7 +1293,7 @@
     return [a.id,{crownY:uv?.top??a.crownY,
      soleY:uv?.bottom??a.soleY,fromAlpha:!!uv}];
    })),
-   l2dReady:visibleActors(mode).filter(a=>textures.get(a.id).painted).length,
+   l2dReady:visibleActors(mode).filter(a=>textures.get(a.id)?.painted).length,
    heroine:{
     id:previewPose==='female7'?'female-07':
      window.PaperchalkL2D?.get('player')?.img?.dataset.characterId||null,
