@@ -109,6 +109,24 @@ try{
  assert.equal(await page.locator('#overworld-city-stage').isVisible(),false,
    'Actual school art must render, not placeholder label');
  await snap('07-school-classroom.png');
+ // Click an actual colored track, not a photo. Show directional menu locally.
+ await openMap();
+ const diagram=await page.locator('.pw-transit-map').boundingBox();
+ assert.ok(diagram,'metro map layout must exist');
+ await page.mouse.click(diagram.x+diagram.width*.415,diagram.y+diagram.height*.315);
+ await page.locator('.pw-transit-popup:not([hidden])').waitFor();
+ assert.ok((await page.locator('.pw-transit-popup').innerText()).includes('住宅线'));
+ await snap('07a-clicked-rail-direction.png');
+ await page.locator('.pw-transit-menu-item.is-primary').filter({hasText:'中央换乘站'}).click();
+ await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro?.onboard);
+ await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.cabin?.isOpen?.());
+ await snap('07b-train-interior-3d.png');
+ assert.equal((await info()).metro.station,'school');
+ await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
+ assert.equal((await info()).metro.station,'central');
+ await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'下车'}).click();
+ await page.waitForFunction(()=>!window.PaperWorldDailyLifeUI.cabin?.isOpen?.());
+ assert.equal((await info()).location,'central');
  await openMap();await go('convenience','convenience.svg');
  await snap('08-convenience-store.png');
  await tapScene('shop');
