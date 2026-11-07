@@ -473,10 +473,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // atlas photo POIs must not blanket its station names at initial city zoom.
   // Only reveal those optional investigations at street-level detail.
   const occupied=[];
-  if(!metroLayer.hidden&&currentCity==='kirihama'){
-   for(const st of Object.values(metro.STATIONS)){
+  if(scale>=1.22&&currentCity==='kirihama'){
+   for(const [id,st] of Object.entries(metro.STATIONS)){
     const loc=localPoint(st);
-    occupied.push({x:x+loc.x*scale,y:y+(loc.y-(PHOTO[Object.keys(metro.STATIONS).find(id=>metro.STATIONS[id]===st)]?CELL:0))*scale});
+    occupied.push({x:x+loc.x*scale,
+     y:y+(loc.y-(PHOTO[id]?CELL:0))*scale});
    }
   }
   for(const {node,poi} of worldNodes){
