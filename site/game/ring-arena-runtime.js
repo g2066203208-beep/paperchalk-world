@@ -1910,7 +1910,7 @@
     im.onerror=()=>{if(environmentEpoch===epoch){
      target.error='Unable to load '+path;canvas.dataset[kind+'Texture']='error';
     }};
-    im.src=path+(path.startsWith('./assets/metro/side/')?'?v=carriage-joined-v39-20261107':'');
+    im.src=path+(path.startsWith('./assets/metro/side/')?'?v=station-light-floor-v46-20261108':'');
    }
    return true;
   }
