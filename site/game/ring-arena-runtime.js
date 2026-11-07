@@ -326,7 +326,7 @@
   'vec3 ringTone(vec3 paint,vec3 irradiance){',
   'vec3 linearPaint=pow(clamp(paint,0.0,1.0),vec3(2.2));',
   'vec3 hdr=linearPaint*irradiance;',
-  'return pow(hdr/(vec3(1.0)+hdr*.14),vec3(.45454545));',
+  'return pow(clamp(hdr/(vec3(1.0)+hdr),0.0,1.0),vec3(.45454545));',
   '}',
   'vec3 ringShade(vec3 paint,vec3 p,vec3 n){',
   'return ringTone(paint,ringIrradiance(p,n));',
@@ -354,7 +354,7 @@
   'vec3 ringTone(vec3 paint,vec3 irradiance){',
   'vec3 linearPaint=pow(clamp(paint,0.0,1.0),vec3(2.2));',
   'vec3 hdr=linearPaint*irradiance;',
-  'return pow(hdr/(vec3(1.0)+hdr*.14),vec3(.45454545));',
+  'return pow(clamp(hdr/(vec3(1.0)+hdr),0.0,1.0),vec3(.45454545));',
   '}'
  ].join('\n');
  const worldFragment=[
@@ -430,7 +430,7 @@
   '}',
   'if(t.a<.025)discard;',
   'vec3 rgb=mix(t.rgb,vec3(1.0,.81,.70),clamp(uHit,0.0,1.0));',
-  'vec3 pseudoNormal=normalize(uFacing+vec3(0.0,.38,0.0)',
+  'vec3 pseudoNormal=normalize(uFacing+vec3(0.0,.62,0.0)'
   '+uRightDir*(vUv.x-.5)*.17);',
   'rgb=ringShade(rgb,vWorld,pseudoNormal);',
   // Preserve painted linework; rim only traces the true alpha silhouette,
@@ -486,11 +486,11 @@
   'void main(){',
   'vec2 uv=vec2(vUv.x,1.0-vUv.y);',
   'float a=texture2D(uTexture,uv).a*.38;',
-  'a+=texture2D(uTexture,uv+vec2(.007,0.0)).a*.155;',
-  'a+=texture2D(uTexture,uv-vec2(.007,0.0)).a*.155;',
-  'a+=texture2D(uTexture,uv+vec2(0.0,.007)).a*.155;',
-  'a+=texture2D(uTexture,uv-vec2(0.0,.007)).a*.155;',
-  'float edge=smoothstep(.03,.68,a);',
+  'a+=texture2D(uTexture,uv+vec2(.011,0.0)).a*.155;',
+  'a+=texture2D(uTexture,uv-vec2(.011,0.0)).a*.155;',
+  'a+=texture2D(uTexture,uv+vec2(0.0,.011)).a*.155;',
+  'a+=texture2D(uTexture,uv-vec2(0.0,.011)).a*.155;',
+  'float edge=smoothstep(.16,.85,a);',
   'gl_FragColor=vec4(.008,.012,.018,edge*uStrength);}'
  ].join('\n');
  function projectedShadowMesh(gl){
@@ -1122,7 +1122,7 @@
      position:rig.positions.subarray(3*i,3*i+3)});
    }
    choices.sort((a,b)=>b.strength-a.strength);
-   return choices.slice(0,2);
+   return choices.slice(0,1);
   }
   function drawFixtures(vp){
    gl.useProgram(fixture.handle);
@@ -1178,7 +1178,7 @@
     for(let i=0;i<lamps.length;i++){
      gl.uniform3fv(projectedShadow.uLamp,lamps[i].position);
      gl.uniform1f(projectedShadow.uStrength,
-      Math.min(.49,lamps[i].strength*(i===0?.62:.24)));
+      Math.min(.22,lamps[i].strength*.27));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
     }
