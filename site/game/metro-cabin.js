@@ -17,7 +17,7 @@ function create({root,engine,onExit,onFeedback}){
   '<canvas class="pw-cabin-foreground" aria-hidden="true"></canvas>'+
   '<div class="pw-cabin-top"><span class="pw-cabin-line"></span><span class="pw-cabin-clock"></span></div>'+
   '<div class="pw-cabin-station"><small>下一站</small><strong></strong></div>'+
-  '<div class="pw-cabin-speech"><span class="pw-cabin-person"></span><p class="pw-cabin-words"></p></div>'+
+
   '<div class="pw-cabin-actions"></div>'+
   '<div class="pw-cabin-anomaly" hidden><strong>末班车</strong><p>车厢里的报站声突然停了。</p></div>';
  root.append(section);
@@ -49,11 +49,9 @@ function create({root,engine,onExit,onFeedback}){
  const lineLabel=section.querySelector('.pw-cabin-line');
  const clock=section.querySelector('.pw-cabin-clock');
  const nextLabel=section.querySelector('.pw-cabin-station strong');
- const words=section.querySelector('.pw-cabin-words');
- const person=section.querySelector('.pw-cabin-person');
  const actions=section.querySelector('.pw-cabin-actions');
  const anomaly=section.querySelector('.pw-cabin-anomaly');
- let raf=0,last=0,visible=false,speakerIndex=0,auto=false,frame=0,anomalyEventSent=false;
+ let raf=0,last=0,visible=false,auto=false,frame=0,anomalyEventSent=false;
  let regionalRide=null;
  const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);return b};
  // A single FRONT-facing side-elevation canvas. Never project train depth
@@ -126,8 +124,6 @@ function create({root,engine,onExit,onFeedback}){
    clock.textContent=s.calendar.time;
    nextLabel.textContent=dest?.name||leg.to;
    anomaly.hidden=true;section.dataset.night='false';
-   person.textContent='车内广播';
-   words.textContent='下一站，'+(dest?.name||leg.to)+'。请留意随身物品。';
    actions.replaceChildren();
    return;
   }
@@ -142,7 +138,6 @@ function create({root,engine,onExit,onFeedback}){
   nextLabel.textContent=ride.anomaly?'？？？':next?metro.STATIONS[next].label:'终点站';
   anomaly.hidden=!ride.anomaly;
   if(ride.anomaly){
-    person.textContent='车内广播';words.textContent='22:00。车门没有打开。窗外已经不是熟悉的城市。';
     actions.replaceChildren();
     section.dataset.night='true';
     if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.setLighting?.('flicker');
@@ -156,19 +151,12 @@ function create({root,engine,onExit,onFeedback}){
   }
   section.dataset.night='false';
   if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.setLighting?.('on');
-  const story=metro.conversation(s,{connections:ride.rides,transfers:[]});
-  const beat=story[speakerIndex%story.length];
-  person.textContent=beat.speaker;
-  words.textContent=beat.text;
-  if(ride.rides)engine.recordTransitRumor?.(
-    'ride-'+s.day+'-'+ride.lineId+'-'+ride.rides,
-    beat.speaker+'：'+beat.text);
   actions.replaceChildren();
   if(next)actions.append(btn('继续乘坐 · 下一站',()=>{
     if(auto)return;
     const result=engine.metroNext();
     if(!result.ok){onFeedback?.(result.reason);return}
-    speakerIndex++;refresh();
+    refresh();
   }));
   if(!next)actions.append(btn('终点站 · 请下车',()=>exit()));
   actions.append(btn('下车',()=>exit()));
@@ -178,7 +166,7 @@ function create({root,engine,onExit,onFeedback}){
       const state=engine.snapshot().metro;
       if(!metro.nextStop(state.lineId,state.station,state.direction))break;
       const result=engine.metroNext();
-      speakerIndex++;
+
       refresh();
       if(result.anomaly||!result.ok)break;
       await new Promise(resolve=>setTimeout(resolve,360));
@@ -198,7 +186,7 @@ function create({root,engine,onExit,onFeedback}){
       for(const dir of other.directions)list.append(btn(dir.label,()=>{
         const result=engine.metroSwitch(other.id,dir.direction);
         if(!result.ok)onFeedback?.(result.reason);
-        else{speakerIndex++;refresh()}
+        else{refresh()}
       }));
       actions.replaceChildren(list);
     }));
@@ -265,12 +253,12 @@ function create({root,engine,onExit,onFeedback}){
     if(ride.lineId!==seg.line.id||ride.direction!==direction){
       const transfer=engine.metroSwitch(seg.line.id,direction);
       if(!transfer.ok)return transfer;
-      speakerIndex++;refresh();
+      refresh();
       await new Promise(resolve=>setTimeout(resolve,550));
     }
     const next=engine.metroNext();
     if(!next.ok)return next;
-    speakerIndex++;refresh();
+    refresh();
     if(next.anomaly)return next;
     await new Promise(resolve=>setTimeout(resolve,550));
    }
