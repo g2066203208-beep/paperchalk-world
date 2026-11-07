@@ -1017,6 +1017,24 @@
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
+  let transitHeroSource=null,transitHeroAssignment=null;
+  async function ensureTransitHero(){
+   // The battle preview defaults to female-07. A metro ride MUST instead
+   // show the real canonical protagonist's animated rear L2D, not that
+   // unrelated preview or a blank frame from a hidden offscreen source.
+   for(let retry=0;retry<15&&transitMode;retry++){
+    const dev=window.PaperchalkCharacterDev;
+    if(dev?.ready){
+     const current=dev.assigned?.player;
+     if(current&&(current.id!=='protagonist'||current.side!=='back')){
+      transitHeroAssignment={id:current.id,side:current.side};
+      await dev.assign('player','protagonist','back',false);
+     }
+     return;
+    }
+    await new Promise(resolve=>setTimeout(resolve,120));
+   }
+  }
   let environmentLightRig=null,environmentActorIds=null;
   const sceneRig=whichMode=>environmentLightRig||lightRigs[whichMode]||lightRigs.outer;
   function fixedEnvironmentCamera(base,preset,aspect){
@@ -1182,7 +1200,7 @@
    if(b.hasAttribute('data-exit')&&!attack&&typeof onExit==='function')onExit();
   });
   function sourceFor(actor){
-   if(actor.id==='hero'&&posePreviewEnabled){
+   if(actor.id==='hero'&&posePreviewEnabled&&!transitMode){
     if(!poseImage.complete||!poseImage.naturalWidth)return null;
     return {
      runtime:{
@@ -1340,7 +1358,7 @@
     targetTexture.visibleUv=null;targetTexture.shadowClipUv=null;
     targetTexture.nextProbe=0;targetTexture.updated=-999;
    }
-   const fixedPose=a.id==='hero'&&posePreviewEnabled;
+   const fixedPose=a.id==='hero'&&posePreviewEnabled&&!transitMode;
    // Static heroine: one GPU upload only. All animated L2D remain dynamic.
    if(fixedPose&&targetTexture.painted)return true;
    const interval=a.id==='hero'?50:78;
@@ -1822,6 +1840,17 @@
    const carriage=document.getElementById('pw-metro-cabin');
    if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
+   // The renderer uploads from the real L2D source canvas, which normally
+   // lives in a hidden battle-source DOM root. Unpause it while keeping the
+   // DOM node optically invisible: one 3D actor, never a second flat actor.
+   const protagonist=window.PaperchalkL2D?.get?.('player');
+   if(protagonist?.root){
+    transitHeroSource={root:protagonist.root,hidden:protagonist.root.hidden,
+     visibility:protagonist.root.style.visibility};
+    protagonist.root.hidden=false;
+    protagonist.root.style.visibility='hidden';
+   }
+   ensureTransitHero().catch(error=>console.warn('[Metro L2D hero]',error));
    // Reparent the EXISTING WebGL drawing buffer, not a raster screenshot.
    // In the old implementation it sat in #scene (z=1), behind overlays
    // above #novel-ui (z=6). That produces an empty dark subway view.
@@ -1836,6 +1865,16 @@
   function exitTransit(){
    if(!transitMode)return false;
    transitMode=false;active=false;
+   if(transitHeroSource){
+    transitHeroSource.root.hidden=transitHeroSource.hidden;
+    transitHeroSource.root.style.visibility=transitHeroSource.visibility;
+    transitHeroSource=null;
+   }
+   if(transitHeroAssignment){
+    const previous=transitHeroAssignment;transitHeroAssignment=null;
+    window.PaperchalkCharacterDev?.assign?.('player',previous.id,previous.side,false)
+     .catch(error=>console.warn('[Metro restore original L2D slot]',error));
+   }
    canvas.hidden=true;hud.hidden=true;
    // Restore the SAME canvas and GL context for ordinary ring encounters.
    if(canvas.parentElement!==stage)stage.append(canvas);
@@ -1922,7 +1961,7 @@
     repeats:ACTIVE_WALL.repeats,heightMeters:ACTIVE_WALL.heightMeters,
      kind:'curved-webgl-wall'},
    cameraCount:1,eyeLevel:Math.abs((lens||camera(mode,0)).eye.y-1.50)<.001,
-   heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero')?.frames??0,
+   heroStatic:posePreviewEnabled&&!transitMode,heroTextureUploads:textures.get('hero')?.frames??0,
    director:{card:attackCard.name,baseDamage:attackCard.damage,
     armed,playing:!!attack,phase:attackSample?.stage||'idle',
     targetId:attack?.targetId||null,applied:attackApplied,
@@ -1964,11 +2003,11 @@
    })),
    l2dReady:visibleActors(mode).filter(a=>textures.get(a.id)?.painted).length,
    heroine:{
-    id:previewPose==='female7'?'female-07':
+    id:!transitMode&&previewPose==='female7'?'female-07':
      window.PaperchalkL2D?.get('player')?.img?.dataset.characterId||null,
-    side:previewPose==='female7'?'back':
+    side:!transitMode&&previewPose==='female7'?'back':
      window.PaperchalkL2D?.get('player')?.img?.dataset.characterSide||null,
-    l2dMode:previewPose==='female7'?'static-back-battle-cutout':
+    l2dMode:!transitMode&&previewPose==='female7'?'static-back-battle-cutout':
      window.PaperchalkL2D?.get('player')?.root?.dataset.l2dMode||null,
     ready:!!textures.get('hero')?.painted,
     sourceUv:textures.get('hero')?.opaqueUv||null,
@@ -1980,7 +2019,8 @@
      textures.get('hero')?.opaqueCombatUv||CANONICAL_BACK_UV,
      lens?.cinematic?null:lens),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
-   pixelsFrom:previewPose==='female7'?'user-approved female-07 original back art (static), four animated enemy L2D actors':
+   pixelsFrom:transitMode?'canonical protagonist animated back L2D from real game slot':
+    previewPose==='female7'?'user-approved female-07 original back art (static), four animated enemy L2D actors':
     posePreviewEnabled?'legacy fixed-left 3/4 heroine + animated original enemy L2D':
     'original animated L2D actors'});
   function qaFrame(targetId,elapsedMs){
