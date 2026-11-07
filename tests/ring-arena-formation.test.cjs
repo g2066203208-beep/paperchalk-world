@@ -16,6 +16,12 @@ for(const mode of ['outer','inner']){
  assert.deepEqual(visible.map(a=>a.id),
   ['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.equal(formation.enemies.length,4);
+ // Four opponents are truly same-depth; their transparent portraits and
+ // attached fog must draw in stable character order, never in radial x order.
+ const paintOrder=ring.sortActorsForAlpha(visible,camera).map(x=>x.actor.id);
+ assert.deepEqual(paintOrder,
+  ['enemy-1','enemy-2','enemy-3','enemy-4','hero'],
+  'stable back-to-front 3D alpha order should not fade the rightmost actor');
  assert.equal(new Set(formation.enemies.map(a=>a.z)).size,1,
   'all four enemies must share the same REAL camera depth (not appear scattered in screenshot)');
  assert.ok(Math.abs(formation.allies[0].z-camera.eye.z)>1.25,'hero must not intersect camera');
