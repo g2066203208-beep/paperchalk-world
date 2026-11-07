@@ -144,7 +144,8 @@
       relationships:{female2:55,classmate:0,clerk:0,neighbor:0},
       inventory:{bread:1,water:1,bandage:1,keys:1,homework:1},dailyUses:{},nightStatus:'day',
       phone:{callsRead:false,messagesRead:false,reply:null},
-      phoneThreads:{female2:[]},phoneCalls:[],transitRumors:[],
+      phoneThreads:{female2:[],classmate:[],clerk:[],neighbor:[]},
+      phoneCalls:[],transitRumors:[],
       mediaPhotos:[],socialPosts:[],
       homework:{status:'unfinished',inspected:false,handedIn:false},
       log:[{day:1,minute:7*60,text:'新的一天开始了。先安排今天的生活。'}],
@@ -183,16 +184,18 @@
       handedIn:raw.homework?.handedIn===true
     };
     // Bounded in-world phone/social state; never treat player text as HTML.
-    if(Array.isArray(raw.phoneThreads?.female2))
-      s.phoneThreads.female2=raw.phoneThreads.female2.slice(-40).filter(m=>
+    for(const id of Object.keys(s.phoneThreads)){
+      if(!Array.isArray(raw.phoneThreads?.[id]))continue;
+      s.phoneThreads[id]=raw.phoneThreads[id].slice(-40).filter(m=>
         m&&typeof m.text==='string'&&m.text.length<=200&&
-        ['me','female2'].includes(m.from)&&Number.isFinite(m.day))
+        ['me',id].includes(m.from)&&Number.isFinite(m.day))
         .map(m=>({from:m.from,text:m.text,day:CLAMP(INTEGER(m.day,1),1,9999),
           minute:CLAMP(INTEGER(m.minute,0),0,1440)}));
+    }
     if(Array.isArray(raw.phoneCalls))
       s.phoneCalls=raw.phoneCalls.slice(-24).filter(m=>
-        m&&m.to==='female2'&&Number.isFinite(m.day)).map(m=>({
-          to:'female2',video:m.video===true,answered:m.answered===true,
+        m&&Object.hasOwn(NPCS,m.to)&&Number.isFinite(m.day)).map(m=>({
+          to:m.to,video:m.video===true,answered:m.answered===true,
           day:CLAMP(INTEGER(m.day,1),1,9999),minute:CLAMP(INTEGER(m.minute,0),0,1440)
         }));
     if(Array.isArray(raw.transitRumors))
@@ -371,34 +374,74 @@
         '回复女二：还没写，我现在过去！':'回复女二：我先看看书包，马上出门。');
     }
     function sendPhoneMessage(to,text){
-      if(to!=='female2')return fail('联系人不存在');
+      if(!Object.hasOwn(NPCS,to)||(!state.relationships[to]&&to!=='female2'))
+        return fail('还没有这个联系人的联系方式');
       const body=String(text||'').trim().slice(0,180);
       if(!body)return fail('消息不能为空');
       const stamp={day:state.day,minute:state.minute};
-      state.phoneThreads.female2.push({...stamp,from:'me',text:body});
-      // Available classmates respond in their own voice and according to the day.
-      const replies=stageOf(state)===1?
-        ['看到啦。今天作业可别忘了！','好，我在学校等你。','你又在路上玩手机？小心迟到。','那我们放学再聊。']:
-        ['我也看到消息了，先别一个人去那边。','听起来有点奇怪，我们到学校再说。','我正准备确认消息来源，别急着传。'];
-      const reply=replies[(state.phoneThreads.female2.filter(m=>m.from==='me').length-1)%replies.length];
-      state.phoneThreads.female2.push({...stamp,from:'female2',text:reply});
-      state.phoneThreads.female2=state.phoneThreads.female2.slice(-40);
-      return finish('phone-message','给女二发送了一条消息。',{type:'phone',action:'message'});
+      const thread=state.phoneThreads[to];
+      thread.push({...stamp,from:'me',text:body});
+      const recent=thread.filter(m=>m.from==='me').length;
+      let reply='';
+      const where=LOCATIONS[state.location]?.group==='家'?'在家':
+        '在'+(LOCATIONS[state.location]?.label||'附近');
+      if(to==='female2'){
+        if(/作业|老师|交作业|补作业/.test(body))
+          reply=state.homework.status==='finished'?'写完就好。记得交给老师，别再忘了。':
+            '你还差最后一页不是吗？早点来教室，我帮你看。';
+        else if(/在哪|哪里|到哪|学校/.test(body))
+          reply=state.minute<16*HOUR?'我在学校呢。你现在'+where+'吗？':'我已经离开学校了。怎么了？';
+        else if(/视频|传闻|怪事|监控|失踪|新闻/.test(body))
+          reply=stageOf(state)===1?'我也看到了，不过别只看转发，原视频在哪儿？':
+            '我也在查这件事。先别单独去那个地方。';
+        else if(/早|起床|睡/.test(body))reply='你终于醒啦！快点看看今天要交的东西。';
+        else if(/见面|一起|出来/.test(body))reply='好啊，等放学以后再联系我吧。';
+        else{
+          const pool=stageOf(state)===1?[
+            '收到。你今天有什么安排？','你先忙，见面再慢慢说。','咦？你刚刚说的是认真的吗？','那你路上小心。'
+          ]:[
+            '看到了。我现在也有点担心。','别慌，我们先确认消息是不是真的。','你在哪里？先报个平安。'
+          ];
+          reply=pool[(state.day+recent)%pool.length];
+        }
+      }else if(to==='classmate'){
+        reply=/作业|学校|考试/.test(body)?'我也还没复习完，别提了。':
+          stageOf(state)>1?'听说有同学遇到怪事。下次在学校聊。':'收到！下次班里见。';
+      }else if(to==='clerk'){
+        reply=/商品|买|货|店/.test(body)?'货架上有的都能买，缺货还得等配送。':
+          '店里正在忙，等空下来再回复你。';
+      }else{
+        reply=/公园|街|附近/.test(body)?'最近路口在施工，晚上最好绕开。':
+          '知道了，有事就在社区群里说一声。';
+      }
+      const persona=NPCS[to];
+      const busy=(to==='female2'&&state.minute>=8*HOUR&&state.minute<9*HOUR)||
+        (to==='classmate'&&state.minute>=8*HOUR&&state.minute<15*HOUR);
+      if(!busy)thread.push({...stamp,from:to,text:reply});
+      thread.splice(0,Math.max(0,thread.length-40));
+      return finish('phone-message',busy?'消息已送达，暂时没有回复。':
+        persona.label+'回复了消息。');
     }
     function phoneCall(to,video=false){
-      if(to!=='female2')return fail('联系人不存在');
-      const now=state.minute;
-      const answered=now>=6*60+30&&now<21*60&&state.nightStatus==='day';
-      const note=answered?
-        stageOf(state)===1?'女二：你终于打电话了。今天早点来学校，我有事找你。':
-        '女二：你现在在哪儿？最近的传闻越来越奇怪了，先确认安全。':
-        '对方没有接听，已记入通话记录。';
+      if(!Object.hasOwn(NPCS,to)||(!state.relationships[to]&&to!=='female2'))
+        return fail('还没有这个联系人的联系方式');
+      const now=state.minute,npc=NPCS[to];
+      const available=to==='female2'?now>=6*HOUR+30&&now<21*HOUR:
+        now>=npc.from&&now<npc.to;
+      const answered=available&&state.nightStatus==='day';
+      const say=answered?(to==='female2'?
+        (stageOf(state)===1?'你终于打电话了。今天早点来学校，我有事找你。':
+        '你现在在哪儿？最近的传闻越来越奇怪了，先确认安全。'):
+        to==='classmate'?'喂？我刚刚在看班级群。怎么了？':
+        to==='clerk'?'你好，我正在店里。需要帮你留什么吗？':
+        '喂，刚刚看到你的电话了。'): '对方没有接听，已记入通话记录。';
       const cost=answered?4:1;
       const time=spend(cost);if(!time.ok)return time;
       state.phoneCalls.push({to,video:!!video,answered,day:state.day,minute:now});
       state.phoneCalls=state.phoneCalls.slice(-24);
+      const note=answered?npc.label+'：'+say:'对方没有接听，已记入通话记录。';
       const res=finish('phone-call',note);
-      return {...res,answered,video:!!video,speaker:answered?'女二':'通话记录',text:note};
+      return {...res,answered,video:!!video,speaker:answered?npc.label:'通话记录',text:note};
     }
     function recordTransitRumor(id,text){
       const key=String(id||'').slice(0,80),body=String(text||'').slice(0,220);
