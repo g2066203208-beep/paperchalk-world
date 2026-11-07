@@ -454,16 +454,18 @@
   'uniform mat4 uVP;uniform vec3 uFoot;uniform vec3 uRight;',
   'uniform vec3 uUp;uniform float uHeight;uniform float uSoleX;',
   'uniform float uSoleY;uniform float uCrownY;uniform float uWidthScale;',
-  'uniform float uLean;varying vec2 vUv;varying vec3 vWorld;',
-  'void main(){float H=uHeight/max(.01,uSoleY-uCrownY);',
-  'float bodyHeight=clamp((uSoleY-aUv.y)/max(.01,uSoleY-uCrownY),0.0,1.0);',
-  'vec3 pos=uFoot+uRight*((aUv.x-uSoleX)*H*uWidthScale+uLean*H*bodyHeight)',
-  '+uUp*((uSoleY-aUv.y)*H);',
-  'vUv=aUv;vWorld=pos;gl_Position=uVP*vec4(pos,1.0);}'
+  'uniform vec4 uClipUv;uniform float uLean;varying vec2 vUv;varying vec3 vWorld;',
+  'void main(){vec2 uv=mix(uClipUv.xy,uClipUv.zw,aUv);',
+  'float H=uHeight/max(.01,uSoleY-uCrownY);',
+  'float bodyHeight=clamp((uSoleY-uv.y)/max(.01,uSoleY-uCrownY),0.0,1.0);',
+  'vec3 pos=uFoot+uRight*((uv.x-uSoleX)*H*uWidthScale+uLean*H*bodyHeight)',
+  '+uUp*((uSoleY-uv.y)*H);',
+  'vUv=uv;vWorld=pos;gl_Position=uVP*vec4(pos,1.0);}'
  ].join('\n');
+ // Portrait quad vertices now span only the live alpha content rectangle.
  const portraitFragment=[
   'precision highp float;varying vec2 vUv;varying vec3 vWorld;',
-  'uniform sampler2D uTexture;',
+  'uniform sampler2D uTexture;uniform vec4 uClipUv;',
   'uniform float uHit;uniform float uDim;uniform float uBlur;',
   'uniform vec3 uFacing;uniform vec3 uRightDir;',
   lightingGLSL,
@@ -477,6 +479,9 @@
   'texture2D(uTexture,uv-vec2(0.0,d.y)))*.25;',
   't=mix(t,soft,clamp(uBlur,0.0,1.0)*.78);',
   '}',
+  'float edgeDist=min(min(vUv.x-uClipUv.x,uClipUv.z-vUv.x),',
+  'min(vUv.y-uClipUv.y,uClipUv.w-vUv.y));',
+  't.a*=smoothstep(0.0,.012,edgeDist)*smoothstep(.055,.23,t.a);',
   'if(t.a<.025)discard;',
   'vec3 rgb=mix(t.rgb,vec3(1.0,.81,.70),clamp(uHit,0.0,1.0));',
   'vec3 pseudoNormal=normalize(uFacing+vec3(0.0,.62,0.0)',
@@ -527,15 +532,15 @@
   'precision highp float;attribute vec2 aUv;uniform mat4 uVP;',
   'uniform vec3 uFoot;uniform vec3 uRight;uniform vec3 uLamp;',
   'uniform float uHeight;uniform float uSoleX;uniform float uSoleY;',
-  'uniform float uCrownY;uniform highp float uContact;varying vec2 vUv;',
-  'void main(){',
+  'uniform float uCrownY;uniform highp float uContact;uniform vec4 uClipUv;varying vec2 vUv;',
+  'void main(){vec2 uv=mix(uClipUv.xy,uClipUv.zw,aUv);',
   'float h=uHeight/max(.01,uSoleY-uCrownY);',
-  'vec3 person=uFoot+uRight*(aUv.x-uSoleX)*h',
-  '+vec3(0.0,(uSoleY-aUv.y)*h,0.0);',
+  'vec3 person=uFoot+uRight*(uv.x-uSoleX)*h',
+  '+vec3(0.0,(uSoleY-uv.y)*h,0.0);',
   'float factor=uLamp.y/max(.15,uLamp.y-person.y);',
   'vec3 p=uLamp+(person-uLamp)*factor;',
   'p.xz=mix(p.xz,uFoot.xz,uContact*.82);',
-  'p.y=.022+uContact*.003;vUv=aUv;gl_Position=uVP*vec4(p,1.0);}'
+  'p.y=.022+uContact*.003;vUv=uv;gl_Position=uVP*vec4(p,1.0);}'
  ].join('\n');
  // Distance-dependent area-light penumbra from the actual animated L2D
  // alpha occluder. The shoe contact stays tight; projected head/hair edges
@@ -769,6 +774,7 @@
    const surfaceMaterials=Object.fromEntries(Object.entries(SURFACE_TEXTURES)
     .map(([kind,url])=>[kind,{url,texture:null,image:null,ready:false,error:null}]));
   let projectedShadowDraws=0;
+  let shadowLampAssignments={};
   const textures=new Map();
   const actionTextures=new Map(); // separate GPU action poses at real 3D anchors
   let drawnPoses={};
@@ -777,11 +783,11 @@
    if(!gl)throw Error('WebGL unavailable');
    world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower','uViewEye']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
     ['uVP','uCenter','uSize','uLevel','uEmergency','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
-    ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uTexture','uStrength','uContact']);
+    ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uClipUv','uTexture','uStrength','uContact']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner]=worldMesh(gl);
    shadowGrid=projectedShadowMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
@@ -1077,28 +1083,56 @@
    ctx.clearRect(0,0,N,N);
    ctx.drawImage(texture.stage,0,0,N,N);
    const data=ctx.getImageData(0,0,N,N).data;
-   let x0=N,y0=N,x1=-1,y1=-1;
+   const alpha=(x,y)=>data[(y*N+x)*4+3];
+   let high=0,medium=0;
+   for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const a=alpha(x,y);
+    if(a>=168)high++;
+    if(a>=88)medium++;
+   }
+   // Exclude diffuse fog from the body rectangle; fallback for deliberately
+   // translucent characters only if no strong foreground alpha exists.
+   const cutoff=high>=60?168:medium>=60?88:44;
+   const columns=new Uint16Array(N),rows=new Uint16Array(N);
    let combatX0=N,combatX1=-1;
    const combatTopRows=Math.floor(N*.55);
    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
-    if(data[(y*N+x)*4+3]<44)continue;
-    x0=Math.min(x0,x);x1=Math.max(x1,x);
-    y0=Math.min(y0,y);y1=Math.max(y1,y);
-    // Distinguish the readable upper-body lane from the long poleaxe blade
-    // crossing the LOWER foreground: full-body min/max is not a face blocker.
-    if(y<combatTopRows){
-     combatX0=Math.min(combatX0,x);combatX1=Math.max(combatX1,x);
-    }
+    if(alpha(x,y)<cutoff)continue;
+    columns[x]++;rows[y]++;
+    if(y<combatTopRows){combatX0=Math.min(combatX0,x);combatX1=Math.max(combatX1,x)}
    }
-   if(x1<0)return;
-   texture.opaqueUv={
-    left:clamp(x0/N-.045,0,1),right:clamp((x1+1)/N+.045,0,1),
-    top:clamp(y0/N-.025,0,1),bottom:clamp((y1+1)/N+.01,0,1)
+   let x0=N,y0=N,x1=-1,y1=-1;
+   for(let i=0;i<N;i++){
+    if(columns[i]>=2){x0=Math.min(x0,i);x1=Math.max(x1,i)}
+    if(rows[i]>=2){y0=Math.min(y0,i);y1=Math.max(y1,i)}
+   }
+   if(x1<0||y1<0)return;
+   const fresh={
+    left:clamp(x0/N-.028,0,1),right:clamp((x1+1)/N+.028,0,1),
+    top:clamp(y0/N-.028,0,1),bottom:clamp((y1+1)/N+.028,0,1)
+   };
+   // Animated limbs may leave the initial rectangle. Grow, never shrink:
+   // no crop jumping when L2D animates or fluorescent fixtures flicker.
+   const prev=texture.visibleUv;
+   const visible=prev?{
+    left:Math.min(prev.left,fresh.left),right:Math.max(prev.right,fresh.right),
+    top:Math.min(prev.top,fresh.top),bottom:Math.max(prev.bottom,fresh.bottom)
+   }:fresh;
+   texture.visibleUv=visible;
+   texture.shadowClipUv={
+    left:clamp(visible.left-.057,0,1),right:clamp(visible.right+.057,0,1),
+    top:clamp(visible.top-.057,0,1),bottom:clamp(visible.bottom+.057,0,1)
+   };
+   // Shoe and crown reference cannot change every time a ponytail moves.
+   // Lock the first reliable alpha body rectangle for this character ID.
+   if(!texture.opaqueUv)texture.opaqueUv={
+    left:visible.left,right:visible.right,
+    top:clamp(y0/N-.007,0,.45),bottom:clamp((y1+1)/N+.004,.5,1)
    };
    texture.opaqueCombatUv=combatX1>=0?{
     left:clamp(combatX0/N-.018,0,1),
     right:clamp((combatX1+1)/N+.018,0,1),
-    top:clamp(y0/N-.012,0,1),bottom:combatTopRows/N
+    top:texture.opaqueUv.top,bottom:combatTopRows/N
    }:texture.opaqueUv;
   }
   function updateTexture(a,now){
@@ -1107,6 +1141,7 @@
     // Never show a stale wrong-identity WebGL texture.
     targetTexture.painted=false;
     targetTexture.opaqueUv=null;targetTexture.opaqueCombatUv=null;
+    targetTexture.visibleUv=null;targetTexture.shadowClipUv=null;
     return false;
    }
    const identity=desc.runtime.img.dataset.characterId+'|'+
@@ -1116,6 +1151,7 @@
    if(targetTexture.identity!==identity){
     targetTexture.identity=identity;
     targetTexture.painted=false;targetTexture.opaqueUv=null;targetTexture.opaqueCombatUv=null;
+    targetTexture.visibleUv=null;targetTexture.shadowClipUv=null;
     targetTexture.nextProbe=0;targetTexture.updated=-999;
    }
    const fixedPose=a.id==='hero'&&posePreviewEnabled;
@@ -1176,30 +1212,29 @@
    gl.uniform3fv(prog.uEmergencyPosition,currentLighting.emergencyPosition);
    gl.uniform1f(prog.uEmergencyPower,currentLighting.emergencyPower);
   }
-  // Hero and four foes retain their REAL 3D silhouettes. A lamp almost
-  // directly above a body produces a featureless foreshortened footprint.
-  // Choose a POWERED fixture producing a readable, medium-length cast
-  // silhouette rather than a long black strip across the convenience floor.
-  function nearestLitLamps(p,whichMode=mode){
+  // Fix the selected real-world luminaire PER ACTOR at its immutable base
+  // anchor. Power only modulates shadow intensity. It must NEVER switch the
+  // shadow to a different fixture when the chosen lamp flickers off.
+  // Physical actor lunges still move the actual shadow within that fixed light.
+  function assignedShadowLamp(actor,whichMode=mode){
    const rig=lightRigs[whichMode];
+   const anchor=visibleActors(whichMode).find(a=>a.id===actor.id)||actor;
    const choices=[];
    for(let i=0;i<rig.count;i++){
-    const level=currentLighting.levels[i];
-    if(level<.08)continue;
-    const dx=p.x-rig.positions[i*3],dz=p.z-rig.positions[i*3+2];
+    const dx=anchor.x-rig.positions[i*3],dz=anchor.z-rig.positions[i*3+2];
     const distance=dx*dx+dz*dz;
-    const headY=Math.min(LIGHTING.height-.20,p.height*.88);
+    const headY=Math.min(LIGHTING.height-.20,anchor.height*.88);
     const projectedHeadOffset=Math.sqrt(distance)*
      headY/Math.max(.20,rig.positions[i*3+1]-headY);
     const readability=Math.exp(-1.8*Math.abs(projectedHeadOffset-1.75));
-    const intensity=level/(1.0+.16*distance);
-    const score=readability*(.25+.75*level)/
-     (1+.085*distance);
-    choices.push({index:i,distance,strength:intensity,score,
-     projectedHeadOffset,position:rig.positions.subarray(3*i,3*i+3)});
+    const score=readability/(1+.085*distance);
+    choices.push({index:i,distance,score,
+     position:rig.positions.subarray(3*i,3*i+3)});
    }
-   choices.sort((a,b)=>b.score-a.score);
-   return choices.slice(0,1);
+   choices.sort((a,b)=>b.score-a.score||(a.index-b.index));
+   const selected=choices[0];
+   return {index:selected.index,position:selected.position,
+    strength:currentLighting.levels[selected.index]/(1.0+.16*selected.distance)};
   }
   function drawFixtures(vp){
    gl.useProgram(fixture.handle);
@@ -1249,6 +1284,7 @@
   }
   function drawProjectedShadows(actors,cam,vp){
    projectedShadowDraws=0;
+   shadowLampAssignments={};
    if(!shadowGrid)return;
    gl.useProgram(projectedShadow.handle);
    gl.uniformMatrix4fv(projectedShadow.uVP,false,new Float32Array(vp));
@@ -1273,16 +1309,20 @@
     gl.uniform1f(projectedShadow.uSoleX,a.soleX);
     gl.uniform1f(projectedShadow.uSoleY,sole);
     gl.uniform1f(projectedShadow.uCrownY,crown);
+    const clip=tex.shadowClipUv||{left:0,top:0,right:1,bottom:1};
+    gl.uniform4f(projectedShadow.uClipUv,clip.left,clip.top,clip.right,clip.bottom);
     gl.bindTexture(gl.TEXTURE_2D,tex.texture);
-    const lamps=nearestLitLamps(a,mode);
-    for(let i=0;i<lamps.length;i++){
-     gl.uniform3fv(projectedShadow.uLamp,lamps[i].position);
+    const lamp=assignedShadowLamp(a,mode);
+    shadowLampAssignments[a.id]=lamp.index;
+    if(lamp.strength<=.012)continue;
+    {
+     gl.uniform3fv(projectedShadow.uLamp,lamp.position);
      gl.uniform1f(projectedShadow.uContact,0);
-     gl.uniform1f(projectedShadow.uStrength,Math.min(.25,.07+lamps[i].strength*.27));
+     gl.uniform1f(projectedShadow.uStrength,Math.min(.25,lamp.strength*.32));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
      gl.uniform1f(projectedShadow.uContact,1);
-     gl.uniform1f(projectedShadow.uStrength,Math.min(.38,.12+lamps[i].strength*.38));
+     gl.uniform1f(projectedShadow.uStrength,Math.min(.38,lamp.strength*.43));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
     }
@@ -1389,6 +1429,9 @@
     const sole=alphaPivot?clamp(alphaPivot.bottom,crown+.20,1):a.soleY;
     gl.uniform1f(portrait.uSoleY,sole);
     gl.uniform1f(portrait.uCrownY,crown);
+    const clip=art?.painted?{left:0,top:0,right:1,bottom:1}:
+     t.visibleUv||{left:0,top:0,right:1,bottom:1};
+    gl.uniform4f(portrait.uClipUv,clip.left,clip.top,clip.right,clip.bottom);
     gl.uniform1f(portrait.uWidthScale,1);
     gl.uniform1f(portrait.uLean,female07Actor&&attackSample
      ? .095*attackSample.advance-.028*attackSample.recoil:0);
@@ -1546,6 +1589,8 @@
      contactShadow:'original-L2D-shoe-alpha-no-ellipse',
      shadowMode:'live-ceiling-source-world-planar-occlusion',
      shadowFilter:'13-tap-distance-dependent-area-light-penumbra',
+     shadowLampAssignments:{...shadowLampAssignments},
+     sourcePolicy:'fixed-per-actor-world-luminaire-power-only',
      switchableFixtures:true,
      fixtureHeight:LIGHTING.height,
      positions:[...lightRigs[mode].positions],
@@ -1584,7 +1629,14 @@
    effectiveVerticalFov:responsiveFov((lens||camera(mode,shotIndex)).fov,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
    // Per-actor true alpha shoe edges; separately inspectable in browser QA.
-   measuredShoePivots:Object.fromEntries(visibleActors(mode).map(a=>{
+   actorVisibleUv:Object.fromEntries(visibleActors(mode).map(a=>{
+     const t=textures.get(a.id);
+     return [a.id,{clip:t?.visibleUv||null,
+      shadowClip:t?.shadowClipUv||null,
+      originalQuadKept:false,
+      sourcePixelsUntouched:true}];
+    })),
+    measuredShoePivots:Object.fromEntries(visibleActors(mode).map(a=>{
     const uv=textures.get(a.id)?.opaqueUv;
     return [a.id,{crownY:uv?.top??a.crownY,
      soleY:uv?.bottom??a.soleY,fromAlpha:!!uv}];

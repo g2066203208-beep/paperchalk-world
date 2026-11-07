@@ -59,6 +59,8 @@ try{
  const setLighting=(state,phase=null)=>page.evaluate(({state,phase})=>
   window.PaperWorldGameRingArena.setLighting(state,phase),{state,phase});
  report.outer=await inspect();
+ report.initialProjectors=report.outer.lighting.shadowLampAssignments;
+ report.alphaClips=report.outer.actorVisibleUv;
  if(report.outer?.lighting?.shadowFilter!=='13-tap-distance-dependent-area-light-penumbra')
   throw Error('Actual WebGL scene is still using old hard-edge shadows');
  await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});
@@ -66,6 +68,8 @@ try{
   await setLighting('partial');
   await page.waitForTimeout(150);
   report.partial=await inspect();
+  if(JSON.stringify(report.initialProjectors)!==JSON.stringify(report.partial.lighting.shadowLampAssignments))
+   errors.push('partial blackout changed the assigned shadow projector');
   await page.screenshot({path:resolve(out,'02-outer-partial-blackout-1917x906.png')});
   await setLighting('flicker',2.0); // exact unpowered ballast moment
   await page.waitForFunction(()=>{
@@ -73,10 +77,14 @@ try{
    return l?.state==='flicker'&&l.levels[1]<.1;
   },null,{timeout:9000});
   report.flicker=await inspect();
+  if(JSON.stringify(report.initialProjectors)!==JSON.stringify(report.flicker.lighting.shadowLampAssignments))
+   errors.push('flicker teleported the assigned shadow projector');
   await page.screenshot({path:resolve(out,'03-outer-flicker-moment-1917x906.png')});
   await setLighting('outage');
   await page.waitForTimeout(160);
   report.outage=await inspect();
+  if(JSON.stringify(report.initialProjectors)!==JSON.stringify(report.outage.lighting.shadowLampAssignments))
+   errors.push('outage changed the assigned shadow projector');
   await page.screenshot({path:resolve(out,'04-outer-all-lights-off-1917x906.png')});
   // Three real frames from the exact same running WebGL + original L2D
   // textures. Story moments remain unedited: the power system drives them.
@@ -100,6 +108,8 @@ try{
   await setLighting('on');
   await page.waitForTimeout(150);
   report.inner=await inspect();
+  if(Object.values(report.inner.actorVisibleUv).some(x=>!x.clip))
+   errors.push('one or more 3D portraits did not receive a real source-alpha trim');
   await page.screenshot({path:resolve(out,'06-inner-full-lights-1917x906.png')});
   if(report.inner.mode!=='inner')errors.push('inner mode did not switch');
  }
@@ -149,7 +159,7 @@ try{
   report.outage?.lighting?.physicallyGroundedShadows!==0||
   report.outage?.lighting?.emergencyPower!==1||
   report.innerOutage?.lighting?.state!=='outage'||
-  pageErrors.length)
+  errors.length||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+errors.join('; '));
  console.log('PASS nine real-game WebGL shots: no black circles, dual live L2D alpha shadows, scripted ballast flicker/cascade/blackout/recovery and five grounded characters');
 }finally{

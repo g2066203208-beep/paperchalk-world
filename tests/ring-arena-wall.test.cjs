@@ -193,6 +193,16 @@ assert.match(src,/gl\.uniform1f\(projectedShadow\.uContact,1\)/,
  'shoe contact must also use L2D alpha instead of synthetic circle');
 assert.match(src,/const data=\[\],N=28,M=36/,
  'silhouette projection needs adequately subdivided ground geometry');
+assert.match(src,/score=readability\/\(1\+\.085\*distance\)/,
+ 'shadow source choice MUST NOT depend on momentary lamp power');
+assert.doesNotMatch(src,/if\(level<\.08\)continue/,
+ 'flickering lamp must not teleport a body shadow to another live fixture');
+assert.match(src,/shadowLampAssignments:\{\.\.\.shadowLampAssignments\}/,
+ 'real browser QA must inspect stable per-actor projector identity');
+assert.match(src,/vec2 uv=mix\(uClipUv.xy,uClipUv.zw,aUv\)/,
+ 'projected quads sample only actual alpha content UV');
+assert.match(src,/shadowClipUv=/,
+ 'the shadow penumbra must have a separately padded alpha crop');
 assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,
  'cast lamps must be selected by real projected body silhouette geometry');
 assert.match(src,/float shoes=smoothstep\(\.81,\.98,vUv\.y\)/,
