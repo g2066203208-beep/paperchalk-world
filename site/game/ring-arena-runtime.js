@@ -53,13 +53,13 @@
   const u=sign*wallArcMeters(theta)/tileWidth+WALL_TEXTURE.repeats/2;
   return {u:u-Math.floor(u),v:clamp(y/WALL_TEXTURE.heightMeters,0,1)};
  }
- // Organic, shallow near/far battle composition. ALL soles stay on y=0,
- // with small real world-Z changes instead of card-like uniform screen depth.
- // Every character's original 3D anchor stays immutable when mouse looks.
+ // ONE playable, standard encounter (not alternating 'surround' patterns).
+ // Four foes span 4.12m across the shop and 1.10m in real world depth.
+ // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[1.03,7.86],[1.82,7.43],[2.58,7.87],[3.55,7.57]])
+   enemies:Object.freeze([[.28,7.20],[1.28,8.05],[2.63,7.43],[4.40,6.95]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
@@ -145,8 +145,8 @@
  // One stationary eye pivot; only camera.focus rotates. The real room,
  // animated L2D quads, world-space shadow geometry and targets project via
  // exactly ONE shared cameraVP. Never reposition individual layers.
- const LOOK_LIMITS=Object.freeze({yawLeftDeg:3.0,yawRightDeg:2.6,
-  pitchUpDeg:1.65,pitchDownDeg:1.55});
+ const LOOK_LIMITS=Object.freeze({yawLeftDeg:24,yawRightDeg:24,
+  pitchUpDeg:12,pitchDownDeg:12});
  function immersiveCamera(base,cursorX=0,cursorY=0){
   const x=clamp(Number(cursorX)||0,-1,1),y=clamp(Number(cursorY)||0,-1,1);
   if(Math.abs(x)+Math.abs(y)<1e-9)return base;
@@ -723,7 +723,7 @@
    '#view.ring-arena-active [data-l2d-actor] [data-l2d-image]{position:absolute!important;left:0!important;top:0!important;width:1024px!important;height:1024px!important;max-width:none!important;display:block!important;object-fit:fill!important;transform:none!important;scale:1!important}',
    '#view.ring-arena-active [data-l2d-actor] [data-l2d-canvas]{transform:none!important;scale:1!important}',
    '#ring-arena-controls{position:absolute;inset:0;z-index:15;pointer-events:none;color:#d9f6e9;font:500 12px/1.4 system-ui,sans-serif}',
-   '#ring-arena-controls .top{position:absolute;left:14px;top:12px;padding:6px 9px;background:rgba(1,14,18,.52);border-left:2px solid #81d8bb}',
+   '#ring-arena-controls .status{display:none!important}',
    '#ring-arena-controls .top b{display:block;letter-spacing:.15em;font-size:11px}',
    '#ring-arena-controls .top small{font-size:10px;color:#99b5af}',
    '#ring-arena-controls .bottom{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;width:94%}',
@@ -735,13 +735,10 @@
   ].join('\n');
   document.head.append(style);
   const canvas=document.createElement('canvas');canvas.id='ring-arena-canvas';
-  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D战场，3/4背面主角，固定左侧平视过肩机位');stage.append(canvas);
+  canvas.hidden=true;canvas.setAttribute('aria-label','真实3D战斗场景，单一遭遇战，鼠标原地环顾');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="top"><b>ARC BATTLE / 3D</b><small>原地环顾 · 鼠标轻微转头</small></div>',
-   '<div class="status" role="status"></div><div class="bottom">',
-   '<button data-mode="outer" aria-pressed="true" type="button">我方包围敌人</button>',
-   '<button data-mode="inner" aria-pressed="false" type="button">敌人包围我方</button>',
+   '<div class="status" role="status" hidden></div><div class="bottom">',
    '<button data-lighting type="button" title="正常 / 部分熄灭 / 故障闪烁 / 停电 / 恐怖演出，按 L 可切换">灯光：正常</button>',
    '<button data-exit type="button">返回</button></div>',
    '<div class="director-deck"><button class="director-card" data-attack-card="slash" aria-pressed="false" type="button" aria-label="攻击牌：斧柄横扫，基础伤害12。选择后点击敌人">',
@@ -983,7 +980,6 @@
     button.disabled=hp<=0;
     button.title='敌方生命 '+hp+'/36';
    }
-   for(const b of hud.querySelectorAll('[data-mode]'))b.disabled=!!attack;
    hud.querySelector('[data-exit]').disabled=!!attack;
   }
   function startAttack(targetId){
@@ -1046,17 +1042,6 @@
    if(b.hasAttribute('data-lighting')){
     setLighting(LIGHT_STATES[(LIGHT_STATES.indexOf(lightState)+1)%LIGHT_STATES.length]);
     return;
-   }
-   if(b.hasAttribute('data-mode')){
-    if(attack)return;
-    const requestedMode=b.dataset.mode;
-    if(requestedMode!=='outer'&&requestedMode!=='inner')return;
-    mode=requestedMode;
-    lens=camera(mode,0);
-    resetCombatPreview();
-    for(const option of hud.querySelectorAll('[data-mode]'))
-     option.setAttribute('aria-pressed',String(option.dataset.mode===mode));
-    render(0);
    }
    if(b.hasAttribute('data-exit')&&!attack&&typeof onExit==='function')onExit();
   });
@@ -1621,8 +1606,7 @@
    }
    if(frames%12===0){
     const ready=all.filter(a=>textures.get(a.id).painted).length;
-    status.textContent=(mode==='outer'?'外圈':'内圈')+
-     ' · 固定左机位 · 人物 '+ready+'/'+all.length+
+    status.textContent='标准遭遇 · 原地环顾 · 人物 '+ready+'/'+all.length+
      (previewPose==='female7'?' · 女七背面持斧':' · '+(posePreviewEnabled?'旧版3/4 平视':'原版动态'));
     canvas.dataset.l2dReady=String(ready);
     canvas.dataset.renderedFrames=String(frames);
@@ -1632,11 +1616,13 @@
   function setActive(value){
    active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
-   if(active){elapsed=0;frames=0;shotIndex=0;mouseLookX=0;mouseLookY=0;
+   if(active){mode='outer';elapsed=0;frames=0;shotIndex=0;mouseLookX=0;mouseLookY=0;
+    currentLighting=lightingFrame(lightState,0,mode);
     resetCombatPreview();lens=camera(mode,0);render(0)}
    else resetCombatPreview();
   }
-  const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
+  const inspect=()=>({active,encounter:'one-standard-wide-spaced-world',encounterControls:0,
+   renderer:gl?'webgl-l2d':'unavailable',
     cameraLook:{mode:'stationary-world-eye',yawDeg:lens?.lookYawDeg||0,
      pitchDeg:lens?.lookPitchDeg||0,inputX:mouseLookX,inputY:mouseLookY,
      fixedEye:!attack,actorsStatic:true,sharedProjection:true},
