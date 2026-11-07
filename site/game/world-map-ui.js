@@ -25,6 +25,25 @@ const PHOTO_FALLBACK={
  mall:'./assets/locations/mall.svg',
  park:'./assets/locations/park.svg'
 };
+// Remote photo sources occasionally reject third-party hotlinking. A real
+// licensed Unsplash photo is the secondary source; the final step uses a
+// local placeholder rather than EVER showing an empty photograph.
+const THEME_BACKUP={
+ mountain:'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=480&q=65',
+ lake:'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=480&q=65',
+ coast:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=480&q=65',
+ island:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=480&q=65',
+ harbor:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=480&q=65',
+ village:'https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=480&q=65',
+ oldvillage:'https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=480&q=65',
+ forest:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=480&q=65',
+ tunnel:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=480&q=65',
+ darktunnel:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=480&q=65',
+ schoolruin:'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=480&q=65',
+ factory:'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=480&q=65',
+ onsen:'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=480&q=65',
+ rice:'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=480&q=65'
+};
 function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldTravel,onFeedback}){
  const atlas=global.PaperWorldAtlas;
  if(!atlas){body.textContent='城市地图数据尚未加载';return}
@@ -66,7 +85,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.append(footer,popup);
  body.replaceChildren(map);
  let scale=1,tx=0,ty=0,fit=1,drag=null,
-   selected=null,lastOpen=null,renderPending=false,mode='all';
+   selected=null,lastOpen=null,renderPending=false,mode='all',
+   focusedCity=null;
  const current=snapshot?.location||'entrance';
  const currentPoi=atlas.POI_BY_ID[current]||atlas.POI_BY_ID.entrance;
  const currentCity=currentPoi?.city||'kirihama';
@@ -81,13 +101,14 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  function preload(img,key,id){
   const source=sourcePhoto(key);
   img.alt='';img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
-  let tried=false;
+  const srcs=[source.url,THEME_BACKUP[key],
+    PHOTO_FALLBACK[id]||'./assets/locations/park.svg'].filter(Boolean);
+  let index=0;
   img.addEventListener('error',()=>{
-   if(tried)return;tried=true;
-   if(PHOTO_FALLBACK[id])img.src=PHOTO_FALLBACK[id];
-   else img.style.opacity='0';
+   if(++index<srcs.length)img.src=srcs[index];
+   else{img.removeAttribute('src');img.dataset.fallback='true'}
   });
-  img.src=source.url;
+  img.src=srcs[0];
  }
  function itemButton(label,callback,disabled=false,main=false){
   const b=tag('button','pw-world-action'+(main?' is-main':''),label);
@@ -168,7 +189,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   e.stopPropagation();
   const route=atlas.route(currentCity,c.id);
   menu(e,c.name,c.sub+' · '+formatRoute(route),[
-   {label:'查看城区',main:true,run:()=>{dismiss();focus(c.x,c.y,Math.max(fit*2.9,1.15))}},
+   {label:'查看城区',main:true,run:()=>{
+     focusedCity=c.id;dismiss();focus(c.x,c.y,Math.max(fit*2.9,1.15))
+   }},
    {label:'交通路线',run:()=>menu(e,c.name,formatRoute(route),
     [{label:'返回地图',run:dismiss}],node)}
   ],node);
@@ -411,22 +434,29 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   world.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')';
   map.dataset.zoom=scale>1.22?'detail':scale>.74?'district':'region';
   map.dataset.transport=mode;
+  map.style.setProperty('--pw-world-city-font',(15/Math.max(scale,.25))+'px');
+  map.style.setProperty('--pw-world-poi-font',(13/Math.max(scale,.25))+'px');
   const region=scale<=.72;
   for(const {n,c} of cityNodes){
    const visible=region||scale<=1.04&&c.id===viewedCity()?.id;
    n.hidden=!visible;
   }
+  const activeCity=focusedCity||viewedCity()?.id||currentCity;
   const sorted=poiNodes.filter(o=>{
-   const v=mapXY(o.p),margin=75;
+   const v=mapXY(o.p),margin=90;
    return v.x>-margin&&v.x<w+margin&&v.y>-margin&&v.y<h+margin;
   }).sort((a,b)=>Number(b.p.staged)-Number(a.p.staged));
   const placed=[];
   let shown=0;
+  // Never let an expanding rural settlement turn into a field of overlapping
+  // photo cards. Only the focused town's sights appear at medium zoom.
+  const threshold=scale<1.5?152:scale<2.25?114:85;
+  const limit=scale<1.5?8:scale<2.25?14:25;
   for(const node of sorted){
    const v=mapXY(node.p);
-   const threshold=scale<.82?999:scale<1.25?70:65;
-   const can=scale>.77&&(node.p.city===viewedCity()?.id||scale>1.25)&&
-    !placed.some(p=>Math.hypot(p.x-v.x,p.y-v.y)<threshold)&&shown<34;
+   const within=scale>2.3||node.p.city===activeCity;
+   const can=scale>.77&&within&&
+    !placed.some(p=>Math.hypot(p.x-v.x,p.y-v.y)<threshold)&&shown<limit;
    node.n.hidden=!can;
    if(can){
     shown++;placed.push(v);
@@ -443,7 +473,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   requestAnimationFrame(apply)}
  zoomOut.addEventListener('click',()=>zoomAt(scale/1.55,map.clientWidth*.5,map.clientHeight*.5));
  zoomIn.addEventListener('click',()=>zoomAt(scale*1.55,map.clientWidth*.5,map.clientHeight*.5));
- home.addEventListener('click',()=>{scale=fit;tx=(map.clientWidth-2000*fit)/2;
+ home.addEventListener('click',()=>{focusedCity=null;
+  scale=fit;tx=(map.clientWidth-2000*fit)/2;
   ty=(map.clientHeight-1280*fit)/2;schedule();dismiss()});
  switcher.addEventListener('click',()=>{
   mode=mode==='all'?'terrain':'all';switcher.textContent=mode==='all'?'交通':'地形';
