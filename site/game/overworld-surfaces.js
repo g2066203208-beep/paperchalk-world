@@ -86,7 +86,7 @@
       {id:'entrance',name:'家',x:16,y:23,
        photo:'https://img.livable.co.jp/?h=576&url=https%3A%2F%2Fwww.livable.co.jp%2Fproject-image%2F81%2F818%2F81889%2F81889_22863358.jpg%3F20180412221044&w=768'},
       {id:'school',name:'学校',x:46,y:17,
-       photo:'https://ferret-one.akamaized.net/images/6048928c1ba9cc139160fd7c/original.jpeg'},
+       photo:'./assets/classroom.webp'},
       {id:'convenience',name:'便利店',x:77,y:23,
        photo:'https://www.biz-lixil.com/case/images/B250014c.jpg'},
       {id:'cafe',name:'咖啡厅',x:24,y:49,
@@ -184,7 +184,7 @@
         if(p.photo){
           const img=el('img','pw-photo-map-photo');
           img.src=p.photo;img.alt='';
-          img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
+          img.loading='eager';img.decoding='async';img.referrerPolicy='no-referrer';
           // Reference photo networks can fail on some browsers; fall back to
           // an actual local game scene, not a broken image icon or empty tile.
           const localScene={
@@ -203,7 +203,7 @@
           });
           picture.appendChild(img);
         }
-        const placeholder=el('span','pw-photo-map-placeholder',locked?'?':'◇');
+        const placeholder=el('span','pw-photo-map-placeholder',locked?'·':'◇');
         picture.appendChild(placeholder);
         const pin=el('span','pw-photo-map-anchor');
         const textName=el('span','pw-photo-map-name',p.name);
