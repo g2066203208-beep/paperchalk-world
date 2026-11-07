@@ -78,7 +78,8 @@ try{
  await popup.waitFor();
  assert.match(await popup.innerText(),/岬崎市/);
  await shot('29-dot-world-mobile-city-menu.png');
- await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
+ // Test wheel zoom without re-clicking the overview command beneath a
+ // still-open mobile popup. The overview button was already exercised above.
  const start=await page.locator('.pw-dot-world-canvas').getAttribute('style');
  await page.mouse.wheel(0,-520);
  await page.waitForTimeout(120);
