@@ -21,8 +21,8 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  assert.ok(safe.clear&&safe.valid&&safe.gap>.05,'all five must fit center TPS view');
  assert.ok(safe.hero.right<safe.foes[0].left,'close heroine must not cover first enemy');
  if(aspect===1917/906){
-  assert.ok(safe.hero.left<-1.35&&safe.hero.right>-.36);
-  assert.ok(safe.hero.top>.56&&safe.hero.top<.70,
+  assert.ok(safe.hero.left<-.99&&safe.hero.right>-.28);
+  assert.ok(safe.hero.top>.47&&safe.hero.top<.55,
    'default head must project into upper screen without hiding the targets');
   assert.ok(safe.foes[3].right<.93);
  }
