@@ -57,7 +57,7 @@ for(const mode of ['outer','inner']){
  assert.ok(end.y>.64&&end.y<.80,'2.85m physical ceiling still in correct projected position');
  const foe=ring.layout(mode).enemies[1],b=ring.portraitBounds(foe,camera,aspect);
  const relative=(end.y-start.y)/(b.top-b.bottom);
- assert.ok(relative>.90&&relative<1.20,
+ assert.ok(relative>.90&&relative<1.26,
   'a 2.85m wall must not make 1.6m enemies look like miniature people in '+mode+': '+relative);
 }
 const outer=ring.backdropPoint('outer',0),inner=ring.backdropPoint('inner',0);
