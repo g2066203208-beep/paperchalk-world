@@ -123,9 +123,9 @@ try{
    validationErrors.push('mouse look is still a fixed eye, not a TPS orbit');
   if(report.mouseLeft.cameraLook.mode!=='hero-root-tps-shoulder-rig'||
      !report.mouseRight.cameraLook.orbitAroundHero||
-     !(report.mouseLeft.cameraLook.heroYawDeg<-.5&&
-       report.mouseRight.cameraLook.heroYawDeg>.5))
-   validationErrors.push('hero body is not turning with the real orbiting shoulder camera');
+     report.mouseLeft.cameraLook.heroYawDeg!==0||
+     report.mouseRight.cameraLook.heroYawDeg!==0)
+   validationErrors.push('camera look improperly rotates the fixed heroine');
   if(!(report.mouseLeft.cameraLook.yawDeg<-1.2&&
        report.mouseRight.cameraLook.yawDeg>1.2))
    validationErrors.push('cursor does not turn camera in the correct direction');
@@ -242,7 +242,7 @@ try{
   report.restored?.mode!=='outer'||
   validationErrors.length||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+validationErrors.concat(pageErrors,errors).join('; '));
- console.log('PASS true close TPS camera orbit, heroine body yaw follow, original L2D four foes, real alpha shadows and red ceiling lamps');
+ console.log('PASS true TPS camera orbit, fixed heroine world pose, original L2D four foes, real alpha shadows and red ceiling lamps');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }
