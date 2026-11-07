@@ -52,8 +52,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const regional=vector('g',{},'pw-dot-regional-lines');
  const urban=vector('g',{},'pw-dot-urban-lines');
  const metroNetwork=vector('g',{},'pw-dot-planned-metro');
+ const municipal=vector('g',{},'pw-dot-municipal-lines');
  const stops=vector('g',{},'pw-dot-stations');
- svg.append(dots,regional,metroNetwork,urban,stops);
+ svg.append(dots,regional,metroNetwork,municipal,urban,stops);
  const areaLayer=element('div','pw-dot-areas');
  const cityLayer=element('div','pw-dot-cities');
  const placeLayer=element('div','pw-dot-places');
@@ -203,26 +204,30 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  }
  // Expanded municipal services exist as planned topology. Only actually
  // implemented local routes offer boarding; planned lines never fake rides.
- for(const l of atlas.METRO_LINES){
-  const pts=l.coords.map(location);
-  const corridor=[pts[0]];
-  for(let i=1;i<pts.length;i++){
-   const section=orthogonal(pts[i-1],pts[i]);
-   for(const p of section.slice(1))if(p.x!==corridor.at(-1).x||p.y!==corridor.at(-1).y)corridor.push(p);
+ // City transport uses actual, individually named destination nodes,
+ // never numbered synthetic metro stops. Smaller towns have buses.
+ for(const l of atlas.LOCAL_TRANSIT_LINES){
+  const points=[location(atlas.POI_BY_ID[l.stops[0]])];
+  for(let i=1;i<l.stops.length;i++){
+   const a=atlas.POI_BY_ID[l.stops[i-1]],b=atlas.POI_BY_ID[l.stops[i]];
+   for(const p of orthogonal(a,b).slice(1))
+    if(p.x!==points.at(-1).x||p.y!==points.at(-1).y)points.push(p);
   }
-  if(l.shape==='ring'){
-   for(const p of orthogonal(pts.at(-1),pts[0]).slice(1))
-    if(p.x!==corridor.at(-1).x||p.y!==corridor.at(-1).y)corridor.push(p);
-  }
-  const d=rounded(corridor,7);
-  const g=vector('g',{'data-line':l.id,'data-city':l.city},'pw-dot-planned-line');
-  g.append(vector('path',{d,stroke:l.color},'pw-dot-planned-track'));
-  metroNetwork.append(g);
-  l.coords.forEach((p,i)=>{
-   if(i%2&&i!==l.coords.length-1)return;
-   const s=location(p);
-   g.append(vector('circle',{cx:s.x,cy:s.y,r:3.6},'pw-dot-planned-stop'));
+  const g=lineGroup(municipal,l,l.stops[0],l.stops.at(-1),points,'metro',(e,node)=>{
+   const city=atlas.CITY_BY_ID[l.city];
+   showMenu(e,node,l.name,city.name+' · '+(l.mode==='metro'?'地铁':l.mode==='tram'?'有轨电车':'地方巴士')+
+    ' · '+l.stops.length+' 个真实地点',l.stops.map(id=>{
+    const stop=atlas.POI_BY_ID[id];
+    return {label:stop.name,run:()=>{clear();focus(stop,Math.max(3.15,scale))}};
+   }));
   });
+  g.dataset.city=l.city;g.dataset.mode=l.mode;
+  for(const id of l.stops){
+   const p=location(atlas.POI_BY_ID[id]);
+   const station=vector('circle',{cx:p.x,cy:p.y,r:4,
+    'data-stop':id,'data-city':l.city},'pw-dot-municipal-stop');
+   g.append(station);
+  }
  }
  const localPoint=p=>({x:LOCAL_X+p.gx*CELL,y:LOCAL_Y+p.gy*CELL});
  for(const l of metro.LINES){
@@ -315,6 +320,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   label.dataset.area=a.id;put(label,location(a),areaLayer);
   areaNodes.push(label);
  }
+ const transitPOIs=new Set(atlas.LOCAL_TRANSIT_STOPS.map(stop=>stop.id));
  const cityNodes=[];
  for(const c of atlas.CITIES){
   const node=element('button','pw-dot-city');
@@ -341,6 +347,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   node.type='button';node.dataset.place=p.id;node.dataset.city=p.city;
   node.dataset.current=String(p.id===here);
   node.dataset.kind=p.kind||'';
+  node.dataset.transitStop=String(transitPOIs.has(p.id));
   const src=atlas.PHOTOS[p.photo]?.url;
   photo(node,[src,PLACEHOLDER]);
   node.append(element('span','pw-transit-place-name',p.name));
@@ -368,7 +375,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   });
  }
  // Always keep the actual current place legible under photo-pin decluttering.
- worldNodes.sort((a,b)=>Number(b.poi.id===here)-Number(a.poi.id===here));
+ worldNodes.sort((a,b)=>Number(b.poi.id===here)-Number(a.poi.id===here)||
+  Number(transitPOIs.has(b.poi.id))-Number(transitPOIs.has(a.poi.id)));
  const caption=element('span','pw-transit-caption','');
  const sub=element('span','pw-transit-tip','');
  map.append(caption,sub);
@@ -412,11 +420,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const occupied=[];
   for(const {node,poi} of worldNodes){
    const p=location(poi),px=x+p.x*scale,py=y+p.y*scale;
-   let visible=scale>=2.65&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
+   let visible=scale>=(transitPOIs.has(poi.id)?1.9:2.45)&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
    // Real screen-space occupancy, not piles of overlapping photo cards.
    if(visible){
-    visible=!occupied.some(q=>Math.abs(q.x-px)<Math.max(110,61*scale)&&
-      Math.abs(q.y-py)<Math.max(86,51*scale));
+    visible=!occupied.some(q=>Math.abs(q.x-px)<88&&
+      Math.abs(q.y-py)<74);
     if(visible)occupied.push({x:px,y:py});
    }
    node.hidden=!visible;
@@ -424,7 +432,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   metroLayer.hidden=scale<1.22||scale>4.5;
   urban.style.display=scale<1.22?'none':'';
   stops.style.display=scale<1.22?'none':'';
-  metroNetwork.style.display=scale<2.75?'none':'';
+  metroNetwork.style.display='none'; // Retired fabricated ghost stops.
+  municipal.style.display=scale<1.65?'none':'';
   regional.style.display=scale>=1.45?'none':'';
   regional.style.opacity='.86';
   hint.hidden=scale>2.3;
