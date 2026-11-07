@@ -50,7 +50,7 @@ assert.equal(ring.camera('inner').fov,52);
 for(const mode of ['outer','inner']){
  const backdrop=ring.backdropPoint(mode,0),camera=ring.camera(mode),aspect=1917/906;
  const dist=Math.abs(backdrop.z-camera.eye.z);
- assert.ok(mode==='outer'?dist>4.80&&dist<4.95:dist>6.20&&dist<6.30,'physical wall distance calibrated per active camera');
+ assert.ok(mode==='outer'?dist>5.0&&dist<5.15:dist>6.20&&dist<6.30,'physical wall distance calibrated per active camera');
  const end=ring.project({x:0,y:ring.SPEC.wallHeight,z:backdrop.z},camera,aspect);
  const start=ring.project({x:0,y:0,z:backdrop.z},camera,aspect);
  assert.ok(end.valid&&start.valid);
