@@ -348,3 +348,31 @@
  #pw-world-surface .pw-transit-grid-dot{opacity:.53}
  #pw-world-surface .pw-transit-photo-leader{stroke-width:1.2px}
 }
+
+/* Nine equally spaced destination cells (3 columns × 3 rows).
+ * Future destinations are empty photo slots, never tiny off-grid buttons. */
+#pw-world-surface .pw-transit-place.is-future-location{
+ opacity:.64;
+}
+#pw-world-surface .pw-transit-place.is-future-location .pw-transit-photo{
+ display:grid;place-items:center;
+ background:linear-gradient(140deg,#28333d,#17242d);
+ border:1px dashed #95a7af8c;
+ box-shadow:0 3px 8px #08101688;
+}
+#pw-world-surface .pw-transit-future-symbol{
+ display:grid;place-items:center;
+ width:100%;height:100%;
+ color:#99a7ac;
+ font:400 clamp(13px,2.7cqh,20px)/1 "PaperSans",sans-serif;
+ letter-spacing:.35em;
+}
+#pw-world-surface .pw-transit-place.is-future-location .pw-transit-place-name{
+ color:#c9d2d3!important;
+ font-weight:400;
+ background:#15222cd9;
+}
+#pw-world-surface .pw-transit-photo-leader[data-locked=true]{
+ stroke-dasharray:2 4;
+ opacity:.34;
+}
