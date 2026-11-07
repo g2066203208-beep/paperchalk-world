@@ -124,6 +124,17 @@ try{
   'subway does NOT have a dialogue UI');
  assert.equal(await page.locator('#pw-metro-cabin .pw-cabin-person,#pw-metro-cabin .pw-cabin-words').count(),0);
 
+ // Record WHICH original L2D backend really paints the metro heroine.
+ // A visible wire grid can come from an older full-canvas breath mesh,
+ // independently of the 25-part authoring renderer.
+ console.log('METRO L2D RENDERER DIAG',JSON.stringify(await page.evaluate(()=>{
+  const a=window.PaperchalkL2D?.get('player');
+  return {edition:a?.root?.dataset.l2dEdition,mode:a?.root?.dataset.l2dMode,
+   clip:a?.clip?.type||null,rig:!!a?.rig,
+   rigAmplitude:a?.rig?.amplitude,rigPsdParts:a?.rig?.psdParts?.length||0,
+   library:!!a?.libraryPlayer,libraryCharacter:a?.libraryPlayer?.model?.characterId,
+   source:a?.lastSource?.slice(-90)};
+ })));
  assert.deepEqual(room3d.visibleActorIds,['hero'],
   'metro keeps the real grounded hero, not unrelated combat enemy rigs');
  assert.ok(room3d.lensShift<.13,
