@@ -40,7 +40,7 @@
     const body=el('div','pw-surface-body');
     const foot=el('div','pw-surface-foot');
     frame.append(header,body,foot);root.append(dim,frame);parent.appendChild(root);
-    let mode='',choice=null,filter='all',busy=false,returnFocus=null,mapMode='metro';
+    let mode='',choice=null,filter='all',busy=false,returnFocus=null;
     const get=()=>engine.snapshot();
     const text=(txt,error=false)=>{
       foot.textContent=txt||'';
@@ -68,7 +68,6 @@
       if(!['map','bag','shop'].includes(which))return false;
       returnFocus=document.activeElement;
       mode=which;choice=null;filter='all';foot.textContent='';
-      if(which==='map')mapMode=global.PaperWorldMetro?.STATIONS?.[get().location]?'metro':'regional';
       root.hidden=false;
       document.getElementById('view')?.classList.add('overworld-surface-open');
       draw();frame.focus({preventScroll:true});return true;
@@ -122,11 +121,11 @@
     }
     function drawMap(){
       const snapshot=get();
-      frame.dataset.view='map';heading.textContent='城区交通';
+      frame.dataset.view='map';heading.textContent='点阵交通图';
       note.textContent=snapshot.calendar.time;
       foot.textContent='';
-      const painter=mapMode==='regional'?global.PaperWorldRegionalMap:global.PaperWorldTransitMap;
-      frame.dataset.mapMode=mapMode;
+      const painter=global.PaperWorldTransitMap;
+      frame.dataset.mapMode='dot-world';
       if(!painter){body.textContent='地图模块尚未加载';return}
       painter.draw({
         body,snapshot,locations:locs,availability,
@@ -141,16 +140,6 @@
         },
         onFeedback:message=>onFeedback?.(message)
       });
-      // Restore the original strict 12×6 dot-matrix map by default.
-      const changeLayer=button(mapMode==='metro'?'查看跨城地图':'返回点阵地铁图',()=>{
-        mapMode=mapMode==='metro'?'regional':'metro';draw();
-      },'pw-map-mode-toggle');
-      changeLayer.setAttribute('aria-label',mapMode==='metro'?'切换到跨城交通地图':'恢复原版点阵地铁图');
-      // The regional atlas owns its toolbar; do not overlay its zoom buttons
-      // or its city title with a floating map-mode button.
-      const atlasControls=mapMode==='regional'?body.querySelector('.pw-world-controls'):null;
-      if(atlasControls)atlasControls.prepend(changeLayer);
-      else body.append(changeLayer);
     }
     function drawBag(){
       const s=get(),items=Object.entries(meta).filter(([key,m])=>
