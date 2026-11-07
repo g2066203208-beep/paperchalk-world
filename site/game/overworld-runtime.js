@@ -16,7 +16,7 @@
     storage:store,
     onStatEvent:event=>global.PaperWorldTopHUD?.applyEvent?.(event)
   });
-  let mode=false,hideTimer=null,traveling=false;
+  let mode=false,hideTimer=null,traveling=false,contextOpen=false;
   const h=(tag,className,text)=>{
     const el=document.createElement(tag);
     if(className)el.className=className;
@@ -41,6 +41,18 @@
   const cityArt=h('div','overworld-city-art');
   city.appendChild(cityArt);
   view.appendChild(city);
+  // Passenger view owns the transition while the map is already closed.
+  const transit=h('section','pw-transit-scene');
+  transit.id='pw-transit-scene';transit.hidden=true;
+  transit.setAttribute('role','dialog');transit.setAttribute('aria-label','列车途中');
+  transit.innerHTML='<div class="pw-train-window" aria-hidden="true"><i></i><i></i><i></i></div>'+
+    '<div class="pw-transit-header"><span class="pw-transit-line"></span>'+
+    '<span class="pw-transit-stops"></span></div>'+
+    '<div class="pw-transit-passengers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>'+
+    '<div class="pw-transit-conversation"><small class="pw-transit-speaker"></small>'+
+    '<p class="pw-transit-words"></p><div class="pw-transit-progress"></div></div>'+
+    '<button type="button" class="pw-transit-next" aria-label="继续车厢对话">继续 ›</button>';
+  root.appendChild(transit);
   const director=global.PaperWorldOverworldDirector?.create?.({root})||null;
   const surfaces=global.PaperWorldOverworldSurfaces?.create?.({
     engine,onTravel:place=>travel(place),onFeedback:message=>say(message)
@@ -59,37 +71,107 @@
   }
   function run(fn,after=null){
     if(traveling)return;
+    contextOpen=false;prompts.hidden=true;
     const result=fn();
     if(!result.ok){say(result.reason);return}
     say(result.message);
     if(after)after(result);
     draw();
   }
-  async function travel(place){
+  let endTransit=null;
+  function presentTransit(route,snapshot){
+    const metro=global.PaperWorldMetro;
+    if(!metro||!route?.segments?.length)return Promise.resolve();
+    const dialogue=metro.conversation(snapshot,route);
+    const slides=[];
+    slides.push({speaker:'列车广播',
+      text:route.lines.join(' / ')+' · '+route.connections+' 站 · '+(route.transfers.length?'需要换乘':'直达')});
+    for(const turn of dialogue.slice(0,2))slides.push(turn);
+    for(const at of route.transfers){
+      slides.push({speaker:'站内广播',
+        text:'中央换乘站到了。请前往另一条线路的站台换乘。',transfer:at});
+    }
+    slides.push(dialogue[2]);
+    const text=transit.querySelector('.pw-transit-words');
+    const speaker=transit.querySelector('.pw-transit-speaker');
+    const progress=transit.querySelector('.pw-transit-progress');
+    const next=transit.querySelector('.pw-transit-next');
+    transit.querySelector('.pw-transit-line').textContent=route.lines.join('  /  ');
+    transit.querySelector('.pw-transit-stops').textContent=
+      route.stops.map(id=>metro.STATIONS[id]?.label||id).join('  ·  ');
+    transit.hidden=false;
+    view.classList.add('pw-traveling');
+    contextOpen=false;prompts.hidden=true;
+    return new Promise(resolve=>{
+      let index=0,timer=0,done=false;
+      const finish=()=>{
+        if(done)return;done=true;
+        clearTimeout(timer);next.removeEventListener('click',advance);
+        transit.removeEventListener('click',onStageClick);
+        endTransit=null;resolve();
+      };
+      const show=()=>{
+        const slide=slides[index];
+        speaker.textContent=slide.speaker;
+        text.textContent=slide.text;
+        progress.textContent=(index+1)+' / '+slides.length;
+        transit.dataset.transfer=String(!!slide.transfer);
+        next.textContent=index===slides.length-1?'到站 ›':'继续 ›';
+        if(index>0&&index<=2){
+          engine.recordTransitRumor?.(
+            'train-'+snapshot.day+'-'+route.from+'-'+route.to+'-'+index,
+            slide.speaker+'：'+slide.text);
+        }
+        clearTimeout(timer);
+        timer=setTimeout(advance,slide.transfer?2800:3600);
+      };
+      const advance=()=>{
+        if(done)return;
+        if(index+1>=slides.length){finish();return}
+        index++;show();
+      };
+      const onStageClick=e=>{
+        if(e.target.closest('button'))return;
+        advance();
+      };
+      next.addEventListener('click',advance);
+      transit.addEventListener('click',onStageClick);
+      endTransit=finish;
+      show();
+    });
+  }
+  async function travel(place,route=null){
     if(traveling)return {ok:false,reason:'正在前往目的地'};
     const dest=Core.LOCATIONS[place];
     if(!dest)return {ok:false,reason:'没有这个目的地'};
-    const current=engine.snapshot();
+    const previous=engine.snapshot();
     traveling=true;
-    const result=engine.travel(place);
-    if(!result.ok){traveling=false;say(result.reason);return result}
+    contextOpen=false;prompts.hidden=true;
+    // Close world surface BEFORE engine.travel() emits state notifications.
+    // The old order redrew the map above the new scene and caused flashes.
+    surfaces?.close?.();
     try{
-      const swap=async()=>{
-        if(dest.scene){
-          const changed=await global.PaperWorldDailyLifeScene?.(dest.scene);
-          if(changed===false&&stage.dataset.scene!==dest.scene)
-            say('场景加载失败；请从地图重试。');
-        }
-        paintedCity='';draw();
-      };
-      // The host's existing scene transition owns the fade and source image.
-      // Avoid layering another full-screen fade or fake home backdrop.
-      await swap();
+      const result=engine.travel(place);
+      if(!result.ok){say(result.reason);return result}
+      if(route?.segments?.length&&
+          (Core.LOCATIONS[previous.location]?.group==='城区'||dest.group==='城区'))
+        await presentTransit(route,previous);
+      // Keep the train matte over the scene until scene swap completes.
+      if(dest.scene){
+        const changed=await global.PaperWorldDailyLifeScene?.(dest.scene);
+        if(changed===false&&stage.dataset.scene!==dest.scene)
+          say('场景加载失败；请从地图重试。');
+      }
+      paintedCity='';draw();
       say('到达'+dest.label+'。');
       if(dest.group==='城区'&&director)
-        global.setTimeout(()=>{if(mode)director.playLocation(place,engine.snapshot())},260);
+        global.setTimeout(()=>{if(mode)director.playLocation(place,engine.snapshot())},380);
       return result;
-    }finally{traveling=false;draw()}
+    }finally{
+      endTransit?.();endTransit=null;
+      transit.hidden=true;view.classList.remove('pw-traveling');
+      traveling=false;draw();
+    }
   }
   function addAction(label,action,fn){
     const button=h('button','overworld-scene-action',label);
@@ -111,9 +193,9 @@
       }
     }
     prompts.replaceChildren();
-    prompts.hidden=!mode||root.hidden||s.nightStatus==='recalled';
-    if(prompts.hidden)return;
-    if(phone?.isOpen?.())prompts.hidden=true;
+    const available=mode&&!root.hidden&&s.nightStatus!=='recalled';
+    prompts.hidden=!available||!contextOpen||traveling||phone?.isOpen?.()||surfaces?.isOpen?.();
+    if(!available)return;
     // No persistent list of time, wealth, energy, relations or missions:
     // only two or three natural interactions in the current room.
     if(s.location==='bedroom'){
@@ -153,14 +235,29 @@
       addAction('离开商场','exit',()=>surfaces?.openMap());
     }
   }
-  function activate(){
+  // No permanent bottom-right menu. In-world click/tap reveals a tiny
+  // transient contextual list where the player actually touched the scene.
+  view.addEventListener('click',event=>{
+    if(!mode||traveling||root.hidden||phone?.isOpen?.()||surfaces?.isOpen?.()||!transit.hidden)return;
+    if(event.target.closest('button,#novel-ui,#dev-tools,#dev-stage,#scene-menu'))return;
+    if(event.target.closest('#pw-world-director'))return;
+    const rect=view.getBoundingClientRect();
+    const px=Math.max(0,Math.min(1,(event.clientX-rect.left)/Math.max(1,rect.width)));
+    const py=Math.max(0,Math.min(1,(event.clientY-rect.top)/Math.max(1,rect.height)));
+    contextOpen=!contextOpen;
+    prompts.style.left=(Math.min(.73,Math.max(.035,px)) * 100)+'%';
+    prompts.style.top=(Math.min(.63,Math.max(.09,py)) * 100)+'%';
+    draw();
+  });
+    function activate(){
     if(root.hidden)return false;
-    mode=true;view.classList.add('overworld-life-active');
+    mode=true;contextOpen=false;view.classList.add('overworld-life-active');
     draw();global.PaperWorldTopHUD?.refreshClock?.();
     phone?.refresh?.();return true;
   }
   function deactivate(){
-    mode=false;
+    mode=false;contextOpen=false;endTransit?.();endTransit=null;
+    transit.hidden=true;view.classList.remove('pw-traveling');
     prompts.hidden=true;city.hidden=true;caption.hidden=true;
     director?.close?.();surfaces?.close?.();
     view.classList.remove('overworld-life-active');
@@ -182,6 +279,11 @@
   phone?.configure?.({
     getNarrative:()=>engine.phoneInbox(),
     onPhoneRead:kind=>engine.markPhoneRead(kind),
+    onSendMessage:(to,msg)=>engine.sendPhoneMessage(to,msg),
+    onPhoneCall:(to,video)=>engine.phoneCall(to,video),
+    onTakePhoto:data=>engine.addPhonePhoto(data),
+    onPublishPost:(text,photo)=>engine.publishSocial(text,photo),
+    getPhoneWorld:()=>engine.snapshot(),
     onPhoneReply:choice=>engine.replyHomework(choice),
     getContacts:()=>{
       const saved=engine.snapshot();
