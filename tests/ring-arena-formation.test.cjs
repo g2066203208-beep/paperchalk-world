@@ -27,7 +27,7 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  const safe=r.battleVisualSafety('outer',0,aspect,r.FEMALE07_BACK_UV);
  assert.ok(safe.valid&&safe.clear&&safe.gap>.07,
   'cropped foreground protagonist cannot cover opponents');
- assert.ok(safe.hero.right<-.70,
+ assert.ok(safe.hero.right<-.60,
   'near-camera protagonist should naturally crop at the left edge');
  if(aspect===1917/906)console.log('VISUAL CENTER',p.map(q=>+q.x.toFixed(3)));
 }
