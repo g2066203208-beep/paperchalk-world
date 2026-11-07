@@ -233,7 +233,44 @@ function create({root,engine,onExit,onFeedback}){
   visible=false;section.hidden=true;
   if(raf)cancelAnimationFrame(raf);raf=0;
  }
- return Object.freeze({open,close,refresh,isOpen:()=>visible});
+ // Directly choosing a destination uses the same actual rolling train.
+ // Auto travel never teleports the player or creates a second fake carriage.
+ async function playRoute(route){
+  if(!route?.segments?.length)return {ok:false,reason:'这段行程不需要地铁'};
+  if(!engine.snapshot().metro?.onboard)return {ok:false,reason:'尚未登车'};
+  if(auto)return {ok:false,reason:'列车正在行驶'};
+  open();auto=true;
+  try{
+   for(const seg of route.segments){
+    let ride=engine.snapshot().metro;
+    if(ride.anomaly)return {ok:true,anomaly:true};
+    if(ride.station!==seg.from)
+     return {ok:false,reason:'列车站点和路径不一致'};
+    const direction=metro.neighbors(seg.line,seg.from).find(n=>n.to===seg.to)?.direction;
+    if(!direction)return {ok:false,reason:'线路方向不正确'};
+    if(ride.lineId!==seg.line.id||ride.direction!==direction){
+      const transfer=engine.metroSwitch(seg.line.id,direction);
+      if(!transfer.ok)return transfer;
+      speakerIndex++;refresh();
+      await new Promise(resolve=>setTimeout(resolve,550));
+    }
+    const next=engine.metroNext();
+    if(!next.ok)return next;
+    speakerIndex++;refresh();
+    if(next.anomaly)return next;
+    await new Promise(resolve=>setTimeout(resolve,550));
+   }
+   const result=engine.metroExit();
+   if(!result.ok)return result;
+   await onExit?.(result.station);
+   return result;
+  }finally{
+   auto=false;
+   if(!engine.snapshot().metro?.onboard)close();
+   else refresh();
+  }
+ }
+ return Object.freeze({open,close,refresh,playRoute,isOpen:()=>visible});
 }
 global.PaperWorldMetroCabin=Object.freeze({create});
 })(window);
