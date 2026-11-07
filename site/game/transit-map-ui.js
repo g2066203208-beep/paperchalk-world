@@ -23,7 +23,10 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
  svg.setAttribute('preserveAspectRatio','none');map.appendChild(svg);
  const popup=create('div','pw-transit-popup');popup.hidden=true;popup.setAttribute('role','group');
  let busy=false;
- const clear=()=>{popup.hidden=true;map.querySelectorAll('[data-selected]').forEach(n=>n.dataset.selected='false')};
+ const clear=()=>{
+   popup.hidden=true;
+   map.querySelectorAll('[data-selected]').forEach(n=>n.dataset.selected='false');
+ };
  map.addEventListener('click',e=>{if(e.target===map||e.target===svg)clear()});
  function menu(e,name,details,actions){
   clear();popup.replaceChildren(create('strong','pw-transit-popup-name',name));
@@ -42,38 +45,97 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   popup.style.left=Math.max(6,Math.min(rect.width-w-6,(x+w+22>rect.width?x-w-15:x+15)))+'px';
   popup.style.top=Math.max(38,Math.min(rect.height-h-7,y-h*.33))+'px';
  }
- for(const line of metro.LINES){
-  const points=line.stops,segments=[];
-  for(let i=1;i<points.length;i++)segments.push([points[i-1],points[i]]);
-  if(line.ring)segments.push([points[points.length-1],points[0]]);
-  for(const [a,b] of segments){
-   const p=metro.STATIONS[a],q=metro.STATIONS[b],d='M'+p.x+' '+p.y+' L'+q.x+' '+q.y;
-   const rail=document.createElementNS(NS,'path');
-   rail.classList.add('pw-transit-rail');if(line.locked)rail.classList.add('is-locked');
-   rail.setAttribute('stroke',line.color);rail.setAttribute('d',d);svg.append(rail);
-   const hit=document.createElementNS(NS,'path');
-   hit.classList.add('pw-transit-line-hit');
-   hit.setAttribute('d',d);hit.setAttribute('stroke','transparent');hit.style.pointerEvents='stroke';
-   hit.setAttribute('role','button');hit.setAttribute('aria-label','乘坐'+line.name);
-   hit.addEventListener('click',e=>{
-    e.stopPropagation();
-    const options=metro.boardingChoices(current).find(v=>v.id===line.id);
-    if(!options){menu(e,line.name,line.locked?'此线路尚未运营':'当前站不在此线路上，请到换乘站',[]);return}
-    menu(e,line.name,'从 '+metro.STATIONS[current].label+' 出发',options.directions.map(dir=>({
+ // The rail canvas is drawn in real CSS-pixel coordinates, so 90° corners
+ // remain circular at every aspect ratio. No skewed diagonals or sharp joins.
+ const geometry=global.PaperWorldMetroGeometry;
+ const segments=[],stationMarkers=[];
+ function lineSegment(line,a,b){
+  const group=document.createElementNS(NS,'g');
+  group.classList.add('pw-transit-segment');
+  group.dataset.line=line.id;group.dataset.from=a;group.dataset.to=b;
+  if(line.locked)group.dataset.locked='true';
+  const createStroke=(cls,stroke)=>{
+   const path=document.createElementNS(NS,'path');
+   path.classList.add(cls);path.setAttribute('stroke',stroke);
+   group.appendChild(path);return path;
+  };
+  const casing=createStroke('pw-transit-rail-casing','#0f1b21');
+  const core=createStroke('pw-transit-rail',line.color);
+  const glint=createStroke('pw-transit-rail-glint','#e4eeed');
+  const hit=createStroke('pw-transit-line-hit','transparent');
+  hit.setAttribute('role','button');
+  hit.setAttribute('aria-label','乘坐'+line.name);
+  hit.style.pointerEvents='stroke';
+  hit.addEventListener('pointerenter',()=>group.dataset.hover='true');
+  hit.addEventListener('pointerleave',()=>group.dataset.hover='false');
+  hit.addEventListener('click',event=>{
+   event.stopPropagation();
+   const options=metro.boardingChoices(current).find(v=>v.id===line.id);
+   if(!options){
+    menu(event,line.name,line.locked?'尚未运营':'请先到此线的车站换乘',[]);
+    return;
+   }
+   menu(event,line.name,'当前站 · '+metro.STATIONS[current].label,
+    options.directions.map(dir=>({
      label:dir.label,primary:true,run:async()=>{
       if(busy)return;busy=true;clear();
-      let result;try{result=await onBoard(line.id,dir.direction)}
+      let result;
+      try{result=await onBoard(line.id,dir.direction)}
       catch(_){result={ok:false,reason:'上车失败'}}
-      busy=false;if(!result?.ok)menu(e,line.name,result?.reason||'无法乘车',[]);
+      busy=false;
+      if(!result?.ok)menu(event,line.name,result?.reason||'无法乘车',[]);
      }
     })));
-    hit.dataset.selected='true';
-   });svg.append(hit);
-  }
+   group.dataset.selected='true';
+  });
+  svg.appendChild(group);
+  segments.push({line,a,b,parts:[casing,core,glint,hit]});
  }
  for(const line of metro.LINES){
+  for(const [a,b] of (geometry?.segments(line)||[]))lineSegment(line,a,b);
+ }
+ for(const [id,station] of Object.entries(metro.STATIONS)){
+  const group=document.createElementNS(NS,'g');
+  group.classList.add('pw-transit-stop-group');
+  group.dataset.stop=id;
+  if(station.locked)group.dataset.locked='true';
+  if(station.transfer)group.dataset.transfer='true';
+  if(current===id)group.dataset.current='true';
+  const makeCircle=(cls)=>{
+   const c=document.createElementNS(NS,'circle');
+   c.classList.add(cls);c.setAttribute('r',cls==='pw-transit-stop-halo'?13:
+     station.transfer?8:5.5);
+   group.appendChild(c);return c;
+  };
+  if(current===id)makeCircle('pw-transit-stop-halo');
+  const circle=makeCircle('pw-transit-stop-circle');
+  if(station.transfer)makeCircle('pw-transit-transfer-core');
+  svg.appendChild(group);
+  stationMarkers.push({station,group});
+ }
+ function drawLines(){
+  if(!map.isConnected)return;
+  const rect=map.getBoundingClientRect();
+  const width=Math.max(1,rect.width),height=Math.max(1,rect.height);
+  svg.setAttribute('viewBox','0 0 '+width+' '+height);
+  for(const seg of segments){
+   const d=geometry.pathFor(seg.line.id,seg.a,seg.b,
+      metro.STATIONS,width,height,Math.min(22,height*.041));
+   for(const p of seg.parts)p.setAttribute('d',d);
+  }
+  for(const {station,group} of stationMarkers){
+   group.setAttribute('transform','translate('+
+    (station.x*width/100)+','+(station.y*height/100)+')');
+  }
+ }
+ // One compact route label per colored service, attached to its geography.
+ const keyPositions={a:[60,35],b:[57,85],c:[28,96]};
+ for(const line of metro.LINES){
   const label=create('span','pw-transit-line-key',line.name);
-  label.dataset.line=line.id;label.style.setProperty('--route-color',line.color);
+  label.dataset.line=line.id;
+  label.style.setProperty('--route-color',line.color);
+  label.style.left=keyPositions[line.id][0]+'%';
+  label.style.top=keyPositions[line.id][1]+'%';
   if(line.locked)label.dataset.locked='true';
   map.append(label);
  }
@@ -83,6 +145,7 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   node.type='button';node.dataset.place=id;node.dataset.current=String(id===current);
   node.dataset.locked=String(!!station.locked);node.dataset.selected='false';
   node.style.left=station.x+'%';node.style.top=station.y+'%';
+  node.dataset.photograph=String(!!PHOTO[id]);
   node.setAttribute('aria-label',name+(station.locked?'，未开放':''));
   if(PHOTO[id]){
    const pic=create('span','pw-transit-photo'),img=create('img');
@@ -99,6 +162,7 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
    img.addEventListener('error',()=>{if(img.src!==new URL(fallback,document.baseURI).href)img.src=fallback});
   }else node.append(create('span','pw-transit-station-dot',station.locked?'×':station.transfer?'◎':'•'));
   node.append(create('span','pw-transit-place-name',name));
+  if(PHOTO[id])node.append(create('span','pw-transit-photo-link'));
   node.addEventListener('click',e=>{
    e.stopPropagation();
    const def=locations[id];
@@ -125,8 +189,16 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   map.append(node);
  }
  map.append(create('span','pw-transit-caption','城区交通'));
- map.append(create('span','pw-transit-tip','点照片查看地点 · 点线路选择方向'));
+ map.append(create('span','pw-transit-tip','点击地点或线路'));
  map.append(popup);body.replaceChildren(map);
+ drawLines();
+ if(typeof ResizeObserver==='function'){
+  const ro=new ResizeObserver(drawLines);ro.observe(map);
+  // The next render disconnects the old observer when opening a fresh map.
+  if(global.PaperWorldTransitMap?._disconnect)
+   global.PaperWorldTransitMap._disconnect();
+  global.PaperWorldTransitMap._disconnect=()=>ro.disconnect();
+ }
 }
-global.PaperWorldTransitMap=Object.freeze({PHOTO,draw});
+global.PaperWorldTransitMap={PHOTO,draw,_disconnect:null};
 })(window);
