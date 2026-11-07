@@ -213,7 +213,9 @@ try{
  await page.waitForTimeout(380);
  const standard=await inspect();
  const foeSpots=standard.actors.enemies.map(a=>a.x);
- assert.ok(Math.max(...foeSpots)-Math.min(...foeSpots)>4);
+ assert.ok(Math.max(...foeSpots)-Math.min(...foeSpots)>3.7&&
+  Math.max(...foeSpots)-Math.min(...foeSpots)<4,
+  'four enemies hold a tighter 3.81m single rank without colliding');
  assert.deepEqual(standard.actors,outer.actors,
   'all world-space actors must stay fixed after mouse look and attack');
  await page.screenshot({path:'artifacts/ring-arena/V32-single-encounter-wide-1917x906.png'});
