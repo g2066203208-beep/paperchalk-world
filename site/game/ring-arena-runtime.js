@@ -707,6 +707,7 @@
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
    const surfaceMaterials=Object.fromEntries(Object.entries(SURFACE_TEXTURES)
     .map(([kind,url])=>[kind,{url,texture:null,image:null,ready:false,error:null}]));
+  let projectedShadowDraws=0;
   const textures=new Map();
   const actionTextures=new Map(); // separate GPU action poses at real 3D anchors
   let drawnPoses={};
@@ -1145,6 +1146,7 @@
    gl.disableVertexAttribArray(fixture.aUv);
   }
   function drawProjectedShadows(actors,cam,vp){
+   projectedShadowDraws=0;
    if(!shadowGrid)return;
    const facing=normalize({x:cam.focus.x-cam.eye.x,
     y:0,z:cam.focus.z-cam.eye.z});
@@ -1178,6 +1180,7 @@
      gl.uniform1f(projectedShadow.uStrength,
       Math.min(.49,lamps[i].strength*(i===0?.62:.24)));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
+     projectedShadowDraws++;
     }
    }
    gl.depthMask(true);gl.disable(gl.BLEND);
@@ -1449,7 +1452,13 @@
        (mode==='outer'?ceilingOuter:ceilingInner)?.count,
       mapping:'curved-wall-arc-and-depth'}])),
     lighting:{kind:LIGHTING.kind,count:lightRigs[mode].count,
-     ambient:[...LIGHTING.coolAmbient],
+     state:lightState,levels:[...currentLighting.levels],
+     ambient:[...currentLighting.ambient],
+     emergencyPower:currentLighting.emergencyPower,
+     physicallyGroundedShadows:projectedShadowDraws,
+     silhouetteProjection:'original-L2D-alpha-ray-intersection-y0',
+     shadowMode:'live-ceiling-source-world-planar-occlusion',
+     switchableFixtures:true,
      fixtureHeight:LIGHTING.height,
      positions:[...lightRigs[mode].positions],
      colors:[...lightRigs[mode].colors],
@@ -1530,11 +1539,11 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,render,inspect,get canvas(){return canvas}};
+  const api={setActive,render,inspect,setLighting,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
- return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
+ return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,LIGHT_STATES,lightingFrame,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
   SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
