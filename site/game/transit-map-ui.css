@@ -639,3 +639,29 @@
 #pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-photo img{
  image-rendering:auto!important;
 }
+
+/* All eleven named municipal services are genuine SVG geometries.
+   Roads are dotted; trams and metro remain solid. The card labels remain
+   native pixels, independent of map zoom. */
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines .pw-transit-rail-casing{
+ stroke-width:6.6;opacity:.82;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines .pw-transit-rail{
+ stroke-width:3.6;opacity:.95;stroke-linecap:round;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines .pw-transit-rail-glint{
+ stroke-width:.6;opacity:.17
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines [data-mode="tram"] .pw-transit-rail{
+ stroke-width:3;opacity:.88
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-lines [data-mode="bus"] .pw-transit-rail{
+ stroke-width:2.7;stroke-dasharray:8 7;opacity:.84
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-municipal-stop{
+ fill:#d5e7da;stroke:#16252e;stroke-width:1.8;
+ pointer-events:none
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-poi[data-transit-stop="true"] .pw-transit-place-name{
+ border-left:2px solid #91bdb6;padding-left:5px
+}
