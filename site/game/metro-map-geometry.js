@@ -13,9 +13,7 @@ const routes=Object.freeze({
  'b:park:mall':[],
  'b:mall:convenience':[[11,4],[11,2]],
  'b:convenience:northgate':[[11,2],[11,0],[8,0]],
- 'b:northgate:central':[],
- 'c:hospital:station':[],
- 'c:station:police':[]
+ 'b:northgate:central':[]
 });
 const number=n=>Number(n.toFixed(2));
 function layout(width,height){
