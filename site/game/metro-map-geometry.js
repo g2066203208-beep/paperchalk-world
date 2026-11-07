@@ -8,11 +8,11 @@ const routes=Object.freeze({
  'a:entrance:school':[],
  'a:school:central':[],
  'a:central:convenience':[],
- 'b:central:cafe':[[5,4]],
+ 'b:central:cafe':[[5,3],[4,3],[4,4]],
  'b:cafe:park':[[3,5]],
  'b:park:mall':[],
  'b:mall:convenience':[[11,5]],
- 'b:convenience:northgate':[[11,1]],
+ 'b:convenience:northgate':[[12,2],[12,0],[9,0]],
  'b:northgate:central':[[5,1]],
  'c:hospital:station':[],
  'c:station:police':[]
