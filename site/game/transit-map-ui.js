@@ -407,8 +407,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   metroLayer.hidden=scale<1.22||scale>4.5;
   urban.style.display=scale<1.22?'none':'';
   stops.style.display=scale<1.22?'none':'';
-  metroNetwork.style.display=scale<1.85?'none':'';
-  regional.style.opacity=scale>2.55?'.13':'.86';
+  metroNetwork.style.display=scale<2.75?'none':'';
+  regional.style.display=scale>=1.45?'none':'';
+  regional.style.opacity='.86';
   hint.hidden=scale>2.3;
   clear();
  }
@@ -445,7 +446,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  };
  map.addEventListener('wheel',wheel,{passive:false});
  map.addEventListener('pointerdown',e=>{
-  if(e.button!==0||e.target.closest('button,.pw-dot-chrome,.pw-transit-popup'))return;
+  if(e.button!==0||e.target.closest('button,.pw-dot-chrome,.pw-transit-popup,.pw-transit-line-hit'))return;
   drag={id:e.pointerId,cx:e.clientX,cy:e.clientY,x,y,moved:false};
   map.setPointerCapture?.(e.pointerId);
  });
