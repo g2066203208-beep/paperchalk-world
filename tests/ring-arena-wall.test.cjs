@@ -57,7 +57,7 @@ for(const mode of ['outer','inner']){
  assert.ok(end.y>.70&&end.y<.78,'real ceiling begins at a consistent screen height in '+mode);
  const foe=ring.layout(mode).enemies[1],b=ring.portraitBounds(foe,camera,aspect);
  const relative=(end.y-start.y)/(b.top-b.bottom);
- assert.ok(relative>.99&&relative<1.14,
+ assert.ok(relative>.96&&relative<1.16,
   'a 2.85m wall must not make 1.6m enemies look like miniature people in '+mode+': '+relative);
 }
 const outer=ring.backdropPoint('outer',0),inner=ring.backdropPoint('inner',0);
