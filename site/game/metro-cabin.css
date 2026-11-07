@@ -1,5 +1,4 @@
-/* Metro carriage. All depth geometry is projected every frame by metro-cabin.js.
-   UI is only a small line board, destination info, overheard speech and verbs. */
+/* Universal 2.5D subway scene. No dialogue system: route, next stop, time and essential travel actions only. */
 #novel-ui>#pw-metro-cabin[hidden]{display:none!important}
 #novel-ui>#pw-metro-cabin{
  position:absolute;inset:0;z-index:20!important;
@@ -42,25 +41,6 @@
 #pw-metro-cabin .pw-cabin-station strong{
  font-size:clamp(15px,2.85cqh,24px);font-weight:500;
  letter-spacing:.07em;white-space:nowrap;
-}
-#pw-metro-cabin .pw-cabin-speech{
- position:absolute;bottom:11%;left:8%;right:38%;
- display:flex;flex-direction:column;gap:6px;
- padding:12px 12px 10px 0;
- text-shadow:0 2px 8px #000,0 0 18px #001015;
- pointer-events:none;
-}
-#pw-metro-cabin .pw-cabin-speech::before{
- content:"";position:absolute;top:0;left:0;right:7%;
- border-top:1px solid #d6e6db88;opacity:.7;
-}
-#pw-metro-cabin .pw-cabin-person{
- font-size:clamp(12px,2cqh,17px);color:#bad1d2;
- letter-spacing:.08em;
-}
-#pw-metro-cabin .pw-cabin-words{
- margin:0;font:400 clamp(14px,2.5cqh,22px)/1.5 "PaperSans",sans-serif;
- color:#fff;min-height:2.7em;
 }
 #pw-metro-cabin .pw-cabin-actions{
  position:absolute;bottom:7%;right:6%;
@@ -110,14 +90,11 @@
 @container (max-height:500px){
  #pw-metro-cabin .pw-cabin-top{top:3%;left:4%;right:4%}
  #pw-metro-cabin .pw-cabin-station{top:10%;padding:4px 9px}
- #pw-metro-cabin .pw-cabin-speech{bottom:5%;left:5%;right:42%;padding-top:8px}
- #pw-metro-cabin .pw-cabin-words{font-size:clamp(12px,3cqh,15px);min-height:1.5em}
- #pw-metro-cabin .pw-cabin-actions{bottom:4%;right:4%;width:35%;max-height:60%;gap:3px}
+   #pw-metro-cabin .pw-cabin-actions{bottom:4%;right:4%;width:35%;max-height:60%;gap:3px}
  #novel-ui #pw-metro-cabin .pw-cabin-actions button{
   min-height:30px;padding:5px 8px!important;font-size:10px!important;
  }
- #pw-metro-cabin .pw-cabin-person{font-size:11px}
-}
+ }
 @media(prefers-reduced-motion:reduce){
  #pw-metro-cabin *{transition:none!important}
 }
