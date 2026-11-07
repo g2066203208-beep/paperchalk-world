@@ -9,7 +9,7 @@
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const ART=Object.freeze({
  // Approved complete Anima scene; keep the procedural background if absent.
- master:'./assets/metro/side/cabin-master.webp',
+ master:'./assets/metro/side/cabin-master-illustrated.webp',
  wall:'./assets/metro/side/wall.webp',
  windows:'./assets/metro/side/windows.webp',
  doors:'./assets/metro/side/doors.webp',
@@ -56,8 +56,8 @@ function rounded(ctx,x,y,w,h,rad,color){
  ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,rad);ctx.fill();
 }
 function drawBackground(ctx,w,h,t,anomaly,repaint){
- // A single authored 2048x1024 environment is the preferred first-pass
- // preview. Respect its 2:1 aspect ratio: never stretch the doors or benches.
+ // Authored 2172x724 subway wall with real alpha-window masks.
+ // Respect original 3:1 aspect; never stretch the doors or benches.
  const master=images.get('master');
  if(master?.naturalWidth){
   ctx.fillStyle='#18262c';ctx.fillRect(0,0,w,h);
