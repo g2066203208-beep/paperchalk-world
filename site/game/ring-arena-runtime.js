@@ -1365,7 +1365,9 @@
   // Physical actor lunges still move the actual shadow within that fixed light.
   function assignedShadowLamp(actor,whichMode=mode){
    const rig=sceneRig(whichMode);
-   const anchor=visibleActors(whichMode).find(a=>a.id===actor.id)||actor;
+   // Lamp distance must use the SAME actual per-scene actor footprint.
+   const anchor=ACTIVE_GEOMETRY.shape==='arc'?
+    (visibleActors(whichMode).find(a=>a.id===actor.id)||actor):actor;
    const choices=[];
    for(let i=0;i<rig.count;i++){
     const dx=anchor.x-rig.positions[i*3],dz=anchor.z-rig.positions[i*3+2];
@@ -1609,12 +1611,19 @@
    // overlay. Attack direction remains under the existing action director.
    // One identical real battle shoulder camera for every environment.
    // Only an actual combat attack uses the existing cinematic director.
-   lens=target?director.cinematicCamera(base,attack,attackSample,target):
+   // One 2.5D renderer with declarative camera rigs. A standing-passenger
+   // eye camera looks into the actual carriage. It doesn't inherit the
+   // oversized heroine-centric battle shoulder closeup.
+   const scenePack=window.PaperWorldEnvironments?.get?.(environmentId);
+   const lensPreset=scenePack?.camera;
+   const regular=target?director.cinematicCamera(base,attack,attackSample,target):
     shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
-   // Same lens and 3D projection for all assets; each environment can tune
-   // framing without changing camera implementation or creating CSS layers.
-   const lensPreset=window.PaperWorldEnvironments?.get?.(environmentId)?.camera;
+   lens=lensPreset?.mode==='fixed'?{
+    ...base,shot:'scene-passenger-eye',eye:{...lensPreset.eye},
+    focus:{...lensPreset.focus},fov:lensPreset.fov,
+    sceneStatic:true
+   }:regular;
    if(Number.isFinite(lensPreset?.lensShift))
     lens={...lens,lensShift:lensPreset.lensShift};
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
@@ -1659,7 +1668,8 @@
    drawWorld(mode==='outer'?wingOuter:wingInner,3,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
    drawFixtures(vp);
-   const all=visibleActors(mode).filter(a=>!environmentActorIds||environmentActorIds.has(a.id));
+   const all=visibleActors(mode).filter(a=>!environmentActorIds||environmentActorIds.has(a.id))
+    .map(a=>({...a,...(scenePack?.actors?.positions?.[a.id]||{})}));
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
    uploadActionImage('hero-attack',heroActionArt);
@@ -1809,7 +1819,10 @@
    cameraParity:(()=>{
     if(!lens||lens.cinematic)return false;
     const base=camera(mode,0);
-    const actual=shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
+    const cfg=window.PaperWorldEnvironments?.get?.(environmentId)?.camera;
+    const actual=cfg?.mode==='fixed'?{
+     ...base,eye:cfg.eye,focus:cfg.focus,fov:cfg.fov
+    }:shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
     return Math.abs(lens.eye.x-actual.eye.x)<.00001&&
      Math.abs(lens.eye.y-actual.eye.y)<.00001&&
@@ -1819,7 +1832,11 @@
      Math.abs(lens.focus.z-actual.focus.z)<.00001&&
      Math.abs(lens.fov-actual.fov)<.00001;
    })(),
-   environment:environmentId,geometry:{...ACTIVE_GEOMETRY},encounter:'one-centered-grounded-opponents',encounterControls:0,
+   environment:environmentId,geometry:{...ACTIVE_GEOMETRY},
+   connectionMaterial:{url:surfaceMaterials.wing.url,ready:surfaceMaterials.wing.ready,
+    error:surfaceMaterials.wing.error},
+   actorAnchors:window.PaperWorldEnvironments?.get?.(environmentId)?.actors?.positions||null,
+   encounter:'one-centered-grounded-opponents',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
     cameraLook:{mode:'hero-root-tps-shoulder-rig',
      yawDeg:lens?.lookYawDeg||0,pitchDeg:lens?.lookPitchDeg||0,
