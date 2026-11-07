@@ -755,7 +755,7 @@ body.mobile-mode.virtual-landscape #view{
 
 </style>
 <script src="./scene-catalog.generated.js"></script>
-<script src="./scene-modules.js"></script>
+<script src="./scene-modules.js?v=restore-dot-transit-scene-v8-20261107"></script>
 <script src="./game/story-content.js?v=bedroom-wake-v1"></script>
 <script src="./game/opening-flow.js?v=bedroom-wake-v1"></script>
 <script src="./game/scene-preloader.js?v=runtime-architecture-1"></script>
@@ -764,10 +764,10 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/survival-state.js"></script>
 <script src="./game/world-atlas.js?v=megaregion-world-v2-20261107"></script>
 <script src="./game/daily-life-state.js?v=megaregion-world-v2-20261107"></script>
-<link rel="stylesheet" href="./game/overworld.css?v=metro-release-20261107-r2">
+<link rel="stylesheet" href="./game/overworld.css?v=fog-underlay-fix-v8-20261107">
 <link rel="stylesheet" href="./game/overworld-surfaces.css?v=rail-photo-v4a-20261107">
 <link rel="stylesheet" href="./game/transit-map-ui.css?v=strict-dot-matrix-3x3-v7-20261107">
-<link rel="stylesheet" href="./game/world-map-ui.css?v=megaregion-world-v2-20261107">
+<link rel="stylesheet" href="./game/world-map-ui.css?v=restore-dot-transit-scene-v8-20261107">
 <link rel="stylesheet" href="./game/metro-cabin.css?v=rail-photo-v4a-20261107">
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
@@ -1989,6 +1989,8 @@ void main(){
   ),'ring-arena':{id:'ring-arena',title:'圆环数字空间 · 3D',type:'environment',
     image:'./assets/menu-wall.webp',alt:'WebGL程序生成的圆柱形真实三维战场',
     layers:{player:false,enemy:false}}});
+  // Authoritative live registry shared by scene switching, city travel and POIs.
+  window.PaperWorldSceneRegistry=SCENES;
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
   const extraEnemies=['enemy2','enemy3','enemy4'].map(id=>document.getElementById('room-'+id+'-root'));
@@ -3412,11 +3414,11 @@ void main(){
 <script src="./game/metro-graph.js?v=strict-dot-matrix-3x3-v7-20261107"></script>
 <script src="./game/metro-map-geometry.js?v=strict-dot-matrix-3x3-v7-20261107"></script>
 <script src="./game/transit-map-ui.js?v=strict-dot-matrix-3x3-v7-20261107"></script>
-<script src="./game/metro-cabin.js?v=rail-photo-v4a-20261107"></script>
+<script src="./game/metro-cabin.js?v=regional-rail-carriage-v8-20261107"></script>
 <script src="./game/world-map-ui.js?v=megaregion-world-v2-20261107"></script>
-<script src="./game/overworld-surfaces.js?v=megaregion-world-v2-20261107"></script>
+<script src="./game/overworld-surfaces.js?v=restore-dot-transit-scene-v8-20261107"></script>
 <script src="./game/overworld-director.js?v=world-director-v1"></script>
-<script src="./game/overworld-runtime.js?v=megaregion-world-v2-20261107"></script>
+<script src="./game/overworld-runtime.js?v=restore-dot-transit-scene-v8-20261107"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
