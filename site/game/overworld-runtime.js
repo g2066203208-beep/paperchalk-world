@@ -59,6 +59,7 @@
   })||null;
   const surfaces=global.PaperWorldOverworldSurfaces?.create?.({
     engine,onTravel:(place,route)=>travel(place,route),
+    onWorldTravel:(place,route)=>regionalTravel(place,route),
     onBoard:(lineId,direction)=>boardMetro(lineId,direction),
     onFeedback:message=>say(message)
   })||null;
@@ -168,6 +169,12 @@
     }else say(result.reason);
     return result;
   }
+  async function regionalTravel(place,route){
+    // World travel is a genuine dated journey with an intercity route cost,
+    // not an immediate jump to a map marker.
+    if(!route)return {ok:false,reason:'此地点尚未接入公共交通'};
+    return travel(place,null);
+  }
   async function travel(place,route=null){
     if(traveling)return {ok:false,reason:'正在前往目的地'};
     const dest=Core.LOCATIONS[place];
@@ -222,13 +229,34 @@
   }
   function draw(){
     const s=engine.snapshot();
+    const worldPoi=global.PaperWorldAtlas?.POI_BY_ID?.[s.location];
     const isCity=mode&&!root.hidden&&
-      Core.LOCATIONS[s.location]?.group==='城区'&&!Core.LOCATIONS[s.location]?.scene;
+      ['城区','世界'].includes(Core.LOCATIONS[s.location]?.group)&&
+      !Core.LOCATIONS[s.location]?.scene;
     city.hidden=!isCity;
     if(isCity&&!traveling){
       const signature=s.location+'/'+Math.floor(s.minute/60);
       if(signature!==paintedCity){
-        cityArt.innerHTML=global.PaperWorldCityScenes?.markup?.(s.location,s.minute)||'';
+        if(worldPoi){
+          const photo=global.PaperWorldAtlas?.PHOTOS?.[worldPoi.photo]||
+            global.PaperWorldAtlas?.PHOTOS?.street;
+          cityArt.replaceChildren();
+          const image=document.createElement('img');
+          image.className='pw-world-preview-image';
+          image.alt='';image.decoding='async';
+          image.src=photo?.url||'';
+          const text=document.createElement('span');
+          text.className='pw-world-preview-label';
+          text.textContent=worldPoi.name;
+          const subtitle=document.createElement('small');
+          subtitle.className='pw-world-preview-subtitle';
+          subtitle.textContent=global.PaperWorldAtlas?.CITY_BY_ID?.[worldPoi.city]?.name||'';
+          cityArt.append(image,text,subtitle);
+          city.dataset.worldScene='true';
+        }else{
+          cityArt.innerHTML=global.PaperWorldCityScenes?.markup?.(s.location,s.minute)||'';
+          city.dataset.worldScene='false';
+        }
         city.dataset.location=s.location;
         paintedCity=signature;
       }
