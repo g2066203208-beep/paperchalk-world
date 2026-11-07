@@ -232,7 +232,7 @@
  background:#13222de9;border-radius:2px;
  padding:2px 7px;
  color:#f5f4ee;
- font:600 20px/1.2 "PaperSans","Noto Sans CJK SC",sans-serif;
+ font:600 var(--pw-world-city-font,20px)/1.2 "PaperSans","Noto Sans CJK SC",sans-serif;
  white-space:nowrap;text-shadow:0 2px 5px #040a12;
 }
 #pw-world-surface .pw-world-city-sub{
@@ -241,7 +241,7 @@
  color:#bfcbcc;font:400 12px/1.15 "PaperSans",sans-serif;
  white-space:nowrap;max-width:190%;
 }
-#pw-world-surface .pw-world-poi-title{font-size:15px}
+#pw-world-surface .pw-world-poi-title{font-size:var(--pw-world-poi-font,15px)}
 #pw-world-surface .pw-world-poi[data-kind=rumor] .pw-world-poi-photo{
  border-color:#b28d93b8;
 }
@@ -372,4 +372,21 @@
  color:#bdc9c9;letter-spacing:.1em;
  font:400 clamp(12px,2cqh,17px)/1.2 "PaperSans",sans-serif;
  text-shadow:0 2px 9px #000b;
+}
+
+/* The photograph stays readable and solid even if a remote provider is down. */
+#pw-world-surface .pw-world-city-photo img[data-fallback=true],
+#pw-world-surface .pw-world-poi-photo img[data-fallback=true]{
+ opacity:0;
+}
+#pw-world-surface .pw-world-city-photo:has(img[data-fallback=true]),
+#pw-world-surface .pw-world-poi-photo:has(img[data-fallback=true]){
+ background:radial-gradient(ellipse at 65% 40%,#87999577,transparent 76%),
+  linear-gradient(145deg,#425866,#172b3a);
+}
+#pw-world-surface .pw-world-city-card .pw-world-city-name{
+ padding:3px 7px;
+}
+#pw-world-surface .pw-world-poi-title{
+ max-width:140%;overflow:hidden;text-overflow:ellipsis;
 }
