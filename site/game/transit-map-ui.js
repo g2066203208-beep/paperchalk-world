@@ -87,9 +87,16 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   if(PHOTO[id]){
    const pic=create('span','pw-transit-photo'),img=create('img');
    img.alt='';img.loading='eager';img.decoding='async';img.referrerPolicy='no-referrer';
-   const [src,fallback]=PHOTO[id];img.src=src;
-   img.addEventListener('error',()=>{if(img.dataset.fallback)return;img.dataset.fallback='true';img.src=fallback});
-   pic.append(img);node.append(pic);
+   const [src,fallback]=PHOTO[id];
+   // Local visual first: an offline or stalled photo server never leaves a
+   // dark empty card. Only swap to online reference after its pixels load.
+   img.src=fallback;pic.append(img);node.append(pic);
+   const remote=new Image();remote.decoding='async';
+   remote.referrerPolicy='no-referrer';
+   remote.onload=()=>{if(img.isConnected&&remote.naturalWidth>0)img.src=src};
+   remote.onerror=()=>{};
+   remote.src=src;
+   img.addEventListener('error',()=>{if(img.src!==new URL(fallback,document.baseURI).href)img.src=fallback});
   }else node.append(create('span','pw-transit-station-dot',station.locked?'×':station.transfer?'◎':'•'));
   node.append(create('span','pw-transit-place-name',name));
   node.addEventListener('click',e=>{
