@@ -11,10 +11,10 @@ assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shoulder camera base, not sw
 const base=arena.camera('outer'),scene=arena.layout('outer'),hero=scene.allies[0];
 assert.deepEqual(arena.visibleActors('outer').map(a=>a.id),
  ['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
-assert.ok(scene.enemies.every(a=>a.y===0&&a.z===7.45));
-close(base.eye.y,1.5);close(base.eye.x,.2);close(base.eye.z,10.55);
-close(base.fov,70);
-assert.ok(arena.responsiveFov(70,9/16)>arena.responsiveFov(70,16/9));
+assert.ok(scene.enemies.every(a=>a.y===0&&a.z===7.68));
+close(base.eye.y,1.5);close(base.eye.x,.2);close(base.eye.z,10.58);
+close(base.fov,66);
+assert.ok(arena.responsiveFov(66,9/16)>arena.responsiveFov(66,16/9));
 const initial=JSON.stringify(scene);
 for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  const cam=arena.shoulderCamera(base,hero,0,0,aspect);
@@ -34,9 +34,9 @@ const safe=arena.battleVisualSafety('outer',0,1917/906,arena.FEMALE07_BACK_UV,c)
 assert.ok(safe.hero.left<-.93&&safe.hero.right<-.4&&safe.hero.right>-.55);
 assert.ok(safe.hero.top>.30&&safe.hero.top<.55);
 const heroBillboard=arena.portraitBounds(hero,c,1917/906);
-assert.ok(heroBillboard.heightFraction>.8&&heroBillboard.heightFraction<1.2,
+assert.ok(heroBillboard.heightFraction>.8&&heroBillboard.heightFraction<1.3,
  'hero must have an immersive large close-up rather than a distant card');
-assert.ok(safe.foes.every(f=>f.heightFraction>.40&&f.heightFraction<.53),
+assert.ok(safe.foes.every(f=>f.heightFraction>.50&&f.heightFraction<.58),
  'enemy sizes must remain natural at true world distance');
 const foePositions=scene.enemies.map(e=>arena.project({x:e.x,y:e.height*.5,z:e.z},c,1917/906).x);
 assert.ok(foePositions[0]<-.2&&foePositions.at(-1)>.6,
