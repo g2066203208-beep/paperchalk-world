@@ -526,8 +526,10 @@
   'float footAO=mix(.75,1.0,smoothstep(.04,.82,vWorld.y));',
   'color=wallArt*vec3(.81,.83,.88)*footAO;',
   // Real wall-foot trim masks the alpha edge without a floating dark strip.
-  'if(uSurface==1&&uGeometry>.5&&uGeometry<1.5&&vWorld.y<.055)',
-  'color=mix(color,vec3(.25,.29,.30),.78);',
+  // A continuous real painted lower-wall apron replaces source alpha holes.
+  // The one-piece vinyl floor meets this skirting at world y=0 (no black moat).
+  'if(uSurface==1&&uGeometry>.5&&uGeometry<1.5)',
+  'color=mix(vec3(.37,.42,.43),color,smoothstep(.05,.29,vWorld.y));',
   'if(uSurface==3&&uWingReady>.5){',
   'color=texture2D(uWingTexture,vec2(clamp(vWallUv.x,.001,.999),clamp(vWallUv.y,.001,.999))).rgb*.89;',
   '}',
