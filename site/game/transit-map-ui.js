@@ -128,8 +128,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    const distortion=.82+.16*Math.sin(cx*.017+cy*.011)+.1*Math.cos(cx*.025-cy*.009);
    if(dx*dx+dy*dy<distortion){accent=REGION_TONES[a.type]||'#758e90';break}
   }
-  dots.append(vector('circle',{cx,cy,r:1.85,fill:accent||'#869aaa'},
-   'pw-transit-grid-dot'+(accent?' pw-dot-biome-dot':'')));
+  const dot=vector('circle',{cx,cy,r:1.85},
+   'pw-transit-grid-dot'+(accent?' pw-dot-biome-dot':''));
+  if(accent){dot.style.fill=accent;dot.style.opacity='.62'}
+  dots.append(dot);
  }
  function rounded(points,radius=13){
   if(!points?.length)return '';
