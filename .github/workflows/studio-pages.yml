@@ -164,7 +164,7 @@ jobs:
           assert 'id="menu-gallery-button"' in h
           assert 'id="scene-switcher-toggle"' in h
           assert 'scene-catalog.generated.js' in h
-          assert '<script src="./scene-modules.js"></script>' in h
+          assert '<script src="./scene-modules.js?' in h
           assert not any(x in h for x in ("title:'主角立绘'", "type:'portrait'"))
           assert '(?:webp|png|jpe?g)' in Path('site/scene-modules.js').read_text()
           # Black blotches were intentionally DELETED, not merely turned off.
