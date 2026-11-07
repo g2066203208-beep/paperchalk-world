@@ -258,7 +258,7 @@
   }
   function deactivate(){
     mode=false;contextOpen=false;endTransit?.();endTransit=null;
-    transit.hidden=true;view.classList.remove('pw-traveling');
+    transit.hidden=true;view.classList.remove('pw-traveling','overworld-phone-open');
     prompts.hidden=true;city.hidden=true;caption.hidden=true;
     director?.close?.();surfaces?.close?.();
     view.classList.remove('overworld-life-active');
@@ -350,6 +350,7 @@
   intercept('quick-map',()=>surfaces?.openMap?.());
   intercept('quick-backpack',()=>surfaces?.openBag?.());
   global.addEventListener('paperchalk:phone-visibility',()=>{
+    view.classList.toggle('overworld-phone-open',!!phone?.isOpen?.());
     contextOpen=false;prompts.hidden=true;
     suppressContextTapUntil=performance.now()+280;
     if(mode)draw();
