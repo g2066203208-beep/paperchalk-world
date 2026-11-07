@@ -185,8 +185,8 @@
  // original authored rear/side pose while providing real foreshortening.
  function actorWorldRight(actor,mode='outer'){
   const flip=mode==='inner'?-1:1;
-  const i=Number(actor?.id?.split('-')[1])||0;
-  const yaw=actor?.id==='hero'?-0.105:[0,-.045,-.014,.020,.046][i]||0;
+  // Same-depth opponents retain one world yaw and exact scale.
+  const yaw=actor?.id==='hero'?-0.105:0;
   return {x:flip*Math.cos(yaw),y:0,z:Math.sin(yaw)};
  }
  // Actual WebGL billboard quad bounds from the SAME 3D projection used in
