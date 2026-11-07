@@ -734,6 +734,11 @@
    '#view.ring-arena-transit #pw-metro-cabin{background:transparent!important}',
    '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-canvas{display:none!important}',
    '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-foreground{display:none!important}',
+   // The WebGL canvas MUST physically live in the same stacking context as
+   // the transit interface. Otherwise other higher-level overlays can cover
+   // the whole textured 3D room while leaving passengers and controls visible.
+   '#view.ring-arena-transit #pw-metro-cabin>#ring-arena-canvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;z-index:1!important;pointer-events:none!important}',
+   '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-top,#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-station,#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-speech,#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-actions,#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-anomaly{z-index:5!important}',
    '#view.ring-arena-transit #novel-ui>:not(#pw-metro-cabin){visibility:hidden!important;pointer-events:none!important}',
    '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat[hidden]{display:none!important}',
    '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat{position:absolute!important;left:var(--metro-seat-x)!important;top:31%!important;width:15%!important;height:54%!important;opacity:1!important;transform:translateX(-50%)!important;overflow:hidden!important;pointer-events:none!important}',
@@ -1683,8 +1688,14 @@
   });
   function enterTransit(){
    if(active&&!transitMode)return false;
-   if(!changeEnvironment('metro'))return false;
+   const carriage=document.getElementById('pw-metro-cabin');
+   if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
+   // Reparent the EXISTING WebGL drawing buffer, not a raster screenshot.
+   // In the old implementation it sat in #scene (z=1), behind overlays
+   // above #novel-ui (z=6). That produces an empty dark subway view.
+   carriage.prepend(canvas);
+   canvas.dataset.mount='metro';
    canvas.hidden=false;hud.hidden=true;
    view.classList.add('ring-arena-active','ring-arena-transit');
    elapsed=0;frames=0;mouseLookX=0;mouseLookY=0;
@@ -1695,6 +1706,9 @@
    if(!transitMode)return false;
    transitMode=false;active=false;
    canvas.hidden=true;hud.hidden=true;
+   // Restore the SAME canvas and GL context for ordinary ring encounters.
+   if(canvas.parentElement!==stage)stage.append(canvas);
+   canvas.dataset.mount='ring';
    view.classList.remove('ring-arena-transit','ring-arena-active');
    changeEnvironment('convenience');
    return true;
@@ -1708,7 +1722,7 @@
     resetCombatPreview();lens=camera(mode,0);render(0)}
    else resetCombatPreview();
   }
-  const inspect=()=>({active,transitMode,environment:environmentId,encounter:'one-centered-grounded-opponents',encounterControls:0,
+  const inspect=()=>({active,transitMode,canvasParent:canvas.parentElement?.id||null,environment:environmentId,encounter:'one-centered-grounded-opponents',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
     cameraLook:{mode:'stationary-world-eye',yawDeg:lens?.lookYawDeg||0,
      pitchDeg:lens?.lookPitchDeg||0,inputX:mouseLookX,inputY:mouseLookY,
