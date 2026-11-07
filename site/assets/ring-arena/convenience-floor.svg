@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
 <defs>
- <linearGradient id="base" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#343a40"/><stop offset=".57" stop-color="#383d43"/><stop offset="1" stop-color="#31363c"/></linearGradient>
- <linearGradient id="slab" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#8b979e" stop-opacity=".035"/><stop offset="1" stop-color="#060b10" stop-opacity=".075"/></linearGradient>
+ <linearGradient id="base" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#2b3038"/><stop offset=".57" stop-color="#343941"/><stop offset="1" stop-color="#272d35"/></linearGradient>
+ <linearGradient id="slab" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#aeb8c0" stop-opacity=".055"/><stop offset="1" stop-color="#020409" stop-opacity=".115"/></linearGradient>
 </defs>
 <rect width="1024" height="1024" fill="url(#base)"/>
 <g fill="url(#slab)">
@@ -10,10 +10,20 @@
 <rect x="5" y="517" width="502" height="502"/>
 <rect x="517" y="517" width="502" height="502"/>
 </g>
-<path d="M0 0H1024M0 512H1024M0 1023H1024M0 0V1024M512 0V1024M1023 0V1024" fill="none" stroke="#171e26" stroke-width="5" stroke-opacity=".52"/>
-<path d="M0 5H1024M0 517H1024M5 0V1024M517 0V1024" fill="none" stroke="#81909c" stroke-opacity=".09" stroke-width="3"/>
+<path d="M0 0H1024M0 512H1024M0 1023H1024M0 0V1024M512 0V1024M1023 0V1024" fill="none" stroke="#121821" stroke-width="5" stroke-opacity=".57"/>
+<path d="M0 5H1024M0 517H1024M5 0V1024M517 0V1024" fill="none" stroke="#a5b4b9" stroke-opacity=".12" stroke-width="3"/>
 <g fill="none" stroke="#141e25" stroke-opacity=".075" stroke-width="3">
  <path d="M92 160h180m220 131h140M42 760h210m380 86h250"/>
  <path d="M365 51v90M830 446v42M710 712v106"/>
+</g>
+<!-- Subtle roughness traces painted in the original square source material.
+     Specular response is applied by live world-space lamps in WebGL. -->
+<g fill="none" stroke-linecap="round">
+ <path d="M25 72L386 56M532 91L953 84M52 585L408 570M566 662L938 644"
+  stroke="#ced4d2" stroke-opacity=".038" stroke-width="9"/>
+ <path d="M83 247L384 241M562 370L916 354M95 824L415 814M590 922L957 898"
+  stroke="#d9d8d0" stroke-opacity=".024" stroke-width="14"/>
+ <path d="M29 128L255 121M625 173L934 164M23 923L348 910M611 538L943 531"
+  stroke="#04080b" stroke-opacity=".095" stroke-width="11"/>
 </g>
 </svg>
