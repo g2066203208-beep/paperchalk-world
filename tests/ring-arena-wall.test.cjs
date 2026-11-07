@@ -4,9 +4,9 @@ const fs=require('node:fs');
 const path=require('node:path');
 const ring=require('../site/game/ring-arena-runtime.js');
 assert.equal(ring.WALL_TEXTURE.url,'./assets/ring-arena/convenience-wall.webp');
-assert.equal(ring.WALL_TEXTURE.repeats,8);
-assert.equal(ring.WALL_TEXTURE.heightMeters,3.2);
-assert.equal(ring.SPEC.wallHeight,3.2);
+assert.equal(ring.WALL_TEXTURE.repeats,9);
+assert.equal(ring.WALL_TEXTURE.heightMeters,2.85);
+assert.equal(ring.SPEC.wallHeight,2.85);
 assert.equal(ring.SPEC.ceilingHeight,ring.SPEC.wallHeight);
 const tileWorldWidth=2*ring.wallArcMeters(ring.SPEC.wallArcHalfAngle)/ring.WALL_TEXTURE.repeats;
 const tileImageWorldWidth=ring.WALL_TEXTURE.heightMeters*ring.WALL_TEXTURE.width/ring.WALL_TEXTURE.height;
@@ -43,22 +43,22 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[6.966,6.966,6.966,6.966]);
-assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[11.75,11.75,11.75,11.75]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.70,7.70,7.70,7.70]);
+assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[11,11,11,11]);
 assert.equal(ring.camera('outer').fov,55);
 assert.equal(ring.camera('inner').fov,52);
 for(const mode of ['outer','inner']){
  const backdrop=ring.backdropPoint(mode,0),camera=ring.camera(mode),aspect=1917/906;
  const dist=Math.abs(backdrop.z-camera.eye.z);
- assert.ok(dist>8&&dist<8.3,'wall-to-camera distance calibrated for '+mode);
+ assert.ok(dist>6.20&&dist<6.30,'wall-to-camera distance calibrated for '+mode);
  const end=ring.project({x:0,y:ring.SPEC.wallHeight,z:backdrop.z},camera,aspect);
  const start=ring.project({x:0,y:0,z:backdrop.z},camera,aspect);
  assert.ok(end.valid&&start.valid);
- assert.ok(end.y>.65&&end.y<.80,'real ceiling begins at a consistent screen height in '+mode);
+ assert.ok(end.y>.70&&end.y<.78,'real ceiling begins at a consistent screen height in '+mode);
  const foe=ring.layout(mode).enemies[1],b=ring.portraitBounds(foe,camera,aspect);
  const relative=(end.y-start.y)/(b.top-b.bottom);
- assert.ok(relative>1.00&&relative<1.45,
-  'a 3.2m wall must not make 1.6m enemies look like miniature people in '+mode+': '+relative);
+ assert.ok(relative>.99&&relative<1.14,
+  'a 2.85m wall must not make 1.6m enemies look like miniature people in '+mode+': '+relative);
 }
 const outer=ring.backdropPoint('outer',0),inner=ring.backdropPoint('inner',0);
 assert.ok(Math.abs(Math.abs(outer.z-ring.camera('outer').eye.z)-
@@ -72,9 +72,9 @@ for(const theta of [-ring.SPEC.wallArcHalfAngle,0,ring.SPEC.wallArcHalfAngle]){
 // whose corners cut through the photograph-wrapped 3D wall).
 assert.equal(ring.SPEC.floorTileMeters,1.2);
 assert.equal(ring.SPEC.ceilingTileMeters,1.9);
-assert.equal(ring.SPEC.surfaceDepth,18);
+assert.equal(ring.SPEC.surfaceDepth,10);
 assert.equal(ring.SPEC.arcSegments,160);
-assert.equal(ring.SPEC.surfaceSegments,20);
+assert.equal(ring.SPEC.surfaceSegments,24);
 // The 1024px assets contain a 2x2 panel grid; each ground tile is 0.6m,
 // each ceiling module 0.95m, and the fixture artwork is roughly 1.0m long.
 assert.ok(Math.abs(ring.SPEC.floorTileMeters/2-.6)<1e-7);
@@ -91,8 +91,16 @@ const ceilingSource=fs.readFileSync(path.resolve(__dirname,
  '../site/assets/ring-arena/convenience-ceiling.svg'),'utf8');
 assert.doesNotMatch(ceilingSource,/fill="url\(#lamp\)"/,
  'ceiling texture cannot contain two lamps repeated every 1.9 meters');
-assert.match(src,/vec2 lampUv=abs\(fract\(\(vWallUv\+vec2\(1\.5,0\.0\)\)\/vec2\(3\.0,2\.5\)\)/,
- 'roof shader should place luminaires separately on 5.7 x 4.75m spacing');
+assert.doesNotMatch(src,/vec2 lampUv=abs/,
+ 'no periodic fake luminous ceiling decals after conversion to actual 3D fixtures');
+assert.match(src,/fixture=program\(gl,fixtureVertex,fixtureFragment/,
+ 'real ceiling lamp geometry must exist as a WebGL draw call');
+assert.match(src,/drawFixtures\(vp\)/);
+assert.match(src,/drawProjectedShadows\(presented,cam,vp\)/,
+ 'floor shadows MUST be projected from original L2D silhouettes');
+assert.match(src,/texture2D\(uTexture,uv\)\.a/,
+ 'real L2D alpha drives physical projected floor shadow coverage');
+assert.match(src,/uLampLevels\[6\]/,'each fluorescent lamp independently switchable');
 // Real-time light fixtures must occupy the physical emissive centers of the
 // actual same curved 3D ceiling, in BOTH camera orientations. The texture,
  // environment and original L2D sprites must share one light rig.
@@ -109,11 +117,23 @@ for(const mode of ['outer','inner']){
   const geom=ring.curvedSurfacePoint(mode,angle,depth,ring.LIGHTING.height);
   assert.ok(Math.abs(geom.x-rig.positions[i*3])<.00001);
   assert.ok(Math.abs(geom.z-rig.positions[i*3+2])<.00001);
-  const uv=ring.curvedSurfaceUV(mode,angle,depth,'ceiling');
-  const frac=x=>x-Math.floor(x);
-  assert.ok(Math.abs(frac((uv.u+1.5)/3)-.5)<.0001);
-  assert.ok(Math.abs(frac(uv.v/2.5)-.5)<.0001);
+  assert.ok(Math.abs(rig.positions[i*3+1]-ring.LIGHTING.height)<1e-7);
  }
+}
+// The blackout must extinguish source geometry AND remove its lighting and
+// physically cast shadows. Emergency is a physically positioned red source.
+for(const mode of ['outer','inner']){
+ const on=ring.lightingFrame('on',0,mode);
+ const half=ring.lightingFrame('partial',0,mode);
+ const off=ring.lightingFrame('outage',0,mode);
+ const flicker=ring.lightingFrame('flicker',2.00,mode);
+ assert.deepEqual([...on.levels],[1,1,1,1,1,1]);
+ assert.ok([...half.levels].some(x=>x===0));
+ assert.deepEqual([...off.levels],[0,0,0,0,0,0]);
+ assert.equal(off.emergencyPower,1);
+ assert.ok([...off.ambient].every(x=>x<.04));
+ assert.ok(flicker.levels[1]<.1);
+ assert.equal(off.emergencyPosition.length,3);
 }
 assert.match(src,/uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;/,
  '3D vertex shader must use highp int matching the fragment shader');
@@ -163,4 +183,4 @@ assert.match(src,/texture2D\(uFloorTexture,fract\(vWallUv\)\)/);
 assert.match(src,/texture2D\(uCeilingTexture,fract\(vWallUv\)\)/);
 assert.doesNotMatch(src,/push\(floor,\[-w,0,z0\]/,
  'old square floor with unmatched wall curve must be removed');
-console.log('PASS 3.2m human-scale convenience walls, 8 physically accurate arc-length repeats, real ceiling, mirrored view perspective, unchanged actor anchors');
+console.log('PASS compact 2.85m convenience-store bay, nine aspect-correct wall sections, four closer actors and switchable shadow-casting lights');
