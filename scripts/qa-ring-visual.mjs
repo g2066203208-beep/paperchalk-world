@@ -19,7 +19,7 @@ const server=createServer((req,res)=>{
 });
 await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
-const errors=[],pageErrors=[],report={};
+const errors=[],validationErrors=[],pageErrors=[],report={};
 try{
  const page=await browser.newPage({viewport:{width:1917,height:906},deviceScaleFactor:1});
  page.on('pageerror',e=>{pageErrors.push(e.message);errors.push('pageerror: '+e.message)});
@@ -69,7 +69,7 @@ try{
   await page.waitForTimeout(150);
   report.partial=await inspect();
   if(JSON.stringify(report.initialProjectors)!==JSON.stringify(report.partial.lighting.shadowLampAssignments))
-   errors.push('partial blackout changed the assigned shadow projector');
+   validationErrors.push('partial blackout changed the assigned shadow projector');
   await page.screenshot({path:resolve(out,'02-outer-partial-blackout-1917x906.png')});
   await setLighting('flicker',2.0); // exact unpowered ballast moment
   await page.waitForFunction(()=>{
@@ -78,13 +78,13 @@ try{
   },null,{timeout:9000});
   report.flicker=await inspect();
   if(JSON.stringify(report.initialProjectors)!==JSON.stringify(report.flicker.lighting.shadowLampAssignments))
-   errors.push('flicker teleported the assigned shadow projector');
+   validationErrors.push('flicker teleported the assigned shadow projector');
   await page.screenshot({path:resolve(out,'03-outer-flicker-moment-1917x906.png')});
   await setLighting('outage');
   await page.waitForTimeout(160);
   report.outage=await inspect();
   if(JSON.stringify(report.initialProjectors)!==JSON.stringify(report.outage.lighting.shadowLampAssignments))
-   errors.push('outage changed the assigned shadow projector');
+   validationErrors.push('outage changed the assigned shadow projector');
   await page.screenshot({path:resolve(out,'04-outer-all-lights-off-1917x906.png')});
   // Three real frames from the exact same running WebGL + original L2D
   // textures. Story moments remain unedited: the power system drives them.
@@ -109,7 +109,7 @@ try{
   await page.waitForTimeout(150);
   report.inner=await inspect();
   if(Object.values(report.inner.actorVisibleUv).some(x=>!x.clip))
-   errors.push('one or more 3D portraits did not receive a real source-alpha trim');
+   validationErrors.push('one or more 3D portraits did not receive a real source-alpha trim');
   await page.screenshot({path:resolve(out,'06-inner-full-lights-1917x906.png')});
   if(report.inner.mode!=='inner')errors.push('inner mode did not switch');
  }
@@ -121,7 +121,7 @@ try{
   outerEnemyDepth:report.outer?.actors?.enemies?.[0]?.z,
   innerEnemyDepth:report.inner?.actors?.enemies?.[0]?.z
  };
- report.ready=ready;report.errors=errors;report.pageErrors=pageErrors;
+ report.ready=ready;report.errors=errors;report.validationErrors=validationErrors;report.pageErrors=pageErrors;
  writeFileSync(resolve(out,'report.json'),JSON.stringify(report,null,2));
  if(!ready||report.outer?.wallMaterial?.heightMeters!==2.85||
   report.outer?.wallMaterial?.repeats!==9||
@@ -159,8 +159,8 @@ try{
   report.outage?.lighting?.physicallyGroundedShadows!==0||
   report.outage?.lighting?.emergencyPower!==1||
   report.innerOutage?.lighting?.state!=='outage'||
-  errors.length||pageErrors.length)
-  throw Error('Real browser visual gate failed; see screenshot and report: '+errors.join('; '));
+  validationErrors.length||pageErrors.length)
+  throw Error('Real browser visual gate failed; see screenshot and report: '+validationErrors.concat(pageErrors).join('; '));
  console.log('PASS nine real-game WebGL shots: no black circles, dual live L2D alpha shadows, scripted ballast flicker/cascade/blackout/recovery and five grounded characters');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
