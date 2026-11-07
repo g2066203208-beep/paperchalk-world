@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+ <linearGradient id="panel" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#a1a5aa"/><stop offset=".55" stop-color="#8e949b"/><stop offset="1" stop-color="#7f878f"/></linearGradient>
+ <linearGradient id="lamp" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#b7c7c9"/><stop offset=".10" stop-color="#eef1eb"/><stop offset=".52" stop-color="#f4f0df"/><stop offset=".90" stop-color="#d4dfdf"/><stop offset="1" stop-color="#9eafb3"/></linearGradient>
+</defs>
+<rect width="1024" height="1024" fill="#777f87"/>
+<g fill="url(#panel)">
+ <rect x="5" y="5" width="502" height="502"/>
+ <rect x="517" y="5" width="502" height="502"/>
+ <rect x="5" y="517" width="502" height="502"/>
+ <rect x="517" y="517" width="502" height="502"/>
+</g>
+<path d="M0 0H1024M0 512H1024M0 1023H1024M0 0V1024M512 0V1024M1023 0V1024" stroke="#4a5059" stroke-width="9" fill="none" opacity=".65"/>
+<path d="M8 7H1016M8 518H1016M8 0V1024M518 0V1024" stroke="#dce1dc" stroke-width="2" fill="none" opacity=".26"/>
+<!-- Two inset fluorescent fixtures, repeated naturally by the 4m rectangular texture. -->
+<g>
+ <rect x="207" y="95" width="82" height="322" rx="10" fill="#535c64" opacity=".95"/>
+ <rect x="213" y="101" width="70" height="310" rx="7" fill="url(#lamp)"/>
+ <rect x="219" y="107" width="58" height="298" rx="6" fill="#f5f2e8" opacity=".6"/>
+ <rect x="719" y="605" width="82" height="322" rx="10" fill="#535c64" opacity=".95"/>
+ <rect x="725" y="611" width="70" height="310" rx="7" fill="url(#lamp)"/>
+ <rect x="731" y="617" width="58" height="298" rx="6" fill="#f5f2e8" opacity=".6"/>
+</g>
+<g fill="#737c84" opacity=".28"><circle cx="49" cy="42" r="4"/><circle cx="979" cy="42" r="4"/><circle cx="49" cy="979" r="4"/><circle cx="979" cy="979" r="4"/></g>
+</svg>
