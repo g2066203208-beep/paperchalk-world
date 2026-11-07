@@ -16,6 +16,7 @@
   stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:3.2,ceilingHeight:3.2,wallBend:.7,
   wallCenterZ:-16,wallArcHalfAngle:rad(78),
   floorWidth:96,floorFrontZ:48,floorBackZ:-55,
+  surfaceDepth:34,surfaceTileMeters:4,surfaceSegments:18,arcSegments:160,
   outerRoleRadius:10.55,innerRoleRadius:8.30,
   outerCameraRadius:11.5,innerCameraRadius:7.47,
   verticalFov:48,battleFocusZ:6.8
@@ -24,6 +25,10 @@
  // 3D backdrops; actor anchors, depth and camera remain exactly unchanged.
  const WALL_TEXTURE=Object.freeze({
   url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:8,heightMeters:3.2
+ });
+ const SURFACE_TEXTURES=Object.freeze({
+  floor:'./assets/ring-arena/convenience-floor.svg',
+  ceiling:'./assets/ring-arena/convenience-ceiling.svg'
  });
  // CPU-side real surface-length UV mapping. The 0.7-curvature walls are
  // shallower than perfect cylinders, so an angle-based repeat stretches shop
@@ -246,6 +251,8 @@
  const worldFragment=[
   'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;uniform float uTime;uniform int uSurface;uniform float uMode;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
+  'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;',
+  'uniform float uFloorReady;uniform float uCeilingReady;',
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
   'void main(){vec3 color;',
@@ -254,19 +261,13 @@
   'float radial=line(r/32.0,40.0,.016);float spokes=line(a,78.0,.013);',
   'float allies=1.0-smoothstep(.016,.065,abs(r-mix(10.55,8.3,uMode)));',
   'float enemies=1.0-smoothstep(.016,.065,abs(r-mix(6.65,12.9,uMode)));',
-  'float gx=abs(fract(vWorld.x/2.3)-.5);float gz=abs(fract(vWorld.z/2.3)-.5);',
-  'float seam=smoothstep(.485,.499,max(gx,gz));',
-  'color=vec3(.075,.081,.089)-vec3(.013,.014,.016)*seam',
-  '+vec3(.009,.035,.037)*(radial*.32+spokes*.08);',
-  'color+=vec3(.006,.041,.038)*(allies+enemies)*.17;',
+  'color=vec3(.18,.20,.22);',
+  'if(uFloorReady>.5)color=texture2D(uFloorTexture,fract(vWallUv)).rgb*.89;',
+  'color+=vec3(.007,.018,.018)*(radial*.3+spokes*.08);',
+  'color+=vec3(.002,.019,.018)*(allies+enemies)*.10;',
   '}else if(uSurface==2){',
-  'float gx=abs(fract(vWorld.x/2.4)-.5);float gz=abs(fract(vWorld.z/2.4)-.5);',
-  'float seams=smoothstep(.486,.499,max(gx,gz));',
-  'float rail=1.0-smoothstep(.165,.23,abs(fract(vWorld.x/6.4)-.5));',
-  'float strip=1.0-smoothstep(.027,.05,abs(fract(vWorld.z/5.6)-.5));',
-  'float panel=rail*strip;',
-  'color=vec3(.166,.173,.188)-vec3(.024,.025,.027)*seams',
-  '+vec3(.27,.30,.31)*panel;',
+  'color=vec3(.46,.48,.51);',
+  'if(uCeilingReady>.5)color=texture2D(uCeilingTexture,fract(vWallUv)).rgb*.87;',
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
   'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
@@ -344,42 +345,53 @@
    ? {x:SPEC.wallRadius*Math.sin(a),z:15.35+bow*SPEC.wallBend}
    : {x:SPEC.wallRadius*Math.sin(a),z:3.4-bow*SPEC.wallBend};
  }
+ // The ceiling and floor begin as rectangular 1024x1024 source images.
+ // Their far edges follow the curved wall exactly at all 160 wall joints.
+ function curvedSurfacePoint(mode,angle,depth,height){
+  const p=backdropPoint(mode,angle);
+  return {x:p.x,y:height,z:p.z+(mode==='inner'?-1:1)*depth};
+ }
+ function curvedSurfaceUV(mode,angle,depth){
+  const sign=mode==='inner'?-1:1;
+  return {u:sign*wallArcMeters(angle)/SPEC.surfaceTileMeters+8,
+   v:depth/SPEC.surfaceTileMeters};
+ }
  function worldMesh(gl){
-  const floor=[],backInner=[],backOuter=[],ceiling=[];
-  const push=(to,a,b,c)=>{
-   for(const v of [a,b,c])to.push(...v,...(v.length===3?[0,0]:[]));
+  const floorOuter=[],floorInner=[],backInner=[],backOuter=[],ceilingOuter=[],ceilingInner=[];
+  const push=(to,a,b,c)=>{for(const v of [a,b,c])to.push(...v,...(v.length===3?[0,0]:[]));};
+  const N=SPEC.arcSegments,D=SPEC.surfaceSegments;
+  const theta=i=>-SPEC.wallArcHalfAngle+i*2*SPEC.wallArcHalfAngle/N;
+  const addSheet=(dest,mode,height)=>{
+   const vertex=(i,j)=>{
+    const angle=theta(i),depth=SPEC.surfaceDepth*j/D;
+    const p=curvedSurfacePoint(mode,angle,depth,height),uv=curvedSurfaceUV(mode,angle,depth);
+    return [p.x,p.y,p.z,uv.u,uv.v];
+   };
+   for(let i=0;i<N;i++)for(let j=0;j<D;j++){
+    const a=vertex(i,j),b=vertex(i+1,j),c=vertex(i+1,j+1),d=vertex(i,j+1);
+    push(dest,a,b,c);push(dest,a,c,d);
+   }
   };
-  const w=SPEC.floorWidth/2,z0=SPEC.floorFrontZ,z1=SPEC.floorBackZ;
-  push(floor,[-w,0,z0],[-w,0,z1],[w,0,z1]);
-  push(floor,[-w,0,z0],[w,0,z1],[w,0,z0]);
-  // Actual 3D ceiling at the same world height as the authored wall.
-  const roofY=SPEC.ceilingHeight;
-  push(ceiling,[-w,roofY,z0],[w,roofY,z1],[-w,roofY,z1]);
-  push(ceiling,[-w,roofY,z0],[w,roofY,z0],[w,roofY,z1]);
-  // A pair of broad curved BACKDROPS, not one enormous closed cylinder.
-  // Each faces its respective camera mode, and both are real 3D surfaces.
-  const N=160;
+  addSheet(floorOuter,'outer',0);addSheet(floorInner,'inner',0);
+  addSheet(ceilingOuter,'outer',SPEC.ceilingHeight);
+  addSheet(ceilingInner,'inner',SPEC.ceilingHeight);
   const addWall=(dest,face)=>{
    const point=angle=>backdropPoint(face==='inner'?'outer':'inner',angle);
    const uv=(p,angle,y)=>{
     const tex=wallTextureUV(p.x,y,face==='outer'?'inner':'outer');
-    // Preserve the unwrapped continuous U across segment boundaries for
-    // correct perspective interpolation, including on reversed walls.
     const tileWidth=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
     const signed=face==='outer'?-1:1;
     return [p.x,y,p.z,signed*wallArcMeters(angle)/tileWidth+
      WALL_TEXTURE.repeats/2+.5,tex.v];
    };
    for(let i=0;i<N;i++){
-    const a=-SPEC.wallArcHalfAngle+i*2*SPEC.wallArcHalfAngle/N;
-    const b=-SPEC.wallArcHalfAngle+(i+1)*2*SPEC.wallArcHalfAngle/N;
-    const p=point(a),q=point(b);
+    const a=theta(i),b=theta(i+1),p=point(a),q=point(b);
     push(dest,uv(p,a,0),uv(p,a,SPEC.wallHeight),uv(q,b,SPEC.wallHeight));
     push(dest,uv(p,a,0),uv(q,b,SPEC.wallHeight),uv(q,b,0));
    }
   };
   addWall(backInner,'inner');addWall(backOuter,'outer');
-  return [floor,backInner,backOuter,ceiling].map(arr=>{
+  return [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner].map(arr=>{
    const buffer=gl.createBuffer(),data=new Float32Array(arr);
    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
    return {buffer,count:data.length/5};
