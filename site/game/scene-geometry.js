@@ -25,7 +25,7 @@
   const g=geometry(input);
   if(g.shape==='arc')throw Error('Arc remains the original universal ring mesh');
   const out={floorOuter:[],floorInner:[],backInner:[],backOuter:[],
-   ceilingOuter:[],ceilingInner:[],wingOuter:[],wingInner:[]};
+   ceilingOuter:[],ceilingInner:[],wingOuter:[],wingInner:[],exterior:[]};
   const tri=(dst,a,b,c)=>dst.push(...a,...b,...c);
   const grid=(dst,n,m,vertex)=>{
    for(let i=0;i<n;i++)for(let j=0;j<m;j++){
@@ -46,6 +46,9 @@
   const wall=[];
   grid(wall,64,12,(u,v)=>[x(u),g.height*v,g.backZ,.001+u*.998,v]);
   out.backInner=wall;out.backOuter=wall.slice();
+  // Physical outside beyond the pierced window apertures, rendered first
+  // into the same depth buffer. This is a genuine separate 3D backdrop.
+  grid(out.exterior,64,12,(u,v)=>[x(u),g.height*v,g.backZ-.16,u,v]);
   // True perpendicular end walls looking into the NEXT carriage.
   // The gangway texture is continuous from back to front and has its own
   // color texture; never stretch the side-wall's first and last columns.
