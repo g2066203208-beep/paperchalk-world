@@ -133,7 +133,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    const distortion=.82+.16*Math.sin(cx*.017+cy*.011)+.1*Math.cos(cx*.025-cy*.009);
    if(dx*dx+dy*dy<distortion){accent=REGION_TONES[a.type]||'#758e90';break}
   }
-  const dot=vector('circle',{cx,cy,r:1.85},
+  const dot=vector('circle',{cx,cy,r:1.35},
    'pw-transit-grid-dot'+(accent?' pw-dot-biome-dot':''));
   if(accent){dot.style.fill=accent;dot.style.opacity='.62'}
   dots.append(dot);
@@ -169,11 +169,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const g=vector('g',{'data-line':line.id,'data-from':from,'data-to':to,
    'data-kind':kind,'data-mode':line.mode||'metro'},'pw-transit-segment pw-dot-segment');
   const d=rounded(points,kind==='metro'?15:20);
-  g.append(vector('path',{d,stroke:'#0e1822'},'pw-transit-rail-casing'));
-  g.append(vector('path',{d,stroke:line.color||'#b7cbc7'},'pw-transit-rail'));
-  g.append(vector('path',{d,stroke:'#eff6ed'},'pw-transit-rail-glint'));
+  g.append(vector('path',{d,stroke:'#0e1822','vector-effect':'non-scaling-stroke'},'pw-transit-rail-casing'));
+  g.append(vector('path',{d,stroke:line.color||'#b7cbc7','vector-effect':'non-scaling-stroke'},'pw-transit-rail'));
+  g.append(vector('path',{d,stroke:'#eff6ed','vector-effect':'non-scaling-stroke'},'pw-transit-rail-glint'));
   if(hitCallback){
    const hit=vector('path',{d,stroke:'transparent',tabindex:0,role:'button',
+    'vector-effect':'non-scaling-stroke',
     'aria-label':line.name},'pw-transit-line-hit');
    hit.addEventListener('click',e=>{if(drag?.moved)return;hitCallback(e,g)});
    hit.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){
@@ -403,17 +404,28 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // five-pixel blurry disc just because the SVG logical view grew.
   if(Math.abs(scale-previousDotScale)>.0005){
    previousDotScale=scale;
-   const worldRadius=1.7/scale;
-   for(const dot of dots.children)dot.setAttribute('r',worldRadius.toFixed(4));
+   const radius=1.25/scale;
+   for(const dot of dots.children)dot.setAttribute('r',radius.toFixed(4));
+   // Circles use vector coordinates but never shrink to illegible pixels on
+   // the world overview, nor turn into giant blobs at street-level zoom.
+   for(const stop of stops.querySelectorAll('circle')){
+    const r=stop.classList.contains('pw-transit-stop-halo')?18:
+     stop.classList.contains('pw-transit-transfer-core')?4.2:
+     stop.closest('.pw-transit-stop-group')?.querySelector('.pw-transit-transfer-core')?10:8;
+    stop.setAttribute('r',(r/scale).toFixed(4));
+   }
+   for(const stop of municipal.querySelectorAll('.pw-dot-municipal-stop'))
+    stop.setAttribute('r',(6.5/scale).toFixed(4));
   }
   for(const {node,p} of anchored){
    node.style.left=(x+p.x*scale)+'px';
    node.style.top=(y+p.y*scale)+'px';
   }
-  canvas.style.setProperty('--dot-city-label-size','17px');
+  canvas.style.setProperty('--dot-city-label-size',v.w<900?'15px':'19px');
   canvas.style.setProperty('--dot-area-label-size','16px');
-  canvas.style.setProperty('--dot-poi-label-size','11px');
-  map.dataset.compact=String(scale<.48);
+  canvas.style.setProperty('--dot-poi-label-size',v.w<900?'14px':'16px');
+  map.dataset.compact=String(scale<.55);
+  map.dataset.smallScreen=String(v.w<900);
   const zoom=scale<1.15?'region':scale<2.3?'city':'detail';
   map.dataset.zoom=zoom;
   // Regions and city districts are zoom layers of the SAME physical lattice.
