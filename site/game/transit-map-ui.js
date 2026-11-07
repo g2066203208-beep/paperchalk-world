@@ -80,7 +80,26 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
  // The rail canvas is drawn in real CSS-pixel coordinates, so 90° corners
  // remain circular at every aspect ratio. No skewed diagonals or sharp joins.
  const geometry=global.PaperWorldMetroGeometry;
- const segments=[],stationMarkers=[];
+ const segments=[],stationMarkers=[],gridDots=[],photoNodes=[];
+ const dotLayer=document.createElementNS(NS,'g');
+ dotLayer.classList.add('pw-transit-dot-matrix');
+ svg.appendChild(dotLayer);
+ // Dedicated neutral leader strokes connect each photo grid slot to its
+ // exact station intersection. No independent percentage placement.
+ const photoLayer=document.createElementNS(NS,'g');
+ photoLayer.classList.add('pw-transit-photo-leaders');
+ svg.appendChild(photoLayer);
+ const photoLeaders=new Map();
+ for(let row=0;row<=geometry.GRID.rows;row++){
+  for(let col=0;col<=geometry.GRID.columns;col++){
+   const dot=document.createElementNS(NS,'circle');
+   dot.classList.add('pw-transit-grid-dot');
+   dot.dataset.column=String(col);dot.dataset.row=String(row);
+   dot.setAttribute('r','1.4');
+   dotLayer.append(dot);gridDots.push({col,row,dot});
+  }
+ }
+
  function lineSegment(line,a,b){
   const group=document.createElementNS(NS,'g');
   group.classList.add('pw-transit-segment');
@@ -152,26 +171,56 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   if(!map.isConnected)return;
   const rect=map.getBoundingClientRect();
   const width=Math.max(1,rect.width),height=Math.max(1,rect.height);
+  const matrix=geometry.layout(width,height);
+  map.style.setProperty('--metro-grid-cell',matrix.cell+'px');
+  map.dataset.grid=matrix.columns+'x'+matrix.rows;
   svg.setAttribute('viewBox','0 0 '+width+' '+height);
+  for(const {col,row,dot} of gridDots){
+   const p=geometry.point(col,row,matrix);
+   dot.setAttribute('cx',p.x);dot.setAttribute('cy',p.y);
+  }
   for(const seg of segments){
    const d=geometry.pathFor(seg.line.id,seg.a,seg.b,
-      metro.STATIONS,width,height,Math.min(22,height*.041));
+      metro.STATIONS,width,height,Math.min(22,matrix.cell*.29));
    for(const p of seg.parts)p.setAttribute('d',d);
   }
   for(const {station,group} of stationMarkers){
-   group.setAttribute('transform','translate('+
-    (station.x*width/100)+','+(station.y*height/100)+')');
+   const p=geometry.stationPoint(station,matrix);
+   group.setAttribute('transform','translate('+p.x+','+p.y+')');
+  }
+  for(const {node,station,slot,leader} of photoNodes){
+   const photo=geometry.point(slot.gx,slot.gy,matrix);
+   node.style.left=photo.x+'px';node.style.top=photo.y+'px';
+   if(node.dataset.photograph==='true'){
+    node.style.width=Math.min(170,Math.max(68,matrix.cell*1.52))+'px';
+    const stationPos=geometry.stationPoint(station,matrix);
+    const b=node.getBoundingClientRect();
+    const nodeBottom=b.bottom-rect.top;
+    const top=Math.min(stationPos.y-5,nodeBottom);
+    leader.setAttribute('d','M'+photo.x+' '+top+
+      ' L'+stationPos.x+' '+(stationPos.y-6));
+   }
+  }
+  for(const {label,slot} of gridLabels){
+   const p=geometry.point(slot.gx,slot.gy,matrix);
+   label.style.left=p.x+'px';label.style.top=p.y+'px';
   }
   positionPopup();
  }
  // One compact route label per colored service, attached to its geography.
- const keyPositions={a:[60,35],b:[57,85],c:[20,85]};
+ const gridLabels=[];
+ const keyPositions={
+  a:{gx:8,gy:3},
+  b:{gx:7,gy:4},
+  c:{gx:7,gy:6}
+ };
  for(const line of metro.LINES){
   const label=create('span','pw-transit-line-key',line.name);
   label.dataset.line=line.id;
   label.style.setProperty('--route-color',line.color);
-  label.style.left=keyPositions[line.id][0]+'%';
-  label.style.top=keyPositions[line.id][1]+'%';
+  label.dataset.gridColumn=String(keyPositions[line.id].gx);
+  label.dataset.gridRow=String(keyPositions[line.id].gy);
+  gridLabels.push({label,slot:keyPositions[line.id]});
   if(line.locked)label.dataset.locked='true';
   map.append(label);
  }
@@ -180,8 +229,19 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   const node=create('button','pw-transit-place'+(!PHOTO[id]?' is-station':''));
   node.type='button';node.dataset.place=id;node.dataset.current=String(id===current);
   node.dataset.locked=String(!!station.locked);node.dataset.selected='false';
-  node.style.left=station.x+'%';node.style.top=station.y+'%';
+  const slot=PHOTO[id]?{gx:station.gx,gy:
+    id==='convenience'?0:station.gy-1}:{gx:station.gx,gy:station.gy};
+  node.dataset.gridColumn=String(slot.gx);
+  node.dataset.gridRow=String(slot.gy);
   node.dataset.photograph=String(!!PHOTO[id]);
+  let leader=null;
+  if(PHOTO[id]){
+   leader=document.createElementNS(NS,'path');
+   leader.classList.add('pw-transit-photo-leader');
+   leader.dataset.place=id;
+   photoLayer.appendChild(leader);
+  }
+  photoNodes.push({node,station,slot,leader});
   node.setAttribute('aria-label',name+(station.locked?'，未开放':''));
   if(PHOTO[id]){
    const pic=create('span','pw-transit-photo'),img=create('img');
@@ -198,7 +258,8 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
    img.addEventListener('error',()=>{if(img.src!==new URL(fallback,document.baseURI).href)img.src=fallback});
   }else node.append(create('span','pw-transit-station-dot',station.locked?'×':station.transfer?'◎':'•'));
   node.append(create('span','pw-transit-place-name',name));
-  if(PHOTO[id])node.append(create('span','pw-transit-photo-link'));
+  // The photo-to-stop connector lives in the SVG grid layer, not an
+  // independent CSS stem with fixed pixels.
   node.addEventListener('click',e=>{
    e.stopPropagation();
    const def=locations[id];
