@@ -116,7 +116,9 @@ try{
     await page.locator('#phone-fingerprint').click();
     assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
     await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-home.png'});
-    await page.locator('#quick-phone').click();
+    assert.equal(await page.locator('#quick-phone').isVisible(),false,
+      'The quick tool must be hidden while its physical handset is open');
+    await page.locator('#scene').click({position:{x:35,y:35}});
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
     await page.waitForTimeout(200);
     const residual=await page.evaluate(()=>{
@@ -129,6 +131,7 @@ try{
     await page.locator('#quick-phone').click();
     for(const ch of '000000')await page.locator('#phone-ui [data-key="'+ch+'"]').click();
     assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
+    await page.locator('#scene').click({position:{x:35,y:35}});
     await page.locator('#quick-backpack').click();
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
     assert.equal(await page.locator('#quick-panel-title').textContent(),'背包');
