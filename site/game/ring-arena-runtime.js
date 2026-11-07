@@ -513,6 +513,18 @@
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,0]));
   return {texture,painted:false,updated:-999,frames:0,source:null,uploadedSize:0};
  }
+
+  // Use the VIEW-DIRECTION dot product, never radial 3D distance.
+  // In our eye-level composition all four opponents have identical depth
+  // and must retain their authored source stacking order.
+  function sortActorsForAlpha(actors,cam){
+   const facing=normalize({x:cam.focus.x-cam.eye.x,
+    y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z});
+   return actors.map((a,i)=>({actor:a,index:i,
+    depth:(a.x-cam.eye.x)*facing.x+(a.y-cam.eye.y)*facing.y+
+     (a.z-cam.eye.z)*facing.z}))
+    .sort((a,b)=>(b.depth-a.depth)||(a.index-b.index));
+  }
  function create({stage,view,onExit}={}){
   if(!stage||!view)throw Error('Ring arena must mount in the real game');
   const style=document.createElement('style');
@@ -1055,17 +1067,6 @@
     t.alphaTrim={source:{width:img.naturalWidth,height:img.naturalHeight},crop};
     return true;
    }catch(error){t.error=String(error);return false}
-  }
-  // Use the VIEW-DIRECTION dot product, never radial 3D distance.
-  // In our eye-level composition all four opponents have identical depth
-  // and must retain their authored source stacking order.
-  function sortActorsForAlpha(actors,cam){
-   const facing=normalize({x:cam.focus.x-cam.eye.x,
-    y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z});
-   return actors.map((a,i)=>({actor:a,index:i,
-    depth:(a.x-cam.eye.x)*facing.x+(a.y-cam.eye.y)*facing.y+
-     (a.z-cam.eye.z)*facing.z}))
-    .sort((a,b)=>(b.depth-a.depth)||(a.index-b.index));
   }
   function drawActors(actors,cam,vp){
    // Transparent L2D textures MUST sort by CAMERA VIEW DEPTH, not by
