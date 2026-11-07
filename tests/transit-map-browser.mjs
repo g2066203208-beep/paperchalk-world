@@ -111,6 +111,10 @@ try{
  },null,{timeout:25000});
  const room3d=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(room3d.geometry.shape,'strip');
+ assert.deepEqual(room3d.visibleActorIds,['hero'],
+  'metro keeps the real grounded hero, not unrelated combat enemy rigs');
+ assert.ok(room3d.lensShift<.13,
+  'metro should show real ceiling fixtures rather than cropping them out');
  assert.ok(room3d.geometry.widthMeters>room3d.geometry.depthMeters);
  assert.equal(room3d.wallMaterial.repeats,1);
  assert.equal(room3d.lighting.positions.length,18);
