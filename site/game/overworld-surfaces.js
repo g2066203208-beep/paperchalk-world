@@ -29,14 +29,14 @@
     root.id='pw-world-surface';root.hidden=true;
     const dim=el('div','pw-surface-dim');
     const frame=el('section','pw-surface-frame');
-    frame.setAttribute('role','dialog');frame.setAttribute('aria-modal','true');
+    frame.setAttribute('role','dialog');frame.setAttribute('aria-modal','true');frame.tabIndex=-1;
     const header=el('header','pw-surface-head');
     const heading=el('h2','pw-surface-heading');
     const right=el('div','pw-surface-right');
     const note=el('span','pw-surface-note');
     const close=el('button','pw-surface-close','×');
     close.type='button';close.setAttribute('aria-label','收起');
-    right.append(note,close);header.append(heading,right);
+    right.append(note);header.append(heading,right);
     const body=el('div','pw-surface-body');
     const foot=el('div','pw-surface-foot');
     frame.append(header,body,foot);root.append(dim,frame);parent.appendChild(root);
@@ -54,7 +54,12 @@
       if(node?.isConnected)node.focus({preventScroll:true});
     }
     dim.addEventListener('click',closeSurface);
-    close.addEventListener('click',closeSurface);
+    // World-space animated fog at all edges, already provided by the host.
+    for(const edge of ['top','right','bottom','left']){
+      const signal=el('span','pw-surface-fog-signal');
+      signal.setAttribute('data-ui-fog-edge',edge);
+      signal.setAttribute('aria-hidden','true');root.appendChild(signal);
+    }
     document.addEventListener('keydown',event=>{
       if(root.hidden)return;
       if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeSurface();}
@@ -65,7 +70,7 @@
       mode=which;choice=null;filter='all';foot.textContent='';
       root.hidden=false;
       document.getElementById('view')?.classList.add('overworld-surface-open');
-      draw();close.focus({preventScroll:true});return true;
+      draw();frame.focus({preventScroll:true});return true;
     }
     function button(label,fn,className,disabled=false){
       const b=el('button',className,label);
@@ -93,7 +98,8 @@
       {id:'hospital',name:'医院',x:15,y:75,locked:true},
       {id:'station',name:'车站',x:46,y:75,locked:true},
       {id:'police',name:'警察局',x:78,y:75,locked:true}
-    ]);
+    ].map(p=>({...p,x:global.PaperWorldMetro?.STATIONS[p.id]?.x??p.x,
+      y:global.PaperWorldMetro?.STATIONS[p.id]?.y??p.y})));
     const mapLinks=Object.freeze([
       ['entrance','school'],['school','convenience'],
       ['entrance','cafe'],['cafe','mall'],['mall','convenience'],
@@ -133,19 +139,42 @@
       routeSvg.setAttribute('preserveAspectRatio','none');
       routeSvg.setAttribute('aria-hidden','true');
       routeSvg.classList.add('pw-photo-map-routes');
+      const metro=global.PaperWorldMetro;
       const byId=Object.fromEntries(pinData.map(p=>[p.id,p]));
-      for(const [from,to] of mapLinks){
-        const p=byId[from],q=byId[to];
+      const currentCity=['bedroom','living-room','kitchen'].includes(s.location)?'entrance':s.location;
+      const route=choice&&!byId[choice]?.locked?metro?.path(currentCity,choice):null;
+      function addTrack(a,b,line,selected=false){
+        const p=metro.STATIONS[a],q=metro.STATIONS[b];
         const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-        path.setAttribute('d','M'+p.x+' '+p.y+' L'+q.x+' '+q.y);
-        if(p.locked||q.locked)path.setAttribute('stroke-dasharray','0.4 1.4');
-        path.setAttribute('class','pw-photo-map-link'+(p.locked||q.locked?' is-future':''));
+        path.setAttribute('d','M'+p.x+','+p.y+' L'+q.x+','+q.y);
+        path.setAttribute('class','pw-metro-track'+(selected?' is-selected':'')+(line.locked?' is-future':''));
+        path.setAttribute('stroke',line.color);
         routeSvg.appendChild(path);
+      }
+      for(const line of metro?.LINES||[]){
+        for(let i=0;i<line.stops.length-1;i++){
+          addTrack(line.stops[i],line.stops[i+1],line);
+        }
+      }
+      for(const seg of route?.segments||[])addTrack(seg.from,seg.to,seg.line,true);
+      for(const station of Object.values(metro?.STATIONS||{})){
+        if(!station.transfer)continue;
+        const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        dot.setAttribute('cx',station.x);dot.setAttribute('cy',station.y);
+        dot.setAttribute('r','1.0');dot.setAttribute('class','pw-metro-transfer');
+        routeSvg.appendChild(dot);
       }
       stage.appendChild(routeSvg);
       const activeChoice=pinData.find(p=>p.id===choice)||null;
-      const currentCity=s.location==='bedroom'||s.location==='living-room'||
-        s.location==='kitchen'?'entrance':s.location;
+      const legend=el('div','pw-photo-map-legend');
+      for(const line of metro?.LINES||[]){
+        const tag=el('span','pw-photo-map-line',line.name);
+        tag.style.setProperty('--line-color',line.color);
+        if(line.locked)tag.dataset.locked='true';
+        legend.appendChild(tag);
+      }
+      stage.appendChild(legend);
+
       for(const p of pinData){
         const locked=!!p.locked;
         const b=button('',()=>{
@@ -197,6 +226,12 @@
           String(Math.floor(def.close/60)).padStart(2,'0')+':'+
           String(def.close%60).padStart(2,'0');
         selected.appendChild(el('small','',def.group==='家'?'回到家中':('开放 '+hours)));
+        if(route&&route.segments.length){
+          const pathText=route.lines.join(' → ')+
+            (route.transfers.length?' · '+route.transfers.map(id=>metro.STATIONS[id].label+'换乘').join('、'):' · 直达')+
+            ' · '+route.connections+' 站';
+          selected.appendChild(el('small','pw-map-route-summary',pathText));
+        }
       }
       info.appendChild(selected);
       const actions=el('div','pw-photo-map-actions');
@@ -204,13 +239,19 @@
         const avail=availability(activeChoice.id,s);
         const go=button('前往',async()=>{
           if(busy)return;
-          const dest=choice;
+          const dest=choice,chosenRoute=route;
           busy=true;
-          try{
-            const response=await onTravel?.(dest);
-            if(response?.ok)closeSurface();
-            else {text(response?.reason||'无法抵达目的地',true);draw();}
-          }finally{busy=false}
+          // Crucial: close before the engine commits travel. Engine subscriber
+          // redraws on every state change and used to flash the open map.
+          closeSurface();
+          let response;
+          try{response=await onTravel?.(dest,chosenRoute)}
+          catch(error){response={ok:false,reason:'场景移动失败'};}
+          busy=false;
+          if(!response?.ok){
+            open('map');choice=dest;draw();
+            text(response?.reason||'无法抵达目的地',true);
+          }
         },'pw-photo-map-go',!avail.ok);
         actions.appendChild(go);
       }else{
