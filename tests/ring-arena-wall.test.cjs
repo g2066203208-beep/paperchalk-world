@@ -259,7 +259,10 @@ for(const mode of ['outer','inner']){
 }
 assert.match(src,/drawWorld\(mode==='outer'\?floorOuter:floorInner,0,vp\)/);
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/);
-assert.match(src,/texture2D\(uFloorTexture,fract\(vWallUv\)\)/);
+assert.match(src,/uGeometry>\.5&&uGeometry<1\.5\?clamp\(vWallUv/,
+ 'strip train floor uses continuous sampling');
+assert.match(src,/fract\(vWallUv\)\)\.rgb/,
+ 'arc combat floor must retain its repeating material');
 assert.match(src,/texture2D\(uCeilingTexture,fract\(vWallUv\)\)/);
 assert.doesNotMatch(src,/push\(floor,\[-w,0,z0\]/,
  'old square floor with unmatched wall curve must be removed');
