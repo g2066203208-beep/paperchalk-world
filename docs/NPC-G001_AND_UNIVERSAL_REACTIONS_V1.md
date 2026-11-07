@@ -101,3 +101,7 @@ worst quality, low quality, blurry, identical faces, cloned faces, same anime gi
 ```
 
 **提醒：** 单靠文字对三人的长相/身高约束不一定稳定，重复失败时先分别确定三位获批母图，再在兼容的参考图/区域提示机制中保持身份；不能声称这段Prompt已复现成功。
+
+
+## 2026-11-07｜Anima 提示词新规范（优先）
+**此前本文件尾部的超长三人模板是历史候选，停止用于直接生图。** 已根据 [CircleStone Labs 官方 Anima 模型卡](https://huggingface.co/circlestone-labs/Anima) 改为 Tag + 简短可见英文动作句。三人9套**完整替代版**见 [NPC-G001_ANIMA_PROMPTS_V2_OFFICIAL.md](NPC-G001_ANIMA_PROMPTS_V2_OFFICIAL.md)。身高体重只留人物数据库，不继续写进 Prompt 企图精确控制；实际大小靠人物母图和场景尺度，真实多人物一致性依赖参考图/控制约束。
