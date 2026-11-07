@@ -35,10 +35,21 @@
    }
   };
   const x=u=>(u-.5)*g.width, z=v=>g.backZ+g.depth*v;
-  // Separate real floor and ceiling meshes; natural tile repeat distance.
+  // A carriage floor must run UNDER the wall and side partitions, rather
+  // than end on the same raster pixel. 6cm of hidden physical overlap
+  // prevents thin background/alpha holes at every camera resolution.
+  const underlap=g.shape==='strip'?.06:0;
+  // The train has ONE continuous anti-slip vinyl sheet, not repeated shop
+  // tiles. UVs 0..1 also avoid texture-edge discontinuities at each repeat.
   for(const [kind,y,tile] of [['floor',0,1.2],['ceiling',g.height,1.9]]){
    const data=[];
-   grid(data,48,28,(u,v)=>[x(u),y,z(v),(x(u)+g.width/2)/tile,g.depth*v/tile]);
+   grid(data,48,28,(u,v)=>{
+    const floor=kind==='floor'&&g.shape==='strip';
+    const px=floor?(u-.5)*(g.width+underlap*2):x(u);
+    const pz=floor?g.backZ-underlap+v*(g.depth+underlap*2):z(v);
+    return [px,y,pz,floor?u:(x(u)+g.width/2)/tile,
+     floor?v:g.depth*v/tile];
+   });
    out[kind+'Outer']=data;out[kind+'Inner']=data.slice();
   }
   // The author-provided 2048x1024 picture is ONE continuous wall. Never
