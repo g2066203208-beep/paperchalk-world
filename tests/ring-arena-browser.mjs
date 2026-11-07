@@ -94,22 +94,23 @@ try{
  assert.ok(groundProof.feet.every(x=>x.valid));
  assert.ok(Math.abs(groundProof.aspect-1917/906)<.001);
  const midY=groundProof.feet[0].y;
- assert.ok(groundProof.feet.every(x=>Math.abs(x.y-midY)<.001),
-  'user screenshot: all 4 opponents must stand on the same ground Y');
+ assert.ok(groundProof.feet.every(x=>x.valid));
+ const verticalRange=Math.max(...groundProof.feet.map(p=>p.y))-
+  Math.min(...groundProof.feet.map(p=>p.y));
+ assert.ok(verticalRange>.06&&verticalRange<.12,
+  'real near/far placement should show physical grounded depth, not 2D offsets');
  const centers=groundProof.feet.map(x=>x.x);
  const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
- assert.ok(gaps[0]>.22&&gaps[0]<.24&&gaps[1]>.22&&gaps[1]<.24);
- assert.ok(Math.abs(gaps[0]-gaps[1])<.002);
- assert.ok(gaps[2]>.26&&gaps[2]<.29,
-  'wider fourth enemy must not obscure the third enemy');
+ assert.ok(gaps.every(x=>x>.18&&x<.30),
+  'natural depth composition must keep four distinct enemy silhouettes');
  assert.ok(groundProof.hero.left>-.99&&groundProof.hero.right<-.23,
   'the actual woman7 rear cutout must not be clipped or obstruct enemies');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
   'weapon and enemy1 cannot overlap');
  const foemeter=groundProof.enemySizes.map((h,i)=>
   h/outer.actors.enemies[i].height);
- assert.ok(Math.max(...foemeter)-Math.min(...foemeter)<.001,
-  'foes of different real heights must share one true perspective scale');
+ assert.ok(Math.max(...foemeter)-Math.min(...foemeter)<.05,
+  'foe scale differences must come from real distance and remain human-sized');
  await page.screenshot({path:'artifacts/ring-arena/V31-woman7-four-enemies-ground-aligned-1917x906.png'});
  await page.setViewportSize({width:1280,height:720});
  await page.waitForTimeout(220);
@@ -157,7 +158,7 @@ try{
  assert.equal(returned.director.enemyHP['enemy-2'],24);
  assert.equal(returned.director.enemyHP['enemy-3'],36);
  assert.equal(returned.director.enemyHP['enemy-4'],36);
- assert.equal(JSON.stringify(returned.camera),originalCamera);
+ assert.equal(JSON.stringify(returned.cameraTarget),originalCamera);
  assert.equal(JSON.stringify(returned.actors),originalActors);
  assert.equal(returned.heroTextureUploads,1);
  assert.equal(returned.directorCameraTemporary,false);
@@ -177,7 +178,7 @@ try{
  assert.equal(followup.director.enemyHP['enemy-2'],24);
  assert.equal(followup.director.enemyHP['enemy-3'],24);
  assert.equal(followup.director.enemyHP['enemy-4'],36);
- assert.equal(JSON.stringify(followup.camera),originalCamera);
+ assert.equal(JSON.stringify(followup.cameraTarget),originalCamera);
  assert.equal(JSON.stringify(followup.actors),originalActors);
  // Touch/keyboard inputs must never reveal a second camera.
  await page.mouse.move(420,250);await page.mouse.down();
@@ -186,8 +187,17 @@ try{
  await page.keyboard.press('a');await page.keyboard.press('d');
  await page.waitForTimeout(350);
  const stable=await inspect();
- assert.equal(stable.shotIndex,0);assert.equal(JSON.stringify(stable.camera),originalCamera);
+ assert.equal(stable.shotIndex,0);
+ assert.deepEqual(stable.camera.eye,outer.camera.eye,
+  'mouse movement must rotate the fixed 3D camera, never dolly');
+ assert.ok(Math.abs(stable.cameraLook.yawDeg)>.35,
+  'the mouse should now truly rotate the 3D camera focus');
+ assert.equal(stable.cameraLook.sharedProjection,true);
  assert.equal(JSON.stringify(stable.actors),originalActors);
+ // Reset mouse to center before switching battle orientation and inspecting
+ // the canonical forward camera.
+ await page.mouse.move(640,360);
+ await page.waitForTimeout(850);
  assert.equal(stable.heroTextureUploads,1);
  // The second encounter topology is not a second camera.
  await page.locator('[data-mode="inner"]').click();
@@ -197,7 +207,8 @@ try{
  assert.equal(inner.camera.shot,'left');assert.equal(inner.cameraCount,1);
  assert.equal(inner.eyeLevel,true);
  assert.equal(inner.camera.eye.y,1.50);
- assert.ok(Math.abs(inner.cameraPitchDeg)<.001);
+ assert.ok(Math.abs(inner.cameraPitchDeg)<1.8,
+  'real bounded FPS-style tilt should not overturn the battle camera');
  assert.ok(inner.safety.valid&&inner.safety.clear);
  assert.equal(inner.heroTextureUploads,1);
  await page.screenshot({path:'artifacts/ring-arena/final-inner-fixed-left.png'});
@@ -210,7 +221,9 @@ try{
    engine.project({x:a.x,y:0,z:a.z},state.camera,state.projectionAspect));
   return {feet,safety:state.safety};
  });
- assert.ok(innerGround.feet.every(p=>Math.abs(p.y-innerGround.feet[0].y)<.001));
+ assert.ok(innerGround.feet.every(p=>p.valid));
+ assert.ok(Math.max(...innerGround.feet.map(p=>p.y))-
+  Math.min(...innerGround.feet.map(p=>p.y))>.045);
  assert.ok(innerGround.safety.clear&&innerGround.safety.hero.left>-.99);
  await page.screenshot({path:'artifacts/ring-arena/V31-inner-woman7-ground-aligned-1917x906.png'});
  // Responsive full stage, same perspective, no second camera or cutoff.

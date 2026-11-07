@@ -1,8 +1,7 @@
 'use strict';
-/* V31 composition contract for user-supplied female-07 rear view:
- * one close foreground hero, exactly FOUR readable opponents on a common
- * 3D ground plane, all feet horizontally level in the SAME live camera.
- * No per-sprite CSS hacks, no hidden world anchor changes during idle.
+/* Shallow 3D battle blocking: four visually readable opponents stand on
+ * the same physical floor at naturally varied depths. Mouse look must never
+ * mutate any actor position or create independent parallax layers.
  */
 const assert=require('node:assert/strict');
 const ring=require('../site/game/ring-arena-runtime.js');
@@ -16,14 +15,14 @@ for(const mode of ['outer','inner']){
  assert.deepEqual(visible.map(a=>a.id),
   ['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.equal(formation.enemies.length,4);
- // Four opponents are truly same-depth; their transparent portraits and
- // attached fog must draw in stable character order, never in radial x order.
+ // Transparency sorting follows actual camera depth. The foreground hero
+ // is always nearest, but varied enemy Z naturally changes their order.
  const paintOrder=ring.sortActorsForAlpha(visible,camera).map(x=>x.actor.id);
- assert.deepEqual(paintOrder,
-  ['enemy-1','enemy-2','enemy-3','enemy-4','hero'],
-  'stable back-to-front 3D alpha order should not fade the rightmost actor');
- assert.equal(new Set(formation.enemies.map(a=>a.z)).size,1,
-  'all four enemies must share the same REAL camera depth (not appear scattered in screenshot)');
+ assert.equal(paintOrder.at(-1),'hero');
+ assert.deepEqual([...paintOrder.slice(0,4)].sort(),
+  ['enemy-1','enemy-2','enemy-3','enemy-4']);
+ assert.ok(new Set(formation.enemies.map(a=>a.z)).size>=3,
+  'individual real world Z depth must avoid a flat photo lineup');
  assert.ok(Math.abs(formation.allies[0].z-camera.eye.z)>1.25,'hero must not intersect camera');
  for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
   const hero=formation.allies[0];
@@ -32,13 +31,14 @@ for(const mode of ['outer','inner']){
   const coords=feet.map(p=>p.x);
   const spacing=coords.slice(1).map((v,i)=>v-coords[i]);
   assert.ok(feet.every(p=>p.valid));
-  assert.ok(feet.every(p=>Math.abs(p.y-feet[0].y)<.001),
-   'foe shoe bottoms must align on one projected floor line at aspect '+aspect);
-  // Each view reserves extra clearance for the fourth actor's wide coat.
-  assert.ok(spacing[0]>.22&&spacing[0]<.25&&spacing[1]>.22&&spacing[1]<.25);
-  assert.ok(Math.abs(spacing[0]-spacing[1])<.002);
-  assert.ok(spacing[2]>.26&&spacing[2]<.30,
-   'fourth character coat must not overlap the shopping-bag actor');
+  assert.ok(formation.enemies.every(a=>a.y===0),
+   'no shoe ever floats above or sinks below the true y=0 floor');
+  const baseline=feet.map(p=>p.y);
+  const deltaY=Math.max(...baseline)-Math.min(...baseline);
+  assert.ok(deltaY>.017&&deltaY<.13,
+   'natural ground projection must vary with real depth, never by DOM offsets');
+  assert.ok(spacing.every(d=>d>.17&&d<.32),
+   'silhouette grouping remains readable at each device aspect');
   const safety=ring.battleVisualSafety(mode,0,aspect,ring.FEMALE07_BACK_UV);
   assert.ok(safety.valid&&safety.clear,'actual female07 weapon + enemy bounds in safe zone');
   assert.ok(safety.hero.left>-.99,'left shoulder/head/ponytail must not be cropped');
@@ -51,15 +51,13 @@ for(const mode of ['outer','inner']){
   // Different canonical actors are 1.58–1.60m tall; normalize by their
   // TRUE heights so the perspective test measures depth, not anatomy.
   const normalized=heightFractions.map((h,i)=>h/formation.enemies[i].height);
-  assert.ok(Math.max(...normalized)-Math.min(...normalized)<.001,
-   'same-depth opponents must have identical per-meter screen scale');
+  assert.ok(Math.max(...normalized)-Math.min(...normalized)<.065,
+   'human-scale perspective should not create giant or miniature characters');
   if(aspect===1917/906){
    // Real 1.58-1.60m bodies are physically closer, not multiplied by CSS.
    // Closer to the camera than V13 with actual 1.58m people, not sprite scaling.
-   assert.ok(heightFractions[0]>(mode==='outer'?.485:.516),
-    'opponents must be materially larger and clearly legible');
-   assert.ok(heightFractions[0]<(mode==='outer'?.52:.555),
-    'foes should keep human scale under the new 2.85m ceiling');
+   assert.ok(heightFractions[0]>.46&&heightFractions[0]<.56,
+    'foes remain human-scale under the physical 2.85m ceiling');
   }
   if(aspect===1917/906)
    console.log('V31 '+mode+' 1917x906:',{
@@ -70,4 +68,4 @@ for(const mode of ['outer','inner']){
    });
  }
 }
-console.log('PASS: both 3D battle topologies have 4 equally spaced grounded foes right of uncropped female07 at every aspect ratio');
+console.log('PASS naturally staggered world-Z enemy staging, grounded 4-foe silhouette and shared 3D camera bounds');

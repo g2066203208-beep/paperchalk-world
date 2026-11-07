@@ -68,6 +68,28 @@ try{
  if(report.outer?.lighting?.shadowFilter!=='13-tap-distance-dependent-area-light-penumbra')
   throw Error('Actual WebGL scene is still using old hard-edge shadows');
  await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});
+ // Actual mouse movement should rotate ONE stationary camera, not any actor,
+ // floor, wall, light or shadow anchor. Capture two real opposing look poses.
+ if(ready){
+  const anchors=JSON.stringify(report.outer.actors),origin=report.outer.camera.eye;
+  await page.mouse.move(75,435);await page.waitForTimeout(520);
+  report.mouseLeft=await inspect();
+  await page.screenshot({path:resolve(out,'10-mouse-look-left-1917x906.png')});
+  await page.mouse.move(1840,435);await page.waitForTimeout(560);
+  report.mouseRight=await inspect();
+  await page.screenshot({path:resolve(out,'11-mouse-look-right-1917x906.png')});
+  if(JSON.stringify(report.mouseLeft.actors)!==anchors||
+     JSON.stringify(report.mouseRight.actors)!==anchors)
+   validationErrors.push('mouse look mutated physical character world anchors');
+  if(JSON.stringify(report.mouseLeft.camera.eye)!==JSON.stringify(origin)||
+     JSON.stringify(report.mouseRight.camera.eye)!==JSON.stringify(origin))
+   validationErrors.push('mouse look translated the eye instead of rotating');
+  if(!(report.mouseLeft.cameraLook.yawDeg<-.7&&
+       report.mouseRight.cameraLook.yawDeg>.7))
+   validationErrors.push('cursor does not turn camera in the correct direction');
+  await page.mouse.move(958,453);await page.waitForTimeout(760);
+ }
+
  if(ready){
   await setLighting('partial');
   await page.waitForTimeout(150);
