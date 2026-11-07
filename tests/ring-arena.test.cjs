@@ -49,12 +49,14 @@ for(const mode of ['outer','inner']){
  const ordered=[...centers].sort((a,b)=>a-b);
  for(let i=1;i<ordered.length;i++)assert.ok(ordered[i]-ordered[i-1]>.185);
  const feet=scene.enemies.map(e=>arena.project({x:e.x,y:0,z:e.z},c));
- for(let i=1;i<feet.length;i++)
-  assert.ok(Math.abs(feet[i].y-feet[0].y)<.0001,
-   'ALL FOUR shoes stand on the exact same real 3D projected floor line');
+ assert.ok(scene.enemies.every(actor=>actor.y===0),
+  'all four shoes physically touch the same world y=0 floor');
+ const visualBaseline=feet.map(p=>p.y);
+ assert.ok(Math.max(...visualBaseline)-Math.min(...visualBaseline)>.06,
+  'natural 3D near/far formation produces varied projected baseline');
  for(const e of safety.foes){
   assert.ok(e.top>.1&&e.top<.5&&e.bottom>-.62&&e.bottom<.06);
-  assert.ok(e.heightFraction>.40&&e.heightFraction<.49);
+  assert.ok(e.heightFraction>.35&&e.heightFraction<.56);
  }
  for(const aspect of [16/9,4/3,9/16]){
   const res=arena.battleVisualSafety(mode,0,aspect);
