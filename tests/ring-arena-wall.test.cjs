@@ -30,6 +30,7 @@ const src=fs.readFileSync(path.resolve(__dirname,'../site/game/ring-arena-runtim
 assert.match(src,/texture2D\(uWallTexture/);
 assert.match(src,/texture2D\(uWallTexture,vec2\(clamp\(fract\(vWallUv.x\)/);
 assert.match(src,/gl\.vertexAttribPointer\(world\.aUv,2,gl\.FLOAT,false,20,12\)/);
+assert.match(src,/return \{buffer,count:data\.length\/5\};/,'five-component geometry must render only actual vertices');
 assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighting material');
 assert.match(src,/drawWorld\(ceiling,2,vp\)/,'ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
