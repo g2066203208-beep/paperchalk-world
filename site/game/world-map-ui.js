@@ -239,11 +239,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  terrain.append(svg('path',{d:'M1620 -50 C1580 95 1650 195 1530 310 C1470 377 1575 447 1555 500 C1500 565 1633 615 1610 690 C1570 757 1712 785 1690 853 C1660 927 1810 951 1780 1058 C1763 1123 1825 1175 1804 1310 L2100 1310 L2100 -50 Z',fill:'#1b3544'},'pw-world-sea'));
  terrain.append(svg('path',{d:'M1619 -50 C1579 95 1649 195 1529 310 C1469 377 1574 447 1554 500 C1499 565 1632 615 1609 690 C1569 757 1711 785 1689 853 C1659 927 1809 951 1779 1058 C1762 1123 1824 1175 1803 1310',fill:'none',stroke:'#6c9cab', 'stroke-width':4,opacity:.47}));
  const mountainData=[
-  'M0 0 H1040 L930 143 L800 225 L710 180 L570 287 L430 245 L294 369 L168 356 L0 535Z',
-  'M0 100 L325 0 L490 90 L575 190 L440 315 L512 401 L329 512 L110 583 L0 544Z',
-  'M0 374 L255 317 L402 398 L472 561 L350 720 L186 779 L0 696Z',
-  'M151 595 L295 520 L398 560 L515 697 L480 897 L292 970 L135 894 L0 818Z',
-  'M355 897 L514 821 L670 880 L743 1050 L603 1247 L331 1232 L260 1071Z'
+  'M0 0 H1028 C944 85 917 172 797 204 S689 164 574 263 S426 272 303 380 S143 372 0 538 Z',
+  'M0 74 C130 44 216 -16 339 12 S519 116 560 192 S454 322 491 387 S362 499 268 529 S85 568 0 576 Z',
+  'M0 342 C122 337 238 296 327 356 S481 438 480 550 S376 726 242 743 S66 739 0 690 Z',
+  'M118 591 C205 562 256 492 338 533 S478 635 506 721 S474 863 356 936 S183 882 101 842 S18 770 0 703 Z',
+  'M337 895 C404 879 461 820 552 860 S732 959 718 1044 S623 1200 588 1248 S404 1240 323 1198 S242 1080 337 895 Z'
  ];
  mountainData.forEach((d,i)=>terrain.append(svg('path',{d,fill:['#253d39','#2e423d','#2a3c39','#34413a','#2a403d'][i],opacity:.93})));
  // Mountain contours and heavily wooded shapes, deliberately not a grid.
@@ -257,11 +257,16 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  // Agricultural patchwork follows the broad northern alluvial plain.
  terrain.append(svg('path',{d:'M905 65 C1050 25 1350 52 1532 156 L1490 373 L1320 440 L1030 385 L878 280 Z',fill:'#263b37',opacity:.88}));
  for(let row=0;row<8;row++)for(let col=0;col<10;col++){
-  const xx=948+col*57+(row%2)*9,yy=105+row*39;
-  terrain.append(svg('rect',{x:xx,y:yy,width:43+((col+row)%3)*5,height:28,rx:2,
-   fill:(col+row)%3===0?'#5b7453':'#455f4c',opacity:.35,
-   transform:'rotate('+(row%2===0?4:-3)+' '+xx+' '+yy+')'}));
+  const xx=949+col*56+Math.sin(row*1.7+col*.44)*13;
+  const yy=104+row*39+Math.sin(col*.87+row*.22)*9;
+  const size=35+((col*7+row*11)%19);
+  terrain.append(svg('rect',{x:xx,y:yy,width:size,height:20+((col*9+row*3)%16),
+   rx:2,fill:(col+row)%4===0?'#617b55':'#49684e',
+   opacity:.12+((col*2+row)%5)*.025,
+   transform:'rotate('+(row%2===0?3:-2)+' '+xx+' '+yy+')'}));
  }
+ terrain.append(svg('path',{d:'M984 68 C1045 177 1092 264 1162 392 M1416 79 C1378 208 1332 305 1264 401',
+  fill:'none',stroke:'#8da48f','stroke-width':4,opacity:.13}));
  // A mountain reservoir is distinct from the sea, linked to a winding river.
  terrain.append(svg('path',{d:'M422 844 C483 805 554 854 558 907 C568 963 530 1014 485 1017 C428 1007 400 945 422 844Z',
   fill:'#395866',stroke:'#698996','stroke-width':2,opacity:.93}));
