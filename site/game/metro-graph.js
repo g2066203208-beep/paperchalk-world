@@ -20,11 +20,11 @@ const STATIONS=Object.freeze({
  police:{label:'警察署前',x:46,y:91,locked:true}
 });
 const LINES=Object.freeze([
- Object.freeze({id:'a',name:'住宅线',color:'#D36C78',
+ Object.freeze({id:'a',name:'住宅线',color:'#E45B70',
    stops:['entrance','school','central','convenience'],ring:false}),
- Object.freeze({id:'b',name:'环城线',color:'#7EAFC6',
+ Object.freeze({id:'b',name:'环城线',color:'#7DA9DE',
    stops:['central','cafe','park','mall','convenience','northgate'],ring:true}),
- Object.freeze({id:'c',name:'南部线',color:'#A0B699',
+ Object.freeze({id:'c',name:'南部线',color:'#AEC792',
    stops:['hospital','station','police'],ring:false,locked:true})
 ]);
 const getLine=id=>LINES.find(l=>l.id===id)||null;
