@@ -41,6 +41,21 @@ try{
  assert.equal(await page.locator('.pw-dot-local-places [data-place="hospital"],.pw-dot-local-places [data-place="station"],.pw-dot-local-places [data-place="police"]').count(),0);
  assert.equal(await page.evaluate(()=>window.PaperWorldMetro.getLine('c')),null);
  assert.ok(await page.locator('.pw-dot-local-places [data-place="school"]').isVisible());
+ // Even a 1440x810 game view needs actual legible clickable stations:
+ // no tiny line strokes or 10px labels hidden by the dotted background.
+ const legibility=await page.evaluate(()=>{
+  const rail=document.querySelector('.pw-dot-urban-lines .pw-transit-rail');
+  const caption=document.querySelector('.pw-dot-local-places [data-place="school"] .pw-transit-place-name');
+  const card=document.querySelector('.pw-dot-local-places [data-place="school"]');
+  return {stroke:parseFloat(getComputedStyle(rail).strokeWidth),
+   vectorEffect:rail.getAttribute('vector-effect'),
+   stationFont:parseFloat(getComputedStyle(caption).fontSize),
+   photoWidth:card.getBoundingClientRect().width};
+ });
+ assert.ok(legibility.stroke>=8,JSON.stringify(legibility));
+ assert.equal(legibility.vectorEffect,'non-scaling-stroke');
+ assert.ok(legibility.stationFont>=14,JSON.stringify(legibility));
+ assert.ok(legibility.photoWidth>=95,JSON.stringify(legibility));
  await shot('19-city-dot-world.png');
  const lattice=await page.evaluate(()=>{
   const svg=document.querySelector('.pw-dot-rail-canvas');
