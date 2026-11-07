@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
+process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
 const base=process.env.PAPERCHALK_BROWSER_BASE||'http://127.0.0.1:8765/';
 const out=process.env.PAPERCHALK_CAPTURE_DIR||'artifacts/overworld';
 fs.mkdirSync(out,{recursive:true});
