@@ -271,3 +271,28 @@
  #pw-transit-scene .pw-train-window::before,
  #pw-transit-scene .pw-transit-passengers i{animation:none!important}
 }
+
+/* Visual QA V4: controls belong to the scene, not above open physical objects.
+   Outside-tap and ESC remain the standard dismissal mechanisms. */
+#view.overworld-surface-open #quick-tools,
+#view.overworld-surface-open #top-menu,
+#view.overworld-surface-open #hud-top,
+#view.overworld-phone-open #quick-tools,
+#view.overworld-phone-open #top-menu,
+#view.overworld-phone-open #hud-top,
+#view.pw-traveling #quick-tools,
+#view.pw-traveling #top-menu,
+#view.pw-traveling #hud-top{
+ visibility:hidden!important;pointer-events:none!important;
+}
+#view.overworld-phone-open #overworld-scene-prompts{display:none!important}
+#novel-ui>#phone-ui:not([hidden]){
+ animation:pw-handset-fog-reveal 350ms ease-out both;
+}
+@keyframes pw-handset-fog-reveal{
+ 0%,20%{opacity:0}
+ 100%{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+ #novel-ui>#phone-ui{animation:none!important}
+}
