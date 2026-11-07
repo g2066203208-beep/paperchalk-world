@@ -83,17 +83,19 @@
  opacity:1;stroke-width:5;
  filter:drop-shadow(0 0 2px #c5e4eb7e);
 }
-#pw-world-surface .pw-world-municipal-lines,
-#pw-world-surface .pw-world-metro-service,
-#pw-world-surface .pw-world-metro-stop{
+#pw-world-surface .pw-world-municipal-lines{
  opacity:0;transition:opacity .15s ease;
  pointer-events:none;
 }
+#pw-world-surface .pw-world-metro-service,
+#pw-world-surface .pw-world-metro-stop{
+ opacity:1;
+}
 #pw-world-surface .pw-world-map[data-zoom="district"] .pw-world-municipal-lines{
- opacity:.78;
+ opacity:.72;pointer-events:stroke;
 }
 #pw-world-surface .pw-world-map[data-zoom="detail"] .pw-world-municipal-lines{
- opacity:1;
+ opacity:1;pointer-events:stroke;
 }
 #pw-world-surface .pw-world-metro-stop{
  fill:#dce9ea;stroke:#1e2c37;stroke-width:1.2px;
