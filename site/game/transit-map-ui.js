@@ -3,11 +3,11 @@
 'use strict';
 const PHOTO=Object.freeze({
  entrance:['https://commons.wikimedia.org/wiki/Special:FilePath/Residential_area.jpg?width=540','./assets/scenes/entrance.webp'],
- school:['https://www.hijirigaoka.ed.jp/common/img/introduction/facilities/pic_introduction_facilities03.png','./assets/classroom.webp'],
+ school:['https://commons.wikimedia.org/wiki/Special:FilePath/Horikoshi_High_School_(external_appearance).jpg?width=540','./assets/classroom.webp'],
  convenience:['https://commons.wikimedia.org/wiki/Special:FilePath/Family-Mart-store_JA-Izumo-Otsu.jpg?width=540','./assets/locations/convenience.svg'],
- cafe:['https://images.unsplash.com/photo-1593344745356-6e4c8740c3af?auto=format&fit=crop&w=540&q=75','./assets/locations/cafe.svg'],
+ cafe:['https://commons.wikimedia.org/wiki/Special:FilePath/Cafe_Casa%2C_Tokyo_2021.jpg?width=540','./assets/locations/cafe.svg'],
  mall:['https://commons.wikimedia.org/wiki/Special:FilePath/Shinjuku_Keio-Department-store.jpg?width=540','./assets/locations/mall.svg'],
- park:['https://ak-d.tripcdn.com/images/1mi1m224x8u2ae3b0B5E2.jpg?proc=source%2Ftrip','./assets/locations/park.svg']
+ park:['https://commons.wikimedia.org/wiki/Special:FilePath/Fuchu-city.Tokyo.Japan.Keyaki.namiki.dori.fuchu.jpg?width=540','./assets/locations/park.svg']
 });
 const names={entrance:'家',school:'学校',convenience:'便利店',cafe:'咖啡厅',mall:'商场',park:'公园',central:'中央站',northgate:'北街口',hospital:'医院',station:'车站',police:'警察局'};
 const create=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n};
