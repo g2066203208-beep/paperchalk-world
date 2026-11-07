@@ -32,8 +32,14 @@ try{
   return a?.active&&a?.renderer==='webgl-l2d'&&a?.heroStatic===true&&
    a?.previewPose==='female7'&&a?.eyeLevel===true&&a?.l2dReady===5&&a?.heroTextureUploads>=1;
  },null,{timeout:100000});
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.wallMaterial?.ready===true,
+  null,{timeout:15000});
  await page.waitForTimeout(650);
  const outer=await inspect();
+ assert.equal(outer.wallMaterial.kind,'curved-webgl-wall');
+ assert.equal(outer.wallMaterial.repeats,3);
+ assert.deepEqual(outer.wallMaterial.sourceSize,[2172,724]);
+ assert.equal(await page.locator('#ring-arena-canvas').getAttribute('data-wall-texture'),'ready');
  assert.equal(outer.mode,'outer');assert.equal(outer.shotIndex,0);
  assert.equal(outer.shotName,'固定左机位');
  assert.equal(outer.camera.shot,'left');

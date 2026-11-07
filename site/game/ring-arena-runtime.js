@@ -20,6 +20,16 @@
   outerCameraRadius:11.5,innerCameraRadius:7.47,
   verticalFov:48,battleFocusZ:6.8
  });
+ // The authored convenience-store wall image is drawn on the existing curved
+ // 3D backdrops; actor anchors, depth and camera remain exactly unchanged.
+ const WALL_TEXTURE=Object.freeze({
+  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:3
+ });
+ function wallTextureUV(x,y){
+  const theta=Math.asin(clamp(x/SPEC.wallRadius,-.975,.975));
+  const u=(theta/(2*SPEC.wallArcHalfAngle)+.5)*WALL_TEXTURE.repeats;
+  return {u:u-Math.floor(u),v:clamp(y/SPEC.wallHeight,0,1)};
+ }
  // V31: projection-correct four-opponent row at camera-equal ground depth.
  // All shoes rest on a common real-world y=0 ground plane and at the same
  // view-space depth, unlike the old 0.8m staggered arc. Four distinct x
@@ -217,6 +227,7 @@
  ].join('\n');
  const worldFragment=[
   'precision highp float;varying vec3 vWorld;uniform float uTime;uniform int uSurface;uniform float uMode;',
+  'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
   'void main(){vec3 color;',
@@ -236,6 +247,13 @@
   'float bright=pow(max(0.0,sin(v*1.4+hash(col)*6.28)),13.0);',
   'color=vec3(.003,.011,.014)+vec3(.006,.045,.038)*line(vWorld.x,3.0,.016)',
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
+  'if(uWallReady>.5){',
+  'float theta=asin(clamp(vWorld.x/32.0,-.975,.975));',
+  'float u=fract((theta/2.7227136+.5)*3.0);',
+  'float v=clamp(vWorld.y/13.0,.003,.997);',
+  'vec3 wallArt=texture2D(uWallTexture,vec2(clamp(u,.002,.998),v)).rgb;',
+  'color=wallArt*vec3(.87,.88,.91);',
+  '}',
   '}gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
@@ -421,13 +439,14 @@
     ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
     :'./assets/characters/protagonist-back-combat-3q-final.webp';
   let gl=null,world=null,portrait=null,shadow=null,floor=null,backInner=null,backOuter=null,quad=null;
+  let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
   const textures=new Map();
   const actionTextures=new Map(); // separate GPU action poses at real 3D anchors
   let drawnPoses={};
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface','uMode']);
+   world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady']);
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur']);
@@ -439,6 +458,38 @@
    actionTextures.set('enemy-2-hit',prepareTexture(gl));
    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+   // GPU texture with an original-procedural fallback while image loads.
+   wallMaterial=gl.createTexture();
+   if(!wallMaterial)throw Error('3D wall texture creation failed');
+   gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,
+    new Uint8Array([22,25,28,255]));
+   wallImage=new Image();
+   wallImage.decoding='async';
+   canvas.dataset.wallTexture='loading';
+   wallImage.onload=()=>{
+    if(!gl||!wallMaterial)return;
+    try{
+     gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
+     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,wallImage);
+     wallMaterialReady=true;
+     wallMaterialError=null;
+     canvas.dataset.wallTexture='ready';
+    }catch(error){
+     wallMaterialError=String(error.message||error);
+     canvas.dataset.wallTexture='error';
+    }
+   };
+   wallImage.onerror=()=>{
+    wallMaterialError='Image loading failed: '+WALL_TEXTURE.url;
+    canvas.dataset.wallTexture='error';
+   };
+   wallImage.src=WALL_TEXTURE.url;
   }catch(err){
    canvas.dataset.error=String(err.message||err);status.textContent='WebGL failed '+String(err.message||err);
    gl=null;
@@ -887,6 +938,10 @@
    gl.uniformMatrix4fv(world.uVP,false,new Float32Array(vp));
    gl.uniform1f(world.uTime,elapsed);
    gl.uniform1f(world.uMode,mode==='inner'?1:0);
+   gl.activeTexture(gl.TEXTURE0);
+   gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
+   gl.uniform1i(world.uWallTexture,0);
+   gl.uniform1f(world.uWallReady,wallMaterialReady?1:0);
    drawWorld(floor,0,vp);drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    gl.disableVertexAttribArray(world.aP);
    const all=visibleActors(mode);
@@ -954,6 +1009,9 @@
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,0).eye.x,
      lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
+   wallMaterial:{url:WALL_TEXTURE.url,ready:wallMaterialReady,error:wallMaterialError,
+    sourceSize:wallImage?.naturalWidth?[wallImage.naturalWidth,wallImage.naturalHeight]:null,
+    repeats:WALL_TEXTURE.repeats,kind:'curved-webgl-wall'},
    cameraCount:1,eyeLevel:Math.abs((lens||camera(mode,0)).eye.y-1.50)<.001,
    heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero').frames,
    director:{card:attackCard.name,baseDamage:attackCard.damage,
@@ -1030,7 +1088,7 @@
   return Object.freeze(api);
  }
  return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
-  SHOT_NAMES,CAMERA_STOPS,cameraPitchDeg,backdropPoint,camera,portraitBounds,
+  SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });

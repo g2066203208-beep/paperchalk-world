@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'site/game/ring-arena-runtime.js'
+      - 'site/assets/ring-arena/**'
       - 'site/assets/characters/protagonist-back-combat-3q-final.webp'
       - 'site/index.html'
       - 'site/dev/character-bridge.js'
@@ -42,6 +43,7 @@ jobs:
       - name: Verify one locked camera, 4 opponents, fixed anchors and portrait proportion
         run: |
           node tests/ring-arena.test.cjs
+          node tests/ring-arena-wall.test.cjs
           node tests/ring-arena-director.test.cjs
       - name: Install real Chromium renderer
         run: |
