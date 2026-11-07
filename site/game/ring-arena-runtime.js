@@ -297,7 +297,7 @@
   'vec3 hdr=linearPaint*ringIrradiance(p,n);',
   'return pow(hdr/(vec3(1.0)+hdr*.14),vec3(.45454545));',
   '}'
- ].join('\\n');
+ ].join('\n');
  const worldVertex=[
   'precision highp float;',
   'attribute vec3 aP;attribute vec2 aUv;',
@@ -357,7 +357,7 @@
   'color=ringShade(color,vWorld,normal);',
   'if(uSurface==2)color=mix(color,vec3(.96,.95,.87),emissive*.90);',
   '}gl_FragColor=vec4(color,1.0);}'
- ].join('\\n');
+ ].join('\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
  // Vertical pivot uses the source canvas's measured shoe & crown fractions.
  // No regenerated textures or destructive crop operations.
