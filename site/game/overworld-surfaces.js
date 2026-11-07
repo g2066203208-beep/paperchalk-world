@@ -100,13 +100,6 @@
       {id:'police',name:'警察局',x:78,y:75,locked:true}
     ].map(p=>({...p,x:global.PaperWorldMetro?.STATIONS[p.id]?.x??p.x,
       y:global.PaperWorldMetro?.STATIONS[p.id]?.y??p.y})));
-    const mapLinks=Object.freeze([
-      ['entrance','school'],['school','convenience'],
-      ['entrance','cafe'],['cafe','mall'],['mall','convenience'],
-      ['mall','park'],['cafe','park'],
-      ['entrance','hospital'],['hospital','station'],
-      ['station','police'],['police','park'],['station','mall']
-    ]);
     function projectedCost(from,to){
       const a=locs[from],b=locs[to];
       return a.group==='家'&&b.group==='家'?10:b.group==='家'?a.travel:b.travel;
@@ -192,7 +185,22 @@
           const img=el('img','pw-photo-map-photo');
           img.src=p.photo;img.alt='';
           img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
-          img.addEventListener('error',()=>{img.hidden=true;picture.dataset.imageFailed='true'});
+          // Reference photo networks can fail on some browsers; fall back to
+          // an actual local game scene, not a broken image icon or empty tile.
+          const localScene={
+            entrance:'./assets/scenes/entrance.webp',
+            school:'./assets/classroom.webp',
+            convenience:'./assets/locations/convenience.svg',
+            cafe:'./assets/locations/cafe.svg',
+            mall:'./assets/locations/mall.svg',
+            park:'./assets/locations/park.svg'
+          }[p.id];
+          img.addEventListener('error',()=>{
+            if(img.dataset.fallback!=='true'&&localScene){
+              img.dataset.fallback='true';img.src=localScene;return;
+            }
+            img.hidden=true;picture.dataset.imageFailed='true';
+          });
           picture.appendChild(img);
         }
         const placeholder=el('span','pw-photo-map-placeholder',locked?'?':'◇');
