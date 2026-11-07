@@ -13,6 +13,8 @@ on:
       - 'tests/world-map-browser.mjs'
       - 'site/game/metro-graph.js'
       - 'site/game/scene-environments.js'
+      - 'site/game/scene-geometry.js'
+      - 'tests/scene-geometry.test.cjs'
       - 'site/game/ring-arena-runtime.js'
       - 'site/game/metro-cabin.js'
       - 'site/game/metro-cabin.css'
@@ -68,7 +70,7 @@ jobs:
           cat /tmp/paperchalk-web.log
           exit 1
       - name: Verify daytime state rules
-        run: node --test tests/daily-life.test.cjs tests/metro-graph.test.cjs tests/metro-map-geometry.test.cjs tests/phone-life.test.cjs tests/world-atlas.test.cjs tests/metro-master-art.test.cjs tests/scene-environments.test.cjs
+        run: node --test tests/daily-life.test.cjs tests/metro-graph.test.cjs tests/metro-map-geometry.test.cjs tests/phone-life.test.cjs tests/world-atlas.test.cjs tests/metro-master-art.test.cjs tests/scene-environments.test.cjs tests/scene-geometry.test.cjs
       - name: Capture original dot-matrix city stations, real cabin and subway arrival
         run: node tests/transit-map-browser.mjs
       - name: Capture ten-city zoomable atlas, landscape controls and location photographs
