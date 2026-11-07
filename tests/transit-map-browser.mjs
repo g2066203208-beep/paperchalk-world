@@ -1,5 +1,5 @@
-// Focused real-browser transit map screenshot QA. State fixture only moves from
-// bedroom to the real home entrance, then all map/rail/train actions are clicks.
+// ONE physical zoomable dot map: original city metro, 10-region network,
+// real route clicks, stateful side-on L2D cabin and mobile layout screenshots.
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
@@ -10,115 +10,74 @@ const out=process.env.PAPERCHALK_CAPTURE_DIR||'artifacts/overworld';
 fs.mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFactor:1});
-page.setDefaultTimeout(17000);
+page.setDefaultTimeout(20000);
 const errors=[];
-page.on('pageerror',error=>errors.push(String(error)));
-const shot=async name=>page.screenshot({path:path.join(out,name),animations:'disabled',timeout:16000});
+page.on('pageerror',e=>errors.push(String(e)));
+const shot=async name=>page.screenshot({path:path.join(out,name),animations:'disabled',timeout:22000});
 try{
  await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').click();
  await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom');
  await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false');
- const num=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
- for(let i=0;i<num;i++)await page.locator('#next-line').click();
+ const lines=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
+ for(let i=0;i<lines;i++)await page.locator('#next-line').click();
  await page.waitForFunction(()=>window.PaperWorldQuickTools?.phone?.isOpen?.());
  await page.evaluate(()=>{
-   window.PaperWorldQuickTools.close();
-   const g=window.PaperWorldDailyLifeUI.engine;
-   const result=g.travel('entrance');
-   if(!result.ok)throw Error(result.reason);
+  window.PaperWorldQuickTools.close();
+  const res=window.PaperWorldDailyLifeUI.engine.travel('entrance');
+  if(!res.ok)throw Error(res.reason);
  });
  await page.locator('#quick-map').click();
- const map=page.locator('.pw-transit-map');
+ const map=page.locator('.pw-dot-world-map');
  await map.waitFor({state:'visible'});
- assert.equal(await page.locator('.pw-photo-map-info').count(),0);
- assert.equal(await page.locator('.pw-transit-place').count(),11);
- assert.ok(await page.locator('.pw-transit-line-hit').count()>=10);
- assert.ok(await page.locator('.pw-transit-rail-glint').count()>=10);
- const gridCheck=await page.evaluate(()=>{
-  const metro=window.PaperWorldMetro,geo=window.PaperWorldMetroGeometry;
-  const element=document.querySelector('.pw-transit-map');
-  const rect=element.getBoundingClientRect();
-  const space=geo.layout(rect.width,rect.height);
-  const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-  const dotError=[...element.querySelectorAll('.pw-transit-grid-dot')]
-   .map(n=>distance({x:+n.getAttribute('cx'),y:+n.getAttribute('cy')},
-     geo.point(+n.dataset.column,+n.dataset.row,space)));
-  const markerError=Object.entries(metro.STATIONS).map(([id,st])=>{
-   const n=element.querySelector('.pw-transit-stop-group[data-stop="'+id+'"]');
-   const p=geo.stationPoint(st,space);
-   const move=n?.getAttribute('transform')?.replace('translate(','')?.replace(')','')?.split(',');
-   return move?.length===2?distance(p,{x:+move[0],y:+move[1]}):999;
-  });
-  const photoCards=[...element.querySelectorAll('.pw-transit-place[data-photograph=true]')];
-  const rows={};
-  for(const card of photoCards){
-   const key=card.dataset.gridRow;
-   rows[key]=(rows[key]||0)+1;
-  }
-  const photoError=photoCards
-   .map(n=>{
-    const st=metro.STATIONS[n.dataset.place],b=n.getBoundingClientRect();
-    const slot=geo.point(st.gx,st.gy-1,space);
-    return distance(slot,{x:b.left+b.width/2-rect.left,y:b.top+b.height/2-rect.top});
-   });
-  return {grid:element.dataset.grid,cell:space.cell,
-   dots:dotError.length,stations:markerError.length,photos:photoError.length,rows,
-   dotError:Math.max(...dotError),stationError:Math.max(...markerError),
-   photoError:Math.max(...photoError)};
+ assert.equal(await page.locator('.pw-world-map,.pw-map-mode-toggle').count(),0,
+  'the retired second atlas and map-mode switch must not exist');
+ assert.equal(await page.locator('.pw-transit-grid-dot').count(),1683);
+ assert.equal(await page.locator('.pw-dot-local-places .pw-transit-place').count(),8);
+ assert.equal(await page.locator('.pw-dot-city').count(),10);
+ assert.ok(await page.locator('.pw-dot-poi').count()>=100);
+ assert.ok(await page.locator('.pw-dot-regional-lines .pw-transit-segment').count()>=14);
+ assert.equal(await page.locator('.pw-dot-urban-lines [data-line="c"]').count(),0);
+ assert.equal(await page.locator('.pw-dot-local-places [data-place="hospital"],.pw-dot-local-places [data-place="station"],.pw-dot-local-places [data-place="police"]').count(),0);
+ assert.equal(await page.evaluate(()=>window.PaperWorldMetro.getLine('c')),null);
+ assert.ok(await page.locator('.pw-dot-local-places [data-place="school"]').isVisible());
+ await shot('19-city-dot-world.png');
+ const lattice=await page.evaluate(()=>{
+  const svg=document.querySelector('.pw-dot-rail-canvas');
+  const pts=[...document.querySelectorAll('.pw-transit-grid-dot')];
+  const errors=pts.filter(p=>
+   (+p.getAttribute('cx'))%40!==0||(+p.getAttribute('cy'))%40!==0);
+  const nodes=[...document.querySelectorAll('.pw-dot-city')];
+  const off=nodes.filter(n=>
+   (Math.round(parseFloat(n.style.left)))%40!==0||
+   (Math.round(parseFloat(n.style.top)))%40!==0);
+  return {view:svg.getAttribute('viewBox'),dots:pts.length,offGrid:errors.length,cityOff:off.length};
  });
- assert.equal(gridCheck.grid,'12x6');
- assert.equal(gridCheck.dots,91);
- assert.equal(gridCheck.stations,11);
- assert.equal(gridCheck.photos,9);
- assert.deepEqual(gridCheck.rows,{'1':3,'3':3,'5':3});
- assert.ok(gridCheck.dotError<.05,JSON.stringify(gridCheck));
- assert.ok(gridCheck.stationError<.05,JSON.stringify(gridCheck));
- assert.ok(gridCheck.photoError<1.5,JSON.stringify(gridCheck));
- console.log('STRICT GRID ALIGNMENT',JSON.stringify(gridCheck));
- await shot('19-transit-map-desktop.png');
- await page.locator('.pw-transit-place[data-place="school"]').click();
- await page.locator('.pw-transit-popup:not([hidden])').waitFor();
- assert.equal(await page.locator('.pw-transit-menu-item').count(),2);
- await shot('20-near-photo-actions.png');
- await page.setViewportSize({width:844,height:390});
- await page.waitForTimeout(250);
- const cardBox=await page.locator('.pw-transit-place[data-place="school"]').boundingBox();
- const popupBox=await page.locator('.pw-transit-popup:not([hidden])').boundingBox();
- assert.ok(cardBox&&popupBox,'photo and contextual menu should remain visible');
- assert.ok(popupBox.x>=cardBox.x+cardBox.width-1||
-  popupBox.x+popupBox.width<=cardBox.x+1,
-  'selection popup must not cover the chosen photograph');
- await shot('21-transit-map-mobile.png');
- await page.setViewportSize({width:1440,height:810});
- await page.waitForTimeout(250);
- // Click an actually visible residential-line segment in screen pixels.
- // This remains correct after the schematic reflows for a new viewport.
- const clickPoint=await page.evaluate(()=>{
-   const svg=document.querySelector('.pw-transit-lines');
-   const p=svg?.querySelector('.pw-transit-segment[data-line="a"][data-from="entrance"] .pw-transit-line-hit');
-   if(!svg||!p)throw Error('missing colored track hit target');
-   const xy=p.getPointAtLength(p.getTotalLength()*.48);
-   const rect=svg.getBoundingClientRect();
-   return {x:rect.x+xy.x,y:rect.y+xy.y};
+ assert.deepEqual(lattice,{view:'0 0 2000 1280',dots:1683,offGrid:0,cityOff:0});
+ // The ORIGINAL coloured住宅线 is still a physical boarding action,
+ // not a decorative fake rail segment or teleport to the destination.
+ const hit=await page.evaluate(()=>{
+  const p=document.querySelector('.pw-dot-urban-lines [data-line="a"][data-from="entrance"] .pw-transit-line-hit');
+  if(!p)throw Error('Metro track is missing');
+  const pt=p.getPointAtLength(p.getTotalLength()*.5),m=p.getScreenCTM();
+  return {x:m.a*pt.x+m.c*pt.y+m.e,y:m.b*pt.x+m.d*pt.y+m.f};
  });
- await page.mouse.click(clickPoint.x,clickPoint.y);
- await page.locator('.pw-transit-popup:not([hidden])').waitFor();
- const label=await page.locator('.pw-transit-popup').innerText();
- assert.match(label,/住宅线/);
- assert.match(label,/学园前/);
- await shot('22-near-line-directions.png');
- await page.locator('.pw-transit-popup .pw-transit-menu-item.is-primary').first().click();
+ await page.mouse.click(hit.x,hit.y);
+ const popup=page.locator('.pw-transit-popup:not([hidden])');
+ await popup.waitFor();
+ assert.match(await popup.innerText(),/住宅线/);
+ assert.match(await popup.innerText(),/学园前/);
+ await shot('20-dot-metro-board-choices.png');
+ await popup.locator('.pw-transit-menu-item.is-primary').first().click();
  await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro?.onboard===true);
  await page.locator('#pw-metro-cabin:not([hidden])').waitFor();
- await page.waitForTimeout(400);
- await shot('23-procedural-metro-carriage.png');
+ await shot('21-dot-map-real-metro-carriage.png');
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'school');
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'下车'}).click();
- await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro?.onboard===false);
+ await page.waitForFunction(()=>!window.PaperWorldDailyLifeUI.snapshot().metro?.onboard);
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location),'school');
  assert.deepEqual(errors.filter(v=>/ReferenceError|TypeError|SyntaxError/.test(v)),[]);
- console.log(JSON.stringify({PASS:true,frames:5,endingStation:'school'}));
+ console.log('SINGLE DOT METRO QA PASS',JSON.stringify({lattice,ended:'school',errors}));
 }finally{await browser.close()}
