@@ -221,7 +221,7 @@ class HeroineBreathRig{
    return {x,y:133+(y-133)*(1-.68*this.blinkAmount(t))};
   return {x,y};
  }
- renderPSDParts(t){
+ renderPSDParts(t,continuous=false){
   const g=this.ctx,W=this.canvas.width,H=this.canvas.height,sx=W/1024,sy=H/1024;
   const tri=(src,A,B,C,D,E,F)=>{
    const ux=B.x-A.x,uy=B.y-A.y,vx=C.x-A.x,vy=C.y-A.y,det=ux*vy-uy*vx;
@@ -249,7 +249,8 @@ class HeroineBreathRig{
    if(!w||!h)continue;
    // The jacket MUST be a mesh. A corner-only affine transform would
    // evaluate outside the chest envelope and silently show zero breathing.
-   const x=part.x,y=part.y,soft=/back.?hair|front.?hair|后发|刘海|bottomwear|裙|handwear|手臂|topwear|上身|外套|校服|jacket|衬衫|衣领|collar/i.test(part.name);
+   // Only metro's close-up uses one continuous draw per real PSD part.
+   const x=part.x,y=part.y,soft=!continuous&&/back.?hair|front.?hair|后发|刘海|bottomwear|裙|handwear|手臂|topwear|上身|外套|校服|jacket|衬衫|衣领|collar/i.test(part.name);
    g.globalAlpha=part.opacity;
    if(!soft){
     const A=this.psdTarget(x,y,part,t),B=this.psdTarget(x+w,y,part,t),C=this.psdTarget(x,y+h,part,t);
@@ -282,11 +283,20 @@ class HeroineBreathRig{
   const g=this.ctx;
   g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);
   const t=(this.playing?(now-this.t0):this.frozen)/1000;
+  const carriage=document.getElementById('pw-metro-cabin');
+  const metroContinuous=this.canvas.id==='actor-player-l2d'&&
+   carriage&&!carriage.hidden&&carriage.dataset.renderer==='ring-3d';
   if(this.playing)this.frozen=now-this.t0;
   if(this.psdParts?.length){
-   this.renderPSDParts(t);
+   this.renderPSDParts(t,!!metroContinuous);
    if(this.drawBones)this.drawBoneRig(t);
    return;
+  }
+  // This legacy fallback otherwise triangulates the entire image and
+  // prints grey overlapping-alpha grid lines across visible skin/hair.
+  if(metroContinuous){
+   g.drawImage(this.source,0,0,W,H);
+   this.drawBlink(t);this.drawBoneRig(t);return;
   }
   if(this.amplitude<.0001){
    g.drawImage(this.source,0,0,W,H);
