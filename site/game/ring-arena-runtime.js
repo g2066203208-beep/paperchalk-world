@@ -55,12 +55,12 @@
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
  // ONE playable, standard encounter (not alternating 'surround' patterns).
- // Four foes span 4.12m across the shop and 1.10m in real world depth.
+ // Four foes form a centred 4.30m line on the same real floor y=0.
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[.28,7.20],[1.28,8.05],[2.63,7.43],[4.40,6.95]])
+   allies:Object.freeze([[-.76,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
+   enemies:Object.freeze([[-1.35,7.45],[-.05,7.45],[1.25,7.45],[2.95,7.45]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
@@ -296,6 +296,8 @@
   height:SPEC.ceilingHeight-.07,
   coolAmbient:Object.freeze([.23,.27,.34]),
   color:Object.freeze([2.00,1.88,1.72]),
+  redColor:Object.freeze([3.1,.12,.075]),
+  redCeilingIndices:Object.freeze([1,4]),
   strength:1
  });
  function angleForArcMeters(meters){
@@ -324,53 +326,48 @@
  const LIGHT_STATES=Object.freeze(['on','partial','flicker','outage','horror']);
  function lightingFrame(state='on',seconds=0,whichMode='outer'){
   const valid=LIGHT_STATES.includes(state)?state:'on';
-  const levels=new Float32Array(6).fill(1);
-  if(valid==='partial'){
-   levels.set([1,.0,.95,.3,0,.65]);
-  }else if(valid==='outage'){
-   levels.fill(0);
+  const levels=new Float32Array(6).fill(1),redMix=new Float32Array(6);
+  if(valid==='partial')levels.set([1,0,.95,.3,0,.65]);
+  else if(valid==='outage'){
+   // Red emitters are IN original ceiling fixtures, not a floating light.
+   levels.fill(0);levels[1]=.86;levels[4]=.72;redMix[1]=redMix[4]=1;
   }else if(valid==='flicker'){
    const p=((Number(seconds)||0)%6.2+6.2)%6.2;
-   levels[1]=(p>1.62&&p<1.78)||(p>1.9&&p<2.25)||(p>4.86&&p<5.24)?0.0:1.0;
-   levels[4]=(p>4.83&&p<5.36)?0.07:1.0;
+   levels[1]=(p>1.62&&p<1.78)||(p>1.9&&p<2.25)||(p>4.86&&p<5.24)?0:1;
+   levels[4]=(p>4.83&&p<5.36)?.07:1;
   }else if(valid==='horror'){
    const t=Math.max(0,Number(seconds)||0);
-   // Eight-second narrative lighting beat with deterministic switch stages.
-   // This is an in-world power event; no full-screen black card is drawn.
    if(t>=.95&&t<1.68){
     const pulse=Math.sin(t*81)*.5+.5;
-    levels[1]=pulse>.64?.98:.025;
-    levels[4]=pulse>.72?.78:0;
-   }else if(t>=1.68&&t<2.36){
-    levels.set([1,0,.65,.15,0,.22]);
-   }else if(t>=2.36&&t<4.42){
-    levels.fill(0);
-    if(t>3.70&&t<3.77)levels[2]=.92;
+    levels[1]=pulse>.64?.98:.025;levels[4]=pulse>.72?.78:0;
+   }else if(t>=1.68&&t<2.36)levels.set([1,0,.65,.15,0,.22]);
+   else if(t>=2.36&&t<4.42){
+    levels.fill(0);if(t>3.70&&t<3.77)levels[2]=.92;
    }else if(t>=4.42&&t<5.08){
     const surge=t<4.70?.82:.05;
     levels.set([surge,0,surge*.9,0,0,surge*.4]);
-   }else if(t>=5.08&&t<5.66){
-    levels.fill(0);
-   }else if(t>=5.66){
-    levels.set([.7,0,.55,.20,0,.28]);
+   }else if(t>=5.08&&t<5.66)levels.fill(0);
+   else if(t>=5.66)levels.set([.7,0,.55,.20,0,.28]);
+   if(t>=2.75&&t<5.66){
+    levels[1]=.86;levels[4]=.72;redMix[1]=redMix[4]=1;
    }
   }
-  const t=Number(seconds)||0;
-  const horrorOutage=valid==='horror'&&levels.every(x=>x<.08);
-  const emergency=valid==='outage'?1:valid==='horror'&&t>=2.75?1:valid==='flicker'?.12:0;
-  const ambient=valid==='outage'||horrorOutage?[.010,.014,.024]:
+  const red=redMix.some(x=>x>.5),t=Number(seconds)||0;
+  const ambient=valid==='outage'||red?[.023,.010,.014]:
    valid==='partial'||valid==='horror'&&t>=1.68?[.09,.12,.15]:
    [...LIGHTING.coolAmbient];
-  const door=curvedSurfacePoint(whichMode,angleForArcMeters(-3.5),.12,
-   SPEC.ceilingHeight-.34);
-  return {state:valid,levels,ambient:new Float32Array(ambient),
-   emergencyPosition:new Float32Array([door.x,door.y,door.z]),
-   emergencyPower:emergency};
+  const rig=lightRigs[whichMode]||lightRigs.outer;
+  const colors=new Float32Array(rig.colors);
+  for(let i=0;i<rig.count;i++)if(redMix[i]>.5){
+   const intensity=i<3?1.04:.83;
+   for(let c=0;c<3;c++)colors[i*3+c]=LIGHTING.redColor[c]*intensity;
+  }
+  return {state:valid,levels,redMix,colors,
+   redFixtureIndices:LIGHTING.redCeilingIndices,ambient:new Float32Array(ambient)};
  }
  const lightingGLSL=[
   'uniform vec3 uLampPositions[6];uniform vec3 uLampColors[6];',
   'uniform float uLampLevels[6];uniform vec3 uAmbient;',
-  'uniform vec3 uEmergencyPosition;uniform float uEmergencyPower;',
   'vec3 ringIrradiance(vec3 p,vec3 n){',
   'vec3 ambient=uAmbient;',
   'vec3 normal=normalize(n);',
@@ -381,10 +378,6 @@
   'float attenuation=1.0/(1.0+ds*.22);',
   'ambient+=uLampColors[i]*uLampLevels[i]*(cosine*1.25+.025)*attenuation;',
   '}',
-  'vec3 e=uEmergencyPosition-p;',
-  'float ed=max(dot(e,e),.01);',
-  'float ec=max(dot(normal,e*inversesqrt(ed)),0.0);',
-  'ambient+=vec3(.75,.10,.055)*uEmergencyPower*(ec+.09)/(1.0+.35*ed);',
   'return ambient;',
   '}',
   'vec3 ringTone(vec3 paint,vec3 irradiance){',
@@ -542,12 +535,12 @@
  ].join('\n');
  const fixtureFragment=[
   'precision mediump float;varying vec2 vUv;',
-  'uniform float uLevel;uniform float uEmergency;uniform float uGlow;',
+  'uniform float uLevel;uniform float uRedMix;uniform float uGlow;',
   'void main(){',
   'if(uGlow>.5){',
   'vec2 p=(vUv-vec2(.5))*vec2(2.4,1.7);',
   'float halo=exp(-dot(p,p)*5.8);',
-  'vec3 warm=mix(vec3(.90,.84,.70),vec3(.96,.15,.07),uEmergency);',
+  'vec3 warm=mix(vec3(.90,.84,.70),vec3(.98,.08,.045),uRedMix);',
   'gl_FragColor=vec4(warm,halo*clamp(uLevel,0.0,1.0)*.22);',
   'return;',
   '}',
@@ -556,7 +549,7 @@
   'vec3 dark=vec3(.10,.12,.14);',
   'vec3 lit=mix(vec3(.88,.91,.89),vec3(1.0,.95,.83),core);',
   'vec3 color=mix(dark,lit,clamp(uLevel,0.0,1.0));',
-  'if(uEmergency>.5)color=mix(vec3(.17,.025,.025),vec3(.95,.08,.035),uLevel);',
+  'color=mix(color,mix(vec3(.13,.035,.038),vec3(1.0,.055,.030),clamp(uLevel,0.0,1.0)),uRedMix);',
   'gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
  // Project each ORIGINAL L2D alpha silhouette from a real ceiling lamp
@@ -841,11 +834,11 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower','uViewEye']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uViewEye']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
-    ['uVP','uCenter','uSize','uLevel','uEmergency','uGlow']);
+    ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
     ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uClipUv','uTexture','uStrength','uContact']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner,wingOuter,wingInner]=worldMesh(gl);
@@ -937,7 +930,7 @@
   let lightState=LIGHT_STATES.includes(params.get('lights'))?params.get('lights'):'on';
   let currentLighting=lightingFrame(lightState,0,mode);
   const lightLabel=hud.querySelector('[data-lighting]');
-  const lightStateNames={on:'正常',partial:'部分熄灭',flicker:'故障闪烁',outage:'停电',horror:'恐怖演出'};
+  const lightStateNames={on:'正常',partial:'部分熄灭',flicker:'故障闪烁',outage:'应急红灯',horror:'恐怖演出'};
   let lightingStartedAt=performance.now()/1000;
   let lightingPhasePreview=null;
   function setLighting(state,previewPhase=null){
@@ -1293,11 +1286,9 @@
   function setSceneLighting(prog,whichMode){
    const rig=lightRigs[whichMode]||lightRigs.outer;
    gl.uniform3fv(prog['uLampPositions[0]'],rig.positions);
-   gl.uniform3fv(prog['uLampColors[0]'],rig.colors);
+   gl.uniform3fv(prog['uLampColors[0]'],currentLighting.colors);
    gl.uniform1fv(prog['uLampLevels[0]'],currentLighting.levels);
    gl.uniform3fv(prog.uAmbient,currentLighting.ambient);
-   gl.uniform3fv(prog.uEmergencyPosition,currentLighting.emergencyPosition);
-   gl.uniform1f(prog.uEmergencyPower,currentLighting.emergencyPower);
   }
   // Fix the selected real-world luminaire PER ACTOR at its immutable base
   // anchor. Power only modulates shadow intensity. It must NEVER switch the
@@ -1329,44 +1320,26 @@
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.enableVertexAttribArray(fixture.aUv);
    gl.vertexAttribPointer(fixture.aUv,2,gl.FLOAT,false,8,0);
-   gl.uniform1f(fixture.uEmergency,0);
    gl.uniform1f(fixture.uGlow,0);
    gl.uniform2f(fixture.uSize,.21,1.08);
    const rig=lightRigs[mode];
    for(let i=0;i<rig.count;i++){
     gl.uniform3fv(fixture.uCenter,rig.positions.subarray(i*3,i*3+3));
     gl.uniform1f(fixture.uLevel,currentLighting.levels[i]);
+    gl.uniform1f(fixture.uRedMix,currentLighting.redMix[i]);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
-   gl.uniform1f(fixture.uEmergency,1);
-   gl.uniform2f(fixture.uSize,.27,.20);
-   gl.uniform3fv(fixture.uCenter,currentLighting.emergencyPosition);
-   gl.uniform1f(fixture.uLevel,currentLighting.emergencyPower);
-   gl.drawArrays(gl.TRIANGLES,0,6);
-   // A separate additive falloff quad is tied to each LIVE fluorescent
-   // mesh. It switches off with the corresponding fixture — no fake
-   // permanent halos baked into ceiling textures or screen overlays.
-   gl.enable(gl.BLEND);
-   gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
-   gl.depthMask(false);
-   gl.uniform1f(fixture.uGlow,1);
-   gl.uniform1f(fixture.uEmergency,0);
+   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+   gl.depthMask(false);gl.uniform1f(fixture.uGlow,1);
    gl.uniform2f(fixture.uSize,.76,2.05);
    for(let i=0;i<rig.count;i++){
     if(currentLighting.levels[i]<.01)continue;
     gl.uniform3fv(fixture.uCenter,rig.positions.subarray(i*3,i*3+3));
     gl.uniform1f(fixture.uLevel,currentLighting.levels[i]);
+    gl.uniform1f(fixture.uRedMix,currentLighting.redMix[i]);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
-   if(currentLighting.emergencyPower>.01){
-    gl.uniform1f(fixture.uEmergency,1);
-    gl.uniform2f(fixture.uSize,.68,.82);
-    gl.uniform3fv(fixture.uCenter,currentLighting.emergencyPosition);
-    gl.uniform1f(fixture.uLevel,currentLighting.emergencyPower);
-    gl.drawArrays(gl.TRIANGLES,0,6);
-   }
-   gl.depthMask(true);
-   gl.disable(gl.BLEND);
+   gl.depthMask(true);gl.disable(gl.BLEND);
    gl.disableVertexAttribArray(fixture.aUv);
   }
   function drawProjectedShadows(actors,cam,vp){
@@ -1735,7 +1708,7 @@
     resetCombatPreview();lens=camera(mode,0);render(0)}
    else resetCombatPreview();
   }
-  const inspect=()=>({active,transitMode,environment:environmentId,encounter:'one-standard-wide-spaced-world',encounterControls:0,
+  const inspect=()=>({active,transitMode,environment:environmentId,encounter:'one-centered-grounded-opponents',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
     cameraLook:{mode:'stationary-world-eye',yawDeg:lens?.lookYawDeg||0,
      pitchDeg:lens?.lookPitchDeg||0,inputX:mouseLookX,inputY:mouseLookY,
@@ -1756,9 +1729,9 @@
        (mode==='outer'?ceilingOuter:ceilingInner)?.count,
       mapping:'curved-wall-arc-and-depth'}])),
     lighting:{kind:LIGHTING.kind,count:lightRigs[mode].count,
-     state:lightState,levels:[...currentLighting.levels],
-     ambient:[...currentLighting.ambient],
-     emergencyPower:currentLighting.emergencyPower,
+     state:lightState,levels:[...currentLighting.levels],redMix:[...currentLighting.redMix],
+     redFixtureIndices:[...currentLighting.redFixtureIndices],
+     ambient:[...currentLighting.ambient],noDetachedRedLight:true,
      physicallyGroundedShadows:projectedShadowDraws,
      silhouetteProjection:'original-L2D-alpha-ray-intersection-y0',
      contactShadow:'original-L2D-shoe-alpha-no-ellipse',
@@ -1769,7 +1742,7 @@
      switchableFixtures:true,
      fixtureHeight:LIGHTING.height,
      positions:[...lightRigs[mode].positions],
-     colors:[...lightRigs[mode].colors],
+     colors:[...currentLighting.colors],
      colorPipeline:'linear-sRGB-shading-filmic-compression',
      spriteNormal:'camera-facing-pseudonormal-preserves-artist-source'},
     wallMaterial:{url:ACTIVE_WALL.url,ready:wallMaterialReady,error:wallMaterialError,
