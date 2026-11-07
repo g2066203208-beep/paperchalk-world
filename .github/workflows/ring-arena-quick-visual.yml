@@ -1,0 +1,42 @@
+name: Fast 3D ring room screenshot proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/qa-ring-visual.mjs'
+      - '.github/workflows/ring-arena-quick-visual.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screenshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate the exact game L2D parts and catalog
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/fix_protagonist_neck_v4.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_character_catalog.py
+          python3 scripts/build_scene_catalog.py
+      - name: Install real Chromium renderer
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Screenshot actual outer/inner WebGL world at original user dimensions
+        run: node scripts/qa-ring-visual.mjs
+      - name: Publish visual verification images and runtime report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3d-ring-room-human-scale-visual
+          path: artifacts/ring-arena-quick/
+          retention-days: 7
+          if-no-files-found: warn
