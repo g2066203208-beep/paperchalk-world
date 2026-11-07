@@ -286,8 +286,10 @@ assert.match(gameHtml,/const cameraFrameDt=Math.min\(\.25,Math.max\(0,rawFrameDt
 assert.match(gameHtml,/ringScene\.render\(dt,currentX,currentY\)/,
  'only one shared 3D world-camera receives smoothed cursor direction');
 const bridgeSource=fs.readFileSync(path.resolve(__dirname,'../site/dev/character-bridge.js'),'utf8');
-assert.match(bridgeSource,/const visibleFirst=\['player','enemy','enemy2','enemy3','enemy4'/,
- 'all five visible 3D battle L2D must load before non-visible reserve allies');
+assert.match(bridgeSource,/const visibleFirst=\['player','enemy','ally4','enemy2','ally2','enemy3','ally3','enemy4'\]/,
+ 'all eight 4v4 roles must load with visible allies prioritized');
+assert.match(bridgeSource,/Promise\.all\(\[worker\(\),worker\(\)\]\)/,
+ 'bounded dual loading prevents last squadmate starvation while respecting RGBA budget');
 const hero=ring.layout('outer').allies[0],base=ring.camera('outer');
 for(const x of [-1,-.5,0,.5,1]){
  const shot=ring.shoulderCamera(base,hero,x,0,1917/906);
