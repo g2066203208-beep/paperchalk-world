@@ -46,12 +46,13 @@
   const wall=[];
   grid(wall,64,12,(u,v)=>[x(u),g.height*v,g.backZ,.001+u*.998,v]);
   out.backInner=wall;out.backOuter=wall.slice();
-  // Real left and right closing planes. Sample the wall's unadvertised
-  // border material, rather than cloning complete windows and seats.
+  // True perpendicular end walls looking into the NEXT carriage.
+  // The gangway texture is continuous from back to front and has its own
+  // color texture; never stretch the side-wall's first and last columns.
   const wings=[];
   for(const side of [-1,1])
    grid(wings,28,12,(u,v)=>[
-    side*g.width/2,g.height*v,z(u),side<0?.002:.998,v
+    side*g.width/2,g.height*v,z(u),side<0?u:1-u,v
    ]);
   out.wingOuter=wings;out.wingInner=wings.slice();
   return Object.freeze({geometry:g,meshes:out});
