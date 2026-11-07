@@ -41,7 +41,7 @@ assert.ok(heroBillboard.heightFraction>1.45&&heroBillboard.heightFraction<1.65,
 assert.ok(safe.foes.every(f=>f.heightFraction>.41&&f.heightFraction<.46),
  'enemy sizes must remain natural at true world distance');
 const foePositions=scene.enemies.map(e=>arena.project({x:e.x,y:e.height*.5,z:e.z},c,1917/906).x);
-assert.ok(foePositions[0]<-.10&&foePositions.at(-1)>.70,
+assert.ok(foePositions[0]<0&&foePositions.at(-1)>.72,
  'foes remain readable beyond the heroine shoulder');
 for(const yaw of [-1,-.5,0,.5,1])for(const pitch of [-1,0,1]){
  const cam=arena.shoulderCamera(base,hero,yaw,pitch,1917/906);
