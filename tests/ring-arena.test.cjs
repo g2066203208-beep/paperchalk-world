@@ -11,8 +11,8 @@ assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shoulder camera base, not sw
 const base=arena.camera('outer'),scene=arena.layout('outer'),hero=scene.allies[0];
 assert.deepEqual(arena.visibleActors('outer').map(a=>a.id),
  ['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
-assert.ok(scene.enemies.every(a=>a.y===0&&a.z===7.68));
-close(base.eye.y,1.5);close(base.eye.x,.2);close(base.eye.z,10.58);
+assert.ok(scene.enemies.every(a=>a.y===0&&a.z===7.15));
+close(base.eye.y,1.5);close(base.eye.x,-.05);close(base.eye.z,10.52);
 close(base.fov,66);
 assert.ok(arena.responsiveFov(66,9/16)>arena.responsiveFov(66,16/9));
 const initial=JSON.stringify(scene);
@@ -23,20 +23,20 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  assert.ok(safe.gap>.05);
  assert.ok(cam.shoulderRig&&cam.actorRootUnchanged);
  assert.equal(cam.lookYawDeg,0);
- assert.ok(cam.shoulderBoomMeters>=1.65&&cam.shoulderBoomMeters<=2.6);
+ assert.ok(cam.shoulderBoomMeters>=1.45&&cam.shoulderBoomMeters<=2.6);
  const visibleWidth=Math.max(0,Math.min(1,safe.hero.right)-Math.max(-1,safe.hero.left));
- assert.ok(visibleWidth>.15,'foreground heroine remains visibly large');
+ assert.ok(visibleWidth>.27,'foreground heroine remains visibly large');
  const heel=scene.enemies.map(a=>arena.project({x:a.x,y:0,z:a.z},cam,aspect));
  assert.ok(heel.every(p=>p.valid),'all 4 enemies grounded and in front of camera');
 }
 const c=arena.shoulderCamera(base,hero,0,0,1917/906);
 const safe=arena.battleVisualSafety('outer',0,1917/906,arena.FEMALE07_BACK_UV,c);
-assert.ok(safe.hero.left<-.93&&safe.hero.right<-.4&&safe.hero.right>-.55);
+assert.ok(safe.hero.left<-.98&&safe.hero.right<-.28&&safe.hero.right>-.42);
 assert.ok(safe.hero.top>.30&&safe.hero.top<.55);
 const heroBillboard=arena.portraitBounds(hero,c,1917/906);
-assert.ok(heroBillboard.heightFraction>.8&&heroBillboard.heightFraction<1.3,
+assert.ok(heroBillboard.heightFraction>1.05&&heroBillboard.heightFraction<1.45,
  'hero must have an immersive large close-up rather than a distant card');
-assert.ok(safe.foes.every(f=>f.heightFraction>.50&&f.heightFraction<.58),
+assert.ok(safe.foes.every(f=>f.heightFraction>.42&&f.heightFraction<.50),
  'enemy sizes must remain natural at true world distance');
 const foePositions=scene.enemies.map(e=>arena.project({x:e.x,y:e.height*.5,z:e.z},c,1917/906).x);
 assert.ok(foePositions[0]<-.2&&foePositions.at(-1)>.6,
@@ -47,7 +47,9 @@ for(const yaw of [-1,-.5,0,.5,1])for(const pitch of [-1,0,1]){
  const boom=Math.hypot(cam.eye.x-hero.x,cam.eye.z-hero.z);
  close(boom,arena.shoulderCamera(base,hero,0,0,1917/906).shoulderBoomMeters,1e-7);
  assert.ok(displacement<1.5);
- close(cam.heroYawDeg,cam.lookYawDeg*.85,1e-7);
+ close(cam.heroYawDeg,0,1e-7);
+ close(arena.project({x:hero.x,y:1,z:hero.z},cam,1917/906).x,
+  arena.project({x:hero.x,y:1,z:hero.z},c,1917/906).x,1e-7);
  assert.ok(Math.abs(cam.lookYawDeg)<=22.0001&&Math.abs(cam.lookPitchDeg)<=12.0001);
  const originalShadowRight=arena.actorWorldRight(hero,'outer',cam.heroYawDeg);
  assert.ok(Number.isFinite(originalShadowRight.x)&&Number.isFinite(originalShadowRight.z));
@@ -58,4 +60,4 @@ for(const yaw of [-1,-.5,0,.5,1])for(const pitch of [-1,0,1]){
 assert.equal(JSON.stringify(scene),initial,'third-person camera must NEVER move actors');
 const inner=arena.camera('inner');
 assert.equal(inner.fov,52,'legacy opposite-direction environment remains intact');
-console.log('PASS close hero-root TPS camera, ±22° body follow, unchanged enemy world, real silhouettes and landscape/portrait safety');
+console.log('PASS larger static heroine, distant foe rank, fixed world orientation and orbit-only mouse look');
