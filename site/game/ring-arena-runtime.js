@@ -813,9 +813,15 @@
   let currentLighting=lightingFrame(lightState,0,mode);
   const lightLabel=hud.querySelector('[data-lighting]');
   const lightStateNames={on:'正常',partial:'部分熄灭',flicker:'故障闪烁',outage:'停电'};
-  function setLighting(state){
+  let lightingStartedAt=performance.now()/1000;
+  let lightingPhasePreview=null;
+  function setLighting(state,previewPhase=null){
    lightState=LIGHT_STATES.includes(state)?state:'on';
-   currentLighting=lightingFrame(lightState,elapsed,mode);
+   lightingStartedAt=performance.now()/1000;
+   // A fixed phase is used only for deterministic horror beat screenshots;
+   // ordinary player light failures use independent true wall-clock time.
+   lightingPhasePreview=Number.isFinite(previewPhase)?previewPhase:null;
+   currentLighting=lightingFrame(lightState,lightingPhasePreview??0,mode);
    lightLabel.textContent='灯光：'+lightStateNames[lightState];
    lightLabel.setAttribute('aria-label','灯光状态 '+lightStateNames[lightState]+',点击切换');
    if(active)render(0);
@@ -1351,7 +1357,8 @@
    const target=attack?actorForTarget(attack.targetId):null;
    lens=target?director.cinematicCamera(base,attack,attackSample,target):base;
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
-   currentLighting=lightingFrame(lightState,elapsed,mode);
+   currentLighting=lightingFrame(lightState,
+    lightingPhasePreview??(performance.now()/1000-lightingStartedAt),mode);
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
    if(w<2||h<2)return false;
