@@ -37,7 +37,8 @@ try{
  await page.waitForTimeout(650);
  const outer=await inspect();
  assert.equal(outer.wallMaterial.kind,'curved-webgl-wall');
- assert.equal(outer.wallMaterial.repeats,3);
+ assert.equal(outer.wallMaterial.repeats,7);
+ assert.equal(outer.wallMaterial.heightMeters,4.15);
  assert.deepEqual(outer.wallMaterial.sourceSize,[2172,724]);
  assert.equal(await page.locator('#ring-arena-canvas').getAttribute('data-wall-texture'),'ready');
  assert.equal(outer.mode,'outer');assert.equal(outer.shotIndex,0);
