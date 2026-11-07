@@ -16,6 +16,7 @@ on:
       - 'site/assets/locations/**'
       - 'tests/overworld-intro-browser.mjs'
       - 'tests/overworld-mobile-browser.mjs'
+      - 'tests/transit-map-browser.mjs'
       - '.github/workflows/overworld-screenshots.yml'
   workflow_dispatch:
 permissions:
@@ -50,6 +51,8 @@ jobs:
           exit 1
       - name: Verify daytime state rules
         run: node --test tests/daily-life.test.cjs tests/metro-graph.test.cjs tests/phone-life.test.cjs
+      - name: Capture photographic transit map, local menus, rail directions and carriage first
+        run: node tests/transit-map-browser.mjs
       - name: Actually play and screenshot main game
         run: node tests/overworld-intro-browser.mjs
       - name: Validate landscape phone UX and capture mobile screens
