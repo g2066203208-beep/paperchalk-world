@@ -156,11 +156,11 @@
  transition:filter .15s ease,transform .15s ease;
 }
 #novel-ui #pw-world-surface .pw-transit-place[data-photograph=true]{
- transform:translate(-50%,-100%);
+ transform:translate(-50%,-50%);
 }
 #novel-ui #pw-world-surface .pw-transit-place[data-photograph=true]:hover,
 #novel-ui #pw-world-surface .pw-transit-place[data-photograph=true][data-selected=true]{
- transform:translate(-50%,-100%) scale(1.045);
+ transform:translate(-50%,-50%) scale(1.045);
  filter:drop-shadow(0 3px 8px #091013b6);
 }
 #pw-world-surface .pw-transit-place .pw-transit-photo{
@@ -311,4 +311,40 @@
  #pw-world-surface .pw-transit-rail,
  #novel-ui #pw-world-surface .pw-transit-place,
  #pw-world-surface .pw-transit-photo img{transition:none!important}
+}
+
+/* DOT-MATRIX V6: one mathematically uniform square grid owns every asset. */
+#pw-world-surface .pw-transit-dot-matrix,
+#pw-world-surface .pw-transit-photo-leaders{
+ pointer-events:none!important;
+}
+#pw-world-surface .pw-transit-grid-dot{
+ fill:#a0afba55;
+ stroke:none;
+ pointer-events:none!important;
+}
+#pw-world-surface .pw-transit-photo-leader{
+ fill:none;
+ stroke:#b8c7cacc;
+ stroke-width:1.55px;
+ stroke-linecap:round;
+ vector-effect:non-scaling-stroke;
+ opacity:.84;
+ pointer-events:none!important;
+}
+#pw-world-surface .pw-transit-map[data-grid]{
+ --metro-grid-color:#9ca9b524;
+}
+#pw-world-surface .pw-transit-map[data-grid] .pw-transit-line-key{
+ box-shadow:0 1px 4px #050f1850;
+}
+#pw-world-surface .pw-transit-place[data-photograph=true]{
+ transform-origin:50% 50%;
+}
+#pw-world-surface .pw-transit-place[data-photograph=true] .pw-transit-photo-link{
+ display:none!important;
+}
+@container (max-height:430px){
+ #pw-world-surface .pw-transit-grid-dot{opacity:.53}
+ #pw-world-surface .pw-transit-photo-leader{stroke-width:1.2px}
 }
