@@ -1,5 +1,8 @@
 # NPC-G001 三人组｜Anima 最简整组换动作工作流 V3（2026-11-08）
 
+> **2026-11-08 更新：本文的 txt2img + ImageStitch 参考模式已被用户的最新实图否定（只继承旧动作，且三人不完全符合要求）。当前应优先采用已批准「喜悦」母图在 img2img 改整身姿态、保持原有左中右脚底位置的 [V4完整方案](NPC-G001_ANIMA_IMG2IMG_SURPRISE_V4.md)。本文仅留作技术试验历史，不再当成最新操作指令。**
+
+
 > **当前优先方案：txt2img + ImageStitch Integrated + anima-reference-forge-neo 已记录的 pilot Ref Adapter。** 这是设计/操作指导，没有远程操控用户本地 Forge 或验证实际成图。旧版「直接将喜悦图放入普通 img2img、不断拉高去噪」以及「默认要 OpenPose + IP-Adapter + 分区提示」不再推荐为第一方案。
 
 ## 为什么
