@@ -1,0 +1,123 @@
+/* Metro carriage. All depth geometry is projected every frame by metro-cabin.js.
+   UI is only a small line board, destination info, overheard speech and verbs. */
+#novel-ui>#pw-metro-cabin[hidden]{display:none!important}
+#novel-ui>#pw-metro-cabin{
+ position:absolute;inset:0;z-index:20!important;
+ overflow:hidden;isolation:isolate;
+ font-family:"PaperSans","Noto Sans CJK SC",sans-serif!important;
+ color:#edf1ec;pointer-events:auto;
+ background:#18252a;
+}
+#pw-metro-cabin .pw-cabin-canvas{
+ display:block;width:100%;height:100%;
+ position:absolute;inset:0;
+}
+#pw-metro-cabin .pw-cabin-top{
+ position:absolute;top:5.5%;left:5%;right:5%;
+ display:flex;justify-content:space-between;align-items:center;gap:14px;
+ font:500 clamp(12px,2cqh,17px)/1.25 "PaperSans",sans-serif;
+ letter-spacing:.06em;text-shadow:0 2px 7px #000c;
+ pointer-events:none;
+}
+#pw-metro-cabin .pw-cabin-line{
+ border-left:4px solid #92bbc7;
+ padding:6px 11px;background:#142327ad;
+}
+#pw-metro-cabin .pw-cabin-clock{
+ opacity:.84;letter-spacing:.07em;
+}
+#pw-metro-cabin .pw-cabin-station{
+ position:absolute;top:17%;left:50%;transform:translateX(-50%);
+ padding:6px 16px;display:flex;gap:3px;
+ flex-direction:column;align-items:center;
+ color:#f2f2e8;background:#142428df;
+ border:1px solid #91a4a588;border-radius:1px;
+ pointer-events:none;max-width:65%;
+ text-shadow:0 2px 5px #000a;
+}
+#pw-metro-cabin .pw-cabin-station small{
+ color:#a7c0c0;font-size:clamp(9px,1.35cqh,12px);
+ letter-spacing:.1em;
+}
+#pw-metro-cabin .pw-cabin-station strong{
+ font-size:clamp(15px,2.85cqh,24px);font-weight:500;
+ letter-spacing:.07em;white-space:nowrap;
+}
+#pw-metro-cabin .pw-cabin-speech{
+ position:absolute;bottom:11%;left:8%;right:38%;
+ display:flex;flex-direction:column;gap:6px;
+ padding:12px 12px 10px 0;
+ text-shadow:0 2px 8px #000,0 0 18px #001015;
+ pointer-events:none;
+}
+#pw-metro-cabin .pw-cabin-speech::before{
+ content:"";position:absolute;top:0;left:0;right:7%;
+ border-top:1px solid #d6e6db88;opacity:.7;
+}
+#pw-metro-cabin .pw-cabin-person{
+ font-size:clamp(12px,2cqh,17px);color:#bad1d2;
+ letter-spacing:.08em;
+}
+#pw-metro-cabin .pw-cabin-words{
+ margin:0;font:400 clamp(14px,2.5cqh,22px)/1.5 "PaperSans",sans-serif;
+ color:#fff;min-height:2.7em;
+}
+#pw-metro-cabin .pw-cabin-actions{
+ position:absolute;bottom:7%;right:6%;
+ width:min(32%,275px);
+ max-height:48%;overflow:auto;
+ display:flex;flex-direction:column;align-items:stretch;gap:5px;
+ scrollbar-width:thin;
+}
+#novel-ui #pw-metro-cabin .pw-cabin-actions button{
+ display:block;flex:none;
+ min-height:37px;padding:7px 12px!important;
+ color:#f6f4ef!important;
+ font:500 clamp(11px,1.85cqh,15px)/1.3 "PaperSans",sans-serif!important;
+ text-align:left!important;letter-spacing:.025em;
+ border:1px solid #a6bcc054!important;
+ background:#1b2d35d9!important;
+ border-radius:2px!important;
+ text-shadow:0 1px 4px #000c;
+ cursor:pointer;pointer-events:auto;
+}
+#novel-ui #pw-metro-cabin .pw-cabin-actions button:hover{
+ background:#435b63ec!important;border-color:#cfdbd1a6!important;
+}
+#pw-metro-cabin .pw-cabin-connection{
+ display:flex;flex-direction:column;gap:6px;
+}
+#pw-metro-cabin .pw-cabin-anomaly[hidden]{display:none!important}
+#pw-metro-cabin .pw-cabin-anomaly{
+ position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);
+ pointer-events:none;
+ display:flex;flex-direction:column;align-items:center;gap:10px;
+ color:#f3eeee;text-align:center;
+ text-shadow:0 1px 9px #c25a62,0 0 20px #000;
+}
+#pw-metro-cabin .pw-cabin-anomaly strong{
+ font:500 clamp(30px,6cqh,62px)/1.1 "PaperSerif",serif;
+ letter-spacing:.18em;
+}
+#pw-metro-cabin .pw-cabin-anomaly p{
+ margin:0;font-size:clamp(12px,2.2cqh,19px);
+ letter-spacing:.05em;
+}
+#pw-metro-cabin[data-night="true"] .pw-cabin-canvas{filter:saturate(.55)}
+#pw-metro-cabin[data-night="true"] .pw-cabin-station{
+ border-color:#a65263;color:#ffcfda;
+}
+@container (max-height:500px){
+ #pw-metro-cabin .pw-cabin-top{top:3%;left:4%;right:4%}
+ #pw-metro-cabin .pw-cabin-station{top:10%;padding:4px 9px}
+ #pw-metro-cabin .pw-cabin-speech{bottom:5%;left:5%;right:42%;padding-top:8px}
+ #pw-metro-cabin .pw-cabin-words{font-size:clamp(12px,3cqh,15px);min-height:1.5em}
+ #pw-metro-cabin .pw-cabin-actions{bottom:4%;right:4%;width:35%;max-height:60%;gap:3px}
+ #novel-ui #pw-metro-cabin .pw-cabin-actions button{
+  min-height:30px;padding:5px 8px!important;font-size:10px!important;
+ }
+ #pw-metro-cabin .pw-cabin-person{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ #pw-metro-cabin *{transition:none!important}
+}
