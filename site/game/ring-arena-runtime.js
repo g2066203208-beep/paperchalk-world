@@ -411,6 +411,25 @@
  const lightingGLSL=[
   'uniform vec3 uLampPositions[6];uniform vec3 uLampColors[6];',
   'uniform float uLampLevels[6];uniform vec3 uAmbient;',
+  // Lights physically located outside the glass are distinct from ceiling
+  // lights. The same lamps illuminate floor vertices AND original L2D
+  // raster surfaces. Zero strength leaves every battle shader unchanged.
+  'uniform vec3 uPlatformPositions[4];uniform vec3 uPlatformColors[4];',
+  'uniform float uPlatformExposure;uniform float uPlatformBackZ;',
+  'float platformWindowTransmission(vec3 p,vec3 src,int side){',
+  'float windowZ=side==3?uPlatformBackZ+3.85:uPlatformBackZ;',
+  'float dz=src.z-p.z;',
+  'float t=(windowZ-p.z)/(abs(dz)<.001?.001:dz);',
+  'if(t<=0.0||t>=1.0)return 0.0;',
+  'vec3 q=mix(p,src,t);',
+  'float vertical=smoothstep(.67,1.04,q.y)*(1.0-smoothstep(2.23,2.54,q.y));',
+  'if(side==3)return vertical*smoothstep(-3.9,-3.5,q.x)*(1.0-smoothstep(3.4,3.86,q.x));',
+  // Source image authentic window groups: left two door glasses and a
+  // continuous central side-window. The intervening metal blocks light.
+  'float door=smoothstep(-3.78,-3.50,q.x)*(1.0-smoothstep(-1.72,-1.47,q.x));',
+  'float bench=smoothstep(-.30,-.07,q.x)*(1.0-smoothstep(3.10,3.34,q.x));',
+  'return vertical*max(door,bench);',
+  '}',
   'vec3 ringIrradiance(vec3 p,vec3 n){',
   'vec3 ambient=uAmbient;',
   'vec3 normal=normalize(n);',
@@ -420,6 +439,19 @@
   'float cosine=max(dot(normal,d*inversesqrt(ds)),0.0);',
   'float attenuation=1.0/(1.0+ds*.22);',
   'ambient+=uLampColors[i]*uLampLevels[i]*(cosine*1.25+.025)*attenuation;',
+  '}',
+  'if(uPlatformExposure>.001){',
+  'for(int i=0;i<4;i++){',
+  'vec3 d=uPlatformPositions[i]-p;',
+  'float ds=max(dot(d,d),.01);',
+  'float through=platformWindowTransmission(p,uPlatformPositions[i],i);',
+  'float cosine=max(dot(normal,d*inversesqrt(ds)),0.0);',
+  'float areaFalloff=1.0/(1.0+ds*.24);',
+  // Floor gets direct window light; neutral diffuse fill makes a subtle
+  // rim on original illustrated L2D even when its flat normal faces away.
+  'ambient+=uPlatformColors[i]*uPlatformExposure*through*',
+  '(cosine*1.6+.10)*areaFalloff;',
+  '}',
   '}',
   'return ambient;',
   '}',
@@ -478,6 +510,7 @@
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;uniform sampler2D uWingTexture;uniform float uWingReady;',
   'uniform float uFloorReady;uniform float uCeilingReady;uniform float uWindowCutouts;',
+  'uniform float uPlatformExposure;',
   worldColorGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
@@ -490,6 +523,19 @@
   'float blur=sin(vWallUv.x*21.0-uTime*.47)*.035;',
   'vec3 outside=vec3(.27,.35,.39)+vec3(blur);',
   'outside+=vec3(.30,.24,.17)*lightStrip;',
+  // The platform is BEHIND the real alpha window apertures at 3D z=7.84:
+  // lit wall tiles, pillar shadows and fluorescent strips, not a screen tint.
+  'float tile=1.0-smoothstep(.0,.015,abs(fract(vWallUv.y*9.0)-.5));',
+  'float pillar=1.0-smoothstep(.024,.065,abs(fract(vWallUv.x*5.0)-.15));',
+  'float tube=smoothstep(.70,.73,vWallUv.y)*(1.0-smoothstep(.79,.83,vWallUv.y));',
+  'float headTrim=smoothstep(.89,.93,vWallUv.y);',
+  'vec3 station=vec3(.36,.43,.43)+vec3(.16,.16,.13)*tube;',
+  'station+=vec3(.20,.22,.21)*tube*(1.0-pillar);',
+  'station-=vec3(.11,.11,.10)*pillar;',
+  'station-=vec3(.025,.029,.029)*tile;',
+  'station-=vec3(.085,.088,.09)*headTrim;',
+  'station+=vec3(.035,.031,.019)*sin(vWallUv.x*24.0)*tube;',
+  'outside=mix(outside,station,clamp(uPlatformExposure,0.0,1.0));',
   'gl_FragColor=vec4(outside,1.0);return;',
   '}',
   'if(uSurface==0){',
@@ -933,9 +979,9 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uViewEye','uGeometry','uWindowCutouts']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uViewEye','uGeometry','uWindowCutouts']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
     ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
@@ -1024,6 +1070,14 @@
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
+  let platformExposure=0;
+  const DARK_PLATFORM_POSITIONS=new Float32Array(12);
+  const DARK_PLATFORM_COLORS=new Float32Array(12);
+  function setPlatformExposure(value){
+   platformExposure=clamp(Number(value)||0,0,1);
+   if(active&&transitMode)render(0);
+   return platformExposure;
+  }
   let transitHeroSource=null,transitHeroAssignment=null;
   async function ensureTransitHero(){
    // The battle preview defaults to female-07. A metro ride MUST instead
@@ -1421,6 +1475,11 @@
    gl.uniform3fv(prog['uLampColors[0]'],currentLighting.colors);
    gl.uniform1fv(prog['uLampLevels[0]'],currentLighting.levels);
    gl.uniform3fv(prog.uAmbient,currentLighting.ambient);
+   const lights=transitMode?window.PaperWorldEnvironments?.get?.('metro')?.platformLighting:null;
+   gl.uniform3fv(prog['uPlatformPositions[0]'],lights?.positions||DARK_PLATFORM_POSITIONS);
+   gl.uniform3fv(prog['uPlatformColors[0]'],lights?.colors||DARK_PLATFORM_COLORS);
+   gl.uniform1f(prog.uPlatformExposure,transitMode?platformExposure:0);
+   gl.uniform1f(prog.uPlatformBackZ,lights?.backZ??8.0);
   }
   // Fix the selected real-world luminaire PER ACTOR at its immutable base
   // anchor. Power only modulates shadow intensity. It must NEVER switch the
@@ -1847,6 +1906,7 @@
    const carriage=document.getElementById('pw-metro-cabin');
    if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
+   platformExposure=1; // arriving at an actual subway platform
    // The renderer uploads from the real L2D source canvas, which normally
    // lives in a hidden battle-source DOM root. Unpause it while keeping the
    // DOM node optically invisible: one 3D actor, never a second flat actor.
@@ -1871,7 +1931,7 @@
   }
   function exitTransit(){
    if(!transitMode)return false;
-   transitMode=false;active=false;
+   transitMode=false;active=false;platformExposure=0;
    if(transitHeroSource){
     transitHeroSource.root.hidden=transitHeroSource.hidden;
     transitHeroSource.root.style.visibility=transitHeroSource.visibility;
@@ -1917,6 +1977,11 @@
      Math.abs(lens.fov-actual.fov)<.00001;
    })(),
    environment:environmentId,geometry:{...ACTIVE_GEOMETRY},
+   platformLighting:{active:transitMode,exposure:platformExposure,
+    sources:transitMode?(window.PaperWorldEnvironments?.get?.('metro')?.platformLighting?.positions.length||0)/3:0,
+    rearSideWindows:true,oppositeSideWindows:true,
+    affects:['floor','wall','original-l2d','real-alpha-shadows'],
+    kind:'world-space-lamps-filtered-by-actual-window-bands'},
    windowOpenings:{alpha:!!ACTIVE_WALL.alphaWindows,exteriorMeshVertices:exteriorMesh?.count||0},
    connectionMaterial:{url:surfaceMaterials.wing.url,ready:surfaceMaterials.wing.ready,
     error:surfaceMaterials.wing.error},
@@ -2048,7 +2113,7 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,enterTransit,exitTransit,render,inspect,setLighting,get canvas(){return canvas}};
+  const api={setActive,enterTransit,exitTransit,render,inspect,setLighting,setPlatformExposure,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
