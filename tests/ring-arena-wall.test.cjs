@@ -22,6 +22,14 @@ for(const y of [0,ring.WALL_TEXTURE.heightMeters/2,ring.WALL_TEXTURE.heightMeter
  assert.ok(Math.abs(uv.u-.5)<1e-7);
  assert.ok(Math.abs(uv.v-y/ring.WALL_TEXTURE.heightMeters)<1e-7);
 }
+// Opposite camera direction must reverse physical UV orientation but never
+// mirror letters on the convenience-store signs.
+assert.ok(ring.wallTextureUV(-.25,1,'outer').u<
+ ring.wallTextureUV(.25,1,'outer').u);
+assert.ok(ring.wallTextureUV(.25,1,'inner').u<
+ ring.wallTextureUV(-.25,1,'inner').u);
+assert.match(fs.readFileSync(path.resolve(__dirname,'../site/game/ring-arena-runtime.js'),'utf8'),
+ /face==='outer'\?'inner':'outer'/,'reverse side must receive the correct text orientation');
 for(const x of [-31.25,-17,0,17,31.25]){
  const uv=ring.wallTextureUV(x,2);
  assert.ok(uv.u>=0&&uv.u<1);
