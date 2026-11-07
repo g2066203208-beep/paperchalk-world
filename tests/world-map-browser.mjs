@@ -38,7 +38,8 @@ try{
    rumors:atlas.SITES.length,links:atlas.LINKS.length,
    cityMarkers:document.querySelectorAll('.pw-dot-city').length,
    poiMarkers:document.querySelectorAll('.pw-dot-poi').length,
-   metroTracks:document.querySelectorAll('.pw-dot-planned-line').length,
+   municipalTracks:document.querySelectorAll('.pw-dot-municipal-lines .pw-transit-segment').length,
+   localTransitCities:new Set(atlas.LOCAL_TRANSIT_LINES.map(l=>l.city).concat('kirihama')).size,
    regionalSegments:document.querySelectorAll('.pw-dot-regional-lines .pw-transit-segment').length};
  });
  assert.equal(overview.cities,10);
@@ -47,7 +48,8 @@ try{
  assert.equal(overview.links,14);
  assert.equal(overview.cityMarkers,10);
  assert.ok(overview.poiMarkers>=100);
- assert.equal(overview.metroTracks,9);
+ assert.equal(overview.municipalTracks,11);
+ assert.equal(overview.localTransitCities,10);
  assert.ok(overview.regionalSegments>=14);
  await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='region');
@@ -80,11 +82,12 @@ try{
  await shot('29-dot-world-mobile-city-menu.png');
  // Test wheel zoom without re-clicking the overview command beneath a
  // still-open mobile popup. The overview button was already exercised above.
- const start=await page.locator('.pw-dot-world-canvas').getAttribute('style');
+ const start=await page.locator('.pw-dot-rail-canvas').getAttribute('viewBox');
  await page.mouse.wheel(0,-520);
  await page.waitForTimeout(120);
- const after=await page.locator('.pw-dot-world-canvas').getAttribute('style');
- assert.notEqual(start,after,'wheel zoom must change the same dot-canvas');
+ const after=await page.locator('.pw-dot-rail-canvas').getAttribute('viewBox');
+ assert.notEqual(start,after,'wheel zoom must update the SVG viewport without scaling a bitmap');
+ assert.equal(await page.locator('.pw-dot-world-canvas').evaluate(e=>getComputedStyle(e).transform),'none');
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location),'entrance');
  assert.deepEqual(errors.filter(x=>/ReferenceError|TypeError|SyntaxError/.test(x)),[]);
  console.log('ONE DOT WORLD QA PASS',JSON.stringify({overview,chosen,errors}));
