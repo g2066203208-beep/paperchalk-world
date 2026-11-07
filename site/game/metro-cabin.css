@@ -91,7 +91,7 @@
  #pw-metro-cabin .pw-cabin-top{top:3%;left:4%;right:4%}
  #pw-metro-cabin .pw-cabin-station{top:10%;padding:4px 9px}
    #pw-metro-cabin .pw-cabin-actions{
-    bottom:4%;right:3.6%;width:clamp(160px,26%,280px);
+    bottom:4%;right:3.6%;width:clamp(150px,20%,250px);
     max-height:52%;gap:4px}
  #novel-ui #pw-metro-cabin .pw-cabin-actions button{
   min-height:30px;padding:5px 8px!important;font-size:10px!important;
@@ -132,7 +132,7 @@
    Keep controls readable but stop them blotting out the real 3D floor. */
 @media(min-aspect-ratio:2/1){
  #pw-metro-cabin .pw-cabin-actions{
-  width:min(26%,280px)!important;
+  width:clamp(150px,20%,250px)!important;
   max-height:47%!important;
   right:3.5%!important;
   bottom:4%!important;
