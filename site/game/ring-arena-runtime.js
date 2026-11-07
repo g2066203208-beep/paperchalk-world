@@ -964,6 +964,22 @@
   // silhouette of the fixed-left, New-Moon-style shoulder-close camera.
   // Old protagonist L2D is preserved behind heroPose=original, and legacy
   // 3q/level camera studies stay available but never replace the new lead.
+  // If an IndexedDB model is slow, missing, or temporarily reassigning,
+  // always show the REAL protagonist's original back-facing asset instead
+  // of leaving a disturbing empty subway. This is a temporary SOURCE fallback
+  // on the very same 3D actor, never a CSS billboard or invented character.
+  const metroCanonicalBack=new Image();
+  metroCanonicalBack.decoding='async';
+  metroCanonicalBack.src='./assets/characters/protagonist-back.webp';
+  const metroCanonicalSource=()=>metroCanonicalBack.complete&&metroCanonicalBack.naturalWidth>0?{
+   runtime:{
+    img:{dataset:{characterId:'protagonist',characterSide:'back'}},
+    root:{dataset:{l2dEdition:'metro-canonical-original-back',
+     l2dMode:'original-source-fallback-waiting-for-live-l2d'}}
+   },
+   source:metroCanonicalBack,w:metroCanonicalBack.naturalWidth,
+   h:metroCanonicalBack.naturalHeight
+  }:null;
   const requestedPose=new URLSearchParams(window.location.search).get('heroPose');
   const previewPose=['original','3q','level'].includes(requestedPose)
    ?requestedPose:'female7';
@@ -1270,6 +1286,7 @@
    if(b.hasAttribute('data-exit')&&!attack&&typeof onExit==='function')onExit();
   });
   function sourceFor(actor){
+   const safeHero=()=>actor.id==='hero'&&transitMode?metroCanonicalSource():null;
    if(actor.id==='hero'&&posePreviewEnabled&&!transitMode){
     if(!poseImage.complete||!poseImage.naturalWidth)return null;
     return {
@@ -1282,29 +1299,29 @@
    }
    const runtime=window.PaperchalkL2D?.get(actor.slot);
    if(!runtime||runtime.root.hidden||runtime.img.hidden||
-     runtime.root.dataset.l2dState!=='ready')return null;
+     runtime.root.dataset.l2dState!=='ready')return safeHero();
    // An IndexedDB scene assignment can outlive a previous DEV session.
    // A back-view battle must NEVER render another character or the front
    // portrait as the heroine while the canonical model is being reattached.
    if(actor.id==='hero'){
     if(runtime.img.dataset.characterId!=='protagonist'||
-       runtime.img.dataset.characterSide!=='back')return null;
+       runtime.img.dataset.characterSide!=='back')return safeHero();
     // "ready" on a DOM image can occur BEFORE the latest genuine
     // 2D L2D frame arrives. Do not upload the previous character's pixels.
-    if(runtime.clip?.type==='decoder'&&runtime.clip.frame<0)return null;
+    if(runtime.clip?.type==='decoder'&&runtime.clip.frame<0)return safeHero();
     if(runtime.libraryPlayer&&(
       runtime.libraryPlayer.disposed||
       runtime.libraryPlayer.renderedFrames<1||
       !['protagonist','protagonist-rig-v1','protagonist-unified-v1']
-       .includes(runtime.libraryPlayer.model?.characterId)))return null;
+       .includes(runtime.libraryPlayer.model?.characterId)))return safeHero();
     if(!runtime.clip&&!runtime.libraryPlayer&&
-       runtime.lastSource!==(runtime.img.currentSrc||runtime.img.src))return null;
+       runtime.lastSource!==(runtime.img.currentSrc||runtime.img.src))return safeHero();
    }
    const source=runtime.clip?.type==='native'?runtime.clip.img:runtime.canvas;
-   if(!source)return null;
+   if(!source)return safeHero();
    const w=source.videoWidth||source.naturalWidth||source.width;
    const h=source.videoHeight||source.naturalHeight||source.height;
-   if(!w||!h)return null;
+   if(!w||!h)return safeHero();
    return {runtime,source,w,h};
   }
   // Throttle pixel uploads, preserving the original 30 fps source animation.
