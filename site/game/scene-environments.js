@@ -19,7 +19,7 @@
   }),
   metro:Object.freeze({
    id:'metro',name:'地铁车厢 · 长条形场景',
-   geometry:Object.freeze({shape:'strip',widthMeters:8.6,depthMeters:3.85,
+   geometry:Object.freeze({shape:'strip',widthMeters:7.0,depthMeters:3.85,
     heightMeters:2.85,backZ:8.0}),
    // Per-scene staging is data, not a separate game-mode rendering path.
    camera:Object.freeze({
