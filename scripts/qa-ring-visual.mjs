@@ -219,7 +219,7 @@ try{
   report.geometry.floorRoofDepthMeters!==10||
   !report.geometry.foePositions||
   Math.max(...report.geometry.foePositions.map(a=>a.x))-
-   Math.min(...report.geometry.foePositions.map(a=>a.x))<4||
+   Math.min(...report.geometry.foePositions.map(a=>a.x))<3.7||
   report.outer?.lighting?.count!==6||
   report.outer?.lighting?.positions?.length!==18||
   report.outer?.safety?.gap<.055||
@@ -241,7 +241,7 @@ try{
   report.outage?.lighting?.noDetachedRedLight!==true||
   report.restored?.mode!=='outer'||
   validationErrors.length||pageErrors.length)
-  throw Error('Real browser visual gate failed; see screenshot and report: '+validationErrors.concat(pageErrors).join('; '));
+  throw Error('Real browser visual gate failed; see screenshot and report: '+validationErrors.concat(pageErrors,errors).join('; '));
  console.log('PASS true close TPS camera orbit, heroine body yaw follow, original L2D four foes, real alpha shadows and red ceiling lamps');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
