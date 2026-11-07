@@ -1,8 +1,8 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "date": "2026-11-07",
   "purpose": "Reusable actors + base behaviors. Content semantics and scene-to-pose mappings are canonical in event-content-taxonomy.v2.json. Message/event content selects response first; persona affects only micro-performance.",
-  "status": "design_candidate_rejected_images_pending_redraw",
+  "status": "NPC-G001 joy mother reference approved; only metadata in GitHub, original PNG remains conversation attachment; surprise next",
   "referenceRules": {
     "canonicalStyle": "docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md",
     "canonicalUniformReference": "site/assets/characters/protagonist-front.webp",
@@ -17,7 +17,7 @@
     {
       "id": "NPC-G001",
       "name": "同校三人女同学固定群演组",
-      "status": "unapproved_redraw_required",
+      "status": "joy_visual_reference_user_approved",
       "members": [
         "NPC-G001-A",
         "NPC-G001-B",
@@ -98,10 +98,16 @@
         }
       ],
       "artReview": {
-        "latestResult": "REJECTED: three similar heroine-like youthful faces; body/face/eye proportions too similar and overly polished, not enough ordinary bystander character; uniform and poses need independent audit.",
-        "requestedNext": "Stronger face and body contrast visible at thumbnail size, natural candid gesture, light NPC face detail with readable eyes. No facial erasure.",
-        "imageApproved": false,
-        "assetsCreated": false
+        "latestResult": "2026-11-07: user approved new full-trio friendly laughing image as JOY master reference. Prior images failed; user-approved newest is authoritative.",
+        "requestedNext": "Surprise emotion using the SAME 3 actors and the approved joy reference; prioritize img2img with subtle inpaint and margin padding.",
+        "imageApproved": true,
+        "assetsCreated": false,
+        "imageApprovedScope": "joy group reference only; not every expression, not final transparent game-ready sprite",
+        "imageBinaryCommittedToGitHub": false,
+        "imageSource": "User uploaded 1024x1024 RGB PNG in conversation; GitHub stores sha256 only until actual binary upload",
+        "imageSha256": "c3afb8ac08173c4cb20178ff3088b33592d3f13bb40a66ba52fab06a50b2e53d",
+        "artRecord": "docs/characters/NPC-G001_JOY_APPROVED_20261107.json",
+        "nextPrompt": "docs/NPC-G001_ANIMA_SURPRISE_V1.md"
       },
       "identityPolicy": "A/B/C remain the same three recurring people across all poses, outfits and scenes. Proposal dimensions and faces become LOCKED only after user approves a specific mother image."
     }
