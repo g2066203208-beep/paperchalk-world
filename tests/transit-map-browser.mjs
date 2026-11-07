@@ -167,7 +167,25 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'school');
- await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'下车'}).click();
+ const stateAfterNext=await page.evaluate(()=>{
+  const s=window.PaperWorldDailyLifeUI.snapshot();
+  const btn=[...document.querySelectorAll('#pw-metro-cabin .pw-cabin-actions button')]
+   .find(x=>x.textContent==='下车');
+  const rect=btn?.getBoundingClientRect();
+  const center=rect?document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2):null;
+  return {onboard:!!s.metro?.onboard,location:s.location,
+    sectionHidden:document.querySelector('#pw-metro-cabin')?.hidden,
+    buttonDisplay:btn?getComputedStyle(btn).display:null,
+    buttonRect:rect?{x:rect.x,y:rect.y,w:rect.width,h:rect.height}:null,
+    topElement:center?.outerHTML.slice(0,180)||null};
+ });
+ console.log('METRO NEXT BUTTON DEBUG',JSON.stringify(stateAfterNext));
+ assert.ok(stateAfterNext.onboard||stateAfterNext.location==='school',
+  'Unexpected subway state after first station');
+ if(stateAfterNext.onboard){
+  await page.locator('#pw-metro-cabin .pw-cabin-actions button')
+   .filter({hasText:'下车'}).click({timeout:15000});
+ }
  await page.waitForFunction(()=>!window.PaperWorldDailyLifeUI.snapshot().metro?.onboard);
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location),'school');
  const parked=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
