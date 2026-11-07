@@ -26,16 +26,41 @@ const openMap=async()=>{
  await waitDirector();
  await page.locator('#quick-map').click();
  await page.locator('#pw-world-surface:not([hidden])').waitFor();
- assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'城区地图');
+ assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'地区选择');
+};
+const tapScene=async action=>{
+ await page.locator('#scene').click({position:{x:80,y:80}});
+ await page.locator('#overworld-scene-prompts [data-action="'+action+'"]').waitFor({state:'visible'});
+ await page.locator('#overworld-scene-prompts [data-action="'+action+'"]').click();
+};
+const dismissSurface=async()=>{
+ await page.locator('#pw-world-surface .pw-surface-dim').click({position:{x:5,y:5}});
+ await page.waitForFunction(()=>document.getElementById('pw-world-surface')?.hidden);
+};
+const finishTrain=async()=>{
+ for(let i=0;i<8;i++){
+   if(!await page.locator('#pw-transit-scene').isVisible())break;
+   await page.locator('#pw-transit-scene .pw-transit-next').click();
+ }
+ await page.waitForFunction(()=>document.getElementById('pw-transit-scene')?.hidden);
 };
 const go=async(id,expectSrc)=>{
- await page.locator('#pw-world-surface .pw-map-pin[data-place="'+id+'"]').click();
- await page.locator('#pw-world-surface .pw-map-depart').click();
+ await page.locator('#pw-world-surface .pw-photo-map-node[data-place="'+id+'"]').click();
+ const route=await page.locator('#pw-world-surface .pw-map-route-summary').innerText().catch(()=>null);
+ assert.ok(route?.includes('线')||id==='entrance','metro route should be readable: '+route);
+ await page.locator('#pw-world-surface .pw-photo-map-go').click();
+ assert.equal(await page.locator('#pw-world-surface').isVisible(),false,
+   'map must close BEFORE scene travel to prevent flashing');
  await page.waitForFunction(id=>window.PaperWorldDailyLifeUI.snapshot().location===id,id);
+ if(await page.locator('#pw-transit-scene').isVisible()){
+   await snap('06a-subway-passengers.png');
+   await finishTrain();
+ }
  await waitScene(id);
  if(expectSrc)assert.match(await page.locator('#source').getAttribute('src'),new RegExp(expectSrc.replace(/\./g,'\\.')));
  await waitDirector();
 };
+
 try{
  await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').waitFor();
@@ -55,20 +80,24 @@ try{
    'Handset must fit the scene vertically: '+JSON.stringify(bounds));
  await page.locator('#phone-fingerprint').click();
  await page.locator('[data-app="信息"]').click();
- assert.equal(await page.locator('#phone-app-copy .phone-message-row').count(),3);
+ assert.equal(await page.locator('#phone-app-copy .phone-chat-bubble.is-them').count(),3);
+ await page.locator('.phone-chat-input').fill('作业写完了吗？');
+ await page.locator('.phone-chat-composer button').click();
+ assert.ok(await page.locator('#phone-app-copy .phone-chat-bubble.is-me').count()>0);
  await snap('03-homework-inbox.png');
  await page.locator('#phone-app-back').click();
  await page.locator('[data-app="联系人"]').click();
  await page.locator('#phone-app-copy [data-contact="female2"]').click();
  assert.match(await page.locator('#phone-app-copy').innerText(),/亲密度/);
  await snap('04-female-two-relationship.png');
- await page.locator('.phone-close').click();
+ await page.locator('#scene').click({position:{x:65,y:65}});
+ await page.waitForFunction(()=>!window.PaperWorldQuickTools.phone.isOpen());
  assert.equal(await page.locator('#daily-life-ui').count(),0);
  assert.equal(await page.locator('#camera-player-root').evaluate(e=>getComputedStyle(e).display),'none');
  await snap('05-quiet-bedroom.png');
- await page.locator('#overworld-scene-prompts [data-action="hall"]').click();
+ await tapScene('hall');
  await waitScene('entrance');
- await page.locator('#overworld-scene-prompts [data-action="exit"]').click();
+ await tapScene('exit');
  assert.equal(await page.locator('#pw-world-surface').isVisible(),true);
  await snap('06-full-city-map.png');
  await go('school','classroom.webp');
@@ -79,14 +108,14 @@ try{
  await snap('07-school-classroom.png');
  await openMap();await go('convenience','convenience.svg');
  await snap('08-convenience-store.png');
- await page.locator('#overworld-scene-prompts [data-action="shop"]').click();
+ await tapScene('shop');
  assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'便利店货架');
  await page.locator('.pw-shop-row[data-item="bread"]').click();
  const before=(await info()).money;
  await page.locator('.pw-item-use').click();
  assert.equal((await info()).money,before-18);
  await snap('09-shop-buying.png');
- await page.locator('.pw-surface-close').click();
+ await dismissSurface();
  await page.locator('#quick-backpack').click();
  assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'背包');
  assert.ok(await page.locator('.pw-item[data-item="keys"]').count());
@@ -94,7 +123,7 @@ try{
  await page.locator('.pw-item[data-item="homework"]').click();
  assert.match(await page.locator('.pw-item-detail').innerText(),/不能随意消耗/);
  await snap('10-real-backpack.png');
- await page.locator('.pw-surface-close').click();
+ await dismissSurface();
  // Reach 10:00 using the ACTUAL game wait method (not changing device time).
  await page.evaluate(()=>{
    const e=window.PaperWorldDailyLifeUI.engine;
@@ -108,7 +137,8 @@ try{
  await snap('13-public-park.png');
  // The UI must remain a quiet scene, not a permanent RPG dashboard.
  assert.equal(await page.locator('#daily-life-ui').count(),0);
- assert.equal(await page.locator('#overworld-scene-prompts').isVisible(),true);
+ assert.equal(await page.locator('#overworld-scene-prompts').isVisible(),false,
+   'scene must not show a permanent right-bottom action menu');
  const fatal=errors.filter(x=>/ReferenceError|SyntaxError|TypeError|Uncaught/.test(x));
  assert.deepEqual(fatal,[]);
  console.log(JSON.stringify({PASS:true,phoneBounds:bounds,files:fs.readdirSync(out),
