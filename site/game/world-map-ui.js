@@ -175,25 +175,40 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  }
  function chooseLine(e,l,node){
   e.stopPropagation();
-  const from=citiesOnLine(l);
-  const nearest=from.reduce((best,c)=>dist(c,currentPlace)<dist(best,currentPlace)?c:best,from[0]);
-  if(!nearest)return;
-  const pos=from.indexOf(nearest);
-  const choices=[];
-  if(pos>0){
-   const dest=from[pos-1];
-   choices.push({label:'往 '+dest.name+' 方向',main:true,
-    run:()=>menu(e,l.name,formatRoute(atlas.route(currentCity,dest.id)),
-      [{label:'查看线路',run:dismiss}],node)});
+  const stops=citiesOnLine(l);
+  if(!stops.length)return;
+  const index=stops.findIndex(c=>c.id===currentCity);
+  if(index<0){
+   const near=stops.reduce((best,c)=>dist(c,currentPlace)<dist(best,currentPlace)?c:best,stops[0]);
+   menu(e,l.name,'当前不在此线路沿线 · 从 '+near.name+' 站换乘',[
+    {label:'查看接驳路线',main:true,run:()=>menu(e,l.name,
+      formatRoute(atlas.route(currentCity,near.id)),
+      [{label:'返回地图',run:dismiss}],node)}
+   ],node);return;
   }
-  if(pos<from.length-1){
-   const dest=from[pos+1];
-   choices.push({label:'往 '+dest.name+' 方向',main:true,
-    run:()=>menu(e,l.name,formatRoute(atlas.route(currentCity,dest.id)),
-      [{label:'查看线路',run:dismiss}],node)});
+  const selections=[];
+  for(const nextIndex of [index-1,index+1]){
+   if(nextIndex<0||nextIndex>=stops.length)continue;
+   const dest=stops[nextIndex];
+   selections.push({label:'往 '+dest.name+' 方向',main:true,run:()=>{
+    const route=atlas.route(currentCity,dest.id,
+      ['highway','coach','bus'].includes(l.mode)?'road':'rail');
+    const destination=atlas.POIS.find(p=>p.city===dest.id);
+    menu(e,l.name,formatRoute(route),[
+     {label:'乘坐至 '+dest.name,main:true,
+      disabled:!route||!destination,
+      run:async()=>{
+       dismiss();
+       if(!onWorldTravel)return onFeedback?.('该车次尚未开放');
+       const result=await onWorldTravel(destination.id,route);
+       if(!result?.ok)onFeedback?.(result?.reason||'交通服务暂时不可用');
+      }},
+     {label:'返回地图',run:dismiss}
+    ],node);
+   }});
   }
-  menu(e,l.name,atlas.SERVICE_LABELS[l.mode]+' · '+(nearest?.name||''),
-    choices,node);
+  menu(e,l.name,atlas.SERVICE_LABELS[l.mode]+' · '+stops[index].name,
+    selections,node);
  }
  function citiesOnLine(line){return line.stops.map(id=>cityBy[id]).filter(Boolean)}
  // Complex coast with natural asymmetry, several river mouths and islands.
