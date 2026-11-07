@@ -4,8 +4,8 @@ const assert=require('node:assert/strict');
 const r=require('../site/game/ring-arena-runtime.js');
 const scene=r.layout('outer'),hero=scene.allies[0],base=r.camera('outer');
 const before=JSON.stringify(scene);
-assert.ok(scene.enemies.every(a=>a.y===0&&a.z===7.45));
-assert.ok(Math.abs(scene.enemies[3].x-scene.enemies[0].x-4.3)<.001);
+assert.ok(scene.enemies.every(a=>a.y===0&&a.z===7.68));
+assert.ok(Math.abs(scene.enemies[3].x-scene.enemies[0].x-3.81)<.001);
 const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
  'enemy-2':{left:.32,right:.69,top:0,bottom:1},
  'enemy-3':{left:.30,right:.76,top:0,bottom:1},
