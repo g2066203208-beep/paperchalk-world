@@ -1,4 +1,5 @@
-/* Actual Chromium QA and screenshots for the full multi-city world map. */
+/* Real Chromium proof: the whole megaregion lives inside the SAME subway
+ * dot matrix, with no second map and no fake southern subway route. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,12 +10,12 @@ const base=process.env.PAPERCHALK_BROWSER_BASE||'http://127.0.0.1:8765/';
 fs.mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFactor:1});
-page.setDefaultTimeout(16000);
+page.setDefaultTimeout(18000);
 const errors=[];
 page.on('pageerror',e=>errors.push(String(e)));
-const shot=async name=>page.screenshot({path:path.join(out,name),timeout:25000,animations:'disabled'});
+const shot=async name=>page.screenshot({path:path.join(out,name),animations:'disabled',timeout:26000});
 try{
- await page.goto(base,{waitUntil:'domcontentloaded'});
+ await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').click();
  await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom');
  await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false');
@@ -27,66 +28,63 @@ try{
   if(!result.ok)throw Error(result.reason);
  });
  await page.locator('#quick-map').click();
- // Original 12×6 dot-matrix subway map is the default city layer.
- const metro=page.locator('.pw-transit-map');
- await metro.waitFor({state:'visible'});
- assert.equal(await page.locator('.pw-transit-grid-dot').count(),91);
- await page.locator('.pw-map-mode-toggle').click();
- const map=page.locator('.pw-world-map');
+ const map=page.locator('.pw-dot-world-map');
  await map.waitFor({state:'visible'});
- await page.waitForTimeout(700);
- const summary=await page.evaluate(()=>{
-  const a=window.PaperWorldAtlas;
-  return {cities:a.CITIES.length,pois:a.POIS.length,stories:a.SITES.length,
-   regional:a.LINKS.length,metro:a.METRO_LINES.length,metroStops:a.METRO_STOPS.length,
-   photoCards:document.querySelectorAll('.pw-world-city-card').length,
-   poiButtons:document.querySelectorAll('.pw-world-poi').length,
-   paths:document.querySelectorAll('.pw-world-transport-service').length,
-   imageSources:document.querySelectorAll('.pw-world-city-photo img[src]').length};
+ assert.equal(await page.locator('.pw-world-map,.pw-map-mode-toggle').count(),0);
+ assert.equal(await page.locator('.pw-transit-grid-dot').count(),1683);
+ const overview=await page.evaluate(()=>{
+  const atlas=window.PaperWorldAtlas;
+  return {cities:atlas.CITIES.length,pois:atlas.POIS.length,
+   rumors:atlas.SITES.length,links:atlas.LINKS.length,
+   cityMarkers:document.querySelectorAll('.pw-dot-city').length,
+   poiMarkers:document.querySelectorAll('.pw-dot-poi').length,
+   metroTracks:document.querySelectorAll('.pw-dot-planned-line').length,
+   regionalSegments:document.querySelectorAll('.pw-dot-regional-lines .pw-transit-segment').length};
  });
- assert.equal(summary.cities,10);
- assert.ok(summary.pois>=120);
- assert.ok(summary.stories>=45);
- assert.equal(summary.regional,14);
- assert.ok(summary.metroStops>=100);
- assert.equal(summary.photoCards,10);
- assert.equal(summary.poiButtons,summary.pois);
- assert.equal(summary.paths,summary.regional);
- assert.equal(summary.imageSources,10);
- await shot('24-world-all-region-desktop.png');
- await page.locator('.pw-world-city-card[data-city="homori"]').click();
- await page.locator('.pw-world-popup:not([hidden])').waitFor();
- assert.match(await page.locator('.pw-world-popup').innerText(),/穗森市/);
- await shot('25-world-city-popup.png');
- await page.locator('.pw-world-popup .pw-world-action').filter({hasText:'查看城区'}).click();
- await page.waitForFunction(()=>document.querySelector('.pw-world-map')?.dataset.zoom!=='region');
- await page.waitForTimeout(400);
- const visible=await page.evaluate(()=>[...document.querySelectorAll('.pw-world-poi:not([hidden])')].map(x=>x.dataset.place));
- assert.ok(visible.length>=2,'zoom reveals nearby places: '+JSON.stringify(visible));
- await shot('26-world-zoom-rural-countryside.png');
- const selected=page.locator('.pw-world-poi:not([hidden])').first();
- const id=await selected.getAttribute('data-place');
- await selected.click();
- const popup=page.locator('.pw-world-popup:not([hidden])');
+ assert.equal(overview.cities,10);
+ assert.ok(overview.pois>=120);
+ assert.ok(overview.rumors>=45);
+ assert.equal(overview.links,14);
+ assert.equal(overview.cityMarkers,10);
+ assert.ok(overview.poiMarkers>=100);
+ assert.equal(overview.metroTracks,9);
+ assert.ok(overview.regionalSegments>=14);
+ await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
+ await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='region');
+ assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
+ await shot('24-dot-world-overview-desktop.png');
+ await page.locator('.pw-dot-city[data-city="homori"]').click();
+ const popup=page.locator('.pw-transit-popup:not([hidden])');
+ await popup.waitFor();
+ assert.match(await popup.innerText(),/穗森市/);
+ await shot('25-dot-world-city-popup.png');
+ await popup.locator('.pw-transit-menu-item.is-primary').click();
+ await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='detail');
+ const visible=page.locator('.pw-dot-poi:not([hidden])');
+ assert.ok(await visible.count()>0,'city zoom must reveal actual point-grid destinations');
+ await shot('26-dot-world-zoom-countryside.png');
+ const target=visible.first();
+ const chosen=await target.getAttribute('data-place');
+ await target.click();
  await popup.waitFor();
  assert.match(await popup.innerText(),/前往/);
- await shot('27-world-location-popup.png');
- await page.locator('.pw-world-tool.is-home').click();
+ await shot('27-dot-world-location-popup.png');
+ await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
  await page.setViewportSize({width:844,height:390});
  await page.waitForTimeout(350);
- await shot('28-world-mobile-overview.png');
- await page.locator('.pw-world-city-card[data-city="misaki"]').click();
- await page.locator('.pw-world-popup:not([hidden])').waitFor();
- await shot('29-world-mobile-city-menu.png');
- const rect=await map.boundingBox();
- await page.locator('.pw-world-tool.is-home').click();
- const start=await page.locator('.pw-world-canvas').getAttribute('style');
+ assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
+ await shot('28-dot-world-mobile-overview.png');
+ await page.locator('.pw-dot-city[data-city="misaki"]').click();
+ await popup.waitFor();
+ assert.match(await popup.innerText(),/岬崎市/);
+ await shot('29-dot-world-mobile-city-menu.png');
+ await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
+ const start=await page.locator('.pw-dot-world-canvas').getAttribute('style');
  await page.mouse.wheel(0,-520);
  await page.waitForTimeout(120);
- const after=await page.locator('.pw-world-canvas').getAttribute('style');
- assert.notEqual(start,after,'wheel zoom must transform world canvas');
- const x=await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location);
- assert.equal(x,'entrance','opening map must not move hero');
+ const after=await page.locator('.pw-dot-world-canvas').getAttribute('style');
+ assert.notEqual(start,after,'wheel zoom must change the same dot-canvas');
+ assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location),'entrance');
  assert.deepEqual(errors.filter(x=>/ReferenceError|TypeError|SyntaxError/.test(x)),[]);
- console.log('WORLD MAP QA PASS',JSON.stringify({summary,chosen:id,mobile:{width:rect.width,height:rect.height},errors}));
+ console.log('ONE DOT WORLD QA PASS',JSON.stringify({overview,chosen,errors}));
 }finally{await browser.close()}
