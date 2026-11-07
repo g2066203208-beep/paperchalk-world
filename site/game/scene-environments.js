@@ -20,9 +20,11 @@
    id:'metro',name:'地铁车厢 · 圆环场景',
    wall:Object.freeze({url:'./assets/metro/side/cabin-master.webp',
     width:2048,height:1024,repeats:13,heightMeters:2.85}),
-   floor:'./assets/metro/side/metro-floor.svg',
-   ceiling:'./assets/metro/side/metro-ceiling.svg',
-   lighting:'fluorescent'
+   // SAME meshes, surface materials and lighting as the already-approved
+   // battle ring: only the wall artwork changes between these two packs.
+   floor:'./assets/ring-arena/convenience-floor.svg',
+   ceiling:'./assets/ring-arena/convenience-ceiling.svg',
+   lighting:'commercial'
   })
  });
  function get(id){return environments[id]||null}
