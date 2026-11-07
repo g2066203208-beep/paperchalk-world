@@ -4,11 +4,11 @@ const fs=require('node:fs');
 const path=require('node:path');
 const ring=require('../site/game/ring-arena-runtime.js');
 assert.equal(ring.WALL_TEXTURE.url,'./assets/ring-arena/convenience-wall.webp');
-assert.equal(ring.WALL_TEXTURE.repeats,9);
+assert.equal(ring.WALL_TEXTURE.repeats,8);
 assert.equal(ring.WALL_TEXTURE.heightMeters,3.2);
 assert.equal(ring.SPEC.wallHeight,3.2);
 assert.equal(ring.SPEC.ceilingHeight,ring.SPEC.wallHeight);
-const tileWorldWidth=2*ring.SPEC.wallArcHalfAngle*ring.SPEC.wallRadius/ring.WALL_TEXTURE.repeats;
+const tileWorldWidth=2*ring.wallArcMeters(ring.SPEC.wallArcHalfAngle)/ring.WALL_TEXTURE.repeats;
 const tileImageWorldWidth=ring.WALL_TEXTURE.heightMeters*ring.WALL_TEXTURE.width/ring.WALL_TEXTURE.height;
 assert.ok(Math.abs(tileWorldWidth/tileImageWorldWidth-1)<.03,
  'the real 2172x724 image must repeat at its physically correct aspect ratio');
@@ -28,8 +28,8 @@ for(const x of [-31.25,-17,0,17,31.25]){
 }
 const src=fs.readFileSync(path.resolve(__dirname,'../site/game/ring-arena-runtime.js'),'utf8');
 assert.match(src,/texture2D\(uWallTexture/);
-assert.match(src,/float u=fract\(\(theta\/2\.7227136\+\.5\)\*9\.0\)/);
-assert.match(src,/float v=clamp\(vWorld\.y\/3\.2/);
+assert.match(src,/texture2D\(uWallTexture,vec2\(clamp\(fract\(vWallUv.x\)/);
+assert.match(src,/gl\.vertexAttribPointer\(world\.aUv,2,gl\.FLOAT,false,20,12\)/);
 assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighting material');
 assert.match(src,/drawWorld\(ceiling,2,vp\)/,'ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
@@ -56,4 +56,4 @@ for(const theta of [-ring.SPEC.wallArcHalfAngle,0,ring.SPEC.wallArcHalfAngle]){
  const innerDepth=Math.abs(ring.backdropPoint('inner',theta).z-ring.camera('inner').eye.z);
  assert.ok(Math.abs(outerDepth-innerDepth)<.1,'mirrored arcs have equal perspective depth across the image');
 }
-console.log('PASS 3.2m human-scale convenience walls, 9 correct-aspect repeats, real ceiling, mirrored view perspective, unchanged actor anchors');
+console.log('PASS 3.2m human-scale convenience walls, 8 physically accurate arc-length repeats, real ceiling, mirrored view perspective, unchanged actor anchors');
