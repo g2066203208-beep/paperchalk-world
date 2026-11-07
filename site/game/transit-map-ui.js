@@ -383,6 +383,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  function position(){
   const v=viewport();
   canvas.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
+  canvas.style.setProperty('--dot-city-label-size',scale<.5?'40px':'24px');
+  canvas.style.setProperty('--dot-area-label-size',scale<.5?'34px':'23px');
+  canvas.style.setProperty('--dot-poi-label-size',Math.max(2.2,11/scale)+'px');
   const zoom=scale<1.15?'region':scale<2.3?'city':'detail';
   map.dataset.zoom=zoom;
   // Regions and city districts are zoom layers of the SAME physical lattice.
