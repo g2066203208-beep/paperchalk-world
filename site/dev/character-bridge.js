@@ -398,17 +398,22 @@ async function init(){
    if(fallback)assigned[key]={id:fallback,side:'front'};
   }
  }
- // Prioritize the five actually visible original L2D battle actors before
- // the three hidden reserve allies. Serial loading avoids huge parallel
- // decoded RGBA spikes on mobile while preventing late enemy #4 first-frame.
- const visibleFirst=['player','enemy','enemy2','enemy3','enemy4',
-  'ally2','ally3','ally4'];
- for(const key of visibleFirst){
+ // The ring scene renders 4v4, not five actors with hidden reserve allies.
+ // Assign all eight REAL source rigs with at most TWO concurrent decoders.
+ // The old serial pass left ally4 permanently absent in slow Chromium after
+ // 85s. Bounded concurrency avoids both that queue starvation and mobile
+ // RGBA spikes; every role still keeps its original source/person identity.
+ const visibleFirst=['player','enemy','ally4','enemy2','ally2','enemy3','ally3','enemy4'];
+ const queue=visibleFirst.slice();
+ async function loadBattleRole(key){
   const a=assigned[key];if(a?.id&&catalog.has(a.id)){
    try{await assign(key,a.id,a.side,false)}
-   catch(e){console.error('[L2D] 游戏启动同步失败',e);note('L2D 加载失败：'+e.message);}
+   catch(e){console.error('[L2D] 游戏启动同步失败 '+key,e);
+    note('L2D 加载失败 '+key+'：'+e.message);}
   }
  }
+ const worker=async()=>{while(queue.length)await loadBattleRole(queue.shift())};
+ await Promise.all([worker(),worker()]);
  ready=true;
  // The scene can already be rendering before the asynchronous catalog boot.
  // Correct an old local player-slot assignment before the next battle frame.
