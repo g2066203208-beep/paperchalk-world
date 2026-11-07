@@ -19,6 +19,8 @@
     'living-room':{label:'客厅',group:'家',scene:'living-room',open:0,close:1440,travel:10},
     kitchen:{label:'厨房',group:'家',scene:'kitchen',open:0,close:1440,travel:10},
     entrance:{label:'玄关',group:'家',scene:'entrance',open:0,close:1440,travel:10},
+    central:{label:'中央换乘站',group:'城区',scene:null,open:0,close:1320,travel:6},
+    northgate:{label:'北街口',group:'城区',scene:null,open:0,close:1320,travel:6},
     school:{label:'学校',group:'城区',scene:'school',open:7*60,close:17*60,travel:35,weekdaysOnly:true},
     convenience:{label:'便利店',group:'城区',scene:'convenience',open:6*60,close:22*60,travel:25},
     cafe:{label:'咖啡店',group:'城区',scene:'cafe',open:10*60,close:21*60,travel:30},
@@ -146,6 +148,7 @@
       phone:{callsRead:false,messagesRead:false,reply:null},
       phoneThreads:{female2:[],classmate:[],clerk:[],neighbor:[]},
       phoneCalls:[],transitRumors:[],
+      metro:{onboard:false,station:null,lineId:null,direction:1,rides:0,anomaly:false},
       mediaPhotos:[],socialPosts:[],
       homework:{status:'unfinished',inspected:false,handedIn:false},
       log:[{day:1,minute:7*60,text:'新的一天开始了。先安排今天的生活。'}],
@@ -183,6 +186,16 @@
       inspected:raw.homework?.inspected===true,
       handedIn:raw.homework?.handedIn===true
     };
+    const metro=raw.metro;
+    if(metro&&typeof metro==='object'){
+      const graph=typeof window!=='undefined'?window.PaperWorldMetro:null;
+      const line=graph?.getLine?.(metro.lineId);
+      if(line&&line.stops.includes(metro.station)&&!line.locked){
+        s.metro={onboard:metro.onboard===true,station:metro.station,lineId:line.id,
+          direction:metro.direction===-1?-1:1,rides:CLAMP(INTEGER(metro.rides,0),0,100000),
+          anomaly:metro.anomaly===true};
+      }
+    }
     // Bounded in-world phone/social state; never treat player text as HTML.
     for(const id of Object.keys(s.phoneThreads)){
       if(!Array.isArray(raw.phoneThreads?.[id]))continue;
@@ -283,6 +296,82 @@
       const can=spend(cost);if(!can.ok)return can;
       state.energy=CLAMP(state.energy-3,0,100);state.location=location;
       return finish('travel','到达'+dest.label+'，路上用了'+cost+'分钟。');
+    }
+    // A subway ride is a persistent physical state, not an instant change
+    // of destination. Boarding requires the passenger to be AT a served station.
+    function metroBoard(lineId,direction){
+      const graph=typeof window!=='undefined'?window.PaperWorldMetro:null;
+      if(!graph)return fail('交通网络尚未加载');
+      if(state.metro.onboard)return fail('你已经在车厢里');
+      if(state.nightStatus!=='day')return fail('末班车已经结束运营');
+      const line=graph.getLine(lineId),dir=Number(direction)===-1?-1:1;
+      if(!line||line.locked)return fail('该线路尚未开放');
+      const station=state.location;
+      if(!graph.neighbors(line,station).some(x=>x.direction===dir))
+        return fail('当前地点没有这条线路的此方向列车');
+      const paid=spend(2);
+      if(!paid.ok)return paid;
+      state.metro={onboard:true,station,lineId:line.id,direction:dir,
+        rides:0,anomaly:false};
+      return finish('metro-board','从'+graph.STATIONS[station].label+
+        '乘上'+line.name+'。');
+    }
+    function metroNext(){
+      const graph=typeof window!=='undefined'?window.PaperWorldMetro:null;
+      const ride=state.metro;
+      if(!ride.onboard||!graph)return fail('目前没有乘坐列车');
+      if(ride.anomaly)return fail('车厢已经驶离正常线路');
+      const target=graph.nextStop(ride.lineId,ride.station,ride.direction);
+      if(!target)return {ok:false,terminal:true,reason:'已经抵达终点站'};
+      const cost=5;
+      if(state.minute+cost>=NIGHT){
+        state.minute=NIGHT;
+        ride.station=target;ride.rides++;ride.anomaly=true;
+        state.nightStatus='recalled';
+        return {...finish('metro-anomaly','22:00，末班车的广播忽然中断。车窗外的站台消失了。'),
+          anomaly:true,station:target};
+      }
+      state.minute+=cost;ride.station=target;ride.rides++;
+      return {...finish('metro-stop','列车抵达'+graph.STATIONS[target].label+'。'),
+        station:target,terminal:!graph.nextStop(ride.lineId,target,ride.direction)};
+    }
+    function metroExit(){
+      const graph=typeof window!=='undefined'?window.PaperWorldMetro:null;
+      const ride=state.metro;
+      if(!ride.onboard)return fail('目前不在列车里');
+      if(ride.anomaly)return fail('车门没有打开，无法在这里下车');
+      const station=ride.station;
+      if(!LOCATIONS[station])return fail('这座站台尚未开放出入口');
+      state.location=station;
+      state.metro={onboard:false,station:null,lineId:null,direction:1,rides:0,anomaly:false};
+      return {...finish('metro-exit','从'+graph.STATIONS[station].label+'走出站台。'),station};
+    }
+    function metroSwitch(lineId,direction){
+      const graph=typeof window!=='undefined'?window.PaperWorldMetro:null;
+      const ride=state.metro;
+      if(!ride.onboard||ride.anomaly)return fail('现在无法换乘');
+      const line=graph?.getLine(lineId),dir=Number(direction)===-1?-1:1;
+      if(!line||line.locked||!graph.neighbors(line,ride.station).some(n=>n.direction===dir))
+        return fail('当前站没有可换乘的此方向列车');
+      if(line.id===ride.lineId&&dir===ride.direction)return fail('已经在这个方向的列车上');
+      const paid=spend(5);if(!paid.ok)return paid;
+      ride.lineId=line.id;ride.direction=dir;
+      return finish('metro-transfer','在'+graph.STATIONS[ride.station].label+
+        '换乘'+line.name+'。');
+    }
+    function metroRideToNight(){
+      const graph=typeof window!=='undefined'?window.PaperWorldMetro:null;
+      const ride=state.metro;
+      const line=graph?.getLine(ride.lineId);
+      if(!ride.onboard||ride.anomaly||!line?.ring)return fail('只有正在运行的环线可以持续乘坐');
+      const count=Math.max(1,Math.ceil((NIGHT-state.minute)/5));
+      const index=line.stops.indexOf(ride.station);
+      ride.station=line.stops[((index+ride.direction*count)%line.stops.length+
+        line.stops.length)%line.stops.length];
+      ride.rides+=count;ride.anomaly=true;
+      state.minute=NIGHT;state.nightStatus='recalled';
+      return {...finish('metro-anomaly','一直坐到22:00，车厢不再报站，地图上出现了不存在的线路。'),
+        anomaly:true,station:ride.station,stopsPassed:count};
     }
     function act(id){
       const a=ACTIONS[id];
@@ -534,7 +623,8 @@
     function reset(){
       state=defaultState();persist();notify('reset');return snapshot();
     }
-    return Object.freeze({snapshot,subscribe,persist,travel,act,buy,use,inspectItem,talk,wait,sleep,
+    return Object.freeze({snapshot,subscribe,persist,travel,metroBoard,metroNext,metroExit,
+      metroSwitch,metroRideToNight,act,buy,use,inspectItem,talk,wait,sleep,
       phoneInbox,markPhoneRead,replyHomework,sendPhoneMessage,phoneCall,
       recordTransitRumor,addPhonePhoto,publishSocial,
       inspectHomework,finishHomework,submitHomework,
