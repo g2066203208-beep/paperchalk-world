@@ -224,7 +224,11 @@
  function cameraVP(cam,aspect=16/9){
   // Off-axis lens: raise the composition without pitching the actual optical axis.
   // The EXACT same matrix is used by WebGL and 3D occlusion/safe-zone tests.
-  const vp=multiply(perspective(responsiveFov(cam.fov||SPEC.verticalFov,aspect),aspect),lookAt(cam.eye,cam.focus));
+  // Fixed passenger scenes retain a human-scale vertical FOV on phones.
+  // The battle rig still keeps its authored horizontal framing algorithm.
+  const field=cam.sceneStatic&&cam.fovMode==='vertical'?
+   (cam.fov||SPEC.verticalFov):responsiveFov(cam.fov||SPEC.verticalFov,aspect);
+  const vp=multiply(perspective(field,aspect),lookAt(cam.eye,cam.focus));
   const lensShift=Number.isFinite(cam.lensShift)?cam.lensShift:VERTICAL_LENS_SHIFT;
    for(const i of [0,4,8,12])vp[i+1]+=lensShift*vp[i+3];
   return vp;
@@ -494,7 +498,9 @@
   'float allies=1.0-smoothstep(.016,.065,abs(r-mix(10.55,8.3,uMode)));',
   'float enemies=1.0-smoothstep(.016,.065,abs(r-mix(6.65,12.9,uMode)));',
   'color=vec3(.18,.20,.22);',
-  'if(uFloorReady>.5)color=texture2D(uFloorTexture,fract(vWallUv)).rgb*.89;',
+  // The strip carriage floor is ONE unbroken vinyl sheet (no fract seams).
+  'if(uFloorReady>.5)color=texture2D(uFloorTexture,',
+  'uGeometry>.5&&uGeometry<1.5?clamp(vWallUv,vec2(.001),vec2(.999)):fract(vWallUv)).rgb*.89;',
   'color+=vec3(.007,.018,.018)*(radial*.3+spokes*.08)*(1.0-step(.5,uGeometry));',
   'color+=vec3(.002,.019,.018)*(allies+enemies)*.10*(1.0-step(.5,uGeometry));',
   '}else if(uSurface==2){',
@@ -519,6 +525,9 @@
   'vec3 wallArt=wallSample.rgb;',
   'float footAO=mix(.75,1.0,smoothstep(.04,.82,vWorld.y));',
   'color=wallArt*vec3(.81,.83,.88)*footAO;',
+  // Real wall-foot trim masks the alpha edge without a floating dark strip.
+  'if(uSurface==1&&uGeometry>.5&&uGeometry<1.5&&vWorld.y<.055)',
+  'color=mix(color,vec3(.25,.29,.30),.78);',
   'if(uSurface==3&&uWingReady>.5){',
   'color=texture2D(uWingTexture,vec2(clamp(vWallUv.x,.001,.999),clamp(vWallUv.y,.001,.999))).rgb*.89;',
   '}',
@@ -1010,6 +1019,19 @@
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
   let environmentLightRig=null,environmentActorIds=null;
   const sceneRig=whichMode=>environmentLightRig||lightRigs[whichMode]||lightRigs.outer;
+  function fixedEnvironmentCamera(base,preset,aspect){
+   const t=clamp((1.05-clamp(Number(aspect)||16/9,.35,3.5))/.4875,0,1);
+   const blend=(desktop,phone)=>({
+    x:desktop.x+(phone.x-desktop.x)*t,
+    y:desktop.y+(phone.y-desktop.y)*t,
+    z:desktop.z+(phone.z-desktop.z)*t
+   });
+   return {...base,shot:'scene-passenger-eye',
+    eye:preset.phoneEye?blend(preset.eye,preset.phoneEye):{...preset.eye},
+    focus:preset.phoneFocus?blend(preset.focus,preset.phoneFocus):{...preset.focus},
+    fov:preset.fov,sceneStatic:true,fovMode:preset.fovMode||null,
+    ...(Number.isFinite(preset.lensShift)?{lensShift:preset.lensShift}:{})};
+  }
   let mouseLookX=0,mouseLookY=0;
   const params=new URLSearchParams(window.location.search);
   let lightState=LIGHT_STATES.includes(params.get('lights'))?params.get('lights'):'on';
@@ -1635,11 +1657,8 @@
    const regular=target?director.cinematicCamera(base,attack,attackSample,target):
     shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
-   lens=lensPreset?.mode==='fixed'?{
-    ...base,shot:'scene-passenger-eye',eye:{...lensPreset.eye},
-    focus:{...lensPreset.focus},fov:lensPreset.fov,
-    sceneStatic:true
-   }:regular;
+   lens=lensPreset?.mode==='fixed'?fixedEnvironmentCamera(base,lensPreset,
+    canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9):regular;
    if(Number.isFinite(lensPreset?.lensShift))
     lens={...lens,lensShift:lensPreset.lensShift};
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
@@ -1660,7 +1679,8 @@
    gl.uniform3fv(world.uViewEye,new Float32Array([cam.eye.x,cam.eye.y,cam.eye.z]));
    gl.uniform1f(world.uTime,elapsed);
    gl.uniform1f(world.uMode,mode==='inner'?1:0);
-   gl.uniform1f(world.uGeometry,ACTIVE_GEOMETRY.shape==='arc'?0:1);
+   gl.uniform1f(world.uGeometry,ACTIVE_GEOMETRY.shape==='arc'?0:
+    ACTIVE_GEOMETRY.shape==='strip'?1:2);
    gl.uniform1f(world.uWindowCutouts,ACTIVE_WALL.alphaWindows?1:0);
    setSceneLighting(world,mode);
    gl.activeTexture(gl.TEXTURE0);
@@ -1838,9 +1858,9 @@
     if(!lens||lens.cinematic)return false;
     const base=camera(mode,0);
     const cfg=window.PaperWorldEnvironments?.get?.(environmentId)?.camera;
-    const actual=cfg?.mode==='fixed'?{
-     ...base,eye:cfg.eye,focus:cfg.focus,fov:cfg.fov
-    }:shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
+    const actual=cfg?.mode==='fixed'?fixedEnvironmentCamera(base,cfg,
+     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9):
+     shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
     return Math.abs(lens.eye.x-actual.eye.x)<.00001&&
      Math.abs(lens.eye.y-actual.eye.y)<.00001&&
@@ -1879,7 +1899,7 @@
       size:s.image?.naturalWidth?[s.image.naturalWidth,s.image.naturalHeight]:null,
       vertices:kind==='floor'?(mode==='outer'?floorOuter:floorInner)?.count:
        (mode==='outer'?ceilingOuter:ceilingInner)?.count,
-      mapping:'curved-wall-arc-and-depth'}])),
+      mapping:ACTIVE_GEOMETRY.shape==='strip'?'one-piece-train-vinyl-with-underlap':'curved-wall-arc-and-depth'}])),
     lighting:{kind:LIGHTING.kind,count:sceneRig(mode).count,
      state:lightState,levels:[...currentLighting.levels],redMix:[...currentLighting.redMix],
      redFixtureIndices:[...currentLighting.redFixtureIndices],
@@ -1926,8 +1946,9 @@
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,
    projectionAspect:canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
-   effectiveVerticalFov:responsiveFov((lens||camera(mode,shotIndex)).fov,
-    canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
+   effectiveVerticalFov:lens?.sceneStatic&&lens?.fovMode==='vertical'?lens.fov:
+    responsiveFov((lens||camera(mode,shotIndex)).fov,
+     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
    // Per-actor true alpha shoe edges; separately inspectable in browser QA.
    actorVisibleUv:Object.fromEntries(visibleActors(mode).map(a=>{
      const t=textures.get(a.id);
