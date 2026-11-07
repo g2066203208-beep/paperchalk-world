@@ -1,0 +1,19 @@
+{
+  "groupId": "NPC-G001",
+  "emotionId": "joy",
+  "status": "user_approved_reference",
+  "approvedDate": "2026-11-07",
+  "source": "user-uploaded conversation image",
+  "originalFile": "tmpel7c22k7.png",
+  "width": 1024,
+  "height": 1024,
+  "mode": "RGB",
+  "sha256": "c3afb8ac08173c4cb20178ff3088b33592d3f13bb40a66ba52fab06a50b2e53d",
+  "assetInGitHub": false,
+  "reason": "The GitHub connector text-file actions cannot access/move the raw conversation PNG bytes; stored identity and art metadata without pretending the binary was committed.",
+  "plannedRepoPath": "site/assets/characters/npc-g001/joy-master-20261107.png",
+  "acceptedFor": "joyful friends / warm playful trio scene and visual anchor for next expression",
+  "composition": "three-person joint sprite, left petite dark bob, middle light-brown shoulder-length hair, right dark side braid, close friendly group, open hands, shared laugh; white background",
+  "styleConstraints": "Keep exactly this A/B/C identity, uniform look, mutual friendship energy. Different emotions change face+gesture, not faces/costume.",
+  "caveat": "This is a white-background RGB mother reference, not RGBA game-ready asset, no rig and not registered in game"
+}
