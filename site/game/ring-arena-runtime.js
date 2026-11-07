@@ -451,7 +451,7 @@
   'void main(){vUv=aUv;',
   'vec3 pos=uCenter+vec3((aUv.x-.5)*.21,-.018,(aUv.y-.5)*1.08);',
   'gl_Position=uVP*vec4(pos,1.0);}'
- ].join('\\n');
+ ].join('\n');
  const fixtureFragment=[
   'precision mediump float;varying vec2 vUv;',
   'uniform float uLevel;uniform float uEmergency;',
@@ -463,7 +463,48 @@
   'vec3 color=mix(dark,lit,clamp(uLevel,0.0,1.0));',
   'if(uEmergency>.5)color=mix(vec3(.17,.025,.025),vec3(.95,.08,.035),uLevel);',
   'gl_FragColor=vec4(color,1.0);}'
- ].join('\\n');
+ ].join('\n');
+ // Project each ORIGINAL L2D alpha silhouette from a real ceiling lamp
+ // onto the y=0 3D floor. No sprite replacement, fake circle-only shadow,
+ // or screen-space sticker. The 12x18 UV grid preserves planar projection.
+ const projectedShadowVertex=[
+  'precision highp float;attribute vec2 aUv;uniform mat4 uVP;',
+  'uniform vec3 uFoot;uniform vec3 uRight;uniform vec3 uLamp;',
+  'uniform float uHeight;uniform float uSoleX;uniform float uSoleY;',
+  'uniform float uCrownY;varying vec2 vUv;',
+  'void main(){',
+  'float h=uHeight/max(.01,uSoleY-uCrownY);',
+  'vec3 person=uFoot+uRight*(aUv.x-uSoleX)*h',
+  '+vec3(0.0,(uSoleY-aUv.y)*h,0.0);',
+  'float factor=uLamp.y/max(.15,uLamp.y-person.y);',
+  'vec3 p=uLamp+(person-uLamp)*factor;',
+  'p.y=.022;vUv=aUv;gl_Position=uVP*vec4(p,1.0);}'
+ ].join('\n');
+ const projectedShadowFragment=[
+  'precision mediump float;varying vec2 vUv;',
+  'uniform sampler2D uTexture;uniform float uStrength;',
+  'void main(){',
+  'vec2 uv=vec2(vUv.x,1.0-vUv.y);',
+  'float a=texture2D(uTexture,uv).a*.38;',
+  'a+=texture2D(uTexture,uv+vec2(.007,0.0)).a*.155;',
+  'a+=texture2D(uTexture,uv-vec2(.007,0.0)).a*.155;',
+  'a+=texture2D(uTexture,uv+vec2(0.0,.007)).a*.155;',
+  'a+=texture2D(uTexture,uv-vec2(0.0,.007)).a*.155;',
+  'float edge=smoothstep(.03,.68,a);',
+  'gl_FragColor=vec4(.008,.012,.018,edge*uStrength);}'
+ ].join('\n');
+ function projectedShadowMesh(gl){
+  const data=[],N=12,M=18;
+  const v=(x,y)=>[x/N,y/M];
+  for(let y=0;y<M;y++)for(let x=0;x<N;x++){
+   const a=v(x,y),b=v(x+1,y),c=v(x+1,y+1),d=v(x,y+1);
+   data.push(...a,...b,...c,...a,...c,...d);
+  }
+  const buffer=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);
+  return {buffer,count:data.length/2};
+ }
  // Lightweight ground contact: one blended elliptical quad under each
  // visible actor, leaving all original L2D textures and lights untouched.
  const shadowVertex=[
