@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const r=require('../site/game/ring-arena-runtime.js');
 const scene=r.layout('outer'),hero=scene.allies[0],base=r.camera('outer');
 const before=JSON.stringify(scene);
-assert.ok(scene.enemies.every(a=>a.y===0&&a.z===7.15));
+assert.ok(scene.enemies.every(a=>a.y===0&&a.z===6.80));
 assert.ok(Math.abs(scene.enemies[3].x-scene.enemies[0].x-3.84)<.001);
 const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
  'enemy-2':{left:.32,right:.69,top:0,bottom:1},
@@ -21,7 +21,9 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  assert.ok(safe.clear&&safe.valid&&safe.gap>.05,'all five must fit center TPS view');
  assert.ok(safe.hero.right<safe.foes[0].left,'close heroine must not cover first enemy');
  if(aspect===1917/906){
-  assert.ok(safe.hero.left<-.98&&safe.hero.right>-.42);
+  assert.ok(safe.hero.left<-1.35&&safe.hero.right>-.36);
+  assert.ok(safe.hero.top>.56&&safe.hero.top<.70,
+   'default head must project into upper screen without hiding the targets');
   assert.ok(safe.foes[3].right<.93);
  }
 }
