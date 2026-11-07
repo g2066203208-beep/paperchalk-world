@@ -438,7 +438,7 @@
   '}',
   'if(t.a<.025)discard;',
   'vec3 rgb=mix(t.rgb,vec3(1.0,.81,.70),clamp(uHit,0.0,1.0));',
-  'vec3 pseudoNormal=normalize(uFacing+vec3(0.0,.62,0.0)'
+  'vec3 pseudoNormal=normalize(uFacing+vec3(0.0,.62,0.0)',
   '+uRightDir*(vUv.x-.5)*.17);',
   'rgb=ringShade(rgb,vWorld,pseudoNormal);',
   // Preserve painted linework; rim only traces the true alpha silhouette,
