@@ -229,8 +229,8 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   const node=create('button','pw-transit-place'+(!PHOTO[id]?' is-station':''));
   node.type='button';node.dataset.place=id;node.dataset.current=String(id===current);
   node.dataset.locked=String(!!station.locked);node.dataset.selected='false';
-  const slot=PHOTO[id]?{gx:station.gx,gy:
-    id==='convenience'?0:station.gy-1}:{gx:station.gx,gy:station.gy};
+  const slot=PHOTO[id]?{gx:station.gx,gy:station.gy-1}:
+    {gx:station.gx,gy:station.gy};
   node.dataset.gridColumn=String(slot.gx);
   node.dataset.gridRow=String(slot.gy);
   node.dataset.photograph=String(!!PHOTO[id]);
