@@ -42,8 +42,24 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   popup.style.width=w+'px';
   const h=popup.offsetHeight||122;
   const x=e.clientX-rect.left,y=e.clientY-rect.top;
-  popup.style.left=Math.max(6,Math.min(rect.width-w-6,(x+w+22>rect.width?x-w-15:x+15)))+'px';
-  popup.style.top=Math.max(38,Math.min(rect.height-h-7,y-h*.33))+'px';
+  // Node popovers sit OUTSIDE the photograph's full bounding box.
+  // Clicking on a photo's left/right edge must never cover that same photo.
+  const locationCard=e.currentTarget?.closest?.('.pw-transit-place');
+  if(locationCard){
+   const anchor=locationCard.getBoundingClientRect();
+   const leftEdge=anchor.left-rect.left,rightEdge=anchor.right-rect.left;
+   const roomRight=rect.width-rightEdge-10;
+   const roomLeft=leftEdge-10;
+   const preferRight=roomRight>=w||roomRight>=roomLeft;
+   const left=preferRight?rightEdge+12:leftEdge-w-12;
+   popup.style.left=Math.max(6,Math.min(rect.width-w-6,left))+'px';
+   popup.style.top=Math.max(38,Math.min(rect.height-h-7,
+     anchor.top-rect.top+anchor.height*.5-h*.5))+'px';
+  }else{
+   popup.style.left=Math.max(6,Math.min(rect.width-w-6,
+    (x+w+22>rect.width?x-w-15:x+15)))+'px';
+   popup.style.top=Math.max(38,Math.min(rect.height-h-7,y-h*.33))+'px';
+  }
  }
  // The rail canvas is drawn in real CSS-pixel coordinates, so 90° corners
  // remain circular at every aspect ratio. No skewed diagonals or sharp joins.
