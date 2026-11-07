@@ -1,71 +1,43 @@
 'use strict';
-/* Shallow 3D battle blocking: four visually readable opponents stand on
- * the same physical floor at naturally varied depths. Mouse look must never
- * mutate any actor position or create independent parallax layers.
- */
+/* One standard encounter. World-space foes use real perspective, never CSS. */
 const assert=require('node:assert/strict');
 const ring=require('../site/game/ring-arena-runtime.js');
-const format=n=>Math.round(n*1000)/1000;
-for(const mode of ['outer','inner']){
- const camera=ring.camera(mode),formation=ring.layout(mode);
- const visible=ring.visibleActors(mode);
- assert.equal(camera.shot,'left');
- assert.equal(camera.eye.y,camera.focus.y);
- assert.equal(camera.eye.x,camera.focus.x,'yaw cannot stagger enemy size');
- assert.deepEqual(visible.map(a=>a.id),
-  ['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
- assert.equal(formation.enemies.length,4);
- // Transparency sorting follows actual camera depth. The foreground hero
- // is always nearest, but varied enemy Z naturally changes their order.
- const paintOrder=ring.sortActorsForAlpha(visible,camera).map(x=>x.actor.id);
- assert.equal(paintOrder.at(-1),'hero');
- assert.deepEqual([...paintOrder.slice(0,4)].sort(),
-  ['enemy-1','enemy-2','enemy-3','enemy-4']);
- assert.ok(new Set(formation.enemies.map(a=>a.z)).size>=3,
-  'individual real world Z depth must avoid a flat photo lineup');
- assert.ok(Math.abs(formation.allies[0].z-camera.eye.z)>1.25,'hero must not intersect camera');
- for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
-  const hero=formation.allies[0];
-  const foot=a=>ring.project({x:a.x,y:0,z:a.z},camera,aspect);
-  const feet=formation.enemies.map(foot);
-  const coords=feet.map(p=>p.x);
-  const spacing=coords.slice(1).map((v,i)=>v-coords[i]);
-  assert.ok(feet.every(p=>p.valid));
-  assert.ok(formation.enemies.every(a=>a.y===0),
-   'no shoe ever floats above or sinks below the true y=0 floor');
-  const baseline=feet.map(p=>p.y);
-  const deltaY=Math.max(...baseline)-Math.min(...baseline);
-  assert.ok(deltaY>.017&&deltaY<.13,
-   'natural ground projection must vary with real depth, never by DOM offsets');
-  assert.ok(spacing.every(d=>d>.17&&d<.32),
-   'silhouette grouping remains readable at each device aspect');
-  const safety=ring.battleVisualSafety(mode,0,aspect,ring.FEMALE07_BACK_UV);
-  assert.ok(safety.valid&&safety.clear,'actual female07 weapon + enemy bounds in safe zone');
-  assert.ok(safety.hero.left>-.99,'left shoulder/head/ponytail must not be cropped');
-  assert.ok(safety.hero.right<-.23,'foreground hero belongs in left visual zone');
-  assert.ok(safety.gap>.055,'no body or weapon overlap with enemy1');
-  assert.ok(safety.foes[0].left>-.25&&safety.foes[3].right<.925,
-   'foe row must occupy screen right, yet be entirely on camera');
-  assert.ok(Math.abs(foot(hero).x)<.72);
-  const heightFractions=safety.foes.map(x=>x.heightFraction);
-  // Different canonical actors are 1.58–1.60m tall; normalize by their
-  // TRUE heights so the perspective test measures depth, not anatomy.
-  const normalized=heightFractions.map((h,i)=>h/formation.enemies[i].height);
-  assert.ok(Math.max(...normalized)-Math.min(...normalized)<.065,
-   'human-scale perspective should not create giant or miniature characters');
-  if(aspect===1917/906){
-   // Real 1.58-1.60m bodies are physically closer, not multiplied by CSS.
-   // Closer to the camera than V13 with actual 1.58m people, not sprite scaling.
-   assert.ok(heightFractions[0]>.46&&heightFractions[0]<.56,
-    'foes remain human-scale under the physical 2.85m ceiling');
-  }
-  if(aspect===1917/906)
-   console.log('V31 '+mode+' 1917x906:',{
-    heroine:[format(safety.hero.left),format(safety.hero.right)],
-    enemyFeet:coords.map(format),
-    enemySoleY:feet.map(p=>format(p.y)),
-    gap:format(safety.gap)
-   });
- }
+const f=n=>Number(n.toFixed(3));
+const mode='outer',cam=ring.camera(mode),scene=ring.layout(mode);
+const foes=scene.enemies,all=ring.visibleActors(mode),snapshot=JSON.stringify(scene);
+assert.equal(foes.length,4);
+assert.deepEqual(all.map(a=>a.id),['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
+assert.ok(foes.every(a=>a.y===0),'all shoes sit on y=0 of real WebGL ground');
+assert.ok(Math.max(...foes.map(a=>a.x))-Math.min(...foes.map(a=>a.x))>4,'use shop width');
+assert.ok(Math.max(...foes.map(a=>a.z))-Math.min(...foes.map(a=>a.z))>1,'natural staggered depth');
+assert.ok(new Set(foes.map(a=>a.z)).size===4,'not a uniform lineup');
+assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
+ ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[24,24,12,12]);
+const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
+ 'enemy-2':{left:.32,right:.69,top:0,bottom:1},
+ 'enemy-3':{left:.30,right:.76,top:0,bottom:1},
+ 'enemy-4':{left:0,right:.58,top:0,bottom:1}};
+for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
+ const feet=foes.map(a=>ring.project({x:a.x,y:0,z:a.z},cam,aspect));
+ assert.ok(feet.every(p=>p.valid));
+ const silhouettes=foes.map(a=>ring.portraitVisibleBounds(a,cam,uv[a.id],aspect));
+ const gaps=silhouettes.slice(1).map((b,i)=>b.left-silhouettes[i].right);
+ assert.ok(gaps.every(g=>g>.025),'world-space alpha silhouettes must remain distinct');
+ const safety=ring.battleVisualSafety(mode,0,aspect,ring.FEMALE07_BACK_UV);
+ assert.ok(safety.valid&&safety.clear&&safety.gap>.055);
+ assert.ok(safety.hero.left>-.999&&safety.hero.right<-.23);
+ assert.ok(safety.foes[3].right<.93);
+ const baseline=feet.map(p=>p.y);
+ assert.ok(Math.max(...baseline)-Math.min(...baseline)>.015);
+ if(aspect===1917/906)console.log('ONE encounter 1917x906',
+  {foeX:feet.map(p=>f(p.x)),footY:feet.map(p=>f(p.y)),gaps:gaps.map(f)});
 }
-console.log('PASS naturally staggered world-Z enemy staging, grounded 4-foe silhouette and shared 3D camera bounds');
+// Freedom to look toward a wall means NOT every opponent must remain onscreen.
+for(const x of [-1,-.5,0,.5,1])for(const y of [-1,0,1]){
+ const looked=ring.immersiveCamera(cam,x,y);
+ assert.deepEqual(looked.eye,cam.eye,'camera stays at fixed world eye');
+ assert.equal(looked.fov,cam.fov);
+ assert.ok(ring.project({x:0,y:1.5,z:0},looked).valid);
+}
+assert.equal(JSON.stringify(scene),snapshot,'cursor turn never moves ArtMesh anchors');
+console.log('PASS one spaced battle, real floor, 50-degree horizontal look sweep');

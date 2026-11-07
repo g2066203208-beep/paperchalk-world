@@ -43,7 +43,7 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.86,7.43,7.87,7.57]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.20,8.05,7.43,6.95]);
 assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.96,11.35,10.94,11.26]);
 assert.equal(ring.camera('outer').fov,55);
 assert.equal(ring.camera('inner').fov,52);
@@ -208,14 +208,16 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id\)/,
  'real animated source must pass through non-destructive battle mask before upload');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
- ring.STAGING.outer.enemies[0][0]-.79)<1e-7,
- 'outer enemy standing distance should not overlap broad coats');
+ ring.STAGING.outer.enemies[0][0]-1.00)<1e-7,
+ 'the first two fighters have a full meter of width');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[3][0]-
- ring.STAGING.outer.enemies[2][0]-.97)<1e-7,
- 'fourth character broad sleeves need a wider last gap');
+ ring.STAGING.outer.enemies[2][0]-1.77)<1e-7,
+ 'broad fourth coat needs extra world-space width');
 assert.ok(Math.abs(ring.STAGING.inner.enemies[1][0]-
  ring.STAGING.inner.enemies[0][0]+.88)<1e-7,
  'the reverse battle line needs the same visual clearance');
+assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
+ ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[24,24,12,12]);
 assert.match(src,/shadowClipUv=/,
  'the shadow penumbra must have a separately padded alpha crop');
 assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,
@@ -264,8 +266,10 @@ for(const side of ['outer','inner']){
   assert.deepEqual(looked.eye,base.eye,
    'mouse is allowed to rotate view but must never translate world camera');
   assert.equal(looked.fov,base.fov);
-  const safe=ring.battleVisualSafety(side,0,1917/906,ring.FEMALE07_BACK_UV,looked);
-  assert.ok(safe.valid&&safe.clear,'all enemies must remain visible under mouse look');
+  // At extreme yaw players may look away from enemies toward the shop wall.
+  const roomPoint=ring.project({x:0,y:1.5,z:0},looked);
+  assert.ok(roomPoint.valid,'real world must remain visible under camera turn');
+  assert.ok(Math.abs(ring.cameraPitchDeg(looked))<=12.0001);
  }
 }
 const gameHtml=fs.readFileSync(path.resolve(__dirname,'../site/index.html'),'utf8');

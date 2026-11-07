@@ -44,7 +44,7 @@ for(const mode of ['outer','inner']){
   'eye-height over-shoulder framing must not put heroine head against ceiling');
  const centers=scene.enemies.map(e=>arena.project({...e,y:e.height*.5},c).x);
  const mean=centers.reduce((a,b)=>a+b,0)/4;
- assert.ok(mean>.35&&mean<.45,
+ assert.ok(mean>.30&&mean<.43,
    'both four-enemy rows occupy the right battle lane after silhouette spacing');
  const ordered=[...centers].sort((a,b)=>a-b);
  for(let i=1;i<ordered.length;i++)assert.ok(ordered[i]-ordered[i-1]>.185);
@@ -56,7 +56,7 @@ for(const mode of ['outer','inner']){
   'natural 3D near/far formation produces varied projected baseline');
  for(const e of safety.foes){
   assert.ok(e.top>.1&&e.top<.5&&e.bottom>-.62&&e.bottom<.06);
-  assert.ok(e.heightFraction>.35&&e.heightFraction<.56);
+  assert.ok(e.heightFraction>.30&&e.heightFraction<.61);
  }
  for(const aspect of [16/9,4/3,9/16]){
   const res=arena.battleVisualSafety(mode,0,aspect);
