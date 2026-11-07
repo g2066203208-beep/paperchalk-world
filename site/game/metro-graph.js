@@ -3,16 +3,21 @@
    "Ring" is a true closed route: it has no artificial terminal. */
 (function(global){
 'use strict';
+// Visual station coordinates form a deliberately legible orthogonal
+// schematic. The authored graph/topology remains unchanged; this is NOT
+// physical street geography. Route corners are built separately.
 const STATIONS=Object.freeze({
- entrance:{label:'住宅前',x:13,y:39},school:{label:'学园前',x:32,y:20},
- central:{label:'中央换乘站',x:51,y:43,transfer:true},
- convenience:{label:'商业街',x:79,y:20},
- cafe:{label:'咖啡街',x:28,y:64},mall:{label:'中央商场',x:79,y:48},
- park:{label:'河岸公园',x:79,y:73},
- northgate:{label:'北街口',x:55,y:12},
- hospital:{label:'医院前',x:13,y:79,locked:true},
- station:{label:'南站',x:42,y:84,locked:true},
- police:{label:'警察署前',x:64,y:88,locked:true}
+ entrance:{label:'住宅前',x:11,y:41},
+ school:{label:'学园前',x:26,y:41},
+ central:{label:'中央换乘站',x:42,y:41,transfer:true},
+ convenience:{label:'商业街',x:87,y:41},
+ cafe:{label:'咖啡街',x:29,y:61},
+ park:{label:'河岸公园',x:49,y:79},
+ mall:{label:'中央商场',x:74,y:79},
+ northgate:{label:'北街口',x:69,y:18},
+ hospital:{label:'医院前',x:13,y:91,locked:true},
+ station:{label:'南站',x:28,y:91,locked:true},
+ police:{label:'警察署前',x:46,y:91,locked:true}
 });
 const LINES=Object.freeze([
  Object.freeze({id:'a',name:'住宅线',color:'#D36C78',
