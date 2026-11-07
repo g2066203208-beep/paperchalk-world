@@ -98,17 +98,43 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  function mapXY(p){return {x:tx+p.x*scale,y:ty+p.y*scale}}
  function sourcePhoto(key){return atlas.PHOTOS[key]||atlas.PHOTOS.street}
  // The photo assets are replaceable one-by-one without changing any route.
+ function placeholderArt(key){
+  // A local non-photographic preview is available immediately, even when
+  // public image hosts stall rather than reporting an error.
+  const kind=/mountain|forest|tunnel|dark|shrine|oldvillage|village|waterfall/.test(key)?
+    'mountain':/rice|rural|lake|onsen/.test(key)?'rural':
+    /coast|island|fishing|harbor/.test(key)?'coast':'city';
+  const shapes={
+   mountain:'<path d="M0 255L115 110L230 235L326 82L480 260Z" fill="#466360"/><path d="M0 284L184 171L295 259L405 164L480 239V300H0Z" fill="#263f44"/>',
+   rural:'<path d="M0 170Q134 124 239 160T480 148V300H0Z" fill="#567365"/><path d="M0 210L480 181V300H0Z" fill="#35514c"/><path d="M0 247L480 227M0 271L480 245" stroke="#a8b6a2" opacity=".38" stroke-width="5"/>',
+   coast:'<path d="M0 200Q170 154 291 189T480 148V300H0Z" fill="#557584"/><path d="M0 226Q139 190 291 232T480 207V300H0Z" fill="#345460"/><path d="M0 240Q133 225 250 253T480 239" fill="none" stroke="#b0c5c3" stroke-width="3" opacity=".5"/>',
+   city:'<path d="M0 270V176H58V118H106V196H151V145H195V97H245V178H300V117H341V156H382V98H429V200H480V300H0Z" fill="#3c5665"/><path d="M0 260H480V300H0Z" fill="#233f4b"/>'
+  };
+  const source='<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="#82959a"/><stop offset="1" stop-color="#243b49"/></linearGradient></defs><rect width="480" height="300" fill="url(#g)"/><circle cx="357" cy="73" r="32" fill="#d9d4bc" opacity=".34"/>'+shapes[kind]+'</svg>';
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(source);
+ }
  function preload(img,key,id){
   const source=sourcePhoto(key);
-  img.alt='';img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
-  const srcs=[source.url,THEME_BACKUP[key],
-    PHOTO_FALLBACK[id]||'./assets/locations/park.svg'].filter(Boolean);
-  let index=0;
-  img.addEventListener('error',()=>{
-   if(++index<srcs.length)img.src=srcs[index];
-   else{img.removeAttribute('src');img.dataset.fallback='true'}
-  });
-  img.src=srcs[0];
+  img.alt='';img.decoding='async';img.referrerPolicy='no-referrer';
+  img.src=placeholderArt(key);
+  const sources=[source.url,THEME_BACKUP[key],PHOTO_FALLBACK[id]]
+    .filter((v,i,arr)=>v&&arr.indexOf(v)===i);
+  let nextIndex=0;
+  function tryNext(){
+   if(nextIndex>=sources.length)return;
+   const url=sources[nextIndex++];
+   const remote=new Image();
+   remote.decoding='async';
+   remote.referrerPolicy='no-referrer';
+   remote.onload=()=>{
+    if(img.isConnected&&remote.naturalWidth>0){
+     img.src=url;img.dataset.actual='true';
+    }
+   };
+   remote.onerror=tryNext;
+   remote.src=url;
+  }
+  tryNext();
  }
  function itemButton(label,callback,disabled=false,main=false){
   const b=tag('button','pw-world-action'+(main?' is-main':''),label);
