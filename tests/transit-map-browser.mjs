@@ -132,7 +132,24 @@ try{
  assert.equal(room3d.wallMaterial.repeats,1);
  assert.equal(room3d.lighting.positions.length,18);
  assert.ok(room3d.roomSurfaces.floor.vertices>0&&room3d.roomSurfaces.ceiling.vertices>0);
- assert.equal(room3d.cameraParity,true,'same 2.5D shoulder camera as other scene shapes');
+ assert.equal(room3d.cameraParity,true,'the physical train uses one coherent camera/projection');
+ // The combat renderer normally starts with a DIFFERENT female-07 cutout.
+ // Transit must upload the true protagonist L2D even when the DOM source
+ // is not painted over the train and even on the narrow portrait viewport.
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.l2dReady>=1,
+  null,{timeout:20000});
+ const subwayPortrait=await page.evaluate(()=>{
+  const room=window.PaperWorldGameRingArena.inspect();
+  const hero=room.actorAnchors.hero,project=window.PaperWorldRingArena.project;
+  const foot=project({x:hero.x,y:hero.y,z:hero.z},room.camera,room.projectionAspect);
+  const crown=project({x:hero.x,y:hero.y+hero.height,z:hero.z},room.camera,room.projectionAspect);
+  return {character:room.heroine.id,source:room.pixelsFrom,
+   visibleHeight:(crown.y-foot.y)/2,footY:foot.y,headY:crown.y};
+ });
+ assert.equal(subwayPortrait.character,'protagonist','never render female-07 battle preview on the train');
+ assert.ok(subwayPortrait.visibleHeight>.54,'the protagonist must not be tiny: '+JSON.stringify(subwayPortrait));
+ assert.ok(subwayPortrait.footY>-.98&&subwayPortrait.headY<.90,
+  'train heroine shoes/head must fit the real frame: '+JSON.stringify(subwayPortrait));
  assert.equal(await page.locator('#pw-metro-cabin .pw-cabin-live-actors')
   .evaluate(el=>getComputedStyle(el).display),'none',
   'do not layer flat character cutouts on top of the real WebGL world');
