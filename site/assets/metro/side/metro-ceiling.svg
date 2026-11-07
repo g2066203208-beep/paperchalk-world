@@ -1,8 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-<defs><pattern id="p" width="256" height="256" patternUnits="userSpaceOnUse">
-<rect width="256" height="256" fill="#8e9691"/>
-<path d="M0 0H256M0 255H256M0 0V256M255 0V256" stroke="#596665" stroke-width="5"/>
-<rect x="34" y="66" width="188" height="48" rx="6" fill="#dfe4dc" stroke="#677b7b" stroke-width="5"/>
-<rect x="48" y="80" width="160" height="18" rx="5" fill="#faf8df"/>
-<rect x="34" y="154" width="188" height="22" fill="#667475" opacity=".5"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs>
+<linearGradient id="panel" x2="0" y2="1"><stop stop-color="#8d9994"/><stop offset=".52" stop-color="#b4b9af"/><stop offset="1" stop-color="#808e8b"/></linearGradient>
+<pattern id="p" width="256" height="320" patternUnits="userSpaceOnUse">
+<rect width="256" height="320" fill="url(#panel)"/>
+<path d="M0 0H256M0 320H256M0 0V320M256 0V320" stroke="#4b5a5d" stroke-width="8"/>
+<path d="M17 12H237V306H17Z" fill="none" stroke="#d9dcd1" stroke-width="3" opacity=".48"/>
+<rect x="37" y="68" width="182" height="49" rx="7" fill="#e1e2d7" stroke="#4c6061" stroke-width="7"/>
+<rect x="51" y="80" width="153" height="22" rx="5" fill="#f1f2e8"/>
+<path d="M24 240H226M24 254H226M24 268H226M24 282H226" stroke="#46595a" stroke-width="5" opacity=".65"/>
 </pattern></defs><rect width="1024" height="1024" fill="url(#p)"/></svg>
