@@ -42,6 +42,12 @@ try{
  await shot('20-near-photo-actions.png');
  await page.setViewportSize({width:844,height:390});
  await page.waitForTimeout(250);
+ const cardBox=await page.locator('.pw-transit-place[data-place="school"]').boundingBox();
+ const popupBox=await page.locator('.pw-transit-popup:not([hidden])').boundingBox();
+ assert.ok(cardBox&&popupBox,'photo and contextual menu should remain visible');
+ assert.ok(popupBox.x>=cardBox.x+cardBox.width-1||
+  popupBox.x+popupBox.width<=cardBox.x+1,
+  'selection popup must not cover the chosen photograph');
  await shot('21-transit-map-mobile.png');
  await page.setViewportSize({width:1440,height:810});
  await page.waitForTimeout(250);
