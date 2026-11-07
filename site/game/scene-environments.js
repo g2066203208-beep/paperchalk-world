@@ -19,7 +19,7 @@
   }),
   metro:Object.freeze({
    id:'metro',name:'地铁车厢 · 长条形场景',
-   geometry:Object.freeze({shape:'strip',widthMeters:7.0,depthMeters:3.85,
+   geometry:Object.freeze({shape:'strip',widthMeters:8.5,depthMeters:3.85,
     heightMeters:2.85,backZ:8.0}),
    // Per-scene staging is data, not a separate game-mode rendering path.
    camera:Object.freeze({
@@ -35,8 +35,9 @@
     })
    }),
    ends:'./assets/metro/side/metro-gangway.svg',
-   wall:Object.freeze({url:'./assets/metro/side/cabin-master.webp',
-    width:2048,height:1024,repeats:1,heightMeters:2.85}),
+   wall:Object.freeze({url:'./assets/metro/side/cabin-master-illustrated.webp',
+    width:2172,height:724,repeats:1,heightMeters:2.85,
+    alphaWindows:true,exterior:'animated-tunnel'}),
    // Geometry is different, renderer/shaders/lighting/shadows are identical.
    floor:'./assets/metro/side/metro-floor.svg',
    ceiling:'./assets/metro/side/metro-ceiling.svg',
