@@ -153,12 +153,21 @@ for(const mode of ['outer','inner']){
 }
 assert.match(src,/uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;/,
  '3D vertex shader must use highp int matching the fragment shader');
-assert.match(src,/vIrradiance;uniform float uTime;uniform highp int uSurface;/,
+assert.match(src,/vIrradiance;varying float vFloorSpecular;uniform float uTime;uniform highp int uSurface;/,
  '3D fragment shader must use matching highp precision under ANGLE');
 assert.match(src,/uLampPositions\[6\]/);
 assert.match(src,/uLampColors\[6\]/);
 assert.match(src,/vIrradiance=ringIrradiance\(aP,n\)/,
  'static 3D surfaces must evaluate lamps at mesh vertices, not every pixel');
+assert.match(src,/vFloorSpecular\+=pow\(nh,14\.0\)\*uLampLevels\[i\]/,
+ 'wet-tile reflections must use the same physically powered lights');
+assert.match(src,/gl\.uniform3fv\(world\.uViewEye/,
+ 'specular must be calculated from the actual game 3D camera');
+assert.match(src,/uGlow/,
+ 'each physical fluorescent fixture has optional powered halo');
+assert.match(src,/gl\.blendFunc\(gl\.SRC_ALPHA,gl\.ONE\)/,
+ 'emissive light halos use additive blending');
+
 assert.match(src,/ringTone\(color,vIrradiance\)/,
  'fragment shader must interpolate physical lamp irradiance');
 assert.doesNotMatch(src,/color=ringShade\(color,vWorld,normal\)/);
@@ -172,7 +181,7 @@ assert.match(src,/gl\.uniform1f\(projectedShadow\.uContact,0\)/,
  'project main original-L2D silhouette');
 assert.match(src,/gl\.uniform1f\(projectedShadow\.uContact,1\)/,
  'shoe contact must also use L2D alpha instead of synthetic circle');
-assert.match(src,/const data=\[\],N=22,M=28/,
+assert.match(src,/const data=\[\],N=28,M=36/,
  'silhouette projection needs adequately subdivided ground geometry');
 assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,
  'cast lamps must be selected by real projected body silhouette geometry');
