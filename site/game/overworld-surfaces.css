@@ -297,12 +297,12 @@
  overflow:visible;pointer-events:none;
 }
 #pw-world-surface .pw-photo-map-link{
- fill:none;stroke:#99aaad;stroke-width:.17;
+ fill:none;stroke:#99aaad;stroke-width:1.35;
  stroke-linecap:round;opacity:.35;
  vector-effect:non-scaling-stroke;
 }
 #pw-world-surface .pw-photo-map-link.is-future{
- stroke:#728286;stroke-width:.12;opacity:.26;
+ stroke:#728286;stroke-width:1;opacity:.26;
 }
 #novel-ui #pw-world-surface .pw-photo-map-node{
  position:absolute;z-index:2;transform:translate(-50%,-50%);
