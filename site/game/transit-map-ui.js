@@ -210,9 +210,9 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
  // One compact route label per colored service, attached to its geography.
  const gridLabels=[];
  const keyPositions={
-  a:{gx:8,gy:3},
-  b:{gx:7,gy:4},
-  c:{gx:7,gy:6}
+  a:{gx:4,gy:3},
+  b:{gx:8,gy:5},
+  c:{gx:1,gy:6}
  };
  for(const line of metro.LINES){
   const label=create('span','pw-transit-line-key',line.name);
@@ -226,16 +226,18 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
  }
  for(const [id,station] of Object.entries(metro.STATIONS)){
   const name=names[id]||station.label;
-  const node=create('button','pw-transit-place'+(!PHOTO[id]?' is-station':''));
+  const photoSlot=!!PHOTO[id]||!!station.locked;
+  const node=create('button','pw-transit-place'+(!photoSlot?' is-station':'')+
+    (station.locked?' is-future-location':''));
   node.type='button';node.dataset.place=id;node.dataset.current=String(id===current);
   node.dataset.locked=String(!!station.locked);node.dataset.selected='false';
-  const slot=PHOTO[id]?{gx:station.gx,gy:station.gy-1}:
+  const slot=photoSlot?{gx:station.gx,gy:station.gy-1}:
     {gx:station.gx,gy:station.gy};
   node.dataset.gridColumn=String(slot.gx);
   node.dataset.gridRow=String(slot.gy);
-  node.dataset.photograph=String(!!PHOTO[id]);
+  node.dataset.photograph=String(photoSlot);
   let leader=null;
-  if(PHOTO[id]){
+  if(photoSlot){
    leader=document.createElementNS(NS,'path');
    leader.classList.add('pw-transit-photo-leader');
    leader.dataset.place=id;
@@ -256,7 +258,11 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
    remote.onerror=()=>{};
    remote.src=src;
    img.addEventListener('error',()=>{if(img.src!==new URL(fallback,document.baseURI).href)img.src=fallback});
-  }else node.append(create('span','pw-transit-station-dot',station.locked?'×':station.transfer?'◎':'•'));
+  }else if(station.locked){
+   const pic=create('span','pw-transit-photo pw-transit-future-photo');
+   pic.append(create('span','pw-transit-future-symbol','···'));
+   node.append(pic);
+  }else node.append(create('span','pw-transit-station-dot',station.transfer?'◎':'•'));
   node.append(create('span','pw-transit-place-name',name));
   // The photo-to-stop connector lives in the SVG grid layer, not an
   // independent CSS stem with fixed pixels.
