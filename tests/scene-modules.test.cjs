@@ -27,6 +27,18 @@ for(const [id,asset] of [
   assert.equal(rooms[id].layers.fog,true);
   assert.ok(fs.existsSync('site/'+asset.slice(2)), 'missing city stage art: '+id);
 }
+// An approved city image dropped in assets/scenes MUST replace its blockout
+// while inheriting the exact same fog/transition engine and no cutout actor.
+const schoolPhoto={id:'school',file:'school.webp',title:'学校实景',
+  width:1024,height:576,version:'123456789abc'};
+const approved=api.buildRegistry([...catalog.scenes,schoolPhoto]);
+assert.equal(approved.school.image,'./assets/scenes/school.webp');
+assert.equal(approved.school.kind,'surface-world');
+assert.equal(approved.school.layers.player,false);
+assert.equal(approved.school.layers.fog,true);
+assert.equal(approved.school.effects.fixedScreenFog,true);
+assert.equal(approved.school.effects.darkSceneTransition,true);
+assert.throws(()=>api.buildRegistry([...catalog.scenes,schoolPhoto,schoolPhoto]),/duplicated/);
 assert.equal(rooms['classroom-box'].kind,'five-face-3d');
 assert.equal(rooms['classroom-box'].layers.player,true);
 assert.equal(rooms['classroom-box'].layers.enemy,true);
