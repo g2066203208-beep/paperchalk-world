@@ -97,14 +97,15 @@ try{
  assert.ok(groundProof.feet.every(x=>x.valid));
  const verticalRange=Math.max(...groundProof.feet.map(p=>p.y))-
   Math.min(...groundProof.feet.map(p=>p.y));
- assert.ok(verticalRange>.17&&verticalRange<.29,
-  'real near/far placement should show physical grounded depth, not 2D offsets');
+ assert.ok(verticalRange<.001,
+  'the four foes now share one physical ground-depth line');
  const centers=groundProof.feet.map(x=>x.x);
  const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
- assert.ok(gaps.every(x=>x>.25&&x<.40),
-  'natural depth composition must keep four distinct enemy silhouettes');
- assert.ok(groundProof.hero.left>-.99&&groundProof.hero.right<-.23,
-  'the actual woman7 rear cutout must not be clipped or obstruct enemies');
+ assert.ok(gaps.every(x=>x>.30&&x<.47)&&
+  Math.abs(centers.reduce((sum,x)=>sum+x,0)/4)<.09,
+  'four distinct fighters should spread symmetrically around visual center');
+ assert.ok(groundProof.hero.left< -1.1&&groundProof.hero.right<-.70,
+  'foreground heroine can crop naturally on the left without obscuring any centered enemy');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
   'weapon and enemy1 cannot overlap');
  const foemeter=groundProof.enemySizes.map((h,i)=>
