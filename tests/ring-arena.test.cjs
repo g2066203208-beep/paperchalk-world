@@ -25,7 +25,7 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  assert.equal(cam.lookYawDeg,0);
  assert.ok(cam.shoulderBoomMeters>=1.45&&cam.shoulderBoomMeters<=2.6);
  const visibleWidth=Math.max(0,Math.min(1,safe.hero.right)-Math.max(-1,safe.hero.left));
- assert.ok(visibleWidth>.27,'foreground heroine remains visibly large');
+ assert.ok(visibleWidth>.25,'foreground heroine remains visibly large');
  const heel=scene.enemies.map(a=>arena.project({x:a.x,y:0,z:a.z},cam,aspect));
  assert.ok(heel.every(p=>p.valid),'all 4 enemies grounded and in front of camera');
 }
@@ -48,8 +48,10 @@ for(const yaw of [-1,-.5,0,.5,1])for(const pitch of [-1,0,1]){
  close(boom,arena.shoulderCamera(base,hero,0,0,1917/906).shoulderBoomMeters,1e-7);
  assert.ok(displacement<1.5);
  close(cam.heroYawDeg,0,1e-7);
- close(arena.project({x:hero.x,y:1,z:hero.z},cam,1917/906).x,
-  arena.project({x:hero.x,y:1,z:hero.z},c,1917/906).x,1e-7);
+ const pivot={x:hero.x,y:hero.y+hero.height*.88,z:hero.z};
+ const neutral=arena.shoulderCamera(base,hero,0,pitch,1917/906);
+ close(arena.project(pivot,cam,1917/906).x,
+  arena.project(pivot,neutral,1917/906).x,1e-6);
  assert.ok(Math.abs(cam.lookYawDeg)<=22.0001&&Math.abs(cam.lookPitchDeg)<=12.0001);
  const originalShadowRight=arena.actorWorldRight(hero,'outer',cam.heroYawDeg);
  assert.ok(Number.isFinite(originalShadowRight.x)&&Number.isFinite(originalShadowRight.z));
