@@ -195,7 +195,7 @@ assert.match(src,/const data=\[\],N=28,M=36/,
  'silhouette projection needs adequately subdivided ground geometry');
 assert.match(src,/projectedHeadOffset=Math\.sqrt\(distance\)/,
  'cast lamps must be selected by real projected body silhouette geometry');
-assert.match(src,/float shoes=smoothstep\(\.68,\.94,vUv\.y\)/,
+assert.match(src,/float shoes=smoothstep\(\.81,\.98,vUv\.y\)/,
  'contact shader must be limited to real shoe / trouser alpha');
 assert.equal(ring.SURFACE_TEXTURES.floor,'./assets/ring-arena/convenience-floor.svg');
 assert.equal(ring.SURFACE_TEXTURES.ceiling,'./assets/ring-arena/convenience-ceiling.svg');
