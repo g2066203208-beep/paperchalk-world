@@ -840,7 +840,8 @@
      canvas.dataset[kind+'Texture']='error';
     };
     canvas.dataset[kind+'Texture']='loading';
-    material.image.src=material.url;
+    // The worn floor art changed; invalidate long-lived browser texture caches.
+    material.image.src=material.url+(kind==='floor'?'?v=cinematic-floor-v19-20261107':'');
    }
   }catch(err){
    canvas.dataset.error=String(err.message||err);status.textContent='WebGL failed '+String(err.message||err);
