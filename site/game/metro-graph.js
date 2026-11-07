@@ -3,22 +3,29 @@
    "Ring" is a true closed route: it has no artificial terminal. */
 (function(global){
 'use strict';
-// Visual station coordinates form a deliberately legible orthogonal
-// schematic. The authored graph/topology remains unchanged; this is NOT
-// physical street geography. Route corners are built separately.
-const STATIONS=Object.freeze({
- entrance:{label:'住宅前',x:11,y:41},
- school:{label:'学园前',x:26,y:41},
- central:{label:'中央换乘站',x:42,y:41,transfer:true},
- convenience:{label:'商业街',x:87,y:41},
- cafe:{label:'咖啡街',x:29,y:61},
- park:{label:'河岸公园',x:49,y:79},
- mall:{label:'中央商场',x:74,y:79},
- northgate:{label:'北街口',x:69,y:18},
- hospital:{label:'医院前',x:13,y:91,locked:true},
- station:{label:'南站',x:28,y:91,locked:true},
- police:{label:'警察署前',x:46,y:91,locked:true}
+// The transit diagram is defined on ONE shared integer lattice.
+ // gx/gy are grid intersections, never independently hand-tuned percentages.
+ // The same lattice positions rail stations, vector turns, photo anchors
+ // and line badges in desktop and landscape mobile layouts.
+const GRID=Object.freeze({columns:12,rows:6});
+const GRID_STATIONS=Object.freeze({
+ entrance:{label:'住宅前',gx:1,gy:2},
+ school:{label:'学园前',gx:3,gy:2},
+ central:{label:'中央换乘站',gx:5,gy:2,transfer:true},
+ convenience:{label:'商业街',gx:11,gy:2},
+ cafe:{label:'咖啡街',gx:3,gy:4},
+ park:{label:'河岸公园',gx:5,gy:5},
+ mall:{label:'中央商场',gx:9,gy:5},
+ northgate:{label:'北街口',gx:9,gy:1},
+ hospital:{label:'医院前',gx:1,gy:6,locked:true},
+ station:{label:'南站',gx:3,gy:6,locked:true},
+ police:{label:'警察署前',gx:5,gy:6,locked:true}
 });
+const STATIONS=Object.freeze(Object.fromEntries(Object.entries(GRID_STATIONS)
+ .map(([id,station])=>[id,Object.freeze({...station,
+ // Computed compatibility coordinates; do not edit or draw with these.
+ x:station.gx/GRID.columns*100,
+ y:station.gy/GRID.rows*100})])));
 const LINES=Object.freeze([
  Object.freeze({id:'a',name:'住宅线',color:'#E45B70',
    stops:['entrance','school','central','convenience'],ring:false}),
@@ -107,6 +114,6 @@ function conversation(snapshot,route){
  ];
 }
 global.PaperWorldMetro=Object.freeze({
- STATIONS,LINES,getLine,neighbors,nextStop,boardingChoices,path,conversation
+ GRID,STATIONS,LINES,getLine,neighbors,nextStop,boardingChoices,path,conversation
 });
 })(window);
