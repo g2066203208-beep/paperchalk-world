@@ -194,7 +194,10 @@ try{
     assert.equal(await page.locator('#phone-ui [data-phone-page="app"]').isVisible(),true);
     await page.locator('#phone-app-back').click();
     assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
-    await page.locator('#quick-phone').click();
+    // Immersive controls hide the shortcut while the handset is up.
+    // Dismiss by tapping OUTSIDE the handset instead of using any X.
+    assert.equal(await page.locator('#quick-phone').isVisible(),false);
+    await page.locator('#scene').click({position:{x:36,y:35}});
     await expectEdge(page,'right',false);
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
 
@@ -203,6 +206,8 @@ try{
     for(const digit of '000000')await page.locator('#phone-ui [data-key="'+digit+'"]').click();
     assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
     assert.equal(await page.evaluate(()=>window.PaperWorldQuickTools.phone.snapshot().unlockedBy),'pin');
+    await page.locator('#scene').click({position:{x:36,y:35}});
+    await expectEdge(page,'right',false);
     await page.locator('#quick-map').click();
     await expectEdge(page,'right',true);
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
