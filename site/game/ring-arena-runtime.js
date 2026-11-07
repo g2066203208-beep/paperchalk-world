@@ -13,7 +13,7 @@
  const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
  const rad=d=>d*Math.PI/180;
  const SPEC=Object.freeze({
-  stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:13,
+  stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:3.2,ceilingHeight:3.2,
   wallCenterZ:-16,wallArcHalfAngle:rad(78),
   floorWidth:96,floorFrontZ:48,floorBackZ:-55,
   outerRoleRadius:10.55,innerRoleRadius:8.30,
@@ -23,7 +23,7 @@
  // The authored convenience-store wall image is drawn on the existing curved
  // 3D backdrops; actor anchors, depth and camera remain exactly unchanged.
  const WALL_TEXTURE=Object.freeze({
-  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:7,heightMeters:4.15
+  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:9,heightMeters:3.2
  });
  function wallTextureUV(x,y){
   const theta=Math.asin(clamp(x/SPEC.wallRadius,-.975,.975));
@@ -236,9 +236,19 @@
   'float radial=line(r/32.0,40.0,.016);float spokes=line(a,78.0,.013);',
   'float allies=1.0-smoothstep(.016,.065,abs(r-mix(10.55,8.3,uMode)));',
   'float enemies=1.0-smoothstep(.016,.065,abs(r-mix(6.65,12.9,uMode)));',
-  'color=vec3(.005,.013,.016)+vec3(.009,.055,.049)*(radial*.40+spokes*.10)',
-  '+vec3(.006,.085,.08)*(allies+enemies)*.22;',
-  'color+=vec3(.008,.019,.016)*(allies+enemies)*.18;',
+  'float gx=abs(fract(vWorld.x/2.3)-.5);float gz=abs(fract(vWorld.z/2.3)-.5);',
+  'float seam=smoothstep(.485,.499,max(gx,gz));',
+  'color=vec3(.075,.081,.089)-vec3(.013,.014,.016)*seam',
+  '+vec3(.009,.035,.037)*(radial*.32+spokes*.08);',
+  'color+=vec3(.006,.041,.038)*(allies+enemies)*.17;',
+  '}else if(uSurface==2){',
+  'float gx=abs(fract(vWorld.x/2.4)-.5);float gz=abs(fract(vWorld.z/2.4)-.5);',
+  'float seams=smoothstep(.486,.499,max(gx,gz));',
+  'float rail=1.0-smoothstep(.165,.23,abs(fract(vWorld.x/6.4)-.5));',
+  'float strip=1.0-smoothstep(.027,.05,abs(fract(vWorld.z/5.6)-.5));',
+  'float panel=rail*strip;',
+  'color=vec3(.166,.173,.188)-vec3(.024,.025,.027)*seams',
+  '+vec3(.27,.30,.31)*panel;',
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
   'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
@@ -249,16 +259,12 @@
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   'if(uWallReady>.5){',
   'float theta=asin(clamp(vWorld.x/32.0,-.975,.975));',
-  'float u=fract((theta/2.7227136+.5)*7.0);',
-  'float v=clamp(vWorld.y/4.15,.003,.997);',
+  'float u=fract((theta/2.7227136+.5)*9.0);',
+  'float v=clamp(vWorld.y/3.2,.003,.997);',
   'vec3 wallArt=texture2D(uWallTexture,vec2(clamp(u,.002,.998),v)).rgb;',
   'color=wallArt*vec3(.87,.88,.91);',
-   // The 13m arena mesh is a distant backdrop, NOT a 13m retail wall. Keep
-   // the authored shop art at realistic 4.15m scale; its upper edge becomes
-   // a dark neutral overhead backdrop instead of stretching the image.
-   'float overhead=smoothstep(4.07,4.30,vWorld.y);',
-   'vec3 upperBackdrop=vec3(.073,.085,.105);',
-   'color=mix(color,upperBackdrop,overhead);',
+   // 2172x724 source is a 3:1 panel. Nine repeats across the 87m arc
+   // produce 9.68m x 3.2m panels without any source-art distortion.
   '}',
   '}gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
@@ -318,16 +324,21 @@
    // the camera. The 4.15m authored wall then ended far below screen top,
    // leaving a huge empty overhead band. Match the outer view's ~8m
    // camera-to-wall distance without touching actor anchors or optics.
-   // The shallower bend keeps even the arc ends behind the inner camera.
-   ? {x:SPEC.wallRadius*Math.sin(a),z:15.35-bow*.25}
+   // Mirror the outer arc's depth curvature, maintaining equal perspective
+   // scale across the wall in both camera directions.
+   ? {x:SPEC.wallRadius*Math.sin(a),z:15.35+bow*.7}
    : {x:SPEC.wallRadius*Math.sin(a),z:3.4-bow*.7};
  }
  function worldMesh(gl){
-  const floor=[],backInner=[],backOuter=[];
+  const floor=[],backInner=[],backOuter=[],ceiling=[];
   const push=(to,a,b,c)=>to.push(...a,...b,...c);
   const w=SPEC.floorWidth/2,z0=SPEC.floorFrontZ,z1=SPEC.floorBackZ;
   push(floor,[-w,0,z0],[-w,0,z1],[w,0,z1]);
   push(floor,[-w,0,z0],[w,0,z1],[w,0,z0]);
+  // Actual 3D ceiling at the same world height as the authored wall.
+  const roofY=SPEC.ceilingHeight;
+  push(ceiling,[-w,roofY,z0],[w,roofY,z1],[-w,roofY,z1]);
+  push(ceiling,[-w,roofY,z0],[w,roofY,z0],[w,roofY,z1]);
   // A pair of broad curved BACKDROPS, not one enormous closed cylinder.
   // Each faces its respective camera mode, and both are real 3D surfaces.
   const N=160;
@@ -342,7 +353,7 @@
    }
   };
   addWall(backInner,'inner');addWall(backOuter,'outer');
-  return [floor,backInner,backOuter].map(arr=>{
+  return [floor,backInner,backOuter,ceiling].map(arr=>{
    const buffer=gl.createBuffer(),data=new Float32Array(arr);
    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
    return {buffer,count:data.length/3};
@@ -449,7 +460,7 @@
    :previewPose==='level'
     ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
     :'./assets/characters/protagonist-back-combat-3q-final.webp';
-  let gl=null,world=null,portrait=null,shadow=null,floor=null,backInner=null,backOuter=null,quad=null;
+  let gl=null,world=null,portrait=null,shadow=null,floor=null,backInner=null,backOuter=null,ceiling=null,quad=null;
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
   const textures=new Map();
   const actionTextures=new Map(); // separate GPU action poses at real 3D anchors
@@ -461,7 +472,7 @@
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur']);
-   [floor,backInner,backOuter]=worldMesh(gl);
+   [floor,backInner,backOuter,ceiling]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
    for(const id of Object.keys(bindings))textures.set(id,prepareTexture(gl));
@@ -953,7 +964,9 @@
    gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
    gl.uniform1i(world.uWallTexture,0);
    gl.uniform1f(world.uWallReady,wallMaterialReady?1:0);
-   drawWorld(floor,0,vp);drawWorld(mode==='outer'?backInner:backOuter,1,vp);
+   drawWorld(floor,0,vp);
+   drawWorld(ceiling,2,vp);
+   drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    gl.disableVertexAttribArray(world.aP);
    const all=visibleActors(mode);
    const now=performance.now();
