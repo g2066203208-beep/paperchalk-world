@@ -474,11 +474,21 @@
   'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;varying float vFloorSpecular;uniform float uTime;uniform highp int uSurface;uniform float uMode;uniform float uGeometry;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;uniform sampler2D uWingTexture;uniform float uWingReady;',
-  'uniform float uFloorReady;uniform float uCeilingReady;',
+  'uniform float uFloorReady;uniform float uCeilingReady;uniform float uWindowCutouts;',
   worldColorGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
   'void main(){vec3 color;',
+  // This is a physical background plane behind actual pierced windows.
+  // During a normal journey, exterior light slides across the glass.
+  'if(uSurface==4){',
+  'float lane=fract(vWallUv.x*7.0-uTime*.20);',
+  'float lightStrip=pow(max(0.0,1.0-abs(lane-.5)*8.0),6.0);',
+  'float blur=sin(vWallUv.x*21.0-uTime*.47)*.035;',
+  'vec3 outside=vec3(.27,.35,.39)+vec3(blur);',
+  'outside+=vec3(.30,.24,.17)*lightStrip;',
+  'gl_FragColor=vec4(outside,1.0);return;',
+  '}',
   'if(uSurface==0){',
   'float r=length(vWorld.xz);float a=atan(vWorld.x,vWorld.z)/6.2831853+.5;',
   'float radial=line(r/32.0,40.0,.016);float spokes=line(a,78.0,.013);',
@@ -500,7 +510,9 @@
   'color=vec3(.003,.011,.014)+vec3(.006,.045,.038)*line(vWorld.x,3.0,.016)',
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   'if(uWallReady>.5){',
-  'vec3 wallArt=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(vWallUv.y,.003,.997))).rgb;',
+  'vec4 wallSample=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(vWallUv.y,.003,.997)));',
+  'if(uSurface==1&&uWindowCutouts>.5&&wallSample.a<.70)discard;',
+  'vec3 wallArt=wallSample.rgb;',
   'float footAO=mix(.75,1.0,smoothstep(.04,.82,vWorld.y));',
   'color=wallArt*vec3(.81,.83,.88)*footAO;',
   'if(uSurface==3&&uWingReady>.5){',
@@ -689,7 +701,7 @@
    const room=window.PaperWorldSceneGeometry?.build?.(ACTIVE_GEOMETRY);
    if(!room)throw Error('Unavailable room template '+ACTIVE_GEOMETRY.shape);
    const names=['floorOuter','floorInner','backInner','backOuter',
-    'ceilingOuter','ceilingInner','wingOuter','wingInner'];
+    'ceilingOuter','ceilingInner','wingOuter','wingInner','exterior'];
    return names.map(name=>{
     const data=new Float32Array(room.meshes[name]);
     const buffer=gl.createBuffer();
@@ -889,7 +901,7 @@
     ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
     :'./assets/characters/protagonist-back-combat-3q-final.webp';
   let gl=null,world=null,portrait=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,wingOuter=null,wingInner=null,quad=null;
-   let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null;
+   let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null,exteriorMesh=null;
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
    const surfaceMaterials=Object.fromEntries(Object.entries({...SURFACE_TEXTURES,wing:null})
     .map(([kind,url])=>[kind,{url,texture:null,image:null,ready:false,error:null}]));
@@ -901,14 +913,14 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uViewEye','uGeometry']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uViewEye','uGeometry','uWindowCutouts']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
     ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
     ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uClipUv','uTexture','uStrength','uContact']);
-   [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner,wingOuter,wingInner]=worldMesh(gl);
+   [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner,wingOuter,wingInner,exteriorMesh]=worldMesh(gl);
    shadowGrid=projectedShadowMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -1645,6 +1657,7 @@
    gl.uniform1f(world.uTime,elapsed);
    gl.uniform1f(world.uMode,mode==='inner'?1:0);
    gl.uniform1f(world.uGeometry,ACTIVE_GEOMETRY.shape==='arc'?0:1);
+   gl.uniform1f(world.uWindowCutouts,ACTIVE_WALL.alphaWindows?1:0);
    setSceneLighting(world,mode);
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
@@ -1664,6 +1677,7 @@
    gl.uniform1f(world.uWingReady,surfaceMaterials.wing.ready?1:0);
    drawWorld(mode==='outer'?floorOuter:floorInner,0,vp);
    drawWorld(mode==='outer'?ceilingOuter:ceilingInner,2,vp);
+   if(ACTIVE_WALL.alphaWindows&&exteriorMesh?.count)drawWorld(exteriorMesh,4,vp);
    drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    drawWorld(mode==='outer'?wingOuter:wingInner,3,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
@@ -1735,9 +1749,9 @@
     new Set(pack.actors.visible):null;
    const epoch=++environmentEpoch;
    const oldMeshes=[floorOuter,floorInner,backInner,backOuter,
-    ceilingOuter,ceilingInner,wingOuter,wingInner];
+    ceilingOuter,ceilingInner,wingOuter,wingInner,exteriorMesh];
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,
-    ceilingInner,wingOuter,wingInner]=worldMesh(gl);
+    ceilingInner,wingOuter,wingInner,exteriorMesh]=worldMesh(gl);
    for(const mesh of oldMeshes)if(mesh?.buffer)gl.deleteBuffer(mesh.buffer);
    wallMaterialReady=false;wallMaterialError=null;
    canvas.dataset.wallTexture='loading';canvas.dataset.environment=id;
@@ -1833,6 +1847,7 @@
      Math.abs(lens.fov-actual.fov)<.00001;
    })(),
    environment:environmentId,geometry:{...ACTIVE_GEOMETRY},
+   windowOpenings:{alpha:!!ACTIVE_WALL.alphaWindows,exteriorMeshVertices:exteriorMesh?.count||0},
    connectionMaterial:{url:surfaceMaterials.wing.url,ready:surfaceMaterials.wing.ready,
     error:surfaceMaterials.wing.error},
    actorAnchors:window.PaperWorldEnvironments?.get?.(environmentId)?.actors?.positions||null,
