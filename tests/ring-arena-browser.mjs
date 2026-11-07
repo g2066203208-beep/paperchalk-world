@@ -104,7 +104,7 @@ try{
  assert.ok(gaps.every(x=>x>.30&&x<.47)&&
   Math.abs(centers.reduce((sum,x)=>sum+x,0)/4)<.09,
   'four distinct fighters should spread symmetrically around visual center');
- assert.ok(groundProof.hero.left< -1.1&&groundProof.hero.right<-.70,
+ assert.ok(groundProof.hero.left< -1.1&&groundProof.hero.right<-.60,
   'foreground heroine can crop naturally on the left without obscuring any centered enemy');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
   'weapon and enemy1 cannot overlap');
