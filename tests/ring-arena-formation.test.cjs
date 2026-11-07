@@ -41,8 +41,11 @@ for(const mode of ['outer','inner']){
    'foe row must occupy screen right, yet be entirely on camera');
   assert.ok(Math.abs(foot(hero).x)<.72);
   const heightFractions=safety.foes.map(x=>x.heightFraction);
-  assert.ok(Math.max(...heightFractions)-Math.min(...heightFractions)<.005,
-   'enemy heights cannot be randomly different due to depth');
+  // Different canonical actors are 1.58–1.60m tall; normalize by their
+  // TRUE heights so the perspective test measures depth, not anatomy.
+  const normalized=heightFractions.map((h,i)=>h/formation.enemies[i].height);
+  assert.ok(Math.max(...normalized)-Math.min(...normalized)<.001,
+   'same-depth opponents must have identical per-meter screen scale');
   if(aspect===1917/906){
    // Real 1.58-1.60m bodies are physically closer, not multiplied by CSS.
    // More readable than V10's ~0.331/0.353 full body height fractions.
