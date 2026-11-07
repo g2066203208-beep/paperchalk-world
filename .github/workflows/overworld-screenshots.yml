@@ -60,11 +60,12 @@ jobs:
           exit 1
       - name: Verify daytime state rules
         run: node --test tests/daily-life.test.cjs tests/metro-graph.test.cjs tests/metro-map-geometry.test.cjs tests/phone-life.test.cjs tests/world-atlas.test.cjs
+      - name: Capture original dot-matrix city stations, real cabin and subway arrival
+        run: node tests/transit-map-browser.mjs
       - name: Capture ten-city zoomable atlas, landscape controls and location photographs
         run: node tests/world-map-browser.mjs
-      # The old tests assumed the now-retired nine-card map DOM.
-      # Keep them in the repo as migration fixtures, but do not fail
-      # the regional atlas visual build on intentionally obsolete selectors.
+      # Both renderers share the actual state, place callbacks and staged scene.
+      # Regression screenshots verify the city metro and intercity atlas together.
       - name: Make review overview from real browser frames
         if: success()
         run: |
