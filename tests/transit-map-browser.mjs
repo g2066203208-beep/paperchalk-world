@@ -245,10 +245,14 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
  const fallbackInfo=await page.evaluate(()=>{
   const player=window.PaperchalkL2D?.get('player');
   if(!player?.root)throw Error('Canonical player missing');
-  const old=player.root.dataset.l2dState;
+  const old=player.root.dataset.l2dState,wasHidden=player.root.hidden;
+  // A hidden original source node is a stable reproduction of the real
+  // user's locally unavailable character renderer. An animation tick may
+  // rewrite dataset.l2dState, but it cannot override this browser property.
+  player.root.hidden=true;
   player.root.dataset.l2dState='loading';
   window.PaperWorldGameRingArena.render(0);
-  return {old};
+  return {old,wasHidden};
  });
  await page.waitForFunction(()=>{
   const live=window.PaperWorldGameRingArena.inspect();
@@ -258,9 +262,10 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
  await shot('25-metro-original-protagonist-fallback-unready-local-l2d.png');
  await page.evaluate(old=>{
   const p=window.PaperchalkL2D.get('player');
-  p.root.dataset.l2dState=old;
+  p.root.hidden=old.wasHidden;
+  p.root.dataset.l2dState=old.old;
   window.PaperWorldGameRingArena.render(0);
- },fallbackInfo.old);
+ },fallbackInfo);
  const stateAfterNext=await page.evaluate(()=>{
   const s=window.PaperWorldDailyLifeUI.snapshot();
   const btn=[...document.querySelectorAll('#pw-metro-cabin .pw-cabin-actions button')]
