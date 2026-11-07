@@ -28,6 +28,7 @@
   url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:9,heightMeters:2.85
  });
  let ACTIVE_WALL=WALL_TEXTURE;
+ let ACTIVE_GEOMETRY=Object.freeze({shape:'arc'});
  const SURFACE_TEXTURES=Object.freeze({
   floor:'./assets/ring-arena/convenience-floor.svg',
   ceiling:'./assets/ring-arena/convenience-ceiling.svg'
@@ -435,7 +436,7 @@
   'precision highp float;',
   'attribute vec3 aP;attribute vec2 aUv;',
   'uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;',
-  'uniform vec3 uViewEye;',
+  'uniform vec3 uViewEye;uniform float uGeometry;',
   'varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;',
   'varying float vFloorSpecular;',
   lightingGLSL,
@@ -445,6 +446,7 @@
   'vec3 n=uSurface==0?vec3(0.0,1.0,0.0):',
   'uSurface==2?vec3(0.0,-1.0,0.0):',
   'uSurface==3?vec3(aP.x>0.0?-1.0:1.0,0.0,0.0):',
+  'uGeometry>.5?vec3(0.0,0.0,1.0):',
   'normalize(vec3(.7*sin(theta),0.0,(uMode>.5?-1.0:1.0)*cos(theta)));',
   'vIrradiance=ringIrradiance(aP,n);',
   'vFloorSpecular=0.0;',
@@ -469,7 +471,7 @@
   '}'
  ].join('\n');
  const worldFragment=[
-  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;varying float vFloorSpecular;uniform float uTime;uniform highp int uSurface;uniform float uMode;',
+  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;varying float vFloorSpecular;uniform float uTime;uniform highp int uSurface;uniform float uMode;uniform float uGeometry;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;',
   'uniform float uFloorReady;uniform float uCeilingReady;',
@@ -484,8 +486,8 @@
   'float enemies=1.0-smoothstep(.016,.065,abs(r-mix(6.65,12.9,uMode)));',
   'color=vec3(.18,.20,.22);',
   'if(uFloorReady>.5)color=texture2D(uFloorTexture,fract(vWallUv)).rgb*.89;',
-  'color+=vec3(.007,.018,.018)*(radial*.3+spokes*.08);',
-  'color+=vec3(.002,.019,.018)*(allies+enemies)*.10;',
+  'color+=vec3(.007,.018,.018)*(radial*.3+spokes*.08)*(1.0-step(.5,uGeometry));',
+  'color+=vec3(.002,.019,.018)*(allies+enemies)*.10*(1.0-step(.5,uGeometry));',
   '}else if(uSurface==2){',
   'color=vec3(.46,.48,.51);',
   'if(uCeilingReady>.5)color=texture2D(uCeilingTexture,fract(vWallUv)).rgb*.83;',
@@ -680,6 +682,19 @@
   return {u:sign*wallArcMeters(angle)/tile+9,v:depth/tile};
  }
  function worldMesh(gl){
+  if(ACTIVE_GEOMETRY.shape!=='arc'){
+   const room=window.PaperWorldSceneGeometry?.build?.(ACTIVE_GEOMETRY);
+   if(!room)throw Error('Unavailable room template '+ACTIVE_GEOMETRY.shape);
+   const names=['floorOuter','floorInner','backInner','backOuter',
+    'ceilingOuter','ceilingInner','wingOuter','wingInner'];
+   return names.map(name=>{
+    const data=new Float32Array(room.meshes[name]);
+    const buffer=gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
+    return {buffer,count:data.length/5};
+   });
+  }
   const floorOuter=[],floorInner=[],backInner=[],backOuter=[],ceilingOuter=[],ceilingInner=[],wingOuter=[],wingInner=[];
   const push=(to,a,b,c)=>{for(const v of [a,b,c])to.push(...v,...(v.length===3?[0,0]:[]));};
   const N=SPEC.arcSegments,D=SPEC.surfaceSegments;
@@ -883,7 +898,7 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uViewEye']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uViewEye','uGeometry']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
@@ -974,6 +989,8 @@
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
+  let environmentLightRig=null;
+  const sceneRig=whichMode=>environmentLightRig||lightRigs[whichMode]||lightRigs.outer;
   let mouseLookX=0,mouseLookY=0;
   const params=new URLSearchParams(window.location.search);
   let lightState=LIGHT_STATES.includes(params.get('lights'))?params.get('lights'):'on';
@@ -1333,7 +1350,7 @@
    gl.drawArrays(gl.TRIANGLES,0,mesh.count);
   }
   function setSceneLighting(prog,whichMode){
-   const rig=lightRigs[whichMode]||lightRigs.outer;
+   const rig=sceneRig(whichMode);
    gl.uniform3fv(prog['uLampPositions[0]'],rig.positions);
    gl.uniform3fv(prog['uLampColors[0]'],currentLighting.colors);
    gl.uniform1fv(prog['uLampLevels[0]'],currentLighting.levels);
@@ -1344,7 +1361,7 @@
   // shadow to a different fixture when the chosen lamp flickers off.
   // Physical actor lunges still move the actual shadow within that fixed light.
   function assignedShadowLamp(actor,whichMode=mode){
-   const rig=lightRigs[whichMode];
+   const rig=sceneRig(whichMode);
    const anchor=visibleActors(whichMode).find(a=>a.id===actor.id)||actor;
    const choices=[];
    for(let i=0;i<rig.count;i++){
@@ -1371,7 +1388,7 @@
    gl.vertexAttribPointer(fixture.aUv,2,gl.FLOAT,false,8,0);
    gl.uniform1f(fixture.uGlow,0);
    gl.uniform2f(fixture.uSize,.21,1.08);
-   const rig=lightRigs[mode];
+   const rig=sceneRig(mode);
    for(let i=0;i<rig.count;i++){
     gl.uniform3fv(fixture.uCenter,rig.positions.subarray(i*3,i*3+3));
     gl.uniform1f(fixture.uLevel,currentLighting.levels[i]);
@@ -1610,6 +1627,7 @@
    gl.uniform3fv(world.uViewEye,new Float32Array([cam.eye.x,cam.eye.y,cam.eye.z]));
    gl.uniform1f(world.uTime,elapsed);
    gl.uniform1f(world.uMode,mode==='inner'?1:0);
+   gl.uniform1f(world.uGeometry,ACTIVE_GEOMETRY.shape==='arc'?0:1);
    setSceneLighting(world,mode);
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
@@ -1688,6 +1706,9 @@
    const pack=window.PaperWorldEnvironments?.get?.(id);
    if(!pack||!gl)return false;
    environmentId=id;ACTIVE_WALL=pack.wall;
+   ACTIVE_GEOMETRY=pack.geometry||{shape:'arc'};
+   environmentLightRig=ACTIVE_GEOMETRY.shape==='arc'?null:
+    window.PaperWorldSceneGeometry?.lightRig?.(ACTIVE_GEOMETRY)||null;
    const epoch=++environmentEpoch;
    const oldMeshes=[floorOuter,floorInner,backInner,backOuter,
     ceilingOuter,ceilingInner,wingOuter,wingInner];
@@ -1783,7 +1804,7 @@
      Math.abs(lens.focus.z-actual.focus.z)<.00001&&
      Math.abs(lens.fov-actual.fov)<.00001;
    })(),
-   environment:environmentId,encounter:'one-centered-grounded-opponents',encounterControls:0,
+   environment:environmentId,geometry:{...ACTIVE_GEOMETRY},encounter:'one-centered-grounded-opponents',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
     cameraLook:{mode:'hero-root-tps-shoulder-rig',
      yawDeg:lens?.lookYawDeg||0,pitchDeg:lens?.lookPitchDeg||0,
@@ -1808,7 +1829,7 @@
       vertices:kind==='floor'?(mode==='outer'?floorOuter:floorInner)?.count:
        (mode==='outer'?ceilingOuter:ceilingInner)?.count,
       mapping:'curved-wall-arc-and-depth'}])),
-    lighting:{kind:LIGHTING.kind,count:lightRigs[mode].count,
+    lighting:{kind:LIGHTING.kind,count:sceneRig(mode).count,
      state:lightState,levels:[...currentLighting.levels],redMix:[...currentLighting.redMix],
      redFixtureIndices:[...currentLighting.redFixtureIndices],
      ambient:[...currentLighting.ambient],noDetachedRedLight:true,
@@ -1821,7 +1842,7 @@
      sourcePolicy:'fixed-per-actor-world-luminaire-power-only',
      switchableFixtures:true,
      fixtureHeight:LIGHTING.height,
-     positions:[...lightRigs[mode].positions],
+     positions:[...sceneRig(mode).positions],
      colors:[...currentLighting.colors],
      colorPipeline:'linear-sRGB-shading-filmic-compression',
      spriteNormal:'camera-facing-pseudonormal-preserves-artist-source'},
