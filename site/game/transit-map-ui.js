@@ -469,10 +469,22 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
     placedCities.push({x:best.x,y:best.y,w:cityCardWidth,h:cityCardHeight});
    }
   }
+  // The real eight-station metro is the main navigation layer. Surrounding
+  // atlas photo POIs must not blanket its station names at initial city zoom.
+  // Only reveal those optional investigations at street-level detail.
   const occupied=[];
+  if(!metroLayer.hidden&&currentCity==='kirihama'){
+   for(const st of Object.values(metro.STATIONS)){
+    const loc=localPoint(st);
+    occupied.push({x:x+loc.x*scale,y:y+(loc.y-(PHOTO[Object.keys(metro.STATIONS).find(id=>metro.STATIONS[id]===st)]?CELL:0))*scale});
+   }
+  }
   for(const {node,poi} of worldNodes){
    const p=location(poi),px=x+p.x*scale,py=y+p.y*scale;
-   let visible=scale>=(transitPOIs.has(poi.id)?1.9:2.45)&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
+   const threshold=poi.id===here?1.8:
+    (poi.city==='kirihama'&&currentCity==='kirihama')?3.85:
+    transitPOIs.has(poi.id)?1.9:2.45;
+   let visible=scale>=threshold&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
    // Real screen-space occupancy, not piles of overlapping photo cards.
    if(visible){
     visible=!occupied.some(q=>Math.abs(q.x-px)<112&&
