@@ -602,3 +602,40 @@
 #pw-world-surface .pw-dot-world-map .pw-dot-planned-line[data-city="kirihama"]{
  display:none!important;
 }
+
+/* VECTOR MAP V10: no parent raster-scale, no low-resolution texture zoom.
+   SVG viewBox and pixel-anchored HTML are updated for each viewport. */
+#pw-world-surface .pw-dot-world-map .pw-dot-world-canvas{
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;
+ transform:none!important;will-change:auto!important;
+ isolation:isolate;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-rail-canvas{
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;
+ display:block!important;transform:none!important;
+ overflow:hidden!important;z-index:1!important;
+ shape-rendering:geometricPrecision;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-rail-canvas path,
+#pw-world-surface .pw-dot-world-map .pw-dot-rail-canvas circle{
+ shape-rendering:geometricPrecision;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-cities,
+#pw-world-surface .pw-dot-world-map .pw-dot-places,
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places,
+#pw-world-surface .pw-dot-world-map .pw-dot-areas{
+ position:absolute!important;inset:0!important;
+ transform:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi,
+#pw-world-surface .pw-dot-world-map .pw-transit-place{
+ will-change:auto;image-rendering:auto!important;
+ -webkit-font-smoothing:antialiased;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-photo img,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-photo img{
+ image-rendering:auto!important;
+}
