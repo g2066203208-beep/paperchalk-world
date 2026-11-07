@@ -142,6 +142,10 @@ try{
  assert.ok(room3d.geometry.widthMeters>room3d.geometry.depthMeters);
  assert.equal(room3d.wallMaterial.repeats,1);
  assert.equal(room3d.lighting.positions.length,18);
+ assert.equal(room3d.platformLighting.sources,4,
+  'station has left/right glass-side plus unseen opposite-side world lamps');
+ assert.equal(room3d.platformLighting.exposure,1,
+  'subway stop illuminates its interior from the outside platforms');
  assert.ok(room3d.roomSurfaces.floor.vertices>0&&room3d.roomSurfaces.ceiling.vertices>0);
  assert.equal(room3d.cameraParity,true,'the physical train uses one coherent camera/projection');
  // The combat renderer normally starts with a DIFFERENT female-07 cutout.
@@ -165,6 +169,30 @@ try{
   .evaluate(el=>getComputedStyle(el).display),'none',
   'do not layer flat character cutouts on top of the real WebGL world');
  await shot('21-dot-map-real-metro-carriage.png');
+ // Prove that exterior station lamps and the actual rendered alpha windows
+ // alter the REAL WebGL pixels. A fake static blue sky would fail this.
+ await page.evaluate(()=>window.PaperWorldGameRingArena.setPlatformExposure(0));
+ await page.waitForTimeout(240);
+ await shot('23-dot-metro-moving-tunnel-no-platform-light.png');
+ await page.evaluate(()=>window.PaperWorldGameRingArena.setPlatformExposure(1));
+ await page.waitForTimeout(240);
+ const stationContrast=Number(execFileSync('python3',['-c',`
+from PIL import Image
+import sys
+on=Image.open(sys.argv[1]).convert('RGB')
+off=Image.open(sys.argv[2]).convert('RGB')
+sample=[]
+for y in range(203,316,12):
+ for x in range(800,1190,17):
+  a=on.getpixel((x,y))
+  b=off.getpixel((x,y))
+  sample.append(sum(abs(a[c]-b[c]) for c in range(3))/3)
+print(round(sum(sample)/len(sample),3))
+`,path.join(out,'21-dot-map-real-metro-carriage.png'),
+path.join(out,'23-dot-metro-moving-tunnel-no-platform-light.png')],{encoding:'utf8'}));
+ assert.ok(stationContrast>4,
+  'actual window pixels must change under exterior platform lights: '+stationContrast);
+ console.log('METRO STATION LIGHT PIXEL DIFFERENCE',stationContrast);
  // Genuine shared six-bulb lighting: use the original world lighting API
  // on strip geometry, not a CSS darkness filter on the artist's bitmap.
  await page.evaluate(()=>window.PaperWorldGameRingArena.setLighting('outage'));
