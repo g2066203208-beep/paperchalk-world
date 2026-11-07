@@ -73,10 +73,33 @@
       if(fn)b.addEventListener('click',fn);
       return b;
     }
+    // Fictional-city node positions. Photo previews are replaceable reference
+    // photographs, NOT claims that these are the game's actual locations.
+    // Existing destinations use the authoritative life engine; future nodes
+    // remain visibly locked instead of navigating to nonexistent scenes.
     const pinData=Object.freeze([
-      ['entrance','家',15,74],['school','学校',32,22],
-      ['convenience','便利店',53,54],['cafe','咖啡店',36,78],
-      ['mall','商场',81,31],['park','公园',80,76]
+      {id:'entrance',name:'家',x:16,y:23,
+       photo:'https://img.livable.co.jp/?h=576&url=https%3A%2F%2Fwww.livable.co.jp%2Fproject-image%2F81%2F818%2F81889%2F81889_22863358.jpg%3F20180412221044&w=768'},
+      {id:'school',name:'学校',x:46,y:17,
+       photo:'https://ferret-one.akamaized.net/images/6048928c1ba9cc139160fd7c/original.jpeg'},
+      {id:'convenience',name:'便利店',x:77,y:23,
+       photo:'https://www.biz-lixil.com/case/images/B250014c.jpg'},
+      {id:'cafe',name:'咖啡厅',x:24,y:49,
+       photo:'https://images.unsplash.com/photo-1593344745356-6e4c8740c3af?auto=format&fit=crop&w=420&q=75'},
+      {id:'mall',name:'商场',x:56,y:47,
+       photo:'https://www.aeon-jreit.co.jp/file/portfolio-f42a862f3c3b544b4e48580a3f2c1f0702b4c23e.jpg'},
+      {id:'park',name:'公园',x:84,y:50,
+       photo:'https://ak-d.tripcdn.com/images/1mi1m224x8u2ae3b0B5E2.jpg?proc=source%2Ftrip'},
+      {id:'hospital',name:'医院',x:15,y:75,locked:true},
+      {id:'station',name:'车站',x:46,y:75,locked:true},
+      {id:'police',name:'警察局',x:78,y:75,locked:true}
+    ]);
+    const mapLinks=Object.freeze([
+      ['entrance','school'],['school','convenience'],
+      ['entrance','cafe'],['cafe','mall'],['mall','convenience'],
+      ['mall','park'],['cafe','park'],
+      ['entrance','hospital'],['hospital','station'],
+      ['station','police'],['police','park'],['station','mall']
     ]);
     function projectedCost(from,to){
       const a=locs[from],b=locs[to];
@@ -98,68 +121,107 @@
       return {ok:true,reason:'可以前往',cost};
     }
     function drawMap(){
-      const s=get();heading.textContent='城区地图';
-      note.textContent=s.calendar.month+'月'+s.calendar.date+'日 '+s.calendar.time;
+      const s=get();
+      heading.textContent='地区选择';
+      note.textContent=s.calendar.month+'月'+s.calendar.date+'日  '+s.calendar.time;
       frame.dataset.view='map';
-      const left=el('div','pw-map-drawing');
-      left.innerHTML='<svg viewBox="0 0 900 610" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'+
-        '<defs><pattern id="pwmapblock" width="104" height="84" patternUnits="userSpaceOnUse"><path d="M12 12h78v60H12z" fill="#636c69" opacity=".16" stroke="#b5beb4" stroke-opacity=".21"/></pattern>'+
-        '<pattern id="pwmapnoise" width="26" height="26" patternUnits="userSpaceOnUse"><circle cx="6" cy="8" r=".8" fill="#c7c9bb" opacity=".3"/></pattern></defs>'+
-        '<rect width="900" height="610" fill="#35413f"/><rect width="900" height="610" fill="url(#pwmapblock)"/>'+
-        '<path d="M0 150L180 188L436 116L648 192L900 137 M0 430L170 337L430 370L684 287L900 420 M120 0L194 178L181 322L125 610 M455 0L436 121L437 370L457 610 M775 0L672 190L684 288L769 610" fill="none" stroke="#92998d" stroke-width="35" stroke-linecap="round" stroke-linejoin="round"/>'+
-        '<path d="M0 150L180 188L436 116L648 192L900 137 M0 430L170 337L430 370L684 287L900 420 M120 0L194 178L181 322L125 610 M455 0L436 121L437 370L457 610 M775 0L672 190L684 288L769 610" fill="none" stroke="#dde0d1" stroke-opacity=".4" stroke-width="2" stroke-dasharray="16 18"/>'+
-        '<path d="M520 0L530 610" fill="none" stroke="#556d71" stroke-width="40" opacity=".52"/>'+
-        '<path d="M520 0L530 610" fill="none" stroke="#a2aba8" stroke-width="2" opacity=".6"/>'+
-        '<path d="M0 535Q150 471 270 537T550 530T900 515" fill="none" stroke="#526e58" stroke-width="72" opacity=".6"/>'+
-        '<rect width="900" height="610" fill="url(#pwmapnoise)"/></svg>';
-      const coordinate=el('span','pw-map-caption','城区路线示意 · 非实景导航');
-      left.appendChild(coordinate);
-      for(const [id,name,x,y] of pinData){
-        const state=availability(id,s);
-        const b=button('',()=>{choice=id;draw()},'pw-map-pin');
-        b.style.left=x+'%';b.style.top=y+'%';b.dataset.place=id;
-        b.dataset.active=String(choice===id);
-        b.dataset.current=String(s.location===id);
-        // Always show non-open pins; explain why instead of hiding them.
-        const dot=el('span','pw-pin-dot','');
-        const label=el('span','pw-pin-label',name);
-        b.append(dot,label);left.appendChild(b);
+      // No geographic wallpaper: one restrained color, photographic nodes.
+      const stage=el('div','pw-photo-map');
+      stage.setAttribute('aria-label','城区地点选择');
+      const routeSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      routeSvg.setAttribute('viewBox','0 0 100 100');
+      routeSvg.setAttribute('preserveAspectRatio','none');
+      routeSvg.setAttribute('aria-hidden','true');
+      routeSvg.classList.add('pw-photo-map-routes');
+      const byId=Object.fromEntries(pinData.map(p=>[p.id,p]));
+      for(const [from,to] of mapLinks){
+        const p=byId[from],q=byId[to];
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d','M'+p.x+' '+p.y+' L'+q.x+' '+q.y);
+        if(p.locked||q.locked)path.setAttribute('stroke-dasharray','0.4 1.4');
+        path.setAttribute('class','pw-photo-map-link'+(p.locked||q.locked?' is-future':''));
+        routeSvg.appendChild(path);
       }
-      const detail=el('aside','pw-map-detail');
-      const head=el('div','pw-detail-top');
-      head.appendChild(el('small','','当前位置'));
-      head.appendChild(el('strong','',locs[s.location].label));
-      detail.appendChild(head);
-      detail.appendChild(el('p','pw-detail-help',
-        '选择地图上的地点，查看路程与开放状态。出门经过玄关，时间按游戏日历结算。'));
-      if(choice){
-        const a=availability(choice,s),def=locs[choice];
-        const card=el('div','pw-map-select');
-        card.appendChild(el('small','','已选地点'));
-        card.appendChild(el('h3','',def.label));
-        const hrs=String(Math.floor(def.open/60)).padStart(2,'0')+':'+
-          String(def.open%60).padStart(2,'0')+'—'+
+      stage.appendChild(routeSvg);
+      const activeChoice=pinData.find(p=>p.id===choice)||null;
+      const currentCity=s.location==='bedroom'||s.location==='living-room'||
+        s.location==='kitchen'?'entrance':s.location;
+      for(const p of pinData){
+        const locked=!!p.locked;
+        const b=button('',()=>{
+          choice=p.id;draw();
+        },'pw-photo-map-node');
+        b.style.left=p.x+'%';b.style.top=p.y+'%';
+        b.dataset.place=p.id;
+        b.dataset.selected=String(choice===p.id);
+        b.dataset.current=String(currentCity===p.id);
+        b.dataset.locked=String(locked);
+        b.setAttribute('aria-label',p.name+(locked?'，尚未开放':currentCity===p.id?'，当前位置':''));
+        b.setAttribute('aria-pressed',String(choice===p.id));
+        const picture=el('span','pw-photo-map-picture');
+        if(p.photo){
+          const img=el('img','pw-photo-map-photo');
+          img.src=p.photo;img.alt='';
+          img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
+          img.addEventListener('error',()=>{img.hidden=true;picture.dataset.imageFailed='true'});
+          picture.appendChild(img);
+        }
+        const placeholder=el('span','pw-photo-map-placeholder',locked?'?':'◇');
+        picture.appendChild(placeholder);
+        const pin=el('span','pw-photo-map-anchor');
+        const textName=el('span','pw-photo-map-name',p.name);
+        b.append(picture,pin,textName);
+        if(locked)b.title='计划中的地点，暂不能前往';
+        stage.appendChild(b);
+      }
+      const info=el('div','pw-photo-map-info');
+      const identity=el('div','pw-photo-map-identity');
+      identity.appendChild(el('span','pw-photo-map-kicker','当前地点'));
+      identity.appendChild(el('strong','pw-photo-map-current',locs[s.location].label));
+      info.appendChild(identity);
+      const selected=el('div','pw-photo-map-target');
+      if(!activeChoice){
+        selected.appendChild(el('span','pw-photo-map-kicker','目的地'));
+        selected.appendChild(el('strong','','选择照片上的地点'));
+        selected.appendChild(el('small','','可查看到达时间与开放状态'));
+      }else if(activeChoice.locked){
+        selected.appendChild(el('span','pw-photo-map-kicker','未开放地区'));
+        selected.appendChild(el('strong','',activeChoice.name));
+        selected.appendChild(el('small','','场景尚未制作，不能移动'));
+      }else{
+        const def=locs[activeChoice.id],a=availability(activeChoice.id,s);
+        selected.appendChild(el('span','pw-photo-map-kicker','目的地 · '+activeChoice.name));
+        selected.appendChild(el('strong','',a.ok?'预计 '+a.cost+' 分钟':a.reason));
+        const hours=String(Math.floor(def.open/60)).padStart(2,'0')+':'+
+          String(def.open%60).padStart(2,'0')+'–'+
           String(Math.floor(def.close/60)).padStart(2,'0')+':'+
           String(def.close%60).padStart(2,'0');
-        card.appendChild(el('p','',a.reason));
-        card.appendChild(el('p','',def.group==='家'?'住所室内':('营业／开放 '+hrs)));
-        card.appendChild(el('p','', '路程约 '+a.cost+' 分钟'));
-        const go=button('前往 '+def.label,async()=>{
-          if(busy)return;
-          busy=true;
-          const response=await onTravel?.(choice);
-          busy=false;
-          if(response?.ok)closeSurface();
-          else{
-            text(response?.reason||'无法抵达目的地',true);
-            draw();
-          }
-        },'pw-map-depart',!a.ok);
-        card.appendChild(go);detail.appendChild(card);
-      }else{
-        detail.appendChild(el('p','pw-map-empty','选中目的地后再决定是否前往。'));
+        selected.appendChild(el('small','',def.group==='家'?'回到家中':('开放 '+hours)));
       }
-      body.replaceChildren(left,detail);
+      info.appendChild(selected);
+      const actions=el('div','pw-photo-map-actions');
+      if(activeChoice&&!activeChoice.locked){
+        const avail=availability(activeChoice.id,s);
+        const go=button('前往',async()=>{
+          if(busy)return;
+          const dest=choice;
+          busy=true;
+          try{
+            const response=await onTravel?.(dest);
+            if(response?.ok)closeSurface();
+            else {text(response?.reason||'无法抵达目的地',true);draw();}
+          }finally{busy=false}
+        },'pw-photo-map-go',!avail.ok);
+        actions.appendChild(go);
+      }else{
+        const go=button(activeChoice?'暂未开放':'选择地点',null,'pw-photo-map-go',true);
+        actions.appendChild(go);
+      }
+      info.appendChild(actions);
+      stage.appendChild(info);
+      const credit=el('span','pw-photo-map-credit','地点照片为临时实景参考，不代表游戏设定中的真实地点');
+      stage.appendChild(credit);
+      body.replaceChildren(stage);
     }
     function drawBag(){
       const s=get(),items=Object.entries(meta).filter(([key,m])=>
