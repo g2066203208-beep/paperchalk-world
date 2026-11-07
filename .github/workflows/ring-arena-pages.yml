@@ -10,6 +10,8 @@ on:
       - 'site/game/scene-environments.js'
       - 'site/dev/character-bridge.js'
       - 'site/assets/ring-arena/**'
+      - 'site/assets/metro/side/**'
+      - 'tests/test_metro_wall_alpha.py'
       - 'site/assets/characters/female-07/**'
       - 'site/index.html'
       - 'site/convenience-store/**'
@@ -82,6 +84,7 @@ jobs:
           test -s site/assets/ring-arena/convenience-wall.webp
           test -s site/assets/ring-arena/convenience-floor.svg
           test -s site/assets/ring-arena/convenience-ceiling.svg
+          test -s site/assets/metro/side/cabin-master-illustrated.webp
           test -s site/game/ring-arena-director.js
           test -s site/game/ring-arena-director.css
           test -s site/assets/characters/female-07/back.webp
@@ -105,6 +108,7 @@ jobs:
           node tests/ring-arena-formation.test.cjs
           node tests/ring-arena-director.test.cjs
           node tests/scene-camera.test.cjs
+          python3 tests/test_metro_wall_alpha.py
           node tests/test_l2d_display_lifecycle.cjs
           node tests/test_l2d_studio_game_sync.cjs
           python3 tests/test_female06_base_immutable.py
