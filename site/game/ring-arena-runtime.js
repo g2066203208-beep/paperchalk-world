@@ -1308,7 +1308,7 @@
    safety:battleVisualSafety(mode,shotIndex,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
     previewPose==='female7'?FEMALE07_BACK_UV:
-     textures.get('hero').opaqueCombatUv||CANONICAL_BACK_UV),
+     textures.get('hero')?.opaqueCombatUv||CANONICAL_BACK_UV),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:previewPose==='female7'?'user-approved female-07 original back art (static), four animated enemy L2D actors':
     posePreviewEnabled?'legacy fixed-left 3/4 heroine + animated original enemy L2D':
