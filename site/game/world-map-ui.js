@@ -413,8 +413,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const w=map.clientWidth||1200,h=map.clientHeight||720;
   const previous=fit;
   fit=Math.min((w-42)/atlas.SIZE.width,(h-54)/atlas.SIZE.height);
+  // Wide landscape phones use a geographic crop that fills the horizontal
+  // screen. The "全域" action still returns to true contain-fit overview.
+  const cover=(w/h>1.86)?Math.max(fit,(w-40)/atlas.SIZE.width):fit;
   if(!drag||!drag.initialized||Math.abs(previous-fit)>0.01&&scale===previous){
-   scale=fit;tx=(w-atlas.SIZE.width*fit)/2;ty=(h-atlas.SIZE.height*fit)/2;
+   scale=cover;tx=(w-atlas.SIZE.width*scale)/2;ty=(h-atlas.SIZE.height*scale)/2;
   }
   schedule();
  }
@@ -470,7 +473,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    }
   }
   for(const o of poiNodes)if(!sorted.includes(o))o.n.hidden=true;
-  const cardSize=clamp(118/scale,75,240);
+  const cardSize=clamp(118/scale,75,530);
   for(const {n} of cityNodes)n.style.width=cardSize+'px';
   movePopup();
  }
