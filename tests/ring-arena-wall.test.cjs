@@ -200,7 +200,7 @@ assert.match(src,/shadowLampAssignments:\{\.\.\.shadowLampAssignments\}/,
  'real browser QA must inspect stable per-actor projector identity');
 assert.match(src,/vec2 uv=mix\(uClipUv.xy,uClipUv.zw,aUv\)/,
  'projected quads sample only actual alpha content UV');
-assert.match(src,/function maskEmbeddedFogForBattle\(tex,ctx,size,id\)/,
+assert.match(src,/function maskEmbeddedFogForBattle\(tex,ctx,size,id,characterId=/,
  'prepainted opaque fog must be excluded from the temporary battle texture');
 assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
  'fog removal must be an alpha mask, not paint-over on source art');
