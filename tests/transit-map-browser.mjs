@@ -34,6 +34,7 @@ try{
  assert.equal(await page.locator('.pw-photo-map-info').count(),0);
  assert.equal(await page.locator('.pw-transit-place').count(),11);
  assert.ok(await page.locator('.pw-transit-line-hit').count()>=10);
+ assert.ok(await page.locator('.pw-transit-rail-glint').count()>=10);
  await shot('19-transit-map-desktop.png');
  await page.locator('.pw-transit-place[data-place="school"]').click();
  await page.locator('.pw-transit-popup:not([hidden])').waitFor();
@@ -44,8 +45,17 @@ try{
  await shot('21-transit-map-mobile.png');
  await page.setViewportSize({width:1440,height:810});
  await page.waitForTimeout(250);
- const mapRect=await map.boundingBox();
- await page.mouse.click(mapRect.x+mapRect.width*.225,mapRect.y+mapRect.height*.295);
+ // Click an actually visible residential-line segment in screen pixels.
+ // This remains correct after the schematic reflows for a new viewport.
+ const clickPoint=await page.evaluate(()=>{
+   const svg=document.querySelector('.pw-transit-lines');
+   const p=svg?.querySelector('.pw-transit-segment[data-line="a"][data-from="entrance"] .pw-transit-line-hit');
+   if(!svg||!p)throw Error('missing colored track hit target');
+   const xy=p.getPointAtLength(p.getTotalLength()*.48);
+   const rect=svg.getBoundingClientRect();
+   return {x:rect.x+xy.x,y:rect.y+xy.y};
+ });
+ await page.mouse.click(clickPoint.x,clickPoint.y);
  await page.locator('.pw-transit-popup:not([hidden])').waitFor();
  const label=await page.locator('.pw-transit-popup').innerText();
  assert.match(label,/住宅线/);
