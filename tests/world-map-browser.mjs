@@ -27,6 +27,11 @@ try{
   if(!result.ok)throw Error(result.reason);
  });
  await page.locator('#quick-map').click();
+ // Original 12×6 dot-matrix subway map is the default city layer.
+ const metro=page.locator('.pw-transit-map');
+ await metro.waitFor({state:'visible'});
+ assert.equal(await page.locator('.pw-transit-grid-dot').count(),91);
+ await page.locator('.pw-map-mode-toggle').click();
  const map=page.locator('.pw-world-map');
  await map.waitFor({state:'visible'});
  await page.waitForTimeout(700);
