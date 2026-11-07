@@ -42,6 +42,16 @@ try{
  await page.locator('#pw-world-surface:not([hidden])').waitFor();
  assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'城区交通');
  await shot('17-mobile-city-map.png');
+ assert.equal(await page.locator('.pw-photo-map-info').count(),0);
+ await page.locator('.pw-transit-place[data-place="school"]').click();
+ await page.locator('.pw-transit-popup:not([hidden])').waitFor();
+ const mapRect=await page.locator('.pw-transit-map').boundingBox();
+ const popupRect=await page.locator('.pw-transit-popup').boundingBox();
+ assert.ok(popupRect.x>=mapRect.x-1&&popupRect.y>=mapRect.y-1&&
+   popupRect.x+popupRect.width<=mapRect.x+mapRect.width+1&&
+   popupRect.y+popupRect.height<=mapRect.y+mapRect.height+1,
+   'popup anchored near photo must stay on small screen: '+JSON.stringify(popupRect));
+ await shot('18-mobile-local-photo-menu.png');
  assert.deepEqual(errors.filter(x=>/TypeError|ReferenceError|SyntaxError/.test(x)),[]);
  console.log(JSON.stringify({PASS:true,viewport:'844x390',phoneFocusedBounds:bounds,screenshots:4}));
 }finally{await browser.close()}
