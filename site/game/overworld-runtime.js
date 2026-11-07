@@ -16,7 +16,7 @@
     storage:store,
     onStatEvent:event=>global.PaperWorldTopHUD?.applyEvent?.(event)
   });
-  let mode=false,hideTimer=null,traveling=false,contextOpen=false;
+  let mode=false,hideTimer=null,traveling=false,contextOpen=false,suppressContextTapUntil=0;
   const h=(tag,className,text)=>{
     const el=document.createElement(tag);
     if(className)el.className=className;
@@ -239,6 +239,7 @@
   // transient contextual list where the player actually touched the scene.
   view.addEventListener('click',event=>{
     if(!mode||traveling||root.hidden||phone?.isOpen?.()||surfaces?.isOpen?.()||!transit.hidden)return;
+    if(performance.now()<suppressContextTapUntil)return;
     if(event.target.closest('button,#novel-ui,#dev-tools,#dev-stage,#scene-menu'))return;
     if(event.target.closest('#pw-world-director'))return;
     const rect=view.getBoundingClientRect();
@@ -337,6 +338,8 @@
   intercept('quick-map',()=>surfaces?.openMap?.());
   intercept('quick-backpack',()=>surfaces?.openBag?.());
   global.addEventListener('paperchalk:phone-visibility',()=>{
+    contextOpen=false;prompts.hidden=true;
+    suppressContextTapUntil=performance.now()+280;
     if(mode)draw();
   });
   engine.subscribe(()=>{
