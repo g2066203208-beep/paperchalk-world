@@ -184,7 +184,16 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  // implemented local routes offer boarding; planned lines never fake rides.
  for(const l of atlas.METRO_LINES){
   const pts=l.coords.map(location);
-  const d=rounded(pts,7);
+  const corridor=[pts[0]];
+  for(let i=1;i<pts.length;i++){
+   const section=orthogonal(pts[i-1],pts[i]);
+   for(const p of section.slice(1))if(p.x!==corridor.at(-1).x||p.y!==corridor.at(-1).y)corridor.push(p);
+  }
+  if(l.shape==='ring'){
+   for(const p of orthogonal(pts.at(-1),pts[0]).slice(1))
+    if(p.x!==corridor.at(-1).x||p.y!==corridor.at(-1).y)corridor.push(p);
+  }
+  const d=rounded(corridor,7);
   const g=vector('g',{'data-line':l.id,'data-city':l.city},'pw-dot-planned-line');
   g.append(vector('path',{d,stroke:l.color},'pw-dot-planned-track'));
   metroNetwork.append(g);
@@ -294,7 +303,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   node.addEventListener('click',e=>{
    if(drag?.moved)return;
    showMenu(e,node,c.name,c.sub+' · '+c.region,[
-    {label:'查看城区',primary:true,run:()=>{clear();focus(c,Math.max(1.9,minScale*2.6))}}
+    {label:'查看城区',primary:true,run:()=>{clear();focus(c,Math.max(2.85,minScale*3.6))}}
    ]);
   });
  }
@@ -358,10 +367,16 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
     (y+city.y*scale)>-100&&(y+city.y*scale)<v.h+100;
    node.hidden=!onScreen||scale>=1.55;
   }
+  const occupied=[];
   for(const {node,poi} of worldNodes){
    const p=location(poi),px=x+p.x*scale,py=y+p.y*scale;
-   const visible=scale>=2.65&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
-   // Spatial decluttering: do not show 100 overlapping photographs.
+   let visible=scale>=2.65&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
+   // Real screen-space occupancy, not piles of overlapping photo cards.
+   if(visible){
+    visible=!occupied.some(q=>Math.abs(q.x-px)<Math.max(110,61*scale)&&
+      Math.abs(q.y-py)<Math.max(86,51*scale));
+    if(visible)occupied.push({x:px,y:py});
+   }
    node.hidden=!visible;
   }
   metroLayer.hidden=scale<1.22||scale>4.5;
