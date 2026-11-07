@@ -16,7 +16,7 @@
   stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:3.2,ceilingHeight:3.2,wallBend:.7,
   wallCenterZ:-16,wallArcHalfAngle:rad(78),
   floorWidth:96,floorFrontZ:48,floorBackZ:-55,
-  surfaceDepth:34,surfaceTileMeters:4,surfaceSegments:18,arcSegments:160,
+  surfaceDepth:18,floorTileMeters:1.2,ceilingTileMeters:1.9,surfaceSegments:20,arcSegments:160,
   outerRoleRadius:10.55,innerRoleRadius:8.30,
   outerCameraRadius:11.5,innerCameraRadius:7.47,
   verticalFov:48,battleFocusZ:6.8
@@ -59,11 +59,11 @@
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[.55,5.70],[1.90,5.70],[3.25,5.70],[4.60,5.70]])
+   enemies:Object.freeze([[.55,5.82],[1.90,5.82],[3.25,5.82],[4.60,5.82]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
-   enemies:Object.freeze([[1.05,13.0],[-.29,13.0],[-1.63,13.0],[-2.97,13.0]])
+   enemies:Object.freeze([[1.05,12.90],[-.29,12.90],[-1.63,12.90],[-2.97,12.90]])
   })
  });
  const bindings=Object.freeze({
@@ -125,7 +125,7 @@
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
    id:'left',eyeX:.78,eyeZ:11.55,eyeY:1.50,
-   focusX:.78,focusY:1.50,focusZ:5.70,fov:56
+   focusX:.78,focusY:1.50,focusZ:5.70,fov:55
   })]),
   inner:Object.freeze([Object.freeze({
    id:'left',eyeX:.78,eyeZ:7.15,eyeY:1.50,
@@ -267,7 +267,7 @@
   'color+=vec3(.002,.019,.018)*(allies+enemies)*.10;',
   '}else if(uSurface==2){',
   'color=vec3(.46,.48,.51);',
-  'if(uCeilingReady>.5)color=texture2D(uCeilingTexture,fract(vWallUv)).rgb*.87;',
+  'if(uCeilingReady>.5)color=texture2D(uCeilingTexture,fract(vWallUv)).rgb*.83;',
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
   'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
@@ -351,10 +351,12 @@
   const p=backdropPoint(mode,angle);
   return {x:p.x,y:height,z:p.z+(mode==='inner'?-1:1)*depth};
  }
- function curvedSurfaceUV(mode,angle,depth){
+ function curvedSurfaceUV(mode,angle,depth,kind='floor'){
   const sign=mode==='inner'?-1:1;
-  return {u:sign*wallArcMeters(angle)/SPEC.surfaceTileMeters+8,
-   v:depth/SPEC.surfaceTileMeters};
+  const tile=kind==='ceiling'?SPEC.ceilingTileMeters:SPEC.floorTileMeters;
+  // Each original rectangle is painted as a 2x2 module sheet: physically
+  // 0.6m floor tiles and 0.95m ceiling tiles, not 2m oversized blocks.
+  return {u:sign*wallArcMeters(angle)/tile+8,v:depth/tile};
  }
  function worldMesh(gl){
   const floorOuter=[],floorInner=[],backInner=[],backOuter=[],ceilingOuter=[],ceilingInner=[];
@@ -364,7 +366,7 @@
   const addSheet=(dest,mode,height)=>{
    const vertex=(i,j)=>{
     const angle=theta(i),depth=SPEC.surfaceDepth*j/D;
-    const p=curvedSurfacePoint(mode,angle,depth,height),uv=curvedSurfaceUV(mode,angle,depth);
+    const p=curvedSurfacePoint(mode,angle,depth,height),uv=curvedSurfaceUV(mode,angle,depth,height?'ceiling':'floor');
     return [p.x,p.y,p.z,uv.u,uv.v];
    };
    for(let i=0;i<N;i++)for(let j=0;j<D;j++){
