@@ -762,11 +762,11 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/frame-budget.js?v=frame-time-telemetry-20261105"></script>
 <link rel="stylesheet" href="./game/dialogue-layout.css?v=runtime-architecture-1">
 <script src="./game/survival-state.js"></script>
-<script src="./game/world-atlas.js?v=megaregion-world-v2-20261107"></script>
+<script src="./game/world-atlas.js?v=ten-city-municipal-v12-20261107"></script>
 <script src="./game/daily-life-state.js?v=megaregion-world-v2-20261107"></script>
 <link rel="stylesheet" href="./game/overworld.css?v=fog-underlay-fix-v8-20261107">
 <link rel="stylesheet" href="./game/overworld-surfaces.css?v=rail-photo-v4a-20261107">
-<link rel="stylesheet" href="./game/transit-map-ui.css?v=single-dot-world-v9-20261107">
+<link rel="stylesheet" href="./game/transit-map-ui.css?v=vector-native-v12-20261107">
 <link rel="stylesheet" href="./game/metro-cabin.css?v=rail-photo-v4a-20261107">
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
@@ -774,7 +774,8 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./combat-lab/engine.js?v=attack-director-v1"></script>
 <link rel="stylesheet" href="./game/ring-arena-director.css?v=hit-result-hold-v26-20261106">
 <script src="./game/ring-arena-director.js?v=dd699-compact-v29c-20261107"></script>
-<script src="./game/ring-arena-runtime.js?v=single-encounter-enclosed-wall-v27-20261107"></script>
+<script src="./game/scene-environments.js?v=metro3d-registry-20261107"></script>
+<script src="./game/ring-arena-runtime.js?v=metro-ring-webgl-v28-20261107"></script>
 <script src="./game/ring-arena-frame-inspector.js?v=dd699-camera-retreat-v29b-20261106" defer></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=phone-world-20261107-r2">
 <link rel="stylesheet" href="./game/phone-focus.css?v=phone-world-20261107-r2">
@@ -3307,7 +3308,7 @@ void main(){
     // pivot, not a dolly. This is the sole frame-time-based damping pass.
     // No individual L2D, fog or material-layer parallax.
     const roomMove=stage.dataset.scene==='classroom-box';
-    const worldLook=roomMove||stage.dataset.scene==='ring-arena';
+    const worldLook=roomMove||stage.dataset.scene==='ring-arena'||view.classList.contains('ring-arena-transit');
     const lookRate=stage.dataset.scene==='ring-arena'?10:7;
     const kx=1-Math.exp(-cameraFrameDt*(roomMove?10:lookRate));
     const ky=1-Math.exp(-cameraFrameDt*(roomMove?9:lookRate));
@@ -3321,7 +3322,7 @@ void main(){
       // The menu is authored as a flat graphic; retain its original tilt.
       stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+
         'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
-    }else if(stage.dataset.scene==='ring-arena'){
+    }else if(stage.dataset.scene==='ring-arena'||view.classList.contains('ring-arena-transit')){
       // ALL people and surfaces belong to the same WebGL depth buffer.
       // No DOM billboard offsets, CSS parallax or backdrop deformation.
       stage.style.transform='none';
@@ -3387,7 +3388,7 @@ void main(){
     }
     // No 10/16/24 FPS steps: every browser animation frame advances the SAME
     // persistent fluid density and composites the independent screen fog.
-    if(stage.dataset.scene==='ring-arena'||!reduced.matches||Math.abs(currentX)+Math.abs(currentY)>.001)raf=requestAnimationFrame(tick);
+    if(stage.dataset.scene==='ring-arena'||view.classList.contains('ring-arena-transit')||!reduced.matches||Math.abs(currentX)+Math.abs(currentY)>.001)raf=requestAnimationFrame(tick);
   }
   function start(){if(!raf)raf=requestAnimationFrame(tick)}
   window.addEventListener('pointermove',e=>{
@@ -3419,7 +3420,7 @@ void main(){
 <script src="./game/l2d-ground-binding.js?v=shoulder-camera-v7"></script>
 <script src="./game/metro-graph.js?v=remove-fake-south-line-v9-20261107"></script>
 <script src="./game/metro-map-geometry.js?v=remove-fake-south-line-v9-20261107"></script>
-<script src="./game/transit-map-ui.js?v=single-dot-world-v9-20261107"></script>
+<script src="./game/transit-map-ui.js?v=vector-native-v12-20261107"></script>
 <script src="./game/metro-side-renderer.js?v=real-side-scene-v10-20261107"></script>
 <script src="./game/metro-cabin.js?v=regional-rail-carriage-v8-20261107"></script>
 <script src="./game/overworld-surfaces.js?v=single-dot-world-v9-20261107"></script>
