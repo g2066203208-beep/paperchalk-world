@@ -43,7 +43,7 @@ test('train conversations derive from day and pressure stage',()=>{
 test('line segment neighbors offer both real directions at intermediate stations',()=>{
  const line=metro.getLine('a'),options=metro.neighbors(line,'school');
  assert.equal(options.length,2);
- assert.deepEqual(options.map(o=>o.to),['central','entrance']);
+ assert.deepEqual(Array.from(options,o=>o.to),['central','entrance']);
  const ring=metro.getLine('b');
  assert.equal(ring.ring,true);
  assert.equal(metro.nextStop('b','northgate',1),'central');
