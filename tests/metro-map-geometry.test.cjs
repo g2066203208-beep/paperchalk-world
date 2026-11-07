@@ -47,3 +47,32 @@ test('Corners remain round at desktop and mobile landscape aspect ratios',()=>{
   assert.ok(points.length>=3,d);
  }
 });
+
+test('All location nodes are INTEGER intersections of one 12×6 grid',()=>{
+ assert.equal(metro.GRID.columns,12);
+ assert.equal(metro.GRID.rows,6);
+ for(const [id,st] of Object.entries(metro.STATIONS)){
+  assert.ok(Number.isInteger(st.gx)&&Number.isInteger(st.gy),id);
+  assert.ok(st.gx>=0&&st.gx<=metro.GRID.columns,id);
+  assert.ok(st.gy>=0&&st.gy<=metro.GRID.rows,id);
+  assert.equal(st.x,st.gx/metro.GRID.columns*100);
+  assert.equal(st.y,st.gy/metro.GRID.rows*100);
+ }
+ for(const [edge,turns] of Object.entries(geo.routes)){
+  assert.ok(Array.isArray(turns),edge);
+  for(const [column,row] of turns){
+   assert.ok(Number.isInteger(column)&&Number.isInteger(row),edge);
+   assert.ok(column>=0&&column<=metro.GRID.columns,edge);
+   assert.ok(row>=0&&row<=metro.GRID.rows,edge);
+  }
+ }
+});
+test('Dot array cells have precisely the same X/Y spacing at all viewports',()=>{
+ for(const [width,height] of [[1320,760],[844,390],[640,360]]){
+  const space=geo.layout(width,height),origin=geo.point(0,0,space);
+  const right=geo.point(1,0,space),down=geo.point(0,1,space);
+  assert.ok(Math.abs((right.x-origin.x)-(down.y-origin.y))<1e-8);
+  const last=geo.point(12,6,space);
+  assert.ok(origin.x>=0&&origin.y>=0&&last.x<=width&&last.y<=height);
+ }
+});
