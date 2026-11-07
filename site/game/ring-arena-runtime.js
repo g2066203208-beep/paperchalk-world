@@ -446,10 +446,10 @@
  // dark when its light level is zero and emits only while powered.
  const fixtureVertex=[
   'precision highp float;attribute vec2 aUv;',
-  'uniform mat4 uVP;uniform vec3 uCenter;',
+  'uniform mat4 uVP;uniform vec3 uCenter;uniform vec2 uSize;'
   'varying vec2 vUv;',
   'void main(){vUv=aUv;',
-  'vec3 pos=uCenter+vec3((aUv.x-.5)*.21,-.018,(aUv.y-.5)*1.08);',
+  'vec3 pos=uCenter+vec3((aUv.x-.5)*uSize.x,-.018,(aUv.y-.5)*uSize.y);',
   'gl_Position=uVP*vec4(pos,1.0);}'
  ].join('\n');
  const fixtureFragment=[
@@ -516,9 +516,9 @@
   'gl_Position=uVP*vec4(p,1.0);}'
  ].join('\n');
  const shadowFragment=[
-  'precision mediump float;varying vec2 vLocal;',
-  'void main(){float d=dot(vLocal,vLocal);float w=1.0-smoothstep(.14,1.0,d);',
-  'gl_FragColor=vec4(.014,.020,.030,.31*w);}'
+  'precision mediump float;varying vec2 vLocal;uniform float uStrength;',
+  'void main(){float d=dot(vLocal,vLocal);float w=1.0-smoothstep(.08,1.0,d);',
+  'gl_FragColor=vec4(.008,.012,.019,uStrength*w);}'
  ].join('\n');
  // Physically reversed wall bend when viewed from the opposite side.
  function backdropPoint(mode='outer',angle=0){
@@ -714,11 +714,11 @@
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
    world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
-   shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uShadowLight','uRadius']);
+   shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uShadowLight','uRadius','uStrength']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
-    ['uVP','uCenter','uLevel','uEmergency']);
+    ['uVP','uCenter','uSize','uLevel','uEmergency']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
     ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uTexture','uStrength']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner]=worldMesh(gl);
@@ -1103,16 +1103,85 @@
    const rig=lightRigs[whichMode]||lightRigs.outer;
    gl.uniform3fv(prog['uLampPositions[0]'],rig.positions);
    gl.uniform3fv(prog['uLampColors[0]'],rig.colors);
+   gl.uniform1fv(prog['uLampLevels[0]'],currentLighting.levels);
+   gl.uniform3fv(prog.uAmbient,currentLighting.ambient);
+   gl.uniform3fv(prog.uEmergencyPosition,currentLighting.emergencyPosition);
+   gl.uniform1f(prog.uEmergencyPower,currentLighting.emergencyPower);
   }
-  function nearestLamp(p,whichMode){
-   const ps=lightRigs[whichMode||mode].positions;
-   let best=0,closest=Infinity;
-   for(let i=0;i<6;i++){
-    const dx=p.x-ps[i*3],dz=p.z-ps[i*3+2];
-    const d2=dx*dx+dz*dz;
-    if(d2<closest){closest=d2;best=i}
+  function nearestLitLamps(p,whichMode=mode){
+   const rig=lightRigs[whichMode];
+   const choices=[];
+   for(let i=0;i<rig.count;i++){
+    const level=currentLighting.levels[i];
+    if(level<.08)continue;
+    const dx=p.x-rig.positions[i*3],dz=p.z-rig.positions[i*3+2];
+    const distance=dx*dx+dz*dz;
+    const strength=level/(1.0+.16*distance);
+    choices.push({index:i,distance,strength,
+     position:rig.positions.subarray(3*i,3*i+3)});
    }
-   return new Float32Array(ps.slice(best*3,best*3+3));
+   choices.sort((a,b)=>b.strength-a.strength);
+   return choices.slice(0,2);
+  }
+  function drawFixtures(vp){
+   gl.useProgram(fixture.handle);
+   gl.uniformMatrix4fv(fixture.uVP,false,new Float32Array(vp));
+   gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+   gl.enableVertexAttribArray(fixture.aUv);
+   gl.vertexAttribPointer(fixture.aUv,2,gl.FLOAT,false,8,0);
+   gl.uniform1f(fixture.uEmergency,0);
+   gl.uniform2f(fixture.uSize,.21,1.08);
+   const rig=lightRigs[mode];
+   for(let i=0;i<rig.count;i++){
+    gl.uniform3fv(fixture.uCenter,rig.positions.subarray(i*3,i*3+3));
+    gl.uniform1f(fixture.uLevel,currentLighting.levels[i]);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+   }
+   gl.uniform1f(fixture.uEmergency,1);
+   gl.uniform2f(fixture.uSize,.27,.20);
+   gl.uniform3fv(fixture.uCenter,currentLighting.emergencyPosition);
+   gl.uniform1f(fixture.uLevel,currentLighting.emergencyPower);
+   gl.drawArrays(gl.TRIANGLES,0,6);
+   gl.disableVertexAttribArray(fixture.aUv);
+  }
+  function drawProjectedShadows(actors,cam,vp){
+   if(!shadowGrid)return;
+   const facing=normalize({x:cam.focus.x-cam.eye.x,
+    y:0,z:cam.focus.z-cam.eye.z});
+   const right=normalize(cross(facing,{x:0,y:1,z:0}));
+   gl.useProgram(projectedShadow.handle);
+   gl.uniformMatrix4fv(projectedShadow.uVP,false,new Float32Array(vp));
+   gl.uniform3fv(projectedShadow.uRight,new Float32Array([right.x,right.y,right.z]));
+   gl.activeTexture(gl.TEXTURE0);
+   gl.uniform1i(projectedShadow.uTexture,0);
+   gl.bindBuffer(gl.ARRAY_BUFFER,shadowGrid.buffer);
+   gl.enableVertexAttribArray(projectedShadow.aUv);
+   gl.vertexAttribPointer(projectedShadow.aUv,2,gl.FLOAT,false,8,0);
+   gl.enable(gl.BLEND);
+   gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+   gl.depthMask(false);
+   for(const a of actors){
+    const tex=textures.get(a.id);
+    if(!tex?.painted)continue;
+    const pivot=tex.opaqueUv;
+    const crown=pivot?clamp(pivot.top,0,.40):a.crownY;
+    const sole=pivot?clamp(pivot.bottom,crown+.20,1):a.soleY;
+    gl.uniform3fv(projectedShadow.uFoot,new Float32Array([a.x,a.y,a.z]));
+    gl.uniform1f(projectedShadow.uHeight,a.height);
+    gl.uniform1f(projectedShadow.uSoleX,a.soleX);
+    gl.uniform1f(projectedShadow.uSoleY,sole);
+    gl.uniform1f(projectedShadow.uCrownY,crown);
+    gl.bindTexture(gl.TEXTURE_2D,tex.texture);
+    const lamps=nearestLitLamps(a,mode);
+    for(let i=0;i<lamps.length;i++){
+     gl.uniform3fv(projectedShadow.uLamp,lamps[i].position);
+     gl.uniform1f(projectedShadow.uStrength,
+      Math.min(.49,lamps[i].strength*(i===0?.62:.24)));
+     gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
+    }
+   }
+   gl.depthMask(true);gl.disable(gl.BLEND);
+   gl.disableVertexAttribArray(projectedShadow.aUv);
   }
   function drawContactShadows(actors,vp){
    gl.useProgram(shadow.handle);
@@ -1124,7 +1193,9 @@
    gl.depthMask(false);
    for(const a of actors){
     gl.uniform3fv(shadow.uFoot,new Float32Array([a.x,0,a.z]));
-    gl.uniform3fv(shadow.uShadowLight,nearestLamp(a,mode));
+    const nearest=nearestLitLamps(a,mode)[0];
+    gl.uniform3fv(shadow.uShadowLight,nearest?.position||currentLighting.emergencyPosition);
+    gl.uniform1f(shadow.uStrength,lightState==='outage'?.16:.48);
     gl.uniform1f(shadow.uRadius,a.id==='hero'?.46:.35);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -1271,6 +1342,7 @@
    const target=attack?actorForTarget(attack.targetId):null;
    lens=target?director.cinematicCamera(base,attack,attackSample,target):base;
    elapsed+=clamp(Number(dt)||0,0,.06);frames++;
+   currentLighting=lightingFrame(lightState,elapsed,mode);
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
    if(w<2||h<2)return false;
@@ -1302,6 +1374,7 @@
    drawWorld(mode==='outer'?ceilingOuter:ceilingInner,2,vp);
    drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
+   drawFixtures(vp);
    const all=visibleActors(mode);
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
@@ -1324,6 +1397,7 @@
    drawnPoses={};
    drawnActorIds=presented.map(a=>a.id);
    // The same temporary lunge transforms affect cast shadows and portraits.
+   drawProjectedShadows(presented,cam,vp);
    drawContactShadows(presented,vp);
    drawActors(presented,cam,vp);
    if(armed)updateTargetPositions(base,w/h);
