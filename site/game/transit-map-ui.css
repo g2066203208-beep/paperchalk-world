@@ -579,3 +579,20 @@
  #pw-world-surface .pw-dot-world-map .pw-dot-subtitle{display:none}
  #pw-world-surface .pw-dot-world-map .pw-dot-hint{display:none}
 }
+
+/* Authored mountain, forest, plain, coastal and river labels stay DOT-ONLY. */
+#pw-world-surface .pw-dot-world-map .pw-dot-areas{
+ position:absolute;inset:0;z-index:1;pointer-events:none
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-area-label{
+ position:absolute;transform:translate(-50%,-50%);
+ display:block;white-space:nowrap;
+ font:500 23px/1.2 "PaperSans","Noto Sans CJK SC",sans-serif;
+ color:#a5b8b8;letter-spacing:.12em;
+ text-shadow:0 1px 4px #0c171e;
+ opacity:.65;pointer-events:none
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-area-label[hidden]{display:none!important}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-place-name{
+ font-size:24px!important
+}
