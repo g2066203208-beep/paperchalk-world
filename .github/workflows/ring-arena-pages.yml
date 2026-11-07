@@ -143,11 +143,11 @@ jobs:
             'site/dev/character-bridge.js'
           ])new Function(fs.readFileSync(path,'utf8'));
           const html=fs.readFileSync('site/index.html','utf8');
-          if(!html.includes('ring-arena-runtime.js?v=natural-staging-world-mouse-look-v25-20261107'))
+          if(!html.includes('ring-arena-runtime.js?v=single-encounter-enclosed-wall-v27-20261107'))
             throw Error('Deployed HTML still points at stale ring-arena WebGL source');
           if(!html.includes("ringScene.setActive(name==='ring-arena')"))
             throw Error('3D ring scene was not integrated into the game');
-          console.log('PASS: single left eye-level camera; 3/4 back pose; four animated enemy L2D; clean mobile projection');
+          console.log('PASS: one wide 4-foe encounter, physically closed walls, stationary view, original L2D and mobile projection');
           JS
       # Real Chromium screenshot proof of heroine + 4 enemies runs separately in
       # ring-arena-proof.yml. Do not block a ring-only deploy behind the
