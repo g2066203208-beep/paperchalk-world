@@ -128,8 +128,8 @@
  const SHOT_NAMES=Object.freeze(['固定左机位']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
-   id:'left',eyeX:-.32,eyeZ:10.16,eyeY:1.50,
-   focusX:-.02,focusY:1.50,focusZ:5.40,fov:66
+   id:'left',eyeX:-.28,eyeZ:10.40,eyeY:1.50,
+   focusX:-.24,focusY:1.50,focusZ:5.40,fov:66
   })]),
   inner:Object.freeze([Object.freeze({
    id:'left',eyeX:.78,eyeZ:7.15,eyeY:1.50,
