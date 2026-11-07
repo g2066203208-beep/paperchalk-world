@@ -43,9 +43,9 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.45,7.45,7.45,7.45]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.68,7.68,7.68,7.68]);
 assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.96,11.35,10.94,11.26]);
-assert.equal(ring.camera('outer').fov,70);
+assert.equal(ring.camera('outer').fov,66);
 assert.equal(ring.camera('inner').fov,52);
 for(const mode of ['outer','inner']){
  const backdrop=ring.backdropPoint(mode,0),camera=ring.camera(mode),aspect=1917/906;
@@ -207,10 +207,10 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id\)/,
  'real animated source must pass through non-destructive battle mask before upload');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
- ring.STAGING.outer.enemies[0][0]-1.30)<1e-7,
+ ring.STAGING.outer.enemies[0][0]-1.18)<1e-7,
  'the first two fighters have a full meter of width');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[3][0]-
- ring.STAGING.outer.enemies[2][0]-1.70)<1e-7,
+ ring.STAGING.outer.enemies[2][0]-1.45)<1e-7,
  'broad fourth coat needs extra world-space width');
 assert.ok(Math.abs(ring.STAGING.inner.enemies[1][0]-
  ring.STAGING.inner.enemies[0][0]+.88)<1e-7,
