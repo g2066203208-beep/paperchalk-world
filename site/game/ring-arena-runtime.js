@@ -503,8 +503,15 @@
  ].join('\n');
  const fixtureFragment=[
   'precision mediump float;varying vec2 vUv;',
-  'uniform float uLevel;uniform float uEmergency;',
+  'uniform float uLevel;uniform float uEmergency;uniform float uGlow;',
   'void main(){',
+  'if(uGlow>.5){',
+  'vec2 p=(vUv-vec2(.5))*vec2(2.4,1.7);',
+  'float halo=exp(-dot(p,p)*5.8);',
+  'vec3 warm=mix(vec3(.90,.84,.70),vec3(.96,.15,.07),uEmergency);',
+  'gl_FragColor=vec4(warm,halo*clamp(uLevel,0.0,1.0)*.22);',
+  'return;',
+  '}',
   'float edge=max(abs(vUv.x-.5)*2.0,abs(vUv.y-.5)*2.0);',
   'float core=1.0-smoothstep(.68,.85,edge);',
   'vec3 dark=vec3(.10,.12,.14);',
@@ -535,18 +542,20 @@
   'uniform sampler2D uTexture;uniform float uStrength;uniform highp float uContact;',
   'void main(){',
   'vec2 uv=vec2(vUv.x,1.0-vUv.y);',
-  'float a=texture2D(uTexture,uv).a*.38;',
-  'a+=texture2D(uTexture,uv+vec2(.011,0.0)).a*.155;',
-  'a+=texture2D(uTexture,uv-vec2(.011,0.0)).a*.155;',
-  'a+=texture2D(uTexture,uv+vec2(0.0,.011)).a*.155;',
-  'a+=texture2D(uTexture,uv-vec2(0.0,.011)).a*.155;',
-  'float edge=smoothstep(.10,.82,a);',
+  'float foot=smoothstep(.48,.92,vUv.y);',
+  'float radius=mix(.012,.0038,foot);',
+  'float a=texture2D(uTexture,uv).a*.46;',
+  'a+=texture2D(uTexture,uv+vec2(radius,0.0)).a*.135;',
+  'a+=texture2D(uTexture,uv-vec2(radius,0.0)).a*.135;',
+  'a+=texture2D(uTexture,uv+vec2(0.0,radius)).a*.135;',
+  'a+=texture2D(uTexture,uv-vec2(0.0,radius)).a*.135;',
+  'float edge=smoothstep(.13,.82,a);',
   'float shoes=smoothstep(.68,.94,vUv.y);',
   'edge*=mix(1.0,shoes,uContact);',
   'gl_FragColor=vec4(.008,.012,.018,edge*uStrength);}'
  ].join('\n');
  function projectedShadowMesh(gl){
-  const data=[],N=22,M=28;
+  const data=[],N=28,M=36;
   const v=(x,y)=>[x/N,y/M];
   for(let y=0;y<M;y++)for(let x=0;x<N;x++){
    const a=v(x,y),b=v(x+1,y),c=v(x+1,y+1),d=v(x,y+1);
@@ -757,7 +766,7 @@
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
-    ['uVP','uCenter','uSize','uLevel','uEmergency']);
+    ['uVP','uCenter','uSize','uLevel','uEmergency','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
     ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uTexture','uStrength','uContact']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner]=worldMesh(gl);
@@ -1185,6 +1194,7 @@
    gl.enableVertexAttribArray(fixture.aUv);
    gl.vertexAttribPointer(fixture.aUv,2,gl.FLOAT,false,8,0);
    gl.uniform1f(fixture.uEmergency,0);
+   gl.uniform1f(fixture.uGlow,0);
    gl.uniform2f(fixture.uSize,.21,1.08);
    const rig=lightRigs[mode];
    for(let i=0;i<rig.count;i++){
@@ -1197,6 +1207,30 @@
    gl.uniform3fv(fixture.uCenter,currentLighting.emergencyPosition);
    gl.uniform1f(fixture.uLevel,currentLighting.emergencyPower);
    gl.drawArrays(gl.TRIANGLES,0,6);
+   // A separate additive falloff quad is tied to each LIVE fluorescent
+   // mesh. It switches off with the corresponding fixture — no fake
+   // permanent halos baked into ceiling textures or screen overlays.
+   gl.enable(gl.BLEND);
+   gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+   gl.depthMask(false);
+   gl.uniform1f(fixture.uGlow,1);
+   gl.uniform1f(fixture.uEmergency,0);
+   gl.uniform2f(fixture.uSize,.76,2.05);
+   for(let i=0;i<rig.count;i++){
+    if(currentLighting.levels[i]<.01)continue;
+    gl.uniform3fv(fixture.uCenter,rig.positions.subarray(i*3,i*3+3));
+    gl.uniform1f(fixture.uLevel,currentLighting.levels[i]);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+   }
+   if(currentLighting.emergencyPower>.01){
+    gl.uniform1f(fixture.uEmergency,1);
+    gl.uniform2f(fixture.uSize,.68,.82);
+    gl.uniform3fv(fixture.uCenter,currentLighting.emergencyPosition);
+    gl.uniform1f(fixture.uLevel,currentLighting.emergencyPower);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+   }
+   gl.depthMask(true);
+   gl.disable(gl.BLEND);
    gl.disableVertexAttribArray(fixture.aUv);
   }
   function drawProjectedShadows(actors,cam,vp){
