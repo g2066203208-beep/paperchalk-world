@@ -8,6 +8,8 @@
 'use strict';
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const ART=Object.freeze({
+ // Approved complete Anima scene; keep the procedural background if absent.
+ master:'./assets/metro/side/cabin-master.webp',
  wall:'./assets/metro/side/wall.webp',
  windows:'./assets/metro/side/windows.webp',
  doors:'./assets/metro/side/doors.webp',
@@ -54,6 +56,21 @@ function rounded(ctx,x,y,w,h,rad,color){
  ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,rad);ctx.fill();
 }
 function drawBackground(ctx,w,h,t,anomaly,repaint){
+ // A single authored 2048x1024 environment is the preferred first-pass
+ // preview. Respect its 2:1 aspect ratio: never stretch the doors or benches.
+ const master=images.get('master');
+ if(master?.naturalWidth){
+  ctx.fillStyle='#18262c';ctx.fillRect(0,0,w,h);
+  const fit=Math.min(w/master.naturalWidth,h/master.naturalHeight);
+  const iw=master.naturalWidth*fit,ih=master.naturalHeight*fit;
+  ctx.drawImage(master,(w-iw)*.5,(h-ih)*.5,iw,ih);
+  if(anomaly){
+   ctx.fillStyle=(Math.floor(t/190)%17===0)?'#7f4a561e':'#08131e48';
+   ctx.fillRect(0,0,w,h);
+  }
+  return;
+ }
+ if(!images.has('master'))load('master',repaint);
  const fill=ctx.createLinearGradient(0,0,0,h);
  fill.addColorStop(0,anomaly?'#22242e':'#a2b4b5');
  fill.addColorStop(.6,anomaly?'#29323a':'#c2cdc9');
@@ -160,6 +177,12 @@ function drawBackground(ctx,w,h,t,anomaly,repaint){
 }
 function drawForeground(ctx,w,h,anomaly,repaint){
  ctx.clearRect(0,0,w,h);
+ // Never paint a synthetic old bench over the artist's complete carriage:
+ // a future authored alpha bench-front layer owns passenger leg occlusion.
+ if(images.get('master')?.naturalWidth){
+  image(ctx,'benchFront',w,h,repaint);
+  return;
+ }
  if(image(ctx,'benchFront',w,h,repaint))return;
  // This foreground is painted AFTER L2D, precisely covering the lower legs,
  // so existing FRONT rigs read as seated without new body animation.
@@ -180,6 +203,6 @@ const SEATS=Object.freeze([
  Object.freeze({id:'seat-4',x:.75})
 ]);
 global.PaperWorldMetroSideRenderer=Object.freeze({
- ART,SEATS,drawBackground,drawForeground
+ ART,SEATS,drawBackground,drawForeground,hasMaster:()=>!!images.get('master')?.naturalWidth
 });
 })(window);
