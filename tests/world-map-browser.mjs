@@ -75,6 +75,18 @@ try{
  await page.setViewportSize({width:844,height:390});
  await page.waitForTimeout(350);
  assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
+ const cardSizes=await page.evaluate(()=>{
+  const markers=[...document.querySelectorAll('.pw-dot-city:not([hidden])')];
+  const cityWidths=markers.map(n=>Math.round(n.getBoundingClientRect().width));
+  const a=document.querySelector('.pw-dot-city[data-city="misaki"]').getBoundingClientRect();
+  const b=document.querySelector('.pw-dot-city[data-city="urasima"]').getBoundingClientRect();
+  const overlap=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left))*
+   Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
+  return {cityWidths,nearbyCityOverlap:overlap};
+ });
+ assert.ok(cardSizes.cityWidths.every(w=>w>=88),JSON.stringify(cardSizes));
+ assert.equal(cardSizes.nearbyCityOverlap,0,
+  'island and peninsula city cards must be large and independently tappable');
  await shot('28-dot-world-mobile-overview.png');
  await page.locator('.pw-dot-city[data-city="misaki"]').click();
  await popup.waitFor();
