@@ -102,12 +102,35 @@ try{
   const cab=document.querySelector('#pw-metro-cabin:not([hidden])');
   const room=window.PaperWorldGameRingArena?.inspect?.();
   return cab?.dataset.renderer==='ring-3d'&&room?.transitMode===true&&
-   room.environment==='metro'&&room.canvasParent==='pw-metro-cabin'&&
+   room.environment==='metro'&&room.geometry?.shape==='strip'&&
+   room.canvasParent==='pw-metro-cabin'&&
+   room.roomSurfaces?.floor?.ready&&room.roomSurfaces?.ceiling?.ready&&
    room.wallMaterial?.ready===true&&
    room.wallMaterial.url.endsWith('cabin-master.webp')&&
    document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready';
  },null,{timeout:25000});
+ const room3d=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(room3d.geometry.shape,'strip');
+ assert.ok(room3d.geometry.widthMeters>room3d.geometry.depthMeters);
+ assert.equal(room3d.wallMaterial.repeats,1);
+ assert.equal(room3d.lighting.positions.length,18);
+ assert.ok(room3d.roomSurfaces.floor.vertices>0&&room3d.roomSurfaces.ceiling.vertices>0);
+ assert.equal(room3d.cameraParity,true,'same 2.5D shoulder camera as other scene shapes');
+ assert.equal(await page.locator('#pw-metro-cabin .pw-cabin-live-actors')
+  .evaluate(el=>getComputedStyle(el).display),'none',
+  'do not layer flat character cutouts on top of the real WebGL world');
  await shot('21-dot-map-real-metro-carriage.png');
+ // Genuine shared six-bulb lighting: use the original world lighting API
+ // on strip geometry, not a CSS darkness filter on the artist's bitmap.
+ await page.evaluate(()=>window.PaperWorldGameRingArena.setLighting('outage'));
+ await page.waitForTimeout(260);
+ const emergency=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect().lighting);
+ assert.equal(emergency.state,'outage');
+ assert.ok(emergency.levels.filter(x=>x>.6).length===2);
+ await shot('22-dot-metro-true-3d-emergency-lights.png');
+ await page.evaluate(()=>window.PaperWorldGameRingArena.setLighting('on'));
+ await page.waitForTimeout(130);
+
  // A texture upload is NOT proof of a visible carriage. Check actual
  // composited screenshot pixels, so a black screenshot like the user's Edge
  // capture cannot pass this Chromium regression ever again.
