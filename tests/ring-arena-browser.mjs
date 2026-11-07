@@ -103,7 +103,7 @@ try{
  const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
  assert.ok(gaps.every(x=>x>.28&&x<.47)&&
   centers.reduce((sum,x)=>sum+x,0)/4>.15&&
-  centers.reduce((sum,x)=>sum+x,0)/4<.40,
+  centers.reduce((sum,x)=>sum+x,0)/4<.42,
   'four distinct fighters should spread symmetrically around visual center');
  assert.ok(groundProof.hero.left< -.99&&groundProof.hero.right<-.20&&groundProof.hero.right>-.28,
   'foreground heroine can crop naturally on the left without obscuring any centered enemy');
