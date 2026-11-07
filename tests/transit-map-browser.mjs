@@ -223,6 +223,44 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'school');
+ // Regression: real user screenshots at 1536x691 AFTER another station
+ // exposed an invisible protagonist and a 538px-wide stack of giant buttons.
+ await page.setViewportSize({width:1536,height:691});
+ await page.waitForTimeout(320);
+ const afterStation=await page.evaluate(()=>{
+  const live=window.PaperWorldGameRingArena.inspect();
+  const button=document.querySelector('#pw-metro-cabin .pw-cabin-actions button');
+  return {heroTexture:live.heroine.ready,heroIdentity:live.heroTextureIdentity,
+   canvasParent:live.canvasParent,renderer:live.renderer,
+   actionWidth:button?.getBoundingClientRect().width,
+   width:innerWidth,height:innerHeight};
+ });
+ assert.ok(afterStation.heroTexture,'real hero must survive next station: '+JSON.stringify(afterStation));
+ assert.ok(afterStation.actionWidth<=300,
+  '1536x691 user screen must not show >500px-wide actions: '+JSON.stringify(afterStation));
+ await shot('24-metro-real-user-widescreen-after-next-stop.png');
+ // The user's local browser may have an old/unloaded L2D library state.
+ // Simulate that exact case. Never let a missing IndexedDB rig create
+ // a permanently empty carriage: upload original canonical back art.
+ const fallbackInfo=await page.evaluate(()=>{
+  const player=window.PaperchalkL2D?.get('player');
+  if(!player?.root)throw Error('Canonical player missing');
+  const old=player.root.dataset.l2dState;
+  player.root.dataset.l2dState='loading';
+  window.PaperWorldGameRingArena.render(0);
+  return {old};
+ });
+ await page.waitForFunction(()=>{
+  const live=window.PaperWorldGameRingArena.inspect();
+  return live.heroine.ready&&live.heroOriginalFallback&&
+   live.heroTextureIdentity?.includes('metro-canonical-original-back');
+ },null,{timeout:13000});
+ await shot('25-metro-original-protagonist-fallback-unready-local-l2d.png');
+ await page.evaluate(old=>{
+  const p=window.PaperchalkL2D.get('player');
+  p.root.dataset.l2dState=old;
+  window.PaperWorldGameRingArena.render(0);
+ },fallbackInfo.old);
  const stateAfterNext=await page.evaluate(()=>{
   const s=window.PaperWorldDailyLifeUI.snapshot();
   const btn=[...document.querySelectorAll('#pw-metro-cabin .pw-cabin-actions button')]
