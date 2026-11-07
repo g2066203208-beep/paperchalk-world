@@ -26,6 +26,14 @@ try{
  page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
  const base='http://127.0.0.1:'+server.address().port;
  await page.goto(base+'/index.html?scene=ring-arena',{waitUntil:'domcontentloaded',timeout:60000});
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect?.()?.active,
+  null,{timeout:35000});
+ const initialization=await page.evaluate(()=>{
+  const snapshot=window.PaperWorldGameRingArena?.inspect?.();
+  return {renderer:snapshot?.renderer,error:snapshot?.initError||null};
+ });
+ if(initialization.error||initialization.renderer!=='webgl-l2d')
+  throw Error('WebGL initialization: '+JSON.stringify(initialization));
  let ready=false;
  try{
   await page.waitForFunction(()=>{
