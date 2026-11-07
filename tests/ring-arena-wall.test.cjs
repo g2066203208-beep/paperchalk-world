@@ -86,6 +86,13 @@ for(const kind of ['floor','ceiling']){
  assert.match(texture,/<svg xmlns="http:\/\/www.w3.org\/2000\/svg" width="1024" height="1024"/);
  assert.ok(texture.includes('1024'),'the original source is a rectangular 1024 image');
 }
+// Light spacing is NOT tied to acoustic ceiling tile repetition.
+const ceilingSource=fs.readFileSync(path.resolve(__dirname,
+ '../site/assets/ring-arena/convenience-ceiling.svg'),'utf8');
+assert.doesNotMatch(ceilingSource,/fill="url\(#lamp\)"/,
+ 'ceiling texture cannot contain two lamps repeated every 1.9 meters');
+assert.match(src,/vec2 lampUv=abs\(fract\(vWallUv\/vec2\(3\.0,2\.5\)\)/,
+ 'roof shader should place luminaires separately on 5.7 x 4.75m spacing');
 assert.equal(ring.SURFACE_TEXTURES.floor,'./assets/ring-arena/convenience-floor.svg');
 assert.equal(ring.SURFACE_TEXTURES.ceiling,'./assets/ring-arena/convenience-ceiling.svg');
 for(const mode of ['outer','inner']){
