@@ -1,5 +1,8 @@
 # NPC-G001｜惊讶：全身动作重编 V2（替换原V1）
 
+> **2026-11-08 当前最终版本：** 用户明确回到原图 img2img，不允许重新排站位；旧版惊讶提示词没有做到整身动作变换，已被 [V4](NPC-G001_ANIMA_IMG2IMG_SURPRISE_V4.md) 代替。下面保留作失败记录，不应照做。
+
+
 > **2026-11-08 优先工作流修正：** 之前的「喜悦图普通 img2img 调高去噪、还不行就上 OpenPose+IP Adapter」不是这组人物的第一选择。根据已安装插件以及 [anima-reference-forge-neo 作者说明](https://github.com/eduardoabreu81/anima-reference-forge-neo)，现在优先 **txt2img + ImageStitch Integrated 上传喜悦组图 + 已有 `anima_ref_adapter_pilot_r32` 方法权重**，用新 Prompt 直接重编三人动作。完整参数与精简提示词请以 [最新V3操作方案](NPC-G001_ANIMA_REFERENCE_SIMPLE_V3.md) 为准；本文下方的 img2img 0.72~0.82 方案降级为历史替代实验，不再建议首先使用。三人参考能否完整保身份须现场试图核实。
 
 > 2026-11-08：用户指出原「惊讶」图只改表情、几乎照搬「喜悦」三人动作，因此否决。**本稿替换惊讶的整组三人动作设计与生图方法**。获批「喜悦」母图仍然有效，惊讶图还未获得批准。
