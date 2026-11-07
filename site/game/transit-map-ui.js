@@ -413,6 +413,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   canvas.style.setProperty('--dot-city-label-size','17px');
   canvas.style.setProperty('--dot-area-label-size','16px');
   canvas.style.setProperty('--dot-poi-label-size','11px');
+  map.dataset.compact=String(scale<.48);
   const zoom=scale<1.15?'region':scale<2.3?'city':'detail';
   map.dataset.zoom=zoom;
   // Regions and city districts are zoom layers of the SAME physical lattice.
