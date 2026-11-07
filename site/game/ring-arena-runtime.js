@@ -314,7 +314,12 @@
   const a=clamp(angle,-SPEC.wallArcHalfAngle,SPEC.wallArcHalfAngle);
   const bow=SPEC.wallRadius*(1-Math.cos(a));
   return mode==='inner'
-   ? {x:SPEC.wallRadius*Math.sin(a),z:26.0-bow*.35}
+   // Reverse-facing mode had its center wall at z=26, nearly 19m beyond
+   // the camera. The 4.15m authored wall then ended far below screen top,
+   // leaving a huge empty overhead band. Match the outer view's ~8m
+   // camera-to-wall distance without touching actor anchors or optics.
+   // The shallower bend keeps even the arc ends behind the inner camera.
+   ? {x:SPEC.wallRadius*Math.sin(a),z:15.35-bow*.25}
    : {x:SPEC.wallRadius*Math.sin(a),z:3.4-bow*.7};
  }
  function worldMesh(gl){
