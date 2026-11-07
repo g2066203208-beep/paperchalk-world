@@ -128,7 +128,7 @@ try{
   report.outage=await inspect();
   if(JSON.stringify(report.initialProjectors)!==JSON.stringify(report.outage.lighting.shadowLampAssignments))
    validationErrors.push('outage changed the assigned shadow projector');
-  await page.screenshot({path:resolve(out,'04-outer-all-lights-off-1917x906.png')});
+  await page.screenshot({path:resolve(out,'04-ceiling-fixtures-red-1917x906.png')});
   // Three real frames from the exact same running WebGL + original L2D
   // textures. Story moments remain unedited: the power system drives them.
   await setLighting('horror',1.3);
