@@ -1057,10 +1057,16 @@
    }catch(error){t.error=String(error);return false}
   }
   function drawActors(actors,cam,vp){
-   // Transparent L2D textures are sorted far to near; pixels share the same
-   // depth-test as the floor and cylinder, no independent DOM z-index.
-   const ordered=actors.map(a=>({actor:a,d:Math.hypot(a.x-cam.eye.x,a.z-cam.eye.z)}))
-    .sort((a,b)=>b.d-a.d);
+   // Transparent L2D textures MUST sort by CAMERA VIEW DEPTH, not by
+   // Euclidean radial distance (which falsely reorders a same-Z four-person
+   // row by x-distance and paints one actor's attached fog OVER the next).
+   // Stable source order for equal depths puts the final character last.
+   const facing=normalize({x:cam.focus.x-cam.eye.x,
+    y:cam.focus.y-cam.eye.y,z:cam.focus.z-cam.eye.z});
+   const ordered=actors.map((a,i)=>({actor:a,index:i,
+    depth:(a.x-cam.eye.x)*facing.x+(a.y-cam.eye.y)*facing.y+
+     (a.z-cam.eye.z)*facing.z}))
+    .sort((a,b)=>(b.depth-a.depth)||(a.index-b.index));
    gl.useProgram(portrait.handle);
    gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
