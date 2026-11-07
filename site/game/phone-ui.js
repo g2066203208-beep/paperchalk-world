@@ -421,12 +421,11 @@
       selection.addEventListener('click',()=>{
         copy.replaceChildren();
         copy.appendChild(appButton('‹ 返回论坛',()=>renderApp('城市论坛')));
-        renderGallery(copy,true,id=>{photoId=id;renderApp('城市论坛');});
+        renderGallery(copy,true,id=>{section.dataset.forumPhoto=id;renderApp('城市论坛');});
       });
       // Album selection is stored on this handset until the next post.
       photoId=section.dataset.forumPhoto||'';
       if(photoId)photoLabel.textContent='已添加照片';
-      selection.addEventListener('click',()=>{});
       form.addEventListener('submit',event=>{
         event.preventDefault();
         const result=config.onPublishPost?.(field.value,section.dataset.forumPhoto||'');
