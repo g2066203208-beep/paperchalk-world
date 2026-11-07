@@ -41,6 +41,8 @@ try{
  assert.equal(await page.locator('.pw-dot-local-places [data-place="hospital"],.pw-dot-local-places [data-place="station"],.pw-dot-local-places [data-place="police"]').count(),0);
  assert.equal(await page.evaluate(()=>window.PaperWorldMetro.getLine('c')),null);
  assert.ok(await page.locator('.pw-dot-local-places [data-place="school"]').isVisible());
+ assert.equal(await page.locator('.pw-dot-poi[data-city="kirihama"]:not([hidden])').count(),0,
+  'default subway map must not be covered by dozens of investigation photo cards');
  // Even a 1440x810 game view needs actual legible clickable stations:
  // no tiny line strokes or 10px labels hidden by the dotted background.
  const legibility=await page.evaluate(()=>{
