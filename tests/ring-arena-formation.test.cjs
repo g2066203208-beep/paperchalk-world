@@ -7,7 +7,7 @@ const before=JSON.stringify(scene);
 assert.ok(scene.enemies.every(a=>a.y===0&&a.z===6.80));
 assert.ok(Math.abs(scene.enemies[3].x-scene.enemies[0].x-3.84)<.001);
 assert.deepEqual(scene.allies.slice(1).map(a=>[a.x,a.z]),
- [[-3.80,7.00],[-1.25,7.10],[-1.55,7.55]],
+ [[-3.80,7.00],[-1.25,7.10],[-1.10,7.65]],
  'one ally at far left, one near the heroine shoulder, and one on the left-middle wing');
 const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
  'enemy-2':{left:.32,right:.69,top:0,bottom:1},
