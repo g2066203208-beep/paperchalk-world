@@ -35,6 +35,7 @@ function create({root,engine,onExit,onFeedback}){
    holder.setAttribute('aria-label','正面 L2D 座位 '+(i+1));
    holder.hidden=true;
    holder.style.left=(seat.x*100)+'%';
+   holder.style.setProperty('--metro-seat-x',(seat.x*100)+'%');
    const img=document.createElement('img');
    img.setAttribute('data-l2d-image','');
    img.alt='';img.draggable=false;
@@ -61,6 +62,7 @@ function create({root,engine,onExit,onFeedback}){
   if(!visible||section.hidden)return;
   raf=requestAnimationFrame(render);
   if(time-last<40)return;last=time;frame++;
+  if(section.dataset.renderer==='ring-3d')return;
   const rect=canvas.getBoundingClientRect();
   const w=Math.max(280,Math.round(rect.width));
   const h=Math.max(130,Math.round(rect.height));
@@ -143,6 +145,7 @@ function create({root,engine,onExit,onFeedback}){
     person.textContent='车内广播';words.textContent='22:00。车门没有打开。窗外已经不是熟悉的城市。';
     actions.replaceChildren();
     section.dataset.night='true';
+    if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.setLighting?.('flicker');
     if(!anomalyEventSent){
       anomalyEventSent=true;
       global.dispatchEvent(new CustomEvent('paperchalk:metro-night-entry',{
@@ -152,6 +155,7 @@ function create({root,engine,onExit,onFeedback}){
     return;
   }
   section.dataset.night='false';
+  if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.setLighting?.('on');
   const story=metro.conversation(s,{connections:ride.rides,transfers:[]});
   const beat=story[speakerIndex%story.length];
   person.textContent=beat.speaker;
@@ -210,12 +214,15 @@ function create({root,engine,onExit,onFeedback}){
   const ride=engine.snapshot().metro;
   if(!ride?.onboard)return false;
   visible=true;section.hidden=false;anomalyEventSent=false;
+  section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
   populatePassengers().catch(error=>console.warn('[Metro L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
   refresh();return true;
  }
  function close(){
   visible=false;section.hidden=true;
+  if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.exitTransit?.();
+  section.dataset.renderer='painted';
   if(raf)cancelAnimationFrame(raf);raf=0;
  }
  // Regional rail shares the existing side-on 2.5D carriage and authentic
@@ -225,6 +232,7 @@ function create({root,engine,onExit,onFeedback}){
   if(visible||auto)return {ok:false,reason:'列车正在行驶'};
   regionalRide={legs:route.legs,index:0};
   visible=true;section.hidden=false;anomalyEventSent=false;auto=true;
+  section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
   populatePassengers().catch(error=>console.warn('[Regional rail L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
   try{
