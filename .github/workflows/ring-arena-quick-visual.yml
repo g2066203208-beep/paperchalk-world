@@ -7,6 +7,8 @@ on:
       # Other game/map developers may publish index.html frequently. A battle screenshot
       # should not cancel mid-render when only unrelated city-map UI changes.
       - 'scripts/qa-ring-visual.mjs'
+      - 'scripts/qa-ring-light-pixels.py'
+      - 'site/assets/ring-arena/convenience-floor.svg'
       - '.github/workflows/ring-arena-quick-visual.yml'
   workflow_dispatch:
 permissions:
@@ -38,6 +40,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Screenshot actual outer/inner WebGL world at original user dimensions
         run: node scripts/qa-ring-visual.mjs
+      - name: Verify real scene is lit by actual powered fixtures, not overlays
+        run: python3 scripts/qa-ring-light-pixels.py artifacts/ring-arena-quick
       - name: Publish visual verification images and runtime report
         if: always()
         uses: actions/upload-artifact@v4
