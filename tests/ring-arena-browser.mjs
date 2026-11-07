@@ -101,12 +101,14 @@ try{
   'four enemies are physically grounded on the same world y=0 plane; the close off-axis shoulder camera creates natural projected baselines');
  const centers=groundProof.feet.map(x=>x.x);
  const gaps=centers.slice(1).map((x,i)=>x-centers[i]);
- assert.ok(gaps.every(x=>x>.30&&x<.50)&&
+ assert.ok(gaps.every(x=>x>.28&&x<.47)&&
   centers.reduce((sum,x)=>sum+x,0)/4>.15&&
   centers.reduce((sum,x)=>sum+x,0)/4<.40,
   'four distinct fighters should spread symmetrically around visual center');
- assert.ok(groundProof.hero.left< -.95&&groundProof.hero.right<-.28&&groundProof.hero.right>-.42,
+ assert.ok(groundProof.hero.left< -1.35&&groundProof.hero.right<-.28&&groundProof.hero.right>-.36,
   'foreground heroine can crop naturally on the left without obscuring any centered enemy');
+ assert.ok(groundProof.hero.top>.56,
+  'default hero head should now be visibly closer, not an undersized distant silhouette');
  assert.ok(groundProof.safety.gap>.055&&groundProof.safety.clear,
   'weapon and enemy1 cannot overlap');
  const foemeter=groundProof.enemySizes.map((h,i)=>
