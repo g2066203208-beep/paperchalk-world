@@ -26,7 +26,7 @@ const openMap=async()=>{
  await waitDirector();
  await page.locator('#quick-map').click();
  await page.locator('#pw-world-surface:not([hidden])').waitFor();
- assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'地区选择');
+ assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'城区交通');
 };
 const tapScene=async action=>{
  await page.locator('#scene').click({position:{x:80,y:80}});
@@ -45,19 +45,20 @@ const finishTrain=async()=>{
  await page.waitForFunction(()=>document.getElementById('pw-transit-scene')?.hidden);
 };
 const go=async(id,expectSrc)=>{
- await page.locator('#pw-world-surface .pw-photo-map-node[data-place="'+id+'"]').click();
- const route=await page.locator('#pw-world-surface .pw-map-route-summary').innerText().catch(()=>null);
- assert.ok(route?.includes('线')||id==='entrance','metro route should be readable: '+route);
- await page.locator('#pw-world-surface .pw-photo-map-go').click();
+ await page.locator('#pw-world-surface .pw-transit-place[data-place="'+id+'"]').click();
+ const popup=page.locator('#pw-world-surface .pw-transit-popup');
+ await popup.waitFor({state:'visible'});
+ assert.ok(await popup.locator('.pw-transit-menu-item').count()>=2);
+ await popup.locator('.pw-transit-menu-item.is-primary').click();
  assert.equal(await page.locator('#pw-world-surface').isVisible(),false,
-   'map must close BEFORE scene travel to prevent flashing');
+   'map must close before scene travel');
+ await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.cabin?.isOpen?.());
+ await snap('06a-procedural-train-cabin.png');
  await page.waitForFunction(id=>window.PaperWorldDailyLifeUI.snapshot().location===id,id);
- if(await page.locator('#pw-transit-scene').isVisible()){
-   await snap('06a-subway-passengers.png');
-   await finishTrain();
- }
+ await page.waitForFunction(()=>!window.PaperWorldDailyLifeUI.cabin?.isOpen?.());
  await waitScene(id);
- if(expectSrc)assert.match(await page.locator('#source').getAttribute('src'),new RegExp(expectSrc.replace(/\./g,'\\.')));
+ if(expectSrc)assert.match(await page.locator('#source').getAttribute('src'),
+   new RegExp(expectSrc.replace(/\./g,'\\.')));
  await waitDirector();
 };
 
@@ -100,6 +101,8 @@ try{
  await tapScene('exit');
  assert.equal(await page.locator('#pw-world-surface').isVisible(),true);
  await snap('06-full-city-map.png');
+ assert.equal(await page.locator('.pw-photo-map-info').count(),0,
+  'map must not have a bottom inspector bar');
  await go('school','classroom.webp');
  assert.equal((await info()).location,'school');
  assert.ok((await info()).minute>420);
