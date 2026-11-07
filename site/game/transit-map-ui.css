@@ -844,3 +844,14 @@
   font-size:13px!important;padding:5px 8px!important
  }
 }
+
+
+/* Final specificity contract: legacy 11px local/station rules must never
+   override readable fonts on full-size photo cards or station labels. */
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place .pw-transit-place-name,
+#pw-world-surface .pw-dot-world-map .pw-dot-places .pw-dot-poi .pw-transit-place-name{
+ font-size:var(--metro-place-label)!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place.is-station .pw-transit-place-name{
+ font-size:var(--metro-station-label)!important
+}
