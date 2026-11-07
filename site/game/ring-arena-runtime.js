@@ -59,11 +59,11 @@
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-.08,10.0],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[.55,5.82],[1.90,5.82],[3.25,5.82],[4.60,5.82]])
+   enemies:Object.freeze([[.839,6.966],[1.757,6.966],[2.675,6.966],[3.593,6.966]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
-   enemies:Object.freeze([[1.05,12.90],[-.29,12.90],[-1.63,12.90],[-2.97,12.90]])
+   enemies:Object.freeze([[.755,11.750],[-.156,11.750],[-1.068,11.750],[-1.979,11.750]])
   })
  });
  const bindings=Object.freeze({
