@@ -596,3 +596,9 @@
 #pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-place-name{
  font-size:24px!important
 }
+
+/* The old playable metro is canonical inside Kirihama. Do not overlay nine
+ * fictional ghost lines when the player zooms into actual city service. */
+#pw-world-surface .pw-dot-world-map .pw-dot-planned-line[data-city="kirihama"]{
+ display:none!important;
+}
