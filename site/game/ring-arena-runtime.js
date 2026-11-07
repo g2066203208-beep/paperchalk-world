@@ -1237,6 +1237,7 @@
    else resetCombatPreview();
   }
   const inspect=()=>({active,renderer:gl?'webgl-l2d':'unavailable',
+    initError:canvas.dataset.error||null,
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:VERTICAL_LENS_SHIFT,
    cameraTarget:camera(mode,shotIndex),
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
@@ -1260,7 +1261,7 @@
     repeats:WALL_TEXTURE.repeats,heightMeters:WALL_TEXTURE.heightMeters,
      kind:'curved-webgl-wall'},
    cameraCount:1,eyeLevel:Math.abs((lens||camera(mode,0)).eye.y-1.50)<.001,
-   heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero').frames,
+   heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero')?.frames??0,
    director:{card:attackCard.name,baseDamage:attackCard.damage,
     armed,playing:!!attack,phase:attackSample?.stage||'idle',
     targetId:attack?.targetId||null,applied:attackApplied,
@@ -1300,9 +1301,9 @@
      window.PaperchalkL2D?.get('player')?.img?.dataset.characterSide||null,
     l2dMode:previewPose==='female7'?'static-back-battle-cutout':
      window.PaperchalkL2D?.get('player')?.root?.dataset.l2dMode||null,
-    ready:textures.get('hero').painted,
-    sourceUv:textures.get('hero').opaqueUv||null,
-    combatUpperUv:textures.get('hero').opaqueCombatUv||null
+    ready:!!textures.get('hero')?.painted,
+    sourceUv:textures.get('hero')?.opaqueUv||null,
+    combatUpperUv:textures.get('hero')?.opaqueCombatUv||null
    },
    safety:battleVisualSafety(mode,shotIndex,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
