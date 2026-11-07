@@ -43,6 +43,14 @@ for(const mode of ['outer','inner']){
   const heightFractions=safety.foes.map(x=>x.heightFraction);
   assert.ok(Math.max(...heightFractions)-Math.min(...heightFractions)<.005,
    'enemy heights cannot be randomly different due to depth');
+  if(aspect===1917/906){
+   // Real 1.58-1.60m bodies are physically closer, not multiplied by CSS.
+   // More readable than V10's ~0.331/0.353 full body height fractions.
+   assert.ok(heightFractions[0]>(mode==='outer'?.40:.43),
+    'opponents must be materially larger and clearly legible');
+   assert.ok(heightFractions[0]<(mode==='outer'?.44:.47),
+    'opponents should not tower over the authored 3.2m room');
+  }
   if(aspect===1917/906)
    console.log('V31 '+mode+' 1917x906:',{
     heroine:[format(safety.hero.left),format(safety.hero.right)],
