@@ -13,7 +13,7 @@
  const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
  const rad=d=>d*Math.PI/180;
  const SPEC=Object.freeze({
-  stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:3.2,ceilingHeight:3.2,
+  stageType:'wide-cinematic-arc',wallRadius:32,wallHeight:3.2,ceilingHeight:3.2,wallBend:.7,
   wallCenterZ:-16,wallArcHalfAngle:rad(78),
   floorWidth:96,floorFrontZ:48,floorBackZ:-55,
   outerRoleRadius:10.55,innerRoleRadius:8.30,
@@ -23,11 +23,25 @@
  // The authored convenience-store wall image is drawn on the existing curved
  // 3D backdrops; actor anchors, depth and camera remain exactly unchanged.
  const WALL_TEXTURE=Object.freeze({
-  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:9,heightMeters:3.2
+  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:8,heightMeters:3.2
  });
+ // CPU-side real surface-length UV mapping. The 0.7-curvature walls are
+ // shallower than perfect cylinders, so an angle-based repeat stretches shop
+ // signs horizontally. Arc-length approximation (<0.08% error at 78 degrees)
+ // is evaluated only for the 160 wall-segment vertices, not per fragment.
+ function wallArcMeters(theta){
+  const m=1-SPEC.wallBend*SPEC.wallBend,m2=m*m,m3=m2*m;
+  return SPEC.wallRadius*(
+   theta*(1-m/4-3*m2/64-5*m3/256)
+   +Math.sin(2*theta)*(m/8+m2/32+15*m3/1024)
+   -Math.sin(4*theta)*(m2/256+3*m3/1024)
+   +Math.sin(6*theta)*m3/3072
+  );
+ }
  function wallTextureUV(x,y){
   const theta=Math.asin(clamp(x/SPEC.wallRadius,-.975,.975));
-  const u=(theta/(2*SPEC.wallArcHalfAngle)+.5)*WALL_TEXTURE.repeats;
+  const tileWidth=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
+  const u=wallArcMeters(theta)/tileWidth+WALL_TEXTURE.repeats/2+.5;
   return {u:u-Math.floor(u),v:clamp(y/WALL_TEXTURE.heightMeters,0,1)};
  }
  // V31: projection-correct four-opponent row at camera-equal ground depth.
@@ -222,11 +236,12 @@
  }
  const worldVertex=[
   'precision highp float;',
-  'attribute vec3 aP;uniform mat4 uVP;varying vec3 vWorld;',
-  'void main(){vWorld=aP;gl_Position=uVP*vec4(aP,1.0);}'
+  'attribute vec3 aP;attribute vec2 aUv;',
+  'uniform mat4 uVP;varying vec3 vWorld;varying vec2 vWallUv;',
+  'void main(){vWorld=aP;vWallUv=aUv;gl_Position=uVP*vec4(aP,1.0);}'
  ].join('\n');
  const worldFragment=[
-  'precision highp float;varying vec3 vWorld;uniform float uTime;uniform int uSurface;uniform float uMode;',
+  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;uniform float uTime;uniform int uSurface;uniform float uMode;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
@@ -258,13 +273,10 @@
   'color=vec3(.003,.011,.014)+vec3(.006,.045,.038)*line(vWorld.x,3.0,.016)',
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   'if(uWallReady>.5){',
-  'float theta=asin(clamp(vWorld.x/32.0,-.975,.975));',
-  'float u=fract((theta/2.7227136+.5)*9.0);',
-  'float v=clamp(vWorld.y/3.2,.003,.997);',
-  'vec3 wallArt=texture2D(uWallTexture,vec2(clamp(u,.002,.998),v)).rgb;',
+  'vec3 wallArt=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(vWallUv.y,.003,.997))).rgb;',
   'color=wallArt*vec3(.87,.88,.91);',
-   // 2172x724 source is a 3:1 panel. Nine repeats across the 87m arc
-   // produce 9.68m x 3.2m panels without any source-art distortion.
+   // Source art 2172x724 is 3:1. Eight real arc-length repeats across
+   // the 76.7m curved surface = 9.58m x 3.2m (aspect preserved).
   '}',
   '}gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
@@ -326,12 +338,14 @@
    // camera-to-wall distance without touching actor anchors or optics.
    // Mirror the outer arc's depth curvature, maintaining equal perspective
    // scale across the wall in both camera directions.
-   ? {x:SPEC.wallRadius*Math.sin(a),z:15.35+bow*.7}
-   : {x:SPEC.wallRadius*Math.sin(a),z:3.4-bow*.7};
+   ? {x:SPEC.wallRadius*Math.sin(a),z:15.35+bow*SPEC.wallBend}
+   : {x:SPEC.wallRadius*Math.sin(a),z:3.4-bow*SPEC.wallBend};
  }
  function worldMesh(gl){
   const floor=[],backInner=[],backOuter=[],ceiling=[];
-  const push=(to,a,b,c)=>to.push(...a,...b,...c);
+  const push=(to,a,b,c)=>{
+   for(const v of [a,b,c])to.push(...v,...(v.length===3?[0,0]:[]));
+  };
   const w=SPEC.floorWidth/2,z0=SPEC.floorFrontZ,z1=SPEC.floorBackZ;
   push(floor,[-w,0,z0],[-w,0,z1],[w,0,z1]);
   push(floor,[-w,0,z0],[w,0,z1],[w,0,z0]);
@@ -344,12 +358,17 @@
   const N=160;
   const addWall=(dest,face)=>{
    const point=angle=>backdropPoint(face==='inner'?'outer':'inner',angle);
+   const uv=(p,angle,y)=>[
+    p.x,y,p.z,wallArcMeters(angle)/(WALL_TEXTURE.heightMeters*
+     WALL_TEXTURE.width/WALL_TEXTURE.height)+WALL_TEXTURE.repeats/2+.5,
+    y/WALL_TEXTURE.heightMeters
+   ];
    for(let i=0;i<N;i++){
     const a=-SPEC.wallArcHalfAngle+i*2*SPEC.wallArcHalfAngle/N;
     const b=-SPEC.wallArcHalfAngle+(i+1)*2*SPEC.wallArcHalfAngle/N;
     const p=point(a),q=point(b);
-    push(dest,[p.x,0,p.z],[p.x,SPEC.wallHeight,p.z],[q.x,SPEC.wallHeight,q.z]);
-    push(dest,[p.x,0,p.z],[q.x,SPEC.wallHeight,q.z],[q.x,0,q.z]);
+    push(dest,uv(p,a,0),uv(p,a,SPEC.wallHeight),uv(q,b,SPEC.wallHeight));
+    push(dest,uv(p,a,0),uv(q,b,SPEC.wallHeight),uv(q,b,0));
    }
   };
   addWall(backInner,'inner');addWall(backOuter,'outer');
@@ -468,7 +487,7 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady']);
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur']);
@@ -790,7 +809,8 @@
   }
   function drawWorld(mesh,kind,viewProjection){
    gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
-   gl.vertexAttribPointer(world.aP,3,gl.FLOAT,false,12,0);
+   gl.vertexAttribPointer(world.aP,3,gl.FLOAT,false,20,0);
+   gl.vertexAttribPointer(world.aUv,2,gl.FLOAT,false,20,12);
    gl.uniform1i(world.uSurface,kind);
    gl.drawArrays(gl.TRIANGLES,0,mesh.count);
   }
@@ -956,7 +976,7 @@
    gl.viewport(0,0,W,H);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
    gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
    gl.clearColor(.001,.005,.008,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-   gl.useProgram(world.handle);gl.enableVertexAttribArray(world.aP);
+   gl.useProgram(world.handle);gl.enableVertexAttribArray(world.aP);gl.enableVertexAttribArray(world.aUv);
    gl.uniformMatrix4fv(world.uVP,false,new Float32Array(vp));
    gl.uniform1f(world.uTime,elapsed);
    gl.uniform1f(world.uMode,mode==='inner'?1:0);
@@ -967,7 +987,7 @@
    drawWorld(floor,0,vp);
    drawWorld(ceiling,2,vp);
    drawWorld(mode==='outer'?backInner:backOuter,1,vp);
-   gl.disableVertexAttribArray(world.aP);
+   gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
    const all=visibleActors(mode);
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
@@ -1112,7 +1132,7 @@
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
- return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,
+ return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,
   SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
