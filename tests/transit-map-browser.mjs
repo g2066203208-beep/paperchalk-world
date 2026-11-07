@@ -49,11 +49,18 @@ try{
    (+p.getAttribute('cx'))%40!==0||(+p.getAttribute('cy'))%40!==0);
   const nodes=[...document.querySelectorAll('.pw-dot-city')];
   const off=nodes.filter(n=>
-   (Math.round(parseFloat(n.style.left)))%40!==0||
-   (Math.round(parseFloat(n.style.top)))%40!==0);
-  return {view:svg.getAttribute('viewBox'),dots:pts.length,offGrid:errors.length,cityOff:off.length};
+   (+n.dataset.worldX)%40!==0||(+n.dataset.worldY)%40!==0);
+  const vb=svg.viewBox.baseVal;
+  return {viewWidth:vb.width,viewHeight:vb.height,
+   cssScale:getComputedStyle(document.querySelector('.pw-dot-world-canvas')).transform,
+   dots:pts.length,offGrid:errors.length,cityOff:off.length,
+   localTransitLines:document.querySelectorAll('.pw-dot-municipal-lines .pw-transit-segment').length};
  });
- assert.deepEqual(lattice,{view:'0 0 2000 1280',dots:1683,offGrid:0,cityOff:0});
+ assert.equal(lattice.cssScale,'none','map must not use compositor bitmap zoom');
+ assert.ok(lattice.viewWidth>0&&lattice.viewHeight>0);
+ assert.equal(lattice.dots,1683);
+ assert.equal(lattice.offGrid,0);assert.equal(lattice.cityOff,0);
+ assert.equal(lattice.localTransitLines,11);
  // The ORIGINAL coloured住宅线 is still a physical boarding action,
  // not a decorative fake rail segment or teleport to the destination.
  const hit=await page.evaluate(()=>{
@@ -71,19 +78,16 @@ try{
  await popup.locator('.pw-transit-menu-item.is-primary').first().click();
  await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro?.onboard===true);
  await page.locator('#pw-metro-cabin:not([hidden])').waitFor();
- // The actual carriage painting cannot be an all-black empty canvas.
+ // The battle ring renderer now owns the subway 3D wall, floor, ceiling,
+ // and real fixtures. Its texture must contain the uploaded 2048x1024 art.
  await page.waitForFunction(()=>{
-  const c=document.querySelector('#pw-metro-cabin .pw-cabin-canvas');
-  const painter=window.PaperWorldMetroSideRenderer;
-  if(!c||!painter||c.width<100||c.height<100)return false;
-  const ctx=c.getContext('2d');
-  // Windows are intentionally dark: sample illuminated wall/bench regions
-  // instead of falsely treating the dark exterior as a black frame.
-  return [[.3,.21],[.55,.22],[.5,.7],[.9,.55]].some(([u,v])=>{
-   const rgba=ctx.getImageData(Math.floor(c.width*u),Math.floor(c.height*v),1,1).data;
-   return rgba[0]+rgba[1]+rgba[2]>260;
-  });
- },null,{timeout:12000});
+  const cab=document.querySelector('#pw-metro-cabin:not([hidden])');
+  const room=window.PaperWorldGameRingArena?.inspect?.();
+  return cab?.dataset.renderer==='ring-3d'&&room?.transitMode===true&&
+   room.environment==='metro'&&room.wallMaterial?.ready===true&&
+   room.wallMaterial.url.endsWith('cabin-master.webp')&&
+   document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready';
+ },null,{timeout:25000});
  await shot('21-dot-map-real-metro-carriage.png');
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
