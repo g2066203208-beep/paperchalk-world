@@ -8,12 +8,12 @@ const routes=Object.freeze({
  'a:entrance:school':[],
  'a:school:central':[],
  'a:central:convenience':[],
- 'b:central:cafe':[[5,3],[4,3],[4,4]],
- 'b:cafe:park':[[3,5]],
+ 'b:central:cafe':[[8,3],[7,3],[7,0],[1,0],[1,4]],
+ 'b:cafe:park':[],
  'b:park:mall':[],
- 'b:mall:convenience':[[11,5]],
- 'b:convenience:northgate':[[12,2],[12,0],[9,0]],
- 'b:northgate:central':[[5,1]],
+ 'b:mall:convenience':[[11,4],[11,2]],
+ 'b:convenience:northgate':[[11,2],[11,0],[8,0]],
+ 'b:northgate:central':[],
  'c:hospital:station':[],
  'c:station:police':[]
 });
