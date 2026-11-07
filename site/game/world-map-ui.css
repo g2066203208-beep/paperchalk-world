@@ -35,7 +35,7 @@
  font:500 clamp(11px,1.5cqh,13px)/1.2 "PaperSans",sans-serif!important;
  letter-spacing:.04em;box-shadow:0 2px 12px #0008!important;
 }
-#pw-world-surface .pw-surface-frame[data-map-mode="regional"] .pw-map-mode-toggle{top:56px;right:12px}
+#pw-world-surface .pw-surface-frame[data-map-mode="regional"] .pw-map-mode-toggle{top:56px;left:12px;right:auto}
 #novel-ui #pw-world-surface .pw-map-mode-toggle:hover,
 #novel-ui #pw-world-surface .pw-map-mode-toggle:focus-visible{
  background:#32464de8!important;border-color:#d8e1df!important;
