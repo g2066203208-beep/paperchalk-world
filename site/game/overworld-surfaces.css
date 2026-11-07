@@ -616,3 +616,43 @@
  #pw-world-surface .pw-item-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
  #pw-world-surface .pw-bag-left{min-height:0;padding:8px!important}
 }
+
+/* Visual QA V4: photographed locations are prominent, undiscovered sites
+   shrink to station ticks rather than three unfinished blank photo tiles. */
+#pw-world-surface .pw-metro-track{
+ stroke-width:3.3!important;opacity:.78!important;
+}
+#pw-world-surface .pw-metro-track.is-selected{
+ stroke-width:6!important;opacity:1!important;
+}
+#pw-world-surface .pw-metro-track.is-future{
+ stroke-width:1.7!important;opacity:.35!important;
+}
+#pw-world-surface .pw-photo-map-node[data-locked="true"]{
+ min-height:32px!important;opacity:.5!important;
+}
+#pw-world-surface .pw-photo-map-node[data-locked="true"] .pw-photo-map-picture{
+ display:none!important;
+}
+#pw-world-surface .pw-photo-map-node[data-locked="true"] .pw-photo-map-anchor{
+ width:12px;height:12px;border:1px solid #9ca6a3;
+ background:#334245;border-radius:50%;
+}
+#pw-world-surface .pw-photo-map-node[data-locked="true"] .pw-photo-map-name{
+ background:transparent!important;font-size:clamp(10px,1.6cqh,13px)!important;
+}
+#pw-world-surface .pw-photo-map-node[data-locked="true"][data-selected="true"]{
+ opacity:.9!important;
+}
+/* Fog starts first; physical map/bag surface resolves from darkness a moment
+   later. Keep motion subtle and reduce it for accessibility. */
+#novel-ui > #pw-world-surface:not([hidden]) .pw-surface-frame{
+ animation:pw-immersive-surface-reveal 360ms ease-out both;
+}
+@keyframes pw-immersive-surface-reveal{
+ 0%,25%{opacity:0;transform:translateY(5px)}
+ 100%{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+ #novel-ui > #pw-world-surface .pw-surface-frame{animation:none!important}
+}
