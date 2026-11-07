@@ -47,8 +47,8 @@ try{
   const markerError=Object.entries(metro.STATIONS).map(([id,st])=>{
    const n=element.querySelector('.pw-transit-stop-group[data-stop="'+id+'"]');
    const p=geo.stationPoint(st,space);
-   const move=n?.getAttribute('transform')?.match(/translate\\(([^,]+),([^\\)]+)\\)/);
-   return move?distance(p,{x:+move[1],y:+move[2]}):999;
+   const move=n?.getAttribute('transform')?.replace('translate(','')?.replace(')','')?.split(',');
+   return move?.length===2?distance(p,{x:+move[0],y:+move[1]}):999;
   });
   const photoError=[...element.querySelectorAll('.pw-transit-place[data-photograph=true]')]
    .map(n=>{
