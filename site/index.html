@@ -1408,6 +1408,9 @@ void main(){
   const quickPanelTitle=document.getElementById('quick-panel-title');
   const quickPanelContent=document.getElementById('quick-panel-content');
   const phoneUI=window.PaperWorldPhoneUI.create({root:uiRoot});
+  // Hide the tiny legacy quick placeholders after the proper immersive
+  // map/bag is active. The actual tools remain in the three-icon strip.
+
   const quickToolButtons=Object.freeze({
     backpack:document.getElementById('quick-backpack'),
     phone:document.getElementById('quick-phone'),
@@ -1924,7 +1927,7 @@ void main(){
         uiFogCtx.drawImage(fog,0,0,srcW,verticalSource,0,0,w,dh);
       }else{
         drawNativeSideFog(uiFogCtx,edge,w,h,
-          uiFogProgress[edge],edge==='right'&&phoneUI.isOpen()?w*.55:w*.31,.99);
+          uiFogProgress[edge],edge==='right'&&phoneUI.isOpen()?w*.79:w*.40,.99);
       }
     }
     uiFogCtx.globalAlpha=1;
