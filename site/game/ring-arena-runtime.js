@@ -27,6 +27,7 @@
  const WALL_TEXTURE=Object.freeze({
   url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:9,heightMeters:2.85
  });
+ let ACTIVE_WALL=WALL_TEXTURE;
  const SURFACE_TEXTURES=Object.freeze({
   floor:'./assets/ring-arena/convenience-floor.svg',
   ceiling:'./assets/ring-arena/convenience-ceiling.svg'
@@ -46,12 +47,12 @@
  }
  function wallTextureUV(x,y,mode='outer'){
   const theta=Math.asin(clamp(x/SPEC.wallRadius,-.975,.975));
-  const tileWidth=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
+  const tileWidth=ACTIVE_WALL.heightMeters*ACTIVE_WALL.width/ACTIVE_WALL.height;
   // When the camera looks toward +Z in inner mode, screen-right is world -X.
   // Reverse the UV run so all shop signs stay legible, never mirror text.
   const sign=mode==='inner'?-1:1;
-  const u=sign*wallArcMeters(theta)/tileWidth+WALL_TEXTURE.repeats/2;
-  return {u:u-Math.floor(u),v:clamp(y/WALL_TEXTURE.heightMeters,0,1)};
+  const u=sign*wallArcMeters(theta)/tileWidth+ACTIVE_WALL.repeats/2;
+  return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
  // ONE playable, standard encounter (not alternating 'surround' patterns).
  // Four foes span 4.12m across the shop and 1.10m in real world depth.
@@ -669,10 +670,10 @@
    const point=angle=>backdropPoint(face==='inner'?'outer':'inner',angle);
    const uv=(p,angle,y)=>{
     const tex=wallTextureUV(p.x,y,face==='outer'?'inner':'outer');
-    const tileWidth=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
+    const tileWidth=ACTIVE_WALL.heightMeters*ACTIVE_WALL.width/ACTIVE_WALL.height;
     const signed=face==='outer'?-1:1;
     return [p.x,y,p.z,signed*wallArcMeters(angle)/tileWidth+
-     WALL_TEXTURE.repeats/2,tex.v];
+     ACTIVE_WALL.repeats/2,tex.v];
    };
    for(let i=0;i<N;i++){
     const a=theta(i),b=theta(i+1),p=point(a),q=point(b);
@@ -686,9 +687,9 @@
   // A ±24° pan used to expose empty black space where the arc mesh stopped.
   const addWing=(dest,whichMode,side)=>{
    const angle=side*SPEC.wallArcHalfAngle;
-   const texW=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
+   const texW=ACTIVE_WALL.heightMeters*ACTIVE_WALL.width/ACTIVE_WALL.height;
    const sign=whichMode==='outer'?1:-1;
-   const baseU=sign*wallArcMeters(angle)/texW+WALL_TEXTURE.repeats/2;
+   const baseU=sign*wallArcMeters(angle)/texW+ACTIVE_WALL.repeats/2;
    const vertex=(depth,y)=>{
     const p=curvedSurfacePoint(whichMode,angle,depth,y);
     return [p.x,p.y,p.z,baseU+sign*side*depth/texW,y/SPEC.wallHeight];
@@ -736,6 +737,10 @@
    '#view.ring-arena-active #scene::after{content:none!important}',
    '#view.ring-arena-active #source{visibility:hidden!important}',
    '#view.ring-arena-active > #fog,#view.ring-arena-active > #ui-edge-fog,#view.ring-arena-active > #novel-ui{display:none!important}',
+   '#view.ring-arena-transit > #novel-ui{display:block!important;visibility:visible!important}',
+   '#view.ring-arena-transit #pw-metro-cabin{background:transparent!important}',
+   '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-canvas{display:none!important}',
+   '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-foreground{display:none!important}',
    '#ring-arena-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:manipulation;pointer-events:auto;cursor:default}',
    '#ring-arena-canvas[hidden],#ring-arena-controls[hidden]{display:none!important}',
    // Keep existing L2D artists' exact original rigs animating while visually
@@ -917,6 +922,7 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
+  let transitMode=false,environmentId='convenience',environmentEpoch=0;
   let mouseLookX=0,mouseLookY=0;
   const params=new URLSearchParams(window.location.search);
   let lightState=LIGHT_STATES.includes(params.get('lights'))?params.get('lights'):'on';
@@ -1606,8 +1612,7 @@
    drawnPoses={};
    drawnActorIds=presented.map(a=>a.id);
    // The same temporary lunge transforms affect cast shadows and portraits.
-   drawProjectedShadows(presented,cam,vp);
-   drawActors(presented,cam,vp);
+   if(!transitMode){drawProjectedShadows(presented,cam,vp);drawActors(presented,cam,vp)}
    if(armed)updateTargetPositions(cam,w/h);
    if(attack&&attackSample){
     const victim=presented.find(a=>a.id===target.id)||target;
@@ -1635,7 +1640,76 @@
    }
    return true;
   }
+  // The very same battle room WebGL meshes, camera, lighting and
+  // material shaders are reused for transit. Only texture slots change.
+  function changeEnvironment(id){
+   if(id===environmentId)return true;
+   const pack=window.PaperWorldEnvironments?.get?.(id);
+   if(!pack||!gl)return false;
+   environmentId=id;ACTIVE_WALL=pack.wall;
+   const epoch=++environmentEpoch;
+   const oldMeshes=[floorOuter,floorInner,backInner,backOuter,
+    ceilingOuter,ceilingInner,wingOuter,wingInner];
+   [floorOuter,floorInner,backInner,backOuter,ceilingOuter,
+    ceilingInner,wingOuter,wingInner]=worldMesh(gl);
+   for(const mesh of oldMeshes)if(mesh?.buffer)gl.deleteBuffer(mesh.buffer);
+   wallMaterialReady=false;wallMaterialError=null;
+   canvas.dataset.wallTexture='loading';canvas.dataset.environment=id;
+   const picture=new Image();
+   picture.decoding='async';wallImage=picture;
+   picture.onload=()=>{
+    if(environmentEpoch!==epoch)return;
+    try{
+     gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
+     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,picture);
+     wallMaterialReady=true;canvas.dataset.wallTexture='ready';
+    }catch(err){wallMaterialError=String(err);canvas.dataset.wallTexture='error'}
+   };
+   picture.onerror=()=>{if(environmentEpoch===epoch){
+    wallMaterialError='Unable to load '+pack.wall.url;canvas.dataset.wallTexture='error';
+   }};
+   picture.src=pack.wall.url;
+   for(const [kind,path,unit] of [['floor',pack.floor,1],['ceiling',pack.ceiling,2]]){
+    const target=surfaceMaterials[kind],im=new Image();
+    target.url=path;target.ready=false;target.error=null;target.image=im;
+    canvas.dataset[kind+'Texture']='loading';
+    im.onload=()=>{
+     if(environmentEpoch!==epoch)return;
+     try{
+      gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,target.texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im);
+      target.ready=true;canvas.dataset[kind+'Texture']='ready';
+     }catch(err){target.error=String(err);canvas.dataset[kind+'Texture']='error'}
+    };
+    im.onerror=()=>{if(environmentEpoch===epoch){
+     target.error='Unable to load '+path;canvas.dataset[kind+'Texture']='error';
+    }};
+    im.src=path;
+   }
+   return true;
+  }
+  function enterTransit(){
+   if(active&&!transitMode)return false;
+   if(!changeEnvironment('metro'))return false;
+   transitMode=true;active=true;mode='outer';
+   canvas.hidden=false;hud.hidden=true;
+   view.classList.add('ring-arena-active','ring-arena-transit');
+   elapsed=0;frames=0;mouseLookX=0;mouseLookY=0;
+   lens=camera(mode,0);setLighting('on');render(0,0,0);
+   return true;
+  }
+  function exitTransit(){
+   if(!transitMode)return false;
+   transitMode=false;active=false;
+   canvas.hidden=true;hud.hidden=true;
+   view.classList.remove('ring-arena-transit','ring-arena-active');
+   changeEnvironment('convenience');
+   return true;
+  }
   function setActive(value){
+   if(transitMode)exitTransit();
    active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
    if(active){mode='outer';elapsed=0;frames=0;shotIndex=0;mouseLookX=0;mouseLookY=0;
@@ -1643,7 +1717,7 @@
     resetCombatPreview();lens=camera(mode,0);render(0)}
    else resetCombatPreview();
   }
-  const inspect=()=>({active,encounter:'one-standard-wide-spaced-world',encounterControls:0,
+  const inspect=()=>({active,transitMode,environment:environmentId,encounter:'one-standard-wide-spaced-world',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
     cameraLook:{mode:'stationary-world-eye',yawDeg:lens?.lookYawDeg||0,
      pitchDeg:lens?.lookPitchDeg||0,inputX:mouseLookX,inputY:mouseLookY,
@@ -1680,9 +1754,9 @@
      colors:[...lightRigs[mode].colors],
      colorPipeline:'linear-sRGB-shading-filmic-compression',
      spriteNormal:'camera-facing-pseudonormal-preserves-artist-source'},
-    wallMaterial:{url:WALL_TEXTURE.url,ready:wallMaterialReady,error:wallMaterialError,
+    wallMaterial:{url:ACTIVE_WALL.url,ready:wallMaterialReady,error:wallMaterialError,
     sourceSize:wallImage?.naturalWidth?[wallImage.naturalWidth,wallImage.naturalHeight]:null,
-    repeats:WALL_TEXTURE.repeats,heightMeters:WALL_TEXTURE.heightMeters,
+    repeats:ACTIVE_WALL.repeats,heightMeters:ACTIVE_WALL.heightMeters,
      kind:'curved-webgl-wall'},
    cameraCount:1,eyeLevel:Math.abs((lens||camera(mode,0)).eye.y-1.50)<.001,
    heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero')?.frames??0,
@@ -1763,7 +1837,7 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,render,inspect,setLighting,get canvas(){return canvas}};
+  const api={setActive,enterTransit,exitTransit,render,inspect,setLighting,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
