@@ -124,6 +124,7 @@ function create({root,engine,onExit,onFeedback}){
    clock.textContent=s.calendar.time;
    nextLabel.textContent=dest?.name||leg.to;
    anomaly.hidden=true;section.dataset.night='false';
+   if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.setPlatformExposure?.(.82);
    actions.replaceChildren();
    return;
   }
@@ -140,7 +141,10 @@ function create({root,engine,onExit,onFeedback}){
   if(ride.anomaly){
     actions.replaceChildren();
     section.dataset.night='true';
-    if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.setLighting?.('flicker');
+    if(section.dataset.renderer==='ring-3d'){
+     global.PaperWorldGameRingArena?.setPlatformExposure?.(0);
+     global.PaperWorldGameRingArena?.setLighting?.('flicker');
+    }
     if(!anomalyEventSent){
       anomalyEventSent=true;
       global.dispatchEvent(new CustomEvent('paperchalk:metro-night-entry',{
@@ -150,7 +154,12 @@ function create({root,engine,onExit,onFeedback}){
     return;
   }
   section.dataset.night='false';
-  if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.setLighting?.('on');
+  if(section.dataset.renderer==='ring-3d'){
+   // The train is stopped at a station: allow both platform light banks
+   // to enter through the authored glass and illuminate the physical floor.
+   global.PaperWorldGameRingArena?.setPlatformExposure?.(1);
+   global.PaperWorldGameRingArena?.setLighting?.('on');
+  }
   actions.replaceChildren();
   if(next)actions.append(btn('继续乘坐 · 下一站',()=>{
     if(auto)return;
@@ -255,6 +264,10 @@ function create({root,engine,onExit,onFeedback}){
       if(!transfer.ok)return transfer;
       refresh();
       await new Promise(resolve=>setTimeout(resolve,550));
+    }
+    if(section.dataset.renderer==='ring-3d'){
+     global.PaperWorldGameRingArena?.setPlatformExposure?.(0);
+     await new Promise(resolve=>global.setTimeout(resolve,230));
     }
     const next=engine.metroNext();
     if(!next.ok)return next;
