@@ -511,7 +511,12 @@
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   'if(uWallReady>.5){',
   'vec4 wallSample=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(vWallUv.y,.003,.997)));',
-  'if(uSurface==1&&uWindowCutouts>.5&&wallSample.a<.70)discard;',
+  'if(uSurface==1&&uWindowCutouts>.5&&wallSample.a<.70){',
+  // Empty source-image margin is not an exterior WINDOW. It belongs to
+  // the lower wall trim and must not show a bright tunnel through the floor.
+  'if(vWallUv.y>.10)discard;',
+  'wallSample.rgb=vec3(.20,.22,.23);',
+  '}',
   'vec3 wallArt=wallSample.rgb;',
   'float footAO=mix(.75,1.0,smoothstep(.04,.82,vWorld.y));',
   'color=wallArt*vec3(.81,.83,.88)*footAO;',
