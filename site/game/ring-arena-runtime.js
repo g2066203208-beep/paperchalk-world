@@ -375,7 +375,7 @@
   return [floor,backInner,backOuter,ceiling].map(arr=>{
    const buffer=gl.createBuffer(),data=new Float32Array(arr);
    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
-   return {buffer,count:data.length/3};
+   return {buffer,count:data.length/5};
   });
  }
  function prepareTexture(gl){
