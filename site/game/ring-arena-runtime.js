@@ -335,7 +335,7 @@
   '*(1.0-smoothstep(.113,.124,lampUv.y));',
   'color=mix(color,vec3(.18,.19,.21),housing*.88);',
   'color=mix(color,vec3(.75,.78,.75),emitting*.60);',
-  'emissive=emitting;'
+  'emissive=emitting;',
   '}else{',
   'float col=floor(vWorld.x*3.0);float v=vWorld.y*8.0+uTime*(.35+hash(col)*1.1);',
   'float cellX=fract(vWorld.x*3.0);float cellY=fract(v);',
@@ -350,13 +350,14 @@
    // Source art 2172x724 is 3:1. Eight real arc-length repeats across
    // the 76.7m curved surface = 9.58m x 3.2m (aspect preserved).
   '}',
+  '}',
   'vec3 normal=uSurface==0?vec3(0.0,1.0,0.0):',
   'uSurface==2?vec3(0.0,-1.0,0.0):',
   'normalize(vec3(.7*sin(asin(clamp(vWorld.x/32.0,-.975,.975))),0.0,',
   '(uMode>.5?-1.0:1.0)*sqrt(max(.001,1.0-pow(vWorld.x/32.0,2.0)))));',
   'color=ringShade(color,vWorld,normal);',
   'if(uSurface==2)color=mix(color,vec3(.96,.95,.87),emissive*.90);',
-  '}gl_FragColor=vec4(color,1.0);}'
+  'gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
  // Vertical pivot uses the source canvas's measured shoe & crown fractions.
@@ -409,7 +410,7 @@
   'uniform vec3 uFoot;uniform vec3 uShadowLight;uniform float uRadius;varying vec2 vLocal;',
   'void main(){vLocal=aUv*2.0-1.0;',
   'vec2 sl=(uFoot.xz-uShadowLight.xz)*.065;',
-  'vec3 p=uFoot+vec3(sl.x+vLocal.x*uRadius,0.016,sl.y+vLocal.y*uRadius*.72);',
+  'vec3 p=uFoot+vec3(sl.x*.43+vLocal.x*uRadius,0.016,sl.y*.43+vLocal.y*uRadius*.72);',
   'gl_Position=uVP*vec4(p,1.0);}'
  ].join('\n');
  const shadowFragment=[
@@ -597,10 +598,10 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady']);
-   shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]']);
+   shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uShadowLight','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -956,6 +957,21 @@
    gl.uniform1i(world.uSurface,kind);
    gl.drawArrays(gl.TRIANGLES,0,mesh.count);
   }
+  function setSceneLighting(prog,whichMode){
+   const rig=lightRigs[whichMode]||lightRigs.outer;
+   gl.uniform3fv(prog['uLampPositions[0]'],rig.positions);
+   gl.uniform3fv(prog['uLampColors[0]'],rig.colors);
+  }
+  function nearestLamp(p,whichMode){
+   const ps=lightRigs[whichMode||mode].positions;
+   let best=0,closest=Infinity;
+   for(let i=0;i<6;i++){
+    const dx=p.x-ps[i*3],dz=p.z-ps[i*3+2];
+    const d2=dx*dx+dz*dz;
+    if(d2<closest){closest=d2;best=i}
+   }
+   return new Float32Array(ps.slice(best*3,best*3+3));
+  }
   function drawContactShadows(actors,vp){
    gl.useProgram(shadow.handle);
    gl.uniformMatrix4fv(shadow.uVP,false,new Float32Array(vp));
@@ -966,6 +982,7 @@
    gl.depthMask(false);
    for(const a of actors){
     gl.uniform3fv(shadow.uFoot,new Float32Array([a.x,0,a.z]));
+    gl.uniform3fv(shadow.uShadowLight,nearestLamp(a,mode));
     gl.uniform1f(shadow.uRadius,a.id==='hero'?.46:.35);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -1035,6 +1052,9 @@
    const right=normalize(cross(f,{x:0,y:1,z:0}));
    gl.uniform3fv(portrait.uRight,new Float32Array([right.x,right.y,right.z]));
    gl.uniform3fv(portrait.uUp,new Float32Array([0,1,0]));
+   gl.uniform3fv(portrait.uRightDir,new Float32Array([right.x,right.y,right.z]));
+   gl.uniform3fv(portrait.uFacing,new Float32Array([-f.x,-f.y,-f.z]));
+   setSceneLighting(portrait,mode);
    gl.activeTexture(gl.TEXTURE0);gl.uniform1i(portrait.uTexture,0);
    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
    gl.depthMask(false);
@@ -1122,6 +1142,7 @@
    gl.uniformMatrix4fv(world.uVP,false,new Float32Array(vp));
    gl.uniform1f(world.uTime,elapsed);
    gl.uniform1f(world.uMode,mode==='inner'?1:0);
+   setSceneLighting(world,mode);
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
    gl.uniform1i(world.uWallTexture,0);
@@ -1209,6 +1230,13 @@
       vertices:kind==='floor'?(mode==='outer'?floorOuter:floorInner)?.count:
        (mode==='outer'?ceilingOuter:ceilingInner)?.count,
       mapping:'curved-wall-arc-and-depth'}])),
+    lighting:{kind:LIGHTING.kind,count:lightRigs[mode].count,
+     ambient:[...LIGHTING.coolAmbient],
+     fixtureHeight:LIGHTING.height,
+     positions:[...lightRigs[mode].positions],
+     colors:[...lightRigs[mode].colors],
+     colorPipeline:'linear-sRGB-shading-filmic-compression',
+     spriteNormal:'camera-facing-pseudonormal-preserves-artist-source'},
     wallMaterial:{url:WALL_TEXTURE.url,ready:wallMaterialReady,error:wallMaterialError,
     sourceSize:wallImage?.naturalWidth?[wallImage.naturalWidth,wallImage.naturalHeight]:null,
     repeats:WALL_TEXTURE.repeats,heightMeters:WALL_TEXTURE.heightMeters,
@@ -1288,7 +1316,7 @@
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
- return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
+ return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
   SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
