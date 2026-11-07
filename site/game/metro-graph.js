@@ -9,17 +9,17 @@
  // and line badges in desktop and landscape mobile layouts.
 const GRID=Object.freeze({columns:12,rows:6});
 const GRID_STATIONS=Object.freeze({
- entrance:{label:'住宅前',gx:1,gy:2},
- school:{label:'学园前',gx:3,gy:2},
- central:{label:'中央换乘站',gx:5,gy:2,transfer:true},
- convenience:{label:'商业街',gx:11,gy:2},
- cafe:{label:'咖啡街',gx:3,gy:4},
- park:{label:'河岸公园',gx:5,gy:5},
- mall:{label:'中央商场',gx:9,gy:5},
- northgate:{label:'北街口',gx:9,gy:1},
- hospital:{label:'医院前',gx:1,gy:6,locked:true},
- station:{label:'南站',gx:3,gy:6,locked:true},
- police:{label:'警察署前',gx:5,gy:6,locked:true}
+ entrance:{label:'住宅前',gx:2,gy:2},
+ school:{label:'学园前',gx:6,gy:2},
+ central:{label:'中央换乘站',gx:8,gy:2,transfer:true},
+ convenience:{label:'商业街',gx:10,gy:2},
+ cafe:{label:'咖啡街',gx:2,gy:4},
+ park:{label:'河岸公园',gx:6,gy:4},
+ mall:{label:'中央商场',gx:10,gy:4},
+ northgate:{label:'北街口',gx:8,gy:1},
+ hospital:{label:'医院前',gx:2,gy:6,locked:true},
+ station:{label:'南站',gx:6,gy:6,locked:true},
+ police:{label:'警察署前',gx:10,gy:6,locked:true}
 });
 const STATIONS=Object.freeze(Object.fromEntries(Object.entries(GRID_STATIONS)
  .map(([id,station])=>[id,Object.freeze({...station,
