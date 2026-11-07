@@ -54,10 +54,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const metroNetwork=vector('g',{},'pw-dot-planned-metro');
  const stops=vector('g',{},'pw-dot-stations');
  svg.append(dots,regional,metroNetwork,urban,stops);
+ const areaLayer=element('div','pw-dot-areas');
  const cityLayer=element('div','pw-dot-cities');
  const placeLayer=element('div','pw-dot-places');
  const metroLayer=element('div','pw-dot-local-places');
- canvas.append(svg,cityLayer,placeLayer,metroLayer);
+ canvas.append(svg,areaLayer,cityLayer,placeLayer,metroLayer);
  map.append(canvas);
  const chrome=element('header','pw-dot-chrome');
  const heading=element('div','pw-dot-heading');
@@ -114,8 +115,22 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   layer.append(node);
  }
  // The same integer lattice owns regional routes, subway turns and every pin.
- for(let cy=0;cy<=H;cy+=CELL)for(let cx=0;cx<=W;cx+=CELL)
-  dots.append(vector('circle',{cx,cy,r:1.85},'pw-transit-grid-dot'));
+ const REGION_TONES={mountain:'#738e7c',forest:'#648476',plain:'#8e9580',
+  lake:'#6492a3',sea:'#59879e',coast:'#6e94a0',island:'#709f9b',
+  rural:'#9fa88a',industrial:'#758e9a',river:'#6c979d',
+  town:'#80969a',ruins:'#8b8c83',onsen:'#8ca4a0'};
+ for(let cy=0;cy<=H;cy+=CELL)for(let cx=0;cx<=W;cx+=CELL){
+  let accent=null;
+  // Semantic biomes are DOTS ONLY: never a painted terrain polygon,
+  // imported world-map texture or fake mini city silhouette.
+  for(const a of atlas.AREAS){
+   const dx=(cx-a.x)/245,dy=(cy-a.y)/185;
+   const distortion=.82+.16*Math.sin(cx*.017+cy*.011)+.1*Math.cos(cx*.025-cy*.009);
+   if(dx*dx+dy*dy<distortion){accent=REGION_TONES[a.type]||'#758e90';break}
+  }
+  dots.append(vector('circle',{cx,cy,r:1.85,fill:accent||'#869aaa'},
+   'pw-transit-grid-dot'+(accent?' pw-dot-biome-dot':'')));
+ }
  function rounded(points,radius=13){
   if(!points?.length)return '';
   const result=['M'+points[0].x+' '+points[0].y];
@@ -263,7 +278,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const node=element('button','pw-transit-place pw-dot-place'+(visible?'':' is-station'));
   node.type='button';node.dataset.place=id;node.dataset.local='true';
   node.dataset.current=String(here===id);node.dataset.photograph=String(visible);
-  node.dataset.gridColumn=s.gx;node.dataset.gridRow=s.gy;
+  node.dataset.gridColumn=s.gx;node.dataset.gridRow=s.gy-(visible?1:0);
   if(visible){const q=PHOTO[id];photo(node,[q[0],q[1]])}
   else node.append(element('span','pw-transit-station-dot',s.transfer?'◎':'•'));
   node.append(element('span','pw-transit-place-name',name));
@@ -289,6 +304,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   });
  }
  for(const [id,s] of Object.entries(metro.STATIONS))if(!s.locked)localPlace(id,s);
+ const areaNodes=[];
+ for(const a of atlas.AREAS){
+  const label=element('span','pw-dot-area-label',a.name);
+  label.dataset.area=a.id;put(label,location(a),areaLayer);
+  areaNodes.push(label);
+ }
  const cityNodes=[];
  for(const c of atlas.CITIES){
   const node=element('button','pw-dot-city');
@@ -363,6 +384,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   caption.textContent=zoom==='region'?'都市圈交通':zoom==='city'?'城市交通':'街区交通';
   sub.textContent=zoom==='region'?'点击城市放大 · 城际铁路 / 巴士 / 渡轮':
    zoom==='city'?'点击地点乘车 · 缩放查看全域':'点击地点调查 · 拖动继续探索';
+  for(const n of areaNodes)n.hidden=scale>=1.22;
   for(const {node,city} of cityNodes){
    const onScreen=(x+city.x*scale)>-100&&(x+city.x*scale)<v.w+100&&
     (y+city.y*scale)>-100&&(y+city.y*scale)<v.h+100;
