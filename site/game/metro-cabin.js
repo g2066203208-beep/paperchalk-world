@@ -1,6 +1,6 @@
-/* Procedurally projected 3D carriage. No pre-rendered train backdrop.
-   Geometry is defined in metres, projected by a pinhole camera, shaded in
-   depth order, and animated while the train is in motion. */
+/* Side-on 2.5D passenger carriage. Fixed camera perpendicular to one long
+ * seat row, so all passenger portraits are the canonical FRONT L2D.
+ * All travel, stations and the 22:00 anomaly remain fully stateful. */
 (function(global){
 'use strict';
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
@@ -11,14 +11,40 @@ function create({root,engine,onExit,onFeedback}){
  section.id='pw-metro-cabin';section.hidden=true;
  section.setAttribute('role','dialog');section.setAttribute('aria-label','正在乘坐的地铁车厢');
  section.setAttribute('data-ui-fog-edge','bottom');
- section.innerHTML='<canvas class="pw-cabin-canvas" aria-label="程序化三维车厢"></canvas>'+
+ section.dataset.camera='side-elevation';
+ section.innerHTML='<canvas class="pw-cabin-canvas" aria-label="地铁车厢纯侧面背景"></canvas>'+
+  '<div class="pw-cabin-live-actors" aria-label="对面座位上的 Live2D 乘客"></div>'+
+  '<canvas class="pw-cabin-foreground" aria-hidden="true"></canvas>'+
   '<div class="pw-cabin-top"><span class="pw-cabin-line"></span><span class="pw-cabin-clock"></span></div>'+
   '<div class="pw-cabin-station"><small>下一站</small><strong></strong></div>'+
   '<div class="pw-cabin-speech"><span class="pw-cabin-person"></span><p class="pw-cabin-words"></p></div>'+
   '<div class="pw-cabin-actions"></div>'+
   '<div class="pw-cabin-anomaly" hidden><strong>末班车</strong><p>车厢里的报站声突然停了。</p></div>';
  root.append(section);
- const canvas=section.querySelector('canvas'),ctx=canvas.getContext('2d',{alpha:false});
+ const canvas=section.querySelector('.pw-cabin-canvas'),ctx=canvas.getContext('2d',{alpha:false});
+ const foreground=section.querySelector('.pw-cabin-foreground');
+ const fg=foreground.getContext('2d',{alpha:true});
+ const actorsLayer=section.querySelector('.pw-cabin-live-actors');
+ // Every seat accepts the real authored front L2D renderer. No synthetic
+ // human silhouettes, no auto-painted seated/side-profile character variants.
+ const liveSeats=[];
+ for(const [i,seat] of (global.PaperWorldMetroSideRenderer?.SEATS||[]).entries()){
+   const holder=document.createElement('div');
+   holder.className='pw-cabin-l2d-seat';holder.dataset.seat=seat.id;
+   holder.dataset.l2dActor='metro-seat-'+(i+1);
+   holder.setAttribute('aria-label','正面 L2D 座位 '+(i+1));
+   holder.hidden=true;
+   holder.style.left=(seat.x*100)+'%';
+   const img=document.createElement('img');
+   img.setAttribute('data-l2d-image','');
+   img.alt='';img.draggable=false;
+   const cv=document.createElement('canvas');
+   cv.setAttribute('data-l2d-canvas','');
+   cv.width=1024;cv.height=1024;
+   holder.append(img,cv);actorsLayer.appendChild(holder);
+   liveSeats.push({id:holder.dataset.l2dActor,holder,img,canvas:cv});
+ }
+ let seatsPopulated=false,seatLoading=false,seatTry=0;
  const lineLabel=section.querySelector('.pw-cabin-line');
  const clock=section.querySelector('.pw-cabin-clock');
  const nextLabel=section.querySelector('.pw-cabin-station strong');
@@ -28,121 +54,64 @@ function create({root,engine,onExit,onFeedback}){
  const anomaly=section.querySelector('.pw-cabin-anomaly');
  let raf=0,last=0,visible=false,speakerIndex=0,auto=false,frame=0,anomalyEventSent=false;
  const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);return b};
- // Camera and meshes are independent of viewport size. No CSS fake-car box.
+ // A single FRONT-facing side-elevation canvas. Never project train depth
+ // toward a vanishing point or transform an existing character portrait.
  function render(time){
   if(!visible||section.hidden)return;
   raf=requestAnimationFrame(render);
-  if(time-last<38)return;last=time;frame++;
+  if(time-last<40)return;last=time;frame++;
   const rect=canvas.getBoundingClientRect();
-  const w=Math.max(280,Math.round(rect.width)),h=Math.max(130,Math.round(rect.height));
+  const w=Math.max(280,Math.round(rect.width));
+  const h=Math.max(130,Math.round(rect.height));
   const dpr=Math.min(2,global.devicePixelRatio||1);
-  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){
-   canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  const cw=Math.round(w*dpr),ch=Math.round(h*dpr);
+  if(canvas.width!==cw||canvas.height!==ch){
+   canvas.width=cw;canvas.height=ch;
+   foreground.width=cw;foreground.height=ch;
   }
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  const s=engine.snapshot(),ride=s.metro||{},isDark=!!ride.anomaly;
-  const t=time*.001,camX=Math.sin(t*1.75)*.018,camY=1.48+Math.sin(t*2.5)*.012;
-  const F=h*1.67,baseY=h*.61;
-  const project=(x,y,z)=>{
-    const zc=Math.max(.2,5.1-z);
-    return [w*.5+(x-camX)*F/zc,baseY-(y-camY)*F/zc];
-  };
-  const fillQuad=(p,color,stroke)=>{
-    const a=p.map(v=>project(...v));
-    ctx.beginPath();ctx.moveTo(...a[0]);
-    for(let i=1;i<a.length;i++)ctx.lineTo(...a[i]);
-    ctx.closePath();ctx.fillStyle=color;ctx.fill();
-    if(stroke){ctx.lineWidth=.7;ctx.strokeStyle=stroke;ctx.stroke()}
-  };
-  const beam=(a,b,width,color)=>{
-    const pa=project(...a),pb=project(...b);
-    ctx.beginPath();ctx.moveTo(...pa);ctx.lineTo(...pb);
-    ctx.lineWidth=Math.max(.4,width*F/Math.max(2,5.1-(a[2]+b[2])*.5));
-    ctx.strokeStyle=color;ctx.stroke();
-  };
-  const bg=ctx.createLinearGradient(0,0,0,h);
-  bg.addColorStop(0,isDark?'#11121c':'#879a9d');
-  bg.addColorStop(.51,isDark?'#17202b':'#c3c7c2');
-  bg.addColorStop(1,isDark?'#151820':'#3b484e');
-  ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
-  // Real 3D surfaces of a 4m-wide, 2.8m-high rail carriage.
-  fillQuad([[-2,0,-24],[2,0,-24],[2,0,3.6],[-2,0,3.6]],
-    isDark?'#20232c':'#697477');
-  fillQuad([[-2,2.85,-24],[2,2.85,-24],[2,2.85,3.6],[-2,2.85,3.6]],
-    isDark?'#272b34':'#e3e1d8');
-  fillQuad([[-2,0,-24],[-2,2.85,-24],[-2,2.85,3.6],[-2,0,3.6]],
-    isDark?'#2e333c':'#c8c9c1');
-  fillQuad([[2,0,-24],[2,2.85,-24],[2,2.85,3.6],[2,0,3.6]],
-    isDark?'#232833':'#b5bec1');
-  fillQuad([[-2,0,-23],[2,0,-23],[2,2.85,-23],[-2,2.85,-23]],
-    isDark?'#1d212c':'#849293','#52666c');
-  // A bright glass exit at the far end, framed in metal.
-  fillQuad([[-.73,.22,-22.95],[.73,.22,-22.95],[.73,2.38,-22.95],[-.73,2.38,-22.95]],
-    isDark?'#151c22':'#59747a','#dce6df');
-  const count=9;
-  for(let i=count-1;i>=0;i--){
-    const z=2.0-i*2.7,z2=z-2.15;
-    for(const side of [-1,1]){
-      const x=side*1.98;
-      fillQuad([[x,1.20,z],[x,2.36,z],[x,2.36,z2],[x,1.20,z2]],
-        isDark?'#111926':'#4b707b','#a1b4b3');
-      // Reflections and passing platform columns move behind the window glass.
-      const k=(t*.9+i*.63)%1;
-      const colZ=z+(z2-z)*k;
-      beam([x,1.22,colZ],[x,2.30,colZ],.028,isDark?'#9d6c78':'#9fbcc4');
-      beam([x,1.20,z],[x,2.36,z],.035,'#778d91');
-      beam([x,1.20,z2],[x,2.36,z2],.035,'#778d91');
-      beam([x,.12,z],[x,2.76,z],.028,'#788a8b');
-      // Long bench top, base, back, true quadrilateral perspective surfaces.
-      const xi=side*1.18;
-      fillQuad([[x,.42,z],[xi,.42,z],[xi,.42,z2],[x,.42,z2]],
-        isDark?'#46525a':'#5d8790','#314a54');
-      fillQuad([[xi,.13,z],[xi,.42,z],[xi,.42,z2],[xi,.13,z2]],
-        isDark?'#283e49':'#4d7681');
-      fillQuad([[x,.42,z],[x,.92,z],[x,.92,z2],[x,.42,z2]],
-        isDark?'#263442':'#83a4a9');
-      beam([x,2.5,z],[x,2.5,z2],.035,'#e1e6dc');
+  fg.setTransform(dpr,0,0,dpr,0,0);
+  const anomaly=engine.snapshot().metro?.anomaly===true;
+  const painter=global.PaperWorldMetroSideRenderer;
+  if(painter){
+   painter.drawBackground(ctx,w,h,time,anomaly);
+   painter.drawForeground(fg,w,h,anomaly);
+  }
+ }
+ async function populatePassengers(){
+  if(seatsPopulated||seatLoading||!visible)return;
+  const dev=global.PaperchalkCharacterDev;
+  if(!dev?.ready||typeof dev.assign!=='function'){
+   if(++seatTry<12)global.setTimeout(populatePassengers,450);
+   return;
+  }
+  seatLoading=true;
+  try{
+   const catalog=dev.characters||[];
+   // Select actual playable authored front rigs only. Never create a fake
+   // avatar or draw a full-body standing character directly into the wall.
+   const preferred=['char-002','char-004','char-003','char-006'];
+   const picks=preferred.map(id=>catalog.find(c=>c.id===id&&c.front)).filter(Boolean);
+   if(!picks.length){
+    seatsPopulated=true;return; // empty carriage is preferable to fake people
+   }
+   const targets=[liveSeats[1],liveSeats[2],liveSeats[0],liveSeats[3]];
+   for(let i=0;i<Math.min(targets.length,picks.length);i++){
+    const seat=targets[i],model=picks[i];if(!seat)continue;
+    for(let attempt=0;attempt<6&&!global.PaperchalkL2D?.get?.(seat.id);attempt++)
+     await new Promise(resolve=>global.setTimeout(resolve,80));
+    if(!global.PaperchalkL2D?.get?.(seat.id))continue;
+    try{
+     await dev.assign(seat.id,model.id,'front',false);
+     seat.holder.hidden=false;
+     seat.holder.dataset.character=model.id;
+    }catch(error){
+     seat.holder.hidden=true;
+     console.warn('[Metro front L2D] Authentic source unavailable:',model.id,error);
     }
-    // Suspended grab handles in the physical 3D aisle, not a flat icon row.
-    for(const x of [-1.0,1.0]){
-      beam([x,2.77,z],[x,2.27,z],.028,'#a7babd');
-      const p=project(x,2.13,z),radius=Math.max(1,11*F/(5.1-z)/60);
-      ctx.beginPath();ctx.ellipse(p[0],p[1],Math.min(17,radius*1.3),
-        Math.min(20,radius*1.5),0,0,Math.PI*2);
-      ctx.strokeStyle='#c5d6cf';ctx.lineWidth=Math.max(1,radius*.22);ctx.stroke();
-    }
-    // Ceiling light panels diminish with depth.
-    fillQuad([[-.45,2.82,z], [.45,2.82,z],[.45,2.82,z-.85],[-.45,2.82,z-.85]],
-      isDark?'#b19a9e':'#f5f3e3');
-    // Joint between floor panels.
-    beam([-2,.012,z],[2,.012,z],.008,'#a1aeb039');
-  }
-  // Forward end camera detail, seat rails and linear ceiling recesses.
-  for(const side of [-1,1]){
-    beam([side*1.75,.83,3.0],[side*1.75,.83,-24],.035,'#bdcbc5');
-    beam([side*.87,2.78,3],[side*.87,2.78,-24],.048,'#98acaa');
-    beam([side*1.99,.07,3],[side*1.99,.07,-24],.07,'#3d4b50');
-  }
-  // Seated passengers are restrained volumetric silhouettes at fixed depth.
-  for(const [x,z,kind] of [[-1.55,-5,0],[1.55,-8,1],[-1.57,-12,1],[1.55,-17,0]]){
-    const head=project(x,1.08,z),body=project(x,.55,z);
-    const scale=F/(5.1-z);
-    ctx.fillStyle=kind?'#46515b':'#4b5661';
-    ctx.beginPath();ctx.ellipse(body[0],body[1],scale*.32,scale*.46,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=kind?'#c5b3a3':'#aeb6ac';
-    ctx.beginPath();ctx.arc(head[0],head[1],scale*.16,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#303942';
-    ctx.beginPath();ctx.arc(head[0],head[1]-scale*.06,scale*.165,Math.PI,Math.PI*2);ctx.fill();
-  }
-  // Filmic atmospheric falloff, edge vignetting and carriage lighting.
-  const fade=ctx.createLinearGradient(0,0,0,h);
-  fade.addColorStop(0,'#0c1b2455');fade.addColorStop(.35,'#08171c05');
-  fade.addColorStop(1,'#071317b5');
-  ctx.fillStyle=fade;ctx.fillRect(0,0,w,h);
-  if(isDark){
-    ctx.fillStyle=frame%17<3?'#a442432c':'#1b112236';
-    ctx.fillRect(0,0,w,h);
-  }
+   }
+   seatsPopulated=true;
+  }finally{seatLoading=false}
  }
  function refresh(){
   const s=engine.snapshot(),ride=s.metro||{};
@@ -226,6 +195,7 @@ function create({root,engine,onExit,onFeedback}){
   const ride=engine.snapshot().metro;
   if(!ride?.onboard)return false;
   visible=true;section.hidden=false;anomalyEventSent=false;
+  populatePassengers().catch(error=>console.warn('[Metro L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
   refresh();return true;
  }
