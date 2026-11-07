@@ -741,6 +741,9 @@
    '#view.ring-arena-transit #pw-metro-cabin{background:transparent!important}',
    '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-canvas{display:none!important}',
    '#view.ring-arena-transit #pw-metro-cabin>.pw-cabin-foreground{display:none!important}',
+   '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat{position:absolute!important;left:var(--metro-seat-x)!important;top:31%!important;width:15%!important;height:54%!important;opacity:1!important;transform:translateX(-50%)!important;overflow:hidden!important;pointer-events:none!important}',
+   '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat [data-l2d-image]{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:100%!important;object-fit:contain!important;opacity:1!important}',
+   '#view.ring-arena-transit #pw-metro-cabin .pw-cabin-l2d-seat [data-l2d-canvas]{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:100%!important}',
    '#ring-arena-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:manipulation;pointer-events:auto;cursor:default}',
    '#ring-arena-canvas[hidden],#ring-arena-controls[hidden]{display:none!important}',
    // Keep existing L2D artists' exact original rigs animating while visually
@@ -866,6 +869,7 @@
    wallImage.decoding='async';
    canvas.dataset.wallTexture='loading';
    wallImage.onload=()=>{
+    if(environmentEpoch!==0)return;
     if(!gl||!wallMaterial)return;
     try{
      gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
@@ -880,6 +884,7 @@
     }
    };
    wallImage.onerror=()=>{
+    if(environmentEpoch!==0)return;
     wallMaterialError='Image loading failed: '+WALL_TEXTURE.url;
     canvas.dataset.wallTexture='error';
    };
@@ -899,6 +904,7 @@
     material.image=new Image();
     material.image.decoding='async';
     material.image.onload=()=>{
+     if(environmentEpoch!==0)return;
      if(!gl)return;
      try{
       gl.activeTexture(gl.TEXTURE0+unit);
@@ -910,6 +916,7 @@
      }catch(error){material.error=String(error);canvas.dataset[kind+'Texture']='error';}
     };
     material.image.onerror=()=>{
+     if(environmentEpoch!==0)return;
      material.error='Unable to load '+material.url;
      canvas.dataset[kind+'Texture']='error';
     };
