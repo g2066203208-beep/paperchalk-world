@@ -11,7 +11,7 @@
       No big office ceramic tiles, no wooden planks or baked-in shadows. -->
  <rect width="1024" height="1024" fill="url(#grain)"/>
  <rect width="1024" height="1024" fill="url(#wear)"/>
- <path d="M0 3H1024M0 1020H1024" stroke="#202f32" stroke-width="5" opacity=".72"/>
- <path d="M7 0V1024M1019 0V1024" stroke="#a3afa5" stroke-width="3" opacity=".16"/>
+ <!-- Continuous rubber floor, not ceramic/wood planks. No artificial
+      high-contrast rectangular tile boundaries at each texture repeat. -->
  <path d="M80 340L134 364M343 600L385 616M700 143L750 166M892 781L937 807" stroke="#82908b" stroke-width="8" opacity=".14"/>
  </svg>
