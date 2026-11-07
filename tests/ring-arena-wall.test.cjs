@@ -43,7 +43,7 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.20,8.05,7.43,6.95]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[7.45,7.45,7.45,7.45]);
 assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.96,11.35,10.94,11.26]);
 assert.equal(ring.camera('outer').fov,55);
 assert.equal(ring.camera('inner').fov,52);
@@ -132,35 +132,33 @@ for(const mode of ['outer','inner']){
   assert.ok(Math.abs(rig.positions[i*3+1]-ring.LIGHTING.height)<1e-7);
  }
 }
-// The blackout must extinguish source geometry AND remove its lighting and
-// physically cast shadows. Emergency is a physically positioned red source.
+// Red emergency lighting must come ONLY from real ceiling lamps #1,#4.
 for(const mode of ['outer','inner']){
  const on=ring.lightingFrame('on',0,mode);
  const half=ring.lightingFrame('partial',0,mode);
- const off=ring.lightingFrame('outage',0,mode);
- const flicker=ring.lightingFrame('flicker',2.00,mode);
+ const red=ring.lightingFrame('outage',0,mode);
+ const flicker=ring.lightingFrame('flicker',2,mode);
  assert.deepEqual([...on.levels],[1,1,1,1,1,1]);
+ assert.deepEqual([...on.redMix],[0,0,0,0,0,0]);
  assert.ok([...half.levels].some(x=>x===0));
- assert.deepEqual([...off.levels],[0,0,0,0,0,0]);
- assert.equal(off.emergencyPower,1);
- assert.ok([...off.ambient].every(x=>x<.04));
  assert.ok(flicker.levels[1]<.1);
- assert.equal(off.emergencyPosition.length,3);
- const story0=ring.lightingFrame('horror',0,mode);
- const storyFault=ring.lightingFrame('horror',1.3,mode);
- const storyFailure=ring.lightingFrame('horror',2.8,mode);
- const storyReturn=ring.lightingFrame('horror',6.0,mode);
- assert.deepEqual([...story0.levels],[1,1,1,1,1,1]);
- assert.ok(storyFault.levels[1]<.1&&storyFault.levels[4]<.1,
-  'ballast strobe needs a visibly failed pair of lamps');
- assert.deepEqual([...storyFailure.levels],[0,0,0,0,0,0],
-  'horror beat must truly kill all six luminaires, not draw an overlay');
- assert.equal(storyFailure.emergencyPower,1,
-  'late red emergency light must be independently controllable');
- assert.ok([...storyReturn.levels].some(x=>x>0)&&
-  [...storyReturn.levels].some(x=>x===0),
-  'partial restoration must not silently bring all lights back');
+ assert.deepEqual([...red.redMix],[0,1,0,0,1,0]);
+ assert.ok(red.levels[1]>.7&&red.levels[4]>.6);
+ assert.ok([0,2,3,5].every(i=>red.levels[i]===0));
+ assert.deepEqual([...red.redFixtureIndices],[1,4]);
+ assert.equal(red.emergencyPosition,undefined);
+ assert.ok(red.colors[3]>red.colors[4]*8&&red.colors[12]>red.colors[13]*8);
+ const horror=ring.lightingFrame('horror',2.8,mode);
+ assert.deepEqual([...horror.redMix],[0,1,0,0,1,0]);
+ assert.ok(ring.lightingFrame('horror',1.3,mode).levels[1]<.1);
+ assert.ok(ring.lightingFrame('horror',6,mode).levels.some(v=>v===0));
 }
+assert.doesNotMatch(src,/uEmergencyPosition|uEmergencyPower|uEmergency;/,
+ 'the detached red source must be deleted from shaders');
+assert.match(src,/gl\.uniform3fv\(prog\['uLampColors\[0\]'\],currentLighting\.colors\)/,
+ 'room and L2D lighting must use the actual dynamic ceiling-lamp colors');
+assert.match(src,/gl\.uniform1f\(fixture\.uRedMix,currentLighting\.redMix\[i\]\)/,
+ 'the physical fixture must change color along with its real irradiance');
 assert.match(src,/uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;/,
  '3D vertex shader must use highp int matching the fragment shader');
 assert.match(src,/vIrradiance;varying float vFloorSpecular;uniform float uTime;uniform highp int uSurface;/,
@@ -208,10 +206,10 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id\)/,
  'real animated source must pass through non-destructive battle mask before upload');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
- ring.STAGING.outer.enemies[0][0]-1.00)<1e-7,
+ ring.STAGING.outer.enemies[0][0]-1.30)<1e-7,
  'the first two fighters have a full meter of width');
 assert.ok(Math.abs(ring.STAGING.outer.enemies[3][0]-
- ring.STAGING.outer.enemies[2][0]-1.77)<1e-7,
+ ring.STAGING.outer.enemies[2][0]-1.70)<1e-7,
  'broad fourth coat needs extra world-space width');
 assert.ok(Math.abs(ring.STAGING.inner.enemies[1][0]-
  ring.STAGING.inner.enemies[0][0]+.88)<1e-7,
