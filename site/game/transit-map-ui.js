@@ -132,7 +132,7 @@ function draw({body,snapshot,locations,availability,onTravel,onBoard}){
   }
  }
  // One compact route label per colored service, attached to its geography.
- const keyPositions={a:[60,35],b:[57,85],c:[28,96]};
+ const keyPositions={a:[60,35],b:[57,85],c:[20,85]};
  for(const line of metro.LINES){
   const label=create('span','pw-transit-line-key',line.name);
   label.dataset.line=line.id;
