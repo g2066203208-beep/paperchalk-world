@@ -60,8 +60,8 @@
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-3.70,7.95],[-2.65,7.75],[-1.55,7.55]]),
-   enemies:Object.freeze([[-.68,6.80],[.51,6.80],[1.70,6.80],[3.16,6.80]])
+   allies:Object.freeze([[-1.05,9.30],[-3.80,7.00],[-1.25,7.10],[-1.55,7.55]]),
+   enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
@@ -113,8 +113,10 @@
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
  // All four existing allied ArtMeshes now participate in the same 3D battle.
- // Heroine remains the close left-shoulder foreground subject; the other three
- // stand as a smaller, staggered left wing without enlarging or faking textures.
+ // The 4v4 preview is a THREE-DEPTH wedge: heroine is the dominant shoulder
+ // foreground; far-left teammate at the edge, two teammates peek around her
+ // right shoulder; foes remain a separate four-person line behind them.
+ // This keeps each ArtMesh in real perspective with genuine alpha shadows.
  // Metro still chooses only its one named passenger via scene actors.visible.
  const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
@@ -1430,8 +1432,11 @@
   // A normal alpha bbox cannot remove them (their alpha exceeds 168/255).
   // For the 3D BATTLE texture ONLY, apply a feathered body-shaped alpha mask;
   // the original story L2D image, rig, poses and saved pixels remain intact.
-  function maskEmbeddedFogForBattle(tex,ctx,size,id){
-   if(id!=='enemy-3')return;
+  function maskEmbeddedFogForBattle(tex,ctx,size,id,characterId=''){
+   // Same original CHAR-006 artwork is temporarily assigned to both teams.
+   // Remove the opaque prepainted cloud in BOTH battle views without touching
+   // its real L2D source, but never apply a CHAR-006 mask to a reassigned ally.
+   if(id!=='enemy-3'&&!(id==='ally-4'&&characterId==='char-006'))return;
    if(!tex.subjectMask||tex.subjectMask.width!==size){
     const mask=document.createElement('canvas');
     mask.width=size;mask.height=size;
@@ -1505,7 +1510,8 @@
      ctx.drawImage(desc.source,fitted.x+portraitInsetX,fitted.y,
       fitted.width,fitted.height);
     }else ctx.drawImage(desc.source,0,0,size,size);
-    maskEmbeddedFogForBattle(targetTexture,ctx,size,a.id);
+    maskEmbeddedFogForBattle(targetTexture,ctx,size,a.id,
+     desc.runtime.img.dataset.characterId);
     gl.bindTexture(gl.TEXTURE_2D,targetTexture.texture);
     if(targetTexture.uploadedSize!==size){
      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,targetTexture.stage);
