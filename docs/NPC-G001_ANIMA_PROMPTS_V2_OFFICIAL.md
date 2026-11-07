@@ -1,5 +1,5 @@
 # NPC-G001｜Anima 官方格式核对后的 9 类通用表情与动作提示词 V2
-> 2026-11-07。**替换此前冗长的厘米/公斤/角色设定/剧情说明版本。当前为设计候选，不代表在用户本机已验收、也不表示已经实装游戏。**
+> 2026-11-07。**更新：三人『喜悦』整体母版已获用户认可；『惊讶』改用该图的 img2img 参考，完整新提示词见 [惊讶V1](NPC-G001_ANIMA_SURPRISE_V1.md)。其他情绪尚属候选；没有把会话中的PNG二进制提交到GitHub，也未上线游戏。**
 
 ## 官方依据
 - [Anima 官方模型页 / Prompting](https://huggingface.co/circlestone-labs/Anima): 训练支持 booru-style tags、自然语言 captions 及混合；标签建议用小写、空格替换下划线（score_X 除外）；建议前缀 `masterpiece, best quality, score_7, safe`，艺术家标签前加 `@`，训练使用随机 tag dropout，不需要堆积重复标签。
@@ -32,12 +32,12 @@ Clearly different expressions and hand gestures. The three classmates look comfo
 The left girl is visibly the shortest, the middle girl intermediate, the right girl clearly tallest. Feet on the same ground level, full shoes visible, empty white space above their heads and below their shoes, balanced three-person composition.
 ```
 
-## 02 喜悦 / joy
+## 02 喜悦 / joy【2026-11-07 用户批准整组三人参考母图，详见 characters/NPC-G001_JOY_APPROVED_20261107.json】
 ```text
 masterpiece, best quality, score_7, safe, 3girls, @akipekostyle, <lora:akipekoanima_v1_1:1>, high school girls, school uniform, full body, standing, group, height difference, looking at each other, white background, simple background, clean lineart, simple shading. laughing, open mouth, closed eyes, cheerful, covering mouth. Three classmates stand together in one full-body illustration, with their heads, hands and shoes visible. The short girl on the left has a slightly plump build, a round face, short chestnut bob hair and small round brown eyes. The slim girl in the middle has a longer oval face, shoulder-length wavy ash-brown hair and small drooping brown eyes. The tall girl on the right has a slightly broader frame, a squarer long face, a thick low black braid and narrow half-lidded brown eyes. Their identical school uniforms have dark navy blazers, white collared shirts, burgundy neckties, charcoal pleated skirts, dark socks and dark loafers. Each blazer has two small matte dark front buttons. The short girl bends forward with laughter, holding her stomach. The middle girl laughs and covers her mouth with one hand. The tall girl turns slightly away with a crooked grin, trying not to laugh.
 ```
 
-## 03 惊讶 / surprise
+## 03 惊讶 / surprise【旧试作候选；现在优先使用 NPC-G001_ANIMA_SURPRISE_V1.md 中更新的 img2img 全量提示词】
 ```text
 masterpiece, best quality, score_7, safe, 3girls, @akipekostyle, <lora:akipekoanima_v1_1:1>, high school girls, school uniform, full body, standing, group, height difference, looking at each other, white background, simple background, clean lineart, simple shading. surprised, wide-eyed, open mouth, raised eyebrows. Three classmates stand together in one full-body illustration, with their heads, hands and shoes visible. The short girl on the left has a slightly plump build, a round face, short chestnut bob hair and small round brown eyes. The slim girl in the middle has a longer oval face, shoulder-length wavy ash-brown hair and small drooping brown eyes. The tall girl on the right has a slightly broader frame, a squarer long face, a thick low black braid and narrow half-lidded brown eyes. Their identical school uniforms have dark navy blazers, white collared shirts, burgundy neckties, charcoal pleated skirts, dark socks and dark loafers. Each blazer has two small matte dark front buttons. The short girl flinches backward with both hands raised. The middle girl freezes with one hand halfway up and her mouth open. The tall girl turns sharply toward something outside the frame, her eyebrows raised.
 ```
