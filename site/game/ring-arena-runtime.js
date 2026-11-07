@@ -525,16 +525,25 @@
   'outside+=vec3(.30,.24,.17)*lightStrip;',
   // The platform is BEHIND the real alpha window apertures at 3D z=7.84:
   // lit wall tiles, pillar shadows and fluorescent strips, not a screen tint.
-  'float tile=1.0-smoothstep(.0,.015,abs(fract(vWallUv.y*9.0)-.5));',
-  'float pillar=1.0-smoothstep(.024,.065,abs(fract(vWallUv.x*5.0)-.15));',
-  'float tube=smoothstep(.70,.73,vWallUv.y)*(1.0-smoothstep(.79,.83,vWallUv.y));',
-  'float headTrim=smoothstep(.89,.93,vWallUv.y);',
-  'vec3 station=vec3(.36,.43,.43)+vec3(.16,.16,.13)*tube;',
-  'station+=vec3(.20,.22,.21)*tube*(1.0-pillar);',
-  'station-=vec3(.11,.11,.10)*pillar;',
-  'station-=vec3(.025,.029,.029)*tile;',
-  'station-=vec3(.085,.088,.09)*headTrim;',
-  'station+=vec3(.035,.031,.019)*sin(vWallUv.x*24.0)*tube;',
+  // A recognizable station outside actual glass: glazed wall joints,
+  // platform columns, signage band and luminous overhead lightbox.
+  'float sx=vWallUv.x,sy=vWallUv.y;',
+  'float mortarX=1.0-smoothstep(.005,.013,abs(fract(sx*11.0)-.5));',
+  'float mortarY=1.0-smoothstep(.006,.016,abs(fract(sy*7.0)-.5));',
+  'float pillar=1.0-smoothstep(.026,.063,abs(fract(sx*4.0)-.18));',
+  'float lightbox=smoothstep(.57,.592,sy)*(1.0-smoothstep(.645,.674,sy));',
+  'float halo=exp(-pow((sy-.611)*8.4,2.0));',
+  'float wayfinding=smoothstep(.34,.37,sy)*(1.0-smoothstep(.44,.47,sy));',
+  'float accent=smoothstep(.435,.446,sy)*(1.0-smoothstep(.455,.463,sy));',
+  'float baseboard=1.0-smoothstep(.12,.20,sy);',
+  'vec3 station=vec3(.440,.475,.454);',
+  'station-=vec3(.037,.036,.036)*max(mortarX,mortarY);',
+  'station-=vec3(.20,.205,.192)*pillar;',
+  'station=mix(station,vec3(.125,.218,.260),wayfinding*.83);',
+  'station=mix(station,vec3(.74,.62,.35),accent*.70);',
+  'station+=vec3(.168,.175,.138)*halo*(1.0-pillar*.45);',
+  'station=mix(station,vec3(.87,.89,.79),lightbox*(1.0-pillar));',
+  'station-=vec3(.17,.17,.15)*baseboard;',
   'outside=mix(outside,station,clamp(uPlatformExposure,0.0,1.0));',
   'gl_FragColor=vec4(outside,1.0);return;',
   '}',
@@ -1910,7 +1919,7 @@
     im.onerror=()=>{if(environmentEpoch===epoch){
      target.error='Unable to load '+path;canvas.dataset[kind+'Texture']='error';
     }};
-    im.src=path+(path.startsWith('./assets/metro/side/')?'?v=station-light-floor-v46-20261108':'');
+    im.src=path+(path.startsWith('./assets/metro/side/')?'?v=station-platform-art-v47-20261108':'');
    }
    return true;
   }
