@@ -123,3 +123,59 @@
 @media(prefers-reduced-motion:reduce){
  #novel-ui>#phone-ui[data-focus="true"]{transition:none!important}
 }
+
+/* V5 readable optical phone: large live screen; one consistent type scale.
+   No separate invented translucent dashboard outside the handset. */
+#novel-ui>#phone-ui[data-focus="true"]{
+ width:min(54cqw,720px)!important;
+ height:min(96cqh,980px)!important;
+ right:clamp(40px,7.5cqw,145px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-view{
+ padding:clamp(38px,6.6cqh,57px) 7% 5%!important;
+ gap:7px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-title{
+ font-size:clamp(18px,2.9cqh,26px)!important;
+ margin:0!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-copy{
+ font-size:clamp(13px,2.15cqh,19px)!important;
+ line-height:1.55!important;
+ gap:8px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-apps{
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ row-gap:clamp(9px,1.65cqh,17px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-icon{
+ width:clamp(44px,7.6cqh,66px)!important;
+ height:clamp(44px,7.6cqh,66px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-label{
+ font-size:clamp(12px,1.9cqh,17px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-chat-bubble{
+ font-size:clamp(12px,2.1cqh,18px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-news-card{
+ font-size:clamp(12px,2cqh,17px)!important;
+}
+@container (max-height:560px){
+ #novel-ui>#phone-ui[data-focus="true"]{
+  width:min(77cqw,680px)!important;
+  height:97cqh!important;right:5cqw!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-app-view{
+  padding:30px 5% 3%!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-apps{
+  gap:5px 10px!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-app-icon{
+  width:clamp(34px,8.1cqh,48px)!important;
+  height:clamp(34px,8.1cqh,48px)!important;
+ }
+ #novel-ui>#phone-ui[data-focus="true"] .phone-app-label{font-size:11px!important}
+ #novel-ui>#phone-ui[data-focus="true"] .phone-chat-thread{max-height:27cqh}
+}
