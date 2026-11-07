@@ -502,7 +502,7 @@
   'precision highp float;attribute vec2 aUv;uniform mat4 uVP;',
   'uniform vec3 uFoot;uniform vec3 uRight;uniform vec3 uLamp;',
   'uniform float uHeight;uniform float uSoleX;uniform float uSoleY;',
-  'uniform float uCrownY;uniform float uContact;varying vec2 vUv;',
+  'uniform float uCrownY;uniform highp float uContact;varying vec2 vUv;',
   'void main(){',
   'float h=uHeight/max(.01,uSoleY-uCrownY);',
   'vec3 person=uFoot+uRight*(aUv.x-uSoleX)*h',
@@ -514,7 +514,7 @@
  ].join('\n');
  const projectedShadowFragment=[
   'precision mediump float;varying vec2 vUv;',
-  'uniform sampler2D uTexture;uniform float uStrength;uniform float uContact;',
+  'uniform sampler2D uTexture;uniform float uStrength;uniform highp float uContact;',
   'void main(){',
   'vec2 uv=vec2(vUv.x,1.0-vUv.y);',
   'float a=texture2D(uTexture,uv).a*.38;',
