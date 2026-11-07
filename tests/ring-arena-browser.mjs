@@ -30,7 +30,7 @@ try{
  await page.waitForFunction(()=>{
   const a=window.PaperWorldGameRingArena?.inspect();
   return a?.active&&a?.renderer==='webgl-l2d'&&a?.heroStatic===true&&
-   a?.previewPose==='female7'&&a?.eyeLevel===true&&a?.l2dReady===5&&a?.heroTextureUploads>=1;
+   a?.previewPose==='female7'&&a?.eyeLevel===true&&a?.l2dReady===8&&a?.heroTextureUploads>=1;
  },null,{timeout:100000});
  await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.wallMaterial?.ready===true,
   null,{timeout:15000});
@@ -39,7 +39,7 @@ try{
  assert.equal(outer.wallMaterial.kind,'curved-webgl-wall');
  assert.equal(outer.wallMaterial.repeats,9);
  assert.equal(outer.wallMaterial.heightMeters,2.85);
- assert.ok(outer.lighting.physicallyGroundedShadows>=5,'original 3D L2D silhouettes must cast on floor');
+ assert.ok(outer.lighting.physicallyGroundedShadows>=8,'original 3D L2D silhouettes must cast on floor');
  assert.equal(outer.lighting.state,'on');
  assert.deepEqual(outer.wallMaterial.sourceSize,[2172,724]);
  assert.equal(await page.locator('#ring-arena-canvas').getAttribute('data-wall-texture'),'ready');
@@ -57,12 +57,12 @@ try{
  assert.equal(outer.heroine.l2dMode,'static-back-battle-cutout');
  assert.ok(Math.abs(outer.cameraPitchDeg)<.001);
  assert.equal(outer.heroTextureUploads,1,'static heroine must not upload every frame');
- assert.deepEqual(outer.visibleActorIds,['hero','enemy-1','enemy-2','enemy-3','enemy-4']);
+ assert.deepEqual(outer.visibleActorIds,['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.ok(outer.safety.valid&&outer.safety.clear,'actual alpha must preserve enemy view');
  // The source painter's actual RGBA shoe/crown fractions MUST drive real
  // WebGL foot placement, not the old hard-coded source .979 fraction.
  assert.deepEqual(Object.keys(outer.measuredShoePivots).sort(),
-  ['hero','enemy-1','enemy-2','enemy-3','enemy-4'].sort());
+  ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4'].sort());
  for(const [actor,pivot]of Object.entries(outer.measuredShoePivots)){
   assert.ok(pivot.fromAlpha,'pixel alpha must be inspected for '+actor);
   assert.ok(pivot.soleY>.55&&pivot.soleY<=1,'valid true shoe pivot: '+actor);
@@ -251,7 +251,7 @@ try{
   {waitUntil:'domcontentloaded',timeout:50000});
  await page.waitForFunction(()=>{
   const s=window.PaperWorldGameRingArena?.inspect();
-  return s?.active&&!s.heroStatic&&s.previewPose==='original'&&s.l2dReady===5&&
+  return s?.active&&!s.heroStatic&&s.previewPose==='original'&&s.l2dReady===8&&
    s.heroine?.id==='protagonist'&&s.heroine?.side==='back'&&s.heroine?.ready;
  },null,{timeout:100000});
  const restored=await inspect();
@@ -271,7 +271,7 @@ try{
   {waitUntil:'domcontentloaded',timeout:50000});
  await qa.waitForFunction(()=>{
   const game=window.PaperWorldGameRingArena;
-  return game?.inspect()?.active&&game?.inspect()?.l2dReady===5&&
+  return game?.inspect()?.active&&game?.inspect()?.l2dReady===8&&
    game?.inspect()?.directorArt?.hero?.loaded&&game?.inspect()?.directorArt?.enemy?.loaded;
  },null,{timeout:100000});
  const invoke=async(target,ms)=>qa.evaluate(([t,at])=>
@@ -282,8 +282,8 @@ try{
  assert.equal(await qa.locator('[data-director-cinematic]').getAttribute('data-cut'),'attacker');
  assert.deepEqual((await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.drawnActorIds)).sort(),
- ['enemy-1','enemy-2','enemy-3','enemy-4','hero'].sort(),
- 'same five actors must remain in the SAME 3D scene');
+ ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4'].sort(),
+ 'all eight actors must remain in the SAME 3D scene');
  assert.equal((await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses.hero)),
  'female07-axe-lunge','same female07 back art remains on its world-space billboard');
@@ -412,7 +412,7 @@ try{
  await qa.goto(origin+'/index.html?scene=ring-arena&directorQA=1&frameInspector=1',
   {waitUntil:'domcontentloaded',timeout:50000});
  await qa.waitForSelector('#ring-frame-inspector #fi-seek',{timeout:120000});
- await qa.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.l2dReady===5,
+ await qa.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.l2dReady===8,
   null,{timeout:120000});
  const scrub=async i=>qa.locator('#fi-seek').evaluate((el,frame)=>{
   el.value=String(frame);
