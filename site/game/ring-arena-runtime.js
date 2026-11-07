@@ -307,7 +307,7 @@
  const worldVertex=[
   'precision highp float;',
   'attribute vec3 aP;attribute vec2 aUv;',
-  'uniform mat4 uVP;uniform int uSurface;uniform float uMode;',
+  'uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;',
   'varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;',
   lightingGLSL,
   'void main(){',
@@ -327,7 +327,7 @@
   '}'
  ].join('\n');
  const worldFragment=[
-  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;uniform float uTime;uniform int uSurface;uniform float uMode;',
+  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;uniform float uTime;uniform highp int uSurface;uniform float uMode;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;',
   'uniform float uFloorReady;uniform float uCeilingReady;',
