@@ -29,9 +29,20 @@ const openMap=async()=>{
  assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'城区交通');
 };
 const tapScene=async action=>{
+ await page.waitForTimeout(340); // avoid closing phone's intentional tap-through guard
  await page.mouse.click(350,300);
- await page.locator('#overworld-scene-prompts [data-action="'+action+'"]').waitFor({state:'visible'});
- await page.locator('#overworld-scene-prompts [data-action="'+action+'"]').click();
+ const button=page.locator('#overworld-scene-prompts [data-action="'+action+'"]');
+ if(!await button.isVisible()){
+   const state=await page.evaluate(()=>{
+     const p=document.elementFromPoint(350,300);
+     const m=document.getElementById('overworld-scene-prompts');
+     return {top:p?.id||p?.tagName,menuHidden:m?.hidden,mode:window.PaperWorldDailyLifeUI?.isModeActive?.()};
+   });
+   console.log('tapScene retry',JSON.stringify(state));
+   await page.mouse.click(480,360);
+ }
+ await button.waitFor({state:'visible'});
+ await button.click();
 };
 const dismissSurface=async()=>{
  await page.locator('#pw-world-surface .pw-surface-dim').click({position:{x:5,y:5}});
