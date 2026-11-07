@@ -1567,8 +1567,7 @@
     gl.bindTexture(gl.TEXTURE_2D,tex.texture);
     const lamp=assignedShadowLamp(a,mode);
     shadowLampAssignments[a.id]=lamp.index;
-    if(lamp.strength<=.012)continue;
-    {
+    if(lamp.strength>.012){
      gl.uniform3fv(projectedShadow.uLamp,lamp.position);
      gl.uniform1f(projectedShadow.uContact,0);
      gl.uniform1f(projectedShadow.uStrength,Math.min(.25,lamp.strength*.32));
@@ -1578,6 +1577,22 @@
      gl.uniform1f(projectedShadow.uStrength,Math.min(.38,lamp.strength*.43));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
+    }
+    // These are the SAME measured L2D alpha silhouettes, projected from
+    // real platform lamps THROUGH the windows. They remain even if the
+    // carriage ceiling flickers off, unlike the train's ceiling shadows.
+    if(transitMode&&platformExposure>.08){
+     const outside=window.PaperWorldEnvironments?.get?.('metro')?.platformLighting;
+     if(outside?.positions){
+      for(const [offset,weight] of [[0,.16],[9,.10]]){
+       gl.uniform3fv(projectedShadow.uLamp,
+        new Float32Array(outside.positions.slice(offset,offset+3)));
+       gl.uniform1f(projectedShadow.uContact,0);
+       gl.uniform1f(projectedShadow.uStrength,weight*platformExposure);
+       gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
+       projectedShadowDraws++;
+      }
+     }
     }
    }
    gl.depthMask(true);gl.disable(gl.BLEND);
