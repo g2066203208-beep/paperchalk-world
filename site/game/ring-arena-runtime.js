@@ -370,7 +370,9 @@
   'precision highp float;',
   'attribute vec3 aP;attribute vec2 aUv;',
   'uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;',
+  'uniform vec3 uViewEye;',
   'varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;',
+  'varying float vFloorSpecular;',
   lightingGLSL,
   'void main(){',
   'vWorld=aP;vWallUv=aUv;',
@@ -379,6 +381,18 @@
   'uSurface==2?vec3(0.0,-1.0,0.0):',
   'normalize(vec3(.7*sin(theta),0.0,(uMode>.5?-1.0:1.0)*cos(theta)));',
   'vIrradiance=ringIrradiance(aP,n);',
+  'vFloorSpecular=0.0;',
+  'if(uSurface==0){',
+  'vec3 viewDir=normalize(uViewEye-aP);',
+  'for(int i=0;i<6;i++){',
+  'vec3 delta=uLampPositions[i]-aP;',
+  'float ds=max(dot(delta,delta),.01);',
+  'vec3 L=delta*inversesqrt(ds);',
+  'vec3 halfVec=normalize(viewDir+L);',
+  'float nh=max(dot(vec3(0.0,1.0,0.0),halfVec),0.0);',
+  'vFloorSpecular+=pow(nh,14.0)*uLampLevels[i]/(1.0+ds*.20);',
+  '}',
+  '}',
   'gl_Position=uVP*vec4(aP,1.0);}'
  ].join('\n');
  const worldColorGLSL=[
@@ -389,7 +403,7 @@
   '}'
  ].join('\n');
  const worldFragment=[
-  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;uniform float uTime;uniform highp int uSurface;uniform float uMode;',
+  'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;varying float vFloorSpecular;uniform float uTime;uniform highp int uSurface;uniform float uMode;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;',
   'uniform float uFloorReady;uniform float uCeilingReady;',
@@ -419,13 +433,17 @@
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   'if(uWallReady>.5){',
   'vec3 wallArt=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(vWallUv.y,.003,.997))).rgb;',
-  'color=wallArt*vec3(.87,.88,.91);',
+  'float footAO=mix(.75,1.0,smoothstep(.04,.82,vWorld.y));',
+  'color=wallArt*vec3(.81,.83,.88)*footAO;',
    // Source art 2172x724 is 3:1. Eight real arc-length repeats across
    // the 76.7m curved surface = 9.58m x 3.2m (aspect preserved).
   '}',
   '}',
   'color=ringTone(color,vIrradiance);',
-  // Emissive ceiling fixtures are separate world-space 3D geometry.
+  'if(uSurface==0){',
+  'float patches=.7+.3*sin(vWallUv.x*17.1+sin(vWallUv.y*11.7));',
+  'color+=vec3(.47,.47,.42)*min(.21,vFloorSpecular*1.35)*patches;',
+  '}',
   'gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
@@ -735,7 +753,7 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower','uViewEye']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uEmergencyPosition','uEmergencyPower']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
@@ -1137,9 +1155,8 @@
   }
   // Hero and four foes retain their REAL 3D silhouettes. A lamp almost
   // directly above a body produces a featureless foreshortened footprint.
-  // For readable horror staging, choose an ACTUAL POWERED fixture giving
-  // approximately 2.6m head displacement on the 3D floor. This is still
-  // ray-intersection alpha projection from the genuine ceiling light.
+  // Choose a POWERED fixture producing a readable, medium-length cast
+  // silhouette rather than a long black strip across the convenience floor.
   function nearestLitLamps(p,whichMode=mode){
    const rig=lightRigs[whichMode];
    const choices=[];
@@ -1151,7 +1168,7 @@
     const headY=Math.min(LIGHTING.height-.20,p.height*.88);
     const projectedHeadOffset=Math.sqrt(distance)*
      headY/Math.max(.20,rig.positions[i*3+1]-headY);
-    const readability=Math.exp(-2.3*Math.abs(projectedHeadOffset-2.6));
+    const readability=Math.exp(-1.8*Math.abs(projectedHeadOffset-1.75));
     const intensity=level/(1.0+.16*distance);
     const score=readability*(.25+.75*level)/
      (1+.085*distance);
@@ -1213,11 +1230,11 @@
     for(let i=0;i<lamps.length;i++){
      gl.uniform3fv(projectedShadow.uLamp,lamps[i].position);
      gl.uniform1f(projectedShadow.uContact,0);
-     gl.uniform1f(projectedShadow.uStrength,Math.min(.34,.10+lamps[i].strength*.37));
+     gl.uniform1f(projectedShadow.uStrength,Math.min(.25,.07+lamps[i].strength*.27));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
      gl.uniform1f(projectedShadow.uContact,1);
-     gl.uniform1f(projectedShadow.uStrength,Math.min(.43,.15+lamps[i].strength*.45));
+     gl.uniform1f(projectedShadow.uStrength,Math.min(.38,.12+lamps[i].strength*.38));
      gl.drawArrays(gl.TRIANGLES,0,shadowGrid.count);
      projectedShadowDraws++;
     }
@@ -1379,6 +1396,7 @@
    gl.clearColor(.001,.005,.008,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
    gl.useProgram(world.handle);gl.enableVertexAttribArray(world.aP);gl.enableVertexAttribArray(world.aUv);
    gl.uniformMatrix4fv(world.uVP,false,new Float32Array(vp));
+   gl.uniform3fv(world.uViewEye,new Float32Array([cam.eye.x,cam.eye.y,cam.eye.z]));
    gl.uniform1f(world.uTime,elapsed);
    gl.uniform1f(world.uMode,mode==='inner'?1:0);
    setSceneLighting(world,mode);
