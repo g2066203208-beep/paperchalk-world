@@ -31,7 +31,7 @@ try{
    'Enlarged mobile phone must fit landscape screen: '+JSON.stringify(bounds));
  assert.equal(await page.locator('#phone-app-copy .phone-chat-bubble.is-them').count(),3);
  await shot('15-mobile-messages-focused.png');
- await page.locator('#scene').click({position:{x:32,y:30}});
+ await page.mouse.click(32,45);
  await page.waitForFunction(()=>!window.PaperWorldQuickTools.phone.isOpen());
  await page.locator('#quick-backpack').click();
  await page.locator('#pw-world-surface:not([hidden])').waitFor();
