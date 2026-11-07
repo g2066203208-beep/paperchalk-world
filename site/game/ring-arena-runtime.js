@@ -498,19 +498,22 @@
    :previewPose==='level'
     ?'./assets/characters/protagonist-back-combat-eye-level-preview.webp'
     :'./assets/characters/protagonist-back-combat-3q-final.webp';
-  let gl=null,world=null,portrait=null,shadow=null,floor=null,backInner=null,backOuter=null,ceiling=null,quad=null;
+  let gl=null,world=null,portrait=null,shadow=null,backInner=null,backOuter=null,quad=null;
+   let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null;
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
+   const surfaceMaterials=Object.fromEntries(Object.entries(SURFACE_TEXTURES)
+    .map(([kind,url])=>[kind,{url,texture:null,image:null,ready:false,error:null}]));
   const textures=new Map();
   const actionTextures=new Map(); // separate GPU action poses at real 3D anchors
   let drawnPoses={};
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady']);
    shadow=program(gl,shadowVertex,shadowFragment,['aUv'],['uVP','uFoot','uRadius']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uTexture','uHit','uDim','uBlur']);
-   [floor,backInner,backOuter,ceiling]=worldMesh(gl);
+   [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner]=worldMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
    for(const id of Object.keys(bindings))textures.set(id,prepareTexture(gl));
@@ -550,6 +553,38 @@
     canvas.dataset.wallTexture='error';
    };
    wallImage.src=WALL_TEXTURE.url;
+   // The source art stays 2D and rectangular. Surface meshes bend its UVs.
+   for(const [kind,unit] of [['floor',1],['ceiling',2]]){
+    const material=surfaceMaterials[kind];
+    material.texture=gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0+unit);
+    gl.bindTexture(gl.TEXTURE_2D,material.texture);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,
+     new Uint8Array([60,65,70,255]));
+    material.image=new Image();
+    material.image.decoding='async';
+    material.image.onload=()=>{
+     if(!gl)return;
+     try{
+      gl.activeTexture(gl.TEXTURE0+unit);
+      gl.bindTexture(gl.TEXTURE_2D,material.texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,material.image);
+      material.ready=true;
+      canvas.dataset[kind+'Texture']='ready';
+     }catch(error){material.error=String(error);canvas.dataset[kind+'Texture']='error';}
+    };
+    material.image.onerror=()=>{
+     material.error='Unable to load '+material.url;
+     canvas.dataset[kind+'Texture']='error';
+    };
+    canvas.dataset[kind+'Texture']='loading';
+    material.image.src=material.url;
+   }
   }catch(err){
    canvas.dataset.error=String(err.message||err);status.textContent='WebGL failed '+String(err.message||err);
    gl=null;
@@ -1003,8 +1038,16 @@
    gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
    gl.uniform1i(world.uWallTexture,0);
    gl.uniform1f(world.uWallReady,wallMaterialReady?1:0);
-   drawWorld(floor,0,vp);
-   drawWorld(ceiling,2,vp);
+   gl.activeTexture(gl.TEXTURE1);
+   gl.bindTexture(gl.TEXTURE_2D,surfaceMaterials.floor.texture);
+   gl.uniform1i(world.uFloorTexture,1);
+   gl.uniform1f(world.uFloorReady,surfaceMaterials.floor.ready?1:0);
+   gl.activeTexture(gl.TEXTURE2);
+   gl.bindTexture(gl.TEXTURE_2D,surfaceMaterials.ceiling.texture);
+   gl.uniform1i(world.uCeilingTexture,2);
+   gl.uniform1f(world.uCeilingReady,surfaceMaterials.ceiling.ready?1:0);
+   drawWorld(mode==='outer'?floorOuter:floorInner,0,vp);
+   drawWorld(mode==='outer'?ceilingOuter:ceilingInner,2,vp);
    drawWorld(mode==='outer'?backInner:backOuter,1,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
    const all=visibleActors(mode);
@@ -1072,7 +1115,13 @@
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,0).eye.x,
      lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
-   wallMaterial:{url:WALL_TEXTURE.url,ready:wallMaterialReady,error:wallMaterialError,
+   roomSurfaces:Object.fromEntries(Object.entries(surfaceMaterials).map(([kind,s])=>
+     [kind,{url:s.url,ready:s.ready,error:s.error,
+      size:s.image?.naturalWidth?[s.image.naturalWidth,s.image.naturalHeight]:null,
+      vertices:kind==='floor'?(mode==='outer'?floorOuter:floorInner)?.count:
+       (mode==='outer'?ceilingOuter:ceilingInner)?.count,
+      mapping:'curved-wall-arc-and-depth'}])),
+    wallMaterial:{url:WALL_TEXTURE.url,ready:wallMaterialReady,error:wallMaterialError,
     sourceSize:wallImage?.naturalWidth?[wallImage.naturalWidth,wallImage.naturalHeight]:null,
     repeats:WALL_TEXTURE.repeats,heightMeters:WALL_TEXTURE.heightMeters,
      kind:'curved-webgl-wall'},
@@ -1151,7 +1200,7 @@
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
- return Object.freeze({SPEC,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,
+ return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
   SHOT_NAMES,CAMERA_STOPS,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
