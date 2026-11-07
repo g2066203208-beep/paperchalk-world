@@ -38,14 +38,14 @@ try{
  try{
   await page.waitForFunction(()=>{
    const s=window.PaperWorldGameRingArena?.inspect?.();
-   return s?.active&&s?.renderer==='webgl-l2d'&&s?.l2dReady===5&&s?.wallMaterial?.ready&&
+   return s?.active&&s?.renderer==='webgl-l2d'&&s?.l2dReady===8&&s?.wallMaterial?.ready&&
     s?.roomSurfaces?.floor?.ready&&s?.roomSurfaces?.ceiling?.ready;
   },null,{timeout:85000});
   ready=true;
  }catch(e){
   errors.push('ready condition: '+e.message);
   report.l2dBoot=await page.evaluate(()=>Object.fromEntries(
-   ['player','enemy','enemy2','enemy3','enemy4'].map(slot=>{
+   ['player','ally2','ally3','ally4','enemy','enemy2','enemy3','enemy4'].map(slot=>{
     const a=window.PaperchalkL2D?.get(slot);
     return [slot,{present:!!a,state:a?.root?.dataset?.l2dState||null,
      mode:a?.root?.dataset?.l2dMode||null,rootHidden:a?.root?.hidden,
@@ -61,7 +61,7 @@ try{
  if(ready){
   await page.waitForFunction(()=>{
    const a=window.PaperWorldGameRingArena?.inspect?.();
-   return a?.l2dReady===5&&['enemy-1','enemy-2','enemy-3','enemy-4']
+   return a?.l2dReady===8&&['enemy-1','enemy-2','enemy-3','enemy-4']
     .every(id=>(a.l2dFrames?.[id]||0)>=4);
   },null,{timeout:60000});
   await page.waitForTimeout(220);
@@ -211,7 +211,7 @@ try{
   !report.outer?.roomSurfaces?.floor?.ready||!report.outer?.roomSurfaces?.ceiling?.ready||
   report.outer?.roomSurfaces?.floor?.vertices<15000||
   report.outer?.safety?.clear!==true||
-  report.outer?.l2dReady!==5||
+  report.outer?.l2dReady!==8||
   report.outer?.encounterControls!==0||
   report.outer?.encounter!=='one-centered-grounded-opponents'||
   Math.abs(report.geometry.floorPanelMeters-.6)>.001||
@@ -223,7 +223,7 @@ try{
   report.outer?.lighting?.count!==6||
   report.outer?.lighting?.positions?.length!==18||
   report.outer?.safety?.gap<.055||
-  report.outer?.lighting?.physicallyGroundedShadows<5||
+  report.outer?.lighting?.physicallyGroundedShadows<8||
   report.outer?.lighting?.contactShadow!=='original-L2D-shoe-alpha-no-ellipse'||
   report.horrorFlicker?.lighting?.state!=='horror'||
   report.horrorFlicker?.lighting?.levels?.[1]>.1||
@@ -242,7 +242,7 @@ try{
   report.restored?.mode!=='outer'||
   validationErrors.length||pageErrors.length)
   throw Error('Real browser visual gate failed; see screenshot and report: '+validationErrors.concat(pageErrors,errors).join('; '));
- console.log('PASS true TPS camera orbit, fixed heroine world pose, original L2D four foes, real alpha shadows and red ceiling lamps');
+ console.log('PASS true TPS camera orbit, fixed heroine world pose, original 4v4 L2D, eight real alpha shadows and red ceiling lamps');
 }finally{
  await browser.close();await new Promise(ok=>server.close(ok));
 }
