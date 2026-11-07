@@ -259,7 +259,7 @@
  const LIGHTING=Object.freeze({
   kind:'world-space-six-motivated-fluorescents',
   columns:Object.freeze([-3.5,0,3.5]),
-  depths:Object.freeze([1.65,4.25]),
+  depths:Object.freeze([.90,5.20]),
   height:SPEC.ceilingHeight-.07,
   coolAmbient:Object.freeze([.23,.27,.34]),
   color:Object.freeze([2.00,1.88,1.72]),
