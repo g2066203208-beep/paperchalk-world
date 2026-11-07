@@ -4,7 +4,8 @@ on:
     branches: [main]
     paths:
       - 'site/game/ring-arena-runtime.js'
-      - 'site/index.html'
+      # Other game/map developers may publish index.html frequently. A battle screenshot
+      # should not cancel mid-render when only unrelated city-map UI changes.
       - 'scripts/qa-ring-visual.mjs'
       - '.github/workflows/ring-arena-quick-visual.yml'
   workflow_dispatch:
