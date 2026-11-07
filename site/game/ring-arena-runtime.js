@@ -23,12 +23,12 @@
  // The authored convenience-store wall image is drawn on the existing curved
  // 3D backdrops; actor anchors, depth and camera remain exactly unchanged.
  const WALL_TEXTURE=Object.freeze({
-  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:3
+  url:'./assets/ring-arena/convenience-wall.webp',width:2172,height:724,repeats:7,heightMeters:4.15
  });
  function wallTextureUV(x,y){
   const theta=Math.asin(clamp(x/SPEC.wallRadius,-.975,.975));
   const u=(theta/(2*SPEC.wallArcHalfAngle)+.5)*WALL_TEXTURE.repeats;
-  return {u:u-Math.floor(u),v:clamp(y/SPEC.wallHeight,0,1)};
+  return {u:u-Math.floor(u),v:clamp(y/WALL_TEXTURE.heightMeters,0,1)};
  }
  // V31: projection-correct four-opponent row at camera-equal ground depth.
  // All shoes rest on a common real-world y=0 ground plane and at the same
@@ -249,10 +249,16 @@
   '+glyph*bit*(vec3(.009,.13,.085)+vec3(.04,.37,.22)*bright);',
   'if(uWallReady>.5){',
   'float theta=asin(clamp(vWorld.x/32.0,-.975,.975));',
-  'float u=fract((theta/2.7227136+.5)*3.0);',
-  'float v=clamp(vWorld.y/13.0,.003,.997);',
+  'float u=fract((theta/2.7227136+.5)*7.0);',
+  'float v=clamp(vWorld.y/4.15,.003,.997);',
   'vec3 wallArt=texture2D(uWallTexture,vec2(clamp(u,.002,.998),v)).rgb;',
   'color=wallArt*vec3(.87,.88,.91);',
+   // The 13m arena mesh is a distant backdrop, NOT a 13m retail wall. Keep
+   // the authored shop art at realistic 4.15m scale; its upper edge becomes
+   // a dark neutral overhead backdrop instead of stretching the image.
+   'float overhead=smoothstep(4.07,4.30,vWorld.y);',
+   'vec3 upperBackdrop=vec3(.073,.085,.105);',
+   'color=mix(color,upperBackdrop,overhead);',
   '}',
   '}gl_FragColor=vec4(color,1.0);}'
  ].join('\n');
@@ -1011,7 +1017,8 @@
      lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
    wallMaterial:{url:WALL_TEXTURE.url,ready:wallMaterialReady,error:wallMaterialError,
     sourceSize:wallImage?.naturalWidth?[wallImage.naturalWidth,wallImage.naturalHeight]:null,
-    repeats:WALL_TEXTURE.repeats,kind:'curved-webgl-wall'},
+    repeats:WALL_TEXTURE.repeats,heightMeters:WALL_TEXTURE.heightMeters,
+     kind:'curved-webgl-wall'},
    cameraCount:1,eyeLevel:Math.abs((lens||camera(mode,0)).eye.y-1.50)<.001,
    heroStatic:posePreviewEnabled,heroTextureUploads:textures.get('hero').frames,
    director:{card:attackCard.name,baseDamage:attackCard.damage,
