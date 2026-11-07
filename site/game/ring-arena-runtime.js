@@ -38,10 +38,13 @@
    +Math.sin(6*theta)*m3/3072
   );
  }
- function wallTextureUV(x,y){
+ function wallTextureUV(x,y,mode='outer'){
   const theta=Math.asin(clamp(x/SPEC.wallRadius,-.975,.975));
   const tileWidth=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
-  const u=wallArcMeters(theta)/tileWidth+WALL_TEXTURE.repeats/2+.5;
+  // When the camera looks toward +Z in inner mode, screen-right is world -X.
+  // Reverse the UV run so all shop signs stay legible, never mirror text.
+  const sign=mode==='inner'?-1:1;
+  const u=sign*wallArcMeters(theta)/tileWidth+WALL_TEXTURE.repeats/2+.5;
   return {u:u-Math.floor(u),v:clamp(y/WALL_TEXTURE.heightMeters,0,1)};
  }
  // V31: projection-correct four-opponent row at camera-equal ground depth.
@@ -358,11 +361,15 @@
   const N=160;
   const addWall=(dest,face)=>{
    const point=angle=>backdropPoint(face==='inner'?'outer':'inner',angle);
-   const uv=(p,angle,y)=>[
-    p.x,y,p.z,wallArcMeters(angle)/(WALL_TEXTURE.heightMeters*
-     WALL_TEXTURE.width/WALL_TEXTURE.height)+WALL_TEXTURE.repeats/2+.5,
-    y/WALL_TEXTURE.heightMeters
-   ];
+   const uv=(p,angle,y)=>{
+    const tex=wallTextureUV(p.x,y,face==='outer'?'inner':'outer');
+    // Preserve the unwrapped continuous U across segment boundaries for
+    // correct perspective interpolation, including on reversed walls.
+    const tileWidth=WALL_TEXTURE.heightMeters*WALL_TEXTURE.width/WALL_TEXTURE.height;
+    const signed=face==='outer'?-1:1;
+    return [p.x,y,p.z,signed*wallArcMeters(angle)/tileWidth+
+     WALL_TEXTURE.repeats/2+.5,tex.v];
+   };
    for(let i=0;i<N;i++){
     const a=-SPEC.wallArcHalfAngle+i*2*SPEC.wallArcHalfAngle/N;
     const b=-SPEC.wallArcHalfAngle+(i+1)*2*SPEC.wallArcHalfAngle/N;
