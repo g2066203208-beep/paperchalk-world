@@ -65,4 +65,45 @@ for(const theta of [-ring.SPEC.wallArcHalfAngle,0,ring.SPEC.wallArcHalfAngle]){
  const innerDepth=Math.abs(ring.backdropPoint('inner',theta).z-ring.camera('inner').eye.z);
  assert.ok(Math.abs(outerDepth-innerDepth)<.1,'mirrored arcs have equal perspective depth across the image');
 }
+// Curved ceiling AND floor share the exact wall edge (not a flat rectangle
+// whose corners cut through the photograph-wrapped 3D wall).
+assert.equal(ring.SPEC.surfaceTileMeters,4);
+assert.equal(ring.SPEC.surfaceDepth,34);
+for(const kind of ['floor','ceiling']){
+ const file=path.resolve(__dirname,'../site/assets/ring-arena/'+
+  (kind==='floor'?'convenience-floor.svg':'convenience-ceiling.svg'));
+ const texture=fs.readFileSync(file,'utf8');
+ assert.match(texture,/<svg xmlns="http:\/\/www.w3.org\/2000\/svg" width="1024" height="1024"/);
+ assert.ok(texture.includes('1024'),'the original source is a rectangular 1024 image');
+}
+assert.equal(ring.SURFACE_TEXTURES.floor,'./assets/ring-arena/convenience-floor.svg');
+assert.equal(ring.SURFACE_TEXTURES.ceiling,'./assets/ring-arena/convenience-ceiling.svg');
+for(const mode of ['outer','inner']){
+ for(const theta of [-ring.SPEC.wallArcHalfAngle,-.45,0,.5,ring.SPEC.wallArcHalfAngle]){
+  const wall=ring.backdropPoint(mode,theta);
+  const foot=ring.curvedSurfacePoint(mode,theta,0,0);
+  const roof=ring.curvedSurfacePoint(mode,theta,0,ring.SPEC.ceilingHeight);
+  assert.equal(foot.x,wall.x);assert.equal(roof.x,wall.x);
+  assert.equal(foot.z,wall.z);assert.equal(roof.z,wall.z);
+  assert.equal(foot.y,0);assert.equal(roof.y,ring.SPEC.wallHeight);
+  const distance=ring.SPEC.surfaceDepth,far=ring.curvedSurfacePoint(mode,theta,distance,0);
+  assert.equal(far.z-wall.z,mode==='inner'?-distance:distance);
+  assert.equal(ring.curvedSurfaceUV(mode,theta,distance).v,distance/4);
+  assert.equal(ring.curvedSurfaceUV(mode,theta,0).v,0);
+ }
+ const actors=ring.visibleActors(mode);
+ for(const actor of actors){
+  const a=Math.asin(actor.x/ring.SPEC.wallRadius);
+  const anchor=ring.curvedSurfacePoint(mode,a,0,0);
+  const depth=(actor.z-anchor.z)*(mode==='inner'?-1:1);
+  assert.ok(depth>=-.001&&depth<ring.SPEC.surfaceDepth,
+   'real floor must cover the actor shoe world position '+mode+' '+actor.id);
+ }
+}
+assert.match(src,/drawWorld\(mode==='outer'\?floorOuter:floorInner,0,vp\)/);
+assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/);
+assert.match(src,/texture2D\(uFloorTexture,fract\(vWallUv\)\)/);
+assert.match(src,/texture2D\(uCeilingTexture,fract\(vWallUv\)\)/);
+assert.doesNotMatch(src,/push\(floor,\[-w,0,z0\]/,
+ 'old square floor with unmatched wall curve must be removed');
 console.log('PASS 3.2m human-scale convenience walls, 8 physically accurate arc-length repeats, real ceiling, mirrored view perspective, unchanged actor anchors');
