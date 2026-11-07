@@ -56,12 +56,12 @@
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
  // ONE playable, standard encounter (not alternating 'surround' patterns).
- // Four foes share one 3.84m rank, backed off to restore breathing room in front of the camera.
+ // Four foes share a readable 3.84m rank at 6.80m: the heroine can fill the foreground without enemies appearing closer.
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze([[-1.05,9.30],[-1.90,9.6],[1.80,9.6],[-3.50,9.0]]),
-   enemies:Object.freeze([[-.90,7.15],[.29,7.15],[1.48,7.15],[2.94,7.15]])
+   enemies:Object.freeze([[-.68,6.80],[.51,6.80],[1.70,6.80],[3.16,6.80]])
   }),
   inner:Object.freeze({
    allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
@@ -128,8 +128,8 @@
  const SHOT_NAMES=Object.freeze(['固定左机位']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
-   id:'left',eyeX:-.05,eyeZ:10.52,eyeY:1.50,
-   focusX:-.10,focusY:1.50,focusZ:5.40,fov:66
+   id:'left',eyeX:-.32,eyeZ:10.16,eyeY:1.50,
+   focusX:-.02,focusY:1.50,focusZ:5.40,fov:66
   })]),
   inner:Object.freeze([Object.freeze({
    id:'left',eyeX:.78,eyeZ:7.15,eyeY:1.50,
