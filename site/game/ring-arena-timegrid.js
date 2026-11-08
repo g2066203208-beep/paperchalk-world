@@ -107,7 +107,7 @@
   if(!hud||typeof document==='undefined')throw Error('Timegrid HUD requires a battle stage');
   const holder=document.createElement('section');
   holder.className='ring-timegrid';
-  holder.setAttribute('aria-label','战斗常驻角色头像及生命值');
+  holder.setAttribute('aria-label','战斗电影胶片：敌我八人头像与三项实时状态');
   // This is the ONLY always-visible game HUD: 4 foe portraits + 4
   // party portraits, each with real engine HP. NO permanent card grid,
   // command window, timeline ruler, hand, or tinted full-height panel.
@@ -241,13 +241,25 @@
   };
   let seed=20261108,model=null,target='enemy-1',cardUid=null,selectedTick=1,tip='';
   function notify(message){tip=String(message);get('hint').textContent=tip;}
+  // Three ACTUAL combat-engine values—not mock HUD gauges:
+  // HP / remaining poise resistance / charged finisher energy.
   function hpBar(actual){
-   const max=Math.max(1,actual.maxHp||1),hp=Math.max(0,Number(actual.hp)||0);
+   const max=Math.max(1,Number(actual.maxHp)||1);
+   const hp=Math.max(0,Math.min(max,Number(actual.hp)||0));
+   const pm=Math.max(1,Number(actual.poiseMax)||1);
+   const poise=Math.max(0,Math.min(pm,Number(actual.poise)||0));
+   const resistance=pm-poise,energy=Math.max(0,Math.min(100,Number(actual.energy)||0));
+   const meter=(name,klass,val,total,pct)=>'<span class="'+klass+
+    '" role="progressbar" aria-label="'+name+'" aria-valuemin="0" '+
+    'aria-valuemax="'+total+'" aria-valuenow="'+val+
+    '" title="'+name+' '+val+'/'+total+'"><i style="width:'+
+    Math.max(0,Math.min(100,pct)).toFixed(2)+'%"></i></span>';
    return '<div class="tg-health"><span class="tg-hp-value">'+hp+
-    '<small>/'+max+'</small></span><span class="tg-hp-bar" role="progressbar" '+
-    'aria-label="生命值" aria-valuemin="0" aria-valuemax="'+max+
-    '" aria-valuenow="'+hp+'"><i style="width:'+
-    Math.min(100,hp/max*100)+'%"></i></span></div>';
+    '<small>/'+max+'</small></span><div class="tg-meter-stack">'+
+    meter('生命值','tg-hp-bar',hp,max,100*hp/max)+
+    meter('韧性剩余','tg-poise-bar',resistance,pm,100*resistance/pm)+
+    meter('绝杀能量','tg-energy-bar',energy,100,energy)+
+    '</div></div>';
   }
   function paintRoster(){
    const state=new Map(model.shown.map(a=>[a.id,a]));
@@ -261,7 +273,7 @@
       slot=displayId(actor.id),mine=actor.id===model.controlled().id;
      const id=ROLE_IDS.indexOf(actor.id)+1;
      const label=side==='enemy'?'敌人 '+slot.slice(-1):roleName(actor.id);
-     rows.push('<div class="tg-row '+side+(mine?' current':'')+(dead?' dead':'')+
+     rows.push('<div class="tg-row tg-film-frame '+side+(mine?' current':'')+(dead?' dead':'')+
       '" data-tg-row="'+slot+'">'+
       '<button type="button" class="tg-portrait" '+
       (side==='ally'?'data-tg-choose-role="'+id+'"':'data-tg-open-target="'+slot+'"')+
@@ -273,7 +285,7 @@
     }
    }
    holder.querySelector('[data-tg-roster]').innerHTML=rows.join('');
-   holder.dataset.layout='p5-inspired-diagonal-face-hp-only';
+   holder.dataset.layout='continuous-35mm-filmstrip-rectangular-frames';
    holder.dataset.timegridVersion='1.7';
   }
   function paintTactics(){
