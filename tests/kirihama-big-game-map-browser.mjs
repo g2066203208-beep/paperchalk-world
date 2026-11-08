@@ -55,6 +55,11 @@ try{
  });
  await page.locator('#quick-map').click();
  await page.locator('.pw-dot-world-map').waitFor({state:'visible'});
+ // This is the second level, reached from the station neighborhood.
+ assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-map-layer'),'station');
+ await page.locator('.pw-home-neighborhood-up').click();
+ assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-map-layer'),'metro');
+ await page.locator('.pw-dot-back').click();
  assert.equal((await stats()).scope,'region');
  await page.evaluate(()=>{
   const c=document.querySelector('.pw-dot-city[data-city="kirihama"]');
