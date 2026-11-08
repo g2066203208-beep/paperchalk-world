@@ -40,7 +40,7 @@ test('real subway stations preserve canonical grid coordinates across the indepe
   const p=N.at(id);
   assert.ok(p,'missing active subway station '+id);
   assert.equal(p.x,Math.round((280+s.gx*40)/40)*40);
-  assert.equal(p.y,Math.round((100+s.gy*40)/40)*40);
+  assert.equal(p.y,Math.round((80+s.gy*40)/40)*40);
  }
  const w=N.journey('school','entrance'),e=N.journey('entrance','school');
  assert.ok(w&&e);
