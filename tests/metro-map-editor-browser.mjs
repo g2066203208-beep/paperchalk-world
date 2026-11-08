@@ -83,7 +83,7 @@ try{
  assert.notEqual(empty.svg,'none','do not hide the dot grid with its parent SVG');
  await page.waitForFunction(()=>{
   const m=document.querySelector('.pw-dot-world-map');
-  return Number(m?.dataset.rippleFrames||0)>=5&&m?.dataset.fogSource==='live-world-fluid';
+  return Number(m?.dataset.rippleFrames||0)>=5&&m?.dataset.mapBackground==='solid-black';
  },{timeout:15000});
  const waveState=()=>page.evaluate(()=>{
   const map=document.querySelector('.pw-dot-world-map');
@@ -94,29 +94,20 @@ try{
   for(let i=3;i<rgba.length;i+=4){
    if(rgba[i]>0){bright++;weighted=(weighted+(rgba[i]*(i%997)))%2147483647}
   }
-  const fogLayer=map.querySelector('.pw-dot-fog-surface');
-  const fogCtx=fogLayer.getContext('2d');
-  const samples=[[.18,.18],[.5,.18],[.82,.18],
-   [.18,.5],[.5,.5],[.82,.5],[.18,.82],[.5,.82],[.82,.82]]
-   .map(([u,v])=>{
-    const px=fogCtx.getImageData(Math.floor(fogLayer.width*u),
-     Math.floor(fogLayer.height*v),1,1).data;
-    return {r:px[0],g:px[1],b:px[2],a:px[3]};
-   });
   return {frames:+map.dataset.rippleFrames,bright,weighted,
-   fog:map.dataset.fogSource,rings:+map.dataset.rippleCount,
+   background:map.dataset.mapBackground,rings:+map.dataset.rippleCount,
    renderer:document.querySelector('#fog')?.dataset.renderer,
-   dotMode:map.dataset.dotAnimation,coverage:map.dataset.fogCoverage,
-   style:map.dataset.rippleStyle,samples};
+   dotMode:map.dataset.dotAnimation,
+   fogCount:map.querySelectorAll('.pw-dot-fog-surface').length,
+   backdrop:getComputedStyle(map).backgroundColor};
  });
  const beforeWave=await waveState();
  assert.ok(beforeWave.bright>100,'ripple dots must be painted in Canvas2D');
- assert.equal(beforeWave.dotMode,'fluid-ripples');
+ assert.equal(beforeWave.dotMode,'slow-subtle-ripples');
  assert.ok(beforeWave.rings>=1,'at least one expanding ring exists');
- assert.equal(beforeWave.coverage,'full','fog must cover the whole map');
- assert.equal(beforeWave.style,'subtle-slow');
- assert.ok(beforeWave.samples.every(p=>p.a===255&&p.r<=22&&p.g<=22&&p.b<=22),
-  'entire map should be almost black with no grey opening: '+JSON.stringify(beforeWave.samples));
+ assert.equal(beforeWave.background,'solid-black');
+ assert.equal(beforeWave.backdrop,'rgb(0, 0, 0)');
+ assert.equal(beforeWave.fogCount,0,'map must have no fog canvas');
  await shot('00-original-game-empty-dot-canvas.png');
  await page.waitForTimeout(4800);
  const afterWave=await waveState();
