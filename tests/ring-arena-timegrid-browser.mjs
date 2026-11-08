@@ -37,75 +37,64 @@ try{
  assert.equal(first.timegrid.roles.length,4);
  assert.equal(first.timegrid.enemies.length,4);
  assert.equal(first.timegrid.timelineTicks,10);
- assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
- assert.equal(first.timegrid.ui,'right-portrait-dual-track-v17');
- const arenaViewports=await page.evaluate(()=>{
-  const game=document.querySelector('#ring-arena-canvas').getBoundingClientRect();
-  const command=document.querySelector('.ring-timegrid').getBoundingClientRect();
-  return {sceneRight:game.right,panelLeft:command.left,sceneWidth:game.width,panelWidth:command.width};
- });
- assert.ok(arenaViewports.sceneWidth>=1275&&arenaViewports.sceneRight>=1275,
-  'real WebGL battle must occupy the entire 1280px screen: HUD is not a separate side panel');
- assert.ok(arenaViewports.panelLeft>=780&&arenaViewports.panelWidth>350,
-  'all eight portraits and two card tracks belong to the in-battle right edge');
- const hudStyle=await page.locator('.ring-timegrid').evaluate(node=>{
-  const s=getComputedStyle(node);return {background:s.backgroundColor,border:s.borderTopWidth,shadow:s.boxShadow};
- });
- assert.equal(hudStyle.background,'rgba(0, 0, 0, 0)',
-  'HUD must have NO giant opaque rectangular panel');
- assert.equal(hudStyle.border,'0px');
- assert.equal(hudStyle.shadow,'none');
- const viewSafe=await page.evaluate(()=>{
-  const state=window.PaperWorldGameRingArena.inspect();
-  const ring=window.PaperWorldRingArena;
-  const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
-   'enemy-2':{left:.32,right:.69,top:0,bottom:1},
-   'enemy-3':{left:.30,right:.76,top:0,bottom:1},
-   'enemy-4':{left:0,right:.58,top:0,bottom:1}};
-  const canvas=document.querySelector('#ring-arena-canvas').getBoundingClientRect();
-  const hud=document.querySelector('.ring-timegrid').getBoundingClientRect();
-  const right=Math.max(...state.actors.enemies.map(e=>
-   ring.portraitVisibleBounds(e,state.camera,uv[e.id],state.projectionAspect).right));
-  return {rightPixel:canvas.left+(right+1)*canvas.width/2,
-   hudLeft:hud.left,shift:state.hudSafeShiftX};
- });
- assert.ok(viewSafe.shift<-.04,'real 3D camera must keep enemy-4 clear of HUD');
- assert.ok(viewSafe.rightPixel+8<viewSafe.hudLeft,
-  'all four enemy silhouettes must remain LEFT of the right-edge HUD');
+ assert.equal(first.timegrid.ui,'persistent-portraits-hp-only');
  assert.equal(first.timegrid.version,'1.7');
- assert.equal(await page.locator('.tg-unit .tg-portrait img').count(),8);
- assert.equal(await page.locator('.tg-target-track').count(),8);
- assert.equal(await page.locator('.tg-own-track').count(),8);
+ assert.equal(first.timegrid.tacticsOpen,false);
+ assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
  assert.equal(await page.locator('.tg-faction').count(),2);
- assert.equal(await page.locator('.ring-timegrid .tg-ticks span').count(),11);
- assert.equal(await page.locator('.ring-timegrid [data-tg-card]').count(),4);
- assert.equal(await page.locator('[data-attack-card]').isVisible(),false,
-  'the legacy one-click damage sandbox must not replace card combat');
+ assert.equal(await page.locator('.ring-timegrid .tg-portrait img').count(),8);
+ assert.equal(await page.locator('.ring-timegrid .tg-hp-value').count(),8);
+ assert.equal(await page.locator('.ring-timegrid .tg-hp-bar').count(),8);
+ assert.equal(await page.locator('.tg-tactics').isVisible(),false,
+  'NO giant card panel, timeline table, action buttons or deck on battle startup');
+ assert.equal(await page.locator('.ring-timegrid .tg-card,.ring-timegrid .tg-ticks,.ring-timegrid .tg-tools').count(),0,
+  'no old UI scaffolding must appear in persistent avatar HUD');
+ const hudBox=await page.evaluate(()=>{
+  const stage=document.querySelector('#ring-arena-canvas').getBoundingClientRect();
+  const avatars=document.querySelector('.ring-timegrid').getBoundingClientRect();
+  const s=getComputedStyle(document.querySelector('.ring-timegrid'));
+  return {stageRight:stage.right,stageWidth:stage.width,
+   avatarRight:avatars.right,avatarWidth:avatars.width,avatarLeft:avatars.left,
+   background:s.backgroundColor,shadow:s.boxShadow};
+ });
+ assert.ok(hudBox.stageWidth>=1275&&hudBox.stageRight>=1275,
+  'full-width actual WebGL world is never resized for UI');
+ assert.ok(hudBox.avatarLeft>1090&&hudBox.avatarWidth<180,
+  'avatar + HP strip, NOT a large right side planning window');
+ assert.equal(hudBox.background,'rgba(0, 0, 0, 0)');
+ assert.equal(hudBox.shadow,'none');
+ const hpLabels=await page.locator('.tg-hp-value').allTextContents();
+ assert.ok(hpLabels.every(x=>/^\d+\/\d+$/.test(x.trim())),
+  'all eight portraits display real current HP / max HP');
  await page.screenshot({path:resolve(out,'01-planning-1280x720.png'),animations:'disabled'});
  const expected=['hero','ai-gun','ai-guard','ai-mage'];
  const cameraIds=['hero','ally-2','ally-3','ally-4'];
  for(let i=1;i<=4;i++){
   await page.locator('[data-tg-choose-role="'+i+'"]').click();
-  await page.waitForTimeout(90);
-  const s=await inspect();
-  assert.equal(s.timegrid.controlledId,expected[i-1]);
-  assert.equal(s.controlledActorId,cameraIds[i-1]);
-  assert.equal(s.timegrid.roles.length,4);
-  assert.equal(s.timegrid.enemies.length,4);
+  await page.waitForTimeout(80);
+  const state=await inspect();
+  assert.equal(state.timegrid.controlledId,expected[i-1]);
+  assert.equal(state.controlledActorId,cameraIds[i-1]);
+  assert.equal(state.timegrid.tacticsOpen,false,
+   'selecting the active ally switches the real world camera without opening a menu');
  }
  await page.locator('[data-tg-choose-role="1"]').click();
- // Each manually controlled actor must receive actual engine-scheduled cards.
+ // Selecting a target offers a TRANSIENT, explicit action tray only then.
+ await page.locator('[data-tg-open-target="enemy-1"]').click();
+ assert.equal(await page.locator('.tg-tactics').isVisible(),true);
+ assert.equal(await page.locator('[data-tg-card]').count(),4);
+ assert.equal(await page.locator('[data-tg-tick]').count(),10);
  await page.locator('[data-tg-auto-all]').click();
  const planned=await inspect();
  assert.ok(planned.timegrid.roles.every(x=>x.planned>=1),
-  'autoplan writes an independent Timegrid schedule for each of four heroes');
- assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
- assert.equal(await page.locator('.tg-band').count()>0,true);
+  'real engine still schedules all four character decks, not merely HP UI');
  await page.screenshot({path:resolve(out,'02-planned-four-roles-1280x720.png'),animations:'disabled'});
  await page.locator('[data-tg-execute]').click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().timegrid.phase==='resolving',
   null,{timeout:10000});
- await page.waitForTimeout(1300);
+ assert.equal(await page.locator('.tg-tactics').isVisible(),false,
+  'tactical choices close automatically for the real 3D action');
+ await page.waitForTimeout(1350);
  const progressing=await inspect();
  assert.equal(progressing.timegrid.phase,'resolving');
  await page.screenshot({path:resolve(out,'03-real-3d-tick-playback-1280x720.png'),animations:'disabled'});
@@ -117,19 +106,19 @@ try{
  assert.ok(after.timegrid.round>=1);
  assert.ok(after.timegrid.roles.some((x,i)=>x.hp!==first.timegrid.roles[i].hp)||
   after.timegrid.enemies.some((x,i)=>x.hp!==first.timegrid.enemies[i].hp),
-  'real simulated actions change battle HP');
- assert.deepEqual(after.partyLine,first.partyLine,'3D party anchors must remain fixed');
- assert.deepEqual(after.opposingLine,first.opposingLine,'3D enemy anchors must remain fixed');
- assert.equal(after.timegrid.roles.length,4);
+  'the eight avatar HP bars follow true ten-tick V1.7 simulation');
+ assert.deepEqual(after.partyLine,first.partyLine,'party actors never change standing position');
+ assert.deepEqual(after.opposingLine,first.opposingLine,'enemy actors never change standing position');
+ assert.equal(after.timegrid.tacticsOpen,false);
+ assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
  await page.screenshot({path:resolve(out,'04-round-resolved-1280x720.png'),animations:'disabled'});
  await page.setViewportSize({width:390,height:844});
  await page.waitForTimeout(500);
- const toggle=page.locator('[data-tg-toggle]');
- await toggle.click();
- await page.screenshot({path:resolve(out,'05-phone-timegrid-390x844.png'),animations:'disabled'});
+ assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
+ assert.equal(await page.locator('.tg-tactics').isVisible(),false);
  const mobile=await inspect();
  assert.equal(mobile.renderer,'webgl-l2d');
- assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
+ await page.screenshot({path:resolve(out,'05-phone-timegrid-390x844.png'),animations:'disabled'});
  const summary={pass:true,commit:process.env.GITHUB_SHA||null,
   browser:'real Chromium/Swiftshader WebGL; no raster mock',
   scene:'ring-arena',party:first.partyLine,foes:first.opposingLine,
