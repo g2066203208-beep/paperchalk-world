@@ -222,88 +222,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    });
   }
  }
- // Expanded municipal services exist as planned topology. Only actually
- // implemented local routes offer boarding; planned lines never fake rides.
- // City transport uses actual, individually named destination nodes,
- // never numbered synthetic metro stops. Smaller towns have buses.
- for(const l of atlas.LOCAL_TRANSIT_LINES){
-  const points=[location(atlas.POI_BY_ID[l.stops[0]])];
-  for(let i=1;i<l.stops.length;i++){
-   const a=atlas.POI_BY_ID[l.stops[i-1]],b=atlas.POI_BY_ID[l.stops[i]];
-   for(const p of orthogonal(a,b).slice(1))
-    if(p.x!==points.at(-1).x||p.y!==points.at(-1).y)points.push(p);
-  }
-  const g=lineGroup(municipal,l,l.stops[0],l.stops.at(-1),points,'metro',(e,node)=>{
-   const city=atlas.CITY_BY_ID[l.city];
-   showMenu(e,node,l.name,city.name+' · '+(l.mode==='metro'?'地铁':l.mode==='tram'?'有轨电车':'地方巴士')+
-    ' · '+l.stops.length+' 个真实地点',l.stops.map(id=>{
-    const stop=atlas.POI_BY_ID[id];
-    return {label:stop.name,run:()=>{clear();focus(stop,Math.max(3.15,scale))}};
-   }));
-  });
-  g.dataset.city=l.city;g.dataset.mode=l.mode;
-  for(const id of l.stops){
-   const p=location(atlas.POI_BY_ID[id]);
-   const station=vector('circle',{cx:p.x,cy:p.y,r:4,
-    'data-stop':id,'data-city':l.city},'pw-dot-municipal-stop');
-   g.append(station);
-  }
- }
- // Each named destination has an actual station mark on a symmetric
- // access-road / trail network. No invented ghost metro trains.
+ // Strict SUBWAY ONLY: municipal buses/trams, walking roads and local
+ // destination access exist in the gameplay journey graph, but never
+ // become subway tracks or subway stations in this view.
  const stopButtons=new Map();
- const physicalMarkers=new Set();
- for(const l of network.ACCESS_ROUTES){
-  const ps=[],points=l.stops.map(id=>network.at(id)).filter(Boolean);
-  for(let i=0;i<points.length;i++){
-   if(!i){ps.push(location(points[i]));continue}
-   for(const p of orthogonal(points[i-1],points[i]).slice(1)){
-    const last=ps.at(-1);
-    if(!last||p.x!==last.x||p.y!==last.y)ps.push(p);
-   }
-  }
-  const g=lineGroup(access,l,l.stops[0],l.stops.at(-1),ps,'access',null);
-  g.dataset.city=points[0]?.city||'';
-  for(const id of l.stops){
-   if(physicalMarkers.has(id))continue;physicalMarkers.add(id);
-   const pt=network.at(id);if(!pt)continue;
-   const marker=vector('circle',{cx:pt.x,cy:pt.y,r:5,
-    'data-stop':id,'data-direction':'both','data-city':pt.city},
-    'pw-dot-destination-stop'+(pt.kind==='hub'?' is-interchange':''));
-   marker.setAttribute('role','button');marker.setAttribute('tabindex','0');
-   marker.setAttribute('aria-label','查看站点 '+pt.name);
-   marker.addEventListener('click',event=>{
-    event.stopPropagation();
-    if(activeCity!==pt.city)return;
-    if(id===network.HUB(activeCity)){
-     const trip=network.journey(here,id),backTrip=network.journey(id,here);
-     const dest=locations[id],can=here!==id&&!!trip&&!!backTrip&&
-      !!dest&&snapshot.nightStatus!=='recalled'&&
-      snapshot.minute+trip.minutes<dest.close;
-     showMenu(event,marker,pt.name,'市内与城际换乘站 · '+
-      (trip?'去程 '+trip.minutes+' 分钟 · 返程 '+backTrip.minutes+' 分钟':'暂不可达'),[
-      {label:'前往换乘站',primary:true,disabled:!can,run:async()=>{
-       if(busy)return;busy=true;clear();
-       try{const res=await onWorldTravel?.(id,trip);
-        if(!res?.ok)notify(res?.reason||'无法前往')}
-       catch(err){notify('换乘站加载失败')}finally{busy=false}
-      }},
-      {label:'查看城际路线',run:leaveCity}
-     ]);
-     previewRegionalRoute(trip?.legs);return;
-    }
-    const card=stopButtons.get(id);
-    if(card&&!card.hidden)card.click();
-    else focus(pt,Math.max(3.5,scale*1.35));
-   });
-   marker.addEventListener('keydown',event=>{
-    if(event.key==='Enter'||event.key===' '){
-     event.preventDefault();marker.dispatchEvent(new MouseEvent('click',{bubbles:true}))
-    }
-   });
-   stops.append(marker);
-  }
- }
  const localPoint=p=>({x:LOCAL_X+p.gx*CELL,y:LOCAL_Y+p.gy*CELL});
  for(const l of metro.LINES){
   for(const [from,to] of geometry.segments(l)){
@@ -357,40 +279,38 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   img.alt='';img.decoding='async';img.loading='lazy';img.referrerPolicy='no-referrer';
   pic.append(img);node.append(pic);previewImage(img,sources);
  }
- function localPlace(id,s){
-  const p=localPoint(s),visible=!!PHOTO[id];
-  const name=PLACE_NAMES[id]||s.label;
-  const node=element('button','pw-transit-place pw-dot-place'+(visible?'':' is-station'));
+ function localPlace(id,station){
+  // Only approved metro stations — not the school, café or shop as POIs.
+  const p=localPoint(station),name=station.label;
+  const node=element('button','pw-transit-place pw-dot-place is-station');
   node.type='button';node.dataset.place=id;node.dataset.local='true';
-  node.dataset.current=String(here===id);node.dataset.photograph=String(visible);
-  node.dataset.station=id;stopButtons.set(id,node);
-  node.dataset.gridColumn=s.gx;node.dataset.gridRow=s.gy;
-  if(visible){const q=PHOTO[id];photo(node,[q[0],q[1]])}
-  else node.append(element('span','pw-transit-station-dot',s.transfer?'◎':'•'));
-  node.append(element('span','pw-transit-place-name',name));
-  // Image leader ends exactly at this metro station, never one grid row above.
+  node.dataset.current=String(here===id);node.dataset.station=id;
+  node.dataset.stationOnly='true';stopButtons.set(id,node);
+  node.dataset.gridColumn=station.gx;node.dataset.gridRow=station.gy;
+  node.append(element('span','pw-transit-station-dot',station.transfer?'◎':'●'),
+   element('span','pw-transit-place-name',name));
   put(node,p,metroLayer);
   node.addEventListener('click',e=>{
-   if(drag?.moved)return;
-   e.stopPropagation();
-   const loc=locations[id],status=id===here?{ok:false,reason:'当前位置'}:
-    loc?availability?.(id,snapshot):{ok:false,reason:'尚未开放'};
-   const metroRoute=metro.STATIONS[here]?metro.path(here,id):null;
-   const trip=network.journey(here,id),back=network.journey(id,here);
-   const viable=!!trip&&!!back&&!!status?.ok;
-   showMenu(e,node,name,(viable?'去程 '+trip.minutes+' 分钟 · 返程 '+back.minutes+' 分钟':
-    status?.reason||'暂不可达'),[
-    {label:'前往',primary:true,disabled:!viable,run:async()=>{
+   if(drag?.moved)return;e.stopPropagation();
+   const trip=metro.path(here,id);
+   const status=id===here?{ok:false,reason:'当前站'}:
+    locations[id]?availability?.(id,snapshot):{ok:false,reason:'尚未开放'};
+   const viable=!!trip?.segments?.length;
+   showMenu(e,node,name,viable?
+    '地铁 · '+trip.lines.join(' → ')+
+    (trip.transfers.length?' · '+trip.transfers.length+' 次换乘':' · 无需换乘'):
+    id===here?'当前所在站':'请先抵达正式地铁站',[
+    {label:'乘地铁前往',primary:true,disabled:!viable||!status?.ok,run:async()=>{
      if(busy)return;busy=true;clear();
-     try{
-      const result=metroRoute?.segments?.length?
-       await onTravel?.(id,metroRoute):await onWorldTravel?.(id,trip);
-      if(!result?.ok)notify(result?.reason||'无法到达');
-     }catch(error){notify('地图路线不可用')}finally{busy=false}
+     try{const res=await onTravel?.(id,trip);
+      if(!res?.ok)notify(res?.reason||'当前无法乘车')}
+     catch(err){notify('地铁行程不可用')}finally{busy=false}
     }},
-    {label:'查看线路',run:()=>{clear();previewRegionalRoute(trip?.legs)}}
+    {label:'查看地铁路线',disabled:!viable,run:()=>{
+     clear();previewMetroRoute(trip);
+    }}
    ]);
-   previewRegionalRoute(trip?.legs);
+   if(viable)previewMetroRoute(trip);
   });
  }
  for(const [id,s] of Object.entries(metro.STATIONS))if(!s.locked)localPlace(id,s);
@@ -431,45 +351,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    enterCity(c.id);
   });
  }
+ // Map-specific location images belong in a separate place planner,
+ // never in subway-only tracks. World destinations remain in atlas/network.
  const worldNodes=[];
- for(const p of atlas.POIS){
-  if(metro.STATIONS[p.id]||!locations[p.id])continue;
-  const node=element('button','pw-dot-poi pw-transit-place');
-  node.type='button';node.dataset.place=p.id;node.dataset.city=p.city;
-  node.dataset.station=p.id;stopButtons.set(p.id,node);
-  node.dataset.current=String(p.id===here);
-  node.dataset.kind=p.kind||'';
-  node.dataset.transitStop=String(transitPOIs.has(p.id));
-  const src=atlas.PHOTOS[p.photo]?.url;
-  // Load only visible photos. All pictures are connected to real route pins.
-  const pic=element('span','pw-transit-photo');
-  const img=element('img');img.alt='';img.loading='lazy';
-  img.referrerPolicy='no-referrer';img.decoding='async';
-  pic.append(img);node.append(pic,element('span','pw-transit-place-name',p.name));
-  put(node,location(p),placeLayer);
-  worldNodes.push({node,poi:p,img,source:src});
-  node.addEventListener('click',e=>{
-   if(drag?.moved)return;
-   const route=network.journey(here,p.id);
-   const hereNow=here===p.id;
-   const dest=locations[p.id];
-   const cost=route?.minutes||dest.travel;
-   const canTravel=!hereNow&&!!route&&snapshot.nightStatus!=='recalled'&&
-    snapshot.minute+cost<dest.close;
-   showMenu(e,node,p.name,(atlas.CITY_BY_ID[p.city]?.name||'城市')+
-    ' · '+(route?.legs.length?route.legs.map(l=>l.line.name).filter((v,i,a)=>a.indexOf(v)===i).join(' → '):
-      '同城区域')+(canTravel?' · 约 '+cost+' 分钟':' · 当前不可前往'),[
-    {label:'前往',primary:true,disabled:!canTravel,run:async()=>{
-     if(busy)return;busy=true;clear();
-     try{const res=await onWorldTravel?.(p.id,route);
-      if(!res?.ok)notify(res?.reason||'尚无法前往')}
-     catch(_){notify('场景加载失败')}finally{busy=false}
-    }},
-    {label:'查看地点',run:()=>{clear();focus(p,Math.max(scale,2.5))}}
-   ],src);
-   previewRegionalRoute(route?.legs);
-  });
- }
  // Dedicated, world-coordinate player marker is not a fictional POI.
  const you=element('span','pw-dot-current-location');
  you.setAttribute('aria-label','当前位置');
