@@ -1,53 +1,60 @@
-# 普通路人 NPC｜统一人物集
+# 路人 NPC｜统一人物图鉴
 
-> **所有日常路人（地铁、街头、商场等）归入同一类型。已批准的老爷爷 `NPC-M003` 也是普通路人，不是独立于路人的特殊剧情人物。**
->
-> 人物可复用既有素材和编号，禁止复制已批准 PNG、迁移文件目录、随意覆盖已有身份。剧情主角与主要角色（CHAR 系列）另外管理。
+**2026-11-08：五名路人已有真实 PNG 存储在 GitHub。** 与剧情主要角色（CHAR 系列）分开管理；老爷爷 M003 本来就属于**路人 NPC**，保留原编号与其经过批准的四视图、RGBA 图集和单姿态精灵。不得重复导入/重命名他的旧资产。
 
-## 图鉴
+## 已入库的五名路人
 
-| ID | 人物 | 已有美术 | 三视图实际顺序 | 运行时 |
+| NPC ID | 人物 | 原始 PNG（GitHub 实际文件） | 视图顺序 | 状态 |
 | --- | --- | --- | --- | --- |
-| `NPC-C001` | 灰西装男性上班族 | 用户已上传 RGB 原图；GitHub PNG 尚待上传 | 左侧面 → 正面 → 背面 | 未实装 |
-| `NPC-C002` | 米色开衫年轻女性 | 用户已上传 RGB 原图；GitHub PNG 尚待上传 | 左侧面 → 正面 → 背面 | 未实装 |
-| `NPC-C003` | 深灰针织衫年长女性 | 用户已上传 RGB 原图；GitHub PNG 尚待上传 | 左侧面 → 正面 → 背面 | 未实装 |
-| `NPC-M003` | **灰发老爷爷，坐地铁看报** | **已批准四视图，原图与 RGBA 精灵已在 GitHub** | 正面 → 左侧面 → 背面 → 正面坐着看报 | 未实装 |
-| `NPC-C004` | 深绿色连帽衫年轻男性 | 用户最新候选存在发型/光影不一致，**尚未批准** | 待审核 | 未实装 |
+| NPC-C001 | 男性上班族，灰色西装 | [three-view-original.png](../../../assets/characters/civilians/npc-c001/three-view-original.png) | 左侧面→正面→背面 | 已上传 RGB 原图，待 RGBA 和表演状态 |
+| NPC-C002 | 年轻女性通勤者，米色开衫 | [three-view-original.png](../../../assets/characters/civilians/npc-c002/three-view-original.png) | 左侧面→正面→背面 | 已上传 RGB 原图，待 RGBA 和表演状态 |
+| NPC-C003 | 老奶奶，深灰针织衫 | [three-view-original.png](../../../assets/characters/civilians/npc-c003/three-view-original.png) | 左侧面→正面→背面 | 已上传 RGB 原图，待 RGBA 和表演状态 |
+| NPC-C004 | 年轻街头男性，深绿连帽卫衣 | [three-view-original.png](../../../assets/characters/civilians/npc-c004/three-view-original.png) | 左侧面→正面→背面 | **用户认可最终修正版**，已上传 RGB 原图，待 RGBA 和表演状态 |
+| NPC-M003 | 老爷爷，地铁看报 | [approved-four-poses.png](../../../assets/characters/metro/npc-m003/approved-four-poses.png) | 正面→左侧面→背面→坐着看报 | **用户已批准，RGB 原图及所有透明 RGBA 精灵均已入 GitHub** |
 
-**机器图鉴：** [gallery.v1.json](gallery.v1.json)。NPC-M003 通过唯一 `canonicalRecord` 链接老档案 `site/data/npc/metro-commuter-npc-m003.v2.json`，不是多造一个老爷爷。旧 `metro-character-gallery.v1.json` 仍可给旧模块查找，但它也是路人类型的历史索引，不能当成另一组人物。
+> 后续 NPC-C005（酒红毛衣中年女性）仅有 [Anima 三视图完整提示词](../../../../docs/NPC-C005_ANIMA_THREE_VIEW_MIDDLE_AGED_WOMAN_20261108.md)，未出图，**不计入已入库五人**。
 
-## 已批准 M003 的唯一真实素材
-
-- 原图：[approved-four-poses.png](../../../assets/characters/metro/npc-m003/approved-four-poses.png)
-- 透明图集：[four-pose-atlas-rgba.png](../../../assets/characters/metro/npc-m003/four-pose-atlas-rgba.png)
-- 单独动作：[front-standing.png](../../../assets/characters/metro/npc-m003/front-standing.png)、[side-standing.png](../../../assets/characters/metro/npc-m003/side-standing.png)、[back-standing.png](../../../assets/characters/metro/npc-m003/back-standing.png)、[special-front-seated-reading.png](../../../assets/characters/metro/npc-m003/special-front-seated-reading.png)
-
-**M003 老爷爷已有四格，不因新 NPC 默认三视图而删第四格。** 以后统一追加 img2img 交流/休息/死亡状态；老爷爷已有坐着看报动作，可作为现有休息姿态；交流和死亡状态尚未画。
-
-## 新三位路人的素材计划
+## 正式保存位置
 
 ```text
-site/assets/characters/civilians/
-  npc-c001/three-view-original.png  # 待 GitHub 二进制提交
-  npc-c002/three-view-original.png  # 待 GitHub 二进制提交
-  npc-c003/three-view-original.png  # 待 GitHub 二进制提交
+site/data/npc/civilians/
+  README.md
+  gallery.v1.json                    # 五人单一身份索引；真实资源路径、SHA、身份和制作状态
 
-site/assets/characters/metro/npc-m003/
-  approved-four-poses.png            # 已在 GitHub，保持不动
-  four-pose-atlas-rgba.png           # 已在 GitHub，保持不动
+site/assets/characters/civilians/
+  npc-c001/three-view-original.png   # 678018 字节 RGB PNG
+  npc-c002/three-view-original.png   # 733253 字节 RGB PNG
+  npc-c003/three-view-original.png   # 636544 字节 RGB PNG
+  npc-c004/three-view-original.png   # 668427 字节 RGB PNG
+
+site/assets/characters/metro/npc-m003/  # 已批准老爷爷，沿用原目录，不复制二进制
+  approved-four-poses.png
+  four-pose-atlas-rgba.png
   front-standing.png
   side-standing.png
   back-standing.png
   special-front-seated-reading.png
 ```
 
-新三位的 RGB 原图为 1024×1024，真实布局是**侧面→正面→背面**。必须依照原图实际顺序裁切，不允许以提示词顺序替代图像顺序。白底不代表真透明，游戏注册前需验证 RGBA、投影脚底锚点和角色个人实际身高。
+四个新 PNG 均按用户提交的原始字节写入 GitHub，**与本次源文件 Git Blob SHA 和 SHA-256 双重匹配**；没有使用 Canva 缩略图、改变尺寸或重新压缩。四个新源图均为 **1024×1024、RGB、白色背景**。M003 为 1472×1024 四视图，除已有 RGBA 精灵之外保持不动。
 
-已准备 `npc-civilians-source-images-20261108.zip` 对话素材包，仍需将其中三张 PNG 二进制上传 GitHub 才能变为正式资源。使用 `python3 scripts/validate_civilian_npc_sources.py` 核对；该校验也会验证已有 M003 的原图 SHA。**图鉴文件存在不等于对应新 PNG 已经提交。**
+## 视图约定（十分重要）
 
-## 制作与演出
+当前 C001-C004 用户实际成品的左右顺序为 **侧面 / 正面 / 背面**；而 Anima 提示词基准期望 **正面 / 侧面 / 背面**。**程序裁切应读取 gallery.v1.json 内的 `source.actualImageLeftToRight`，不得猜测生成顺序，也不要把左侧面当成正面。**
 
-- 新普通路人首张出图只画**三视图**。以 [LEFT/CENTER/RIGHT 模板](../../../../docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md) 为生产规范；旧已批准四视图保留原状。
-- 同一人物正侧背发型/服装必须统一；禁止预烘焙强定向光、重暗面、发丝亮斑或强投影。默认阴天均匀漫射光，游戏灯光与阴影在运行时处理。
-- img2img 状态：交流、休息、死亡，每个人单独设计姿态和朝向。不凭描述冒充实际已画出状态。
-- NPC 在游戏内的实际位置/交通归属必须通过独立生活路径和资格校验；**美术存在不能直接刷人**。
+白底 RGB **不能直接**作为透明游戏立绘。图像实际上传并不意味着已经生成切片、RG​​BA、L2D 或游戏中 NPC。正式角色还要验收透明像素边缘、脚底站位、世界身高、场景归属和实际渲染。
+
+## 后续生产
+
+- 新 NPC 先做三视图；同一个 NPC 独立使用自己的母图通过 img2img 制作**交流、休息、死亡**三种状态，每个人设计不同动作和朝向。已有老爷爷坐姿看报属于他的已批准特殊待机动作，不会为匹配新规格删除第四格。
+- **默认阴天、均匀漫射光；发型、服装跨视角一致；不烘焙硬阴影、反光或环境光源。** 具体规范： [Anima 官方整理](../../../../docs/ANIMA_OFFICIAL_PROMPTING_REFERENCE_20261108.md)、[项目模板](../../../../docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md)。
+- 各路人实际身体高度独立登记为游戏单位，不以 `160 cm` 等 Anima 文字生成身高。不要自动安排全部 NPC 在同一车站出场。
+- 校验原图与全部 GitHub 文件：`python3 scripts/validate_civilian_npc_sources.py`。
+- 兼容目录 `site/data/npc/metro-character-gallery.v1.json` 仅供原有 M001-M003 数据使用，**不是排除老爷爷的独立路人集合**。
+
+### 责任与状态
+
+- 图片上传/索引/源图哈希：完成，五位。
+- 透明三视图切片与 L2D 动态素材：C001-C004 未做，M003 已有透明四格。
+- 交流、休息、死亡的 img2img 状态：尚未生成（M003 已有看报坐姿）。
+- 游戏 NPC 运行时注册：**本次未执行**，不得宣称用户已在游戏里看到这些角色。
