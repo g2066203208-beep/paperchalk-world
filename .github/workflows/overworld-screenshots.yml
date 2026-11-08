@@ -36,6 +36,8 @@ on:
       - 'tests/metro-map-geometry.test.cjs'
       - 'site/game/metro-map-geometry.js'
       - 'site/game/transit-map-ui.js'
+      - 'site/game/destination-network.js'
+      - 'tests/destination-network.test.cjs'
       - 'site/game/transit-map-ui.css'
       - '.github/workflows/overworld-screenshots.yml'
   workflow_dispatch:
@@ -69,8 +71,8 @@ jobs:
           done
           cat /tmp/paperchalk-web.log
           exit 1
-      - name: Verify daytime state rules
-        run: node --test tests/daily-life.test.cjs tests/metro-graph.test.cjs tests/metro-map-geometry.test.cjs tests/phone-life.test.cjs tests/world-atlas.test.cjs tests/metro-master-art.test.cjs tests/scene-environments.test.cjs tests/scene-geometry.test.cjs
+      - name: Verify daytime state rules, all places and return journeys
+        run: node --test tests/daily-life.test.cjs tests/metro-graph.test.cjs tests/metro-map-geometry.test.cjs tests/phone-life.test.cjs tests/world-atlas.test.cjs tests/destination-network.test.cjs tests/metro-master-art.test.cjs tests/scene-environments.test.cjs tests/scene-geometry.test.cjs
       - name: Capture original dot-matrix city stations, real cabin and subway arrival
         run: node tests/transit-map-browser.mjs
       - name: Capture ten-city zoomable atlas, landscape controls and location photographs
