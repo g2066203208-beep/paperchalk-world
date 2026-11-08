@@ -6,14 +6,14 @@ const scene=r.layout('outer'),hero=scene.allies[0],base=r.camera('outer');
 const before=JSON.stringify(scene);
 assert.ok(scene.enemies.every(a=>a.y===0&&a.z===6.80));
 assert.ok(Math.abs(scene.enemies[3].x-scene.enemies[0].x-3.84)<.001);
-assert.ok(scene.allies.slice(1).every(a=>a.z>=8.2&&a.z<=9.35),
+assert.ok(scene.allies.slice(1).every(a=>a.z>=8.25&&a.z<=9.35),
  'all three teammates belong to the near-side player zone');
 assert.ok(Math.min(...scene.allies.map(a=>a.z))-
- Math.max(...scene.enemies.map(a=>a.z))>=1.39,
+ Math.max(...scene.enemies.map(a=>a.z))>=1.44,
  'there must be a genuine physical empty battle lane between allied and enemy halves');
 assert.deepEqual(scene.allies.slice(1).map(a=>[a.x,a.z]),
- [[-1.50,9.34],[-.55,8.50],[2.10,8.20]],
- 'all three teammates must stay on the near side in a left/shoulder/right echelon');
+ [[-1.35,9.34],[-.75,8.50],[-1.05,8.25]],
+ 'all three teammates must cluster beside heroine in successive near-side depths');
 const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
  'enemy-2':{left:.32,right:.69,top:0,bottom:1},
  'enemy-3':{left:.30,right:.76,top:0,bottom:1},
@@ -29,6 +29,8 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
   'allies must read as NEAR-SIDE world-space bodies larger than distant foes');
  const squadUv={left:.25,right:.75,top:.02,bottom:1};
  const squadSilhouettes=scene.allies.slice(1).map(a=>r.portraitVisibleBounds(a,cam,squadUv,aspect));
+ assert.ok(scene.allies.slice(1).every(a=>a.x>=-1.5&&a.x<=-.65),
+  'all teammates occupy the heroine physical cluster, never the right enemy wing');
  if(aspect===1917/906)assert.ok(squadSilhouettes.every(b=>b.right>-.99&&b.left<.96),
   'all three teammates must appear within the default landscape camera');
  assert.ok(allies.every(a=>a.valid),'three allies must use the same camera and ground geometry');
