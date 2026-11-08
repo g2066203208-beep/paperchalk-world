@@ -51,7 +51,7 @@ async function chooseCase(id){
  },id);
 }
 try{
- await page.goto(base+(base.includes('?')?'&':'?')+'cityBuilder=1',{waitUntil:'domcontentloaded',timeout:70000});
+ await page.goto(base+(base.includes('?')?'&':'?')+'cityBuilder=1&mapLayers=full',{waitUntil:'domcontentloaded',timeout:70000});
  await page.locator('#menu-start').click();
  await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom');
  await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false');
