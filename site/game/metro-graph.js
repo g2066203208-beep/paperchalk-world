@@ -10,7 +10,7 @@
 const GRID=Object.freeze({columns:36,rows:26});
 // Existing story locations retain their save-game station IDs and the same
 // two originally playable service names/directions. The new city grid has
-// room for 170 independently located platforms instead of eight giant pins.
+// room for curated stops, not 170 redundant station handles.
 const BASE_STATIONS={
  entrance:{label:'住宅前',gx:6,gy:10},
  school:{label:'学园前',gx:11,gy:10},
@@ -100,6 +100,70 @@ for(const corridor of CORRIDORS){
  allLineRows.push({id:corridor.id,name:corridor.name,color:corridor.color,
   stops,ring:false});
 }
+
+/* Gameplay-first subway stop plan. The 36×26 dots are drawing lattice
+ * nodes, NOT 170 physical stations. Curated 70 meaningful accessible stops
+ * retain all original interchanges, eight story IDs, metro termini and
+ * the authentic authored 90-degree turns between remaining stations. */
+const CURATED_LINE_STOPS=Object.freeze({"a":["entrance","school","central","convenience"],"b":["central","cafe","park","mall","convenience","northgate"],"c":["kh-c-01","kh-c-03","northgate","kh-c-07","central","kh-c-11","kh-c-13","kh-c-15","kh-c-18","kh-c-20","kh-c-22"],"d":["kh-d-01","kh-d-03","kh-d-05","kh-d-08","kh-c-07","kh-d-13","kh-d-15","kh-d-17","kh-d-20","kh-d-23"],"e":["kh-e-01","kh-e-04","kh-e-06","kh-d-05","entrance","kh-e-13","cafe","kh-e-17","kh-e-19","kh-e-23"],"f":["kh-f-01","kh-f-03","kh-f-05","kh-d-17","kh-f-10","kh-f-12","kh-f-15","kh-f-18","kh-f-22","kh-f-23"],"g":["kh-g-01","kh-g-03","kh-e-04","kh-g-08","kh-g-10","kh-c-03","kh-g-14","kh-g-16","kh-f-03","kh-g-23"],"h":["kh-h-01","kh-e-19","kh-h-07","kh-h-10","kh-c-18","kh-h-13","kh-h-15","kh-h-17","kh-f-18","kh-h-22"],"i":["kh-i-01","kh-i-03","kh-e-13","kh-i-08","kh-i-10","kh-i-12","kh-i-15","kh-h-10","kh-i-21","kh-i-23"],"j":["kh-j-01","kh-j-03","kh-i-23","kh-c-22","kh-j-11","kh-j-13","kh-f-22","kh-j-18","kh-j-21"]});
+const ORIGINAL_LINES=allLineRows.map(l=>({...l,stops:l.stops.slice()}));
+const ORIGINAL_STOP_COUNT=Object.keys(stationRows).length;
+const authoredBaseBends={
+ 'b:central:cafe':[[15,12],[6,12]],
+ 'b:convenience:northgate':[[22,10],[22,5]]
+};
+const AUTHORED_ROUTE_BENDS={};
+const point=id=>[stationRows[id].gx,stationRows[id].gy];
+function originalBends(lineId,from,to){
+ const special=authoredBaseBends[lineId+':'+from+':'+to];
+ if(special)return special.map(p=>p.slice());
+ const a=stationRows[from],b=stationRows[to];
+ return a.gx!==b.gx&&a.gy!==b.gy?[[b.gx,a.gy]]:[];
+}
+function simplifiedCorners(points){
+ const clean=[];
+ for(const p of points){
+  if(clean.length&&clean.at(-1)[0]===p[0]&&clean.at(-1)[1]===p[1])continue;
+  while(clean.length>=2){
+   const a=clean.at(-2),b=clean.at(-1);
+   if((a[0]===b[0]&&b[0]===p[0])||
+      (a[1]===b[1]&&b[1]===p[1]))clean.pop();
+   else break;
+  }
+  clean.push(p);
+ }
+ return clean;
+}
+for(const line of ORIGINAL_LINES){
+ const stops=CURATED_LINE_STOPS[line.id];
+ if(!stops||new Set(stops).size!==stops.length||
+    !stops.every(id=>line.stops.includes(id))||
+    stops[0]!==line.stops[0]||stops.at(-1)!==line.stops.at(-1))
+   throw Error('Curated line invalid: '+line.id);
+ for(let i=0;i<stops.length-1;i++){
+  const from=stops[i],to=stops[i+1];
+  const first=line.stops.indexOf(from),last=line.stops.indexOf(to);
+  if(first>=last)throw Error('Metro route order reversed '+line.id);
+  const points=[point(from)];
+  for(let k=first;k<last;k++){
+   const next=line.stops[k+1];
+   points.push(...originalBends(line.id,line.stops[k],next),point(next));
+  }
+  AUTHORED_ROUTE_BENDS[line.id+':'+from+':'+to]=simplifiedCorners(points).slice(1,-1);
+ }
+ if(line.ring){
+  const from=stops.at(-1),to=stops[0];
+  AUTHORED_ROUTE_BENDS[line.id+':'+from+':'+to]=originalBends(line.id,from,to);
+ }
+ line.stops=stops.slice();
+}
+allLineRows.splice(0,allLineRows.length,...ORIGINAL_LINES);
+const curatedIds=new Set(allLineRows.flatMap(l=>l.stops));
+for(const id of Object.keys(stationRows)){
+ if(!curatedIds.has(id))delete stationRows[id];
+}
+if(ORIGINAL_STOP_COUNT!==170||curatedIds.size!==70)
+ throw Error('Subway must retain exactly 70 playable stations (was 170)');
 const servedBy=new Map();
 for(const line of allLineRows){
  if(new Set(line.stops).size!==line.stops.length)throw Error('Repeated station on line '+line.id);
@@ -118,13 +182,13 @@ let STATIONS=Object.freeze(Object.fromEntries(Object.entries(GRID_STATIONS)
   y:station.gy/GRID.rows*100})])));
 let LINES=Object.freeze(allLineRows.map(line=>Object.freeze({...line,
  stops:Object.freeze(line.stops.slice())})));
-if(LINES.length!==10||Object.keys(STATIONS).length!==170)
- throw Error('Kirihama metro plan must contain exactly 10 lines and 170 physical stations');
+if(LINES.length!==10||Object.keys(STATIONS).length!==70)
+ throw Error('Kirihama metro now has ten lines and 70 distinct stations');
 // Once a personally-edited blueprint has been explicitly SAVED, this same
 // graph becomes its playable source after a reload. No separate fake SVG-only
 // rail map: local station coordinates, stop order and real train directions
 // are installed together BEFORE daily-life, destination network or UI load.
-// Invalid/corrupt layouts are rejected, leaving the 170-stop GitHub baseline.
+// Invalid/corrupt layouts are rejected, leaving the 70-stop GitHub baseline.
 let ACTIVE_BLUEPRINT=null;
 try{
  const editor=global.PaperWorldMetroMapEditor;
@@ -236,6 +300,6 @@ function conversation(snapshot,route){
  ];
 }
 global.PaperWorldMetro=Object.freeze({
- GRID,STATIONS,LINES,ACTIVE_BLUEPRINT,getLine,neighbors,nextStop,boardingChoices,path,conversation
+ GRID,STATIONS,LINES,AUTHORED_ROUTE_BENDS:Object.freeze(AUTHORED_ROUTE_BENDS),ACTIVE_BLUEPRINT,getLine,neighbors,nextStop,boardingChoices,path,conversation
 });
 })(window);
