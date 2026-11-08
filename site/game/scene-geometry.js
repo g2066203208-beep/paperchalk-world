@@ -43,7 +43,9 @@
   // tiles. UVs 0..1 also avoid texture-edge discontinuities at each repeat.
   for(const [kind,y,tile] of [['floor',0,1.2],['ceiling',g.height,1.9]]){
    const data=[];
-   grid(data,48,28,(u,v)=>{
+   // Sub-metre tessellation for analytic lights; half the vertex cost of
+   // previous 48x28 quads without affecting flat art or world dimensions.
+   grid(data,g.shape==='strip'?32:48,g.shape==='strip'?20:28,(u,v)=>{
     const floor=kind==='floor'&&g.shape==='strip';
     const px=floor?(u-.5)*(g.width+underlap*2):x(u);
     const pz=floor?g.backZ-underlap+v*(g.depth+underlap*2):z(v);
@@ -55,17 +57,18 @@
   // The author-provided 2048x1024 picture is ONE continuous wall. Never
   // tile a second train door, or curve it as though it were a shop facade.
   const wall=[];
-  grid(wall,64,12,(u,v)=>[x(u),g.height*v,g.backZ,.001+u*.998,v]);
+  grid(wall,g.shape==='strip'?48:64,10,(u,v)=>[x(u),g.height*v,g.backZ,.001+u*.998,v]);
   out.backInner=wall;out.backOuter=wall.slice();
   // Physical outside beyond the pierced window apertures, rendered first
   // into the same depth buffer. This is a genuine separate 3D backdrop.
-  grid(out.exterior,64,12,(u,v)=>[x(u),g.height*v,g.backZ-.16,u,v]);
+  // Flat backdrop needs only one quad per ~27cm; motion is GPU UV-based.
+  grid(out.exterior,32,8,(u,v)=>[x(u),g.height*v,g.backZ-.16,u,v]);
   // True perpendicular end walls looking into the NEXT carriage.
   // The gangway texture is continuous from back to front and has its own
   // color texture; never stretch the side-wall's first and last columns.
   const wings=[];
   for(const side of [-1,1])
-   grid(wings,28,12,(u,v)=>[
+   grid(wings,20,10,(u,v)=>[
     side*g.width/2,g.height*v,z(u),side<0?u:1-u,v
    ]);
   out.wingOuter=wings;out.wingInner=wings.slice();
