@@ -28,6 +28,9 @@ def check():
         digest = hashlib.sha256(blob).hexdigest()
         if digest != source["sha256"]:
             errors.append(f"{name}: SHA-256 mismatch: {digest}")
+        git_sha = hashlib.sha1(b"blob " + str(len(blob)).encode("ascii") + b"\\x00" + blob).hexdigest()
+        if git_sha != source.get("gitBlobSha"):
+            errors.append(f"{name}: Git blob SHA mismatch: {git_sha}")
         if source.get("bytes") is not None and len(blob) != source["bytes"]:
             errors.append(f"{name}: wrong byte count")
         if len(blob) < 26 or not blob.startswith(PNG_SIGNATURE):
