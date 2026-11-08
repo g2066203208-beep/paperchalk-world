@@ -44,27 +44,37 @@ try{
   await page.waitForFunction(index=>{
    const s=window.PaperWorldGameRingArena?.inspect();
    return s?.controlledAllyIndex===index-1&&s?.cameraParity===true&&
+    s?.stagePresentation==='world-space-foreground-handoff'&&
+    s?.stageTransitionProgress>=.999&&
     Math.abs(s.cameraLook?.yawDeg||0)<1.2;
   },slot,{timeout:16000});
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(100);
   const data=await page.evaluate(()=>{
    const game=window.PaperWorldGameRingArena.inspect();
    const ring=window.PaperWorldRingArena;
-   const enemyRects=game.actors.enemies.map(a=>
+   const visible=game.presentationActors;
+   const enemyRects=visible.filter(a=>a.team==='enemy').map(a=>
     ring.portraitVisibleBounds(a,game.camera,
      {left:.30,right:.69,top:0,bottom:1},game.projectionAspect));
-   const squadRects=game.actors.allies.map(a=>
+   const squadRects=visible.filter(a=>a.team==='ally').map(a=>
     ring.portraitVisibleBounds(a,game.camera,
      ring.FEMALE07_BACK_UV,game.projectionAspect));
    return {
     active:game.controlledActorId,actorIds:game.visibleActorIds,
     opacity:game.renderedActorOpacity,camera:game.camera,enemyRects,squadRects,
+    worldActors:game.presentationActors,staging:game.stagePresentation,
     friendlyX:game.partyLine.map(a=>a.x),enemyX:game.opposingLine.map(a=>a.x)
    };
   });
   assert.deepEqual(data.friendlyX,[-1.05,-.25,.55,1.35]);
   assert.deepEqual(data.enemyX,data.friendlyX,'true paired X lanes');
   assert.equal(data.actorIds.length,8);
+  assert.equal(data.staging,'world-space-foreground-handoff');
+  const foreground=data.worldActors.find(a=>a.id===data.active);
+  assert.ok(Math.abs(foreground.x+1.05)<.001&&Math.abs(foreground.z-9.30)<.001,
+   'the controlled actor enters the genuine foreground instead of moving the camera');
+  assert.deepEqual(data.camera.eye,{x:-.28,y:1.5,z:10.4},
+   'the approved New Moon camera eye must remain pixel-accurate');
   assert.equal(data.camera.fov,66,'never alter the approved 66 degree lens');
   assert.equal(data.camera.eye.y,1.5,'never raise the approved camera');
   assert.equal(data.camera.focus.y,1.5,'never tilt the approved eye-level camera');
@@ -80,7 +90,7 @@ try{
  await page.locator('[data-control-ally="1"]').click();
  await page.mouse.move(640,360);
  await page.setViewportSize({width:1917,height:906});
- await page.waitForTimeout(350);
+ await page.waitForTimeout(800);
  await page.screenshot({path:resolve(out,'V31-woman7-four-enemies-ground-aligned-1917x906.png'),
   animations:'disabled'});
  assert.deepEqual(errors,[],'WebGL battle JavaScript errors');
@@ -88,7 +98,7 @@ try{
   source:'ACTUAL in-game Chromium/WebGL; no illustrations, mocks, or faked poses',
   commit:process.env.GITHUB_SHA||null,entries
  },null,2));
- console.log('PASS: 5 authentic WebGL captures; all eight actors fully drawn in four aligned viewpoints');
+ console.log('PASS: 5 authentic WebGL captures; 4 role handoffs, true 3D spectators and locked 66-degree hero camera');
 }finally{
  await browser?.close();
  await new Promise(resolveClosed=>server.close(resolveClosed));
