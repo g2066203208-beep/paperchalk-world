@@ -1160,11 +1160,12 @@
 #pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place.is-station .pw-transit-station-dot{
  display:none;
 }
+/* In overview, images are still LARGE and tied to physical city hubs. */
 #pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city .pw-transit-photo{
- display:none!important;
+ display:block!important;min-height:82px!important;
 }
 #novel-ui #pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city{
- width:122px!important;min-width:122px!important;max-width:122px!important;
+ width:146px!important;min-width:146px!important;max-width:146px!important;
 }
 #pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city .pw-transit-place-name{
  border-top:1px solid #8daea591!important;border-radius:4px!important;
@@ -1199,5 +1200,14 @@
  #pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-place-name,
  #pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place-name{
   font-size:13px!important;min-height:23px;
+ }
+}
+
+@container(max-height:430px){
+ #novel-ui #pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city{
+  width:128px!important;min-width:128px!important;max-width:128px!important;
+ }
+ #pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city .pw-transit-photo{
+  min-height:70px!important;
  }
 }
