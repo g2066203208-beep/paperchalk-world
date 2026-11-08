@@ -2193,8 +2193,9 @@
    // oversized heroine-centric battle shoulder closeup.
    const scenePack=window.PaperWorldEnvironments?.get?.(environmentId);
    const lensPreset=scenePack?.camera;
-   const cameraBase=allyViewCamera(base,layout(mode).allies[0],controlledActor(),0,0,
-    canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
+   const cameraBase=controlledActorId==='hero'?base:
+    allyViewCamera(base,layout(mode).allies[0],controlledActor(),0,0,
+     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
    const regular=target?director.cinematicCamera(cameraBase,attack,attackSample,target):
     allyViewCamera(base,layout(mode).allies[0],controlledActor(),mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
@@ -2529,15 +2530,12 @@
    partyLine:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
    renderedActorOpacity:{...renderedActorOpacity},
    opposingLine:layout(mode).enemies.map(a=>({id:a.id,x:a.x,z:a.z})),
-   cameraTarget:allyViewCamera(camera(mode,0),layout(mode).allies[0],controlledActor(),0,0,
-    canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
+   cameraTarget:controlledActorId==='hero'?camera(mode,shotIndex):
+    allyViewCamera(camera(mode,0),layout(mode).allies[0],controlledActor(),0,0,
+     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
-   settled:!!lens&&Math.hypot(
-     lens.eye.x-allyViewCamera(camera(mode,0),layout(mode).allies[0],
-      controlledActor(),0,0,canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9).eye.x,
-     lens.eye.z-allyViewCamera(camera(mode,0),layout(mode).allies[0],
-      controlledActor(),0,0,canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9).eye.z)<.001,
-    actors:layout(mode),
+   settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,0).eye.x,
+     lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
    sideWalls:{vertices:(mode==='outer'?wingOuter:wingInner)?.count||0,
      kind:'real-textured-end-wall-mesh',closedSides:2,
      physicalDepth:16.5},
