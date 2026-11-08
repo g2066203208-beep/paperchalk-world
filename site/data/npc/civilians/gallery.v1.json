@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "name": "普通路人 NPC — 独立三视图素材集合",
+  "separateFrom": [
+    "site/data/npc/metro-character-gallery.v1.json",
+    "site/data/characters/registry.json"
+  ],
+  "indexPolicy": "仅对图像源建立记录，不触发游戏注册；必须完成二进制原图提交、透明化、脚底锚点与游戏QA才能上线",
+  "assetImportZip": "npc-civilians-source-images-20261108.zip",
+  "assetBundleStatus": "created_in_conversation_not_committed_to_GitHub",
+  "sourceFilenameConvention": "site/assets/characters/civilians/{slug}/three-view-original.png",
+  "actualSourceOrder": [
+    "side_left",
+    "front",
+    "back"
+  ],
+  "animaTemplateOrder": [
+    "front",
+    "side_left",
+    "back"
+  ],
+  "sourcePixels": [
+    1024,
+    1024
+  ],
+  "sourceFormat": "RGB PNG white background",
+  "approvalScope": "user provided actual reference images; no alpha, individual state image, or game runtime approval asserted",
+  "characters": [
+    {
+      "id": "NPC-C001",
+      "slug": "npc-c001",
+      "label": "男性上班族",
+      "role": "office_worker",
+      "visualCanon": {
+        "ageGroup": "adult",
+        "outfit": "灰色西装、白衬衫、藏蓝领带、黑皮鞋"
+      },
+      "source": {
+        "path": "site/assets/characters/civilians/npc-c001/three-view-original.png",
+        "sha256": "a98113e0612058b9d8fccfee28c9f88223be4f8de4c90e8fe938dc0cbb718ba5",
+        "bytes": 678018,
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "mode": "RGB",
+        "actualImageLeftToRight": [
+          "side_left",
+          "front",
+          "back"
+        ],
+        "committedToRepository": false
+      },
+      "promptReference": "docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md",
+      "states": {
+        "communicate": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "rest": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "death": {
+          "status": "not_drawn",
+          "path": null
+        }
+      },
+      "production": {
+        "registeredForGame": false,
+        "gameApproved": false,
+        "hasRealAlpha": false,
+        "heightMeters": null,
+        "staging": "source image prepared in downloadable bundle, pending actual GitHub binary upload"
+      }
+    },
+    {
+      "id": "NPC-C002",
+      "slug": "npc-c002",
+      "label": "年轻女性通勤者",
+      "role": "commuter_woman",
+      "visualCanon": {
+        "ageGroup": "young_adult",
+        "outfit": "浅米色开衫、灰蓝上衣、深蓝长裤、白鞋"
+      },
+      "source": {
+        "path": "site/assets/characters/civilians/npc-c002/three-view-original.png",
+        "sha256": "a319c5ebc3e9b236010a1c31b2bccfb1f7e96668eaa3211b3b35bfde17cb2291",
+        "bytes": 733253,
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "mode": "RGB",
+        "actualImageLeftToRight": [
+          "side_left",
+          "front",
+          "back"
+        ],
+        "committedToRepository": false
+      },
+      "promptReference": "docs/NPC-M002_ANIMA_THREE_VIEW_LEFT_CENTER_RIGHT_20261108.md",
+      "states": {
+        "communicate": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "rest": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "death": {
+          "status": "not_drawn",
+          "path": null
+        }
+      },
+      "production": {
+        "registeredForGame": false,
+        "gameApproved": false,
+        "hasRealAlpha": false,
+        "heightMeters": null,
+        "staging": "source image prepared in downloadable bundle, pending actual GitHub binary upload"
+      }
+    },
+    {
+      "id": "NPC-C003",
+      "slug": "npc-c003",
+      "label": "年长女性乘客",
+      "role": "elderly_commuter_woman",
+      "visualCanon": {
+        "ageGroup": "elderly",
+        "outfit": "深灰针织开衫、米色上衣、深灰长裤、深棕便鞋"
+      },
+      "source": {
+        "path": "site/assets/characters/civilians/npc-c003/three-view-original.png",
+        "sha256": "7037e692d122e8022140320a4e5f4e430c134da6aac26f3852d6410a4acfeade",
+        "bytes": 636544,
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "mode": "RGB",
+        "actualImageLeftToRight": [
+          "side_left",
+          "front",
+          "back"
+        ],
+        "committedToRepository": false
+      },
+      "promptReference": null,
+      "states": {
+        "communicate": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "rest": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "death": {
+          "status": "not_drawn",
+          "path": null
+        }
+      },
+      "production": {
+        "registeredForGame": false,
+        "gameApproved": false,
+        "hasRealAlpha": false,
+        "heightMeters": null,
+        "staging": "source image prepared in downloadable bundle, pending actual GitHub binary upload"
+      }
+    }
+  ],
+  "planned": [
+    {
+      "id": "NPC-C004",
+      "label": "年轻街头男性",
+      "visualCanon": "深绿连帽卫衣、卡其工装裤、黑白运动鞋",
+      "status": "prompt_only_no_image"
+    }
+  ]
+}
