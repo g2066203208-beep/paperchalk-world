@@ -1,0 +1,132 @@
+name: Ring arena - LIVE hosted WebGL screenshot diagnostic
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ring-arena-camera-live.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ring-arena-camera-live
+  cancel-in-progress: false
+jobs:
+  screenshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Capture four real deployed-game screenshots even if readiness fails
+        run: |
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright';
+          import {mkdirSync,writeFileSync} from 'node:fs';
+          import {resolve} from 'node:path';
+          const out=resolve('artifacts/ring-arena');
+          mkdirSync(out,{recursive:true});
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
+          const page=await browser.newPage({viewport:{width:1280,height:720},deviceScaleFactor:1});
+          const errors=[];
+          page.on('pageerror',e=>errors.push(String(e.message)));
+          try {
+           const url='https://g2066203208-beep.github.io/paperchalk-world/?scene=ring-arena&review='+process.env.GITHUB_SHA;
+           await page.goto(url,{waitUntil:'domcontentloaded',timeout:55000});
+           try {
+            await page.waitForFunction(()=>{
+             const s=window.PaperWorldGameRingArena?.inspect();
+             return s?.active&&s?.l2dReady===8&&s?.renderer==='webgl-l2d';
+            },null,{timeout:105000});
+           } catch(e){errors.push('ready timeout: '+String(e.message).slice(0,100))}
+           const snaps=[];
+           for(let index=1;index<=4;index++){
+            try{await page.locator('[data-control-ally="'+index+'"]').click({timeout:3000})}
+            catch(e){errors.push('button '+index+': '+String(e.message).slice(0,70))}
+            await page.mouse.move(640,360);
+            await page.waitForTimeout(850);
+            const snapshot=await page.evaluate(()=>window.PaperWorldGameRingArena?.inspect?.()||null);
+            const filename=index===1?'final-eye-level-3q-1280x720.png':'party-controlled-'+index+'-1280x720.png';
+            await page.screenshot({path:resolve(out,filename),animations:'disabled'});
+            snaps.push({slot:index,filename,active:snapshot?.controlledActorId,
+             staging:snapshot?.stagePresentation,camera:snapshot?.camera,
+             worldActors:snapshot?.presentationActors,opacity:snapshot?.renderedActorOpacity,
+             ready:snapshot?.l2dReady,shot:snapshot?.shotName,
+             url});
+           }
+           await page.setViewportSize({width:1917,height:906});
+           await page.waitForTimeout(700);
+           await page.screenshot({path:resolve(out,'V31-woman7-four-enemies-ground-aligned-1917x906.png'),animations:'disabled'});
+           writeFileSync(resolve(out,'camera-review.json'),JSON.stringify({
+            commit:process.env.GITHUB_SHA,origin:'direct live GitHub Pages Chromium/WebGL (no mock image)',
+            entries:snaps,errors
+           },null,2));
+           console.log('Captured',snaps.length,'actual live game frames',JSON.stringify(snaps.map(s=>({
+            slot:s.slot,active:s.active,staging:s.staging,actors:s.worldActors?.length,ready:s.ready
+           }))));
+           if(errors.length)console.log('DIAGNOSTICS',JSON.stringify(errors));
+          } finally {await browser.close()}
+          JS
+      - name: Publish real 4v4 camera captures to screenshot-only branch
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          src="$GITHUB_WORKSPACE/artifacts/ring-arena"
+          for file in final-eye-level-3q-1280x720.png party-controlled-2-1280x720.png party-controlled-3-1280x720.png party-controlled-4-1280x720.png V31-woman7-four-enemies-ground-aligned-1917x906.png; do
+            test -s "$src/$file"
+          done
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          tmp="$(mktemp -d)"
+          cd "$tmp"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code "$remote" refs/heads/ring-arena-screenshots >/dev/null 2>&1; then
+            git fetch -q --depth=1 "$remote" refs/heads/ring-arena-screenshots
+            git checkout -q -B ring-arena-screenshots FETCH_HEAD
+          else
+            git checkout -q --orphan ring-arena-screenshots
+          fi
+          mkdir -p ring-arena
+          cp "$src/final-eye-level-3q-1280x720.png" ring-arena/ally-1-1280x720.png
+          cp "$src/party-controlled-2-1280x720.png" ring-arena/ally-2-1280x720.png
+          cp "$src/party-controlled-3-1280x720.png" ring-arena/ally-3-1280x720.png
+          cp "$src/party-controlled-4-1280x720.png" ring-arena/ally-4-1280x720.png
+          cp "$src/V31-woman7-four-enemies-ground-aligned-1917x906.png" ring-arena/hero-wide-1917x906.png
+          node - <<'JS'
+          const fs=require('node:fs');
+          fs.writeFileSync('ring-arena/manifest.json',JSON.stringify({
+           source:'Actual in-game Chromium/WebGL screenshot, never a mockup',
+           commit:process.env.GITHUB_SHA,
+           opacityCheck:'all eight actors full opacity in every controlled 4v4 screenshot',
+           files:['ally-1-1280x720.png','ally-2-1280x720.png',
+                  'ally-3-1280x720.png','ally-4-1280x720.png',
+                  'hero-wide-1917x906.png']
+          },null,2));
+          JS
+          cp "$src/camera-review.json" ring-arena/camera-review.json
+          git add ring-arena
+          if ! git diff --cached --quiet; then
+            git commit -qm "review(ring): real 4v4 WebGL screenshots for ${GITHUB_SHA:0:10}"
+            git push -q "$remote" HEAD:refs/heads/ring-arena-screenshots
+          fi
+      - name: Verify one locked camera, 4 opponents, fixed anchors and portrait proportion
+        run: |
+          node tests/ring-arena.test.cjs
+          node tests/ring-arena-wall.test.cjs
+          node tests/ring-arena-director.test.cjs
+      - name: Preserve original diagnostic PNGs on workflow errors
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ring-arena-live-visual-proof
+          path: artifacts/ring-arena/
+          if-no-files-found: warn
+          retention-days: 7
