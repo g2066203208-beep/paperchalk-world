@@ -74,7 +74,7 @@
  });
  const heights=Object.freeze({
   hero:1.62,'ally-2':1.62,'ally-3':1.62,'ally-4':1.62,
-  'enemy-1':1.70,'enemy-2':1.70,'enemy-3':1.70,'enemy-4':1.70
+  'enemy-1':1.58,'enemy-2':1.58,'enemy-3':1.58,'enemy-4':1.58
  });
  const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
  const cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});

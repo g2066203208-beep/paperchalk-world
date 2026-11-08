@@ -18,8 +18,8 @@ for(let i=0;i<4;i++)for(let j=i+1;j<4;j++)
  assert.ok(Math.hypot(scene.allies[i].x-scene.allies[j].x,
  scene.allies[i].z-scene.allies[j].z)>.7,
  'separate teammates physically in 3D: '+i+','+j);
-assert.ok(scene.enemies.every(e=>e.height===1.70),
- 'mild, consistent opponent art-size correction, no changed camera');
+assert.ok(scene.enemies.every(e=>e.height===1.58),
+ 'restore original four-on-four enemy scale without changing the camera');
 assert.deepEqual(ring.HIDDEN_ALLY_IDS,[]);
 assert.deepEqual(ring.visibleActors('outer').map(a=>a.id),
  ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
