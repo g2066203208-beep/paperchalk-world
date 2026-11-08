@@ -27,8 +27,17 @@ try{
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
-    // Phone must own RIGHT ONLY: first hide dialogue so there is no
-    // independent, legitimate bottom subtitle smoke.
+    // Enter the ACTUAL game: the main-menu quick tools are intentionally hidden.
+    await page.locator('#menu-start').click();
+    await page.waitForFunction(()=>
+      document.querySelector('#scene')?.dataset.scene==='bedroom'&&
+      document.querySelector('#scene-transition')?.dataset.active==='false',null,{timeout:20000});
+    const wakingLines=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
+    for(let i=0;i<wakingLines;i++)await page.locator('#next-line').click();
+    await page.waitForFunction(()=>window.PaperWorldQuickTools?.phone?.isOpen?.());
+    await page.locator('#scene').click({position:{x:25,y:25}});
+    await page.waitForFunction(()=>!window.PaperWorldQuickTools.phone.isOpen());
+    // Phone must own RIGHT ONLY: hide dialogue using real game menu.
     await page.locator('#menu-toggle').click();
     await page.locator('#hide-button').click();
     assert.equal(await page.locator('#dialogue').isVisible(),false);
