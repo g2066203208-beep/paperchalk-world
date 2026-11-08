@@ -1,0 +1,90 @@
+/* The playable ten-tick planner belongs to the existing 3D WebGL encounter. */
+#ring-arena-controls .ring-timegrid{position:absolute;inset:auto 10px 8px 10px;z-index:9;
+ color:#edece7;background:#071016ed;border:1px solid #82979b5a;border-radius:12px;
+ box-shadow:0 9px 45px #000b;max-height:48vh;pointer-events:auto;
+ display:flex;flex-direction:column;font:12px/1.35 system-ui,sans-serif}
+#ring-arena-controls .ring-timegrid button{font:inherit;cursor:pointer;touch-action:manipulation;color:inherit}
+#ring-arena-controls .ring-timegrid button:disabled{opacity:.48;cursor:default}
+#ring-arena-controls .ring-timegrid [hidden]{display:none!important}
+#ring-arena-controls .tg-head,.tg-tools,.tg-bottom{display:flex;align-items:center;gap:8px;padding:6px 10px}
+#ring-arena-controls .tg-head{border-bottom:1px solid #a5b1b526;min-height:29px}
+#ring-arena-controls .tg-head strong{font-size:13px;letter-spacing:.04em}
+#ring-arena-controls .tg-head [data-tg-phase]{margin-right:auto;opacity:.76;font-size:11px}
+#ring-arena-controls .tg-head button,#ring-arena-controls .tg-tools button,
+#ring-arena-controls .tg-bottom button{border:1px solid #a5bbb659;background:#1b2a30e8;border-radius:7px;padding:6px 9px;white-space:nowrap}
+#ring-arena-controls .tg-head button:hover,#ring-arena-controls .tg-tools button:hover{border-color:#c8e9d6}
+#ring-arena-controls .tg-tools{flex-wrap:wrap;border-bottom:1px solid #a5b1b51f}
+#ring-arena-controls .tg-tools [data-tg-role]{font-weight:700;white-space:nowrap;color:#d4efe4}
+#ring-arena-controls .tg-help{margin-right:auto;color:#b1c2c6}
+#ring-arena-controls .tg-tools .tg-execute{background:#315847!important;border-color:#85c5a1!important;font-weight:700!important}
+#ring-arena-controls .tg-rail{overflow:auto;overscroll-behavior:contain;max-height:23vh;padding:3px 8px 5px}
+#ring-arena-controls .tg-ticks,#ring-arena-controls .tg-row{display:grid;grid-template-columns:130px minmax(340px,1fr);min-width:520px}
+#ring-arena-controls .tg-ticks{color:#a4adb2;position:sticky;top:0;z-index:3;background:#071016}
+#ring-arena-controls .tg-ticks{grid-template-columns:130px repeat(10,minmax(34px,1fr));text-align:center}
+#ring-arena-controls .tg-ticks span{padding:3px 0}
+#ring-arena-controls .tg-ticks .active{color:#f9e4a9}
+#ring-arena-controls .tg-row{min-height:34px;align-items:stretch;border-bottom:1px solid #9ba8ae22}
+#ring-arena-controls .tg-row.current{background:#23443870}
+#ring-arena-controls .tg-row.dead{opacity:.48}
+#ring-arena-controls .tg-unit{padding:4px 7px;position:sticky;left:0;z-index:2;background:#0b151bee}
+#ring-arena-controls .tg-unit b{display:inline-block;font-size:11px;max-width:75px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+#ring-arena-controls .tg-hp{display:block;opacity:.75;font-size:10px}
+#ring-arena-controls .tg-hp-track{display:block;height:3px;background:#4c3038;position:relative;overflow:hidden;border-radius:4px}
+#ring-arena-controls .tg-hp-track i,#ring-arena-controls .tg-hp-track b{position:absolute;inset:0 auto 0 0}
+#ring-arena-controls .tg-hp-track i{background:#7b9baa}
+#ring-arena-controls .tg-hp-track b{background:#a3d2b9a8;opacity:.62}
+#ring-arena-controls .tg-row.enemy .tg-unit{border-left:2px solid #a96369}
+#ring-arena-controls .tg-row.ally .tg-unit{border-left:2px solid #589a82}
+#ring-arena-controls .tg-track{display:grid;grid-template-columns:repeat(10,minmax(34px,1fr));position:relative}
+#ring-arena-controls .tg-cell{height:31px;background:transparent!important;border:1px solid #7d90952b!important;border-radius:0!important;min-width:0!important}
+#ring-arena-controls .tg-cell:hover:not(:disabled){background:#b6d4cc1c!important}
+#ring-arena-controls .tg-bands{pointer-events:none;position:absolute;inset:2px 1px;overflow:hidden}
+#ring-arena-controls .tg-band{pointer-events:auto;position:absolute;height:25px;top:0;display:block;border:1px solid #e2eeef75!important;
+ border-radius:4px!important;overflow:hidden;padding:0 2px!important;white-space:nowrap;text-align:center;
+ font-size:10px!important;text-shadow:0 1px 3px #000;isolation:isolate}
+#ring-arena-controls .tg-band span{position:relative;z-index:2;overflow:hidden;text-overflow:ellipsis;display:block}
+#ring-arena-controls .tg-band .tg-segment{position:absolute;top:0;bottom:0;display:block;z-index:-1}
+#ring-arena-controls .tg-segment.windup{background:#9eb3ad65}
+#ring-arena-controls .tg-segment.active{background:#c55c6ebb}
+#ring-arena-controls .tg-segment.recovery{background:#703f50c8}
+#ring-arena-controls .tg-type-defense .tg-segment.active{background:#4d8bb2d8}
+#ring-arena-controls .tg-type-skill .tg-segment.active{background:#3b9e94d8}
+#ring-arena-controls .tg-type-power .tg-segment.active{background:#8666b0d8}
+#ring-arena-controls .tg-type-finisher .tg-segment.active{background:#c59c41e0}
+#ring-arena-controls .tg-band.locked{border-style:dashed!important}
+#ring-arena-controls .tg-band.selected{outline:2px solid #fff2b2;outline-offset:-2px}
+#ring-arena-controls .tg-hand-label{display:flex;justify-content:space-between;padding:5px 10px 0;color:#cadbd4}
+#ring-arena-controls .tg-hand-label span{opacity:.73;font-size:10px}
+#ring-arena-controls .tg-hand{display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;padding:6px 10px 8px;flex:0 0 auto}
+#ring-arena-controls .tg-card{min-width:133px;max-width:176px;min-height:51px;padding:7px 9px!important;display:flex;flex-direction:column;gap:4px;
+ text-align:left;background:#24252cd9!important;border:1px solid #91616b99!important;border-radius:7px!important}
+#ring-arena-controls .tg-card strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ring-arena-controls .tg-card small{font-size:10px;opacity:.76}
+#ring-arena-controls .tg-card.selected{border-color:#faf0c0!important;transform:translateY(-2px);background:#554449de!important}
+#ring-arena-controls .tg-card.tg-type-defense{border-color:#5180a6ab!important}
+#ring-arena-controls .tg-card.tg-type-skill{border-color:#4d9a85ab!important}
+#ring-arena-controls .tg-card.tg-type-power{border-color:#886eb9ab!important}
+#ring-arena-controls .tg-bottom{border-top:1px solid #a5b1b526;justify-content:space-between;color:#b4c3c2;font-size:11px}
+#ring-arena-controls .ring-timegrid.is-folded{left:auto;right:10px;bottom:8px;max-width:min(400px,90vw);max-height:none}
+#ring-arena-controls .ring-timegrid.is-folded [data-tg-body]{display:none}
+#ring-arena-controls .ring-timegrid.is-folded .tg-bottom{border-top:none}
+#ring-arena-controls .ring-timegrid [data-tg-hits]{position:fixed;inset:0;pointer-events:none}
+#ring-arena-controls .tg-float-hit{position:absolute;transform:translate(-50%,-50%);font-size:21px;font-weight:800;color:#ffe1bc;
+ text-shadow:0 2px 5px #230509,0 0 9px #e35939;animation:tg-float-hit .75s ease-out both}
+#ring-arena-controls .tg-float-hit.heal{color:#baf4ce;text-shadow:0 0 9px #2c9162}
+@keyframes tg-float-hit{from{opacity:0;transform:translate(-50%,-30%) scale(.9)}20%{opacity:1}
+ to{opacity:0;transform:translate(-50%,-175%) scale(1.15)}}
+#ring-arena-controls.timegrid-enabled .director-deck,
+#ring-arena-controls.timegrid-enabled .director-targets{display:none!important}
+#ring-arena-controls.timegrid-enabled .bottom{bottom:auto;top:10px;right:9px;left:auto}
+#ring-arena-controls.timegrid-enabled .party-switch{top:10px}
+#ring-arena-controls.timegrid-enabled .status{display:none!important}
+@media(max-width:700px){
+ #ring-arena-controls .ring-timegrid{max-height:54vh;inset:auto 4px 4px 4px;font-size:11px}
+ #ring-arena-controls .tg-head,.tg-tools,.tg-bottom{padding:4px 6px}
+ #ring-arena-controls .tg-rail{max-height:21vh}
+ #ring-arena-controls .tg-tools{gap:4px}
+ #ring-arena-controls .tg-tools button{padding:4px 6px}
+ #ring-arena-controls .tg-card{min-width:125px;min-height:46px}
+ #ring-arena-controls .ring-timegrid.is-folded{inset:auto 4px 4px auto}
+}
