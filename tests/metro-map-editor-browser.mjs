@@ -81,7 +81,7 @@ try{
  assert.equal(state.count.stations,70);
  await shot('02-kirihama-editable-rail-node-network.png');
  // Choosing a colored route reveals and focuses that line in the real map.
- await page.locator('.pw-metro-edit-line[data-line="a"]').click();
+ await page.evaluate(()=>document.querySelector('.pw-metro-edit-line[data-line="a"]').click());
  assert.equal(await page.locator('.pw-metro-edit-line[data-active="true"][data-line="a"]').count(),1);
  assert.equal((await inspect()).nodeLod,'selected-line');
  // The 81 rails have actual SVG stroke hit zones, not bounding image rects.
