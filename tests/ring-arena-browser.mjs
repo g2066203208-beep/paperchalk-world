@@ -52,6 +52,14 @@ try{
  assert.equal(outer.camera.focus.y,1.50);
  assert.equal(outer.lensShift,.23);
  assert.equal(outer.previewPose,'female7');
+ assert.equal(outer.uniformBattlePreview,true,'default 4v4 is uniform-source staging only');
+ const artIdentity=outer.actorTextureIdentities;
+ for(const id of ['ally-2','ally-3','ally-4'])
+  assert.equal(artIdentity[id],artIdentity.hero,'all four friendly actors must use IDENTICAL original heroine source');
+ for(const id of ['enemy-2','enemy-3','enemy-4'])
+  assert.equal(artIdentity[id],artIdentity['enemy-1'],'all four opponents must use ONE original L2D source');
+ assert.notEqual(artIdentity.hero,artIdentity['enemy-1'],
+  'friendly and enemy source art must stay visually distinct');
  assert.equal(outer.heroine.id,'female-07');
  assert.equal(outer.heroine.side,'back');
  assert.equal(outer.heroine.l2dMode,'static-back-battle-cutout');
