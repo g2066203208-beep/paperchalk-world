@@ -62,6 +62,12 @@ try{
  assert.equal(s.paths,7);
  assert.equal(s.active,'entrance');
  assert.equal(s.otherCityPins,0,'full city 120 pins must NOT appear in home-station tier');
+ assert.equal(await page.locator('.pw-home-neighborhood-aside').isVisible(),false,
+  'no huge obstructing sidebar in restored native-style dot map');
+ assert.equal(await page.locator('.pw-home-map-blocks rect').count(),0,
+  'never return to faux block buildings and thick roads');
+ assert.ok(await page.locator('.pw-home-map-dots circle').count()>100,
+  'street outlines and neighborhood must be physically separated light dots');
  assert.ok(s.labels.includes('家'),'a real home doorway must be shown');
  assert.ok(s.labels.includes('晨露家庭诊所'));
  assert.equal(await page.locator('.pw-home-neighborhood-station').innerText(),'住宅前站');
@@ -83,7 +89,10 @@ try{
  assert.equal(realCoords.homeY,realCoords.expectedY);
  assert.equal(realCoords.westLine,true);assert.equal(realCoords.homeLine,true);
  await shot('01-residential-home-station-square-dot-neighborhood-1600.png',true);
- await page.locator('.pw-home-neighborhood-list-item[data-place="khp-residential-03"]').click();
+ await page.evaluate(()=>{
+  document.querySelector('.pw-home-place-marker[data-place="khp-residential-03"]').dispatchEvent(
+   new MouseEvent('click',{bubbles:true}));
+ });
  assert.equal((await state()).active,'khp-residential-03');
  assert.match(await page.locator('.pw-home-neighborhood-selected-meta').innerText(),/593/);
  assert.equal(await page.locator('.pw-home-neighborhood-travel').isVisible(),false);
