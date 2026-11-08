@@ -463,7 +463,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(activeCity===null)regionalCamera={scale,x,y};
   activeCity=id;drag=null;pinch=null;fingers.clear();clear();
   // Always frame the COMPLETE selected city's real physical tracks.
-  // A metropolis of 170 stations cannot use the old 8-stop zoom preset.
+  // A curated large-city network of 70 physical stops must fit without packed circles.
   fitSelectedCity();
  }
  function leaveCity(){
@@ -527,7 +527,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    node.style.left=(x+p.x*scale)+'px';
    node.style.top=(y+p.y*scale)+'px';
   }
-  // Hierarchical station rendering: preserve ALL 170 physical stop IDs,
+  // Hierarchical station rendering: preserve ALL 70 curated physical stop IDs,
   // but on the full-city overview show only key interchanges/landmarks.
   // Clicking a line reveals ITS stations; zooming reveals nearby small stops.
   // Hiding a marker never edits or disconnects the underlying subway graph.
