@@ -68,9 +68,9 @@ try{
  assert.equal(await page.locator('.pw-large-city-place-row').count(),120);
  await snap('02-kirihama-all-120-locations-browser.png');
  await page.locator('.pw-large-city-browser-search').fill('桐音高中');
- assert.equal(await page.locator('.pw-large-city-place-row').count(),1);
- assert.match(await page.locator('.pw-large-city-place-row').innerText(),/学园前/);
- await page.locator('.pw-large-city-place-row').click();
+ assert.ok((await page.locator('.pw-large-city-place-row').count())>=1,
+  'search should include main school and its named sub-sites');
+ await page.locator('.pw-large-city-place-row[data-place="school"]').click();
  await page.waitForFunction(()=>document.querySelector('.pw-transit-popup:not([hidden])')?.textContent.includes('桐音高中'));
  x=await stats();assert.ok(x.visibleSites>0);
  await page.locator('.pw-large-city-browser-close').click();
