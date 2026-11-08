@@ -94,17 +94,31 @@ try{
   for(let i=3;i<rgba.length;i+=4){
    if(rgba[i]>0){bright++;weighted=(weighted+(rgba[i]*(i%997)))%2147483647}
   }
+  const fogLayer=map.querySelector('.pw-dot-fog-surface');
+  const fogCtx=fogLayer.getContext('2d');
+  const samples=[[.18,.18],[.5,.18],[.82,.18],
+   [.18,.5],[.5,.5],[.82,.5],[.18,.82],[.5,.82],[.82,.82]]
+   .map(([u,v])=>{
+    const px=fogCtx.getImageData(Math.floor(fogLayer.width*u),
+     Math.floor(fogLayer.height*v),1,1).data;
+    return {r:px[0],g:px[1],b:px[2],a:px[3]};
+   });
   return {frames:+map.dataset.rippleFrames,bright,weighted,
    fog:map.dataset.fogSource,rings:+map.dataset.rippleCount,
    renderer:document.querySelector('#fog')?.dataset.renderer,
-   dotMode:map.dataset.dotAnimation};
+   dotMode:map.dataset.dotAnimation,coverage:map.dataset.fogCoverage,
+   style:map.dataset.rippleStyle,samples};
  });
  const beforeWave=await waveState();
  assert.ok(beforeWave.bright>100,'ripple dots must be painted in Canvas2D');
  assert.equal(beforeWave.dotMode,'fluid-ripples');
  assert.ok(beforeWave.rings>=1,'at least one expanding ring exists');
+ assert.equal(beforeWave.coverage,'full','fog must cover the whole map');
+ assert.equal(beforeWave.style,'subtle-slow');
+ assert.ok(beforeWave.samples.every(p=>p.a===255&&p.r<=22&&p.g<=22&&p.b<=22),
+  'entire map should be almost black with no grey opening: '+JSON.stringify(beforeWave.samples));
  await shot('00-original-game-empty-dot-canvas.png');
- await page.waitForTimeout(1100);
+ await page.waitForTimeout(4800);
  const afterWave=await waveState();
  assert.ok(afterWave.frames>beforeWave.frames,'water surface must update continuously');
  assert.notEqual(afterWave.weighted,beforeWave.weighted,
@@ -112,7 +126,7 @@ try{
  await shot('00b-original-game-black-fog-expanding-ripples.png');
  if(process.env.PAPERCHALK_RIPPLE_GIF_CAPTURE==='1'){
   for(let i=0;i<12;i++){
-   await page.waitForTimeout(180);
+   await page.waitForTimeout(700);
    await shot('ripple-frame-'+String(i).padStart(2,'0')+'.png');
   }
  }
