@@ -209,10 +209,10 @@ assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id,/,
 for(const mode of ['outer','inner']){
  const friends=ring.STAGING[mode].allies.map(([x])=>x);
  const foes=ring.STAGING[mode].enemies.map(([x])=>x);
- assert.deepEqual(friends,[-1.95,-.65,.65,1.95],
-  'four friends must keep a real straight one-rank formation');
+ assert.deepEqual(friends,[-1.05,-.25,.55,1.35],
+  'four friends keep a compact straight rank without moving the approved heroine');
  assert.deepEqual(foes,friends,'enemy rank must align to the exact four opposing lanes');
- for(let i=1;i<4;i++)assert.ok(Math.abs(friends[i]-friends[i-1]-1.30)<1e-7,
+ for(let i=1;i<4;i++)assert.ok(Math.abs(friends[i]-friends[i-1]-.80)<1e-7,
   'four equal separated lanes, no camera-driven layout offsets');
 }
 assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
