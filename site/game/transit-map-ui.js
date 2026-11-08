@@ -359,6 +359,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   node.dataset.current=String(here===id);node.dataset.station=id;
   node.dataset.stationOnly='true';node.dataset.transfer=String(!!station.transfer);
   node.dataset.labelSide=(station.gx+station.gy)%2?'north':'south';
+  node.dataset.keyStation=String(['entrance','school','central','convenience','cafe','park','mall','northgate'].includes(id));
   node.setAttribute('aria-label',name+'地铁站');
   stopButtons.set(id,node);
   node.dataset.gridColumn=station.gx;node.dataset.gridRow=station.gy;
@@ -516,6 +517,36 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   for(const {node,p} of anchored){
    node.style.left=(x+p.x*scale)+'px';
    node.style.top=(y+p.y*scale)+'px';
+  }
+  // 170 station buttons have independent click targets. Their text labels
+  // are dynamically decluttered in SCREEN space; full zoom shows all names.
+  // Never paint one opaque rectangular image or station-card per grid dot.
+  if(activeCity==='kirihama'){
+   const placed=[];
+   const entries=Object.entries(metro.STATIONS).map(([id,station])=>
+    ({id,station,node:stopButtons.get(id)}))
+    .filter(row=>!!row.node)
+    .sort((a,b)=>
+     Number(b.id===here)-Number(a.id===here)||
+     Number(b.station.transfer)-Number(a.station.transfer)||
+     Number(b.node.dataset.keyStation==='true')-Number(a.node.dataset.keyStation==='true')||
+     a.id.localeCompare(b.id));
+   for(const {id,station,node} of entries){
+    const px=x+(LOCAL_X+station.gx*CELL)*scale;
+    const py=y+(LOCAL_Y+station.gy*CELL)*scale;
+    const candidate=scale>=2||station.transfer||
+     node.dataset.keyStation==='true'||id===here;
+    const visible=candidate&&px>-100&&px<v.w+100&&py>-80&&py<v.h+80;
+    if(!visible){node.dataset.showLabel='false';continue}
+    const width=Math.min(136,Math.max(49,station.label.length*14+18));
+    const above=node.dataset.labelSide==='north';
+    const test={left:px-width*.5,right:px+width*.5,
+     top:py+(above?-42:18),bottom:py+(above?-14:46)};
+    const collided=placed.some(q=>test.left<q.right+7&&test.right>q.left-7&&
+      test.top<q.bottom+5&&test.bottom>q.top-5);
+    node.dataset.showLabel=String(!collided||scale>=2.65);
+    if(!collided)placed.push(test);
+   }
   }
   // Explicit map scope, NOT zoom: intercity vs one city's SUBWAY ONLY.
   const scoped=activeCity!==null,city=atlas.CITY_BY_ID[activeCity];
