@@ -241,7 +241,7 @@
     }
     paintedCity='';draw();
     if(dest.group==='城区'&&director){
-      global.setTimeout(()=>{if(mode)director.playLocation(station,engine.snapshot())},400);
+      global.setTimeout(()=>{if(mode)arriveStory(station)},400);
     }
   }
   async function boardMetro(lineId,direction){
@@ -353,6 +353,11 @@
           subtitle.textContent=global.PaperWorldAtlas?.CITY_BY_ID?.[worldPoi.city]?.name||'';
           cityArt.append(image,text,subtitle);
           city.dataset.worldScene='true';
+        }else if(s.location==='classmate-home'){
+          cityArt.innerHTML='<div class="pw-arc-house-scene" aria-hidden="true">'+
+            '<i class="pw-arc-house-ceiling"></i><i class="pw-arc-house-floor"></i>'+
+            '<i class="pw-arc-house-door"></i><i class="pw-arc-house-light"></i></div>';
+          city.dataset.worldScene='false';
         }else{
           cityArt.innerHTML=global.PaperWorldCityScenes?.markup?.(s.location,s.minute)||'';
           city.dataset.worldScene='false';
