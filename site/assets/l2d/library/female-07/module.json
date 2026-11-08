@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "id": "female-07",
+  "familyId": "female-07",
+  "label": "女七 · 原始PSD背面独立骨骼",
+  "variantCategory": "default",
+  "actions": [
+    "idle",
+    "alert"
+  ],
+  "views": {
+    "back": {
+      "portrait": "portrait-back.webp",
+      "rig": {
+        "type": "part-mesh",
+        "file": "back.part-rig.json",
+        "textures": {
+          "eyebrow": "parts/back/eyebrow.png",
+          "back_hair": "parts/back/back_hair.png",
+          "legwear_l": "parts/back/legwear_l.png",
+          "legwear_r": "parts/back/legwear_r.png",
+          "footwear_l": "parts/back/footwear_l.png",
+          "footwear_r": "parts/back/footwear_r.png",
+          "bottomwear": "parts/back/bottomwear.png",
+          "neck": "parts/back/neck.png",
+          "topwear": "parts/back/topwear.png",
+          "objects": "parts/back/objects.png",
+          "handwear_l": "parts/back/handwear_l.png",
+          "handwear_r": "parts/back/handwear_r.png",
+          "face": "parts/back/face.png",
+          "front_hair": "parts/back/front_hair.png"
+        }
+      }
+    }
+  }
+}
