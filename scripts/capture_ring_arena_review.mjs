@@ -62,9 +62,12 @@ try{
     friendlyX:game.partyLine.map(a=>a.x),enemyX:game.opposingLine.map(a=>a.x)
    };
   });
-  assert.deepEqual(data.friendlyX,[-1.95,-.65,.65,1.95]);
+  assert.deepEqual(data.friendlyX,[-1.05,-.25,.55,1.35]);
   assert.deepEqual(data.enemyX,data.friendlyX,'true paired X lanes');
   assert.equal(data.actorIds.length,8);
+  assert.equal(data.camera.fov,66,'never alter the approved 66 degree lens');
+  assert.equal(data.camera.eye.y,1.5,'never raise the approved camera');
+  assert.equal(data.camera.focus.y,1.5,'never tilt the approved eye-level camera');
   assert.deepEqual(Object.keys(data.opacity).sort(),data.actorIds.slice().sort());
   assert.ok(Object.values(data.opacity).every(n=>n===1),'a teammate was hidden');
   assert.ok(data.enemyRects.every(a=>a.valid&&a.left>-1&&a.right<1),
