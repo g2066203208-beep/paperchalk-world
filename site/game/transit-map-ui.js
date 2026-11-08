@@ -44,6 +44,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const currentCity=network.at(here)?.city||herePoi?.city||'kirihama';
  const hereCity=atlas.CITY_BY_ID[currentCity]||atlas.CITIES[0];
  const map=element('section','pw-transit-map pw-dot-world-map');
+ // Redesign stage zero: display the existing dot lattice and nothing else.
+ // The underlying transit graph, modules, places and editor are retained.
+ // ?mapLayers=full opt-in restores the full map for regression/QA.
+ const mapLayersFull=new URLSearchParams(global.location.search).get('mapLayers')==='full';
+ map.classList.toggle('pw-dot-empty-preview',!mapLayersFull);
+ map.dataset.presentation=mapLayersFull?'full':'dots-only';
  map.setAttribute('aria-label','分级交通地图：跨市交通总览及各市独立市内线路');
  map.dataset.scope='region';
  map.dataset.grid='50x32';
