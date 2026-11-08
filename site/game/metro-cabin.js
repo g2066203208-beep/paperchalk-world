@@ -53,14 +53,61 @@ function create({root,engine,onExit,onFeedback}){
  const anomaly=section.querySelector('.pw-cabin-anomaly');
  let raf=0,last=0,visible=false,auto=false,frame=0,anomalyEventSent=false;
  let regionalRide=null;
+ const motion=global.PaperWorldMetroMotion?.create?.()||null;
+ const journeyTime=global.PaperWorldMetroMotion?.DURATION_MS||6200;
+ let rideEpoch=0;
+ const delay=ms=>new Promise(resolve=>global.setTimeout(resolve,ms));
+ // Train's camera, floor, walls and actor positions never translate.
+ // Only the scenery OUTSIDE the glass is animated by travelled distance.
+ async function animateRailLeg(){
+  if(!visible)return false;
+  if(section.dataset.renderer!=='ring-3d'||!motion){
+   await delay(650);return visible;
+  }
+  if(motion.isMoving())return false;
+  const epoch=rideEpoch;
+  motion.begin(global.performance.now());
+  section.dataset.trainMoving='true';
+  section.dataset.travelPhase='departing';
+  actions.replaceChildren();
+  global.PaperWorldGameRingArena?.setTransitDynamics?.(motion.snapshot());
+  await delay(journeyTime+55);
+  if(!visible||epoch!==rideEpoch)return false;
+  const arrival=motion.snapshot(global.performance.now()+10);
+  global.PaperWorldGameRingArena?.setTransitDynamics?.(arrival);
+  section.dataset.trainMoving='false';
+  section.dataset.travelPhase='docked';
+  return true;
+ }
+ async function advanceOneStation(){
+  if(auto)return;
+  auto=true;
+  try{
+   if(!await animateRailLeg())return;
+   const result=engine.metroNext();
+   if(!result.ok){onFeedback?.(result.reason);return}
+   refresh();
+  }finally{auto=false}
+ }
  const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);return b};
  // A single FRONT-facing side-elevation canvas. Never project train depth
  // toward a vanishing point or transform an existing character portrait.
  function render(time){
   if(!visible||section.hidden)return;
   raf=requestAnimationFrame(render);
-  if(time-last<40)return;last=time;frame++;
-  if(section.dataset.renderer==='ring-3d')return;
+  const threeD=section.dataset.renderer==='ring-3d';
+  // One RAF owner. Stationary coach at 12fps, in-motion exterior at ~30fps.
+  const interval=threeD?(motion?.isMoving()?33:82):40;
+  if(time-last<interval)return;last=time;frame++;
+  if(threeD){
+   const stage=motion?.snapshot(time);
+   if(stage){
+    section.dataset.travelPhase=stage.phase;
+    global.PaperWorldGameRingArena?.setTransitDynamics?.(stage);
+   }
+   global.PaperWorldGameRingArena?.render?.(0);
+   return;
+  }
   const rect=canvas.getBoundingClientRect();
   const w=Math.max(280,Math.round(rect.width));
   const h=Math.max(130,Math.round(rect.height));
@@ -124,7 +171,8 @@ function create({root,engine,onExit,onFeedback}){
    clock.textContent=s.calendar.time;
    nextLabel.textContent=dest?.name||leg.to;
    anomaly.hidden=true;section.dataset.night='false';
-   if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.setPlatformExposure?.(.82);
+   if(section.dataset.renderer==='ring-3d'&&!motion?.isMoving())
+    global.PaperWorldGameRingArena?.setPlatformExposure?.(.82);
    actions.replaceChildren();
    return;
   }
@@ -154,33 +202,32 @@ function create({root,engine,onExit,onFeedback}){
     return;
   }
   section.dataset.night='false';
-  if(section.dataset.renderer==='ring-3d'){
-   // The train is stopped at a station: allow both platform light banks
-   // to enter through the authored glass and illuminate the physical floor.
+  if(section.dataset.renderer==='ring-3d'&&!motion?.isMoving()){
    global.PaperWorldGameRingArena?.setPlatformExposure?.(1);
    global.PaperWorldGameRingArena?.setLighting?.('on');
   }
   actions.replaceChildren();
   if(next)actions.append(btn('继续乘坐 · 下一站',()=>{
-    if(auto)return;
-    const result=engine.metroNext();
-    if(!result.ok){onFeedback?.(result.reason);return}
-    refresh();
+   advanceOneStation().catch(error=>{
+    auto=false;console.error('[Metro motion]',error);
+    onFeedback?.('列车运行异常，请重试');refresh();
+   });
   }));
   if(!next)actions.append(btn('终点站 · 请下车',()=>exit()));
   actions.append(btn('下车',()=>exit()));
   if(!line.ring&&next)actions.append(btn('坐到终点',async()=>{
     if(auto)return;auto=true;
+    try{
     for(let i=0;i<16;i++){
-      const state=engine.snapshot().metro;
-      if(!metro.nextStop(state.lineId,state.station,state.direction))break;
-      const result=engine.metroNext();
-
-      refresh();
-      if(result.anomaly||!result.ok)break;
-      await new Promise(resolve=>setTimeout(resolve,360));
+     const state=engine.snapshot().metro;
+     if(!metro.nextStop(state.lineId,state.station,state.direction))break;
+     if(!await animateRailLeg())break;
+     const result=engine.metroNext();
+     refresh();
+     if(result.anomaly||!result.ok)break;
+     await delay(450);
     }
-    auto=false;refresh();
+   }finally{auto=false;refresh()}
   }));
   if(line.ring)actions.append(btn('一直坐到22:00',()=>{
     if(auto)return;
@@ -211,6 +258,8 @@ function create({root,engine,onExit,onFeedback}){
   const ride=engine.snapshot().metro;
   if(!ride?.onboard)return false;
   visible=true;section.hidden=false;anomalyEventSent=false;
+  rideEpoch++;motion?.reset();
+  section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
   if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Metro L2D]',error));
@@ -218,7 +267,9 @@ function create({root,engine,onExit,onFeedback}){
   refresh();return true;
  }
  function close(){
-  visible=false;section.hidden=true;
+  visible=false;section.hidden=true;rideEpoch++;
+  motion?.reset();
+  section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.exitTransit?.();
   section.dataset.renderer='painted';
   if(raf)cancelAnimationFrame(raf);raf=0;
@@ -230,6 +281,8 @@ function create({root,engine,onExit,onFeedback}){
   if(visible||auto)return {ok:false,reason:'列车正在行驶'};
   regionalRide={legs:route.legs,index:0};
   visible=true;section.hidden=false;anomalyEventSent=false;auto=true;
+  rideEpoch++;motion?.reset();
+  section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
   if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Regional rail L2D]',error));
@@ -237,7 +290,8 @@ function create({root,engine,onExit,onFeedback}){
   try{
    for(let i=0;i<route.legs.length;i++){
     regionalRide.index=i;refresh();
-    await new Promise(resolve=>global.setTimeout(resolve,1600));
+    if(!await animateRailLeg())break;
+    await delay(600);
    }
    return {ok:true};
   }finally{
@@ -250,7 +304,8 @@ function create({root,engine,onExit,onFeedback}){
   if(!route?.segments?.length)return {ok:false,reason:'这段行程不需要地铁'};
   if(!engine.snapshot().metro?.onboard)return {ok:false,reason:'尚未登车'};
   if(auto)return {ok:false,reason:'列车正在行驶'};
-  open();auto=true;
+  if(!visible)open();
+  auto=true;
   try{
    for(const seg of route.segments){
     let ride=engine.snapshot().metro;
@@ -265,10 +320,7 @@ function create({root,engine,onExit,onFeedback}){
       refresh();
       await new Promise(resolve=>setTimeout(resolve,550));
     }
-    if(section.dataset.renderer==='ring-3d'){
-     global.PaperWorldGameRingArena?.setPlatformExposure?.(0);
-     await new Promise(resolve=>global.setTimeout(resolve,230));
-    }
+    if(!await animateRailLeg())return {ok:false,reason:'列车行程已取消'};
     const next=engine.metroNext();
     if(!next.ok)return next;
     refresh();
