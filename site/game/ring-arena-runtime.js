@@ -2112,7 +2112,7 @@
     gl.uniform1f(portrait.uBlur,.88*backgroundCue);
     const occludes=blocksTarget(a);
     if(occludes)occludingAllies.push(a.id);
-    gl.uniform1f(portrait.uOpacity,occludes?.14:1);
+    gl.uniform1f(portrait.uOpacity,occludes?.035:1);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
