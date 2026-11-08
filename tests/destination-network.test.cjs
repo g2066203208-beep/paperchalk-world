@@ -74,7 +74,9 @@ test('map code does not import a geographic backdrop or teleport to fake address
 test('cross-city map actions invoke the actual travel engine rather than only opening a city diagram',()=>{
  const map=fs.readFileSync(path.join(root,'site/game/transit-map-ui.js'),'utf8');
  assert.match(map,/network\.journey\(here,destination\)/);
- assert.match(map,/onWorldTravel\?\.\(destination,journey\)/);
+ assert.match(map,/onWorldTravel\?\.\(item\.destination,item\.journey\)/);
+ assert.ok(map.includes('const endpoints=[{id:from,city:a},{id:to,city:b}]'),
+  'a physical city link must offer both endpoints for round-trip access');
  assert.match(map,/disabled:!viable\|\|!canRide/);
  assert.ok(!map.includes('availability?.(id,snapshot)'),
   'subway travel must not be blocked by the nearby school/store opening hours');
