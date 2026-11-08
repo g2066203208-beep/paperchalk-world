@@ -52,7 +52,7 @@ function create({root,engine,onExit,onFeedback}){
  function extractPaper(image){
   const imageWidth=image.naturalWidth||image.width;
   const imageHeight=image.naturalHeight||image.height;
-  const size=768,side=Math.max(imageWidth,imageHeight);
+  const size=1024,side=Math.max(imageWidth,imageHeight);
   const cv=document.createElement('canvas');cv.width=size;cv.height=size;
   const c=cv.getContext('2d',{willReadFrequently:true});if(!c)return image.src;
   c.drawImage(image,(size-imageWidth*size/side)/2,
@@ -75,35 +75,38 @@ function create({root,engine,onExit,onFeedback}){
   }
   c.putImageData(frame,0,0);return cv.toDataURL('image/png');
  }
- // Two approved-reference thumbnails are committed in ONE AVIF preview asset.
- // They auto-load without a file chooser; local PNG files override them at full resolution.
+ // Two authentic 1024×1024 RGBA sprites are committed to the game repo.
+ // Render them directly: no 192px thumbnail, browser re-matting or upscaling.
  let previewAssetStatus='idle';
  function loadDefaultNpcArt(){
   if(previewAssetStatus!=='idle')return;
   previewAssetStatus='loading';
-  const source=new Image();source.decoding='async';
   const note=qa.querySelector('.pw-npc-qa-note');
-  source.onload=()=>{
-   const cell=source.naturalHeight;
-   if(!cell||source.naturalWidth!==cell*2){
-    previewAssetStatus='error';if(note)note.textContent='预览图尺寸错误，请选择本地原图';return;
-   }
-   for(const [i,pose] of ['joy','surprise'].entries()){
-    if(qaImages[pose].dataset.overridden==='true')continue;
-    const cut=document.createElement('canvas');cut.width=cell;cut.height=cell;
-    const ctx=cut.getContext('2d',{alpha:true});
-    if(!ctx)continue;
-    ctx.drawImage(source,i*cell,0,cell,cell,0,0,cell,cell);
-    qaImages[pose].src=extractPaper(cut);
-   }
-   previewAssetStatus='ready';
-   if(note)note.textContent='两组NPC已从GitHub自动加载（192px快速预览）。可点下方文件选择框替换为高清原图。';
+  if(note)note.textContent='正在加载 GitHub 中的 1024×1024 高清三人立绘…';
+  let ready=0,errors=0;
+  const images={
+   joy:'./assets/characters/npc-g001/joy-1024.png?v=approved-20261108-hd',
+   surprise:'./assets/characters/npc-g001/surprise-1024.png?v=candidate-20261108-hd'
   };
-  source.onerror=()=>{
-   previewAssetStatus='error';
-   if(note)note.textContent='自动素材加载失败；请刷新或手动选取两张原始PNG';
-  };
-  source.src='./assets/characters/npc-g001/emotion-joy-surprise-preview.avif?v=source-20261108';
+  for(const [pose,source] of Object.entries(images)){
+   const img=qaImages[pose];
+   if(img.dataset.overridden==='true'){ready++;continue}
+   img.decoding='async';img.loading='eager';
+   img.onload=()=>{
+    if(img.naturalWidth!==1024||img.naturalHeight!==1024){
+     errors++;
+     console.error('[NPC-G001] Original sprite resolution mismatch',pose,img.naturalWidth,img.naturalHeight);
+    }else ready++;
+    previewAssetStatus=errors?'error':ready===2?'ready':'loading';
+    if(note)note.textContent=errors?'高清图加载失败或尺寸不符，请刷新检查部署':
+     ready===2?'两张 1024×1024 透明原图已自动加载，可在同一车厢切换喜悦和惊讶。':'正在加载第二张高清立绘…';
+   };
+   img.onerror=()=>{
+    errors++;previewAssetStatus='error';
+    if(note)note.textContent='1024高清立绘尚未发布或加载失败，请检查 GitHub Pages 状态';
+   };
+   img.src=source;
+  }
  }
  function showQaPose(pose){
   qaPose=pose==='surprise'||pose==='both'?pose:'joy';
