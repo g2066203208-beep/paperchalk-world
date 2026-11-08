@@ -93,7 +93,7 @@ try{
  const originalCamera=JSON.stringify(outer.cameraTarget);
  const originalActors=JSON.stringify(outer.actors);
  assert.equal(outer.controlledActorId,'hero','the original heroine controls the first view');
- assert.deepEqual(outer.partyLine.map(p=>p.z),[9.30,7.95,9.50,8.32]);
+ assert.deepEqual(outer.partyLine.map(p=>p.z),[9.30,7.95,9.45,8.32]);
  assert.deepEqual(outer.opposingLine.map(p=>p.z),[6.35,6.35,6.35,6.35]);
  assert.equal(await page.locator('[data-control-ally]').count(),4,
   'the player can select one of four actual allied slots, including on phones');
@@ -125,7 +125,7 @@ try{
   assert.equal(switched.stageActors.find(a=>a.id===chosen.id).x,chosen.x);
   assert.equal(switched.stageActors.find(a=>a.id===chosen.id).z,chosen.z);
   assert.deepEqual(switched.presentationActors.filter(a=>a.team==='ally').map(a=>a.z),
-   [9.3,7.95,9.5,8.32],'P5 fixed wide L2D positions persist without swapping actors');
+   [9.3,7.95,9.45,8.32],'P5 fixed wide L2D positions persist without swapping actors');
   assert.ok(switched.presentationActors.filter(a=>a.team==='ally')
    .every(a=>a.stageYaw===undefined),'never rotate female07 back art into side views');
   assert.equal(JSON.stringify(switched.actors),originalActors,
@@ -164,7 +164,7 @@ try{
  assert.ok(groundProof.feet.every(x=>x.valid),
   'all four real enemy shoes project to the shared world-space floor');
  const partyXYZ=outer.actors.allies.map(a=>[a.x,a.z]);
- assert.deepEqual(partyXYZ,[[-1.05,9.3],[-1.72,7.95],[.78,9.5],[-1.05,8.32]],
+ assert.deepEqual(partyXYZ,[[-1.05,9.3],[-1.72,7.95],[.98,9.45],[-1.05,8.32]],
   'P5 positions use a fixed wide grouping rather than four backs in one camera row');
  assert.deepEqual(outer.actors.enemies.map(a=>[a.x,a.z]),
   [[-.2,6.35],[.45,6.35],[1.1,6.35],[1.75,6.35]]);
