@@ -6,6 +6,10 @@ on:
       - 'site/assets/scenes/**'
       - 'site/scene-modules.js'
       - 'site/index.html'
+      - 'site/game/metro-platform-*.js'
+      - 'site/game/ring-arena-runtime.js'
+      - 'site/assets/metro/commuters/**'
+      - 'tests/metro-platform-life.test.cjs'
       - 'scripts/build_scene_catalog.py'
       - 'tests/scene-modules.test.cjs'
       - '.github/workflows/scene-modules.yml'
@@ -14,6 +18,10 @@ on:
       - 'site/assets/scenes/**'
       - 'site/scene-modules.js'
       - 'site/index.html'
+      - 'site/game/metro-platform-*.js'
+      - 'site/game/ring-arena-runtime.js'
+      - 'site/assets/metro/commuters/**'
+      - 'tests/metro-platform-life.test.cjs'
       - 'scripts/build_scene_catalog.py'
       - 'tests/scene-modules.test.cjs'
       - '.github/workflows/scene-modules.yml'
@@ -39,6 +47,12 @@ jobs:
         run: python3 scripts/build_scene_catalog.py
       - name: Check every image and reusable scene configuration
         run: node tests/scene-modules.test.cjs
+      - name: Verify station passengers, boarding, new 3D seats and lighting
+        run: |
+          node --check site/game/metro-platform-life.js
+          node --check site/game/metro-platform-3d.js
+          node --check site/game/ring-arena-runtime.js
+          node --test tests/metro-platform-life.test.cjs tests/metro-platform3d.test.cjs tests/metro-station-light.test.cjs
       - name: Verify game scripts parse independently
         run: |
           node - <<'JS'
