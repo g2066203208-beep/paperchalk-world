@@ -54,7 +54,7 @@ function create({map,svg,canvas,tools,atlas,metro,network,localPoint,
  }
  const rows=div('div','pw-large-city-browser-rows');
  menu.append(bar,meta,search,select,rows);map.append(menu);
- const toggle=div('button','pw-dot-tool pw-large-city-toggle','地点 120');
+ const toggle=div('button','pw-dot-tool pw-large-city-toggle','查看地点');
  toggle.type='button';toggle.hidden=true;
  toggle.setAttribute('aria-label','查看霧浜市所有120个地点');
  tools.insertBefore(toggle,tools.querySelector('.pw-metro-edit-toggle'));
@@ -98,6 +98,7 @@ function create({map,svg,canvas,tools,atlas,metro,network,localPoint,
   menu.hidden=!open;
   toggle.dataset.active=String(open);
   if(open)renderList();
+  position({activeCity,camera:camera(),viewport:viewport()});
  }
  toggle.addEventListener('click',()=>togglePanel(!open));
  close.addEventListener('click',()=>togglePanel(false));
@@ -189,11 +190,12 @@ function create({map,svg,canvas,tools,atlas,metro,network,localPoint,
  function position({activeCity:scope,camera:cam,viewport:v}){
   activeCity=scope;
   const enabled=scope==='kirihama';
-  districtLayer.hidden=!enabled;placeLayer.hidden=!enabled;
-  links.style.display=enabled?'':'none';
-  toggle.hidden=!enabled;
+  districtLayer.hidden=!enabled||!open;
+  placeLayer.hidden=!enabled||!open;
+  links.style.display=enabled&&open?'':'none';
+  toggle.hidden=!enabled||map.dataset.metroEditing==='true';
   menu.hidden=!enabled||!open;
-  if(!enabled)return;
+  if(!enabled||!open)return;
   const {x,y,scale}=cam;
   map.dataset.citySites='120';
   map.dataset.cityDistrictCount='15';
