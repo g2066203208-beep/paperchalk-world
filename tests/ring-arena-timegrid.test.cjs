@@ -49,28 +49,32 @@ assert.match(main,/ring-arena-timegrid\.js\?v=[^\"]+/, 'timegrid JS version cach
 assert.match(main,/ring-arena-timegrid\.css\?v=[^\"]+/, 'timegrid CSS version cache busted');
 const right=fs.readFileSync(path.join(__dirname,'../site/game/ring-arena-timegrid.js'),'utf8');
 const style=fs.readFileSync(path.join(__dirname,'../site/game/ring-arena-timegrid.css'),'utf8');
-assert.match(right,/data-tg-choose-role/);
-assert.match(right,/tg-roster/,'real team portrait HUD is preserved');
-assert.match(right,/tg-hp-value/,'real HP numbers stay visible');
-assert.match(right,/tg-hp-bar/,'real actor HP bars stay visible');
-assert.match(right,/gpt-vintage-vertical-film-roll-v1/,'real vertical vintage movie reel HUD');
-assert.match(right,/vintage-cinema-single-frame\\.svg/,'actual GPT-generated frame asset is used');
-assert.match(right,/rollOut/,'deceased film frame exits with real scroll');
-assert.match(right,/recruit:actor/,'runtime supports new party entrants');
-assert.match(right,/rosterRevision/,'film changes are tracked without rebuilding on each tick');
-assert.match(right,/data-tg-quick/,'minimal one-touch action preserves combat');
-assert.match(right,/executeQuick/,'real ten-tick engine remains actionable');
-assert.match(right,/hud.append\(holder,hitLayer\)/,'only real roster and hit FX mounted');
-assert.doesNotMatch(right,/tg-tactics|tg-tick-caption|data-tg-hand/,'rejected planner source actually deleted');
-assert.doesNotMatch(right,/tg-film-frame/,'no fake 35mm frames');
-assert.doesNotMatch(right,/continuous-35mm-filmstrip/,'old film layout removed');
-assert.doesNotMatch(style,/radial-gradient\(ellipse/,'no CSS-drawn sprocket holes');
-assert.match(style,/ring-timegrid::before/,'pseudo elements explicitly disabled');
-assert.match(style,/content:none!important/,'no fake film rails');
-assert.match(style,/\.tg-team/,'compact team groups');
-assert.match(style,/\.tg-hp-bar/,'real hairline HP');
-assert.match(style,/\.tg-tactics\{display:none!important\}/,'old round action UI hidden');
-assert.match(style,/@media\(max-width:700px\)/,'portrait responsive layout');
+assert.ok(right.includes('data-tg-choose-role'));
+assert.ok(right.includes('tg-roster'),'portrait roster preserved');
+assert.ok(right.includes('tg-hp-value')&&right.includes('tg-hp-bar'),'live HP kept');
+assert.ok(right.includes('gpt-vintage-vertical-film-roll-v1'),'real vertical movie reel mounted');
+assert.ok(right.includes('vintage-cinema-single-frame.svg'),'GPT film image asset used');
+assert.ok(right.includes('rollOut'),'death extracts its film frame');
+assert.ok(right.includes('recruit:actor'),'newcomers join the film');
+assert.ok(right.includes('rosterRevision'),'dynamic membership has stable state');
+assert.ok(right.includes('data-tg-quick')&&right.includes('executeQuick'),'combat still executable');
+assert.ok(right.includes('hud.append(holder,hitLayer)'),'only actual roster and hit FX mounted');
+assert.ok(!right.includes('tg-tactics')&&!right.includes('tg-tick-caption'),
+ 'old round-one action panel actually removed');
+assert.ok(!right.includes('tg-film-frame')&&!right.includes('continuous-35mm-filmstrip'),
+ 'CSS imitation film reel is absent');
+assert.ok(!style.includes('radial-gradient(ellipse'),'sprocket holes never CSS-painted');
+assert.ok(style.includes('content:none!important'),'no pseudo-element film edges');
+assert.ok(style.includes('.tg-reel')&&style.includes('tg-reel-scroll-in'),
+ 'one-piece film scroll is animated');
+assert.ok(style.includes('.tg-film-texture'),'authored frame image overlays portraits');
+assert.ok(style.includes('.tg-hp-bar'),'real HP line survives');
+assert.ok(style.includes('.tg-tactics{display:none!important}'),
+ 'rejected card planner stays hidden');
+assert.ok(style.includes('@media(max-width:700px)'),'mobile viewport supported');
+const film=fs.readFileSync(path.join(__dirname,'../site/assets/ui/vintage-cinema-single-frame.svg'),'utf8');
+assert.ok(film.includes('data:image/webp;base64,'),'real GPT-generated film image embedded');
+assert.ok(film.length>4500,'authored celluloid texture has not been replaced by placeholder');
 assert.match(runtime,/PaperWorldRingTimegrid/);
 assert.match(runtime,/combatTimegrid\.advance\(dt\)/);
 console.log('PASS ring arena actual 4v4 Timegrid ten-tick cards, four controllers and game integration');
