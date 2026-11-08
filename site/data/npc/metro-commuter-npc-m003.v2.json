@@ -52,13 +52,15 @@
     "colorMode": "RGB",
     "sha256": "0a55af227d55b126d1fd37e4209eef50322d99c99e2f690be8c19fc9519701ba",
     "viewLayout": "four full-body figures in one row, correct front / strict side / back / front seated",
-    "originalBinaryCommittedToGitHub": false,
+    "originalBinaryCommittedToGitHub": true,
     "proposedAssetPath": "site/assets/characters/metro/npc-m003/approved-four-poses.png",
     "whiteBackgroundPresent": true,
-    "note": "This is a validated approval and checksum record, not yet a repository binary or transparent game-ready atlas."
+    "note": "Exact user-approved original RGB PNG, verified byte-for-byte by Git blob SHA and SHA256, committed to main. Needs separate alpha sprites and in-game integration.",
+    "assetPath": "site/assets/characters/metro/npc-m003/approved-four-poses.png",
+    "gitBlobSha": "e72e5f6149ef7e53935ceaf10345932754293d7b"
   },
   "render": {
-    "approvedSource": null,
+    "approvedSource": "site/assets/characters/metro/npc-m003/approved-four-poses.png",
     "transparentSpriteAtlas": null,
     "ready": false
   },
