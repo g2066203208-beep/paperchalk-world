@@ -123,6 +123,12 @@ try{
  const room3d=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(room3d.geometry.shape,'strip');
  assert.equal(room3d.windowOpenings.alpha,true);
+ assert.equal(room3d.station3D.kind,'genuine-box-meshes');
+ assert.equal(room3d.station3D.doorLeafCount,4);
+ for(const part of ['platformFloor','platformBack','platformCeiling','platformColumns','platformLightboxes','doorLeafLeft','doorLeafRight'])
+  assert.ok(room3d.station3D.components[part]>=6,
+   'no fake static station picture: actual mesh missing '+part);
+ assert.equal(room3d.station3D.backWallZ,4.42);
  assert.ok(room3d.windowOpenings.exteriorMeshVertices>100,
   'Actual transparent windows must reveal a separate world-space exterior');
  assert.ok(room3d.connectionMaterial.ready,
@@ -191,6 +197,39 @@ try{
  assert.equal(await page.locator('#pw-metro-cabin .pw-cabin-live-actors')
   .evaluate(el=>getComputedStyle(el).display),'none',
   'do not layer flat character cutouts on top of the real WebGL world');
+ // Doors must actually finish OPENING after the train is stationary.
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.station3D?.doorOpen>.99,
+  null,{timeout:7000});
+ const opened=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(opened.transitMotion.speedMps,0,
+  'four physical door leaves never open while train is moving');
+ await shot('30-real-three-dimensional-platform-with-open-subway-doors.png');
+ // Distinguish true sliding physical door panels and a hole in the train
+ // wall from an inert background change by comparing REAL rendered pixels.
+ await page.evaluate(()=>{
+  window.PaperWorldGameRingArena.setTransitDoorOpen(0);
+ });
+ await page.waitForTimeout(130);
+ await shot('31-actual-closed-subway-doors-sealing-platform.png');
+ const realDoorDifference=Number(execFileSync('python3',['-c',`
+from PIL import Image
+import sys
+a=Image.open(sys.argv[1]).convert('RGB')
+b=Image.open(sys.argv[2]).convert('RGB')
+w,h=a.size
+v=[]
+for y in range(int(.18*h),int(.88*h),13):
+ for x in range(int(.02*w),int(.98*w),19):
+  p,q=a.getpixel((x,y)),b.getpixel((x,y))
+  v.append(sum(abs(p[k]-q[k]) for k in range(3))/3)
+print(round(sum(v)/len(v),3))
+`,path.join(out,'30-real-three-dimensional-platform-with-open-subway-doors.png'),
+path.join(out,'31-actual-closed-subway-doors-sealing-platform.png')],{encoding:'utf8'}));
+ assert.ok(realDoorDifference>2.5,
+  'opening physical subway door meshes must visibly change rendered pixels: '+realDoorDifference);
+ await page.evaluate(()=>{
+  window.PaperWorldGameRingArena.setTransitDoorOpen(1);
+ });
  await shot('21-dot-map-real-metro-carriage.png');
  // Prove that exterior station lamps and the actual rendered alpha windows
  // alter the REAL WebGL pixels. A fake static blue sky would fail this.
@@ -252,7 +291,9 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
  const initialCamera=JSON.stringify(docked.camera);
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.transitMotion.moving,
-  null,{timeout:4000});
+  null,{timeout:5000});
+ assert.ok((await page.evaluate(()=>window.PaperWorldGameRingArena.inspect().station3D.doorOpen))<.03,
+  'interlock: all door leaves are completely closed BEFORE train accelerates');
  const departing=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance',
   'the game cannot teleport to next station before the window shows movement');
@@ -282,6 +323,8 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
  assert.equal(arrived.transitMotion.speedMps,0);
  assert.equal(arrived.transitMotion.distanceMeters,88);
  assert.equal(arrived.platformLighting.exposure,1);
+ assert.ok(arrived.station3D.doorOpen>.99,
+  'arrival: doors open only AFTER train has docked');
  assert.equal(JSON.stringify(arrived.camera),initialCamera,
   'fixed coach camera unchanged after stop');
  await shot('29-metro-arrived-new-platform-after-real-travel.png');
