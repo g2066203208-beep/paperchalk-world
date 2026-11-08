@@ -1321,6 +1321,9 @@
   }
   function setTransitNpcStop({station,lineId,direction,arrival=false}={}){
    if(!station||!lineId||![-1,1].includes(direction))return false;
+   if(transitNpcStation?.station===station&&transitNpcStation.lineId===lineId&&
+      transitNpcStation.direction===direction&&transitNpcStation.arrival===!!arrival)
+    return true;
    transitNpcStation={station,lineId,direction,arrival:!!arrival};
    const flow=ensureCivilianFlow();
    if(!flow)return false;
