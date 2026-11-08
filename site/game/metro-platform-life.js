@@ -45,14 +45,17 @@
   return clamp(dip*hum,.18,1);
  }
  function sample({distanceMeters=0,stationExposure=1,doorOpen=0,moving=false,
-   dwellMs=0,nowMs=0,anomaly=false}={}){
+   dwellMs=0,nowMs=0,doorOpenedEver=false,anomaly=false}={}){
   const offset=stationOffset(distanceMeters);
   const station=stationNumber(distanceMeters);
   const exposed=clamp(stationExposure);
   const door=clamp(doorOpen);
   const time=Math.max(0,Number(nowMs)||0);
   const dwell=Math.max(0,Number(dwellMs)||0);
-  const passage=smooth((dwell-430)/2200)*smooth((door-.18)/.7);
+  // Latch the first real opening. Closing doors and acceleration must
+  // NEVER teleport a half-boarded commuter back to the waiting area.
+  const passage=smooth((dwell-430)/2200)*
+   (doorOpenedEver?1:smooth((door-.18)/.7));
   const crowd=PROFILE.map((p,i)=>{
    let x=p.x,z=p.z,opacity=1,movingFeet=false;
    if(p.role==='passing'){
@@ -61,16 +64,16 @@
     movingFeet=true;
    }else if(p.role==='boarding-left'||p.role==='boarding-right'){
     const target=p.role==='boarding-left'?-2.67:2.67;
-    const amount=moving?0:passage;
+    const amount=passage;
     x=mix(x,target,amount);
     z=mix(z,8.31,amount);
     opacity=1-smooth((amount-.82)/.18);
     movingFeet=amount>.03&&amount<.96;
    }else if(p.role==='alighting-left'){
-    const amount=moving?0:passage;
+    const amount=passage;
     z=mix(8.29,6.55,amount);
     x=mix(-2.67,-2.12,amount);
-    opacity=door>.15&&!moving?1:0;
+    opacity=(door>.15||doorOpenedEver)?1:0;
     movingFeet=amount>.03&&amount<.96;
    }else if(p.role==='waiting'){
     // A human fidgets and shifts weight rather than hovering in place.
