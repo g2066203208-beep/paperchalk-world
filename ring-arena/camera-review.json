@@ -123,7 +123,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 68,
+      "dynamicUploads": 88,
       "worldActors": [
         {
           "id": "hero",
@@ -326,7 +326,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 84,
+      "dynamicUploads": 112,
       "worldActors": [
         {
           "id": "hero",
@@ -529,7 +529,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 104,
+      "dynamicUploads": 135,
       "worldActors": [
         {
           "id": "hero",
@@ -732,7 +732,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 120,
+      "dynamicUploads": 161,
       "worldActors": [
         {
           "id": "hero",
