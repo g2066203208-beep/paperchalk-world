@@ -32,7 +32,7 @@
     // along the carriage, not a flat perpendicular elevation of a box.
     // The coach stays perfectly rigid; travel NEVER tilts or pans the eye.
     mode:'fixed',eye:Object.freeze({x:-1.15,y:1.50,z:10.60}),
-    focus:Object.freeze({x:-.55,y:.95,z:7.70}),fov:66,lensShift:.04,
+    focus:Object.freeze({x:-.55,y:.95,z:7.70}),fov:66,lensShift:.09,
     fovMode:'vertical',
     phoneEye:Object.freeze({x:-1.55,y:1.50,z:10.60}),
     phoneFocus:Object.freeze({x:-.95,y:.95,z:7.70})
