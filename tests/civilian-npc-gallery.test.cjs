@@ -34,9 +34,9 @@ test('all seven ordinary civilians including SG01 are in one roster; originals a
     const src = fs.readFileSync(path.join(ROOT,item.source.path));
     assert.equal(crypto.createHash('sha256').update(src).digest('hex'),item.source.sha256);
     assert.equal(crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${src.length}\0`),src])).digest('hex'),item.source.gitBlobSha);
-    assert.equal(item.production.registeredForGame,false);
+    assert.equal(item.production.registeredForGame,true,'trial art should be linked to the runtime');
     assert.equal(item.production.gameApproved,false);
-    assert.equal(item.production.hasRealAlpha,false);
+    assert.equal(item.production.hasRealAlpha,true,'RGB master must produce real RGBA game views');
     for (const state of ['communicate','rest','death'])
       assert.equal(item.states[state].status,'not_drawn');
   }
@@ -57,7 +57,7 @@ test('approved subway reader M003 remains included as a civilian, without asset 
   assert.equal(elder.production.hasRealAlpha,true);
   assert.equal(elder.production.artApproved,true);
   assert.equal(elder.production.gameApproved,false);
-  assert.equal(elder.production.registeredForGame,false);
+  assert.equal(elder.production.registeredForGame,true,'previously accepted elder should enter first NPC test');
   assert.ok(legacy.characters.some(c=>c.id==='NPC-M003' && c.approval==='four_pose_reference_approved'));
   for (const f of [original.render.transparentSpriteAtlas,...Object.values(original.render.sprites)]) {
     assert.ok(fs.existsSync(path.join(ROOT,f)),`missing M003 approved asset ${f}`);
@@ -91,8 +91,8 @@ test('SG01 schoolgirl uploaded original is actually present, correctly hashed an
   assert.equal(crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${bytes.length}\0`),bytes])).digest('hex'),'4f1443d9d6fcd83829ea77cd837365c01152c1e8');
   assert.equal(npc.production.sourceImageUserAccepted,true);
   assert.equal(npc.production.gameApproved,false);
-  assert.equal(npc.production.hasRealAlpha,false);
-  assert.equal(npc.production.registeredForGame,false);
+  assert.equal(npc.production.hasRealAlpha,true);
+  assert.equal(npc.production.registeredForGame,true);
   assert.deepEqual(data.schoolTrio.roster,['NPC-SG01','NPC-SG02','NPC-SG03']);
-  assert.equal(data.schoolTrio.planned.find(x=>x.id==='NPC-SG02').status,'prompt_only_no_png');
+  assert.equal(data.schoolTrio.planned.find(x=>x.id==='NPC-SG02').status,'user_visually_accepted_candidate_source_not_committed');
 });
