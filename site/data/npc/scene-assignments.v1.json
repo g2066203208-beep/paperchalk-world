@@ -105,6 +105,196 @@
           "rumor"
         ]
       }
+    },
+    {
+      "id": "NPC-C001",
+      "role": "office-worker-civilian",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate",
+        "convenience"
+      ],
+      "allowedTransport": [
+        "metro"
+      ],
+      "metroSlot": "back-left",
+      "reason": "Trial NPC: explicit per-identity permissions; moves by persistent day schedule. Static art is not a walking animation.",
+      "life": {
+        "kind": "resident",
+        "interest": [
+          "social",
+          "festival"
+        ]
+      }
+    },
+    {
+      "id": "NPC-C002",
+      "role": "young-woman-civilian",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate",
+        "convenience"
+      ],
+      "allowedTransport": [
+        "metro"
+      ],
+      "metroSlot": "back-right",
+      "reason": "Trial NPC: explicit per-identity permissions; moves by persistent day schedule. Static art is not a walking animation.",
+      "life": {
+        "kind": "resident",
+        "interest": [
+          "social",
+          "festival"
+        ]
+      }
+    },
+    {
+      "id": "NPC-C003",
+      "role": "elderly-woman-civilian",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate",
+        "convenience"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Trial NPC: explicit per-identity permissions; moves by persistent day schedule. Static art is not a walking animation.",
+      "life": {
+        "kind": "resident",
+        "interest": [
+          "social",
+          "festival"
+        ]
+      }
+    },
+    {
+      "id": "NPC-C004",
+      "role": "hoodie-young-man-civilian",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate",
+        "convenience"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Trial NPC: explicit per-identity permissions; moves by persistent day schedule. Static art is not a walking animation.",
+      "life": {
+        "kind": "resident",
+        "interest": [
+          "social",
+          "festival"
+        ]
+      }
+    },
+    {
+      "id": "NPC-C005",
+      "role": "middle-age-woman-civilian",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate",
+        "convenience"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Trial NPC: explicit per-identity permissions; moves by persistent day schedule. Static art is not a walking animation.",
+      "life": {
+        "kind": "resident",
+        "interest": [
+          "social",
+          "festival"
+        ]
+      }
+    },
+    {
+      "id": "NPC-C006",
+      "role": "slate-jacket-civilian",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate",
+        "convenience"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Trial NPC: explicit per-identity permissions; moves by persistent day schedule. Static art is not a walking animation.",
+      "life": {
+        "kind": "resident",
+        "interest": [
+          "social",
+          "festival"
+        ]
+      }
+    },
+    {
+      "id": "NPC-M003",
+      "role": "elderly-newspaper-reader-civilian",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate",
+        "convenience"
+      ],
+      "allowedTransport": [
+        "metro"
+      ],
+      "metroSlot": "back-center",
+      "reason": "Trial NPC: explicit per-identity permissions; moves by persistent day schedule. Static art is not a walking animation.",
+      "life": {
+        "kind": "resident",
+        "interest": [
+          "social",
+          "festival"
+        ]
+      }
+    },
+    {
+      "id": "NPC-SG01",
+      "role": "schoolgirl-phone",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "school",
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Trial NPC: explicit per-identity permissions; moves by persistent day schedule. Static art is not a walking animation.",
+      "life": {
+        "kind": "student",
+        "interest": [
+          "school",
+          "social"
+        ]
+      }
     }
   ]
 }
