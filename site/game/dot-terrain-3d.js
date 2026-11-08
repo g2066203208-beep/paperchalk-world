@@ -102,6 +102,79 @@
    }
    return true;
   }
+  // Sparse terrain edits are independent of streaming chunks and survive
+  // the disappearance/recreation of visible GPU buffers.
+  function exportHeights(){
+   return Array.from(overrides,([key,height])=>{
+    const comma=key.indexOf(',');
+    return [+key.slice(0,comma),+key.slice(comma+1),height];
+   });
+  }
+  function importHeights(rows){
+   if(!Array.isArray(rows))return false;
+   overrides.clear();
+   if(rows.length>500000)return false;
+   for(const row of rows){
+    if(!Array.isArray(row)||row.length!==3)continue;
+    const [gx,gy,z]=row;
+    if(!Number.isSafeInteger(gx)||!Number.isSafeInteger(gy)||!Number.isFinite(z))continue;
+    const height=clamp(z,-800,800);
+    if(height!==0)overrides.set(keyFor(gx,gy),height);
+   }
+   // Existing vertices are updated immediately, not after a camera movement.
+   for(const [key,index] of lookup){
+    const next=overrides.get(key)||0;
+    coords[index*3+2]=next;
+   }
+   if(count){
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    gl.bufferSubData(gl.ARRAY_BUFFER,0,coords);
+   }
+   return true;
+  }
+  function sampleHeight(gx,gy){
+   const ax=Math.floor(gx),ay=Math.floor(gy),tx=gx-ax,ty=gy-ay;
+   const a=getHeight(ax,ay),b=getHeight(ax+1,ay);
+   const d=getHeight(ax,ay+1),e=getHeight(ax+1,ay+1);
+   return a*(1-tx)*(1-ty)+b*tx*(1-ty)+d*(1-tx)*ty+e*tx*ty;
+  }
+  // Project ground coordinates and invert their real 3D perspective. The
+  // editing cursor uses the SAME projection as the renderer, not the old
+  // 2D-only camera math or a fake skewed overlay.
+  function project(wx,wy,height){
+   const v=viewport(),c=camera(),w=v.w,h=v.h;
+   const eased=mix*mix*(3-2*mix);
+   const ya=yaw*eased,pt=pitch*eased,D=Math.max(350,h*1.45);
+   const sn=Math.sin(ya),cs=Math.cos(ya);
+   const px=(wx-(w*.5-c.x)/c.scale)*c.scale;
+   const py=(wy-(h*.5-c.y)/c.scale)*c.scale;
+   const qx=cs*px-sn*py,qy=sn*px+cs*py,zz=height*c.scale;
+   const depth=Math.sin(pt)*qy+Math.cos(pt)*zz;
+   const factor=clamp(D/Math.max(60,D-depth),.1,7);
+   return {x:w*.5+qx*factor,y:h*.5+(Math.cos(pt)*qy-Math.sin(pt)*zz)*factor};
+  }
+  function unproject(screenX,screenY){
+   const v=viewport(),c=camera(),D=Math.max(350,v.h*1.45);
+   const eased=mix*mix*(3-2*mix);
+   const ya=yaw*eased,pt=pitch*eased;
+   const sp=Math.sin(pt),cp=Math.cos(pt),cr=Math.cos(ya),sr=Math.sin(ya);
+   const sy=screenY-v.h*.5,sx=screenX-v.w*.5;
+   const denom=D*cp+sy*sp;
+   if(denom<1)return null;
+   let height=0,worldX=0,worldY=0;
+   for(let iteration=0;iteration<4;iteration++){
+    const z=height*c.scale;
+    const qy=(sy*D+z*(D*sp-sy*cp))/denom;
+    const depth=sp*qy+cp*z;
+    if(D-depth<=65)return null;
+    const factor=clamp(D/(D-depth),.1,7);
+    const qx=sx/factor;
+    worldX=(v.w*.5-c.x)/c.scale+(cr*qx+sr*qy)/c.scale;
+    worldY=(v.h*.5-c.y)/c.scale+(-sr*qx+cr*qy)/c.scale;
+    height=sampleHeight(worldX/cell,worldY/cell);
+   }
+   return {x:worldX,y:worldY,z:height,gx:Math.round(worldX/cell),gy:Math.round(worldY/cell)};
+  }
   function rectangleForView(v,c,angle,rotation,camDist){
    const focusX=(v.w*.5-c.x)/c.scale;
    const focusY=(v.h*.5-c.y)/c.scale;
@@ -358,7 +431,7 @@
   map.addEventListener('contextmenu',onContext);
   return Object.freeze({
    render,setMode,toggleMode,is3D:()=>target>.5,orbitBy,resetOrbit,
-   getHeight,setHeight,inspect,
+   getHeight,setHeight,exportHeights,importHeights,project,unproject,inspect,
    dispose(){
     active=false;map.removeEventListener('contextmenu',onContext);
     toggle.remove();surface.remove();
