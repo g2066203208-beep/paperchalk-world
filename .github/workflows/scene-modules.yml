@@ -10,6 +10,11 @@ on:
       - 'site/game/ring-arena-runtime.js'
       - 'site/game/metro-npc-staging.js'
       - 'tests/metro-npc-world-staging.test.cjs'
+      - 'tests/npc-scene-presence.test.cjs'
+      - 'site/data/npc/production-manifest.v1.json'
+      - 'site/data/npc/scene-assignments.v1.json'
+      - 'site/game/npc-scene-presence.js'
+      - 'site/game/npc-life-sim.js'
       - 'site/assets/metro/commuters/**'
       - 'tests/metro-platform-life.test.cjs'
       - 'scripts/build_scene_catalog.py'
@@ -24,6 +29,11 @@ on:
       - 'site/game/ring-arena-runtime.js'
       - 'site/game/metro-npc-staging.js'
       - 'tests/metro-npc-world-staging.test.cjs'
+      - 'tests/npc-scene-presence.test.cjs'
+      - 'site/data/npc/production-manifest.v1.json'
+      - 'site/data/npc/scene-assignments.v1.json'
+      - 'site/game/npc-scene-presence.js'
+      - 'site/game/npc-life-sim.js'
       - 'site/assets/metro/commuters/**'
       - 'tests/metro-platform-life.test.cjs'
       - 'scripts/build_scene_catalog.py'
@@ -58,6 +68,7 @@ jobs:
           node --check site/game/ring-arena-runtime.js
           node --check site/game/metro-npc-staging.js
           node --test tests/metro-npc-world-staging.test.cjs
+          node --test tests/npc-scene-presence.test.cjs
           node --test tests/metro-platform-life.test.cjs tests/metro-platform3d.test.cjs tests/metro-station-light.test.cjs
       - name: Verify game scripts parse independently
         run: |
