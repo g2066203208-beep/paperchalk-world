@@ -8,7 +8,7 @@
 | --- | --- | --- | --- | --- |
 | NPC-M001 | 普通年轻男性 · 下班后坐着打瞌睡 | **原三视图废止；四格待 Anima 重画** | [M001 v3 正式下一位提示词](metro-commuter-npc-m001-four-pose-draft.v3.json) | 禁止旧素材上线 |
 | NPC-M002 | 普通成年女性 · 低头看手机 | **原三视图废止；四格待 Anima 重画** | [M002 v2](metro-commuter-npc-m002-four-pose-draft.v2.json) | 禁止旧素材上线 |
-| NPC-M003 | 灰白发老爷爷 · 正面坐着看报纸 | **四格已批准，原图及五份透明 PNG 已入 GitHub** | [M003 v2](metro-commuter-npc-m003.v2.json) | 美术已准备，游戏行为/渲染尚未接入 |
+| NPC-M003 | 灰白发老爷爷 · 正面坐着看报纸 | **四格已批准，原图及五份透明 PNG 已入 GitHub** | [M003 用户原文提示词](../../../docs/NPC-M003_ANIMA_APPROVED_FOUR_POSE_USER_PROMPT_20261108.md) · [档案](metro-commuter-npc-m003.v2.json) | 美术已准备，游戏行为/渲染尚未接入 |
 
 **程序可读图鉴：** [metro-character-gallery.v1.json](metro-character-gallery.v1.json)
 
