@@ -431,7 +431,7 @@
   map.addEventListener('contextmenu',onContext);
   return Object.freeze({
    render,setMode,toggleMode,is3D:()=>target>.5,orbitBy,resetOrbit,
-   getHeight,setHeight,exportHeights,importHeights,project,unproject,inspect,
+   getHeight,setHeight,heightAt:sampleHeight,exportHeights,importHeights,project,unproject,inspect,
    dispose(){
     active=false;map.removeEventListener('contextmenu',onContext);
     toggle.remove();surface.remove();
