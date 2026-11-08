@@ -290,23 +290,33 @@ async function assign(target,id,face='front',save=true){
    (live?(live.model?.characterId===id?' · 工作室/游戏同一 PartRig':' · 发布版 PartRig'):
     usesPsdRig?' · 简化 PSD 骨骼':source?' · V4 备份':' · 通用程序网格'));
 }
-// Only the battle scene requires the approved protagonist BACK. Preserve the
-// user's normal DEV slot choice in memory and restore it on leaving the arena.
-// This uses the SAME game/Studio L2D pipeline; no impostor static sprite.
+// In the ring battle, all four visible same-art placeholders now use
+// female-07's ACTUAL separate back PartRig canvas from the SAME studio.
+// Never overwrite a user's slot choices in IndexedDB. Restore all four
+// original actor assignments on leaving the battle scene.
 async function ensureBattleHero(){
  if(!ready||!isArena())return false;
- const old=assigned.player;
- if(old?.id==='protagonist'&&old.side==='back')return true;
- if(!battleRestoration&&old)battleRestoration={...old};
- await assign('player','protagonist','back',false);
+ if(!catalog.get('female-07')?.l2dModule?.back?.rig?.textures)
+  throw Error('女七背面 14 层 PSD L2D 尚未发布：拒绝用静态图片冒充');
+ const keys=['player','ally2','ally3','ally4'];
+ if(!battleRestoration)battleRestoration=Object.fromEntries(
+  keys.map(key=>[key,{...assigned[key]}]));
+ for(const key of keys){
+  if(assigned[key]?.id==='female-07'&&assigned[key]?.side==='back'&&
+     window.PaperchalkL2DLibrary?.get(key)?.model?.characterId==='female-07')
+   continue;
+  await assign(key,'female-07','back',false);
+ }
  return true;
 }
 async function restoreBattleHero(){
  if(!ready||isArena()||!battleRestoration)return false;
  const saved=battleRestoration;battleRestoration=null;
- if(catalog.has(saved.id)&&
-   (assigned.player?.id!==saved.id||assigned.player?.side!==saved.side))
-  await assign('player',saved.id,saved.side,false);
+ for(const [key,actor] of Object.entries(saved)){
+  if(actor?.id&&catalog.has(actor.id)&&
+   (assigned[key]?.id!==actor.id||assigned[key]?.side!==actor.side))
+   await assign(key,actor.id,actor.side,false);
+ }
  return true;
 }
 async function setHeroineRenderer(mode){
