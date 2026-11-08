@@ -157,6 +157,9 @@ for(const item of STAGED){
   staged:status==='日常'||id==='hospital'||id==='station'||id==='police'}));
 }
 for(const c of CITIES){
+ // Kirihama's exact 120-site plan supersedes its old random radial pins.
+ // Other cities still use the legacy provisional landmark layout.
+ if(c.id==='kirihama'&&global.PaperWorldKirihamaLocationPlan?.sites?.length===120)continue;
  const entries=LANDMARK_GROUPS[c.id]||[];
  for(let i=0;i<entries.length;i++){
   const [name,kind,photo]=entries[i];
@@ -169,6 +172,50 @@ for(const c of CITIES){
     staged:false}));
  }
 }
+// District-authored positions; these DO NOT mean 120 playable scene files.
+ // The metro's 36x26 dot lattice remains the EDITOR SCHEMATIC, while each
+ // location is pinned in a separate metric street-level coordinate plane.
+ const KIRIHAMA_CITY_PLAN=global.PaperWorldKirihamaLocationPlan||null;
+ if(KIRIHAMA_CITY_PLAN?.sites?.length===120){
+  const legacyStage=new Map(POIS.filter(p=>p.city==='kirihama').map(p=>[p.id,p]));
+  const districtById=new Map(KIRIHAMA_CITY_PLAN.districts.map(d=>[d.id,d]));
+  const photos={central:'street',westold:'street',campus:'school',
+   eastcommerce:'mall',residential:'residential',river:'park',
+   baynew:'harbor',harbor:'harbor',medical:'hospital',
+   industrial:'factory',northhill:'forest',southsuburb:'rice',
+   nightlife:'street',culture:'mall',underground:'darktunnel'};
+  const kinds={westold:'town',campus:'school',eastcommerce:'landmark',
+   residential:'home',river:'park',baynew:'landmark',harbor:'port',
+   medical:'hospital',industrial:'factory',northhill:'forest',
+   southsuburb:'rural',nightlife:'landmark',culture:'landmark',
+   underground:'rumor',central:'landmark'};
+  const projected=KIRIHAMA_CITY_PLAN.sites.map(site=>{
+   const original=legacyStage.get(site.id);
+   const n=site.id.startsWith('kirihama-')?Number(site.id.split('-')[1])-1:-1;
+   const oldInfo=Number.isInteger(n)&&n>=0?LANDMARK_GROUPS.kirihama[n]:null;
+   const city=CITY_BY_ID.kirihama;
+   const gx=site.localPosition.eastM/900,gy=site.localPosition.southM/900;
+   const x=Math.round(city.x+(gx-18)*16),y=Math.round(city.y+(gy-13)*16);
+   const kind=original?.kind||oldInfo?.[1]||kinds[site.districtId]||'landmark';
+   const photo=original?.photo||oldInfo?.[2]||photos[site.districtId]||'street';
+   if(!PHOTOS[photo])throw Error('Unknown authored photo category '+site.id);
+   if(site.status==='日常'&&!original?.staged)
+    throw Error('Do not silently open a planned site '+site.id);
+   const district=districtById.get(site.districtId);
+   if(!district)throw Error('Missing city district '+site.id);
+   return Object.freeze({id:site.id,name:site.name,city:'kirihama',
+    x,y,kind,photo,status:site.status,
+    staged:site.status==='日常'||site.status==='未开放',
+    desc:district.name+' · '+(CATEGORY_HINT[kind]||'地点'),
+    districtId:site.districtId,metroStationId:site.metroStationId,
+    metroLocal:Object.freeze({...site.localPosition}),
+    walkingEstimateM:site.walking.distanceM,
+    storyReady:site.status==='日常'});
+  });
+  if(new Set(projected.map(p=>p.id)).size!==120)
+   throw Error('Kirihama plan must have 120 unique stable site IDs');
+  POIS.splice(0,POIS.length,...projected,...POIS.filter(p=>p.city!=='kirihama'));
+ }
 const POI_BY_ID=Object.freeze(Object.fromEntries(POIS.map(p=>[p.id,p])));
 const SITES=Object.freeze(POIS.filter(p=>p.kind==='rumor').map((p,i)=>Object.freeze({
  id:'case-'+String(i+1).padStart(3,'0'),name:'《'+p.name+'》',place:p.id,
@@ -307,7 +354,7 @@ const LOCAL_TRANSIT_STOPS=Object.freeze(LOCAL_TRANSIT_LINES.flatMap(line=>line.s
  .map(id=>Object.freeze({id,line:line.id,city:line.city,
   name:POI_BY_ID[id].name,x:POI_BY_ID[id].x,y:POI_BY_ID[id].y,mode:line.mode}))));
 global.PaperWorldAtlas=Object.freeze({
- SIZE,CITIES,CITY_BY_ID,AREAS,POIS,POI_BY_ID,PHOTOS,SITES,HUBS,LINKS,
+ SIZE,CITIES,CITY_BY_ID,AREAS,POIS,POI_BY_ID,PHOTOS,SITES,KIRIHAMA_CITY_PLAN,HUBS,LINKS,
  METRO_LINES,METRO_STOPS,LOCAL_TRANSIT_LINES,LOCAL_TRANSIT_STOPS,SERVICE_LABELS,connections,route
 });
 })(window);
