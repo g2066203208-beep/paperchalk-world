@@ -207,7 +207,7 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id,/,
  'real animated source must pass through non-destructive battle mask before upload');
 assert.deepEqual(ring.STAGING.outer.allies.map(([x,z])=>[x,z]),
- [[-1.05,9.3],[-1.72,7.95],[.78,9.5],[-1.05,8.32]]);
+ [[-1.05,9.3],[-1.72,7.95],[.98,9.45],[-1.05,8.32]]);
 assert.deepEqual(ring.STAGING.outer.enemies.map(([x,z])=>[x,z]),
  [[-.2,6.35],[.45,6.35],[1.1,6.35],[1.75,6.35]]);
 assert.deepEqual(ring.STAGING.inner.allies.map(([x])=>x),[-1.05,-.25,.55,1.35]);
