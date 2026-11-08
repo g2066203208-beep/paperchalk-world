@@ -24,7 +24,7 @@
   map.dataset.dotAnimation='fluid-ripples';
   map.dataset.fogCoverage='full';
   map.dataset.rippleStyle='subtle-slow';
-  let frame=0,last=0,lastBirth=0,sequence=0,mistImage=null;
+  let frame=0,last=0,lastBirth=0,sequence=0,mistImage=null,lastMistUpdate=0;
   const waves=[];
   function spawn(time,v,c){
    const id=++sequence;
@@ -46,31 +46,41 @@
    if(fog.width!==fw||fog.height!==fh){fog.width=fw;fog.height=fh}
    // Low-resolution filtered density: no big gradients, no grey rectangle,
    // no hard clear zone. Every map pixel remains nearly black.
-   const mw=Math.max(110,Math.min(260,Math.round(w*.16)));
-   const mh=Math.max(72,Math.min(150,Math.round(h*.16)));
+   const mw=Math.max(90,Math.min(200,Math.round(w*.12)));
+   const mh=Math.max(66,Math.min(120,Math.round(h*.12)));
    if(mist.width!==mw||mist.height!==mh){
     mist.width=mw;mist.height=mh;
     mistImage=mc.createImageData(mw,mh);
+    lastMistUpdate=0;
    }
-   const p=mistImage.data,t=now*.001;
-   // Same time-varying curl-field family used by the game's existing fluid.
-   // Very slow advection, low contrast, broad eddies: subtle at a glance.
-   for(let j=0;j<mh;j++){
-    const vy=(j+.5)/mh,yy=(vy-.5)*4;
+   // The full-screen haze flows so slowly that a 12 fps low-resolution
+   // density refresh is perceptually continuous. The real WebGL fog and
+   // dots still composite at their own cadence.
+   if(!lastMistUpdate||now-lastMistUpdate>=85){
+    lastMistUpdate=now;
+    const p=mistImage.data,t=now*.001;
+    const colShift=new Float32Array(mw);
     for(let i=0;i<mw;i++){
-     const vx=(i+.5)/mw,xx=(vx-.5)*5;
-     const flowX=xx+.20*Math.sin(yy*1.3-t*.055);
-     const flowY=yy+.20*Math.sin(xx*1.1+t*.048);
-     const a=Math.sin(flowX*1.27+flowY*.67+t*.055);
-     const b=Math.cos(flowY*1.85-flowX*.53-t*.041);
-     const c=Math.sin(flowX*.62-flowY*1.12+t*.032);
-     const density=(a*.46+b*.32+c*.22);
-     const value=clamp(Math.round(8.5+3.3*density),4,14);
-     const z=(j*mw+i)*4;
-     p[z]=value;p[z+1]=value+1;p[z+2]=value+1;p[z+3]=255;
+     const xx=((i+.5)/mw-.5)*5;
+     colShift[i]=.20*Math.sin(xx*1.1+t*.048);
     }
+    for(let j=0;j<mh;j++){
+     const yy=((j+.5)/mh-.5)*4;
+     const rowShift=.20*Math.sin(yy*1.3-t*.055);
+     for(let i=0;i<mw;i++){
+      const xx=((i+.5)/mw-.5)*5;
+      const flowX=xx+rowShift,flowY=yy+colShift[i];
+      const a=Math.sin(flowX*1.27+flowY*.67+t*.055);
+      const b=Math.cos(flowY*1.85-flowX*.53-t*.041);
+      const d=Math.sin(flowX*.62-flowY*1.12+t*.032);
+      const value=clamp(Math.round(8.5+3.3*(a*.46+b*.32+d*.22)),4,14);
+      const z=(j*mw+i)*4;
+      p[z]=value;p[z+1]=value+1;p[z+2]=value+1;p[z+3]=255;
+     }
+    }
+    mc.putImageData(mistImage,0,0);
+    map.dataset.fogDensityFrames=String((+map.dataset.fogDensityFrames||0)+1);
    }
-   mc.putImageData(mistImage,0,0);
    fc.setTransform(fw/w,0,0,fh/h,0,0);
    fc.globalAlpha=1;fc.fillStyle='#050606';fc.fillRect(0,0,w,h);
    fc.imageSmoothingEnabled=true;
