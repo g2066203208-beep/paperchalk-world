@@ -4,10 +4,10 @@
   "separateFrom": [
     "site/data/characters/registry.json"
   ],
-  "indexPolicy": "统一收录普通路人：NPC-C001～C004 四张原始三视图 PNG 均已实传 GitHub；已批准老爷爷 NPC-M003 保留原始四视图及 RGBA；人物出场与动态状态均独立审核，不因图像已入库直接进入游戏。",
+  "indexPolicy": "普通路人统一人物集：C001～C005 五张三视图原始 PNG 已进入 GitHub，M003 已批准老爷爷保留四视图及透明精灵；共六人。原图存在不代表透明切图或游戏运行时完成。",
   "assetImportZip": "npc-civilians-source-images-20261108.zip",
   "assetBundleStatus": "four_original_1024px_RGB_PNG_committed_to_GitHub_main_20261108",
-  "sourceFilenameConvention": "C001-C004: site/assets/characters/civilians/npc-c00X/three-view-original.png; M003 preserves original site/assets/characters/metro/npc-m003/*.png",
+  "sourceFilenameConvention": "C001-C005: site/assets/characters/civilians/npc-c00X/three-view-original.png; M003: site/assets/characters/metro/npc-m003/approved-four-poses.png",
   "actualSourceOrder": [
     "side_left",
     "front",
@@ -23,7 +23,7 @@
     1024
   ],
   "sourceFormat": "RGB PNG white background",
-  "approvalScope": "C001～C004 用户原始 RGB 三视图 PNG 已上传 GitHub 并 SHA 校验；NPC-M003 用户批准四格及 RGBA 已在 GitHub；C005 尚待生图；未执行游戏运行时注册。",
+  "approvalScope": "用户上传六位路人的正面素材；C001～C005 原始 PNG 均 GitHub 已实传，M003 已批准 RGBA；C005 视觉美术还需审核，其余独立状态图和游戏实装仍待完成",
   "characters": [
     {
       "id": "NPC-C001",
@@ -306,15 +306,61 @@
         "heightMeters": null,
         "staging": "已批准的真实 PNG + RGBA 四方向文件已在 GitHub；原位置不动；人物属于普通路人 NPC 统一索引，但尚未完成游戏进场规则验收"
       }
-    }
-  ],
-  "planned": [
+    },
     {
       "id": "NPC-C005",
-      "label": "中年女性通勤者（酒红毛衣、橄榄绿裙）",
+      "slug": "npc-c005",
+      "label": "中年女性乘客",
+      "role": "middle_aged_female_commuter",
+      "category": "civilian_npc",
+      "visualCanon": {
+        "ageGroup": "middle_aged",
+        "hair": "深栗棕色短波波头，齐颌、侧分，三视图一致",
+        "outfit": "酒红色套头毛衣、橄榄绿过膝A字裙、黑色裤袜、棕色短靴"
+      },
+      "source": {
+        "path": "site/assets/characters/civilians/npc-c005/three-view-original.png",
+        "sha256": "136e12649d8fa8d04e409a28601727c348ac4d2addf7f458bc7bc776d707f533",
+        "bytes": 585412,
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "mode": "RGB",
+        "actualImageLeftToRight": [
+          "side_left",
+          "front",
+          "back"
+        ],
+        "committedToRepository": true,
+        "gitBlobSha": "9de3fba5aac97d9c77f732957c26ac9039190fca",
+        "userSupplied": true
+      },
       "promptReference": "docs/NPC-C005_ANIMA_THREE_VIEW_MIDDLE_AGED_WOMAN_20261108.md",
-      "status": "prompt_only_no_image"
+      "states": {
+        "communicate": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "rest": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "death": {
+          "status": "not_drawn",
+          "path": null
+        }
+      },
+      "production": {
+        "registeredForGame": false,
+        "gameApproved": false,
+        "hasRealAlpha": false,
+        "heightMeters": null,
+        "sourceImageUserAccepted": false,
+        "staging": "用户上传完整RGB原始三视图；已提交GitHub。仅待用户视觉确认，游戏未注册。"
+      }
     }
   ],
+  "planned": [],
   "commonArtRule": "基础立绘发型三视角一致；普通场景阴天漫射光、不烘焙硬影；人物实际高度游戏数据单独处理"
 }
