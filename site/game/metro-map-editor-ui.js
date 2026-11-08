@@ -343,20 +343,25 @@ function create(options){
    if(id===selectedStation)circle.dataset.selected='true';
    if(!station.original)circle.dataset.custom='true';
    titleNode(circle,station.label+' · '+station.gx+','+station.gy);
-   circle.addEventListener('pointerdown',e=>{
-    selectedStation=id;selectedEdge=null;selectedBend=-1;
-    lastWarning='';status();startDrag(e,'station',id);
-   });
-   circle.addEventListener('click',e=>{
-    e.stopPropagation();e.preventDefault();
-    selectedStation=id;selectedEdge=null;selectedBend=-1;render();
-   });
-   circle.addEventListener('keydown',e=>{
-    if(e.key==='Enter'||e.key===' '){
-     e.preventDefault();selectedStation=id;selectedEdge=null;render()
-    }
-   });
-   layer.append(circle);
+   const stationHit=v('circle',{cx:p.x,cy:p.y,r:18/cam.scale,
+    'aria-hidden':'true'},'pw-metro-edit-station-hit');
+   // Invisible 36px screen-size hit target; the visible dot stays delicate.
+   for(const handle of [circle,stationHit]){
+    handle.addEventListener('pointerdown',e=>{
+     selectedStation=id;selectedEdge=null;selectedBend=-1;
+     lastWarning='';status();startDrag(e,'station',id);
+    });
+    handle.addEventListener('click',e=>{
+     e.stopPropagation();e.preventDefault();
+     selectedStation=id;selectedEdge=null;selectedBend=-1;render();
+    });
+    handle.addEventListener('keydown',e=>{
+     if(e.key==='Enter'||e.key===' '){
+      e.preventDefault();selectedStation=id;selectedEdge=null;render()
+     }
+    });
+   }
+   layer.append(circle,stationHit);
    const labelVisible=id===selectedStation||
     (!!selectedLine&&onLine&&spacing>=44)||
     (!selectedLine&&important&&spacing>=60)||
@@ -375,18 +380,21 @@ function create(options){
     'aria-label':'可拖动圆角控制点 '+(index+1)},
     'pw-metro-edit-bend');
    if(selectedBend===index)handle.dataset.selected='true';
-   handle.addEventListener('click',e=>{
-    e.stopPropagation();selectedBend=index;selectedStation=null;status();
-    render();
-   });
-   handle.addEventListener('dblclick',e=>{
-    e.stopPropagation();model.deleteBend(edge,index);
-    selectedBend=-1;render();
-   });
-   handle.addEventListener('pointerdown',e=>{
-    selectedBend=index;lastWarning='';status();startDrag(e,'bend',edge.key,index);
-   });
-   layer.append(handle);
+   const bendHit=v('circle',{cx:p.x,cy:p.y,r:17/cam.scale,
+    'aria-hidden':'true'},'pw-metro-edit-bend-hit');
+   for(const target of [handle,bendHit]){
+    target.addEventListener('click',e=>{
+     e.stopPropagation();selectedBend=index;selectedStation=null;status();render();
+    });
+    target.addEventListener('dblclick',e=>{
+     e.stopPropagation();model.deleteBend(edge,index);
+     selectedBend=-1;render();
+    });
+    target.addEventListener('pointerdown',e=>{
+     selectedBend=index;lastWarning='';status();startDrag(e,'bend',edge.key,index);
+    });
+   }
+   layer.append(handle,bendHit);
   });
   status();
  }
