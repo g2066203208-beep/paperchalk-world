@@ -133,7 +133,7 @@ test('broken modules cannot corrupt the city draft or overwrite another official
  e.choose('home');
  const before=e.exportJSON();
  assert.throws(()=>e.insert('wrong-type',2,3),/Unknown city module/);
- assert.throws(()=>e.insert('rail',200,300),/|/);
+ assert.equal(e.insert('rail',200,300),null);
  assert.equal(e.exportJSON(),before);
  const invalid=JSON.parse(before);
  invalid.modules.push({...invalid.modules[0],id:'bad-glyph',color:'not-a-color'});
