@@ -67,6 +67,11 @@ function create(options){
  function button(label,action,titleText){
   const b=el('button','pw-metro-edit-action',label);
   b.type='button';b.title=titleText||label;
+  const actions={'选取':'select','折点＋':'bend','站点＋':'station',
+   '删除选中':'remove','↶':'undo','↷':'redo','保存':'save',
+   '应用游戏':'apply','导出':'export','导入':'import',
+   '复原':'reset','改名':'rename'};
+  b.dataset.action=actions[label]||'unknown';
   b.addEventListener('click',event=>{
    event.stopPropagation();
    action();
