@@ -48,7 +48,7 @@ function create(options){
  const upload=el('input');
  upload.type='file';upload.accept='.json,application/json';
  upload.hidden=true;map.append(upload);
- let active=false,tool='select',selectedEdge=null,selectedStation=null,
+ let active=false,tool='select',selectedEdge=null,focusedLine=null,selectedStation=null,
   selectedBend=-1,drag=null,lastWarning='';
  const message=t=>{
   lastWarning=t;info.textContent=t;
@@ -133,7 +133,7 @@ function create(options){
   if(!file)return;
   try{
    model.importJSON(await file.text());
-   selectedEdge=null;selectedStation=null;selectedBend=-1;
+   selectedEdge=null;focusedLine=null;selectedStation=null;selectedBend=-1;
    tool='select';render();message('已导入完整线路蓝图，检查后点保存');
   }catch(err){message('导入失败：'+(err.message||String(err)))}
   upload.value='';
@@ -166,7 +166,7 @@ function create(options){
   status();
  }
  function selectEdge(edge){
-  selectedEdge=edge.key;selectedStation=null;selectedBend=-1;
+  selectedEdge=edge.key;focusedLine=edge.lineId;selectedStation=null;selectedBend=-1;
   lastWarning='';status();
  }
  const applyToEdge=(edge,event,method)=>{
@@ -204,7 +204,7 @@ function create(options){
   layer.replaceChildren();
   if(!active)return;
   const data=model.data(),cam=camera(),screenR=clamp(4.7/cam.scale,2.4,15);
-  const edge=currentEdge(),selectedLine=edge?.lineId;
+  const edge=currentEdge(),selectedLine=focusedLine||edge?.lineId;
   const spacing=40*cam.scale;
   const showAllStationHandles=!selectedLine&&spacing>=82;
   // Route-first LOD: a full metropolis is a LINE PLAN, not 170 white circles.
@@ -364,7 +364,7 @@ function create(options){
    catch(err){message(err.message)}
   }
   active=next;drag=null;tool='select';
-  selectedEdge=null;selectedStation=null;selectedBend=-1;
+  selectedEdge=null;focusedLine=null;selectedStation=null;selectedBend=-1;
   lastWarning='';
   toggleButton.textContent=active?'完成':'编排';
   toggleButton.dataset.active=String(active);
