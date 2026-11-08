@@ -14,8 +14,8 @@
     "back"
   ],
   "animaTemplateOrder": [
-    "front",
     "side_left",
+    "front",
     "back"
   ],
   "sourcePixels": [
@@ -442,14 +442,14 @@
         "look": "深蜜棕晒黑肤色、蜂蜜金齐肩卷发、较高个，校服敞开、领带松系、袜子略堆",
         "personality": "自信俏皮的黑皮辣妹",
         "promptReference": "docs/NPC_SG02_ANIMA_DYNAMIC_THREE_VIEW_CHEERFUL_WALK_20261108.md",
-        "status": "candidate_two_frontal_views_no_90_side_20261108_rejected_v6_pending_generation",
-        "reviewNotes": "用户最新 SG02 图中左为斜正面、中为正面且丢了酒红长领带、右背面；不合格。V6 已根据 SG01 批准图的实际左侧面/中正面/右背面顺序建立 V2 固定填空模板，禁止继续用失败的单人侧面 inpaint 或旧 V1 错序。仍无批准 PNG。"
+        "status": "user_visually_accepted_candidate_source_not_committed",
+        "reviewNotes": "2026-11-08 用户回复‘怎么样可以吗下一个’后助理判断 SG02 可通过，用户随即进入 SG03；SG02 用户图尚未以原始 PNG 实际入库，不能宣称 GitHub 图片已上传、游戏已实装。"
       },
       {
         "id": "NPC-SG03",
         "look": "中等身高稍结实、短栗棕碎发、黑色细圆镜框但镜片后无眼睛、左肩灰蓝单肩软帆布托特包挂至左胯；同校制服上扣系好下扣松开",
         "personality": "略冒失、担心迟到、认真且匆匆赶路；正面抬手扶眼镜，侧面扶左肩书包带",
-        "status": "candidate_rejected_prompt_v5_sg02_source_based_pending_image",
+        "status": "skipped_by_user_unapproved_do_not_regenerate",
         "promptReference": "docs/NPC_SG03_ANIMA_THREE_VIEW_GLASSES_GIRL_20261108.md",
         "motion": {
           "side_left": "左侧面左肩左胯单肩托特包真实可见、左手扶一根肩带、小步朝左",
@@ -457,7 +457,7 @@
           "back": "背面包在画面左侧（人物左肩左胯）、同一根肩带、自然小步离开"
         },
         "eyePolicy": "thin round glasses with clear lens, blank skin and absolutely no drawn eyes",
-        "reviewNotes": "2026-11-08 V5 严格从 SG02 V6 七段完整已用提示词逐句替换人设和三个动作，不再编造新结构。眼镜必须在前/侧，镜片后只有肤色无眼睛，单灰蓝书包在人物左肩左胯。此前 SG03 用户上传候选图有眼睛/背包不一致仍不合格；V5 尚未出图验收。",
+        "reviewNotes": "2026-11-08 用户明确要求暂时跳过 SG03 眼镜妹；此前多次 Anima 候选图出现有眼睛/配件不一致，因此任何失败图或提示词不能视为批准或继续自动重绘。",
         "productionMethod": "surgical text substitutions into SG02 V6 seven-paragraph positive and preserved base negative"
       }
     ],
@@ -467,5 +467,21 @@
       "front",
       "back"
     ]
-  }
+  },
+  "plannedCivilians": [
+    {
+      "id": "NPC-C006",
+      "name": "地铁夜班维修工大叔",
+      "role": "station_maintenance_worker",
+      "visualCanon": "矮壮宽肩、略圆肚子、灰黑短硬发、暗青绿连体工作服、灰内搭领口、黑工作鞋；无道具、无眼睛，三面服装完全一致",
+      "expectedOrder": [
+        "side_left",
+        "front",
+        "back"
+      ],
+      "promptReference": "docs/NPC-C006_ANIMA_THREE_VIEW_METRO_MAINTENANCE_20261108.md",
+      "status": "prompt_only_not_drawn_or_approved",
+      "gameRegistered": false
+    }
+  ]
 }
