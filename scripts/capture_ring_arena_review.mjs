@@ -45,8 +45,7 @@ try{
   await page.waitForFunction(index=>{
    const s=window.PaperWorldGameRingArena?.inspect();
    return s?.controlledAllyIndex===index-1&&s?.cameraParity===true&&
-    s?.stagePresentation==='world-space-foreground-handoff'&&
-    s?.stageTransitionProgress>=.999&&
+    s?.stagePresentation==='four-rear-facing-allies-one-fixed-rank'&&
     Math.abs(s.cameraLook?.yawDeg||0)<1.2;
   },slot,{timeout:16000});
   await page.waitForTimeout(100);
@@ -73,12 +72,13 @@ try{
   assert.deepEqual(data.friendlyX,[-1.05,-.25,.55,1.35]);
   assert.deepEqual(data.enemyX,data.friendlyX,'true paired X lanes');
   assert.equal(data.actorIds.length,8);
-  assert.equal(data.staging,'world-space-foreground-handoff');
-  const foreground=data.worldActors.find(a=>a.id===data.active);
-  assert.ok(Math.abs(foreground.x+1.05)<.001&&Math.abs(foreground.z-9.30)<.001,
-   'the controlled actor enters the genuine foreground instead of moving the camera');
-  assert.deepEqual(data.camera.eye,{x:-.28,y:1.5,z:10.4},
-   'the approved New Moon camera eye must remain pixel-accurate');
+  assert.equal(data.staging,'four-rear-facing-allies-one-fixed-rank');
+  assert.deepEqual(data.worldActors.filter(a=>a.team==='ally').map(a=>a.z),
+   [9.3,9.3,9.3,9.3],'all 4 female07 back rigs stand in a single row');
+  assert.ok(data.worldActors.filter(a=>a.team==='ally').every(a=>a.stageYaw===undefined),
+   'no 3D side rotations: 4 back-facing portraits only');
+  assert.ok(data.dynamicFemale07&&data.dynamicPartyIds.length===4,
+   'four authentic female07 PartRig animation canvases, not static fallback');
   assert.equal(data.camera.fov,66,'never alter the approved 66 degree lens');
   assert.equal(data.camera.eye.y,1.5,'never raise the approved camera');
   assert.equal(data.camera.focus.y,1.5,'never tilt the approved eye-level camera');
