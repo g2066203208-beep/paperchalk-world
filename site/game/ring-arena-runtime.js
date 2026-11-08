@@ -142,8 +142,8 @@
  function visibleActors(mode='outer'){return VISIBLE_LAYOUTS[mode]||VISIBLE_LAYOUTS.outer}
  // Single cinematic TPS right-shoulder rig. The authored rear ArtMesh is
  // physically grounded and remains part of the SAME 3D world as all foes.
- // The camera stays close behind her and ORBITS her world-space root;
- // it is not a fixed eye with the heroine pushed out to the left.
+ // The camera stays close behind her; cursor movement only rotates gaze,
+ // never moving the approved eye or the heroine's world-space root.
  const SHOT_NAMES=Object.freeze(['P5 宽站位 · 相邻队友']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
@@ -196,7 +196,7 @@
  // inputs. Only the camera orbits her shoulder pivot: no turn-to-cursor,
  // cursor-linked sprite lean, or screen-space portrait translation.
  // Every actor, shadow and surface still shares the exact same WebGL VP.
- // On portrait phones the shoulder boom extends to show all four opponents.
+ // On portrait phones the neutral shoulder boom fits the battle viewport.
  function shoulderCamera(base,hero,cursorX=0,cursorY=0,aspect=16/9){
   const x=clamp(Number(cursorX)||0,-1,1);
   const y=clamp(Number(cursorY)||0,-1,1);
@@ -2566,8 +2566,8 @@
      pivot:lens?.shoulderPivot||null,
      shoulderBoomMeters:lens?.shoulderBoomMeters||null,
      inputX:mouseLookX,inputY:mouseLookY,
-     orbitAroundHero:!!lens?.shoulderRig,heroRootWorldStatic:true,
-     sharedProjection:true},
+     orbitAroundHero:false,stationaryEye:!!lens?.shoulderRig,
+     heroRootWorldStatic:true,sharedProjection:true},
     initError:canvas.dataset.error||null,
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:lens?.lensShift??VERTICAL_LENS_SHIFT,
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
