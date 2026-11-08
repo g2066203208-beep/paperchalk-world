@@ -1,0 +1,46 @@
+name: Build civilian NPC test sprites and verify runtime
+on:
+  push:
+    paths:
+      - '.github/workflows/npc-build-game-sprites.yml'
+      - 'scripts/build_civilian_game_sprites.py'
+      - 'site/assets/characters/civilians/npc-c006/three-view-original.png'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  civilian-art:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install transparent sprite segmentation tools
+        run: python3 -m pip install --disable-pip-version-check --quiet --break-system-packages Pillow numpy opencv-python-headless
+      - name: Extract three alpha views per character, preserving originals
+        run: python3 scripts/build_civilian_game_sprites.py
+      - name: Assert game identities, RGBA source paths and scene gates
+        run: |
+          node --test tests/npc-civilian-production.test.cjs
+          node --test tests/npc-scene-presence.test.cjs
+          node --test tests/civilian-npc-gallery.test.cjs
+      - name: Publish tested sprites and production manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/assets/characters/civilians/npc-c00{1,2,3,4,5,6}/{side_left,front,back}.png
+          git add site/assets/characters/civilians/schoolgirls/sg01/{side_left,front,back}.png
+          git add site/data/npc/production-manifest.v1.json
+          if git diff --cached --quiet; then
+            echo 'All NPC alpha sprites and manifest already current'
+            exit 0
+          fi
+          git commit -m 'assets(npc): publish 21 real-alpha scene sprites for 8-civilian test'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 3
+          done
+          exit 1
