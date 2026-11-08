@@ -54,7 +54,7 @@ def front_crop(root,npc):
  # User's actual three-view PNG: left side | center front | right back.
  w,h=im.size
  assert im.size==(1024,1024),f"Unexpected dimensions: {source} {im.size}"
- center=im.crop((int(w*0.315),0,int(w*0.685),h))
+ center=im.crop((340,0,668,h))  # exclude the neighboring left/right view figures
  bb=bbox_nonwhite(center)
  if not bb: raise RuntimeError(f"No front-view figure found for {npc['id']}")
  return center.crop(bb)
