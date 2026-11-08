@@ -6,11 +6,13 @@
 
 | ID | 人物/生活状态 | 图片审核 | Anima 四格正式提示词 | 运行时 |
 | --- | --- | --- | --- | --- |
-| NPC-M001 | 普通年轻男性 · 下班后坐着打瞌睡 | **原三视图废止；四格待 Anima 重画** | [M001 v2](metro-commuter-npc-m001-four-pose-draft.v2.json) | 禁止旧素材上线 |
+| NPC-M001 | 普通年轻男性 · 下班后坐着打瞌睡 | **原三视图废止；四格待 Anima 重画** | [M001 v3 正式下一位提示词](metro-commuter-npc-m001-four-pose-draft.v3.json) | 禁止旧素材上线 |
 | NPC-M002 | 普通成年女性 · 低头看手机 | **原三视图废止；四格待 Anima 重画** | [M002 v2](metro-commuter-npc-m002-four-pose-draft.v2.json) | 禁止旧素材上线 |
 | NPC-M003 | 灰白发老爷爷 · 正面坐着看报纸 | **四格已批准，原图及五份透明 PNG 已入 GitHub** | [M003 v2](metro-commuter-npc-m003.v2.json) | 美术已准备，游戏行为/渲染尚未接入 |
 
 **程序可读图鉴：** [metro-character-gallery.v1.json](metro-character-gallery.v1.json)
+
+**开发白皮书：** [NPC 四格 Anima 开发白皮书（上一位老人 M003 全过程纠错与验收）](../../../docs/NPC_FOUR_POSE_DEVELOPMENT_WHITEPAPER_V1_20261108.md)；**下一个优先重画：** [M001 Anima Base 完整正向/负向 V3](../../../docs/NPC-M001_ANIMA_FOUR_POSE_PROMPT_V3_20261108.md)。未经过用户批准，不会将 M001 或 M002 标为成品。
 
 ## NPC-M003 用户已批准的 Anima 画作
 
@@ -25,7 +27,7 @@
 
 - 老三视图格式已经被用户明确废止，原 `metro-commuter-npc-m001.v1.json` 和 `metro-commuter-npc-m002-draft.v1.json` 已从活动图鉴删除。
 - 两人外貌保持此前分别已认可的身份设计：M001 黑短发、深蓝夹克、米白 T 恤、炭灰裤、灰白运动鞋；M002 棕色中短发、米色开衫、灰蓝 T 恤、藏蓝长裤、白运动鞋。
-- M001 第四格建议：正面坐着打盹；M002 第四格：正面手持手机阅读。若后续用户选择不同特殊动作，修改第四格而不影响前三格。
+- M001 第四格按 V3 提示词暂定：严格正面坐着打盹；M002 第四格：正面手持手机阅读。若后续用户选择不同特殊动作，修改第四格而不影响前三格。
 - 每个 JSON 文件的 `production.positivePrompt` / `negativePrompt` 包含**可以直接复制到 Anima 的完整英文提示词**，无需自行拼接。
 - 同人跨动作身份稳定性：在 Forge Neo 已确认的 Anima Base、`@akipekostyle<lora:akipekoanima_v1_1:0.65>` 基础上，若单次四格出图换脸换衣，应逐格以**本 NPC 自己的原图**作 ImageStitch 参考重画；pilot 专用 LoRA `<lora:anima_ref_adapter_pilot_r32:1>` 只能在正确配置的参考适配器中用，不能当普通风格 LoRA。
 - Anima 模型提示词不能保证直接输出 RGBA。真正透明需要 PNG Alpha 检查。无原图时只登记待画，不能拿程序绘制的占位角色伪装成完成。
