@@ -105,11 +105,11 @@
    return path;
   }
   const cast=actors.filter(a=>nodes.has(a.home)).map(a=>({...a,interest:a.interest||[]}));
+  const initialActor=a=>({id:a.id,node:a.home,leg:null,queue:[],
+   target:a.home,activity:'home',intention:'home',lastIntent:'',lastEvent:''});
   function fresh(){
-   return {version:VERSION,time:0,actors:Object.fromEntries(cast.map(a=>[a.id,{
-    id:a.id,node:a.home,leg:null,queue:[],target:a.home,activity:'home',
-    intention:'home',lastIntent:'',lastEvent:''
-   }])),events:[]};
+   return {version:VERSION,time:0,
+    actors:Object.fromEntries(cast.map(a=>[a.id,initialActor(a)])),events:[]};
   }
   let state=fresh();
   if(storage)try{
@@ -230,9 +230,32 @@
   }
   const unsub=engine.subscribe((snapshot,event)=>sync(snapshot,event));
   advanceTo(abs(engine.snapshot()));
+  function registerActors(definitions=[]){
+   if(!Array.isArray(definitions))return [];
+   const added=[];
+   for(const d of definitions){
+    if(!d||typeof d.id!=='string'||!/^[A-Za-z0-9_-]{2,75}$/.test(d.id)||
+       !nodes.has(d.home)||!['student','worker','resident'].includes(d.kind)||
+       cast.some(x=>x.id===d.id))continue;
+    if(d.kind==='worker'&&(!d.work||!nodes.has(d.work)))continue;
+    const def={id:d.id,name:String(d.name||d.id).slice(0,90),home:d.home,
+     kind:d.kind,work:d.work||null,interest:Array.isArray(d.interest)?
+      d.interest.filter(x=>typeof x==='string').slice(0,12):[]};
+    cast.push(def);
+    // A newly registered person starts physically at home and takes a
+    // timed travel leg from the CURRENT game minute. Never appear instantly
+    // at school, shop, or a distant event when their art becomes available.
+    if(!state.actors[def.id])state.actors[def.id]=initialActor(def);
+    moveOne(state.actors[def.id],def,state.time);
+    added.push(def.id);
+   }
+   if(added.length)persist();
+   return added;
+  }
   const api=Object.freeze({snapshot:()=>JSON.parse(JSON.stringify(state)),get,present,
    where:get,isPresent:(id,place)=>present(place).some(a=>a.id===id),
-   publishEvent,advanceTo,route,reset:()=>{state=fresh();persist();advanceTo(abs(engine.snapshot()))},
+   publishEvent,advanceTo,route,registerActors,
+   reset:()=>{state=fresh();persist();advanceTo(abs(engine.snapshot()))},
    dispose:()=>{persist();unsub()},definitions:cast});
   return api;
  }
