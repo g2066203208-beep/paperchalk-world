@@ -48,6 +48,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.dataset.grid='50x32';
  const canvas=element('div','pw-dot-world-canvas');
  const svg=vector('svg',{viewBox:'0 0 '+W+' '+H,preserveAspectRatio:'none'},'pw-transit-lines pw-dot-rail-canvas');
+ const terrain=vector('g',{},'pw-dot-geography');
  const dots=vector('g',{},'pw-transit-dot-matrix');
  let previousDotScale=-1;
  const regional=vector('g',{},'pw-dot-regional-lines');
@@ -55,7 +56,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const metroNetwork=vector('g',{},'pw-dot-planned-metro');
  const municipal=vector('g',{},'pw-dot-municipal-lines');
  const stops=vector('g',{},'pw-dot-stations');
- svg.append(dots,regional,metroNetwork,municipal,urban,stops);
+ svg.append(terrain,dots,regional,metroNetwork,municipal,urban,stops);
  const areaLayer=element('div','pw-dot-areas');
  const cityLayer=element('div','pw-dot-cities');
  const placeLayer=element('div','pw-dot-places');
@@ -65,7 +66,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const chrome=element('header','pw-dot-chrome');
  const heading=element('div','pw-dot-heading');
  heading.append(element('strong','pw-dot-title','交通图'),
-  element('small','pw-dot-subtitle','点阵 · 城市与城际交通'));
+  element('small','pw-dot-subtitle',(hereCity?.name||'霧浜市')+' · '+(locations[here]?.label||metro.STATIONS[here]?.label||'当前位置')));
  const tools=element('div','pw-dot-tools');
  const buttons=[['−','缩小地图'],['+','放大地图'],['全域','查看整个区域'],['定位','返回当前位置']];
  const toolBtns=buttons.map(([name,title])=>{
@@ -119,6 +120,31 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   anchored.push({node,p});
   layer.append(node);
  }
+
+ // Regional relief uses the same authored world coordinate system as the
+ // city POIs. Strictly decorative SVG beneath the original 1683 grid dots.
+ // It does not create transport nodes, map modes or a second terrain image.
+ const LAND='M130 85 C300 53 530 78 730 86 C951 62 1175 65 1382 120 C1552 161 1630 262 1650 380 C1657 486 1594 550 1588 622 C1554 688 1499 745 1550 812 C1609 845 1689 826 1720 903 C1716 971 1659 1025 1581 1092 C1491 1169 1331 1189 1187 1194 C947 1212 803 1171 653 1148 C437 1103 255 1052 163 916 C96 797 102 673 108 532 C82 359 91 183 130 85Z';
+ terrain.append(vector('rect',{x:0,y:0,width:W,height:H},'pw-dot-terrain-sea'),
+  vector('path',{d:LAND},'pw-dot-terrain-land'));
+ const geoPath=(d,cls)=>terrain.append(vector('path',{d},cls));
+ geoPath('M1708 1033 C1745 1002 1780 1015 1790 1046 C1835 1005 1894 1025 1912 1087 C1886 1137 1828 1157 1785 1123 C1753 1132 1709 1092Z','pw-dot-terrain-island');
+ geoPath('M123 165 C212 111 343 127 403 232 S394 434 341 536 C280 611 135 604 100 485Z','pw-dot-relief-mountain');
+ geoPath('M148 230 Q268 148 370 249 M148 284 Q270 208 365 306 M140 339 Q271 259 352 368 M127 399 Q266 327 342 432','pw-dot-contour');
+ geoPath('M134 538 C230 472 368 487 471 629 S451 916 302 996 C177 1003 87 866 134 538Z','pw-dot-relief-forest');
+ geoPath('M208 604 Q321 550 405 681 M190 678 Q300 620 416 741 M172 744 Q295 700 393 811','pw-dot-contour');
+ geoPath('M1124 120 Q1304 57 1508 182 L1540 370 Q1402 465 1217 385Z','pw-dot-relief-farm');
+ for(let i=0;i<7;i++){const yy=164+i*30;
+  geoPath('M'+(1180+i*4)+' '+yy+' Q1340 '+(yy-27)+' 1510 '+(yy+6),'pw-dot-field-line')}
+ const stream='M739 85 C715 210 815 281 867 352 S908 473 999 523 C1109 588 1290 584 1451 648 S1545 701 1598 754';
+ geoPath(stream,'pw-dot-river-bed');geoPath(stream,'pw-dot-river-stream');
+ geoPath('M378 874 C435 807 517 824 551 868 S579 983 523 1024 C461 1063 367 1000 378 874Z','pw-dot-lake');
+ geoPath('M383 887 Q467 841 546 902 M393 937 Q470 895 555 953','pw-dot-water-ripple');
+ for(const c of atlas.CITIES){
+  const radius=c.size==='metro'?125:c.size==='city'?75:c.size==='island'?25:43;
+  terrain.append(vector('circle',{cx:c.x,cy:c.y,r:radius},'pw-dot-settlement'));
+ }
+
  // The same integer lattice owns regional routes, subway turns and every pin.
  const REGION_TONES={mountain:'#738e7c',forest:'#648476',plain:'#8e9580',
   lake:'#6492a3',sea:'#59879e',coast:'#6e94a0',island:'#709f9b',
@@ -332,7 +358,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    c.id==='naruba'||c.id==='okuzawa'?'mountain':
    c.id==='homori'||c.id==='mizuho'?'rice':'street'];
   photo(node,[thumb?.url,PLACEHOLDER]);
-  node.append(element('span','pw-transit-place-name',c.name));
+  node.append(element('span','pw-dot-city-symbol',c.size==='metro'?'●':c.size==='city'?'◆':c.size==='island'?'◌':'•'),
+   element('span','pw-transit-place-name',c.name),
+   element('small','pw-dot-city-sub',c.sub));
   put(node,location(c),cityLayer);
   cityNodes.push({node,city:c});
   node.addEventListener('click',e=>{
@@ -352,7 +380,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   node.dataset.transitStop=String(transitPOIs.has(p.id));
   const src=atlas.PHOTOS[p.photo]?.url;
   photo(node,[src,PLACEHOLDER]);
-  node.append(element('span','pw-transit-place-name',p.name));
+  const glyph=({rural:'田',mountain:'山',lake:'水',forest:'林',
+   island:'岛',tunnel:'隧',shrine:'社',school:'校',factory:'厂',
+   hospital:'医',station:'站',rumor:'?',port:'港',park:'园',
+   town:'街',coast:'海',bridge:'桥'})[p.kind]||'·';
+  node.append(element('span','pw-dot-poi-symbol',glyph),
+   element('span','pw-transit-place-name',p.name));
   put(node,location(p),placeLayer);
   worldNodes.push({node,poi:p});
   node.addEventListener('click',e=>{
@@ -376,6 +409,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    ]);
   });
  }
+ // Dedicated, world-coordinate player marker is not a fictional POI.
+ const you=element('span','pw-dot-current-location');
+ you.setAttribute('aria-label','当前位置');
+ you.append(element('i','pw-dot-current-ring'),
+  element('span','pw-dot-current-text','你在这里'));
+ areaLayer.append(you);
  // Always keep the actual current place legible under photo-pin decluttering.
  worldNodes.sort((a,b)=>Number(b.poi.id===here)-Number(a.poi.id===here)||
   Number(transitPOIs.has(b.poi.id))-Number(transitPOIs.has(a.poi.id)));
@@ -421,12 +460,17 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    node.style.left=(x+p.x*scale)+'px';
    node.style.top=(y+p.y*scale)+'px';
   }
+  const physicalHere=scale<1.22?hereCity:
+   metro.STATIONS[here]?localPoint(metro.STATIONS[here]):herePoi||hereCity;
+  you.style.left=(x+location(physicalHere).x*scale)+'px';
+  you.style.top=(y+location(physicalHere).y*scale)+'px';
+  you.dataset.region=String(scale<1.22);
   canvas.style.setProperty('--dot-city-label-size',v.w<900?'15px':'19px');
   canvas.style.setProperty('--dot-area-label-size','16px');
   canvas.style.setProperty('--dot-poi-label-size',v.w<900?'14px':'16px');
   map.dataset.compact=String(scale<.55);
   map.dataset.smallScreen=String(v.w<900);
-  const zoom=scale<1.15?'region':scale<2.3?'city':'detail';
+  const zoom=scale<1.22?'region':scale<2.3?'city':'detail';
   map.dataset.zoom=zoom;
   // Regions and city districts are zoom layers of the SAME physical lattice.
   caption.textContent=zoom==='region'?'都市圈交通':zoom==='city'?'城市交通':'街区交通';
@@ -441,16 +485,16 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // Atlas city cards have fixed *readable* screen sizes. Resolve the few
   // close-city overlaps in screen space rather than making ALL cities tiny.
   // Keep each card as close as possible to its snapped geographic anchor.
-  const cityCardWidth=scale<.55?96:166;
-  const cityCardHeight=scale<.55?82:125;
+  const cityCardWidth=scale<.65?94:126;
+  const cityCardHeight=scale<.65?50:60;
   const placedCities=[];
   for(const {node,city} of cityNodes){
    if(node.hidden)continue;
    const anchorX=x+location(city).x*scale;
    const anchorY=y+location(city).y*scale;
-   const offsets=[[0,0],[0,-74],[0,74],[105,0],[-105,0],
-    [105,-65],[-105,-65],[105,65],[-105,65],
-    [0,-144],[0,144],[145,0],[-145,0]];
+   const offsets=[[0,0],[0,-52],[0,52],[110,0],[-110,0],
+    [110,-56],[-110,-56],[110,56],[-110,56],
+    [0,-106],[0,106],[148,0],[-148,0]];
    let best=null;
    for(const [dx,dy] of offsets){
     const cx=clamp(anchorX+dx,cityCardWidth/2+8,v.w-cityCardWidth/2-8);
