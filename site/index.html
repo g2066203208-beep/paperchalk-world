@@ -3396,6 +3396,11 @@ void main(){
   function start(){if(!raf)raf=requestAnimationFrame(tick)}
   window.addEventListener('pointermove',e=>{
     if(editorActive||!fine.matches||e.pointerType==='touch'||reduced.matches)return;
+    // The four ally-selection controls are UI, not camera input. Clicking a
+    // squadmate must not simultaneously whip the battle camera to the edge.
+    if(stage.dataset.scene==='ring-arena'&&e.target?.closest?.('#ring-arena-controls')){
+      aimX=0;aimY=0;start();return;
+    }
     aimX=clamp(e.clientX/Math.max(1,innerWidth)*2-1,-1,1);
     aimY=clamp(e.clientY/Math.max(1,innerHeight)*2-1,-1,1);
     start();
