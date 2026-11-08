@@ -272,3 +272,13 @@
  #pw-world-surface .pw-home-neighborhood-right{order:1;flex:1}
  #pw-world-surface .pw-home-neighborhood-maphead{padding:56px 10px 7px}
 }
+
+/* One downward breadcrumb on the city page, never an inert button in the
+ * local station or world levels. */
+#pw-world-surface .pw-dot-world-map .pw-dot-home-down[hidden]{
+ display:none!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-home-down:not([hidden]){
+ background:#493238!important;border-color:#d9ab94!important;
+ color:#fff2dd!important;font-weight:750!important;
+}
