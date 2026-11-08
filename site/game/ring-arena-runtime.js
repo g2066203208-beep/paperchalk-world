@@ -219,8 +219,17 @@
   if(!selected||selected.id===originalHero.id)
    return shoulderCamera(base,originalHero,x,y,aspect);
   const dx=selected.x-originalHero.x,dz=selected.z-originalHero.z;
-  const shifted={...base,eye:{...base.eye,x:base.eye.x+dx,z:base.eye.z+dz},
-   focus:{...base.focus,x:base.focus.x+dx*.5,z:base.focus.z+dz}};
+  // Narrow phones cannot show a near-side shoulder and the entire opposing
+  // rank with the desktop 1.34m camera boom. As the controlled fighter moves
+  // left across the player rank, retreat the SINGLE camera proportionately.
+  // The actor roots and their one-to-one world-space rows NEVER move.
+  const phone=clamp((.85-clamp(Number(aspect)||16/9,.35,3.5))/.25,0,1);
+  const rows=Math.abs(dx)/1.19,extraZ=Math.min(1.6,rows*.5)*phone;
+  const shifted={...base,
+   eye:{...base.eye,x:base.eye.x+dx*(1+.1*phone),
+    z:base.eye.z+dz+extraZ},
+   focus:{...base.focus,x:base.focus.x+dx*(.5+.15*phone),
+    z:base.focus.z+dz}};
   const view=shoulderCamera(shifted,selected,x,y,aspect);
   return {...view,controlledActorId:selected.id,originalHeroWorldStatic:true};
  }
