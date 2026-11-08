@@ -1,8 +1,8 @@
-# 路人 NPC｜统一人物图鉴（六人）
+# 路人 NPC｜统一人物图鉴（已入库七人）
 
-**2026-11-08：现有六名路人，五张全新三视图 PNG 与老爷爷已批准 PNG 均在 GitHub。** 与剧情主要角色（CHAR 系列）分开管理；老爷爷 M003 本来就属于**路人 NPC**，保留原编号与其经过批准的四视图、RGBA 图集和单姿态精灵。不得重复导入/重命名他的旧资产。
+**2026-11-08：现已入库七名路人（含女主学校第一位学生妹），六张新三视图 PNG 与老爷爷已批准 PNG 都在 GitHub。** 与剧情主要角色（CHAR 系列）分开管理；老爷爷 M003 本来就属于**路人 NPC**，保留原编号与其经过批准的四视图、RGBA 图集和单姿态精灵。不得重复导入/重命名他的旧资产。
 
-## 已入库的六名路人
+## 已入库的七名路人
 
 | NPC ID | 人物 | 原始 PNG（GitHub 实际文件） | 视图顺序 | 状态 |
 | --- | --- | --- | --- | --- |
@@ -12,6 +12,7 @@
 | NPC-C004 | 年轻街头男性，深绿连帽卫衣 | [three-view-original.png](../../../assets/characters/civilians/npc-c004/three-view-original.png) | 左侧面→正面→背面 | **用户认可最终修正版**，已上传 RGB 原图，待 RGBA 和表演状态 |
 | NPC-M003 | 老爷爷，地铁看报 | [approved-four-poses.png](../../../assets/characters/metro/npc-m003/approved-four-poses.png) | 正面→左侧面→背面→坐着看报 | **用户已批准，RGB 原图及所有透明 RGBA 精灵均已入 GitHub** |
 | NPC-C005 | 中年女性，酒红毛衣橄榄绿裙 | [three-view-original.png](../../../assets/characters/civilians/npc-c005/three-view-original.png) | 左侧面→正面→背面 | 已上传 RGB 原图，待视觉验收及 RGBA/表演状态 |
+| NPC-SG01 | 学校三人队①，高马尾娇小手机女生 | [three-view-original.png](../../../assets/characters/civilians/schoolgirls/sg01/three-view-original.png) | 左侧面→正面→背面 | **用户认可三视图母图，已实传原始 RGB PNG**；待透明与 img2img 状态 |
 
 > NPC-C005 的完整 [Anima 原提示词](../../../../docs/NPC-C005_ANIMA_THREE_VIEW_MIDDLE_AGED_WOMAN_20261108.md) 与用户实际三视图 PNG 均已保存，图像尚未单独宣布为已通过全部美术验收。
 
@@ -28,6 +29,7 @@ site/assets/characters/civilians/
   npc-c003/three-view-original.png   # 636544 字节 RGB PNG
   npc-c004/three-view-original.png   # 668427 字节 RGB PNG
   npc-c005/three-view-original.png   # 585412 字节 RGB PNG
+  schoolgirls/sg01/three-view-original.png  # 623012 字节 RGB PNG
   npc-front-comparison-20261108.png  # 六人正面全身高清对照图
   npc-front-comparison-20261108.jpg  # 同内容高清预览图
 
@@ -40,11 +42,11 @@ site/assets/characters/metro/npc-m003/  # 已批准老爷爷，沿用原目录�
   special-front-seated-reading.png
 ```
 
-五个新 PNG 均按用户提交的原始字节写入 GitHub，**与本次源文件 Git Blob SHA 和 SHA-256 双重匹配**；没有使用 Canva 缩略图、改变尺寸或重新压缩。五个新源图均为 **1024×1024、RGB、白色背景**。M003 为 1472×1024 四视图，除已有 RGBA 精灵之外保持不动。
+六个新 PNG 均按用户提交的原始字节写入 GitHub，**与本次源文件 Git Blob SHA 和 SHA-256 双重匹配**；没有使用 Canva 缩略图、改变尺寸或重新压缩。六个新源图均为 **1024×1024、RGB、白色背景**。M003 为 1472×1024 四视图，除已有 RGBA 精灵之外保持不动。
 
 ## 视图约定（十分重要）
 
-当前 C001-C004 用户实际成品的左右顺序为 **侧面 / 正面 / 背面**；而 Anima 提示词基准期望 **正面 / 侧面 / 背面**。**程序裁切应读取 gallery.v1.json 内的 `source.actualImageLeftToRight`，不得猜测生成顺序，也不要把左侧面当成正面。**
+当前 C001-C005、SG01 用户实际成品的左右顺序为 **侧面 / 正面 / 背面**；而 Anima 提示词基准期望 **正面 / 侧面 / 背面**。**程序裁切应读取 gallery.v1.json 内的 `source.actualImageLeftToRight`，不得猜测生成顺序，也不要把左侧面当成正面。**
 
 白底 RGB **不能直接**作为透明游戏立绘。图像实际上传并不意味着已经生成切片、RG​​BA、L2D 或游戏中 NPC。正式角色还要验收透明像素边缘、脚底站位、世界身高、场景归属和实际渲染。
 
@@ -56,7 +58,13 @@ site/assets/characters/metro/npc-m003/  # 已批准老爷爷，沿用原目录�
 - 校验原图与全部 GitHub 文件：`python3 scripts/validate_civilian_npc_sources.py`。
 - 兼容目录 `site/data/npc/metro-character-gallery.v1.json` 仅供原有 M001-M003 数据使用，**不是排除老爷爷的独立路人集合**。
 
-## 六人正面统一对照
+## 学校学生妹三人组
+
+- [学校三人队独立目录](school-trio/README.md)：**SG01 已上传原始三视图 PNG**；**SG02 黑皮辣妹已完成完整 Anima 提示词，但尚无 PNG**；SG03 待设计。
+- SG01 的实际图序是左侧面／中正面／右背面；不要误用此前模板期望的左正面／中侧面／右背面来自动切片。
+- 学校统一校服，SG02 的不规矩穿法仍须保留长酒红领带、两颗深暖灰棕圆扣与校服的基本结构。新学校学生 LoRA 1.0。
+
+## 六位原有市民正面统一对照
 
 - [六人正面高清 PNG](../../../assets/characters/civilians/npc-front-comparison-20261108.png)
 - [六人正面高清 JPG 预览](../../../assets/characters/civilians/npc-front-comparison-20261108.jpg)
@@ -66,7 +74,7 @@ site/assets/characters/metro/npc-m003/  # 已批准老爷爷，沿用原目录�
 
 ### 责任与状态
 
-- 图片上传/索引/源图哈希：完成，六位。
-- 透明三视图切片与 L2D 动态素材：C001-C005 未做，M003 已有透明四格。
+- 图片上传/索引/源图哈希：完成，七位（六位原市民 + SG01）。
+- 透明三视图切片与 L2D 动态素材：C001-C005 及 SG01 未做，M003 已有透明四格。
 - 交流、休息、死亡的 img2img 状态：尚未生成（M003 已有看报坐姿）。
 - 游戏 NPC 运行时注册：**本次未执行**，不得宣称用户已在游戏里看到这些角色。
