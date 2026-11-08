@@ -44,14 +44,22 @@ try{
   const command=document.querySelector('.ring-timegrid').getBoundingClientRect();
   return {sceneRight:game.right,panelLeft:command.left,sceneWidth:game.width,panelWidth:command.width};
  });
- assert.ok(arenaViewports.sceneRight<=arenaViewports.panelLeft+3,
-  'the right portrait command panel must never obscure the fourth 3D enemy');
- assert.ok(arenaViewports.sceneWidth>500&&arenaViewports.panelWidth>360,
-  '3D world and ten-tick panel both need a real usable viewport');
+ assert.ok(arenaViewports.sceneWidth>=1275&&arenaViewports.sceneRight>=1275,
+  'real WebGL battle must occupy the entire 1280px screen: HUD is not a separate side panel');
+ assert.ok(arenaViewports.panelLeft>=780&&arenaViewports.panelWidth>350,
+  'all eight portraits and two card tracks belong to the in-battle right edge');
+ const hudStyle=await page.locator('.ring-timegrid').evaluate(node=>{
+  const s=getComputedStyle(node);return {background:s.backgroundColor,border:s.borderTopWidth,shadow:s.boxShadow};
+ });
+ assert.equal(hudStyle.background,'rgba(0, 0, 0, 0)',
+  'HUD must have NO giant opaque rectangular panel');
+ assert.equal(hudStyle.border,'0px');
+ assert.equal(hudStyle.shadow,'none');
  assert.equal(first.timegrid.version,'1.7');
  assert.equal(await page.locator('.tg-unit .tg-portrait img').count(),8);
  assert.equal(await page.locator('.tg-target-track').count(),8);
  assert.equal(await page.locator('.tg-own-track').count(),8);
+ assert.equal(await page.locator('.tg-faction').count(),2);
  assert.equal(await page.locator('.ring-timegrid .tg-ticks span').count(),11);
  assert.equal(await page.locator('.ring-timegrid [data-tg-card]').count(),4);
  assert.equal(await page.locator('[data-attack-card]').isVisible(),false,

@@ -261,11 +261,23 @@
    const targetsAllies=mode==='shuffle'||(selectedType&&friendly(selectedType));
    const targetsFoes=mode==='finisher'||(selectedType&&!friendly(selectedType));
    const activeTargeting=!!(mode||selectedType||moving);
-   const rail=['<div class="tg-ticks"><span>目标 / 自身行动</span>'];
+   const rail=['<div class="tg-ticks"><span>角色 / 时间轴</span>'];
    for(let t=1;t<=10;t++)rail.push('<span'+((playing?model.progress:selectedTick)===t?
     ' class="active"':'')+'>'+t+'</span>');
    rail.push('</div>');
-   for(const actor of game.actors){
+   // The battle HUD is ALWAYS visible on the right edge. Foes above,
+   // allies below; one physical avatar + TWO actionable information bands.
+   // This is not a separate dialog, panel or scene.
+   const combatants=[...game.actors.filter(a=>a.side==='enemy'),
+    ...game.actors.filter(a=>a.side==='ally')];
+   let previousSide='';
+   for(const actor of combatants){
+    if(actor.side!==previousSide){
+     previousSide=actor.side;
+     rail.push('<div class="tg-faction tg-faction-'+previousSide+
+      '"><span>'+(previousSide==='enemy'?'敌方 · ENEMY':'我方 · PARTY')+
+      '</span><i></i></div>');
+    }
     const current=shown.get(actor.id)||actor,forecast=projected.get(actor.id)||actor;
     const enemy=actor.side==='enemy',mine=actor.id===selected.id,dead=!!current.dead;
     const index=ROLE_IDS.indexOf(actor.id)+1,portrait=imgSrc(actor);
