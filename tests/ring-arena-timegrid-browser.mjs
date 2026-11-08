@@ -123,17 +123,21 @@ try{
  },null,{timeout:110000});
  const after=await inspect();
  assert.ok(after.timegrid.round>=1);
+ const aliveCount=after.timegrid.roles.filter(x=>x.hp>0).length+
+  after.timegrid.enemies.filter(x=>x.hp>0&&!x.dead).length;
  assert.ok(after.timegrid.roles.some((x,i)=>x.hp!==first.timegrid.roles[i].hp)||
   after.timegrid.enemies.some((x,i)=>x.hp!==first.timegrid.enemies[i].hp),
   'the eight avatar HP bars follow true ten-tick V1.7 simulation');
  assert.deepEqual(after.partyLine,first.partyLine,'party actors never change standing position');
  assert.deepEqual(after.opposingLine,first.opposingLine,'enemy actors never change standing position');
  assert.equal(after.timegrid.tacticsOpen,false);
- assert.equal(await page.locator('.tg-reel > .tg-row').count(),8);
+ assert.equal(await page.locator('.tg-reel > .tg-row').count(),aliveCount,
+  'death splices a real enemy frame out of the live film reel');
  await page.screenshot({path:resolve(out,'04-round-resolved-1280x720.png'),animations:'disabled'});
  await page.setViewportSize({width:390,height:844});
  await page.waitForTimeout(500);
- assert.equal(await page.locator('.tg-reel > .tg-row').count(),8);
+ assert.equal(await page.locator('.tg-reel > .tg-row').count(),aliveCount,
+  'phone reel retains the real live-member count after deaths');
  assert.equal(await page.locator('.tg-tactics').count(),0);
  const mobile=await inspect();
  assert.equal(mobile.renderer,'webgl-l2d');
