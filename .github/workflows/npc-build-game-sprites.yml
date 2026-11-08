@@ -24,6 +24,19 @@ jobs:
           node --test tests/npc-civilian-production.test.cjs
           node --test tests/npc-scene-presence.test.cjs
           node --test tests/civilian-npc-gallery.test.cjs
+      - name: Verify the actual NPC scene in Chromium, including mobile
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node tests/npc-civilian-browser.mjs
+      - name: Save exact real-browser NPC screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npc-civilian-real-browser-proof
+          path: artifacts/npc-civilian/*.png
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Publish tested sprites and production manifest
         shell: bash
         run: |
