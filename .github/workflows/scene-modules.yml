@@ -16,6 +16,9 @@ on:
       - 'site/game/npc-scene-presence.js'
       - 'site/game/npc-life-sim.js'
       - 'site/assets/metro/commuters/**'
+      - 'site/data/npc/**'
+      - 'site/assets/characters/metro/**'
+      - 'tests/metro-npc-four-pose-gallery.test.cjs'
       - 'tests/metro-platform-life.test.cjs'
       - 'scripts/build_scene_catalog.py'
       - 'tests/scene-modules.test.cjs'
@@ -35,6 +38,9 @@ on:
       - 'site/game/npc-scene-presence.js'
       - 'site/game/npc-life-sim.js'
       - 'site/assets/metro/commuters/**'
+      - 'site/data/npc/**'
+      - 'site/assets/characters/metro/**'
+      - 'tests/metro-npc-four-pose-gallery.test.cjs'
       - 'tests/metro-platform-life.test.cjs'
       - 'scripts/build_scene_catalog.py'
       - 'tests/scene-modules.test.cjs'
@@ -70,6 +76,7 @@ jobs:
           node --test tests/metro-npc-world-staging.test.cjs
           node --test tests/npc-scene-presence.test.cjs
           node --test tests/metro-platform-life.test.cjs tests/metro-platform3d.test.cjs tests/metro-station-light.test.cjs
+          node --test tests/metro-npc-four-pose-gallery.test.cjs
       - name: Verify game scripts parse independently
         run: |
           node - <<'JS'
