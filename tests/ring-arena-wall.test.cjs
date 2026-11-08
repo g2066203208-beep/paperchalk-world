@@ -43,7 +43,7 @@ assert.match(src,/else if\(uSurface==2\)/,'real 3D ceiling needs distinct lighti
 assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'curved ceiling triangles must be rendered');
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
-assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[6.80,6.80,6.80,6.80]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[6.35,6.35,6.35,6.35]);
 assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.5,10.5,10.5,10.5]);
 assert.equal(ring.camera('outer').fov,66);
 assert.equal(ring.camera('inner').fov,52);
@@ -206,15 +206,14 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
  'fog removal must be an alpha mask, not paint-over on source art');
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id,/,
  'real animated source must pass through non-destructive battle mask before upload');
-for(const mode of ['outer','inner']){
- const friends=ring.STAGING[mode].allies.map(([x])=>x);
- const foes=ring.STAGING[mode].enemies.map(([x])=>x);
- assert.deepEqual(friends,[-1.05,-.25,.55,1.35],
-  'four friends keep a compact straight rank without moving the approved heroine');
- assert.deepEqual(foes,friends,'enemy rank must align to the exact four opposing lanes');
- for(let i=1;i<4;i++)assert.ok(Math.abs(friends[i]-friends[i-1]-.80)<1e-7,
-  'four equal separated lanes, no camera-driven layout offsets');
-}
+assert.deepEqual(ring.STAGING.outer.allies.map(([x,z])=>[x,z]),
+ [[-1.05,9.3],[-1.72,7.95],[.78,9.5],[-1.05,8.32]]);
+assert.deepEqual(ring.STAGING.outer.enemies.map(([x,z])=>[x,z]),
+ [[-.2,6.35],[.45,6.35],[1.1,6.35],[1.75,6.35]]);
+assert.deepEqual(ring.STAGING.inner.allies.map(([x])=>x),[-1.05,-.25,.55,1.35]);
+assert.deepEqual(ring.STAGING.inner.enemies.map(([x])=>x),[-1.05,-.25,.55,1.35]);
+assert.ok(new Set(ring.STAGING.outer.allies.map(([,z])=>z)).size>2,
+ 'P5 staging must not flatten into four identical huge near-camera backs');
 assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
  ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[22,22,12,12]);
 assert.match(src,/const capDepth=16\.5/,
