@@ -1,76 +1,56 @@
 'use strict';
-/* Real right-shoulder TPS rig, human-scale proportions, 3D ground contact. */
+/* Immutable 4v4 lane geometry, physically shared WebGL camera and actors. */
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
 const arena=require('../site/game/ring-arena-runtime.js');
 const close=(a,b,eps=1e-6)=>assert.ok(Math.abs(a-b)<=eps,a+' != '+b);
 assert.equal(arena.SPEC.stageType,'compact-convenience-curved-aisle');
-assert.deepEqual(arena.HIDDEN_ALLY_IDS,[],'all four friendly actors must take part in the battle');
-// Camera-dependent opacity/culling is forbidden: it previously made any
-// teammate overlapping a foe only 3.5% opaque (effectively deleted).
-const rendererSource=require('node:fs').readFileSync(require('node:path').resolve(__dirname,'../site/game/ring-arena-runtime.js'),'utf8');
-assert.ok(rendererSource.includes('gl.uniform1f(portrait.uOpacity,1);'),
- 'all actors must remain full opacity across all four controllable views');
+assert.deepEqual(arena.HIDDEN_ALLY_IDS,[]);
+const rendererSource=fs.readFileSync(path.resolve(__dirname,'../site/game/ring-arena-runtime.js'),'utf8');
+assert.match(rendererSource,/gl\.uniform1f\(portrait\.uOpacity,1\)/,
+ 'all eight actual L2D quads draw at full opacity');
 assert.doesNotMatch(rendererSource,/blocksTarget\s*=|occludes\?\.035|portrait\.uOpacity\s*,\s*occludes/,
- 'never restore any hidden ally or projected-occlusion opacity filter');
+ 'no teammate opacity or culling heuristics ever return');
 assert.equal(arena.portraitFit(800,1200,1024).height,1024);
 assert.ok(arena.renderPixelRatio(1920,1080,4)<1.1);
-assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shoulder camera base, not switching angles');
+assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shared physical camera rig');
 const base=arena.camera('outer'),scene=arena.layout('outer'),hero=scene.allies[0];
 assert.deepEqual(arena.visibleActors('outer').map(a=>a.id),
  ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
-assert.ok(scene.enemies.every(a=>a.y===0&&a.z===6.80));
-assert.ok(scene.allies.slice(1).every(a=>a.z>=7.85),
- 'every squadmate must stand in the heroine near-side physical zone');
-close(base.eye.y,1.5);close(base.eye.x,-.28);close(base.eye.z,10.40);
-close(base.fov,66);
+assert.deepEqual(scene.allies.map(a=>a.x),scene.enemies.map(a=>a.x));
+assert.ok(scene.allies.every(a=>a.z===9.3));
+assert.ok(scene.enemies.every(a=>a.z===6.8));
+close(base.eye.y,1.5);close(base.fov,66);
 assert.ok(arena.responsiveFov(66,9/16)>arena.responsiveFov(66,16/9));
-const initial=JSON.stringify(scene);
+const original=JSON.stringify(scene);
 for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
- const cam=arena.shoulderCamera(base,hero,0,0,aspect);
- const safe=arena.battleVisualSafety('outer',0,aspect,arena.FEMALE07_BACK_UV,cam);
- assert.ok(safe.valid&&safe.clear,'no ally/foe overlap in the center view '+aspect);
- assert.ok(safe.gap>.05);
- assert.ok(cam.shoulderRig&&cam.actorRootUnchanged);
- assert.equal(cam.lookYawDeg,0);
- assert.ok(cam.shoulderBoomMeters>=1.1&&cam.shoulderBoomMeters<=2.65);
- const visibleWidth=Math.max(0,Math.min(1,safe.hero.right)-Math.max(-1,safe.hero.left));
- assert.ok(visibleWidth>.25,'foreground heroine remains visibly large');
- const heel=scene.enemies.map(a=>arena.project({x:a.x,y:0,z:a.z},cam,aspect));
- const squad=scene.allies.slice(1).map(a=>arena.project({x:a.x,y:0,z:a.z},cam,aspect));
- assert.ok(squad.every(p=>p.valid),'three squadmates share the actual 3D floor');
- assert.ok(heel.every(p=>p.valid),'all 4 enemies grounded and in front of camera');
+ for(const active of scene.allies){
+  const neutral=arena.allyViewCamera(base,hero,active,0,0,aspect);
+  assert.ok(neutral.shoulderRig&&neutral.actorRootUnchanged);
+  assert.deepEqual(neutral.shoulderPivot,
+   {x:active.x,y:active.y+active.height*.88,z:active.z});
+  assert.equal(neutral.controlledActorId,active.id);
+  assert.ok(neutral.composition.score>=0&&Number.isFinite(neutral.composition.score));
+  assert.equal(neutral.heroYawDeg,0);
+  const foeCenters=scene.enemies.map(e=>arena.project({
+   x:e.x,y:e.height*.5,z:e.z
+  },neutral,aspect));
+  assert.ok(foeCenters.every(p=>p.valid),'four real ground-anchored foes project');
+  for(const yaw of [-1,-.5,0,.5,1])for(const pitch of [-1,0,1]){
+   const orbit=arena.allyViewCamera(base,hero,active,yaw,pitch,aspect);
+   assert.ok(orbit.actorRootUnchanged);
+   assert.deepEqual(orbit.shoulderPivot,neutral.shoulderPivot);
+   close(Math.hypot(orbit.eye.x-active.x,orbit.eye.z-active.z),
+    Math.hypot(neutral.eye.x-active.x,neutral.eye.z-active.z),1e-7);
+   assert.ok(Math.abs(orbit.lookYawDeg)<=22.00001);
+   assert.ok(Math.abs(orbit.lookPitchDeg)<=12.00001);
+   assert.ok(Number.isFinite(arena.project({
+    x:scene.enemies[0].x,y:.8,z:scene.enemies[0].z
+   },orbit,aspect).x));
+  }
+ }
 }
-const c=arena.shoulderCamera(base,hero,0,0,1917/906);
-const safe=arena.battleVisualSafety('outer',0,1917/906,arena.FEMALE07_BACK_UV,c);
-assert.ok(safe.hero.left<-.99&&safe.hero.right<-.20&&safe.hero.right>-.28);
-assert.ok(safe.hero.top>.47&&safe.hero.top<.55);
-const heroBillboard=arena.portraitBounds(hero,c,1917/906);
-assert.ok(heroBillboard.heightFraction>1.45&&heroBillboard.heightFraction<1.65,
- 'hero must have an immersive large close-up rather than a distant card');
-assert.ok(safe.foes.every(f=>f.heightFraction>.41&&f.heightFraction<.46),
- 'enemy sizes must remain natural at true world distance');
-const foePositions=scene.enemies.map(e=>arena.project({x:e.x,y:e.height*.5,z:e.z},c,1917/906).x);
-assert.ok(foePositions[0]<0&&foePositions.at(-1)>.72,
- 'foes remain readable beyond the heroine shoulder');
-for(const yaw of [-1,-.5,0,.5,1])for(const pitch of [-1,0,1]){
- const cam=arena.shoulderCamera(base,hero,yaw,pitch,1917/906);
- const displacement=Math.hypot(cam.eye.x-base.eye.x,cam.eye.z-base.eye.z);
- const boom=Math.hypot(cam.eye.x-hero.x,cam.eye.z-hero.z);
- close(boom,arena.shoulderCamera(base,hero,0,0,1917/906).shoulderBoomMeters,1e-7);
- assert.ok(displacement<1.5);
- close(cam.heroYawDeg,0,1e-7);
- const pivot={x:hero.x,y:hero.y+hero.height*.88,z:hero.z};
- const neutral=arena.shoulderCamera(base,hero,0,pitch,1917/906);
- close(arena.project(pivot,cam,1917/906).x,
-  arena.project(pivot,neutral,1917/906).x,1e-6);
- assert.ok(Math.abs(cam.lookYawDeg)<=22.0001&&Math.abs(cam.lookPitchDeg)<=12.0001);
- const originalShadowRight=arena.actorWorldRight(hero,'outer',cam.heroYawDeg);
- assert.ok(Number.isFinite(originalShadowRight.x)&&Number.isFinite(originalShadowRight.z));
- // Shoulder follows the same yaw and does not teleport the foe's art or root.
- const enemyRight=arena.actorWorldRight(scene.enemies[0],'outer',cam.heroYawDeg);
- close(enemyRight.x,1);close(enemyRight.z,0);
-}
-assert.equal(JSON.stringify(scene),initial,'third-person camera must NEVER move actors');
-const inner=arena.camera('inner');
-assert.equal(inner.fov,52,'legacy opposite-direction environment remains intact');
-console.log('PASS four matching allies behind locked heroine and four matching enemies with an unchanged shoulder camera');
+assert.equal(JSON.stringify(scene),original,'camera never moves either rank');
+assert.equal(arena.camera('inner').fov,52,'unrelated scene camera stays untouched');
+console.log('PASS exact aligned 4v4, cached four-role shoulder solver, shared WebGL matrix and uncullable allies');
