@@ -149,7 +149,7 @@
    const v=viewport(),c=camera();
    const w=Math.max(1,Math.round(v.w)),h=Math.max(1,Math.round(v.h));
    if(!Number.isFinite(c.scale)||c.scale<=0)return;
-   const dpr=Math.min(root.devicePixelRatio||1,1.35);
+   const dpr=Math.min(doc.defaultView?.devicePixelRatio||1,1.35);
    const dw=Math.round(w*dpr),dh=Math.round(h*dpr);
    if(surface.width!==dw||surface.height!==dh){
     surface.width=dw;surface.height=dh;gl.viewport(0,0,dw,dh);
