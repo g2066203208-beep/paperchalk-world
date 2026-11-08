@@ -108,11 +108,13 @@ test('game map loads a real on-canvas editor and keeps normal in-place travel me
  const html=fs.readFileSync(path.join(__dirname,'../site/index.html'),'utf8');
  const js=fs.readFileSync(path.join(root,'transit-map-ui.js'),'utf8');
  const ui=fs.readFileSync(path.join(root,'metro-map-editor-ui.js'),'utf8');
- const a=html.indexOf('src="./game/metro-map-geometry.js?');
- const b=html.indexOf('src="./game/metro-map-editor.js?');
- const c=html.indexOf('src="./game/metro-map-editor-ui.js?');
- const d=html.indexOf('src="./game/transit-map-ui.js?');
- assert.ok(a>=0&&b>a&&c>b&&d>c,'browser must register editor before transit UI');
+ const a=html.indexOf('src="./game/metro-map-editor.js?');
+ const b=html.indexOf('src="./game/metro-graph.js?');
+ const c=html.indexOf('src="./game/metro-map-geometry.js?');
+ const d=html.indexOf('src="./game/metro-map-editor-ui.js?');
+ const e=html.indexOf('src="./game/transit-map-ui.js?');
+ assert.ok(a>=0&&b>a&&c>b&&d>c&&e>d,
+  'editor validation must load before actual graph, geometry and transit UI');
  assert.match(js,/editorUI\?\.syncVisibility\(\)/);
  assert.match(js,/function showMenu\(/);
  assert.match(js,/positionPopup\(\)/);
@@ -122,4 +124,33 @@ test('game map loads a real on-canvas editor and keeps normal in-place travel me
  assert.match(ui,/pointerdown/);
  assert.match(ui,/model\.addStation/);
  assert.match(ui,/model\.insertBend/);
+});
+
+
+test('saving and reloading a blueprint actually installs the new station and rounded bends into playable metro',()=>{
+ const disk=store(),draft=editor.create(metro,geo,disk);
+ const targetEdge=draft.edges().find(e=>e.lineId==='h');
+ const newId=draft.addStation(targetEdge,1,25);
+ assert.ok(newId);
+ const afterEdge=draft.edges().find(e=>e.lineId==='h'&&e.to===newId);
+ draft.insertBend(afterEdge,2,24);
+ draft.save();
+ const runtime={window:{localStorage:disk,console:{warn(){}}}};
+ for(const filename of ['metro-map-editor.js','metro-graph.js','metro-map-geometry.js']){
+  vm.runInNewContext(fs.readFileSync(path.join(root,filename),'utf8'),
+   runtime,{filename});
+ }
+ const actual=runtime.window.PaperWorldMetro;
+ const shape=runtime.window.PaperWorldMetroGeometry;
+ assert.ok(actual.ACTIVE_BLUEPRINT,'saved plan must be recognized at boot');
+ assert.ok(actual.STATIONS[newId],'newly authored stop must become a real playable station');
+ assert.equal(Object.keys(actual.STATIONS).length,171);
+ assert.equal(actual.LINES.length,10);
+ assert.equal(actual.getLine('h').stops.includes(newId),true);
+ assert.ok(actual.path('entrance',newId));
+ assert.ok(actual.path(newId,'entrance'));
+ assert.ok(shape.routes[afterEdge.key]);
+ for(const line of actual.LINES)for(const [from,to] of shape.segments(line)){
+  assert.match(shape.pathFor(line.id,from,to,actual.STATIONS,1440,810),/^M\d/);
+ }
 });
