@@ -230,7 +230,23 @@ function createEditor(cases,store){
    if(props.y!==undefined)m.y=nearest(props.y);
    if(props.label!==undefined)m.label=safeText(props.label);
    if(props.color!==undefined)m.color=props.color;
-   if(props.angle!==undefined)m.angle=((nearest(props.angle)%4)+4)%4;
+   if(props.angle!==undefined){
+    m.angle=((nearest(props.angle)%4)+4)%4;
+    const turns=(m.angle-original.angle+4)%4;
+    if(turns&&m.points){
+     // A connected official line must not silently detach from both its
+     // canonical stations. Edit bends, drag stops or copy it first instead.
+     if(m.fromStation||m.toStation)return false;
+     m.points=m.points.map(([x,y])=>{
+      let dx=x-original.x,dy=y-original.y;
+      for(let i=0;i<turns;i++)[dx,dy]=[-dy,dx];
+      return [original.x+dx,original.y+dy];
+     });
+     m.points=uniquePoints(m.points);
+    }
+    if(turns%2===1&&TYPES[m.type].mode==='area')
+     [m.w,m.h]=[m.h,m.w];
+   }
    if(props.w!==undefined)m.w=nearest(props.w);
    if(props.h!==undefined)m.h=nearest(props.h);
    if(props.points)m.points=uniquePoints(props.points.map(p=>[nearest(p[0]),nearest(p[1])]));
