@@ -81,9 +81,14 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  });
  chrome.append(heading,tools);
  const hint=element('div','pw-dot-hint','点击城市进入独立市内交通图 · 城际线路只在此层显示');
+ const emptyMetro=element('div','pw-dot-metro-no-service');
+ emptyMetro.append(element('strong','pw-dot-empty-title','本市暂无已登记运营地铁'),
+  element('small','pw-dot-empty-sub','不把公交、道路或步行线路伪装成地铁。'),
+  element('small','pw-dot-empty-hint','← 返回城际地图查看其他城市'));
+ emptyMetro.hidden=true;
  const popup=element('div','pw-transit-popup pw-dot-popup');
  popup.hidden=true;popup.setAttribute('role','group');
- map.append(chrome,hint,popup);
+ map.append(chrome,hint,emptyMetro,popup);
  body.replaceChildren(map);
  // Only explicit city selection can reveal internal rail or destination pins.
  let activeCity=null,regionalCamera=null;
@@ -181,6 +186,21 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    const d=rounded(orthogonal(a,b),18);
    selectedRoute.append(vector('path',{d,'data-service':item.line?.mode||'regional'},
     'pw-dot-route-preview-line'));
+  }
+ }
+ function previewMetroRoute(route){
+  selectedRoute.replaceChildren();
+  if(!route?.segments?.length||activeCity!=='kirihama')return;
+  for(const leg of route.segments){
+   const a=metro.STATIONS[leg.from],b=metro.STATIONS[leg.to];
+   if(!a||!b)continue;
+   const intermediate=geometry.routes[leg.line.id+':'+leg.from+':'+leg.to]||
+    (geometry.routes[leg.line.id+':'+leg.to+':'+leg.from]||[]).slice().reverse();
+   const points=[localPoint(a),...intermediate.map(([gx,gy])=>localPoint({gx,gy})),
+    localPoint(b)];
+   selectedRoute.append(vector('path',{
+    d:rounded(points,15),'data-line':leg.line.id},
+    'pw-dot-route-preview-line pw-dot-metro-journey-preview'));
   }
  }
  function lineGroup(parent,line,from,to,points,kind,hitCallback){
@@ -392,10 +412,14 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  function fitSelectedCity(){
   if(!activeCity){centerOn({x:W*.5,y:H*.5},minScale);return}
   const city=atlas.CITY_BY_ID[activeCity],v=viewport();
-  const pts=[city,...atlas.POIS.filter(p=>p.city===activeCity)
-   .map(p=>network.at(p.id)||p)];
-  if(activeCity==='kirihama')for(const [id,stop] of Object.entries(metro.STATIONS))
-   if(!stop.locked)pts.push(localPoint(stop));
+  const pts=[city];
+  if(activeCity==='kirihama'){
+   // Fit ONLY subway infrastructure. Off-network cafés, forests, and road
+   // access points must never determine the metro camera bounds.
+   pts.length=0;
+   for(const stop of Object.values(metro.STATIONS))
+    if(!stop.locked)pts.push(localPoint(stop));
+  }
   const xs=pts.map(p=>location(p).x),ys=pts.map(p=>location(p).y);
   const bounds={left:Math.min(...xs),right:Math.max(...xs),
    top:Math.min(...ys),bottom:Math.max(...ys)};
@@ -439,51 +463,50 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    node.style.left=(x+p.x*scale)+'px';
    node.style.top=(y+p.y*scale)+'px';
   }
-  // Map LEVEL is independent of zoom. No switch from regional to city
-  // just because the player zoomed in near another city.
-  const scoped=activeCity!==null,selectedCity=atlas.CITY_BY_ID[activeCity];
+  // Explicit map scope, NOT zoom: intercity vs one city's SUBWAY ONLY.
+  const scoped=activeCity!==null,city=atlas.CITY_BY_ID[activeCity];
+  const hasMetro=activeCity==='kirihama'&&metro.LINES.some(l=>!l.locked);
   map.dataset.scope=scoped?'city':'region';
   map.dataset.city=activeCity||'';
-  map.dataset.zoom=scoped?(scale>=4.75?'detail':'city'):'region';
+  map.dataset.transport=scoped?'metro':'regional';
+  map.dataset.zoom=scoped?'metro':'region';
   map.dataset.compact=String(!scoped&&scale<.65);
   map.dataset.smallScreen=String(v.w<900);
-  back.hidden=!scoped;
+  back.hidden=!scoped;emptyMetro.hidden=!scoped||hasMetro;
   heading.querySelector('.pw-dot-title').textContent=scoped?
-   selectedCity.name+' · 市内交通':'城际交通总图';
+   city.name+' · 地铁线路图':'城际交通总图';
   heading.querySelector('.pw-dot-subtitle').textContent=scoped?
-   selectedCity.sub+' · 仅显示本市线路与地点':
-   '点击城市进入独立交通图 · 城际铁路 / 巴士 / 渡轮';
-  hint.textContent=scoped?'仅显示'+selectedCity.name+'的交通线 · ← 返回城际图 · 拖动／缩放':
-   '仅显示跨市线路 · 点击任一城市进入其独立市内交通图';
-  caption.textContent=scoped?selectedCity.name+' · 市内线网':'十城城际交通';
-  sub.textContent=scoped?'点击本站点规划去回路线 · 返回城际图可选其他城市':
-   '城市间交通只在这一层显示 · 点击城市查看内部线路';
+   hasMetro?'仅运营地铁 · 车站 · 换乘 · 无其他交通':
+    '当前城市暂无已确认的运营地铁线路':
+   '点击城市查看该城市独立地铁图';
+  hint.textContent=scoped?
+   '地铁专用 · 其他交通方式不在此图 · ← 返回城际':
+   '城际交通总图 · 点击城市查看独立地铁';
+  caption.textContent=scoped?city.name+' · 地铁线路':'十城城际交通';
+  sub.textContent=scoped?
+   hasMetro?'点击地铁站查询乘车和换乘 · 不显示道路公交':
+    '本城市暂无正式地铁线路':
+   '各城市地铁独立显示 · 不在总图混合';
   canvas.style.setProperty('--dot-city-label-size',v.w<900?'15px':'19px');
   canvas.style.setProperty('--dot-area-label-size','16px');
   canvas.style.setProperty('--dot-poi-label-size',v.w<900?'14px':'16px');
-  // Geographical area names are not part of the current route-first brief.
   for(const n of areaNodes)n.hidden=true;
   regional.style.display=scoped?'none':'';
   regional.style.opacity='.95';
-  urban.style.display=activeCity==='kirihama'?'':'none';
+  urban.style.display=hasMetro?'':'none';
   metroNetwork.style.display='none';
-  municipal.style.display=scoped?'':'none';
-  access.style.display=scoped?'':'none';
-  stops.style.display=scoped?'':'none';
-  for(const segment of municipal.children){
-   segment.style.display=scoped&&segment.dataset.city===activeCity?'':'none';
-  }
-  for(const segment of access.children){
-   segment.style.display=scoped&&segment.dataset.city===activeCity?'':'none';
-  }
-  for(const group of stops.children){
-   group.style.display=scoped&&group.dataset.city===activeCity?'':'none';
-  }
-  metroLayer.hidden=activeCity!=='kirihama';
-  const physicalHere=scoped?(network.at(here)||hereCity):hereCity;
-  you.hidden=scoped&&currentCity!==activeCity;
-  you.style.left=(x+location(physicalHere).x*scale)+'px';
-  you.style.top=(y+location(physicalHere).y*scale)+'px';
+  municipal.style.display='none';
+  access.style.display='none';
+  stops.style.display=hasMetro?'':'none';
+  for(const group of stops.children)
+   group.style.display=hasMetro&&group.dataset.city==='kirihama'?'':'none';
+  metroLayer.hidden=!hasMetro;
+  placeLayer.hidden=true;
+  const actualHere=scoped&&hasMetro&&metro.STATIONS[here]?
+   localPoint(metro.STATIONS[here]):hereCity;
+  you.hidden=scoped&&(!hasMetro||currentCity!==activeCity);
+  you.style.left=(x+location(actualHere).x*scale)+'px';
+  you.style.top=(y+location(actualHere).y*scale)+'px';
   you.dataset.region=String(!scoped);
   // Intercity map contains ONLY cities, with large photos and route pins.
   // When a city is selected, all ten city cards disappear completely.
@@ -528,34 +551,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
     loadCardPhoto(img,source);
    }
   }
-  // Each city's POI list is isolated by its authored city ID, not by
-  // proximity or a zoom threshold. POIs in other cities cannot leak.
-  const occupied=[];
-  if(activeCity==='kirihama'){
-   for(const [id,station] of Object.entries(metro.STATIONS)){
-    if(station.locked)continue;
-    const p=localPoint(station);
-    occupied.push({x:x+p.x*scale,y:y+p.y*scale-100});
-   }
-  }
-  for(const {node,poi,img,source} of worldNodes){
-   const p=network.at(poi.id)||location(poi);
-   const px=x+p.x*scale,py=y+p.y*scale;
-   // Do not paint half-cropped photo cards along the viewport edges.
-   // Their physical circle pins stay on the line and can still be selected.
-   const cardClearance=v.h<450?164:188;
-   let visible=scoped&&poi.city===activeCity&&scale>=1.6&&
-    px>95&&px<v.w-95&&py>=cardClearance&&py<v.h-33;
-   if(visible){
-    visible=!occupied.some(q=>Math.abs(q.x-px)<183&&
-     Math.abs(q.y-(py-85))<145);
-    if(visible)occupied.push({x:px,y:py-85});
-   }
-   node.hidden=!visible;
-   if(visible)loadCardPhoto(img,source);
-  }
-  // Local station thumbnails stay visible only in Kirihama city mode.
-  // Other city's bus/metro labels belong to that city's authored lines.
+  // Metro-only: no location photo cards, city road pins, or POI labels.
+  for(const {node} of worldNodes)node.hidden=true;
   hint.hidden=false;
   clear();
  }
