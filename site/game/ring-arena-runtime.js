@@ -533,7 +533,7 @@
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;uniform sampler2D uWingTexture;uniform float uWingReady;',
   'uniform float uFloorReady;uniform float uCeilingReady;uniform float uWindowCutouts;',
-  'uniform float uPlatformExposure;uniform float uTrainPosition;uniform float uTrainSpeed;uniform float uDoorOpen;'
+  'uniform float uPlatformExposure;uniform float uTrainPosition;uniform float uTrainSpeed;uniform float uDoorOpen;',
   worldColorGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
@@ -660,7 +660,7 @@
   'float wallV=((uSurface==1||uSurface==9||uSurface==10)&&uGeometry>.5&&uGeometry<1.5)?',
   '(.10+.90*vWallUv.y):vWallUv.y;',
   'vec4 wallSample=texture2D(uWallTexture,vec2(clamp(fract(vWallUv.x),.002,.998),clamp(wallV,.003,.997)));',
-  'if((uSurface==1||uSurface==9||uSurface==10)&&uWindowCutouts>.5&&wallSample.a<.70){'
+  'if((uSurface==1||uSurface==9||uSurface==10)&&uWindowCutouts>.5&&wallSample.a<.70){',
   // Empty source-image margin is not an exterior WINDOW. It belongs to
   // the lower wall trim and must not show a bright tunnel through the floor.
   'if(vWallUv.y>.10||uSurface==9||uSurface==10)discard;',
