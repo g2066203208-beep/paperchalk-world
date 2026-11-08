@@ -4,22 +4,34 @@
 'use strict';
 const graph=global.PaperWorldMetro;
 const GRID=graph?.GRID||Object.freeze({columns:12,rows:6});
-const routes=Object.freeze({
+// Every SVG segment is calculated from REAL integer-lattice station nodes.
+// Only two downtown loop corners require authored intermediate grid turns;
+// all eight new city corridors consist of contiguous axis-aligned tracks.
+const routeRows={
  'a:entrance:school':[],
  'a:school:central':[],
  'a:central:convenience':[],
- // Direct, comprehensible ring corner: central -> south-west -> café.
- // No false detour across the northern diagram, no visual crossovers.
- 'b:central:cafe':[[8,3],[2,3]],
+ 'b:central:cafe':[[15,12],[6,12]],
  'b:cafe:park':[],
  'b:park:mall':[],
- // Both stations share column 10: take the direct northbound track.
  'b:mall:convenience':[],
- // North arc runs outside the red residential line without an
- // invented stop or maze-like zigzag.
- 'b:convenience:northgate':[[11,2],[11,1]],
+ 'b:convenience:northgate':[[22,10],[22,5]],
  'b:northgate:central':[]
-});
+};
+for(const line of graph?.LINES||[]){
+ for(let i=0;i<line.stops.length;i++){
+  if(i===line.stops.length-1&&!line.ring)continue;
+  const from=line.stops[i],to=line.stops[(i+1)%line.stops.length];
+  const key=line.id+':'+from+':'+to;
+  if(routeRows[key])continue;
+  const a=graph.STATIONS[from],b=graph.STATIONS[to];
+  if(!a||!b||a.gx!==b.gx&&a.gy!==b.gy)
+   throw Error('A metro edge requires a real orthogonal route: '+key);
+  routeRows[key]=[];
+ }
+}
+const routes=Object.freeze(Object.fromEntries(Object.entries(routeRows)
+ .map(([key,via])=>[key,Object.freeze(via.map(point=>Object.freeze(point.slice())))])));
 const number=n=>Number(n.toFixed(2));
 function layout(width,height){
  const w=Math.max(300,Number(width)||0),h=Math.max(160,Number(height)||0);
