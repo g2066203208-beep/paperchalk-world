@@ -855,3 +855,164 @@
 #pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place.is-station .pw-transit-place-name{
  font-size:var(--metro-station-label)!important
 }
+
+/* DOT WORLD V14 — geographical reading, not a wall of repeated stock photos.
+   One continuous pixel-dot world, one world-coordinate SVG camera. */
+#pw-world-surface .pw-dot-world-map .pw-dot-geography{
+ pointer-events:none;opacity:.90;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-terrain-sea{fill:#0a2430}
+#pw-world-surface .pw-dot-world-map .pw-dot-terrain-land{
+ fill:#23332e;stroke:#72978c;stroke-width:4;stroke-opacity:.55;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-terrain-island{
+ fill:#283f37;stroke:#8db7a7;stroke-width:3;stroke-opacity:.65;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-relief-mountain{
+ fill:#37423a;opacity:.88;stroke:#778878;stroke-width:2;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-relief-forest{
+ fill:#1b4137;opacity:.88;stroke:#507969;stroke-width:2;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-relief-farm{
+ fill:#496347;opacity:.62;stroke:#8eac7b;stroke-width:2;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-contour{
+ fill:none;stroke:#aac1a3;stroke-width:2.4;opacity:.36;
+ stroke-dasharray:4 10;stroke-linecap:round;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-field-line{
+ fill:none;stroke:#b2c48c;stroke-width:2.5;opacity:.32;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-river-bed{
+ fill:none;stroke:#133c4b;stroke-width:20;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-river-stream{
+ fill:none;stroke:#649eae;stroke-width:7;opacity:.82;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-lake{
+ fill:#144451;stroke:#80b7b1;stroke-width:3;opacity:.96;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-water-ripple{
+ fill:none;stroke:#91b9b7;stroke-width:2;opacity:.4;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-settlement{
+ fill:#95b7a8;fill-opacity:.115;
+ stroke:#afd0bb;stroke-opacity:.15;stroke-width:1.5;
+ stroke-dasharray:4 9;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-area-label{
+ font-size:clamp(12px,1.5cqh,18px)!important;
+ font-weight:500;letter-spacing:.08em;
+ color:#bcd1c8;opacity:.72;
+ text-shadow:0 2px 5px #081218,0 0 8px #10282c;
+}
+/* Pin-first city markers: no duplicated city photos on full-region map. */
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-city{
+ width:126px!important;min-width:90px!important;min-height:50px!important;
+ display:flex;flex-direction:column;justify-content:center;
+ align-items:center;gap:2px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-dot-city-symbol{
+ display:flex;align-items:center;justify-content:center;
+ width:25px;height:25px;border:2px solid #9dbaad;
+ border-radius:50%;background:#183a40;color:#d5e8d9;
+ font-size:15px;line-height:1;
+ box-shadow:0 0 0 4px #081c244c,0 0 14px #9dbfa83c;
+ transition:background .14s ease,box-shadow .14s ease;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city[data-size="metro"] .pw-dot-city-symbol{
+ width:30px;height:30px;color:#f6d7bb;
+ border-color:#f1ce9d;background:#544236;
+ box-shadow:0 0 0 5px #6e66433f,0 0 19px #f9cb906b;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-dot-city-sub{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-place-name,
+#pw-world-surface .pw-dot-world-map[data-compact="true"] .pw-dot-city .pw-transit-place-name{
+ font-size:14px!important;line-height:1.15!important;
+ padding:2px 6px!important;min-height:0!important;
+ white-space:nowrap!important;letter-spacing:.015em!important;
+ border:1px solid #a0b5a85c!important;
+ border-radius:3px!important;background:#132830f5!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city:hover .pw-dot-city-symbol,
+#pw-world-surface .pw-dot-world-map .pw-dot-city[data-selected="true"] .pw-dot-city-symbol{
+ background:#496b69;box-shadow:0 0 0 6px #9dcfb54d;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map[data-compact="true"] .pw-dot-city{
+ width:94px!important;min-width:94px!important;max-width:94px!important;
+ min-height:48px!important;
+}
+#pw-world-surface .pw-dot-world-map[data-small-screen="true"] .pw-dot-city .pw-transit-place-name{
+ font-size:13px!important;
+}
+/* Detail-level POI: small semantic markers, photographs load ONLY when selected. */
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-poi{
+ width:104px!important;min-height:40px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-dot-poi-symbol{
+ display:flex;align-items:center;justify-content:center;
+ width:27px;height:27px;border-radius:7px;
+ background:#213e40f0;color:#d9e8d4;
+ border:1px solid #94b5a88c;
+ font-size:14px;font-weight:700;line-height:1;
+ box-shadow:0 2px 7px #06141bbd;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-poi[data-kind="rumor"] .pw-dot-poi-symbol{
+ background:#42323d;color:#f3d9d6;border-color:#cb9699;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-place-name{
+ font-size:13px!important;padding:2px 5px!important;
+ background:#12252bde!important;border:1px solid #79928c4c!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-poi[data-current="true"] .pw-dot-poi-symbol{
+ border-color:#f6c9a3;box-shadow:0 0 0 4px #ecbd8d4d;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-current-location{
+ position:absolute;z-index:8;display:flex;flex-direction:column;
+ transform:translate(-50%,-50%);pointer-events:none;
+ align-items:center;min-width:62px;gap:2px;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-current-ring{
+ display:block;width:38px;height:38px;border-radius:50%;
+ border:2px solid #ffd4b1;background:#ef9c705c;
+ box-shadow:0 0 0 5px #d29c6b3b,0 0 20px #ffd4aa8c;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-current-text{
+ color:#fbe4c7;font:700 11px/1.2 "PaperSans",sans-serif;
+ background:#3c2e26e8;border:1px solid #d0a88999;
+ border-radius:2px;padding:2px 4px;white-space:nowrap;
+ text-shadow:0 1px 3px #21160e;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-current-location[data-region="true"] .pw-dot-current-ring{
+ width:27px;height:27px;border-width:2px;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-current-location[data-region="true"] .pw-dot-current-text{
+ display:none;
+}
+/* Photos belong to selected detail panels, not repeated map pins. */
+#pw-world-surface .pw-dot-world-map .pw-dot-popup .pw-dot-preview-photo{
+ margin:7px 0 6px;max-height:94px;overflow:hidden;
+ border:1px solid #9ab1ac78;border-radius:3px;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-popup .pw-dot-preview-photo img{
+ display:block;width:100%;max-height:94px;object-fit:cover;
+ filter:saturate(.7) contrast(1.04);
+}
+@container(max-height:430px){
+ #pw-world-surface .pw-dot-world-map .pw-dot-area-label{font-size:12px!important}
+ #pw-world-surface .pw-dot-world-map .pw-dot-city .pw-dot-city-symbol{
+  width:21px;height:21px;font-size:12px;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-city[data-size="metro"] .pw-dot-city-symbol{
+  width:25px;height:25px;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-popup .pw-dot-preview-photo{
+  display:none;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-current-ring{
+  width:27px;height:27px;
+ }
+}
