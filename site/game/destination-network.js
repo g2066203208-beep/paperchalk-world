@@ -19,12 +19,21 @@
  const HUB=c=>'hub-'+c;
  const nodes=new Map(),adj=new Map(),edgeByPair=new Map();
  const access=[],allRoutes=[];
- const point=(id,x,y,city,kind='place',name=id)=>{
+ const point=(id,x,y,city,kind='place',name=id,precise=false)=>{
   if(!id||nodes.has(id))return;
-  nodes.set(id,Object.freeze({id,x:snap(x),y:snap(y),city,kind,name}));
+  nodes.set(id,Object.freeze({id,x:precise?Math.round(x):snap(x),
+   y:precise?Math.round(y):snap(y),city,kind,name}));
   adj.set(id,[]);
  };
- for(const c of atlas.CITIES)point(HUB(c.id),c.x,c.y,c.id,'hub',c.name+'交通枢纽');
+ for(const c of atlas.CITIES){
+  // Region-wide visual coordinates are NOT the city-local street GIS.
+  // The Kirihama regional transfer hub is physically co-located with its
+  // central metro platform in the local transport graph.
+  const centre=c.id==='kirihama'?metro?.STATIONS?.central:null;
+  point(HUB(c.id),centre?METRO_ORIGIN.x+centre.gx*CELL:c.x,
+   centre?METRO_ORIGIN.y+centre.gy*CELL:c.y,
+   c.id,'hub',c.name+'交通枢纽');
+}
  // Canonical local subway node coordinates always win over approximate
  // regional landmark coordinates when both refer to the SAME place ID.
  // This prevents a photograph and its access-road pin being detached from
@@ -33,7 +42,12 @@
   const stop=metro?.STATIONS?.[p.id];
   if(stop&&!stop.locked)
    point(p.id,METRO_ORIGIN.x+stop.gx*CELL,METRO_ORIGIN.y+stop.gy*CELL,p.city,'place',p.name);
-  else point(p.id,p.x,p.y,p.city,'place',p.name);
+  else if(p.city==='kirihama'&&p.metroLocal){
+   // Exact planned point position, including within-block metre offsets.
+   // No fabricated radial chains and no 900m rounding of POI doorways.
+   point(p.id,METRO_ORIGIN.x+(p.metroLocal.eastM/900)*CELL,
+    METRO_ORIGIN.y+(p.metroLocal.southM/900)*CELL,p.city,'place',p.name,true);
+  }else point(p.id,p.x,p.y,p.city,'place',p.name);
  }
  // Actual municipal metro station nodes already exist in the real transport
  // simulation. Their positions are the SAME local square grid as in map UI.
@@ -48,7 +62,9 @@
   const multiplier=line.mode==='metro'?.055:line.mode==='regional'?.055:
    line.mode==='ferry'?.16:line.mode==='localrail'?.085:
    line.mode==='coach'?.10:line.mode==='bus'?.14:.24;
-  const minutes=Math.max(line.mode==='metro'?3:2,Math.round(metres*multiplier)+1);
+  const minutes=line.plannedWalkM?
+   Math.max(2,Math.ceil(line.plannedWalkM/65)):
+   Math.max(line.mode==='metro'?3:2,Math.round(metres*multiplier)+1);
   const push=(src,dst)=>{
    const key=src+'>'+dst+'@'+line.id;
    if(edgeByPair.has(key))return;
@@ -57,11 +73,11 @@
   };
   push(from,to);push(to,from);
  };
- const routeLine=(id,name,mode,color,stops,kind='access')=>{
+ const routeLine=(id,name,mode,color,stops,kind='access',metadata=null)=>{
   if(!Array.isArray(stops)||stops.length<2)return;
   const clean=stops.filter((id,i)=>nodes.has(id)&&(i===0||stops[i-1]!==id));
   if(clean.length<2)return;
-  const line=Object.freeze({id,name,mode,color,stops:Object.freeze(clean),kind});
+  const line=Object.freeze({id,name,mode,color,stops:Object.freeze(clean),kind,...(metadata||{})});
   allRoutes.push(line);
   for(let i=1;i<clean.length;i++)addEdge(clean[i-1],clean[i],line);
   return line;
@@ -72,6 +88,9 @@
  // Route direction is symmetric; an endpoint is never a one-way dead end.
  const SECTORS=['东区','南区','西区','北区'];
  for(const city of atlas.CITIES){
+  // No more random wedge/radial paths inside Kirihama: a planned site is
+  // attached ONLY to its authored actual station, with a reversible path.
+  if(city.id==='kirihama'&&atlas.KIRIHAMA_CITY_PLAN?.sites?.length===120)continue;
   const ps=atlas.POIS.filter(p=>p.city===city.id);
   const groups=[[],[],[],[]];
   for(const p of ps){
@@ -94,6 +113,28 @@
     city.name+' · '+SECTORS[n]+'接驳路',
     'access',n%2?'#8da9a6':'#a4b1a2',ordered);
    if(line)access.push(line);
+  }
+ }
+ // Explicit street-to-station first/last-mile links for all city POIs.
+ // Story sites sharing an old canonical station ID retain game save
+ // compatibility; their separate building door coordinates are authored
+ // in the masterplan pending a separate station-vs-location ID migration.
+ if(atlas.KIRIHAMA_CITY_PLAN?.sites?.length===120){
+  const switchLink=routeLine('access-kirihama-regional',
+   '中央总站 · 地铁与城际换乘厅','walk','#789898',
+   [HUB('kirihama'),'central'],'access',{plannedWalkM:120});
+  if(switchLink)access.push(switchLink);
+  for(const p of atlas.POIS){
+   if(p.city!=='kirihama'||!p.metroStationId)continue;
+   if(!metro?.STATIONS?.[p.metroStationId])
+    throw Error('Site has an unregistered station anchor '+p.id);
+   if(p.id===p.metroStationId)continue;
+   const link=routeLine('access-kirihama-'+p.id,
+    p.name+' · 车站步行接驳','walk','#849b9a',
+    [p.metroStationId,p.id],'access',
+    {plannedWalkM:p.walkingEstimateM,districtId:p.districtId});
+   if(!link)throw Error('Site lacks a distinct physical access link '+p.id);
+   access.push(link);
   }
  }
  // Existing municipal services are additional useful edges (not replacements
