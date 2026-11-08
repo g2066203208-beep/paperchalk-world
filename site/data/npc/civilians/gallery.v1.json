@@ -471,17 +471,17 @@
   "plannedCivilians": [
     {
       "id": "NPC-C006",
-      "name": "亲切的微胖中年大叔（通用城市路人）",
+      "name": "灰蓝夹克休闲男性（用户认可的实际原图）",
       "role": "everyday_civilian",
-      "visualCanon": "约48岁、中等身高略宽肩、自然小肚子、圆润方脸和温和嘴角、整齐深棕短发有少量灰丝、无眼睛但五官结构清爽；静蓝灰敞开休闲夹克、暖米白T恤、深炭灰直筒裤、干净棕灰低帮鞋；均匀平涂无深色脏脸影，非职业路人",
+      "visualCanon": "以用户批准的三视图为准：深棕短发、身材匀称、灰蓝敞开短夹克、浅米白T恤、黑色休闲长裤、浅色运动鞋；左纯侧、中正、右背，普通城市路人",
       "expectedOrder": [
         "side_left",
         "front",
         "back"
       ],
-      "promptReference": "docs/NPC-C006_ANIMA_THREE_VIEW_FRIENDLY_MIDDLE_AGED_MAN_20261108.md",
-      "status": "user_requested_age_distinct_chubby_uncle_prompt_v3_not_drawn_or_approved",
-      "gameRegistered": false,
+      "promptReference": null,
+      "status": "source_approved_in_repository_test_trial",
+      "gameRegistered": true,
       "sceneApplicability": [
         "street",
         "metro",
@@ -489,7 +489,43 @@
         "residential",
         "park",
         "convenience_store"
-      ]
+      ],
+      "source": {
+        "path": "site/assets/characters/civilians/npc-c006/three-view-original.png",
+        "sha256": "9c0cdafbc869ac23e8c95ba5421670e1946538b367a18cd8fb2df9ee625c037f",
+        "bytes": 632510,
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "mode": "RGB",
+        "actualImageLeftToRight": [
+          "side_left",
+          "front",
+          "back"
+        ],
+        "committedToRepository": true,
+        "gitCommit": "166336f0cad0fdb42fbe2c3fd22cc9cfd2d3cc5a",
+        "gitBlobSha": "0b46bed626a465b0477f77285558a1ddcf8e34f6",
+        "userSupplied": true
+      },
+      "notes": "Approved image overrides rejected older C006 prompt text that described a chubby uncle; visual truth is the approved uploaded PNG."
     }
-  ]
+  ],
+  "npcTest": {
+    "phase": "eight-civilian-trial",
+    "ids": [
+      "NPC-C001",
+      "NPC-C002",
+      "NPC-C003",
+      "NPC-C004",
+      "NPC-C005",
+      "NPC-C006",
+      "NPC-M003",
+      "NPC-SG01"
+    ],
+    "sourceApproval": "user_confirmed_initial_test",
+    "sourceMastersUntouched": true,
+    "note": "C006 original uploaded; remaining sprites extracted by reproducible GitHub Action; SG03 rejected and excluded."
+  }
 }
