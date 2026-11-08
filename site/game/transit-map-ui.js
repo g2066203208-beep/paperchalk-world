@@ -523,110 +523,121 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    node.style.left=(x+p.x*scale)+'px';
    node.style.top=(y+p.y*scale)+'px';
   }
-  const physicalHere=scale<1.22?hereCity:
-   metro.STATIONS[here]?localPoint(metro.STATIONS[here]):herePoi||hereCity;
-  you.style.left=(x+location(physicalHere).x*scale)+'px';
-  you.style.top=(y+location(physicalHere).y*scale)+'px';
-  you.dataset.region=String(scale<1.22);
+  // Map LEVEL is independent of zoom. No switch from regional to city
+  // just because the player zoomed in near another city.
+  const scoped=activeCity!==null,selectedCity=atlas.CITY_BY_ID[activeCity];
+  map.dataset.scope=scoped?'city':'region';
+  map.dataset.city=activeCity||'';
+  map.dataset.zoom=scoped?(scale>=4.75?'detail':'city'):'region';
+  map.dataset.compact=String(!scoped&&scale<.65);
+  map.dataset.smallScreen=String(v.w<900);
+  back.hidden=!scoped;
+  heading.querySelector('.pw-dot-title').textContent=scoped?
+   selectedCity.name+' · 市内交通':'城际交通总图';
+  heading.querySelector('.pw-dot-subtitle').textContent=scoped?
+   selectedCity.sub+' · 仅显示本市线路与地点':
+   '点击城市进入独立交通图 · 城际铁路 / 巴士 / 渡轮';
+  hint.textContent=scoped?'仅显示'+selectedCity.name+'的交通线 · ← 返回城际图 · 拖动／缩放':
+   '仅显示跨市线路 · 点击任一城市进入其独立市内交通图';
+  caption.textContent=scoped?selectedCity.name+' · 市内线网':'十城城际交通';
+  sub.textContent=scoped?'点击本站点规划去回路线 · 返回城际图可选其他城市':
+   '城市间交通只在这一层显示 · 点击城市查看内部线路';
   canvas.style.setProperty('--dot-city-label-size',v.w<900?'15px':'19px');
   canvas.style.setProperty('--dot-area-label-size','16px');
   canvas.style.setProperty('--dot-poi-label-size',v.w<900?'14px':'16px');
-  map.dataset.compact=String(scale<.55);
-  map.dataset.smallScreen=String(v.w<900);
-  const zoom=scale<1.25?'region':scale<2.85?'city':'detail';
-  map.dataset.zoom=zoom;
-  // Regions and city districts are zoom layers of the SAME physical lattice.
-  caption.textContent=zoom==='region'?'都市圈交通':zoom==='city'?'城市交通':'街区交通';
-  sub.textContent=zoom==='region'?'点击城市放大 · 城际铁路 / 巴士 / 渡轮':
-   zoom==='city'?'点击地点乘车 · 缩放查看全域':'点击地点调查 · 拖动继续探索';
-  for(const n of areaNodes)n.hidden=scale>=1.22;
-  for(const {node,city} of cityNodes){
-   const onScreen=(x+city.x*scale)>-100&&(x+city.x*scale)<v.w+100&&
-    (y+city.y*scale)>-100&&(y+city.y*scale)<v.h+100;
-   node.hidden=!onScreen||scale>=1.55;
+  // Geographical area names are not part of the current route-first brief.
+  for(const n of areaNodes)n.hidden=true;
+  regional.style.display=scoped?'none':'';
+  regional.style.opacity='.95';
+  urban.style.display=activeCity==='kirihama'?'':'none';
+  metroNetwork.style.display='none';
+  municipal.style.display=scoped?'':'none';
+  access.style.display=scoped?'':'none';
+  stops.style.display=scoped?'':'none';
+  for(const segment of municipal.children){
+   segment.style.display=scoped&&segment.dataset.city===activeCity?'':'none';
   }
-  // Atlas city cards have fixed *readable* screen sizes. Resolve the few
-  // close-city overlaps in screen space rather than making ALL cities tiny.
-  // Keep each card as close as possible to its snapped geographic anchor.
-  // Bounding rectangles include the photograph and title, not tiny labels.
-  const cityCardWidth=scale<.65?(v.h<440?132:150):194;
-  const cityCardHeight=scale<.65?(v.h<440?114:128):155;
-  cardLeaders.replaceChildren();
-  const placedCities=[];
+  for(const segment of access.children){
+   segment.style.display=scoped&&segment.dataset.city===activeCity?'':'none';
+  }
+  for(const group of stops.children){
+   group.style.display=scoped&&group.dataset.city===activeCity?'':'none';
+  }
+  metroLayer.hidden=activeCity!=='kirihama';
+  const physicalHere=scoped?(network.at(here)||hereCity):hereCity;
+  you.hidden=scoped&&currentCity!==activeCity;
+  you.style.left=(x+location(physicalHere).x*scale)+'px';
+  you.style.top=(y+location(physicalHere).y*scale)+'px';
+  you.dataset.region=String(!scoped);
+  // Intercity map contains ONLY cities, with large photos and route pins.
+  // When a city is selected, all ten city cards disappear completely.
   for(const {node,city} of cityNodes){
-   if(node.hidden)continue;
-   const anchorX=x+location(city).x*scale;
-   const anchorY=y+location(city).y*scale;
-   const dx=cityCardWidth+14,dy=cityCardHeight+10;
-   const offsets=[[0,0],[0,-dy],[0,dy],[dx,0],[-dx,0],
-    [dx,-dy],[-dx,-dy],[dx,dy],[-dx,dy],
-    [0,-2*dy],[0,2*dy],[2*dx,0],[-2*dx,0],
-    [2*dx,-dy],[-2*dx,-dy],[2*dx,dy],[-2*dx,dy]];
-   let best=null;
-   for(const [dx,dy] of offsets){
-    const cx=clamp(anchorX+dx,cityCardWidth/2+8,v.w-cityCardWidth/2-8);
-    const cy=clamp(anchorY+dy,cityCardHeight+52,v.h-10);
-    const overlap=placedCities.reduce((sum,q)=>{
-     const ow=Math.max(0,(cityCardWidth+q.w)/2+8-Math.abs(cx-q.x));
-     const oh=Math.max(0,(cityCardHeight+q.h)/2+6-Math.abs(cy-q.y));
-     return sum+ow*oh;
-    },0);
-    const score=overlap*6+Math.hypot(cx-anchorX,cy-anchorY)*.7;
-    if(!best||score<best.score)best={x:cx,y:cy,score};
-    if(overlap===0&&Math.hypot(cx-anchorX,cy-anchorY)<8)break;
-   }
-   if(best){
+   const px=x+location(city).x*scale,py=y+location(city).y*scale;
+   node.hidden=scoped||px<-130||px>v.w+130||py<-170||py>v.h+210;
+  }
+  cardLeaders.replaceChildren();
+  if(!scoped){
+   const cityCardWidth=v.h<440?130:148;
+   const cityCardHeight=v.h<440?112:135;
+   const placed=[];
+   for(const item of cityNodes){
+    const {node,city,img,source}=item;if(node.hidden)continue;
+    const ax=x+location(city).x*scale,ay=y+location(city).y*scale;
+    const dx=cityCardWidth+10,dy=cityCardHeight+12;
+    const offsets=[[0,0],[0,-dy],[0,dy],[dx,0],[-dx,0],
+     [dx,-dy],[-dx,-dy],[dx,dy],[-dx,dy],
+     [0,-2*dy],[0,2*dy],[2*dx,0],[-2*dx,0]];
+    let best=null;
+    for(const [ox,oy] of offsets){
+     const cx=clamp(ax+ox,cityCardWidth/2+8,v.w-cityCardWidth/2-8);
+     const cy=clamp(ay+oy,cityCardHeight+44,v.h-11);
+     const overlap=placed.reduce((sum,q)=>{
+      const ow=Math.max(0,(cityCardWidth+q.w)/2+7-Math.abs(cx-q.x));
+      const oh=Math.max(0,(cityCardHeight+q.h)/2+6-Math.abs(cy-q.y));
+      return sum+ow*oh;
+     },0);
+     const score=overlap*7+Math.hypot(cx-ax,cy-ay)*.45;
+     if(!best||score<best.score)best={x:cx,y:cy,score};
+     if(overlap===0&&Math.hypot(cx-ax,cy-ay)<8)break;
+    }
+    if(!best)continue;
     node.style.left=best.x+'px';node.style.top=best.y+'px';
-    placedCities.push({x:best.x,y:best.y,w:cityCardWidth,h:cityCardHeight});
-    const dist=Math.hypot(best.x-anchorX,best.y-anchorY);
-    if(dist>7){
+    placed.push({x:best.x,y:best.y,w:cityCardWidth,h:cityCardHeight});
+    if(Math.hypot(best.x-ax,best.y-ay)>7){
      const from=location(city),tx=(best.x-x)/scale,ty=(best.y-y)/scale;
      cardLeaders.append(vector('path',{d:rounded([
       from,{x:from.x,y:ty},{x:tx,y:ty}],7),
       'data-stop':network.HUB(city.id)},'pw-dot-city-card-leader'));
     }
-    const source=cityNodes.find(item=>item.city.id===city.id);
-    loadCardPhoto(source?.img,source?.source);
+    loadCardPhoto(img,source);
    }
   }
-  // The real eight-station metro is the main navigation layer. Surrounding
-  // atlas photo POIs must not blanket its station names at initial city zoom.
-  // Only reveal those optional investigations at street-level detail.
+  // Each city's POI list is isolated by its authored city ID, not by
+  // proximity or a zoom threshold. POIs in other cities cannot leak.
   const occupied=[];
-  if(scale>=1.22&&currentCity==='kirihama'){
-   for(const [id,st] of Object.entries(metro.STATIONS)){
-    const loc=localPoint(st);
-    occupied.push({x:x+loc.x*scale,
-     y:y+(loc.y-(PHOTO[id]?CELL:0))*scale});
+  if(activeCity==='kirihama'){
+   for(const [id,station] of Object.entries(metro.STATIONS)){
+    if(station.locked)continue;
+    const p=localPoint(station);
+    occupied.push({x:x+p.x*scale,y:y+p.y*scale-100});
    }
   }
-  for(const {node,poi} of worldNodes){
-   const p=location(poi),px=x+p.x*scale,py=y+p.y*scale;
-   const threshold=poi.id===here?2.15:
-    poi.city===currentCity?3.45:2.85;
-   let visible=scale>=threshold&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
-   // Real screen-space occupancy, not piles of overlapping photo cards.
+  for(const {node,poi,img,source} of worldNodes){
+   const p=network.at(poi.id)||location(poi);
+   const px=x+p.x*scale,py=y+p.y*scale;
+   let visible=scoped&&poi.city===activeCity&&scale>=1.6&&
+    px>-95&&px<v.w+95&&py>-40&&py<v.h+180;
    if(visible){
-    visible=!occupied.some(q=>Math.abs(q.x-px)<185&&
-      Math.abs(q.y-py)<150);
-    if(visible)occupied.push({x:px,y:py});
+    visible=!occupied.some(q=>Math.abs(q.x-px)<183&&
+     Math.abs(q.y-(py-85))<145);
+    if(visible)occupied.push({x:px,y:py-85});
    }
    node.hidden=!visible;
-   if(visible){
-    const selected=worldNodes.find(item=>item.poi.id===poi.id);
-    loadCardPhoto(selected?.img,selected?.source);
-   }
+   if(visible)loadCardPhoto(img,source);
   }
-  metroLayer.hidden=scale<1.25;
-  urban.style.display=scale<1.22?'none':'';
-  // Interchange pins stay visible at overview; local pins hide via CSS.
-  stops.style.display='';
-  metroNetwork.style.display='none'; // Retired fabricated ghost stops.
-  municipal.style.display=scale<1.45?'none':'';
-  access.style.display=scale<1.15?'none':'';
-  regional.style.display=scale>=1.45?'none':'';
-  regional.style.opacity='.86';
-  hint.hidden=scale>2.3;
+  // Local station thumbnails stay visible only in Kirihama city mode.
+  // Other city's bus/metro labels belong to that city's authored lines.
+  hint.hidden=false;
   clear();
  }
  function focus(p,zoom){centerOn(p,zoom)}
