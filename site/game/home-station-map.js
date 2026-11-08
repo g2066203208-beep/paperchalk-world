@@ -74,94 +74,78 @@ function create({map,atlas,metro,onTravel,notify,onUp}){
  const greens=svg('pattern',{id:'pw-home-green-dots',x:0,y:0,width:12,height:12,patternUnits:'userSpaceOnUse'});
  greens.append(svg('rect',{x:1,y:1,width:5,height:5,fill:'#617b61',opacity:.62}));
  defs.append(dots,greens);vector.append(defs);
- const terrain=svg('g',{},'pw-home-map-blocks');
- terrain.append(svg('rect',{x:0,y:0,width:S.width,height:S.height,fill:'#13202a'}));
- terrain.append(svg('rect',{x:0,y:0,width:S.width,height:S.height,fill:'url(#pw-home-pixel-dots)'}));
- // The block layout uses consistent 11px pixel blocks and broad orthogonal
- // roads. No misleading satellite imagery or street-scale GIS claims.
- const xRoads=[125,318,550,773,982],yRoads=[104,254,365,519,656];
- for(let j=0;j<yRoads.length-1;j++){
-  for(let i=0;i<xRoads.length-1;i++){
-   const x1=xRoads[i]+18,x2=xRoads[i+1]-18;
-   const y1=yRoads[j]+18,y2=yRoads[j+1]-17;
-   if(x2<=x1||y2<=y1)continue;
-   terrain.append(svg('rect',{x:x1,y:y1,width:x2-x1,height:y2-y1,
-    rx:0,fill:(i+j)%3===0?'#1d2934':(i+j)%3===1?'#202b35':'#18242f',
-    stroke:'#53616e','stroke-width':1,opacity:.75}));
-   for(let py=y1+8;py<y2-8;py+=13){
-    for(let px=x1+9;px<x2-7;px+=13){
-     const r=hash(Math.round(px),Math.round(py))%17;
-     if(r<3)continue;
-     terrain.append(svg('rect',{x:px,y:py,width:r%4===0?5:7,height:7,
-      fill:r%5===0?'#aaa5a0':r%4===0?'#6b747d':'#515e6a',
-      opacity:r%3===0?.72:.46}));
-    }
+ // The original subway is a clean BLACK/BLUE DOT-LATTICE, not a pixel
+ // street diorama. Every drawn road, block contour and track is composed
+ // from real, separated dots. No faux 7px buildings / broad paved roads.
+ const terrain=svg('g',{},'pw-home-map-dots');
+ terrain.append(svg('rect',{x:0,y:0,width:S.width,height:S.height,fill:'#101b27'}));
+ terrain.append(svg('rect',{x:0,y:0,width:S.width,height:S.height,
+  fill:'url(#pw-home-pixel-dots)',opacity:.82}));
+ function dottedPath(parent,points,{step=13,radius=1.9,fill='#a7bac4',opacity=.6}={}){
+  for(let i=1;i<points.length;i++){
+   const a=points[i-1],b=points[i];
+   const length=Math.hypot(b[0]-a[0],b[1]-a[1]);
+   const n=Math.max(1,Math.floor(length/step));
+   for(let j=0;j<=n;j++){
+    const t=j/n,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;
+    parent.append(svg('circle',{cx:x,cy:y,r:radius,fill,opacity}));
    }
   }
  }
- // A small pocket of urban trees; this is decorative land use, NOT an
- // invented reachable public park or a new world-map destination.
- for(const [x,y,w,h] of [[31,136,85,112],[999,58,83,171],[52,545,84,105],
-  [967,557,112,97],[343,275,70,52]]){
-  terrain.append(svg('rect',{x,y,width:w,height:h,
-   fill:'#1d312f',stroke:'#40534b','stroke-width':1.5}));
-  terrain.append(svg('rect',{x,y,width:w,height:h,
-   fill:'url(#pw-home-green-dots)'}));
- }
- // Gray square pedestrian roads and lanes. They are a neighborhood design
- // sketch, not a claim that sidewalk GIS has already been surveyed.
- const street=svg('g',{},'pw-home-map-streets');
- for(const rx of xRoads){
-  street.append(svg('rect',{x:rx-13,y:0,width:26,height:720,fill:'#34414a'}));
-  street.append(svg('rect',{x:rx-2.1,y:0,width:4.2,height:720,fill:'#8f9692',opacity:.44}));
-  for(let y=8;y<720;y+=15)street.append(svg('rect',{
-   x:rx-12,y,width:4,height:7,fill:'#c5bdb2',opacity:.55}));
- }
- for(const ry of yRoads){
-  street.append(svg('rect',{x:0,y:ry-13,width:1100,height:26,fill:'#34414a'}));
-  street.append(svg('rect',{x:0,y:ry-2.1,width:1100,height:4.2,fill:'#949c9a',opacity:.42}));
-  for(let x=8;x<1100;x+=15)street.append(svg('rect',{
-   x,y:ry+6,width:7,height:4,fill:'#c0bdb5',opacity:.52}));
- }
- terrain.append(street);
- // The 住宅前 station is actually shared by A and E. The schematic
- // displays these TWO real services and never invents a third one.
+ // Sparse orthogonal traces are ONLY visual neighborhood context, not
+ // fake GIS road claims. Distinct dots, dark voids and wide breathing room.
+ const blocks=svg('g',{},'pw-home-block-traces');
+ const avenues=[86,257,423,738,945,1054];
+ const cross=[95,220,504,650];
+ for(const xx of avenues)
+  dottedPath(blocks,[[xx,42],[xx,690]],{step:15,radius:1.7,
+   fill:'#849ba7',opacity:.44});
+ for(const yy of cross)
+  dottedPath(blocks,[[28,yy],[1070,yy]],{step:15,radius:1.7,
+   fill:'#849ba7',opacity:.44});
+ // Secondary paths stop inside blocks: they are not fake extra metro lines.
+ for(const coords of [
+  [[86,220],[257,220],[257,365]],
+  [[257,504],[423,504],[423,650]],
+  [[738,95],[738,220],[945,220]],
+  [[738,504],[945,504],[945,650]],
+  [[423,95],[423,220]],
+  [[257,650],[423,650]],
+  [[945,95],[1054,95]]
+ ])dottedPath(blocks,coords,{step:13,radius:2.15,
+  fill:'#c5cfd2',opacity:.74});
+ terrain.append(blocks);
+ // Authored metro topology only: "住宅线" terminates at home and runs east;
+ // "西城线" goes north/south. Both use actual registered service colors.
  const rail=svg('g',{},'pw-home-local-rail');
  const lineA=metro.LINES.find(l=>l.id==='a'&&l.stops.includes('entrance'));
  const lineE=metro.LINES.find(l=>l.id==='e'&&l.stops.includes('entrance'));
- if(!lineA||!lineE)throw Error('住宅前 is no longer on both real lines');
- const aPath=svg('rect',{x:550,y:353,width:550,height:24,fill:'#101a25'});
- const ePath=svg('rect',{x:538,y:0,width:24,height:720,fill:'#101a25'});
- rail.append(aPath,ePath);
- for(let x=550;x<1100;x+=17)rail.append(svg('rect',{
-  x,y:360,width:11,height:11,fill:lineA.color,stroke:'#f5ded8','stroke-width':.55}));
- for(let y=8;y<720;y+=17)rail.append(svg('rect',{
-  x:543,y,width:11,height:11,fill:lineE.color,stroke:'#eadff1','stroke-width':.5}));
+ if(!lineA||!lineE)throw Error('住宅前 station line identity changed');
+ dottedPath(rail,[[550,365],[1090,365]],{step:12,radius:3.6,fill:lineA.color,opacity:.97});
+ dottedPath(rail,[[550,15],[550,705]],{step:12,radius:3.6,fill:lineE.color,opacity:.93});
  const hub=svg('g',{},'pw-home-station-symbol');
- hub.append(svg('rect',{x:S.stationX-22,y:S.stationY-22,
-  width:44,height:44,rx:1,fill:'#fff0d3',stroke:'#1b2530','stroke-width':6}));
- hub.append(svg('rect',{x:S.stationX-12,y:S.stationY-12,
-  width:24,height:24,fill:'#192833',stroke:'#e76f70','stroke-width':3}));
- hub.append(svg('path',{d:'M550 335 V302 H579',fill:'none',
-  stroke:'#f6dfca','stroke-width':3}));
+ hub.append(svg('circle',{cx:550,cy:365,r:21,fill:'#101b27',
+  stroke:'#e5ddd0','stroke-width':2.4}));
+ hub.append(svg('circle',{cx:550,cy:365,r:14.5,fill:'#1b2a34',
+  stroke:lineA.color,'stroke-width':3.5}));
+ hub.append(svg('circle',{cx:550,cy:365,r:5.2,fill:'#e5ddd0'}));
  const hubTag=svg('g',{'data-role':'station-label'},'pw-home-station-callout');
- hubTag.append(svg('rect',{x:576,y:281,width:157,height:44,rx:1,
-  fill:'#e5d9c2',stroke:'#17222c','stroke-width':3}));
- hubTag.append(svg('rect',{x:580,y:285,width:149,height:36,rx:0,fill:'#a34347'}));
- const tagText=svg('text',{x:591,y:309,fill:'#fff5e6','font-size':20,'font-weight':750});
+ dottedPath(hubTag,[[564,351],[581,325]],{step:6,radius:1.5,
+  fill:'#e9e7dc',opacity:.86});
+ const tagText=svg('text',{x:589,y:319,fill:'#eaeae0','font-size':19,
+  'font-weight':700,'paint-order':'stroke',stroke:'#101b27',
+  'stroke-width':3});
  tagText.textContent='住宅前站';
- hubTag.append(tagText);
- hub.append(hubTag);rail.append(hub);
+ hubTag.append(tagText);hub.append(hubTag);rail.append(hub);
  const arrows=svg('g',{},'pw-home-map-line-labels');
- for(const [x,y,text,color] of [
-  [718,346,'住宅线 · 至学园前 →',lineA.color],
-  [567,61,'西城线',lineE.color]
+ for(const [x,y,label,color] of [
+  [745,344,'住宅线  →  学园前',lineA.color],
+  [575,65,'西城线',lineE.color]
  ]){
-  const t=svg('text',{x,y,fill:color,'font-size':14,'font-weight':650,
-   'paint-order':'stroke',stroke:'#13212b','stroke-width':3});
-  t.textContent=text;arrows.append(t);
+  const t=svg('text',{x,y,fill:color,'font-size':14,'font-weight':600,
+   'paint-order':'stroke',stroke:'#101b27','stroke-width':3});
+  t.textContent=label;arrows.append(t);
  }
- // The rail arrow labels are schematic, no fabricated platform or exits.
  vector.append(terrain,rail,arrows);
  const locationLayer=svg('g',{},'pw-home-nearby-markers');
  const labels={
@@ -240,7 +224,7 @@ function create({map,atlas,metro,onTravel,notify,onUp}){
    id==='zoom-out'?'缩小站点地区':'重置站点地区视角');
   b.addEventListener('click',fn);mapActions.append(b);
  }
- stage.append(vector,legend,legendInfo,mapActions);
+ stage.append(vector,legend,legendInfo,mapActions,details);
  right.append(mast,stage);
  rootNode.append(panel,right);map.append(rootNode);
  const view={x:0,y:0,w:1100,h:720};
