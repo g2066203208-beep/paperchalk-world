@@ -55,20 +55,18 @@
   const u=sign*wallArcMeters(theta)/tileWidth+ACTIVE_WALL.repeats/2;
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
- // ONE playable, standard encounter (not alternating 'surround' patterns).
- // True 4-on-4 two-RANK formation. All four allies share z=9.30, all four
- // enemies share z=6.80. Both lines have matching lateral lane spacings
- // 1.19m,1.19m,1.46m (mirrored on the friendly side), giving four
- // actual corresponding 1-v-1 lanes with 2.50m between the ranks.
- // The heroine and her original camera never move in world coordinates.
+ // Four genuine one-on-one lanes. Both ranks are straight, parallel and
+ // EXACTLY aligned in world X: switching the controlled player never moves
+ // or reorders an actor. Do not sacrifice this formation to solve occlusion.
+ const LANE_X=Object.freeze([-1.95,-.65,.65,1.95]);
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-2.24,9.30],[-3.43,9.30],[-4.89,9.30]]),
-   enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
+   allies:Object.freeze(LANE_X.map(x=>Object.freeze([x,9.30]))),
+   enemies:Object.freeze(LANE_X.map(x=>Object.freeze([x,6.80])))
   }),
   inner:Object.freeze({
-   allies:Object.freeze([[1.64,8.72],[3.20,8.0],[.30,8.0],[4.50,7.70]]),
-   enemies:Object.freeze([[.73,10.96],[-.15,11.35],[-.95,10.94],[-1.91,11.26]])
+   allies:Object.freeze(LANE_X.map(x=>Object.freeze([x,8.0]))),
+   enemies:Object.freeze(LANE_X.map(x=>Object.freeze([x,10.5])))
   })
  });
  const bindings=Object.freeze({
@@ -210,37 +208,157 @@
    lookPitchDeg:pitch*180/Math.PI,
    phoneShoulderFit:phone,actorRootUnchanged:true};
  }
- // Re-anchor the very SAME world-space shoulder rig to any friendly.
- // This is not four separate cameras, a sprite swap, or teleportation:
- // the teammate's immutable root is the new viewing pivot. The view
- // gently converges on the enemy rank as the selected teammate sits farther
- // left, ensuring all four opponents remain within the battlefield.
+ // The four real actors occupy exactly the same X lanes as the enemy rank.
+ // There is NO universal shoulder offset that preserves both a big selected
+ // fighter and a clear view of the other seven. Solve neutral composition
+ // once per actor / viewport bucket, using the SAME real 3D projection matrix
+ // and the alpha footprint of each real L2D portrait. No hidden actors,
+ // fake screen overlays, depth tricks or per-character rearrangement.
+ const ROLE_CAMERA_CACHE=new Map();
+ const ROLE_CAMERA_UV=Object.freeze({
+  ally:Object.freeze({left:.222,right:.775,top:.012,bottom:1}),
+  enemy:Object.freeze({left:.30,right:.69,top:0,bottom:1})
+ });
+ const screenRect=(a,m)=>({
+  left:Math.max(-1,a.left),right:Math.min(1,a.right),
+  top:Math.min(1,a.top),bottom:Math.max(-1,a.bottom)
+ });
+ function rolePortraitRect(a,vp){
+  const uv=a.team==='ally'?ROLE_CAMERA_UV.ally:ROLE_CAMERA_UV.enemy;
+  const right=actorWorldRight(a,'outer');
+  const h=a.height/Math.max(.01,a.soleY-a.crownY);
+  let l=Infinity,r=-Infinity,b=Infinity,t=-Infinity;
+  for(const u of [uv.left,uv.right])for(const v of [uv.top,uv.bottom]){
+   const x=a.x+right.x*(u-a.soleX)*h,y=a.y+(a.soleY-v)*h,
+    z=a.z+right.z*(u-a.soleX)*h;
+   const w=vp[3]*x+vp[7]*y+vp[11]*z+vp[15];
+   if(w<=.01)return null;
+   const px=(vp[0]*x+vp[4]*y+vp[8]*z+vp[12])/w;
+   const py=(vp[1]*x+vp[5]*y+vp[9]*z+vp[13])/w;
+   l=Math.min(l,px);r=Math.max(r,px);
+   b=Math.min(b,py);t=Math.max(t,py);
+  }
+  return {left:l,right:r,bottom:b,top:t};
+ }
+ const squared=v=>v*v;
+ const overlapArea=(a,b)=>{
+  if(!a||!b)return 10;
+  return Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left))*
+   Math.max(0,Math.min(a.top,b.top)-Math.max(a.bottom,b.bottom));
+ };
+ function roleCompositionScore(cam,selected,aspect){
+  const vp=cameraVP(cam,aspect),scene=layout('outer');
+  const allied=scene.allies.map(a=>rolePortraitRect(a,vp));
+  const foes=scene.enemies.map(a=>rolePortraitRect(a,vp));
+  if([...allied,...foes].some(v=>!v))return Infinity;
+  const idx=scene.allies.findIndex(a=>a.id===selected.id);
+  const self=allied[idx],screenSelf=screenRect(self);
+  const selfWidth=Math.max(0,screenSelf.right-screenSelf.left);
+  const side=cam.composition.side;
+  const selfCenter=(screenSelf.left+screenSelf.right)/2;
+  let score=0;
+  // Protect real enemy silhouettes including the outermost target.
+  for(const e of foes){
+   score+=320*(squared(Math.max(0,-.90-e.left))+
+    squared(Math.max(0,e.right-.90)));
+   score+=85*(squared(Math.max(0,-.82-e.bottom))+
+    squared(Math.max(0,e.top-.89)));
+   score+=100*squared(Math.max(0,.12-(e.right-e.left)));
+  }
+  // Other allies must remain identifiable rather than fading away or
+  // dropping entirely beyond the viewport. Heads and shoulders matter most.
+  for(let i=0;i<allied.length;i++){
+   if(i===idx)continue;
+   const a=allied[i],clip=screenRect(a);
+   const visible=Math.max(0,clip.right-clip.left);
+   score+=150*squared(Math.max(0,.095-visible));
+   score+=12*squared(Math.max(0,.10-a.top));
+   score+=12*squared(Math.max(0,-.95-a.bottom));
+  }
+  // Current player stays a large, grounded third-person foreground figure.
+  score+=180*squared(Math.max(0,.40-selfWidth));
+  score+=40*squared(Math.max(0,selfWidth-.75));
+  score+=30*squared(Math.max(0,.13-self.top));
+  score+=13*squared(selfCenter-(side>0?-.54:.54));
+  // The enemy group belongs in the opposite, quiet area of the frame.
+  const enemyCenter=foes.reduce((s,e)=>s+(e.left+e.right)/2,0)/4;
+  score+=10*squared(enemyCenter-(side>0?.20:-.20));
+  // World-space visibility conflicts. In particular another friendly
+  // must not be rendered over a foe as a giant silhouette.
+  for(let i=0;i<allied.length;i++)for(const e of foes)
+   score+=(i===idx?250:340)*overlapArea(allied[i],e);
+  for(let i=0;i<3;i++){
+   score+=90*overlapArea(foes[i],foes[i+1]);
+   score+=20*overlapArea(allied[i],allied[i+1]);
+  }
+  // Prefer a human-scale shoulder boom, not a camera at the far wall.
+  score+=2*squared(Math.max(0,cam.shoulderBoomMeters-2.75));
+  score+=4*squared(Math.max(0,Math.abs(cam.eye.x)-4.3));
+  score+=2*squared(Math.max(0,cam.eye.y-2.15));
+  return score;
+ }
+ function roleNeutralCamera(base,selected,aspect){
+  const key=base.mode+'|'+selected.id+'|'+Math.round(aspect*20)/20;
+  if(ROLE_CAMERA_CACHE.has(key))return ROLE_CAMERA_CACHE.get(key);
+  const scene=layout('outer');
+  const idealSide=scene.allies.indexOf(selected)<2?1:-1;
+  // Discrete, deterministic and bounded. 864 real 3D evaluations at most
+  // on FIRST selection for a viewport bucket; never search each frame.
+  let winner=null,best=Infinity;
+  for(const side of [idealSide,-idealSide])
+   for(const offset of [.68,.98,1.30,1.67])
+    for(const behind of [1.12,1.65,2.22])
+     for(const aimX of [-.7,0,.7])
+      for(const aimZ of [5.1,6.0])
+       for(const eyeY of [1.58,2.08])
+        for(const fov of [63,70,77]){
+         const eye={x:selected.x+side*offset,y:eyeY,z:selected.z+behind};
+         const candidate={...base,eye,focus:{
+          x:aimX,y:eyeY>1.8?1.17:1.48,z:aimZ
+         },fov,composition:{side,offset,behind},
+          shoulderRig:true,actorRootUnchanged:true,
+          shoulderPivot:{x:selected.x,y:selected.y+selected.height*.88,z:selected.z},
+          shoulderBoomMeters:Math.hypot(offset,behind),
+          heroYawDeg:0,lookYawDeg:0,lookPitchDeg:0,
+          controlledActorId:selected.id,
+          lensShift:eyeY>1.8?.40:.23
+         };
+         const rating=roleCompositionScore(candidate,selected,aspect)+
+          (side===idealSide?0:.05);
+         if(rating<best){best=rating;winner=candidate}
+        }
+  const solved=Object.freeze({...winner,
+   composition:Object.freeze({...winner.composition,score:best,
+    evaluatedForAspect:aspect})});
+  // Bound cache growth under browser resize / rotation storms.
+  if(ROLE_CAMERA_CACHE.size>=32)ROLE_CAMERA_CACHE.clear();
+  ROLE_CAMERA_CACHE.set(key,solved);
+  return solved;
+ }
+ function roleOrbitCamera(neutral,selected,x=0,y=0){
+  const yaw=rad(clamp(Number(x)||0,-1,1)*LOOK_LIMITS.yawRightDeg);
+  const pitch=rad(clamp(Number(y)||0,-1,1)*LOOK_LIMITS.pitchDownDeg);
+  if(Math.abs(yaw)+Math.abs(pitch)<1e-8)return neutral;
+  const pivot=neutral.shoulderPivot;
+  const dx=neutral.eye.x-pivot.x,dz=neutral.eye.z-pivot.z;
+  const cs=Math.cos(yaw),sn=Math.sin(yaw);
+  const eye={x:pivot.x+dx*cs-dz*sn,y:neutral.eye.y,
+   z:pivot.z+dx*sn+dz*cs};
+  const f=normalize({x:neutral.focus.x-neutral.eye.x,y:0,
+   z:neutral.focus.z-neutral.eye.z});
+  const right=normalize(cross(f,{x:0,y:1,z:0}));
+  const d=Math.hypot(neutral.focus.x-neutral.eye.x,neutral.focus.z-neutral.eye.z);
+  return {...neutral,eye,focus:{
+    x:eye.x+d*Math.cos(pitch)*(f.x*cs+right.x*sn),
+    y:eye.y-d*Math.sin(pitch),
+    z:eye.z+d*Math.cos(pitch)*(f.z*cs+right.z*sn)
+   },lookYawDeg:yaw*180/Math.PI,lookPitchDeg:pitch*180/Math.PI};
+ }
+ // Only the camera moves; four actual immutable aligned lanes remain.
  function allyViewCamera(base,originalHero,selected,x=0,y=0,aspect=16/9){
-  if(!selected||selected.id===originalHero.id)
-   return shoulderCamera(base,originalHero,x,y,aspect);
-  const dx=selected.x-originalHero.x,dz=selected.z-originalHero.z;
-  // Narrow phones cannot show a near-side shoulder and the entire opposing
-  // rank with the desktop 1.34m camera boom. As the controlled fighter moves
-  // left across the player rank, retreat the SINGLE camera proportionately.
-  // The actor roots and their one-to-one world-space rows NEVER move.
-  const phone=clamp((.85-clamp(Number(aspect)||16/9,.35,3.5))/.25,0,1);
-  const role=['hero','ally-2','ally-3','ally-4'].indexOf(selected.id);
-  const i=Math.max(0,role);
-  // Perspective-correct composition, one base shoulder rig translated to
-  // the controlled actor. Later-row roles sit farther left, so the same
-  // camera booms backward a fraction and looks slightly across the aisle.
-  // This preserves a sizeable active shoulder and all four enemy targets.
-  const desktopRetreat=[0,.30,.45,.60][i],phoneRetreat=[0,.50,1.0,1.5][i];
-  const desktopAim=[0,.45,.55,.65][i],phoneAim=[0,.65,.80,.65][i];
-  const extraZ=desktopRetreat+(phoneRetreat-desktopRetreat)*phone;
-  const aim=desktopAim+(phoneAim-desktopAim)*phone;
-  const shifted={...base,
-   eye:{...base.eye,x:base.eye.x+dx*(1+.1*phone),
-    z:base.eye.z+dz+extraZ},
-   focus:{...base.focus,x:base.focus.x+dx*aim,
-    z:base.focus.z+dz}};
-  const view=shoulderCamera(shifted,selected,x,y,aspect);
-  return {...view,controlledActorId:selected.id,originalHeroWorldStatic:true};
+  if(!selected)return shoulderCamera(base,originalHero,x,y,aspect);
+  if(base.mode!=='outer')return shoulderCamera(base,selected,x,y,aspect);
+  return roleOrbitCamera(roleNeutralCamera(base,selected,aspect),selected,x,y);
  }
  // Preserve the DESIGNED horizontal battle framing when a browser or
  // device changes aspect ratio. Portrait canvases no longer crop half the
