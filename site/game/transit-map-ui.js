@@ -386,7 +386,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
     '地铁 · '+trip.lines.join(' → ')+
     (trip.transfers.length?' · '+trip.transfers.length+' 次换乘':' · 无需换乘'):
     id===here?'当前所在站':'请先抵达正式地铁站',[
-    {label:'乘地铁前往',primary:true,disabled:!viable||!canRide,run:async()=>{
+    ...(id==='entrance'?[{label:'查看住宅前站地区',primary:true,run:openHomeStation}]:[]),
+    {label:'乘地铁前往',primary:id!=='entrance',disabled:!viable||!canRide,run:async()=>{
      if(busy)return;busy=true;clear();
      try{const res=await onTravel?.(id,trip);
       if(!res?.ok)notify(res?.reason||'当前无法乘车')}
