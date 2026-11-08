@@ -35,7 +35,7 @@
     next.className='pw-director-next';next.textContent='继续 ›';
     next.setAttribute('aria-label','继续剧情');
     wrap.append(speaker,line,next);root.appendChild(wrap);
-    let queue=[],index=0,active=false,resolvePending=null,task=null,waiting=null;
+    let queue=[],index=0,active=false,resolvePending=null,task=null,waiting=null,hooks=null;
     const seen=new Set();
     function cleanupTimer(){
       if(task){global.clearTimeout(task);task=null}
@@ -44,6 +44,8 @@
     function close(){
       cleanupTimer();
       queue=[];index=0;active=false;wrap.hidden=true;
+      const ended=hooks;hooks=null;
+      try{ended?.onClose?.()}catch(error){console.warn('[story] visual cleanup',error)}
       if(resolvePending){const done=resolvePending;resolvePending=null;done()}
     }
     function advance(){
@@ -69,6 +71,7 @@
       speaker.textContent=item.speaker||'旁白';
       line.textContent=item.text;
       wrap.hidden=false;
+      try{hooks?.onBeat?.(item)}catch(error){console.warn('[story] beat effect',error)}
       if(!global.matchMedia?.('(prefers-reduced-motion:reduce)').matches){
         wrap.dataset.animate='false';
         void wrap.offsetWidth;
@@ -77,13 +80,14 @@
       task=global.setTimeout(advance,
         Math.max(1000,Math.min(6000,Number(item.hold)||2000)));
     }
-    function play(beats){
+    function play(beats,options={}){
       close();
       if(!Array.isArray(beats)||!beats.length)return Promise.resolve();
       const accepted=beats.filter(x=>typeof x?.text==='string'&&x.text.trim());
       if(!accepted.length)return Promise.resolve();
-      queue=accepted.map(x=>({speaker:x.speaker||'旁白',text:x.text,hold:x.hold||1900}));
-      index=0;active=true;
+      queue=accepted.map(x=>({speaker:x.speaker||'旁白',text:x.text,
+        hold:x.hold||1900,effect:x.effect||null}));
+      hooks=options;index=0;active=true;
       const promise=new Promise(resolve=>{resolvePending=resolve});
       render();return promise;
     }
