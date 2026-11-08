@@ -74,6 +74,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const back=element('button','pw-dot-tool pw-dot-back','← 城际地图');
  back.type='button';back.setAttribute('aria-label','返回城际交通总图');
  back.hidden=true;tools.append(back);
+ const homeDown=element('button','pw-dot-tool pw-dot-home-down','↓ 住宅前地区');
+ homeDown.type='button';homeDown.hidden=true;
+ homeDown.setAttribute('aria-label','进入住宅前站的站点地区地图');
+ tools.append(homeDown);
  const buttons=[['−','缩小地图'],['+','放大地图'],['全域','查看当前层全图'],['定位','定位人物所在城市及站点']];
  const toolBtns=buttons.map(([name,title])=>{
   const b=element('button','pw-dot-tool',name);
@@ -625,6 +629,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   map.dataset.compact=String(!scoped&&scale<.65);
   map.dataset.smallScreen=String(v.w<900);
   back.hidden=!scoped;emptyMetro.hidden=!scoped||hasMetro;
+  homeDown.hidden=localMode||activeCity!=='kirihama'||here!=='entrance';
   subwayLegend.hidden=!hasMetro;
   heading.querySelector('.pw-dot-title').textContent=scoped?
    city.name+' · 地铁线路图':'城际交通总图';
@@ -745,6 +750,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  toolBtns[0].addEventListener('click',()=>zoomBy(1/1.37));
  toolBtns[1].addEventListener('click',()=>zoomBy(1.37));
  back.addEventListener('click',leaveCity);
+ homeDown.addEventListener('click',openHomeStation);
  toolBtns[2].addEventListener('click',()=>localMode?homeStation?.reset():fitSelectedCity());
  toolBtns[3].addEventListener('click',()=>{
   if(activeCity!==currentCity)enterCity(currentCity);
