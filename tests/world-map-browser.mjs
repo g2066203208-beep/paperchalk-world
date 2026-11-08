@@ -125,6 +125,27 @@ try{
  assert.ok(view.access.length>0&&view.access.every(x=>x==='shiomi'));
  assert.ok(view.poi.every(x=>x==='shiomi'));
  await shot('27-shiomi-only-harbor-transit-1920.png');
+ // Exhaustively check ALL ten towns individually, including the island.
+ // No other city's physical stop, route, or photo is allowed into a city.
+ const cityIds=await page.evaluate(()=>window.PaperWorldAtlas.CITIES.map(c=>c.id));
+ for(const id of cityIds){
+  await click('.pw-dot-back');
+  assert.equal(await scope(),'region');
+  await click('.pw-dot-city[data-city="'+id+'"]');
+  const info=await inspect();
+  assert.equal(info.scope,'city');
+  assert.equal(info.city,id);
+  assert.equal(info.regional,0);
+  assert.equal(info.cityCards.length,0);
+  assert.ok(info.access.length>0,'missing access route for '+id);
+  assert.ok(info.access.every(x=>x===id),'other city access route leaked into '+id);
+  assert.ok(info.poi.every(x=>x===id),'other city destination photo leaked into '+id);
+  assert.ok(info.municipal.every(x=>x===id),'other city municipal line leaked into '+id);
+  if(id==='kirihama')assert.equal(info.metro,9);
+  else assert.equal(info.metro,0,'outside metro visible in '+id);
+ }
+ await click('.pw-dot-back');
+ await click('.pw-dot-city[data-city="shiomi"]');
  // Mobile must retain the same explicit back control and city isolation.
  await page.setViewportSize({width:844,height:390});
  await page.waitForTimeout(100);
