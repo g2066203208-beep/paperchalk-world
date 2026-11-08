@@ -47,6 +47,7 @@
    '}';
   const frag='precision mediump float; uniform float u_pointMode; varying float v_light; varying float v_fade; void main(){'+
    'if(u_pointMode<0.5){gl_FragColor=vec4(0.0,0.0,0.0,1.0);return;}'+
+   'if(u_pointMode>1.5){gl_FragColor=vec4(0.69,0.72,0.70,0.115*v_fade);return;}'+
    'vec2 v=gl_PointCoord*2.0-1.0; float d=dot(v,v);'+
    'if(d>1.0)discard;'+
    'float edge=1.0-smoothstep(0.52,1.0,d);'+
@@ -59,7 +60,7 @@
     const err=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(err);
    }return s;
   };
-  let program,buffer,indexBuffer;
+  let program,buffer,indexBuffer,gridEdgeBuffer;
   try{
    program=gl.createProgram();
    const vs=makeShader(gl.VERTEX_SHADER,vert),fs=makeShader(gl.FRAGMENT_SHADER,frag);
@@ -67,6 +68,7 @@
    gl.deleteShader(vs);gl.deleteShader(fs);
    if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
    buffer=gl.createBuffer();indexBuffer=gl.createBuffer();
+   gridEdgeBuffer=gl.createBuffer();
   }catch(error){
    surface.remove();toggle.remove();map.dataset.terrainRenderer='shader-error';
    console.warn('3D dot terrain unavailable:',error);
@@ -79,7 +81,7 @@
   const authoredCols=Math.floor(width/cell),authoredRows=Math.floor(height/cell);
   const overrides=new Map();
   let count=0,triangleCount=0,coords=new Float32Array(0);
-  let indices=new Uint16Array(0),lookup=new Map(),meshKey='';
+  let indices=new Uint16Array(0),gridEdges=new Uint16Array(0),lookup=new Map(),meshKey='';
   let originX=0,originY=0,nearTiles=0,farTiles=0,farCellStep=1;
   let fadeStart=5000,fadeEnd=9000;
   function keyFor(gx,gy){return gx+','+gy}
@@ -157,7 +159,13 @@
    // away from the original authored city.
    originX=Math.floor(view.focusX/s)*s;
    originY=Math.floor(view.focusY/s)*s;
-   const vertices=[],triangles=[],vertexIndices=new Map();
+   const vertices=[],triangles=[],edges=[],seenEdges=new Set(),vertexIndices=new Map();
+   function join(a,b){
+    // Draw only the actual square-lattice edges, never triangle diagonals.
+    const k=a<b?a+','+b:b+','+a;
+    if(seenEdges.has(k))return;
+    seenEdges.add(k);edges.push(a,b);
+   }
    function point(gx,gy){
     const key=keyFor(gx,gy);
     let id=vertexIndices.get(key);
@@ -181,6 +189,10 @@
      const d=rows[y+1][x],e=rows[y+1][x+1];
      triangles.push(a,b,d,b,e,d);
     }
+    for(let y=0;y<=segments;y++)
+     for(let x=0;x<segments;x++)join(rows[y][x],rows[y][x+1]);
+    for(let y=0;y<segments;y++)
+     for(let x=0;x<=segments;x++)join(rows[y][x],rows[y+1][x]);
    }
    const totalNear=(nx1-nx0+1)*(ny1-ny0+1);
    const nearStride=totalNear>MAX_NEAR_CHUNKS?2:1;
@@ -202,12 +214,15 @@
    }
    coords=new Float32Array(vertices);
    indices=new Uint16Array(triangles);
+   gridEdges=new Uint16Array(edges);
    lookup=vertexIndices;
    count=coords.length/3;triangleCount=indices.length/3;
    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
    gl.bufferData(gl.ARRAY_BUFFER,coords,gl.DYNAMIC_DRAW);
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.DYNAMIC_DRAW);
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,gridEdgeBuffer);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,gridEdges,gl.DYNAMIC_DRAW);
    meshKey=signature;
    farCellStep=macro*2;
    // The visible near field is solid dots; distant dots fade towards the
@@ -215,6 +230,8 @@
    fadeStart=view.range*.52;fadeEnd=view.range*.96;
    map.dataset.terrainVertices=String(count);
    map.dataset.terrainTriangles=String(triangleCount);
+   map.dataset.terrainGridEdges=String(gridEdges.length/2);
+   map.dataset.gridMesh='orthogonal-hairlines';
    map.dataset.terrainNearTiles=String(nearTiles);
    map.dataset.terrainFarTiles=String(farTiles);
    map.dataset.terrainChunkStep=String(farCellStep);
@@ -306,10 +323,22 @@
    gl.enableVertexAttribArray(aPosition);
    gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,0,0);
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
+   // Keep black terrain triangles for hidden-surface depth, but slightly
+   // offset their depth so delicate actual surface edges don't flicker.
+   gl.depthMask(true);
+   gl.enable(gl.POLYGON_OFFSET_FILL);
+   gl.polygonOffset(1,1);
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
    gl.uniform1f(uniforms.u_pointMode,0);
    gl.drawElements(gl.TRIANGLES,indices.length,gl.UNSIGNED_SHORT,0);
+   gl.disable(gl.POLYGON_OFFSET_FILL);
+   gl.depthMask(false);
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,gridEdgeBuffer);
+   gl.uniform1f(uniforms.u_pointMode,2);
+   gl.drawElements(gl.LINES,gridEdges.length,gl.UNSIGNED_SHORT,0);
    gl.uniform1f(uniforms.u_pointMode,1);
    gl.drawArrays(gl.POINTS,0,count);
+   gl.depthMask(true);
    surface.style.opacity=String(eased);
    const flat=map.querySelector('.pw-dot-wave-surface');
    if(flat)flat.style.opacity=String(1-eased);
@@ -319,7 +348,8 @@
   }
   function inspect(){return Object.freeze({
    mode:target>.5?'3d':'2d',blend:mix,pitch,yaw,
-   vertices:count,triangles:triangleCount,cols:authoredCols,rows:authoredRows,
+   vertices:count,triangles:triangleCount,gridEdges:gridEdges.length/2,
+   meshStyle:'orthogonal-hairlines',cols:authoredCols,rows:authoredRows,
    world:'infinite',nearTiles,farTiles,farCellStep,origin:[originX,originY],
    heightsDefined:overrides.size>0,heightOverrides:overrides.size,
    renderer:map.dataset.terrainRenderer,frames
@@ -332,7 +362,8 @@
    dispose(){
     active=false;map.removeEventListener('contextmenu',onContext);
     toggle.remove();surface.remove();
-    if(gl){gl.deleteBuffer(buffer);gl.deleteBuffer(indexBuffer);gl.deleteProgram(program)}
+    if(gl){gl.deleteBuffer(buffer);gl.deleteBuffer(indexBuffer);
+     gl.deleteBuffer(gridEdgeBuffer);gl.deleteProgram(program)}
    }
   });
  }
