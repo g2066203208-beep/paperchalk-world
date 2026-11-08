@@ -285,10 +285,47 @@ try{
  assert.equal(await page.evaluate(({gx,gy})=>
   window.PaperWorldTransitMap._terrain.getHeight(gx,gy),targetBefore),22,
   'flatten tool must set precise elevation');
- // Sculpt controls still work on the SAME XYZ surface in orbit camera mode.
+ // Shape a distinct high plateau using the REAL rectangle+flatten UI, so
+ // 3D screenshots demonstrate actual raised geometry instead of near-flat dots.
+ await page.evaluate(()=>{
+  document.querySelector('.pw-terrain-edit-choice[data-shape="rect"]').click();
+  const target=document.querySelector('.pw-terrain-edit-target input');
+  target.value='160';target.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ const plateauA={x:box.x+box.width*.38,y:box.y+box.height*.56};
+ const plateauB={x:plateauA.x+175,y:plateauA.y+135};
+ await page.mouse.move(plateauA.x,plateauA.y);
+ await page.mouse.down();await page.mouse.move(plateauB.x,plateauB.y,{steps:7});
+ await page.mouse.up();
+ const plateau=await page.evaluate(()=>{
+  const pts=window.PaperWorldTransitMap._terrain.exportHeights();
+  return pts.filter(p=>p[2]===160).length;
+ });
+ assert.ok(plateau>=8,'rectangle flatten should raise a visible level plateau');
+ // Sculpt controls must still target real terrain points in orbit view.
  await page.evaluate(()=>document.querySelector('.pw-dot-camera-toggle').click());
  await page.waitForFunction(()=>Number(document.querySelector('.pw-dot-world-map')
   .dataset.cameraBlend)>.99);
+ await page.evaluate(()=>{
+  document.querySelector('.pw-terrain-edit-choice[data-shape="point"]').click();
+  document.querySelector('.pw-terrain-edit-choice[data-op="raise"]').click();
+  const step=document.querySelector('.pw-terrain-edit-setting input');
+  step.value='35';step.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ const threeDTarget={x:box.x+box.width*.33,y:box.y+box.height*.62};
+ const before3D=await page.evaluate(({x,y})=>{
+  const box=document.querySelector('.pw-dot-world-map').getBoundingClientRect();
+  const t=window.PaperWorldTransitMap._terrain;
+  const p=t.unproject(x-box.x,y-box.y);
+  return {...p,height:t.getHeight(p.gx,p.gy)};
+ },threeDTarget);
+ assert.ok(Number.isFinite(before3D.height),'3D picking must map onto the terrain');
+ await page.mouse.move(threeDTarget.x,threeDTarget.y);
+ await page.mouse.down();await page.mouse.up();
+ const after3D=await page.evaluate(({gx,gy})=>
+  window.PaperWorldTransitMap._terrain.getHeight(gx,gy),before3D);
+ assert.equal(after3D,Math.min(800,before3D.height+35),
+  'mouse click in free 3D view must raise the physically projected XYZ vertex');
  await shot('07-real-game-sculpted-3d-heightfield.png');
  const edited3D=await page.evaluate(()=>({
   mode:document.querySelector('.pw-dot-world-map').dataset.cameraMode,
@@ -302,5 +339,5 @@ try{
  assert.ok(!errors.some(x=>/dot-terrain-3d|dot-terrain-tools|Map dot animation disabled|TypeError|ReferenceError/i.test(x)),
   'unexpected render error: '+errors.join('\\n').slice(0,1000));
  console.log('REAL GAME SEAMLESS 2D/3D TERRAIN CAMERA VERIFIED',
-  JSON.stringify({flat,raised,three,orbited,farAway,panned,zoomed,back,shifted,dotsOutside,afterPoint,digging,edited3D}));
+  JSON.stringify({flat,raised,three,orbited,farAway,panned,zoomed,back,shifted,dotsOutside,afterPoint,digging,plateau,before3D,after3D,edited3D}));
 }finally{await browser.close()}
