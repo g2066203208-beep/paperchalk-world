@@ -110,6 +110,12 @@ try{
  assert.notEqual(afterWave.weighted,beforeWave.weighted,
   'dot alpha/radius must change over time from mathematical water ripples');
  await shot('00b-original-game-black-fog-expanding-ripples.png');
+ if(process.env.PAPERCHALK_RIPPLE_GIF_CAPTURE==='1'){
+  for(let i=0;i<12;i++){
+   await page.waitForTimeout(180);
+   await shot('ripple-frame-'+String(i).padStart(2,'0')+'.png');
+  }
+ }
  console.log('LIVE FLUID FOG + WATER RIPPLES CHROMIUM PROOF',JSON.stringify({beforeWave,afterWave,empty}));
  await page.evaluate(()=>document.querySelector('.pw-dot-world-map')?.classList.remove('pw-dot-empty-preview'));
  assert.equal(await page.locator('.pw-metro-edit-toggle:visible').count(),1);
