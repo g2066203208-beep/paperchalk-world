@@ -1,0 +1,55 @@
+name: Kirihama big 120-location real-game city map proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/city-map-overlays.js'
+      - 'site/game/city-map-overlays.css'
+      - 'site/game/transit-map-ui.js'
+      - 'site/index.html'
+      - 'tests/kirihama-big-game-map-browser.mjs'
+      - '.github/workflows/kirihama-big-game-map.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: kirihama-120-big-game-city
+  cancel-in-progress: true
+jobs:
+  real-game-chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate unchanged real subway and authored locations
+        run: |
+          node --check site/game/city-map-overlays.js
+          node --check site/game/transit-map-ui.js
+          node --test tests/kirihama-location-masterplan.test.cjs tests/destination-network.test.cjs
+      - name: Install browser
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve the actual horror game
+        run: |
+          python3 scripts/build_scene_catalog.py
+          python3 -m http.server 8765 --directory site >/tmp/kirihama-big-game.log 2>&1 &
+          for n in $(seq 1 35); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/kirihama-big-game.log
+          exit 1
+      - name: Open actual game, click Kirihama, find all 120 locations and capture screenshots
+        run: node tests/kirihama-big-game-map-browser.mjs
+      - name: Upload untouched real Chromium screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kirihama-big-city-120-real-game-screenshots
+          path: artifacts/kirihama-big-game-map/*.png
+          if-no-files-found: warn
+          retention-days: 14
