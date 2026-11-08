@@ -48,9 +48,9 @@ test('Corners remain round at desktop and mobile landscape aspect ratios',()=>{
  }
 });
 
-test('All location nodes are INTEGER intersections of one 12×6 grid',()=>{
- assert.equal(metro.GRID.columns,12);
- assert.equal(metro.GRID.rows,6);
+test('All location nodes are INTEGER intersections of one 36×26 city grid',()=>{
+ assert.equal(metro.GRID.columns,36);
+ assert.equal(metro.GRID.rows,26);
  for(const [id,st] of Object.entries(metro.STATIONS)){
   assert.ok(Number.isInteger(st.gx)&&Number.isInteger(st.gy),id);
   assert.ok(st.gx>=0&&st.gx<=metro.GRID.columns,id);
@@ -72,7 +72,7 @@ test('Dot array cells have precisely the same X/Y spacing at all viewports',()=>
   const space=geo.layout(width,height),origin=geo.point(0,0,space);
   const right=geo.point(1,0,space),down=geo.point(0,1,space);
   assert.ok(Math.abs((right.x-origin.x)-(down.y-origin.y))<1e-8);
-  const last=geo.point(12,6,space);
+  const last=geo.point(36,26,space);
   assert.ok(origin.x>=0&&origin.y>=0&&last.x<=width&&last.y<=height);
  }
 });
@@ -80,11 +80,11 @@ test('Dot array cells have precisely the same X/Y spacing at all viewports',()=>
 test('ring diagram follows a short coherent subway loop instead of northern spaghetti detours',()=>{
  const direct=geo.routes['b:central:cafe'];
  const northern=geo.routes['b:convenience:northgate'];
- assert.deepEqual(Array.from(direct,p=>Array.from(p)),[[8,3],[2,3]]);
- assert.deepEqual(Array.from(northern,p=>Array.from(p)),[[11,2],[11,1]]);
+ assert.deepEqual(Array.from(direct,p=>Array.from(p)),[[15,12],[6,12]]);
+ assert.deepEqual(Array.from(northern,p=>Array.from(p)),[[22,10],[22,5]]);
  for(const turns of [direct,northern])for(const [gx,gy] of turns){
-  assert.ok(gy>=1&&gy<=4,'rail corner outside metro route');
-  assert.ok(gx>=2&&gx<=11,'rail corner uses fictional outlying tracks');
+  assert.ok(gy>=1&&gy<=26,'rail corner outside metro route');
+  assert.ok(gx>=1&&gx<=36,'rail corner uses fictional outlying tracks');
  }
  assert.equal(geo.segments(metro.getLine('a')).length,3);
  assert.equal(geo.segments(metro.getLine('b')).length,6);
