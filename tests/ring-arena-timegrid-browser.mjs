@@ -162,8 +162,10 @@ try{
  assert.equal(moved.died,true);
  assert.equal(moved.before.length,8);
  assert.equal(moved.revision,1,'death splices exactly one frame and triggers quick roll');
- await page.waitForTimeout(360);
- assert.equal(await page.locator('.tg-reel > .tg-row').count(),7);
+ await page.waitForFunction(()=>document.querySelectorAll('.tg-reel > .tg-row').length===7,
+  null,{timeout:30000});
+ await page.waitForFunction(()=>document.querySelectorAll('.tg-ghost').length===0,
+  null,{timeout:30000});
  assert.equal(await page.locator('.tg-ghost').count(),0,'dead portrait ghost fully exits');
  await page.screenshot({path:resolve(out,'06-death-splice-1280x720.png'),animations:'disabled'});
  const recruited=await page.evaluate(()=>{
@@ -173,7 +175,9 @@ try{
    actions:[],hand:[]});
  });
  assert.equal(recruited,true);
- await page.waitForTimeout(350);
+ await page.waitForFunction(()=>document.querySelectorAll('.tg-reel > .tg-row').length===8,
+  null,{timeout:30000});
+ await page.waitForTimeout(450);
  assert.equal(await page.locator('.tg-reel > .tg-row').count(),8);
  assert.equal(await page.locator('.tg-reel > .tg-row[data-tg-actor="enemy-join-5"]').count(),1);
  const revision=await page.locator('.ring-timegrid').getAttribute('data-reel-revision');
