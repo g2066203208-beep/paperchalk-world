@@ -88,7 +88,7 @@ jobs:
           from PIL import Image,ImageDraw,ImageFont
           from pathlib import Path
           shots=sorted(Path('artifacts/overworld').glob('[0-9][0-9]-*.png'))
-          assert len(shots)>=6, f'Expected 6 actual regional map browser screens, got {shots}'
+          assert len(shots)>=2 and any('24-intercity' in p.name for p in shots) and any('25-homori' in p.name for p in shots), f'Expected real inter-city and single-city screenshots, got {shots}'
           labels=[p.stem.replace('-', ' ').upper() for p in shots]
           w,h=690,388
           rows=(len(shots)+1)//2
