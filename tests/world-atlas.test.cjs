@@ -5,11 +5,13 @@ const vm=require('node:vm');
 const test=require('node:test');
 const path=require('node:path');
 const scope={window:{}};
-vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../site/game/world-atlas.js'),'utf8'),scope);
+for(const name of ['kirihama-location-plan','world-atlas'])
+ vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../site/game/'+name+'.js'),'utf8'),scope);
 const atlas=scope.window.PaperWorldAtlas;
-test('Ten geographically distinct cities and 120+ individually addressable sites',()=>{
+test('Ten distinct settlements and 211 authored region sites, including 120 Kirihama locations',()=>{
  assert.equal(atlas.CITIES.length,10);
- assert.ok(atlas.POIS.length>=120);
+ assert.equal(atlas.POIS.length,211);
+ assert.equal(atlas.POIS.filter(p=>p.city==='kirihama').length,120);
  assert.equal(new Set(atlas.POIS.map(p=>p.id)).size,atlas.POIS.length);
  for(const p of atlas.POIS){
   assert.ok(atlas.CITY_BY_ID[p.city],p.id);
