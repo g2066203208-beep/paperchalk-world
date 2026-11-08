@@ -111,16 +111,16 @@ try{
  await click('.pw-dot-back');
  assert.equal(await scope(),'region');
  assert.equal((await inspect()).municipal.length,0);
- // Kirihama is the ONLY city with the operational eight-stop metro overlay.
+ // Kirihama is the ONLY current city with a live 10-line, 170-station subway network.
  await click('.pw-dot-city[data-city="kirihama"]');
  view=await inspect();
  assert.equal(view.scope,'city');assert.equal(view.city,'kirihama');
- assert.equal(view.regional,0);assert.equal(view.metro,9); // 3+6 physical segments
- assert.equal(view.cityCards.length,0);assert.equal(view.local,8);
+ assert.equal(view.regional,0);assert.equal(view.metro,179); // 10 physical subway services, including the downtown ring
+ assert.equal(view.cityCards.length,0);assert.equal(view.local,170);
  assert.equal(view.access.length,0);
  assert.equal(view.municipal.length,0);
  assert.equal(view.poi.length,0);
- assert.equal(await page.locator('.pw-dot-metro-legend-entry:visible').count(),2);
+ assert.equal(await page.locator('.pw-dot-metro-legend-entry:visible').count(),10);
  assert.equal(await page.locator('.pw-dot-local-places .pw-transit-photo').count(),0,
   'city subway station labels are not unrelated tourist photos');
  // Keep the actual city metro photograph legible but affordable to capture.
@@ -156,7 +156,7 @@ try{
   assert.equal(info.poi.length,0,'nonstation destination leaked into metro '+id);
   assert.equal(info.municipal.length,0,'bus/tram drawn as subway line '+id);
   if(id==='kirihama'){
-   assert.equal(info.metro,9);assert.equal(info.local,8);
+   assert.equal(info.metro,179);assert.equal(info.local,170);
   }else{
    assert.equal(info.metro,0,'invented unregistered subway in '+id);
    assert.equal(info.local,0,'invented subway station in '+id);
