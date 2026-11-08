@@ -58,7 +58,7 @@
  // Four genuine one-on-one lanes. Both ranks are straight, parallel and
  // EXACTLY aligned in world X: switching the controlled player never moves
  // or reorders an actor. Do not sacrifice this formation to solve occlusion.
- const LANE_X=Object.freeze([-1.05,.25,1.55,2.85]);
+ const LANE_X=Object.freeze([-1.05,-.25,.55,1.35]);
  const STAGING=Object.freeze({
   outer:Object.freeze({
    allies:Object.freeze(LANE_X.map(x=>Object.freeze([x,9.30]))),
