@@ -1878,7 +1878,7 @@
  * dot grid, camera, pan/zoom and ALL authored route/place data underneath.
  * ?mapLayers=full remains a non-destructive QA escape hatch.
  */
-#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > :not(.pw-dot-world-canvas),
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > :not(.pw-dot-world-canvas):not(.pw-dot-fog-surface):not(.pw-dot-wave-surface),
 #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-world-canvas > :not(.pw-dot-rail-canvas),
 #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview .pw-dot-rail-canvas > :not(.pw-transit-dot-matrix){
  display:none!important;
@@ -1891,4 +1891,29 @@
 }
 #novel-ui #pw-world-surface .pw-surface-frame[data-view="map"]:has(.pw-dot-empty-preview){
  border:0!important;border-radius:14px!important;box-shadow:none!important;
+}
+
+/* Native horror-game fluid black fog and analytic point-wave layer.
+ * No gradients, photos, cards, extraneous landmarks or full-time editor UI.
+ * The fog canvas is composited from the existing WebGL fluid in index.html.
+ */
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview{
+ background:#222829!important;background-image:none!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-fog-surface,
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-wave-surface{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ margin:0!important;padding:0!important;display:block!important;
+ border:0!important;pointer-events:none!important;user-select:none!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-fog-surface{z-index:1}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-wave-surface{z-index:5}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview.pw-dot-ripple-running .pw-transit-dot-matrix{
+ opacity:0!important;visibility:hidden!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview .pw-dot-world-canvas{
+ pointer-events:none!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview{
+ cursor:grab!important;
 }
