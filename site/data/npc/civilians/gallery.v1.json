@@ -471,17 +471,26 @@
   "plannedCivilians": [
     {
       "id": "NPC-C006",
-      "name": "地铁夜班维修工大叔",
-      "role": "station_maintenance_worker",
-      "visualCanon": "矮壮宽肩、略圆肚子、灰黑短硬发、暗青绿连体工作服、灰内搭领口、黑工作鞋；无道具、无眼睛，三面服装完全一致",
+      "name": "普通休闲男性（通用城市路人）",
+      "role": "everyday_civilian",
+      "visualCanon": "35岁左右普通成年男性；中等身高略微发福、深栗棕微卷短发、平和小嘴无眼睛；暖浅灰米色敞开休闲衬衫外套、暗砖红T恤、深蓝直筒牛仔裤、灰白休闲帆布鞋，无工作服无道具",
       "expectedOrder": [
         "side_left",
         "front",
         "back"
       ],
-      "promptReference": "docs/NPC-C006_ANIMA_THREE_VIEW_METRO_MAINTENANCE_20261108.md",
+      "promptReference": "docs/NPC-C006_ANIMA_THREE_VIEW_EVERYDAY_CASUAL_MAN_20261108.md",
       "status": "prompt_only_not_drawn_or_approved",
-      "gameRegistered": false
+      "gameRegistered": false,
+      "sceneApplicability": [
+        "street",
+        "metro",
+        "mall",
+        "residential",
+        "park",
+        "campus_perimeter",
+        "convenience_store"
+      ]
     }
   ]
 }
