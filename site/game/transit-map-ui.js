@@ -166,7 +166,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   selectedRoute.replaceChildren();
   if(!Array.isArray(legs)||!legs.length)return;
   for(const item of legs){
-   const a=atlas.CITY_BY_ID[item.from],b=atlas.CITY_BY_ID[item.to];
+   const a=network.at(item.from),b=network.at(item.to);
    if(!a||!b)continue;
    const d=rounded(orthogonal(a,b),18);
    selectedRoute.append(vector('path',{d,'data-service':item.line?.mode||'regional'},
@@ -239,6 +239,43 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    g.append(station);
   }
  }
+ // Each named destination has an actual station mark on a symmetric
+ // access-road / trail network. No invented ghost metro trains.
+ const stopButtons=new Map();
+ const physicalMarkers=new Set();
+ for(const l of network.ACCESS_ROUTES){
+  const ps=[],points=l.stops.map(id=>network.at(id)).filter(Boolean);
+  for(let i=0;i<points.length;i++){
+   if(!i){ps.push(location(points[i]));continue}
+   for(const p of orthogonal(points[i-1],points[i]).slice(1)){
+    const last=ps.at(-1);
+    if(!last||p.x!==last.x||p.y!==last.y)ps.push(p);
+   }
+  }
+  const g=lineGroup(access,l,l.stops[0],l.stops.at(-1),ps,'access',null);
+  g.dataset.city=points[0]?.city||'';
+  for(const id of l.stops){
+   if(physicalMarkers.has(id))continue;physicalMarkers.add(id);
+   const pt=network.at(id);if(!pt)continue;
+   const marker=vector('circle',{cx:pt.x,cy:pt.y,r:5,
+    'data-stop':id,'data-direction':'both','data-city':pt.city},
+    'pw-dot-destination-stop'+(pt.kind==='hub'?' is-interchange':''));
+   marker.setAttribute('role','button');marker.setAttribute('tabindex','0');
+   marker.setAttribute('aria-label','查看站点 '+pt.name);
+   marker.addEventListener('click',event=>{
+    event.stopPropagation();
+    const card=stopButtons.get(id);
+    if(card&&!card.hidden)card.click();
+    else focus(pt,Math.max(3.5,scale*1.35));
+   });
+   marker.addEventListener('keydown',event=>{
+    if(event.key==='Enter'||event.key===' '){
+     event.preventDefault();marker.dispatchEvent(new MouseEvent('click',{bubbles:true}))
+    }
+   });
+   stops.append(marker);
+  }
+ }
  const localPoint=p=>({x:LOCAL_X+p.gx*CELL,y:LOCAL_Y+p.gy*CELL});
  for(const l of metro.LINES){
   for(const [from,to] of geometry.segments(l)){
@@ -298,12 +335,13 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const node=element('button','pw-transit-place pw-dot-place'+(visible?'':' is-station'));
   node.type='button';node.dataset.place=id;node.dataset.local='true';
   node.dataset.current=String(here===id);node.dataset.photograph=String(visible);
-  node.dataset.gridColumn=s.gx;node.dataset.gridRow=s.gy-(visible?1:0);
+  node.dataset.station=id;stopButtons.set(id,node);
+  node.dataset.gridColumn=s.gx;node.dataset.gridRow=s.gy;
   if(visible){const q=PHOTO[id];photo(node,[q[0],q[1]])}
   else node.append(element('span','pw-transit-station-dot',s.transfer?'◎':'•'));
   node.append(element('span','pw-transit-place-name',name));
-  const at={x:p.x,y:p.y-(visible?CELL:0)};
-  put(node,at,metroLayer);
+  // Image leader ends exactly at this metro station, never one grid row above.
+  put(node,p,metroLayer);
   node.addEventListener('click',e=>{
    if(drag?.moved)return;
    e.stopPropagation();
