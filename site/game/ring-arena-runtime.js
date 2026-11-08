@@ -1306,6 +1306,18 @@
   // physical door, never both. Exact approved art and persistent life data
   // are the only inputs; no generated station population.
   let civilianFlow=null,flowSample=null,transitNpcStation=null;
+  let transitNpcQaFrame=null;
+  // Only browser QA with explicit opt-in may freeze a real 3D doorway instant.
+  function qaTransitNpcFrame(sample=null){
+   if(!new URLSearchParams(window.location.search).has('npcMetroQA'))return null;
+   if(!sample){transitNpcQaFrame=null;return {active:false}}
+   transitNpcQaFrame={dwellMs:Math.max(0,Number(sample.dwellMs)||0),
+    doorOpen:clamp(Number(sample.doorOpen)||0,0,1),
+    doorOpenedEver:sample.doorOpenedEver===true};
+   render(0);
+   return {active:true,...transitNpcQaFrame};
+  }
+
   function ensureCivilianFlow(){
    if(!transitMode)return null;
    if(civilianFlow)return civilianFlow;
@@ -2392,16 +2404,19 @@
       station:ride.station,lineId:ride.lineId,direction:ride.direction});
     }
    }
+   const npcDoor=transitNpcQaFrame?.doorOpen??doorOpen;
+   const npcOpened=transitNpcQaFrame?.doorOpenedEver??platformDoorOpenedEver;
+   const npcDwellMs=transitNpcQaFrame?.dwellMs??(performance.now()-platformDockedAt);
    flowSample=flow?.sample({
-    doorOpen,doorOpenedEver:platformDoorOpenedEver,
-    dwellMs:performance.now()-platformDockedAt,
+    doorOpen:npcDoor,doorOpenedEver:npcOpened,
+    dwellMs:npcDwellMs,
     stationExposure:platformExposure,moving:trainState.moving
    })||null;
    const stationLife=transitMode&&platformLife?platformLife.sample({
     distanceMeters:trainState.distanceMeters,
-    stationExposure:platformExposure,doorOpen,doorOpenedEver:platformDoorOpenedEver,
+    stationExposure:platformExposure,doorOpen:npcDoor,doorOpenedEver:npcOpened,
     moving:trainState.moving,
-    dwellMs:performance.now()-platformDockedAt,realActors:flowSample?.platform||[],
+    dwellMs:npcDwellMs,realActors:flowSample?.platform||[],
     nowMs:performance.now(),anomaly:platformExposure<.01
    }):null;
    platformLampFactor=stationLife?.lampFactor??1;
@@ -2585,7 +2600,7 @@
    if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
    platformDockedAt=performance.now();platformDoorOpenedEver=false;
-   civilianFlow=null;flowSample=null;transitNpcStation=null;
+   civilianFlow=null;flowSample=null;transitNpcStation=null;transitNpcQaFrame=null;
    commuterAtlasStatus='real-approved-npc';
    // Real approved alpha sprites load per NPC on demand; no legacy SVG commuter atlas.
    platformExposure=1;platformExposureOverride=null;doorOpen=0;
@@ -2616,7 +2631,7 @@
   function exitTransit(){
    if(!transitMode)return false;
    transitMode=false;active=false;platformExposure=0;platformExposureOverride=null;doorOpen=0;
-   civilianFlow?.clear();civilianFlow=null;flowSample=null;transitNpcStation=null;
+   civilianFlow?.clear();civilianFlow=null;flowSample=null;transitNpcStation=null;transitNpcQaFrame=null;
    if(transitHeroSource){
     transitHeroSource.root.hidden=transitHeroSource.hidden;
     transitHeroSource.root.style.visibility=transitHeroSource.visibility;
@@ -2865,7 +2880,7 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,selectAlly,enterTransit,exitTransit,render,inspect,inspectMetroNpcStaging,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,setTransitNpcStop,setTransitNpcDeparture,get canvas(){return canvas}};
+  const api={setActive,selectAlly,enterTransit,exitTransit,render,inspect,inspectMetroNpcStaging,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,setTransitNpcStop,setTransitNpcDeparture,qaTransitNpcFrame,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
