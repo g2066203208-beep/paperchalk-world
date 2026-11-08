@@ -217,7 +217,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
     showMenu(e,node,l.name,route?
      '城际交通 · '+(atlas.SERVICE_LABELS[l.mode]||l.mode)+' · 约 '+route.minutes+' 分钟':
      '当前位置需要先换乘',[
-      {label:'查看 '+b.name,primary:true,run:()=>{clear();focus(b,Math.max(minScale*2,1.7))}}
+      {label:'进入'+b.name+'市内交通',primary:true,run:()=>{clear();enterCity(to)}}
      ]);
    });
   }
