@@ -25,22 +25,35 @@ test('subway vinyl floor overlaps its actual back wall and both end walls with n
   'carriage sheet uses single continuous UV range, without repeats');
  assert.deepEqual(m.floorOuter,m.floorInner,'normal/reverse meshes must meet identically');
 });
-test('metro actress keeps world stature, visible hair and visible shoe soles in desktop AND mobile framing',()=>{
+test('formal straight-on metro wall: no floor or gangway, heroine cropped naturally as foreground',()=>{
  const hero=metro.actors.positions.hero;
- assert.ok(hero.height>=1.55&&hero.height<=1.75,'use natural character meters, not billboard magic');
- assert.equal(hero.y,0,'character soles still touch actual floor');
- assert.equal(metro.camera.fovMode,'vertical','portrait devices must not turn small humans into tiny silhouettes');
+ assert.ok(hero.height>=1.55&&hero.height<=1.75,'keep original actor height in metres');
+ assert.equal(hero.y,0,'actual 3D shoes still stand on y=0 even when out of picture');
+ assert.equal(metro.camera.composition,'front-elevation-no-floor');
+ assert.equal(metro.camera.fovMode,'vertical');
+ assert.equal(metro.camera.lensShift,0);
  for(const [aspect,eye,focus] of [[16/9,metro.camera.eye,metro.camera.focus],
   [9/16,metro.camera.phoneEye,metro.camera.phoneFocus]]){
+  assert.equal(eye.x,focus.x,'formal front camera MUST face the wall squarely');
+  assert.equal(eye.y,focus.y,'no tilted side perspective or downward floor angle');
   const cam={...ring.camera('outer',0),eye,focus,fov:metro.camera.fov,
    lensShift:metro.camera.lensShift,sceneStatic:true,fovMode:metro.camera.fovMode};
+  const paintedWallFloor=ring.project({x:eye.x,y:0,z:metro.geometry.backZ},cam,aspect);
+  const paintedWallCeiling=ring.project({x:eye.x,y:metro.geometry.heightMeters,z:metro.geometry.backZ},cam,aspect);
+  assert.ok(paintedWallFloor.valid&&paintedWallCeiling.valid);
+  assert.ok(paintedWallFloor.y< -1.03,
+   'floor-wall seam MUST be below the bottom of the image: '+aspect+' '+paintedWallFloor.y);
+  assert.ok(paintedWallCeiling.y>1.0,
+   'wall image extends beyond top of frame: '+aspect+' '+paintedWallCeiling.y);
   const foot=ring.project({x:hero.x,y:hero.y,z:hero.z},cam,aspect);
   const crown=ring.project({x:hero.x,y:hero.y+hero.height,z:hero.z},cam,aspect);
   assert.ok(foot.valid&&crown.valid);
-  assert.ok(foot.y>-.98&&foot.y<-.53,'entire shoes in picture: '+aspect);
-  assert.ok(crown.y>.32&&crown.y<.89,'head clear of top: '+aspect);
-  assert.ok(crown.y-foot.y>1.08,'human fills at least 54% frame height: '+aspect);
-  assert.ok(foot.x>-.85&&foot.x<.5,'human visible horizontally: '+aspect);
+  assert.ok(foot.y< -1.1,'foreground heroine lower body is intentionally offscreen');
+  assert.ok(crown.y>0&&crown.y<.70,
+   'hero head sits comfortably inside the actual carriage: '+aspect+' '+crown.y);
+  assert.ok(crown.x>-.85&&crown.x<.85,
+   'hero upper body remains visible on desktop and phone: '+aspect+' '+crown.x);
+  assert.ok(crown.y-foot.y>1.0,'hero must not become tiny');
  }
 });
 test('carriage uses continuous floor sampling and battle retains repeated floor tiles',()=>{
