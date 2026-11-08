@@ -4,6 +4,10 @@
 **状态区分：** 三视图写法和截图由用户在会话中明确认可（构图方向正确）；下述新增第四格属于**待出图/待审核提示词**，不能谎称四格画作已经通过验收。
 参考：[官方模型卡](https://huggingface.co/circlestone-labs/Anima) · [已整理的官方 Anima 提示规则](ANIMA_OFFICIAL_PROMPTING_REFERENCE_20261108.md) · [本项目风格锁](ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md) · [用户已批准 M003 老人原文](NPC-M003_ANIMA_APPROVED_FOUR_POSE_USER_PROMPT_20261108.md)
 
+## 学校女生专用填空模板（2026-11-08）
+
+> 学校三人队及同校普通女学生请直接使用 [SG01 成功案例抽取的固定三视图母模板](ANIMA_SCHOOLGIRL_THREE_VIEW_FILL_IN_TEMPLATE_V1_20261108.md)：衣服和三面空间结构不再每人重写，只有外貌、身形、肤色、发型、嘴部气质、校服穿法、道具、各面自然动作、特有负面词作为占位符。此规则优先于下面上班族示例中的统一僵硬站姿；保持老人物原图不动。
+
 ## 为什么停止使用旧写法
 
 多次失败稿把 `front view, side view, back view` 混在开头的标签串里，或使用 `FIRST: EXACT...` 大量重复强调，结果中间重复正面、第三格丢失背面、服装变更。**本项目用户认可的一次三视图出图所使用的是简短的 Anima 标签＋普通英文描述，并用 `LEFT FIGURE / CENTER FIGURE / RIGHT FIGURE` 指定空间位置。** 这是一种经本项目用户确认有效的**项目经验**，不是 Anima 官方承诺的强制布局语法。以后必须先用该写法，不得自动退回失败版。
