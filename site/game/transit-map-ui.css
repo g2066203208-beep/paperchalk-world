@@ -1898,7 +1898,7 @@
  * The fog canvas is composited from the existing WebGL fluid in index.html.
  */
 #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview{
- background:#222829!important;background-image:none!important;
+ background:#050606!important;background-image:none!important;
 }
 #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-fog-surface,
 #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-wave-surface{
@@ -1921,5 +1921,22 @@
 /* A hidden preview layer must not occupy layout space in full-map QA mode. */
 #pw-world-surface .pw-dot-world-map:not(.pw-dot-empty-preview) > .pw-dot-fog-surface,
 #pw-world-surface .pw-dot-world-map:not(.pw-dot-empty-preview) > .pw-dot-wave-surface{
+ display:none!important;
+}
+
+/* FULL-FIELD FOG: the real dark surface has no light-grey center, viewport
+ * aperture or visible rectangular rim. Map extends to the playable frame. */
+#novel-ui #pw-world-surface .pw-surface-frame[data-view="map"]:has(.pw-dot-empty-preview){
+ width:100cqw!important;height:100cqh!important;
+ max-width:100%!important;max-height:100%!important;
+ background:#050606!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;
+}
+#pw-world-surface .pw-transit-map.pw-dot-world-map.pw-dot-empty-preview{
+ background:#050606!important;
+ background-image:none!important;
+ border:0!important;border-radius:0!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview::before{
  display:none!important;
 }
