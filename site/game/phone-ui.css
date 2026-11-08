@@ -529,3 +529,83 @@
  #phone-ui .phone-call-screen{min-height:135px}
  #phone-ui .phone-news-card{padding:8px}
 }
+
+/* Handset V2: conversation inbox, editable remarks, saved investigation notes. */
+#phone-ui .phone-conversation-list,#phone-ui .phone-memo-list{
+ display:flex;flex-direction:column;gap:7px;min-width:0;
+}
+#phone-ui .phone-conversation-row,#phone-ui .phone-memo-open{
+ display:flex;align-items:center;gap:10px;text-align:left!important;
+ width:100%;padding:11px 9px!important;min-height:60px;
+ background:#29383d!important;color:#eef3f0!important;
+ border:1px solid #70898362!important;border-radius:8px!important;
+ overflow:hidden;
+}
+#phone-ui .phone-conversation-avatar{
+ flex:none;width:38px;height:38px;border-radius:50%;
+ display:grid;place-items:center;background:#516867;
+ color:#f4f5f0;font-weight:600;font-size:16px;
+}
+#phone-ui .phone-conversation-details{
+ display:flex;flex-direction:column;gap:5px;flex:1;min-width:0;
+}
+#phone-ui .phone-conversation-details strong{
+ font-size:clamp(13px,2.05cqh,17px);font-weight:550;
+}
+#phone-ui .phone-conversation-details small{
+ color:#b3c4c0;font-size:clamp(11px,1.7cqh,14px);
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#phone-ui .phone-conversation-badge{
+ flex:none;min-width:21px;padding:3px 5px;border-radius:11px;
+ background:#9dbdb3;color:#13262b;text-align:center;font-size:12px;font-weight:700;
+}
+#phone-ui .phone-conversation-return,#phone-ui .phone-remark-action,
+#phone-ui .phone-memo-add,#phone-ui .phone-memo-delete,
+#phone-ui .phone-memo-cancel{
+ padding:7px 9px!important;min-height:33px!important;
+ background:#3d5051!important;color:#e6f0eb!important;
+ border:1px solid #8aa49a70!important;border-radius:5px!important;
+ text-align:center!important;cursor:pointer;
+ font-size:clamp(11px,1.7cqh,14px)!important;
+}
+#phone-ui .phone-conversation-return{text-align:left!important;align-self:flex-start}
+#phone-ui .phone-remark-editor,#phone-ui .phone-memo-editor{
+ display:flex;flex-direction:column;gap:10px;width:100%;
+}
+#phone-ui .phone-remark-input,#phone-ui .phone-memo-title,
+#phone-ui .phone-memo-text{
+ width:100%;max-width:100%;box-sizing:border-box;
+ color:#f5f4ee!important;background:#233136!important;
+ border:1px solid #8daaa087!important;border-radius:5px;
+ padding:9px;font:inherit;font-size:clamp(12px,1.85cqh,16px);
+}
+#phone-ui .phone-memo-text{resize:vertical;min-height:110px;line-height:1.55}
+#phone-ui .phone-memo-toolbar{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:9px;padding:8px 0 3px;
+}
+#phone-ui .phone-memo-toolbar strong{font-size:clamp(14px,2.1cqh,18px);font-weight:550}
+#phone-ui .phone-memo-entry{display:flex;align-items:center;gap:6px;min-width:0}
+#phone-ui .phone-memo-open{
+ flex:1;min-width:0;min-height:62px;
+ flex-direction:column;align-items:flex-start;gap:5px;
+}
+#phone-ui .phone-memo-open strong,#phone-ui .phone-memo-open small{
+ display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#phone-ui .phone-memo-open small{font-size:clamp(10px,1.5cqh,12px);color:#adbfbb}
+#phone-ui .phone-memo-delete{flex:none;border-color:#96767780!important;color:#e3b7b4!important}
+#phone-ui .phone-memo-feedback{min-height:1em;color:#eac2b3;margin:0}
+#phone-ui .phone-memo-actions{display:flex;gap:8px}
+#phone-ui .phone-memo-actions button,
+#phone-ui .phone-remark-editor button{
+ min-height:38px;padding:8px 15px;border:1px solid #9db7ae;
+ background:#56716c;color:#f2f5f0;border-radius:5px;
+ font-size:clamp(12px,1.8cqh,15px);cursor:pointer;
+}
+#phone-ui .phone-call-picker{
+ width:100%;padding:9px;color:#edf1e9;background:#2b3d3f;
+ border:1px solid #829c95;border-radius:5px;
+}
+#phone-ui .phone-unread-preview{cursor:pointer;text-align:left}
