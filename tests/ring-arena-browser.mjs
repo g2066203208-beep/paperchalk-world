@@ -98,9 +98,10 @@ try{
   // Verify the DEFAULT selected view, not an incidental mouse-hover look at
   // the party UI. All four role choices still support real free mouse-look.
   await page.mouse.move(640,360);
-  await page.waitForFunction(()=>Math.abs(
-   window.PaperWorldGameRingArena?.inspect()?.cameraLook?.yawDeg||0)<1.2,
-   null,{timeout:15000});
+  await page.waitForFunction(()=>{
+   const s=window.PaperWorldGameRingArena?.inspect();
+   return Math.abs(s?.cameraLook?.yawDeg||0)<1.2&&s?.stageTransitionProgress>=.999;
+  },null,{timeout:15000});
   const switched=await inspect();
   const chosen=outer.actors.allies[index-1];
   assert.equal(switched.controlledActorId,chosen.id);
@@ -112,8 +113,14 @@ try{
    'teammate is still fully opaque even when overlapping an enemy silhouette');
   assert.equal(switched.cameraParity,true,
    'the single WebGL camera follows the real selected world-space teammate');
-  assert.equal(switched.cameraLook.pivot.x,chosen.x);
-  assert.equal(switched.cameraLook.pivot.z,chosen.z);
+  assert.equal(switched.stagePresentation,'world-space-foreground-handoff');
+  assert.equal(switched.cameraLook.pivot.x,-1.05);
+  assert.equal(switched.cameraLook.pivot.z,9.3);
+  assert.deepEqual(switched.camera.eye,{x:-.28,y:1.5,z:10.4},
+   'camera never follows the original tactical slot: the selected real actor enters the original shoulder slot');
+  assert.equal(switched.camera.fov,66);
+  assert.equal(switched.stageActors.find(a=>a.id===chosen.id).x,-1.05);
+  assert.equal(switched.stageActors.find(a=>a.id===chosen.id).z,9.3);
   assert.equal(JSON.stringify(switched.actors),originalActors,
    'switching control cannot move even one ally or enemy root');
   assert.equal(await page.locator('[data-control-ally="'+index+'"]').getAttribute('aria-pressed'),'true');
