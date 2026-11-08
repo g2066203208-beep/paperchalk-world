@@ -784,7 +784,7 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/metro-npc-staging.js?v=world-foot-2p5d-20261108"></script>
 <script src="./game/metro-platform-3d.js?v=platform-box-four-sliding-doors-v1-20261108"></script>
 <script src="./game/metro-platform-life.js?v=station-crowd-20261108-v1"></script>
-<script src="./game/ring-arena-runtime.js?v=female07-original-psd-live-14parts-20261108"></script>
+<script src="./game/ring-arena-runtime.js?v=p5-wide-neighbor-fixed-camera-comfort-v2-20261108"></script>
 <script src="./game/ring-arena-frame-inspector.js?v=dd699-camera-retreat-v29b-20261106" defer></script>
 <link rel="stylesheet" href="./game/phone-ui.css?v=phone-conversations-notes-20261108-v2">
 <link rel="stylesheet" href="./game/phone-focus.css?v=phone-world-20261107-r2">
@@ -3318,7 +3318,10 @@ void main(){
     // No individual L2D, fog or material-layer parallax.
     const roomMove=stage.dataset.scene==='classroom-box';
     const worldLook=roomMove||stage.dataset.scene==='ring-arena'||view.classList.contains('ring-arena-transit');
-    const lookRate=stage.dataset.scene==='ring-arena'?10:7;
+    // Battle view is peripheral awareness, not an FPS camera. A gentler
+    // single-pass exponential damper avoids instant head snapping and
+    // artificial parallax. Never change the base shoulder lens/eye.
+    const lookRate=stage.dataset.scene==='ring-arena'?4.5:7;
     const kx=1-Math.exp(-cameraFrameDt*(roomMove?10:lookRate));
     const ky=1-Math.exp(-cameraFrameDt*(roomMove?9:lookRate));
     // Old flat-scene tilt only affects 2D. The WebGL room uses the
@@ -3407,8 +3410,22 @@ void main(){
     if(stage.dataset.scene==='ring-arena'&&e.target?.closest?.('#ring-arena-controls')){
       aimX=0;aimY=0;start();return;
     }
-    aimX=clamp(e.clientX/Math.max(1,innerWidth)*2-1,-1,1);
-    aimY=clamp(e.clientY/Math.max(1,innerHeight)*2-1,-1,1);
+    const cursorX=clamp(e.clientX/Math.max(1,innerWidth)*2-1,-1,1);
+    const cursorY=clamp(e.clientY/Math.max(1,innerHeight)*2-1,-1,1);
+    if(stage.dataset.scene==='ring-arena'){
+      // Stable neutral viewing area around the center (12% per half-axis).
+      // Smoothstep avoids a visibly abrupt velocity change at the boundary.
+      // This is ONLY applied to the 3D battle, not maps, DEV or dialogue.
+      const comfortableLook=v=>{
+        const t=clamp((Math.abs(v)-.12)/.88,0,1);
+        const smooth=t*t*(3-2*t);
+        return Math.sign(v)*smooth;
+      };
+      aimX=comfortableLook(cursorX);
+      aimY=comfortableLook(cursorY);
+    }else{
+      aimX=cursorX;aimY=cursorY;
+    }
     start();
   },{passive:true});
   view.addEventListener('pointerleave',()=>{aimX=0;aimY=0;start()});
