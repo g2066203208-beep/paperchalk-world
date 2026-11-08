@@ -1,0 +1,52 @@
+name: Real 3D dot-map camera proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/dot-terrain-3d.js'
+      - 'site/game/transit-map-ui.js'
+      - 'site/game/transit-map-ui.css'
+      - 'site/index.html'
+      - 'tests/map-terrain-camera-browser.mjs'
+      - '.github/workflows/map-3d-camera-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-map-3d:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify real heightfield code and original railway
+        run: |
+          node --check site/game/dot-terrain-3d.js
+          node --check site/game/transit-map-ui.js
+          node --test tests/metro-map-editor.test.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve the actual hosted horror game
+        run: |
+          python3 scripts/build_scene_catalog.py
+          python3 -m http.server 8765 --directory site >/tmp/map-3d-http.log 2>&1 &
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/map-3d-http.log
+          exit 1
+      - name: Verify smooth switch, physical 3D heightfield and orbit controls
+        run: node tests/map-terrain-camera-browser.mjs
+      - name: Upload actual browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: actual-2d-3d-dot-map-chromium
+          path: artifacts/map-terrain-3d/*.png
+          if-no-files-found: warn
+          retention-days: 14
