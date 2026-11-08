@@ -1,0 +1,70 @@
+{
+  "schema": "paperchalk/npc-scene-assignments/v1",
+  "version": 1,
+  "owner": "gameplay-npc-placement-task",
+  "policy": "Art task owns identity and sprite art. This assignment document alone authorizes scene/transport placement. No inference from filenames, emotional variants, or scene tags.",
+  "records": [
+    {
+      "id": "NPC-G001",
+      "role": "three-classmates-social-group",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "school",
+        "mall",
+        "park",
+        "cafe",
+        "central",
+        "northgate"
+      ],
+      "allowedTransport": [
+        "metro"
+      ],
+      "metroSlot": "back-center",
+      "reason": "One persistent three-student friendship group; school on weekdays, shared public outings on free days, metro only while traveling on matching route. Art currently rejected; placement alone never activates it."
+    },
+    {
+      "id": "female2",
+      "role": "named-main-cast-schoolgirl",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "school"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Important story character, not a generic metro passenger. Only a confirmed story/schedule changes this."
+    },
+    {
+      "id": "classmate",
+      "role": "classmate",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "school"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Do not turn classmate into commuter or store employee without identity-specific approval."
+    },
+    {
+      "id": "clerk",
+      "role": "convenience-clerk",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "convenience"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Store employee appears at assigned shift; do not reuse work-uniform art in school or leisure scenes."
+    },
+    {
+      "id": "neighbor",
+      "role": "neighbor",
+      "home": "kirihama-07",
+      "allowedLocations": [
+        "park"
+      ],
+      "allowedTransport": [],
+      "metroSlot": null,
+      "reason": "Recognizable neighborhood passerby only where their real route and appropriate outfit permit."
+    }
+  ]
+}
