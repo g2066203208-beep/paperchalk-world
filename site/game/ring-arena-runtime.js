@@ -419,6 +419,7 @@
   // raster surfaces. Zero strength leaves every battle shader unchanged.
   'uniform vec3 uPlatformPositions[4];uniform vec3 uPlatformColors[4];',
   'uniform float uPlatformExposure;uniform float uPlatformBackZ;',
+  'uniform float uTrainPosition;uniform float uTrainSpeed;'
   'float platformWindowTransmission(vec3 p,vec3 src,int side){',
   'float windowZ=side==3?uPlatformBackZ+3.85:uPlatformBackZ;',
   'float dz=src.z-p.z;',
@@ -452,8 +453,11 @@
   'float areaFalloff=1.0/(1.0+ds*.24);',
   // Floor gets direct window light; neutral diffuse fill makes a subtle
   // rim on original illustrated L2D even when its flat normal faces away.
+  // Real overhead platform fixture pools move across the carriage ONLY
+  // as train DISTANCE changes. There is no frame-clock-driven fake motion.
+  'float spatialPool=.77+.23*cos((p.x+uTrainPosition)*.82+float(i)*1.3);',
   'ambient+=uPlatformColors[i]*uPlatformExposure*through*',
-  '(cosine*1.6+.10)*areaFalloff;',
+  '(cosine*1.6+.10)*areaFalloff*spatialPool;'
   '}',
   '}',
   'return ambient;',
@@ -513,7 +517,7 @@
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;uniform sampler2D uWingTexture;uniform float uWingReady;',
   'uniform float uFloorReady;uniform float uCeilingReady;uniform float uWindowCutouts;',
-  'uniform float uPlatformExposure;',
+  'uniform float uPlatformExposure;uniform float uTrainPosition;uniform float uTrainSpeed;',
   worldColorGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
@@ -521,33 +525,59 @@
   // This is a physical background plane behind actual pierced windows.
   // During a normal journey, exterior light slides across the glass.
   'if(uSurface==4){',
-  'float lane=fract(vWallUv.x*7.0-uTime*.20);',
-  'float lightStrip=pow(max(0.0,1.0-abs(lane-.5)*8.0),6.0);',
-  'float blur=sin(vWallUv.x*21.0-uTime*.47)*.035;',
-  'vec3 outside=vec3(.27,.35,.39)+vec3(blur);',
-  'outside+=vec3(.30,.24,.17)*lightStrip;',
-  // The platform is BEHIND the real alpha window apertures at 3D z=7.84:
-  // lit wall tiles, pillar shadows and fluorescent strips, not a screen tint.
-  // A recognizable station outside actual glass: glazed wall joints,
-  // platform columns, signage band and luminous overhead lightbox.
-  'float sx=vWallUv.x,sy=vWallUv.y;',
-  'float mortarX=1.0-smoothstep(.005,.013,abs(fract(sx*11.0)-.5));',
-  'float mortarY=1.0-smoothstep(.006,.016,abs(fract(sy*7.0)-.5));',
-  'float pillar=1.0-smoothstep(.026,.063,abs(fract(sx*4.0)-.18));',
-  'float lightbox=smoothstep(.57,.592,sy)*(1.0-smoothstep(.645,.674,sy));',
-  'float halo=exp(-pow((sy-.611)*8.4,2.0));',
-  'float wayfinding=smoothstep(.34,.37,sy)*(1.0-smoothstep(.44,.47,sy));',
-  'float accent=smoothstep(.435,.446,sy)*(1.0-smoothstep(.455,.463,sy));',
-  'float baseboard=1.0-smoothstep(.12,.20,sy);',
-  'vec3 station=vec3(.440,.475,.454);',
-  'station-=vec3(.037,.036,.036)*max(mortarX,mortarY);',
-  'station-=vec3(.20,.205,.192)*pillar;',
-  'station=mix(station,vec3(.125,.218,.260),wayfinding*.83);',
-  'station=mix(station,vec3(.74,.62,.35),accent*.70);',
-  'station+=vec3(.168,.175,.138)*halo*(1.0-pillar*.45);',
-  'station=mix(station,vec3(.87,.89,.79),lightbox*(1.0-pillar));',
-  'station-=vec3(.17,.17,.15)*baseboard;',
-  'outside=mix(outside,station,clamp(uPlatformExposure,0.0,1.0));',
+  // STATION AND TUNNEL BOTH STAY PUT IN WORLD SPACE: only a single train
+  // odometer advances. Exterior movement comes from worldX, never uTime.
+  // The train metal/glass, heroine, floor, lamps and camera NEVER move.
+  'float worldX=(vWallUv.x-.5)*8.5+uTrainPosition;',
+  'float stopX=mod(worldX+44.0,88.0)-44.0;',
+  'float stationMask=1.0-smoothstep(11.0,19.5,abs(stopX));',
+  'float station=stationMask*uPlatformExposure;',
+  'float sy=vWallUv.y;',
+  // Tunnel: receding reinforced concrete, cable trough, occasional signal
+  // housings and cool maintenance lamps. All details advect at true metres.
+  'float tunnelRib=1.0-smoothstep(.012,.036,abs(fract(worldX/4.2)-.5));',
+  'float seam=1.0-smoothstep(.004,.010,abs(fract(sy*9.0)-.5));',
+  'float cable=smoothstep(.32,.34,sy)*(1.0-smoothstep(.365,.38,sy));',
+  'float signalZone=1.0-smoothstep(.16,.24,abs(fract(worldX/13.0)-.51));',
+  'float signalHeight=smoothstep(.63,.66,sy)*(1.0-smoothstep(.74,.77,sy));',
+  'float lampZone=1.0-smoothstep(.075,.145,abs(fract(worldX/8.0)-.48));',
+  'float lampHeight=smoothstep(.79,.815,sy)*(1.0-smoothstep(.84,.865,sy));',
+  'vec3 tunnel=vec3(.029,.041,.052)+vec3(.023,.027,.028)*sy;',
+  'tunnel-=vec3(.018,.016,.015)*tunnelRib;',
+  'tunnel-=vec3(.010,.009,.008)*seam;',
+  'tunnel+=vec3(.038,.042,.041)*cable;',
+  'tunnel+=vec3(.19,.21,.16)*lampZone*lampHeight;',
+  'tunnel+=vec3(.036,.105,.062)*signalZone*signalHeight;',
+  // A far wall moves at reduced parallax compared with foreground pillars.
+  // Its dark bay outlines read as a real station beyond the glass.
+  'float farX=worldX*.58;',
+  'float bayEdge=1.0-smoothstep(.013,.035,abs(fract(farX/3.8)-.5));',
+  'float tileX=1.0-smoothstep(.005,.012,abs(fract(farX/1.18)-.5));',
+  'float tileY=1.0-smoothstep(.007,.015,abs(fract(sy*7.0)-.5));',
+  'float pillar=1.0-smoothstep(.038,.065,abs(fract(worldX/4.6)-.50));',
+  'float sideShadow=smoothstep(.42,.58,abs(fract(worldX/4.6)-.5));',
+  'float lightbox=smoothstep(.755,.79,sy)*(1.0-smoothstep(.855,.89,sy));',
+  'float indirect=exp(-pow((sy-.80)*7.0,2.0));',
+  'float signBand=smoothstep(.38,.41,sy)*(1.0-smoothstep(.48,.51,sy));',
+  'float signPanel=1.0-smoothstep(.06,.10,abs(fract(worldX/18.5)-.5));',
+  'float caution=smoothstep(.23,.242,sy)*(1.0-smoothstep(.25,.265,sy));',
+  'float kick=1.0-smoothstep(.14,.21,sy);',
+  'vec3 platform=vec3(.405,.433,.425);',
+  'platform-=vec3(.035,.033,.031)*max(tileX,tileY);',
+  'platform-=vec3(.043,.048,.049)*bayEdge;',
+  'platform-=vec3(.035,.043,.047)*sideShadow;',
+  'platform=mix(platform,vec3(.105,.170,.196),signBand*.83);',
+  'platform=mix(platform,vec3(.685,.655,.444),signPanel*signBand*.66);',
+  'platform+=vec3(.19,.19,.145)*indirect;',
+  'platform=mix(platform,vec3(.88,.90,.81),lightbox);',
+  'platform=mix(platform,vec3(.72,.61,.33),caution);',
+  'platform-=vec3(.18,.18,.17)*kick;',
+  'platform=mix(platform,vec3(.09,.115,.125),pillar*.88);',
+  // Only parts currently next to the windows illuminate the real coach.
+  // Train speed stretches highlights through window glass, never the cabin.
+  'float streak=smoothstep(9.0,15.0,uTrainSpeed)*.032;',
+  'vec3 outside=mix(tunnel,platform,station);',
+  'outside+=vec3(.22,.235,.20)*streak*lampZone*lampHeight;',
   'gl_FragColor=vec4(outside,1.0);return;',
   '}',
   'if(uSurface==0){',
@@ -1036,9 +1066,9 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uViewEye','uGeometry','uWindowCutouts']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uViewEye','uGeometry','uWindowCutouts']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
     ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
@@ -1127,11 +1157,30 @@
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
-  let platformExposure=0;
+  let platformExposure=0,platformExposureOverride=null;
+  let trainState={distanceMeters:0,speedMps:0,stationExposure:1,
+   phase:'docked',moving:false,progress:1,legs:0};
+  function setTransitDynamics(next){
+   if(!transitMode||!next)return null;
+   trainState={
+    distanceMeters:Math.max(0,Number(next.distanceMeters)||0),
+    speedMps:Math.max(0,Number(next.speedMps)||0),
+    stationExposure:clamp(Number(next.stationExposure)||0,0,1),
+    phase:next.phase||'docked',moving:!!next.moving,
+    progress:clamp(Number(next.progress)||0,0,1),
+    legs:Math.max(0,Math.floor(next.legs||0))
+   };
+   // A manual lamp state (anomaly and screenshot QA) persists while parked.
+   // During travel, external light is always owned by proximity to a station.
+   if(trainState.moving)platformExposureOverride=null;
+   platformExposure=platformExposureOverride??trainState.stationExposure;
+   return {...trainState};
+  }
   const DARK_PLATFORM_POSITIONS=new Float32Array(12);
   const DARK_PLATFORM_COLORS=new Float32Array(12);
   function setPlatformExposure(value){
-   platformExposure=clamp(Number(value)||0,0,1);
+   platformExposureOverride=clamp(Number(value)||0,0,1);
+   platformExposure=platformExposureOverride;
    if(active&&transitMode)render(0);
    return platformExposure;
   }
@@ -1548,6 +1597,8 @@
    gl.uniform3fv(prog['uPlatformColors[0]'],lights?.colors||DARK_PLATFORM_COLORS);
    gl.uniform1f(prog.uPlatformExposure,transitMode?platformExposure:0);
    gl.uniform1f(prog.uPlatformBackZ,lights?.backZ??8.0);
+   gl.uniform1f(prog.uTrainPosition,transitMode?trainState.distanceMeters:0);
+   gl.uniform1f(prog.uTrainSpeed,transitMode?trainState.speedMps:0);
   }
   // Fix the selected real-world luminaire PER ACTOR at its immutable base
   // anchor. Power only modulates shadow intensity. It must NEVER switch the
@@ -1989,7 +2040,9 @@
    const carriage=document.getElementById('pw-metro-cabin');
    if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
-   platformExposure=1; // arriving at an actual subway platform
+   platformExposure=1;platformExposureOverride=null;
+   trainState={distanceMeters:0,speedMps:0,stationExposure:1,
+    phase:'docked',moving:false,progress:1,legs:0};
    // The renderer uploads from the real L2D source canvas, which normally
    // lives in a hidden battle-source DOM root. Unpause it while keeping the
    // DOM node optically invisible: one 3D actor, never a second flat actor.
@@ -2014,7 +2067,7 @@
   }
   function exitTransit(){
    if(!transitMode)return false;
-   transitMode=false;active=false;platformExposure=0;
+   transitMode=false;active=false;platformExposure=0;platformExposureOverride=null;
    if(transitHeroSource){
     transitHeroSource.root.hidden=transitHeroSource.hidden;
     transitHeroSource.root.style.visibility=transitHeroSource.visibility;
@@ -2060,6 +2113,7 @@
      Math.abs(lens.fov-actual.fov)<.00001;
    })(),
    environment:environmentId,geometry:{...ACTIVE_GEOMETRY},
+   transitMotion:{...trainState,carriageWorldFixed:true,heroWorldFixed:true,exteriorDistanceDriven:true},
    platformLighting:{active:transitMode,exposure:platformExposure,
     sources:transitMode?(window.PaperWorldEnvironments?.get?.('metro')?.platformLighting?.positions.length||0)/3:0,
     rearSideWindows:true,oppositeSideWindows:true,
@@ -2199,7 +2253,7 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,enterTransit,exitTransit,render,inspect,setLighting,setPlatformExposure,get canvas(){return canvas}};
+  const api={setActive,enterTransit,exitTransit,render,inspect,setLighting,setPlatformExposure,setTransitDynamics,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
