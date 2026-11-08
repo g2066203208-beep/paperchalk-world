@@ -105,19 +105,26 @@
  }
  function mount({hud,onTick,onRole}={}){
   if(!hud||typeof document==='undefined')throw Error('Timegrid HUD requires battle stage');
-  // Rejected filmstrip and round-one planner are deleted, not concealed.
-  // The card engine remains unchanged; the unframed source art is temporary.
   const holder=document.createElement('section');
-  holder.className='ring-timegrid';
-  holder.setAttribute('aria-label','双方角色头像与实时生命值');
-  holder.innerHTML='<div data-tg-roster class="tg-roster"></div>'+
-   '<button type="button" class="tg-quick" data-tg-quick '+
-   'aria-label="安排并执行一次战斗行动">行动</button>';
+  holder.className='ring-timegrid tg-ready';
+  holder.setAttribute('aria-label','老式电影胶片战斗角色表');
+  holder.innerHTML=[
+   '<div class="tg-film-viewport" aria-label="连续竖向电影胶片">',
+   '<div class="tg-reel" data-tg-roster></div></div>',
+   '<button type="button" class="tg-quick" data-tg-quick aria-label="自动安排并执行一次行动">行动</button>',
+   '<span class="tg-screenreader" role="status" aria-live="polite" data-tg-announcement></span>'
+  ].join('');
+  const roster=holder.querySelector('[data-tg-roster]');
+  const viewport=holder.querySelector('.tg-film-viewport');
+  const announce=holder.querySelector('[data-tg-announcement]');
   const hitLayer=document.createElement('div');
   hitLayer.dataset.tgHits='';hitLayer.className='tg-hit-layer';
   hitLayer.setAttribute('aria-hidden','true');
   hud.append(holder,hitLayer);
   const roleName=id=>({hero:'斧卫','ai-gun':'枪手','ai-guard':'守护','ai-mage':'调律'}[id]||'敌方');
+  // This is the exact transparent-window vintage 35mm film image generated
+  // for this game, stored once and repeated as a texture, never CSS-drawn.
+  const FILM_ART='./assets/ui/vintage-cinema-single-frame.svg';
   const portraitArt=Object.freeze({
    hero:'./assets/characters/protagonist-front.webp',
    'ai-gun':'./assets/characters/char-003/front.png',
@@ -221,48 +228,155 @@
    return cropped.get(source)||source;
   };
 
-  let seed=20261108,model=null;
-  function hpBar(actual){
-   const max=Math.max(1,Number(actual.maxHp)||1);
-   const hp=Math.max(0,Math.min(max,Number(actual.hp)||0));
-   const width=Math.max(0,Math.min(100,100*hp/max));
-   return '<div class="tg-health"><span class="tg-hp-value">'+hp+
-    '<small>/'+max+'</small></span><span class="tg-hp-bar" role="progressbar" '+
-    'aria-label="生命值" aria-valuemin="0" aria-valuemax="'+max+'" aria-valuenow="'+hp+'">'+
-    '<i style="width:'+width.toFixed(2)+'%"></i></span></div>';
+
+  let seed=20261108,model=null,firstFrame=true,rosterRevision=0;
+  const nodes=new Map();
+  const reduceMotion=()=>!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  function makeFrame(actor){
+   const slot=displayId(actor.id)||actor.id;
+   const label=actor.side==='ally'?roleName(actor.id):actor.name||'敌方';
+   const row=document.createElement('div');
+   row.className='tg-row '+(actor.side==='enemy'?'enemy':'ally');
+   row.dataset.tgActor=actor.id;
+   row.dataset.tgRow=slot;
+   // The portrait is behind the transparent window. The real film is
+   // an image OVER it, so scratches/edge perforations stay physically visible.
+   const portrait=actor.side==='ally'
+    ?'<button type="button" class="tg-portrait" data-tg-choose-role="'+
+     (ROLE_IDS.indexOf(actor.id)+1)+'" aria-label="切换到'+escape(label)+'">'
+    :'<span class="tg-portrait" aria-hidden="true">';
+   const portraitEnd=actor.side==='ally'?'</button>':'</span>';
+   row.innerHTML=portrait+
+    '<span class="tg-cutout"><img class="tg-face" alt="" draggable="false" decoding="async" src="'+art(actor)+'"></span>'+
+    portraitEnd+
+    '<img class="tg-film-texture" alt="" decoding="async" draggable="false" src="'+FILM_ART+'" aria-hidden="true">'+
+    '<span class="tg-identity"><strong class="tg-hp-value"></strong>'+
+    '<span class="tg-hp-bar" role="progressbar" aria-label="生命值" '+
+    'aria-valuemin="0"><i></i></span></span>';
+   return row;
+  }
+  function updateFrame(row,actor){
+   const hpMax=Math.max(1,Number(actor.maxHp)||1);
+   const hp=Math.max(0,Math.min(hpMax,Number(actor.hp)||0));
+   const role=actor.id===model.controlled().id;
+   row.classList.toggle('current',role);
+   row.classList.toggle('enemy',actor.side==='enemy');
+   row.classList.toggle('ally',actor.side==='ally');
+   const face=row.querySelector('.tg-face'),source=art(actor);
+   if(face.getAttribute('src')!==source)face.src=source;
+   const current=row.querySelector('.tg-hp-value');
+   if(current.textContent!==hp+'/'+hpMax)current.textContent=hp+'/'+hpMax;
+   const bar=row.querySelector('.tg-hp-bar');
+   bar.setAttribute('aria-valuemax',String(hpMax));
+   bar.setAttribute('aria-valuenow',String(hp));
+   row.querySelector('.tg-hp-bar i').style.width=(100*hp/hpMax).toFixed(2)+'%';
+   const button=row.querySelector('[data-tg-choose-role]');
+   if(button)button.disabled=!!model.playback;
+  }
+  function rollOut(node){
+   if(reduceMotion()||!node.animate)return;
+   const rowBox=node.getBoundingClientRect();
+   const viewBox=viewport.getBoundingClientRect();
+   if(rowBox.width<1||rowBox.height<1)return;
+   const ghost=node.cloneNode(true);
+   ghost.removeAttribute('data-tg-actor');
+   ghost.classList.add('tg-ghost');
+   ghost.style.position='absolute';
+   ghost.style.top=(rowBox.top-viewBox.top)+'px';
+   ghost.style.left=(rowBox.left-viewBox.left)+'px';
+   ghost.style.width=rowBox.width+'px';
+   ghost.style.height=rowBox.height+'px';
+   ghost.style.margin='0';
+   ghost.style.pointerEvents='none';
+   viewport.append(ghost);
+   const direction=node.classList.contains('enemy')?-1:1;
+   const motion=ghost.animate([
+    {opacity:1,filter:'brightness(1.3)',transform:'translate3d(0,0,0)'},
+    {opacity:.6,filter:'brightness(1.8) blur(1px)',offset:.32,
+     transform:'translate3d(0,'+(direction*14)+'px,0)'},
+    {opacity:0,filter:'brightness(.6) blur(3px)',
+     transform:'translate3d(0,'+(direction*rowBox.height*1.08)+'px,0)'}
+   ],{duration:245,easing:'cubic-bezier(.24,.78,.25,1)',fill:'forwards'});
+   motion.finished.catch(()=>{}).then(()=>ghost.remove());
   }
   function paintRoster(){
    if(!model)return;
-   const state=new Map(model.shown.map(a=>[a.id,a]));
-   const teams=[];
-   for(const side of ['ally','enemy']){
-    const people=[];
-    for(const actor of model.game.actors.filter(a=>a.side===side)){
-     const a={...actor,...state.get(actor.id)},dead=!!a.dead,
-      slot=displayId(actor.id),mine=actor.id===model.controlled().id;
-     const label=side==='enemy'?'敌人 '+slot.slice(-1):roleName(actor.id);
-     const image='<span class="tg-cutout"><img alt="" decoding="async" draggable="false" src="'+art(actor)+'"></span>';
-     const portrait=side==='ally'
-      ?'<button type="button" class="tg-portrait" data-tg-choose-role="'+
-        (ROLE_IDS.indexOf(actor.id)+1)+'" aria-label="切换到'+escape(label)+'" '+
-        (model.playback?'disabled':'')+'>'+image+'</button>'
-      :'<span class="tg-portrait" aria-hidden="true">'+image+'</span>';
-     people.push('<div class="tg-row '+side+(mine?' current':'')+
-      (dead?' dead':'')+'" data-tg-row="'+slot+'">'+portrait+
-      '<div class="tg-identity">'+hpBar(a)+'</div></div>');
-    }
-    teams.push('<div class="tg-team '+side+'" role="group" aria-label="'+
-     (side==='ally'?'我方':'敌方')+'">'+people.join('')+'</div>');
+   const currentShown=new Map(model.shown.map(actor=>[actor.id,actor]));
+   // Enemy/ally ordering is stable. Dead actors are spliced OUT of the
+   // physical film immediately; later recruits receive their own new frame.
+   const displayed=model.game.actors.map(actor=>({...actor,...currentShown.get(actor.id)}))
+    .filter(actor=>!actor.dead&&Number(actor.hp)>0)
+    .sort((x,y)=>Number(x.side==='ally')-Number(y.side==='ally'));
+   const desired=displayed.map(actor=>actor.id);
+   const existingIds=[...nodes.keys()];
+   const membershipChanged=desired.length!==existingIds.length||
+    desired.some((id,i)=>id!==existingIds[i]);
+   const beforeRects=new Map();
+   if(membershipChanged&&!firstFrame&&!reduceMotion()){
+    for(const [id,node] of nodes)beforeRects.set(id,node.getBoundingClientRect());
    }
-   holder.querySelector('[data-tg-roster]').innerHTML=teams.join('');
-   holder.querySelector('[data-tg-quick]').disabled=model.playback||model.game.phase!=='planning';
-   holder.dataset.layout='unframed-portraits-hp-only';
-   holder.dataset.timegridVersion='1.8';
+   let vanished=0,arrived=0;
+   for(const [id,node] of [...nodes]){
+    if(desired.includes(id))continue;
+    if(!firstFrame)rollOut(node);
+    node.remove();nodes.delete(id);vanished++;
+   }
+   for(const actor of displayed){
+    let node=nodes.get(actor.id);
+    if(!node){node=makeFrame(actor);nodes.set(actor.id,node);arrived++;}
+    updateFrame(node,actor);
+   }
+   // Reorder only when needed. Existing nodes and their artwork/image decode
+   // survive every 3D tick: no re-rendered innerHTML and no popping portraits.
+   for(let i=0;i<desired.length;i++){
+    const wanted=nodes.get(desired[i]),slot=roster.children[i];
+    if(slot!==wanted)roster.insertBefore(wanted,slot||null);
+   }
+   if(membershipChanged&&!firstFrame&&!reduceMotion()){
+    for(const [id,node] of nodes){
+     const old=beforeRects.get(id);
+     if(old){
+      const now=node.getBoundingClientRect(),dy=old.top-now.top;
+      if(Math.abs(dy)>1&&node.animate)
+       node.animate([{transform:'translate3d(0,'+dy+'px,0)'},
+        {transform:'translate3d(0,-1px,0)',offset:.78},
+        {transform:'translate3d(0,0,0)'}],
+        {duration:285,easing:'cubic-bezier(.18,.78,.23,1)'});
+     }else if(node.animate){
+      node.animate([{opacity:0,filter:'blur(3px) brightness(1.5)',
+         transform:'translate3d(0,-52px,0)'},
+       {opacity:1,filter:'none',transform:'translate3d(0,0,0)'}],
+       {duration:260,easing:'cubic-bezier(.18,.82,.28,1)'});
+     }
+    }
+    if(roster.animate){
+     roster.animate([{transform:'translate3d(0,-8px,0)'},
+      {transform:'translate3d(0,2px,0)',offset:.72},
+      {transform:'translate3d(0,0,0)'}],
+      {duration:300,easing:'cubic-bezier(.14,.78,.24,1)'});
+    }
+   }
+   if(membershipChanged&&!firstFrame){
+    rosterRevision++;
+    announce.textContent=(vanished?'胶片抽离 '+vanished+' 帧。':'')+
+     (arrived?'新人物胶片滚入 '+arrived+' 帧。':'');
+   }
+   holder.querySelector('[data-tg-quick]').disabled=model.playback||
+    model.game.phase!=='planning';
+   holder.dataset.layout='gpt-vintage-vertical-film-roll-v1';
+   holder.dataset.timegridVersion='1.9';
+   holder.dataset.reelRevision=String(rosterRevision);
+   firstFrame=false;
   }
   function start(){
-   model=createBattle(++seed);hitLayer.replaceChildren();
-   model.onChange(e=>{if(onTick)onTick(e,model);paintRoster();});
-   paintRoster();return model;
+   model=createBattle(++seed);
+   firstFrame=true;rosterRevision=0;nodes.clear();roster.replaceChildren();
+   hitLayer.replaceChildren();holder.classList.remove('tg-ready');
+   model.onChange(event=>{if(onTick)onTick(event,model);paintRoster();});
+   paintRoster();
+   // Resetting an encounter physically restarts the one-piece reel entry.
+   void holder.offsetWidth;holder.classList.add('tg-ready');
+   return model;
   }
   function selectRole(index){
    if(!model||model.playback)return false;
@@ -273,27 +387,40 @@
   function executeQuick(){
    if(!model||model.playback||model.game.phase!=='planning')return false;
    model.autoplan(true);
-   const result=model.execute();
-   paintRoster();
-   return !!result;
+   const result=model.execute();paintRoster();return !!result;
   }
-  holder.addEventListener('click',e=>{
-   const button=e.target.closest('button');if(!button)return;
+  holder.addEventListener('click',event=>{
+   const button=event.target.closest('button');if(!button)return;
    if(button.hasAttribute('data-tg-quick')){executeQuick();return;}
    if(button.hasAttribute('data-tg-choose-role')){
     const index=Number(button.dataset.tgChooseRole);
     if(onRole)onRole(index);else selectRole(index);
    }
   });
-  const keyHandler=e=>{
-   if(hud.hidden||!hud.isConnected||e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;
-   if(/input|textarea|select/i.test(e.target?.tagName||''))return;
-   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();executeQuick();}
+  const keyHandler=event=>{
+   if(hud.hidden||!hud.isConnected||event.repeat||event.altKey||
+    event.ctrlKey||event.metaKey)return;
+   if(/input|textarea|select/i.test(event.target?.tagName||''))return;
+   if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();executeQuick();}
   };
   document.addEventListener('keydown',keyHandler);
+  // The optional QA gate verifies recruitment/death movement with REAL DOM
+  // and state, never with a screenshot-composited fake overlay.
+  if(new URLSearchParams(window.location.search).get('timegridQA')==='1'){
+   holder.__timegridQA={
+    remove:id=>{const actor=model.game.actors.find(x=>x.id===id);
+     const visual=model.shown.find(x=>x.id===id);
+     if(!actor)return false;actor.dead=true;actor.hp=0;
+     if(visual){visual.dead=true;visual.hp=0;}paintRoster();return true;},
+    recruit:actor=>{
+     if(!actor?.id||model.game.actors.some(x=>x.id===actor.id))return false;
+     model.game.actors.push(actor);model.shown.push({...actor});paintRoster();return true;}
+   };
+  }
   start();
   return {
    get model(){return model;},element:holder,selectRole,reset:start,executeQuick,
+   refreshRoster:paintRoster,
    advance(dt){return model?.advance(dt)||null;},
    visual(id){return model?.shown.find(a=>a.id===gameId(id))||null;},
    active(){return !!model&&!model.playback&&model.game.phase==='planning';},
@@ -301,6 +428,8 @@
     phase:model.playback?'resolving':model.game.phase,
     round:model.game.round,progress:model.progress,controlledId:model.game.controlledId,
     ui:holder.dataset.layout,version:holder.dataset.timegridVersion,
+    reelRevision:rosterRevision,reelActorIds:[...nodes.keys()],
+    filmArt:FILM_ART,
     tacticsOpen:false,quickActionAvailable:!model.playback&&model.game.phase==='planning',
     roles:ROLE_IDS.map((id,i)=>({gameId:id,arenaId:ARENA_IDS[i],
      hp:model.game.actors.find(a=>a.id===id)?.hp,
