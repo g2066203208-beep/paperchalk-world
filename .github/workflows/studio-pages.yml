@@ -14,6 +14,8 @@ on:
       - 'tests/metro-platform-life.test.cjs'
       - 'tests/npc-g001-hd-preview.test.cjs'
       - 'tests/metro-npc-world-staging.test.cjs'
+      - 'tests/npc-scene-presence.test.cjs'
+      - 'site/data/npc/*.json'
       - 'scripts/fetch-game-fonts.sh'
       - 'scripts/build_scene_catalog.py'
       - 'scripts/build_character_catalog.py'
@@ -64,6 +66,7 @@ jobs:
           node tests/daily-life.test.cjs
           node --test tests/npc-g001-hd-preview.test.cjs
           node --test tests/metro-npc-world-staging.test.cjs
+          node --test tests/npc-scene-presence.test.cjs
           node --test tests/opening-flow.test.cjs
       - name: Prove adding PNG or WebP auto-registers new scene IDs
         run: |
