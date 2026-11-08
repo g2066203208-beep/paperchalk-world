@@ -254,10 +254,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
       !HOME.has(snapshot?.location);
     const detail=HOME.has(snapshot?.location)?
       '请先到玄关出门，再规划城际路线':
-      '城际交通 · '+(atlas.SERVICE_LABELS[l.mode]||l.mode)+' · 请选择目的地';
+      '已选 '+(atlas.SERVICE_LABELS[l.mode]||l.mode)+
+      ' 路段 · 旅程将根据全网实际连通线路规划，可能换乘其他交通';
     showMenu(e,node,l.name,detail,[
      ...endpoints.map(item=>({
-      label:'乘车前往'+item.city.name,primary:true,
+      label:'规划前往'+item.city.name+
+       (item.journey?.legs?.length?' · 约'+item.journey.minutes+'分钟':''),primary:true,
       disabled:!canTravel||!item.journey?.legs?.length,
       run:async()=>{
        if(busy)return;busy=true;clear();
