@@ -20,6 +20,7 @@
  const meshes=()=>({
   platformFloor:[],platformBack:[],platformCeiling:[],
   platformColumns:[],platformLightboxes:[],
+  platformBenches:[],platformWayfinding:[],
   doorLeafLeft:[],doorLeafRight:[]
  });
  const vertex=(x,y,z,u=0,v=0)=>[x,y,z,u,v];
@@ -73,6 +74,22 @@
    // An actual suspended fluorescent lightbox in front of the back wall.
    box(out.platformLightboxes,x-.70,x+.70,2.75,2.81,5.54,6.01);
   }
+  // Cast-steel waiting seats are REAL 3D objects behind the doors,
+  // not a photograph pasted over the carriage's original wall.
+  for(const x of [-.18,4.30]){
+   box(out.platformBenches,x-1.06,x+1.06,.43,.52,4.95,5.44);
+   box(out.platformBenches,x-1.06,x+1.06,.55,1.05,4.87,4.97);
+   for(const dx of [-.92,.92]){
+    box(out.platformBenches,x+dx-.035,x+dx+.035,-.15,.53,5.02,5.37);
+   }
+   box(out.platformBenches,x-1.07,x+1.07,.48,.60,5.31,5.41);
+  }
+  // Suspended line/exit wayfinding and the illuminated arrival board.
+  // Letters are kept off the underlying wall art; later dynamic line
+  // names can be uploaded to this independent real-world sign surface.
+  box(out.platformWayfinding,-3.66,-2.30,1.94,2.37,4.57,4.67);
+  box(out.platformWayfinding,.38,2.03,1.97,2.33,4.57,4.67);
+  box(out.platformWayfinding,3.55,5.15,1.98,2.32,4.57,4.67);
   // Architectural side returns close the box (the photo only shows a
   // section). No second station picture; these are real 3D polygons.
   box(out.platformColumns,-7.28,-7.08,-.16,3.04,4.4,7.85);
