@@ -704,7 +704,7 @@
  const portraitFragment=[
   'precision highp float;varying vec2 vUv;varying vec3 vWorld;',
   'uniform sampler2D uTexture;uniform vec4 uClipUv;',
-  'uniform float uHit;uniform float uDim;uniform float uBlur;',
+  'uniform float uHit;uniform float uDim;uniform float uBlur;uniform float uOpacity;',
   'uniform vec3 uFacing;uniform vec3 uRightDir;',
   lightingGLSL,
   'void main(){vec2 uv=vec2(vUv.x,1.0-vUv.y);',
@@ -731,7 +731,7 @@
   'float edge=clamp((t.a-nearbyAlpha)*1.6,0.0,1.0);',
   'rgb+=vec3(.045,.055,.067)*edge;',
   'rgb*=1.0-clamp(uDim,0.0,.80);',
-  'gl_FragColor=vec4(rgb,t.a);}'
+  'gl_FragColor=vec4(rgb,t.a*uOpacity);}'
  ].join('\n');
  // A physical luminaire is independent 3D geometry, not a periodically
  // repeating bright pixel painted into the ceiling texture. It remains
@@ -1104,6 +1104,85 @@
   let gl=null,world=null,portrait=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,wingOuter=null,wingInner=null,quad=null;
    let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null,exteriorMesh=null;
   let platformMeshes=Object.create(null);
+  // These eight hand-authored transparent commuters are STATIC GPU sprites.
+  // Draw their quads in the existing world camera/depth buffer, not DOM
+  // overlays. All animation uses the carriage RAF and actual station metres.
+  const platformLife=window.PaperWorldMetroPlatformLife||null;
+  const commuterFrames=[];
+  const commuterAtlas=new Image();
+  let commuterAtlasStatus='unrequested',platformDockedAt=performance.now();
+  let platformLampFactor=1,lastStationCrowd=[];
+  function requestCommuterAtlas(){
+   if(!platformLife||!gl||commuterAtlasStatus!=='unrequested')return;
+   commuterAtlasStatus='loading';
+   commuterAtlas.decoding='async';
+   commuterAtlas.onload=()=>{
+    if(!gl||!commuterAtlas.naturalWidth){commuterAtlasStatus='error';return}
+    try{
+     const width=256,height=512;
+     for(let frame=0;frame<platformLife.ATLAS_COLUMNS;frame++){
+      const c=document.createElement('canvas');c.width=width;c.height=height;
+      const g=c.getContext('2d',{alpha:true});
+      if(!g)throw Error('No 2D atlas context');
+      g.clearRect(0,0,width,height);
+      g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+      g.drawImage(commuterAtlas,frame*platformLife.CELL_WIDTH,0,
+       platformLife.CELL_WIDTH,platformLife.CELL_HEIGHT,
+       0,0,width,height);
+      const t=prepareTexture(gl);
+      gl.bindTexture(gl.TEXTURE_2D,t.texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c);
+      t.painted=true;commuterFrames[frame]=t;
+     }
+     commuterAtlasStatus='ready';
+    }catch(e){
+     commuterAtlasStatus='error';
+     console.warn('[Metro platform commuters]',e);
+    }
+   };
+   commuterAtlas.onerror=()=>{commuterAtlasStatus='error'};
+   commuterAtlas.src=platformLife.ATLAS+'?v=platform-life-20261108-v1';
+  }
+  function drawPlatformCommuters(lifeSample,vp){
+   if(!transitMode||!lifeSample?.passengers?.length||commuterAtlasStatus!=='ready')return;
+   gl.useProgram(portrait.handle);
+   gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
+   gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+   gl.enableVertexAttribArray(portrait.aUv);
+   gl.vertexAttribPointer(portrait.aUv,2,gl.FLOAT,false,8,0);
+   setSceneLighting(portrait,mode);
+   gl.uniform3fv(portrait.uUp,new Float32Array([0,1,0]));
+   gl.uniform3fv(portrait.uRight,new Float32Array([1,0,0]));
+   gl.uniform3fv(portrait.uRightDir,new Float32Array([1,0,0]));
+   gl.uniform3fv(portrait.uFacing,new Float32Array([0,0,1]));
+   gl.uniform1f(portrait.uSoleX,.50);
+   gl.uniform1f(portrait.uSoleY,.955);
+   gl.uniform1f(portrait.uCrownY,.055);
+   gl.uniform1f(portrait.uWidthScale,.54);
+   gl.uniform4f(portrait.uClipUv,0,0,1,1);
+   gl.uniform1f(portrait.uHit,0);
+   gl.uniform1f(portrait.uDim,0);
+   gl.uniform1f(portrait.uBlur,0);
+   gl.activeTexture(gl.TEXTURE0);gl.uniform1i(portrait.uTexture,0);
+   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+   gl.depthMask(false);
+   // Far-to-near alpha ordering; WebGL depth test still intersects with
+   // the architectural columns, bench and actual train wall/door aperture.
+   const people=[...lifeSample.passengers].sort((a,b)=>a.z-b.z);
+   for(const person of people){
+    const t=commuterFrames[person.frame];
+    if(!t?.painted)continue;
+    gl.uniform3fv(portrait.uFoot,new Float32Array([person.x,person.y,person.z]));
+    gl.uniform1f(portrait.uHeight,person.height);
+    gl.uniform1f(portrait.uLean,person.lean);
+    gl.uniform1f(portrait.uOpacity,person.opacity);
+    gl.bindTexture(gl.TEXTURE_2D,t.texture);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+   }
+   gl.depthMask(true);gl.disable(gl.BLEND);
+   gl.disableVertexAttribArray(portrait.aUv);
+  }
   function makePlatformMeshes(){
    const parts=window.PaperWorldMetroPlatform3D?.build?.();
    if(!parts)return;
@@ -1127,7 +1206,7 @@
    if(!gl)throw Error('WebGL unavailable');
    world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen','uViewEye','uGeometry','uWindowCutouts','uDoorOpen']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uOpacity','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
     ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
@@ -1230,6 +1309,7 @@
    phase:'docked',moving:false,progress:1,legs:0};
   function setTransitDynamics(next){
    if(!transitMode||!next)return null;
+   const wasMoving=trainState.moving;
    trainState={
     distanceMeters:Math.max(0,Number(next.distanceMeters)||0),
     speedMps:Math.max(0,Number(next.speedMps)||0),
@@ -1238,6 +1318,7 @@
     progress:clamp(Number(next.progress)||0,0,1),
     legs:Math.max(0,Math.floor(next.legs||0))
    };
+   if(wasMoving&&!trainState.moving)platformDockedAt=performance.now();
    // A manual lamp state (anomaly and screenshot QA) persists while parked.
    // During travel, external light is always owned by proximity to a station.
    if(trainState.moving)platformExposureOverride=null;
@@ -1667,7 +1748,7 @@
    const lights=transitMode?window.PaperWorldEnvironments?.get?.('metro')?.platformLighting:null;
    gl.uniform3fv(prog['uPlatformPositions[0]'],lights?.positions||DARK_PLATFORM_POSITIONS);
    gl.uniform3fv(prog['uPlatformColors[0]'],lights?.colors||DARK_PLATFORM_COLORS);
-   gl.uniform1f(prog.uPlatformExposure,transitMode?platformExposure:0);
+   gl.uniform1f(prog.uPlatformExposure,transitMode?platformExposure*platformLampFactor:0);
    gl.uniform1f(prog.uPlatformBackZ,lights?.backZ??8.0);
    gl.uniform1f(prog.uTrainPosition,transitMode?trainState.distanceMeters:0);
    gl.uniform1f(prog.uTrainSpeed,transitMode?trainState.speedMps:0);
@@ -1906,6 +1987,7 @@
     const backgroundCue=!duelPerformer&&attackSample?attackSample.zoom:0;
     gl.uniform1f(portrait.uDim,.72*backgroundCue);
     gl.uniform1f(portrait.uBlur,.88*backgroundCue);
+    gl.uniform1f(portrait.uOpacity,1);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -1966,6 +2048,14 @@
    const W=Math.floor(w*pixel),H=Math.floor(h*pixel);
    if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
    const cam=lens,vp=cameraVP(cam,w/h);
+   const stationLife=transitMode&&platformLife?platformLife.sample({
+    distanceMeters:trainState.distanceMeters,
+    stationExposure:platformExposure,doorOpen,moving:trainState.moving,
+    dwellMs:performance.now()-platformDockedAt,
+    nowMs:performance.now(),anomaly:platformExposure<.01
+   }):null;
+   platformLampFactor=stationLife?.lampFactor??1;
+   lastStationCrowd=stationLife?.passengers||[];
    gl.viewport(0,0,W,H);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
    gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
    gl.clearColor(.001,.005,.008,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -2003,7 +2093,8 @@
     // buffer. All parts are STATIC GPU buffers shifted only in vertex shader.
     for(const [name,kind] of [
      ['platformBack',5],['platformFloor',6],['platformCeiling',7],
-     ['platformColumns',8],['platformLightboxes',11]]){
+     ['platformColumns',8],['platformLightboxes',11],
+     ['platformBenches',12],['platformWayfinding',13]]){
      if(platformMeshes[name]?.count)drawWorld(platformMeshes[name],kind,vp);
     }
    }
@@ -2040,6 +2131,7 @@
    // The same temporary lunge transforms affect cast shadows and portraits.
    // Reuse the exact 3D grounded actors, L2D UVs and projected light shadows.
    // No flat portrait DOM plane just because this is a metro wall texture.
+   drawPlatformCommuters(stationLife,vp);
    drawProjectedShadows(presented,cam,vp);drawActors(presented,cam,vp);
    if(armed)updateTargetPositions(cam,w/h);
    if(attack&&attackSample){
@@ -2131,6 +2223,7 @@
    const carriage=document.getElementById('pw-metro-cabin');
    if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
+   platformDockedAt=performance.now();requestCommuterAtlas();
    platformExposure=1;platformExposureOverride=null;doorOpen=0;
    trainState={distanceMeters:0,speedMps:0,stationExposure:1,
     phase:'docked',moving:false,progress:1,legs:0};
@@ -2210,9 +2303,12 @@
      .map(([key,mesh])=>[key,mesh.count])),
     floorHeight:-.16,backWallZ:4.42,ceilingHeight:3.02,
     doorOpen,doorLeafCount:4,
+    waitingSeatCount:2,commutersDrawn:lastStationCrowd.length,
+    commuterAtlasStatus,commuterWorldAnchors:lastStationCrowd.map(p=>({id:p.id,x:p.x,z:p.z,role:p.role})),
     doorMaterial:'original-wall-image-texture-with-alpha-glass'},
    platformLighting:{active:transitMode,exposure:platformExposure,
     sources:transitMode?(window.PaperWorldEnvironments?.get?.('metro')?.platformLighting?.positions.length||0)/3:0,
+    stationLampFactor:platformLampFactor,
     rearSideWindows:true,oppositeSideWindows:true,
     affects:['floor','wall','original-l2d','real-alpha-shadows'],
     kind:'world-space-lamps-filtered-by-actual-window-bands'},
