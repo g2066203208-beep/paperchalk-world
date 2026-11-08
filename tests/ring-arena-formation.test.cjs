@@ -40,6 +40,17 @@ const cam=ring.camera('outer'),hero=scene.allies[0];
 assert.deepEqual(cam.eye,{x:-.28,y:1.5,z:10.4});
 assert.deepEqual(cam.focus,{x:-.24,y:1.5,z:5.4});
 assert.equal(cam.fov,66);
+assert.deepEqual(ring.SHOULDER_LOOK_LIMITS,{
+ yawLeftDeg:7.5,yawRightDeg:7.5,pitchUpDeg:3.5,pitchDownDeg:3.5
+});
+const html=fs.readFileSync(path.resolve(__dirname,'../site/index.html'),'utf8');
+assert.match(html,/p5-wide-neighbor-fixed-camera-comfort-v2-20261108/,
+ 'HTML must force actual battle source reload rather than stale cache');
+assert.match(html,/const comfortableLook=v=>/,
+ 'mouse neutral deadzone and continuous smoothstep must exist');
+assert.match(html,/stage\.dataset\.scene==='ring-arena'\?4\.5:7/,
+ 'battle cursor must have gentler independent easing');
+
 assert.equal(ring.CAMERA_STOPS.outer.length,1);
 const visibleWidth=r=>r.valid?Math.max(0,Math.min(1,r.right)-
  Math.max(-1,r.left))/Math.max(.001,r.right-r.left):0;
