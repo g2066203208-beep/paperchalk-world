@@ -56,12 +56,14 @@
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
  // ONE playable, standard encounter (not alternating 'surround' patterns).
- // Uniform 4v4 composition trial. Camera and original heroine never move.
- // Teammates are at separate near-side world positions with no target occlusion.
- // All sole anchors stay y=0; genuine source art is never destructively edited.
+ // True 4-on-4 two-RANK formation. All four allies share z=9.30, all four
+ // enemies share z=6.80. Both lines have matching lateral lane spacings
+ // 1.19m,1.19m,1.46m (mirrored on the friendly side), giving four
+ // actual corresponding 1-v-1 lanes with 2.50m between the ranks.
+ // The heroine and her original camera never move in world coordinates.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-1.28,7.88],[-2.45,8.15],[-1.15,8.55]]),
+   allies:Object.freeze([[-1.05,9.30],[-2.24,9.30],[-3.43,9.30],[-4.89,9.30]]),
    enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
   }),
   inner:Object.freeze({
@@ -113,11 +115,10 @@
  })));
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
- // Three companions now form a shallow shoulder-width echelon BEHIND the
- // fixed heroine: far-left, middle-left and near the heroine's right shoulder.
- // They use the same authentic female-07 back material while the four
- // enemies share enemy-one's genuine animated L2D. No friendly reaches any
- // enemy silhouette in the default view; no actor is a screen-space overlay.
+ // Four actual same-depth teammates stand on ONE near rank rather than a
+ // staggered line. Teammates are left of heroine so her right-shoulder
+ // viewport never hides the four enemies. Switching actors RE-ANCHORS
+ // only the one genuine WebGL camera; neither team changes their anchors.
  // Metro still chooses only its named passenger via scene actors.visible.
  const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
@@ -129,7 +130,7 @@
  // physically grounded and remains part of the SAME 3D world as all foes.
  // The camera stays close behind her and ORBITS her world-space root;
  // it is not a fixed eye with the heroine pushed out to the left.
- const SHOT_NAMES=Object.freeze(['固定左机位']);
+ const SHOT_NAMES=Object.freeze(['四人同排 · 自由切换']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
    id:'left',eyeX:-.28,eyeZ:10.40,eyeY:1.50,
@@ -204,6 +205,20 @@
    heroYawDeg:0,lookYawDeg:yawDeg,
    lookPitchDeg:pitch*180/Math.PI,
    phoneShoulderFit:phone,actorRootUnchanged:true};
+ }
+ // Re-anchor the very SAME world-space shoulder rig to any friendly.
+ // This is not four separate cameras, a sprite swap, or teleportation:
+ // the teammate's immutable root is the new viewing pivot. The view
+ // gently converges on the enemy rank as the selected teammate sits farther
+ // left, ensuring all four opponents remain within the battlefield.
+ function allyViewCamera(base,originalHero,selected,x=0,y=0,aspect=16/9){
+  if(!selected||selected.id===originalHero.id)
+   return shoulderCamera(base,originalHero,x,y,aspect);
+  const dx=selected.x-originalHero.x,dz=selected.z-originalHero.z;
+  const shifted={...base,eye:{...base.eye,x:base.eye.x+dx,z:base.eye.z+dz},
+   focus:{...base.focus,x:base.focus.x+dx*.5,z:base.focus.z+dz}};
+  const view=shoulderCamera(shifted,selected,x,y,aspect);
+  return {...view,controlledActorId:selected.id,originalHeroWorldStatic:true};
  }
  // Preserve the DESIGNED horizontal battle framing when a browser or
  // device changes aspect ratio. Portrait canvases no longer crop half the
