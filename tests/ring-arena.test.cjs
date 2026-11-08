@@ -12,6 +12,8 @@ const base=arena.camera('outer'),scene=arena.layout('outer'),hero=scene.allies[0
 assert.deepEqual(arena.visibleActors('outer').map(a=>a.id),
  ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
 assert.ok(scene.enemies.every(a=>a.y===0&&a.z===6.80));
+assert.ok(scene.allies.slice(1).every(a=>a.z>=8.2),
+ 'every squadmate must stand in the heroine near-side physical zone');
 close(base.eye.y,1.5);close(base.eye.x,-.28);close(base.eye.z,10.40);
 close(base.fov,66);
 assert.ok(arena.responsiveFov(66,9/16)>arena.responsiveFov(66,16/9));
