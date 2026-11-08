@@ -52,8 +52,12 @@ try{
  assert.equal(await page.locator('.pw-dot-local-places [data-place="hospital"],.pw-dot-local-places [data-place="station"],.pw-dot-local-places [data-place="police"]').count(),0);
  assert.equal(await page.evaluate(()=>window.PaperWorldMetro.getLine('c')),null);
  assert.ok(await page.locator('.pw-dot-local-places [data-place="school"]').isVisible());
- assert.equal(await page.locator('.pw-dot-poi[data-city="kirihama"]:not([hidden])').count(),0,
-  'default subway map must not be covered by dozens of investigation photo cards');
+ const detailed=page.locator('.pw-dot-poi[data-city="kirihama"]:not([hidden])');
+ const shown=await detailed.count();
+ assert.ok(shown>=1&&shown<=15,'large zoom should show a curated, not overlapping number of real city places: '+shown);
+ assert.ok(await page.locator('.pw-dot-access-lines .pw-transit-segment').count()>=35);
+ assert.ok(await page.locator('.pw-dot-destination-stop[data-direction="both"]').count()>=130);
+ assert.ok((await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit())).unreachable.length===0);
  // Even a 1440x810 game view needs actual legible clickable stations:
  // no tiny line strokes or 10px labels hidden by the dotted background.
  const legibility=await page.evaluate(()=>{
@@ -68,7 +72,7 @@ try{
  assert.ok(legibility.stroke>=8,JSON.stringify(legibility));
  assert.equal(legibility.vectorEffect,'non-scaling-stroke');
  assert.ok(legibility.stationFont>=14,JSON.stringify(legibility));
- assert.ok(legibility.photoWidth>=95,JSON.stringify(legibility));
+ assert.ok(legibility.photoWidth>=150,'big pinned station photo card: '+JSON.stringify(legibility));
  await shot('19-city-dot-world.png');
  const lattice=await page.evaluate(()=>{
   const svg=document.querySelector('.pw-dot-rail-canvas');
