@@ -135,7 +135,10 @@
   }
   function render(now){
    if(!active||!map.isConnected||doc.hidden)return;
-   const dt=last?Math.min(.06,(now-last)*.001):.016;last=now;
+   // The 3D grid is nearly motionless. A 30fps GPU cap saves substantial
+   // fill-rate on software WebGL and phones without stepping the camera.
+   if(last&&now-last<30)return;
+   const dt=last?Math.min(.09,(now-last)*.001):.033;last=now;
    const ease=1-Math.exp(-dt*5.6);
    mix+=(target-mix)*ease;
    if(Math.abs(mix-target)<.0004)mix=target;
