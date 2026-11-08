@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "id": "NPC-M001",
+  "category": "metro_background_commuter",
+  "displayName": "普通男性通勤者 · 深蓝夹克",
+  "role": "地铁站台候车／普通乘客",
+  "canonicalStatus": "USER_APPROVED_VISUAL_REFERENCE",
+  "approvalDate": "2026-11-08",
+  "art": {
+    "sourceType": "conversation_uploaded_anima_image",
+    "sourceFile": "tmpmcdsdrcw.png",
+    "sourceSha256": "382e8b126169f50a9d1b161fff24cca342e3412c9eb3633e4904b9ce4cd4da6d",
+    "sourceSize": [
+      1024,
+      1024
+    ],
+    "sourceMode": "RGB",
+    "sourceViews": [
+      "left:front",
+      "middle:left-profile",
+      "right:back"
+    ],
+    "assetInGitHub": false,
+    "runtimeAsset": null,
+    "proposedImportPath": "site/assets/characters/metro/npc-m001/turnaround-master.png",
+    "approvedBy": "user",
+    "revision": "V4-approved",
+    "constraint": "Keep original artwork pixel-identical; no regeneration, recoloring or replacing with procedural SVG art. Existing three-view image has a white RGB background and cannot be treated as transparent RGBA.",
+    "preparedFor": "front/side/back sprite derivation after source import; do not auto-publish without alpha extraction and visual QA"
+  },
+  "visualCanon": {
+    "presentation": "male",
+    "ageRangeVisual": "young adult",
+    "hair": "short near-black straight hair with fringe; simplified shape",
+    "facialFeatures": "no drawn eyes, no eyebrows; small simple nose and visible small mouth",
+    "jacket": "dark navy casual button-front jacket with collar, naturally open",
+    "inner": "off-white round-neck T-shirt",
+    "pants": "charcoal straight-leg trousers",
+    "shoes": "gray low-top sneakers with white toe and soles",
+    "shape": "ordinary average-build commuter, restrained line art and flat graphic shading",
+    "colors": "muted, coordinated contemporary civilian clothes; no uniform tracksuit",
+    "forbid": [
+      "expressive detailed eyes",
+      "fashion-model pose",
+      "large hero portrait",
+      "overdesigned accessories",
+      "flat black sock-like shoes",
+      "excessive folds"
+    ]
+  },
+  "identityPolicy": {
+    "uniqueCharacter": true,
+    "notMainStoryCharacter": true,
+    "noRandomizedFaceOrCostume": true,
+    "preserveSameArtAcrossAllActions": true,
+    "noAutomaticSwapWithNPCG001": true
+  },
+  "performance": {
+    "activityConcept": "下班候车，留意到站信息，先让下车乘客通过再上车",
+    "emotionalBase": "slightly tired, quiet, not theatrical",
+    "locomotion": "sparse grounded 2.5D steps; do not slide static sprites",
+    "routine": [
+      {
+        "event": "platform_entry",
+        "action": "walk_from_station_corridor",
+        "approxSeconds": 4
+      },
+      {
+        "event": "waiting",
+        "action": "shift_weight_and_small_head_turn_to_arrival_board",
+        "approxSeconds": 5
+      },
+      {
+        "event": "waiting",
+        "action": "briefly_check_wrist_or_phone",
+        "approxSeconds": 3,
+        "requiresNewArtwork": true
+      },
+      {
+        "event": "train_arrival",
+        "action": "pause_and_look_toward_opening_doors",
+        "approxSeconds": 2
+      },
+      {
+        "event": "doors_open",
+        "action": "yield_to_alighting_passengers_then_walk_to_door",
+        "approxSeconds": 5
+      },
+      {
+        "event": "doors_close",
+        "action": "settle_inside_carriage_or_wait_for_next_train",
+        "approxSeconds": 3
+      }
+    ],
+    "locomotionAndPropsStatus": "planned_not_yet_drawn",
+    "spatialConstraints": [
+      "no teleportation",
+      "respect door interlock",
+      "feet on platform floor",
+      "no crossing track",
+      "no duplicate of same ID",
+      "do not crowd player"
+    ]
+  },
+  "acceptedColorAndStyleLock": "Background-NPC simplified silhouette, same project akipeko family but visibly lower detail than protagonist",
+  "generationTags": {
+    "style": "@akipekostyle<lora:akipekoanima_v1_1:0.65>",
+    "referenceOnlyAfterMasterAvailable": "<lora:anima_ref_adapter_pilot_r32:1>"
+  },
+  "notes": "Approved full-body front/profile/back views. Character bio and specific age not confirmed; do not invent real-world identity."
+}
