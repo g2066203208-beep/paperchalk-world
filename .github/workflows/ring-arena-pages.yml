@@ -19,6 +19,9 @@ on:
       - 'site/character-editor/**'
       - 'site/assets/l2d/inbox/**'
       - 'site/assets/l2d/library/**'
+      - 'site/l2d/part-rig.js'
+      - 'site/l2d/library-player.js'
+      - 'tests/female07-back-l2d.test.cjs'
       - 'scripts/build_l2d_library.py'
       - 'scripts/bind_female06_pants.py'
       - 'scripts/build_character_catalog.py'
@@ -105,6 +108,7 @@ jobs:
           test -s site/convenience-store/parts/counter-top.svg
           test -s site/convenience-store/index.html
           node tests/ring-arena.test.cjs
+          node tests/female07-back-l2d.test.cjs
           node tests/ring-arena-wall.test.cjs
           node tests/ring-arena-formation.test.cjs
           node tests/ring-arena-director.test.cjs
