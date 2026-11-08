@@ -74,7 +74,7 @@
     view:role==='boarding'&&progress>.36?'back':
      role==='alighting'&&progress<.60?'front':'side_left',
     geometry:person.geometry,sprites:person.sprites,
-    moving,lean:moving?.009*Math.sin(nowMs*.011+i):0});
+    moving,lean:moving?(.009*Math.sin(nowMs*.011+i)):0});
   }
   return passengers;
  }
