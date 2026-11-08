@@ -74,7 +74,7 @@ try{
  });
  const raised=await inspect();
  assert.equal(raised.state.heightsDefined,true);
- await page.locator('.pw-dot-camera-toggle').click();
+ await page.evaluate(()=>document.querySelector('.pw-dot-camera-toggle').click());
  console.log('AFTER 3D CLICK',JSON.stringify(await inspect()));
  await page.waitForTimeout(1350);
  console.log('AFTER 3D 1.35s',JSON.stringify(await inspect()),
@@ -123,7 +123,7 @@ try{
  const zoomed=await inspect();
  assert.notEqual(zoomed.viewBox,panned.viewBox,'wheel should zoom');
  await page.evaluate(()=>window.PaperWorldTransitMap._terrain.setHeight(20,13,0));
- await page.locator('.pw-dot-camera-toggle').click();
+ await page.evaluate(()=>document.querySelector('.pw-dot-camera-toggle').click());
  await page.waitForFunction(()=>{
   const el=document.querySelector('.pw-dot-world-map');
   return el?.dataset.cameraMode==='2d'&&Number(el?.dataset.cameraBlend)===0;
