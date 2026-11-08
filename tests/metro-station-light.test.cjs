@@ -33,7 +33,12 @@ test('real window side and opposite platform lamps illuminate original WebGL 3D 
  assert.match(source,/ringShade\(rgb,vWorld,pseudoNormal\)/,'original L2D body receives same analytic light');
  assert.match(source,/uPlatformExposure\*through/);
  assert.match(source,/projectedShadow\.uLamp,[\s\S]{0,100}outside\.positions\.slice/);
- assert.match(source,/outside=mix\(outside,station,clamp\(uPlatformExposure/);
+ assert.match(source,/vec3 outside=mix\(tunnel,platform,station\)/);
+ assert.match(source,/float worldX=\(vWallUv.x-.5\)\*8.5\+uTrainPosition/);
+ assert.match(source,/float stationMask=1.0-smoothstep/);
+ assert.match(source,/float station=stationMask\*uPlatformExposure/);
+ assert.match(source,/spatialPool=/);
+ assert.doesNotMatch(source,/float lane=fract\(vWallUv.x\*7.0-uTime/);
  assert.match(cabin,/setPlatformExposure\?\.\(0\)/,'horror event switches off platform');
  assert.match(cabin,/setPlatformExposure\?\.\(1\)/,'station stop illuminates platform');
 });
@@ -45,4 +50,17 @@ test('subway refuses transparent L2D canvases and limits emergency original-art 
  assert.match(source,/canonicalMetroFallback.{0,28}targetTexture[.]painted/);
  assert.match(source,/heroOriginalFallback:/);
  assert.match(source,/protagonist-back\.webp/);
+});
+
+test('metro movement is driven by real world-distance, never by a moving cabin, actor or camera',()=>{
+ const motion=require('../site/game/metro-motion.js');
+ assert.equal(motion.LEG_METERS,88);
+ assert.equal(motion.sampleLeg(0).stationExposure,1);
+ assert.equal(motion.sampleLeg(motion.DURATION_MS*.5).stationExposure,0);
+ assert.match(source,/function setTransitDynamics\(next\)/);
+ assert.match(source,/uTrainPosition/);
+ assert.match(cabin,/const motion=global[.]PaperWorldMetroMotion/);
+ assert.match(cabin,/setTransitDynamics[?][.]\(stage\)/);
+ assert.match(cabin,/await animateRailLeg\(\)/);
+ assert.match(cabin,/motion[?][.]isMoving\(\)/);
 });
