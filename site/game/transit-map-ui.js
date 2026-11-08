@@ -493,7 +493,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(activeCity===null)regionalCamera={scale,x,y};
   activeCity=id;drag=null;pinch=null;fingers.clear();clear();
   const v=viewport();
-  centerOn(city,Math.max(3.15,Math.min(4.8,(v.w-160)/285,(v.h-165)/175)));
+  // Kirihama's physical eight-stop metro is centered north of the city
+  // interchange. Frame the railway itself, not the broad city-hub centroid.
+  const target=id==='kirihama'?{x:1080,y:550}:city;
+  centerOn(target,Math.max(3.15,Math.min(4.8,(v.w-160)/285,(v.h-165)/175)));
  }
  function leaveCity(){
   if(activeCity===null)return;
