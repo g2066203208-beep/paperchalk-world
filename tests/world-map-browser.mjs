@@ -107,7 +107,7 @@ try{
  await click('.pw-dot-city[data-city="kirihama"]');
  view=await inspect();
  assert.equal(view.scope,'city');assert.equal(view.city,'kirihama');
- assert.equal(view.regional,0);assert.ok(view.metro>=10);
+ assert.equal(view.regional,0);assert.equal(view.metro,9); // 3+6 physical segments
  assert.equal(view.cityCards.length,0);assert.equal(view.local,8);
  assert.ok(view.access.length>0&&view.access.every(x=>x==='kirihama'));
  assert.ok(view.poi.every(x=>x==='kirihama'));
