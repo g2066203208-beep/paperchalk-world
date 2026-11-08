@@ -183,9 +183,13 @@
   const yaw=rad((x<0?LOOK_LIMITS.yawLeftDeg:LOOK_LIMITS.yawRightDeg)*x);
   const pitch=rad((y<0?LOOK_LIMITS.pitchUpDeg:LOOK_LIMITS.pitchDownDeg)*y);
   const phone=clamp((.85-clamp(Number(aspect)||16/9,.35,3.5))/.25,0,1);
-  const x0=base.eye.x+(.60-base.eye.x)*phone;
-  const z0=base.eye.z+(11.20-base.eye.z)*phone;
-  const fx0=base.focus.x+(.75-base.focus.x)*phone;
+  // Relative mobile shoulder offsets MUST stay relative to the selected
+  // character's translated base rig. Absolute .60/.75 phone X values
+  // would snap every teammate's camera back to heroine's original spot.
+  const reference=(CAMERA_STOPS[base.mode]||CAMERA_STOPS.outer)[0];
+  const x0=base.eye.x+(.60-reference.eyeX)*phone;
+  const z0=base.eye.z+(11.20-reference.eyeZ)*phone;
+  const fx0=base.focus.x+(.75-reference.focusX)*phone;
   const fz0=base.focus.z;
   const pivot={x:hero.x,y:hero.y+hero.height*.88,z:hero.z};
   const dx=x0-hero.x,dz=z0-hero.z,cs=Math.cos(yaw),sn=Math.sin(yaw);
