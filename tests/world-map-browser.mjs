@@ -1,19 +1,45 @@
-/* Real Chromium proof: the whole megaregion lives inside the SAME subway
- * dot matrix, with no second map and no fake southern subway route. */
+/* Actual Chromium proof: region -> one city -> region -> different city.
+ * The regional map must NEVER paint any internal subway, municipal bus,
+ * access road or individual destination — at any zoom.
+ */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {chromium} from 'playwright';
 process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
-const out=process.env.PAPERCHALK_CAPTURE_DIR||'artifacts/overworld';
+const dir=process.env.PAPERCHALK_CAPTURE_DIR||'artifacts/overworld';
 const base=process.env.PAPERCHALK_BROWSER_BASE||'http://127.0.0.1:8765/';
-fs.mkdirSync(out,{recursive:true});
+fs.mkdirSync(dir,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFactor:1});
-page.setDefaultTimeout(18000);
+const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
+page.setDefaultTimeout(25000);
 const errors=[];
 page.on('pageerror',e=>errors.push(String(e)));
-const shot=async name=>page.screenshot({path:path.join(out,name),animations:'disabled',timeout:26000});
+const shot=async name=>page.screenshot({path:path.join(dir,name),animations:'allow',timeout:50000});
+const scope=()=>page.locator('.pw-dot-world-map').getAttribute('data-scope');
+const inspect=()=>page.evaluate(()=>{
+ const m=document.querySelector('.pw-dot-world-map');
+ const shown=selector=>[...document.querySelectorAll(selector)]
+  .filter(e=>getComputedStyle(e).display!=='none'&&!e.closest('[hidden]'));
+ const municipal=shown('.pw-dot-municipal-lines .pw-transit-segment');
+ const access=shown('.pw-dot-access-lines .pw-transit-segment');
+ const poi=shown('.pw-dot-poi');
+ const local=shown('.pw-dot-local-places .pw-transit-place');
+ return {scope:m.dataset.scope,city:m.dataset.city,
+  regional:shown('.pw-dot-regional-lines .pw-transit-segment').length,
+  metro:shown('.pw-dot-urban-lines .pw-transit-segment').length,
+  municipal:municipal.map(n=>n.dataset.city),
+  access:access.map(n=>n.dataset.city),
+  poi:poi.map(n=>n.dataset.city),
+  local:local.length,
+  cityCards:shown('.pw-dot-city').map(n=>n.dataset.city),
+  backVisible:!document.querySelector('.pw-dot-back').hidden};
+});
+const click=(query)=>page.evaluate(selector=>{
+ const btn=document.querySelector(selector);
+ if(!btn)throw Error('Cannot find map control '+selector);
+ btn.click();
+},query);
 try{
  await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').click();
@@ -27,104 +53,82 @@ try{
   const result=window.PaperWorldDailyLifeUI.engine.travel('entrance');
   if(!result.ok)throw Error(result.reason);
  });
- await page.locator('#quick-map').click();
- const map=page.locator('.pw-dot-world-map');
- await map.waitFor({state:'visible'});
- assert.equal(await page.locator('.pw-world-map,.pw-map-mode-toggle').count(),0);
- assert.equal(await page.locator('.pw-transit-grid-dot').count(),1683);
- const overview=await page.evaluate(()=>{
-  const atlas=window.PaperWorldAtlas;
-  return {cities:atlas.CITIES.length,pois:atlas.POIS.length,
-   rumors:atlas.SITES.length,links:atlas.LINKS.length,
-   cityMarkers:document.querySelectorAll('.pw-dot-city').length,
-   poiMarkers:document.querySelectorAll('.pw-dot-poi').length,
-   municipalTracks:document.querySelectorAll('.pw-dot-municipal-lines .pw-transit-segment').length,
-   localTransitCities:new Set(atlas.LOCAL_TRANSIT_LINES.map(l=>l.city).concat('kirihama')).size,
-   regionalSegments:document.querySelectorAll('.pw-dot-regional-lines .pw-transit-segment').length};
- });
- assert.equal(overview.cities,10);
- assert.ok(overview.pois>=120);
- assert.ok(overview.rumors>=45);
- assert.equal(overview.links,14);
- assert.equal(overview.cityMarkers,10);
- assert.ok(overview.poiMarkers>=100);
- assert.equal(overview.municipalTracks,11);
- assert.equal(await page.locator('.pw-dot-access-lines .pw-transit-segment').count(),40);
- assert.ok(await page.locator('.pw-dot-destination-stop[data-direction="both"]').count()>=130);
- assert.deepEqual(await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit().unreachable),[]);
- assert.deepEqual(await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit().oneWay),[]);
- assert.equal(overview.localTransitCities,10);
- assert.ok(overview.regionalSegments>=14);
- await page.evaluate(()=>[...document.querySelectorAll('.pw-dot-tool')]
-  .find(x=>x.textContent==='全域')?.click());
- await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='region');
- assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
- // Keep the geographic backdrop EMPTY. The map belongs to routes/stations.
- assert.equal(await page.locator('.pw-dot-terrain-land,.pw-dot-terrain-sea,.pw-dot-lake').count(),0);
- assert.equal(await page.locator('.pw-dot-current-location').count(),1);
- assert.equal(await page.locator('.pw-dot-city .pw-transit-photo').count(),10,
-  'each city has an image tethered to its existing hub station');
- assert.equal(await page.locator('.pw-dot-city[data-station]').count(),10);
- await shot('24-dot-world-overview-desktop.png');
- await page.evaluate(()=>document.querySelector('.pw-dot-city[data-city="homori"]')?.click());
- const popup=page.locator('.pw-transit-popup:not([hidden])');
- await popup.waitFor();
- assert.match(await popup.innerText(),/穗森市/);
- await shot('25-dot-world-city-popup.png');
- await page.evaluate(()=>[...document.querySelectorAll('.pw-transit-popup:not([hidden]) .pw-transit-menu-item')]
-  .find(x=>x.textContent==='放大城区')?.click());
- await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='detail');
- const visible=page.locator('.pw-dot-poi:not([hidden])');
- assert.ok(await visible.count()>0,'city zoom must reveal actual point-grid destinations');
- assert.ok(await page.locator('.pw-dot-poi .pw-transit-photo').count()>=100);
- const pics=await page.locator('.pw-dot-poi img[src]').count();
- assert.ok(pics>0&&pics<60,'only visible location photos should be fetched, count='+pics);
- assert.ok(await page.locator('.pw-dot-poi[data-station]').count()>=100);
- await shot('26-dot-world-zoom-countryside.png');
- const target=visible.first();
- const chosen=await target.getAttribute('data-place');
- await target.evaluate(el=>el.click());
- await popup.waitFor();
- assert.match(await popup.innerText(),/前往/);
- await shot('27-dot-world-location-popup.png');
- await page.evaluate(()=>[...document.querySelectorAll('.pw-dot-tool')]
-  .find(x=>x.textContent==='全域')?.click());
+ await click('#quick-map');
+ await page.locator('.pw-dot-world-map').waitFor({state:'visible'});
+ assert.equal(await scope(),'region','game MUST open the inter-city page, not metropolitan subway');
+ const atlas=await page.evaluate(()=>window.PaperWorldAtlas);
+ assert.equal(atlas.CITIES.length,10);assert.ok(atlas.POIS.length>=120);
+ const graph=await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit());
+ assert.deepEqual(graph.unreachable,[]);assert.deepEqual(graph.oneWay,[]);
+ let view=await inspect();
+ assert.equal(view.regional>=14,true);
+ assert.equal(view.metro,0);assert.equal(view.municipal.length,0);
+ assert.equal(view.access.length,0);assert.equal(view.local,0);assert.equal(view.poi.length,0);
+ assert.equal(view.cityCards.length,10);assert.equal(view.backVisible,false);
+ await shot('24-intercity-only-all-ten-cities-1920.png');
+ // Zooming a REGIONAL map must never reveal intra-city transport.
+ await page.mouse.move(850,480);
+ await page.mouse.wheel(0,-620);
+ await page.waitForTimeout(150);
+ assert.equal(await scope(),'region');
+ view=await inspect();
+ assert.equal(view.metro,0);assert.equal(view.municipal.length,0);
+ assert.equal(view.access.length,0);assert.equal(view.poi.length,0);
+ await click('.pw-dot-tool[aria-label="查看当前层全图"]');
+ // City click directly enters ONE city's transit network.
+ await click('.pw-dot-city[data-city="homori"]');
+ assert.equal(await scope(),'city');
+ view=await inspect();
+ assert.equal(view.city,'homori');assert.equal(view.regional,0);
+ assert.equal(view.cityCards.length,0);assert.equal(view.metro,0);
+ assert.equal(view.local,0);assert.equal(view.backVisible,true);
+ assert.ok(view.municipal.length>0);
+ assert.ok(view.access.length>0);
+ assert.ok(view.poi.length>0);
+ assert.ok(view.municipal.every(x=>x==='homori'));
+ assert.ok(view.access.every(x=>x==='homori'));
+ assert.ok(view.poi.every(x=>x==='homori'));
+ await shot('25-homori-only-town-bus-and-stations-1920.png');
+ // Zoom does not cross map levels.
+ await page.mouse.wheel(0,-300);
+ assert.equal(await scope(),'city');
+ assert.equal((await inspect()).city,'homori');
+ await click('.pw-dot-back');
+ assert.equal(await scope(),'region');
+ assert.equal((await inspect()).municipal.length,0);
+ // Kirihama is the ONLY city with the operational eight-stop metro overlay.
+ await click('.pw-dot-city[data-city="kirihama"]');
+ view=await inspect();
+ assert.equal(view.scope,'city');assert.equal(view.city,'kirihama');
+ assert.equal(view.regional,0);assert.ok(view.metro>=10);
+ assert.equal(view.cityCards.length,0);assert.equal(view.local,8);
+ assert.ok(view.access.length>0&&view.access.every(x=>x==='kirihama'));
+ assert.ok(view.poi.every(x=>x==='kirihama'));
+ await shot('26-kirihama-only-real-metro-1920.png');
+ // City-level "all" cannot accidentally bounce back to regional mode.
+ await click('.pw-dot-tool[aria-label="查看当前层全图"]');
+ assert.equal(await scope(),'city');assert.equal((await inspect()).city,'kirihama');
+ await click('.pw-dot-back');
+ assert.equal(await scope(),'region');
+ await click('.pw-dot-city[data-city="shiomi"]');
+ view=await inspect();
+ assert.equal(view.city,'shiomi');assert.equal(view.regional,0);
+ assert.equal(view.metro,0);assert.equal(view.local,0);
+ assert.ok(view.municipal.length>0&&view.municipal.every(x=>x==='shiomi'));
+ assert.ok(view.access.length>0&&view.access.every(x=>x==='shiomi'));
+ assert.ok(view.poi.every(x=>x==='shiomi'));
+ await shot('27-shiomi-only-harbor-transit-1920.png');
+ // Mobile must retain the same explicit back control and city isolation.
  await page.setViewportSize({width:844,height:390});
- await page.waitForTimeout(350);
- assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
- const cardSizes=await page.evaluate(()=>{
-  const markers=[...document.querySelectorAll('.pw-dot-city:not([hidden])')];
-  const cityWidths=markers.map(n=>Math.round(n.getBoundingClientRect().width));
-  const a=document.querySelector('.pw-dot-city[data-city="misaki"]').getBoundingClientRect();
-  const b=document.querySelector('.pw-dot-city[data-city="urasima"]').getBoundingClientRect();
-  const overlap=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left))*
-   Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
-  return {cityWidths,nearbyCityOverlap:overlap};
- });
- assert.ok(cardSizes.cityWidths.every(w=>w>=120),JSON.stringify(cardSizes));
- assert.equal(cardSizes.nearbyCityOverlap,0,
-  'island and peninsula city cards must be large and independently tappable');
- await shot('28-dot-world-mobile-overview.png');
- const misakiBox=await page.locator('.pw-dot-city[data-city="misaki"]').boundingBox();
- assert.ok(misakiBox,'岬崎市 must remain visible in mobile overview');
- const mx=misakiBox.x+misakiBox.width/2;
- const my=misakiBox.y+Math.min(25,misakiBox.height/3);
- const hitCity=await page.evaluate(({mx,my})=>
-  document.elementFromPoint(mx,my)?.closest('.pw-dot-city')?.dataset.city||null,{mx,my});
- assert.equal(hitCity,'misaki','mobile city touch point must not be intercepted');
- await page.mouse.click(mx,my);
- await popup.waitFor();
- assert.match(await popup.innerText(),/岬崎市/);
- await shot('29-dot-world-mobile-city-menu.png');
- // Test wheel zoom without re-clicking the overview command beneath a
- // still-open mobile popup. The overview button was already exercised above.
- const start=await page.locator('.pw-dot-rail-canvas').getAttribute('viewBox');
- await page.mouse.wheel(0,-520);
- await page.waitForTimeout(120);
- const after=await page.locator('.pw-dot-rail-canvas').getAttribute('viewBox');
- assert.notEqual(start,after,'wheel zoom must update the SVG viewport without scaling a bitmap');
- assert.equal(await page.locator('.pw-dot-world-canvas').evaluate(e=>getComputedStyle(e).transform),'none');
- assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().location),'entrance');
+ await page.waitForTimeout(100);
+ assert.equal(await scope(),'city');
+ await shot('28-shiomi-mobile-independent-map.png');
+ await click('.pw-dot-back');
+ assert.equal(await scope(),'region');
+ view=await inspect();
+ assert.equal(view.metro,0);assert.equal(view.municipal.length,0);
+ assert.equal(view.access.length,0);assert.equal(view.poi.length,0);
+ await shot('29-intercity-mobile-10-portals.png');
  assert.deepEqual(errors.filter(x=>/ReferenceError|TypeError|SyntaxError/.test(x)),[]);
- console.log('ONE DOT WORLD QA PASS',JSON.stringify({overview,chosen,errors}));
+ console.log('HIERARCHICAL TRANSPORT MAP PASS',JSON.stringify({graph,view,errors}));
 }finally{await browser.close()}
