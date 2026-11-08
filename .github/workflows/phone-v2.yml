@@ -1,0 +1,53 @@
+name: Immersive phone app regression
+
+on:
+  push:
+    branches:
+      - main
+      - feature/immersive-phone-v2-20261108
+    paths:
+      - 'site/game/phone-ui.js'
+      - 'site/game/phone-ui.css'
+      - 'site/game/daily-life-state.js'
+      - 'site/game/overworld-runtime.js'
+      - 'tests/phone-life.test.cjs'
+      - 'tests/phone-ui-browser.mjs'
+      - '.github/workflows/phone-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phone-browser:
+    name: Desktop and mobile handset proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless Chromium
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Build canonical game scene catalog
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_scene_catalog.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_character_catalog.py
+      - name: Verify persisted phone state
+        run: node --test tests/phone-life.test.cjs
+      - name: Verify physical phone, chat, notes and contact details
+        run: node tests/phone-ui-browser.mjs
+      - name: Archive actual desktop and mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phone-v2-real-browser
+          path: artifacts/phone/*.png
+          retention-days: 14
+          if-no-files-found: warn

@@ -162,6 +162,9 @@
       inventory:{bread:1,water:1,bandage:1,keys:1,homework:1},dailyUses:{},nightStatus:'day',
       phone:{callsRead:false,messagesRead:false,reply:null},
       phoneThreads:{female2:[],classmate:[],clerk:[],neighbor:[]},
+      phoneUnread:{female2:0,classmate:0,clerk:0,neighbor:0},
+      contactRemarks:{female2:'',classmate:'',clerk:'',neighbor:''},
+      phoneNotes:[],
       phoneCalls:[],transitRumors:[],
       metro:{onboard:false,station:null,lineId:null,direction:1,rides:0,anomaly:false},
       mediaPhotos:[],socialPosts:[],
@@ -224,6 +227,20 @@
         .map(m=>({from:m.from,text:m.text,day:CLAMP(INTEGER(m.day,1),1,9999),
           minute:CLAMP(INTEGER(m.minute,0),0,1440)}));
     }
+    for(const id of Object.keys(s.phoneUnread)){
+      s.phoneUnread[id]=CLAMP(INTEGER(raw.phoneUnread?.[id],0),0,40);
+      const remark=raw.contactRemarks?.[id];
+      s.contactRemarks[id]=typeof remark==='string'?remark.slice(0,28):'';
+    }
+    if(Array.isArray(raw.phoneNotes))
+      s.phoneNotes=raw.phoneNotes.slice(0,24).filter(note=>
+        note&&typeof note.id==='string'&&note.id.length<90&&
+        typeof note.title==='string'&&note.title.length<=60&&
+        typeof note.text==='string'&&note.text.length<=1200&&
+        Number.isFinite(note.day)&&Number.isFinite(note.minute))
+        .map(note=>({id:note.id,title:note.title,text:note.text,
+          day:CLAMP(INTEGER(note.day,1),1,9999),
+          minute:CLAMP(INTEGER(note.minute,0),0,1440)}));
     if(Array.isArray(raw.phoneCalls))
       s.phoneCalls=raw.phoneCalls.slice(-24).filter(m=>
         m&&Object.hasOwn(NPCS,m.to)&&Number.isFinite(m.day)).map(m=>({
@@ -476,7 +493,9 @@
     }
     function markPhoneRead(which){
       if(!['calls','messages'].includes(which))return fail('无效的手机通知');
-      state.phone[which==='calls'?'callsRead':'messagesRead']=true;
+      const key=which==='calls'?'callsRead':'messagesRead';
+      if(state.phone[key])return {ok:true,unchanged:true};
+      state.phone[key]=true;
       return finish('phone-read',which==='calls'?'查看了女二的未接来电。':'读完了女二发来的消息。');
     }
     function replyHomework(choice){
@@ -531,10 +550,50 @@
       const persona=NPCS[to];
       const busy=(to==='female2'&&state.minute>=8*HOUR&&state.minute<9*HOUR)||
         (to==='classmate'&&state.minute>=8*HOUR&&state.minute<15*HOUR);
-      if(!busy)thread.push({...stamp,from:to,text:reply});
+      if(!busy){
+        thread.push({...stamp,from:to,text:reply});
+        state.phoneUnread[to]=Math.min(40,(state.phoneUnread[to]||0)+1);
+      }
       thread.splice(0,Math.max(0,thread.length-40));
       return finish('phone-message',busy?'消息已送达，暂时没有回复。':
         persona.label+'回复了消息。');
+    }
+    function markThreadRead(to){
+      if(!Object.hasOwn(NPCS,to))return fail('无效联系人');
+      if(!state.phoneUnread[to])return {ok:true,unchanged:true};
+      state.phoneUnread[to]=0;
+      return finish('phone-thread-read','查看了'+NPCS[to].label+'的聊天记录。');
+    }
+    function setContactRemark(to,remark){
+      if(!Object.hasOwn(NPCS,to)||(!state.relationships[to]&&to!=='female2'))
+        return fail('尚未获得这位联系人的联系方式');
+      const next=String(remark??'').trim().slice(0,28);
+      if(state.contactRemarks[to]===next)return {ok:true,unchanged:true};
+      state.contactRemarks[to]=next;
+      return finish('phone-contact-remark','更新了联系人备注。');
+    }
+    function savePhoneNote(id,title,text){
+      const body=String(text??'').trim().slice(0,1200);
+      const heading=String(title??'').trim().slice(0,60)||'无标题';
+      if(!body)return fail('请填写记录内容');
+      const existing=id?state.phoneNotes.find(n=>n.id===id):null;
+      if(id&&!existing)return fail('找不到这条记录');
+      if(existing){
+        existing.title=heading;existing.text=body;
+        existing.day=state.day;existing.minute=state.minute;
+      }else{
+        const noteId='note-'+state.day+'-'+state.minute+'-'+Math.random().toString(36).slice(2,10);
+        state.phoneNotes.unshift({id:noteId,title:heading,text:body,
+          day:state.day,minute:state.minute});
+        state.phoneNotes=state.phoneNotes.slice(0,24);
+      }
+      return finish('phone-note-save','保存了一条私人备忘录。');
+    }
+    function deletePhoneNote(id){
+      const index=state.phoneNotes.findIndex(n=>n.id===id);
+      if(index<0)return fail('找不到这条记录');
+      state.phoneNotes.splice(index,1);
+      return finish('phone-note-delete','删除了一条私人备忘录。');
     }
     function phoneCall(to,video=false){
       if(!Object.hasOwn(NPCS,to)||(!state.relationships[to]&&to!=='female2'))
@@ -651,6 +710,7 @@
     return Object.freeze({snapshot,subscribe,persist,travel,metroBoard,metroNext,metroExit,
       metroSwitch,metroRideToNight,act,buy,use,inspectItem,talk,wait,sleep,
       phoneInbox,markPhoneRead,replyHomework,sendPhoneMessage,phoneCall,
+      markThreadRead,setContactRemark,savePhoneNote,deletePhoneNote,
       recordTransitRumor,addPhonePhoto,publishSocial,
       inspectHomework,finishHomework,submitHomework,
       recordNightReturn,reset,calendar:()=>calendar(state)});

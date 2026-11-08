@@ -420,6 +420,11 @@
     getNarrative:()=>engine.phoneInbox(),
     onPhoneRead:kind=>engine.markPhoneRead(kind),
     onSendMessage:(to,msg)=>engine.sendPhoneMessage(to,msg),
+    onReadThread:to=>engine.markThreadRead(to),
+    onSaveContactRemark:(to,remark)=>engine.setContactRemark(to,remark),
+    getNotes:()=>engine.snapshot().phoneNotes,
+    onSaveNote:(id,title,text)=>engine.savePhoneNote(id,title,text),
+    onDeleteNote:id=>engine.deletePhoneNote(id),
     onPhoneCall:(to,video)=>engine.phoneCall(to,video),
     onTakePhoto:data=>engine.addPhonePhoto(data),
     onPublishPost:(text,photo)=>engine.publishSocial(text,photo),
@@ -430,6 +435,7 @@
       // Contacts appear when the protagonist actually knows a person.
       const contacts=[{
         id:'female2',display:'女二',note:'学校同学',
+        remark:saved.contactRemarks?.female2||'学校同学',
         relationship:'同学 · 熟悉',affinity:saved.relationships.female2,
         bio:'早上连续打来电话提醒交作业。平时经常保持联系。',
         chatAvailable:true
@@ -444,7 +450,8 @@
       ];
       for(const [id,display,note,relationship,bio] of discoveries){
         const affinity=saved.relationships[id]||0;
-        if(affinity>0)contacts.push({id,display,note,relationship,bio,
+        if(affinity>0)contacts.push({id,display,note,
+          remark:saved.contactRemarks?.[id]||note,relationship,bio,
           affinity,chatAvailable:true});
       }
       return contacts;

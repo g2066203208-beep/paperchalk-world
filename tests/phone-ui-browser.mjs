@@ -16,7 +16,7 @@ const server=createServer((req,res)=>{
   catch{if(!res.headersSent)res.writeHead(404);res.end('not found')}
 });
 await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
-const url='http://127.0.0.1:'+server.address().port+'/index.html?scene=classroom';
+const url='http://127.0.0.1:'+server.address().port+'/index.html';
 mkdirSync('artifacts/phone',{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
 try{
@@ -27,8 +27,31 @@ try{
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
-    // Phone must own RIGHT ONLY: first hide dialogue so there is no
-    // independent, legitimate bottom subtitle smoke.
+    // Enter the ACTUAL game: the main-menu quick tools are intentionally hidden.
+    await page.locator('#menu-start').click();
+    try{
+      await page.waitForFunction(()=>
+        document.querySelector('#scene')?.dataset.scene==='bedroom'&&
+        document.querySelector('#scene-transition')?.dataset.active==='false',null,{timeout:12000});
+    }catch(error){
+      const diag=await page.evaluate(()=>({
+        scene:document.querySelector('#scene')?.dataset.scene,
+        shade:document.querySelector('#scene-transition')?.dataset,
+        menu:document.querySelector('#scene-menu')?.hidden,
+        root:document.querySelector('#novel-ui')?.hidden,
+        hasStory:!!window.PaperWorldStoryContent,
+        opening:window.PaperWorldOpeningState?.snapshot?.(),
+        consoleErrors:document.querySelector('#scene')?.getAttribute('aria-label')
+      }));
+      throw new Error('Opening game did not reach bedroom: '+JSON.stringify(diag)+
+        '; errors='+errors.join(' | ')+'; '+error.message);
+    }
+    const wakingLines=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
+    for(let i=0;i<wakingLines;i++)await page.locator('#next-line').click();
+    await page.waitForFunction(()=>window.PaperWorldQuickTools?.phone?.isOpen?.());
+    await page.locator('#scene').click({position:{x:25,y:25}});
+    await page.waitForFunction(()=>!window.PaperWorldQuickTools.phone.isOpen());
+    // Phone must own RIGHT ONLY: hide dialogue using real game menu.
     await page.locator('#menu-toggle').click();
     await page.locator('#hide-button').click();
     assert.equal(await page.locator('#dialogue').isVisible(),false);
@@ -116,6 +139,36 @@ try{
     await page.locator('#phone-fingerprint').click();
     assert.equal(await page.locator('#phone-ui [data-phone-page="home"]').isVisible(),true);
     await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-home.png'});
+    // Actual interactive phone features use the original world save.
+    await page.locator('#phone-ui [data-app="信息"]').click();
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-conversations.png'});
+    await page.locator('#phone-ui .phone-conversation-row[data-contact="female2"]').click();
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-chat.png'});
+    assert.ok((await page.locator('#phone-ui .phone-chat-bubble.is-them').count())>=3,
+      'Opening chat must preserve the three day-one messages');
+    await page.locator('#phone-ui .phone-conversation-return').click();
+    assert.equal(await page.locator('#phone-ui .phone-conversation-row').count(),1);
+    await page.locator('#phone-app-back').click();
+    await page.locator('#phone-ui [data-app="备忘录"]').click();
+    await page.locator('#phone-ui .phone-memo-add').click();
+    await page.locator('#phone-ui .phone-memo-title').fill('车站记录');
+    await page.locator('#phone-ui .phone-memo-text').fill('站台的广播忽然中断。');
+    await page.locator('#phone-ui .phone-memo-editor button[type="submit"]').click();
+    assert.equal(await page.locator('#phone-ui .phone-memo-open').count(),1);
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-notebook.png'});
+    await page.locator('#phone-ui .phone-memo-open').click();
+    assert.equal(await page.locator('#phone-ui .phone-memo-text').inputValue(),'站台的广播忽然中断。');
+    await page.locator('#phone-ui .phone-memo-cancel').click();
+    await page.locator('#phone-app-back').click();
+    await page.locator('#phone-ui [data-app="联系人"]').click();
+    await page.locator('#phone-ui .phone-contact-row[data-contact="female2"]').click();
+    await page.locator('#phone-ui .phone-remark-action').click();
+    await page.locator('#phone-ui .phone-remark-input').fill('同学兼好友');
+    await page.locator('#phone-ui .phone-remark-editor button[type="submit"]').click();
+    assert.ok((await page.locator('#phone-ui .phone-profile-field').first().textContent()).includes('同学兼好友'),
+      'Edited remark must be reflected on the contact profile');
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-contact.png'});
+    await page.locator('#phone-app-back').click();
     assert.equal(await page.locator('#quick-phone').isVisible(),false,
       'The quick tool must be hidden while its physical handset is open');
     await page.locator('#scene').click({position:{x:35,y:35}});
@@ -134,12 +187,17 @@ try{
     await page.locator('#scene').click({position:{x:35,y:35}});
     await page.locator('#quick-backpack').click();
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
-    assert.equal(await page.locator('#quick-panel-title').textContent(),'背包');
-    // Hide/show dialogue retains its original bottom fog lifecycle.
+    await page.locator('#pw-world-surface:not([hidden])').waitFor();
+    assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'背包');
+    await page.locator('#pw-world-surface .pw-surface-dim').click({position:{x:3,y:3}});
+    // The introduction has finished: toggling menu cannot resurrect vanished
+    // dialogue, and bottom smoke must follow the actual dialogue visibility.
     await page.locator('#menu-toggle').click();
     await page.locator('#hide-button').click();
-    await page.waitForFunction(()=>document.querySelector('.ui-fog-band[data-edge="bottom"]').dataset.active==='true');
-    assert.equal(await page.locator('#dialogue').isVisible(),true);
+    const dialogueVisible=await page.locator('#dialogue').isVisible();
+    await page.waitForFunction(expected=>
+      document.querySelector('.ui-fog-band[data-edge="bottom"]').dataset.active===String(expected),
+      dialogueVisible);
     assert.deepEqual(errors,[],'Browser runtime errors: '+errors.join('; '));
     console.log('PASS '+cfg.name+' phone shell, responsive display, PIN, fingerprint, app screen and quick-tool lifecycle');
     await page.close();
