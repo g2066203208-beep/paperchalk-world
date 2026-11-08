@@ -41,7 +41,9 @@ try{
  await page.locator('#quick-map').click();
  const map=page.locator('.pw-dot-world-map');
  await map.waitFor({state:'visible'});
- // Home station first; go up through city metro to the ten-city world.
+ // Main map now opens on the existing city subway; neighborhood is opt-in.
+ assert.equal(await map.getAttribute('data-map-layer'),'metro');
+ await page.locator('.pw-dot-home-down').click();
  assert.equal(await map.getAttribute('data-map-layer'),'station');
  assert.equal(await page.locator('.pw-home-place-marker').count(),7);
  await page.locator('.pw-home-neighborhood-up').click();
