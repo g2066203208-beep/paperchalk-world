@@ -2,7 +2,7 @@
   "schema": "paperchalk/npc-scene-assignments/v1",
   "version": 1,
   "owner": "gameplay-npc-placement-task",
-  "policy": "Art task owns identity and sprite art. This assignment document alone authorizes scene/transport placement. No inference from filenames, emotional variants, or scene tags.",
+  "policy": "Art task owns identity and sprite art. This assignment document alone authorizes scene/transport placement. No inference from filenames, emotional variants, or scene tags. Future IDs require a valid home and explicit life.kind, life.interest and for workers life.work; never derive occupation from an image.",
   "records": [
     {
       "id": "NPC-G001",
@@ -20,7 +20,16 @@
         "metro"
       ],
       "metroSlot": "back-center",
-      "reason": "One persistent three-student friendship group; school on weekdays, shared public outings on free days, metro only while traveling on matching route. Art currently rejected; placement alone never activates it."
+      "reason": "One persistent three-student friendship group; school on weekdays, shared public outings on free days, metro only while traveling on matching route. Art currently rejected; placement alone never activates it.",
+      "life": {
+        "kind": "student",
+        "interest": [
+          "rumor",
+          "festival",
+          "social",
+          "concert"
+        ]
+      }
     },
     {
       "id": "female2",
@@ -31,7 +40,15 @@
       ],
       "allowedTransport": [],
       "metroSlot": null,
-      "reason": "Important story character, not a generic metro passenger. Only a confirmed story/schedule changes this."
+      "reason": "Important story character, not a generic metro passenger. Only a confirmed story/schedule changes this.",
+      "life": {
+        "kind": "student",
+        "interest": [
+          "school",
+          "rumor",
+          "social"
+        ]
+      }
     },
     {
       "id": "classmate",
@@ -42,7 +59,14 @@
       ],
       "allowedTransport": [],
       "metroSlot": null,
-      "reason": "Do not turn classmate into commuter or store employee without identity-specific approval."
+      "reason": "Do not turn classmate into commuter or store employee without identity-specific approval.",
+      "life": {
+        "kind": "student",
+        "interest": [
+          "school",
+          "social"
+        ]
+      }
     },
     {
       "id": "clerk",
@@ -53,7 +77,15 @@
       ],
       "allowedTransport": [],
       "metroSlot": null,
-      "reason": "Store employee appears at assigned shift; do not reuse work-uniform art in school or leisure scenes."
+      "reason": "Store employee appears at assigned shift; do not reuse work-uniform art in school or leisure scenes.",
+      "life": {
+        "kind": "worker",
+        "work": "convenience",
+        "interest": [
+          "social",
+          "festival"
+        ]
+      }
     },
     {
       "id": "neighbor",
@@ -64,7 +96,15 @@
       ],
       "allowedTransport": [],
       "metroSlot": null,
-      "reason": "Recognizable neighborhood passerby only where their real route and appropriate outfit permit."
+      "reason": "Recognizable neighborhood passerby only where their real route and appropriate outfit permit.",
+      "life": {
+        "kind": "resident",
+        "interest": [
+          "social",
+          "festival",
+          "rumor"
+        ]
+      }
     }
   ]
 }
