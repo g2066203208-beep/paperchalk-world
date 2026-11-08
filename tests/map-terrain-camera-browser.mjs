@@ -61,6 +61,28 @@ try{
  assert.equal(flat.mode,'2d');
  assert.equal(flat.source,'webgl-streamed-heightfield');
  assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-dot-world'),'infinite');
+ // The 2D grid edges must be actual faint strokes, not just metadata.
+ const hairline=await page.evaluate(()=>{
+  const map=document.querySelector('.pw-dot-world-map');
+  const canvas=map.querySelector('.pw-dot-wave-surface');
+  const ctx=canvas.getContext('2d');
+  const [left,top,ww,hh]=map.querySelector('svg.pw-dot-rail-canvas')
+    .getAttribute('viewBox').split(' ').map(Number);
+  const sx=canvas.width/ww,sy=canvas.height/hh;
+  const gx=Math.floor((left+ww*.5)/40),gy=Math.floor((top+hh*.5)/40);
+  const px=Math.round(((gx+.5)*40-left)*sx);
+  const py=Math.round((gy*40-top)*sy);
+  function sample(x,y){
+   const a=ctx.getImageData(x-2,y-2,5,5).data;
+   let total=0;for(let i=3;i<a.length;i+=4)total+=a[i];
+   return total;
+  }
+  return {grid:map.dataset.gridMesh,along:sample(px,py),
+   away:sample(px,py+12),coords:[px,py]};
+ });
+ assert.equal(hairline.grid,'orthogonal-hairlines');
+ assert.ok(hairline.along>hairline.away,
+  '2D hairline midpoint between adjacent dots must contain a visible faint stroke: '+JSON.stringify(hairline));
  assert.equal(flat.bg,'rgb(0, 0, 0)');
  assert.equal(flat.fog,0);
  assert.equal(flat.state.heightsDefined,false);
@@ -94,6 +116,8 @@ try{
  assert.equal(three.state.world,'infinite');
  assert.ok(three.state.vertices>=400,'streamed mesh should generate many true XYZ vertices');
  assert.ok(three.state.triangles>=400,'streamed mesh should contain true triangular ground faces');
+ assert.equal(three.state.meshStyle,'orthogonal-hairlines');
+ assert.ok(three.state.gridEdges>500,'3D surface must connect actual terrain vertices by fine grid edges');
  assert.ok(three.state.nearTiles>0,'near grid chunks should be loaded');
  assert.ok(three.state.farTiles>0,'distant grid chunks should be streamed');
  assert.ok(three.state.pitch>.5);
