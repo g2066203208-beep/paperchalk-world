@@ -288,7 +288,10 @@
    (cam.fov||SPEC.verticalFov):responsiveFov(cam.fov||SPEC.verticalFov,aspect);
   const vp=multiply(perspective(field,aspect),lookAt(cam.eye,cam.focus));
   const lensShift=Number.isFinite(cam.lensShift)?cam.lensShift:VERTICAL_LENS_SHIFT;
-   for(const i of [0,4,8,12])vp[i+1]+=lensShift*vp[i+3];
+  for(const i of [0,4,8,12])vp[i+1]+=lensShift*vp[i+3];
+  // HUD-safe horizontal optical shift applies identically to WebGL and hit projection.
+  const hudX=Number.isFinite(cam.hudSafeShiftX)?cam.hudSafeShiftX:0;
+  if(hudX)for(const i of [0,4,8,12])vp[i]+=hudX*vp[i+3];
   return vp;
  }
  function project(p,cam,aspect=16/9){
@@ -2312,6 +2315,22 @@
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
    if(w<2||h<2)return false;
+   // Full-screen stage with an OVERLAY HUD, not two split screens. All four
+   // enemies must remain LEFT of its first portrait, without moving the
+   // world-space actors or altering the approved physical shoulder camera.
+   if(combatTimegrid&&!transitMode&&mode==='outer'&&w>=1050&&w/h>1.30){
+    const dock=hud.querySelector('.ring-timegrid:not(.is-folded)');
+    if(dock){
+     const hudLeft=dock.getBoundingClientRect().left;
+     const canvasLeft=canvas.getBoundingClientRect().left;
+     const safeNdc=(hudLeft-canvasLeft-18)/w*2-1;
+     const foeRight=Math.max(...layout(mode).enemies.map(a=>{
+      const b=portraitVisibleBounds(a,lens,ENEMY_VISIBLE_SAFETY_UV[a.id],w/h);
+      return b.valid?b.right:-1;
+     }));
+     lens={...lens,hudSafeShiftX:clamp(Math.min(0,safeNdc-foeRight),-.38,0)};
+    }
+   }
    // On mobile trains use fewer fill-rate pixels during relative exterior
    // motion. Preserve authored texture resolution and CSS image geometry.
    // Desktop/battle keep their original unrestricted render pixel policy.
@@ -2626,6 +2645,7 @@
    renderer:gl?'webgl-l2d':'unavailable',
    timegrid:combatTimegrid?.inspect()||null,
    timegridEnabled:!!combatTimegrid,
+    hudSafeShiftX:lens?.hudSafeShiftX||0,
     cameraLook:{mode:controlledActorId==='hero'?'hero-root-tps-shoulder-rig':'selected-ally-enemy-centered-shoulder-rig',
      yawDeg:lens?.lookYawDeg||0,pitchDeg:lens?.lookPitchDeg||0,
      controlledActorId,
@@ -2640,7 +2660,7 @@
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
    stagePresentation:'four-rear-facing-allies-one-fixed-rank',
-   runtimeRevision:'right-panel-aligned-hitfx-v17-20261108',
+   runtimeRevision:'fullwidth-right-hud-safe-frustum-v18-20261108',
    shoulderMouseLimits:{...SHOULDER_LOOK_LIMITS},
    stageTransitionProgress:1,
    stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
