@@ -1368,6 +1368,7 @@
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let controlledActorId='hero';
+  let occludingAllies=[];
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
   let platformExposure=0,platformExposureOverride=null;
   let doorOpen=0;
@@ -2030,6 +2031,23 @@
    // row by x-distance and paints one actor's attached fog OVER the next).
    // Stable source order for equal depths puts the final character last.
    const ordered=sortActorsForAlpha(actors,cam);
+   occludingAllies=[];
+   // A player swapping to a far-left squadmate must still see all four
+   // opponents. Never move an ally away from its single 4v4 rank: only
+   // fade its original WebGL quad if its live alpha silhouette would cover
+   // an enemy. Genuine cast shadows and 3D roots remain untouched.
+   const aspect=canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9;
+   const foeAreas=actors.filter(a=>a.team==='enemy').map(a=>
+    portraitVisibleBounds(a,cam,textures.get(a.id)?.opaqueUv||
+     {left:.347,right:.664,top:0,bottom:1},aspect));
+   const blocksTarget=a=>{
+    if(a.team!=='ally'||a.id===controlledActorId||transitMode)return false;
+    const rect=portraitVisibleBounds(a,cam,textures.get(a.id)?.opaqueUv||
+     FEMALE07_BACK_UV,aspect);
+    return foeAreas.some(t=>t.valid&&rect.valid&&
+     Math.min(rect.right,t.right)-Math.max(rect.left,t.left)>.018&&
+     Math.min(rect.top,t.top)-Math.max(rect.bottom,t.bottom)>.018);
+   };
    gl.useProgram(portrait.handle);
    gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
@@ -2092,7 +2110,9 @@
     const backgroundCue=!duelPerformer&&attackSample?attackSample.zoom:0;
     gl.uniform1f(portrait.uDim,.72*backgroundCue);
     gl.uniform1f(portrait.uBlur,.88*backgroundCue);
-    gl.uniform1f(portrait.uOpacity,1);
+    const occludes=blocksTarget(a);
+    if(occludes)occludingAllies.push(a.id);
+    gl.uniform1f(portrait.uOpacity,occludes?.14:1);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
@@ -2442,6 +2462,7 @@
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
    partyLine:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
+   occludingAllies:[...occludingAllies],
    opposingLine:layout(mode).enemies.map(a=>({id:a.id,x:a.x,z:a.z})),
    cameraTarget:controlledActorId==='hero'?camera(mode,shotIndex):
     allyViewCamera(camera(mode,0),layout(mode).allies[0],controlledActor(),0,0,
