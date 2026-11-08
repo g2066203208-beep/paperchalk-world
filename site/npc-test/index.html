@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14171a">
+<title>路人 NPC · 游戏内美术测试</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans SC",sans-serif;font-synthesis:none}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;background:#121416;color:#f1f0ed}
+body{display:flex;flex-direction:column;overflow-x:hidden}
+header{padding:18px clamp(18px,3.5vw,58px) 12px;display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}
+h1{font-size:clamp(17px,2.4vw,26px);letter-spacing:.03em;font-weight:500;margin:0}
+.sub{font-size:12px;color:#a2a6a8;margin-top:5px}
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+button,select{font:inherit;background:#25292c;border:1px solid #454a4d;color:#e9e9e6;border-radius:10px;min-height:38px;padding:8px 13px;cursor:pointer}
+button:hover,select:hover{border-color:#858b8e}
+button[aria-pressed="true"]{background:#d4d8d6;color:#17191b;border-color:#d4d8d6}
+select{appearance:none;padding-right:20px}
+#stage-wrap{margin:0 clamp(10px,2.3vw,38px);position:relative;aspect-ratio:16/9;min-height:370px;max-height:73vh;border-radius:18px;overflow:hidden;background:#22282c}
+#stage{display:block;width:100%;height:100%;touch-action:manipulation}
+#scene-meta{position:absolute;top:14px;left:17px;font-size:12px;color:#c9d0d1a8;pointer-events:none}
+#status{position:absolute;bottom:13px;left:18px;font-size:12px;color:#d7ddddaa;pointer-events:none}
+#stage-empty{position:absolute;inset:0;display:none;place-items:center;color:#c8cece;text-align:center;font-size:14px;padding:22px;pointer-events:none;background:#171c1d77}
+#stage-empty:not([hidden]){display:grid}
+.panel{margin:12px clamp(12px,2.3vw,38px) 24px;display:flex;gap:14px;align-items:stretch;flex-wrap:wrap}
+.strip{display:flex;gap:8px;align-items:center;flex:1;overflow-x:auto;scrollbar-width:thin;padding:2px}
+.chip{font-size:12px;min-width:88px;text-align:center;white-space:nowrap}
+.chip.active{border-color:#d8dad7}
+.info{min-width:240px;flex:1;max-width:540px;border:1px solid #363b3c;border-radius:13px;padding:12px 16px;font-size:12px;line-height:1.75;color:#b5babc}
+#inspection{display:none;width:100%;border-top:1px solid #353b3f;padding:14px clamp(16px,3.5vw,58px) 28px}
+#inspection.open{display:block}
+#inspection-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#inspection h2{font-weight:500;font-size:18px;margin:0}
+#views{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:850px;margin:15px auto 0}
+.view{border-radius:13px;min-height:200px;height:min(37vw,430px);background:linear-gradient(#34393b,#1e2426);display:flex;align-items:flex-end;justify-content:center;position:relative;padding:16px;overflow:hidden}
+.view img{max-height:94%;max-width:98%;object-fit:contain;filter:drop-shadow(0 7px 7px #080a0c55)}
+.view small{position:absolute;bottom:6px;right:9px;font-size:10px;color:#afb4b5}
+footer{font-size:12px;color:#9ea5a8;padding:0 clamp(18px,3.5vw,58px) 24px}
+label{font-size:12px;color:#b8bfc0}
+input[type=range]{accent-color:#d7dbd8;width:125px;vertical-align:middle}
+#clock-block{display:none;align-items:center;gap:8px}
+#clock-block.active{display:flex}
+@media(max-width:700px){header{padding:13px 12px}#stage-wrap{aspect-ratio:4/3;min-height:340px;margin:0 8px}#views{gap:5px}.view{padding:5px;min-height:145px;height:47vw}.panel{margin:10px 8px 20px}.chip{min-width:70px;padding:5px}.info{min-width:100%;max-width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>路人 NPC · 第一轮测试</h1><div class="sub">原始三视图透明拆分 · 同一世界高度 · 身份与场景检查</div></div>
+  <div class="controls">
+    <select id="place" aria-label="测试地点">
+      <option value="mall">商场</option><option value="park">公园</option>
+      <option value="cafe">咖啡厅</option><option value="convenience">便利店</option>
+      <option value="school">学校</option><option value="central">市中心</option>
+      <option value="northgate">北口</option>
+    </select>
+    <button id="front" aria-pressed="true">正面</button>
+    <button id="side_left" aria-pressed="false">侧面</button>
+    <button id="back" aria-pressed="false">背面</button>
+    <button id="mode" aria-pressed="false">外观对齐</button>
+    <span id="clock-block"><label for="clock">游戏时间</label><input id="clock" type="range" min="360" max="1380" step="15" value="720"><span id="clock-text">12:00</span></span>
+  </div>
+</header>
+<div id="stage-wrap">
+ <canvas id="stage" aria-label="统一透视与脚底锚点 NPC 实测画面"></canvas>
+ <div id="scene-meta">城市生活 · NPC 场景比例测试</div>
+ <div id="status">加载美术资源中…</div>
+ <div id="stage-empty" hidden>当前时间与地点没有符合日程的路人。<br>调整游戏时间或切回外观对齐。</div>
+</div>
+<div class="panel">
+ <div class="strip" id="strip" aria-label="角色切换"></div>
+ <div class="info" id="details">选择人物查看三视图。外观对齐模式不会伪装成真实日程；切换“生活运行”才会遵循现有 NPC 身份、地点及时间机制。</div>
+</div>
+<section id="inspection">
+ <div id="inspection-head"><h2 id="inspect-title">三视图</h2><button id="close-inspection">收起</button></div>
+ <div id="views"></div>
+</section>
+<footer>测试说明：只使用用户已选择的 NPC 原图；不生成新人物、也不把单张姿势伪装成行走动画。正式游戏仍需逐场校准遮挡、行动和事件状态。</footer>
+<script src="../game/world-atlas.js"></script>
+<script src="../game/metro-graph.js"></script>
+<script src="../game/daily-life-state.js"></script>
+<script src="../game/npc-life-sim.js"></script>
+<script src="../game/npc-scene-presence.js"></script>
+<script>
+(()=>{
+'use strict';
+const canvas=document.querySelector('#stage'),ctx=canvas.getContext('2d',{alpha:false});
+const $=s=>document.querySelector(s);
+const labels={'NPC-C001':'上班族','NPC-C002':'年轻女性','NPC-C003':'老奶奶','NPC-C004':'卫衣青年',
+'NPC-C005':'中年女性','NPC-C006':'休闲男性','NPC-M003':'看报爷爷','NPC-SG01':'手机学生'};
+const ids=Object.keys(labels),cache=new Map();
+const state={manifest:null,assignments:null,life:null,presence:null,view:'front',mode:'art',
+ scene:'mall',time:720,page:0,selected:null,boxes:[],drawn:0,errors:[]};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function url(path){return '../'+path.replace(/^\.\//,'')}
+function getImage(path){
+ if(!path)return null;
+ if(cache.has(path))return cache.get(path);
+ const img=new Image();
+ const item={img,ok:false,err:false};
+ cache.set(path,item);
+ img.onload=()=>{item.ok=true;requestRender()};
+ img.onerror=()=>{item.err=true;state.errors.push(path);requestRender()};
+ img.src=url(path);
+ return item;
+}
+function resize(){
+ const r=canvas.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
+ const w=Math.round(r.width*dpr),h=Math.round(r.height*dpr);
+ if(w!==canvas.width||h!==canvas.height){canvas.width=w;canvas.height=h}
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ return {w:r.width,h:r.height};
+}
+function background(w,h){
+ const palettes={mall:['#42484a','#34393c','#30373a'],park:['#344642','#283d38','#31453d'],
+ cafe:['#4c4642','#34302f','#292c2a'],convenience:['#455053','#313a3c','#373f41'],
+ school:['#55555a','#353e41','#303c40'],central:['#3c4851','#29333c','#364045'],
+ northgate:['#405058','#27333c','#313f45']};
+ const p=palettes[state.scene]||palettes.mall;
+ ctx.fillStyle=p[0];ctx.fillRect(0,0,w,h*.67);
+ ctx.fillStyle=p[1];ctx.fillRect(0,h*.68,w,h*.32);
+ const grad=ctx.createLinearGradient(0,h*.57,0,h);
+ grad.addColorStop(0,'#c9c4bb10');grad.addColorStop(1,'#090d1260');
+ ctx.fillStyle=grad;ctx.fillRect(0,h*.56,w,h*.44);
+ ctx.strokeStyle='#f5f0e515';ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(0,h*.68);ctx.lineTo(w,h*.68);ctx.stroke();
+ const vanish=w*.5;
+ for(let i=-8;i<=8;i++){ctx.beginPath();ctx.moveTo(vanish,h*.67);ctx.lineTo(w*(.5+i*.24),h);ctx.stroke()}
+ for(let j=1;j<7;j++){const t=j/7;const y=h*(.68+.32*t*t);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+ for(let j=1;j<5;j++){
+  ctx.fillStyle='#c7d3d322';ctx.fillRect(w*j/5,h*.09,w*.085,Math.max(2,h*.01));
+ }
+}
+function people(){
+ const rows=state.manifest?.records||[];
+ if(state.mode==='art')return rows.filter(x=>ids.includes(x.id));
+ return state.presence?.forLocation(state.scene,{limit:30}).map(x=>rows.find(z=>z.id===x.id)).filter(Boolean)||[];
+}
+function render(){
+ const {w,h}=resize();background(w,h);
+ const list=people();
+ state.boxes.length=0;state.drawn=0;
+ if(!state.manifest)return;
+ const chunk=state.mode==='art'?list.slice(state.page*4,state.page*4+4):list.slice(state.page*4,state.page*4+4);
+ const positions=[.15,.38,.62,.85];
+ let waiting=0;
+ for(const [i,p] of chunk.entries()){
+  if(!p)continue;
+  const pic=getImage(p.sprites?.[state.view]||p.sprites?.idle);
+  if(!pic?.ok){waiting++;continue}
+  const depth=[.82,.98,.89,1.07][i],px=w*positions[i];
+  const meters=p.geometry?.heightMeters||1.65;
+  const H=clamp(h*.66*(meters/1.65)/depth,130,h*.75);
+  const W=H*(pic.img.naturalWidth/pic.img.naturalHeight)*(p.geometry?.widthScale||1);
+  const fy=h*(.91-(depth-1)*.17),x=px-W*.5,y=fy-H;
+  ctx.save();
+  const shade=ctx.createRadialGradient(px,fy,1,px,fy,W*.48);
+  shade.addColorStop(0,'#0a11175c');shade.addColorStop(1,'#0a111700');
+  ctx.fillStyle=shade;ctx.beginPath();ctx.ellipse(px,fy+3,W*.55,Math.max(3,W*.08),0,0,2*Math.PI);ctx.fill();
+  ctx.drawImage(pic.img,x,y,W,H);
+  if(state.selected===p.id){
+    ctx.strokeStyle='#e5e9e9a6';ctx.lineWidth=1;
+    ctx.strokeRect(x-5,y-5,W+10,H+10);
+  }
+  ctx.fillStyle='#ffffffdb';ctx.font='12px system-ui,sans-serif';ctx.textAlign='center';
+  ctx.fillText(labels[p.id]||p.id,px,Math.min(h-8,fy+21));
+  ctx.restore();state.boxes.push({id:p.id,x,y,w:W,h:H});state.drawn++;
+ }
+ const total=list.length,pages=Math.max(1,Math.ceil(total/4));
+ const loadCount=[...cache.values()].filter(x=>x.ok).length;
+ $('#status').textContent=state.mode==='art'?`外观对齐 · ${Math.min(state.page+1,pages)} / ${pages} 组 · ${state.drawn} 人显示 · ${loadCount} 张已载入`:
+  `生活运行 · 第 1 天 ${clockValue()} · ${total} 人符合当前地点 · ${state.drawn} 人显示`;
+ $('#stage-empty').hidden=!!(chunk.length||waiting);
+ if(state.errors.length)$('#details').textContent='有素材加载失败：'+state.errors[0]+'。请确认 GitHub Actions 已生成透明 PNG。';
+ window.__NPC_TEST_STATE__={scene:state.scene,mode:state.mode,direction:state.view,visible:state.drawn,
+  registered:state.manifest.records.length,lifeActorCount:state.life?.definitions?.length||0,
+  alphaImagesLoaded:loadCount,missingImagePaths:[...new Set(state.errors)],ids:state.boxes.map(x=>x.id)};
+}
+let queued=false;
+function requestRender(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;render()})}
+function clockValue(){return String(Math.floor(state.time/60)).padStart(2,'0')+':'+String(state.time%60).padStart(2,'0')}
+function syncLife(){
+ if(!state.life)return;
+ state.life.advanceTo(window.PaperWorldNpcLife.abs({day:1,minute:state.time}));
+}
+function showPerson(id){
+ const p=state.manifest?.records.find(x=>x.id===id);if(!p)return;
+ state.selected=id;
+ $('#inspection').classList.add('open');
+ $('#inspect-title').textContent=(labels[id]||id)+' · 左侧 / 正面 / 背面';
+ $('#views').replaceChildren();
+ for(const [view,label] of [['side_left','90°侧面'],['front','正面'],['back','背面']]){
+  const node=document.createElement('div');node.className='view';
+  const img=document.createElement('img');img.alt=label;img.src=url(p.sprites[view]||p.sprites.idle);
+  const small=document.createElement('small');small.textContent=label;
+  node.append(img,small);$('#views').appendChild(node);
+ }
+ requestRender();
+}
+canvas.addEventListener('click',e=>{
+ const bounds=canvas.getBoundingClientRect(),x=e.clientX-bounds.left,y=e.clientY-bounds.top;
+ for(const b of [...state.boxes].reverse())if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){showPerson(b.id);return}
+});
+$('#close-inspection').onclick=()=>{$('#inspection').classList.remove('open');state.selected=null;requestRender()};
+for(const v of ['front','side_left','back'])$('#'+v).onclick=()=>{
+ state.view=v;for(const k of ['front','side_left','back'])$('#'+k).setAttribute('aria-pressed',String(k===v));
+ requestRender();
+};
+$('#place').onchange=e=>{state.scene=e.target.value;state.page=0;requestRender()};
+$('#clock').oninput=e=>{state.time=+e.target.value;$('#clock-text').textContent=clockValue();syncLife();state.page=0;requestRender()};
+$('#mode').onclick=()=>{
+ state.mode=state.mode==='art'?'life':'art';state.page=0;
+ $('#mode').textContent=state.mode==='art'?'外观对齐':'生活运行';
+ $('#mode').setAttribute('aria-pressed',String(state.mode==='life'));
+ $('#clock-block').classList.toggle('active',state.mode==='life');
+ requestRender();
+};
+window.addEventListener('resize',requestRender,{passive:true});
+window.addEventListener('keydown',e=>{
+ if(e.key==='ArrowRight'){const n=Math.max(1,Math.ceil(people().length/4));state.page=(state.page+1)%n;requestRender();}
+ if(e.key==='ArrowLeft'){const n=Math.max(1,Math.ceil(people().length/4));state.page=(state.page+n-1)%n;requestRender();}
+});
+async function start(){
+ try{
+  const [m,a]=await Promise.all(['../data/npc/production-manifest.v1.json',
+   '../data/npc/scene-assignments.v1.json'].map(p=>fetch(p,{cache:'no-store'}).then(r=>{
+   if(!r.ok)throw Error(p+': HTTP '+r.status);return r.json();
+  })));
+  const Presence=window.PaperWorldNpcScenePresence,Life=window.PaperWorldNpcLife;
+  if(!Presence||!Life)throw Error('NPC world simulation scripts not loaded');
+  const actors=a.records.filter(x=>ids.includes(x.id)).map(x=>({
+   id:x.id,name:labels[x.id],home:x.home,kind:x.life.kind,interest:x.life.interest||[],work:x.life.work
+  }));
+  const engine={snapshot:()=>({day:1,minute:state.time,location:state.scene}),subscribe:()=>()=>{}};
+  state.life=Life.create({engine,storage:null,atlas:window.PaperWorldAtlas,metro:window.PaperWorldMetro,actors});
+  state.presence=Presence.create({life:state.life,metro:window.PaperWorldMetro,
+   manifest:m,assignments:a});
+  const check=state.presence.inspect();
+  if(check.renderableIds.length<8)throw Error('Only '+check.renderableIds.length+' approved identity intersections');
+  state.manifest=m;state.assignments=a;syncLife();
+  const strip=$('#strip');
+  for(const id of ids){const b=document.createElement('button');b.className='chip';b.textContent=labels[id];b.onclick=()=>{
+   state.page=Math.floor(ids.indexOf(id)/4);showPerson(id);
+  };strip.appendChild(b);}
+  const next=document.createElement('button');next.textContent='下一组 ›';next.onclick=()=>{
+   const n=Math.max(1,Math.ceil(people().length/4));state.page=(state.page+1)%n;requestRender();
+  };strip.append(next);
+  $('#details').textContent='已载入 '+check.renderableIds.length+' 位试用 NPC。前七张三视图为自动扣白底的真实透明精灵；灰发老人沿用原有已批准精灵。切换生活运行，检查身份、日程和场景准入。';
+  requestRender();
+ }catch(error){$('#status').textContent='初始化失败：'+error.message;$('#details').textContent='请检查资源和脚本是否已经由构建任务提交；不会使用假人物占位。';}
+}
+start();
+})();
+</script>
+</body>
+</html>
