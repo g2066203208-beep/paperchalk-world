@@ -49,10 +49,13 @@
    }
    dc.setTransform(1,0,0,1,0,0);
    dc.clearRect(0,0,w,h);dc.fillStyle='#bbc4c1';
-   const minX=clamp(Math.ceil((-c.x/c.scale-2)/cell),0,worldWidth/cell);
-   const maxX=clamp(Math.floor(((w-c.x)/c.scale+2)/cell),0,worldWidth/cell);
-   const minY=clamp(Math.ceil((-c.y/c.scale-2)/cell),0,worldHeight/cell);
-   const maxY=clamp(Math.floor(((h-c.y)/c.scale+2)/cell),0,worldHeight/cell);
+   // Infinite integer lattice: derive visible rows and columns from camera,
+   // never from the old authored 2000x1280 city-data bounding box.
+   const minX=Math.ceil((-c.x/c.scale-2)/cell);
+   const maxX=Math.floor(((w-c.x)/c.scale+2)/cell);
+   const minY=Math.ceil((-c.y/c.scale-2)/cell);
+   const maxY=Math.floor(((h-c.y)/c.scale+2)/cell);
+   map.dataset.dotWorld='infinite';
    for(let gy=minY;gy<=maxY;gy++)for(let gx=minX;gx<=maxX;gx++){
     const wx=gx*cell,wy=gy*cell;
     let swell=0;
