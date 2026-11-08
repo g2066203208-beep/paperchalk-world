@@ -80,6 +80,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.append(chrome,hint,popup);
  body.replaceChildren(map);
  let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,focused=false;
+ const fingers=new Map();let pinch=null;
  let lastW=844,lastH=390;
  const cleanupListeners=[];
  function notify(msg){onFeedback?.(msg)}
@@ -99,7 +100,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    5,Math.max(5,outer.width-w-5))+'px';
   popup.style.top=clamp(top-h*.3,5,Math.max(5,outer.height-h-5))+'px';
  }
- function showMenu(e,node,title,detail,commands){
+ function showMenu(e,node,title,detail,commands,previewUrl=null){
   clear();e.stopPropagation();
   popup.replaceChildren(element('strong','pw-transit-popup-name',title),
    element('small','pw-transit-popup-sub',detail));
@@ -108,6 +109,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    const b=element('button','pw-transit-menu-item'+(a.primary?' is-primary':''),a.label);
    b.type='button';b.disabled=!!a.disabled;
    b.addEventListener('click',ev=>{ev.stopPropagation();a.run()});group.append(b);
+  }
+  if(previewUrl){
+   const preview=element('div','pw-dot-preview-photo');
+   const im=element('img');im.alt='地点照片仅作场景参考';im.loading='lazy';im.decoding='async';
+   im.referrerPolicy='no-referrer';im.src=previewUrl;
+   preview.append(im);popup.append(preview);
   }
   popup.append(group);
   popup.hidden=false;selected=node;node?.setAttribute('data-selected','true');
@@ -357,7 +364,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    c.id==='misaki'||c.id==='urasima'?'coast':
    c.id==='naruba'||c.id==='okuzawa'?'mountain':
    c.id==='homori'||c.id==='mizuho'?'rice':'street'];
-  photo(node,[thumb?.url,PLACEHOLDER]);
+  // City location cards are geographic pins; only load imagery in a selected
+  // place detail panel, not ten duplicated city photographs at map open.
   node.append(element('span','pw-dot-city-symbol',c.size==='metro'?'●':c.size==='city'?'◆':c.size==='island'?'◌':'•'),
    element('span','pw-transit-place-name',c.name),
    element('small','pw-dot-city-sub',c.sub));
@@ -367,7 +375,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    if(drag?.moved)return;
    showMenu(e,node,c.name,c.sub+' · '+c.region,[
     {label:'查看城区',primary:true,run:()=>{clear();focus(c,Math.max(2.85,minScale*3.6))}}
-   ]);
+   ],thumb?.url);
   });
  }
  const worldNodes=[];
@@ -379,7 +387,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   node.dataset.kind=p.kind||'';
   node.dataset.transitStop=String(transitPOIs.has(p.id));
   const src=atlas.PHOTOS[p.photo]?.url;
-  photo(node,[src,PLACEHOLDER]);
+  // No 120-photo download storm. Category pin remains crisp at every zoom;
+  // the representative location image is fetched only when selected.
   const glyph=({rural:'田',mountain:'山',lake:'水',forest:'林',
    island:'岛',tunnel:'隧',shrine:'社',school:'校',factory:'厂',
    hospital:'医',station:'站',rumor:'?',port:'港',park:'园',
@@ -406,7 +415,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
      catch(_){notify('场景加载失败')}finally{busy=false}
     }},
     {label:'查看地点',run:()=>{clear();focus(p,Math.max(scale,2.5))}}
-   ]);
+   ],src);
   });
  }
  // Dedicated, world-coordinate player marker is not a fictional POI.
@@ -587,12 +596,42 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   zoomBy(Math.exp(-clamp(e.deltaY,-500,500)*.0014),e.clientX-r.left,e.clientY-r.top);
  };
  map.addEventListener('wheel',wheel,{passive:false});
+ map.tabIndex=0;
+ map.addEventListener('keydown',e=>{
+  if(e.target.closest('button')||e.target.closest('input'))return;
+  if(e.key==='Escape'){clear();return}
+  if(e.key==='+'||e.key==='='){e.preventDefault();zoomBy(1.25)}
+  else if(e.key==='-'){e.preventDefault();zoomBy(.8)}
+  else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
+   e.preventDefault();
+   const dx=e.key==='ArrowLeft'?80:e.key==='ArrowRight'?-80:0;
+   const dy=e.key==='ArrowUp'?80:e.key==='ArrowDown'?-80:0;
+   x+=dx;y+=dy;constrain();position();
+  }
+ });
  map.addEventListener('pointerdown',e=>{
   if(e.button!==0||e.target.closest('button,.pw-dot-chrome,.pw-transit-popup,.pw-transit-line-hit'))return;
-  drag={id:e.pointerId,cx:e.clientX,cy:e.clientY,x,y,moved:false};
+  if(e.pointerType==='touch'){
+   fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+   if(fingers.size===2){
+    const [a,b]=[...fingers.values()];
+    pinch={distance:Math.max(1,Math.hypot(b.x-a.x,b.y-a.y))};
+    drag=null;
+   }
+  }
+  if(!pinch)drag={id:e.pointerId,cx:e.clientX,cy:e.clientY,x,y,moved:false};
   map.setPointerCapture?.(e.pointerId);
  });
  map.addEventListener('pointermove',e=>{
+  if(fingers.has(e.pointerId))fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch&&fingers.size>=2){
+   const [a,b]=[...fingers.values()];
+   const next=Math.max(1,Math.hypot(b.x-a.x,b.y-a.y));
+   const box=map.getBoundingClientRect();
+   zoomBy(clamp(next/pinch.distance,.75,1.35),
+    (a.x+b.x)*.5-box.left,(a.y+b.y)*.5-box.top);
+   pinch.distance=next;return;
+  }
   if(!drag||drag.id!==e.pointerId)return;
   const dx=e.clientX-drag.cx,dy=e.clientY-drag.cy;
   if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;
@@ -600,12 +639,15 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   position();
  });
  map.addEventListener('pointerup',e=>{
+  fingers.delete(e.pointerId);
+  if(pinch){if(fingers.size<2)pinch=null;drag=null;return}
   if(!drag||drag.id!==e.pointerId)return;
-  const hadMove=drag.moved;
-  drag=null;
+  const hadMove=drag.moved;drag=null;
   if(hadMove)position();
  });
- map.addEventListener('pointercancel',()=>{drag=null});
+ map.addEventListener('pointercancel',e=>{
+  fingers.delete(e.pointerId);pinch=null;drag=null;
+ });
  map.addEventListener('click',e=>{if(e.target===map||e.target===canvas||e.target===svg)clear()});
  let observer=null;
  if(typeof ResizeObserver==='function'){
