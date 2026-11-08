@@ -2379,11 +2379,25 @@
    const W=Math.floor(w*pixel),H=Math.floor(h*pixel);
    if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
    const cam=lens,vp=cameraVP(cam,w/h);
+   const flow=ensureCivilianFlow();
+   if(flow&&!trainState.moving){
+    if(transitNpcStation)flow.refreshWaiting();
+    else {
+     const ride=window.PaperWorldDailyLifeUI?.snapshot?.()?.metro;
+     if(ride?.onboard)setTransitNpcStop({
+      station:ride.station,lineId:ride.lineId,direction:ride.direction});
+    }
+   }
+   flowSample=flow?.sample({
+    doorOpen,doorOpenedEver:platformDoorOpenedEver,
+    dwellMs:performance.now()-platformDockedAt,
+    stationExposure:platformExposure,moving:trainState.moving
+   })||null;
    const stationLife=transitMode&&platformLife?platformLife.sample({
     distanceMeters:trainState.distanceMeters,
     stationExposure:platformExposure,doorOpen,doorOpenedEver:platformDoorOpenedEver,
     moving:trainState.moving,
-    dwellMs:performance.now()-platformDockedAt,
+    dwellMs:performance.now()-platformDockedAt,realActors:flowSample?.platform||[],
     nowMs:performance.now(),anomaly:platformExposure<.01
    }):null;
    platformLampFactor=stationLife?.lampFactor??1;
@@ -2567,7 +2581,9 @@
    if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
    platformDockedAt=performance.now();platformDoorOpenedEver=false;
-   requestCommuterAtlas();
+   civilianFlow=null;flowSample=null;transitNpcStation=null;
+   commuterAtlasStatus='real-approved-npc';
+   // Real approved alpha sprites load per NPC on demand; no legacy SVG commuter atlas.
    platformExposure=1;platformExposureOverride=null;doorOpen=0;
    trainState={distanceMeters:0,speedMps:0,stationExposure:1,
     phase:'docked',moving:false,progress:1,legs:0};
@@ -2596,6 +2612,7 @@
   function exitTransit(){
    if(!transitMode)return false;
    transitMode=false;active=false;platformExposure=0;platformExposureOverride=null;doorOpen=0;
+   civilianFlow?.clear();civilianFlow=null;flowSample=null;transitNpcStation=null;
    if(transitHeroSource){
     transitHeroSource.root.hidden=transitHeroSource.hidden;
     transitHeroSource.root.style.visibility=transitHeroSource.visibility;
@@ -2669,6 +2686,8 @@
     floorHeight:-.16,backWallZ:4.42,ceilingHeight:3.02,
     doorOpen,doorOpenedEver:platformDoorOpenedEver,doorLeafCount:4,
     waitingSeatCount:2,commutersDrawn:lastStationCrowd.length,
+    approvedTransitFlow:civilianFlow?.status?.()||null,
+    realCrowdIds:lastStationCrowd.map(p=>p.id),
     commuterAtlasStatus,commuterWorldAnchors:lastStationCrowd.map(p=>({id:p.id,x:p.x,z:p.z,role:p.role})),
     doorMaterial:'original-wall-image-texture-with-alpha-glass'},
    platformLighting:{active:transitMode,exposure:platformExposure,
@@ -2842,7 +2861,7 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,selectAlly,enterTransit,exitTransit,render,inspect,inspectMetroNpcStaging,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,get canvas(){return canvas}};
+  const api={setActive,selectAlly,enterTransit,exitTransit,render,inspect,inspectMetroNpcStaging,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,setTransitNpcStop,setTransitNpcDeparture,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
