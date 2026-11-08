@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "name": "普通路人 NPC 统一人物集（含地铁老爷爷 NPC-M003）",
+  "name": "普通路人 NPC 统一人物集（六位市民及学校三人队学生）",
   "separateFrom": [
     "site/data/characters/registry.json"
   ],
   "indexPolicy": "普通路人 NPC 统一收录生活市民和同校普通学生；已有六名市民 + 已批准一名学校三人组学生 SG01 的 RGB 原图。SG02/SG03 为待绘制规划条目，不能记为图片入库；已有老爷爷 M003 保留原四视图。",
   "assetImportZip": "npc-civilians-source-images-20261108.zip",
-  "assetBundleStatus": "four_original_1024px_RGB_PNG_committed_to_GitHub_main_20261108",
+  "assetBundleStatus": "C001-C005_AND_SG01_original_RGB_PNG_committed_GitHub;_M003_approved_legacy_assets_preserved",
   "sourceFilenameConvention": "C001-C005: site/assets/characters/civilians/npc-c00X/three-view-original.png; SG01: site/assets/characters/civilians/schoolgirls/sg01/three-view-original.png; M003: site/assets/characters/metro/npc-m003/approved-four-poses.png",
   "actualSourceOrder": [
     "side_left",
