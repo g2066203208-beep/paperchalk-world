@@ -50,7 +50,7 @@ assert.deepEqual(ring.SHOULDER_LOOK_LIMITS,{
  yawLeftDeg:7.5,yawRightDeg:7.5,pitchUpDeg:3.5,pitchDownDeg:3.5
 });
 const html=fs.readFileSync(path.resolve(__dirname,'../site/index.html'),'utf8');
-assert.match(html,/per-role-foe-centered-camera-v2-20261108/,
+assert.match(html,/full-timegrid-four-party-3d-v1-20261108/,
  'HTML must force actual battle source reload rather than stale cache');
 assert.match(html,/const comfortableLook=v=>/,
  'mouse neutral deadzone and continuous smoothstep must exist');

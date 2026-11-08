@@ -30,6 +30,11 @@ on:
       - 'tests/test_l2d_person_tree_model.cjs'
       - 'site/game/ring-arena-director.js'
       - 'site/game/ring-arena-director.css'
+      - 'site/game/ring-arena-timegrid.js'
+      - 'site/game/ring-arena-timegrid.css'
+      - 'site/combat-lab/engine.js'
+      - 'site/combat-lab/cards-expansion.js'
+      - 'tests/ring-arena-timegrid.test.cjs'
       - 'site/assets/characters/hero-axe-attack.webp'
       - 'site/assets/characters/enemy-suit-hit.webp'
       - 'site/assets/characters/enemy-suit-hit-no-hud.webp'
@@ -112,6 +117,7 @@ jobs:
           node tests/ring-arena-wall.test.cjs
           node tests/ring-arena-formation.test.cjs
           node tests/ring-arena-director.test.cjs
+          node tests/ring-arena-timegrid.test.cjs
           node tests/scene-camera.test.cjs
           python3 tests/test_metro_wall_alpha.py
           node tests/test_l2d_display_lifecycle.cjs

@@ -98,6 +98,8 @@
    autoplan,preview,execute,advance,displayId,gameId,
    onChange(fn){listener=typeof fn==='function'?fn:()=>{};},
    get playback(){return !!replay;},get shown(){return shown;},
+   get planningNow(){return replay?replay.round*G.ROUND:game.now;},
+   get planningActions(){return replay?replay.actions:null;},
    get progress(){return replay?replay.index+1:0}};
   return api;
  }
@@ -146,7 +148,7 @@
   }
   function band(owner,action){
    const c=cardOf(action.card);if(!c)return '';
-   const start=action.start-model.game.now+1,length=G.cLen(c);
+   const start=action.start-model.planningNow+1,length=G.cLen(c);
    if(start+length<=1||start>10||action.canceled)return '';
    const left=Math.max(0,start-1),cut=Math.max(0,1-start),lengthHere=Math.min(length-cut,10-left);
    const movable=owner.id===model.controlled().id&&!action.locked&&!model.playback;
@@ -173,7 +175,7 @@
    if(!model)return;
    rollup();
    const game=model.game,playing=model.playback;
-   const selected=model.controlled(),projected=model.preview();
+   const selected=model.controlled(),projected=playing?{actors:model.shown}:model.preview();
    const predicted=new Map(projected.actors.map(a=>[a.id,a]));
    const shown=new Map(model.shown.map(a=>[a.id,a]));
    get('phase').textContent=playing?'第 '+(game.round)+' 轮 · 时间推进 '+model.progress+'/10':
@@ -201,11 +203,12 @@
      escape(displayId(actor.id))+'" data-tg-tick="'+t+'" title="'+escape(actor.name+' · 第'+t+'格')+
      '" '+(game.phase!=='planning'||playing||dead?'disabled':'')+'></button>');
     timeline.push('<div class="tg-bands">');
-    for(const action of actor.actions)timeline.push(band(actor,action));
+    const actions=playing?model.planningActions.filter(a=>a.actorId===actor.id):actor.actions;
+    for(const action of actions)timeline.push(band(actor,action));
     timeline.push('</div></div></div>');
    }
    get('rail').innerHTML=timeline.join('');
-   const hand=selected.hand.map(item=>{
+   const hand=(playing?[]:selected.hand).map(item=>{
     const card=cardOf(item.key),chosen=picked===item.uid;
     const nums=[card.w,card.a,card.r].join('/');
     const sub=card.damage?'每次 '+card.damage+'伤害':card.guard?'防御池 '+card.guard:
@@ -216,7 +219,8 @@
      (playing||game.phase!=='planning'||selected.dead?' disabled':'')+'><strong>'+
      escape(card.name)+'</strong><small>'+escape(sub)+' · '+nums+'</small></button>';
    });
-   get('hand').innerHTML=hand.length?hand.join(''):'<span class="tg-empty">本角色暂无手牌，换手或等下轮补牌</span>';
+   get('hand').innerHTML=hand.length?hand.join(''):'<span class="tg-empty">'+
+    (playing?'10 格执行中 · 同步判定双方的动作':'本角色暂无手牌，换手或等下轮补牌')+'</span>';
    for(const name of ['undo','shuffle','finisher','auto','auto-all','execute']){
     get(name).disabled=playing||game.phase!=='planning';
    }

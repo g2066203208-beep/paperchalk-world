@@ -7,6 +7,7 @@
 #ring-arena-controls .ring-timegrid button:disabled{opacity:.48;cursor:default}
 #ring-arena-controls .ring-timegrid [hidden]{display:none!important}
 #ring-arena-controls .tg-head,.tg-tools,.tg-bottom{display:flex;align-items:center;gap:8px;padding:6px 10px}
+#ring-arena-controls .ring-timegrid [data-tg-body]{min-height:0;overflow:auto;overscroll-behavior:contain}
 #ring-arena-controls .tg-head{border-bottom:1px solid #a5b1b526;min-height:29px}
 #ring-arena-controls .tg-head strong{font-size:13px;letter-spacing:.04em}
 #ring-arena-controls .tg-head [data-tg-phase]{margin-right:auto;opacity:.76;font-size:11px}
@@ -43,7 +44,7 @@
  border-radius:4px!important;overflow:hidden;padding:0 2px!important;white-space:nowrap;text-align:center;
  font-size:10px!important;text-shadow:0 1px 3px #000;isolation:isolate}
 #ring-arena-controls .tg-band span{position:relative;z-index:2;overflow:hidden;text-overflow:ellipsis;display:block}
-#ring-arena-controls .tg-band .tg-segment{position:absolute;top:0;bottom:0;display:block;z-index:-1}
+#ring-arena-controls .tg-band .tg-segment{position:absolute;top:0;bottom:0;display:block;z-index:0}
 #ring-arena-controls .tg-segment.windup{background:#9eb3ad65}
 #ring-arena-controls .tg-segment.active{background:#c55c6ebb}
 #ring-arena-controls .tg-segment.recovery{background:#703f50c8}
