@@ -41,7 +41,7 @@ test('art approval alone cannot decide where NPCs spawn',()=>{
  assert.equal(presence.setManifest({version:1,records:[approved('NPC-G001')]}).ok,true);
  assert.equal(presence.forLocation('school').length,0);
  assert.equal(presence.forMetro({lineId:'a',station:'entrance',direction:1}).length,0);
- assert.deepEqual(presence.inspect().renderableIds,[]);
+ assert.equal(presence.inspect().renderableIds.length,0);
 });
 test('named NPC is visible only where actual life schedule AND owned scene permissions agree',()=>{
  const {life,presence}=setup(600);
