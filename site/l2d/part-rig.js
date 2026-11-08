@@ -810,6 +810,42 @@ function crouchDeform(part,point,u,v,phase){
 }
 function bindBodyHierarchy(model){
  const p=model?.parts;if(!p)return model;
+ // Female-07's BACK SeeThrough source supplies two separate lower-body
+ // meshes, two shoe meshes and two independent sleeves. Do not manufacture
+ // one fake "combined leg" image to fit the older rig's assumptions.
+ if(model.characterId==='female-07'&&model.face==='back'&&
+    p.legwear_l&&p.legwear_r&&p.footwear_l&&p.footwear_r&&
+    p.bottomwear&&p.topwear&&p.neck){
+  const l=p.legwear_l,r=p.legwear_r,skirt=p.bottomwear,torso=p.topwear;
+  const xy=(part,u,v)=>({x:part.x+part.w*u,y:part.y+part.h*v});
+  const chain=(part,hipX,kneeX,ankleX)=>({
+   hip:xy(part,hipX,.045),knee:xy(part,kneeX,.57),
+   ankle:xy(part,ankleX,.94),hy:.045,ky:.57,ay:.94
+  });
+  const left=chain(l,.47,.53,.48),right=chain(r,.48,.54,.53);
+  const pelvis=xy(skirt,.50,.08),shoulder=xy(torso,.50,.12);
+  const face=p.face||p.front_hair;
+  const head=face?xy(face,.50,.42):xy(torso,.5,-.14);
+  const neck=xy(p.neck,.50,.20);
+  const layout={pelvis,shoulder,shoulderHalfWidth:torso.w*.48,
+   head,neck,neckTop:p.neck.y+p.neck.h*.12,
+   neckBottom:p.neck.y+p.neck.h*.96,left,right,
+   legsId:'legwear',feetId:'footwear_l',
+   graph:{pelvis:{parent:'ground',rest:pelvis},
+    torso:{parent:'pelvis',partId:torso.id},
+    leftShoulder:{parent:'torso'},rightShoulder:{parent:'torso'},
+    neck:{parent:'torso',partId:p.neck.id},
+    head:{parent:'neck',partId:face?.id||null},
+    leftHip:{parent:'pelvis',rest:left.hip},
+    rightHip:{parent:'pelvis',rest:right.hip},
+    leftAnkle:{parent:'leftHip',rest:left.ankle},
+    rightAnkle:{parent:'rightHip',rest:right.ankle}}};
+  Object.defineProperty(model,'bodyHierarchy',{value:layout,configurable:true});
+  for(const part of Object.values(p))
+   Object.defineProperty(part,'_bodyHierarchy',{value:layout,configurable:true});
+  return model;
+ }
+
  const femaleSix=model.characterId==='female-06'||
    String(model.characterId||'').startsWith('female-06-');
  const pick=(...ids)=>ids.map(id=>p[id]).find(Boolean);
