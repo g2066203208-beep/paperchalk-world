@@ -1134,7 +1134,7 @@
   const platformLife=window.PaperWorldMetroPlatformLife||null;
   const commuterFrames=[];
   const commuterAtlas=new Image();
-  let commuterAtlasStatus='unrequested',platformDockedAt=performance.now();
+  let commuterAtlasStatus='unrequested',platformDockedAt=performance.now(),platformDoorOpenedEver=false;
   let platformLampFactor=1,lastStationCrowd=[];
   function requestCommuterAtlas(){
    if(!platformLife||!gl||commuterAtlasStatus!=='unrequested')return;
@@ -1327,6 +1327,7 @@
    // The existing carriage RAF owns all door animation frames. No extra
    // render on the same tick and no second canvas/video composite.
    doorOpen=clamp(Number(value)||0,0,1);
+   if(doorOpen>.4&&!trainState.moving)platformDoorOpenedEver=true;
    if(redraw&&active&&transitMode)render(0);
    return doorOpen;
   }
@@ -1343,7 +1344,9 @@
     progress:clamp(Number(next.progress)||0,0,1),
     legs:Math.max(0,Math.floor(next.legs||0))
    };
-   if(wasMoving&&!trainState.moving)platformDockedAt=performance.now();
+   if(wasMoving&&!trainState.moving){
+    platformDockedAt=performance.now();platformDoorOpenedEver=false;
+   }
    // A manual lamp state (anomaly and screenshot QA) persists while parked.
    // During travel, external light is always owned by proximity to a station.
    if(trainState.moving)platformExposureOverride=null;
@@ -2076,7 +2079,8 @@
    const cam=lens,vp=cameraVP(cam,w/h);
    const stationLife=transitMode&&platformLife?platformLife.sample({
     distanceMeters:trainState.distanceMeters,
-    stationExposure:platformExposure,doorOpen,moving:trainState.moving,
+    stationExposure:platformExposure,doorOpen,doorOpenedEver:platformDoorOpenedEver,
+    moving:trainState.moving,
     dwellMs:performance.now()-platformDockedAt,
     nowMs:performance.now(),anomaly:platformExposure<.01
    }):null;
@@ -2249,7 +2253,8 @@
    const carriage=document.getElementById('pw-metro-cabin');
    if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
-   platformDockedAt=performance.now();requestCommuterAtlas();
+   platformDockedAt=performance.now();platformDoorOpenedEver=false;
+   requestCommuterAtlas();
    platformExposure=1;platformExposureOverride=null;doorOpen=0;
    trainState={distanceMeters:0,speedMps:0,stationExposure:1,
     phase:'docked',moving:false,progress:1,legs:0};
@@ -2328,7 +2333,7 @@
     components:Object.fromEntries(Object.entries(platformMeshes)
      .map(([key,mesh])=>[key,mesh.count])),
     floorHeight:-.16,backWallZ:4.42,ceilingHeight:3.02,
-    doorOpen,doorLeafCount:4,
+    doorOpen,doorOpenedEver:platformDoorOpenedEver,doorLeafCount:4,
     waitingSeatCount:2,commutersDrawn:lastStationCrowd.length,
     commuterAtlasStatus,commuterWorldAnchors:lastStationCrowd.map(p=>({id:p.id,x:p.x,z:p.z,role:p.role})),
     doorMaterial:'original-wall-image-texture-with-alpha-glass'},
