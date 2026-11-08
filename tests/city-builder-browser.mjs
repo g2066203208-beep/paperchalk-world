@@ -79,9 +79,13 @@ try{
  await page.locator('.pw-city-build-cat[data-cat="路网"]').click();
  await page.locator('.pw-city-build-module[data-tool="road"]').click();
  for(const pt of [[6,6],[9,6],[9,11]])await clickGrid(...pt);
- const m=await page.evaluate(()=>window.PaperWorldCityBuilderStudioDebug.model);
- assert.equal(m.state().modules.filter(x=>x.type==='road').length,7);
- assert.ok(m.adjacency('road').some(j=>j.at==='9,6'&&j.ids.length>=2));
+ const roadAudit=await page.evaluate(()=>{
+  const m=window.PaperWorldCityBuilderStudioDebug.model;
+  return {count:m.state().modules.filter(x=>x.type==='road').length,
+   joins:m.adjacency('road')};
+ });
+ assert.equal(roadAudit.count,7);
+ assert.ok(roadAudit.joins.some(j=>j.at==='9,6'&&j.ids.length>=2));
  await page.locator('.pw-city-build-canvas').press('Enter');
  await shot('02-new-houses-and-joined-road-dot-map.png');
  await page.locator('.pw-city-build-action[data-action="save"]').click();
