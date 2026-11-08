@@ -1903,7 +1903,7 @@
    const fixedPose=posePreviewEnabled&&!desc.livePartRig&&!transitMode&&
     (a.id==='hero'||(uniformBattlePreview&&a.team==='ally'));
    // Static heroine: one GPU upload only. All animated L2D remain dynamic.
-   const canonicalMetroFallback=actor.id==='hero'&&transitMode&&
+   const canonicalMetroFallback=a.id==='hero'&&transitMode&&
     desc.runtime.root.dataset.l2dMode==='original-source-fallback-waiting-for-live-l2d';
    // A static source fallback needs ONE upload, not repeated GPU uploads.
    // sourceFor still checks for an eventual nonblank true L2D on every render.
