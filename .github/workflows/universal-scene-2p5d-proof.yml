@@ -25,7 +25,7 @@ permissions:
   contents: read
 concurrency:
   group: paperchalk-universal-2p5d-proof
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   real-scene:
     runs-on: ubuntu-24.04
