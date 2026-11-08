@@ -77,9 +77,16 @@ try{
  let point=await edgePoint(key);
  await page.mouse.click(point.x,point.y);
  assert.equal(await page.locator('.pw-metro-edit-edge[data-selected="true"]').count(),1);
- const focus=await page.locator('.pw-metro-edit-edge[data-selected="true"] .pw-metro-edit-hit')
-  .evaluate(e=>({outline:getComputedStyle(e).outlineStyle,
-   boxShadow:getComputedStyle(e).boxShadow}));
+ const focus=await page.evaluate(()=>{
+  const g=document.querySelector('.pw-metro-edit-edge[data-selected="true"]');
+  const hit=g?.querySelector('.pw-metro-edit-hit');
+  return {selected:!!g,hit:!!hit,outer:g?.outerHTML.slice(0,550),
+   outline:hit?getComputedStyle(hit).outlineStyle:null,
+   boxShadow:hit?getComputedStyle(hit).boxShadow:null};
+ });
+ console.log('EDITOR TRUE SVG HIT PROOF',JSON.stringify(focus));
+ assert.equal(focus.selected,true,JSON.stringify(focus));
+ assert.equal(focus.hit,true,JSON.stringify(focus));
  assert.equal(focus.outline,'none');assert.equal(focus.boxShadow,'none');
  // A selected route accepts a new control point on the same integer dot grid.
  await page.locator('.pw-metro-edit-action').filter({hasText:'折点＋'}).click();
