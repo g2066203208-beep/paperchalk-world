@@ -84,5 +84,5 @@ worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg
 
 ## 历史清理说明
 
-- `NPC_ANIMA_FAST_PRODUCTION_WORKFLOW_V1_20261108.md` 的「必须先分别生成每个角度」仅是历史**失败后临时的候选方案**，已经被用户明确认可的单张横排方案取代；不可再当当前默认。
+- 此前「逐张单视图生成」只是失败后的临时替代候选，已从 main 移除（仅保留 Git 历史），不可再当当前默认。
 - M001 的旧失败候选 V3/V4/V5（反复堆词、饭袋、揉颈等）均不用于新的 NPC 提示词；M001/M002 现存待重画资料不代表它们的旧图被批准。
