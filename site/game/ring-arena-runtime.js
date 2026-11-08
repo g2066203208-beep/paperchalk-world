@@ -56,11 +56,13 @@
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
  // ONE playable, standard encounter (not alternating 'surround' patterns).
- // Four foes share a readable 3.84m rank at 6.80m: the heroine can fill the foreground without enemies appearing closer.
+ // Four foes remain on the FAR side at z=6.8; every ally has to occupy a
+ // separate NEAR-SIDE world-space band (z>=8.2). Never mix both factions
+ // into the same depth row just to show all eight full bodies.
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-3.80,7.00],[-1.25,7.10],[-1.10,7.65]]),
+   allies:Object.freeze([[-1.05,9.30],[-1.50,9.34],[-.55,8.50],[2.10,8.20]]),
    enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
   }),
   inner:Object.freeze({
@@ -113,10 +115,11 @@
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
  // All four existing allied ArtMeshes now participate in the same 3D battle.
- // The 4v4 preview is a THREE-DEPTH wedge: heroine is the dominant shoulder
- // foreground; far-left teammate at the edge, two teammates peek around her
- // right shoulder; foes remain a separate four-person line behind them.
- // This keeps each ArtMesh in real perspective with genuine alpha shadows.
+ // On the near side, a deliberately cropped three-ally echelon wraps around
+ // the full-height heroine: one adjacent foreground companion at the left
+ // edge, one slightly ahead of the right shoulder, and one at the right
+ // near-side wing. The foes stay 1.4m+ deeper than ANY ally. A partial real
+ // silhouette is better than making teammates pose inside the opponent row.
  // Metro still chooses only its one named passenger via scene actors.visible.
  const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
