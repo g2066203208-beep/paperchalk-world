@@ -48,6 +48,12 @@ function validate(plan,metro){
  }
  for(const id of Object.keys(metro.STATIONS))
   if(!ids.has(id))throw Error('原有站点不能丢失：'+id);
+ // A former 170-stop saved draft is NOT allowed to silently resurrect
+ // hundreds of removed real stations in the new 70-stop city graph.
+ for(const [id,stop] of Object.entries(plan.stations)){
+  if(!metro.STATIONS[id]&&(!id.startsWith('kh-custom-')||stop.original!==false))
+   throw Error('旧版蓝图站点不兼容新版精简线路：'+id);
+ }
  for(const line of plan.lines){
   const original=metro.LINES.find(l=>l.id===line.id);
   if(!original||original.name!==line.name||original.color!==line.color||
