@@ -43,6 +43,9 @@ const inspect=()=>page.evaluate(()=>{
  return {active:editor?.isActive(),editing:map?.dataset.metroEditing,
   count:model?.info(),rails:document.querySelectorAll('.pw-metro-edit-edge').length,
   dots:document.querySelectorAll('.pw-metro-edit-station').length,
+  nodeLod:map?.dataset.editorNodeDensity,
+  visibleNormalStations:document.querySelectorAll(
+   '.pw-dot-local-places .is-station[data-node-visible="true"]').length,
   images:document.querySelectorAll('.pw-metro-edit-layer image,.pw-metro-edit-layer img').length,
   overlay:getComputedStyle(document.querySelector('.pw-dot-urban-lines')).display,
   state:map?.dataset.scope,city:map?.dataset.city};
@@ -70,7 +73,10 @@ try{
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.metroEditing==='true');
  let state=await inspect();
  assert.equal(state.active,true);assert.equal(state.state,'city');
- assert.equal(state.rails,181);assert.equal(state.dots,170);
+ assert.equal(state.rails,181);
+ assert.ok(state.dots>=10&&state.dots<=30,
+  'city overview must show only important editable hubs, not 170 pearl nodes: '+JSON.stringify(state));
+ assert.equal(state.nodeLod,'hubs');
  assert.equal(state.images,0,'rails must not use raster boxes');
  assert.equal(state.overlay,'none','normal rail must be hidden while editing');
  assert.equal(state.count.lines,10);assert.equal(state.count.interchanges,19);
@@ -83,6 +89,10 @@ try{
  let point=await edgePoint(key);
  await page.mouse.click(point.x,point.y);
  assert.equal(await page.locator('.pw-metro-edit-edge[data-selected="true"]').count(),1);
+ state=await inspect();
+ assert.equal(state.nodeLod,'selected-line');
+ assert.ok(state.dots>=4&&state.dots<=24,
+  'editing one route must reveal ONLY that route stations: '+JSON.stringify(state));
  const focus=await page.evaluate(()=>{
   const g=document.querySelector('.pw-metro-edit-edge[data-selected="true"]');
   const hit=g?.querySelector('.pw-metro-edit-hit');
