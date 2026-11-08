@@ -1099,6 +1099,17 @@
     :'./assets/characters/protagonist-back-combat-3q-final.webp';
   let gl=null,world=null,portrait=null,fixture=null,projectedShadow=null,shadowGrid=null,backInner=null,backOuter=null,wingOuter=null,wingInner=null,quad=null;
    let floorOuter=null,floorInner=null,ceilingOuter=null,ceilingInner=null,exteriorMesh=null;
+  let platformMeshes=Object.create(null);
+  function makePlatformMeshes(){
+   const parts=window.PaperWorldMetroPlatform3D?.build?.();
+   if(!parts)return;
+   for(const [name,vertices] of Object.entries(parts)){
+    const data=new Float32Array(vertices),buffer=gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
+    platformMeshes[name]={buffer,count:data.length/5};
+   }
+  }
   let wallMaterial=null,wallImage=null,wallMaterialReady=false,wallMaterialError=null;
    const surfaceMaterials=Object.fromEntries(Object.entries({...SURFACE_TEXTURES,wing:null})
     .map(([kind,url])=>[kind,{url,texture:null,image:null,ready:false,error:null}]));
@@ -1110,7 +1121,7 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uViewEye','uGeometry','uWindowCutouts']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uViewEye','uGeometry','uWindowCutouts','uDoorOpen']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
      ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
@@ -1118,6 +1129,7 @@
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
     ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uClipUv','uTexture','uStrength','uContact']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner,wingOuter,wingInner,exteriorMesh]=worldMesh(gl);
+   makePlatformMeshes();
    shadowGrid=projectedShadowMesh(gl);
    quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,0,1,1,0,0,1,1,1,1,0]),gl.STATIC_DRAW);
@@ -1202,6 +1214,12 @@
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
   let platformExposure=0,platformExposureOverride=null;
+  let doorOpen=0;
+  function setTransitDoorOpen(value){
+   doorOpen=clamp(Number(value)||0,0,1);
+   if(active&&transitMode)render(0);
+   return doorOpen;
+  }
   let trainState={distanceMeters:0,speedMps:0,stationExposure:1,
    phase:'docked',moving:false,progress:1,legs:0};
   function setTransitDynamics(next){
@@ -1948,6 +1966,7 @@
    gl.uniform1f(world.uGeometry,ACTIVE_GEOMETRY.shape==='arc'?0:
     ACTIVE_GEOMETRY.shape==='strip'?1:2);
    gl.uniform1f(world.uWindowCutouts,ACTIVE_WALL.alphaWindows?1:0);
+   gl.uniform1f(world.uDoorOpen,transitMode?doorOpen:0);
    setSceneLighting(world,mode);
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D,wallMaterial);
@@ -1968,7 +1987,20 @@
    drawWorld(mode==='outer'?floorOuter:floorInner,0,vp);
    drawWorld(mode==='outer'?ceilingOuter:ceilingInner,2,vp);
    if(ACTIVE_WALL.alphaWindows&&exteriorMesh?.count)drawWorld(exteriorMesh,4,vp);
+   if(transitMode&&platformExposure>.08&&platformMeshes.platformBack?.count){
+    // Actual physical station volume, rendered with the train in ONE depth
+    // buffer. All parts are STATIC GPU buffers shifted only in vertex shader.
+    for(const [name,kind] of [
+     ['platformBack',5],['platformFloor',6],['platformCeiling',7],
+     ['platformColumns',8],['platformLightboxes',11]]){
+     if(platformMeshes[name]?.count)drawWorld(platformMeshes[name],kind,vp);
+    }
+   }
    drawWorld(mode==='outer'?backInner:backOuter,1,vp);
+   if(transitMode&&doorOpen>.002){
+    if(platformMeshes.doorLeafLeft?.count)drawWorld(platformMeshes.doorLeafLeft,9,vp);
+    if(platformMeshes.doorLeafRight?.count)drawWorld(platformMeshes.doorLeafRight,10,vp);
+   }
    drawWorld(mode==='outer'?wingOuter:wingInner,3,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
    drawFixtures(vp);
@@ -2088,7 +2120,7 @@
    const carriage=document.getElementById('pw-metro-cabin');
    if(!carriage||!changeEnvironment('metro'))return false;
    transitMode=true;active=true;mode='outer';
-   platformExposure=1;platformExposureOverride=null;
+   platformExposure=1;platformExposureOverride=null;doorOpen=0;
    trainState={distanceMeters:0,speedMps:0,stationExposure:1,
     phase:'docked',moving:false,progress:1,legs:0};
    // The renderer uploads from the real L2D source canvas, which normally
@@ -2115,7 +2147,7 @@
   }
   function exitTransit(){
    if(!transitMode)return false;
-   transitMode=false;active=false;platformExposure=0;platformExposureOverride=null;
+   transitMode=false;active=false;platformExposure=0;platformExposureOverride=null;doorOpen=0;
    if(transitHeroSource){
     transitHeroSource.root.hidden=transitHeroSource.hidden;
     transitHeroSource.root.style.visibility=transitHeroSource.visibility;
@@ -2162,6 +2194,12 @@
    })(),
    environment:environmentId,geometry:{...ACTIVE_GEOMETRY},
    transitMotion:{...trainState,carriageWorldFixed:true,heroWorldFixed:true,exteriorDistanceDriven:true},
+   station3D:{enabled:transitMode,kind:'genuine-box-meshes',
+    components:Object.fromEntries(Object.entries(platformMeshes)
+     .map(([key,mesh])=>[key,mesh.count])),
+    floorHeight:-.16,backWallZ:4.42,ceilingHeight:3.02,
+    doorOpen,doorLeafCount:4,
+    doorMaterial:'original-wall-image-texture-with-alpha-glass'},
    platformLighting:{active:transitMode,exposure:platformExposure,
     sources:transitMode?(window.PaperWorldEnvironments?.get?.('metro')?.platformLighting?.positions.length||0)/3:0,
     rearSideWindows:true,oppositeSideWindows:true,
@@ -2301,7 +2339,7 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,enterTransit,exitTransit,render,inspect,setLighting,setPlatformExposure,setTransitDynamics,get canvas(){return canvas}};
+  const api={setActive,enterTransit,exitTransit,render,inspect,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
