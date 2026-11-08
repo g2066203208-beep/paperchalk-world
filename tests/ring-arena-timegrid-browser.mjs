@@ -100,7 +100,8 @@ try{
    x.src.startsWith('data:image/'));
  },null,{timeout:30000});
  assert.equal(hudBox.background,'rgba(0, 0, 0, 0)');
- assert.equal(hudBox.shadow,'none');
+ assert.notEqual(hudBox.shadow,'none',
+  'a physical vintage film reel should cast a subtle shadow, not a floating HUD panel');
  const hpLabels=await page.locator('.tg-hp-value').allTextContents();
  assert.ok(hpLabels.every(x=>/^\d+\/\d+$/.test(x.trim())),
   'all eight portraits display real current HP / max HP');
