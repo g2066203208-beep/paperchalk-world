@@ -56,13 +56,12 @@
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
  // ONE playable, standard encounter (not alternating 'surround' patterns).
- // Four foes remain on the FAR side at z=6.8; every ally has to occupy a
- // separate NEAR-SIDE world-space band (z>=8.2). Never mix both factions
- // into the same depth row just to show all eight full bodies.
- // All soles remain y=0; original ArtMesh dimensions stay unchanged.
+ // Uniform 4v4 composition trial. Camera and original heroine never move.
+ // Teammates are at separate near-side world positions with no target occlusion.
+ // All sole anchors stay y=0; genuine source art is never destructively edited.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-1.65,9.05],[-.75,8.50],[-.85,8.25]]),
+   allies:Object.freeze([[-1.05,9.30],[-1.78,9.43],[-2.45,8.15],[-1.42,7.85]]),
    enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
   }),
   inner:Object.freeze({
@@ -75,8 +74,8 @@
   'enemy-1':'enemy','enemy-2':'enemy2','enemy-3':'enemy3','enemy-4':'enemy4'
  });
  const heights=Object.freeze({
-  hero:1.62,'ally-2':1.64,'ally-3':1.60,'ally-4':1.59,
-  'enemy-1':1.58,'enemy-2':1.59,'enemy-3':1.60,'enemy-4':1.58
+  hero:1.62,'ally-2':1.62,'ally-3':1.62,'ally-4':1.62,
+  'enemy-1':1.58,'enemy-2':1.58,'enemy-3':1.58,'enemy-4':1.58
  });
  const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
  const cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
@@ -114,15 +113,11 @@
  })));
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
- // All four existing allied ArtMeshes now participate in the same 3D battle.
- // The squad forms a real NEAR-SIDE cluster within 0.9m of heroine x=-1.05.
- // Ally2 is 0.25m behind heroine in world depth (z9.05), keeping its
- // separate face visible without stealing the heroine's visual dominance.
- // Ally3 is the middle echelon (z8.50), ally4 is the farthest ally (z8.25)
- // and offsets 20cm right to separate the two heads. Enemy rank is z6.80;
- // 1.45m of empty floor always separates the two teams. Normal 3D occlusion
- // is intentional: never move friends into the enemy rank to reveal torsos.
- // Metro still chooses only its one named passenger via scene actors.visible.
+ // Three companion anchors surround the heroine's LEFT/REAR side rather than
+ // extending into the opponent rank. They repeat heroine back art in the
+ // uniform trial; enemies repeat real enemy-one L2D. Portraits and alpha-cast
+ // shadows remain in the same physical 3D scene, not a HUD overlay.
+ // Metro still chooses only its named passenger via scene actors.visible.
  const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
   const scene=layout(mode);
@@ -1093,6 +1088,7 @@
     return false;
    }
   }
+  const uniformBattlePreview=new URLSearchParams(window.location.search).get('formation')!=='individual';
   const requestedPose=new URLSearchParams(window.location.search).get('heroPose');
   const previewPose=['original','3q','level'].includes(requestedPose)
    ?requestedPose:'female7';
@@ -1439,7 +1435,7 @@
   });
   function sourceFor(actor){
    const safeHero=()=>actor.id==='hero'&&transitMode?metroCanonicalSource():null;
-   if(actor.id==='hero'&&posePreviewEnabled&&!transitMode){
+   if((actor.id==='hero'||(uniformBattlePreview&&actor.team==='ally'))&&posePreviewEnabled&&!transitMode){
     if(!poseImage.complete||!poseImage.naturalWidth)return null;
     return {
      runtime:{
@@ -1449,7 +1445,11 @@
      source:poseImage,w:poseImage.naturalWidth,h:poseImage.naturalHeight
     };
    }
-   const runtime=window.PaperchalkL2D?.get(actor.slot);
+   // Uniform staging is render-only: never overwrite the artist's real slots.
+   const sourceSlot=uniformBattlePreview&&!transitMode?
+    actor.team==='enemy'?'enemy':actor.team==='ally'?'player':actor.slot:
+    actor.slot;
+   const runtime=window.PaperchalkL2D?.get(sourceSlot);
    if(!runtime||runtime.root.hidden||runtime.img.hidden||
      runtime.root.dataset.l2dState!=='ready')return safeHero();
    // An IndexedDB scene assignment can outlive a previous DEV session.
@@ -1556,7 +1556,7 @@
    // Same original CHAR-006 artwork is temporarily assigned to both teams.
    // Remove the opaque prepainted cloud in BOTH battle views without touching
    // its real L2D source, but never apply a CHAR-006 mask to a reassigned ally.
-   if(id!=='enemy-3'&&!(id==='ally-4'&&characterId==='char-006'))return;
+   if(characterId!=='char-006'||(id!=='enemy-3'&&id!=='ally-4'))return;
    if(!tex.subjectMask||tex.subjectMask.width!==size){
     const mask=document.createElement('canvas');
     mask.width=size;mask.height=size;
@@ -1602,7 +1602,7 @@
     targetTexture.visibleUv=null;targetTexture.shadowClipUv=null;
     targetTexture.nextProbe=0;targetTexture.updated=-999;
    }
-   const fixedPose=a.id==='hero'&&posePreviewEnabled&&!transitMode;
+   const fixedPose=posePreviewEnabled&&!transitMode&&(a.id==='hero'||(uniformBattlePreview&&a.team==='ally'));
    // Static heroine: one GPU upload only. All animated L2D remain dynamic.
    const canonicalMetroFallback=actor.id==='hero'&&transitMode&&
     desc.runtime.root.dataset.l2dMode==='original-source-fallback-waiting-for-live-l2d';
@@ -1611,7 +1611,7 @@
    if((fixedPose||canonicalMetroFallback)&&targetTexture.painted)return true;
    const interval=a.id==='hero'?50:78;
    if(now-targetTexture.updated<interval&&targetTexture.painted)return true;
-   const size=a.id==='hero'?(fixedPose?1024:768):512;
+   const size=a.id==='hero'?(fixedPose?1024:768):fixedPose?640:512;
    if(!targetTexture.stage||targetTexture.stage.width!==size){
     targetTexture.stage=document.createElement('canvas');
     targetTexture.stage.width=size;targetTexture.stage.height=size;
@@ -1863,7 +1863,7 @@
     // frame-timed lean, fast forward lunge, and the existing impact VFX.
     const female07Actor=a.id==='hero'&&previewPose==='female7';
     const key=requested==='attack'&&!female07Actor?'hero-attack':
-     requested==='hurt-art'?'enemy-2-hit':null;
+     requested==='hurt-art'&&!uniformBattlePreview?'enemy-2-hit':null;
     const art=key?actionTextures.get(key):null;
     const t=art?.painted?art:textures.get(a.id);
     drawnPoses[a.id]=female07Actor&&requested==='attack'?'female07-axe-lunge':
@@ -2290,6 +2290,9 @@
     spriteTextures:Object.fromEntries([...actionTextures].map(([id,t])=>[id,{
      ready:!!t.painted,uploads:t.frames,alphaTrim:t.alphaTrim||null}]))},
    visibleActorIds:visibleActors(mode).filter(a=>!environmentActorIds||environmentActorIds.has(a.id)).map(a=>a.id),
+   uniformBattlePreview:uniformBattlePreview&&!transitMode,
+   actorTextureIdentities:Object.fromEntries(visibleActors(mode).map(a=>
+    [a.id,textures.get(a.id)?.identity||null])),
    hiddenAlliedTeammateIds:HIDDEN_ALLY_IDS,
    camera:lens||camera(mode,shotIndex),ring:SPEC,
    projectionAspect:canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9,
@@ -2328,7 +2331,9 @@
      lens?.cinematic?null:lens),
    l2dFrames:Object.fromEntries([...textures.entries()].map(([id,t])=>[id,t.frames])),
    pixelsFrom:transitMode?'canonical protagonist animated back L2D from real game slot':
-    previewPose==='female7'?'user-approved female-07 original back art (static), four animated enemy L2D actors':
+    previewPose==='female7'?(uniformBattlePreview?
+     'four identical female-07 back ArtMeshes and four identical original enemy-one animated ArtMeshes':
+     'original female-07 back ArtMesh plus seven separately assigned L2D actors'):
     posePreviewEnabled?'legacy fixed-left 3/4 heroine + animated original enemy L2D':
     'original animated L2D actors'});
   function qaFrame(targetId,elapsedMs){
