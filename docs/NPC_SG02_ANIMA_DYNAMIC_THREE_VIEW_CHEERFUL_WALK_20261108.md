@@ -1,10 +1,10 @@
-# NPC-SG02 黑皮辣妹｜Anima V3：无眼睛三视图修正版
+# NPC-SG02 黑皮辣妹｜Anima V4：无眼睛已解决，纯左90°侧面待修
 
-> **2026-11-08 实际出图未通过：用户反馈第二位仍出现眼睛。** 之前把 `Japanese gyaru` 等标签、表情与人物特征混写，虽然负向列有 `visible eyes`，Anima 依然可能生成典型带眼线和眼睛的二次元脸。这是模型视觉先验与文本约束的冲突，不能承诺靠字词必然解决。**V3 将“眼部完全留白，仅保留鼻子和嘴”放到正向人物脸结构的前端，并对每一视图明确眼部空白；从开头去掉容易诱发完整妆容的 `gyaru` 标签**，仍保留用户想要的晒黑肤色、卷发、松散校服和性格。
+> **2026-11-08 最新验收：用户确认新版本已无眼睛；但侧面仍是斜侧、没有达到严格左 90°。SG02 尚未批准，不能上传为正式母图。** 不再大改已正确的正面/背面、晒黑肤色、发型和穿法。优先把现有图的侧面整个人物作为 img2img inpaint 蒙版，独立修复。
 >
-> **状态：完整修正提示词；原输出仍不通过，无 SG02 批准图片。** 画风 LoRA 1.0，同校制服结构以 [原图校服锁](SCHOOL_UNIFORM_FEMALE_CANON_20261108.md) 为准。Anima 官方只支持标签、自然英语混写，并未承诺可靠压制特定脸部细节。
+> **状态：仅无眼睛问题解决，侧面角度仍未通过。** 补充整个人物局部重绘提示词，避免重新生成时再次出现眼睛。
 >
-> **更可靠的修复路径：** 若已生成图除眼睛外其他部分满意，保留原图，用 img2img 局部重绘/修复蒙版**只处理眼部区域**，清除眼睛/眼线/睫毛/闭眼弧线、保持自然皮肤色块，同时保护发型、鼻子、嘴巴、衣服和身体姿势。若重画整张仍长眼睛，就不要继续加几十个重复的否定词。
+> **修复范围：** 不是再擦眼睛；这次蒙版必须覆盖**出错侧面人物从头到鞋的整个身体**，否则头、肩、臀和脚会保留旧斜角。其余两个人物保持未蒙版，不要修改。
 
 ## Positive Prompt
 ```text
@@ -30,3 +30,28 @@ worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg
 
 ## 设置和验收
 Anima Base · ER SDE · 35 steps · CFG 4.5 · 1536×1024 · `@akipekostyle, <lora:akipekoanima_v1_1:1.0>`。三格：左正面，中纯朝左 90°，右纯背面；第一和第二格眼部必须**皮肤留白**，无眉眼、闭眼线、睫毛；西装三格敞开、两颗哑光暖灰棕扣、酒红长领带不消失，动作自然小幅。
+
+
+## V4：仅修正左 90°纯侧面（img2img/Inpaint 完整提示词）
+
+请将现有三视图作为 img2img 输入，**只遮罩实际画面中不合格的侧面人物整身（头发到鞋尖）**；正面、背面保持原始像素不动。旧正/负提示词为整张三视图重画备份，本节是当前推荐操作。
+
+### Side-only Positive Prompt
+```text
+masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:1.0>, full body, one Japanese high school girl, left-facing side profile, tanned skin, honey blonde wavy hair, school uniform, simple anime style, clean lineart, flat colors, muted colors, white background.
+
+A full-body character drawing of the same tall, deep golden-brown suntanned Japanese schoolgirl from the reference image, seen from a TRUE 90-DEGREE LEFT SIDE PROFILE. The entire head, nose, neck, shoulders, chest, waist, hips, knees and both shoes all point directly LEFT. The viewer sees only ONE side of her face, ONE ear and the narrow side silhouette of her torso. The far shoulder is hidden behind the near shoulder. Her face has a small nose and mouth, while the entire eye area remains plain skin with no eyes or eyelid marks.
+
+She has the identical shoulder-length wavy honey-blonde hair with darker roots as in the original image. She wears the exact same very dark midnight-navy school blazer OPEN and unbuttoned, two matte warm dark gray-brown buttons still attached to its front, white collared shirt, loosely tied narrow long burgundy necktie, short charcoal pleated skirt, slightly scrunched black mid-calf socks and dark brown-black loafers. The white collar and a little of the loose burgundy tie are naturally visible from the side without turning her chest toward the viewer.
+
+She walks slowly toward the LEFT with a small relaxed step, one foot slightly ahead, arms resting comfortably with a natural walking swing. Her shoulders and pelvis are not twisted. The camera is exactly perpendicular to the side of her body, at normal standing eye level. Full figure from hair to shoes, plain white background, neutral diffuse overcast light, flat colors, no cast shadows.
+
+This is a replacement for ONLY the side-profile figure in the existing three-view sheet. Preserve the other two figures completely unchanged.
+```
+
+### Side-only Negative Prompt
+```text
+worst quality, low quality, score_1, score_2, score_3, blurry, jpeg artifacts, chromatic aberration, three-quarter view, 45-degree angle, 60-degree angle, oblique view, diagonal torso, front-facing chest, both shoulders visible separately, shoulders turned toward viewer, hips rotated toward viewer, front view, back view, looking at viewer, head turning, looking back, visible eyes, pupils, eyelashes, eyelid lines, closed-eye arcs, eyebrows, detailed eyes, pale skin, mismatched skin color, straight short hair, different hairstyle, missing wavy blonde hair, closed blazer, missing long burgundy tie, ribbon bow, gold buttons, metallic buttons, different school uniform, different shoes, exaggerated pose, running, jumping, arms raised, long walking stride, distorted hands, cropped feet, cropped head, furniture, scenery, hard shadows, strong highlights, text, watermark
+```
+
+注意：侧面正好 90°时，胸部领带/两颗正面纽扣**不一定能同时全部看见**，这是透视遮挡正常结果。必须保持它们在衣服上，但不要为了展示两个扣子强迫胸口旋转成斜侧面。生成完后才检查是否真正纯侧，不应提前宣布批准。LoRA 1.0，Anima Base，ER SDE，35 Steps，CFG 4.5。
