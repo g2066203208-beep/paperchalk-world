@@ -32,6 +32,21 @@ for(const line of graph?.LINES||[]){
   routeRows[key]=(a.gx!==b.gx&&a.gy!==b.gy)?[[b.gx,a.gy]]:[];
  }
 }
+// The EXACT saved blueprint controls visible rounded rail geometry as well
+// as station topology after reload. Orthogonalize between authored handles,
+// so a dragged node never creates a diagonal or loses an editable connection.
+if(graph?.ACTIVE_BLUEPRINT&&global.PaperWorldMetroMapEditor){
+ const plan=graph.ACTIVE_BLUEPRINT;
+ for(const line of graph.LINES){
+  const pairs=global.PaperWorldMetroMapEditor.segments(line);
+  for(const [from,to] of pairs){
+   const k=line.id+':'+from+':'+to;
+   const pts=global.PaperWorldMetroMapEditor.orthogonalPoints(plan,line.id,from,to);
+   if(pts.length<2)throw Error('Saved metro blueprint contains a disconnected edge '+k);
+   routeRows[k]=pts.slice(1,-1);
+  }
+ }
+}
 const routes=Object.freeze(Object.fromEntries(Object.entries(routeRows)
  .map(([key,via])=>[key,Object.freeze(via.map(point=>Object.freeze(point.slice())))])));
 const number=n=>Number(n.toFixed(2));
