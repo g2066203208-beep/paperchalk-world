@@ -36,6 +36,8 @@ jobs:
         run: |
           python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/build_scene_catalog.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_character_catalog.py
       - name: Verify persisted phone state
         run: node --test tests/phone-life.test.cjs
