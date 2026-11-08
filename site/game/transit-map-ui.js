@@ -41,7 +41,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  global.PaperWorldTransitMap?._cleanup?.();
  const here=HOME.has(snapshot?.location)?'entrance':snapshot?.location||'entrance';
  const herePoi=atlas.POI_BY_ID[here];
- const currentCity=herePoi?.city||'kirihama';
+ const currentCity=network.at(here)?.city||herePoi?.city||'kirihama';
  const hereCity=atlas.CITY_BY_ID[currentCity]||atlas.CITIES[0];
  const map=element('section','pw-transit-map pw-dot-world-map');
  map.setAttribute('aria-label','唯一的可缩放点阵城市及全国交通地图');
@@ -345,20 +345,24 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   node.addEventListener('click',e=>{
    if(drag?.moved)return;
    e.stopPropagation();
-   const loc=locations[id];
-   const status=id===here?{ok:false,reason:'当前位置'}:
-    loc?availability?.(id,snapshot):{ok:false,reason:'请先到达此站'};
-   const route=metro.path(here,id);
-   showMenu(e,node,name,status?.ok?'预计 '+status.cost+' 分钟':status?.reason||'暂不可达',[
-    {label:'前往',primary:true,disabled:!status?.ok||!route,run:async()=>{
+   const loc=locations[id],status=id===here?{ok:false,reason:'当前位置'}:
+    loc?availability?.(id,snapshot):{ok:false,reason:'尚未开放'};
+   const metroRoute=metro.STATIONS[here]?metro.path(here,id):null;
+   const trip=network.journey(here,id),back=network.journey(id,here);
+   const viable=!!trip&&!!back&&!!status?.ok;
+   showMenu(e,node,name,(viable?'去程 '+trip.minutes+' 分钟 · 返程 '+back.minutes+' 分钟':
+    status?.reason||'暂不可达'),[
+    {label:'前往',primary:true,disabled:!viable,run:async()=>{
      if(busy)return;busy=true;clear();
-     try{const res=await onTravel?.(id,route);if(!res?.ok)notify(res?.reason||'无法到达')}
-     catch(_){notify('场景加载失败')}finally{busy=false}
+     try{
+      const result=metroRoute?.segments?.length?
+       await onTravel?.(id,metroRoute):await onWorldTravel?.(id,trip);
+      if(!result?.ok)notify(result?.reason||'无法到达');
+     }catch(error){notify('地图路线不可用')}finally{busy=false}
     }},
-    {label:'详情',run:()=>showMenu(e,node,name,
-     '市内交通 · '+(route?.lines.join(' / ')||'步行')+
-     (route?.transfers.length?' · 需要换乘':''),[])}
+    {label:'查看线路',run:()=>{clear();previewRegionalRoute(trip?.legs)}}
    ]);
+   previewRegionalRoute(trip?.legs);
   });
  }
  for(const [id,s] of Object.entries(metro.STATIONS))if(!s.locked)localPlace(id,s);
@@ -393,10 +397,20 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   cityNodes.push({node,city:c,img,source:thumb?.url});
   node.addEventListener('click',e=>{
    if(drag?.moved)return;
-   showMenu(e,node,c.name,c.sub+' · '+c.region,[
-    {label:'查看城区',primary:true,run:()=>{clear();focus(c,Math.max(2.85,minScale*3.6))}}
+   const hub=network.HUB(c.id),trip=network.journey(here,hub),back=network.journey(hub,here);
+   const allowed=here!==hub&&!!trip&&!!back&&!!locations[hub]&&
+    snapshot.nightStatus!=='recalled'&&snapshot.minute+trip.minutes<locations[hub].close;
+   showMenu(e,node,c.name,c.sub+' · '+c.region+
+    (trip?' · 去程'+trip.minutes+'分钟 · 返程'+back.minutes+'分钟':' · 暂不可达'),[
+    {label:'前往城市枢纽',primary:true,disabled:!allowed,run:async()=>{
+     if(busy)return;busy=true;clear();
+     try{const result=await onWorldTravel?.(hub,trip);
+      if(!result?.ok)notify(result?.reason||'无法到达')}
+     catch(error){notify('地图路线不可用')}finally{busy=false}
+    }},
+    {label:'放大城区',run:()=>{clear();focus(c,Math.max(3.85,minScale*4))}}
    ],thumb?.url);
-   previewRegionalRoute(network.journey(here,network.HUB(c.id))?.legs);
+   previewRegionalRoute(trip?.legs);
   });
  }
  const worldNodes=[];
