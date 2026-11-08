@@ -19,8 +19,12 @@ const shot=async name=>page.screenshot({path:path.join(dir,name),animations:'all
 const scope=()=>page.locator('.pw-dot-world-map').getAttribute('data-scope');
 const inspect=()=>page.evaluate(()=>{
  const m=document.querySelector('.pw-dot-world-map');
- const shown=selector=>[...document.querySelectorAll(selector)]
-  .filter(e=>getComputedStyle(e).display!=='none'&&!e.closest('[hidden]'));
+ const rendered=element=>{
+  for(let n=element;n&&n.nodeType===1;n=n.parentElement)
+   if(n.hidden||getComputedStyle(n).display==='none')return false;
+  return true;
+ };
+ const shown=selector=>[...document.querySelectorAll(selector)].filter(rendered);
  const municipal=shown('.pw-dot-municipal-lines .pw-transit-segment');
  const access=shown('.pw-dot-access-lines .pw-transit-segment');
  const poi=shown('.pw-dot-poi');
@@ -56,8 +60,11 @@ try{
  await click('#quick-map');
  await page.locator('.pw-dot-world-map').waitFor({state:'visible'});
  assert.equal(await scope(),'region','game MUST open the inter-city page, not metropolitan subway');
- const atlas=await page.evaluate(()=>window.PaperWorldAtlas);
- assert.equal(atlas.CITIES.length,10);assert.ok(atlas.POIS.length>=120);
+ const atlas=await page.evaluate(()=>({
+  cities:window.PaperWorldAtlas.CITIES.length,
+  points:window.PaperWorldAtlas.POIS.length
+ }));
+ assert.equal(atlas.cities,10);assert.ok(atlas.points>=120);
  const graph=await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit());
  assert.deepEqual(graph.unreachable,[]);assert.deepEqual(graph.oneWay,[]);
  let view=await inspect();
