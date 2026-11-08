@@ -14,7 +14,7 @@
  if(!atlas)throw Error('World atlas must load before destination network');
  const CELL=40;
  // The city subway uses its own, large, pixel-dot world lattice.
- const METRO_ORIGIN=Object.freeze({x:280,y:100});
+ const METRO_ORIGIN=Object.freeze({x:280,y:80});
  const snap=n=>Math.round(n/CELL)*CELL;
  const HUB=c=>'hub-'+c;
  const nodes=new Map(),adj=new Map(),edgeByPair=new Map();
