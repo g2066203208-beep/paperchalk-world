@@ -8,6 +8,8 @@ on:
       - 'site/index.html'
       - 'site/game/metro-platform-*.js'
       - 'site/game/ring-arena-runtime.js'
+      - 'site/game/metro-npc-staging.js'
+      - 'tests/metro-npc-world-staging.test.cjs'
       - 'site/assets/metro/commuters/**'
       - 'tests/metro-platform-life.test.cjs'
       - 'scripts/build_scene_catalog.py'
@@ -20,6 +22,8 @@ on:
       - 'site/index.html'
       - 'site/game/metro-platform-*.js'
       - 'site/game/ring-arena-runtime.js'
+      - 'site/game/metro-npc-staging.js'
+      - 'tests/metro-npc-world-staging.test.cjs'
       - 'site/assets/metro/commuters/**'
       - 'tests/metro-platform-life.test.cjs'
       - 'scripts/build_scene_catalog.py'
@@ -52,6 +56,8 @@ jobs:
           node --check site/game/metro-platform-life.js
           node --check site/game/metro-platform-3d.js
           node --check site/game/ring-arena-runtime.js
+          node --check site/game/metro-npc-staging.js
+          node --test tests/metro-npc-world-staging.test.cjs
           node --test tests/metro-platform-life.test.cjs tests/metro-platform3d.test.cjs tests/metro-station-light.test.cjs
       - name: Verify game scripts parse independently
         run: |
