@@ -13,7 +13,11 @@ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disab
 const page=await browser.newPage({viewport:{width:1440,height:850},deviceScaleFactor:1});
 page.setDefaultTimeout(22000);
 const errors=[];
+const consoleMessages=[];
 page.on('pageerror',e=>errors.push(String(e)));
+page.on('console',m=>{
+ if(m.type()==='warning'||m.type()==='error')consoleMessages.push(m.type()+': '+m.text());
+});
 const shot=async name=>{
  try{await page.screenshot({path:path.join(out,name),animations:'disabled',timeout:20000});return true}
  catch(e){console.warn('Software Chromium screenshot skipped:',name,String(e).slice(0,120));return false}
@@ -71,10 +75,20 @@ try{
  const raised=await inspect();
  assert.equal(raised.state.heightsDefined,true);
  await page.locator('.pw-dot-camera-toggle').click();
- await page.waitForFunction(()=>{
-  const el=document.querySelector('.pw-dot-world-map');
-  return el?.dataset.cameraMode==='3d'&&Number(el?.dataset.cameraBlend)>=.985;
- },{timeout:14000});
+ console.log('AFTER 3D CLICK',JSON.stringify(await inspect()));
+ await page.waitForTimeout(1350);
+ console.log('AFTER 3D 1.35s',JSON.stringify(await inspect()),
+  'CONSOLE',JSON.stringify(consoleMessages),'PAGE_ERRORS',JSON.stringify(errors));
+ try{
+  await page.waitForFunction(()=>{
+   const el=document.querySelector('.pw-dot-world-map');
+   return el?.dataset.cameraMode==='3d'&&Number(el?.dataset.cameraBlend)>=.985;
+  },{timeout:8000});
+ }catch(error){
+  console.error('3D transition FAILED state',JSON.stringify(await inspect()),
+   'CONSOLE',JSON.stringify(consoleMessages),'PAGE_ERRORS',JSON.stringify(errors));
+  throw error;
+ }
  const three=await inspect();
  assert.equal(three.state.mode,'3d');
  assert.ok(three.state.pitch>.5);
