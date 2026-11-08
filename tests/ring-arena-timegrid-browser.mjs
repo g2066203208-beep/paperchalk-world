@@ -38,6 +38,11 @@ try{
  assert.equal(first.timegrid.enemies.length,4);
  assert.equal(first.timegrid.timelineTicks,10);
  assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
+ assert.equal(first.timegrid.ui,'right-portrait-dual-track-v17');
+ assert.equal(first.timegrid.version,'1.7');
+ assert.equal(await page.locator('.tg-unit .tg-portrait img').count(),8);
+ assert.equal(await page.locator('.tg-target-track').count(),8);
+ assert.equal(await page.locator('.tg-own-track').count(),8);
  assert.equal(await page.locator('.ring-timegrid .tg-ticks span').count(),11);
  assert.equal(await page.locator('.ring-timegrid [data-tg-card]').count(),4);
  assert.equal(await page.locator('[data-attack-card]').isVisible(),false,
@@ -54,7 +59,7 @@ try{
   assert.equal(s.timegrid.roles.length,4);
   assert.equal(s.timegrid.enemies.length,4);
  }
- await page.locator('[data-control-ally="1"]').click();
+ await page.locator('[data-tg-choose-role="1"]').click();
  // Each manually controlled actor must receive actual engine-scheduled cards.
  await page.locator('[data-tg-auto-all]').click();
  const planned=await inspect();
