@@ -81,6 +81,16 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  });
  chrome.append(heading,tools);
  const hint=element('div','pw-dot-hint','点击城市进入独立市内交通图 · 城际线路只在此层显示');
+ const subwayLegend=element('div','pw-dot-metro-legend');
+ subwayLegend.setAttribute('aria-label','地铁路线图例');
+ for(const line of metro.LINES.filter(l=>!l.locked)){
+  const item=element('div','pw-dot-metro-legend-entry');
+  const key=element('i','pw-dot-metro-legend-line');
+  key.style.background=line.color;
+  item.append(key,element('span','pw-dot-metro-legend-label',line.name));
+  subwayLegend.append(item);
+ }
+ subwayLegend.hidden=true;
  const emptyMetro=element('div','pw-dot-metro-no-service');
  emptyMetro.append(element('strong','pw-dot-empty-title','本市暂无已登记运营地铁'),
   element('small','pw-dot-empty-sub','不把公交、道路或步行线路伪装成地铁。'),
@@ -88,7 +98,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  emptyMetro.hidden=true;
  const popup=element('div','pw-transit-popup pw-dot-popup');
  popup.hidden=true;popup.setAttribute('role','group');
- map.append(chrome,hint,emptyMetro,popup);
+ map.append(chrome,hint,subwayLegend,emptyMetro,popup);
  body.replaceChildren(map);
  // Only explicit city selection can reveal internal rail or destination pins.
  let activeCity=null,regionalCamera=null;
@@ -473,6 +483,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   map.dataset.compact=String(!scoped&&scale<.65);
   map.dataset.smallScreen=String(v.w<900);
   back.hidden=!scoped;emptyMetro.hidden=!scoped||hasMetro;
+  subwayLegend.hidden=!hasMetro;
   heading.querySelector('.pw-dot-title').textContent=scoped?
    city.name+' · 地铁线路图':'城际交通总图';
   heading.querySelector('.pw-dot-subtitle').textContent=scoped?
