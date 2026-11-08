@@ -82,6 +82,13 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   viewport:()=>viewport(),camera:()=>({x,y,scale}),
   cell:CELL,worldWidth:W,worldHeight:H
  })||null;
+ // Both camera modes project the SAME editable X/Y/Z grid. Orthographic
+ // mode keeps the existing native 2D map and its quiet breathing dots.
+ const terrain3D=global.PaperWorldDotTerrain3D?.create?.({
+  map,enabled:!mapLayersFull,
+  viewport:()=>viewport(),camera:()=>({x,y,scale}),
+  cell:CELL,width:W,height:H
+ })||null;
  const chrome=element('header','pw-dot-chrome');
  const heading=element('div','pw-dot-heading');
  heading.append(element('strong','pw-dot-title','交通图'),
@@ -812,6 +819,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.tabIndex=0;
  map.addEventListener('keydown',e=>{
   if(e.target.closest('button')||e.target.closest('input'))return;
+  if(e.key.toLowerCase()==='v'&&!e.repeat&&terrain3D){
+   e.preventDefault();terrain3D.toggleMode();return;
+  }
+  if(e.key.toLowerCase()==='r'&&terrain3D?.is3D()){
+   e.preventDefault();terrain3D.resetOrbit();return;
+  }
   if(e.key==='Escape'){if(localMode){leaveHomeStation();return}if(!popup.hidden)clear();else leaveCity();return}
   if(e.key==='+'||e.key==='='){e.preventDefault();zoomBy(1.25)}
   else if(e.key==='-'){e.preventDefault();zoomBy(.8)}
@@ -824,16 +837,20 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  });
  map.addEventListener('pointerdown',e=>{
   if(localMode||editorUI?.isTarget(e.target))return;
-  if(e.button!==0||e.target.closest('button,.pw-dot-chrome,.pw-transit-popup,.pw-transit-line-hit'))return;
+  const orbit3D=!!terrain3D?.is3D();
+  if((e.button!==0&&!(orbit3D&&e.button===2))||
+     e.target.closest('button,.pw-dot-chrome,.pw-transit-popup,.pw-transit-line-hit'))return;
   if(e.pointerType==='touch'){
    fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
    if(fingers.size===2){
     const [a,b]=[...fingers.values()];
-    pinch={distance:Math.max(1,Math.hypot(b.x-a.x,b.y-a.y))};
+    pinch={distance:Math.max(1,Math.hypot(b.x-a.x,b.y-a.y)),
+     cx:(a.x+b.x)*.5,cy:(a.y+b.y)*.5};
     drag=null;
    }
   }
-  if(!pinch)drag={id:e.pointerId,cx:e.clientX,cy:e.clientY,x,y,moved:false};
+  if(!pinch)drag={id:e.pointerId,cx:e.clientX,cy:e.clientY,x,y,moved:false,
+   orbit:orbit3D&&e.button===0&&!e.shiftKey};
   map.setPointerCapture?.(e.pointerId);
  });
  map.addEventListener('pointermove',e=>{
@@ -844,13 +861,22 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    const [a,b]=[...fingers.values()];
    const next=Math.max(1,Math.hypot(b.x-a.x,b.y-a.y));
    const box=map.getBoundingClientRect();
+   const midX=(a.x+b.x)*.5,midY=(a.y+b.y)*.5;
+   if(terrain3D?.is3D()){
+    x+=midX-pinch.cx;y+=midY-pinch.cy;constrain();position();
+   }
    zoomBy(clamp(next/pinch.distance,.75,1.35),
-    (a.x+b.x)*.5-box.left,(a.y+b.y)*.5-box.top);
-   pinch.distance=next;return;
+    midX-box.left,midY-box.top);
+   pinch.distance=next;pinch.cx=midX;pinch.cy=midY;return;
   }
   if(!drag||drag.id!==e.pointerId)return;
   const dx=e.clientX-drag.cx,dy=e.clientY-drag.cy;
   if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;
+  if(drag.orbit){
+   terrain3D?.orbitBy(dx,dy);
+   drag.cx=e.clientX;drag.cy=e.clientY;
+   return;
+  }
   x=drag.x+dx;y=drag.y+dy;constrain();
   position();
  });
@@ -877,13 +903,17 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   global.addEventListener('resize',onResize);cleanupListeners.push(()=>global.removeEventListener('resize',onResize));
  }
  measure(true);
- global.PaperWorldTransitMap._animateFrame=dotFog?dotFog.render:null;
+ const renderMapFrame=now=>{dotFog?.render(now);terrain3D?.render(now)};
+ global.PaperWorldTransitMap._animateFrame=renderMapFrame;
+ global.PaperWorldTransitMap._terrain=terrain3D;
  global.PaperWorldTransitMap._cleanup=()=>{
-  if(global.PaperWorldTransitMap._animateFrame===dotFog?.render)
+  if(global.PaperWorldTransitMap._animateFrame===renderMapFrame)
    global.PaperWorldTransitMap._animateFrame=null;
-  dotFog?.dispose();
+  if(global.PaperWorldTransitMap._terrain===terrain3D)
+   global.PaperWorldTransitMap._terrain=null;
+  dotFog?.dispose();terrain3D?.dispose();
   cityBuilder?.dispose?.();editorUI?.dispose?.();observer?.disconnect();cleanupListeners.forEach(fn=>fn());
  };
 }
-global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null,_animateFrame:null};
+global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null,_animateFrame:null,_terrain:null};
 })(window);
