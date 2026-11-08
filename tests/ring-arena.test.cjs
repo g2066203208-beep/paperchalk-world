@@ -12,6 +12,15 @@ assert.match(rendererSource,/gl\.uniform1f\(portrait\.uOpacity,1\)/,
  'all eight actual L2D quads draw at full opacity');
 assert.doesNotMatch(rendererSource,/blocksTarget\s*=|occludes\?\.035|portrait\.uOpacity\s*,\s*occludes/,
  'no teammate opacity or culling heuristics ever return');
+assert.doesNotMatch(rendererSource,
+ /STAGE_SPECTATORS|stagePosition\(|stageTransition\s*=|stageYaw/,
+ 'four rear-facing team members must NEVER be moved, yawed or side-staged');
+assert.match(rendererSource,/stagePresentation:'four-rear-facing-allies-one-fixed-rank'/,
+ 'the game must expose the strict standing one-row rear-view layout');
+assert.match(rendererSource,/runtime\.libraryPlayer\?\.model\?\.characterId==='female-07'/,
+ 'battle display must accept the REAL female-07 back rig from the studio');
+assert.match(rendererSource,/runtime\.img\?\.dataset\?\.characterSide==='back'/,
+ 'all four 3D battle actor sources use BACK art, not front or synthetic side views');
 assert.equal(arena.portraitFit(800,1200,1024).height,1024);
 assert.ok(arena.renderPixelRatio(1920,1080,4)<1.1);
 assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shared physical camera rig');
