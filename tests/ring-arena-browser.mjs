@@ -89,6 +89,12 @@ try{
   'the player can select one of four actual allied slots, including on phones');
  for(let index=2;index<=4;index++){
   await page.locator('[data-control-ally="'+index+'"]').click();
+  // Verify the DEFAULT selected view, not an incidental mouse-hover look at
+  // the party UI. All four role choices still support real free mouse-look.
+  await page.mouse.move(640,360);
+  await page.waitForFunction(()=>Math.abs(
+   window.PaperWorldGameRingArena?.inspect()?.cameraLook?.yawDeg||0)<1.2,
+   null,{timeout:15000});
   const switched=await inspect();
   const chosen=outer.actors.allies[index-1];
   assert.equal(switched.controlledActorId,chosen.id);
