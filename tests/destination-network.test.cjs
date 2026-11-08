@@ -22,6 +22,9 @@ test('all authored destinations have one station on a real two-way street/rail g
 test('a destination is reachable from the player and always has a reverse leg',()=>{
  for(const p of A.POIS){
   const outward=N.journey('entrance',p.id),back=N.journey(p.id,'entrance');
+  if(p.id==='entrance'){
+   assert.equal(outward.minutes,0);assert.equal(back.minutes,0);continue;
+  }
   assert.ok(outward?.legs.length,'outbound route missing: '+p.id);
   assert.ok(back?.legs.length,'return route missing: '+p.id);
   assert.equal(outward.stops.at(-1),p.id);
