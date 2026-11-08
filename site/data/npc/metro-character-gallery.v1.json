@@ -12,16 +12,18 @@
     "background": "export real RGBA before publishing; white Anima preview is NOT transparent",
     "graphics": "Approved Anima illustrations only. Procedurally drawn or placeholder SVG crowd is not canon.",
     "changes": "Previous male/female 3-view approvals deprecated by 2026-11-08 instruction; four-pose replacement required.",
-    "readyCondition": "Only when canonical artwork binary, alpha, approval, feet anchors, four views, runtime and gameplay QA all verified; M003 art passes image requirements but is not yet active NPC in the game."
+    "readyCondition": "Only when canonical artwork binary, alpha, approval, feet anchors, four views, runtime and gameplay QA all verified; M003 art passes image requirements but is not yet active NPC in the game.",
+    "latestAnimaWhitepaper": "docs/NPC_FOUR_POSE_DEVELOPMENT_WHITEPAPER_V1_20261108.md"
   },
   "characters": [
     {
       "id": "NPC-M001",
       "label": "普通年轻男通勤者",
-      "record": "metro-commuter-npc-m001-four-pose-draft.v2.json",
+      "record": "metro-commuter-npc-m001-four-pose-draft.v3.json",
       "approval": "rebuild_required",
       "image": null,
-      "action": "正面坐着打瞌睡"
+      "action": "纯正面坐着打瞌睡",
+      "promptDoc": "docs/NPC-M001_ANIMA_FOUR_POSE_PROMPT_V3_20261108.md"
     },
     {
       "id": "NPC-M002",
