@@ -1453,6 +1453,12 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
+  let combatTimegrid=null,combatPulseIds=[],combatPulseDuration=0;
+  const usingTimegrid=!!window.PaperWorldRingTimegrid&&
+   new URLSearchParams(window.location.search).get('legacyDirector')!=='1'&&
+   new URLSearchParams(window.location.search).get('directorQA')!=='1';
+  // Actual 4v4 Timegrid game owns HP, card scheduling and round outcomes.
+  // The old one-click attack showcase is isolated for legacyDirector QA.
   let controlledActorId='hero';
   // One immutable straight rank: all four original back-facing L2D actors.
   let renderedActorOpacity=Object.create(null);
@@ -1565,6 +1571,7 @@
    if(!Number.isInteger(number)||number<1||number>4)return false;
    const next=layout(mode).allies[number-1];
    if(!next)return false;
+   if(combatTimegrid&&!combatTimegrid.selectRole(number))return false;
    controlledActorId=next.id;
    mouseLookX=0;mouseLookY=0;armed=false;
    refreshDirectorUI();render(0,0,0);
@@ -1707,6 +1714,39 @@
    }
    if(b.hasAttribute('data-exit')&&!attack&&typeof onExit==='function')onExit();
   });
+  function showTimegridHit(event){
+   const layer=hud.querySelector('[data-tg-hits]');
+   if(!layer||!lens||!canvas.clientWidth||!canvas.clientHeight)return;
+   const aspect=canvas.clientWidth/canvas.clientHeight;
+   for(const change of event.changes||[]){
+    if(!change.deltaHp)continue;
+    const actor=[...layout(mode).allies,...layout(mode).enemies]
+     .find(a=>a.id===change.visualId);
+    if(!actor)continue;
+    const point=project({x:actor.x,y:actor.y+actor.height*.75,z:actor.z},lens,aspect);
+    if(!point.valid||Math.abs(point.x)>1.4||Math.abs(point.y)>1.4)continue;
+    const number=document.createElement('span');
+    number.className='tg-float-hit'+(change.deltaHp>0?' heal':'');
+    number.textContent=(change.deltaHp>0?'+':'')+change.deltaHp;
+    number.style.left=((point.x+1)*50).toFixed(2)+'%';
+    number.style.top=((1-point.y)*50).toFixed(2)+'%';
+    number.addEventListener('animationend',()=>number.remove(),{once:true});
+    layer.append(number);
+   }
+  }
+  if(usingTimegrid){
+   combatTimegrid=window.PaperWorldRingTimegrid.mount({
+    hud,onTick:event=>{
+     if(event.tick){
+      combatPulseIds=event.activeActions.filter(a=>
+       !!window.Timegrid?.CARD?.[a.card]?.damage).map(a=>a.visualId);
+      combatPulseDuration=.30;
+      showTimegridHit(event);
+     }else if(event.done){combatPulseIds=[];combatPulseDuration=0;}
+    }
+   });
+   hud.classList.add('timegrid-enabled');
+  }
   function sourceFor(actor){
    const safeHero=()=>actor.id==='hero'&&transitMode?metroCanonicalSource():null;
    // The published female-07 14-ArtMesh back rig is the ONLY canonical
@@ -2217,6 +2257,11 @@
    mouseLookX=clamp(Number(inputX)||0,-1,1);
    mouseLookY=clamp(Number(inputY)||0,-1,1);
    const base=camera(mode,0);
+   if(combatTimegrid&&!transitMode&&!attack){
+    combatTimegrid.advance(dt);
+    combatPulseDuration=Math.max(0,combatPulseDuration-Math.max(0,Number(dt)||0));
+    if(combatPulseDuration<=0)combatPulseIds=[];
+   }
    if(attack){
     const frame=director.sample(attack,qaTimeMs===null?
      performance.now():attack.startedAt+qaTimeMs);
@@ -2330,7 +2375,9 @@
    drawWorld(mode==='outer'?wingOuter:wingInner,3,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
    drawFixtures(vp);
-   const all=visibleActors(mode).filter(a=>!environmentActorIds||environmentActorIds.has(a.id))
+   const all=visibleActors(mode)
+    .filter(a=>!environmentActorIds||environmentActorIds.has(a.id))
+    .filter(a=>!combatTimegrid||transitMode||!combatTimegrid.visual(a.id)?.dead)
     .map(a=>({...a,...(scenePack?.actors?.positions?.[a.id]||{})}));
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
@@ -2352,7 +2399,10 @@
     const motion=director.actorMotion(a.id,attack,attackSample,performing,target,duet);
     return {...a,x:a.x+motion.x,y:a.y+motion.y,
      z:a.z+motion.z,height:a.height*motion.scale};
-   }):all;
+   }):combatPulseIds.length?all.map(a=>combatPulseIds.includes(a.id)?
+    {...a,z:a.z+(a.team==='ally'?-1:1)*.16}:a):all;
+   // Card hits animate the SAME genuine world-space actors and contact shadows.
+   // Static role anchors remain untouched outside the active effect window.
    presentedActors=presented;
    // BOTH participants stay visible at once, sharing ONE 3D camera.
    // Render a pose swap at the same anchor rather than a fullscreen cut.
@@ -2507,7 +2557,9 @@
    view.classList.toggle('ring-arena-active',active);
    if(active){mode='outer';elapsed=0;frames=0;shotIndex=0;controlledActorId='hero';mouseLookX=0;mouseLookY=0;
     currentLighting=lightingFrame(lightState,0,mode);
-    resetCombatPreview();lens=camera(mode,0);render(0)}
+    resetCombatPreview();combatPulseIds=[];combatPulseDuration=0;
+    if(combatTimegrid)combatTimegrid.reset();
+    lens=camera(mode,0);render(0)}
    else resetCombatPreview();
   }
   // DEV geometry diagnostics: place future ordinary NPCs in world meters and
@@ -2568,6 +2620,8 @@
    actorAnchors:window.PaperWorldEnvironments?.get?.(environmentId)?.actors?.positions||null,
    encounter:'one-centered-grounded-opponents',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
+   timegrid:combatTimegrid?.inspect()||null,
+   timegridEnabled:!!combatTimegrid,
     cameraLook:{mode:controlledActorId==='hero'?'hero-root-tps-shoulder-rig':'selected-ally-enemy-centered-shoulder-rig',
      yawDeg:lens?.lookYawDeg||0,pitchDeg:lens?.lookPitchDeg||0,
      controlledActorId,
@@ -2582,7 +2636,7 @@
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
    stagePresentation:'four-rear-facing-allies-one-fixed-rank',
-   runtimeRevision:'per-role-foe-centered-camera-v2-20261108',
+   runtimeRevision:'full-timegrid-four-party-3d-v1-20261108',
    shoulderMouseLimits:{...SHOULDER_LOOK_LIMITS},
    stageTransitionProgress:1,
    stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
