@@ -262,7 +262,7 @@ function create({root,engine,onExit,onFeedback}){
   rideEpoch++;motion?.reset();
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
-  section.dataset.camera=section.dataset.renderer==='ring-3d'?'three-quarter-passenger':'side-elevation';
+  section.dataset.camera=section.dataset.renderer==='ring-3d'?'front-elevation-no-floor':'side-elevation';
   if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Metro L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
@@ -286,7 +286,7 @@ function create({root,engine,onExit,onFeedback}){
   rideEpoch++;motion?.reset();
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
-  section.dataset.camera=section.dataset.renderer==='ring-3d'?'three-quarter-passenger':'side-elevation';
+  section.dataset.camera=section.dataset.renderer==='ring-3d'?'front-elevation-no-floor':'side-elevation';
   if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Regional rail L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
