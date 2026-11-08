@@ -52,7 +52,14 @@ try{
   const data=await page.evaluate(()=>{
    const game=window.PaperWorldGameRingArena.inspect();
    const ring=window.PaperWorldRingArena;
-   const visible=game.presentationActors;
+   // Inspector presentationActors reports world anchors only. Hydrate each
+   // REAL rendered actor with height/sole/crown/UV source metadata before
+   // projecting: using anchor-only summaries produced NaN/NULL rectangles.
+   const baseActors=[...game.actors.allies,...game.actors.enemies];
+   const actorById=new Map(baseActors.map(actor=>[actor.id,actor]));
+   const visible=game.presentationActors.map(actor=>({
+    ...actorById.get(actor.id),...actor
+   }));
    const enemyRects=visible.filter(a=>a.team==='enemy').map(a=>
     ring.portraitVisibleBounds(a,game.camera,
      {left:.30,right:.69,top:0,bottom:1},game.projectionAspect));
@@ -88,7 +95,8 @@ try{
   // because a separate (pre-existing) formation problem is being examined.
   // No fake camera or invisible actor is used to satisfy this check.
   data.fourEnemySilhouettesUnclipped=data.enemyRects.every(a=>
-   a.valid&&a.left>-1&&a.right<1);
+   a.valid&&Number.isFinite(a.left)&&Number.isFinite(a.right)&&
+   a.left>-1&&a.right<1);
   if(!data.fourEnemySilhouettesUnclipped)
    console.warn('VISUAL REVIEW:',slot,'one or more enemies extend outside the viewport');
   const filename=slot===1?'final-eye-level-3q-1280x720.png':
