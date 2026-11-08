@@ -30,7 +30,7 @@
 ## GitHub 与保存边界
 
 - 本轮 GitHub 已保存代码、基线真实图、编辑器和自动化测试。
-- 浏览器草稿使用 localStorage 键 paperchalk-kirihama-dot-metro-blueprint-v1，只保存当前用户的规划数据，**不会暗中修改全体玩家的正式运营线路或伪称同步 GitHub**。
+- 浏览器草稿使用 localStorage 键 paperchalk-kirihama-dot-metro-blueprint-v1。点击「应用游戏」主动重新加载后，地铁主图和游戏寻路会验证、读取这一蓝图，新增站点可以真实乘坐和下车。**本机应用不等于将修改发布给所有 GitHub Pages 玩家**。
 - 导出的完整 JSON 蓝图可在审核连通、站名、换乘与剧情关键站 ID 后导入 GitHub 正式线路数据。
 - 每站独立站厅/站台场景属于后续任务，本轮只制作地铁线网可视化编排。
 
