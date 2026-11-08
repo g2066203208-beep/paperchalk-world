@@ -271,12 +271,12 @@
    if(i===idx)continue;
    const a=allied[i],clip=screenRect(a);
    const visible=Math.max(0,clip.right-clip.left);
-   score+=150*squared(Math.max(0,.095-visible));
+   score+=1200*squared(Math.max(0,.13-visible));
    score+=12*squared(Math.max(0,.10-a.top));
    score+=12*squared(Math.max(0,-.95-a.bottom));
   }
   // Current player stays a large, grounded third-person foreground figure.
-  score+=180*squared(Math.max(0,.40-selfWidth));
+  score+=1050*squared(Math.max(0,.52-selfWidth));
   score+=40*squared(Math.max(0,selfWidth-.75));
   score+=30*squared(Math.max(0,.13-self.top));
   score+=13*squared(selfCenter-(side>0?-.54:.54));
@@ -310,7 +310,7 @@
     for(const behind of [1.12,1.65,2.22])
      for(const aimX of [-.7,0,.7])
       for(const aimZ of [5.1,6.0])
-       for(const eyeY of [1.58,2.08])
+       for(const eyeY of [1.58,2.08,2.28])
         for(const fov of [63,70,77]){
          const eye={x:selected.x+side*offset,y:eyeY,z:selected.z+behind};
          const candidate={...base,eye,focus:{
@@ -321,7 +321,7 @@
           shoulderBoomMeters:Math.hypot(offset,behind),
           heroYawDeg:0,lookYawDeg:0,lookPitchDeg:0,
           controlledActorId:selected.id,
-          lensShift:eyeY>1.8?.40:.23
+          lensShift:eyeY>2.2?.70:eyeY>1.8?.40:.23
          };
          const rating=roleCompositionScore(candidate,selected,aspect)+
           (side===idealSide?0:.05);
