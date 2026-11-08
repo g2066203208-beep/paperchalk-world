@@ -212,8 +212,10 @@ try{
    library:!!a?.libraryPlayer,libraryCharacter:a?.libraryPlayer?.model?.characterId,
    source:a?.lastSource?.slice(-90)};
  })));
- assert.deepEqual(room3d.visibleActorIds,['hero'],
-  'metro keeps the real grounded hero, not unrelated combat enemy rigs');
+ assert.ok(room3d.visibleActorIds.includes('hero'),
+  'metro must retain the real grounded heroine even with permitted NPCs');
+ assert.ok(room3d.visibleActorIds.every(id=>id==='hero'||id.startsWith('npc:NPC-')),
+  'metro must not show unrelated combat actors');
  assert.ok(room3d.lensShift<.13,
   'metro should show real ceiling fixtures rather than cropping them out');
  assert.ok(room3d.geometry.widthMeters>room3d.geometry.depthMeters);
@@ -264,14 +266,17 @@ try{
  const opened=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(opened.transitMotion.speedMps,0,
   'four physical door leaves never open while train is moving');
- await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.station3D?.commuterAtlasStatus==='ready',
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.station3D?.commuterAtlasStatus==='real-approved-npc',
   null,{timeout:12000});
  const stationWithPeople=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect().station3D);
  for(const part of ['platformBenches','platformWayfinding'])
   assert.ok(stationWithPeople.components[part]>=6,'missing actual 3D station furniture '+part);
  assert.equal(stationWithPeople.waitingSeatCount,2);
- assert.ok(stationWithPeople.commutersDrawn>=6,
-  'station must have waiting, seated and walking commuters: '+JSON.stringify(stationWithPeople));
+ assert.ok(stationWithPeople.commutersDrawn<=6,
+  'never invent extra NPCs to fill a station: '+JSON.stringify(stationWithPeople));
+ assert.ok(stationWithPeople.realCrowdIds.every(id=>id.startsWith('NPC-')),
+  'every visible commuter must have a valid real NPC art identity');
+ assert.equal(new Set(stationWithPeople.realCrowdIds).size,stationWithPeople.realCrowdIds.length);
  assert.equal(stationWithPeople.doorOpenedEver,true);
  await shot('31-metro-platform-npcs-seated-waiting-and-boarding.png');
  await shot('30-real-three-dimensional-platform-with-open-subway-doors.png');
