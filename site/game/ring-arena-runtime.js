@@ -1885,7 +1885,11 @@
    if(!gl)return false;
    const w=canvas.clientWidth,h=canvas.clientHeight;
    if(w<2||h<2)return false;
-   const pixel=renderPixelRatio(w,h,window.devicePixelRatio||1);
+   // On mobile trains use fewer fill-rate pixels during relative exterior
+   // motion. Preserve authored texture resolution and CSS image geometry.
+   // Desktop/battle keep their original unrestricted render pixel policy.
+   const pixel=Math.min(renderPixelRatio(w,h,window.devicePixelRatio||1),
+    transitMode&&w<900?1.5:1.75);
    const W=Math.floor(w*pixel),H=Math.floor(h*pixel);
    if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
    const cam=lens,vp=cameraVP(cam,w/h);
