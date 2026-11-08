@@ -1,6 +1,6 @@
 {
   "source": "Actual in-game Chromium/WebGL screenshot, never a mockup",
-  "commit": "594da804c8bd7cf70ea11d2e1220f2780d8b6682",
+  "commit": "f99f52e72a6718b9eb3dfd9343815b42b26c9dcf",
   "opacityCheck": "all eight actors full opacity in every controlled 4v4 screenshot",
   "files": [
     "ally-1-1280x720.png",
