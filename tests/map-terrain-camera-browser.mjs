@@ -57,10 +57,10 @@ try{
  await page.locator('.pw-dot-world-map.pw-dot-empty-preview').waitFor({state:'visible'});
  await page.waitForFunction(()=>Number(document.querySelector('.pw-dot-world-map')?.dataset.rippleFrames)>3);
  const flat=await inspect();
- assert.equal(flat.state?.vertices,51*33);
- assert.equal(flat.state?.triangles,50*32*2);
+ assert.equal(flat.state?.world,'infinite');
  assert.equal(flat.mode,'2d');
- assert.equal(flat.source,'webgl-heightfield');
+ assert.equal(flat.source,'webgl-streamed-heightfield');
+ assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-dot-world'),'infinite');
  assert.equal(flat.bg,'rgb(0, 0, 0)');
  assert.equal(flat.fog,0);
  assert.equal(flat.state.heightsDefined,false);
@@ -91,6 +91,11 @@ try{
  }
  const three=await inspect();
  assert.equal(three.state.mode,'3d');
+ assert.equal(three.state.world,'infinite');
+ assert.ok(three.state.vertices>=400,'streamed mesh should generate many true XYZ vertices');
+ assert.ok(three.state.triangles>=400,'streamed mesh should contain true triangular ground faces');
+ assert.ok(three.state.nearTiles>0,'near grid chunks should be loaded');
+ assert.ok(three.state.farTiles>0,'distant grid chunks should be streamed');
  assert.ok(three.state.pitch>.5);
  assert.ok(three.frame>0);
  assert.ok(three.surface.opacity>.9);
@@ -113,6 +118,27 @@ try{
  assert.ok(Math.abs(orbited.state.yaw-three.state.yaw)>.1,'drag must orbit in real 3D');
  assert.ok(Math.abs(orbited.state.pitch-three.state.pitch)>.05,'vertical drag must change elevation angle');
  await shot('03-real-game-3d-free-orbit.png');
+ // A temporary terrain elevation thousands of cells outside the authored
+ // 50x32 map must remain editable, and 3D streaming should follow there.
+ await page.evaluate(()=>{
+  const t=window.PaperWorldTransitMap._terrain;
+  if(!t.setHeight(-250,-175,147)||t.getHeight(-250,-175)!==147)
+   throw Error('unbounded negative terrain coordinate is not editable');
+  const map=document.querySelector('.pw-dot-world-map');
+  // One real keyboard pan event per lattice step; no camera bounds remain.
+  for(let i=0;i<72;i++)map.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));
+  for(let i=0;i<56;i++)map.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
+ });
+ await page.waitForTimeout(450);
+ const farAway=await inspect();
+ assert.notEqual(farAway.viewBox,orbited.viewBox,
+  'camera must pan beyond the original 2000x1280 world');
+ assert.notDeepEqual(farAway.state.origin,orbited.state.origin,
+  '3D grid chunks must be regenerated around the remote camera');
+ assert.ok(farAway.state.vertices>400,'remote 3D world must still contain a mesh');
+ assert.equal(farAway.state.heightOverrides,2,
+  'height edits are stored independently of the streamed viewport');
+ await shot('03b-real-game-3d-infinite-world-away-from-city.png');
  // Native right-drag pans the same map world, wheel zooms that camera.
  await page.mouse.move(cx,cy);
  await page.mouse.down({button:'right'});
@@ -125,7 +151,10 @@ try{
  await page.waitForTimeout(260);
  const zoomed=await inspect();
  assert.notEqual(zoomed.viewBox,panned.viewBox,'wheel should zoom');
- await page.evaluate(()=>window.PaperWorldTransitMap._terrain.setHeight(20,13,0));
+ await page.evaluate(()=>{
+  window.PaperWorldTransitMap._terrain.setHeight(20,13,0);
+  window.PaperWorldTransitMap._terrain.setHeight(-250,-175,0);
+ });
  await page.evaluate(()=>document.querySelector('.pw-dot-camera-toggle').click());
  await page.waitForFunction(()=>{
   const el=document.querySelector('.pw-dot-world-map');
@@ -140,5 +169,5 @@ try{
  assert.ok(!errors.some(x=>/dot-terrain-3d|Map dot animation disabled|TypeError|ReferenceError/i.test(x)),
   'unexpected render error: '+errors.join('\\n').slice(0,1000));
  console.log('REAL GAME SEAMLESS 2D/3D TERRAIN CAMERA VERIFIED',
-  JSON.stringify({flat,raised,three,orbited,panned,zoomed,back}));
+  JSON.stringify({flat,raised,three,orbited,farAway,panned,zoomed,back}));
 }finally{await browser.close()}
