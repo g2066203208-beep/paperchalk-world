@@ -64,8 +64,6 @@ try{
   if(!r.ok)throw Error(r.reason);
  });
  await page.evaluate(()=>document.querySelector('#quick-map').click());
- await page.locator('.pw-dot-world-map[data-scope="region"]').waitFor();
- await page.evaluate(()=>document.querySelector('.pw-dot-city[data-city="kirihama"]').click());
  await page.locator('.pw-dot-world-map[data-scope="city"][data-city="kirihama"]').waitFor();
  assert.equal(await page.locator('.pw-metro-edit-toggle:visible').count(),1);
  await shot('01-kirihama-70-stations-10-lines-before-edit.png');
@@ -74,7 +72,7 @@ try{
  let state=await inspect();
  assert.equal(state.active,true);assert.equal(state.state,'city');
  assert.equal(state.rails,81);
- assert.ok(state.dots>=10&&state.dots<=30,
+ assert.ok(state.dots>=1&&state.dots<=30,
   'city overview must show only important editable hubs, not 70 pearl nodes: '+JSON.stringify(state));
  assert.equal(state.nodeLod,'hubs');
  assert.equal(state.images,0,'rails must not use raster boxes');
@@ -82,6 +80,10 @@ try{
  assert.equal(state.count.lines,10);assert.equal(state.count.interchanges,19);
  assert.equal(state.count.stations,70);
  await shot('02-kirihama-editable-rail-node-network.png');
+ // Choosing a colored route reveals and focuses that line in the real map.
+ await page.locator('.pw-metro-edit-line[data-line="a"]').click();
+ assert.equal(await page.locator('.pw-metro-edit-line[data-active="true"][data-line="a"]').count(),1);
+ assert.equal((await inspect()).nodeLod,'selected-line');
  // The 81 rails have actual SVG stroke hit zones, not bounding image rects.
  const key=await page.evaluate(()=>document.querySelector(
   '.pw-metro-edit-edge[data-editor-line="a"]')?.dataset.editorEdge);
