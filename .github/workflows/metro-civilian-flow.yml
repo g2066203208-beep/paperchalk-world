@@ -34,6 +34,11 @@ jobs:
       - name: Build genuine game scene catalogs for startup
         run: |
           python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=10,<12'
+          python3 scripts/repair_character_masks.py
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/fix_protagonist_neck_v4.py
+          python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
           test -s site/scene-catalog.generated.js
