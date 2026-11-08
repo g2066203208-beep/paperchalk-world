@@ -102,7 +102,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  body.replaceChildren(map);
  // Only explicit city selection can reveal internal rail or destination pins.
  let activeCity=null,regionalCamera=null;
- let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,popupAnchor=null,focused=false;
+ let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,popupAnchor=null,focused=false,selectedMetroLineId=null;
  const fingers=new Map();let pinch=null;
  let lastW=844,lastH=390;
  const cleanupListeners=[];
@@ -113,7 +113,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    for(const seg of group.querySelectorAll('[data-selected="true"]'))
     seg.removeAttribute('data-selected');
   selected?.removeAttribute('data-selected');
-  selected=null;popupAnchor=null;
+  selected=null;popupAnchor=null;selectedMetroLineId=null;
  }
  function positionPopup(){
   const outer=map.getBoundingClientRect();
@@ -154,8 +154,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   positionPopup();
  }
  function selectMetroLine(lineId){
+  selectedMetroLineId=lineId;
   for(const seg of urban.querySelectorAll('.pw-transit-segment[data-line="'+lineId+'"]'))
    seg.dataset.selected='true';
+  position(); // reveal just this line's individual stations at overview scale
  }
  const anchored=[];
  function put(node,p,layer){
@@ -525,35 +527,55 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    node.style.left=(x+p.x*scale)+'px';
    node.style.top=(y+p.y*scale)+'px';
   }
-  // 170 station buttons have independent click targets. Their text labels
-  // are dynamically decluttered in SCREEN space; full zoom shows all names.
-  // Never paint one opaque rectangular image or station-card per grid dot.
+  // Hierarchical station rendering: preserve ALL 170 physical stop IDs,
+  // but on the full-city overview show only key interchanges/landmarks.
+  // Clicking a line reveals ITS stations; zooming reveals nearby small stops.
+  // Hiding a marker never edits or disconnects the underlying subway graph.
   if(activeCity==='kirihama'){
-   const placed=[];
+   const screenStep=CELL*scale,overview=screenStep<52;
+   const detail=screenStep>=82,placed=[];
+   const line=metro.LINES.find(l=>l.id===selectedMetroLineId);
+   const chosenStations=new Set(line?.stops||[]);
    const entries=Object.entries(metro.STATIONS).map(([id,station])=>
     ({id,station,node:stopButtons.get(id)}))
     .filter(row=>!!row.node)
     .sort((a,b)=>
      Number(b.id===here)-Number(a.id===here)||
+     Number(b.id==='central')-Number(a.id==='central')||
      Number(b.station.transfer)-Number(a.station.transfer)||
      Number(b.node.dataset.keyStation==='true')-Number(a.node.dataset.keyStation==='true')||
      a.id.localeCompare(b.id));
+   let visibleCount=0;
    for(const {id,station,node} of entries){
     const px=x+(LOCAL_X+station.gx*CELL)*scale;
     const py=y+(LOCAL_Y+station.gy*CELL)*scale;
-    const candidate=scale>=2||station.transfer||
-     node.dataset.keyStation==='true'||id===here;
-    const visible=candidate&&px>-100&&px<v.w+100&&py>-80&&py<v.h+80;
-    if(!visible){node.dataset.showLabel='false';continue}
-    const width=Math.min(136,Math.max(49,station.label.length*14+18));
+    const onScreen=px>-30&&px<v.w+30&&py>-30&&py<v.h+30;
+    const isMajor=station.transfer||node.dataset.keyStation==='true'||id===here;
+    const revealed=detail||chosenStations.has(id)||
+      (!overview&&station.transfer)||isMajor;
+    const shown=onScreen&&revealed;
+    node.dataset.nodeVisible=String(shown);
+    node.tabIndex=shown?0:-1;
+    if(!shown){node.dataset.showLabel='false';continue}
+    visibleCount++;
+    const isSelected=node.dataset.selected==='true';
+    // Ordinary stop labels are on-demand. They never fill the full-city map.
+    const candidate=isSelected||id===here||id==='central'||
+      (detail&&station.transfer)||
+      (screenStep>=108&&chosenStations.has(id))||
+      (screenStep>=118&&node.dataset.keyStation==='true');
+    if(!candidate){node.dataset.showLabel='false';continue}
+    const width=Math.min(138,Math.max(49,station.label.length*12+16));
     const above=node.dataset.labelSide==='north';
-    const test={left:px-width*.5,right:px+width*.5,
-     top:py+(above?-42:18),bottom:py+(above?-14:46)};
-    const collided=placed.some(q=>test.left<q.right+7&&test.right>q.left-7&&
-      test.top<q.bottom+5&&test.bottom>q.top-5);
-    node.dataset.showLabel=String(!collided||scale>=2.65);
-    if(!collided)placed.push(test);
+    const box={left:px-width*.5,right:px+width*.5,
+     top:py+(above?-40:16),bottom:py+(above?-12:44)};
+    const collision=placed.some(q=>box.left<q.right+6&&box.right>q.left-6&&
+     box.top<q.bottom+5&&box.bottom>q.top-5);
+    node.dataset.showLabel=String(!collision||isSelected);
+    if(!collision)placed.push(box);
    }
+   map.dataset.visibleMetroStations=String(visibleCount);
+   map.dataset.stationLod=overview?'overview':detail?'detail':'corridor';
   }
   // Explicit map scope, NOT zoom: intercity vs one city's SUBWAY ONLY.
   const scoped=activeCity!==null,city=atlas.CITY_BY_ID[activeCity];
