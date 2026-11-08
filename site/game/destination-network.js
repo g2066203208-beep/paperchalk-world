@@ -120,8 +120,9 @@
   let count=0;
   while(queue.length&&count++<22000){
    queue.sort((a,b)=>a.cost-b.cost);
-   const cur=queue.shift();if((best.get(cur.id)||Infinity)<=cur.cost)continue;
-   best.set(cur.id,cur.cost);
+   const cur=queue.shift(),stateKey=cur.id+'|'+(cur.last||'start');
+   if((best.get(stateKey)??Infinity)<=cur.cost)continue;
+   best.set(stateKey,cur.cost);
    if(cur.id===to){
     return {from,to,minutes:Math.round(cur.cost),legs:cur.legs,
      transfers:cur.legs.filter((l,i)=>i>0&&l.line.id!==cur.legs[i-1].line.id).length,
@@ -130,7 +131,7 @@
    for(const edge of adj.get(cur.id)){
     const penalty=cur.last&&cur.last!==edge.line.id?3:0;
     const cost=cur.cost+edge.minutes+penalty;
-    if((best.get(edge.to)||Infinity)<=cost)continue;
+    if((best.get(edge.to+'|'+edge.line.id)??Infinity)<=cost)continue;
     queue.push({id:edge.to,cost,
      legs:cur.legs.concat(edge),last:edge.line.id});
    }
