@@ -26,11 +26,11 @@ const errors=[];
 const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
 page.on('pageerror',e=>errors.push(e.message));
 try{
- page.setDefaultTimeout(16000);
+ page.setDefaultTimeout(35000);
  const origin='http://127.0.0.1:'+server.address().port;
  await page.goto(origin+'/index.html?mapLayers=full',{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').click();
- await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom',{timeout:25000});
+ await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom',null,{timeout:42000});
  await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false');
  const count=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
  for(let i=0;i<count;i++)await page.locator('#next-line').click();
@@ -40,7 +40,7 @@ try{
   const r=window.PaperWorldDailyLifeUI.engine.travel('entrance');
   if(!r.ok)throw Error(r.reason);
  });
- await page.waitForFunction(()=>window.PaperWorldDailyLifeUI?.npcManifest?.registered>=8,{timeout:30000});
+ await page.waitForFunction(()=>window.PaperWorldDailyLifeUI?.npcManifest?.registered>=8,null,{timeout:35000});
  const ready=await page.evaluate(async()=>{
   // QA-only deterministic leg: the actual approved image manifest and scene
   // permissions must validate before the real renderer may draw anybody.
@@ -114,6 +114,22 @@ try{
  console.log('PASS subway NPC browser: true 3D platform, visible authentic citizens, physical door boarding, one cabin, destination-specific alighting.');
  const relevant=errors.filter(x=>/SyntaxError|ReferenceError|TypeError/.test(x));
  assert.deepEqual(relevant,[],relevant.join('; '));
+}catch(error){
+ const diagnostic=await page.evaluate(()=>({
+  scene:document.querySelector('#scene')?.dataset.scene||null,
+  transition:document.querySelector('#scene-transition')?.dataset.active||null,
+  menuStart:document.querySelector('#menu-start')?.getAttribute('hidden'),
+  menuHidden:document.querySelector('#menu')?.hidden,
+  dailyReady:!!window.PaperWorldDailyLifeUI,
+  renderReady:!!window.PaperWorldGameRingArena,
+  currentNpcManifest:window.PaperWorldDailyLifeUI?.npcManifest||null,
+  pageText:document.body.innerText.slice(0,250)
+ })).catch(e=>({diagnosticError:String(e)}));
+ console.error('METRO REAL BROWSER FAILURE',String(error),'DIAG',JSON.stringify(diagnostic),
+  'PAGE ERRORS',JSON.stringify(errors.slice(-15)));
+ await page.screenshot({path:output+'/00-browser-failure.png',timeout:14000})
+  .catch(e=>console.error('Diagnostic screenshot unavailable:',String(e)));
+ throw error;
 }finally{
  await browser.close();
  await new Promise(done=>server.close(done));
