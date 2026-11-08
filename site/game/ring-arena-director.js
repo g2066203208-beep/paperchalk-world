@@ -103,7 +103,8 @@
  function createAttack(targetId,startedAt,opts={}){
   if(!/^enemy-[1-4]$/.test(targetId))throw Error('Invalid attack target');
   if(!Number.isFinite(startedAt))throw Error('Attack needs a clock');
-  return Object.freeze({targetId,startedAt,mode:opts.mode==='inner'?'inner':'outer',
+  const attackerId=['hero','ally-2','ally-3','ally-4'].includes(opts.attackerId)?opts.attackerId:'hero';
+  return Object.freeze({targetId,attackerId,startedAt,mode:opts.mode==='inner'?'inner':'outer',
    damage:CARD.damage,reducedMotion:!!opts.reducedMotion});
  }
  function hasEnemyHitPortrait(targetId){
@@ -150,7 +151,7 @@
  }
  function poseFor(actorId,attack,state){
   if(!attack||!state||state.finished)return 'idle';
-  if(actorId==='hero'&&state.heroPose)return 'attack';
+  if(actorId===(attack.attackerId||'hero')&&state.heroPose)return 'attack';
   if(actorId===attack.targetId&&state.victimPose)
    return hasEnemyHitPortrait(actorId)?'hurt-art':'hurt-original';
   return 'idle';
@@ -196,7 +197,7 @@
  function actorMotion(actorId,attack,s,hero,target,duel){
   if(!attack||!s||s.finished||!duel)return {x:0,y:0,z:0,scale:1};
   const lerp=(a,b,t)=>a+(b-a)*t;
-  if(actorId==='hero'){
+  if(actorId===(attack.attackerId||'hero')){
    const k=s.heroProgress;
    const touch=.24*s.advance*k;
    const x=lerp(hero.x,duel.hero.x,k)+(duel.target.x-duel.hero.x)*touch;
