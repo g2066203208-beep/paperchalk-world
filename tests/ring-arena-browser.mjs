@@ -323,7 +323,7 @@ try{
   'victim must stay in 3D scene, not vanish behind an overlay poster');
  assert.equal(await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses['enemy-2']),
- 'hurt-art','own hurt sprite is used on the enemy world-space quad');
+ outer.uniformBattlePreview?'idle':'hurt-art','the temporary same-model preview must NOT swap the foe into a different identity on hit');
  assert.equal(await qa.evaluate(()=>
   window.PaperWorldGameRingArena.inspect().directorArt.renderedPoses.hero),
  'female07-axe-lunge','hit frame must keep user approved female07 while showing victim');
@@ -355,7 +355,7 @@ try{
  const heldSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(heldSnap.directorArt.renderedPoses.hero,'female07-axe-lunge',
   'never switch to idle during original 46-frame tableau');
- assert.equal(heldSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
+ assert.equal(heldSnap.directorArt.renderedPoses['enemy-2'],outer.uniformBattlePreview?'idle':'hurt-art');
  assert.ok(heldSnap.camera.fov<heldSnap.cameraTarget.fov-10,
   'original cinematic is an actual strong enlargement, not a tiny FOV twitch');
  await qa.screenshot({path:'artifacts/ring-arena/v29-frame46-source-matched-central-held-art.png'});
@@ -365,14 +365,14 @@ try{
  assert.equal(retreat.phase,'recover');
  const retreatSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(retreatSnap.directorArt.renderedPoses.hero,'female07-axe-lunge');
- assert.equal(retreatSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
+ assert.equal(retreatSnap.directorArt.renderedPoses['enemy-2'],outer.uniformBattlePreview?'idle':'hurt-art');
  assert.notEqual(retreatSnap.duel.playedPositions[0].z,retreatSnap.actors.allies[0].z);
  await qa.screenshot({path:'artifacts/ring-arena/v29-frame52-backward-motion-still-action.png'});
  const home=await invoke('enemy-2',55*(1000/30)+.01);
  assert.equal(home.phase,'recover');
  const homeSnap=await qa.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(homeSnap.directorArt.renderedPoses.hero,'female07-axe-lunge');
- assert.equal(homeSnap.directorArt.renderedPoses['enemy-2'],'hurt-art');
+ assert.equal(homeSnap.directorArt.renderedPoses['enemy-2'],outer.uniformBattlePreview?'idle':'hurt-art');
  assert.equal(homeSnap.duel.playedPositions[0].x,homeSnap.actors.allies[0].x);
  assert.equal(homeSnap.duel.playedPositions[0].z,homeSnap.actors.allies[0].z);
  assert.equal(homeSnap.duel.playedPositions[1].x,homeSnap.actors.enemies[1].x);
