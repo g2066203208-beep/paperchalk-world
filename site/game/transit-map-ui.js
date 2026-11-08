@@ -580,6 +580,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    Math.max(minScale,Math.min(9,wanted)));
  }
  function constrain(){
+  // The authored rail network retains its real, finite coordinates, but
+  // the terrain is an unbounded world. Only legacy full-network QA mode
+  // preserves the previous bounded camera behavior.
+  if(!mapLayersFull)return;
   const v=viewport(),pad=22;
   x=(W*scale<v.w)?(v.w-W*scale)*.5:clamp(x,v.w-W*scale-pad,pad);
   y=(H*scale<v.h)?(v.h-H*scale)*.5:clamp(y,v.h-H*scale-pad,pad);
