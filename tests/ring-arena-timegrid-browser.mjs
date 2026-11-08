@@ -31,21 +31,23 @@ try{
   return s?.active&&s.renderer==='webgl-l2d'&&s.timegridEnabled&&
    s.timegrid?.phase==='planning'&&s.timegrid?.roles?.length===4;
  },null,{timeout:120000});
- await page.waitForTimeout(800);
+ await page.waitForTimeout(1050);
  const inspect=()=>page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  const first=await inspect();
  assert.equal(first.timegrid.roles.length,4);
  assert.equal(first.timegrid.enemies.length,4);
  assert.equal(first.timegrid.timelineTicks,10);
- assert.equal(first.timegrid.ui,'unframed-portraits-hp-only');
- assert.equal(first.timegrid.version,'1.8');
+ assert.equal(first.timegrid.ui,'gpt-vintage-vertical-film-roll-v1');
+ assert.equal(first.timegrid.version,'1.9');
  assert.equal(first.timegrid.tacticsOpen,false);
- assert.equal(await page.locator('.ring-timegrid .tg-team').count(),2);
- assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
+ assert.equal(await page.locator('.ring-timegrid .tg-film-viewport').count(),1);
+ assert.equal(await page.locator('.ring-timegrid .tg-reel').count(),1);
+ assert.equal(await page.locator('.ring-timegrid .tg-film-texture').count(),8);
+ assert.equal(await page.locator('.tg-reel > .tg-row').count(),8);
  assert.equal(await page.locator('.ring-timegrid .tg-portrait img').count(),8);
  assert.equal(await page.locator('.ring-timegrid .tg-hp-value').count(),8);
  assert.equal(await page.locator('.ring-timegrid .tg-hp-bar').count(),8);
- assert.equal(await page.locator('.tg-film-frame').count(),0);
+ assert.equal(await page.locator('.tg-film-frame').count(),0,'no previous CSS imitation film frames');
  assert.equal(await page.locator('.tg-tactics').count(),0,'old planner must not exist');
  assert.equal(await page.locator('[data-tg-quick]').count(),1);
  const visual=await page.evaluate(()=>{
@@ -59,10 +61,11 @@ try{
    rows:rows.map(r=>({width:r.width,height:r.height}))};
  });
  assert.ok(visual.stageWidth>=1275&&visual.hudWidth>=1275,'real 3D fills the screen');
- assert.equal(visual.bg,'none','film surface removed');
- assert.equal(visual.shadow,'none','film shadow removed');
- assert.ok(visual.rail==='none'||visual.rail==='normal','film perforations removed');
- assert.ok(visual.rows.every(r=>r.width<100&&r.height<110));
+ assert.equal(visual.bg,'none','film appearance comes from the GPT asset, not HUD CSS backgrounds');
+ assert.equal(visual.shadow,'none','no invented floating panel shadow');
+ assert.ok(visual.rail==='none'||visual.rail==='normal','real sprocket holes are in the texture, not pseudo-elements');
+ assert.ok(visual.rows.every(r=>r.width>=105&&r.width<160&&r.height>=55&&r.height<100),
+  'each frame has authentic 35mm landscape proportions');
  const hp=await page.locator('.tg-hp-bar').evaluateAll(nodes=>nodes.map(
   n=>Number(n.getAttribute('aria-valuenow'))));
  assert.equal(hp.length,8);
@@ -71,6 +74,19 @@ try{
   const faces=[...document.querySelectorAll('.ring-timegrid .tg-portrait img')];
   return faces.length===8&&faces.every(x=>x.complete&&x.naturalWidth>0);
  },null,{timeout:30000});
+ await page.waitForFunction(()=>{
+  const textures=[...document.querySelectorAll('.tg-reel > .tg-row .tg-film-texture')];
+  return textures.length===8&&textures.every(im=>im.complete&&im.naturalWidth===224);
+ },null,{timeout:30000});
+ const filmGeometry=await page.locator('.tg-film-viewport').evaluate(el=>{
+  const r=el.getBoundingClientRect();
+  return {width:r.width,height:r.height,top:r.top,right:r.right,
+   tile:el.querySelector('.tg-row').getBoundingClientRect().height};
+ });
+ assert.ok(filmGeometry.height>400&&filmGeometry.height<690,
+  'eight authentic film frames connect vertically without blocking the full stage');
+ assert.ok(filmGeometry.right<=1280&&filmGeometry.top>=0,
+  'reel always stays inside the stage');
  const hpLabels=await page.locator('.tg-hp-value').allTextContents();
  assert.ok(hpLabels.every(x=>{const parts=x.trim().split('/');return parts.length===2&&parts.every(v=>v!==''&&Number.isInteger(Number(v)));}),
   'all eight portraits show their real HP');
@@ -113,16 +129,53 @@ try{
  assert.deepEqual(after.partyLine,first.partyLine,'party actors never change standing position');
  assert.deepEqual(after.opposingLine,first.opposingLine,'enemy actors never change standing position');
  assert.equal(after.timegrid.tacticsOpen,false);
- assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
+ assert.equal(await page.locator('.tg-reel > .tg-row').count(),8);
  await page.screenshot({path:resolve(out,'04-round-resolved-1280x720.png'),animations:'disabled'});
  await page.setViewportSize({width:390,height:844});
  await page.waitForTimeout(500);
- assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
+ assert.equal(await page.locator('.tg-reel > .tg-row').count(),8);
  assert.equal(await page.locator('.tg-tactics').count(),0);
  const mobile=await inspect();
  assert.equal(mobile.renderer,'webgl-l2d');
  await page.screenshot({path:resolve(out,'05-phone-timegrid-390x844.png'),animations:'disabled'});
- const summary={pass:true,commit:process.env.GITHUB_SHA||null,
+ // Real DOM/state acceptance for a death splice followed by a newcomer.
+ // QA-only mutator is never exposed in normal game mode.
+ await page.setViewportSize({width:1280,height:720});
+ await page.goto(origin+'/index.html?scene=ring-arena&timegridQA=1',
+  {waitUntil:'domcontentloaded',timeout:60000});
+ await page.waitForFunction(()=>{
+  const hud=document.querySelector('.ring-timegrid');
+  return window.PaperWorldGameRingArena?.inspect?.()?.active&&hud?.__timegridQA;
+ },null,{timeout:120000});
+ await page.waitForTimeout(1000);
+ const moved=await page.evaluate(()=>{
+  const hud=document.querySelector('.ring-timegrid');
+  const before=[...document.querySelectorAll('.tg-reel > .tg-row')]
+   .map(x=>x.dataset.tgActor);
+  const died=hud.__timegridQA.remove('enemy-s4');
+  return {before,died,revision:Number(hud.dataset.reelRevision)};
+ });
+ assert.equal(moved.died,true);
+ assert.equal(moved.before.length,8);
+ assert.equal(moved.revision,1,'death splices exactly one frame and triggers quick roll');
+ await page.waitForTimeout(360);
+ assert.equal(await page.locator('.tg-reel > .tg-row').count(),7);
+ assert.equal(await page.locator('.tg-ghost').count(),0,'dead portrait ghost fully exits');
+ await page.screenshot({path:resolve(out,'06-death-splice-1280x720.png'),animations:'disabled'});
+ const recruited=await page.evaluate(()=>{
+  const hud=document.querySelector('.ring-timegrid');
+  return hud.__timegridQA.recruit({id:'enemy-join-5',side:'enemy',name:'增援',
+   hp:36,maxHp:36,poise:0,poiseMax:10,energy:0,dead:false,
+   actions:[],hand:[]});
+ });
+ assert.equal(recruited,true);
+ await page.waitForTimeout(350);
+ assert.equal(await page.locator('.tg-reel > .tg-row').count(),8);
+ assert.equal(await page.locator('.tg-reel > .tg-row[data-tg-actor="enemy-join-5"]').count(),1);
+ const revision=await page.locator('.ring-timegrid').getAttribute('data-reel-revision');
+ assert.equal(revision,'2','recruit splices one new genuine film frame');
+ await page.screenshot({path:resolve(out,'07-newcomer-splice-1280x720.png'),animations:'disabled'});
+  const summary={pass:true,commit:process.env.GITHUB_SHA||null,
   browser:'real Chromium/Swiftshader WebGL; no raster mock',
   scene:'ring-arena',party:first.partyLine,foes:first.opposingLine,
   actors:after.timegrid.roles,enemies:after.timegrid.enemies,
