@@ -117,8 +117,12 @@ try{
  assert.equal(view.scope,'city');assert.equal(view.city,'kirihama');
  assert.equal(view.regional,0);assert.equal(view.metro,81); // 10 physical subway services, including the downtown ring
  assert.equal(view.cityCards.length,0);
- assert.ok(view.local>=10&&view.local<=30,
-  'full city must visually show only major stations, not a dense 70-pin row: '+view.local);
+ assert.ok(view.local>=8&&view.local<=70,
+  'large player city map uses zoomed physical station LOD, not a tiny fit-to-screen diagram: '+view.local);
+ assert.equal(await page.locator('.pw-large-city-pin').count(),120,
+  'all 120 physical city destinations must be real independent map pins');
+ assert.equal(await page.locator('.pw-large-city-district').count(),15,
+  'all 15 player-facing district signposts must appear in Kirihama');
  assert.equal(await page.locator('.pw-dot-local-places .pw-transit-place').count(),70,
   'all 70 real stations still exist as programmatic independent nodes');
  assert.equal(view.access.length,0);
