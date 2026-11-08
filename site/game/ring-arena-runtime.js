@@ -170,6 +170,12 @@
  // exactly ONE shared cameraVP. Never reposition individual layers.
  const LOOK_LIMITS=Object.freeze({yawLeftDeg:22,yawRightDeg:22,
   pitchUpDeg:12,pitchDownDeg:12});
+ // Human-comfort battle camera: limit ambient cursor motion separately from
+ // the independent free-look/DEV camera. Never alter the approved neutral
+ // 66-degree New-Moon shoulder eye, lens or heroine portrait scale.
+ const SHOULDER_LOOK_LIMITS=Object.freeze({
+  yawLeftDeg:7.5,yawRightDeg:7.5,pitchUpDeg:3.5,pitchDownDeg:3.5
+ });
  function immersiveCamera(base,cursorX=0,cursorY=0){
   const x=clamp(Number(cursorX)||0,-1,1),y=clamp(Number(cursorY)||0,-1,1);
   if(Math.abs(x)+Math.abs(y)<1e-9)return base;
@@ -194,8 +200,8 @@
  function shoulderCamera(base,hero,cursorX=0,cursorY=0,aspect=16/9){
   const x=clamp(Number(cursorX)||0,-1,1);
   const y=clamp(Number(cursorY)||0,-1,1);
-  const yaw=rad((x<0?LOOK_LIMITS.yawLeftDeg:LOOK_LIMITS.yawRightDeg)*x);
-  const pitch=rad((y<0?LOOK_LIMITS.pitchUpDeg:LOOK_LIMITS.pitchDownDeg)*y);
+  const yaw=rad((x<0?SHOULDER_LOOK_LIMITS.yawLeftDeg:SHOULDER_LOOK_LIMITS.yawRightDeg)*x);
+  const pitch=rad((y<0?SHOULDER_LOOK_LIMITS.pitchUpDeg:SHOULDER_LOOK_LIMITS.pitchDownDeg)*y);
   const phone=clamp((.85-clamp(Number(aspect)||16/9,.35,3.5))/.25,0,1);
   // Relative mobile shoulder offsets MUST stay relative to the selected
   // character's translated base rig. Absolute .60/.75 phone X values
@@ -207,8 +213,12 @@
   const fz0=base.focus.z;
   const pivot={x:hero.x,y:hero.y+hero.height*.88,z:hero.z};
   const dx=x0-hero.x,dz=z0-hero.z,cs=Math.cos(yaw),sn=Math.sin(yaw);
-  const eye={x:pivot.x+dx*cs-dz*sn,y:base.eye.y,
-   z:pivot.z+dx*sn+dz*cs};
+  // Critical comfort fix: keep the real shoulder EYE at its approved
+  // world position for every cursor input. The previous mouse yaw ORBITED
+  // the eye around the actor, translating the entire room and making it
+  // feel as if the 3D scene slipped behind the fixed L2D portraits.
+  // Human head-look rotates only the viewing direction, not the observer.
+  const eye={x:x0,y:base.eye.y,z:z0};
   const f=normalize({x:fx0-x0,y:0,z:fz0-z0});
   const right=normalize(cross(f,{x:0,y:1,z:0}));
   const worldF={x:f.x*cs+right.x*sn,z:f.z*cs+right.z*sn};
@@ -2563,6 +2573,8 @@
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
    stagePresentation:'p5-spaced-fixed-all-back-command-team',
+   runtimeRevision:'p5-neighbor-wide-comfort-headlook-v2-20261108',
+   shoulderMouseLimits:{...SHOULDER_LOOK_LIMITS},
    stageTransitionProgress:1,
    stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
    presentationActors:presentedActors.map(a=>({id:a.id,team:a.team,
@@ -2708,7 +2720,7 @@
   return Object.freeze(api);
  }
  return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,LIGHT_STATES,lightingFrame,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
-  SHOT_NAMES,CAMERA_STOPS,LOOK_LIMITS,immersiveCamera,shoulderCamera,allyViewCamera,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
+  SHOT_NAMES,CAMERA_STOPS,LOOK_LIMITS,SHOULDER_LOOK_LIMITS,immersiveCamera,shoulderCamera,allyViewCamera,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });
