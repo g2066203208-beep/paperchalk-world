@@ -369,6 +369,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   areaNodes.push(label);
  }
  const transitPOIs=new Set(atlas.POIS.map(p=>p.id)); // Every destination is now a routable stop.
+ function loadCardPhoto(img,source){
+  if(!img||!source||img.dataset.loaded==='true')return;
+  img.dataset.loaded='true';
+  img.onerror=()=>{img.onerror=null;img.src=PLACEHOLDER};
+  img.src=source;
+ }
  const cityNodes=[];
  for(const c of atlas.CITIES){
   const node=element('button','pw-dot-city');
@@ -446,7 +452,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.append(caption,sub);
  function viewport(){const r=map.getBoundingClientRect();return {w:r.width||844,h:r.height||390}}
  function centerOn(p,s){
-  const v=viewport();scale=clamp(s,minScale,4.5);
+  const v=viewport();scale=clamp(s,minScale,9);
   x=v.w*.5-location(p).x*scale;y=v.h*.5-location(p).y*scale;
   constrain();position();
  }
@@ -471,7 +477,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    // Circles use vector coordinates but never shrink to illegible pixels on
    // the world overview, nor turn into giant blobs at street-level zoom.
    for(const stop of stops.querySelectorAll('circle')){
-    const r=stop.classList.contains('pw-transit-stop-halo')?18:
+    const r=stop.classList.contains('pw-dot-destination-stop')?
+     (stop.classList.contains('is-interchange')?13:7):
+     stop.classList.contains('pw-transit-stop-halo')?18:
      stop.classList.contains('pw-transit-transfer-core')?4.2:
      stop.closest('.pw-transit-stop-group')?.querySelector('.pw-transit-transfer-core')?10:8;
     stop.setAttribute('r',(r/scale).toFixed(4));
@@ -493,7 +501,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   canvas.style.setProperty('--dot-poi-label-size',v.w<900?'14px':'16px');
   map.dataset.compact=String(scale<.55);
   map.dataset.smallScreen=String(v.w<900);
-  const zoom=scale<1.22?'region':scale<2.3?'city':'detail';
+  const zoom=scale<1.25?'region':scale<2.85?'city':'detail';
   map.dataset.zoom=zoom;
   // Regions and city districts are zoom layers of the SAME physical lattice.
   caption.textContent=zoom==='region'?'都市圈交通':zoom==='city'?'城市交通':'街区交通';
@@ -508,8 +516,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // Atlas city cards have fixed *readable* screen sizes. Resolve the few
   // close-city overlaps in screen space rather than making ALL cities tiny.
   // Keep each card as close as possible to its snapped geographic anchor.
-  const cityCardWidth=scale<.65?94:126;
-  const cityCardHeight=scale<.65?50:60;
+  const cityCardWidth=scale<.65?128:192;
+  const cityCardHeight=scale<.65?78:155;
+  cardLeaders.replaceChildren();
   const placedCities=[];
   for(const {node,city} of cityNodes){
    if(node.hidden)continue;
@@ -534,6 +543,15 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    if(best){
     node.style.left=best.x+'px';node.style.top=best.y+'px';
     placedCities.push({x:best.x,y:best.y,w:cityCardWidth,h:cityCardHeight});
+    const dist=Math.hypot(best.x-anchorX,best.y-anchorY);
+    if(dist>7){
+     const from=location(city),tx=(best.x-x)/scale,ty=(best.y-y)/scale;
+     cardLeaders.append(vector('path',{d:rounded([
+      from,{x:from.x,y:ty},{x:tx,y:ty}],7),
+      'data-stop':network.HUB(city.id)},'pw-dot-city-card-leader'));
+    }
+    const source=cityNodes.find(item=>item.city.id===city.id);
+    loadCardPhoto(source?.img,source?.source);
    }
   }
   // The real eight-station metro is the main navigation layer. Surrounding
@@ -549,23 +567,27 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   }
   for(const {node,poi} of worldNodes){
    const p=location(poi),px=x+p.x*scale,py=y+p.y*scale;
-   const threshold=poi.id===here?1.8:
-    (poi.city==='kirihama'&&currentCity==='kirihama')?3.85:
-    transitPOIs.has(poi.id)?1.9:2.45;
+   const threshold=poi.id===here?2.15:
+    poi.city===currentCity?3.45:2.85;
    let visible=scale>=threshold&&px>-75&&px<v.w+75&&py>-65&&py<v.h+65;
    // Real screen-space occupancy, not piles of overlapping photo cards.
    if(visible){
-    visible=!occupied.some(q=>Math.abs(q.x-px)<112&&
-      Math.abs(q.y-py)<93);
+    visible=!occupied.some(q=>Math.abs(q.x-px)<185&&
+      Math.abs(q.y-py)<150);
     if(visible)occupied.push({x:px,y:py});
    }
    node.hidden=!visible;
+   if(visible){
+    const selected=worldNodes.find(item=>item.poi.id===poi.id);
+    loadCardPhoto(selected?.img,selected?.source);
+   }
   }
-  metroLayer.hidden=scale<1.22||scale>4.5;
+  metroLayer.hidden=scale<1.25;
   urban.style.display=scale<1.22?'none':'';
   stops.style.display=scale<1.22?'none':'';
   metroNetwork.style.display='none'; // Retired fabricated ghost stops.
-  municipal.style.display=scale<1.65?'none':'';
+  municipal.style.display=scale<1.45?'none':'';
+  access.style.display=scale<1.15?'none':'';
   regional.style.display=scale>=1.45?'none':'';
   regional.style.opacity='.86';
   hint.hidden=scale>2.3;
@@ -575,7 +597,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  function zoomBy(factor,atX,atY){
   const v=viewport(),old=scale;
   const px=atX??v.w*.5,py=atY??v.h*.5;
-  const next=clamp(old*factor,minScale,4.5);
+  const next=clamp(old*factor,minScale,9);
   x=px-(px-x)*next/old;y=py-(py-y)*next/old;scale=next;
   constrain();position();
  }
@@ -589,8 +611,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    // Fit the ACTUAL 8-column x 3-row metro diagram, not a fictional
    // 570x310 bounding rectangle that left the route tiny. Photo cards and
    // station names require a modest clearance outside the real track bounds.
-   const metroZoom=Math.min(3.5,(v.w-80)/400,(v.h-92)/185);
-   const local=Math.max(1.5,metroZoom);
+   const metroZoom=Math.min(4.3,(v.w-48)/400,(v.h-52)/210);
+   const local=Math.max(2.5,metroZoom);
    const targetZoom=currentCity==='kirihama'?local:Math.max(2.85,local);
    centerOn(currentCity==='kirihama'?
     {x:LOCAL_X+6*CELL,y:LOCAL_Y+2*CELL}:(herePoi||hereCity),
@@ -604,7 +626,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  toolBtns[0].addEventListener('click',()=>zoomBy(1/1.37));
  toolBtns[1].addEventListener('click',()=>zoomBy(1.37));
  toolBtns[2].addEventListener('click',()=>centerOn({x:W/2,y:H/2},minScale));
- toolBtns[3].addEventListener('click',()=>centerOn(herePoi||hereCity,Math.max(1.8,minScale*2.6)));
+ toolBtns[3].addEventListener('click',()=>centerOn(network.at(here)||herePoi||hereCity,Math.max(3.4,minScale*3.4)));
  const wheel=e=>{e.preventDefault();
   const r=map.getBoundingClientRect();
   zoomBy(Math.exp(-clamp(e.deltaY,-500,500)*.0014),e.clientX-r.left,e.clientY-r.top);
