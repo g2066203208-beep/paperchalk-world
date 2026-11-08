@@ -1028,6 +1028,11 @@
    '#ring-arena-controls button[aria-pressed=true]{background:#185b4a;border-color:#aaf9d6}',
    '#ring-arena-controls button:disabled{opacity:.36;cursor:default}',
    '#ring-arena-controls .status{position:absolute;right:14px;top:14px;font:11px/1.5 monospace;color:#b1dccc;text-align:right}',
+   '#ring-arena-controls .party-switch{position:absolute;left:clamp(12px,2vw,32px);top:16px;display:flex;align-items:center;gap:5px;max-width:90%;pointer-events:auto}',
+   '#ring-arena-controls .party-switch button{min-width:34px;width:36px;height:36px;padding:2px 0;border-radius:50%;background:#08141bcf;border-color:#6c858d99;font-size:12px;box-shadow:0 2px 9px #0006}',
+   '#ring-arena-controls .party-switch button[aria-pressed=true]{background:#3d715e;border-color:#d0ffdf;box-shadow:0 0 0 2px #c0efcb35}',
+   '#ring-arena-controls .party-hint{font-size:10px;opacity:.72;margin-right:5px}',
+   '#view.ring-arena-transit #ring-arena-controls .party-switch{display:none!important}',
    '@media(max-width:690px){#ring-arena-controls .status,#ring-arena-controls .top small{display:none}#ring-arena-controls button{padding:6px 8px;min-height:36px}#ring-arena-controls .bottom{gap:5px;bottom:max(8px,env(safe-area-inset-bottom))}}'
   ].join('\n');
   document.head.append(style);
@@ -1035,7 +1040,11 @@
   canvas.hidden=true;canvas.setAttribute('aria-label','真实3D越肩战斗场景，摄像机围绕主角肩后转动，主角身体跟随鼠标');stage.append(canvas);
   const hud=document.createElement('section');hud.id='ring-arena-controls';hud.hidden=true;
   hud.innerHTML=[
-   '<div class="status" role="status" hidden></div><div class="bottom">',
+   '<div class="status" role="status" hidden></div>',
+   '<div class="party-switch" role="group" aria-label="切换当前控制的我方角色">',
+   '<span class="party-hint">我方</span>',
+   ...[1,2,3,4].map(i=>'<button type="button" data-control-ally="'+i+'" aria-pressed="'+(i===1)+'" aria-label="切换控制我方'+i+'号角色" title="按 '+i+' 切换队友">'+i+'</button>'),
+   '</div><div class="bottom">',
    '<button data-lighting type="button" title="正常 / 部分熄灭 / 故障闪烁 / 停电 / 恐怖演出，按 L 可切换">灯光：正常</button>',
    '<button data-exit type="button">返回</button></div>',
    '<div class="director-deck"><button class="director-card" data-attack-card="slash" aria-pressed="false" type="button" aria-label="攻击牌：斧柄横扫，基础伤害12。选择后点击敌人">',
@@ -1079,6 +1088,7 @@
   const enemyHitArt=hud.querySelector('[data-action-enemy]');
   const actionAssets=[heroActionArt,enemyHitArt];
   const targetButtons=[...hud.querySelectorAll('[data-director-enemy]')];
+  const partyButtons=[...hud.querySelectorAll('[data-control-ally]')];
   // User-approved FEMALE 07 rear battle cutout is the DEFAULT leading
   // silhouette of the fixed-left, New-Moon-style shoulder-close camera.
   // Old protagonist L2D is preserved behind heroPose=original, and legacy
@@ -1335,6 +1345,7 @@
    gl=null;
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
+  let controlledActorId='hero';
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
   let platformExposure=0,platformExposureOverride=null;
   let doorOpen=0;
@@ -1435,6 +1446,20 @@
   let completedAttacks=0,lastTarget=null;
   const enemyHP=new Map([1,2,3,4].map(i=>['enemy-'+i,36]));
   const actorForTarget=id=>layout(mode).enemies.find(a=>a.id===id);
+  const controlledActor=()=>layout(mode).allies.find(a=>a.id===controlledActorId)||layout(mode).allies[0];
+  const controlledBase=()=>({mode,selected:controlledActorId,
+   base:camera(mode,0)});
+  function selectAlly(index){
+   if(!active||transitMode||attack)return false;
+   const number=Number(index);
+   if(!Number.isInteger(number)||number<1||number>4)return false;
+   const next=layout(mode).allies[number-1];
+   if(!next)return false;
+   controlledActorId=next.id;
+   mouseLookX=0;mouseLookY=0;armed=false;
+   refreshDirectorUI();render(0,0,0);
+   return true;
+  }
   const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
   let audioContext=null,previousBeat='idle';
   // Original, synthesized-only battle effects. No third-party copyrighted audio.
@@ -1494,12 +1519,17 @@
     button.title='敌方生命 '+hp+'/36';
    }
    hud.querySelector('[data-exit]').disabled=!!attack;
+   for(const b of partyButtons){
+    const ally=layout(mode).allies[Number(b.dataset.controlAlly)-1];
+    b.setAttribute('aria-pressed',String(ally?.id===controlledActorId));
+    b.disabled=!!attack;
+   }
   }
   function startAttack(targetId){
    if(!armed||attack||!actorForTarget(targetId)||enemyHP.get(targetId)<=0)return false;
    armed=false;qaTimeMs=null;
    attack=director.createAttack(targetId,performance.now(),
-    {mode,reducedMotion:reducedMotion()});
+    {mode,reducedMotion:reducedMotion(),attackerId:controlledActorId});
    attackApplied=false;attackSample=director.sample(attack,attack.startedAt);
    previousBeat='lock';playDirectorSound('windup');
    cinematic.hidden=false;cinematic.dataset.phase='lock';cinematic.dataset.cut='none';
@@ -1533,7 +1563,15 @@
    if(!active||e.altKey||e.ctrlKey||e.metaKey||
       e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;
    if(e.key==='Escape'&&armed){e.preventDefault();armed=false;refreshDirectorUI();return;}
-   if(armed&&/^[1-4]$/.test(e.key)){e.preventDefault();startAttack('enemy-'+e.key);}
+   if(armed&&/^[1-4]$/.test(e.key)){e.preventDefault();startAttack('enemy-'+e.key);return;}
+   if(!armed&&!attack&&/^[1-4]$/.test(e.key)&&!e.repeat){
+    e.preventDefault();selectAlly(Number(e.key));return;
+   }
+   if(!armed&&!attack&&['q','e'].includes(e.key.toLowerCase())&&!e.repeat){
+    e.preventDefault();
+    const i=layout(mode).allies.findIndex(a=>a.id===controlledActorId);
+    selectAlly(((i+(e.key.toLowerCase()==='q'?3:1))%4)+1);return;
+   }
    if(e.key.toLowerCase()==='l'&&!e.repeat){e.preventDefault();setLighting(LIGHT_STATES[(LIGHT_STATES.indexOf(lightState)+1)%LIGHT_STATES.length]);}
   }
   window.addEventListener('keydown',onDirectorKey);
@@ -1544,6 +1582,7 @@
   hud.addEventListener('click',e=>{
    const b=e.target.closest('button');if(!b)return;
    e.preventDefault();e.stopPropagation();
+   if(b.hasAttribute('data-control-ally')){selectAlly(b.dataset.controlAlly);return;}
    if(b.hasAttribute('data-attack-card')){
     if(!attack){armed=!armed;refreshDirectorUI();render(0);}
     return;
@@ -1986,7 +2025,7 @@
     // red-haired protagonist's axe poster during an attack. Keep the same
     // original back-facing art on the real 3D actor and drive a grounded
     // frame-timed lean, fast forward lunge, and the existing impact VFX.
-    const female07Actor=a.id==='hero'&&previewPose==='female7';
+    const female07Actor=(a.id==='hero'||(uniformBattlePreview&&a.team==='ally'))&&previewPose==='female7';
     const key=requested==='attack'&&!female07Actor?'hero-attack':
      requested==='hurt-art'&&!uniformBattlePreview?'enemy-2-hit':null;
     const art=key?actionTextures.get(key):null;
@@ -2025,7 +2064,7 @@
     gl.uniform1f(portrait.uWalkPhase,0);
     gl.uniform1f(portrait.uHit,attack&&a.id===attack.targetId&&attackSample?
      attackSample.hitFlash:0);
-    const duelPerformer=!!attack&&(a.id==='hero'||a.id===attack.targetId);
+    const duelPerformer=!!attack&&(a.id===(attack.attackerId||'hero')||a.id===attack.targetId);
     // DD source: spectator queue remains faint and softly out of focus
     // during the 46-frame central shot, not erased or moved to DOM.
     const backgroundCue=!duelPerformer&&attackSample?attackSample.zoom:0;
@@ -2071,8 +2110,11 @@
    // oversized heroine-centric battle shoulder closeup.
    const scenePack=window.PaperWorldEnvironments?.get?.(environmentId);
    const lensPreset=scenePack?.camera;
-   const regular=target?director.cinematicCamera(base,attack,attackSample,target):
-    shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
+   const cameraBase=controlledActorId==='hero'?base:
+    allyViewCamera(base,layout(mode).allies[0],controlledActor(),0,0,
+     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
+   const regular=target?director.cinematicCamera(cameraBase,attack,attackSample,target):
+    allyViewCamera(base,layout(mode).allies[0],controlledActor(),mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
    lens=lensPreset?.mode==='fixed'?fixedEnvironmentCamera(base,lensPreset,
     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9):regular;
@@ -2160,11 +2202,12 @@
    // V29 original-source measured shared center: performers at 30% / 70%.
    // Their portraits stay in ACTION form through the entire 7-frame retreat.
    // Other actors stay at original anchors, subdued rather than removed.
+   const performing=all.find(a=>a.id===(attack?.attackerId||controlledActorId))||all[0];
    const duet=attack&&attackSample&&target?
-    director.duelLayout(director.duelCamera(base),project,w/h,all[0],target):null;
+    director.duelLayout(director.duelCamera(cameraBase),project,w/h,performing,target):null;
    lastDuet=duet;
    const presented=duet?all.map(a=>{
-    const motion=director.actorMotion(a.id,attack,attackSample,all[0],target,duet);
+    const motion=director.actorMotion(a.id,attack,attackSample,performing,target,duet);
     return {...a,x:a.x+motion.x,y:a.y+motion.y,
      z:a.z+motion.z,height:a.height*motion.scale};
    }):all;
@@ -2292,7 +2335,7 @@
    canvas.hidden=false;hud.hidden=true;
    view.classList.add('ring-arena-active','ring-arena-transit');
    elapsed=0;frames=0;mouseLookX=0;mouseLookY=0;
-   resetCombatPreview();lens=camera(mode,0);setLighting('on');render(0,0,0);
+   controlledActorId='hero';resetCombatPreview();lens=camera(mode,0);setLighting('on');render(0,0,0);
    return true;
   }
   function exitTransit(){
@@ -2320,7 +2363,7 @@
    if(transitMode)exitTransit();
    active=!!value;canvas.hidden=!active;hud.hidden=!active;
    view.classList.toggle('ring-arena-active',active);
-   if(active){mode='outer';elapsed=0;frames=0;shotIndex=0;mouseLookX=0;mouseLookY=0;
+   if(active){mode='outer';elapsed=0;frames=0;shotIndex=0;controlledActorId='hero';mouseLookX=0;mouseLookY=0;
     currentLighting=lightingFrame(lightState,0,mode);
     resetCombatPreview();lens=camera(mode,0);render(0)}
    else resetCombatPreview();
@@ -2330,10 +2373,9 @@
     if(!lens||lens.cinematic)return false;
     const base=camera(mode,0);
     const cfg=window.PaperWorldEnvironments?.get?.(environmentId)?.camera;
-    const actual=cfg?.mode==='fixed'?fixedEnvironmentCamera(base,cfg,
-     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9):
-     shoulderCamera(base,layout(mode).allies[0],mouseLookX,mouseLookY,
-     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
+    const aspect=canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9;
+    const actual=cfg?.mode==='fixed'?fixedEnvironmentCamera(base,cfg,aspect):
+     allyViewCamera(base,layout(mode).allies[0],controlledActor(),mouseLookX,mouseLookY,aspect);
     return Math.abs(lens.eye.x-actual.eye.x)<.00001&&
      Math.abs(lens.eye.y-actual.eye.y)<.00001&&
      Math.abs(lens.eye.z-actual.eye.z)<.00001&&
@@ -2366,6 +2408,7 @@
    renderer:gl?'webgl-l2d':'unavailable',
     cameraLook:{mode:'hero-root-tps-shoulder-rig',
      yawDeg:lens?.lookYawDeg||0,pitchDeg:lens?.lookPitchDeg||0,
+     controlledActorId,
      heroYawDeg:lens?.heroYawDeg||0,
      pivot:lens?.shoulderPivot||null,
      shoulderBoomMeters:lens?.shoulderBoomMeters||null,
@@ -2374,7 +2417,13 @@
      sharedProjection:true},
     initError:canvas.dataset.error||null,
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:lens?.lensShift??VERTICAL_LENS_SHIFT,
-   cameraTarget:camera(mode,shotIndex),
+   controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
+   controlCameraPivot:controlledActor(),
+   partyLine:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
+   opposingLine:layout(mode).enemies.map(a=>({id:a.id,x:a.x,z:a.z})),
+   cameraTarget:controlledActorId==='hero'?camera(mode,shotIndex):
+    allyViewCamera(camera(mode,0),layout(mode).allies[0],controlledActor(),0,0,
+     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
    settled:!!lens&&Math.hypot(lens.eye.x-camera(mode,0).eye.x,
      lens.eye.z-camera(mode,0).eye.z)<.001,actors:layout(mode),
@@ -2486,7 +2535,7 @@
    // real attacks. Reset enemy HP so advancing from impact to arrival never
    // appears to inflict a second hit in screenshots.
    for(const id of enemyHP.keys())enemyHP.set(id,36);
-   attack=director.createAttack(targetId,performance.now(),{mode,reducedMotion:false});
+   attack=director.createAttack(targetId,performance.now(),{mode,reducedMotion:false,attackerId:controlledActorId});
    qaTimeMs=clamp(elapsedMs,0,director.DURATION);
    attackApplied=false;armed=false;previousBeat='qa';
    cinematic.hidden=false;
@@ -2497,12 +2546,12 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,enterTransit,exitTransit,render,inspect,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,get canvas(){return canvas}};
+  const api={setActive,selectAlly,enterTransit,exitTransit,render,inspect,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
  return Object.freeze({SPEC,SURFACE_TEXTURES,STAGING,LIGHTING,LIGHT_STATES,lightingFrame,lightRig,angleForArcMeters,bindings,layout,visibleActors,HIDDEN_ALLY_IDS,wallArcMeters,curvedSurfacePoint,curvedSurfaceUV,
-  SHOT_NAMES,CAMERA_STOPS,LOOK_LIMITS,immersiveCamera,shoulderCamera,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
+  SHOT_NAMES,CAMERA_STOPS,LOOK_LIMITS,immersiveCamera,shoulderCamera,allyViewCamera,WALL_TEXTURE,wallTextureUV,cameraPitchDeg,backdropPoint,camera,sortActorsForAlpha,actorWorldRight,portraitBounds,
   portraitVisibleBounds,battleVisualSafety,CANONICAL_BACK_UV,FEMALE07_BACK_UV,responsiveFov,portraitFit,renderPixelRatio,cameraVP,VERTICAL_LENS_SHIFT,lookAt,
   perspective,multiply,project,create});
 });
