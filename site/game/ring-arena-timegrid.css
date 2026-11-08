@@ -436,3 +436,12 @@
   width:calc(100% - clamp(320px,47vw,405px) - 5px)!important;
  }
 }
+
+/* The battle HUD owns the FX layer directly, outside the scrollable
+   right command dock. Its bounds are updated to the true WebGL canvas
+   pixels before each hit so 3D torso impact labels stay correctly aligned. */
+#ring-arena-controls > .tg-hit-layer{
+ position:absolute!important;top:0!important;left:0!important;
+ right:auto!important;bottom:auto!important;
+ z-index:12!important;overflow:visible;pointer-events:none;
+}

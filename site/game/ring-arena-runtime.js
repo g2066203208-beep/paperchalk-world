@@ -1717,6 +1717,10 @@
   function showTimegridHit(event){
    const layer=hud.querySelector('[data-tg-hits]');
    if(!layer||!lens||!canvas.clientWidth||!canvas.clientHeight)return;
+   // The screen-space FX plane matches the actual LEFT 3D viewport when
+   // the right-hand planner is open, not the whole browser or sidebar.
+   layer.style.width=canvas.clientWidth+'px';
+   layer.style.height=canvas.clientHeight+'px';
    const aspect=canvas.clientWidth/canvas.clientHeight;
    for(const change of event.changes||[]){
     if(!change.deltaHp)continue;

@@ -134,6 +134,11 @@
    '<div class="tg-hit-layer" data-tg-hits aria-hidden="true"></div>'
   ].join('');
   hud.append(holder);
+  // Damage text belongs to the SAME projected WebGL viewport as its actor,
+  // never inside the clipped/blurred command panel. Keep HUD ownership so
+  // transit and scene changes still hide it automatically.
+  const hits=holder.querySelector('[data-tg-hits]');
+  hud.append(hits);
   const get=n=>holder.querySelector('[data-tg-'+n+']');
   const note=s=>{feedback=String(s);get('help').textContent=feedback;};
   const roleName=id=>({hero:'斧卫','ai-gun':'枪手','ai-guard':'守护','ai-mage':'调律'}[id]||'敌方');
@@ -150,6 +155,7 @@
   };
   function start(){
    model=createBattle(++seed);picked=null;moving=null;mode=null;expanded=true;selectedTick=1;
+   hits.replaceChildren();
    model.onChange(e=>{if(onTick)onTick(e,model);paint();});
    feedback='选手牌 → 点击目标的时间格；点头像切换角色。';
    paint();return model;
