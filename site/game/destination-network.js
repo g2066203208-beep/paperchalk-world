@@ -23,7 +23,16 @@
   adj.set(id,[]);
  };
  for(const c of atlas.CITIES)point(HUB(c.id),c.x,c.y,c.id,'hub',c.name+'交通枢纽');
- for(const p of atlas.POIS)point(p.id,p.x,p.y,p.city,'place',p.name);
+ // Canonical local subway node coordinates always win over approximate
+ // regional landmark coordinates when both refer to the SAME place ID.
+ // This prevents a photograph and its access-road pin being detached from
+ // the actual metro station by one or two grid cells.
+ for(const p of atlas.POIS){
+  const stop=metro?.STATIONS?.[p.id];
+  if(stop&&!stop.locked)
+   point(p.id,840+stop.gx*CELL,480+stop.gy*CELL,p.city,'place',p.name);
+  else point(p.id,p.x,p.y,p.city,'place',p.name);
+ }
  // Actual municipal metro station nodes already exist in the real transport
  // simulation. Their positions are the SAME local square grid as in map UI.
  if(metro?.STATIONS)for(const [id,s] of Object.entries(metro.STATIONS)){
