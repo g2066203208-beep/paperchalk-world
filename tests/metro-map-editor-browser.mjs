@@ -81,8 +81,36 @@ try{
  assert.ok(empty.dots>1500,'all original map dots should remain');
  for(const layer of ['heading','metro','pins','editor'])assert.equal(empty[layer],'none',JSON.stringify(empty));
  assert.notEqual(empty.svg,'none','do not hide the dot grid with its parent SVG');
+ await page.waitForFunction(()=>{
+  const m=document.querySelector('.pw-dot-world-map');
+  return Number(m?.dataset.rippleFrames||0)>=5&&m?.dataset.fogSource==='live-world-fluid';
+ },{timeout:15000});
+ const waveState=()=>page.evaluate(()=>{
+  const map=document.querySelector('.pw-dot-world-map');
+  const canvas=map.querySelector('.pw-dot-wave-surface');
+  const ctx=canvas.getContext('2d');
+  const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  let bright=0,weighted=0;
+  for(let i=3;i<rgba.length;i+=4){
+   if(rgba[i]>0){bright++;weighted=(weighted+(rgba[i]*(i%997)))%2147483647}
+  }
+  return {frames:+map.dataset.rippleFrames,bright,weighted,
+   fog:map.dataset.fogSource,rings:+map.dataset.rippleCount,
+   renderer:document.querySelector('#fog')?.dataset.renderer,
+   dotMode:map.dataset.dotAnimation};
+ });
+ const beforeWave=await waveState();
+ assert.ok(beforeWave.bright>100,'ripple dots must be painted in Canvas2D');
+ assert.equal(beforeWave.dotMode,'fluid-ripples');
+ assert.ok(beforeWave.rings>=1,'at least one expanding ring exists');
  await shot('00-original-game-empty-dot-canvas.png');
- console.log('EMPTY DOT MAP CHROMIUM PROOF',JSON.stringify(empty));
+ await page.waitForTimeout(1100);
+ const afterWave=await waveState();
+ assert.ok(afterWave.frames>beforeWave.frames,'water surface must update continuously');
+ assert.notEqual(afterWave.weighted,beforeWave.weighted,
+  'dot alpha/radius must change over time from mathematical water ripples');
+ await shot('00b-original-game-black-fog-expanding-ripples.png');
+ console.log('LIVE FLUID FOG + WATER RIPPLES CHROMIUM PROOF',JSON.stringify({beforeWave,afterWave,empty}));
  await page.evaluate(()=>document.querySelector('.pw-dot-world-map')?.classList.remove('pw-dot-empty-preview'));
  assert.equal(await page.locator('.pw-metro-edit-toggle:visible').count(),1);
  await shot('01-kirihama-70-stations-10-lines-before-edit.png');
