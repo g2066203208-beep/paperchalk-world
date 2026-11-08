@@ -9,7 +9,7 @@
  if(root)root.PaperWorldMetroMotion=api;
 })(typeof window!=='undefined'?window:null,function(){
  'use strict';
- const LEG_METERS=88,DURATION_MS=6200;
+ const LEG_METERS=88,DURATION_MS=9000;
  const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,Number(v)||0));
  const smooth=x=>{const t=clamp(x);return t*t*(3-2*t)};
  // Smoothstep speed ramps, integrated analytically. Velocity and
