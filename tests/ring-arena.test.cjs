@@ -5,6 +5,13 @@ const arena=require('../site/game/ring-arena-runtime.js');
 const close=(a,b,eps=1e-6)=>assert.ok(Math.abs(a-b)<=eps,a+' != '+b);
 assert.equal(arena.SPEC.stageType,'compact-convenience-curved-aisle');
 assert.deepEqual(arena.HIDDEN_ALLY_IDS,[],'all four friendly actors must take part in the battle');
+// Camera-dependent opacity/culling is forbidden: it previously made any
+// teammate overlapping a foe only 3.5% opaque (effectively deleted).
+const rendererSource=require('node:fs').readFileSync(require('node:path').resolve(__dirname,'../site/game/ring-arena-runtime.js'),'utf8');
+assert.ok(rendererSource.includes('gl.uniform1f(portrait.uOpacity,1);'),
+ 'all actors must remain full opacity across all four controllable views');
+assert.doesNotMatch(rendererSource,/blocksTarget\s*=|occludes\?\.035|portrait\.uOpacity\s*,\s*occludes/,
+ 'never restore any hidden ally or projected-occlusion opacity filter');
 assert.equal(arena.portraitFit(800,1200,1024).height,1024);
 assert.ok(arena.renderPixelRatio(1920,1080,4)<1.1);
 assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shoulder camera base, not switching angles');
