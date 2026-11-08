@@ -49,6 +49,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  // ?mapLayers=full opt-in restores the full map for regression/QA.
  const mapLayersFull=new URLSearchParams(global.location.search).get('mapLayers')==='full';
  map.classList.toggle('pw-dot-empty-preview',!mapLayersFull);
+ // Own the actual background at the map root. Higher-level scene/surface
+ // styling must never turn the requested pure-black canvas transparent.
+ if(!mapLayersFull)map.style.setProperty('background','#000000','important');
  map.dataset.presentation=mapLayersFull?'full':'dots-only';
  map.setAttribute('aria-label','分级交通地图：跨市交通总览及各市独立市内线路');
  map.dataset.scope='region';
