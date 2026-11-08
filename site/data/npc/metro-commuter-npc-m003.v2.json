@@ -55,14 +55,34 @@
     "originalBinaryCommittedToGitHub": true,
     "proposedAssetPath": "site/assets/characters/metro/npc-m003/approved-four-poses.png",
     "whiteBackgroundPresent": true,
-    "note": "Exact user-approved original RGB PNG, verified byte-for-byte by Git blob SHA and SHA256, committed to main. Needs separate alpha sprites and in-game integration.",
+    "note": "Canonical original PNG and derived transparent 4-pose atlas + four individual sprites are all in GitHub. Art approved; gameplay animation and station spawn QA not yet complete.",
     "assetPath": "site/assets/characters/metro/npc-m003/approved-four-poses.png",
-    "gitBlobSha": "e72e5f6149ef7e53935ceaf10345932754293d7b"
+    "gitBlobSha": "e72e5f6149ef7e53935ceaf10345932754293d7b",
+    "alphaAtlasSha256": "7b924ea8bf3ec64ca1bac7beaf48bc99ba3a3f064d8611056cbdf9f659cb714a",
+    "alphaExtraction": "Background-only flood extraction and minor detached component cleanup; original canonical source retained unmodified"
   },
   "render": {
     "approvedSource": "site/assets/characters/metro/npc-m003/approved-four-poses.png",
-    "transparentSpriteAtlas": null,
-    "ready": false
+    "transparentSpriteAtlas": "site/assets/characters/metro/npc-m003/four-pose-atlas-rgba.png",
+    "sprites": {
+      "front": "site/assets/characters/metro/npc-m003/front-standing.png",
+      "side": "site/assets/characters/metro/npc-m003/side-standing.png",
+      "back": "site/assets/characters/metro/npc-m003/back-standing.png",
+      "special": "site/assets/characters/metro/npc-m003/special-front-seated-reading.png"
+    },
+    "cellSize": [
+      416,
+      1024
+    ],
+    "atlasSize": [
+      1664,
+      1024
+    ],
+    "hasRealAlpha": true,
+    "assetsStoredInGitHub": true,
+    "ready": false,
+    "integrationState": "sprites created and committed, not yet inserted into active metro WebGL NPC spawn/runtime",
+    "note": "Preserve four transparent 416x1024 drawings as separate sprites for renderer; fourth is seated without furniture."
   },
   "allowedBehavior": [
     "stand",
