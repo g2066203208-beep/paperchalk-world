@@ -195,10 +195,11 @@ function create({map,svg,canvas,tools,atlas,metro,network,localPoint,
   links.style.display=enabled&&open?'':'none';
   toggle.hidden=!enabled||map.dataset.metroEditing==='true';
   menu.hidden=!enabled||!open;
-  if(!enabled||!open)return;
-  const {x,y,scale}=cam;
+  if(!enabled)return;
   map.dataset.citySites='120';
   map.dataset.cityDistrictCount='15';
+  if(!open)return;
+  const {x,y,scale}=cam;
   map.dataset.placeMapScale=scale>=2.4?'district':'full-city';
   // All 120 sites retain DOM nodes and exact unique map positions, even
   // when outside the camera. Every dot is clickable when on screen.
