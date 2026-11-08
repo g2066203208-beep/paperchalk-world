@@ -447,9 +447,16 @@
       },
       {
         "id": "NPC-SG03",
-        "look": "未最终锁定（应与 SG01/SG02 明显不同）",
-        "personality": "待进一步设计",
-        "status": "not_drawn"
+        "look": "中等身高、稍结实圆肩圆脸、短栗棕蓬松耳下发、透明镜片无眼睛的细圆框眼镜、右肩旧灰蓝帆布书包、左臂夹灰蓝笔记本、校服上扣系好下扣松开",
+        "personality": "略冒失、认真、担心上课迟到，急匆匆走路并不时扶眼镜",
+        "status": "prompt_completed_not_drawn",
+        "promptReference": "docs/NPC_SG03_ANIMA_THREE_VIEW_GLASSES_GIRL_20261108.md",
+        "motion": {
+          "side_left": "右手扶右肩书包带、左臂夹笔记本、小步朝左急行",
+          "front": "左臂夹本、右食指轻推眼镜、迎面小步快走",
+          "back": "右手拉书包带、左臂夹本、小步背向离开"
+        },
+        "eyePolicy": "transparent_round_glasses_with_blank_eye_area_no_drawn_eyes"
       }
     ],
     "promptTemplate": "docs/ANIMA_SCHOOLGIRL_THREE_VIEW_FILL_IN_TEMPLATE_V2_20261108.md",
