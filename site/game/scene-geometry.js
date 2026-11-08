@@ -62,7 +62,11 @@
   // Physical outside beyond the pierced window apertures, rendered first
   // into the same depth buffer. This is a genuine separate 3D backdrop.
   // Flat backdrop needs only one quad per ~27cm; motion is GPU UV-based.
-  grid(out.exterior,32,8,(u,v)=>[x(u),g.height*v,g.backZ-.16,u,v]);
+  // The track/tunnel lies BEHIND the actual station's ceramic wall at z4.42,
+  // never across it at z7.84: the original plane was physically occluding
+  // the station floor, columns and lightboxes even with train doors open.
+  grid(out.exterior,32,8,(u,v)=>[x(u),g.height*v,
+   g.shape==='strip'?g.backZ-4.0:g.backZ-.16,u,v]);
   // True perpendicular end walls looking into the NEXT carriage.
   // The gangway texture is continuous from back to front and has its own
   // color texture; never stretch the side-wall's first and last columns.
