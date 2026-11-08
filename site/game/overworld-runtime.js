@@ -94,6 +94,40 @@
     '<button type="button" class="pw-transit-next" aria-label="继续车厢对话">继续 ›</button>';
   root.appendChild(transit);
   const director=global.PaperWorldOverworldDirector?.create?.({root})||null;
+  const actOne=global.PaperWorldActOne?.create?.({storage:store})||null;
+  // A single short-lived shadow passes the existing classroom's LEFT window.
+  // No second full-screen art, gore plate, or artificial quest interface.
+  const fallMask=h('div','pw-act-one-fall');
+  fallMask.hidden=true;fallMask.setAttribute('aria-hidden','true');
+  fallMask.innerHTML='<span class="pw-act-one-fall-person"><i></i><b></b></span>';
+  view.appendChild(fallMask);
+  let fallTimer=0;
+  function clearFall(){
+    if(fallTimer)global.clearTimeout(fallTimer);
+    fallTimer=0;fallMask.hidden=true;fallMask.classList.remove('is-falling');
+  }
+  function playActOne(scene){
+    if(!scene||!director||!mode||root.hidden)return Promise.resolve();
+    // Scenes are data, while the existing director remains sole dialogue renderer.
+    return director.play(scene.lines,{
+      onBeat:beat=>{
+        if(beat.effect!=='fall')return;
+        clearFall();fallMask.hidden=false;
+        void fallMask.offsetWidth;
+        fallMask.classList.add('is-falling');
+        fallTimer=global.setTimeout(clearFall,1700);
+      },
+      onClose:clearFall
+    });
+  }
+  async function arriveStory(place){
+    if(!mode||root.hidden||!director)return;
+    // Preserve the existing everyday entrance; chapter dialogue follows.
+    await director.playLocation(place,engine.snapshot());
+    if(!mode||root.hidden||engine.snapshot().location!==place)return;
+    if(place==='school')await playActOne(actOne?.enter(engine.snapshot()));
+    else if(place==='classmate-home')await playActOne(actOne?.home(engine.snapshot(),'entry'));
+  }
   const cabin=global.PaperWorldMetroCabin?.create?.({
     root,engine,onExit:exitFromMetro,onFeedback:message=>say(message)
   })||null;
@@ -279,7 +313,7 @@
       paintedCity='';draw();
       say('到达'+dest.label+'。');
       if(dest.group==='城区'&&director)
-        global.setTimeout(()=>{if(mode)director.playLocation(place,engine.snapshot())},380);
+        global.setTimeout(()=>{if(mode)arriveStory(place)},380);
       return result;
     }finally{
       endTransit?.();endTransit=null;
@@ -348,6 +382,14 @@
       addAction('出门','exit',()=>surfaces?.openMap());
       addAction('回卧室','bedroom',()=>travel('bedroom'));
     }else if(s.location==='school'){
+      // Lessons are playable daily; the window fall happens DURING a lesson,
+      // not upon entering the room or by reading an unrelated news popup.
+      if(s.minute>=7*60&&s.minute<=15*60&&s.energy>=13)
+        addAction('上课','study',()=>run(()=>engine.act('study'),()=>{
+          const scene=actOne?.study(engine.snapshot());
+          if(scene)playActOne(scene);
+          else if(s.day===3)say('这节课照常结束。其他人还在讨论今天的事情。');
+        }));
       if(s.day===1&&!s.homework.handedIn){
         if(s.homework.status!=='finished')
           addAction('补完作业','homework',()=>run(()=>engine.finishHomework()));
@@ -356,7 +398,24 @@
       addAction('找女二','female2',()=>run(()=>engine.talk('female2'),res=>{
         director?.playSocial(res.message);
       }));
+      if(s.day<6)addAction('和小胖聊聊','boy',()=>playActOne(actOne?.talk(engine.snapshot(),'boy')));
+      if(s.day<3)addAction('跟她说两句','girl',()=>playActOne(actOne?.talk(engine.snapshot(),'girl')));
+      if(s.day>=3){
+        addAction('听听同学们怎么说','classmates',()=>playActOne(actOne?.talk(engine.snapshot(),'classmates')));
+        addAction('看看她的课桌','desk',()=>playActOne(actOne?.talk(engine.snapshot(),'girl-desk')));
+      }else addAction('听听班里的八卦','classmates',()=>playActOne(actOne?.talk(engine.snapshot(),'classmates')));
+      if(s.day>=3&&s.day<6)
+        addAction('问问男二','male2',()=>playActOne(actOne?.talk(engine.snapshot(),'male2')));
+      if(s.day>=6){
+        addAction('看看小胖家','boy-home',()=>travel('classmate-home'));
+        if(actOne?.knew('home-records')&&actOne?.knew('desk-note'))
+          addAction('想想那两件事','remember',()=>playActOne(actOne?.talk(engine.snapshot(),'conclusion')));
+      }
       addAction('离开学校','exit',()=>surfaces?.openMap());
+    }else if(s.location==='classmate-home'){
+      addAction('看看门口','door',()=>playActOne(actOne?.home(engine.snapshot(),'entry')));
+      addAction('查阅家属留下的记录','records',()=>playActOne(actOne?.home(engine.snapshot(),'records')));
+      addAction('离开','exit',()=>surfaces?.openMap());
     }else if(s.location==='convenience'){
       addAction('看看货架','shop',()=>surfaces?.openShop());
       addAction('离开便利店','exit',()=>surfaces?.openMap());
@@ -399,7 +458,7 @@
     cabin?.close();
     transit.hidden=true;view.classList.remove('pw-traveling','overworld-phone-open');
     prompts.hidden=true;city.hidden=true;caption.hidden=true;
-    director?.close?.();surfaces?.close?.();
+    director?.close?.();clearFall();surfaces?.close?.();
     view.classList.remove('overworld-life-active');
     global.PaperWorldTopHUD?.refreshClock?.();
   }
@@ -519,7 +578,7 @@
     activate,deactivate,onGameScene,
     snapshot:()=>engine.snapshot(),isModeActive:()=>mode,
     engine,navigate,showCaption:say,surfaces,director,cabin,
-    npcLife,npcPresence,npcManifest
+    npcLife,npcPresence,npcManifest,actOne
   });
 
 })(window);
