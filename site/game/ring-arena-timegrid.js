@@ -105,177 +105,301 @@
  }
  function mount({hud,onTick,onRole}={}){
   if(!hud||typeof document==='undefined')throw Error('Timegrid battle needs a HUD');
-  let seed=20261108,model=null,picked=null,moving=null,selectedTick=1,expanded=true;
+  let seed=20261108,model=null,picked=null,moving=null,mode=null,selectedTick=1,expanded=true;
+  let feedback='选手牌 → 点右侧目标的时间格。点击我方头像可切换镜头和牌组。';
   const holder=document.createElement('section');
-  holder.className='ring-timegrid';holder.setAttribute('aria-label','正式时间步卡牌战斗');
+  holder.className='ring-timegrid';
+  holder.setAttribute('aria-label','右侧四对四人物头像与时间步卡牌指挥面板');
   holder.innerHTML=[
-   '<div class="tg-head"><strong>时间步 · 卡牌战斗</strong><span data-tg-phase></span>',
-   '<button type="button" data-tg-toggle title="收起或展开规划时间轴">收起</button></div>',
-   '<div data-tg-body><div class="tg-tools">',
-   '<span data-tg-role></span><span class="tg-help" data-tg-help>选卡后点目标角色的时间格</span>',
-   '<button type="button" data-tg-undo>取下</button><button type="button" data-tg-shuffle>洗牌</button>',
-   '<button type="button" data-tg-finisher>绝杀</button>',
-   '<button type="button" data-tg-auto>本角色自动</button><button type="button" data-tg-auto-all>全队自动</button>',
-   '<button type="button" class="tg-execute" data-tg-execute>执行 10 格</button></div>',
+   '<div class="tg-head"><div class="tg-brand"><span class="tg-sigil">◈</span>',
+   '<div><strong>时序作战</strong><small>TIMEGRID / V1.7</small></div></div>',
+   '<span data-tg-phase class="tg-phase"></span>',
+   '<button type="button" data-tg-toggle aria-expanded="true">收起 ⌃</button></div>',
+   '<div class="tg-body" data-tg-body>',
+   '<div class="tg-threat" data-tg-threat></div>',
+   '<div class="tg-command"><span data-tg-role></span><small data-tg-deck></small>',
+   '<div class="tg-tools">',
+   '<button type="button" data-tg-undo title="撤销当前选中的已安排卡牌">撤销</button>',
+   '<button type="button" data-tg-shuffle title="空手1格、非空手2格；洗牌只锁已排动作">洗牌</button>',
+   '<button type="button" data-tg-finisher title="独立绝杀槽，需能量100与发动条件">绝杀</button>',
+   '<button type="button" data-tg-auto title="为当前角色辅助排程">辅助</button>',
+   '<button type="button" data-tg-auto-all title="为四名角色分别辅助排程">全队</button></div></div>',
    '<div class="tg-rail" data-tg-rail></div>',
-   '<div class="tg-hand-label"><strong>当前角色手牌</strong><span data-tg-deck></span></div>',
-   '<div class="tg-hand" data-tg-hand></div></div>',
-   '<div class="tg-bottom"><span data-tg-info></span><button type="button" data-tg-restart hidden>重新战斗</button></div>',
+   '<div class="tg-hand-label"><strong>当前角色手牌</strong><span data-tg-handcount></span></div>',
+   '<div class="tg-hand" data-tg-hand></div>',
+   '<div class="tg-bottom"><span data-tg-help aria-live="polite"></span>',
+   '<button type="button" class="tg-execute" data-tg-execute>执行 10 格 →</button>',
+   '<button type="button" data-tg-restart hidden>重开</button></div>',
+   '</div><div class="tg-compact" data-tg-compact hidden></div>',
    '<div class="tg-hit-layer" data-tg-hits aria-hidden="true"></div>'
   ].join('');
   hud.append(holder);
   const get=n=>holder.querySelector('[data-tg-'+n+']');
-  const message=txt=>{get('help').textContent=txt;};
+  const note=s=>{feedback=String(s);get('help').textContent=feedback;};
+  const roleName=id=>({hero:'斧卫','ai-gun':'枪手','ai-guard':'守护','ai-mage':'调律'}[id]||'敌方');
+  const imgSrc=actor=>actor.side==='enemy'?
+   './assets/characters/enemy-suit-hit-no-hud.webp':'./assets/characters/protagonist-front.webp';
+  const describe=c=>{
+   if(c.aoe)return '全体 · '+(c.damage||0)+'×'+c.a;
+   if(c.damage)return '伤害 '+c.damage+(c.a>1?'×'+c.a:'');
+   if(c.guard)return '格挡 '+c.guard;
+   if(c.heal)return '治疗 '+c.heal;
+   if(c.steady)return '稳定 '+c.steady;
+   if(c.mark)return '标记 '+c.mark;
+   return TYPE_NAMES[c.type]||'行动';
+  };
   function start(){
-   model=createBattle(++seed);picked=null;moving=null;selectedTick=1;expanded=true;
-   model.onChange(event=>{
-    if(onTick)onTick(event,model);
-    paint();
-   });
-   paint();
-   return model;
+   model=createBattle(++seed);picked=null;moving=null;mode=null;expanded=true;selectedTick=1;
+   model.onChange(e=>{if(onTick)onTick(e,model);paint();});
+   feedback='选手牌 → 点击目标的时间格；点头像切换角色。';
+   paint();return model;
   }
-  function rollup(){
-   holder.classList.toggle('is-folded',!expanded);
-   get('toggle').textContent=expanded?'收起':'展开';
-   get('toggle').setAttribute('aria-expanded',String(expanded));
+  function setExpanded(open){
+   expanded=open;holder.classList.toggle('is-folded',!open);
+   get('toggle').textContent=open?'收起 ⌃':'展开 ⌄';
+   get('toggle').setAttribute('aria-expanded',String(open));
+   get('compact').hidden=open;get('body').hidden=!open;
   }
-  function stampHp(actor,predicted){
-   const max=Math.max(1,actor.maxHp),p=predicted?.hp??actor.hp;
-   return '<span class="tg-hp">'+actor.hp+(p!==actor.hp?' → '+p:'')+'/'+max+'</span>'+
-    '<span class="tg-hp-track"><i style="width:'+Math.max(0,Math.min(100,actor.hp/max*100))+
-    '%"></i><b style="width:'+Math.max(0,Math.min(100,p/max*100))+'%"></b></span>';
+  function hp(actor,pred){
+   const max=Math.max(1,actor.maxHp),estimate=pred?.hp??actor.hp;
+   return '<span class="tg-hp">'+actor.hp+
+    (estimate!==actor.hp?'<em class="'+(estimate<actor.hp?'danger':'heal')+'"> → '+estimate+'</em>':'')+
+    '<small>/'+max+'</small></span><span class="tg-hp-track"><i style="width:'+
+    Math.max(0,actor.hp/max*100)+'%"></i><b style="width:'+
+    Math.max(0,estimate/max*100)+'%"></b></span>';
   }
-  function band(owner,action){
-   const c=cardOf(action.card);if(!c)return '';
-   const start=action.start-model.planningNow+1,length=G.cLen(c);
-   if(start+length<=1||start>10||action.canceled)return '';
-   const left=Math.max(0,start-1),cut=Math.max(0,1-start),lengthHere=Math.min(length-cut,10-left);
-   const movable=owner.id===model.controlled().id&&!action.locked&&!model.playback;
-   const active=moving===action.id,style='left:'+(left*10)+'%;width:'+(Math.max(0,lengthHere)*10)+'%;';
-   const parts=[
-    {n:c.w,color:'windup',title:'前摇'},
-    {n:c.a,color:'active',title:'生效'},
-    {n:c.r,color:'recovery',title:'后摇'}
-   ];
+  function band(action,interactive){
+   const c=cardOf(action.card);if(!c||action.canceled)return '';
+   const start=action.start-model.planningNow+1,len=G.cLen(c);
+   if(start+len<=1||start>10)return '';
+   const left=Math.max(0,start-1),cut=Math.max(0,1-start);
+   const shown=Math.min(len-cut,10-left);if(shown<=0)return '';
    let offset=0,segments='';
-   for(const part of parts){
-    const a=Math.max(offset,cut),b=Math.min(offset+part.n,cut+lengthHere);
-    if(b>a)segments+='<i class="tg-segment '+part.color+'" style="left:'+
-      ((a-cut)/lengthHere*100)+'%;width:'+((b-a)/lengthHere*100)+'%"></i>';
-    offset+=part.n;
+   for(const [color,duration]of [['windup',c.w],['active',c.a],['recovery',c.r]]){
+    const a=Math.max(offset,cut),b=Math.min(offset+duration,cut+shown);
+    if(b>a)segments+='<i class="tg-segment '+color+'" style="left:'+
+     ((a-cut)/shown*100)+'%;width:'+((b-a)/shown*100)+'%"></i>';
+    offset+=duration;
    }
-   return '<button type="button" class="tg-band tg-type-'+c.type+(active?' selected':'')+
-    (action.locked?' locked':'')+'" data-tg-action="'+escape(action.id)+'"'+
-    (movable?'':' disabled')+' style="'+style+'" title="'+escape(c.name+' · '+(action.target||'')+
-    ' · '+c.w+'/'+c.a+'/'+c.r)+'">'+segments+
-    '<span>'+escape(c.name)+'</span></button>';
+   const editable=interactive&&!model.playback&&!action.locked;
+   return '<button type="button" class="tg-band tg-type-'+escape(c.type)+
+    (moving===action.id?' selected':'')+(action.locked?' locked':'')+
+    '" style="left:'+(left*10)+'%;width:'+(shown*10)+'%;" title="'+
+    escape(c.name+' · '+describe(c)+' · 前'+c.w+'生效'+c.a+'后'+c.r)+'" '+
+    (editable?'data-tg-action="'+escape(action.id)+'" draggable="true"':'disabled')+
+    '>'+segments+'<span>'+escape(c.name)+'</span></button>';
+  }
+  function threats(){
+   const game=model.game,allies=game.actors.filter(a=>a.side==='ally'&&!a.dead);
+   const found=new Map();
+   for(const enemy of game.actors.filter(a=>a.side==='enemy'&&!a.dead)){
+    for(const action of enemy.actions.filter(a=>!a.canceled)){
+     const c=cardOf(action.card);if(!c?.damage)continue;
+     for(let t=action.start+c.w;t<action.start+c.w+c.a;t++){
+      const relative=t-game.now+1;if(relative<1||relative>10)continue;
+      const targets=c.aoe?allies:allies.filter(a=>a.id===action.target);
+      for(const target of targets){
+       const key=target.id+':'+relative;
+       const prior=found.get(key);
+       if(prior)prior.damage+=c.damage;
+       else found.set(key,{id:target.id,tick:relative,damage:c.damage,source:enemy.name});
+      }
+     }
+    }
+   }
+   return [...found.values()].sort((a,b)=>a.tick-b.tick||b.damage-a.damage);
+  }
+  function quickGuard(id,tick){
+   const a=model.controlled(),hand=a.hand.filter(h=>cardOf(h.key)?.type==='defense');
+   if(!hand.length)throw Error('当前角色没有防御手牌，可切换其他队友');
+   for(const item of hand){
+    const c=cardOf(item.key);
+    for(let t=1;t<=10;t++){
+     if(t+c.w>tick||t+c.w+c.a<=tick)continue;
+     try{
+      model.schedule(item.uid,t,displayId(id));picked=null;moving=null;mode=null;selectedTick=t;
+      note('已自动为 '+roleName(id)+' 排防，覆盖 T'+tick+'；占用施术者自己的时间');
+      return true;
+     }catch(_){}
+    }
+   }
+   throw Error('没有可覆盖 T'+tick+' 的空闲时间格');
   }
   function paint(){
    if(!model)return;
-   rollup();
-   const game=model.game,playing=model.playback;
-   const selected=model.controlled(),projected=playing?{actors:model.shown}:model.preview();
-   const predicted=new Map(projected.actors.map(a=>[a.id,a]));
+   setExpanded(expanded);
+   const game=model.game,playing=model.playback,selected=model.controlled();
+   const projected=new Map((playing?model.shown:model.preview().actors).map(a=>[a.id,a]));
    const shown=new Map(model.shown.map(a=>[a.id,a]));
-   get('phase').textContent=playing?'第 '+(game.round)+' 轮 · 时间推进 '+model.progress+'/10':
-    game.phase==='planning'?'第 '+(game.round+1)+' 轮 · 10 时间格':
-    game.phase==='win'?'胜利 · '+(game.score?.rank||''):'战斗失败';
-   const className=selected.name.split('·').pop();
-   get('role').textContent='操控：'+selected.name;
-   get('deck').textContent='抽牌 '+selected.draw.length+' · 弃牌 '+selected.discard.length+
-    ' · 能量 '+selected.energy+'/100';
-   get('info').textContent=playing?'同步执行中 · 双方逐格结算':
-    game.phase==='planning'?'选卡 → 点击目标对应时间格；切换 1–4 规划队友':
-    game.phase==='win'?'胜利 · 评分 '+(game.score?.rank||'')+' · '+(game.score?.points||0)+' 分':
-    '本场已结束';
-   const timeline=['<div class="tg-ticks"><span>目标 / 自身行动</span>'];
-   for(let t=1;t<=10;t++)timeline.push('<span'+(selectedTick===t?' class="active"':'')+'>'+t+'</span>');
-   timeline.push('</div>');
+   const danger=playing?[]:threats();
+   const affected=new Set(danger.map(t=>t.id+':'+t.tick));
+   get('phase').textContent=playing?'第'+game.round+'轮 T'+model.progress+'/10':
+    game.phase==='planning'?'第'+(game.round+1)+'轮 · 10格':
+    game.phase==='win'?'胜利 '+(game.score?.rank||''):'失败';
+   get('role').textContent='操控 '+roleName(selected.id)+' · '+selected.name;
+   get('deck').textContent='抽 '+selected.draw.length+' / 弃 '+selected.discard.length+
+    ' / 绝杀 '+selected.energy+'/100';
+   get('compact').textContent=roleName(selected.id)+' · 第'+(game.round+1)+'轮 · 点击上方展开';
+   get('threat').innerHTML=danger.length?
+    '<strong>受击预告</strong>'+danger.slice(0,2).map(t=>
+     '<button type="button" class="tg-danger-chip" data-tg-cover="'+escape(t.id)+
+     '" data-tg-cover-tick="'+t.tick+'" title="敌人预计伤害；点击自动给目标安排防御">'+
+     '<span>T'+t.tick+'</span> '+escape(roleName(t.id))+' <em>−'+t.damage+'</em><b>援护</b></button>').join('')+
+     (danger.length>2?'<small>+'+(danger.length-2)+'</small>':''):
+    '<strong>战况</strong><span class="tg-quiet">本轮暂无预告攻击</span>';
+   const playerActs=playing?
+    model.planningActions.filter(a=>a.actorId===selected.id):selected.actions;
+   const rail=['<div class="tg-ticks"><span>目标 / 自身行动</span>'];
+   for(let t=1;t<=10;t++)rail.push('<span'+((playing?model.progress:selectedTick)===t?
+    ' class="active"':'')+'>'+t+'</span>');
+   rail.push('</div>');
    for(const actor of game.actors){
-    const ui=shown.get(actor.id)||actor,pre=predicted.get(actor.id)||actor;
-    const live={...actor,hp:ui.hp};
-    const mine=actor.id===selected.id,dead=!!ui.dead;
-    timeline.push('<div class="tg-row '+(actor.side==='enemy'?'enemy':'ally')+
-     (mine?' current':'')+(dead?' dead':'')+'"><div class="tg-unit"><b>'+
-     escape(actor.name.replace(/ · .*/,''))+'</b>'+stampHp(live,pre)+'</div><div class="tg-track">');
-    for(let t=1;t<=10;t++)timeline.push('<button type="button" class="tg-cell" data-tg-target="'+
-     escape(displayId(actor.id))+'" data-tg-tick="'+t+'" title="'+escape(actor.name+' · 第'+t+'格')+
-     '" '+(game.phase!=='planning'||playing||dead?'disabled':'')+'></button>');
-    timeline.push('<div class="tg-bands">');
-    const actions=playing?model.planningActions.filter(a=>a.actorId===actor.id):actor.actions;
-    for(const action of actions)timeline.push(band(actor,action));
-    timeline.push('</div></div></div>');
+    const current=shown.get(actor.id)||actor,forecast=projected.get(actor.id)||actor;
+    const enemy=actor.side==='enemy',mine=actor.id===selected.id,dead=!!current.dead;
+    const index=ROLE_IDS.indexOf(actor.id)+1,portrait=imgSrc(actor);
+    rail.push('<div class="tg-row '+(enemy?'enemy':'ally')+
+     (mine?' current':'')+(dead?' dead':'')+'" data-tg-row="'+escape(displayId(actor.id))+
+     '"><div class="tg-unit">'+
+     (!enemy?'<button type="button" class="tg-portrait" data-tg-choose-role="'+index+
+      '" aria-label="切换'+escape(roleName(actor.id))+'的镜头与手牌">':
+      '<span class="tg-portrait">')+
+     '<img alt="" loading="eager" draggable="false" src="'+portrait+'">'+
+     (!enemy?'</button>':'</span>')+
+     '<div class="tg-identity"><b>'+escape(enemy?actor.name:roleName(actor.id))+
+     '</b>'+hp({...actor,hp:current.hp},forecast)+'</div></div>'+
+     '<div class="tg-dual"><div class="tg-target-track">');
+    for(let t=1;t<=10;t++)rail.push('<button type="button" class="tg-cell'+
+     (affected.has(actor.id+':'+t)?' danger':'')+
+     (selectedTick===t?' chosen':'')+
+     '" data-tg-target="'+escape(displayId(actor.id))+'" data-tg-tick="'+t+
+     '" title="'+escape(actor.name)+' · 第'+t+'格'+
+     (affected.has(actor.id+':'+t)?' · 预定受击':'')+'"'+
+     (playing||game.phase!=='planning'||dead?' disabled':'')+'></button>');
+    rail.push('<div class="tg-bands">'+playerActs.filter(a=>a.target===actor.id)
+     .map(a=>band(a,true)).join('')+'</div></div>'+
+     '<div class="tg-own-track" title="此角色自己的行动（只读）"><div class="tg-bands">');
+    const own=playing?model.planningActions.filter(a=>a.actorId===actor.id):actor.actions;
+    rail.push(own.map(a=>band(a,false)).join('')+'</div></div></div></div>');
    }
-   get('rail').innerHTML=timeline.join('');
-   const hand=(playing?[]:selected.hand).map(item=>{
-    const card=cardOf(item.key),chosen=picked===item.uid;
-    const nums=[card.w,card.a,card.r].join('/');
-    const sub=card.damage?'每次 '+card.damage+'伤害':card.guard?'防御池 '+card.guard:
-     card.heal?'回复 '+card.heal:card.mark?'标记 '+card.mark:
-     card.steady?'减硬直 '+card.steady:TYPE_NAMES[card.type]||'';
-    return '<button class="tg-card tg-type-'+escape(card.type)+(chosen?' selected':'')+
-     '" type="button" data-tg-card="'+escape(item.uid)+'"'+
-     (playing||game.phase!=='planning'||selected.dead?' disabled':'')+'><strong>'+
-     escape(card.name)+'</strong><small>'+escape(sub)+' · '+nums+'</small></button>';
+   get('rail').innerHTML=rail.join('');
+   const cards=(playing?[]:selected.hand).map(item=>{
+    const c=cardOf(item.key);if(!c)return '';
+    const rarity=c.rarity||'common',chosen=picked===item.uid;
+    return '<button type="button" draggable="true" class="tg-card tg-type-'+escape(c.type)+
+     ' tg-rarity-'+escape(rarity)+(chosen?' selected':'')+
+     '" data-tg-card="'+escape(item.uid)+'" aria-pressed="'+chosen+'" title="'+
+     escape(c.desc||c.name)+'" '+(playing||game.phase!=='planning'||selected.dead?'disabled':'')+
+     '><span class="tg-card-icon">'+({attack:'⚔',defense:'⬡',skill:'✦',power:'◆'}[c.type]||'✧')+
+     '</span><strong>'+escape(c.name)+'</strong><small>'+escape(describe(c))+
+     ' · '+c.w+'/'+c.a+'/'+c.r+'</small></button>';
    });
-   get('hand').innerHTML=hand.length?hand.join(''):'<span class="tg-empty">'+
-    (playing?'10 格执行中 · 同步判定双方的动作':'本角色暂无手牌，换手或等下轮补牌')+'</span>';
-   for(const name of ['undo','shuffle','finisher','auto','auto-all','execute']){
+   get('hand').innerHTML=cards.length?cards.join(''):
+    '<span class="tg-empty">'+(playing?'行动正在执行':'手牌空 · 洗牌或等待下轮自动补满')+'</span>';
+   get('handcount').textContent=selected.hand.length+'/'+G.HAND+' 张';
+   get('help').textContent=feedback;
+   for(const name of ['undo','shuffle','finisher','auto','auto-all','execute'])
     get(name).disabled=playing||game.phase!=='planning';
-   }
-   get('undo').disabled=get('undo').disabled||!moving;
-   get('finisher').title='能量100且目标已标记/破防或生命低于55%，需选敌人轨';
+   get('finisher').classList.toggle('ready',selected.energy>=100);
    get('restart').hidden=playing||!['win','lost'].includes(game.phase);
+   holder.dataset.layout='right-portrait-dual-track-v17';
+   holder.dataset.timegridVersion='1.7';
    holder.dataset.phase=playing?'resolving':game.phase;
   }
-  function run(action){
-   try{const value=action();paint();return value;}
-   catch(err){message(err?.message||String(err));paint();return false;}
+  function run(fn){
+   try{const result=fn();paint();return result;}
+   catch(error){note(error?.message||String(error));paint();return false;}
   }
   function selectRole(index){
    if(!model||model.playback)return false;
-   const changed=model.setRole(index);if(changed){picked=null;moving=null;message('选卡后点击目标轨道的时间格');paint();}
-   return !!changed;
+   const actor=model.setRole(index);
+   if(actor){picked=null;moving=null;mode=null;note('已切换 '+roleName(actor.id)+'，选择该角色手牌');paint();}
+   return !!actor;
+  }
+  function onSlot(id,tick){
+   selectedTick=tick;
+   run(()=>{
+    if(mode==='finisher'){
+     model.finisher(tick,id);mode=null;note('绝杀已安排到 T'+tick);return;
+    }
+    if(mode==='shuffle'){
+     if(id!==displayId(model.controlled().id))throw Error('洗牌只放在当前出牌者的上轨');
+     model.shuffle(tick);mode=null;note('换手成功，已排动作锁定，未占用的旧时间格仍可回填');return;
+    }
+    if(picked){model.schedule(picked,tick,id);picked=null;note('卡牌已放入 T'+tick);return;}
+    if(moving){model.move(moving,tick,id);moving=null;note('卡牌已移至 T'+tick);return;}
+    note('先选手牌，再点击目标上轨的 T1–T10');
+   });
   }
   holder.addEventListener('click',e=>{
    const b=e.target.closest('button');if(!b||!holder.contains(b))return;
    e.stopPropagation();e.preventDefault();
-   if(b.hasAttribute('data-tg-toggle')){expanded=!expanded;paint();return;}
+   if(b.hasAttribute('data-tg-toggle')){setExpanded(!expanded);return;}
    if(b.hasAttribute('data-tg-restart')){start();return;}
-   if(model.playback)return;
+   if(!model||model.playback)return;
+   if(b.hasAttribute('data-tg-choose-role')){
+    const n=Number(b.dataset.tgChooseRole);
+    if(onRole)onRole(n);else selectRole(n);
+    return;
+   }
    if(b.hasAttribute('data-tg-card')){
     picked=picked===b.dataset.tgCard?null:b.dataset.tgCard;
-    moving=null;message(picked?'选择目标角色的第 1–10 时间格':'选卡后点击目标时间格');paint();return;
+    moving=null;mode=null;
+    const inst=model.controlled().hand.find(a=>a.uid===picked);
+    note(inst?(cardOf(inst.key).name+' · '+(cardOf(inst.key).desc||'请选择合法目标及时间格')):
+     '选卡后点目标上轨');paint();return;
    }
    if(b.hasAttribute('data-tg-action')){
     moving=moving===b.dataset.tgAction?null:b.dataset.tgAction;
-    picked=null;message(moving?'点击新时间格移动；或点击取下':'选牌后点时间格');paint();return;
+    picked=null;mode=null;note(moving?'已选中动作：点新时间格调整，或点击撤销':'选择手牌规划');paint();return;
    }
-   if(b.hasAttribute('data-tg-target')){
-    selectedTick=Number(b.dataset.tgTick);
-    const dest=b.dataset.tgTarget;
+   if(b.hasAttribute('data-tg-target')){onSlot(b.dataset.tgTarget,Number(b.dataset.tgTick));return;}
+   if(b.hasAttribute('data-tg-cover')){
+    run(()=>quickGuard(b.dataset.tgCover,Number(b.dataset.tgCoverTick)));return;
+   }
+   if(b.hasAttribute('data-tg-undo')){
     run(()=>{
-     if(picked){model.schedule(picked,selectedTick,dest);picked=null;}
-     else if(moving){model.move(moving,selectedTick,dest);moving=null;}
-     else {message('请选择手牌或已排好的动作');return;}
-     message('已放入时间轴，可以继续规划或执行');
+     const actor=model.controlled(),last=actor.actions.filter(a=>!a.locked&&a.start>=model.game.now)
+      .sort((a,b)=>b.start-a.start)[0],id=moving||last?.id;
+     if(!id)throw Error('没有可撤销的已排卡牌');
+     model.undo(id);moving=null;picked=null;note('已取下，卡牌返回手牌');
     });return;
    }
-   if(b.hasAttribute('data-tg-undo')){run(()=>{model.undo(moving);moving=null;});return;}
-   if(b.hasAttribute('data-tg-shuffle')){run(()=>model.shuffle(selectedTick));return;}
-   if(b.hasAttribute('data-tg-finisher')){picked='__finisher__';moving=null;message('点击敌人轨的指定时间格发动绝杀');paint();return;}
-   if(b.hasAttribute('data-tg-auto')){run(()=>model.autoplan(false));return;}
-   if(b.hasAttribute('data-tg-auto-all')){run(()=>model.autoplan(true));return;}
-   if(b.hasAttribute('data-tg-execute')){run(()=>{picked=null;moving=null;expanded=false;model.execute();});}
+   if(b.hasAttribute('data-tg-shuffle')){
+    mode='shuffle';picked=null;moving=null;note('点击当前角色上轨选洗牌起点：空手1格，有手牌2格');paint();return;
+   }
+   if(b.hasAttribute('data-tg-finisher')){
+    mode='finisher';picked=null;moving=null;note('绝杀：在敌人上轨选择时间格，需100能量和发动条件');paint();return;
+   }
+   if(b.hasAttribute('data-tg-auto')){run(()=>{model.autoplan(false);note('已辅助规划本角色，可继续调整');});return;}
+   if(b.hasAttribute('data-tg-auto-all')){run(()=>{model.autoplan(true);note('四个角色各自排程完毕，可切换复核');});return;}
+   if(b.hasAttribute('data-tg-execute')){
+    run(()=>{picked=null;moving=null;mode=null;model.execute();note('双方行动按十格同步结算');});return;
+   }
   });
-  // Finisher is an independent slot and is never part of the shuffled hand.
-  function handleFinisherClick(e){const b=e.target.closest('[data-tg-target]');if(!b||picked!=='__finisher__')return;
-   e.preventDefault();e.stopImmediatePropagation();
-   selectedTick=Number(b.dataset.tgTick);
-   run(()=>{model.finisher(selectedTick,b.dataset.tgTarget);picked=null;message('绝杀已放入行动时间轴');});
-  }
-  holder.addEventListener('click',handleFinisherClick,true);
+  // Desktop drag/drop and touch-friendly tap-to-place use the same engine.
+  holder.addEventListener('dragstart',e=>{
+   const el=e.target.closest('[data-tg-card],[data-tg-action]');
+   if(!el||!e.dataTransfer||model?.playback)return;
+   e.dataTransfer.setData('text/plain',el.dataset.tgCard?'card:'+el.dataset.tgCard:
+    'action:'+el.dataset.tgAction);
+   e.dataTransfer.effectAllowed='move';
+  });
+  holder.addEventListener('dragover',e=>{
+   const el=e.target.closest('[data-tg-target]');
+   if(el&&!model?.playback){e.preventDefault();el.classList.add('drag-target');}
+  });
+  holder.addEventListener('dragleave',e=>{
+   const el=e.target.closest('[data-tg-target]');if(el)el.classList.remove('drag-target');
+  });
+  holder.addEventListener('drop',e=>{
+   const el=e.target.closest('[data-tg-target]');if(!el||model?.playback)return;
+   e.preventDefault();el.classList.remove('drag-target');
+   const token=e.dataTransfer?.getData('text/plain')||'';
+   if(token.startsWith('card:')){picked=token.slice(5);moving=null;mode=null;}
+   else if(token.startsWith('action:')){moving=token.slice(7);picked=null;mode=null;}
+   else return;
+   onSlot(el.dataset.tgTarget,Number(el.dataset.tgTick));
+  });
   start();
   return {get model(){return model;},element:holder,selectRole,reset:start,
    advance(dt){return model?.advance(dt)||null;},
@@ -283,6 +407,7 @@
    active(){return !!model&&!model.playback&&model.game.phase==='planning';},
    inspect(){return model?{phase:model.playback?'resolving':model.game.phase,
     round:model.game.round,progress:model.progress,controlledId:model.game.controlledId,
+    ui:holder.dataset.layout,version:holder.dataset.timegridVersion,
     roles:ROLE_IDS.map((id,i)=>({gameId:id,arenaId:ARENA_IDS[i],
      hp:model.game.actors.find(a=>a.id===id)?.hp,
      hand:model.game.actors.find(a=>a.id===id)?.hand.length,
