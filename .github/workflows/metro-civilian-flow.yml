@@ -31,6 +31,13 @@ jobs:
           node --test tests/metro-platform-life.test.cjs
           node --test tests/metro-platform3d.test.cjs
           node --test tests/metro-station-light.test.cjs
+      - name: Build genuine game scene catalogs for startup
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=10,<12'
+          python3 scripts/build_scene_catalog.py
+          python3 scripts/build_character_catalog.py
+          test -s site/scene-catalog.generated.js
+          test -s site/characters.catalog.json
       - name: Chromium real subway animation screenshots
         if: hashFiles('tests/metro-civilian-browser.mjs') != ''
         run: |
