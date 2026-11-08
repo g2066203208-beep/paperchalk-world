@@ -400,6 +400,14 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   });
  }
  for(const [id,s] of Object.entries(metro.STATIONS))if(!s.locked)localPlace(id,s);
+ // Render 120 authored locations in the existing interactive city map.
+ // No new independent planning screen and no fake metro station geometry.
+ const cityOverlay=global.PaperWorldCityMapOverlay?.create?.({
+  map,svg,canvas,tools,atlas,metro,network,localPoint,
+  camera:()=>({x,y,scale}),viewport:()=>viewport(),
+  center:(p,z)=>centerOn({...p,exact:true},z),
+  clear,showMenu,onTravel,notify
+ })||null;
  const areaNodes=[];
  for(const a of atlas.AREAS){
   const label=element('span','pw-dot-area-label',a.name);
@@ -455,7 +463,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  function viewport(){const r=map.getBoundingClientRect();return {w:r.width||844,h:r.height||390}}
  function centerOn(p,s){
   const v=viewport();scale=clamp(s,minScale,9);
-  x=v.w*.5-location(p).x*scale;y=v.h*.5-location(p).y*scale;
+  const point=p?.exact?p:location(p);
+  x=v.w*.5-point.x*scale;y=v.h*.5-point.y*scale;
   constrain();position();
  }
  function enterCity(id){
@@ -463,12 +472,18 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(activeCity===null)regionalCamera={scale,x,y};
   activeCity=id;drag=null;pinch=null;fingers.clear();clear();
   // Always frame the COMPLETE selected city's real physical tracks.
-  // A curated large-city network of 70 physical stops must fit without packed circles.
+  // Keep 全域 overview, but initially show readable, BIG neighborhoods.
   fitSelectedCity();
+  if(id==='kirihama'){
+   const hub=localPoint(metro.STATIONS.central);
+   cityOverlay?.resetSelection();
+   centerOn({x:hub.x+50,y:hub.y+28,exact:true},Math.max(scale,2.2));
+  }
  }
  function leaveCity(){
   if(activeCity===null)return;
   activeCity=null;drag=null;pinch=null;fingers.clear();clear();
+  cityOverlay?.togglePanel(false);
   if(regionalCamera){
    ({scale,x,y}=regionalCamera);regionalCamera=null;constrain();position();
   }else centerOn({x:W*.5,y:H*.5},minScale);
@@ -577,6 +592,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    map.dataset.visibleMetroStations=String(visibleCount);
    map.dataset.stationLod=overview?'overview':detail?'detail':'corridor';
   }
+  cityOverlay?.position({activeCity,camera:{x,y,scale},viewport:v});
   // Explicit map scope, NOT zoom: intercity vs one city's SUBWAY ONLY.
   const scoped=activeCity!==null,city=atlas.CITY_BY_ID[activeCity];
   const hasMetro=activeCity==='kirihama'&&metro.LINES.some(l=>!l.locked);
@@ -602,7 +618,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    '城际交通总图 · 点击城市查看独立地铁';
   caption.textContent=scoped?city.name+' · 地铁线路':'十城城际交通';
   sub.textContent=scoped?
-   hasMetro?'点击真实轨道或车站 · 就地操作 · 缩放查看站名':
+   hasMetro?'拖动大地图查看城区和地点 · 点击地点就地操作 · 地铁仍是真实轨道':
     '本城市暂无正式地铁线路':
    '各城市地铁独立显示 · 不在总图混合';
   canvas.style.setProperty('--dot-city-label-size',v.w<900?'15px':'19px');
