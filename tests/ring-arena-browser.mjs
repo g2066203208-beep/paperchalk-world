@@ -44,7 +44,7 @@ try{
  assert.deepEqual(outer.wallMaterial.sourceSize,[2172,724]);
  assert.equal(await page.locator('#ring-arena-canvas').getAttribute('data-wall-texture'),'ready');
  assert.equal(outer.mode,'outer');assert.equal(outer.shotIndex,0);
- assert.equal(outer.shotName,'固定左机位');
+ assert.equal(outer.shotName,'四人同排 · 自由切换');
  assert.equal(outer.camera.shot,'left');
  assert.equal(outer.cameraCount,1);
  assert.equal(outer.eyeLevel,true,'camera is at heroine true eye height');
@@ -82,6 +82,35 @@ try{
  assert.ok(await page.locator('[data-exit]').isVisible());
  const originalCamera=JSON.stringify(outer.cameraTarget);
  const originalActors=JSON.stringify(outer.actors);
+ assert.equal(outer.controlledActorId,'hero','the original heroine controls the first view');
+ assert.deepEqual(outer.partyLine.map(p=>p.z),[9.30,9.30,9.30,9.30]);
+ assert.deepEqual(outer.opposingLine.map(p=>p.z),[6.80,6.80,6.80,6.80]);
+ assert.equal(await page.locator('[data-control-ally]').count(),4,
+  'the player can select one of four actual allied slots, including on phones');
+ for(let index=2;index<=4;index++){
+  await page.locator('[data-control-ally="'+index+'"]').click();
+  const switched=await inspect();
+  const chosen=outer.actors.allies[index-1];
+  assert.equal(switched.controlledActorId,chosen.id);
+  assert.equal(switched.controlledAllyIndex,index-1);
+  assert.equal(switched.cameraParity,true,
+   'the single WebGL camera follows the real selected world-space teammate');
+  assert.equal(switched.cameraLook.pivot.x,chosen.x);
+  assert.equal(switched.cameraLook.pivot.z,chosen.z);
+  assert.equal(JSON.stringify(switched.actors),originalActors,
+   'switching control cannot move even one ally or enemy root');
+  assert.equal(await page.locator('[data-control-ally="'+index+'"]').getAttribute('aria-pressed'),'true');
+  const crowd=await page.evaluate(()=>{
+   const ring=window.PaperWorldRingArena,s=window.PaperWorldGameRingArena.inspect();
+   return s.actors.enemies.map(a=>ring.portraitVisibleBounds(a,s.camera,
+    s.actorVisibleUv['enemy-1'].clip||{left:.347,right:.664,top:0,bottom:1},s.projectionAspect));
+  });
+  assert.ok(crowd.every(b=>b.valid&&b.left>-.96&&b.right<.96),
+   'ALL four targets must remain on screen from each selected character view');
+  await page.screenshot({path:'artifacts/ring-arena/party-controlled-'+index+'-1280x720.png'});
+ }
+ await page.locator('[data-control-ally="1"]').click();
+ assert.equal((await inspect()).controlledActorId,'hero');
  await page.screenshot({path:'artifacts/ring-arena/final-eye-level-3q-1280x720.png'});
  // Reproduce the user's ACTUAL 1917x906 screenshot dimensions. Measure the
  // screen-space positions from the very projection matrix used by WebGL.
@@ -255,6 +284,23 @@ try{
  assert.ok(portrait.safety.clear);
  await page.screenshot({path:'artifacts/ring-arena/final-mobile-portrait.png'});
  // Developer rollback works with original approved dynamic L2D untouched.
+ // Control of a teammate includes that teammate's attack, not a camera
+ // trick where the original heroine still performs every move.
+ await page.locator('[data-control-ally="3"]').click();
+ await page.locator('[data-attack-card]').click();
+ await page.locator('[data-director-enemy="4"]').click();
+ await page.waitForFunction(()=>{
+  const d=window.PaperWorldGameRingArena?.inspect()?.director;
+  return d?.completedAttacks===3&&!d?.playing;
+ },null,{timeout:20000});
+ const teammateAttack=await inspect();
+ assert.equal(teammateAttack.director.lastAttacker,'ally-3');
+ assert.equal(teammateAttack.director.lastTarget,'enemy-4');
+ assert.equal(teammateAttack.controlledActorId,'ally-3');
+ assert.equal(teammateAttack.cameraParity,true,'camera returns to the active teammate after attack');
+ assert.equal(JSON.stringify(teammateAttack.actors),originalActors,
+  'the attack must not permanently rearrange the two parallel rows');
+ await page.locator('[data-control-ally="1"]').click();
  await page.goto(origin+'/index.html?scene=ring-arena&heroPose=original',
   {waitUntil:'domcontentloaded',timeout:50000});
  await page.waitForFunction(()=>{
