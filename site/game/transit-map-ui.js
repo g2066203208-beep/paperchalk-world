@@ -416,6 +416,13 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const homeStation=global.PaperWorldHomeStationMap?.create?.({
   map,atlas,metro,here,onTravel,notify,onUp:leaveHomeStation
  })||null;
+ // Cities (including the current one) are playable ASSEMBLIES of real,
+ // individually editable dot-grid components, not background map images.
+ const cityBuilder=global.PaperWorldCityBuilderUI?.create?.({
+  map,tools,atlas,metro,geometry,onFeedback:notify,
+  chooseInitial:()=>localMode?'home':activeCity||currentCity
+ })||null;
+ global.PaperWorldCityBuilderStudioDebug=cityBuilder;
  const areaNodes=[];
  for(const a of atlas.AREAS){
   const label=element('span','pw-dot-area-label',a.name);
@@ -835,7 +842,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  }
  measure(true);
  global.PaperWorldTransitMap._cleanup=()=>{
-  editorUI?.dispose?.();observer?.disconnect();cleanupListeners.forEach(fn=>fn());
+  cityBuilder?.dispose?.();editorUI?.dispose?.();observer?.disconnect();cleanupListeners.forEach(fn=>fn());
  };
 }
 global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null};
