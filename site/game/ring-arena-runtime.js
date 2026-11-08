@@ -1302,6 +1302,39 @@
   const textures=new Map();
   const actionTextures=new Map();
   const metroNpcStatus=new Map();
+  // One NPC identity can be either outside the carriage or inside its
+  // physical door, never both. Exact approved art and persistent life data
+  // are the only inputs; no generated station population.
+  let civilianFlow=null,flowSample=null,transitNpcStation=null;
+  function ensureCivilianFlow(){
+   if(!transitMode)return null;
+   if(civilianFlow)return civilianFlow;
+   const daily=window.PaperWorldDailyLifeUI;
+   if(!daily?.npcLife||!daily?.npcPresence?.inspect?.().artCount||
+      !window.PaperWorldMetroCivilianFlow)return null;
+   civilianFlow=window.PaperWorldMetroCivilianFlow.create({
+    life:daily.npcLife,presence:daily.npcPresence});
+   commuterAtlasStatus='real-approved-npc';
+   if(transitNpcStation)civilianFlow.dock(transitNpcStation,{
+    arrival:!!transitNpcStation.arrival});
+   return civilianFlow;
+  }
+  function setTransitNpcStop({station,lineId,direction,arrival=false}={}){
+   if(!station||!lineId||![-1,1].includes(direction))return false;
+   transitNpcStation={station,lineId,direction,arrival:!!arrival};
+   const flow=ensureCivilianFlow();
+   if(!flow)return false;
+   if(arrival)flow.arrive(transitNpcStation);
+   else flow.dock(transitNpcStation);
+   return true;
+  }
+  function setTransitNpcDeparture(){
+   const flow=ensureCivilianFlow();
+   if(!flow)return [];
+   transitNpcStation=null;
+   return flow.depart();
+  }
+
   function approvedNpcTexture(actor){
    if(!gl||!actor.npcSprite||!actor.id.startsWith('npc:'))return false;
    let t=textures.get(actor.id);
@@ -1346,16 +1379,14 @@
    return !!t.painted;
   }
   function approvedMetroGuests(cam,aspect){
-   const daily=window.PaperWorldDailyLifeUI,ride=daily?.snapshot?.()?.metro;
-   const life=daily?.npcPresence,staging=window.PaperWorldMetroNpcStaging;
-   if(!transitMode||!ride?.onboard||!life||!staging)return [];
-   const candidates=life.forMetro({
-    lineId:ride.lineId,station:ride.station,direction:ride.direction});
+   const staging=window.PaperWorldMetroNpcStaging;
+   if(!transitMode||!staging||!flowSample?.cabin?.length)return [];
    const seen=[],out=[];
-   for(const candidate of candidates){
+   for(const candidate of flowSample.cabin){
     const g=candidate.geometry;
     const slot=staging.CONFIG.slots.find(s=>s.id===g?.metroSlot);
-    if(!slot||!candidate.sprite)continue;
+    const sprite=candidate.sprites?.front;
+    if(!slot||!sprite)continue;
     const ref=staging.derive({id:'npc:'+candidate.id,slot,
      height:g.heightMeters,renderReady:true,
      art:{soleX:g.soleX,crownY:g.assetCrownY,soleY:g.assetSoleY,
@@ -1363,11 +1394,10 @@
     if(!ref.ok)continue;
     const screen=staging.screenMetrics(ref.actor,{camera:cam,aspect,project});
     if(!screen.ok||!screen.inHorizontalFov)continue;
-    const half=Math.max(.22,ref.actor.height*ref.actor.widthScale*.36);
-    if(seen.some(p=>Math.abs(p.x-slot.x)<p.half+half+.1))continue;
+    const half=Math.max(.22,ref.actor.height*ref.actor.widthScale*.19);
+    if(seen.some(p=>Math.abs(p.x-slot.x)<p.half+half+.04))continue;
     seen.push({x:slot.x,half});
-    out.push({...ref.actor,team:'npc',
-     npcId:candidate.id,npcSprite:candidate.sprite});
+    out.push({...ref.actor,team:'npc',npcId:candidate.id,npcSprite:sprite});
    }
    return out;
   } // separate GPU action poses at real 3D anchors
