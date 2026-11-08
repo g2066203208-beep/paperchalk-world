@@ -24,11 +24,15 @@ const inspect=()=>page.evaluate(()=>{
   originalMetroStations:Object.keys(window.PaperWorldMetro.STATIONS).length}
 });
 async function at(gx,gy){
- const r=await page.locator('.pw-city-build-canvas').boundingBox();
- const d=await page.evaluate(()=>window.PaperWorldCityBuilderStudioDebug.model.state());
- const cell=Math.min((r.width-115)/d.width,(r.height-105)/d.height);
- return {x:r.x+r.width/2+(gx-d.width/2)*cell,
-  y:r.y+r.height/2+(gy-d.height/2)*cell}
+ return page.evaluate(({gx,gy})=>{
+  const node=document.querySelector('.pw-city-build-canvas');
+  if(!node)throw Error('City construction canvas missing');
+  const r=node.getBoundingClientRect();
+  const d=window.PaperWorldCityBuilderStudioDebug.model.state();
+  const cell=Math.min((r.width-115)/d.width,(r.height-105)/d.height);
+  return {x:r.left+r.width/2+(gx-d.width/2)*cell,
+   y:r.top+r.height/2+(gy-d.height/2)*cell};
+ },{gx,gy})
 }
 async function clickGrid(x,y){const p=await at(x,y);await page.mouse.click(p.x,p.y)}
 async function ui(selector){
