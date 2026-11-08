@@ -372,24 +372,25 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const cityNodes=[];
  for(const c of atlas.CITIES){
   const node=element('button','pw-dot-city');
-  node.type='button';node.dataset.city=c.id;
+  node.type='button';node.dataset.city=c.id;node.dataset.size=c.size;
+  node.dataset.station=network.HUB(c.id);stopButtons.set(network.HUB(c.id),node);
   const thumb=atlas.PHOTOS[c.id==='kirihama'?'metropolis':
    c.id==='misaki'||c.id==='urasima'?'coast':
    c.id==='naruba'||c.id==='okuzawa'?'mountain':
    c.id==='homori'||c.id==='mizuho'?'rice':'street'];
-  // City location cards are geographic pins; only load imagery in a selected
-  // place detail panel, not ten duplicated city photographs at map open.
-  node.append(element('span','pw-dot-city-symbol',c.size==='metro'?'●':c.size==='city'?'◆':c.size==='island'?'◌':'•'),
-   element('span','pw-transit-place-name',c.name),
-   element('small','pw-dot-city-sub',c.sub));
+  // The bottom of the large picture card is physically attached to this hub.
+  const pic=element('span','pw-transit-photo');
+  const img=element('img');img.alt='';img.loading='lazy';
+  img.referrerPolicy='no-referrer';img.decoding='async';
+  pic.append(img);node.append(pic,element('span','pw-transit-place-name',c.name));
   put(node,location(c),cityLayer);
-  cityNodes.push({node,city:c});
+  cityNodes.push({node,city:c,img,source:thumb?.url});
   node.addEventListener('click',e=>{
    if(drag?.moved)return;
    showMenu(e,node,c.name,c.sub+' · '+c.region,[
     {label:'查看城区',primary:true,run:()=>{clear();focus(c,Math.max(2.85,minScale*3.6))}}
    ],thumb?.url);
-   previewRegionalRoute(atlas.route(currentCity,c.id)?.legs);
+   previewRegionalRoute(network.journey(here,network.HUB(c.id))?.legs);
   });
  }
  const worldNodes=[];
@@ -397,26 +398,24 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(metro.STATIONS[p.id]||!locations[p.id])continue;
   const node=element('button','pw-dot-poi pw-transit-place');
   node.type='button';node.dataset.place=p.id;node.dataset.city=p.city;
+  node.dataset.station=p.id;stopButtons.set(p.id,node);
   node.dataset.current=String(p.id===here);
   node.dataset.kind=p.kind||'';
   node.dataset.transitStop=String(transitPOIs.has(p.id));
   const src=atlas.PHOTOS[p.photo]?.url;
-  // No 120-photo download storm. Category pin remains crisp at every zoom;
-  // the representative location image is fetched only when selected.
-  const glyph=({rural:'田',mountain:'山',lake:'水',forest:'林',
-   island:'岛',tunnel:'隧',shrine:'社',school:'校',factory:'厂',
-   hospital:'医',station:'站',rumor:'?',port:'港',park:'园',
-   town:'街',coast:'海',bridge:'桥'})[p.kind]||'·';
-  node.append(element('span','pw-dot-poi-symbol',glyph),
-   element('span','pw-transit-place-name',p.name));
+  // Load only visible photos. All pictures are connected to real route pins.
+  const pic=element('span','pw-transit-photo');
+  const img=element('img');img.alt='';img.loading='lazy';
+  img.referrerPolicy='no-referrer';img.decoding='async';
+  pic.append(img);node.append(pic,element('span','pw-transit-place-name',p.name));
   put(node,location(p),placeLayer);
-  worldNodes.push({node,poi:p});
+  worldNodes.push({node,poi:p,img,source:src});
   node.addEventListener('click',e=>{
    if(drag?.moved)return;
-   const route=atlas.route(currentCity,p.city);
+   const route=network.journey(here,p.id);
    const hereNow=here===p.id;
    const dest=locations[p.id];
-   const cost=p.city!==currentCity?Math.max(18,Math.round((route?.minutes||0)+18)):dest.travel;
+   const cost=route?.minutes||dest.travel;
    const canTravel=!hereNow&&!!route&&snapshot.nightStatus!=='recalled'&&
     snapshot.minute+cost<dest.close;
    showMenu(e,node,p.name,(atlas.CITY_BY_ID[p.city]?.name||'城市')+
