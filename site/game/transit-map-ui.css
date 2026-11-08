@@ -1917,3 +1917,9 @@
 #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview{
  cursor:grab!important;
 }
+
+/* A hidden preview layer must not occupy layout space in full-map QA mode. */
+#pw-world-surface .pw-dot-world-map:not(.pw-dot-empty-preview) > .pw-dot-fog-surface,
+#pw-world-surface .pw-dot-world-map:not(.pw-dot-empty-preview) > .pw-dot-wave-surface{
+ display:none!important;
+}
