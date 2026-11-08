@@ -164,16 +164,20 @@ function create({root,engine,onExit,onFeedback}){
  let regionalRide=null;
  const motion=global.PaperWorldMetroMotion?.create?.()||null;
  const journeyTime=global.PaperWorldMetroMotion?.DURATION_MS||9000;
- const platformDwellMs=1650; // short cinematic time scale; doors remain open
+ const platformDwellMs=2250; // people can leave and board before departure
  let rideEpoch=0,doorSequence=0;
  const door={open:0,start:0,from:0,target:0,duration:900,moving:false};
+ let doorReadyAt=0;
  const delay=ms=>new Promise(resolve=>global.setTimeout(resolve,ms));
  const ease=x=>{const t=clamp(x,0,1);return t*t*(3-2*t)};
  function sampleDoors(time=global.performance.now()){
   if(door.moving){
    const progress=clamp((time-door.start)/door.duration,0,1);
    door.open=door.from+(door.target-door.from)*ease(progress);
-   if(progress>=1){door.open=door.target;door.moving=false}
+   if(progress>=1){
+    door.open=door.target;door.moving=false;
+    if(door.open>.995)doorReadyAt=time;
+   }
   }
   if(section.dataset.renderer==='ring-3d')
    global.PaperWorldGameRingArena?.setTransitDoorOpen?.(door.open,false);
@@ -195,6 +199,7 @@ function create({root,engine,onExit,onFeedback}){
   await delay(door.duration+65);
   if(!visible||rideEpoch!==epoch||doorSequence!==sequence)return false;
   door.open=door.target;door.moving=false;
+  if(door.open>.995)doorReadyAt=global.performance.now();
   sampleDoors();
   return true;
  }
@@ -207,6 +212,19 @@ function create({root,engine,onExit,onFeedback}){
   }
   if(motion.isMoving())return false;
   const epoch=rideEpoch;
+  // Arrivals must allow real travellers time to cross. If the player
+  // presses Continue early, wait for door-open animation plus a short
+  // minimum dwell; never close onto a boarding commuter.
+  if(door.moving&&door.target>.99){
+   await delay(Math.max(0,door.duration-(global.performance.now()-door.start))+70);
+  }
+  sampleDoors();
+  if(door.open>.1&&doorReadyAt){
+   const minPassengerDwellMs=1350;
+   const remaining=minPassengerDwellMs-(global.performance.now()-doorReadyAt);
+   if(remaining>0)await delay(remaining);
+  }
+  if(!visible||rideEpoch!==epoch)return false;
   // The train physically cannot depart while either door leaf is open.
   if(!await animateDoors(0,930))return false;
   if(!visible||epoch!==rideEpoch)return false;
@@ -425,7 +443,7 @@ function create({root,engine,onExit,onFeedback}){
   if(!ride?.onboard)return false;
   visible=true;section.hidden=false;anomalyEventSent=false;
   rideEpoch++;doorSequence++;motion?.reset();
-  door.open=0;door.from=0;door.target=0;door.moving=false;
+  door.open=0;door.from=0;door.target=0;door.moving=false;doorReadyAt=0;
   section.dataset.doorState='closed';
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
@@ -440,7 +458,7 @@ function create({root,engine,onExit,onFeedback}){
  function close(){
   qaActive=false;qa.hidden=true;
   visible=false;section.hidden=true;rideEpoch++;doorSequence++;
-  door.open=0;door.target=0;door.moving=false;
+  door.open=0;door.target=0;door.moving=false;doorReadyAt=0;
   section.dataset.doorState='closed';
   motion?.reset();
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
@@ -456,7 +474,7 @@ function create({root,engine,onExit,onFeedback}){
   regionalRide={legs:route.legs,index:0};
   visible=true;section.hidden=false;anomalyEventSent=false;auto=true;
   rideEpoch++;doorSequence++;motion?.reset();
-  door.open=0;door.from=0;door.target=0;door.moving=false;
+  door.open=0;door.from=0;door.target=0;door.moving=false;doorReadyAt=0;
   section.dataset.doorState='closed';
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
