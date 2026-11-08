@@ -57,7 +57,27 @@ const CORRIDORS=[
  {id:'j',name:'临海南线',color:'#DDD36D',
   points:[9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,28,30,34].map(x=>[x,23]),
   names:'西湾南端|杉台南|古南郊|霞田农园|秋津西路|临水湿地|光桥郊园|南河百货|朝阳高地|月轮桥|晨曦住宅|港西工坊|青蒲里|松浦东区|石渡口|南潮林|海风绿地|海鸟公园|东湾净水|南沙道|岬角前'}
-].map(p=>Object.freeze({...p,names:p.names.split('|')}));
+].map(p=>Object.freeze({...p,
+ // Authored rail corridors bend around old districts, riverbanks and docks;
+ // the central shared interchange lattice positions are left untouched.
+ // Each stop retains its name, index and ID across future scene assets.
+ points:p.points.map(([gx,gy])=>{
+  if(p.id==='c'&&gy>=12&&gy<=17)gx=16;
+  if(p.id==='d'&&gx>=10&&gx<=13)gy=7;
+  if(p.id==='e'&&(gy===2||gy===3))gx=4;
+  if(p.id==='e'&&gy>=21)gx=5;
+  if(p.id==='f'&&gy>=11&&gy<=16)gx=26;
+  if(p.id==='g'&&gx>=8&&gx<=12)gy=3;
+  if(p.id==='g'&&gx>=26)gy=5;
+  if(p.id==='h'&&gx>=8&&gx<=11)gy=18;
+  if(p.id==='h'&&gx>=26)gy=21;
+  if(p.id==='i'&&gy===13&&gx>=9&&gx<=13)gy=14;
+  if(p.id==='i'&&gy>=20&&gy<=22)gx=13;
+  if(p.id==='j'&&gx>=26)gy=22;
+  return Object.freeze([gx,gy]);
+ }),
+ names:p.names.split('|')
+})));
 const stationRows={...BASE_STATIONS};
 const byCoordinate=new Map(Object.entries(stationRows)
  .map(([id,s])=>[s.gx+','+s.gy,id]));
