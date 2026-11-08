@@ -45,7 +45,7 @@ try{
   await page.waitForFunction(index=>{
    const s=window.PaperWorldGameRingArena?.inspect();
    return s?.controlledAllyIndex===index-1&&s?.cameraParity===true&&
-    s?.stagePresentation==='four-rear-facing-allies-one-fixed-rank'&&
+    s?.stagePresentation==='p5-spaced-fixed-all-back-command-team'&&
     Math.abs(s.cameraLook?.yawDeg||0)<1.2;
   },slot,{timeout:16000});
   await page.waitForTimeout(100);
@@ -69,12 +69,12 @@ try{
     friendlyX:game.partyLine.map(a=>a.x),enemyX:game.opposingLine.map(a=>a.x)
    };
   });
-  assert.deepEqual(data.friendlyX,[-1.05,-.25,.55,1.35]);
-  assert.deepEqual(data.enemyX,data.friendlyX,'true paired X lanes');
+  assert.deepEqual(data.friendlyX,[-1.05,-1.72,.78,-1.05]);
+  assert.deepEqual(data.enemyX,[-.2,.45,1.1,1.75]);
   assert.equal(data.actorIds.length,8);
-  assert.equal(data.staging,'four-rear-facing-allies-one-fixed-rank');
+  assert.equal(data.staging,'p5-spaced-fixed-all-back-command-team');
   assert.deepEqual(data.worldActors.filter(a=>a.team==='ally').map(a=>a.z),
-   [9.3,9.3,9.3,9.3],'all 4 female07 back rigs stand in a single row');
+   [9.3,7.95,9.5,8.32],'all 4 L2D backs keep distinct P5-style permanent positions');
   assert.ok(data.worldActors.filter(a=>a.team==='ally').every(a=>a.stageYaw===undefined),
    'no 3D side rotations: 4 back-facing portraits only');
   assert.ok(data.dynamicFemale07&&data.dynamicPartyIds.length===4,
