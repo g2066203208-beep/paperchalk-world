@@ -1,44 +1,32 @@
-# 学生妹三人组 SG02｜黑皮辣妹、校服穿得松散｜Anima 三视图 V2
+# NPC-SG02 黑皮辣妹｜Anima V3：无眼睛三视图修正版
 
-> **2026-11-08 用户明确改变 SG02 设计：第二位是晒黑肌肤的日式辣妹（gyaru），不会像第一位一样规规矩矩穿校服。** 此文档已用全新的完整正向和负向提示词**替换**旧“高挑开朗短栗棕 bob、校服规整”的过时设计。旧设计仅保留在 Git 历史中。
+> **2026-11-08 实际出图未通过：用户反馈第二位仍出现眼睛。** 之前把 `Japanese gyaru` 等标签、表情与人物特征混写，虽然负向列有 `visible eyes`，Anima 依然可能生成典型带眼线和眼睛的二次元脸。这是模型视觉先验与文本约束的冲突，不能承诺靠字词必然解决。**V3 将“眼部完全留白，仅保留鼻子和嘴”放到正向人物脸结构的前端，并对每一视图明确眼部空白；从开头去掉容易诱发完整妆容的 `gyaru` 标签**，仍保留用户想要的晒黑肤色、卷发、松散校服和性格。
 >
-> 状态：提示词已完成，**未生成 SG02 人物 PNG，不是批准成品**。必须先读 [女主学校校服原版结构](SCHOOL_UNIFORM_FEMALE_CANON_20261108.md)、[SG01 正确母图及三视图提示词](NPC_SG01_ANIMA_DYNAMIC_THREE_VIEW_PHONE_WALK_20261108.md)、[Anima 官方模型卡](https://huggingface.co/circlestone-labs/Anima)；自然语言与标签混用是官方支持的方式，但不保证一次生成严格三格。
-
-## 角色与三格动作
-
-- **身份：** 女主学校三人队第二位，明显高于 SG01、肩稍宽、结实而健康；深蜜棕晒黑肤色、蜂蜜金色齐肩波浪发、深色自然发根、侧分；**不画任何眼睛、眼皮、闭眼弧线**。性格自信俏皮，嘴角带一丝揶揄似的笑。
-- **校服共性：** 同学校、同样深海军蓝近黑西装、白衬衫、酒红色细长长领带、炭灰短百褶裙、黑色小腿袜、深棕黑乐福鞋。前片必须保留 **两枚大号哑光暖深灰棕圆扣**，不可更改颜色或数量。
-- **不规矩但不换校服：** 西装**始终敞开不扣**，衬衫领口最上方略松、**酒红长领带仍系着但结略松**，袜子稍微堆在小腿；三视图穿法一致。**不要领结、不要漏领带、不要把她画成另一个学校的制服**。
-- **左正面：** 小步自信地迎面走，右手轻扶敞开的西装边缘，左臂自然摆，嘴角戏谑浅笑。
-- **中纯左侧面：** 朝左自然慢走，右手靠近外套口袋，左臂摆动；完整 90° 侧身。
-- **右纯背面：** 往远处轻松走，单手轻捋齐肩卷发发尾，另一手自然放松；身体始终完全背向。
-- 阴天中性漫射光，平涂无强烈定向阴影；不添加手提包、手机、首饰、场景物品。
+> **状态：完整修正提示词；原输出仍不通过，无 SG02 批准图片。** 画风 LoRA 1.0，同校制服结构以 [原图校服锁](SCHOOL_UNIFORM_FEMALE_CANON_20261108.md) 为准。Anima 官方只支持标签、自然英语混写，并未承诺可靠压制特定脸部细节。
+>
+> **更可靠的修复路径：** 若已生成图除眼睛外其他部分满意，保留原图，用 img2img 局部重绘/修复蒙版**只处理眼部区域**，清除眼睛/眼线/睫毛/闭眼弧线、保持自然皮肤色块，同时保护发型、鼻子、嘴巴、衣服和身体姿势。若重画整张仍长眼睛，就不要继续加几十个重复的否定词。
 
 ## Positive Prompt
-
 ```text
-masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:1.0>, character reference sheet, character turnaround, multiple views, full body, Japanese gyaru schoolgirl, deep sun-tanned skin, honey blonde hair, tall girl, playful smile, simple anime style, clean lineart, flat colors, muted colors, soft overcast ambient light, white background.
+masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:1.0>, character reference sheet, character turnaround, three full body views, tanned Japanese schoolgirl, honey blonde wavy hair, simple anime style, clean lineart, flat colors, muted colors, white background.
 
-A character turnaround sheet with exactly three full-body drawings of the same Japanese schoolgirl in one horizontal row. She is tall with longer legs, a strong healthy build, relaxed shoulders and a confident, teasing smile. She has deep warm golden-brown suntanned skin, shoulder-length loose wavy honey-blonde hair, darker roots and a side part. Same skin tone, hairstyle and proportions in every view. Her eye area is completely blank: no visible eyes, eyelids, eyelashes or closed-eye arcs.
+Exactly three full-body drawings of the same tall Japanese high school girl in a single horizontal row. She has warm deep golden-brown suntanned skin, shoulder-length loose wavy honey-blonde hair with darker roots, a side part, relaxed shoulders and long legs. Her face has a small nose and a playful curved mouth. The entire eye area between her bangs and her nose is plain uninterrupted skin, without any drawn eye shapes, eyelashes, eyebrows, closed-eye curves or eyelid lines. This blank eye area is the same in every view.
 
-She wears the SAME SCHOOL UNIFORM as the female protagonist, but casually: a fitted very dark midnight-navy school blazer WORN OPEN and UNBUTTONED, with exactly two large matte dark warm gray-brown round buttons with near-black rims still attached to its front; a white collared shirt with the top collar button slightly undone; a narrow burgundy LONG NECKTIE with a loose knot, clearly visible down the front; a short charcoal-gray pleated skirt reaching mid-thigh; black mid-calf socks slightly scrunched down; and dark brown-black leather penny loafers. All three views keep the blazer open, both buttons present and the same loosely tied burgundy necktie.
+She wears the same school uniform design as the female protagonist, but with a relaxed fashionable attitude: a very dark midnight-navy blazer worn OPEN in all three views, exactly two large matte warm dark gray-brown round blazer buttons with near-black rims, a white collared shirt with its top button undone, a narrow burgundy LONG NECKTIE still loosely knotted and clearly visible, a charcoal gray short pleated skirt, slightly scrunched black mid-calf socks and dark brown-black loafers. The outfit, hairstyle, skin tone, button color and tie remain unchanged in all three drawings.
 
-LEFT FIGURE: Front view. She walks toward the viewer in a small confident step. Her head, shoulders, chest and hips face straight forward. Her right hand casually touches the open blazer edge near her hip, leaving the necktie and buttons visible. Her left arm swings naturally, and her mouth has a playful half-smile.
+LEFT FIGURE: Front view. She walks toward the viewer with a small confident step. Her head, shoulders, chest and hips face forward. Her right hand lightly catches the edge of her open blazer near the hip, while her left arm swings naturally. Her playful smile is shown only by her mouth. Her upper face remains blank.
 
-CENTER FIGURE: Left-facing side profile. She walks left in a strict 90-degree side view. Her nose, shoulders, chest, hips and shoes face left. One foot is slightly ahead. Her right hand rests near the open blazer pocket while her other arm swings comfortably. Her wavy hair, open blazer and loose burgundy necktie match the front view.
+CENTER FIGURE: Left-facing side profile. The same girl takes a small step to the left in a strict 90-degree side view. Her nose, shoulders, chest, hips and shoes face left. One hand stays relaxed near her blazer pocket and the other swings gently. Only her nose and mouth are drawn on the face profile, with no eye or eyelid marks.
 
-RIGHT FIGURE: Back view. She takes a relaxed step away from the viewer, facing directly away with her head, shoulders, back and hips. One hand lightly brushes the end of her loose wavy hair near her shoulder, while the other arm hangs naturally. Her open blazer, charcoal pleated skirt, scrunched black socks and loafers remain unchanged.
+RIGHT FIGURE: Back view. The same girl walks away in a natural relaxed step, her head, shoulders, back and hips facing away. One hand casually brushes the ends of her wavy hair. The open blazer, skirt, socks and loafers exactly match the other figures.
 
-Three natural everyday walking poses of exactly the same girl, slightly different small gestures, clear front, pure left side and pure back directions, consistent costume and hair. Three complete full-body figures, evenly spaced on a plain white background. Flat colors, gentle overcast diffuse ambient illumination, no strong baked lighting or cast shadows.
+Three natural understated walking poses, identical appearance in all views, complete figures from hair to shoes, even spacing, neutral overcast diffuse light, soft flat material colors, no dramatic highlights, no cast shadows, plain white background.
 ```
 
 ## Negative Prompt
-
 ```text
-worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, pale skin, different skin tones, black ponytail, short dark bob hair, different hairstyles, different hair lengths, visible eyes, pupils, eyelashes, eyebrows, eyelid lines, closed-eye arcs, detailed eyes, closed blazer, buttoned blazer, missing blazer, missing buttons, one button, three buttons, gold buttons, brass buttons, shiny buttons, pure black buttons, missing burgundy necktie, bow tie, ribbon bow, bare collar, different school uniform, long skirt, trousers, black tights, thigh-high socks, sneakers, high heels, extra accessories, handbag, smartphone, dramatic posing, wide stride, running, jumping, dancing, twisted torso, three-quarter view, repeated front views, front view in middle, back view in middle, front view on right, side view on right, looking back, different characters, fourth figure, cropped head, cropped feet, harsh shadows, rim light, spotlight, shiny highlights, background scenery, furniture, text, watermark
+worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, visible eyes, eyes, eye shapes, drawn eyes, pupils, irises, eyeliner, eye makeup, eyelashes, eyelid lines, eyebrows, closed eyes, closed-eye arcs, smiling eye arcs, eye highlights, upper face details, full anime face, pale skin, inconsistent skin tone, black ponytail, short black hair, different hair lengths, buttoned blazer, closed blazer, missing blazer, missing buttons, one button, three buttons, gold buttons, brass buttons, metallic buttons, missing burgundy necktie, ribbon bow, bare shirt collar, different school uniform, long skirt, trousers, tights, thigh-high socks, high heels, extra accessories, smartphone, jumping, running, dancing, twisted torso, three-quarter view, repeated front views, front view in center, back view in center, front view on right, side view on right, looking backward, different characters, extra figures, fourth figure, cropped feet, cropped head, hard shadows, rim light, spotlight, background scenery, furniture, text, watermark
 ```
 
-## 参数
-Anima Base · ER SDE · 35 steps · CFG 4.5 · 1536×1024 · `@akipekostyle, <lora:akipekoanima_v1_1:1.0>`。**这些是本项目的设置，不是 Anima 官方固定视角控制语言。**
-
-验收：三面朝向必须清楚，人物晒黑肤色统一、卷发统一、衬衫领带都不丢、两颗深灰棕扣都在、西装始终敞开，动作小而不僵硬，无眼睛和预烘焙强光影。
+## 设置和验收
+Anima Base · ER SDE · 35 steps · CFG 4.5 · 1536×1024 · `@akipekostyle, <lora:akipekoanima_v1_1:1.0>`。三格：左正面，中纯朝左 90°，右纯背面；第一和第二格眼部必须**皮肤留白**，无眉眼、闭眼线、睫毛；西装三格敞开、两颗哑光暖灰棕扣、酒红长领带不消失，动作自然小幅。
