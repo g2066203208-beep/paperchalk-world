@@ -8,7 +8,7 @@
 | --- | --- | --- | --- | --- |
 | NPC-M001 | 普通年轻男性 · 下班后坐着打瞌睡 | **原三视图废止；四格待 Anima 重画** | [M001 v2](metro-commuter-npc-m001-four-pose-draft.v2.json) | 禁止旧素材上线 |
 | NPC-M002 | 普通成年女性 · 低头看手机 | **原三视图废止；四格待 Anima 重画** | [M002 v2](metro-commuter-npc-m002-four-pose-draft.v2.json) | 禁止旧素材上线 |
-| NPC-M003 | 灰白发老爷爷 · 正面坐着看报纸 | **用户已确认四格 2026-11-08** | [M003 v2](metro-commuter-npc-m003.v2.json) | 原图二进制尚待入库并去背 |
+| NPC-M003 | 灰白发老爷爷 · 正面坐着看报纸 | **四格已批准，原图及五份透明 PNG 已入 GitHub** | [M003 v2](metro-commuter-npc-m003.v2.json) | 美术已准备，游戏行为/渲染尚未接入 |
 
 **程序可读图鉴：** [metro-character-gallery.v1.json](metro-character-gallery.v1.json)
 
@@ -17,8 +17,9 @@
 - 会话原图：`tmp9006p_bo.png`，1472 × 1024，RGB；真实文件 SHA-256：`0a55af227d55b126d1fd37e4209eef50322d99c99e2f690be8c19fc9519701ba`。
 - 四格：纯正面站立 → 90° 左侧面站立 → 纯背面站立 → 正面坐姿看报。
 - 深炭灰夹克、棕色 V 领针织背心、浅米色衬衫、深蓝黑色裤子、黑皮鞋，全部四格统一。
-- **状态严格区分：** 当前 GitHub 存的是角色批准记录与完整 Anima prompt，不是 PNG 本体。仓库内已存在的旧程序 SVG 不能代替正式 Anima 画作；必须拿到真实 PNG/RGBA 二进制才能标记游戏已使用。
-- 原图为白底 RGB，**不是透明背景**。导入时保存原母图，并制作真实 alpha 的四张独立 PNG，校验人物脚底和贴地位置；不用画出座椅，因为地铁座椅由游戏的真实 3D 模型承担。
+- **真实 GitHub 资产：** [已批准的原图（RGB PNG）](../../assets/characters/metro/npc-m003/approved-four-poses.png)、[透明 RGBA 四格图集](../../assets/characters/metro/npc-m003/four-pose-atlas-rgba.png)、[纯正面站姿](../../assets/characters/metro/npc-m003/front-standing.png)、[严格侧面站姿](../../assets/characters/metro/npc-m003/side-standing.png)、[背面站姿](../../assets/characters/metro/npc-m003/back-standing.png)、[纯正面坐着看报](../../assets/characters/metro/npc-m003/special-front-seated-reading.png)。原图 SHA-256 与 `metro-commuter-npc-m003.v2.json` 一致，四格成品各 416×1024，图集 1664×1024，RGBA Alpha 已检查。
+- **状态严格区分：** 图片已经真正提交到 GitHub，但还未接入站台 NPC 渲染和行为状态机，不得声称游戏已经出现 M003。已有旧程序 SVG 群众是历史占位，不是用户批准的人物。
+- 原图保留为白底 RGB，派生的五份透明图已生成并入 GitHub，不能混用。使用正式素材前仍需在游戏里校验脚底锚点、透视比例及动作切换；不用画出座椅，因为地铁座椅由游戏的真实 3D 模型承担。
 
 ## M001 / M002 修订要求
 
