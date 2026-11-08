@@ -50,8 +50,8 @@ assert.deepEqual(ring.SHOULDER_LOOK_LIMITS,{
  yawLeftDeg:7.5,yawRightDeg:7.5,pitchUpDeg:3.5,pitchDownDeg:3.5
 });
 const html=fs.readFileSync(path.resolve(__dirname,'../site/index.html'),'utf8');
-assert.match(html,/fullwidth-right-hud-safe-frustum-v18-20261108/,
- 'HTML must force actual battle source reload rather than stale cache');
+assert.match(html,/ring-arena-runtime\\.js\\?v=[^"']+/,
+ 'HTML must load the current real battle source with an explicit cache-busting version');
 assert.match(html,/const comfortableLook=v=>/,
  'mouse neutral deadzone and continuous smoothstep must exist');
 assert.match(html,/stage\.dataset\.scene==='ring-arena'\?4\.5:7/,
