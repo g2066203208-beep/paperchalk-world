@@ -37,7 +37,7 @@ try{
  assert.equal(first.timegrid.roles.length,4);
  assert.equal(first.timegrid.enemies.length,4);
  assert.equal(first.timegrid.timelineTicks,10);
- assert.equal(first.timegrid.ui,'persistent-portraits-hp-only');
+ assert.equal(first.timegrid.ui,'p5-inspired-diagonal-face-hp-only');
  assert.equal(first.timegrid.version,'1.7');
  assert.equal(first.timegrid.tacticsOpen,false);
  assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
@@ -59,8 +59,18 @@ try{
  });
  assert.ok(hudBox.stageWidth>=1275&&hudBox.stageRight>=1275,
   'full-width actual WebGL world is never resized for UI');
- assert.ok(hudBox.avatarLeft>1090&&hudBox.avatarWidth<180,
-  'avatar + HP strip, NOT a large right side planning window');
+ assert.ok(hudBox.avatarLeft>1000&&hudBox.avatarWidth<260,
+  'reference-one diagonally cropped faces + a slim HP column, NOT a menu');
+ assert.equal(await page.locator('.tg-portrait .tg-cutout').count(),8);
+ assert.equal(await page.locator('.tg-divider').count(),1);
+ const mask=await page.locator('.tg-portrait').first().evaluate(x=>
+  getComputedStyle(x).clipPath);
+ assert.match(mask,/polygon\(/,'head silhouette uses the reference diagonal cut');
+ await page.waitForFunction(()=>{
+  const faces=[...document.querySelectorAll('.ring-timegrid .tg-portrait img')];
+  return faces.length===8&&faces.every(x=>x.complete&&x.naturalWidth>0&&
+   x.src.startsWith('data:image/'));
+ },null,{timeout:30000});
  assert.equal(hudBox.background,'rgba(0, 0, 0, 0)');
  assert.equal(hudBox.shadow,'none');
  const hpLabels=await page.locator('.tg-hp-value').allTextContents();
