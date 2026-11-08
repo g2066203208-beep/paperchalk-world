@@ -279,7 +279,7 @@
       ],
       "metro": {
         "plannedLines": 16,
-        "plannedUniqueStations": 300,
+        "plannedUniqueStations": 150,
         "currentlyRegisteredLines": 0,
         "currentlyRegisteredUniqueStations": 0
       },
