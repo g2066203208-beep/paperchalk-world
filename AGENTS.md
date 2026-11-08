@@ -10,6 +10,10 @@ Read these documents **in the current session**, not from memory:
 
 **Do not claim to have consulted official instructions unless you actually checked them.** If upstream access fails, disclose that and rely on the last dated copy. The reference is a source-linked summary, not an invented official guarantee of precise multi-view control.
 
+### Schoolgirl NPC shared template: mandatory fixed structure and fillable variables (2026-11-08)
+
+**For all NEW ordinary female students in the heroine's school, start from [SG01-proven fill-in template](docs/ANIMA_SCHOOLGIRL_THREE_VIEW_FILL_IN_TEMPLATE_V1_20261108.md), not from fresh freeform prompts.** Keep every fixed line of the positive/negative template; replace only its **appearance, body build, skin, hair, personality/mouth, uniform-wearing style, personal prop, front/side/back action and character-specific negative** placeholders. The user's accepted SG01 image/prompt are immutable. Always submit the final fully substituted positive and negative prompts, not placeholders, when the user requests a specific student. **Do not substitute failed SG02 side-only inpaint for the 3-view master structure.**
+
 ### Current NPC canonical prompt: MANDATORY
 
 **Always read [NPC multi-view canonical LEFT/CENTER/RIGHT template](docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md) before writing multi-view NPC prompts.** The user confirmed a complete three-view office-worker example with `LEFT FIGURE: front / CENTER FIGURE: left profile / RIGHT FIGURE: back`. Preserve this spatial structure, changing only character appearance and, if requested, adding a fourth far-right frontal **sustainable** idle. In a four-view variant, remove contradictory negative terms such as `fourth figure` or `two frontal figures`. The abandoned single-view trial was deleted from main; Git history retains it for audit. It must never be the default. The three-view composition has user approval; the new fourth-view addition still needs actual image review.
