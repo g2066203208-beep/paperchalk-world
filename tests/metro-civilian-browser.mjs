@@ -28,7 +28,7 @@ page.on('pageerror',e=>errors.push(e.message));
 try{
  page.setDefaultTimeout(35000);
  const origin='http://127.0.0.1:'+server.address().port;
- await page.goto(origin+'/index.html?mapLayers=full',{waitUntil:'domcontentloaded',timeout:60000});
+ await page.goto(origin+'/index.html?mapLayers=full&npcMetroQA=1',{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').click();
  await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom',null,{timeout:42000});
  await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false');
@@ -77,18 +77,35 @@ try{
  let stage=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect().station3D);
  assert.deepEqual(stage.approvedTransitFlow.waiting,ready.keys);
  assert.equal(stage.commuterAtlasStatus,'real-approved-npc');
+ // Software WebGL screenshots take much longer than human-world door
+ // animation. Freeze real spatial phases ONLY in explicit QA mode.
+ await page.evaluate(()=>window.PaperWorldGameRingArena.qaTransitNpcFrame({
+  dwellMs:250,doorOpen:0,doorOpenedEver:false
+ }));
+ await page.waitForFunction(()=>{
+  const a=window.PaperWorldGameRingArena?.inspect?.();
+  return a?.station3D?.realCrowdIds?.length===3&&
+   a.approvedMetroNpcArt.filter(p=>p.ready&&p.id.startsWith('NPC-')).length>=3;
+ },null,{timeout:25000});
  await page.screenshot({path:output+'/01-waiting-real-3d-desktop.png',timeout:48000});
+ await page.evaluate(()=>window.PaperWorldGameRingArena.qaTransitNpcFrame({
+  dwellMs:2350,doorOpen:1,doorOpenedEver:true
+ }));
  await page.waitForFunction(()=>{
   const a=window.PaperWorldGameRingArena?.inspect?.();
   return a?.station3D?.commutersDrawn>0&&
    a.station3D.realCrowdIds.includes('NPC-C001');
- },{timeout:20000});
+ },null,{timeout:20000});
  await page.screenshot({path:output+'/02-boarding-through-door.png',timeout:48000});
+ await page.evaluate(()=>window.PaperWorldGameRingArena.qaTransitNpcFrame({
+  dwellMs:4900,doorOpen:1,doorOpenedEver:true
+ }));
  await page.waitForFunction(()=>{
   const a=window.PaperWorldGameRingArena?.inspect?.();
   return a?.station3D?.approvedTransitFlow?.waiting.length===3&&
    a?.station3D?.commutersDrawn===0;
- },{timeout:20000});
+ },null,{timeout:20000});
+ await page.evaluate(()=>window.PaperWorldGameRingArena.qaTransitNpcFrame(null));
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).first().click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.transitMotion.moving,{timeout:20000});
  stage=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect().station3D);
@@ -100,10 +117,13 @@ try{
   return !a.transitMotion.moving&&
    a.station3D?.approvedTransitFlow?.alighting.length===2;
  },{timeout:30000});
+ await page.evaluate(()=>window.PaperWorldGameRingArena.qaTransitNpcFrame({
+  dwellMs:1000,doorOpen:1,doorOpenedEver:true
+ }));
  await page.waitForFunction(()=>{
   const a=window.PaperWorldGameRingArena.inspect();
-  return a.station3D?.realCrowdIds.some(x=>x==='NPC-C001');
- },{timeout:14000});
+  return a.station3D?.realCrowdIds.includes('NPC-C001');
+ },null,{timeout:20000});
  stage=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect().station3D);
  assert.deepEqual(stage.approvedTransitFlow.alighting,['NPC-C001','NPC-C002']);
  assert.deepEqual(stage.approvedTransitFlow.onboard,['NPC-SG01']);
