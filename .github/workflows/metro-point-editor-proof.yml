@@ -1,0 +1,60 @@
+name: Kirihama editable point-connect metro proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/metro-graph.js'
+      - 'site/game/metro-map-geometry.js'
+      - 'site/game/metro-map-editor.js'
+      - 'site/game/metro-map-editor-ui.js'
+      - 'site/game/transit-map-ui.js'
+      - 'site/game/transit-map-ui.css'
+      - 'site/index.html'
+      - 'tests/metro-map-editor.test.cjs'
+      - 'tests/metro-map-editor-browser.mjs'
+      - '.github/workflows/metro-point-editor-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: kirihama-dot-grid-editor-main
+  cancel-in-progress: false
+jobs:
+  chrome-editor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check real track and reversible station authoring model
+        run: |
+          node --check site/game/metro-map-editor.js
+          node --check site/game/metro-map-editor-ui.js
+          node --check site/game/transit-map-ui.js
+          node --test tests/metro-map-editor.test.cjs
+      - name: Install real Chrome browser runner
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Prepare existing game scene catalog and local server
+        run: |
+          python3 scripts/build_scene_catalog.py
+          python3 -m http.server 8765 --directory site >/tmp/metro-editor-http.log 2>&1 &
+          for n in $(seq 1 35); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/metro-editor-http.log
+          exit 1
+      - name: Physically click actual tracks, drag grid nodes and save rounded rail blueprint
+        run: node tests/metro-map-editor-browser.mjs
+      - name: Upload actual in-game metro-edit screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kirihama-editable-dot-metro-chromium
+          path: artifacts/metro-editor/*.png
+          retention-days: 14
+          if-no-files-found: warn
