@@ -14,6 +14,26 @@ for(const mode of ['outer','inner']){
 }
 assert.deepEqual(scene.allies.map(a=>a.z),[9.3,9.3,9.3,9.3]);
 assert.deepEqual(scene.enemies.map(a=>a.z),[6.8,6.8,6.8,6.8]);
+
+const fs=require('node:fs'),path=require('node:path');
+const source=fs.readFileSync(path.resolve(__dirname,'../site/game/ring-arena-runtime.js'),'utf8');
+const bridge=fs.readFileSync(path.resolve(__dirname,'../site/dev/character-bridge.js'),'utf8');
+assert.doesNotMatch(source,/STAGE_SPECTATORS|STAGE_FG|stageTransition\s*=|function stagePosition/,
+ 'never resurrect the unwanted side-wing lineup or scripted position swapping');
+assert.match(source,/stagePresentation:'four-rear-facing-allies-one-fixed-rank'/,
+ 'the actual 3D renderer must remain one straight rear-facing rank');
+assert.match(bridge,/const keys=originalMode\?\['player'\]:\['player','ally2','ally3','ally4'\]/,
+ 'default battle must mount all four independently animated L2D back rigs');
+assert.match(bridge,/const targetId=originalMode\?'protagonist':'female-07'/,
+ 'all four battle actors must be the user-approved female-07');
+assert.match(bridge,/await assign\(key,targetId,'back',false\)/,
+ 'every party slot must mount the back view, not the front or a fake rotated pose');
+for(const actor of scene.allies){
+ const right=ring.actorWorldRight(actor,'outer');
+ assert.ok(right.x>.998&&Math.abs(right.z)<.051,
+  actor.id+' must face from the original full-back plane, not a sideways plane');
+}
+
 assert.deepEqual(ring.HIDDEN_ALLY_IDS,[]);
 assert.deepEqual(ring.visibleActors('outer').map(a=>a.id),
  ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
