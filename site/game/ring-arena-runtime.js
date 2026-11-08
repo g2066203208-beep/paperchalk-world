@@ -1390,10 +1390,11 @@
     const slot=staging.CONFIG.slots.find(s=>s.id===g?.metroSlot);
     const sprite=candidate.sprites?.front;
     if(!slot||!sprite)continue;
+    const aspect=textures.get('npc:'+candidate.id)?.sourceAspect||.30;
     const ref=staging.derive({id:'npc:'+candidate.id,slot,
      height:g.heightMeters,renderReady:true,
      art:{soleX:g.soleX,crownY:g.assetCrownY,soleY:g.assetSoleY,
-      widthScale:g.widthScale,approved:true}});
+      widthScale:g.widthScale*aspect,approved:true}});
     if(!ref.ok)continue;
     const screen=staging.screenMetrics(ref.actor,{camera:cam,aspect,project});
     if(!screen.ok||!screen.inHorizontalFov)continue;
