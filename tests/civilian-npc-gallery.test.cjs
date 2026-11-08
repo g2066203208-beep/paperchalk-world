@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -29,6 +30,9 @@ test('all five ordinary civilians are in one roster; four new real PNG files are
     assert.deepEqual(item.source.actualImageLeftToRight,['side_left','front','back']);
     assert.equal(item.source.mode,'RGB');
     assert.ok(fs.existsSync(path.join(ROOT,item.source.path)),`missing binary: ${item.source.path}`);
+    const src = fs.readFileSync(path.join(ROOT,item.source.path));
+    assert.equal(crypto.createHash('sha256').update(src).digest('hex'),item.source.sha256);
+    assert.equal(crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${src.length}\\0`),src])).digest('hex'),item.source.gitBlobSha);
     assert.equal(item.production.registeredForGame,false);
     assert.equal(item.production.gameApproved,false);
     assert.equal(item.production.hasRealAlpha,false);
@@ -44,6 +48,8 @@ test('approved subway reader M003 remains included as a civilian, without asset 
   assert.equal(elder.source.path,original.approvedArt.assetPath);
   assert.equal(elder.source.sha256,original.approvedArt.sha256);
   assert.ok(fs.existsSync(path.join(ROOT,elder.source.path)));
+  const elderSrc=fs.readFileSync(path.join(ROOT,elder.source.path));
+  assert.equal(crypto.createHash('sha256').update(elderSrc).digest('hex'),elder.source.sha256);
   assert.equal(elder.source.committedToRepository,true);
   assert.deepEqual(elder.source.actualImageLeftToRight,['front','side_left','back','seated_reading']);
   assert.equal(elder.states.rest.path,original.render.sprites.special);
