@@ -155,7 +155,7 @@
  position:absolute;height:var(--npc-qa-height);width:58%;
  bottom:5%;left:50%;object-fit:contain;object-position:center bottom;
  transform:translateX(-50%);pointer-events:none;
- filter:brightness(.84) saturate(.9) contrast(1.06);
+ image-rendering:auto;filter:none;opacity:1;backface-visibility:hidden;
 }
 #pw-metro-cabin .pw-npc-qa[data-pose="joy"] .pw-npc-qa-surprise,
 #pw-metro-cabin .pw-npc-qa[data-pose="surprise"] .pw-npc-qa-joy{display:none}
@@ -206,3 +206,6 @@
 #novel-ui #pw-metro-cabin .pw-npc-qa-controls button[aria-pressed="true"]{
  background:#5f6d6c!important;border-color:#e2e6da!important;
 }
+
+/* HD 1024px transparent sources — no CSS blur, shadow or saturation degradation. */
+#pw-metro-cabin .pw-npc-qa-stage img{filter:none!important;image-rendering:auto!important;opacity:1!important;max-width:none!important}
