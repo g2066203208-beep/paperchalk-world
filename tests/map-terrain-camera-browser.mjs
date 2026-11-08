@@ -9,8 +9,8 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
 const base=process.env.PAPERCHALK_BROWSER_BASE||'http://127.0.0.1:8765/';
 const out='artifacts/map-terrain-3d';
 fs.mkdirSync(out,{recursive:true});
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-const page=await browser.newPage({viewport:{width:1440,height:850},deviceScaleFactor:1});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader']});
+const page=await browser.newPage({viewport:{width:1100,height:650},deviceScaleFactor:1});
 page.setDefaultTimeout(22000);
 const errors=[];
 const consoleMessages=[];
@@ -19,7 +19,7 @@ page.on('console',m=>{
  if(m.type()==='warning'||m.type()==='error')consoleMessages.push(m.type()+': '+m.text());
 });
 const shot=async name=>{
- try{await page.screenshot({path:path.join(out,name),animations:'disabled',timeout:20000});return true}
+ try{await page.screenshot({path:path.join(out,name),animations:'disabled',timeout:15000});return true}
  catch(e){console.warn('Software Chromium screenshot skipped:',name,String(e).slice(0,120));return false}
 };
 const inspect=()=>page.evaluate(()=>{
@@ -76,7 +76,7 @@ try{
  assert.equal(raised.state.heightsDefined,true);
  await page.evaluate(()=>document.querySelector('.pw-dot-camera-toggle').click());
  console.log('AFTER 3D CLICK',JSON.stringify(await inspect()));
- await page.waitForTimeout(1350);
+ await page.waitForTimeout(900);
  console.log('AFTER 3D 1.35s',JSON.stringify(await inspect()),
   'CONSOLE',JSON.stringify(consoleMessages),'PAGE_ERRORS',JSON.stringify(errors));
  try{
@@ -103,7 +103,7 @@ try{
  const cx=bounds.x+bounds.width*.5,cy=bounds.y+bounds.height*.5;
  await page.mouse.move(cx,cy);
  await page.mouse.down();
- await page.mouse.move(cx+140,cy+58,{steps:16});
+ await page.mouse.move(cx+140,cy+58,{steps:4});
  await page.mouse.up();
  await page.waitForTimeout(360);
  const orbited=await inspect();
