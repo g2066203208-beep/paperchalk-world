@@ -156,6 +156,26 @@ const BACK={
  jacket:['torso',.50,.08,.50,.79,'torso'],
  hair_over_jacket:['head',.50,.05,.50,.94,'hair']
 };
+// Female-seven's uploaded 1024-square SeeThrough BACK PSD is a distinct
+// fourteen-ArtMesh source, not an inverted front or a repeated flat cutout.
+// Both hands, both legs and both shoes are split from disconnected ORIGINAL
+// pixels; the weapon follows her right wrist in the same PartRig hierarchy.
+const FEMALE07_BACK=Object.freeze({
+ eyebrow:['head',.5,.5,.5,.5,'fixed'],
+ back_hair:['head',.50,.045,.47,.97,'hair'],
+ front_hair:['head',.51,.06,.48,.95,'hair'],
+ face:['head',.5,.42,.5,.56,'face'],
+ neck:['torso',.5,.83,.5,.2,'fixed'],
+ topwear:['torso',.50,.16,.50,.86,'torso'],
+ bottomwear:['pelvis',.5,.06,.5,.96,'skirt'],
+ legwear_l:['ground',.5,.13,.5,.93,'fixed'],
+ legwear_r:['ground',.5,.13,.5,.93,'fixed'],
+ footwear_l:['ground',.5,.82,.5,.82,'fixed'],
+ footwear_r:['ground',.5,.82,.5,.82,'fixed'],
+ handwear_l:['torso',.88,.07,.79,.96,'arm-left'],
+ handwear_r:['torso',.20,.07,.91,.94,'arm-right'],
+ objects:['handwear_r',.15,.28,.82,.90,'fixed']
+});
 // CHAR-002: source-authentic PSD layers; empty source records are kept in the ZIP.
 const CHAR002={
  head_reference:['head',.50,.48,.50,.48,'face'],
@@ -516,6 +536,8 @@ function cleanPart(part,face,id,characterId){
   (CHAR004[id]||FRONT[id]):
   (characterId==='char-002'||characterId==='char-002-psd-v1')&&face==='front'?
    (CHAR002[id]||FRONT[id]):
+   characterId==='female-07'&&face==='back'?
+    (FEMALE07_BACK[id]||BACK[id]):
    (face==='back'?BACK:FRONT)[id];
  const w=Math.max(1,finite(p.canvas?.width||p.w,1));
  const h=Math.max(1,finite(p.canvas?.height||p.h,1));
