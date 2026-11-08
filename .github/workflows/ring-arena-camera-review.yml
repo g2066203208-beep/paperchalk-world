@@ -11,7 +11,7 @@ permissions:
   contents: write
 concurrency:
   group: ring-arena-camera-only-main
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   render:
     runs-on: ubuntu-24.04
