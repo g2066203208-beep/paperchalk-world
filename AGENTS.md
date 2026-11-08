@@ -14,6 +14,10 @@ Read these documents **in the current session**, not from memory:
 
 **Always read [NPC multi-view canonical LEFT/CENTER/RIGHT template](docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md) before writing multi-view NPC prompts.** The user confirmed a complete three-view office-worker example with `LEFT FIGURE: front / CENTER FIGURE: left profile / RIGHT FIGURE: back`. Preserve this spatial structure, changing only character appearance and, if requested, adding a fourth far-right frontal **sustainable** idle. In a four-view variant, remove contradictory negative terms such as `fourth figure` or `two frontal figures`. The abandoned single-view trial was deleted from main; Git history retains it for audit. It must never be the default. The three-view composition has user approval; the new fourth-view addition still needs actual image review.
 
+### Separate civilian-NPC gallery (mandatory)
+
+Ordinary background commuters are now indexed in [site/data/npc/civilians/gallery.v1.json](site/data/npc/civilians/gallery.v1.json), **separate from** the historical metro M001-M003 art set and named story CHAR assets. **Default is THREE views only.** Each person's own img2img communication/rest/death states will be added later, one per state, without inventing finished art. The three currently supplied raw 1024x1024 RGB originals are arranged left side / center front / right back, **not** the canonical prompt's requested left front / center side / right back. Preserve actual image order. Source paths in JSON are *intended* locations until binary GitHub commit is verified. Check SHA256 and image dimensions using `scripts/validate_civilian_npc_sources.py`; do not mark `committedToRepository` or `gameApproved` true without evidence.
+
 ### Current NPC standards (unless user changes them)
 - Anima Base, `@akipekostyle, <lora:akipekoanima_v1_1:0.65>`; do not add Munji or new LoRAs unless asked.
 - Three views, when requested: **front neutral stand → strict LEFT 90° profile neutral stand → directly back neutral stand**. No extra figure or special action.
