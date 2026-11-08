@@ -32,7 +32,12 @@ for(const line of graph?.LINES||[]){
   routeRows[key]=(a.gx!==b.gx&&a.gy!==b.gy)?[[b.gx,a.gy]]:[];
  }
 }
-// The EXACT saved blueprint controls visible rounded rail geometry as well
+// Curated 70-stop topology retains the ORIGINAL 170-stop railway bends:
+ // removed station nodes are still drawn as true grid turns, not stop buttons.
+ for(const [edge,via] of Object.entries(graph?.AUTHORED_ROUTE_BENDS||{})){
+  routeRows[edge]=via.map(p=>p.slice());
+ }
+ // The EXACT saved blueprint controls visible rounded rail geometry as well
 // as station topology after reload. Orthogonalize between authored handles,
 // so a dragged node never creates a diagonal or loses an editable connection.
 if(graph?.ACTIVE_BLUEPRINT&&global.PaperWorldMetroMapEditor){
