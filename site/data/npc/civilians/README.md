@@ -1,8 +1,8 @@
-# 路人 NPC｜统一人物图鉴
+# 路人 NPC｜统一人物图鉴（六人）
 
-**2026-11-08：五名路人已有真实 PNG 存储在 GitHub。** 与剧情主要角色（CHAR 系列）分开管理；老爷爷 M003 本来就属于**路人 NPC**，保留原编号与其经过批准的四视图、RGBA 图集和单姿态精灵。不得重复导入/重命名他的旧资产。
+**2026-11-08：现有六名路人，五张全新三视图 PNG 与老爷爷已批准 PNG 均在 GitHub。** 与剧情主要角色（CHAR 系列）分开管理；老爷爷 M003 本来就属于**路人 NPC**，保留原编号与其经过批准的四视图、RGBA 图集和单姿态精灵。不得重复导入/重命名他的旧资产。
 
-## 已入库的五名路人
+## 已入库的六名路人
 
 | NPC ID | 人物 | 原始 PNG（GitHub 实际文件） | 视图顺序 | 状态 |
 | --- | --- | --- | --- | --- |
@@ -11,8 +11,9 @@
 | NPC-C003 | 老奶奶，深灰针织衫 | [three-view-original.png](../../../assets/characters/civilians/npc-c003/three-view-original.png) | 左侧面→正面→背面 | 已上传 RGB 原图，待 RGBA 和表演状态 |
 | NPC-C004 | 年轻街头男性，深绿连帽卫衣 | [three-view-original.png](../../../assets/characters/civilians/npc-c004/three-view-original.png) | 左侧面→正面→背面 | **用户认可最终修正版**，已上传 RGB 原图，待 RGBA 和表演状态 |
 | NPC-M003 | 老爷爷，地铁看报 | [approved-four-poses.png](../../../assets/characters/metro/npc-m003/approved-four-poses.png) | 正面→左侧面→背面→坐着看报 | **用户已批准，RGB 原图及所有透明 RGBA 精灵均已入 GitHub** |
+| NPC-C005 | 中年女性，酒红毛衣橄榄绿裙 | [three-view-original.png](../../../assets/characters/civilians/npc-c005/three-view-original.png) | 左侧面→正面→背面 | 已上传 RGB 原图，待视觉验收及 RGBA/表演状态 |
 
-> 后续 NPC-C005（酒红毛衣中年女性）仅有 [Anima 三视图完整提示词](../../../../docs/NPC-C005_ANIMA_THREE_VIEW_MIDDLE_AGED_WOMAN_20261108.md)，未出图，**不计入已入库五人**。
+> NPC-C005 的完整 [Anima 原提示词](../../../../docs/NPC-C005_ANIMA_THREE_VIEW_MIDDLE_AGED_WOMAN_20261108.md) 与用户实际三视图 PNG 均已保存，图像尚未单独宣布为已通过全部美术验收。
 
 ## 正式保存位置
 
@@ -26,6 +27,9 @@ site/assets/characters/civilians/
   npc-c002/three-view-original.png   # 733253 字节 RGB PNG
   npc-c003/three-view-original.png   # 636544 字节 RGB PNG
   npc-c004/three-view-original.png   # 668427 字节 RGB PNG
+  npc-c005/three-view-original.png   # 585412 字节 RGB PNG
+  npc-front-comparison-20261108.png  # 六人正面全身高清对照图
+  npc-front-comparison-20261108.jpg  # 同内容高清预览图
 
 site/assets/characters/metro/npc-m003/  # 已批准老爷爷，沿用原目录，不复制二进制
   approved-four-poses.png
@@ -36,7 +40,7 @@ site/assets/characters/metro/npc-m003/  # 已批准老爷爷，沿用原目录�
   special-front-seated-reading.png
 ```
 
-四个新 PNG 均按用户提交的原始字节写入 GitHub，**与本次源文件 Git Blob SHA 和 SHA-256 双重匹配**；没有使用 Canva 缩略图、改变尺寸或重新压缩。四个新源图均为 **1024×1024、RGB、白色背景**。M003 为 1472×1024 四视图，除已有 RGBA 精灵之外保持不动。
+五个新 PNG 均按用户提交的原始字节写入 GitHub，**与本次源文件 Git Blob SHA 和 SHA-256 双重匹配**；没有使用 Canva 缩略图、改变尺寸或重新压缩。五个新源图均为 **1024×1024、RGB、白色背景**。M003 为 1472×1024 四视图，除已有 RGBA 精灵之外保持不动。
 
 ## 视图约定（十分重要）
 
@@ -52,9 +56,17 @@ site/assets/characters/metro/npc-m003/  # 已批准老爷爷，沿用原目录�
 - 校验原图与全部 GitHub 文件：`python3 scripts/validate_civilian_npc_sources.py`。
 - 兼容目录 `site/data/npc/metro-character-gallery.v1.json` 仅供原有 M001-M003 数据使用，**不是排除老爷爷的独立路人集合**。
 
+## 六人正面统一对照
+
+- [六人正面高清 PNG](../../../assets/characters/civilians/npc-front-comparison-20261108.png)
+- [六人正面高清 JPG 预览](../../../assets/characters/civilians/npc-front-comparison-20261108.jpg)
+- 重建脚本：[scripts/build_civilian_front_comparison.py](../../../../scripts/build_civilian_front_comparison.py)
+
+**顺序：** NPC-M003 老爷爷 → NPC-C003 老奶奶 → NPC-C001 男性上班族 → NPC-C004 年轻男性 → NPC-C002 年轻女性 → NPC-C005 中年女性。**只提取正面，全部按相同展示高度调整并对齐脚底；不可根据这张对照图推断游戏世界身高。** 原始母图保持不变。
+
 ### 责任与状态
 
-- 图片上传/索引/源图哈希：完成，五位。
-- 透明三视图切片与 L2D 动态素材：C001-C004 未做，M003 已有透明四格。
+- 图片上传/索引/源图哈希：完成，六位。
+- 透明三视图切片与 L2D 动态素材：C001-C005 未做，M003 已有透明四格。
 - 交流、休息、死亡的 img2img 状态：尚未生成（M003 已有看报坐姿）。
 - 游戏 NPC 运行时注册：**本次未执行**，不得宣称用户已在游戏里看到这些角色。
