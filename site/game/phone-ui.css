@@ -608,4 +608,4 @@
  width:100%;padding:9px;color:#edf1e9;background:#2b3d3f;
  border:1px solid #829c95;border-radius:5px;
 }
-#phone-ui .phone-unread-preview{cursor:pointer;text-align:left}
+#phone-ui .phone-unread-preview{cursor:pointer;text-align:left;pointer-events:auto;touch-action:manipulation}
