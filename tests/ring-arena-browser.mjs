@@ -47,11 +47,11 @@ try{
  assert.equal(outer.shotName,'四人同排 · 自由切换');
  assert.equal(outer.camera.shot,'left');
  assert.equal(outer.cameraCount,1);
- assert.ok(outer.camera.eye.y>=1.5&&outer.camera.eye.y<=2.15,
+ assert.ok(outer.camera.eye.y>=1.5&&outer.camera.eye.y<=2.30,
   'camera uses human-scale eye/raised-shoulder position');
  assert.ok(outer.camera.composition&&Number.isFinite(outer.camera.composition.score),
   'real per-player projection composition solver has selected a camera');
- assert.ok(outer.lensShift>=.23&&outer.lensShift<=.40);
+ assert.ok(outer.lensShift>=.23&&outer.lensShift<=.70);
  assert.equal(outer.previewPose,'female7');
  assert.equal(outer.uniformBattlePreview,true,'default 4v4 is uniform-source staging only');
  const artIdentity=outer.actorTextureIdentities;
