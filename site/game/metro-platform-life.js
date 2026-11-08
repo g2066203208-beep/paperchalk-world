@@ -82,7 +82,7 @@
    const gait=movingFeet?Math.abs(Math.sin(time*.011+i*1.72))*.025:0;
    if(p.role==='sitting')z+=Math.sin(time*.0006+i)*.008;
    return {id:p.id,frame:p.frame,role:p.role,
-    x:x-offset,y:gait,z,height:p.height,
+    x:x-offset,y:-.16+gait,z,height:p.height,
     opacity:clamp(opacity*exposed),moving:movingFeet,
     lean:p.role==='sitting' ? .012*Math.sin(time*.001+i) : movingFeet ? .014*Math.sin(time*.011+i) : 0};
   });
