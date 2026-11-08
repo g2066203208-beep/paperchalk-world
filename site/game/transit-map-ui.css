@@ -1859,3 +1859,15 @@
   width:190px;
  }
 }
+
+/* Accessible screen-size hit areas do not alter the restrained dot artwork. */
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station-hit,
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-bend-hit{
+ fill:transparent!important;stroke:none!important;
+ pointer-events:all!important;touch-action:none!important;
+ cursor:grab!important;-webkit-tap-highlight-color:transparent;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station-hit:active,
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-bend-hit:active{
+ cursor:grabbing!important;
+}
