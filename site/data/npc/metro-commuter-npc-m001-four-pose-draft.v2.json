@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "id": "NPC-M001",
+  "category": "metro_civilian",
+  "title": "年轻男通勤者—下班打瞌睡",
+  "state": "REDRAW_REQUIRED_FOUR_POSE",
+  "legacy": "The earlier user-approved 3-view art is superseded for runtime use; retain identity/outfit, DO NOT load old artwork as 4-pose",
+  "visualCanon": {
+    "hair": "short straight black hair with bangs",
+    "face": "minimal face, no rendered eyes, small nose and mouth",
+    "jacket": "dark navy casual jacket worn open",
+    "inner": "off-white T-shirt",
+    "pants": "charcoal straight trousers",
+    "shoes": "gray-white low-top sneakers"
+  },
+  "special": {
+    "action": "frontal_seated_doze",
+    "direction": "strict_front",
+    "props": [],
+    "furnitureNotInSprite": true,
+    "characterActivity": "帰宅後疲れ切って地下鉄で居眠り"
+  },
+  "production": {
+    "checkpoint": "Anima Base",
+    "steps": 35,
+    "cfg": 4.5,
+    "sampler": "ER SDE",
+    "canvas": [
+      1536,
+      1024
+    ],
+    "lora": "@akipekostyle <lora:akipekoanima_v1_1:0.65>",
+    "referenceAdvice": "For subsequent pose edits, use that NPC's own confirmed Anima source image with the installed pilot_r32 ImageStitch reference method; do not borrow another NPC's reference.",
+    "alphaAdvice": "Anima prompt text does not prove output RGBA. Remove white background and verify alpha before game registration.",
+    "viewOrder": [
+      "front_static_standing",
+      "strict_90deg_side_static_standing_facing_left",
+      "back_static_standing",
+      "unique_frontal_special_action"
+    ],
+    "positivePrompt": "safe, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, character sheet, four full body illustrations of the same ordinary young adult man, identical clothing in every view, short straight black hair with bangs, no visible eyes, small nose, small closed mouth, navy casual open jacket with simple collar and buttons, off-white crewneck t-shirt, charcoal straight trousers, gray and white low-top sneakers, ordinary urban commuter, flat colors, clean anime lineart, simple cel shading, muted colors, few natural clothing folds, isolated figures, plain white background. Four figures in one horizontal row, left to right. FIRST: exact straight front view standing still, shoulders face chest and shoes directly forward, arms relaxed at sides, feet planted, no walking. SECOND: exact ninety-degree left side profile standing still, whole body and shoes facing left, arms hanging naturally, no walking. THIRD: exact back view standing still, entire body facing away, arms relaxed, no walking. FOURTH: exact front view sitting on an invisible chair, exhausted after work, quietly dozing with head bowed slightly, both hands resting on knees, knees and feet facing directly forward. The exact same navy open jacket, cream t-shirt, charcoal pants, gray sneakers and hairstyle in all four figures. No furniture, no seat, no railings, no bags or background scenery. All four heads and shoes complete and evenly spaced.",
+    "negativePrompt": "extra people, different characters, inconsistent clothes, different colors between poses, missing jacket, missing undershirt, different hairstyle, first pose three-quarter view, second pose front view, second pose three-quarter view, third pose side view, fourth pose side view, walking, stepping, action pose in first three figures, chair, bench, subway seat, train interior, furniture, scenery, background objects, floor shadow, excessive clothing details, cropped head, cropped feet, text, watermark"
+  },
+  "render": {
+    "approvedSource": null,
+    "transparentSpriteAtlas": null,
+    "ready": false
+  },
+  "history": "2026-11-08 user explicitly requires remaking prior three-view male as 4-pose; no Anima remake image received yet."
+}
