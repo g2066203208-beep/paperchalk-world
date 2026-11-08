@@ -1,8 +1,8 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "date": "2026-11-07",
   "purpose": "Reusable actors + base behaviors. Content semantics and scene-to-pose mappings are canonical in event-content-taxonomy.v2.json. Message/event content selects response first; persona affects only micro-performance.",
-  "status": "NPC-G001 joy mother reference approved; only metadata in GitHub, original PNG remains conversation attachment; surprise next",
+  "status": "NPC-G001 early trio art rejected for background-NPC use and 2.5D viewport mismatch; no deployable group sprite",
   "referenceRules": {
     "canonicalStyle": "docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md",
     "canonicalUniformReference": "site/assets/characters/protagonist-front.webp",
@@ -17,7 +17,7 @@
     {
       "id": "NPC-G001",
       "name": "同校三人女同学固定群演组",
-      "status": "joy_visual_reference_user_approved",
+      "status": "art_rejected_needs_npc_redesign",
       "members": [
         "NPC-G001-A",
         "NPC-G001-B",
@@ -34,9 +34,11 @@
       ],
       "rendering": {
         "firstMaster": "2048×1536 or 2048×2048 overall group RGBA PNG after white-background matte",
-        "footBaseline": "all soles share one ground plane",
-        "camera": "eye-level, mild perspective, unposed candid interaction",
-        "separation": "one whole group asset is fine; splitting into independent actors optional later; no automatic production registration"
+        "footBaseline": "Each actor sole is planted at y=0 in one 3D floor plane with its own x,z world coordinates; never CSS screen percentages",
+        "camera": "Use game's EXISTING metro camera from scene-environments.js, not an authored front-view camera",
+        "separation": "one whole group asset is fine; splitting into independent actors optional later; no automatic production registration",
+        "visibilityPolicy": "No rejected art in live NPC auto-registry. One unique social-group ID, spawn only from persistent schedule when new art approved.",
+        "coordinateSystem": "WebGL scene geometry meters and cameraVP; clothing/crown/sole alpha pivots for visible height"
       },
       "cast": [
         {
@@ -98,16 +100,22 @@
         }
       ],
       "artReview": {
-        "latestResult": "2026-11-07: user approved new full-trio friendly laughing image as JOY master reference. Prior images failed; user-approved newest is authoritative.",
-        "requestedNext": "Surprise emotion using the SAME 3 actors and the approved joy reference; prioritize img2img with subtle inpaint and margin padding.",
-        "imageApproved": true,
+        "latestResult": "2026-11-08: User explicitly rejected BOTH trio PNGs as normal NPCs: excessive main-character appearance and wrong 2.5D placement/scale/perspective.",
+        "requestedNext": "redesign lower-salience mob trio (simpler silhouettes, less detailed eyes/highlights, muted clothes, distinct body language); validate world anchor and perspective before art submission",
+        "imageApproved": false,
         "assetsCreated": false,
-        "imageApprovedScope": "joy group reference only; not every expression, not final transparent game-ready sprite",
+        "imageApprovedScope": "historical reference only, not a deployable NPC or approved game art",
         "imageBinaryCommittedToGitHub": false,
         "imageSource": "User uploaded 1024x1024 RGB PNG in conversation; GitHub stores sha256 only until actual binary upload",
         "imageSha256": "c3afb8ac08173c4cb20178ff3088b33592d3f13bb40a66ba52fab06a50b2e53d",
         "artRecord": "docs/characters/NPC-G001_JOY_APPROVED_20261107.json",
-        "nextPrompt": "docs/NPC-G001_ANIMA_SURPRISE_V1.md"
+        "nextPrompt": null,
+        "previousJoyApproval": "2026-11-07 approval applied only as a reference candidate for emotional interaction, REVOKED for game-background-NPC production on 2026-11-08.",
+        "gameArtApproved": false,
+        "archivedArtPaths": [
+          "docs/rejected-art/npc-g001/joy-1024.png",
+          "docs/rejected-art/npc-g001/surprise-1024.png"
+        ]
       },
       "identityPolicy": "A/B/C remain the same three recurring people across all poses, outfits and scenes. Proposal dimensions and faces become LOCKED only after user approves a specific mother image."
     }
