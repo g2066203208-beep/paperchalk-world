@@ -1236,7 +1236,7 @@
    commuterAtlas.src=platformLife.ATLAS+'?v=platform-life-20261108-v1';
   }
   function drawPlatformCommuters(lifeSample,vp){
-   if(!transitMode||!lifeSample?.passengers?.length||commuterAtlasStatus!=='ready')return;
+   if(!transitMode||!lifeSample?.passengers?.length)return;
    gl.useProgram(portrait.handle);
    gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
@@ -1262,12 +1262,21 @@
    // the architectural columns, bench and actual train wall/door aperture.
    const people=[...lifeSample.passengers].sort((a,b)=>a.z-b.z);
    for(const person of people){
-    const t=commuterFrames[person.frame];
+    const source=person.sprites?.[person.view]||person.sprites?.front;
+    if(!source)continue;
+    const sprite={id:'npc:'+person.id+':'+person.view,npcId:person.id,npcSprite:source};
+    if(!approvedNpcTexture(sprite))continue;
+    const t=textures.get(sprite.id),g=person.geometry||{};
     if(!t?.painted)continue;
     gl.uniform3fv(portrait.uFoot,new Float32Array([person.x,person.y,person.z]));
     gl.uniform1f(portrait.uHeight,person.height);
-    gl.uniform1f(portrait.uLean,person.lean);
-    gl.uniform1f(portrait.uWalkPhase,person.moving?performance.now()*.012+person.frame:0);
+    gl.uniform1f(portrait.uSoleX,g.soleX??.5);
+    gl.uniform1f(portrait.uSoleY,g.assetSoleY??.991);
+    gl.uniform1f(portrait.uCrownY,g.assetCrownY??.009);
+    // Real extracted PNG aspect ratio: never force a square body billboard.
+    gl.uniform1f(portrait.uWidthScale,(t.sourceAspect||.30)*(g.widthScale||1));
+    gl.uniform1f(portrait.uLean,person.lean||0);
+    gl.uniform1f(portrait.uWalkPhase,person.moving?performance.now()*.010:0);
     gl.uniform1f(portrait.uOpacity,person.opacity);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
@@ -1303,6 +1312,7 @@
     img.onload=()=>{
      if(!gl||t.sourceUri!==actor.npcSprite)return;
      try{
+      t.sourceAspect=img.naturalWidth/Math.max(1,img.naturalHeight);
       const cv=document.createElement('canvas');cv.width=192;cv.height=192;
       const ctx=cv.getContext('2d',{willReadFrequently:true});
       if(!ctx)throw Error('alpha-bounds unavailable');
