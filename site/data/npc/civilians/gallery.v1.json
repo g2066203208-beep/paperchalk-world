@@ -449,7 +449,7 @@
         "id": "NPC-SG03",
         "look": "中等身高稍结实、短栗棕碎发、黑色细圆镜框但镜片后无眼睛、左肩灰蓝单肩软帆布托特包挂至左胯；同校制服上扣系好下扣松开",
         "personality": "略冒失、担心迟到、认真且匆匆赶路；正面抬手扶眼镜，侧面扶左肩书包带",
-        "status": "candidate_rejected_sg03_v4_prompt_from_sg02_skeleton_pending_image",
+        "status": "candidate_rejected_prompt_v5_sg02_source_based_pending_image",
         "promptReference": "docs/NPC_SG03_ANIMA_THREE_VIEW_GLASSES_GIRL_20261108.md",
         "motion": {
           "side_left": "左侧面左肩左胯单肩托特包真实可见、左手扶一根肩带、小步朝左",
@@ -457,8 +457,8 @@
           "back": "背面包在画面左侧（人物左肩左胯）、同一根肩带、自然小步离开"
         },
         "eyePolicy": "thin round glasses with clear lens, blank skin and absolutely no drawn eyes",
-        "reviewNotes": "此前图片仍不通过（正面画眼睛、圆眼镜缺失或书包三角度不统一）。2026-11-08 V4 从用户接受的 SG02 V6 7 段三视图文字直接替换人物属性与动作，不另造新模板；本 V4 只有提示词，尚无通过的 SG03 PNG。",
-        "productionMethod": "literal seven-paragraph substitution from SG02 V6 positive/negative, same side-front-back layout"
+        "reviewNotes": "2026-11-08 V5 严格从 SG02 V6 七段完整已用提示词逐句替换人设和三个动作，不再编造新结构。眼镜必须在前/侧，镜片后只有肤色无眼睛，单灰蓝书包在人物左肩左胯。此前 SG03 用户上传候选图有眼睛/背包不一致仍不合格；V5 尚未出图验收。",
+        "productionMethod": "surgical text substitutions into SG02 V6 seven-paragraph positive and preserved base negative"
       }
     ],
     "promptTemplate": "docs/ANIMA_SCHOOLGIRL_THREE_VIEW_FILL_IN_TEMPLATE_V2_20261108.md",
