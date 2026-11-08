@@ -122,6 +122,24 @@ try{
   assert.equal(switched.cameraLook.pivot.z,chosen.z);
   assert.equal(switched.camera.fov,66);
   assert.equal(switched.camera.eye.y,1.5);
+  assert.equal(switched.cameraLook.mode,'selected-ally-enemy-centered-shoulder-rig');
+  assert.ok(switched.camera.eye.z>chosen.z&&switched.camera.eye.z-chosen.z<=1.7,
+   'game camera must follow the real selected actor from just behind');
+  const framed=await page.evaluate(()=>{
+   const ring=window.PaperWorldRingArena,s=window.PaperWorldGameRingArena.inspect();
+   const foes=s.actors.enemies.map(a=>ring.portraitVisibleBounds(a,s.camera,
+    {left:.30,right:.69,top:0,bottom:1},s.projectionAspect));
+   const actor=s.actors.allies[s.controlledAllyIndex];
+   const me=ring.portraitVisibleBounds(actor,s.camera,ring.FEMALE07_BACK_UV,s.projectionAspect);
+   return {center:(Math.min(...foes.map(e=>e.left))+Math.max(...foes.map(e=>e.right)))/2,
+    me};
+  });
+  assert.ok(Math.abs(framed.center)<.12,
+   'selected actor game screenshot must retain center-facing four-enemy view');
+  if(chosen.x<switched.actors.enemies[0].x)
+   assert.ok(framed.me.right<-.15,'left fighter stays at left edge');
+  else
+   assert.ok(framed.me.left>.20,'right fighter stays at right edge');
   assert.equal(switched.stageActors.find(a=>a.id===chosen.id).x,chosen.x);
   assert.equal(switched.stageActors.find(a=>a.id===chosen.id).z,chosen.z);
   assert.deepEqual(switched.presentationActors.filter(a=>a.team==='ally').map(a=>a.z),

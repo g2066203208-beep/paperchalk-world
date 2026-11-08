@@ -50,7 +50,7 @@ assert.deepEqual(ring.SHOULDER_LOOK_LIMITS,{
  yawLeftDeg:7.5,yawRightDeg:7.5,pitchUpDeg:3.5,pitchDownDeg:3.5
 });
 const html=fs.readFileSync(path.resolve(__dirname,'../site/index.html'),'utf8');
-assert.match(html,/wide-friends-2p4m-shoulder-v1-20261108/,
+assert.match(html,/per-role-foe-centered-camera-v2-20261108/,
  'HTML must force actual battle source reload rather than stale cache');
 assert.match(html,/const comfortableLook=v=>/,
  'mouse neutral deadzone and continuous smoothstep must exist');
@@ -84,6 +84,19 @@ for(const aspect of [1917/906,1280/720,844/390]){
   }
   assert.ok(visibleWidth(friends[scene.allies.indexOf(active)])>.4,
    'controlled actor is a genuine close shoulder portrait, not artificially reduced');
+  assert.ok(shot.eye.z>active.z&&shot.eye.z-active.z<=1.7,
+   'the neutral 3D eye must actually stand just behind its selected fighter');
+  if(active.id!=='hero'){
+   const edgeL=Math.min(...foes.map(f=>f.left));
+   const edgeR=Math.max(...foes.map(f=>f.right));
+   assert.ok(Math.abs((edgeL+edgeR)/2)<.12,
+    'view must look at the FOUR ENEMIES, not an empty wall: '+active.id);
+   const me=friends[scene.allies.indexOf(active)];
+   if(active.x<scene.enemies[0].x)
+    assert.ok(me.right<-.15,'left flank keeps an authentic left-edge shoulder');
+   else
+    assert.ok(me.left>.20,'right fighter keeps an authentic right-edge shoulder');
+  }
   for(const x of [-1,0,1]){
    const look=ring.allyViewCamera(cam,hero,active,x,0,aspect);
    assert.equal(look.fov,66);
@@ -93,5 +106,16 @@ for(const aspect of [1917/906,1280/720,844/390]){
 }
 assert.equal(JSON.stringify(scene),original,
  'control switching must NEVER reposition the actual eight actors');
+// Mobile regression: the phone boom must not crop the current player.
+for(const active of scene.allies.slice(1)){
+ const shot=ring.allyViewCamera(cam,hero,active,0,0,390/844);
+ const me=ring.portraitVisibleBounds(active,shot,ring.FEMALE07_BACK_UV,390/844);
+ assert.ok(me.valid&&visibleWidth(me)>.55,
+  'portrait switch should keep controlled person visible: '+active.id);
+ const foes=scene.enemies.map(e=>ring.portraitVisibleBounds(e,shot,
+  {left:.30,right:.69,top:0,bottom:1},390/844));
+ assert.ok(foes.every(e=>e.valid&&e.left>-.98&&e.right<.98),
+  'portrait switch should keep four foes visible: '+active.id);
+}
 assert.equal(ring.camera('inner').fov,52);
 console.log('PASS four real allies spaced 2.4m apart with four visible foes');

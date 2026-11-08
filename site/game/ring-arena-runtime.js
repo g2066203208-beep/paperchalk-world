@@ -225,27 +225,39 @@
  // side to keep all four original enemies readable with the wider ally gap.
  // The actual eight ground-anchored actors, L2D rigs and shadows never move.
  function allyViewCamera(base,originalHero,selected,x=0,y=0,aspect=16/9){
+  // Keep the original heroine's approved camera EXACTLY as it was.
   if(!selected||selected.id===originalHero.id)
    return {...shoulderCamera(base,originalHero,x,y,aspect),
     controlledActorId:originalHero.id};
   const dx=selected.x-originalHero.x,dz=selected.z-originalHero.z;
-  let eyeX=base.eye.x+dx,focusX=base.focus.x+dx;
-  if(base.mode==='outer'){
-   const enemies=layout(base.mode).enemies;
-   const centerX=enemies.reduce((sum,a)=>sum+a.x,0)/enemies.length;
-   const shoulderSide=selected.x>centerX?-1:1;
-   // Extreme lanes: narrow shoulder offset keeps the inner teammate outside
-   // the screen's enemy band. Near-center lane: broader shoulder offset
-   // prevents the active person's original full-size sprite hiding targets.
-   const shoulderOffset=Math.abs(selected.x-centerX)<1.65?.85:.30;
-   eyeX=selected.x+shoulderSide*shoulderOffset;
-   focusX=eyeX+(base.focus.x-base.eye.x)+(centerX-eyeX)*.22;
+  if(base.mode!=='outer'){
+   const translated={...base,
+    eye:{...base.eye,x:base.eye.x+dx,z:base.eye.z+dz},
+    focus:{...base.focus,x:base.focus.x+dx,z:base.focus.z+dz}};
+   return {...shoulderCamera(translated,selected,x,y,aspect),
+    controlledActorId:selected.id,originalHeroWorldStatic:true};
   }
-  const shifted={...base,
-   eye:{...base.eye,x:eyeX,z:base.eye.z+dz},
-   focus:{...base.focus,x:focusX,z:base.focus.z+dz}};
-  return {...shoulderCamera(shifted,selected,x,y,aspect),
-   controlledActorId:selected.id,originalHeroWorldStatic:true};
+  // After widening allies to 2.4m apart, simply translating the protagonist
+  // camera makes outer members stare at empty scenery. Physically re-aim each
+  // selected member toward the center of all four FIXED enemy world anchors.
+  const enemies=layout(base.mode).enemies;
+  const centerX=enemies.reduce((sum,a)=>sum+a.x,0)/enemies.length;
+  const centerZ=enemies.reduce((sum,a)=>sum+a.z,0)/enemies.length;
+  const left=selected.x<centerX,flank=Math.abs(selected.x-centerX)>2.2;
+  const desiredEyeX=selected.x+(flank?(left?-.20:.20):(left?1:-1));
+  const desiredEyeZ=selected.z+(flank?1.60:1.40);
+  const targetX=centerX,targetZ=centerZ+(flank?-.20:.20);
+  // Heroine's legacy phone boom slides the camera to the RIGHT. Compensate
+  // only teammate inputs so portrait mode does not lose the leftmost actor.
+  const phone=clamp((.85-clamp(Number(aspect)||16/9,.35,3.5))/.25,0,1);
+  const reference=(CAMERA_STOPS[base.mode]||CAMERA_STOPS.outer)[0];
+  const rig={...base,
+   eye:{...base.eye,x:desiredEyeX-(.60-reference.eyeX)*phone,
+    z:desiredEyeZ-(11.20-reference.eyeZ)*phone},
+   focus:{...base.focus,x:targetX-(.75-reference.focusX)*phone,z:targetZ}};
+  return {...shoulderCamera(rig,selected,x,y,aspect),
+   controlledActorId:selected.id,originalHeroWorldStatic:true,
+   roleCamera:'selected-ally-enemy-centered-world-shoulder'};
  }
  // Preserve the DESIGNED horizontal battle framing when a browser or
  // device changes aspect ratio. Portrait canvases no longer crop half the
@@ -2556,7 +2568,7 @@
    actorAnchors:window.PaperWorldEnvironments?.get?.(environmentId)?.actors?.positions||null,
    encounter:'one-centered-grounded-opponents',encounterControls:0,
    renderer:gl?'webgl-l2d':'unavailable',
-    cameraLook:{mode:'hero-root-tps-shoulder-rig',
+    cameraLook:{mode:controlledActorId==='hero'?'hero-root-tps-shoulder-rig':'selected-ally-enemy-centered-shoulder-rig',
      yawDeg:lens?.lookYawDeg||0,pitchDeg:lens?.lookPitchDeg||0,
      controlledActorId,
      heroYawDeg:lens?.heroYawDeg||0,
@@ -2570,7 +2582,7 @@
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
    stagePresentation:'four-rear-facing-allies-one-fixed-rank',
-   runtimeRevision:'wide-friends-2p4m-shoulder-v1-20261108',
+   runtimeRevision:'per-role-foe-centered-camera-v2-20261108',
    shoulderMouseLimits:{...SHOULDER_LOOK_LIMITS},
    stageTransitionProgress:1,
    stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
