@@ -1356,3 +1356,19 @@
   padding:14px;gap:5px;
  }
 }
+
+
+/* V25: A subway line is a LIVE SVG stroke, not a selectable image rectangle.
+ * Keyboard focus and pointer selection illuminate only the physical rail.
+ * Never expose the SVG path's bounding-box focus outline. */
+#pw-world-surface .pw-dot-world-map .pw-transit-line-hit:focus,
+#pw-world-surface .pw-dot-world-map .pw-transit-line-hit:focus-visible,
+#pw-world-surface .pw-dot-world-map .pw-transit-segment:focus,
+#pw-world-surface .pw-dot-world-map .pw-transit-segment:focus-visible{
+ outline:none!important;outline-offset:0!important;
+ box-shadow:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-transit-segment:has(.pw-transit-line-hit:focus-visible) .pw-transit-rail{
+ filter:drop-shadow(0 0 5px #d9f6e7)!important;
+ opacity:1!important;
+}
