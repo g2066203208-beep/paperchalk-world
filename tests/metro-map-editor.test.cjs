@@ -10,7 +10,7 @@ const geo=ctx.window.PaperWorldMetroGeometry;
 const editor=ctx.window.PaperWorldMetroMapEditor;
 const store=()=>{
  const data=new Map();
- return {getItem:id=>data.get(id)||null,setItem:(id,v)=>data.set(id,v),removeItem:id=>data.delete(id)};
+ return {getItem:id=>data.has(id)?data.get(id):null,setItem:(id,v)=>data.set(id,v),removeItem:id=>data.delete(id)};
 };
 const straight=points=>points.every((p,i)=>i===0||p[0]===points[i-1][0]||p[1]===points[i-1][1]);
 test('every railway edge is a point-to-point SVG-drawable orthogonal polyline',()=>{
@@ -153,4 +153,29 @@ test('saving and reloading a blueprint actually installs the new station and rou
  for(const line of actual.LINES)for(const [from,to] of shape.segments(line)){
   assert.match(shape.pathFor(line.id,from,to,actual.STATIONS,1440,810),/^M\d/);
  }
+});
+
+test('a saved layout stays draft until the player explicitly applies it',()=>{
+ const disk=store();
+ const boot=()=>{
+  const runtime={window:{localStorage:disk,console:{warn(){}}}};
+  for(const filename of ['metro-map-editor.js','metro-graph.js','metro-map-geometry.js']){
+   vm.runInNewContext(fs.readFileSync(path.join(root,filename),'utf8'),
+    runtime,{filename});
+  }
+  return runtime.window.PaperWorldMetro;
+ };
+ const baseline=boot();
+ assert.equal(disk.getItem(editor.LIVE_KEY),'','fresh players start on original 70-stop metro');
+ const local=editor.create(baseline,geo,disk);
+ const segment=local.edges().find(e=>e.lineId==='h');
+ const id=local.addStation(segment,1,25);
+ assert.ok(id);assert.equal(local.save(),true);
+ assert.equal(disk.getItem(editor.LIVE_KEY),'','draft save must not change live graph');
+ assert.equal(Object.keys(boot().STATIONS).length,70,
+  'refresh must not silently apply work-in-progress edits');
+ assert.equal(local.apply(),true);
+ const applied=boot();
+ assert.equal(Object.keys(applied.STATIONS).length,71);
+ assert.ok(applied.path('entrance',id));
 });
