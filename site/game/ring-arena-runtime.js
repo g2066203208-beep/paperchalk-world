@@ -61,7 +61,7 @@
  // All sole anchors stay y=0; genuine source art is never destructively edited.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-1.28,7.88],[-2.45,8.15],[-1.82,8.20]]),
+   allies:Object.freeze([[-1.05,9.30],[-1.28,7.88],[-2.45,8.15],[-1.15,8.55]]),
    enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
   }),
   inner:Object.freeze({
