@@ -221,8 +221,40 @@ print(json.dumps({'samples':samples,'bright':sum(v>94 for v in samples)}))
  assert.ok(pixQA.bright>=2,
   '3D metro cabin must be VISIBLY lit in the final composed screenshot, not just load textures: '+JSON.stringify(pixQA));
  assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance');
+ // Docked means NO train movement even if the game clock advances.
+ const docked=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(docked.transitMotion.speedMps,0);
+ assert.equal(docked.transitMotion.phase,'docked');
+ assert.equal(docked.transitMotion.distanceMeters,0);
+ const initialCamera=JSON.stringify(docked.camera);
  await page.locator('#pw-metro-cabin .pw-cabin-actions button').filter({hasText:'继续乘坐'}).click();
- assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'school');
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.transitMotion.moving,
+  null,{timeout:4000});
+ const departing=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(await page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station),'entrance',
+  'the game cannot teleport to next station before the window shows movement');
+ assert.ok(departing.transitMotion.distanceMeters<15);
+ assert.equal(JSON.stringify(departing.camera),initialCamera,
+  'the passenger eye MUST NOT tilt, roll or translate while train starts');
+ await shot('27-metro-departing-real-moving-window.png');
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.transitMotion.phase==='tunnel',
+  null,{timeout:9000});
+ const tunnelState=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(JSON.stringify(tunnelState.camera),initialCamera);
+ assert.ok(tunnelState.transitMotion.speedMps>0);
+ assert.ok(tunnelState.platformLighting.exposure<.15,
+  'platform lamps must fade OUT when physically clear of the station');
+ await shot('28-metro-running-tunnel-relative-motion.png');
+ await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro.station==='school',
+  null,{timeout:18000});
+ const arrived=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ assert.equal(arrived.transitMotion.phase,'docked');
+ assert.equal(arrived.transitMotion.speedMps,0);
+ assert.equal(arrived.transitMotion.distanceMeters,88);
+ assert.equal(arrived.platformLighting.exposure,1);
+ assert.equal(JSON.stringify(arrived.camera),initialCamera,
+  'fixed coach camera unchanged after stop');
+ await shot('29-metro-arrived-new-platform-after-real-travel.png');
  // Regression: real user screenshots at 1536x691 AFTER another station
  // exposed an invisible protagonist and a 538px-wide stack of giant buttons.
  await page.setViewportSize({width:1536,height:691});
