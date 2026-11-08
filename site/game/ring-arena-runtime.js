@@ -2320,7 +2320,7 @@
    // world-space actors or altering the approved physical shoulder camera.
    if(combatTimegrid&&!transitMode&&mode==='outer'&&w>=1050&&w/h>1.30){
     const dock=hud.querySelector('.ring-timegrid:not(.is-folded)');
-    if(dock){
+    if(dock&&dock.getBoundingClientRect().width<w*.36){
      const hudLeft=dock.getBoundingClientRect().left;
      const canvasLeft=canvas.getBoundingClientRect().left;
      const safeNdc=(hudLeft-canvasLeft-18)/w*2-1;
