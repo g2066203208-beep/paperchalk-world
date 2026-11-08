@@ -7,28 +7,99 @@
  // gx/gy are grid intersections, never independently hand-tuned percentages.
  // The same lattice positions rail stations, vector turns, photo anchors
  // and line badges in desktop and landscape mobile layouts.
-const GRID=Object.freeze({columns:12,rows:6});
-const GRID_STATIONS=Object.freeze({
- entrance:{label:'住宅前',gx:2,gy:2},
- school:{label:'学园前',gx:6,gy:2},
- central:{label:'中央换乘站',gx:8,gy:2,transfer:true},
- convenience:{label:'商业街',gx:10,gy:2},
- cafe:{label:'咖啡街',gx:2,gy:4},
- park:{label:'河岸公园',gx:6,gy:4},
- mall:{label:'中央商场',gx:10,gy:4},
- northgate:{label:'北街口',gx:8,gy:1}
-});
+const GRID=Object.freeze({columns:36,rows:26});
+// Existing story locations retain their save-game station IDs and the same
+// two originally playable service names/directions. The new city grid has
+// room for 170 independently located platforms instead of eight giant pins.
+const BASE_STATIONS={
+ entrance:{label:'住宅前',gx:6,gy:10},
+ school:{label:'学园前',gx:11,gy:10},
+ central:{label:'中央换乘站',gx:15,gy:10},
+ convenience:{label:'商业街',gx:20,gy:10},
+ cafe:{label:'咖啡街',gx:6,gy:15},
+ park:{label:'河岸公园',gx:11,gy:15},
+ mall:{label:'中央商场',gx:20,gy:15},
+ northgate:{label:'北街口',gx:15,gy:5}
+};
+const BASE_LINES=[
+ {id:'a',name:'住宅线',color:'#E45B70',
+  stops:['entrance','school','central','convenience'],ring:false},
+ {id:'b',name:'环城线',color:'#7DA9DE',
+  stops:['central','cafe','park','mall','convenience','northgate'],ring:true}
+];
+// Eight additional AUTHORED corridor stop orders. The coordinates are
+// integer intersections on the same subway-only dot network. Shared
+// coordinates resolve to one canonical station ID = a real interchange;
+// this is NOT a raster image, and no line is generated from nearby POIs.
+const range=(a,b)=>Array.from({length:b-a+1},(_,i)=>i+a);
+const CORRIDORS=[
+ {id:'c',name:'南北线',color:'#E8B763',
+  points:range(1,23).filter(y=>y!==2).map(y=>[15,y]),
+  names:'赤樫北口|北岭公园|杉原町|朝雾坂|旧北街|梓桥|榉木上町|大学北门|北樱门|中央北口|中央南口|纸灯町|青柳桥|莲花新町|河岸东口|砂町|潮田坂|新桥南|南田工坊|青冈住宅|南谷町|南环口'},
+ {id:'d',name:'东西线',color:'#75C6B3',
+  points:[1,2,3,5,6,8,10,11,13,15,16,18,19,20,21,23,24,26,27,29,30,32,33].map(x=>[x,8]),
+  names:'旧西门|樫町|斜阳坂|梨木里|桐原东口|落叶町|老电厂|西城医院|樱庭|西风道|茜桥|中央大街|文化会馆|南图书馆|轨道公园|东央门|新湾区|滨桥町|风车广场|樱港中路|潮见塔|东滨町|临港公园'},
+ {id:'e',name:'西城线',color:'#B69AE8',
+  points:range(1,23).map(y=>[6,y]),
+  names:'北樫丘|晨雾北苑|杉影坡|白榆公园|旧区役所|松明坂|西町小路|旧城中枢|赤砖巷|晨雾住宅|梅花街|古书里|旧港河桥|桐叶町|柳下街|霞桥旧址|长藤苑|西河滨|城南中学|西风台|竹林坡|云泉路|月见台'},
+ {id:'f',name:'湾岸线',color:'#F38B65',
+  points:range(1,24).filter(y=>y!==2).map(y=>[24,y]),
+  names:'北海公园|潮岬新町|风滨港|潮音台|海洋资料馆|晴波大桥|新都心北|港湾会展|东湾商务|滨海医院|中央码头|南港仓储|滨河渡口|万叶广场|盐田町|海防大街|潮入路|港南街|海堤公园|物流新城|新浦码头|月轮港|汐风南岸'},
+ {id:'g',name:'学园北线',color:'#94CB7A',
+  points:[2,3,4,5,6,7,9,10,12,13,14,15,16,18,19,20,21,22,24,25,27,29,30].map(x=>[x,4]),
+  names:'西学宿|古樱町|雾谷北路|梧桐台|教师住宅|图书学园|旧大学西|文艺大道|萤泽町|学研中心|北环三街|南杉研究院|湖上公园|青柿里|双叶坂|西湾学院|科创大道|望月广场|青海北站|晴风台|芦苇园|虹桥北|东海大学'},
+ {id:'h',name:'南部线',color:'#E4A5C7',
+  points:[3,4,5,6,7,9,10,11,12,14,15,16,18,19,20,21,22,23,24,26,28,31].map(x=>[x,19]),
+  names:'西南林场|旧隧道口|谷尾坂|赤穗工厂|长青里|南浦学院|楠叶桥|水门东|南商工街|旧码头路|高架新町|临港西门|深川南街|白莲园|海港步廊|千鸟町|南城展馆|春樱台|湾口南|新民居|新堤町|东南田园'},
+ {id:'i',name:'青柳河岸线',color:'#77C4E3',
+  points:[...range(2,14).map(x=>[x,13]),...range(14,23).map(y=>[14,y])],
+  names:'河西堤|芦花小路|秋影桥|祠堂东|河岸观测|旧堤站|榉川市场|柳泉花园|纸鸟横丁|真砂口|工艺学校|白浪桥|新川门|南河谷|枫林码头|堤岸三丁目|青柳新城|南柳巷|白石堤|雨后町|汀桥里|湿地公园|水穗北路'},
+ {id:'j',name:'临海南线',color:'#DDD36D',
+  points:[9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,28,30,34].map(x=>[x,23]),
+  names:'西湾南端|杉台南|古南郊|霞田农园|秋津西路|临水湿地|光桥郊园|南河百货|朝阳高地|月轮桥|晨曦住宅|港西工坊|青蒲里|松浦东区|石渡口|南潮林|海风绿地|海鸟公园|东湾净水|南沙道|岬角前'}
+].map(p=>Object.freeze({...p,names:p.names.split('|')})));
+const stationRows={...BASE_STATIONS};
+const byCoordinate=new Map(Object.entries(stationRows)
+ .map(([id,s])=>[s.gx+','+s.gy,id]));
+const allLineRows=[...BASE_LINES];
+for(const corridor of CORRIDORS){
+ if(corridor.points.length!==corridor.names.length)
+  throw Error('Authored metro labels mismatch: '+corridor.id);
+ const stops=corridor.points.map(([gx,gy],i)=>{
+  if(gx<0||gx>GRID.columns||gy<0||gy>GRID.rows)
+   throw Error('Subway station outside the mapped city: '+corridor.id);
+  const key=gx+','+gy;
+  if(byCoordinate.has(key))return byCoordinate.get(key);
+  const id='kh-'+corridor.id+'-'+String(i+1).padStart(2,'0');
+  if(Object.values(stationRows).some(row=>row.label===corridor.names[i]))
+   throw Error('Duplicate station name: '+corridor.names[i]);
+  stationRows[id]={label:corridor.names[i],gx,gy};
+  byCoordinate.set(key,id);
+  return id;
+ });
+ allLineRows.push({id:corridor.id,name:corridor.name,color:corridor.color,
+  stops,ring:false});
+}
+const servedBy=new Map();
+for(const line of allLineRows){
+ if(new Set(line.stops).size!==line.stops.length)throw Error('Repeated station on line '+line.id);
+ for(const id of line.stops){
+  if(!servedBy.has(id))servedBy.set(id,[]);
+  servedBy.get(id).push(line.id);
+ }
+}
+const GRID_STATIONS=Object.freeze(Object.fromEntries(Object.entries(stationRows)
+ .map(([id,station])=>[id,Object.freeze({...station,
+  transfer:(servedBy.get(id)?.length||0)>1,
+  lines:Object.freeze(servedBy.get(id)||[])})])));
 const STATIONS=Object.freeze(Object.fromEntries(Object.entries(GRID_STATIONS)
  .map(([id,station])=>[id,Object.freeze({...station,
- // Computed compatibility coordinates; do not edit or draw with these.
- x:station.gx/GRID.columns*100,
- y:station.gy/GRID.rows*100})])));
-const LINES=Object.freeze([
- Object.freeze({id:'a',name:'住宅线',color:'#E45B70',
-   stops:['entrance','school','central','convenience'],ring:false}),
- Object.freeze({id:'b',name:'环城线',color:'#7DA9DE',
-   stops:['central','cafe','park','mall','convenience','northgate'],ring:true})
-]);
+  x:station.gx/GRID.columns*100,
+  y:station.gy/GRID.rows*100})])));
+const LINES=Object.freeze(allLineRows.map(line=>Object.freeze({...line,
+ stops:Object.freeze(line.stops.slice())})));
+if(LINES.length!==10||Object.keys(STATIONS).length!==170)
+ throw Error('Kirihama metro plan must contain exactly 10 lines and 170 physical stations');
 const getLine=id=>LINES.find(l=>l.id===id)||null;
 function neighbors(line,station){
  if(!line||line.locked)return [];
