@@ -434,10 +434,14 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const homeStation=global.PaperWorldHomeStationMap?.create?.({
   map,atlas,metro,here,onTravel,notify,onUp:leaveHomeStation
  })||null;
- // Detached city-builder drafts are not a second competing metro editor.
- // Their stored blueprints remain intact, but only the real metro is shown here.
- const cityBuilder=null;
- global.PaperWorldCityBuilderStudioDebug=null;
+ // Old freeform city construction canvas remains available for isolated QA
+ // via ?cityBuilder=1. It does not overwrite the real playable subway.
+ // Normal players use only the inline metro editor in the city map.
+ const enableBuilder=new URLSearchParams(global.location.search).get('cityBuilder')==='1';
+ const cityBuilder=enableBuilder?global.PaperWorldCityBuilderUI?.create?.({
+  map,tools,atlas,metro,geometry,onFeedback:notify,chooseInitial:()=> 'home'
+ }):null;
+ global.PaperWorldCityBuilderStudioDebug=cityBuilder||null;
  const areaNodes=[];
  for(const a of atlas.AREAS){
   const label=element('span','pw-dot-area-label',a.name);
