@@ -187,7 +187,9 @@ try{
     await page.locator('#scene').click({position:{x:35,y:35}});
     await page.locator('#quick-backpack').click();
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
-    assert.equal(await page.locator('#quick-panel-title').textContent(),'背包');
+    await page.locator('#pw-world-surface:not([hidden])').waitFor();
+    assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'背包');
+    await page.locator('#pw-world-surface .pw-surface-dim').click({position:{x:3,y:3}});
     // Hide/show dialogue retains its original bottom fog lifecycle.
     await page.locator('#menu-toggle').click();
     await page.locator('#hide-button').click();
