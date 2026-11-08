@@ -12,7 +12,7 @@
     "background": "export real RGBA before publishing; white Anima preview is NOT transparent",
     "graphics": "Approved Anima illustrations only. Procedurally drawn or placeholder SVG crowd is not canon.",
     "changes": "Previous male/female 3-view approvals deprecated by 2026-11-08 instruction; four-pose replacement required.",
-    "readyCondition": "Only if canonical artwork binary, verified alpha, user approval, leg pivots, four view crops and real runtime QA exist."
+    "readyCondition": "Only when canonical artwork binary, alpha, approval, feet anchors, four views, runtime and gameplay QA all verified; M003 art passes image requirements but is not yet active NPC in the game."
   },
   "characters": [
     {
@@ -36,9 +36,18 @@
       "label": "灰发老爷爷",
       "record": "metro-commuter-npc-m003.v2.json",
       "approval": "four_pose_reference_approved",
-      "image": null,
+      "image": "site/assets/characters/metro/npc-m003/approved-four-poses.png",
       "action": "正面坐着看报纸",
-      "approvedSourceSha256": "0a55af227d55b126d1fd37e4209eef50322d99c99e2f690be8c19fc9519701ba"
+      "approvedSourceSha256": "0a55af227d55b126d1fd37e4209eef50322d99c99e2f690be8c19fc9519701ba",
+      "rgbaAtlas": "site/assets/characters/metro/npc-m003/four-pose-atlas-rgba.png",
+      "sprites": {
+        "front": "site/assets/characters/metro/npc-m003/front-standing.png",
+        "side": "site/assets/characters/metro/npc-m003/side-standing.png",
+        "back": "site/assets/characters/metro/npc-m003/back-standing.png",
+        "special": "site/assets/characters/metro/npc-m003/special-front-seated-reading.png"
+      },
+      "alphaReady": true,
+      "gameplayIntegrated": false
     }
   ]
 }
