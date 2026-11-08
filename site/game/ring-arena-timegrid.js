@@ -210,7 +210,8 @@
    return [...found.values()].sort((a,b)=>a.tick-b.tick||b.damage-a.damage);
   }
   function quickGuard(id,tick){
-   const a=model.controlled(),hand=a.hand.filter(h=>cardOf(h.key)?.type==='defense');
+   const a=model.controlled(),hand=a.hand.filter(h=>cardOf(h.key)?.type==='defense')
+    .sort((x,y)=>Number(y.uid===picked)-Number(x.uid===picked));
    if(!hand.length)throw Error('当前角色没有防御手牌，可切换其他队友');
    for(const item of hand){
     const c=cardOf(item.key);
@@ -249,6 +250,11 @@
     '<strong>战况</strong><span class="tg-quiet">本轮暂无预告攻击</span>';
    const playerActs=playing?
     model.planningActions.filter(a=>a.actorId===selected.id):selected.actions;
+   const selectedCard=selected.hand.find(a=>a.uid===picked);
+   const selectedType=selectedCard?cardOf(selectedCard.key):null;
+   const targetsAllies=mode==='shuffle'||(selectedType&&friendly(selectedType));
+   const targetsFoes=mode==='finisher'||(selectedType&&!friendly(selectedType));
+   const activeTargeting=!!(mode||selectedType||moving);
    const rail=['<div class="tg-ticks"><span>目标 / 自身行动</span>'];
    for(let t=1;t<=10;t++)rail.push('<span'+((playing?model.progress:selectedTick)===t?
     ' class="active"':'')+'>'+t+'</span>');
@@ -257,8 +263,12 @@
     const current=shown.get(actor.id)||actor,forecast=projected.get(actor.id)||actor;
     const enemy=actor.side==='enemy',mine=actor.id===selected.id,dead=!!current.dead;
     const index=ROLE_IDS.indexOf(actor.id)+1,portrait=imgSrc(actor);
+    const eligible=!activeTargeting||moving||targetsAllies&&!enemy||
+     targetsFoes&&enemy;
     rail.push('<div class="tg-row '+(enemy?'enemy':'ally')+
-     (mine?' current':'')+(dead?' dead':'')+'" data-tg-row="'+escape(displayId(actor.id))+
+     (mine?' current':'')+(dead?' dead':'')+
+     (activeTargeting?(eligible?' tg-eligible':' tg-ineligible'):'')+
+     '" data-tg-row="'+escape(displayId(actor.id))+
      '"><div class="tg-unit">'+
      (!enemy?'<button type="button" class="tg-portrait" data-tg-choose-role="'+index+
       '" aria-label="切换'+escape(roleName(actor.id))+'的镜头与手牌">':
@@ -376,6 +386,50 @@
     run(()=>{picked=null;moving=null;mode=null;model.execute();note('双方行动按十格同步结算');});return;
    }
   });
+  // Human-friendly full-action footprint: test legality with a CLONED real
+  // V1.7 engine state, not a divergent UI-only overlap approximation.
+  // Does not consume cards or change the live deck on hover.
+  function clearFootprint(){
+   holder.querySelectorAll('.tg-footprint-valid,.tg-footprint-invalid').forEach(el=>{
+    el.classList.remove('tg-footprint-valid','tg-footprint-invalid');
+   });
+  }
+  function footprint(cell){
+   clearFootprint();
+   if(!cell||model?.playback||model?.game.phase!=='planning')return;
+   const tick=Number(cell.dataset.tgTick),target=cell.dataset.tgTarget;
+   const actor=model.controlled();
+   let c=null,act=null,uid=null;
+   if(mode==='finisher')c=cardOf(actor.fin);
+   else if(mode==='shuffle')c={w:0,a:actor.hand.length?2:1,r:0};
+   else if(picked){
+    const item=actor.hand.find(a=>a.uid===picked);
+    if(item){uid=item.uid;c=cardOf(item.key);}
+   }else if(moving){
+    act=actor.actions.find(a=>a.id===moving);if(act)c=cardOf(act.card);
+   }
+   if(!c)return;
+   let legal=false;
+   try{
+    const snapshot=G.clone(model.game),dest=gameId(target);
+    if(mode==='finisher')G.placeFinisher(snapshot,tick,dest);
+    else if(mode==='shuffle'){
+     if(target!==displayId(actor.id))throw Error('shuffle target');
+     G.shuffleHand(snapshot,tick);
+    }else if(uid)G.place(snapshot,uid,tick,dest);
+    else if(act)G.moveAction(snapshot,act.id,tick,dest);
+    legal=true;
+   }catch(_){}
+   const row=cell.closest('.tg-row');if(!row)return;
+   const cls=legal?'tg-footprint-valid':'tg-footprint-invalid';
+   for(let i=tick;i<=Math.min(10,tick+G.cLen(c)-1);i++)
+    row.querySelector('[data-tg-target][data-tg-tick="'+i+'"]')?.classList.add(cls);
+  }
+  get('rail').addEventListener('pointerover',e=>{
+   const cell=e.target.closest('[data-tg-target]');
+   if(cell)footprint(cell);
+  });
+  get('rail').addEventListener('pointerleave',clearFootprint);
   // Desktop drag/drop and touch-friendly tap-to-place use the same engine.
   holder.addEventListener('dragstart',e=>{
    const el=e.target.closest('[data-tg-card],[data-tg-action]');
