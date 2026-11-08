@@ -52,11 +52,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const dots=vector('g',{},'pw-transit-dot-matrix');
  let previousDotScale=-1;
  const regional=vector('g',{},'pw-dot-regional-lines');
+ const selectedRoute=vector('g',{},'pw-dot-selected-route');
  const urban=vector('g',{},'pw-dot-urban-lines');
  const metroNetwork=vector('g',{},'pw-dot-planned-metro');
  const municipal=vector('g',{},'pw-dot-municipal-lines');
  const stops=vector('g',{},'pw-dot-stations');
- svg.append(terrain,dots,regional,metroNetwork,municipal,urban,stops);
+ svg.append(terrain,dots,regional,selectedRoute,metroNetwork,municipal,urban,stops);
  const areaLayer=element('div','pw-dot-areas');
  const cityLayer=element('div','pw-dot-cities');
  const placeLayer=element('div','pw-dot-places');
@@ -85,7 +86,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const cleanupListeners=[];
  function notify(msg){onFeedback?.(msg)}
  function clear(){
-  popup.hidden=true;selected?.removeAttribute('data-selected');
+  popup.hidden=true;selectedRoute.replaceChildren();selected?.removeAttribute('data-selected');
   selected=null;
  }
  function positionPopup(event,node){
@@ -197,6 +198,17 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const mid=snap((start.x+end.x)*.5+offset);
   return [start,{x:mid,y:start.y},{x:mid,y:end.y},end]
    .filter((p,i,arr)=>i===0||p.x!==arr[i-1].x||p.y!==arr[i-1].y);
+ }
+ function previewRegionalRoute(legs){
+  selectedRoute.replaceChildren();
+  if(!Array.isArray(legs)||!legs.length)return;
+  for(const item of legs){
+   const a=atlas.CITY_BY_ID[item.from],b=atlas.CITY_BY_ID[item.to];
+   if(!a||!b)continue;
+   const d=rounded(orthogonal(a,b),18);
+   selectedRoute.append(vector('path',{d,'data-service':item.line?.mode||'regional'},
+    'pw-dot-route-preview-line'));
+  }
  }
  function lineGroup(parent,line,from,to,points,kind,hitCallback){
   const g=vector('g',{'data-line':line.id,'data-from':from,'data-to':to,
@@ -376,6 +388,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    showMenu(e,node,c.name,c.sub+' · '+c.region,[
     {label:'查看城区',primary:true,run:()=>{clear();focus(c,Math.max(2.85,minScale*3.6))}}
    ],thumb?.url);
+   previewRegionalRoute(atlas.route(currentCity,c.id)?.legs);
   });
  }
  const worldNodes=[];
@@ -416,6 +429,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
     }},
     {label:'查看地点',run:()=>{clear();focus(p,Math.max(scale,2.5))}}
    ],src);
+   previewRegionalRoute(route?.legs);
   });
  }
  // Dedicated, world-coordinate player marker is not a fictional POI.
