@@ -39,8 +39,8 @@ test('real subway stations preserve canonical grid coordinates across the indepe
   if(s.locked)continue;
   const p=N.at(id);
   assert.ok(p,'missing active subway station '+id);
-  assert.equal(p.x,Math.round((840+s.gx*40)/40)*40);
-  assert.equal(p.y,Math.round((480+s.gy*40)/40)*40);
+  assert.equal(p.x,Math.round((280+s.gx*40)/40)*40);
+  assert.equal(p.y,Math.round((100+s.gy*40)/40)*40);
  }
  const w=N.journey('school','entrance'),e=N.journey('entrance','school');
  assert.ok(w&&e);
@@ -97,4 +97,17 @@ test('world travel state can physically reach and return from a regional interch
  const returned=engine.travel('entrance');
  assert.equal(returned.ok,true,returned.reason);
  assert.equal(engine.snapshot().location,'entrance');
+});
+
+
+test('the entire 170-station city subway has two-way paths and matching real game stop nodes',()=>{
+ assert.equal(M.LINES.length,10);
+ assert.equal(Object.keys(M.STATIONS).length,170);
+ assert.equal(Object.values(M.STATIONS).filter(s=>s.transfer).length,19);
+ for(const id of Object.keys(M.STATIONS)){
+  const outward=M.path('entrance',id),back=M.path(id,'entrance');
+  assert.ok(outward,'no metro route to '+id);
+  assert.ok(back,'no metro route home from '+id);
+  assert.ok(N.at(id),'new subway stop absent from destination graph '+id);
+ }
 });
