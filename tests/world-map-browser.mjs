@@ -54,6 +54,16 @@ try{
  await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='region');
  assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
+ // Geography is SVG vectors on the same dot-world coordinates: no extra
+ // photo wallpaper, fake subway line or duplicated photo-card atlas.
+ assert.equal(await page.locator('.pw-dot-terrain-land').count(),1);
+ assert.equal(await page.locator('.pw-dot-terrain-sea').count(),1);
+ assert.equal(await page.locator('.pw-dot-terrain-island').count(),1);
+ assert.equal(await page.locator('.pw-dot-lake').count(),1);
+ assert.equal(await page.locator('.pw-dot-current-location').count(),1);
+ assert.equal(await page.locator('.pw-dot-city-symbol').count(),10);
+ assert.equal(await page.locator('.pw-dot-city .pw-transit-photo').count(),0,
+  'regional cities should be map markers, not ten repeated stock photos');
  await shot('24-dot-world-overview-desktop.png');
  await page.locator('.pw-dot-city[data-city="homori"]').click();
  const popup=page.locator('.pw-transit-popup:not([hidden])');
@@ -64,6 +74,9 @@ try{
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='detail');
  const visible=page.locator('.pw-dot-poi:not([hidden])');
  assert.ok(await visible.count()>0,'city zoom must reveal actual point-grid destinations');
+ assert.equal(await page.locator('.pw-dot-poi .pw-transit-photo').count(),0,
+  'POI photos must not be eagerly loaded for every pin');
+ assert.ok(await page.locator('.pw-dot-poi-symbol').count()>=100);
  await shot('26-dot-world-zoom-countryside.png');
  const target=visible.first();
  const chosen=await target.getAttribute('data-place');
