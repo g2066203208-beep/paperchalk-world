@@ -22,8 +22,8 @@
   Object.freeze({id:'elder',frame:3,role:'waiting',x:1.52,z:5.45,height:1.63}),
   Object.freeze({id:'commuter',frame:4,role:'boarding-right',x:3.48,z:6.00,height:1.68}),
   Object.freeze({id:'worker',frame:5,role:'alighting-left',x:-2.67,z:8.29,height:1.73}),
-  Object.freeze({id:'seated-reader',frame:6,role:'sitting',x:-.18,z:4.99,height:1.12}),
-  Object.freeze({id:'seated-listener',frame:7,role:'sitting',x:4.30,z:4.99,height:1.11})
+  Object.freeze({id:'seated-reader',frame:6,role:'sitting',x:-.18,z:5.44,height:1.43}),
+  Object.freeze({id:'seated-listener',frame:7,role:'sitting',x:4.30,z:5.44,height:1.42})
  ]);
  // The station box shader uses this exact modular displacement. Platform
  // architecture and passengers MUST travel together when the coach departs.
@@ -40,7 +40,7 @@
   // A subtle powered fluorescent breathing/fault sequence. No all-white
   // screen flash. Dips are deliberately sparse and deterministic.
   const beat=(t+station*1137)%10900;
-  const dip=beat>7480&&beat<7590?.26:beat>7630&&beat<7725?.49:1;
+  const dip=beat>7480&&beat<7590 ? .26 : beat>7630&&beat<7725 ? .49 : 1;
   const hum=.975+.025*Math.sin(t*.0015+station*1.37);
   return clamp(dip*hum,.18,1);
  }
@@ -84,7 +84,7 @@
    return {id:p.id,frame:p.frame,role:p.role,
     x:x-offset,y:gait,z,height:p.height,
     opacity:clamp(opacity*exposed),moving:movingFeet,
-    lean:p.role==='sitting'?.012*Math.sin(time*.001+i):movingFeet?.014*Math.sin(time*.011+i):0};
+    lean:p.role==='sitting' ? .012*Math.sin(time*.001+i) : movingFeet ? .014*Math.sin(time*.011+i) : 0};
   });
   return {station,offsetMeters:offset,lampFactor:lightCue(nowMs,station,anomaly),
    passengers:exposed>.045&&!anomaly?crowd.filter(p=>p.opacity>.025):[]};
