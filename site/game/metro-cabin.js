@@ -328,7 +328,7 @@ function create({root,engine,onExit,onFeedback}){
     if(!next.ok)return next;
     refresh();
     if(next.anomaly)return next;
-    await new Promise(resolve=>setTimeout(resolve,550));
+    await delay(platformDwellMs);
    }
    const result=engine.metroExit();
    if(!result.ok)return result;
