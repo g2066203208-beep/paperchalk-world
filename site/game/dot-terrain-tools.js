@@ -107,7 +107,7 @@
    map.dataset.terrainEditing=String(editing);
    map.dataset.terrainTool=op;
    map.dataset.terrainShape=shape;
-   toggle.textContent=editing?'完成':'地形';
+   toggle.textContent='地形';
    toggle.setAttribute('aria-pressed',String(editing));
    toggle.setAttribute('aria-label',editing?'关闭地形塑造工具':'打开地形塑造工具');
    for(const [id,b] of buttonsOp)b.setAttribute('aria-pressed',String(id===op));
