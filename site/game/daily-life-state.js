@@ -175,7 +175,9 @@
     const s=defaultState();
     s.day=CLAMP(raw.day,1,9999);
     s.minute=CLAMP(INTEGER(raw.minute,420),0,1440);
-    s.location=Object.hasOwn(LOCATIONS,raw.location)?raw.location:'bedroom';
+    const savedLocation=String(raw.location||'');
+    s.location=Object.hasOwn(LOCATIONS,savedLocation)?savedLocation:
+      (GRAPH?.RETIRED_STOP_ALIASES?.[savedLocation]||'bedroom');
     s.money=CLAMP(INTEGER(raw.money,260),0,100000000);
     s.energy=CLAMP(INTEGER(raw.energy,78),0,100);
     s.knowledge=CLAMP(INTEGER(raw.knowledge,0),0,10000);
@@ -205,8 +207,10 @@
     if(metro&&typeof metro==='object'){
       const graph=typeof window!=='undefined'?window.PaperWorldMetro:null;
       const line=graph?.getLine?.(metro.lineId);
-      if(line&&line.stops.includes(metro.station)&&!line.locked){
-        s.metro={onboard:metro.onboard===true,station:metro.station,lineId:line.id,
+      const station=graph?.STATIONS?.[metro.station]?metro.station:
+        graph?.RETIRED_STOP_ALIASES?.[metro.station];
+      if(line&&line.stops.includes(station)&&!line.locked){
+        s.metro={onboard:metro.onboard===true,station,lineId:line.id,
           direction:metro.direction===-1?-1:1,rides:CLAMP(INTEGER(metro.rides,0),0,100000),
           anomaly:metro.anomaly===true};
       }
