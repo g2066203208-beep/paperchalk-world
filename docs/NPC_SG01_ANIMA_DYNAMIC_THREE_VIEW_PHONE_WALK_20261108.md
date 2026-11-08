@@ -1,46 +1,40 @@
-# 女主学校三人队学生妹① SG01｜准确同校校服＋自然小步看手机三视图
+# SG01｜学校三人队第一位 · 版本 V3：正确校服／无眼睛／自然操作手机三视图
 
-> **2026-11-08 纠错：此前版本校服不符合女主原图：错把酒红长领带画成蝴蝶结，袜高、外套形制和裙摆结构也不准。现已整体替换正负向提示词。旧版本仅供 Git 历史复盘，不再使用。**
+> **2026-11-08，仍为待重画提示词；截图 V2 被用户明确否决，不得当成批准原画。** 用户指出：外套纽扣不匹配女主原图、正面出现眼睛且侧面出现闭眼弧线、手机只拿在手里没有真实互动动作。**本版全文替换旧稿。**
 >
-> 本任务仍在**文字提示词待生成状态**；用户提供的 `03_女主_基础站立_2048.png` 是同校校服的视觉参考，不是 SG01 出图。详见 [女主学校女生校服准确参考锁](SCHOOL_UNIFORM_FEMALE_CANON_20261108.md)。
+> 参考：女主原图 `03_女主_基础站立_2048.png`；[学校女生准确制服母版](SCHOOL_UNIFORM_FEMALE_CANON_20261108.md)；[官方 Anima 模型卡](https://huggingface.co/circlestone-labs/Anima)；[三视图左右位置合同](NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md)。
 
-## 角色定位和动作
+## 硬性验收
 
-- 独立于主角的娇小高马尾普通学生；无可见眼睛；眉眼细节不画，但嘴角、头部微倾、步幅体现文静性格。
-- **左 FRONT：** 小步向前走，一只手拿手机在腰前，轻微低头、浅笑。
-- **中 LEFT SIDE：** 纯左侧面，小步朝左走，左手仍握同一手机，动作自然。
-- **右 BACK：** 背对镜头小步离开，手机在左手自然垂低。
-- 同一套深海军蓝近黑西装＋白衬衫＋**细长酒红领带**＋**短炭灰百褶裙**＋**黑色小腿袜**＋**深棕黑色乐福鞋**；三格穿法一致。
-- 阴天均匀漫射照明，场景灯光后期在游戏中完成；不烘焙方向阴影。动作可以自然变化，三视方向不可错误。
+- 制服纽扣：**女主原图两枚大圆深灰黑纽扣，上下排列；不能生成金色／铜色纽扣，也不能增减数量**。白衬衫、整齐酒红色细长领带、深海军蓝近黑合身西装、深灰短百褶裙、黑色小腿袜、深棕黑乐福鞋同样锁定。
+- 无眼睛：**眼睛、瞳孔、睫毛、眼皮线、闭眼弧线一律不画**，不可用“微笑眯眼”取代无眼睛；性格通过嘴角、下巴、肩臂和走姿表现。
+- 手机：同一部小黑色手机，左手持、**右手拇指触屏滚动**。不只是手垂着拿手机。正面、纯左侧面、纯背面三角度各有一帧自然慢走玩手机；背面手机部分被躯干遮挡属合理结果。
+- 朝向：三视图横排 **LEFT 正面 / CENTER 朝左严格 90° 侧面 / RIGHT 正背面**。姿势可有适度小步幅变化，但不得旋转肩膀或背面回头。
+- Akipeko LoRA 0.65、纯白背景、阴天漫射光、无强烈烘焙阴影。**图片本身未生成，绝不写批准或游戏已导入。**
 
 ## Positive Prompt
 
 ```text
-masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, character reference sheet, character turnaround, multiple views, full body, teenage schoolgirl, petite, high ponytail, school uniform, holding smartphone, gentle walking, simple anime style, clean lineart, flat colors, muted colors, overcast ambient lighting, white background.
+masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, character reference sheet, character turnaround, multiple views, full body, petite teenage schoolgirl, high ponytail, walking slowly, using smartphone, simple anime style, clean lineart, flat colors, muted colors, soft overcast ambient light, white background.
 
-A three-view character reference sheet showing exactly three full-body drawings of the same petite Japanese high school girl in one horizontal row. She has a small frame, narrow shoulders, a youthful round face, dark brown hair tied in a neat high ponytail, soft straight bangs, no visible eyes, a small nose, and a small mouth with a gentle subtle smile. This is a different girl from the school heroine, with her own high ponytail and petite proportions.
+A character sheet showing exactly three full-body drawings of the same petite Japanese schoolgirl in one horizontal row. She has a small narrow-shouldered build, dark brown hair in a neat high ponytail, soft bangs, a youthful round face, no drawn eyes, no eyelids, no eyelashes, a small nose, and a small mouth with a faint relaxed smile. Her face is completely blank at eye level in all three drawings.
 
-She wears the same SCHOOL UNIFORM DESIGN as the female protagonist: a fitted very dark midnight-navy single-breasted school blazer with notched lapels, two dark front buttons and two lower front pockets, a white collared shirt, a narrow burgundy red LONG NECKTIE hanging down the shirt front, a charcoal gray SHORT PLEATED SKIRT reaching the middle of her thighs, plain BLACK MID-CALF SOCKS leaving both knees and most of the calves visible, and dark brown nearly black leather penny loafers. The blazer is worn closed in all three views. The neckwear is a long necktie, not a ribbon bow. The uniform design, colors, hem length, sock height and shoes match across all three figures.
+She wears the same uniform design as the female protagonist: a fitted very dark midnight-navy single-breasted school blazer with notched lapels, exactly TWO large flat DARK CHARCOAL BUTTONS vertically aligned on the front, a small chest pocket and two lower pockets, a white collared shirt, a properly tied narrow burgundy LONG NECKTIE, a short charcoal gray pleated skirt reaching mid-thigh, black mid-calf socks leaving knees visible, and dark brown-black penny loafers. Both blazer buttons match the dark jacket, never gold or brass. The blazer is closed neatly in all views. The identical uniform and high ponytail appear in all three drawings.
 
-LEFT FIGURE: Front view. She takes a short natural step toward the viewer, with her head, chest and shoulders facing directly forward. Her left hand holds a small plain black smartphone in front of her waist. Her right arm hangs loosely with a soft walking swing. She glances slightly downward and has a faint pleasant smile.
+LEFT FIGURE: Front view. She takes a small natural step toward the viewer while reading a message. Her head, shoulders, chest and hips face straight forward. She holds one small black smartphone upright with her left hand near her waist, and uses her right thumb to scroll on the screen. Both elbows stay comfortably close to her body. Her chin is slightly lowered, her mouth forms a subtle smile, and the eye area has no drawn features.
 
-CENTER FIGURE: Left-facing side profile. The same girl takes a small relaxed step toward the left, seen directly from the side. Her nose, chest, shoulders, hips and shoes face left. Her left elbow is gently bent to hold the same smartphone near her waist. Her high ponytail hangs naturally behind her head. Her skirt, blazer, long burgundy tie, socks and loafers are identical to the front view.
+CENTER FIGURE: Left-facing side profile. The same girl walks gently toward the left, viewed directly from the side. Her nose, shoulders, chest, hips and shoes face left. One foot is slightly ahead in a short relaxed step. She holds the same phone in her left hand just in front of her waist, and her right thumb lightly touches the screen. Her head dips slightly toward the phone without twisting her torso. Her ponytail keeps the same length and height.
 
-RIGHT FIGURE: Back view. The same girl walks slowly away from the viewer with a small natural step. Her head, shoulders, torso and hips face directly away. Her left hand holds the same black smartphone lowered beside her thigh; her right arm swings a little. The same high ponytail, fitted navy school blazer, short charcoal pleated skirt, black mid-calf socks and dark brown loafers are visible from behind.
+RIGHT FIGURE: Back view. The same girl takes a small step away from the viewer. Her head, shoulders and torso face directly away. Her forearms rest naturally in front of her waist as she continues using the same phone, mostly hidden from the rear. Her head is slightly lowered, and the high ponytail hangs down her back. Her uniform, skirt, socks and shoes remain unchanged.
 
-All three drawings show the identical schoolgirl and the exact same school uniform, hairstyle, ponytail height, body proportions and smartphone. The three views capture different gentle everyday walking moments without rotating the required front, strict left profile and back body directions.
-
-Uniform soft diffuse overcast daylight, even flat material colors, minimal structural shading, no strong directional light, no cast shadow, no dramatic highlights. Exactly three complete full-body figures, evenly spaced, isolated on a plain white background.
+Three natural moments of the same everyday action, gentle walking while checking a message. Different small leg and arm movements, comfortable balance, no exaggerated posing. Three identical character designs, evenly spaced, fully visible from head to shoes. Uniform soft diffuse overcast light, minimal structural shading, no harsh cast shadows or bright highlights, plain white background.
 ```
 
 ## Negative Prompt
 
 ```text
-worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, ribbon bow, bow tie, neck ribbon, sailor uniform, different school uniform, light blue blazer, open cardigan, oversized jacket, cropped blazer, double-breasted jacket, missing blazer, missing white shirt, missing long burgundy necktie, green skirt, plaid skirt, long skirt, trousers, missing pleated skirt, knee-high socks, over-the-knee socks, thighhighs, black tights, pantyhose, bare ankles, sneakers, boots, high heels, missing loafers, different clothes, different colors, different ponytail positions, different hairstyles, different characters, visible eyes, pupils, eyelashes, detailed eyes, repeated front views, front view in center, back view in center, front view on right, side view on right, three-quarter view, turned torso, running, sprinting, jumping, dramatic gestures, giant walking strides, phone covering face, two phones, extra accessories, exaggerated shadows, rim light, spotlight, hard shadows, bright glossy highlights, background scenery, furniture, fourth figure, cropped feet, cropped head, text, watermark
+worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, visible eyes, eye outlines, closed eyes, closed-eye arcs, eyelid lines, eyelashes, pupils, irises, eyebrows, eye highlights, facial eye marks, gold buttons, brass buttons, yellow buttons, shiny metal buttons, extra front buttons, missing blazer buttons, one front button, three front buttons, mismatched button colors, bow tie, ribbon bow, untied necktie, loose crooked tie, different school uniform, light blue jacket, cardigan, missing blazer, missing necktie, long skirt, tights, knee-high socks, thigh-high socks, sneakers, different hairstyles, different ponytails, extra phones, two smartphones, smartphone hanging unused at side, phone held behind back, phone covering face, idle mannequin pose, stiff arms, wide strides, sprinting, running, jumping, dancing, exaggerated gestures, turned shoulders, three-quarter view, repeated front views, frontal figure in center, side figure on right, looking backward, different characters, cropped feet, cropped head, extra figures, fourth figure, directional sunlight, hard shadows, rim light, dramatic lighting, scenery, furniture, text, watermark
 ```
 
-## Anima 参数及验收
-
-Anima Base / ER SDE / 35 steps / CFG 4.5 / 1536×1024，`@akipekostyle, <lora:akipekoanima_v1_1:0.65>`。官方支持标签和自然语言组合，但不保证精确三格空间方向，输出仍需验收。
-
-核对：**是长领带不是蝴蝶结；小腿袜不是过膝袜；西装近黑海军蓝不是浅蓝；炭灰短百褶裙不是长绿裙**。与上传的女主校服照片逐项对照，不能自动换装。三格同一个人、同一高马尾、同一手机，三个方向可各有自然小动作。若输出与女主校服色形不符，必须退稿。
+## 参数
+Anima Base · ER SDE · 35 steps · CFG 4.5 · 1536 × 1024 · `@akipekostyle, <lora:akipekoanima_v1_1:0.65>`。位置段落属于项目有效经验，不是 Anima 官方可靠控制语法。
