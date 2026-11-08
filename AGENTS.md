@@ -10,6 +10,10 @@ Read these documents **in the current session**, not from memory:
 
 **Do not claim to have consulted official instructions unless you actually checked them.** If upstream access fails, disclose that and rely on the last dated copy. The reference is a source-linked summary, not an invented official guarantee of precise multi-view control.
 
+### Current NPC canonical prompt: MANDATORY
+
+**Always read [NPC multi-view canonical LEFT/CENTER/RIGHT template](docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md) before writing multi-view NPC prompts.** The user confirmed a complete three-view office-worker example with `LEFT FIGURE: front / CENTER FIGURE: left profile / RIGHT FIGURE: back`. Preserve this spatial structure, changing only character appearance and, if requested, adding a fourth far-right frontal **sustainable** idle. In a four-view variant, remove contradictory negative terms such as `fourth figure` or `two frontal figures`. Never treat the former [single-view trial](docs/NPC_ANIMA_FAST_PRODUCTION_WORKFLOW_V1_20261108.md) as the default. The three-view composition has user approval; the new fourth-view addition still needs actual image review.
+
 ### Current NPC standards (unless user changes them)
 - Anima Base, `@akipekostyle, <lora:akipekoanima_v1_1:0.65>`; do not add Munji or new LoRAs unless asked.
 - Three views, when requested: **front neutral stand → strict LEFT 90° profile neutral stand → directly back neutral stand**. No extra figure or special action.
