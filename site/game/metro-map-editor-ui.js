@@ -92,6 +92,14 @@ function create(options){
   try{model.save();message('编辑草图已保存到本浏览器，可继续修改或导出');render()}
   catch(err){message(err.message||'无法保存')}
  },'保存到当前浏览器；正式乘车线路需审核后发布');
+ const apply=button('应用游戏',()=>{
+  if(!global.confirm('将已编辑的地铁线路应用到本机游戏吗？页面会重新加载，已有游戏存档保留。'))return;
+  try{
+   model.save();
+   message('蓝图已通过站点完整性验证，正在重新加载地铁系统');
+   global.location.reload();
+  }catch(err){message('无法应用：'+(err.message||String(err)))}
+ },'保存并重新加载；新站与路线将进入本机真实乘车图');
  const exportButton=button('导出',()=>{
   try{
    const blob=new Blob([model.exportJSON()],{type:'application/json;charset=utf-8'});
@@ -104,7 +112,7 @@ function create(options){
  },'下载全部线路、站点、圆角控制点 JSON 蓝图');
  const importButton=button('导入',()=>upload.click(),'导入之前保存的点阵线路蓝图');
  const reset=button('复原',()=>{
-  if(!global.confirm('要把当前编辑中的线路恢复成 GitHub 原始线路吗？可先导出或撤销。'))return;
+  if(!global.confirm('要恢复成进入当前编辑器时的线路布局吗？可以撤销。'))return;
   model.reset();selectedEdge=null;selectedStation=null;selectedBend=-1;render();
  },'恢复仓库原有线路草图，可撤销');
  const renameButton=button('改名',()=>{
@@ -114,7 +122,7 @@ function create(options){
    else message('站名不能留空，最多 36 个字符');
   }catch(err){message(err.message)}
  },'直接修改所选地铁站的名称');
- const selectedControls=[pick,bend,add,remove,undo,redo,save,exportButton,importButton,reset,renameButton];
+ const selectedControls=[pick,bend,add,remove,undo,redo,save,apply,exportButton,importButton,reset,renameButton];
  upload.addEventListener('change',async()=>{
   const file=upload.files?.[0];
   if(!file)return;
