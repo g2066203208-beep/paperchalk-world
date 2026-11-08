@@ -208,7 +208,15 @@ if(LINES.length!==10||Object.keys(STATIONS).length!==70)
 let ACTIVE_BLUEPRINT=null;
 try{
  const editor=global.PaperWorldMetroMapEditor;
- const raw=editor&&global.localStorage?.getItem(editor.KEY);
+ const storage=global.localStorage;
+ // One-time compatibility migration: old versions used the draft key
+ // as their active layout. Lock the current baseline in the new live key
+ // even when it is empty, so new draft saves cannot activate on refresh.
+ const live=editor&&storage?.getItem(editor.LIVE_KEY);
+ const legacy=live===null&&editor?storage?.getItem(editor.KEY):null;
+ const raw=live===null?legacy:live;
+ if(editor&&live===null&&storage)
+  storage.setItem(editor.LIVE_KEY,raw||'');
  if(raw){
   const proposed=JSON.parse(raw);
   editor.validate(proposed,{STATIONS,LINES,GRID});
