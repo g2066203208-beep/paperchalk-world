@@ -49,34 +49,35 @@ try{
  assert.equal(overview.cityMarkers,10);
  assert.ok(overview.poiMarkers>=100);
  assert.equal(overview.municipalTracks,11);
+ assert.equal(await page.locator('.pw-dot-access-lines .pw-transit-segment').count(),40);
+ assert.ok(await page.locator('.pw-dot-destination-stop[data-direction="both"]').count()>=130);
+ assert.deepEqual(await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit().unreachable),[]);
+ assert.deepEqual(await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit().oneWay),[]);
  assert.equal(overview.localTransitCities,10);
  assert.ok(overview.regionalSegments>=14);
  await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='region');
  assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
- // Geography is SVG vectors on the same dot-world coordinates: no extra
- // photo wallpaper, fake subway line or duplicated photo-card atlas.
- assert.equal(await page.locator('.pw-dot-terrain-land').count(),1);
- assert.equal(await page.locator('.pw-dot-terrain-sea').count(),1);
- assert.equal(await page.locator('.pw-dot-terrain-island').count(),1);
- assert.equal(await page.locator('.pw-dot-lake').count(),1);
+ // Keep the geographic backdrop EMPTY. The map belongs to routes/stations.
+ assert.equal(await page.locator('.pw-dot-terrain-land,.pw-dot-terrain-sea,.pw-dot-lake').count(),0);
  assert.equal(await page.locator('.pw-dot-current-location').count(),1);
- assert.equal(await page.locator('.pw-dot-city-symbol').count(),10);
- assert.equal(await page.locator('.pw-dot-city .pw-transit-photo').count(),0,
-  'regional cities should be map markers, not ten repeated stock photos');
+ assert.equal(await page.locator('.pw-dot-city .pw-transit-photo').count(),10,
+  'each city has an image tethered to its existing hub station');
+ assert.equal(await page.locator('.pw-dot-city[data-station]').count(),10);
  await shot('24-dot-world-overview-desktop.png');
  await page.locator('.pw-dot-city[data-city="homori"]').click();
  const popup=page.locator('.pw-transit-popup:not([hidden])');
  await popup.waitFor();
  assert.match(await popup.innerText(),/穗森市/);
  await shot('25-dot-world-city-popup.png');
- await popup.locator('.pw-transit-menu-item.is-primary').click();
+ await popup.locator('.pw-transit-menu-item').filter({hasText:'放大城区'}).click();
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='detail');
  const visible=page.locator('.pw-dot-poi:not([hidden])');
  assert.ok(await visible.count()>0,'city zoom must reveal actual point-grid destinations');
- assert.equal(await page.locator('.pw-dot-poi .pw-transit-photo').count(),0,
-  'POI photos must not be eagerly loaded for every pin');
- assert.ok(await page.locator('.pw-dot-poi-symbol').count()>=100);
+ assert.ok(await page.locator('.pw-dot-poi .pw-transit-photo').count()>=100);
+ const pics=await page.locator('.pw-dot-poi img[src]').count();
+ assert.ok(pics>0&&pics<60,'only visible location photos should be fetched, count='+pics);
+ assert.ok(await page.locator('.pw-dot-poi[data-station]').count()>=100);
  await shot('26-dot-world-zoom-countryside.png');
  const target=visible.first();
  const chosen=await target.getAttribute('data-place');
@@ -97,7 +98,7 @@ try{
    Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
   return {cityWidths,nearbyCityOverlap:overlap};
  });
- assert.ok(cardSizes.cityWidths.every(w=>w>=88),JSON.stringify(cardSizes));
+ assert.ok(cardSizes.cityWidths.every(w=>w>=120),JSON.stringify(cardSizes));
  assert.equal(cardSizes.nearbyCityOverlap,0,
   'island and peninsula city cards must be large and independently tappable');
  await shot('28-dot-world-mobile-overview.png');
