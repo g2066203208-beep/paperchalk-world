@@ -892,13 +892,15 @@ async function loadList(){
  if(Array.isArray(imported))for(const record of imported)if(okId(record?.id)){
   const published=list.get(record.id);
   if(!published)list.set(record.id,record);
-  else if(published.draft&&!published.l2dModule?.front?.rig)
+  else if(published.draft&&!published.l2dModule?.front?.rig&&
+    !published.l2dModule?.back?.rig)
    list.set(record.id,{...published,...record});
  }
  const overrides=await get('overrides');
  if(Array.isArray(overrides))for(const record of overrides){
   const existing=list.get(record?.id);
-  if(existing&&!existing.l2dModule?.front?.rig)
+  if(existing&&!existing.l2dModule?.front?.rig&&
+     !existing.l2dModule?.back?.rig)
    Object.assign(existing,record);
  }
  // Old local imported catalogue entries must NEVER resurrect deleted outfits.
