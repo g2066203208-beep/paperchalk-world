@@ -209,7 +209,8 @@ function create({map,svg,canvas,tools,atlas,metro,network,localPoint,
    node.dataset.selected=String(selectedId===poi.id);
    node.dataset.dim=String(!!focusedDistrict&&poi.districtId!==focusedDistrict);
    let label=visible&&(selectedId===poi.id||
-     (focusedDistrict===poi.districtId&&scale>=2.4));
+     (focusedDistrict===poi.districtId&&scale>=2.4)||
+     (poi.status==='日常'&&scale>=1.7));
    if(label&&selectedId!==poi.id){
     const width=Math.min(162,Math.max(62,poi.name.length*15+18));
     const b={left:px-width/2,right:px+width/2,top:py+14,bottom:py+40};
@@ -232,11 +233,11 @@ function create({map,svg,canvas,tools,atlas,metro,network,localPoint,
    // retain every area sign and move its CARD without moving its true anchor.
    const small=scale>=2.4&&d.id!==focusedDistrict;
    node.dataset.small=String(small);
-   const width=small?39:120,height=small?39:50;
+   const width=small?39:152,height=small?39:50;
    const shifts=small?[[0,-24],[0,24]]:[
-    [0,-73],[0,67],[128,-30],[-128,-30],[128,55],
-    [-128,55],[0,-142],[0,130],[252,-32],[-252,-32],
-    [252,65],[-252,65]];
+    [0,-73],[0,67],[165,-30],[-165,-30],[165,55],
+    [-165,55],[0,-142],[0,130],[315,-32],[-315,-32],
+    [315,65],[-315,65]];
    let best=null;
    for(const [dx,dy] of shifts){
     const cx=clamp(ax+dx,width/2+9,v.w-width/2-9);
