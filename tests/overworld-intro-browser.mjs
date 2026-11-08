@@ -93,6 +93,7 @@ try{
    'Handset must fit the scene vertically: '+JSON.stringify(bounds));
  await page.locator('#phone-fingerprint').click();
  await page.locator('[data-app="信息"]').click();
+ await page.locator('#phone-ui .phone-conversation-row[data-contact="female2"]').click();
  assert.equal(await page.locator('#phone-app-copy .phone-chat-bubble.is-them').count(),3);
  await page.locator('.phone-chat-input').fill('作业写完了吗？');
  await page.locator('.phone-chat-composer button').click();
