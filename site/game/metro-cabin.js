@@ -54,7 +54,8 @@ function create({root,engine,onExit,onFeedback}){
  let raf=0,last=0,visible=false,auto=false,frame=0,anomalyEventSent=false;
  let regionalRide=null;
  const motion=global.PaperWorldMetroMotion?.create?.()||null;
- const journeyTime=global.PaperWorldMetroMotion?.DURATION_MS||6200;
+ const journeyTime=global.PaperWorldMetroMotion?.DURATION_MS||9000;
+ const platformDwellMs=1650; // short cinematic time scale; doors remain open
  let rideEpoch=0;
  const delay=ms=>new Promise(resolve=>global.setTimeout(resolve,ms));
  // Train's camera, floor, walls and actor positions never translate.
@@ -225,7 +226,7 @@ function create({root,engine,onExit,onFeedback}){
      const result=engine.metroNext();
      refresh();
      if(result.anomaly||!result.ok)break;
-     await delay(450);
+     await delay(platformDwellMs);
     }
    }finally{auto=false;refresh()}
   }));
@@ -261,6 +262,7 @@ function create({root,engine,onExit,onFeedback}){
   rideEpoch++;motion?.reset();
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
+  section.dataset.camera=section.dataset.renderer==='ring-3d'?'three-quarter-passenger':'side-elevation';
   if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Metro L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
@@ -284,6 +286,7 @@ function create({root,engine,onExit,onFeedback}){
   rideEpoch++;motion?.reset();
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
+  section.dataset.camera=section.dataset.renderer==='ring-3d'?'three-quarter-passenger':'side-elevation';
   if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Regional rail L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
@@ -291,7 +294,7 @@ function create({root,engine,onExit,onFeedback}){
    for(let i=0;i<route.legs.length;i++){
     regionalRide.index=i;refresh();
     if(!await animateRailLeg())break;
-    await delay(600);
+    await delay(platformDwellMs);
    }
    return {ok:true};
   }finally{
