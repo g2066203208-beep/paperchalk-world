@@ -1,0 +1,246 @@
+{
+  "schema": 1,
+  "characterId": "female-07",
+  "face": "back",
+  "canvas": [
+    1024,
+    1024
+  ],
+  "sourceCanvas": [
+    1024,
+    1024
+  ],
+  "origin": "SeeThrough-4a806bb8c33e.psd",
+  "sha256": "d6f3a1e564eb2ecf7e5c6f853007cb04c9811265b9cd472fac6f1eeece45e83c",
+  "recordCount": 11,
+  "playablePartCount": 14,
+  "layers": {
+    "back": [
+      {
+        "partId": "eyebrow",
+        "name": "eyebrow",
+        "x": 492,
+        "y": 86,
+        "canvas": {
+          "width": 6,
+          "height": 4
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 1,
+        "anatomy": "eyebrow",
+        "sha256": "2d9fb97d4f687ae77d776b602dc5395f007e7f606d99e9cd158d16e250af2e55"
+      },
+      {
+        "partId": "back_hair",
+        "name": "back_hair",
+        "x": 280,
+        "y": 28,
+        "canvas": {
+          "width": 227,
+          "height": 507
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 2,
+        "anatomy": "back_hair",
+        "sha256": "48192dd45e8e148dc00a566f093f63136afa8d3ee292ce6aa67267fb6c4fa734"
+      },
+      {
+        "partId": "legwear_l",
+        "name": "legwear_l",
+        "x": 339,
+        "y": 504,
+        "canvas": {
+          "width": 96,
+          "height": 410
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 3,
+        "anatomy": "planted-left-leg",
+        "sha256": "92988d886757b155f14d6de791684158b17e89ea81040fe8ca4b62bc0ca76588"
+      },
+      {
+        "partId": "legwear_r",
+        "name": "legwear_r",
+        "x": 435,
+        "y": 492,
+        "canvas": {
+          "width": 118,
+          "height": 439
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 3,
+        "anatomy": "planted-right-leg",
+        "sha256": "7ea8ff0fe7b0494517fcfbd8a52bbf30bc68ae6f9f7f66633c9c784c4bf12b12"
+      },
+      {
+        "partId": "footwear_l",
+        "name": "footwear_l",
+        "x": 343,
+        "y": 879,
+        "canvas": {
+          "width": 71,
+          "height": 118
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 4,
+        "anatomy": "planted-left-foot",
+        "sha256": "10b118350a5f456996160c08ea70ada900218a4b2a73507eaaa16fe658dda202"
+      },
+      {
+        "partId": "footwear_r",
+        "name": "footwear_r",
+        "x": 489,
+        "y": 897,
+        "canvas": {
+          "width": 130,
+          "height": 127
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 4,
+        "anatomy": "planted-right-foot",
+        "sha256": "ce28bb4d30686d222abbb821d8c31a879ebfb17529322b7a5dba6501cbf56437"
+      },
+      {
+        "partId": "bottomwear",
+        "name": "bottomwear",
+        "x": 345,
+        "y": 529,
+        "canvas": {
+          "width": 195,
+          "height": 225
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 5,
+        "anatomy": "bottomwear",
+        "sha256": "a78ce35a0750fa2d5e70e6686e73fa54d3d064a5fa44c94af9090d4e726e8ae6"
+      },
+      {
+        "partId": "neck",
+        "name": "neck",
+        "x": 405,
+        "y": 129,
+        "canvas": {
+          "width": 69,
+          "height": 64
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 6,
+        "anatomy": "neck",
+        "sha256": "9eece528d1cbe3b8c6b69219b806e874b5c519b3d967944955696f71cb46a365"
+      },
+      {
+        "partId": "topwear",
+        "name": "topwear",
+        "x": 318,
+        "y": 140,
+        "canvas": {
+          "width": 262,
+          "height": 527
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 7,
+        "anatomy": "topwear",
+        "sha256": "f00402fe48ec8a9b5c2f7b852cab58ff751dfe819f41f77250032f649c67e778"
+      },
+      {
+        "partId": "objects",
+        "name": "objects",
+        "x": 624,
+        "y": 475,
+        "canvas": {
+          "width": 161,
+          "height": 118
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 8,
+        "anatomy": "objects",
+        "sha256": "52ee34100d5011550d80edf05d5bbf94e7b028fd8c17025e19baa2c714cb50b9"
+      },
+      {
+        "partId": "handwear_l",
+        "name": "handwear_l",
+        "x": 233,
+        "y": 221,
+        "canvas": {
+          "width": 134,
+          "height": 328
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 9,
+        "anatomy": "independent-left-arm",
+        "sha256": "f38286e00e377742b73f5839c6876198d11439647cee8acc1bdf75693a549528"
+      },
+      {
+        "partId": "handwear_r",
+        "name": "handwear_r",
+        "x": 475,
+        "y": 203,
+        "canvas": {
+          "width": 224,
+          "height": 323
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 9,
+        "anatomy": "independent-weapon-arm",
+        "sha256": "6cfe80dc8cd44b9df23f2f03c71bbac434ce6b800cbbf0ff51d4f4fb1bf5089e"
+      },
+      {
+        "partId": "face",
+        "name": "face",
+        "x": 397,
+        "y": 41,
+        "canvas": {
+          "width": 100,
+          "height": 121
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 10,
+        "anatomy": "face",
+        "sha256": "d48f373a72abede6f3d5eab3b422fc111c78c985a45dd60cfb50a1a1b6b52ec4"
+      },
+      {
+        "partId": "front_hair",
+        "name": "front_hair",
+        "x": 368,
+        "y": 18,
+        "canvas": {
+          "width": 144,
+          "height": 276
+        },
+        "sourcePart": true,
+        "visible": true,
+        "opacity": 1,
+        "sourceLayer": 11,
+        "anatomy": "front_hair",
+        "sha256": "f854ccb133052c773de779fd688f9f415cfe8e93645c8c527fd9a65ceaf6d1a5"
+      }
+    ]
+  },
+  "compositor": "original PSD isolated RGBA components; no repaint or substitution"
+}
