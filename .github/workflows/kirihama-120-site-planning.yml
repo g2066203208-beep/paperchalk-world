@@ -5,6 +5,7 @@ on:
     paths:
       - 'site/data/kirihama-location-masterplan.v1.json'
       - 'site/game/kirihama-location-plan.js'
+      - 'scripts/build_kirihama_location_plan.mjs'
       - 'site/game/world-atlas.js'
       - 'site/game/destination-network.js'
       - 'site/kirihama-location-plan.html'
@@ -32,6 +33,7 @@ jobs:
       - name: Validate metric locations, original story IDs, true station access and return trips
         run: |
           node --check site/game/kirihama-location-plan.js
+          node scripts/build_kirihama_location_plan.mjs --check
           node --check site/game/world-atlas.js
           node --check site/game/destination-network.js
           node --test tests/kirihama-location-masterplan.test.cjs tests/world-atlas.test.cjs tests/destination-network.test.cjs
