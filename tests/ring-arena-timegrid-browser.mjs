@@ -37,7 +37,7 @@ try{
  assert.equal(first.timegrid.roles.length,4);
  assert.equal(first.timegrid.enemies.length,4);
  assert.equal(first.timegrid.timelineTicks,10);
- assert.equal(first.timegrid.ui,'p5-inspired-diagonal-face-hp-only');
+ assert.equal(first.timegrid.ui,'continuous-35mm-filmstrip-rectangular-frames');
  assert.equal(first.timegrid.version,'1.7');
  assert.equal(first.timegrid.tacticsOpen,false);
  assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
@@ -59,13 +59,41 @@ try{
  });
  assert.ok(hudBox.stageWidth>=1275&&hudBox.stageRight>=1275,
   'full-width actual WebGL world is never resized for UI');
- assert.ok(hudBox.avatarLeft>1000&&hudBox.avatarWidth<260,
-  'reference-one diagonally cropped faces + a slim HP column, NOT a menu');
+ assert.ok(hudBox.avatarLeft>900&&hudBox.avatarWidth<320,
+  'continuous vertical reel must remain an unobtrusive right-edge HUD');
+ assert.equal(await page.locator('.tg-film-frame').count(),8);
  assert.equal(await page.locator('.tg-portrait .tg-cutout').count(),8);
  assert.equal(await page.locator('.tg-divider').count(),1);
- const mask=await page.locator('.tg-portrait').first().evaluate(x=>
-  getComputedStyle(x).clipPath);
- assert.match(mask,/polygon\(/,'head silhouette uses the reference diagonal cut');
+ assert.equal(await page.locator('.tg-poise-bar').count(),8);
+ assert.equal(await page.locator('.tg-energy-bar').count(),8);
+ const film=await page.locator('.ring-timegrid').evaluate(el=>{
+  const style=getComputedStyle(el);
+  const rails=[getComputedStyle(el,'::before'),getComputedStyle(el,'::after')];
+  const rows=[...el.querySelectorAll('.tg-film-frame')];
+  const rectangles=rows.map(row=>{
+   const rect=row.getBoundingClientRect();
+   const info=row.querySelector('.tg-identity').getBoundingClientRect();
+   return {x:rect.x,width:rect.width,h:rect.height,
+    inset:info.left>=rect.left&&info.right<=rect.right,
+    clip:getComputedStyle(row.querySelector('.tg-portrait')).clipPath};
+  });
+  return {bg:style.backgroundColor,rectangles,rails:rails.map(r=>({
+   content:r.content,background:r.backgroundImage
+  }))};
+ });
+ assert.ok(film.rectangles.every(r=>r.inset&&r.clip==='none'),
+  'each negative is a RECTANGLE with status INSIDE the portrait, not a separate card');
+ assert.ok(film.rectangles.every(r=>Math.abs(r.x-film.rectangles[0].x)<1),
+  'all eight film negatives must share the SAME uninterrupted film rail');
+ assert.ok(film.rails.every(x=>x.content!=='none'&&x.background.includes('radial-gradient')),
+  'both left and right continuous sprocket rails must be present');
+ const values=await page.locator('.tg-film-frame').evaluateAll(nodes=>nodes.map(n=>({
+  hp:Number(n.querySelector('.tg-hp-bar').getAttribute('aria-valuenow')),
+  poise:Number(n.querySelector('.tg-poise-bar').getAttribute('aria-valuenow')),
+  energy:Number(n.querySelector('.tg-energy-bar').getAttribute('aria-valuenow'))
+ })));
+ assert.equal(values.length,8);
+ assert.ok(values.every(v=>Number.isFinite(v.hp)&&Number.isFinite(v.poise)&&Number.isFinite(v.energy)));
  await page.waitForFunction(()=>{
   const faces=[...document.querySelectorAll('.ring-timegrid .tg-portrait img')];
   return faces.length===8&&faces.every(x=>x.complete&&x.naturalWidth>0&&
