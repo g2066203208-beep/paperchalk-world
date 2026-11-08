@@ -116,7 +116,11 @@ try{
  view=await inspect();
  assert.equal(view.scope,'city');assert.equal(view.city,'kirihama');
  assert.equal(view.regional,0);assert.equal(view.metro,81); // 10 physical subway services, including the downtown ring
- assert.equal(view.cityCards.length,0);assert.equal(view.local,70);
+ assert.equal(view.cityCards.length,0);
+ assert.ok(view.local>=10&&view.local<=30,
+  'full city must visually show only major stations, not a dense 70-pin row: '+view.local);
+ assert.equal(await page.locator('.pw-dot-local-places .pw-transit-place').count(),70,
+  'all 70 real stations still exist as programmatic independent nodes');
  assert.equal(view.access.length,0);
  assert.equal(view.municipal.length,0);
  assert.equal(view.poi.length,0);
@@ -156,7 +160,9 @@ try{
   assert.equal(info.poi.length,0,'nonstation destination leaked into metro '+id);
   assert.equal(info.municipal.length,0,'bus/tram drawn as subway line '+id);
   if(id==='kirihama'){
-   assert.equal(info.metro,81);assert.equal(info.local,70);
+   assert.equal(info.metro,81);
+   assert.ok(info.local>=10&&info.local<=30,
+    'overview must remain visually sparse, not show every registered stop');
   }else{
    assert.equal(info.metro,0,'invented unregistered subway in '+id);
    assert.equal(info.local,0,'invented subway station in '+id);
