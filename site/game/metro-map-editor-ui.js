@@ -164,6 +164,42 @@ function create(options){
   }catch(err){message('导入失败：'+(err.message||String(err)))}
   upload.value='';
  });
+ let stationOptionsStamp='';
+ function updateStationOptions(){
+  const plan=model.data(),line=plan.lines.find(l=>l.id===focusedLine);
+  const ids=line?line.stops:Object.keys(plan.stations).sort((a,b)=>
+   plan.stations[a].label.localeCompare(plan.stations[b].label,'zh'));
+  const stamp=(focusedLine||'all')+'|'+ids.map(id=>
+   id+':'+plan.stations[id]?.label).join('/');
+  if(stamp!==stationOptionsStamp){
+   stationChoice.replaceChildren();
+   const placeholder=el('option','', '选择车站…');
+   placeholder.value='';stationChoice.append(placeholder);
+   for(const id of ids){
+    const option=el('option','',plan.stations[id].label);
+    option.value=id;stationChoice.append(option);
+   }
+   stationOptionsStamp=stamp;
+  }
+  stationChoice.value=selectedStation||'';
+ }
+ function focusLine(id){
+  focusedLine=id||null;selectedEdge=null;selectedBend=-1;selectedStation=null;
+  tool='select';lastWarning='';render();
+  if(id)onFocusLine?.(model.getLine(id),model.data());
+ }
+ lineAll.addEventListener('click',()=>focusLine(null));
+ for(const [id,b] of lineButtons)
+  b.addEventListener('click',()=>focusLine(id));
+ stationChoice.addEventListener('change',()=>{
+  const id=stationChoice.value;
+  selectedStation=id||null;selectedEdge=null;selectedBend=-1;
+  tool='select';lastWarning='';render();
+  if(id)onFocusStation?.(model.getStation(id));
+ });
+ nameField.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();renameButton.click();nameField.blur()}
+ });
  const status=()=>{
   const edge=currentEdge(),s=model.getStation(selectedStation);
   const txt=s?'车站 · '+s.label+' ('+s.gx+','+s.gy+')':
@@ -171,6 +207,9 @@ function create(options){
     ' → '+(model.getStation(edge.to)?.label||edge.to):
    '点一条彩色线路，只显示这条线的车站，再拖动编辑';
   info.textContent=lastWarning||txt;
+   lineAll.dataset.active=String(!focusedLine);
+   for(const [id,b] of lineButtons)b.dataset.active=String(id===focusedLine);
+   updateStationOptions();
   pick.dataset.active=String(tool==='select');
   bend.dataset.active=String(tool==='bend');
   add.dataset.active=String(tool==='station');
@@ -229,7 +268,7 @@ function create(options){
  function render(){
   layer.replaceChildren();
   if(!active)return;
-  const data=model.data(),cam=camera(),screenR=clamp(4.7/cam.scale,2.4,15);
+  const data=model.data(),cam=camera(),screenR=clamp(7.5/cam.scale,3.8,19);
   const edge=currentEdge(),selectedLine=focusedLine||edge?.lineId;
   const spacing=40*cam.scale;
   const showAllStationHandles=!selectedLine&&spacing>=82;
@@ -311,7 +350,7 @@ function create(options){
    });
    layer.append(circle);
    const labelVisible=id===selectedStation||
-    (!!selectedLine&&onLine&&spacing>=75)||
+    (!!selectedLine&&onLine&&spacing>=44)||
     (!selectedLine&&important&&spacing>=60)||
     (!selectedLine&&isTransfer&&spacing>=105);
    if(labelVisible){
@@ -385,6 +424,7 @@ function create(options){
  function toggle(value){
   const next=value===undefined?!active:!!value;
   if(next&&getCity()!=='kirihama')return false;
+  if(next)onStart?.();
   if(!next&&active&&model.changed()){
    try{model.save();message('线路草图已自动保存到浏览器')}
    catch(err){message(err.message)}
@@ -392,11 +432,12 @@ function create(options){
   active=next;drag=null;tool='select';
   selectedEdge=null;focusedLine=null;selectedStation=null;selectedBend=-1;
   lastWarning='';
-  toggleButton.textContent=active?'完成':'编排';
+  toggleButton.textContent=active?'结束编辑':'编辑地铁';
   toggleButton.dataset.active=String(active);
-  toggleButton.setAttribute('aria-label',active?'结束地铁线网编排':'进入可编辑地铁线网编排');
+  toggleButton.setAttribute('aria-label',active?'结束地铁编辑':'编辑霧浜市现有地铁线路');
   bar.hidden=!active;layer.style.display=active?'':'none';
   map.dataset.metroEditing=String(active);
+  extras.open=false;
   if(active)render();else layer.replaceChildren();
   onRefresh?.();
   return true;
