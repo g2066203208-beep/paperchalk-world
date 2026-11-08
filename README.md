@@ -1,6 +1,6 @@
 # Paperchalk World｜GitHub 托管游戏与像素工作室
 
-> **Anima 提示词任务（每次必读）：** 先看 [官方 Anima 提示规范归档与源链接](docs/ANIMA_OFFICIAL_PROMPTING_REFERENCE_20261108.md)，再看 [项目 Akipeko 画风锁](docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md)；NPC 必须再看 [M003 老爷爷成功提示词原文](docs/NPC-M003_ANIMA_APPROVED_FOUR_POSE_USER_PROMPT_20261108.md)。完整执行顺序见 [AGENTS.md](AGENTS.md)。不得凭经验把重复 EXACT/MUST 当作官方可靠视角控制。
+> **Anima/NPC 提示词必读：** [Anima 官方规范与来源](docs/ANIMA_OFFICIAL_PROMPTING_REFERENCE_20261108.md) → [游戏画风锁](docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md) → **[用户确认的 LEFT/CENTER/RIGHT 三视图与第四格待机标准（当前唯一模板）](docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md)** → [已批准老爷爷原文](docs/NPC-M003_ANIMA_APPROVED_FOUR_POSE_USER_PROMPT_20261108.md)。每次新写提示词先核对这些文件；过时的多次失败候选和「强制逐张单视图」实验不得再当默认。详见 [AGENTS.md](AGENTS.md)。
 
 > **人物 2048 重画 / Anima / Forge Neo 每次开工必读（2026-11-06 已复核：本机同时安装 Anima Base + Turbo、22 个内置模块、14 个外部扩展、15 张 LoRA/参考权重卡片）：** [已安装插件与 LoRA 逐项清单](docs/ANIMA_FORGE_NEO_INVENTORY_20261105.md) → [女主 CHAR-001 2048 保真精修 SOP（含可复制提示词、UI参数、透明化及验收）](docs/CHAR_001_2048_REPAINT_SOP_20261105.md) → [角色美术风格锁](docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md)。清单原始依据 2026-11-05 用户截图，已于 2026-11-06 根据新截图和用户明确确认更新，不等于软件安装状态实时自动同步；每次使用先核对实际本机界面，不能未经用户验收覆盖已批准 L2D/母图。
 
