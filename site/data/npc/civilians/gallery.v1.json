@@ -442,8 +442,8 @@
         "look": "深蜜棕晒黑肤色、蜂蜜金齐肩卷发、较高个，校服敞开、领带松系、袜子略堆",
         "personality": "自信俏皮的黑皮辣妹",
         "promptReference": "docs/NPC_SG02_ANIMA_DYNAMIC_THREE_VIEW_CHEERFUL_WALK_20261108.md",
-        "status": "candidate_no_eyes_but_side_not_90_inpaint_required",
-        "reviewNotes": "用户确认无眼睛，但侧面呈斜侧而非纯左90°；保留其他两个方向，局部重绘侧面整身。尚未批准母图。"
+        "status": "candidate_no_eyes_but_side_not_90_new_three_view_prompt_v5_pending",
+        "reviewNotes": "用户确认 SG02 无眼睛新稿，但侧面斜角未过。V4 单人物侧面 inpaint 效果更差，现已撤销；V5 回归 SG01 已验证完整三视图模板，尚待出图验收。"
       },
       {
         "id": "NPC-SG03",
