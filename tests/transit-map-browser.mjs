@@ -70,7 +70,7 @@ try{
  assert.ok(await page.locator('.pw-dot-local-places [data-place="school"]').isVisible());
  const stations=page.locator('.pw-dot-local-places .pw-transit-place[data-station]');
  assert.equal(await stations.count(),170,'Exactly 170 independent physical station buttons');
- assert.equal(await page.locator('.pw-dot-urban-lines .pw-transit-segment').count(),179);
+ assert.equal(await page.locator('.pw-dot-urban-lines .pw-transit-segment').count(),181);
  assert.deepEqual(await page.locator('.pw-dot-metro-legend-label').allTextContents(),
   ['住宅线','环城线','南北线','东西线','西城线','湾岸线',
    '学园北线','南部线','青柳河岸线','临海南线']);
