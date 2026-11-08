@@ -29,9 +29,23 @@ try{
     await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
     // Enter the ACTUAL game: the main-menu quick tools are intentionally hidden.
     await page.locator('#menu-start').click();
-    await page.waitForFunction(()=>
-      document.querySelector('#scene')?.dataset.scene==='bedroom'&&
-      document.querySelector('#scene-transition')?.dataset.active==='false',null,{timeout:20000});
+    try{
+      await page.waitForFunction(()=>
+        document.querySelector('#scene')?.dataset.scene==='bedroom'&&
+        document.querySelector('#scene-transition')?.dataset.active==='false',null,{timeout:12000});
+    }catch(error){
+      const diag=await page.evaluate(()=>({
+        scene:document.querySelector('#scene')?.dataset.scene,
+        shade:document.querySelector('#scene-transition')?.dataset,
+        menu:document.querySelector('#scene-menu')?.hidden,
+        root:document.querySelector('#novel-ui')?.hidden,
+        hasStory:!!window.PaperWorldStoryContent,
+        opening:window.PaperWorldOpeningState?.snapshot?.(),
+        consoleErrors:document.querySelector('#scene')?.getAttribute('aria-label')
+      }));
+      throw new Error('Opening game did not reach bedroom: '+JSON.stringify(diag)+
+        '; errors='+errors.join(' | ')+'; '+error.message);
+    }
     const wakingLines=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
     for(let i=0;i<wakingLines;i++)await page.locator('#next-line').click();
     await page.waitForFunction(()=>window.PaperWorldQuickTools?.phone?.isOpen?.());
