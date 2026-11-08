@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'site/game/dot-terrain-3d.js'
+      - 'site/game/dot-terrain-tools.js'
       - 'site/game/transit-map-ui.js'
       - 'site/game/transit-map-ui.css'
       - 'site/index.html'
@@ -24,6 +25,7 @@ jobs:
       - name: Verify real heightfield code and original railway
         run: |
           node --check site/game/dot-terrain-3d.js
+          node --check site/game/dot-terrain-tools.js
           node --check site/game/transit-map-ui.js
           node --test tests/metro-map-editor.test.cjs
       - name: Install Chromium
