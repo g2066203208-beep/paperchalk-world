@@ -237,3 +237,10 @@
  }
  #pw-world-surface .pw-large-city-place-row{padding:7px 5px}
 }
+
+/* Override the very specific game-button display rule when a pin is offscreen. */
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-large-city-pin[hidden],
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-large-city-district[hidden],
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-large-city-toggle[hidden]{
+ display:none!important;pointer-events:none!important;
+}
