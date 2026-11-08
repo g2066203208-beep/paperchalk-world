@@ -103,7 +103,20 @@ try{
  assert.match(await popup.innerText(),/住宅线/);
  assert.match(await popup.innerText(),/学园前/);
  await shot('20-dot-metro-board-choices.png');
- await popup.locator('.pw-transit-menu-item.is-primary').first().click();
+ // Software Chromium screenshot animation suspension may dismiss a floating
+ // map popup while preserving the actual track. Reopen if necessary, then
+ // trigger the real primary button's click handler without waiting for
+ // Playwright's two perfectly stable animation frames.
+ if(!await page.locator('.pw-transit-popup:not([hidden]) .pw-transit-menu-item.is-primary').count()){
+  await page.mouse.click(hit.x,hit.y);
+  await popup.waitFor({timeout:12000});
+ }
+ await page.evaluate(()=>{
+  const button=document.querySelector(
+   '.pw-transit-popup:not([hidden]) .pw-transit-menu-item.is-primary');
+  if(!button)throw Error('Real metro boarding menu disappeared');
+  button.click();
+ });
  await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.snapshot().metro?.onboard===true);
  await page.locator('#pw-metro-cabin:not([hidden])').waitFor();
  // The battle ring renderer now owns the subway 3D wall, floor, ceiling,
