@@ -66,6 +66,8 @@ try{
  assert.ok(Math.abs(outer.cameraPitchDeg)<.001);
  assert.equal(outer.heroTextureUploads,1,'static heroine must not upload every frame');
  assert.deepEqual(outer.visibleActorIds,['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
+ assert.deepEqual(outer.occludingAllies,[],
+  'all eight actors must render at full opacity in the default 4v4 view');
  assert.ok(outer.safety.valid&&outer.safety.clear,'actual alpha must preserve enemy view');
  // The source painter's actual RGBA shoe/crown fractions MUST drive real
  // WebGL foot placement, not the old hard-coded source .979 fraction.
@@ -99,6 +101,8 @@ try{
   const chosen=outer.actors.allies[index-1];
   assert.equal(switched.controlledActorId,chosen.id);
   assert.equal(switched.controlledAllyIndex,index-1);
+  assert.deepEqual(switched.occludingAllies,[],
+   'never make any non-selected teammate invisible to solve a 3D overlap');
   assert.equal(switched.cameraParity,true,
    'the single WebGL camera follows the real selected world-space teammate');
   assert.equal(switched.cameraLook.pivot.x,chosen.x);
