@@ -216,6 +216,16 @@ try{
  const opened=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
  assert.equal(opened.transitMotion.speedMps,0,
   'four physical door leaves never open while train is moving');
+ await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect()?.station3D?.commuterAtlasStatus==='ready',
+  null,{timeout:12000});
+ const stationWithPeople=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect().station3D);
+ for(const part of ['platformBenches','platformWayfinding'])
+  assert.ok(stationWithPeople.components[part]>=6,'missing actual 3D station furniture '+part);
+ assert.equal(stationWithPeople.waitingSeatCount,2);
+ assert.ok(stationWithPeople.commutersDrawn>=6,
+  'station must have waiting, seated and walking commuters: '+JSON.stringify(stationWithPeople));
+ assert.equal(stationWithPeople.doorOpenedEver,true);
+ await shot('31-metro-platform-npcs-seated-waiting-and-boarding.png');
  await shot('30-real-three-dimensional-platform-with-open-subway-doors.png');
  // Read actual GPU pixels synchronously with both door positions while the
  // parked train remains unchanged. A screenshot can take many seconds on a
