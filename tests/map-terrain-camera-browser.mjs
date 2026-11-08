@@ -98,7 +98,10 @@ try{
  // The planar grid center/zoom are literally the same coordinates at swap.
  assert.equal(three.viewBox,flat.viewBox);
  await shot('02-real-game-3d-terrain-perspective.png');
- const bounds=await page.locator('.pw-dot-world-map').boundingBox();
+ // Query DOM coordinates directly: software WebGL's continuously
+ // composited canvas can stall Playwright locator auto-scrolling.
+ const bounds=await page.evaluate(()=>document.querySelector('.pw-dot-world-map')
+  .getBoundingClientRect().toJSON());
  assert.ok(bounds?.width>100&&bounds?.height>100);
  const cx=bounds.x+bounds.width*.5,cy=bounds.y+bounds.height*.5;
  await page.mouse.move(cx,cy);
