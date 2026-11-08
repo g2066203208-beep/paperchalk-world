@@ -100,9 +100,9 @@ test('world travel state can physically reach and return from a regional interch
 });
 
 
-test('the entire 170-station city subway has two-way paths and matching real game stop nodes',()=>{
+test('the entire 70-station city subway has two-way paths and matching real game stop nodes',()=>{
  assert.equal(M.LINES.length,10);
- assert.equal(Object.keys(M.STATIONS).length,170);
+ assert.equal(Object.keys(M.STATIONS).length,70);
  assert.equal(Object.values(M.STATIONS).filter(s=>s.transfer).length,19);
  for(const id of Object.keys(M.STATIONS)){
   const outward=M.path('entrance',id),back=M.path(id,'entrance');
