@@ -2640,7 +2640,7 @@
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
    stagePresentation:'four-rear-facing-allies-one-fixed-rank',
-   runtimeRevision:'right-side-portraits-dual-tracks-v17-20261108',
+   runtimeRevision:'right-panel-aligned-hitfx-v17-20261108',
    shoulderMouseLimits:{...SHOULDER_LOOK_LIMITS},
    stageTransitionProgress:1,
    stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
