@@ -518,23 +518,43 @@
       const track=document.createElement('div');track.className='phone-affection-track';
       const fill=document.createElement('i');fill.style.width=pct+'%';
       track.appendChild(fill);section.appendChild(track);copy.appendChild(section);
-      for(const [key,value] of [['联系人备注',contact.note||'—'],
+      for(const [key,value] of [['联系人备注',contact.remark||contact.note||'—'],
         ['关系',contact.relationship||'未记录'],['个人信息',contact.bio||'尚未了解']]){
         const item=document.createElement('div');item.className='phone-profile-field';
         const k=document.createElement('small');k.textContent=key;
         const v=document.createElement('span');v.textContent=value;item.append(k,v);
         copy.appendChild(item);
       }
+      const remarkButton=appButton('修改备注',()=>{
+        remarkButton.hidden=true;
+        const form=make('form','phone-remark-editor');
+        const field=make('input','phone-remark-input');
+        field.type='text';field.maxLength=28;
+        field.value=contact.remark||contact.note||'';
+        field.setAttribute('aria-label','联系人备注');
+        const save=make('button','','保存备注');save.type='submit';
+        form.append(field,save);
+        form.addEventListener('submit',event=>{
+          event.preventDefault();
+          const result=config.onSaveContactRemark?.(contact.id,field.value);
+          if(result?.ok){
+            const current=(config.getContacts?.()||[]).find(c=>c.id===contact.id)||contact;
+            renderContactProfile(current,copy);
+          }else panelNote(copy,'无法保存',result?.reason||'当前无法修改联系人备注');
+        });
+        copy.appendChild(form);field.focus();
+      },'phone-remark-action');
+      copy.appendChild(remarkButton);
       const actions=make('div','phone-contact-actions');
       actions.append(appButton('语音通话',()=>renderApp('电话')),
         appButton('视频通话',()=>{renderApp('电话');const b=get('phone-app-copy')
           .querySelectorAll('.phone-call-actions button')[1];b?.click();}),
-        appButton('发消息',()=>renderApp('信息')));
+        appButton('发消息',()=>renderApp('信息',{chat:true})));
       copy.appendChild(actions);
       if(contact.chatAvailable){
         const chat=document.createElement('button');chat.type='button';
         chat.className='phone-contact-chat';chat.textContent='查看聊天记录';
-        chat.addEventListener('click',()=>renderApp('信息'));copy.appendChild(chat);
+        chat.addEventListener('click',()=>renderApp('信息',{chat:true}));copy.appendChild(chat);
       }
     }
     function renderContacts(copy){
@@ -555,11 +575,67 @@
     }
     function renderMemo(copy){
       const memo=config.getMemo?.();
-      if(!memo){copy.textContent='暂无记录';return}
-      const note=document.createElement('div');note.className='phone-memo-note';
-      const title=document.createElement('strong');title.textContent=memo.title;
-      const details=document.createElement('p');details.textContent=memo.text;
-      note.append(title,details);copy.appendChild(note);
+      if(memo){
+        const notice=make('div','phone-memo-note');
+        notice.append(make('strong','',memo.title),make('p','',memo.text));
+        copy.appendChild(notice);
+      }
+      const rumors=world()?.transitRumors||[];
+      if(rumors.length){
+        copy.appendChild(make('h3','phone-feed-heading','调查线索'));
+        for(const rumor of rumors.slice(-5).reverse())
+          panelNote(copy,'第'+rumor.day+'天 · 街区见闻',rumor.text);
+      }
+      const toolbar=make('div','phone-memo-toolbar');
+      toolbar.appendChild(make('strong','','私人记录'));
+      const add=appButton('＋ 新记录',()=>editNote(null),'phone-memo-add');
+      toolbar.appendChild(add);copy.appendChild(toolbar);
+      const notes=config.getNotes?.()||[];
+      if(!notes.length)copy.appendChild(make('p','phone-feed-intro','记录你发现的线索、地址和想法。'));
+      const list=make('div','phone-memo-list');
+      for(const note of notes){
+        const row=make('div','phone-memo-entry');
+        const open=make('button','phone-memo-open');open.type='button';
+        open.append(make('strong','',note.title),
+          make('small','',note.text.slice(0,90)),
+          make('small','','第'+note.day+'天 · '+
+            String(Math.floor(note.minute/60)).padStart(2,'0')+':'+
+            String(note.minute%60).padStart(2,'0')));
+        open.addEventListener('click',()=>editNote(note));
+        const remove=appButton('删除',()=>{
+          const result=config.onDeleteNote?.(note.id);
+          if(result?.ok)renderApp('备忘录');
+          else panelNote(copy,'删除失败',result?.reason||'无法删除记录');
+        },'phone-memo-delete');
+        remove.setAttribute('aria-label','删除记录 '+note.title);
+        row.append(open,remove);list.appendChild(row);
+      }
+      copy.appendChild(list);
+      function editNote(note){
+        copy.replaceChildren();
+        const form=make('form','phone-memo-editor');
+        const heading=make('input','phone-memo-title');
+        heading.type='text';heading.maxLength=60;
+        heading.placeholder='标题';heading.value=note?.title||'';
+        heading.setAttribute('aria-label','备忘录标题');
+        const body=make('textarea','phone-memo-text');
+        body.maxLength=1200;body.rows=8;body.required=true;
+        body.placeholder='记录线索、人物、地点或自己的想法……';
+        body.value=note?.text||'';
+        body.setAttribute('aria-label','备忘录内容');
+        const msg=make('p','phone-memo-feedback');
+        const controls=make('div','phone-memo-actions');
+        const save=make('button','','保存');save.type='submit';
+        controls.append(save,appButton('取消',()=>renderApp('备忘录'),'phone-memo-cancel'));
+        form.append(heading,body,msg,controls);
+        form.addEventListener('submit',event=>{
+          event.preventDefault();
+          const result=config.onSaveNote?.(note?.id||null,heading.value,body.value);
+          if(result?.ok)renderApp('备忘录');
+          else msg.textContent=result?.reason||'保存失败';
+        });
+        copy.appendChild(form);heading.focus();
+      }
     }
     function renderStatus(copy){
       const status=config.getStatus?.();
