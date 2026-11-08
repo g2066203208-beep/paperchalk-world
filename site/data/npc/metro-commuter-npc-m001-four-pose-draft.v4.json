@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 4,
+  "id": "NPC-M001",
+  "category": "metro_civilian",
+  "title": "年轻男乘客—疲惫下班，托腮防打盹，随身旧饭袋",
+  "state": "REDRAW_REQUIRED_FOUR_POSE",
+  "legacy": "The earlier user-approved 3-view art is superseded for runtime use; retain identity/outfit, DO NOT load old artwork as 4-pose",
+  "visualCanon": {
+    "hair": "short straight black hair with bangs",
+    "face": "minimal face, no rendered eyes, small nose and mouth",
+    "jacket": "dark navy casual jacket worn open",
+    "inner": "off-white T-shirt",
+    "pants": "charcoal straight trousers",
+    "shoes": "gray-white low-top sneakers"
+  },
+  "special": {
+    "action": "front_seated_fighting_sleep_with_lunch_bag",
+    "direction": "strict_front",
+    "props": [
+      "small worn dark-olive fabric lunch bag (fourth special pose only)"
+    ],
+    "furnitureNotInSprite": true,
+    "characterActivity": "下晚班后困到点头，试图靠托腮保持清醒，另一只手仍握着旧布饭袋；乘车时怕睡过站。",
+    "status": "character_concept_proposal_not_user_approved"
+  },
+  "production": {
+    "checkpoint": "Anima Base",
+    "steps": 35,
+    "cfg": 4.5,
+    "sampler": "ER SDE",
+    "canvas": [
+      1536,
+      1024
+    ],
+    "lora": "@akipekostyle <lora:akipekoanima_v1_1:0.65>",
+    "referenceAdvice": "For subsequent pose edits, use that NPC's own confirmed Anima source image with the installed pilot_r32 ImageStitch reference method; do not borrow another NPC's reference.",
+    "alphaAdvice": "Render isolated characters with zero environment; final game sprites must be actually checked RGBA after alpha extraction, not simulated checkerboard or a white RGB matte.",
+    "viewOrder": [
+      "front_static_standing",
+      "strict_90deg_side_static_standing_facing_left",
+      "back_static_standing",
+      "unique_frontal_special_action"
+    ],
+    "positivePrompt": "safe, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, character sheet, multiple views, four full body depictions of the same young adult man, short slightly messy black hair with a neat fringe, narrow tired eyes drawn as tiny simple lines, small nose, small mouth, slender ordinary build, dark navy casual jacket worn open, off-white crew-neck t-shirt, charcoal straight pants, gray-white sneakers, a quiet and considerate young commuter returning home after a long shift, simple anime style, clean lineart, flat colors, simple cel shading, muted colors, white background.\n\nFour separate depictions of exactly the same young adult man in one horizontal row, from left to right.\n\nFIRST: EXACT FRONT VIEW, standing still, face looking directly forward, both shoulders facing the viewer, symmetrical frontal body, slightly tired relaxed shoulders, arms hanging naturally, both feet on the ground.\n\nSECOND: EXACT 90 DEGREE LEFT SIDE PROFILE VIEW, standing still, entire body facing left, only one side of the face visible, shoulders and chest seen strictly from the side, feet pointing left, arms relaxed.\n\nTHIRD: EXACT BACK VIEW, standing still, entire body facing away from the viewer, back of head and navy jacket visible, arms at sides, both feet on the ground.\n\nFOURTH: EXACT FRONT VIEW, sitting on an invisible seat after a tiring work shift, torso and shoulders facing directly toward the viewer, both knees pointing forward, both shoes facing forward and touching the ground. He is trying not to fall asleep: his heavy eyelids droop, his head dips in a tiny involuntary sleepy nod, and his shoulders sag. One hand loosely supports his cheek, while the other loosely holds the handle of his small worn dark-olive fabric lunch bag between his knees. His expression is tired, quiet and a little self-conscious, not smiling for a portrait. Natural asymmetrical human seated posture, no chair visible.\n\nThe exact same face, hairstyle, open dark navy jacket, off-white t-shirt, charcoal pants and gray-white sneakers in all four depictions. The jacket is worn open over the t-shirt in every pose, including the seated pose. The small worn lunch bag appears ONLY in the fourth special action and has no lettering or logo.\n\nFour full body figures, evenly spaced, consistent proportions, no furniture, no chair, no bench, no environment, isolated figures, simple background.",
+    "negativePrompt": "three-quarter view in first pose, front view in second pose, three-quarter view in second pose, front view in third pose, side view in fourth pose, three-quarter view in fourth pose, turned torso in fourth pose, walking, running, stepping in first three poses, different outfits, different jacket colors, missing jacket, missing t-shirt, closed jacket, different hairstyles, different faces, stiff straight-backed fourth pose, fully awake cheerful fourth pose, reading newspaper, checking smartphone, lunch bag in first three poses, chair, bench, subway seat, furniture, background scenery, excessive shading, excessive fabric folds, cropped feet, cropped head, extra characters, text, watermark",
+    "promptReference": "docs/NPC-M001_ANIMA_FOUR_POSE_PERSONALITY_V4_20261108.md",
+    "specification": "docs/NPC_FOUR_POSE_DEVELOPMENT_WHITEPAPER_V1_20261108.md",
+    "status": "prompt_v4_personality_proposal_awaiting_user_review_and_anima_image"
+  },
+  "render": {
+    "approvedSource": null,
+    "transparentSpriteAtlas": null,
+    "sprites": null,
+    "hasRealAlpha": false,
+    "assetsStoredInGitHub": false,
+    "ready": false
+  },
+  "history": "2026-11-08 V4: user correctly rejected generic interchangeable behavior. Keep M001 original identity and outfit, but give special pose an individual emotional and life-driven action. V3 retained in Git history; no new art approved.",
+  "lifeConcept": {
+    "status": "proposal",
+    "personality": [
+      "安静内向",
+      "体贴会让座",
+      "节俭",
+      "疲惫但仍想保持体面"
+    ],
+    "dailyRhythm": "下班归途，习惯带旧布饭袋，等车与乘车时困倦，努力不睡过站",
+    "visualExpression": "沉重下垂的细眼线、轻点的头、松垮肩膀、托腮动作，而不是僵硬坐姿",
+    "distinctionFrom": "M003 老爷爷端坐读报；M002 女性低头看消息"
+  }
+}
