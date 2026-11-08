@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const ring=require('../site/game/ring-arena-runtime.js');
 const scene=ring.layout('outer'),original=JSON.stringify(scene);
-const outerFriendly=[[-1.05,9.30],[-1.72,7.95],[.78,9.50],[-1.05,8.32]];
+const outerFriendly=[[-1.05,9.30],[-1.72,7.95],[.98,9.45],[-1.05,8.32]];
 const outerEnemies=[[-.20,6.35],[.45,6.35],[1.10,6.35],[1.75,6.35]];
 assert.deepEqual(scene.allies.map(a=>[a.x,a.z]),outerFriendly);
 assert.deepEqual(scene.enemies.map(a=>[a.x,a.z]),outerEnemies);
