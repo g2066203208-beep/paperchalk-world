@@ -126,7 +126,7 @@ function create(options){
  const apply=button('保存到游戏',()=>{
   if(!global.confirm('保存霧浜市地铁并应用到本机游戏？地图会重新加载，游戏进度保留。'))return;
   try{
-   model.save();
+   model.apply();
    message('蓝图已通过站点完整性验证，正在重新加载地铁系统');
    global.location.reload();
   }catch(err){message('无法应用：'+(err.message||String(err)))}
