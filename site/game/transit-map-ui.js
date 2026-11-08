@@ -530,8 +530,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // Atlas city cards have fixed *readable* screen sizes. Resolve the few
   // close-city overlaps in screen space rather than making ALL cities tiny.
   // Keep each card as close as possible to its snapped geographic anchor.
-  const cityCardWidth=scale<.65?128:192;
-  const cityCardHeight=scale<.65?78:155;
+  // Bounding rectangles include the photograph and title, not tiny labels.
+  const cityCardWidth=scale<.65?(v.h<440?132:150):194;
+  const cityCardHeight=scale<.65?(v.h<440?114:128):155;
   cardLeaders.replaceChildren();
   const placedCities=[];
   for(const {node,city} of cityNodes){
@@ -598,7 +599,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   }
   metroLayer.hidden=scale<1.25;
   urban.style.display=scale<1.22?'none':'';
-  stops.style.display=scale<1.22?'none':'';
+  // Interchange pins stay visible at overview; local pins hide via CSS.
+  stops.style.display='';
   metroNetwork.style.display='none'; // Retired fabricated ghost stops.
   municipal.style.display=scale<1.45?'none':'';
   access.style.display=scale<1.15?'none':'';
