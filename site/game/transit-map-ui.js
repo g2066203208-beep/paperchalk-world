@@ -174,6 +174,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   for(const item of legs){
    const a=network.at(item.from),b=network.at(item.to);
    if(!a||!b)continue;
+   // In the region show inter-city legs only; in a city show only its
+   // internal legs. Never overlay internal metro on an inter-city view.
+   if(activeCity?(a.city!==activeCity||b.city!==activeCity):
+     (a.city===b.city))continue;
    const d=rounded(orthogonal(a,b),18);
    selectedRoute.append(vector('path',{d,'data-service':item.line?.mode||'regional'},
     'pw-dot-route-preview-line'));
@@ -270,6 +274,24 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    marker.setAttribute('aria-label','查看站点 '+pt.name);
    marker.addEventListener('click',event=>{
     event.stopPropagation();
+    if(activeCity!==pt.city)return;
+    if(id===network.HUB(activeCity)){
+     const trip=network.journey(here,id),backTrip=network.journey(id,here);
+     const dest=locations[id],can=here!==id&&!!trip&&!!backTrip&&
+      !!dest&&snapshot.nightStatus!=='recalled'&&
+      snapshot.minute+trip.minutes<dest.close;
+     showMenu(event,marker,pt.name,'市内与城际换乘站 · '+
+      (trip?'去程 '+trip.minutes+' 分钟 · 返程 '+backTrip.minutes+' 分钟':'暂不可达'),[
+      {label:'前往换乘站',primary:true,disabled:!can,run:async()=>{
+       if(busy)return;busy=true;clear();
+       try{const res=await onWorldTravel?.(id,trip);
+        if(!res?.ok)notify(res?.reason||'无法前往')}
+       catch(err){notify('换乘站加载失败')}finally{busy=false}
+      }},
+      {label:'查看城际路线',run:leaveCity}
+     ]);
+     previewRegionalRoute(trip?.legs);return;
+    }
     const card=stopButtons.get(id);
     if(card&&!card.hidden)card.click();
     else focus(pt,Math.max(3.5,scale*1.35));
