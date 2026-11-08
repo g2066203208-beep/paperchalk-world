@@ -423,7 +423,7 @@
   // lights. The same lamps illuminate floor vertices AND original L2D
   // raster surfaces. Zero strength leaves every battle shader unchanged.
   'uniform vec3 uPlatformPositions[4];uniform vec3 uPlatformColors[4];',
-  'uniform float uPlatformExposure;uniform float uPlatformBackZ;',
+  'uniform float uPlatformExposure;uniform float uPlatformBackZ;uniform float uDoorLightOpen;'
   'uniform float uTrainPosition;uniform float uTrainSpeed;',
   'float platformWindowTransmission(vec3 p,vec3 src,int side){',
   'float windowZ=side==3?uPlatformBackZ+3.85:uPlatformBackZ;',
@@ -437,7 +437,14 @@
   // continuous central side-window. The intervening metal blocks light.
   'float door=smoothstep(-3.78,-3.50,q.x)*(1.0-smoothstep(-1.72,-1.47,q.x));',
   'float bench=smoothstep(-.30,-.07,q.x)*(1.0-smoothstep(3.10,3.34,q.x));',
-  'return vertical*max(door,bench);',
+  // Opening a metal door creates a much larger real aperture than its
+  // narrow glass. Station lamps now illuminate the carriage floor AND
+  // original L2D silhouette through the aperture, not a screen vignette.
+  'float doorH=smoothstep(.06,.28,q.y)*(1.0-smoothstep(2.02,2.20,q.y));',
+  'float doorLeft=smoothstep(-3.49,-3.31,q.x)*(1.0-smoothstep(-2.06,-1.92,q.x));',
+  'float doorRight=smoothstep(1.92,2.06,q.x)*(1.0-smoothstep(3.31,3.49,q.x));',
+  'float opening=uDoorLightOpen*doorH*max(doorLeft,doorRight);',
+  'return max(vertical*max(door,bench),opening);',
   '}',
   'vec3 ringIrradiance(vec3 p,vec3 n){',
   'vec3 ambient=uAmbient;',
@@ -1121,9 +1128,9 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uViewEye','uGeometry','uWindowCutouts','uDoorOpen']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen','uViewEye','uGeometry','uWindowCutouts','uDoorOpen']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
     ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
@@ -1663,6 +1670,7 @@
    gl.uniform1f(prog.uPlatformBackZ,lights?.backZ??8.0);
    gl.uniform1f(prog.uTrainPosition,transitMode?trainState.distanceMeters:0);
    gl.uniform1f(prog.uTrainSpeed,transitMode?trainState.speedMps:0);
+   gl.uniform1f(prog.uDoorLightOpen,transitMode?doorOpen:0);
   }
   // Fix the selected real-world luminaire PER ACTOR at its immutable base
   // anchor. Power only modulates shadow intensity. It must NEVER switch the
