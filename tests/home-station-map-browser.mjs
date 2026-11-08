@@ -52,6 +52,8 @@ try{
   if(!result.ok)throw Error(result.reason);
  });
  await page.locator('#quick-map').click();
+ await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.mapLayer==='metro');
+ await page.locator('.pw-dot-home-down').click();
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.mapLayer==='station');
  const s=await state();
  assert.equal(s.layer,'station');
