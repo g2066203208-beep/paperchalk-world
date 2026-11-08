@@ -13,7 +13,8 @@ const routes=Object.freeze({
  'b:central:cafe':[[8,3],[2,3]],
  'b:cafe:park':[],
  'b:park:mall':[],
- 'b:mall:convenience':[[11,4],[11,2]],
+ // Both stations share column 10: take the direct northbound track.
+ 'b:mall:convenience':[],
  // North arc runs outside the red residential line without an
  // invented stop or maze-like zigzag.
  'b:convenience:northgate':[[11,2],[11,1]],
