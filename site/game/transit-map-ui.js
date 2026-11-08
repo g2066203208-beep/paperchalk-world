@@ -89,6 +89,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   viewport:()=>viewport(),camera:()=>({x,y,scale}),
   cell:CELL,width:W,height:H
  })||null;
+ const terrainTools=global.PaperWorldTerrainTools?.create?.({
+  map,terrain:terrain3D,enabled:!mapLayersFull,
+  viewport:()=>viewport(),camera:()=>({x,y,scale}),cell:CELL
+ })||null;
  const chrome=element('header','pw-dot-chrome');
  const heading=element('div','pw-dot-heading');
  heading.append(element('strong','pw-dot-title','交通图'),
@@ -829,7 +833,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(e.key.toLowerCase()==='r'&&terrain3D?.is3D()){
    e.preventDefault();terrain3D.resetOrbit();return;
   }
-  if(e.key==='Escape'){if(localMode){leaveHomeStation();return}if(!popup.hidden)clear();else leaveCity();return}
+  if(e.key==='Escape'){if(terrainTools?.isEditing()){e.preventDefault();terrainTools.close();return}if(localMode){leaveHomeStation();return}if(!popup.hidden)clear();else leaveCity();return}
   if(e.key==='+'||e.key==='='){e.preventDefault();zoomBy(1.25)}
   else if(e.key==='-'){e.preventDefault();zoomBy(.8)}
   else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
@@ -907,17 +911,20 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   global.addEventListener('resize',onResize);cleanupListeners.push(()=>global.removeEventListener('resize',onResize));
  }
  measure(true);
- const renderMapFrame=now=>{dotFog?.render(now);terrain3D?.render(now)};
+ const renderMapFrame=now=>{dotFog?.render(now);terrain3D?.render(now);terrainTools?.render(now)};
  global.PaperWorldTransitMap._animateFrame=renderMapFrame;
  global.PaperWorldTransitMap._terrain=terrain3D;
+ global.PaperWorldTransitMap._terrainTools=terrainTools;
  global.PaperWorldTransitMap._cleanup=()=>{
   if(global.PaperWorldTransitMap._animateFrame===renderMapFrame)
    global.PaperWorldTransitMap._animateFrame=null;
   if(global.PaperWorldTransitMap._terrain===terrain3D)
    global.PaperWorldTransitMap._terrain=null;
-  dotFog?.dispose();terrain3D?.dispose();
+  if(global.PaperWorldTransitMap._terrainTools===terrainTools)
+   global.PaperWorldTransitMap._terrainTools=null;
+  terrainTools?.dispose();dotFog?.dispose();terrain3D?.dispose();
   cityBuilder?.dispose?.();editorUI?.dispose?.();observer?.disconnect();cleanupListeners.forEach(fn=>fn());
  };
 }
-global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null,_animateFrame:null,_terrain:null};
+global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null,_animateFrame:null,_terrain:null,_terrainTools:null};
 })(window);
