@@ -164,8 +164,8 @@ try{
  assert.ok(groundProof.feet.every(x=>x.valid),
   'all four real enemy shoes project to the shared world-space floor');
  const partyXYZ=outer.actors.allies.map(a=>[a.x,a.z]);
- assert.deepEqual(partyXYZ,[[-1.05,9.3],[-.25,9.3],[.55,9.3],[1.35,9.3]],
-  'all four players must hold the approved fixed rank');
+ assert.deepEqual(partyXYZ,[[-1.05,9.3],[-3.45,9.3],[1.35,9.3],[3.75,9.3]],
+  'four characters remain at their exact 2.4m spaced world anchors');
  assert.deepEqual(outer.actors.enemies.map(a=>[a.x,a.z]),
   [[-1.05,6.8],[-.25,6.8],[.55,6.8],[1.35,6.8]]);
  const centers=groundProof.feet.map(x=>x.x);

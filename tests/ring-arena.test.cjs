@@ -27,7 +27,7 @@ assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shared physical camera rig')
 const base=arena.camera('outer'),scene=arena.layout('outer'),hero=scene.allies[0];
 assert.deepEqual(arena.visibleActors('outer').map(a=>a.id),
  ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
-assert.deepEqual(scene.allies.map(a=>[a.x,a.z]),[[-1.05,9.3],[-.25,9.3],[.55,9.3],[1.35,9.3]]);
+assert.deepEqual(scene.allies.map(a=>[a.x,a.z]),[[-1.05,9.3],[-3.45,9.3],[1.35,9.3],[3.75,9.3]]);
 assert.deepEqual(scene.enemies.map(a=>[a.x,a.z]),[[-1.05,6.8],[-.25,6.8],[.55,6.8],[1.35,6.8]]);
 close(base.eye.y,1.5);close(base.fov,66);
 assert.deepEqual(base.eye,{x:-.28,y:1.5,z:10.4});

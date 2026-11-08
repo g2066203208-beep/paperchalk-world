@@ -207,14 +207,16 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id,/,
  'real animated source must pass through non-destructive battle mask before upload');
 assert.deepEqual(ring.STAGING.outer.allies.map(([x,z])=>[x,z]),
- [[-1.05,9.3],[-.25,9.3],[.55,9.3],[1.35,9.3]]);
+ [[-1.05,9.3],[-3.45,9.3],[1.35,9.3],[3.75,9.3]]);
 assert.deepEqual(ring.STAGING.outer.enemies.map(([x,z])=>[x,z]),
  [[-1.05,6.8],[-.25,6.8],[.55,6.8],[1.35,6.8]]);
 assert.deepEqual(ring.STAGING.inner.allies.map(([x])=>x),[-1.05,-.25,.55,1.35]);
 assert.deepEqual(ring.STAGING.inner.enemies.map(([x])=>x),[-1.05,-.25,.55,1.35]);
-assert.deepEqual(ring.STAGING.outer.allies.map(([x])=>x),
- ring.STAGING.outer.enemies.map(([x])=>x),
- 'both ranks share four numbered X lanes');
+const xs=ring.STAGING.outer.allies.map(([x])=>x).sort((a,b)=>a-b);
+assert.ok(xs.slice(1).every((v,i)=>Math.abs(v-xs[i]-2.4)<1e-9),
+ 'full allied rank must keep the gap originally left after removing two center figures');
+assert.deepEqual(ring.STAGING.outer.enemies.map(([x])=>x),[-1.05,-.25,.55,1.35],
+ 'four compact enemy slots retain the approved targets');
 assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
  ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[22,22,12,12]);
 assert.match(src,/const capDepth=16\.5/,

@@ -6,14 +6,19 @@ const fs=require('node:fs');
 const path=require('node:path');
 const ring=require('../site/game/ring-arena-runtime.js');
 const scene=ring.layout('outer'),original=JSON.stringify(scene);
-const outerFriendly=[[-1.05,9.30],[-.25,9.30],[.55,9.30],[1.35,9.30]];
+const outerFriendly=[[-1.05,9.30],[-3.45,9.30],[1.35,9.30],[3.75,9.30]];
 const outerEnemies=[[-1.05,6.80],[-.25,6.80],[.55,6.80],[1.35,6.80]];
 assert.deepEqual(scene.allies.map(a=>[a.x,a.z]),outerFriendly);
 assert.deepEqual(scene.enemies.map(a=>[a.x,a.z]),outerEnemies);
 assert.equal(new Set(scene.allies.map(a=>a.z)).size,1,'one ally rank');
 assert.equal(new Set(scene.enemies.map(a=>a.z)).size,1,'one enemy rank');
-assert.deepEqual(scene.allies.map(a=>a.x),scene.enemies.map(a=>a.x),
- 'each ally must be directly opposite its numbered enemy');
+const allX=scene.allies.map(a=>a.x).sort((a,b)=>a-b);
+const survivorsGap=scene.enemies[3].x-scene.enemies[0].x;
+assert.ok(Math.abs(survivorsGap-2.4)<1e-9);
+assert.equal(scene.allies.length,4,'do not delete the two middle actors');
+for(let i=1;i<4;i++)
+ assert.ok(Math.abs((allX[i]-allX[i-1])-survivorsGap)<1e-9,
+  'all three friend gaps must equal the original outside-pair distance');
 for(let i=0;i<4;i++)for(let j=i+1;j<4;j++)
  assert.ok(Math.hypot(scene.allies[i].x-scene.allies[j].x,
  scene.allies[i].z-scene.allies[j].z)>.7,
@@ -45,7 +50,7 @@ assert.deepEqual(ring.SHOULDER_LOOK_LIMITS,{
  yawLeftDeg:7.5,yawRightDeg:7.5,pitchUpDeg:3.5,pitchDownDeg:3.5
 });
 const html=fs.readFileSync(path.resolve(__dirname,'../site/index.html'),'utf8');
-assert.match(html,/aligned-four-lanes-stationary-eye-v1-20261108/,
+assert.match(html,/wide-friends-2p4m-shoulder-v1-20261108/,
  'HTML must force actual battle source reload rather than stale cache');
 assert.match(html,/const comfortableLook=v=>/,
  'mouse neutral deadzone and continuous smoothstep must exist');
@@ -89,4 +94,4 @@ for(const aspect of [1917/906,1280/720,844/390]){
 assert.equal(JSON.stringify(scene),original,
  'control switching must NEVER reposition the actual eight actors');
 assert.equal(ring.camera('inner').fov,52);
-console.log('PASS aligned 4v4 ranks with unchanged original shoulder camera');
+console.log('PASS four real allies spaced 2.4m apart with four visible foes');

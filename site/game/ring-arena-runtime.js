@@ -55,12 +55,18 @@
   const u=sign*wallArcMeters(theta)/tileWidth+ACTIVE_WALL.repeats/2;
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
- // Four genuine one-on-one lanes. Both ranks are straight, parallel
- // and exactly aligned in X. Camera switches never reposition characters.
+ // User-directed spacing: remove the old two middle figures in the mental
+ // layout, measure the original outside pair, then use that 2.4m gap for
+ // every adjacent member of the full FOUR-person front rank.
  const LANE_X=Object.freeze([-1.05,-.25,.55,1.35]);
+ const WIDE_ALLY_GAP=Number((LANE_X[3]-LANE_X[0]).toFixed(2));
+ // Visual left-to-right order: ally-2, hero, ally-3, ally-4.
+ // Keep hero at -1.05 so her approved camera/scale stays untouched.
+ const WIDE_ALLY_X=Object.freeze([LANE_X[0],LANE_X[0]-WIDE_ALLY_GAP,
+  LANE_X[3],LANE_X[3]+WIDE_ALLY_GAP]);
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze(LANE_X.map(x=>Object.freeze([x,9.30]))),
+   allies:Object.freeze(WIDE_ALLY_X.map(x=>Object.freeze([x,9.30]))),
    enemies:Object.freeze(LANE_X.map(x=>Object.freeze([x,6.80])))
   }),
   inner:Object.freeze({
@@ -214,19 +220,30 @@
    lookPitchDeg:pitch*180/Math.PI,
    phoneShoulderFit:phone,actorRootUnchanged:true};
  }
- // ORIGINAL APPROVED NEW-MOON STYLE SHOULDER CAMERA - DO NOT RETUNE.
- // This is an exact translation of the heroine's approved rig to whichever
- // teammate the player controls. NO camera search, adaptive FOV, raised eye,
- // retreat, mirrored side, artificial zoom, dynamic crop or actor culling.
- // The original heroine always uses the UNMODIFIED shoulderCamera(base,...).
+ // The heroine always retains her ORIGINAL approved 66-degree over-shoulder
+ // camera. Only teammate views move the real camera to a suitable shoulder
+ // side to keep all four original enemies readable with the wider ally gap.
+ // The actual eight ground-anchored actors, L2D rigs and shadows never move.
  function allyViewCamera(base,originalHero,selected,x=0,y=0,aspect=16/9){
   if(!selected||selected.id===originalHero.id)
    return {...shoulderCamera(base,originalHero,x,y,aspect),
     controlledActorId:originalHero.id};
   const dx=selected.x-originalHero.x,dz=selected.z-originalHero.z;
+  let eyeX=base.eye.x+dx,focusX=base.focus.x+dx;
+  if(base.mode==='outer'){
+   const enemies=layout(base.mode).enemies;
+   const centerX=enemies.reduce((sum,a)=>sum+a.x,0)/enemies.length;
+   const shoulderSide=selected.x>centerX?-1:1;
+   // Extreme lanes: narrow shoulder offset keeps the inner teammate outside
+   // the screen's enemy band. Near-center lane: broader shoulder offset
+   // prevents the active person's original full-size sprite hiding targets.
+   const shoulderOffset=Math.abs(selected.x-centerX)<1.65?.85:.30;
+   eyeX=selected.x+shoulderSide*shoulderOffset;
+   focusX=eyeX+(base.focus.x-base.eye.x)+(centerX-eyeX)*.22;
+  }
   const shifted={...base,
-   eye:{...base.eye,x:base.eye.x+dx,z:base.eye.z+dz},
-   focus:{...base.focus,x:base.focus.x+dx,z:base.focus.z+dz}};
+   eye:{...base.eye,x:eyeX,z:base.eye.z+dz},
+   focus:{...base.focus,x:focusX,z:base.focus.z+dz}};
   return {...shoulderCamera(shifted,selected,x,y,aspect),
    controlledActorId:selected.id,originalHeroWorldStatic:true};
  }
@@ -2553,7 +2570,7 @@
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
    stagePresentation:'four-rear-facing-allies-one-fixed-rank',
-   runtimeRevision:'aligned-four-lanes-stationary-eye-v1-20261108',
+   runtimeRevision:'wide-friends-2p4m-shoulder-v1-20261108',
    shoulderMouseLimits:{...SHOULDER_LOOK_LIMITS},
    stageTransitionProgress:1,
    stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
