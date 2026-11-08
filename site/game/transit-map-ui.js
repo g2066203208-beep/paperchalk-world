@@ -72,6 +72,13 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const metroLayer=element('div','pw-dot-local-places');
  canvas.append(svg,areaLayer,cityLayer,placeLayer,metroLayer);
  map.append(canvas);
+ // The live fluid fog is sampled from the existing game's renderer.
+ // Dot waves use the same camera coordinates as this original SVG lattice.
+ const dotFog=global.PaperWorldDotFogRipples?.create?.({
+  map,enabled:!mapLayersFull,
+  viewport:()=>viewport(),camera:()=>({x,y,scale}),
+  cell:CELL,worldWidth:W,worldHeight:H
+ })||null;
  const chrome=element('header','pw-dot-chrome');
  const heading=element('div','pw-dot-heading');
  heading.append(element('strong','pw-dot-title','交通图'),
@@ -867,9 +874,13 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   global.addEventListener('resize',onResize);cleanupListeners.push(()=>global.removeEventListener('resize',onResize));
  }
  measure(true);
+ global.PaperWorldTransitMap._animateFrame=dotFog?dotFog.render:null;
  global.PaperWorldTransitMap._cleanup=()=>{
+  if(global.PaperWorldTransitMap._animateFrame===dotFog?.render)
+   global.PaperWorldTransitMap._animateFrame=null;
+  dotFog?.dispose();
   cityBuilder?.dispose?.();editorUI?.dispose?.();observer?.disconnect();cleanupListeners.forEach(fn=>fn());
  };
 }
-global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null};
+global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null,_animateFrame:null};
 })(window);
