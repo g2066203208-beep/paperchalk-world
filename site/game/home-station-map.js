@@ -154,8 +154,8 @@ function create({map,atlas,metro,onTravel,notify,onUp}){
  hub.append(hubTag);rail.append(hub);
  const arrows=svg('g',{},'pw-home-map-line-labels');
  for(const [x,y,text,color] of [
-  [20,346,'← 住宅线 · 学园前方向',lineA.color],
-  [852,346,'住宅线 · 学园前 →',lineA.color],
+  [20,346,'住宅线 · 住宅前始发',lineA.color],
+  [852,346,'住宅线 · 至学园前 →',lineA.color],
   [567,61,'西城线',lineE.color]
  ]){
   const t=svg('text',{x,y,fill:color,'font-size':14,'font-weight':650,
@@ -225,7 +225,7 @@ function create({map,atlas,metro,onTravel,notify,onUp}){
  }
  vector.append(locationLayer);
  const legend=div('div','pw-home-neighborhood-legend');
- legend.append(div('span','pw-home-neighborhood-key home-key','<span>■</span> 当前家'),
+ legend.append(div('span','pw-home-neighborhood-key home-key','■ 家（可进入）'),
   div('span','pw-home-neighborhood-key','□ 规划地点'),
   div('span','pw-home-neighborhood-key','— 住宅线 / 西城线'));
  const legendInfo=div('div','pw-home-neighborhood-scale','N ↑  ·  方正点阵  ·  约 700m 生活圈');
