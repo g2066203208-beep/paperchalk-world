@@ -118,7 +118,15 @@ function create(metro,geometry,storage){
    const raw=store?.getItem(KEY);
    if(!raw)return;
    const p=JSON.parse(raw);validate(p,metro);plan=p;saved=raw;
-  }catch(err){plan=defaults(metro,geometry);saved=JSON.stringify(plan);}
+  }catch(err){
+   // Do not destroy anyone's 170-stop draft when the playable network
+   // becomes 70 stops. Archive the exact old JSON before next save.
+   try{
+    const old=store?.getItem(KEY),backup=KEY+'-legacy-backup';
+    if(old&&!store.getItem(backup))store.setItem(backup,old);
+   }catch(_){}
+   plan=defaults(metro,geometry);saved=JSON.stringify(plan);
+  }
  };
  const serialize=()=>JSON.stringify(plan);
  const remember=(before=serialize())=>{
