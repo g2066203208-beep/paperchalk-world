@@ -16,6 +16,7 @@ on:
       - 'tests/metro-graph.test.cjs'
       - 'tests/metro-map-geometry.test.cjs'
       - 'tests/world-atlas.test.cjs'
+      - 'tests/world-settlement-tier-plan.test.cjs'
       - 'tests/metro-platform-life.test.cjs'
       - 'tests/npc-g001-hd-preview.test.cjs'
       - 'tests/metro-npc-world-staging.test.cjs'
@@ -69,7 +70,7 @@ jobs:
           node tests/ring-arena.test.cjs
           node --test tests/metro-platform-life.test.cjs tests/metro-platform3d.test.cjs tests/metro-station-light.test.cjs
           node tests/daily-life.test.cjs
-          node --test tests/metro-graph.test.cjs tests/metro-map-geometry.test.cjs tests/world-atlas.test.cjs tests/destination-network.test.cjs
+          node --test tests/metro-graph.test.cjs tests/metro-map-geometry.test.cjs tests/world-atlas.test.cjs tests/destination-network.test.cjs tests/world-settlement-tier-plan.test.cjs
           node --test tests/npc-g001-hd-preview.test.cjs
           node --test tests/metro-npc-world-staging.test.cjs
           node --test tests/npc-scene-presence.test.cjs
