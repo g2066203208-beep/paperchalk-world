@@ -1,0 +1,47 @@
+name: Subway civilian real boarding and alighting QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/metro-civilian-flow.js'
+      - 'site/game/metro-platform-life.js'
+      - 'site/game/metro-cabin.js'
+      - 'site/game/ring-arena-runtime.js'
+      - 'site/data/npc/scene-assignments.v1.json'
+      - 'site/index.html'
+      - 'tests/metro-civilian-flow.test.cjs'
+      - 'tests/metro-civilian-browser.mjs'
+      - '.github/workflows/metro-civilian-flow.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  metro-civilians:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate actual route-locked NPC door choreography and 3D scale
+        run: |
+          node --test tests/metro-civilian-flow.test.cjs
+          node --test tests/npc-scene-presence.test.cjs
+          node --test tests/metro-platform-life.test.cjs
+          node --test tests/metro-platform3d.test.cjs
+          node --test tests/metro-station-light.test.cjs
+      - name: Chromium real subway animation screenshots
+        if: hashFiles('tests/metro-civilian-browser.mjs') != ''
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node tests/metro-civilian-browser.mjs
+      - name: Retain actual desktop and phone subway NPC screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: subway-approved-civilians-real-webgl-proof
+          path: artifacts/metro-civilians/*.png
+          if-no-files-found: ignore
+          retention-days: 14
