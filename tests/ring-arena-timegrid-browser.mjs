@@ -46,7 +46,7 @@ try{
  const expected=['hero','ai-gun','ai-guard','ai-mage'];
  const cameraIds=['hero','ally-2','ally-3','ally-4'];
  for(let i=1;i<=4;i++){
-  await page.locator('[data-control-ally="'+i+'"]').click();
+  await page.locator('[data-tg-choose-role="'+i+'"]').click();
   await page.waitForTimeout(90);
   const s=await inspect();
   assert.equal(s.timegrid.controlledId,expected[i-1]);

@@ -1736,7 +1736,7 @@
   }
   if(usingTimegrid){
    combatTimegrid=window.PaperWorldRingTimegrid.mount({
-    hud,onTick:event=>{
+    hud,onRole:index=>selectAlly(index),onTick:event=>{
      if(event.tick){
       combatPulseIds=event.activeActions.filter(a=>
        !!window.Timegrid?.CARD?.[a.card]?.damage).map(a=>a.visualId);
