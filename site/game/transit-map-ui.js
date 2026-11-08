@@ -298,6 +298,13 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  // become subway tracks or subway stations in this view.
  const stopButtons=new Map();
  const localPoint=p=>({x:LOCAL_X+p.gx*CELL,y:LOCAL_Y+p.gy*CELL});
+ // The authoring mode is a separate real SVG layer over the SAME grid.
+ // Normal play keeps its in-place station menus and operating graph intact.
+ const editorUI=global.PaperWorldMetroMapEditorUI?.create?.({
+  map,svg,urban,stops,metroLayer,tools,metro,geometry,
+  localPoint,rounded,camera:()=>({x,y,scale}),
+  onFeedback:notify,getCity:()=>activeCity,onRefresh:()=>position()
+ })||null;
  for(const l of metro.LINES){
   for(const [from,to] of geometry.segments(l)){
    const a=metro.STATIONS[from],b=metro.STATIONS[to];
@@ -648,6 +655,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // Reposition a selected station popup along with the map camera.
   // Do not destroy the route highlight every time the player pans/zooms.
   if(!popup.hidden&&selected?.isConnected)positionPopup();
+  editorUI?.syncVisibility();
  }
  function focus(p,zoom){centerOn(p,zoom)}
  function zoomBy(factor,atX,atY){
@@ -702,6 +710,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   }
  });
  map.addEventListener('pointerdown',e=>{
+  if(editorUI?.isTarget(e.target))return;
   if(e.button!==0||e.target.closest('button,.pw-dot-chrome,.pw-transit-popup,.pw-transit-line-hit'))return;
   if(e.pointerType==='touch'){
    fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -715,6 +724,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   map.setPointerCapture?.(e.pointerId);
  });
  map.addEventListener('pointermove',e=>{
+  if(editorUI?.handlePointerMove(e))return;
   if(fingers.has(e.pointerId))fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pinch&&fingers.size>=2){
    const [a,b]=[...fingers.values()];
@@ -731,6 +741,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   position();
  });
  map.addEventListener('pointerup',e=>{
+  if(editorUI?.handlePointerUp(e))return;
   fingers.delete(e.pointerId);
   if(pinch){if(fingers.size<2)pinch=null;drag=null;return}
   if(!drag||drag.id!==e.pointerId)return;
@@ -738,6 +749,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(hadMove)position();
  });
  map.addEventListener('pointercancel',e=>{
+  if(editorUI?.handlePointerUp(e))return;
   fingers.delete(e.pointerId);pinch=null;drag=null;
  });
  map.addEventListener('click',e=>{if(e.target===map||e.target===canvas||e.target===svg)clear()});
@@ -750,7 +762,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  }
  measure(true);
  global.PaperWorldTransitMap._cleanup=()=>{
-  observer?.disconnect();cleanupListeners.forEach(fn=>fn());
+  editorUI?.dispose?.();observer?.disconnect();cleanupListeners.forEach(fn=>fn());
  };
 }
 global.PaperWorldTransitMap={PHOTO,draw,_cleanup:null};
