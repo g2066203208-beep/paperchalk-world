@@ -149,7 +149,7 @@ function create({map,tools,atlas,metro,geometry,chooseInitial,onFeedback}){
  toggle.type='button';
  toggle.setAttribute('aria-label','打开城市点阵模块拼装编辑器');
  toggle.addEventListener('click',()=>open?hide():show(chooseInitial?.()));
- tools.append(toggle);
+ map.append(toggle);
  const selected=()=>model.state().modules.find(m=>m.id===selection);
  const list=()=>model.state().modules;
  const keys=()=>Object.keys(M.TYPES);
