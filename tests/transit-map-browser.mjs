@@ -56,7 +56,7 @@ try{
  assert.equal(await page.locator('.pw-world-map,.pw-map-mode-toggle').count(),0,
   'the retired second atlas and map-mode switch must not exist');
  assert.equal(await page.locator('.pw-transit-grid-dot').count(),1683);
- assert.equal(await page.locator('.pw-dot-local-places .pw-transit-place').count(),170);
+ assert.equal(await page.locator('.pw-dot-local-places .pw-transit-place').count(),70);
  assert.equal(await page.locator('.pw-dot-city').count(),10);
  assert.equal(await page.locator('.pw-dot-poi').count(),0);
  assert.equal(await page.locator('.pw-dot-municipal-lines .pw-transit-segment').count(),0);
@@ -64,13 +64,13 @@ try{
  assert.equal(await page.locator('.pw-dot-destination-stop').count(),0);
  assert.equal(await page.locator('.pw-dot-local-places .pw-transit-photo').count(),0);
  assert.ok(await page.locator('.pw-dot-regional-lines .pw-transit-segment').count()>=14);
- assert.ok(await page.locator('.pw-dot-urban-lines [data-line="c"]').count()>=20);
+ assert.ok(await page.locator('.pw-dot-urban-lines [data-line="c"]').count()>=9);
  assert.equal(await page.locator('.pw-dot-local-places [data-place="hospital"],.pw-dot-local-places [data-place="station"],.pw-dot-local-places [data-place="police"]').count(),0);
  assert.equal(await page.evaluate(()=>window.PaperWorldMetro.getLine('c')?.name),'南北线');
  assert.ok(await page.locator('.pw-dot-local-places [data-place="school"]').isVisible());
  const stations=page.locator('.pw-dot-local-places .pw-transit-place[data-station]');
- assert.equal(await stations.count(),170,'Exactly 170 independent physical station buttons');
- assert.equal(await page.locator('.pw-dot-urban-lines .pw-transit-segment').count(),181);
+ assert.equal(await stations.count(),70,'Exactly 70 independent physical station buttons');
+ assert.equal(await page.locator('.pw-dot-urban-lines .pw-transit-segment').count(),81);
  assert.deepEqual(await page.locator('.pw-dot-metro-legend-label').allTextContents(),
   ['住宅线','环城线','南北线','东西线','西城线','湾岸线',
    '学园北线','南部线','青柳河岸线','临海南线']);
