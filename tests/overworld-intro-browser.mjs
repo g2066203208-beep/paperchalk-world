@@ -75,7 +75,7 @@ const go=async(id,expectSrc)=>{
 };
 
 try{
- await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
+ await page.goto(base+(base.includes('?')?'&':'?')+'mapLayers=full',{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').waitFor();
  await page.locator('#menu-start').click();
  await waitScene('bedroom');
