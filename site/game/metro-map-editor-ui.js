@@ -20,23 +20,48 @@ const v=(tag,attrs={},cls)=>{
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 function create(options){
  const {map,svg,urban,stops,metroLayer,tools,metro,geometry,
-  localPoint,rounded,camera,onFeedback,getCity,onRefresh}=options;
+  localPoint,rounded,camera,onFeedback,getCity,onRefresh,onFocusLine,onFocusStation,onStart}=options;
  if(!global.PaperWorldMetroMapEditor)throw Error('Metro blueprint editor must load first');
  const model=global.PaperWorldMetroMapEditor.create(metro,geometry);
  const layer=v('g',{'data-role':'metro-blueprint'},'pw-metro-edit-layer');
  svg.append(layer);
- const toggleButton=el('button','pw-dot-tool pw-metro-edit-toggle','编排');
- toggleButton.type='button';toggleButton.title='点阵地铁 · 拖动站点与线路圆角';
- toggleButton.setAttribute('aria-label','进入可编辑地铁线网编排');
+ const toggleButton=el('button','pw-dot-tool pw-metro-edit-toggle','编辑地铁');
+ toggleButton.type='button';toggleButton.title='直接编辑霧浜市现有地铁线网';
+ toggleButton.setAttribute('aria-label','编辑霧浜市现有地铁线路');
  tools.append(toggleButton);
  const bar=el('div','pw-metro-edit-toolbar');
  bar.hidden=true;bar.setAttribute('aria-label','点阵地铁可视化编排工具');
  const headline=el('div','pw-metro-edit-head');
- const title=el('strong','', '霧浜地铁 · 点阵编排');
- const info=el('small','pw-metro-edit-info','选择任意真实轨道或车站');
+ const title=el('strong','', '霧浜市 / 地铁编辑');
+ const info=el('small','pw-metro-edit-info','选择线路 → 点选轨道或拖动车站');
  headline.append(title,info);bar.append(headline);
+ const linePicker=el('div','pw-metro-edit-lines');
+ linePicker.setAttribute('role','group');
+ linePicker.setAttribute('aria-label','选择需要修改的地铁线路');
+ const lineButtons=new Map();
+ const lineAll=el('button','pw-metro-edit-line','全部线路');
+ lineAll.type='button';lineAll.dataset.line='all';
+ linePicker.append(lineAll);
+ for(const line of metro.LINES){
+  const b=el('button','pw-metro-edit-line',line.name);
+  b.type='button';b.dataset.line=line.id;
+  b.style.setProperty('--line-color',line.color);
+  b.title='只显示并定位 '+line.name+' 的车站';
+  lineButtons.set(line.id,b);linePicker.append(b);
+ }
+ bar.append(linePicker);
  const controls=el('div','pw-metro-edit-controls');
  bar.append(controls);
+ const quickFind=el('div','pw-metro-edit-quick-find');
+ const quickLabel=el('label','', '定位车站');
+ const stationChoice=el('select','pw-metro-edit-station-choice');
+ stationChoice.setAttribute('aria-label','选择车站并将地图定位到该站');
+ quickLabel.append(stationChoice);quickFind.append(quickLabel);
+ bar.append(quickFind);
+ const extras=el('details','pw-metro-edit-more');
+ const summary=el('summary','', '更多操作 · 复原 / 导入导出');
+ const advanced=el('div','pw-metro-edit-advanced-actions');
+ extras.append(summary,advanced);bar.append(extras);
  const rename=el('div','pw-metro-edit-rename');
  const nameField=el('input');
  nameField.type='text';nameField.maxLength=36;
@@ -67,21 +92,22 @@ function create(options){
  function button(label,action,titleText){
   const b=el('button','pw-metro-edit-action',label);
   b.type='button';b.title=titleText||label;
-  const actions={'选取':'select','折点＋':'bend','站点＋':'station',
-   '删除选中':'remove','↶':'undo','↷':'redo','保存':'save',
-   '应用游戏':'apply','导出':'export','导入':'import',
+  const actions={'移动车站':'select','调整轨道':'bend','线路加站':'station',
+   '删除选中':'remove','↶':'undo','↷':'redo','保存草稿':'save',
+   '保存到游戏':'apply','导出':'export','导入':'import',
    '复原':'reset','改名':'rename'};
   b.dataset.action=actions[label]||'unknown';
   b.addEventListener('click',event=>{
    event.stopPropagation();
    action();
   });
-  controls.append(b);
+  (new Set(['保存草稿','导出','导入','复原','改名'])).has(label)?
+   advanced.append(b):controls.append(b);
   return b;
  }
- const pick=button('选取',()=>setTool('select'),'拖动车站、点击线路选中、拖动金色圆角点');
- const bend=button('折点＋',()=>setTool('bend'),'选中后点轨道或空白格点添加圆角控制点');
- const add=button('站点＋',()=>setTool('station'),'选中一段轨道后点格点插入新车站');
+ const pick=button('移动车站',()=>setTool('select'),'点选车站并拖动；点击彩色轨道选中一段');
+ const bend=button('调整轨道',()=>setTool('bend'),'先点一段轨道，再点新的格点添加可拖动折点');
+ const add=button('线路加站',()=>setTool('station'),'先点一段轨道，再点击格点插入真实车站');
  const remove=button('删除选中',()=>{
   const edge=currentEdge();
   if(edge&&selectedBend>=0){
@@ -93,18 +119,18 @@ function create(options){
  },'点选金色折点后删除；原有剧情站点受到保护');
  const undo=button('↶',()=>{if(model.undo())render()},'撤销 Ctrl+Z');
  const redo=button('↷',()=>{if(model.redo())render()},'重做 Ctrl+Y');
- const save=button('保存',()=>{
+ const save=button('保存草稿',()=>{
   try{model.save();message('编辑草图已保存到本浏览器，可继续修改或导出');render()}
   catch(err){message(err.message||'无法保存')}
  },'保存到当前浏览器；正式乘车线路需审核后发布');
- const apply=button('应用游戏',()=>{
-  if(!global.confirm('将已编辑的地铁线路应用到本机游戏吗？页面会重新加载，已有游戏存档保留。'))return;
+ const apply=button('保存到游戏',()=>{
+  if(!global.confirm('保存霧浜市地铁并应用到本机游戏？地图会重新加载，游戏进度保留。'))return;
   try{
    model.save();
    message('蓝图已通过站点完整性验证，正在重新加载地铁系统');
    global.location.reload();
   }catch(err){message('无法应用：'+(err.message||String(err)))}
- },'保存并重新加载；新站与路线将进入本机真实乘车图');
+ },'保存并重新加载，新的轨道和车站直接进入本机可乘坐地铁');
  const exportButton=button('导出',()=>{
   try{
    const blob=new Blob([model.exportJSON()],{type:'application/json;charset=utf-8'});
