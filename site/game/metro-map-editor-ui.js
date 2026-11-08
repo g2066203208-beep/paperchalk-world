@@ -207,7 +207,7 @@ function create(options){
   const edge=currentEdge(),selectedLine=focusedLine||edge?.lineId;
   const spacing=40*cam.scale;
   const showAllStationHandles=!selectedLine&&spacing>=82;
-  // Route-first LOD: a full metropolis is a LINE PLAN, not 170 white circles.
+  // Route-first LOD: a full metropolis is a LINE PLAN, not hundreds of white circles.
   // One click isolates the current line's genuine station handles.
   map.dataset.editorNodeDensity=selectedLine?'selected-line':
    showAllStationHandles?'detailed':'hubs';
