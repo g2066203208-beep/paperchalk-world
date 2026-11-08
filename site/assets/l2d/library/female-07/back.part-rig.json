@@ -1,0 +1,1089 @@
+{
+  "format": "paperchalk-part-rig-v1",
+  "characterId": "female-07",
+  "face": "back",
+  "canvas": [
+    1024,
+    1024
+  ],
+  "idleProfile": {
+    "profileVersion": 4,
+    "preset": "realistic",
+    "weather": "realistic",
+    "windLift": 0,
+    "body": {
+      "amount": 0,
+      "speed": 0.85,
+      "swayX": 0,
+      "swayY": 0,
+      "rotate": 0
+    },
+    "hair": {
+      "amount": 0.22,
+      "speed": 0.83,
+      "lag": 0.78
+    },
+    "cloth": {
+      "amount": 0.12,
+      "speed": 0.78,
+      "lag": 0.7
+    },
+    "sleeves": {
+      "amount": 0.033,
+      "speed": 0.8,
+      "lag": 0.56
+    },
+    "breath": {
+      "amount": 0.16,
+      "speed": 0.85
+    },
+    "joints": {
+      "hands": 0.22,
+      "shoulders": 0.12,
+      "hips": 0.04
+    },
+    "parts": {
+      "back_hair": 1.3,
+      "front_hair": 1.05,
+      "bottomwear": 1.15,
+      "topwear": 0.35,
+      "handwear_l": 0.7,
+      "handwear_r": 0.6,
+      "objects": 0,
+      "legwear_l": 0,
+      "legwear_r": 0,
+      "footwear_l": 0,
+      "footwear_r": 0,
+      "neck": 0,
+      "face": 0,
+      "eyebrow": 0
+    }
+  },
+  "parts": {
+    "eyebrow": {
+      "id": "eyebrow",
+      "name": "eyebrow",
+      "x": 492,
+      "y": 86,
+      "w": 6,
+      "h": 4,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "head",
+      "kind": "fixed",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "mesh": {
+        "columns": 4,
+        "rows": 4
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": false
+    },
+    "back_hair": {
+      "id": "back_hair",
+      "name": "back_hair",
+      "x": 280,
+      "y": 28,
+      "w": 227,
+      "h": 507,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "head",
+      "kind": "hair",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.045
+      },
+      "tip": {
+        "x": 0.47,
+        "y": 0.97
+      },
+      "mesh": {
+        "columns": 6,
+        "rows": 9
+      },
+      "bones": [
+        {
+          "id": "left-root",
+          "parent": null,
+          "head": {
+            "x": 0.27,
+            "y": 0.07
+          },
+          "tail": {
+            "x": 0.25,
+            "y": 0.53
+          },
+          "amplitude": 11,
+          "frequency": 1.03,
+          "phase": 0,
+          "radius": 0.31,
+          "enabled": true
+        },
+        {
+          "id": "left-tip",
+          "parent": "left-root",
+          "head": {
+            "x": 0.25,
+            "y": 0.53
+          },
+          "tail": {
+            "x": 0.13,
+            "y": 0.94
+          },
+          "amplitude": 17,
+          "frequency": 1.18,
+          "phase": -0.48,
+          "radius": 0.29,
+          "enabled": true
+        },
+        {
+          "id": "center-root",
+          "parent": null,
+          "head": {
+            "x": 0.51,
+            "y": 0.06
+          },
+          "tail": {
+            "x": 0.51,
+            "y": 0.49
+          },
+          "amplitude": 7,
+          "frequency": 0.9,
+          "phase": 0.62,
+          "radius": 0.32,
+          "enabled": true
+        },
+        {
+          "id": "center-tip",
+          "parent": "center-root",
+          "head": {
+            "x": 0.51,
+            "y": 0.49
+          },
+          "tail": {
+            "x": 0.53,
+            "y": 0.95
+          },
+          "amplitude": 12,
+          "frequency": 1.06,
+          "phase": -0.37,
+          "radius": 0.3,
+          "enabled": true
+        },
+        {
+          "id": "right-root",
+          "parent": null,
+          "head": {
+            "x": 0.76,
+            "y": 0.07
+          },
+          "tail": {
+            "x": 0.75,
+            "y": 0.55
+          },
+          "amplitude": 10,
+          "frequency": 0.98,
+          "phase": 0.9,
+          "radius": 0.31,
+          "enabled": true
+        },
+        {
+          "id": "right-tip",
+          "parent": "right-root",
+          "head": {
+            "x": 0.75,
+            "y": 0.55
+          },
+          "tail": {
+            "x": 0.88,
+            "y": 0.95
+          },
+          "amplitude": 16,
+          "frequency": 1.15,
+          "phase": 0.3,
+          "radius": 0.3,
+          "enabled": true
+        }
+      ],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "legwear_l": {
+      "id": "legwear_l",
+      "name": "legwear_l",
+      "x": 339,
+      "y": 504,
+      "w": 96,
+      "h": 410,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "ground",
+      "kind": "fixed",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.13
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.93
+      },
+      "mesh": {
+        "columns": 4,
+        "rows": 4
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "legwear_r": {
+      "id": "legwear_r",
+      "name": "legwear_r",
+      "x": 435,
+      "y": 492,
+      "w": 118,
+      "h": 439,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "ground",
+      "kind": "fixed",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.13
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.93
+      },
+      "mesh": {
+        "columns": 4,
+        "rows": 4
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "footwear_l": {
+      "id": "footwear_l",
+      "name": "footwear_l",
+      "x": 343,
+      "y": 879,
+      "w": 71,
+      "h": 118,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "ground",
+      "kind": "fixed",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "mesh": {
+        "columns": 4,
+        "rows": 4
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "footwear_r": {
+      "id": "footwear_r",
+      "name": "footwear_r",
+      "x": 489,
+      "y": 897,
+      "w": 130,
+      "h": 127,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "ground",
+      "kind": "fixed",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "mesh": {
+        "columns": 4,
+        "rows": 4
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "bottomwear": {
+      "id": "bottomwear",
+      "name": "bottomwear",
+      "x": 345,
+      "y": 529,
+      "w": 195,
+      "h": 225,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "pelvis",
+      "kind": "skirt",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.06
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.96
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [
+        {
+          "id": "left-pleat",
+          "parent": null,
+          "head": {
+            "x": 0.2,
+            "y": 0.07
+          },
+          "tail": {
+            "x": 0.17,
+            "y": 0.54
+          },
+          "amplitude": 6,
+          "frequency": 0.89,
+          "phase": -0.6,
+          "radius": 0.28,
+          "enabled": true
+        },
+        {
+          "id": "left-hem",
+          "parent": "left-pleat",
+          "head": {
+            "x": 0.17,
+            "y": 0.54
+          },
+          "tail": {
+            "x": 0.08,
+            "y": 0.95
+          },
+          "amplitude": 13,
+          "frequency": 1.12,
+          "phase": -0.85,
+          "radius": 0.25,
+          "enabled": true
+        },
+        {
+          "id": "middle-pleat",
+          "parent": null,
+          "head": {
+            "x": 0.5,
+            "y": 0.06
+          },
+          "tail": {
+            "x": 0.5,
+            "y": 0.56
+          },
+          "amplitude": 4,
+          "frequency": 0.83,
+          "phase": 0.1,
+          "radius": 0.27,
+          "enabled": true
+        },
+        {
+          "id": "middle-hem",
+          "parent": "middle-pleat",
+          "head": {
+            "x": 0.5,
+            "y": 0.56
+          },
+          "tail": {
+            "x": 0.53,
+            "y": 0.97
+          },
+          "amplitude": 9,
+          "frequency": 1.13,
+          "phase": 0.35,
+          "radius": 0.25,
+          "enabled": true
+        },
+        {
+          "id": "right-pleat",
+          "parent": null,
+          "head": {
+            "x": 0.8,
+            "y": 0.07
+          },
+          "tail": {
+            "x": 0.83,
+            "y": 0.55
+          },
+          "amplitude": 6,
+          "frequency": 0.94,
+          "phase": 0.66,
+          "radius": 0.28,
+          "enabled": true
+        },
+        {
+          "id": "right-hem",
+          "parent": "right-pleat",
+          "head": {
+            "x": 0.83,
+            "y": 0.55
+          },
+          "tail": {
+            "x": 0.91,
+            "y": 0.95
+          },
+          "amplitude": 13,
+          "frequency": 1.09,
+          "phase": 0.9,
+          "radius": 0.25,
+          "enabled": true
+        }
+      ],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "neck": {
+      "id": "neck",
+      "name": "neck",
+      "x": 405,
+      "y": 129,
+      "w": 69,
+      "h": 64,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "torso",
+      "kind": "fixed",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.83
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.2
+      },
+      "mesh": {
+        "columns": 4,
+        "rows": 4
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "topwear": {
+      "id": "topwear",
+      "name": "topwear",
+      "x": 318,
+      "y": 140,
+      "w": 262,
+      "h": 527,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "torso",
+      "kind": "torso",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.16
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [
+        {
+          "id": "left-jacket",
+          "parent": null,
+          "head": {
+            "x": 0.28,
+            "y": 0.13
+          },
+          "tail": {
+            "x": 0.23,
+            "y": 0.61
+          },
+          "amplitude": 2.7,
+          "frequency": 0.92,
+          "phase": 0.3,
+          "radius": 0.35,
+          "enabled": true
+        },
+        {
+          "id": "left-tail",
+          "parent": "left-jacket",
+          "head": {
+            "x": 0.23,
+            "y": 0.61
+          },
+          "tail": {
+            "x": 0.19,
+            "y": 0.96
+          },
+          "amplitude": 5.3,
+          "frequency": 1.13,
+          "phase": -0.62,
+          "radius": 0.31,
+          "enabled": true
+        },
+        {
+          "id": "right-jacket",
+          "parent": null,
+          "head": {
+            "x": 0.72,
+            "y": 0.13
+          },
+          "tail": {
+            "x": 0.77,
+            "y": 0.6
+          },
+          "amplitude": 2.7,
+          "frequency": 0.92,
+          "phase": -0.3,
+          "radius": 0.35,
+          "enabled": true
+        },
+        {
+          "id": "right-tail",
+          "parent": "right-jacket",
+          "head": {
+            "x": 0.77,
+            "y": 0.6
+          },
+          "tail": {
+            "x": 0.82,
+            "y": 0.96
+          },
+          "amplitude": 5.3,
+          "frequency": 1.08,
+          "phase": 0.48,
+          "radius": 0.31,
+          "enabled": true
+        }
+      ],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "objects": {
+      "id": "objects",
+      "name": "objects",
+      "x": 624,
+      "y": 475,
+      "w": 161,
+      "h": 118,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "handwear_r",
+      "kind": "fixed",
+      "pivot": {
+        "x": 0.15,
+        "y": 0.28
+      },
+      "tip": {
+        "x": 0.82,
+        "y": 0.9
+      },
+      "mesh": {
+        "columns": 4,
+        "rows": 4
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true,
+      "followGrip": {
+        "partId": "handwear_r",
+        "point": {
+          "x": 0.88,
+          "y": 0.92
+        },
+        "seam": {
+          "x": 680,
+          "y": 522
+        },
+        "radiusX": 90,
+        "radiusY": 120,
+        "strength": 0.9
+      }
+    },
+    "handwear_l": {
+      "id": "handwear_l",
+      "name": "handwear_l",
+      "x": 233,
+      "y": 221,
+      "w": 134,
+      "h": 328,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "torso",
+      "kind": "arm-left",
+      "pivot": {
+        "x": 0.88,
+        "y": 0.07
+      },
+      "tip": {
+        "x": 0.79,
+        "y": 0.96
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [
+        {
+          "id": "shoulder",
+          "parent": null,
+          "head": {
+            "x": 0.82,
+            "y": 0.05
+          },
+          "tail": {
+            "x": 0.56,
+            "y": 0.48
+          },
+          "amplitude": 9,
+          "frequency": 0.97,
+          "phase": 0.05,
+          "radius": 0.38,
+          "enabled": true
+        },
+        {
+          "id": "elbow",
+          "parent": "shoulder",
+          "head": {
+            "x": 0.56,
+            "y": 0.48
+          },
+          "tail": {
+            "x": 0.43,
+            "y": 0.93
+          },
+          "amplitude": 14,
+          "frequency": 1.2,
+          "phase": -0.62,
+          "radius": 0.36,
+          "enabled": true
+        }
+      ],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "handwear_r": {
+      "id": "handwear_r",
+      "name": "handwear_r",
+      "x": 475,
+      "y": 203,
+      "w": 224,
+      "h": 323,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "torso",
+      "kind": "arm-right",
+      "pivot": {
+        "x": 0.2,
+        "y": 0.07
+      },
+      "tip": {
+        "x": 0.91,
+        "y": 0.94
+      },
+      "mesh": {
+        "columns": 5,
+        "rows": 7
+      },
+      "bones": [
+        {
+          "id": "shoulder",
+          "parent": null,
+          "head": {
+            "x": 0.18,
+            "y": 0.05
+          },
+          "tail": {
+            "x": 0.45,
+            "y": 0.5
+          },
+          "amplitude": 9,
+          "frequency": 1.05,
+          "phase": 0.4,
+          "radius": 0.38,
+          "enabled": true
+        },
+        {
+          "id": "elbow",
+          "parent": "shoulder",
+          "head": {
+            "x": 0.45,
+            "y": 0.5
+          },
+          "tail": {
+            "x": 0.6,
+            "y": 0.94
+          },
+          "amplitude": 14,
+          "frequency": 1.18,
+          "phase": 0.9,
+          "radius": 0.36,
+          "enabled": true
+        }
+      ],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "face": {
+      "id": "face",
+      "name": "face",
+      "x": 397,
+      "y": 41,
+      "w": 100,
+      "h": 121,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "head",
+      "kind": "face",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.42
+      },
+      "tip": {
+        "x": 0.5,
+        "y": 0.56
+      },
+      "mesh": {
+        "columns": 4,
+        "rows": 4
+      },
+      "bones": [],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    },
+    "front_hair": {
+      "id": "front_hair",
+      "name": "front_hair",
+      "x": 368,
+      "y": 18,
+      "w": 144,
+      "h": 276,
+      "placement": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "parentId": "head",
+      "kind": "hair",
+      "pivot": {
+        "x": 0.51,
+        "y": 0.06
+      },
+      "tip": {
+        "x": 0.48,
+        "y": 0.95
+      },
+      "mesh": {
+        "columns": 6,
+        "rows": 9
+      },
+      "bones": [
+        {
+          "id": "left-root",
+          "parent": null,
+          "head": {
+            "x": 0.27,
+            "y": 0.07
+          },
+          "tail": {
+            "x": 0.25,
+            "y": 0.53
+          },
+          "amplitude": 11,
+          "frequency": 1.03,
+          "phase": 0,
+          "radius": 0.31,
+          "enabled": true
+        },
+        {
+          "id": "left-tip",
+          "parent": "left-root",
+          "head": {
+            "x": 0.25,
+            "y": 0.53
+          },
+          "tail": {
+            "x": 0.13,
+            "y": 0.94
+          },
+          "amplitude": 17,
+          "frequency": 1.18,
+          "phase": -0.48,
+          "radius": 0.29,
+          "enabled": true
+        },
+        {
+          "id": "center-root",
+          "parent": null,
+          "head": {
+            "x": 0.51,
+            "y": 0.06
+          },
+          "tail": {
+            "x": 0.51,
+            "y": 0.49
+          },
+          "amplitude": 7,
+          "frequency": 0.9,
+          "phase": 0.62,
+          "radius": 0.32,
+          "enabled": true
+        },
+        {
+          "id": "center-tip",
+          "parent": "center-root",
+          "head": {
+            "x": 0.51,
+            "y": 0.49
+          },
+          "tail": {
+            "x": 0.53,
+            "y": 0.95
+          },
+          "amplitude": 12,
+          "frequency": 1.06,
+          "phase": -0.37,
+          "radius": 0.3,
+          "enabled": true
+        },
+        {
+          "id": "right-root",
+          "parent": null,
+          "head": {
+            "x": 0.76,
+            "y": 0.07
+          },
+          "tail": {
+            "x": 0.75,
+            "y": 0.55
+          },
+          "amplitude": 10,
+          "frequency": 0.98,
+          "phase": 0.9,
+          "radius": 0.31,
+          "enabled": true
+        },
+        {
+          "id": "right-tip",
+          "parent": "right-root",
+          "head": {
+            "x": 0.75,
+            "y": 0.55
+          },
+          "tail": {
+            "x": 0.88,
+            "y": 0.95
+          },
+          "amplitude": 16,
+          "frequency": 1.15,
+          "phase": 0.3,
+          "radius": 0.3,
+          "enabled": true
+        }
+      ],
+      "motion": {
+        "x": 0,
+        "y": 0,
+        "angle": 0,
+        "frequency": 1,
+        "phase": 0
+      },
+      "enabled": true
+    }
+  },
+  "layerOrder": [
+    "eyebrow",
+    "back_hair",
+    "legwear_l",
+    "legwear_r",
+    "footwear_l",
+    "footwear_r",
+    "bottomwear",
+    "neck",
+    "topwear",
+    "objects",
+    "handwear_l",
+    "handwear_r",
+    "face",
+    "front_hair"
+  ],
+  "provenance": "original-psd",
+  "sourcePsdSha256": "d6f3a1e564eb2ecf7e5c6f853007cb04c9811265b9cd472fac6f1eeece45e83c",
+  "originalLayerCount": 11,
+  "originalPartCount": 14,
+  "artworkStatus": "original Photoshop transparent pixels; no approximation, redraw, or inferred layer",
+  "actionProfiles": {
+    "default": "idle",
+    "transitionMs": 420,
+    "actions": {
+      "idle": {
+        "label": "背面自然待机",
+        "parts": {}
+      },
+      "alert": {
+        "label": "战斗戒备 · 手持物微调",
+        "parts": {
+          "handwear_r": {
+            "angle": 1.2
+          },
+          "objects": {
+            "angle": 0.4
+          },
+          "handwear_l": {
+            "angle": -0.8
+          }
+        }
+      }
+    }
+  }
+}
