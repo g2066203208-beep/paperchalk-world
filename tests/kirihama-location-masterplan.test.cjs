@@ -104,3 +104,49 @@ test('site layout is loaded before atlas in the actual browser',()=>{
  const networkStart=html.indexOf('src="./game/destination-network.js?');
  assert.ok(plan>0&&atlasStart>plan&&metroStart>atlasStart&&networkStart>metroStart);
 });
+
+
+const inPolygon=([x,y],poly)=>{
+ let inside=false;
+ for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+  const [xi,yi]=poly[i],[xj,yj]=poly[j];
+  if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;
+ }
+ return inside;
+};
+const bezier=(a,b,c,d,t)=>{
+ const q=1-t;
+ return [0,1].map(k=>q*q*q*a[k]+3*q*q*t*b[k]+3*q*t*t*c[k]+t*t*t*d[k]);
+};
+const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+const segmentsIntersect=(a,b,c,d)=>
+ cross(a,b,c)*cross(a,b,d)<0&&cross(c,d,a)*cross(c,d,b)<0;
+test('planned buildings and metro stations stay on LAND, not in Kirihama Bay',()=>{
+ const water=saved.geography.bayWaterPolygonGrid;
+ assert.ok(water.length>=6);
+ for(const s of saved.sites)
+  assert.equal(inPolygon([s.localPosition.eastM/900,s.localPosition.southM/900],water),
+   false,'planned land entrance fell into the bay: '+s.name);
+ for(const [id,st] of Object.entries(metro.STATIONS))
+  assert.equal(inPolygon([st.gx,st.gy],water),false,'metro station in bay: '+id);
+});
+test('no planned first-mile walking link silently crosses the river without a bridge',()=>{
+ const river=saved.geography.riverCubicSectionsGrid.flatMap(
+  ([a,b,c,d])=>Array.from({length:81},(_,i)=>bezier(a,b,c,d,i/80)));
+ for(const s of saved.sites){
+  const st=metro.STATIONS[s.metroStationId],a=[st.gx,st.gy];
+  const b=[s.localPosition.eastM/900,s.localPosition.southM/900];
+  for(let k=1;k<river.length;k++)
+   assert.equal(segmentsIntersect(a,b,river[k-1],river[k]),
+    false,s.name+' requires a real documented river crossing');
+ }
+});
+test('underground, elevated and second-floor locations keep their real level',()=>{
+ const levelOf=name=>saved.sites.find(s=>s.name===name).localPosition.level;
+ for(const name of ['都心地下街','中央地下食堂街','中央地下换乘通道'])
+  assert.equal(levelOf(name),-1,name);
+ for(const name of ['旧书店二楼','霞桥高架','北环铁路桥','商场步行天桥'])
+  assert.equal(levelOf(name),1,name);
+ assert.equal(levelOf('废弃侧式站台'),-2);
+ assert.equal(levelOf('家'),0);
+});
