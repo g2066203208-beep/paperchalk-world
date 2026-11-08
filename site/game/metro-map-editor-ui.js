@@ -475,7 +475,7 @@ function create(options){
  global.PaperWorldMetroEditorDebug={model,isActive:()=>active,
   enter:()=>toggle(true),exit:()=>toggle(false)};
  return Object.freeze({
-  toggle,syncVisibility,render,
+  model,toggle,syncVisibility,render,
   isEditing:()=>active,
   isTarget:target=>active&&!!target.closest?.('.pw-metro-edit-layer,.pw-metro-edit-toolbar'),
   handlePointerMove,handlePointerUp,handleKeydown,
