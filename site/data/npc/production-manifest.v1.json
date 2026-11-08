@@ -4,6 +4,28 @@
   "description": "In-game trial assets with real transparency, not finalized walking animations.",
   "records": [
     {
+      "id": "NPC-M003",
+      "kind": "civilian",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/metro/npc-m003/front-standing.png",
+        "front": "./assets/characters/metro/npc-m003/front-standing.png",
+        "side_left": "./assets/characters/metro/npc-m003/side-standing.png",
+        "back": "./assets/characters/metro/npc-m003/back-standing.png",
+        "rest": "./assets/characters/metro/npc-m003/special-front-seated-reading.png"
+      },
+      "geometry": {
+        "heightMeters": 1.65,
+        "assetCrownY": 0.011,
+        "assetSoleY": 0.989,
+        "soleX": 0.5,
+        "widthScale": 0.91
+      },
+      "notes": "Existing user-approved transparent M003 sprites kept intact."
+    },
+    {
       "id": "NPC-C001",
       "kind": "civilian",
       "artApproved": true,
@@ -289,28 +311,6 @@
       },
       "sourceMaster": "./assets/characters/civilians/schoolgirls/sg01/three-view-original.png",
       "notes": "User-selected master for NPC test. Static views, not animated gait."
-    },
-    {
-      "id": "NPC-M003",
-      "kind": "civilian",
-      "artApproved": true,
-      "production": true,
-      "trial": true,
-      "sprites": {
-        "idle": "./assets/characters/metro/npc-m003/front-standing.png",
-        "front": "./assets/characters/metro/npc-m003/front-standing.png",
-        "side_left": "./assets/characters/metro/npc-m003/side-standing.png",
-        "back": "./assets/characters/metro/npc-m003/back-standing.png",
-        "rest": "./assets/characters/metro/npc-m003/special-front-seated-reading.png"
-      },
-      "geometry": {
-        "heightMeters": 1.65,
-        "assetCrownY": 0.011,
-        "assetSoleY": 0.989,
-        "soleX": 0.5,
-        "widthScale": 0.91
-      },
-      "notes": "Existing user-approved transparent M003 sprites kept intact."
     }
   ],
   "exampleNotActive": {
