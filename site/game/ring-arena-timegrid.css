@@ -192,6 +192,19 @@
  box-shadow:inset 0 0 0 1px #dcf5d78a;
 }
 #ring-arena-controls .tg-cell.chosen{border-bottom-color:#e1ca8d77!important}
+/* Target affinity and full-card live footprint (validated by engine clone). */
+#ring-arena-controls .tg-row.tg-ineligible .tg-target-track{opacity:.38}
+#ring-arena-controls .tg-row.tg-eligible .tg-unit{filter:brightness(1.08)}
+#ring-arena-controls .tg-row.tg-eligible .tg-target-track{box-shadow:inset 0 0 0 1px #a8d2b013}
+#ring-arena-controls .tg-cell.tg-footprint-valid{
+ background:rgba(108,174,142,.43)!important;
+ border-color:#b6e3c6!important;
+ box-shadow:inset 0 0 0 1px rgba(226,255,220,.16)!important;
+}
+#ring-arena-controls .tg-cell.tg-footprint-invalid{
+ background:rgba(178,77,80,.36)!important;
+ border-color:#db858b!important;
+}
 #ring-arena-controls .tg-cell.danger{
  background:linear-gradient(160deg,rgba(142,41,53,.54),rgba(87,38,49,.28))!important;
  border-color:#b05c66a0!important;
