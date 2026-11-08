@@ -138,7 +138,7 @@
   const note=s=>{feedback=String(s);get('help').textContent=feedback;};
   const roleName=id=>({hero:'斧卫','ai-gun':'枪手','ai-guard':'守护','ai-mage':'调律'}[id]||'敌方');
   const imgSrc=actor=>actor.side==='enemy'?
-   './assets/characters/enemy-suit-hit-no-hud.webp':'./assets/characters/protagonist-front.webp';
+   './assets/characters/char-002/front.png':'./assets/characters/protagonist-front.webp';
   const describe=c=>{
    if(c.aoe)return '全体 · '+(c.damage||0)+'×'+c.a;
    if(c.damage)return '伤害 '+c.damage+(c.a>1?'×'+c.a:'');

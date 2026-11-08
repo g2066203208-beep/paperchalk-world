@@ -39,6 +39,15 @@ try{
  assert.equal(first.timegrid.timelineTicks,10);
  assert.equal(await page.locator('.ring-timegrid .tg-row').count(),8);
  assert.equal(first.timegrid.ui,'right-portrait-dual-track-v17');
+ const arenaViewports=await page.evaluate(()=>{
+  const game=document.querySelector('#ring-arena-canvas').getBoundingClientRect();
+  const command=document.querySelector('.ring-timegrid').getBoundingClientRect();
+  return {sceneRight:game.right,panelLeft:command.left,sceneWidth:game.width,panelWidth:command.width};
+ });
+ assert.ok(arenaViewports.sceneRight<=arenaViewports.panelLeft+3,
+  'the right portrait command panel must never obscure the fourth 3D enemy');
+ assert.ok(arenaViewports.sceneWidth>500&&arenaViewports.panelWidth>360,
+  '3D world and ten-tick panel both need a real usable viewport');
  assert.equal(first.timegrid.version,'1.7');
  assert.equal(await page.locator('.tg-unit .tg-portrait img').count(),8);
  assert.equal(await page.locator('.tg-target-track').count(),8);

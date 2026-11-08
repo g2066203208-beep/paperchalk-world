@@ -386,3 +386,53 @@
 @media(prefers-reduced-motion:reduce){
  #ring-arena-controls .tg-card,#ring-arena-controls .tg-float-hit{animation:none!important;transition:none!important}
 }
+/* RIGHT-PANEL VISIBILITY PASS: do not let it cover the fourth real enemy.
+   The arena's 3D eye/focus and actor world anchors remain exactly unchanged.
+   The canvas simply takes the available LEFT viewport while the panel is open;
+   both L2Ds and world meshes use the SAME responsive perspective matrix.
+   Folding the panel returns the entire WebGL viewport, not a permanently
+   cropped or squashed game screenshot. */
+@media (orientation:landscape) and (min-width:760px){
+ #view.ring-arena-active:not(.ring-arena-transit):has(#ring-arena-controls.timegrid-enabled .ring-timegrid:not(.is-folded)) #ring-arena-canvas{
+  left:0!important;right:auto!important;
+  width:calc(100% - clamp(378px,34vw,540px) - 12px)!important;
+  max-width:none!important;
+ }
+}
+/* Entire eight-person roster fits the typical 1280x720 game frame;
+   keep the two-track hit zones and readable hand, never scroll away a fighter. */
+@media (orientation:landscape) and (min-height:590px){
+ #ring-arena-controls .tg-row{height:47px;min-height:47px;padding:1px 0}
+ #ring-arena-controls .tg-portrait{width:34px;height:40px}
+ #ring-arena-controls .tg-identity{gap:1px}
+ #ring-arena-controls .tg-dual{gap:2px}
+ #ring-arena-controls .tg-target-track{height:19px}
+ #ring-arena-controls .tg-cell{height:19px}
+ #ring-arena-controls .tg-own-track{height:15px}
+ #ring-arena-controls .tg-target-track .tg-band{height:17px;line-height:15px!important}
+ #ring-arena-controls .tg-own-track .tg-band{height:13px;line-height:11px!important}
+ #ring-arena-controls .tg-threat{min-height:31px;max-height:34px}
+ #ring-arena-controls .tg-hand-label{height:21px}
+ #ring-arena-controls .tg-hand{min-height:66px;max-height:71px;padding:3px 8px 4px}
+ #ring-arena-controls .tg-card{min-height:57px!important;max-height:63px;padding:4px 7px!important}
+ #ring-arena-controls .tg-head{height:45px}
+ #ring-arena-controls .tg-bottom{min-height:38px;padding:4px 8px}
+}
+/* Use actual character ART for thumbnails; the original authored portrait
+   images have transparent full-body margins, which otherwise make their faces
+   too small to function as selectable avatars. */
+#ring-arena-controls .tg-portrait img{
+ object-position:center 10%;transform:scale(1.86);
+ transform-origin:50% 19%;
+}
+#ring-arena-controls .tg-row.enemy .tg-portrait img{
+ object-position:center 12%;transform:scale(1.95);
+ transform-origin:50% 18%;
+}
+/* In compact landscape viewports (including Android) match the pane width
+   to the declared narrow-screen command-panel rule, no hidden enemy slot. */
+@media (orientation:landscape) and (min-width:760px) and (max-width:780px){
+ #view.ring-arena-active:not(.ring-arena-transit):has(#ring-arena-controls.timegrid-enabled .ring-timegrid:not(.is-folded)) #ring-arena-canvas{
+  width:calc(100% - clamp(320px,47vw,405px) - 5px)!important;
+ }
+}
