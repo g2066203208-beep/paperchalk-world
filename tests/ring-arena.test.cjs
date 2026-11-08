@@ -22,6 +22,8 @@ assert.deepEqual(scene.allies.map(a=>a.x),scene.enemies.map(a=>a.x));
 assert.ok(scene.allies.every(a=>a.z===9.3));
 assert.ok(scene.enemies.every(a=>a.z===6.8));
 close(base.eye.y,1.5);close(base.fov,66);
+assert.deepEqual(base.eye,{x:-.28,y:1.5,z:10.4});
+assert.deepEqual(base.focus,{x:-.24,y:1.5,z:5.4});
 assert.ok(arena.responsiveFov(66,9/16)>arena.responsiveFov(66,16/9));
 const original=JSON.stringify(scene);
 for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
@@ -31,7 +33,9 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
   assert.deepEqual(neutral.shoulderPivot,
    {x:active.x,y:active.y+active.height*.88,z:active.z});
   assert.equal(neutral.controlledActorId,active.id);
-  assert.ok(neutral.composition.score>=0&&Number.isFinite(neutral.composition.score));
+  assert.equal(neutral.fov,66,'the heroine-approved lens is never changed');
+  assert.equal(neutral.eye.y,1.5,'the heroine-approved eye height is never raised');
+  assert.equal(neutral.focus.y,1.5,'the heroine-approved eye-level focus is preserved');
   assert.equal(neutral.heroYawDeg,0);
   const foeCenters=scene.enemies.map(e=>arena.project({
    x:e.x,y:e.height*.5,z:e.z
@@ -53,4 +57,4 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
 }
 assert.equal(JSON.stringify(scene),original,'camera never moves either rank');
 assert.equal(arena.camera('inner').fov,52,'unrelated scene camera stays untouched');
-console.log('PASS exact aligned 4v4, cached four-role shoulder solver, shared WebGL matrix and uncullable allies');
+console.log('PASS aligned 4v4 and fully restored original fixed 66-degree shoulder camera');
