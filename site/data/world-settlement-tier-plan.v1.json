@@ -21,8 +21,8 @@
         18
       ],
       "metroUniqueStationsRange": [
-        230,
-        350
+        100,
+        180
       ],
       "transit": "dense-multicore-metro"
     },
@@ -33,8 +33,8 @@
         12
       ],
       "metroUniqueStationsRange": [
-        130,
-        200
+        55,
+        100
       ],
       "transit": "major-metro"
     },
@@ -46,7 +46,7 @@
       ],
       "metroUniqueStationsRange": [
         0,
-        65
+        40
       ],
       "transit": "metro-if-dense-otherwise-localrail"
     },
@@ -124,9 +124,9 @@
       "urbanType": "initial-large-city",
       "metro": {
         "plannedLines": 10,
-        "plannedUniqueStations": 170,
+        "plannedUniqueStations": 70,
         "currentlyRegisteredLines": 10,
-        "currentlyRegisteredUniqueStations": 170
+        "currentlyRegisteredUniqueStations": 70
       },
       "note": "海湾主都心／多中心高密度城市"
     },
@@ -289,7 +289,7 @@
   "plannedSubwayTotalExistingArea": {
     "citiesWithSubway": 3,
     "lines": 14,
-    "uniqueStations": 235
+    "uniqueStations": 135
   },
-  "planNotes": "Kirihama now has 10 graph-registered metro services and 170 unique city-lattice stations with usable train routes and game exit IDs. The other two cities remain proposed only; per-station scenes are separately deferred. Gameplay graph remains authoritative, never this planning file."
+  "planNotes": "Game-first dense-city design: Kirihama is capped at 70 DISTINCT playable stops on 10 real vector-connected lines. All 8 story stations, 19 interchanges, city termini and authored orthogonal bends survive. Fewer physical stops by design, rather than merely hiding 100 pins. Other cities remain proposed."
 }
