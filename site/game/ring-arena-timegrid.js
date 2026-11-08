@@ -133,8 +133,74 @@
   hitLayer.setAttribute('aria-hidden','true');hud.append(hitLayer);
   const get=name=>tray.querySelector('[data-tg-'+name+']');
   const roleName=id=>({hero:'斧卫','ai-gun':'枪手','ai-guard':'守护','ai-mage':'调律'}[id]||'敌方');
-  const art=actor=>actor.side==='enemy'?
-   './assets/characters/char-002/front.png':'./assets/characters/protagonist-front.webp';
+  // Keep the canonical role slots stable. Art source maps to the actual
+  // currently published front portraits (no generated/third-party faces).
+  // char-006 has no published front master yet; use the registered interim
+  // portrait until its own front asset is added to the character library.
+  const portraitArt=Object.freeze({
+   hero:'./assets/characters/protagonist-front.webp',
+   'ai-gun':'./assets/characters/char-003/front.png',
+   'ai-guard':'./assets/characters/char-004/fullbody-solo.png',
+   'ai-mage':'./assets/characters/char-016/front.png',
+   'enemy-s1':'./assets/characters/char-002/front.png',
+   'enemy-s2':'./assets/characters/char-003/front.png',
+   'enemy-s3':'./assets/characters/char-016/front.png',
+   'enemy-s4':'./assets/characters/char-004/fullbody-solo.png'
+  });
+  const cropped=new Map();
+  // Crop a FACE from the existing full-body L2D artwork, respecting the
+  // transparent silhouette instead of naively scaling a whole person into
+  // a tiny avatar. Computed once per asset, not on every battle tick.
+  function preparePortrait(source){
+   if(cropped.has(source))return;
+   cropped.set(source,source);
+   const im=new Image();im.decoding='async';
+   im.onload=()=>{
+    try{
+     const scale=Math.min(1,720/Math.max(im.naturalWidth,im.naturalHeight));
+     const w=Math.max(1,Math.round(im.naturalWidth*scale));
+     const h=Math.max(1,Math.round(im.naturalHeight*scale));
+     const temp=document.createElement('canvas');temp.width=w;temp.height=h;
+     const ctx=temp.getContext('2d',{willReadFrequently:true});
+     ctx.drawImage(im,0,0,w,h);
+     const pixels=ctx.getImageData(0,0,w,h).data;
+     let loX=w,hiX=0,loY=h,hiY=0,count=0;
+     const stride=Math.max(1,Math.floor(Math.max(w,h)/480));
+     for(let y=0;y<h;y+=stride)for(let x=0;x<w;x+=stride){
+      if(pixels[(y*w+x)*4+3]<70)continue;
+      loX=Math.min(loX,x);hiX=Math.max(hiX,x);
+      loY=Math.min(loY,y);hiY=Math.max(hiY,y);count++;
+     }
+     if(count<36)return;
+     const bodyH=Math.max(1,hiY-loY),bodyW=Math.max(1,hiX-loX);
+     // Face lives in the top quarter of an upright three-view/full-body.
+     // A wide portrait crop preserves hair, forehead, eyes and shoulders.
+     const cropH=Math.min(h,Math.max(28,bodyH*.29));
+     const cropW=cropH*1.65,headY=loY+bodyH*.135;
+     let massX=0,massN=0;
+     for(let y=loY;y<Math.min(h,loY+bodyH*.19);y+=stride)
+      for(let x=loX;x<=hiX;x+=stride){
+       if(pixels[(y*w+x)*4+3]<95)continue;
+       massX+=x;massN++;
+      }
+     const centerX=massN>12?massX/massN:(loX+hiX)/2;
+     const sx=Math.max(0,Math.min(w-cropW,centerX-cropW*.5));
+     const sy=Math.max(0,Math.min(h-cropH,headY-cropH*.45));
+     const out=document.createElement('canvas');out.width=264;out.height=144;
+     const o=out.getContext('2d');
+     o.drawImage(temp,sx,sy,Math.min(cropW,w),Math.min(cropH,h),0,0,264,144);
+     cropped.set(source,out.toDataURL('image/webp',.88));
+     if(model)paintRoster();
+    }catch(error){console.warn('[Arena HUD portrait crop]',error);}
+   };
+   im.src=source;
+  }
+  const art=actor=>{
+   const source=portraitArt[actor.id]||
+    './assets/characters/protagonist-front.webp';
+   preparePortrait(source);
+   return cropped.get(source)||source;
+  };
   let seed=20261108,model=null,target='enemy-1',cardUid=null,selectedTick=1,tip='';
   function notify(message){tip=String(message);get('hint').textContent=tip;}
   function hpBar(actual){
@@ -149,7 +215,9 @@
    const state=new Map(model.shown.map(a=>[a.id,a]));
    const game=model.game,rows=[];
    for(const side of ['enemy','ally']){
-    rows.push('<div class="tg-faction '+side+'">'+(side==='enemy'?'敌方':'我方')+'</div>');
+    if(side==='ally')rows.push('<div class="tg-divider" aria-hidden="true"><span></span></div>');
+    rows.push('<div class="tg-faction '+side+' tg-screenreader">'+
+     (side==='enemy'?'敌方':'我方')+'</div>');
     for(const actor of game.actors.filter(a=>a.side===side)){
      const a={...actor,...state.get(actor.id)},dead=!!a.dead,
       slot=displayId(actor.id),mine=actor.id===model.controlled().id;
@@ -160,13 +228,14 @@
       '<button type="button" class="tg-portrait" '+
       (side==='ally'?'data-tg-choose-role="'+id+'"':'data-tg-open-target="'+slot+'"')+
       ' aria-label="'+(side==='ally'?'切换到':'选择')+escape(label)+'"'+
-      (model.playback?' disabled':'')+'><img alt="" draggable="false" src="'+art(actor)+
-      '"></button><div class="tg-identity"><strong>'+escape(label)+
-      '</strong>'+hpBar(a)+'</div></div>');
+      (model.playback?' disabled':'')+'><span class="tg-cutout">'+
+      '<img alt="" decoding="async" draggable="false" src="'+art(actor)+'">'+
+      '</span></button><div class="tg-identity"><strong class="tg-screenreader">'+
+      escape(label)+'</strong>'+hpBar(a)+'</div></div>');
     }
    }
    holder.querySelector('[data-tg-roster]').innerHTML=rows.join('');
-   holder.dataset.layout='persistent-portraits-hp-only';
+   holder.dataset.layout='p5-inspired-diagonal-face-hp-only';
    holder.dataset.timegridVersion='1.7';
   }
   function paintTactics(){
