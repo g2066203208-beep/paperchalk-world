@@ -50,16 +50,19 @@ function create({root,engine,onExit,onFeedback}){
  let qaActive=false,qaPose='joy';
  // Outer-area flood fill preserves white shirt regions inside the blazer.
  function extractPaper(image){
-  const size=768,side=Math.max(image.naturalWidth,image.naturalHeight);
+  const imageWidth=image.naturalWidth||image.width;
+  const imageHeight=image.naturalHeight||image.height;
+  const size=768,side=Math.max(imageWidth,imageHeight);
   const cv=document.createElement('canvas');cv.width=size;cv.height=size;
   const c=cv.getContext('2d',{willReadFrequently:true});if(!c)return image.src;
-  c.drawImage(image,(size-image.naturalWidth*size/side)/2,
-   (size-image.naturalHeight*size/side)/2,
-   image.naturalWidth*size/side,image.naturalHeight*size/side);
+  c.drawImage(image,(size-imageWidth*size/side)/2,
+   (size-imageHeight*size/side)/2,
+   imageWidth*size/side,imageHeight*size/side);
   const frame=c.getImageData(0,0,size,size),p=frame.data;
   const visited=new Uint8Array(size*size),stack=new Int32Array(size*size);
   let count=0;
-  const blank=i=>p[i*4]>239&&p[i*4+1]>239&&p[i*4+2]>239;
+  const blank=i=>p[i*4]>228&&p[i*4+1]>228&&p[i*4+2]>228&&
+   Math.max(p[i*4],p[i*4+1],p[i*4+2])-Math.min(p[i*4],p[i*4+1],p[i*4+2])<24;
   const push=i=>{if(i<0||i>=visited.length||visited[i]||!blank(i))return;
     visited[i]=1;stack[count++]=i};
   for(let x=0;x<size;x++){push(x);push((size-1)*size+x)}
@@ -71,6 +74,36 @@ function create({root,engine,onExit,onFeedback}){
    if(y>0)push(a-size);if(y<size-1)push(a+size);
   }
   c.putImageData(frame,0,0);return cv.toDataURL('image/png');
+ }
+ // Two approved-reference thumbnails are committed in ONE AVIF preview asset.
+ // They auto-load without a file chooser; local PNG files override them at full resolution.
+ let previewAssetStatus='idle';
+ function loadDefaultNpcArt(){
+  if(previewAssetStatus!=='idle')return;
+  previewAssetStatus='loading';
+  const source=new Image();source.decoding='async';
+  const note=qa.querySelector('.pw-npc-qa-note');
+  source.onload=()=>{
+   const cell=source.naturalHeight;
+   if(!cell||source.naturalWidth!==cell*2){
+    previewAssetStatus='error';if(note)note.textContent='预览图尺寸错误，请选择本地原图';return;
+   }
+   for(const [i,pose] of ['joy','surprise'].entries()){
+    if(qaImages[pose].dataset.overridden==='true')continue;
+    const cut=document.createElement('canvas');cut.width=cell;cut.height=cell;
+    const ctx=cut.getContext('2d',{alpha:true});
+    if(!ctx)continue;
+    ctx.drawImage(source,i*cell,0,cell,cell,0,0,cell,cell);
+    qaImages[pose].src=extractPaper(cut);
+   }
+   previewAssetStatus='ready';
+   if(note)note.textContent='两组NPC已从GitHub自动加载（192px快速预览）。可点下方文件选择框替换为高清原图。';
+  };
+  source.onerror=()=>{
+   previewAssetStatus='error';
+   if(note)note.textContent='自动素材加载失败；请刷新或手动选取两张原始PNG';
+  };
+  source.src='./assets/characters/npc-g001/emotion-joy-surprise-preview.avif?v=source-20261108';
  }
  function showQaPose(pose){
   qaPose=pose==='surprise'||pose==='both'?pose:'joy';
@@ -85,7 +118,7 @@ function create({root,engine,onExit,onFeedback}){
   input.addEventListener('change',()=>{
    const file=input.files?.[0];if(!file)return;
    const pose=input.dataset.npcInput,url=URL.createObjectURL(file),img=new Image();
-   img.onload=()=>{try{qaImages[pose].src=extractPaper(img)}
+   img.onload=()=>{try{qaImages[pose].dataset.overridden='true';qaImages[pose].src=extractPaper(img)}
     finally{URL.revokeObjectURL(url)}showQaPose(pose)};
    img.onerror=()=>URL.revokeObjectURL(url);img.src=url;
   });
@@ -384,7 +417,7 @@ function create({root,engine,onExit,onFeedback}){
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
   section.dataset.camera=section.dataset.renderer==='ring-3d'?'front-elevation-no-floor':'side-elevation';
   if(!raf)raf=requestAnimationFrame(render);
-  showQaPose('both');refresh();
+  loadDefaultNpcArt();showQaPose('both');refresh();
   return true;
  }
  function open(){
