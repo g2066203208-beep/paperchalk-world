@@ -1717,7 +1717,28 @@
   });
   function sourceFor(actor){
    const safeHero=()=>actor.id==='hero'&&transitMode?metroCanonicalSource():null;
-   if((actor.id==='hero'||(uniformBattlePreview&&actor.team==='ally'))&&posePreviewEnabled&&!transitMode){
+   // The published female-07 14-ArtMesh back rig is the ONLY canonical
+   // default battle portrait. It comes from this character's live L2D
+   // canvas, the same one edited and saved by the unified L2D studio.
+   // Each party member owns a separate animated canvas/PartRig, even if
+   // four placeholder instances intentionally share the same source art.
+   const ringFemale=actor.team==='ally'&&!transitMode&&previewPose==='female7';
+   const sourceSlot=actor.team==='enemy'&&uniformBattlePreview&&!transitMode?
+    'enemy':actor.slot;
+   const runtime=window.PaperchalkL2D?.get(sourceSlot);
+   const liveFemale=ringFemale&&runtime&&
+    runtime.img?.dataset?.characterId==='female-07'&&
+    runtime.img?.dataset?.characterSide==='back'&&
+    runtime.root?.dataset?.l2dState==='ready'&&
+    runtime.root?.dataset?.l2dMode==='library-part-mesh'&&
+    runtime.libraryPlayer?.model?.characterId==='female-07'&&
+    runtime.libraryPlayer?.renderedFrames>=1&&!runtime.libraryPlayer?.disposed;
+   if(liveFemale&&runtime.canvas){
+    const source=runtime.canvas;
+    return {runtime,source,w:source.width,h:source.height,livePartRig:true};
+   }
+   if((actor.id==='hero'||(uniformBattlePreview&&actor.team==='ally'))&&
+      posePreviewEnabled&&!transitMode){
     if(!poseImage.complete||!poseImage.naturalWidth)return null;
     return {
      runtime:{
@@ -1727,29 +1748,24 @@
      source:poseImage,w:poseImage.naturalWidth,h:poseImage.naturalHeight
     };
    }
-   // Uniform staging is render-only: never overwrite the artist's real slots.
-   const sourceSlot=uniformBattlePreview&&!transitMode?
-    actor.team==='enemy'?'enemy':actor.team==='ally'?'player':actor.slot:
-    actor.slot;
-   const runtime=window.PaperchalkL2D?.get(sourceSlot);
    if(!runtime||runtime.root.hidden||runtime.img.hidden||
-     runtime.root.dataset.l2dState!=='ready')return safeHero();
-   // An IndexedDB scene assignment can outlive a previous DEV session.
-   // A back-view battle must NEVER render another character or the front
-   // portrait as the heroine while the canonical model is being reattached.
+      runtime.root.dataset.l2dState!=='ready')return safeHero();
    if(actor.id==='hero'){
-    if(runtime.img.dataset.characterId!=='protagonist'||
-       runtime.img.dataset.characterSide!=='back')return safeHero();
-    // "ready" on a DOM image can occur BEFORE the latest genuine
-    // 2D L2D frame arrives. Do not upload the previous character's pixels.
+    const battleBack=!transitMode&&
+     runtime.img.dataset.characterId==='female-07'&&
+     runtime.img.dataset.characterSide==='back';
+    const canonicalBack=runtime.img.dataset.characterId==='protagonist'&&
+     runtime.img.dataset.characterSide==='back';
+    if(!battleBack&&!canonicalBack)return safeHero();
     if(runtime.clip?.type==='decoder'&&runtime.clip.frame<0)return safeHero();
     if(runtime.libraryPlayer&&(
-      runtime.libraryPlayer.disposed||
-      runtime.libraryPlayer.renderedFrames<1||
-      !['protagonist','protagonist-rig-v1','protagonist-unified-v1']
-       .includes(runtime.libraryPlayer.model?.characterId)))return safeHero();
+      runtime.libraryPlayer.disposed||runtime.libraryPlayer.renderedFrames<1||
+      !['female-07','protagonist','protagonist-rig-v1',
+        'protagonist-unified-v1'].includes(runtime.libraryPlayer.model?.characterId)
+    ))return safeHero();
     if(!runtime.clip&&!runtime.libraryPlayer&&
-       runtime.lastSource!==(runtime.img.currentSrc||runtime.img.src))return safeHero();
+       runtime.lastSource!==(runtime.img.currentSrc||runtime.img.src))
+     return safeHero();
    }
    const source=runtime.clip?.type==='native'?runtime.clip.img:runtime.canvas;
    if(!source)return safeHero();
@@ -1884,7 +1900,8 @@
     targetTexture.visibleUv=null;targetTexture.shadowClipUv=null;
     targetTexture.nextProbe=0;targetTexture.updated=-999;
    }
-   const fixedPose=posePreviewEnabled&&!transitMode&&(a.id==='hero'||(uniformBattlePreview&&a.team==='ally'));
+   const fixedPose=posePreviewEnabled&&!desc.livePartRig&&!transitMode&&
+    (a.id==='hero'||(uniformBattlePreview&&a.team==='ally'));
    // Static heroine: one GPU upload only. All animated L2D remain dynamic.
    const canonicalMetroFallback=actor.id==='hero'&&transitMode&&
     desc.runtime.root.dataset.l2dMode==='original-source-fallback-waiting-for-live-l2d';
@@ -2625,7 +2642,14 @@
     repeats:ACTIVE_WALL.repeats,heightMeters:ACTIVE_WALL.heightMeters,
      kind:'curved-webgl-wall'},
    cameraCount:1,eyeLevel:Math.abs((lens||camera(mode,0)).eye.y-1.50)<.001,
-   heroStatic:posePreviewEnabled&&!transitMode,heroTextureUploads:textures.get('hero')?.frames??0,
+   heroStatic:posePreviewEnabled&&!transitMode&&
+    !textures.get('hero')?.identity?.includes('library-part-mesh'),
+   heroLiveFemale07L2D:!!(textures.get('hero')?.identity?.startsWith('female-07|back|')&&
+    textures.get('hero')?.identity?.includes('library-part-mesh')),
+   female07PartyPartRigIds:visibleActors(mode).filter(a=>a.team==='ally'&&
+    textures.get(a.id)?.identity?.startsWith('female-07|back|')&&
+    textures.get(a.id)?.identity?.includes('library-part-mesh')).map(a=>a.id),
+   heroTextureUploads:textures.get('hero')?.frames??0,
    heroTextureIdentity:textures.get('hero')?.identity||null,
    heroOriginalFallback:!!(transitMode&&textures.get('hero')?.identity?.includes('metro-canonical-original-back')),
    heroTextureError:textures.get('hero')?.error||null,
