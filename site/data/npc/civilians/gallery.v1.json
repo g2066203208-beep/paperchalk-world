@@ -471,16 +471,16 @@
   "plannedCivilians": [
     {
       "id": "NPC-C006",
-      "name": "普通休闲男性（通用城市路人）",
+      "name": "清爽休闲青年（通用城市路人）",
       "role": "everyday_civilian",
-      "visualCanon": "35岁左右普通成年男性；中等身高略微发福、深栗棕微卷短发、平和小嘴无眼睛；暖浅灰米色敞开休闲衬衫外套、暗砖红T恤、深蓝直筒牛仔裤、灰白休闲帆布鞋，无工作服无道具",
+      "visualCanon": "约24岁、身高略高、自然修长、深巧克力棕侧分短发、柔和椭圆脸、小鼻子/嘴巴无可见眼睛；静蓝灰敞开轻夹克、暖白圆领T恤、炭灰直筒休闲裤、灰白低帮鞋，无随身道具，明暗平涂无脏污斑",
       "expectedOrder": [
         "side_left",
         "front",
         "back"
       ],
-      "promptReference": "docs/NPC-C006_ANIMA_THREE_VIEW_EVERYDAY_CASUAL_MAN_20261108.md",
-      "status": "prompt_only_not_drawn_or_approved",
+      "promptReference": "docs/NPC-C006_ANIMA_THREE_VIEW_CLEAN_CASUAL_YOUNG_MAN_20261108.md",
+      "status": "earlier_heavyset_draft_rejected_new_handsome_v2_prompt_not_drawn",
       "gameRegistered": false,
       "sceneApplicability": [
         "street",
