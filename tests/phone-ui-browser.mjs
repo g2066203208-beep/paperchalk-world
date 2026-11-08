@@ -190,11 +190,14 @@ try{
     await page.locator('#pw-world-surface:not([hidden])').waitFor();
     assert.equal(await page.locator('#pw-world-surface .pw-surface-heading').innerText(),'背包');
     await page.locator('#pw-world-surface .pw-surface-dim').click({position:{x:3,y:3}});
-    // Hide/show dialogue retains its original bottom fog lifecycle.
+    // The introduction has finished: toggling menu cannot resurrect vanished
+    // dialogue, and bottom smoke must follow the actual dialogue visibility.
     await page.locator('#menu-toggle').click();
     await page.locator('#hide-button').click();
-    await page.waitForFunction(()=>document.querySelector('.ui-fog-band[data-edge="bottom"]').dataset.active==='true');
-    assert.equal(await page.locator('#dialogue').isVisible(),true);
+    const dialogueVisible=await page.locator('#dialogue').isVisible();
+    await page.waitForFunction(expected=>
+      document.querySelector('.ui-fog-band[data-edge="bottom"]').dataset.active===String(expected),
+      dialogueVisible);
     assert.deepEqual(errors,[],'Browser runtime errors: '+errors.join('; '));
     console.log('PASS '+cfg.name+' phone shell, responsive display, PIN, fingerprint, app screen and quick-tool lifecycle');
     await page.close();
