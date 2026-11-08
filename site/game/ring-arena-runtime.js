@@ -483,19 +483,23 @@
   'precision highp float;',
   'attribute vec3 aP;attribute vec2 aUv;',
   'uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;',
-  'uniform vec3 uViewEye;uniform float uGeometry;',
+  'uniform vec3 uViewEye;uniform float uGeometry;uniform float uDoorOpen;'
   'varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;',
   'varying float vFloorSpecular;',
   lightingGLSL,
   'void main(){',
-  'vWorld=aP;vWallUv=aUv;',
+  'vec3 renderP=aP;',
+  'if((uSurface>=5&&uSurface<=8)||uSurface==11)renderP.x-=mod(uTrainPosition+44.0,88.0)-44.0;',
+  'if(uSurface==9)renderP.x-=uDoorOpen*.752;',
+  'if(uSurface==10)renderP.x+=uDoorOpen*.752;',
+  'vWorld=renderP;vWallUv=aUv;',
   'float theta=asin(clamp(aP.x/32.0,-.975,.975));',
   'vec3 n=uSurface==0?vec3(0.0,1.0,0.0):',
   'uSurface==2?vec3(0.0,-1.0,0.0):',
   'uSurface==3?vec3(aP.x>0.0?-1.0:1.0,0.0,0.0):',
   'uGeometry>.5?vec3(0.0,0.0,1.0):',
   'normalize(vec3(.7*sin(theta),0.0,(uMode>.5?-1.0:1.0)*cos(theta)));',
-  'vIrradiance=ringIrradiance(aP,n);',
+  'vIrradiance=((uSurface>=5&&uSurface<=8)||uSurface==11)?vec3(.90,.94,.89):ringIrradiance(renderP,n);'
   'vFloorSpecular=0.0;',
   'if(uSurface==0){',
   'vec3 viewDir=normalize(uViewEye-aP);',
@@ -508,7 +512,7 @@
   'vFloorSpecular+=pow(nh,14.0)*uLampLevels[i]/(1.0+ds*.20);',
   '}',
   '}',
-  'gl_Position=uVP*vec4(aP,1.0);}'
+  'gl_Position=uVP*vec4(renderP,1.0);}'
  ].join('\n');
  const worldColorGLSL=[
   'vec3 ringTone(vec3 paint,vec3 irradiance){',
@@ -522,7 +526,7 @@
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
   'uniform sampler2D uFloorTexture;uniform sampler2D uCeilingTexture;uniform sampler2D uWingTexture;uniform float uWingReady;',
   'uniform float uFloorReady;uniform float uCeilingReady;uniform float uWindowCutouts;',
-  'uniform float uPlatformExposure;uniform float uTrainPosition;uniform float uTrainSpeed;',
+  'uniform float uPlatformExposure;uniform float uTrainPosition;uniform float uTrainSpeed;uniform float uDoorOpen;'
   worldColorGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
