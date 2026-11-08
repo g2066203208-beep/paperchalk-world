@@ -1,5 +1,5 @@
-/* Strict, square-cell metro lattice. All photos, station dots, curves and
- * route titles share the same calculated 12×6 dot matrix. */
+/* Strict 36x26 integer subway lattice: every line turn, station and clickable
+ * track segment is generated from real nodes, not an image rectangle. */
 (function(global){
 'use strict';
 const graph=global.PaperWorldMetro;
@@ -25,9 +25,11 @@ for(const line of graph?.LINES||[]){
   const key=line.id+':'+from+':'+to;
   if(routeRows[key])continue;
   const a=graph.STATIONS[from],b=graph.STATIONS[to];
-  if(!a||!b||a.gx!==b.gx&&a.gy!==b.gy)
-   throw Error('A metro edge requires a real orthogonal route: '+key);
-  routeRows[key]=[];
+  if(!a||!b)throw Error('A metro edge requires two genuine stations: '+key);
+  // When two authored station nodes are on different grid rows/columns,
+  // make a true two-axis track via a real integer-lattice bend. Never
+  // draw a diagonal line or a selected rectangular image area.
+  routeRows[key]=(a.gx!==b.gx&&a.gy!==b.gy)?[[b.gx,a.gy]]:[];
  }
 }
 const routes=Object.freeze(Object.fromEntries(Object.entries(routeRows)
