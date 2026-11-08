@@ -79,9 +79,9 @@ test('metro board, next stop, transfer and 22:00 loop persist in world state',()
 });
 
 
-test('Kirihama has exactly ten genuine lines, 170 separate stops and 19 physical interchanges',()=>{
+test('Kirihama has exactly ten genuine lines, 70 separate stops and 19 physical interchanges',()=>{
  assert.equal(metro.LINES.length,10);
- assert.equal(Object.keys(metro.STATIONS).length,170);
+ assert.equal(Object.keys(metro.STATIONS).length,70);
  assert.equal(Object.values(metro.STATIONS).filter(s=>s.transfer).length,19);
  const routes=new Set();
  for(const line of metro.LINES){
@@ -95,7 +95,7 @@ test('Kirihama has exactly ten genuine lines, 170 separate stops and 19 physical
    assert.equal(metro.nextStop(line.id,line.stops[i],-1),line.stops[i-1]);
   }
  }
- assert.equal(routes.size,170);
+ assert.equal(routes.size,70);
  for(const station of routes){
   assert.ok(metro.path('entrance',station),'station cannot be reached: '+station);
   assert.ok(metro.path(station,'entrance'),'station cannot return: '+station);
@@ -109,13 +109,13 @@ test('a newly-authored station can actually be boarded and exited in the daily-l
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../site/game/daily-life-state.js'),'utf8'),game);
  const e=game.module.exports.create();
  assert.equal(e.travel('entrance').ok,true);
- assert.ok(game.module.exports.LOCATIONS['kh-e-11']);
+ assert.ok(game.module.exports.LOCATIONS['kh-e-13']);
  assert.equal(e.metroBoard('e',1).ok,true);
  const target=e.metroNext();
  assert.equal(target.ok,true);
- assert.equal(target.station,'kh-e-11');
+ assert.equal(target.station,'kh-e-13');
  assert.equal(e.metroExit().ok,true);
- assert.equal(e.snapshot().location,'kh-e-11');
+ assert.equal(e.snapshot().location,'kh-e-13');
 });
 
 test('website always builds the complete subway station registry before game state',()=>{
