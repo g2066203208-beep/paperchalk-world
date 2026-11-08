@@ -36,7 +36,15 @@
       source('./data/npc/scene-assignments.v1.json')
     ]).then(([art,assignments])=>{
       const where=npcPresence.setAssignments(assignments);
+      // New NPC identities enter the SAME persistent life system. They
+      // start at their authored home and travel by a timed route.
+      const added=npcLife?.registerActors?.((assignments.records||[])
+       .filter(row=>row.home&&row.life?.kind)
+       .map(row=>({id:row.id,home:row.home,
+        name:row.role||row.id,kind:row.life.kind,
+        work:row.life.work||null,interest:row.life.interest||[]})))||[];
       const images=npcPresence.setManifest(art);
+      npcManifest.newIdentities=added;
       npcManifest.status=where.ok&&images.ok?'ready':'invalid';
       npcManifest.registered=images.registered;
       npcManifest.assigned=where.assigned;
