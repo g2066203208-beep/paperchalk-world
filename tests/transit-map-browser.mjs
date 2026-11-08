@@ -58,17 +58,21 @@ try{
  assert.equal(await page.locator('.pw-transit-grid-dot').count(),1683);
  assert.equal(await page.locator('.pw-dot-local-places .pw-transit-place').count(),8);
  assert.equal(await page.locator('.pw-dot-city').count(),10);
- assert.ok(await page.locator('.pw-dot-poi').count()>=100);
+ assert.equal(await page.locator('.pw-dot-poi').count(),0);
+ assert.equal(await page.locator('.pw-dot-municipal-lines .pw-transit-segment').count(),0);
+ assert.equal(await page.locator('.pw-dot-access-lines .pw-transit-segment').count(),0);
+ assert.equal(await page.locator('.pw-dot-destination-stop').count(),0);
+ assert.equal(await page.locator('.pw-dot-local-places .pw-transit-photo').count(),0);
  assert.ok(await page.locator('.pw-dot-regional-lines .pw-transit-segment').count()>=14);
  assert.equal(await page.locator('.pw-dot-urban-lines [data-line="c"]').count(),0);
  assert.equal(await page.locator('.pw-dot-local-places [data-place="hospital"],.pw-dot-local-places [data-place="station"],.pw-dot-local-places [data-place="police"]').count(),0);
  assert.equal(await page.evaluate(()=>window.PaperWorldMetro.getLine('c')),null);
  assert.ok(await page.locator('.pw-dot-local-places [data-place="school"]').isVisible());
- const detailed=page.locator('.pw-dot-poi[data-city="kirihama"]:not([hidden])');
- const shown=await detailed.count();
- assert.ok(shown>=1&&shown<=15,'large zoom should show a curated, not overlapping number of real city places: '+shown);
- assert.ok(await page.locator('.pw-dot-access-lines .pw-transit-segment').count()>=35);
- assert.ok(await page.locator('.pw-dot-destination-stop[data-direction="both"]').count()>=130);
+ const stations=page.locator('.pw-dot-local-places .pw-transit-place[data-station]');
+ assert.equal(await stations.count(),8,'Only 8 real metro stations, no POI pseudo stops');
+ assert.equal(await page.locator('.pw-dot-urban-lines .pw-transit-segment').count(),9);
+ assert.deepEqual(await page.locator('.pw-dot-metro-legend-label').allTextContents(),
+  ['住宅线','环城线']);
  assert.ok((await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit())).unreachable.length===0);
  // Even a 1440x810 game view needs actual legible clickable stations:
  // no tiny line strokes or 10px labels hidden by the dotted background.
@@ -79,12 +83,14 @@ try{
   return {stroke:parseFloat(getComputedStyle(rail).strokeWidth),
    vectorEffect:rail.getAttribute('vector-effect'),
    stationFont:parseFloat(getComputedStyle(caption).fontSize),
-   photoWidth:card.getBoundingClientRect().width};
+   stationWidth:card.getBoundingClientRect().width,
+   stationText:caption.textContent};
  });
  assert.ok(legibility.stroke>=8,JSON.stringify(legibility));
  assert.equal(legibility.vectorEffect,'non-scaling-stroke');
  assert.ok(legibility.stationFont>=14,JSON.stringify(legibility));
- assert.ok(legibility.photoWidth>=150,'big pinned station photo card: '+JSON.stringify(legibility));
+ assert.ok(legibility.stationWidth>=112,'readable real station label: '+JSON.stringify(legibility));
+ assert.equal(legibility.stationText,'学园前');
  await shot('19-city-dot-world.png');
  const lattice=await page.evaluate(()=>{
   const svg=document.querySelector('.pw-dot-rail-canvas');
@@ -104,7 +110,7 @@ try{
  assert.ok(lattice.viewWidth>0&&lattice.viewHeight>0);
  assert.equal(lattice.dots,1683);
  assert.equal(lattice.offGrid,0);assert.equal(lattice.cityOff,0);
- assert.equal(lattice.localTransitLines,11);
+ assert.equal(lattice.localTransitLines,0,'municipal trains/buses removed from subway map');
  // The ORIGINAL coloured住宅线 is still a physical boarding action,
  // not a decorative fake rail segment or teleport to the destination.
  const hit=await page.evaluate(()=>{
