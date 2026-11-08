@@ -57,7 +57,7 @@ const CORRIDORS=[
  {id:'j',name:'临海南线',color:'#DDD36D',
   points:[9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,28,30,34].map(x=>[x,23]),
   names:'西湾南端|杉台南|古南郊|霞田农园|秋津西路|临水湿地|光桥郊园|南河百货|朝阳高地|月轮桥|晨曦住宅|港西工坊|青蒲里|松浦东区|石渡口|南潮林|海风绿地|海鸟公园|东湾净水|南沙道|岬角前'}
-].map(p=>Object.freeze({...p,names:p.names.split('|')})));
+].map(p=>Object.freeze({...p,names:p.names.split('|')}));
 const stationRows={...BASE_STATIONS};
 const byCoordinate=new Map(Object.entries(stationRows)
  .map(([id,s])=>[s.gx+','+s.gy,id]));
