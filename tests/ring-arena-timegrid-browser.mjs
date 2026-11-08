@@ -13,9 +13,10 @@ const server=createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost');
  const file=resolve(root,'.'+(url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname));
  if(!file.startsWith(root+'/'))return res.writeHead(403).end();
- try{res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream'})
-  .end(readFileSync(file));}
- catch{res.writeHead(404).end('not found');}
+ let bytes;
+ try{bytes=readFileSync(file);}
+ catch{return res.writeHead(404).end('not found');}
+ res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream'}).end(bytes);
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const browser=await chromium.launch({headless:true,
