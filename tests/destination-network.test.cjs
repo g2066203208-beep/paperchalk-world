@@ -69,3 +69,30 @@ test('map code does not import a geographic backdrop or teleport to fake address
  assert.ok(map.includes('name=station.label'));
  assert.ok(html.includes('destination-network.js'));
 });
+
+
+test('cross-city map actions invoke the actual travel engine rather than only opening a city diagram',()=>{
+ const map=fs.readFileSync(path.join(root,'site/game/transit-map-ui.js'),'utf8');
+ assert.match(map,/network\\.journey\\(here,destination\\)/);
+ assert.match(map,/onWorldTravel\\?\\.\\(destination,journey\\)/);
+ assert.match(map,/disabled:!viable\\|\\|!canRide/);
+ assert.ok(!map.includes('availability?.(id,snapshot)'),
+  'subway travel must not be blocked by the nearby school/store opening hours');
+ assert.match(map,/if\\(!popup\\.hidden&&selected\\?\\.isConnected\\)positionPopup/);
+});
+test('world travel state can physically reach and return from a regional interchange',()=>{
+ const game={window:{}};
+ for(const filename of ['world-atlas','metro-graph','destination-network']){
+  vm.runInNewContext(fs.readFileSync(path.join(root,'site/game/'+filename+'.js'),'utf8'),game);
+ }
+ game.module={exports:{}};
+ vm.runInNewContext(fs.readFileSync(path.join(root,'site/game/daily-life-state.js'),'utf8'),game);
+ const engine=game.module.exports.create();
+ assert.equal(engine.travel('entrance').ok,true);
+ const outbound=engine.travel('hub-shiomi');
+ assert.equal(outbound.ok,true,outbound.reason);
+ assert.equal(engine.snapshot().location,'hub-shiomi');
+ const returned=engine.travel('entrance');
+ assert.equal(returned.ok,true,returned.reason);
+ assert.equal(engine.snapshot().location,'entrance');
+});
