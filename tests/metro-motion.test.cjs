@@ -52,10 +52,12 @@ test('actual travel distance is continuous across multiple stations and resets o
  assert.equal(driver.snapshot(200+2*D).distanceMeters,motion.LEG_METERS*2);
  assert.equal(driver.reset().distanceMeters,0);
 });
-test('the 3/4 passenger camera is rigid and independent of station or train speed',()=>{
+test('front-on passenger camera stays fixed while train movement affects only scenery',()=>{
  assert.equal(environment.camera.mode,'fixed');
+ assert.equal(environment.camera.composition,'front-elevation-no-floor');
  const eye=environment.camera.eye,focus=environment.camera.focus;
- assert.ok(Math.abs(eye.x-focus.x)>.35,'no sterile perpendicular wall-elevation camera');
- assert.ok(Math.abs(eye.x-focus.x)<1.2,'do not look down the entire length of the train');
+ assert.equal(eye.x,focus.x,'camera must look directly at train wall');
+ assert.equal(eye.y,focus.y,'keep floor out of the camera');
  assert.equal(environment.camera.fovMode,'vertical');
+ assert.ok(environment.camera.fov<=50);
 });
