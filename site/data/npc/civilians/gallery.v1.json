@@ -471,16 +471,16 @@
   "plannedCivilians": [
     {
       "id": "NPC-C006",
-      "name": "清爽休闲青年（通用城市路人）",
+      "name": "亲切的微胖中年大叔（通用城市路人）",
       "role": "everyday_civilian",
-      "visualCanon": "约24岁、身高略高、自然修长、深巧克力棕侧分短发、柔和椭圆脸、小鼻子/嘴巴无可见眼睛；静蓝灰敞开轻夹克、暖白圆领T恤、炭灰直筒休闲裤、灰白低帮鞋，无随身道具，明暗平涂无脏污斑",
+      "visualCanon": "约48岁、中等身高略宽肩、自然小肚子、圆润方脸和温和嘴角、整齐深棕短发有少量灰丝、无眼睛但五官结构清爽；静蓝灰敞开休闲夹克、暖米白T恤、深炭灰直筒裤、干净棕灰低帮鞋；均匀平涂无深色脏脸影，非职业路人",
       "expectedOrder": [
         "side_left",
         "front",
         "back"
       ],
-      "promptReference": "docs/NPC-C006_ANIMA_THREE_VIEW_CLEAN_CASUAL_YOUNG_MAN_20261108.md",
-      "status": "earlier_heavyset_draft_rejected_new_handsome_v2_prompt_not_drawn",
+      "promptReference": "docs/NPC-C006_ANIMA_THREE_VIEW_FRIENDLY_MIDDLE_AGED_MAN_20261108.md",
+      "status": "user_requested_age_distinct_chubby_uncle_prompt_v3_not_drawn_or_approved",
       "gameRegistered": false,
       "sceneApplicability": [
         "street",
@@ -488,7 +488,6 @@
         "mall",
         "residential",
         "park",
-        "campus_perimeter",
         "convenience_store"
       ]
     }
