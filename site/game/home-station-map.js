@@ -130,10 +130,10 @@ function create({map,atlas,metro,onTravel,notify,onUp}){
  const lineA=metro.LINES.find(l=>l.id==='a'&&l.stops.includes('entrance'));
  const lineE=metro.LINES.find(l=>l.id==='e'&&l.stops.includes('entrance'));
  if(!lineA||!lineE)throw Error('住宅前 is no longer on both real lines');
- const aPath=svg('rect',{x:0,y:353,width:1100,height:24,fill:'#101a25'});
+ const aPath=svg('rect',{x:550,y:353,width:550,height:24,fill:'#101a25'});
  const ePath=svg('rect',{x:538,y:0,width:24,height:720,fill:'#101a25'});
  rail.append(aPath,ePath);
- for(let x=8;x<1100;x+=17)rail.append(svg('rect',{
+ for(let x=550;x<1100;x+=17)rail.append(svg('rect',{
   x,y:360,width:11,height:11,fill:lineA.color,stroke:'#f5ded8','stroke-width':.55}));
  for(let y=8;y<720;y+=17)rail.append(svg('rect',{
   x:543,y,width:11,height:11,fill:lineE.color,stroke:'#eadff1','stroke-width':.5}));
@@ -154,8 +154,7 @@ function create({map,atlas,metro,onTravel,notify,onUp}){
  hub.append(hubTag);rail.append(hub);
  const arrows=svg('g',{},'pw-home-map-line-labels');
  for(const [x,y,text,color] of [
-  [20,346,'住宅线 · 住宅前始发',lineA.color],
-  [852,346,'住宅线 · 至学园前 →',lineA.color],
+  [718,346,'住宅线 · 至学园前 →',lineA.color],
   [567,61,'西城线',lineE.color]
  ]){
   const t=svg('text',{x,y,fill:color,'font-size':14,'font-weight':650,
