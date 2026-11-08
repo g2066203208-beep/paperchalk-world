@@ -1,7 +1,7 @@
-/* Paperchalk World — ONE continuous dot-matrix map.
- * From the local 12x6 subway grid to ten cities and 120+ visitable points,
- * every rail, photo pin and station aligns to one square lattice. There is
- * no separate regional atlas, no geographic wallpaper, and no map-mode switch.
+/* Paperchalk World — TWO explicit navigation levels, ONE transit graph:
+ * REGION: cities and real inter-city lines only.
+ * CITY: the chosen city's own metro/tram/bus/road network and destinations.
+ * Zoom cannot leak metro lines across levels; city click opens a separate view.
  */
 (function(global){
 'use strict';
@@ -44,7 +44,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const currentCity=network.at(here)?.city||herePoi?.city||'kirihama';
  const hereCity=atlas.CITY_BY_ID[currentCity]||atlas.CITIES[0];
  const map=element('section','pw-transit-map pw-dot-world-map');
- map.setAttribute('aria-label','唯一的可缩放点阵城市及全国交通地图');
+ map.setAttribute('aria-label','分级交通地图：跨市交通总览及各市独立市内线路');
+ map.dataset.scope='region';
  map.dataset.grid='50x32';
  const canvas=element('div','pw-dot-world-canvas');
  const svg=vector('svg',{viewBox:'0 0 '+W+' '+H,preserveAspectRatio:'none'},'pw-transit-lines pw-dot-rail-canvas');
@@ -70,17 +71,22 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  heading.append(element('strong','pw-dot-title','交通图'),
   element('small','pw-dot-subtitle',(hereCity?.name||'霧浜市')+' · '+(locations[here]?.label||metro.STATIONS[here]?.label||'当前位置')));
  const tools=element('div','pw-dot-tools');
- const buttons=[['−','缩小地图'],['+','放大地图'],['全域','查看整个区域'],['定位','返回当前位置']];
+ const back=element('button','pw-dot-tool pw-dot-back','← 城际地图');
+ back.type='button';back.setAttribute('aria-label','返回城际交通总图');
+ back.hidden=true;tools.append(back);
+ const buttons=[['−','缩小地图'],['+','放大地图'],['全域','查看当前层全图'],['定位','定位人物所在城市及站点']];
  const toolBtns=buttons.map(([name,title])=>{
   const b=element('button','pw-dot-tool',name);
   b.type='button';b.setAttribute('aria-label',title);tools.append(b);return b;
  });
  chrome.append(heading,tools);
- const hint=element('div','pw-dot-hint','每张地点图钉在实际站点 · 拖动／双指缩放 · 线路双向可达');
+ const hint=element('div','pw-dot-hint','点击城市进入独立市内交通图 · 城际线路只在此层显示');
  const popup=element('div','pw-transit-popup pw-dot-popup');
  popup.hidden=true;popup.setAttribute('role','group');
  map.append(chrome,hint,popup);
  body.replaceChildren(map);
+ // Only explicit city selection can reveal internal rail or destination pins.
+ let activeCity=null;
  let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,focused=false;
  const fingers=new Map();let pinch=null;
  let lastW=844,lastH=390;
@@ -300,7 +306,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  for(const [id,s] of Object.entries(metro.STATIONS)){
   if(s.locked)continue; // No fabricated empty southern line / fake stations.
   const p=localPoint(s);
-  const g=vector('g',{'data-stop':id,'data-current':id===here},
+  const g=vector('g',{'data-stop':id,'data-current':id===here,'data-city':'kirihama'},
    'pw-transit-stop-group');
   if(id===here)g.append(vector('circle',{cx:p.x,cy:p.y,r:12},'pw-transit-stop-halo'));
   g.append(vector('circle',{cx:p.x,cy:p.y,r:s.transfer?6.5:5},
@@ -397,20 +403,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   cityNodes.push({node,city:c,img,source:thumb?.url});
   node.addEventListener('click',e=>{
    if(drag?.moved)return;
-   const hub=network.HUB(c.id),trip=network.journey(here,hub),back=network.journey(hub,here);
-   const allowed=here!==hub&&!!trip&&!!back&&!!locations[hub]&&
-    snapshot.nightStatus!=='recalled'&&snapshot.minute+trip.minutes<locations[hub].close;
-   showMenu(e,node,c.name,c.sub+' · '+c.region+
-    (trip?' · 去程'+trip.minutes+'分钟 · 返程'+back.minutes+'分钟':' · 暂不可达'),[
-    {label:'前往城市枢纽',primary:true,disabled:!allowed,run:async()=>{
-     if(busy)return;busy=true;clear();
-     try{const result=await onWorldTravel?.(hub,trip);
-      if(!result?.ok)notify(result?.reason||'无法到达')}
-     catch(error){notify('地图路线不可用')}finally{busy=false}
-    }},
-    {label:'放大城区',run:()=>{clear();focus(c,Math.max(3.85,minScale*4))}}
-   ],thumb?.url);
-   previewRegionalRoute(trip?.legs);
+   e.stopPropagation();
+   // Clicking a city ENTERS its independent local rail diagram.
+   // Its physical interchange offers travel actions after entry.
+   enterCity(c.id);
   });
  }
  const worldNodes=[];
