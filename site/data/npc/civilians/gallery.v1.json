@@ -447,17 +447,17 @@
       },
       {
         "id": "NPC-SG03",
-        "look": "中等身高稍结实、栗棕耳下短发、细圆框透明眼镜镜片后留白无眼睛、左肩左胯灰蓝帆布包、右臂夹灰蓝笔记本；校服上扣系好下扣松开",
+        "look": "中等身高稍结实、短栗棕碎发、黑色细圆镜框但镜片后无眼睛、左肩灰蓝单肩软帆布托特包挂至左胯；同校制服上扣系好下扣松开",
         "personality": "略冒失、担心迟到、认真且匆匆赶路；正面抬手扶眼镜，侧面扶左肩书包带",
-        "status": "candidate_rejected_missing_bag_in_left_profile_and_eyes_without_glasses_front_v2_prompt_ready",
+        "status": "candidate_rejected_visible_eyes_no_glasses_and_inconsistent_bag_v3_prompt_ready",
         "promptReference": "docs/NPC_SG03_ANIMA_THREE_VIEW_GLASSES_GIRL_20261108.md",
         "motion": {
-          "side_left": "左侧面左肩书包贴近镜头可见，左手稳住带，右臂夹本",
-          "front": "中正面左肩书包右臂本，右手轻推圆框眼镜，镜片内无眼睛",
-          "back": "右背面左肩书包右臂本，左手稳住书包带"
+          "side_left": "左侧面左肩左胯单肩托特包真实可见、左手扶一根肩带、小步朝左",
+          "front": "正面包在画面右侧（人物左肩左胯）、两枚圆框与鼻梁连接件可见、框内无眼睛",
+          "back": "背面包在画面左侧（人物左肩左胯）、同一根肩带、自然小步离开"
         },
-        "eyePolicy": "clear_round_glasses_all_views_no_detailed_eyes_blank_skin_inside_lenses",
-        "reviewNotes": "实际用户图左侧面书包缺失、中正面画出眼睛却没有眼镜，不合格。已统一改左肩左胯，使朝左纯侧面能看见包；镜片后必须仅留肤色无眼睛。图片尚未批准、未归档为母图。"
+        "eyePolicy": "thin round glasses with clear lens, blank skin and absolutely no drawn eyes",
+        "reviewNotes": "2026-11-08 最新图仍失败：左侧面帆布包变成背后背包，中间有完整眼睛却没镜框，正面书包带在人物右肩，右背面书包跑另一侧。V3 锁定左肩左胯同一单肩软帆布包；圆框内仅肤色。暂移除助手添加的笔记本简化道具，仍待实际重画验收。"
       }
     ],
     "promptTemplate": "docs/ANIMA_SCHOOLGIRL_THREE_VIEW_FILL_IN_TEMPLATE_V2_20261108.md",
