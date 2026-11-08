@@ -44,8 +44,14 @@ test('approved M003 original and all RGBA poses are real GitHub files, not place
  for(const name of sprites)assert.deepEqual(png(base+name),{width:416,height:1024,bitDepth:8,colorType:6});
  assert.equal(data.render.hasRealAlpha,true);
  assert.equal(data.render.ready,false,'art registration is not a claim of live gameplay implementation');
- assert.match(data.production.positivePrompt,/FOURTH: exact front view sitting on an invisible seat/i);
- assert.match(data.production.positivePrompt,/jacket over brown sweater over beige shirt/i);
+ assert.match(data.production.positivePrompt,/character sheet, multiple views/i);
+ assert.match(data.production.positivePrompt,/FOURTH: EXACT FRONT VIEW, sitting on an invisible seat/i);
+ assert.match(data.production.positivePrompt,/The jacket is worn open over the sweater vest in every pose/i);
+ assert.match(data.production.negativePrompt,/three-quarter view in first pose, front view in second pose/i);
+ assert.equal(data.production.promptTextStatus,'verbatim_text_received_from_user_2026-11-08');
+ assert.equal(data.production.imageGenerationMetadataStatus,'unverified_png_info_not_inspected');
+ assert.ok(data.production.previousRewrittenPrompt.positivePrompt);
+ assert.ok(fs.existsSync(path.join(root,data.production.userProvidedVerbatimPromptPath)));
 });
 
 test('next NPC-M001 V3 is a strict four-panel Anima prompt, not approved artwork',()=>{
