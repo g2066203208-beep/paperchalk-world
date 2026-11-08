@@ -39,14 +39,14 @@ jobs:
       - name: Capture real live fluid black fog and water-ripple dot animation
         env:
           PAPERCHALK_RIPPLE_GIF_CAPTURE: '1'
-        run: node tests/metro-map-editor-browser.mjs
+        run: node tests/map-fluid-ripple-preview-browser.mjs
       - name: Assemble real browser animation for visual review
         if: always()
         run: |
           python3 - <<'PY'
           from PIL import Image
           from pathlib import Path
-          paths=sorted(Path('artifacts/metro-editor').glob('ripple-frame-*.png'))
+          paths=sorted(Path('artifacts/map-ripples').glob('wave-*.png'))
           if len(paths)<4:
               print('Not enough actual browser frames for preview', len(paths))
           else:
@@ -55,9 +55,9 @@ jobs:
                   im=Image.open(p).convert('RGB')
                   im.thumbnail((940,530),Image.Resampling.LANCZOS)
                   frames.append(im)
-              out=Path('artifacts/metro-editor/00-live-black-fog-dot-ripples.gif')
+              out=Path('artifacts/map-ripples/00-live-black-fog-dot-ripples.gif')
               frames[0].save(out,save_all=True,append_images=frames[1:],
-                  duration=700,loop=0,optimize=True,disposal=2)
+                  duration=1600,loop=0,optimize=True,disposal=2)
               print('Real game GIF:',out,'frames:',len(frames),'bytes:',out.stat().st_size)
           PY
       - name: Upload source frames, screenshots and animated proof
@@ -66,8 +66,8 @@ jobs:
         with:
           name: real-game-fluid-fog-dot-ripples
           path: |
-            artifacts/metro-editor/00*.png
-            artifacts/metro-editor/ripple-frame-*.png
-            artifacts/metro-editor/00-live-black-fog-dot-ripples.gif
+            artifacts/map-ripples/01-full-screen-black-fog-subtle-dots.png
+            artifacts/map-ripples/wave-*.png
+            artifacts/map-ripples/00-live-black-fog-dot-ripples.gif
           retention-days: 14
           if-no-files-found: warn
