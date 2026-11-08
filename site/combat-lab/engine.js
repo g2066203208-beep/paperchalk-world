@@ -122,7 +122,7 @@ function makeActor(id,side,name,hp,fin){
 }
 function addDeck(actor,def,rand){let uid=0;for(const [card,n]of Object.entries(def))for(let i=0;i<n;i++)actor.draw.push({uid:actor.id+'-c'+(uid++),key:card});shuffle(actor.draw,rand);}
 function drawHand(actor,rand){const limit=HAND+(actor.relics?.includes('extra_hand')?1:0);while(actor.hand.length<limit){if(!actor.draw.length){if(!actor.discard.length)break;actor.draw=shuffle(actor.discard.splice(0),rand);}actor.hand.push(actor.draw.pop());}}
-function create(opts={}){const options={classId:opts.classId||'axe',styleId:opts.styleId||'strike',encounterId:opts.encounterId||'corridor',team:!!opts.team,seed:opts.seed===undefined?86420:opts.seed,campaignBalance:!!opts.campaignBalance};const rand=rng(options.seed);
+function create(opts={}){const options={classId:opts.classId||'axe',styleId:opts.styleId||'strike',encounterId:opts.encounterId||'corridor',team:!!opts.team,seed:opts.seed===undefined?86420:opts.seed,campaignBalance:!!opts.campaignBalance,controlAllies:!!opts.controlAllies};const rand=rng(options.seed);
 let cd=CLASS[options.classId],style=cd.styles[options.styleId]||Object.values(cd.styles)[0],actors=[];
 const main=makeActor('hero','ally',cd.name,opts.maxHp||cd.hp,cd.fin);main.hp=Math.max(1,Math.min(main.maxHp,opts.heroHp||main.maxHp));main.energy=opts.demoEnergy===undefined?55:opts.demoEnergy;main.relics=(opts.relics||[]).slice();if(opts.deckSpec){addDeck(main,opts.deckSpec,rand);}else addDeck(main,style.deck,rand);drawHand(main,rand);actors.push(main);
 if(options.team){for(const key of Object.keys(CLASS).filter(x=>x!==options.classId)){const c=CLASS[key];let a=makeActor('ai-'+key,'ally',c.name,c.hp,c.fin);const st=Object.values(c.styles)[0];addDeck(a,st.deck,rand);drawHand(a,rand);actors.push(a);}}
@@ -134,22 +134,25 @@ for(const en of encounterEnemies){
  const a=makeActor('enemy-'+en.id,'enemy',en.name,Math.round(en.hp*hpMultiplier),null);
  a.pattern=en;a.enemyDamageScale=options.campaignBalance?tier.damage:1;actors.push(a);
 }
-const game={options,round:0,now:0,phase:'planning',actors,log:[],events:[],winner:null,finisherBy:null,score:null,turns:0,stats:{shuffle:0,attacks:0,blocks:0,breaks:0,staggers:0,faints:0,canceledActions:0,damage:0,heal:0,playerHit:0,finishers:0},nextUid:0,randState:options.seed>>>0};
+const game={options,controlledId:'hero',round:0,now:0,phase:'planning',actors,log:[],events:[],winner:null,finisherBy:null,score:null,turns:0,stats:{shuffle:0,attacks:0,blocks:0,breaks:0,staggers:0,faints:0,canceledActions:0,damage:0,heal:0,playerHit:0,finishers:0},nextUid:0,randState:options.seed>>>0};
 // Persist deterministic RNG state through an explicit incrementing generator (not Math.random).
 prepareRound(game);return game;
 }
 function gameRand(game){game.randState=(Math.imul(game.randState,1664525)+1013904223)>>>0;return game.randState/4294967296;}
 function drawGame(actor,game){return drawHand(actor,()=>gameRand(game));}
 function actorsOf(game,side){return game.actors.filter(a=>a.side===side&&!a.dead);}
+// Opt-in four-hero 3D battle controller. Legacy combat-lab remains hero-only.
+function player(game){return game.options?.controlAllies?game.actors.find(a=>a.id===game.controlledId&&a.side==='ally')||game.actors[0]:game.actors[0];}
+function setControlled(game,id){if(!game.options?.controlAllies&&id!=='hero')throw Error('本模式只能控制主角');const actor=game.actors.find(a=>a.id===id&&a.side==='ally');if(!actor)throw Error('无效我方角色');game.controlledId=id;return actor;}
 function isBusy(actor,start,end,ex=null){if(start<actor.stunUntil)return true;return actor.actions.some(a=>!a.canceled&&a!==ex&&a.start<end&&a.start+cLen(CARD[a.card])>start);}
 function scheduleAction(game,actor,card,start,target,source,locked=false,uid=null){const c=CARD[card];if(!c)throw Error('Unknown card '+card);if(start<game.now||start>=game.now+ROUND)throw Error('此回合只能从当前10格内开始');const end=start+cLen(c);if(isBusy(actor,start,end))throw Error('该角色时间格被占用');const already=actor.actions.filter(a=>!a.canceled&&a.start>=game.now&&a.start<game.now+ROUND);
 if(end>game.now+ROUND&&already.some(a=>a.start>start))throw Error('跨回合的必须是最右端动作');
 if(already.some(a=>a.start+cLen(CARD[a.card])>game.now+ROUND&&a.start<start))throw Error('跨界动作后不能再安排新卡');
 const action={id:'a'+(++game.nextUid),card,start,target,source,locked,uid,guardLeft:(c.guard||0)+(c.guard&&actor.side==='ally'&&actor.relics?.includes('guard_plus')?4:0),canceled:false,started:false,done:false};actor.actions.push(action);actor.actions.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));return action;}
-function place(game,uid,startRelative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];if(a.dead||a.stunUntil>game.now+startRelative)throw Error('角色失能');if(!Number.isInteger(startRelative)||startRelative<1||startRelative>10)throw Error('请选择T1～T10');const ix=a.hand.findIndex(c=>c.uid===uid);if(ix<0)throw Error('手牌未找到');const card=a.hand[ix],c=CARD[card.key];const start=game.now+startRelative-1;/* 洗牌只锁已放动作，不锁时间格；新牌能倒填任何空格。洗牌耗时是真实成本。 */if(!c)throw Error('无效卡牌');if(c.type==='finisher')throw Error('绝杀为单独槽位');const friend=!!(c.type==='defense'||c.heal||c.buff||c.steady);const dest=targetId||(friend?a.id:actorsOf(game,'enemy')[0]?.id);const t=game.actors.find(x=>x.id===dest);if(!t||t.dead||t.side!==(friend?'ally':'enemy'))throw Error(friend?'请拖到我方角色轨道':'请拖到敌方目标轨道');const action=scheduleAction(game,a,card.key,start,dest,'hand',false,card.uid);a.hand.splice(ix,1);return action;}
+function place(game,uid,startRelative,targetId){if(game.phase!=='planning')throw Error('不是规划阶段');const a=player(game);if(a.dead||a.stunUntil>game.now+startRelative)throw Error('角色失能');if(!Number.isInteger(startRelative)||startRelative<1||startRelative>10)throw Error('请选择T1～T10');const ix=a.hand.findIndex(c=>c.uid===uid);if(ix<0)throw Error('手牌未找到');const card=a.hand[ix],c=CARD[card.key];const start=game.now+startRelative-1;/* 洗牌只锁已放动作，不锁时间格；新牌能倒填任何空格。洗牌耗时是真实成本。 */if(!c)throw Error('无效卡牌');if(c.type==='finisher')throw Error('绝杀为单独槽位');const friend=!!(c.type==='defense'||c.heal||c.buff||c.steady);const dest=targetId||(friend?a.id:actorsOf(game,'enemy')[0]?.id);const t=game.actors.find(x=>x.id===dest);if(!t||t.dead||t.side!==(friend?'ally':'enemy'))throw Error(friend?'请拖到我方角色轨道':'请拖到敌方目标轨道');const action=scheduleAction(game,a,card.key,start,dest,'hand',false,card.uid);a.hand.splice(ix,1);return action;}
 function moveAction(game,actionId,startRelative,targetId){
  if(game.phase!=='planning')throw Error('不是规划阶段');
- const hero=game.actors[0],act=hero.actions.find(a=>a.id===actionId);
+ const hero=player(game),act=hero.actions.find(a=>a.id===actionId);
  if(!act||act.locked||act.start<game.now)throw Error('只有洗牌前已经放好的动作才被锁定；新牌可在旧空位自由移动');
  if(!Number.isInteger(startRelative)||startRelative<1||startRelative>ROUND)throw Error('目标时间必须在1—10格内');
  const card=CARD[act.card],friend=card.type==='defense'||card.heal||card.buff||card.steady||act.source==='shuffle';
@@ -167,8 +170,8 @@ function moveAction(game,actionId,startRelative,targetId){
  }
  hero.actions.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));return act;
 }
-function remove(game,actionId){const a=game.actors[0];const i=a.actions.findIndex(a=>a.id===actionId);if(i<0)throw Error('未找到卡牌');const act=a.actions[i];if(act.locked)throw Error('洗牌前已经放好的卡牌已锁定；新牌可移动、取下，也可填前面的空位');if(act.start<game.now)throw Error('跨回合动作不可移除');if(act.source==='hand')a.hand.push({uid:act.uid,key:act.card});a.actions.splice(i,1);return act;}
-function shuffleHand(game,relative){if(game.phase!=='planning')throw Error('不是规划阶段');const a=game.actors[0];const start=game.now+relative-1;const cost=a.hand.length?SHUFFLE_FORCED:SHUFFLE_EMPTY;if(!Number.isInteger(relative)||relative<1||relative>10)throw Error('请选择T1～T10');const prev=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND);
+function remove(game,actionId){const a=player(game);const i=a.actions.findIndex(a=>a.id===actionId);if(i<0)throw Error('未找到卡牌');const act=a.actions[i];if(act.locked)throw Error('洗牌前已经放好的卡牌已锁定；新牌可移动、取下，也可填前面的空位');if(act.start<game.now)throw Error('跨回合动作不可移除');if(act.source==='hand')a.hand.push({uid:act.uid,key:act.card});a.actions.splice(i,1);return act;}
+function shuffleHand(game,relative){if(game.phase!=='planning')throw Error('不是规划阶段');const a=player(game);const start=game.now+relative-1;const cost=a.hand.length?SHUFFLE_FORCED:SHUFFLE_EMPTY;if(!Number.isInteger(relative)||relative<1||relative>10)throw Error('请选择T1～T10');const prev=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND);
 const latest=prev.reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));if(start<latest)throw Error('洗牌只能排在已安排动作之后；不能回到过去');if(start>=game.now+ROUND)throw Error('当前回合没有洗牌空间');if(!a.draw.length&&!a.discard.length&&!a.hand.length)throw Error('本轮牌库已被预留，请到下一回合自动补牌');
 const c=cost===1?'shuffle1':'shuffle2';// synthetic card definitions fixed time
 if(!CARD[c])CARD[c]={name:cost===1?'空手换手':'主动重整',type:'system',w:0,a:cost,r:0,desc:'抽取新手牌'};
@@ -179,12 +182,12 @@ if(a.hand.length){for(const c of a.hand)a.discard.push(c);a.hand=[];}
 a.lockedUntil=start+cost-1;drawGame(a,game);act.grantedCards=a.hand.map(c=>({...c}));game.stats.shuffle++;return act;
 }
 function finisherCondition(game,start,destId,excludeAction=null){
- const enemy=game.actors.find(a=>a.id===destId),hero=game.actors[0];
+ const enemy=game.actors.find(a=>a.id===destId),hero=player(game);
  if(!enemy||enemy.side!=='enemy'||enemy.dead)return{ok:false,message:'请选择有效敌人'};
- const temp=clone(game);const player=temp.actors[0];
+ const temp=clone(game);const caster=player(temp);
  if(excludeAction)player.actions=player.actions.filter(a=>a.id!==excludeAction.id);
  const projected=start>game.now?simulateRound(temp,{preview:false,stopAt:start-1}):temp;
- const target=projected.actors.find(a=>a.id===destId),who=projected.actors[0];
+ const target=projected.actors.find(a=>a.id===destId),who=player(projected);
  if(who.dead)return{ok:false,message:'预计绝杀开始前施术者已倒下'};
  if(!target||target.dead)return{ok:false,message:'绝杀开始前目标已被击败'};
  if(who.energy<FINISHER_NEED)return{ok:false,message:'到该时间格时绝杀能量不足（预计 '+who.energy+'/100）'};
@@ -194,7 +197,7 @@ function finisherCondition(game,start,destId,excludeAction=null){
 function placeFinisher(game,relative,targetId){
  if(game.phase!=='planning')throw Error('不是规划阶段');
  if(!Number.isInteger(relative)||relative<1||relative>ROUND)throw Error('请选择时间格');
- const a=game.actors[0],start=game.now+relative-1;
+ const a=player(game),start=game.now+relative-1;
  if(a.actions.some(x=>!x.canceled&&x.source==='finisher'&&x.start>=game.now))throw Error('本轮已有一张绝杀牌');
  const condition=finisherCondition(game,start,targetId);
  if(!condition.ok)throw Error(condition.message);
@@ -205,6 +208,7 @@ function enemySchedule(game){const base=game.now;for(const e of actorsOf(game,'e
 }}
 function scoreCard(card,enemyNext){const c=CARD[card],len=cLen(c);let score=(c.damage||0)*c.a/Math.max(1,len)*1.4+(c.guard||0)/Math.max(1,len)*0.65+(c.heal||0)*0.7+(c.mark||0)*2.1+(c.breakPower||0)*0.65+(c.poisePower||0)*0.3+(c.steady||0)*0.2+(c.bleed||0)*1.7+(c.meter||0)*.25+(c.buff||0)*1.8+(c.bonusCombo||0)*.45+(c.bonusMarked||0)*.38;return score;}
 function aiSchedule(game){
+ if(game.options?.controlAllies)return; // four real party members are manually planned via camera switching
  // NPC allies use their own clock.  Defensive/healing cards may protect an
  // endangered teammate; never consume the target ally's scheduled time slots.
  const allies=actorsOf(game,'ally'),foes=actorsOf(game,'enemy');
@@ -451,7 +455,7 @@ function simulateRound(input,{preview=false,stopAt=null,collectTrace=false}={}){
  return game;
 }
 function scoreResult(game){const living=game.actors.filter(a=>a.side==='ally'),baseHealth=living.reduce((sum,a)=>sum+a.maxHp,0),remain=living.reduce((sum,a)=>sum+a.hp,0);const efficiency=Math.max(4,20-Math.max(0,game.turns-2)*3);const survival=Math.round(25*remain/baseHealth);const tactics=Math.min(35,8+game.stats.blocks/7+game.stats.breaks*4+game.stats.heal/5);const finisher=game.finisherBy?20:0;const pts=Math.min(100,Math.round(efficiency+survival+tactics+finisher));const rank=pts>=90?'SS':pts>=76?'S':pts>=61?'A':pts>=42?'B':'C';const prob={SS:[8,22,70],S:[20,35,45],A:[38,42,20],B:[55,35,10],C:[75,22,3]}[rank];return{points:pts,rank,rewardProb:prob,finisherBy:game.finisherBy,breakdown:{efficiency,survival,tactics,finisher},range:'仅限当前关卡奖励池'};}
-function autoPlan(game,policy='tactical'){if(game.phase!=='planning')return game;const hero=game.actors[0];const enemies=actorsOf(game,'enemy');if(!enemies.length)return game;
+function autoPlan(game,policy='tactical'){if(game.phase!=='planning')return game;const hero=player(game);const enemies=actorsOf(game,'enemy');if(!enemies.length)return game;
 let tries=0;while(tries++<12){const cards=hero.hand.slice();if(!cards.length){const next=earliestShuffle(game);if(next>10)break;try{shuffleHand(game,next);}catch{break;}continue;}
 let best=null;
 for(const inst of cards){const card=CARD[inst.key];for(let relative=1;relative<=10;relative++){
@@ -487,7 +491,7 @@ for(const inst of cards){const card=CARD[inst.key];for(let relative=1;relative<=
 }
 if(hero.energy>=100&&enemies.some(e=>e.hp<=35)){const e=enemies.find(e=>e.hp<=35);for(let i=1;i<=10;i++){try{placeFinisher(game,i,e.id);break;}catch{}}}
 return game;}
-function earliestShuffle(game){const a=game.actors[0];const last=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND).reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));return last-game.now+1;}
+function earliestShuffle(game){const a=player(game);const last=a.actions.filter(x=>!x.canceled&&x.start<game.now+ROUND).reduce((m,x)=>Math.max(m,x.start+cLen(CARD[x.card])),Math.max(game.now,a.lockedUntil+1));return last-game.now+1;}
 function runAuto(opts,policy='tactical',maxRounds=14){const game=create(opts);while(game.phase==='planning'&&game.round<maxRounds){autoPlan(game,policy);simulateRound(game);}if(game.phase==='planning')game.phase='timeout';return game;}
-return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,ENCOUNTER_SCALING,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,STAGGER_TICKS,POISE_DECAY,POISE_GRACE,cLen,phase,predictHit:actorHitBuff,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,aiSchedule,clone};
+return{ROUND,HAND,CARD,CLASS,ENCOUNTERS,COLORS,BALANCE,ENCOUNTER_SCALING,FINISHER_NEED,BREAK_TICKS,FAINT_TICKS,STAGGER_TICKS,POISE_DECAY,POISE_GRACE,cLen,phase,predictHit:actorHitBuff,create,place,remove,moveAction,finisherCondition,shuffleHand,placeFinisher,simulateRound,scoreResult,autoPlan,runAuto,earliestShuffle,actorsOf,aiSchedule,clone,player,setControlled};
 });
