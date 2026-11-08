@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "name": "地铁路人 NPC 正式人物图鉴",
+  "policy": {
+    "poseLayout": [
+      "FRONT static standing, fully straight-on",
+      "SIDE static standing, exact 90° profile",
+      "BACK static standing, straight away",
+      "SPECIAL action, frontal unless a character's own exception is approved"
+    ],
+    "invariant": "Four panels are the SAME person in the SAME outfit. Panels 1-3 contain NO gait or stepping. Panel 4 includes only one distinct private-life action, not subway furniture or background.",
+    "background": "export real RGBA before publishing; white Anima preview is NOT transparent",
+    "graphics": "Approved Anima illustrations only. Procedurally drawn or placeholder SVG crowd is not canon.",
+    "changes": "Previous male/female 3-view approvals deprecated by 2026-11-08 instruction; four-pose replacement required.",
+    "readyCondition": "Only if canonical artwork binary, verified alpha, user approval, leg pivots, four view crops and real runtime QA exist."
+  },
+  "characters": [
+    {
+      "id": "NPC-M001",
+      "label": "普通年轻男通勤者",
+      "record": "metro-commuter-npc-m001-four-pose-draft.v2.json",
+      "approval": "rebuild_required",
+      "image": null,
+      "action": "正面坐着打瞌睡"
+    },
+    {
+      "id": "NPC-M002",
+      "label": "普通女性通勤乘客",
+      "record": "metro-commuter-npc-m002-four-pose-draft.v2.json",
+      "approval": "rebuild_required",
+      "image": null,
+      "action": "正面双手查看手机"
+    },
+    {
+      "id": "NPC-M003",
+      "label": "灰发老爷爷",
+      "record": "metro-commuter-npc-m003.v2.json",
+      "approval": "four_pose_reference_approved",
+      "image": null,
+      "action": "正面坐着看报纸",
+      "approvedSourceSha256": "0a55af227d55b126d1fd37e4209eef50322d99c99e2f690be8c19fc9519701ba"
+    }
+  ]
+}
