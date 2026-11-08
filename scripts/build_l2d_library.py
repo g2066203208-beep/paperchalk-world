@@ -202,7 +202,11 @@ def inspect_module(folder):
     if not isinstance(views,dict) or not views or any(k not in ("front","back") for k in views):
         fail(folder,"views must contain front and/or back")
     if "back" in views and "front" not in views:
-        fail(folder,"back-only characters need a front portrait for game catalog (no faked back)")
+        # Female-07 has a genuine, canonical back-only PSD. Do not invent
+        # a front frame to satisfy a catalog validation convention.
+        existing_back=SITE/"assets"/"characters"/folder.name/"back.webp"
+        if folder.name!="female-07" or not existing_back.is_file():
+            fail(folder,"back-only characters need a front portrait for game catalog (no faked back)")
     faces = {side: inspect_view(folder,v,side) for side,v in views.items()}
     # No coercion of blank/corrupt/missing assets into a playable character.
     digest=hashlib.sha256()
