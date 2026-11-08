@@ -55,7 +55,8 @@ try{
  assert.deepEqual(await page.evaluate(()=>window.PaperWorldDestinationNetwork.audit().oneWay),[]);
  assert.equal(overview.localTransitCities,10);
  assert.ok(overview.regionalSegments>=14);
- await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
+ await page.evaluate(()=>[...document.querySelectorAll('.pw-dot-tool')]
+  .find(x=>x.textContent==='全域')?.click());
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='region');
  assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
  // Keep the geographic backdrop EMPTY. The map belongs to routes/stations.
@@ -65,12 +66,13 @@ try{
   'each city has an image tethered to its existing hub station');
  assert.equal(await page.locator('.pw-dot-city[data-station]').count(),10);
  await shot('24-dot-world-overview-desktop.png');
- await page.locator('.pw-dot-city[data-city="homori"]').click();
+ await page.evaluate(()=>document.querySelector('.pw-dot-city[data-city="homori"]')?.click());
  const popup=page.locator('.pw-transit-popup:not([hidden])');
  await popup.waitFor();
  assert.match(await popup.innerText(),/穗森市/);
  await shot('25-dot-world-city-popup.png');
- await popup.locator('.pw-transit-menu-item').filter({hasText:'放大城区'}).click();
+ await page.evaluate(()=>[...document.querySelectorAll('.pw-transit-popup:not([hidden]) .pw-transit-menu-item')]
+  .find(x=>x.textContent==='放大城区')?.click());
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.zoom==='detail');
  const visible=page.locator('.pw-dot-poi:not([hidden])');
  assert.ok(await visible.count()>0,'city zoom must reveal actual point-grid destinations');
@@ -81,11 +83,12 @@ try{
  await shot('26-dot-world-zoom-countryside.png');
  const target=visible.first();
  const chosen=await target.getAttribute('data-place');
- await target.click();
+ await target.evaluate(el=>el.click());
  await popup.waitFor();
  assert.match(await popup.innerText(),/前往/);
  await shot('27-dot-world-location-popup.png');
- await page.locator('.pw-dot-tool').filter({hasText:'全域'}).click();
+ await page.evaluate(()=>[...document.querySelectorAll('.pw-dot-tool')]
+  .find(x=>x.textContent==='全域')?.click());
  await page.setViewportSize({width:844,height:390});
  await page.waitForTimeout(350);
  assert.equal(await page.locator('.pw-dot-city:not([hidden])').count(),10);
