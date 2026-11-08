@@ -131,7 +131,12 @@ def discover():
         clips=row.setdefault('clips',{})
         animated=row.setdefault('animated',{})
         for face, spec in module['views'].items():
-            row[face]=spec['portrait']
+            # Female-07's original 800x1436 back artwork remains the
+            # catalog's visible canonical source; the module's duplicate
+            # portrait is solely a validated immutable poster. The 14 real
+            # PSD PartRig textures are what the editor and game animate.
+            if not (actor_id=='female-07' and face=='back' and row.get(face)):
+                row[face]=spec['portrait']
             animated[face]=True
             if spec.get('clip'):
                 clips[face]=spec['clip']
