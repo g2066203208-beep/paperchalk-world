@@ -56,8 +56,8 @@ function create({root,engine,onExit,onFeedback}){
  let regionalRide=null;
  const motion=global.PaperWorldMetroMotion?.create?.()||null;
  const journeyTime=global.PaperWorldMetroMotion?.DURATION_MS||9000;
- const platformDwellMs=2250; // people can leave and board before departure
- let rideEpoch=0,doorSequence=0;
+ const platformDwellMs=3250; // let approved pedestrians finish crossing
+ let rideEpoch=0,doorSequence=0,lastArrivedStop=null;
  const door={open:0,start:0,from:0,target:0,duration:900,moving:false};
  let doorReadyAt=0;
  const delay=ms=>new Promise(resolve=>global.setTimeout(resolve,ms));
@@ -112,7 +112,7 @@ function create({root,engine,onExit,onFeedback}){
   }
   sampleDoors();
   if(door.open>.1&&doorReadyAt){
-   const minPassengerDwellMs=1350;
+   const minPassengerDwellMs=global.PaperWorldMetroCivilianFlow?.CONFIG?.minimumDoorDwellMs||3100;
    const remaining=minPassengerDwellMs-(global.performance.now()-doorReadyAt);
    if(remaining>0)await delay(remaining);
   }
@@ -120,6 +120,9 @@ function create({root,engine,onExit,onFeedback}){
   // The train physically cannot depart while either door leaf is open.
   if(!await animateDoors(0,930))return false;
   if(!visible||epoch!==rideEpoch)return false;
+  // Completed boarding now occupies the train, never also the platform.
+  if(!regionalRide)global.PaperWorldGameRingArena?.setTransitNpcDeparture?.();
+  lastArrivedStop=null;
   motion.begin(global.performance.now());
   section.dataset.trainMoving='true';
   section.dataset.travelPhase='departing';
@@ -131,6 +134,18 @@ function create({root,engine,onExit,onFeedback}){
   global.PaperWorldGameRingArena?.setTransitDynamics?.(arrival);
   section.dataset.trainMoving='false';
   section.dataset.travelPhase='docked';
+  // The physical station at the end of this leg is the next stop; identify
+  // genuine arrivals BEFORE opening the four metal doors, not after.
+  if(!regionalRide){
+   const ride=engine.snapshot().metro;
+   const next=ride?.onboard?metro.nextStop(ride.lineId,ride.station,ride.direction):null;
+   if(next){
+    lastArrivedStop=next;
+    global.PaperWorldGameRingArena?.setTransitNpcStop?.({
+     station:next,lineId:ride.lineId,direction:ride.direction,arrival:true
+    });
+   }
+  }
   // Open all four physical metal leaves after the wheel speed reaches 0.
   if(!await animateDoors(1,1050))return false;
   return true;
@@ -259,6 +274,12 @@ function create({root,engine,onExit,onFeedback}){
     return;
   }
   section.dataset.night='false';
+  if(section.dataset.renderer==='ring-3d'){
+   global.PaperWorldGameRingArena?.setTransitNpcStop?.({
+    station:ride.station,lineId:ride.lineId,direction:ride.direction,
+    arrival:lastArrivedStop===ride.station
+   });
+  }
   if(section.dataset.renderer==='ring-3d'&&!motion?.isMoving()){
    global.PaperWorldGameRingArena?.setPlatformExposure?.(1);
    global.PaperWorldGameRingArena?.setLighting?.('on');
@@ -299,7 +320,7 @@ function create({root,engine,onExit,onFeedback}){
       for(const dir of other.directions)list.append(btn(dir.label,()=>{
         const result=engine.metroSwitch(other.id,dir.direction);
         if(!result.ok)onFeedback?.(result.reason);
-        else{refresh()}
+        else{lastArrivedStop=null;refresh()}
       }));
       actions.replaceChildren(list);
     }));
@@ -315,7 +336,7 @@ function create({root,engine,onExit,onFeedback}){
   const ride=engine.snapshot().metro;
   if(!ride?.onboard)return false;
   visible=true;section.hidden=false;anomalyEventSent=false;
-  rideEpoch++;doorSequence++;motion?.reset();
+  rideEpoch++;doorSequence++;motion?.reset();lastArrivedStop=null;
   door.open=0;door.from=0;door.target=0;door.moving=false;doorReadyAt=0;
   section.dataset.doorState='closed';
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
@@ -330,6 +351,7 @@ function create({root,engine,onExit,onFeedback}){
  }
  function close(){
   visible=false;section.hidden=true;rideEpoch++;doorSequence++;
+  lastArrivedStop=null;
   door.open=0;door.target=0;door.moving=false;doorReadyAt=0;
   section.dataset.doorState='closed';
   motion?.reset();
