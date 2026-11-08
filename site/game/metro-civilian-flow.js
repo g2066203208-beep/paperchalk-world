@@ -88,7 +88,7 @@
   function sample({doorOpen=0,doorOpenedEver=false,dwellMs=0,moving=false,stationExposure=1}={}){
    const elapsed=Math.max(0,Number(dwellMs)||0);
    const open=clamp(doorOpen),exposure=clamp(stationExposure);
-   const activeDoor=doorOpenedEver&&open>.78&&!moving;
+   const activeDoor=doorOpenedEver&&!moving;
    const platform=[];
    const push=(p,role,i,progress)=>{
     const art=approved(p.id);
@@ -98,7 +98,7 @@
    };
    for(const [i,p] of alighting.entries()){
     const progress=activeDoor?smooth((elapsed-CONFIG.alightStartMs-i*130)/CONFIG.alightDurationMs):0;
-    if(progress<.98&&exposure>.05)push(p,'alighting',i,progress);
+    if(progress>=.02&&progress<.98&&exposure>.05)push(p,'alighting',i,progress);
    }
    for(const [i,p] of waiting.entries()){
     const progress=activeDoor?smooth((elapsed-CONFIG.boardStartMs-i*155)/
