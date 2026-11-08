@@ -31,7 +31,8 @@
   function create({root,profile={}}={}){
     if(!root)throw new Error('Phone requires #novel-ui root');
     let config={...defaultProfile,...profile};
-    let pin='',page='lock',opened=false,clockTimer=0,mediaStream=null,selectedContact='female2';
+    let pin='',page='lock',opened=false,clockTimer=0,mediaStream=null,
+      selectedContact='female2',chatOpen=false;
     const section=document.createElement('section');
     section.id='phone-ui';section.hidden=true;
     section.dataset.uiFogEdge='right';
@@ -56,7 +57,8 @@
               <div class="phone-big-time" id="phone-clock">14:50</div>
               <div class="phone-date" id="phone-date">11月3日 星期二</div>
             </div>
-            <div class="phone-unread-preview" id="phone-unread-preview" hidden></div>
+            <button type="button" class="phone-unread-preview" id="phone-unread-preview"
+              aria-label="查看手机未读通知" hidden></button>
             <div class="phone-password" aria-live="polite">
               <div id="phone-prompt" class="phone-prompt">输入六位密码</div>
               <div class="phone-dots" aria-label="已输入0位密码">${'<span class="phone-dot"></span>'.repeat(6)}</div>
@@ -135,11 +137,14 @@
         state.calendar.month+'月'+state.calendar.date+'日 '+state.calendar.weekdayLabel:
         (now.getMonth()+1)+'月'+now.getDate()+'日 '+weekdays[now.getDay()];
       const inbox=getInbox(),badge=get('phone-unread-preview');
-      const count=inbox?((inbox.phone?.callsRead?0:inbox.missedCalls.length)+
-        (inbox.phone?.messagesRead?0:inbox.messages.length)):0;
-      badge.hidden=count===0;
-      if(count)badge.textContent=inbox.contact+' · '+(inbox.phone?.callsRead?0:inbox.missedCalls.length)+
-        ' 通未接来电 · '+(inbox.phone?.messagesRead?0:inbox.messages.length)+' 条消息';
+      const calls=inbox&&!inbox.phone?.callsRead?inbox.missedCalls.length:0;
+      const opening=inbox&&!inbox.phone?.messagesRead?inbox.messages.length:0;
+      const threads=Object.values(world()?.phoneUnread||{}).reduce((n,c)=>n+(Number(c)||0),0);
+      badge.hidden=calls+opening+threads===0;
+      if(!badge.hidden){
+        badge.textContent=[calls?calls+' 通未接来电':'',
+          opening+threads?(opening+threads)+' 条未读消息':''].filter(Boolean).join(' · ');
+      }
     }
     function showPage(next){
       if(next!=='app')stopCamera();
@@ -206,11 +211,42 @@
         copy.appendChild(b);
       }
     }
+    function renderConversationList(copy){
+      const contacts=config.getContacts?.()||[];
+      const state=world(),inbox=getInbox();
+      copy.appendChild(make('p','phone-feed-intro','私人会话 · 与已交换联系方式的人聊天'));
+      if(!contacts.length){
+        panelNote(copy,'信息','还没有保存任何联系人的联系方式。');return;
+      }
+      const list=make('div','phone-conversation-list');
+      for(const contact of contacts){
+        const logs=state?.phoneThreads?.[contact.id]||[];
+        const latest=logs[logs.length-1];
+        const opening=contact.id==='female2'?inbox?.messages?.[inbox.messages.length-1]:null;
+        const count=(Number(state?.phoneUnread?.[contact.id])||0)+
+          (contact.id==='female2'&&!inbox?.phone?.messagesRead?inbox?.messages?.length||0:0);
+        const row=make('button','phone-conversation-row');row.type='button';
+        row.dataset.contact=contact.id;
+        const avatar=make('span','phone-conversation-avatar',contact.display.slice(0,1));
+        const details=make('span','phone-conversation-details');
+        const heading=make('strong','',contact.display);
+        const preview=make('small','',latest?.text||opening?.text||'开始聊天');
+        details.append(heading,preview);
+        row.append(avatar,details);
+        if(count)row.appendChild(make('span','phone-conversation-badge',count>99?'99+':count));
+        row.addEventListener('click',()=>{
+          selectedContact=contact.id;renderApp('信息',{chat:true});
+        });
+        list.appendChild(row);
+      }
+      copy.appendChild(list);
+    }
     function renderConversation(copy){
       const inbox=getInbox();
       const state=world();
       const person=(config.getContacts?.()||[]).find(c=>c.id===selectedContact)||
         {id:'female2',display:'女二',relationship:'学校同学'};
+      copy.appendChild(appButton('‹ 全部会话',()=>renderApp('信息'),'phone-conversation-return'));
       const title=make('div','phone-chat-header');
       title.append(make('strong','',person.display),make('small','',person.relationship+' · 私人聊天'));
       if(selectedContact!=='female2')title.appendChild(make('small','','通过相识角色的联系方式进行交流'));
@@ -244,17 +280,19 @@
         event.preventDefault();const body=input.value.trim();
         if(!body)return;
         const res=config.onSendMessage?.(selectedContact,body);
-        if(res?.ok)renderApp('信息');
+        if(res?.ok)renderApp('信息',{chat:true});
         else panelNote(copy,'发送失败',res?.reason||'消息无法发送');
       });
       composer.append(input,submit);copy.appendChild(composer);
-      if(selectedContact==='female2'&&typeof config.onPhoneRead==='function')config.onPhoneRead('messages');
+      if(selectedContact==='female2'&&typeof config.onPhoneRead==='function')
+        config.onPhoneRead('messages');
+      config.onReadThread?.(selectedContact);
       if(selectedContact==='female2'&&inbox?.phone&&!inbox.phone.reply){
         const quick=make('div','phone-chat-quick');
         for(const [id,txt] of [['coming','还没写，我现在过去！'],['checking','我先看看书包']]){
           quick.appendChild(appButton(txt,()=>{
             const res=config.onPhoneReply?.(id);
-            if(res?.ok)renderApp('信息');
+            if(res?.ok)renderApp('信息',{chat:true});
           },'phone-quick-reply'));
         }
         copy.appendChild(quick);
@@ -264,6 +302,17 @@
     function renderCall(copy){
       const state=world(),inbox=getInbox();
       const person=(config.getContacts?.()||[]).find(c=>c.id===selectedContact)||{display:'女二'};
+      const contacts=config.getContacts?.()||[];
+      if(contacts.length>1){
+        const pick=make('select','phone-call-picker');
+        pick.setAttribute('aria-label','选择要呼叫的联系人');
+        for(const c of contacts){
+          const option=make('option','',c.display);option.value=c.id;pick.appendChild(option);
+        }
+        pick.value=selectedContact;
+        pick.addEventListener('change',()=>{selectedContact=pick.value;renderApp('电话');});
+        copy.appendChild(pick);
+      }
       const head=make('div','phone-call-contact');
       head.append(make('div','phone-call-avatar',person.display.slice(0,1)),make('strong','',person.display),
         make('small','','同班同学'));
@@ -533,8 +582,9 @@
       }
       copy.appendChild(detail);
     }
-    function renderApp(name){
+    function renderApp(name,options={}){
       const inbox=getInbox(),copy=get('phone-app-copy');
+      if(name!=='信息')chatOpen=false;
       get('phone-app-title').textContent=name;
       section.dataset.appName=name;
       copy.replaceChildren();
@@ -543,7 +593,10 @@
         renderContacts(copy);showPage('app');return;
       }
       if(name==='信息'){
-        renderConversation(copy);showPage('app');return;
+        chatOpen=options.chat===true;
+        if(chatOpen)renderConversation(copy);
+        else renderConversationList(copy);
+        showPage('app');return;
       }
       if(name==='电话'){
         renderCall(copy);showPage('app');return;
@@ -631,8 +684,10 @@
         const label=document.createElement('span');label.className='phone-app-label';label.textContent=name;
         button.appendChild(label);
         const inbox=getInbox();
-        const unread=name==='信息'&&!inbox?.phone?.messagesRead?inbox?.messages?.length:
-          name==='电话'&&!inbox?.phone?.callsRead?inbox?.missedCalls?.length:0;
+        const unread=name==='信息'?
+          (inbox&&!inbox.phone?.messagesRead?inbox.messages.length:0)+
+            Object.values(world()?.phoneUnread||{}).reduce((n,c)=>n+(Number(c)||0),0):
+          name==='电话'&&inbox&&!inbox.phone?.callsRead?inbox.missedCalls.length:0;
         if(unread){
           const mark=document.createElement('span');mark.className='phone-app-badge';
           mark.textContent=unread;button.appendChild(mark);
@@ -642,7 +697,8 @@
       }
     }
     function open(){
-      opened=true;section.hidden=false;pin='';updatePin();setPrompt();showPage('lock');
+      opened=true;section.hidden=false;pin='';chatOpen=false;
+      updatePin();setPrompt();showPage('lock');
       drawClock();clearInterval(clockTimer);clockTimer=setInterval(drawClock,30000);
       global.dispatchEvent(new CustomEvent('paperchalk:phone-visibility',{detail:{open:true}}));
     }
@@ -654,7 +710,18 @@
     }
     section.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',()=>input(b.dataset.key)));
     get('phone-fingerprint').addEventListener('click',()=>{if(opened&&page==='lock')unlock('simulated-fingerprint')});
-    get('phone-app-back').addEventListener('click',()=>showPage('home'));
+    get('phone-app-back').addEventListener('click',()=>{
+      if(section.dataset.appName==='信息'&&chatOpen)renderApp('信息');
+      else showPage('home');
+    });
+    get('phone-unread-preview').addEventListener('click',()=>{
+      if(!opened||page!=='lock')return;
+      const inbox=getInbox();
+      selectedContact='female2';unlock('notification');
+      const anyMessages=(inbox&&!inbox.phone?.messagesRead)||
+        Object.values(world()?.phoneUnread||{}).some(n=>n>0);
+      renderApp(anyMessages?'信息':'电话');
+    });
     // A handset closes by tapping anywhere outside its silhouette.
     const view=document.getElementById('view');
     view?.addEventListener('pointerdown',event=>{
