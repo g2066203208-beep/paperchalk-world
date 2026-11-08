@@ -40,3 +40,38 @@ test('invalid media input and empty posts are rejected',()=>{
  assert.equal(game.addPhonePhoto('<script>no</script>').ok,false);
  assert.equal(game.publishSocial('', '').ok,false);
 });
+
+test('phone notes and edited contact remarks persist with existing save data',()=>{
+ const storage=memory(),game=Core.create({storage});
+ assert.equal(game.savePhoneNote(null,'楼梯口','放学后看到的告示').ok,true);
+ const note=game.snapshot().phoneNotes[0];
+ assert.equal(note.title,'楼梯口');
+ assert.equal(game.savePhoneNote(note.id,'楼梯口','记录已补充').ok,true);
+ assert.equal(game.setContactRemark('female2','早上催作业的人').ok,true);
+ assert.equal(game.setContactRemark('neighbor','不应出现').ok,false);
+ const restored=Core.create({storage}).snapshot();
+ assert.equal(restored.phoneNotes[0].text,'记录已补充');
+ assert.equal(restored.contactRemarks.female2,'早上催作业的人');
+ assert.equal(game.deletePhoneNote(note.id).ok,true);
+ assert.equal(Core.create({storage}).snapshot().phoneNotes.length,0);
+});
+test('conversations have independent persistent unread counters',()=>{
+ const storage=memory(),game=Core.create({storage});
+ game.sendPhoneMessage('female2','周末见');
+ assert.equal(game.snapshot().phoneUnread.female2,1);
+ assert.equal(game.markThreadRead('female2').ok,true);
+ assert.equal(game.snapshot().phoneUnread.female2,0);
+ assert.equal(game.markThreadRead('female2').unchanged,true);
+ assert.equal(game.sendPhoneMessage('neighbor','你好').ok,false);
+ assert.equal(Core.create({storage}).snapshot().phoneUnread.female2,0);
+});
+test('save sanitizer rejects oversized phone notes and caps unread values',()=>{
+ const raw=Core.defaultState();
+ raw.phoneNotes=[{id:'x',title:'合法记录',text:'还在这里',day:1,minute:420},
+  {id:'y',title:'异常',text:'a'.repeat(2000),day:1,minute:420}];
+ raw.phoneUnread.female2=10000;
+ const safe=Core.sanitize(raw);
+ assert.equal(safe.phoneNotes.length,1);
+ assert.equal(safe.phoneUnread.female2,40);
+ assert.equal(safe.phoneNotes[0].text,'还在这里');
+});
