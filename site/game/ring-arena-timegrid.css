@@ -1,663 +1,200 @@
-/* Ring Arena / Timegrid V1.7 — right-side portrait command ribbon.
-   The 3D encounter remains visible on the left. One ruler; two tracks per
-   portrait: upper = cards by selected caster onto THIS target, lower = this
-   person's OWN action intent. All 10 positions are real clickable hit zones. */
+/* Paperchalk ring combat / native, always-on portrait + HP HUD.
+   The permanent UI contains eight avatars and health only. The Timegrid
+   card planner is CONTEXTUAL and stays hidden until an enemy is selected
+   or the player presses T. There is no card/table/menu over the stage. */
+#view.ring-arena-active:not(.ring-arena-transit) #ring-arena-canvas{
+ left:0!important;right:0!important;width:100%!important;
+ max-width:none!important;
+}
 #ring-arena-controls .ring-timegrid{
- --tg-ink:#e6e8e5;--tg-muted:#9caeb2;--tg-line:rgba(184,209,217,.15);
- --tg-backing:rgba(7,17,24,.93);
- position:absolute;z-index:9;top:12px;right:12px;bottom:12px;left:auto;
- box-sizing:border-box;width:clamp(378px,34vw,540px);max-width:calc(100% - 24px);
- height:auto;max-height:none;pointer-events:auto;
- display:flex;flex-direction:column;overflow:hidden;
- background:linear-gradient(160deg,rgba(18,35,42,.96),var(--tg-backing) 47%,rgba(7,13,21,.96));
- color:var(--tg-ink);border:1px solid rgba(173,195,197,.29);border-radius:12px;
- box-shadow:0 0 0 1px rgba(0,0,0,.42),0 18px 54px rgba(0,0,0,.42),
- inset 0 1px 0 rgba(255,255,255,.09);
- font:12px/1.35 "Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
- backdrop-filter:blur(12px);isolation:isolate;
+ position:absolute;top:clamp(43px,6vh,72px);right:13px;bottom:auto;left:auto;
+ width:142px;max-width:28vw;height:auto;z-index:9;
+ color:#e8f0ec;pointer-events:none;
+ background:none;border:0;box-shadow:none;
+ font:12px/1.2 "Noto Sans SC","Microsoft Yahei",system-ui,sans-serif;
+ text-shadow:0 1px 3px #000b;
 }
 #ring-arena-controls .ring-timegrid *{box-sizing:border-box}
-#ring-arena-controls .ring-timegrid button{
- font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;
- border:0;outline-offset:2px;
+#ring-arena-controls .tg-roster{display:flex;flex-direction:column;gap:3px;pointer-events:none}
+#ring-arena-controls .tg-faction{
+ margin:2px 0 0 0;max-width:100%;height:17px;line-height:17px;
+ text-align:right;padding-right:5px;
+ color:#d6d3c9;font-size:10px;letter-spacing:.16em;
+ background:none;border:none;box-shadow:none;
 }
-#ring-arena-controls .ring-timegrid button:disabled{cursor:default}
-#ring-arena-controls .ring-timegrid button:focus-visible{outline:2px solid #e7d4aa}
-#ring-arena-controls .ring-timegrid [hidden]{display:none!important}
-#ring-arena-controls .tg-head{
- flex:none;display:flex;align-items:center;gap:8px;justify-content:space-between;
- height:49px;padding:6px 12px 6px 11px;border-bottom:1px solid var(--tg-line);
- background:linear-gradient(90deg,#779f981a,transparent 60%);
-}
-#ring-arena-controls .tg-brand{display:flex;align-items:center;gap:9px;min-width:0}
-#ring-arena-controls .tg-sigil{
- display:grid;place-items:center;width:26px;height:26px;border-radius:7px;
- color:#d6e8da;font:21px Georgia,serif;border:1px solid rgba(186,224,204,.34);
-}
-#ring-arena-controls .tg-brand strong{font-size:15px;font-weight:650;letter-spacing:.13em;display:block}
-#ring-arena-controls .tg-brand small{
- display:block;color:#92b4ad;font-size:8px;letter-spacing:.15em;margin-top:1px;
-}
-#ring-arena-controls .tg-phase{
- margin-left:auto;flex:none;font-size:10px;letter-spacing:.035em;
- color:#bed1c7;font-variant-numeric:tabular-nums;
-}
-#ring-arena-controls .tg-head button{
- flex:none;padding:5px 7px!important;font-size:10px!important;
- border:1px solid var(--tg-line)!important;background:#1a30354a!important;
- border-radius:6px!important;min-height:27px!important;
-}
-#ring-arena-controls .tg-body{display:flex;flex-direction:column;min-height:0;flex:1;overflow:hidden}
-#ring-arena-controls .tg-threat{
- flex:none;min-height:35px;max-height:43px;display:flex;align-items:center;gap:6px;
- padding:5px 11px;border-bottom:1px solid rgba(241,152,149,.12);overflow:hidden;
- white-space:nowrap;
-}
-#ring-arena-controls .tg-threat>strong{
- font-size:10px;font-weight:650;color:#ddacaa;letter-spacing:.06em;flex:none;
-}
-#ring-arena-controls .tg-threat>small,#ring-arena-controls .tg-quiet{
- color:#9bb0b0;font-size:10px;overflow:hidden;text-overflow:ellipsis;
-}
-#ring-arena-controls .tg-danger-chip{
- display:flex;align-items:center;gap:4px;flex:none;
- height:26px;min-height:26px!important;padding:2px 6px!important;
- border:1px solid rgba(201,120,121,.34)!important;border-radius:6px!important;
- background:rgba(104,40,45,.2)!important;font-size:10px!important;
-}
-#ring-arena-controls .tg-danger-chip>span{color:#f3c6a6;font-weight:750}
-#ring-arena-controls .tg-danger-chip em{font-style:normal;color:#ffb0a7;font-weight:700}
-#ring-arena-controls .tg-danger-chip b{font-weight:600;color:#dcebc9}
-#ring-arena-controls .tg-danger-chip:hover{background:rgba(149,58,60,.38)!important}
-#ring-arena-controls .tg-command{
- flex:none;display:grid;grid-template-columns:1fr auto;column-gap:8px;row-gap:3px;
- align-items:center;padding:7px 10px;border-bottom:1px solid var(--tg-line);
-}
-#ring-arena-controls [data-tg-role]{
- font-weight:680;letter-spacing:.02em;font-size:12px;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis;min-width:0;
-}
-#ring-arena-controls [data-tg-deck]{
- grid-column:1;font-size:10px;color:var(--tg-muted);font-variant-numeric:tabular-nums;
-}
-#ring-arena-controls .tg-tools{
- grid-column:2;grid-row:1 / span 2;display:flex;align-items:center;gap:4px;
- border:0;padding:0;flex:none;
-}
-#ring-arena-controls .tg-tools button{
- background:#1e3338b8!important;border:1px solid #57727768!important;
- border-radius:5px!important;font-size:10px!important;
- padding:5px 6px!important;min-height:27px!important;min-width:0!important;
- white-space:nowrap;
-}
-#ring-arena-controls .tg-tools button:hover:not(:disabled){
- background:#325258!important;border-color:#9ebfb7!important;
-}
-#ring-arena-controls .tg-tools button.ready{
- background:#68502c!important;border-color:#d2aa68!important;
-}
-#ring-arena-controls .tg-rail{
- flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
- padding:0 6px 3px;scrollbar-color:#5e777d44 transparent;
- scrollbar-width:thin;overscroll-behavior:contain;
-}
-#ring-arena-controls .tg-ticks{
- position:sticky;top:0;z-index:5;
- display:grid;grid-template-columns:109px repeat(10,minmax(0,1fr));
- align-items:center;min-width:0;height:27px;
- background:rgba(8,21,27,.97);border-bottom:1px solid rgba(209,222,225,.18);
- color:#93a8ad;font-size:10px;text-align:center;font-variant-numeric:tabular-nums;
-}
-#ring-arena-controls .tg-ticks span:first-child{text-align:left;padding-left:5px;color:#aebebc}
-#ring-arena-controls .tg-ticks span.active{
- color:#e9d8a3;font-weight:800;background:#d5b46f16;border-radius:3px;
-}
+#ring-arena-controls .tg-faction.enemy{color:#f3bcbd}
+#ring-arena-controls .tg-faction.ally{color:#c0ebd5;margin-top:7px}
 #ring-arena-controls .tg-row{
- display:grid;grid-template-columns:109px minmax(0,1fr);
- align-items:center;min-width:0;min-height:54px;height:54px;
- padding:3px 0;border-bottom:1px solid rgba(166,202,211,.11);
- background:transparent;
+ display:flex;align-items:center;gap:6px;position:relative;
+ min-height:46px;height:46px;
+ padding:0 2px;
+ border:0;border-radius:0;box-shadow:none;
+ background:linear-gradient(to right,transparent,rgba(5,15,22,.32) 35%,rgba(5,15,22,.46));
+ pointer-events:none;
 }
-#ring-arena-controls .tg-row.enemy{background:linear-gradient(90deg,rgba(103,41,51,.13),transparent 54%)}
-#ring-arena-controls .tg-row.ally{background:linear-gradient(90deg,rgba(49,100,85,.13),transparent 54%)}
-#ring-arena-controls .tg-row.current{
- background:linear-gradient(90deg,rgba(64,117,105,.3),rgba(25,52,54,.16) 70%);
- box-shadow:inset 2px 0 0 #a3cfb6;
+#ring-arena-controls .tg-row.enemy{background:linear-gradient(to right,transparent,rgba(27,12,23,.30) 43%,rgba(27,12,23,.45))}
+#ring-arena-controls .tg-row.current::after{
+ content:"";position:absolute;left:-4px;top:5px;bottom:5px;
+ width:2px;background:#b5ecd1;box-shadow:0 0 8px rgba(152,249,201,.65);
 }
-#ring-arena-controls .tg-row.dead{opacity:.38;filter:grayscale(.65)}
-#ring-arena-controls .tg-unit{
- display:flex;align-items:center;gap:5px;padding:0 3px 0 3px;min-width:0;
- position:relative;z-index:1;
-}
+#ring-arena-controls .tg-row.dead{opacity:.44;filter:grayscale(.85)}
 #ring-arena-controls .tg-portrait{
- position:relative;flex:none;display:block;width:37px;height:44px;padding:0!important;
- border:1px solid #859b9d70!important;border-radius:6px!important;
- background:linear-gradient(150deg,#394744,#18252e)!important;overflow:hidden;
- min-height:0!important;min-width:0!important;
+ display:block;flex:0 0 41px;width:41px;height:44px;
+ padding:0;margin:0;overflow:hidden;border-radius:5px;
+ border:1px solid rgba(221,165,168,.72);
+ background:rgba(12,20,27,.72);
+ box-shadow:0 1px 5px #000b;
+ pointer-events:auto;cursor:pointer;touch-action:manipulation;
 }
-#ring-arena-controls .tg-row.ally .tg-portrait{border-color:#83ae9a8c!important}
-#ring-arena-controls .tg-row.enemy .tg-portrait{border-color:#c385888c!important}
-#ring-arena-controls .tg-portrait img{
- display:block;width:100%;height:100%;object-fit:cover;object-position:center 13%;
- transform:scale(1.17);pointer-events:none;
-}
-#ring-arena-controls .tg-row.enemy .tg-portrait img{object-position:center 20%}
-#ring-arena-controls button.tg-portrait:hover{border-color:#f2e2c1!important}
+#ring-arena-controls .tg-row.ally .tg-portrait{border-color:rgba(165,221,188,.72)}
 #ring-arena-controls .tg-row.current .tg-portrait{
- border-color:#e4ddb2!important;box-shadow:0 0 0 1px #d5dab32d;
+ border-color:#dcebc7;box-shadow:0 0 0 1px rgba(220,241,201,.35),0 0 11px rgba(148,219,176,.4);
 }
-#ring-arena-controls .tg-identity{min-width:0;display:flex;flex-direction:column;gap:3px;flex:1}
-#ring-arena-controls .tg-identity b{
- max-width:62px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
- font-size:10px;font-weight:700;
+#ring-arena-controls .tg-portrait img{
+ display:block;width:100%;height:100%;object-fit:cover;
+ object-position:center 9%;transform:scale(1.82);transform-origin:50% 18%;
+ pointer-events:none;
 }
-#ring-arena-controls .tg-hp{
- display:block;font-size:10px;font-variant-numeric:tabular-nums;
- color:#c9dbd7;white-space:nowrap;letter-spacing:-.02em;
+#ring-arena-controls .tg-row.enemy .tg-portrait img{
+ object-position:center 12%;transform:scale(1.95);transform-origin:50% 18%;
 }
-#ring-arena-controls .tg-hp em{font-size:10px;font-style:normal}
-#ring-arena-controls .tg-hp .danger{color:#ffaaa2}
-#ring-arena-controls .tg-hp .heal{color:#a3dfc2}
-#ring-arena-controls .tg-hp small{font-size:9px;color:#84989c}
-#ring-arena-controls .tg-hp-track{
- position:relative;width:100%;height:3px;border-radius:4px;
- display:block;background:#3c4149;overflow:hidden;
+#ring-arena-controls button.tg-portrait:hover:not(:disabled){
+ border-color:#f4eacc;transform:translateX(-1px);
 }
-#ring-arena-controls .tg-hp-track i,#ring-arena-controls .tg-hp-track b{
- position:absolute;top:0;bottom:0;left:0;display:block;
+#ring-arena-controls button.tg-portrait:focus-visible{outline:2px solid #fcdfaa;outline-offset:2px}
+#ring-arena-controls .tg-identity{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#ring-arena-controls .tg-identity strong{
+ display:block;min-width:0;white-space:nowrap;text-overflow:ellipsis;
+ overflow:hidden;font-size:10px;font-weight:650;letter-spacing:.02em;
 }
-#ring-arena-controls .tg-hp-track i{background:#66867f}
-#ring-arena-controls .tg-hp-track b{background:#a8d6bf9e}
-#ring-arena-controls .tg-row.enemy .tg-hp-track i{background:#885159}
-#ring-arena-controls .tg-row.enemy .tg-hp-track b{background:#d98889c2}
-#ring-arena-controls .tg-dual{min-width:0;display:flex;flex-direction:column;gap:3px;padding:1px 2px}
-#ring-arena-controls .tg-target-track{
- display:grid;grid-template-columns:repeat(10,minmax(0,1fr));position:relative;
- height:21px;min-width:0;
+#ring-arena-controls .tg-health{min-width:0;display:flex;flex-direction:column;gap:3px}
+#ring-arena-controls .tg-hp-value{
+ display:block;text-align:left;font-size:12px;line-height:12px;font-weight:700;
+ font-variant-numeric:tabular-nums;letter-spacing:.015em;color:#f0f5ef;
 }
-#ring-arena-controls .tg-own-track{
- position:relative;height:18px;min-width:0;border-radius:3px;
- border-top:1px solid rgba(125,161,168,.14);background:#45626714;
- background-image:repeating-linear-gradient(to right,
- rgba(0,0,0,0) 0,rgba(0,0,0,0) calc(10% - 1px),rgba(122,151,153,.15) calc(10% - 1px),
- rgba(122,151,153,.15) 10%);
+#ring-arena-controls .tg-hp-value small{font-size:9px;color:#d1d5d1b8;font-weight:400}
+#ring-arena-controls .tg-hp-bar{
+ display:block;position:relative;width:100%;height:4px;border-radius:5px;
+ overflow:hidden;background:rgba(111,45,57,.68);
+ box-shadow:0 0 0 1px rgba(0,0,0,.18);
 }
-#ring-arena-controls .tg-cell{
- display:block;width:100%;height:21px;min-height:0!important;min-width:0!important;
- padding:0!important;border:1px solid rgba(131,167,174,.18)!important;
- border-radius:2px!important;background:#91aea90e!important;
+#ring-arena-controls .tg-hp-bar i{
+ display:block;height:100%;background:linear-gradient(90deg,#bc7378,#f1a5a9);
+ transition:width 190ms ease-out;
 }
-#ring-arena-controls .tg-cell:hover:not(:disabled),#ring-arena-controls .tg-cell.drag-target{
- background:#c4d9c644!important;border-color:#daebda!important;
- box-shadow:inset 0 0 0 1px #dcf5d78a;
+#ring-arena-controls .tg-row.ally .tg-hp-bar{background:rgba(32,61,53,.72)}
+#ring-arena-controls .tg-row.ally .tg-hp-bar i{background:linear-gradient(90deg,#78ae9f,#b5d9b6)}
+/* Timegrid remains a real engine, not a permanently visible table.
+   Its small action tray only materializes on a deliberate target click/T. */
+#ring-arena-controls .tg-tactics[hidden]{display:none!important}
+#ring-arena-controls .tg-tactics{
+ --text:#ebf4ed;
+ position:absolute;z-index:11;left:clamp(12px,7vw,115px);
+ right:clamp(160px,17vw,220px);bottom:20px;
+ max-width:650px;min-width:0;
+ padding:10px 12px 12px;
+ color:var(--text);font:12px/1.35 "Noto Sans SC",system-ui,sans-serif;
+ background:rgba(6,16,24,.95);border:1px solid rgba(188,218,201,.42);
+ border-radius:10px;box-shadow:0 14px 42px #000a;
+ pointer-events:auto;backdrop-filter:blur(10px);
 }
-#ring-arena-controls .tg-cell.chosen{border-bottom-color:#e1ca8d77!important}
-/* Target affinity and full-card live footprint (validated by engine clone). */
-#ring-arena-controls .tg-row.tg-ineligible .tg-target-track{opacity:.38}
-#ring-arena-controls .tg-row.tg-eligible .tg-unit{filter:brightness(1.08)}
-#ring-arena-controls .tg-row.tg-eligible .tg-target-track{box-shadow:inset 0 0 0 1px #a8d2b013}
-#ring-arena-controls .tg-cell.tg-footprint-valid{
- background:rgba(108,174,142,.43)!important;
- border-color:#b6e3c6!important;
- box-shadow:inset 0 0 0 1px rgba(226,255,220,.16)!important;
+#ring-arena-controls .tg-tactics *{box-sizing:border-box}
+#ring-arena-controls .tg-tactics button{
+ font:inherit;color:inherit;min-height:28px;cursor:pointer;touch-action:manipulation;
+ padding:3px 7px;border:1px solid rgba(195,214,207,.28);
+ border-radius:5px;background:rgba(29,45,49,.76);
 }
-#ring-arena-controls .tg-cell.tg-footprint-invalid{
- background:rgba(178,77,80,.36)!important;
- border-color:#db858b!important;
+#ring-arena-controls .tg-tactics button:disabled{opacity:.4;cursor:default}
+#ring-arena-controls .tg-tactics button.selected{
+ border-color:#e0d7ad!important;background:rgba(106,99,69,.48)!important;
 }
-#ring-arena-controls .tg-cell.danger{
- background:linear-gradient(160deg,rgba(142,41,53,.54),rgba(87,38,49,.28))!important;
- border-color:#b05c66a0!important;
+#ring-arena-controls .tg-tactic-head{
+ display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:6px;
 }
-#ring-arena-controls .tg-cell.danger::after{
- content:"";display:block;position:absolute;top:1px;width:3px;height:3px;
- background:#f6b8ac;border-radius:50%;
+#ring-arena-controls .tg-tactic-head strong{font-size:12px}
+#ring-arena-controls .tg-tactic-head [data-tg-phase]{margin-left:auto;font-size:10px;opacity:.65}
+#ring-arena-controls .tg-tactic-head [data-tg-close]{
+ min-width:29px!important;height:29px!important;
+ font-size:19px!important;padding:0!important;
 }
-#ring-arena-controls .tg-bands{
- position:absolute;inset:1px 0;pointer-events:none;
+#ring-arena-controls .tg-target-line{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+#ring-arena-controls .tg-target-line button{font-size:10px!important;min-height:26px!important}
+#ring-arena-controls .tg-cards{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px}
+#ring-arena-controls .tg-cards button{
+ flex:1 0 100px;text-align:left;display:flex;flex-direction:column;gap:4px;
+ min-width:100px;max-width:160px;min-height:52px!important;padding:7px!important;
 }
-#ring-arena-controls .tg-band{
- position:absolute;top:0;height:19px;display:block;pointer-events:auto;
- margin:0!important;min-height:0!important;min-width:0!important;
- padding:0 2px!important;border:1px solid #aabec28c!important;
- border-radius:3px!important;background:#273a42b8!important;
- overflow:hidden;text-align:center;white-space:nowrap;
- font-size:9px!important;line-height:17px!important;
+#ring-arena-controls .tg-cards button strong{font-size:11px}
+#ring-arena-controls .tg-cards button small{font-size:9px;color:#c8d4d0}
+#ring-arena-controls .tg-tick-caption{font-size:9px;color:#a7b7b3;margin:2px 0 5px}
+#ring-arena-controls .tg-ticks{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
+#ring-arena-controls .tg-ticks button{min-width:0!important;padding:3px 0!important}
+#ring-arena-controls .tg-tactic-foot{display:flex;align-items:center;gap:5px;margin-top:9px}
+#ring-arena-controls .tg-tactic-foot [data-tg-hint]{
+ flex:1;min-width:0;font-size:10px;color:#bdcbc5;
+ max-height:29px;overflow:hidden;
 }
-#ring-arena-controls .tg-own-track .tg-band{
- height:15px;line-height:13px!important;font-size:8px!important;
- pointer-events:none;opacity:.92!important;
+#ring-arena-controls .tg-tactic-foot .tg-commit{
+ background:#386b54!important;border-color:#9bd6b0!important;font-weight:650;
 }
-#ring-arena-controls .tg-band span{
- display:block;position:relative;z-index:2;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis;
- color:#faf9f7;text-shadow:0 1px 2px #020507;
-}
-#ring-arena-controls .tg-band .tg-segment{
- position:absolute;top:0;bottom:0;display:block;z-index:1;
-}
-#ring-arena-controls .tg-segment.windup{background:#8fa2a3bb}
-#ring-arena-controls .tg-segment.active{background:#bc666edb}
-#ring-arena-controls .tg-segment.recovery{background:#694850e0}
-#ring-arena-controls .tg-type-defense .tg-segment.active{background:#5d98c1ed}
-#ring-arena-controls .tg-type-skill .tg-segment.active{background:#55aa9fed}
-#ring-arena-controls .tg-type-power .tg-segment.active{background:#9e77c5e8}
-#ring-arena-controls .tg-type-finisher .tg-segment.active{background:#d5b168ed}
-#ring-arena-controls .tg-band.locked{border-style:dashed!important}
-#ring-arena-controls .tg-band.selected{outline:2px solid #ffedb5;outline-offset:-1px}
-#ring-arena-controls .tg-hand-label{
- flex:none;height:25px;display:flex;align-items:center;justify-content:space-between;
- padding:3px 11px;color:#d4ded9;
- border-top:1px solid var(--tg-line);font-size:11px;
-}
-#ring-arena-controls .tg-hand-label strong{font-size:11px;font-weight:650}
-#ring-arena-controls .tg-hand-label span{font-size:10px;color:var(--tg-muted)}
-#ring-arena-controls .tg-hand{
- flex:none;display:flex;align-items:stretch;gap:6px;overflow-x:auto;overflow-y:hidden;
- min-height:74px;max-height:86px;padding:5px 8px 8px;
- scrollbar-color:#79918c50 transparent;scrollbar-width:thin;
-}
-#ring-arena-controls .tg-card{
- position:relative;flex:0 0 128px;width:128px;min-width:128px!important;
- min-height:63px!important;max-height:73px;padding:6px 7px!important;
- border:1px solid #a2747575!important;border-radius:6px!important;
- background:linear-gradient(155deg,#37303ad9,#19232bcc)!important;
- display:flex;flex-direction:column;align-items:flex-start;justify-content:space-around;
- text-align:left;transition:transform .13s,border-color .13s;
-}
-#ring-arena-controls .tg-card:hover:not(:disabled){transform:translateY(-2px);border-color:#e3c0b3!important}
-#ring-arena-controls .tg-card.selected{
- transform:translateY(-2px);border-color:#f0dba6!important;
- box-shadow:0 0 0 1px #f0dba639,inset 0 0 10px #eee1bf0a;
-}
-#ring-arena-controls .tg-card .tg-card-icon{font-size:13px;color:#d7c0a7;float:left;line-height:1}
-#ring-arena-controls .tg-card strong{
- display:block;max-width:110px;font-size:11px;font-weight:700;
- overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
-}
-#ring-arena-controls .tg-card small{
- display:block;max-width:112px;font-size:10px;color:#c7bfc1;
- overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
-}
-#ring-arena-controls .tg-card.tg-type-defense{border-color:#6586a38a!important}
-#ring-arena-controls .tg-card.tg-type-skill{border-color:#5e9d8d8a!important}
-#ring-arena-controls .tg-card.tg-type-power{border-color:#8571ac8a!important}
-#ring-arena-controls .tg-card.tg-rarity-rare{box-shadow:inset 0 2px 0 rgba(212,168,96,.5)}
-#ring-arena-controls .tg-bottom{
- flex:none;display:flex;align-items:center;gap:7px;min-height:44px;
- padding:6px 8px 7px;border-top:1px solid var(--tg-line);
-}
-#ring-arena-controls .tg-bottom [data-tg-help]{
- flex:1;min-width:0;max-height:28px;overflow:hidden;
- font-size:10px;line-height:1.28;color:#b3c9c7;
-}
-#ring-arena-controls .tg-execute{
- flex:none;padding:7px 11px!important;min-height:30px!important;min-width:0!important;
- border:1px solid #93c2a9!important;border-radius:6px!important;
- background:linear-gradient(155deg,#416b5b,#2d534a)!important;
- font-size:11px!important;font-weight:700!important;
-}
-#ring-arena-controls .tg-execute:hover:not(:disabled){filter:brightness(1.13)}
-#ring-arena-controls [data-tg-restart]{
- padding:7px 10px!important;border:1px solid #9bbabb65!important;border-radius:5px!important;
- background:#263b3d!important;
-}
-#ring-arena-controls .tg-empty{color:#96a9a8;font-size:11px;align-self:center;padding:9px}
-#ring-arena-controls .ring-timegrid.is-folded{
- top:auto;bottom:12px;right:12px;left:auto;width:min(310px,calc(100% - 24px));
- height:auto;min-height:0;max-height:none;
-}
-#ring-arena-controls .ring-timegrid.is-folded .tg-body{display:none!important}
-#ring-arena-controls .tg-compact{
- flex:none;color:#b6c6c3;font-size:10px;padding:8px 12px;
- background:rgba(10,22,25,.78);
-}
-#ring-arena-controls .tg-hit-layer{
- position:fixed;inset:0;z-index:12;pointer-events:none;
+#ring-arena-controls > .tg-hit-layer{
+ position:absolute;top:0;left:0;right:auto;bottom:auto;z-index:12;
+ pointer-events:none;overflow:visible;
 }
 #ring-arena-controls .tg-float-hit{
  position:absolute;transform:translate(-50%,-50%);
- font-size:23px;font-weight:800;color:#ffdbc7;
- text-shadow:0 2px 5px #37040c,0 0 8px #e95a39;
- animation:tg-float-hit .8s ease-out both;
+ color:#ffd4bc;font-weight:800;font-size:21px;
+ text-shadow:0 1px 6px #2f060a,0 0 8px #ff5c35;
+ animation:tg-float-up .76s ease-out both;
 }
-#ring-arena-controls .tg-float-hit.heal{color:#abefbf;text-shadow:0 0 9px #339566}
-@keyframes tg-float-hit{
- from{opacity:0;transform:translate(-50%,-20%) scale(.84)}
- 20%{opacity:1}
- to{opacity:0;transform:translate(-50%,-185%) scale(1.2)}
+#ring-arena-controls .tg-float-hit.heal{color:#a1f1c3;text-shadow:0 0 10px #1d915a}
+@keyframes tg-float-up{
+ 0%{opacity:0;transform:translate(-50%,-20%) scale(.9)}
+ 17%{opacity:1}100%{opacity:0;transform:translate(-50%,-175%) scale(1.14)}
 }
-/* Remove the redundant hero-switch circles and single-card sandbox.
-   The right-hand portraits themselves control the actual 3D ally camera. */
 #ring-arena-controls.timegrid-enabled .party-switch,
 #ring-arena-controls.timegrid-enabled .director-deck,
 #ring-arena-controls.timegrid-enabled .director-targets,
 #ring-arena-controls.timegrid-enabled .status{display:none!important}
 #ring-arena-controls.timegrid-enabled .bottom{
- top:11px;left:9px;right:auto;bottom:auto;
- opacity:.86;gap:5px;z-index:5;
+ top:10px;left:10px;right:auto;bottom:auto;z-index:4;
+ gap:5px;opacity:.68;
 }
 #ring-arena-controls.timegrid-enabled .bottom button{
  min-height:30px!important;padding:4px 8px!important;
- background:#06131c99!important;border-color:#6b838565!important;
+ background:rgba(4,17,24,.58)!important;
  font-size:11px!important;
 }
-/* 3D stays visible in landscape; the command panel becomes a compact
-   portrait/touch drawer on a genuine portrait phone. */
-@media(max-width:780px) and (orientation:landscape){
- #ring-arena-controls .ring-timegrid{
-  right:5px;top:5px;bottom:5px;width:clamp(320px,47vw,405px);max-width:65%;
- }
- #ring-arena-controls .tg-head{height:34px;padding:3px 8px}
- #ring-arena-controls .tg-threat{min-height:25px;max-height:29px;padding:2px 7px}
- #ring-arena-controls .tg-command{padding:4px 5px}
- #ring-arena-controls .tg-ticks,#ring-arena-controls .tg-row{grid-template-columns:98px repeat(10,minmax(0,1fr))}
- #ring-arena-controls .tg-row{grid-template-columns:98px minmax(0,1fr);height:49px;min-height:49px}
- #ring-arena-controls .tg-portrait{width:32px;height:39px}
- #ring-arena-controls .tg-hand{min-height:60px;max-height:65px}
- #ring-arena-controls .tg-bottom{min-height:33px;padding:3px 6px}
+@media(max-height:650px){
+ #ring-arena-controls .ring-timegrid{top:35px}
+ #ring-arena-controls .tg-roster{gap:1px}
+ #ring-arena-controls .tg-row{height:38px;min-height:38px}
+ #ring-arena-controls .tg-portrait{width:35px;height:37px;flex-basis:35px}
+ #ring-arena-controls .tg-faction{height:14px;line-height:14px}
 }
-@media(max-width:660px) and (orientation:portrait){
- #ring-arena-controls .ring-timegrid{
-  top:auto;bottom:5px;right:5px;left:5px;width:calc(100% - 10px);
-  max-width:none;height:min(70dvh,670px);max-height:calc(100% - 10px);
+@media(max-width:700px){
+ #ring-arena-controls .ring-timegrid{top:48px;right:5px;width:105px;max-width:35vw}
+ #ring-arena-controls .tg-row{min-height:43px;height:43px;gap:4px}
+ #ring-arena-controls .tg-portrait{width:34px;height:40px;flex-basis:34px}
+ #ring-arena-controls .tg-identity strong{font-size:9px}
+ #ring-arena-controls .tg-hp-value{font-size:10px}
+ #ring-arena-controls .tg-hp-value small{font-size:8px}
+ #ring-arena-controls .tg-faction{font-size:9px}
+ #ring-arena-controls .tg-tactics{
+  left:4px;right:112px;bottom:8px;max-width:none;
+  padding:7px 8px;
  }
- #ring-arena-controls .tg-row{height:56px;min-height:56px}
- #ring-arena-controls .tg-rail{overflow-y:auto;overflow-x:hidden}
- #ring-arena-controls .tg-command{grid-template-columns:1fr;row-gap:5px}
- #ring-arena-controls .tg-tools{grid-column:1;grid-row:3;justify-content:space-between}
- #ring-arena-controls .tg-tools button{flex:1;min-width:0!important}
- #ring-arena-controls .tg-threat{max-height:35px}
- #ring-arena-controls .tg-hand{min-height:75px;max-height:85px}
- #ring-arena-controls .ring-timegrid.is-folded{
-  left:auto;top:auto;bottom:5px;right:5px;width:min(310px,calc(100% - 10px));height:auto;
- }
+ #ring-arena-controls .tg-cards button{flex-basis:90px;min-width:90px}
 }
-@media(max-height:470px){
- #ring-arena-controls .tg-head{height:35px;padding:3px 8px}
- #ring-arena-controls .tg-brand strong{font-size:12px}
- #ring-arena-controls .tg-brand small{font-size:7px}
- #ring-arena-controls .tg-threat{min-height:25px;max-height:27px;padding:2px 8px}
- #ring-arena-controls .tg-command{padding:4px 8px}
- #ring-arena-controls .tg-hand{min-height:60px;max-height:66px;padding:3px 6px}
- #ring-arena-controls .tg-card{min-height:52px!important;max-height:59px}
- #ring-arena-controls .tg-bottom{min-height:33px;padding:4px 8px}
+@media(max-width:500px) and (orientation:portrait){
+ #ring-arena-controls .ring-timegrid{top:38px}
+ #ring-arena-controls .tg-row{height:49px;min-height:49px}
+ #ring-arena-controls .tg-portrait{width:36px;height:44px;flex-basis:36px}
+ #ring-arena-controls .tg-tactics{
+  left:4px;right:4px;bottom:7px;max-height:44vh;overflow-y:auto;
+ }
 }
 @media(prefers-reduced-motion:reduce){
- #ring-arena-controls .tg-card,#ring-arena-controls .tg-float-hit{animation:none!important;transition:none!important}
-}
-/* Entire eight-person roster fits the typical 1280x720 game frame;
-   keep the two-track hit zones and readable hand, never scroll away a fighter. */
-@media (orientation:landscape) and (min-height:590px){
- #ring-arena-controls .tg-row{height:47px;min-height:47px;padding:1px 0}
- #ring-arena-controls .tg-portrait{width:34px;height:40px}
- #ring-arena-controls .tg-identity{gap:1px}
- #ring-arena-controls .tg-dual{gap:2px}
- #ring-arena-controls .tg-target-track{height:19px}
- #ring-arena-controls .tg-cell{height:19px}
- #ring-arena-controls .tg-own-track{height:15px}
- #ring-arena-controls .tg-target-track .tg-band{height:17px;line-height:15px!important}
- #ring-arena-controls .tg-own-track .tg-band{height:13px;line-height:11px!important}
- #ring-arena-controls .tg-threat{min-height:31px;max-height:34px}
- #ring-arena-controls .tg-hand-label{height:21px}
- #ring-arena-controls .tg-hand{min-height:66px;max-height:71px;padding:3px 8px 4px}
- #ring-arena-controls .tg-card{min-height:57px!important;max-height:63px;padding:4px 7px!important}
- #ring-arena-controls .tg-head{height:45px}
- #ring-arena-controls .tg-bottom{min-height:38px;padding:4px 8px}
-}
-/* Use actual character ART for thumbnails; the original authored portrait
-   images have transparent full-body margins, which otherwise make their faces
-   too small to function as selectable avatars. */
-#ring-arena-controls .tg-portrait img{
- object-position:center 10%;transform:scale(1.86);
- transform-origin:50% 19%;
-}
-#ring-arena-controls .tg-row.enemy .tg-portrait img{
- object-position:center 12%;transform:scale(1.95);
- transform-origin:50% 18%;
-}
-
-/* The battle HUD owns the FX layer directly, outside the scrollable
-   right command dock. Its bounds are updated to the true WebGL canvas
-   pixels before each hit so 3D torso impact labels stay correctly aligned. */
-#ring-arena-controls > .tg-hit-layer{
- position:absolute!important;top:0!important;left:0!important;
- right:auto!important;bottom:auto!important;
- z-index:12!important;overflow:visible;pointer-events:none;
-}
-
-/* -------------------------------------------------------------------------
-   WAR HUD — edge-of-screen battlefield overlay, NOT A PANEL.
-   Actual in-game HUD, present for every battle frame. The whole 3D world
-   keeps its original full-size canvas, no side-by-side split, no tinted
-   rectangle, no modal window or game-view shrink. Only the interaction
-   items capture pointer events; empty stage remains usable.
-   ------------------------------------------------------------------------- */
-#view.ring-arena-active:not(.ring-arena-transit) #ring-arena-canvas{
- left:0!important;right:0!important;width:100%!important;max-width:none!important;
-}
-#ring-arena-controls .ring-timegrid{
- position:absolute!important;top:10px!important;right:12px!important;
- bottom:8px!important;left:auto!important;
- width:clamp(370px,33.8vw,445px)!important;
- max-width:calc(100% - 24px)!important;height:auto!important;
- border:0!important;border-radius:0!important;
- background:transparent!important;background-image:none!important;
- box-shadow:none!important;backdrop-filter:none!important;
- filter:none!important;isolation:auto!important;overflow:visible!important;
- pointer-events:none!important;
- color:#e9f2ed;
- text-shadow:0 1px 5px rgba(0,0,0,.8);
-}
-#ring-arena-controls .ring-timegrid .tg-head,
-#ring-arena-controls .ring-timegrid .tg-body,
-#ring-arena-controls .ring-timegrid .tg-command,
-#ring-arena-controls .ring-timegrid .tg-rail,
-#ring-arena-controls .ring-timegrid .tg-threat,
-#ring-arena-controls .ring-timegrid .tg-hand,
-#ring-arena-controls .ring-timegrid .tg-bottom{
- border:0!important;box-shadow:none!important;
- backdrop-filter:none!important;background:transparent!important;
-}
-#ring-arena-controls .ring-timegrid .tg-head{
- height:30px!important;min-height:30px!important;
- padding:0 1px 4px 8px!important;
- background:linear-gradient(90deg,transparent,rgba(4,15,23,.35) 35%,rgba(4,15,23,.60))!important;
- pointer-events:none!important;
-}
-#ring-arena-controls .tg-sigil{
- border:0!important;background:transparent!important;width:20px!important;
- height:23px!important;font-size:22px!important;
- text-shadow:0 0 8px #91cbb17c;
-}
-#ring-arena-controls .tg-brand{gap:6px!important}
-#ring-arena-controls .tg-brand strong{font-size:12px!important;letter-spacing:.13em!important}
-#ring-arena-controls .tg-brand small{font-size:8px!important;letter-spacing:.09em!important}
-#ring-arena-controls .tg-phase{
- font-size:11px!important;color:#d1e2d7!important;font-variant-numeric:tabular-nums;
-}
-#ring-arena-controls .tg-head [data-tg-toggle]{
- pointer-events:auto!important;min-height:22px!important;padding:2px 6px!important;
- background:rgba(5,16,24,.54)!important;
- border:1px solid rgba(160,191,193,.2)!important;
- font-size:9px!important;
-}
-#ring-arena-controls .ring-timegrid .tg-body{
- pointer-events:none!important;overflow:hidden!important;
-}
-#ring-arena-controls .tg-threat{
- padding:1px 5px!important;height:29px!important;min-height:29px!important;
- max-height:29px!important;
- background:linear-gradient(90deg,transparent 1%,rgba(4,17,25,.46) 34%,rgba(4,17,25,.68))!important;
- pointer-events:none!important;
-}
-#ring-arena-controls .tg-threat button{pointer-events:auto!important}
-#ring-arena-controls .tg-danger-chip{
- border:1px solid rgba(224,125,128,.34)!important;
- background:rgba(56,22,34,.75)!important;
- padding:2px 5px!important;min-height:23px!important;height:23px!important;
-}
-#ring-arena-controls .tg-command{
- padding:4px 5px 5px!important;row-gap:1px!important;min-height:50px;
- background:linear-gradient(90deg,transparent,rgba(3,15,22,.46) 25%,rgba(3,15,22,.76))!important;
- pointer-events:none!important;
-}
-#ring-arena-controls .tg-command [data-tg-role]{font-size:11px!important}
-#ring-arena-controls .tg-command [data-tg-deck]{font-size:9px!important}
-#ring-arena-controls .tg-command button{pointer-events:auto!important}
-#ring-arena-controls .tg-tools button{
- font-size:9px!important;min-height:24px!important;
- padding:3px 4px!important;
- border:1px solid rgba(140,180,176,.19)!important;
- background:rgba(8,24,30,.49)!important;
-}
-#ring-arena-controls .tg-tools button:hover{
- background:rgba(30,65,66,.85)!important;
- border-color:rgba(191,228,205,.7)!important;
-}
-#ring-arena-controls .tg-rail{
- padding:0 0 2px 0!important;overflow-x:hidden!important;
- overflow-y:auto!important;pointer-events:none!important;
- scrollbar-width:thin;
- scrollbar-color:rgba(176,218,210,.25) transparent;
-}
-#ring-arena-controls .tg-ticks{
- height:23px!important;min-height:23px!important;
- grid-template-columns:117px repeat(10,minmax(0,1fr))!important;
- background:linear-gradient(90deg,transparent 0%,rgba(4,17,25,.55) 28%,rgba(4,17,25,.74))!important;
- border:0!important;color:#c1d5d1!important;
- font-size:10px!important;top:0;letter-spacing:.04em;
- pointer-events:none;
-}
-#ring-arena-controls .tg-ticks span:first-child{padding-left:9px!important;font-size:9px!important}
-#ring-arena-controls .tg-faction{
- height:14px;min-height:14px;
- display:flex;align-items:center;gap:6px;padding:0 5px 0 8px;
- font-size:9px;letter-spacing:.17em;line-height:12px;
- color:#e1c3ba;font-weight:750;
- background:linear-gradient(90deg,transparent 0%,rgba(8,22,30,.54) 30%,rgba(8,22,30,.64));
-}
-#ring-arena-controls .tg-faction-ally{color:#bfe2cf}
-#ring-arena-controls .tg-faction i{flex:1;height:1px;background:linear-gradient(90deg,currentColor,transparent);opacity:.36}
-#ring-arena-controls .tg-row,
-#ring-arena-controls .tg-row.enemy,
-#ring-arena-controls .tg-row.ally{
- grid-template-columns:117px minmax(0,1fr)!important;
- min-height:46px!important;height:46px!important;
- border:0!important;border-bottom:1px solid rgba(182,205,199,.09)!important;
- border-left:1px solid rgba(158,207,189,.12)!important;
- border-radius:0 4px 4px 0!important;
- padding:1px 0!important;margin:0 0 2px 0!important;
- background:linear-gradient(90deg,rgba(3,15,20,.09),rgba(4,16,25,.56) 23%,rgba(5,17,25,.70) 100%)!important;
- pointer-events:none!important;
-}
-#ring-arena-controls .tg-row.enemy{
- border-left-color:rgba(204,113,123,.28)!important;
- background:linear-gradient(90deg,rgba(5,17,24,.06),rgba(20,13,25,.53) 24%,rgba(16,14,24,.71))!important;
-}
-#ring-arena-controls .tg-row.current{
- border-left:2px solid #c5efcc!important;
- background:linear-gradient(90deg,rgba(25,65,54,.31),rgba(12,34,36,.61) 24%,rgba(8,26,30,.80))!important;
- box-shadow:inset 0 0 20px rgba(138,196,161,.09)!important;
-}
-#ring-arena-controls .tg-unit{padding:0 2px!important;gap:6px!important}
-#ring-arena-controls .tg-portrait{
- width:43px!important;height:42px!important;min-height:42px!important;
- border-radius:4px!important;box-shadow:0 2px 8px #0009!important;
- pointer-events:auto!important;
-}
-#ring-arena-controls .tg-row.enemy .tg-portrait{border-color:rgba(224,141,148,.62)!important}
-#ring-arena-controls .tg-row.ally .tg-portrait{border-color:rgba(154,217,177,.58)!important}
-#ring-arena-controls .tg-identity{gap:2px!important}
-#ring-arena-controls .tg-identity b{font-size:10px!important;max-width:70px!important}
-#ring-arena-controls .tg-hp{font-size:10px!important}
-#ring-arena-controls .tg-hp small{font-size:8px!important}
-#ring-arena-controls .tg-hp-track{height:3px!important}
-#ring-arena-controls .tg-dual{gap:3px!important;padding:2px 2px 1px 0!important}
-#ring-arena-controls .tg-target-track{height:18px!important;grid-template-columns:repeat(10,minmax(0,1fr))}
-#ring-arena-controls .tg-cell{
- height:18px!important;min-height:18px!important;
- background:rgba(115,163,157,.055)!important;
- border:1px solid rgba(163,206,197,.14)!important;
- pointer-events:auto!important;
-}
-#ring-arena-controls .tg-cell:hover:not(:disabled){
- background:rgba(183,238,212,.27)!important;border-color:#d4efdf!important;
-}
-#ring-arena-controls .tg-own-track{height:13px!important;border:0!important;background-color:rgba(8,18,26,.23)!important}
-#ring-arena-controls .tg-own-track .tg-band{height:12px!important;line-height:10px!important}
-#ring-arena-controls .tg-target-track .tg-band{height:17px!important;line-height:15px!important}
-#ring-arena-controls .tg-band{
- border:1px solid rgba(219,238,224,.32)!important;
- border-radius:3px!important;
- box-shadow:0 1px 5px #000a!important;
- font-size:9px!important;
-}
-#ring-arena-controls .tg-band:not(:disabled){pointer-events:auto!important}
-#ring-arena-controls .tg-hand-label{
- min-height:20px!important;height:20px!important;padding:3px 6px 0 8px!important;
- border:0!important;color:#e2e7dc;
- background:linear-gradient(90deg,transparent,rgba(4,16,23,.66))!important;
- pointer-events:none!important;
-}
-#ring-arena-controls .tg-hand{
- min-height:65px!important;max-height:71px!important;
- padding:4px 1px 4px 4px!important;gap:5px!important;
- pointer-events:none!important;
-}
-#ring-arena-controls .tg-card{
- flex:1 1 0!important;width:0!important;min-width:0!important;max-width:none!important;
- min-height:59px!important;max-height:64px!important;
- padding:4px 5px!important;
- border:1px solid rgba(182,145,135,.61)!important;
- background:linear-gradient(145deg,rgba(51,43,49,.92),rgba(14,24,32,.91))!important;
- box-shadow:0 3px 8px #0008!important;
- pointer-events:auto!important;
-}
-#ring-arena-controls .tg-card strong{font-size:10px!important;max-width:100%!important}
-#ring-arena-controls .tg-card small{font-size:9px!important;max-width:100%!important}
-#ring-arena-controls .tg-card .tg-card-icon{font-size:11px!important}
-#ring-arena-controls .tg-bottom{
- min-height:36px!important;height:36px!important;padding:2px 3px 2px 8px!important;
- background:linear-gradient(90deg,transparent,rgba(4,17,24,.67))!important;
- pointer-events:none!important;
-}
-#ring-arena-controls [data-tg-help]{
- color:#d0dfda!important;font-size:9px!important;
- max-height:28px!important;
-}
-#ring-arena-controls .tg-bottom button{pointer-events:auto!important}
-#ring-arena-controls .tg-execute{
- min-height:28px!important;padding:4px 10px!important;
- font-weight:800!important;letter-spacing:.04em;
- border-color:rgba(185,231,207,.74)!important;
- background:linear-gradient(145deg,rgba(63,105,87,.93),rgba(22,60,50,.95))!important;
-}
-#ring-arena-controls .ring-timegrid.is-folded{
- top:auto!important;bottom:10px!important;right:10px!important;
- width:260px!important;height:auto!important;
-}
-#ring-arena-controls .ring-timegrid.is-folded .tg-head{
- background:rgba(6,18,24,.64)!important;
-}
-#ring-arena-controls .tg-compact{background:rgba(4,17,22,.67)!important}
-@media(max-width:850px) and (orientation:landscape){
- #ring-arena-controls .ring-timegrid{right:4px!important;top:4px!important;bottom:4px!important;
-  width:clamp(315px,47vw,390px)!important;max-width:60%!important;}
- #ring-arena-controls .tg-ticks{grid-template-columns:101px repeat(10,minmax(0,1fr))!important}
- #ring-arena-controls .tg-row{grid-template-columns:101px minmax(0,1fr)!important}
- #ring-arena-controls .tg-portrait{width:34px!important;height:36px!important;min-height:36px!important}
- #ring-arena-controls .tg-row{min-height:43px!important;height:43px!important}
- #ring-arena-controls .tg-brand small{display:none}
-}
-@media(max-width:660px) and (orientation:portrait){
- #ring-arena-controls .ring-timegrid{
-  left:5px!important;right:5px!important;top:auto!important;bottom:5px!important;
-  width:calc(100% - 10px)!important;max-width:none!important;
-  height:min(72dvh,665px)!important;
- }
- #ring-arena-controls .tg-row{min-height:48px!important;height:48px!important}
- #ring-arena-controls .tg-head{background:rgba(5,16,22,.71)!important}
- #ring-arena-controls .tg-tools button{font-size:9px!important;padding:4px 3px!important}
- #ring-arena-controls .tg-card{flex:1 1 0!important;width:0!important}
+ #ring-arena-controls .tg-hp-bar i{transition:none}
+ #ring-arena-controls .tg-float-hit{animation:none}
 }
