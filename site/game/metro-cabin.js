@@ -20,122 +20,11 @@ function create({root,engine,onExit,onFeedback}){
 
   '<div class="pw-cabin-actions"></div>'+
   '<div class="pw-cabin-anomaly" hidden><strong>末班车</strong><p>车厢里的报站声突然停了。</p></div>';
- // Developer-only NPC-G001 emotion comparison. Normal metro remains unchanged.
- // Inputs can be original white-background Anima PNGs: the outer paper is
- // stripped for display without touching or overwriting the uploaded artwork.
- section.insertAdjacentHTML('beforeend',
-  '<section class="pw-npc-qa" hidden aria-label="NPC三人组情绪地铁对比">'+
-  '<div class="pw-npc-qa-stage" aria-live="off">'+
-  '<img class="pw-npc-qa-joy" alt="喜悦三人组">'+
-  '<img class="pw-npc-qa-surprise" alt="惊讶三人组"></div>'+
-  '<div class="pw-npc-qa-controls">'+
-  '<strong>NPC-G001 · 地铁情绪对比</strong>'+
-  '<button type="button" data-npc-pose="joy">喜悦</button>'+
-  '<button type="button" data-npc-pose="surprise">惊讶</button>'+
-  '<button type="button" data-npc-pose="both">并排</button>'+
-  '<label>大小 <input data-npc-scale type="range" min="42" max="80" value="64"></label>'+
-  '<label class="pw-npc-file">喜悦原图 <input type="file" data-npc-input="joy" accept="image/png,image/jpeg,image/webp"></label>'+
-  '<label class="pw-npc-file">惊讶原图 <input type="file" data-npc-input="surprise" accept="image/png,image/jpeg,image/webp"></label>'+
-  '<button type="button" data-npc-pose="exit">退出对比</button>'+
-  '<small class="pw-npc-qa-note">开发预览：复用实际地铁车厢背景与摄像机；当前人物为屏幕上的透视比例测试，非正式3D演员。</small>'+
-  '</div></section>');
  root.append(section);
  const canvas=section.querySelector('.pw-cabin-canvas'),ctx=canvas.getContext('2d',{alpha:false});
  const foreground=section.querySelector('.pw-cabin-foreground');
  const fg=foreground.getContext('2d',{alpha:true});
  const actorsLayer=section.querySelector('.pw-cabin-live-actors');
- const qa=section.querySelector('.pw-npc-qa');
- const qaImages={joy:qa.querySelector('.pw-npc-qa-joy'),
-  surprise:qa.querySelector('.pw-npc-qa-surprise')};
- let qaActive=false,qaPose='joy';
- // Outer-area flood fill preserves white shirt regions inside the blazer.
- function extractPaper(image){
-  const imageWidth=image.naturalWidth||image.width;
-  const imageHeight=image.naturalHeight||image.height;
-  const size=1024,side=Math.max(imageWidth,imageHeight);
-  const cv=document.createElement('canvas');cv.width=size;cv.height=size;
-  const c=cv.getContext('2d',{willReadFrequently:true});if(!c)return image.src;
-  c.drawImage(image,(size-imageWidth*size/side)/2,
-   (size-imageHeight*size/side)/2,
-   imageWidth*size/side,imageHeight*size/side);
-  const frame=c.getImageData(0,0,size,size),p=frame.data;
-  const visited=new Uint8Array(size*size),stack=new Int32Array(size*size);
-  let count=0;
-  const blank=i=>p[i*4]>228&&p[i*4+1]>228&&p[i*4+2]>228&&
-   Math.max(p[i*4],p[i*4+1],p[i*4+2])-Math.min(p[i*4],p[i*4+1],p[i*4+2])<24;
-  const push=i=>{if(i<0||i>=visited.length||visited[i]||!blank(i))return;
-    visited[i]=1;stack[count++]=i};
-  for(let x=0;x<size;x++){push(x);push((size-1)*size+x)}
-  for(let y=0;y<size;y++){push(y*size);push(y*size+size-1)}
-  while(count){
-   const a=stack[--count],x=a%size,y=Math.floor(a/size);
-   p[a*4+3]=0;
-   if(x>0)push(a-1);if(x<size-1)push(a+1);
-   if(y>0)push(a-size);if(y<size-1)push(a+size);
-  }
-  c.putImageData(frame,0,0);return cv.toDataURL('image/png');
- }
- // Two authentic 1024×1024 RGBA sprites are committed to the game repo.
- // Render them directly: no 192px thumbnail, browser re-matting or upscaling.
- let previewAssetStatus='idle';
- function loadDefaultNpcArt(){
-  if(previewAssetStatus!=='idle')return;
-  previewAssetStatus='loading';
-  const note=qa.querySelector('.pw-npc-qa-note');
-  if(note)note.textContent='正在加载 GitHub 中的 1024×1024 高清三人立绘…';
-  let ready=0,errors=0;
-  const images={
-   joy:'./assets/characters/npc-g001/joy-1024.png?v=approved-20261108-hd',
-   surprise:'./assets/characters/npc-g001/surprise-1024.png?v=candidate-20261108-hd'
-  };
-  for(const [pose,source] of Object.entries(images)){
-   const img=qaImages[pose];
-   if(img.dataset.overridden==='true'){ready++;continue}
-   img.decoding='async';img.loading='eager';
-   img.onload=()=>{
-    if(img.naturalWidth!==1024||img.naturalHeight!==1024){
-     errors++;
-     console.error('[NPC-G001] Original sprite resolution mismatch',pose,img.naturalWidth,img.naturalHeight);
-    }else ready++;
-    previewAssetStatus=errors?'error':ready===2?'ready':'loading';
-    if(note)note.textContent=errors?'高清图加载失败或尺寸不符，请刷新检查部署':
-     ready===2?'两张 1024×1024 透明原图已自动加载，可在同一车厢切换喜悦和惊讶。':'正在加载第二张高清立绘…';
-   };
-   img.onerror=()=>{
-    errors++;previewAssetStatus='error';
-    if(note)note.textContent='1024高清立绘尚未发布或加载失败，请检查 GitHub Pages 状态';
-   };
-   img.src=source;
-  }
- }
- function showQaPose(pose){
-  qaPose=pose==='surprise'||pose==='both'?pose:'joy';
-  qa.dataset.pose=qaPose;
-  for(const button of qa.querySelectorAll('[data-npc-pose]')){
-   if(button.dataset.npcPose!=='exit')
-    button.setAttribute('aria-pressed',String(button.dataset.npcPose===qaPose));
-  }
-  return qaPose;
- }
- for(const input of qa.querySelectorAll('[data-npc-input]')){
-  input.addEventListener('change',()=>{
-   const file=input.files?.[0];if(!file)return;
-   const pose=input.dataset.npcInput,url=URL.createObjectURL(file),img=new Image();
-   img.onload=()=>{try{qaImages[pose].dataset.overridden='true';qaImages[pose].src=extractPaper(img)}
-    finally{URL.revokeObjectURL(url)}showQaPose(pose)};
-   img.onerror=()=>URL.revokeObjectURL(url);img.src=url;
-  });
- }
- for(const button of qa.querySelectorAll('[data-npc-pose]')){
-  button.addEventListener('click',()=>{
-   const pose=button.dataset.npcPose;
-   if(pose==='exit'){close();return}
-   showQaPose(pose);
-  });
- }
- qa.querySelector('[data-npc-scale]').addEventListener('input',event=>{
-  qa.style.setProperty('--npc-qa-height',event.target.value+'%');
- });
 
  // Every seat accepts the real authored front L2D renderer. No synthetic
  // human silhouettes, no auto-painted seated/side-profile character variants.
@@ -330,14 +219,6 @@ function create({root,engine,onExit,onFeedback}){
   }finally{seatLoading=false}
  }
  function refresh(){
-  if(qaActive){
-   lineLabel.textContent='地铁 · 三人NPC情绪预览';
-   clock.textContent='开发对比';
-   nextLabel.textContent='站内观察';
-   anomaly.hidden=true;section.dataset.night='false';
-   actions.replaceChildren();
-   return;
-  }
   if(regionalRide){
    const atlas=global.PaperWorldAtlas;
    const s=engine.snapshot(),leg=regionalRide.legs[regionalRide.index];
@@ -430,17 +311,6 @@ function create({root,engine,onExit,onFeedback}){
   if(!result.ok){onFeedback?.(result.reason);return}
   close();await onExit?.(result.station);
  }
- function openNpcComparison(){
-  if(visible||auto)return false;
-  qaActive=true;visible=true;section.hidden=false;qa.hidden=false;
-  rideEpoch++;motion?.reset();
-  section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
-  section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
-  section.dataset.camera=section.dataset.renderer==='ring-3d'?'front-elevation-no-floor':'side-elevation';
-  if(!raf)raf=requestAnimationFrame(render);
-  loadDefaultNpcArt();showQaPose('both');refresh();
-  return true;
- }
  function open(){
   const ride=engine.snapshot().metro;
   if(!ride?.onboard)return false;
@@ -459,7 +329,6 @@ function create({root,engine,onExit,onFeedback}){
   return true;
  }
  function close(){
-  qaActive=false;qa.hidden=true;
   visible=false;section.hidden=true;rideEpoch++;doorSequence++;
   door.open=0;door.target=0;door.moving=false;doorReadyAt=0;
   section.dataset.doorState='closed';
@@ -536,7 +405,7 @@ function create({root,engine,onExit,onFeedback}){
    else refresh();
   }
  }
- return Object.freeze({open,openNpcComparison,showQaPose,close,refresh,playRoute,playRegionalJourney,isOpen:()=>visible});
+ return Object.freeze({open,close,refresh,playRoute,playRegionalJourney,isOpen:()=>visible});
 }
 global.PaperWorldMetroCabin=Object.freeze({create});
 })(window);
