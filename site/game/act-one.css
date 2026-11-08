@@ -1,0 +1,75 @@
+/* Act I cinematic insert — same game scene, no new HUD or puzzle frame. */
+#view>.pw-act-one-fall[hidden]{display:none!important}
+#view>.pw-act-one-fall{
+  position:absolute;inset:0;z-index:8;overflow:hidden;
+  pointer-events:none;background:transparent;
+}
+#view .pw-act-one-fall-person{
+  position:absolute;left:13.5%;top:-42%;width:clamp(22px,4.2cqw,56px);
+  height:clamp(92px,19cqh,184px);opacity:0;
+  filter:blur(.5px) drop-shadow(0 0 1px #111);
+  transform:rotate(8deg);
+}
+#view .pw-act-one-fall-person:before{
+  content:"";position:absolute;left:34%;top:0;width:30%;aspect-ratio:1;
+  background:#151b21;border-radius:50%;box-shadow:0 0 1px #37434c;
+}
+#view .pw-act-one-fall-person>i{
+  position:absolute;left:20%;top:17%;width:59%;height:50%;
+  background:linear-gradient(#222830,#14191e);
+  clip-path:polygon(20% 0,75% 0,96% 42%,82% 94%,18% 100%,0 40%);
+}
+#view .pw-act-one-fall-person>b{
+  position:absolute;left:23%;top:60%;width:55%;height:42%;
+  background:#15191f;
+  clip-path:polygon(0 0,44% 0,45% 100%,30% 100%,24% 36%,16% 100%,0 100%);
+}
+#view>.pw-act-one-fall.is-falling .pw-act-one-fall-person{
+  animation:pw-act-one-window-drop 1.12s cubic-bezier(.38,.08,.67,1) forwards;
+}
+@keyframes pw-act-one-window-drop{
+  0%{top:-42%;opacity:0;transform:rotate(6deg) translateX(0)}
+  11%{opacity:.8}
+  38%{opacity:.93;transform:rotate(12deg) translateX(10px)}
+  77%{opacity:.86}
+  100%{top:115%;opacity:0;transform:rotate(21deg) translateX(22px)}
+}
+/* Hallway for the optional visit to the boy's home.
+   It is a quiet exterior; no grotesque crime-scene fabrication. */
+#overworld-city-stage[data-location="classmate-home"]{
+  background:linear-gradient(180deg,#10151b 0%,#20252b 58%,#14171b 100%);
+}
+#overworld-city-stage .pw-arc-house-scene{
+  position:absolute;inset:0;overflow:hidden;
+  background:linear-gradient(90deg,#1a1c21 0 19%,#39373b 19.2% 81%,#15191d 81.2%);
+}
+.pw-arc-house-scene .pw-arc-house-ceiling{
+  position:absolute;left:0;top:0;right:0;height:26%;
+  background:linear-gradient(#11151a,#22252a);
+  clip-path:polygon(0 0,100% 0,78% 100%,23% 100%);
+}
+.pw-arc-house-scene .pw-arc-house-floor{
+  position:absolute;left:0;bottom:0;right:0;height:35%;
+  background:repeating-linear-gradient(115deg,transparent 0 64px,#15181b4b 65px 66px),
+   linear-gradient(#292a2d,#0d1218);
+  clip-path:polygon(21% 0,79% 0,100% 100%,0 100%);
+}
+.pw-arc-house-scene .pw-arc-house-door{
+  position:absolute;left:38%;top:20%;width:25%;height:59%;
+  background:linear-gradient(110deg,#131619,#21262b 40%,#11151a 100%);
+  border:clamp(5px,1cqw,13px) solid #454345;
+  box-shadow:12px 12px 25px #000a,inset 3px 0 22px #080b0dee;
+}
+.pw-arc-house-scene .pw-arc-house-door:before{
+  content:"";position:absolute;right:12%;top:52%;width:8px;height:8px;
+  border-radius:50%;background:#85817a;box-shadow:0 0 4px #d5d1c344;
+}
+.pw-arc-house-scene .pw-arc-house-light{
+  position:absolute;left:44%;top:10%;width:13%;height:3px;
+  background:#d0cebe;box-shadow:0 0 19px 7px #e2e1bc18;
+}
+@media(prefers-reduced-motion:reduce){
+  #view>.pw-act-one-fall.is-falling .pw-act-one-fall-person{
+    animation-duration:.28s;
+  }
+}
