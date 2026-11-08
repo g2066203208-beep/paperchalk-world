@@ -53,10 +53,12 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
    const orbit=arena.allyViewCamera(base,hero,active,yaw,pitch,aspect);
    assert.ok(orbit.actorRootUnchanged);
    assert.deepEqual(orbit.shoulderPivot,neutral.shoulderPivot);
-   close(Math.hypot(orbit.eye.x-active.x,orbit.eye.z-active.z),
-    Math.hypot(neutral.eye.x-active.x,neutral.eye.z-active.z),1e-7);
-   assert.ok(Math.abs(orbit.lookYawDeg)<=22.00001);
-   assert.ok(Math.abs(orbit.lookPitchDeg)<=12.00001);
+   // Mouse movement is natural head-look, NEVER a shoulder dolly/orbit.
+   assert.deepEqual(orbit.eye,neutral.eye,
+    'the real 3D shoulder eye must remain fixed at all cursor positions');
+   assert.equal(orbit.fov,neutral.fov,'mouse cannot change the approved FOV');
+   assert.ok(Math.abs(orbit.lookYawDeg)<=7.50001);
+   assert.ok(Math.abs(orbit.lookPitchDeg)<=3.50001);
    assert.ok(Number.isFinite(arena.project({
     x:scene.enemies[0].x,y:.8,z:scene.enemies[0].z
    },orbit,aspect).x));
