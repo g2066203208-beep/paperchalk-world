@@ -10,6 +10,7 @@ on:
       - 'site/game/metro-cabin.js'
       - 'site/game/metro-npc-staging.js'
       - 'tests/metro-npc-world-staging.test.cjs'
+      - 'tests/npc-scene-presence.test.cjs'
       - 'site/game/metro-motion.js'
       - 'site/game/metro-platform-3d.js'
       - 'site/assets/metro/side/**'
@@ -54,7 +55,7 @@ jobs:
           cat /tmp/scene-2p5d.log
           exit 1
       - name: Check interchangeable 2.5D arc strip box meshes and 3D lamps
-        run: node --test tests/scene-geometry.test.cjs tests/scene-environments.test.cjs tests/metro-carriage-joins.test.cjs tests/metro-station-light.test.cjs tests/metro-motion.test.cjs tests/metro-carriage-joins.test.cjs tests/metro-platform3d.test.cjs tests/metro-npc-world-staging.test.cjs
+        run: node --test tests/scene-geometry.test.cjs tests/scene-environments.test.cjs tests/metro-carriage-joins.test.cjs tests/metro-station-light.test.cjs tests/metro-motion.test.cjs tests/metro-carriage-joins.test.cjs tests/metro-platform3d.test.cjs tests/metro-npc-world-staging.test.cjs tests/npc-scene-presence.test.cjs
       - name: Verify transparent window holes in the exact game wall asset
         run: python3 tests/test_metro_wall_alpha.py
       - name: Drive actual subway, inspect floor/ceiling lighting and capture Chrome screenshots
