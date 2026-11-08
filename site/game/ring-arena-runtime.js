@@ -69,7 +69,7 @@
    allies:Object.freeze([
     Object.freeze([-1.05,9.30]),
     Object.freeze([-1.72,7.95]),
-    Object.freeze([.78,9.50]),
+    Object.freeze([.98,9.45]),
     Object.freeze([-1.05,8.32])
    ]),
    // Four visibly separated enemies in the composition's quiet middle.
