@@ -1271,7 +1271,76 @@
   let projectedShadowDraws=0;
   let shadowLampAssignments={};
   const textures=new Map();
-  const actionTextures=new Map(); // separate GPU action poses at real 3D anchors
+  const actionTextures=new Map();
+  const metroNpcStatus=new Map();
+  function approvedNpcTexture(actor){
+   if(!gl||!actor.npcSprite||!actor.id.startsWith('npc:'))return false;
+   let t=textures.get(actor.id);
+   if(!t){t=prepareTexture(gl);textures.set(actor.id,t)}
+   if(t.sourceUri!==actor.npcSprite){
+    t.sourceUri=actor.npcSprite;t.painted=false;t.error=null;
+    const img=new Image();img.decoding='async';
+    img.onload=()=>{
+     if(!gl||t.sourceUri!==actor.npcSprite)return;
+     try{
+      const cv=document.createElement('canvas');cv.width=192;cv.height=192;
+      const ctx=cv.getContext('2d',{willReadFrequently:true});
+      if(!ctx)throw Error('alpha-bounds unavailable');
+      ctx.drawImage(img,0,0,192,192);
+      const p=ctx.getImageData(0,0,192,192).data;
+      let x0=192,x1=0,y0=192,y1=0;
+      for(let y=0;y<192;y++)for(let x=0;x<192;x++)if(p[(y*192+x)*4+3]>=40){
+       x0=Math.min(x0,x);x1=Math.max(x1,x);
+       y0=Math.min(y0,y);y1=Math.max(y1,y);
+      }
+      if(x1<x0||y1<y0)throw Error('empty-alpha-sprite');
+      gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,t.texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+      t.opaqueUv={left:x0/192,right:(x1+1)/192,top:y0/192,bottom:(y1+1)/192};
+      t.shadowClipUv={...t.opaqueUv};
+      t.visibleUv={left:0,right:1,top:0,bottom:1};
+      t.painted=true;t.frames++;t.updated=performance.now();
+      t.identity=actor.npcId+'/'+actor.npcSprite;
+      metroNpcStatus.set(actor.npcId,{ready:true,asset:actor.npcSprite});
+     }catch(err){
+      t.error=String(err.message||err);
+      metroNpcStatus.set(actor.npcId,{ready:false,error:t.error});
+     }
+    };
+    img.onerror=()=>{t.error='npc-sprite-load-failed';
+     metroNpcStatus.set(actor.npcId,{ready:false,error:t.error})};
+    img.src=actor.npcSprite;
+   }
+   return !!t.painted;
+  }
+  function approvedMetroGuests(cam,aspect){
+   const daily=window.PaperWorldDailyLifeUI,ride=daily?.snapshot?.()?.metro;
+   const life=daily?.npcPresence,staging=window.PaperWorldMetroNpcStaging;
+   if(!transitMode||!ride?.onboard||!life||!staging)return [];
+   const candidates=life.forMetro({
+    lineId:ride.lineId,station:ride.station,direction:ride.direction});
+   const seen=[],out=[];
+   for(const candidate of candidates){
+    const g=candidate.geometry;
+    const slot=staging.CONFIG.slots.find(s=>s.id===g?.metroSlot);
+    if(!slot||!candidate.sprite)continue;
+    const ref=staging.derive({id:'npc:'+candidate.id,slot,
+     height:g.heightMeters,renderReady:true,
+     art:{soleX:g.soleX,crownY:g.assetCrownY,soleY:g.assetSoleY,
+      widthScale:g.widthScale,approved:true}});
+    if(!ref.ok)continue;
+    const screen=staging.screenMetrics(ref.actor,{camera:cam,aspect,project});
+    if(!screen.ok||!screen.inHorizontalFov)continue;
+    const half=Math.max(.22,ref.actor.height*ref.actor.widthScale*.36);
+    if(seen.some(p=>Math.abs(p.x-slot.x)<p.half+half+.1))continue;
+    seen.push({x:slot.x,half});
+    out.push({...ref.actor,team:'npc',
+     npcId:candidate.id,npcSprite:candidate.sprite});
+   }
+   return out;
+  } // separate GPU action poses at real 3D anchors
   let drawnPoses={};
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
@@ -2095,7 +2164,7 @@
     const clip=art?.painted?{left:0,top:0,right:1,bottom:1}:
      t.visibleUv||{left:0,top:0,right:1,bottom:1};
     gl.uniform4f(portrait.uClipUv,clip.left,clip.top,clip.right,clip.bottom);
-    gl.uniform1f(portrait.uWidthScale,1);
+    gl.uniform1f(portrait.uWidthScale,a.widthScale||1);
     // Mouse movement does not animate, tilt or translate the heroine.
     // An actual attack still has its authored one-shot physical lunge.
     gl.uniform1f(portrait.uLean,
@@ -2239,6 +2308,11 @@
     .map(a=>({...a,...(scenePack?.actors?.positions?.[a.id]||{})}));
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
+   // The same cameraVP, world-space floor, lighting and shadows as heroine.
+   // Never render an unapproved image or two simultaneous copies of one NPC.
+   for(const npc of approvedMetroGuests(cam,w/h)){
+    if(approvedNpcTexture(npc))all.push(npc);
+   }
    uploadActionImage('hero-attack',heroActionArt);
    uploadActionImage('enemy-2-hit',enemyHitArt);
    // V29 original-source measured shared center: performers at 30% / 70%.
@@ -2430,7 +2504,7 @@
     }),
     note:'No artwork; no visual actors. Fixed metro camera may intentionally crop feet below frame.'};
   }
-  const inspect=()=>({active,transitMode,metroNpcStaging:inspectMetroNpcStaging(),canvasParent:canvas.parentElement?.id||null,
+  const inspect=()=>({active,transitMode,approvedMetroNpcArt:[...metroNpcStatus].map(([id,status])=>({id,...status})),metroNpcStaging:inspectMetroNpcStaging(),canvasParent:canvas.parentElement?.id||null,
    cameraParity:(()=>{
     if(!lens||lens.cinematic)return false;
     const base=camera(mode,0);
