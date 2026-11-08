@@ -237,7 +237,10 @@
       "id": "NPC-C004",
       "label": "年轻街头男性",
       "visualCanon": "深绿连帽卫衣、卡其工装裤、黑白运动鞋",
-      "status": "prompt_only_no_image"
+      "status": "candidate_image_rejected_hair_and_baked_lighting_redraw_required",
+      "promptReference": "docs/NPC-C004_ANIMA_THREE_VIEW_OVERCAST_HAIR_LOCK_20261108.md",
+      "artRule": "3 views; hairstyle consistent across all angles; unlit flat colors; neutral overcast diffuse environment; no baked hard shadows"
     }
-  ]
+  ],
+  "commonArtRule": "All future civilian source art: consistent hairstyle across front / strict left side / back, and neutral overcast diffuse illumination with unlit flat materials; game runtime handles directional light and shadows."
 }
