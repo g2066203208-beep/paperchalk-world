@@ -76,3 +76,16 @@ test('Dot array cells have precisely the same X/Y spacing at all viewports',()=>
   assert.ok(origin.x>=0&&origin.y>=0&&last.x<=width&&last.y<=height);
  }
 });
+
+test('ring diagram follows a short coherent subway loop instead of northern spaghetti detours',()=>{
+ const direct=geo.routes['b:central:cafe'];
+ const northern=geo.routes['b:convenience:northgate'];
+ assert.deepEqual(Array.from(direct,p=>Array.from(p)),[[8,3],[2,3]]);
+ assert.deepEqual(Array.from(northern,p=>Array.from(p)),[[11,2],[11,1]]);
+ for(const turns of [direct,northern])for(const [gx,gy] of turns){
+  assert.ok(gy>=1&&gy<=4,'rail corner outside metro route');
+  assert.ok(gx>=2&&gx<=11,'rail corner uses fictional outlying tracks');
+ }
+ assert.equal(geo.segments(metro.getLine('a')).length,3);
+ assert.equal(geo.segments(metro.getLine('b')).length,6);
+});
