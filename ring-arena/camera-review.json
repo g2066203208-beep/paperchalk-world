@@ -1,31 +1,12 @@
 {
-  "source": "ACTUAL in-game Chromium/WebGL; no illustrations, mocks, or faked poses",
-  "commit": "d5e1b265cbc3f1cd8f1cacda087df14e2bab78a7",
+  "commit": "0f27537c63b8a53005d25b96e470e98b12999f9d",
+  "origin": "direct live GitHub Pages Chromium/WebGL (no mock image)",
   "entries": [
     {
       "slot": 1,
       "filename": "final-eye-level-3q-1280x720.png",
       "active": "hero",
-      "actorIds": [
-        "hero",
-        "ally-2",
-        "ally-3",
-        "ally-4",
-        "enemy-1",
-        "enemy-2",
-        "enemy-3",
-        "enemy-4"
-      ],
-      "opacity": {
-        "enemy-4": 1,
-        "enemy-3": 1,
-        "enemy-2": 1,
-        "enemy-1": 1,
-        "ally-4": 1,
-        "ally-3": 1,
-        "ally-2": 1,
-        "hero": 1
-      },
+      "staging": "world-space-foreground-handoff",
       "camera": {
         "mode": "outer",
         "index": 0,
@@ -54,95 +35,188 @@
         "lookYawDeg": 0,
         "lookPitchDeg": 0,
         "phoneShoulderFit": 0,
-        "actorRootUnchanged": true,
-        "controlledActorId": "hero"
+        "actorRootUnchanged": true
       },
-      "enemyRects": [
+      "worldActors": [
         {
-          "valid": true,
-          "left": -0.27281094959652535,
-          "right": -0.11636099274111557,
-          "top": 0.28425208782855904,
-          "bottom": -0.42816728359035067
+          "id": "hero",
+          "team": "ally",
+          "x": -1.05,
+          "y": 0,
+          "z": 9.3,
+          "stageYaw": -0.05
         },
         {
-          "valid": true,
-          "left": -0.07971312085172198,
-          "right": 0.07618109042825817,
-          "top": 0.28415557484104076,
-          "bottom": -0.42699642190799675
+          "id": "ally-2",
+          "team": "ally",
+          "x": 1.4,
+          "y": 0,
+          "z": 7.68,
+          "stageYaw": 1.6
         },
         {
-          "valid": true,
-          "left": 0.11269889637059012,
-          "right": 0.2680403180254413,
-          "top": 0.2840594046316848,
-          "bottom": -0.4258297186899726
+          "id": "ally-3",
+          "team": "ally",
+          "x": 2.1,
+          "y": 0,
+          "z": 7.58,
+          "stageYaw": 1.9
         },
         {
-          "valid": true,
-          "left": 0.3044287492141647,
-          "right": 0.4592203162681196,
-          "top": 0.283963575377598,
-          "bottom": -0.42466715182157666
+          "id": "ally-4",
+          "team": "ally",
+          "x": 2.85,
+          "y": 0,
+          "z": 7.52,
+          "stageYaw": 1.9
+        },
+        {
+          "id": "enemy-1",
+          "team": "enemy",
+          "x": -1.05,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-2",
+          "team": "enemy",
+          "x": -0.25,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-3",
+          "team": "enemy",
+          "x": 0.55,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-4",
+          "team": "enemy",
+          "x": 1.35,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
         }
       ],
-      "squadRects": [
-        {
-          "valid": true,
-          "left": -1.016599290270032,
-          "right": -0.2403958475820762,
-          "top": 0.44264390161371414,
-          "bottom": -1.9877283003774677
-        },
-        {
-          "valid": true,
-          "left": -0.3573587521859357,
-          "right": 0.38417623114770216,
-          "top": 0.4368134124869218,
-          "bottom": -1.9269203456540867
-        },
-        {
-          "valid": true,
-          "left": 0.2730310515799518,
-          "right": 1.0060135829441297,
-          "top": 0.4356132455916158,
-          "bottom": -1.9144034379567638
-        },
-        {
-          "valid": true,
-          "left": 0.8961465901188704,
-          "right": 1.6207237801588137,
-          "top": 0.4344269277977074,
-          "bottom": -1.9020309667745399
-        }
-      ],
-      "friendlyX": [
-        -1.05,
-        -0.25,
-        0.55,
-        1.35
-      ],
-      "enemyX": [
-        -1.05,
-        -0.25,
-        0.55,
-        1.35
-      ]
+      "opacity": {
+        "enemy-4": 1,
+        "enemy-3": 1,
+        "enemy-2": 1,
+        "enemy-1": 1,
+        "ally-4": 1,
+        "ally-3": 1,
+        "ally-2": 1,
+        "hero": 1
+      },
+      "ready": 8,
+      "shot": "四人同排 · 自由切换",
+      "url": "https://g2066203208-beep.github.io/paperchalk-world/?scene=ring-arena&review=0f27537c63b8a53005d25b96e470e98b12999f9d"
     },
     {
       "slot": 2,
       "filename": "party-controlled-2-1280x720.png",
-      "active": "ally-2",
-      "actorIds": [
-        "hero",
-        "ally-2",
-        "ally-3",
-        "ally-4",
-        "enemy-1",
-        "enemy-2",
-        "enemy-3",
-        "enemy-4"
+      "active": "hero",
+      "staging": "world-space-foreground-handoff",
+      "camera": {
+        "mode": "outer",
+        "index": 0,
+        "shot": "left",
+        "angle": -0.02691657466805804,
+        "radius": 10.403768547982986,
+        "fov": 66,
+        "eye": {
+          "x": -0.28,
+          "y": 1.5,
+          "z": 10.4
+        },
+        "focus": {
+          "x": -0.24,
+          "y": 1.5,
+          "z": 5.4
+        },
+        "shoulderRig": true,
+        "shoulderPivot": {
+          "x": -1.05,
+          "y": 1.4256000000000002,
+          "z": 9.3
+        },
+        "shoulderBoomMeters": 1.3427211177307072,
+        "heroYawDeg": 0,
+        "lookYawDeg": 0,
+        "lookPitchDeg": 0,
+        "phoneShoulderFit": 0,
+        "actorRootUnchanged": true
+      },
+      "worldActors": [
+        {
+          "id": "hero",
+          "team": "ally",
+          "x": -1.05,
+          "y": 0,
+          "z": 9.3,
+          "stageYaw": -0.05
+        },
+        {
+          "id": "ally-2",
+          "team": "ally",
+          "x": 1.4,
+          "y": 0,
+          "z": 7.68,
+          "stageYaw": 1.6
+        },
+        {
+          "id": "ally-3",
+          "team": "ally",
+          "x": 2.1,
+          "y": 0,
+          "z": 7.58,
+          "stageYaw": 1.9
+        },
+        {
+          "id": "ally-4",
+          "team": "ally",
+          "x": 2.85,
+          "y": 0,
+          "z": 7.52,
+          "stageYaw": 1.9
+        },
+        {
+          "id": "enemy-1",
+          "team": "enemy",
+          "x": -1.05,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-2",
+          "team": "enemy",
+          "x": -0.25,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-3",
+          "team": "enemy",
+          "x": 0.55,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-4",
+          "team": "enemy",
+          "x": 1.35,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        }
       ],
       "opacity": {
         "enemy-4": 1,
@@ -154,124 +228,110 @@
         "ally-2": 1,
         "hero": 1
       },
-      "camera": {
-        "mode": "outer",
-        "index": 0,
-        "shot": "left",
-        "angle": -0.02691657466805804,
-        "radius": 10.403768547982986,
-        "fov": 66,
-        "eye": {
-          "x": 0.52,
-          "y": 1.5,
-          "z": 10.4
-        },
-        "focus": {
-          "x": 0.56,
-          "y": 1.5,
-          "z": 5.4
-        },
-        "shoulderRig": true,
-        "shoulderPivot": {
-          "x": -0.25,
-          "y": 1.4256000000000002,
-          "z": 9.3
-        },
-        "shoulderBoomMeters": 1.3427211177307072,
-        "heroYawDeg": 0,
-        "lookYawDeg": 0,
-        "lookPitchDeg": 0,
-        "phoneShoulderFit": 0,
-        "actorRootUnchanged": true,
-        "controlledActorId": "ally-2",
-        "originalHeroWorldStatic": true
-      },
-      "enemyRects": [
-        {
-          "valid": true,
-          "left": -0.4665982630529197,
-          "right": -0.30958958355888067,
-          "top": 0.28434894543015093,
-          "bottom": -0.42934232600966393
-        },
-        {
-          "valid": true,
-          "left": -0.27281094959652546,
-          "right": -0.11636099274111558,
-          "top": 0.2842520878285591,
-          "bottom": -0.42816728359035083
-        },
-        {
-          "valid": true,
-          "left": -0.07971312085172198,
-          "right": 0.07618109042825817,
-          "top": 0.28415557484104065,
-          "bottom": -0.42699642190799686
-        },
-        {
-          "valid": true,
-          "left": 0.11269889637059015,
-          "right": 0.2680403180254413,
-          "top": 0.2840594046316847,
-          "bottom": -0.42582971868997277
-        }
-      ],
-      "squadRects": [
-        {
-          "valid": true,
-          "left": -1.6764610708730614,
-          "right": -0.8634716761453455,
-          "top": 0.44392780403973253,
-          "bottom": -2.0011185115403403
-        },
-        {
-          "valid": true,
-          "left": -0.9951509489732873,
-          "right": -0.24491294989308768,
-          "top": 0.43802767241957985,
-          "bottom": -1.9395842339491884
-        },
-        {
-          "valid": true,
-          "left": -0.3573587521859363,
-          "right": 0.38417623114770216,
-          "top": 0.4368134124869225,
-          "bottom": -1.9269203456540902
-        },
-        {
-          "valid": true,
-          "left": 0.2730310515799518,
-          "right": 1.0060135829441315,
-          "top": 0.4356132455916154,
-          "bottom": -1.9144034379567643
-        }
-      ],
-      "friendlyX": [
-        -1.05,
-        -0.25,
-        0.55,
-        1.35
-      ],
-      "enemyX": [
-        -1.05,
-        -0.25,
-        0.55,
-        1.35
-      ]
+      "ready": 8,
+      "shot": "四人同排 · 自由切换",
+      "url": "https://g2066203208-beep.github.io/paperchalk-world/?scene=ring-arena&review=0f27537c63b8a53005d25b96e470e98b12999f9d"
     },
     {
       "slot": 3,
       "filename": "party-controlled-3-1280x720.png",
-      "active": "ally-3",
-      "actorIds": [
-        "hero",
-        "ally-2",
-        "ally-3",
-        "ally-4",
-        "enemy-1",
-        "enemy-2",
-        "enemy-3",
-        "enemy-4"
+      "active": "hero",
+      "staging": "world-space-foreground-handoff",
+      "camera": {
+        "mode": "outer",
+        "index": 0,
+        "shot": "left",
+        "angle": -0.02691657466805804,
+        "radius": 10.403768547982986,
+        "fov": 66,
+        "eye": {
+          "x": -0.28,
+          "y": 1.5,
+          "z": 10.4
+        },
+        "focus": {
+          "x": -0.24,
+          "y": 1.5,
+          "z": 5.4
+        },
+        "shoulderRig": true,
+        "shoulderPivot": {
+          "x": -1.05,
+          "y": 1.4256000000000002,
+          "z": 9.3
+        },
+        "shoulderBoomMeters": 1.3427211177307072,
+        "heroYawDeg": 0,
+        "lookYawDeg": 0,
+        "lookPitchDeg": 0,
+        "phoneShoulderFit": 0,
+        "actorRootUnchanged": true
+      },
+      "worldActors": [
+        {
+          "id": "hero",
+          "team": "ally",
+          "x": -1.05,
+          "y": 0,
+          "z": 9.3,
+          "stageYaw": -0.05
+        },
+        {
+          "id": "ally-2",
+          "team": "ally",
+          "x": 1.4,
+          "y": 0,
+          "z": 7.68,
+          "stageYaw": 1.6
+        },
+        {
+          "id": "ally-3",
+          "team": "ally",
+          "x": 2.1,
+          "y": 0,
+          "z": 7.58,
+          "stageYaw": 1.9
+        },
+        {
+          "id": "ally-4",
+          "team": "ally",
+          "x": 2.85,
+          "y": 0,
+          "z": 7.52,
+          "stageYaw": 1.9
+        },
+        {
+          "id": "enemy-1",
+          "team": "enemy",
+          "x": -1.05,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-2",
+          "team": "enemy",
+          "x": -0.25,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-3",
+          "team": "enemy",
+          "x": 0.55,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-4",
+          "team": "enemy",
+          "x": 1.35,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        }
       ],
       "opacity": {
         "enemy-4": 1,
@@ -283,124 +343,110 @@
         "ally-2": 1,
         "hero": 1
       },
-      "camera": {
-        "mode": "outer",
-        "index": 0,
-        "shot": "left",
-        "angle": -0.02691657466805804,
-        "radius": 10.403768547982986,
-        "fov": 66,
-        "eye": {
-          "x": 1.32,
-          "y": 1.5,
-          "z": 10.4
-        },
-        "focus": {
-          "x": 1.36,
-          "y": 1.5,
-          "z": 5.4
-        },
-        "shoulderRig": true,
-        "shoulderPivot": {
-          "x": 0.55,
-          "y": 1.4256000000000002,
-          "z": 9.3
-        },
-        "shoulderBoomMeters": 1.3427211177307072,
-        "heroYawDeg": 0,
-        "lookYawDeg": 0,
-        "lookPitchDeg": 0,
-        "phoneShoulderFit": 0,
-        "actorRootUnchanged": true,
-        "controlledActorId": "ally-3",
-        "originalHeroWorldStatic": true
-      },
-      "enemyRects": [
-        {
-          "valid": true,
-          "left": -0.6610787606882628,
-          "right": -0.5035083601906603,
-          "top": 0.2844461494948619,
-          "bottom": -0.4305215715979052
-        },
-        {
-          "valid": true,
-          "left": -0.4665982630529196,
-          "right": -0.30958958355888067,
-          "top": 0.2843489454301511,
-          "bottom": -0.4293423260096636
-        },
-        {
-          "valid": true,
-          "left": -0.27281094959652535,
-          "right": -0.11636099274111558,
-          "top": 0.2842520878285591,
-          "bottom": -0.4281672835903505
-        },
-        {
-          "valid": true,
-          "left": -0.07971312085172202,
-          "right": 0.07618109042825806,
-          "top": 0.2841555748410407,
-          "bottom": -0.4269964219079965
-        }
-      ],
-      "squadRects": [
-        {
-          "valid": true,
-          "left": -2.3443394879655752,
-          "right": -1.4937442201704194,
-          "top": 0.44522730454907683,
-          "bottom": -2.0146713998858634
-        },
-        {
-          "valid": true,
-          "left": -1.6404766934460195,
-          "right": -0.8813815597927729,
-          "top": 0.43925627508824394,
-          "bottom": -1.952397707025715
-        },
-        {
-          "valid": true,
-          "left": -0.9951509489732875,
-          "right": -0.24491294989308743,
-          "top": 0.4380276724195807,
-          "bottom": -1.939584233949188
-        },
-        {
-          "valid": true,
-          "left": -0.357358752185936,
-          "right": 0.38417623114770216,
-          "top": 0.4368134124869222,
-          "bottom": -1.9269203456540867
-        }
-      ],
-      "friendlyX": [
-        -1.05,
-        -0.25,
-        0.55,
-        1.35
-      ],
-      "enemyX": [
-        -1.05,
-        -0.25,
-        0.55,
-        1.35
-      ]
+      "ready": 8,
+      "shot": "四人同排 · 自由切换",
+      "url": "https://g2066203208-beep.github.io/paperchalk-world/?scene=ring-arena&review=0f27537c63b8a53005d25b96e470e98b12999f9d"
     },
     {
       "slot": 4,
       "filename": "party-controlled-4-1280x720.png",
-      "active": "ally-4",
-      "actorIds": [
-        "hero",
-        "ally-2",
-        "ally-3",
-        "ally-4",
-        "enemy-1",
-        "enemy-2",
-        "enemy-3",
-        "enemy-4"
+      "active": "hero",
+      "staging": "world-space-foreground-handoff",
+      "camera": {
+        "mode": "outer",
+        "index": 0,
+        "shot": "left",
+        "angle": -0.02691657466805804,
+        "radius": 10.403768547982986,
+        "fov": 66,
+        "eye": {
+          "x": -0.28,
+          "y": 1.5,
+          "z": 10.4
+        },
+        "focus": {
+          "x": -0.24,
+          "y": 1.5,
+          "z": 5.4
+        },
+        "shoulderRig": true,
+        "shoulderPivot": {
+          "x": -1.05,
+          "y": 1.4256000000000002,
+          "z": 9.3
+        },
+        "shoulderBoomMeters": 1.3427211177307072,
+        "heroYawDeg": 0,
+        "lookYawDeg": 0,
+        "lookPitchDeg": 0,
+        "phoneShoulderFit": 0,
+        "actorRootUnchanged": true
+      },
+      "worldActors": [
+        {
+          "id": "hero",
+          "team": "ally",
+          "x": -1.05,
+          "y": 0,
+          "z": 9.3,
+          "stageYaw": -0.05
+        },
+        {
+          "id": "ally-2",
+          "team": "ally",
+          "x": 1.4,
+          "y": 0,
+          "z": 7.68,
+          "stageYaw": 1.6
+        },
+        {
+          "id": "ally-3",
+          "team": "ally",
+          "x": 2.1,
+          "y": 0,
+          "z": 7.58,
+          "stageYaw": 1.9
+        },
+        {
+          "id": "ally-4",
+          "team": "ally",
+          "x": 2.85,
+          "y": 0,
+          "z": 7.52,
+          "stageYaw": 1.9
+        },
+        {
+          "id": "enemy-1",
+          "team": "enemy",
+          "x": -1.05,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-2",
+          "team": "enemy",
+          "x": -0.25,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-3",
+          "team": "enemy",
+          "x": 0.55,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        },
+        {
+          "id": "enemy-4",
+          "team": "enemy",
+          "x": 1.35,
+          "y": 0,
+          "z": 6.8,
+          "stageYaw": 0
+        }
       ],
       "opacity": {
         "enemy-4": 1,
@@ -412,110 +458,14 @@
         "ally-2": 1,
         "hero": 1
       },
-      "camera": {
-        "mode": "outer",
-        "index": 0,
-        "shot": "left",
-        "angle": -0.02691657466805804,
-        "radius": 10.403768547982986,
-        "fov": 66,
-        "eye": {
-          "x": 2.12,
-          "y": 1.5,
-          "z": 10.4
-        },
-        "focus": {
-          "x": 2.16,
-          "y": 1.5,
-          "z": 5.4
-        },
-        "shoulderRig": true,
-        "shoulderPivot": {
-          "x": 1.35,
-          "y": 1.4256000000000002,
-          "z": 9.3
-        },
-        "shoulderBoomMeters": 1.3427211177307072,
-        "heroYawDeg": 0,
-        "lookYawDeg": 0,
-        "lookPitchDeg": 0,
-        "phoneShoulderFit": 0,
-        "actorRootUnchanged": true,
-        "controlledActorId": "ally-4",
-        "originalHeroWorldStatic": true
-      },
-      "enemyRects": [
-        {
-          "valid": true,
-          "left": -0.8562561684835884,
-          "right": -0.698121027124887,
-          "top": 0.28454370188498906,
-          "bottom": -0.43170504294781237
-        },
-        {
-          "valid": true,
-          "left": -0.661078760688263,
-          "right": -0.5035083601906604,
-          "top": 0.284446149494862,
-          "bottom": -0.43052157159790544
-        },
-        {
-          "valid": true,
-          "left": -0.4665982630529196,
-          "right": -0.30958958355888067,
-          "top": 0.284348945430151,
-          "bottom": -0.42934232600966377
-        },
-        {
-          "valid": true,
-          "left": -0.27281094959652546,
-          "right": -0.11636099274111565,
-          "top": 0.28425208782855904,
-          "bottom": -0.42816728359035067
-        }
-      ],
-      "squadRects": [
-        {
-          "valid": true,
-          "left": -3.0203815251291877,
-          "right": -2.1313388903038795,
-          "top": 0.4465426891297864,
-          "bottom": -2.0283899480707976
-        },
-        {
-          "valid": true,
-          "left": -2.293470257051323,
-          "right": -1.525360209400558,
-          "top": 0.4404994761254525,
-          "bottom": -1.9653634309536219
-        },
-        {
-          "valid": true,
-          "left": -1.6404766934460222,
-          "right": -0.8813815597927729,
-          "top": 0.43925627508824466,
-          "bottom": -1.9523977070257188
-        },
-        {
-          "valid": true,
-          "left": -0.9951509489732875,
-          "right": -0.24491294989308762,
-          "top": 0.4380276724195803,
-          "bottom": -1.9395842339491884
-        }
-      ],
-      "friendlyX": [
-        -1.05,
-        -0.25,
-        0.55,
-        1.35
-      ],
-      "enemyX": [
-        -1.05,
-        -0.25,
-        0.55,
-        1.35
-      ]
+      "ready": 8,
+      "shot": "四人同排 · 自由切换",
+      "url": "https://g2066203208-beep.github.io/paperchalk-world/?scene=ring-arena&review=0f27537c63b8a53005d25b96e470e98b12999f9d"
     }
+  ],
+  "errors": [
+    "button 2: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for loca",
+    "button 3: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for loca",
+    "button 4: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for loca"
   ]
 }
