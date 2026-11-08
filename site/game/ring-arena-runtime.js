@@ -272,7 +272,7 @@
   const flip=mode==='inner'?-1:1;
   // All actors, including the heroine, retain one stable world orientation.
   // Moving the mouse may orbit the camera but cannot rotate the painted art.
-  const yaw=Number.isFinite(actor?.stageYaw)?actor.stageYaw:actor?.id==='hero'?-0.05:0;
+  const yaw=actor?.id==='hero'?-0.05:0;
   return {x:flip*Math.cos(yaw),y:0,z:Math.sin(yaw)};
  }
  // Actual WebGL billboard quad bounds from the SAME 3D projection used in
@@ -1419,46 +1419,7 @@
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let controlledActorId='hero';
-  let stageTransition=null;
-  const STAGE_FG=Object.freeze({x:-1.05,z:9.30,stageYaw:-.05});
-  // Three unobstructed midground side-wing silhouettes at genuine floor
-  // anchors, spaced beyond the rightmost enemy portrait. Unlike the first
-  // attempt none of these occupies the huge foreground hero silhouette.
-  // The existing ArtMesh is turned physically; replace with AUTHORED side
-  // L2D later, never paint over or squeeze the user's character image.
-  const STAGE_SPECTATORS=Object.freeze([
-   Object.freeze({x:1.40,z:7.68,stageYaw:1.60}),
-   Object.freeze({x:2.10,z:7.58,stageYaw:1.90}),
-   Object.freeze({x:2.85,z:7.52,stageYaw:1.90})
-  ]);
-  const stageEnabled=()=>!transitMode&&mode==='outer'&&
-   new URLSearchParams(window.location.search).get('staging')!=='legacy';
-  function stageSlots(activeId=controlledActorId){
-   const allies=layout(mode).allies;
-   const spectators=allies.filter(a=>a.id!==activeId);
-   return Object.fromEntries(allies.map(a=>{
-    const place=a.id===activeId?STAGE_FG:
-     STAGE_SPECTATORS[spectators.findIndex(v=>v.id===a.id)];
-    return [a.id,{...place}];
-   }));
-  }
-  const interp=(x,y,t)=>x+(y-x)*t;
-  function stagePosition(id,now=performance.now()){
-   const target=stageSlots()[id];
-   if(!target)return null;
-   if(!stageTransition)return target;
-   const t=clamp((now-stageTransition.start)/stageTransition.ms,0,1);
-   const eased=t*t*(3-2*t);
-   const from=stageTransition.from[id]||target;
-   if(t>=1)return target;
-   return {x:interp(from.x,target.x,eased),
-    z:interp(from.z,target.z,eased),
-    stageYaw:interp(from.stageYaw,target.stageYaw,eased)};
-  }
-  function activeStageActor(){
-   const a=controlledActor();
-   return stageEnabled()?{...a,...STAGE_FG}:a;
-  }
+  // One immutable straight rank: all four original back-facing L2D actors.
   let renderedActorOpacity=Object.create(null);
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
   let platformExposure=0,platformExposureOverride=null;
@@ -1569,11 +1530,7 @@
    if(!Number.isInteger(number)||number<1||number>4)return false;
    const next=layout(mode).allies[number-1];
    if(!next)return false;
-   const now=performance.now();
-   const previous=stageEnabled()?Object.fromEntries(layout(mode).allies.map(a=>
-    [a.id,stagePosition(a.id,now)])):null;
    controlledActorId=next.id;
-   if(previous)stageTransition={from:previous,start:now,ms:650};
    mouseLookX=0;mouseLookY=0;armed=false;
    refreshDirectorUI();render(0,0,0);
    return true;
@@ -2254,14 +2211,11 @@
    // oversized heroine-centric battle shoulder closeup.
    const scenePack=window.PaperWorldEnvironments?.get?.(environmentId);
    const lensPreset=scenePack?.camera;
-   // The camera NEVER moves to solve a 4v4 occlusion: the selected
-   // actor enters the approved physical foreground instead.
-   const cameraBase=stageEnabled()?base:controlledActorId==='hero'?base:
+   // Preserve approved New Moon camera. Control switches never move actors.
+   const cameraBase=controlledActorId==='hero'?base:
     allyViewCamera(base,layout(mode).allies[0],controlledActor(),0,0,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
    const regular=target?director.cinematicCamera(cameraBase,attack,attackSample,target):
-    stageEnabled()?shoulderCamera(base,activeStageActor(),mouseLookX,mouseLookY,
-     canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9):
     allyViewCamera(base,layout(mode).allies[0],controlledActor(),mouseLookX,mouseLookY,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9);
    lens=lensPreset?.mode==='fixed'?fixedEnvironmentCamera(base,lensPreset,
@@ -2341,10 +2295,8 @@
    drawWorld(mode==='outer'?wingOuter:wingInner,3,vp);
    gl.disableVertexAttribArray(world.aP);gl.disableVertexAttribArray(world.aUv);
    drawFixtures(vp);
-   const stageTime=performance.now();
    const all=visibleActors(mode).filter(a=>!environmentActorIds||environmentActorIds.has(a.id))
-    .map(a=>({...a,...(scenePack?.actors?.positions?.[a.id]||{}),
-     ...(stageEnabled()&&a.team==='ally'?stagePosition(a.id,stageTime):{})}));
+    .map(a=>({...a,...(scenePack?.actors?.positions?.[a.id]||{})}));
    const now=performance.now();
    for(const a of all)updateTexture(a,now);
    // The same cameraVP, world-space floor, lighting and shadows as heroine.
@@ -2550,7 +2502,6 @@
     const cfg=window.PaperWorldEnvironments?.get?.(environmentId)?.camera;
     const aspect=canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9;
     const actual=cfg?.mode==='fixed'?fixedEnvironmentCamera(base,cfg,aspect):
-     stageEnabled()?shoulderCamera(base,activeStageActor(),mouseLookX,mouseLookY,aspect):
      allyViewCamera(base,layout(mode).allies[0],controlledActor(),mouseLookX,mouseLookY,aspect);
     return Math.abs(lens.eye.x-actual.eye.x)<.00001&&
      Math.abs(lens.eye.y-actual.eye.y)<.00001&&
@@ -2594,18 +2545,16 @@
     initError:canvas.dataset.error||null,
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:lens?.lensShift??VERTICAL_LENS_SHIFT,
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
-   controlCameraPivot:stageEnabled()?activeStageActor():controlledActor(),
-   stagePresentation:stageEnabled()?'world-space-foreground-handoff':'legacy-static-ranks',
-   stageTransitionProgress:stageTransition?
-    clamp((performance.now()-stageTransition.start)/stageTransition.ms,0,1):1,
-   stageActors:stageEnabled()?layout(mode).allies.map(a=>({
-    id:a.id,...stagePosition(a.id)})):null,
+   controlCameraPivot:controlledActor(),
+   stagePresentation:'four-rear-facing-allies-one-fixed-rank',
+   stageTransitionProgress:1,
+   stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
    presentationActors:presentedActors.map(a=>({id:a.id,team:a.team,
-    x:a.x,y:a.y,z:a.z,stageYaw:a.stageYaw??0})),
+    x:a.x,y:a.y,z:a.z})),
    partyLine:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
    renderedActorOpacity:{...renderedActorOpacity},
    opposingLine:layout(mode).enemies.map(a=>({id:a.id,x:a.x,z:a.z})),
-   cameraTarget:stageEnabled()?camera(mode,shotIndex):controlledActorId==='hero'?camera(mode,shotIndex):
+   cameraTarget:controlledActorId==='hero'?camera(mode,shotIndex):
     allyViewCamera(camera(mode,0),layout(mode).allies[0],controlledActor(),0,0,
      canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9),
    cameraPitchDeg:cameraPitchDeg(lens||camera(mode,shotIndex)),
