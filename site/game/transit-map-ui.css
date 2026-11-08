@@ -1030,3 +1030,174 @@
 #pw-world-surface .pw-dot-world-map .pw-dot-current-location[data-region="true"]{
  filter:drop-shadow(0 0 5px #e5a981);
 }
+
+/* V17: destination-led schematic. No geographic wallpaper.
+   All photos are connected by a visible stem to the PHYSICAL station,
+   not pasted arbitrarily on the screen. Every pin has a return route. */
+#novel-ui #pw-world-surface .pw-surface-frame[data-view="map"]{
+ width:min(1780px,99.5cqw)!important;
+ height:min(1030px,98.5cqh)!important;
+ border:1px solid #77918e60!important;
+}
+#pw-world-surface .pw-transit-map.pw-dot-world-map{
+ background:#111c26!important;background-image:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-geography{display:none!important}
+#pw-world-surface .pw-dot-world-map .pw-dot-access-lines{pointer-events:none}
+#pw-world-surface .pw-dot-world-map .pw-dot-access-lines .pw-transit-rail{
+ stroke-width:3.5px;stroke:#9cb3aa;opacity:.8;
+ stroke-linecap:round;stroke-dasharray:6 6;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-access-lines .pw-transit-rail-casing{
+ stroke-width:8.5px;opacity:.68;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-access-lines .pw-transit-rail-glint{
+ display:none;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-access-lines[data-city="kirihama"] .pw-transit-rail{
+ stroke:#b1c2af;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-destination-stop{
+ fill:#172b34;stroke:#d4e9da;stroke-width:2.25;
+ pointer-events:all!important;cursor:pointer;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-destination-stop.is-interchange{
+ fill:#d6aa83;stroke:#283b43;stroke-width:2.5;
+ filter:drop-shadow(0 0 3px #e3c5a4);
+}
+#pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-destination-stop:not(.is-interchange){
+ display:none;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-destination-stop:hover{
+ fill:#fff1cf;stroke:#fff7e6;filter:drop-shadow(0 0 5px #ffddad);
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-card-leaders{
+ pointer-events:none;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city-card-leader{
+ fill:none;stroke:#e2c4a1;stroke-width:2.2;
+ stroke-linecap:round;stroke-dasharray:5 4;
+ vector-effect:non-scaling-stroke;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-city,
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-poi,
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place{
+ transform:translate(-50%,calc(-100% - 20px))!important;
+ border:0!important;background:transparent!important;
+ padding:0!important;margin:0!important;
+ gap:0!important;overflow:visible!important;
+ max-height:none!important;min-height:0!important;
+ filter:drop-shadow(0 5px 8px #03090fb3);
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-city{
+ width:190px!important;min-width:190px!important;max-width:190px!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-poi{
+ width:176px!important;min-width:176px!important;max-width:176px!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place{
+ width:166px!important;min-width:166px!important;max-width:166px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city::after,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi::after,
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place::after{
+ content:"";position:absolute;left:calc(50% - 1.5px);bottom:-20px;
+ width:3px;height:20px;pointer-events:none;
+ background:linear-gradient(#ced9d2,#eec5a0);
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city::before,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi::before,
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place::before{
+ content:"";position:absolute;left:calc(50% - 7px);bottom:-30px;
+ width:14px;height:14px;box-sizing:border-box;
+ background:#edc6a5;border:3px solid #172936;border-radius:50%;
+ pointer-events:none;z-index:4;box-shadow:0 0 0 2px #f6e2c79c;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-photo,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-photo,
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-photo{
+ display:block!important;box-sizing:border-box;
+ width:100%!important;height:auto!important;
+ aspect-ratio:1.65!important;min-height:96px!important;
+ overflow:hidden!important;max-height:none!important;
+ background:#2e4145!important;
+ padding:3px!important;
+ border:2px solid #b9d6c8!important;
+ border-radius:4px!important;
+ box-shadow:0 2px 15px #07131ac9!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-photo img,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-photo img,
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-photo img{
+ width:100%!important;height:100%!important;object-fit:cover!important;
+ display:block!important;filter:saturate(.82) contrast(1.04)!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-transit-place-name,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-place-name,
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place-name{
+ display:block!important;width:100%!important;max-width:100%!important;
+ box-sizing:border-box!important;min-height:27px;
+ padding:4px 6px!important;margin:0!important;
+ color:#fcf8ef!important;background:#172b31f2!important;
+ border:1px solid #8daea591!important;border-top:0!important;
+ border-radius:0 0 4px 4px!important;text-overflow:clip!important;
+ overflow:visible!important;white-space:normal!important;
+ font:700 15px/1.25 "PaperSans","Noto Sans CJK SC",sans-serif!important;
+ text-align:center;word-break:keep-all!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-city .pw-dot-city-symbol,
+#pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-dot-poi-symbol{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place.is-station{
+ width:94px!important;min-width:94px!important;max-width:94px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place.is-station .pw-transit-place-name{
+ font-size:13px!important;max-width:94px!important;
+ border-top:1px solid #90aca4!important;border-radius:4px!important;
+ background:#1d3339f0!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place.is-station .pw-transit-station-dot{
+ display:none;
+}
+#pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city .pw-transit-photo{
+ display:none!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city{
+ width:122px!important;min-width:122px!important;max-width:122px!important;
+}
+#pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city .pw-transit-place-name{
+ border-top:1px solid #8daea591!important;border-radius:4px!important;
+ font-size:15px!important;
+}
+#pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city::after{
+ height:13px;bottom:-13px;
+}
+#pw-world-surface .pw-dot-world-map[data-zoom="region"] .pw-dot-city::before{
+ bottom:-24px;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-hint{
+ color:#c5d5c9;background:#11252cbd;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-popup .pw-dot-preview-photo{
+ max-height:160px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-popup .pw-dot-preview-photo img{
+ max-height:160px!important;object-fit:cover;
+}
+@container(max-height:430px){
+ #novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-poi{
+  width:142px!important;min-width:142px!important;max-width:142px!important;
+ }
+ #novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place{
+  width:146px!important;min-width:146px!important;max-width:146px!important;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-photo,
+ #pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-photo{
+  min-height:75px!important;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-poi .pw-transit-place-name,
+ #pw-world-surface .pw-dot-world-map .pw-dot-local-places .pw-transit-place-name{
+  font-size:13px!important;min-height:23px;
+ }
+}
