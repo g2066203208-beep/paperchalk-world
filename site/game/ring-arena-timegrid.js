@@ -155,7 +155,7 @@
      if(count<36)return;
      const bodyH=Math.max(1,hiY-loY),bodyW=Math.max(1,hiX-loX);
      // Face lives in the top quarter of an upright three-view/full-body.
-     // A wide portrait crop preserves hair, forehead, eyes and shoulders.
+     // Portrait-aspect crop preserves full hair, eyes and shoulders without squashing faces.
      const cropH=Math.min(h,Math.max(28,bodyH*.29));
      const cropW=cropH*.82,headY=loY+bodyH*.135;
      let massX=0,massN=0;
