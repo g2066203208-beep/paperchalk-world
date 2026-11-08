@@ -47,11 +47,12 @@ try{
  assert.equal(outer.shotName,'四人同排 · 自由切换');
  assert.equal(outer.camera.shot,'left');
  assert.equal(outer.cameraCount,1);
- assert.ok(outer.camera.eye.y>=1.5&&outer.camera.eye.y<=2.30,
-  'camera uses human-scale eye/raised-shoulder position');
- assert.ok(outer.camera.composition&&Number.isFinite(outer.camera.composition.score),
-  'real per-player projection composition solver has selected a camera');
- assert.ok(outer.lensShift>=.23&&outer.lensShift<=.70);
+ assert.deepEqual(outer.camera.eye,{x:-.28,y:1.5,z:10.4},
+  'original protagonist camera position preserved exactly');
+ assert.deepEqual(outer.camera.focus,{x:-.24,y:1.5,z:5.4},
+  'original protagonist camera direction preserved exactly');
+ assert.equal(outer.camera.fov,66,'approved New Moon 66 degree lens preserved');
+ assert.equal(outer.lensShift,.23,'approved vertical lens correction preserved');
  assert.equal(outer.previewPose,'female7');
  assert.equal(outer.uniformBattlePreview,true,'default 4v4 is uniform-source staging only');
  const artIdentity=outer.actorTextureIdentities;
@@ -64,7 +65,7 @@ try{
  assert.equal(outer.heroine.id,'female-07');
  assert.equal(outer.heroine.side,'back');
  assert.equal(outer.heroine.l2dMode,'static-back-battle-cutout');
- assert.ok(Math.abs(outer.cameraPitchDeg)<13,'slight grounded camera pitch only');
+ assert.ok(Math.abs(outer.cameraPitchDeg)<.001,'restore original eye-level camera pitch');
  assert.equal(outer.heroTextureUploads,1,'static heroine must not upload every frame');
  assert.deepEqual(outer.visibleActorIds,['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.deepEqual(Object.keys(outer.renderedActorOpacity).sort(),outer.visibleActorIds.slice().sort(),
@@ -151,7 +152,7 @@ try{
  const laneX=outer.actors.allies.map(a=>a.x);
  assert.deepEqual(laneX,outer.actors.enemies.map(a=>a.x),
   'the two full ranks face each other in four exact world X lanes');
- assert.deepEqual(laneX,[-1.95,-.65,.65,1.95]);
+ assert.deepEqual(laneX,[-1.05,-.25,.55,1.35]);
  const centers=groundProof.feet.map(x=>x.x);
  assert.ok(centers.every(x=>x>-.99&&x<.99),
   'four enemy ground contacts remain visible in the composed camera');
@@ -260,9 +261,8 @@ try{
  await page.waitForTimeout(380);
  const standard=await inspect();
  const foeSpots=standard.actors.enemies.map(a=>a.x);
- assert.ok(Math.max(...foeSpots)-Math.min(...foeSpots)>3.7&&
-  Math.max(...foeSpots)-Math.min(...foeSpots)<4,
-  'four enemies stand farther back on a 3.84m single rank');
+ assert.ok(Math.abs(Math.max(...foeSpots)-Math.min(...foeSpots)-2.4)<.0001,
+  'four aligned enemies use compact ranks, not an off-axis staggered formation');
  assert.deepEqual(standard.actors,outer.actors,
   'all world-space actors must stay fixed after mouse look and attack');
  await page.screenshot({path:'artifacts/ring-arena/V32-single-encounter-wide-1917x906.png'});
