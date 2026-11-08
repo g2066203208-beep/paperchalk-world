@@ -2101,22 +2101,11 @@
    // Stable source order for equal depths puts the final character last.
    const ordered=sortActorsForAlpha(actors,cam);
    occludingAllies=[];
-   // A player swapping to a far-left squadmate must still see all four
-   // opponents. Never move an ally away from its single 4v4 rank: only
-   // fade its original WebGL quad if its live alpha silhouette would cover
-   // an enemy. Genuine cast shadows and 3D roots remain untouched.
-   const aspect=canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9;
-   const foeAreas=actors.filter(a=>a.team==='enemy').map(a=>
-    portraitVisibleBounds(a,cam,textures.get(a.id)?.opaqueUv||
-     {left:.347,right:.664,top:0,bottom:1},aspect));
-   const blocksTarget=a=>{
-    if(a.team!=='ally'||a.id===controlledActorId||transitMode)return false;
-    const rect=portraitVisibleBounds(a,cam,textures.get(a.id)?.opaqueUv||
-     FEMALE07_BACK_UV,aspect);
-    return foeAreas.some(t=>t.valid&&rect.valid&&
-     Math.min(rect.right,t.right)-Math.max(rect.left,t.left)>.018&&
-     Math.min(rect.top,t.top)-Math.max(rect.bottom,t.bottom)>.018);
-   };
+   // Render every squad member with its authored alpha and real shared
+   // 3D projection. A teammate crossing an enemy silhouette is a camera /
+   // formation composition issue, NEVER permission to erase the teammate.
+   // Do not add camera-dependent ally fading, conditional visibility, or
+   // per-actor opacity heuristics here.
    gl.useProgram(portrait.handle);
    gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
@@ -2179,9 +2168,9 @@
     const backgroundCue=!duelPerformer&&attackSample?attackSample.zoom:0;
     gl.uniform1f(portrait.uDim,.72*backgroundCue);
     gl.uniform1f(portrait.uBlur,.88*backgroundCue);
-    const occludes=blocksTarget(a);
-    if(occludes)occludingAllies.push(a.id);
-    gl.uniform1f(portrait.uOpacity,occludes?.035:1);
+    // Full source opacity for ALL eight battle actors, irrespective of
+    // selected viewpoint, overlap, screen size, or attack state.
+    gl.uniform1f(portrait.uOpacity,1);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
    }
