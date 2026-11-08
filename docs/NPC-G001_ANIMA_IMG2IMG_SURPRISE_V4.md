@@ -30,14 +30,16 @@ Matching dark navy school blazers with TWO small matte near-black front buttons 
 worst quality, low quality, score_1, score_2, score_3, blurry, jpeg artifacts, chromatic aberration, 1girl, 2girls, 4girls, extra person, duplicate girls, swapped positions, wrong character, different hairstyle, different faces, identical height, identical body type, same pose as source, same laughing group pose, both outer girls leaning toward the center, bending forward, hands resting on knees, cupped palms, two palms held forward, hands together in front, storytelling gesture, three girls huddling together, three identical gestures, synchronized posing, group photo, stiff standing, closed eyes, laughing, cheerful smile, crying, screaming in terror, running, jumping away, moving to different positions, floor-level change, cropped legs, cropped shoes, out of frame, floating feet, deformed hands, extra fingers, extra arms, merged bodies, fused fingers, wrong uniform, bow tie, ribbon tie, missing necktie, gold buttons, brass buttons, metallic trim, new accessories, dramatic lighting, heavy floor shadow, background scenery, text, speech bubble, watermark
 ```
 
-## 只操作 Forge Neo img2img 这一个页面
-1. **img2img → img2img**，上传最后获批的三人喜悦原PNG（不是失败的惊讶稿）。不走 ImageStitch 参考方法，禁用 pilot_r32/role-ref-kv/其他对同一原动作的额外参考约束。只开原画风 `@akipekostyle` 和真实卡片插入的 `akipeko` 画风LoRA，1.0（或已验收值）。
-2. 图片宽高 **1024×1024** 与原图相同，Resize mode **Just resize**；不要 Crop and resize，也不要改变横竖比。如果鞋底贴边，可先用原定稿的1024方形留白参考版。
-3. Checkpoint 选 **Anima Base**，Steps **35**，CFG **4.5**，Sampler **ER SDE**，Shift **沿用你已验证的 Anima Base 设定**；Batch Size 1。
-4. **Denoising Strength 先试 0.72**，固定同一个 seed 比较 **0.68 / 0.72 / 0.78** 三档。0.68可能动作保留太多，0.78可能脸/校服漂移；这是经验起点，不是官方保证成功的阈值。
-5. 首轮不要开 ADetailer、Face Restore、Hires Fix 或额外 LoRA；它们可能在基础动作没对前带来另一轮外貌漂移。
-6. **画面审核**：A有没有双手抬到脸旁、B有没有掩口与抓前襟、C有没有挺直侧转+抬臂指向？若没达到，不能以『表情像惊讶』宣布过关。
-7. 纯文字+普通 img2img **不能严格保证**『局部姿势大变且人物身份/鞋底像素完全不变』；如果 0.78 下还是复制原身体，最少只需切换同一 img2img 页的 Inpaint，对每个人躯干/双手局部遮罩高去噪（保留脸、鞋子不涂），不需要额外安装控制插件；同样不保证一次成功。
+## Forge Neo：最少操作、保证原站位的 img2img 做法
+**优先：img2img → Inpaint (WebUI自带)、不是另一个新插件，也不打开ImageStitch。** 用户之前已多轮尝试普通img2img高去噪，原三人靠近动作仍然复制；因此不继续建议把0.72当首选。
+1. 打开原「喜悦」已批准PNG，在 **img2img → Inpaint**。**不要拿失败的惊讶图再重画**。宽高1024×1024，Resize mode `Just resize`（原图同尺寸同宽高比）。
+2. **保留**三人左右脚底/脚跟、腿部基准位置、原头发外轮廓。**在三个角色从脸部表情、肩膀、躯干、手臂至腰部的区域上蒙版**；尤其要包括手臂抬起来将覆盖的白色空白，不然旧手只能在原轮廓里动。可以把脸的眉眼嘴涂进去但尽量不涂发型轮廓。不要蒙住鞋。
+3. Mask mode `Inpaint masked`，Masked content 先试 `latent noise`（大改结构；如果画面碎裂再改 `fill`），Inpaint area `Whole picture`，Mask blur 8px（可在 6-12 试），Denoising Strength **0.82**（建议0.78～0.88范围）。
+4. 模型 **Anima Base**，Sampler **ER SDE**，35 Steps，CFG4.5，Seed保留本次测试，Style `@akipekostyle` + 当前实际卡片插入的 `akipeko` LoRA（通常权重1.0）。其余脸部自动修正、hires fix、参考适配器和增强LoRA首轮关闭。
+5. 首张只检查 **A双手抬脸旁、B一手掩口一手抓衣襟、C挺直转身举臂指向**。每个人脚跟基本留在原位，不允许三人交换左右身份。出现人脸变了，收小脸部蒙版、降低去噪或第二轮局部修脸；未改变动作，扩展蒙版到新的手臂空白、换masked content或略提高去噪。
+6. **注意**：所有提示词都不可能让Anima保证脚底/人物身份像素级精确保持。Inpaint蒙版保留鞋底是强约束；单纯的文字命令和普通高denoise img2img不是强约束。无须OpenPose、IP-Adapter和复杂分区工作流。
+
+**次选：** 若不愿涂蒙版，普通`img2img → img2img`依然可以在原图下尝试 0.82 / 0.86 两档，甚至更高。但这些会让全图同时重绘，可能换脸、换发型、校服出错；它不具备『站位锁定』能力，不能称为稳定最终方案。
 
 ## Anima 官方依据
 - CircleStone Labs Anima：https://huggingface.co/circlestone-labs/Anima —— 支持 Booru 标签和英文自然语言混写，多人应单独描述外貌和动作；30–50 Steps，CFG 4–5，ER SDE可用。
