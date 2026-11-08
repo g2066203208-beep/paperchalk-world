@@ -56,6 +56,28 @@
    const minY=Math.ceil((-c.y/c.scale-2)/cell);
    const maxY=Math.floor(((h-c.y)/c.scale+2)/cell);
    map.dataset.dotWorld='infinite';
+   map.dataset.gridMesh='orthogonal-hairlines';
+   // Single batched hairline path: joins only direct horizontal and vertical
+   // neighbors of the original infinite dot lattice. No diagonals, colors,
+   // arrows, crossing markers, or decorative mesh texture.
+   // Draw UNDER the vertices to preserve their understated hierarchy.
+   dc.save();
+   dc.beginPath();
+   for(let gy=minY;gy<=maxY;gy++){
+    const sy=c.y+gy*cell*c.scale;
+    dc.moveTo(c.x+minX*cell*c.scale,sy);
+    dc.lineTo(c.x+maxX*cell*c.scale,sy);
+   }
+   for(let gx=minX;gx<=maxX;gx++){
+    const sx=c.x+gx*cell*c.scale;
+    dc.moveTo(sx,c.y+minY*cell*c.scale);
+    dc.lineTo(sx,c.y+maxY*cell*c.scale);
+   }
+   dc.strokeStyle='#aeb7b1';
+   dc.lineWidth=.55;
+   dc.globalAlpha=.105;
+   dc.stroke();
+   dc.restore();
    for(let gy=minY;gy<=maxY;gy++)for(let gx=minX;gx<=maxX;gx++){
     const wx=gx*cell,wy=gy*cell;
     let swell=0;
