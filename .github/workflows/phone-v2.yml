@@ -32,6 +32,11 @@ jobs:
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
+      - name: Build canonical game scene catalog
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_scene_catalog.py
+          python3 scripts/build_character_catalog.py
       - name: Verify persisted phone state
         run: node --test tests/phone-life.test.cjs
       - name: Verify physical phone, chat, notes and contact details
