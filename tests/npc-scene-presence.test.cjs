@@ -81,6 +81,25 @@ test('art identity and scene assignment identity both must be unique',()=>{
   policy('NPC-G001'),policy('NPC-G001')]}).ok,false);
  assert.equal(presence.forLocation('school').length,0);
 });
+test('new artist identity joins existing life system from home, never materializes at current player scene',()=>{
+ const {life,presence}=setup(600);
+ assert.equal(life.get('NPC-G002'),null);
+ const added=life.registerActors([{
+  id:'NPC-G002',home:'kirihama-07',name:'新学生',kind:'student',
+  interest:['rumor','social']
+ }]);
+ assert.equal(added.length,1);
+ const next=life.get('NPC-G002');
+ assert.ok(next,'new actor must have one persistent physical record');
+ assert.equal(next.node,'kirihama-07');
+ assert.equal(next.phase,'traveling','new NPC must spend actual route time');
+ assert.equal(next.location,null,'not instantly at school');
+ presence.setAssignments({version:1,records:[policy('NPC-G002')]});
+ presence.setManifest({version:1,records:[approved('NPC-G002')]});
+ assert.equal(presence.forLocation('school').length,0);
+ assert.equal(life.registerActors([{id:'NPC-G002',home:'kirihama-07',kind:'student'}]).length,0,
+  'registering same actor twice must never duplicate life');
+});
 test('metro world slot cannot come from unrelated art metadata',()=>{
  const stage=require('../site/game/metro-npc-staging.js');
  const keys=stage.CONFIG.slots.map(s=>s.id);
