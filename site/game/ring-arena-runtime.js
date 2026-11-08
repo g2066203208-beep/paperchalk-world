@@ -62,7 +62,7 @@
  // All soles remain y=0; original ArtMesh dimensions stay unchanged.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-1.35,9.34],[-.75,8.50],[-1.05,8.25]]),
+   allies:Object.freeze([[-1.05,9.30],[-1.65,9.05],[-.75,8.50],[-.85,8.25]]),
    enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
   }),
   inner:Object.freeze({
@@ -115,12 +115,13 @@
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
  // All four existing allied ArtMeshes now participate in the same 3D battle.
- // The squad forms a true NEAR-SIDE cluster around the heroine, entirely in
- // the left portion of the normal view. Ally2 is beside her shoulder (z9.34),
- // ally3 offsets forward (z8.50), and ally4 sits one further depth step
- // (z8.25). All enemy targets stay at z6.80, with 1.45m of empty battle lane.
- // Some natural near-character overlap is intentional; never move allies
- // into the enemy rank or to the screen's opposite wing just to show torsos.
+ // The squad forms a real NEAR-SIDE cluster within 0.9m of heroine x=-1.05.
+ // Ally2 is 0.25m behind heroine in world depth (z9.05), keeping its
+ // separate face visible without stealing the heroine's visual dominance.
+ // Ally3 is the middle echelon (z8.50), ally4 is the farthest ally (z8.25)
+ // and offsets 20cm right to separate the two heads. Enemy rank is z6.80;
+ // 1.45m of empty floor always separates the two teams. Normal 3D occlusion
+ // is intentional: never move friends into the enemy rank to reveal torsos.
  // Metro still chooses only its one named passenger via scene actors.visible.
  const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
