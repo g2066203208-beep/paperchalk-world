@@ -37,6 +37,7 @@
     central:{label:'中央换乘站',group:'城区',scene:null,open:0,close:1320,travel:6},
     northgate:{label:'北街口',group:'城区',scene:null,open:0,close:1320,travel:6},
     school:{label:'学校',group:'城区',scene:'school',open:7*60,close:17*60,travel:35,weekdaysOnly:true},
+    'classmate-home':{label:'小胖家',group:'城区',scene:null,open:6*60,close:21*60,travel:25},
     convenience:{label:'便利店',group:'城区',scene:'convenience',open:6*60,close:22*60,travel:25},
     cafe:{label:'咖啡店',group:'城区',scene:'cafe',open:10*60,close:21*60,travel:30},
     park:{label:'社区公园',group:'城区',scene:'park',open:6*60,close:21*60,travel:25},
