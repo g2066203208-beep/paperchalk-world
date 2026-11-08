@@ -2410,7 +2410,27 @@
     resetCombatPreview();lens=camera(mode,0);render(0)}
    else resetCombatPreview();
   }
-  const inspect=()=>({active,transitMode,canvasParent:canvas.parentElement?.id||null,
+  // DEV geometry diagnostics: place future ordinary NPCs in world meters and
+  // project their head/soles through the SAME fixed WebGL metro camera. The
+  // rejected NPC-G001 sprites are never registered or painted by this code.
+  function inspectMetroNpcStaging(){
+   if(!transitMode)return null;
+   const m=window.PaperWorldMetroNpcStaging;
+   const cfg=window.PaperWorldEnvironments?.get?.('metro')?.camera;
+   if(!m||!cfg)return {ready:false,reason:'missing-staging'};
+   const aspect=canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:16/9;
+   const actual=lens||fixedEnvironmentCamera(camera(mode,0),cfg,aspect);
+   const heights=[1.54,1.61,1.68];
+   return {ready:true,renderer:'world-cameraVP',camera:actual,
+    slots:m.CONFIG.slots.map((slot,i)=>{
+     const a=m.derive({id:'empty-metro-slot-'+i,slot,height:heights[i],
+      art:{crownY:.035,soleY:.985,soleX:.5,widthScale:1,approved:false}});
+     return {id:slot.id,world:slot,
+      calibrated:a.ok?m.screenMetrics(a.actor,{camera:actual,aspect,project}):a};
+    }),
+    note:'No artwork; no visual actors. Fixed metro camera may intentionally crop feet below frame.'};
+  }
+  const inspect=()=>({active,transitMode,metroNpcStaging:inspectMetroNpcStaging(),canvasParent:canvas.parentElement?.id||null,
    cameraParity:(()=>{
     if(!lens||lens.cinematic)return false;
     const base=camera(mode,0);
@@ -2590,7 +2610,7 @@
    render(0);
    return inspect().director;
   }
-  const api={setActive,selectAlly,enterTransit,exitTransit,render,inspect,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,get canvas(){return canvas}};
+  const api={setActive,selectAlly,enterTransit,exitTransit,render,inspect,inspectMetroNpcStaging,setLighting,setPlatformExposure,setTransitDynamics,setTransitDoorOpen,get canvas(){return canvas}};
   if(directorQA)api.qaFrame=qaFrame;
   return Object.freeze(api);
  }
