@@ -30,7 +30,8 @@
     "preferredWalkM": 500,
     "maxPlannedWalkM": 1000,
     "computation": "Manhattan block detour estimate = 1.28 × (|eastOffset|+|southOffset|)+55m; street/river-crossing audit still required",
-    "unverified": "缺少逐路段的人行道、信号灯、河桥、交通管制 GIS，因此此阶段只能称规划估算，不可声称实测步行距离"
+    "unverified": "缺少逐路段的人行道、信号灯、河桥、交通管制 GIS，因此此阶段只能称规划估算，不可声称实测步行距离",
+    "verticalLevelConvention": "0 为地面，-1 为 B1，-2 为 B2，+1 为二层或高架通廊；同一平面坐标可有不同高度的独立目的地。"
   },
   "districts": [
     {
@@ -259,7 +260,7 @@
       "localPosition": {
         "eastM": 13330,
         "southM": 9120,
-        "level": 0
+        "level": -1
       },
       "offsetFromStation": {
         "eastM": -170,
@@ -271,7 +272,7 @@
         "minutes": 7,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": -1,
       "status": "规划",
       "legacyGameId": "kirihama-02"
     },
@@ -409,7 +410,7 @@
       "localPosition": {
         "eastM": 13670,
         "southM": 9280,
-        "level": 0
+        "level": -1
       },
       "offsetFromStation": {
         "eastM": 170,
@@ -421,7 +422,7 @@
         "minutes": 10,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": -1,
       "status": "规划",
       "legacyGameId": null
     },
@@ -459,7 +460,7 @@
       "localPosition": {
         "eastM": 13760,
         "southM": 7090,
-        "level": 0
+        "level": 1
       },
       "offsetFromStation": {
         "eastM": 260,
@@ -471,7 +472,7 @@
         "minutes": 9,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": 1,
       "status": "规划",
       "legacyGameId": null
     },
@@ -584,7 +585,7 @@
       "localPosition": {
         "eastM": 5280,
         "southM": 7490,
-        "level": 0
+        "level": 1
       },
       "offsetFromStation": {
         "eastM": -120,
@@ -596,7 +597,7 @@
         "minutes": 9,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": 1,
       "status": "规划",
       "legacyGameId": "kirihama-19"
     },
@@ -1184,7 +1185,7 @@
       "localPosition": {
         "eastM": 18250,
         "southM": 13310,
-        "level": 0
+        "level": 1
       },
       "offsetFromStation": {
         "eastM": 250,
@@ -1196,7 +1197,7 @@
         "minutes": 10,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": 1,
       "status": "规划",
       "legacyGameId": null
     },
@@ -1509,7 +1510,7 @@
       "localPosition": {
         "eastM": 5610,
         "southM": 11580,
-        "level": 0
+        "level": 1
       },
       "offsetFromStation": {
         "eastM": 210,
@@ -1521,7 +1522,7 @@
         "minutes": 8,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": 1,
       "status": "规划",
       "legacyGameId": "kirihama-03"
     },
@@ -1859,7 +1860,7 @@
       "localPosition": {
         "eastM": 21910,
         "southM": 7060,
-        "level": 0
+        "level": 1
       },
       "offsetFromStation": {
         "eastM": 310,
@@ -1871,7 +1872,7 @@
         "minutes": 10,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": 1,
       "status": "规划",
       "legacyGameId": null
     },
@@ -2384,7 +2385,7 @@
       "localPosition": {
         "eastM": 8740,
         "southM": 16010,
-        "level": 0
+        "level": 1
       },
       "offsetFromStation": {
         "eastM": -260,
@@ -2396,7 +2397,7 @@
         "minutes": 10,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": 1,
       "status": "规划",
       "legacyGameId": null
     },
@@ -2459,7 +2460,7 @@
       "localPosition": {
         "eastM": 8720,
         "southM": 2580,
-        "level": 0
+        "level": 1
       },
       "offsetFromStation": {
         "eastM": -280,
@@ -2471,7 +2472,7 @@
         "minutes": 9,
         "routeStatus": "corridor-planned-not-surveyed"
       },
-      "floor": 0,
+      "floor": 1,
       "status": "规划",
       "legacyGameId": "kirihama-11"
     },
@@ -3200,5 +3201,115 @@
       "status": "规划",
       "legacyGameId": null
     }
-  ]
+  ],
+  "geography": {
+    "coordinateGridM": 900,
+    "bayWaterPolygonGrid": [
+      [
+        36,
+        0
+      ],
+      [
+        36,
+        26
+      ],
+      [
+        34.8,
+        24
+      ],
+      [
+        35,
+        22
+      ],
+      [
+        32.5,
+        20
+      ],
+      [
+        29.5,
+        18
+      ],
+      [
+        29.2,
+        15
+      ],
+      [
+        31.8,
+        12
+      ],
+      [
+        34.6,
+        9
+      ],
+      [
+        35.3,
+        0
+      ]
+    ],
+    "riverCubicSectionsGrid": [
+      [
+        [
+          0,
+          14.4
+        ],
+        [
+          5,
+          14.9
+        ],
+        [
+          9,
+          14.2
+        ],
+        [
+          13,
+          14.8
+        ]
+      ],
+      [
+        [
+          13,
+          14.8
+        ],
+        [
+          15,
+          16
+        ],
+        [
+          12,
+          19
+        ],
+        [
+          13.8,
+          26
+        ]
+      ]
+    ],
+    "northHillIndicativePolygonGrid": [
+      [
+        -2,
+        -2
+      ],
+      [
+        12,
+        -2
+      ],
+      [
+        9,
+        1.5
+      ],
+      [
+        6.8,
+        4.8
+      ],
+      [
+        4,
+        5.7
+      ],
+      [
+        -2,
+        4
+      ]
+    ],
+    "terrainInterpretation": "以上都是虚构城市的规划约束线，湾海为不可用作陆地设施的水面，青柳川每条步行接驳均应避开直接跨水。最终街道与桥梁需另行建模核验。"
+  }
 }
