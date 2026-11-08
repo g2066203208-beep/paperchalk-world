@@ -55,7 +55,7 @@ const click=(query)=>page.evaluate(selector=>{
  btn.click();
 },query);
 try{
- await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
+ await page.goto(base+(base.includes('?')?'&':'?')+'mapLayers=full',{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').click();
  await page.waitForFunction(()=>document.querySelector('#scene')?.dataset.scene==='bedroom');
  await page.waitForFunction(()=>document.querySelector('#scene-transition')?.dataset.active==='false');
