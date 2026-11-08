@@ -69,7 +69,9 @@ try{
  });
  await click('#quick-map');
  await page.locator('.pw-dot-world-map').waitFor({state:'visible'});
- // Navigation now starts at the protagonist's actual residential station.
+ // Main navigation begins with Kirihama's existing subway, not the neighborhood.
+ assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-map-layer'),'metro');
+ await click('.pw-dot-home-down');
  assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-map-layer'),'station');
  assert.equal(await page.locator('.pw-home-place-marker').count(),7);
  await click('.pw-home-neighborhood-up');
