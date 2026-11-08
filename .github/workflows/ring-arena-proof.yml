@@ -18,7 +18,7 @@ on:
       - '.github/workflows/ring-arena-proof.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: ring-arena-real-browser-proof
   cancel-in-progress: true
@@ -51,6 +51,53 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Render actual 3D with static 3/4 heroine and animated enemy L2D
         run: node tests/ring-arena-browser.mjs
+      # The actual 4-player viewport screenshots already exist after the
+      # full browser test; publish those ORIGINAL PNGs (not re-rendered art).
+      # The Pages release remains independent of this expensive QA job.
+      - name: Publish real 4v4 camera captures to screenshot-only branch
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          src="$GITHUB_WORKSPACE/artifacts/ring-arena"
+          for file in final-eye-level-3q-1280x720.png party-controlled-2-1280x720.png party-controlled-3-1280x720.png party-controlled-4-1280x720.png V31-woman7-four-enemies-ground-aligned-1917x906.png; do
+            test -s "$src/$file"
+          done
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          tmp="$(mktemp -d)"
+          cd "$tmp"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code "$remote" refs/heads/ring-arena-screenshots >/dev/null 2>&1; then
+            git fetch -q --depth=1 "$remote" refs/heads/ring-arena-screenshots
+            git checkout -q -B ring-arena-screenshots FETCH_HEAD
+          else
+            git checkout -q --orphan ring-arena-screenshots
+          fi
+          mkdir -p ring-arena
+          cp "$src/final-eye-level-3q-1280x720.png" ring-arena/ally-1-1280x720.png
+          cp "$src/party-controlled-2-1280x720.png" ring-arena/ally-2-1280x720.png
+          cp "$src/party-controlled-3-1280x720.png" ring-arena/ally-3-1280x720.png
+          cp "$src/party-controlled-4-1280x720.png" ring-arena/ally-4-1280x720.png
+          cp "$src/V31-woman7-four-enemies-ground-aligned-1917x906.png" ring-arena/hero-wide-1917x906.png
+          node - <<'JS'
+          const fs=require('node:fs');
+          fs.writeFileSync('ring-arena/manifest.json',JSON.stringify({
+           source:'Actual in-game Chromium/WebGL screenshot, never a mockup',
+           commit:process.env.GITHUB_SHA,
+           opacityCheck:'all eight actors full opacity in every controlled 4v4 screenshot',
+           files:['ally-1-1280x720.png','ally-2-1280x720.png',
+                  'ally-3-1280x720.png','ally-4-1280x720.png',
+                  'hero-wide-1917x906.png']
+          },null,2));
+          JS
+          git add ring-arena
+          if ! git diff --cached --quiet; then
+            git commit -qm "review(ring): real 4v4 WebGL screenshots for ${GITHUB_SHA:0:10}"
+            git push -q "$remote" HEAD:refs/heads/ring-arena-screenshots
+          fi
       - name: Capture all 59 DD699-reviewed V29 battle frames in REAL Chromium/WebGL
         run: node tests/ring-arena-storyboard.mjs
       - name: Preserve real rendered game screenshots even on failed test
