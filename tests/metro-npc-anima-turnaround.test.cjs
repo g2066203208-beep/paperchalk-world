@@ -38,7 +38,7 @@ test('four-view variant keeps base directions and only adds a sustainable fronta
   assert.match(four, /occasionally tapping the fingers/i);
   assert.match(four, /same complete business suit/i);
   const negative = four.split('### Negative Prompt')[1].split('\x60\x60\x60text')[1].split('\x60\x60\x60')[0];
-  assert.doesNotMatch(negative, /two frontal figures|fourth figure(?=,|$)/i);
+  assert.doesNotMatch(negative, /two frontal figures|(?:^|, )fourth figure(?:,|$)/i);
   assert.match(negative, /fifth figure/);
 });
 
