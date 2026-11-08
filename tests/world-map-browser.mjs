@@ -99,13 +99,11 @@ try{
  assert.equal(view.city,'homori');assert.equal(view.regional,0);
  assert.equal(view.cityCards.length,0);assert.equal(view.metro,0);
  assert.equal(view.local,0);assert.equal(view.backVisible,true);
- assert.ok(view.municipal.length>0);
- assert.ok(view.access.length>0);
- assert.ok(view.poi.length>0);
- assert.ok(view.municipal.every(x=>x==='homori'));
- assert.ok(view.access.every(x=>x==='homori'));
- assert.ok(view.poi.every(x=>x==='homori'));
- await shot('25-homori-only-town-bus-and-stations-1920.png');
+ assert.equal(view.municipal.length,0,'bus/tram must never be a metro line');
+ assert.equal(view.access.length,0,'walking roads must never be a metro line');
+ assert.equal(view.poi.length,0,'school, shops and rumors are not stations');
+ assert.equal(await page.locator('.pw-dot-metro-no-service').isVisible(),true);
+ await shot('25-homori-no-registered-subway-1920.png');
  // Zoom does not cross map levels.
  await page.mouse.wheel(0,-300);
  assert.equal(await scope(),'city');
@@ -119,8 +117,12 @@ try{
  assert.equal(view.scope,'city');assert.equal(view.city,'kirihama');
  assert.equal(view.regional,0);assert.equal(view.metro,9); // 3+6 physical segments
  assert.equal(view.cityCards.length,0);assert.equal(view.local,8);
- assert.ok(view.access.length>0&&view.access.every(x=>x==='kirihama'));
- assert.ok(view.poi.every(x=>x==='kirihama'));
+ assert.equal(view.access.length,0);
+ assert.equal(view.municipal.length,0);
+ assert.equal(view.poi.length,0);
+ assert.equal(await page.locator('.pw-dot-metro-legend-entry:visible').count(),2);
+ assert.equal(await page.locator('.pw-dot-local-places .pw-transit-photo').count(),0,
+  'city subway station labels are not unrelated tourist photos');
  // Keep the actual city metro photograph legible but affordable to capture.
  await page.setViewportSize({width:1440,height:810});
  await shot('26-kirihama-only-real-metro-1440.png');
@@ -134,10 +136,10 @@ try{
  view=await inspect();
  assert.equal(view.city,'shiomi');assert.equal(view.regional,0);
  assert.equal(view.metro,0);assert.equal(view.local,0);
- assert.ok(view.municipal.length>0&&view.municipal.every(x=>x==='shiomi'));
- assert.ok(view.access.length>0&&view.access.every(x=>x==='shiomi'));
- assert.ok(view.poi.every(x=>x==='shiomi'));
- await shot('27-shiomi-only-harbor-transit-1920.png');
+ assert.equal(view.municipal.length,0);
+ assert.equal(view.access.length,0);
+ assert.equal(view.poi.length,0);
+ await shot('27-shiomi-no-registered-subway-1920.png');
  // Exhaustively check ALL ten towns individually, including the island.
  // No other city's physical stop, route, or photo is allowed into a city.
  const cityIds=await page.evaluate(()=>window.PaperWorldAtlas.CITIES.map(c=>c.id));
@@ -150,12 +152,15 @@ try{
   assert.equal(info.city,id);
   assert.equal(info.regional,0);
   assert.equal(info.cityCards.length,0);
-  assert.ok(info.access.length>0,'missing access route for '+id);
-  assert.ok(info.access.every(x=>x===id),'other city access route leaked into '+id);
-  assert.ok(info.poi.every(x=>x===id),'other city destination photo leaked into '+id);
-  assert.ok(info.municipal.every(x=>x===id),'other city municipal line leaked into '+id);
-  if(id==='kirihama')assert.equal(info.metro,9);
-  else assert.equal(info.metro,0,'outside metro visible in '+id);
+  assert.equal(info.access.length,0,'walking road leaked into the metro view '+id);
+  assert.equal(info.poi.length,0,'nonstation destination leaked into metro '+id);
+  assert.equal(info.municipal.length,0,'bus/tram drawn as subway line '+id);
+  if(id==='kirihama'){
+   assert.equal(info.metro,9);assert.equal(info.local,8);
+  }else{
+   assert.equal(info.metro,0,'invented unregistered subway in '+id);
+   assert.equal(info.local,0,'invented subway station in '+id);
+  }
  }
  await click('.pw-dot-back');
  await click('.pw-dot-city[data-city="shiomi"]');
@@ -163,7 +168,7 @@ try{
  await page.setViewportSize({width:844,height:390});
  await page.waitForTimeout(100);
  assert.equal(await scope(),'city');
- await shot('28-shiomi-mobile-independent-map.png');
+ await shot('28-shiomi-mobile-no-subway.png');
  await click('.pw-dot-back');
  assert.equal(await scope(),'region');
  view=await inspect();
