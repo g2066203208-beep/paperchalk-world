@@ -29,8 +29,9 @@ try{
  const inspect=()=>page.evaluate(()=>window.PaperWorldGameRingArena?.inspect());
  await page.waitForFunction(()=>{
   const a=window.PaperWorldGameRingArena?.inspect();
-  return a?.active&&a?.renderer==='webgl-l2d'&&a?.heroStatic===true&&
-   a?.previewPose==='female7'&&a?.l2dReady===8&&a?.heroTextureUploads>=1;
+  return a?.active&&a?.renderer==='webgl-l2d'&&a?.heroLiveFemale07L2D===true&&
+   a?.previewPose==='female7'&&a?.l2dReady===8&&
+   a?.female07PartyPartRigIds?.length===4&&a?.heroTextureUploads>=1;
  },null,{timeout:160000});
  await page.waitForFunction(()=>window.PaperWorldGameRingArena?.inspect()?.wallMaterial?.ready===true,
   null,{timeout:15000});
@@ -66,7 +67,10 @@ try{
  assert.equal(outer.heroine.side,'back');
  assert.equal(outer.heroine.l2dMode,'static-back-battle-cutout');
  assert.ok(Math.abs(outer.cameraPitchDeg)<.001,'restore original eye-level camera pitch');
- assert.equal(outer.heroTextureUploads,1,'static heroine must not upload every frame');
+ assert.equal(outer.heroStatic,false,'original female07 Photoshop PartRig is NOT a static cutout');
+ assert.equal(outer.heroLiveFemale07L2D,true,'the actual female07 PartRig drives the 3D heroine texture');
+ assert.deepEqual(outer.female07PartyPartRigIds,['hero','ally-2','ally-3','ally-4']);
+ assert.ok(outer.heroTextureUploads>=1,'live PartRig has uploaded frames to genuine WebGL');
  assert.deepEqual(outer.visibleActorIds,['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
  assert.deepEqual(Object.keys(outer.renderedActorOpacity).sort(),outer.visibleActorIds.slice().sort(),
   'every battle participant must have a real opaque WebGL draw');
@@ -217,7 +221,7 @@ try{
  assert.equal(returned.director.enemyHP['enemy-4'],36);
  assert.equal(JSON.stringify(returned.cameraTarget),originalCamera);
  assert.equal(JSON.stringify(returned.actors),originalActors);
- assert.equal(returned.heroTextureUploads,1);
+ assert.ok(returned.heroTextureUploads>=1);
  assert.equal(returned.directorCameraTemporary,false);
  assert.equal(returned.directorArt.cut,'none');
  assert.equal(returned.directorArt.hero.loaded,true);
@@ -259,7 +263,7 @@ try{
  // the canonical forward camera.
  await page.mouse.move(640,360);
  await page.waitForTimeout(850);
- assert.equal(stable.heroTextureUploads,1);
+ assert.ok(stable.heroTextureUploads>=1);
  // Single canonical encounter, with four physically separated foes.
  // A camera movement never switches into a second 'surround' map.
  assert.equal(await page.locator('[data-mode]').count(),0);
