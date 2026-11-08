@@ -7,17 +7,17 @@
 - 左 FRONT：开心地轻快小步朝前，右手胸前作小幅解释手势，左手自然摆动。
 - 中 LEFT SIDE：严格向左迈小步，右肘稍弯、手在腰前随说话轻微比画，保持左侧面。
 - 右 BACK：纯背面轻快走离，双臂自然摇摆，头发细微随动。
-- 统一女主学校制服：接近黑色的深海军蓝合身外套、**两枚深炭灰扁圆纽扣**、白衬衫、**酒红细长领带**、炭灰短百褶裙、露膝盖的黑色小腿袜、深棕黑乐福鞋。无眼睛、眼皮和闭眼弧线。
+- 统一女主学校制服：接近黑色的深海军蓝合身外套、**两枚带暖棕调的深棕灰色哑光大圆扣（近黑边缘）**、白衬衫、**酒红细长领带**、炭灰短百褶裙、露膝盖的黑色小腿袜、深棕黑乐福鞋。无眼睛、眼皮和闭眼弧线。
 - 低饱和阴天平涂，不画强光照或落地投影；三个角色不增加配角或道具。
 
 ## Positive Prompt
 
 ```text
-masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, character reference sheet, character turnaround, multiple views, full body, teenage schoolgirl, tall slender build, long legs, short fluffy chestnut brown hair, cheerful smile, natural walking, simple anime style, clean lineart, flat colors, muted colors, overcast daylight, white background.
+masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:1>, character reference sheet, character turnaround, multiple views, full body, teenage schoolgirl, tall slender build, long legs, short fluffy chestnut brown hair, cheerful smile, natural walking, simple anime style, clean lineart, flat colors, muted colors, overcast daylight, white background.
 
 A character reference sheet showing exactly three full-body drawings of the same Japanese high school girl in one horizontal row. She is a tall, lively and cheerful girl with long slender legs, a lean athletic build, naturally relaxed shoulders and youthful facial proportions. She has short fluffy chestnut brown hair reaching her jaw, a side-swept fringe and softly outward-curving hair ends. She has no visible eyes, no eyelids, no eyelashes, a small nose and a cheerful smiling mouth. Her hairstyle, body proportions and face remain identical in all three drawings.
 
-She wears the same school uniform as the female protagonist: a fitted very dark midnight-navy single-breasted blazer with notched lapels, exactly two large flat dark charcoal front buttons arranged vertically, a small chest pocket and two lower pockets, a white collared shirt, a neatly tied narrow burgundy long necktie, a short charcoal gray pleated skirt reaching mid-thigh, plain black mid-calf socks leaving the knees visible, and dark brown-black leather penny loafers. Her blazer remains neatly closed in every view. All uniform details and colors remain identical.
+She wears the same school uniform as the female protagonist: a fitted very dark midnight-navy single-breasted blazer with notched lapels, exactly two large matte warm dark brown-gray round front buttons with near-black rims, arranged vertically, a small chest pocket and two lower pockets, a white collared shirt, a neatly tied narrow burgundy long necktie, a short charcoal gray pleated skirt reaching mid-thigh, plain black mid-calf socks leaving the knees visible, and dark brown-black leather penny loafers. Her blazer remains neatly closed in every view. All uniform details and colors remain identical.
 
 LEFT FIGURE: Front view. The girl walks happily toward the viewer with a small light step, her right foot slightly forward. Her head, shoulders, chest and hips face directly forward. Her right hand is raised slightly in front of her chest with a small relaxed conversational gesture, as if she is telling a friend something funny. Her left arm swings naturally beside her body. Her mouth forms a cheerful open smile. Her pose is casual, friendly and lively.
 
@@ -35,11 +35,11 @@ Exactly three complete full-body figures, evenly spaced, isolated on a plain whi
 ## Negative Prompt
 
 ```text
-worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, visible eyes, pupils, irises, eyelashes, eyelids, closed-eye arcs, eye outlines, detailed eyes, eye highlights, different hairstyles, different hair lengths, ponytail, long straight hair, different characters, different body proportions, short stature, childlike proportions, gold buttons, brass buttons, yellow buttons, shiny metal buttons, one front button, three front buttons, extra buttons, ribbon bow, bow tie, untied necktie, loose necktie, different school uniform, missing blazer, missing necktie, open cardigan, long skirt, trousers, knee-high socks, thigh-high socks, tights, sneakers, high heels, handbag, backpack, smartphone, holding phone, exaggerated waving, arms above head, jumping, running, sprinting, dancing, exaggerated gestures, wide strides, unnatural walking, repeated front views, front view in center, back view in center, front view on right, side view on right, three-quarter view, turned torso, looking backward, extra characters, fourth figure, cropped head, cropped feet, hard shadows, directional sunlight, rim light, dramatic lighting, glossy highlights, scenery, furniture, text, watermark
+worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, visible eyes, pupils, irises, eyelashes, eyelids, closed-eye arcs, eye outlines, detailed eyes, eye highlights, different hairstyles, different hair lengths, ponytail, long straight hair, different characters, different body proportions, short stature, childlike proportions, gold buttons, brass buttons, yellow buttons, cold flat black buttons, glossy metal buttons, shiny metal buttons, one front button, three front buttons, extra buttons, ribbon bow, bow tie, untied necktie, loose necktie, different school uniform, missing blazer, missing necktie, open cardigan, long skirt, trousers, knee-high socks, thigh-high socks, tights, sneakers, high heels, handbag, backpack, smartphone, holding phone, exaggerated waving, arms above head, jumping, running, sprinting, dancing, exaggerated gestures, wide strides, unnatural walking, repeated front views, front view in center, back view in center, front view on right, side view on right, three-quarter view, turned torso, looking backward, extra characters, fourth figure, cropped head, cropped feet, hard shadows, directional sunlight, rim light, dramatic lighting, glossy highlights, scenery, furniture, text, watermark
 ```
 
 ## 参数与验收
 
-Anima Base · ER SDE · 35 Steps · CFG 4.5 · 1536×1024 · `@akipekostyle, <lora:akipekoanima_v1_1:0.65>`.
+Anima Base · ER SDE · 35 Steps · CFG 4.5 · 1536×1024 · `@akipekostyle, <lora:akipekoanima_v1_1:1>`.
 
 只接受一个角色三个朝向、自然且不夸张的步态手势、无眼睛、校服和发型跨视图完全一致、黑色双扣与长领带一致。其实际身高在游戏人物数据中单独确定，不在 Anima 文字里使用厘米值冒充尺度控制。
