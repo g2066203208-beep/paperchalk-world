@@ -297,7 +297,11 @@
     {opacity:0,filter:'brightness(.6) blur(3px)',
      transform:'translate3d(0,'+(direction*rowBox.height*1.08)+'px,0)'}
    ],{duration:245,easing:'cubic-bezier(.24,.78,.25,1)',fill:'forwards'});
-   motion.finished.catch(()=>{}).then(()=>ghost.remove());
+   const discard=()=>ghost.remove();
+   motion.finished.then(discard,discard);
+   // Slow software-WebGL/hidden tabs can delay animation completion events.
+   // A bounded cleanup also prevents an old portrait ghost from lingering.
+   window.setTimeout(discard,480);
   }
   function paintRoster(){
    if(!model)return;
