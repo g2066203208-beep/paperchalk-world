@@ -244,6 +244,10 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // Restore runtime-only bone ancestry AFTER published parts and local artwork
  // positions are finalized. Every drawn layer shares the same ground anchors.
  root.PaperchalkPartRigCore.bindBodyHierarchy(model);
+ // Rehydrate authored wrist-to-weapon / cloth-to-grip links after JSON
+ // decoding. Non-enumerable runtime parent references are not serializable
+ // and must be restored for both the Studio and the live battle canvas.
+ root.PaperchalkPartRigCore.bindGripParents(model);
  // Crouch is a separate authored ACTION resource under the same heroine.
  // Both editor and game evaluate precisely the same anchored deformation.
  // Restore the user's optional per-system strengths without making a new
