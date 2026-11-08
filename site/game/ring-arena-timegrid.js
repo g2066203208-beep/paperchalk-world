@@ -356,6 +356,10 @@
       {duration:300,easing:'cubic-bezier(.14,.78,.24,1)'});
     }
    }
+   // Keep insertion order identical to the visible physical reel, even
+   // when a new enemy splices in before the allied portrait frames.
+   const ordered=new Map(desired.map(id=>[id,nodes.get(id)]));
+   nodes.clear();for(const [id,node] of ordered)nodes.set(id,node);
    if(membershipChanged&&!firstFrame){
     rosterRevision++;
     announce.textContent=(vanished?'胶片抽离 '+vanished+' 帧。':'')+
