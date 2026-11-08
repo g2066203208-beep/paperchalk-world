@@ -1,0 +1,27 @@
+{
+  "$schema": "paperchalk/npc-production-manifest/v1",
+  "version": 1,
+  "description": "Gameplay-approved NPC sprites only. Art-production task owns original art and its approval; integration task owns 2.5D scene placement and simulation. Empty until reviewed art is supplied. Never auto-approve artwork based on filename.",
+  "records": [],
+  "exampleNotActive": {
+    "id": "NPC-G001",
+    "artApproved": false,
+    "production": false,
+    "allowedLocations": ["school", "mall", "park", "cafe"],
+    "allowedTransport": ["metro"],
+    "home": "kirihama-07",
+    "sprites": {
+      "idle": "./assets/characters/npc-g001/approved-new-idle.png",
+      "joy": "./assets/characters/npc-g001/approved-new-joy.png",
+      "surprise": "./assets/characters/npc-g001/approved-new-surprise.png"
+    },
+    "geometry": {
+      "assetCrownY": 0.03,
+      "assetSoleY": 0.97,
+      "soleX": 0.5,
+      "heightMeters": 1.62,
+      "widthScale": 2
+    },
+    "notes": "EXAMPLE ONLY. Do not turn this into a real approval. Geometry must be calibrated with actual alpha bounds and gameplay camera."
+  }
+}
