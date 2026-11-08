@@ -1,0 +1,37 @@
+name: Build civilian NPC front-view comparison
+on:
+  push:
+    paths:
+      - '.github/workflows/npc-build-front-comparison.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install image tools
+        run: python3 -m pip install --disable-pip-version-check --quiet --break-system-packages Pillow
+      - name: Compare all six canonical front-view sources
+        run: python3 scripts/build_civilian_front_comparison.py
+      - name: Save comparison without altering source PNGs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/assets/characters/civilians/npc-front-comparison-20261108.png
+          if git diff --cached --quiet; then
+            echo 'Comparison already up-to-date'
+            exit 0
+          fi
+          git commit -m 'assets(npc): publish six-person front-only civilian comparison'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
