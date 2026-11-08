@@ -159,6 +159,19 @@ for(const line of ORIGINAL_LINES){
 }
 allLineRows.splice(0,allLineRows.length,...ORIGINAL_LINES);
 const curatedIds=new Set(allLineRows.flatMap(l=>l.stops));
+// Migrate older save locations to a real nearby station on the same line.
+// Retired grid points remain railway geometry, not physical boarding stops.
+const RETIRED_STOP_ALIASES={};
+for(const line of ORIGINAL_LINES){
+ const remaining=CURATED_LINE_STOPS[line.id];
+ for(let i=0;i<line.stops.length;i++){
+  const id=line.stops[i];
+  if(curatedIds.has(id))continue;
+  const target=remaining.slice().sort((a,b)=>
+   Math.abs(line.stops.indexOf(a)-i)-Math.abs(line.stops.indexOf(b)-i))[0];
+  RETIRED_STOP_ALIASES[id]=target;
+ }
+}
 for(const id of Object.keys(stationRows)){
  if(!curatedIds.has(id))delete stationRows[id];
 }
@@ -300,6 +313,6 @@ function conversation(snapshot,route){
  ];
 }
 global.PaperWorldMetro=Object.freeze({
- GRID,STATIONS,LINES,AUTHORED_ROUTE_BENDS:Object.freeze(AUTHORED_ROUTE_BENDS),ACTIVE_BLUEPRINT,getLine,neighbors,nextStop,boardingChoices,path,conversation
+ GRID,STATIONS,LINES,RETIRED_STOP_ALIASES:Object.freeze(RETIRED_STOP_ALIASES),AUTHORED_ROUTE_BENDS:Object.freeze(AUTHORED_ROUTE_BENDS),ACTIVE_BLUEPRINT,getLine,neighbors,nextStop,boardingChoices,path,conversation
 });
 })(window);
