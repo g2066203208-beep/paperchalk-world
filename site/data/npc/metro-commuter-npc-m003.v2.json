@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 2,
+  "id": "NPC-M003",
+  "category": "metro_civilian",
+  "title": "老年男乘客—正面坐着看报纸",
+  "state": "USER_APPROVED_FOUR_POSE_IMAGE",
+  "approvalDate": "2026-11-08",
+  "visualCanon": {
+    "hair": "receding gray-white hair with bald crown",
+    "face": "mature wrinkles, eyelids almost closed, simple nose and mouth",
+    "outer": "dark charcoal gray casual open jacket",
+    "middle": "brown v-neck knit sweater",
+    "inner": "beige collared shirt",
+    "pants": "dark navy straight trousers",
+    "shoes": "black leather shoes"
+  },
+  "special": {
+    "action": "front_seated_reading_newspaper",
+    "direction": "strict_front",
+    "props": [
+      "open newspaper"
+    ],
+    "furnitureNotInSprite": true,
+    "characterActivity": "坐地铁上安静地看报纸，偶尔折报、休息、抬头看站名"
+  },
+  "production": {
+    "checkpoint": "Anima Base",
+    "steps": 35,
+    "cfg": 4.5,
+    "sampler": "ER SDE",
+    "canvas": [
+      1536,
+      1024
+    ],
+    "lora": "@akipekostyle <lora:akipekoanima_v1_1:0.65>",
+    "referenceAdvice": "For subsequent pose edits, use that NPC's own confirmed Anima source image with the installed pilot_r32 ImageStitch reference method; do not borrow another NPC's reference.",
+    "alphaAdvice": "Anima prompt text does not prove output RGBA. Remove white background and verify alpha before game registration.",
+    "viewOrder": [
+      "front_static_standing",
+      "strict_90deg_side_static_standing_facing_left",
+      "back_static_standing",
+      "unique_frontal_special_action"
+    ],
+    "positivePrompt": "safe, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, character sheet, four full body illustrations of the same elderly man, identical outfit in every view, receding gray hair, bald crown, gray hair on sides, aged face, subtle wrinkles, almost closed eyes, small nose, small closed mouth, charcoal gray open casual jacket, brown v-neck knitted sweater, beige collared shirt under the sweater, dark navy straight trousers, black leather shoes, flat colors, clean lineart, simple cel shading, muted colors, simple fabric folds, isolated figures, plain white background. Four figures arranged in one horizontal row, left to right. FIRST: exact straight front view standing still, face and shoulders directly facing viewer, arms naturally lowered, both feet planted, no walking. SECOND: exact ninety-degree left side profile view standing still, entire face chest hips and shoes pointing left, arms lowered, no walking. THIRD: exact back view standing still, back of head and jacket visible, arms lowered, no walking. FOURTH: exact front view sitting on an invisible seat, torso shoulders knees and shoes facing viewer, holding an open newspaper with both hands and reading quietly, slightly bowed head, feet on floor. All four depictions have identical charcoal jacket over brown sweater over beige shirt, identical navy trousers, black shoes, bald crown and gray side hair. No chair or bench, no furniture or scene. All four heads and shoes complete and evenly spaced.",
+    "negativePrompt": "extra people, different characters, inconsistent clothes, different colors between poses, missing jacket, missing undershirt, different hairstyle, first pose three-quarter view, second pose front view, second pose three-quarter view, third pose side view, fourth pose side view, walking, stepping, action pose in first three figures, chair, bench, subway seat, train interior, furniture, scenery, background objects, floor shadow, excessive clothing details, cropped head, cropped feet, text, watermark"
+  },
+  "approvedArt": {
+    "sourceType": "uploaded_user_image",
+    "originalFilename": "tmp9006p_bo.png",
+    "originalWidth": 1472,
+    "originalHeight": 1024,
+    "colorMode": "RGB",
+    "sha256": "0a55af227d55b126d1fd37e4209eef50322d99c99e2f690be8c19fc9519701ba",
+    "viewLayout": "four full-body figures in one row, correct front / strict side / back / front seated",
+    "originalBinaryCommittedToGitHub": false,
+    "proposedAssetPath": "site/assets/characters/metro/npc-m003/approved-four-poses.png",
+    "whiteBackgroundPresent": true,
+    "note": "This is a validated approval and checksum record, not yet a repository binary or transparent game-ready atlas."
+  },
+  "render": {
+    "approvedSource": null,
+    "transparentSpriteAtlas": null,
+    "ready": false
+  },
+  "allowedBehavior": [
+    "stand",
+    "turn",
+    "board",
+    "sit",
+    "read_newspaper",
+    "fold_newspaper",
+    "check_station",
+    "briefly_doze"
+  ],
+  "animationCoverage": "planned; only four static art poses approved"
+}
