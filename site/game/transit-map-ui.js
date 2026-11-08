@@ -654,8 +654,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   for(const {node,poi,img,source} of worldNodes){
    const p=network.at(poi.id)||location(poi);
    const px=x+p.x*scale,py=y+p.y*scale;
+   // Do not paint half-cropped photo cards along the viewport edges.
+   // Their physical circle pins stay on the line and can still be selected.
+   const cardClearance=v.h<450?164:188;
    let visible=scoped&&poi.city===activeCity&&scale>=1.6&&
-    px>-95&&px<v.w+95&&py>-40&&py<v.h+180;
+    px>95&&px<v.w-95&&py>=cardClearance&&py<v.h-33;
    if(visible){
     visible=!occupied.some(q=>Math.abs(q.x-px)<183&&
      Math.abs(q.y-(py-85))<145);
