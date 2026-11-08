@@ -1,0 +1,56 @@
+name: Home station pixel neighborhood actual game proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/home-station-map.js'
+      - 'site/game/home-station-map.css'
+      - 'site/game/transit-map-ui.js'
+      - 'site/index.html'
+      - 'tests/home-station-map-browser.mjs'
+      - '.github/workflows/home-station-neighborhood.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: paperchalk-home-pixel-neighborhood
+  cancel-in-progress: true
+jobs:
+  chrome-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate scripts and station position data
+        run: |
+          node --check site/game/home-station-map.js
+          node --check site/game/transit-map-ui.js
+          node --test tests/kirihama-location-masterplan.test.cjs tests/metro-graph.test.cjs
+      - name: Install Chromium and scene renderer prerequisites
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+      - name: Start actual game
+        run: |
+          python3 scripts/build_scene_catalog.py
+          python3 -m http.server 8765 --directory site >/tmp/paperchalk-home-server.log 2>&1 &
+          for i in $(seq 1 35); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/paperchalk-home-server.log
+          exit 1
+      - name: Verify in real browser and capture home station pixel neighborhood
+        run: node tests/home-station-map-browser.mjs
+      - name: Upload actual game screenshots of local home station
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-station-square-dot-actual-chromium
+          path: artifacts/home-station-neighborhood/*.png
+          if-no-files-found: warn
+          retention-days: 14
