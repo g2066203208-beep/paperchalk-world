@@ -57,9 +57,9 @@
    platformLighting:Object.freeze({
     backZ:8.0,
     positions:Object.freeze([
-     -2.85,2.55,7.02,
-     0.92,2.56,7.06,
-     2.62,2.48,7.00,
+     -2.85,2.82,5.85,
+     0.92,2.82,5.85,
+     2.62,2.80,5.85,
      -1.92,2.55,12.66
     ]),
     colors:Object.freeze([
@@ -68,7 +68,7 @@
      3.28,3.44,3.34,
      2.44,2.82,3.20
     ]),
-    visibleSide:'rear-window-and-door-glass',
+    visibleSide:'3d-station-box-real-ceiling-luminaires-through-glass-and-open-doors',
     oppositeSide:'off-camera-side-platform-windows'
    })
   })
