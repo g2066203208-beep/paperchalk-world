@@ -32,7 +32,7 @@ test('all five ordinary civilians are in one roster; four new real PNG files are
     assert.ok(fs.existsSync(path.join(ROOT,item.source.path)),`missing binary: ${item.source.path}`);
     const src = fs.readFileSync(path.join(ROOT,item.source.path));
     assert.equal(crypto.createHash('sha256').update(src).digest('hex'),item.source.sha256);
-    assert.equal(crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${src.length}\\0`),src])).digest('hex'),item.source.gitBlobSha);
+    assert.equal(crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${src.length}\0`),src])).digest('hex'),item.source.gitBlobSha);
     assert.equal(item.production.registeredForGame,false);
     assert.equal(item.production.gameApproved,false);
     assert.equal(item.production.hasRealAlpha,false);
