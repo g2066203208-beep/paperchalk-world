@@ -1531,7 +1531,7 @@
 #pw-world-surface .pw-dot-world-map .pw-metro-edit-edge{
  opacity:.84;
 }
-#pw-world-surface .pw-dot-world-map .pw-metro-edit-edge[data-sameline="true"]{
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-edge[data-same-line="true"]{
  opacity:1;
 }
 #pw-world-surface .pw-dot-world-map .pw-metro-edit-edge[data-selected="true"] .pw-metro-edit-track{
@@ -1653,4 +1653,10 @@
  #novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action{
   font-size:11px!important;padding:4px 7px!important;min-height:25px!important
  }
+}
+
+/* Touch-drags move grid handles; they must never pan the webpage. */
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station,
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-bend{
+ touch-action:none!important;user-select:none!important;
 }
