@@ -69,7 +69,13 @@ try{
  });
  await click('#quick-map');
  await page.locator('.pw-dot-world-map').waitFor({state:'visible'});
- assert.equal(await scope(),'region','game MUST open the inter-city page, not metropolitan subway');
+ // Navigation now starts at the protagonist's actual residential station.
+ assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-map-layer'),'station');
+ assert.equal(await page.locator('.pw-home-place-marker').count(),7);
+ await click('.pw-home-neighborhood-up');
+ assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-map-layer'),'metro');
+ await click('.pw-dot-back');
+ assert.equal(await scope(),'region','world is the third map level above home and city');
  const atlas=await page.evaluate(()=>({
   cities:window.PaperWorldAtlas.CITIES.length,
   points:window.PaperWorldAtlas.POIS.length
