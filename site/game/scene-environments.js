@@ -21,21 +21,20 @@
    id:'metro',name:'地铁车厢 · 长条形场景',
    geometry:Object.freeze({shape:'strip',widthMeters:8.5,depthMeters:3.85,
     heightMeters:2.85,backZ:8.0}),
-   // Per-scene staging is data, not a separate game-mode rendering path.
+   // Formal, straight-on subway side-wall composition.
+   // The actual 3D floor still exists for lighting and contact shadows, but
+   // the frame crops BELOW the floor/wall joint instead of showing a grey
+   // wedge of ground or diagonal gangway. Do not pan or orbit this camera.
+   // A 49-degree vertical lens at 2.9m from the 2.85m wall fills the frame;
+   // the painted door/window/bench art remains vertically undistorted.
    camera:Object.freeze({
-    // Passenger eye sees a believable 2.85m-high train, not the battle
-    // over-shoulder lens/giant foreground heroine.
-    // Keep the 1.63m heroine physically real, but move the passenger
-    // camera closer and aim low enough for her actual shoes to remain visible.
-    // Portrait devices crop the carriage horizontally, not the human vertically.
-    // Corrected seated-passenger 3/4 camera: a modest 12-degree view
-    // along the carriage, not a flat perpendicular elevation of a box.
-    // The coach stays perfectly rigid; travel NEVER tilts or pans the eye.
-    mode:'fixed',eye:Object.freeze({x:-1.15,y:1.50,z:10.60}),
-    focus:Object.freeze({x:-.55,y:.95,z:7.70}),fov:66,lensShift:.09,
-    fovMode:'vertical',
-    phoneEye:Object.freeze({x:-1.55,y:1.50,z:10.60}),
-    phoneFocus:Object.freeze({x:-.95,y:.95,z:7.70})
+    mode:'fixed',
+    eye:Object.freeze({x:-0.95,y:1.45,z:10.90}),
+    focus:Object.freeze({x:-0.95,y:1.45,z:8.0}),
+    fov:49,lensShift:0,fovMode:'vertical',
+    phoneEye:Object.freeze({x:-1.60,y:1.45,z:10.90}),
+    phoneFocus:Object.freeze({x:-1.60,y:1.45,z:8.0}),
+    composition:'front-elevation-no-floor'
    }),
    actors:Object.freeze({
     visible:Object.freeze(['hero']),
