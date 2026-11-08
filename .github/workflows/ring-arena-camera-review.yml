@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           src="$GITHUB_WORKSPACE/artifacts/ring-arena"
-          for file in final-eye-level-3q-1280x720.png party-controlled-2-1280x720.png party-controlled-3-1280x720.png party-controlled-4-1280x720.png V31-woman7-four-enemies-ground-aligned-1917x906.png; do
+          for file in final-eye-level-3q-1280x720.png party-controlled-2-1280x720.png party-controlled-3-1280x720.png party-controlled-4-1280x720.png V31-woman7-four-enemies-ground-aligned-1917x906.png human-look-left-1280x720.png human-look-right-1280x720.png; do
             test -s "$src/$file"
           done
           remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
@@ -64,6 +64,8 @@ jobs:
           cp "$src/party-controlled-3-1280x720.png" ring-arena/ally-3-1280x720.png
           cp "$src/party-controlled-4-1280x720.png" ring-arena/ally-4-1280x720.png
           cp "$src/V31-woman7-four-enemies-ground-aligned-1917x906.png" ring-arena/hero-wide-1917x906.png
+          cp "$src/human-look-left-1280x720.png" ring-arena/human-look-left-1280x720.png
+          cp "$src/human-look-right-1280x720.png" ring-arena/human-look-right-1280x720.png
           node - <<'JS'
           const fs=require('node:fs');
           fs.writeFileSync('ring-arena/manifest.json',JSON.stringify({
@@ -72,7 +74,8 @@ jobs:
            opacityCheck:'all eight actors full opacity in every controlled 4v4 screenshot',
            files:['ally-1-1280x720.png','ally-2-1280x720.png',
                   'ally-3-1280x720.png','ally-4-1280x720.png',
-                  'hero-wide-1917x906.png']
+                  'hero-wide-1917x906.png',
+                  'human-look-left-1280x720.png','human-look-right-1280x720.png']
           },null,2));
           JS
           cp "$src/camera-review.json" ring-arena/camera-review.json
