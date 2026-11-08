@@ -127,7 +127,9 @@ try{
     await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-home.png'});
     // Actual interactive phone features use the original world save.
     await page.locator('#phone-ui [data-app="信息"]').click();
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-conversations.png'});
     await page.locator('#phone-ui .phone-conversation-row[data-contact="female2"]').click();
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-chat.png'});
     assert.ok((await page.locator('#phone-ui .phone-chat-bubble.is-them').count())>=3,
       'Opening chat must preserve the three day-one messages');
     await page.locator('#phone-ui .phone-conversation-return').click();
@@ -139,6 +141,7 @@ try{
     await page.locator('#phone-ui .phone-memo-text').fill('站台的广播忽然中断。');
     await page.locator('#phone-ui .phone-memo-editor button[type="submit"]').click();
     assert.equal(await page.locator('#phone-ui .phone-memo-open').count(),1);
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-notebook.png'});
     await page.locator('#phone-ui .phone-memo-open').click();
     assert.equal(await page.locator('#phone-ui .phone-memo-text').inputValue(),'站台的广播忽然中断。');
     await page.locator('#phone-ui .phone-memo-cancel').click();
@@ -150,6 +153,7 @@ try{
     await page.locator('#phone-ui .phone-remark-editor button[type="submit"]').click();
     assert.ok((await page.locator('#phone-ui .phone-profile-field').first().textContent()).includes('同学兼好友'),
       'Edited remark must be reflected on the contact profile');
+    await page.screenshot({path:'artifacts/phone/char001-'+cfg.name+'-contact.png'});
     await page.locator('#phone-app-back').click();
     assert.equal(await page.locator('#quick-phone').isVisible(),false,
       'The quick tool must be hidden while its physical handset is open');
