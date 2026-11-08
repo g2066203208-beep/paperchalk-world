@@ -77,3 +77,52 @@ test('metro board, next stop, transfer and 22:00 loop persist in world state',()
  assert.equal(e.snapshot().metro.onboard,true);
  assert.equal(life.create({storage:store}).snapshot().metro.anomaly,true);
 });
+
+
+test('Kirihama has exactly ten genuine lines, 170 separate stops and 19 physical interchanges',()=>{
+ assert.equal(metro.LINES.length,10);
+ assert.equal(Object.keys(metro.STATIONS).length,170);
+ assert.equal(Object.values(metro.STATIONS).filter(s=>s.transfer).length,19);
+ const routes=new Set();
+ for(const line of metro.LINES){
+  assert.ok(line.stops.length>=4,'not a true line: '+line.name);
+  for(const station of line.stops){
+   assert.ok(metro.STATIONS[station],'dangling stop on '+line.name);
+   routes.add(station);
+  }
+  for(let i=1;i<line.stops.length;i++){
+   assert.equal(metro.nextStop(line.id,line.stops[i-1],1),line.stops[i]);
+   assert.equal(metro.nextStop(line.id,line.stops[i],-1),line.stops[i-1]);
+  }
+ }
+ assert.equal(routes.size,170);
+ for(const station of routes){
+  assert.ok(metro.path('entrance',station),'station cannot be reached: '+station);
+  assert.ok(metro.path(station,'entrance'),'station cannot return: '+station);
+ }
+});
+
+test('a newly-authored station can actually be boarded and exited in the daily-life engine',()=>{
+ const game={window:{}};
+ vm.runInNewContext(fs.readFileSync(core,'utf8'),game);
+ game.module={exports:{}};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../site/game/daily-life-state.js'),'utf8'),game);
+ const e=game.module.exports.create();
+ assert.equal(e.travel('entrance').ok,true);
+ assert.ok(game.module.exports.LOCATIONS['kh-e-11']);
+ assert.equal(e.metroBoard('e',1).ok,true);
+ const target=e.metroNext();
+ assert.equal(target.ok,true);
+ assert.equal(target.station,'kh-e-11');
+ assert.equal(e.metroExit().ok,true);
+ assert.equal(e.snapshot().location,'kh-e-11');
+});
+
+test('website always builds the complete subway station registry before game state',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../site/index.html'),'utf8');
+ const graph=html.indexOf('src="./game/metro-graph.js?');
+ const life=html.indexOf('src="./game/daily-life-state.js?');
+ assert.ok(graph>=0&&life>graph,'DailyLife must not initialize before MetroGraph');
+ assert.equal(html.split('src="./game/metro-graph.js?').length,2,
+  'MetroGraph should be evaluated once, not duplicated');
+});
