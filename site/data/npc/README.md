@@ -1,3 +1,5 @@
+> **当前提示词来源：** [LEFT / CENTER / RIGHT 人物三视图，以及右侧追加特色待机的四视图（2026-11-08）](../../../docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md)。普通路人以用户已认可的三视图单行提示结构为基准；需要第四格时只在最右增加纯正面的可持续生活待机。**本文件后面的 M001/M002 V6/V2 是未出图的旧人物待办，不再是新路人默认提示词。M003 已批准美术保持不动。**
+
 # 地铁路人 NPC 人物集 — 四格标准 (2026-11-08)
 
 **统一规则：第一格纯正面静止站姿、第二格严格 90° 左侧面静止站姿、第三格纯背面静止站姿、第四格专属生活动作（默认纯正面）。前三格不是行走帧。** 四格必须同一人的发型、脸、身材、外套、内搭、裤子、鞋子完全一致，不能每格单独换衣服。第四格不是背面，也不能出现椅子、站台、车厢等环境或道具（手持的报纸、手机等该动作必要道具除外）。
@@ -12,7 +14,7 @@
 
 **程序可读图鉴：** [metro-character-gallery.v1.json](metro-character-gallery.v1.json)
 
-**开发白皮书：** [NPC 四格 Anima 开发白皮书（上一位老人 M003 全过程纠错与验收）](../../../docs/NPC_FOUR_POSE_DEVELOPMENT_WHITEPAPER_V1_20261108.md)；**下一个优先重画：** [M001 Anima Base 完整正向/负向 V6（无眼睛、前三格统一站姿）](../../../docs/NPC-M001_ANIMA_FOUR_POSE_NO_EYES_V6_20261108.md)。未经过用户批准，不会将 M001 或 M002 标为成品。
+**当前新 NPC 的唯一提示词范本：** [LEFT / CENTER / RIGHT 三视图及四格新增待机](../../../docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md)。[M001 V6 旧候选](../../../docs/NPC-M001_ANIMA_FOUR_POSE_NO_EYES_V6_20261108.md)及 M002 V2 保留为未批准人物档案，**不再作为新图提示词的默认入口**。 [老爷爷 M003 开发复盘](../../../docs/NPC_FOUR_POSE_DEVELOPMENT_WHITEPAPER_V1_20261108.md)为历史纠错参考。
 
 ## NPC-M003 用户已批准的 Anima 画作
 
