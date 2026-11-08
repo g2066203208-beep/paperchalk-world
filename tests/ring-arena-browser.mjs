@@ -253,9 +253,10 @@ try{
  await page.waitForTimeout(350);
  const stable=await inspect();
  assert.equal(stable.shotIndex,0);
- assert.ok(Math.hypot(stable.camera.eye.x-outer.camera.eye.x,
-  stable.camera.eye.z-outer.camera.eye.z)>.02,
-  'true third-person camera must orbit the protagonist shoulder, not pivot from a fixed eye');
+ assert.deepEqual(stable.camera.eye,outer.camera.eye,
+  'head-look must not translate the approved New-Moon shoulder eye');
+ assert.ok(Math.abs(stable.cameraLook.yawDeg)<=7.50001);
+ assert.ok(Math.abs(stable.cameraLook.pitchDeg)<=3.50001);
  assert.equal(stable.cameraLook.mode,'hero-root-tps-shoulder-rig');
  assert.equal(stable.cameraLook.heroYawDeg,0,
   'protagonist world orientation must remain locked during mouse orbit');
