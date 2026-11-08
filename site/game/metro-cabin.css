@@ -194,3 +194,15 @@
  #pw-metro-cabin .pw-npc-qa-note{display:none}
  #pw-metro-cabin .pw-npc-qa-controls button{padding:3px 5px}
 }
+
+/* Preview media should not show placeholder alt text before importing art. */
+#pw-metro-cabin .pw-npc-qa-stage img:not([src]){display:none!important}
+/* Game's global button skin uses !important; QA controls need a visible skin. */
+#novel-ui #pw-metro-cabin .pw-npc-qa-controls button{
+ background:#25383de8!important;border:1px solid #819498aa!important;
+ border-radius:4px!important;color:#f3f1e9!important;
+ padding:5px 9px!important;font-size:inherit!important;
+}
+#novel-ui #pw-metro-cabin .pw-npc-qa-controls button[aria-pressed="true"]{
+ background:#5f6d6c!important;border-color:#e2e6da!important;
+}
