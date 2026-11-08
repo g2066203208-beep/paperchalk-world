@@ -4,6 +4,8 @@ on:
     paths:
       - '.github/workflows/npc-build-game-sprites.yml'
       - 'scripts/build_civilian_game_sprites.py'
+      - 'site/npc-test/**'
+      - 'tests/npc-civilian-browser.mjs'
       - 'site/assets/characters/civilians/npc-c006/three-view-original.png'
   workflow_dispatch:
 permissions:
