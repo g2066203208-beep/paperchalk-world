@@ -72,10 +72,22 @@ try{
  report.outer=await inspect();
  report.initialProjectors=report.outer.lighting.shadowLampAssignments;
  report.alphaClips=report.outer.actorVisibleUv;
- const masked=report.alphaClips?.['enemy-3'];
- if(!masked?.clip||masked.clip.right-masked.clip.left>.55||
-  masked.sourceMask!=='battle-only-feathered-subject-separates-opaque-clouds')
-  validationErrors.push('enemy 3 opaque painted cloud still leaks outside the cropped figure');
+ if(report.outer.uniformBattlePreview){
+  const textures=report.outer.actorTextureIdentities;
+  if(['ally-2','ally-3','ally-4'].some(id=>textures[id]!==textures.hero))
+   validationErrors.push('friends do not share the exact same original back heroine portrait');
+  if(['enemy-2','enemy-3','enemy-4'].some(id=>textures[id]!==textures['enemy-1']))
+   validationErrors.push('enemies do not share the same original animated enemy ArtMesh');
+  if(textures.hero===textures['enemy-1'])
+   validationErrors.push('both teams must not use the same actor source');
+  if(report.alphaClips?.['enemy-3']?.sourceMask)
+   validationErrors.push('legacy cloud mask was applied to clean shared enemy art');
+ }else{
+  const masked=report.alphaClips?.['enemy-3'];
+  if(!masked?.clip||masked.clip.right-masked.clip.left>.55||
+   masked.sourceMask!=='battle-only-feathered-subject-separates-opaque-clouds')
+   validationErrors.push('original CHAR-006 enemy 3 fog is not masked');
+ }
  if(report.outer?.lighting?.shadowFilter!=='13-tap-distance-dependent-area-light-penumbra')
   throw Error('Actual WebGL scene is still using old hard-edge shadows');
  await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});
@@ -211,6 +223,7 @@ try{
   !report.outer?.roomSurfaces?.floor?.ready||!report.outer?.roomSurfaces?.ceiling?.ready||
   report.outer?.roomSurfaces?.floor?.vertices<15000||
   report.outer?.safety?.clear!==true||
+  report.outer?.uniformBattlePreview!==true||
   report.outer?.l2dReady!==8||
   report.outer?.encounterControls!==0||
   report.outer?.encounter!=='one-centered-grounded-opponents'||
