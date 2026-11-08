@@ -593,7 +593,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   metroNetwork.style.display='none';
   municipal.style.display='none';
   access.style.display='none';
-  stops.style.display=hasMetro?'':'none';
+  // The HTML station dot is the ONE interactive visual marker. A second
+  // SVG circle underneath made every stop look like an ugly double ring.
+  stops.style.display='none';
   for(const group of stops.children)
    group.style.display=hasMetro&&group.dataset.city==='kirihama'?'':'none';
   metroLayer.hidden=!hasMetro;
