@@ -1660,3 +1660,71 @@
 #pw-world-surface .pw-dot-world-map .pw-metro-edit-bend{
  touch-action:none!important;user-select:none!important;
 }
+
+
+/* V29 · Metro diagram LOD. 170 physical stops, but NEVER 170 visible
+ * white rings at the full-city overview. Crisp routes first, hubs second,
+ * one selected corridor's local stations third, small stations on zoom. */
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-transit-grid-dot{
+ opacity:.13!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map[data-scope="city"]
+ .pw-dot-local-places .pw-transit-place.is-station[data-node-visible="false"]{
+ display:none!important;pointer-events:none!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"]
+ .pw-dot-local-places .pw-transit-place.is-station .pw-transit-station-dot{
+ width:8px!important;height:8px!important;
+ min-width:8px!important;min-height:8px!important;
+ border:1.5px solid #b9d7d2!important;
+ background:#203944!important;
+ box-shadow:0 0 0 1px #0b1b23!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"]
+ .pw-dot-local-places .pw-transit-place.is-station[data-transfer="true"] .pw-transit-station-dot{
+ width:12px!important;height:12px!important;
+ min-width:12px!important;min-height:12px!important;
+ border:2px solid #f1d499!important;
+ background:#183640!important;
+ box-shadow:0 0 0 1px #091d25!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"]
+ .pw-dot-local-places .pw-transit-place.is-station[data-current="true"] .pw-transit-station-dot,
+#pw-world-surface .pw-dot-world-map[data-scope="city"]
+ .pw-dot-local-places .pw-transit-place.is-station[data-selected="true"] .pw-transit-station-dot{
+ border-color:#fff0c6!important;background:#dbb77c!important;
+ box-shadow:0 0 0 2px #224954,0 0 6px #efcb9173!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"]
+ .pw-dot-local-places .pw-transit-place.is-station .pw-transit-place-name{
+ font-size:11px!important;
+}
+/* The default edit view is a topology PLAN: only 19 transfer handles and
+ * a few established story landmarks, not a pearl chain of 170 handles.
+ * Selecting a route reveals only that route's individual handles. */
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"] .pw-metro-edit-station{
+ stroke-width:1.45px!important;fill:#17323a!important;
+}
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"]
+ .pw-metro-edit-station[data-transfer="true"]{
+ stroke-width:2px!important;stroke:#dcc995!important;
+}
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"]
+ .pw-metro-edit-edge[data-dimmed="true"]{
+ opacity:.20!important;
+}
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"]
+ .pw-metro-edit-edge[data-selected="true"],
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"]
+ .pw-metro-edit-edge[data-same-line="true"]{
+ opacity:1!important;
+}
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"]
+ .pw-metro-edit-edge[data-dimmed="true"] .pw-metro-edit-track-casing{
+ opacity:.35!important;
+}
+/* Fade unused grid intersections and track casing, not the active coloured
+ * train routes. No rectangular outline or extra floating selection box. */
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"] .pw-metro-edit-track-casing{
+ opacity:.55!important;
+}
