@@ -55,14 +55,30 @@
   const u=sign*wallArcMeters(theta)/tileWidth+ACTIVE_WALL.repeats/2;
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
- // Four genuine one-on-one lanes. Both ranks are straight, parallel and
- // EXACTLY aligned in world X: switching the controlled player never moves
- // or reorders an actor. Do not sacrifice this formation to solve occlusion.
+ // Persona-5-inspired OPEN party formation, not a four-back wall.
+ // The selected fighter keeps the approved shoulder camera and ORIGINAL
+ // full-size portrait. In any one command view the audience only needs a
+ // neighbouring teammate, never all four portraits at the same depth.
+ // These positions are immutable world anchors: control swaps move ONLY
+ // the same camera rig, not the performers. All allies remain FULL BACK L2D.
  const LANE_X=Object.freeze([-1.05,-.25,.55,1.35]);
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze(LANE_X.map(x=>Object.freeze([x,9.30]))),
-   enemies:Object.freeze(LANE_X.map(x=>Object.freeze([x,6.80])))
+   // Wide, non-collinear irregular staging: front hero, one left-forward
+   // ally, one right-rear ally, one left-midground ally.
+   allies:Object.freeze([
+    Object.freeze([-1.05,9.30]),
+    Object.freeze([-1.72,7.95]),
+    Object.freeze([.78,9.50]),
+    Object.freeze([-1.05,8.32])
+   ]),
+   // Four visibly separated enemies in the composition's quiet middle.
+   // A little farther back with a slight art-size compensation avoids
+   // the close-up enemies appearing tiny or touching each other.
+   enemies:Object.freeze([
+    Object.freeze([-.20,6.35]),Object.freeze([.45,6.35]),
+    Object.freeze([1.10,6.35]),Object.freeze([1.75,6.35])
+   ])
   }),
   inner:Object.freeze({
    allies:Object.freeze(LANE_X.map(x=>Object.freeze([x,8.0]))),
@@ -75,7 +91,7 @@
  });
  const heights=Object.freeze({
   hero:1.62,'ally-2':1.62,'ally-3':1.62,'ally-4':1.62,
-  'enemy-1':1.58,'enemy-2':1.58,'enemy-3':1.58,'enemy-4':1.58
+  'enemy-1':1.70,'enemy-2':1.70,'enemy-3':1.70,'enemy-4':1.70
  });
  const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
  const cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
@@ -113,10 +129,10 @@
  })));
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
- // Four actual same-depth teammates stand on ONE near rank rather than a
- // staggered line. Teammates are left of heroine so her right-shoulder
- // viewport never hides the four enemies. Switching actors RE-ANCHORS
- // only the one genuine WebGL camera; neither team changes their anchors.
+ // A four-person P5-style command team: selected player + nearby partner
+ // are the visual priority, NOT four enormous backs in the same rank.
+ // Switching roles re-anchors only the ORIGINAL 66-degree shoulder camera
+ // to the fixed world position of that role; all four real actors stay put.
  // Metro still chooses only its named passenger via scene actors.visible.
  const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
@@ -128,7 +144,7 @@
  // physically grounded and remains part of the SAME 3D world as all foes.
  // The camera stays close behind her and ORBITS her world-space root;
  // it is not a fixed eye with the heroine pushed out to the left.
- const SHOT_NAMES=Object.freeze(['四人同排 · 自由切换']);
+ const SHOT_NAMES=Object.freeze(['P5 宽站位 · 相邻队友']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
    id:'left',eyeX:-.28,eyeZ:10.40,eyeY:1.50,
@@ -2546,7 +2562,7 @@
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:lens?.lensShift??VERTICAL_LENS_SHIFT,
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
-   stagePresentation:'four-rear-facing-allies-one-fixed-rank',
+   stagePresentation:'p5-spaced-fixed-all-back-command-team',
    stageTransitionProgress:1,
    stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
    presentationActors:presentedActors.map(a=>({id:a.id,team:a.team,
