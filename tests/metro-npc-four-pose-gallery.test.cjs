@@ -54,15 +54,15 @@ test('approved M003 original and all RGBA poses are real GitHub files, not place
  assert.ok(fs.existsSync(path.join(root,data.production.userProvidedVerbatimPromptPath)));
 });
 
-test('next NPC-M001 V3 is a strict four-panel Anima prompt, not approved artwork',()=>{
+test('next NPC-M001 V5 is a strict four-panel Anima prompt, not approved artwork',()=>{
  const gallery=json('site/data/npc/metro-character-gallery.v1.json');
  const entry=gallery.characters.find(x=>x.id==='NPC-M001');
- assert.equal(entry.record,'metro-commuter-npc-m001-four-pose-draft.v4.json');
+ assert.equal(entry.record,'metro-commuter-npc-m001-four-pose-draft.v5.json');
  assert.equal(entry.approval,'rebuild_required');
  assert.equal(entry.image,null);
  const info=json('site/data/npc/'+entry.record);
  assert.equal(info.state,'REDRAW_REQUIRED_FOUR_POSE');
- assert.equal(info.production.status,'prompt_v4_personality_proposal_awaiting_user_review_and_anima_image');
+ assert.equal(info.production.status,'prompt_v5_personality_proposal_awaiting_user_review_and_anima_image');
  assert.equal(info.production.checkpoint,'Anima Base');
  assert.deepEqual(info.production.viewOrder,[
   'front_static_standing',
@@ -82,18 +82,19 @@ test('next NPC-M001 V3 is a strict four-panel Anima prompt, not approved artwork
  assert.equal(info.render.approvedSource,null);
  assert.equal(info.render.hasRealAlpha,false);
  for(const p of [
-  'docs/NPC-M001_ANIMA_FOUR_POSE_PERSONALITY_V4_20261108.md',
+  'docs/NPC-M001_ANIMA_FOUR_POSE_PERSONALITY_V5_20261108.md',
   'docs/NPC_FOUR_POSE_DEVELOPMENT_WHITEPAPER_V1_20261108.md'
  ]) assert.ok(fs.existsSync(path.join(root,p)),p);
 });
 
 test('M001 own lived-in fourth pose and personality differ from approved M003',()=>{
- const info=json('site/data/npc/metro-commuter-npc-m001-four-pose-draft.v4.json');
+ const info=json('site/data/npc/metro-commuter-npc-m001-four-pose-draft.v5.json');
  assert.equal(info.special.direction,'strict_front');
  assert.equal(info.special.status,'character_concept_proposal_not_user_approved');
- assert.match(info.production.positivePrompt,/supports his cheek/);
+ assert.match(info.production.positivePrompt,/rub the back of his sore neck/);
  assert.match(info.production.positivePrompt,/worn dark-olive fabric lunch bag/);
- assert.match(info.production.positivePrompt,/trying not to fall asleep/);
+ assert.match(info.production.positivePrompt,/exhausted involuntary yawn/);
  assert.doesNotMatch(info.production.positivePrompt,/holding an open newspaper/);
+ assert.doesNotMatch(info.production.positivePrompt,/sitting on an invisible seat/);
  assert.equal(info.render.ready,false);
 });
