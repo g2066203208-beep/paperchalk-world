@@ -72,7 +72,7 @@ try{
   return faces.length===8&&faces.every(x=>x.complete&&x.naturalWidth>0);
  },null,{timeout:30000});
  const hpLabels=await page.locator('.tg-hp-value').allTextContents();
- assert.ok(hpLabels.every(x=>/^\\d+\\/\\d+$/.test(x.trim())),
+ assert.ok(hpLabels.every(x=>{const parts=x.trim().split('/');return parts.length===2&&parts.every(v=>v!==''&&Number.isInteger(Number(v)));}),
   'all eight portraits show their real HP');
  await page.screenshot({path:resolve(out,'01-planning-1280x720.png'),animations:'disabled'});
  const expected=['hero','ai-gun','ai-guard','ai-mage'];
