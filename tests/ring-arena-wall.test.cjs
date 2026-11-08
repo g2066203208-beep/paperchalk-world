@@ -297,8 +297,8 @@ for(const x of [-1,-.5,0,.5,1]){
  assert.ok(shot.shoulderRig&&shot.actorRootUnchanged);
  assert.ok(Math.abs(shot.heroYawDeg)<1e-8);
 }
-assert.match(src,/shoulderCamera\(base,layout\(mode\)\.allies\[0\],mouseLookX,mouseLookY/,
- 'the live WebGL renderer must USE the root-attached shoulder camera');
+assert.match(src,/allyViewCamera\(base,layout\(mode\)\.allies\[0\],controlledActor\(\),mouseLookX,mouseLookY/,
+ 'the one live 3D shoulder camera must follow the SELECTED real teammate, never move actor world anchors');
 assert.match(src,/actorWorldRight\(a,mode\)/,
  'rendered ArtMesh and shadows share a stable world orientation');
 console.log('PASS compact 2.85m convenience-store bay, nine aspect-correct wall sections, four closer actors and switchable shadow-casting lights');
