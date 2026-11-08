@@ -112,14 +112,50 @@ const GRID_STATIONS=Object.freeze(Object.fromEntries(Object.entries(stationRows)
  .map(([id,station])=>[id,Object.freeze({...station,
   transfer:(servedBy.get(id)?.length||0)>1,
   lines:Object.freeze(servedBy.get(id)||[])})])));
-const STATIONS=Object.freeze(Object.fromEntries(Object.entries(GRID_STATIONS)
+let STATIONS=Object.freeze(Object.fromEntries(Object.entries(GRID_STATIONS)
  .map(([id,station])=>[id,Object.freeze({...station,
   x:station.gx/GRID.columns*100,
   y:station.gy/GRID.rows*100})])));
-const LINES=Object.freeze(allLineRows.map(line=>Object.freeze({...line,
+let LINES=Object.freeze(allLineRows.map(line=>Object.freeze({...line,
  stops:Object.freeze(line.stops.slice())})));
 if(LINES.length!==10||Object.keys(STATIONS).length!==170)
  throw Error('Kirihama metro plan must contain exactly 10 lines and 170 physical stations');
+// Once a personally-edited blueprint has been explicitly SAVED, this same
+// graph becomes its playable source after a reload. No separate fake SVG-only
+// rail map: local station coordinates, stop order and real train directions
+// are installed together BEFORE daily-life, destination network or UI load.
+// Invalid/corrupt layouts are rejected, leaving the 170-stop GitHub baseline.
+let ACTIVE_BLUEPRINT=null;
+try{
+ const editor=global.PaperWorldMetroMapEditor;
+ const raw=editor&&global.localStorage?.getItem(editor.KEY);
+ if(raw){
+  const proposed=JSON.parse(raw);
+  editor.validate(proposed,{STATIONS,LINES,GRID});
+  const memberships=new Map();
+  for(const line of proposed.lines)for(const id of line.stops){
+   if(!memberships.has(id))memberships.set(id,[]);
+   memberships.get(id).push(line.id);
+  }
+  const amended=Object.fromEntries(Object.entries(proposed.stations)
+   .map(([id,station])=>[id,Object.freeze({
+    label:station.label,gx:station.gx,gy:station.gy,
+    transfer:memberships.get(id).length>1,
+    lines:Object.freeze(memberships.get(id).slice()),
+    x:station.gx/GRID.columns*100,
+    y:station.gy/GRID.rows*100
+   })]));
+  const amendedLines=proposed.lines.map(line=>Object.freeze({
+   id:line.id,name:line.name,color:line.color,ring:!!line.ring,
+   stops:Object.freeze(line.stops.slice())
+  }));
+  STATIONS=Object.freeze(amended);
+  LINES=Object.freeze(amendedLines);
+  ACTIVE_BLUEPRINT=proposed;
+ }
+}catch(err){
+ if(global.console?.warn)global.console.warn('[Metro blueprint] Invalid draft ignored:',err.message);
+}
 const getLine=id=>LINES.find(l=>l.id===id)||null;
 function neighbors(line,station){
  if(!line||line.locked)return [];
@@ -200,6 +236,6 @@ function conversation(snapshot,route){
  ];
 }
 global.PaperWorldMetro=Object.freeze({
- GRID,STATIONS,LINES,getLine,neighbors,nextStop,boardingChoices,path,conversation
+ GRID,STATIONS,LINES,ACTIVE_BLUEPRINT,getLine,neighbors,nextStop,boardingChoices,path,conversation
 });
 })(window);
