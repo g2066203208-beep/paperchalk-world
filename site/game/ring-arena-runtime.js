@@ -457,7 +457,7 @@
   // as train DISTANCE changes. There is no frame-clock-driven fake motion.
   'float spatialPool=.77+.23*cos((p.x+uTrainPosition)*.82+float(i)*1.3);',
   'ambient+=uPlatformColors[i]*uPlatformExposure*through*',
-  '(cosine*1.6+.10)*areaFalloff*spatialPool;'
+  '(cosine*1.6+.10)*areaFalloff*spatialPool;',
   '}',
   '}',
   'return ambient;',
