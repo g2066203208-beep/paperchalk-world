@@ -1,0 +1,295 @@
+{
+  "version": 1,
+  "status": "planning-proposal-only",
+  "generatedOn": "2026-11-08",
+  "runtimeAuthoritative": false,
+  "documentation": "docs/WORLD_SETTLEMENT_GRADES_AND_METRO_CAPACITY_V1_20261108.md",
+  "rules": [
+    "initialCityMustBeTierA",
+    "futureMegacityMustBeSeparateRegion",
+    "citySubwayGraphIndependent",
+    "subwayMapContainsOnlyRegisteredMetro",
+    "uniqueStationIdPerPhysicalStation",
+    "localSceneDeferred",
+    "nonMetroModesCannotBeDisplayedAsSubway"
+  ],
+  "settlementTiers": {
+    "S": {
+      "label": "特大都市",
+      "metroLinesRange": [
+        13,
+        18
+      ],
+      "metroUniqueStationsRange": [
+        230,
+        350
+      ],
+      "transit": "dense-multicore-metro"
+    },
+    "A": {
+      "label": "大城市",
+      "metroLinesRange": [
+        8,
+        12
+      ],
+      "metroUniqueStationsRange": [
+        130,
+        200
+      ],
+      "transit": "major-metro"
+    },
+    "B": {
+      "label": "中等城市",
+      "metroLinesRange": [
+        0,
+        4
+      ],
+      "metroUniqueStationsRange": [
+        0,
+        65
+      ],
+      "transit": "metro-if-dense-otherwise-localrail"
+    },
+    "C": {
+      "label": "小城市",
+      "metroLinesRange": [
+        0,
+        0
+      ],
+      "metroUniqueStationsRange": [
+        0,
+        0
+      ],
+      "transit": "regional-rail-and-bus"
+    },
+    "D": {
+      "label": "镇",
+      "metroLinesRange": [
+        0,
+        0
+      ],
+      "metroUniqueStationsRange": [
+        0,
+        0
+      ],
+      "transit": "localrail-road-bus"
+    },
+    "E": {
+      "label": "村庄或离岛聚落",
+      "metroLinesRange": [
+        0,
+        0
+      ],
+      "metroUniqueStationsRange": [
+        0,
+        0
+      ],
+      "transit": "local-bus-road-ferry"
+    }
+  },
+  "regions": [
+    {
+      "id": "mistbay-existing",
+      "status": "existing",
+      "name": "霧湾都市圈",
+      "settlementIds": [
+        "kirihama",
+        "kirihara",
+        "homori",
+        "shiomi",
+        "minamioka",
+        "misaki",
+        "okuzawa",
+        "naruba",
+        "mizuho",
+        "urasima"
+      ]
+    },
+    {
+      "id": "future-mega-region-01",
+      "status": "reserved-not-in-runtime",
+      "name": "未命名特大都市圈",
+      "settlementIds": [
+        "future-megacity-01"
+      ]
+    }
+  ],
+  "municipalities": [
+    {
+      "id": "kirihama",
+      "name": "霧浜市",
+      "populationWan": 860,
+      "tier": "A",
+      "regionId": "mistbay-existing",
+      "urbanType": "initial-large-city",
+      "metro": {
+        "plannedLines": 10,
+        "plannedUniqueStations": 170,
+        "currentlyRegisteredLines": 2,
+        "currentlyRegisteredUniqueStations": 8
+      },
+      "note": "海湾主都心／多中心高密度城市"
+    },
+    {
+      "id": "kirihara",
+      "name": "桐原市",
+      "populationWan": 138,
+      "tier": "B",
+      "regionId": "mistbay-existing",
+      "urbanType": "medium-oldcity",
+      "metro": {
+        "plannedLines": 2,
+        "plannedUniqueStations": 34,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "旧城与学园走廊"
+    },
+    {
+      "id": "homori",
+      "name": "穗森市",
+      "populationWan": 94,
+      "tier": "B",
+      "regionId": "mistbay-existing",
+      "urbanType": "medium-rural",
+      "metro": {
+        "plannedLines": 0,
+        "plannedUniqueStations": 0,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "大平田低密度农业，地方铁路"
+    },
+    {
+      "id": "shiomi",
+      "name": "汐凪市",
+      "populationWan": 112,
+      "tier": "B",
+      "regionId": "mistbay-existing",
+      "urbanType": "medium-port",
+      "metro": {
+        "plannedLines": 2,
+        "plannedUniqueStations": 31,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "人口走廊与港湾工业"
+    },
+    {
+      "id": "minamioka",
+      "name": "南丘市",
+      "populationWan": 82,
+      "tier": "B",
+      "regionId": "mistbay-existing",
+      "urbanType": "medium-industrial",
+      "metro": {
+        "plannedLines": 0,
+        "plannedUniqueStations": 0,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "轻轨/地方铁路，但不视为地铁"
+    },
+    {
+      "id": "misaki",
+      "name": "岬崎市",
+      "populationWan": 29,
+      "tier": "C",
+      "regionId": "mistbay-existing",
+      "urbanType": "small-coastal",
+      "metro": {
+        "plannedLines": 0,
+        "plannedUniqueStations": 0,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "半岛渔港、客运与普通铁路"
+    },
+    {
+      "id": "okuzawa",
+      "name": "奥沢町",
+      "populationWan": 18,
+      "tier": "D",
+      "regionId": "mistbay-existing",
+      "urbanType": "town-mountain",
+      "metro": {
+        "plannedLines": 0,
+        "plannedUniqueStations": 0,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "温泉水库，地方铁路和巴士"
+    },
+    {
+      "id": "naruba",
+      "name": "鳴羽町",
+      "populationWan": 12,
+      "tier": "D",
+      "regionId": "mistbay-existing",
+      "urbanType": "town-forest",
+      "metro": {
+        "plannedLines": 0,
+        "plannedUniqueStations": 0,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "林业山路和乡镇客运"
+    },
+    {
+      "id": "mizuho",
+      "name": "水穗町",
+      "populationWan": 13,
+      "tier": "D",
+      "regionId": "mistbay-existing",
+      "urbanType": "town-lake",
+      "metro": {
+        "plannedLines": 0,
+        "plannedUniqueStations": 0,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "湖畔、农业和地方铁路"
+    },
+    {
+      "id": "urasima",
+      "name": "浦岛村",
+      "populationWan": 3,
+      "tier": "E",
+      "regionId": "mistbay-existing",
+      "urbanType": "village-island",
+      "metro": {
+        "plannedLines": 0,
+        "plannedUniqueStations": 0,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "note": "离岛渡船和村道"
+    }
+  ],
+  "futureReservations": [
+    {
+      "id": "future-megacity-01",
+      "name": null,
+      "regionId": "future-mega-region-01",
+      "tier": "S",
+      "status": "unmapped-do-not-render",
+      "populationWanRange": [
+        1500,
+        2000
+      ],
+      "metro": {
+        "plannedLines": 16,
+        "plannedUniqueStations": 300,
+        "currentlyRegisteredLines": 0,
+        "currentlyRegisteredUniqueStations": 0
+      },
+      "worldCoordinates": null
+    }
+  ],
+  "plannedSubwayTotalExistingArea": {
+    "citiesWithSubway": 3,
+    "lines": 14,
+    "uniqueStations": 235
+  },
+  "planNotes": "Do not auto-promote proposed routes to playable services. Existing A/B metro registries remain authoritative until real per-city station graphs are authored and tested."
+}
