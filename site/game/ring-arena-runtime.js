@@ -711,12 +711,17 @@
   'uniform mat4 uVP;uniform vec3 uFoot;uniform vec3 uRight;',
   'uniform vec3 uUp;uniform float uHeight;uniform float uSoleX;',
   'uniform float uSoleY;uniform float uCrownY;uniform float uWidthScale;',
-  'uniform vec4 uClipUv;uniform float uLean;varying vec2 vUv;varying vec3 vWorld;',
+  'uniform vec4 uClipUv;uniform float uLean;uniform float uWalkPhase;varying vec2 vUv;varying vec3 vWorld;',
   'void main(){vec2 uv=mix(uClipUv.xy,uClipUv.zw,aUv);',
   'float H=uHeight/max(.01,uSoleY-uCrownY);',
   'float bodyHeight=clamp((uSoleY-uv.y)/max(.01,uSoleY-uCrownY),0.0,1.0);',
   'vec3 pos=uFoot+uRight*((uv.x-uSoleX)*H*uWidthScale+uLean*H*bodyHeight)',
   '+uUp*((uSoleY-uv.y)*H);',
+  // A restrained two-leg alternating walk cycle applied only to dynamic
+  // commuters. The old authored L2D and hero use uWalkPhase=0 unchanged.
+  'float legMask=smoothstep(.58,.94,uv.y);',
+  'float side=step(uSoleX,uv.x);',
+  'pos+=uRight*legMask*sin(uWalkPhase+side*3.14159265)*H*.055;',
   'vUv=uv;vWorld=pos;gl_Position=uVP*vec4(pos,1.0);}'
  ].join('\n');
  // Portrait quad vertices now span only the live alpha content rectangle.
@@ -1195,6 +1200,7 @@
     gl.uniform3fv(portrait.uFoot,new Float32Array([person.x,person.y,person.z]));
     gl.uniform1f(portrait.uHeight,person.height);
     gl.uniform1f(portrait.uLean,person.lean);
+    gl.uniform1f(portrait.uWalkPhase,person.moving?performance.now()*.012+person.frame:0);
     gl.uniform1f(portrait.uOpacity,person.opacity);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
@@ -1225,7 +1231,7 @@
    if(!gl)throw Error('WebGL unavailable');
    world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen','uViewEye','uGeometry','uWindowCutouts','uDoorOpen']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uClipUv','uTexture','uHit','uDim','uBlur','uOpacity','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uWalkPhase','uClipUv','uTexture','uHit','uDim','uBlur','uOpacity','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
     ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
@@ -1998,6 +2004,7 @@
     gl.uniform1f(portrait.uLean,
      female07Actor&&attackSample?.advance
       ? .095*attackSample.advance-.028*attackSample.recoil:0);
+    gl.uniform1f(portrait.uWalkPhase,0);
     gl.uniform1f(portrait.uHit,attack&&a.id===attack.targetId&&attackSample?
      attackSample.hitFlash:0);
     const duelPerformer=!!attack&&(a.id==='hero'||a.id===attack.targetId);
