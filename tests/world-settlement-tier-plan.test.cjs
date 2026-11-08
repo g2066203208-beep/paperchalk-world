@@ -32,7 +32,7 @@ test('initial city stays a large tier A; supercity is a genuinely separate futur
  assert.equal(initial.tier,'A');
  assert.equal(initial.urbanType,'initial-large-city');
  assert.equal(initial.metro.plannedLines,10);
- assert.equal(initial.metro.plannedUniqueStations,170);
+ assert.equal(initial.metro.plannedUniqueStations,70);
  assert.equal(metro.LINES.filter(l=>!l.locked).length,initial.metro.currentlyRegisteredLines);
  assert.equal(Object.values(metro.STATIONS).filter(s=>!s.locked).length,
   initial.metro.currentlyRegisteredUniqueStations);
@@ -56,7 +56,7 @@ test('subway planning never invents metro for a village, town or rural municipal
  const operational=rows.filter(c=>c.metro.plannedLines>0);
  assert.deepEqual(operational.map(c=>c.id),['kirihama','kirihara','shiomi']);
  assert.equal(operational.reduce((n,c)=>n+c.metro.plannedLines,0),14);
- assert.equal(operational.reduce((n,c)=>n+c.metro.plannedUniqueStations,0),235);
+ assert.equal(operational.reduce((n,c)=>n+c.metro.plannedUniqueStations,0),135);
  assert.equal(plan.plannedSubwayTotalExistingArea.lines,14);
- assert.equal(plan.plannedSubwayTotalExistingArea.uniqueStations,235);
+ assert.equal(plan.plannedSubwayTotalExistingArea.uniqueStations,135);
 });
