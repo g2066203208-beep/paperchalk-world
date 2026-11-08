@@ -107,6 +107,8 @@ for(const corridor of CORRIDORS){
  * the authentic authored 90-degree turns between remaining stations. */
 const CURATED_LINE_STOPS=Object.freeze({"a":["entrance","school","central","convenience"],"b":["central","cafe","park","mall","convenience","northgate"],"c":["kh-c-01","kh-c-03","northgate","kh-c-07","central","kh-c-11","kh-c-13","kh-c-15","kh-c-18","kh-c-20","kh-c-22"],"d":["kh-d-01","kh-d-03","kh-d-05","kh-d-08","kh-c-07","kh-d-13","kh-d-15","kh-d-17","kh-d-20","kh-d-23"],"e":["kh-e-01","kh-e-04","kh-e-06","kh-d-05","entrance","kh-e-13","cafe","kh-e-17","kh-e-19","kh-e-23"],"f":["kh-f-01","kh-f-03","kh-f-05","kh-d-17","kh-f-10","kh-f-12","kh-f-15","kh-f-18","kh-f-22","kh-f-23"],"g":["kh-g-01","kh-g-03","kh-e-04","kh-g-08","kh-g-10","kh-c-03","kh-g-14","kh-g-16","kh-f-03","kh-g-23"],"h":["kh-h-01","kh-e-19","kh-h-07","kh-h-10","kh-c-18","kh-h-13","kh-h-15","kh-h-17","kh-f-18","kh-h-22"],"i":["kh-i-01","kh-i-03","kh-e-13","kh-i-08","kh-i-10","kh-i-12","kh-i-15","kh-h-10","kh-i-21","kh-i-23"],"j":["kh-j-01","kh-j-03","kh-i-23","kh-c-22","kh-j-11","kh-j-13","kh-f-22","kh-j-18","kh-j-21"]});
 const ORIGINAL_LINES=allLineRows.map(l=>({...l,stops:l.stops.slice()}));
+const ORIGINAL_ROUTE_STOP_IDS=Object.freeze(Object.fromEntries(
+ ORIGINAL_LINES.map(l=>[l.id,l.stops.slice()])));
 const ORIGINAL_STOP_COUNT=Object.keys(stationRows).length;
 const authoredBaseBends={
  'b:central:cafe':[[15,12],[6,12]],
@@ -163,12 +165,13 @@ const curatedIds=new Set(allLineRows.flatMap(l=>l.stops));
 // Retired grid points remain railway geometry, not physical boarding stops.
 const RETIRED_STOP_ALIASES={};
 for(const line of ORIGINAL_LINES){
+ const former=ORIGINAL_ROUTE_STOP_IDS[line.id];
  const remaining=CURATED_LINE_STOPS[line.id];
- for(let i=0;i<line.stops.length;i++){
-  const id=line.stops[i];
+ for(let i=0;i<former.length;i++){
+  const id=former[i];
   if(curatedIds.has(id))continue;
   const target=remaining.slice().sort((a,b)=>
-   Math.abs(line.stops.indexOf(a)-i)-Math.abs(line.stops.indexOf(b)-i))[0];
+   Math.abs(former.indexOf(a)-i)-Math.abs(former.indexOf(b)-i))[0];
   RETIRED_STOP_ALIASES[id]=target;
  }
 }
