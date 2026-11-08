@@ -187,9 +187,47 @@
      const sx=Math.max(0,Math.min(w-cropW,centerX-cropW*.5));
      const sy=Math.max(0,Math.min(h-cropH,headY-cropH*.45));
      const out=document.createElement('canvas');out.width=264;out.height=144;
-     const o=out.getContext('2d');
+     const o=out.getContext('2d',{willReadFrequently:true});
      o.drawImage(temp,sx,sy,Math.min(cropW,w),Math.min(cropH,h),0,0,264,144);
-     cropped.set(source,out.toDataURL('image/webp',.88));
+     // A number of the authentic fullbody sources have solid PAPER-WHITE
+     // backdrops. Flood-remove only near-neutral whites CONNECTED TO THE
+     // crop boundary; enclosed pale skin/eyes/shirt remain source artwork.
+     // This turns old rectangular source thumbnails into contemporary
+     // transparent face cutouts without changing the original files.
+     const pw=264,ph=144,frame=o.getImageData(0,0,pw,ph),data=frame.data;
+     const visited=new Uint8Array(pw*ph),removed=new Uint8Array(pw*ph);
+     const queue=new Int32Array(pw*ph);let qIn=0,qOut=0;
+     const paper=p=>{
+      const off=p*4,r=data[off],g=data[off+1],b=data[off+2],a=data[off+3];
+      return a<35||r>202&&g>202&&b>202&&
+       Math.max(r,g,b)-Math.min(r,g,b)<35;
+     };
+     const seed=p=>{if(!visited[p]&&paper(p)){
+      visited[p]=1;queue[qIn++]=p;
+     }};
+     for(let x=0;x<pw;x++){seed(x);seed((ph-1)*pw+x);}
+     for(let y=0;y<ph;y++){seed(y*pw);seed(y*pw+pw-1);}
+     while(qOut<qIn){
+      const p=queue[qOut++];removed[p]=1;
+      const x=p%pw,y=(p-x)/pw;
+      if(x>0)seed(p-1);if(x+1<pw)seed(p+1);
+      if(y>0)seed(p-pw);if(y+1<ph)seed(p+pw);
+     }
+     for(let p=0;p<pw*ph;p++){
+      if(removed[p])data[p*4+3]=0;
+      else{
+       const x=p%pw,y=(p-x)/pw;
+       const edge=(x>0&&removed[p-1])||(x+1<pw&&removed[p+1])||
+        (y>0&&removed[p-pw])||(y+1<ph&&removed[p+pw]);
+       if(edge){
+        const at=p*4,r=data[at],g=data[at+1],b=data[at+2];
+        if(Math.min(r,g,b)>170&&Math.max(r,g,b)-Math.min(r,g,b)<45)
+         data[at+3]=Math.round(data[at+3]*.5);
+       }
+      }
+     }
+     o.putImageData(frame,0,0);
+     cropped.set(source,out.toDataURL('image/webp',.90));
      if(model)paintRoster();
     }catch(error){console.warn('[Arena HUD portrait crop]',error);}
    };
