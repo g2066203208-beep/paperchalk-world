@@ -14,7 +14,17 @@ const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFa
 page.setDefaultTimeout(20000);
 const errors=[];
 page.on('pageerror',e=>errors.push(String(e)));
-const shot=async name=>page.screenshot({path:path.join(out,name),animations:'disabled',timeout:22000});
+// Software Chromium shared CI runners can be temporarily stalled by the
+// map's SVG compositing BEFORE the train even opens. Never treat a transient
+// 22s screenshot freeze as failure of 3D platform motion.
+const shot=async name=>{
+ try{
+  return await page.screenshot({path:path.join(out,name),animations:'disabled',timeout:48000});
+ }catch(error){
+  if(!/Timeout/.test(String(error)))throw error;
+  return await page.screenshot({path:path.join(out,name),animations:'allow',timeout:30000});
+ }
+};
 try{
  await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-start').click();
