@@ -18,6 +18,9 @@ const inspect=()=>page.evaluate(()=>{
  const b=window.PaperWorldCityBuilderStudioDebug,r=document.querySelector('.pw-city-build-studio');
  return {...b?.debug(),visible:!!r&&!r.hidden,imgs:r?.querySelectorAll('img,image').length,
   pixels:r?.querySelector('canvas')?.width,
+  stationCount:Number(r?.dataset.stationCount)||0,
+  railCount:Number(r?.dataset.railCount)||0,
+  placeCount:Number(r?.dataset.placeCount)||0,
   originalMetroStations:Object.keys(window.PaperWorldMetro.STATIONS).length}
 });
 async function at(gx,gy){
