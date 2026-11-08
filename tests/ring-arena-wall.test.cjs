@@ -44,7 +44,7 @@ assert.match(src,/drawWorld\(mode==='outer'\?ceilingOuter:ceilingInner,2,vp\)/,'
 assert.match(src,/gl\.uniform1f\(world\.uWallReady,wallMaterialReady\?1:0\)/);
 assert.match(src,/gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA,gl\.RGBA,gl\.UNSIGNED_BYTE,wallImage\)/);
 assert.deepEqual(ring.STAGING.outer.enemies.map(x=>x[1]),[6.80,6.80,6.80,6.80]);
-assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.96,11.35,10.94,11.26]);
+assert.deepEqual(ring.STAGING.inner.enemies.map(x=>x[1]),[10.5,10.5,10.5,10.5]);
 assert.equal(ring.camera('outer').fov,66);
 assert.equal(ring.camera('inner').fov,52);
 for(const mode of ['outer','inner']){
@@ -206,15 +206,15 @@ assert.match(src,/ctx\.globalCompositeOperation='destination-in'/,
  'fog removal must be an alpha mask, not paint-over on source art');
 assert.match(src,/maskEmbeddedFogForBattle\(targetTexture,ctx,size,a\.id,/,
  'real animated source must pass through non-destructive battle mask before upload');
-assert.ok(Math.abs(ring.STAGING.outer.enemies[1][0]-
- ring.STAGING.outer.enemies[0][0]-1.19)<1e-7,
- 'the first two fighters have a full meter of width');
-assert.ok(Math.abs(ring.STAGING.outer.enemies[3][0]-
- ring.STAGING.outer.enemies[2][0]-1.46)<1e-7,
- 'broad fourth coat needs extra world-space width');
-assert.ok(Math.abs(ring.STAGING.inner.enemies[1][0]-
- ring.STAGING.inner.enemies[0][0]+.88)<1e-7,
- 'the reverse battle line needs the same visual clearance');
+for(const mode of ['outer','inner']){
+ const friends=ring.STAGING[mode].allies.map(([x])=>x);
+ const foes=ring.STAGING[mode].enemies.map(([x])=>x);
+ assert.deepEqual(friends,[-1.95,-.65,.65,1.95],
+  'four friends must keep a real straight one-rank formation');
+ assert.deepEqual(foes,friends,'enemy rank must align to the exact four opposing lanes');
+ for(let i=1;i<4;i++)assert.ok(Math.abs(friends[i]-friends[i-1]-1.30)<1e-7,
+  'four equal separated lanes, no camera-driven layout offsets');
+}
 assert.deepEqual([ring.LOOK_LIMITS.yawLeftDeg,ring.LOOK_LIMITS.yawRightDeg,
  ring.LOOK_LIMITS.pitchUpDeg,ring.LOOK_LIMITS.pitchDownDeg],[22,22,12,12]);
 assert.match(src,/const capDepth=16\.5/,
