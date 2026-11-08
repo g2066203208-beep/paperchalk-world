@@ -92,6 +92,23 @@ def build():
  base['description']='In-game trial assets with real transparency, not finalized walking animations.'
  base['pendingStateArt']=['communicate','rest','death']
  MANIFEST.write_text(json.dumps(base,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+ # Acknowledge only test-stage registration in the visual gallery; full
+ # authored communicate/rest/death animations remain explicitly incomplete.
+ for item in gallery['characters']:
+  if item['id'] not in HEIGHTS and item['id']!='NPC-M003':continue
+  state=item.setdefault('production',{})
+  state['registeredForGame']=True
+  state['gameApproved']=False
+  state['hasRealAlpha']=True
+  state['trial']=True
+  state['staging']='Real alpha views and world placement are available for first scene trial; gait and emotion states not authored.'
+  if item['id']=='NPC-C005':state['sourceImageUserAccepted']=True
+  if item['id'] in HEIGHTS:
+   state['sprites']={k:v for k,v in rows[item['id']]['sprites'].items() if k!='idle'}
+   state['heightMeters']=HEIGHTS[item['id']]
+ gallery.setdefault('npcTest',{})['phase']='ready-for-gameplay-qa'
+ gallery['npcTest']['extractedAlphaSprites']=len(output)
+ GALLERY.write_text(json.dumps(gallery,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
  print('Generated',len(output),'transparent view PNGs and',len(rows),'NPC registrations')
  for s in output:print(s)
 
