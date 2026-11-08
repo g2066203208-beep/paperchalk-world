@@ -73,7 +73,8 @@
     const amount=passage;
     z=mix(8.29,6.55,amount);
     x=mix(-2.67,-2.12,amount);
-    opacity=(door>.15||doorOpenedEver)?1:0;
+    // No passenger clips through an almost-closed metal leaf.
+    opacity=(door>.82||(doorOpenedEver&&passage>.35))?1:0;
     movingFeet=amount>.03&&amount<.96;
    }else if(p.role==='waiting'){
     // A human fidgets and shifts weight rather than hovering in place.
