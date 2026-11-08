@@ -36,8 +36,8 @@ const PLACE_NAMES=Object.freeze({
 const HOME=new Set(['bedroom','living-room','kitchen']);
 const PLACEHOLDER='./assets/locations/park.svg';
 function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldTravel,onFeedback}){
- const metro=global.PaperWorldMetro,atlas=global.PaperWorldAtlas,geometry=global.PaperWorldMetroGeometry;
- if(!metro||!atlas||!geometry){body.textContent='交通地图尚未加载';return}
+ const metro=global.PaperWorldMetro,atlas=global.PaperWorldAtlas,geometry=global.PaperWorldMetroGeometry,network=global.PaperWorldDestinationNetwork;
+ if(!metro||!atlas||!geometry||!network){body.textContent='交通路线尚未加载';return}
  global.PaperWorldTransitMap?._cleanup?.();
  const here=HOME.has(snapshot?.location)?'entrance':snapshot?.location||'entrance';
  const herePoi=atlas.POI_BY_ID[here];
@@ -48,7 +48,6 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.dataset.grid='50x32';
  const canvas=element('div','pw-dot-world-canvas');
  const svg=vector('svg',{viewBox:'0 0 '+W+' '+H,preserveAspectRatio:'none'},'pw-transit-lines pw-dot-rail-canvas');
- const terrain=vector('g',{},'pw-dot-geography');
  const dots=vector('g',{},'pw-transit-dot-matrix');
  let previousDotScale=-1;
  const regional=vector('g',{},'pw-dot-regional-lines');
@@ -56,8 +55,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const urban=vector('g',{},'pw-dot-urban-lines');
  const metroNetwork=vector('g',{},'pw-dot-planned-metro');
  const municipal=vector('g',{},'pw-dot-municipal-lines');
+ const access=vector('g',{},'pw-dot-access-lines');
+ const cardLeaders=vector('g',{},'pw-dot-card-leaders');
  const stops=vector('g',{},'pw-dot-stations');
- svg.append(terrain,dots,regional,selectedRoute,metroNetwork,municipal,urban,stops);
+ svg.append(dots,regional,metroNetwork,municipal,access,urban,selectedRoute,cardLeaders,stops);
  const areaLayer=element('div','pw-dot-areas');
  const cityLayer=element('div','pw-dot-cities');
  const placeLayer=element('div','pw-dot-places');
@@ -75,7 +76,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   b.type='button';b.setAttribute('aria-label',title);tools.append(b);return b;
  });
  chrome.append(heading,tools);
- const hint=element('div','pw-dot-hint','滚轮缩放 · 拖动地图 · 点击站点与地点');
+ const hint=element('div','pw-dot-hint','每张地点图钉在实际站点 · 拖动／双指缩放 · 线路双向可达');
  const popup=element('div','pw-transit-popup pw-dot-popup');
  popup.hidden=true;popup.setAttribute('role','group');
  map.append(chrome,hint,popup);
@@ -129,48 +130,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   layer.append(node);
  }
 
- // Regional relief uses the same authored world coordinate system as the
- // city POIs. Strictly decorative SVG beneath the original 1683 grid dots.
- // It does not create transport nodes, map modes or a second terrain image.
- const LAND='M130 85 C300 53 530 78 730 86 C951 62 1175 65 1382 120 C1552 161 1630 262 1650 380 C1657 486 1594 550 1588 622 C1554 688 1499 745 1550 812 C1609 845 1689 826 1720 903 C1716 971 1659 1025 1581 1092 C1491 1169 1331 1189 1187 1194 C947 1212 803 1171 653 1148 C437 1103 255 1052 163 916 C96 797 102 673 108 532 C82 359 91 183 130 85Z';
- terrain.append(vector('rect',{x:0,y:0,width:W,height:H},'pw-dot-terrain-sea'),
-  vector('path',{d:LAND},'pw-dot-terrain-land'));
- const geoPath=(d,cls)=>terrain.append(vector('path',{d},cls));
- geoPath('M1708 1033 C1745 1002 1780 1015 1790 1046 C1835 1005 1894 1025 1912 1087 C1886 1137 1828 1157 1785 1123 C1753 1132 1709 1092Z','pw-dot-terrain-island');
- geoPath('M123 165 C212 111 343 127 403 232 S394 434 341 536 C280 611 135 604 100 485Z','pw-dot-relief-mountain');
- geoPath('M148 230 Q268 148 370 249 M148 284 Q270 208 365 306 M140 339 Q271 259 352 368 M127 399 Q266 327 342 432','pw-dot-contour');
- geoPath('M134 538 C230 472 368 487 471 629 S451 916 302 996 C177 1003 87 866 134 538Z','pw-dot-relief-forest');
- geoPath('M208 604 Q321 550 405 681 M190 678 Q300 620 416 741 M172 744 Q295 700 393 811','pw-dot-contour');
- geoPath('M1124 120 Q1304 57 1508 182 L1540 370 Q1402 465 1217 385Z','pw-dot-relief-farm');
- for(let i=0;i<7;i++){const yy=164+i*30;
-  geoPath('M'+(1180+i*4)+' '+yy+' Q1340 '+(yy-27)+' 1510 '+(yy+6),'pw-dot-field-line')}
- const stream='M739 85 C715 210 815 281 867 352 S908 473 999 523 C1109 588 1290 584 1451 648 S1545 701 1598 754';
- geoPath(stream,'pw-dot-river-bed');geoPath(stream,'pw-dot-river-stream');
- geoPath('M378 874 C435 807 517 824 551 868 S579 983 523 1024 C461 1063 367 1000 378 874Z','pw-dot-lake');
- geoPath('M383 887 Q467 841 546 902 M393 937 Q470 895 555 953','pw-dot-water-ripple');
- for(const c of atlas.CITIES){
-  const radius=c.size==='metro'?125:c.size==='city'?75:c.size==='island'?25:43;
-  terrain.append(vector('circle',{cx:c.x,cy:c.y,r:radius},'pw-dot-settlement'));
- }
-
  // The same integer lattice owns regional routes, subway turns and every pin.
- const REGION_TONES={mountain:'#738e7c',forest:'#648476',plain:'#8e9580',
-  lake:'#6492a3',sea:'#59879e',coast:'#6e94a0',island:'#709f9b',
-  rural:'#9fa88a',industrial:'#758e9a',river:'#6c979d',
-  town:'#80969a',ruins:'#8b8c83',onsen:'#8ca4a0'};
+ // No terrain background at this stage: only the dot lattice and real routes.
  for(let cy=0;cy<=H;cy+=CELL)for(let cx=0;cx<=W;cx+=CELL){
-  let accent=null;
-  // Semantic biomes are DOTS ONLY: never a painted terrain polygon,
-  // imported world-map texture or fake mini city silhouette.
-  for(const a of atlas.AREAS){
-   const dx=(cx-a.x)/245,dy=(cy-a.y)/185;
-   const distortion=.82+.16*Math.sin(cx*.017+cy*.011)+.1*Math.cos(cx*.025-cy*.009);
-   if(dx*dx+dy*dy<distortion){accent=REGION_TONES[a.type]||'#758e90';break}
-  }
-  const dot=vector('circle',{cx,cy,r:1.35},
-   'pw-transit-grid-dot'+(accent?' pw-dot-biome-dot':''));
-  if(accent){dot.style.fill=accent;dot.style.opacity='.62'}
-  dots.append(dot);
+  dots.append(vector('circle',{cx,cy,r:1.2},'pw-transit-grid-dot'));
  }
  function rounded(points,radius=13){
   if(!points?.length)return '';
@@ -367,7 +330,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   label.dataset.area=a.id;put(label,location(a),areaLayer);
   areaNodes.push(label);
  }
- const transitPOIs=new Set(atlas.LOCAL_TRANSIT_STOPS.map(stop=>stop.id));
+ const transitPOIs=new Set(atlas.POIS.map(p=>p.id)); // Every destination is now a routable stop.
  const cityNodes=[];
  for(const c of atlas.CITIES){
   const node=element('button','pw-dot-city');
