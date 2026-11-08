@@ -243,12 +243,28 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    const points=orthogonal(a,b,((atlas.LINKS.indexOf(l)%3)-1)*CELL);
    const pseudo={...l,mode};
    lineGroup(regional,pseudo,from,to,points,'regional',(e,node)=>{
-    const route=atlas.route(currentCity,to,['highway','coach','bus'].includes(l.mode)?'road':'rail');
-    showMenu(e,node,l.name,route?
-     '城际交通 · '+(atlas.SERVICE_LABELS[l.mode]||l.mode)+' · 约 '+route.minutes+' 分钟':
-     '当前位置需要先换乘',[
-      {label:'进入'+b.name+'市内交通',primary:true,run:()=>{clear();enterCity(to)}}
-     ]);
+    // A regional track is an actual travel action, not only a shortcut to
+    // another city's subway viewer. Plan the full journey from the player's
+    // current physical location to the chosen city's interchange.
+    const destination=network.HUB(to),journey=network.journey(here,destination);
+    const canTravel=!!journey?.legs?.length&&!HOME.has(snapshot?.location)&&
+      snapshot?.nightStatus==='day'&&!snapshot?.metro?.onboard;
+    const detail=HOME.has(snapshot?.location)?
+      '请先到玄关出门，再规划城际路线':
+      !journey?.legs?.length?
+       here===destination?'你已在该交通枢纽':'当前没有可用的去回线路':
+       '至'+b.name+'交通枢纽 · 约'+journey.minutes+'分钟 · '+journey.transfers+'次换乘';
+    showMenu(e,node,l.name,detail,[
+      {label:'查看'+b.name+'地铁图',run:()=>{clear();enterCity(to)}},
+      {label:'乘车前往'+b.name,primary:true,disabled:!canTravel,run:async()=>{
+       if(busy)return;busy=true;clear();
+       try{
+        const res=await onWorldTravel?.(destination,journey);
+        if(!res?.ok)notify(res?.reason||'当前无法前往');
+       }catch(_){notify('城际旅行失败')}finally{busy=false}
+      }}
+    ]);
+    if(journey?.legs?.length)previewRegionalRoute(journey.legs);
    });
   }
  }
@@ -323,14 +339,15 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   node.addEventListener('click',e=>{
    if(drag?.moved)return;e.stopPropagation();
    const trip=metro.path(here,id);
-   const status=id===here?{ok:false,reason:'当前站'}:
-    locations[id]?availability?.(id,snapshot):{ok:false,reason:'尚未开放'};
+   // Subway access belongs to the station, not the business or school
+   // nearby: an evening train remains boardable after shops close.
+   const canRide=snapshot?.nightStatus==='day'&&!snapshot?.metro?.onboard;
    const viable=!!trip?.segments?.length;
    showMenu(e,node,name,viable?
     '地铁 · '+trip.lines.join(' → ')+
     (trip.transfers.length?' · '+trip.transfers.length+' 次换乘':' · 无需换乘'):
     id===here?'当前所在站':'请先抵达正式地铁站',[
-    {label:'乘地铁前往',primary:true,disabled:!viable||!status?.ok,run:async()=>{
+    {label:'乘地铁前往',primary:true,disabled:!viable||!canRide,run:async()=>{
      if(busy)return;busy=true;clear();
      try{const res=await onTravel?.(id,trip);
       if(!res?.ok)notify(res?.reason||'当前无法乘车')}
@@ -513,9 +530,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    group.style.display=hasMetro&&group.dataset.city==='kirihama'?'':'none';
   metroLayer.hidden=!hasMetro;
   placeLayer.hidden=true;
-  const actualHere=scoped&&hasMetro&&metro.STATIONS[here]?
-   localPoint(metro.STATIONS[here]):hereCity;
-  you.hidden=scoped&&(!hasMetro||currentCity!==activeCity);
+  // Never draw a made-up subway player pin at the city-centre hub when
+  // the player is actually in a home, shop, forest or other off-rail POI.
+  const atMetroStop=!!(scoped&&hasMetro&&metro.STATIONS[here]);
+  const actualHere=atMetroStop?localPoint(metro.STATIONS[here]):hereCity;
+  you.hidden=scoped&&(!atMetroStop||currentCity!==activeCity);
   you.style.left=(x+location(actualHere).x*scale)+'px';
   you.style.top=(y+location(actualHere).y*scale)+'px';
   you.dataset.region=String(!scoped);
@@ -565,7 +584,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // Metro-only: no location photo cards, city road pins, or POI labels.
   for(const {node} of worldNodes)node.hidden=true;
   hint.hidden=false;
-  clear();
+  // Reposition a selected station popup along with the map camera.
+  // Do not destroy the route highlight every time the player pans/zooms.
+  if(!popup.hidden&&selected?.isConnected)positionPopup(null,selected);
  }
  function focus(p,zoom){centerOn(p,zoom)}
  function zoomBy(factor,atX,atY){
@@ -594,7 +615,12 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  toolBtns[2].addEventListener('click',fitSelectedCity);
  toolBtns[3].addEventListener('click',()=>{
   if(activeCity!==currentCity)enterCity(currentCity);
-  centerOn(network.at(here)||herePoi||hereCity,Math.max(3.45,scale));
+  if(activeCity==='kirihama'){
+   // An off-network destination is not a subway station. Show the real
+   // line network instead of centring an empty portion of the metro map.
+   if(metro.STATIONS[here])centerOn(localPoint(metro.STATIONS[here]),Math.max(3.45,scale));
+   else fitSelectedCity();
+  }else centerOn(atlas.CITY_BY_ID[currentCity]||hereCity,Math.max(3.45,scale));
  });
  const wheel=e=>{e.preventDefault();
   const r=map.getBoundingClientRect();
