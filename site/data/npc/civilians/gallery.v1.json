@@ -4,10 +4,10 @@
   "separateFrom": [
     "site/data/characters/registry.json"
   ],
-  "indexPolicy": "所有日常路人（包括已批准老爷爷 M003）都属于此统一图鉴；M003 使用现有原图和透明精灵的唯一真实路径，不复制图像或更改原ID；登记不等于游戏运行时上线。",
+  "indexPolicy": "统一收录普通路人：NPC-C001～C004 四张原始三视图 PNG 均已实传 GitHub；已批准老爷爷 NPC-M003 保留原始四视图及 RGBA；人物出场与动态状态均独立审核，不因图像已入库直接进入游戏。",
   "assetImportZip": "npc-civilians-source-images-20261108.zip",
-  "assetBundleStatus": "created_in_conversation_not_committed_to_GitHub",
-  "sourceFilenameConvention": "NPC-C001～C003 待入库图采用 site/assets/characters/civilians/{slug}/three-view-original.png；旧批准 M003 沿用 site/assets/characters/metro/npc-m003/ 原目录，不复制二进制",
+  "assetBundleStatus": "four_original_1024px_RGB_PNG_committed_to_GitHub_main_20261108",
+  "sourceFilenameConvention": "C001-C004: site/assets/characters/civilians/npc-c00X/three-view-original.png; M003 preserves original site/assets/characters/metro/npc-m003/*.png",
   "actualSourceOrder": [
     "side_left",
     "front",
@@ -23,7 +23,7 @@
     1024
   ],
   "sourceFormat": "RGB PNG white background",
-  "approvalScope": "C001～C003 原图已提供但还未上传 GitHub；M003 老爷爷已获批准、RGB 原图和透明精灵均已存在 GitHub，尚未接入运行时",
+  "approvalScope": "C001～C004 用户原始 RGB 三视图 PNG 已上传 GitHub 并 SHA 校验；NPC-M003 用户批准四格及 RGBA 已在 GitHub；C005 尚待生图；未执行游戏运行时注册。",
   "characters": [
     {
       "id": "NPC-C001",
@@ -48,7 +48,10 @@
           "front",
           "back"
         ],
-        "committedToRepository": false
+        "committedToRepository": true,
+        "gitCommit": "b4daf4881797b88094fcb7868360b39a35a0bf4d",
+        "originalImagePreserved": true,
+        "userSupplied": true
       },
       "promptReference": "docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md",
       "states": {
@@ -70,7 +73,8 @@
         "gameApproved": false,
         "hasRealAlpha": false,
         "heightMeters": null,
-        "staging": "source image prepared in downloadable bundle, pending actual GitHub binary upload"
+        "staging": "原始三视图 RGB PNG 已真正提交 GitHub，已匹配源图 SHA-256；状态图及透明 RGBA 待制作，游戏尚未实装",
+        "sourceImageUserAccepted": true
       }
     },
     {
@@ -96,7 +100,10 @@
           "front",
           "back"
         ],
-        "committedToRepository": false
+        "committedToRepository": true,
+        "gitCommit": "b4daf4881797b88094fcb7868360b39a35a0bf4d",
+        "originalImagePreserved": true,
+        "userSupplied": true
       },
       "promptReference": "docs/NPC-M002_ANIMA_THREE_VIEW_LEFT_CENTER_RIGHT_20261108.md",
       "states": {
@@ -118,13 +125,14 @@
         "gameApproved": false,
         "hasRealAlpha": false,
         "heightMeters": null,
-        "staging": "source image prepared in downloadable bundle, pending actual GitHub binary upload"
+        "staging": "原始三视图 RGB PNG 已真正提交 GitHub，已匹配源图 SHA-256；状态图及透明 RGBA 待制作，游戏尚未实装",
+        "sourceImageUserAccepted": true
       }
     },
     {
       "id": "NPC-C003",
       "slug": "npc-c003",
-      "label": "年长女性乘客",
+      "label": "老奶奶（年长女性乘客）",
       "role": "elderly_commuter_woman",
       "visualCanon": {
         "ageGroup": "elderly",
@@ -144,7 +152,10 @@
           "front",
           "back"
         ],
-        "committedToRepository": false
+        "committedToRepository": true,
+        "gitCommit": "b4daf4881797b88094fcb7868360b39a35a0bf4d",
+        "originalImagePreserved": true,
+        "userSupplied": true
       },
       "promptReference": null,
       "states": {
@@ -166,7 +177,67 @@
         "gameApproved": false,
         "hasRealAlpha": false,
         "heightMeters": null,
-        "staging": "source image prepared in downloadable bundle, pending actual GitHub binary upload"
+        "staging": "原始三视图 RGB PNG 已真正提交 GitHub，已匹配源图 SHA-256；状态图及透明 RGBA 待制作，游戏尚未实装",
+        "sourceImageUserAccepted": true
+      }
+    },
+    {
+      "id": "NPC-C004",
+      "slug": "npc-c004",
+      "label": "年轻男性街头路人",
+      "role": "young_street_commuter",
+      "category": "civilian_npc",
+      "visualCanon": {
+        "ageGroup": "young_adult",
+        "hair": "黑色短碎发、额前不规则刘海，三视图同一发型",
+        "outfit": "深森林绿套头卫衣、卡其色宽松工装裤、黑白帆布鞋"
+      },
+      "source": {
+        "path": "site/assets/characters/civilians/npc-c004/three-view-original.png",
+        "sha256": "9ac68f4ca8a642054c0e65e1382eab66ca87d16a12fc83bdcf2876ad3f56453c",
+        "bytes": 668427,
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "mode": "RGB",
+        "actualImageLeftToRight": [
+          "side_left",
+          "front",
+          "back"
+        ],
+        "committedToRepository": true,
+        "gitCommit": "b4daf4881797b88094fcb7868360b39a35a0bf4d",
+        "originalImagePreserved": true,
+        "userSupplied": true
+      },
+      "promptReference": "docs/NPC-C004_ANIMA_THREE_VIEW_OVERCAST_HAIR_LOCK_20261108.md",
+      "approval": {
+        "sourceImageUserAccepted": true,
+        "reviewDate": "2026-11-08",
+        "note": "用户确认这版发型和阴天风格可用，要求转下一个路人"
+      },
+      "states": {
+        "communicate": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "rest": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "death": {
+          "status": "not_drawn",
+          "path": null
+        }
+      },
+      "production": {
+        "registeredForGame": false,
+        "gameApproved": false,
+        "hasRealAlpha": false,
+        "heightMeters": null,
+        "sourceImageUserAccepted": true,
+        "staging": "原图 RGB PNG 已提交 GitHub，尚待独立透明精灵与状态图"
       }
     },
     {
@@ -234,13 +305,11 @@
   ],
   "planned": [
     {
-      "id": "NPC-C004",
-      "label": "年轻街头男性",
-      "visualCanon": "深绿连帽卫衣、卡其工装裤、黑白运动鞋",
-      "status": "candidate_image_rejected_hair_and_baked_lighting_redraw_required",
-      "promptReference": "docs/NPC-C004_ANIMA_THREE_VIEW_OVERCAST_HAIR_LOCK_20261108.md",
-      "artRule": "3 views; hairstyle consistent across all angles; unlit flat colors; neutral overcast diffuse environment; no baked hard shadows"
+      "id": "NPC-C005",
+      "label": "中年女性通勤者（酒红毛衣、橄榄绿裙）",
+      "promptReference": "docs/NPC-C005_ANIMA_THREE_VIEW_MIDDLE_AGED_WOMAN_20261108.md",
+      "status": "prompt_only_no_image"
     }
   ],
-  "commonArtRule": "All future civilian source art: consistent hairstyle across front / strict left side / back, and neutral overcast diffuse illumination with unlit flat materials; game runtime handles directional light and shadows."
+  "commonArtRule": "基础立绘发型三视角一致；普通场景阴天漫射光、不烘焙硬影；人物实际高度游戏数据单独处理"
 }
