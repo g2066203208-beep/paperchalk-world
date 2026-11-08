@@ -33,6 +33,7 @@ try{
  await page.waitForFunction(()=>{
   const s=window.PaperWorldGameRingArena?.inspect();
   return s?.active&&s?.renderer==='webgl-l2d'&&s?.l2dReady===8&&
+   s?.heroLiveFemale07L2D===true&&s?.female07PartyPartRigIds?.length===4&&
    s?.wallMaterial?.ready===true&&
    Object.keys(s?.renderedActorOpacity||{}).length===8;
  },null,{timeout:160000});
@@ -62,6 +63,9 @@ try{
    return {
     active:game.controlledActorId,actorIds:game.visibleActorIds,
     opacity:game.renderedActorOpacity,camera:game.camera,enemyRects,squadRects,
+    dynamicFemale07:game.heroLiveFemale07L2D,
+    dynamicPartyIds:game.female07PartyPartRigIds,
+    dynamicUploads:game.heroTextureUploads,
     worldActors:game.presentationActors,staging:game.stagePresentation,
     friendlyX:game.partyLine.map(a=>a.x),enemyX:game.opposingLine.map(a=>a.x)
    };
