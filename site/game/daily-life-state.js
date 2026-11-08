@@ -16,12 +16,14 @@
   const HOUR=60, NIGHT=22*HOUR, DAY_START=6*HOUR;
   const ATLAS=typeof window!=='undefined'?window.PaperWorldAtlas:null;
   const ATLAS_LOCATIONS=Object.fromEntries((ATLAS?.POIS||[])
-    .filter(p=>!['entrance','school','convenience','cafe','mall','park',
-      'hospital','station','police'].includes(p.id))
+    .filter(p=>!['entrance','school','convenience','cafe','mall','park'].includes(p.id))
     .map(p=>[p.id,{label:p.name,group:'世界',scene:null,
       open:0,close:1320,travel:30}]));
+  const HUB_LOCATIONS=Object.fromEntries((ATLAS?.CITIES||[])
+    .map(c=>['hub-'+c.id,{label:c.name+'交通枢纽',group:'世界',
+      scene:null,open:0,close:1320,travel:30}]));
   const LOCATIONS=Object.freeze({
-    ...ATLAS_LOCATIONS,
+    ...ATLAS_LOCATIONS,...HUB_LOCATIONS,
     bedroom:{label:'卧室',group:'家',scene:'bedroom',open:0,close:1440,travel:10},
     'living-room':{label:'客厅',group:'家',scene:'living-room',open:0,close:1440,travel:10},
     kitchen:{label:'厨房',group:'家',scene:'kitchen',open:0,close:1440,travel:10},
@@ -298,12 +300,11 @@
         return fail('从城区回家需要先经过玄关');
       let cost=(current.group==='家'&&dest.group==='家')?10:
         dest.group==='家'?current.travel:dest.travel;
-      if((current.group==='世界'||dest.group==='世界')&&ATLAS){
-        const fromCity=ATLAS.POI_BY_ID[state.location]?.city||'kirihama';
-        const toCity=ATLAS.POI_BY_ID[location]?.city||'kirihama';
-        const route=ATLAS.route(fromCity,toCity);
-        if(!route)return fail('该区域暂时没有可用的城际公共交通线路');
-        cost=Math.max(18,Math.round(route.minutes+18));
+      if(current.group==='世界'||dest.group==='世界'){
+        const network=typeof window!=='undefined'?window.PaperWorldDestinationNetwork:null;
+        const trip=network?.journey(state.location,location);
+        if(!trip)return fail('当前地点没有可去可回的交通路线');
+        cost=Math.max(3,Math.round(trip.minutes));
       }
       if(state.energy<3)return fail('太疲倦，先休息');
       if(!isOpen(location,state.minute+cost))return fail('到达时该地点已经关闭');
