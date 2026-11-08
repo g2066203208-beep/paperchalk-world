@@ -125,8 +125,8 @@
       "metro": {
         "plannedLines": 10,
         "plannedUniqueStations": 170,
-        "currentlyRegisteredLines": 2,
-        "currentlyRegisteredUniqueStations": 8
+        "currentlyRegisteredLines": 10,
+        "currentlyRegisteredUniqueStations": 170
       },
       "note": "海湾主都心／多中心高密度城市"
     },
@@ -291,5 +291,5 @@
     "lines": 14,
     "uniqueStations": 235
   },
-  "planNotes": "Do not auto-promote proposed routes to playable services. Existing A/B metro registries remain authoritative until real per-city station graphs are authored and tested."
+  "planNotes": "Kirihama now has 10 graph-registered metro services and 170 unique city-lattice stations with usable train routes and game exit IDs. The other two cities remain proposed only; per-station scenes are separately deferred. Gameplay graph remains authoritative, never this planning file."
 }
