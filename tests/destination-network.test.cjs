@@ -34,7 +34,7 @@ test('a destination is reachable from the player and always has a reverse leg',(
   assert.equal(outward.minutes,back.minutes,'two-way route differs: '+p.id);
  }
 });
-test('all metro-photo pins use the actual game subway coordinates and original station identities',()=>{
+test('real subway stations preserve canonical grid coordinates across the independent journey graph',()=>{
  for(const [id,s] of Object.entries(M.STATIONS)){
   if(s.locked)continue;
   const p=N.at(id);
@@ -58,7 +58,14 @@ test('map code does not import a geographic backdrop or teleport to fake address
  const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
  assert.ok(!map.includes('pw-dot-geography'));
  assert.ok(!map.includes('pw-dot-terrain-land'));
- assert.ok(map.includes('pw-dot-destination-stop'));
- assert.ok(map.includes('previewRegionalRoute(trip?.legs)'));
+ assert.ok(!map.includes('for(const l of atlas.LOCAL_TRANSIT_LINES)'),
+  'bus/tram lines must not be rendered in the subway view');
+ assert.ok(!map.includes('for(const l of network.ACCESS_ROUTES)'),
+  'walking roads must not be rendered in the subway view');
+ assert.ok(!map.includes("node=element('button','pw-dot-poi"),
+  'generic destinations cannot become subway station cards');
+ assert.ok(map.includes('previewMetroRoute(trip)'));
+ assert.ok(map.includes('for(const l of metro.LINES)'));
+ assert.ok(map.includes('name=station.label'));
  assert.ok(html.includes('destination-network.js'));
 });
