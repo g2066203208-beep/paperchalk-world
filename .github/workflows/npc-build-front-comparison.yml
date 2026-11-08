@@ -17,13 +17,23 @@ jobs:
         run: python3 -m pip install --disable-pip-version-check --quiet --break-system-packages Pillow
       - name: Compare all six canonical front-view sources
         run: python3 scripts/build_civilian_front_comparison.py
+      - name: Produce high-resolution JPEG preview
+        run: |
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          p=Path('site/assets/characters/civilians/npc-front-comparison-20261108.png')
+          out=p.with_suffix('.jpg')
+          Image.open(p).convert('RGB').save(out,quality=87,optimize=True,progressive=True)
+          print('JPEG PREVIEW:',out,out.stat().st_size,'bytes')
+          PY
       - name: Save comparison without altering source PNGs
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add site/assets/characters/civilians/npc-front-comparison-20261108.png
+          git add site/assets/characters/civilians/npc-front-comparison-20261108.png site/assets/characters/civilians/npc-front-comparison-20261108.jpg
           if git diff --cached --quiet; then
             echo 'Comparison already up-to-date'
             exit 0
