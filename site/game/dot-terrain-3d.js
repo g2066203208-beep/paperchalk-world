@@ -1,6 +1,7 @@
-/* Paperchalk World: real 3D heightfield under the existing dot-grid map.
- * Orthographic top-down and free orbit are two cameras on ONE XY/Z surface.
- * No photo backdrop, fake CSS tilt, additional fog, or duplicate map data.
+/* Infinite terrain surface on the existing black dot world.
+ * Orthographic and orbit perspectives share the same integer world grid.
+ * Nearby tiles are real 3D triangular heightfield geometry; distant tiles
+ * stream at lower density so no rectangular terrain boundary ever appears.
  */
 (function(root,factory){
  'use strict';
@@ -10,6 +11,7 @@
 })(typeof window!=='undefined'?window:null,function(){
  'use strict';
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+ const CHUNK_CELLS=16,MAX_FAR_CHUNKS=200,MAX_NEAR_CHUNKS=100;
  const TAU=Math.PI*2;
  function create({map,viewport,camera,cell=40,width=2000,height=1280,enabled=true}){
   if(!enabled||!map||!map.ownerDocument)return null;
@@ -29,7 +31,7 @@
   try{gl=surface.getContext('webgl',{alpha:true,antialias:true,depth:true,
     premultipliedAlpha:false,preserveDrawingBuffer:false});}catch(_){}
   if(!gl){surface.remove();toggle.remove();map.dataset.terrainRenderer='unavailable';return null}
-  const vert='attribute vec3 a_position; uniform vec2 u_focus; uniform vec2 u_screen; uniform float u_scale; uniform float u_yaw; uniform float u_pitch; uniform float u_camDist; uniform float u_time; uniform float u_pointMode; varying float v_light; void main(){'+
+  const vert='attribute vec3 a_position; uniform vec2 u_focus; uniform vec2 u_screen; uniform float u_scale; uniform float u_yaw; uniform float u_pitch; uniform float u_camDist; uniform float u_time; uniform float u_pointMode; uniform float u_fadeStart; uniform float u_fadeEnd; varying float v_light; varying float v_fade; void main(){'+
    'vec2 p=(a_position.xy-u_focus)*u_scale;float sn=sin(u_yaw),cs=cos(u_yaw);'+
    'vec2 q=vec2(cs*p.x-sn*p.y,sn*p.x+cs*p.y);'+
    'float zz=a_position.z*u_scale;'+
@@ -40,13 +42,15 @@
    'float breath=0.006*sin(u_time*0.14+a_position.x*0.00625+a_position.y*0.0045);'+
    'gl_PointSize=clamp((2.92+breath)*pow(factor,0.64),1.25,6.5);'+
    'v_light=0.43+breath;'+
+   'float dist=length(p);'+
+   'v_fade=1.0-smoothstep(u_fadeStart,u_fadeEnd,dist);'+
    '}';
-  const frag='precision mediump float; uniform float u_pointMode; varying float v_light; void main(){'+
+  const frag='precision mediump float; uniform float u_pointMode; varying float v_light; varying float v_fade; void main(){'+
    'if(u_pointMode<0.5){gl_FragColor=vec4(0.0,0.0,0.0,1.0);return;}'+
    'vec2 v=gl_PointCoord*2.0-1.0; float d=dot(v,v);'+
    'if(d>1.0)discard;'+
    'float edge=1.0-smoothstep(0.52,1.0,d);'+
-   'gl_FragColor=vec4(0.73,0.77,0.76,v_light*edge);'+
+   'gl_FragColor=vec4(0.73,0.77,0.76,v_light*edge*v_fade);'+
    '}';
   const makeShader=(type,source)=>{
    const s=gl.createShader(type);
@@ -68,36 +72,165 @@
    console.warn('3D dot terrain unavailable:',error);
    return null;
   }
-  const cols=Math.floor(width/cell),rows=Math.floor(height/cell);
-  const count=(cols+1)*(rows+1);
-  const coords=new Float32Array(count*3);
-  const heights=new Float32Array(count);
-  const indices=new Uint16Array(cols*rows*6);
-  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){
-   const i=y*(cols+1)+x;
-   coords[i*3]=x*cell;coords[i*3+1]=y*cell;coords[i*3+2]=0;
+
+  // Tiles are anchored to integer grid coordinates, not screen positions.
+  // Only the small visible region is in GPU memory at any moment; edits
+  // outside that region remain in sparse world-space height storage.
+  const authoredCols=Math.floor(width/cell),authoredRows=Math.floor(height/cell);
+  const overrides=new Map();
+  let count=0,triangleCount=0,coords=new Float32Array(0);
+  let indices=new Uint16Array(0),lookup=new Map(),meshKey='';
+  let originX=0,originY=0,nearTiles=0,farTiles=0,farCellStep=1;
+  let fadeStart=5000,fadeEnd=9000;
+  function keyFor(gx,gy){return gx+','+gy}
+  function getHeight(col,row){
+   if(!Number.isSafeInteger(col)||!Number.isSafeInteger(row))return null;
+   return overrides.get(keyFor(col,row))||0;
   }
-  for(let y=0,k=0;y<rows;y++)for(let x=0;x<cols;x++){
-   const a=y*(cols+1)+x,b=a+1,c=a+(cols+1),d=c+1;
-   indices[k++]=a;indices[k++]=b;indices[k++]=c;
-   indices[k++]=b;indices[k++]=d;indices[k++]=c;
+  function setHeight(col,row,value){
+   if(!Number.isSafeInteger(col)||!Number.isSafeInteger(row)||
+      !Number.isFinite(value))return false;
+   const key=keyFor(col,row),z=clamp(value,-800,800);
+   if(z===0)overrides.delete(key);else overrides.set(key,z);
+   const index=lookup.get(key);
+   if(index!==undefined){
+    coords[index*3+2]=z;
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    gl.bufferSubData(gl.ARRAY_BUFFER,index*12+8,coords.subarray(index*3+2,index*3+3));
+   }
+   return true;
   }
-  function upload(){
+  function rectangleForView(v,c,angle,rotation,camDist){
+   const focusX=(v.w*.5-c.x)/c.scale;
+   const focusY=(v.h*.5-c.y)/c.scale;
+   const sn=Math.sin(angle),cs=Math.cos(angle);
+   const yr=Math.sin(rotation),xr=Math.cos(rotation);
+   // A slightly larger world-space field reaches behind the perspective
+   // horizon. Beyond this distance the last points smoothly disappear into
+   // black, NOT a flat rectangular mesh edge.
+   const distanceLimit=Math.max(8000,Math.max(v.w,v.h)*13/c.scale);
+   const corners=[];
+   for(const sy of [-v.h*.8,-v.h*.5,0,v.h*.5,v.h*.8]){
+    const denom=camDist*cs+sy*sn;
+    const qy=denom>camDist*.012?clamp(sy*camDist/denom,
+     -distanceLimit,distanceLimit):-distanceLimit;
+    const factor=camDist/(camDist-sy*0+Math.max(-distanceLimit,qy)*(-sn));
+    for(const sx of [-v.w*.8,-v.w*.5,0,v.w*.5,v.w*.8]){
+     const qx=clamp(sx/Math.max(.04,factor),-distanceLimit,distanceLimit);
+     const wx=focusX+(xr*qx+yr*qy)/c.scale;
+     const wy=focusY+(-yr*qx+xr*qy)/c.scale;
+     corners.push([wx,wy]);
+    }
+   }
+   const minX=Math.min(...corners.map(p=>p[0]));
+   const maxX=Math.max(...corners.map(p=>p[0]));
+   const minY=Math.min(...corners.map(p=>p[1]));
+   const maxY=Math.max(...corners.map(p=>p[1]));
+   return {minX,maxX,minY,maxY,focusX,focusY,
+    distanceLimit,range:distanceLimit*c.scale};
+  }
+  function streamTiles(v,c,angle,rotation,camDist){
+   const view=rectangleForView(v,c,angle,rotation,camDist);
+   const s=CHUNK_CELLS*cell;
+   const nearRadius=Math.min(2450,
+    Math.max(1500,Math.max(v.w,v.h)*1.15/c.scale));
+   const nx0=Math.floor((view.focusX-nearRadius)/s);
+   const nx1=Math.ceil((view.focusX+nearRadius)/s)-1;
+   const ny0=Math.floor((view.focusY-nearRadius)/s);
+   const ny1=Math.ceil((view.focusY+nearRadius)/s)-1;
+   // Far tiles have a power-of-two cell step and power-of-two world span.
+   // At a glancing view the projected region can span kilometers; far
+   // cells are still mathematically aligned with the same 40-unit grid.
+   let macro=1;
+   const widthWorld=view.maxX-view.minX+2*s;
+   const heightWorld=view.maxY-view.minY+2*s;
+   while((widthWorld/(s*macro)+2)*(heightWorld/(s*macro)+2)>MAX_FAR_CHUNKS
+      &&macro<64)macro*=2;
+   const farSpanCells=CHUNK_CELLS*macro,farSize=farSpanCells*cell;
+   const fx0=Math.floor((view.minX-s)/farSize);
+   const fx1=Math.ceil((view.maxX+s)/farSize)-1;
+   const fy0=Math.floor((view.minY-s)/farSize);
+   const fy1=Math.ceil((view.maxY+s)/farSize)-1;
+   const signature=[nx0,nx1,ny0,ny1,fx0,fx1,fy0,fy1,macro].join('/');
+   if(signature===meshKey)return view;
+   // A floating origin prevents shader vertex jitter millions of units
+   // away from the original authored city.
+   originX=Math.floor(view.focusX/s)*s;
+   originY=Math.floor(view.focusY/s)*s;
+   const vertices=[],triangles=[],vertexIndices=new Map();
+   function point(gx,gy){
+    const key=keyFor(gx,gy);
+    let id=vertexIndices.get(key);
+    if(id!==undefined)return id;
+    id=vertices.length/3;
+    if(id>=65535)throw Error('Terrain streaming exceeded 16-bit geometry budget');
+    vertexIndices.set(key,id);
+    vertices.push(gx*cell-originX,gy*cell-originY,getHeight(gx,gy));
+    return id;
+   }
+   function tile(tx,ty,span,segments){
+    const startX=tx*span,startY=ty*span,step=span/segments;
+    const rows=[];
+    for(let y=0;y<=segments;y++){
+     const row=[];
+     for(let x=0;x<=segments;x++)row.push(point(startX+x*step,startY+y*step));
+     rows.push(row);
+    }
+    for(let y=0;y<segments;y++)for(let x=0;x<segments;x++){
+     const a=rows[y][x],b=rows[y][x+1];
+     const d=rows[y+1][x],e=rows[y+1][x+1];
+     triangles.push(a,b,d,b,e,d);
+    }
+   }
+   const totalNear=(nx1-nx0+1)*(ny1-ny0+1);
+   const nearStride=totalNear>MAX_NEAR_CHUNKS?2:1;
+   const minNearX=nx0*s,maxNearX=(nx1+1)*s;
+   const minNearY=ny0*s,maxNearY=(ny1+1)*s;
+   // Coarse far terrain never takes over the high fidelity near grid.
+   farTiles=0;nearTiles=0;
+   for(let ty=fy0;ty<=fy1;ty++)for(let tx=fx0;tx<=fx1;tx++){
+    const x0=tx*farSize,y0=ty*farSize;
+    if(x0>=minNearX&&x0+farSize<=maxNearX&&
+       y0>=minNearY&&y0+farSize<=maxNearY)continue;
+    if(farTiles>=MAX_FAR_CHUNKS*2)continue;
+    tile(tx,ty,farSpanCells,8);farTiles++;
+   }
+   for(let ty=ny0;ty<=ny1;ty+=nearStride)for(let tx=nx0;tx<=nx1;tx+=nearStride){
+    tile(Math.floor(tx/nearStride),Math.floor(ty/nearStride),
+     CHUNK_CELLS*nearStride,CHUNK_CELLS);
+    nearTiles++;
+   }
+   coords=new Float32Array(vertices);
+   indices=new Uint16Array(triangles);
+   lookup=vertexIndices;
+   count=coords.length/3;triangleCount=indices.length/3;
    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
    gl.bufferData(gl.ARRAY_BUFFER,coords,gl.DYNAMIC_DRAW);
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
-   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.DYNAMIC_DRAW);
+   meshKey=signature;
+   farCellStep=macro*2;
+   // The visible near field is solid dots; distant dots fade towards the
+   // perspective horizon without an artificial world edge.
+   fadeStart=view.range*.52;fadeEnd=view.range*.96;
+   map.dataset.terrainVertices=String(count);
+   map.dataset.terrainTriangles=String(triangleCount);
+   map.dataset.terrainNearTiles=String(nearTiles);
+   map.dataset.terrainFarTiles=String(farTiles);
+   map.dataset.terrainChunkStep=String(farCellStep);
+   map.dataset.terrainOrigin=originX+','+originY;
+   return view;
   }
-  upload();
   let target=0,mix=0,yaw=0,pitch=.72,last=0,frames=0,active=true;
   map.dataset.cameraMode='2d';
-  map.dataset.terrainRenderer='webgl-heightfield';
-  map.dataset.terrainVertices=String(count);
-  map.dataset.terrainTriangles=String(indices.length/3);
+  map.dataset.terrainRenderer='webgl-streamed-heightfield';
+  map.dataset.terrainWorld='infinite';
+  map.dataset.terrainVertices='0';
+  map.dataset.terrainTriangles='0';
   map.dataset.terrainFaces='true';
   const uniforms={};
   gl.useProgram(program);
-  for(const name of ['u_focus','u_screen','u_scale','u_yaw','u_pitch','u_camDist','u_time','u_pointMode'])
+  for(const name of ['u_focus','u_screen','u_scale','u_yaw','u_pitch','u_camDist','u_time','u_pointMode','u_fadeStart','u_fadeEnd'])
    uniforms[name]=gl.getUniformLocation(program,name);
   const aPosition=gl.getAttribLocation(program,'a_position');
   function updateToggle(){
@@ -120,19 +253,6 @@
    pitch=clamp(pitch-dy*.0038,.12,1.36);
   }
   function resetOrbit(){yaw=0;pitch=.72}
-  const getHeight=(col,row)=>{
-   if(!Number.isInteger(col)||!Number.isInteger(row)||col<0||col>cols||row<0||row>rows)return null;
-   return heights[row*(cols+1)+col];
-  };
-  function setHeight(col,row,value){
-   if(!Number.isInteger(col)||!Number.isInteger(row)||col<0||col>cols||row<0||row>rows||!Number.isFinite(value))return false;
-   const i=row*(cols+1)+col;
-   heights[i]=clamp(value,-800,800);
-   coords[i*3+2]=heights[i];
-   gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
-   gl.bufferSubData(gl.ARRAY_BUFFER,i*3*4,coords.subarray(i*3,i*3+3));
-   return true;
-  }
   function render(now){
    if(!active||!map.isConnected||doc.hidden)return;
    // The 3D grid is nearly motionless. A 30fps GPU cap saves substantial
@@ -164,6 +284,7 @@
    const effectiveYaw=yaw*eased;
    const effectivePitch=pitch*eased;
    const focal=Math.max(350,h*1.45);
+   streamTiles({w,h},c,effectivePitch,effectiveYaw,focal);
    gl.clearColor(0,0,0,0);
    gl.clearDepth(1);
    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -172,13 +293,15 @@
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
    gl.useProgram(program);
-   gl.uniform2f(uniforms.u_focus,focusX,focusY);
+   gl.uniform2f(uniforms.u_focus,focusX-originX,focusY-originY);
    gl.uniform2f(uniforms.u_screen,w,h);
    gl.uniform1f(uniforms.u_scale,c.scale);
    gl.uniform1f(uniforms.u_yaw,effectiveYaw);
    gl.uniform1f(uniforms.u_pitch,effectivePitch);
    gl.uniform1f(uniforms.u_camDist,focal);
    gl.uniform1f(uniforms.u_time,now*.001);
+   gl.uniform1f(uniforms.u_fadeStart,fadeStart);
+   gl.uniform1f(uniforms.u_fadeEnd,fadeEnd);
    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
    gl.enableVertexAttribArray(aPosition);
    gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,0,0);
@@ -196,8 +319,9 @@
   }
   function inspect(){return Object.freeze({
    mode:target>.5?'3d':'2d',blend:mix,pitch,yaw,
-   vertices:count,triangles:indices.length/3,cols,rows,
-   heightsDefined:heights.some(h=>h!==0),
+   vertices:count,triangles:triangleCount,cols:authoredCols,rows:authoredRows,
+   world:'infinite',nearTiles,farTiles,farCellStep,origin:[originX,originY],
+   heightsDefined:overrides.size>0,heightOverrides:overrides.size,
    renderer:map.dataset.terrainRenderer,frames
   })}
   const onContext=e=>{if(target>.5)e.preventDefault()};
