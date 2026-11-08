@@ -91,6 +91,31 @@ try{
  if(report.outer?.lighting?.shadowFilter!=='13-tap-distance-dependent-area-light-penumbra')
   throw Error('Actual WebGL scene is still using old hard-edge shadows');
  await page.screenshot({path:resolve(out,'01-outer-full-lights-1917x906.png')});
+ if(ready){
+  report.partyViews={};
+  const worldAnchors=JSON.stringify(report.outer.actors);
+  if(report.outer.controlledActorId!=='hero'||!report.outer.cameraParity)
+   validationErrors.push('default game control is not the original heroine');
+  if(report.outer.partyLine.some(p=>p.z!==9.3)||
+     report.outer.opposingLine.some(p=>p.z!==6.8))
+   validationErrors.push('players and enemies are not four-on-four aligned rows');
+  for(let index=2;index<=4;index++){
+   await page.locator('[data-control-ally="'+index+'"]').click();
+   const state=await inspect();
+   report.partyViews['ally-'+index]={
+    controlledActorId:state.controlledActorId,
+    camera:state.camera,cameraParity:state.cameraParity,
+    originalRoot:state.actors.allies[index-1],occludingAllies:state.occludingAllies};
+   if(state.controlledActorId!=='ally-'+index||!state.cameraParity||
+      state.cameraLook.pivot?.x!==state.actors.allies[index-1].x||
+      JSON.stringify(state.actors)!==worldAnchors)
+    validationErrors.push('switching to ally '+index+' mutated the ranks or failed to anchor their actual camera');
+   await page.screenshot({path:resolve(out,'01-team-view-'+index+'-1917x906.png')});
+  }
+  await page.locator('[data-control-ally="1"]').click();
+  if((await inspect()).controlledActorId!=='hero')
+   validationErrors.push('switching back to heroine failed');
+ }
  // Actual mouse motion must ORBIT the heroine's original 3D world root while
  // rotating her body-facing ArtMesh and all real projected alpha shadows.
  // Enemy world coordinates never shift, and no scene layers are translated.
