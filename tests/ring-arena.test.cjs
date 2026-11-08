@@ -15,7 +15,7 @@ assert.doesNotMatch(rendererSource,/blocksTarget\s*=|occludes\?\.035|portrait\.u
 assert.doesNotMatch(rendererSource,
  /STAGE_SPECTATORS|stagePosition\(|stageTransition\s*=|stageYaw/,
  'four rear-facing team members must NEVER be moved, yawed or side-staged');
-assert.match(rendererSource,/stagePresentation:'four-rear-facing-allies-one-fixed-rank'/,
+assert.match(rendererSource,/stagePresentation:'p5-spaced-fixed-all-back-command-team'/,
  'the game must expose the strict standing one-row rear-view layout');
 assert.match(rendererSource,/runtime\.libraryPlayer\?\.model\?\.characterId==='female-07'/,
  'battle display must accept the REAL female-07 back rig from the studio');
@@ -27,9 +27,8 @@ assert.equal(arena.CAMERA_STOPS.outer.length,1,'one shared physical camera rig')
 const base=arena.camera('outer'),scene=arena.layout('outer'),hero=scene.allies[0];
 assert.deepEqual(arena.visibleActors('outer').map(a=>a.id),
  ['hero','ally-2','ally-3','ally-4','enemy-1','enemy-2','enemy-3','enemy-4']);
-assert.deepEqual(scene.allies.map(a=>a.x),scene.enemies.map(a=>a.x));
-assert.ok(scene.allies.every(a=>a.z===9.3));
-assert.ok(scene.enemies.every(a=>a.z===6.8));
+assert.deepEqual(scene.allies.map(a=>[a.x,a.z]),[[-1.05,9.3],[-1.72,7.95],[.78,9.5],[-1.05,8.32]]);
+assert.deepEqual(scene.enemies.map(a=>[a.x,a.z]),[[-.2,6.35],[.45,6.35],[1.1,6.35],[1.75,6.35]]);
 close(base.eye.y,1.5);close(base.fov,66);
 assert.deepEqual(base.eye,{x:-.28,y:1.5,z:10.4});
 assert.deepEqual(base.focus,{x:-.24,y:1.5,z:5.4});
