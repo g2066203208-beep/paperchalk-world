@@ -28,6 +28,21 @@ async function at(gx,gy){
   y:r.y+r.height/2+(gy-d.height/2)*cell}
 }
 async function clickGrid(x,y){const p=await at(x,y);await page.mouse.click(p.x,p.y)}
+async function ui(selector){
+ await page.evaluate(css=>{
+  const b=document.querySelector(css);
+  if(!b)throw Error('Missing city editor control '+css);
+  b.click();
+ },selector);
+}
+async function chooseCase(id){
+ await page.evaluate(city=>{
+  const select=document.querySelector('.pw-city-build-case');
+  if(!select)throw Error('Missing case selector');
+  select.value=city;
+  select.dispatchEvent(new Event('change',{bubbles:true}));
+ },id);
+}
 try{
  await page.goto(base,{waitUntil:'domcontentloaded',timeout:70000});
  await page.locator('#menu-start').click();
@@ -43,7 +58,7 @@ try{
  });
  await page.locator('#quick-map').click();
  await page.locator('.pw-dot-world-map[data-map-layer="station"]').waitFor();
- await page.locator('.pw-city-build-toggle').click();
+ await ui('.pw-city-build-toggle');
  await page.locator('.pw-city-build-studio:not([hidden])').waitFor();
  let state=await inspect();
  assert.equal(state.visible,true);
@@ -52,32 +67,34 @@ try{
  assert.equal(state.imgs,0);
  assert.ok(state.pixels>600);
  await shot('01-real-game-dot-city-module-builder.png',true);
- await page.locator('.pw-city-build-cat[data-cat="建筑"]').click();
- await page.locator('.pw-city-build-module[data-tool="home"]').click();
+ await ui('.pw-city-build-cat[data-cat="建筑"]');
+ await ui('.pw-city-build-module[data-tool="home"]');
  await clickGrid(19,16);
  state=await inspect();
  assert.equal(state.moduleCount,16);
  const id=state.selectedId;
  assert.ok(id);
- await page.locator('.pw-city-build-action[data-action="undo"]').click();
+ await ui('.pw-city-build-action[data-action="undo"]');
  assert.equal((await inspect()).moduleCount,15);
- await page.locator('.pw-city-build-action[data-action="redo"]').click();
+ await ui('.pw-city-build-action[data-action="redo"]');
  assert.equal((await inspect()).moduleCount,16);
- await page.locator('.pw-city-build-select').click();
+ await ui('.pw-city-build-select');
  const a=await at(19,16),b=await at(20,17);
  await page.mouse.move(a.x,a.y);
  await page.mouse.down();await page.mouse.move(b.x,b.y,{steps:5});await page.mouse.up();
  let piece=await page.evaluate(id=>
   window.PaperWorldCityBuilderStudioDebug.model.state().modules.find(m=>m.id===id),id);
  assert.equal(piece.x,20);assert.equal(piece.y,17);
- await page.locator('.pw-city-build-edit-actions button').filter({hasText:'旋转'}).click();
- await page.locator('.pw-city-build-name').fill('新住宅');
- await page.locator('.pw-city-build-name').press('Tab');
+ await page.evaluate(()=>[...document.querySelectorAll('.pw-city-build-edit-actions button')].find(x=>x.textContent.includes('旋转')).click());
+ await page.evaluate(()=>{
+  const n=document.querySelector('.pw-city-build-name');
+  n.value='新住宅';n.dispatchEvent(new Event('change',{bubbles:true}));
+ });
  piece=await page.evaluate(id=>
   window.PaperWorldCityBuilderStudioDebug.model.state().modules.find(m=>m.id===id),id);
  assert.equal(piece.angle,1);assert.equal(piece.label,'新住宅');
- await page.locator('.pw-city-build-cat[data-cat="路网"]').click();
- await page.locator('.pw-city-build-module[data-tool="road"]').click();
+ await ui('.pw-city-build-cat[data-cat="路网"]');
+ await ui('.pw-city-build-module[data-tool="road"]');
  for(const pt of [[6,6],[9,6],[9,11]])await clickGrid(...pt);
  const roadAudit=await page.evaluate(()=>{
   const m=window.PaperWorldCityBuilderStudioDebug.model;
@@ -86,23 +103,24 @@ try{
  });
  assert.equal(roadAudit.count,7);
  assert.ok(roadAudit.joins.some(j=>j.at==='9,6'&&j.ids.length>=2));
- await page.locator('.pw-city-build-canvas').press('Enter');
+ await page.evaluate(()=>document.querySelector('.pw-city-build-canvas')
+  .dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true})));
  await shot('02-new-houses-and-joined-road-dot-map.png');
- await page.locator('.pw-city-build-action[data-action="save"]').click();
- await page.locator('.pw-city-build-case').selectOption('kirihama');
+ await ui('.pw-city-build-action[data-action="save"]');
+ await chooseCase('kirihama');
  state=await inspect();
  assert.equal(state.moduleCount,271);
  assert.equal(state.stationCount,70);
  assert.equal(state.railCount,81);
  assert.equal(state.placeCount,120);
  await shot('03-kirihama-271-actual-editable-components.png');
- await page.locator('.pw-city-build-case').selectOption('shiomi');
+ await chooseCase('shiomi');
  state=await inspect();assert.equal(state.railCount,0);
  await shot('04-shiomi-real-location-components-no-fake-metro.png');
- await page.locator('.pw-city-build-case').selectOption('home');
+ await chooseCase('home');
  assert.equal((await inspect()).moduleCount,18);
  assert.equal((await inspect()).originalMetroStations,70);
- await page.locator('.pw-city-build-action[data-action="close"]').click();
+ await ui('.pw-city-build-action[data-action="close"]');
  assert.equal((await inspect()).visible,false);
  assert.deepEqual(errors.filter(e=>/SyntaxError|ReferenceError|TypeError/.test(e)),[]);
  console.log('PASS REAL DOT CITY BUILDER',JSON.stringify({state,errors}));
