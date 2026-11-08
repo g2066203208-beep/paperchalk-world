@@ -6,7 +6,7 @@
 (function(global){
 'use strict';
 const NS='http://www.w3.org/2000/svg';
-const CELL=40,W=2000,H=1280,LOCAL_X=280,LOCAL_Y=100;
+const CELL=40,W=2000,H=1280,LOCAL_X=280,LOCAL_Y=80;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const snap=x=>Math.round(x/CELL)*CELL;
 const element=(tag,cls,label)=>{
