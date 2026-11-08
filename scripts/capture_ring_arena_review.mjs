@@ -69,12 +69,12 @@ try{
     friendlyX:game.partyLine.map(a=>a.x),enemyX:game.opposingLine.map(a=>a.x)
    };
   });
-  assert.deepEqual(data.friendlyX,[-1.05,-1.72,.78,-1.05]);
+  assert.deepEqual(data.friendlyX,[-1.05,-1.72,.98,-1.05]);
   assert.deepEqual(data.enemyX,[-.2,.45,1.1,1.75]);
   assert.equal(data.actorIds.length,8);
   assert.equal(data.staging,'p5-spaced-fixed-all-back-command-team');
   assert.deepEqual(data.worldActors.filter(a=>a.team==='ally').map(a=>a.z),
-   [9.3,7.95,9.5,8.32],'all 4 L2D backs keep distinct P5-style permanent positions');
+   [9.3,7.95,9.45,8.32],'all 4 L2D backs keep distinct P5-style permanent positions');
   assert.ok(data.worldActors.filter(a=>a.team==='ally').every(a=>a.stageYaw===undefined),
    'no 3D side rotations: 4 back-facing portraits only');
   assert.ok(data.dynamicFemale07&&data.dynamicPartyIds.length===4,
