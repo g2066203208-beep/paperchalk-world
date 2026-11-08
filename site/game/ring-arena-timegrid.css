@@ -99,7 +99,7 @@
  left:50%;transform:translateX(-50%);
  min-width:48px!important;min-height:30px!important;
  margin:0!important;padding:2px 6px!important;
- color:#eee8e2!important;font:600 12px/1.2 inherit!important;
+ color:#eee8e2!important;font:600 12px/1.2 system-ui,sans-serif!important;
  border:0!important;border-radius:0!important;
  background:transparent!important;box-shadow:none!important;
  text-shadow:0 2px 6px #000,0 0 8px #000;
