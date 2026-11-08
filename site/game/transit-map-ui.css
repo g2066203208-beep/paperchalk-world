@@ -1877,7 +1877,7 @@
  * canvas draws only subtle mathematical variations on visible dots.
  * ?mapLayers=full restores the normal route network for QA.
  */
-#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > :not(.pw-dot-world-canvas):not(.pw-dot-wave-surface),
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > :not(.pw-dot-world-canvas):not(.pw-dot-wave-surface):not(.pw-dot-terrain-surface):not(.pw-dot-camera-toggle),
 #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-world-canvas > :not(.pw-dot-rail-canvas),
 #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview .pw-dot-rail-canvas > :not(.pw-transit-dot-matrix){
  display:none!important;
@@ -1914,4 +1914,46 @@
  max-width:100%!important;max-height:100%!important;
  background:#000!important;border:0!important;border-radius:0!important;
  box-shadow:none!important;
+}
+
+/* TRUE 3D MAP / single native WebGL XY/Z triangulated terrain sheet.
+ * No CSS-tilted photograph, fake elevation, vignette, fog, or added cards.
+ * The camera button stays visible over both projection modes only.
+ */
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-terrain-surface{
+ position:absolute!important;inset:0!important;display:block!important;
+ width:100%!important;height:100%!important;
+ margin:0!important;padding:0!important;background:transparent!important;
+ border:0!important;z-index:6!important;opacity:0;
+ pointer-events:none!important;user-select:none!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-camera-toggle{
+ position:absolute!important;top:16px!important;right:16px!important;left:auto!important;
+ z-index:9!important;display:flex!important;align-items:center!important;
+ justify-content:center!important;min-width:49px!important;height:36px!important;
+ padding:0 12px!important;margin:0!important;line-height:1!important;
+ border-radius:12px!important;border:1px solid #6b77745c!important;
+ background:#141919dd!important;color:#d2dad4!important;
+ font:600 12px/1 "PaperSans",sans-serif!important;letter-spacing:.015em!important;
+ box-shadow:none!important;outline-offset:3px!important;cursor:pointer!important;
+ touch-action:manipulation!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-camera-toggle[aria-pressed="true"]{
+ background:#222b29ed!important;border-color:#93aaa073!important;
+}
+#pw-world-surface .pw-dot-world-map:not(.pw-dot-empty-preview) > .pw-dot-terrain-surface,
+#pw-world-surface .pw-dot-world-map:not(.pw-dot-empty-preview) > .pw-dot-camera-toggle{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview[data-camera-mode="3d"]{
+ touch-action:none!important;cursor:grab!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview[data-camera-mode="3d"]:active{
+ cursor:grabbing!important;
+}
+@media(max-width:620px){
+ #pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-camera-toggle{
+  top:9px!important;right:9px!important;height:34px!important;min-width:44px!important;
+  padding:0 10px!important;border-radius:10px!important;
+ }
 }
