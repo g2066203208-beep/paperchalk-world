@@ -1,6 +1,6 @@
 {
   "source": "ACTUAL in-game Chromium/WebGL; no illustrations, mocks, or faked poses",
-  "commit": "b6370ae6c8b864ce82b2658d67798bad9708677c",
+  "commit": "25a2c76c177f0010de4f5a9bce46460f64e1cb74",
   "entries": [
     {
       "slot": 1,
@@ -60,61 +60,61 @@
       "enemyRects": [
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.06631864490748295,
+          "right": 0.08275100712905094,
+          "top": 0.3251285733350612,
+          "bottom": -0.3549327162763938
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.07267982160621085,
+          "right": 0.22136746681453454,
+          "top": 0.3250065227452952,
+          "bottom": -0.35418224372653734
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.21132207323929758,
+          "right": 0.359629178140036,
+          "top": 0.324884784937658,
+          "bottom": -0.3534336944316381
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.3496094775607318,
+          "right": 0.4975375011774913,
+          "top": 0.32476335871132633,
+          "bottom": -0.35268706100799585
         }
       ],
       "squadRects": [
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -1.016599290270032,
+          "right": -0.2403958475820762,
+          "top": 0.44264390161371414,
+          "bottom": -1.9877283003774677
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.6877491736485218,
+          "right": -0.35152526371524534,
+          "top": 0.3231374157132876,
+          "bottom": -0.7413586003825368
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.7054407147372206,
+          "right": 1.5464998475784604,
+          "top": 0.46712526658170583,
+          "bottom": -2.243051944786576
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.5273089007824413,
+          "right": -0.13265588666250575,
+          "top": 0.33954359089798375,
+          "bottom": -0.9124636202393795
         }
       ],
       "dynamicFemale07": true,
@@ -124,7 +124,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 22,
+      "dynamicUploads": 76,
       "worldActors": [
         {
           "id": "hero",
@@ -143,9 +143,9 @@
         {
           "id": "ally-3",
           "team": "ally",
-          "x": 0.78,
+          "x": 0.98,
           "y": 0,
-          "z": 9.5
+          "z": 9.45
         },
         {
           "id": "ally-4",
@@ -187,7 +187,7 @@
       "friendlyX": [
         -1.05,
         -1.72,
-        0.78,
+        0.98,
         -1.05
       ],
       "enemyX": [
@@ -196,7 +196,7 @@
         1.1,
         1.75
       ],
-      "fourEnemySilhouettesUnclipped": false
+      "fourEnemySilhouettesUnclipped": true
     },
     {
       "slot": 2,
@@ -257,61 +257,53 @@
       "enemyRects": [
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.11884254262354221,
+          "right": 0.3415309261562909,
+          "top": 0.3724489828645187,
+          "bottom": -0.6458995069154716
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.3264956351977367,
+          "right": 0.5483305952903077,
+          "top": 0.37217548147578666,
+          "bottom": -0.6442177839104084
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.533352869859414,
+          "right": 0.7543393030760723,
+          "top": 0.371903028317262,
+          "bottom": -0.6425425063309522
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.7394188132034326,
+          "right": 0.9595615787208683,
+          "top": 0.37163161737424977,
+          "bottom": -0.6408736371935572
         }
       ],
       "squadRects": [
         {
-          "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "valid": false
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.9951509489732858,
+          "right": -0.24491294989308704,
+          "top": 0.43802767241957996,
+          "bottom": -1.9395842339491849
+        },
+        {
+          "valid": false
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
-        },
-        {
-          "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.6918353182845984,
+          "right": 0.4285259186013287,
+          "top": 0.542596199780059,
+          "bottom": -3.030161394621321
         }
       ],
       "dynamicFemale07": true,
@@ -321,7 +313,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 34,
+      "dynamicUploads": 100,
       "worldActors": [
         {
           "id": "hero",
@@ -340,9 +332,9 @@
         {
           "id": "ally-3",
           "team": "ally",
-          "x": 0.78,
+          "x": 0.98,
           "y": 0,
-          "z": 9.5
+          "z": 9.45
         },
         {
           "id": "ally-4",
@@ -384,7 +376,7 @@
       "friendlyX": [
         -1.05,
         -1.72,
-        0.78,
+        0.98,
         -1.05
       ],
       "enemyX": [
@@ -393,7 +385,7 @@
         1.1,
         1.75
       ],
-      "fourEnemySilhouettesUnclipped": false
+      "fourEnemySilhouettesUnclipped": true
     },
     {
       "slot": 3,
@@ -427,20 +419,20 @@
         "radius": 10.403768547982986,
         "fov": 66,
         "eye": {
-          "x": 1.55,
+          "x": 1.7500000000000002,
           "y": 1.5,
-          "z": 10.6
+          "z": 10.549999999999999
         },
         "focus": {
-          "x": 1.59,
+          "x": 1.7900000000000003,
           "y": 1.5,
-          "z": 5.6
+          "z": 5.549999999999999
         },
         "shoulderRig": true,
         "shoulderPivot": {
-          "x": 0.78,
+          "x": 0.98,
           "y": 1.4256000000000002,
-          "z": 9.5
+          "z": 9.45
         },
         "shoulderBoomMeters": 1.3427211177307072,
         "heroYawDeg": 0,
@@ -454,61 +446,61 @@
       "enemyRects": [
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.4849447955818592,
+          "right": -0.34007964937896834,
+          "top": 0.3220855799839831,
+          "bottom": -0.3362217622059714
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.34986717905516396,
+          "right": -0.20536142012036082,
+          "top": 0.32197120817375513,
+          "bottom": -0.335518505431727
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.21512468356102457,
+          "right": -0.07097697617759802,
+          "top": 0.3218571201144559,
+          "bottom": -0.3348169934035212
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.08071606351595051,
+          "right": 0.06307492142181181,
+          "top": 0.32174331475143514,
+          "bottom": -0.3341172196364525
         }
       ],
       "squadRects": [
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -2.36925962730729,
+          "right": -1.6169323983853143,
+          "top": 0.41894411469682297,
+          "bottom": -1.7405559725578585
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -1.3369260789560384,
+          "right": -1.0162616438455812,
+          "top": 0.31828699871691274,
+          "bottom": -0.6907721177236856
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.9951509489732875,
+          "right": -0.24491294989308743,
+          "top": 0.4380276724195803,
+          "bottom": -1.939584233949188
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -1.2936357346035667,
+          "right": -0.9202428929629896,
+          "top": 0.33289485944619196,
+          "bottom": -0.8431219659979409
         }
       ],
       "dynamicFemale07": true,
@@ -518,7 +510,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 50,
+      "dynamicUploads": 125,
       "worldActors": [
         {
           "id": "hero",
@@ -537,9 +529,9 @@
         {
           "id": "ally-3",
           "team": "ally",
-          "x": 0.78,
+          "x": 0.98,
           "y": 0,
-          "z": 9.5
+          "z": 9.45
         },
         {
           "id": "ally-4",
@@ -581,7 +573,7 @@
       "friendlyX": [
         -1.05,
         -1.72,
-        0.78,
+        0.98,
         -1.05
       ],
       "enemyX": [
@@ -590,7 +582,7 @@
         1.1,
         1.75
       ],
-      "fourEnemySilhouettesUnclipped": false
+      "fourEnemySilhouettesUnclipped": true
     },
     {
       "slot": 4,
@@ -651,61 +643,57 @@
       "enemyRects": [
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.0852904976191582,
+          "right": 0.11134735551214255,
+          "top": 0.3555173255734855,
+          "bottom": -0.5417890389131643
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.09806789227441393,
+          "right": 0.29404142146439527,
+          "top": 0.3553049290970197,
+          "bottom": -0.5404830417395384
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.28080678384557106,
+          "right": 0.4761193499584324,
+          "top": 0.3550932502275363,
+          "bottom": -0.5391814570340773
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": 0.46292931137367227,
+          "right": 0.657584252641296,
+          "top": 0.35488228533438654,
+          "bottom": -0.5378842624724137
         }
       ],
       "squadRects": [
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -12.470484487842734,
+          "right": -1.8631176268247085,
+          "top": 2.8549163106792084,
+          "bottom": -27.14605519903729
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -1.146405454820776,
+          "right": -0.5824769610311299,
+          "top": 0.38588245030492313,
+          "bottom": -1.3957457606351449
+        },
+        {
+          "valid": false
         },
         {
           "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
-        },
-        {
-          "valid": true,
-          "left": null,
-          "right": null,
-          "top": null,
-          "bottom": null
+          "left": -0.9951509489732873,
+          "right": -0.24491294989308762,
+          "top": 0.4380276724195803,
+          "bottom": -1.939584233949188
         }
       ],
       "dynamicFemale07": true,
@@ -715,7 +703,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 62,
+      "dynamicUploads": 147,
       "worldActors": [
         {
           "id": "hero",
@@ -734,9 +722,9 @@
         {
           "id": "ally-3",
           "team": "ally",
-          "x": 0.78,
+          "x": 0.98,
           "y": 0,
-          "z": 9.5
+          "z": 9.45
         },
         {
           "id": "ally-4",
@@ -778,7 +766,7 @@
       "friendlyX": [
         -1.05,
         -1.72,
-        0.78,
+        0.98,
         -1.05
       ],
       "enemyX": [
@@ -787,7 +775,7 @@
         1.1,
         1.75
       ],
-      "fourEnemySilhouettesUnclipped": false
+      "fourEnemySilhouettesUnclipped": true
     }
   ]
 }
