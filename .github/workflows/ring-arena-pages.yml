@@ -38,6 +38,7 @@ on:
       - 'tests/ring-arena-wall.test.cjs'
       - 'tests/ring-arena-browser.mjs'
       - 'scripts/capture_ring_arena_review.mjs'
+      - 'site/reviews/ring-arena/index.html'
       - '.github/workflows/ring-arena-pages.yml'
   workflow_dispatch:
 permissions:
