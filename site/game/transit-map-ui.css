@@ -1272,3 +1272,87 @@
   font-size:15px!important;
  }
 }
+
+/* V23 — SUBWAY ONLY. A route map is not the city place planner.
+   Never style bus / tram / road / hiking access as a colored metro.
+   Never treat a school, cafe, shop or rumor location as a train station. */
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-municipal-lines,
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-access-lines,
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-places,
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-card-leaders{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-local-places .pw-transit-photo,
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-local-places .pw-transit-photo img{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-local-places .pw-transit-place.is-station{
+ width:125px!important;min-width:125px!important;max-width:125px!important;
+ transform:translate(-50%,calc(-100% - 14px))!important;
+ filter:none!important;box-shadow:none!important;
+ background:transparent!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-local-places .pw-transit-place.is-station .pw-transit-place-name{
+ display:block!important;text-align:center!important;white-space:nowrap!important;
+ width:100%!important;max-width:125px!important;
+ font:700 14px/1.2 "PaperSans","Noto Sans CJK SC",sans-serif!important;
+ padding:5px 7px!important;min-height:28px!important;
+ border:1px solid #91b5b7!important;border-radius:4px!important;
+ color:#eef5f0!important;background:#132831f5!important;
+ box-shadow:0 3px 8px #06111e8c!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-local-places .pw-transit-place.is-station::after{
+ height:14px!important;bottom:-14px!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-local-places .pw-transit-place.is-station::before{
+ bottom:-24px!important;width:15px!important;height:15px!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-metro-legend{
+ position:absolute;z-index:18;bottom:53px;left:15px;
+ display:flex;gap:14px;align-items:center;pointer-events:none;
+ color:#ebf2ee;background:#112631f1;padding:7px 11px;
+ border:1px solid #7c96958a;border-radius:4px;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-metro-legend[hidden],
+#pw-world-surface .pw-dot-world-map .pw-dot-metro-no-service[hidden]{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-metro-legend-entry{
+ display:flex;align-items:center;gap:7px;
+ font:600 13px/1.1 "PaperSans",sans-serif;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-metro-legend-line{
+ display:inline-block;width:28px;height:5px;border-radius:3px;
+ border:1px solid #ffffff66;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-metro-no-service{
+ position:absolute;z-index:18;left:50%;top:50%;
+ transform:translate(-50%,-50%);width:min(430px,86%);
+ display:flex;flex-direction:column;gap:12px;
+ align-items:center;text-align:center;
+ padding:28px 24px;border:1px solid #88a8a57d;
+ border-radius:5px;background:#12242fdc;
+ pointer-events:none;color:#e7f0ea;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-empty-title{
+ font:650 clamp(19px,2.6cqh,29px)/1.3 "PaperSans",sans-serif;
+}
+#pw-world-surface .pw-dot-world-map .pw-dot-empty-sub,
+#pw-world-surface .pw-dot-world-map .pw-dot-empty-hint{
+ font:400 13px/1.5 "PaperSans",sans-serif;color:#bfcbc8;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-metro-legend,
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-metro-no-service{
+ display:none!important;
+}
+@container(max-height:430px){
+ #pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-metro-legend{
+  bottom:42px;left:8px;padding:5px 8px;gap:10px;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-metro-legend-entry{
+  font-size:11px;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-metro-no-service{
+  padding:14px;gap:5px;
+ }
+}
