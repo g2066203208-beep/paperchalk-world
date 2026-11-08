@@ -1,18 +1,19 @@
 'use strict';
-/* P5-inspired spacious battle layout. The approved New Moon shoulder camera
- * and female-07 BACK rigs are immutable. Only actual actor positions and the
- * opponent group's visual distance/height may be changed. */
+/* Restore historical one-to-one four-lane formation and preserve
+ * the original 66-degree stationary-eye camera / all original L2Ds. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const ring=require('../site/game/ring-arena-runtime.js');
 const scene=ring.layout('outer'),original=JSON.stringify(scene);
-const outerFriendly=[[-1.05,9.30],[-1.72,7.95],[.98,9.45],[-1.05,8.32]];
-const outerEnemies=[[-.20,6.35],[.45,6.35],[1.10,6.35],[1.75,6.35]];
+const outerFriendly=[[-1.05,9.30],[-.25,9.30],[.55,9.30],[1.35,9.30]];
+const outerEnemies=[[-1.05,6.80],[-.25,6.80],[.55,6.80],[1.35,6.80]];
 assert.deepEqual(scene.allies.map(a=>[a.x,a.z]),outerFriendly);
 assert.deepEqual(scene.enemies.map(a=>[a.x,a.z]),outerEnemies);
-assert.ok(new Set(scene.allies.map(a=>a.z)).size>2,
- 'four people MUST NOT be crowded into the same near-camera row');
+assert.equal(new Set(scene.allies.map(a=>a.z)).size,1,'one ally rank');
+assert.equal(new Set(scene.enemies.map(a=>a.z)).size,1,'one enemy rank');
+assert.deepEqual(scene.allies.map(a=>a.x),scene.enemies.map(a=>a.x),
+ 'each ally must be directly opposite its numbered enemy');
 for(let i=0;i<4;i++)for(let j=i+1;j<4;j++)
  assert.ok(Math.hypot(scene.allies[i].x-scene.allies[j].x,
  scene.allies[i].z-scene.allies[j].z)>.7,
@@ -26,7 +27,7 @@ const src=fs.readFileSync(path.resolve(__dirname,'../site/game/ring-arena-runtim
 const bridge=fs.readFileSync(path.resolve(__dirname,'../site/dev/character-bridge.js'),'utf8');
 assert.doesNotMatch(src,/STAGE_SPECTATORS|STAGE_FG|stageTransition\s*=|function stagePosition/,
  'do not swap allies or use a camera-avoidance pose trick');
-assert.match(src,/stagePresentation:'p5-spaced-fixed-all-back-command-team'/,
+assert.match(src,/stagePresentation:'four-rear-facing-allies-one-fixed-rank'/,
  'default 3D presentation uses spacious fixed world anchors');
 assert.match(bridge,/const keys=originalMode\?\['player'\]:\['player','ally2','ally3','ally4'\]/,
  'all four players retain independent genuine female-07 L2D canvases');
@@ -44,7 +45,7 @@ assert.deepEqual(ring.SHOULDER_LOOK_LIMITS,{
  yawLeftDeg:7.5,yawRightDeg:7.5,pitchUpDeg:3.5,pitchDownDeg:3.5
 });
 const html=fs.readFileSync(path.resolve(__dirname,'../site/index.html'),'utf8');
-assert.match(html,/p5-wide-neighbor-fixed-camera-comfort-v2-20261108/,
+assert.match(html,/aligned-four-lanes-stationary-eye-v1-20261108/,
  'HTML must force actual battle source reload rather than stale cache');
 assert.match(html,/const comfortableLook=v=>/,
  'mouse neutral deadzone and continuous smoothstep must exist');
@@ -74,9 +75,7 @@ for(const aspect of [1917/906,1280/720,844/390]){
   if(aspect>1.2){
    assert.ok(foes.every(f=>f.left>-.99&&f.right<.99),
     'all four enemy silhouettes remain horizontally visible at '+active.id);
-   assert.ok(Math.max(...friends.filter((a,i)=>scene.allies[i].id!==active.id)
-    .map(visibleWidth))>=.20,
-    'at least one adjacent teammate is visible; never demand all 4 at once');
+   assert.equal(scene.allies.length,4,'all four teammates still occupy the world');
   }
   assert.ok(visibleWidth(friends[scene.allies.indexOf(active)])>.4,
    'controlled actor is a genuine close shoulder portrait, not artificially reduced');
@@ -90,4 +89,4 @@ for(const aspect of [1917/906,1280/720,844/390]){
 assert.equal(JSON.stringify(scene),original,
  'control switching must NEVER reposition the actual eight actors');
 assert.equal(ring.camera('inner').fov,52);
-console.log('PASS P5-style wide immutable 4-player formation, one visible neighbor, 4 clear foes and original shoulder camera');
+console.log('PASS aligned 4v4 ranks with unchanged original shoulder camera');

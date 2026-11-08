@@ -55,30 +55,13 @@
   const u=sign*wallArcMeters(theta)/tileWidth+ACTIVE_WALL.repeats/2;
   return {u:u-Math.floor(u),v:clamp(y/ACTIVE_WALL.heightMeters,0,1)};
  }
- // Persona-5-inspired OPEN party formation, not a four-back wall.
- // The selected fighter keeps the approved shoulder camera and ORIGINAL
- // full-size portrait. In any one command view the audience only needs a
- // neighbouring teammate, never all four portraits at the same depth.
- // These positions are immutable world anchors: control swaps move ONLY
- // the same camera rig, not the performers. All allies remain FULL BACK L2D.
+ // Four genuine one-on-one lanes. Both ranks are straight, parallel
+ // and exactly aligned in X. Camera switches never reposition characters.
  const LANE_X=Object.freeze([-1.05,-.25,.55,1.35]);
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   // Wide, non-collinear irregular staging: front hero, one left-forward
-   // ally, one right-rear ally, one left-midground ally.
-   allies:Object.freeze([
-    Object.freeze([-1.05,9.30]),
-    Object.freeze([-1.72,7.95]),
-    Object.freeze([.98,9.45]),
-    Object.freeze([-1.05,8.32])
-   ]),
-   // Four visibly separated enemies in the composition's quiet middle.
-   // A little farther back with a slight art-size compensation avoids
-   // the close-up enemies appearing tiny or touching each other.
-   enemies:Object.freeze([
-    Object.freeze([-.20,6.35]),Object.freeze([.45,6.35]),
-    Object.freeze([1.10,6.35]),Object.freeze([1.75,6.35])
-   ])
+   allies:Object.freeze(LANE_X.map(x=>Object.freeze([x,9.30]))),
+   enemies:Object.freeze(LANE_X.map(x=>Object.freeze([x,6.80])))
   }),
   inner:Object.freeze({
    allies:Object.freeze(LANE_X.map(x=>Object.freeze([x,8.0]))),
@@ -129,11 +112,8 @@
  })));
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
- // A four-person P5-style command team: selected player + nearby partner
- // are the visual priority, NOT four enormous backs in the same rank.
- // Switching roles re-anchors only the ORIGINAL 66-degree shoulder camera
- // to the fixed world position of that role; all four real actors stay put.
- // Metro still chooses only its named passenger via scene actors.visible.
+ // Four genuine rear-facing L2D players on the same fixed front rank.
+ // The selected teammate changes only the real shoulder-camera anchor.
  const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
   const scene=layout(mode);
@@ -144,7 +124,7 @@
  // physically grounded and remains part of the SAME 3D world as all foes.
  // The camera stays close behind her; cursor movement only rotates gaze,
  // never moving the approved eye or the heroine's world-space root.
- const SHOT_NAMES=Object.freeze(['P5 宽站位 · 相邻队友']);
+ const SHOT_NAMES=Object.freeze(['四人同排 · 自由切换']);
  const CAMERA_STOPS=Object.freeze({
   outer:Object.freeze([Object.freeze({
    id:'left',eyeX:-.28,eyeZ:10.40,eyeY:1.50,
@@ -2572,8 +2552,8 @@
    mode,shotIndex,shotName:SHOT_NAMES[shotIndex],posePreviewEnabled,previewPose,lensShift:lens?.lensShift??VERTICAL_LENS_SHIFT,
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
-   stagePresentation:'p5-spaced-fixed-all-back-command-team',
-   runtimeRevision:'p5-neighbor-wide-comfort-headlook-v2-20261108',
+   stagePresentation:'four-rear-facing-allies-one-fixed-rank',
+   runtimeRevision:'aligned-four-lanes-stationary-eye-v1-20261108',
    shoulderMouseLimits:{...SHOULDER_LOOK_LIMITS},
    stageTransitionProgress:1,
    stageActors:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),

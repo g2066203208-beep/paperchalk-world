@@ -93,8 +93,8 @@ try{
  const originalCamera=JSON.stringify(outer.cameraTarget);
  const originalActors=JSON.stringify(outer.actors);
  assert.equal(outer.controlledActorId,'hero','the original heroine controls the first view');
- assert.deepEqual(outer.partyLine.map(p=>p.z),[9.30,7.95,9.45,8.32]);
- assert.deepEqual(outer.opposingLine.map(p=>p.z),[6.35,6.35,6.35,6.35]);
+ assert.deepEqual(outer.partyLine.map(p=>p.z),[9.30,9.30,9.30,9.30]);
+ assert.deepEqual(outer.opposingLine.map(p=>p.z),[6.80,6.80,6.80,6.80]);
  assert.equal(await page.locator('[data-control-ally]').count(),4,
   'the player can select one of four actual allied slots, including on phones');
  for(let index=2;index<=4;index++){
@@ -117,7 +117,7 @@ try{
    'teammate is still fully opaque even when overlapping an enemy silhouette');
   assert.equal(switched.cameraParity,true,
    'the single WebGL camera follows the real selected world-space teammate');
-  assert.equal(switched.stagePresentation,'p5-spaced-fixed-all-back-command-team');
+  assert.equal(switched.stagePresentation,'four-rear-facing-allies-one-fixed-rank');
   assert.equal(switched.cameraLook.pivot.x,chosen.x);
   assert.equal(switched.cameraLook.pivot.z,chosen.z);
   assert.equal(switched.camera.fov,66);
@@ -125,7 +125,7 @@ try{
   assert.equal(switched.stageActors.find(a=>a.id===chosen.id).x,chosen.x);
   assert.equal(switched.stageActors.find(a=>a.id===chosen.id).z,chosen.z);
   assert.deepEqual(switched.presentationActors.filter(a=>a.team==='ally').map(a=>a.z),
-   [9.3,7.95,9.45,8.32],'P5 fixed wide L2D positions persist without swapping actors');
+   [9.3,9.3,9.3,9.3],'all four L2D front-rank anchors persist without swapping actors');
   assert.ok(switched.presentationActors.filter(a=>a.team==='ally')
    .every(a=>a.stageYaw===undefined),'never rotate female07 back art into side views');
   assert.equal(JSON.stringify(switched.actors),originalActors,
@@ -164,10 +164,10 @@ try{
  assert.ok(groundProof.feet.every(x=>x.valid),
   'all four real enemy shoes project to the shared world-space floor');
  const partyXYZ=outer.actors.allies.map(a=>[a.x,a.z]);
- assert.deepEqual(partyXYZ,[[-1.05,9.3],[-1.72,7.95],[.98,9.45],[-1.05,8.32]],
-  'P5 positions use a fixed wide grouping rather than four backs in one camera row');
+ assert.deepEqual(partyXYZ,[[-1.05,9.3],[-.25,9.3],[.55,9.3],[1.35,9.3]],
+  'all four players must hold the approved fixed rank');
  assert.deepEqual(outer.actors.enemies.map(a=>[a.x,a.z]),
-  [[-.2,6.35],[.45,6.35],[1.1,6.35],[1.75,6.35]]);
+  [[-1.05,6.8],[-.25,6.8],[.55,6.8],[1.35,6.8]]);
  const centers=groundProof.feet.map(x=>x.x);
  assert.ok(centers.every(x=>x>-.99&&x<.99),
   'four enemy ground contacts remain visible in the composed camera');
