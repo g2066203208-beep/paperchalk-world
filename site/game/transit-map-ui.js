@@ -625,8 +625,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    // Fit the ACTUAL 8-column x 3-row metro diagram, not a fictional
    // 570x310 bounding rectangle that left the route tiny. Photo cards and
    // station names require a modest clearance outside the real track bounds.
-   const metroZoom=Math.min(4.3,(v.w-48)/400,(v.h-52)/210);
-   const local=Math.max(2.5,metroZoom);
+   // Intentionally fill the viewport with a large network. Not every
+   // destination must fit at once: drag and pinch reveal the rest.
+   const metroZoom=Math.min(5.25,(v.w-48)/300,(v.h-52)/155);
+   const local=Math.max(3.0,metroZoom);
    const targetZoom=currentCity==='kirihama'?local:Math.max(2.85,local);
    centerOn(currentCity==='kirihama'?
     {x:LOCAL_X+6*CELL,y:LOCAL_Y+2*CELL}:(herePoi||hereCity),
