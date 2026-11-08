@@ -1,3 +1,4 @@
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-city-build-studio[hidden]{display:none!important;pointer-events:none!important}
 /* Paperchalk | modular DOT CITY BUILDER inside original game.
  * Visual geometry is canvas-generated individual light points, not imagery.
  * This editor is intentionally independent of the old full-city atlas art.
@@ -228,4 +229,17 @@
  #pw-world-surface .pw-city-build-case{width:139px;flex:0 0 139px}
  #pw-world-surface .pw-city-build-actions{flex:0 0 auto}
  #pw-world-surface .pw-city-build-footer{display:none}
+}
+
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-city-build-toggle{
+ position:absolute!important;right:12px!important;top:74px!important;
+ z-index:86!important;min-width:100px!important;min-height:34px!important;
+ padding:7px 11px!important;background:#172b35e8!important;
+ border:1px solid #a4c3c3!important;color:#e2ebe2!important;
+ border-radius:2px!important;font-size:12px!important;
+ box-shadow:0 3px 10px #07121b78!important;cursor:pointer!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-city-build-toggle[data-active="true"]{
+ color:#fff0cf!important;border-color:#e2bc93!important;
+ background:#465b5b!important;
 }
