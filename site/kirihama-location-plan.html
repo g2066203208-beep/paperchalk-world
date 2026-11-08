@@ -47,7 +47,7 @@ h2{font-size:12px;color:#98adb1;letter-spacing:.12em;font-weight:600;margin:8px 
 </section><aside><h2>所选区域与地点</h2><div id="district-desc"></div><div id="information"></div><div id="site-list"></div><div id="rail-note">采用虚构城市米制坐标，点阵 1 格对应规划约 900 米。步行距离属于道路建模前的绕行估算，尚不是 GIS 测量结果。地铁只属于霧浜市，不和其他城市线路混画。地面与地下地点使用不同楼层编号。</div></aside></main>
 <script src="./game/metro-graph.js?v=curated70-review-map-20261108"></script>
 <script src="./game/metro-map-geometry.js?v=authored-corners-review-20261108"></script>
-<script src="./game/kirihama-location-plan.js?v=120-authored-station-pins-v1-20261108"></script>
+<script src="./game/kirihama-location-plan.js?v=coast-river-level-review-v2-20261108"></script>
 <script>
 (()=>{'use strict';
  const plan=window.PaperWorldKirihamaLocationPlan;
@@ -66,9 +66,15 @@ h2{font-size:12px;color:#98adb1;letter-spacing:.12em;font-weight:600;margin:8px 
  const base=el('g',{'data-name':'geography'}),lines=el('g',{'data-name':'tracks'}),hubs=el('g',{'data-name':'hubs'}),pins=el('g',{'data-name':'sites'});
  svg.append(base,lines,hubs,pins);
  base.append(el('rect',{x:-2,y:-2,width:40,height:31,fill:'#13242a'}));
- base.append(el('path',{d:'M-2,-2 H12 L9,1.5 6.8,4.8 4,5.7 -2,4Z',fill:'#22392f',opacity:.56}));
- base.append(el('path',{d:'M36 0 L36 26 34.8 24 35 22 32.5 20 29.5 18 29.2 15 31.8 12 34.6 9 35.3 0Z',fill:'#244654',opacity:.76}));
- base.append(el('path',{d:'M0 14.4 C5 14.9 9 14.2 13 14.8 C15 16 12 19 13.8 26',fill:'none',stroke:'#386974','stroke-width':.38,opacity:.65}));
+ const polygonPath=coords=>coords.map((p,i)=>(i?'L':'M')+p.join(' ')).join(' ')+'Z';
+ const geoConstraints=plan.geography;
+ base.append(el('path',{d:polygonPath(geoConstraints.northHillIndicativePolygonGrid),fill:'#22392f',opacity:.56}));
+ base.append(el('path',{d:polygonPath(geoConstraints.bayWaterPolygonGrid),fill:'#244654',opacity:.76}));
+ const riverD=geoConstraints.riverCubicSectionsGrid.map((points,i)=>{
+  const [a,b,c,d]=points;
+  return (i===0?'M'+a.join(' '):'')+' C'+b.join(' ')+' '+c.join(' ')+' '+d.join(' ');
+ }).join(' ');
+ base.append(el('path',{d:riverD,fill:'none',stroke:'#386974','stroke-width':.38,opacity:.65}));
  for(const line of rail.LINES){
   for(const [a,b] of geo.segments(line)){
    const from=rail.STATIONS[a],to=rail.STATIONS[b];
