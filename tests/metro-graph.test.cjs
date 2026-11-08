@@ -126,3 +126,24 @@ test('website always builds the complete subway station registry before game sta
  assert.equal(html.split('src="./game/metro-graph.js?').length,2,
   'MetroGraph should be evaluated once, not duplicated');
 });
+
+
+test('legacy saves at 100 retired stations keep their location and in-progress metro trips',()=>{
+ const migrated=metro.RETIRED_STOP_ALIASES;
+ assert.equal(Object.keys(migrated).length,100);
+ for(const id of Object.keys(migrated))
+  assert.ok(metro.STATIONS[migrated[id]],'retired platform lost its successor: '+id);
+ const game={window:{}};
+ vm.runInNewContext(fs.readFileSync(core,'utf8'),game);
+ game.module={exports:{}};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../site/game/daily-life-state.js'),'utf8'),game);
+ const life=game.module.exports;
+ const saved=life.defaultState();
+ saved.location='kh-e-11';
+ saved.metro={onboard:true,station:'kh-e-11',lineId:'e',direction:1,rides:7};
+ const restored=life.sanitize(saved);
+ assert.equal(restored.location,migrated['kh-e-11']);
+ assert.equal(restored.metro.station,migrated['kh-e-11']);
+ assert.equal(restored.metro.lineId,'e');
+ assert.equal(restored.metro.onboard,true);
+});
