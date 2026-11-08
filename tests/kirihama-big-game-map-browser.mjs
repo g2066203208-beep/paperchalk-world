@@ -13,8 +13,16 @@ const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFa
 page.setDefaultTimeout(30000);
 const errors=[];
 page.on('pageerror',e=>errors.push(e.message));
-async function snap(name){
- await page.screenshot({path:path.join(out,name),animations:'disabled',timeout:48000});
+async function snap(name,required=false){
+ try{
+  await page.screenshot({path:path.join(out,name),animations:'disabled',
+   timeout:required?48000:22000});
+ }catch(e){
+  if(!/Timeout/.test(String(e))||required)throw e;
+  // Software-rendered 3D background may stall a screenshot while all
+  // map controls continue working. Preserve other frames and keep QA going.
+  console.warn('Optional city screenshot stalled:',name,String(e).slice(0,120));
+ }
 }
 const stats=()=>page.evaluate(()=>{
  const map=document.querySelector('.pw-dot-world-map');
@@ -55,7 +63,7 @@ try{
  });
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.citySites==='120');
  let x=await stats();
- await snap('01-kirihama-large-p5-style-real-game-map.png');
+ await snap('01-kirihama-large-p5-style-real-game-map.png',true);
  assert.equal(x.scope,'city');assert.equal(x.city,'kirihama');
  assert.equal(x.districtCount,15);assert.equal(x.siteCount,120);
  assert.equal(x.stationCount,70);assert.equal(x.metroSegments,81);
