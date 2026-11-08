@@ -14,17 +14,20 @@
     "changes": "Previous male/female 3-view approvals deprecated by 2026-11-08 instruction; four-pose replacement required.",
     "readyCondition": "Only when canonical artwork binary, alpha, approval, feet anchors, four views, runtime and gameplay QA all verified; M003 art passes image requirements but is not yet active NPC in the game.",
     "latestAnimaWhitepaper": "docs/NPC_FOUR_POSE_DEVELOPMENT_WHITEPAPER_V1_20261108.md",
-    "personalityContract": "Each NPC needs individual life context, demeanor, habits, facial expression and a distinct fourth action. First three poses remain static front / 90-degree side / back. An old man reading seated is NOT a reusable seated template for the next character. Distinct concepts await user approval."
+    "personalityContract": "Each NPC needs individual life context, demeanor, habits, facial expression and a distinct fourth action. First three poses remain static front / 90-degree side / back. An old man reading seated is NOT a reusable seated template for the next character. Distinct concepts await user approval.",
+    "eyeRule": "All four panels of M001 have no drawn eyes, pupils, eyelashes, eyelid lines, or closed-eye arcs. Other NPC identity-specific minimal facial canon must follow user approval.",
+    "firstThreePoses": "Same static neutral standing with arms naturally down, transformed only by front/strict left 90-degree profile/back; no special gesture in these three.",
+    "fourthPose": "Unique character-specific idle action selected for each NPC; for M001 seated sleeping, M002 phone checking, M003 newspaper reading; never infer other motions automatically."
   },
   "characters": [
     {
       "id": "NPC-M001",
       "label": "普通年轻男通勤者",
-      "record": "metro-commuter-npc-m001-four-pose-draft.v5.json",
+      "record": "metro-commuter-npc-m001-four-pose-draft.v6.json",
       "approval": "rebuild_required",
       "image": null,
-      "action": "严格正面站立：单手揉后颈，困倦打哈欠，另一手提旧饭袋",
-      "promptDoc": "docs/NPC-M001_ANIMA_FOUR_POSE_PERSONALITY_V5_20261108.md"
+      "action": "纯正面坐着打瞌睡（无眼睛，衣服与前三格完全一致）",
+      "promptDoc": "docs/NPC-M001_ANIMA_FOUR_POSE_NO_EYES_V6_20261108.md"
     },
     {
       "id": "NPC-M002",
