@@ -55,9 +55,7 @@ try{
  });
  await page.locator('#quick-map').click();
  await page.locator('.pw-dot-world-map').waitFor({state:'visible'});
- // This is the second level, reached from the station neighborhood.
- assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-map-layer'),'station');
- await page.locator('.pw-home-neighborhood-up').click();
+ // The existing Kirihama subway is the first surface after opening map.
  assert.equal(await page.locator('.pw-dot-world-map').getAttribute('data-map-layer'),'metro');
  await page.locator('.pw-dot-back').click();
  assert.equal((await stats()).scope,'region');
@@ -67,6 +65,9 @@ try{
   c.click();
  });
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.citySites==='120');
+ // Metro-only by default; switch to the 120-location layer explicitly.
+ assert.equal((await stats()).visibleSites,0);
+ await page.locator('.pw-large-city-toggle').click();
  let x=await stats();
  await snap('01-kirihama-large-p5-style-real-game-map.png',true);
  assert.equal(x.scope,'city');assert.equal(x.city,'kirihama');
@@ -76,7 +77,6 @@ try{
  assert.ok(x.visibleSites>=15,'Large map must display many real physical location pins: '+JSON.stringify(x));
  assert.ok(x.districtVisible>=4,'Large city needs area signposts visible: '+JSON.stringify(x));
  assert.equal(x.mapMode,'full-city');
- await page.locator('.pw-large-city-toggle').click();
  assert.equal((await stats()).panel,true);
  assert.equal(await page.locator('.pw-large-city-place-row').count(),120);
  await snap('02-kirihama-all-120-locations-browser.png');
@@ -88,6 +88,7 @@ try{
  x=await stats();assert.ok(x.visibleSites>0);
  await page.locator('.pw-large-city-browser-close').click();
  await snap('03-kirihama-school-destination-on-real-map.png');
+ await page.locator('.pw-large-city-toggle').click();
  await page.evaluate(()=>document.querySelector('.pw-large-city-district[data-district="westold"]').click());
  await page.waitForFunction(()=>document.querySelector('.pw-large-city-pin[data-district="westold"][data-label="true"]'));
  await snap('04-kirihama-old-town-neighborhood-zoom.png');
