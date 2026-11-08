@@ -55,6 +55,7 @@ try{
  });
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.citySites==='120');
  let x=await stats();
+ await snap('01-kirihama-large-p5-style-real-game-map.png');
  assert.equal(x.scope,'city');assert.equal(x.city,'kirihama');
  assert.equal(x.districtCount,15);assert.equal(x.siteCount,120);
  assert.equal(x.stationCount,70);assert.equal(x.metroSegments,81);
@@ -62,7 +63,6 @@ try{
  assert.ok(x.visibleSites>=15,'Large map must display many real physical location pins: '+JSON.stringify(x));
  assert.ok(x.districtVisible>=4,'Large city needs area signposts visible: '+JSON.stringify(x));
  assert.equal(x.mapMode,'full-city');
- await snap('01-kirihama-large-p5-style-real-game-map.png');
  await page.locator('.pw-large-city-toggle').click();
  assert.equal((await stats()).panel,true);
  assert.equal(await page.locator('.pw-large-city-place-row').count(),120);
