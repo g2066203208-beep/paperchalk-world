@@ -282,3 +282,151 @@
  background:#493238!important;border-color:#d9ab94!important;
  color:#fff2dd!important;font-weight:750!important;
 }
+
+
+/* RESTORED SUBWAY DOT LANGUAGE — 2026-11-08
+ * The station neighborhood must feel like the original in-game rail graph,
+ * not like a second independently illustrated map. No 22% sidebar.
+ */
+#novel-ui #pw-world-surface .pw-dot-world-map[data-map-layer="station"] .pw-home-neighborhood-map{
+ display:block!important;
+ background:#101b27!important;
+}
+#pw-world-surface .pw-dot-world-map[data-map-layer="station"] .pw-home-neighborhood-aside{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map[data-map-layer="station"] .pw-home-neighborhood-right{
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;
+ display:block!important;background:#101b27!important;
+}
+#pw-world-surface .pw-dot-world-map[data-map-layer="station"] .pw-home-neighborhood-stage{
+ position:absolute!important;inset:0!important;
+ min-height:0!important;width:100%!important;height:100%!important;
+ background:#101b27!important;
+}
+#pw-world-surface .pw-dot-world-map[data-map-layer="station"] .pw-home-neighborhood-maphead{
+ position:absolute!important;z-index:12!important;
+ top:66px!important;left:22px!important;right:22px!important;
+ min-height:40px!important;padding:5px 8px!important;
+ display:flex!important;align-items:center!important;
+ border:0!important;background:transparent!important;
+ pointer-events:none!important;
+}
+#pw-world-surface .pw-home-neighborhood-maphead .pw-home-neighborhood-crumb{
+ gap:3px!important;
+ text-shadow:0 1px 8px #0b1620;
+}
+#pw-world-surface .pw-home-neighborhood-crumb b{
+ color:#dde7e5!important;font-size:14px!important;
+ letter-spacing:.08em!important;
+}
+#pw-world-surface .pw-home-neighborhood-crumb span{
+ color:#879eaa!important;font-size:10px!important;
+ letter-spacing:.1em!important;
+}
+#pw-world-surface .pw-home-neighborhood-up{
+ pointer-events:auto!important;
+ border:1px solid #8599a4a8!important;
+ background:#172735e9!important;
+ color:#dde7e5!important;
+ font-weight:650!important;
+ box-shadow:none!important;
+}
+#pw-world-surface .pw-home-neighborhood-up:hover{
+ border-color:#ddede7!important;background:#293b49!important;
+}
+#pw-world-surface .pw-home-neighborhood-svg{
+ shape-rendering:geometricPrecision!important;
+}
+#pw-world-surface .pw-home-place-card path{
+ fill:#152633ec!important;
+ stroke:#8299a4!important;
+ stroke-width:1.5!important;
+}
+#pw-world-surface .pw-home-place-card rect{
+ fill:#263c48!important;
+}
+#pw-world-surface .pw-home-place-card text{
+ font-size:15px!important;
+ fill:#e8eae4!important;
+}
+#pw-world-surface .pw-home-place-marker:hover .pw-home-place-card path,
+#pw-world-surface .pw-home-place-marker[data-selected="true"] .pw-home-place-card path{
+ fill:#23404bee!important;
+ stroke:#d0e6e4!important;
+ stroke-width:2.3!important;
+}
+#pw-world-surface .pw-home-place-leader{
+ stroke:#839fae!important;
+ stroke-width:1.7!important;
+ stroke-dasharray:1.5 6!important;
+ stroke-linecap:round!important;
+ opacity:.75!important;
+}
+#pw-world-surface .pw-home-place-marker[data-selected="true"] .pw-home-place-leader{
+ stroke:#d4dfe0!important;stroke-width:2!important;
+ stroke-dasharray:2 5!important;
+}
+#pw-world-surface .pw-home-station-symbol circle{
+ filter:drop-shadow(0 0 4px #a5afbd77);
+}
+#pw-world-surface .pw-home-neighborhood-legend{
+ left:17px!important;bottom:13px!important;
+ max-width:calc(100% - 340px)!important;
+ background:#101a25d9!important;border:0!important;
+ padding:6px 8px!important;color:#8eabb5!important;
+ font-size:10px!important;
+}
+#pw-world-surface .pw-home-neighborhood-scale{
+ top:118px!important;left:26px!important;
+ border:0!important;background:#101a25c9!important;
+ color:#90a9b7!important;font-size:10px!important;
+}
+#pw-world-surface .pw-home-neighborhood-details{
+ position:absolute!important;z-index:15!important;
+ right:88px!important;bottom:11px!important;
+ min-width:172px!important;width:210px!important;
+ display:flex!important;gap:3px!important;
+ padding:9px 11px!important;
+ border:1px solid #6c87967a!important;
+ background:#101d28ed!important;
+ box-shadow:0 3px 12px #07111b90!important;
+ pointer-events:auto!important;
+}
+#pw-world-surface .pw-home-neighborhood-selected-name{
+ color:#e8eeec!important;font-size:13px!important;
+}
+#pw-world-surface .pw-home-neighborhood-selected-meta,
+#pw-world-surface .pw-home-neighborhood-status{
+ color:#829daa!important;font-size:10px!important;
+}
+#pw-world-surface .pw-home-neighborhood-travel{
+ margin-top:3px!important;padding:6px 8px!important;
+ background:#375265!important;border-color:#7495a6!important;
+ font-size:11px!important;
+}
+#pw-world-surface .pw-home-neighborhood-zoom{
+ bottom:12px!important;right:13px!important;
+}
+#pw-world-surface .pw-home-neighborhood-zoom button{
+ background:#142430e9!important;border:1px solid #6b8996a0!important;
+ color:#bdced3!important;font-size:17px!important;
+}
+@container(max-width:650px){
+ #pw-world-surface .pw-dot-world-map[data-map-layer="station"] .pw-home-neighborhood-maphead{
+  top:42px!important;left:10px!important;right:9px!important;
+ }
+ #pw-world-surface .pw-home-neighborhood-crumb span{display:none!important}
+ #pw-world-surface .pw-home-neighborhood-crumb b{font-size:12px!important}
+ #pw-world-surface .pw-home-neighborhood-up{
+  min-width:90px!important;min-height:30px!important;font-size:10px!important;
+ }
+ #pw-world-surface .pw-home-neighborhood-scale{top:81px!important;left:8px!important}
+ #pw-world-surface .pw-home-neighborhood-legend{display:none!important}
+ #pw-world-surface .pw-home-neighborhood-details{
+  bottom:7px!important;right:124px!important;
+  width:166px!important;min-width:0!important;
+  padding:6px 8px!important;
+ }
+}
