@@ -1,6 +1,6 @@
 # Paperchalk World｜GitHub 托管游戏与像素工作室
 
-> **普通路人 NPC 统一人物集（含已批准老爷爷 NPC-M003）：** [全部路人和素材状态](site/data/npc/civilians/README.md) · [机器索引](site/data/npc/civilians/gallery.v1.json) · [导入校验脚本](scripts/validate_civilian_npc_sources.py)。原始三张 PNG 已整理成同一次对话中的下载素材 ZIP；GitHub 索引已提交，但二进制资产未正式提交前不能称为 GitHub 已入库或游戏已实装。普通路人默认只有三视图；交流/休息/死亡是后续 img2img 状态图。
+> **普通路人 NPC 统一人物集（含已批准老爷爷 NPC-M003）：** [全部路人和素材状态](site/data/npc/civilians/README.md) · [机器索引](site/data/npc/civilians/gallery.v1.json) · [导入校验脚本](scripts/validate_civilian_npc_sources.py)。四张新路人的 1024×1024 原始 PNG 已真实提交 GitHub（commit b4daf488），老爷爷 M003 保留原批准资源；五人均在统一图鉴，哈希与文件存在性已通过自动检查。仅美术原图入库，暂不代表 NPC 已进游戏或三种 img2img 状态已完成。
 
 > **Anima/NPC 提示词必读：** [Anima 官方规范与来源](docs/ANIMA_OFFICIAL_PROMPTING_REFERENCE_20261108.md) → [游戏画风锁](docs/ANIMA_CHARACTER_ART_STYLE_LOCK_V1.md) → **[用户确认的 LEFT/CENTER/RIGHT 三视图与第四格待机标准（当前唯一模板）](docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md)** → [已批准老爷爷原文](docs/NPC-M003_ANIMA_APPROVED_FOUR_POSE_USER_PROMPT_20261108.md)。每次新写提示词先核对这些文件；过时的多次失败候选和「强制逐张单视图」实验不得再当默认。详见 [AGENTS.md](AGENTS.md)。
 
