@@ -166,8 +166,38 @@ try{
  assert.equal(back.dots,'1');
  assert.equal(back.bg,'rgb(0, 0, 0)');
  await shot('04-real-game-return-to-flat-map.png');
+ // A plane whose DOTS are confined to 2000x1280 will turn blank here.
+ // Push the real map by thousands of world units, then check canvas pixels.
+ const shifted=await page.evaluate(()=>{
+  const map=document.querySelector('.pw-dot-world-map');
+  const original=map.querySelector('svg.pw-dot-rail-canvas').getAttribute('viewBox');
+  for(let i=0;i<86;i++){
+   map.dispatchEvent(new KeyboardEvent('keydown',{
+    key:'ArrowLeft',bubbles:true,cancelable:true
+   }));
+  }
+  const final=map.querySelector('svg.pw-dot-rail-canvas').getAttribute('viewBox');
+  return {original,final};
+ });
+ const previousX=Number(shifted.original.split(' ')[0]);
+ const finalX=Number(shifted.final.split(' ')[0]);
+ assert.ok(finalX<previousX-2000,'flat camera must leave the finite authored map freely');
+ await page.waitForTimeout(380);
+ const dotsOutside=await page.evaluate(()=>{
+  const m=document.querySelector('.pw-dot-world-map');
+  const canvas=m.querySelector('.pw-dot-wave-surface');
+  const pixels=canvas.getContext('2d').getImageData(
+   0,0,canvas.width,canvas.height).data;
+  let visible=0;
+  for(let i=3;i<pixels.length;i+=4)if(pixels[i]>0)visible++;
+  return {visible,world:m.dataset.dotWorld};
+ });
+ assert.equal(dotsOutside.world,'infinite');
+ assert.ok(dotsOutside.visible>100,
+  '2D points must continue painting well outside the original map');
+ await shot('05-real-game-flat-infinite-panned-beyond-authored-world.png');
  assert.ok(!errors.some(x=>/dot-terrain-3d|Map dot animation disabled|TypeError|ReferenceError/i.test(x)),
   'unexpected render error: '+errors.join('\\n').slice(0,1000));
  console.log('REAL GAME SEAMLESS 2D/3D TERRAIN CAMERA VERIFIED',
-  JSON.stringify({flat,raised,three,orbited,farAway,panned,zoomed,back}));
+  JSON.stringify({flat,raised,three,orbited,farAway,panned,zoomed,back,shifted,dotsOutside}));
 }finally{await browser.close()}
