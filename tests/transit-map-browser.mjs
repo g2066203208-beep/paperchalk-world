@@ -204,32 +204,35 @@ try{
  assert.equal(opened.transitMotion.speedMps,0,
   'four physical door leaves never open while train is moving');
  await shot('30-real-three-dimensional-platform-with-open-subway-doors.png');
- // Distinguish true sliding physical door panels and a hole in the train
- // wall from an inert background change by comparing REAL rendered pixels.
- await page.evaluate(()=>{
-  window.PaperWorldGameRingArena.setTransitDoorOpen(0);
+ // Read actual GPU pixels synchronously with both door positions while the
+ // parked train remains unchanged. A screenshot can take many seconds on a
+ // software renderer, letting the normal cabin RAF overwrite a QA override.
+ const realDoorDifference=await page.evaluate(()=>{
+  const arena=window.PaperWorldGameRingArena,gl=arena.canvas.getContext('webgl');
+  const w=gl.drawingBufferWidth,h=gl.drawingBufferHeight;
+  function capture(){
+   const bytes=new Uint8Array(w*h*4);
+   gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,bytes);
+   return bytes;
+  }
+  arena.setTransitDoorOpen(1);
+  const open=capture();
+  arena.setTransitDoorOpen(0);
+  const closed=capture();
+  arena.setTransitDoorOpen(1);
+  let total=0,count=0;
+  for(let y=Math.floor(.12*h);y<Math.floor(.85*h);y+=11)
+   for(let x=Math.floor(.02*w);x<Math.floor(.98*w);x+=17){
+    const i=(y*w+x)*4;
+    total+=(Math.abs(open[i]-closed[i])+Math.abs(open[i+1]-closed[i+1])
+     +Math.abs(open[i+2]-closed[i+2]))/3;
+    count++;
+   }
+  return total/Math.max(1,count);
  });
- await page.waitForTimeout(130);
- await shot('31-actual-closed-subway-doors-sealing-platform.png');
- const realDoorDifference=Number(execFileSync('python3',['-c',`
-from PIL import Image
-import sys
-a=Image.open(sys.argv[1]).convert('RGB')
-b=Image.open(sys.argv[2]).convert('RGB')
-w,h=a.size
-v=[]
-for y in range(int(.18*h),int(.88*h),13):
- for x in range(int(.02*w),int(.98*w),19):
-  p,q=a.getpixel((x,y)),b.getpixel((x,y))
-  v.append(sum(abs(p[k]-q[k]) for k in range(3))/3)
-print(round(sum(v)/len(v),3))
-`,path.join(out,'30-real-three-dimensional-platform-with-open-subway-doors.png'),
-path.join(out,'31-actual-closed-subway-doors-sealing-platform.png')],{encoding:'utf8'}));
  assert.ok(realDoorDifference>2.5,
-  'opening physical subway door meshes must visibly change rendered pixels: '+realDoorDifference);
- await page.evaluate(()=>{
-  window.PaperWorldGameRingArena.setTransitDoorOpen(1);
- });
+  'the same 3D scene must visibly OPEN its physical sliding doors: '+realDoorDifference);
+ console.log('PHYSICAL SUBWAY DOOR OPEN/CLOSED GPU PIXEL DIFFERENCE',realDoorDifference);
  await shot('21-dot-map-real-metro-carriage.png');
  // Prove that exterior station lamps and the actual rendered alpha windows
  // alter the REAL WebGL pixels. A fake static blue sky would fail this.
