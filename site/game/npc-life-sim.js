@@ -99,7 +99,8 @@
    const path=[];let at=to;
    while(at!==from){
     const edge=prev.get(at);if(!edge)return null;
-    path.unshift({from:edge.from,to:at,minutes:edge.minutes,mode:edge.mode});at=edge.from;
+    path.unshift({from:edge.from,to:at,minutes:edge.minutes,mode:edge.mode,
+     ...(edge.lineId?{lineId:edge.lineId,direction:edge.direction}: {})});at=edge.from;
    }
    return path;
   }
