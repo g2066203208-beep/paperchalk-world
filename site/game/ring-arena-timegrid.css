@@ -206,31 +206,44 @@
  background:rgba(4,17,24,.58)!important;
  font-size:11px!important;
 }
-@media(max-height:650px){
- #ring-arena-controls .ring-timegrid{top:35px}
+@media (max-height:650px) and (min-width:701px){
+ #ring-arena-controls .ring-timegrid{top:28px}
  #ring-arena-controls .tg-roster{gap:1px}
- #ring-arena-controls .tg-row{height:38px;min-height:38px}
- #ring-arena-controls .tg-portrait{width:35px;height:37px;flex-basis:35px}
- #ring-arena-controls .tg-faction{height:14px;line-height:14px}
+ #ring-arena-controls .tg-row{height:46px;min-height:46px}
+ #ring-arena-controls .tg-portrait{height:46px;min-height:46px}
+ #ring-arena-controls .tg-divider{height:23px;min-height:23px}
+ #ring-arena-controls .tg-divider::before{top:10px}
+ #ring-arena-controls .tg-divider::after{top:7px}
 }
-@media(max-width:700px){
- #ring-arena-controls .ring-timegrid{top:48px;right:5px;width:105px;max-width:35vw}
- #ring-arena-controls .tg-row{min-height:43px;height:43px;gap:4px}
- #ring-arena-controls .tg-portrait{width:34px;height:40px;flex-basis:34px}
- #ring-arena-controls .tg-identity strong{font-size:9px}
+@media (max-width:700px){
+ #ring-arena-controls .ring-timegrid{
+  top:clamp(38px,5vh,53px);right:5px;
+  width:clamp(126px,33vw,171px);
+  max-width:38vw;max-height:calc(100% - 60px);
+ }
+ #ring-arena-controls .tg-roster{gap:1px}
+ #ring-arena-controls .tg-row{height:45px;min-height:45px}
+ #ring-arena-controls .tg-portrait{height:45px;min-height:45px}
+ #ring-arena-controls .tg-identity{padding-left:4px}
+ #ring-arena-controls .tg-health{gap:5px}
  #ring-arena-controls .tg-hp-value{font-size:10px}
- #ring-arena-controls .tg-hp-value small{font-size:8px}
- #ring-arena-controls .tg-faction{font-size:9px}
+ #ring-arena-controls .tg-hp-value small{font-size:9px}
+ #ring-arena-controls .tg-divider{height:21px;min-height:21px}
+ #ring-arena-controls .tg-divider::before{top:10px}
+ #ring-arena-controls .tg-divider::after{top:7px}
  #ring-arena-controls .tg-tactics{
   left:4px;right:112px;bottom:8px;max-width:none;
   padding:7px 8px;
  }
  #ring-arena-controls .tg-cards button{flex-basis:90px;min-width:90px}
 }
-@media(max-width:500px) and (orientation:portrait){
- #ring-arena-controls .ring-timegrid{top:38px}
- #ring-arena-controls .tg-row{height:49px;min-height:49px}
- #ring-arena-controls .tg-portrait{width:36px;height:44px;flex-basis:36px}
+@media (max-width:500px) and (orientation:portrait){
+ #ring-arena-controls .ring-timegrid{
+  top:clamp(40px,5vh,57px);right:5px;width:37vw;
+  max-width:147px;max-height:calc(100% - 62px);
+ }
+ #ring-arena-controls .tg-row{height:48px;min-height:48px}
+ #ring-arena-controls .tg-portrait{height:48px;min-height:48px}
  #ring-arena-controls .tg-tactics{
   left:4px;right:4px;bottom:7px;max-height:44vh;overflow-y:auto;
  }
