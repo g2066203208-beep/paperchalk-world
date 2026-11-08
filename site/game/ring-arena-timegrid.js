@@ -180,7 +180,6 @@
     game.phase==='planning'?'第 '+(game.round+1)+' 轮 · 10 时间格':
     game.phase==='win'?'胜利 · '+(game.score?.rank||''):'战斗失败';
    const className=selected.name.split('·').pop();
-   get('role').textContent='操控：'+ARENA_IDS.indexOf(displayId(selected.id)+1);
    get('role').textContent='操控：'+selected.name;
    get('deck').textContent='抽牌 '+selected.draw.length+' · 弃牌 '+selected.discard.length+
     ' · 能量 '+selected.energy+'/100';
@@ -267,8 +266,6 @@
    if(b.hasAttribute('data-tg-execute')){run(()=>{picked=null;moving=null;expanded=false;model.execute();});}
   });
   // Finisher is an independent slot and is never part of the shuffled hand.
-  const originalSchedule=createBattle;
-  const previousClick=holder.onclick;
   function handleFinisherClick(e){const b=e.target.closest('[data-tg-target]');if(!b||picked!=='__finisher__')return;
    e.preventDefault();e.stopImmediatePropagation();
    selectedTick=Number(b.dataset.tgTick);

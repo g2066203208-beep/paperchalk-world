@@ -25,7 +25,7 @@ try{
  const errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  const origin='http://127.0.0.1:'+server.address().port;
- await page.goto(origin+'/index.html?scene=ring-arena',{waitUntil:'domcontentloaded',timeout:50000});
+ await page.goto(origin+'/index.html?scene=ring-arena&legacyDirector=1',{waitUntil:'domcontentloaded',timeout:50000});
  const inspect=()=>page.evaluate(()=>window.PaperWorldGameRingArena?.inspect());
  await page.waitForFunction(()=>{
   const a=window.PaperWorldGameRingArena?.inspect();
