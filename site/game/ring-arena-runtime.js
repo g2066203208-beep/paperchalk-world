@@ -423,7 +423,7 @@
   // lights. The same lamps illuminate floor vertices AND original L2D
   // raster surfaces. Zero strength leaves every battle shader unchanged.
   'uniform vec3 uPlatformPositions[4];uniform vec3 uPlatformColors[4];',
-  'uniform float uPlatformExposure;uniform float uPlatformBackZ;uniform float uDoorLightOpen;'
+  'uniform float uPlatformExposure;uniform float uPlatformBackZ;uniform float uDoorLightOpen;',
   'uniform float uTrainPosition;uniform float uTrainSpeed;',
   'float platformWindowTransmission(vec3 p,vec3 src,int side){',
   'float windowZ=side==3?uPlatformBackZ+3.85:uPlatformBackZ;',
@@ -490,7 +490,7 @@
   'precision highp float;',
   'attribute vec3 aP;attribute vec2 aUv;',
   'uniform mat4 uVP;uniform highp int uSurface;uniform float uMode;',
-  'uniform vec3 uViewEye;uniform float uGeometry;uniform float uDoorOpen;'
+  'uniform vec3 uViewEye;uniform float uGeometry;uniform float uDoorOpen;',
   'varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;',
   'varying float vFloorSpecular;',
   lightingGLSL,
@@ -506,7 +506,7 @@
   'uSurface==3?vec3(aP.x>0.0?-1.0:1.0,0.0,0.0):',
   'uGeometry>.5?vec3(0.0,0.0,1.0):',
   'normalize(vec3(.7*sin(theta),0.0,(uMode>.5?-1.0:1.0)*cos(theta)));',
-  'vIrradiance=((uSurface>=5&&uSurface<=8)||uSurface==11)?vec3(.90,.94,.89):ringIrradiance(renderP,n);'
+  'vIrradiance=((uSurface>=5&&uSurface<=8)||uSurface==11)?vec3(.90,.94,.89):ringIrradiance(renderP,n);',
   'vFloorSpecular=0.0;',
   'if(uSurface==0){',
   'vec3 viewDir=normalize(uViewEye-aP);',
@@ -663,7 +663,7 @@
   'if((uSurface==1||uSurface==9||uSurface==10)&&uWindowCutouts>.5&&wallSample.a<.70){'
   // Empty source-image margin is not an exterior WINDOW. It belongs to
   // the lower wall trim and must not show a bright tunnel through the floor.
-  'if(vWallUv.y>.10||uSurface==9||uSurface==10)discard;'
+  'if(vWallUv.y>.10||uSurface==9||uSurface==10)discard;',
   'wallSample.rgb=vec3(.20,.22,.23);',
   '}',
   'vec3 wallArt=wallSample.rgb;',
