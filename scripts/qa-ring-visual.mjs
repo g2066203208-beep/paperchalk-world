@@ -101,6 +101,10 @@ try{
    validationErrors.push('players and enemies are not four-on-four aligned rows');
   for(let index=2;index<=4;index++){
    await page.locator('[data-control-ally="'+index+'"]').click();
+   await page.mouse.move(958,453);
+   await page.waitForFunction(()=>Math.abs(
+    window.PaperWorldGameRingArena?.inspect()?.cameraLook?.yawDeg||0)<1.2,
+    null,{timeout:15000});
    const state=await inspect();
    report.partyViews['ally-'+index]={
     controlledActorId:state.controlledActorId,
