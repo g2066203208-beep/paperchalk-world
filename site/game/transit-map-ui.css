@@ -1728,3 +1728,134 @@
 #pw-world-surface .pw-dot-world-map[data-metro-editing="true"] .pw-metro-edit-track-casing{
  opacity:.55!important;
 }
+
+/* V40 / coherent in-map subway authoring, not a second detached canvas.
+   Keep the editing controls below the diagram and let the route network
+   remain the primary visual. The operating SVG stays crisp at every zoom. */
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-toggle{
+ min-width:91px!important;min-height:37px!important;
+ font-weight:750!important;letter-spacing:.025em!important;
+ border:1px solid #c4ad7b!important;border-radius:5px!important;
+ background:#344746!important;color:#ffebc7!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-toggle[data-active="true"]{
+ background:#e2bc83!important;color:#1c282b!important;
+ border-color:#fff0c9!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-toolbar{
+ top:auto!important;right:auto!important;bottom:12px!important;left:12px!important;
+ width:min(690px,calc(100% - 24px))!important;
+ max-width:calc(100% - 24px)!important;
+ max-height:min(48%,390px)!important;
+ box-sizing:border-box!important;overflow-y:auto!important;
+ padding:12px 14px!important;gap:9px!important;
+ background:linear-gradient(135deg,#14252af5,#10232cf3)!important;
+ border:1px solid #86a09d99!important;border-radius:9px!important;
+ box-shadow:0 12px 40px #041119b0, inset 0 1px #e3f3e818!important;
+ backdrop-filter:blur(12px);overscroll-behavior:contain;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-head{
+ align-items:baseline!important;flex-wrap:wrap!important;gap:5px 14px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-head strong{
+ color:#f3e5c9;font-size:15px;font-weight:750;letter-spacing:.04em;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-info{
+ white-space:normal!important;overflow:visible!important;
+ font-size:12px!important;line-height:1.35!important;flex:1 1 230px;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-lines{
+ display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;
+ padding:1px 1px 6px;scrollbar-width:thin;scrollbar-color:#688b89 transparent;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-line{
+ appearance:none!important;flex:none!important;display:inline-flex!important;
+ align-items:center!important;gap:6px!important;
+ min-height:31px!important;padding:5px 9px!important;border-radius:4px!important;
+ border:1px solid #73918a77!important;background:#203840d9!important;
+ color:#c6d8d5!important;font:650 12px/1.2 "PaperSans",sans-serif!important;
+ white-space:nowrap!important;cursor:pointer!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-line:not([data-line="all"])::before{
+ content:"";width:5px;height:16px;flex:none;border-radius:1px;
+ background:var(--line-color);box-shadow:0 0 7px var(--line-color);
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-line[data-active="true"]{
+ color:#fff0d5!important;border-color:#efca88!important;
+ background:#395455!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-controls{
+ flex-wrap:wrap!important;gap:5px!important;overflow:visible!important;
+ padding-bottom:0!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action{
+ min-height:34px!important;padding:7px 11px!important;
+ border-radius:4px!important;font-size:12px!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action[data-action="apply"]{
+ background:#d5b881!important;border:1px solid #f5d9aa!important;
+ color:#182931!important;font-weight:800!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-quick-find{
+ display:flex;align-items:center;gap:10px;color:#a9c1bf;font-size:12px;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-quick-find label{
+ display:flex;align-items:center;gap:10px;min-width:0;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station-choice{
+ min-height:33px;max-width:min(280px,70vw);width:230px;
+ padding:5px 8px;background:#20383e;color:#f4eee0;
+ border:1px solid #789b97;border-radius:4px;outline-offset:2px;
+ font:550 12px/1.3 "PaperSans",sans-serif;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-more{
+ border-top:1px solid #76918d55;padding-top:7px;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-more summary{
+ color:#b5c9c5;font-size:12px;cursor:pointer;user-select:none;
+ width:fit-content;padding:2px 0;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-advanced-actions{
+ display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:9px 0 2px;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-rename{
+ order:5;
+}
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"] .pw-dot-metro-legend,
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"] .pw-dot-hint{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-hit{
+ stroke-width:23px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station-label{
+ font-size:12.5px!important;stroke-width:2.9px!important;font-weight:700!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station,
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-bend{
+ touch-action:none!important;
+}
+@container (max-height:500px){
+ #pw-world-surface .pw-dot-world-map .pw-metro-edit-toolbar{
+  bottom:6px!important;left:6px!important;
+  width:min(620px,calc(100% - 12px))!important;
+  max-width:calc(100% - 12px)!important;
+  max-height:52%!important;padding:8px 10px!important;gap:6px!important;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-metro-edit-head strong{font-size:13px}
+ #novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action{
+  min-height:28px!important;padding:5px 8px!important;
+ }
+ #novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-line{
+  min-height:27px!important;padding:4px 7px!important;
+ }
+}
+@container (max-width:560px){
+ #pw-world-surface .pw-dot-world-map .pw-metro-edit-toolbar{
+  width:calc(100% - 12px)!important;left:6px!important;
+  bottom:5px!important;max-height:58%!important;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-metro-edit-station-choice{
+  width:190px;
+ }
+}
