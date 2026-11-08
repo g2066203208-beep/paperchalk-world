@@ -105,7 +105,7 @@ function create(metro,geometry,storage){
  if(!metro||!geometry)throw Error('地铁规划编辑器需要实际线路数据');
  let store=storage;
  if(store===undefined){try{store=global.localStorage}catch(_){store=null}}
- let plan=defaults(metro,geometry),saved='',undoStack=[],redoStack=[];
+ let plan=defaults(metro,geometry),saved=JSON.stringify(defaults(metro,geometry)),undoStack=[],redoStack=[];
  const load=()=>{
   try{
    const raw=store?.getItem(KEY);
