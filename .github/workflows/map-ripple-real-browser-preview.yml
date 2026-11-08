@@ -5,6 +5,10 @@ on:
     paths:
       - '.github/workflows/map-ripple-real-browser-preview.yml'
       - 'tests/map-fluid-ripple-preview-browser.mjs'
+      - 'site/game/transit-map-ui.js'
+      - 'site/game/transit-map-ui.css'
+      - 'site/game/dot-fog-ripples.js'
+      - 'site/index.html'
   workflow_dispatch:
 permissions:
   contents: read
