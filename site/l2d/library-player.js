@@ -247,7 +247,7 @@ async function attach(slot,characterId,face,rigSpec,localDraft=null,localArt=nul
  // Rehydrate authored wrist-to-weapon / cloth-to-grip links after JSON
  // decoding. Non-enumerable runtime parent references are not serializable
  // and must be restored for both the Studio and the live battle canvas.
- root.PaperchalkPartRigCore.bindGripParents(model);
+ root.PaperchalkPartRigCore.bindGripParents?.(model);
  // Crouch is a separate authored ACTION resource under the same heroine.
  // Both editor and game evaluate precisely the same anchored deformation.
  // Restore the user's optional per-system strengths without making a new
