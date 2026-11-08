@@ -2807,18 +2807,18 @@
       "metroStationId": "kh-c-11",
       "stationName": "中央南口",
       "localPosition": {
-        "eastM": 14640,
+        "eastM": 14740,
         "southM": 10570,
         "level": 0
       },
       "offsetFromStation": {
-        "eastM": 240,
+        "eastM": 340,
         "southM": -230
       },
       "walking": {
         "type": "station-linked-estimate",
-        "distanceM": 657,
-        "minutes": 11,
+        "distanceM": 785,
+        "minutes": 13,
         "routeStatus": "corridor-planned-not-surveyed"
       },
       "floor": 0,
@@ -2932,18 +2932,18 @@
       "metroStationId": "kh-c-11",
       "stationName": "中央南口",
       "localPosition": {
-        "eastM": 14140,
-        "southM": 11020,
+        "eastM": 14010,
+        "southM": 10980,
         "level": 0
       },
       "offsetFromStation": {
-        "eastM": -260,
-        "southM": 220
+        "eastM": -390,
+        "southM": 180
       },
       "walking": {
         "type": "station-linked-estimate",
-        "distanceM": 669,
-        "minutes": 11,
+        "distanceM": 785,
+        "minutes": 13,
         "routeStatus": "corridor-planned-not-surveyed"
       },
       "floor": 0,
