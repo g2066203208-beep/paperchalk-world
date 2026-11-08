@@ -145,7 +145,7 @@
     for(const turn of dialogue.slice(0,2))slides.push(turn);
     for(const at of route.transfers){
       slides.push({speaker:'站内广播',
-        text:'中央换乘站到了。请前往另一条线路的站台换乘。',transfer:at});
+        text:(metro.STATIONS[at]?.label||'换乘站')+'到了。请前往另一条线路的站台换乘。',transfer:at});
     }
     slides.push(dialogue[2]);
     const text=transit.querySelector('.pw-transit-words');
