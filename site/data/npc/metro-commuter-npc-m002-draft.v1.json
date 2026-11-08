@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "id": "NPC-M002",
+  "category": "metro_background_commuter",
+  "displayName": "下班查看手机的普通女性乘客",
+  "status": "ART_PROMPT_DRAFT_AWAITING_USER_GENERATION_AND_REVIEW",
+  "visualDesign": {
+    "genderPresentation": "female adult",
+    "identity": "ordinary commuter; no hero styling",
+    "face": "no visible eyes or brows, simple nose, small mouth, mild tiredness communicated through posture",
+    "hair": "simple medium-length dark-brown hair",
+    "outfit": "beige cardigan, muted blue blouse, navy straight-leg trousers, plain white sneakers",
+    "handProp": "one everyday smartphone",
+    "silhouette": "slightly lowered head and shoulders, holding phone with both hands; calm asymmetrical standing posture",
+    "reference": "Match approved NPC-M001 simplified design degree, not its face, clothing or body",
+    "views": [
+      "front left",
+      "strict left-facing side middle",
+      "back right"
+    ]
+  },
+  "behaviorSpec": {
+    "archetype": "tired office worker waiting for metro",
+    "ownBusiness": "quietly reads a message, occasionally checks train arrival board",
+    "normalEmotion": "tired but attentive, not sad or robotic",
+    "idles": [
+      {
+        "action": "read_phone",
+        "seconds": [
+          4,
+          8
+        ],
+        "pose": "head down; tiny thumb-scroll; shoulders relaxed"
+      },
+      {
+        "action": "look_at_arrival_board",
+        "seconds": [
+          1,
+          2
+        ],
+        "pose": "raise head and upper body slightly"
+      },
+      {
+        "action": "resume_phone",
+        "seconds": [
+          3,
+          6
+        ],
+        "pose": "shift weight, look down again"
+      }
+    ],
+    "trainArrives": "put phone away; let passengers leave; move to correct door",
+    "sitsWhenTired": "if free seat, sit down and continue reading; needs separate seated Anima action sprite",
+    "boarding": "board only after door opens; no position snap",
+    "nightHorrorBehavior": "stop scrolling; mouth tightens; hesitate briefly before leaving",
+    "assets": "not drawn and not published"
+  },
+  "generation": {
+    "type": "Anima Base txt2img initial three-view",
+    "size": [
+      1536,
+      1024
+    ],
+    "steps": 35,
+    "cfg": 4.5,
+    "sampler": "ER SDE",
+    "positive": "safe, 1girl, solo, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, ordinary adult woman, medium length dark brown hair, simple hairstyle, no eyes, no eyebrows, small nose, small closed mouth, simplified face, character turnaround, three views of the same woman, front view on the left, strict side profile facing left in the middle, back view on the right, full body, looking down at smartphone, holding smartphone with both hands, slightly lowered head, relaxed shoulders, natural standing posture, light beige cardigan, muted blue blouse, dark navy straight pants, white low-top sneakers, plain everyday clothes, simple fabric folds, flat colors, simple cel shading, clean lineart, white background, three full body figures in one row, equal height, same clothes, head and shoes fully visible",
+    "negative": "visible eyes, eyebrows, detailed eyes, eyelashes, missing mouth, faceless, glamorous face, dramatic pose, fashionable outfit, short skirt, high heels, excessive clothing folds, random color patches, dramatic lighting, detailed fabric texture, accessories, large portrait, close-up, extra character, duplicate front view, three-quarter view, cropped head, cropped feet, text, watermark",
+    "referenceAdapter": "After user-approved master exists, for new action poses use <lora:anima_ref_adapter_pilot_r32:1> with correct ImageStitch reference."
+  },
+  "note": "Only NPC-M001 approved. NPC-M002 must never be marked approved or spawned before user selects generated art."
+}
