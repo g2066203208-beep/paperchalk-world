@@ -61,7 +61,7 @@
  // All sole anchors stay y=0; genuine source art is never destructively edited.
  const STAGING=Object.freeze({
   outer:Object.freeze({
-   allies:Object.freeze([[-1.05,9.30],[-1.78,9.43],[-2.45,8.15],[-1.42,7.85]]),
+   allies:Object.freeze([[-1.05,9.30],[-1.28,7.88],[-2.45,8.15],[-1.82,8.20]]),
    enemies:Object.freeze([[-.46,6.80],[.73,6.80],[1.92,6.80],[3.38,6.80]])
   }),
   inner:Object.freeze({
@@ -113,10 +113,11 @@
  })));
  // Camera moves, while ALL actor coordinates remain bit-for-bit unchanged.
  function layout(mode='outer'){return LAYOUTS[mode]||LAYOUTS.outer}
- // Three companion anchors surround the heroine's LEFT/REAR side rather than
- // extending into the opponent rank. They repeat heroine back art in the
- // uniform trial; enemies repeat real enemy-one L2D. Portraits and alpha-cast
- // shadows remain in the same physical 3D scene, not a HUD overlay.
+ // Three companions now form a shallow shoulder-width echelon BEHIND the
+ // fixed heroine: far-left, middle-left and near the heroine's right shoulder.
+ // They use the same authentic female-07 back material while the four
+ // enemies share enemy-one's genuine animated L2D. No friendly reaches any
+ // enemy silhouette in the default view; no actor is a screen-space overlay.
  // Metro still chooses only its named passenger via scene actors.visible.
  const HIDDEN_ALLY_IDS=Object.freeze([]);
  const VISIBLE_LAYOUTS=Object.freeze(Object.fromEntries(['outer','inner'].map(mode=>{
