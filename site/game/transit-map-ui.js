@@ -101,7 +101,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.append(chrome,hint,subwayLegend,emptyMetro,popup);
  body.replaceChildren(map);
  // Only explicit city selection can reveal internal rail or destination pins.
- let activeCity=null,regionalCamera=null;
+ let activeCity=null,regionalCamera=null,localMode=false;
  let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,popupAnchor=null,focused=false,selectedMetroLineId=null;
  const fingers=new Map();let pinch=null;
  let lastW=844,lastH=390;
@@ -408,6 +408,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   center:(p,z)=>centerOn({...p,exact:true},z),
   clear,showMenu,onTravel,notify
  })||null;
+ const homeStation=global.PaperWorldHomeStationMap?.create?.({
+  map,atlas,metro,here,onTravel,notify,onUp:leaveHomeStation
+ })||null;
  const areaNodes=[];
  for(const a of atlas.AREAS){
   const label=element('span','pw-dot-area-label',a.name);
@@ -470,6 +473,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  function enterCity(id){
   const city=atlas.CITY_BY_ID[id];if(!city)return;
   if(activeCity===null)regionalCamera={scale,x,y};
+  localMode=false;homeStation?.hide();
   activeCity=id;drag=null;pinch=null;fingers.clear();clear();
   // Always frame the COMPLETE selected city's real physical tracks.
   // Keep 全域 overview, but initially show readable, BIG neighborhoods.
@@ -480,8 +484,21 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    centerOn({x:hub.x+50,y:hub.y+28,exact:true},Math.max(scale,2.2));
   }
  }
+ function openHomeStation(){
+  if(!homeStation)return;
+  localMode=true;activeCity='kirihama';drag=null;pinch=null;fingers.clear();
+  cityOverlay?.togglePanel(false);clear();homeStation.show();
+  const stop=localPoint(metro.STATIONS.entrance);
+  centerOn({x:stop.x,y:stop.y,exact:true},2.2);
+ }
+ function leaveHomeStation(){
+  if(!localMode)return;
+  localMode=false;homeStation?.hide();clear();enterCity('kirihama');
+ }
  function leaveCity(){
+  if(localMode){leaveHomeStation();return}
   if(activeCity===null)return;
+  localMode=false;homeStation?.hide();
   activeCity=null;drag=null;pinch=null;fingers.clear();clear();
   cityOverlay?.togglePanel(false);
   if(regionalCamera){
@@ -596,6 +613,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   // Explicit map scope, NOT zoom: intercity vs one city's SUBWAY ONLY.
   const scoped=activeCity!==null,city=atlas.CITY_BY_ID[activeCity];
   const hasMetro=activeCity==='kirihama'&&metro.LINES.some(l=>!l.locked);
+  map.dataset.mapLayer=localMode?'station':scoped?'metro':'world';
   map.dataset.scope=scoped?'city':'region';
   map.dataset.city=activeCity||'';
   map.dataset.transport=scoped?'metro':'regional';
@@ -613,6 +631,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    hasMetro?metro.LINES.length+' 条地铁 · '+Object.keys(metro.STATIONS).length+' 座车站 · 独立点阵轨道':
     '当前城市暂无已确认的运营地铁线路':
    '点击城市查看该城市独立地铁图';
+  if(localMode){
+   heading.querySelector('.pw-dot-title').textContent='住宅前站 · 站点地区图';
+   heading.querySelector('.pw-dot-subtitle').textContent=
+    '西南住宅区 · 家附近七个地点 · 方正点阵地图';
+  }
   hint.textContent=scoped?
    '地铁专用 · 其他交通方式不在此图 · ← 返回城际':
    '城际交通总图 · 点击城市查看独立地铁';
@@ -713,15 +736,15 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   lastW=v.w;lastH=v.h;
   if(first){
    activeCity=null;
-   // Always enter the regional map; city networks are accessed by city click.
    centerOn({x:W*.5,y:H*.5},minScale);
+   if(here==='entrance'&&currentCity==='kirihama')openHomeStation();
   }else if(overview)centerOn({x:W*.5,y:H*.5},minScale);
   else centerOn(oldCenter,Math.max(minScale,scale));
  }
  toolBtns[0].addEventListener('click',()=>zoomBy(1/1.37));
  toolBtns[1].addEventListener('click',()=>zoomBy(1.37));
  back.addEventListener('click',leaveCity);
- toolBtns[2].addEventListener('click',fitSelectedCity);
+ toolBtns[2].addEventListener('click',()=>localMode?homeStation?.reset():fitSelectedCity());
  toolBtns[3].addEventListener('click',()=>{
   if(activeCity!==currentCity)enterCity(currentCity);
   if(activeCity==='kirihama'){
@@ -731,7 +754,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    else fitSelectedCity();
   }else centerOn(atlas.CITY_BY_ID[currentCity]||hereCity,Math.max(3.45,scale));
  });
- const wheel=e=>{e.preventDefault();
+ const wheel=e=>{if(localMode)return;e.preventDefault();
   const r=map.getBoundingClientRect();
   zoomBy(Math.exp(-clamp(e.deltaY,-500,500)*.0014),e.clientX-r.left,e.clientY-r.top);
  };
@@ -739,7 +762,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  map.tabIndex=0;
  map.addEventListener('keydown',e=>{
   if(e.target.closest('button')||e.target.closest('input'))return;
-  if(e.key==='Escape'){if(!popup.hidden)clear();else leaveCity();return}
+  if(e.key==='Escape'){if(localMode){leaveHomeStation();return}if(!popup.hidden)clear();else leaveCity();return}
   if(e.key==='+'||e.key==='='){e.preventDefault();zoomBy(1.25)}
   else if(e.key==='-'){e.preventDefault();zoomBy(.8)}
   else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
@@ -750,7 +773,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   }
  });
  map.addEventListener('pointerdown',e=>{
-  if(editorUI?.isTarget(e.target))return;
+  if(localMode||editorUI?.isTarget(e.target))return;
   if(e.button!==0||e.target.closest('button,.pw-dot-chrome,.pw-transit-popup,.pw-transit-line-hit'))return;
   if(e.pointerType==='touch'){
    fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -764,6 +787,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   map.setPointerCapture?.(e.pointerId);
  });
  map.addEventListener('pointermove',e=>{
+  if(localMode)return;
   if(editorUI?.handlePointerMove(e))return;
   if(fingers.has(e.pointerId))fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pinch&&fingers.size>=2){
@@ -781,6 +805,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   position();
  });
  map.addEventListener('pointerup',e=>{
+  if(localMode)return;
   if(editorUI?.handlePointerUp(e))return;
   fingers.delete(e.pointerId);
   if(pinch){if(fingers.size<2)pinch=null;drag=null;return}
@@ -789,6 +814,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(hadMove)position();
  });
  map.addEventListener('pointercancel',e=>{
+  if(localMode)return;
   if(editorUI?.handlePointerUp(e))return;
   fingers.delete(e.pointerId);pinch=null;drag=null;
  });
