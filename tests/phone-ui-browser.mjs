@@ -16,7 +16,7 @@ const server=createServer((req,res)=>{
   catch{if(!res.headersSent)res.writeHead(404);res.end('not found')}
 });
 await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
-const url='http://127.0.0.1:'+server.address().port+'/index.html?scene=classroom';
+const url='http://127.0.0.1:'+server.address().port+'/index.html';
 mkdirSync('artifacts/phone',{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
 try{
