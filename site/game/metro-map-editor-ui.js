@@ -197,8 +197,16 @@ function create(options){
   tool='select';lastWarning='';render();
   if(id)onFocusStation?.(model.getStation(id));
  });
+ nameField.addEventListener('change',()=>{
+  if(!selectedStation)return;
+  try{
+   if(model.renameStation(selectedStation,nameField.value)){
+    lastWarning='站名已更新 · 保存到游戏后即可使用';render();
+   }else message('请输入 1–36 个字符的站名');
+  }catch(err){message(err.message||'站名修改失败')}
+ });
  nameField.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){e.preventDefault();renameButton.click();nameField.blur()}
+  if(e.key==='Enter'){e.preventDefault();nameField.blur()}
  });
  const status=()=>{
   const edge=currentEdge(),s=model.getStation(selectedStation);
