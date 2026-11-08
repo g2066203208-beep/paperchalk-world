@@ -4,10 +4,10 @@
   "separateFrom": [
     "site/data/characters/registry.json"
   ],
-  "indexPolicy": "普通路人统一人物集：C001～C005 五张三视图原始 PNG 已进入 GitHub，M003 已批准老爷爷保留四视图及透明精灵；共六人。原图存在不代表透明切图或游戏运行时完成。",
+  "indexPolicy": "普通路人 NPC 统一收录生活市民和同校普通学生；已有六名市民 + 已批准一名学校三人组学生 SG01 的 RGB 原图。SG02/SG03 为待绘制规划条目，不能记为图片入库；已有老爷爷 M003 保留原四视图。",
   "assetImportZip": "npc-civilians-source-images-20261108.zip",
   "assetBundleStatus": "four_original_1024px_RGB_PNG_committed_to_GitHub_main_20261108",
-  "sourceFilenameConvention": "C001-C005: site/assets/characters/civilians/npc-c00X/three-view-original.png; M003: site/assets/characters/metro/npc-m003/approved-four-poses.png",
+  "sourceFilenameConvention": "C001-C005: site/assets/characters/civilians/npc-c00X/three-view-original.png; SG01: site/assets/characters/civilians/schoolgirls/sg01/three-view-original.png; M003: site/assets/characters/metro/npc-m003/approved-four-poses.png",
   "actualSourceOrder": [
     "side_left",
     "front",
@@ -23,7 +23,7 @@
     1024
   ],
   "sourceFormat": "RGB PNG white background",
-  "approvalScope": "用户上传六位路人的正面素材；C001～C005 原始 PNG 均 GitHub 已实传，M003 已批准 RGBA；C005 视觉美术还需审核，其余独立状态图和游戏实装仍待完成",
+  "approvalScope": "六位原有市民和 SG01 高马尾女学生原图均实传 GitHub；SG01 三视图母图获用户同意，SG02/SG03 尚未生成。游戏注册和其余状态图独立后续验收。",
   "characters": [
     {
       "id": "NPC-C001",
@@ -359,8 +359,97 @@
         "sourceImageUserAccepted": false,
         "staging": "用户上传完整RGB原始三视图；已提交GitHub。仅待用户视觉确认，游戏未注册。"
       }
+    },
+    {
+      "id": "NPC-SG01",
+      "slug": "sg01",
+      "label": "女主学校三人队①｜娇小高马尾手机女生",
+      "category": "school_civilian_npc",
+      "role": "schoolgirl",
+      "sceneGroup": "heroine_school_trio",
+      "visualCanon": {
+        "build": "petite, small frame, narrow shoulders",
+        "hair": "深棕高马尾、整齐刘海",
+        "outfit": "深午夜蓝近黑双扣西装、白衬衫、酒红长领带、炭灰短百褶裙、黑色小腿袜、深棕近黑乐福鞋",
+        "behavior": "边慢走边看手机，动作自然"
+      },
+      "source": {
+        "path": "site/assets/characters/civilians/schoolgirls/sg01/three-view-original.png",
+        "sha256": "32687ac374ccdb7f3ffb830a9a005a6a70ffa294f6fa570e06776d392d60121a",
+        "bytes": 623012,
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "mode": "RGB",
+        "actualImageLeftToRight": [
+          "side_left",
+          "front",
+          "back"
+        ],
+        "committedToRepository": true,
+        "gitCommit": "a1638baa54aa4895b53c3b41a56fbc5c278b842e",
+        "gitBlobSha": "4f1443d9d6fcd83829ea77cd837365c01152c1e8",
+        "userSupplied": true
+      },
+      "promptReference": "docs/NPC_SG01_ANIMA_DYNAMIC_THREE_VIEW_PHONE_WALK_20261108.md",
+      "approval": {
+        "sourceArtApproved": true,
+        "scope": "three-view RGB master source only",
+        "note": "用户确认本版可作为第一个学生妹并指示上传 GitHub；手机动作存在轻微差异，不影响母图批准"
+      },
+      "states": {
+        "communicate": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "rest": {
+          "status": "not_drawn",
+          "path": null
+        },
+        "death": {
+          "status": "not_drawn",
+          "path": null
+        }
+      },
+      "production": {
+        "registeredForGame": false,
+        "gameApproved": false,
+        "hasRealAlpha": false,
+        "heightMeters": null,
+        "sourceImageUserAccepted": true,
+        "artApproved": true,
+        "staging": "原始三视图 RGB PNG 623012 bytes 已实际上传 GitHub 且逐文件验证 sha；尚无透明 Alpha 和游戏路人注册"
+      }
     }
   ],
   "planned": [],
-  "commonArtRule": "基础立绘发型三视角一致；普通场景阴天漫射光、不烘焙硬影；人物实际高度游戏数据单独处理"
+  "commonArtRule": "基础立绘发型三视角一致；普通场景阴天漫射光、不烘焙硬影；人物实际高度游戏数据单独处理",
+  "schoolTrio": {
+    "roster": [
+      "NPC-SG01",
+      "NPC-SG02",
+      "NPC-SG03"
+    ],
+    "directory": "site/data/npc/civilians/school-trio/README.md",
+    "uniformCanon": "docs/SCHOOL_UNIFORM_FEMALE_CANON_20261108.md",
+    "currentApprovedMaster": [
+      "NPC-SG01"
+    ],
+    "planned": [
+      {
+        "id": "NPC-SG02",
+        "look": "深蜜棕晒黑肤色、蜂蜜金齐肩卷发、较高个，校服敞开、领带松系、袜子略堆",
+        "personality": "自信俏皮的黑皮辣妹",
+        "promptReference": "docs/NPC_SG02_ANIMA_DYNAMIC_THREE_VIEW_CHEERFUL_WALK_20261108.md",
+        "status": "prompt_only_no_png"
+      },
+      {
+        "id": "NPC-SG03",
+        "look": "未最终锁定（应与 SG01/SG02 明显不同）",
+        "personality": "待进一步设计",
+        "status": "not_drawn"
+      }
+    ]
+  }
 }
