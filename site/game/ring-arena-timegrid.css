@@ -7,7 +7,7 @@
  left:0!important;right:0!important;width:100%!important;max-width:none!important;
 }
 #ring-arena-controls .ring-timegrid{
- --film-h:clamp(55px,10.15vh,96px);
+ --film-h:clamp(55px,11.2vh,104px);
  --film-rail:17px;
  --film-frame-bg:#1d1b20;
  position:absolute;z-index:9;
