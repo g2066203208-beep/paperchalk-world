@@ -243,28 +243,37 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    const points=orthogonal(a,b,((atlas.LINKS.indexOf(l)%3)-1)*CELL);
    const pseudo={...l,mode};
    lineGroup(regional,pseudo,from,to,points,'regional',(e,node)=>{
-    // A regional track is an actual travel action, not only a shortcut to
-    // another city's subway viewer. Plan the full journey from the player's
-    // current physical location to the chosen city's interchange.
-    const destination=network.HUB(to),journey=network.journey(here,destination);
-    const canTravel=!!journey?.legs?.length&&!HOME.has(snapshot?.location)&&
-      snapshot?.nightStatus==='day'&&!snapshot?.metro?.onboard;
+    // Both endpoints of the same physical service are accessible. Direction
+    // is not inferred from how an SVG segment happened to be authored.
+    const endpoints=[{id:from,city:a},{id:to,city:b}].map(item=>{
+     const destination=network.HUB(item.id);
+     const journey=network.journey(here,destination);
+     return {...item,destination,journey};
+    });
+    const canTravel=snapshot?.nightStatus==='day'&&!snapshot?.metro?.onboard&&
+      !HOME.has(snapshot?.location);
     const detail=HOME.has(snapshot?.location)?
       '请先到玄关出门，再规划城际路线':
-      !journey?.legs?.length?
-       here===destination?'你已在该交通枢纽':'当前没有可用的去回线路':
-       '至'+b.name+'交通枢纽 · 约'+journey.minutes+'分钟 · '+journey.transfers+'次换乘';
+      '城际交通 · '+(atlas.SERVICE_LABELS[l.mode]||l.mode)+' · 请选择目的地';
     showMenu(e,node,l.name,detail,[
-      {label:'查看'+b.name+'地铁图',run:()=>{clear();enterCity(to)}},
-      {label:'乘车前往'+b.name,primary:true,disabled:!canTravel,run:async()=>{
+     ...endpoints.map(item=>({
+      label:'乘车前往'+item.city.name,primary:true,
+      disabled:!canTravel||!item.journey?.legs?.length,
+      run:async()=>{
        if(busy)return;busy=true;clear();
        try{
-        const res=await onWorldTravel?.(destination,journey);
+        const res=await onWorldTravel?.(item.destination,item.journey);
         if(!res?.ok)notify(res?.reason||'当前无法前往');
        }catch(_){notify('城际旅行失败')}finally{busy=false}
-      }}
+      }
+     })),
+     ...endpoints.map(item=>({
+      label:'查看'+item.city.name+'地铁图',
+      run:()=>{clear();enterCity(item.id)}
+     }))
     ]);
-    if(journey?.legs?.length)previewRegionalRoute(journey.legs);
+    const preview=endpoints.find(item=>item.journey?.legs?.length);
+    if(preview)previewRegionalRoute(preview.journey.legs);
    });
   }
  }
