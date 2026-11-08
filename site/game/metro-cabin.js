@@ -56,8 +56,39 @@ function create({root,engine,onExit,onFeedback}){
  const motion=global.PaperWorldMetroMotion?.create?.()||null;
  const journeyTime=global.PaperWorldMetroMotion?.DURATION_MS||9000;
  const platformDwellMs=1650; // short cinematic time scale; doors remain open
- let rideEpoch=0;
+ let rideEpoch=0,doorSequence=0;
+ const door={open:0,start:0,from:0,target:0,duration:900,moving:false};
  const delay=ms=>new Promise(resolve=>global.setTimeout(resolve,ms));
+ const ease=x=>{const t=clamp(x,0,1);return t*t*(3-2*t)};
+ function sampleDoors(time=global.performance.now()){
+  if(door.moving){
+   const progress=clamp((time-door.start)/door.duration,0,1);
+   door.open=door.from+(door.target-door.from)*ease(progress);
+   if(progress>=1){door.open=door.target;door.moving=false}
+  }
+  if(section.dataset.renderer==='ring-3d')
+   global.PaperWorldGameRingArena?.setTransitDoorOpen?.(door.open,false);
+  section.dataset.doorState=door.moving?'moving':door.open>.995?'open':'closed';
+  return door.open;
+ }
+ async function animateDoors(target,duration=900){
+  if(!visible)return false;
+  if(section.dataset.renderer!=='ring-3d'){
+   await delay(350);return visible;
+  }
+  sampleDoors();
+  const sequence=++doorSequence,epoch=rideEpoch;
+  door.from=door.open;door.target=clamp(target,0,1);
+  door.start=global.performance.now();
+  door.duration=Math.max(80,duration);
+  door.moving=Math.abs(door.target-door.from)>.005;
+  if(!door.moving)return true;
+  await delay(door.duration+65);
+  if(!visible||rideEpoch!==epoch||doorSequence!==sequence)return false;
+  door.open=door.target;door.moving=false;
+  sampleDoors();
+  return true;
+ }
  // Train's camera, floor, walls and actor positions never translate.
  // Only the scenery OUTSIDE the glass is animated by travelled distance.
  async function animateRailLeg(){
@@ -67,6 +98,9 @@ function create({root,engine,onExit,onFeedback}){
   }
   if(motion.isMoving())return false;
   const epoch=rideEpoch;
+  // The train physically cannot depart while either door leaf is open.
+  if(!await animateDoors(0,930))return false;
+  if(!visible||epoch!==rideEpoch)return false;
   motion.begin(global.performance.now());
   section.dataset.trainMoving='true';
   section.dataset.travelPhase='departing';
@@ -78,6 +112,8 @@ function create({root,engine,onExit,onFeedback}){
   global.PaperWorldGameRingArena?.setTransitDynamics?.(arrival);
   section.dataset.trainMoving='false';
   section.dataset.travelPhase='docked';
+  // Open all four physical metal leaves after the wheel speed reaches 0.
+  if(!await animateDoors(1,1050))return false;
   return true;
  }
  async function advanceOneStation(){
@@ -98,9 +134,10 @@ function create({root,engine,onExit,onFeedback}){
   raf=requestAnimationFrame(render);
   const threeD=section.dataset.renderer==='ring-3d';
   // One RAF owner. Stationary coach at 12fps, in-motion exterior at ~30fps.
-  const interval=threeD?(motion?.isMoving()?33:82):40;
+  const interval=threeD?(motion?.isMoving()||door.moving?33:82):40;
   if(time-last<interval)return;last=time;frame++;
   if(threeD){
+   sampleDoors(time);
    const stage=motion?.snapshot(time);
    if(stage){
     section.dataset.travelPhase=stage.phase;
