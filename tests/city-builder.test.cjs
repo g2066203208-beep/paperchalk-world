@@ -108,6 +108,25 @@ test('moving real metro interchange updates all attached editable rail segments'
   assert.deepEqual(plain(endpoint),[m.x+1,m.y]);
  }
 });
+test('90-degree module rotation alters real dot geometry rather than only metadata',()=>{
+ const e=makeEditor();e.choose('home');
+ const id=e.addPath('road',[[5,5],[10,7]]);
+ assert.deepEqual(plain(e.state().modules.find(m=>m.id===id).points),
+  [[5,5],[10,5],[10,7]]);
+ assert.ok(e.update(id,{angle:1}));
+ assert.deepEqual(plain(e.state().modules.find(m=>m.id===id).points),
+  [[5,5],[5,10],[3,10]]);
+ const park=e.insert('park',6,6,{w:5,h:2});
+ const before=e.state().modules.find(m=>m.id===park);
+ assert.equal(before.w,5);assert.equal(before.h,2);
+ assert.ok(e.update(park,{angle:1}));
+ const after=e.state().modules.find(m=>m.id===park);
+ assert.equal(after.w,2);assert.equal(after.h,5);
+ e.choose('kirihama');
+ const connected=e.state().modules.find(m=>m.type==='rail'&&m.fromStation&&m.toStation);
+ assert.equal(e.update(connected.id,{angle:1}),false,
+  'official connected metro track must not silently detach from station IDs');
+});
 test('undo/redo, local save/reload and export/import roundtrip preserve each independent component',()=>{
  const disk=store(),e=B.createEditor(official,disk);
  e.choose('home');
