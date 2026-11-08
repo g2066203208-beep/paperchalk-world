@@ -55,6 +55,23 @@ try{
   'HUD must have NO giant opaque rectangular panel');
  assert.equal(hudStyle.border,'0px');
  assert.equal(hudStyle.shadow,'none');
+ const viewSafe=await page.evaluate(()=>{
+  const state=window.PaperWorldGameRingArena.inspect();
+  const ring=window.PaperWorldRingArena;
+  const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
+   'enemy-2':{left:.32,right:.69,top:0,bottom:1},
+   'enemy-3':{left:.30,right:.76,top:0,bottom:1},
+   'enemy-4':{left:0,right:.58,top:0,bottom:1}};
+  const canvas=document.querySelector('#ring-arena-canvas').getBoundingClientRect();
+  const hud=document.querySelector('.ring-timegrid').getBoundingClientRect();
+  const right=Math.max(...state.actors.enemies.map(e=>
+   ring.portraitVisibleBounds(e,state.camera,uv[e.id],state.projectionAspect).right));
+  return {rightPixel:canvas.left+(right+1)*canvas.width/2,
+   hudLeft:hud.left,shift:state.hudSafeShiftX};
+ });
+ assert.ok(viewSafe.shift<-.04,'real 3D camera must keep enemy-4 clear of HUD');
+ assert.ok(viewSafe.rightPixel+8<viewSafe.hudLeft,
+  'all four enemy silhouettes must remain LEFT of the right-edge HUD');
  assert.equal(first.timegrid.version,'1.7');
  assert.equal(await page.locator('.tg-unit .tg-portrait img').count(),8);
  assert.equal(await page.locator('.tg-target-track').count(),8);
