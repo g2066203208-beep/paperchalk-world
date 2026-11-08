@@ -309,7 +309,25 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const editorUI=global.PaperWorldMetroMapEditorUI?.create?.({
   map,svg,urban,stops,metroLayer,tools,metro,geometry,
   localPoint,rounded,camera:()=>({x,y,scale}),
-  onFeedback:notify,getCity:()=>activeCity,onRefresh:()=>position()
+  onFeedback:notify,getCity:()=>activeCity,onRefresh:()=>position(),
+  onStart:()=>{clear();cityOverlay?.togglePanel(false)},
+  onFocusStation:station=>{
+   centerOn({...localPoint(station),exact:true},Math.max(scale,1.5));
+  },
+  onFocusLine:(line,blueprint)=>{
+   if(!line?.stops?.length)return;
+   const points=line.stops.map(id=>blueprint.stations[id]).filter(Boolean)
+    .map(localPoint);
+   if(!points.length)return;
+   const xs=points.map(p=>p.x),ys=points.map(p=>p.y);
+   const left=Math.min(...xs),right=Math.max(...xs);
+   const top=Math.min(...ys),bottom=Math.max(...ys);
+   const v=viewport();
+   const fit=Math.min((v.w-145)/(right-left+110),
+    (v.h-165)/(bottom-top+110));
+   centerOn({x:(left+right)/2,y:(top+bottom)/2,exact:true},
+    Math.max(minScale,Math.min(3.2,fit)));
+  }
  })||null;
  for(const l of metro.LINES){
   for(const [from,to] of geometry.segments(l)){
@@ -416,13 +434,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  const homeStation=global.PaperWorldHomeStationMap?.create?.({
   map,atlas,metro,here,onTravel,notify,onUp:leaveHomeStation
  })||null;
- // Cities (including the current one) are playable ASSEMBLIES of real,
- // individually editable dot-grid components, not background map images.
- const cityBuilder=global.PaperWorldCityBuilderUI?.create?.({
-  map,tools,atlas,metro,geometry,onFeedback:notify,
-  chooseInitial:()=>localMode?'home':activeCity||currentCity
- })||null;
- global.PaperWorldCityBuilderStudioDebug=cityBuilder;
+ // Detached city-builder drafts are not a second competing metro editor.
+ // Their stored blueprints remain intact, but only the real metro is shown here.
+ const cityBuilder=null;
+ global.PaperWorldCityBuilderStudioDebug=null;
  const areaNodes=[];
  for(const a of atlas.AREAS){
   const label=element('span','pw-dot-area-label',a.name);
@@ -493,7 +508,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(id==='kirihama'){
    const hub=localPoint(metro.STATIONS.central);
    cityOverlay?.resetSelection();
-   centerOn({x:hub.x+50,y:hub.y+28,exact:true},Math.max(scale,2.2));
+   centerOn({x:hub.x,y:hub.y,exact:true},Math.max(scale,1.18));
   }
  }
  function openHomeStation(){
@@ -510,6 +525,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  function leaveCity(){
   if(localMode){leaveHomeStation();return}
   if(activeCity===null)return;
+   if(editorUI?.isEditing())editorUI.toggle(false);
   localMode=false;homeStation?.hide();
   activeCity=null;drag=null;pinch=null;fingers.clear();clear();
   cityOverlay?.togglePanel(false);
@@ -525,7 +541,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    // Fit ONLY subway infrastructure. Off-network cafés, forests, and road
    // access points must never determine the metro camera bounds.
    pts.length=0;
-   for(const stop of Object.values(metro.STATIONS))
+   for(const stop of Object.values(editorUI?.isEditing()?editorUI.model.data().stations:metro.STATIONS))
     if(!stop.locked)pts.push(localPoint(stop));
   }
   const xs=pts.map(p=>location(p).x),ys=pts.map(p=>location(p).y);
@@ -636,8 +652,8 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   map.dataset.compact=String(!scoped&&scale<.65);
   map.dataset.smallScreen=String(v.w<900);
   back.hidden=!scoped;emptyMetro.hidden=!scoped||hasMetro;
-  homeDown.hidden=localMode||activeCity!=='kirihama'||here!=='entrance';
-  subwayLegend.hidden=!hasMetro;
+  homeDown.hidden=localMode||activeCity!=='kirihama'||here!=='entrance'||!!editorUI?.isEditing();
+  subwayLegend.hidden=!hasMetro||!!editorUI?.isEditing();
   heading.querySelector('.pw-dot-title').textContent=scoped?
    city.name+' · 地铁线路图':'城际交通总图';
   heading.querySelector('.pw-dot-subtitle').textContent=scoped?
@@ -654,7 +670,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    '城际交通总图 · 点击城市查看独立地铁';
   caption.textContent=scoped?city.name+' · 地铁线路':'十城城际交通';
   sub.textContent=scoped?
-   hasMetro?'拖动大地图查看城区和地点 · 点击地点就地操作 · 地铁仍是真实轨道':
+   hasMetro?'拖动查看城区 · 点击线路或车站查看乘车信息 · 编辑地铁可直接调整线网':
     '本城市暂无正式地铁线路':
    '各城市地铁独立显示 · 不在总图混合';
   canvas.style.setProperty('--dot-city-label-size',v.w<900?'15px':'19px');
@@ -750,7 +766,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   if(first){
    activeCity=null;
    centerOn({x:W*.5,y:H*.5},minScale);
-   if(here==='entrance'&&currentCity==='kirihama')openHomeStation();
+   if(currentCity==='kirihama')enterCity('kirihama');
   }else if(overview)centerOn({x:W*.5,y:H*.5},minScale);
   else centerOn(oldCenter,Math.max(minScale,scale));
  }
