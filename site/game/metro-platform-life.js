@@ -44,8 +44,42 @@
   const hum=.975+.025*Math.sin(t*.0015+station*1.37);
   return clamp(dip*hum,.18,1);
  }
+ // Unlike the historical demonstration atlas, these are REAL approved
+ // identities selected by the persistent NPC route/boarding controller.
+ // No actor is invented here; no random platform placement or teleport.
+ const REAL_WAIT_X=[-3.55,-1.48,1.22,3.55,-4.1,4.03];
+ function sampleApproved({realActors=[],distanceMeters=0,stationExposure=1,
+   nowMs=0,anomaly=false}={}){
+  const offset=stationOffset(distanceMeters),exposed=clamp(stationExposure);
+  const passengers=[];
+  if(exposed<.045||anomaly)return passengers;
+  const unique=new Set();
+  for(const person of realActors){
+   if(!person?.id||!person.art||unique.has(person.id)||passengers.length>=6)continue;
+   unique.add(person.id);
+   const i=passengers.length,progress=clamp(person.progress),role=person.role;
+   const waitX=REAL_WAIT_X[i],doorX=i%2?2.67:-2.67;
+   let x=waitX,z=5.54+(i%3)*.15;
+   const walk=role==='boarding'||role==='alighting';
+   if(role==='boarding'){
+    x=mix(waitX,doorX,progress);z=mix(z,8.31,progress);
+   }else if(role==='alighting'){
+    x=mix(doorX,waitX,progress);z=mix(8.31,z,progress);
+   }
+   const moving=walk&&progress>.025&&progress<.975;
+   passengers.push({id:person.id,role,frame:null,
+    x:x-offset,z,y:-.16+(moving?Math.abs(Math.sin(nowMs*.01+i))*.013:0),
+    height:person.geometry?.heightMeters||1.6,
+    opacity:exposed,progress,
+    view:role==='boarding'&&progress>.36?'back':
+     role==='alighting'&&progress<.60?'front':'side_left',
+    geometry:person.geometry,sprites:person.sprites,
+    moving,lean:moving?.009*Math.sin(nowMs*.011+i):0});
+  }
+  return passengers;
+ }
  function sample({distanceMeters=0,stationExposure=1,doorOpen=0,moving=false,
-   dwellMs=0,nowMs=0,doorOpenedEver=false,anomaly=false}={}){
+   dwellMs=0,nowMs=0,doorOpenedEver=false,anomaly=false,realActors=null}={}){
   const offset=stationOffset(distanceMeters);
   const station=stationNumber(distanceMeters);
   const exposed=clamp(stationExposure);
@@ -91,8 +125,9 @@
     lean:p.role==='sitting' ? .012*Math.sin(time*.001+i) : movingFeet ? .014*Math.sin(time*.011+i) : 0};
   });
   return {station,offsetMeters:offset,lampFactor:lightCue(nowMs,station,anomaly),
-   passengers:exposed>.045&&!anomaly?crowd.filter(p=>p.opacity>.025):[]};
+   passengers:Array.isArray(realActors)?sampleApproved({realActors,distanceMeters,stationExposure,nowMs,anomaly}):
+    exposed>.045&&!anomaly?crowd.filter(p=>p.opacity>.025):[]};
  }
  return Object.freeze({ATLAS,CELL_WIDTH,CELL_HEIGHT,ATLAS_COLUMNS,LEG_METERS,
-  PROFILE,stationNumber,stationOffset,lightCue,sample});
+  PROFILE,stationNumber,stationOffset,lightCue,sample,sampleApproved});
 });
