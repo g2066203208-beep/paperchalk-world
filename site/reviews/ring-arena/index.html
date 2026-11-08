@@ -36,4 +36,19 @@ code{font-size:12px;color:#b8c2d1}
 <figure><a href="https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/ally-4-1280x720.png"><img src="https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/ally-4-1280x720.png" alt="切换第四名队友时的真实4v4战斗画面"></a><figcaption>04 · 队友四越肩视角</figcaption></figure>
 </div>
 <figure class="wide"><a href="https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/hero-wide-1917x906.png"><img src="https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/hero-wide-1917x906.png" alt="1917乘906像素主角四对四战斗宽屏实机截图"></a><figcaption>主角宽屏实机 · 1917 × 906</figcaption></figure>
+
+<h2 style="font-weight:600;font-size:19px;margin:32px 0 10px">鼠标环顾舒适度 · 左右极限实机</h2>
+<p>以下两张由真实 WebGL 画面截取：仅视线轻微转动，人物世界位置、原始越肩摄像机眼点和 FOV 不改变；左右最大 7.5°。若截图尚未发布，先在下方检查对应测试的提交版本。</p>
+<div class="grid">
+<figure><a href="https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/human-look-left-1280x720.png"><img src="https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/human-look-left-1280x720.png" alt="原地向左轻微环顾的真实游戏截图" loading="lazy"></a><figcaption>鼠标移到最左侧 · 最多 -7.5°</figcaption></figure>
+<figure><a href="https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/human-look-right-1280x720.png"><img src="https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/human-look-right-1280x720.png" alt="原地向右轻微环顾的真实游戏截图" loading="lazy"></a><figcaption>鼠标移到最右侧 · 最多 +7.5°</figcaption></figure>
+</div>
+<p id="capture-revision" style="margin-top:20px">截图版本核对中……</p>
+<script>
+fetch('https://raw.githubusercontent.com/g2066203208-beep/paperchalk-world/ring-arena-screenshots/ring-arena/manifest.json?v=human-look-v2',{cache:'no-store'})
+.then(r=>r.json()).then(m=>{
+ document.getElementById('capture-revision').textContent='截图对应源提交：'+(m.commit||'未知')+
+  '。若与 GitHub 最新提交不一致，此处图片仍是旧版，不能用于新版本验收。';
+}).catch(()=>{document.getElementById('capture-revision').textContent='无法读取截图版本，请检查 GitHub Actions。';});
+</script>
 </main></body></html>
