@@ -11,7 +11,7 @@
  'use strict';
  const KEY='paperchalk-npc-lives-v1',VERSION=1,MINUTES_DAY=1440;
  const DEFINITIONS=Object.freeze([
-  {id:'NPC-G001',name:'结伴出行的三位女同学',members:['NPC-G001-A','NPC-G001-B','NPC-G001-C'],kind:'student',home:'kirihama-07',interest:['rumor','festival','social','concert'],image:'./assets/characters/npc-g001/joy-master.webp'},
+  {id:'NPC-G001',name:'结伴出行的三位女同学',members:['NPC-G001-A','NPC-G001-B','NPC-G001-C'],kind:'student',home:'kirihama-07',interest:['rumor','festival','social','concert'],image:null,artStatus:'rejected-needs-redesign'},
   {id:'female2',name:'女二',kind:'student',home:'kirihama-07',interest:['school','rumor','social']},
   {id:'classmate',name:'同班同学',kind:'student',home:'kirihama-07',interest:['school','social']},
   {id:'clerk',name:'店员',kind:'worker',work:'convenience',home:'kirihama-07',interest:['social','festival']},
