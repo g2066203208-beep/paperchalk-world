@@ -55,6 +55,26 @@
     if(nodes.has(hub))addEdge(a.id,hub,Math.hypot(a.x-nodes.get(hub).x,a.y-nodes.get(hub).y)/14,'walk');
    }
   }
+  // Real intra-city subway legs. A traveller only appears in the player's
+  // carriage when their timed line+direction+origin leg matches that train.
+  // No invented subway service to other cities or instantaneous station hops.
+  if(metro?.LINES){
+   for(const line of metro.LINES){
+    if(line.locked||!Array.isArray(line.stops))continue;
+    const n=line.stops.length;
+    for(let i=0;i<n;i++){
+     for(const dir of [-1,1]){
+      const next=i+dir,at=(next+n)%n;
+      if(!line.ring&&(next<0||next>=n))continue;
+      const from=line.stops[i],to=line.stops[at];
+      if(!nodes.has(from)||!nodes.has(to))continue;
+      // Normal train trip between stations takes five game minutes.
+      const edge={to,minutes:5,mode:'metro',lineId:line.id,direction:dir};
+      links.get(from).push(edge);
+     }
+    }
+   }
+  }
   // Intercity legs use the existing authored atlas transport network.
   for(const city of atlas?.CITIES||[])for(const edge of atlas.connections?.(city.id)||[]){
    if(nodes.has('hub-'+city.id)&&nodes.has('hub-'+edge.to))
