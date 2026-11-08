@@ -1,0 +1,37 @@
+name: Civilian NPC binary art validation
+
+on:
+  push:
+    paths:
+      - 'site/data/npc/civilians/**'
+      - 'site/assets/characters/civilians/**'
+      - 'site/assets/characters/metro/npc-m003/**'
+      - 'site/data/npc/metro-commuter-npc-m003.v2.json'
+      - 'scripts/validate_civilian_npc_sources.py'
+      - 'tests/civilian-npc-gallery.test.cjs'
+      - '.github/workflows/civilian-npc-asset-check.yml'
+  pull_request:
+    paths:
+      - 'site/data/npc/civilians/**'
+      - 'site/assets/characters/civilians/**'
+      - 'site/assets/characters/metro/npc-m003/**'
+      - 'scripts/validate_civilian_npc_sources.py'
+      - 'tests/civilian-npc-gallery.test.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-assets:
+    name: SHA256, Git blob SHA, PNG dimensions and civilian gallery
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify every original NPC source and M003 existing alpha assets
+        run: python3 scripts/validate_civilian_npc_sources.py
+      - name: Verify five civilian identities and metadata
+        run: node --test tests/civilian-npc-gallery.test.cjs
