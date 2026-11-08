@@ -1,19 +1,22 @@
-/* Battle HUD reset 2026-11-08: remove rejected round-one UI and 35mm reel.
- * Pure placement and real HP only. No imitation film stock, holes, cards,
- * metallic gradients, painted portrait frames or large action planner.
- * Decorative UI art must be separately authored and approved.
+/* Paperchalk battle / genuine GPT-rendered 35mm celluloid film v1.9.
+ * The frame/holes/scratches are a transparent authored image, not CSS art.
+ * One image is reused for every horizontal frame in one VERTICAL roll.
+ * Membership transitions preserve actual DOM nodes across Timegrid ticks.
  */
 #view.ring-arena-active:not(.ring-arena-transit) #ring-arena-canvas{
  left:0!important;right:0!important;width:100%!important;max-width:none!important;
 }
 #ring-arena-controls .ring-timegrid{
- position:absolute!important;inset:0!important;width:100%!important;
- height:100%!important;max-width:none!important;max-height:none!important;
- margin:0!important;padding:0!important;z-index:9;
- pointer-events:none;background:none!important;border:0!important;
- border-radius:0!important;box-shadow:none!important;
- color:#eee9e7;font:11px/1.15 system-ui,"Noto Sans SC",sans-serif;
- overflow:visible!important;
+ --tg-frame-w:clamp(112px,10.5vw,154px);
+ --tg-frame-h:calc(var(--tg-frame-w)*.5625);
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;
+ max-width:none!important;max-height:none!important;
+ margin:0!important;padding:0!important;
+ z-index:9;pointer-events:none;color:#eee8e2;
+ font:11px/1.15 system-ui,"Noto Sans SC",sans-serif;
+ background:none!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;overflow:visible!important;
 }
 #ring-arena-controls .ring-timegrid::before,
 #ring-arena-controls .ring-timegrid::after{content:none!important;display:none!important}
@@ -21,85 +24,117 @@
 #ring-arena-controls .tg-screenreader{
  position:absolute!important;width:1px!important;height:1px!important;
  padding:0!important;margin:-1px!important;overflow:hidden!important;
- clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+ clip:rect(0,0,0,0)!important;white-space:nowrap!important;
+ border:0!important;
 }
-#ring-arena-controls .tg-roster{position:absolute;inset:0;pointer-events:none}
-#ring-arena-controls .tg-team{
- position:absolute;bottom:max(12px,env(safe-area-inset-bottom));
- display:flex;flex-flow:row nowrap;gap:clamp(5px,.65vw,11px);
- width:max-content;max-width:44%;align-items:flex-end;
- pointer-events:none;background:none;border:0;box-shadow:none;
+#ring-arena-controls .tg-film-viewport{
+ position:absolute;top:50%;right:clamp(6px,1.2vw,22px);
+ transform:translateY(-50%);
+ width:var(--tg-frame-w);
+ max-height:calc(100% - 18px);
+ overflow:hidden;
+ pointer-events:none;
+ isolation:isolate;
 }
-#ring-arena-controls .tg-team.ally{left:clamp(10px,1.5vw,24px)}
-#ring-arena-controls .tg-team.enemy{right:clamp(10px,1.5vw,24px)}
+#ring-arena-controls .tg-reel{
+ position:relative;width:100%;
+ display:flex;flex-direction:column;gap:0;align-items:stretch;
+ will-change:transform;transform:translate3d(0,0,0);
+}
+#ring-arena-controls .tg-ready .tg-reel{
+ animation:tg-reel-scroll-in .82s cubic-bezier(.16,.8,.18,1) both;
+}
+@keyframes tg-reel-scroll-in{
+ 0%{transform:translate3d(0,-116%,0);filter:blur(2.5px);opacity:.12}
+ 43%{filter:blur(.4px);opacity:1}
+ 73%{transform:translate3d(0,2.2%,0);filter:none}
+ 88%{transform:translate3d(0,-.7%,0)}
+ 100%{transform:translate3d(0,0,0);filter:none;opacity:1}
+}
 #ring-arena-controls .tg-row{
- position:relative;display:block;flex:0 0 auto;
- width:clamp(49px,4.9vw,68px);height:clamp(75px,12vh,92px);
- padding:0;margin:0;border:0!important;border-radius:0!important;
- background:none!important;box-shadow:none!important;
- pointer-events:none;overflow:visible;
+ display:block;flex:0 0 var(--tg-frame-h);
+ position:relative;width:100%;height:var(--tg-frame-h);
+ margin:0;padding:0;overflow:hidden;pointer-events:none;
+ background:none!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;
 }
-#ring-arena-controls .tg-row::before,
-#ring-arena-controls .tg-row::after{content:none!important;display:none!important}
+#ring-arena-controls .tg-row+.tg-row{margin-top:-2px}
+#ring-arena-controls .tg-row::before,#ring-arena-controls .tg-row::after{
+ content:none!important;display:none!important;
+}
 #ring-arena-controls .tg-portrait{
- position:absolute;top:0;left:0;width:100%;height:100%;
+ position:absolute;z-index:1;
+ left:14.6%;right:14.6%;top:6.5%;bottom:6.2%;
+ display:block;width:auto;height:auto;
  min-width:0!important;min-height:0!important;
- margin:0;padding:0!important;border:0!important;border-radius:0!important;
+ margin:0!important;padding:0!important;
+ border:0!important;border-radius:0!important;
  background:none!important;box-shadow:none!important;clip-path:none!important;
- transform:none!important;overflow:hidden;pointer-events:auto;
- cursor:pointer;touch-action:manipulation;
+ transform:none!important;overflow:hidden;
+ pointer-events:auto;cursor:pointer;touch-action:manipulation;
 }
+#ring-arena-controls .tg-row.enemy .tg-portrait{pointer-events:none}
 #ring-arena-controls .tg-portrait:focus-visible{
- outline:2px solid #e0dad6!important;outline-offset:2px;
+ outline:1px solid #dfd1bb!important;outline-offset:-2px;
 }
 #ring-arena-controls .tg-cutout{
- position:absolute;inset:0;display:block;overflow:hidden;
- border:0!important;background:none!important;border-radius:0!important;
+ display:block;position:absolute;inset:0;overflow:hidden;
+ background:rgba(18,16,18,.79);border-radius:0!important;
 }
-#ring-arena-controls .tg-cutout img{
- position:absolute;inset:0;width:100%;height:100%;
- object-fit:cover;object-position:50% 38%;
- transform:none!important;pointer-events:none;
- filter:saturate(.65) brightness(.85) contrast(1.08);
-}
-#ring-arena-controls .tg-row.enemy .tg-cutout img{
- filter:saturate(.48) brightness(.76) contrast(1.08);
-}
-#ring-arena-controls .tg-cutout::after{
- content:"";position:absolute;inset:45% 0 0;
- background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);
+#ring-arena-controls .tg-cutout .tg-face{
+ position:absolute;display:block;inset:0;
+ width:100%;height:100%;object-fit:cover;object-position:50% 35%;
  pointer-events:none;
+ filter:saturate(.72) contrast(1.09) brightness(.94);
+}
+#ring-arena-controls .tg-row.enemy .tg-face{
+ filter:saturate(.48) contrast(1.12) brightness(.77);
+}
+#ring-arena-controls .tg-film-texture{
+ display:block;position:absolute;inset:0;
+ width:100%;height:100%;z-index:4;
+ object-fit:fill;pointer-events:none;
+ filter:drop-shadow(-1px 1px 2px rgba(0,0,0,.34));
+}
+#ring-arena-controls .tg-row.current .tg-film-texture{
+ filter:brightness(1.3) drop-shadow(0 0 3px rgba(222,208,184,.32));
 }
 #ring-arena-controls .tg-identity{
- position:absolute;z-index:2;left:0;right:0;bottom:1px;
- pointer-events:none;display:block!important;background:none!important;
+ position:absolute;z-index:6;
+ left:20%;right:20%;bottom:7.5%;
+ height:auto;display:flex;flex-direction:column;
+ align-items:stretch;gap:2px;pointer-events:none;
+ background:none!important;border:none!important;
 }
-#ring-arena-controls .tg-health{display:flex;flex-direction:column;gap:3px;width:100%}
 #ring-arena-controls .tg-hp-value{
- display:block;width:100%;color:#f4f2f0;
- font:600 10px/11px "Arial Narrow",system-ui,sans-serif;
- font-variant-numeric:tabular-nums;text-align:center;
- text-shadow:0 1px 3px #000,0 1px 4px #000;
+ width:100%;height:12px;
+ font:600 clamp(9px,.80vw,11px)/12px "Arial Narrow",system-ui,sans-serif;
+ text-align:center;color:#f2ede8;
+ font-variant-numeric:tabular-nums;letter-spacing:.01em;
+ text-shadow:0 1px 3px #000,0 0 5px #000,0 1px 1px #000;
 }
-#ring-arena-controls .tg-hp-value small{color:#ddd9d6;font-size:.85em}
 #ring-arena-controls .tg-hp-bar{
- display:block;width:100%;height:3px;min-height:3px;
- background:rgba(19,14,16,.9);border:0;border-radius:0;overflow:hidden;
+ display:block;width:100%;height:2px;min-height:2px;
+ background:rgba(32,24,25,.9);overflow:hidden;
+ border:0!important;border-radius:0!important;
 }
 #ring-arena-controls .tg-hp-bar i{
- display:block;height:100%;background:#b98b8e;
- transition:width .22s ease-out;
+ display:block;height:100%;width:0;
+ background:#ba9090;
+ transition:width .19s cubic-bezier(.18,.77,.19,1);
 }
-#ring-arena-controls .tg-row.ally .tg-hp-bar i{background:#d7cbbe}
-#ring-arena-controls .tg-row.dead{opacity:.28;filter:grayscale(1)}
-#ring-arena-controls .tg-row.current .tg-hp-bar{height:4px;min-height:4px}
-#ring-arena-controls .tg-row.current .tg-hp-bar i{background:#f0e4d5}
+#ring-arena-controls .tg-row.ally .tg-hp-bar i{background:#d0c4b4}
+#ring-arena-controls .tg-row.current .tg-hp-bar i{background:#fff5de}
+#ring-arena-controls .tg-ghost{
+ position:absolute!important;z-index:8!important;pointer-events:none!important;
+}
 #ring-arena-controls .tg-quick{
- position:absolute;bottom:max(15px,env(safe-area-inset-bottom));
+ position:absolute;bottom:max(14px,env(safe-area-inset-bottom));
  left:50%;transform:translateX(-50%);
- min-width:48px!important;min-height:30px!important;
- margin:0!important;padding:2px 6px!important;
- color:#eee8e2!important;font:600 12px/1.2 system-ui,sans-serif!important;
+ min-width:44px!important;min-height:30px!important;
+ margin:0!important;padding:2px 5px!important;
+ color:#ede5dc!important;
+ font:600 12px/1.2 system-ui,sans-serif!important;
  border:0!important;border-radius:0!important;
  background:transparent!important;box-shadow:none!important;
  text-shadow:0 2px 6px #000,0 0 8px #000;
@@ -107,10 +142,9 @@
 }
 #ring-arena-controls .tg-quick:hover:not(:disabled),
 #ring-arena-controls .tg-quick:focus-visible{
- text-decoration:underline;text-underline-offset:3px;
- outline:none!important;
+ text-decoration:underline;text-underline-offset:3px;outline:none!important;
 }
-#ring-arena-controls .tg-quick:disabled{opacity:.38}
+#ring-arena-controls .tg-quick:disabled{opacity:.35}
 #ring-arena-controls .tg-tactics{display:none!important}
 #ring-arena-controls > .tg-hit-layer{
  position:absolute;inset:0 auto auto 0;z-index:12;
@@ -139,15 +173,28 @@
  background:rgba(6,6,8,.35)!important;font-size:11px!important;
 }
 @media(max-width:700px){
- #ring-arena-controls .tg-team{gap:3px;bottom:max(8px,env(safe-area-inset-bottom));max-width:45%}
- #ring-arena-controls .tg-team.ally{left:5px}
- #ring-arena-controls .tg-team.enemy{right:5px}
- #ring-arena-controls .tg-row{width:clamp(30px,8vw,39px);height:clamp(55px,7vh,70px)}
- #ring-arena-controls .tg-hp-value{font-size:8px;line-height:9px}
+ #ring-arena-controls .ring-timegrid{
+  --tg-frame-w:clamp(76px,23.5vw,101px);
+ }
+ #ring-arena-controls .tg-film-viewport{
+  right:max(3px,env(safe-area-inset-right));
+  max-height:calc(100% - 60px);
+ }
+ #ring-arena-controls .tg-row+.tg-row{margin-top:-1px}
+ #ring-arena-controls .tg-identity{gap:1px}
+ #ring-arena-controls .tg-hp-value{
+  font-size:8px;line-height:9px;height:9px;
+ }
  #ring-arena-controls .tg-hp-bar{height:2px;min-height:2px}
- #ring-arena-controls .tg-quick{font-size:10px!important;min-width:36px!important;bottom:max(12px,env(safe-area-inset-bottom))}
+ #ring-arena-controls .tg-quick{
+  font-size:10px!important;bottom:max(11px,env(safe-area-inset-bottom));
+ }
+}
+@media(max-height:580px) and (min-width:701px){
+ #ring-arena-controls .ring-timegrid{--tg-frame-w:clamp(84px,8vw,112px)}
 }
 @media(prefers-reduced-motion:reduce){
- #ring-arena-controls .tg-hp-bar i{transition:none}
- #ring-arena-controls .tg-float-hit{animation:none}
+ #ring-arena-controls .tg-ready .tg-reel{animation:none!important}
+ #ring-arena-controls .tg-hp-bar i{transition:none!important}
+ #ring-arena-controls .tg-float-hit{animation:none!important}
 }
