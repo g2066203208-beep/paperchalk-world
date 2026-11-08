@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/map-ripple-real-browser-preview.yml'
+      - 'tests/map-fluid-ripple-preview-browser.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -47,7 +48,7 @@ jobs:
           from PIL import Image
           from pathlib import Path
           paths=sorted(Path('artifacts/map-ripples').glob('wave-*.png'))
-          if len(paths)<4:
+          if len(paths)<2:
               print('Not enough actual browser frames for preview', len(paths))
           else:
               frames=[]
