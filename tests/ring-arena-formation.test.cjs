@@ -31,6 +31,20 @@ for(const aspect of [1917/906,1280/720,844/390,390/844]){
   assert.ok(enemies.every(r=>r.valid),'four real opponents must project into the view');
   assert.ok(enemies.every(r=>r.right>-1&&r.left<1),
    'all four enemies must remain horizontally on screen');
+  const allies=scene.allies.map(a=>ring.portraitVisibleBounds(a,shot,heroUv,aspect));
+  const projectedOverlap=(a,b)=>Math.max(0,Math.min(a.right,b.right)-
+   Math.max(a.left,b.left))*Math.max(0,Math.min(a.top,b.top)-
+   Math.max(a.bottom,b.bottom));
+  for(const e of enemies){
+   const faceZone={...e,bottom:e.top-.28*(e.top-e.bottom)};
+   assert.ok(allies.every(a=>projectedOverlap(a,faceZone)<.001),
+    'every enemy HEAD remains visually uncovered by all four real teammates');
+  }
+  if(aspect>1.35)for(const a of allies){
+   const visibleWidth=Math.max(0,Math.min(1,a.right)-Math.max(-1,a.left));
+   assert.ok(visibleWidth>=.13,
+    'all four teammate silhouettes must stay visibly present in wide battle views');
+  }
   assert.equal(shot.heroYawDeg,0);
   console.log('role',chosen.id,'aspect',aspect.toFixed(3),
    'shoulder',shot.composition.side,'score',shot.composition.score.toFixed(2),
