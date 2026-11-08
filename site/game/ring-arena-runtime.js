@@ -1437,7 +1437,7 @@
   }
   let active=false,mode='outer',shotIndex=0,lens=null,elapsed=0,frames=0,paintCount=0,drawnActorIds=[];
   let controlledActorId='hero';
-  let occludingAllies=[];
+  let renderedActorOpacity=Object.create(null);
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
   let platformExposure=0,platformExposureOverride=null;
   let doorOpen=0;
@@ -2100,7 +2100,7 @@
    // row by x-distance and paints one actor's attached fog OVER the next).
    // Stable source order for equal depths puts the final character last.
    const ordered=sortActorsForAlpha(actors,cam);
-   occludingAllies=[];
+   renderedActorOpacity=Object.create(null);
    // Render every squad member with its authored alpha and real shared
    // 3D projection. A teammate crossing an enemy silhouette is a camera /
    // formation composition issue, NEVER permission to erase the teammate.
@@ -2170,6 +2170,7 @@
     gl.uniform1f(portrait.uBlur,.88*backgroundCue);
     // Full source opacity for ALL eight battle actors, irrespective of
     // selected viewpoint, overlap, screen size, or attack state.
+    renderedActorOpacity[a.id]=1;
     gl.uniform1f(portrait.uOpacity,1);
     gl.bindTexture(gl.TEXTURE_2D,t.texture);
     gl.drawArrays(gl.TRIANGLES,0,6);
@@ -2545,7 +2546,7 @@
    controlledActorId,controlledAllyIndex:layout(mode).allies.findIndex(a=>a.id===controlledActorId),
    controlCameraPivot:controlledActor(),
    partyLine:layout(mode).allies.map(a=>({id:a.id,x:a.x,z:a.z})),
-   occludingAllies:[...occludingAllies],
+   renderedActorOpacity:{...renderedActorOpacity},
    opposingLine:layout(mode).enemies.map(a=>({id:a.id,x:a.x,z:a.z})),
    cameraTarget:controlledActorId==='hero'?camera(mode,shotIndex):
     allyViewCamera(camera(mode,0),layout(mode).allies[0],controlledActor(),0,0,
