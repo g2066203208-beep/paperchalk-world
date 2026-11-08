@@ -21,7 +21,8 @@ function defaults(metro,geometry){
  return {
   version:1,cityId:'kirihama',nextStationNumber:1,
   stations:Object.fromEntries(Object.entries(metro.STATIONS).map(([id,s])=>
-   [id,{id,label:s.label,gx:s.gx,gy:s.gy,original:true}])),
+   [id,{id,label:s.label,gx:s.gx,gy:s.gy,
+    original:metro.ACTIVE_BLUEPRINT?.stations?.[id]?.original!==false}])),
   lines:metro.LINES.map(l=>({id:l.id,name:l.name,color:l.color,
    ring:!!l.ring,stops:l.stops.slice()})),
   bends:Object.fromEntries(Object.entries(geometry.routes).map(([id,points])=>
