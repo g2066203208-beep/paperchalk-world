@@ -166,8 +166,8 @@ assert.match(src,/vIrradiance;varying float vFloorSpecular;uniform float uTime;u
  '3D fragment shader must use matching highp precision under ANGLE');
 assert.match(src,/uLampPositions\[6\]/);
 assert.match(src,/uLampColors\[6\]/);
-assert.match(src,/vIrradiance=ringIrradiance\(aP,n\)/,
- 'static 3D surfaces must evaluate lamps at mesh vertices, not every pixel');
+assert.match(src,/vIrradiance=.*ringIrradiance\(renderP,n\)/,
+ 'vertex shader must light the actual deformed world-space position; selected train surfaces may use neutral authored irradiance');
 assert.match(src,/vFloorSpecular\+=pow\(nh,14\.0\)\*uLampLevels\[i\]/,
  'wet-tile reflections must use the same physically powered lights');
 assert.match(src,/gl\.uniform3fv\(world\.uViewEye/,
