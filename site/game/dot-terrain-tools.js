@@ -121,7 +121,7 @@
      '左键塑造 · Shift+拖动移动视角 · Ctrl+Z 撤销';
   }
   function setEditing(value){
-   if(stroke)finish(stroke,false);
+   if(stroke)finish(stroke,true);
    editing=!!value;hover=null;sync();
    if(!editing&&ctx)ctx.clearRect(0,0,preview.width,preview.height);
   }
@@ -335,7 +335,7 @@
    ctx.clearRect(0,0,width,height);
    const focus=stroke?.current||hover;if(!focus)return;
    const drawAt=(gx,gy)=>{
-    const z=terrain.getHeight(gx,gy);
+    const z=terrain.heightAt(gx,gy);
     return terrain.project(gx*cell,gy*cell,z);
    };
    if(shape==='rect'&&stroke){
