@@ -37,6 +37,7 @@ on:
       - 'tests/ring-arena-formation.test.cjs'
       - 'tests/ring-arena-wall.test.cjs'
       - 'tests/ring-arena-browser.mjs'
+      - 'scripts/capture_ring_arena_review.mjs'
       - '.github/workflows/ring-arena-pages.yml'
   workflow_dispatch:
 permissions:
@@ -155,9 +156,14 @@ jobs:
             throw Error('3D ring scene was not integrated into the game');
           console.log('PASS: one wide 4-foe encounter, physically closed walls, stationary view, original L2D and mobile projection');
           JS
-      # Real Chromium screenshot proof of heroine + 4 enemies runs separately in
-      # ring-arena-proof.yml. Do not block a ring-only deploy behind the
-      # unrelated full fog/editor browser suite.
+      # Publish the same REAL game pixels that a reviewer would see.
+      # Unlike short-lived Actions ZIPs these PNGs get stable Pages URLs.
+      - name: Install Chromium for actual public WebGL screenshot previews
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Capture all four fully opaque party viewpoints into published site
+        run: node scripts/capture_ring_arena_review.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
