@@ -8,11 +8,15 @@ const routes=Object.freeze({
  'a:entrance:school':[],
  'a:school:central':[],
  'a:central:convenience':[],
- 'b:central:cafe':[[8,3],[7,3],[7,0],[1,0],[1,4]],
+ // Direct, comprehensible ring corner: central -> south-west -> café.
+ // No false detour across the northern diagram, no visual crossovers.
+ 'b:central:cafe':[[8,3],[2,3]],
  'b:cafe:park':[],
  'b:park:mall':[],
  'b:mall:convenience':[[11,4],[11,2]],
- 'b:convenience:northgate':[[11,2],[11,0],[8,0]],
+ // North arc runs outside the red residential line without an
+ // invented stop or maze-like zigzag.
+ 'b:convenience:northgate':[[11,2],[11,1]],
  'b:northgate:central':[]
 });
 const number=n=>Number(n.toFixed(2));
