@@ -419,7 +419,7 @@
   // raster surfaces. Zero strength leaves every battle shader unchanged.
   'uniform vec3 uPlatformPositions[4];uniform vec3 uPlatformColors[4];',
   'uniform float uPlatformExposure;uniform float uPlatformBackZ;',
-  'uniform float uTrainPosition;uniform float uTrainSpeed;'
+  'uniform float uTrainPosition;uniform float uTrainSpeed;',
   'float platformWindowTransmission(vec3 p,vec3 src,int side){',
   'float windowZ=side==3?uPlatformBackZ+3.85:uPlatformBackZ;',
   'float dz=src.z-p.z;',
