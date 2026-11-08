@@ -10,8 +10,7 @@
 - GitHub Pages: https://g2066203208-beep.github.io/paperchalk-world/?npcCompare=1
 - `?npcCompare=1` **开发预览入口**：调用原有 `PaperWorldMetroCabin` / `PaperWorldGameRingArena.enterTransit()`，使用既有真实车厢、平台灯、场景相机和地板几何，不另造新地图。
 - 开发预览对话框包含「喜悦 / 惊讶 / 并排」、比例滑块，以及两个原始图片文件输入。选中图片后用 Canvas 在**浏览器内**去掉**与四边相连的白底**（不损害封闭在衣服内的白衬衫），显示两套头身比例/空间摆放差异。文件不上传到服务器，不修改原作品。
-- **当前仓库没有这两张原PNG的二进制文件。** GitHub目前只有批准元数据和开发预览代码，所以进入链接后需要各选择一次本地两张PNG才会显示。不能把「参考图已写GitHub文档」冒充「二进制美术素材已上传」。
-- 正常游玩不受影响；只有打开 `?npcCompare=1` 才会进入两情绪开发对比，正常模式不能出现两个 NPC-G001。
+- **自动预览资源已提交：** `site/assets/characters/npc-g001/emotion-joy-surprise-preview.avif`。它是192×192每种情绪的低码率快速预览二联图（整图384×192），由用户批准的喜悦原图与最新惊讶候选图缩放生成，只用于网页上自动可见，**不是高清正式NPC素材**。原始1024px两张PNG仍未作为二进制入库；需要高清时可在预览入口分别上传两张PNG替换低分辨率预览。npcCompare=1` 才会进入两情绪开发对比，正常模式不能出现两个 NPC-G001。
 - 对比的 NPC 贴图当前作为屏幕空间QA图层，背景才是真实地铁WebGL；**这不是最终人物的WebGL 3D落脚和实时光照**。正式接入下一步应将透明组图作为一位 3D billboard actor 注册，绑定地面坐标/真正3D灯光。不得宣称已经全部完成。
 - 测试图还可用本轮聊天生成的本地离线自带图页面 `npc-g001-subway-comparison.html` 做快速布局调节，但那一页是**模拟车厢对比，不是实际游戏截图**。
 
@@ -29,3 +28,10 @@
 - [QA URL boot](../site/game/overworld-runtime.js)
 - [Existing 3D metro camera and lights](../site/game/scene-environments.js)
 - [User-approved joy metadata](characters/NPC-G001_JOY_APPROVED_20261107.json)
+
+## 2026-11-08 空白预览修复
+- 用户上传实际地铁截图后发现三人完全未显示。根因：首次只提交了切换UI而没有上传任何图片，所以两张 `<img>` 始终没有 `src`；这不是人物被主角遮挡或没有到达车站。
+- 已创建并校验 GitHub AVIF 预览图的 Blob SHA：`f0b6e3f5fc1c55ffeb1609b302d84c0c62b3a6b7`；文件路径：`site/assets/characters/npc-g001/emotion-joy-surprise-preview.avif`。
+- `metro-cabin.js` 预览入口先自动加载 AVIF 双联图，切分左右画面后只对边缘相连的白底做透明处理，然后显示在游戏地铁图层。无需再次选择本地图片。
+- `site/index.html` 更新JS版本号防止缓存旧页面。可继续在 QA 控件用文件输入覆盖为原始高清PNG。
+- GitHub Pages 部署任务和浏览器实景截图需要分别验收；不能把 JS 语法检查当作真实画面通过。
