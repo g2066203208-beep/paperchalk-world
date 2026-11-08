@@ -125,6 +125,25 @@ try{
  await popup.waitFor();
  assert.match(await popup.innerText(),/住宅线/);
  assert.match(await popup.innerText(),/学园前/);
+ // Regressions: the rail is painted by programmatic SVG strokes, never a
+ // raster image or a giant rectangular focus/select hitbox.
+ const trackSelection=await page.evaluate(()=>{
+  const line=document.querySelector('.pw-dot-urban-lines [data-line="a"] .pw-transit-line-hit');
+  const selected=[...document.querySelectorAll('.pw-dot-urban-lines .pw-transit-segment[data-line="a"][data-selected="true"]')];
+  const pop=document.querySelector('.pw-transit-popup:not([hidden])')?.getBoundingClientRect();
+  return {focusOutline:getComputedStyle(line).outlineStyle,
+   focusBoxShadow:getComputedStyle(line).boxShadow,
+   imagery:document.querySelectorAll('.pw-dot-urban-lines image,.pw-dot-urban-lines img').length,
+   lineSegmentsSelected:selected.length,
+   pop:pop&&{left:pop.left,right:pop.right,top:pop.top,bottom:pop.bottom}};
+ });
+ assert.equal(trackSelection.focusOutline,'none',JSON.stringify(trackSelection));
+ assert.ok(trackSelection.focusBoxShadow==='none',JSON.stringify(trackSelection));
+ assert.equal(trackSelection.imagery,0,'metro lines cannot be a single raster image');
+ assert.equal(trackSelection.lineSegmentsSelected,3,'selection must follow physical line edges');
+ assert.ok(trackSelection.pop&&Math.abs(trackSelection.pop.left-hit.x)<270,
+  'floating line actions should appear by the clicked rail, not at its rectangle bounds: '+
+    JSON.stringify(trackSelection));
  await shot('20-dot-metro-board-choices.png');
  // Software Chromium screenshot animation suspension may dismiss a floating
  // map popup while preserving the actual track. Reopen if necessary, then
