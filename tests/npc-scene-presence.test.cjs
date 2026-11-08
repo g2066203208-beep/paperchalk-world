@@ -109,6 +109,11 @@ test('metro world slot cannot come from unrelated art metadata',()=>{
  assert.ok(keys.includes(group.metroSlot));
  const manifest=JSON.parse(fs.readFileSync(path.join(root,
   'site/data/npc/production-manifest.v1.json'),'utf8'));
- assert.equal(manifest.records.length,0,'do not approve other art task results by guessing a path');
+ assert.equal(manifest.records.length,8,'only these eight explicitly selected trial NPCs may be in production');
+ const exact=new Set(['NPC-C001','NPC-C002','NPC-C003','NPC-C004','NPC-C005','NPC-C006','NPC-M003','NPC-SG01']);
+ assert.deepEqual(new Set(manifest.records.map(x=>x.id)),exact);
+ assert.ok(manifest.records.every(x=>x.artApproved===true&&x.production===true));
+ assert.ok(manifest.records.every(x=>!Object.hasOwn(x,'metroSlot')),
+  'artist manifest must not grant game world placement/metro slot by itself');
  assert.equal(manifest.exampleNotActive.artApproved,false);
 });
