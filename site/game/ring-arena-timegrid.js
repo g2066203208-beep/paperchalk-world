@@ -104,40 +104,20 @@
   return api;
  }
  function mount({hud,onTick,onRole}={}){
-  if(!hud||typeof document==='undefined')throw Error('Timegrid HUD requires a battle stage');
+  if(!hud||typeof document==='undefined')throw Error('Timegrid HUD requires battle stage');
+  // Rejected filmstrip and round-one planner are deleted, not concealed.
+  // The card engine remains unchanged; the unframed source art is temporary.
   const holder=document.createElement('section');
   holder.className='ring-timegrid';
   holder.setAttribute('aria-label','双方角色头像与实时生命值');
-  // This is the ONLY always-visible game HUD: 4 foe portraits + 4
-  // party portraits, each with real engine HP. NO permanent card grid,
-  // command window, timeline ruler, hand, or tinted full-height panel.
-  holder.innerHTML='<div data-tg-roster class="tg-roster"></div>'+ 
-   '<button type="button" class="tg-quick" data-tg-quick aria-label="安排并执行一次战斗行动">行动</button>';
-  const tray=document.createElement('section');
-  tray.className='tg-tactics';
-  tray.hidden=true;tray.setAttribute('aria-label','临时战术操作');
-  tray.innerHTML=[
-   '<div class="tg-tactic-head"><strong data-tg-role></strong><span data-tg-phase></span>',
-   '<button type="button" data-tg-close aria-label="关闭临时出牌操作">×</button></div>',
-   '<div class="tg-target-line" data-tg-targets></div>',
-   '<div class="tg-cards" data-tg-hand></div>',
-   '<div class="tg-tick-caption">选择出牌时间格 · 前摇 / 生效 / 后摇由 V1.7 引擎结算</div>',
-   '<div class="tg-ticks" data-tg-ticks></div>',
-   '<div class="tg-tactic-foot"><span data-tg-hint></span>',
-   '<button type="button" data-tg-undo>撤销</button>',
-   '<button type="button" data-tg-auto-all>辅助排程</button>',
-   '<button type="button" class="tg-commit" data-tg-execute>执行</button></div>'
-  ].join('');
-  hud.append(holder); // Rejected round-one tactics panel is no longer in the game DOM.
+  holder.innerHTML='<div data-tg-roster class="tg-roster"></div>'+
+   '<button type="button" class="tg-quick" data-tg-quick '+
+   'aria-label="安排并执行一次战斗行动">行动</button>';
   const hitLayer=document.createElement('div');
   hitLayer.dataset.tgHits='';hitLayer.className='tg-hit-layer';
-  hitLayer.setAttribute('aria-hidden','true');hud.append(hitLayer);
-  const get=name=>tray.querySelector('[data-tg-'+name+']');
+  hitLayer.setAttribute('aria-hidden','true');
+  hud.append(holder,hitLayer);
   const roleName=id=>({hero:'斧卫','ai-gun':'枪手','ai-guard':'守护','ai-mage':'调律'}[id]||'敌方');
-  // Keep the canonical role slots stable. Art source maps to the actual
-  // currently published front portraits (no generated/third-party faces).
-  // char-006 has no published front master yet; use the registered interim
-  // portrait until its own front asset is added to the character library.
   const portraitArt=Object.freeze({
    hero:'./assets/characters/protagonist-front.webp',
    'ai-gun':'./assets/characters/char-003/front.png',
@@ -177,7 +157,7 @@
      // Face lives in the top quarter of an upright three-view/full-body.
      // A wide portrait crop preserves hair, forehead, eyes and shoulders.
      const cropH=Math.min(h,Math.max(28,bodyH*.29));
-     const cropW=cropH*1.65,headY=loY+bodyH*.135;
+     const cropW=cropH*.82,headY=loY+bodyH*.135;
      let massX=0,massN=0;
      for(let y=loY;y<Math.min(h,loY+bodyH*.19);y+=stride)
       for(let x=loX;x<=hiX;x+=stride){
@@ -187,15 +167,15 @@
      const centerX=massN>12?massX/massN:(loX+hiX)/2;
      const sx=Math.max(0,Math.min(w-cropW,centerX-cropW*.5));
      const sy=Math.max(0,Math.min(h-cropH,headY-cropH*.45));
-     const out=document.createElement('canvas');out.width=264;out.height=144;
+     const out=document.createElement('canvas');out.width=216;out.height=264;
      const o=out.getContext('2d',{willReadFrequently:true});
-     o.drawImage(temp,sx,sy,Math.min(cropW,w),Math.min(cropH,h),0,0,264,144);
+     o.drawImage(temp,sx,sy,Math.min(cropW,w),Math.min(cropH,h),0,0,216,264);
      // A number of the authentic fullbody sources have solid PAPER-WHITE
      // backdrops. Flood-remove only near-neutral whites CONNECTED TO THE
      // crop boundary; enclosed pale skin/eyes/shirt remain source artwork.
      // This turns old rectangular source thumbnails into contemporary
      // transparent face cutouts without changing the original files.
-     const pw=264,ph=144,frame=o.getImageData(0,0,pw,ph),data=frame.data;
+     const pw=216,ph=264,frame=o.getImageData(0,0,pw,ph),data=frame.data;
      const visited=new Uint8Array(pw*ph),removed=new Uint8Array(pw*ph);
      const queue=new Int32Array(pw*ph);let qIn=0,qOut=0;
      const paper=p=>{
@@ -240,27 +220,16 @@
    preparePortrait(source);
    return cropped.get(source)||source;
   };
-  let seed=20261108,model=null,target='enemy-1',cardUid=null,selectedTick=1,tip='';
-  function notify(message){tip=String(message);get('hint').textContent=tip;}
-  // Three ACTUAL combat-engine values—not mock HUD gauges:
-  // HP / remaining poise resistance / charged finisher energy.
+
+  let seed=20261108,model=null;
   function hpBar(actual){
    const max=Math.max(1,Number(actual.maxHp)||1);
    const hp=Math.max(0,Math.min(max,Number(actual.hp)||0));
-   const pm=Math.max(1,Number(actual.poiseMax)||1);
-   const poise=Math.max(0,Math.min(pm,Number(actual.poise)||0));
-   const resistance=pm-poise,energy=Math.max(0,Math.min(100,Number(actual.energy)||0));
-   const meter=(name,klass,val,total,pct)=>'<span class="'+klass+
-    '" role="progressbar" aria-label="'+name+'" aria-valuemin="0" '+
-    'aria-valuemax="'+total+'" aria-valuenow="'+val+
-    '" title="'+name+' '+val+'/'+total+'"><i style="width:'+
-    Math.max(0,Math.min(100,pct)).toFixed(2)+'%"></i></span>';
+   const width=Math.max(0,Math.min(100,100*hp/max));
    return '<div class="tg-health"><span class="tg-hp-value">'+hp+
-    '<small>/'+max+'</small></span><div class="tg-meter-stack">'+
-    meter('生命值','tg-hp-bar',hp,max,100*hp/max)+
-    meter('韧性剩余','tg-poise-bar',resistance,pm,100*resistance/pm)+
-    meter('绝杀能量','tg-energy-bar',energy,100,energy)+
-    '</div></div>';
+    '<small>/'+max+'</small></span><span class="tg-hp-bar" role="progressbar" '+
+    'aria-label="生命值" aria-valuemin="0" aria-valuemax="'+max+'" aria-valuenow="'+hp+'">'+
+    '<i style="width:'+width.toFixed(2)+'%"></i></span></div>';
   }
   function paintRoster(){
    if(!model)return;
@@ -290,112 +259,36 @@
    holder.dataset.layout='unframed-portraits-hp-only';
    holder.dataset.timegridVersion='1.8';
   }
-  function paintTactics(){
-   if(tray.hidden)return;
-   const game=model.game,actor=model.controlled();
-   get('role').textContent=roleName(actor.id)+' · '+actor.name;
-   get('phase').textContent=model.playback?'行动 '+model.progress+'/10':
-    '第 '+(game.round+1)+' 轮';
-   get('targets').innerHTML=game.actors.map(a=>'<button type="button" '+
-    'data-tg-target-pick="'+escape(displayId(a.id))+'" class="'+
-    (target===displayId(a.id)?'selected':'')+'"'+(a.dead?' disabled':'')+'>'+
-    escape(a.side==='ally'?roleName(a.id):'敌'+displayId(a.id).slice(-1))+'</button>').join('');
-   get('hand').innerHTML=actor.hand.map(item=>{
-    const c=cardOf(item.key);
-    if(!c)return '';
-    return '<button type="button" data-tg-card="'+escape(item.uid)+'" '+
-     (cardUid===item.uid?'class="selected" ':'')+
-     (model.playback||game.phase!=='planning'?'disabled ':'')+
-     'title="'+escape(c.desc||c.name)+'"><strong>'+escape(c.name)+
-     '</strong><small>'+c.w+' / '+c.a+' / '+c.r+
-     (c.damage?' · '+c.damage+'伤害':c.guard?' · '+c.guard+'防御':'')+
-     '</small></button>';
-   }).join('')||'<span class="tg-empty">没有手牌，等待下一轮补牌</span>';
-   get('ticks').innerHTML=Array.from({length:10},(_,i)=>
-    '<button type="button" data-tg-tick="'+(i+1)+'" '+
-    (selectedTick===i+1?'class="selected" ':'')+
-    (model.playback||game.phase!=='planning'?'disabled':'')+
-    '>'+(i+1)+'</button>').join('');
-   get('hint').textContent=tip;
-   for(const n of ['undo','auto-all','execute']){
-    get(n).disabled=model.playback||game.phase!=='planning';
-   }
-  }
-  function paint(){if(!model)return;paintRoster();}
   function start(){
-   model=createBattle(++seed);target='enemy-1';cardUid=null;selectedTick=1;
-   tray.hidden=true;hitLayer.replaceChildren();
-   model.onChange(e=>{if(onTick)onTick(e,model);paint();});
-   tip='选择手牌，再点开始时间格';paint();return model;
+   model=createBattle(++seed);hitLayer.replaceChildren();
+   model.onChange(e=>{if(onTick)onTick(e,model);paintRoster();});
+   paintRoster();return model;
   }
   function selectRole(index){
    if(!model||model.playback)return false;
-   const result=model.setRole(index);
-   if(result){
-    cardUid=null;
-    notify('当前：'+roleName(result.id)+'。点击敌人头像选择目标，按 T 开关出牌');
-    paint();
-   }
+   const result=model.setRole(Number(index));
+   if(result)paintRoster();
    return !!result;
   }
-  function openTactics(choice){
-   if(!model||model.playback||model.game.phase!=='planning')return false;
-   return false; // Rejected giant round-one planner removed from the mounted UI.
-   if(choice)target=choice;
-   tray.hidden=false;cardUid=null;notify('选择手牌与时间格；完成后关闭，头像与血量依然常驻');
-   paint();return true;
-  }
-  function action(fn){try{const r=fn();paint();return r;}catch(err){
-   notify(err?.message||String(err));paint();return false;
-  }}
   function executeQuick(){
    if(!model||model.playback||model.game.phase!=='planning')return false;
-   model.autoplan(true);const result=model.execute();paint();return result;
+   model.autoplan(true);
+   const result=model.execute();
+   paintRoster();
+   return !!result;
   }
   holder.addEventListener('click',e=>{
    const button=e.target.closest('button');if(!button)return;
    if(button.hasAttribute('data-tg-quick')){executeQuick();return;}
    if(button.hasAttribute('data-tg-choose-role')){
-    const i=Number(button.dataset.tgChooseRole);
-    if(onRole)onRole(i);else selectRole(i);
-   }else if(button.hasAttribute('data-tg-open-target'))openTactics(button.dataset.tgOpenTarget);
-  });
-  tray.addEventListener('click',e=>{
-   const b=e.target.closest('button');if(!b||!tray.contains(b))return;
-   e.stopPropagation();
-   if(b.hasAttribute('data-tg-close')){tray.hidden=true;return;}
-   if(model.playback||model.game.phase!=='planning')return;
-   if(b.hasAttribute('data-tg-target-pick')){target=b.dataset.tgTargetPick;paint();return;}
-   if(b.hasAttribute('data-tg-card')){cardUid=b.dataset.tgCard;paint();return;}
-   if(b.hasAttribute('data-tg-tick')){
-    selectedTick=Number(b.dataset.tgTick);
-    action(()=>{
-     if(!cardUid){notify('请先选择一张手牌');return;}
-     model.schedule(cardUid,selectedTick,target);cardUid=null;
-     notify('已在第 '+selectedTick+' 格放牌');
-    });return;
+    const index=Number(button.dataset.tgChooseRole);
+    if(onRole)onRole(index);else selectRole(index);
    }
-   if(b.hasAttribute('data-tg-undo')){action(()=>{
-    const actor=model.controlled();
-    const last=actor.actions.filter(a=>!a.locked&&!a.canceled).sort((a,b)=>b.start-a.start)[0];
-    if(!last)throw Error('当前角色没有可撤销动作');
-    model.undo(last.id);notify('已撤回最后一张牌');
-   });return;}
-   if(b.hasAttribute('data-tg-auto-all')){action(()=>{
-    model.autoplan(true);notify('已安排四名队友，可以直接执行或继续调整');
-   });return;}
-   if(b.hasAttribute('data-tg-execute')){action(()=>{
-    cardUid=null;tray.hidden=true;model.execute();
-   });}
   });
   const keyHandler=e=>{
    if(hud.hidden||!hud.isConnected||e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;
    if(/input|textarea|select/i.test(e.target?.tagName||''))return;
-   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();executeQuick();return;}
-   if(e.key?.toLowerCase()==='t'){
-    e.preventDefault();
-    if(tray.hidden)openTactics();else tray.hidden=true;
-   }else if(e.key==='Escape'&&!tray.hidden){e.preventDefault();tray.hidden=true;}
+   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();executeQuick();}
   };
   document.addEventListener('keydown',keyHandler);
   start();
@@ -404,18 +297,20 @@
    advance(dt){return model?.advance(dt)||null;},
    visual(id){return model?.shown.find(a=>a.id===gameId(id))||null;},
    active(){return !!model&&!model.playback&&model.game.phase==='planning';},
-   inspect(){return model?{phase:model.playback?'resolving':model.game.phase,
+   inspect(){return model?{
+    phase:model.playback?'resolving':model.game.phase,
     round:model.game.round,progress:model.progress,controlledId:model.game.controlledId,
     ui:holder.dataset.layout,version:holder.dataset.timegridVersion,
-    tacticsOpen:false,
+    tacticsOpen:false,quickActionAvailable:!model.playback&&model.game.phase==='planning',
     roles:ROLE_IDS.map((id,i)=>({gameId:id,arenaId:ARENA_IDS[i],
      hp:model.game.actors.find(a=>a.id===id)?.hp,
      hand:model.game.actors.find(a=>a.id===id)?.hand.length,
      planned:model.game.actors.find(a=>a.id===id)?.actions.length})),
-    enemies:model.game.actors.filter(a=>a.side==='enemy').map(a=>({id:a.id,
-     arenaId:displayId(a.id),hp:a.hp,dead:a.dead})),
+    enemies:model.game.actors.filter(a=>a.side==='enemy').map(a=>({
+     id:a.id,arenaId:displayId(a.id),hp:a.hp,dead:a.dead})),
     projectedHp:model.preview().actors.map(a=>({id:a.id,hp:a.hp})),
-    timelineTicks:G.ROUND}:null;}
+    timelineTicks:G.ROUND
+   }:null;}
   };
  }
  return Object.freeze({createBattle,mount,displayId,gameId,ROLE_IDS,ARENA_IDS,friendly});
