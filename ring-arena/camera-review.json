@@ -1,6 +1,6 @@
 {
   "source": "ACTUAL in-game Chromium/WebGL; no illustrations, mocks, or faked poses",
-  "commit": "25a2c76c177f0010de4f5a9bce46460f64e1cb74",
+  "commit": "2ba531b68d20845e2566cda1d469cd1d69dd0b1d",
   "entries": [
     {
       "slot": 1,
@@ -124,7 +124,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 76,
+      "dynamicUploads": 79,
       "worldActors": [
         {
           "id": "hero",
@@ -313,7 +313,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 100,
+      "dynamicUploads": 106,
       "worldActors": [
         {
           "id": "hero",
@@ -510,7 +510,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 125,
+      "dynamicUploads": 133,
       "worldActors": [
         {
           "id": "hero",
@@ -703,7 +703,7 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 147,
+      "dynamicUploads": 151,
       "worldActors": [
         {
           "id": "hero",
