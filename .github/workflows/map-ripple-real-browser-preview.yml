@@ -1,4 +1,4 @@
-name: Map ripples - isolated real browser animated preview
+name: Map dots - pure black real browser animated preview
 on:
   push:
     branches: [main]
@@ -37,7 +37,7 @@ jobs:
           done
           cat /tmp/map-ripple-http.log
           exit 1
-      - name: Capture real live fluid black fog and water-ripple dot animation
+      - name: Capture real solid-black map with subtle moving dots
         env:
           PAPERCHALK_RIPPLE_GIF_CAPTURE: '1'
         run: node tests/map-fluid-ripple-preview-browser.mjs
@@ -56,7 +56,7 @@ jobs:
                   im=Image.open(p).convert('RGB')
                   im.thumbnail((940,530),Image.Resampling.LANCZOS)
                   frames.append(im)
-              out=Path('artifacts/map-ripples/00-live-black-fog-dot-ripples.gif')
+              out=Path('artifacts/map-ripples/00-solid-black-dot-ripples.gif')
               frames[0].save(out,save_all=True,append_images=frames[1:],
                   duration=1600,loop=0,optimize=True,disposal=2)
               print('Real game GIF:',out,'frames:',len(frames),'bytes:',out.stat().st_size)
@@ -65,9 +65,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: real-game-fluid-fog-dot-ripples
+          name: real-game-solid-black-dot-ripples
           path: |
-            artifacts/map-ripples/01-full-screen-black-fog-subtle-dots.png
+            artifacts/map-ripples/01-pure-black-subtle-dots.png
             artifacts/map-ripples/wave-*.png
             artifacts/map-ripples/00-live-black-fog-dot-ripples.gif
           retention-days: 14
