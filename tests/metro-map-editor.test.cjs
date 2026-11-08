@@ -57,7 +57,7 @@ test('selected route can gain a rounded bend, be dragged, undone, redone and sav
 });
 test('dragging a physical interchange updates every line sharing that same station',()=>{
  const model=editor.create(metro,geo,store());
- const id='central',original=model.getStation(id);
+ const id='central',original={...model.getStation(id)};
  assert.ok(original);
  assert.equal(model.moveStation(id,16,11),true);
  assert.equal(model.getStation(id).gx,16);
