@@ -53,6 +53,22 @@ try{
    backdrop:getComputedStyle(map).backgroundColor};
  });
  const before=await sample();
+ const styleProbe=await page.evaluate(()=>{
+  const m=document.querySelector('.pw-dot-world-map');
+  const list=[];
+  for(const sheet of document.styleSheets){
+   try{
+    const found=[...sheet.cssRules].filter(rule=>
+     rule.cssText.includes('pw-dot-empty-preview')&&rule.cssText.includes('background')).slice(-8);
+    if(found.length)list.push({sheet:sheet.href,rules:found.map(rule=>rule.cssText.slice(0,250))});
+   }catch(_){}
+  }
+  return {classes:m.className,bg:getComputedStyle(m).backgroundColor,
+   sheet:document.querySelector('link[href*="transit-map-ui.css"]')?.href,
+   rules:list.slice(-5),inline:m.getAttribute('style')};
+ });
+ console.log('PURE BLACK MAP CSS DIAGNOSTICS',JSON.stringify(styleProbe));
+ await shot('01-pure-black-subtle-dots.png');
  assert.equal(before.background,'solid-black','no simulated map fog should remain');
  assert.equal(before.fogCount,0,'map fog canvases must have been removed');
  assert.equal(before.backdrop,'rgb(0, 0, 0)','map background must be pure #000');
