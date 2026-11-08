@@ -51,7 +51,8 @@
         "committedToRepository": true,
         "gitCommit": "b4daf4881797b88094fcb7868360b39a35a0bf4d",
         "originalImagePreserved": true,
-        "userSupplied": true
+        "userSupplied": true,
+        "gitBlobSha": "5053f01d30ab5018dddac98e563ba8ecfe5c2928"
       },
       "promptReference": "docs/NPC_ANIMA_LEFT_CENTER_RIGHT_TURNAROUND_V1_20261108.md",
       "states": {
@@ -103,7 +104,8 @@
         "committedToRepository": true,
         "gitCommit": "b4daf4881797b88094fcb7868360b39a35a0bf4d",
         "originalImagePreserved": true,
-        "userSupplied": true
+        "userSupplied": true,
+        "gitBlobSha": "f2cb4e5e02d16df77c59297a001f7ea965ed5a7a"
       },
       "promptReference": "docs/NPC-M002_ANIMA_THREE_VIEW_LEFT_CENTER_RIGHT_20261108.md",
       "states": {
@@ -155,7 +157,8 @@
         "committedToRepository": true,
         "gitCommit": "b4daf4881797b88094fcb7868360b39a35a0bf4d",
         "originalImagePreserved": true,
-        "userSupplied": true
+        "userSupplied": true,
+        "gitBlobSha": "847f7b4ad8d454368cb8fe668c1b659ff80bf4ce"
       },
       "promptReference": null,
       "states": {
@@ -209,7 +212,8 @@
         "committedToRepository": true,
         "gitCommit": "b4daf4881797b88094fcb7868360b39a35a0bf4d",
         "originalImagePreserved": true,
-        "userSupplied": true
+        "userSupplied": true,
+        "gitBlobSha": "eddfd9b3724af0bf7ae115aac44282ea10800d98"
       },
       "promptReference": "docs/NPC-C004_ANIMA_THREE_VIEW_OVERCAST_HAIR_LOCK_20261108.md",
       "approval": {
@@ -268,7 +272,8 @@
         ],
         "committedToRepository": true,
         "assetType": "user_approved_legacy_four_pose",
-        "canonicalRecord": "site/data/npc/metro-commuter-npc-m003.v2.json"
+        "canonicalRecord": "site/data/npc/metro-commuter-npc-m003.v2.json",
+        "gitBlobSha": "e72e5f6149ef7e53935ceaf10345932754293d7b"
       },
       "promptReference": "docs/NPC-M003_ANIMA_APPROVED_FOUR_POSE_USER_PROMPT_20261108.md",
       "states": {
