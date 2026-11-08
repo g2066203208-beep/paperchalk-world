@@ -224,11 +224,20 @@
   // left across the player rank, retreat the SINGLE camera proportionately.
   // The actor roots and their one-to-one world-space rows NEVER move.
   const phone=clamp((.85-clamp(Number(aspect)||16/9,.35,3.5))/.25,0,1);
-  const rows=Math.abs(dx)/1.19,extraZ=Math.min(1.6,rows*.5)*phone;
+  const role=['hero','ally-2','ally-3','ally-4'].indexOf(selected.id);
+  const i=Math.max(0,role);
+  // Perspective-correct composition, one base shoulder rig translated to
+  // the controlled actor. Later-row roles sit farther left, so the same
+  // camera booms backward a fraction and looks slightly across the aisle.
+  // This preserves a sizeable active shoulder and all four enemy targets.
+  const desktopRetreat=[0,.30,.45,.60][i],phoneRetreat=[0,.50,1.0,1.5][i];
+  const desktopAim=[0,.45,.55,.65][i],phoneAim=[0,.65,.80,.65][i];
+  const extraZ=desktopRetreat+(phoneRetreat-desktopRetreat)*phone;
+  const aim=desktopAim+(phoneAim-desktopAim)*phone;
   const shifted={...base,
    eye:{...base.eye,x:base.eye.x+dx*(1+.1*phone),
     z:base.eye.z+dz+extraZ},
-   focus:{...base.focus,x:base.focus.x+dx*(.5+.15*phone),
+   focus:{...base.focus,x:base.focus.x+dx*aim,
     z:base.focus.z+dz}};
   const view=shoulderCamera(shifted,selected,x,y,aspect);
   return {...view,controlledActorId:selected.id,originalHeroWorldStatic:true};
