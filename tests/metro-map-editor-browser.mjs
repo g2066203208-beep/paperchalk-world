@@ -30,6 +30,12 @@ const edgePoint=async key=>page.evaluate(edgeKey=>{
  const m=hit.getScreenCTM();
  return {x:m.a*p.x+m.c*p.y+m.e,y:m.b*p.x+m.d*p.y+m.f};
 },key);
+const clickAction=async action=>page.evaluate(name=>{
+ const btn=document.querySelector('.pw-metro-edit-action[data-action="'+name+'"]');
+ if(!btn)throw Error('Missing edit action '+name+'; available: '+
+  [...document.querySelectorAll('.pw-metro-edit-action')].map(x=>x.textContent).join(' / '));
+ btn.click();
+},action);
 const inspect=()=>page.evaluate(()=>{
  const map=document.querySelector('.pw-dot-world-map');
  const editor=window.PaperWorldMetroEditorDebug;
@@ -89,7 +95,7 @@ try{
  assert.equal(focus.hit,true,JSON.stringify(focus));
  assert.equal(focus.outline,'none');assert.equal(focus.boxShadow,'none');
  // A selected route accepts a new control point on the same integer dot grid.
- await page.locator('.pw-metro-edit-action').filter({hasText:'折点＋'}).click();
+ await clickAction('bend');
  point=await edgePoint(key);
  const before=await page.evaluate(k=>window.PaperWorldMetroEditorDebug.model
   .bends(window.PaperWorldMetroEditorDebug.model.edgeFor(k)).length,key);
@@ -97,9 +103,12 @@ try{
  const after=await page.evaluate(k=>window.PaperWorldMetroEditorDebug.model
   .bends(window.PaperWorldMetroEditorDebug.model.edgeFor(k)).length,key);
  assert.equal(after,before+1,'clicking a real rail must append a bend');
- const handle=page.locator('.pw-metro-edit-bend').first();
- await handle.waitFor({state:'visible'});
- const bb=await handle.boundingBox();
+ const bb=await page.evaluate(()=>{
+  const handle=document.querySelector('.pw-metro-edit-bend');
+  if(!handle)throw Error('A new rounded bend handle must exist');
+  const r=handle.getBoundingClientRect();
+  return {x:r.x,y:r.y,width:r.width,height:r.height};
+ });
  await page.mouse.move(bb.x+bb.width/2,bb.y+bb.height/2);
  await page.mouse.down();
  await page.mouse.move(bb.x+bb.width/2,bb.y+bb.height/2+56,{steps:12});
@@ -110,7 +119,7 @@ try{
  assert.ok(moved[0].every(Number.isInteger),'control point snapped to a dot');
  await shot('03-kirihama-rounded-selected-route-control-dot.png');
  // Save and reopen: browser storage keeps the entire editable blueprint.
- await page.locator('.pw-metro-edit-action').filter({hasText:'保存'}).click();
+ await clickAction('save');
  assert.equal(await page.evaluate(()=>!!localStorage.getItem(
   window.PaperWorldMetroMapEditor.KEY)),true);
  await page.locator('.pw-metro-edit-toggle').click(); // finish editing
