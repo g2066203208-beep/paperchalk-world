@@ -10,14 +10,15 @@ const ROOT = path.resolve(__dirname, '..');
 const read = p => JSON.parse(fs.readFileSync(path.join(ROOT,p),'utf8'));
 const data = read('site/data/npc/civilians/gallery.v1.json');
 
-test('all five ordinary civilians are in one roster; four new real PNG files are committed',()=>{
-  assert.deepEqual(data.characters.map(c=>c.id),['NPC-C001','NPC-C002','NPC-C003','NPC-C004','NPC-M003']);
+test('all six ordinary civilians are in one roster; five new real PNG files are committed',()=>{
+  assert.deepEqual(data.characters.map(c=>c.id),['NPC-C001','NPC-C002','NPC-C003','NPC-C004','NPC-M003','NPC-C005']);
   assert.equal(new Set(data.characters.map(c=>c.id)).size,5);
   const expected = {
     'NPC-C001': ['a98113e0612058b9d8fccfee28c9f88223be4f8de4c90e8fe938dc0cbb718ba5', 678018],
     'NPC-C002': ['a319c5ebc3e9b236010a1c31b2bccfb1f7e96668eaa3211b3b35bfde17cb2291', 733253],
     'NPC-C003': ['7037e692d122e8022140320a4e5f4e430c134da6aac26f3852d6410a4acfeade', 636544],
-    'NPC-C004': ['9ac68f4ca8a642054c0e65e1382eab66ca87d16a12fc83bdcf2876ad3f56453c', 668427]
+    'NPC-C004': ['9ac68f4ca8a642054c0e65e1382eab66ca87d16a12fc83bdcf2876ad3f56453c', 668427],
+    'NPC-C005': ['136e12649d8fa8d04e409a28601727c348ac4d2addf7f458bc7bc776d707f533', 585412]
   };
   for(const id of Object.keys(expected)){
     const item=data.characters.find(c=>c.id===id);
@@ -61,4 +62,13 @@ test('approved subway reader M003 remains included as a civilian, without asset 
   for (const f of [original.render.transparentSpriteAtlas,...Object.values(original.render.sprites)]) {
     assert.ok(fs.existsSync(path.join(ROOT,f)),`missing M003 approved asset ${f}`);
   }
+});
+
+test('six-front comparison production script references all six actual characters',()=>{
+  const p=path.join(ROOT,'scripts/build_civilian_front_comparison.py');
+  const txt=fs.readFileSync(p,'utf8');
+  for(const id of ['NPC-M003','NPC-C003','NPC-C001','NPC-C004','NPC-C002','NPC-C005'])
+    assert.ok(txt.includes(id),id);
+  assert.ok(fs.existsSync(path.join(ROOT,'site/assets/characters/civilians/npc-front-comparison-20261108.png')));
+  assert.ok(fs.existsSync(path.join(ROOT,'site/assets/characters/civilians/npc-front-comparison-20261108.jpg')));
 });
