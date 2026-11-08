@@ -41,6 +41,18 @@ try{
  await page.locator('#quick-map').click();
  const map=page.locator('.pw-dot-world-map');
  await map.waitFor({state:'visible'});
+ // Global transport is an independent page. A real subway appears only
+ // AFTER explicitly entering Kirihama from its city card.
+ assert.equal(await map.getAttribute('data-scope'),'region');
+ assert.equal(await page.locator('.pw-dot-urban-lines').evaluate(el=>getComputedStyle(el).display),'none');
+ await page.evaluate(()=>{
+  const city=document.querySelector('.pw-dot-city[data-city="kirihama"]');
+  if(!city)throw Error('Kirihama city portal absent');
+  city.click();
+ });
+ await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.scope==='city');
+ assert.equal(await map.getAttribute('data-city'),'kirihama');
+ assert.equal(await page.locator('.pw-dot-regional-lines').evaluate(el=>getComputedStyle(el).display),'none');
  assert.equal(await page.locator('.pw-world-map,.pw-map-mode-toggle').count(),0,
   'the retired second atlas and map-mode switch must not exist');
  assert.equal(await page.locator('.pw-transit-grid-dot').count(),1683);
