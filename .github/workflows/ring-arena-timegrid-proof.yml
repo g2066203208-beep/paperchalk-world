@@ -1,0 +1,55 @@
+name: Ring arena — actual four-hero Timegrid browser proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/ring-arena-timegrid.js'
+      - 'site/game/ring-arena-timegrid.css'
+      - 'site/game/ring-arena-runtime.js'
+      - 'site/combat-lab/engine.js'
+      - 'site/index.html'
+      - 'tests/ring-arena-timegrid-browser.mjs'
+      - '.github/workflows/ring-arena-timegrid-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ring-timegrid-4v4-browser-proof
+  cancel-in-progress: true
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build actual Game + L2D artwork
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/fix_protagonist_neck_v4.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_character_catalog.py
+          python3 scripts/build_scene_catalog.py
+      - name: Verify genuine deterministic card engine and 4v4 timeline adapter
+        run: |
+          node tests/ring-arena-timegrid.test.cjs
+          node tests/ring-arena-formation.test.cjs
+          node tests/ring-arena.test.cjs
+      - name: Install Chromium and WebGL software backend
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Prove actual WebGL 3D combat + screenshot four-role timeline
+        run: node tests/ring-arena-timegrid-browser.mjs
+      - name: Preserve browser screenshots and acceptance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3d-ring-timegrid-four-role-browser-proof
+          path: artifacts/ring-timegrid/
+          retention-days: 10
+          if-no-files-found: warn
