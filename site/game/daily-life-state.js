@@ -22,8 +22,14 @@
   const HUB_LOCATIONS=Object.fromEntries((ATLAS?.CITIES||[])
     .map(c=>['hub-'+c.id,{label:c.name+'交通枢纽',group:'世界',
       scene:null,open:0,close:1320,travel:30}]));
+  // Real authored platforms are valid exits even before their individual
+  // station scene art exists. Never alias a generic city POI to a rail stop.
+  const GRAPH=typeof window!=='undefined'?window.PaperWorldMetro:null;
+  const METRO_STATION_LOCATIONS=Object.fromEntries(Object.entries(GRAPH?.STATIONS||{})
+    .map(([id,s])=>[id,{label:s.label,group:'城区',
+      scene:null,open:0,close:1320,travel:6}]));
   const LOCATIONS=Object.freeze({
-    ...ATLAS_LOCATIONS,...HUB_LOCATIONS,
+    ...ATLAS_LOCATIONS,...HUB_LOCATIONS,...METRO_STATION_LOCATIONS,
     bedroom:{label:'卧室',group:'家',scene:'bedroom',open:0,close:1440,travel:10},
     'living-room':{label:'客厅',group:'家',scene:'living-room',open:0,close:1440,travel:10},
     kitchen:{label:'厨房',group:'家',scene:'kitchen',open:0,close:1440,travel:10},
