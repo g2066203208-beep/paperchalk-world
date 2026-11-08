@@ -539,13 +539,15 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    if(node.hidden)continue;
    const anchorX=x+location(city).x*scale;
    const anchorY=y+location(city).y*scale;
-   const offsets=[[0,0],[0,-52],[0,52],[110,0],[-110,0],
-    [110,-56],[-110,-56],[110,56],[-110,56],
-    [0,-106],[0,106],[148,0],[-148,0]];
+   const dx=cityCardWidth+14,dy=cityCardHeight+10;
+   const offsets=[[0,0],[0,-dy],[0,dy],[dx,0],[-dx,0],
+    [dx,-dy],[-dx,-dy],[dx,dy],[-dx,dy],
+    [0,-2*dy],[0,2*dy],[2*dx,0],[-2*dx,0],
+    [2*dx,-dy],[-2*dx,-dy],[2*dx,dy],[-2*dx,dy]];
    let best=null;
    for(const [dx,dy] of offsets){
     const cx=clamp(anchorX+dx,cityCardWidth/2+8,v.w-cityCardWidth/2-8);
-    const cy=clamp(anchorY+dy,cityCardHeight/2+48,v.h-cityCardHeight/2-8);
+    const cy=clamp(anchorY+dy,cityCardHeight+52,v.h-10);
     const overlap=placedCities.reduce((sum,q)=>{
      const ow=Math.max(0,(cityCardWidth+q.w)/2+8-Math.abs(cx-q.x));
      const oh=Math.max(0,(cityCardHeight+q.h)/2+6-Math.abs(cy-q.y));
