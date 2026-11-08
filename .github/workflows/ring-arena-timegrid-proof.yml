@@ -8,6 +8,9 @@ on:
       - 'site/game/ring-arena-runtime.js'
       - 'site/combat-lab/engine.js'
       - 'tests/ring-arena-timegrid-browser.mjs'
+      - 'tests/ring-arena-timegrid.test.cjs'
+      - 'tests/ring-arena-formation.test.cjs'
+      - 'site/assets/ui/vintage-cinema-single-frame.svg'
       - '.github/workflows/ring-arena-timegrid-proof.yml'
   workflow_dispatch:
 permissions:
