@@ -134,7 +134,15 @@ function create({map,tools,atlas,metro,geometry,chooseInitial,onFeedback}){
   const b=docEl('button','',text);b.type='button';
   b.addEventListener('click',fn);editActions.append(b);
  };
- edit('↻ 旋转',()=>{const m=selected();if(m){model.update(m.id,{angle:m.angle+1});render()}});
+ edit('↻ 旋转',()=>{
+  const m=selected();
+  if(!m)return;
+  try{
+   if(!model.update(m.id,{angle:m.angle+1}))
+    notify('已接入正式车站的轨道不能整体旋转；可编辑站点位置或复制轨道');
+   render();
+  }catch(e){notify(e.message)}
+ });
  edit('复制',()=>{const m=selected();if(m){selection=model.duplicate(m.id);render()}});
  edit('删除',()=>{if(selection){model.remove(selection);selection=null;render()}});
  details.append(name,colorField,position,refs,editActions);
@@ -290,8 +298,11 @@ function create({map,tools,atlas,metro,geometry,chooseInitial,onFeedback}){
     shop:[[-1,0],[0,0],[1,0],[-1,1],[1,1]],
     hospital:[[0,-1],[-1,0],[0,0],[1,0],[0,1]]
    };
-   for(const [dx,dy] of shapes[m.type]||[[0,0]])
+   for(const [ox,oy] of shapes[m.type]||[[0,0]]){
+    let dx=ox,dy=oy;
+    for(let i=0;i<m.angle;i++)[dx,dy]=[-dy,dx];
     dot(ctx,x+dx*4,y+dy*4,selected?2.65:2.15,col);
+   }
   }
   // Labels are attached to one real module point with a SHORT dotted tail.
   // At metropolitan zoom, hide crowding until selected or closer.
@@ -304,10 +315,13 @@ function create({map,tools,atlas,metro,geometry,chooseInitial,onFeedback}){
    (!home&&(focal&&m.type==='station'||m.status==='日常')&&t.cell>=9)||
    (zoom>=1.85&&t.cell>=16);
   if(showLabel){
-   const lx=x+13,ly=y-14;
-   pointDots(ctx,[m.x,m.y],[m.x+12/t.cell,m.y-12/t.cell],t,col,
-    {radius:1.05,spacing:5,opacity:.85});
-   label(ctx,lx+4,ly,m.label,selected?'#fff1ce':'#d5e2dd');
+   const labelDirection=[[1,-1],[-1,-1],[-1,1],[1,1]][m.angle];
+   const lx=x+labelDirection[0]*14,ly=y+labelDirection[1]*14;
+   pointDots(ctx,[m.x,m.y],
+    [m.x+labelDirection[0]*12/t.cell,m.y+labelDirection[1]*12/t.cell],
+    t,col,{radius:1.05,spacing:5,opacity:.85});
+   label(ctx,lx+labelDirection[0]*4,ly,m.label,
+    selected?'#fff1ce':'#d5e2dd',labelDirection[0]<0?'right':'left');
   }
  }
  function render(){
