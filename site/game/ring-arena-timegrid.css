@@ -49,8 +49,10 @@
  position:absolute;display:block;inset:1px;
  clip-path:polygon(17% 0,100% 0,84% 100%,0 100%);
  overflow:hidden;
- background:#292f35;
+ background:linear-gradient(155deg,#353d43,#222931 76%);
 }
+#ring-arena-controls .tg-row.enemy .tg-cutout{background:linear-gradient(145deg,#403138,#242832 78%)}
+#ring-arena-controls .tg-row.ally .tg-cutout{background:linear-gradient(145deg,#33443e,#242f33 78%)}
 #ring-arena-controls .tg-cutout::after{
  content:"";position:absolute;inset:0;pointer-events:none;
  background:linear-gradient(93deg,rgba(21,21,25,.1),rgba(8,15,21,0) 57%,rgba(7,12,16,.24));
