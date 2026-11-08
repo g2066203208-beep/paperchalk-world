@@ -77,7 +77,7 @@ const CORRIDORS=[
   return Object.freeze([gx,gy]);
  }),
  names:p.names.split('|')
-})));
+}));
 const stationRows={...BASE_STATIONS};
 const byCoordinate=new Map(Object.entries(stationRows)
  .map(([id,s])=>[s.gx+','+s.gy,id]));
