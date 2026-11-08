@@ -1,6 +1,6 @@
 {
   "source": "ACTUAL in-game Chromium/WebGL; no illustrations, mocks, or faked poses",
-  "commit": "2ba531b68d20845e2566cda1d469cd1d69dd0b1d",
+  "commit": "41d9d92989cc105e9ad343e91dfb7393e7797093",
   "entries": [
     {
       "slot": 1,
@@ -124,7 +124,14 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 79,
+      "dynamicUploads": 40,
+      "runtimeRevision": "p5-neighbor-wide-comfort-headlook-v2-20261108",
+      "lookLimits": {
+        "yawLeftDeg": 7.5,
+        "yawRightDeg": 7.5,
+        "pitchUpDeg": 3.5,
+        "pitchDownDeg": 3.5
+      },
       "worldActors": [
         {
           "id": "hero",
@@ -313,7 +320,14 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 106,
+      "dynamicUploads": 56,
+      "runtimeRevision": "p5-neighbor-wide-comfort-headlook-v2-20261108",
+      "lookLimits": {
+        "yawLeftDeg": 7.5,
+        "yawRightDeg": 7.5,
+        "pitchUpDeg": 3.5,
+        "pitchDownDeg": 3.5
+      },
       "worldActors": [
         {
           "id": "hero",
@@ -510,7 +524,14 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 133,
+      "dynamicUploads": 74,
+      "runtimeRevision": "p5-neighbor-wide-comfort-headlook-v2-20261108",
+      "lookLimits": {
+        "yawLeftDeg": 7.5,
+        "yawRightDeg": 7.5,
+        "pitchUpDeg": 3.5,
+        "pitchDownDeg": 3.5
+      },
       "worldActors": [
         {
           "id": "hero",
@@ -703,7 +724,14 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 151,
+      "dynamicUploads": 91,
+      "runtimeRevision": "p5-neighbor-wide-comfort-headlook-v2-20261108",
+      "lookLimits": {
+        "yawLeftDeg": 7.5,
+        "yawRightDeg": 7.5,
+        "pitchUpDeg": 3.5,
+        "pitchDownDeg": 3.5
+      },
       "worldActors": [
         {
           "id": "hero",
@@ -776,6 +804,30 @@
         1.75
       ],
       "fourEnemySilhouettesUnclipped": true
+    }
+  ],
+  "lookReviews": [
+    {
+      "side": "right",
+      "filename": "human-look-right-1280x720.png",
+      "yawDeg": 3.038845213816237,
+      "pitchDeg": 0,
+      "cameraEye": {
+        "x": -0.28,
+        "y": 1.5,
+        "z": 10.4
+      }
+    },
+    {
+      "side": "left",
+      "filename": "human-look-left-1280x720.png",
+      "yawDeg": -4.122890207395729,
+      "pitchDeg": 0,
+      "cameraEye": {
+        "x": -0.28,
+        "y": 1.5,
+        "z": 10.4
+      }
     }
   ]
 }
