@@ -1495,3 +1495,6 @@
   font-size:10px!important;
  }
 }
+
+/* Scope-guard wins over the flexible 10-line legend on cities without metro. */
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-metro-legend[hidden]{display:none!important}
