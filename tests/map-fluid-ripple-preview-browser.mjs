@@ -1,6 +1,4 @@
-/* The player's actual real-game map, not a fabricated UI mock.
- * Fast visual capture for black all-over fluid haze + nearly invisible dots.
- */
+/* Real gameplay proof: solid black map with subtle moving dots, NO fog. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -40,32 +38,26 @@ try{
  await page.locator('.pw-dot-world-map.pw-dot-empty-preview').waitFor({state:'visible'});
  await page.waitForFunction(()=>{
   const map=document.querySelector('.pw-dot-world-map');
-  return +map?.dataset.rippleFrames>=5&&map?.dataset.fogSource==='live-world-fluid';
+  return +map?.dataset.rippleFrames>=5&&map?.dataset.mapBackground==='solid-black';
  },{timeout:20000});
  const sample=async()=>page.evaluate(()=>{
   const map=document.querySelector('.pw-dot-world-map');
-  const f=map.querySelector('.pw-dot-fog-surface');
-  const p=f.getContext('2d');
-  const colors=[[.1,.1],[.5,.1],[.9,.1],[.1,.5],[.5,.5],[.9,.5],[.1,.9],[.5,.9],[.9,.9]].map(([x,y])=>
-   [...p.getImageData(Math.floor(x*f.width),Math.floor(y*f.height),1,1).data]);
+  const fogCount=map.querySelectorAll('.pw-dot-fog-surface').length;
   const dc=map.querySelector('.pw-dot-wave-surface');
   const d=dc.getContext('2d').getImageData(0,0,dc.width,dc.height).data;
   let pixels=0,sum=0;
   for(let i=3;i<d.length;i+=4){if(d[i]>0){pixels++;sum=(sum+d[i]*(i%101))%2147483647}}
-  return {frames:+map.dataset.rippleFrames,
-   fogFrames:+map.dataset.fogDensityFrames,
-   fogSource:map.dataset.fogSource,coverage:map.dataset.fogCoverage,
-   style:map.dataset.rippleStyle,colors,pixels,sum,
+  return {frames:+map.dataset.rippleFrames,background:map.dataset.mapBackground,
+   fogCount,pixels,sum,
    mapBounds:map.getBoundingClientRect().toJSON(),
    backdrop:getComputedStyle(map).backgroundColor};
  });
  const before=await sample();
- assert.equal(before.coverage,'full');
- assert.equal(before.style,'subtle-slow');
- assert.ok(before.colors.every(c=>c[3]===255&&Math.max(...c.slice(0,3))<=22),
-   'Full-field fog must be opaque BLACK everywhere: '+JSON.stringify(before.colors));
- assert.ok(before.pixels>150,'live map dots must be visible');
- await shot('01-full-screen-black-fog-subtle-dots.png');
+ assert.equal(before.background,'solid-black','no simulated map fog should remain');
+ assert.equal(before.fogCount,0,'map fog canvases must have been removed');
+ assert.equal(before.backdrop,'rgb(0, 0, 0)','map background must be pure #000');
+ assert.ok(before.pixels>150,'animated map dots must remain visible');
+ await shot('01-pure-black-subtle-dots.png');
  // A slow animation is captured several REAL seconds apart, not staged.
  let completeFrames=0;
  for(let i=0;i<4;i++){
@@ -78,6 +70,6 @@ try{
  const after=await sample();
  assert.ok(after.frames>before.frames,'motion should continue');
  assert.notEqual(after.sum,before.sum,'dot field should move very gently');
- console.log('FULL-FIELD BLACK FOG AND SUBTLE DOT MOTION VERIFIED',
+ console.log('SOLID BLACK NO FOG AND SUBTLE DOT MOTION VERIFIED',
   JSON.stringify({before,after}));
 }finally{await browser.close()}
