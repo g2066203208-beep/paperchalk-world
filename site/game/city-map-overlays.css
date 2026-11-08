@@ -44,10 +44,10 @@
 }
 #novel-ui #pw-world-surface .pw-dot-world-map .pw-large-city-district{
  position:absolute!important;box-sizing:border-box!important;
- display:grid!important;grid-template-columns:36px 1fr 19px;
+ display:grid!important;grid-template-columns:36px minmax(0,1fr) 17px;
  align-items:center!important;
- width:120px!important;height:50px!important;
- min-width:120px!important;max-width:120px!important;
+ width:152px!important;height:50px!important;
+ min-width:152px!important;max-width:152px!important;
  min-height:50px!important;max-height:50px!important;
  padding:3px 5px!important;
  transform:translate(-50%,-50%)!important;
@@ -71,7 +71,8 @@
 }
 #pw-world-surface .pw-large-city-district .pw-large-city-district-name{
  color:#1a1f23;font-weight:900;font-size:13px;
- line-height:1.12;letter-spacing:-.035em;
+ line-height:1.12;letter-spacing:-.04em;
+ white-space:nowrap;overflow:visible;
  text-shadow:none;
 }
 #pw-world-surface .pw-large-city-district .pw-large-city-district-count{
@@ -243,4 +244,35 @@
 #novel-ui #pw-world-surface .pw-dot-world-map .pw-large-city-district[hidden],
 #novel-ui #pw-world-surface .pw-dot-world-map .pw-large-city-toggle[hidden]{
  display:none!important;pointer-events:none!important;
+}
+
+/* P5-style visual priority: the six real daily-life destinations have
+ * always-readable place names, while 114 future locations keep tiny
+ * navigable pins at whole-city scale instead of forming bead soup. */
+#pw-world-surface .pw-dot-world-map[data-place-map-scale="full-city"]
+ .pw-large-city-pin[data-active="false"] .pw-large-city-pin-icon{
+ width:11px!important;height:11px!important;
+ font-size:0!important;
+ border:1px solid #182a30!important;
+ background:#b7c6bf!important;
+ opacity:.78;
+ box-shadow:0 0 0 1px #253942!important;
+}
+#pw-world-surface .pw-dot-world-map[data-place-map-scale="full-city"]
+ .pw-large-city-pin[data-active="true"] .pw-large-city-pin-icon{
+ width:24px!important;height:24px!important;
+ font-size:12px!important;
+ border:2px solid #fff0cf!important;
+ background:#cc634f!important;color:#fff5de!important;
+ box-shadow:0 0 0 2px #6f282b,0 0 11px #f6a5799c!important;
+}
+#pw-world-surface .pw-large-city-pin[data-active="true"]
+ .pw-large-city-pin-label{
+ top:-36px!important;
+ border:1px solid #e3b98aa6!important;
+ background:#533036f5!important;
+ color:#fff0d4!important;
+ font-size:14px!important;
+ white-space:nowrap!important;
+ box-shadow:3px 3px 0 #0b1721c4!important;
 }
