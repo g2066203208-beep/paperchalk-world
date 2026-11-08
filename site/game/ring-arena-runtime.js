@@ -344,14 +344,19 @@
   const cs=Math.cos(yaw),sn=Math.sin(yaw);
   const eye={x:pivot.x+dx*cs-dz*sn,y:neutral.eye.y,
    z:pivot.z+dx*sn+dz*cs};
-  const f=normalize({x:neutral.focus.x-neutral.eye.x,y:0,
-   z:neutral.focus.z-neutral.eye.z});
+  const dxF=neutral.focus.x-neutral.eye.x,dyF=neutral.focus.y-neutral.eye.y,
+   dzF=neutral.focus.z-neutral.eye.z;
+  const f=normalize({x:dxF,y:0,z:dzF});
   const right=normalize(cross(f,{x:0,y:1,z:0}));
-  const d=Math.hypot(neutral.focus.x-neutral.eye.x,neutral.focus.z-neutral.eye.z);
+  const d=Math.hypot(dxF,dyF,dzF);
+  // Preserve the neutral camera's intentional slight downward pitch while
+  // orbiting. Otherwise even a 1px mouse yaw snaps the camera to eye level.
+  const basePitch=Math.atan2(-dyF,Math.hypot(dxF,dzF));
+  const totalPitch=basePitch+pitch;
   return {...neutral,eye,focus:{
-    x:eye.x+d*Math.cos(pitch)*(f.x*cs+right.x*sn),
-    y:eye.y-d*Math.sin(pitch),
-    z:eye.z+d*Math.cos(pitch)*(f.z*cs+right.z*sn)
+    x:eye.x+d*Math.cos(totalPitch)*(f.x*cs+right.x*sn),
+    y:eye.y-d*Math.sin(totalPitch),
+    z:eye.z+d*Math.cos(totalPitch)*(f.z*cs+right.z*sn)
    },lookYawDeg:yaw*180/Math.PI,lookPitchDeg:pitch*180/Math.PI};
  }
  // Only the camera moves; four actual immutable aligned lanes remain.
