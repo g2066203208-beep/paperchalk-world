@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 6,
+  "id": "NPC-M001",
+  "category": "metro_civilian",
+  "title": "年轻男乘客—同姿态纯正侧背，正面坐着打瞌睡，无眼睛",
+  "state": "REDRAW_REQUIRED_FOUR_POSE",
+  "legacy": "The earlier user-approved 3-view art is superseded for runtime use; retain identity/outfit, DO NOT load old artwork as 4-pose",
+  "visualCanon": {
+    "hair": "short straight black hair with bangs",
+    "face": "minimalist face: absolutely no drawn eyes, irises, pupils, eyelashes, eyelid lines, or closed-eye arcs; small nose and small mouth only",
+    "jacket": "dark navy casual jacket worn open",
+    "inner": "off-white T-shirt",
+    "pants": "charcoal straight trousers",
+    "shoes": "gray-white low-top sneakers"
+  },
+  "special": {
+    "action": "front_seated_doze",
+    "direction": "strict_front",
+    "props": [],
+    "furnitureNotInSprite": true,
+    "characterActivity": "下班乘车后安静坐着打盹，头略微向前低下，肩膀放松，双手自然放在大腿上；无座椅素材、无可见眼睛。",
+    "status": "concept_proposal_awaiting_user_approval"
+  },
+  "production": {
+    "checkpoint": "Anima Base",
+    "steps": 35,
+    "cfg": 4.5,
+    "sampler": "ER SDE",
+    "canvas": [
+      1536,
+      1024
+    ],
+    "lora": "@akipekostyle <lora:akipekoanima_v1_1:0.65>",
+    "referenceAdvice": "For subsequent pose edits, use that NPC's own confirmed Anima source image with the installed pilot_r32 ImageStitch reference method; do not borrow another NPC's reference.",
+    "alphaAdvice": "Render isolated characters with zero environment; final game sprites must be actually checked RGBA after alpha extraction, not simulated checkerboard or a white RGB matte.",
+    "viewOrder": [
+      "front_static_standing",
+      "strict_90deg_side_static_standing_facing_left",
+      "back_static_standing",
+      "unique_frontal_special_action"
+    ],
+    "positivePrompt": "safe, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, character sheet, multiple views, four full body depictions of the same young adult man, short straight black hair with simple bangs, no visible eyes, no drawn eyelids, no eye lines, no eyelashes, no pupils, blank upper face, small nose, small mouth, dark navy blue jacket, off-white crew-neck t-shirt, charcoal gray straight pants, gray-white sneakers, ordinary tired young commuter, simple anime style, clean lineart, flat colors, simple cel shading, muted colors, white background.\n\nFour separate depictions of exactly the same young adult man in one horizontal row, from left to right.\n\nFIRST: EXACT FRONT VIEW, standing still, face looking directly forward, both shoulders facing the viewer, symmetrical frontal body, arms hanging naturally at his sides, both feet on the ground.\n\nSECOND: EXACT 90 DEGREE LEFT SIDE PROFILE VIEW, standing still, entire body facing left, only one side of the face visible, shoulders and chest seen strictly from the side, feet pointing left, arms hanging naturally at his sides.\n\nTHIRD: EXACT BACK VIEW, standing still, entire body facing away from the viewer, back of head and jacket visible, arms hanging naturally at his sides, both feet on the ground.\n\nFOURTH: EXACT FRONT VIEW, sitting on an invisible seat after a tiring day, torso and shoulders facing directly toward the viewer, both knees pointing forward, both feet facing forward. He is quietly dozing off, with his head slightly lowered toward his chest, shoulders relaxed, both hands resting loosely on his thighs, natural sleepy seated posture. His tiredness is conveyed only through his relaxed body posture and lowered head, not through drawn eyes or exaggerated facial expressions. No visible eyes, no eyelids, no eye lines, no eyelashes in this pose either.\n\nThe exact same face, hairstyle, navy jacket, off-white t-shirt, charcoal gray pants and gray-white sneakers in all four depictions. The jacket is worn open over the t-shirt in every pose, including the seated pose. All four depictions have the same minimalist facial design with absolutely no visible eyes or eye details.\n\nThe first three figures have identical neutral standing poses, with only their viewing directions changed. The fourth figure alone has the special seated sleeping pose.\n\nFour full body figures, evenly spaced, consistent proportions, no furniture, no chair, no bench, no environment, isolated figures, simple background.",
+    "negativePrompt": "visible eyes, drawn eyes, open eyes, closed eyes drawn, eyelid lines, eyelashes, pupils, irises, detailed eyes, expressive anime eyes, three-quarter view in first pose, front view in second pose, three-quarter view in second pose, front view in third pose, side view in fourth pose, three-quarter view in fourth pose, turned torso in fourth pose, standing in fourth pose, walking, running, stepping, different standing poses in first three figures, raised arms in first three figures, different outfits, different jacket colors, missing jacket, missing t-shirt, closed jacket, different hairstyles, different faces, exaggerated facial expressions, open mouth, yawning, different shoes, chair, bench, subway seat, furniture, background scenery, excessive shading, excessive fabric folds, cropped feet, cropped head, extra characters, text, watermark",
+    "promptReference": "docs/NPC-M001_ANIMA_FOUR_POSE_NO_EYES_V6_20261108.md",
+    "specification": "docs/NPC_FOUR_POSE_DEVELOPMENT_WHITEPAPER_V1_20261108.md",
+    "status": "v6_prompt_corrected_pending_anima_and_user_approval"
+  },
+  "render": {
+    "approvedSource": null,
+    "transparentSpriteAtlas": null,
+    "sprites": null,
+    "hasRealAlpha": false,
+    "assetsStoredInGitHub": false,
+    "ready": false
+  },
+  "history": "2026-11-08 V6 corrects failed image and errors in V3–V5: first three are identical static standing (front 0°, left side 90°, back 180°), NO eyes in any panel, FOURTH is frontal seated sleeping with original jacket retained. No new art has been approved.",
+  "lifeConcept": {
+    "status": "proposal",
+    "personality": [
+      "寡言",
+      "下班疲惫",
+      "不张扬"
+    ],
+    "dailyRhythm": "归家路上容易安静地打盹，醒来后注意是否到站",
+    "visualExpression": "通过头部轻微垂下、双肩放松、双手置于大腿表现困倦；无眼部表情和夸张嘴形",
+    "distinctionFrom": "M003：安静坐着看报；M001：安静坐着睡着；M002：停下看手机"
+  }
+}
