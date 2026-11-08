@@ -139,6 +139,18 @@ function create({map,tools,atlas,metro,geometry,chooseInitial,onFeedback}){
  edit('删除',()=>{if(selection){model.remove(selection);selection=null;render()}});
  details.append(name,colorField,position,refs,editActions);
  right.append(details);
+ // Dense official cities can contain 120 location labels at almost the
+ // same metro grid point. A searchable INSTANCE list makes each original
+ // component directly selectable, not merely a small visual hit target.
+ const instancesTitle=docEl('div','pw-city-build-small-title','案例组件 · 可逐项编辑');
+ const instancesSearch=docEl('input','pw-city-build-instance-search');
+ instancesSearch.type='search';instancesSearch.placeholder='搜索车站、地点、轨道…';
+ instancesSearch.setAttribute('aria-label','搜索所有官方案例组件');
+ const instancesCount=docEl('small','pw-city-build-instance-count');
+ const instancesList=docEl('div','pw-city-build-instance-list');
+ right.append(instancesTitle,instancesSearch,instancesCount,instancesList);
+ let instanceStamp='';
+ instancesSearch.addEventListener('input',()=>{instanceStamp='';renderInstanceList()});
  const foot=docEl('div','pw-city-build-footer');
  foot.append(docEl('span','', '点阵不是贴图：每条道路、轨道、站点、地块、地点都有独立数据。'),
   docEl('span','pw-city-build-footer-mode','编辑草图不会直接改动正式旅行线路'));
@@ -283,8 +295,15 @@ function create({map,tools,atlas,metro,geometry,chooseInitial,onFeedback}){
   }
   // Labels are attached to one real module point with a SHORT dotted tail.
   // At metropolitan zoom, hide crowding until selected or closer.
-  if(selected||zoom>=1.15&&t.cell>=9&&(
-   m.type!=='place'||m.status==='日常')){
+  // Neighborhood demo: readable official names; metropolis: only
+  // essential hubs/daily-life locations until the user zooms in.
+  const home=model.selectedCase==='home';
+  const focal=['entrance','school','central'].includes(m.refId);
+  const showLabel=selected||
+   (home&&(m.type==='place'||m.type==='station'))||
+   (!home&&(focal&&m.type==='station'||m.status==='日常')&&t.cell>=9)||
+   (zoom>=1.85&&t.cell>=16);
+  if(showLabel){
    const lx=x+13,ly=y-14;
    pointDots(ctx,[m.x,m.y],[m.x+12/t.cell,m.y-12/t.cell],t,col,
     {radius:1.05,spacing:5,opacity:.85});
@@ -357,7 +376,39 @@ function create({map,tools,atlas,metro,geometry,chooseInitial,onFeedback}){
   save.dataset.changed=String(model.changed);
   renderInspector();
  }
+ function renderInstanceList(){
+  if(!open)return;
+  const data=view(),search=instancesSearch.value.trim().toLowerCase();
+  const stamp=data.caseId+'|'+data.modules.length+'|'+search+'|'+selection+'|'+
+   data.modules.map(m=>m.label).join('~');
+  if(instanceStamp===stamp)return;
+  instanceStamp=stamp;
+  const shown=data.modules.filter(m=>!search||
+   m.label.toLowerCase().includes(search)||
+   m.type.includes(search)||
+   (m.refId||'').toLowerCase().includes(search)||
+   M.TYPES[m.type].name.includes(search));
+  instancesCount.textContent=shown.length+' / '+data.modules.length+' 组件';
+  instancesList.replaceChildren();
+  for(const m of shown.slice(0,125)){
+   const b=docEl('button','pw-city-build-instance');
+   b.type='button';b.dataset.module=m.id;
+   b.dataset.selected=String(m.id===selection);
+   const swatch=docEl('i');swatch.style.background=m.color;
+   b.append(swatch,docEl('span','',m.label),
+    docEl('small','',M.TYPES[m.type].name));
+   b.addEventListener('click',()=>{
+    const t=transform(),p=screen([m.x,m.y],t);
+    selection=m.id;pending=null;tool='select';rebuildBank();
+    pan.x+=lastSize.w*.5-p[0];pan.y+=lastSize.h*.5-p[1];
+    render();canvas.focus({preventScroll:true});
+   });
+   instancesList.append(b);
+  }
+ }
+
  function renderInspector(){
+  renderInstanceList();
   const m=selected();
   details.hidden=!m;
   if(!m)return;
