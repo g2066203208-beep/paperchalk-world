@@ -70,12 +70,18 @@
         }
       },
       "production": {
-        "registeredForGame": false,
+        "registeredForGame": true,
         "gameApproved": false,
-        "hasRealAlpha": false,
-        "heightMeters": null,
-        "staging": "原始三视图 RGB PNG 已真正提交 GitHub，已匹配源图 SHA-256；状态图及透明 RGBA 待制作，游戏尚未实装",
-        "sourceImageUserAccepted": true
+        "hasRealAlpha": true,
+        "heightMeters": 1.74,
+        "staging": "Real alpha views and world placement are available for first scene trial; gait and emotion states not authored.",
+        "sourceImageUserAccepted": true,
+        "trial": true,
+        "sprites": {
+          "side_left": "./assets/characters/civilians/npc-c001/side_left.png",
+          "front": "./assets/characters/civilians/npc-c001/front.png",
+          "back": "./assets/characters/civilians/npc-c001/back.png"
+        }
       }
     },
     {
@@ -123,12 +129,18 @@
         }
       },
       "production": {
-        "registeredForGame": false,
+        "registeredForGame": true,
         "gameApproved": false,
-        "hasRealAlpha": false,
-        "heightMeters": null,
-        "staging": "原始三视图 RGB PNG 已真正提交 GitHub，已匹配源图 SHA-256；状态图及透明 RGBA 待制作，游戏尚未实装",
-        "sourceImageUserAccepted": true
+        "hasRealAlpha": true,
+        "heightMeters": 1.61,
+        "staging": "Real alpha views and world placement are available for first scene trial; gait and emotion states not authored.",
+        "sourceImageUserAccepted": true,
+        "trial": true,
+        "sprites": {
+          "side_left": "./assets/characters/civilians/npc-c002/side_left.png",
+          "front": "./assets/characters/civilians/npc-c002/front.png",
+          "back": "./assets/characters/civilians/npc-c002/back.png"
+        }
       }
     },
     {
@@ -176,12 +188,18 @@
         }
       },
       "production": {
-        "registeredForGame": false,
+        "registeredForGame": true,
         "gameApproved": false,
-        "hasRealAlpha": false,
-        "heightMeters": null,
-        "staging": "原始三视图 RGB PNG 已真正提交 GitHub，已匹配源图 SHA-256；状态图及透明 RGBA 待制作，游戏尚未实装",
-        "sourceImageUserAccepted": true
+        "hasRealAlpha": true,
+        "heightMeters": 1.55,
+        "staging": "Real alpha views and world placement are available for first scene trial; gait and emotion states not authored.",
+        "sourceImageUserAccepted": true,
+        "trial": true,
+        "sprites": {
+          "side_left": "./assets/characters/civilians/npc-c003/side_left.png",
+          "front": "./assets/characters/civilians/npc-c003/front.png",
+          "back": "./assets/characters/civilians/npc-c003/back.png"
+        }
       }
     },
     {
@@ -236,12 +254,18 @@
         }
       },
       "production": {
-        "registeredForGame": false,
+        "registeredForGame": true,
         "gameApproved": false,
-        "hasRealAlpha": false,
-        "heightMeters": null,
+        "hasRealAlpha": true,
+        "heightMeters": 1.74,
         "sourceImageUserAccepted": true,
-        "staging": "原图 RGB PNG 已提交 GitHub，尚待独立透明精灵与状态图"
+        "staging": "Real alpha views and world placement are available for first scene trial; gait and emotion states not authored.",
+        "trial": true,
+        "sprites": {
+          "side_left": "./assets/characters/civilians/npc-c004/side_left.png",
+          "front": "./assets/characters/civilians/npc-c004/front.png",
+          "back": "./assets/characters/civilians/npc-c004/back.png"
+        }
       }
     },
     {
@@ -292,7 +316,7 @@
         }
       },
       "production": {
-        "registeredForGame": false,
+        "registeredForGame": true,
         "gameApproved": false,
         "artApproved": true,
         "hasRealAlpha": true,
@@ -304,7 +328,8 @@
           "rest": "site/assets/characters/metro/npc-m003/special-front-seated-reading.png"
         },
         "heightMeters": null,
-        "staging": "已批准的真实 PNG + RGBA 四方向文件已在 GitHub；原位置不动；人物属于普通路人 NPC 统一索引，但尚未完成游戏进场规则验收"
+        "staging": "Real alpha views and world placement are available for first scene trial; gait and emotion states not authored.",
+        "trial": true
       }
     },
     {
@@ -352,12 +377,18 @@
         }
       },
       "production": {
-        "registeredForGame": false,
+        "registeredForGame": true,
         "gameApproved": false,
-        "hasRealAlpha": false,
-        "heightMeters": null,
-        "sourceImageUserAccepted": false,
-        "staging": "用户上传完整RGB原始三视图；已提交GitHub。仅待用户视觉确认，游戏未注册。"
+        "hasRealAlpha": true,
+        "heightMeters": 1.6,
+        "sourceImageUserAccepted": true,
+        "staging": "Real alpha views and world placement are available for first scene trial; gait and emotion states not authored.",
+        "trial": true,
+        "sprites": {
+          "side_left": "./assets/characters/civilians/npc-c005/side_left.png",
+          "front": "./assets/characters/civilians/npc-c005/front.png",
+          "back": "./assets/characters/civilians/npc-c005/back.png"
+        }
       }
     },
     {
@@ -413,13 +444,19 @@
         }
       },
       "production": {
-        "registeredForGame": false,
+        "registeredForGame": true,
         "gameApproved": false,
-        "hasRealAlpha": false,
-        "heightMeters": null,
+        "hasRealAlpha": true,
+        "heightMeters": 1.57,
         "sourceImageUserAccepted": true,
         "artApproved": true,
-        "staging": "原始三视图 RGB PNG 623012 bytes 已实际上传 GitHub 且逐文件验证 sha；尚无透明 Alpha 和游戏路人注册"
+        "staging": "Real alpha views and world placement are available for first scene trial; gait and emotion states not authored.",
+        "trial": true,
+        "sprites": {
+          "side_left": "./assets/characters/civilians/schoolgirls/sg01/side_left.png",
+          "front": "./assets/characters/civilians/schoolgirls/sg01/front.png",
+          "back": "./assets/characters/civilians/schoolgirls/sg01/back.png"
+        }
       }
     }
   ],
@@ -513,7 +550,7 @@
     }
   ],
   "npcTest": {
-    "phase": "eight-civilian-trial",
+    "phase": "ready-for-gameplay-qa",
     "ids": [
       "NPC-C001",
       "NPC-C002",
@@ -526,6 +563,7 @@
     ],
     "sourceApproval": "user_confirmed_initial_test",
     "sourceMastersUntouched": true,
-    "note": "C006 original uploaded; remaining sprites extracted by reproducible GitHub Action; SG03 rejected and excluded."
+    "note": "C006 original uploaded; remaining sprites extracted by reproducible GitHub Action; SG03 rejected and excluded.",
+    "extractedAlphaSprites": 21
   }
 }

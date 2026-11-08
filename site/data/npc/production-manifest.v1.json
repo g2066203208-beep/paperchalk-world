@@ -1,8 +1,318 @@
 {
   "$schema": "paperchalk/npc-production-manifest/v1",
   "version": 1,
-  "description": "ART task only: identity, art approval, sprite resources and alpha/body measurements. Scene assignment and metro slot are controlled separately by site/data/npc/scene-assignments.v1.json. Currently no game-approved NPC art.",
-  "records": [],
+  "description": "In-game trial assets with real transparency, not finalized walking animations.",
+  "records": [
+    {
+      "id": "NPC-C001",
+      "kind": "civilian",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/civilians/npc-c001/front.png",
+        "side_left": "./assets/characters/civilians/npc-c001/side_left.png",
+        "front": "./assets/characters/civilians/npc-c001/front.png",
+        "back": "./assets/characters/civilians/npc-c001/back.png"
+      },
+      "geometry": {
+        "heightMeters": 1.74,
+        "assetCrownY": 0.009,
+        "assetSoleY": 0.991,
+        "soleX": 0.5,
+        "widthScale": 0.97
+      },
+      "viewOrder": [
+        "side_left",
+        "front",
+        "back"
+      ],
+      "viewSizes": {
+        "side_left": [
+          228,
+          983
+        ],
+        "front": [
+          286,
+          989
+        ],
+        "back": [
+          281,
+          984
+        ]
+      },
+      "sourceMaster": "./assets/characters/civilians/npc-c001/three-view-original.png",
+      "notes": "User-selected master for NPC test. Static views, not animated gait."
+    },
+    {
+      "id": "NPC-C002",
+      "kind": "civilian",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/civilians/npc-c002/front.png",
+        "side_left": "./assets/characters/civilians/npc-c002/side_left.png",
+        "front": "./assets/characters/civilians/npc-c002/front.png",
+        "back": "./assets/characters/civilians/npc-c002/back.png"
+      },
+      "geometry": {
+        "heightMeters": 1.61,
+        "assetCrownY": 0.009,
+        "assetSoleY": 0.991,
+        "soleX": 0.5,
+        "widthScale": 0.92
+      },
+      "viewOrder": [
+        "side_left",
+        "front",
+        "back"
+      ],
+      "viewSizes": {
+        "side_left": [
+          204,
+          975
+        ],
+        "front": [
+          319,
+          983
+        ],
+        "back": [
+          317,
+          979
+        ]
+      },
+      "sourceMaster": "./assets/characters/civilians/npc-c002/three-view-original.png",
+      "notes": "User-selected master for NPC test. Static views, not animated gait."
+    },
+    {
+      "id": "NPC-C003",
+      "kind": "civilian",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/civilians/npc-c003/front.png",
+        "side_left": "./assets/characters/civilians/npc-c003/side_left.png",
+        "front": "./assets/characters/civilians/npc-c003/front.png",
+        "back": "./assets/characters/civilians/npc-c003/back.png"
+      },
+      "geometry": {
+        "heightMeters": 1.55,
+        "assetCrownY": 0.009,
+        "assetSoleY": 0.991,
+        "soleX": 0.5,
+        "widthScale": 0.92
+      },
+      "viewOrder": [
+        "side_left",
+        "front",
+        "back"
+      ],
+      "viewSizes": {
+        "side_left": [
+          207,
+          951
+        ],
+        "front": [
+          307,
+          959
+        ],
+        "back": [
+          304,
+          956
+        ]
+      },
+      "sourceMaster": "./assets/characters/civilians/npc-c003/three-view-original.png",
+      "notes": "User-selected master for NPC test. Static views, not animated gait."
+    },
+    {
+      "id": "NPC-C004",
+      "kind": "civilian",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/civilians/npc-c004/front.png",
+        "side_left": "./assets/characters/civilians/npc-c004/side_left.png",
+        "front": "./assets/characters/civilians/npc-c004/front.png",
+        "back": "./assets/characters/civilians/npc-c004/back.png"
+      },
+      "geometry": {
+        "heightMeters": 1.74,
+        "assetCrownY": 0.009,
+        "assetSoleY": 0.991,
+        "soleX": 0.5,
+        "widthScale": 1.0
+      },
+      "viewOrder": [
+        "side_left",
+        "front",
+        "back"
+      ],
+      "viewSizes": {
+        "side_left": [
+          236,
+          981
+        ],
+        "front": [
+          326,
+          985
+        ],
+        "back": [
+          327,
+          990
+        ]
+      },
+      "sourceMaster": "./assets/characters/civilians/npc-c004/three-view-original.png",
+      "notes": "User-selected master for NPC test. Static views, not animated gait."
+    },
+    {
+      "id": "NPC-C005",
+      "kind": "civilian",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/civilians/npc-c005/front.png",
+        "side_left": "./assets/characters/civilians/npc-c005/side_left.png",
+        "front": "./assets/characters/civilians/npc-c005/front.png",
+        "back": "./assets/characters/civilians/npc-c005/back.png"
+      },
+      "geometry": {
+        "heightMeters": 1.6,
+        "assetCrownY": 0.009,
+        "assetSoleY": 0.991,
+        "soleX": 0.5,
+        "widthScale": 0.91
+      },
+      "viewOrder": [
+        "side_left",
+        "front",
+        "back"
+      ],
+      "viewSizes": {
+        "side_left": [
+          210,
+          989
+        ],
+        "front": [
+          303,
+          998
+        ],
+        "back": [
+          298,
+          991
+        ]
+      },
+      "sourceMaster": "./assets/characters/civilians/npc-c005/three-view-original.png",
+      "notes": "User-selected master for NPC test. Static views, not animated gait."
+    },
+    {
+      "id": "NPC-C006",
+      "kind": "civilian",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/civilians/npc-c006/front.png",
+        "side_left": "./assets/characters/civilians/npc-c006/side_left.png",
+        "front": "./assets/characters/civilians/npc-c006/front.png",
+        "back": "./assets/characters/civilians/npc-c006/back.png"
+      },
+      "geometry": {
+        "heightMeters": 1.73,
+        "assetCrownY": 0.009,
+        "assetSoleY": 0.991,
+        "soleX": 0.5,
+        "widthScale": 0.97
+      },
+      "viewOrder": [
+        "side_left",
+        "front",
+        "back"
+      ],
+      "viewSizes": {
+        "side_left": [
+          273,
+          958
+        ],
+        "front": [
+          299,
+          981
+        ],
+        "back": [
+          303,
+          961
+        ]
+      },
+      "sourceMaster": "./assets/characters/civilians/npc-c006/three-view-original.png",
+      "notes": "User-selected master for NPC test. Static views, not animated gait."
+    },
+    {
+      "id": "NPC-SG01",
+      "kind": "student",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/civilians/schoolgirls/sg01/front.png",
+        "side_left": "./assets/characters/civilians/schoolgirls/sg01/side_left.png",
+        "front": "./assets/characters/civilians/schoolgirls/sg01/front.png",
+        "back": "./assets/characters/civilians/schoolgirls/sg01/back.png"
+      },
+      "geometry": {
+        "heightMeters": 1.57,
+        "assetCrownY": 0.009,
+        "assetSoleY": 0.991,
+        "soleX": 0.5,
+        "widthScale": 0.86
+      },
+      "viewOrder": [
+        "side_left",
+        "front",
+        "back"
+      ],
+      "viewSizes": {
+        "side_left": [
+          321,
+          979
+        ],
+        "front": [
+          270,
+          973
+        ],
+        "back": [
+          278,
+          977
+        ]
+      },
+      "sourceMaster": "./assets/characters/civilians/schoolgirls/sg01/three-view-original.png",
+      "notes": "User-selected master for NPC test. Static views, not animated gait."
+    },
+    {
+      "id": "NPC-M003",
+      "kind": "civilian",
+      "artApproved": true,
+      "production": true,
+      "trial": true,
+      "sprites": {
+        "idle": "./assets/characters/metro/npc-m003/front-standing.png",
+        "front": "./assets/characters/metro/npc-m003/front-standing.png",
+        "side_left": "./assets/characters/metro/npc-m003/side-standing.png",
+        "back": "./assets/characters/metro/npc-m003/back-standing.png",
+        "rest": "./assets/characters/metro/npc-m003/special-front-seated-reading.png"
+      },
+      "geometry": {
+        "heightMeters": 1.65,
+        "assetCrownY": 0.011,
+        "assetSoleY": 0.989,
+        "soleX": 0.5,
+        "widthScale": 0.91
+      },
+      "notes": "Existing user-approved transparent M003 sprites kept intact."
+    }
+  ],
   "exampleNotActive": {
     "id": "NPC-G001",
     "artApproved": false,
@@ -20,5 +330,11 @@
       "widthScale": 1.12
     },
     "notes": "Example only; artist supplies exact verified resources, and approval is set only after user acceptance. Do not add allowedLocations/metroSlot here; those belong to the gameplay-owned assignment table."
-  }
+  },
+  "testPhase": "civilian-alpha-v1",
+  "pendingStateArt": [
+    "communicate",
+    "rest",
+    "death"
+  ]
 }
