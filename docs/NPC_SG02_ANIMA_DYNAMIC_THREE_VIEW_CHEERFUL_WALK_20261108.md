@@ -13,7 +13,7 @@
 ## Positive Prompt
 
 ```text
-masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:1>, character reference sheet, character turnaround, multiple views, full body, teenage schoolgirl, tall slender build, long legs, short fluffy chestnut brown hair, cheerful smile, natural walking, simple anime style, clean lineart, flat colors, muted colors, overcast daylight, white background.
+masterpiece, best quality, score_7, safe, @akipekostyle, <lora:akipekoanima_v1_1:1.0>, character reference sheet, character turnaround, multiple views, full body, teenage schoolgirl, tall slender build, long legs, short fluffy chestnut brown hair, cheerful smile, natural walking, simple anime style, clean lineart, flat colors, muted colors, overcast daylight, white background.
 
 A character reference sheet showing exactly three full-body drawings of the same Japanese high school girl in one horizontal row. She is a tall, lively and cheerful girl with long slender legs, a lean athletic build, naturally relaxed shoulders and youthful facial proportions. She has short fluffy chestnut brown hair reaching her jaw, a side-swept fringe and softly outward-curving hair ends. She has no visible eyes, no eyelids, no eyelashes, a small nose and a cheerful smiling mouth. Her hairstyle, body proportions and face remain identical in all three drawings.
 
@@ -40,6 +40,6 @@ worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg
 
 ## 参数与验收
 
-Anima Base · ER SDE · 35 Steps · CFG 4.5 · 1536×1024 · `@akipekostyle, <lora:akipekoanima_v1_1:1>`.
+Anima Base · ER SDE · 35 Steps · CFG 4.5 · 1536×1024 · `@akipekostyle, <lora:akipekoanima_v1_1:1.0>`.
 
 只接受一个角色三个朝向、自然且不夸张的步态手势、无眼睛、校服和发型跨视图完全一致、黑色双扣与长领带一致。其实际身高在游戏人物数据中单独确定，不在 Anima 文字里使用厘米值冒充尺度控制。
