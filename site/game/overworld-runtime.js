@@ -473,18 +473,5 @@
     snapshot:()=>engine.snapshot(),isModeActive:()=>mode,
     engine,navigate,showCaption:say,surfaces,director,cabin
   });
-  // Explicit QA deep link only: never auto-spawn two NPC groups in gameplay.
-  // Reuses the exact subway scene camera/background by entering transit.
-  // Both poses are one NPC identity presented as side-by-side developer tests.
-  if(new URLSearchParams(global.location.search).get('npcCompare')==='1'){
-    global.addEventListener('load',()=>{
-      const previousHidden=root.hidden;
-      root.hidden=false;
-      const started=cabin?.openNpcComparison?.();
-      if(!started){
-        root.hidden=previousHidden;
-        console.warn('[NPC-G001 QA] Metro compare could not enter carriage');
-      }
-    },{once:true});
-  }
+
 })(window);
