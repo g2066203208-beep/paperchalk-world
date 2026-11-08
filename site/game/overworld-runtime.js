@@ -16,6 +16,32 @@
     storage:store,
     onStatEvent:event=>global.PaperWorldTopHUD?.applyEvent?.(event)
   });
+  // One physical NPC per identity: persistent schedule is the source of truth.
+  const npcLife=global.PaperWorldNpcLife?.create?.({
+    engine,storage:store,atlas:global.PaperWorldAtlas,metro:global.PaperWorldMetro
+  })||null;
+  const npcPresence=npcLife?global.PaperWorldNpcScenePresence?.create?.({
+    life:npcLife,atlas:global.PaperWorldAtlas,metro:global.PaperWorldMetro
+  }):null;
+  const npcManifest={status:'not-loaded',registered:0,error:null};
+  // A separate art task owns the sprites; this runtime only accepts an
+  // explicitly identity+location approved manifest, never filenames alone.
+  if(npcPresence){
+    npcManifest.status='loading';
+    global.fetch('./data/npc/production-manifest.v1.json',{cache:'no-store'})
+     .then(response=>{if(!response.ok)throw Error('HTTP '+response.status);return response.json()})
+     .then(data=>{
+       const check=npcPresence.setManifest(data);
+       npcManifest.status=check.ok?'ready':'invalid';
+       npcManifest.registered=check.registered;
+       npcManifest.error=check.error||null;
+       if(!check.ok)console.warn('[NPC production] Invalid art manifest',check.error);
+       global.PaperWorldGameRingArena?.render?.(0);
+     }).catch(err=>{
+       npcManifest.status='error';npcManifest.error=String(err.message||err);
+       console.warn('[NPC production] Manifest unavailable',err);
+     });
+  }
   let mode=false,hideTimer=null,traveling=false,contextOpen=false,suppressContextTapUntil=0;
   const h=(tag,className,text)=>{
     const el=document.createElement(tag);
@@ -471,7 +497,8 @@
   global.PaperWorldDailyLifeUI=Object.freeze({
     activate,deactivate,onGameScene,
     snapshot:()=>engine.snapshot(),isModeActive:()=>mode,
-    engine,navigate,showCaption:say,surfaces,director,cabin
+    engine,navigate,showCaption:say,surfaces,director,cabin,
+    npcLife,npcPresence,npcManifest
   });
 
 })(window);
