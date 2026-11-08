@@ -1,0 +1,96 @@
+name: Ring arena camera-only genuine WebGL screenshot proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/game/ring-arena-runtime.js'
+      - 'scripts/capture_ring_arena_review.mjs'
+      - '.github/workflows/ring-arena-camera-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ring-arena-camera-only-main
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build exact approved character rigs used by game
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/fix_protagonist_neck_v4.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_character_catalog.py
+          python3 scripts/build_scene_catalog.py
+      - name: Install real Chromium renderer
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Capture true 4v4 world-aligned shoulder views before longer animation tests
+        run: node scripts/capture_ring_arena_review.mjs
+      - name: Publish real 4v4 camera captures to screenshot-only branch
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          src="$GITHUB_WORKSPACE/artifacts/ring-arena"
+          for file in final-eye-level-3q-1280x720.png party-controlled-2-1280x720.png party-controlled-3-1280x720.png party-controlled-4-1280x720.png V31-woman7-four-enemies-ground-aligned-1917x906.png; do
+            test -s "$src/$file"
+          done
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          tmp="$(mktemp -d)"
+          cd "$tmp"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code "$remote" refs/heads/ring-arena-screenshots >/dev/null 2>&1; then
+            git fetch -q --depth=1 "$remote" refs/heads/ring-arena-screenshots
+            git checkout -q -B ring-arena-screenshots FETCH_HEAD
+          else
+            git checkout -q --orphan ring-arena-screenshots
+          fi
+          mkdir -p ring-arena
+          cp "$src/final-eye-level-3q-1280x720.png" ring-arena/ally-1-1280x720.png
+          cp "$src/party-controlled-2-1280x720.png" ring-arena/ally-2-1280x720.png
+          cp "$src/party-controlled-3-1280x720.png" ring-arena/ally-3-1280x720.png
+          cp "$src/party-controlled-4-1280x720.png" ring-arena/ally-4-1280x720.png
+          cp "$src/V31-woman7-four-enemies-ground-aligned-1917x906.png" ring-arena/hero-wide-1917x906.png
+          node - <<'JS'
+          const fs=require('node:fs');
+          fs.writeFileSync('ring-arena/manifest.json',JSON.stringify({
+           source:'Actual in-game Chromium/WebGL screenshot, never a mockup',
+           commit:process.env.GITHUB_SHA,
+           opacityCheck:'all eight actors full opacity in every controlled 4v4 screenshot',
+           files:['ally-1-1280x720.png','ally-2-1280x720.png',
+                  'ally-3-1280x720.png','ally-4-1280x720.png',
+                  'hero-wide-1917x906.png']
+          },null,2));
+          JS
+          cp "$src/camera-review.json" ring-arena/camera-review.json
+          git add ring-arena
+          if ! git diff --cached --quiet; then
+            git commit -qm "review(ring): real 4v4 WebGL screenshots for ${GITHUB_SHA:0:10}"
+            git push -q "$remote" HEAD:refs/heads/ring-arena-screenshots
+          fi
+      - name: Verify one locked camera, 4 opponents, fixed anchors and portrait proportion
+        run: |
+          node tests/ring-arena.test.cjs
+          node tests/ring-arena-wall.test.cjs
+          node tests/ring-arena-director.test.cjs
+      - name: Keep original screenshots as separate QA artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ring-arena-real-camera-webgl
+          path: artifacts/ring-arena/
+          retention-days: 7
+          if-no-files-found: warn
