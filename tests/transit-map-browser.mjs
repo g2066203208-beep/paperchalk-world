@@ -41,8 +41,12 @@ try{
  await page.locator('#quick-map').click();
  const map=page.locator('.pw-dot-world-map');
  await map.waitFor({state:'visible'});
- // Global transport is an independent page. A real subway appears only
- // AFTER explicitly entering Kirihama from its city card.
+ // Home station first; go up through city metro to the ten-city world.
+ assert.equal(await map.getAttribute('data-map-layer'),'station');
+ assert.equal(await page.locator('.pw-home-place-marker').count(),7);
+ await page.locator('.pw-home-neighborhood-up').click();
+ assert.equal(await map.getAttribute('data-map-layer'),'metro');
+ await page.locator('.pw-dot-back').click();
  assert.equal(await map.getAttribute('data-scope'),'region');
  assert.equal(await page.locator('.pw-dot-urban-lines').evaluate(el=>getComputedStyle(el).display),'none');
  await page.evaluate(()=>{
