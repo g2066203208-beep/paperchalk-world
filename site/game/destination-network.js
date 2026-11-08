@@ -13,6 +13,8 @@
  'use strict';
  if(!atlas)throw Error('World atlas must load before destination network');
  const CELL=40;
+ // The city subway uses its own, large, pixel-dot world lattice.
+ const METRO_ORIGIN=Object.freeze({x:280,y:100});
  const snap=n=>Math.round(n/CELL)*CELL;
  const HUB=c=>'hub-'+c;
  const nodes=new Map(),adj=new Map(),edgeByPair=new Map();
@@ -30,14 +32,14 @@
  for(const p of atlas.POIS){
   const stop=metro?.STATIONS?.[p.id];
   if(stop&&!stop.locked)
-   point(p.id,840+stop.gx*CELL,480+stop.gy*CELL,p.city,'place',p.name);
+   point(p.id,METRO_ORIGIN.x+stop.gx*CELL,METRO_ORIGIN.y+stop.gy*CELL,p.city,'place',p.name);
   else point(p.id,p.x,p.y,p.city,'place',p.name);
  }
  // Actual municipal metro station nodes already exist in the real transport
  // simulation. Their positions are the SAME local square grid as in map UI.
  if(metro?.STATIONS)for(const [id,s] of Object.entries(metro.STATIONS)){
   if(!s.locked&&!nodes.has(id))
-   point(id,840+s.gx*CELL,480+s.gy*CELL,'kirihama','metro',s.label);
+   point(id,METRO_ORIGIN.x+s.gx*CELL,METRO_ORIGIN.y+s.gy*CELL,'kirihama','metro',s.label);
  }
  const addEdge=(from,to,line)=>{
   const a=nodes.get(from),b=nodes.get(to);
