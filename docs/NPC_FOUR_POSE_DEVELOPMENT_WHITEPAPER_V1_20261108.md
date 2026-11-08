@@ -38,6 +38,10 @@
 - 2026-11-08 可核对 Git 记录：`98d8b54b8` 建立四格合同；`a58883efd` 入库用户批准原图；`e2c21c62a` 入库透明拆分；`98d7fdda6` 添加图集核验测试；`07e90523c` 添加 CI 二进制/旧图排除检查。
 - **状态：`USER_APPROVED_FOUR_POSE_IMAGE`，但 `gameplayIntegrated=false`，不能声称已经在真实车厢或站台出现。**
 
+### 1.3 2026-11-08 原始提示词纠错
+
+用户提供 M003 的完整正向与负向原文，曾用 GitHub 存储的改写版本并非这份原文。现已将原文保存于 [M003 用户原文提示词](NPC-M003_ANIMA_APPROVED_FOUR_POSE_USER_PROMPT_20261108.md)，并写回 M003 档案的 `production.positivePrompt` 与 `production.negativePrompt`，旧改写版留档。不能仅凭提示词中的 `0.65` 推断已批准 PNG 的真实 LoRA 参数（PNG Info 尚未核验）。今后不能把编辑过的提示词说成用户原文。
+
 ## 2. 美术风格锁与 NPC 观感
 
 - 保留项目已批准的克制日系动画/2.5D 美术：`@akipekostyle` 与实际安装的 `akipekoanima_v1_1` 别名。路人是环境中的**普通市民**，不是精细华丽的可玩主角，不用极端五官、夸张姿态、战斗演出。
