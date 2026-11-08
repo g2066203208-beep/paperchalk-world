@@ -18,7 +18,7 @@ async function snap(name){
 }
 const stats=()=>page.evaluate(()=>{
  const map=document.querySelector('.pw-dot-world-map');
- const active=selector=>[...document.querySelectorAll(selector)].filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
+ const active=selector=>[...document.querySelectorAll(selector)].filter(el=>{for(let n=el;n&&n.nodeType===1;n=n.parentElement)if(n.hidden||getComputedStyle(n).display==='none')return false;return true});
  return {scope:map?.dataset.scope,city:map?.dataset.city,
   districtCount:document.querySelectorAll('.pw-large-city-district').length,
   siteCount:document.querySelectorAll('.pw-large-city-pin').length,
