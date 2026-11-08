@@ -1,0 +1,546 @@
+{
+  "source": "ACTUAL in-game Chromium/WebGL; no illustrations, mocks, or faked poses",
+  "commit": "175c0bc30a42eb67d88b324ded9c3d5bf43b995a",
+  "entries": [
+    {
+      "slot": 1,
+      "filename": "final-eye-level-3q-1280x720.png",
+      "active": "hero",
+      "actorIds": [
+        "hero",
+        "ally-2",
+        "ally-3",
+        "ally-4",
+        "enemy-1",
+        "enemy-2",
+        "enemy-3",
+        "enemy-4"
+      ],
+      "opacity": {
+        "enemy-4": 1,
+        "enemy-3": 1,
+        "enemy-2": 1,
+        "enemy-1": 1,
+        "ally-4": 1,
+        "ally-3": 1,
+        "ally-2": 1,
+        "hero": 1
+      },
+      "camera": {
+        "mode": "outer",
+        "index": 0,
+        "shot": "left",
+        "angle": -0.02691657466805804,
+        "radius": 10.403768547982986,
+        "fov": 77,
+        "eye": {
+          "x": -0.97,
+          "y": 2.28,
+          "z": 10.420000000000002
+        },
+        "focus": {
+          "x": 0,
+          "y": 1.17,
+          "z": 5.1
+        },
+        "composition": {
+          "side": 1,
+          "offset": 0.98,
+          "behind": 1.12,
+          "score": 16.264863901393937,
+          "evaluatedForAspect": 1.7777777777777777
+        },
+        "shoulderRig": true,
+        "actorRootUnchanged": true,
+        "shoulderPivot": {
+          "x": -1.95,
+          "y": 1.4256000000000002,
+          "z": 9.3
+        },
+        "shoulderBoomMeters": 1.488220413782851,
+        "heroYawDeg": 0,
+        "lookYawDeg": 0,
+        "lookPitchDeg": 0,
+        "controlledActorId": "hero",
+        "lensShift": 0.7
+      },
+      "enemyRects": [
+        {
+          "valid": true,
+          "left": -0.40483141670160805,
+          "right": -0.2401051862887897,
+          "top": 0.718651853389228,
+          "bottom": 0.1601594981188939
+        },
+        {
+          "valid": true,
+          "left": -0.12928490709555215,
+          "right": -0.0041699742581996204,
+          "top": 0.7333060435471628,
+          "bottom": 0.20627885175575877
+        },
+        {
+          "valid": true,
+          "left": 0.10445989103625528,
+          "right": 0.22409803501685863,
+          "top": 0.7462696771372748,
+          "bottom": 0.24735799484300997
+        },
+        {
+          "valid": true,
+          "left": 0.3041868373369654,
+          "right": 0.42780100093293594,
+          "top": 0.7578193425006153,
+          "bottom": 0.2841803568107704
+        }
+      ],
+      "squadRects": [
+        {
+          "valid": true,
+          "left": -1.2385024647507457,
+          "right": -0.339294466424409,
+          "top": 0.2451812538776825,
+          "bottom": -1.3879369486425348
+        },
+        {
+          "valid": true,
+          "left": -0.21100872377958693,
+          "right": 0.3021733018730919,
+          "top": 0.3543368584113096,
+          "bottom": -0.9998272412447998
+        },
+        {
+          "valid": true,
+          "left": 0.37534028135255454,
+          "right": 0.8330678702862329,
+          "top": 0.4419761490498359,
+          "bottom": -0.7437442093102501
+        },
+        {
+          "valid": true,
+          "left": 0.7898878618982877,
+          "right": 1.2293648237181787,
+          "top": 0.5073962643559642,
+          "bottom": -0.5469020835617452
+        }
+      ],
+      "friendlyX": [
+        -1.95,
+        -0.65,
+        0.65,
+        1.95
+      ],
+      "enemyX": [
+        -1.95,
+        -0.65,
+        0.65,
+        1.95
+      ]
+    },
+    {
+      "slot": 2,
+      "filename": "party-controlled-2-1280x720.png",
+      "active": "ally-2",
+      "actorIds": [
+        "hero",
+        "ally-2",
+        "ally-3",
+        "ally-4",
+        "enemy-1",
+        "enemy-2",
+        "enemy-3",
+        "enemy-4"
+      ],
+      "opacity": {
+        "enemy-1": 1,
+        "enemy-2": 1,
+        "enemy-3": 1,
+        "enemy-4": 1,
+        "hero": 1,
+        "ally-2": 1,
+        "ally-3": 1,
+        "ally-4": 1
+      },
+      "camera": {
+        "mode": "outer",
+        "index": 0,
+        "shot": "left",
+        "angle": -0.02691657466805804,
+        "radius": 10.403768547982986,
+        "fov": 77,
+        "eye": {
+          "x": 0.030000000000000027,
+          "y": 2.28,
+          "z": 10.420000000000002
+        },
+        "focus": {
+          "x": 0,
+          "y": 1.17,
+          "z": 5.1
+        },
+        "composition": {
+          "side": 1,
+          "offset": 0.68,
+          "behind": 1.12,
+          "score": 12.846407868445688,
+          "evaluatedForAspect": 1.7777777777777777
+        },
+        "shoulderRig": true,
+        "actorRootUnchanged": true,
+        "shoulderPivot": {
+          "x": -0.65,
+          "y": 1.4256000000000002,
+          "z": 9.3
+        },
+        "shoulderBoomMeters": 1.310267148332736,
+        "heroYawDeg": 0,
+        "lookYawDeg": 0,
+        "lookPitchDeg": 0,
+        "controlledActorId": "ally-2",
+        "lensShift": 0.7
+      },
+      "enemyRects": [
+        {
+          "valid": true,
+          "left": -0.43922727055251937,
+          "right": -0.28877355147221,
+          "top": 0.7348591463467635,
+          "bottom": 0.22381057931468964
+        },
+        {
+          "valid": true,
+          "left": -0.1904579457938113,
+          "right": -0.06052123636885096,
+          "top": 0.7344159487190961,
+          "bottom": 0.22249177818283689
+        },
+        {
+          "valid": true,
+          "left": 0.0542722137617046,
+          "right": 0.18412375915192736,
+          "top": 0.7339710204688122,
+          "bottom": 0.22116825837386947
+        },
+        {
+          "valid": true,
+          "left": 0.28375250052160966,
+          "right": 0.4353307574522449,
+          "top": 0.733524351439336,
+          "bottom": 0.21983999451722305
+        }
+      ],
+      "squadRects": [
+        {
+          "valid": true,
+          "left": -1.4229217421140627,
+          "right": -0.6652038071557241,
+          "top": 0.3157770107549,
+          "bottom": -0.9444520365701452
+        },
+        {
+          "valid": true,
+          "left": -0.6585154909104649,
+          "right": -0.09240726861856487,
+          "top": 0.30271068992533234,
+          "bottom": -0.9313446681354562
+        },
+        {
+          "valid": true,
+          "left": 0.06886468860360123,
+          "right": 0.634769693406722,
+          "top": 0.29884611057471366,
+          "bottom": -0.940036988571855
+        },
+        {
+          "valid": true,
+          "left": 0.6579530064437089,
+          "right": 1.3967544073938047,
+          "top": 0.2949359786934808,
+          "bottom": -0.9488094769887001
+        }
+      ],
+      "friendlyX": [
+        -1.95,
+        -0.65,
+        0.65,
+        1.95
+      ],
+      "enemyX": [
+        -1.95,
+        -0.65,
+        0.65,
+        1.95
+      ]
+    },
+    {
+      "slot": 3,
+      "filename": "party-controlled-3-1280x720.png",
+      "active": "ally-3",
+      "actorIds": [
+        "hero",
+        "ally-2",
+        "ally-3",
+        "ally-4",
+        "enemy-1",
+        "enemy-2",
+        "enemy-3",
+        "enemy-4"
+      ],
+      "opacity": {
+        "enemy-4": 1,
+        "enemy-3": 1,
+        "enemy-2": 1,
+        "enemy-1": 1,
+        "ally-4": 1,
+        "ally-3": 1,
+        "ally-2": 1,
+        "hero": 1
+      },
+      "camera": {
+        "mode": "outer",
+        "index": 0,
+        "shot": "left",
+        "angle": -0.02691657466805804,
+        "radius": 10.403768547982986,
+        "fov": 77,
+        "eye": {
+          "x": -0.030000000000000027,
+          "y": 2.28,
+          "z": 10.420000000000002
+        },
+        "focus": {
+          "x": 0,
+          "y": 1.17,
+          "z": 5.1
+        },
+        "composition": {
+          "side": -1,
+          "offset": 0.68,
+          "behind": 1.12,
+          "score": 12.863139417358905,
+          "evaluatedForAspect": 1.7777777777777777
+        },
+        "shoulderRig": true,
+        "actorRootUnchanged": true,
+        "shoulderPivot": {
+          "x": 0.65,
+          "y": 1.4256000000000002,
+          "z": 9.3
+        },
+        "shoulderBoomMeters": 1.310267148332736,
+        "heroYawDeg": 0,
+        "lookYawDeg": 0,
+        "lookPitchDeg": 0,
+        "controlledActorId": "ally-3",
+        "lensShift": 0.7
+      },
+      "enemyRects": [
+        {
+          "valid": true,
+          "left": -0.4385475674162,
+          "right": -0.28669059323763835,
+          "top": 0.7335186316679074,
+          "bottom": 0.21982298839993042
+        },
+        {
+          "valid": true,
+          "left": -0.1873280078323275,
+          "right": -0.05719981259954111,
+          "top": 0.733965323010738,
+          "bottom": 0.22115131305081606
+        },
+        {
+          "valid": true,
+          "left": 0.05759887986305578,
+          "right": 0.18727238195001353,
+          "top": 0.7344102734440606,
+          "bottom": 0.22247489332860984
+        },
+        {
+          "valid": true,
+          "left": 0.28586160472574423,
+          "right": 0.43605408559513625,
+          "top": 0.7348534931254647,
+          "bottom": 0.22379375460619377
+        }
+      ],
+      "squadRects": [
+        {
+          "valid": true,
+          "left": -1.4266033725828569,
+          "right": -0.6510489755091059,
+          "top": 0.30724894977026246,
+          "bottom": -0.9777246129117771
+        },
+        {
+          "valid": true,
+          "left": -0.6377475635028732,
+          "right": -0.07116989145099113,
+          "top": 0.29883082922320064,
+          "bottom": -0.9400713162893171
+        },
+        {
+          "valid": true,
+          "left": 0.09010786318881411,
+          "right": 0.6555971514875435,
+          "top": 0.30269558608311986,
+          "bottom": -0.9313786828606465
+        },
+        {
+          "valid": true,
+          "left": 0.6723867233113684,
+          "right": 1.393689819270753,
+          "top": 0.306515578749063,
+          "bottom": -0.9227651277413718
+        }
+      ],
+      "friendlyX": [
+        -1.95,
+        -0.65,
+        0.65,
+        1.95
+      ],
+      "enemyX": [
+        -1.95,
+        -0.65,
+        0.65,
+        1.95
+      ]
+    },
+    {
+      "slot": 4,
+      "filename": "party-controlled-4-1280x720.png",
+      "active": "ally-4",
+      "actorIds": [
+        "hero",
+        "ally-2",
+        "ally-3",
+        "ally-4",
+        "enemy-1",
+        "enemy-2",
+        "enemy-3",
+        "enemy-4"
+      ],
+      "opacity": {
+        "enemy-1": 1,
+        "enemy-2": 1,
+        "enemy-3": 1,
+        "enemy-4": 1,
+        "hero": 1,
+        "ally-2": 1,
+        "ally-3": 1,
+        "ally-4": 1
+      },
+      "camera": {
+        "mode": "outer",
+        "index": 0,
+        "shot": "left",
+        "angle": -0.02691657466805804,
+        "radius": 10.403768547982986,
+        "fov": 77,
+        "eye": {
+          "x": 0.97,
+          "y": 2.28,
+          "z": 10.420000000000002
+        },
+        "focus": {
+          "x": 0,
+          "y": 1.17,
+          "z": 5.1
+        },
+        "composition": {
+          "side": -1,
+          "offset": 0.98,
+          "behind": 1.12,
+          "score": 16.138300702648834,
+          "evaluatedForAspect": 1.7777777777777777
+        },
+        "shoulderRig": true,
+        "actorRootUnchanged": true,
+        "shoulderPivot": {
+          "x": 1.95,
+          "y": 1.4256000000000002,
+          "z": 9.3
+        },
+        "shoulderBoomMeters": 1.488220413782851,
+        "heroYawDeg": 0,
+        "lookYawDeg": 0,
+        "lookPitchDeg": 0,
+        "controlledActorId": "ally-4",
+        "lensShift": 0.7
+      },
+      "enemyRects": [
+        {
+          "valid": true,
+          "left": -0.43026064917520784,
+          "right": -0.30660550879291637,
+          "top": 0.7579588010204361,
+          "bottom": 0.2846262715833221
+        },
+        {
+          "valid": true,
+          "left": -0.22684950968020617,
+          "right": -0.10715001455923043,
+          "top": 0.7464256817956972,
+          "bottom": 0.24785395547293834
+        },
+        {
+          "valid": true,
+          "left": 0.0013261544862693197,
+          "right": 0.12598840729156446,
+          "top": 0.7334817237054452,
+          "bottom": 0.2068337816291253
+        },
+        {
+          "valid": true,
+          "left": 0.23691285541318063,
+          "right": 0.4010758194457984,
+          "top": 0.718851180329478,
+          "bottom": 0.16078457536704588
+        }
+      ],
+      "squadRects": [
+        {
+          "valid": true,
+          "left": -1.2480229903325388,
+          "right": -0.7810708219098481,
+          "top": 0.5018223646193294,
+          "bottom": -0.529156750648468
+        },
+        {
+          "valid": true,
+          "left": -0.8348508819910817,
+          "right": -0.3771821043656164,
+          "top": 0.4422704859866033,
+          "bottom": -0.7428696453900689
+        },
+        {
+          "valid": true,
+          "left": -0.3046130757553488,
+          "right": 0.20783648963938556,
+          "top": 0.3547396126775639,
+          "bottom": -0.9986697578285316
+        },
+        {
+          "valid": true,
+          "left": 0.3395578490051393,
+          "right": 1.2076494996220115,
+          "top": 0.23142744173529345,
+          "bottom": -1.3450280233184488
+        }
+      ],
+      "friendlyX": [
+        -1.95,
+        -0.65,
+        0.65,
+        1.95
+      ],
+      "enemyX": [
+        -1.95,
+        -0.65,
+        0.65,
+        1.95
+      ]
+    }
+  ]
+}
