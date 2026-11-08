@@ -767,7 +767,9 @@ body.mobile-mode.virtual-landscape #view{
 <!-- Register the complete metro graph BEFORE constructing daily-life locations. -->
 <script src="./game/metro-map-editor.js?v=backup-legacy-70-v34-20261108"></script>
 <script src="./game/metro-graph.js?v=retired-station-migration-v34-20261108"></script>
-<script src="./game/daily-life-state.js?v=legacy-save-migration-70-v34-20261108"></script>
+<script src="./game/daily-life-state.js?v=act-one-home-20261109"></script>
+<script src="./game/act-one-story.js?v=act-one-v1-20261109"></script>
+<link rel="stylesheet" href="./game/act-one.css?v=act-one-v1-20261109">
 <link rel="stylesheet" href="./game/overworld.css?v=fog-underlay-fix-v8-20261107">
 <link rel="stylesheet" href="./game/overworld-surfaces.css?v=rail-photo-v4a-20261107">
 <link rel="stylesheet" href="./game/transit-map-ui.css?v=sculpt-ground-v1-20261108">
@@ -2193,6 +2195,7 @@ void main(){
     const life=window.PaperWorldDailyLifeUI;
     if(!resume){
       opening.newGame();
+      life?.actOne?.reset?.();
       life?.engine?.reset?.();
       window.PaperWorldTopHUD?.reset?.();
     }else if(!opening.snapshot().hasSave)return false;
@@ -3481,10 +3484,10 @@ void main(){
 <script src="./game/metro-motion.js?v=physical-journey-v2-20261108"></script>
 <script src="./game/metro-cabin.js?v=real-npc-cabin-door-flow-v1-20261108"></script>
 <script src="./game/overworld-surfaces.js?v=route-aware-availability-v19-20261108"></script>
-<script src="./game/overworld-director.js?v=world-director-v1"></script>
+<script src="./game/overworld-director.js?v=act-one-beat-hooks-20261109"></script>
 <script src="./game/npc-life-sim.js?v=late-register-npc-v4-20261108"></script>
 <script src="./game/npc-scene-presence.js?v=independent-scene-permissions-v3-20261108"></script>
-<script src="./game/overworld-runtime.js?v=real-transfer-station-70-v33-20261108"></script>
+<script src="./game/overworld-runtime.js?v=act-one-script-20261109"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
