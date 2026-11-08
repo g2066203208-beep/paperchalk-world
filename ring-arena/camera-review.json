@@ -1,6 +1,6 @@
 {
   "source": "ACTUAL in-game Chromium/WebGL; no illustrations, mocks, or faked poses",
-  "commit": "618ff1ec61194e2d7f3fbf0a97c6a4ba63e7a9f3",
+  "commit": "b4dd74a7bf79583e50f7dac7ae77590de427ea1d",
   "entries": [
     {
       "slot": 1,
@@ -54,7 +54,8 @@
         "lookYawDeg": 0,
         "lookPitchDeg": 0,
         "phoneShoulderFit": 0,
-        "actorRootUnchanged": true
+        "actorRootUnchanged": true,
+        "controlledActorId": "hero"
       },
       "enemyRects": [
         {
@@ -123,74 +124,66 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 88,
+      "dynamicUploads": 58,
       "worldActors": [
         {
           "id": "hero",
           "team": "ally",
           "x": -1.05,
           "y": 0,
-          "z": 9.3,
-          "stageYaw": -0.05
+          "z": 9.3
         },
         {
           "id": "ally-2",
           "team": "ally",
-          "x": 1.4,
+          "x": -0.25,
           "y": 0,
-          "z": 7.68,
-          "stageYaw": 1.6
+          "z": 9.3
         },
         {
           "id": "ally-3",
           "team": "ally",
-          "x": 2.1,
+          "x": 0.55,
           "y": 0,
-          "z": 7.58,
-          "stageYaw": 1.9
+          "z": 9.3
         },
         {
           "id": "ally-4",
           "team": "ally",
-          "x": 2.85,
+          "x": 1.35,
           "y": 0,
-          "z": 7.52,
-          "stageYaw": 1.9
+          "z": 9.3
         },
         {
           "id": "enemy-1",
           "team": "enemy",
           "x": -1.05,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-2",
           "team": "enemy",
           "x": -0.25,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-3",
           "team": "enemy",
           "x": 0.55,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-4",
           "team": "enemy",
           "x": 1.35,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         }
       ],
-      "staging": "world-space-foreground-handoff",
+      "staging": "four-rear-facing-allies-one-fixed-rank",
       "friendlyX": [
         -1.05,
         -0.25,
@@ -226,8 +219,8 @@
         "enemy-1": 1,
         "ally-4": 1,
         "ally-3": 1,
-        "hero": 1,
-        "ally-2": 1
+        "ally-2": 1,
+        "hero": 1
       },
       "camera": {
         "mode": "outer",
@@ -237,18 +230,18 @@
         "radius": 10.403768547982986,
         "fov": 66,
         "eye": {
-          "x": -0.28,
+          "x": 0.52,
           "y": 1.5,
           "z": 10.4
         },
         "focus": {
-          "x": -0.24,
+          "x": 0.56,
           "y": 1.5,
           "z": 5.4
         },
         "shoulderRig": true,
         "shoulderPivot": {
-          "x": -1.05,
+          "x": -0.25,
           "y": 1.4256000000000002,
           "z": 9.3
         },
@@ -257,7 +250,9 @@
         "lookYawDeg": 0,
         "lookPitchDeg": 0,
         "phoneShoulderFit": 0,
-        "actorRootUnchanged": true
+        "actorRootUnchanged": true,
+        "controlledActorId": "ally-2",
+        "originalHeroWorldStatic": true
       },
       "enemyRects": [
         {
@@ -326,74 +321,66 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 112,
+      "dynamicUploads": 78,
       "worldActors": [
         {
           "id": "hero",
           "team": "ally",
-          "x": 1.4,
+          "x": -1.05,
           "y": 0,
-          "z": 7.68,
-          "stageYaw": 1.6
+          "z": 9.3
         },
         {
           "id": "ally-2",
           "team": "ally",
-          "x": -1.05,
+          "x": -0.25,
           "y": 0,
-          "z": 9.3,
-          "stageYaw": -0.05
+          "z": 9.3
         },
         {
           "id": "ally-3",
           "team": "ally",
-          "x": 2.1,
+          "x": 0.55,
           "y": 0,
-          "z": 7.58,
-          "stageYaw": 1.9
+          "z": 9.3
         },
         {
           "id": "ally-4",
           "team": "ally",
-          "x": 2.85,
+          "x": 1.35,
           "y": 0,
-          "z": 7.52,
-          "stageYaw": 1.9
+          "z": 9.3
         },
         {
           "id": "enemy-1",
           "team": "enemy",
           "x": -1.05,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-2",
           "team": "enemy",
           "x": -0.25,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-3",
           "team": "enemy",
           "x": 0.55,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-4",
           "team": "enemy",
           "x": 1.35,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         }
       ],
-      "staging": "world-space-foreground-handoff",
+      "staging": "four-rear-facing-allies-one-fixed-rank",
       "friendlyX": [
         -1.05,
         -0.25,
@@ -428,9 +415,9 @@
         "enemy-2": 1,
         "enemy-1": 1,
         "ally-4": 1,
+        "ally-3": 1,
         "ally-2": 1,
-        "hero": 1,
-        "ally-3": 1
+        "hero": 1
       },
       "camera": {
         "mode": "outer",
@@ -440,18 +427,18 @@
         "radius": 10.403768547982986,
         "fov": 66,
         "eye": {
-          "x": -0.28,
+          "x": 1.32,
           "y": 1.5,
           "z": 10.4
         },
         "focus": {
-          "x": -0.24,
+          "x": 1.36,
           "y": 1.5,
           "z": 5.4
         },
         "shoulderRig": true,
         "shoulderPivot": {
-          "x": -1.05,
+          "x": 0.55,
           "y": 1.4256000000000002,
           "z": 9.3
         },
@@ -460,7 +447,9 @@
         "lookYawDeg": 0,
         "lookPitchDeg": 0,
         "phoneShoulderFit": 0,
-        "actorRootUnchanged": true
+        "actorRootUnchanged": true,
+        "controlledActorId": "ally-3",
+        "originalHeroWorldStatic": true
       },
       "enemyRects": [
         {
@@ -529,74 +518,66 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 135,
+      "dynamicUploads": 100,
       "worldActors": [
         {
           "id": "hero",
           "team": "ally",
-          "x": 1.4,
+          "x": -1.05,
           "y": 0,
-          "z": 7.68,
-          "stageYaw": 1.6
+          "z": 9.3
         },
         {
           "id": "ally-2",
           "team": "ally",
-          "x": 2.1,
+          "x": -0.25,
           "y": 0,
-          "z": 7.58,
-          "stageYaw": 1.9
+          "z": 9.3
         },
         {
           "id": "ally-3",
           "team": "ally",
-          "x": -1.05,
+          "x": 0.55,
           "y": 0,
-          "z": 9.3,
-          "stageYaw": -0.05
+          "z": 9.3
         },
         {
           "id": "ally-4",
           "team": "ally",
-          "x": 2.85,
+          "x": 1.35,
           "y": 0,
-          "z": 7.52,
-          "stageYaw": 1.9
+          "z": 9.3
         },
         {
           "id": "enemy-1",
           "team": "enemy",
           "x": -1.05,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-2",
           "team": "enemy",
           "x": -0.25,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-3",
           "team": "enemy",
           "x": 0.55,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-4",
           "team": "enemy",
           "x": 1.35,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         }
       ],
-      "staging": "world-space-foreground-handoff",
+      "staging": "four-rear-facing-allies-one-fixed-rank",
       "friendlyX": [
         -1.05,
         -0.25,
@@ -630,10 +611,10 @@
         "enemy-3": 1,
         "enemy-2": 1,
         "enemy-1": 1,
+        "ally-4": 1,
         "ally-3": 1,
         "ally-2": 1,
-        "hero": 1,
-        "ally-4": 1
+        "hero": 1
       },
       "camera": {
         "mode": "outer",
@@ -643,18 +624,18 @@
         "radius": 10.403768547982986,
         "fov": 66,
         "eye": {
-          "x": -0.28,
+          "x": 2.12,
           "y": 1.5,
           "z": 10.4
         },
         "focus": {
-          "x": -0.24,
+          "x": 2.16,
           "y": 1.5,
           "z": 5.4
         },
         "shoulderRig": true,
         "shoulderPivot": {
-          "x": -1.05,
+          "x": 1.35,
           "y": 1.4256000000000002,
           "z": 9.3
         },
@@ -663,7 +644,9 @@
         "lookYawDeg": 0,
         "lookPitchDeg": 0,
         "phoneShoulderFit": 0,
-        "actorRootUnchanged": true
+        "actorRootUnchanged": true,
+        "controlledActorId": "ally-4",
+        "originalHeroWorldStatic": true
       },
       "enemyRects": [
         {
@@ -732,74 +715,66 @@
         "ally-3",
         "ally-4"
       ],
-      "dynamicUploads": 161,
+      "dynamicUploads": 122,
       "worldActors": [
         {
           "id": "hero",
           "team": "ally",
-          "x": 1.4,
+          "x": -1.05,
           "y": 0,
-          "z": 7.68,
-          "stageYaw": 1.6
+          "z": 9.3
         },
         {
           "id": "ally-2",
           "team": "ally",
-          "x": 2.1,
+          "x": -0.25,
           "y": 0,
-          "z": 7.58,
-          "stageYaw": 1.9
+          "z": 9.3
         },
         {
           "id": "ally-3",
           "team": "ally",
-          "x": 2.85,
+          "x": 0.55,
           "y": 0,
-          "z": 7.52,
-          "stageYaw": 1.9
+          "z": 9.3
         },
         {
           "id": "ally-4",
           "team": "ally",
-          "x": -1.05,
+          "x": 1.35,
           "y": 0,
-          "z": 9.3,
-          "stageYaw": -0.05
+          "z": 9.3
         },
         {
           "id": "enemy-1",
           "team": "enemy",
           "x": -1.05,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-2",
           "team": "enemy",
           "x": -0.25,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-3",
           "team": "enemy",
           "x": 0.55,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         },
         {
           "id": "enemy-4",
           "team": "enemy",
           "x": 1.35,
           "y": 0,
-          "z": 6.8,
-          "stageYaw": 0
+          "z": 6.8
         }
       ],
-      "staging": "world-space-foreground-handoff",
+      "staging": "four-rear-facing-allies-one-fixed-rank",
       "friendlyX": [
         -1.05,
         -0.25,
