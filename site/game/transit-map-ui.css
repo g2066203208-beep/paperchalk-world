@@ -1871,3 +1871,24 @@
 #pw-world-surface .pw-dot-world-map .pw-metro-edit-bend-hit:active{
  cursor:grabbing!important;
 }
+
+/* EMPTY DOT STAGE / 2026-11-08
+ * This is the existing real game map, not a new canvas or a fake screenshot.
+ * Hide every built map layer and overlay; retain the original uniform SVG
+ * dot grid, camera, pan/zoom and ALL authored route/place data underneath.
+ * ?mapLayers=full remains a non-destructive QA escape hatch.
+ */
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > :not(.pw-dot-world-canvas),
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview > .pw-dot-world-canvas > :not(.pw-dot-rail-canvas),
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview .pw-dot-rail-canvas > :not(.pw-transit-dot-matrix){
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview .pw-transit-dot-matrix{
+ display:initial!important;visibility:visible!important;opacity:1!important;
+}
+#pw-world-surface .pw-dot-world-map.pw-dot-empty-preview .pw-transit-grid-dot{
+ fill:#8499a9!important;opacity:.66!important;
+}
+#novel-ui #pw-world-surface .pw-surface-frame[data-view="map"]:has(.pw-dot-empty-preview){
+ border:0!important;border-radius:14px!important;box-shadow:none!important;
+}
