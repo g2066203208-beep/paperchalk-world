@@ -10,9 +10,9 @@ const ROOT = path.resolve(__dirname, '..');
 const read = p => JSON.parse(fs.readFileSync(path.join(ROOT,p),'utf8'));
 const data = read('site/data/npc/civilians/gallery.v1.json');
 
-test('all six ordinary civilians are in one roster; five new real PNG files are committed',()=>{
-  assert.deepEqual(data.characters.map(c=>c.id),['NPC-C001','NPC-C002','NPC-C003','NPC-C004','NPC-M003','NPC-C005']);
-  assert.equal(new Set(data.characters.map(c=>c.id)).size,5);
+test('all seven ordinary civilians including SG01 are in one roster; originals are committed',()=>{
+  assert.deepEqual(data.characters.map(c=>c.id),['NPC-C001','NPC-C002','NPC-C003','NPC-C004','NPC-M003','NPC-C005','NPC-SG01']);
+  assert.equal(new Set(data.characters.map(c=>c.id)).size,7);
   const expected = {
     'NPC-C001': ['a98113e0612058b9d8fccfee28c9f88223be4f8de4c90e8fe938dc0cbb718ba5', 678018],
     'NPC-C002': ['a319c5ebc3e9b236010a1c31b2bccfb1f7e96668eaa3211b3b35bfde17cb2291', 733253],
@@ -71,4 +71,28 @@ test('six-front comparison production script references all six actual character
     assert.ok(txt.includes(id),id);
   assert.ok(fs.existsSync(path.join(ROOT,'site/assets/characters/civilians/npc-front-comparison-20261108.png')));
   assert.ok(fs.existsSync(path.join(ROOT,'site/assets/characters/civilians/npc-front-comparison-20261108.jpg')));
+});
+
+
+test('SG01 schoolgirl uploaded original is actually present, correctly hashed and not game-registered',()=>{
+  const npc=data.characters.find(c=>c.id==='NPC-SG01');
+  assert.ok(npc);
+  assert.equal(npc.sceneGroup,'heroine_school_trio');
+  assert.equal(npc.source.path,'site/assets/characters/civilians/schoolgirls/sg01/three-view-original.png');
+  assert.deepEqual(npc.source.actualImageLeftToRight,['side_left','front','back']);
+  assert.deepEqual(npc.source.dimensions,[1024,1024]);
+  assert.equal(npc.source.mode,'RGB');
+  assert.equal(npc.source.committedToRepository,true);
+  const p=path.join(ROOT,npc.source.path);
+  assert.ok(fs.existsSync(p));
+  const bytes=fs.readFileSync(p);
+  assert.equal(bytes.length,623012);
+  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),'32687ac374ccdb7f3ffb830a9a005a6a70ffa294f6fa570e06776d392d60121a');
+  assert.equal(crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${bytes.length}\0`),bytes])).digest('hex'),'4f1443d9d6fcd83829ea77cd837365c01152c1e8');
+  assert.equal(npc.production.sourceImageUserAccepted,true);
+  assert.equal(npc.production.gameApproved,false);
+  assert.equal(npc.production.hasRealAlpha,false);
+  assert.equal(npc.production.registeredForGame,false);
+  assert.deepEqual(data.schoolTrio.roster,['NPC-SG01','NPC-SG02','NPC-SG03']);
+  assert.equal(data.schoolTrio.planned.find(x=>x.id==='NPC-SG02').status,'prompt_only_no_png');
 });
