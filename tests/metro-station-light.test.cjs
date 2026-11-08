@@ -29,7 +29,7 @@ test('real window side and opposite platform lamps illuminate original WebGL 3D 
  assert.match(source,/float platformWindowTransmission\(vec3 p,vec3 src,int side\)/);
  assert.match(source,/uPlatformPositions\[4\]/);
  assert.match(source,/uPlatformColors\[4\]/);
- assert.match(source,/ringIrradiance\(aP,n\)/,'floor receives analytic light');
+ assert.match(source,/ringIrradiance\(renderP,n\)/,'floor receives analytic world-space lighting');
  assert.match(source,/ringShade\(rgb,vWorld,pseudoNormal\)/,'original L2D body receives same analytic light');
  assert.match(source,/uPlatformExposure\*through/);
  assert.match(source,/projectedShadow\.uLamp,[\s\S]{0,100}outside\.positions\.slice/);
