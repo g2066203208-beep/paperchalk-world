@@ -99,9 +99,10 @@ try{
  assert.equal((await state()).homeVisible,false);
  assert.equal((await state()).scope,'city');
  assert.equal(await page.locator('.pw-dot-local-places .is-station').count(),70);
- // From the real home station node, descend to its one authored district.
- await page.evaluate(()=>document.querySelector('.pw-dot-local-places .is-station[data-place="entrance"]').click());
- await page.locator('.pw-transit-menu-item').filter({hasText:'查看住宅前站周边'}).click();
+ // The city metro has an explicit route back DOWN into the current
+ // station area, without needing to hit a tiny 10px station marker.
+ assert.equal(await page.locator('.pw-dot-home-down').isVisible(),true);
+ await page.locator('.pw-dot-home-down').click();
  await page.waitForFunction(()=>document.querySelector('.pw-dot-world-map')?.dataset.mapLayer==='station');
  assert.equal((await state()).active,'entrance');
  await page.locator('.pw-home-neighborhood-up').click();
