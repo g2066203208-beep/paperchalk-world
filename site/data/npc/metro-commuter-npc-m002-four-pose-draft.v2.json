@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 2,
+  "id": "NPC-M002",
+  "category": "metro_civilian",
+  "title": "普通女乘客—低头看手机",
+  "state": "REDRAW_REQUIRED_FOUR_POSE",
+  "legacy": "The earlier 3-view phone-holding woman's art is superseded for runtime use; retain identity/outfit, DO NOT load old artwork as 4-pose",
+  "visualCanon": {
+    "hair": "straight shoulder-length dark brown hair with bangs",
+    "face": "minimal face, no rendered eyes, small nose and mouth",
+    "outer": "light beige cardigan worn open",
+    "inner": "muted light blue top",
+    "pants": "dark navy ankle-length straight trousers",
+    "shoes": "white low-top sneakers"
+  },
+  "special": {
+    "action": "frontal_phone_check",
+    "direction": "strict_front",
+    "props": [
+      "small blue smartphone"
+    ],
+    "furnitureNotInSprite": true,
+    "characterActivity": "候车时读消息，听到广播会抬头"
+  },
+  "production": {
+    "checkpoint": "Anima Base",
+    "steps": 35,
+    "cfg": 4.5,
+    "sampler": "ER SDE",
+    "canvas": [
+      1536,
+      1024
+    ],
+    "lora": "@akipekostyle <lora:akipekoanima_v1_1:0.65>",
+    "referenceAdvice": "For subsequent pose edits, use that NPC's own confirmed Anima source image with the installed pilot_r32 ImageStitch reference method; do not borrow another NPC's reference.",
+    "alphaAdvice": "Anima prompt text does not prove output RGBA. Remove white background and verify alpha before game registration.",
+    "viewOrder": [
+      "front_static_standing",
+      "strict_90deg_side_static_standing_facing_left",
+      "back_static_standing",
+      "unique_frontal_special_action"
+    ],
+    "positivePrompt": "safe, @akipekostyle, <lora:akipekoanima_v1_1:0.65>, character sheet, four full body illustrations of the same ordinary young adult woman, identical clothing in every view, straight shoulder-length dark brown hair, long front bangs, no visible eyes, small nose, small closed mouth, beige button-front cardigan worn open, pale powder-blue t-shirt, dark navy straight ankle-length pants, plain white low-top sneakers, everyday subway commuter, flat colors, clean anime lineart, simple cel shading, muted colors, simple natural clothing folds, isolated figures, plain white background. Four figures in one horizontal row, left to right. FIRST: exact straight front view standing still, shoulders face chest and shoes directly forward, empty hands relaxed at sides, both feet planted, no walking. SECOND: exact ninety-degree left side profile standing still, entire body and shoes facing left, arms relaxed at sides, no walking. THIRD: exact back view standing still, whole body facing away, arms down, no walking. FOURTH: exact front view standing still with head slightly lowered, both hands holding a small blue smartphone and reading a message, shoulders and hips facing straight toward viewer. The exact same beige cardigan, powder-blue top, navy pants, white sneakers, and hair in all four depictions. No chair, no bench, no scenery, no ground objects. All four heads and shoes complete and evenly spaced.",
+    "negativePrompt": "extra people, different characters, inconsistent clothes, different colors between poses, missing jacket, missing undershirt, different hairstyle, first pose three-quarter view, second pose front view, second pose three-quarter view, third pose side view, fourth pose side view, walking, stepping, action pose in first three figures, chair, bench, subway seat, train interior, furniture, scenery, background objects, floor shadow, excessive clothing details, cropped head, cropped feet, text, watermark"
+  },
+  "render": {
+    "approvedSource": null,
+    "transparentSpriteAtlas": null,
+    "ready": false
+  },
+  "history": "2026-11-08 prior three-view female approved as identity but obsolete under new 4-pose standard; waiting for Anima new image."
+}
