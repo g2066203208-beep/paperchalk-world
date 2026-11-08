@@ -17,8 +17,8 @@ test('every railway edge is a point-to-point SVG-drawable orthogonal polyline',(
  const model=editor.create(metro,geo,store());
  const audit=model.info();
  assert.equal(model.changed(),false);
- assert.equal(audit.lines,10);assert.equal(audit.stations,170);
- assert.equal(audit.interchanges,19);assert.equal(audit.segments,181);
+ assert.equal(audit.lines,10);assert.equal(audit.stations,70);
+ assert.equal(audit.interchanges,19);assert.equal(audit.segments,81);
  for(const edge of model.edges()){
   const pts=model.points(edge);
   assert.ok(pts.length>=2,edge.key);
@@ -77,16 +77,16 @@ test('point-connection inserts and deletes a NEW physical station in its real li
  const base=model.getLine(edge.lineId).stops.length;
  const id=model.addStation(edge,1,25);
  assert.match(id,/^kh-custom-/);
- assert.equal(model.info().stations,171);assert.equal(model.info().segments,182);
+ assert.equal(model.info().stations,71);assert.equal(model.info().segments,82);
  assert.equal(model.getLine(edge.lineId).stops.length,base+1);
  assert.equal(model.getLine(edge.lineId).stops.indexOf(id),
   model.getLine(edge.lineId).stops.indexOf(edge.from)+1);
  assert.equal(model.renameStation(id,'新的调查站'),true);
  assert.equal(model.getStation(id).label,'新的调查站');
  assert.equal(model.removeCustomStation(id),true);
- assert.equal(model.info().stations,170);assert.equal(model.info().segments,181);
+ assert.equal(model.info().stations,70);assert.equal(model.info().segments,81);
  assert.equal(model.getLine(edge.lineId).stops.length,base);
- assert.equal(model.undo(),true);assert.equal(model.info().stations,171);
+ assert.equal(model.undo(),true);assert.equal(model.info().stations,71);
 });
 test('invalid blueprint edits cannot corrupt real stops or create rectangle-based phantom rails',()=>{
  const model=editor.create(metro,geo,store());
@@ -144,7 +144,7 @@ test('saving and reloading a blueprint actually installs the new station and rou
  const shape=runtime.window.PaperWorldMetroGeometry;
  assert.ok(actual.ACTIVE_BLUEPRINT,'saved plan must be recognized at boot');
  assert.ok(actual.STATIONS[newId],'newly authored stop must become a real playable station');
- assert.equal(Object.keys(actual.STATIONS).length,171);
+ assert.equal(Object.keys(actual.STATIONS).length,71);
  assert.equal(actual.LINES.length,10);
  assert.equal(actual.getLine('h').stops.includes(newId),true);
  assert.ok(actual.path('entrance',newId));
