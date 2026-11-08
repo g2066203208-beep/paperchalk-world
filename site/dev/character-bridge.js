@@ -296,16 +296,19 @@ async function assign(target,id,face='front',save=true){
 // original actor assignments on leaving the battle scene.
 async function ensureBattleHero(){
  if(!ready||!isArena())return false;
- if(!catalog.get('female-07')?.l2dModule?.back?.rig?.textures)
+ const originalMode=new URLSearchParams(location.search).get('heroPose')==='original';
+ if(!originalMode&&!catalog.get('female-07')?.l2dModule?.back?.rig?.textures)
   throw Error('女七背面 14 层 PSD L2D 尚未发布：拒绝用静态图片冒充');
- const keys=['player','ally2','ally3','ally4'];
+ const keys=originalMode?['player']:['player','ally2','ally3','ally4'];
+ const targetId=originalMode?'protagonist':'female-07';
  if(!battleRestoration)battleRestoration=Object.fromEntries(
   keys.map(key=>[key,{...assigned[key]}]));
  for(const key of keys){
-  if(assigned[key]?.id==='female-07'&&assigned[key]?.side==='back'&&
-     window.PaperchalkL2DLibrary?.get(key)?.model?.characterId==='female-07')
+  if(assigned[key]?.id===targetId&&assigned[key]?.side==='back'&&
+     (!originalMode?
+      window.PaperchalkL2DLibrary?.get(key)?.model?.characterId==='female-07':true))
    continue;
-  await assign(key,'female-07','back',false);
+  await assign(key,targetId,'back',false);
  }
  return true;
 }
