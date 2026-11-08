@@ -65,6 +65,25 @@ try{
  });
  await page.evaluate(()=>document.querySelector('#quick-map').click());
  await page.locator('.pw-dot-world-map[data-scope="city"][data-city="kirihama"]').waitFor();
+ // Stage-zero screenshot must show the REAL, current game with only its dot
+ // lattice visible. The test then unveils legacy layers for edit regressions.
+ const empty=await page.evaluate(()=>{
+  const map=document.querySelector('.pw-dot-world-map');
+  const display=selector=>{
+   const el=map.querySelector(selector);return el?getComputedStyle(el).display:null;
+  };
+  return {mode:map.dataset.presentation,dots:map.querySelectorAll('.pw-transit-dot-matrix circle').length,
+   heading:display('.pw-dot-chrome'),metro:display('.pw-dot-urban-lines'),
+   pins:display('.pw-dot-local-places'),editor:display('.pw-metro-edit-toolbar'),
+   svg:display('.pw-dot-rail-canvas')};
+ });
+ assert.equal(empty.mode,'dots-only');
+ assert.ok(empty.dots>1500,'all original map dots should remain');
+ for(const layer of ['heading','metro','pins','editor'])assert.equal(empty[layer],'none',JSON.stringify(empty));
+ assert.notEqual(empty.svg,'none','do not hide the dot grid with its parent SVG');
+ await shot('00-original-game-empty-dot-canvas.png');
+ console.log('EMPTY DOT MAP CHROMIUM PROOF',JSON.stringify(empty));
+ await page.evaluate(()=>document.querySelector('.pw-dot-world-map')?.classList.remove('pw-dot-empty-preview'));
  assert.equal(await page.locator('.pw-metro-edit-toggle:visible').count(),1);
  await shot('01-kirihama-70-stations-10-lines-before-edit.png');
  await page.locator('.pw-metro-edit-toggle').click();
