@@ -6,7 +6,7 @@
 (function(global){
 'use strict';
 const NS='http://www.w3.org/2000/svg';
-const CELL=40,W=2000,H=1280,LOCAL_X=840,LOCAL_Y=480;
+const CELL=40,W=2000,H=1280,LOCAL_X=280,LOCAL_Y=100;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const snap=x=>Math.round(x/CELL)*CELL;
 const element=(tag,cls,label)=>{
@@ -102,29 +102,39 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
  body.replaceChildren(map);
  // Only explicit city selection can reveal internal rail or destination pins.
  let activeCity=null,regionalCamera=null;
- let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,focused=false;
+ let scale=1,minScale=.5,x=0,y=0,drag=null,busy=false,selected=null,popupAnchor=null,focused=false;
  const fingers=new Map();let pinch=null;
  let lastW=844,lastH=390;
  const cleanupListeners=[];
  function notify(msg){onFeedback?.(msg)}
  function clear(){
-  popup.hidden=true;selectedRoute.replaceChildren();selected?.removeAttribute('data-selected');
-  selected=null;
+  popup.hidden=true;selectedRoute.replaceChildren();
+  for(const group of [urban,regional])
+   for(const seg of group.querySelectorAll('[data-selected="true"]'))
+    seg.removeAttribute('data-selected');
+  selected?.removeAttribute('data-selected');
+  selected=null;popupAnchor=null;
  }
- function positionPopup(event,node){
+ function positionPopup(){
   const outer=map.getBoundingClientRect();
-  const r=node?.getBoundingClientRect();
   const w=Math.min(236,Math.max(155,outer.width*.27));
   const h=popup.offsetHeight||124;
-  const left=r?(r.right-outer.left+12):(event.clientX-outer.left+12);
-  const top=r?(r.top-outer.top+r.height*.45):(event.clientY-outer.top);
+  // The pointer hits an actual rail STROKE, not the SVG path bounding box.
+  // Save the clicked world point so the nearby menu follows map pan/zoom.
+  const px=x+(popupAnchor?.gx||0)*scale;
+  const py=y+(popupAnchor?.gy||0)*scale;
+  const left=px+14,top=py-h*.26;
   popup.style.width=w+'px';
-  popup.style.left=clamp(left+w>outer.width?left-w-(r?.width||0)-24:left,
+  popup.style.left=clamp(left+w>outer.width?px-w-14:left,
    5,Math.max(5,outer.width-w-5))+'px';
-  popup.style.top=clamp(top-h*.3,5,Math.max(5,outer.height-h-5))+'px';
+  popup.style.top=clamp(top,5,Math.max(5,outer.height-h-5))+'px';
  }
  function showMenu(e,node,title,detail,commands,previewUrl=null){
   clear();e.stopPropagation();
+  const bounds=map.getBoundingClientRect();
+  const clickX=clamp(e.clientX-bounds.left,0,bounds.width);
+  const clickY=clamp(e.clientY-bounds.top,0,bounds.height);
+  popupAnchor={gx:(clickX-x)/scale,gy:(clickY-y)/scale};
   popup.replaceChildren(element('strong','pw-transit-popup-name',title),
    element('small','pw-transit-popup-sub',detail));
   const group=element('div','pw-transit-popup-buttons');
@@ -141,7 +151,11 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   }
   popup.append(group);
   popup.hidden=false;selected=node;node?.setAttribute('data-selected','true');
-  positionPopup(e,node);
+  positionPopup();
+ }
+ function selectMetroLine(lineId){
+  for(const seg of urban.querySelectorAll('.pw-transit-segment[data-line="'+lineId+'"]'))
+   seg.dataset.selected='true';
  }
  const anchored=[];
  function put(node,p,layer){
@@ -291,7 +305,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    const ps=[localPoint(a),...via.map(p=>localPoint({gx:p[0],gy:p[1]})),localPoint(b)];
    lineGroup(urban,l,from,to,ps,'metro',(e,node)=>{
     const choice=metro.boardingChoices(here).find(p=>p.id===l.id);
-    if(!choice){showMenu(e,node,l.name,'请先到这条线路的站点',[]);return}
+    if(!choice){showMenu(e,node,l.name,'请先到这条线路的站点',[]);selectMetroLine(l.id);return}
     showMenu(e,node,l.name,'当前站 · '+metro.STATIONS[here].label,
      choice.directions.map(dir=>({
       label:dir.label,primary:true,run:async()=>{
@@ -301,6 +315,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
        }catch(err){notify('乘车失败')}finally{busy=false}
       }
      })));
+    selectMetroLine(l.id);
    });
   }
  }
@@ -342,7 +357,10 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const node=element('button','pw-transit-place pw-dot-place is-station');
   node.type='button';node.dataset.place=id;node.dataset.local='true';
   node.dataset.current=String(here===id);node.dataset.station=id;
-  node.dataset.stationOnly='true';stopButtons.set(id,node);
+  node.dataset.stationOnly='true';node.dataset.transfer=String(!!station.transfer);
+  node.dataset.labelSide=(station.gx+station.gy)%2?'north':'south';
+  node.setAttribute('aria-label',name+'地铁站');
+  stopButtons.set(id,node);
   node.dataset.gridColumn=station.gx;node.dataset.gridRow=station.gy;
   node.append(element('span','pw-transit-station-dot',station.transfer?'◎':'●'),
    element('span','pw-transit-place-name',name));
@@ -434,11 +452,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   const city=atlas.CITY_BY_ID[id];if(!city)return;
   if(activeCity===null)regionalCamera={scale,x,y};
   activeCity=id;drag=null;pinch=null;fingers.clear();clear();
-  const v=viewport();
-  // Kirihama's physical eight-stop metro is centered north of the city
-  // interchange. Frame the railway itself, not the broad city-hub centroid.
-  const target=id==='kirihama'?{x:1080,y:550}:city;
-  centerOn(target,Math.max(3.15,Math.min(4.8,(v.w-160)/285,(v.h-165)/175)));
+  // Always frame the COMPLETE selected city's real physical tracks.
+  // A metropolis of 170 stations cannot use the old 8-stop zoom preset.
+  fitSelectedCity();
  }
  function leaveCity(){
   if(activeCity===null)return;
@@ -508,6 +524,9 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   map.dataset.city=activeCity||'';
   map.dataset.transport=scoped?'metro':'regional';
   map.dataset.zoom=scoped?'metro':'region';
+  map.dataset.metroDensity=scoped&&scale>=2?'detail':'overview';
+  map.dataset.metroLineCount=hasMetro?String(metro.LINES.length):'0';
+  map.dataset.metroStationCount=hasMetro?String(Object.keys(metro.STATIONS).length):'0';
   map.dataset.compact=String(!scoped&&scale<.65);
   map.dataset.smallScreen=String(v.w<900);
   back.hidden=!scoped;emptyMetro.hidden=!scoped||hasMetro;
@@ -515,7 +534,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   heading.querySelector('.pw-dot-title').textContent=scoped?
    city.name+' · 地铁线路图':'城际交通总图';
   heading.querySelector('.pw-dot-subtitle').textContent=scoped?
-   hasMetro?'仅运营地铁 · 车站 · 换乘 · 无其他交通':
+   hasMetro?metro.LINES.length+' 条地铁 · '+Object.keys(metro.STATIONS).length+' 座车站 · 独立点阵轨道':
     '当前城市暂无已确认的运营地铁线路':
    '点击城市查看该城市独立地铁图';
   hint.textContent=scoped?
@@ -523,7 +542,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
    '城际交通总图 · 点击城市查看独立地铁';
   caption.textContent=scoped?city.name+' · 地铁线路':'十城城际交通';
   sub.textContent=scoped?
-   hasMetro?'点击地铁站查询乘车和换乘 · 不显示道路公交':
+   hasMetro?'点击真实轨道或车站 · 就地操作 · 缩放查看站名':
     '本城市暂无正式地铁线路':
    '各城市地铁独立显示 · 不在总图混合';
   canvas.style.setProperty('--dot-city-label-size',v.w<900?'15px':'19px');
@@ -597,7 +616,7 @@ function draw({body,snapshot,locations={},availability,onTravel,onBoard,onWorldT
   hint.hidden=false;
   // Reposition a selected station popup along with the map camera.
   // Do not destroy the route highlight every time the player pans/zooms.
-  if(!popup.hidden&&selected?.isConnected)positionPopup(null,selected);
+  if(!popup.hidden&&selected?.isConnected)positionPopup();
  }
  function focus(p,zoom){centerOn(p,zoom)}
  function zoomBy(factor,atX,atY){
