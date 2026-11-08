@@ -1211,3 +1211,64 @@
   min-height:70px!important;
  }
 }
+
+/* V21 — two LEVELS, never a continuous blended rail map.
+ * Only real inter-city rail/road/ferry and city portals on the regional page.
+ * City interior is independently scoped to one city ID by JS and these
+ * CSS guards. Zoom cannot switch levels or reveal a neighboring city's lines.
+ */
+#pw-world-surface .pw-dot-world-map .pw-dot-back[hidden]{
+ display:none!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-back{
+ min-width:92px!important;white-space:nowrap!important;
+ border-color:#b5a28a!important;
+ background:#29373bfa!important;
+ color:#fff1d6!important;font-weight:700!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-municipal-lines,
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-access-lines,
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-urban-lines,
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-stations,
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-places,
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-local-places{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-regional-lines,
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-cities,
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-areas{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"]:not([data-city="kirihama"]) .pw-dot-urban-lines,
+#pw-world-surface .pw-dot-world-map[data-scope="city"]:not([data-city="kirihama"]) .pw-dot-local-places{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-title{
+ letter-spacing:.08em;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-title{
+ color:#f7e2bb;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-subtitle{
+ color:#d4dcd4;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-city{
+ cursor:pointer!important;
+}
+#pw-world-surface .pw-dot-world-map[data-scope="region"] .pw-dot-city:focus-visible{
+ outline:3px solid #f0ce91!important;outline-offset:6px!important;
+}
+@container(max-height:430px){
+ #novel-ui #pw-world-surface .pw-dot-world-map .pw-dot-back{
+  min-width:74px!important;font-size:12px!important;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-chrome{
+  align-items:center;gap:5px;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-heading{
+  max-width:36%;white-space:normal;
+ }
+ #pw-world-surface .pw-dot-world-map .pw-dot-title{
+  font-size:15px!important;
+ }
+}
