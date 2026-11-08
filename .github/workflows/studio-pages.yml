@@ -60,6 +60,7 @@ jobs:
           node tests/ring-arena.test.cjs
           node --test tests/metro-platform-life.test.cjs tests/metro-platform3d.test.cjs tests/metro-station-light.test.cjs
           node tests/daily-life.test.cjs
+          node --test tests/npc-g001-hd-preview.test.cjs
           node --test tests/opening-flow.test.cjs
       - name: Prove adding PNG or WebP auto-registers new scene IDs
         run: |
