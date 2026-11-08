@@ -17,7 +17,7 @@ permissions:
   contents: read
 concurrency:
   group: ring-timegrid-4v4-browser-proof
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   prove:
     runs-on: ubuntu-24.04
