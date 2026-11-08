@@ -220,8 +220,87 @@ try{
  assert.ok(dotsOutside.visible>100,
   '2D points must continue painting well outside the original map');
  await shot('05-real-game-flat-infinite-panned-beyond-authored-world.png');
- assert.ok(!errors.some(x=>/dot-terrain-3d|Map dot animation disabled|TypeError|ReferenceError/i.test(x)),
+ // Exercise the ACTUAL sculpt toolbar using pointer gestures, not simply
+ // invoking setHeight() internally. Verify persistence and undo/redo.
+ await page.evaluate(()=>document.querySelector('.pw-terrain-edit-toggle').click());
+ const toolPanel=page.locator('.pw-terrain-edit-panel');
+ assert.ok(await toolPanel.isVisible(),'terrain editing panel must be in the actual game');
+ assert.equal(await page.locator('.pw-terrain-edit-choice[data-op]').count(),4);
+ assert.equal(await page.locator('.pw-terrain-edit-choice[data-shape]').count(),3);
+ await page.evaluate(()=>{
+  document.querySelector('.pw-terrain-edit-choice[data-shape="point"]').click();
+  document.querySelector('.pw-terrain-edit-choice[data-op="raise"]').click();
+  const step=document.querySelector('.pw-terrain-edit-setting input');
+  step.value='12';step.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ const box=await page.evaluate(()=>document.querySelector('.pw-dot-world-map')
+  .getBoundingClientRect().toJSON());
+ const start={x:box.x+box.width*.36,y:box.y+box.height*.50};
+ const targetBefore=await page.evaluate(({x,y})=>{
+  const m=document.querySelector('.pw-dot-world-map').getBoundingClientRect();
+  return window.PaperWorldTransitMap._terrain.unproject(x-m.x,y-m.y);
+ },start);
+ assert.ok(targetBefore,'actual 2D cursor must map to XYZ terrain coordinates');
+ await page.mouse.move(start.x,start.y);
+ await page.mouse.down();await page.mouse.up();
+ const afterPoint=await page.evaluate(({gx,gy})=>({
+  height:window.PaperWorldTransitMap._terrain.getHeight(gx,gy),
+  tool:window.PaperWorldTransitMap._terrainTools.inspect()
+ }),targetBefore);
+ assert.equal(afterPoint.height,12,'point brush must raise ground by 12 meters');
+ assert.equal(afterPoint.tool.undo,1,'one pointer stroke creates exactly one undo entry');
+ await page.evaluate(()=>document.querySelectorAll('.pw-terrain-edit-action')[0].click());
+ assert.equal(await page.evaluate(({gx,gy})=>
+  window.PaperWorldTransitMap._terrain.getHeight(gx,gy),targetBefore),0,'undo must restore old elevation');
+ await page.evaluate(()=>document.querySelectorAll('.pw-terrain-edit-action')[1].click());
+ assert.equal(await page.evaluate(({gx,gy})=>
+  window.PaperWorldTransitMap._terrain.getHeight(gx,gy),targetBefore),12,'redo must restore sculpted elevation');
+ // Draw the rectangular excavation and verify MULTIPLE raised/dig vertices.
+ await page.evaluate(()=>{
+  document.querySelector('.pw-terrain-edit-choice[data-shape="rect"]').click();
+  document.querySelector('.pw-terrain-edit-choice[data-op="dig"]').click();
+ });
+ const rectA={x:box.x+box.width*.52,y:box.y+box.height*.38};
+ const rectB={x:rectA.x+130,y:rectA.y+110};
+ await page.mouse.move(rectA.x,rectA.y);
+ await page.mouse.down();await page.mouse.move(rectB.x,rectB.y,{steps:6});
+ await page.mouse.up();
+ const digging=await page.evaluate(()=>{
+  const pts=window.PaperWorldTransitMap._terrain.exportHeights();
+  return {negative:pts.filter(p=>p[2]<0).length,
+   stored:JSON.parse(localStorage.getItem('paperworld:terrain:heightfield:v1'))?.points?.length};
+ });
+ assert.ok(digging.negative>4,'rectangle drag must excavate a real area, not only one dot');
+ assert.ok(digging.stored>4,'all height changes must persist to local storage');
+ await shot('06-real-game-terrain-sculpt-excavation-and-tools.png');
+ // Flatten a selected spot to a chosen elevation.
+ await page.evaluate(()=>{
+  document.querySelector('.pw-terrain-edit-choice[data-op="flatten"]').click();
+  document.querySelector('.pw-terrain-edit-choice[data-shape="point"]').click();
+  const target=document.querySelector('.pw-terrain-edit-target input');
+  target.value='22';target.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ await page.mouse.move(start.x,start.y);
+ await page.mouse.down();await page.mouse.up();
+ assert.equal(await page.evaluate(({gx,gy})=>
+  window.PaperWorldTransitMap._terrain.getHeight(gx,gy),targetBefore),22,
+  'flatten tool must set precise elevation');
+ // Sculpt controls still work on the SAME XYZ surface in orbit camera mode.
+ await page.evaluate(()=>document.querySelector('.pw-dot-camera-toggle').click());
+ await page.waitForFunction(()=>Number(document.querySelector('.pw-dot-world-map')
+  .dataset.cameraBlend)>.99);
+ await shot('07-real-game-sculpted-3d-heightfield.png');
+ const edited3D=await page.evaluate(()=>({
+  mode:document.querySelector('.pw-dot-world-map').dataset.cameraMode,
+  heights:window.PaperWorldTransitMap._terrain.exportHeights().length,
+  tool:window.PaperWorldTransitMap._terrainTools.inspect()
+ }));
+ assert.equal(edited3D.mode,'3d');assert.ok(edited3D.heights>4);
+ await page.evaluate(()=>document.querySelector('.pw-terrain-edit-toggle').click());
+ assert.equal(await page.locator('.pw-terrain-edit-panel').isVisible(),false,
+  'finishing terrain edit must restore uncluttered map');
+ assert.ok(!errors.some(x=>/dot-terrain-3d|dot-terrain-tools|Map dot animation disabled|TypeError|ReferenceError/i.test(x)),
   'unexpected render error: '+errors.join('\\n').slice(0,1000));
  console.log('REAL GAME SEAMLESS 2D/3D TERRAIN CAMERA VERIFIED',
-  JSON.stringify({flat,raised,three,orbited,farAway,panned,zoomed,back,shifted,dotsOutside}));
+  JSON.stringify({flat,raised,three,orbited,farAway,panned,zoomed,back,shifted,dotsOutside,afterPoint,digging,edited3D}));
 }finally{await browser.close()}
