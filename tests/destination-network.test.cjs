@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.join(__dirname,'..'),window={};
-for(const name of ['world-atlas','metro-graph','destination-network']){
+for(const name of ['kirihama-location-plan','world-atlas','metro-graph','destination-network']){
  vm.runInNewContext(fs.readFileSync(path.join(root,'site/game/'+name+'.js'),'utf8'),
  {window,console},{filename:name+'.js'});
 }
@@ -11,11 +11,11 @@ test('all authored destinations have one station on a real two-way street/rail g
  const audit=N.audit();
  assert.equal(audit.cities,10);
  assert.equal(audit.locations,A.POIS.length);
- assert.ok(audit.locations>=120);
- assert.equal(audit.accessLines,40);
+ assert.equal(audit.locations,211); // 120 Kirihama + 91 elsewhere
+ assert.equal(audit.accessLines,151); // 36 other city corridors + 115 authored first-mile links
  assert.deepEqual(Array.from(audit.unreachable),[]);
  assert.deepEqual(Array.from(audit.oneWay),[]);
- const pinned=new Set(N.ACCESS_ROUTES.flatMap(r=>Array.from(r.stops)));
+ const pinned=new Set([...N.ACCESS_ROUTES.flatMap(r=>Array.from(r.stops)),...Object.keys(M.STATIONS)]);
  for(const p of A.POIS)assert.ok(pinned.has(p.id),'no unconnected image pin: '+p.name);
  for(const c of A.CITIES)assert.ok(pinned.has(N.HUB(c.id)),'no isolated hub: '+c.id);
 });
@@ -84,7 +84,7 @@ test('cross-city map actions invoke the actual travel engine rather than only op
 });
 test('world travel state can physically reach and return from a regional interchange',()=>{
  const game={window:{}};
- for(const filename of ['world-atlas','metro-graph','destination-network']){
+ for(const filename of ['kirihama-location-plan','world-atlas','metro-graph','destination-network']){
   vm.runInNewContext(fs.readFileSync(path.join(root,'site/game/'+filename+'.js'),'utf8'),game);
  }
  game.module={exports:{}};
