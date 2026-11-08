@@ -296,17 +296,23 @@ function create({root,engine,onExit,onFeedback}){
   const ride=engine.snapshot().metro;
   if(!ride?.onboard)return false;
   visible=true;section.hidden=false;anomalyEventSent=false;
-  rideEpoch++;motion?.reset();
+  rideEpoch++;doorSequence++;motion?.reset();
+  door.open=0;door.from=0;door.target=0;door.moving=false;
+  section.dataset.doorState='closed';
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
   section.dataset.camera=section.dataset.renderer==='ring-3d'?'front-elevation-no-floor':'side-elevation';
   if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Metro L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
-  refresh();return true;
+  refresh();
+  animateDoors(1,980).catch(error=>console.warn('[Metro station doors]',error));
+  return true;
  }
  function close(){
-  visible=false;section.hidden=true;rideEpoch++;
+  visible=false;section.hidden=true;rideEpoch++;doorSequence++;
+  door.open=0;door.target=0;door.moving=false;
+  section.dataset.doorState='closed';
   motion?.reset();
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   if(section.dataset.renderer==='ring-3d')global.PaperWorldGameRingArena?.exitTransit?.();
@@ -320,13 +326,16 @@ function create({root,engine,onExit,onFeedback}){
   if(visible||auto)return {ok:false,reason:'列车正在行驶'};
   regionalRide={legs:route.legs,index:0};
   visible=true;section.hidden=false;anomalyEventSent=false;auto=true;
-  rideEpoch++;motion?.reset();
+  rideEpoch++;doorSequence++;motion?.reset();
+  door.open=0;door.from=0;door.target=0;door.moving=false;
+  section.dataset.doorState='closed';
   section.dataset.trainMoving='false';section.dataset.travelPhase='docked';
   section.dataset.renderer=global.PaperWorldGameRingArena?.enterTransit?.()===true?'ring-3d':'painted';
   section.dataset.camera=section.dataset.renderer==='ring-3d'?'front-elevation-no-floor':'side-elevation';
   if(section.dataset.renderer!=='ring-3d')
   populatePassengers().catch(error=>console.warn('[Regional rail L2D]',error));
   if(!raf)raf=requestAnimationFrame(render);
+  animateDoors(1,980).catch(error=>console.warn('[Regional rail doors]',error));
   try{
    for(let i=0;i<route.legs.length;i++){
     regionalRide.index=i;refresh();
