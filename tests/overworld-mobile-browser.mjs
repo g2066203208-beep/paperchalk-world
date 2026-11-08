@@ -25,6 +25,7 @@ try{
  await page.locator('#phone-fingerprint').click();
  await page.waitForFunction(()=>document.querySelector('#phone-ui')?.dataset.focus==='true');
  await page.locator('[data-app="信息"]').click();
+ await page.locator('#phone-ui .phone-conversation-row[data-contact="female2"]').click();
  await page.locator('#phone-app-copy .phone-chat-bubble.is-them').first().waitFor();
  const bounds=await page.locator('#phone-ui').boundingBox();
  assert.ok(bounds,'phone close-up should have a bounding box');
