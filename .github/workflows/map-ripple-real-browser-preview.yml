@@ -57,7 +57,7 @@ jobs:
                   frames.append(im)
               out=Path('artifacts/metro-editor/00-live-black-fog-dot-ripples.gif')
               frames[0].save(out,save_all=True,append_images=frames[1:],
-                  duration=185,loop=0,optimize=True,disposal=2)
+                  duration=700,loop=0,optimize=True,disposal=2)
               print('Real game GIF:',out,'frames:',len(frames),'bytes:',out.stat().st_size)
           PY
       - name: Upload source frames, screenshots and animated proof
