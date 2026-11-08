@@ -1,63 +1,58 @@
 'use strict';
-/* Visually grounded original Live2D four-foe row with close TPS heroine. */
+/* True aligned 4v4 horizontal ranks and one controllable shoulder camera per friendly. */
 const assert=require('node:assert/strict');
-const r=require('../site/game/ring-arena-runtime.js');
-const scene=r.layout('outer'),hero=scene.allies[0],base=r.camera('outer');
-const before=JSON.stringify(scene);
-assert.ok(scene.enemies.every(a=>a.y===0&&a.z===6.80));
-assert.ok(Math.abs(scene.enemies[3].x-scene.enemies[0].x-3.84)<.001);
-assert.ok(scene.allies.slice(1).every(a=>a.z>=7.85&&a.z<=9.45),
- 'all three teammates belong to the near-side player zone');
-assert.ok(Math.min(...scene.allies.map(a=>a.z))-
- Math.max(...scene.enemies.map(a=>a.z))>=1.04,
- 'there must be a genuine physical empty battle lane between allied and enemy halves');
-assert.deepEqual(scene.allies.slice(1).map(a=>[a.x,a.z]),
- [[-1.28,7.88],[-2.45,8.15],[-1.15,8.55]],
- 'allies stay near the heroine, in staggered near-side depths without blocking foes');
-const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
- 'enemy-2':{left:.32,right:.69,top:0,bottom:1},
- 'enemy-3':{left:.30,right:.76,top:0,bottom:1},
- 'enemy-4':{left:0,right:.58,top:0,bottom:1}};
+const ring=require('../site/game/ring-arena-runtime.js');
+const scene=ring.layout('outer'),hero=scene.allies[0],base=ring.camera('outer');
+const immutable=JSON.stringify(scene);
+const friendX=scene.allies.map(a=>a.x),enemyX=scene.enemies.map(a=>a.x);
+assert.deepEqual(scene.allies.map(a=>a.z),[9.30,9.30,9.30,9.30],
+ 'four teammates MUST occupy one world-space horizontal rank');
+assert.deepEqual(scene.enemies.map(a=>a.z),[6.80,6.80,6.80,6.80],
+ 'four opponents MUST occupy one world-space horizontal rank');
+assert.ok(scene.allies.every(a=>a.y===0)&&scene.enemies.every(a=>a.y===0));
+assert.ok(Math.abs(scene.allies[0].x+1.05)<1e-9,'heroine remains fixed at approved x');
+assert.ok(Math.abs(base.eye.x+.28)<1e-9&&Math.abs(base.eye.z-10.40)<1e-9,
+ 'protagonist initial camera coordinates do not change');
+assert.ok(Math.abs(scene.allies[0].z-scene.enemies[0].z-2.5)<1e-9,
+ 'both complete lines have exactly 2.50m of empty floor between them');
+for(let i=1;i<4;i++){
+ const friendlyStep=friendX[i-1]-friendX[i];
+ const enemyStep=enemyX[i]-enemyX[i-1];
+ assert.ok(Math.abs(friendlyStep-enemyStep)<1e-7,
+  'both ranks must have matching 1-to-1 lateral lane spacing, rank '+i);
+}
+const allyUV=ring.FEMALE07_BACK_UV;
+const foeUV={left:.347,right:.6634,top:.0032,bottom:1};
 for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
- const cam=r.shoulderCamera(base,hero,0,0,aspect);
- const feet=scene.enemies.map(a=>r.project({x:a.x,y:0,z:a.z},cam,aspect));
- assert.ok(feet.every(x=>x.valid));
- const silhouettes=scene.enemies.map(a=>r.portraitVisibleBounds(a,cam,uv[a.id],aspect));
- const allies=scene.allies.slice(1).map(a=>r.portraitBounds(a,cam,aspect));
- const foes=scene.enemies.map(a=>r.portraitBounds(a,cam,aspect));
- assert.ok(allies.every(a=>a.heightFraction>foes[0].heightFraction*1.25),
-  'allies must read as NEAR-SIDE world-space bodies larger than distant foes');
- const squadSilhouettes=scene.allies.slice(1).map(a=>
-  r.portraitVisibleBounds(a,cam,r.FEMALE07_BACK_UV,aspect));
- const uniformEnemyUv={left:.31,right:.69,top:0,bottom:1};
- const leftmostEnemy=r.portraitVisibleBounds(scene.enemies[0],cam,uniformEnemyUv,aspect);
- const teammateRight=Math.max(...squadSilhouettes.map(b=>b.right));
- assert.ok(leftmostEnemy.left-teammateRight>.045,
-  'all teammate bodies must leave the leftmost enemy readable, at every aspect ratio');
- assert.ok(scene.allies.slice(1).every(a=>a.x>=-2.5&&a.x<=-1.1),
-  'all teammates occupy the heroine physical cluster, never the right enemy wing');
- if(aspect===1917/906)assert.ok(squadSilhouettes.every(b=>b.right>-.99&&b.left<.96),
-  'all three teammates must appear within the default landscape camera');
- assert.ok(allies.every(a=>a.valid),'three allies must use the same camera and ground geometry');
- assert.ok(silhouettes.slice(1).every((b,i)=>b.left-silhouettes[i].right>.035),
-  'enemy source-alpha outlines are distinct under true perspective');
- const safe=r.battleVisualSafety('outer',0,aspect,r.FEMALE07_BACK_UV,cam);
- assert.ok(safe.clear&&safe.valid&&safe.gap>.05,'all five must fit center TPS view');
- assert.ok(safe.hero.right<safe.foes[0].left,'close heroine must not cover first enemy');
- if(aspect===1917/906){
-  assert.ok(safe.hero.left<-.99&&safe.hero.right>-.28);
-  assert.ok(safe.hero.top>.47&&safe.hero.top<.55,
-   'default head must project into upper screen without hiding the targets');
-  assert.ok(safe.foes[3].right<.93);
+ for(const chosen of scene.allies){
+  const cam=ring.allyViewCamera(base,hero,chosen,0,0,aspect);
+  const selected=ring.portraitVisibleBounds(chosen,cam,allyUV,aspect);
+  const foes=scene.enemies.map(a=>ring.portraitVisibleBounds(a,cam,foeUV,aspect));
+  assert.ok(cam.shoulderRig&&cam.actorRootUnchanged,
+   'switching control must never move the actor root');
+  assert.deepEqual(cam.shoulderPivot,{x:chosen.x,y:chosen.height*.88,z:chosen.z},
+   'camera world pivot must move to the selected teammate');
+  assert.equal(cam.heroYawDeg,0,'mouse look never rotates the selected actor');
+  assert.ok(selected.valid&&selected.right>-.96&&selected.left<1,
+   'controlled teammate must actually be visible in their shoulder view');
+  assert.ok(foes.every(b=>b.valid&&b.left>-.96&&b.right<.96),
+   'every camera must preserve all 4 enemy portraits including on narrow phones');
+  assert.ok(foes.slice(1).every((b,i)=>b.left-foes[i].right>.027),
+   'all four enemies must remain visually separated in each player view');
+  assert.ok(foes[0].left-selected.right>.075,
+   'selected teammate must not cover the first enemy');
  }
 }
-for(const x of [-1,-.5,0,.5,1]){
- const cam=r.shoulderCamera(base,hero,x,0,1917/906);
- assert.equal(cam.actorRootUnchanged,true);
- assert.deepEqual(cam.shoulderPivot,{x:hero.x,y:hero.y+hero.height*.88,z:hero.z});
- assert.equal(cam.heroYawDeg,0,'cursor must not turn the heroine');
- const relX=cam.eye.x-hero.x,relZ=cam.eye.z-hero.z;
- assert.ok(Math.abs(Math.hypot(relX,relZ)-cam.shoulderBoomMeters)<.00001);
+// The approved original heroine framing is exactly unchanged.
+assert.deepEqual(ring.allyViewCamera(base,hero,hero,0,0,1917/906),
+ ring.shoulderCamera(base,hero,0,0,1917/906));
+for(const chosen of scene.allies){
+ for(const look of [-1,0,1]){
+  const cam=ring.allyViewCamera(base,hero,chosen,look,0,1917/906);
+  assert.deepEqual(cam.shoulderPivot,{x:chosen.x,y:chosen.height*.88,z:chosen.z});
+  assert.ok(Math.abs(cam.lookYawDeg)<=22.00001);
+ }
 }
-assert.equal(JSON.stringify(scene),before);
-console.log('PASS 4v4 same-source formation: hero and camera locked; team fully near-side; all enemies unobstructed');
+assert.equal(JSON.stringify(scene),immutable,
+ 'perspective switching must preserve all eight immutable world positions');
+console.log('PASS two aligned four-person ranks, 4 selectable real over-shoulder views, all 4 foes visible');
