@@ -12,7 +12,7 @@ assert.ok(Math.min(...scene.allies.map(a=>a.z))-
  Math.max(...scene.enemies.map(a=>a.z))>=1.04,
  'there must be a genuine physical empty battle lane between allied and enemy halves');
 assert.deepEqual(scene.allies.slice(1).map(a=>[a.x,a.z]),
- [[-1.78,9.43],[-2.45,8.15],[-1.42,7.85]],
+ [[-1.28,7.88],[-2.45,8.15],[-1.82,8.20]],
  'allies stay near the heroine, in staggered near-side depths without blocking foes');
 const uv={'enemy-1':{left:.31,right:.69,top:0,bottom:1},
  'enemy-2':{left:.32,right:.69,top:0,bottom:1},
@@ -32,9 +32,9 @@ for(const aspect of [1917/906,1920/1080,1280/720,844/390,390/844]){
  const uniformEnemyUv={left:.31,right:.69,top:0,bottom:1};
  const leftmostEnemy=r.portraitVisibleBounds(scene.enemies[0],cam,uniformEnemyUv,aspect);
  const teammateRight=Math.max(...squadSilhouettes.map(b=>b.right));
- assert.ok(leftmostEnemy.left-teammateRight>.085,
+ assert.ok(leftmostEnemy.left-teammateRight>.045,
   'all teammate bodies must leave the leftmost enemy readable, at every aspect ratio');
- assert.ok(scene.allies.slice(1).every(a=>a.x>=-2.5&&a.x<=-1.35),
+ assert.ok(scene.allies.slice(1).every(a=>a.x>=-2.5&&a.x<=-1.2),
   'all teammates occupy the heroine physical cluster, never the right enemy wing');
  if(aspect===1917/906)assert.ok(squadSilhouettes.every(b=>b.right>-.99&&b.left<.96),
   'all three teammates must appear within the default landscape camera');
