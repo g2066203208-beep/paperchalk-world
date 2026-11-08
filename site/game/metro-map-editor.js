@@ -7,6 +7,7 @@
 (function(global){
 'use strict';
 const KEY='paperchalk-kirihama-dot-metro-blueprint-v1';
+const LIVE_KEY='paperchalk-kirihama-dot-metro-live-v1';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const key=(lineId,from,to)=>lineId+':'+from+':'+to;
@@ -259,6 +260,16 @@ function create(metro,geometry,storage){
    store.setItem(KEY,raw);
    saved=raw;return true;
   },
+  apply(){
+   validate(plan,metro);
+   if(!store)throw Error('浏览器不允许保存正式地铁，请导出 JSON');
+   const raw=serialize();
+   // Keep draft and live separate. A failed live write must never claim
+   // that the playable network was successfully updated.
+   store.setItem(LIVE_KEY,raw);
+   store.setItem(KEY,raw);
+   saved=raw;return true;
+  },
   reset(){
    const before=serialize();
    plan=defaults(metro,geometry);
@@ -275,6 +286,6 @@ function create(metro,geometry,storage){
  return Object.freeze(api);
 }
 global.PaperWorldMetroMapEditor=Object.freeze({
- KEY,create,validate,segments,key,orthogonalPoints
+ KEY,LIVE_KEY,create,validate,segments,key,orthogonalPoints
 });
 })(window);
