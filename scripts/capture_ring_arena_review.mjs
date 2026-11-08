@@ -72,12 +72,17 @@ try{
     dynamicFemale07:game.heroLiveFemale07L2D,
     dynamicPartyIds:game.female07PartyPartRigIds,
     dynamicUploads:game.heroTextureUploads,
+    runtimeRevision:game.runtimeRevision,lookLimits:game.shoulderMouseLimits,
     worldActors:game.presentationActors,staging:game.stagePresentation,
     friendlyX:game.partyLine.map(a=>a.x),enemyX:game.opposingLine.map(a=>a.x)
    };
   });
   assert.deepEqual(data.friendlyX,[-1.05,-1.72,.98,-1.05]);
   assert.deepEqual(data.enemyX,[-.2,.45,1.1,1.75]);
+  assert.equal(data.runtimeRevision,'p5-neighbor-wide-comfort-headlook-v2-20261108',
+   'new battle script must load; stale browser code is NOT valid proof');
+  assert.deepEqual(data.lookLimits,{yawLeftDeg:7.5,yawRightDeg:7.5,
+   pitchUpDeg:3.5,pitchDownDeg:3.5});
   assert.equal(data.actorIds.length,8);
   assert.equal(data.staging,'p5-spaced-fixed-all-back-command-team');
   assert.deepEqual(data.worldActors.filter(a=>a.team==='ally').map(a=>a.z),
@@ -104,8 +109,31 @@ try{
   await page.screenshot({path:resolve(out,filename),animations:'disabled'});
   entries.push({slot,filename,...data});
  }
+ // Actual pointer-at-edge frames: human-comfort camera cannot dolly,
+ // whirl 22 degrees, or jerk into a new framing at the screen boundary.
  await page.locator('[data-control-ally="1"]').click();
  await page.mouse.move(640,360);
+ await page.waitForTimeout(950);
+ const neutral=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+ const lookReviews=[];
+ for(const side of [{x:1250,name:'right'},{x:30,name:'left'}]){
+  await page.mouse.move(side.x,360);
+  await page.waitForTimeout(950);
+  const shot=await page.evaluate(()=>window.PaperWorldGameRingArena.inspect());
+  assert.deepEqual(shot.camera.eye,neutral.camera.eye,
+   'mouse look must rotate human gaze, not translate the 3D world eye');
+  assert.ok(Math.abs(shot.cameraLook.yawDeg)<=7.50001);
+  assert.ok(Math.abs(shot.cameraLook.pitchDeg)<=3.50001);
+  assert.ok(Math.abs(shot.cameraLook.yawDeg)>=3,
+   'mouse movement still turns the view, but only with gentle saturation');
+  const file='human-look-'+side.name+'-1280x720.png';
+  await page.screenshot({path:resolve(out,file),animations:'disabled'});
+  lookReviews.push({side:side.name,filename:file,
+   yawDeg:shot.cameraLook.yawDeg,pitchDeg:shot.cameraLook.pitchDeg,
+   cameraEye:shot.camera.eye});
+ }
+ await page.mouse.move(640,360);
+ await page.waitForTimeout(950);
  await page.setViewportSize({width:1917,height:906});
  await page.waitForTimeout(800);
  await page.screenshot({path:resolve(out,'V31-woman7-four-enemies-ground-aligned-1917x906.png'),
@@ -113,9 +141,9 @@ try{
  assert.deepEqual(errors,[],'WebGL battle JavaScript errors');
  writeFileSync(resolve(out,'camera-review.json'),JSON.stringify({
   source:'ACTUAL in-game Chromium/WebGL; no illustrations, mocks, or faked poses',
-  commit:process.env.GITHUB_SHA||null,entries
+  commit:process.env.GITHUB_SHA||null,entries,lookReviews
  },null,2));
- console.log('PASS: 5 authentic WebGL captures; 4 role handoffs, true 3D spectators and locked 66-degree hero camera');
+ console.log('PASS: 7 authentic WebGL captures; 4 fixed P5 positions plus stationary-eye ±7.5° human gaze');
 }finally{
  await browser?.close();
  await new Promise(resolveClosed=>server.close(resolveClosed));
