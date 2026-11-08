@@ -12,11 +12,9 @@
  'use strict';
  const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,Number(v)||0));
  const smooth=t=>{const x=clamp(t);return x*x*(3-2*x)};
- const CONFIG=Object.freeze({maxPlatform:6,maxCabin:3,boardStartMs:500,boardDurationMs:2250,
-  alightStartMs:250,alightDurationMs:1700,minimumDoorDwellMs:3100});
- const slotIds=Object.freeze(['back-left','back-center','back-right']);
- const has=(v,x)=>Array.isArray(v)&&v.includes(x);
- function create({presence,life}={}){
+ const CONFIG=Object.freeze({maxPlatform:6,maxCabin:3,boardStartMs:1250,boardDurationMs:2250,
+  alightStartMs:250,alightDurationMs:1700,minimumDoorDwellMs:3600});
+  function create({presence,life}={}){
   if(!presence||typeof presence.forMetro!=='function'||typeof presence.get!=='function')
    throw Error('Approved NPC scene presence required');
   if(!life||typeof life.get!=='function')throw Error('Persistent NPC routes required');
@@ -47,7 +45,7 @@
    for(const p of probe(ride)){
     if(onboard.some(x=>x.id===p.id)||alighting.some(x=>x.id===p.id)||seen.has(p.id))continue;
     waiting.push(p);seen.add(p.id);
-    if(waiting.length>=CONFIG.maxPlatform)break;
+    if(waiting.length>=Math.min(CONFIG.maxCabin-onboard.length,CONFIG.maxPlatform))break;
    }
    epoch++;return true;
   }
@@ -57,7 +55,7 @@
    for(const p of probe(stop)){
     if(onboard.some(x=>x.id===p.id)||alighting.some(x=>x.id===p.id))continue;
     waiting.push(p);
-    if(waiting.length>=CONFIG.maxPlatform)break;
+    if(waiting.length>=Math.min(CONFIG.maxCabin-onboard.length,CONFIG.maxPlatform))break;
    }
    return waiting.length>0;
   }
