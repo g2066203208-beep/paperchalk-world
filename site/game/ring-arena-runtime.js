@@ -1466,7 +1466,7 @@
   lightLabel.textContent='灯光：'+lightStateNames[lightState];
   let lastDuet=null,presentedActors=[];
   let armed=false,attack=null,attackApplied=false,attackSample=null,qaTimeMs=null;
-  let completedAttacks=0,lastTarget=null;
+  let completedAttacks=0,lastTarget=null,lastAttacker=null;
   const enemyHP=new Map([1,2,3,4].map(i=>['enemy-'+i,36]));
   const actorForTarget=id=>layout(mode).enemies.find(a=>a.id===id);
   const controlledActor=()=>layout(mode).allies.find(a=>a.id===controlledActorId)||layout(mode).allies[0];
@@ -1523,7 +1523,7 @@
   }
   function resetCombatPreview(){
    attack=null;attackSample=null;attackApplied=false;armed=false;qaTimeMs=null;
-   previousBeat='idle';lastTarget=null;completedAttacks=0;
+   previousBeat='idle';lastTarget=null;lastAttacker=null;completedAttacks=0;
    for(const id of enemyHP.keys())enemyHP.set(id,36);
    cinematic.hidden=true;cinematic.dataset.phase='idle';
    cinematic.dataset.cut='none';
@@ -1577,7 +1577,7 @@
   function finishDirector(){
    const target=attack?.targetId||null;
    completedAttacks++;
-   lastTarget=target;
+   lastTarget=target;lastAttacker=attack?.attackerId||'hero';
    attack=null;attackSample=null;attackApplied=false;qaTimeMs=null;
    cinematic.hidden=true;cinematic.dataset.phase='idle';cinematic.dataset.cut='none';
    refreshDirectorUI();
@@ -2507,7 +2507,8 @@
    heroTextureError:textures.get('hero')?.error||null,
    director:{card:attackCard.name,baseDamage:attackCard.damage,
     armed,playing:!!attack,phase:attackSample?.stage||'idle',
-    targetId:attack?.targetId||null,applied:attackApplied,
+    targetId:attack?.targetId||null,attackerId:attack?.attackerId||null,
+    lastAttacker,applied:attackApplied,
     completedAttacks,lastTarget,enemyHP:Object.fromEntries(enemyHP)},
    directorCameraTemporary:!!lens?.cinematic,
    duel:lastDuet?{...lastDuet,playedPositions:presentedActors.filter(a=>
