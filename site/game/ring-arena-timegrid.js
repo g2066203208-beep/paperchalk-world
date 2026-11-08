@@ -107,11 +107,12 @@
   if(!hud||typeof document==='undefined')throw Error('Timegrid HUD requires a battle stage');
   const holder=document.createElement('section');
   holder.className='ring-timegrid';
-  holder.setAttribute('aria-label','战斗电影胶片：敌我八人头像与三项实时状态');
+  holder.setAttribute('aria-label','双方角色头像与实时生命值');
   // This is the ONLY always-visible game HUD: 4 foe portraits + 4
   // party portraits, each with real engine HP. NO permanent card grid,
   // command window, timeline ruler, hand, or tinted full-height panel.
-  holder.innerHTML='<div data-tg-roster class="tg-roster"></div>';
+  holder.innerHTML='<div data-tg-roster class="tg-roster"></div>'+ 
+   '<button type="button" class="tg-quick" data-tg-quick aria-label="安排并执行一次战斗行动">行动</button>';
   const tray=document.createElement('section');
   tray.className='tg-tactics';
   tray.hidden=true;tray.setAttribute('aria-label','临时战术操作');
@@ -127,7 +128,7 @@
    '<button type="button" data-tg-auto-all>辅助排程</button>',
    '<button type="button" class="tg-commit" data-tg-execute>执行</button></div>'
   ].join('');
-  hud.append(holder,tray);
+  hud.append(holder); // Rejected round-one tactics panel is no longer in the game DOM.
   const hitLayer=document.createElement('div');
   hitLayer.dataset.tgHits='';hitLayer.className='tg-hit-layer';
   hitLayer.setAttribute('aria-hidden','true');hud.append(hitLayer);
@@ -262,31 +263,32 @@
     '</div></div>';
   }
   function paintRoster(){
+   if(!model)return;
    const state=new Map(model.shown.map(a=>[a.id,a]));
-   const game=model.game,rows=[];
-   for(const side of ['enemy','ally']){
-    if(side==='ally')rows.push('<div class="tg-divider" aria-hidden="true"><span></span></div>');
-    rows.push('<div class="tg-faction '+side+' tg-screenreader">'+
-     (side==='enemy'?'敌方':'我方')+'</div>');
-    for(const actor of game.actors.filter(a=>a.side===side)){
+   const teams=[];
+   for(const side of ['ally','enemy']){
+    const people=[];
+    for(const actor of model.game.actors.filter(a=>a.side===side)){
      const a={...actor,...state.get(actor.id)},dead=!!a.dead,
       slot=displayId(actor.id),mine=actor.id===model.controlled().id;
-     const id=ROLE_IDS.indexOf(actor.id)+1;
      const label=side==='enemy'?'敌人 '+slot.slice(-1):roleName(actor.id);
-     rows.push('<div class="tg-row tg-film-frame '+side+(mine?' current':'')+(dead?' dead':'')+
-      '" data-tg-row="'+slot+'">'+
-      '<button type="button" class="tg-portrait" '+
-      (side==='ally'?'data-tg-choose-role="'+id+'"':'data-tg-open-target="'+slot+'"')+
-      ' aria-label="'+(side==='ally'?'切换到':'选择')+escape(label)+'"'+
-      (model.playback?' disabled':'')+'><span class="tg-cutout">'+
-      '<img alt="" decoding="async" draggable="false" src="'+art(actor)+'">'+
-      '</span></button><div class="tg-identity"><strong class="tg-screenreader">'+
-      escape(label)+'</strong>'+hpBar(a)+'</div></div>');
+     const image='<span class="tg-cutout"><img alt="" decoding="async" draggable="false" src="'+art(actor)+'"></span>';
+     const portrait=side==='ally'
+      ?'<button type="button" class="tg-portrait" data-tg-choose-role="'+
+        (ROLE_IDS.indexOf(actor.id)+1)+'" aria-label="切换到'+escape(label)+'" '+
+        (model.playback?'disabled':'')+'>'+image+'</button>'
+      :'<span class="tg-portrait" aria-hidden="true">'+image+'</span>';
+     people.push('<div class="tg-row '+side+(mine?' current':'')+
+      (dead?' dead':'')+'" data-tg-row="'+slot+'">'+portrait+
+      '<div class="tg-identity">'+hpBar(a)+'</div></div>');
     }
+    teams.push('<div class="tg-team '+side+'" role="group" aria-label="'+
+     (side==='ally'?'我方':'敌方')+'">'+people.join('')+'</div>');
    }
-   holder.querySelector('[data-tg-roster]').innerHTML=rows.join('');
-   holder.dataset.layout='continuous-35mm-filmstrip-rectangular-frames';
-   holder.dataset.timegridVersion='1.7';
+   holder.querySelector('[data-tg-roster]').innerHTML=teams.join('');
+   holder.querySelector('[data-tg-quick]').disabled=model.playback||model.game.phase!=='planning';
+   holder.dataset.layout='unframed-portraits-hp-only';
+   holder.dataset.timegridVersion='1.8';
   }
   function paintTactics(){
    if(tray.hidden)return;
@@ -319,7 +321,7 @@
     get(n).disabled=model.playback||game.phase!=='planning';
    }
   }
-  function paint(){if(!model)return;paintRoster();paintTactics();}
+  function paint(){if(!model)return;paintRoster();}
   function start(){
    model=createBattle(++seed);target='enemy-1';cardUid=null;selectedTick=1;
    tray.hidden=true;hitLayer.replaceChildren();
@@ -338,6 +340,7 @@
   }
   function openTactics(choice){
    if(!model||model.playback||model.game.phase!=='planning')return false;
+   return false; // Rejected giant round-one planner removed from the mounted UI.
    if(choice)target=choice;
    tray.hidden=false;cardUid=null;notify('选择手牌与时间格；完成后关闭，头像与血量依然常驻');
    paint();return true;
@@ -345,8 +348,13 @@
   function action(fn){try{const r=fn();paint();return r;}catch(err){
    notify(err?.message||String(err));paint();return false;
   }}
+  function executeQuick(){
+   if(!model||model.playback||model.game.phase!=='planning')return false;
+   model.autoplan(true);const result=model.execute();paint();return result;
+  }
   holder.addEventListener('click',e=>{
    const button=e.target.closest('button');if(!button)return;
+   if(button.hasAttribute('data-tg-quick')){executeQuick();return;}
    if(button.hasAttribute('data-tg-choose-role')){
     const i=Number(button.dataset.tgChooseRole);
     if(onRole)onRole(i);else selectRole(i);
@@ -383,6 +391,7 @@
   const keyHandler=e=>{
    if(hud.hidden||!hud.isConnected||e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;
    if(/input|textarea|select/i.test(e.target?.tagName||''))return;
+   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();executeQuick();return;}
    if(e.key?.toLowerCase()==='t'){
     e.preventDefault();
     if(tray.hidden)openTactics();else tray.hidden=true;
@@ -391,14 +400,14 @@
   document.addEventListener('keydown',keyHandler);
   start();
   return {
-   get model(){return model;},element:holder,selectRole,reset:start,
+   get model(){return model;},element:holder,selectRole,reset:start,executeQuick,
    advance(dt){return model?.advance(dt)||null;},
    visual(id){return model?.shown.find(a=>a.id===gameId(id))||null;},
    active(){return !!model&&!model.playback&&model.game.phase==='planning';},
    inspect(){return model?{phase:model.playback?'resolving':model.game.phase,
     round:model.game.round,progress:model.progress,controlledId:model.game.controlledId,
     ui:holder.dataset.layout,version:holder.dataset.timegridVersion,
-    tacticsOpen:!tray.hidden,
+    tacticsOpen:false,
     roles:ROLE_IDS.map((id,i)=>({gameId:id,arenaId:ARENA_IDS[i],
      hp:model.game.actors.find(a=>a.id===id)?.hp,
      hand:model.game.actors.find(a=>a.id===id)?.hand.length,
