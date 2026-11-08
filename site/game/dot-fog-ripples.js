@@ -32,7 +32,7 @@
    if(waves.length>5)waves.shift();
   }
   function render(now,worldFog){
-   if(document.hidden||now-last<40||!map.isConnected||!map.getClientRects().length)return;
+   if(document.hidden||now-last<40||!map.isConnected||!map.classList.contains('pw-dot-empty-preview')||!map.getClientRects().length)return;
    last=now;
    const v=viewport(),c=camera(),w=Math.ceil(v.w),h=Math.ceil(v.h);
    if(w<=0||h<=0||!Number.isFinite(c.scale)||c.scale<=0)return;
