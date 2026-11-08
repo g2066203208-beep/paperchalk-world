@@ -6,44 +6,53 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
-const json = p => JSON.parse(fs.readFileSync(path.join(ROOT, p),'utf8'));
-const data = json('site/data/npc/civilians/gallery.v1.json');
+const read = p => JSON.parse(fs.readFileSync(path.join(ROOT,p),'utf8'));
+const data = read('site/data/npc/civilians/gallery.v1.json');
 
-test('civilian gallery includes all three new commuters and the existing approved elderly M003', () => {
-  assert.deepEqual(data.characters.map(c=>c.id), ['NPC-C001','NPC-C002','NPC-C003','NPC-M003']);
-  assert.equal(new Set(data.characters.map(c=>c.id)).size,4);
-  const pending = data.characters.filter(c=>/^NPC-C\d{3}$/.test(c.id));
-  assert.equal(pending.length,3);
-  for(const item of pending){
-    assert.equal(item.source.committedToRepository,false);
+test('all five ordinary civilians are in one roster; four new real PNG files are committed',()=>{
+  assert.deepEqual(data.characters.map(c=>c.id),['NPC-C001','NPC-C002','NPC-C003','NPC-C004','NPC-M003']);
+  assert.equal(new Set(data.characters.map(c=>c.id)).size,5);
+  const expected = {
+    'NPC-C001': ['a98113e0612058b9d8fccfee28c9f88223be4f8de4c90e8fe938dc0cbb718ba5', 678018],
+    'NPC-C002': ['a319c5ebc3e9b236010a1c31b2bccfb1f7e96668eaa3211b3b35bfde17cb2291', 733253],
+    'NPC-C003': ['7037e692d122e8022140320a4e5f4e430c134da6aac26f3852d6410a4acfeade', 636544],
+    'NPC-C004': ['9ac68f4ca8a642054c0e65e1382eab66ca87d16a12fc83bdcf2876ad3f56453c', 668427]
+  };
+  for(const id of Object.keys(expected)){
+    const item=data.characters.find(c=>c.id===id);
+    assert.ok(item,id);
+    assert.equal(item.source.path,`site/assets/characters/civilians/${id.toLowerCase()}/three-view-original.png`);
+    assert.equal(item.source.sha256,expected[id][0]);
+    assert.equal(item.source.bytes,expected[id][1]);
+    assert.equal(item.source.committedToRepository,true);
+    assert.deepEqual(item.source.dimensions,[1024,1024]);
+    assert.deepEqual(item.source.actualImageLeftToRight,['side_left','front','back']);
+    assert.equal(item.source.mode,'RGB');
+    assert.ok(fs.existsSync(path.join(ROOT,item.source.path)),`missing binary: ${item.source.path}`);
     assert.equal(item.production.registeredForGame,false);
     assert.equal(item.production.gameApproved,false);
     assert.equal(item.production.hasRealAlpha,false);
-    assert.deepEqual(item.source.actualImageLeftToRight,['side_left','front','back']);
-    assert.deepEqual(item.source.dimensions,[1024,1024]);
-    assert.equal(item.source.mode,'RGB');
-    assert.match(item.source.sha256,/^[a-f0-9]{64}$/);
     for (const state of ['communicate','rest','death'])
       assert.equal(item.states[state].status,'not_drawn');
   }
 });
 
-test('elderly M003 is a civilian; cross-linked, not reissued or duplicated',()=>{
-  const elderly = data.characters.find(c=>c.id==='NPC-M003');
-  const canonicalPath = 'site/data/npc/metro-commuter-npc-m003.v2.json';
-  const original = json(canonicalPath);
-  const historical = json('site/data/npc/metro-character-gallery.v1.json');
-  assert.equal(elderly.canonicalRecord,canonicalPath);
-  assert.equal(elderly.source.path,original.approvedArt.assetPath);
-  assert.equal(elderly.source.sha256,original.approvedArt.sha256);
-  assert.equal(elderly.source.committedToRepository,true);
-  assert.deepEqual(elderly.source.actualImageLeftToRight,['front','side_left','back','seated_reading']);
-  assert.equal(elderly.production.hasRealAlpha,true);
-  assert.equal(elderly.production.artApproved,true);
-  assert.equal(elderly.production.gameApproved,false);
-  assert.equal(elderly.production.registeredForGame,false);
-  assert.equal(elderly.states.rest.path,original.render.sprites.special);
-  assert.ok(historical.characters.some(c=>c.id==='NPC-M003' && c.approval==='four_pose_reference_approved'));
-  assert.equal(elderly.production.sprites.front,original.render.sprites.front);
-  assert.equal(elderly.production.sprites.back,original.render.sprites.back);
+test('approved subway reader M003 remains included as a civilian, without asset duplication',()=>{
+  const elder=data.characters.find(c=>c.id==='NPC-M003');
+  const original=read('site/data/npc/metro-commuter-npc-m003.v2.json');
+  const legacy=read('site/data/npc/metro-character-gallery.v1.json');
+  assert.equal(elder.source.path,original.approvedArt.assetPath);
+  assert.equal(elder.source.sha256,original.approvedArt.sha256);
+  assert.ok(fs.existsSync(path.join(ROOT,elder.source.path)));
+  assert.equal(elder.source.committedToRepository,true);
+  assert.deepEqual(elder.source.actualImageLeftToRight,['front','side_left','back','seated_reading']);
+  assert.equal(elder.states.rest.path,original.render.sprites.special);
+  assert.equal(elder.production.hasRealAlpha,true);
+  assert.equal(elder.production.artApproved,true);
+  assert.equal(elder.production.gameApproved,false);
+  assert.equal(elder.production.registeredForGame,false);
+  assert.ok(legacy.characters.some(c=>c.id==='NPC-M003' && c.approval==='four_pose_reference_approved'));
+  for (const f of [original.render.transparentSpriteAtlas,...Object.values(original.render.sprites)]) {
+    assert.ok(fs.existsSync(path.join(ROOT,f)),`missing M003 approved asset ${f}`);
+  }
 });
