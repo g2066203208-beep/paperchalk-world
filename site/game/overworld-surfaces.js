@@ -102,6 +102,11 @@
       y:global.PaperWorldMetro?.STATIONS[p.id]?.y??p.y})));
     function projectedCost(from,to){
       const a=locs[from],b=locs[to];
+      if(!a||!b)return Infinity;
+      if(a.group==='世界'||b.group==='世界'){
+       const trip=global.PaperWorldDestinationNetwork?.journey(from,to);
+       return trip?Math.max(3,trip.minutes):Infinity;
+      }
       return a.group==='家'&&b.group==='家'?10:b.group==='家'?a.travel:b.travel;
     }
     function availability(id,s){
