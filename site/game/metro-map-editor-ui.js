@@ -143,7 +143,7 @@ function create(options){
   const txt=s?'车站 · '+s.label+' ('+s.gx+','+s.gy+')':
    edge?edge.name+' · '+(model.getStation(edge.from)?.label||edge.from)+
     ' → '+(model.getStation(edge.to)?.label||edge.to):
-   '点选线路；双击轨道加圆角点；拖站点调整格点';
+   '点一条彩色线路，只显示这条线的车站，再拖动编辑';
   info.textContent=lastWarning||txt;
   pick.dataset.active=String(tool==='select');
   bend.dataset.active=String(tool==='bend');
@@ -203,8 +203,14 @@ function create(options){
  function render(){
   layer.replaceChildren();
   if(!active)return;
-  const data=model.data(),cam=camera(),screenR=clamp(7.5/cam.scale,3,20);
+  const data=model.data(),cam=camera(),screenR=clamp(4.7/cam.scale,2.4,15);
   const edge=currentEdge(),selectedLine=edge?.lineId;
+  const spacing=40*cam.scale;
+  const showAllStationHandles=!selectedLine&&spacing>=82;
+  // Route-first LOD: a full metropolis is a LINE PLAN, not 170 white circles.
+  // One click isolates the current line's genuine station handles.
+  map.dataset.editorNodeDensity=selectedLine?'selected-line':
+   showAllStationHandles?'detailed':'hubs';
   const visible=(gx,gy,margin=90)=>{
    const p=localPoint({gx,gy});
    const bounds=map.getBoundingClientRect();
@@ -221,6 +227,7 @@ function create(options){
     'data-editor-line':row.lineId},'pw-metro-edit-edge');
    if(row.key===selectedEdge)group.dataset.selected='true';
    else if(selectedLine===row.lineId)group.dataset.sameLine='true';
+   else if(selectedLine)group.dataset.dimmed='true';
    const casing=v('path',{d,stroke:'#0b1721',
     'stroke-width':11,'vector-effect':'non-scaling-stroke'},
     'pw-metro-edit-track-casing');
@@ -248,6 +255,13 @@ function create(options){
   for(const [id,station] of Object.entries(data.stations)){
    if(!visible(station.gx,station.gy))continue;
    const p=localPoint(station),isTransfer=(served.get(id)||0)>1;
+   const onLine=!!selectedLine&&data.lines.some(line=>
+    line.id===selectedLine&&line.stops.includes(id));
+   const important=['entrance','central','school','convenience'].includes(id);
+   const showHandle=!!(id===selectedStation||onLine||
+    (!selectedLine&&(showAllStationHandles||isTransfer||important)));
+   // Hidden stops remain in the editable model and track path, never deleted.
+   if(!showHandle)continue;
    const circle=v('circle',{cx:p.x,cy:p.y,r:screenR,
     'data-editor-station':id,role:'button',tabindex:0,
     'aria-label':'编辑车站 '+station.label},
@@ -271,7 +285,9 @@ function create(options){
    });
    layer.append(circle);
    const labelVisible=id===selectedStation||
-    cam.scale>=1.55||(isTransfer&&cam.scale>=.9);
+    (!!selectedLine&&onLine&&spacing>=75)||
+    (!selectedLine&&important&&spacing>=60)||
+    (!selectedLine&&isTransfer&&spacing>=105);
    if(labelVisible){
     const txt=v('text',{x:p.x,y:p.y-screenR-5,
      'text-anchor':'middle'},'pw-metro-edit-station-label');
