@@ -117,14 +117,17 @@ try{
    'teammate is still fully opaque even when overlapping an enemy silhouette');
   assert.equal(switched.cameraParity,true,
    'the single WebGL camera follows the real selected world-space teammate');
-  assert.equal(switched.stagePresentation,'world-space-foreground-handoff');
-  assert.equal(switched.cameraLook.pivot.x,-1.05);
-  assert.equal(switched.cameraLook.pivot.z,9.3);
-  assert.deepEqual(switched.camera.eye,{x:-.28,y:1.5,z:10.4},
-   'camera never follows the original tactical slot: the selected real actor enters the original shoulder slot');
+  assert.equal(switched.stagePresentation,'four-rear-facing-allies-one-fixed-rank');
+  assert.equal(switched.cameraLook.pivot.x,chosen.x);
+  assert.equal(switched.cameraLook.pivot.z,chosen.z);
   assert.equal(switched.camera.fov,66);
-  assert.equal(switched.stageActors.find(a=>a.id===chosen.id).x,-1.05);
+  assert.equal(switched.camera.eye.y,1.5);
+  assert.equal(switched.stageActors.find(a=>a.id===chosen.id).x,chosen.x);
   assert.equal(switched.stageActors.find(a=>a.id===chosen.id).z,9.3);
+  assert.deepEqual(switched.presentationActors.filter(a=>a.team==='ally').map(a=>a.z),
+   [9.3,9.3,9.3,9.3],'all 4 back L2D actors remain in one physical rank');
+  assert.ok(switched.presentationActors.filter(a=>a.team==='ally')
+   .every(a=>a.stageYaw===undefined),'never rotate female07 back art into side views');
   assert.equal(JSON.stringify(switched.actors),originalActors,
    'switching control cannot move even one ally or enemy root');
   assert.equal(await page.locator('[data-control-ally="'+index+'"]').getAttribute('aria-pressed'),'true');
