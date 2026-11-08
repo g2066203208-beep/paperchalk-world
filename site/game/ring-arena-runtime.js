@@ -1421,12 +1421,15 @@
   let controlledActorId='hero';
   let stageTransition=null;
   const STAGE_FG=Object.freeze({x:-1.05,z:9.30,stageYaw:-.05});
-  // Genuinely different world-space spectator positions: not screen overlays.
-  // The ArtMesh plane turns in 3D while preserving original source pixels.
+  // Three unobstructed midground side-wing silhouettes at genuine floor
+  // anchors, spaced beyond the rightmost enemy portrait. Unlike the first
+  // attempt none of these occupies the huge foreground hero silhouette.
+  // The existing ArtMesh is turned physically; replace with AUTHORED side
+  // L2D later, never paint over or squeeze the user's character image.
   const STAGE_SPECTATORS=Object.freeze([
-   Object.freeze({x:-2.75,z:7.55,stageYaw:-1.05}),
-   Object.freeze({x:1.62,z:7.55,stageYaw:-.95}),
-   Object.freeze({x:2.60,z:7.50,stageYaw:1.05})
+   Object.freeze({x:1.40,z:7.68,stageYaw:1.60}),
+   Object.freeze({x:2.10,z:7.58,stageYaw:1.90}),
+   Object.freeze({x:2.85,z:7.52,stageYaw:1.90})
   ]);
   const stageEnabled=()=>!transitMode&&mode==='outer'&&
    new URLSearchParams(window.location.search).get('staging')!=='legacy';
