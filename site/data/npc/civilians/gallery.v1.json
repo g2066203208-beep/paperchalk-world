@@ -442,8 +442,8 @@
         "look": "深蜜棕晒黑肤色、蜂蜜金齐肩卷发、较高个，校服敞开、领带松系、袜子略堆",
         "personality": "自信俏皮的黑皮辣妹",
         "promptReference": "docs/NPC_SG02_ANIMA_DYNAMIC_THREE_VIEW_CHEERFUL_WALK_20261108.md",
-        "status": "candidate_no_eyes_but_side_not_90_new_three_view_prompt_v5_pending",
-        "reviewNotes": "用户确认 SG02 无眼睛新稿，但侧面斜角未过。V4 单人物侧面 inpaint 效果更差，现已撤销；V5 回归 SG01 已验证完整三视图模板，尚待出图验收。"
+        "status": "candidate_two_frontal_views_no_90_side_20261108_rejected_v6_pending_generation",
+        "reviewNotes": "用户最新 SG02 图中左为斜正面、中为正面且丢了酒红长领带、右背面；不合格。V6 已根据 SG01 批准图的实际左侧面/中正面/右背面顺序建立 V2 固定填空模板，禁止继续用失败的单人侧面 inpaint 或旧 V1 错序。仍无批准 PNG。"
       },
       {
         "id": "NPC-SG03",
@@ -451,6 +451,12 @@
         "personality": "待进一步设计",
         "status": "not_drawn"
       }
+    ],
+    "promptTemplate": "docs/ANIMA_SCHOOLGIRL_THREE_VIEW_FILL_IN_TEMPLATE_V2_20261108.md",
+    "actualTargetOrder": [
+      "side_left",
+      "front",
+      "back"
     ]
   }
 }
