@@ -1215,9 +1215,11 @@
   let transitMode=false,environmentId='convenience',environmentEpoch=0;
   let platformExposure=0,platformExposureOverride=null;
   let doorOpen=0;
-  function setTransitDoorOpen(value){
+  function setTransitDoorOpen(value,redraw=true){
+   // The existing carriage RAF owns all door animation frames. No extra
+   // render on the same tick and no second canvas/video composite.
    doorOpen=clamp(Number(value)||0,0,1);
-   if(active&&transitMode)render(0);
+   if(redraw&&active&&transitMode)render(0);
    return doorOpen;
   }
   let trainState={distanceMeters:0,speedMps:0,stationExposure:1,
