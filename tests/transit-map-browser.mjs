@@ -173,8 +173,21 @@ try{
  });
  assert.equal(subwayPortrait.character,'protagonist','never render female-07 battle preview on the train');
  assert.ok(subwayPortrait.visibleHeight>.54,'the protagonist must not be tiny: '+JSON.stringify(subwayPortrait));
- assert.ok(subwayPortrait.footY>-.98&&subwayPortrait.headY<.90,
-  'train heroine shoes/head must fit the real frame: '+JSON.stringify(subwayPortrait));
+ assert.ok(subwayPortrait.footY< -1.03&&subwayPortrait.headY>0&&subwayPortrait.headY<.70,
+  'formal front wall fills frame; foreground heroine lower legs intentionally cropped: '+JSON.stringify(subwayPortrait));
+ const frontal=await page.evaluate(()=>{
+  const room=window.PaperWorldGameRingArena.inspect();
+  const eye=room.camera.eye,focus=room.camera.focus;
+  const join=window.PaperWorldRingArena.project(
+   {x:eye.x,y:0,z:room.geometry.backZ},room.camera,room.projectionAspect);
+  return {eye,focus,fov:room.camera.fov,joinY:join.y,composition:
+   window.PaperWorldEnvironments.get('metro').camera.composition};
+ });
+ assert.equal(frontal.composition,'front-elevation-no-floor');
+ assert.ok(Math.abs(frontal.eye.x-frontal.focus.x)<.0001);
+ assert.ok(Math.abs(frontal.eye.y-frontal.focus.y)<.0001);
+ assert.ok(frontal.joinY< -1.03,
+  'floor is not allowed to appear in real Chromium view: '+JSON.stringify(frontal));
  assert.equal(await page.locator('#pw-metro-cabin .pw-cabin-live-actors')
   .evaluate(el=>getComputedStyle(el).display),'none',
   'do not layer flat character cutouts on top of the real WebGL world');
