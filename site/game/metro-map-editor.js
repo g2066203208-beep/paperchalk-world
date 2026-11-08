@@ -118,7 +118,7 @@ function create(metro,geometry,storage){
    const raw=store?.getItem(KEY);
    if(!raw)return;
    const p=JSON.parse(raw);validate(p,metro);plan=p;saved=raw;
-  }catch(err){plan=defaults(metro,geometry);saved='';}
+  }catch(err){plan=defaults(metro,geometry);saved=JSON.stringify(plan);}
  };
  const serialize=()=>JSON.stringify(plan);
  const remember=(before=serialize())=>{
