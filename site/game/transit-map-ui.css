@@ -1498,3 +1498,159 @@
 
 /* Scope-guard wins over the flexible 10-line legend on cities without metro. */
 #pw-world-surface .pw-dot-world-map[data-scope="city"] .pw-dot-metro-legend[hidden]{display:none!important}
+
+
+/* V28 — genuine DOT-CONNECT metro blueprint editing.
+ * ALL selected tracks are SVG strokes with rounded Q corners.
+ * No image, interactive bounding rectangle, or station-card backdrop. */
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-toggle[hidden],
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-toolbar[hidden]{
+ display:none!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-toggle{
+ min-width:60px!important;border:1px solid #80aca9b0!important;
+ background:#244246bb!important;color:#e9f6f1!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-toggle[data-active="true"]{
+ border-color:#eecb84!important;color:#ffe6b2!important;
+ background:#30504fc9!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-layer{
+ pointer-events:none;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-track,
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-track-casing,
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-hit{
+ fill:none!important;stroke-linecap:round;stroke-linejoin:round;
+ vector-effect:non-scaling-stroke!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-track,
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-track-casing{
+ pointer-events:none;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-edge{
+ opacity:.84;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-edge[data-sameline="true"]{
+ opacity:1;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-edge[data-selected="true"] .pw-metro-edit-track{
+ stroke-width:8.5px!important;
+ filter:drop-shadow(0 0 4px #fff2bc)!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-hit{
+ pointer-events:stroke!important;
+ cursor:crosshair!important;stroke-width:20px!important;
+ outline:none!important;outline-offset:0!important;
+ box-shadow:none!important;-webkit-tap-highlight-color:transparent;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-hit:focus,
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-hit:focus-visible{
+ outline:none!important;box-shadow:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-edge:has(.pw-metro-edit-hit:focus-visible) .pw-metro-edit-track{
+ filter:drop-shadow(0 0 5px #fff2bc);
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station{
+ fill:#263b43!important;stroke:#e8f0ea!important;stroke-width:2.2px!important;
+ vector-effect:non-scaling-stroke!important;
+ pointer-events:all!important;
+ cursor:grab!important;outline:none!important;
+ -webkit-tap-highlight-color:transparent;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station:active{
+ cursor:grabbing!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station[data-transfer="true"]{
+ stroke:#f4d99a!important;stroke-width:3px!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station[data-custom="true"]{
+ fill:#2e6760!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station[data-selected="true"],
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station:focus-visible{
+ stroke:#ffffff!important;fill:#f0b978!important;
+ filter:drop-shadow(0 0 4px #d9b987)!important;
+ outline:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-bend{
+ fill:#f4d292!important;stroke:#22383c!important;stroke-width:2px!important;
+ vector-effect:non-scaling-stroke!important;
+ pointer-events:all!important;cursor:grab!important;
+ outline:none!important;-webkit-tap-highlight-color:transparent;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-bend[data-selected="true"],
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-bend:focus-visible{
+ fill:#fff9ce!important;stroke:#bf7e44!important;stroke-width:3px!important;
+ outline:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-station-label{
+ font:600 11px/1.1 "PaperSans","Noto Sans CJK SC",sans-serif;
+ fill:#e8f3ec;stroke:#0d1c23;stroke-width:2.3px;
+ paint-order:stroke;stroke-linejoin:round;pointer-events:none;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-toolbar{
+ position:absolute;top:52px;right:12px;z-index:55;
+ box-sizing:border-box;
+ max-width:calc(100% - 24px);width:min(850px,calc(100% - 24px));
+ display:flex;flex-direction:column;gap:6px;
+ border:1px solid #91bcb96c;border-radius:6px;
+ background:#14252ce8;
+ padding:9px 11px;box-shadow:0 8px 22px #051319a1;
+ pointer-events:auto;
+ color:#e8f1eb;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-head{
+ display:flex;align-items:center;gap:15px;justify-content:space-between;
+ font:600 13px/1.15 "PaperSans",sans-serif;
+ min-width:0;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-info{
+ font-size:11px;font-weight:400;color:#c3d4d2;min-width:0;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-controls{
+ display:flex;align-items:center;gap:5px;overflow-x:auto;
+ scrollbar-width:thin;padding-bottom:2px;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action{
+ appearance:none!important;flex:none;
+ border:1px solid #7597978c!important;border-radius:3px!important;
+ background:#24404abd!important;color:#e7eeeb!important;
+ padding:6px 9px!important;min-height:28px!important;
+ font:500 12px/1.2 "PaperSans",sans-serif!important;
+ text-shadow:none!important;box-shadow:none!important;
+ white-space:nowrap!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action[data-active="true"]{
+ border-color:#f6d7a7!important;background:#476052dd!important;color:#fff2ce!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action[data-dirty="true"]{
+ border-color:#d6b17c!important;
+}
+#novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action:disabled{
+ opacity:.35!important;cursor:not-allowed!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-rename[hidden]{
+ display:none!important;
+}
+#pw-world-surface .pw-dot-world-map .pw-metro-edit-rename input{
+ width:min(275px,90%);min-height:29px;box-sizing:border-box;
+ border:1px solid #7a9c9a;border-radius:3px;
+ padding:5px 8px;background:#1c343c;color:#f2faf2;
+ font:500 13px/1.2 "PaperSans",sans-serif;
+}
+#pw-world-surface .pw-dot-world-map[data-metro-editing="true"] .pw-dot-hint{
+ display:none!important;
+}
+@container(max-height:440px){
+ #pw-world-surface .pw-dot-world-map .pw-metro-edit-toolbar{
+  top:39px;right:6px;padding:5px 6px;gap:3px;
+  max-width:calc(100% - 12px);width:min(650px,calc(100% - 12px));
+ }
+ #pw-world-surface .pw-dot-world-map .pw-metro-edit-head{font-size:11px;gap:7px}
+ #pw-world-surface .pw-dot-world-map .pw-metro-edit-info{font-size:10px}
+ #novel-ui #pw-world-surface .pw-dot-world-map .pw-metro-edit-action{
+  font-size:11px!important;padding:4px 7px!important;min-height:25px!important
+ }
+}
