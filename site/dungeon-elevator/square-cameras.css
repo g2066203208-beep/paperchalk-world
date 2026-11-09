@@ -1,0 +1,115 @@
+/* Single-source square secondary camera. Last CSS file wins over all older
+ * grid strip sizing; both WebGL canvases retain their independent aspect. */
+.sidebar{container-type:inline-size}
+.preview-card{aspect-ratio:1 / 1}
+@media (min-width:1091px) and (min-height:541px){
+ .sidebar{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:min(100cqw, max(220px, calc(100dvh - 460px))) minmax(0,1fr) clamp(235px,27vh,285px);
+  gap:0;
+ }
+ .sidebar>.preview-card{
+  grid-row:1;grid-column:1;
+  height:100%;width:auto;min-width:0;max-width:100%;
+  aspect-ratio:1/1;
+  justify-self:center;align-self:center;
+  border:1px solid #92877d;border-radius:2px;
+  overflow:hidden;
+ }
+ .sidebar>.shop-panel{grid-row:2;grid-column:1;min-height:0;overflow:hidden}
+ .sidebar>.control-panel{grid-row:3;grid-column:1;min-height:0;overflow:hidden}
+ .sidebar .shop-panel .stock-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr))}
+}
+@media (min-width:681px) and (max-width:1090px) and (min-height:541px){
+ .sidebar{
+  display:grid;grid-template-columns:minmax(0,1fr);
+  grid-template-rows:min(100cqw, max(170px, calc(100dvh - 430px))) minmax(0,1fr) clamp(208px,30vh,258px);
+ }
+ .sidebar>.preview-card{
+  grid-column:1;grid-row:1;width:auto;height:100%;max-width:100%;
+  aspect-ratio:1/1;justify-self:center;
+  border:1px solid #92877d;
+ }
+ .sidebar>.shop-panel{grid-column:1;grid-row:2;min-height:0;overflow:hidden}
+ .sidebar>.control-panel{grid-column:1;grid-row:3;min-height:0;overflow:hidden}
+ .sidebar .shop-panel .stock-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr))}
+}
+@media (orientation:landscape) and (max-height:540px){
+ /* Phone: the top half of the console is split into two columns.
+    Camera stays SQUARE, with merchandise immediately beside it.
+    The lower section becomes a full-width, thumb-friendly lift console. */
+ .workspace{
+  grid-template-columns:minmax(0,1fr) minmax(286px,44%);
+  gap:3px;
+ }
+ .sidebar{
+  container-type:inline-size;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:min(50cqw, calc(100% - 142px)) minmax(0,1fr);
+  gap:2px;
+  background:#e4ded5;
+ }
+ .sidebar>.preview-card{
+  grid-column:2;grid-row:1;
+  width:100%;height:100%;aspect-ratio:1/1;
+  align-self:stretch;justify-self:stretch;min-height:0;
+  border:1px solid #a59a8f;border-radius:2px;
+  overflow:hidden;
+ }
+ .sidebar>.shop-panel{
+  grid-column:1;grid-row:1;min-height:0;
+  padding:2px;overflow:hidden;border:0;border-right:1px solid #bdb3a9;
+  display:flex;flex-direction:column;gap:1px;
+ }
+ .sidebar>.control-panel{
+  grid-column:1 / -1;grid-row:2;
+  min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;gap:3px;padding:4px;
+  border:0;border-top:1px solid #bdb3a9;
+ }
+ .sidebar .shop-panel .section-heading{min-height:12px;max-height:12px;height:12px;padding:0}
+ .sidebar .shop-panel .section-heading h2{font-size:10px}
+ .sidebar .shop-panel .capacity{font-size:9px}
+ .sidebar .shop-panel .stock-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:2px;flex:1;min-height:0;
+ }
+ .sidebar .stock-item{min-height:0;padding:1px 3px;gap:2px;justify-content:space-between}
+ .sidebar .stock-item .goods-icon{display:none}
+ .sidebar .stock-item .goods-label{width:100%;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:1px}
+ .sidebar .stock-item .goods-name{font-size:10px;line-height:1;letter-spacing:-.03em;overflow:hidden;text-overflow:clip}
+ .sidebar .stock-item .goods-qty{font-size:9px;line-height:1;flex:none}
+ .sidebar .customer-strip{
+  height:44px;min-height:44px;max-height:44px;flex:none;
+  display:flex;flex-direction:column;
+  padding:2px 0 0;gap:2px;border-top:1px solid #c9beb2;
+ }
+ .sidebar .customer-upper{display:none}
+ .sidebar .request-copy{font-size:9px;line-height:1;max-height:12px;min-height:10px;white-space:nowrap;overflow:hidden}
+ .sidebar .request-actions{display:grid;grid-template-columns:1.2fr 1fr .5fr;gap:2px;height:27px;min-height:27px;flex:none}
+ .sidebar .request-actions button{font-size:9px;padding:1px 0;height:26px;min-height:26px;white-space:nowrap}
+ .sidebar .control-heading{min-height:14px;max-height:14px;height:14px}
+ .sidebar .travel-actions{flex:1;min-height:42px;max-height:none;gap:5px}
+ .sidebar .move{min-height:42px}
+ .sidebar .move .arrow{font-size:36px}
+ .sidebar .move-text strong{font-size:16px}
+ .sidebar .gate-actions{height:32px;min-height:32px;gap:4px}
+ .sidebar .door-button{height:32px;min-height:32px;font-size:11px}
+ .sidebar .emergency{height:31px;min-height:31px;font-size:12px}
+ .sidebar .utility-actions{display:none}
+ .sidebar .preview-swap{width:22px;height:22px;right:4px;bottom:4px;font-size:14px}
+}
+/* Very short wide-phone screens: maintain the square first and economize text. */
+@media (orientation:landscape) and (max-height:370px){
+ .sidebar{grid-template-rows:min(50cqw, calc(100% - 131px)) minmax(0,1fr)}
+ .sidebar .customer-strip{height:38px;min-height:38px;max-height:38px}
+ .sidebar .request-actions{height:23px;min-height:23px}
+ .sidebar .request-actions button{height:22px;min-height:22px}
+ .sidebar .gate-actions{height:28px;min-height:28px}
+ .sidebar .door-button{height:28px;min-height:28px}
+ .sidebar .emergency{height:27px;min-height:27px}
+}
