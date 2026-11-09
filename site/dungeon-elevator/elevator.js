@@ -73,7 +73,9 @@ function repaintGoods(){
   const icon=document.createElement('span');icon.className='goods-icon';icon.textContent=good.symbol;
   const label=document.createElement('span');label.className='goods-label';
   const name=document.createElement('span');name.className='goods-name';name.textContent=good.name;
-  const qty=document.createElement('span');qty.className='goods-qty';qty.textContent='×'+good.qty+' · '+good.mass+'kg/件';
+  const qty=document.createElement('span');qty.className='goods-qty';qty.textContent='×'+good.qty;
+  button.setAttribute('aria-label',good.name+'，库存'+good.qty+'件，每件'+good.mass+'公斤');
+  button.title=good.name+' · '+good.mass+'kg/件 · 进货'+good.cost+'G';
   label.append(name,qty);button.append(icon,label);
   button.addEventListener('click',()=>{selectedGood=good.id;repaintGoods();repaintRequest()});
   grid.append(button);
@@ -96,7 +98,7 @@ function repaintRequest(){
  $('request-floor').textContent='B'+state.depth;
  if(state.depth===0){
   $('customer-name').textContent='地表补货站';
-  $('customer-request').textContent=good.name+' · 进价 '+good.cost+'G';
+  $('customer-request').textContent=good.name+' · '+good.mass+'kg/件 · 进价'+good.cost+'G';
  }else if(orderServed){
   $('customer-name').textContent=request.customer;
   $('customer-request').textContent='交易完成';
