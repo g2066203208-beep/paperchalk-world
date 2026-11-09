@@ -362,6 +362,8 @@
       active,renderer,error,frame,room:ROOM,
       faces:Object.keys(faces),deskCount:25,chairCount:25,
       textureCount:ready,expectedTextures:5+ACTORS.length,
+      faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
+        [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
       visibleActors:active?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
       fallActive:fallStart>0,heldFallFrame
     };}
