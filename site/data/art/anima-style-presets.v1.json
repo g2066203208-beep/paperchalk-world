@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "updated_on": "2026-11-09",
+  "source": "user-specified Anima style presets; preserve exact LoRA names/weights/tags",
+  "default_preset": "normal",
+  "normal": {
+    "label": "正常版",
+    "positive_prefix": "<lora:akipekoanima_v1_1:0.8> @akipekostyle <lora:Munji_Anima_AITK_KNA35_18ep2520_1024_20261031:1> @muji_style <lora:anima-highres-aesthetic-boost:1>"
+  },
+  "cute": {
+    "label": "可爱版",
+    "positive_prefix": "<lora:akipekoanima_v1_1:0.8> @akipekostyle <lora:Munji_Anima_AITK_KNA35_18ep2520_1024_20261031:1> @muji_style <lora:anima-highres-aesthetic-boost:1> <lora:firedotinc_old-dataset_anima-b1_v6:0.8> @firedotinc-old"
+  },
+  "note": "Normal differs from cute only by omitting the firedotinc LoRA and @firedotinc-old. These presets are for Anima, not GPT Image. Do not overwrite approved existing art."
+}
