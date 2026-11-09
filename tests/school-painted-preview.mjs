@@ -212,6 +212,9 @@ try{
     'Golden hour in the real canvas must be visibly warmer than blue');
   console.log('SCHOOL_DAY_NIGHT_WEBGL_PROOF',JSON.stringify(sceneLightingShots));
 
+  // Capture Boss in a legible daytime lesson, then let the encounter itself
+  // drain the light. Do not carry over the preceding night QA time setting.
+  await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setLightingPreview(660));
   // Capture actual classroom pixels through the entire 2D boss cinematic.
   // Each furniture item has a distinct world-space flight mesh; by the end
   // all 20 desks, 20 chairs and the podium are GONE, not hidden under a mask.
@@ -248,6 +251,31 @@ try{
       bossGrowth:result.state.bossGrowth,path});
   }
   console.log('SCHOOL_BOSS_BIRTH_REAL_WEBGL',JSON.stringify(bossShots));
+
+  // The full animation preview uses 29 distinct REAL WebGL frames, not image
+  // interpolations or a storyboard. Downsample on readback for light artifacts.
+  for(let i=0;i<29;i++){
+    const seconds=4.15*i/28;
+    const capture=await page.evaluate(t=>{
+      const renderer=window.PaperWorldSchoolRoomRenderer;
+      renderer.setBossBirthPreview(t);
+      const source=renderer.canvas;
+      const output=document.createElement('canvas');
+      output.width=768;output.height=432;
+      output.getContext('2d').drawImage(source,0,0,768,432);
+      return {png:output.toDataURL('image/png'),
+        phase:renderer.inspect().bossEncounter.phase,
+        error:renderer.inspect().error};
+    },seconds);
+    assert.equal(capture.error,null,'Boss movement GL error t='+seconds);
+    writeFileSync('artifacts/painted-school-room/boss-motion-'+
+      String(i).padStart(2,'0')+'.png',
+      Buffer.from(capture.png.split(',')[1],'base64'));
+  }
+  console.log('SCHOOL_BOSS_MOTION_29_REAL_FRAMES',JSON.stringify({
+    count:29,durationSeconds:4.15,format:'real-webgl-768x432',
+    noModelledFurniture:true}));
+
   await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setBossBirthPreview(null));
 
   await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setLightingPreview(null));
