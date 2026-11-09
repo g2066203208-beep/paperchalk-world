@@ -154,6 +154,53 @@ try{
   writeFileSync(target,bytes);
   console.log('PAINTED_CLASSROOM_CAPTURE',JSON.stringify({target,bytes:bytes.length,textureCount:status.textureCount,materials:status.faceTextures,drawFrames:status.frame}));
 
+  // Exact world-time lighting comparisons from the REAL game's WebGL canvas,
+  // not tinted reference images. Story-capture is required for the QA override.
+  const periods=[
+    {minute:390,name:'sunrise-0630'},
+    {minute:750,name:'noon-1230'},
+    {minute:1065,name:'sunset-1745'},
+    {minute:1185,name:'night-1945'}
+  ];
+  const sceneLightingShots=[];
+  for(const period of periods){
+    const result=await page.evaluate(minute=>{
+      const renderer=window.PaperWorldSchoolRoomRenderer;
+      if(!renderer.setLightingPreview(minute))throw Error('QA lighting preview denied');
+      renderer.render(0,0);
+      const canvas=renderer.canvas;
+      const px=document.createElement('canvas');
+      px.width=120;px.height=68;
+      const ctx=px.getContext('2d',{willReadFrequently:true});
+      ctx.drawImage(canvas,0,0,120,68);
+      const rgba=ctx.getImageData(0,0,120,68).data;
+      let red=0,green=0,blue=0;
+      for(let i=0;i<rgba.length;i+=4){red+=rgba[i];green+=rgba[i+1];blue+=rgba[i+2];}
+      return {
+        encoded:canvas.toDataURL('image/png'),
+        lighting:renderer.inspect().lighting,
+        average:{red:red/(120*68),green:green/(120*68),blue:blue/(120*68)},
+        error:renderer.inspect().error
+      };
+    },period.minute);
+    assert.equal(result.error,null,'WebGL failed at '+period.name);
+    assert.equal(result.lighting.minute,period.minute);
+    assert.equal(result.lighting.source,'qa-preview');
+    assert.ok(result.encoded.length>25000,'Empty rendered sunrise/noon/sunset frame');
+    const filepath='artifacts/painted-school-room/daylight-'+period.name+'.png';
+    writeFileSync(filepath,Buffer.from(result.encoded.split(',')[1],'base64'));
+    sceneLightingShots.push({name:period.name,minute:period.minute,
+      phase:result.lighting.phase,average:result.average,
+      sunPower:result.lighting.sunPower});
+  }
+  assert.ok(sceneLightingShots[1].average.red>sceneLightingShots[3].average.red*1.50,
+    'The actual daylight canvas must be significantly brighter than night');
+  assert.ok(sceneLightingShots[2].average.red>sceneLightingShots[2].average.blue*1.06,
+    'Golden hour in the real canvas must be visibly warmer than blue');
+  console.log('SCHOOL_DAY_NIGHT_WEBGL_PROOF',JSON.stringify(sceneLightingShots));
+  await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setLightingPreview(null));
+
+
   // These are real game screenshots, not cropped WebGL samples or mockups.
   // Confirm the phone menu matches the user's actual path into daily life.
   await captureGamePage(page,'artifacts/painted-school-room/desktop-actual-game-school.png');
