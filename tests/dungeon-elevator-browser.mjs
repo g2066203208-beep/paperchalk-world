@@ -98,6 +98,12 @@ try{
  const initial=await state(),surface=await shaft();
  assert.equal(initial.depth,0);assert.equal(initial.view,'door');
  assert.equal(surface.floor,0);assert.equal(surface.landingVisible,false);
+ assert.equal(surface.surfaceCityVisible,true,'B0 must show street city, not blank white');
+ assert.equal(surface.surfaceSpriteCount,5,'B0 city must have five individually placed flat sprites');
+ await page.waitForFunction(()=>{
+  const art=window.DungeonElevatorDemo.getRenderStats().art;
+  return ['surface-city-backdrop.svg','surface-city-left.svg','surface-city-right.svg','surface-city-ground.svg','surface-city-streetlight.svg'].every(n=>art[n]==='ready');
+ },null,{timeout:15000});
  assert.equal(await page.locator('#stock-grid .stock-item').count(),6);
  await page.screenshot({path:out+'/01-surface-door-white-1920x1080.png'});
  await page.locator('#swap-camera').click();
@@ -108,6 +114,8 @@ try{
  await page.waitForTimeout(350);
  await page.locator('#service-gate').click();await page.locator('#security-gate').click();
  await page.waitForTimeout(440);
+ assert.equal((await shaft()).surfaceCityVisible,true,'B0 city should remain behind open gates');
+ await page.screenshot({path:out+'/01b-B0-city-street-both-gates-open-1920x1080.png'});
  await page.locator('#down').click();
  assert.equal((await state()).depth,0,'Open doors should prevent travel');
  await page.locator('#service-gate').click();await page.locator('#security-gate').click();
@@ -115,6 +123,7 @@ try{
  let descending=await state(),rockA=await shaft();
  assert.equal(descending.moving,true);assert.equal(descending.depth,0);assert.equal(descending.targetDepth,1);
  assert.equal(rockA.travelVisible,true);assert.equal(rockA.landingVisible,false);
+ assert.equal(rockA.surfaceCityVisible,false,'City must disappear while underground shaft moves');
  assert.equal(rockA.direction,1);
  await page.waitForTimeout(630);
  let rockB=await shaft();
@@ -124,6 +133,7 @@ try{
  let floor1=await state(),land1=await shaft();
  assert.equal(floor1.depth,1);assert.equal(floor1.request.id,'potion');
  assert.equal(land1.travelVisible,false);assert.equal(land1.landingVisible,true);assert.equal(land1.floor,1);
+ assert.equal(land1.surfaceCityVisible,false,'City must not appear at underground B1');
  await page.locator('#service-gate').click();await page.locator('#security-gate').click();
  await page.waitForTimeout(500);
  await page.screenshot({path:out+'/04-B1-open-rock-above-below-1920x1080.png'});
@@ -155,6 +165,7 @@ try{
  const end=await state(),finalShaft=await shaft();
  assert.equal(end.emergencyUsed,true);assert.equal(end.integrity,92);
  assert.equal(finalShaft.floor,0);assert.equal(finalShaft.landingVisible,false);
+ assert.equal(finalShaft.surfaceCityVisible,true,'City must restore when returning to B0');
  // Verify real ORIGINAL horror game main menu also exposes the elevator link on a phone.
  const homePhone=await browser.newPage({viewport:{width:844,height:390},deviceScaleFactor:2,isMobile:true,hasTouch:true});
  await homePhone.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:60000});
@@ -191,6 +202,7 @@ try{
    stats:window.DungeonElevatorDemo.getRenderStats()};
  });
  assert.deepEqual(Object.keys(phoneLayout.stats.geometries),['PlaneGeometry']);
+ assert.equal(await phone.evaluate(()=>window.DungeonElevatorDemo.getShaftState().surfaceCityVisible),true);
  assert.ok(phoneLayout.primary.width>phoneLayout.preview.width,'Phone main view should stay larger');
  assert.ok(phoneLayout.preview.x>=phoneLayout.primary.right-1,'Preview must be in right column');
  const phoneClean=await phone.evaluate(()=>{
@@ -267,5 +279,5 @@ try{
  console.log('PHONE_GAME_PROOF',JSON.stringify({phoneLayout,compactLayout,phoneErrors}));
 
  assert.equal(errors.length,0,'Browser page errors: '+JSON.stringify(errors));
- console.log('DUNGEON_ELEVATOR_SHAFT_PROOF',JSON.stringify({layout,initial,descending:{rockA,rockB},land1,ascending:{upA,upB},end,finalShaft,screenshots:10,errors}));
+ console.log('DUNGEON_ELEVATOR_SHAFT_PROOF',JSON.stringify({layout,initial,descending:{rockA,rockB},land1,ascending:{upA,upB},end,finalShaft,screenshots:11,errors}));
 }finally{await browser.close()}
