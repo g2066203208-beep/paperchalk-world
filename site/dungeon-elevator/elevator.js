@@ -258,7 +258,7 @@ function switchView(view){
  $('main-camera-label').textContent=state.view==='door'?'门外':'舱内';
  $('preview-camera-label').textContent=state.view==='door'?'舱内':'门外';
  document.querySelector('.main-camera-help').textContent=state.view==='door'?'电梯营业窗口':'电梯乘客空间';
- $('scene-camera-hint').textContent=state.view==='door'?'停靠看上下岩层；行驶时岩土连续滚动':'空电梯3D方盒子，人员与货物素材暂未加入';
+ $('scene-camera-hint').textContent=state.view==='door'?'B0地表城市；B1及以下为岩层，移动时岩土滚动':'舱内仍以2D纸片搭建，乘客立绘尚未加入';
  $('swap-camera').setAttribute('aria-label',state.view==='door'?'切换到电梯内部主镜头':'切换到电梯门外主镜头');
  notice('',true);
  requestRender();
@@ -280,7 +280,7 @@ function finishRide(){
  state.depth=result.target;state.moving=false;state.targetDepth=null;state.motionDirection=0;
  exterior.setTraveling(false);exterior.setFloor(state.depth);
  prepareRequest();repaintHUD();
- $('scene-camera-hint').textContent=state.depth===0?'地表外景仍保持纯白':'门外只保留停靠层的上、下岩壁与空出入口';
+ $('scene-camera-hint').textContent=state.depth===0?'B0 · 地表城市街道':'门外保留岩层天花、地面和中间开口';
  notice(result.emergencyRide?'紧急返回地表成功，耗损耐久8点，本次应急装置已使用。':'已停靠 '+(state.depth===0?'地表':'B'+String(state.depth).padStart(3,'0'))+'。打开门可观察本层岩土开口。');
  requestRender();
 }
