@@ -90,6 +90,27 @@ test('daylight advances with game minutes and keeps the same physical sun direct
   assert.deepEqual(school.lightingAt(420),school.lightingAt(420),
     'The same in-game minute cannot randomly change lighting');
 });
+test('boss emergence ejects every one of the 41 2D classroom standees',()=>{
+  assert.deepEqual(Object.keys(school.BOSS_MATERIALS).sort(),['creature','rupture']);
+  const phases=[0,.58,1.24,2.2,3,4.15].map(t=>school.bossPhaseAt(t));
+  assert.deepEqual(phases.map(p=>p.phase),
+    ['warning','rupture','blast','blast','manifest','boss-ready']);
+  assert.ok(phases[0].furnitureVisible);
+  assert.ok(phases[2].flyingFurniture);
+  assert.ok(phases[2].displacement>0);
+  assert.ok(phases[3].furnitureOpacity<.5);
+  assert.equal(phases[4].furnitureVisible,false);
+  assert.equal(phases[5].furnitureVisible,false);
+  assert.equal(phases[5].bossGrowth,1);
+  assert.equal(phases[5].bossOpacity,1);
+  assert.equal(school.BOSS_DURATION,4.15);
+  const {readFileSync}=require('node:fs'),{join}=require('node:path');
+  for(const sprite of Object.values(school.BOSS_MATERIALS)){
+    const text=readFileSync(join(__dirname,'../site',sprite),'utf8');
+    assert.match(text,/^<svg/,'Boss must remain an actual 2D texture');
+    assert.doesNotMatch(text,/<image\b/,'No external-image dependencies');
+  }
+});
 test('one shared physical perspective makes distant objects appear smaller',()=>{
   const cam=school.camera();
   const w=1440,h=810;
