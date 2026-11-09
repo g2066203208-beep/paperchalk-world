@@ -8,6 +8,10 @@ on:
     paths:
       - 'site/game/phone-ui.js'
       - 'site/game/phone-ui.css'
+      - 'site/game/phone-ui-redesign.css'
+      - 'site/game/phone-world-camera.js'
+      - 'tests/phone-world-camera.test.cjs'
+      - 'tests/phone-world-camera-browser.mjs'
       - 'site/game/daily-life-state.js'
       - 'site/game/overworld-runtime.js'
       - 'tests/phone-life.test.cjs'
@@ -40,9 +44,11 @@ jobs:
           python3 scripts/build_char002_psd_rig.py
           python3 scripts/build_character_catalog.py
       - name: Verify persisted phone state
-        run: node --test tests/phone-life.test.cjs
+        run: node --test tests/phone-life.test.cjs tests/phone-world-camera.test.cjs
       - name: Verify physical phone, chat, notes and contact details
         run: node tests/phone-ui-browser.mjs
+      - name: Verify real game-world photo, draggable handset and live stream (no webcam)
+        run: node tests/phone-world-camera-browser.mjs
       - name: Archive actual desktop and mobile screenshots
         if: always()
         uses: actions/upload-artifact@v4
