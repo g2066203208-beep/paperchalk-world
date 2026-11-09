@@ -137,9 +137,17 @@ try{
   controlsBottom:document.querySelector('.control-panel').getBoundingClientRect().bottom,
   sceneRight:document.getElementById('primary-stage').getBoundingClientRect().right,
   previewLeft:document.getElementById('swap-camera').getBoundingClientRect().left,
-  scrollHeight:document.documentElement.scrollHeight
+  scrollHeight:document.documentElement.scrollHeight,
+  customerActionsBottom:document.querySelector('.customer-strip .request-actions').getBoundingClientRect().bottom,
+  shopBottom:document.querySelector('.shop-panel').getBoundingClientRect().bottom,
+  fullscreenRight:document.getElementById('game-fullscreen').getBoundingClientRect().right,
+  backLeft:document.querySelector('.main-link').getBoundingClientRect().left,
+  backRight:document.querySelector('.main-link').getBoundingClientRect().right
  }));
  assert.ok(compactLayout.controlsBottom<=375&&compactLayout.scrollHeight<=375,'Compact phone controls clipped: '+JSON.stringify(compactLayout));
+ assert.ok(compactLayout.customerActionsBottom<=compactLayout.shopBottom-1,'Compact phone shop buttons clipped: '+JSON.stringify(compactLayout));
+ assert.ok(compactLayout.fullscreenRight<=compactLayout.backLeft+1,'Fullscreen/back buttons overlap: '+JSON.stringify(compactLayout));
+ assert.ok(compactLayout.backRight<=667,'Back button off-screen: '+JSON.stringify(compactLayout));
  await compact.screenshot({path:out+'/09-phone-compact-667x375.png'});
  await compact.close();
  const portrait=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
