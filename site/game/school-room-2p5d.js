@@ -144,8 +144,9 @@
   function silhouette(position){
     // Explicit human anatomy, not an abstract rectangle. The figure falls
     // vertically through the LEFT window on a real X/Y plane in the room.
-    const c=color('#222c37',.97),v=[],x=-4.64,z=7.65;
-    const P=(dx,dy)=>[x+dx,position+dy,z];
+    const c=color('#222c37',.97),v=[],x=-4.93,z=6.10;
+    const angle=.28,ca=Math.cos(angle),sa=Math.sin(angle);
+    const P=(dx,dy)=>[x+dx*ca-dy*sa,position+dx*sa+dy*ca,z];
     const triangle=(a,b,d)=>v.push(...a,...c,...b,...c,...d,...c);
     const poly=points=>{
       for(let i=1;i+1<points.length;i++)
