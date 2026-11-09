@@ -45,6 +45,30 @@ test('the daily school is a separate real five-face environment',()=>{
   assert.equal(school.ACTORS.some(a=>a.id==='girl'),true);
   assert.equal(school.ACTORS.some(a=>a.id==='boy'),true);
 });
+test('classroom actors keep the exact original source-image proportions',()=>{
+  const actor=school.ACTORS.find(a=>a.id==='female2');
+  // Width follows the 1024x2048 original; never the historic fixed 0.49 ratio.
+  const ink={left:.32,right:.68,top:.06,bottom:.96};
+  const fit=school.portraitPlacement(actor,{width:1024,height:2048},ink);
+  assert.ok(Math.abs(fit.sourceAspect-fit.planeAspect)<1e-12);
+  assert.ok(Math.abs(fit.visibleHeight-actor.h)<1e-10);
+  assert.ok(Math.abs(fit.planeWidth/fit.planeHeight-.5)<1e-12);
+  assert.ok(Math.abs((fit.x0+(ink.left+ink.right)*.5*fit.planeWidth)-actor.x)<1e-10);
+  assert.ok(Math.abs(fit.y0+(1-ink.bottom)*fit.planeHeight)<1e-10);
+  const wide=school.portraitPlacement(actor,{width:2048,height:1024},
+    {left:.30,right:.70,top:.1,bottom:.9});
+  assert.ok(Math.abs(wide.planeAspect-2)<1e-12);
+});
+test('school lens uses human-sized actors, not a wide overview of the ceiling',()=>{
+  const cam=school.camera(),actor=school.ACTORS.find(a=>a.id==='girl');
+  const top=school.project([actor.x,actor.h,actor.z],cam,1440,810);
+  const sole=school.project([actor.x,0,actor.z],cam,1440,810);
+  assert.ok(top&&sole);
+  const fraction=(sole.y-top.y)/810;
+  assert.ok(fraction>.49&&fraction<.69,
+    'Physical 1.73m actor should occupy a readable fraction: '+fraction);
+  assert.ok(cam.hFov<=56&&cam.z> -1.2,'Portrait lens should frame humans');
+});
 test('one shared physical perspective makes distant objects appear smaller',()=>{
   const cam=school.camera();
   const w=1440,h=810;
