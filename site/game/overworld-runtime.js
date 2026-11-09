@@ -125,8 +125,16 @@
     // Preserve the existing everyday entrance; chapter dialogue follows.
     await director.playLocation(place,engine.snapshot());
     if(!mode||root.hidden||engine.snapshot().location!==place)return;
-    if(place==='school')await playActOne(actOne?.enter(engine.snapshot()));
-    else if(place==='classmate-home')await playActOne(actOne?.home(engine.snapshot(),'entry'));
+    if(place==='school'){
+      // One visit may need to catch up several days of news if the player
+      // was exploring elsewhere. No scene is replayed or converted into a quest.
+      for(let i=0;i<4;i++){
+        const beat=actOne?.enter(engine.snapshot());
+        if(!beat)break;
+        await playActOne(beat);
+        if(!mode||root.hidden||engine.snapshot().location!==place)break;
+      }
+    }else if(place==='classmate-home')await playActOne(actOne?.home(engine.snapshot(),'entry'));
   }
   const cabin=global.PaperWorldMetroCabin?.create?.({
     root,engine,onExit:exitFromMetro,onFeedback:message=>say(message)
@@ -376,6 +384,7 @@
     if(s.location==='bedroom'){
       if(s.day===1&&!s.homework.inspected)
         addAction('查看书包','bag',()=>run(()=>engine.inspectHomework()));
+      if(s.minute<22*60)addAction('睡觉','sleep',()=>run(()=>engine.sleep()));
       addAction('去玄关','hall',()=>travel('entrance'));
     }else if(s.location==='living-room'){
       addAction('回卧室','bedroom',()=>travel('bedroom'));
@@ -409,8 +418,10 @@
         addAction('听听同学们怎么说','classmates',()=>playActOne(actOne?.talk(engine.snapshot(),'classmates')));
         addAction('看看她的课桌','desk',()=>playActOne(actOne?.talk(engine.snapshot(),'girl-desk')));
       }else addAction('听听班里的八卦','classmates',()=>playActOne(actOne?.talk(engine.snapshot(),'classmates')));
-      if(s.day>=3&&s.day<6)
+      if(s.day>=3){
         addAction('问问男二','male2',()=>playActOne(actOne?.talk(engine.snapshot(),'male2')));
+        addAction('和男主说说话','male1',()=>playActOne(actOne?.talk(engine.snapshot(),'male1')));
+      }
       if(s.day>=6){
         addAction('看看小胖家','boy-home',()=>travel('classmate-home'));
         if(actOne?.knew('home-records')&&actOne?.knew('desk-note'))
