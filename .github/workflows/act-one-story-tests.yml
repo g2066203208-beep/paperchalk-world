@@ -1,0 +1,35 @@
+name: Act One Story Tests
+on:
+  push:
+    paths:
+      - 'site/game/act-one-story.js'
+      - 'site/game/overworld-runtime.js'
+      - 'site/game/overworld-director.js'
+      - 'site/game/daily-life-state.js'
+      - 'site/index.html'
+      - 'tests/act-one-story.test.cjs'
+      - '.github/workflows/act-one-story-tests.yml'
+  pull_request:
+    paths:
+      - 'site/game/act-one-story.js'
+      - 'site/game/overworld-runtime.js'
+      - 'site/game/overworld-director.js'
+      - 'site/game/daily-life-state.js'
+      - 'site/index.html'
+      - 'tests/act-one-story.test.cjs'
+jobs:
+  story-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax-check authored game files
+        run: |
+          node --check site/game/act-one-story.js
+          node --check site/game/overworld-runtime.js
+          node --check site/game/overworld-director.js
+          node --check site/game/daily-life-state.js
+      - name: Test Act One persistence and chapter continuity
+        run: node --test tests/act-one-story.test.cjs
