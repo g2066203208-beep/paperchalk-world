@@ -49,8 +49,11 @@
       if(m<.13)return 0;const s=(m-.13)/.87;
       return Math.sign(v)*s*s*(3-2*s);
     };
-    return {x:.10,y:1.58,z:-1.45,hFov:67,yaw:axis(px)*.085,
-      pitch:-.013-axis(py)*.039};
+    // Battle-room-inspired human-scale lens. The viewer is INSIDE the
+    // classroom, not photographing the whole room from beyond its back wall.
+    // Let the ceiling crop naturally instead of shrinking every character.
+    return {x:.10,y:1.25,z:-.90,hFov:54,yaw:axis(px)*.085,
+      pitch:-.006-axis(py)*.039};
   }
   function project(p,cam,w,h){
     const dx=p[0]-cam.x,dy=p[1]-cam.y,dz=p[2]-cam.z;
@@ -144,12 +147,65 @@
       return [id,new Float32Array(arr)];
     }));
   }
-  function spriteGeometry(actor){
-    const x=actor.x,z=actor.z,h=actor.h,w=h*.49,a=x-w/2,b=x+w/2;
+  // Just like the ring arena's sole/crown calibration: actor.h is the
+  // physical INK height, never the pixel canvas's padded height. Preserve
+  // authored horizontal and vertical scale exactly, without a fixed 0.49:1
+  // body squash or cutting pixels from the original 2D texture.
+  const FULL_IMAGE=Object.freeze({left:0,top:0,right:1,bottom:1});
+  function portraitPlacement(actor,pixels={width:512,height:960},ink=FULL_IMAGE){
+    const width=Math.max(1,Number(pixels.width)||512);
+    const height=Math.max(1,Number(pixels.height)||960);
+    const top=clamp(ink.top,0,.98),bottom=clamp(ink.bottom,top+.02,1);
+    const left=clamp(ink.left,0,.98),right=clamp(ink.right,left+.02,1);
+    const inkFraction=bottom-top;
+    const planeHeight=actor.h/inkFraction;
+    const planeWidth=planeHeight*(width/height);
+    const x0=actor.x-(left+right)*.5*planeWidth;
+    const y0=-(1-bottom)*planeHeight;
+    return Object.freeze({
+      sourceAspect:width/height,planeAspect:planeWidth/planeHeight,
+      planeHeight,planeWidth,visibleHeight:inkFraction*planeHeight,
+      x0,y0,x1:x0+planeWidth,y1:y0+planeHeight,
+      ink:{left,top,right,bottom}
+    });
+  }
+  function spriteGeometry(actor,pixels,ink){
+    const fit=portraitPlacement(actor,pixels,ink),z=actor.z;
     return new Float32Array([
-      a,0,z,0,0,b,0,z,1,0,b,h,z,1,1,
-      a,0,z,0,0,b,h,z,1,1,a,h,z,0,1
+      fit.x0,fit.y0,z,0,0,fit.x1,fit.y0,z,1,0,fit.x1,fit.y1,z,1,1,
+      fit.x0,fit.y0,z,0,0,fit.x1,fit.y1,z,1,1,fit.x0,fit.y1,z,0,1
     ]);
+  }
+  function measurePortraitInk(image){
+    // The original source pixels stay intact. Read a small temporary
+    // downsample for alpha bounds only; its size never affects drawing.
+    const width=image.naturalWidth||1,height=image.naturalHeight||1;
+    const scale=Math.min(1,384/Math.max(width,height));
+    const sample=document.createElement('canvas');
+    sample.width=Math.max(1,Math.round(width*scale));
+    sample.height=Math.max(1,Math.round(height*scale));
+    try{
+      const ctx=sample.getContext('2d',{willReadFrequently:true});
+      ctx.drawImage(image,0,0,sample.width,sample.height);
+      const rgba=ctx.getImageData(0,0,sample.width,sample.height).data;
+      let left=sample.width,top=sample.height,right=-1,bottom=-1,count=0;
+      for(let y=0;y<sample.height;y++)for(let x=0;x<sample.width;x++){
+        const p=(y*sample.width+x)*4;
+        // White matte is discarded by the existing sprite shader too.
+        const white=rgba[p]>247&&rgba[p+1]>247&&rgba[p+2]>247;
+        if(rgba[p+3]<42||white)continue;
+        left=Math.min(left,x);right=Math.max(right,x);
+        top=Math.min(top,y);bottom=Math.max(bottom,y);count++;
+      }
+      if(count<12)return FULL_IMAGE;
+      const pad=2;
+      return {
+        left:Math.max(0,(left-pad)/sample.width),
+        top:Math.max(0,(top-pad)/sample.height),
+        right:Math.min(1,(right+pad+1)/sample.width),
+        bottom:Math.min(1,(bottom+pad+1)/sample.height)
+      };
+    }catch(_){return FULL_IMAGE;}
   }
   function fallingSprite(position){
     // The full figure stays behind the exterior side of the LEFT wall
@@ -194,8 +250,8 @@
       gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
       return {gpu,count:data.length/5};
     }
-    function loadTexture(src){
-      const item={src,ready:false,texture:gl.createTexture()};
+    function loadTexture(src,onLoaded=null){
+      const item={src,ready:false,texture:gl.createTexture(),sourcePixels:null};
       gl.bindTexture(gl.TEXTURE_2D,item.texture);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
@@ -208,6 +264,8 @@
           gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
           gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
           if(gl.getError()!==gl.NO_ERROR)throw Error('GPU texture upload');
+          item.sourcePixels={width:image.naturalWidth,height:image.naturalHeight};
+          if(onLoaded)onLoaded(image,item);
           item.ready=true;ready++;lastFrameKey='';
         }catch(e){item.error=String(e);}
       };
@@ -237,8 +295,18 @@
         furnitureTextures[id]=loadTexture(src);
         furnitureGPU[id]=mesh(new Float32Array(furnitureSurfaces[id]));
       }
-      for(const actor of ACTORS)
-        sprites[actor.id]={texture:loadTexture(actor.src),...mesh(spriteGeometry(actor))};
+      for(const actor of ACTORS){
+        const slot={...mesh(spriteGeometry(actor)),fit:null};
+        slot.texture=loadTexture(actor.src,(image,item)=>{
+          const ink=measurePortraitInk(image);
+          const fit=portraitPlacement(actor,item.sourcePixels,ink);
+          gl.bindBuffer(gl.ARRAY_BUFFER,slot.gpu);
+          gl.bufferData(gl.ARRAY_BUFFER,
+            spriteGeometry(actor,item.sourcePixels,ink),gl.STATIC_DRAW);
+          slot.fit=fit;
+        });
+        sprites[actor.id]=slot;
+      }
       gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
       renderer='webgl-five-face-room';
@@ -364,6 +432,12 @@
       faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
         [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
       visibleActors:active?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
+      actorArtwork:Object.fromEntries(ACTORS.map(a=>{
+        const slot=sprites[a.id];
+        return [a.id,{source:a.src,physicalHeight:a.h,
+          sourcePixels:slot?.texture?.sourcePixels||null,
+          fit:slot?.fit||null,ready:!!slot?.texture?.ready}];
+      })),
       fallActive:fallStart>0,fallTriggerCount,heldFallFrame
     };}
     function holdFallFrame(t){
@@ -378,5 +452,6 @@
       render,inspect,get canvas(){return canvas}});
   }
   return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,EXTERIOR_MATERIALS,
-    FALL_MATERIAL,CLASSROOM_LAYOUT,ACTORS,EXTERIOR,camera,project,create});
+    FALL_MATERIAL,CLASSROOM_LAYOUT,ACTORS,EXTERIOR,
+    portraitPlacement,camera,project,create});
 });
