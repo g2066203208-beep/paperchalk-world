@@ -7,28 +7,123 @@
 import * as THREE from '../sphere-maze/vendor/three.module.js';
 const $=id=>document.getElementById(id);
 const stage=$('viewport');
+const previewStage=$('mini-viewport');
 const state={depth:0,power:100,integrity:100,weight:0,capacity:350,passengers:0,seats:4,coins:150,serviceOpen:false,securityOpen:false,view:'door',emergencyUsed:false};
 const SIZE={w:7.2,h:3.85,d:6.6};
 const MATERIAL={wall:0xa69a99,metal:0x756d70,trim:0x574f51,rust:0x9d7066,light:0xe8e0d2};
-let renderer,scene,camera,highLeaves=[],lowLeaves=[],renderPending=false,previous=0;
+let renderer,previewRenderer,scene,camera,previewCamera,highLeaves=[],lowLeaves=[],renderPending=false,previous=0;
+const GOODS=[
+ {id:'potion',name:'恢复药水',symbol:'◈',qty:5,mass:2,cost:12,price:30},
+ {id:'food',name:'旅行干粮',symbol:'☷',qty:4,mass:1,cost:6,price:15},
+ {id:'torch',name:'火把',symbol:'♜',qty:3,mass:2,cost:8,price:21},
+ {id:'bandage',name:'绷带',symbol:'▥',qty:3,mass:1,cost:5,price:12},
+ {id:'stone',name:'魔力矿石',symbol:'✦',qty:2,mass:4,cost:18,price:44},
+ {id:'rope',name:'绳索',symbol:'⌁',qty:2,mass:3,cost:9,price:24}
+];
+let selectedGood='potion',cargoOverride=null,request=null,orderServed=false;
 const doorView={position:new THREE.Vector3(0,1.85,0.35),target:new THREE.Vector3(0,1.65,-3.35),fov:64};
 const cabinView={position:new THREE.Vector3(0,1.83,-3.06),target:new THREE.Vector3(0,1.65,2.45),fov:67};
 let cameraTarget=doorView;
 const cameraAim=new THREE.Vector3().copy(doorView.target);
 function notice(message){$('notice').textContent=message}
+const $good=id=>GOODS.find(g=>g.id===id);
+function cargoUnits(){return GOODS.reduce((sum,g)=>sum+g.qty,0)}
+function syncLoad(){
+ if(cargoOverride!==null){state.weight=cargoOverride;return}
+ state.weight=GOODS.reduce((sum,g)=>sum+g.qty*g.mass,0)+state.passengers*70;
+}
 function repaintHUD(){
+ syncLoad();
  $('floor-label').textContent=state.depth===0?'地表 B0':'B'+String(state.depth).padStart(3,'0');
  $('power-label').textContent=state.power+'%';
  $('health-label').textContent=state.integrity+'%';
  $('weight-label').textContent=state.weight+' / '+state.capacity+' kg';
  $('weight-label').style.color=state.weight>state.capacity?'#a34137':'';
+ $('weight-meter').style.width=Math.min(100,100*state.weight/state.capacity)+'%';
+ $('weight-meter').style.background=state.weight>state.capacity?'#a34137':'#ae8c65';
+ $('power-meter').style.width=state.power+'%';
  $('seats-label').textContent=state.passengers+' / '+state.seats;
+ $('passenger-short').textContent=state.passengers+'/'+state.seats;
  $('money-label').textContent=state.coins+' G';
+ $('cargo-label').textContent='库存 '+cargoUnits()+' / 24';
  $('service-label').textContent=(state.serviceOpen?'关闭':'开启')+'半高营业门';
  $('security-label').textContent=(state.securityOpen?'关闭':'开启')+'全高安全门';
  $('service-gate').setAttribute('aria-pressed',String(state.serviceOpen));
  $('security-gate').setAttribute('aria-pressed',String(state.securityOpen));
+ $('door-status').textContent=state.serviceOpen||state.securityOpen?'门未锁闭 · 停止运行':'双门已锁闭';
+ $('door-status').style.color=state.serviceOpen||state.securityOpen?'#924e40':'';
  $('emergency').disabled=state.depth===0||state.emergencyUsed;
+ $('scene-floor').textContent=state.depth===0?'地表 · 补货站':'B'+String(state.depth).padStart(3,'0')+' · 地牢营业';
+}
+function repaintGoods(){
+ const grid=$('stock-grid');grid.replaceChildren();
+ for(const good of GOODS){
+  const button=document.createElement('button');button.type='button';
+  button.className='stock-item'+(good.id===selectedGood?' selected':'');
+  button.dataset.good=good.id;button.setAttribute('aria-pressed',String(good.id===selectedGood));
+  const icon=document.createElement('span');icon.className='goods-icon';icon.textContent=good.symbol;
+  const label=document.createElement('span');label.className='goods-label';
+  const name=document.createElement('span');name.className='goods-name';name.textContent=good.name;
+  const qty=document.createElement('span');qty.className='goods-qty';qty.textContent='×'+good.qty+' · '+good.mass+'kg/件';
+  label.append(name,qty);button.append(icon,label);
+  button.addEventListener('click',()=>{selectedGood=good.id;repaintGoods();repaintRequest()});
+  grid.append(button);
+ }
+}
+const CUSTOMERS=['见习女剑士','地牢魔女','猫耳斥候','受伤圣职者','冒险者少女','巡逻女骑士'];
+function prepareRequest(){
+ orderServed=false;
+ if(state.depth===0){request=null}
+ else{
+  const idx=(state.depth-1)%GOODS.length,good=GOODS[idx];
+  const count=1+(state.depth%4===0?1:0);
+  const price=count*(good.price+Math.floor(state.depth/3)*3);
+  request={id:good.id,qty:count,price,customer:CUSTOMERS[(state.depth-1)%CUSTOMERS.length]};
+ }
+ repaintRequest();
+}
+function repaintRequest(){
+ const good=$good(selectedGood);
+ $('request-floor').textContent='B'+state.depth;
+ if(state.depth===0){
+  $('customer-name').textContent='地表补货站';
+  $('customer-request').textContent='选中'+good.name+'，进货单价 '+good.cost+'G · 上限24件';
+ }else if(orderServed){
+  $('customer-name').textContent=request.customer;
+  $('customer-request').textContent='这层的交易已结束，继续上行或下行。';
+ }else{
+  const want=$good(request.id);
+  $('customer-name').textContent=request.customer;
+  $('customer-request').textContent='需要 '+want.name+' ×'+request.qty+' · 收购报价 '+request.price+'G';
+ }
+ $('sell-request').disabled=state.depth===0||orderServed||!request||$good(request.id).qty<request.qty;
+ $('sell-request').textContent=state.depth===0?'等待顾客':orderServed?'已处理':request&&$good(request.id).qty<request.qty?'库存不足':'成交 +'+(request?.price||0)+'G';
+ $('buy-selected').disabled=state.depth!==0||state.coins<good.cost||cargoUnits()>=24||state.weight+good.mass>state.capacity;
+ $('buy-selected').textContent=state.depth===0?'进货 -'+good.cost+'G':'地表进货';
+ $('skip-request').disabled=state.depth===0||orderServed;
+}
+function trade(){
+ if(!request||orderServed||state.depth===0)return;
+ const good=$good(request.id);
+ if(good.qty<request.qty){notice('库存不足，无法完成交易。');return}
+ good.qty-=request.qty;state.coins+=request.price;orderServed=true;
+ repaintHUD();repaintGoods();repaintRequest();
+ notice('交易完成：'+request.customer+' 支付 '+request.price+' G。');
+}
+function buy(){
+ if(state.depth!==0)return;
+ const good=$good(selectedGood);
+ if(state.coins<good.cost){notice('金币不足。');return}
+ if(cargoUnits()>=24||state.weight+good.mass>state.capacity){notice('货舱已满或超过电梯承重。');return}
+ good.qty++;state.coins-=good.cost;cargoOverride=null;repaintHUD();repaintGoods();repaintRequest();
+ notice('进货成功：'+good.name+' +1，花费 '+good.cost+' G。');
+}
+function skip(){
+ if(!request||orderServed)return;
+ orderServed=true;repaintRequest();notice('已拒绝本层交易。');
+}
+function utility(title,message){
+ $('utility-title').textContent=title;$('utility-content').textContent=message;$('utility-popover').hidden=false;
 }
 function seeded(seed){let s=seed|0;return()=>{s^=s<<13;s^=s>>>17;s^=s<<5;return((s>>>0)%10000)/10000}}
 function texture(type){
@@ -129,30 +224,44 @@ function makeLowGate(){
  }
 }
 function setup(){
- if(!stage||!window.WebGL2RenderingContext)throw new Error('浏览器没有可用的 WebGL2 环境');
+ if(!stage||!previewStage||!window.WebGL2RenderingContext)throw new Error('浏览器没有可用的 WebGL2 环境');
  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.setClearColor(0xffffff);
+ previewRenderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'default'});
+ const pixelRatio=Math.min(window.devicePixelRatio||1,1.55);
+ for(const r of [renderer,previewRenderer]){
+  r.setPixelRatio(pixelRatio);r.outputColorSpace=THREE.SRGBColorSpace;r.setClearColor(0xffffff);
+ }
  scene=new THREE.Scene();scene.background=new THREE.Color(0xffffff);
  camera=new THREE.PerspectiveCamera(doorView.fov,1,.06,80);
  camera.position.copy(doorView.position);
+ previewCamera=new THREE.PerspectiveCamera(cabinView.fov,1,.06,80);
+ previewCamera.position.copy(cabinView.position);previewCamera.lookAt(cabinView.target);
  scene.add(new THREE.HemisphereLight(0xe8e1dc,0xaaa2a0,2));
  const sun=new THREE.DirectionalLight(0xffffff,1.1);sun.position.set(-2.3,5.5,2.1);scene.add(sun);
  makeCabin();makeHighGate();makeLowGate();
- stage.appendChild(renderer.domElement);
- resize();bindControls();repaintHUD();requestRender();
+ stage.appendChild(renderer.domElement);previewStage.appendChild(previewRenderer.domElement);
+ prepareRequest();bindControls();repaintHUD();repaintGoods();resize();requestRender();
 }
-function resize(){if(!renderer)return;const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();requestRender()}
+function resize(){
+ if(!renderer||!previewRenderer)return;
+ for(const [r,c,element] of [[renderer,camera,stage],[previewRenderer,previewCamera,previewStage]]){
+  const w=Math.max(1,element.clientWidth),h=Math.max(1,element.clientHeight);
+  r.setSize(w,h,false);c.aspect=w/h;c.updateProjectionMatrix();
+ }
+ requestRender();
+}
 function frame(now){
  renderPending=false;
- const dt=Math.min(0.05,previous?(now-previous)/1000:.016);previous=now;
+ const dt=Math.min(.05,previous?(now-previous)/1000:.016);previous=now;
  const k=Math.min(1,dt*10);
  let active=false;
- for(const leaf of highLeaves){const end=leaf.base+(state.securityOpen?leaf.sign*3.62:0);
+ for(const leaf of highLeaves){
+  const end=leaf.base+(state.securityOpen?leaf.sign*3.62:0);
   leaf.group.position.x+=(end-leaf.group.position.x)*k;
   if(Math.abs(end-leaf.group.position.x)>.008)active=true;else leaf.group.position.x=end;
  }
- for(const leaf of lowLeaves){const end=leaf.base+(state.serviceOpen?leaf.sign*3.62:0);
+ for(const leaf of lowLeaves){
+  const end=leaf.base+(state.serviceOpen?leaf.sign*3.62:0);
   leaf.group.position.x+=(end-leaf.group.position.x)*k;
   if(Math.abs(end-leaf.group.position.x)>.008)active=true;else leaf.group.position.x=end;
  }
@@ -162,64 +271,79 @@ function frame(now){
  if(camera.position.distanceTo(cameraTarget.position)>.005||cameraAim.distanceTo(cameraTarget.target)>.005||Math.abs(camera.fov-cameraTarget.fov)>.03)active=true;
  camera.lookAt(cameraAim);camera.updateProjectionMatrix();
  renderer.render(scene,camera);
+ previewRenderer.render(scene,previewCamera);
  if(active)requestRender();
 }
-function requestRender(){if(renderPending||!renderer)return;renderPending=true;requestAnimationFrame(frame)}
+function requestRender(){if(renderPending||!renderer||!previewRenderer)return;renderPending=true;requestAnimationFrame(frame)}
 function switchView(view){
  state.view=view==='cabin'?'cabin':'door';
  cameraTarget=state.view==='door'?doorView:cabinView;
- $('door-camera').classList.toggle('is-selected',state.view==='door');
- $('cabin-camera').classList.toggle('is-selected',state.view==='cabin');
- $('door-camera').setAttribute('aria-pressed',String(state.view==='door'));
- $('cabin-camera').setAttribute('aria-pressed',String(state.view==='cabin'));
- notice(state.view==='door'?'门口镜头：观察半高营业门、全高安全门与门外白色占位背景。':'内部镜头：转身查看真正的3D方盒子空间；顾客立绘和货物将独立叠加。');
+ const other=state.view==='door'?cabinView:doorView;
+ previewCamera.position.copy(other.position);previewCamera.fov=other.fov;
+ previewCamera.lookAt(other.target);previewCamera.updateProjectionMatrix();
+ $('main-camera-label').textContent=state.view==='door'?'01 / 电梯门':'02 / 电梯内部';
+ $('preview-camera-label').textContent=state.view==='door'?'02 / 电梯内部':'01 / 电梯门';
+ document.querySelector('.main-camera-help').textContent=state.view==='door'?'电梯营业窗口':'电梯乘客空间';
+ $('scene-camera-hint').textContent=state.view==='door'?'门外暂用纯白占位，后续替换楼层场景':'空电梯3D方盒子，人员与货物素材暂未加入';
+ notice(state.view==='door'?'已切换：左侧门口主镜头，右上内部小镜头。':'已切换：左侧电梯内部主镜头，右上门口小镜头。');
  requestRender();
 }
-function toggleService(){state.serviceOpen=!state.serviceOpen;repaintHUD();notice(state.serviceOpen?'半高营业门已打开，不能行驶。':'半高营业门已关闭。');requestRender()}
+function toggleService(){state.serviceOpen=!state.serviceOpen;repaintHUD();notice(state.serviceOpen?'半高营业门已打开，电梯禁止行驶。':'半高营业门已关闭。');requestRender()}
 function toggleSecurity(){state.securityOpen=!state.securityOpen;repaintHUD();notice(state.securityOpen?'全高安全门已打开，危险层请谨慎！':'全高安全门已关闭。');requestRender()}
 function travel(delta){
  if(state.serviceOpen||state.securityOpen){notice('请先关闭半高营业门和全高安全门。');return false}
  if(state.weight>state.capacity||state.passengers>state.seats){notice('电梯超载，无法运行。');return false}
  if(state.integrity<=0){notice('电梯耐久不足，请先维修。');return false}
  if(delta<0&&state.depth===0){notice('已经抵达地表。');return false}
- const next=Math.max(0,state.depth+delta);
- const cost=2+Math.floor(next/12);
+ const next=Math.max(0,state.depth+delta),cost=2+Math.floor(next/12);
  if(state.power<cost){notice('电力不足，无法移动。可使用紧急回地表。');return false}
- state.power-=cost;state.depth=next;repaintHUD();
- notice('已抵达 '+(next===0?'地表':'B'+String(next).padStart(3,'0'))+'。门外暂为纯白占位背景。');
+ state.power-=cost;state.depth=next;
+ prepareRequest();repaintHUD();
+ notice('已抵达 '+(next===0?'地表':'B'+String(next).padStart(3,'0'))+'。查看右侧顾客需求。');
  requestRender();return true;
 }
 function emergency(){
  if(state.depth===0||state.emergencyUsed)return;
- state.emergencyUsed=true;state.depth=0;
- state.serviceOpen=false;state.securityOpen=false;
+ state.emergencyUsed=true;state.depth=0;state.serviceOpen=false;state.securityOpen=false;
  state.integrity=Math.max(1,state.integrity-8);state.power=Math.max(0,state.power-15);
- repaintHUD();requestRender();notice('紧急绞盘已启动：强制关门并返回地表，本次试运行已消耗应急装置。');
+ prepareRequest();repaintHUD();requestRender();notice('紧急绞盘已启动：强制关门返回地表，耗损耐久8点。');
 }
 function bindControls(){
- $('up').addEventListener('click',()=>travel(-1));
- $('down').addEventListener('click',()=>travel(1));
- $('service-gate').addEventListener('click',toggleService);
- $('security-gate').addEventListener('click',toggleSecurity);
+ $('up').addEventListener('click',()=>travel(-1));$('down').addEventListener('click',()=>travel(1));
+ $('service-gate').addEventListener('click',toggleService);$('security-gate').addEventListener('click',toggleSecurity);
  $('emergency').addEventListener('click',emergency);
- $('door-camera').addEventListener('click',()=>switchView('door'));
- $('cabin-camera').addEventListener('click',()=>switchView('cabin'));
+ $('swap-camera').addEventListener('click',()=>switchView(state.view==='door'?'cabin':'door'));
+ $('sell-request').addEventListener('click',trade);$('buy-selected').addEventListener('click',buy);
+ $('skip-request').addEventListener('click',skip);
+ $('utility-passengers').addEventListener('click',()=>utility('电梯乘客','乘客 '+state.passengers+'/'+state.seats+' 名。可承载乘客的静态立绘与任务将在后续版本接入。'));
+ $('utility-quests').addEventListener('click',()=>utility('委托任务','后续将接入救援、载客和送货委托。当前尚未生成可接取的任务。'));
+ $('utility-repair').addEventListener('click',()=>{
+  if(state.depth!==0){utility('维修','只能在地表进行维修。');return}
+  if(state.integrity===100){notice('电梯耐久已满，无需维修。');return}
+  if(state.coins<20){notice('维修需要20G，金币不足。');return}
+  state.coins-=20;state.integrity=Math.min(100,state.integrity+20);
+  repaintHUD();notice('地表维修完成，耐久恢复20点，花费20G。');
+ });
+ $('utility-info').addEventListener('click',()=>utility('游玩说明','左侧为电梯主画面；点击右上角实时小镜头交换内外视角。\n双门关闭才能运行，↓ 下潜、↑ 上行，每层有顾客需求。右侧货舱可以查看库存，地表可以点货格进货。\n按 V 也可切换镜头。'));
+ $('utility-close').addEventListener('click',()=>$('utility-popover').hidden=true);
  window.addEventListener('resize',resize,{passive:true});
  window.addEventListener('keydown',e=>{
   if(e.altKey||e.ctrlKey||e.metaKey||['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;
   if(e.code==='ArrowUp'){e.preventDefault();travel(-1)}
   if(e.code==='ArrowDown'){e.preventDefault();travel(1)}
   if(e.code==='KeyV')switchView(state.view==='door'?'cabin':'door');
+  if(e.code==='Escape')$('utility-popover').hidden=true;
  });
  document.addEventListener('visibilitychange',()=>{previous=0;if(!document.hidden)requestRender()});
 }
 window.DungeonElevatorDemo=Object.freeze({
- getState:()=>({...state}),
- setLoad:(weight,passengers)=>{state.weight=Math.max(0,Math.floor(Number(weight)||0));state.passengers=Math.max(0,Math.floor(Number(passengers)||0));repaintHUD()},
- setView:switchView
+ getState:()=>({...state,goods:GOODS.map(g=>({id:g.id,qty:g.qty})),request:request?{...request}:null,orderServed}),
+ setLoad:(weight,passengers)=>{cargoOverride=Math.max(0,Math.floor(Number(weight)||0));state.passengers=Math.max(0,Math.floor(Number(passengers)||0));repaintHUD();repaintRequest()},
+ setView:switchView,
+ swap:()=>switchView(state.view==='door'?'cabin':'door')
 });
 try{setup()}catch(error){
  console.error('[dungeon-elevator] 3D scene startup failed',error);
- const fallback=$('fallback');fallback.hidden=false;fallback.textContent='3D 电梯无法启动：'+(error?.message||'浏览器渲染失败');
+ $('fallback').hidden=false;$('fallback').textContent='3D 电梯无法启动：'+(error?.message||'浏览器渲染失败');
  $('notice').textContent='场景渲染不可用；请检查 WebGL2 与浏览器兼容性。';
 }
