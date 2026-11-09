@@ -124,9 +124,12 @@
       sunDirection:mix3(a.sunDirection,b.sunDirection,t)
     };
   }
+  // Approved character PNGs below remain untouched. Only the former
+  // cartoon SVG classmates are replaced by clearly tagged GPT draft art.
+  // Their h is seated pose height, never an image-resize deformation.
   const ACTORS=Object.freeze([
-    {id:'boy',src:'./assets/school-room/small-boy.svg',x:-.76,z:4.55,h:1.70,ends:5},
-    {id:'girl',src:'./assets/school-room/class-idol.svg',x:-1.75,z:4.43,h:1.73,ends:1},
+    {id:'boy',src:'./assets/school-room/gpt-school-boy-temporary.webp',x:-.76,z:4.55,h:1.36,standingHeight:1.70,seated:true,ends:5},
+    {id:'girl',src:'./assets/school-room/gpt-school-girl-temporary.webp',x:-1.75,z:4.43,h:1.36,standingHeight:1.73,seated:true,ends:1},
     {id:'female2',src:'./assets/characters/civilians/schoolgirls/sg01/front.png',x:2.48,z:5.18,h:1.72},
     {id:'male1',src:'./assets/characters/char-003/front.png',x:-2.90,z:6.20,h:1.79},
     {id:'male2',src:'./assets/characters/char-016/front.png',x:2.05,z:6.10,h:1.80},
@@ -325,10 +328,10 @@
   }
   CLASSROOM_LAYOUT.rows.forEach((z)=>
     CLASSROOM_LAYOUT.columns.forEach((x)=>{
-      standee('desk',x,z,1.12,1.12);
-      standee('chair',x,z-.64,.88,.88);
+      standee('desk',x,z,.88,.88);
+      standee('chair',x,z-.64,.72,.90);
     }));
-  standee('podium',.48,8.12,1.45,1.45);
+  standee('podium',.48,8.12,1.34,1.34);
   function textureFaces(){
     return Object.fromEntries(Object.entries(faces).map(([id,pts])=>{
       const arr=[];
