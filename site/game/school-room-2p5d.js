@@ -756,7 +756,10 @@
       view.classList.toggle('school-room-active',active);
       lastFrameKey='';
       if(active){
-        if(new URLSearchParams(window.location.search).get('bossPreview')==='1' &&
+        const flags=new URLSearchParams(window.location.search);
+        if(flags.get('fallPreview')==='1'&&fallTriggerCount===0)
+          triggerFall();
+        else if(flags.get('bossPreview')==='1' &&
           !bossBornAt&&heldBossTime===null)triggerBossBirth();
         else render(0,0);
       }else{
