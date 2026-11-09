@@ -6,6 +6,7 @@ export function createShaftExterior(THREE,scene,assetReport=()=>{}){
  const root=new THREE.Group();root.name='paper-shaft';scene.add(root);
  const landing=new THREE.Group();landing.name='paper-landing';root.add(landing);
  const travel=new THREE.Group();travel.name='paper-earth-moving';root.add(travel);
+ const surface=new THREE.Group();surface.name='surface-city-paper-stage';root.add(surface);
  const loader=new THREE.TextureLoader();
  function load(name){
   const tex=loader.load('./paint/'+name,()=>assetReport(name,true),undefined,()=>assetReport(name,false));
@@ -41,6 +42,29 @@ export function createShaftExterior(THREE,scene,assetReport=()=>{}){
  paper(landing,12.1,.14,0,.045,-7.33,paints.pale,'floor-slice-paper');
  // During movement the entire outside becomes a scrollable repeating rock sprite.
  paper(travel,25,33,0,1.5,-7.54,paints.travel,'continuous-rock-scroll-paper');
+ // B0 station: an actual street, never white blankness. Five independent
+ // illustrated zero-thickness sprites placed at different Z depths.
+ const cityPaint=(name,transparent=false)=>{
+  const map=load(name);
+  return new THREE.MeshBasicMaterial({
+   map,transparent,alphaTest:transparent ? .02 : 0,
+   depthWrite:!transparent,side:THREE.DoubleSide,toneMapped:false
+  });
+ };
+ const sky=cityPaint('surface-city-backdrop.svg');
+ const left=cityPaint('surface-city-left.svg',true);
+ const right=cityPaint('surface-city-right.svg',true);
+ const road=cityPaint('surface-city-ground.svg');
+ const lamp=cityPaint('surface-city-streetlight.svg',true);
+ const cityBack=paper(surface,24,14.5,0,2.6,-9.54,sky,'surface-city-painted-skyline');
+ const cityLeft=paper(surface,5.35,7.8,-5.2,2.1,-7.94,left,'surface-city-left-shop-street');
+ cityLeft.rotation.y=.08;
+ const cityRight=paper(surface,5.35,7.8,5.2,2.1,-7.97,right,'surface-city-right-building');
+ cityRight.rotation.y=-.08;
+ const cityRoad=paper(surface,18,10.8,0,.022,-8.86,road,'surface-city-paper-road');
+ cityRoad.rotation.x=-Math.PI/2;
+ const streetLamp=paper(surface,1.7,4.3,-3.75,2.15,-6.63,lamp,'surface-city-paper-streetlight');
+ const citySpriteCount=surface.children.filter(item=>item.isMesh).length;
  const seams=[];
  for(let i=0;i<15;i++){
   const width=5.4+(i%4)*1.75;
@@ -52,6 +76,7 @@ export function createShaftExterior(THREE,scene,assetReport=()=>{}){
  function setFloor(depth){
   info.floor=Math.max(0,Math.floor(depth));
   landing.visible=info.floor>0&&!info.traveling;
+  surface.visible=info.floor===0&&!info.traveling;
   if(info.floor>0){
    baseRock.offset.y=(info.floor*.079)%1;
    paints.backdrop.color.setHex(info.floor>16?0xb8b3ac:0xffffff);
@@ -62,6 +87,7 @@ export function createShaftExterior(THREE,scene,assetReport=()=>{}){
   info.direction=direction;
   travel.visible=info.traveling;
   landing.visible=!info.traveling&&info.floor>0;
+  surface.visible=!info.traveling&&info.floor===0;
  }
  function update(dt){
   if(!info.traveling)return;
@@ -77,6 +103,6 @@ export function createShaftExterior(THREE,scene,assetReport=()=>{}){
  travel.visible=false;landing.visible=false;setFloor(0);
  return Object.freeze({
   setFloor,setTraveling,update,
-  getState:()=>({...info,landingVisible:landing.visible,travelVisible:travel.visible,textureOffset:earthRock.offset.y,geometry:'2d-planes-only'})
+  getState:()=>({...info,landingVisible:landing.visible,travelVisible:travel.visible,surfaceCityVisible:surface.visible,surfaceSpriteCount:citySpriteCount,textureOffset:earthRock.offset.y,geometry:'2d-planes-only'})
  });
 }
