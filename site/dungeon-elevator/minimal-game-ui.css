@@ -299,3 +299,132 @@
  .rotate-tip{display:flex;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;flex-direction:column;background:#e8e1d6;gap:13px}
 }
 @media (prefers-reduced-motion:reduce){#notice{transition:none}}
+
+/* V2: restrained HUD, one contiguous right-hand console instead of stacked web cards.
+   No camera explanatory copy, no duplicate floor overlay, no dead gaps. */
+:root{--hud-paper:#e5dfd5;--hud-ink:#393630;--hud-muted:#726b63;--hud-rule:#c5bbae}
+#app{background:#d9d2c9}
+.top-hud{height:48px;min-height:48px;padding:4px 10px;gap:7px;background:#e6e0d6;border-bottom:1px solid #aea59a}
+.identity{min-width:124px;gap:7px;margin-right:0}
+.identity-mark{width:27px;height:29px;font-size:19px;background:#d9d3c8}
+.identity strong{font-size:15px;letter-spacing:0}
+.readouts{gap:0}
+.readout,.readout.floor-readout,.readout.weight-readout{height:33px;padding:2px 9px;border-left:1px solid #c7beb2}
+.readout small{font-size:10px;color:#777069}
+.readout strong,.readout.floor-readout strong{font-size:15px;font-weight:800;color:#393630}
+.readout.floor-readout strong{font-size:18px}
+.main-link,.fullscreen-btn{height:29px;min-height:29px;background:transparent;border:1px solid #b9afa2;border-radius:3px;color:#5d574f;font-size:12px;padding:0 10px}
+.fullscreen-btn{min-width:31px;padding:0 6px;font-size:18px}
+.workspace{grid-template-columns:minmax(0,1fr) clamp(350px,24vw,455px);padding:5px;gap:5px}
+.primary-stage{border:1px solid #968d84;border-radius:2px;box-shadow:none}
+.main-camera-title{top:9px;left:9px;padding:5px 8px;border:0;border-radius:2px;background:#343a3acd;color:#f1eee9;font-size:11px}
+.scene-bottom,.scene-info,.scene-hint{display:none!important}
+.sidebar{gap:0;background:#e4ddd2;border:1px solid #b2a89d;grid-template-rows:clamp(150px,21.5vh,216px) minmax(0,1fr) clamp(282px,33vh,350px)}
+.preview-card{border:0;border-bottom:1px solid #aaa095;border-radius:0;background:#ccc0b3;box-shadow:none}
+.preview-card:hover{border:0;border-bottom:1px solid #83796f}
+.preview-card:focus-visible{outline:2px solid #779681;outline-offset:-2px}
+.preview-swap{right:7px;bottom:7px;width:26px;height:26px;border:1px solid #f6f3ed66;background:#333c3dc7;border-radius:3px;font-size:17px}
+.shop-panel,.control-panel{background:transparent;border:0;border-radius:0;border-bottom:0;box-shadow:none;padding:10px 11px;gap:7px}
+.shop-panel{border-bottom:1px solid #beb3a7}
+.section-heading,.control-heading{min-height:22px;max-height:24px;padding:0;align-items:center;border:0}
+.section-heading h2{font-size:13px;font-weight:800}
+.capacity,.door-status{font-size:11px;color:#726a60}
+.stock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px}
+.stock-item{min-height:0;border:1px solid #c5b9ac;background:#f2ede5;border-radius:3px;padding:5px 6px;gap:6px;box-shadow:none}
+.stock-item.selected{border:1px solid #6d8d78;background:#e0e9dc}
+.stock-item .goods-icon{width:29px;height:29px;min-width:29px;font-size:19px;background:#e4dcd1;border:0}
+.stock-item .goods-name{font-size:12px;color:#403c35}
+.stock-item .goods-qty{font-size:10px;color:#82786f}
+.customer-strip{min-height:88px;flex:none;border:0;border-top:1px solid #c7baad;background:transparent;padding:7px 1px 0;gap:5px}
+.customer-upper strong{font-size:12px}
+.request-copy{font-size:11px;color:#6e665b;min-height:14px}
+.request-actions{grid-template-columns:1.2fr 1fr .65fr;gap:5px}
+.request-actions button{padding:6px 4px;border:1px solid #b9ada0;border-radius:3px;font-size:12px}
+.sell-request{background:#728a79!important;color:#f8f7f2!important}
+.buy-selected{background:#f1ece3!important;color:#4d4842!important}
+.skip-request{background:#ded6cc!important;color:#61584e!important}
+.control-panel{gap:7px}
+.travel-actions{height:auto;flex:1;min-height:82px;max-height:135px;gap:7px}
+.move{border:1px solid #91a297;border-bottom:2px solid #91a297;border-radius:3px;background:#d7e2d6;color:#36503c;gap:9px}
+.move.down{border:1px solid #96a9b0;border-bottom:2px solid #96a9b0;background:#d7e3e7;color:#35515b}
+.move .arrow{font-size:clamp(39px,4.2vh,53px)}
+.move-text strong{font-size:19px}
+.gate-actions{min-height:43px;gap:6px}
+.door-button{font-size:12px;min-height:42px;border:1px solid #c5b9ac;border-radius:3px;background:#f2ede5;color:#49423b;gap:6px}
+.door-button[aria-pressed=true]{background:#e7cabb}
+.gate-icon{font-size:19px}
+.emergency{height:40px;min-height:40px;border:1px solid #ba8c7e;border-radius:3px;background:#e1c5bb;color:#693f37;font-size:14px}
+.emergency span{font-size:18px}
+.utility-actions{min-height:29px;gap:6px;margin-top:0}
+.utility-actions button{background:transparent;border:1px solid #c4b9ab;color:#6d655c;border-radius:2px;font-size:11px;padding:4px}
+#notice{box-shadow:0 4px 14px #0002}
+@media (max-height:900px) and (min-width:901px){
+ .sidebar{grid-template-rows:clamp(136px,21vh,178px) minmax(0,1fr) clamp(222px,34vh,290px)}
+ .shop-panel,.control-panel{padding:7px 8px;gap:5px}
+ .stock-item{padding:3px 5px}
+ .stock-item .goods-icon{width:24px;height:24px;min-width:24px;font-size:17px}
+ .customer-strip{min-height:76px;gap:3px;padding:4px 1px 0}
+ .travel-actions{max-height:105px;min-height:70px}
+ .gate-actions{min-height:37px}
+ .door-button{min-height:36px}
+ .emergency{min-height:35px;height:35px}
+ .utility-actions{min-height:26px}
+}
+@media (max-width:1090px) and (min-height:541px){
+ .workspace{grid-template-columns:minmax(0,1fr) clamp(298px,33vw,350px)}
+ .sidebar{grid-template-rows:clamp(120px,20vh,165px) minmax(0,1fr) clamp(210px,32vh,270px)}
+ .top-hud{height:46px;min-height:46px}
+ .identity{min-width:95px}
+ .identity strong{font-size:13px}
+ .readout,.readout.floor-readout,.readout.weight-readout{padding:2px 4px}
+ .readout strong,.readout.floor-readout strong{font-size:12px}
+ .readout small{font-size:9px}
+ .shop-panel,.control-panel{padding:6px;gap:4px}
+ .customer-strip{min-height:75px}
+ .stock-item .goods-icon{width:22px;height:22px;min-width:22px}
+}
+@media (orientation:landscape) and (max-height:540px){
+ #app{background:#d9d2c9}
+ .top-hud{height:32px;min-height:32px;padding:2px calc(4px + env(safe-area-inset-right)) 2px calc(4px + env(safe-area-inset-left));gap:2px}
+ .identity{width:64px;min-width:64px;margin-right:0;gap:3px}
+ .identity strong{font-size:11px}
+ .readout,.readout.floor-readout,.readout.weight-readout{height:26px;padding:1px 3px}
+ .readout strong,.readout.floor-readout strong{font-size:clamp(9px,1.55vw,12px)}
+ .main-link,.fullscreen-btn{height:26px;min-height:26px;padding:0 5px;font-size:10px}
+ .fullscreen-btn{font-size:17px}
+ .workspace{grid-template-columns:minmax(0,1fr) minmax(260px,40%);gap:3px;padding:3px calc(3px + env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom)) calc(3px + env(safe-area-inset-left))}
+ .sidebar{grid-template-rows:clamp(55px,21%,78px) minmax(0,1fr) clamp(120px,39%,139px);gap:0;border:1px solid #aca397}
+ .preview-card{height:auto;min-height:0;flex:none;border:0;border-bottom:1px solid #b3a89b}
+ .preview-swap{right:4px;bottom:4px;width:20px;height:20px;font-size:13px;border-radius:2px}
+ .shop-panel,.control-panel{min-height:0;height:auto;overflow:hidden;padding:3px 4px;gap:2px;border:0}
+ .shop-panel{border-bottom:1px solid #bcb2a6}
+ .section-heading,.control-heading{min-height:14px;max-height:15px}
+ .section-heading h2{font-size:10px}
+ .capacity,.door-status{font-size:9px}
+ .stock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2px;flex:1;min-height:0}
+ .stock-item{min-height:0;padding:1px 3px;gap:3px;border-radius:2px}
+ .stock-item .goods-icon{width:18px;height:18px;min-width:18px;font-size:14px}
+ .stock-item .goods-name{font-size:10px}
+ .stock-item .goods-qty{font-size:9px}
+ .customer-strip{min-height:40px;max-height:43px;padding:2px 1px 0;gap:2px;border-top:1px solid #c5baad}
+ .customer-upper{display:none}
+ .request-copy{font-size:10px;line-height:1.1;min-height:11px;max-height:12px;flex:none}
+ .request-actions{height:23px;min-height:23px;flex:none;gap:2px}
+ .request-actions button{height:23px;min-height:23px;padding:1px 2px;font-size:10px}
+ .control-panel{gap:2px}
+ .travel-actions{height:auto;min-height:41px;max-height:none;flex:1;gap:3px}
+ .move{gap:4px;border-radius:2px}
+ .move .arrow{font-size:31px}
+ .move-text strong{font-size:15px}
+ .gate-actions{height:29px;min-height:29px;gap:3px}
+ .door-button{height:29px;min-height:29px;padding:2px 3px;font-size:10px;gap:3px}
+ .gate-icon{font-size:15px}
+ .emergency{height:28px;min-height:28px;font-size:11px;gap:4px}
+ .emergency span{font-size:15px}
+ .utility-actions{display:none}
+ .main-camera-title{top:5px;left:5px;padding:3px 5px;font-size:9px}
+}
+@media (orientation:landscape) and (max-height:410px){
+ .sidebar{grid-template-rows:clamp(56px,21%,73px) minmax(0,1fr) clamp(119px,39%,134px)}
+ .customer-strip{min-height:38px;max-height:41px}
+}
