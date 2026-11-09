@@ -4,7 +4,7 @@
  * changing transforms. No BoxGeometry, stones, prisms, or mesh modeling.
  */
 import * as THREE from '../sphere-maze/vendor/three.module.js';
-import {createShaftExterior} from './shaft-exterior.js';
+import {createShaftExterior} from './shaft-exterior.js?v=surface-city-b0-v1';
 const $=id=>document.getElementById(id);
 const stage=$('viewport');
 const previewStage=$('mini-viewport');
