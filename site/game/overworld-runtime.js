@@ -114,8 +114,12 @@
         if(beat.effect!=='fall')return;
         // The body follows a world-space vertical path against the actual
         // classroom window. Keep legacy timing for other scene renderers.
-        global.PaperWorldSchoolRoomRenderer?.triggerFall?.();
-        clearFall();fallMask.hidden=false;
+        const inWorld=global.PaperWorldSchoolRoomRenderer?.triggerFall?.();
+        // Never show the old fixed-position HTML stick figure on top of the
+        // real transparent-window WebGL scene. Keep it as fallback only.
+        clearFall();
+        if(inWorld)return;
+        fallMask.hidden=false;
         void fallMask.offsetWidth;
         fallMask.classList.add('is-falling');
         fallTimer=global.setTimeout(clearFall,1700);
