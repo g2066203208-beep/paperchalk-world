@@ -1,0 +1,279 @@
+/* Paperchalk World phone UI redesign V1 — 2026-11-09.
+ * Unified typographic and spacing layer. Existing approved cat-ear shell,
+ * data models, game saves, app callbacks and camera implementation untouched.
+ * Camera/live game-scene capture is a separate functional milestone.
+ */
+#phone-ui {
+  --phone-bg:#111518;
+  --phone-surface:#1b2023;
+  --phone-ink:#f1f0ed;
+  --phone-secondary:#abb3b5;
+  --phone-line:rgba(237,240,238,.13);
+  --phone-accent:#c4a29d;
+  color:var(--phone-ink);
+  text-shadow:none;
+  font-family:"PaperSans","Noto Sans CJK SC",system-ui,sans-serif;
+}
+#phone-ui .phone-screen{
+  background:var(--phone-bg)!important;
+  color:var(--phone-ink);
+}
+#phone-ui .phone-status{color:var(--phone-ink);font-weight:550;letter-spacing:.01em}
+#phone-ui .phone-home{
+  padding:clamp(42px,7cqh,58px) 7.5% 8%!important;
+  gap:clamp(13px,2.3cqh,24px)!important;
+  background:linear-gradient(170deg,#1c2225 0%,#111518 58%,#0c1013 100%);
+}
+#phone-ui .phone-home-head{
+  font-size:clamp(13px,2.05cqh,17px)!important;
+  font-weight:540;letter-spacing:.04em!important;
+  text-align:left!important;color:var(--phone-ink);
+  padding:0 2% clamp(6px,1.2cqh,12px);
+  border-bottom:1px solid var(--phone-line);
+}
+#phone-ui .phone-apps{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:clamp(12px,2.8cqh,26px) clamp(4px,.85cqw,10px)!important;
+  align-content:start!important;
+  margin-top:0!important;
+}
+#phone-ui .phone-app{
+  min-width:0;gap:clamp(5px,.8cqh,8px)!important;
+  color:var(--phone-ink)!important;
+  text-shadow:none!important;
+  transition:opacity .16s ease,transform .16s ease;
+}
+#phone-ui .phone-app-icon{
+  display:grid!important;place-items:center!important;
+  width:clamp(29px,5.9cqh,46px)!important;
+  height:clamp(29px,5.9cqh,46px)!important;
+  border-radius:clamp(9px,1.7cqh,13px)!important;
+  border:1px solid rgba(241,240,237,.12)!important;
+  background:rgba(234,238,235,.085)!important;
+  box-shadow:inset 0 1px 0 #fff1!important;
+  backdrop-filter:none!important;
+}
+#phone-ui .phone-app-icon svg{
+  width:51%!important;height:51%!important;
+  stroke:var(--phone-ink)!important;
+  stroke-width:1.65!important;
+}
+#phone-ui .phone-app-label{
+  font-size:clamp(9px,1.43cqh,12px)!important;
+  font-weight:450!important;
+  line-height:1.2;letter-spacing:0!important;
+  white-space:nowrap;
+}
+#phone-ui .phone-app[data-app="相机"] .phone-app-icon,
+#phone-ui .phone-app[data-app="直播"] .phone-app-icon{
+  background:rgba(196,162,157,.18)!important;
+  border-color:rgba(196,162,157,.3)!important;
+}
+#phone-ui .phone-app:active{transform:scale(.96)}
+#phone-ui .phone-app-badge{
+  top:-5px;right:4%;
+  background:#956565;color:#fff;
+  border:2px solid var(--phone-bg);
+  min-width:18px;height:18px;
+  font:600 10px/14px system-ui,sans-serif;
+}
+#phone-ui .phone-home-indicator{height:3px;background:rgba(241,240,237,.48)}
+#phone-ui .phone-app-view[data-phone-page="app"]{
+  display:grid!important;
+  grid-template-columns:max-content minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr);
+  gap:0 clamp(10px,2cqh,17px)!important;
+  align-items:center!important;
+  padding:clamp(44px,7cqh,61px) 7% 6%!important;
+  text-align:left!important;
+  background:var(--phone-bg);
+}
+#phone-ui .phone-app-back{
+  grid-column:1;grid-row:1;
+  padding:7px 2px 7px 0!important;
+  margin:0!important;
+  min-height:38px!important;
+  font-size:clamp(12px,1.85cqh,16px)!important;
+  font-weight:450;
+  color:var(--phone-secondary)!important;
+  background:transparent!important;
+}
+#phone-ui .phone-app-title{
+  grid-column:2;grid-row:1;
+  margin:0!important;
+  font-size:clamp(17px,2.6cqh,23px)!important;
+  font-weight:590!important;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#phone-ui .phone-app-copy{
+  grid-column:1/-1;grid-row:2;
+  width:100%!important;height:100%;
+  min-height:0;min-width:0;
+  overflow-x:hidden;overflow-y:auto;
+  padding:clamp(12px,2cqh,19px) 2px clamp(10px,2cqh,20px)!important;
+  border-top:1px solid var(--phone-line);
+  opacity:1!important;
+  color:var(--phone-ink)!important;
+  text-align:left!important;
+  scrollbar-color:#5a6064 transparent;
+  scrollbar-width:thin;
+  overscroll-behavior:contain;
+}
+#phone-ui .phone-news-card,
+#phone-ui .phone-message-row,
+#phone-ui .phone-memo-note,
+#phone-ui .phone-conversation-row,
+#phone-ui .phone-memo-open{
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+  border-bottom:1px solid var(--phone-line)!important;
+  border-radius:0!important;
+  padding:12px 2px!important;
+  margin:0!important;
+  text-align:left!important;
+}
+#phone-ui .phone-news-card small,
+#phone-ui .phone-contact-row-body small,
+#phone-ui .phone-photo-tile small,
+#phone-ui .phone-conversation-row small{
+  color:var(--phone-secondary)!important;
+}
+#phone-ui .phone-news-card p{line-height:1.55}
+#phone-ui .phone-chat-thread{padding:8px 1px!important}
+#phone-ui .phone-chat-bubble{
+  background:#242b2e!important;
+  border-radius:13px 13px 13px 4px!important;
+  color:var(--phone-ink)!important;
+  box-shadow:none!important;
+}
+#phone-ui .phone-chat-bubble.is-me{
+  background:#3b3b3c!important;
+  border-radius:13px 13px 4px 13px!important;
+}
+#phone-ui .phone-contact-row{
+  background:none!important;
+  border-bottom:1px solid var(--phone-line)!important;
+}
+#phone-ui .phone-contact-avatar,
+#phone-ui .phone-contact-row-avatar{
+  border:1px solid #ffffff20!important;
+  background:#31383a!important;
+  color:var(--phone-ink);
+}
+#phone-ui .phone-chat-input,
+#phone-ui .phone-forum-composer textarea,
+#phone-ui .phone-remark-input{
+  background:var(--phone-surface)!important;
+  border:1px solid var(--phone-line)!important;
+  color:var(--phone-ink)!important;
+  border-radius:10px!important;
+  padding:10px 12px!important;
+}
+#phone-ui .phone-chat-composer button,
+#phone-ui .phone-forum-composer button,
+#phone-ui .phone-native-action,
+#phone-ui .phone-hangup,
+#phone-ui .phone-camera-actions button,
+#phone-ui .phone-import-label,
+#phone-ui .phone-quick-reply,
+#phone-ui .phone-contact-actions button,
+#phone-ui .phone-reply,
+#phone-ui .phone-contact-chat{
+  background:#262d30!important;
+  color:var(--phone-ink)!important;
+  border:1px solid rgba(241,240,237,.15)!important;
+  border-radius:10px!important;
+  text-shadow:none!important;
+  min-height:40px!important;
+}
+#phone-ui .phone-chat-composer button,
+#phone-ui .phone-forum-composer button[type="submit"]{
+  background:#c6bab5!important;color:#16191b!important;
+}
+#phone-ui .phone-gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px!important}
+#phone-ui .phone-photo-tile{
+  background:transparent!important;
+  padding:0!important;gap:4px!important;
+  border:0!important;
+}
+#phone-ui .phone-photo-tile img{
+  aspect-ratio:1/1;object-fit:cover;
+  border-radius:5px;
+}
+#phone-ui .phone-photo-preview,#phone-ui .phone-post-image{
+  border-radius:8px!important;
+}
+#phone-ui .phone-camera-stage{
+  border:none!important;border-radius:9px!important;
+  background:#090b0d!important;
+  aspect-ratio:3 / 4;
+  max-height:min(50cqh,500px);
+  min-height:0;
+}
+#phone-ui .phone-camera-live{
+  width:100%;height:100%;object-fit:cover!important;
+}
+#phone-ui .phone-camera-status{
+  color:var(--phone-secondary)!important;
+  line-height:1.45!important;text-align:left!important;
+}
+#phone-ui .phone-camera-actions{
+  align-items:center;justify-content:center;
+}
+#phone-ui .phone-camera-actions button:last-child{
+  background:#dedbd6!important;color:#101417!important;
+  border-color:#dedbd6!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-home{
+  padding:clamp(50px,8cqh,65px) 8% 7%!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-apps{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:clamp(13px,2.7cqh,26px) clamp(6px,1cqw,14px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-icon{
+  width:clamp(42px,6.9cqh,60px)!important;
+  height:clamp(42px,6.9cqh,60px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-label{
+  font-size:clamp(11px,1.7cqh,15px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-view{
+  display:grid!important;
+  grid-template-columns:max-content minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr);
+  align-items:center!important;
+  padding:clamp(42px,7cqh,62px) 6% 5%!important;
+  gap:0 12px!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-title{
+  font-size:clamp(19px,2.8cqh,25px)!important;
+}
+#novel-ui>#phone-ui[data-focus="true"] .phone-app-copy{
+  padding-top:clamp(12px,2.2cqh,20px)!important;
+  font-size:clamp(13px,2.1cqh,18px)!important;
+}
+@container (max-height:560px){
+  #novel-ui>#phone-ui[data-focus="true"] .phone-home{
+    padding:30px 7% 4%!important;gap:5px!important;
+  }
+  #novel-ui>#phone-ui[data-focus="true"] .phone-apps{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:clamp(4px,1.2cqh,10px) 5px!important;
+  }
+  #novel-ui>#phone-ui[data-focus="true"] .phone-app-icon{
+    width:clamp(25px,6.5cqh,34px)!important;
+    height:clamp(25px,6.5cqh,34px)!important;
+  }
+  #novel-ui>#phone-ui[data-focus="true"] .phone-app-label{
+    font-size:clamp(9px,2.1cqh,11px)!important;
+  }
+  #novel-ui>#phone-ui[data-focus="true"] .phone-app-view{
+    padding:28px 5% 3%!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #phone-ui .phone-app{transition:none!important}
+}
