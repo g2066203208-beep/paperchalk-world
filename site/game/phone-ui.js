@@ -32,7 +32,7 @@
   function create({root,profile={}}={}){
     if(!root)throw new Error('Phone requires #novel-ui root');
     let config={...defaultProfile,...profile};
-    let pin='',page='lock',opened=false,clockTimer=0,mediaStream=null,
+    let pin='',page='lock',opened=false,clockTimer=0,worldCameraSession=null,
       selectedContact='female2',chatOpen=false;
     const section=document.createElement('section');
     section.id='phone-ui';section.hidden=true;
@@ -101,8 +101,11 @@
       }
       wall.style.setProperty('--phone-lock-image',config.wallpaperUrl?'url("'+encodeURI(config.wallpaperUrl).replace(/"/g,'%22')+'")':'none');
     }
-    function stopCamera(){
-      if(mediaStream){for(const track of mediaStream.getTracks())track.stop();mediaStream=null;}
+    function stopWorldCamera(){
+      if(worldCameraSession){worldCameraSession.stop();worldCameraSession=null;}
+      delete section.dataset.worldCamera;
+      section.style.removeProperty('--phone-world-x');
+      section.style.removeProperty('--phone-world-y');
     }
     function world(){
       try{return typeof config.getPhoneWorld==='function'?config.getPhoneWorld():null}
@@ -148,7 +151,7 @@
       }
     }
     function showPage(next){
-      if(next!=='app')stopCamera();
+      if(next!=='app')stopWorldCamera();
       page=next;
       // While reading apps, the camera looks closer at the SAME phone screen.
       // The approved cat-ear shell remains unchanged on the lock view.
@@ -331,21 +334,12 @@
           screen.appendChild(avatar);
           const caption=make('small','',result.answered?'对方正在通话 · 剧情画面':'无人接听');
           screen.appendChild(caption);
-          const selfPreview=make('video','phone-call-self');
-          selfPreview.autoplay=true;selfPreview.muted=true;selfPreview.playsInline=true;
-          screen.appendChild(selfPreview);
-          if(navigator.mediaDevices?.getUserMedia){
-            navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false})
-              .then(stream=>{
-                if(!opened||!selfPreview.isConnected){stream.getTracks().forEach(t=>t.stop());return;}
-                stopCamera();mediaStream=stream;selfPreview.srcObject=stream;
-                selfPreview.play().catch(()=>{});
-              }).catch(()=>{selfPreview.hidden=true});
-          }else selfPreview.hidden=true;
+          screen.appendChild(make('small','phone-call-virtual-preview',
+            '游戏人物视频通话 · 不使用玩家设备摄像头'));
         }else screen.append(make('strong','','正在与'+person.display+'通话'));
         screen.append(make('p','',result.text));
         copy.appendChild(screen);
-        copy.appendChild(appButton('结束通话',()=>{stopCamera();renderApp('电话')},'phone-hangup'));
+        copy.appendChild(appButton('结束通话',()=>{stopWorldCamera();renderApp('电话')},'phone-hangup'));
       };
       controls.append(appButton('语音通话',()=>call(false)),
         appButton('视频通话',()=>call(true)));
@@ -393,74 +387,122 @@
       }
       copy.appendChild(grid);
     }
-    async function openRealCamera(copy,live=false){
+    function openGameCamera(copy,live=false){
+      stopWorldCamera();
+      section.dataset.worldCamera='true';
       const preview=make('div','phone-camera-stage');
-      const video=make('video','phone-camera-live');
-      video.autoplay=true;video.muted=true;video.playsInline=true;
-      preview.appendChild(video);copy.appendChild(preview);
+      const canvas=make('canvas','phone-camera-live');
+      canvas.width=360;canvas.height=540;
+      canvas.setAttribute('aria-label','实时游戏场景取景画面');
+      preview.appendChild(canvas);
+      const overlay=make('div','phone-world-camera-overlay',live?'直播取景 · 未开播':'游戏内相机');
+      preview.appendChild(overlay);copy.appendChild(preview);
       const status=make('p','phone-camera-status',
-        live?'游戏世界直播预览 · 不会上传到现实网络':'使用设备摄像头，图片只保存到游戏存档');
+        live?'画面来自当前游戏场景 · 仅向游戏世界内观众直播':
+          '移动手机或拖动取景画面构图 · 不调用现实摄像头');
       copy.appendChild(status);
       const controls=make('div','phone-camera-actions');
       copy.appendChild(controls);
+      const factory=global.PaperWorldPhoneWorldCamera;
+      if(!factory?.create){
+        status.textContent='游戏场景取景模块尚未加载';
+        return;
+      }
+      const camera=factory.create({canvas,phone:section,getWorld:world});
+      worldCameraSession=camera;
+      // A small movable handset floats over the actual live game scene.
+      const area=root.getBoundingClientRect();
+      const initial=section.getBoundingClientRect();
+      section.style.setProperty('--phone-world-x',Math.round(
+        Math.max(0,Math.min(area.width-initial.width,area.width-initial.width-8)))+'px');
+      section.style.setProperty('--phone-world-y',Math.round(
+        Math.max(0,(area.height-initial.height)/2))+'px');
+      camera.start();
+
+      // Drag the handset using the title bar; the world view remains underneath.
+      const header=get('phone-app-title');
+      header.title='拖动手机位置';
+      let moving=null;
+      const grab=e=>{
+        if(e.button!==undefined&&e.button!==0)return;
+        const a=section.getBoundingClientRect();
+        moving={x:e.clientX,y:e.clientY,
+          left:parseFloat(section.style.getPropertyValue('--phone-world-x'))||0,
+          top:parseFloat(section.style.getPropertyValue('--phone-world-y'))||0};
+        header.setPointerCapture?.(e.pointerId);
+        e.preventDefault();
+      };
+      const drag=e=>{
+        if(!moving)return;
+        const bounds=root.getBoundingClientRect(),phone=section.getBoundingClientRect();
+        const x=Math.max(0,Math.min(bounds.width-phone.width,moving.left+e.clientX-moving.x));
+        const y=Math.max(0,Math.min(bounds.height-phone.height,moving.top+e.clientY-moving.y));
+        section.style.setProperty('--phone-world-x',Math.round(x)+'px');
+        section.style.setProperty('--phone-world-y',Math.round(y)+'px');
+      };
+      const release=()=>{moving=null;};
+      header.addEventListener('pointerdown',grab);
+      header.addEventListener('pointermove',drag);
+      header.addEventListener('pointerup',release);
+      header.addEventListener('pointercancel',release);
+
+      let aiming=null;
+      canvas.addEventListener('pointerdown',e=>{
+        if(e.button!==undefined&&e.button!==0)return;
+        aiming={x:e.clientX,y:e.clientY};
+        canvas.setPointerCapture?.(e.pointerId);
+        e.preventDefault();
+      });
+      canvas.addEventListener('pointermove',e=>{
+        if(!aiming)return;
+        const dx=e.clientX-aiming.x,dy=e.clientY-aiming.y;
+        camera.move(-dx/Math.max(1,canvas.clientWidth)*1.6,
+          -dy/Math.max(1,canvas.clientHeight)*1.6);
+        aiming={x:e.clientX,y:e.clientY};
+      });
+      canvas.addEventListener('pointerup',()=>{aiming=null;});
+      canvas.addEventListener('pointercancel',()=>{aiming=null;});
+      canvas.addEventListener('wheel',e=>{
+        camera.setZoom(camera.snapshot().zoom+(e.deltaY<0?.15:-.15));
+        e.preventDefault();
+      },{passive:false});
+
+      const zoomControls=make('label','phone-camera-zoom');
+      zoomControls.appendChild(make('span','','变焦'));
+      const zoomValue=make('span','','1.0×');
+      const slider=make('input');slider.type='range';
+      slider.min='1';slider.max='3';slider.step='.25';slider.value='1';
+      slider.setAttribute('aria-label','游戏内相机变焦');
+      slider.addEventListener('input',()=>{
+        camera.setZoom(Number(slider.value));
+        zoomValue.textContent=Number(slider.value).toFixed(1)+'×';
+      });
+      zoomControls.append(slider,zoomValue);copy.appendChild(zoomControls);
+
       const take=()=>{
-        if(!video.videoWidth){status.textContent='相机尚未就绪';return}
-        const canvas=document.createElement('canvas');
-        canvas.width=320;canvas.height=Math.round(320*video.videoHeight/video.videoWidth);
-        canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
-        const image=canvas.toDataURL('image/jpeg',.62);
-        const res=config.onTakePhoto?.(image);
-        status.textContent=res?.ok?'照片已保存到相册':res?.reason||'存储失败';
-        if(res?.ok&&!live)renderApp('相册');
+        const result=camera.shot();
+        if(!result.ok){status.textContent=result.reason;return;}
+        const saved=config.onTakePhoto?.(result.data,result.meta);
+        status.textContent=saved?.ok?'游戏内照片已保存到相册':
+          saved?.reason||'照片保存失败';
+        if(saved?.ok&&!live)renderApp('相册');
       };
       if(live){
         let broadcasting=false;
+        const indicator=make('span','phone-world-live-badge','');
+        preview.appendChild(indicator);
         const start=appButton('开始游戏内直播',()=>{
           broadcasting=!broadcasting;
           start.textContent=broadcasting?'结束直播':'开始游戏内直播';
+          indicator.textContent=broadcasting?'● LIVE':'';
+          overlay.textContent=broadcasting?'正在向游戏世界直播':'直播取景 · 未开播';
           status.textContent=broadcasting?
-            '直播中 · 游戏世界模拟观众：今天街区有什么新鲜事？':
-            '直播已结束 · 未连接真实直播平台';
+            '直播中 · 模拟观众：画面是哪里？能再往左看看吗？':
+            '直播已结束 · 没有连接任何现实直播平台';
         });
         controls.appendChild(start);
       }
-      controls.appendChild(appButton(live?'拍摄直播截图':'拍照',take));
-      if(!live){
-        const importBtn=make('label','phone-import-label','从设备选取照片');
-        const input=make('input');input.type='file';input.accept='image/*';
-        input.addEventListener('change',event=>{
-          const file=event.target.files?.[0];if(!file)return;
-          const img=new Image();const url=URL.createObjectURL(file);
-          img.onload=()=>{
-            const c=document.createElement('canvas');c.width=320;
-            c.height=Math.max(1,Math.round(320*img.height/img.width));
-            c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-            URL.revokeObjectURL(url);
-            const res=config.onTakePhoto?.(c.toDataURL('image/jpeg',.58));
-            if(res?.ok)renderApp('相册');
-            else status.textContent=res?.reason||'无法导入照片';
-          };
-          img.onerror=()=>URL.revokeObjectURL(url);
-          img.src=url;
-        });
-        importBtn.appendChild(input);controls.appendChild(importBtn);
-      }
-      if(!navigator.mediaDevices?.getUserMedia){
-        video.hidden=true;
-        status.textContent='当前设备不支持网页相机，可以从设备选取照片。';
-        return;
-      }
-      try{
-        stopCamera();
-        const stream=await navigator.mediaDevices.getUserMedia({
-          video:{facingMode:live?'user':'environment'},audio:false});
-        if(!opened||!video.isConnected){stream.getTracks().forEach(t=>t.stop());return}
-        mediaStream=stream;video.srcObject=stream;
-        await video.play().catch(()=>{});
-      }catch(error){
-        video.hidden=true;
-        status.textContent='相机未授权或不可用；可使用设备照片。';
-      }
+      controls.appendChild(appButton(live?'保存直播截图':'拍照',take));
     }
     function renderForum(copy){
       const s=world();
@@ -665,7 +707,7 @@
       get('phone-app-title').textContent=name;
       section.dataset.appName=name;
       copy.replaceChildren();
-      if(name!=='相机'&&name!=='直播'&&name!=='电话')stopCamera();
+      if(name!=='相机'&&name!=='直播')stopWorldCamera();
       if(name==='联系人'){
         renderContacts(copy);showPage('app');return;
       }
@@ -688,7 +730,7 @@
         renderGallery(copy);showPage('app');return;
       }
       if(name==='相机'||name==='直播'){
-        showPage('app');openRealCamera(copy,name==='直播');return;
+        showPage('app');openGameCamera(copy,name==='直播');return;
       }
       if(name==='日历'){
         const state=world();
@@ -781,7 +823,7 @@
     }
     function close(){
       if(!opened)return;
-      stopCamera();opened=false;section.hidden=true;pin='';updatePin();showPage('lock');
+      stopWorldCamera();opened=false;section.hidden=true;pin='';updatePin();showPage('lock');
       clearInterval(clockTimer);clockTimer=0;
       global.dispatchEvent(new CustomEvent('paperchalk:phone-visibility',{detail:{open:false}}));
     }
