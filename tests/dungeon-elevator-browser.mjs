@@ -15,6 +15,18 @@ const settledAt=async depth=>page.waitForFunction(expected=>{const x=window.Dung
 try{
  await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-dungeon-elevator').waitFor({state:'visible'});
+ await page.waitForTimeout(220);
+ const pcMenu=await page.evaluate(()=>{
+  const menu=document.getElementById('scene-menu-main');
+  const buttons=[...menu.querySelectorAll('button')];
+  const lift=document.getElementById('menu-dungeon-elevator').getBoundingClientRect();
+  const stage=document.getElementById('scene').getBoundingClientRect();
+  return{order:buttons.map(b=>b.id),lift:{x:lift.x,y:lift.y,right:lift.right,bottom:lift.bottom},stage:{x:stage.x,y:stage.y,right:stage.right,bottom:stage.bottom}};
+ });
+ assert.equal(pcMenu.order[1],'menu-dungeon-elevator','Elevator must appear immediately after Start Game');
+ assert.ok(pcMenu.lift.y>=pcMenu.stage.y-2 && pcMenu.lift.bottom<=pcMenu.stage.bottom+2,'PC elevator menu button clipped: '+JSON.stringify(pcMenu));
+ await page.screenshot({path:out+'/00-original-horror-game-main-menu-with-elevator-1920x1080.png'});
+ console.log('PC_MAIN_MENU_ENTRY',JSON.stringify(pcMenu));
  await page.locator('#menu-dungeon-elevator').click();
  await page.waitForURL('**/dungeon-elevator/');
  errors.length=0; // main game's unrelated scene-catalog boot is not elevator runtime
@@ -95,6 +107,25 @@ try{
  const end=await state(),finalShaft=await shaft();
  assert.equal(end.emergencyUsed,true);assert.equal(end.integrity,92);
  assert.equal(finalShaft.floor,0);assert.equal(finalShaft.landingVisible,false);
+ // Verify real ORIGINAL horror game main menu also exposes the elevator link on a phone.
+ const homePhone=await browser.newPage({viewport:{width:844,height:390},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ await homePhone.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:60000});
+ await homePhone.locator('#menu-dungeon-elevator').waitFor({state:'visible',timeout:20000});
+ const homeMenu=await homePhone.evaluate(()=>{
+  const button=document.getElementById('menu-dungeon-elevator').getBoundingClientRect();
+  const scene=document.getElementById('scene').getBoundingClientRect();
+  return {button:{x:button.x,y:button.y,right:button.right,bottom:button.bottom},
+          scene:{x:scene.x,y:scene.y,right:scene.right,bottom:scene.bottom},
+          second:[...document.querySelectorAll('#scene-menu-main button')][1].id,
+          href:location.href};
+ });
+ assert.equal(homeMenu.second,'menu-dungeon-elevator');
+ assert.ok(homeMenu.button.bottom<=390 && homeMenu.button.y>=0,'Phone main-menu lift entry off-screen: '+JSON.stringify(homeMenu));
+ await homePhone.screenshot({path:out+'/00-original-horror-game-phone-menu-844x390.png'});
+ await homePhone.locator('#menu-dungeon-elevator').tap();
+ await homePhone.waitForURL('**/dungeon-elevator/',{timeout:12000});
+ console.log('PHONE_MAIN_MENU_ENTRY',JSON.stringify(homeMenu));
+ await homePhone.close();
  // Real phone landscape, NOT desktop CSS resized inside a browser window.
  const phoneErrors=[];
  const phone=await browser.newPage({viewport:{width:844,height:390},deviceScaleFactor:2,isMobile:true,hasTouch:true});
