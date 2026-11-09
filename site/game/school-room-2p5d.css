@@ -1,0 +1,23 @@
+/* Daily classroom: one genuine room volume; do not resize or warp the old art. */
+#scene>#school-room-surface{
+  position:absolute;inset:0;display:block;width:100%;height:100%;
+  z-index:0;pointer-events:none;image-rendering:auto;
+}
+#scene>#school-room-surface[hidden]{display:none!important}
+#view.school-room-active #scene{
+  width:100cqw!important;height:100cqh!important;max-width:none!important;
+  aspect-ratio:auto!important;transform:none!important;
+  border-radius:0!important;overflow:hidden;
+}
+#view.school-room-active #scene::after{content:none!important}
+#view.school-room-active #scene>#source{visibility:hidden!important}
+/* Physical WebGL world-space fall replaces the old screen-space placeholder. */
+#view.school-room-active .pw-act-one-fall-person{display:none!important}
+/* Preserve the original game's restrained fog and immersive dialogue. */
+#view.school-room-active #novel-ui{pointer-events:none}
+#view.school-room-active #novel-ui button,
+#view.school-room-active #novel-ui input,
+#view.school-room-active #novel-ui textarea{pointer-events:auto}
+@media(prefers-reduced-motion:reduce){
+ #view.school-room-active #scene{transition:none!important}
+}
