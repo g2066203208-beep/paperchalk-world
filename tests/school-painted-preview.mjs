@@ -36,6 +36,34 @@ try{
   assert.equal(status.faceTextures.floor.ready,true);
   assert.equal(status.faceTextures.left.ready,true);
   assert.match(status.faceTextures.left.src,/left-windows-alpha\.svg$/);
+  assert.ok(status.exterior.geometryTriangles>0,'Exterior should be actual WebGL geometry');
+  assert.ok(status.exterior.skyX<status.exterior.windowWallX,'Sky must be behind the wall');
+  const alphaProof=await page.evaluate(async()=>{
+    // Check the source wall pixels, not a white preview or an opaque mockup.
+    const src=window.PaperWorldSchoolRoomRenderer.inspect().faceTextures.left.src;
+    const image=new Image();
+    image.src=src;
+    await image.decode();
+    const plane=document.createElement('canvas');
+    plane.width=image.naturalWidth;plane.height=image.naturalHeight;
+    const ctx=plane.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(image,0,0);
+    const alpha=(x,y)=>ctx.getImageData(x,y,1,1).data[3];
+    return {
+      transparentTop:alpha(180,180),transparentBottom:alpha(180,420),
+      secondPane:alpha(650,180),thirdPane:alpha(1125,420),
+      fourthPane:alpha(1630,180),
+      structuralFrame:alpha(305,180),opaqueWall:alpha(40,650)
+    };
+  });
+  assert.equal(alphaProof.transparentTop,0,'Window glass must be alpha=0');
+  assert.equal(alphaProof.transparentBottom,0,'Lower glass must be alpha=0');
+  assert.equal(alphaProof.secondPane,0);
+  assert.equal(alphaProof.thirdPane,0);
+  assert.equal(alphaProof.fourthPane,0);
+  assert.equal(alphaProof.structuralFrame,255,'Keep frame opaque');
+  assert.equal(alphaProof.opaqueWall,255,'Keep classroom wall opaque');
+  console.log('SCHOOL_WINDOW_ALPHA_PROOF',JSON.stringify(alphaProof));
   // Captures the literal canvas pixels from the already-assembled WebGL
   // 2.5D scene, with textures on their real 3D geometry.
   const data=await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.canvas.toDataURL('image/png'));
