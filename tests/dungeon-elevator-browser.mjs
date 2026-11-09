@@ -71,6 +71,16 @@ try{
   gateClosedTextHidden:document.getElementById('door-status')?.hidden
  }));
  assert.ok(quietLayout.hudHeight<=46,'Desktop top HUD still wastes space');
+ const pcSpace=await page.evaluate(()=>({
+  readoutsWidth:document.querySelector('.readouts').getBoundingClientRect().width,
+  goodsColumns:getComputedStyle(document.getElementById('stock-grid')).gridTemplateColumns.split(' ').length,
+  goodsRows:getComputedStyle(document.getElementById('stock-grid')).gridTemplateRows.split(' ').length
+ }));
+ assert.ok(pcSpace.readoutsWidth>1100,'PC status strip wastes too much horizontal space: '+JSON.stringify(pcSpace));
+ assert.equal(pcSpace.goodsColumns,2,'PC cargo must use two clear columns');
+ assert.equal(pcSpace.goodsRows,3,'PC cargo must show three compact rows');
+ console.log('PC_NO_WASTED_SPACE',JSON.stringify(pcSpace));
+
  assert.equal(quietLayout.firstQuantity,'×5','Inventory cards should show only quantity, not repeat weight');
  assert.match(quietLayout.selectedGoodsDetail,/2kg\/件/,'Selected cargo must retain its weight detail');
  assert.equal(quietLayout.gateClosedTextHidden,true,'Do not repeat idle door status permanently');
@@ -207,6 +217,9 @@ try{
   doorStatusHidden:document.getElementById('door-status').hidden
  }));
  assert.ok(phoneQuiet.hudHeight<=34,'Phone top status consumes too much height');
+ const phoneGoodsColumns=await phone.evaluate(()=>getComputedStyle(document.getElementById('stock-grid')).gridTemplateColumns.split(' ').length);
+ assert.equal(phoneGoodsColumns,3,'Phone keeps three merchandise columns for short landscape height');
+
  assert.ok(phoneQuiet.previewIconWidth<=24,'Phone preview camera swap control too large');
  assert.equal(phoneQuiet.selectedGoodsQuantity,'×5');
  assert.equal(phoneQuiet.doorStatusHidden,true);
