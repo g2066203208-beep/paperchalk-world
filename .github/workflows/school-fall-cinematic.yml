@@ -1,0 +1,45 @@
+name: School Window Fall Cinematic Proof
+on:
+  push:
+    paths:
+      - 'site/game/school-room-2p5d.js'
+      - 'site/game/act-one-story.js'
+      - 'site/game/overworld-runtime.js'
+      - 'site/assets/school-room/**'
+      - 'tests/school-fall-smoke.mjs'
+      - '.github/workflows/school-fall-cinematic.yml'
+  workflow_dispatch:
+jobs:
+  fall-real-framebuffer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Build official scene registry
+        run: python3 scripts/build_scene_catalog.py
+      - name: Serve actual game
+        run: |
+          python3 -m http.server 8765 --directory site >/tmp/fall-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/fall-server.log
+          exit 1
+      - name: Capture the real falling figure through window alpha
+        run: node tests/school-fall-smoke.mjs
+      - name: Publish 8 real game frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: school-window-fall-real-webgl
+          path: artifacts/school-window-fall/*.png
+          if-no-files-found: warn
+          retention-days: 14
