@@ -9,7 +9,7 @@ test('the daily school is a separate real five-face environment',()=>{
   const {readFileSync}=require('node:fs');
   const left=readFileSync(require('node:path').join(__dirname,'../site/assets/school-room/left-painted.svg'),'utf8');
   assert.match(left,/viewBox="0 0 2048 760"/);
-  assert.equal((left.match(/id="window-\\d"/g)||[]).length,4);
+  assert.equal((left.match(/id="window-[0-9]"/g)||[]).length,4);
   assert.equal(school.ACTORS.some(a=>a.id==='girl'),true);
   assert.equal(school.ACTORS.some(a=>a.id==='boy'),true);
 });
