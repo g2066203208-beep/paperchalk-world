@@ -7,7 +7,7 @@ test('the daily school is a separate real five-face environment',()=>{
   assert.ok(school.EXTERIOR.schoolX<school.EXTERIOR.windowWallX);
   assert.deepEqual(Object.keys(school.MATERIALS).sort(),
     ['back','ceiling','floor','left','right']);
-  assert.equal(school.MATERIALS.left,'./assets/school-room/left-windows-alpha.svg');
+  assert.equal(school.MATERIALS.left,'./assets/school-room/gpt-left-wall-transparent.webp');
   assert.equal(school.MATERIALS.right,'./assets/school-room/right-door-painted.svg');
   assert.equal(school.CLASSROOM_LAYOUT.desks,20);
   assert.equal(school.CLASSROOM_LAYOUT.chairs,20);
