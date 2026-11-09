@@ -335,6 +335,28 @@
     button.addEventListener('click',fn);
     prompts.appendChild(button);
   }
+  function schoolChatMenu(){
+    if(!mode||engine.snapshot().location!=='school')return;
+    const s=engine.snapshot();
+    prompts.replaceChildren();contextOpen=true;prompts.hidden=false;
+    const dialog=who=>{
+      contextOpen=false;prompts.hidden=true;
+      return playActOne(actOne?.talk(engine.snapshot(),who));
+    };
+    addAction('找女二','female2',()=>run(()=>engine.talk('female2'),res=>
+      director?.playSocial(res.message)));
+    if(s.day<6)addAction('和小胖聊聊','boy',()=>dialog('boy'));
+    if(s.day<3)addAction('跟她说两句','girl',()=>dialog('girl'));
+    addAction('听听同学们怎么说','classmates',()=>dialog('classmates'));
+    if(s.day>=3){
+      addAction('看看她的课桌','desk',()=>dialog('girl-desk'));
+      addAction('问问男二','male2',()=>dialog('male2'));
+      addAction('和男主说说话','male1',()=>dialog('male1'));
+      if(actOne?.knew('home-records')&&actOne?.knew('desk-note'))
+        addAction('想想那两件事','remember',()=>dialog('conclusion'));
+    }
+    addAction('返回','back',()=>draw());
+  }
   function draw(){
     const s=engine.snapshot();
     const worldPoi=global.PaperWorldAtlas?.POI_BY_ID?.[s.location];
@@ -409,24 +431,8 @@
           addAction('补完作业','homework',()=>run(()=>engine.finishHomework()));
         else addAction('交作业','submit',()=>run(()=>engine.submitHomework()));
       }
-      addAction('找女二','female2',()=>run(()=>engine.talk('female2'),res=>{
-        director?.playSocial(res.message);
-      }));
-      if(s.day<6)addAction('和小胖聊聊','boy',()=>playActOne(actOne?.talk(engine.snapshot(),'boy')));
-      if(s.day<3)addAction('跟她说两句','girl',()=>playActOne(actOne?.talk(engine.snapshot(),'girl')));
-      if(s.day>=3){
-        addAction('听听同学们怎么说','classmates',()=>playActOne(actOne?.talk(engine.snapshot(),'classmates')));
-        addAction('看看她的课桌','desk',()=>playActOne(actOne?.talk(engine.snapshot(),'girl-desk')));
-      }else addAction('听听班里的八卦','classmates',()=>playActOne(actOne?.talk(engine.snapshot(),'classmates')));
-      if(s.day>=3){
-        addAction('问问男二','male2',()=>playActOne(actOne?.talk(engine.snapshot(),'male2')));
-        addAction('和男主说说话','male1',()=>playActOne(actOne?.talk(engine.snapshot(),'male1')));
-      }
-      if(s.day>=6){
-        addAction('看看小胖家','boy-home',()=>travel('classmate-home'));
-        if(actOne?.knew('home-records')&&actOne?.knew('desk-note'))
-          addAction('想想那两件事','remember',()=>playActOne(actOne?.talk(engine.snapshot(),'conclusion')));
-      }
+      addAction('课间聊聊','chat',schoolChatMenu);
+      if(s.day>=6)addAction('看看小胖家','boy-home',()=>travel('classmate-home'));
       addAction('离开学校','exit',()=>surfaces?.openMap());
     }else if(s.location==='classmate-home'){
       addAction('看看门口','door',()=>playActOne(actOne?.home(engine.snapshot(),'entry')));
