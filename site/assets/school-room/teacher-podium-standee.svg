@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="650" height="540" viewBox="0 0 650 540">
+<title>讲台独立2D立牌 · 轻俯视 · 无背景</title>
+<defs>
+ <linearGradient id="front" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#807160"/><stop offset=".52" stop-color="#a18a72"/><stop offset="1" stop-color="#82715f"/></linearGradient>
+ <linearGradient id="top" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#c2ad93"/><stop offset="1" stop-color="#a58d73"/></linearGradient>
+</defs>
+<!-- Flat transparent student-facing teacher lectern, not a modeled cuboid. -->
+<g stroke-linecap="round" stroke-linejoin="round">
+ <path d="M105 125H546L584 450H72Z" fill="#796a59" stroke="#5c5148" stroke-width="8"/>
+ <path d="M119 151H532L556 432H95Z" fill="url(#front)" stroke="#65594d" stroke-width="5"/>
+ <path d="M142 176H506L528 399H119Z" fill="none" stroke="#d5baa0" stroke-width="4" opacity=".39"/>
+ <path d="M161 200H487M168 236H481M148 355H510" stroke="#5e5043" stroke-width="2" opacity=".2"/>
+ <path d="M286 166V413" stroke="#665747" stroke-width="4" opacity=".25"/>
+ <path d="M77 421H578L572 457H81Z" fill="#796b58" stroke="#554b41" stroke-width="5"/>
+ <path d="M103 112L511 112L609 171L39 175Z" fill="url(#top)" stroke="#5f5246" stroke-width="8"/>
+ <path d="M44 173H607L595 190L48 193Z" fill="#89735f" stroke="#574c43" stroke-width="4"/>
+ <path d="M114 128H509" stroke="#e2cbb0" stroke-width="4" opacity=".53"/>
+ <path d="M95 155q170 0 365 0M144 169q189 0 344 0" stroke="#856c57" stroke-width="2" opacity=".24"/>
+ <path d="M175 145h65m182 8h44" stroke="#d2bda2" stroke-width="3" opacity=".25"/>
+ <path d="M92 461V482H113V459M537 457V480H558V457" fill="#616766" stroke="#4a5454" stroke-width="4"/>
+</g>
+</svg>
