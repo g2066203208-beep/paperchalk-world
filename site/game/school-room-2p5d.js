@@ -131,8 +131,8 @@
   ].join('\n');
   const uniforms='uniform vec3 u_camera;uniform vec2 u_angles;uniform vec2 u_tan;\n';
   const TVS='attribute vec3 a_position;attribute vec2 a_uv;'+uniforms+
-    'uniform vec3 u_sunDirection;uniform float u_shadowProjection;'+
-    'varying vec2 v_uv;varying vec3 v_world;void main(){'+
+    'uniform mediump vec3 u_sunDirection;uniform mediump float u_shadowProjection;'+
+    'varying mediump vec2 v_uv;varying mediump vec3 v_world;void main(){'+
     'vec3 worldP=a_position;'+
     'if(u_shadowProjection>.5){'+
     'float reach=max(0.0,worldP.y)/max(.22,u_sunDirection.y);'+
@@ -141,11 +141,12 @@
     'v_world=worldP;'+projectionShader+'v_uv=a_uv;}';
   const TFS=[
     'precision mediump float;',
-    'varying vec2 v_uv;varying vec3 v_world;',
+    'varying mediump vec2 v_uv;varying mediump vec3 v_world;',
     'uniform sampler2D u_tex;',
-    'uniform vec3 u_light,u_ambient,u_sunColor,u_sunDirection,u_skyColor;',
+    'uniform vec3 u_light,u_ambient,u_sunColor,u_skyColor;',
+    'uniform mediump vec3 u_sunDirection;',
     'uniform float u_sprite,u_surface,u_sunPower,u_lampPower;',
-    'uniform float u_shadowProjection,u_shadowOpacity;',
+    'uniform mediump float u_shadowProjection;uniform float u_shadowOpacity;',
     // Window transmission analytically projects the actual 16 glass panes
     // onto each 3D receiver. It is not a fixed screen-space overlay.
     'float bounds(float x,float a,float b,float feather){',
@@ -373,7 +374,8 @@
       const v=compile(gl.VERTEX_SHADER,vsrc),f=compile(gl.FRAGMENT_SHADER,fsrc);
       const p=gl.createProgram();gl.attachShader(p,v);gl.attachShader(p,f);
       gl.linkProgram(p);gl.deleteShader(v);gl.deleteShader(f);
-      if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error('School shader link');
+      if(!gl.getProgramParameter(p,gl.LINK_STATUS))
+        throw Error('School shader link: '+gl.getProgramInfoLog(p));
       return p;
     }
     function mesh(data){
