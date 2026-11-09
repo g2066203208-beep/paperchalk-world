@@ -170,8 +170,8 @@
     canvas.setAttribute('aria-label','方正五面三维教室，真实空间透视的课桌椅和窗户');
     original.insertAdjacentElement('afterend',canvas);
     const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true,
-      powerPreference:'low-power',preserveDrawingBuffer:false});
-    let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,heldFallFrame=null;
+      powerPreference:'low-power',preserveDrawingBuffer:true});
+    let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,heldFallFrame=null,lastFrameKey='';
     const props=new Float32Array(solids),worldFaceData=textureFaces();
     const pc={},pt={},textures={},sprites={},faceGPU={};
     let program=null,tprogram=null,colorGPU=null,fallGPU=null,ready=0;
@@ -207,7 +207,7 @@
           gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
           gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
           if(gl.getError()!==gl.NO_ERROR)throw Error('GPU texture upload');
-          item.ready=true;ready++;
+          item.ready=true;ready++;lastFrameKey='';
         }catch(e){item.error=String(e);}
       };
       image.onerror=()=>item.error='Failed to load '+src;
@@ -294,6 +294,14 @@
           clamp((1.42-fallTime)/.22,0,1);
         cam.yaw-=react*.25;cam.pitch+=react*.012;
       }
+      const fallFrame=heldFallFrame!==null?'frozen-'+heldFallFrame:
+        fallStart?Math.floor(fallTime*52):'none';
+      const fingerprint=[bw,bh,ready,s?.day||1,cam.yaw.toFixed(4),
+        cam.pitch.toFixed(4),fallFrame].join('|');
+      // No WebGL redraws while the head is stationary, no assets changed
+      // and no event is running. Existing fluid fog animates independently.
+      if(fingerprint===lastFrameKey)return true;
+      lastFrameKey=fingerprint;
       gl.viewport(0,0,bw,bh);
       gl.clearColor(.44,.47,.47,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       try{
@@ -324,11 +332,11 @@
     function setActive(value){
       active=!!value;canvas.hidden=!active;
       view.classList.toggle('school-room-active',active);
-      if(active)render(0,0);else {fallStart=0;heldFallFrame=null;}
+      lastFrameKey='';if(active)render(0,0);else {fallStart=0;heldFallFrame=null;}
     }
     function triggerFall(){
       if(!active)return false;
-      heldFallFrame=null;fallStart=performance.now();render();return true;
+      heldFallFrame=null;fallStart=performance.now();lastFrameKey='';render();return true;
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
@@ -342,7 +350,7 @@
       if(new URLSearchParams(window.location.search).get('storyCapture')!=='1')
         return false;
       heldFallFrame=clamp(Number(t)||.55,.05,1.15);
-      fallStart=performance.now();render(0,0);return true;
+      fallStart=performance.now();lastFrameKey='';render(0,0);return true;
     }
     function releaseFallFrame(){heldFallFrame=null;return true;}
     return Object.freeze({setActive,triggerFall,holdFallFrame,releaseFallFrame,
