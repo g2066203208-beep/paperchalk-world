@@ -58,10 +58,12 @@ export function createShaftExterior(THREE,scene){
   const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);
   p.position.set(x,y,z);parent.add(p);return p;
  }
+ // A dark geological backing prevents white screen slivers at deep stops.
+ face(landing,35,24,0,1.0,-9.02,rockMats[0]);
  // Rock occupies the space ABOVE and BELOW a real little stop. Between them
  // is just a pale stone staging opening, not an independently painted level.
- face(landing,13,6.1,0,6.0,-7.6,rockMats[0]); // roof y 2.95..9.05
- face(landing,13,5.2,0,-2.5,-7.6,rockMats[0]); // sill y -5.1..0.1
+ face(landing,23,6.1,0,6.0,-7.6,rockMats[0]); // roof y 2.95..9.05
+ face(landing,23,5.2,0,-2.5,-7.6,rockMats[0]); // sill y -5.1..0.1
  const backdrop=face(landing,11.6,2.86,0,1.60,-8.30,makeMat(0xd1c9bf));
  face(landing,2.2,3.0,-6.45,1.55,-7.48,rockMats[0]);
  face(landing,2.2,3.0,6.45,1.55,-7.48,rockMats[0]);
