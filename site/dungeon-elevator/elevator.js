@@ -58,7 +58,8 @@ function repaintHUD(){
  $('security-label').textContent=(state.securityOpen?'关':'开')+'安全门';
  $('service-gate').setAttribute('aria-pressed',String(state.serviceOpen));
  $('security-gate').setAttribute('aria-pressed',String(state.securityOpen));
- $('door-status').textContent=state.serviceOpen||state.securityOpen?'门未关':'门已关';
+ $('door-status').textContent=state.moving?'运行中':state.serviceOpen||state.securityOpen?'门未关':'门已关';
+ $('door-status').hidden=!state.moving&&!state.serviceOpen&&!state.securityOpen;
  $('door-status').style.color=state.serviceOpen||state.securityOpen?'#924e40':'';
  $('emergency').disabled=(state.depth===0&&!state.moving)||state.emergencyUsed;
  for(const id of ['up','down','service-gate','security-gate'])$(id).disabled=state.moving;
