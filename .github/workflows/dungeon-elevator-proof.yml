@@ -1,0 +1,36 @@
+name: Dungeon elevator 3D browser proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/dungeon-elevator/**'
+      - 'tests/dungeon-elevator-browser.mjs'
+      - '.github/workflows/dungeon-elevator-proof.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium for real WebGL rendering
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify elevator module syntax
+        run: node --input-type=module --check < site/dungeon-elevator/elevator.js
+      - name: Capture both camera views and test all controls
+        run: |
+          python3 -m http.server 8765 --directory site >/tmp/dungeon-elevator-http.log 2>&1 &
+          sleep 3
+          node tests/dungeon-elevator-browser.mjs
+      - name: Upload 1920x1080 actual game screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dungeon-elevator-3d-browser-proof
+          path: artifacts/dungeon-elevator/
+          if-no-files-found: warn
