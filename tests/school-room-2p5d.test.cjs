@@ -3,6 +3,8 @@ const assert=require('node:assert/strict');
 const school=require('../site/game/school-room-2p5d.js');
 test('the daily school is a separate real five-face environment',()=>{
   assert.deepEqual(school.ROOM,{width:10,height:3.38,depth:9});
+  assert.ok(school.EXTERIOR.skyX<school.EXTERIOR.schoolX);
+  assert.ok(school.EXTERIOR.schoolX<school.EXTERIOR.windowWallX);
   assert.deepEqual(Object.keys(school.MATERIALS).sort(),
     ['back','ceiling','floor','left','right']);
   assert.equal(school.MATERIALS.left,'./assets/school-room/left-windows-alpha.svg');
