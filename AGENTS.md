@@ -2,6 +2,8 @@
 
 ## Mandatory preflight: before EVERY Anima prompt
 
+**FIRST read the NEW 2026-11-09 user-specified [normal/cute LoRA style presets](docs/ANIMA_STYLE_PRESETS_NORMAL_CUTE_20261109.md).** Use one preset unchanged for new art, then follow the Anima official prompt guide and applicable character identity / NPC view locks. Previous NPC-specific 0.65/1.0 LoRA lines remain historical/reproduction exceptions, not permission to silently override the new normal/cute presets.
+
 Read these documents **in the current session**, not from memory:
 
 1. [Anima official prompting reference (verified 2026-11-08)](docs/ANIMA_OFFICIAL_PROMPTING_REFERENCE_20261108.md). Open the official [model card](https://huggingface.co/circlestone-labs/Anima) and check the current **Prompting** and **Generation settings** sections.
