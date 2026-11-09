@@ -9,6 +9,10 @@ on:
       - 'site/index.html'
       - 'tests/act-one-story.test.cjs'
       - 'tests/act-one-browser.mjs'
+      - 'tests/school-room-2p5d.test.cjs'
+      - 'site/game/school-room-2p5d.js'
+      - 'site/game/school-room-2p5d.css'
+      - 'site/assets/school-room/**'
       - '.github/workflows/act-one-story-tests.yml'
   pull_request:
     paths:
@@ -29,11 +33,12 @@ jobs:
       - name: Syntax-check authored game files
         run: |
           node --check site/game/act-one-story.js
+          node --check site/game/school-room-2p5d.js
           node --check site/game/overworld-runtime.js
           node --check site/game/overworld-director.js
           node --check site/game/daily-life-state.js
       - name: Test Act One persistence and chapter continuity
-        run: node --test tests/act-one-story.test.cjs
+        run: node --test tests/act-one-story.test.cjs tests/school-room-2p5d.test.cjs
 
   actual-game-browser:
     runs-on: ubuntu-24.04
