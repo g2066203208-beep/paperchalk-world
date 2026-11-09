@@ -32,7 +32,7 @@
   function create({root,profile={}}={}){
     if(!root)throw new Error('Phone requires #novel-ui root');
     let config={...defaultProfile,...profile};
-    let pin='',page='lock',opened=false,clockTimer=0,worldCameraSession=null,
+    let pin='',page='lock',opened=false,clockTimer=0,worldCameraSession=null,cameraCleanup=null,
       selectedContact='female2',chatOpen=false;
     const section=document.createElement('section');
     section.id='phone-ui';section.hidden=true;
@@ -102,6 +102,7 @@
       wall.style.setProperty('--phone-lock-image',config.wallpaperUrl?'url("'+encodeURI(config.wallpaperUrl).replace(/"/g,'%22')+'")':'none');
     }
     function stopWorldCamera(){
+      cameraCleanup?.();cameraCleanup=null;
       if(worldCameraSession){worldCameraSession.stop();worldCameraSession=null;}
       delete section.dataset.worldCamera;
       section.style.removeProperty('--phone-world-x');
@@ -462,10 +463,20 @@
       });
       canvas.addEventListener('pointerup',()=>{aiming=null;});
       canvas.addEventListener('pointercancel',()=>{aiming=null;});
-      canvas.addEventListener('wheel',e=>{
+      const wheel=e=>{
         camera.setZoom(camera.snapshot().zoom+(e.deltaY<0?.15:-.15));
         e.preventDefault();
-      },{passive:false});
+      };
+      canvas.addEventListener('wheel',wheel,{passive:false});
+      cameraCleanup=()=>{
+        header.removeEventListener('pointerdown',grab);
+        header.removeEventListener('pointermove',drag);
+        header.removeEventListener('pointerup',release);
+        header.removeEventListener('pointercancel',release);
+        canvas.removeEventListener('wheel',wheel);
+        header.title='';
+        moving=null;aiming=null;
+      };
 
       const zoomControls=make('label','phone-camera-zoom');
       zoomControls.appendChild(make('span','','变焦'));
