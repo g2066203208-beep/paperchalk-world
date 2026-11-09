@@ -26,7 +26,14 @@ const doorView={position:new THREE.Vector3(0,1.85,0.35),target:new THREE.Vector3
 const cabinView={position:new THREE.Vector3(0,1.83,-3.06),target:new THREE.Vector3(0,1.65,2.45),fov:67};
 let cameraTarget=doorView;
 const cameraAim=new THREE.Vector3().copy(doorView.target);
-function notice(message){$('notice').textContent=message}
+let noticeTimer=null;
+function notice(message,quiet=false){
+ const el=$('notice');el.textContent=message;
+ clearTimeout(noticeTimer);
+ if(quiet||!message){el.dataset.visible='false';return}
+ el.dataset.visible='true';
+ noticeTimer=setTimeout(()=>{el.dataset.visible='false'},2250);
+}
 const $good=id=>GOODS.find(g=>g.id===id);
 function cargoUnits(){return GOODS.reduce((sum,g)=>sum+g.qty,0)}
 function syncLoad(){
@@ -46,16 +53,16 @@ function repaintHUD(){
  $('seats-label').textContent=state.passengers+' / '+state.seats;
  $('passenger-short').textContent=state.passengers+'/'+state.seats;
  $('money-label').textContent=state.coins+' G';
- $('cargo-label').textContent='库存 '+cargoUnits()+' / 24';
- $('service-label').textContent=(state.serviceOpen?'关闭':'开启')+'半高营业门';
- $('security-label').textContent=(state.securityOpen?'关闭':'开启')+'全高安全门';
+ $('cargo-label').textContent=cargoUnits()+' / 24';
+ $('service-label').textContent=(state.serviceOpen?'关':'开')+'营业门';
+ $('security-label').textContent=(state.securityOpen?'关':'开')+'安全门';
  $('service-gate').setAttribute('aria-pressed',String(state.serviceOpen));
  $('security-gate').setAttribute('aria-pressed',String(state.securityOpen));
- $('door-status').textContent=state.serviceOpen||state.securityOpen?'门未锁闭 · 停止运行':'双门已锁闭';
+ $('door-status').textContent=state.serviceOpen||state.securityOpen?'门未关':'门已关';
  $('door-status').style.color=state.serviceOpen||state.securityOpen?'#924e40':'';
  $('emergency').disabled=(state.depth===0&&!state.moving)||state.emergencyUsed;
  for(const id of ['up','down','service-gate','security-gate'])$(id).disabled=state.moving;
- $('scene-floor').textContent=state.moving?((state.motionDirection>0?'↓ 下潜中':'↑ 上行中')+' · B'+String(state.targetDepth).padStart(3,'0')):(state.depth===0?'地表 · 补货站':'B'+String(state.depth).padStart(3,'0')+' · 地牢营业');
+ $('scene-floor').textContent=state.moving?((state.motionDirection>0?'↓ ':'↑ ')+'B'+String(state.targetDepth).padStart(3,'0')):(state.depth===0?'地表':'B'+String(state.depth).padStart(3,'0'));
 }
 function repaintGoods(){
  const grid=$('stock-grid');grid.replaceChildren();
@@ -89,14 +96,14 @@ function repaintRequest(){
  $('request-floor').textContent='B'+state.depth;
  if(state.depth===0){
   $('customer-name').textContent='地表补货站';
-  $('customer-request').textContent='选中'+good.name+'，进货单价 '+good.cost+'G · 上限24件';
+  $('customer-request').textContent=good.name+' · 进价 '+good.cost+'G';
  }else if(orderServed){
   $('customer-name').textContent=request.customer;
-  $('customer-request').textContent='这层的交易已结束，继续上行或下行。';
+  $('customer-request').textContent='交易完成';
  }else{
   const want=$good(request.id);
   $('customer-name').textContent=request.customer;
-  $('customer-request').textContent='需要 '+want.name+' ×'+request.qty+' · 收购报价 '+request.price+'G';
+  $('customer-request').textContent=want.name+' ×'+request.qty+' · '+request.price+'G';
  }
  $('sell-request').disabled=state.moving||state.depth===0||orderServed||!request||$good(request.id).qty<request.qty;
  $('sell-request').textContent=state.depth===0?'等待顾客':orderServed?'已处理':request&&$good(request.id).qty<request.qty?'库存不足':'成交 +'+(request?.price||0)+'G';
@@ -245,11 +252,12 @@ function switchView(view){
  const other=state.view==='door'?cabinView:doorView;
  previewCamera.position.copy(other.position);previewCamera.fov=other.fov;
  previewCamera.lookAt(other.target);previewCamera.updateProjectionMatrix();
- $('main-camera-label').textContent=state.view==='door'?'01 / 电梯门':'02 / 电梯内部';
- $('preview-camera-label').textContent=state.view==='door'?'02 / 电梯内部':'01 / 电梯门';
+ $('main-camera-label').textContent=state.view==='door'?'门外':'舱内';
+ $('preview-camera-label').textContent=state.view==='door'?'舱内':'门外';
  document.querySelector('.main-camera-help').textContent=state.view==='door'?'电梯营业窗口':'电梯乘客空间';
  $('scene-camera-hint').textContent=state.view==='door'?'停靠看上下岩层；行驶时岩土连续滚动':'空电梯3D方盒子，人员与货物素材暂未加入';
- notice(state.view==='door'?'已切换：左侧门口主镜头，右上内部小镜头。':'已切换：左侧电梯内部主镜头，右上门口小镜头。');
+ $('swap-camera').setAttribute('aria-label',state.view==='door'?'切换到电梯内部主镜头':'切换到电梯门外主镜头');
+ notice('',true);
  requestRender();
 }
 function toggleService(){if(state.moving)return;state.serviceOpen=!state.serviceOpen;repaintHUD();notice(state.serviceOpen?'半高营业门已打开，电梯禁止行驶。':'半高营业门已关闭。');requestRender()}
