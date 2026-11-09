@@ -608,7 +608,23 @@
       if(canvas.width!==bw)canvas.width=bw;
       if(canvas.height!==bh)canvas.height=bh;
       const cam=camera(px,py),s=life||window.PaperWorldDailyLifeUI?.snapshot?.();
-      const daylight=updateLighting(s);
+      let daylight=updateLighting(s);
+      const bossT=bossElapsed(),bossPhase=bossT===null?null:bossPhaseAt(bossT);
+      if(bossPhase){
+        // Three modest, quickly decaying impulses. All props and walls see
+        // the same actual camera, with no CSS transform or head-bob drift.
+        const shake=clamp((bossT-.30)/.35,0,1)*Math.exp(-Math.max(0,bossT-.8)*1.5);
+        cam.yaw+=Math.sin(bossT*34)*.019*shake;
+        cam.pitch+=Math.cos(bossT*28)*.013*shake;
+        const darkness=smooth(bossT/1.25);
+        const warmth=bossPhase.flash;
+        lightingState={...daylight,
+          ambient:daylight.ambient.map((v,i)=>Math.min(1.16,
+            v*(1-darkness*.57)+warmth*[.43,.13,.20][i])),
+          sunPower:daylight.sunPower*(1-darkness*.84),
+          lampPower:daylight.lampPower*(1-darkness*.58)};
+        daylight=lightingState;
+      }
       // The witness reflexively turns towards the window only AFTER the fall.
       // Walls, desks, people and shadow share one fixed-position pinhole.
       const fallTime=heldFallFrame!==null?heldFallFrame:
@@ -621,7 +637,9 @@
       const fallFrame=heldFallFrame!==null?'frozen-'+heldFallFrame:
         fallStart?Math.floor(fallTime*52):'none';
       const fingerprint=[bw,bh,ready,s?.day||1,cam.yaw.toFixed(3),
-        cam.pitch.toFixed(3),fallFrame,lightingMinute,
+        cam.pitch.toFixed(3),fallFrame,
+        bossPhase?(bossT>=BOSS_DURATION?'boss-ready':Math.floor(bossT*42)):'boss-idle',
+        lightingMinute,
         daylight.ambient[0].toFixed(3),daylight.sunPower.toFixed(3),
         daylight.sunDirection[2].toFixed(3)].join('|');
       // No WebGL redraws while the head is stationary, no assets changed
@@ -640,25 +658,38 @@
         const surfaceTypes={back:2,floor:1,ceiling:2,left:2,right:2};
         for(const id of Object.keys(MATERIALS))
           textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id],false,surfaceTypes[id]);
-        // Daylight creates real spatially projected cutout silhouettes.
-        // The original 2D artwork is reused on a ground plane (no models).
+        // The first abnormal impact begins at the center of the floor.
+        // All of its art is still 2D, drawn into this SAME depth buffer.
+        if(bossPhase)renderBossRupture(bossT,cam,w,h);
+        // Shadows are projected from the exact character/desk silhouettes.
         if(daylight.sunPower>.01){
           gl.depthMask(false);
-          for(const [id,geo] of Object.entries(furnitureGPU))
-            textureDraw(furnitureTextures[id],geo,cam,w,h,[1,1,1],false,3,true);
+          if(!bossPhase||bossT<.78){
+            for(const [id,geo] of Object.entries(furnitureGPU))
+              textureDraw(furnitureTextures[id],geo,cam,w,h,[1,1,1],false,3,true);
+          }
           for(const actor of visibleActors(s)){
             const sprite=sprites[actor.id];
             textureDraw(sprite.texture,sprite,cam,w,h,[1,1,1],true,4,true);
           }
           gl.depthMask(true);
         }
-        // Furniture and cast see exactly the same ambient, daylight and lamp.
-        for(const [id,geo] of Object.entries(furnitureGPU))
-          textureDraw(furnitureTextures[id],geo,cam,w,h,[.97,.98,.99],false,3);
+        if(!bossPhase||bossT<.78){
+          for(const [id,geo] of Object.entries(furnitureGPU))
+            textureDraw(furnitureTextures[id],geo,cam,w,h,[.97,.98,.99],false,3);
+        }else if(bossPhase.furnitureVisible){
+          // No large batch translation: 41 individually animated cutouts.
+          for(const prop of flyingFurniture){
+            updateQuad(prop.quad,flightQuad(prop,bossPhase));
+            textureDraw(furnitureTextures[prop.id],prop.quad,cam,w,h,
+              [.97,.98,.99],false,3,false,bossPhase.furnitureOpacity);
+          }
+        }
         for(const actor of visibleActors(s)){
           const sprite=sprites[actor.id];
           textureDraw(sprite.texture,sprite,cam,w,h,[.97,.99,1],true,4);
         }
+        if(bossPhase)renderBossBody(bossT,cam,w,h);
         if(fallStart||heldFallFrame!==null){
           const t=heldFallFrame!==null?heldFallFrame:(performance.now()-fallStart)/1120;
           if(t>=1.3&&heldFallFrame===null)fallStart=0;
@@ -677,11 +708,32 @@
     function setActive(value){
       active=!!value;canvas.hidden=!active;
       view.classList.toggle('school-room-active',active);
-      lastFrameKey='';if(active)render(0,0);else {fallStart=0;heldFallFrame=null;}
+      lastFrameKey='';
+      if(active){
+        if(new URLSearchParams(window.location.search).get('bossPreview')==='1' &&
+          !bossBornAt&&heldBossTime===null)triggerBossBirth();
+        else render(0,0);
+      }else{
+        fallStart=0;heldFallFrame=null;bossBornAt=0;heldBossTime=null;
+      }
     }
     function triggerFall(){
       if(!active)return false;
       heldFallFrame=null;fallStart=performance.now();fallTriggerCount++;lastFrameKey='';render();return true;
+    }
+    function triggerBossBirth(){
+      if(!active||error||bossBornAt||heldBossTime!==null)return false;
+      bossBornAt=performance.now();
+      bossTriggerCount++;lastFrameKey='';
+      render(0,0);
+      return true;
+    }
+    function setBossBirthPreview(t){
+      if(new URLSearchParams(window.location.search).get('storyCapture')!=='1')
+        return false;
+      heldBossTime=t===null?null:clamp(Number(t)||0,0,BOSS_DURATION);
+      if(t===null)bossBornAt=0;
+      lastFrameKey='';render(0,0);return true;
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
@@ -692,6 +744,21 @@
       classroomLayout:CLASSROOM_LAYOUT,
       propRendering:'painted-2d-standees',
       propCount:CLASSROOM_LAYOUT.desks+CLASSROOM_LAYOUT.chairs+1,
+      bossEncounter:{
+        ...((bossElapsed()===null)?{
+          phase:'idle',elapsed:0,furnitureVisible:true,
+          furnitureOpacity:1,bossGrowth:0,bossOpacity:0,displacement:0,
+          ruptureStrength:0
+        }:bossPhaseAt(bossElapsed())),
+        triggerCount:bossTriggerCount,
+        animatedFurnitureCount:furnitureInstances.length,
+        visibleFurnitureCount:bossElapsed()===null||bossElapsed()<2.68?
+          furnitureInstances.length:0,
+        cinematicDuration:BOSS_DURATION,
+        modelCount:0,
+        readyAssets:Object.fromEntries(Object.entries(bossTextures).map(
+          ([id,t])=>[id,{src:t.src,ready:t.ready,error:t.error||null}]))
+      },
       propTriangles:Object.fromEntries(Object.entries(furnitureSurfaces).map(
         ([id,verts])=>[id,verts.length/15])),
       furnitureTextures:Object.fromEntries(
@@ -705,7 +772,8 @@
       solidMeshes:0,
       textureCount:ready,expectedTextures:5+ACTORS.length+
         Object.keys(FURNITURE_MATERIALS).length+
-        Object.keys(EXTERIOR_MATERIALS).length+1,
+        Object.keys(EXTERIOR_MATERIALS).length+
+        Object.keys(BOSS_MATERIALS).length+1,
       faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
         [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
       visibleActors:active?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
@@ -734,9 +802,11 @@
       render(0,0);return true;
     }
     return Object.freeze({setActive,triggerFall,holdFallFrame,releaseFallFrame,
+      triggerBossBirth,setBossBirthPreview,
       setLightingPreview,render,inspect,get canvas(){return canvas}});
   }
   return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,EXTERIOR_MATERIALS,
-    FALL_MATERIAL,CLASSROOM_LAYOUT,ACTORS,EXTERIOR,
+    FALL_MATERIAL,BOSS_MATERIALS,BOSS_DURATION,bossPhaseAt,
+    CLASSROOM_LAYOUT,ACTORS,EXTERIOR,
     portraitPlacement,lightingAt,camera,project,create});
 });
