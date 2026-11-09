@@ -37,6 +37,27 @@ try {
  assert.equal(assets.geometryPolicy,'textured-2d-planes-only');
  assert.match(assets.source,/gpt-student-furniture-atlas\.webp$/);
  assert.deepEqual(assets.atlas,{width:1152,height:384});
+ const alphaWindow=await page.evaluate(async()=>{
+   const src=window.PaperWorldSchoolRoomRenderer.inspect().faceTextures.left.src;
+   const image=new Image();image.src=src;await image.decode();
+   const canvas=document.createElement('canvas');
+   canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+   const ctx=canvas.getContext('2d',{willReadFrequently:true});
+   ctx.drawImage(image,0,0);
+   const alpha=(x,y)=>ctx.getImageData(x,y,1,1).data[3];
+   const centers=[180,340,690,850,1200,1360,1710,1870];
+   const panes=centers.flatMap(x=>[170,350].map(y=>alpha(x,y)));
+   return {src,width:canvas.width,height:canvas.height,
+      panes,frame:alpha(270,170),plaster:alpha(35,640)};
+ });
+ assert.match(alphaWindow.src,/gpt-left-wall-transparent\.webp$/);
+ assert.deepEqual([alphaWindow.width,alphaWindow.height],[2048,760]);
+ assert.equal(alphaWindow.panes.length,16);
+ assert.ok(alphaWindow.panes.every(a=>a===0),
+   'All 16 GPT-painted window panes must have real alpha=0: '+
+      JSON.stringify(alphaWindow));
+ assert.equal(alphaWindow.frame,255,'Keep real opaque window mullions');
+ assert.equal(alphaWindow.plaster,255,'Keep opaque GPT-painted wall');
  assert.equal(Object.keys(assets.furniture).length,3);
  for(const item of Object.values(assets.furniture)){
    assert.ok(item.ready,'All GPT-painted props must load on real GPU');
@@ -71,7 +92,7 @@ try {
    shots.push({name:w[2],viewport:w.slice(0,2),bytes:b64.length});
  }
  console.log('SCHOOL_GPT_ART_REAL_WEBGL_PROOF',
-   JSON.stringify({atlas:assets.atlas,characters:Object.fromEntries(
+   JSON.stringify({windowAlpha:"16/16 transparent",atlas:assets.atlas,characters:Object.fromEntries(
      Object.entries(assets.actors).map(([k,a])=>[k,{source:a.source,ready:a.ready,
        sourcePixels:a.sourcePixels,poseHeight:a.physicalHeight}])),shots}));
 }finally{
