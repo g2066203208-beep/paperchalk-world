@@ -23,7 +23,10 @@ try{
   await travel('school');
   await page.waitForFunction(()=> {
     const s=window.PaperWorldSchoolRoomRenderer?.inspect?.();
-    return s?.active&&s?.faceTextures?.back?.ready&&s?.faceTextures?.floor?.ready;
+    return s?.active&&s?.faceTextures?.back?.ready&&s?.faceTextures?.floor?.ready
+      &&s?.faceTextures?.right?.ready
+      &&Object.values(s?.furnitureTextures||{}).length===3
+      &&Object.values(s.furnitureTextures).every(v=>v.ready);
   },null,{timeout:60000});
   const status=await page.evaluate(()=>{
     window.PaperWorldSchoolRoomRenderer.render(0,0);
@@ -36,6 +39,16 @@ try{
   assert.equal(status.faceTextures.floor.ready,true);
   assert.equal(status.faceTextures.left.ready,true);
   assert.match(status.faceTextures.left.src,/left-windows-alpha\.svg$/);
+  assert.equal(status.faceTextures.right.ready,true);
+  assert.match(status.faceTextures.right.src,/right-door-painted\.svg$/);
+  assert.equal(status.deskCount,20);
+  assert.equal(status.chairCount,20);
+  assert.deepEqual(status.classroomLayout.columns,[-3.48,-1.22,1.22,3.48]);
+  assert.deepEqual(status.classroomLayout.rows,[2.15,3.3,4.45,5.6,6.75]);
+  for(const [id,mat] of Object.entries(status.furnitureTextures)){
+    assert.equal(mat.ready,true,'Student furniture material failed '+id);
+    assert.match(mat.src,/student-(desk|chair)-[a-z-]+\.svg$/);
+  }
   assert.ok(status.exterior.geometryTriangles>0,'Exterior should be actual WebGL geometry');
   assert.ok(status.exterior.skyX<status.exterior.windowWallX,'Sky must be behind the wall');
   const alphaProof=await page.evaluate(async()=>{
@@ -94,7 +107,9 @@ try{
   }
   await mobile.waitForFunction(()=>{
     const s=window.PaperWorldSchoolRoomRenderer?.inspect?.();
-    return s?.active&&s?.error===null&&s?.faceTextures?.left?.ready;
+    return s?.active&&s?.error===null&&s?.faceTextures?.left?.ready
+      &&s?.faceTextures?.right?.ready
+      &&Object.values(s?.furnitureTextures||{}).every(v=>v.ready);
   },null,{timeout:60000});
   const mobileScene=await mobile.evaluate(()=>{
     window.PaperWorldSchoolRoomRenderer.render(0,0);
