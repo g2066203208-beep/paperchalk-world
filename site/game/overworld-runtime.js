@@ -510,7 +510,7 @@
     onSaveNote:(id,title,text)=>engine.savePhoneNote(id,title,text),
     onDeleteNote:id=>engine.deletePhoneNote(id),
     onPhoneCall:(to,video)=>engine.phoneCall(to,video),
-    onTakePhoto:data=>engine.addPhonePhoto(data),
+    onTakePhoto:(data,meta)=>engine.addPhonePhoto(data,meta),
     onPublishPost:(text,photo)=>engine.publishSocial(text,photo),
     getPhoneWorld:()=>engine.snapshot(),
     onPhoneReply:choice=>engine.replyHomework(choice),
