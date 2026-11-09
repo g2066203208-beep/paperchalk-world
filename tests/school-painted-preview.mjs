@@ -71,6 +71,32 @@ try{
   assert.match(status.faceTextures.right.src,/right-door-painted\.svg$/);
   assert.equal(status.deskCount,20);
   assert.equal(status.chairCount,20);
+  assert.ok(status.actorArtwork&&Object.keys(status.actorArtwork).length===6);
+  const artCalibration={};
+  for(const [id,art] of Object.entries(status.actorArtwork)){
+    assert.equal(art.ready,true,'Character source failed to load: '+id);
+    assert.ok(art.sourcePixels.width>0&&art.sourcePixels.height>0);
+    assert.ok(art.fit&&art.fit.ink.bottom>art.fit.ink.top);
+    assert.ok(Math.abs(art.fit.sourceAspect-art.fit.planeAspect)<1e-9,
+      'Source aspect must be preserved for '+id);
+    assert.ok(Math.abs(art.fit.visibleHeight-art.physicalHeight)<1e-6,
+      'Visible original ink height must agree with character world height: '+id);
+    artCalibration[id]={source:art.source,sourcePixels:art.sourcePixels,
+      visibleInk:art.fit.ink,visibleWorldHeight:art.fit.visibleHeight,
+      planeWidth:art.fit.planeWidth,planeHeight:art.fit.planeHeight};
+  }
+  console.log('SCHOOL_ORIGINAL_CHARACTER_SIZES',JSON.stringify(artCalibration));
+  const projectedHero=await page.evaluate(()=>{
+    const api=window.PaperWorldSchoolRoomRenderer,actor=window.PaperWorldSchoolRoom.ACTORS.find(a=>a.id==='girl');
+    // The same camera used for the full WebGL scene, not CSS portrait scaling.
+    const cam=window.PaperWorldSchoolRoom.camera();
+    const foot=window.PaperWorldSchoolRoom.project([actor.x,0,actor.z],cam,1440,810);
+    const head=window.PaperWorldSchoolRoom.project([actor.x,actor.h,actor.z],cam,1440,810);
+    return {heightFraction:(foot.y-head.y)/810,cam};
+  });
+  assert.ok(projectedHero.heightFraction>.49&&projectedHero.heightFraction<.69,
+    'Girl must appear human-size in the real classroom: '+JSON.stringify(projectedHero));
+  console.log('SCHOOL_HUMAN_SCALE_CAMERA',JSON.stringify(projectedHero));
   assert.equal(status.propRendering,'painted-2d-standees');
   assert.equal(status.geometryPolicy,'textured-2d-planes-only');
   assert.equal(status.solidMeshes,0);
