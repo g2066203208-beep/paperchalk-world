@@ -274,7 +274,31 @@ body.mobile-mode.virtual-landscape #view{
   position:absolute;left:60.5%;top:44%;display:flex;flex-direction:column;
   align-items:flex-start;gap:clamp(3px,1.0cqh,18px);
 }
-#scene-menu #scene-menu-main{top:30%;}
+/* Keep the standalone lift visible on the very first menu screen, including
+   short landscape phones. Previously it was last in a clipped 7-row menu. */
+#scene-menu #scene-menu-main{
+  top:18%;
+  gap:clamp(1px,.6cqh,8px);
+}
+#scene-menu #scene-menu-main button{
+  min-height:clamp(38px,6.4cqh,57px);
+  padding:5px 10px;
+}
+#scene-menu #menu-dungeon-elevator{
+  color:#f1e6d1;
+  border-left:2px solid #b7a890;
+  padding-left:15px;
+  font-weight:600;
+}
+@container (max-height:445px){
+  #scene-menu #scene-menu-main{top:13%;gap:1px}
+  #scene-menu #scene-menu-main button{
+    min-height:clamp(32px,8.2cqh,38px);
+    font-size:clamp(12px,3.4cqh,17px);
+    padding:3px 8px;
+  }
+}
+
 #scene-menu button{
   font-family:var(--font-menu);
   appearance:none;display:block;border:0;border-radius:0;background:none;
@@ -813,12 +837,13 @@ body.mobile-mode.virtual-landscape #view{
     <div id="scene-menu" aria-label="主菜单场景文字">
       <nav id="scene-menu-main" class="scene-menu-options" aria-label="主菜单选项">
         <button id="menu-start" type="button">开始游戏</button>
+        <button id="menu-dungeon-elevator" type="button" title="进入地牢电梯经营游戏">地牢电梯 · 开始经营</button>
         <button id="menu-continue" type="button" disabled>继续游戏</button>
         <button id="menu-settings-button" type="button">设置</button>
          <button id="menu-gallery-button" type="button">场景预览</button>
          <button id="menu-ring-arena" type="button">3D 圆环战场测试</button>
           <button id="menu-convenience" type="button" title="进入表世界便利店打工">便利店兼职 · 表世界</button>
-          <button id="menu-dungeon-elevator" type="button" title="进入独立的地牢电梯3D方盒子场景">地牢电梯 · 3D 场景</button>
+          
       </nav>
       <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
