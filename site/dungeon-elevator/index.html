@@ -2,11 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="screen-orientation" content="landscape">
+<link rel="manifest" href="./manifest.webmanifest">
 <meta name="theme-color" content="#d9d1c7">
 <title>地牢电梯 · 双镜头电梯小店</title>
-<link rel="stylesheet" href="./elevator.css?v=underground-shaft-v1">
-<script type="module" src="./elevator.js?v=underground-shaft-v1"></script>
+<link rel="stylesheet" href="./elevator.css?v=paper-mobile-v3">
+<link rel="stylesheet" href="./mobile-game.css?v=paper-mobile-v3">
+<script type="module" src="./elevator.js?v=paper-mobile-v3"></script>
 </head>
 <body>
 <main id="app" aria-label="地牢电梯 · 电梯小店">
@@ -20,6 +26,7 @@
    <div class="readout weight-readout"><small>实际载重 / 上限</small><strong id="weight-label">0 / 350 kg</strong><span class="mini-meter"><i id="weight-meter"></i></span></div>
    <div class="readout"><small>载客人数</small><strong id="seats-label">0 / 4</strong></div>
   </div>
+  <button id="game-fullscreen" class="fullscreen-btn" type="button" aria-label="切换全屏游玩">⛶ 全屏</button>
   <a class="main-link" href="../" aria-label="返回托管游戏主菜单">返回主菜单</a>
  </header>
  <div class="workspace">
@@ -76,6 +83,7 @@
    </section>
   </aside>
  </div>
+ <div id="rotate-tip" class="rotate-tip" role="status" aria-label="请横屏游玩"><div class="rotate-symbol">↻</div><strong>请将手机横过来</strong><span>地牢电梯为横屏手游 · 转动手机即可继续</span></div>
  <div id="utility-popover" class="utility-popover" hidden role="dialog" aria-label="操作说明"><h3 id="utility-title">说明</h3><p id="utility-content"></p><button type="button" id="utility-close">关闭</button></div>
 </main>
 </body>
