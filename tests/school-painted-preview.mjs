@@ -97,9 +97,12 @@ try{
     const head=window.PaperWorldSchoolRoom.project([actor.x,actor.h,actor.z],cam,1440,810);
     return {heightFraction:(foot.y-head.y)/810,cam};
   });
-  assert.ok(projectedHero.heightFraction>.49&&projectedHero.heightFraction<.69,
-    'Girl must appear human-size in the real classroom: '+JSON.stringify(projectedHero));
+  assert.ok(projectedHero.heightFraction>.39&&projectedHero.heightFraction<.54,
+    'Seated girl must retain appropriate human scale: '+JSON.stringify(projectedHero));
   console.log('SCHOOL_HUMAN_SCALE_CAMERA',JSON.stringify(projectedHero));
+  assert.ok(status.actorArtwork.boy.ready&&status.actorArtwork.girl.ready);
+  assert.match(status.actorArtwork.boy.source,/gpt-school-boy-temporary\.webp$/);
+  assert.match(status.actorArtwork.girl.source,/gpt-school-girl-temporary\.webp$/);
   assert.equal(status.propRendering,'painted-2d-standees');
   assert.equal(status.furnitureTextures.desk.src,
     './assets/school-room/gpt-student-furniture-atlas.webp');
