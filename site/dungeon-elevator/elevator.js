@@ -1,8 +1,7 @@
-/* Dungeon Elevator / V0.1 — genuine Three.js box-room prototype.
- * Two static-look cameras share ONE 3D cabin. The service half-gate and the
- * full-height security gate are separate meshes with separate controls.
- * Character/shop scenes intentionally remain empty until artwork is approved.
- * The outside is WHITE, by design; floor art is not fabricated.
+/* Dungeon Elevator / V0.3 — paper plane scene + synchronized PC/mobile UI.
+ * Two cameras share ONE 3D transform space, but scenery is strictly 2D planes.
+ * Hand-painted SVG assets can be replaced with transparent PNGs without
+ * changing transforms. No BoxGeometry, stones, prisms, or mesh modeling.
  */
 import * as THREE from '../sphere-maze/vendor/three.module.js';
 import {createShaftExterior} from './shaft-exterior.js';
@@ -128,111 +127,71 @@ function skip(){
 function utility(title,message){
  $('utility-title').textContent=title;$('utility-content').textContent=message;$('utility-popover').hidden=false;
 }
-function seeded(seed){let s=seed|0;return()=>{s^=s<<13;s^=s>>>17;s^=s<<5;return((s>>>0)%10000)/10000}}
-function texture(type){
- const c=document.createElement('canvas');c.width=1024;c.height=512;
- const g=c.getContext('2d');const r=seeded(type==='floor'?1557:type==='wall'?6007:1991);
- if(type==='floor'){g.fillStyle='#a19a98';g.fillRect(0,0,1024,512);
-  g.strokeStyle='#736f73';g.lineWidth=4;
-  for(let x=0;x<=1024;x+=256){g.beginPath();g.moveTo(x,0);g.lineTo(x,512);g.stroke()}
-  for(let y=0;y<=512;y+=128){g.beginPath();g.moveTo(0,y);g.lineTo(1024,y);g.stroke()}
-  g.fillStyle='#c1aaa0';for(let y=9;y<512;y+=32)for(let x=11;x<1024;x+=38){g.beginPath();g.arc(x,y,1.4,0,7);g.fill()}
- }else if(type==='half'){g.fillStyle='#b7aaa6';g.fillRect(0,0,1024,512);
-  g.fillStyle='#b3a08f';g.fillRect(0,30,1024,75);
-  g.fillStyle='#807778';g.fillRect(0,27,1024,8);g.fillRect(0,105,1024,8);
-  for(let x=-120;x<1100;x+=92){g.fillStyle=x%2?'#c8aa74':'#8f8080';g.beginPath();g.moveTo(x,33);g.lineTo(x+45,33);g.lineTo(x-18,102);g.lineTo(x-63,102);g.fill()}
-  g.strokeStyle='#6e6869';g.lineWidth=3;g.strokeRect(9,7,1006,498);
- }else{g.fillStyle='#b3a8a5';g.fillRect(0,0,1024,512);
-  g.strokeStyle='#807a7d';g.lineWidth=4;
-  for(let x=4;x<1024;x+=256){g.beginPath();g.moveTo(x,0);g.lineTo(x,512);g.stroke()}
-  g.strokeStyle='#d2c1b5';g.lineWidth=2;
-  for(let x=8;x<1024;x+=256){g.beginPath();g.moveTo(x,0);g.lineTo(x,512);g.stroke()}
- }
- // Authored 2D weathering: subtle paint chips rather than glossy fantasy PBR.
- for(let i=0;i<190;i++){let x=r()*1024,y=r()*512,w=2+r()*23,h=1+r()*7;
-  g.fillStyle=i%4===0?'rgba(130,76,65,.17)':'rgba(239,217,199,.19)';
-  g.beginPath();g.moveTo(x,y);g.lineTo(x+w,y-2);g.lineTo(x+w*.71,y+h);g.lineTo(x,y+h*.55);g.fill();
- }
- const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;
+/* The scene is genuinely 3D space, but ALL its visible scenery is
+ * zero-thickness, hand-painted 2D artwork on PlaneGeometry surfaces. */
+const artStatus=new Map();
+function loadedArt(name,ok){
+ artStatus.set(name,ok?'ready':'failed');
+ if(renderer&&previewRenderer)requestRender();
 }
-function flat(color){return new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide})}
-function cube(parent,w,h,d,x,y,z,mat){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,z);parent.add(mesh);return mesh}
-function panel(parent,w,h,x,y,z,rot,tex){
- const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshLambertMaterial({map:tex,side:THREE.DoubleSide}));
- mesh.position.set(x,y,z);mesh.rotation.y=rot||0;parent.add(mesh);return mesh;
+function artPaint(name,transparent=false){
+ const texture=new THREE.TextureLoader().load('./paint/'+name,()=>loadedArt(name,true),undefined,()=>loadedArt(name,false));
+ texture.colorSpace=THREE.SRGBColorSpace;
+ texture.anisotropy=4;
+ return new THREE.MeshBasicMaterial({
+  map:texture,transparent,alphaTest:transparent?.025:0,
+  depthWrite:!transparent,side:THREE.DoubleSide,toneMapped:false
+ });
 }
-function beam(parent,x1,y1,x2,y2,depth,z,mat){
- const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
- const el=cube(parent,depth,len,.07,(x1+x2)/2,(y1+y2)/2,z,mat);
- el.rotation.z=-Math.atan2(dx,dy);return el;
+function paper(parent,w,h,x,y,z,material,name,rx=0,ry=0){
+ const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),material);
+ mesh.position.set(x,y,z);mesh.rotation.set(rx,ry,0);
+ mesh.name=name;parent.add(mesh);return mesh;
 }
 function makeCabin(){
- const W=SIZE.w,H=SIZE.h,D=SIZE.d;
- const walltex=texture('wall'),floortex=texture('floor');
- const wallMat=new THREE.MeshLambertMaterial({map:walltex,side:THREE.DoubleSide});
- const floorMat=new THREE.MeshLambertMaterial({map:floortex,side:THREE.DoubleSide});
- const floor=new THREE.Mesh(new THREE.PlaneGeometry(W,D),floorMat);
- floor.rotation.x=-Math.PI/2;floor.position.y=.012;scene.add(floor);
- const ceil=new THREE.Mesh(new THREE.PlaneGeometry(W,D),wallMat);
- ceil.rotation.x=Math.PI/2;ceil.position.y=H;scene.add(ceil);
- const back=new THREE.Mesh(new THREE.PlaneGeometry(W,H),wallMat);
- back.position.set(0,H/2,D/2);scene.add(back);
- for(let sign of [-1,1]){
-  const side=new THREE.Mesh(new THREE.PlaneGeometry(D,H),wallMat);
-  side.rotation.y=Math.PI/2;side.position.set(sign*W/2,H/2,0);scene.add(side);
-  const dark=flat(MATERIAL.trim),metal=flat(MATERIAL.metal);
-  cube(scene,.13,H,.13,sign*(W/2-.08),H/2,D/2-.06,dark);
-  cube(scene,.13,H,.13,sign*(W/2-.08),H/2,-D/2+.07,dark);
-  cube(scene,.12,.07,D,sign*(W/2-.045),.98,0,metal);
-  // The interior camera should show an EMPTY floor, not crates, shelves, or a counter.
+ const {w:W,h:H,d:D}=SIZE;
+ const wall=artPaint('wall.svg'),floor=artPaint('floor.svg'),ceiling=artPaint('ceiling.svg');
+ paper(scene,W,D,0,.012,0,floor,'paper-floor',-Math.PI/2);
+ paper(scene,W,D,0,H-.008,0,ceiling,'paper-ceiling',Math.PI/2);
+ paper(scene,W,H,0,H/2,D/2-.008,wall,'paper-back-wall');
+ for(const sign of [-1,1]){
+  paper(scene,D,H,sign*(W/2-.007),H/2,0,wall,sign===-1?'paper-left-wall':'paper-right-wall',0,Math.PI/2);
  }
- const trim=flat(MATERIAL.metal),dark=flat(MATERIAL.trim);
- cube(scene,W,.12,.17,0,H-.06,-D/2,trim);
- cube(scene,W,.13,.19,0,.065,-D/2,dark);
- for(let sign of [-1,1])cube(scene,.17,H,.21,sign*(W/2-.06),H/2,-D/2,trim);
- // One practical industrial ceiling fixture, drawn as a flat non-glossy fitting.
- cube(scene,1.22,.07,.4,0,H-.10,-.35,dark);
- cube(scene,1.03,.035,.3,0,H-.145,-.35,flat(0xf0dfbe));
- const out=new THREE.Mesh(new THREE.PlaneGeometry(35,22),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));
- out.position.set(0,1.8,-9.2);scene.add(out);
+ // The doorway has no volumetric arch or 3D beams; two 2D gate planes.
+ const bright=new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide});
+ paper(scene,35,22,0,1.8,-9.7,bright,'paper-surface-white-fallback');
 }
 function makeHighGate(){
- const metal=flat(MATERIAL.metal),trim=flat(MATERIAL.trim),rust=flat(MATERIAL.rust);
+ const material=artPaint('high-gate-leaf.svg',true);
  const leafW=(SIZE.w-.32)/2;
- for(let sign of [-1,1]){
-  const group=new THREE.Group();group.position.set(sign*leafW/2,0,-SIZE.d/2-.11);scene.add(group);
-  const left=-leafW/2+.05,right=leafW/2-.05,low=.10,high=3.64;
-  for(let x of [left,right])cube(group,.075,high-low,.09,x,(low+high)/2,0,trim);
-  for(let y of [low,1.35,2.55,high])cube(group,leafW,.07,.08,0,y,0,metal);
-  for(let x=left+.42;x<right-.1;x+=.55)cube(group,.045,high-low,.055,x,(low+high)/2,0,metal);
-  for(let y=.17;y<3.5;y+=1.1){
-   for(let x=left;x<right-.16;x+=1.1){beam(group,x,y,x+1.1,y+1.0,.06,0.045,rust);
-    beam(group,x,y+1,x+1.1,y,.06,0.045,metal);}
-  }
-  cube(group,.13,.38,.11,sign<0?right-.12:left+.12,1.7,.12,rust);
+ for(const sign of [-1,1]){
+  const group=new THREE.Group();
+  group.position.set(sign*leafW/2,0,-SIZE.d/2-.11);
+  group.name='paper-security-leaf-'+sign;scene.add(group);
+  paper(group,leafW,3.72,0,1.86,0,material,'flat-security-leaf-'+sign);
   highLeaves.push({group,base:sign*leafW/2,sign});
  }
 }
 function makeLowGate(){
- const m=flat(MATERIAL.metal),dark=flat(MATERIAL.trim),panelTex=texture('half');
- const W=(SIZE.w-.32)/2;
+ const material=artPaint('service-gate-leaf.svg',true);
+ const leafW=(SIZE.w-.32)/2;
  for(const sign of [-1,1]){
-  const group=new THREE.Group();group.position.set(sign*W/2,0,-SIZE.d/2+.17);scene.add(group);
-  panel(group,W-.09,.91,0,.49,.015,0,panelTex);
-  for(let x of [-W/2+.03,W/2-.03])cube(group,.07,1.65,.10,x,.825,0,dark);
-  for(let y of [.06,.94,1.62])cube(group,W,.075,.1,0,y,0,m);
-  for(let x=-W/2+.35;x<W/2-.1;x+=.45)cube(group,.052,.65,.07,x,1.28,.03,m);
-  cube(group,.25,.16,.12,sign<0?W/2-.16:-W/2+.16,.97,.12,dark);
-  lowLeaves.push({group,base:sign*W/2,sign});
+  const group=new THREE.Group();
+  group.position.set(sign*leafW/2,0,-SIZE.d/2+.17);
+  group.name='paper-service-leaf-'+sign;scene.add(group);
+  paper(group,leafW,1.72,0,.86,0,material,'flat-service-leaf-'+sign);
+  lowLeaves.push({group,base:sign*leafW/2,sign});
  }
 }
 function setup(){
  if(!stage||!previewStage||!window.WebGL2RenderingContext)throw new Error('浏览器没有可用的 WebGL2 环境');
  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  previewRenderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'default'});
- const pixelRatio=Math.min(window.devicePixelRatio||1,1.55);
+ const coarse=window.matchMedia('(pointer:coarse)').matches;
+ const pixelRatio=Math.min(window.devicePixelRatio||1,coarse?1.25:1.55);
  for(const r of [renderer,previewRenderer]){
-  r.setPixelRatio(pixelRatio);r.outputColorSpace=THREE.SRGBColorSpace;r.setClearColor(0xffffff);
+  r.setPixelRatio(r===previewRenderer?Math.min(pixelRatio,1.0):pixelRatio);
+  r.outputColorSpace=THREE.SRGBColorSpace;r.setClearColor(0xffffff);
  }
  scene=new THREE.Scene();scene.background=new THREE.Color(0xffffff);
  camera=new THREE.PerspectiveCamera(doorView.fov,1,.06,80);
@@ -242,7 +201,7 @@ function setup(){
  scene.add(new THREE.HemisphereLight(0xe8e1dc,0xaaa2a0,2));
  const sun=new THREE.DirectionalLight(0xffffff,1.1);sun.position.set(-2.3,5.5,2.1);scene.add(sun);
  makeCabin();makeHighGate();makeLowGate();
- exterior=createShaftExterior(THREE,scene);exterior.setFloor(state.depth);
+ exterior=createShaftExterior(THREE,scene,loadedArt);exterior.setFloor(state.depth);
  stage.appendChild(renderer.domElement);previewStage.appendChild(previewRenderer.domElement);
  prepareRequest();bindControls();repaintHUD();repaintGoods();resize();requestRender();
 }
@@ -348,6 +307,16 @@ function bindControls(){
  });
  $('utility-info').addEventListener('click',()=>utility('游玩说明','左侧为电梯主画面；点击右上角实时小镜头交换内外视角。\n双门关闭才能运行，↓ 下潜、↑ 上行，每层有顾客需求。右侧货舱可以查看库存，地表可以点货格进货。\n按 V 也可切换镜头。'));
  $('utility-close').addEventListener('click',()=>$('utility-popover').hidden=true);
+ $('game-fullscreen')?.addEventListener('click',async()=>{
+  const target=document.documentElement;
+  try{
+   if(document.fullscreenElement){await document.exitFullscreen();}
+   else if(target.requestFullscreen){await target.requestFullscreen({navigationUI:'hide'});}
+   else notice('本设备请将游戏添加到主屏幕以全屏游玩。');
+   if(screen.orientation?.lock&&document.fullscreenElement){await screen.orientation.lock('landscape').catch(()=>{});}
+  }catch(_){notice('请使用手机横屏，或将游戏添加到主屏幕启动。');}
+ });
+
  window.addEventListener('resize',resize,{passive:true});
  window.addEventListener('keydown',e=>{
   if(e.altKey||e.ctrlKey||e.metaKey||['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;
@@ -361,6 +330,7 @@ function bindControls(){
 window.DungeonElevatorDemo=Object.freeze({
  getState:()=>({...state,goods:GOODS.map(g=>({id:g.id,qty:g.qty})),request:request?{...request}:null,orderServed}),
  getShaftState:()=>exterior?.getState()??null,
+ getRenderStats:()=>{const types={};let count=0;scene?.traverse(node=>{if(node.isMesh){count++;types[node.geometry.type]=(types[node.geometry.type]||0)+1}});return {meshes:count,geometries:types,art:Object.fromEntries(artStatus),rendererCount:2}},
  setLoad:(weight,passengers)=>{cargoOverride=Math.max(0,Math.floor(Number(weight)||0));state.passengers=Math.max(0,Math.floor(Number(passengers)||0));repaintHUD();repaintRequest()},
  setView:switchView,
  swap:()=>switchView(state.view==='door'?'cabin':'door')
