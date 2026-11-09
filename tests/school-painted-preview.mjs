@@ -69,7 +69,7 @@ try{
   assert.equal(status.faceTextures.back.ready,true);
   assert.equal(status.faceTextures.floor.ready,true);
   assert.equal(status.faceTextures.left.ready,true);
-  assert.match(status.faceTextures.left.src,/left-windows-alpha\.svg$/);
+  assert.match(status.faceTextures.left.src,/gpt-left-wall-transparent\.webp$/);
   assert.equal(status.faceTextures.right.ready,true);
   assert.match(status.faceTextures.right.src,/right-door-painted\.svg$/);
   assert.equal(status.deskCount,20);
@@ -141,9 +141,9 @@ try{
     const alpha=(x,y)=>ctx.getImageData(x,y,1,1).data[3];
     return {
       transparentTop:alpha(180,180),transparentBottom:alpha(180,420),
-      secondPane:alpha(650,180),thirdPane:alpha(1125,420),
-      fourthPane:alpha(1630,180),
-      structuralFrame:alpha(305,180),opaqueWall:alpha(40,650)
+      secondPane:alpha(690,180),thirdPane:alpha(1200,420),
+      fourthPane:alpha(1710,180),
+      structuralFrame:alpha(270,180),opaqueWall:alpha(40,650)
     };
   });
   assert.equal(alphaProof.transparentTop,0,'Window glass must be alpha=0');
@@ -422,7 +422,7 @@ try{
     };
   });
   assert.equal(mobileScene.scene,'school','Game must really open the 3D classroom on phone');
-  assert.match(mobileScene.view.faceTextures.left.src,/left-windows-alpha\.svg$/);
+  assert.match(mobileScene.view.faceTextures.left.src,/gpt-left-wall-transparent\.webp$/);
   await captureGamePage(mobile,'artifacts/painted-school-room/mobile-01-actual-game-school.png');
   console.log('MOBILE_SCHOOL_GAME_SCREENSHOT',JSON.stringify({
     scene:mobileScene.scene,renderer:mobileScene.view.renderer,
