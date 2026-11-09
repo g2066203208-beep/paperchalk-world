@@ -18,6 +18,20 @@ test('the daily school is a separate real five-face environment',()=>{
   assert.equal(school.FURNITURE_MATERIALS.desk,'./assets/school-room/student-desk-standee.svg');
   assert.equal(school.FURNITURE_MATERIALS.chair,'./assets/school-room/student-chair-standee.svg');
   assert.equal(school.FURNITURE_MATERIALS.podium,'./assets/school-room/teacher-podium-standee.svg');
+  const exterior=Object.values(school.EXTERIOR_MATERIALS);
+  assert.equal(exterior.length,2);
+  assert.ok(exterior.every(v=>v.startsWith('./assets/school-room/exterior-')));
+  assert.equal(school.FALL_MATERIAL,'./assets/school-room/falling-schoolgirl-silhouette.svg');
+  const fs=require('node:fs'),path=require('node:path');
+  for(const material of [...exterior,school.FALL_MATERIAL]){
+    const markup=fs.readFileSync(path.join(__dirname,'../site',material),'utf8');
+    assert.match(markup,/^<svg/,'2D material must exist: '+material);
+  }
+  // No solid mesh material/shaders, boxes or hand-triangulated silhouettes.
+  const source=fs.readFileSync(path.join(__dirname,'../site/game/school-room-2p5d.js'),'utf8');
+  for(const banned of ['cuboid(', 'outsideQuad(', 'solidDraw(', 'silhouette(', 'a_color']){
+    assert.equal(source.includes(banned),false,'No 3D solid mesh: '+banned);
+  }
   for(const [id,asset] of Object.entries(school.FURNITURE_MATERIALS)){
     const {readFileSync}=require('node:fs');
     const {join}=require('node:path');
