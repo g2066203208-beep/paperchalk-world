@@ -56,6 +56,15 @@ try{
   await to('entrance');await to('school');
   await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.actOne.snapshot().seen.includes('confession'));
   await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.director?.active());
+  await page.waitForFunction(()=>window.PaperWorldSchoolRoomRenderer?.inspect?.().textureCount>=10);
+  const roomInfo=await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.inspect());
+  assert.equal(roomInfo.active,true);
+  assert.equal(roomInfo.deskCount,25);
+  assert.equal(roomInfo.chairCount,25);
+  assert.equal(roomInfo.faces.length,5);
+  assert.equal(roomInfo.error,null);
+  assert.ok(roomInfo.frame>=1);
+  console.log('School 2.5D:',JSON.stringify(roomInfo));
   assert.ok((await page.locator('#pw-world-director').innerText()).trim().length>0,'An authored classmate line is visible');
   await snap('01-classroom-confession.png');
   await clearDirector();
@@ -73,6 +82,7 @@ try{
   await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.actOne.snapshot().seen.includes('beforeFall'));
   for(let j=0;j<5;j++)await page.locator('#pw-world-director .pw-director-next').click();
   await page.waitForFunction(()=>document.querySelector('.pw-act-one-fall')?.classList.contains('is-falling'));
+  assert.equal(await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.inspect().active),true);
   assert.equal(await page.locator('#scene').getAttribute('data-scene'),'school');
   await snap('02-real-window-fall.png',true);
   await clearDirector();
