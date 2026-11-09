@@ -1,11 +1,12 @@
-// Real WebGL browser proof for Dungeon Elevator. 1920x1080, no concept mockups.
+// Real browser proof: simultaneous cameras, click-to-swap, functional shop, 1920x1080.
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {mkdirSync} from 'node:fs';
 const out='artifacts/dungeon-elevator';mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader']});
 const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
-const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+const errors=[];
+page.on('pageerror',e=>errors.push(String(e)));
 page.on('console',m=>{if(m.type()==='error')console.log('BROWSER_CONSOLE_ERROR',m.text())});
 page.on('requestfailed',r=>console.log('BROWSER_REQUEST_FAILED',r.url(),r.failure()?.errorText));
 try{
@@ -13,33 +14,48 @@ try{
  await page.locator('#menu-dungeon-elevator').waitFor({state:'visible'});
  await page.locator('#menu-dungeon-elevator').click();
  await page.waitForURL('**/dungeon-elevator/');
- // The source game may report a missing GENERATED scene catalog when this lightweight
- // test server starts without the parent game's build pipeline. That error is not
- // from the isolated elevator module; only attribute errors to the elevator page.
- errors.length=0;
- await page.waitForTimeout(1600);
- const boot=await page.evaluate(()=>({url:location.href,canvas:!!document.querySelector('#viewport canvas'),fallback:document.querySelector('#fallback')?.textContent,notice:document.querySelector('#notice')?.textContent,threeDemo:!!window.DungeonElevatorDemo}));
- console.log('DUNGEON_BOOT',JSON.stringify({boot,errors}));
- if(!boot.canvas){await page.screenshot({path:out+'/00-boot-failure.png'});throw new Error('3D canvas did not load: '+JSON.stringify({boot,errors}))}
- await page.waitForTimeout(450);
- const initial=await page.evaluate(()=>window.DungeonElevatorDemo.getState());
+ errors.length=0; // parent game's generated catalog is unrelated to this standalone module
+ await page.locator('#viewport canvas').waitFor({state:'visible',timeout:15000});
+ await page.locator('#mini-viewport canvas').waitFor({state:'visible',timeout:15000});
+ await page.waitForTimeout(700);
+ const layout=await page.evaluate(()=>{
+  const rect=id=>{let r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}};
+  return {main:rect('primary-stage'),preview:rect('swap-camera'),shop:document.querySelector('.shop-panel').getBoundingClientRect().toJSON(),controls:document.querySelector('.control-panel').getBoundingClientRect().toJSON()};
+ });
+ assert.ok(layout.main.width>layout.preview.width*2,'Left main camera is not large enough');
+ assert.ok(layout.preview.x>=layout.main.right,'Mini camera must be in the upper-right sidebar');
+ assert.ok(layout.shop.y>=layout.preview.bottom,'Goods must be below the mini camera');
+ assert.ok(layout.controls.y>=layout.shop.bottom,'Controls must be below goods');
+ assert.ok(layout.controls.bottom<=1080,'Control buttons must stay inside a 1080p screen');
+ let initial=await page.evaluate(()=>window.DungeonElevatorDemo.getState());
  assert.equal(initial.depth,0);assert.equal(initial.view,'door');
  assert.equal(initial.serviceOpen,false);assert.equal(initial.securityOpen,false);
- await page.screenshot({path:out+'/01-door-both-closed-1920x1080.png'});
- await page.locator('#service-gate').click();
- assert.equal(await page.evaluate(()=>window.DungeonElevatorDemo.getState().serviceOpen),true);
- await page.locator('#down').click();
- assert.equal(await page.evaluate(()=>window.DungeonElevatorDemo.getState().depth),0,'Moving with gate open must be blocked');
- await page.locator('#security-gate').click();
- await page.waitForTimeout(400);
- await page.screenshot({path:out+'/02-both-gates-open-white-outside-1920x1080.png'});
- await page.locator('#cabin-camera').click();
- await page.waitForTimeout(650);
+ assert.equal(await page.locator('#stock-grid .stock-item').count(),6);
+ await page.screenshot({path:out+'/01-large-door-small-cabin-1920x1080.png'});
+ await page.locator('#swap-camera').click();
+ await page.waitForTimeout(750);
  assert.equal(await page.evaluate(()=>window.DungeonElevatorDemo.getState().view),'cabin');
- await page.screenshot({path:out+'/03-empty-3d-cabin-1920x1080.png'});
+ assert.match(await page.locator('#preview-camera-label').innerText(),/电梯门/);
+ await page.screenshot({path:out+'/02-large-cabin-small-door-1920x1080.png'});
+ await page.locator('#swap-camera').click();
+ await page.waitForTimeout(400);
+ assert.equal(await page.evaluate(()=>window.DungeonElevatorDemo.getState().view),'door');
+ await page.locator('#service-gate').click();await page.locator('#security-gate').click();
+ await page.waitForTimeout(550);
+ await page.screenshot({path:out+'/03-two-open-gates-white-outside-1920x1080.png'});
+ await page.locator('#down').click();
+ assert.equal(await page.evaluate(()=>window.DungeonElevatorDemo.getState().depth),0,'Moving with open doors must be blocked');
  await page.locator('#service-gate').click();await page.locator('#security-gate').click();
  await page.locator('#down').click();
- assert.equal(await page.evaluate(()=>window.DungeonElevatorDemo.getState().depth),1);
+ const floor1=await page.evaluate(()=>window.DungeonElevatorDemo.getState());
+ assert.equal(floor1.depth,1);assert.equal(floor1.request.id,'potion');
+ const money=floor1.coins;
+ await page.locator('#sell-request').click();
+ const afterTrade=await page.evaluate(()=>window.DungeonElevatorDemo.getState());
+ assert.equal(afterTrade.orderServed,true);
+ assert.ok(afterTrade.coins>money,'Selling should pay gold');
+ assert.equal(afterTrade.goods.find(g=>g.id==='potion').qty,4);
+ await page.screenshot({path:out+'/04-floor1-trade-and-controls-1920x1080.png'});
  await page.evaluate(()=>window.DungeonElevatorDemo.setLoad(999,5));
  await page.locator('#down').click();
  assert.equal(await page.evaluate(()=>window.DungeonElevatorDemo.getState().depth),1,'Overload must block movement');
@@ -47,6 +63,6 @@ try{
  await page.locator('#emergency').click();
  const end=await page.evaluate(()=>window.DungeonElevatorDemo.getState());
  assert.equal(end.depth,0);assert.equal(end.emergencyUsed,true);assert.equal(end.integrity,92);
- assert.equal(errors.length,0,'Browser console page errors: '+JSON.stringify(errors));
- console.log('DUNGEON_ELEVATOR_PROOF',JSON.stringify({initial,end,screenshots:3}));
+ assert.equal(errors.length,0,'Page errors: '+JSON.stringify(errors));
+ console.log('DUNGEON_ELEVATOR_PROOF',JSON.stringify({layout,initial,end,screenshots:4,errors}));
 }finally{await browser.close()}
