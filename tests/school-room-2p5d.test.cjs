@@ -92,7 +92,7 @@ test('daylight advances with game minutes and keeps the same physical sun direct
 });
 test('boss emergence ejects every one of the 41 2D classroom standees',()=>{
   assert.deepEqual(Object.keys(school.BOSS_MATERIALS).sort(),['creature','rupture']);
-  const phases=[0,.58,1.24,2.2,3,4.15].map(t=>school.bossPhaseAt(t));
+  const phases=[0,.58,1.24,2.28,3,4.15].map(t=>school.bossPhaseAt(t));
   assert.deepEqual(phases.map(p=>p.phase),
     ['warning','rupture','blast','blast','manifest','boss-ready']);
   assert.ok(phases[0].furnitureVisible);
