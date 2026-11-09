@@ -11,7 +11,7 @@
   const ROOM=Object.freeze({width:10,height:3.38,depth:9});
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
-    ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/left-windows-alpha.svg',
+    ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/gpt-left-wall-transparent.webp',
     right:'./assets/school-room/right-door-painted.svg'
   });
   // One transparent drawing per object: no 3D desk/chair/podium models.
@@ -180,29 +180,22 @@
   const TFS=[
     'precision mediump float;',
     'varying mediump vec2 v_uv;varying mediump vec3 v_world;',
-    'uniform sampler2D u_tex;',
+    'uniform sampler2D u_tex,u_windowTex;',
     'uniform vec3 u_light,u_ambient,u_sunColor,u_skyColor;',
     'uniform mediump vec3 u_sunDirection;',
     'uniform float u_sprite,u_surface,u_sunPower,u_lampPower,u_objectOpacity;',
     'uniform mediump float u_shadowProjection;uniform float u_shadowOpacity;',
-    // Window transmission analytically projects the actual 16 glass panes
-    // onto each 3D receiver. It is not a fixed screen-space overlay.
-    'float bounds(float x,float a,float b,float feather){',
-    'return smoothstep(a-feather,a+feather,x)*(1.0-smoothstep(b-feather,b+feather,x));}',
+    // The exact painted window alpha determines world-space daylight.
+    // No approximate rectangular holes and no baked light.
     'float windowTransmission(vec3 p){',
     'if(u_sunDirection.x>-.09)return 0.0;',
     'float travel=(-5.0-p.x)/u_sunDirection.x;',
     'if(travel<0.0)return 0.0;',
     'vec3 hit=p+u_sunDirection*travel;',
-    'float windowPixel=hit.z/9.0*2048.0;',
-    'float yPixel=(1.0-hit.y/3.38)*760.0;',
-    'float rel=mod(windowPixel-98.0+1856.0,464.0);',
-    'float bay=bounds(windowPixel,90.0,1915.0,18.0);',
-    'float leftPane=bounds(rel,19.0,201.0,9.0);',
-    'float rightPane=bounds(rel,218.0,402.0,9.0);',
-    'float high=bounds(yPixel,115.0,307.0,10.0);',
-    'float low=bounds(yPixel,328.0,530.0,10.0);',
-    'return bay*min(1.0,leftPane+rightPane)*min(1.0,high+low);}',
+    'vec2 uv=vec2(hit.z/9.0,hit.y/3.38);',
+    'if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0)return 0.0;',
+    'float glass=1.0-texture2D(u_windowTex,uv).a;',
+    'return smoothstep(.20,.95,glass);}',
     'void main(){',
     'vec4 c=texture2D(u_tex,v_uv);if(c.a<.045)discard;',
     'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;',
@@ -556,6 +549,7 @@
       pt.tan=gl.getUniformLocation(tprogram,'u_tan');
       pt.light=gl.getUniformLocation(tprogram,'u_light');
       pt.tex=gl.getUniformLocation(tprogram,'u_tex');
+      pt.windowTex=gl.getUniformLocation(tprogram,'u_windowTex');
       pt.sprite=gl.getUniformLocation(tprogram,'u_sprite');
       pt.ambient=gl.getUniformLocation(tprogram,'u_ambient');
       pt.sunColor=gl.getUniformLocation(tprogram,'u_sunColor');
@@ -626,6 +620,11 @@
       gl.uniform1f(pt.surface,surface);
       gl.uniform1f(pt.shadowProjection,shadow?1:0);
       gl.uniform1f(pt.shadowOpacity,shadow?.28*lightingState.sunPower:0);
+      // A second texture sampler traces the actual sixteen cut-out glass
+      // panes; lighting and the jump event now agree at every alpha pixel.
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D,textures.left?.texture||tex.texture);
+      gl.uniform1i(pt.windowTex,1);
       gl.activeTexture(gl.TEXTURE0);gl.uniform1i(pt.tex,0);
       gl.bindTexture(gl.TEXTURE_2D,tex.texture);
       gl.bindBuffer(gl.ARRAY_BUFFER,mesh.gpu);
