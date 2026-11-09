@@ -63,6 +63,8 @@ try{
   assert.equal(roomInfo.active,true);
   assert.equal(roomInfo.deskCount,20);
   assert.equal(roomInfo.chairCount,20);
+  assert.equal(roomInfo.propRendering,'painted-2d-standees');
+  assert.equal(roomInfo.propCount,41);
   assert.equal(roomInfo.faces.length,5);
   assert.equal(roomInfo.error,null);
   assert.ok(roomInfo.textureCount>=5,'All five structural faces must load');
