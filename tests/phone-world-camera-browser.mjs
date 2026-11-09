@@ -3,8 +3,28 @@
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {createServer} from 'node:http';
+import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright';
-const base=process.env.PAPERCHALK_BROWSER_BASE||'http://127.0.0.1:8765/';
+// Serve the exact checked-out game instead of assuming another test left
+// a server running. This test never uses a mocked scene.
+const gameRoot=resolve('site');
+const types={'.html':'text/html','.js':'application/javascript',
+  '.css':'text/css','.json':'application/json','.png':'image/png',
+  '.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2'};
+const server=createServer((req,res)=>{
+  const route=new URL(req.url,'http://127.0.0.1').pathname;
+  const target=resolve(gameRoot,'.'+(route.endsWith('/')?route+'index.html':route));
+  if(!target.startsWith(gameRoot+'/')){res.writeHead(403).end();return;}
+  try{
+    const data=fs.readFileSync(target);
+    res.writeHead(200,{'content-type':types[extname(target)]||'application/octet-stream',
+      'cache-control':'no-store'});res.end(data);
+  }catch{res.writeHead(404).end('not found');}
+});
+await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
+const base=process.env.PAPERCHALK_BROWSER_BASE||
+  'http://127.0.0.1:'+server.address().port+'/';
 const folder=process.env.PAPERCHALK_CAPTURE_DIR||'artifacts/phone';
 fs.mkdirSync(folder,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader']});
@@ -61,4 +81,4 @@ try{
     errors.slice(0,5).join('\n'));
   console.log(JSON.stringify({PASS:true,captured:'real running game',photos:saved.meta,
     files:fs.readdirSync(folder),errors:errors.slice(0,8)},null,2));
-}finally{await browser.close()}
+}finally{await browser.close();server.close()}
