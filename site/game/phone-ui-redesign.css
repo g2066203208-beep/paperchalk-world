@@ -277,3 +277,78 @@
 @media(prefers-reduced-motion:reduce){
   #phone-ui .phone-app{transition:none!important}
 }
+
+/* World camera phone */
+/* The phone is a real draggable item inside the full game, not a webcam. */
+#novel-ui>#phone-ui[data-focus="true"][data-world-camera="true"]{
+  width:min(28cqw,470px)!important;
+  height:min(80cqh,790px)!important;
+  left:var(--phone-world-x,58cqw)!important;
+  top:var(--phone-world-y,10cqh)!important;
+  right:auto!important;
+  transform:none!important;
+  filter:drop-shadow(0 15px 32px #000c)!important;
+  touch-action:none;
+}
+#novel-ui>#phone-ui[data-world-camera="true"] .phone-app-view{
+  padding:clamp(35px,6.4cqh,52px) 5.5% 6%!important;
+}
+#novel-ui>#phone-ui[data-world-camera="true"] .phone-app-copy{
+  padding-top:8px!important;
+}
+#novel-ui>#phone-ui[data-world-camera="true"] .phone-app-title{
+  cursor:grab;touch-action:none;user-select:none;
+}
+#novel-ui>#phone-ui[data-world-camera="true"] .phone-app-title:active{cursor:grabbing}
+#novel-ui>#phone-ui[data-world-camera="true"] .phone-camera-stage{
+  width:100%;height:auto;aspect-ratio:2/3;
+  min-height:0!important;max-height:48cqh;
+  border:1px solid #ffffff22!important;
+  border-radius:8px!important;overflow:hidden;
+  background:#07090b!important;touch-action:none;
+}
+#novel-ui>#phone-ui[data-world-camera="true"] .phone-camera-live{
+  display:block;width:100%;height:100%;
+  max-height:none!important;object-fit:cover;touch-action:none;
+  cursor:crosshair;
+}
+#phone-ui .phone-world-camera-overlay{
+  position:absolute;left:10px;top:8px;
+  font-size:clamp(10px,1.55cqh,13px);font-weight:500;
+  color:#f1f0ed;text-shadow:0 1px 4px #000b;
+  pointer-events:none;letter-spacing:.02em;
+}
+#phone-ui .phone-world-live-badge{
+  position:absolute;right:9px;top:8px;color:#f6aca5;
+  font-size:clamp(11px,1.6cqh,14px);font-weight:700;
+  text-shadow:0 1px 4px #000b;pointer-events:none;
+}
+#phone-ui .phone-camera-zoom{
+  width:100%;display:flex;align-items:center;
+  gap:10px;margin-top:8px;
+  font-size:clamp(11px,1.7cqh,14px);color:#cbd0cf;
+}
+#phone-ui .phone-camera-zoom input{
+  flex:1;min-width:0;accent-color:#ccc2be;
+  touch-action:pan-x;
+}
+#phone-ui .phone-camera-zoom span:last-child{min-width:32px;text-align:right}
+#phone-ui[data-world-camera="true"] .phone-camera-actions{
+  display:flex;align-items:center;justify-content:center;
+  margin-top:8px;
+}
+#phone-ui[data-world-camera="true"] .phone-camera-actions button{
+  min-width:90px;min-height:43px!important;
+}
+@container (max-height:560px){
+  #novel-ui>#phone-ui[data-focus="true"][data-world-camera="true"]{
+    width:min(35cqw,310px)!important;
+    height:94cqh!important;
+  }
+  #novel-ui>#phone-ui[data-world-camera="true"] .phone-camera-stage{
+    max-height:39cqh!important;
+  }
+  #phone-ui[data-world-camera="true"] .phone-camera-actions button{
+    min-height:34px!important;
+  }
+}
