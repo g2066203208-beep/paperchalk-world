@@ -16,11 +16,20 @@
   });
   // One transparent drawing per object: no 3D desk/chair/podium models.
   // 3D is reserved for the room's placement, camera, depth and wall planes.
+  // GPT-painted isolated 2D furniture, not procedural modelled geometry.
+  const GPT_PROP_ATLAS='./assets/school-room/gpt-student-furniture-atlas.webp';
   const FURNITURE_MATERIALS=Object.freeze({
-    desk:'./assets/school-room/student-desk-standee.svg',
-    chair:'./assets/school-room/student-chair-standee.svg',
-    podium:'./assets/school-room/teacher-podium-standee.svg'
+    desk:GPT_PROP_ATLAS,chair:GPT_PROP_ATLAS,podium:GPT_PROP_ATLAS
   });
+  const FURNITURE_ATLAS=Object.freeze({
+    desk:[0,1/3],chair:[1/3,2/3],podium:[2/3,1]
+  });
+  function furnitureUV(id,mirror=false){
+    const [u0,u1]=FURNITURE_ATLAS[id];
+    return mirror?
+      [[u1,0],[u0,0],[u0,1],[u1,1]]:
+      [[u0,0],[u1,0],[u1,1],[u0,1]];
+  }
   // The distant view and fall animation are also separate 2D texture planes.
   const EXTERIOR_MATERIALS=Object.freeze({
     sky:'./assets/school-room/exterior-overcast-sky.svg',
@@ -239,8 +248,8 @@
   // perspective scaling and the depth buffer supplies correct occlusion.
   const furnitureSurfaces={desk:[],chair:[],podium:[]};
   const furnitureInstances=[];
-  function furnitureQuad(id,points){
-    const uv=[[0,0],[1,0],[1,1],[0,1]];
+  function furnitureQuad(id,points,mirror=false){
+    const uv=furnitureUV(id,mirror);
     for(const i of [0,1,2,0,2,3])furnitureSurfaces[id].push(...points[i],...uv[i]);
   }
   // Far to near: each element is a single textured 2D plane.
@@ -259,12 +268,16 @@
     facade:exteriorQuad(EXTERIOR.schoolX)
   });
   function standee(id,x,z,w,h){
-    // The stable 2D card defines both its regular batch and independent
-    // flight trajectory. No 3D mesh parts or duplicated artwork.
-    furnitureInstances.push(Object.freeze({id,x,z,w,h,index:furnitureInstances.length}));
+    const mirror=x>.1&&id!=='podium';
+    const yaw=id==='podium'?0:(x>0?.055:-.055);
+    const dx=Math.cos(yaw)*w/2,dz=Math.sin(yaw)*w/2;
+    furnitureInstances.push(Object.freeze({
+      id,x,z,w,h,mirror,yaw,index:furnitureInstances.length
+    }));
     furnitureQuad(id,[
-      [x-w/2,0,z],[x+w/2,0,z],[x+w/2,h,z],[x-w/2,h,z]
-    ]);
+      [x-dx,0,z-dz],[x+dx,0,z+dz],
+      [x+dx,h,z+dz],[x-dx,h,z-dz]
+    ],mirror);
   }
   function flightQuad(prop,phase){
     // Deterministic per-card shock physics; every desk and chair has its own
@@ -282,7 +295,7 @@
     const cy=lift-.2*f*f;
     const co=Math.cos(turn),si=Math.sin(turn),twist=.20*Math.sin(f*Math.PI)*((prop.index%3)-1);
     const corners=[[-prop.w/2,0],[prop.w/2,0],[prop.w/2,prop.h],[-prop.w/2,prop.h]];
-    const uv=[[0,0],[1,0],[1,1],[0,1]],out=[];
+    const uv=furnitureUV(prop.id,prop.mirror),out=[];
     for(const k of [0,1,2,0,2,3]){
       const [u,v]=corners[k],yLocal=v-prop.h*.48;
       out.push(cx+u*co-yLocal*si,cy+u*si+yLocal*co+prop.h*.48,
@@ -312,10 +325,10 @@
   }
   CLASSROOM_LAYOUT.rows.forEach((z)=>
     CLASSROOM_LAYOUT.columns.forEach((x)=>{
-      standee('desk',x,z,1.14,1.05);
-      standee('chair',x,z-.64,.72,.97);
+      standee('desk',x,z,1.12,1.12);
+      standee('chair',x,z-.64,.88,.88);
     }));
-  standee('podium',.48,8.12,1.65,1.44);
+  standee('podium',.48,8.12,1.45,1.45);
   function textureFaces(){
     return Object.fromEntries(Object.entries(faces).map(([id,pts])=>{
       const arr=[];
@@ -886,7 +899,8 @@
       triggerBossBirth,setBossBirthPreview,
       setLightingPreview,render,inspect,get canvas(){return canvas}});
   }
-  return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,EXTERIOR_MATERIALS,
+  return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,FURNITURE_ATLAS,
+    GPT_PROP_ATLAS,EXTERIOR_MATERIALS,
     FALL_MATERIAL,FALL_WINDOW,FALL_DURATION,fallPhaseAt,fallingSprite,
     BOSS_MATERIALS,BOSS_DURATION,bossPhaseAt,
     CLASSROOM_LAYOUT,ACTORS,EXTERIOR,
