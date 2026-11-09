@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="896" viewBox="0 0 512 896">
+<title>窗外坠落校服女生 · 独立透明二维剪影素材</title>
+<!-- All invisible areas are alpha zero. The world-space plane is animated downward. -->
+<g fill="#222c37" stroke="#222c37" stroke-linecap="round" stroke-linejoin="round">
+ <!-- head, hair and neck -->
+ <ellipse cx="252" cy="122" rx="74" ry="86"/>
+ <path d="M184 99q-35 65-31 151l30 14 38-66M325 105q34 61 20 155l-36 11-33-79Z"/>
+ <path d="M234 185h39v71h-39Z"/>
+ <!-- shoulder, blazer, asymmetric sleeves -->
+ <path d="M170 235q80-38 162 0l-16 246-136 0Z"/>
+ <path d="M175 262l-87 134-4 99 50 11 40-89 37-99Z"/>
+ <path d="M321 271l96 98 8 87-49 27-61-101-26-50Z"/>
+ <!-- uniform skirt and diagonally falling legs -->
+ <path d="M178 458h141l57 122H116Z"/>
+ <path d="M144 557h82l-26 173-54 88-65-39 44-111Z"/>
+ <path d="M273 558h84l32 143 62 74-54 51-88-89Z"/>
+ <path d="M75 781l73 43-23 34-84-21ZM399 819l50-55 34 29-58 76Z"/>
+</g>
+</svg>
