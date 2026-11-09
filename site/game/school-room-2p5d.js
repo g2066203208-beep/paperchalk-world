@@ -393,15 +393,53 @@
       };
     }catch(_){return FULL_IMAGE;}
   }
-  function fallingSprite(position){
-    // The full figure stays behind the exterior side of the LEFT wall
-    // (all vertices x < -5) and animates as a single alpha-masked plane.
-    const z=6.1,w=.92,h=1.72,x=-5.61;
-    const x0=x-w/2,x1=x+w/2,y0=position-1.50,y1=position+.22;
-    return new Float32Array([
-      x0,y0,z,0,0, x1,y0,z,1,0, x1,y1,z,1,1,
-      x0,y0,z,0,0, x1,y1,z,1,1, x0,y1,z,0,1
-    ]);
+  const FALL_DURATION=4.30;
+  const FALL_WINDOW=Object.freeze({
+    wallX:-5,figureX:-5.57,z:6.10,width:.88,height:1.68,
+    start:0.44,dropEnd:1.63,viewAngle:-.670
+  });
+  function fallPhaseAt(seconds){
+    const t=Math.max(0,Number(seconds)||0);
+    // The witness notices movement at the left of their vision, turns to
+    // the window before the figure crosses it, then stares at the empty pane.
+    const gaze=smooth((t-.10)/.54)*(1-smooth((t-3.19)/.91));
+    const travel=clamp((t-FALL_WINDOW.start)/
+      (FALL_WINDOW.dropEnd-FALL_WINDOW.start),0,1);
+    // Accelerating downward without showing the offscreen impact.
+    const yBottom=3.65-5.35*Math.pow(travel,1.76);
+    const tilt=travel*.27+Math.sin(travel*Math.PI*1.35)*.06;
+    const centerZ=FALL_WINDOW.z+.23*travel+
+      .035*Math.sin(travel*11)*Math.sin(travel*Math.PI);
+    const visible=t>=.68&&t<1.65;
+    const phantom=t>=.87&&t<=1.57;
+    const shock=smooth((t-1.47)/.10)*(1-smooth((t-1.84)/.31));
+    return Object.freeze({
+      elapsed:t,stage:t<.40?'peripheral-motion':t<.78?'turn':
+        t<1.65?'fall':t<3.16?'empty-window':'aftermath',
+      gaze,travel,centerZ,yBottom,tilt,
+      fallingVisible:visible,afterimage:phantom,
+      afterimageOpacity:phantom?.12*Math.sin(Math.PI*travel):0,
+      shock,finished:t>=FALL_DURATION
+    });
+  }
+  function fallingSprite(phase,trailSeconds=0){
+    // A real 2D alpha cutout parallel to the LEFT window wall:
+    // its width is in z, height in y, x is constant (outside x<-5).
+    // Old code incorrectly varied x, making the figure edge-on.
+    const p=trailSeconds?fallPhaseAt(Math.max(0,phase.elapsed-trailSeconds)):phase;
+    const x=FALL_WINDOW.figureX,z=p.centerZ,h=FALL_WINDOW.height,
+      w=FALL_WINDOW.width,bottom=p.yBottom,ang=p.tilt;
+    const co=Math.cos(ang),si=Math.sin(ang);
+    const corners=[[-w/2,0],[w/2,0],[w/2,h],[-w/2,h]];
+    const uv=[[0,0],[1,0],[1,1],[0,1]],out=[];
+    for(const k of [0,1,2,0,2,3]){
+      const [horizontal,vertical]=corners[k];
+      const verticalCenter=vertical-h*.50;
+      const zRot=z+horizontal*co+verticalCenter*si;
+      const yRot=bottom+verticalCenter*co-horizontal*si+h*.50;
+      out.push(x,yRot,zRot,...uv[k]);
+    }
+    return new Float32Array(out);
   }
   function create({stage,view}={}){
     if(!stage||!view)throw Error('School must mount inside the actual game');
@@ -503,7 +541,7 @@
       pt.shadowProjection=gl.getUniformLocation(tprogram,'u_shadowProjection');
       pt.shadowOpacity=gl.getUniformLocation(tprogram,'u_shadowOpacity');
       pt.objectOpacity=gl.getUniformLocation(tprogram,'u_objectOpacity');
-      fallGPU=mesh(fallingSprite(4.12));
+      fallGPU=mesh(fallingSprite(fallPhaseAt(0)));
       fallTexture=loadTexture(FALL_MATERIAL);
       for(const [id,src] of Object.entries(EXTERIOR_MATERIALS)){
         exteriorTextures[id]=loadTexture(src);
@@ -625,17 +663,22 @@
           lampPower:daylight.lampPower*(1-darkness*.58)};
         daylight=lightingState;
       }
-      // The witness reflexively turns towards the window only AFTER the fall.
-      // Walls, desks, people and shadow share one fixed-position pinhole.
+      // The same camera sees the actual 3D window and falling sprite.
+      // No screen-space CSS fall figure or moving world background.
       const fallTime=heldFallFrame!==null?heldFallFrame:
-        (fallStart?(performance.now()-fallStart)/1120:0);
-      if(fallStart||heldFallFrame!==null){
-        const react=clamp((fallTime-.05)/.25,0,1)*
-          clamp((1.42-fallTime)/.22,0,1);
-        cam.yaw-=react*.25;cam.pitch+=react*.012;
+        (fallStart?(performance.now()-fallStart)/1000:null);
+      const fallState=fallTime!==null?fallPhaseAt(fallTime):null;
+      if(fallState){
+        cam.yaw+=FALL_WINDOW.viewAngle*fallState.gaze;
+        cam.pitch+=.014*fallState.gaze;
+        cam.hFov-=4.6*fallState.gaze;
+        const jolt=fallState.shock;
+        cam.yaw+=Math.sin(fallTime*39)*.009*jolt;
+        cam.pitch+=Math.cos(fallTime*45)*.012*jolt;
+        if(fallState.finished&&heldFallFrame===null)fallStart=0;
       }
-      const fallFrame=heldFallFrame!==null?'frozen-'+heldFallFrame:
-        fallStart?Math.floor(fallTime*52):'none';
+      const fallFrame=fallState?(heldFallFrame!==null?'frozen-'+
+        fallTime.toFixed(3):Math.min(999,Math.floor(fallTime*48))):'none';
       const fingerprint=[bw,bh,ready,s?.day||1,cam.yaw.toFixed(3),
         cam.pitch.toFixed(3),fallFrame,
         bossPhase?(bossT>=BOSS_DURATION?'boss-ready':Math.floor(bossT*42)):'boss-idle',
@@ -690,15 +733,18 @@
           textureDraw(sprite.texture,sprite,cam,w,h,[.97,.99,1],true,4);
         }
         if(bossPhase)renderBossBody(bossT,cam,w,h);
-        if(fallStart||heldFallFrame!==null){
-          const t=heldFallFrame!==null?heldFallFrame:(performance.now()-fallStart)/1120;
-          if(t>=1.3&&heldFallFrame===null)fallStart=0;
-          else{
-            const fallVertices=fallingSprite(4.12-6.5*t*t);
-            gl.bindBuffer(gl.ARRAY_BUFFER,fallGPU.gpu);
-            gl.bufferData(gl.ARRAY_BUFFER,fallVertices,gl.DYNAMIC_DRAW);
-            textureDraw(fallTexture,fallGPU,cam,w,h,[.94,.95,1],false,4);
+        if(fallState?.fallingVisible){
+          // Motion echo is drawn behind the principal cutout in the same
+          // world-space window opening; no duplicate overlay on top of the UI.
+          if(fallState.afterimage){
+            updateQuad(fallGPU,fallingSprite(fallState,.085));
+            gl.depthMask(false);
+            textureDraw(fallTexture,fallGPU,cam,w,h,[.68,.75,.86],false,4,
+              false,fallState.afterimageOpacity);
+            gl.depthMask(true);
           }
+          updateQuad(fallGPU,fallingSprite(fallState));
+          textureDraw(fallTexture,fallGPU,cam,w,h,[.91,.94,1],false,4);
         }
         if(gl.getError()!==gl.NO_ERROR)throw Error('School GL draw');
         frame++;
@@ -734,6 +780,12 @@
       heldBossTime=t===null?null:clamp(Number(t)||0,0,BOSS_DURATION);
       if(t===null)bossBornAt=0;
       lastFrameKey='';render(0,0);return true;
+    }
+    function fallTimeSnapshot(){
+      const t=heldFallFrame!==null?heldFallFrame:
+        (fallStart?(performance.now()-fallStart)/1000:null);
+      return t===null?{stage:'idle',elapsed:0,fallingVisible:false,
+        gaze:0,finished:false}:fallPhaseAt(t);
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
@@ -783,16 +835,30 @@
           sourcePixels:slot?.texture?.sourcePixels||null,
           fit:slot?.fit||null,ready:!!slot?.texture?.ready}];
       })),
-      fallActive:fallStart>0,fallTriggerCount,heldFallFrame
+      fallActive:fallStart>0,fallTriggerCount,heldFallFrame,
+      fallSequence:fallTimeSnapshot(),
+      fallMaterialGeometry:{parallelTo:'left-window-wall',worldX:FALL_WINDOW.figureX,
+        windowWallX:FALL_WINDOW.wallX,worldZ:FALL_WINDOW.z,
+        figureHeight:FALL_WINDOW.height,figureWidth:FALL_WINDOW.width,
+        portraitAspect:FALL_WINDOW.width/FALL_WINDOW.height}
     };}
     function holdFallFrame(t){
       // QA captures a paused actual rendered animation frame, not a mockup.
       if(new URLSearchParams(window.location.search).get('storyCapture')!=='1')
         return false;
-      heldFallFrame=clamp(Number(t)||.55,.05,1.15);
-      fallStart=performance.now();lastFrameKey='';render(0,0);return true;
+      // Keep compatibility with the older normalized .57 fall-frame test:
+      // it now lands during the actual transparent window crossing.
+      heldFallFrame=clamp(Number(t)||.55,.05,1.15)*2.08;
+      lastFrameKey='';render(0,0);return true;
     }
-    function releaseFallFrame(){heldFallFrame=null;return true;}
+    function releaseFallFrame(){heldFallFrame=null;lastFrameKey='';return true;}
+    function setFallPreview(seconds){
+      if(new URLSearchParams(window.location.search).get('storyCapture')!=='1')
+        return false;
+      heldFallFrame=seconds===null?null:clamp(Number(seconds)||0,0,FALL_DURATION);
+      if(seconds===null)fallStart=0;
+      lastFrameKey='';render(0,0);return true;
+    }
     function setLightingPreview(minute){
       // QA only; no player-visible daylight slider or production time cheat.
       if(new URLSearchParams(window.location.search).get('storyCapture')!=='1')
@@ -802,11 +868,13 @@
       render(0,0);return true;
     }
     return Object.freeze({setActive,triggerFall,holdFallFrame,releaseFallFrame,
+      setFallPreview,
       triggerBossBirth,setBossBirthPreview,
       setLightingPreview,render,inspect,get canvas(){return canvas}});
   }
   return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,EXTERIOR_MATERIALS,
-    FALL_MATERIAL,BOSS_MATERIALS,BOSS_DURATION,bossPhaseAt,
+    FALL_MATERIAL,FALL_WINDOW,FALL_DURATION,fallPhaseAt,fallingSprite,
+    BOSS_MATERIALS,BOSS_DURATION,bossPhaseAt,
     CLASSROOM_LAYOUT,ACTORS,EXTERIOR,
     portraitPlacement,lightingAt,camera,project,create});
 });
