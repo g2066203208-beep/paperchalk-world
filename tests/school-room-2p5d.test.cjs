@@ -186,4 +186,14 @@ test('main school characters disappear according to chapter days',()=>{
   assert.equal(boy.standingHeight,1.70);
   assert.equal(girl.standingHeight,1.73);
   assert.equal(girl.seated,true);
+  // Two seated silhouettes must sit just in front of existing chair cards,
+  // never float in the walkable aisle.
+  const chairZ=school.CLASSROOM_LAYOUT.rows[2]-.64;
+  for(const person of [boy,girl]){
+    assert.ok(school.CLASSROOM_LAYOUT.columns.includes(person.x),
+      'Classmate must occupy an actual seating column: '+person.id);
+    assert.ok(Math.abs(person.z-(chairZ-.04))<1e-9,
+      'Classmate must touch a real chair in the third row: '+person.id);
+  }
+  assert.notEqual(boy.x,girl.x,'Use distinct seats for the two classmates');
 });
