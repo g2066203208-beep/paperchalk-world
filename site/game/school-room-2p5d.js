@@ -34,6 +34,61 @@
     desks:20,chairs:20,
     centerAisle:1.35,sideAisle:.95
   });
+  // The game's daily-life minute owns all light transitions; no real clock.
+  const LIGHTING_KEYS=Object.freeze([
+    {at:0,phase:'night',ambient:[.16,.21,.32],sun:[1,.62,.32],sky:[.055,.083,.15],sunPower:0,lamp:.30},
+    {at:315,phase:'predawn',ambient:[.25,.31,.44],sun:[1,.56,.35],sky:[.25,.32,.48],sunPower:0,lamp:.22},
+    {at:355,phase:'sunrise',ambient:[.52,.53,.59],sun:[1,.54,.28],sky:[.83,.50,.48],sunPower:.20,lamp:.09},
+    {at:390,phase:'sunrise',ambient:[.68,.66,.62],sun:[1,.64,.34],sky:[1,.68,.53],sunPower:.53,lamp:0},
+    {at:450,phase:'morning',ambient:[.76,.78,.78],sun:[1,.78,.54],sky:[.74,.79,.87],sunPower:.74,lamp:0},
+    {at:660,phase:'day',ambient:[.85,.88,.90],sun:[.99,.94,.82],sky:[.69,.79,.92],sunPower:.82,lamp:0},
+    {at:780,phase:'day',ambient:[.88,.90,.92],sun:[1,.96,.87],sky:[.70,.82,.96],sunPower:.86,lamp:0},
+    {at:960,phase:'afternoon',ambient:[.79,.79,.78],sun:[1,.81,.61],sky:[.80,.80,.85],sunPower:.78,lamp:0},
+    {at:1050,phase:'sunset',ambient:[.67,.61,.60],sun:[1,.49,.28],sky:[.97,.56,.43],sunPower:.74,lamp:0},
+    {at:1100,phase:'sunset',ambient:[.48,.47,.56],sun:[1,.42,.28],sky:[.89,.38,.42],sunPower:.40,lamp:.06},
+    {at:1145,phase:'twilight',ambient:[.30,.35,.49],sun:[1,.49,.34],sky:[.30,.27,.48],sunPower:0,lamp:.17},
+    {at:1200,phase:'night',ambient:[.17,.23,.34],sun:[1,.62,.33],sky:[.07,.12,.25],sunPower:0,lamp:.29},
+    {at:1440,phase:'night',ambient:[.16,.21,.32],sun:[1,.62,.32],sky:[.055,.083,.15],sunPower:0,lamp:.30}
+  ]);
+  const mix=(a,b,t)=>a+(b-a)*t;
+  const mix3=(a,b,t)=>a.map((v,i)=>mix(v,b[i],t));
+  function lightingAt(minute=420){
+    const m=clamp(Number.isFinite(Number(minute))?Number(minute):420,0,1440);
+    let lo=LIGHTING_KEYS[0],hi=LIGHTING_KEYS[LIGHTING_KEYS.length-1];
+    for(let i=0;i<LIGHTING_KEYS.length-1;i++)
+      if(m>=LIGHTING_KEYS[i].at&&m<=LIGHTING_KEYS[i+1].at){
+        lo=LIGHTING_KEYS[i];hi=LIGHTING_KEYS[i+1];break;
+      }
+    let t=clamp((m-lo.at)/Math.max(1,hi.at-lo.at),0,1);
+    t=t*t*(3-2*t);
+    const stage=clamp((m-355)/(1105-355),0,1);
+    // Left-facing window glazing exposes the sun's arc: morning and evening
+    // rays advance in opposite directions across the painted classroom.
+    const altitude=.12+1.12*Math.sin(Math.PI*stage);
+    const azimuth=(stage-.5)*1.62;
+    const ray=[-.92,altitude,azimuth];
+    const n=Math.hypot(...ray)||1;
+    return {
+      minute:m,phase:m===hi.at?hi.phase:lo.phase,
+      ambient:mix3(lo.ambient,hi.ambient,t),
+      sunColor:mix3(lo.sun,hi.sun,t),
+      skyColor:mix3(lo.sky,hi.sky,t),
+      sunPower:mix(lo.sunPower,hi.sunPower,t),
+      lampPower:mix(lo.lamp,hi.lamp,t),
+      sunDirection:ray.map(v=>v/n)
+    };
+  }
+  function blendLight(a,b,t){
+    return {
+      ...b,
+      ambient:mix3(a.ambient,b.ambient,t),
+      sunColor:mix3(a.sunColor,b.sunColor,t),
+      skyColor:mix3(a.skyColor,b.skyColor,t),
+      sunPower:mix(a.sunPower,b.sunPower,t),
+      lampPower:mix(a.lampPower,b.lampPower,t),
+      sunDirection:mix3(a.sunDirection,b.sunDirection,t)
+    };
+  }
   const ACTORS=Object.freeze([
     {id:'boy',src:'./assets/school-room/small-boy.svg',x:-.76,z:4.55,h:1.70,ends:5},
     {id:'girl',src:'./assets/school-room/class-idol.svg',x:-1.75,z:4.43,h:1.73,ends:1},
@@ -65,7 +120,7 @@
     return {x:w/2+f*xx/zz,y:h/2-f*yy/zz,z:zz};
   }
   const projectionShader=[
-    'vec3 d=a_position-u_camera;',
+    'vec3 d=worldP-u_camera;',
     'float cy=cos(u_angles.x),sy=sin(u_angles.x);',
     'float cp=cos(u_angles.y),sp=sin(u_angles.y);',
     'float xx=cy*d.x-sy*d.z,zz=sy*d.x+cy*d.z;',
@@ -76,12 +131,66 @@
   ].join('\n');
   const uniforms='uniform vec3 u_camera;uniform vec2 u_angles;uniform vec2 u_tan;\n';
   const TVS='attribute vec3 a_position;attribute vec2 a_uv;'+uniforms+
-    'varying vec2 v_uv;void main(){'+projectionShader+'v_uv=a_uv;}';
-  const TFS='precision mediump float;varying vec2 v_uv;'+
-    'uniform sampler2D u_tex;uniform vec3 u_light;uniform float u_sprite;'+
-    'void main(){vec4 c=texture2D(u_tex,v_uv);if(c.a<.04)discard;'+
-    'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;'+
-    'gl_FragColor=vec4(c.rgb*u_light,c.a);}';
+    'uniform vec3 u_sunDirection;uniform float u_shadowProjection;'+
+    'varying vec2 v_uv;varying vec3 v_world;void main(){'+
+    'vec3 worldP=a_position;'+
+    'if(u_shadowProjection>.5){'+
+    'float reach=max(0.0,worldP.y)/max(.22,u_sunDirection.y);'+
+    'worldP.x-=u_sunDirection.x*reach;worldP.z-=u_sunDirection.z*reach;'+
+    'worldP.y=.022;}'+
+    'v_world=worldP;'+projectionShader+'v_uv=a_uv;}';
+  const TFS=[
+    'precision mediump float;',
+    'varying vec2 v_uv;varying vec3 v_world;',
+    'uniform sampler2D u_tex;',
+    'uniform vec3 u_light,u_ambient,u_sunColor,u_sunDirection,u_skyColor;',
+    'uniform float u_sprite,u_surface,u_sunPower,u_lampPower;',
+    'uniform float u_shadowProjection,u_shadowOpacity;',
+    // Window transmission analytically projects the actual 16 glass panes
+    // onto each 3D receiver. It is not a fixed screen-space overlay.
+    'float bounds(float x,float a,float b,float feather){',
+    'return smoothstep(a-feather,a+feather,x)*(1.0-smoothstep(b-feather,b+feather,x));}',
+    'float windowTransmission(vec3 p){',
+    'if(u_sunDirection.x>-.09)return 0.0;',
+    'float travel=(-5.0-p.x)/u_sunDirection.x;',
+    'if(travel<0.0)return 0.0;',
+    'vec3 hit=p+u_sunDirection*travel;',
+    'float windowPixel=hit.z/9.0*2048.0;',
+    'float yPixel=(1.0-hit.y/3.38)*760.0;',
+    'float rel=mod(windowPixel-98.0+1856.0,464.0);',
+    'float bay=bounds(windowPixel,90.0,1915.0,18.0);',
+    'float leftPane=bounds(rel,19.0,201.0,9.0);',
+    'float rightPane=bounds(rel,218.0,402.0,9.0);',
+    'float high=bounds(yPixel,115.0,307.0,10.0);',
+    'float low=bounds(yPixel,328.0,530.0,10.0);',
+    'return bay*min(1.0,leftPane+rightPane)*min(1.0,high+low);}',
+    'void main(){',
+    'vec4 c=texture2D(u_tex,v_uv);if(c.a<.045)discard;',
+    'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;',
+    'if(u_shadowProjection>.5){',
+    'gl_FragColor=vec4(.055,.067,.092,c.a*u_shadowOpacity);return;}',
+    // Sky and building are illustrated on independent 2D cards.
+    'if(u_surface>4.5){',
+    'if(u_surface<5.5){',
+    'float horizon=1.0-smoothstep(-.4,3.0,v_world.y);',
+    'vec3 sky=mix(c.rgb,u_skyColor,.78);',
+    'sky+=horizon*u_sunColor*u_sunPower*.12;',
+    'gl_FragColor=vec4(clamp(sky,0.0,1.0),c.a);return;}',
+    'vec3 facade=c.rgb*(u_ambient*.78+.07);',
+    'facade+=u_sunColor*u_sunPower*.12;',
+    'gl_FragColor=vec4(clamp(facade,0.0,1.0),c.a);return;}',
+    'float windowNear=exp(-max(0.0,v_world.x+5.0)*.27);',
+    'float bounce=u_sunPower*(.065+.13*windowNear);',
+    'float direct=u_sunPower*windowTransmission(v_world);',
+    'vec3 diffuse=u_ambient*u_light;',
+    'diffuse+=u_sunColor*(direct*.72+bounce);',
+    'float lampPool=.72+.28*exp(-pow((v_world.x-1.4)*.23,2.0));',
+    'diffuse+=vec3(.93,.85,.72)*u_lampPower*lampPool*.65;',
+    'float floorGlow=clamp(1.0-v_world.y/.23,0.0,1.0);',
+    'vec3 finalColor=c.rgb*min(diffuse,vec3(1.46));',
+    'finalColor+=u_sunColor*direct*floorGlow*.12*c.rgb;',
+    'gl_FragColor=vec4(clamp(finalColor,0.0,1.0),c.a);}'
+  ].join('\n');
   const faces=Object.freeze({
     back:[[-5,0,9],[5,0,9],[5,ROOM.height,9],[-5,ROOM.height,9]],
     floor:[[-5,0,0],[-5,0,9],[5,0,9],[5,0,0]],
