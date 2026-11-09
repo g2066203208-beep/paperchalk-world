@@ -435,6 +435,17 @@
         else addAction('交作业','submit',()=>run(()=>engine.submitHomework()));
       }
       addAction('课间聊聊','chat',schoolChatMenu);
+      // Keep the canonical first-act lesson and falling-window story intact.
+      // The later encounter is an explicit in-world action, never a menu popup.
+      const boss=global.PaperWorldSchoolRoomRenderer?.inspect?.().bossEncounter;
+      if(s.day>=3&&boss?.phase==='idle')
+        addAction('查看教室中央的异常','boss-encounter',()=>{
+          contextOpen=false;prompts.hidden=true;
+          if(global.PaperWorldSchoolRoomRenderer?.triggerBossBirth?.()){
+            caption.hidden=true;
+            view.classList.add('school-boss-cinematic');
+          }
+        });
       if(s.day>=6)addAction('看看小胖家','boy-home',()=>travel('classmate-home'));
       addAction('离开学校','exit',()=>surfaces?.openMap());
     }else if(s.location==='classmate-home'){
