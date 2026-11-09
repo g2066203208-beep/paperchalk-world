@@ -211,6 +211,45 @@ try{
   assert.ok(sceneLightingShots[2].average.red>sceneLightingShots[2].average.blue*1.06,
     'Golden hour in the real canvas must be visibly warmer than blue');
   console.log('SCHOOL_DAY_NIGHT_WEBGL_PROOF',JSON.stringify(sceneLightingShots));
+
+  // Capture actual classroom pixels through the entire 2D boss cinematic.
+  // Each furniture item has a distinct world-space flight mesh; by the end
+  // all 20 desks, 20 chairs and the podium are GONE, not hidden under a mask.
+  const bossShots=[];
+  for(const mark of [
+    {at:0,name:'00-calm'},
+    {at:.60,name:'01-rupture'},
+    {at:1.35,name:'02-desks-flying'},
+    {at:2.28,name:'03-furniture-vanishing'},
+    {at:3.23,name:'04-boss-appearing'},
+    {at:4.15,name:'05-boss-empty-classroom'}
+  ]){
+    const result=await page.evaluate(t=>{
+      const r=window.PaperWorldSchoolRoomRenderer;
+      if(!r.setBossBirthPreview(t))throw Error('Boss preview not allowed');
+      r.render(0,0);
+      return {state:r.inspect().bossEncounter,error:r.inspect().error,
+        encoded:r.canvas.toDataURL('image/png')};
+    },mark.at);
+    assert.equal(result.error,null,'Boss frame WebGL failure at '+mark.at);
+    assert.ok(result.encoded.length>25000,'Missing rendered boss frame '+mark.name);
+    assert.equal(result.state.animatedFurnitureCount,41);
+    assert.equal(result.state.modelCount,0);
+    assert.ok(Object.values(result.state.readyAssets).every(x=>x.ready),
+      'Boss art did not load: '+JSON.stringify(result.state.readyAssets));
+    if(mark.at<.78)assert.equal(result.state.visibleFurnitureCount,41);
+    if(mark.at>=2.68)assert.equal(result.state.visibleFurnitureCount,0);
+    if(mark.at===4.15)assert.equal(result.state.phase,'boss-ready');
+    const path='artifacts/painted-school-room/boss-'+mark.name+'.png';
+    writeFileSync(path,Buffer.from(result.encoded.split(',')[1],'base64'));
+    bossShots.push({name:mark.name,t:mark.at,phase:result.state.phase,
+      visibleFurniture:result.state.visibleFurnitureCount,
+      furnitureOpacity:result.state.furnitureOpacity,
+      bossGrowth:result.state.bossGrowth,path});
+  }
+  console.log('SCHOOL_BOSS_BIRTH_REAL_WEBGL',JSON.stringify(bossShots));
+  await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setBossBirthPreview(null));
+
   await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setLightingPreview(null));
 
 
