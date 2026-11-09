@@ -10,7 +10,7 @@
   'use strict';
   const ROOM=Object.freeze({width:10,height:3.38,depth:9});
   const MATERIALS=Object.freeze({
-    back:'./assets/school-room/back.svg',floor:'./assets/school-room/floor.svg',
+    back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
     ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/left.svg',
     right:'./assets/school-room/right.svg'
   });
@@ -129,8 +129,18 @@
   }
   function textureFaces(){
     return Object.fromEntries(Object.entries(faces).map(([id,pts])=>{
-      const arr=[];for(const i of [0,1,2,0,2,3])
-        arr.push(...pts[i],...uvs[id][i]);
+      const arr=[];
+      // The painted floor is roughly 2:1. Repeat it over two actual floor
+      // strips rather than stretching one image over the entire 10x9m room.
+      // Each segment has independent UVs, so NPOT PNGs stay CLAMP-compatible.
+      const patches=id==='floor'
+        ? [0,4.5].map(z=>[
+            [-5,0,z],[-5,0,z+4.5],[5,0,z+4.5],[5,0,z]
+          ])
+        : [pts];
+      for(const patch of patches)
+        for(const i of [0,1,2,0,2,3])
+          arr.push(...patch[i],...uvs[id][i]);
       return [id,new Float32Array(arr)];
     }));
   }
