@@ -66,7 +66,7 @@ try{
   });
   assert.ok(result.every(x=>x.ok),JSON.stringify(result));
   assert.equal((await state()).day,3);
-  await to('entrance');await page.evaluate(()=>window.PaperWorldDailyLifeUI.engine.wait(30));await to('school');
+  await to('entrance');await page.evaluate(()=>window.PaperWorldDailyLifeUI.engine.wait(60));await to('school');
   assert.equal((await story()).seen.includes('beforeFall'),false);
   // It must take place inside a class session, not on entering school.
   await sceneAction('study');
@@ -83,7 +83,7 @@ try{
   });
   assert.ok(result.every(x=>x.ok),JSON.stringify(result));
   assert.equal((await state()).day,8);
-  await to('entrance');await page.evaluate(()=>window.PaperWorldDailyLifeUI.engine.wait(30));await to('school');
+  await to('entrance');await page.evaluate(()=>window.PaperWorldDailyLifeUI.engine.wait(60));await to('school');
   await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.actOne.snapshot().seen.includes('aftermath'));
   // Let the director sequence the later events, but advance dialogue at user speed.
   for(let j=0;j<65;j++){
