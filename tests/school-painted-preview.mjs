@@ -33,6 +33,7 @@ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disab
 const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFactor:1});
 page.setDefaultTimeout(45000);
 page.on('pageerror',e=>console.error('GAME_PAGE_ERROR',String(e)));
+page.on('console',msg=>{if(['warning','error'].includes(msg.type())) console.error('SCHOOL_BROWSER_CONSOLE',msg.type(),msg.text().slice(0,1600));});
 try{
   await page.goto('http://127.0.0.1:8765/?storyCapture=1',{waitUntil:'domcontentloaded',timeout:60000});
   await page.locator('#menu-start').click();
@@ -46,6 +47,18 @@ try{
   };
   await travel('entrance');
   await travel('school');
+  // Fail with actual runtime/shader error rather than a silent 60s timeout.
+  await page.waitForFunction(()=>{
+    const s=window.PaperWorldSchoolRoomRenderer?.inspect?.();
+    if(s?.error)throw Error('School shader/runtime: '+s.error);
+    return !!s&&!!s.frame;
+  },null,{timeout:20000}).catch(async e=>{
+    console.error('SCHOOL_LOAD_DIAGNOSTIC',JSON.stringify(await page.evaluate(()=>({
+      scene:document.querySelector('#scene')?.dataset?.scene,
+      school:window.PaperWorldSchoolRoomRenderer?.inspect?.()||null
+    }))));
+    throw e;
+  });
   await page.waitForFunction(()=> {
     const s=window.PaperWorldSchoolRoomRenderer?.inspect?.();
     return s?.active&&s?.faceTextures?.back?.ready&&s?.faceTextures?.floor?.ready
