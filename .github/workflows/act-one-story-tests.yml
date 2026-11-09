@@ -1,4 +1,7 @@
 name: Act One Story Tests
+concurrency:
+  group: paperchalk-act-one-${{ github.ref }}
+  cancel-in-progress: true
 on:
   push:
     paths:
