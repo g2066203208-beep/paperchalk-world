@@ -9,7 +9,7 @@ const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFa
 page.setDefaultTimeout(30000);
 const errors=[];
 page.on('pageerror',e=>errors.push(String(e)));
-const snap=name=>page.screenshot({path:'artifacts/act-one/'+name,animations:'disabled'});
+const snap=(name,motion=false)=>page.screenshot({path:'artifacts/act-one/'+name,animations:motion?'allow':'disabled'});
 const state=()=>page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot());
 const story=()=>page.evaluate(()=>window.PaperWorldDailyLifeUI.actOne.snapshot());
 async function to(location){
@@ -51,7 +51,7 @@ try{
   });
   assert.ok(result.every(x=>x.ok),JSON.stringify(result));
   assert.equal((await state()).day,3);
-  await to('entrance');await to('school');
+  await to('entrance');await page.evaluate(()=>window.PaperWorldDailyLifeUI.engine.wait(30));await to('school');
   assert.equal((await story()).seen.includes('beforeFall'),false);
   // It must take place inside a class session, not on entering school.
   await sceneAction('study');
@@ -59,7 +59,7 @@ try{
   for(let j=0;j<5;j++)await page.locator('#pw-world-director .pw-director-next').click();
   await page.waitForFunction(()=>document.querySelector('.pw-act-one-fall')?.classList.contains('is-falling'));
   assert.equal(await page.locator('#scene').getAttribute('data-scene'),'school');
-  await snap('02-real-window-fall.png');
+  await snap('02-real-window-fall.png',true);
   await clearDirector();
   result=await page.evaluate(()=>{
     const e=window.PaperWorldDailyLifeUI.engine;
@@ -68,7 +68,7 @@ try{
   });
   assert.ok(result.every(x=>x.ok),JSON.stringify(result));
   assert.equal((await state()).day,8);
-  await to('entrance');await to('school');
+  await to('entrance');await page.evaluate(()=>window.PaperWorldDailyLifeUI.engine.wait(30));await to('school');
   await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.actOne.snapshot().seen.includes('aftermath'));
   // Let the director sequence the later events, but advance dialogue at user speed.
   for(let j=0;j<65;j++){
