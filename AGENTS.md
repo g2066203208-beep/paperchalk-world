@@ -2,6 +2,8 @@
 
 ## Mandatory preflight: before EVERY Anima prompt
 
+**2026-11-09 USER OVERRIDE (highest priority for new prompts): Do NOT include the `safe` tag in any new Anima positive prompt.** Do not silently reintroduce it via boilerplate, templates, examples, or copied `masterpiece, best quality, score_7, safe` prefixes. Retain the official reference as historical documentation, but user-facing/new production prompts must omit `safe`. This does not change content-policy compliance.
+
 **FIRST read the NEW 2026-11-09 user-specified [normal/cute LoRA style presets](docs/ANIMA_STYLE_PRESETS_NORMAL_CUTE_20261109.md).** Use one preset unchanged for new art, then follow the Anima official prompt guide and applicable character identity / NPC view locks. Previous NPC-specific 0.65/1.0 LoRA lines remain historical/reproduction exceptions, not permission to silently override the new normal/cute presets.
 
 Read these documents **in the current session**, not from memory:
