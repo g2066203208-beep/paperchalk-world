@@ -428,3 +428,171 @@
  .sidebar{grid-template-rows:clamp(56px,21%,73px) minmax(0,1fr) clamp(119px,39%,134px)}
  .customer-strip{min-height:38px;max-height:41px}
 }
+
+/* V3 — Quiet console layout. One clear view, one silent secondary view.
+   Information stays concise, touch actions are obvious, no decorative filler. */
+:root{
+ --hud-paper:#e7e0d6;
+ --hud-ink:#393732;
+ --hud-muted:#7b746b;
+ --hud-rule:#bfb5aa;
+ --hud-fill:#f0ebe3;
+}
+.top-hud{
+ height:44px;min-height:44px;
+ padding:4px 9px;gap:8px;
+ background:#e7e0d8;
+}
+.identity{min-width:112px;gap:6px}
+.identity-mark{width:25px;height:27px;font-size:18px}
+.identity strong{font-size:14px}
+.readouts{flex:0 1 auto;gap:0;justify-content:flex-start}
+.readout,.readout.floor-readout,.readout.weight-readout{
+ flex:none;min-width:96px;max-width:none;height:30px;
+ padding:2px 13px;
+}
+.readout.floor-readout{min-width:118px}
+.readout.weight-readout{min-width:154px}
+.readout small{font-size:10px;line-height:1.08}
+.readout strong,.readout.floor-readout strong{font-size:15px;line-height:1.2}
+.readout.floor-readout strong{font-size:17px}
+.fullscreen-btn{margin-left:auto}
+.workspace{
+ padding:5px;gap:5px;
+ grid-template-columns:minmax(0,1fr) clamp(355px,24vw,456px);
+}
+.primary-stage{border-color:#a49b91}
+.sidebar{
+ background:#e4ded5;border:1px solid #b9afa4;
+ gap:0;
+ grid-template-rows:clamp(162px,19.4vh,205px) minmax(0,1fr) clamp(295px,33vh,356px);
+}
+.preview-card{
+ background:#c9c0b7;min-height:0;
+ border:0;border-bottom:1px solid #ada49a;border-radius:0;
+}
+.preview-head,.preview-caption{display:none!important}
+.preview-swap{
+ right:6px;bottom:6px;
+ width:23px;height:23px;font-size:15px;
+ background:#333a3ba8;border-radius:3px;
+ opacity:.78;transition:opacity 140ms ease,background 140ms ease
+}
+.preview-card:hover .preview-swap,.preview-card:focus-visible .preview-swap{opacity:1;background:#2d3536e6}
+.shop-panel,.control-panel{
+ border:0;border-radius:0;background:transparent;
+ padding:9px 10px;gap:6px;
+}
+.shop-panel{border-bottom:1px solid #c6bbb0}
+.section-heading,.control-heading{height:23px;min-height:23px;max-height:23px}
+.section-heading h2{font-size:13px;letter-spacing:.025em}
+.capacity,.door-status{font-size:11px;color:#7f766b}
+.door-status[hidden]{display:none!important}
+.stock-grid{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ grid-template-rows:repeat(2,minmax(0,1fr));
+ gap:5px;
+}
+.stock-item{
+ border:1px solid #c6bbaf;border-radius:3px;
+ background:#f2ece3;padding:6px 7px;gap:6px;
+}
+.stock-item.selected{background:#dce6da;border-color:#738b77}
+.stock-item .goods-icon{
+ width:29px;height:29px;min-width:29px;
+ background:#e9e1d6;font-size:19px
+}
+.stock-item .goods-label{gap:3px}
+.stock-item .goods-name{font-size:13px;font-weight:750}
+.stock-item .goods-qty{font-size:12px;color:#776f67}
+.customer-strip{
+ border:0;border-top:1px solid #c8beb3;
+ min-height:81px;flex:none;
+ background:transparent;padding:6px 1px 0;gap:4px;
+}
+.customer-upper{gap:6px}
+.customer-upper strong{font-size:12px}
+.request-floor{font-size:10px}
+.request-copy{font-size:11px;line-height:1.25;min-height:14px}
+.request-actions{grid-template-columns:1.14fr 1fr .62fr;gap:5px}
+.request-actions button{
+ min-height:31px;padding:5px 3px;font-size:12px;
+ border:1px solid #beb3a7;border-radius:3px
+}
+.control-panel{gap:6px}
+.travel-actions{flex:1;min-height:83px;max-height:146px;gap:6px}
+.move{border-radius:3px;gap:8px}
+.move .arrow{font-size:clamp(36px,4.3vh,53px)}
+.move-text strong{font-size:18px}
+.gate-actions{gap:6px;min-height:44px}
+.door-button{min-height:42px;font-size:12px;gap:4px}
+.emergency{height:39px;min-height:39px;font-size:13px}
+.utility-actions{min-height:29px;gap:5px}
+.utility-actions button{font-size:11px;padding:3px 4px}
+@media (max-height:900px) and (min-width:901px){
+ .top-hud{height:42px;min-height:42px}
+ .sidebar{grid-template-rows:clamp(133px,20vh,176px) minmax(0,1fr) clamp(220px,33vh,288px)}
+ .shop-panel,.control-panel{padding:6px 7px;gap:4px}
+ .customer-strip{min-height:76px;gap:3px}
+ .travel-actions{min-height:67px}
+ .gate-actions{min-height:37px}
+ .door-button{min-height:36px}
+ .emergency{min-height:34px;height:34px}
+ .stock-item{padding:4px}
+ .stock-item .goods-icon{width:24px;height:24px;min-width:24px}
+ .stock-item .goods-name{font-size:12px}
+ .stock-item .goods-qty{font-size:11px}
+}
+@media (max-width:1090px) and (min-height:541px){
+ .top-hud{height:44px;min-height:44px;gap:4px}
+ .identity{min-width:84px}
+ .readout,.readout.floor-readout,.readout.weight-readout{
+  min-width:0;flex:1;padding:2px 5px;
+ }
+ .readout.weight-readout{flex:1.55}
+ .readouts{flex:1}
+ .readout small{font-size:9px}
+ .readout strong,.readout.floor-readout strong{font-size:12px}
+ .sidebar{grid-template-rows:clamp(119px,20vh,160px) minmax(0,1fr) clamp(220px,34vh,269px)}
+ .workspace{grid-template-columns:minmax(0,1fr) clamp(290px,33vw,350px)}
+ .shop-panel,.control-panel{padding:5px;gap:4px}
+ .customer-strip{min-height:72px}
+}
+@media (orientation:landscape) and (max-height:540px){
+ .top-hud{height:31px;min-height:31px;padding:2px calc(4px + env(safe-area-inset-right)) 2px calc(4px + env(safe-area-inset-left));gap:2px}
+ .identity{min-width:62px;width:62px;gap:2px}
+ .identity-mark{width:19px;height:21px;font-size:16px}
+ .identity strong{font-size:11px}
+ .readouts{flex:1;min-width:0}
+ .readout,.readout.floor-readout,.readout.weight-readout{
+  flex:1;min-width:0;height:26px;padding:1px 3px
+ }
+ .readout.floor-readout{min-width:49px;flex:1.18}
+ .readout.weight-readout{min-width:82px;flex:1.58}
+ .readout strong,.readout.floor-readout strong{font-size:clamp(9px,1.55vw,12px)}
+ .fullscreen-btn{margin-left:0}
+ .workspace{grid-template-columns:minmax(0,1fr) minmax(260px,40%);padding:3px calc(3px + env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom)) calc(3px + env(safe-area-inset-left));gap:3px}
+ .sidebar{grid-template-rows:clamp(55px,21%,77px) minmax(0,1fr) clamp(121px,39%,139px)}
+ .preview-swap{width:20px;height:20px;right:4px;bottom:4px;font-size:13px}
+ .shop-panel,.control-panel{padding:3px 4px;gap:2px}
+ .section-heading,.control-heading{height:14px;min-height:14px;max-height:14px}
+ .section-heading h2{font-size:10px}
+ .capacity,.door-status{font-size:9px}
+ .stock-grid{gap:2px;min-height:0;grid-template-rows:repeat(2,minmax(0,1fr))}
+ .stock-item{padding:1px 3px;gap:3px;border-radius:2px}
+ .stock-item .goods-icon{width:18px;height:18px;min-width:18px;font-size:13px;background:transparent}
+ .stock-item .goods-name{font-size:10px}
+ .stock-item .goods-qty{font-size:9px}
+ .customer-strip{min-height:39px;max-height:42px;gap:2px;padding:2px 1px 0}
+ .customer-upper{display:none}
+ .request-copy{font-size:10px;max-height:12px;line-height:1.1;min-height:11px}
+ .request-actions{height:23px;min-height:23px;gap:2px}
+ .request-actions button{height:23px;min-height:23px;font-size:10px;padding:1px 2px}
+ .travel-actions{flex:1;min-height:41px;max-height:none;gap:3px}
+ .move .arrow{font-size:31px}
+ .move-text strong{font-size:15px}
+ .gate-actions{height:29px;min-height:29px;gap:3px}
+ .door-button{height:29px;min-height:29px;font-size:10px}
+ .emergency{height:28px;min-height:28px;font-size:11px}
+ .utility-actions{display:none}
+}
