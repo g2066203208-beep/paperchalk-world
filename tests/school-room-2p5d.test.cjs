@@ -5,7 +5,7 @@ test('the daily school is a separate real five-face environment',()=>{
   assert.deepEqual(school.ROOM,{width:10,height:3.38,depth:9});
   assert.deepEqual(Object.keys(school.MATERIALS).sort(),
     ['back','ceiling','floor','left','right']);
-  assert.equal(school.MATERIALS.left,'./assets/school-room/left-painted.svg');
+  assert.equal(school.MATERIALS.left,'./assets/school-room/left-windows-alpha.svg');
   const {readFileSync}=require('node:fs');
   const left=readFileSync(require('node:path').join(__dirname,'../site/assets/school-room/left-painted.svg'),'utf8');
   assert.match(left,/viewBox="0 0 2048 760"/);
