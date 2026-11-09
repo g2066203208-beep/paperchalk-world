@@ -10,7 +10,7 @@
 })(typeof window==='object'?window:null,function(){
   'use strict';
   const KEY='paperchalk-act-one-v1',VERSION=1;
-  const L=(speaker,text,effect)=>({speaker,text,...(effect?{effect}:{})});
+  const L=(speaker,text,effect,hold)=>({speaker,text,...(effect?{effect}:{}),...(hold?{hold}:{})});
   const SCENES=Object.freeze({
     confession:[
       L('旁白','上午的教室。有人赶着抄作业，有人隔着两排座位扔橡皮。'),
@@ -57,7 +57,7 @@
       L('同学','老师，昨天的题是不是少写了一个条件？'),
       L('老师','没有，你再看看题干。'),
       L('旁白','一切都和往常一样。'),
-      L('旁白','一道穿着校服的人影，突然从左侧窗外急速坠下。','fall'),
+      L('旁白','一道穿着校服的人影，从左侧窗外一闪而过。','fall',4500),
       L('老师','……？！'),
       L('同学','刚才……窗外是不是有人？！'),
       L('旁白','教室突然安静。几秒后，外面传来尖叫和慌乱的脚步声。'),
