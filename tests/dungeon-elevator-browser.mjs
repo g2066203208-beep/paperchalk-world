@@ -40,6 +40,11 @@ try{
  assert.ok(layout.main.width>layout.preview.width*2,'Left main camera should dominate');
  assert.ok(layout.preview.x>=layout.main.right&&layout.shop.y>=layout.preview.bottom&&layout.controls.y>=layout.shop.bottom,'Sidebar order incorrect');
  assert.ok(layout.controls.bottom<=1080,'Controls clipped at 1080p');
+ const pcRatio=layout.preview.width/layout.preview.height;
+ assert.ok(pcRatio>.94&&pcRatio<1.06,'PC secondary view must be square: '+JSON.stringify(layout.preview));
+ assert.ok(layout.preview.width>=350,'PC secondary view is too small: '+JSON.stringify(layout.preview));
+ console.log('SQUARE_PC_PREVIEW',JSON.stringify({ratio:pcRatio,preview:layout.preview}));
+
  const cleanPreview=await page.evaluate(()=>{
   const el=document.getElementById('swap-camera');
   const header=el.querySelector('.preview-head'),caption=el.querySelector('.preview-caption');
@@ -218,6 +223,13 @@ try{
  assert.equal(phoneClean.previewText,false);
  assert.ok(phoneClean.indicatorSize[0]<=34,'Phone mini camera icon too large');
  assert.ok(phoneLayout.preview.height>=55,'Phone preview too small');
+ const phoneRatio=phoneLayout.preview.width/phoneLayout.preview.height;
+ assert.ok(phoneRatio>.94&&phoneRatio<1.06,'Phone mini camera must be square: '+JSON.stringify(phoneLayout.preview));
+ assert.ok(phoneLayout.preview.width>=165,'Phone mini camera must be actually readable: '+JSON.stringify(phoneLayout.preview));
+ assert.ok(Math.abs(phoneLayout.shop.y-phoneLayout.preview.y)<=3,'On phone goods should sit BESIDE mini view, not below it');
+ assert.ok(phoneLayout.shop.x<phoneLayout.preview.x,'Phone goods must be left of mini camera');
+ console.log('SQUARE_PHONE_PREVIEW',JSON.stringify({ratio:phoneRatio,preview:phoneLayout.preview,shop:phoneLayout.shop}));
+
 
  assert.ok(phoneLayout.controls.bottom<=390,'Phone control panel clipped: '+JSON.stringify(phoneLayout));
  assert.ok(phoneLayout.scrollHeight<=390&&phoneLayout.scrollWidth<=844,'Phone must not scroll like webpage: '+JSON.stringify(phoneLayout));
@@ -230,7 +242,7 @@ try{
  }));
  assert.ok(phoneQuiet.hudHeight<=34,'Phone top status consumes too much height');
  const phoneGoodsColumns=await phone.evaluate(()=>getComputedStyle(document.getElementById('stock-grid')).gridTemplateColumns.split(' ').length);
- assert.equal(phoneGoodsColumns,3,'Phone keeps three merchandise columns for short landscape height');
+ assert.equal(phoneGoodsColumns,2,'Phone goods must sit beside square camera in 2-column shelf');
 
  assert.ok(phoneQuiet.previewIconWidth<=24,'Phone preview camera swap control too large');
  assert.equal(phoneQuiet.selectedGoodsQuantity,'×5');
@@ -262,9 +274,14 @@ try{
   shopBottom:document.querySelector('.shop-panel').getBoundingClientRect().bottom,
   fullscreenRight:document.getElementById('game-fullscreen').getBoundingClientRect().right,
   backLeft:document.querySelector('.main-link').getBoundingClientRect().left,
-  backRight:document.querySelector('.main-link').getBoundingClientRect().right
+  backRight:document.querySelector('.main-link').getBoundingClientRect().right,
+  previewWidth:document.getElementById('swap-camera').getBoundingClientRect().width,
+  previewHeight:document.getElementById('swap-camera').getBoundingClientRect().height
  }));
  assert.ok(compactLayout.controlsBottom<=375&&compactLayout.scrollHeight<=375,'Compact phone controls clipped: '+JSON.stringify(compactLayout));
+ assert.ok(compactLayout.previewWidth>=125,'Compact phone preview is too tiny');
+ assert.ok(Math.abs(compactLayout.previewWidth/compactLayout.previewHeight-1)<.06,'Compact phone preview is not square: '+JSON.stringify(compactLayout));
+
  assert.ok(compactLayout.customerActionsBottom<=compactLayout.shopBottom-1,'Compact phone shop buttons clipped: '+JSON.stringify(compactLayout));
  assert.ok(compactLayout.fullscreenRight<=compactLayout.backLeft+1,'Fullscreen/back buttons overlap: '+JSON.stringify(compactLayout));
  assert.ok(compactLayout.backRight<=667,'Back button off-screen: '+JSON.stringify(compactLayout));
