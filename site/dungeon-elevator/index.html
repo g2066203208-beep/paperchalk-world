@@ -12,49 +12,49 @@
 <title>地牢电梯 · 双镜头电梯小店</title>
 <link rel="stylesheet" href="./elevator.css?v=paper-mobile-v3">
 <link rel="stylesheet" href="./mobile-game.css?v=paper-mobile-v3">
+<link rel="stylesheet" href="./minimal-game-ui.css?v=20261109-compact-v1">
 <script type="module" src="./elevator.js?v=paper-mobile-v3"></script>
 </head>
 <body>
 <main id="app" aria-label="地牢电梯 · 电梯小店">
  <header class="top-hud" aria-label="电梯状态仪表">
-  <div class="identity"><span class="identity-mark">▥</span><div><strong>地牢电梯</strong><small>DUNGEON LIFT · 小店经营原型</small></div></div>
+  <div class="identity"><span class="identity-mark" aria-hidden="true">▥</span><div><strong>地牢电梯</strong></div></div>
   <div class="readouts">
-   <div class="readout floor-readout"><small>当前楼层</small><strong id="floor-label">地表 B0</strong></div>
+   <div class="readout floor-readout"><small>楼层</small><strong id="floor-label">地表 B0</strong></div>
    <div class="readout"><small>金币</small><strong id="money-label">150 G</strong></div>
-   <div class="readout power-readout"><small>剩余电力</small><strong id="power-label">100%</strong><span class="mini-meter"><i id="power-meter"></i></span></div>
-   <div class="readout"><small>电梯耐久</small><strong id="health-label">100%</strong></div>
-   <div class="readout weight-readout"><small>实际载重 / 上限</small><strong id="weight-label">0 / 350 kg</strong><span class="mini-meter"><i id="weight-meter"></i></span></div>
-   <div class="readout"><small>载客人数</small><strong id="seats-label">0 / 4</strong></div>
+   <div class="readout power-readout"><small>电力</small><strong id="power-label">100%</strong><span class="mini-meter"><i id="power-meter"></i></span></div>
+   <div class="readout"><small>耐久</small><strong id="health-label">100%</strong></div>
+   <div class="readout weight-readout"><small>载重</small><strong id="weight-label">0 / 350 kg</strong><span class="mini-meter"><i id="weight-meter"></i></span></div>
+   <div class="readout"><small>乘客</small><strong id="seats-label">0 / 4</strong></div>
   </div>
-  <button id="game-fullscreen" class="fullscreen-btn" type="button" aria-label="切换全屏游玩">⛶ 全屏</button>
-  <a class="main-link" href="../" aria-label="返回托管游戏主菜单">返回主菜单</a>
+  <button id="game-fullscreen" class="fullscreen-btn" type="button" aria-label="切换全屏游玩">⛶</button>
+  <a class="main-link" href="../" aria-label="返回托管游戏主菜单">退出</a>
  </header>
  <div class="workspace">
   <section id="primary-stage" class="primary-stage" aria-label="主要游戏镜头">
    <div id="viewport" class="camera-surface" role="img" aria-label="三维货运电梯主视角">
     <div id="fallback" hidden role="alert"></div>
    </div>
-   <div class="main-camera-title"><span class="camera-live"></span><span id="main-camera-label">01 / 电梯门</span><span class="main-camera-help">电梯营业窗口</span></div>
+   <div class="main-camera-title"><span id="main-camera-label">电梯门</span><span class="main-camera-help" hidden>电梯营业窗口</span></div>
    <div class="scene-bottom">
-    <div class="scene-info"><span id="scene-floor">地表 · 营业准备</span><small id="scene-camera-hint">地表纯白；地下停靠显示上下岩层</small></div>
-    <div class="scene-hint">右上小镜头 <b>点击切换主画面</b>　·　快捷键 V</div>
+    <div class="scene-info"><span id="scene-floor">地表</span><small id="scene-camera-hint" hidden>地表纯白</small></div>
    </div>
-   <div id="notice" role="status" aria-live="polite">电梯已就绪。点击右上角小镜头即可交换视角。</div>
+   <div id="notice" role="status" aria-live="polite" aria-atomic="true"></div>
   </section>
   <aside class="sidebar" aria-label="小镜头、货物和电梯操作">
    <button id="swap-camera" class="preview-card" type="button" aria-label="点击副镜头与主镜头互换">
     <div id="mini-viewport" class="preview-viewport" aria-hidden="true"></div>
-    <span class="preview-head"><span class="camera-live"></span><span id="preview-camera-label">02 / 电梯内部</span><span class="preview-swap">⇄ 切换</span></span>
-    <span class="preview-caption">点击小镜头切换主副画面</span>
+    <span id="preview-camera-label" class="sr-only">电梯内部</span>
+    <span class="preview-swap" aria-hidden="true">⇄</span>
    </button>
    <section class="shop-panel" aria-label="货物、商品需求和交易操作">
     <div class="section-heading">
-     <div><span class="eyebrow">ELEVATOR STORE</span><h2>货舱 · 小店货物</h2></div>
+     <div><h2>货物</h2></div>
      <span class="capacity" id="cargo-label">库存 0 / 24</span>
     </div>
     <div id="stock-grid" class="stock-grid" role="group" aria-label="可点选商品货格"></div>
     <div class="customer-strip">
-     <div class="customer-upper"><span class="request-mark">委托 / 顾客</span><strong id="customer-name">地表补货站</strong><span class="request-floor" id="request-floor">B0</span></div>
+     <div class="customer-upper"><strong id="customer-name">地表补货站</strong><span class="request-floor" id="request-floor">B0</span></div>
      <div class="request-copy" id="customer-request">准备好货物，再前往地下各层营业。</div>
      <div class="request-actions">
       <button type="button" id="sell-request" class="sell-request">成交 / 出售</button>
@@ -64,26 +64,26 @@
     </div>
    </section>
    <section class="control-panel" aria-label="电梯控制台">
-    <div class="section-heading control-heading"><div><span class="eyebrow">LIFT CONTROLS</span><h2>电梯操作</h2></div><span id="door-status" class="door-status">双门已锁闭</span></div>
+    <div class="section-heading control-heading"><div><h2>操作</h2></div><span id="door-status" class="door-status">双门已锁闭</span></div>
     <div class="travel-actions">
-     <button id="up" type="button" class="move up"><span class="arrow">↑</span><span class="move-text"><strong>上行</strong><small>上一层</small></span></button>
-     <button id="down" type="button" class="move down"><span class="arrow">↓</span><span class="move-text"><strong>下行</strong><small>下一层</small></span></button>
+     <button id="up" type="button" class="move up"><span class="arrow">↑</span><span class="move-text"><strong>上行</strong></span></button>
+     <button id="down" type="button" class="move down"><span class="arrow">↓</span><span class="move-text"><strong>下行</strong></span></button>
     </div>
     <div class="gate-actions">
      <button id="service-gate" class="door-button" type="button" aria-pressed="false"><span class="gate-icon">▤</span><span id="service-label">开启半高营业门</span></button>
      <button id="security-gate" class="door-button" type="button" aria-pressed="false"><span class="gate-icon">╳</span><span id="security-label">开启全高安全门</span></button>
     </div>
-    <button id="emergency" type="button" class="emergency"><span>⚠</span><span>紧急回地表</span><small>一次性应急绞盘</small></button>
+    <button id="emergency" type="button" class="emergency"><span aria-hidden="true">⚠</span><span>紧急返回</span></button>
     <div class="utility-actions">
      <button id="utility-passengers" type="button">乘客 <b id="passenger-short">0/4</b></button>
      <button id="utility-quests" type="button">委托 <b>0</b></button>
      <button id="utility-repair" type="button">维修</button>
-     <button id="utility-info" type="button">说明</button>
+     <button id="utility-info" type="button">帮助</button>
     </div>
    </section>
   </aside>
  </div>
- <div id="rotate-tip" class="rotate-tip" role="status" aria-label="请横屏游玩"><div class="rotate-symbol">↻</div><strong>请将手机横过来</strong><span>地牢电梯为横屏手游 · 转动手机即可继续</span></div>
+ <div id="rotate-tip" class="rotate-tip" role="status" aria-label="请横屏游玩"><div class="rotate-symbol">↻</div><strong>请将手机横过来</strong><span>横屏游玩</span></div>
  <div id="utility-popover" class="utility-popover" hidden role="dialog" aria-label="操作说明"><h3 id="utility-title">说明</h3><p id="utility-content"></p><button type="button" id="utility-close">关闭</button></div>
 </main>
 </body>
