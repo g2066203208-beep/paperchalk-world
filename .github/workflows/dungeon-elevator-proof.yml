@@ -20,6 +20,10 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
+      - name: Build original game scene catalog for main-menu smoke test
+        run: |
+          python3 -m pip install --user Pillow
+          python3 scripts/build_scene_catalog.py
       - name: Verify elevator module syntax
         run: node --input-type=module --check < site/dungeon-elevator/elevator.js
       - name: Capture both camera views and test all controls
