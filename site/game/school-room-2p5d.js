@@ -341,6 +341,27 @@
     const pt={},textures={},sprites={},faceGPU={},furnitureTextures={},furnitureGPU={};
     const exteriorTextures={},exteriorGPU={};
     let tprogram=null,fallGPU=null,fallTexture=null,ready=0;
+    // One light field for every 2D wall, prop and actor. Time-jump fades are
+    // smoothed; unchanged minutes do not redraw the GPU each frame.
+    let previewMinute=null,lightingMinute=null,lightingSince=0,lightingFrom=null,
+      lightingState=lightingAt(420);
+    function updateLighting(life){
+      const minute=previewMinute!==null?previewMinute:
+        (Number.isFinite(life?.minute)?life.minute:420);
+      const target=lightingAt(minute);
+      if(minute!==lightingMinute){
+        lightingFrom=lightingState;lightingMinute=minute;
+        lightingSince=performance.now();
+      }
+      if(previewMinute!==null)lightingState=target;
+      else if(lightingFrom){
+        let blend=clamp((performance.now()-lightingSince)/2200,0,1);
+        blend=blend*blend*(3-2*blend);
+        lightingState=blendLight(lightingFrom,target,blend);
+        if(blend>=1)lightingFrom=null;
+      }else lightingState=target;
+      return lightingState;
+    }
     function compile(type,code){
       const obj=gl.createShader(type);gl.shaderSource(obj,code);gl.compileShader(obj);
       if(!gl.getShaderParameter(obj,gl.COMPILE_STATUS))
@@ -392,6 +413,15 @@
       pt.light=gl.getUniformLocation(tprogram,'u_light');
       pt.tex=gl.getUniformLocation(tprogram,'u_tex');
       pt.sprite=gl.getUniformLocation(tprogram,'u_sprite');
+      pt.ambient=gl.getUniformLocation(tprogram,'u_ambient');
+      pt.sunColor=gl.getUniformLocation(tprogram,'u_sunColor');
+      pt.sunDirection=gl.getUniformLocation(tprogram,'u_sunDirection');
+      pt.skyColor=gl.getUniformLocation(tprogram,'u_skyColor');
+      pt.sunPower=gl.getUniformLocation(tprogram,'u_sunPower');
+      pt.lampPower=gl.getUniformLocation(tprogram,'u_lampPower');
+      pt.surface=gl.getUniformLocation(tprogram,'u_surface');
+      pt.shadowProjection=gl.getUniformLocation(tprogram,'u_shadowProjection');
+      pt.shadowOpacity=gl.getUniformLocation(tprogram,'u_shadowOpacity');
       fallGPU=mesh(fallingSprite(4.12));
       fallTexture=loadTexture(FALL_MATERIAL);
       for(const [id,src] of Object.entries(EXTERIOR_MATERIALS)){
@@ -431,10 +461,19 @@
       gl.uniform2f(loc.angles,cam.yaw,cam.pitch);
       gl.uniform2f(loc.tan,w/(2*focal),h/(2*focal));
     }
-    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false){
+    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false,surface=0,shadow=false){
       if(!tex?.ready)return;
       uniforms(cam,w,h,tprogram,pt);gl.uniform3f(pt.light,...light);
       gl.uniform1f(pt.sprite,isSprite?1:0);
+      gl.uniform3fv(pt.ambient,lightingState.ambient);
+      gl.uniform3fv(pt.sunColor,lightingState.sunColor);
+      gl.uniform3fv(pt.sunDirection,lightingState.sunDirection);
+      gl.uniform3fv(pt.skyColor,lightingState.skyColor);
+      gl.uniform1f(pt.sunPower,lightingState.sunPower);
+      gl.uniform1f(pt.lampPower,lightingState.lampPower);
+      gl.uniform1f(pt.surface,surface);
+      gl.uniform1f(pt.shadowProjection,shadow?1:0);
+      gl.uniform1f(pt.shadowOpacity,shadow?.28*lightingState.sunPower:0);
       gl.activeTexture(gl.TEXTURE0);gl.uniform1i(pt.tex,0);
       gl.bindTexture(gl.TEXTURE_2D,tex.texture);
       gl.bindBuffer(gl.ARRAY_BUFFER,mesh.gpu);
@@ -457,6 +496,7 @@
       if(canvas.width!==bw)canvas.width=bw;
       if(canvas.height!==bh)canvas.height=bh;
       const cam=camera(px,py),s=life||window.PaperWorldDailyLifeUI?.snapshot?.();
+      const daylight=updateLighting(s);
       // The witness reflexively turns towards the window only AFTER the fall.
       // Walls, desks, people and shadow share one fixed-position pinhole.
       const fallTime=heldFallFrame!==null?heldFallFrame:
@@ -469,7 +509,9 @@
       const fallFrame=heldFallFrame!==null?'frozen-'+heldFallFrame:
         fallStart?Math.floor(fallTime*52):'none';
       const fingerprint=[bw,bh,ready,s?.day||1,cam.yaw.toFixed(3),
-        cam.pitch.toFixed(3),fallFrame].join('|');
+        cam.pitch.toFixed(3),fallFrame,lightingMinute,
+        daylight.ambient[0].toFixed(3),daylight.sunPower.toFixed(3),
+        daylight.sunDirection[2].toFixed(3)].join('|');
       // No WebGL redraws while the head is stationary, no assets changed
       // and no event is running. Existing fluid fog animates independently.
       if(fingerprint===lastFrameKey)return true;
@@ -479,19 +521,31 @@
       try{
         // Independent hand-painted sky & distant building. Both are transparent
         // or opaque 2D materials on planes BEHIND the cut-out window wall.
-        textureDraw(exteriorTextures.sky,exteriorGPU.sky,cam,w,h,[1,1,1]);
-        textureDraw(exteriorTextures.facade,exteriorGPU.facade,cam,w,h,[1,1,1]);
-        const shades={back:[.92,.95,.96],floor:[.9,.93,.95],
-          ceiling:[.83,.86,.89],left:[1,1,1],right:[.86,.91,.95]};
+        textureDraw(exteriorTextures.sky,exteriorGPU.sky,cam,w,h,[1,1,1],false,5);
+        textureDraw(exteriorTextures.facade,exteriorGPU.facade,cam,w,h,[1,1,1],false,6);
+        const shades={back:[.94,.96,.98],floor:[.98,.99,1],
+          ceiling:[.89,.91,.94],left:[.96,.98,1],right:[.94,.96,.98]};
+        const surfaceTypes={back:2,floor:1,ceiling:2,left:2,right:2};
         for(const id of Object.keys(MATERIALS))
-          textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id]);
-        // Every classroom prop is a single hand-painted 2D standee.
-        // The five real planes still determine perspective and occlusion.
+          textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id],false,surfaceTypes[id]);
+        // Daylight creates real spatially projected cutout silhouettes.
+        // The original 2D artwork is reused on a ground plane (no models).
+        if(daylight.sunPower>.01){
+          gl.depthMask(false);
+          for(const [id,geo] of Object.entries(furnitureGPU))
+            textureDraw(furnitureTextures[id],geo,cam,w,h,[1,1,1],false,3,true);
+          for(const actor of visibleActors(s)){
+            const sprite=sprites[actor.id];
+            textureDraw(sprite.texture,sprite,cam,w,h,[1,1,1],true,4,true);
+          }
+          gl.depthMask(true);
+        }
+        // Furniture and cast see exactly the same ambient, daylight and lamp.
         for(const [id,geo] of Object.entries(furnitureGPU))
-          textureDraw(furnitureTextures[id],geo,cam,w,h,[.94,.95,.95]);
+          textureDraw(furnitureTextures[id],geo,cam,w,h,[.97,.98,.99],false,3);
         for(const actor of visibleActors(s)){
           const sprite=sprites[actor.id];
-          textureDraw(sprite.texture,sprite,cam,w,h,[.92,.94,.96],true);
+          textureDraw(sprite.texture,sprite,cam,w,h,[.97,.99,1],true,4);
         }
         if(fallStart||heldFallFrame!==null){
           const t=heldFallFrame!==null?heldFallFrame:(performance.now()-fallStart)/1120;
@@ -500,7 +554,7 @@
             const fallVertices=fallingSprite(4.12-6.5*t*t);
             gl.bindBuffer(gl.ARRAY_BUFFER,fallGPU.gpu);
             gl.bufferData(gl.ARRAY_BUFFER,fallVertices,gl.DYNAMIC_DRAW);
-            textureDraw(fallTexture,fallGPU,cam,w,h,[.88,.90,.92]);
+            textureDraw(fallTexture,fallGPU,cam,w,h,[.94,.95,1],false,4);
           }
         }
         if(gl.getError()!==gl.NO_ERROR)throw Error('School GL draw');
@@ -519,6 +573,8 @@
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
+      lighting:{...lightingState,source:previewMinute!==null?'qa-preview':'game-time'},
+      lightingTimeMinute:lightingMinute,
       faces:Object.keys(faces),deskCount:CLASSROOM_LAYOUT.desks,
       chairCount:CLASSROOM_LAYOUT.chairs,
       classroomLayout:CLASSROOM_LAYOUT,
@@ -557,10 +613,18 @@
       fallStart=performance.now();lastFrameKey='';render(0,0);return true;
     }
     function releaseFallFrame(){heldFallFrame=null;return true;}
+    function setLightingPreview(minute){
+      // QA only; no player-visible daylight slider or production time cheat.
+      if(new URLSearchParams(window.location.search).get('storyCapture')!=='1')
+        return false;
+      previewMinute=minute===null?null:clamp(Number(minute)||0,0,1440);
+      lightingFrom=null;lightingMinute=null;lastFrameKey='';
+      render(0,0);return true;
+    }
     return Object.freeze({setActive,triggerFall,holdFallFrame,releaseFallFrame,
-      render,inspect,get canvas(){return canvas}});
+      setLightingPreview,render,inspect,get canvas(){return canvas}});
   }
   return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,EXTERIOR_MATERIALS,
     FALL_MATERIAL,CLASSROOM_LAYOUT,ACTORS,EXTERIOR,
-    portraitPlacement,camera,project,create});
+    portraitPlacement,lightingAt,camera,project,create});
 });
