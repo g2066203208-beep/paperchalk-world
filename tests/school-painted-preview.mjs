@@ -212,6 +212,113 @@ try{
     'Golden hour in the real canvas must be visibly warmer than blue');
   console.log('SCHOOL_DAY_NIGHT_WEBGL_PROOF',JSON.stringify(sceneLightingShots));
 
+  // Full day-three window-fall cinematic, frozen from the actual GAME's
+  // WebGL framebuffer. Day 3 removes the girl from her former classroom seat.
+  await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setLightingPreview(660));
+  const fallFrames=[
+    {time:0,name:'00-normal-lesson'},
+    {time:.38,name:'01-turns-to-window'},
+    {time:.88,name:'02-figure-above-glass'},
+    {time:1.10,name:'03-figure-crossing'},
+    {time:1.31,name:'04-fast-fall'},
+    {time:1.55,name:'05-under-the-sill'},
+    {time:2.22,name:'06-empty-window'},
+    {time:4.30,name:'07-camera-recovery'}
+  ];
+  const fallProof=[];
+  for(const mark of fallFrames){
+    const shot=await page.evaluate(t=>{
+      const r=window.PaperWorldSchoolRoomRenderer;
+      if(!r.setFallPreview(t))throw Error('Falling-girl preview denied');
+      const life={...window.PaperWorldDailyLifeUI.snapshot(),day:3};
+      r.render(0,0,life);
+      const status=r.inspect();
+      return {png:r.canvas.toDataURL('image/png'),
+        state:status.fallSequence,error:status.error,
+        geom:status.fallMaterialGeometry};
+    },mark.time);
+    assert.equal(shot.error,null,'Jump WebGL frame '+mark.time);
+    assert.ok(shot.png.length>25000,'Empty jump animation frame '+mark.name);
+    assert.equal(shot.state.elapsed,mark.time);
+    assert.equal(shot.geom.parallelTo,'left-window-wall');
+    assert.ok(shot.geom.worldX<shot.geom.windowWallX);
+    if(mark.time>=.88&&mark.time<=1.55)
+      assert.equal(shot.state.fallingVisible,true);
+    if(mark.time>=2.22)assert.equal(shot.state.fallingVisible,false);
+    const file='artifacts/painted-school-room/fall-'+mark.name+'.png';
+    writeFileSync(file,Buffer.from(shot.png.split(',')[1],'base64'));
+    fallProof.push({t:mark.time,phase:shot.state.stage,
+      cameraTurn:shot.state.gaze,visible:shot.state.fallingVisible,file});
+  }
+  // Verify the actual alpha silhouette changes visible pixels in the glass.
+  // Compare two frames with the SAME pan, daylight and actor positions.
+  const windowProof=await page.evaluate(()=>{
+    const r=window.PaperWorldSchoolRoomRenderer;
+    const room=window.PaperWorldSchoolRoom;
+    const life={...window.PaperWorldDailyLifeUI.snapshot(),day:3};
+    function take(t){
+      r.setFallPreview(t);
+      r.render(0,0,life);
+      const c=r.canvas;
+      const out=document.createElement('canvas');
+      out.width=c.width;out.height=c.height;
+      const ctx=out.getContext('2d',{willReadFrequently:true});
+      ctx.drawImage(c,0,0);
+      return {pixels:ctx.getImageData(0,0,c.width,c.height).data,
+        width:c.width,height:c.height};
+    }
+    const crossing=take(1.12);
+    const empty=take(2.22);
+    const state=room.fallPhaseAt(1.12);
+    const cam=room.camera();
+    cam.yaw+=room.FALL_WINDOW.viewAngle*state.gaze;
+    cam.hFov-=4.6*state.gaze;
+    cam.pitch+=.014*state.gaze;
+    const p=room.project([room.FALL_WINDOW.figureX,state.yBottom+
+      room.FALL_WINDOW.height*.5,state.centerZ],
+      cam,crossing.width,crossing.height);
+    let different=0,compared=0,accumulated=0;
+    const x0=Math.max(0,Math.floor(p.x-125));
+    const x1=Math.min(crossing.width,Math.ceil(p.x+125));
+    const y0=Math.max(0,Math.floor(p.y-160));
+    const y1=Math.min(crossing.height,Math.ceil(p.y+160));
+    for(let y=y0;y<y1;y+=2)for(let x=x0;x<x1;x+=2){
+      const i=(y*crossing.width+x)*4;
+      const delta=Math.abs(crossing.pixels[i]-empty.pixels[i])+
+        Math.abs(crossing.pixels[i+1]-empty.pixels[i+1])+
+        Math.abs(crossing.pixels[i+2]-empty.pixels[i+2]);
+      compared++;accumulated+=delta;if(delta>44)different++;
+    }
+    return {different,compared,meanDelta:accumulated/Math.max(1,compared),
+      projected:p,scene:r.inspect().renderer};
+  });
+  assert.ok(windowProof.projected&&windowProof.projected.x>150,
+    'The falling girl must be in the actual camera view: '+JSON.stringify(windowProof));
+  assert.ok(windowProof.different>200,
+    'Girl must be VISIBLY drawn through actual window pixels, not invisible/edge-on: '+
+    JSON.stringify(windowProof));
+  console.log('SCHOOL_FALL_REAL_WEBGL_PROOF',JSON.stringify({frames:fallProof,pixels:windowProof}));
+  // An additional smooth sequence, exact game frames, for animation review.
+  for(let i=0;i<25;i++){
+    const t=4.30*i/24;
+    const png=await page.evaluate(at=>{
+      const r=window.PaperWorldSchoolRoomRenderer;
+      r.setFallPreview(at);
+      r.render(0,0,{...window.PaperWorldDailyLifeUI.snapshot(),day:3});
+      const out=document.createElement('canvas');
+      out.width=768;out.height=432;
+      out.getContext('2d').drawImage(r.canvas,0,0,out.width,out.height);
+      return out.toDataURL('image/png');
+    },t);
+    writeFileSync('artifacts/painted-school-room/fall-motion-'+
+      String(i).padStart(2,'0')+'.png',Buffer.from(png.split(',')[1],'base64'));
+  }
+  console.log('SCHOOL_FALL_REAL_MOTION_25_FRAMES',JSON.stringify({
+    count:25,duration:4.30,format:'actual-webgl-768x432',day:3
+  }));
+  await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setFallPreview(null));
+
+
   // Capture Boss in a legible daytime lesson, then let the encounter itself
   // drain the light. Do not carry over the preceding night QA time setting.
   await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setLightingPreview(660));
