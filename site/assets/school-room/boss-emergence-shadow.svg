@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 1080" width="880" height="1080">
+<title>教室异常现身 — Boss 暗影纸片立绘（可替换正式人物资产）</title>
+<defs>
+ <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+ <stop stop-color="#1b1b2b"/><stop offset=".44" stop-color="#0d1825"/><stop offset="1" stop-color="#060b15"/>
+ </linearGradient>
+ <linearGradient id="interior" x1="0" y1="0" x2="1" y2="0">
+ <stop stop-color="#182a35"/><stop offset=".52" stop-color="#141723"/><stop offset="1" stop-color="#263240"/>
+ </linearGradient>
+ <radialGradient id="heart"><stop stop-color="#fff0cb"/><stop offset=".15" stop-color="#fd9c8a"/>
+ <stop offset=".34" stop-color="#b0354b"/><stop offset=".6" stop-color="#592c48" stop-opacity=".9"/>
+ <stop offset="1" stop-color="#221627" stop-opacity="0"/></radialGradient>
+</defs>
+<!-- Entire scene remains alpha transparent; a single vertical 2D standee. -->
+<g opacity=".42" fill="#151827">
+ <path d="M370 180Q288 81 228 20L249 158 124 90 201 234 58 188 175 325 31 307 159 405 57 521 207 493 162 683 285 538Z"/>
+ <path d="M526 176Q618 85 686 26L665 169 780 93 701 246 831 188 722 330 860 320 735 416 829 541 682 508 713 696 588 547Z"/>
+</g>
+<g stroke="#1c202c" stroke-width="13" stroke-linejoin="round" stroke-linecap="round" fill="url(#ink)">
+<!-- ragged extra limbs -->
+ <path d="M317 365Q187 360 111 454L27 667 66 689 117 647 155 503 273 470Z"/>
+ <path d="M563 362Q698 342 763 451L852 670 806 688 761 643 727 507 589 470Z"/>
+ <path d="M286 496Q160 555 138 716L77 846 130 865 235 728 358 632Z"/>
+ <path d="M597 504Q718 550 744 718L806 851 753 866 651 726 530 636Z"/>
+<!-- long central torso with torn strips -->
+ <path d="M342 291Q441 268 535 291L635 514 583 694 666 1001 583 950 539 1070 488 947 439 1046 390 938 305 1070 275 952 214 1010 298 692 243 514Z"/>
+</g>
+<!-- Shoulder and torso fine ink carving -->
+<path d="M342 309Q442 358 531 308L568 516 526 728 442 870 347 728 310 518Z" fill="url(#interior)" stroke="#38404b" stroke-opacity=".62" stroke-width="9"/>
+<path d="M327 412Q429 467 556 407M334 493Q438 540 541 487M347 588Q445 634 521 584" fill="none" stroke="#5e4551" stroke-opacity=".18" stroke-width="13"/>
+<!-- impossible long neck -->
+<path d="M410 218L473 211 503 321 391 328Z" fill="#131927"/>
+<!-- partially faceless head in ragged black hair -->
+<path d="M440 34Q533 24 575 112L554 247 512 295 471 257 435 276 400 247 368 287 331 222 310 115Q344 27 440 34Z" fill="url(#ink)" stroke="#32323b" stroke-width="12"/>
+<path d="M332 90Q358 22 398 9L394 105 437 2 467 109 531 23 513 135 578 93 543 246 493 187 448 220 403 184 357 235Z" fill="#0a121e"/>
+<path d="M351 148Q388 188 425 177L441 199 458 176Q497 182 534 139" fill="none" stroke="#364451" stroke-width="11" opacity=".55"/>
+<ellipse cx="442" cy="229" rx="18" ry="8" fill="#bda6a4" opacity=".17"/>
+<!-- unnaturally central pulse and slit eyes -->
+<ellipse cx="443" cy="433" rx="137" ry="155" fill="url(#heart)" opacity=".9"/>
+<path d="M357 180l53 14-49 9M527 180l-48 14 48 7" fill="#c6a2a0" opacity=".74"/>
+<path d="M365 196l39 1M487 197l37 0" stroke="#fae3d2" stroke-opacity=".82" stroke-width="5"/>
+<path d="M438 356l-38 66 40 85 43-90Z" fill="#7e293d" opacity=".57"/>
+<path d="M437 389l-13 32 15 30 17-31Z" fill="#ffad9b" opacity=".55"/>
+<!-- hand tendrils with fine broken line work -->
+<g fill="none" stroke="#63717c" stroke-opacity=".2" stroke-width="5">
+ <path d="M144 460L80 593 59 651M735 469l63 121 33 62M229 719l-109 137M649 716l100 135"/>
+ <path d="M351 713l-39 251M532 717l39 252M407 779l-18 227M472 778l23 215"/>
+</g>
+<!-- irregular trailing translucent void fibers -->
+<g fill="none" stroke="#161c30" stroke-linecap="round">
+ <path d="M310 633Q203 743 203 985" stroke-width="20" opacity=".65"/>
+ <path d="M572 637Q671 761 681 990" stroke-width="16" opacity=".52"/>
+ <path d="M390 780Q336 898 344 1042" stroke-width="13" opacity=".5"/>
+ <path d="M499 759Q559 927 536 1067" stroke-width="13" opacity=".5"/>
+</g>
+</svg>
