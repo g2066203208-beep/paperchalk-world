@@ -14,11 +14,12 @@
     ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/left-windows-alpha.svg',
     right:'./assets/school-room/right-door-painted.svg'
   });
-  // Separate hand-painted 2D prop materials; true 3D furniture carries the textures.
+  // One transparent drawing per object: no 3D desk/chair/podium models.
+  // 3D is reserved for the room's placement, camera, depth and wall planes.
   const FURNITURE_MATERIALS=Object.freeze({
-    desktop:'./assets/school-room/student-desk-top.svg',
-    seat:'./assets/school-room/student-chair-seat.svg',
-    backrest:'./assets/school-room/student-chair-back.svg'
+    desk:'./assets/school-room/student-desk-standee.svg',
+    chair:'./assets/school-room/student-chair-standee.svg',
+    podium:'./assets/school-room/teacher-podium-standee.svg'
   });
   // Rows face the blackboard (z=9). Clear walking lanes on each side and center.
   const CLASSROOM_LAYOUT=Object.freeze({
@@ -93,8 +94,9 @@
     const n=parseInt(v.slice(1),16);
     return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255,a];
   };
-  const solids=[];
-  const furnitureSurfaces={desktop:[],seat:[],backrest:[]};
+  // Lightweight X/Y drawing planes at world-space Z. The camera supplies
+  // perspective scaling and the depth buffer supplies correct occlusion.
+  const furnitureSurfaces={desk:[],chair:[],podium:[]};
   function furnitureQuad(id,points){
     const uv=[[0,0],[1,0],[1,1],[0,1]];
     for(const i of [0,1,2,0,2,3])furnitureSurfaces[id].push(...points[i],...uv[i]);
@@ -123,63 +125,18 @@
     outsideQuad(EXTERIOR.schoolX+.021,1.22,1.73,z+.81,z+.85,'#b8bdb8');
     outsideQuad(EXTERIOR.schoolX+.024,1.13,1.21,z+.15,z+1.52,'#7d8a89');
   }
-  function quad(a,b,c,d,tone){
-    const rgba=typeof tone==='string'?color(tone):tone;
-    for(const v of [a,b,c,a,c,d])solids.push(...v,...rgba);
-  }
-  function cuboid(x,z,w,d,y0,y1,tones){
-    const xl=x-w/2,xr=x+w/2,z0=z-d/2,z1=z+d/2;
-    quad([xl,y1,z0],[xr,y1,z0],[xr,y1,z1],[xl,y1,z1],tones[0]);
-    quad([xl,y0,z0],[xr,y0,z0],[xr,y1,z0],[xl,y1,z0],tones[1]);
-    quad([xr,y0,z0],[xr,y0,z1],[xr,y1,z1],[xr,y1,z0],tones[2]);
-    quad([xl,y0,z1],[xr,y0,z1],[xr,y1,z1],[xl,y1,z1],tones[1]);
-    quad([xl,y0,z0],[xl,y0,z1],[xl,y1,z1],[xl,y1,z0],tones[2]);
-  }
-  function oval(x,z,rx,rz){
-    const c=color('#303b42',.13);
-    for(let i=0;i<18;i++){
-      const t=i*Math.PI/9,u=(i+1)*Math.PI/9;
-      solids.push(x,.008,z,...c,x+rx*Math.cos(t),.008,z+rz*Math.sin(t),...c,
-        x+rx*Math.cos(u),.008,z+rz*Math.sin(u),...c);
-    }
-  }
-  function desk(x,z,n){
-    const wood=['#baa58f','#b09a83','#c0a88e','#b8a08a'][n%4];
-    oval(x,z,.69,.60);
-    cuboid(x,z,1.04,.68,.705,.755,[wood,'#96816d','#85786c']);
-    furnitureQuad('desktop',[
-      [x-.510,.759,z-.333],[x+.510,.759,z-.333],
-      [x+.510,.759,z+.333],[x-.510,.759,z+.333]
+  function standee(id,x,z,w,h){
+    // Flat, painted, alpha-masked prop. No baked shadows or cuboids.
+    furnitureQuad(id,[
+      [x-w/2,0,z],[x+w/2,0,z],[x+w/2,h,z],[x-w/2,h,z]
     ]);
-    cuboid(x,z+.04,.87,.54,.57,.655,['#aa9681','#8c796a','#786e65']);
-    for(const dx of [-.39,.39])for(const dz of [-.22,.22])
-      cuboid(x+dx,z+dz,.052,.052,.05,.7,['#88939a','#637078','#5d6a71']);
-    const chairZ=z-.64;oval(x,chairZ,.43,.33);
-    cuboid(x,chairZ,.75,.45,.42,.50,['#657783','#52626d','#485863']);
-    furnitureQuad('seat',[
-      [x-.355,.505,chairZ-.217],[x+.355,.505,chairZ-.217],
-      [x+.355,.505,chairZ+.217],[x-.355,.505,chairZ+.217]
-    ]);
-    cuboid(x,chairZ-.185,.75,.073,.49,.95,['#71818b','#586874','#4d5d69']);
-    furnitureQuad('backrest',[
-      [x-.349,.535,chairZ-.227],[x+.349,.535,chairZ-.227],
-      [x+.349,.932,chairZ-.227],[x-.349,.932,chairZ-.227]
-    ]);
-    for(const dx of [-.27,.27])for(const dz of [-.13,.15])
-      cuboid(x+dx,chairZ+dz,.046,.046,.03,.43,['#899297','#637079','#5f6a72']);
   }
-  CLASSROOM_LAYOUT.rows.forEach((z,i)=>
-    CLASSROOM_LAYOUT.columns.forEach((x,j)=>desk(x,z,i+j)));
-  oval(.45,8.25,1.25,.63);
-  cuboid(.48,8.29,1.50,.67,.03,.99,['#a38d76','#756a60','#6b635b']);
-  cuboid(.48,7.96,1.60,.75,.98,1.045,['#b9a389','#9b8771','#8e7f6d']);
-  cuboid(1.04,7.95,.32,.25,1.05,1.09,['#ddd5c4','#8b9c9f','#879596']);
-  for(const z of [3.43,6.87])for(const x of [-2,2]){
-    cuboid(x,z,1.55,.13,ROOM.height-.16,ROOM.height-.05,
-      ['#d5d8d2','#aeb6b3','#a4ada9']);
-    cuboid(x,z,1.41,.07,ROOM.height-.177,ROOM.height-.16,
-      ['#f3f1e8','#e5e6dd','#d9dace']);
-  }
+  CLASSROOM_LAYOUT.rows.forEach((z)=>
+    CLASSROOM_LAYOUT.columns.forEach((x)=>{
+      standee('desk',x,z,1.14,1.05);
+      standee('chair',x,z-.64,.72,.97);
+    }));
+  standee('podium',.48,8.12,1.65,1.44);
   function textureFaces(){
     return Object.fromEntries(Object.entries(faces).map(([id,pts])=>{
       const arr=[];
@@ -245,9 +202,9 @@
     const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true,
       powerPreference:'low-power',preserveDrawingBuffer:true});
     let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,fallTriggerCount=0,heldFallFrame=null,lastFrameKey='';
-    const props=new Float32Array(solids),worldFaceData=textureFaces();
+    const worldFaceData=textureFaces();
     const pc={},pt={},textures={},sprites={},faceGPU={},furnitureTextures={},furnitureGPU={};
-    let program=null,tprogram=null,colorGPU=null,fallGPU=null,outsideGPU=null,ready=0;
+    let program=null,tprogram=null,fallGPU=null,outsideGPU=null,ready=0;
     function compile(type,code){
       const obj=gl.createShader(type);gl.shaderSource(obj,code);gl.compileShader(obj);
       if(!gl.getShaderParameter(obj,gl.COMPILE_STATUS))
@@ -301,8 +258,6 @@
       pt.light=gl.getUniformLocation(tprogram,'u_light');
       pt.tex=gl.getUniformLocation(tprogram,'u_tex');
       pt.sprite=gl.getUniformLocation(tprogram,'u_sprite');
-      colorGPU=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,colorGPU);
-      gl.bufferData(gl.ARRAY_BUFFER,props,gl.STATIC_DRAW);
       fallGPU=gl.createBuffer();
       outsideGPU=gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER,outsideGPU);
@@ -392,8 +347,8 @@
           ceiling:[.83,.86,.89],left:[1,1,1],right:[.86,.91,.95]};
         for(const id of Object.keys(MATERIALS))
           textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id]);
-        solidDraw(colorGPU,props.length/7,cam,w,h);
-        // Real desk, seat and backrest geometry with separate 2D painted art.
+        // Every classroom prop is a single hand-painted 2D standee.
+        // The five real planes still determine perspective and occlusion.
         for(const [id,geo] of Object.entries(furnitureGPU))
           textureDraw(furnitureTextures[id],geo,cam,w,h,[.94,.95,.95]);
         for(const actor of visibleActors(s)){
@@ -429,6 +384,10 @@
       faces:Object.keys(faces),deskCount:CLASSROOM_LAYOUT.desks,
       chairCount:CLASSROOM_LAYOUT.chairs,
       classroomLayout:CLASSROOM_LAYOUT,
+      propRendering:'painted-2d-standees',
+      propCount:CLASSROOM_LAYOUT.desks+CLASSROOM_LAYOUT.chairs+1,
+      propTriangles:Object.fromEntries(Object.entries(furnitureSurfaces).map(
+        ([id,verts])=>[id,verts.length/15])),
       furnitureTextures:Object.fromEntries(
         Object.entries(furnitureTextures).map(([id,entry])=>
           [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
