@@ -60,8 +60,9 @@
   const TVS='attribute vec3 a_position;attribute vec2 a_uv;'+uniforms+
     'varying vec2 v_uv;void main(){'+projectionShader+'v_uv=a_uv;}';
   const TFS='precision mediump float;varying vec2 v_uv;'+
-    'uniform sampler2D u_tex;uniform vec3 u_light;'+
+    'uniform sampler2D u_tex;uniform vec3 u_light;uniform float u_sprite;'+
     'void main(){vec4 c=texture2D(u_tex,v_uv);if(c.a<.04)discard;'+
+    'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;'+
     'gl_FragColor=vec4(c.rgb*u_light,c.a);}';
   const faces=Object.freeze({
     back:[[-5,0,9],[5,0,9],[5,ROOM.height,9],[-5,ROOM.height,9]],
@@ -228,6 +229,7 @@
       }
       pt.light=gl.getUniformLocation(tprogram,'u_light');
       pt.tex=gl.getUniformLocation(tprogram,'u_tex');
+      pt.sprite=gl.getUniformLocation(tprogram,'u_sprite');
       colorGPU=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,colorGPU);
       gl.bufferData(gl.ARRAY_BUFFER,props,gl.STATIC_DRAW);
       fallGPU=gl.createBuffer();
@@ -250,9 +252,10 @@
       gl.uniform2f(loc.angles,cam.yaw,cam.pitch);
       gl.uniform2f(loc.tan,w/(2*focal),h/(2*focal));
     }
-    function textureDraw(tex,mesh,cam,w,h,light){
+    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false){
       if(!tex?.ready)return;
       uniforms(cam,w,h,tprogram,pt);gl.uniform3f(pt.light,...light);
+      gl.uniform1f(pt.sprite,isSprite?1:0);
       gl.activeTexture(gl.TEXTURE0);gl.uniform1i(pt.tex,0);
       gl.bindTexture(gl.TEXTURE_2D,tex.texture);
       gl.bindBuffer(gl.ARRAY_BUFFER,mesh.gpu);
@@ -294,7 +297,7 @@
         solidDraw(colorGPU,props.length/7,cam,w,h);
         for(const actor of visibleActors(s)){
           const sprite=sprites[actor.id];
-          textureDraw(sprite.texture,sprite,cam,w,h,[.92,.94,.96]);
+          textureDraw(sprite.texture,sprite,cam,w,h,[.92,.94,.96],true);
         }
         if(fallStart){
           const t=(performance.now()-fallStart)/1120;
