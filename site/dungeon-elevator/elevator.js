@@ -139,7 +139,7 @@ function artPaint(name,transparent=false){
  texture.colorSpace=THREE.SRGBColorSpace;
  texture.anisotropy=4;
  return new THREE.MeshBasicMaterial({
-  map:texture,transparent,alphaTest:transparent?.025:0,
+  map:texture,transparent,alphaTest:transparent ? 0.025 : 0,
   depthWrite:!transparent,side:THREE.DoubleSide,toneMapped:false
  });
 }
