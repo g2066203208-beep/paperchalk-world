@@ -215,7 +215,7 @@
     original.insertAdjacentElement('afterend',canvas);
     const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true,
       powerPreference:'low-power',preserveDrawingBuffer:true});
-    let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,heldFallFrame=null,lastFrameKey='';
+    let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,fallTriggerCount=0,heldFallFrame=null,lastFrameKey='';
     const props=new Float32Array(solids),worldFaceData=textureFaces();
     const pc={},pt={},textures={},sprites={},faceGPU={};
     let program=null,tprogram=null,colorGPU=null,fallGPU=null,outsideGPU=null,ready=0;
@@ -386,7 +386,7 @@
     }
     function triggerFall(){
       if(!active)return false;
-      heldFallFrame=null;fallStart=performance.now();lastFrameKey='';render();return true;
+      heldFallFrame=null;fallStart=performance.now();fallTriggerCount++;lastFrameKey='';render();return true;
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
@@ -396,7 +396,7 @@
       faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
         [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
       visibleActors:active?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
-      fallActive:fallStart>0,heldFallFrame
+      fallActive:fallStart>0,fallTriggerCount,heldFallFrame
     };}
     function holdFallFrame(t){
       // QA captures a paused actual rendered animation frame, not a mockup.
