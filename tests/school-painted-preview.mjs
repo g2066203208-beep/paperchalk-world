@@ -43,11 +43,15 @@ try{
   assert.match(status.faceTextures.right.src,/right-door-painted\.svg$/);
   assert.equal(status.deskCount,20);
   assert.equal(status.chairCount,20);
+  assert.equal(status.propRendering,'painted-2d-standees');
+  assert.equal(status.propCount,41);
+  assert.deepEqual(status.propTriangles,{desk:40,chair:40,podium:2});
+  assert.equal(Object.keys(status.furnitureTextures).length,3);
   assert.deepEqual(status.classroomLayout.columns,[-3.48,-1.22,1.22,3.48]);
   assert.deepEqual(status.classroomLayout.rows,[2.15,3.3,4.45,5.6,6.75]);
   for(const [id,mat] of Object.entries(status.furnitureTextures)){
     assert.equal(mat.ready,true,'Student furniture material failed '+id);
-    assert.match(mat.src,/student-(desk|chair)-[a-z-]+\.svg$/);
+    assert.match(mat.src,/^(?:\.\/assets\/school-room\/)(?:student-(?:desk|chair)-standee|teacher-podium-standee)\.svg$/);
   }
   assert.ok(status.exterior.geometryTriangles>0,'Exterior should be actual WebGL geometry');
   assert.ok(status.exterior.skyX<status.exterior.windowWallX,'Sky must be behind the wall');
