@@ -93,7 +93,7 @@ try{
     assert.match(roomInfo.faceTextures[face].src,/painted\.png$/);
   }
   assert.equal(roomInfo.faceTextures.left.ready,true);
-  assert.match(roomInfo.faceTextures.left.src,/left-windows-alpha\.svg$/);
+  assert.match(roomInfo.faceTextures.left.src,/gpt-left-wall-transparent\.webp$/);
   assert.equal(roomInfo.faceTextures.right.ready,true);
   assert.match(roomInfo.faceTextures.right.src,/right-door-painted\.svg$/);
   assert.ok(Object.values(roomInfo.furnitureTextures).every(x=>x.ready),
