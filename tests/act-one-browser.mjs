@@ -79,6 +79,14 @@ try{
   assert.equal((await story()).seen.includes('beforeFall'),false);
   // It must take place inside a class session, not on entering school.
   await sceneAction('study');
+  const lessonDebug=await page.evaluate(()=>({
+    clock:window.PaperWorldDailyLifeUI.snapshot(),
+    arc:window.PaperWorldDailyLifeUI.actOne.snapshot(),
+    caption:document.querySelector('#overworld-scene-caption')?.textContent,
+    scene:document.querySelector('#scene')?.dataset.scene,
+    director:document.querySelector('#pw-world-director')?.textContent?.slice(0,140)
+  }));
+  console.log('LESSON DEBUG',JSON.stringify(lessonDebug));
   await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.actOne.snapshot().seen.includes('beforeFall'));
   for(let j=0;j<5;j++)await page.locator('#pw-world-director .pw-director-next').click();
   await page.waitForFunction(()=>document.querySelector('.pw-act-one-fall')?.classList.contains('is-falling'));
