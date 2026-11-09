@@ -235,12 +235,13 @@
       const d=s.day;
       // Skipped days have real consequences. Never replay a living girl's
       // confession after the accident, nor fake a witnessed fall on day 4.
-      if(d>=6&&!seen('boyDeath'))return claim('boyDeath');
-      if(d>=4&&!seen('beforeFall')&&!seen('heardFall'))return claim('heardFall');
-      if(d<3&&!seen('confession'))return claim('confession');
+      if(d===1&&!seen('confession'))return claim('confession');
+      if(d===1&&seen('confession')&&!seen('afterConfession'))return claim('afterConfession');
       if(d===2&&!seen('absence'))return claim('absence');
+      if(d>=4&&!seen('beforeFall')&&!seen('heardFall'))return claim('heardFall');
       if(d>=4&&!seen('aftermath'))return claim('aftermath');
       if(d===5&&!seen('boyLast'))return claim('boyLast');
+      if(d>=6&&!seen('boyDeath'))return claim('boyDeath');
       if(d>=8&&seen('boyDeath')&&!seen('emptySeats'))return claim('emptySeats');
       return null;
     }
