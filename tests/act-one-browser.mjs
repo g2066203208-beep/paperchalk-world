@@ -47,7 +47,7 @@ async function sceneAction(id){
   await button.click();
 }
 try{
-  await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
+  await page.goto(base+(base.includes('?')?'&':'?')+'storyCapture=1',{waitUntil:'domcontentloaded',timeout:60000});
   await page.locator('#menu-start').click();
   const n=await page.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
   for(let i=0;i<n;i++)await page.locator('#next-line').click();
@@ -92,7 +92,13 @@ try{
   await page.waitForFunction(()=>document.querySelector('.pw-act-one-fall')?.classList.contains('is-falling'));
   assert.equal(await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.inspect().active),true);
   assert.equal(await page.locator('#scene').getAttribute('data-scene'),'school');
+  // Freeze the ACTUAL scene's animated mesh at a visible instant solely
+  // during CI screenshot capture (normal gameplay continues in real time).
+  assert.equal(await page.evaluate(()=>
+    window.PaperWorldSchoolRoomRenderer.holdFallFrame(.57)),true);
+  await page.waitForTimeout(180);
   await snap('02-real-window-fall.png',true);
+  await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.releaseFallFrame());
   await clearDirector();
   result=await page.evaluate(()=>{
     const e=window.PaperWorldDailyLifeUI.engine;
