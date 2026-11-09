@@ -1,0 +1,23 @@
+{
+  "id": "/paperchalk-world/dungeon-elevator/",
+  "name": "地牢电梯 · 移动商店",
+  "short_name": "地牢电梯",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "landscape",
+  "background_color": "#d9d0c5",
+  "theme_color": "#d9d0c5",
+  "icons": [
+    {
+      "src": "./paint/game-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
