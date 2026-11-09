@@ -142,23 +142,32 @@
     ]);
   }
   function silhouette(position){
-    const c=color('#222c37',.96),v=[],x=-4.64,z=7.65;
-    function triangle(a,b,d){v.push(...a,...c,...b,...c,...d,...c);}
-    function point(y,side){return [x+side,position+y,z];}
-    for(let i=0;i<16;i++){
-      let a=i*Math.PI/8,b=(i+1)*Math.PI/8;
-      triangle(point(0,0),point(.17*Math.sin(a),.13*Math.cos(a)),
-        point(.17*Math.sin(b),.13*Math.cos(b)));
-    }
-    const polygon=pts=>{
-      for(let i=1;i+1<pts.length;i++)
-        triangle(point(...pts[0]),point(...pts[i]),point(...pts[i+1]));
+    // Explicit human anatomy, not an abstract rectangle. The figure falls
+    // vertically through the LEFT window on a real X/Y plane in the room.
+    const c=color('#222c37',.97),v=[],x=-4.64,z=7.65;
+    const P=(dx,dy)=>[x+dx,position+dy,z];
+    const triangle=(a,b,d)=>v.push(...a,...c,...b,...c,...d,...c);
+    const poly=points=>{
+      for(let i=1;i+1<points.length;i++)
+        triangle(P(...points[0]),P(...points[i]),P(...points[i+1]));
     };
-    polygon([[0,-.10],[-.33,-.10],[-.31,-.52],[.25,-.49]]);
-    polygon([[-.25,-.36],[-.53,-.46],[-.46,-.59],[-.23,-.50]]);
-    polygon([[.23,-.34],[.49,-.42],[.54,-.56],[.20,-.49]]);
-    polygon([[-.30,-.47],[-.36,-.96],[-.20,-1.06],[-.05,-.49]]);
-    polygon([[.07,-.48],[.05,-.99],[.21,-1.07],[.28,-.48]]);
+    for(let i=0;i<20;i++){
+      const a=i*Math.PI/10,b=(i+1)*Math.PI/10;
+      triangle(P(0,-.02),P(.16*Math.cos(a),-.02+.17*Math.sin(a)),
+        P(.16*Math.cos(b),-.02+.17*Math.sin(b)));
+    }
+    // Hair silhouette reaching behind the head.
+    poly([[-.10,.10],[-.21,-.06],[-.20,-.29],[-.12,-.28]]);
+    poly([[.10,.11],[.21,-.06],[.18,-.28],[.11,-.29]]);
+    // Narrow neck, shoulder-to-waist torso, skirt and asymmetric arms.
+    poly([[-.065,-.17],[.065,-.17],[.075,-.25],[-.075,-.25]]);
+    poly([[-.24,-.24],[.23,-.24],[.18,-.68],[-.18,-.68]]);
+    poly([[-.18,-.65],[.18,-.65],[.29,-.88],[-.29,-.88]]);
+    poly([[-.23,-.28],[-.45,-.49],[-.43,-.66],[-.12,-.43]]);
+    poly([[.22,-.28],[.43,-.41],[.50,-.56],[.39,-.62],[.13,-.46]]);
+    // Two independently falling legs, bent at different angles.
+    poly([[-.20,-.84],[-.025,-.85],[-.11,-1.33],[-.20,-1.47],[-.32,-1.42]]);
+    poly([[.025,-.85],[.19,-.85],[.29,-1.20],[.37,-1.35],[.26,-1.44],[.13,-1.29]]);
     return new Float32Array(v);
   }
   function create({stage,view}={}){
