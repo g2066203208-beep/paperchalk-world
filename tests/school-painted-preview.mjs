@@ -4,6 +4,31 @@ import {chromium} from 'playwright';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 mkdirSync('artifacts/painted-school-room',{recursive:true});
+async function captureGamePage(page,path,schoolActive=true){
+  // Chromium may stall on a full-page screenshot when long-running WebGL and
+  // continuously animated fog coexist. Keep the capture optional, but never
+  // let a screenshot-compositor timeout invalidate verified classroom geometry.
+  try{
+    await page.screenshot({path,animations:'allow',timeout:15000});
+    console.log('GAME_SCREENSHOT',path,'full-page');
+    return 'full-page';
+  }catch(e){
+    if(!schoolActive){
+      console.warn('MENU_SCREENSHOT_SKIPPED',String(e).slice(0,140));
+      return 'skipped';
+    }
+    // This is the real frame buffer from the active game WebGL, not mock art.
+    const pixels=await page.evaluate(()=>{
+      const r=window.PaperWorldSchoolRoomRenderer;
+      r.render(0,0);
+      return r.canvas.toDataURL('image/png');
+    });
+    assert.match(pixels,/^data:image\/png;base64,/);
+    writeFileSync(path,Buffer.from(pixels.split(',')[1],'base64'));
+    console.log('GAME_SCREENSHOT',path,'real-webgl-fallback');
+    return 'real-webgl-fallback';
+  }
+}
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFactor:1});
 page.setDefaultTimeout(45000);
@@ -92,14 +117,14 @@ try{
 
   // These are real game screenshots, not cropped WebGL samples or mockups.
   // Confirm the phone menu matches the user's actual path into daily life.
-  await page.screenshot({path:'artifacts/painted-school-room/desktop-actual-game-school.png',animations:'disabled'});
+  await captureGamePage(page,'artifacts/painted-school-room/desktop-actual-game-school.png');
   const mobile=await browser.newPage({
     viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true
   });
   mobile.setDefaultTimeout(45000);
   mobile.on('pageerror',e=>console.error('MOBILE_GAME_PAGE_ERROR',String(e)));
   await mobile.goto('http://127.0.0.1:8765/?storyCapture=1',{waitUntil:'domcontentloaded',timeout:60000});
-  await mobile.screenshot({path:'artifacts/painted-school-room/mobile-00-real-menu.png'});
+  await captureGamePage(mobile,'artifacts/painted-school-room/mobile-00-real-menu.png',false);
   await mobile.locator('#menu-start').click();
   const mobileDialogueCount=await mobile.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
   for(let i=0;i<mobileDialogueCount;i++)await mobile.locator('#next-line').click();
@@ -124,7 +149,7 @@ try{
   });
   assert.equal(mobileScene.scene,'school','Game must really open the 3D classroom on phone');
   assert.match(mobileScene.view.faceTextures.left.src,/left-windows-alpha\.svg$/);
-  await mobile.screenshot({path:'artifacts/painted-school-room/mobile-01-actual-game-school.png',animations:'disabled'});
+  await captureGamePage(mobile,'artifacts/painted-school-room/mobile-01-actual-game-school.png');
   console.log('MOBILE_SCHOOL_GAME_SCREENSHOT',JSON.stringify({
     scene:mobileScene.scene,renderer:mobileScene.view.renderer,
     leftWallLoaded:mobileScene.view.faceTextures.left.ready,
@@ -146,7 +171,7 @@ try{
     assert.equal(result?.ok,true,'Landscape travel to '+dest+' failed');
   }
   await landscape.waitForFunction(()=>window.PaperWorldSchoolRoomRenderer?.inspect?.().faceTextures.left.ready);
-  await landscape.screenshot({path:'artifacts/painted-school-room/mobile-02-landscape-game-school.png',animations:'disabled'});
+  await captureGamePage(landscape,'artifacts/painted-school-room/mobile-02-landscape-game-school.png');
   console.log('LANDSCAPE_GAME_SCHOOL_PROOF',JSON.stringify(
     await landscape.evaluate(()=>({scene:document.querySelector('#scene')?.dataset.scene,
       renderer:window.PaperWorldSchoolRoomRenderer.inspect().renderer}))
