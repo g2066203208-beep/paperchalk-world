@@ -127,7 +127,7 @@ export function createShaftExterior(THREE,scene){
   // Elevator going DOWN sees earth moving UP; up travel reverses it.
   const travelStep=dt*1.58*shaftInfo.direction;
   shaftInfo.scrollDistance+=travelStep;
-  scrollingTexture.offset.y+=travelStep*.19;
+  scrollingTexture.offset.y-=travelStep*.19; // Reverse UV shift: downward elevator means rock texture rises onscreen.
   for(const line of seamLines){
    line.position.y=line.userData.baseY+(shaftInfo.scrollDistance*4.3+9.5)%19-9.5;
    if(line.position.y>10)line.position.y-=19;
