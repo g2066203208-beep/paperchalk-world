@@ -17,7 +17,7 @@
 ## 本轮美术文件
 
 - `site/assets/school-room/back.svg`：后墙、黑板、书架、公告栏、时钟
-- `site/assets/school-room/left.svg`：四扇窗、窗帘、阴天外景
+- `site/assets/school-room/left-painted.svg`：已接入正式 3D 左侧窗墙的新版手绘平面贴图，四组大窗、旧式窗框、帘布、阴天校舍外景；保留 `left.svg` 为历史可回退资源
 - `site/assets/school-room/right.svg`：教室门、公告栏、储物柜
 - `site/assets/school-room/floor.svg`：地面铺装，无外部景深
 - `site/assets/school-room/ceiling.svg`：吸音板分格与天花灯
