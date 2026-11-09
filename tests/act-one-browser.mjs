@@ -106,8 +106,19 @@ try{
   }));
   console.log('LESSON DEBUG',JSON.stringify(lessonDebug));
   await page.waitForFunction(()=>window.PaperWorldDailyLifeUI.actOne.snapshot().seen.includes('beforeFall'));
-  for(let j=0;j<5;j++)await page.locator('#pw-world-director .pw-director-next').click();
-  await page.waitForFunction(()=>document.querySelector('.pw-act-one-fall')?.classList.contains('is-falling'));
+  // Advance authored dialogue until the actual world-space fall event fires.
+  // The 1.7s CSS cue may have ended before Playwright reaches its next check.
+  for(let j=0;j<16;j++){
+    const fired=await page.evaluate(()=>
+      window.PaperWorldSchoolRoomRenderer.inspect().fallTriggerCount>0);
+    if(fired)break;
+    await page.locator('#pw-world-director .pw-director-next').click();
+  }
+  await page.waitForFunction(()=>
+    window.PaperWorldSchoolRoomRenderer.inspect().fallTriggerCount>0);
+  assert.ok(await page.evaluate(()=>
+    window.PaperWorldSchoolRoomRenderer.inspect().fallTriggerCount>=1),
+  'The real school room must receive the world-space fall event');
   assert.equal(await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.inspect().active),true);
   assert.equal(await page.locator('#scene').getAttribute('data-scene'),'school');
   // Freeze the ACTUAL scene's animated mesh at a visible instant solely
