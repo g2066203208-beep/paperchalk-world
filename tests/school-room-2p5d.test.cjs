@@ -15,6 +15,9 @@ test('the daily school is a separate real five-face environment',()=>{
   assert.equal(school.CLASSROOM_LAYOUT.rows.length,5);
   assert.ok(school.CLASSROOM_LAYOUT.centerAisle>=1.2);
   assert.equal(Object.keys(school.FURNITURE_MATERIALS).length,3);
+  assert.equal(school.FURNITURE_MATERIALS.desk,'./assets/school-room/student-desk-standee.svg');
+  assert.equal(school.FURNITURE_MATERIALS.chair,'./assets/school-room/student-chair-standee.svg');
+  assert.equal(school.FURNITURE_MATERIALS.podium,'./assets/school-room/teacher-podium-standee.svg');
   for(const [id,asset] of Object.entries(school.FURNITURE_MATERIALS)){
     const {readFileSync}=require('node:fs');
     const {join}=require('node:path');
