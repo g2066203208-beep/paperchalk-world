@@ -11,7 +11,7 @@
   const ROOM=Object.freeze({width:10,height:3.38,depth:9});
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
-    ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/left.svg',
+    ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/left-painted.svg',
     right:'./assets/school-room/right.svg'
   });
   const ACTORS=Object.freeze([
