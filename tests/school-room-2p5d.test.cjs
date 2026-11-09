@@ -83,6 +83,16 @@ test('one shared physical perspective makes distant objects appear smaller',()=>
   assert.ok(school.camera(-.8,0).yaw<0);
   assert.ok(Math.abs(school.camera(0,0).yaw)<1e-10);
 });
+test('the human-scale lens keeps the real character artwork within frame',()=>{
+  const cam=school.camera();
+  const positions=school.ACTORS.map(a=>{
+    const p=school.project([a.x,a.h*.5,a.z],cam,1440,810);
+    assert.ok(p,'Projected real actor must have positive depth: '+a.id);
+    assert.ok(p.x>70&&p.x<1370,'No actors may be lost to the 54-degree crop: '+a.id+' '+p.x);
+    return {id:a.id,x:p.x};
+  });
+  assert.equal(positions.length,6);
+});
 test('window and blackboard belong to opposite true world surfaces',()=>{
   const cam=school.camera();
   const a=school.project([-5,1.65,8.0],cam,1440,810);
