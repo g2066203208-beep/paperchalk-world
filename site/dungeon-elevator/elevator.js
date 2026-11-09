@@ -5,13 +5,15 @@
  * The outside is WHITE, by design; floor art is not fabricated.
  */
 import * as THREE from '../sphere-maze/vendor/three.module.js';
+import {createShaftExterior} from './shaft-exterior.js';
 const $=id=>document.getElementById(id);
 const stage=$('viewport');
 const previewStage=$('mini-viewport');
-const state={depth:0,power:100,integrity:100,weight:0,capacity:350,passengers:0,seats:4,coins:150,serviceOpen:false,securityOpen:false,view:'door',emergencyUsed:false};
+const state={depth:0,power:100,integrity:100,weight:0,capacity:350,passengers:0,seats:4,coins:150,serviceOpen:false,securityOpen:false,view:'door',emergencyUsed:false,moving:false,targetDepth:null,motionDirection:0};
 const SIZE={w:7.2,h:3.85,d:6.6};
 const MATERIAL={wall:0xa69a99,metal:0x756d70,trim:0x574f51,rust:0x9d7066,light:0xe8e0d2};
 let renderer,previewRenderer,scene,camera,previewCamera,highLeaves=[],lowLeaves=[],renderPending=false,previous=0;
+let exterior=null,ride=null;
 const GOODS=[
  {id:'potion',name:'恢复药水',symbol:'◈',qty:5,mass:2,cost:12,price:30},
  {id:'food',name:'旅行干粮',symbol:'☷',qty:4,mass:1,cost:6,price:15},
@@ -52,8 +54,9 @@ function repaintHUD(){
  $('security-gate').setAttribute('aria-pressed',String(state.securityOpen));
  $('door-status').textContent=state.serviceOpen||state.securityOpen?'门未锁闭 · 停止运行':'双门已锁闭';
  $('door-status').style.color=state.serviceOpen||state.securityOpen?'#924e40':'';
- $('emergency').disabled=state.depth===0||state.emergencyUsed;
- $('scene-floor').textContent=state.depth===0?'地表 · 补货站':'B'+String(state.depth).padStart(3,'0')+' · 地牢营业';
+ $('emergency').disabled=(state.depth===0&&!state.moving)||state.emergencyUsed;
+ for(const id of ['up','down','service-gate','security-gate'])$(id).disabled=state.moving;
+ $('scene-floor').textContent=state.moving?((state.motionDirection>0?'↓ 下潜中':'↑ 上行中')+' · B'+String(state.targetDepth).padStart(3,'0')):(state.depth===0?'地表 · 补货站':'B'+String(state.depth).padStart(3,'0')+' · 地牢营业');
 }
 function repaintGoods(){
  const grid=$('stock-grid');grid.replaceChildren();
@@ -96,14 +99,14 @@ function repaintRequest(){
   $('customer-name').textContent=request.customer;
   $('customer-request').textContent='需要 '+want.name+' ×'+request.qty+' · 收购报价 '+request.price+'G';
  }
- $('sell-request').disabled=state.depth===0||orderServed||!request||$good(request.id).qty<request.qty;
+ $('sell-request').disabled=state.moving||state.depth===0||orderServed||!request||$good(request.id).qty<request.qty;
  $('sell-request').textContent=state.depth===0?'等待顾客':orderServed?'已处理':request&&$good(request.id).qty<request.qty?'库存不足':'成交 +'+(request?.price||0)+'G';
- $('buy-selected').disabled=state.depth!==0||state.coins<good.cost||cargoUnits()>=24||state.weight+good.mass>state.capacity;
+ $('buy-selected').disabled=state.moving||state.depth!==0||state.coins<good.cost||cargoUnits()>=24||state.weight+good.mass>state.capacity;
  $('buy-selected').textContent=state.depth===0?'进货 -'+good.cost+'G':'地表进货';
- $('skip-request').disabled=state.depth===0||orderServed;
+ $('skip-request').disabled=state.moving||state.depth===0||orderServed;
 }
 function trade(){
- if(!request||orderServed||state.depth===0)return;
+ if(state.moving||!request||orderServed||state.depth===0)return;
  const good=$good(request.id);
  if(good.qty<request.qty){notice('库存不足，无法完成交易。');return}
  good.qty-=request.qty;state.coins+=request.price;orderServed=true;
@@ -111,7 +114,7 @@ function trade(){
  notice('交易完成：'+request.customer+' 支付 '+request.price+' G。');
 }
 function buy(){
- if(state.depth!==0)return;
+ if(state.moving||state.depth!==0)return;
  const good=$good(selectedGood);
  if(state.coins<good.cost){notice('金币不足。');return}
  if(cargoUnits()>=24||state.weight+good.mass>state.capacity){notice('货舱已满或超过电梯承重。');return}
@@ -119,7 +122,7 @@ function buy(){
  notice('进货成功：'+good.name+' +1，花费 '+good.cost+' G。');
 }
 function skip(){
- if(!request||orderServed)return;
+ if(state.moving||!request||orderServed)return;
  orderServed=true;repaintRequest();notice('已拒绝本层交易。');
 }
 function utility(title,message){
@@ -239,6 +242,7 @@ function setup(){
  scene.add(new THREE.HemisphereLight(0xe8e1dc,0xaaa2a0,2));
  const sun=new THREE.DirectionalLight(0xffffff,1.1);sun.position.set(-2.3,5.5,2.1);scene.add(sun);
  makeCabin();makeHighGate();makeLowGate();
+ exterior=createShaftExterior(THREE,scene);exterior.setFloor(state.depth);
  stage.appendChild(renderer.domElement);previewStage.appendChild(previewRenderer.domElement);
  prepareRequest();bindControls();repaintHUD();repaintGoods();resize();requestRender();
 }
@@ -265,6 +269,7 @@ function frame(now){
   leaf.group.position.x+=(end-leaf.group.position.x)*k;
   if(Math.abs(end-leaf.group.position.x)>.008)active=true;else leaf.group.position.x=end;
  }
+ if(ride){exterior.update(dt);if(now-ride.started>=ride.duration){finishRide()}else active=true;}
  camera.position.lerp(cameraTarget.position,k);
  cameraAim.lerp(cameraTarget.target,k);
  camera.fov+=(cameraTarget.fov-camera.fov)*k;
@@ -284,29 +289,46 @@ function switchView(view){
  $('main-camera-label').textContent=state.view==='door'?'01 / 电梯门':'02 / 电梯内部';
  $('preview-camera-label').textContent=state.view==='door'?'02 / 电梯内部':'01 / 电梯门';
  document.querySelector('.main-camera-help').textContent=state.view==='door'?'电梯营业窗口':'电梯乘客空间';
- $('scene-camera-hint').textContent=state.view==='door'?'门外暂用纯白占位，后续替换楼层场景':'空电梯3D方盒子，人员与货物素材暂未加入';
+ $('scene-camera-hint').textContent=state.view==='door'?'停靠看上下岩层；行驶时岩土连续滚动':'空电梯3D方盒子，人员与货物素材暂未加入';
  notice(state.view==='door'?'已切换：左侧门口主镜头，右上内部小镜头。':'已切换：左侧电梯内部主镜头，右上门口小镜头。');
  requestRender();
 }
-function toggleService(){state.serviceOpen=!state.serviceOpen;repaintHUD();notice(state.serviceOpen?'半高营业门已打开，电梯禁止行驶。':'半高营业门已关闭。');requestRender()}
-function toggleSecurity(){state.securityOpen=!state.securityOpen;repaintHUD();notice(state.securityOpen?'全高安全门已打开，危险层请谨慎！':'全高安全门已关闭。');requestRender()}
+function toggleService(){if(state.moving)return;state.serviceOpen=!state.serviceOpen;repaintHUD();notice(state.serviceOpen?'半高营业门已打开，电梯禁止行驶。':'半高营业门已关闭。');requestRender()}
+function toggleSecurity(){if(state.moving)return;state.securityOpen=!state.securityOpen;repaintHUD();notice(state.securityOpen?'全高安全门已打开，危险层请谨慎！':'全高安全门已关闭。');requestRender()}
+function beginRide(target,direction,duration,emergencyRide=false){
+ state.moving=true;state.targetDepth=target;state.motionDirection=direction;
+ ride={target,direction,duration,started:performance.now(),emergencyRide};
+ exterior.setTraveling(true,direction);
+ repaintHUD();repaintRequest();
+ $('scene-camera-hint').textContent='门外岩土正沿电梯行驶的反方向移动';
+ notice(emergencyRide?'紧急回收绞盘启动：岩层正在向下掠过门外。':direction>0?'电梯下潜中：门外地层正在向上掠过。':'电梯上行中：门外地层正在向下掠过。');
+ requestRender();return true;
+}
+function finishRide(){
+ if(!ride)return;
+ const result=ride;ride=null;
+ state.depth=result.target;state.moving=false;state.targetDepth=null;state.motionDirection=0;
+ exterior.setTraveling(false);exterior.setFloor(state.depth);
+ prepareRequest();repaintHUD();
+ $('scene-camera-hint').textContent=state.depth===0?'地表外景仍保持纯白':'门外只保留停靠层的上、下岩壁与空出入口';
+ notice(result.emergencyRide?'紧急返回地表成功，耗损耐久8点，本次应急装置已使用。':'已停靠 '+(state.depth===0?'地表':'B'+String(state.depth).padStart(3,'0'))+'。打开门可观察本层岩土开口。');
+ requestRender();
+}
 function travel(delta){
+ if(state.moving){notice('电梯正在运行，请等待到站。');return false}
  if(state.serviceOpen||state.securityOpen){notice('请先关闭半高营业门和全高安全门。');return false}
  if(state.weight>state.capacity||state.passengers>state.seats){notice('电梯超载，无法运行。');return false}
  if(state.integrity<=0){notice('电梯耐久不足，请先维修。');return false}
  if(delta<0&&state.depth===0){notice('已经抵达地表。');return false}
  const next=Math.max(0,state.depth+delta),cost=2+Math.floor(next/12);
  if(state.power<cost){notice('电力不足，无法移动。可使用紧急回地表。');return false}
- state.power-=cost;state.depth=next;
- prepareRequest();repaintHUD();
- notice('已抵达 '+(next===0?'地表':'B'+String(next).padStart(3,'0'))+'。查看右侧顾客需求。');
- requestRender();return true;
+ state.power-=cost;return beginRide(next,delta,1750);
 }
 function emergency(){
- if(state.depth===0||state.emergencyUsed)return;
- state.emergencyUsed=true;state.depth=0;state.serviceOpen=false;state.securityOpen=false;
+ if(state.depth===0||state.emergencyUsed)return false;
+ state.emergencyUsed=true;state.serviceOpen=false;state.securityOpen=false;
  state.integrity=Math.max(1,state.integrity-8);state.power=Math.max(0,state.power-15);
- prepareRequest();repaintHUD();requestRender();notice('紧急绞盘已启动：强制关门返回地表，耗损耐久8点。');
+ return beginRide(0,-1,2300,true);
 }
 function bindControls(){
  $('up').addEventListener('click',()=>travel(-1));$('down').addEventListener('click',()=>travel(1));
@@ -318,7 +340,7 @@ function bindControls(){
  $('utility-passengers').addEventListener('click',()=>utility('电梯乘客','乘客 '+state.passengers+'/'+state.seats+' 名。可承载乘客的静态立绘与任务将在后续版本接入。'));
  $('utility-quests').addEventListener('click',()=>utility('委托任务','后续将接入救援、载客和送货委托。当前尚未生成可接取的任务。'));
  $('utility-repair').addEventListener('click',()=>{
-  if(state.depth!==0){utility('维修','只能在地表进行维修。');return}
+  if(state.moving||state.depth!==0){utility('维修','只能在地表停靠后维修。');return}
   if(state.integrity===100){notice('电梯耐久已满，无需维修。');return}
   if(state.coins<20){notice('维修需要20G，金币不足。');return}
   state.coins-=20;state.integrity=Math.min(100,state.integrity+20);
@@ -338,6 +360,7 @@ function bindControls(){
 }
 window.DungeonElevatorDemo=Object.freeze({
  getState:()=>({...state,goods:GOODS.map(g=>({id:g.id,qty:g.qty})),request:request?{...request}:null,orderServed}),
+ getShaftState:()=>exterior?.getState()??null,
  setLoad:(weight,passengers)=>{cargoOverride=Math.max(0,Math.floor(Number(weight)||0));state.passengers=Math.max(0,Math.floor(Number(passengers)||0));repaintHUD();repaintRequest()},
  setView:switchView,
  swap:()=>switchView(state.view==='door'?'cabin':'door')
