@@ -780,6 +780,8 @@ body.mobile-mode.virtual-landscape #view{
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
 <script src="./game/classroom-box-runtime.js?v=four-enemy-row-v2"></script>
+<script src="./game/school-room-2p5d.js?v=school-5face-v1-20261109"></script>
+<link rel="stylesheet" href="./game/school-room-2p5d.css?v=school-5face-v1-20261109">
 <script src="./combat-lab/engine.js?v=full-4p-timegrid-20261108"></script>
 <script src="./combat-lab/cards-expansion.js?v=card-atlas-90-v16-20261108"></script>
 <script src="./combat-lab/balance-v17.js?v=full-timegrid-v17-20261108"></script>
@@ -2019,6 +2021,8 @@ void main(){
     stage,view,playerRoot:cameraPlayer,enemyRoot:enemyDepth
   });
   window.PaperWorldGameRoomBox=boxScene;
+  const schoolRoom=window.PaperWorldSchoolRoom.create({stage,view});
+  window.PaperWorldSchoolRoomRenderer=schoolRoom;
   const ringScene=window.PaperWorldRingArena.create({stage,view,
     onExit:()=>changeScene('menu')});
   window.PaperWorldGameRingArena=ringScene;
@@ -2091,6 +2095,7 @@ void main(){
     ringAllies.forEach(node=>node.hidden=!ringActive);
     extraEnemies.forEach(node=>node.hidden=name!=='classroom-box'&&!ringActive);
     boxScene.setActive(name==='classroom-box');
+    schoolRoom.setActive(name==='school');
     ringScene.setActive(name==='ring-arena');
     // A saved DEV slot may point to another character or FRONT art. In the
     // actual battle, use the approved heroine BACK, retaining the player's
@@ -3327,7 +3332,7 @@ void main(){
     // First-person mouse look: smooth yaw/pitch at ONE stationary camera
     // pivot, not a dolly. This is the sole frame-time-based damping pass.
     // No individual L2D, fog or material-layer parallax.
-    const roomMove=stage.dataset.scene==='classroom-box';
+    const roomMove=stage.dataset.scene==='classroom-box'||stage.dataset.scene==='school';
     const worldLook=roomMove||stage.dataset.scene==='ring-arena'||view.classList.contains('ring-arena-transit');
     // Battle view is peripheral awareness, not an FPS camera. A gentler
     // single-pass exponential damper avoids instant head snapping and
@@ -3353,6 +3358,14 @@ void main(){
       cameraPlayer.style.transform='none';
       ringScene.render(dt,currentX,currentY);
       stage.dataset.cameraProfile='hero-root-tps-shoulder-webgl';
+    }else if(stage.dataset.scene==='school'){
+      // Daily-life classroom is its own square 3D box, sharing the single
+      // pinhole/eye-look convention with the arena, not the battle state.
+      stage.style.transform='none';
+      enemyDepth.style.transform='none';
+      cameraPlayer.style.transform='none';
+      schoolRoom.render(currentX,currentY);
+      stage.dataset.cameraProfile='school-five-face-webgl';
     }else if(stage.dataset.scene==='classroom-box'){
       // Genuine world X/Y/Z -> one pinhole perspective for BOTH surfaces and
       // the existing L2D player/enemy (same shoe coordinates on the floor).
