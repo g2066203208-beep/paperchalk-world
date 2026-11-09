@@ -112,6 +112,9 @@
     return director.play(scene.lines,{
       onBeat:beat=>{
         if(beat.effect!=='fall')return;
+        // The body follows a world-space vertical path against the actual
+        // classroom window. Keep legacy timing for other scene renderers.
+        global.PaperWorldSchoolRoomRenderer?.triggerFall?.();
         clearFall();fallMask.hidden=false;
         void fallMask.offsetWidth;
         fallMask.classList.add('is-falling');
