@@ -63,12 +63,15 @@ test('classroom actors keep the exact original source-image proportions',()=>{
 });
 test('school lens uses human-sized actors, not a wide overview of the ceiling',()=>{
   const cam=school.camera(),actor=school.ACTORS.find(a=>a.id==='girl');
+  assert.equal(actor.seated,true);
+  assert.ok(actor.standingHeight>actor.h);
+  assert.match(actor.src,/gpt-school-girl-temporary\.webp$/);
   const top=school.project([actor.x,actor.h,actor.z],cam,1440,810);
   const sole=school.project([actor.x,0,actor.z],cam,1440,810);
   assert.ok(top&&sole);
   const fraction=(sole.y-top.y)/810;
-  assert.ok(fraction>.49&&fraction<.69,
-    'Physical 1.73m actor should occupy a readable fraction: '+fraction);
+  assert.ok(fraction>.39&&fraction<.54,
+    'Seated 2D figure must retain reasonable world-space scale: '+fraction);
   assert.ok(cam.hFov<=56&&cam.z> -1.2,'Portrait lens should frame humans');
 });
 test('daylight advances with game minutes and keeps the same physical sun direction',()=>{
@@ -178,4 +181,9 @@ test('main school characters disappear according to chapter days',()=>{
   const girl=school.ACTORS.find(a=>a.id==='girl');
   assert.equal(boy.ends,5);
   assert.equal(girl.ends,1);
+  assert.equal(boy.seated,true);
+  assert.match(boy.src,/gpt-school-boy-temporary\.webp$/);
+  assert.equal(boy.standingHeight,1.70);
+  assert.equal(girl.standingHeight,1.73);
+  assert.equal(girl.seated,true);
 });
