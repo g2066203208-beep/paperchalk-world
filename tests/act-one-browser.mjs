@@ -66,11 +66,24 @@ try{
   assert.equal(roomInfo.faces.length,5);
   assert.equal(roomInfo.error,null);
   assert.ok(roomInfo.textureCount>=5,'All five structural faces must load');
+  for(const face of ['back','floor']){
+    assert.equal(roomInfo.faceTextures[face].ready,true,
+      'Painted '+face+' material not loaded: '+JSON.stringify(roomInfo.faceTextures[face]));
+    assert.match(roomInfo.faceTextures[face].src,/painted\.png$/);
+  }
   assert.ok(roomInfo.frame>=1);
   console.log('School 2.5D:',JSON.stringify(roomInfo));
   assert.ok((await page.locator('#pw-world-director').innerText()).trim().length>0,'An authored classmate line is visible');
   await snap('01-classroom-confession.png');
   await clearDirector();
+  await page.evaluate(()=>{
+    const style=document.createElement('style');
+    style.id='clean-classroom-shot';
+    style.textContent='#overworld-scene-prompts, #pw-world-director, #overworld-scene-caption { visibility:hidden!important; }';
+    document.head.appendChild(style);
+  });
+  await snap('01b-painted-wall-and-wood-floor-clean.png');
+  await page.evaluate(()=>document.querySelector('#clean-classroom-shot')?.remove());
   // Simulate the player's ordinary two sleeps, not an arbitrary story flag.
   let result=await page.evaluate(()=>{
     const e=window.PaperWorldDailyLifeUI.engine;
