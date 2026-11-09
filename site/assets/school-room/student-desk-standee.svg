@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="520" viewBox="0 0 640 520">
+<title>学生单人课桌 · 2D透明立牌 · 统一轻俯视</title>
+<defs>
+ <linearGradient id="topwood" x1="0" y1="0" x2=".65" y2="1"><stop stop-color="#c4ae91"/><stop offset=".44" stop-color="#b59c7e"/><stop offset="1" stop-color="#a78a6e"/></linearGradient>
+ <linearGradient id="frontmetal" x1="0" y1="0" x2="1" y2=".7"><stop stop-color="#939c9e"/><stop offset=".65" stop-color="#6b787c"/><stop offset="1" stop-color="#4f5e65"/></linearGradient>
+ <linearGradient id="apron" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#8c7863"/><stop offset=".5" stop-color="#9c846a"/><stop offset="1" stop-color="#83715e"/></linearGradient>
+ <pattern id="woodgrain" width="86" height="54" patternUnits="userSpaceOnUse">
+  <path d="M-2 12q35-5 85 1M17 28q27 4 50-2M1 47q32-3 74 2" fill="none" stroke="#614e40" stroke-width="1.6" opacity=".13"/>
+  <path d="M13 21q24-3 54 1M5 36q38 5 60 0" fill="none" stroke="#e7d1af" stroke-width="1.6" opacity=".16"/>
+ </pattern>
+</defs>
+<!-- No floor, wall or baked cast shadow. Exactly one isolated 2D desk. -->
+<g stroke-linejoin="round" stroke-linecap="round">
+ <!-- rear legs, partly occluded by wooden apron -->
+ <path d="M110 222L111 451Q110 459 103 459L93 454L89 219Z" fill="#69777a" stroke="#46575c" stroke-width="5"/>
+ <path d="M502 219L510 454Q512 462 502 464L491 458L485 210Z" fill="#617176" stroke="#475960" stroke-width="5"/>
+ <path d="M107 238L106 439M496 244L502 445" stroke="#bbc0b8" stroke-width="3" opacity=".48"/>
+ <!-- frame under tabletop -->
+ <path d="M58 218L579 218L564 301L74 301Z" fill="url(#apron)" stroke="#574e45" stroke-width="7"/>
+ <path d="M70 236L568 236" fill="none" stroke="#d2bba0" stroke-width="4" opacity=".32"/>
+ <path d="M86 277L552 277" fill="none" stroke="#695949" stroke-width="5" opacity=".44"/>
+ <!-- drawer panel and restrained metal handle -->
+ <path d="M211 239L414 239L405 275L220 275Z" fill="#9f896f" stroke="#6f604e" stroke-width="3"/>
+ <path d="M276 258L349 258" stroke="#4c5657" stroke-width="6"/>
+ <path d="M280 257L345 257" stroke="#c1bdb0" stroke-width="2" opacity=".65"/>
+ <!-- simple steel front legs -->
+ <path d="M42 235L46 491Q46 500 56 500L66 495L78 244Z" fill="url(#frontmetal)" stroke="#4a5559" stroke-width="6"/>
+ <path d="M580 233L567 489Q567 500 579 503L590 498L603 235Z" fill="url(#frontmetal)" stroke="#495559" stroke-width="6"/>
+ <path d="M58 263L58 480M591 263L578 481" stroke="#d0d2c9" stroke-width="3" opacity=".35"/>
+ <!-- cross rail for credible old school desk -->
+ <path d="M70 402L570 402L568 416L68 416Z" fill="#6e7c7e" stroke="#4b565b" stroke-width="3"/>
+ <path d="M81 405L554 405" stroke="#b1b8b0" stroke-width="2" opacity=".30"/>
+ <!-- table top: visually drawn perspective, NO 3D mesh -->
+ <path d="M76 134L519 134Q528 134 534 142L618 225Q625 233 616 239L23 240Q14 241 18 231L65 146Q69 137 76 134Z"
+ fill="#8d7761" stroke="#5e5248" stroke-width="7"/>
+ <path d="M74 138L522 138L609 225L28 226Z" fill="url(#topwood)" stroke="#d6c2a4" stroke-width="3"/>
+ <path d="M74 138L522 138L609 225L28 226Z" fill="url(#woodgrain)" opacity=".75"/>
+ <path d="M26 227L611 226L606 243L31 244Z" fill="#8b725b" stroke="#645447" stroke-width="3"/>
+ <path d="M68 145L510 145" stroke="#ecdfc7" stroke-width="4" opacity=".33"/>
+ <path d="M83 183Q257 176 463 181M158 208q133-4 270 2M292 158l81 1" stroke="#765f4b" stroke-width="2" opacity=".18" fill="none"/>
+ <!-- restrained classroom wear -->
+ <path d="M83 207l31-3m251-42l18-1M398 209l54-2M212 187l21-2" stroke="#ebdbc1" stroke-width="2" opacity=".42"/>
+ <path d="M514 166l15 19M93 161l-9 19" stroke="#786a55" stroke-width="2" opacity=".2"/>
+</g>
+</svg>
