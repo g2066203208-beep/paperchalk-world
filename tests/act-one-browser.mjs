@@ -71,6 +71,8 @@ try{
       'Painted '+face+' material not loaded: '+JSON.stringify(roomInfo.faceTextures[face]));
     assert.match(roomInfo.faceTextures[face].src,/painted\.png$/);
   }
+  assert.equal(roomInfo.faceTextures.left.ready,true);
+  assert.match(roomInfo.faceTextures.left.src,/left-painted\.svg$/);
   assert.ok(roomInfo.frame>=1);
   console.log('School 2.5D:',JSON.stringify(roomInfo));
   assert.ok((await page.locator('#pw-world-director').innerText()).trim().length>0,'An authored classmate line is visible');
