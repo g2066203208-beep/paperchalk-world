@@ -27,6 +27,32 @@
     facade:'./assets/school-room/exterior-school-facade.svg'
   });
   const FALL_MATERIAL='./assets/school-room/falling-schoolgirl-silhouette.svg';
+  const BOSS_MATERIALS=Object.freeze({
+    creature:'./assets/school-room/boss-emergence-shadow.svg',
+    rupture:'./assets/school-room/boss-rupture-floor.svg'
+  });
+  // Standalone boss birth cinematic. It never overrides the existing
+  // first-act window-fall storyline or assumes the eventual boss identity.
+  const BOSS_DURATION=4.15;
+  const easeOut=t=>1-Math.pow(1-clamp(t,0,1),3);
+  const smooth=t=>{const v=clamp(t,0,1);return v*v*(3-2*v);};
+  function bossPhaseAt(t){
+    const s=Math.max(0,Number(t)||0);
+    const flight=smooth((s-.78)/1.90);
+    return Object.freeze({
+      elapsed:s,
+      phase:s<.48?'warning':s<.78?'rupture':s<2.68?'blast':
+        s<3.70?'manifest':'boss-ready',
+      flyingFurniture:s>=.78&&s<2.68,
+      furnitureVisible:s<2.68,
+      furnitureOpacity:1-smooth((s-1.85)/.83),
+      displacement:flight,
+      bossGrowth:smooth((s-.48)/2.92),
+      bossOpacity:smooth((s-.58)/1.10),
+      ruptureStrength:s<.42?.12:s<2.70?Math.max(0,1-(s-.42)/2.28):0,
+      flash:s>=.78?Math.exp(-Math.pow((s-.9)/.20,2))*.8:0
+    });
+  }
   // Rows face the blackboard (z=9). Clear walking lanes on each side and center.
   const CLASSROOM_LAYOUT=Object.freeze({
     columns:Object.freeze([-3.48,-1.22,1.22,3.48]),
@@ -145,7 +171,7 @@
     'uniform sampler2D u_tex;',
     'uniform vec3 u_light,u_ambient,u_sunColor,u_skyColor;',
     'uniform mediump vec3 u_sunDirection;',
-    'uniform float u_sprite,u_surface,u_sunPower,u_lampPower;',
+    'uniform float u_sprite,u_surface,u_sunPower,u_lampPower,u_objectOpacity;',
     'uniform mediump float u_shadowProjection;uniform float u_shadowOpacity;',
     // Window transmission analytically projects the actual 16 glass panes
     // onto each 3D receiver. It is not a fixed screen-space overlay.
@@ -169,17 +195,19 @@
     'vec4 c=texture2D(u_tex,v_uv);if(c.a<.045)discard;',
     'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;',
     'if(u_shadowProjection>.5){',
-    'gl_FragColor=vec4(.055,.067,.092,c.a*u_shadowOpacity);return;}',
+    'gl_FragColor=vec4(.055,.067,.092,c.a*u_shadowOpacity*u_objectOpacity);return;}',
     // Sky and building are illustrated on independent 2D cards.
+    'if(u_surface>6.5){',
+    'gl_FragColor=vec4(c.rgb,c.a*u_objectOpacity);return;}',
     'if(u_surface>4.5){',
     'if(u_surface<5.5){',
     'float horizon=1.0-smoothstep(-.4,3.0,v_world.y);',
     'vec3 sky=mix(c.rgb,u_skyColor,.78);',
     'sky+=horizon*u_sunColor*u_sunPower*.12;',
-    'gl_FragColor=vec4(clamp(sky,0.0,1.0),c.a);return;}',
+    'gl_FragColor=vec4(clamp(sky,0.0,1.0),c.a*u_objectOpacity);return;}',
     'vec3 facade=c.rgb*(u_ambient*.78+.07);',
     'facade+=u_sunColor*u_sunPower*.12;',
-    'gl_FragColor=vec4(clamp(facade,0.0,1.0),c.a);return;}',
+    'gl_FragColor=vec4(clamp(facade,0.0,1.0),c.a*u_objectOpacity);return;}',
     'float windowNear=exp(-max(0.0,v_world.x+5.0)*.27);',
     'float bounce=u_sunPower*(.065+.13*windowNear);',
     'float direct=u_sunPower*windowTransmission(v_world);',
@@ -191,7 +219,7 @@
     'float floorGlow=clamp(1.0-v_world.y/.23,0.0,1.0);',
     'vec3 finalColor=c.rgb*min(diffuse,vec3(1.46));',
     'finalColor+=u_sunColor*direct*floorGlow*.12*c.rgb;',
-    'gl_FragColor=vec4(clamp(finalColor,0.0,1.0),c.a);}'
+    'gl_FragColor=vec4(clamp(finalColor,0.0,1.0),c.a*u_objectOpacity);}'
   ].join('\n');
   const faces=Object.freeze({
     back:[[-5,0,9],[5,0,9],[5,ROOM.height,9],[-5,ROOM.height,9]],
@@ -210,6 +238,7 @@
   // Lightweight X/Y drawing planes at world-space Z. The camera supplies
   // perspective scaling and the depth buffer supplies correct occlusion.
   const furnitureSurfaces={desk:[],chair:[],podium:[]};
+  const furnitureInstances=[];
   function furnitureQuad(id,points){
     const uv=[[0,0],[1,0],[1,1],[0,1]];
     for(const i of [0,1,2,0,2,3])furnitureSurfaces[id].push(...points[i],...uv[i]);
@@ -230,10 +259,56 @@
     facade:exteriorQuad(EXTERIOR.schoolX)
   });
   function standee(id,x,z,w,h){
-    // Flat, painted, alpha-masked prop. No baked shadows or cuboids.
+    // The stable 2D card defines both its regular batch and independent
+    // flight trajectory. No 3D mesh parts or duplicated artwork.
+    furnitureInstances.push(Object.freeze({id,x,z,w,h,index:furnitureInstances.length}));
     furnitureQuad(id,[
       [x-w/2,0,z],[x+w/2,0,z],[x+w/2,h,z],[x-w/2,h,z]
     ]);
+  }
+  function flightQuad(prop,phase){
+    // Deterministic per-card shock physics; every desk and chair has its own
+    // x/z displacement, lift, spin and final removal, not a sheet translation.
+    const f=phase.displacement;
+    const seed=((prop.index*47+17)%101)/101;
+    const fromX=prop.x+.12*Math.sin(prop.index*1.37);
+    const fromZ=prop.z-4.8+.10*Math.cos(prop.index*.92);
+    const len=Math.hypot(fromX,fromZ)||1;
+    const dx=fromX/len,dz=fromZ/len;
+    const lift=(1.7+seed*1.45)*Math.sin(Math.PI*f*.5);
+    const turn=(prop.index%2?-1:1)*f*(1.12+seed*2.40);
+    const cx=prop.x+dx*f*f*(3.4+seed*2.9);
+    const cz=prop.z+dz*f*f*(3.6+seed*2.5);
+    const cy=lift-.2*f*f;
+    const co=Math.cos(turn),si=Math.sin(turn),twist=.20*Math.sin(f*Math.PI)*((prop.index%3)-1);
+    const corners=[[-prop.w/2,0],[prop.w/2,0],[prop.w/2,prop.h],[-prop.w/2,prop.h]];
+    const uv=[[0,0],[1,0],[1,1],[0,1]],out=[];
+    for(const k of [0,1,2,0,2,3]){
+      const [u,v]=corners[k],yLocal=v-prop.h*.48;
+      out.push(cx+u*co-yLocal*si,cy+u*si+yLocal*co+prop.h*.48,
+        cz+u*twist,...uv[k]);
+    }
+    return new Float32Array(out);
+  }
+  function bossQuad(t){
+    const phase=bossPhaseAt(t),scale=Math.max(.001,phase.bossGrowth);
+    const w=2.26*scale,h=3.10*scale,x=.16,z=4.85;
+    // The silhouette rises from BELOW the floor, expands, then holds.
+    const base=-1.32*(1-phase.bossGrowth)+.02;
+    const pts=[[x-w/2,base,z],[x+w/2,base,z],[x+w/2,base+h,z],[x-w/2,base+h,z]];
+    const uv=[[0,0],[1,0],[1,1],[0,1]],out=[];
+    for(const k of [0,1,2,0,2,3])out.push(...pts[k],...uv[k]);
+    return new Float32Array(out);
+  }
+  function ruptureQuad(t){
+    const phase=bossPhaseAt(t);
+    const growth=smooth((t-.45)/1.70);
+    const radius=.75+4.15*growth,x=.04,z=4.81,y=.028;
+    const pts=[[x-radius,y,z-radius],[x-radius,y,z+radius],
+      [x+radius,y,z+radius],[x+radius,y,z-radius]];
+    const uv=[[0,0],[0,1],[1,1],[1,0]],out=[];
+    for(const k of [0,1,2,0,2,3])out.push(...pts[k],...uv[k]);
+    return new Float32Array(out);
   }
   CLASSROOM_LAYOUT.rows.forEach((z)=>
     CLASSROOM_LAYOUT.columns.forEach((x)=>{
@@ -339,9 +414,11 @@
     const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true,
       powerPreference:'low-power',preserveDrawingBuffer:true});
     let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,fallTriggerCount=0,heldFallFrame=null,lastFrameKey='';
+    let bossBornAt=0,heldBossTime=null,bossTriggerCount=0;
     const worldFaceData=textureFaces();
     const pt={},textures={},sprites={},faceGPU={},furnitureTextures={},furnitureGPU={};
     const exteriorTextures={},exteriorGPU={};
+    const flyingFurniture=[],bossTextures={},bossGPU={};
     let tprogram=null,fallGPU=null,fallTexture=null,ready=0;
     // One light field for every 2D wall, prop and actor. Time-jump fades are
     // smoothed; unchanged minutes do not redraw the GPU each frame.
@@ -425,6 +502,7 @@
       pt.surface=gl.getUniformLocation(tprogram,'u_surface');
       pt.shadowProjection=gl.getUniformLocation(tprogram,'u_shadowProjection');
       pt.shadowOpacity=gl.getUniformLocation(tprogram,'u_shadowOpacity');
+      pt.objectOpacity=gl.getUniformLocation(tprogram,'u_objectOpacity');
       fallGPU=mesh(fallingSprite(4.12));
       fallTexture=loadTexture(FALL_MATERIAL);
       for(const [id,src] of Object.entries(EXTERIOR_MATERIALS)){
@@ -437,6 +515,12 @@
         furnitureTextures[id]=loadTexture(src);
         furnitureGPU[id]=mesh(new Float32Array(furnitureSurfaces[id]));
       }
+      for(const prop of furnitureInstances)
+        flyingFurniture.push({...prop,quad:mesh(flightQuad(prop,bossPhaseAt(0)))});
+      for(const [id,src] of Object.entries(BOSS_MATERIALS))
+        bossTextures[id]=loadTexture(src);
+      bossGPU.creature=mesh(bossQuad(0));
+      bossGPU.rupture=mesh(ruptureQuad(0));
       for(const actor of ACTORS){
         const slot={...mesh(spriteGeometry(actor)),fit:null};
         slot.texture=loadTexture(actor.src,(image,item)=>{
@@ -464,10 +548,11 @@
       gl.uniform2f(loc.angles,cam.yaw,cam.pitch);
       gl.uniform2f(loc.tan,w/(2*focal),h/(2*focal));
     }
-    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false,surface=0,shadow=false){
-      if(!tex?.ready)return;
+    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false,surface=0,shadow=false,opacity=1){
+      if(!tex?.ready||opacity<=.001)return;
       uniforms(cam,w,h,tprogram,pt);gl.uniform3f(pt.light,...light);
       gl.uniform1f(pt.sprite,isSprite?1:0);
+      gl.uniform1f(pt.objectOpacity,clamp(opacity,0,1));
       gl.uniform3fv(pt.ambient,lightingState.ambient);
       gl.uniform3fv(pt.sunColor,lightingState.sunColor);
       gl.uniform3fv(pt.sunDirection,lightingState.sunDirection);
@@ -485,6 +570,30 @@
       gl.vertexAttribPointer(pt.uv,2,gl.FLOAT,false,20,12);
       gl.drawArrays(gl.TRIANGLES,0,mesh.count);
       gl.disableVertexAttribArray(pt.pos);gl.disableVertexAttribArray(pt.uv);
+    }
+    function bossElapsed(){
+      if(heldBossTime!==null)return heldBossTime;
+      return bossBornAt?Math.min(BOSS_DURATION,(performance.now()-bossBornAt)/1000):null;
+    }
+    function updateQuad(slot,vertices){
+      gl.bindBuffer(gl.ARRAY_BUFFER,slot.gpu);
+      gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.DYNAMIC_DRAW);
+    }
+    function renderBossRupture(t,cam,w,h){
+      const phase=bossPhaseAt(t);
+      if(phase.ruptureStrength<=.001)return;
+      updateQuad(bossGPU.rupture,ruptureQuad(t));
+      gl.depthMask(false);
+      textureDraw(bossTextures.rupture,bossGPU.rupture,cam,w,h,[1,1,1],
+        false,7,false,Math.min(1,phase.ruptureStrength*.96+phase.flash*.32));
+      gl.depthMask(true);
+    }
+    function renderBossBody(t,cam,w,h){
+      const phase=bossPhaseAt(t);
+      if(phase.bossOpacity<=.001)return;
+      updateQuad(bossGPU.creature,bossQuad(t));
+      textureDraw(bossTextures.creature,bossGPU.creature,cam,w,h,[1.1,.95,1.08],
+        false,4,false,phase.bossOpacity);
     }
     function visibleActors(life){
       const day=life?.day||1;
