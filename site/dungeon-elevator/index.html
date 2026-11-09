@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#c5b9b0">
+<title>地牢电梯 · 3D 方盒子场景</title>
+<link rel="stylesheet" href="./elevator.css?v=demo-1">
+<script type="module" src="./elevator.js?v=demo-1"></script>
+</head>
+<body>
+<main id="app" aria-label="地牢电梯三维场景">
+ <div id="viewport" role="img" aria-label="旧式货运电梯，3D方盒子空间、半高营业门及全高安全门">
+  <div id="fallback" hidden role="alert"></div>
+ </div>
+ <header class="top-hud" aria-label="电梯基本数据">
+  <div class="identity"><span>地牢电梯</span><small>场景测试 / 3D BOX</small></div>
+  <div class="readout floor-readout"><small>当前楼层</small><strong id="floor-label">地表 B0</strong></div>
+  <div class="readout"><small>金币</small><strong id="money-label">150 G</strong></div>
+  <div class="readout"><small>电力</small><strong id="power-label">100%</strong></div>
+  <div class="readout"><small>耐久</small><strong id="health-label">100%</strong></div>
+  <div class="readout weight"><small>承重</small><strong id="weight-label">0 / 350 kg</strong></div>
+  <div class="readout"><small>乘客</small><strong id="seats-label">0 / 4</strong></div>
+  <a class="main-link" href="../" aria-label="返回游戏主菜单">返回主菜单</a>
+ </header>
+ <section class="view-tabs" aria-label="两个固定镜头">
+  <button id="door-camera" type="button" class="is-selected" aria-pressed="true">门口镜头</button>
+  <button id="cabin-camera" type="button" aria-pressed="false">电梯内部</button>
+ </section>
+ <aside class="controls" aria-label="电梯操作台">
+  <button class="move up" id="up" type="button"><span class="direction" aria-hidden="true">↑</span><span>上行</span></button>
+  <button class="move down" id="down" type="button"><span class="direction" aria-hidden="true">↓</span><span>下行</span></button>
+  <button class="door-button" id="service-gate" type="button" aria-pressed="false"><span class="symbol">▥</span><span id="service-label">开启半高营业门</span></button>
+  <button class="door-button" id="security-gate" type="button" aria-pressed="false"><span class="symbol">╳</span><span id="security-label">开启全高安全门</span></button>
+  <button class="emergency" id="emergency" type="button"><span>⚠</span><span>紧急回地表</span></button>
+ </aside>
+ <div class="subnote">同一部电梯 · 双镜头 · 两道独立门 · 门未关闭禁止行驶</div>
+ <div id="notice" role="status" aria-live="polite">电梯已就绪。门口镜头只观察门与门外空间。</div>
+</main>
+</body>
+</html>
