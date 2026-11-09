@@ -8,6 +8,19 @@ test('the daily school is a separate real five-face environment',()=>{
   assert.deepEqual(Object.keys(school.MATERIALS).sort(),
     ['back','ceiling','floor','left','right']);
   assert.equal(school.MATERIALS.left,'./assets/school-room/left-windows-alpha.svg');
+  assert.equal(school.MATERIALS.right,'./assets/school-room/right-door-painted.svg');
+  assert.equal(school.CLASSROOM_LAYOUT.desks,20);
+  assert.equal(school.CLASSROOM_LAYOUT.chairs,20);
+  assert.equal(school.CLASSROOM_LAYOUT.columns.length,4);
+  assert.equal(school.CLASSROOM_LAYOUT.rows.length,5);
+  assert.ok(school.CLASSROOM_LAYOUT.centerAisle>=1.2);
+  assert.equal(Object.keys(school.FURNITURE_MATERIALS).length,3);
+  for(const [id,asset] of Object.entries(school.FURNITURE_MATERIALS)){
+    const {readFileSync}=require('node:fs');
+    const {join}=require('node:path');
+    const art=readFileSync(join(__dirname,'../site',asset),'utf8');
+    assert.match(art,/viewBox=/,'Missing independent painted '+id+' material');
+  }
   const {readFileSync}=require('node:fs');
   const left=readFileSync(require('node:path').join(__dirname,'../site/assets/school-room/left-painted.svg'),'utf8');
   assert.match(left,/viewBox="0 0 2048 760"/);
