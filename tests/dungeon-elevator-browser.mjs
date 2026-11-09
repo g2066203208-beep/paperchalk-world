@@ -6,12 +6,17 @@ const out='artifacts/dungeon-elevator';mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader']});
 const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
 const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+page.on('console',m=>{if(m.type()==='error')console.log('BROWSER_CONSOLE_ERROR',m.text())});
+page.on('requestfailed',r=>console.log('BROWSER_REQUEST_FAILED',r.url(),r.failure()?.errorText));
 try{
  await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:60000});
  await page.locator('#menu-dungeon-elevator').waitFor({state:'visible'});
  await page.locator('#menu-dungeon-elevator').click();
  await page.waitForURL('**/dungeon-elevator/');
- await page.locator('#viewport canvas').waitFor({state:'visible',timeout:60000});
+ await page.waitForTimeout(1600);
+ const boot=await page.evaluate(()=>({url:location.href,canvas:!!document.querySelector('#viewport canvas'),fallback:document.querySelector('#fallback')?.textContent,notice:document.querySelector('#notice')?.textContent,threeDemo:!!window.DungeonElevatorDemo}));
+ console.log('DUNGEON_BOOT',JSON.stringify({boot,errors}));
+ if(!boot.canvas){await page.screenshot({path:out+'/00-boot-failure.png'});throw new Error('3D canvas did not load: '+JSON.stringify({boot,errors}))}
  await page.waitForTimeout(450);
  const initial=await page.evaluate(()=>window.DungeonElevatorDemo.getState());
  assert.equal(initial.depth,0);assert.equal(initial.view,'door');
