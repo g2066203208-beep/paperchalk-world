@@ -59,6 +59,23 @@ try{
  assert.ok(cleanPreview.swapWidth<=34&&cleanPreview.swapHeight<=34,'Swap indicator should be small');
  assert.ok(cleanPreview.previewHeight>=135,'PC preview should remain useful');
  assert.equal(cleanPreview.sceneToastShown,false,'Initial scene must not show a permanent notification banner');
+ const quietLayout=await page.evaluate(()=>({
+  hudHeight:document.querySelector('.top-hud').getBoundingClientRect().height,
+  previewTextVisible:[...document.querySelectorAll('#swap-camera *')].filter(el=>{
+   const style=getComputedStyle(el);
+   const r=el.getBoundingClientRect();
+   return style.display!=='none'&&style.visibility!=='hidden'&&r.width>40&&r.height>25&&el.id!=='mini-viewport'&&el.tagName!=='CANVAS';
+  }).map(el=>el.className),
+  firstQuantity:document.querySelector('#stock-grid .goods-qty')?.textContent,
+  selectedGoodsDetail:document.getElementById('customer-request')?.textContent,
+  gateClosedTextHidden:document.getElementById('door-status')?.hidden
+ }));
+ assert.ok(quietLayout.hudHeight<=46,'Desktop top HUD still wastes space');
+ assert.equal(quietLayout.firstQuantity,'×5','Inventory cards should show only quantity, not repeat weight');
+ assert.match(quietLayout.selectedGoodsDetail,/2kg\/件/,'Selected cargo must retain its weight detail');
+ assert.equal(quietLayout.gateClosedTextHidden,true,'Do not repeat idle door status permanently');
+ console.log('QUIET_GAME_UI_PROOF',JSON.stringify(quietLayout));
+
  console.log('CLEAN_PREVIEW_PROOF',JSON.stringify(cleanPreview));
 
  const paperStats=await page.evaluate(()=>window.DungeonElevatorDemo.getRenderStats());
@@ -183,6 +200,18 @@ try{
  assert.ok(phoneLayout.controls.bottom<=390,'Phone control panel clipped: '+JSON.stringify(phoneLayout));
  assert.ok(phoneLayout.scrollHeight<=390&&phoneLayout.scrollWidth<=844,'Phone must not scroll like webpage: '+JSON.stringify(phoneLayout));
  assert.ok(phoneLayout.up.height>=40&&phoneLayout.down.height>=40,'Travel touch targets too small');
+ const phoneQuiet=await phone.evaluate(()=>({
+  hudHeight:document.querySelector('.top-hud').getBoundingClientRect().height,
+  previewIconWidth:document.querySelector('.preview-swap').getBoundingClientRect().width,
+  selectedGoodsQuantity:document.querySelector('.goods-qty')?.textContent,
+  doorStatusHidden:document.getElementById('door-status').hidden
+ }));
+ assert.ok(phoneQuiet.hudHeight<=34,'Phone top status consumes too much height');
+ assert.ok(phoneQuiet.previewIconWidth<=24,'Phone preview camera swap control too large');
+ assert.equal(phoneQuiet.selectedGoodsQuantity,'×5');
+ assert.equal(phoneQuiet.doorStatusHidden,true);
+ console.log('PHONE_QUIET_UI_PROOF',JSON.stringify(phoneQuiet));
+
  assert.ok(phoneLayout.emergency.height>=26,'Emergency button missing');
  await phone.screenshot({path:out+'/06-phone-landscape-844x390.png'});
  await phone.locator('#swap-camera').tap();
