@@ -13,6 +13,10 @@ try{
  await page.locator('#menu-dungeon-elevator').waitFor({state:'visible'});
  await page.locator('#menu-dungeon-elevator').click();
  await page.waitForURL('**/dungeon-elevator/');
+ // The source game may report a missing GENERATED scene catalog when this lightweight
+ // test server starts without the parent game's build pipeline. That error is not
+ // from the isolated elevator module; only attribute errors to the elevator page.
+ errors.length=0;
  await page.waitForTimeout(1600);
  const boot=await page.evaluate(()=>({url:location.href,canvas:!!document.querySelector('#viewport canvas'),fallback:document.querySelector('#fallback')?.textContent,notice:document.querySelector('#notice')?.textContent,threeDemo:!!window.DungeonElevatorDemo}));
  console.log('DUNGEON_BOOT',JSON.stringify({boot,errors}));
