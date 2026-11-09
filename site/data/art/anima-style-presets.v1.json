@@ -11,5 +11,7 @@
     "label": "可爱版",
     "positive_prefix": "<lora:akipekoanima_v1_1:0.8> @akipekostyle <lora:Munji_Anima_AITK_KNA35_18ep2520_1024_20261031:1> @muji_style <lora:anima-highres-aesthetic-boost:1> <lora:firedotinc_old-dataset_anima-b1_v6:0.8> @firedotinc-old"
   },
-  "note": "Normal differs from cute only by omitting the firedotinc LoRA and @firedotinc-old. These presets are for Anima, not GPT Image. Do not overwrite approved existing art."
+  "note": "Normal differs from cute only by omitting the firedotinc LoRA and @firedotinc-old. These presets are for Anima, not GPT Image. Do not overwrite approved existing art.",
+  "common_negative_prompt": "worst quality, low quality, blurry, jpeg artifacts, chromatic aberration, watermark",
+  "negative_prompt_policy": "Use this general quality-only negative for new Anima prompts. Do not add subject-specific negative tags unless the user explicitly requests them."
 }
