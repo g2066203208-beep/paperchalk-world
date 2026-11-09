@@ -294,7 +294,11 @@ try{
     assert.equal(await page.locator('#hud-hunger-value').textContent(),'55/80',
       'Hunger must decrease by elapsed active game time');
     await page.evaluate(()=>window.PaperWorldTopHUD.reset());
-    await page.waitForTimeout(650);
+    // Verify the real 480ms animated HUD reaches all three exact values,
+    // without assuming Chromium can always schedule animation frames in 650ms.
+    await page.waitForFunction(()=>['health','hunger','sanity'].every(k=>
+      document.getElementById('hud-'+k+'-value')?.textContent==='100/100'
+    ),null,{timeout:8000});
     assert.equal(await page.locator('#hud-health-value').textContent(),'100/100');
     assert.equal(await page.locator('#hud-hunger-value').textContent(),'100/100');
     assert.equal(await page.locator('#hud-sanity-value').textContent(),'100/100');
