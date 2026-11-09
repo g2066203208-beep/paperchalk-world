@@ -72,4 +72,66 @@ try{
   const target='artifacts/painted-school-room/painted-classroom-live-canvas.png';
   writeFileSync(target,bytes);
   console.log('PAINTED_CLASSROOM_CAPTURE',JSON.stringify({target,bytes:bytes.length,textureCount:status.textureCount,materials:status.faceTextures,drawFrames:status.frame}));
+
+  // These are real game screenshots, not cropped WebGL samples or mockups.
+  // Confirm the phone menu matches the user's actual path into daily life.
+  await page.screenshot({path:'artifacts/painted-school-room/desktop-actual-game-school.png',animations:'disabled'});
+  const mobile=await browser.newPage({
+    viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true
+  });
+  mobile.setDefaultTimeout(45000);
+  mobile.on('pageerror',e=>console.error('MOBILE_GAME_PAGE_ERROR',String(e)));
+  await mobile.goto('http://127.0.0.1:8765/?storyCapture=1',{waitUntil:'domcontentloaded',timeout:60000});
+  await mobile.screenshot({path:'artifacts/painted-school-room/mobile-00-real-menu.png'});
+  await mobile.locator('#menu-start').click();
+  const mobileDialogueCount=await mobile.evaluate(()=>window.PaperWorldStoryContent.wakeup.length);
+  for(let i=0;i<mobileDialogueCount;i++)await mobile.locator('#next-line').click();
+  await mobile.waitForFunction(()=>window.PaperWorldDailyLifeUI?.isModeActive());
+  await mobile.evaluate(()=>window.PaperWorldQuickTools?.phone?.close?.());
+  for(const dest of ['entrance','school']){
+    const travelResult=await mobile.evaluate(place=>window.PaperWorldDailyLifeUI.navigate(place),dest);
+    assert.equal(travelResult?.ok,true,'Mobile game travel to '+dest+' failed: '+JSON.stringify(travelResult));
+  }
+  await mobile.waitForFunction(()=>{
+    const s=window.PaperWorldSchoolRoomRenderer?.inspect?.();
+    return s?.active&&s?.error===null&&s?.faceTextures?.left?.ready;
+  },null,{timeout:60000});
+  const mobileScene=await mobile.evaluate(()=>{
+    window.PaperWorldSchoolRoomRenderer.render(0,0);
+    return {scene:document.querySelector('#scene')?.dataset?.scene,
+      view:window.PaperWorldSchoolRoomRenderer.inspect(),
+      viewport:{width:innerWidth,height:innerHeight}
+    };
+  });
+  assert.equal(mobileScene.scene,'school','Game must really open the 3D classroom on phone');
+  assert.match(mobileScene.view.faceTextures.left.src,/left-windows-alpha\.svg$/);
+  await mobile.screenshot({path:'artifacts/painted-school-room/mobile-01-actual-game-school.png',animations:'disabled'});
+  console.log('MOBILE_SCHOOL_GAME_SCREENSHOT',JSON.stringify({
+    scene:mobileScene.scene,renderer:mobileScene.view.renderer,
+    leftWallLoaded:mobileScene.view.faceTextures.left.ready,
+    viewport:mobileScene.viewport,textureCount:mobileScene.view.textureCount
+  }));
+  await mobile.close();
+
+  // Landscape phone dimensions, separately from the portrait UI rotation.
+  const landscape=await browser.newPage({
+    viewport:{width:844,height:390},deviceScaleFactor:1,isMobile:true,hasTouch:true
+  });
+  await landscape.goto('http://127.0.0.1:8765/?storyCapture=1',{waitUntil:'domcontentloaded',timeout:60000});
+  await landscape.locator('#menu-start').click();
+  for(let i=0;i<n;i++)await landscape.locator('#next-line').click();
+  await landscape.waitForFunction(()=>window.PaperWorldDailyLifeUI?.isModeActive());
+  await landscape.evaluate(()=>window.PaperWorldQuickTools?.phone?.close?.());
+  for(const dest of ['entrance','school']){
+    const result=await landscape.evaluate(place=>window.PaperWorldDailyLifeUI.navigate(place),dest);
+    assert.equal(result?.ok,true,'Landscape travel to '+dest+' failed');
+  }
+  await landscape.waitForFunction(()=>window.PaperWorldSchoolRoomRenderer?.inspect?.().faceTextures.left.ready);
+  await landscape.screenshot({path:'artifacts/painted-school-room/mobile-02-landscape-game-school.png',animations:'disabled'});
+  console.log('LANDSCAPE_GAME_SCHOOL_PROOF',JSON.stringify(
+    await landscape.evaluate(()=>({scene:document.querySelector('#scene')?.dataset.scene,
+      renderer:window.PaperWorldSchoolRoomRenderer.inspect().renderer}))
+  ));
+  await landscape.close();
+
 }finally{await browser.close();}
