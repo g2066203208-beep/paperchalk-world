@@ -101,6 +101,8 @@ try{
     'Girl must appear human-size in the real classroom: '+JSON.stringify(projectedHero));
   console.log('SCHOOL_HUMAN_SCALE_CAMERA',JSON.stringify(projectedHero));
   assert.equal(status.propRendering,'painted-2d-standees');
+  assert.equal(status.furnitureTextures.desk.src,
+    './assets/school-room/gpt-student-furniture-atlas.webp');
   assert.equal(status.geometryPolicy,'textured-2d-planes-only');
   assert.equal(status.solidMeshes,0);
   assert.equal(status.textureCount,status.expectedTextures);
@@ -118,7 +120,8 @@ try{
   assert.deepEqual(status.classroomLayout.rows,[2.15,3.3,4.45,5.6,6.75]);
   for(const [id,mat] of Object.entries(status.furnitureTextures)){
     assert.equal(mat.ready,true,'Student furniture material failed '+id);
-    assert.match(mat.src,/^(?:\.\/assets\/school-room\/)(?:student-(?:desk|chair)-standee|teacher-podium-standee)\.svg$/);
+    assert.match(mat.src,/gpt-student-furniture-atlas\.webp$/,
+      'Official classroom must actually render GPT-painted props: '+id);
   }
   assert.ok(status.exterior.geometryTriangles>0,'Exterior should be actual WebGL geometry');
   assert.ok(status.exterior.skyX<status.exterior.windowWallX,'Sky must be behind the wall');
