@@ -11,7 +11,7 @@
   const ROOM=Object.freeze({width:10,height:3.38,depth:9});
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
-    ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/left-painted.svg',
+    ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/left-windows-alpha.svg',
     right:'./assets/school-room/right.svg'
   });
   const ACTORS=Object.freeze([
@@ -154,7 +154,7 @@
   function silhouette(position){
     // Explicit human anatomy, not an abstract rectangle. The figure falls
     // vertically through the LEFT window on a real X/Y plane in the room.
-    const c=color('#222c37',.97),v=[],x=-4.93,z=6.10;
+    const c=color('#222c37',.97),v=[],x=-5.075,z=6.10;
     const angle=.28,ca=Math.cos(angle),sa=Math.sin(angle);
     const P=(dx,dy)=>[x+dx*ca-dy*sa,position+dx*sa+dy*ca,z];
     const triangle=(a,b,d)=>v.push(...a,...c,...b,...c,...d,...c);
