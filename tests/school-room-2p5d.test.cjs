@@ -15,9 +15,16 @@ test('the daily school is a separate real five-face environment',()=>{
   assert.equal(school.CLASSROOM_LAYOUT.rows.length,5);
   assert.ok(school.CLASSROOM_LAYOUT.centerAisle>=1.2);
   assert.equal(Object.keys(school.FURNITURE_MATERIALS).length,3);
-  assert.equal(school.FURNITURE_MATERIALS.desk,'./assets/school-room/student-desk-standee.svg');
-  assert.equal(school.FURNITURE_MATERIALS.chair,'./assets/school-room/student-chair-standee.svg');
-  assert.equal(school.FURNITURE_MATERIALS.podium,'./assets/school-room/teacher-podium-standee.svg');
+  const atlas='./assets/school-room/gpt-student-furniture-atlas.webp';
+  for(const src of Object.values(school.FURNITURE_MATERIALS))
+    assert.equal(src,atlas,'Furniture must use newly generated GPT artwork');
+  assert.deepEqual(school.FURNITURE_ATLAS,{
+    desk:[0,1/3],chair:[1/3,2/3],podium:[2/3,1]
+  });
+  const image=require('node:fs').readFileSync(
+    require('node:path').join(__dirname,'../site',atlas));
+  assert.equal(image.toString('ascii',0,4),'RIFF');
+  assert.equal(image.toString('ascii',8,12),'WEBP');
   const exterior=Object.values(school.EXTERIOR_MATERIALS);
   assert.equal(exterior.length,2);
   assert.ok(exterior.every(v=>v.startsWith('./assets/school-room/exterior-')));
@@ -32,12 +39,7 @@ test('the daily school is a separate real five-face environment',()=>{
   for(const banned of ['cuboid(', 'outsideQuad(', 'solidDraw(', 'silhouette(', 'a_color']){
     assert.equal(source.includes(banned),false,'No 3D solid mesh: '+banned);
   }
-  for(const [id,asset] of Object.entries(school.FURNITURE_MATERIALS)){
-    const {readFileSync}=require('node:fs');
-    const {join}=require('node:path');
-    const art=readFileSync(join(__dirname,'../site',asset),'utf8');
-    assert.match(art,/viewBox=/,'Missing independent painted '+id+' material');
-  }
+  assert.equal(Object.keys(school.FURNITURE_MATERIALS).length,3);
   const {readFileSync}=require('node:fs');
   const left=readFileSync(require('node:path').join(__dirname,'../site/assets/school-room/left-painted.svg'),'utf8');
   assert.match(left,/viewBox="0 0 2048 760"/);
