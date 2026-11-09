@@ -395,7 +395,7 @@
   }
   const FALL_DURATION=4.30;
   const FALL_WINDOW=Object.freeze({
-    wallX:-5,figureX:-5.57,z:6.10,width:.88,height:1.68,
+    wallX:-5,figureX:-5.57,z:5.74,width:.96,height:1.68,
     start:0.44,dropEnd:1.63,viewAngle:-.670
   });
   function fallPhaseAt(seconds){
@@ -407,7 +407,8 @@
       (FALL_WINDOW.dropEnd-FALL_WINDOW.start),0,1);
     // Accelerating downward without showing the offscreen impact.
     const yBottom=3.65-5.35*Math.pow(travel,1.76);
-    const tilt=travel*.27+Math.sin(travel*Math.PI*1.35)*.06;
+    const tilt=.04+smooth((travel-.10)/.90)*.71+
+      Math.sin(travel*Math.PI*1.40)*.07;
     const centerZ=FALL_WINDOW.z+.23*travel+
       .035*Math.sin(travel*11)*Math.sin(travel*Math.PI);
     const visible=t>=.68&&t<1.65;
@@ -418,7 +419,7 @@
         t<1.65?'fall':t<3.16?'empty-window':'aftermath',
       gaze,travel,centerZ,yBottom,tilt,
       fallingVisible:visible,afterimage:phantom,
-      afterimageOpacity:phantom?.12*Math.sin(Math.PI*travel):0,
+      afterimageOpacity:phantom?.17*Math.sin(Math.PI*travel):0,
       shock,finished:t>=FALL_DURATION
     });
   }
@@ -452,6 +453,11 @@
     const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true,
       powerPreference:'low-power',preserveDrawingBuffer:true});
     let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,fallTriggerCount=0,heldFallFrame=null,lastFrameKey='';
+    const directFallPreview=new URLSearchParams(window.location.search).get('fallPreview')==='1';
+    const textureTarget=Object.keys(MATERIALS).length+
+      Object.keys(FURNITURE_MATERIALS).length+
+      Object.keys(EXTERIOR_MATERIALS).length+
+      Object.keys(BOSS_MATERIALS).length+ACTORS.length+1;
     let bossBornAt=0,heldBossTime=null,bossTriggerCount=0;
     const worldFaceData=textureFaces();
     const pt={},textures={},sprites={},faceGPU={},furnitureTextures={},furnitureGPU={};
@@ -515,6 +521,10 @@
           item.sourcePixels={width:image.naturalWidth,height:image.naturalHeight};
           if(onLoaded)onLoaded(image,item);
           item.ready=true;ready++;lastFrameKey='';
+          // Direct cinematic URLs should begin only AFTER the transparent
+          // window, exterior, actor art and silhouette are all on the GPU.
+          if(directFallPreview&&active&&fallTriggerCount===0&&ready>=textureTarget)
+            triggerFall();
         }catch(e){item.error=String(e);}
       };
       image.onerror=()=>item.error='Failed to load '+src;
@@ -757,9 +767,10 @@
       lastFrameKey='';
       if(active){
         const flags=new URLSearchParams(window.location.search);
-        if(flags.get('fallPreview')==='1'&&fallTriggerCount===0)
-          triggerFall();
-        else if(flags.get('bossPreview')==='1' &&
+        if(directFallPreview&&fallTriggerCount===0){
+          if(ready>=textureTarget)triggerFall();
+          else render(0,0);
+        }else if(flags.get('bossPreview')==='1' &&
           !bossBornAt&&heldBossTime===null)triggerBossBirth();
         else render(0,0);
       }else{
