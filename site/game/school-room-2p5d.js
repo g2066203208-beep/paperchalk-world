@@ -17,12 +17,10 @@
   const ACTORS=Object.freeze([
     {id:'boy',src:'./assets/school-room/small-boy.svg',x:-.76,z:4.55,h:1.70,ends:5},
     {id:'girl',src:'./assets/school-room/class-idol.svg',x:-1.75,z:4.43,h:1.73,ends:1},
-    {id:'female2',src:'./assets/characters/char-002/front.png',x:2.48,z:5.18,h:1.79},
+    {id:'female2',src:'./assets/characters/civilians/schoolgirls/sg01/front.png',x:2.48,z:5.18,h:1.72},
     {id:'male1',src:'./assets/characters/char-003/front.png',x:-3.43,z:6.20,h:1.79},
     {id:'male2',src:'./assets/characters/char-016/front.png',x:3.30,z:6.10,h:1.80},
-    {id:'extra1',src:'./assets/characters/civilians/schoolgirls/sg01/front.png',x:-3.26,z:4.04,h:1.70},
     {id:'extra2',src:'./assets/characters/civilians/npc-c002/front.png',x:1.04,z:4.82,h:1.78},
-    {id:'extra3',src:'./assets/characters/civilians/npc-c005/front.png',x:.88,z:6.64,h:1.74}
   ]);
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   function camera(px=0,py=0){
@@ -144,9 +142,9 @@
     ]);
   }
   function silhouette(position){
-    const c=color('#222c37',.96),v=[],x=-4.83,z=6.84;
+    const c=color('#222c37',.96),v=[],x=-4.64,z=7.65;
     function triangle(a,b,d){v.push(...a,...c,...b,...c,...d,...c);}
-    function point(y,side){return [x,position+y,z+side];}
+    function point(y,side){return [x+side,position+y,z];}
     for(let i=0;i<16;i++){
       let a=i*Math.PI/8,b=(i+1)*Math.PI/8;
       triangle(point(0,0),point(.17*Math.sin(a),.13*Math.cos(a)),
@@ -173,7 +171,7 @@
     original.insertAdjacentElement('afterend',canvas);
     const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true,
       powerPreference:'low-power',preserveDrawingBuffer:false});
-    let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0;
+    let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,heldFallFrame=null;
     const props=new Float32Array(solids),worldFaceData=textureFaces();
     const pc={},pt={},textures={},sprites={},faceGPU={};
     let program=null,tprogram=null,colorGPU=null,fallGPU=null,ready=0;
@@ -287,6 +285,15 @@
       if(canvas.width!==bw)canvas.width=bw;
       if(canvas.height!==bh)canvas.height=bh;
       const cam=camera(px,py),s=life||window.PaperWorldDailyLifeUI?.snapshot?.();
+      // The witness reflexively turns towards the window only AFTER the fall.
+      // Walls, desks, people and shadow share one fixed-position pinhole.
+      const fallTime=heldFallFrame!==null?heldFallFrame:
+        (fallStart?(performance.now()-fallStart)/1120:0);
+      if(fallStart||heldFallFrame!==null){
+        const react=clamp((fallTime-.05)/.25,0,1)*
+          clamp((1.42-fallTime)/.22,0,1);
+        cam.yaw-=react*.25;cam.pitch+=react*.012;
+      }
       gl.viewport(0,0,bw,bh);
       gl.clearColor(.44,.47,.47,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       try{
@@ -299,9 +306,9 @@
           const sprite=sprites[actor.id];
           textureDraw(sprite.texture,sprite,cam,w,h,[.92,.94,.96],true);
         }
-        if(fallStart){
-          const t=(performance.now()-fallStart)/1120;
-          if(t>=1.3)fallStart=0;
+        if(fallStart||heldFallFrame!==null){
+          const t=heldFallFrame!==null?heldFallFrame:(performance.now()-fallStart)/1120;
+          if(t>=1.3&&heldFallFrame===null)fallStart=0;
           else{
             const silhouetteData=silhouette(4.12-6.5*t*t);
             gl.bindBuffer(gl.ARRAY_BUFFER,fallGPU);
@@ -317,20 +324,29 @@
     function setActive(value){
       active=!!value;canvas.hidden=!active;
       view.classList.toggle('school-room-active',active);
-      if(active)render(0,0);else fallStart=0;
+      if(active)render(0,0);else {fallStart=0;heldFallFrame=null;}
     }
     function triggerFall(){
       if(!active)return false;
-      fallStart=performance.now();render();return true;
+      heldFallFrame=null;fallStart=performance.now();render();return true;
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
       faces:Object.keys(faces),deskCount:25,chairCount:25,
       textureCount:ready,expectedTextures:5+ACTORS.length,
       visibleActors:active?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
-      fallActive:fallStart>0
+      fallActive:fallStart>0,heldFallFrame
     };}
-    return Object.freeze({setActive,triggerFall,render,inspect,get canvas(){return canvas}});
+    function holdFallFrame(t){
+      // QA captures a paused actual rendered animation frame, not a mockup.
+      if(new URLSearchParams(window.location.search).get('storyCapture')!=='1')
+        return false;
+      heldFallFrame=clamp(Number(t)||.55,.05,1.15);
+      fallStart=performance.now();render(0,0);return true;
+    }
+    function releaseFallFrame(){heldFallFrame=null;return true;}
+    return Object.freeze({setActive,triggerFall,holdFallFrame,releaseFallFrame,
+      render,inspect,get canvas(){return canvas}});
   }
   return Object.freeze({ROOM,MATERIALS,ACTORS,camera,project,create});
 });
