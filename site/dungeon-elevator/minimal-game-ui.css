@@ -596,3 +596,29 @@
  .emergency{height:28px;min-height:28px;font-size:11px}
  .utility-actions{display:none}
 }
+
+/* V3.1 — recover unused PC header width and remove oversized inventory tiles.
+   Desktop goods are a readable 2-column × 3-row shelf; phone stays 3 × 2. */
+@media (min-width:1091px) and (min-height:541px){
+ .top-hud .readouts{
+   flex:1;min-width:0;
+   display:flex;align-items:center;justify-content:stretch;
+ }
+ .top-hud .readout,
+ .top-hud .readout.floor-readout,
+ .top-hud .readout.weight-readout{
+   flex:1;min-width:0;padding:2px clamp(8px,1vw,20px);
+ }
+ .top-hud .readout.floor-readout{flex:1.10}
+ .top-hud .readout.weight-readout{flex:1.35}
+ .top-hud .fullscreen-btn{margin-left:0}
+ .shop-panel .stock-grid{
+   grid-template-columns:repeat(2,minmax(0,1fr));
+   grid-template-rows:repeat(3,minmax(0,1fr));
+   gap:5px;
+ }
+ .shop-panel .stock-item{justify-content:flex-start;padding:5px 10px}
+ .shop-panel .stock-item .goods-icon{width:32px;height:32px;min-width:32px}
+ .shop-panel .stock-item .goods-name{font-size:13px}
+ .shop-panel .stock-item .goods-qty{font-size:11px}
+}
