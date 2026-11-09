@@ -40,6 +40,27 @@ try{
  assert.ok(layout.main.width>layout.preview.width*2,'Left main camera should dominate');
  assert.ok(layout.preview.x>=layout.main.right&&layout.shop.y>=layout.preview.bottom&&layout.controls.y>=layout.shop.bottom,'Sidebar order incorrect');
  assert.ok(layout.controls.bottom<=1080,'Controls clipped at 1080p');
+ const cleanPreview=await page.evaluate(()=>{
+  const el=document.getElementById('swap-camera');
+  const header=el.querySelector('.preview-head'),caption=el.querySelector('.preview-caption');
+  const swap=el.querySelector('.preview-swap').getBoundingClientRect();
+  const clip=el.getBoundingClientRect();
+  const notice=document.getElementById('notice');
+  return{
+   hasHeader:!!header&&getComputedStyle(header).display!=='none',
+   hasCaption:!!caption&&getComputedStyle(caption).display!=='none',
+   swapWidth:swap.width,swapHeight:swap.height,
+   previewWidth:clip.width,previewHeight:clip.height,
+   sceneToastShown:getComputedStyle(notice).visibility==='visible'
+  };
+ });
+ assert.equal(cleanPreview.hasHeader,false,'Preview must not waste space on a camera title');
+ assert.equal(cleanPreview.hasCaption,false,'Preview must not waste space on instructions');
+ assert.ok(cleanPreview.swapWidth<=34&&cleanPreview.swapHeight<=34,'Swap indicator should be small');
+ assert.ok(cleanPreview.previewHeight>=135,'PC preview should remain useful');
+ assert.equal(cleanPreview.sceneToastShown,false,'Initial scene must not show a permanent notification banner');
+ console.log('CLEAN_PREVIEW_PROOF',JSON.stringify(cleanPreview));
+
  const paperStats=await page.evaluate(()=>window.DungeonElevatorDemo.getRenderStats());
  assert.ok(paperStats.meshes>=10,'Paper scene should have visible pieces');
  assert.deepEqual(Object.keys(paperStats.geometries),['PlaneGeometry'],'No solid 3D meshes allowed: '+JSON.stringify(paperStats.geometries));
@@ -145,6 +166,20 @@ try{
  assert.deepEqual(Object.keys(phoneLayout.stats.geometries),['PlaneGeometry']);
  assert.ok(phoneLayout.primary.width>phoneLayout.preview.width,'Phone main view should stay larger');
  assert.ok(phoneLayout.preview.x>=phoneLayout.primary.right-1,'Preview must be in right column');
+ const phoneClean=await phone.evaluate(()=>{
+  const preview=document.getElementById('swap-camera');
+  const swap=preview.querySelector('.preview-swap').getBoundingClientRect();
+  return{
+   previewText:!!preview.querySelector('.preview-head')||!!preview.querySelector('.preview-caption'),
+   indicatorSize:[swap.width,swap.height],
+   scroller:document.scrollingElement?.scrollHeight,
+   mainStatus:getComputedStyle(document.getElementById('notice')).visibility
+  };
+ });
+ assert.equal(phoneClean.previewText,false);
+ assert.ok(phoneClean.indicatorSize[0]<=34,'Phone mini camera icon too large');
+ assert.ok(phoneLayout.preview.height>=55,'Phone preview too small');
+
  assert.ok(phoneLayout.controls.bottom<=390,'Phone control panel clipped: '+JSON.stringify(phoneLayout));
  assert.ok(phoneLayout.scrollHeight<=390&&phoneLayout.scrollWidth<=844,'Phone must not scroll like webpage: '+JSON.stringify(phoneLayout));
  assert.ok(phoneLayout.up.height>=40&&phoneLayout.down.height>=40,'Travel touch targets too small');
