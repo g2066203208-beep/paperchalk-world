@@ -1,0 +1,45 @@
+name: School Painted Materials Preview
+on:
+  push:
+    paths:
+      - 'site/assets/school-room/**'
+      - 'site/game/school-room-2p5d.js'
+      - 'site/index.html'
+      - 'tests/school-painted-preview.mjs'
+      - '.github/workflows/school-painted-preview.yml'
+  workflow_dispatch:
+jobs:
+  render-actual-school:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium and project scene builder requirements
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+      - name: Build original published scene registry
+        run: python3 scripts/build_scene_catalog.py
+      - name: Serve real game assets
+        run: |
+          python3 -m http.server 8765 --directory site >/tmp/painted-school-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/painted-school-server.log
+          exit 1
+      - name: Capture actual WebGL scene pixels
+        run: node tests/school-painted-preview.mjs
+      - name: Upload clean in-game classroom frame
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: school-painted-live-canvas
+          path: artifacts/painted-school-room/*.png
+          if-no-files-found: warn
+          retention-days: 14
