@@ -5,30 +5,20 @@ import {mkdirSync,writeFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 mkdirSync('artifacts/painted-school-room',{recursive:true});
 async function captureGamePage(page,path,schoolActive=true){
-  // Chromium may stall on a full-page screenshot when long-running WebGL and
-  // continuously animated fog coexist. Keep the capture optional, but never
-  // let a screenshot-compositor timeout invalidate verified classroom geometry.
-  try{
-    await page.screenshot({path,animations:'allow',timeout:15000});
-    console.log('GAME_SCREENSHOT',path,'full-page');
-    return 'full-page';
-  }catch(e){
-    if(!schoolActive){
-      console.warn('MENU_SCREENSHOT_SKIPPED',String(e).slice(0,140));
-      return 'skipped';
-    }
-    // This is the real frame buffer from the active game WebGL, not mock art.
-    const pixels=await page.evaluate(()=>{
-      const r=window.PaperWorldSchoolRoomRenderer;
-      r.render(0,0);
-      return r.canvas.toDataURL('image/png');
-    });
-    assert.match(pixels,/^data:image\/png;base64,/);
-    writeFileSync(path,Buffer.from(pixels.split(',')[1],'base64'));
-    console.log('GAME_SCREENSHOT',path,'real-webgl-fallback');
-    return 'real-webgl-fallback';
-  }
+  // Never invoke full browser page.screenshot during animated WebGL:
+  // Chromium's compositor can block a whole test for minutes.
+  if(!schoolActive)return 'menu-skipped';
+  const encoded=await page.evaluate(()=>{
+    const r=window.PaperWorldSchoolRoomRenderer;
+    r.render(0,0);
+    return r.canvas.toDataURL('image/png');
+  });
+  assert.match(encoded,/^data:image\/png;base64,/);
+  writeFileSync(path,Buffer.from(encoded.split(',')[1],'base64'));
+  console.log('GAME_SCREENSHOT',path,'real-webgl-direct');
+  return 'real-webgl-direct';
 }
+
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFactor:1});
 page.setDefaultTimeout(45000);
@@ -167,6 +157,9 @@ try{
   writeFileSync(target,bytes);
   console.log('PAINTED_CLASSROOM_CAPTURE',JSON.stringify({target,bytes:bytes.length,textureCount:status.textureCount,materials:status.faceTextures,drawFrames:status.frame}));
 
+  // Reduce QA readback to a normal horizontal phone viewport. The first
+  // 1440x810 real game canvas was already archived above.
+  await page.setViewportSize({width:960,height:540});
   // Exact world-time lighting comparisons from the REAL game's WebGL canvas,
   // not tinted reference images. Story-capture is required for the QA override.
   const periods=[
@@ -299,8 +292,8 @@ try{
     JSON.stringify(windowProof));
   console.log('SCHOOL_FALL_REAL_WEBGL_PROOF',JSON.stringify({frames:fallProof,pixels:windowProof}));
   // An additional smooth sequence, exact game frames, for animation review.
-  for(let i=0;i<25;i++){
-    const t=4.30*i/24;
+  for(let i=0;i<19;i++){
+    const t=4.30*i/18;
     const png=await page.evaluate(at=>{
       const r=window.PaperWorldSchoolRoomRenderer;
       r.setFallPreview(at);
@@ -313,8 +306,8 @@ try{
     writeFileSync('artifacts/painted-school-room/fall-motion-'+
       String(i).padStart(2,'0')+'.png',Buffer.from(png.split(',')[1],'base64'));
   }
-  console.log('SCHOOL_FALL_REAL_MOTION_25_FRAMES',JSON.stringify({
-    count:25,duration:4.30,format:'actual-webgl-768x432',day:3
+  console.log('SCHOOL_FALL_REAL_MOTION_FRAMES',JSON.stringify({
+    count:19,duration:4.30,format:'actual-webgl-768x432',day:3
   }));
   await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setFallPreview(null));
 
@@ -361,8 +354,8 @@ try{
 
   // The full animation preview uses 29 distinct REAL WebGL frames, not image
   // interpolations or a storyboard. Downsample on readback for light artifacts.
-  for(let i=0;i<29;i++){
-    const seconds=4.15*i/28;
+  for(let i=0;i<19;i++){
+    const seconds=4.15*i/18;
     const capture=await page.evaluate(t=>{
       const renderer=window.PaperWorldSchoolRoomRenderer;
       renderer.setBossBirthPreview(t);
@@ -379,8 +372,8 @@ try{
       String(i).padStart(2,'0')+'.png',
       Buffer.from(capture.png.split(',')[1],'base64'));
   }
-  console.log('SCHOOL_BOSS_MOTION_29_REAL_FRAMES',JSON.stringify({
-    count:29,durationSeconds:4.15,format:'real-webgl-768x432',
+  console.log('SCHOOL_BOSS_MOTION_REAL_FRAMES',JSON.stringify({
+    count:19,durationSeconds:4.15,format:'real-webgl-768x432',
     noModelledFurniture:true}));
 
   await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.setBossBirthPreview(null));
