@@ -1,6 +1,6 @@
 // Real published game DOM + calendar + first-arc cinematics, not a mock scene.
 import {chromium} from 'playwright';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync,writeFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
 const base=process.env.PAPERCHALK_BROWSER_BASE||'http://127.0.0.1:8765/';
@@ -12,18 +12,32 @@ const errors=[];
 page.on('pageerror',e=>errors.push(String(e)));
 let captured=0;
 async function snap(name,motion=false){
-  try{
-    await page.screenshot({
-      path:'artifacts/act-one/'+name,animations:'allow',timeout:12000,
-      caret:'hide'
-    });
-    captured++;
-    console.log('CAPTURE '+name);
-  }catch(error){
-    // High-complexity WebGL scenes may refuse compositor readback on CI.
-    // Screenshot failure must not replace functional playable-scene testing.
-    console.warn('SCREENSHOT_UNAVAILABLE '+name+': '+String(error.message||error).slice(0,220));
+  // Readback from the ACTUAL rendered scene buffer instead of Chromium
+  // page.screenshot: full-page compositing can stall for 100+ seconds when
+  // the live fog and WebGL renderer are animating simultaneously in CI.
+  const png=await page.evaluate(()=>{
+    const school=window.PaperWorldSchoolRoomRenderer;
+    if(school?.inspect?.().active&&school.canvas?.width>0){
+      school.render(0,0);
+      return school.canvas.toDataURL('image/png');
+    }
+    const source=document.getElementById('source');
+    if(source?.complete&&source?.naturalWidth){
+      const out=document.createElement('canvas');
+      out.width=source.naturalWidth;out.height=source.naturalHeight;
+      out.getContext('2d').drawImage(source,0,0);
+      return out.toDataURL('image/png');
+    }
+    return null;
+  });
+  if(!png?.startsWith('data:image/png;base64,')){
+    console.warn('GAME_CANVAS_NOT_READY '+name);
+    return;
   }
+  writeFileSync('artifacts/act-one/'+name,
+    Buffer.from(png.split(',')[1],'base64'));
+  captured++;
+  console.log('CAPTURE '+name+' REAL_GAME_CANVAS');
 }
 const state=()=>page.evaluate(()=>window.PaperWorldDailyLifeUI.snapshot());
 const story=()=>page.evaluate(()=>window.PaperWorldDailyLifeUI.actOne.snapshot());
