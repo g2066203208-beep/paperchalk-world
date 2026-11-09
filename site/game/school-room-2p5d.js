@@ -12,7 +12,20 @@
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
     ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/left-windows-alpha.svg',
-    right:'./assets/school-room/right.svg'
+    right:'./assets/school-room/right-door-painted.svg'
+  });
+  // Separate hand-painted 2D prop materials; true 3D furniture carries the textures.
+  const FURNITURE_MATERIALS=Object.freeze({
+    desktop:'./assets/school-room/student-desk-top.svg',
+    seat:'./assets/school-room/student-chair-seat.svg',
+    backrest:'./assets/school-room/student-chair-back.svg'
+  });
+  // Rows face the blackboard (z=9). Clear walking lanes on each side and center.
+  const CLASSROOM_LAYOUT=Object.freeze({
+    columns:Object.freeze([-3.48,-1.22,1.22,3.48]),
+    rows:Object.freeze([2.15,3.3,4.45,5.6,6.75]),
+    desks:20,chairs:20,
+    centerAisle:1.35,sideAisle:.95
   });
   const ACTORS=Object.freeze([
     {id:'boy',src:'./assets/school-room/small-boy.svg',x:-.76,z:4.55,h:1.70,ends:5},
@@ -81,6 +94,11 @@
     return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255,a];
   };
   const solids=[];
+  const furnitureSurfaces={desktop:[],seat:[],backrest:[]};
+  function furnitureQuad(id,points){
+    const uv=[[0,0],[1,0],[1,1],[0,1]];
+    for(const i of [0,1,2,0,2,3])furnitureSurfaces[id].push(...points[i],...uv[i]);
+  }
   // Independent world-space exterior, NOT painted into the glass or wall asset.
   // x<-5 is outside the classroom. The window's true alpha openings reveal it.
   const EXTERIOR=Object.freeze({skyX:-10,schoolX:-8.15,windowWallX:-5});
@@ -129,18 +147,29 @@
     const wood=['#baa58f','#b09a83','#c0a88e','#b8a08a'][n%4];
     oval(x,z,.69,.60);
     cuboid(x,z,1.04,.68,.705,.755,[wood,'#96816d','#85786c']);
+    furnitureQuad('desktop',[
+      [x-.510,.759,z-.333],[x+.510,.759,z-.333],
+      [x+.510,.759,z+.333],[x-.510,.759,z+.333]
+    ]);
     cuboid(x,z+.04,.87,.54,.57,.655,['#aa9681','#8c796a','#786e65']);
     for(const dx of [-.39,.39])for(const dz of [-.22,.22])
       cuboid(x+dx,z+dz,.052,.052,.05,.7,['#88939a','#637078','#5d6a71']);
-    const chairZ=z-.63;oval(x,chairZ,.43,.33);
+    const chairZ=z-.64;oval(x,chairZ,.43,.33);
     cuboid(x,chairZ,.75,.45,.42,.50,['#657783','#52626d','#485863']);
+    furnitureQuad('seat',[
+      [x-.355,.505,chairZ-.217],[x+.355,.505,chairZ-.217],
+      [x+.355,.505,chairZ+.217],[x-.355,.505,chairZ+.217]
+    ]);
     cuboid(x,chairZ-.185,.75,.073,.49,.95,['#71818b','#586874','#4d5d69']);
+    furnitureQuad('backrest',[
+      [x-.349,.535,chairZ-.227],[x+.349,.535,chairZ-.227],
+      [x+.349,.932,chairZ-.227],[x-.349,.932,chairZ-.227]
+    ]);
     for(const dx of [-.27,.27])for(const dz of [-.13,.15])
       cuboid(x+dx,chairZ+dz,.046,.046,.03,.43,['#899297','#637079','#5f6a72']);
   }
-  const columns=[-3.58,-1.76,.06,1.88,3.7];
-  const rows=[2.26,3.51,4.76,6.01,7.26];
-  rows.forEach((z,i)=>columns.forEach((x,j)=>desk(x,z,i+j)));
+  CLASSROOM_LAYOUT.rows.forEach((z,i)=>
+    CLASSROOM_LAYOUT.columns.forEach((x,j)=>desk(x,z,i+j)));
   oval(.45,8.25,1.25,.63);
   cuboid(.48,8.29,1.50,.67,.03,.99,['#a38d76','#756a60','#6b635b']);
   cuboid(.48,7.96,1.60,.75,.98,1.045,['#b9a389','#9b8771','#8e7f6d']);
@@ -217,7 +246,7 @@
       powerPreference:'low-power',preserveDrawingBuffer:true});
     let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,fallTriggerCount=0,heldFallFrame=null,lastFrameKey='';
     const props=new Float32Array(solids),worldFaceData=textureFaces();
-    const pc={},pt={},textures={},sprites={},faceGPU={};
+    const pc={},pt={},textures={},sprites={},faceGPU={},furnitureTextures={},furnitureGPU={};
     let program=null,tprogram=null,colorGPU=null,fallGPU=null,outsideGPU=null,ready=0;
     function compile(type,code){
       const obj=gl.createShader(type);gl.shaderSource(obj,code);gl.compileShader(obj);
@@ -280,6 +309,10 @@
       gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(exterior),gl.STATIC_DRAW);
       for(const [id,data] of Object.entries(worldFaceData))faceGPU[id]=mesh(data);
       for(const [id,src] of Object.entries(MATERIALS))textures[id]=loadTexture(src);
+      for(const [id,src] of Object.entries(FURNITURE_MATERIALS)){
+        furnitureTextures[id]=loadTexture(src);
+        furnitureGPU[id]=mesh(new Float32Array(furnitureSurfaces[id]));
+      }
       for(const actor of ACTORS)
         sprites[actor.id]={texture:loadTexture(actor.src),...mesh(spriteGeometry(actor))};
       gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
@@ -360,6 +393,9 @@
         for(const id of Object.keys(MATERIALS))
           textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id]);
         solidDraw(colorGPU,props.length/7,cam,w,h);
+        // Real desk, seat and backrest geometry with separate 2D painted art.
+        for(const [id,geo] of Object.entries(furnitureGPU))
+          textureDraw(furnitureTextures[id],geo,cam,w,h,[.94,.95,.95]);
         for(const actor of visibleActors(s)){
           const sprite=sprites[actor.id];
           textureDraw(sprite.texture,sprite,cam,w,h,[.92,.94,.96],true);
@@ -390,9 +426,14 @@
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
-      faces:Object.keys(faces),deskCount:25,chairCount:25,
+      faces:Object.keys(faces),deskCount:CLASSROOM_LAYOUT.desks,
+      chairCount:CLASSROOM_LAYOUT.chairs,
+      classroomLayout:CLASSROOM_LAYOUT,
+      furnitureTextures:Object.fromEntries(
+        Object.entries(furnitureTextures).map(([id,entry])=>
+          [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
       exterior:{...EXTERIOR,geometryTriangles:exterior.length/21},
-      textureCount:ready,expectedTextures:5+ACTORS.length,
+      textureCount:ready,expectedTextures:5+ACTORS.length+Object.keys(FURNITURE_MATERIALS).length,
       faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
         [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
       visibleActors:active?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
@@ -409,5 +450,5 @@
     return Object.freeze({setActive,triggerFall,holdFallFrame,releaseFallFrame,
       render,inspect,get canvas(){return canvas}});
   }
-  return Object.freeze({ROOM,MATERIALS,ACTORS,EXTERIOR,camera,project,create});
+  return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,CLASSROOM_LAYOUT,ACTORS,EXTERIOR,camera,project,create});
 });
