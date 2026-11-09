@@ -21,6 +21,12 @@
     chair:'./assets/school-room/student-chair-standee.svg',
     podium:'./assets/school-room/teacher-podium-standee.svg'
   });
+  // The distant view and fall animation are also separate 2D texture planes.
+  const EXTERIOR_MATERIALS=Object.freeze({
+    sky:'./assets/school-room/exterior-overcast-sky.svg',
+    facade:'./assets/school-room/exterior-school-facade.svg'
+  });
+  const FALL_MATERIAL='./assets/school-room/falling-schoolgirl-silhouette.svg';
   // Rows face the blackboard (z=9). Clear walking lanes on each side and center.
   const CLASSROOM_LAYOUT=Object.freeze({
     columns:Object.freeze([-3.48,-1.22,1.22,3.48]),
@@ -66,9 +72,6 @@
     'gl_Position=vec4(xx/u_tan.x,yy/u_tan.y,cz,depth);'
   ].join('\n');
   const uniforms='uniform vec3 u_camera;uniform vec2 u_angles;uniform vec2 u_tan;\n';
-  const VS='attribute vec3 a_position;attribute vec4 a_color;'+uniforms+
-    'varying vec4 v_color;void main(){'+projectionShader+'v_color=a_color;}';
-  const FS='precision mediump float;varying vec4 v_color;void main(){gl_FragColor=v_color;}';
   const TVS='attribute vec3 a_position;attribute vec2 a_uv;'+uniforms+
     'varying vec2 v_uv;void main(){'+projectionShader+'v_uv=a_uv;}';
   const TFS='precision mediump float;varying vec2 v_uv;'+
@@ -90,10 +93,6 @@
     left:[[0,0],[0,1],[1,1],[1,0]],
     right:[[0,0],[1,0],[1,1],[0,1]]
   });
-  const color=(v,a=1)=>{
-    const n=parseInt(v.slice(1),16);
-    return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255,a];
-  };
   // Lightweight X/Y drawing planes at world-space Z. The camera supplies
   // perspective scaling and the depth buffer supplies correct occlusion.
   const furnitureSurfaces={desk:[],chair:[],podium:[]};
@@ -101,30 +100,21 @@
     const uv=[[0,0],[1,0],[1,1],[0,1]];
     for(const i of [0,1,2,0,2,3])furnitureSurfaces[id].push(...points[i],...uv[i]);
   }
-  // Independent world-space exterior, NOT painted into the glass or wall asset.
-  // x<-5 is outside the classroom. The window's true alpha openings reveal it.
+  // Far to near: each element is a single textured 2D plane.
+  // No facade windows / clouds / roof are modelled in 3D.
   const EXTERIOR=Object.freeze({skyX:-10,schoolX:-8.15,windowWallX:-5});
-  const exterior=[];
-  function outsideQuad(x,y0,y1,z0,z1,tone){
-    const rgba=color(tone);
-    for(const p of [[x,y0,z0],[x,y1,z0],[x,y1,z1],
-      [x,y0,z0],[x,y1,z1],[x,y0,z1]])exterior.push(...p,...rgba);
+  function exteriorQuad(x){
+    const y0=-3,y1=6,z0=-10,z1=30;
+    const corners=[[x,y0,z0],[x,y0,z1],[x,y1,z1],[x,y1,z0]];
+    const uv=[[0,0],[1,0],[1,1],[0,1]];
+    const v=[];
+    for(const i of [0,1,2,0,2,3])v.push(...corners[i],...uv[i]);
+    return new Float32Array(v);
   }
-  // Overcast day. The distant school building remains a separate 3D layer,
-  // allowing a figure to pass physically between it and the classroom glass.
-  outsideQuad(EXTERIOR.skyX,-3,6,-10,30,'#aebcc1');
-  outsideQuad(EXTERIOR.skyX,2.45,6,-10,30,'#98acb6');
-  outsideQuad(EXTERIOR.skyX,1.95,2.45,-10,30,'#b1c0c3');
-  outsideQuad(EXTERIOR.schoolX,-2,1.88,-8,28,'#a1a8a7');
-  outsideQuad(EXTERIOR.schoolX,1.86,1.94,-8,28,'#7b8789');
-  outsideQuad(EXTERIOR.schoolX,1.94,2.06,-8,28,'#b6bbba');
-  // Long facade, restrained glazing and structural columns. All in x=-8.15.
-  for(let z=-7.7;z<28;z+=1.72){
-    outsideQuad(EXTERIOR.schoolX+.012,1.22,1.73,z+.22,z+1.45,'#748b92');
-    outsideQuad(EXTERIOR.schoolX+.018,1.60,1.64,z+.22,z+1.45,'#a9b5b5');
-    outsideQuad(EXTERIOR.schoolX+.021,1.22,1.73,z+.81,z+.85,'#b8bdb8');
-    outsideQuad(EXTERIOR.schoolX+.024,1.13,1.21,z+.15,z+1.52,'#7d8a89');
-  }
+  const EXTERIOR_QUADS=Object.freeze({
+    sky:exteriorQuad(EXTERIOR.skyX),
+    facade:exteriorQuad(EXTERIOR.schoolX)
+  });
   function standee(id,x,z,w,h){
     // Flat, painted, alpha-masked prop. No baked shadows or cuboids.
     furnitureQuad(id,[
@@ -161,35 +151,15 @@
       a,0,z,0,0,b,h,z,1,1,a,h,z,0,1
     ]);
   }
-  function silhouette(position){
-    // Explicit human anatomy, not an abstract rectangle. The figure falls
-    // vertically through the LEFT window on a real X/Y plane in the room.
-    const c=color('#222c37',.97),v=[],x=-5.075,z=6.10;
-    const angle=.28,ca=Math.cos(angle),sa=Math.sin(angle);
-    const P=(dx,dy)=>[x+dx*ca-dy*sa,position+dx*sa+dy*ca,z];
-    const triangle=(a,b,d)=>v.push(...a,...c,...b,...c,...d,...c);
-    const poly=points=>{
-      for(let i=1;i+1<points.length;i++)
-        triangle(P(...points[0]),P(...points[i]),P(...points[i+1]));
-    };
-    for(let i=0;i<20;i++){
-      const a=i*Math.PI/10,b=(i+1)*Math.PI/10;
-      triangle(P(0,-.02),P(.16*Math.cos(a),-.02+.17*Math.sin(a)),
-        P(.16*Math.cos(b),-.02+.17*Math.sin(b)));
-    }
-    // Hair silhouette reaching behind the head.
-    poly([[-.10,.10],[-.21,-.06],[-.20,-.29],[-.12,-.28]]);
-    poly([[.10,.11],[.21,-.06],[.18,-.28],[.11,-.29]]);
-    // Narrow neck, shoulder-to-waist torso, skirt and asymmetric arms.
-    poly([[-.065,-.17],[.065,-.17],[.075,-.25],[-.075,-.25]]);
-    poly([[-.24,-.24],[.23,-.24],[.18,-.68],[-.18,-.68]]);
-    poly([[-.18,-.65],[.18,-.65],[.29,-.88],[-.29,-.88]]);
-    poly([[-.23,-.28],[-.45,-.49],[-.43,-.66],[-.12,-.43]]);
-    poly([[.22,-.28],[.43,-.41],[.50,-.56],[.39,-.62],[.13,-.46]]);
-    // Two independently falling legs, bent at different angles.
-    poly([[-.20,-.84],[-.025,-.85],[-.11,-1.33],[-.20,-1.47],[-.32,-1.42]]);
-    poly([[.025,-.85],[.19,-.85],[.29,-1.20],[.37,-1.35],[.26,-1.44],[.13,-1.29]]);
-    return new Float32Array(v);
+  function fallingSprite(position){
+    // The full figure stays behind the exterior side of the LEFT wall
+    // (all vertices x < -5) and animates as a single alpha-masked plane.
+    const z=6.1,w=.92,h=1.72,x=-5.61;
+    const x0=x-w/2,x1=x+w/2,y0=position-1.50,y1=position+.22;
+    return new Float32Array([
+      x0,y0,z,0,0, x1,y0,z,1,0, x1,y1,z,1,1,
+      x0,y0,z,0,0, x1,y1,z,1,1, x0,y1,z,0,1
+    ]);
   }
   function create({stage,view}={}){
     if(!stage||!view)throw Error('School must mount inside the actual game');
@@ -203,8 +173,9 @@
       powerPreference:'low-power',preserveDrawingBuffer:true});
     let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,fallTriggerCount=0,heldFallFrame=null,lastFrameKey='';
     const worldFaceData=textureFaces();
-    const pc={},pt={},textures={},sprites={},faceGPU={},furnitureTextures={},furnitureGPU={};
-    let program=null,tprogram=null,fallGPU=null,outsideGPU=null,ready=0;
+    const pt={},textures={},sprites={},faceGPU={},furnitureTextures={},furnitureGPU={};
+    const exteriorTextures={},exteriorGPU={};
+    let tprogram=null,fallGPU=null,fallTexture=null,ready=0;
     function compile(type,code){
       const obj=gl.createShader(type);gl.shaderSource(obj,code);gl.compileShader(obj);
       if(!gl.getShaderParameter(obj,gl.COMPILE_STATUS))
@@ -245,23 +216,21 @@
     }
     function setup(){
       if(!gl){renderer='missing-webgl';return;}
-      program=link(VS,FS);tprogram=link(TVS,TFS);
-      pc.pos=gl.getAttribLocation(program,'a_position');
-      pc.color=gl.getAttribLocation(program,'a_color');
+      tprogram=link(TVS,TFS);
       pt.pos=gl.getAttribLocation(tprogram,'a_position');
       pt.uv=gl.getAttribLocation(tprogram,'a_uv');
-      for(const [obj,prog] of [[pc,program],[pt,tprogram]]){
-        obj.camera=gl.getUniformLocation(prog,'u_camera');
-        obj.angles=gl.getUniformLocation(prog,'u_angles');
-        obj.tan=gl.getUniformLocation(prog,'u_tan');
-      }
+      pt.camera=gl.getUniformLocation(tprogram,'u_camera');
+      pt.angles=gl.getUniformLocation(tprogram,'u_angles');
+      pt.tan=gl.getUniformLocation(tprogram,'u_tan');
       pt.light=gl.getUniformLocation(tprogram,'u_light');
       pt.tex=gl.getUniformLocation(tprogram,'u_tex');
       pt.sprite=gl.getUniformLocation(tprogram,'u_sprite');
-      fallGPU=gl.createBuffer();
-      outsideGPU=gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER,outsideGPU);
-      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(exterior),gl.STATIC_DRAW);
+      fallGPU=mesh(fallingSprite(4.12));
+      fallTexture=loadTexture(FALL_MATERIAL);
+      for(const [id,src] of Object.entries(EXTERIOR_MATERIALS)){
+        exteriorTextures[id]=loadTexture(src);
+        exteriorGPU[id]=mesh(EXTERIOR_QUADS[id]);
+      }
       for(const [id,data] of Object.entries(worldFaceData))faceGPU[id]=mesh(data);
       for(const [id,src] of Object.entries(MATERIALS))textures[id]=loadTexture(src);
       for(const [id,src] of Object.entries(FURNITURE_MATERIALS)){
@@ -298,21 +267,12 @@
       gl.drawArrays(gl.TRIANGLES,0,mesh.count);
       gl.disableVertexAttribArray(pt.pos);gl.disableVertexAttribArray(pt.uv);
     }
-    function solidDraw(gpu,count,cam,w,h){
-      uniforms(cam,w,h,program,pc);
-      gl.bindBuffer(gl.ARRAY_BUFFER,gpu);
-      gl.enableVertexAttribArray(pc.pos);gl.enableVertexAttribArray(pc.color);
-      gl.vertexAttribPointer(pc.pos,3,gl.FLOAT,false,28,0);
-      gl.vertexAttribPointer(pc.color,4,gl.FLOAT,false,28,12);
-      gl.drawArrays(gl.TRIANGLES,0,count);
-      gl.disableVertexAttribArray(pc.pos);gl.disableVertexAttribArray(pc.color);
-    }
     function visibleActors(life){
       const day=life?.day||1;
       return ACTORS.filter(a=>!a.ends||day<=a.ends);
     }
     function render(px=0,py=0,life=null){
-      if(!active||!gl||!program||error)return false;
+      if(!active||!gl||!tprogram||error)return false;
       const w=stage.clientWidth,h=stage.clientHeight;
       if(w<1||h<1)return false;
       const ratio=Math.min(1.5,window.devicePixelRatio||1,Math.sqrt(2200000/w/h));
@@ -340,9 +300,10 @@
       gl.viewport(0,0,bw,bh);
       gl.clearColor(.44,.47,.47,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       try{
-        // Draw behind-wall geometry first. WebGL depth and glass alpha then
-        // reveal it only through true cutout panes, never through opaque walls.
-        solidDraw(outsideGPU,exterior.length/7,cam,w,h);
+        // Independent hand-painted sky & distant building. Both are transparent
+        // or opaque 2D materials on planes BEHIND the cut-out window wall.
+        textureDraw(exteriorTextures.sky,exteriorGPU.sky,cam,w,h,[1,1,1]);
+        textureDraw(exteriorTextures.facade,exteriorGPU.facade,cam,w,h,[1,1,1]);
         const shades={back:[.92,.95,.96],floor:[.9,.93,.95],
           ceiling:[.83,.86,.89],left:[1,1,1],right:[.86,.91,.95]};
         for(const id of Object.keys(MATERIALS))
@@ -359,10 +320,10 @@
           const t=heldFallFrame!==null?heldFallFrame:(performance.now()-fallStart)/1120;
           if(t>=1.3&&heldFallFrame===null)fallStart=0;
           else{
-            const silhouetteData=silhouette(4.12-6.5*t*t);
-            gl.bindBuffer(gl.ARRAY_BUFFER,fallGPU);
-            gl.bufferData(gl.ARRAY_BUFFER,silhouetteData,gl.DYNAMIC_DRAW);
-            solidDraw(fallGPU,silhouetteData.length/7,cam,w,h);
+            const fallVertices=fallingSprite(4.12-6.5*t*t);
+            gl.bindBuffer(gl.ARRAY_BUFFER,fallGPU.gpu);
+            gl.bufferData(gl.ARRAY_BUFFER,fallVertices,gl.DYNAMIC_DRAW);
+            textureDraw(fallTexture,fallGPU,cam,w,h,[.88,.90,.92]);
           }
         }
         if(gl.getError()!==gl.NO_ERROR)throw Error('School GL draw');
@@ -391,8 +352,15 @@
       furnitureTextures:Object.fromEntries(
         Object.entries(furnitureTextures).map(([id,entry])=>
           [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
-      exterior:{...EXTERIOR,geometryTriangles:exterior.length/21},
-      textureCount:ready,expectedTextures:5+ACTORS.length+Object.keys(FURNITURE_MATERIALS).length,
+      exterior:{...EXTERIOR,geometryTriangles:4,mode:'textured-2d-planes',
+        materials:Object.fromEntries(Object.entries(exteriorTextures).map(
+          ([id,entry])=>[id,{src:entry.src,ready:entry.ready,error:entry.error||null}]))},
+      fallingTexture:fallTexture?{src:fallTexture.src,ready:fallTexture.ready,error:fallTexture.error||null}:null,
+      geometryPolicy:'textured-2d-planes-only',
+      solidMeshes:0,
+      textureCount:ready,expectedTextures:5+ACTORS.length+
+        Object.keys(FURNITURE_MATERIALS).length+
+        Object.keys(EXTERIOR_MATERIALS).length+1,
       faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
         [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
       visibleActors:active?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
@@ -409,5 +377,6 @@
     return Object.freeze({setActive,triggerFall,holdFallFrame,releaseFallFrame,
       render,inspect,get canvas(){return canvas}});
   }
-  return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,CLASSROOM_LAYOUT,ACTORS,EXTERIOR,camera,project,create});
+  return Object.freeze({ROOM,MATERIALS,FURNITURE_MATERIALS,EXTERIOR_MATERIALS,
+    FALL_MATERIAL,CLASSROOM_LAYOUT,ACTORS,EXTERIOR,camera,project,create});
 });
