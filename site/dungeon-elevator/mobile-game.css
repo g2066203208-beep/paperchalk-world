@@ -1,0 +1,113 @@
+/* Phone landscape is a GAME canvas, not a desktop page squeezed down.
+ * All views remain in one WebGL world shared with the PC build.
+ * Safe-area insets and locked, non-scrolling HUD make it behave like a game.
+ */
+html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+#app{user-select:none;-webkit-user-select:none}
+#viewport,#mini-viewport{touch-action:none}
+button{touch-action:manipulation}
+.fullscreen-btn{align-self:center;flex:none;background:#e5ddcf;color:#49443f;border:1px solid #958679;border-bottom:3px solid #958679;border-radius:4px;font-weight:850;padding:10px 11px;white-space:nowrap}
+.fullscreen-btn:active,.move:active,.door-button:active,.stock-item:active,.request-actions button:active{transform:translateY(1px);filter:brightness(.96)}
+.rotate-tip{display:none}
+@media (pointer:coarse){
+ button{touch-action:manipulation}
+ .stock-item{min-height:42px}
+ .preview-card{cursor:pointer}
+ .stock-item:active{background:#d6e0d2}
+}
+@media (orientation:landscape) and (max-height:540px){
+ :root{--phone-small-font:11px}
+ html,body{height:100%;width:100%;margin:0;overflow:hidden;position:fixed;inset:0;background:#d9d0c5}
+ #app{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;min-height:0;display:flex;flex-direction:column}
+ .top-hud{flex:none;height:clamp(36px,10.3dvh,46px);min-height:0;padding-top:max(2px,env(safe-area-inset-top));padding-right:calc(5px + env(safe-area-inset-right));padding-bottom:2px;padding-left:calc(5px + env(safe-area-inset-left));gap:4px;flex-wrap:nowrap;align-items:stretch}
+ .identity{min-width:79px;width:79px;gap:3px;margin:0}
+ .identity-mark{font-size:17px;width:20px;height:23px;border-width:1px;box-shadow:none;flex:none}
+ .identity strong{font-size:12px;line-height:1.2;letter-spacing:0}
+ .identity small{display:none}
+ .readouts{flex:1;min-width:0;gap:2px;justify-content:stretch}
+ .readout,.readout.weight-readout,.readout.floor-readout{flex:1;min-width:0;padding:2px 3px;border-radius:2px;border-bottom-width:2px}
+ .readout.weight-readout{flex:1.8;min-width:88px}
+ .readout.floor-readout{flex:1.15;min-width:49px}
+ .readout strong,.readout.floor-readout strong{font-size:clamp(10px,1.8vw,14px);line-height:1.25}
+ .readout small{font-size:clamp(7px,1.25vw,10px);line-height:1.15;overflow:hidden}
+ .mini-meter{height:3px;margin-top:0}
+ .main-link,.fullscreen-btn{align-self:center;margin:0;height:28px;min-height:28px;border-radius:2px;padding:3px 4px;display:grid;place-items:center;font-size:10px;line-height:1.1;font-weight:700}
+ .main-link{font-size:0;min-width:34px}
+ .main-link::after{content:'返回';font-size:10px}
+ .fullscreen-btn{font-size:0;min-width:28px}
+ .fullscreen-btn::after{content:'⛶';font-size:17px}
+ .workspace{min-height:0;flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(284px,39.5%);gap:4px;padding:4px calc(4px + env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) calc(4px + env(safe-area-inset-left))}
+ .primary-stage{height:auto;min-height:0;min-width:0;border-width:1px;box-shadow:none}
+ .main-camera-title{top:7px;left:7px;padding:4px 7px;font-size:10px;gap:5px}
+ .main-camera-help{font-size:9px;padding-left:6px}
+ .camera-live{width:6px;height:6px}
+ .scene-bottom{left:7px;right:7px;bottom:47px}
+ .scene-info{padding:4px 6px;max-width:95%}
+ .scene-info span{font-size:10px}
+ .scene-info small{font-size:9px}
+ .scene-hint{display:none}
+ #notice{bottom:5px;left:5px;right:5px;min-height:31px;padding:5px 8px;font-size:10px;line-height:1.25;border-left-width:3px}
+ .sidebar{display:grid;min-height:0;min-width:0;gap:4px;grid-template-rows:clamp(51px,17%,76px) minmax(0,1fr) clamp(122px,39%,155px)}
+ .preview-card{min-height:0;height:auto;flex:none;box-shadow:none;border-width:1px}
+ .preview-head{left:5px;right:5px;top:4px;padding:3px 5px;font-size:10px;gap:5px}
+ .preview-caption{right:4px;bottom:4px;padding:2px 4px;font-size:9px}
+ .shop-panel,.control-panel{min-height:0;height:auto;overflow:hidden;padding:3px 4px;gap:2px;border-bottom-width:1px;box-shadow:none}
+ .section-heading,.control-heading{min-height:16px;max-height:18px;border-bottom:none;padding-bottom:0;align-items:center}
+ .section-heading h2{font-size:11px}
+ .eyebrow{display:none}
+ .capacity,.door-status{font-size:9px;padding:1px 4px}
+ .stock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2px;flex:1;min-height:0}
+ .stock-item{min-height:0;border-bottom-width:1px;padding:1px 3px;gap:2px;border-radius:2px}
+ .stock-item .goods-icon{width:18px;height:18px;min-width:18px;font-size:14px;border:0;background:transparent}
+ .stock-item .goods-name{font-size:10px;line-height:1.15}
+ .stock-item .goods-qty{font-size:9px;line-height:1.15}
+ .customer-strip{min-height:43px;max-height:49px;padding:3px 4px;gap:2px}
+ .customer-upper{height:11px;gap:3px}
+ .request-mark{display:none}
+ .customer-upper strong{font-size:10px;line-height:1}
+ .request-floor{font-size:9px}
+ .request-copy{font-size:9px;min-height:11px;line-height:1.1}
+ .request-actions{gap:3px;grid-template-columns:1.05fr .95fr .6fr;min-height:24px}
+ .request-actions button{font-size:10px;min-height:23px;padding:2px 3px;border-width:1px;border-radius:2px}
+ .control-panel{gap:3px}
+ .control-heading{min-height:17px;max-height:17px}
+ .travel-actions{flex:1;min-height:42px;height:auto;gap:4px}
+ .move{gap:5px;border-width:1px;border-bottom-width:3px;border-radius:3px}
+ .move .arrow{font-size:35px}
+ .move-text strong{font-size:16px;line-height:1.05}
+ .move-text small{font-size:9px}
+ .gate-actions{min-height:28px;height:28px;gap:4px}
+ .door-button{min-height:28px;padding:1px 2px;gap:3px;border-bottom-width:1px;font-size:9px;border-radius:2px}
+ .gate-icon{font-size:16px;line-height:1}
+ .emergency{flex:none;height:30px;min-height:30px;font-size:12px;gap:4px;border-width:1px;border-bottom-width:2px;border-radius:3px}
+ .emergency span{font-size:16px}
+ .emergency small{font-size:9px}
+ .utility-actions{display:none}
+ .utility-popover{position:fixed;z-index:20;top:50%;left:50%;right:auto;bottom:auto;width:min(400px,85vw);max-height:82dvh;overflow:auto;transform:translate(-50%,-50%);padding:14px}
+ .utility-popover h3{font-size:16px}.utility-popover p{font-size:12px}
+}
+@media (orientation:landscape) and (max-height:410px){
+ .top-hud{height:36px}
+ .sidebar{grid-template-rows:clamp(44px,16%,60px) minmax(0,1fr) clamp(119px,40%,139px)}
+ .shop-panel .section-heading{min-height:14px;max-height:14px}
+ .customer-strip{min-height:41px;max-height:43px}
+ .stock-item .goods-icon{display:none}
+ .stock-item .goods-qty{font-size:8px}
+ .travel-actions{min-height:40px}
+ .move .arrow{font-size:30px}
+ .emergency{height:28px;min-height:28px}
+ .gate-actions{height:27px;min-height:27px}
+}
+@media (pointer:coarse) and (orientation:portrait) and (max-width:900px){
+ .rotate-tip{position:fixed;z-index:100;inset:0;display:flex;align-items:center;justify-content:center;gap:16px;flex-direction:column;padding:28px;background:#dcd2c5;color:#3e3834;text-align:center}
+ .rotate-tip .rotate-symbol{font-size:72px;color:#758675;line-height:1}
+ .rotate-tip strong{font-size:24px;letter-spacing:.07em}
+ .rotate-tip span{max-width:290px;line-height:1.6;color:#766961;font-size:14px}
+}
+@media (pointer:coarse) and (orientation:landscape) and (min-height:541px){
+ .top-hud{padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right))}
+ .workspace{padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right));padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+ .travel-actions .move{min-height:80px}
+ .gate-actions .door-button{min-height:48px}
+ .preview-card{min-height:150px}
+}
