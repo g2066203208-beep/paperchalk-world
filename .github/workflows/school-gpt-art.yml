@@ -1,0 +1,44 @@
+name: School GPT Art — actual 2.5D WebGL proof
+on:
+  push:
+    paths:
+      - 'site/game/school-room-2p5d.js'
+      - 'site/assets/school-room/gpt-*.webp'
+      - 'tests/school-gpt-art-smoke.mjs'
+      - '.github/workflows/school-gpt-art.yml'
+  workflow_dispatch:
+jobs:
+  real-classroom:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser and project requirements
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+      - name: Prepare real game scene catalog
+        run: python3 scripts/build_scene_catalog.py
+      - name: Serve formal game
+        run: |
+          python3 -m http.server 8765 --directory site >/tmp/gpt-game-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/gpt-game-server.log
+          exit 1
+      - name: Validate actual GPT props, portraits, aspect and phone screenshots
+        run: node tests/school-gpt-art-smoke.mjs
+      - name: Upload formal-game screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: classroom-gpt-art-real-webgl
+          path: artifacts/school-gpt-art/*.png
+          if-no-files-found: warn
+          retention-days: 14
