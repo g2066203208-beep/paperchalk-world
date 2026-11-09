@@ -27,7 +27,7 @@ try{
     const response=await page.evaluate(t=>{
       const r=window.PaperWorldSchoolRoomRenderer;
       r.setLightingPreview(660);
-      assert: if(!r.setFallPreview(t))throw Error('QA preview denied');
+      if(!r.setFallPreview(t))throw Error('QA preview denied');
       r.render(0,0,{...(window.PaperWorldDailyLifeUI?.snapshot?.()||{}),day:3});
       return {png:r.canvas.toDataURL('image/png'),
         stage:r.inspect().fallSequence.stage,geometry:r.inspect().fallMaterialGeometry,
