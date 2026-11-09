@@ -28,6 +28,13 @@ try{
  assert.ok(layout.main.width>layout.preview.width*2,'Left main camera should dominate');
  assert.ok(layout.preview.x>=layout.main.right&&layout.shop.y>=layout.preview.bottom&&layout.controls.y>=layout.shop.bottom,'Sidebar order incorrect');
  assert.ok(layout.controls.bottom<=1080,'Controls clipped at 1080p');
+ const paperStats=await page.evaluate(()=>window.DungeonElevatorDemo.getRenderStats());
+ assert.ok(paperStats.meshes>=10,'Paper scene should have visible pieces');
+ assert.deepEqual(Object.keys(paperStats.geometries),['PlaneGeometry'],'No solid 3D meshes allowed: '+JSON.stringify(paperStats.geometries));
+ await page.waitForFunction(()=>{
+  const a=Object.values(window.DungeonElevatorDemo.getRenderStats().art);
+  return a.length>=7&&a.every(v=>v==='ready');
+ },null,{timeout:15000});
  const initial=await state(),surface=await shaft();
  assert.equal(initial.depth,0);assert.equal(initial.view,'door');
  assert.equal(surface.floor,0);assert.equal(surface.landingVisible,false);
@@ -88,6 +95,61 @@ try{
  const end=await state(),finalShaft=await shaft();
  assert.equal(end.emergencyUsed,true);assert.equal(end.integrity,92);
  assert.equal(finalShaft.floor,0);assert.equal(finalShaft.landingVisible,false);
+ // Real phone landscape, NOT desktop CSS resized inside a browser window.
+ const phoneErrors=[];
+ const phone=await browser.newPage({viewport:{width:844,height:390},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ phone.on('pageerror',e=>phoneErrors.push(String(e)));
+ await phone.goto('http://127.0.0.1:8765/dungeon-elevator/',{waitUntil:'domcontentloaded',timeout:60000});
+ await phone.locator('#viewport canvas').waitFor({state:'visible',timeout:15000});
+ await phone.locator('#mini-viewport canvas').waitFor({state:'visible',timeout:15000});
+ await phone.waitForFunction(()=>Object.values(window.DungeonElevatorDemo.getRenderStats().art).length>=7&&Object.values(window.DungeonElevatorDemo.getRenderStats().art).every(v=>v==='ready'),null,{timeout:15000});
+ const phoneLayout=await phone.evaluate(()=>{
+  const box=id=>{const b=document.getElementById(id).getBoundingClientRect();return{x:b.x,y:b.y,width:b.width,height:b.height,right:b.right,bottom:b.bottom}};
+  return {vw:innerWidth,vh:innerHeight,scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight,
+   primary:box('primary-stage'),preview:box('swap-camera'),shop:document.querySelector('.shop-panel').getBoundingClientRect().toJSON(),
+   controls:document.querySelector('.control-panel').getBoundingClientRect().toJSON(),
+   up:box('up'),down:box('down'),gate:box('service-gate'),emergency:box('emergency'),
+   stats:window.DungeonElevatorDemo.getRenderStats()};
+ });
+ assert.deepEqual(Object.keys(phoneLayout.stats.geometries),['PlaneGeometry']);
+ assert.ok(phoneLayout.primary.width>phoneLayout.preview.width,'Phone main view should stay larger');
+ assert.ok(phoneLayout.preview.x>=phoneLayout.primary.right-1,'Preview must be in right column');
+ assert.ok(phoneLayout.controls.bottom<=390,'Phone control panel clipped: '+JSON.stringify(phoneLayout));
+ assert.ok(phoneLayout.scrollHeight<=390&&phoneLayout.scrollWidth<=844,'Phone must not scroll like webpage: '+JSON.stringify(phoneLayout));
+ assert.ok(phoneLayout.up.height>=40&&phoneLayout.down.height>=40,'Travel touch targets too small');
+ assert.ok(phoneLayout.emergency.height>=26,'Emergency button missing');
+ await phone.screenshot({path:out+'/06-phone-landscape-844x390.png'});
+ await phone.locator('#swap-camera').tap();
+ assert.equal(await phone.evaluate(()=>window.DungeonElevatorDemo.getState().view),'cabin');
+ await phone.screenshot({path:out+'/07-phone-landscape-camera-swapped-844x390.png'});
+ await phone.locator('#down').tap();
+ await phone.waitForFunction(()=>{const v=window.DungeonElevatorDemo.getState();return v.depth===1&&!v.moving},null,{timeout:15000});
+ assert.equal(await phone.evaluate(()=>window.DungeonElevatorDemo.getShaftState().landingVisible),true);
+ await phone.locator('#sell-request').tap();
+ assert.equal(await phone.evaluate(()=>window.DungeonElevatorDemo.getState().orderServed),true);
+ await phone.screenshot({path:out+'/08-phone-B1-trade-844x390.png'});
+ await phone.close();
+ const compact=await browser.newPage({viewport:{width:667,height:375},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ await compact.goto('http://127.0.0.1:8765/dungeon-elevator/',{waitUntil:'domcontentloaded',timeout:60000});
+ await compact.locator('#viewport canvas').waitFor({state:'visible',timeout:15000});
+ const compactLayout=await compact.evaluate(()=>({
+  vh:innerHeight,vw:innerWidth,
+  controlsBottom:document.querySelector('.control-panel').getBoundingClientRect().bottom,
+  sceneRight:document.getElementById('primary-stage').getBoundingClientRect().right,
+  previewLeft:document.getElementById('swap-camera').getBoundingClientRect().left,
+  scrollHeight:document.documentElement.scrollHeight
+ }));
+ assert.ok(compactLayout.controlsBottom<=375&&compactLayout.scrollHeight<=375,'Compact phone controls clipped: '+JSON.stringify(compactLayout));
+ await compact.screenshot({path:out+'/09-phone-compact-667x375.png'});
+ await compact.close();
+ const portrait=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ await portrait.goto('http://127.0.0.1:8765/dungeon-elevator/',{waitUntil:'domcontentloaded',timeout:60000});
+ assert.equal(await portrait.locator('#rotate-tip').isVisible(),true,'Portrait should display landscape instruction');
+ await portrait.screenshot({path:out+'/10-phone-portrait-rotate.png'});
+ await portrait.close();
+ assert.equal(phoneErrors.length,0,'Phone errors: '+JSON.stringify(phoneErrors));
+ console.log('PHONE_GAME_PROOF',JSON.stringify({phoneLayout,compactLayout,phoneErrors}));
+
  assert.equal(errors.length,0,'Browser page errors: '+JSON.stringify(errors));
- console.log('DUNGEON_ELEVATOR_SHAFT_PROOF',JSON.stringify({layout,initial,descending:{rockA,rockB},land1,ascending:{upA,upB},end,finalShaft,screenshots:5,errors}));
+ console.log('DUNGEON_ELEVATOR_SHAFT_PROOF',JSON.stringify({layout,initial,descending:{rockA,rockB},land1,ascending:{upA,upB},end,finalShaft,screenshots:10,errors}));
 }finally{await browser.close()}
