@@ -51,7 +51,10 @@ try{
     return s?.active&&s?.faceTextures?.back?.ready&&s?.faceTextures?.floor?.ready
       &&s?.faceTextures?.right?.ready
       &&Object.values(s?.furnitureTextures||{}).length===3
-      &&Object.values(s.furnitureTextures).every(v=>v.ready);
+      &&Object.values(s.furnitureTextures).every(v=>v.ready)
+      &&Object.values(s?.exterior?.materials||{}).length===2
+      &&Object.values(s.exterior.materials).every(v=>v.ready)
+      &&s?.fallingTexture?.ready;
   },null,{timeout:60000});
   const status=await page.evaluate(()=>{
     window.PaperWorldSchoolRoomRenderer.render(0,0);
@@ -69,6 +72,16 @@ try{
   assert.equal(status.deskCount,20);
   assert.equal(status.chairCount,20);
   assert.equal(status.propRendering,'painted-2d-standees');
+  assert.equal(status.geometryPolicy,'textured-2d-planes-only');
+  assert.equal(status.solidMeshes,0);
+  assert.equal(status.textureCount,status.expectedTextures);
+  assert.equal(status.exterior.mode,'textured-2d-planes');
+  assert.equal(status.exterior.materials.sky.ready,true);
+  assert.equal(status.exterior.materials.facade.ready,true);
+  assert.match(status.exterior.materials.sky.src,/exterior-overcast-sky\.svg$/);
+  assert.match(status.exterior.materials.facade.src,/exterior-school-facade\.svg$/);
+  assert.equal(status.fallingTexture.ready,true);
+  assert.match(status.fallingTexture.src,/falling-schoolgirl-silhouette\.svg$/);
   assert.equal(status.propCount,41);
   assert.deepEqual(status.propTriangles,{desk:40,chair:40,podium:2});
   assert.equal(Object.keys(status.furnitureTextures).length,3);
@@ -137,6 +150,8 @@ try{
   await mobile.waitForFunction(()=>{
     const s=window.PaperWorldSchoolRoomRenderer?.inspect?.();
     return s?.active&&s?.error===null&&s?.faceTextures?.left?.ready
+      &&Object.values(s?.exterior?.materials||{}).every(v=>v.ready)
+      &&s?.fallingTexture?.ready
       &&s?.faceTextures?.right?.ready
       &&Object.values(s?.furnitureTextures||{}).every(v=>v.ready);
   },null,{timeout:60000});
@@ -170,7 +185,11 @@ try{
     const result=await landscape.evaluate(place=>window.PaperWorldDailyLifeUI.navigate(place),dest);
     assert.equal(result?.ok,true,'Landscape travel to '+dest+' failed');
   }
-  await landscape.waitForFunction(()=>window.PaperWorldSchoolRoomRenderer?.inspect?.().faceTextures.left.ready);
+  await landscape.waitForFunction(()=>{
+    const s=window.PaperWorldSchoolRoomRenderer?.inspect?.();
+    return s?.faceTextures?.left?.ready&&s?.fallingTexture?.ready
+      &&Object.values(s?.exterior?.materials||{}).every(v=>v.ready);
+  });
   await captureGamePage(landscape,'artifacts/painted-school-room/mobile-02-landscape-game-school.png');
   console.log('LANDSCAPE_GAME_SCHOOL_PROOF',JSON.stringify(
     await landscape.evaluate(()=>({scene:document.querySelector('#scene')?.dataset.scene,
