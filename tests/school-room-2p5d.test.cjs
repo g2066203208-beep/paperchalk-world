@@ -69,6 +69,27 @@ test('school lens uses human-sized actors, not a wide overview of the ceiling',(
     'Physical 1.73m actor should occupy a readable fraction: '+fraction);
   assert.ok(cam.hFov<=56&&cam.z> -1.2,'Portrait lens should frame humans');
 });
+test('daylight advances with game minutes and keeps the same physical sun direction',()=>{
+  const night=school.lightingAt(23*60),dawn=school.lightingAt(390);
+  const noon=school.lightingAt(12*60),dusk=school.lightingAt(17*60+50);
+  const after=school.lightingAt(19*60+45);
+  assert.equal(night.phase,'night');
+  assert.equal(night.sunPower,0);
+  assert.ok(night.lampPower>0);
+  assert.equal(dawn.phase,'sunrise');
+  assert.ok(dawn.sunPower>.3&&dawn.sunPower<noon.sunPower);
+  assert.ok(dawn.sunColor[0]>dawn.sunColor[2]*1.5);
+  assert.ok(noon.ambient[0]>dawn.ambient[0]);
+  assert.ok(dusk.sunPower>.3,'Sunset must still pass direct rays');
+  assert.ok(dusk.sunColor[0]>dusk.sunColor[2]*2);
+  assert.ok(dawn.sunDirection[2]<noon.sunDirection[2]);
+  assert.ok(dusk.sunDirection[2]>noon.sunDirection[2],
+    'Sunset and sunrise use one moving world-space sun');
+  assert.equal(after.sunPower,0);
+  assert.ok(after.lampPower>.1);
+  assert.deepEqual(school.lightingAt(420),school.lightingAt(420),
+    'The same in-game minute cannot randomly change lighting');
+});
 test('one shared physical perspective makes distant objects appear smaller',()=>{
   const cam=school.camera();
   const w=1440,h=810;
