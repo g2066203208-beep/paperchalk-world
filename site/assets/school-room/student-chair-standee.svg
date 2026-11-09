@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="640" viewBox="0 0 480 640">
+<title>学生椅子 · 2D透明立牌 · 单独完整椅子</title>
+<defs>
+ <linearGradient id="steel" x1="0" y1="0" x2="1" y2=".5"><stop stop-color="#abb0aa"/><stop offset=".36" stop-color="#7c8788"/><stop offset="1" stop-color="#586a70"/></linearGradient>
+ <linearGradient id="wood" x1="0" y1="0" x2="1" y2=".5"><stop stop-color="#947b63"/><stop offset=".6" stop-color="#9d8469"/><stop offset="1" stop-color="#756553"/></linearGradient>
+ <linearGradient id="seat" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ab9479"/><stop offset="1" stop-color="#897158"/></linearGradient>
+</defs>
+<!-- One isolated hand-drawn object. Real 3D space will position this sprite. -->
+<g stroke-linejoin="round" stroke-linecap="round">
+ <!-- back legs in the distance -->
+ <path d="M108 371L96 600Q96 610 105 612L117 610L132 357Z" fill="#5b6b70" stroke="#44555d" stroke-width="7"/>
+ <path d="M366 363L374 603Q376 611 386 609L397 604L386 355Z" fill="#617176" stroke="#46585e" stroke-width="7"/>
+ <path d="M112 378L107 582M377 371L384 582" stroke="#c3c7c0" opacity=".35" stroke-width="3"/>
+ <!-- curved backrest tubular structure -->
+ <path d="M74 394V89Q74 42 125 42H348Q405 42 405 93V386" fill="none" stroke="#4e5d61" stroke-width="24"/>
+ <path d="M74 394V89Q74 42 125 42H348Q405 42 405 93V386" fill="none" stroke="url(#steel)" stroke-width="15"/>
+ <path d="M84 107Q79 53 127 52H347Q394 53 394 104" fill="none" stroke="#d5d7cb" stroke-width="4" opacity=".55"/>
+ <!-- wooden backrest -->
+ <path d="M111 93Q112 80 132 80H346Q367 80 369 96L368 288Q366 301 353 304H122Q111 299 111 286Z" fill="#5c6361" stroke="#485357" stroke-width="8"/>
+ <path d="M125 97Q125 91 137 91H342Q353 91 354 99V279Q353 292 343 292H136Q125 291 125 279Z" fill="url(#wood)"/>
+ <path d="M139 110q103 5 205 0m-209 59q111-5 212 0m-202 78q97 3 184-2" fill="none" stroke="#6c5946" stroke-width="2.6" opacity=".23"/>
+ <path d="M138 104H339" stroke="#e2ccb0" opacity=".27" stroke-width="3"/>
+ <!-- steel saddle seat beneath the backrest -->
+ <path d="M96 362L381 362L445 424L43 430Z" fill="#5c6e73" stroke="#42545a" stroke-width="8"/>
+ <path d="M107 357H370L431 409H57Z" fill="url(#seat)" stroke="#625345" stroke-width="6"/>
+ <path d="M111 365H367L419 403H70Z" fill="url(#wood)" opacity=".35"/>
+ <path d="M68 413L428 411L417 433L76 436Z" fill="#78634e" stroke="#584b40" stroke-width="5"/>
+ <path d="M98 383q140-8 287 1" stroke="#d6bda0" opacity=".25" fill="none" stroke-width="3"/>
+ <!-- distinct front steel legs -->
+ <path d="M59 430L65 603Q65 618 79 621L91 617L92 433Z" fill="url(#steel)" stroke="#405159" stroke-width="7"/>
+ <path d="M417 429L408 604Q408 619 422 623L435 618L451 424Z" fill="url(#steel)" stroke="#43545a" stroke-width="7"/>
+ <path d="M77 448l6 155M433 447l-12 153" stroke="#d8d9ce" stroke-width="3" opacity=".4"/>
+ <!-- lateral chair frame -->
+ <path d="M90 510L417 511" stroke="#58686b" stroke-width="11"/>
+ <path d="M100 510H405" stroke="#a9b4b0" stroke-width="3" opacity=".4"/>
+</g>
+</svg>
