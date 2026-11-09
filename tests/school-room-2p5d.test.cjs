@@ -90,6 +90,34 @@ test('daylight advances with game minutes and keeps the same physical sun direct
   assert.deepEqual(school.lightingAt(420),school.lightingAt(420),
     'The same in-game minute cannot randomly change lighting');
 });
+test('window jump is a gravity-driven 2D silhouette parallel to the real left wall',()=>{
+  const falls=[.15,.86,1.12,1.44,2.2,3.65,4.3].map(t=>school.fallPhaseAt(t));
+  assert.ok(falls[0].gaze<.2,'Camera begins facing the class');
+  assert.ok(falls[2].gaze>.95,'Camera catches the actual window crossing');
+  assert.ok(falls[2].fallingVisible,'The girl is visible passing the glass');
+  assert.ok(falls[3].yBottom<falls[2].yBottom,
+    'Acceleration moves the figure down across successive frames');
+  assert.equal(falls[4].fallingVisible,false,'The girl vanishes below the sill');
+  assert.equal(falls[6].finished,true);
+  assert.ok(falls[5].gaze<falls[2].gaze,'The camera slowly returns from the window');
+  const f=school.fallingSprite(falls[2]);
+  assert.equal(f.length,30,'One two-triangle 2D paper sprite');
+  const xs=[...Array(6)].map((_,i)=>f[i*5]);
+  assert.ok(xs.every(x=>Math.abs(x-school.FALL_WINDOW.figureX)<1e-5),
+    'Every falling-sprite vertex must share one world X plane, parallel to window');
+  assert.ok(Math.max(...xs)<school.FALL_WINDOW.wallX,
+    'Girl must stay OUTSIDE the transparent window wall');
+  const zs=[...Array(6)].map((_,i)=>f[i*5+2]);
+  const ys=[...Array(6)].map((_,i)=>f[i*5+1]);
+  assert.ok(Math.max(...zs)-Math.min(...zs)>.78,'Card must have visible width across the pane');
+  assert.ok(Math.max(...ys)-Math.min(...ys)>1.5,'Card must retain human height');
+  const cam=school.camera();cam.yaw+=school.FALL_WINDOW.viewAngle*falls[2].gaze;
+  cam.hFov-=4.6*falls[2].gaze;
+  const center=school.project([school.FALL_WINDOW.figureX,2.1,
+    school.FALL_WINDOW.z],cam,1440,810);
+  assert.ok(center&&center.x>540&&center.x<900,
+    'Window fall must be in cinematic safe area: '+JSON.stringify(center));
+});
 test('boss emergence ejects every one of the 41 2D classroom standees',()=>{
   assert.deepEqual(Object.keys(school.BOSS_MATERIALS).sort(),['creature','rupture']);
   const phases=[0,.58,1.24,2.28,3,4.15].map(t=>school.bossPhaseAt(t));
