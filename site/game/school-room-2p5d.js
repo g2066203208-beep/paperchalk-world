@@ -128,8 +128,8 @@
   // cartoon SVG classmates are replaced by clearly tagged GPT draft art.
   // Their h is seated pose height, never an image-resize deformation.
   const ACTORS=Object.freeze([
-    {id:'boy',src:'./assets/school-room/gpt-school-boy-temporary.webp',x:-.76,z:4.55,h:1.36,standingHeight:1.70,seated:true,ends:5},
-    {id:'girl',src:'./assets/school-room/gpt-school-girl-temporary.webp',x:-1.75,z:4.43,h:1.36,standingHeight:1.73,seated:true,ends:1},
+    {id:'boy',src:'./assets/school-room/gpt-school-boy-temporary.webp',x:1.22,z:3.77,h:1.36,standingHeight:1.70,seated:true,ends:5},
+    {id:'girl',src:'./assets/school-room/gpt-school-girl-temporary.webp',x:-1.22,z:3.77,h:1.36,standingHeight:1.73,seated:true,ends:1},
     {id:'female2',src:'./assets/characters/civilians/schoolgirls/sg01/front.png',x:2.48,z:5.18,h:1.72},
     {id:'male1',src:'./assets/characters/char-003/front.png',x:-2.90,z:6.20,h:1.79},
     {id:'male2',src:'./assets/characters/char-016/front.png',x:2.05,z:6.10,h:1.80},
