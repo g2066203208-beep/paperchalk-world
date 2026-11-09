@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="512" viewBox="0 0 2048 512">
+<title>阴天校园远景天空 · 独立正交二维平面贴图</title>
+<defs>
+  <linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+    <stop stop-color="#94a8b3"/><stop offset=".35" stop-color="#b2bec1"/><stop offset=".74" stop-color="#becbca"/><stop offset="1" stop-color="#a5b7b5"/>
+  </linearGradient>
+</defs>
+<rect width="2048" height="512" fill="url(#s)"/>
+<g fill="none" stroke-linecap="round">
+ <path d="M-40 111q117-45 232-17t226-4t235-13t207 19t235-14t230 6t239-28t229 16" stroke="#d7ddd9" stroke-width="29" opacity=".16"/>
+ <path d="M-24 186q164-31 329-10t292-4t315-16t301 18t285-12t278-6t302 21" stroke="#84999c" stroke-width="21" opacity=".12"/>
+ <path d="M-23 288q184-23 349-7t303 1t319-22t298 20t346-9t315-5t310 20" stroke="#e0e4de" stroke-width="17" opacity=".12"/>
+ <path d="M-34 343q175-10 366 4t301-6t324-10t304 9t322-9t326 12" stroke="#7d9399" stroke-width="19" opacity=".075"/>
+</g>
+<path d="M0 429q165-36 325 1t309-12t327 4t279-8t301 14t279-27t228 5v106H0Z" fill="#829d9b" opacity=".11"/>
+</svg>
