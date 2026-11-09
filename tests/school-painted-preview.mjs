@@ -35,7 +35,7 @@ try{
   assert.equal(status.faceTextures.back.ready,true);
   assert.equal(status.faceTextures.floor.ready,true);
   assert.equal(status.faceTextures.left.ready,true);
-  assert.match(status.faceTextures.left.src,/left-painted\.svg$/);
+  assert.match(status.faceTextures.left.src,/left-windows-alpha\.svg$/);
   // Captures the literal canvas pixels from the already-assembled WebGL
   // 2.5D scene, with textures on their real 3D geometry.
   const data=await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.canvas.toDataURL('image/png'));
