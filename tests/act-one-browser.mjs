@@ -65,6 +65,11 @@ try{
   assert.equal(roomInfo.chairCount,20);
   assert.equal(roomInfo.propRendering,'painted-2d-standees');
   assert.equal(roomInfo.propCount,41);
+  assert.equal(roomInfo.geometryPolicy,'textured-2d-planes-only');
+  assert.equal(roomInfo.solidMeshes,0);
+  assert.equal(roomInfo.exterior.mode,'textured-2d-planes');
+  assert.ok(Object.values(roomInfo.exterior.materials).every(x=>x.ready));
+  assert.equal(roomInfo.fallingTexture.ready,true);
   assert.equal(roomInfo.faces.length,5);
   assert.equal(roomInfo.error,null);
   assert.ok(roomInfo.textureCount>=5,'All five structural faces must load');
