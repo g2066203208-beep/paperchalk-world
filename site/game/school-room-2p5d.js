@@ -81,6 +81,30 @@
     return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255,a];
   };
   const solids=[];
+  // Independent world-space exterior, NOT painted into the glass or wall asset.
+  // x<-5 is outside the classroom. The window's true alpha openings reveal it.
+  const EXTERIOR=Object.freeze({skyX:-10,schoolX:-8.15,windowWallX:-5});
+  const exterior=[];
+  function outsideQuad(x,y0,y1,z0,z1,tone){
+    const rgba=color(tone);
+    for(const p of [[x,y0,z0],[x,y1,z0],[x,y1,z1],
+      [x,y0,z0],[x,y1,z1],[x,y0,z1]])exterior.push(...p,...rgba);
+  }
+  // Overcast day. The distant school building remains a separate 3D layer,
+  // allowing a figure to pass physically between it and the classroom glass.
+  outsideQuad(EXTERIOR.skyX,-3,6,-10,30,'#aebcc1');
+  outsideQuad(EXTERIOR.skyX,2.45,6,-10,30,'#98acb6');
+  outsideQuad(EXTERIOR.skyX,1.95,2.45,-10,30,'#b1c0c3');
+  outsideQuad(EXTERIOR.schoolX,-2,1.88,-8,28,'#a1a8a7');
+  outsideQuad(EXTERIOR.schoolX,1.86,1.94,-8,28,'#7b8789');
+  outsideQuad(EXTERIOR.schoolX,1.94,2.06,-8,28,'#b6bbba');
+  // Long facade, restrained glazing and structural columns. All in x=-8.15.
+  for(let z=-7.7;z<28;z+=1.72){
+    outsideQuad(EXTERIOR.schoolX+.012,1.22,1.73,z+.22,z+1.45,'#748b92');
+    outsideQuad(EXTERIOR.schoolX+.018,1.60,1.64,z+.22,z+1.45,'#a9b5b5');
+    outsideQuad(EXTERIOR.schoolX+.021,1.22,1.73,z+.81,z+.85,'#b8bdb8');
+    outsideQuad(EXTERIOR.schoolX+.024,1.13,1.21,z+.15,z+1.52,'#7d8a89');
+  }
   function quad(a,b,c,d,tone){
     const rgba=typeof tone==='string'?color(tone):tone;
     for(const v of [a,b,c,a,c,d])solids.push(...v,...rgba);
@@ -194,7 +218,7 @@
     let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,heldFallFrame=null,lastFrameKey='';
     const props=new Float32Array(solids),worldFaceData=textureFaces();
     const pc={},pt={},textures={},sprites={},faceGPU={};
-    let program=null,tprogram=null,colorGPU=null,fallGPU=null,ready=0;
+    let program=null,tprogram=null,colorGPU=null,fallGPU=null,outsideGPU=null,ready=0;
     function compile(type,code){
       const obj=gl.createShader(type);gl.shaderSource(obj,code);gl.compileShader(obj);
       if(!gl.getShaderParameter(obj,gl.COMPILE_STATUS))
@@ -251,6 +275,9 @@
       colorGPU=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,colorGPU);
       gl.bufferData(gl.ARRAY_BUFFER,props,gl.STATIC_DRAW);
       fallGPU=gl.createBuffer();
+      outsideGPU=gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,outsideGPU);
+      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(exterior),gl.STATIC_DRAW);
       for(const [id,data] of Object.entries(worldFaceData))faceGPU[id]=mesh(data);
       for(const [id,src] of Object.entries(MATERIALS))textures[id]=loadTexture(src);
       for(const actor of ACTORS)
@@ -325,6 +352,9 @@
       gl.viewport(0,0,bw,bh);
       gl.clearColor(.44,.47,.47,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       try{
+        // Draw behind-wall geometry first. WebGL depth and glass alpha then
+        // reveal it only through true cutout panes, never through opaque walls.
+        solidDraw(outsideGPU,exterior.length/7,cam,w,h);
         const shades={back:[.92,.95,.96],floor:[.9,.93,.95],
           ceiling:[.83,.86,.89],left:[1,1,1],right:[.86,.91,.95]};
         for(const id of Object.keys(MATERIALS))
@@ -361,6 +391,7 @@
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
       faces:Object.keys(faces),deskCount:25,chairCount:25,
+      exterior:{...EXTERIOR,geometryTriangles:exterior.length/21},
       textureCount:ready,expectedTextures:5+ACTORS.length,
       faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
         [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
@@ -378,5 +409,5 @@
     return Object.freeze({setActive,triggerFall,holdFallFrame,releaseFallFrame,
       render,inspect,get canvas(){return canvas}});
   }
-  return Object.freeze({ROOM,MATERIALS,ACTORS,camera,project,create});
+  return Object.freeze({ROOM,MATERIALS,ACTORS,EXTERIOR,camera,project,create});
 });
