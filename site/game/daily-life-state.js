@@ -174,6 +174,21 @@
       updatedBy:'new-game'};
   }
   const copy=s=>JSON.parse(JSON.stringify(s));
+  // Game-scene capture metadata survives save/load and future art replacement.
+  function photoMeta(raw){
+    const r=raw&&typeof raw==='object'?raw:{};
+    const aim=r.aim&&typeof r.aim==='object'?r.aim:{};
+    const subjects=Array.isArray(r.subjects)?r.subjects.slice(0,12):[];
+    return {kind:r.kind==='game-scene'?'game-scene':'legacy',
+      scene:String(r.scene||'').slice(0,80),
+      location:String(r.location||'').slice(0,90),
+      aim:{x:CLAMP(Number(aim.x)||0,-1,1),
+        y:CLAMP(Number(aim.y)||0,-1,1),
+        zoom:CLAMP(Number(aim.zoom)||1,1,3)},
+      subjects:subjects.filter(x=>x&&typeof x.id==='string'&&
+        /^[a-zA-Z0-9_-]{2,70}$/.test(x.id)).map(x=>({
+          id:x.id,kind:String(x.kind||'object').slice(0,30)}))};
+  }
   function sanitize(raw){
     if(!raw||raw.version!==VERSION||!Number.isSafeInteger(raw.day))return defaultState();
     const s=defaultState();
@@ -260,7 +275,8 @@
         typeof m.data==='string'&&m.data.length<175000&&
         /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(m.data)).map(m=>({
           id:m.id,data:m.data,day:CLAMP(INTEGER(m.day,1),1,9999),
-          minute:CLAMP(INTEGER(m.minute,0),0,1440)
+          minute:CLAMP(INTEGER(m.minute,0),0,1440),
+          meta:photoMeta(m.meta)
         }));
     if(Array.isArray(raw.socialPosts))
       s.socialPosts=raw.socialPosts.slice(-24).filter(m=>
@@ -628,12 +644,12 @@
       state.updatedBy='metro-rumor';persist();notify('metro-rumor');
       return {ok:true,discovered:true};
     }
-    function addPhonePhoto(data){
+    function addPhonePhoto(data,meta={}){
       const bytes=String(data||'');
       if(bytes.length>175000||!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(bytes))
         return fail('照片需要是压缩后的 JPEG 图片');
       const id='photo-'+state.day+'-'+state.minute+'-'+Math.round(Math.random()*1000000);
-      state.mediaPhotos.push({id,data:bytes,day:state.day,minute:state.minute});
+      state.mediaPhotos.push({id,data:bytes,day:state.day,minute:state.minute,meta:photoMeta(meta)});
       state.mediaPhotos=state.mediaPhotos.slice(-8);
       const res=finish('phone-photo','保存了一张手机照片。');
       return {...res,photoId:id};
