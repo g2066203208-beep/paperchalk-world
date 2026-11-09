@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<title>暗红裂隙冲击光环 · 透明地板贴图</title>
+<defs>
+<radialGradient id="g">
+<stop stop-color="#050811" stop-opacity=".87"/>
+<stop offset=".23" stop-color="#1b1429" stop-opacity=".85"/>
+<stop offset=".47" stop-color="#532635" stop-opacity=".58"/>
+<stop offset=".66" stop-color="#bb5358" stop-opacity=".34"/>
+<stop offset=".82" stop-color="#5a3355" stop-opacity=".12"/>
+<stop offset="1" stop-color="#192339" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="edge"><stop stop-color="#fff0da" stop-opacity=".8"/>
+<stop offset=".28" stop-color="#dd5365" stop-opacity=".6"/>
+<stop offset="1" stop-color="#3c1d35" stop-opacity="0"/></radialGradient>
+</defs>
+<circle cx="512" cy="512" r="498" fill="url(#g)"/>
+<circle cx="512" cy="512" r="242" fill="none" stroke="#e48c86" stroke-width="9" opacity=".33"/>
+<circle cx="512" cy="512" r="318" fill="none" stroke="#bb5267" stroke-width="5" stroke-dasharray="112 26 63 19" opacity=".28"/>
+<circle cx="512" cy="512" r="388" fill="none" stroke="#d69080" stroke-width="3" stroke-dasharray="198 68 91 77" opacity=".15"/>
+<g stroke-linecap="round" fill="none">
+<path d="M512 505L628 394 698 315M512 502L398 403 304 367M514 505L553 646 630 747M501 508L432 629 320 719"
+ stroke="#f3b19a" stroke-width="9" opacity=".48"/>
+<path d="M510 506L768 492 885 540M508 503L250 500 122 538M513 511L557 234 593 128M508 509L453 791 402 909"
+ stroke="#8e344c" stroke-width="7" opacity=".46"/>
+</g>
+<circle cx="512" cy="512" r="75" fill="url(#edge)"/>
+</svg>
