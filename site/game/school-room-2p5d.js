@@ -38,8 +38,8 @@
     {id:'boy',src:'./assets/school-room/small-boy.svg',x:-.76,z:4.55,h:1.70,ends:5},
     {id:'girl',src:'./assets/school-room/class-idol.svg',x:-1.75,z:4.43,h:1.73,ends:1},
     {id:'female2',src:'./assets/characters/civilians/schoolgirls/sg01/front.png',x:2.48,z:5.18,h:1.72},
-    {id:'male1',src:'./assets/characters/char-003/front.png',x:-3.43,z:6.20,h:1.79},
-    {id:'male2',src:'./assets/characters/char-016/front.png',x:3.30,z:6.10,h:1.80},
+    {id:'male1',src:'./assets/characters/char-003/front.png',x:-2.90,z:6.20,h:1.79},
+    {id:'male2',src:'./assets/characters/char-016/front.png',x:2.05,z:6.10,h:1.80},
     {id:'extra2',src:'./assets/characters/civilians/npc-c002/front.png',x:1.04,z:4.82,h:1.78},
   ]);
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
