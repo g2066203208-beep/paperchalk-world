@@ -61,8 +61,8 @@ try{
   await page.waitForTimeout(750);
   const roomInfo=await page.evaluate(()=>window.PaperWorldSchoolRoomRenderer.inspect());
   assert.equal(roomInfo.active,true);
-  assert.equal(roomInfo.deskCount,25);
-  assert.equal(roomInfo.chairCount,25);
+  assert.equal(roomInfo.deskCount,20);
+  assert.equal(roomInfo.chairCount,20);
   assert.equal(roomInfo.faces.length,5);
   assert.equal(roomInfo.error,null);
   assert.ok(roomInfo.textureCount>=5,'All five structural faces must load');
@@ -73,6 +73,10 @@ try{
   }
   assert.equal(roomInfo.faceTextures.left.ready,true);
   assert.match(roomInfo.faceTextures.left.src,/left-windows-alpha\.svg$/);
+  assert.equal(roomInfo.faceTextures.right.ready,true);
+  assert.match(roomInfo.faceTextures.right.src,/right-door-painted\.svg$/);
+  assert.ok(Object.values(roomInfo.furnitureTextures).every(x=>x.ready),
+    'Each hand-painted desk/chair material must load in real game');
   assert.ok(roomInfo.frame>=1);
   console.log('School 2.5D:',JSON.stringify(roomInfo));
   assert.ok((await page.locator('#pw-world-director').innerText()).trim().length>0,'An authored classmate line is visible');
