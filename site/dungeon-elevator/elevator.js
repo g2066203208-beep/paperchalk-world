@@ -197,7 +197,7 @@ function makeHighGate(){
  const metal=flat(MATERIAL.metal),trim=flat(MATERIAL.trim),rust=flat(MATERIAL.rust);
  const leafW=(SIZE.w-.32)/2;
  for(let sign of [-1,1]){
-  const group=new THREE.Group();group.position.set(sign*leafW/2,0,-SIZE.d/2+.10);scene.add(group);
+  const group=new THREE.Group();group.position.set(sign*leafW/2,0,-SIZE.d/2-.11);scene.add(group);
   const left=-leafW/2+.05,right=leafW/2-.05,low=.10,high=3.64;
   for(let x of [left,right])cube(group,.075,high-low,.09,x,(low+high)/2,0,trim);
   for(let y of [low,1.35,2.55,high])cube(group,leafW,.07,.08,0,y,0,metal);
@@ -214,7 +214,7 @@ function makeLowGate(){
  const m=flat(MATERIAL.metal),dark=flat(MATERIAL.trim),panelTex=texture('half');
  const W=(SIZE.w-.32)/2;
  for(const sign of [-1,1]){
-  const group=new THREE.Group();group.position.set(sign*W/2,0,-SIZE.d/2-.19);scene.add(group);
+  const group=new THREE.Group();group.position.set(sign*W/2,0,-SIZE.d/2+.17);scene.add(group);
   panel(group,W-.09,.91,0,.49,.015,0,panelTex);
   for(let x of [-W/2+.03,W/2-.03])cube(group,.07,1.65,.10,x,.825,0,dark);
   for(let y of [.06,.94,1.62])cube(group,W,.075,.1,0,y,0,m);
