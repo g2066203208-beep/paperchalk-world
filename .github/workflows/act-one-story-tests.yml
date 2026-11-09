@@ -8,6 +8,7 @@ on:
       - 'site/game/daily-life-state.js'
       - 'site/index.html'
       - 'tests/act-one-story.test.cjs'
+      - 'tests/act-one-browser.mjs'
       - '.github/workflows/act-one-story-tests.yml'
   pull_request:
     paths:
@@ -33,3 +34,37 @@ jobs:
           node --check site/game/daily-life-state.js
       - name: Test Act One persistence and chapter continuity
         run: node --test tests/act-one-story.test.cjs
+
+  actual-game-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install real Chromium browser
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Generate the same scene registry as published game
+        run: python3 scripts/build_scene_catalog.py
+      - name: Serve actual game site
+        run: |
+          python3 -m http.server 8765 --directory site >/tmp/act-one-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/act-one-server.log
+          exit 1
+      - name: Play chapter in Chromium and capture in-game scenes
+        run: node tests/act-one-browser.mjs
+      - name: Attach real game screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: act-one-actual-game-frames
+          path: artifacts/act-one/*.png
+          if-no-files-found: warn
+          retention-days: 14
