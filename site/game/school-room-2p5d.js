@@ -296,8 +296,8 @@
       }
       const fallFrame=heldFallFrame!==null?'frozen-'+heldFallFrame:
         fallStart?Math.floor(fallTime*52):'none';
-      const fingerprint=[bw,bh,ready,s?.day||1,cam.yaw.toFixed(4),
-        cam.pitch.toFixed(4),fallFrame].join('|');
+      const fingerprint=[bw,bh,ready,s?.day||1,cam.yaw.toFixed(3),
+        cam.pitch.toFixed(3),fallFrame].join('|');
       // No WebGL redraws while the head is stationary, no assets changed
       // and no event is running. Existing fluid fog animates independently.
       if(fingerprint===lastFrameKey)return true;
