@@ -33,7 +33,7 @@
   // The distant view and fall animation are also separate 2D texture planes.
   const EXTERIOR_MATERIALS=Object.freeze({
     sky:'./assets/school-room/exterior-overcast-sky.svg',
-    facade:'./assets/school-room/exterior-school-facade.svg'
+    facade:'./assets/school-room/exterior-school-facade-gpt-2560x576.webp'
   });
   const FALL_MATERIAL='./assets/school-room/falling-schoolgirl-silhouette.svg';
   const BOSS_MATERIALS=Object.freeze({

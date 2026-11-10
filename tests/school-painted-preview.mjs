@@ -114,7 +114,7 @@ try{
   assert.equal(status.exterior.materials.sky.ready,true);
   assert.equal(status.exterior.materials.facade.ready,true);
   assert.match(status.exterior.materials.sky.src,/exterior-overcast-sky\.svg$/);
-  assert.match(status.exterior.materials.facade.src,/exterior-school-facade\.svg$/);
+  assert.match(status.exterior.materials.facade.src,/exterior-school-facade-gpt-2560x576\.webp$/);
   assert.equal(status.fallingTexture.ready,true);
   assert.match(status.fallingTexture.src,/falling-schoolgirl-silhouette\.svg$/);
   assert.equal(status.propCount,41);
