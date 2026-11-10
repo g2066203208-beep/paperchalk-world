@@ -202,7 +202,7 @@
     // preserving its illustrations and texture. The source scene is warm/dark.
     'if(u_artGrade>.5){',
     'vec3 plaster=u_artGrade>1.5?vec3(.86,.87,.85):vec3(.85,.85,.83);',
-    'c.rgb=mix(c.rgb,plaster,u_artGrade>1.5?.78:.75);}',
+    'c.rgb=mix(c.rgb,plaster,u_artGrade>1.5?.53:.64);}',
     'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;',
     'if(u_shadowProjection>.5){',
     'gl_FragColor=vec4(.055,.067,.092,c.a*u_shadowOpacity*u_objectOpacity);return;}',
