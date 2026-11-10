@@ -74,13 +74,13 @@
     {at:0,phase:'night',ambient:[.16,.21,.32],sun:[1,.62,.32],sky:[.055,.083,.15],sunPower:0,lamp:.30},
     {at:315,phase:'predawn',ambient:[.25,.31,.44],sun:[1,.56,.35],sky:[.25,.32,.48],sunPower:0,lamp:.22},
     {at:355,phase:'sunrise',ambient:[.52,.53,.59],sun:[1,.54,.28],sky:[.83,.50,.48],sunPower:.20,lamp:.09},
-    {at:390,phase:'sunrise',ambient:[.68,.66,.62],sun:[1,.64,.34],sky:[1,.68,.53],sunPower:.53,lamp:0},
-    {at:450,phase:'morning',ambient:[.76,.78,.78],sun:[1,.78,.54],sky:[.74,.79,.87],sunPower:.74,lamp:0},
-    {at:660,phase:'day',ambient:[.85,.88,.90],sun:[.99,.94,.82],sky:[.69,.79,.92],sunPower:.82,lamp:0},
-    {at:780,phase:'day',ambient:[.88,.90,.92],sun:[1,.96,.87],sky:[.70,.82,.96],sunPower:.86,lamp:0},
-    {at:960,phase:'afternoon',ambient:[.79,.79,.78],sun:[1,.81,.61],sky:[.80,.80,.85],sunPower:.78,lamp:0},
-    {at:1050,phase:'sunset',ambient:[.67,.61,.60],sun:[1,.49,.28],sky:[.97,.56,.43],sunPower:.74,lamp:0},
-    {at:1100,phase:'sunset',ambient:[.48,.47,.56],sun:[1,.42,.28],sky:[.89,.38,.42],sunPower:.40,lamp:.06},
+    {at:390,phase:'sunrise',ambient:[.58,.60,.64],sun:[1,.71,.51],sky:[.89,.69,.61],sunPower:.45,lamp:0},
+    {at:450,phase:'morning',ambient:[.69,.73,.78],sun:[1,.86,.73],sky:[.71,.80,.89],sunPower:.65,lamp:0},
+    {at:660,phase:'day',ambient:[.72,.76,.81],sun:[.99,.93,.83],sky:[.70,.80,.91],sunPower:.72,lamp:0},
+    {at:780,phase:'day',ambient:[.74,.77,.82],sun:[1,.95,.85],sky:[.72,.82,.93],sunPower:.73,lamp:0},
+    {at:960,phase:'afternoon',ambient:[.69,.71,.75],sun:[1,.84,.70],sky:[.79,.81,.86],sunPower:.66,lamp:0},
+    {at:1050,phase:'sunset',ambient:[.59,.58,.63],sun:[1,.61,.42],sky:[.92,.63,.57],sunPower:.61,lamp:.035},
+    {at:1100,phase:'sunset',ambient:[.43,.46,.54],sun:[1,.51,.35],sky:[.77,.46,.53],sunPower:.37,lamp:.09},
     {at:1145,phase:'twilight',ambient:[.30,.35,.49],sun:[1,.49,.34],sky:[.30,.27,.48],sunPower:0,lamp:.17},
     {at:1200,phase:'night',ambient:[.17,.23,.34],sun:[1,.62,.33],sky:[.07,.12,.25],sunPower:0,lamp:.29},
     {at:1440,phase:'night',ambient:[.16,.21,.32],sun:[1,.62,.32],sky:[.055,.083,.15],sunPower:0,lamp:.30}
@@ -214,16 +214,24 @@
     'facade+=u_sunColor*u_sunPower*.12;',
     'gl_FragColor=vec4(clamp(facade,0.0,1.0),c.a*u_objectOpacity);return;}',
     'float windowNear=exp(-max(0.0,v_world.x+5.0)*.27);',
-    'float bounce=u_sunPower*(.065+.13*windowNear);',
+    // Restrained blue skylight bounce; sunlight enters through actual window-alpha openings.
+    'float bounce=u_sunPower*(.04+.10*windowNear);',
     'float direct=u_sunPower*windowTransmission(v_world);',
     'vec3 diffuse=u_ambient*u_light;',
-    'diffuse+=u_sunColor*(direct*.72+bounce);',
+    'diffuse+=u_sunColor*direct*.55;',
+    'diffuse+=mix(vec3(.74,.83,.93),u_sunColor,.32)*bounce;',
     'float lampDx=(v_world.x-1.4)*.23;',
     'float lampPool=.72+.28*exp(-lampDx*lampDx);',
-    'diffuse+=vec3(.93,.85,.72)*u_lampPower*lampPool*.65;',
+    'diffuse+=vec3(.96,.87,.76)*u_lampPower*lampPool*.68;',
     'float floorGlow=clamp(1.0-v_world.y/.23,0.0,1.0);',
-    'vec3 finalColor=c.rgb*min(diffuse,vec3(1.46));',
-    'finalColor+=u_sunColor*direct*floorGlow*.12*c.rgb;',
+    // Keep painted pigments intact. Tone-map the light, not the artwork:
+    // modest cool shadow / warm daylight separation, no photo overlay or baked fog.
+    'vec3 finalColor=c.rgb*min(diffuse,vec3(1.30));',
+    'finalColor+=u_sunColor*direct*floorGlow*.045*c.rgb;',
+    'float brightness=dot(finalColor,vec3(.2126,.7152,.0722));',
+    'float penumbra=1.0-smoothstep(.12,.71,brightness);',
+    'finalColor*=mix(vec3(1.0),vec3(.92,.98,1.05),penumbra*.16);',
+    'finalColor=clamp((finalColor-vec3(.48))*1.055+vec3(.48),0.0,1.0);',
     'gl_FragColor=vec4(clamp(finalColor,0.0,1.0),c.a*u_objectOpacity);}'
   ].join('\n');
   const faces=Object.freeze({
@@ -826,6 +834,7 @@
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
+      visualLightingPreset:'balanced-anime-daylight-v1',
        roomShellOnly,renderedDesks:roomShellOnly?0:CLASSROOM_LAYOUT.desks,
        renderedChairs:roomShellOnly?0:CLASSROOM_LAYOUT.chairs,
        renderedPeople:roomShellOnly?0:visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).length,
