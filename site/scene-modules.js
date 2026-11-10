@@ -55,6 +55,11 @@
       '三维战斗镜头：近景主角、同排等间距的四名 L2D 敌人', '战斗构图 · 四敌人',
       'environment', {layers:Object.freeze({player:true,enemy:true,fog:true}),
         kind:'five-face-3d',version:'four-enemy-straight-row-v1'});
+    // Genuine 3D corridor preview: 3 x 9m classroom door/window bays.
+    result['school-corridor'] = define('school-corridor','./assets/classroom.webp',
+      '真实3D教学楼长走廊（长27米、宽2.8米）','教学楼走廊 · 3D','environment',
+      {layers:Object.freeze({player:false,enemy:false,fog:true}),
+       kind:'five-face-3d',version:'27m-school-corridor-blockout-v1'});
     const seen = new Set();
     for (const entry of catalog) {
       if (!entry || !SLUG.test(entry.id) || !IMAGE.test(entry.file)

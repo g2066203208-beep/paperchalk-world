@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="1014" viewBox="0 0 840 1014">
+ <defs><linearGradient id="plaster" x2="0" y2="1"><stop stop-color="#cfc9be"/><stop offset="1" stop-color="#b8b5ad"/></linearGradient><linearGradient id="door" x2="1" y2=".2"><stop stop-color="#a8b0ac"/><stop offset=".5" stop-color="#d2d4cc"/><stop offset="1" stop-color="#929b98"/></linearGradient></defs>
+ <rect width="840" height="1014" fill="url(#plaster)"/>
+ <path d="M0 690H840V1000H0" fill="#808f86"/><path d="M0 996H840V1014H0" fill="#5d554e"/>
+ <path d="M25 0V1014M815 0V1014" stroke="#8c8d84" stroke-width="8" opacity=".45"/>
+ <path d="M85 155H755V987H85Z" fill="#5c6968" stroke="#827c73" stroke-width="12"/>
+ <path d="M106 175H734V972H106Z" fill="url(#door)"/>
+ <path d="M419 175V972" stroke="#737a77" stroke-width="12"/>
+ <path d="M136 213H389V470H136ZM451 213H704V470H451Z" fill="#718d96" stroke="#5d696c" stroke-width="8"/>
+ <path d="M142 300H382M456 300H698" stroke="#c7d3cf" stroke-width="5" opacity=".6"/>
+ <path d="M185 213L284 213L173 465" fill="#d8dfdb" opacity=".14"/>
+ <path d="M477 213L566 213L462 465" fill="#d8dfdb" opacity=".14"/>
+ <path d="M390 580H405V706H390ZM435 580H450V706H435Z" fill="#5d6564" stroke="#d6dad4" stroke-width="4"/>
+ <path d="M105 941H735" stroke="#697472" stroke-width="12"/>
+ <path d="M0 86H840" stroke="#867e73" stroke-width="6" opacity=".34"/>
+ <rect x="328" y="46" width="184" height="76" rx="4" fill="#66776c" stroke="#9ca99b" stroke-width="8"/>
+ <path d="M367 83H472" stroke="#d8e8cb" stroke-width="8"/>
+ </svg>
