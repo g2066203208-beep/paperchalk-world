@@ -183,7 +183,7 @@
     'uniform sampler2D u_tex,u_windowTex;',
     'uniform vec3 u_light,u_ambient,u_sunColor,u_skyColor;',
     'uniform mediump vec3 u_sunDirection;',
-    'uniform float u_sprite,u_surface,u_sunPower,u_lampPower,u_objectOpacity;',
+    'uniform float u_sprite,u_surface,u_sunPower,u_lampPower,u_objectOpacity,u_artGrade;',
     'uniform mediump float u_shadowProjection;uniform float u_shadowOpacity;',
     // The exact painted window alpha determines world-space daylight.
     // No approximate rectangular holes and no baked light.
@@ -198,6 +198,11 @@
     'return smoothstep(.20,.95,glass);}',
     'void main(){',
     'vec4 c=texture2D(u_tex,v_uv);if(c.a<.045)discard;',
+    // Restore the neutral painted-plaster range of the original art while
+    // preserving its illustrations and texture. The source scene is warm/dark.
+    'if(u_artGrade>.5){',
+    'vec3 plaster=u_artGrade>1.5?vec3(.86,.87,.85):vec3(.85,.85,.83);',
+    'c.rgb=mix(c.rgb,plaster,u_artGrade>1.5?.78:.75);}',
     'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;',
     'if(u_shadowProjection>.5){',
     'gl_FragColor=vec4(.055,.067,.092,c.a*u_shadowOpacity*u_objectOpacity);return;}',
@@ -594,6 +599,7 @@
       pt.tex=gl.getUniformLocation(tprogram,'u_tex');
       pt.windowTex=gl.getUniformLocation(tprogram,'u_windowTex');
       pt.sprite=gl.getUniformLocation(tprogram,'u_sprite');
+      pt.artGrade=gl.getUniformLocation(tprogram,'u_artGrade');
       pt.ambient=gl.getUniformLocation(tprogram,'u_ambient');
       pt.sunColor=gl.getUniformLocation(tprogram,'u_sunColor');
       pt.sunDirection=gl.getUniformLocation(tprogram,'u_sunDirection');
@@ -649,10 +655,11 @@
       gl.uniform2f(loc.angles,cam.yaw,cam.pitch);
       gl.uniform2f(loc.tan,w/(2*focal),h/(2*focal));
     }
-    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false,surface=0,shadow=false,opacity=1){
+    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false,surface=0,shadow=false,opacity=1,artGrade=0){
       if(!tex?.ready||opacity<=.001)return;
       uniforms(cam,w,h,tprogram,pt);gl.uniform3f(pt.light,...light);
       gl.uniform1f(pt.sprite,isSprite?1:0);
+      gl.uniform1f(pt.artGrade,artGrade);
       gl.uniform1f(pt.objectOpacity,clamp(opacity,0,1));
       gl.uniform3fv(pt.ambient,lightingState.ambient);
       gl.uniform3fv(pt.sunColor,lightingState.sunColor);
@@ -765,10 +772,11 @@
         textureDraw(exteriorTextures.sky,exteriorGPU.sky,cam,w,h,[1,1,1],false,5);
         textureDraw(exteriorTextures.facade,exteriorGPU.facade,cam,w,h,[1,1,1],false,6);
         const shades={back:[.94,.96,.98],floor:[.98,.99,1],
-          ceiling:[.89,.91,.94],left:[.96,.98,1],right:[.94,.96,.98]};
+          ceiling:[1.00,1.01,1.02],left:[.96,.98,1],right:[1.00,1.00,.99]};
         const surfaceTypes={back:2,floor:1,ceiling:2,left:2,right:2};
         for(const id of Object.keys(MATERIALS))
-          textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id],false,surfaceTypes[id]);
+          textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id],false,
+            surfaceTypes[id],false,1,id==='ceiling'?1:id==='right'?2:0);
         // The first abnormal impact begins at the center of the floor.
         // All of its art is still 2D, drawn into this SAME depth buffer.
         if(bossPhase)renderBossRupture(bossT,cam,w,h);
