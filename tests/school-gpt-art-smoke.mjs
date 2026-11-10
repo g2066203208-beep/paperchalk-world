@@ -77,7 +77,7 @@ try {
      'Never override approved art of '+id);
  }
  const shots=[];
- for(const w of [[960,540,'desktop-16x9'],[844,390,'phone-landscape']]){
+ for(const w of [[1920,1080,'desktop-1920x1080-empty-room'],[960,540,'desktop-16x9'],[844,390,'phone-landscape']]){
    await page.setViewportSize({width:w[0],height:w[1]});
    const b64=await page.evaluate(()=>{
      const r=window.PaperWorldSchoolRoomRenderer;
