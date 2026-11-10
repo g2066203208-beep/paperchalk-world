@@ -144,7 +144,7 @@ try{
       transparentTop:alpha(180,180),transparentBottom:alpha(180,420),
       secondPane:alpha(690,180),thirdPane:alpha(1200,420),
       fourthPane:alpha(1710,180),
-      structuralFrame:alpha(270,180),opaqueWall:alpha(40,650)
+      structuralFrame:alpha(280,180),opaqueWall:alpha(40,650)
     };
   });
   assert.equal(alphaProof.transparentTop,0,'Window glass must be alpha=0');
