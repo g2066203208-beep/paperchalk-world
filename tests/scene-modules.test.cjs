@@ -15,7 +15,10 @@ const rooms = api.buildRegistry(catalog.scenes);
 // travel, fog, L2D or story code.
 // Base: menu, classroom, classroom-box. Plus five location scenes and one
 // dedicated school-corridor 3D walkthrough; catalog scenes are independent.
-assert.equal(Object.keys(rooms).length, 3 + catalog.scenes.length + 5 + 1);
+assert.equal(Object.keys(rooms).length, 3 + catalog.scenes.length + 5 + 2);
+assert.equal(rooms['paper-ocean'].kind,'paper-cutout-2d');
+assert.equal(rooms['paper-ocean'].layers.fog,false);
+assert.equal(rooms['paper-ocean'].layers.player,false);
 assert.equal(rooms['school-corridor'].kind,'five-face-3d');
 assert.equal(rooms['school-corridor'].layers.player,false);
 assert.equal(rooms['school-corridor'].layers.fog,true);
