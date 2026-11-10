@@ -11,8 +11,8 @@
   const ROOM=Object.freeze({width:10,height:3.38,depth:9});
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
-    ceiling:'./assets/school-room/ceiling.svg',left:'./assets/school-room/gpt-left-wall-transparent.webp',
-    right:'./assets/school-room/right-door-painted.svg'
+    ceiling:'./assets/classroom.webp',left:'./assets/school-room/gpt-left-wall-transparent.webp',
+    right:'./assets/classroom.webp'
   });
   // One transparent drawing per object: no 3D desk/chair/podium models.
   // 3D is reserved for the room's placement, camera, depth and wall planes.
@@ -333,8 +333,37 @@
       standee('chair',x,z-.64,.72,.90);
     }));
   standee('podium',.48,8.12,1.34,1.34);
+  // Art-direction preview: use regions of the existing hand-painted classroom
+  // as the ceiling/right-wall material, rather than schematic SVG art.
+  // These are temporary painted crops; dedicated orthographic art can replace
+  // them later without changing any world positions or camera behavior.
+  const PAINTED_CROP_UV=Object.freeze({
+    ceiling:Object.freeze([[.003,.996],[.997,.996],[.780,.836],[.183,.828]]),
+    right:Object.freeze([[.997,.43],[.795,.45],[.795,.836],[.997,.995]])
+  });
+  function paintedFaceMesh(pts,uv,cols=12,rows=8){
+    const out=[];
+    function sample(u,v){
+      const [a,b,c,d]=pts,[ta,tb,tc,td]=uv;
+      const w=[(1-u)*(1-v),u*(1-v),u*v,(1-u)*v];
+      return [
+        ...[0,1,2].map(k=>a[k]*w[0]+b[k]*w[1]+c[k]*w[2]+d[k]*w[3]),
+        ...[0,1].map(k=>ta[k]*w[0]+tb[k]*w[1]+tc[k]*w[2]+td[k]*w[3])
+      ];
+    }
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+      const p=sample(x/cols,y/rows),q=sample((x+1)/cols,y/rows);
+      const r=sample((x+1)/cols,(y+1)/rows),t=sample(x/cols,(y+1)/rows);
+      for(const v of [p,q,r,p,r,t])out.push(...v);
+    }
+    return out;
+  }
   function textureFaces(){
     return Object.fromEntries(Object.entries(faces).map(([id,pts])=>{
+      if(PAINTED_CROP_UV[id]){
+        return [id,new Float32Array(paintedFaceMesh(pts,PAINTED_CROP_UV[id],
+          id==='ceiling'?24:16,10))];
+      }
       const arr=[];
       // The painted floor is roughly 2:1. Repeat it over two actual floor
       // strips rather than stretching one image over the entire 10x9m room.
