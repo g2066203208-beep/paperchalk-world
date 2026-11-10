@@ -50,7 +50,7 @@ try {
    return {src,width:canvas.width,height:canvas.height,
       panes,frame:alpha(270,170),plaster:alpha(35,640)};
  });
- assert.match(alphaWindow.src,/gpt-left-wall-transparent\.webp$/);
+ assert.match(alphaWindow.src,/gpt-left-wall-painted-alpha-2048x768\.webp$/);
  assert.deepEqual([alphaWindow.width,alphaWindow.height],[2048,760]);
  assert.equal(alphaWindow.panes.length,16);
  assert.ok(alphaWindow.panes.every(a=>a===0),
