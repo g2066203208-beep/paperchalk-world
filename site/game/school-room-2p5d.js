@@ -11,7 +11,7 @@
   const ROOM=Object.freeze({width:10,height:3.38,depth:9});
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
-    ceiling:'./assets/classroom.webp',left:'./assets/school-room/gpt-left-wall-transparent.webp',
+    ceiling:'./assets/school-room/gpt-ceiling-painted.webp',left:'./assets/school-room/gpt-left-wall-transparent.webp',
     right:'./assets/classroom.webp'
   });
   // One transparent drawing per object: no 3D desk/chair/podium models.
@@ -200,7 +200,8 @@
     'vec4 c=texture2D(u_tex,v_uv);if(c.a<.045)discard;',
     // Restore the neutral painted-plaster range of the original art while
     // preserving its illustrations and texture. The source scene is warm/dark.
-    'if(u_artGrade>.5){',
+    'if(u_artGrade>2.5){c.rgb=mix(c.rgb,vec3(.84,.86,.86),.43);}',
+    'else if(u_artGrade>.5){',
     'vec3 plaster=u_artGrade>1.5?vec3(.86,.87,.85):vec3(.85,.85,.83);',
     'c.rgb=mix(c.rgb,plaster,u_artGrade>1.5?.53:.64);}',
     'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;',
@@ -338,12 +339,10 @@
       standee('chair',x,z-.64,.72,.90);
     }));
   standee('podium',.48,8.12,1.34,1.34);
-  // Art-direction preview: use regions of the existing hand-painted classroom
-  // as the ceiling/right-wall material, rather than schematic SVG art.
-  // These are temporary painted crops; dedicated orthographic art can replace
-  // them later without changing any world positions or camera behavior.
+  // The ceiling now uses new GPT-painted raster imagery perspective-rectified
+  // into a flat UV texture. Only the side-wall remains a temporary painted crop.
+  // No programmatic SVG ceiling or old classroom background is sampled here.
   const PAINTED_CROP_UV=Object.freeze({
-    ceiling:Object.freeze([[.003,.996],[.997,.996],[.780,.836],[.183,.828]]),
     right:Object.freeze([[.997,.43],[.795,.45],[.795,.836],[.997,.995]])
   });
   function paintedFaceMesh(pts,uv,cols=12,rows=8){
@@ -776,7 +775,7 @@
         const surfaceTypes={back:2,floor:1,ceiling:2,left:2,right:2};
         for(const id of Object.keys(MATERIALS))
           textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id],false,
-            surfaceTypes[id],false,1,id==='ceiling'?1:id==='right'?2:0);
+            surfaceTypes[id],false,1,id==='ceiling'?3:id==='right'?2:0);
         // The first abnormal impact begins at the center of the floor.
         // All of its art is still 2D, drawn into this SAME depth buffer.
         if(bossPhase)renderBossRupture(bossT,cam,w,h);
