@@ -12,7 +12,7 @@
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
     ceiling:'./assets/school-room/classroom-ceiling-painted-1774x887.webp',left:'./assets/school-room/gpt-left-wall-transparent.webp',
-    right:'./assets/classroom.webp'
+    right:'./assets/school-room/classroom-right-two-doors-2048x768.webp'
   });
   // One transparent drawing per object: no 3D desk/chair/podium models.
   // 3D is reserved for the room's placement, camera, depth and wall planes.
@@ -184,7 +184,7 @@
     'uniform sampler2D u_tex,u_windowTex;',
     'uniform vec3 u_light,u_ambient,u_sunColor,u_skyColor;',
     'uniform mediump vec3 u_sunDirection;',
-    'uniform float u_sprite,u_surface,u_sunPower,u_lampPower,u_objectOpacity,u_artGrade;',
+    'uniform float u_sprite,u_surface,u_sunPower,u_lampPower,u_objectOpacity;',
     'uniform mediump float u_shadowProjection;uniform float u_shadowOpacity;',
     // The exact painted window alpha determines world-space daylight.
     // No approximate rectangular holes and no baked light.
@@ -199,12 +199,6 @@
     'return smoothstep(.20,.95,glass);}',
     'void main(){',
     'vec4 c=texture2D(u_tex,v_uv);if(c.a<.045)discard;',
-    // Restore the neutral painted-plaster range of the original art while
-    // preserving its illustrations and texture. The source scene is warm/dark.
-    'if(u_artGrade>2.5){c.rgb=mix(c.rgb,vec3(.84,.86,.86),.43);}',
-    'else if(u_artGrade>.5){',
-    'vec3 plaster=u_artGrade>1.5?vec3(.86,.87,.85):vec3(.85,.85,.83);',
-    'c.rgb=mix(c.rgb,plaster,u_artGrade>1.5?.53:.64);}',
     'if(u_sprite>.5&&c.r>.965&&c.g>.965&&c.b>.965)discard;',
     'if(u_shadowProjection>.5){',
     'gl_FragColor=vec4(.055,.067,.092,c.a*u_shadowOpacity*u_objectOpacity);return;}',
@@ -340,34 +334,10 @@
       standee('chair',x,z-.64,.72,.90);
     }));
   standee('podium',.48,8.12,1.34,1.34);
-  // The ceiling now uses dedicated 1774x887 flat ceiling artwork.
-  // Only the right wall still uses a temporary cropped painting.
-  const PAINTED_CROP_UV=Object.freeze({
-    right:Object.freeze([[.997,.43],[.795,.45],[.795,.836],[.997,.995]])
-  });
-  function paintedFaceMesh(pts,uv,cols=12,rows=8){
-    const out=[];
-    function sample(u,v){
-      const [a,b,c,d]=pts,[ta,tb,tc,td]=uv;
-      const w=[(1-u)*(1-v),u*(1-v),u*v,(1-u)*v];
-      return [
-        ...[0,1,2].map(k=>a[k]*w[0]+b[k]*w[1]+c[k]*w[2]+d[k]*w[3]),
-        ...[0,1].map(k=>ta[k]*w[0]+tb[k]*w[1]+tc[k]*w[2]+td[k]*w[3])
-      ];
-    }
-    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-      const p=sample(x/cols,y/rows),q=sample((x+1)/cols,y/rows);
-      const r=sample((x+1)/cols,(y+1)/rows),t=sample(x/cols,(y+1)/rows);
-      for(const v of [p,q,r,p,r,t])out.push(...v);
-    }
-    return out;
-  }
+  // All five environment faces are now directly authored flat 2D drawings.
+  // No perspective-rectified crop or extra color grade on the right wall.
   function textureFaces(){
     return Object.fromEntries(Object.entries(faces).map(([id,pts])=>{
-      if(PAINTED_CROP_UV[id]){
-        return [id,new Float32Array(paintedFaceMesh(pts,PAINTED_CROP_UV[id],
-          id==='ceiling'?24:16,10))];
-      }
       const arr=[];
       // The painted floor is roughly 2:1. Repeat it over two actual floor
       // strips rather than stretching one image over the entire 10x9m room.
@@ -598,7 +568,6 @@
       pt.tex=gl.getUniformLocation(tprogram,'u_tex');
       pt.windowTex=gl.getUniformLocation(tprogram,'u_windowTex');
       pt.sprite=gl.getUniformLocation(tprogram,'u_sprite');
-      pt.artGrade=gl.getUniformLocation(tprogram,'u_artGrade');
       pt.ambient=gl.getUniformLocation(tprogram,'u_ambient');
       pt.sunColor=gl.getUniformLocation(tprogram,'u_sunColor');
       pt.sunDirection=gl.getUniformLocation(tprogram,'u_sunDirection');
@@ -654,11 +623,10 @@
       gl.uniform2f(loc.angles,cam.yaw,cam.pitch);
       gl.uniform2f(loc.tan,w/(2*focal),h/(2*focal));
     }
-    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false,surface=0,shadow=false,opacity=1,artGrade=0){
+    function textureDraw(tex,mesh,cam,w,h,light,isSprite=false,surface=0,shadow=false,opacity=1){
       if(!tex?.ready||opacity<=.001)return;
       uniforms(cam,w,h,tprogram,pt);gl.uniform3f(pt.light,...light);
       gl.uniform1f(pt.sprite,isSprite?1:0);
-      gl.uniform1f(pt.artGrade,artGrade);
       gl.uniform1f(pt.objectOpacity,clamp(opacity,0,1));
       gl.uniform3fv(pt.ambient,lightingState.ambient);
       gl.uniform3fv(pt.sunColor,lightingState.sunColor);
@@ -774,8 +742,7 @@
           ceiling:[1.00,1.01,1.02],left:[.96,.98,1],right:[1.00,1.00,.99]};
         const surfaceTypes={back:2,floor:1,ceiling:2,left:2,right:2};
         for(const id of Object.keys(MATERIALS))
-          textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id],false,
-            surfaceTypes[id],false,1,id==='right'?2:0);
+          textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id],false,surfaceTypes[id]);
         // The first abnormal impact begins at the center of the floor.
         // All of its art is still 2D, drawn into this SAME depth buffer.
         if(bossPhase)renderBossRupture(bossT,cam,w,h);
