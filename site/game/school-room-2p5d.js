@@ -127,6 +127,11 @@
   // Approved character PNGs below remain untouched. Only the former
   // cartoon SVG classmates are replaced by clearly tagged GPT draft art.
   // Their h is seated pose height, never an image-resize deformation.
+  // Optional isolated style-review actor, never a main-story NPC.
+  const DEMON_STYLE_ACTOR=Object.freeze({
+    id:'merchantDemon',src:'./assets/school-room/demon-merchant-psd-style-review.webp',
+    x:.55,z:5.60,h:1.74
+  });
   const ACTORS=Object.freeze([
     {id:'boy',src:'./assets/school-room/gpt-school-boy-temporary.webp',x:1.22,z:3.77,h:1.36,standingHeight:1.70,seated:true,ends:5},
     {id:'girl',src:'./assets/school-room/gpt-school-girl-temporary.webp',x:-1.22,z:3.77,h:1.36,standingHeight:1.73,seated:true,ends:1},
@@ -474,6 +479,7 @@
       powerPreference:'low-power',preserveDrawingBuffer:true});
     let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,fallTriggerCount=0,heldFallFrame=null,lastFrameKey='';
     const directFallPreview=new URLSearchParams(window.location.search).get('fallPreview')==='1';
+    const demonStylePreview=new URLSearchParams(window.location.search).get('schoolDemon')==='1';
     // User art-review request: show the bare room by default. All former 2D
     // desks, chairs, podium and character source files remain intact for
     // later replacement. Debug can temporarily restore them with
@@ -483,7 +489,7 @@
     const textureTarget=Object.keys(MATERIALS).length+
       Object.keys(FURNITURE_MATERIALS).length+
       Object.keys(EXTERIOR_MATERIALS).length+
-      Object.keys(BOSS_MATERIALS).length+ACTORS.length+1;
+      Object.keys(BOSS_MATERIALS).length+ACTORS.length+1+(demonStylePreview?1:0);
     let bossBornAt=0,heldBossTime=null,bossTriggerCount=0;
     const worldFaceData=textureFaces();
     const pt={},textures={},sprites={},faceGPU={},furnitureTextures={},furnitureGPU={};
@@ -597,6 +603,19 @@
       bossGPU.creature=mesh(bossQuad(0));
       bossGPU.rupture=mesh(ruptureQuad(0));
       for(const actor of ACTORS){
+        const slot={...mesh(spriteGeometry(actor)),fit:null};
+        slot.texture=loadTexture(actor.src,(image,item)=>{
+          const ink=measurePortraitInk(image);
+          const fit=portraitPlacement(actor,item.sourcePixels,ink);
+          gl.bindBuffer(gl.ARRAY_BUFFER,slot.gpu);
+          gl.bufferData(gl.ARRAY_BUFFER,
+            spriteGeometry(actor,item.sourcePixels,ink),gl.STATIC_DRAW);
+          slot.fit=fit;
+        });
+        sprites[actor.id]=slot;
+      }
+      if(demonStylePreview){
+        const actor=DEMON_STYLE_ACTOR;
         const slot={...mesh(spriteGeometry(actor)),fit:null};
         slot.texture=loadTexture(actor.src,(image,item)=>{
           const ink=measurePortraitInk(image);
@@ -775,7 +794,16 @@
           const sprite=sprites[actor.id];
           textureDraw(sprite.texture,sprite,cam,w,h,[.97,.99,1],true,4);
         }
-        } // roomShellOnly: do not render any desks, chairs, podium or people
+        } // roomShellOnly: no ordinary desks, chairs, podium or people
+        if(demonStylePreview&&!bossPhase){
+          const sprite=sprites[DEMON_STYLE_ACTOR.id];
+          if(daylight.sunPower>.01){
+            gl.depthMask(false);
+            textureDraw(sprite.texture,sprite,cam,w,h,[1,1,1],true,4,true);
+            gl.depthMask(true);
+          }
+          textureDraw(sprite.texture,sprite,cam,w,h,[.97,.99,1],true,4);
+        }
         if(bossPhase)renderBossBody(bossT,cam,w,h);
         if(fallState?.fallingVisible){
           // Motion echo is drawn behind the principal cutout in the same
@@ -875,13 +903,19 @@
       fallingTexture:fallTexture?{src:fallTexture.src,ready:fallTexture.ready,error:fallTexture.error||null}:null,
       geometryPolicy:'textured-2d-planes-only',
       solidMeshes:0,
-      textureCount:ready,expectedTextures:5+ACTORS.length+
+      textureCount:ready,expectedTextures:5+ACTORS.length+(demonStylePreview?1:0)+
         Object.keys(FURNITURE_MATERIALS).length+
         Object.keys(EXTERIOR_MATERIALS).length+
         Object.keys(BOSS_MATERIALS).length+1,
       faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
         [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
       visibleActors:active&&!roomShellOnly?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
+      demonStylePreview:demonStylePreview?{
+        source:DEMON_STYLE_ACTOR.src,position:[DEMON_STYLE_ACTOR.x,0,DEMON_STYLE_ACTOR.z],
+        physicalHeight:DEMON_STYLE_ACTOR.h,
+        ready:!!sprites[DEMON_STYLE_ACTOR.id]?.texture?.ready,
+        fit:sprites[DEMON_STYLE_ACTOR.id]?.fit
+      }:null,
       actorArtwork:Object.fromEntries(ACTORS.map(a=>{
         const slot=sprites[a.id];
         return [a.id,{source:a.src,physicalHeight:a.h,
