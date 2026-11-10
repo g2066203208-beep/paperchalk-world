@@ -118,6 +118,39 @@ try {
  }
  shots.push({name:'look-left-through-windows',yaw:look.leftYaw},
    {name:'look-right-toward-doors',yaw:look.rightYaw});
+ // Compare the imported little-demon PSD against the actual school materials.
+ // This is a URL-gated art-review scene, not a permanent school NPC.
+ await page.goto('http://127.0.0.1:8765/?scene=school&schoolDemon=1&storyCapture=1',
+   {waitUntil:'domcontentloaded',timeout:60000});
+ await page.waitForFunction(()=>{
+   const s=window.PaperWorldSchoolRoomRenderer?.inspect?.();
+   if(s?.error)throw Error(s.error);
+   return s?.active&&s?.textureCount===s?.expectedTextures&&s?.demonStylePreview?.ready;
+ },null,{timeout:60000});
+ await page.setViewportSize({width:1920,height:1080});
+ const demon=await page.evaluate(()=>{
+   const r=window.PaperWorldSchoolRoomRenderer;
+   const life={day:1,minute:750};
+   r.setLightingPreview(750);
+   r.render(0,0,life);
+   const noon=r.canvas.toDataURL('image/png');
+   r.setLightingPreview(1060);
+   r.render(0,0,{day:1,minute:1060});
+   const evening=r.canvas.toDataURL('image/png');
+   return {noon,evening,preview:r.inspect().demonStylePreview,error:r.inspect().error};
+ });
+ assert.equal(demon.error,null);
+ assert.equal(demon.preview.ready,true);
+ assert.ok(demon.preview.fit?.visibleHeight>1.5);
+ for(const [name,b64] of [
+   ['demon-merchant-school-noon',demon.noon],
+   ['demon-merchant-school-evening',demon.evening]
+ ]){
+   assert.ok(b64?.startsWith('data:image/png;base64,')&&b64.length>50000);
+   writeFileSync(output+'/'+name+'.png',Buffer.from(b64.split(',')[1],'base64'));
+   shots.push({name});
+ }
+ console.log('DEMON_MERCHANT_STYLE_IN_WORLD',JSON.stringify(demon.preview));
  console.log('SCHOOL_GPT_ART_REAL_WEBGL_PROOF',
    JSON.stringify({windowAlpha:"16/16 transparent",atlas:assets.atlas,characters:Object.fromEntries(
      Object.entries(assets.actors).map(([k,a])=>[k,{source:a.source,ready:a.ready,
