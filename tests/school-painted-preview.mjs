@@ -69,7 +69,7 @@ try{
   assert.equal(status.faceTextures.back.ready,true);
   assert.equal(status.faceTextures.floor.ready,true);
   assert.equal(status.faceTextures.left.ready,true);
-  assert.match(status.faceTextures.left.src,/gpt-left-wall-transparent\.webp$/);
+  assert.match(status.faceTextures.left.src,/gpt-left-wall-painted-alpha-2048x768\.webp$/);
   assert.equal(status.faceTextures.right.ready,true);
   assert.match(status.faceTextures.right.src,/classroom-right-two-doors-2048x768\.webp$/);
   assert.match(status.faceTextures.ceiling.src,/classroom-ceiling-painted-1774x887\.webp$/);
@@ -423,7 +423,7 @@ try{
     };
   });
   assert.equal(mobileScene.scene,'school','Game must really open the 3D classroom on phone');
-  assert.match(mobileScene.view.faceTextures.left.src,/gpt-left-wall-transparent\.webp$/);
+  assert.match(mobileScene.view.faceTextures.left.src,/gpt-left-wall-painted-alpha-2048x768\.webp$/);
   await captureGamePage(mobile,'artifacts/painted-school-room/mobile-01-actual-game-school.png');
   console.log('MOBILE_SCHOOL_GAME_SCREENSHOT',JSON.stringify({
     scene:mobileScene.scene,renderer:mobileScene.view.renderer,

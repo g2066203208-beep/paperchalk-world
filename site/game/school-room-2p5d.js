@@ -11,7 +11,7 @@
   const ROOM=Object.freeze({width:10,height:3.38,depth:9});
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
-    ceiling:'./assets/school-room/classroom-ceiling-painted-1774x887.webp',left:'./assets/school-room/gpt-left-wall-transparent.webp',
+    ceiling:'./assets/school-room/classroom-ceiling-painted-1774x887.webp',left:'./assets/school-room/gpt-left-wall-painted-alpha-2048x768.webp',
     right:'./assets/school-room/classroom-right-two-doors-2048x768.webp'
   });
   // One transparent drawing per object: no 3D desk/chair/podium models.
