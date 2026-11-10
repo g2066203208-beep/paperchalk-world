@@ -48,10 +48,10 @@ try {
    const centers=[180,340,690,850,1200,1360,1710,1870];
    const panes=centers.flatMap(x=>[170,350].map(y=>alpha(x,y)));
    return {src,width:canvas.width,height:canvas.height,
-      panes,frame:alpha(270,170),plaster:alpha(35,640)};
+      panes,frame:alpha(280,170),plaster:alpha(35,640)};
  });
  assert.match(alphaWindow.src,/gpt-left-wall-painted-alpha-2048x768\.webp$/);
- assert.deepEqual([alphaWindow.width,alphaWindow.height],[2048,760]);
+ assert.deepEqual([alphaWindow.width,alphaWindow.height],[2048,768]);
  assert.equal(alphaWindow.panes.length,16);
  assert.ok(alphaWindow.panes.every(a=>a===0),
    'All 16 GPT-painted window panes must have real alpha=0: '+
