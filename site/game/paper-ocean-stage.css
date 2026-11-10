@@ -31,3 +31,8 @@
 @media (max-aspect-ratio:1/1){
  #paper-ocean-stage .paper-ocean-boss{width:90%;top:25%}
  #paper-ocean-stage .paper-ocean-wave{width:150%;left:-25%;height:54%}}
+/* Theater-only scene: no dashboard clutter or desktop window frame. */
+#view.paper-ocean-active{padding:0!important}
+#view.paper-ocean-active #novel-ui{display:none!important}
+#view.paper-ocean-active #scene{margin:0!important;width:100%!important;height:100%!important;border:0!important}
+#view.paper-ocean-active #fog{display:none!important}
