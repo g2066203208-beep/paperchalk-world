@@ -10,7 +10,7 @@
   aspect-ratio:1;border-radius:50%;background:rgba(229,220,195,.68);box-shadow:0 0 70px rgba(205,219,221,.20)}
 #paper-ocean-stage img{position:absolute;display:block;object-fit:fill;max-width:none;user-select:none;
   -webkit-user-drag:none;transform-origin:center center}
-#paper-ocean-stage .paper-ocean-boss{width:min(61%,850px);height:auto;left:50%;top:12%;
+#paper-ocean-stage .paper-ocean-boss{width:min(61%,850px);height:auto;left:50%;top:31%;
   transform:translateX(-50%);filter:drop-shadow(0 14px 9px rgba(5,13,21,.40));
   animation:paper-ocean-bob 5.1s ease-in-out infinite}
 #paper-ocean-stage .paper-ocean-wave{width:108%;height:66%;left:-4%;bottom:-9%;
@@ -29,7 +29,7 @@
  #paper-ocean-stage .paper-ocean-boss,#paper-ocean-stage .paper-ocean-wave{animation:none!important}
  #paper-ocean-stage .paper-ocean-boss{transform:translateX(-50%)}}
 @media (max-aspect-ratio:1/1){
- #paper-ocean-stage .paper-ocean-boss{width:90%;top:25%}
+ #paper-ocean-stage .paper-ocean-boss{width:90%;top:34%}
  #paper-ocean-stage .paper-ocean-wave{width:150%;left:-25%;height:54%}}
 /* Theater-only scene: no dashboard clutter or desktop window frame. */
 #view.paper-ocean-active{padding:0!important}
