@@ -91,6 +91,33 @@ try {
    writeFileSync(output+'/'+w[2]+'.png',Buffer.from(b64.split(',')[1],'base64'));
    shots.push({name:w[2],viewport:w.slice(0,2),bytes:b64.length});
  }
+ // Verify exact artwork dimensions and screenshot the expanded head turns.
+ await page.setViewportSize({width:1920,height:1080});
+ const look=await page.evaluate(async()=>{
+   const r=window.PaperWorldSchoolRoomRenderer;
+   const scene=window.PaperWorldSchoolRoom;
+   const source=r.inspect().faceTextures.ceiling.src;
+   const image=new Image();image.src=source;await image.decode();
+   const life={...(window.PaperWorldDailyLifeUI?.snapshot?.()||{}),day:1,minute:750};
+   r.render(-1,0,life);
+   const left=r.canvas.toDataURL('image/png');
+   r.render(1,0,life);
+   const right=r.canvas.toDataURL('image/png');
+   return {source,width:image.naturalWidth,height:image.naturalHeight,
+     left,right,leftYaw:scene.camera(-1,0).yaw,rightYaw:scene.camera(1,0).yaw,
+     error:r.inspect().error};
+ });
+ assert.equal(look.error,null);
+ assert.deepEqual([look.width,look.height],[1774,887]);
+ assert.match(look.source,/classroom-ceiling-painted-1774x887\.webp$/);
+ assert.ok(look.leftYaw<-.65&&look.rightYaw>.65);
+ for(const [name,png] of [['look-left-through-windows',look.left],
+   ['look-right-toward-doors',look.right]]){
+   assert.ok(png.length>50000,'No WebGL screenshot for '+name);
+   writeFileSync(output+'/'+name+'.png',Buffer.from(png.split(',')[1],'base64'));
+ }
+ shots.push({name:'look-left-through-windows',yaw:look.leftYaw},
+   {name:'look-right-toward-doors',yaw:look.rightYaw});
  console.log('SCHOOL_GPT_ART_REAL_WEBGL_PROOF',
    JSON.stringify({windowAlpha:"16/16 transparent",atlas:assets.atlas,characters:Object.fromEntries(
      Object.entries(assets.actors).map(([k,a])=>[k,{source:a.source,ready:a.ready,

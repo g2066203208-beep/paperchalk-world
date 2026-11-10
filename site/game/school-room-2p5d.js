@@ -11,7 +11,7 @@
   const ROOM=Object.freeze({width:10,height:3.38,depth:9});
   const MATERIALS=Object.freeze({
     back:'./assets/school-room/back-painted.png',floor:'./assets/school-room/floor-painted.png',
-    ceiling:'./assets/school-room/gpt-ceiling-painted.webp',left:'./assets/school-room/gpt-left-wall-transparent.webp',
+    ceiling:'./assets/school-room/classroom-ceiling-painted-1774x887.webp',left:'./assets/school-room/gpt-left-wall-transparent.webp',
     right:'./assets/classroom.webp'
   });
   // One transparent drawing per object: no 3D desk/chair/podium models.
@@ -144,9 +144,10 @@
     };
     // Battle-room-inspired human-scale lens. The viewer is INSIDE the
     // classroom, not photographing the whole room from beyond its back wall.
-    // Let the ceiling crop naturally instead of shrinking every character.
-    return {x:.10,y:1.25,z:-.90,hFov:54,yaw:axis(px)*.085,
-      pitch:-.006-axis(py)*.039};
+    // Keep the central human-sized framing; turn the head to the left windows
+    // and the right doors without moving/rotating the 3D room or art.
+    return {x:.10,y:1.25,z:-.90,hFov:54,yaw:axis(px)*.72,
+      pitch:-.006-axis(py)*.10};
   }
   function project(p,cam,w,h){
     const dx=p[0]-cam.x,dy=p[1]-cam.y,dz=p[2]-cam.z;
@@ -339,9 +340,8 @@
       standee('chair',x,z-.64,.72,.90);
     }));
   standee('podium',.48,8.12,1.34,1.34);
-  // The ceiling now uses new GPT-painted raster imagery perspective-rectified
-  // into a flat UV texture. Only the side-wall remains a temporary painted crop.
-  // No programmatic SVG ceiling or old classroom background is sampled here.
+  // The ceiling now uses dedicated 1774x887 flat ceiling artwork.
+  // Only the right wall still uses a temporary cropped painting.
   const PAINTED_CROP_UV=Object.freeze({
     right:Object.freeze([[.997,.43],[.795,.45],[.795,.836],[.997,.995]])
   });
@@ -775,7 +775,7 @@
         const surfaceTypes={back:2,floor:1,ceiling:2,left:2,right:2};
         for(const id of Object.keys(MATERIALS))
           textureDraw(textures[id],faceGPU[id],cam,w,h,shades[id],false,
-            surfaceTypes[id],false,1,id==='ceiling'?3:id==='right'?2:0);
+            surfaceTypes[id],false,1,id==='right'?2:0);
         // The first abnormal impact begins at the center of the floor.
         // All of its art is still 2D, drawn into this SAME depth buffer.
         if(bossPhase)renderBossRupture(bossT,cam,w,h);
@@ -871,6 +871,7 @@
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
       visualLightingPreset:'balanced-anime-daylight-v1',
+       ceilingArtwork:'painted-1774x887',cameraMaxYawRadians:.72,
        roomShellOnly,renderedDesks:roomShellOnly?0:CLASSROOM_LAYOUT.desks,
        renderedChairs:roomShellOnly?0:CLASSROOM_LAYOUT.chairs,
        renderedPeople:roomShellOnly?0:visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).length,
