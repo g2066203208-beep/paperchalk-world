@@ -14,8 +14,8 @@ function create({stage,view}={}){
     img.src=src;img.alt=alt;img.draggable=false;img.decoding='async';
     board.appendChild(img);return img;
   }
-  const boss=layer('boss','./assets/paper-ocean/octopus-boss.svg','正面纸板大章鱼 Boss');
-  const wave=layer('wave','./assets/paper-ocean/ocean-wave.svg','独立前景剪纸海浪');
+  const boss=layer('boss','./assets/paper-ocean/octopus-boss-gpt.webp','正面纸板大章鱼 Boss');
+  const wave=layer('wave','./assets/paper-ocean/ocean-wave-gpt.webp','独立前景剪纸海浪');
   const source=stage.querySelector('#source');
   if(source)source.insertAdjacentElement('afterend',board);else stage.appendChild(board);
   let active=false;
