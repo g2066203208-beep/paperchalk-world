@@ -71,7 +71,8 @@ try{
   assert.equal(status.faceTextures.left.ready,true);
   assert.match(status.faceTextures.left.src,/gpt-left-wall-transparent\.webp$/);
   assert.equal(status.faceTextures.right.ready,true);
-  assert.match(status.faceTextures.right.src,/right-door-painted\.svg$/);
+  assert.match(status.faceTextures.right.src,/classroom\.webp$/);
+  assert.match(status.faceTextures.ceiling.src,/classroom\.webp$/);
   assert.equal(status.deskCount,20);
   assert.equal(status.chairCount,20);
   assert.ok(status.actorArtwork&&Object.keys(status.actorArtwork).length===6);
