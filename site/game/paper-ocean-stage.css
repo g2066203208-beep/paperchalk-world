@@ -1,0 +1,33 @@
+/* Fully flat camera-facing paper cut-outs. No transform3d or perspective. */
+#scene>#paper-ocean-stage{position:absolute;inset:0;z-index:1;overflow:hidden;
+  pointer-events:none;isolation:isolate;background:#243947}
+#scene>#paper-ocean-stage[hidden]{display:none!important}
+#paper-ocean-stage .paper-ocean-sky{position:absolute;inset:0;background:
+  linear-gradient(180deg,#192935 0%,#324c5a 35%,#667680 69%,#455a63 100%)}
+#paper-ocean-stage .paper-ocean-haze{position:absolute;left:0;right:0;top:44%;height:44%;
+  background:linear-gradient(180deg,transparent,rgba(161,176,175,.20),rgba(14,41,53,.18))}
+#paper-ocean-stage .paper-ocean-moon{position:absolute;left:72%;top:12%;width:min(7vw,100px);
+  aspect-ratio:1;border-radius:50%;background:rgba(229,220,195,.68);box-shadow:0 0 70px rgba(205,219,221,.20)}
+#paper-ocean-stage img{position:absolute;display:block;object-fit:fill;max-width:none;user-select:none;
+  -webkit-user-drag:none;transform-origin:center center}
+#paper-ocean-stage .paper-ocean-boss{width:min(61%,850px);height:auto;left:50%;top:12%;
+  transform:translateX(-50%);filter:drop-shadow(0 14px 9px rgba(5,13,21,.40));
+  animation:paper-ocean-bob 5.1s ease-in-out infinite}
+#paper-ocean-stage .paper-ocean-wave{width:108%;height:66%;left:-4%;bottom:-9%;
+  filter:drop-shadow(0 -8px 9px rgba(7,23,35,.18));
+  animation:paper-ocean-swell 5.8s ease-in-out infinite}
+#view.paper-ocean-active #scene{width:100cqw!important;height:100cqh!important;
+ max-width:none!important;aspect-ratio:auto!important;transform:none!important;
+ border-radius:0!important;overflow:hidden}
+#view.paper-ocean-active #scene::after{content:none!important}
+#view.paper-ocean-active #scene>#source{visibility:hidden!important}
+@keyframes paper-ocean-bob{0%,100%{transform:translate(-50%,0) rotate(-1deg)}
+  50%{transform:translate(-50%,11px) rotate(1deg)}}
+@keyframes paper-ocean-swell{0%,100%{transform:translate(0,0)}
+  50%{transform:translate(-1.2%,9px)}}
+@media (prefers-reduced-motion:reduce){
+ #paper-ocean-stage .paper-ocean-boss,#paper-ocean-stage .paper-ocean-wave{animation:none!important}
+ #paper-ocean-stage .paper-ocean-boss{transform:translateX(-50%)}}
+@media (max-aspect-ratio:1/1){
+ #paper-ocean-stage .paper-ocean-boss{width:90%;top:25%}
+ #paper-ocean-stage .paper-ocean-wave{width:150%;left:-25%;height:54%}}

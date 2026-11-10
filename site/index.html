@@ -809,6 +809,8 @@ body.mobile-mode.virtual-landscape #view{
 <link rel="stylesheet" href="./game/school-room-2p5d.css?v=school-5face-v1-20261109">
 <script src="./game/school-corridor-2p5d.js?v=27m-corridor-blockout-v1"></script>
 <link rel="stylesheet" href="./game/school-corridor-2p5d.css?v=27m-corridor-blockout-v1">
+<script src="./game/paper-ocean-stage.js?v=paper-ocean-v1"></script>
+<link rel="stylesheet" href="./game/paper-ocean-stage.css?v=paper-ocean-v1">
 <script src="./combat-lab/engine.js?v=full-4p-timegrid-20261108"></script>
 <script src="./combat-lab/cards-expansion.js?v=card-atlas-90-v16-20261108"></script>
 <script src="./combat-lab/balance-v17.js?v=full-timegrid-v17-20261108"></script>
@@ -2056,6 +2058,8 @@ void main(){
   window.PaperWorldSchoolRoomRenderer=schoolRoom;
   const schoolCorridor=window.PaperWorldSchoolCorridor.create({stage,view});
   window.PaperWorldSchoolCorridorRenderer=schoolCorridor;
+  const paperOcean=window.PaperWorldPaperOcean.create({stage,view});
+  window.PaperWorldPaperOceanRenderer=paperOcean;
   const ringScene=window.PaperWorldRingArena.create({stage,view,
     onExit:()=>changeScene('menu')});
   window.PaperWorldGameRingArena=ringScene;
@@ -2130,6 +2134,7 @@ void main(){
     boxScene.setActive(name==='classroom-box');
     schoolRoom.setActive(name==='school');
     schoolCorridor.setActive(name==='school-corridor');
+    paperOcean.setActive(name==='paper-ocean');
     ringScene.setActive(name==='ring-arena');
     // A saved DEV slot may point to another character or FRONT art. In the
     // actual battle, use the approved heroine BACK, retaining the player's

@@ -60,6 +60,10 @@
       '真实3D教学楼长走廊（长27米、宽2.8米）','教学楼走廊 · 3D','environment',
       {layers:Object.freeze({player:false,enemy:false,fog:true}),
        kind:'five-face-3d',version:'27m-school-corridor-blockout-v1'});
+    result['paper-ocean'] = define('paper-ocean','./assets/menu-wall.webp',
+      '纯平面纸片海浪与章鱼怪物舞台','纸片演出 · 海上章鱼 Boss','environment',
+      {layers:Object.freeze({player:false,enemy:false,fog:false}),
+       kind:'paper-cutout-2d',version:'ocean-paper-stage-v1'});
     const seen = new Set();
     for (const entry of catalog) {
       if (!entry || !SLUG.test(entry.id) || !IMAGE.test(entry.file)
