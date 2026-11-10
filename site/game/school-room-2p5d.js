@@ -457,12 +457,18 @@
     const canvas=document.createElement('canvas');
     canvas.id='school-room-surface';
     canvas.hidden=true;
-    canvas.setAttribute('aria-label','方正五面三维教室，真实空间透视的课桌椅和窗户');
+    canvas.setAttribute('aria-label','真实3D五面空教室：仅保留墙壁、窗户、黑板、地板与天花板');
     original.insertAdjacentElement('afterend',canvas);
     const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true,
       powerPreference:'low-power',preserveDrawingBuffer:true});
     let renderer='not-initialized',error=null,active=false,frame=0,fallStart=0,fallTriggerCount=0,heldFallFrame=null,lastFrameKey='';
     const directFallPreview=new URLSearchParams(window.location.search).get('fallPreview')==='1';
+    // User art-review request: show the bare room by default. All former 2D
+    // desks, chairs, podium and character source files remain intact for
+    // later replacement. Debug can temporarily restore them with
+    // ?showSchoolStandees=1; the shipped scene itself is empty.
+    const roomShellOnly=new URLSearchParams(window.location.search)
+      .get('showSchoolStandees')!=='1';
     const textureTarget=Object.keys(MATERIALS).length+
       Object.keys(FURNITURE_MATERIALS).length+
       Object.keys(EXTERIOR_MATERIALS).length+
@@ -730,7 +736,7 @@
         // All of its art is still 2D, drawn into this SAME depth buffer.
         if(bossPhase)renderBossRupture(bossT,cam,w,h);
         // Shadows are projected from the exact character/desk silhouettes.
-        if(daylight.sunPower>.01){
+        if(!roomShellOnly&&daylight.sunPower>.01){
           gl.depthMask(false);
           if(!bossPhase||bossT<.78){
             for(const [id,geo] of Object.entries(furnitureGPU))
@@ -742,6 +748,7 @@
           }
           gl.depthMask(true);
         }
+        if(!roomShellOnly){
         if(!bossPhase||bossT<.78){
           for(const [id,geo] of Object.entries(furnitureGPU))
             textureDraw(furnitureTextures[id],geo,cam,w,h,[.97,.98,.99],false,3);
@@ -757,6 +764,7 @@
           const sprite=sprites[actor.id];
           textureDraw(sprite.texture,sprite,cam,w,h,[.97,.99,1],true,4);
         }
+        } // roomShellOnly: do not render any desks, chairs, podium or people
         if(bossPhase)renderBossBody(bossT,cam,w,h);
         if(fallState?.fallingVisible){
           // Motion echo is drawn behind the principal cutout in the same
@@ -818,6 +826,9 @@
     }
     function inspect(){return {
       active,renderer,error,frame,room:ROOM,
+       roomShellOnly,renderedDesks:roomShellOnly?0:CLASSROOM_LAYOUT.desks,
+       renderedChairs:roomShellOnly?0:CLASSROOM_LAYOUT.chairs,
+       renderedPeople:roomShellOnly?0:visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).length,
       lighting:{...lightingState,source:previewMinute!==null?'qa-preview':'game-time'},
       lightingTimeMinute:lightingMinute,
       faces:Object.keys(faces),deskCount:CLASSROOM_LAYOUT.desks,
@@ -857,7 +868,7 @@
         Object.keys(BOSS_MATERIALS).length+1,
       faceTextures:Object.fromEntries(Object.entries(textures).map(([id,entry])=>
         [id,{src:entry.src,ready:entry.ready,error:entry.error||null}])),
-      visibleActors:active?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
+      visibleActors:active&&!roomShellOnly?visibleActors(window.PaperWorldDailyLifeUI?.snapshot?.()).map(a=>a.id):[],
       actorArtwork:Object.fromEntries(ACTORS.map(a=>{
         const slot=sprites[a.id];
         return [a.id,{source:a.src,physicalHeight:a.h,
