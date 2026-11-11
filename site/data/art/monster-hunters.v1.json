@@ -5,7 +5,7 @@
   "art_order": "严格按照用户2026-11-11上传的七张原图顺序",
   "asset_format": "704x1024 RGB PNG",
   "asset_policy": "上传时原字节保存，不裁切、压缩、改色或去背景",
-  "status": "metadata_registered_original_pngs_not_yet_committed",
+  "status": "published_all_7_original_pngs_sha_verified",
   "characters": [
     {
       "id": "01-commander",
@@ -18,7 +18,7 @@
       "source_file_id": "file_000000000df081fd91baace14430c7ce",
       "desc": "银发、黑色军装长外套，佩双剑；负责战场判断与猎杀指挥。",
       "order": 1,
-      "original_png_committed": false
+      "original_png_committed": true
     },
     {
       "id": "02-physician",
@@ -31,7 +31,7 @@
       "source_file_id": "file_0000000078ac81fdbee99d0bb18456cb",
       "desc": "黑发、浅色医疗外套、装有深红色液体的药瓶；负责毒理与样本处理。",
       "order": 2,
-      "original_png_committed": false
+      "original_png_committed": true
     },
     {
       "id": "03-trapper",
@@ -44,7 +44,7 @@
       "source_file_id": "file_00000000ab5c81fdb3f3f6c4cb025655",
       "desc": "短发、披肩、弩、线轴和工具筒；负责布置机关与移动限制。",
       "order": 3,
-      "original_png_committed": false
+      "original_png_committed": true
     },
     {
       "id": "04-markswoman",
@@ -57,7 +57,7 @@
       "source_file_id": "file_00000000277c81fdb6d3961b94e027c2",
       "desc": "金发低马尾、棕色披风、长枪和金属弹药；负责远程精准打击。",
       "order": 4,
-      "original_png_committed": false
+      "original_png_committed": true
     },
     {
       "id": "05-warden",
@@ -70,7 +70,7 @@
       "source_file_id": "file_00000000379481fd9dd4bbe29d0ee931",
       "desc": "深色长袍、铃铛、封印纸和大型封装容器；负责拘束异常目标。",
       "order": 5,
-      "original_png_committed": false
+      "original_png_committed": true
     },
     {
       "id": "06-butcher",
@@ -83,7 +83,7 @@
       "source_file_id": "file_00000000b56881fd92d341a29417908b",
       "desc": "短发、实战护甲、肩扛重型双刃斧；负责破甲、打断与部位破坏。",
       "order": 6,
-      "original_png_committed": false
+      "original_png_committed": true
     },
     {
       "id": "07-cleaner",
@@ -96,7 +96,7 @@
       "source_file_id": "file_00000000e67c81fd810131a387c6e70b",
       "desc": "短发红围巾、围裙和超大沾血重斧；负责残余怪物清剿。",
       "order": 7,
-      "original_png_committed": false
+      "original_png_committed": true
     }
   ]
 }
