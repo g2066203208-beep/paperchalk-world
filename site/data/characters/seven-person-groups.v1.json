@@ -1,0 +1,88 @@
+{
+  "schema": "paperchalk.character-groups.v1",
+  "updated": "2026-11-11",
+  "groups": [
+    {
+      "id": "knight-order",
+      "name": "骑士团",
+      "workspace": "/character-editor/knight-booth.html",
+      "memberCount": 7,
+      "members": [
+        {
+          "id": "knight-captain",
+          "name": "骑士长"
+        },
+        {
+          "id": "knight",
+          "name": "骑士"
+        },
+        {
+          "id": "sergeant",
+          "name": "军士"
+        },
+        {
+          "id": "standard-bearer",
+          "name": "旗手"
+        },
+        {
+          "id": "crossbowman",
+          "name": "弩手"
+        },
+        {
+          "id": "chaplain",
+          "name": "随军司铎"
+        },
+        {
+          "id": "scout",
+          "name": "斥候"
+        }
+      ]
+    },
+    {
+      "id": "blackhearted-demon-company",
+      "name": "黑心恶魔商店集团",
+      "workspace": "/character-editor/demon-company.html",
+      "memberCount": 7,
+      "members": [
+        {
+          "id": "shop-owner",
+          "name": "店长",
+          "artStatus": "approved",
+          "artFile": "../../assets/characters/demon-company/shop-owner.webp"
+        },
+        {
+          "id": "contract-manager",
+          "name": "契约经理",
+          "artStatus": "approved",
+          "artFile": "../../assets/characters/demon-company/contract-manager.webp"
+        },
+        {
+          "id": "finance-director",
+          "name": "财务主管",
+          "artStatus": "approved",
+          "artFile": "../../assets/characters/demon-company/finance-director.webp"
+        },
+        {
+          "id": "purchasing-director",
+          "name": "采购主管",
+          "artStatus": "prompt-ready"
+        },
+        {
+          "id": "lending-director",
+          "name": "放贷主管",
+          "artStatus": "planned"
+        },
+        {
+          "id": "collections-director",
+          "name": "催收主管",
+          "artStatus": "planned"
+        },
+        {
+          "id": "security-director",
+          "name": "安保主管",
+          "artStatus": "planned"
+        }
+      ]
+    }
+  ]
+}
