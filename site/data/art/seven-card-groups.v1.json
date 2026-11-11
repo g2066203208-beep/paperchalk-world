@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "title": "七人卡牌阵营",
+  "groups": [
+    {
+      "id": "knight-order",
+      "name": "骑士团",
+      "gallery": "/character-editor/knight-booth.html",
+      "assetBase": "/assets/characters/knight-order/",
+      "slots": 7
+    },
+    {
+      "id": "demon-merchant",
+      "name": "黑心恶魔商店集团",
+      "gallery": "/character-editor/demon-booth.html",
+      "assetBase": "/assets/characters/demon-merchant/",
+      "slots": 7,
+      "roster": [
+        {
+          "id": "01-owner",
+          "name": "店长",
+          "en": "Demon Shop Owner",
+          "xp": "贪婪",
+          "file": "shop-owner.webp"
+        },
+        {
+          "id": "02-contract",
+          "name": "契约经理",
+          "en": "Contract Manager",
+          "xp": "契约",
+          "file": "contract-manager.webp"
+        },
+        {
+          "id": "03-finance",
+          "name": "财务主管",
+          "en": "Finance Director",
+          "xp": "复利",
+          "file": "finance-director.webp"
+        },
+        {
+          "id": "04-purchasing",
+          "name": "采购主管",
+          "en": "Purchasing Director",
+          "xp": "套利",
+          "file": "purchasing-director.webp"
+        },
+        {
+          "id": "05-loan",
+          "name": "放贷主管",
+          "en": "Loan Director",
+          "xp": "借贷",
+          "file": "loan-director.webp"
+        },
+        {
+          "id": "06-debt",
+          "name": "催收主管",
+          "en": "Debt Collection Director",
+          "xp": "追债",
+          "file": "debt-collector.webp"
+        },
+        {
+          "id": "07-security",
+          "name": "安保主管",
+          "en": "Security Director",
+          "xp": "守财",
+          "file": "security-director.webp"
+        }
+      ]
+    }
+  ]
+}
