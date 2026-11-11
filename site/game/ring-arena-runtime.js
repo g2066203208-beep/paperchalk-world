@@ -1119,6 +1119,12 @@
   filmFrame.id='ring-arena-film-screen';
   filmFrame.setAttribute('aria-hidden','true');
   filmFrame.dataset.art='gpt-cropped-2048x1152';
+  // Grade is below the original GPT film texture and the interactive HUD.
+  // The actual world and all eight actors are graded together on their WebGL canvas.
+  const filmGrade=document.createElement('div');
+  filmGrade.id='ring-arena-film-grade';
+  filmGrade.setAttribute('aria-hidden','true');
+  stage.insertBefore(filmGrade,filmFrame);
   stage.append(filmFrame);
   const status=hud.querySelector('.status');
   const director=window.PaperchalkBattleDirector;

@@ -23,3 +23,52 @@
 #view.ring-film-qa-hide #ring-arena-film-screen{
   display:none!important;
 }
+
+/* Matching 3D film stock: neutral/cold shadows, gently aged sepia highlights.
+ * Since actors and environment share the SAME WebGL canvas, the entire
+ * live 3D scene receives exactly the same grade. UI and film border stay crisp.
+ * The effect never applies in the moving 3D subway/transit scene. */
+#view.ring-arena-active:not(.ring-arena-transit):not(.ring-film-qa-hide) #ring-arena-canvas{
+  filter:grayscale(.20) sepia(.27) saturate(.64) contrast(1.08) brightness(.86);
+}
+#ring-arena-film-grade{
+  display:none;position:absolute;inset:0;z-index:13;
+  pointer-events:none;overflow:hidden;
+}
+#view.ring-arena-active:not(.ring-arena-transit):not(.ring-film-qa-hide) #ring-arena-film-grade{
+  display:block;
+}
+/* Color cast and real photographic edge falloff, not an opaque colored wash. */
+#ring-arena-film-grade::before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 81% 73% at 50% 48%,
+      rgba(0,0,0,0) 29%,rgba(16,12,12,.06) 64%,rgba(16,10,8,.32) 100%),
+    linear-gradient(180deg,rgba(79,49,35,.07),transparent 46%,rgba(16,22,24,.12));
+  pointer-events:none;
+}
+/* Analog film grain overlays the whole picture; texture changes by frame.
+ * SVG is used only as a procedural noise filter, never as a fake film frame. */
+#ring-arena-film-grade::after{
+  content:"";position:absolute;inset:-5%;
+  opacity:.14;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.69' numOctaves='3' seed='9' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.78'/%3E%3C/svg%3E");
+  background-size:180px 180px;background-repeat:repeat;
+  mix-blend-mode:soft-light;
+  animation:ring-film-grain 460ms steps(4,end) infinite;
+  pointer-events:none;
+}
+@keyframes ring-film-grain{
+  0%{transform:translate(0,0);opacity:.12}
+  25%{transform:translate(-1.6%,.7%);opacity:.15}
+  50%{transform:translate(.8%,-1.3%);opacity:.11}
+  75%{transform:translate(-.7%,1.4%);opacity:.17}
+  100%{transform:translate(0,0);opacity:.12}
+}
+@media(prefers-reduced-motion:reduce){
+  #ring-arena-film-grade::after{animation:none}
+}
+/* Match existing right-hand film portraits without reducing name/HP legibility. */
+#view.ring-arena-active:not(.ring-arena-transit) #ring-arena-controls .tg-film-viewport{
+  filter:grayscale(.16) sepia(.19) saturate(.79) brightness(.95);
+}

@@ -32,7 +32,19 @@ try{
     document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready'&&
     Number(info.l2dReady)>=1;
  },null,{timeout:160000});
- const film=page.locator('#ring-arena-film-screen');
+ const filmGrade=page.locator('#ring-arena-film-grade');
+ assert.equal(await filmGrade.count(),1,'film grain/vignette overlay must exist');
+ const grading=await page.evaluate(()=>{
+   const el=document.querySelector('#ring-arena-canvas');
+   const overlay=document.querySelector('#ring-arena-film-grade');
+   return {filter:getComputedStyle(el).filter,gradeDisplay:getComputedStyle(overlay).display,
+     gradePointerEvents:getComputedStyle(overlay).pointerEvents};
+ });
+ assert.ok(grading.filter.includes('sepia('),'3D world must use matching film-color grade');
+ assert.ok(grading.filter.includes('saturate('),'world and people share desaturation');
+ assert.equal(grading.gradeDisplay,'block');
+ assert.equal(grading.gradePointerEvents,'none');
+  const film=page.locator('#ring-arena-film-screen');
  assert.equal(await film.count(),1);
  const style=await film.evaluate(el=>{
   const css=getComputedStyle(el),box=el.getBoundingClientRect();
@@ -53,8 +65,14 @@ try{
  await page.waitForTimeout(800);
  await page.screenshot({path:out+'/ring-arena-with-GPT-film-1920x1080.png'});
  await page.evaluate(()=>document.querySelector('#view').classList.add('ring-film-qa-hide'));
- await page.screenshot({path:out+'/ring-arena-before-film-1920x1080.png'});
+ const hidden=await page.evaluate(()=>{
+   return {filter:getComputedStyle(document.querySelector('#ring-arena-canvas')).filter,
+     grade:getComputedStyle(document.querySelector('#ring-arena-film-grade')).display};
+ });
+ assert.equal(hidden.filter,'none','QA reference screenshot must contain untreated 3D game');
+ assert.equal(hidden.grade,'none','QA reference must exclude all film treatment');
+  await page.screenshot({path:out+'/ring-arena-before-film-1920x1080.png'});
  await page.evaluate(()=>document.querySelector('#view').classList.remove('ring-film-qa-hide'));
  assert.deepEqual(errors,[],'no uncaught page errors');
- console.log('PASS: original GPT film overlay on real WebGL arena',JSON.stringify({style,picture}));
+ console.log('PASS: original GPT film overlay and matched analog grading on live WebGL arena',JSON.stringify({style,picture,grading}));
 }finally{await browser.close();await new Promise(done=>server.close(done));}
