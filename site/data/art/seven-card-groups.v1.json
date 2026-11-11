@@ -126,6 +126,110 @@
       ]
     },
     {
+      "id": "wonder-circus",
+      "name": "奇想马戏团",
+      "gallery": "/character-editor/circus-booth.html",
+      "assetBase": "/assets/characters/wonder-circus/",
+      "slots": 7,
+      "assetStatus": "published_original_pngs_verified",
+      "roster": [
+        {
+          "id": "01-ringmaster",
+          "name": "马戏团团长",
+          "file": "ringmaster.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "02-aerial-acrobat",
+          "name": "空中杂技演员",
+          "file": "aerial-acrobat.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "03-clown-performer",
+          "name": "小丑演员",
+          "file": "clown-performer.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "04-knife-thrower",
+          "name": "飞刀演员",
+          "file": "knife-thrower.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "05-strongwoman",
+          "name": "大力士",
+          "file": "strongwoman.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "06-beast-tamer",
+          "name": "驯兽师",
+          "file": "beast-tamer.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "07-escape-artist",
+          "name": "逃脱术师",
+          "file": "escape-artist.png",
+          "original_png_committed": true
+        }
+      ]
+    },
+    {
+      "id": "crimson-vampires",
+      "name": "绯月血族",
+      "gallery": "/character-editor/vampire-booth.html",
+      "assetBase": "/assets/characters/crimson-vampires/",
+      "slots": 7,
+      "assetStatus": "published_original_pngs_verified",
+      "roster": [
+        {
+          "id": "01-princess",
+          "name": "血族小公主",
+          "file": "vampire-princess.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "02-courier",
+          "name": "夜行信使",
+          "file": "night-courier.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "03-physician",
+          "name": "蔷薇血医",
+          "file": "rose-physician.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "04-duelist",
+          "name": "月下剑姬",
+          "file": "moonlight-duelist.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "05-guardian",
+          "name": "血族守卫",
+          "file": "crimson-guardian.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "06-hostess",
+          "name": "夜宴夫人",
+          "file": "midnight-hostess.png",
+          "original_png_committed": true
+        },
+        {
+          "id": "07-empress",
+          "name": "纯血女皇",
+          "file": "pureblood-empress.png",
+          "original_png_committed": true
+        }
+      ]
+    },
+    {
       "id": "monster-hunters",
       "name": "怪物猎人组织",
       "gallery": "/character-editor/hunter-booth.html",
