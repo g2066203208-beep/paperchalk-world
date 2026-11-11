@@ -33,6 +33,14 @@ try{
  assert.equal(state.inspect.geometryPolicy,'textured-2d-art-on-3d-world-planes');
  assert.equal(state.inspect.road,'bidirectional');
  assert.equal(state.inspect.vehicleCount,4);
+ // Vehicle art regression: three independently replaceable car cutouts,
+ // a distinct taxi, and a city bus must all load into the WebGL material set.
+ for(const key of ['cream','coral','taxi','bus']){
+   assert.equal(state.inspect.textures[key]?.ready,true,'vehicle texture ready: '+key);
+   assert.match(state.inspect.textures[key]?.src||'',/traffic-/);
+ }
+ assert.equal(state.inspect.textureCount,state.inspect.expectedTextures);
+ assert.ok(state.inspect.traffic.some(v=>v.id==='car-near-two'&&v.direction===-1));
  assert.ok(state.inspect.traffic.some(v=>v.direction===-1));
  assert.ok(state.inspect.traffic.some(v=>v.direction===1));
  assert.ok(state.inspect.traffic[0].z!==state.inspect.traffic[2].z);
