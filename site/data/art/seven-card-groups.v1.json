@@ -123,7 +123,13 @@
           "xp": "预言",
           "file": "astral-witch.png"
         }
-      ]
+      ],
+      "minions": {
+        "manifest": "/data/art/witch-workshop-minions.v1.json",
+        "gallery": "/character-editor/witch-minions.html",
+        "count": 3,
+        "assetStatus": "published_original_pngs_verified"
+      }
     },
     {
       "id": "wonder-circus",

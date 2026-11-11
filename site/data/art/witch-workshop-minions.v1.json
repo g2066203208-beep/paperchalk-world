@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "factionId": "witch-workshop",
+  "group": "七曜魔女工坊",
+  "unitClass": "common_soldiers",
+  "slots": 3,
+  "note": "三种普通魔女工坊小兵，与原有七名核心魔女分别归档。称谓仅是根据原画表现暂定的美术识别名，不额外设定稀有度、技能与性格。",
+  "assetBase": "/assets/characters/witch-workshop/minions/",
+  "status": "published_original_pngs_verified",
+  "characters": [
+    {
+      "order": 1,
+      "id": "herb-gatherer",
+      "name": "采药学徒",
+      "english": "Herb Gathering Apprentice",
+      "file": "01-herb-gatherer.png",
+      "image": "金色短卷发，手持装满草药的藤篮，穿棕色长袍和工具腰包",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 536535,
+      "sha256": "2f25e433afe99a5b350f991471d920f5110eafed451ce9216037ef9d65de3bc5",
+      "gitBlob": "45d976b7b5ff3488b7d5481573c3ae19c084e453",
+      "original_png_committed": true
+    },
+    {
+      "order": 2,
+      "id": "ritual-scribe",
+      "name": "绘符学徒",
+      "english": "Rune Drawing Apprentice",
+      "file": "02-ritual-scribe.png",
+      "image": "深蓝黑色侧辫，俯身用细笔在卷轴上绘制符纹，穿棕色工坊长袍",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 522952,
+      "sha256": "78b255033ace222fcaadde802666a24f5871a9ec7873831452a6a26771c10178",
+      "gitBlob": "02bbecbe844b15e2705a5f8618b18edac79c8d88",
+      "original_png_committed": true
+    },
+    {
+      "order": 3,
+      "id": "apothecary-assistant",
+      "name": "炼药学徒",
+      "english": "Apothecary Apprentice",
+      "file": "03-apothecary-assistant.png",
+      "image": "深棕色长发，手持研磨杵，腰侧携带装有药材的双皮包，穿棕色工坊长袍",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 493526,
+      "sha256": "9824479b89cc8f63b8e3fc2435b9d1640d1c2b7901335b56195e80550b77a191",
+      "gitBlob": "dc5539a8a88139915e7333f49b1f44303262a1fe",
+      "original_png_committed": true
+    }
+  ]
+}
