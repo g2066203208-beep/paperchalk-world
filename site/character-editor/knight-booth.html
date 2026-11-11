@@ -62,7 +62,7 @@ async function importFiles(files,onlyCurrent=false){let assigned=0;const images=
  const file=images[i];let idx=onlyCurrent?current:-1;
  if(idx<0){const lower=file.name.toLowerCase();idx=roster.findIndex(r=>r.words.some(w=>lower.includes(w.toLowerCase())));if(idx<0&&images.length===7)idx=i;if(idx<0&&images.length===1)idx=current}
  if(idx<0)continue;const r=roster[idx];try{await save(r.id,file);const old=urls.get(r.id);if(old)URL.revokeObjectURL(old);urls.set(r.id,URL.createObjectURL(file));await refreshThumb(idx);assigned++}catch(e){$('save-status').textContent='保存失败：'+e.message}}
- }await show(current);if(assigned)$('save-status').textContent='✓ '+assigned+' 张原画已保存至此浏览器';else $('save-status').textContent='文件名未能识别，可逐张选中后导入';}
+ await show(current);if(assigned)$('save-status').textContent='✓ '+assigned+' 张原画已保存至此浏览器';else $('save-status').textContent='文件名未能识别，可逐张选中后导入';}
 function choose(onlyCurrent){$('files').multiple=!onlyCurrent;$('files').dataset.one=String(onlyCurrent);$('files').click()}
 $('files').onchange=async e=>{await importFiles(e.target.files,e.target.dataset.one==='true');e.target.value=''};
 $('import-all').onclick=()=>choose(false);$('slot-import').onclick=()=>choose(true);$('prev').onclick=()=>show(current-1);$('next').onclick=()=>show(current+1);
