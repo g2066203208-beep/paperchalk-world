@@ -10,7 +10,7 @@
 })(typeof window==='object'?window:null,function(){
  'use strict';
  const SIZE=Object.freeze({streetLength:96,roadWidth:17,nearSidewalk:6,farSidewalk:4,
-   storefrontZ:28,storefrontHeight:11.5,eyeHeight:1.65});
+   storefrontZ:28,storefrontHeight:9.5,eyeHeight:1.65});
  const ASSETS=Object.freeze({
    road:'./assets/city-street/asphalt-material.svg',
    sidewalk:'./assets/city-street/sidewalk-material.svg',
@@ -37,7 +37,7 @@
    return a<.09?0:Math.sign(n)*Math.pow((a-.09)/.91,1.35)};
  function camera(px=0,py=0,walk=0){
    return {x:clamp(walk,-20,20),y:SIZE.eyeHeight,z:-1.0,
-     yaw:axis(px)*.45,pitch:-.087-axis(py)*.14,hFov:68};
+     yaw:axis(px)*.45,pitch:-.048-axis(py)*.14,hFov:68};
  }
  function quad(out,pts,uv){
    const t=uv||[[0,0],[1,0],[1,1],[0,1]];
@@ -66,7 +66,7 @@
    for(let i=-4;i<=3;i++){
      const x0=i*12,x1=x0+12,z=28.6+(i%3)*.16;
      quad(g[['buildingsA','buildingsB','buildingsC'][((i%3)+3)%3]],
-       [[x0,0,z],[x1,0,z],[x1,11.5,z],[x0,11.5,z]]);
+       [[x0,0,z],[x1,0,z],[x1,9.5,z],[x0,9.5,z]]);
    }
    // Atmospheric distant skyline and full sky are ALSO actual planes.
    quad(g.skyline,[[-120,-4,47],[120,-4,47],[120,34,47],[-120,34,47]]);
