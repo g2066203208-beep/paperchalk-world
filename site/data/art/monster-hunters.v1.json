@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "group_id": "monster-hunters",
+  "group_name": "怪物猎人组织",
+  "art_order": "严格按照用户2026-11-11上传的七张原图顺序",
+  "asset_format": "704x1024 RGB PNG",
+  "asset_policy": "上传时原字节保存，不裁切、压缩、改色或去背景",
+  "status": "metadata_registered_original_pngs_not_yet_committed",
+  "characters": [
+    {
+      "id": "01-commander",
+      "name": "持剑指挥官",
+      "en": "Legendary Hunter",
+      "xp": "指挥",
+      "file": "01-legendary-hunter.png",
+      "size": 559536,
+      "sha256": "71101f4ad34244189455333731e898d29d4f8d827ecdc7fb8beefc26851ddd81",
+      "source_file_id": "file_000000000df081fd91baace14430c7ce",
+      "desc": "银发、黑色军装长外套，佩双剑；负责战场判断与猎杀指挥。",
+      "order": 1,
+      "original_png_committed": false
+    },
+    {
+      "id": "02-physician",
+      "name": "血液医师",
+      "en": "Blood Physician",
+      "xp": "采样",
+      "file": "02-blood-physician.png",
+      "size": 435274,
+      "sha256": "f70558f870336d9c3e7a81b62de61d1d56e21e004c53c6f95db26b8d613156cb",
+      "source_file_id": "file_0000000078ac81fdbee99d0bb18456cb",
+      "desc": "黑发、浅色医疗外套、装有深红色液体的药瓶；负责毒理与样本处理。",
+      "order": 2,
+      "original_png_committed": false
+    },
+    {
+      "id": "03-trapper",
+      "name": "索弩陷阱师",
+      "en": "Wire Trapper",
+      "xp": "布防",
+      "file": "03-trap-engineer.png",
+      "size": 541284,
+      "sha256": "05a2466ee26a92e364517a1787af557af28a7a04c40e9433dbfcc82336bc8920",
+      "source_file_id": "file_00000000ab5c81fdb3f3f6c4cb025655",
+      "desc": "短发、披肩、弩、线轴和工具筒；负责布置机关与移动限制。",
+      "order": 3,
+      "original_png_committed": false
+    },
+    {
+      "id": "04-markswoman",
+      "name": "赏金枪手",
+      "en": "Bounty Markswoman",
+      "xp": "狙击",
+      "file": "04-bounty-markswoman.png",
+      "size": 442200,
+      "sha256": "2263d88bcdeb0da6b59c82ce85b5baff5c5fd9a192505bacd785c6fdec97b26e",
+      "source_file_id": "file_00000000277c81fdb6d3961b94e027c2",
+      "desc": "金发低马尾、棕色披风、长枪和金属弹药；负责远程精准打击。",
+      "order": 4,
+      "original_png_committed": false
+    },
+    {
+      "id": "05-warden",
+      "name": "封印监管者",
+      "en": "Seal Warden",
+      "xp": "封禁",
+      "file": "05-seal-warden.png",
+      "size": 557236,
+      "sha256": "27432ff1b0fd612e880dd0eb1048af6e2097599b89a8c093d27e7a6de0b70ee7",
+      "source_file_id": "file_00000000379481fd9dd4bbe29d0ee931",
+      "desc": "深色长袍、铃铛、封印纸和大型封装容器；负责拘束异常目标。",
+      "order": 5,
+      "original_png_committed": false
+    },
+    {
+      "id": "06-butcher",
+      "name": "巨兽屠夫",
+      "en": "Beast Butcher",
+      "xp": "破甲",
+      "file": "06-beast-butcher.png",
+      "size": 574278,
+      "sha256": "50d9dfde39b4c0248520eb12816d2cad14424809cfbf6e8c7a5d05b76b7e12b5",
+      "source_file_id": "file_00000000b56881fd92d341a29417908b",
+      "desc": "短发、实战护甲、肩扛重型双刃斧；负责破甲、打断与部位破坏。",
+      "order": 6,
+      "original_png_committed": false
+    },
+    {
+      "id": "07-cleaner",
+      "name": "重斧清道夫",
+      "en": "Axe Cleaner",
+      "xp": "处决",
+      "file": "07-axe-scout.png",
+      "size": 518861,
+      "sha256": "799e4defcb8a05a4c82870eb9adcac449c63f19bb63870556de21b5d3068dbc8",
+      "source_file_id": "file_00000000e67c81fd810131a387c6e70b",
+      "desc": "短发红围巾、围裙和超大沾血重斧；负责残余怪物清剿。",
+      "order": 7,
+      "original_png_committed": false
+    }
+  ]
+}
