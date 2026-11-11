@@ -1,6 +1,6 @@
 # 奇想马戏团｜V1 普通小兵（封存保留）
 
-此处为 V1 **旧版封存**文件，原始 PNG 均完整保留、不覆盖、不删除；当前正式展示为 V2：[`circus-minions.html`](../../../../character-editor/circus-minions-archive-v1.html)。
+此处为 V1 **旧版封存**文件，原始 PNG 均完整保留、不覆盖、不删除；当前正式展示为 V2：[`circus-minions.html`](../../../../character-editor/circus-minions.html)。
 
 按用户在 2026-11-11 上传顺序保存的三张马戏团普通工作人员原画。三人的统一服装为米白色衬衫、红色马甲、深色长裤和黑色系短靴。道具和自然动作各异。与原有七名马戏团正式角色独立分类。
 
@@ -14,6 +14,6 @@
 
 所有文件为原始上传的 RGB PNG 原字节，未重绘、裁切、抠图或重新压缩。展示应使用 `object-fit:contain`。
 
-- [三名普通小兵展示页](../../../../character-editor/circus-minions.html)
+- [旧版 V1 三名小兵封存展示](../../../../character-editor/circus-minions-archive-v1.html)
 - [机器人物清单](../../../../data/art/wonder-circus-minions.v1.json)
 - [原有七人马戏团展示](../../../../character-editor/circus-booth.html)
