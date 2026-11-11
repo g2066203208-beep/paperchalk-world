@@ -1,0 +1,46 @@
+name: Ring arena - GPT vintage battle film screenshot
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/assets/ui/horror-battle-screen-film-gpt.webp'
+      - 'site/game/ring-arena-film-screen.css'
+      - 'site/game/ring-arena-runtime.js'
+      - 'site/index.html'
+      - 'tests/ring-arena-film-screen-browser.mjs'
+      - '.github/workflows/ring-arena-film-screen-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  film-frame-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build approved L2D + scene assets
+        run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/fix_protagonist_neck_v4.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_character_catalog.py
+          python3 scripts/build_scene_catalog.py
+      - name: Install browser
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Screenshot actual WebGL battle with and without GPT film overlay
+        run: node tests/ring-arena-film-screen-browser.mjs
+      - name: Upload true browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ring-arena-GPT-film-frame-actual-game
+          path: artifacts/ring-arena-film-screen/*.png
+          if-no-files-found: warn
+          retention-days: 14

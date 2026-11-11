@@ -1112,6 +1112,14 @@
    '</svg></div><strong class="director-damage" data-director-damage>-12</strong></div>'
   ].join('');
   stage.append(hud);
+  // Real GPT-painted, user-approved transparent vintage film overlay.
+  // This is screen-space only: the WebGL characters, lighting, mouse camera,
+  // world geometry and the existing combat controls are not changed.
+  const filmFrame=document.createElement('div');
+  filmFrame.id='ring-arena-film-screen';
+  filmFrame.setAttribute('aria-hidden','true');
+  filmFrame.dataset.art='gpt-cropped-2048x1152';
+  stage.append(filmFrame);
   const status=hud.querySelector('.status');
   const director=window.PaperchalkBattleDirector;
   if(!director)throw Error('Battle director module was not loaded');

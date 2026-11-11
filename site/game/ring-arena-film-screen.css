@@ -1,0 +1,25 @@
+/* GPT-painted old-film frame, cropped from the user's approved original image.
+ * Only the film material is rendered; center and sprocket perforations stay
+ * alpha transparent, so the live WebGL battle continues underneath.
+ * DO NOT reconstruct this texture in SVG/CSS. */
+#ring-arena-film-screen{
+  display:none;
+  position:absolute;
+  inset:0;
+  z-index:14;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  isolation:isolate;
+  background-image:url('../assets/ui/horror-battle-screen-film-gpt.webp');
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:100% 100%;
+}
+#view.ring-arena-active:not(.ring-arena-transit) #ring-arena-film-screen{
+  display:block;
+}
+#view.ring-arena-transit #ring-arena-film-screen,
+#view.ring-film-qa-hide #ring-arena-film-screen{
+  display:none!important;
+}
