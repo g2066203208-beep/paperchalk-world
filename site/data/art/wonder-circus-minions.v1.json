@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "factionId": "wonder-circus",
+  "group": "奇想马戏团",
+  "unitClass": "common_soldiers",
+  "slots": 3,
+  "assetBase": "/assets/characters/wonder-circus/minions/",
+  "status": "published_original_pngs_verified",
+  "note": "按用户上传顺序归档的三名普通后台小兵，与七名核心马戏团人物分开。名称根据画面动作暂定，仅作为素材索引，不设置额外能力与性格。",
+  "characters": [
+    {
+      "order": 1,
+      "id": "prop-preparer",
+      "name": "道具整理员",
+      "en": "Prop Preparation Staff",
+      "file": "01-prop-preparation.png",
+      "image": "深棕色长发，俯身使用细杆整理小型木箱中的道具，红马甲与米白衬衣",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 612371,
+      "sha256": "49276e826c987671d142582d476c49cbe4b64f870198f132a6f8e51b6b2901ef",
+      "gitBlob": "1d82fe9a4cb470cb8f704616d31d46f2d1f08e83",
+      "original_png_committed": true
+    },
+    {
+      "order": 2,
+      "id": "backstage-keeper",
+      "name": "后台值守员",
+      "en": "Backstage Attendant",
+      "file": "02-stagehand-seated.png",
+      "image": "深色高马尾，坐在木质道具箱上，身穿统一红色马甲、米白衬衫和深色长裤",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 504960,
+      "sha256": "19c030422bdc0fa176eb5c001fd5f757cefc6ef5444c9ee0e668cb04ae904284",
+      "gitBlob": "8234a91b58c852d7409e5e84ef6db8bc120d0b27",
+      "original_png_committed": true
+    },
+    {
+      "order": 3,
+      "id": "offshift-stagehand",
+      "name": "轮班勤务员",
+      "en": "Off-duty Stagehand",
+      "file": "03-stagehand-resting.png",
+      "image": "深色长发，坐在木质道具箱上单手托腮，另一手放在身侧，穿统一红色马甲",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 549484,
+      "sha256": "7325015f944d38d30723712fe8369820a2af3af325f99c3110e5ccc3e2aa9dd7",
+      "gitBlob": "328c009a1714e039ee36b26d6c2931fc365c3630",
+      "original_png_committed": true
+    }
+  ]
+}
