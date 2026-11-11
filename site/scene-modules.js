@@ -66,7 +66,7 @@
        kind:'paper-cutout-2d',version:'ocean-paper-stage-v1'});
     // Side-on urban horror overworld location: independently moving two-way vehicles.
     // No vehicle is painted into the background; replaceable street artwork.
-    result['city-street'] = define('city-street','./assets/menu-wall.webp',
+    result['city-street'] = define('city-street','./assets/city-street/streetscape.svg',
       '横向城市双向马路与车水马龙街景','城市街道 · 横向双向车流','environment',
       {layers:Object.freeze({player:false,enemy:false,fog:false}),
        kind:'horizontal-layered-street',version:'street-side-on-mvp-v1'});
