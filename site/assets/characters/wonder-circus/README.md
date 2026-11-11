@@ -14,4 +14,4 @@
 
 展示页：`site/character-editor/circus-booth.html`。正式图片目标路径为 `site/assets/characters/wonder-circus/`。
 
-注意：当前连入的 GitHub 写入接口只支持文本、base64 内容，不接受会话附件的原始文件引用；创建此清单不代表七张 PNG 已入库。请使用上传包的 PNG 原样补齐，随后按 SHA-256 校验。
+上传校验：全部七张正式 PNG 已写入 `site/assets/characters/wonder-circus/`，原图字节与用户上传文件一致。14 张原图已于 2026-11-11 提交入库，本组七张已按 SHA-256 和 Git blob SHA 完整核对。
