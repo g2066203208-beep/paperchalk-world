@@ -811,8 +811,8 @@ body.mobile-mode.virtual-landscape #view{
 <link rel="stylesheet" href="./game/school-corridor-2p5d.css?v=27m-corridor-blockout-v1">
 <script src="./game/paper-ocean-stage.js?v=paper-ocean-v1"></script>
 <link rel="stylesheet" href="./game/paper-ocean-stage.css?v=paper-ocean-v1">
-<script src="./game/city-street-stage.js?v=side-on-street-v1"></script>
-<link rel="stylesheet" href="./game/city-street-stage.css?v=side-on-street-v1">
+<script src="./game/city-street-stage.js?v=city-open-air-world-v2"></script>
+<link rel="stylesheet" href="./game/city-street-stage.css?v=city-open-air-world-v2">
 <script src="./combat-lab/engine.js?v=full-4p-timegrid-20261108"></script>
 <script src="./combat-lab/cards-expansion.js?v=card-atlas-90-v16-20261108"></script>
 <script src="./combat-lab/balance-v17.js?v=full-timegrid-v17-20261108"></script>
@@ -3377,7 +3377,8 @@ void main(){
     // pivot, not a dolly. This is the sole frame-time-based damping pass.
     // No individual L2D, fog or material-layer parallax.
     const roomMove=stage.dataset.scene==='classroom-box'||
-      stage.dataset.scene==='school'||stage.dataset.scene==='school-corridor';
+      stage.dataset.scene==='school'||stage.dataset.scene==='school-corridor'||
+      stage.dataset.scene==='city-street';
     const worldLook=roomMove||stage.dataset.scene==='ring-arena'||view.classList.contains('ring-arena-transit');
     // Battle view is peripheral awareness, not an FPS camera. A gentler
     // single-pass exponential damper avoids instant head snapping and
@@ -3417,6 +3418,14 @@ void main(){
       cameraPlayer.style.transform='none';
       schoolCorridor.render(currentX,currentY);
       stage.dataset.cameraProfile='school-long-corridor-webgl';
+    }else if(stage.dataset.scene==='city-street'){
+      // Urban open-air level uses the same real 3D camera conventions as school.
+      // Sidewalk, asphalt, buildings, moving traffic share WebGL world depth.
+      stage.style.transform='none';
+      enemyDepth.style.transform='none';
+      cameraPlayer.style.transform='none';
+      cityStreet.render(currentX,currentY);
+      stage.dataset.cameraProfile='city-street-open-air-webgl';
     }else if(stage.dataset.scene==='classroom-box'){
       // Genuine world X/Y/Z -> one pinhole perspective for BOTH surfaces and
       // the existing L2D player/enemy (same shoe coordinates on the floor).
