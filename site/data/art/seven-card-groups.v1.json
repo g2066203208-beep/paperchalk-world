@@ -124,6 +124,72 @@
           "file": "astral-witch.png"
         }
       ]
+    },
+    {
+      "id": "monster-hunters",
+      "name": "怪物猎人组织",
+      "gallery": "/character-editor/hunter-booth.html",
+      "assetBase": "/assets/characters/monster-hunters/",
+      "slots": 7,
+      "assetStatus": "metadata_only_original_pngs_pending",
+      "roster": [
+        {
+          "id": "01-commander",
+          "name": "持剑指挥官",
+          "en": "Legendary Hunter",
+          "xp": "指挥",
+          "file": "01-legendary-hunter.png",
+          "original_png_committed": false
+        },
+        {
+          "id": "02-physician",
+          "name": "血液医师",
+          "en": "Blood Physician",
+          "xp": "采样",
+          "file": "02-blood-physician.png",
+          "original_png_committed": false
+        },
+        {
+          "id": "03-trapper",
+          "name": "索弩陷阱师",
+          "en": "Wire Trapper",
+          "xp": "布防",
+          "file": "03-trap-engineer.png",
+          "original_png_committed": false
+        },
+        {
+          "id": "04-markswoman",
+          "name": "赏金枪手",
+          "en": "Bounty Markswoman",
+          "xp": "狙击",
+          "file": "04-bounty-markswoman.png",
+          "original_png_committed": false
+        },
+        {
+          "id": "05-warden",
+          "name": "封印监管者",
+          "en": "Seal Warden",
+          "xp": "封禁",
+          "file": "05-seal-warden.png",
+          "original_png_committed": false
+        },
+        {
+          "id": "06-butcher",
+          "name": "巨兽屠夫",
+          "en": "Beast Butcher",
+          "xp": "破甲",
+          "file": "06-beast-butcher.png",
+          "original_png_committed": false
+        },
+        {
+          "id": "07-cleaner",
+          "name": "重斧清道夫",
+          "en": "Axe Cleaner",
+          "xp": "处决",
+          "file": "07-axe-scout.png",
+          "original_png_committed": false
+        }
+      ]
     }
   ]
 }
