@@ -4,7 +4,7 @@
 
 已逐一读取用户本次上传的七张原图，并按**用户的发图顺序**锁定身份。原图为 704×1024 RGB PNG，严禁重画、裁切、缩放、自动去背或有损压缩。
 
-> **文件状态：** 本提交仅记录图档识别和 SHA-256。**7 个二进制 PNG 尚未写入 GitHub**；当前不能把此目录视为已完成素材发布。原图在会话内制作的 `hunter_group_seven_originals.zip` 中留有未改变字节的备份。网页手动导入只保存到当前浏览器，也不等于提交 GitHub。
+> **文件状态：** 七张 704×1024 原始 PNG 已于 2026-11-11 全部提交 GitHub main，Git blob SHA 与本地原图逐张核对一致；画面像素与原始 PNG 字节均未改变。提交记录：[`e4916fca`](https://github.com/g2066203208-beep/paperchalk-world/commit/e4916fca69ce6ed01e838c07b8682db2c9ed82c1)。
 
 | 顺序 | 临时识别标签 | 预定文件名 | 原图字节 | SHA-256 |
 |:--:|---|---|---:|---|
@@ -21,4 +21,4 @@
 机器索引：[`site/data/art/monster-hunters.v1.json`](../../../data/art/monster-hunters.v1.json)。
 玩法和审美定位：[`docs/characters/HUNTERS_FACTION_VISUAL_RULES_20261111.md`](../../../../docs/characters/HUNTERS_FACTION_VISUAL_RULES_20261111.md)。
 
-下一验收条件：7 PNG 真实写入 `site/assets/characters/monster-hunters/`；逐张以仓库二进制内容 SHA-256 / Git blob SHA 与本档相符；随后将 `original_png_committed` 改成 `true`，展示间才可称为正式发布。
+发布验收结果：7/7 PNG 已在 `site/assets/characters/monster-hunters/`；文件字节、SHA-256 与 Git blob SHA 一一对应，图鉴可正式展示。
