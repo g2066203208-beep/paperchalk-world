@@ -1,10 +1,11 @@
-name: Paper Ocean - actual game 2D stage proof
+name: Paper Depth - 6-layer in-game stage proof
 on:
   push:
     paths:
       - 'site/game/paper-ocean-stage.js'
       - 'site/game/paper-ocean-stage.css'
       - 'site/assets/paper-ocean/**'
+      - 'site/assets/paper-depth/**'
       - 'site/index.html'
       - 'site/scene-modules.js'
       - 'tests/paper-ocean-stage-preview.mjs'
@@ -33,7 +34,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: paper-ocean-real-game-screenshot
+          name: paper-depth-six-layer-real-game-screenshots
           path: artifacts/paper-ocean/*.png
           if-no-files-found: warn
           retention-days: 14

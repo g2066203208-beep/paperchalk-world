@@ -1,38 +1,87 @@
-/* Fully flat camera-facing paper cut-outs. No transform3d or perspective. */
-#scene>#paper-ocean-stage{position:absolute;inset:0;z-index:1;overflow:hidden;
-  pointer-events:none;isolation:isolate;background:#243947}
+/* Same paper-ocean host, converted to six independent masked 2D depth planes.
+   No WebGL, no 3D models and no perspective transform. */
+#scene>#paper-ocean-stage{
+ position:absolute;inset:0;z-index:1;overflow:hidden;isolation:isolate;
+ background:#202c38;pointer-events:none;
+}
 #scene>#paper-ocean-stage[hidden]{display:none!important}
-#paper-ocean-stage .paper-ocean-sky{position:absolute;inset:0;background:
-  linear-gradient(180deg,#192935 0%,#324c5a 35%,#667680 69%,#455a63 100%)}
-#paper-ocean-stage .paper-ocean-haze{position:absolute;left:0;right:0;top:44%;height:44%;
-  background:linear-gradient(180deg,transparent,rgba(161,176,175,.20),rgba(14,41,53,.18))}
-#paper-ocean-stage .paper-ocean-moon{position:absolute;left:72%;top:12%;width:min(7vw,100px);
-  aspect-ratio:1;border-radius:50%;background:rgba(229,220,195,.68);box-shadow:0 0 70px rgba(205,219,221,.20)}
-#paper-ocean-stage img{position:absolute;display:block;object-fit:fill;max-width:none;user-select:none;
-  -webkit-user-drag:none;transform-origin:center center}
-#paper-ocean-stage .paper-ocean-boss{width:min(61%,850px);height:auto;left:50%;top:31%;
-  transform:translateX(-50%);filter:drop-shadow(0 14px 9px rgba(5,13,21,.40));
-  animation:paper-ocean-bob 5.1s ease-in-out infinite}
-#paper-ocean-stage .paper-ocean-wave{width:108%;height:66%;left:-4%;bottom:-9%;
-  filter:drop-shadow(0 -8px 9px rgba(7,23,35,.18));
-  animation:paper-ocean-swell 5.8s ease-in-out infinite}
-#view.paper-ocean-active #scene{width:100cqw!important;height:100cqh!important;
- max-width:none!important;aspect-ratio:auto!important;transform:none!important;
+#paper-ocean-stage .depth-backdrop,
+#paper-ocean-stage .depth-stack,
+#paper-ocean-stage .depth-layer,
+#paper-ocean-stage .depth-layer-art{position:absolute;inset:0;width:100%;height:100%}
+#paper-ocean-stage .depth-backdrop{
+ display:block;object-fit:cover;max-width:none;opacity:1;transform-origin:center;
+ transition:transform 1080ms cubic-bezier(.18,.7,.2,1);will-change:transform;
+}
+#paper-ocean-stage .depth-stack{z-index:2}
+#paper-ocean-stage .depth-layer{will-change:transform,opacity;transform-origin:center;
+ transition:transform 1080ms cubic-bezier(.18,.7,.2,1),opacity 1050ms ease}
+#paper-ocean-stage .depth-layer-art{display:block;object-fit:cover;max-width:none;
+ user-select:none;pointer-events:none;-webkit-user-drag:none}
+#paper-ocean-stage .depth-layer.is-exiting{
+ animation:depth-paper-exit 1050ms cubic-bezier(.45,0,.75,.4) forwards!important;
+}
+#paper-ocean-stage .depth-layer.is-approaching{
+ animation:depth-paper-approach 1050ms cubic-bezier(.2,.8,.16,1) both!important;
+}
+@keyframes depth-paper-exit{
+ from{transform:var(--depth-start-pose);opacity:1}
+ to{transform:translateY(126%) scale(1.38);opacity:0}
+}
+@keyframes depth-paper-approach{
+ from{transform:translateY(-9%) scale(.88);opacity:.65}
+ to{transform:var(--depth-pose);opacity:1}
+}
+#paper-ocean-stage .depth-atmosphere{
+ position:absolute;inset:0;z-index:40;pointer-events:none;
+ background:linear-gradient(180deg,rgba(6,11,21,.28) 0%,transparent 21%,transparent 76%,rgba(5,8,10,.28) 100%);
+}
+#paper-ocean-stage .depth-ui{position:absolute;inset:0;z-index:50;
+ pointer-events:none;color:#fff6e8;font:500 clamp(11px,.95vw,16px)/1.45 system-ui,'PingFang SC','Microsoft YaHei',sans-serif}
+#paper-ocean-stage .depth-heading{position:absolute;left:3.1%;top:4.1%;
+ text-shadow:0 2px 7px rgba(0,0,0,.75)}
+#paper-ocean-stage .depth-eyebrow{display:block;font-size:clamp(9px,.7vw,12px);
+ letter-spacing:.18em;color:#fff1d6;opacity:.85}
+#paper-ocean-stage .depth-title{font:600 clamp(22px,2.7vw,46px)/1.12 Georgia,'Songti SC',serif;
+ margin:7px 0 4px;letter-spacing:.065em}
+#paper-ocean-stage .depth-subtitle{font-size:clamp(11px,.9vw,14px);opacity:.8}
+#paper-ocean-stage .depth-progress{position:absolute;top:6.2%;right:3.1%;
+ display:flex;align-items:center;gap:clamp(5px,.55vw,9px)}
+#paper-ocean-stage .depth-dot{width:clamp(9px,.8vw,13px);aspect-ratio:1;border-radius:50%;
+ border:1px solid rgba(255,238,208,.72);background:rgba(20,20,30,.52);box-shadow:0 1px 5px #0005}
+#paper-ocean-stage .depth-dot.is-current{background:#f6c989;box-shadow:0 0 0 3px #ffdeb63c,0 0 10px #f3bc7ca0}
+#paper-ocean-stage .depth-dot.is-cleared{background:#ddd5c9}
+#paper-ocean-stage .depth-actions{position:absolute;bottom:4.2%;right:3.1%;
+ display:flex;gap:8px;align-items:center;pointer-events:auto;
+ background:rgba(11,16,24,.70);border:1px solid rgba(250,225,190,.26);
+ border-radius:10px;padding:9px 11px;backdrop-filter:blur(7px);box-shadow:0 5px 18px #0005}
+#paper-ocean-stage .depth-status{font-size:clamp(10px,.74vw,12px);
+ color:#e8e0d6;opacity:.88;margin:0 7px 0 3px;white-space:nowrap}
+#paper-ocean-stage button{border:1px solid rgba(248,221,183,.65);border-radius:7px;
+ background:#d6b78c;color:#241a14;font:600 clamp(10px,.82vw,13px)/1.2 system-ui,'Microsoft YaHei',sans-serif;
+ cursor:pointer;padding:9px 13px;min-height:33px;touch-action:manipulation}
+#paper-ocean-stage button:hover{background:#f3d7ad}
+#paper-ocean-stage button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#paper-ocean-stage button.depth-reset{background:#202532;color:#e5e5e7;border-color:#d9c1a65c}
+#paper-ocean-stage [hidden]{display:none!important}
+#view.paper-ocean-active{padding:0!important}
+#view.paper-ocean-active #scene{margin:0!important;width:100%!important;height:100%!important;
+ max-width:none!important;aspect-ratio:auto!important;transform:none!important;border:0!important;
  border-radius:0!important;overflow:hidden}
 #view.paper-ocean-active #scene::after{content:none!important}
 #view.paper-ocean-active #scene>#source{visibility:hidden!important}
-@keyframes paper-ocean-bob{0%,100%{transform:translate(-50%,0) rotate(-1deg)}
-  50%{transform:translate(-50%,11px) rotate(1deg)}}
-@keyframes paper-ocean-swell{0%,100%{transform:translate(0,0)}
-  50%{transform:translate(-1.2%,9px)}}
-@media (prefers-reduced-motion:reduce){
- #paper-ocean-stage .paper-ocean-boss,#paper-ocean-stage .paper-ocean-wave{animation:none!important}
- #paper-ocean-stage .paper-ocean-boss{transform:translateX(-50%)}}
-@media (max-aspect-ratio:1/1){
- #paper-ocean-stage .paper-ocean-boss{width:90%;top:34%}
- #paper-ocean-stage .paper-ocean-wave{width:150%;left:-25%;height:54%}}
-/* Theater-only scene: no dashboard clutter or desktop window frame. */
-#view.paper-ocean-active{padding:0!important}
-#view.paper-ocean-active #novel-ui{display:none!important}
-#view.paper-ocean-active #scene{margin:0!important;width:100%!important;height:100%!important;border:0!important}
-#view.paper-ocean-active #fog{display:none!important}
+#view.paper-ocean-active #novel-ui,#view.paper-ocean-active #fog{display:none!important}
+@media(max-width:700px){
+ #paper-ocean-stage .depth-heading{left:4%;top:4%}
+ #paper-ocean-stage .depth-title{font-size:clamp(18px,4vw,27px)}
+ #paper-ocean-stage .depth-actions{bottom:3%;left:3%;right:3%;
+  justify-content:flex-end;gap:5px;padding:6px}
+ #paper-ocean-stage .depth-status{white-space:normal;flex:1;margin-right:0}
+ #paper-ocean-stage button{padding:8px;font-size:11px}
+ #paper-ocean-stage .depth-progress{right:4%}
+}
+@media(prefers-reduced-motion:reduce){
+ #paper-ocean-stage .depth-layer,#paper-ocean-stage .depth-backdrop{
+  transition:none!important;animation:none!important
+ }
+}

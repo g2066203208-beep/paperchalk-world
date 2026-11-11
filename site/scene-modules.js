@@ -61,9 +61,9 @@
       {layers:Object.freeze({player:false,enemy:false,fog:true}),
        kind:'five-face-3d',version:'27m-school-corridor-blockout-v1'});
     result['paper-ocean'] = define('paper-ocean','./assets/menu-wall.webp',
-      '纯平面纸片海浪与章鱼怪物舞台','纸片演出 · 海上章鱼 Boss','environment',
+      '从最前方小村向深处连续推进到最终 Boss 的六层 2D 纸片舞台','纸片冒险 · 六层纵深','environment',
       {layers:Object.freeze({player:false,enemy:false,fog:false}),
-       kind:'paper-cutout-2d',version:'ocean-paper-stage-v1'});
+       kind:'paper-cutout-2d',version:'paper-depth-six-layers-v1'});
     // Same 3D-space + individually painted 2D-texture architecture as classroom.
     // True horizontal road and pavement meshes, real-perspective painted facades,
     // and independently moving world-space vehicles. Not a CSS scroll stage.
