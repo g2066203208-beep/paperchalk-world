@@ -26,20 +26,29 @@ try{
  page.on('pageerror',e=>errors.push(e.message));
  const origin='http://127.0.0.1:'+server.address().port;
  await page.goto(origin+'/index.html?scene=ring-arena',{waitUntil:'domcontentloaded',timeout:60000});
- await page.waitForFunction(()=>{
-  const info=window.PaperWorldGameRingArena?.inspect?.();
-  return info?.active===true&&info?.renderer==='webgl-l2d'&&
-    document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready';
- },null,{timeout:60000});
- await page.waitForTimeout(3000);
- const runtime=await page.evaluate(()=>({
-   active:window.PaperWorldGameRingArena?.inspect?.().active,
-   renderer:window.PaperWorldGameRingArena?.inspect?.().renderer,
-   l2dReady:window.PaperWorldGameRingArena?.inspect?.().l2dReady,
-   wall:document.querySelector('#ring-arena-canvas')?.dataset.wallTexture,
- }));
- console.log('RING_FILM_RENDER_DIAGNOSTIC',JSON.stringify({runtime,errors}));
- const filmGrade=page.locator('#ring-arena-film-grade');
+ await page.waitForTimeout(10000);
+ const runtime=await page.evaluate(()=>{
+   const info=window.PaperWorldGameRingArena?.inspect?.();
+   return {
+     gameReady:!!window.PaperWorldGameRingArena,
+     stage:document.querySelector('#scene')?.dataset.scene,
+     active:info?.active,
+     renderer:info?.renderer,
+     l2dReady:info?.l2dReady,
+     wall:document.querySelector('#ring-arena-canvas')?.dataset.wallTexture,
+     initError:info?.initError,
+     filmGradeMounted:!!document.querySelector('#ring-arena-film-grade'),
+     filmMounted:!!document.querySelector('#ring-arena-film-screen'),
+     resourceStatus:performance.getEntriesByType('resource').filter(x=>x.responseStatus>=400).slice(0,12).map(x=>({name:x.name,status:x.responseStatus}))
+   };
+ });
+ console.log('RING_FILM_STARTUP_DIAGNOSTIC',JSON.stringify({runtime,errors}));
+ await page.screenshot({path:out+'/ring-film-startup-diagnostic-1920x1080.png'});
+ assert.equal(runtime.stage,'ring-arena','ring arena must be the current scene');
+ assert.equal(runtime.gameReady,true,'arena runtime must be initialized');
+ assert.equal(runtime.active,true,'arena runtime must be active');
+ assert.equal(runtime.renderer,'webgl-l2d','real WebGL renderer must exist');
+  const filmGrade=page.locator('#ring-arena-film-grade');
  assert.equal(await filmGrade.count(),1,'film grain/vignette overlay must exist');
  const grading=await page.evaluate(()=>{
    const canvas=document.querySelector('#ring-arena-canvas');
