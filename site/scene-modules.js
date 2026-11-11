@@ -64,12 +64,14 @@
       '纯平面纸片海浪与章鱼怪物舞台','纸片演出 · 海上章鱼 Boss','environment',
       {layers:Object.freeze({player:false,enemy:false,fog:false}),
        kind:'paper-cutout-2d',version:'ocean-paper-stage-v1'});
-    // Side-on urban horror overworld location: independently moving two-way vehicles.
-    // No vehicle is painted into the background; replaceable street artwork.
+    // Same 3D-space + individually painted 2D-texture architecture as classroom.
+    // True horizontal road and pavement meshes, real-perspective painted facades,
+    // and independently moving world-space vehicles. Not a CSS scroll stage.
     result['city-street'] = define('city-street','./assets/city-street/streetscape.svg',
-      '横向城市双向马路与车水马龙街景','城市街道 · 横向双向车流','environment',
+      '真实3D横向城市街道：贴图路面、对街建筑与双向车流',
+      '城市街道 · 室外 2.5D','environment',
       {layers:Object.freeze({player:false,enemy:false,fog:false}),
-       kind:'horizontal-layered-street',version:'street-side-on-mvp-v1'});
+       kind:'open-air-3d',version:'street-3d-painted-materials-v2'});
     const seen = new Set();
     for (const entry of catalog) {
       if (!entry || !SLUG.test(entry.id) || !IMAGE.test(entry.file)
