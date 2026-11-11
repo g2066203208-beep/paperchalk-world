@@ -1,0 +1,35 @@
+/* Side-on, horizontally composed open-air street. The image is a temporary
+   replaceable blockout; traffic sprites are separate and remain animated. */
+#scene>#city-street-stage{position:absolute;inset:0;z-index:1;overflow:hidden;
+ pointer-events:none;isolation:isolate;background:#bdc7cb}
+#scene>#city-street-stage[hidden]{display:none!important}
+#city-street-stage .city-street-backdrop{
+ position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+ user-select:none;-webkit-user-drag:none;max-width:none}
+#city-street-stage .city-street-vehicle{position:absolute;left:0;width:23%;height:auto;
+ will-change:transform;animation-duration:var(--drive-duration);
+ animation-delay:var(--drive-delay);animation-timing-function:linear;
+ animation-iteration-count:infinite}
+#city-street-stage .city-street-vehicle img{display:block;width:100%;height:auto;max-width:none;user-select:none}
+#city-street-stage .lane-far{top:60.5%;width:20%;z-index:2;filter:brightness(.9)}
+#city-street-stage .vehicle-bus-far{top:59%;width:29%;z-index:2}
+#city-street-stage .lane-near{top:71.4%;width:23%;z-index:3}
+#city-street-stage .dir-right{animation-name:city-traffic-right}
+#city-street-stage .dir-left{animation-name:city-traffic-left}
+#city-street-stage .dir-left img{transform:scaleX(-1)}
+@keyframes city-traffic-right{from{transform:translateX(-38vw)}to{transform:translateX(122vw)}}
+@keyframes city-traffic-left{from{transform:translateX(120vw)}to{transform:translateX(-42vw)}}
+#view.city-street-active #scene{width:100cqw!important;height:100cqh!important;
+ max-width:none!important;aspect-ratio:auto!important;transform:none!important;
+ border-radius:0!important;overflow:hidden}
+#view.city-street-active #scene::after{content:none!important}
+#view.city-street-active #scene>#source{visibility:hidden!important}
+#view.city-street-active #fog{display:none!important}
+#view.city-street-active #novel-ui{display:none!important}
+@media(prefers-reduced-motion:reduce){
+ #city-street-stage .city-street-vehicle{animation:none!important}
+ #city-street-stage .vehicle-bus-far{transform:translateX(4vw)}
+ #city-street-stage .vehicle-car-far{transform:translateX(58vw)}
+ #city-street-stage .vehicle-car-near{transform:translateX(29vw)}
+ #city-street-stage .vehicle-car-near-two{transform:translateX(83vw)}
+}
