@@ -1125,8 +1125,7 @@
   filmGrade.id='ring-arena-film-grade';
   filmGrade.setAttribute('aria-hidden','true');
   filmGrade.innerHTML='<i class="ring-film-tone"></i><i class="ring-film-vignette"></i><i class="ring-film-grain"></i>';
-  stage.insertBefore(filmGrade,filmFrame);
-  stage.append(filmFrame);
+  stage.append(filmGrade,filmFrame);
   const status=hud.querySelector('.status');
   const director=window.PaperchalkBattleDirector;
   if(!director)throw Error('Battle director module was not loaded');
