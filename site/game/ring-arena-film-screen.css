@@ -35,9 +35,15 @@
 }
 #ring-arena-film-grade>i{display:block;position:absolute;inset:0;pointer-events:none}
 #ring-arena-film-grade .ring-film-tone{
-  background:#857b6f;
-  opacity:.40;
+  background:#9e8266;
+  opacity:.18;
   mix-blend-mode:color;
+}
+/* Darken the entire modern 3D image, preserving shape and sharp linework. */
+#ring-arena-film-grade .ring-film-shade{
+  background:#8d8478;
+  opacity:.34;
+  mix-blend-mode:multiply;
 }
 #ring-arena-film-grade .ring-film-vignette{
   background:
@@ -46,7 +52,7 @@
     linear-gradient(180deg,rgba(40,29,24,.06) 0%,transparent 38%,rgba(26,21,21,.11) 100%);
 }
 #ring-arena-film-grade .ring-film-grain{
-  inset:-3%;opacity:.12;mix-blend-mode:soft-light;
+  inset:-3%;opacity:.09;mix-blend-mode:soft-light;
   background-image:url('../assets/ui/horror-analog-grain-tile.png');
   background-repeat:repeat;background-size:128px 128px;
   animation:ring-film-grain 960ms steps(4,end) infinite;
