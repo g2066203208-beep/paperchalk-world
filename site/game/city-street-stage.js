@@ -23,6 +23,7 @@
    white:'./assets/city-street/white-marking.svg',
    cream:'./assets/city-street/traffic-cream.svg',
    coral:'./assets/city-street/traffic-coral.svg',
+   taxi:'./assets/city-street/traffic-taxi.svg',
    bus:'./assets/city-street/traffic-bus.svg',
    shadow:'./assets/city-street/car-shadow.svg'
  });
@@ -30,7 +31,7 @@
    {id:'bus-far',texture:'bus',lane:'far',z:20.8,w:9.5,h:3.35,direction:1,speed:4.3,offset:11},
    {id:'car-far',texture:'coral',lane:'far',z:20.1,w:4.5,h:1.7,direction:1,speed:6.6,offset:37},
    {id:'car-near',texture:'cream',lane:'near',z:11.2,w:4.5,h:1.7,direction:-1,speed:6.2,offset:18},
-   {id:'car-near-two',texture:'coral',lane:'near',z:10.9,w:4.5,h:1.7,direction:-1,speed:5.6,offset:56}
+   {id:'car-near-two',texture:'taxi',lane:'near',z:10.9,w:4.5,h:1.7,direction:-1,speed:5.6,offset:56}
  ]);
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
  const axis=v=>{const n=clamp(Number(v)||0,-1,1),a=Math.abs(n);
