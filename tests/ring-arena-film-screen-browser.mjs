@@ -55,5 +55,5 @@ try{
  await page.screenshot({path:out+'/ring-arena-before-film-1920x1080.png'});
  await page.evaluate(()=>document.querySelector('#view').classList.remove('ring-film-qa-hide'));
  assert.deepEqual(errors,[],'no uncaught page errors');
- console.log('PASS: original GPT film overlay on real WebGL arena',JSON.stringify({style,picture,render:window?.location?.search}));
+ console.log('PASS: original GPT film overlay on real WebGL arena',JSON.stringify({style,picture}));
 }finally{await browser.close();await new Promise(done=>server.close(done));}
