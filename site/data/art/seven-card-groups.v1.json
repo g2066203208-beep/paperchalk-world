@@ -183,10 +183,17 @@
         }
       ],
       "minions": {
-        "manifest": "/data/art/wonder-circus-minions.v1.json",
+        "manifest": "/data/art/wonder-circus-minions.v2.json",
         "gallery": "/character-editor/circus-minions.html",
         "count": 3,
-        "assetStatus": "published_original_pngs_verified"
+        "assetStatus": "published_original_pngs_verified",
+        "version": 2,
+        "archive": {
+          "manifest": "/data/art/wonder-circus-minions.v1.json",
+          "gallery": "/character-editor/circus-minions-archive-v1.html",
+          "count": 3,
+          "retainedOriginalFiles": true
+        }
       }
     },
     {

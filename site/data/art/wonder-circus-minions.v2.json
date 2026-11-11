@@ -1,0 +1,57 @@
+{
+  "version": 2,
+  "factionId": "wonder-circus",
+  "group": "奇想马戏团",
+  "unitClass": "common_soldiers",
+  "slots": 3,
+  "assetBase": "/assets/characters/wonder-circus/minions/v2/",
+  "status": "published_original_pngs_verified",
+  "active": true,
+  "previousVersion": "/data/art/wonder-circus-minions.v1.json",
+  "archiveGallery": "/character-editor/circus-minions-archive-v1.html",
+  "note": "2026-11-11 新版三张小兵为正式展示；旧版 v1 三张仍保留 GitHub 原始文件与独立旧版展示，未删除未覆盖。名称仅为临时美术识别名，不设定职业技能性格。",
+  "characters": [
+    {
+      "order": 1,
+      "id": "floor-assistant",
+      "name": "场务助手",
+      "en": "Floor Assistant",
+      "file": "01-floor-assistant.png",
+      "image": "淡紫色短卷发、红色马甲与米白衬衫、短裤和深色长袜，侧腰有工具袋，叉腰站立",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 392945,
+      "sha256": "dd5640560297bfef50ef729a513ea40e79414e53f2d86c79816505935d77f438",
+      "gitBlob": "1815972a240f97de4f615074402c291256bea9f4",
+      "original_png_committed": true
+    },
+    {
+      "order": 2,
+      "id": "prop-server",
+      "name": "道具托盘员",
+      "en": "Prop Tray Assistant",
+      "file": "02-prop-server.png",
+      "image": "橙红色双辫，身穿红色马甲和米白衬衣，双手平托圆形木盘，神态自然",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 373663,
+      "sha256": "7cac02fb7e0d534ba3a73e0071874ce1cf98cdf82d1526aaeb067c8052862e00",
+      "gitBlob": "628838ae0a80b72d1a960fc27664f0d34bc45a82",
+      "original_png_committed": true
+    },
+    {
+      "order": 3,
+      "id": "stage-supervisor",
+      "name": "资深场务员",
+      "en": "Senior Stagehand",
+      "file": "03-stage-supervisor.png",
+      "image": "银灰长发、红色马甲、米白衬衫与棕色长裤，一手叉腰一手持细长工作杆",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 431807,
+      "sha256": "c8ea7a363241c1ed58c06d0c70a45ef8bfcd8eee59b9b5349386b0f14c08d98a",
+      "gitBlob": "35c570ccfe6944fc99f3efb0fc65184237695b3c",
+      "original_png_committed": true
+    }
+  ]
+}
