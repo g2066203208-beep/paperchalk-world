@@ -66,6 +66,64 @@
           "file": "security-director.webp"
         }
       ]
+    },
+    {
+      "id": "witch-workshop",
+      "name": "七曜魔女工坊",
+      "gallery": "/character-editor/witch-booth.html",
+      "assetBase": "/assets/characters/witch-workshop/",
+      "slots": 7,
+      "roster": [
+        {
+          "id": "01-grand",
+          "name": "首席魔女",
+          "en": "Grand Witch",
+          "xp": "魔力",
+          "file": "grand-witch.png"
+        },
+        {
+          "id": "02-fire",
+          "name": "火焰魔女",
+          "en": "Fire Witch",
+          "xp": "燃烧",
+          "file": "fire-witch.png"
+        },
+        {
+          "id": "03-frost",
+          "name": "冰霜魔女",
+          "en": "Frost Witch",
+          "xp": "冰冻",
+          "file": "frost-witch.png"
+        },
+        {
+          "id": "04-alchemy",
+          "name": "炼金魔女",
+          "en": "Alchemy Witch",
+          "xp": "炼金",
+          "file": "alchemy-witch.png"
+        },
+        {
+          "id": "05-familiar",
+          "name": "使魔魔女",
+          "en": "Familiar Witch",
+          "xp": "召唤",
+          "file": "familiar-witch.png"
+        },
+        {
+          "id": "06-curse",
+          "name": "诅咒魔女",
+          "en": "Curse Witch",
+          "xp": "诅咒",
+          "file": "curse-witch.png"
+        },
+        {
+          "id": "07-astral",
+          "name": "星象魔女",
+          "en": "Astral Witch",
+          "xp": "预言",
+          "file": "astral-witch.png"
+        }
+      ]
     }
   ]
 }
