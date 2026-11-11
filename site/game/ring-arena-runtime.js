@@ -581,6 +581,16 @@
   'return pow(clamp(hdr/(vec3(1.0)+hdr),0.0,1.0),vec3(.45454545));',
   '}'
  ].join('\n');
+ const filmStockGLSL=[
+  'uniform float uFilmGrade;',
+  'vec3 filmStock(vec3 c){',
+  'float lum=dot(c,vec3(.299,.587,.114));',
+  'vec3 muted=mix(c,vec3(lum),.40);',
+  'vec3 warm=muted*vec3(1.065,1.012,.928);',
+  'vec3 hi=clamp((warm-vec3(.48))*1.08+vec3(.48),0.0,1.0);',
+  'return mix(c,hi*.955,clamp(uFilmGrade,0.0,1.0));',
+  '}'
+ ].join('\n');
  const worldFragment=[
   'precision highp float;varying vec3 vWorld;varying vec2 vWallUv;varying vec3 vIrradiance;varying float vFloorSpecular;uniform float uTime;uniform highp int uSurface;uniform float uMode;uniform float uGeometry;',
   'uniform sampler2D uWallTexture;uniform float uWallReady;',
@@ -588,6 +598,7 @@
   'uniform float uFloorReady;uniform float uCeilingReady;uniform float uWindowCutouts;',
   'uniform float uPlatformExposure;uniform float uTrainPosition;uniform float uTrainSpeed;uniform float uDoorOpen;',
   worldColorGLSL,
+  filmStockGLSL,
   'float hash(float x){return fract(sin(x*131.13)*43758.5453);}',
   'float line(float v,float n,float w){return 1.0-smoothstep(w,w+.025,abs(fract(v*n)-.5));}',
   'void main(){vec3 color;',
@@ -758,7 +769,7 @@
   'float patches=.7+.3*sin(vWallUv.x*17.1+sin(vWallUv.y*11.7));',
   'color+=vec3(.47,.47,.42)*min(.21,vFloorSpecular*1.35)*patches;',
   '}',
-  'gl_FragColor=vec4(color,1.0);}'
+  'gl_FragColor=vec4(filmStock(color),1.0);}'
  ].join('\n');
  // Alpha-blended original L2D canvas pixels on CAMERA-FACING 3D planes.
  // Vertical pivot uses the source canvas's measured shoe & crown fractions.
@@ -788,6 +799,7 @@
   'uniform float uHit;uniform float uDim;uniform float uBlur;uniform float uOpacity;',
   'uniform vec3 uFacing;uniform vec3 uRightDir;',
   lightingGLSL,
+  filmStockGLSL,
   'void main(){vec2 uv=vec2(vUv.x,1.0-vUv.y);',
   'vec4 t=texture2D(uTexture,uv);',
   'if(uBlur>0.01){',
@@ -812,7 +824,7 @@
   'float edge=clamp((t.a-nearbyAlpha)*1.6,0.0,1.0);',
   'rgb+=vec3(.045,.055,.067)*edge;',
   'rgb*=1.0-clamp(uDim,0.0,.80);',
-  'gl_FragColor=vec4(rgb,t.a*uOpacity);}'
+  'gl_FragColor=vec4(filmStock(rgb),t.a*uOpacity);}'
  ].join('\n');
  // A physical luminaire is independent 3D geometry, not a periodically
  // repeating bright pixel painted into the ceiling texture. It remains
@@ -828,12 +840,13 @@
  const fixtureFragment=[
   'precision mediump float;varying vec2 vUv;',
   'uniform float uLevel;uniform float uRedMix;uniform float uGlow;',
+  filmStockGLSL,
   'void main(){',
   'if(uGlow>.5){',
   'vec2 p=(vUv-vec2(.5))*vec2(2.4,1.7);',
   'float halo=exp(-dot(p,p)*5.8);',
   'vec3 warm=mix(vec3(.90,.84,.70),vec3(.98,.08,.045),uRedMix);',
-  'gl_FragColor=vec4(warm,halo*clamp(uLevel,0.0,1.0)*.22);',
+  'gl_FragColor=vec4(filmStock(warm),halo*clamp(uLevel,0.0,1.0)*.22);',
   'return;',
   '}',
   'float edge=max(abs(vUv.x-.5)*2.0,abs(vUv.y-.5)*2.0);',
@@ -842,7 +855,7 @@
   'vec3 lit=mix(vec3(.88,.91,.89),vec3(1.0,.95,.83),core);',
   'vec3 color=mix(dark,lit,clamp(uLevel,0.0,1.0));',
   'color=mix(color,mix(vec3(.13,.035,.038),vec3(1.0,.055,.030),clamp(uLevel,0.0,1.0)),uRedMix);',
-  'gl_FragColor=vec4(color,1.0);}'
+  'gl_FragColor=vec4(filmStock(color),1.0);}'
  ].join('\n');
  // Project each ORIGINAL L2D alpha silhouette from a real ceiling lamp
  // onto the y=0 3D floor. No sprite replacement, fake circle-only shadow,
@@ -1124,8 +1137,9 @@
   const filmGrade=document.createElement('div');
   filmGrade.id='ring-arena-film-grade';
   filmGrade.setAttribute('aria-hidden','true');
-  filmGrade.innerHTML='<i class="ring-film-tone"></i><i class="ring-film-shade"></i><i class="ring-film-vignette"></i><i class="ring-film-grain"></i>';
+  filmGrade.innerHTML='<i class="ring-film-vignette"></i><i class="ring-film-grain"></i>';
   stage.append(filmGrade,filmFrame);
+  let gpuFilmMix=0;
   const status=hud.querySelector('.status');
   const director=window.PaperchalkBattleDirector;
   if(!director)throw Error('Battle director module was not loaded');
@@ -1252,6 +1266,7 @@
   function drawPlatformCommuters(lifeSample,vp){
    if(!transitMode||!lifeSample?.passengers?.length)return;
    gl.useProgram(portrait.handle);
+   gl.uniform1f(portrait.uFilmGrade,gpuFilmMix);
    gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.enableVertexAttribArray(portrait.aUv);
@@ -1435,11 +1450,11 @@
   try{
    gl=canvas.getContext('webgl',{depth:true,alpha:false,antialias:true});
    if(!gl)throw Error('WebGL unavailable');
-   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen','uViewEye','uGeometry','uWindowCutouts','uDoorOpen']);
+   world=program(gl,worldVertex,worldFragment,['aP','aUv'],['uVP','uTime','uSurface','uMode','uWallTexture','uWallReady','uFloorTexture','uCeilingTexture','uFloorReady','uCeilingReady','uWingTexture','uWingReady','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen','uViewEye','uGeometry','uWindowCutouts','uDoorOpen','uFilmGrade']);
    portrait=program(gl,portraitVertex,portraitFragment,['aUv'],
-     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uWalkPhase','uClipUv','uTexture','uHit','uDim','uBlur','uOpacity','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen']);
+     ['uVP','uFoot','uRight','uUp','uHeight','uSoleX','uSoleY','uCrownY','uWidthScale','uLean','uWalkPhase','uClipUv','uTexture','uHit','uDim','uBlur','uOpacity','uFacing','uRightDir','uLampPositions[0]','uLampColors[0]','uLampLevels[0]','uAmbient','uPlatformPositions[0]','uPlatformColors[0]','uPlatformExposure','uPlatformBackZ','uTrainPosition','uTrainSpeed','uDoorLightOpen','uFilmGrade']);
    fixture=program(gl,fixtureVertex,fixtureFragment,['aUv'],
-    ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow']);
+    ['uVP','uCenter','uSize','uLevel','uRedMix','uGlow','uFilmGrade']);
    projectedShadow=program(gl,projectedShadowVertex,projectedShadowFragment,['aUv'],
     ['uVP','uFoot','uRight','uLamp','uHeight','uSoleX','uSoleY','uCrownY','uClipUv','uTexture','uStrength','uContact']);
    [floorOuter,floorInner,backInner,backOuter,ceilingOuter,ceilingInner,wingOuter,wingInner,exteriorMesh]=worldMesh(gl);
@@ -2108,6 +2123,7 @@
   }
   function drawFixtures(vp){
    gl.useProgram(fixture.handle);
+   gl.uniform1f(fixture.uFilmGrade,gpuFilmMix);
    gl.uniformMatrix4fv(fixture.uVP,false,new Float32Array(vp));
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.enableVertexAttribArray(fixture.aUv);
@@ -2259,6 +2275,7 @@
    // Do not add camera-dependent ally fading, conditional visibility, or
    // per-actor opacity heuristics here.
    gl.useProgram(portrait.handle);
+   gl.uniform1f(portrait.uFilmGrade,gpuFilmMix);
    gl.uniformMatrix4fv(portrait.uVP,false,new Float32Array(vp));
    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
    gl.enableVertexAttribArray(portrait.aUv);
@@ -2331,6 +2348,7 @@
   }
   function render(dt=1/60,inputX=mouseLookX,inputY=mouseLookY){
    if(!active)return false;
+   gpuFilmMix=transitMode||view.classList.contains('ring-film-qa-hide')?0:1;
    mouseLookX=clamp(Number(inputX)||0,-1,1);
    mouseLookY=clamp(Number(inputY)||0,-1,1);
    const base=camera(mode,0);
@@ -2439,6 +2457,7 @@
    gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
    gl.clearColor(.001,.005,.008,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
    gl.useProgram(world.handle);gl.enableVertexAttribArray(world.aP);gl.enableVertexAttribArray(world.aUv);
+   gl.uniform1f(world.uFilmGrade,gpuFilmMix);
    gl.uniformMatrix4fv(world.uVP,false,new Float32Array(vp));
    gl.uniform3fv(world.uViewEye,new Float32Array([cam.eye.x,cam.eye.y,cam.eye.z]));
    gl.uniform1f(world.uTime,elapsed);
@@ -2695,7 +2714,7 @@
     }),
     note:'No artwork; no visual actors. Fixed metro camera may intentionally crop feet below frame.'};
   }
-  const inspect=()=>({active,transitMode,approvedMetroNpcArt:[...metroNpcStatus].map(([id,status])=>({id,...status})),metroNpcStaging:inspectMetroNpcStaging(),canvasParent:canvas.parentElement?.id||null,
+  const inspect=()=>({active,filmGrade:{kind:'webgl-fragment',mix:gpuFilmMix},transitMode,approvedMetroNpcArt:[...metroNpcStatus].map(([id,status])=>({id,...status})),metroNpcStaging:inspectMetroNpcStaging(),canvasParent:canvas.parentElement?.id||null,
    cameraParity:(()=>{
     if(!lens||lens.cinematic)return false;
     const base=camera(mode,0);

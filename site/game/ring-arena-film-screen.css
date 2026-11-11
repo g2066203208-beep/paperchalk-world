@@ -34,17 +34,7 @@
   display:block;
 }
 #ring-arena-film-grade>i{display:block;position:absolute;inset:0;pointer-events:none}
-#ring-arena-film-grade .ring-film-tone{
-  background:#9e8266;
-  opacity:.18;
-  mix-blend-mode:color;
-}
-/* Darken the entire modern 3D image, preserving shape and sharp linework. */
-#ring-arena-film-grade .ring-film-shade{
-  background:#8d8478;
-  opacity:.34;
-  mix-blend-mode:multiply;
-}
+/* Analog color, saturation and contrast are handled by the live WebGL fragment shaders. */
 #ring-arena-film-grade .ring-film-vignette{
   background:
     radial-gradient(ellipse 85% 73% at 50% 46%,transparent 26%,

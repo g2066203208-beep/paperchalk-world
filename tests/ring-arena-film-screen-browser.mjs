@@ -53,17 +53,17 @@ try{
  const grading=await page.evaluate(()=>{
    const canvas=document.querySelector('#ring-arena-canvas');
    const overlay=document.querySelector('#ring-arena-film-grade');
-   const tone=overlay.querySelector('.ring-film-tone');
    const grain=overlay.querySelector('.ring-film-grain');
    return {canvasFilter:getComputedStyle(canvas).filter,gradeDisplay:getComputedStyle(overlay).display,
      gradePointerEvents:getComputedStyle(overlay).pointerEvents,
-     colorMix:getComputedStyle(tone).mixBlendMode,
+     stock:window.PaperWorldGameRingArena.inspect().filmGrade,
      grainTexture:getComputedStyle(grain).backgroundImage};
  });
  assert.equal(grading.canvasFilter,'none','live WebGL must never use a heavy CSS filter');
  assert.equal(grading.gradeDisplay,'block');
  assert.equal(grading.gradePointerEvents,'none');
- assert.equal(grading.colorMix,'color');
+ assert.equal(grading.stock.kind,'webgl-fragment');
+ assert.equal(grading.stock.mix,1);
  assert.ok(grading.grainTexture.includes('horror-analog-grain-tile.png'));
   const film=page.locator('#ring-arena-film-screen');
  assert.equal(await film.count(),1);
@@ -85,15 +85,17 @@ try{
  assert.deepEqual(picture,{width:2048,height:1152});
  await page.waitForTimeout(800);
  await page.screenshot({path:out+'/ring-arena-with-GPT-film-1920x1080.png'});
- await page.evaluate(()=>document.querySelector('#view').classList.add('ring-film-qa-hide'));
+ await page.evaluate(()=>{document.querySelector('#view').classList.add('ring-film-qa-hide');window.PaperWorldGameRingArena.render(0)});
  const hidden=await page.evaluate(()=>{
    return {filter:getComputedStyle(document.querySelector('#ring-arena-canvas')).filter,
-     grade:getComputedStyle(document.querySelector('#ring-arena-film-grade')).display};
+     grade:getComputedStyle(document.querySelector('#ring-arena-film-grade')).display,
+     mix:window.PaperWorldGameRingArena.inspect().filmGrade.mix};
  });
  assert.equal(hidden.filter,'none','QA reference screenshot must contain untreated 3D game');
  assert.equal(hidden.grade,'none','QA reference must exclude all film treatment');
+ assert.equal(hidden.mix,0,'QA reference must exclude GPU film toning');
   await page.screenshot({path:out+'/ring-arena-before-film-1920x1080.png'});
- await page.evaluate(()=>document.querySelector('#view').classList.remove('ring-film-qa-hide'));
+ await page.evaluate(()=>{document.querySelector('#view').classList.remove('ring-film-qa-hide');window.PaperWorldGameRingArena.render(0)});
  assert.deepEqual(errors,[],'no uncaught page errors');
  console.log('PASS: original GPT film overlay and matched analog grading on live WebGL arena',JSON.stringify({style,picture,grading}));
 }finally{await browser.close();await new Promise(done=>server.close(done));}
