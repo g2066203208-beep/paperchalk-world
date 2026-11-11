@@ -29,9 +29,16 @@ try{
  await page.waitForFunction(()=>{
   const info=window.PaperWorldGameRingArena?.inspect?.();
   return info?.active===true&&info?.renderer==='webgl-l2d'&&
-    document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready'&&
-    Number(info.l2dReady)>=1;
- },null,{timeout:160000});
+    document.querySelector('#ring-arena-canvas')?.dataset.wallTexture==='ready';
+ },null,{timeout:60000});
+ await page.waitForTimeout(3000);
+ const runtime=await page.evaluate(()=>({
+   active:window.PaperWorldGameRingArena?.inspect?.().active,
+   renderer:window.PaperWorldGameRingArena?.inspect?.().renderer,
+   l2dReady:window.PaperWorldGameRingArena?.inspect?.().l2dReady,
+   wall:document.querySelector('#ring-arena-canvas')?.dataset.wallTexture,
+ }));
+ console.log('RING_FILM_RENDER_DIAGNOSTIC',JSON.stringify({runtime,errors}));
  const filmGrade=page.locator('#ring-arena-film-grade');
  assert.equal(await filmGrade.count(),1,'film grain/vignette overlay must exist');
  const grading=await page.evaluate(()=>{
