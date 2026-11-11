@@ -235,7 +235,7 @@
       "gallery": "/character-editor/hunter-booth.html",
       "assetBase": "/assets/characters/monster-hunters/",
       "slots": 7,
-      "assetStatus": "metadata_only_original_pngs_pending",
+      "assetStatus": "published_original_pngs_verified",
       "roster": [
         {
           "id": "01-commander",
@@ -243,7 +243,7 @@
           "en": "Legendary Hunter",
           "xp": "指挥",
           "file": "01-legendary-hunter.png",
-          "original_png_committed": false
+          "original_png_committed": true
         },
         {
           "id": "02-physician",
@@ -251,7 +251,7 @@
           "en": "Blood Physician",
           "xp": "采样",
           "file": "02-blood-physician.png",
-          "original_png_committed": false
+          "original_png_committed": true
         },
         {
           "id": "03-trapper",
@@ -259,7 +259,7 @@
           "en": "Wire Trapper",
           "xp": "布防",
           "file": "03-trap-engineer.png",
-          "original_png_committed": false
+          "original_png_committed": true
         },
         {
           "id": "04-markswoman",
@@ -267,7 +267,7 @@
           "en": "Bounty Markswoman",
           "xp": "狙击",
           "file": "04-bounty-markswoman.png",
-          "original_png_committed": false
+          "original_png_committed": true
         },
         {
           "id": "05-warden",
@@ -275,7 +275,7 @@
           "en": "Seal Warden",
           "xp": "封禁",
           "file": "05-seal-warden.png",
-          "original_png_committed": false
+          "original_png_committed": true
         },
         {
           "id": "06-butcher",
@@ -283,7 +283,7 @@
           "en": "Beast Butcher",
           "xp": "破甲",
           "file": "06-beast-butcher.png",
-          "original_png_committed": false
+          "original_png_committed": true
         },
         {
           "id": "07-cleaner",
@@ -291,7 +291,7 @@
           "en": "Axe Cleaner",
           "xp": "处决",
           "file": "07-axe-scout.png",
-          "original_png_committed": false
+          "original_png_committed": true
         }
       ]
     }
