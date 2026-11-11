@@ -16,9 +16,13 @@ const rooms = api.buildRegistry(catalog.scenes);
 // Base: menu, classroom, classroom-box. Plus five location scenes and one
 // dedicated school-corridor 3D walkthrough; catalog scenes are independent.
 assert.equal(Object.keys(rooms).length, 3 + catalog.scenes.length + 5 + 3);
-assert.equal(rooms['city-street'].kind,'horizontal-layered-street');
+assert.equal(rooms['city-street'].kind,'open-air-3d');
 assert.equal(rooms['city-street'].layers.player,false);
 assert.equal(rooms['city-street'].layers.fog,false);
+assert.equal(rooms['city-street'].image,'./assets/city-street/streetscape.svg');
+assert.ok(fs.existsSync('site/game/city-street-stage.js'));
+assert.ok(fs.existsSync('site/assets/city-street/asphalt-material.svg'));
+assert.ok(fs.existsSync('site/assets/city-street/shopfront-a.svg'));
 assert.equal(rooms['paper-ocean'].kind,'paper-cutout-2d');
 assert.equal(rooms['paper-ocean'].layers.fog,false);
 assert.equal(rooms['paper-ocean'].layers.player,false);
