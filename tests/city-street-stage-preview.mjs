@@ -15,7 +15,7 @@ try{
    const x=window.PaperWorldCityStreetRenderer?.inspect?.();
    if(x?.error)throw Error(x.error);
    return x?.imagesLoaded&&x?.frame>1;
- },{timeout:45000});
+ },null,{timeout:45000});
  await page.evaluate(()=>{
    window.PaperWorldCityStreetRenderer.setTrafficPreviewTime(10);
    window.PaperWorldCityStreetRenderer.setLightingPreview(790);
