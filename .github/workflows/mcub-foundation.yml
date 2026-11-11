@@ -1,0 +1,45 @@
+name: MCUB Foundation
+
+on:
+  push:
+    branches:
+      - feature/mc-universal-bridge-v0
+    paths:
+      - "mc-universal-bridge/**"
+      - ".github/workflows/mcub-foundation.yml"
+  pull_request:
+    paths:
+      - "mc-universal-bridge/**"
+      - ".github/workflows/mcub-foundation.yml"
+
+jobs:
+  protocol:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Validate binary layout
+        run: python -m unittest mc-universal-bridge/tests/test_protocol_layout.py
+
+  native-host:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S mc-universal-bridge/host-runtime -B mc-universal-bridge/host-runtime/build -A x64
+      - name: Build
+        run: cmake --build mc-universal-bridge/host-runtime/build --config Release
+
+  java-core:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Compile Java 25 core
+        shell: pwsh
+        run: javac --release 25 -d mc-universal-bridge/mc-core/out mc-universal-bridge/mc-core/src/main/java/dev/mcub/core/Protocol.java mc-universal-bridge/mc-core/src/main/java/dev/mcub/core/SharedMemoryLink.java mc-universal-bridge/mc-core/src/main/java/dev/mcub/core/MockMinecraftMain.java
