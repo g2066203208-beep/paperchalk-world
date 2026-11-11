@@ -12,6 +12,6 @@
 | 06 | 夜宴夫人 | `midnight-hostess.png` | `tmp1n4g8n5j.png` | `0847c81976302f8cd5a5506d61d21ebac9ad1723acd67dde9bcec7b95ad42a6f` |
 | 07 | 纯血女皇 | `pureblood-empress.png` | `tmpxhvcqg4d.png` | `6f1b509b2c22d1344d5cd6f48af8d9f3791a239b321ca09ae09e1b9b89c5cf1c` |
 
-展示页：[`site/character-editor/vampire-booth.html`](../../../../character-editor/vampire-booth.html)
+展示页：[`site/character-editor/vampire-booth.html`](../../../character-editor/vampire-booth.html)
 
 归档规则：所有原图均保留原始文件字节，并经 Git blob SHA 与本地 `git hash-object` 逐张校验一致。七名角色从小公主到女皇保持独立身份，职业、武器与人物特征不与其他阵营混同。
