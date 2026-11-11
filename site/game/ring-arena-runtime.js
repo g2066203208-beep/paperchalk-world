@@ -1124,6 +1124,7 @@
   const filmGrade=document.createElement('div');
   filmGrade.id='ring-arena-film-grade';
   filmGrade.setAttribute('aria-hidden','true');
+  filmGrade.innerHTML='<i class="ring-film-tone"></i><i class="ring-film-vignette"></i><i class="ring-film-grain"></i>';
   stage.insertBefore(filmGrade,filmFrame);
   stage.append(filmFrame);
   const status=hud.querySelector('.status');

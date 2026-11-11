@@ -35,15 +35,20 @@ try{
  const filmGrade=page.locator('#ring-arena-film-grade');
  assert.equal(await filmGrade.count(),1,'film grain/vignette overlay must exist');
  const grading=await page.evaluate(()=>{
-   const el=document.querySelector('#ring-arena-canvas');
+   const canvas=document.querySelector('#ring-arena-canvas');
    const overlay=document.querySelector('#ring-arena-film-grade');
-   return {filter:getComputedStyle(el).filter,gradeDisplay:getComputedStyle(overlay).display,
-     gradePointerEvents:getComputedStyle(overlay).pointerEvents};
+   const tone=overlay.querySelector('.ring-film-tone');
+   const grain=overlay.querySelector('.ring-film-grain');
+   return {canvasFilter:getComputedStyle(canvas).filter,gradeDisplay:getComputedStyle(overlay).display,
+     gradePointerEvents:getComputedStyle(overlay).pointerEvents,
+     colorMix:getComputedStyle(tone).mixBlendMode,
+     grainTexture:getComputedStyle(grain).backgroundImage};
  });
- assert.ok(grading.filter.includes('sepia('),'3D world must use matching film-color grade');
- assert.ok(grading.filter.includes('saturate('),'world and people share desaturation');
+ assert.equal(grading.canvasFilter,'none','live WebGL must never use a heavy CSS filter');
  assert.equal(grading.gradeDisplay,'block');
  assert.equal(grading.gradePointerEvents,'none');
+ assert.equal(grading.colorMix,'color');
+ assert.ok(grading.grainTexture.includes('horror-analog-grain-tile.png'));
   const film=page.locator('#ring-arena-film-screen');
  assert.equal(await film.count(),1);
  const style=await film.evaluate(el=>{
