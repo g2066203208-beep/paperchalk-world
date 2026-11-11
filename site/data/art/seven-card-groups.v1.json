@@ -246,7 +246,13 @@
           "file": "pureblood-empress.png",
           "original_png_committed": true
         }
-      ]
+      ],
+      "minions": {
+        "manifest": "/data/art/crimson-vampires-minions.v1.json",
+        "gallery": "/character-editor/vampire-minions.html",
+        "count": 3,
+        "assetStatus": "published_original_pngs_verified"
+      }
     },
     {
       "id": "monster-hunters",

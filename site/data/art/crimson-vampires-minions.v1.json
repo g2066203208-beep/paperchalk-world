@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "factionId": "crimson-vampires",
+  "group": "绯月血族",
+  "unitClass": "common_soldiers",
+  "slots": 3,
+  "assetBase": "/assets/characters/crimson-vampires/minions/",
+  "status": "published_original_pngs_verified",
+  "note": "三张按用户上传顺序保存的血族普通小兵，不计入原有七名核心角色；名字仅为暂定美术识别标签，不代表预定技能或品质。原始 PNG 二进制字节不裁切、不改动。",
+  "characters": [
+    {
+      "order": 1,
+      "id": "vampire-messenger",
+      "name": "夜行信使",
+      "english": "Night Messenger",
+      "file": "01-vampire-messenger.png",
+      "image": "绯月血族普通随从，第一张原画，详细身份待定",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 396470,
+      "gitBlob": "fab08ec66d2916e73262a668d494b2920b93ce5a",
+      "original_png_committed": true
+    },
+    {
+      "order": 2,
+      "id": "lantern-bearer",
+      "name": "提灯巡夜侍从",
+      "english": "Lantern Bearer",
+      "file": "02-vampire-lantern-bearer.png",
+      "image": "黑色长直发，红色高领上衣、黑色红衬里外套，手提夜行油灯",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 483311,
+      "gitBlob": "4d3b555b13b054debc2a22625adf98085bb384dd",
+      "original_png_committed": true
+    },
+    {
+      "order": 3,
+      "id": "vampire-retainer",
+      "name": "血裔侍从",
+      "english": "Vampire Retainer",
+      "file": "03-vampire-retainer.png",
+      "image": "红色长发、墨绿高领上衣和棕色宽大外套，双手展开衣襟",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 462304,
+      "gitBlob": "eec6b02ad1813e21b90613ffdedc8b2d862cc3c9",
+      "original_png_committed": true
+    }
+  ]
+}
