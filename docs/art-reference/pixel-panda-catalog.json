@@ -1,0 +1,203 @@
+{
+  "creator": {
+    "name": "像素熊猫",
+    "bilibili_user_id": "174041198",
+    "profile": "https://space.bilibili.com/174041198"
+  },
+  "audited_at": "2026-10-29",
+  "scope": "First-pass verified Bilibili pages and accessible still images. Full 800+ channel video audit NOT completed.",
+  "verification": "public_page_metadata_only_not_frame_by_frame_watching",
+  "total_references": 19,
+  "items": [
+    {
+      "id": "eastward",
+      "title": "风来之国 Eastward",
+      "bvid": "BV1uM4y1L78Q",
+      "url": "https://www.bilibili.com/video/BV1uM4y1L78Q/",
+      "visual_type": "pixel",
+      "focus": "street_environment",
+      "priority": 1,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "world_of_anterra",
+      "title": "World of Anterra",
+      "bvid": "BV1Fe4y167QA",
+      "url": "https://www.bilibili.com/video/BV1Fe4y167QA/",
+      "visual_type": "pixel",
+      "focus": "nation_biome",
+      "priority": 1,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "ringo_ishikawa",
+      "title": "石河倫吾的朋友们",
+      "bvid": "BV15y4y1v7wn",
+      "url": "https://www.bilibili.com/video/BV15y4y1v7wn/",
+      "visual_type": "pixel",
+      "focus": "npc_city_life",
+      "priority": 1,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "little_witch",
+      "title": "林中小女巫",
+      "bvid": "BV17V411b7j9",
+      "url": "https://www.bilibili.com/video/BV17V411b7j9/",
+      "visual_type": "pixel",
+      "focus": "indoor_room_details",
+      "priority": 1,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "yokai_inn",
+      "title": "妖怪旅馆 Yokai Inn",
+      "bvid": "BV1NS4y1f7jZ",
+      "url": "https://www.bilibili.com/video/BV1NS4y1f7jZ/",
+      "visual_type": "pixel",
+      "focus": "business_facility",
+      "priority": 1,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "wanderlost",
+      "title": "Wanderlost",
+      "bvid": "BV1iF411t762",
+      "url": "https://www.bilibili.com/video/BV1iF411t762/",
+      "visual_type": "pixel",
+      "focus": "resources_industry",
+      "priority": 2,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "artis_impact",
+      "title": "Artis Impact 爱氏物语",
+      "bvid": "BV1Py421i7C9",
+      "url": "https://www.bilibili.com/video/BV1Py421i7C9/",
+      "visual_type": "pixel",
+      "focus": "palette_composition",
+      "priority": 2,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "rewinder",
+      "title": "山海旅人",
+      "bvid": "BV17K4y1n77b",
+      "url": "https://www.bilibili.com/video/BV17K4y1n77b/",
+      "visual_type": "pixel",
+      "focus": "atmospheric_storytelling",
+      "priority": 2,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "elderfield",
+      "title": "Welcome to Elderfield",
+      "bvid": "BV1XohGzDELj",
+      "url": "https://www.bilibili.com/video/BV1XohGzDELj/",
+      "visual_type": "pixel",
+      "focus": "living_city_mystery",
+      "priority": 2,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "moonstone",
+      "title": "月光石岛",
+      "bvid": "BV15S4y1m738",
+      "url": "https://www.bilibili.com/video/BV15S4y1m738/",
+      "visual_type": "pixel",
+      "focus": "world_region_variety",
+      "priority": 2,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "cast_n_chill",
+      "title": "Cast n Chill",
+      "bvid": "BV1P1NVeEEQy",
+      "url": "https://www.bilibili.com/video/BV1P1NVeEEQy/",
+      "visual_type": "pixel",
+      "focus": "water_landscape",
+      "priority": 2,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "mind_scanners",
+      "title": "精神检验师",
+      "bvid": "BV1KR4y1L77k",
+      "url": "https://www.bilibili.com/video/BV1KR4y1L77k/",
+      "visual_type": "pixel",
+      "focus": "diegetic_ui",
+      "priority": 2,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "last_meal",
+      "title": "Can you cook my last meal?",
+      "bvid": "BV1G9MC6vERC",
+      "url": "https://www.bilibili.com/video/BV1G9MC6vERC/",
+      "visual_type": "pixel",
+      "focus": "job_venue_story",
+      "priority": 3,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "nivalis",
+      "title": "尼瓦利斯之夜",
+      "bvid": "BV1btTE6HEk2",
+      "url": "https://www.bilibili.com/video/BV1btTE6HEk2/",
+      "visual_type": "3d_voxel",
+      "focus": "rainy_city_ambience_only",
+      "priority": 3,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "railbound",
+      "title": "轨道连结",
+      "bvid": "BV1ba411e7Kv",
+      "url": "https://www.bilibili.com/video/BV1ba411e7Kv/",
+      "visual_type": "non_pixel",
+      "focus": "rail_legibility_only",
+      "priority": 3,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "townscaper",
+      "title": "城镇叠叠乐",
+      "bvid": "BV1Xy4y127CB",
+      "url": "https://www.bilibili.com/video/BV1Xy4y127CB/",
+      "visual_type": "non_pixel",
+      "focus": "urban_massing_only",
+      "priority": 3,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "devlog3",
+      "title": "独游开发日志挖掘#3",
+      "bvid": "BV1Lgd5BMEbA",
+      "url": "https://www.bilibili.com/video/BV1Lgd5BMEbA/",
+      "visual_type": "mixed",
+      "focus": "workflow_inspiration",
+      "priority": 3,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "devlog4",
+      "title": "独游开发日志挖掘#4",
+      "bvid": "BV1J4VV6uEQi",
+      "url": "https://www.bilibili.com/video/BV1J4VV6uEQi/",
+      "visual_type": "mixed",
+      "focus": "workflow_inspiration",
+      "priority": 3,
+      "source_status": "identified_not_full_video_reviewed"
+    },
+    {
+      "id": "compilation2",
+      "title": "模拟建造种田钓鱼回顾第2期",
+      "bvid": "BV1e64y1U7ZC",
+      "url": "https://www.bilibili.com/video/BV1e64y1U7ZC/",
+      "visual_type": "mixed",
+      "focus": "index_source",
+      "priority": 3,
+      "source_status": "identified_not_full_video_reviewed"
+    }
+  ]
+}
