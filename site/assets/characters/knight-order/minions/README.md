@@ -12,6 +12,6 @@
 
 保留 **RGB PNG 原文件字节**：不抠图、不重绘、不拉伸、不裁切、无二次压缩。文件原样存储，第一张是 1024×1024，第二、三张是 704×1024，展示时使用 `object-fit:contain` 保留整张原图。
 
-独立展示间：[`site/character-editor/knight-minions.html`](../../../character-editor/knight-minions.html)。
+独立展示间：[`site/character-editor/knight-minions.html`](../../../../character-editor/knight-minions.html)。
 
-机器清单：[`site/data/art/knight-order-minions.v1.json`](../../../data/art/knight-order-minions.v1.json)。
+机器清单：[`site/data/art/knight-order-minions.v1.json`](../../../../data/art/knight-order-minions.v1.json)。
