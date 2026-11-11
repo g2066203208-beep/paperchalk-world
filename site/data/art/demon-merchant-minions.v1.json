@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "factionId": "demon-merchant",
+  "group": "黑心恶魔商店集团",
+  "unitClass": "common_soldiers",
+  "note": "三种普通恶魔集团文职小兵，与原有七名主管/核心角色分开登记；美术识别名按立绘暂定，不自行添加职业技能、性格或稀有度。",
+  "slots": 3,
+  "assetBase": "/assets/characters/demon-merchant/minions/",
+  "status": "published_original_pngs_verified",
+  "characters": [
+    {
+      "order": 1,
+      "id": "records-clerk",
+      "name": "档案职员",
+      "english": "Records Clerk",
+      "file": "01-clerk-records.png",
+      "image": "浅金色短发、卷角、长尾，捧着棕色档案夹",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 468502,
+      "sha256": "56657522941abe32667155bf03220530db141c942630a11a12ea33994f055c9c",
+      "gitBlob": "3b8be5a21b2b89247cfee004a7b30490c5057831",
+      "original_png_committed": true
+    },
+    {
+      "order": 2,
+      "id": "document-clerk",
+      "name": "文书职员",
+      "english": "Document Clerk",
+      "file": "02-clerk-documents.png",
+      "image": "粉色长发、高角、长尾，手持一叠文件",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 410071,
+      "sha256": "0876bf0bbd096219bde853233c594195cd8156e6fcfeff8dc37b056957b59ee1",
+      "gitBlob": "66037489e668c785ffcf3bead85faf001a4f75ec",
+      "original_png_committed": true
+    },
+    {
+      "order": 3,
+      "id": "administration-clerk",
+      "name": "行政职员",
+      "english": "Administration Clerk",
+      "file": "03-clerk-administration.png",
+      "image": "棕色侧辫、直角、长尾，穿着带证件牌的制式马甲",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 406108,
+      "sha256": "ccebdf3a4356fcea9c09b1966643a37bd662c393e39cb4bb7dcce43701f07804",
+      "gitBlob": "8c63dcd3a02b187c6b18f8366731c65e8722d3c2",
+      "original_png_committed": true
+    }
+  ]
+}
