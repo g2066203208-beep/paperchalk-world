@@ -1,0 +1,41 @@
+name: City Street - horizontal live stage screenshot
+on:
+  push:
+    paths:
+      - 'site/game/city-street-stage.js'
+      - 'site/game/city-street-stage.css'
+      - 'site/assets/city-street/**'
+      - 'site/index.html'
+      - 'site/scene-modules.js'
+      - 'tests/scene-modules.test.cjs'
+      - 'tests/city-street-stage-preview.mjs'
+      - '.github/workflows/city-street-stage.yml'
+  workflow_dispatch:
+jobs:
+  screenshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
+          python3 scripts/build_scene_catalog.py
+          node tests/scene-modules.test.cjs
+          python3 -m http.server 8765 --directory site >/tmp/city-street.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/city-street.log
+          exit 1
+      - run: node tests/city-street-stage-preview.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: city-street-live-game-screenshot
+          path: artifacts/city-street/*.png
+          if-no-files-found: warn
+          retention-days: 14
