@@ -19,7 +19,7 @@
 
 **CRITICAL separation:** race is WHAT SPECIES the character is; faction/organization is WHOM THEY SERVE; profession is WHAT THEY DO. Vampires and demons are RACES, NOT necessarily unique factions. 'Crimson Vampires' may still be a particular vampire family/faction, and 'Demon Merchant Company' remains an organization whose members may be demons. DO NOT rename/delete existing approved faction galleries or images based only on this proposed taxonomy.
 
-**Artwork conflict:** existing demon-company minion PNGs and manifest already show horns and tails; existing crimson-vampire minion PNGs are non-human-themed. If user confirms EVERY T1 recruit is human, migrate these historical assets carefully to T2 species cards or identify expressly approved exceptions, NEVER silently relabel or overwrite images. Fifth XP and lore of new-person formation remain undecided.
+**Artwork conflict & preferred migration option (not yet approved):** existing demon-company minion PNGs show horns/tails and crimson-vampire minion PNGs have vampire-themed identities. To retain fourth-XP-as-race with human-only starting recruits, propose keeping every original PNG and historical manifest intact, using these nonhuman portraits as candidates for T2 species result-art through a NEW gameplay mapping, and introducing human T1 employees/untouched vampire-house recruits where needed. Treat approved core seven-member groups as organizations, not species; never silently relabel/overwrite old art or claim newly created human art. Details are in [the XP/fusion design file](docs/game/XP_COLLECTION_AND_FUSION_CORE_20261112.md). Fifth XP and new-person lore remain undecided.
 
 ## Mandatory preflight: before EVERY Anima prompt
 
