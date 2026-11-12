@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "factionId": "black-tide-pirates",
+  "group": "黑潮海盗团",
+  "unitClass": "common_sailors",
+  "slots": 3,
+  "note": "2026-11-12 user-supplied three original images in order, separate identities; faction elite 7 not approved. Original PNG unmodified. This gallery does not mean game integration.",
+  "assetBase": "/assets/characters/black-tide-pirates/minions/",
+  "status": "published_original_pngs_verified",
+  "characters": [
+    {
+      "order": 1,
+      "id": "petite-sailor",
+      "name": "娇小型船员",
+      "english": "Petite Sailor",
+      "file": "01-petite-sailor.png",
+      "image": "浅金短发，黑色三角帽，藏蓝水手外套、短裤、酒红领巾与腰布、佩刀",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 389301,
+      "sha256": "b179aaac2bbe5ff61270c8a1335c28ee1d385c75f8b387b785848f42950f5318",
+      "gitBlob": "503389fe9067b57bd8d5ac30830365f9a36d2d87",
+      "original_png_committed": true,
+      "game_integrated": false
+    },
+    {
+      "order": 2,
+      "id": "young-sailor",
+      "name": "少女型船员",
+      "english": "Young Sailor",
+      "file": "02-young-sailor.png",
+      "image": "深色低马尾、浅色水手衫，黑色三角帽、藏蓝短裤、酒红腰布与佩刀",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 405701,
+      "sha256": "6d9c8b2fb50921b041ce7679ce2e5419721713940dbec9ffbc78c64beebb859f",
+      "gitBlob": "22a2f2e552d974b7c1f5fca658cb5f34f0700c91",
+      "original_png_committed": true,
+      "game_integrated": false
+    },
+    {
+      "order": 3,
+      "id": "mature-sailor",
+      "name": "成熟型船员",
+      "english": "Mature Sailor",
+      "file": "03-mature-sailor.png",
+      "image": "红褐侧辫，成年健壮体型，黑色三角帽、浅色水手衫、藏蓝短裤、酒红腰布与佩刀",
+      "width": 704,
+      "height": 1024,
+      "byteSize": 453872,
+      "sha256": "6efa4d3123349327dd1c2c20ad72b6abdefb113126989c447603a943c024d829",
+      "gitBlob": "7596e719ef7ff7c5d3e77d15d6a481afafe1d8a4",
+      "original_png_committed": true,
+      "game_integrated": false
+    }
+  ]
+}
