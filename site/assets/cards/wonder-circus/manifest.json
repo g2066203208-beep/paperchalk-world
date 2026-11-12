@@ -1,0 +1,96 @@
+{
+  "fixed_background": "/mnt/data/circus_white_card_demo/01_circus_stage_white_card_bg.png",
+  "source_background_sha256": "6ea1f0b83928105535fc7e2837364061a6531112bbc0b8bd92dc4079e87a3f78",
+  "items": [
+    {
+      "file": "01_ringmaster.png",
+      "role": "团长",
+      "character_source": "/mnt/data/card_battle_layout/assets/characters/wonder-circus/ringmaster.png",
+      "mode": "original previously approved composition; no changes"
+    },
+    {
+      "file": "02_aerial-acrobat.png",
+      "role": "空中杂技演员",
+      "character_source": "/mnt/data/card_battle_layout/assets/characters/wonder-circus/aerial-acrobat.png",
+      "sprite_size": [
+        853,
+        1245
+      ],
+      "sprite_xy": [
+        93,
+        105
+      ],
+      "feet_y": 1350
+    },
+    {
+      "file": "03_knife-thrower.png",
+      "role": "飞刀演员",
+      "character_source": "/mnt/data/card_battle_layout/assets/characters/wonder-circus/knife-thrower.png",
+      "sprite_size": [
+        859,
+        1245
+      ],
+      "sprite_xy": [
+        85,
+        105
+      ],
+      "feet_y": 1350
+    },
+    {
+      "file": "04_beast-tamer.png",
+      "role": "驯兽师",
+      "character_source": "/mnt/data/card_battle_layout/assets/characters/wonder-circus/beast-tamer.png",
+      "sprite_size": [
+        852,
+        1245
+      ],
+      "sprite_xy": [
+        80,
+        105
+      ],
+      "feet_y": 1350
+    },
+    {
+      "file": "05_escape-artist.png",
+      "role": "逃脱术师",
+      "character_source": "/mnt/data/card_battle_layout/assets/characters/wonder-circus/escape-artist.png",
+      "sprite_size": [
+        841,
+        1245
+      ],
+      "sprite_xy": [
+        91,
+        105
+      ],
+      "feet_y": 1350
+    },
+    {
+      "file": "06_strongwoman.png",
+      "role": "大力士",
+      "character_source": "/mnt/data/card_battle_layout/assets/characters/wonder-circus/strongwoman.png",
+      "sprite_size": [
+        856,
+        1245
+      ],
+      "sprite_xy": [
+        74,
+        105
+      ],
+      "feet_y": 1350
+    },
+    {
+      "file": "07_clown-performer.png",
+      "role": "小丑演员",
+      "character_source": "/mnt/data/card_battle_layout/assets/characters/wonder-circus/clown-performer.png",
+      "sprite_size": [
+        816,
+        1245
+      ],
+      "sprite_xy": [
+        104,
+        105
+      ],
+      "feet_y": 1350
+    }
+  ]
+}
