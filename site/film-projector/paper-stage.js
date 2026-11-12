@@ -103,8 +103,8 @@ texPlane('04 RIGHT CURTAIN paper',8.42,.46,-2.18,2.3,9.3,(c,w,h)=>curtainTex(c,w
 // Projection screen is the hero of the shot. Three flat planes: dark frame, matte fabric,
 // and actual image layer. The screen is not a geometric box.
 quad('05 screen shadow silhouette',2.52,.85,-2.20,10.7,5.78,flat('#121015'),{shadow:true});
-quad('06 screen outer matte paper frame',2.54,.87,-1.92,10.5,5.56,flat('#84786f'),{shadow:true});
-const scr=quad('07 luminous screen paper',2.54,.87,-1.875,10.16,5.20,flat('#d0c8bc',.22),{receive:true});
+quad('06 screen outer matte paper frame',2.54,.87,-1.92,10.5,5.56,flat('#84786f'),{shadow:true,receive:false});
+const scr=quad('07 luminous screen paper',2.54,.87,-1.875,10.16,5.20,flat('#d0c8bc',.22),{receive:false});
 const glowUnder=quad('08 projected center light',2.54,.87,-1.855,9.87,4.97,
   new THREE.MeshBasicMaterial({color:0xe0cdb6,transparent:true,opacity:.075,depthWrite:false,side:THREE.DoubleSide}),{receive:false});
 const split=quad('09 character and XP paper divider',4.50,.80,-1.805,.023,4.64,flat('#776f69'),{receive:false});
@@ -196,7 +196,7 @@ const reels=[reel('18 supply reel: paper cutout',-5.92,2.12,.68,2.22),
              reel('19 takeup reel: paper cutout',-4.05,1.91,.72,2.05)];
 const rearSpindle=texPlane('20 reel mechanism connecting paper strip',-5.10,.84,.65,2.2,2.65,(c,w,h)=>{
   c.strokeStyle='rgba(197,182,170,.70)';c.lineWidth=21;
-  c.beginPath();c.moveTo(124,80);c.lineTo(640,820);c.moveTo(560,120);c.lineTo(150,780);c.stroke();
+  c.beginPath();c.moveTo(124,80);c.lineTo(310,790);c.moveTo(560,120);c.lineTo(505,790);c.stroke();
 },{tw:720,th:900,shadow:true});
 const crankCenter=new THREE.Group();crankCenter.name='21 flat handcrank hinge';crankCenter.position.set(-6.52,-1.0,.95);scene.add(crankCenter);
 texPlane('22 handcrank paper plane',0,0,0,1.35,1.35,(c,w,h)=>{
@@ -267,8 +267,8 @@ projectorSpot.shadow.bias=-.0003;
 const visibleBeam=texPlane('28 translucent 2D visible light scattering cutout',-1.78,.49,-.23,4.5,2.35,(c,w,h)=>{
  c.clearRect(0,0,w,h);
  const grad=c.createLinearGradient(0,0,w,0);
- grad.addColorStop(0,'rgba(250,212,160,.03)');grad.addColorStop(.18,'rgba(251,216,164,.14)');
- grad.addColorStop(.68,'rgba(246,219,178,.10)');grad.addColorStop(1,'rgba(248,217,175,0)');
+ grad.addColorStop(0,'rgba(250,212,160,.015)');grad.addColorStop(.18,'rgba(251,216,164,.08)');
+ grad.addColorStop(.68,'rgba(246,219,178,.06)');grad.addColorStop(1,'rgba(248,217,175,0)');
  c.save();c.beginPath();c.moveTo(0,h*.50);c.lineTo(w,h*.02);c.lineTo(w,h*.98);c.closePath();c.clip();
  fill(c,grad,w,h);c.restore();
 },{tw:768,th:384,order:2,receive:false});
