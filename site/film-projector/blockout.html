@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#121316">
+<title>胶片人物选择室｜真正 3D 空间灰模 V2</title>
+<link rel="stylesheet" href="./blockout.css">
+</head>
+<body>
+<main id="viewport" role="region" aria-label="灰模场景：可旋转卷轴的老式电影放映机与独立大幕布">
+  <div id="viewport-3d"></div>
+  <div class="corner-info"><div class="eyebrow">PAPERCHALK / PROJECTOR ROOM</div>
+    <h1>电影放映室 · 3D 空间灰模</h1><p>无角色素材 / 无美术贴图 / 先验收位置与透视</p></div>
+  <div id="labels" aria-hidden="true">
+    <span data-label="screen">大幕布 · 8.3 × 5.2m</span>
+    <span data-label="projector">机械放映机 · 独立卷轴</span>
+    <span data-label="film">前景胶片 · 7 格轨道</span>
+  </div>
+  <div id="error" hidden>WebGL 无法启动，当前浏览器不支持 3D 场景。</div>
+  <div class="footnote"><span id="mode">实际 3D 几何 + 实时投影灯 + 阴影贴图</span><span id="selection">胶片 02 / 07</span></div>
+  <nav aria-label="空间检查操作">
+    <button id="prev" type="button">◀ 上一格</button>
+    <button id="next" type="button">下一格 ▶</button>
+    <button id="lighting" type="button" aria-pressed="true">关闭照明</button>
+    <button id="guides" type="button" aria-pressed="true">隐藏尺寸</button>
+    <button id="reset-camera" type="button">复位镜头</button>
+  </nav>
+  <div class="slider-panel">
+    <label>摄影机视角 <input id="fov" aria-label="摄影机视角" type="range" min="33" max="54" value="41" step="1"><output id="fov-val">41°</output></label>
+  </div>
+</main>
+<script type="module" src="./blockout.js"></script>
+</body></html>
