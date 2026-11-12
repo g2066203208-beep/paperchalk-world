@@ -14,8 +14,6 @@ on:
       - 'tests/test_metro_wall_alpha.py'
       - 'site/assets/characters/female-07/**'
       - 'site/index.html'
-      - 'site/convenience-store/**'
-      - 'tests/convenience-store-browser.mjs'
       - 'site/character-editor/**'
       - 'site/assets/l2d/inbox/**'
       - 'site/assets/l2d/library/**'
@@ -108,10 +106,6 @@ jobs:
           node-version: '22'
       - name: Gate release on fixed actors, authored L2D and real 3D camera
         run: |
-          node site/convenience-store/store-core.test.cjs
-          test -s site/convenience-store/assets/convenience-story.webp
-          test -s site/convenience-store/parts/counter-top.svg
-          test -s site/convenience-store/index.html
           node tests/ring-arena.test.cjs
           node tests/female07-back-l2d.test.cjs
           node tests/ring-arena-wall.test.cjs

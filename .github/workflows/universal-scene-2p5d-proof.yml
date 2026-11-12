@@ -21,7 +21,7 @@ on:
       - 'tests/metro-platform3d.test.cjs'
       - 'tests/metro-carriage-joins.test.cjs'
       - 'tests/test_metro_wall_alpha.py'
-      - 'tests/transit-map-browser.mjs'
+      - 'tests/metro-civilian-browser.mjs'
       - '.github/workflows/universal-scene-2p5d-proof.yml'
   workflow_dispatch:
 permissions:
@@ -59,12 +59,12 @@ jobs:
       - name: Verify transparent window holes in the exact game wall asset
         run: python3 tests/test_metro_wall_alpha.py
       - name: Drive actual subway, inspect floor/ceiling lighting and capture Chrome screenshots
-        run: node tests/transit-map-browser.mjs
+        run: node tests/metro-civilian-browser.mjs
       - name: Archive exact real 3D game frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: universal-2p5d-metro-real-chromium
-          path: artifacts/overworld/*.png
+          path: artifacts/metro-civilians/*.png
           if-no-files-found: warn
           retention-days: 14

@@ -104,26 +104,16 @@ test('invalid blueprint edits cannot corrupt real stops or create rectangle-base
  assert.throws(()=>model.importJSON(JSON.stringify(broken2)),/同一格点/);
  assert.equal(model.serialize(),before);
 });
-test('game map loads a real on-canvas editor and keeps normal in-place travel menus',()=>{
+test('deleted metro visual interface is absent while route data remains',()=>{
  const html=fs.readFileSync(path.join(__dirname,'../site/index.html'),'utf8');
- const js=fs.readFileSync(path.join(root,'transit-map-ui.js'),'utf8');
- const ui=fs.readFileSync(path.join(root,'metro-map-editor-ui.js'),'utf8');
  const a=html.indexOf('src="./game/metro-map-editor.js?');
  const b=html.indexOf('src="./game/metro-graph.js?');
  const c=html.indexOf('src="./game/metro-map-geometry.js?');
- const d=html.indexOf('src="./game/metro-map-editor-ui.js?');
- const e=html.indexOf('src="./game/transit-map-ui.js?');
- assert.ok(a>=0&&b>a&&c>b&&d>c&&e>d,
-  'editor validation must load before actual graph, geometry and transit UI');
- assert.match(js,/editorUI\?\.syncVisibility\(\)/);
- assert.match(js,/function showMenu\(/);
- assert.match(js,/positionPopup\(\)/);
- assert.ok(!js.includes('pw-metro-fixed-inspector'));
- assert.match(ui,/metro-blueprint/);
- assert.match(ui,/pw-metro-edit-hit/);
- assert.match(ui,/pointerdown/);
- assert.match(ui,/model\.addStation/);
- assert.match(ui,/model\.insertBend/);
+ assert.ok(a>=0&&b>a&&c>b,'authoritative metro graph still loads after its data validator');
+ for(const name of ['transit-map-ui.js','metro-map-editor-ui.js'])
+   assert.equal(fs.existsSync(path.join(root,name)),false,'old atlas UI must be deleted: '+name);
+ assert.ok(!html.includes('src="./game/transit-map-ui.js?'));
+ assert.ok(!html.includes('src="./game/metro-map-editor-ui.js?'));
 });
 
 
