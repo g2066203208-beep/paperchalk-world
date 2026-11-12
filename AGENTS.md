@@ -1,5 +1,15 @@
 # Paperchalk World — agent working rules
 
+## 2026-11-12 HIGHEST-PRIORITY USER OVERRIDE — faction common minion Anima prompts
+
+**For ALL faction common-soldier/minion Anima prompts, this section supersedes any older general Anima style preset, NPC LoRA policy, or artist-tag instructions below.** Read [`docs/characters/FACTION_MINION_CHARACTER_IDENTITY_AND_PROMPT_RULES_V1_20261111.md`](docs/characters/FACTION_MINION_CHARACTER_IDENTITY_AND_PROMPT_RULES_V1_20261111.md), then the current faction-specific canon before writing.
+
+- Each faction has **three wholly separate female minion identities**: **loli (萝莉型), young woman (少女型), mature voluptuous woman (成熟丰满型)**. The loli positive prompt must **literally contain `loli`**, not merely `petite` / `small girl`. Keep the loli depiction non-sexualized. Each character has an independent face, hair, build and small natural standing action.
+- **DO NOT put any style wording, style LoRA, `<lora:...>`, `@artist` / `@akipekostyle`, or `safe` in any new minion positive prompt.** The older 2026-11-09 normal/cute style preset remains for other applicable art but **never for faction minions**. Do not override this by copying old examples.
+- Write **three complete independent positive prompts** plus the unmodified shared negative `worst quality, low quality, blurry, jpeg artifacts, chromatic aberration, watermark`. Do not add topic-specific negatives.
+- Same faction's three base recruits must share an **identical uniform design**, with size adjustments only; do not recycle one person's face or body. For the **monster hunter** trio specifically, use the **same classical black long-coat uniform**, never modern workwear or unrelated armor, with calm dialogue-performance standing poses and complete head-to-boots framing.
+- **Monster hunter minion prompt authority:** [`docs/characters/HUNTER_MINIONS_ANIMA_CANON_20261112.md`](docs/characters/HUNTER_MINIONS_ANIMA_CANON_20261112.md) contains the three full positive and negative prompts. Read that file **first** for ongoing hunter minion work. Do not confuse this trio with the seven already approved elite hunter images.
+
 ## Mandatory preflight: before EVERY Anima prompt
 
 **2026-11-09 USER OVERRIDE: Use only the shared generic negative prompt for Anima by default:** `worst quality, low quality, blurry, jpeg artifacts, chromatic aberration, watermark`. Do not add negative terms about character counts, age, genders, scene objects, backgrounds, composition, perspectives, or other subject-specific exclusions unless the user explicitly requests them. Do not copy longer negative sections from old character templates into new prompts. This supersedes conflicting historical example templates.
