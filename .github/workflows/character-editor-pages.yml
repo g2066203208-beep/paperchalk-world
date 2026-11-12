@@ -126,8 +126,9 @@ jobs:
           # Focused Studio's E2E test expects the built site on port 8132.
           python3 -m http.server 8132 --bind 127.0.0.1 --directory site >/tmp/paperchalk-release-http.log 2>&1 &
           sleep 2
-          node tests/ui-edge-fog-browser.mjs
+          # Run the short focused editor check first; failure is actionable sooner.
           node tests/test_l2d_focused_workspace_browser.js
+          node tests/ui-edge-fog-browser.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
