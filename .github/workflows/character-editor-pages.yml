@@ -20,6 +20,7 @@ on:
       - 'scripts/build_l2d_library.py'
       - 'scripts/bind_female06_pants.py'
       - 'docs/characters/*.profile.json'
+      - 'tests/test_l2d_focused_workspace_browser.js'
       - '.github/workflows/character-editor-pages.yml'
   workflow_dispatch:
 permissions:

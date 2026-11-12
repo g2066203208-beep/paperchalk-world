@@ -114,7 +114,13 @@ const {chromium}=require('playwright');
      const r=close.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
      return x>=0&&x<=innerWidth&&y>=0&&y<=innerHeight&&document.elementFromPoint(x,y)===close;
     }),true,'recovery close must receive pointer clicks on 320px phones');
-    await page.locator('.workspace-recovery-close').click();
+    // A real touch uses the existing on-screen coordinates. Playwright's
+    // locator.click() auto-scrolls fixed descendants of an overflow sheet on
+    // 320x568 phones, moving the target underneath the title AFTER hit-testing.
+    // Touch the confirmed topmost control, exactly as the player would.
+    const closeRect=await page.locator('.workspace-recovery-close').boundingBox();
+    assert.ok(closeRect&&closeRect.width>0&&closeRect.height>0);
+    await page.touchscreen.tap(closeRect.x+closeRect.width/2,closeRect.y+closeRect.height/2);
     assert.equal(await page.locator('#studio-recovery').isVisible(),false);
    }
    assert.deepEqual(errors,[],'runtime errors '+JSON.stringify(device));
