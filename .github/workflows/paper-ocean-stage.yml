@@ -1,4 +1,4 @@
-name: Paper Depth - 6-layer in-game stage proof
+name: Paper Depth - 7-layer interactive stage proof
 on:
   push:
     paths:
@@ -7,6 +7,7 @@ on:
       - 'site/assets/paper-ocean/**'
       - 'site/assets/paper-depth/**'
       - 'site/index.html'
+      - 'site/paper-depth-preview.html'
       - 'site/scene-modules.js'
       - 'tests/paper-ocean-stage-preview.mjs'
       - '.github/workflows/paper-ocean-stage.yml'
@@ -34,7 +35,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: paper-depth-six-layer-real-game-screenshots
+          name: paper-depth-seven-layer-interactive-screenshots
           path: artifacts/paper-ocean/*.png
           if-no-files-found: warn
           retention-days: 14
