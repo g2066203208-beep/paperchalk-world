@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paperchalk World | 胶片角色放映室 · 2.5D</title>
+<style>
+:root{color-scheme:dark;font-family:"Noto Serif CJK SC","Songti SC",Georgia,serif;--gold:#bca07a;--warm:#e2c49a;--glow:1;--vignette:0.7}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#060506}body{display:grid;place-items:center}button{font:inherit;cursor:pointer;color:inherit}button:focus-visible{outline:2px solid #ecd6b0;outline-offset:3px}
+#mount{position:relative;width:100vw;height:100dvh;overflow:hidden;background:#030303}
+#stage{width:1600px;height:900px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:50% 50%;background:#0b080a;perspective:1300px;overflow:hidden;isolation:isolate;color:#e7d5bb}
+#room{position:absolute;inset:0;transform-style:preserve-3d;z-index:1}
+.wall{position:absolute;left:-75px;top:-65px;width:1750px;height:820px;transform:translateZ(-220px);background:radial-gradient(ellipse at 58% 34%,#4a3029 0%,#251920 47%,#090809 94%),repeating-linear-gradient(90deg,transparent 0 110px,#ffffff06 111px 112px);box-shadow:inset 0 30px 75px #000a}
+.wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#0000 0 78px,#aa7e4410 80px 84px,#0000 88px 153px),repeating-linear-gradient(0deg,transparent 0 53px,#0006 54px 57px);mix-blend-mode:overlay}
+.wall:after{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 90 110' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M45 15c26 13 25 35 0 47-25-12-26-34 0-47ZM45 62v34M25 44h40' fill='none' stroke='%23b9956c' stroke-width='1' opacity='.15'/%3E%3C/svg%3E");background-size:100px 120px;opacity:.32}
+.ceiling{position:absolute;left:0;top:0;width:1600px;height:92px;background:linear-gradient(180deg,#080607,#26191b 72%,#060404 79%,#7a5739 81%,#1f1515 100%);box-shadow:0 14px 25px #0008;z-index:2}
+.curtain{position:absolute;top:-40px;width:180px;height:850px;background:repeating-linear-gradient(90deg,#140b10 0 15px,#3d1725 26px,#4e2632 36px,#210d17 47px,#130a10 59px);filter:brightness(.60);box-shadow:inset -12px 0 30px #000,20px 0 35px #0007;transform:translateZ(-130px);z-index:2}
+.curtain.left{left:-85px;transform:translateZ(-110px) rotateY(-10deg)}.curtain.right{right:-90px;transform:translateZ(-150px) rotateY(10deg)}
+.floor{position:absolute;left:-140px;bottom:-220px;width:1880px;height:560px;transform-origin:center 100%;transform:rotateX(66deg) translateZ(-105px);background:repeating-linear-gradient(90deg,#241618 0 110px,#362321 111px 115px,#160e11 117px 220px),repeating-linear-gradient(0deg,#110d10 0 35px,#6d4d33 36px 39px,#120c0f 42px 150px);box-shadow:inset 0 120px 90px #000a,0 -22px 45px #000a;border-top:9px solid #241818;z-index:2}
+.floor:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#fff0 0 75px,#b8985538 76px 77px,#0000 79px 130px);opacity:.35}
+.floorshadow{position:absolute;left:65px;bottom:84px;width:540px;height:185px;border-radius:50%;transform:rotate(-10deg);background:#0009;filter:blur(40px);z-index:3}
+#webgl-lighting{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:.70}#webgl-lighting canvas{display:block;width:100%;height:100%;pointer-events:none}.light-switch-off #webgl-lighting{opacity:.08}
+#light-canvas{position:absolute;inset:0;z-index:4;pointer-events:none;mix-blend-mode:screen;opacity:1}
+#shadow-canvas{position:absolute;inset:0;z-index:5;pointer-events:none;mix-blend-mode:multiply;opacity:0.9}
+/* Cinema screen is a separate deep plane, not a background painting. */
+#screen{position:absolute;left:657px;top:105px;width:850px;height:542px;padding:17px;transform:translateZ(-65px) rotateY(-1.4deg);transform-origin:center center;z-index:6;background:linear-gradient(135deg,#704c31,#211920 15%,#725c42 50%,#141015 91%,#ac8a54);border:5px ridge #765338;box-shadow:0 30px 60px #000b,0 0 0 3px #130e0b,0 0 0 9px #3d2620}
+#screen:before{content:"";position:absolute;inset:-20px;border:1px solid #986b4c66;pointer-events:none}
+.screen-inner{height:100%;width:100%;position:relative;overflow:hidden;background:#b9a68f;box-shadow:inset 0 0 85px #24100eaa,0 0 25px #c4a77c55}
+.screen-inner:before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,#0000 0 3px,#281a1718 3px 4px),radial-gradient(ellipse,#ffeac010 15%,#09060666 100%);z-index:9}
+#projection{position:absolute;inset:0;display:flex;filter:sepia(.42) contrast(.95) brightness(calc(.63 + var(--glow)*.35));transition:filter .16s;}
+#hero-wrap{position:relative;width:61%;height:100%;background:linear-gradient(135deg,#b4a18b,#d8c0a6 46%,#6d5446);overflow:hidden;border-right:1px solid #5a3d36}
+#hero{width:100%;height:100%;object-fit:contain;object-position:bottom center;mix-blend-mode:multiply;opacity:.97}
+#hero-fallback{position:absolute;inset:0;display:none;place-items:center;font-size:230px;color:#6a554e66}
+#hero-wrap:has(#hero:not([src])) #hero-fallback{display:grid}
+#info{width:39%;padding:48px 25px;background:linear-gradient(90deg,#9d8775,#ccb298 24%,#d7bfa3 80%,#927762);color:#31211f}
+.info-no{font:italic 19px Georgia,serif;letter-spacing:.22em;color:#765348}.info-line{width:80%;height:1px;background:#5b3a3566;margin:20px 0}.info-name{font-size:39px;font-weight:600;line-height:1.3;letter-spacing:.11em;white-space:nowrap}.info-sub{font-size:15px;letter-spacing:.17em;margin-top:12px;color:#6e5045}.info-xp{font-size:18px;margin-top:40px;display:grid;gap:14px}.info-xp div{border-bottom:1px solid #57403855;padding-bottom:5px}.info-xp b{font-weight:500}
+#grain{position:absolute;inset:0;z-index:10;pointer-events:none;opacity:.16;background:repeating-linear-gradient(82deg,#0000 0 17px,#fff6 18px 19px,#0000 20px 21px)}
+#frameflash{position:absolute;inset:0;z-index:11;background:#160e0b;opacity:0;pointer-events:none}.changing #frameflash{animation:frameflash .64s steps(1,end)}@keyframes frameflash{0%{opacity:0}12%{opacity:1}32%{opacity:.85}42%{opacity:.05}62%{opacity:.75}80%{opacity:0}100%{opacity:0}}
+/* Projector pieces are independent flat cutouts with actual depth ordering. */
+#machine{position:absolute;left:44px;top:146px;width:565px;height:644px;transform:translateZ(132px);z-index:11;filter:drop-shadow(17px 30px 27px #000b)}
+.machine-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#machine-base{z-index:1}#machine-front{z-index:6}
+.reel{position:absolute;width:211px;height:211px;transform-origin:center;z-index:4;filter:drop-shadow(4px 10px 5px #080606a8);border-radius:50%;animation:reel-spin 25s linear infinite;animation-play-state:paused}
+.reel.spin{animation-play-state:running}.reel svg{width:100%;height:100%;overflow:visible}.reel.top{left:45px;top:-35px}.reel.bottom{left:184px;top:44px;width:174px;height:174px;z-index:3}
+@keyframes reel-spin{to{transform:rotate(360deg)}}
+#crank{position:absolute;left:110px;top:324px;width:200px;height:200px;z-index:8;transform-origin:100px 100px;cursor:grab;filter:drop-shadow(8px 7px 6px #0009);user-select:none;touch-action:none}
+#crank:active{cursor:grabbing}#crank svg{width:100%;height:100%;pointer-events:none}
+#lens-glow{position:absolute;left:364px;top:205px;width:54px;height:70px;border-radius:50%;background:radial-gradient(ellipse,#fff8d7,#ffd28e 22%,#b46c3388 50%,transparent 78%);filter:blur(2px);z-index:7;pointer-events:none}
+.table{position:absolute;left:-5px;top:710px;width:632px;height:168px;z-index:12;transform:translateZ(160px);background:linear-gradient(180deg,#6e4832 0%,#291718 10%,#1a1214 22%,#51321e 56%,#170d0c 80%);border-top:13px solid #624129;box-shadow:0 -12px 18px #0009,0 20px 34px #000b;clip-path:polygon(0 0,100% 0,97% 100%,4% 100%)}
+.table:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#ffe2b411 0 1px,transparent 2px 105px);opacity:.4}
+#film-track{position:absolute;left:437px;top:662px;width:1080px;height:151px;z-index:13;transform:translateZ(205px) rotateX(4deg);border:4px solid #493329;background:#130e11;box-shadow:0 7px 15px #000b,0 0 0 2px #ac88533b;overflow:hidden;}
+.sprocket{position:absolute;left:0;right:0;height:18px;background:repeating-linear-gradient(90deg,#bc956d 0 10px,transparent 11px 23px);mask-image:repeating-linear-gradient(90deg,#000 0 12px,transparent 12px 23px);opacity:.67}.sprocket.top{top:0}.sprocket.bottom{bottom:0}
+#film-inner{position:absolute;top:20px;left:0;height:107px;display:flex;align-items:center;gap:6px;transition:transform .58s cubic-bezier(.2,.81,.22,1);will-change:transform}
+.film-cell{width:160px;height:106px;position:relative;border:3px solid #745e45;background:#4a3834;overflow:hidden;flex:none;box-shadow:inset 0 0 0 2px #0a0808}
+.film-cell img{width:100%;height:100%;object-fit:cover;object-position:top;filter:sepia(.4) saturate(.62) brightness(.73)}.film-cell.active{border-color:#ffe2a6;box-shadow:inset 0 0 0 2px #b98d56,0 0 26px #ffdc9b;z-index:2}.film-cell.active img{filter:sepia(.18) saturate(.7) brightness(1.0)}.cell-no{position:absolute;left:7px;bottom:2px;font:13px Georgia;color:#fff0df;text-shadow:0 1px 2px #000}
+#focus-mark{position:absolute;left:calc(50% - 9px);top:-17px;color:#edc58b;font-size:30px;z-index:14;text-shadow:0 1px 8px #ca995a}
+#hud{position:absolute;inset:0;z-index:20;pointer-events:none}
+.kicker{position:absolute;left:56px;top:47px;letter-spacing:.27em;font:13px Georgia,serif;color:#c5a37b;text-shadow:0 0 20px #e4a86c55}
+.sub{position:absolute;left:57px;top:70px;font-size:12px;color:#b0987c99;letter-spacing:.15em}
+#controls{pointer-events:auto;position:absolute;right:84px;bottom:23px;display:flex;gap:12px;align-items:center;color:#cbb79e;font-size:14px}
+#controls button{border:1px solid #9a714b80;background:#170f12cf;padding:11px 19px;letter-spacing:.06em;min-width:86px;transition:background .16s,border-color .16s}
+#controls button:hover{border-color:#e5b97e;background:#423025}
+#current{position:absolute;right:89px;top:56px;text-align:right;font:13px Georgia;color:#d3b58f;letter-spacing:.24em;opacity:.8}
+#status{position:absolute;left:80px;bottom:29px;font:12px Georgia;color:#b4a08299;letter-spacing:.1em;pointer-events:none}
+#front-vignette{pointer-events:none;position:absolute;inset:0;z-index:18;box-shadow:inset 0 0 95px 45px #030203d9,inset 0 -50px 85px #0009}
+#noise{position:absolute;inset:0;pointer-events:none;z-index:19;opacity:.08;mix-blend-mode:screen;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E")}
+#lamp{position:absolute;right:43px;top:70px;width:44px;height:172px;z-index:10;border-radius:28px;background:radial-gradient(ellipse at 50% 15%,#fff0c6 1%,#efbf82 15%,#ce8240 34%,transparent 59%);box-shadow:0 0 55px #e3a45b33;opacity:.8}
+#lamp:before{content:"";position:absolute;left:18px;top:72px;width:8px;height:95px;background:linear-gradient(90deg,#876044,#d8aa75,#422d29)}
+.light-switch-off #light-canvas{opacity:.04}.light-switch-off #projection{filter:sepia(1) brightness(.13)}.light-switch-off #lens-glow,.light-switch-off #lamp{opacity:0}.light-switch-off #screen{box-shadow:0 30px 60px #000e}.light-switch-off .room-light{opacity:0}
+#stage:after{content:"";position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:17;transition:opacity .35s}#stage.light-switch-off:after{opacity:.72}
+@media(prefers-reduced-motion:reduce){.reel,.changing #frameflash{animation:none!important}#film-inner{transition:none}}
+</style>
+</head>
+<body><div id="mount"><main id="stage" aria-label="可操作2.5D老式电影放映室选角场景">
+  <div id="room"><div class="wall"></div><div class="ceiling"></div><div class="curtain left"></div><div class="curtain right"></div><div class="floor"></div><div class="floorshadow"></div></div>
+  <div id="webgl-lighting" aria-hidden="true"></div><canvas id="light-canvas" width="1600" height="900" aria-hidden="true"></canvas><canvas id="shadow-canvas" width="1600" height="900" aria-hidden="true"></canvas>
+  <section id="screen"><div class="screen-inner"><div id="projection"><div id="hero-wrap"><img id="hero" alt="投影中的猎人角色"><div id="hero-fallback">✦</div></div><div id="info"><span class="info-no" id="number">NO. 02</span><div class="info-line"></div><div class="info-name" id="name">血液医师</div><div class="info-sub">怪物猎人组织</div><div class="info-xp"><div>体型 XP　<b>—</b></div><div>性格 XP　<b>—</b></div><div>职业 XP　<b id="job">医师</b></div><div>种族 XP　<b>—</b></div><div>故事 XP　<b>—</b></div></div></div></div><div id="grain"></div><div id="frameflash"></div></div></section>
+  <div id="lamp"></div>
+  <div id="machine">
+  <svg id="machine-base" class="machine-svg" viewBox="0 0 565 644" xmlns="http://www.w3.org/2000/svg">
+   <defs><linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#755333"/><stop offset=".24" stop-color="#1c191a"/><stop offset=".50" stop-color="#76634e"/><stop offset=".77" stop-color="#292021"/><stop offset="1" stop-color="#09080b"/></linearGradient><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8af73"/><stop offset=".25" stop-color="#5e3b22"/><stop offset=".52" stop-color="#bb8e54"/><stop offset=".72" stop-color="#39291e"/><stop offset="1" stop-color="#d1a263"/></linearGradient></defs>
+   <path d="M112 196H335L397 241 386 400 314 461 123 447 93 382Z" fill="url(#steel)" stroke="#c3a176" stroke-width="7"/>
+   <path d="M137 225L327 215 363 261 351 393 278 434 134 411Z" fill="#20191a" stroke="#4e3d2e" stroke-width="4"/>
+   <path d="M163 242H300L326 264 307 372 164 372Z" fill="#262024" stroke="#ad8755" stroke-width="3"/><path d="M187 260V356M208 260V356M231 260V356M252 260V356M273 260V356" stroke="#8e6f4b" stroke-width="3" opacity=".5"/>
+   <rect x="131" y="445" width="232" height="41" rx="7" fill="url(#brass)" stroke="#1a1011" stroke-width="6"/>
+   <path d="M160 481L138 549 166 552 196 482M298 483L325 550 351 547 335 483" fill="url(#steel)" stroke="#8f694c" stroke-width="6"/>
+   <path d="M327 244H406L450 263V333L398 349H328Z" fill="url(#steel)" stroke="#aa8151" stroke-width="6"/>
+   <path d="M408 268L472 279 472 314 402 328Z" fill="#261e1d" stroke="#b28a54" stroke-width="7"/>
+   <ellipse cx="466" cy="297" rx="17" ry="35" fill="#110f12" stroke="#bd935d" stroke-width="7"/>
+   <ellipse cx="469" cy="297" rx="7" ry="20" fill="#e7d4b0" opacity=".75"/>
+   <path d="M100 189L100 140 328 127 341 186" fill="none" stroke="#ac8857" stroke-width="10"/>
+   <rect x="102" y="370" width="234" height="43" rx="10" fill="#2e2625" stroke="#b18e5c" stroke-width="5"/>
+   <circle cx="157" cy="393" r="17" fill="#a5814f" stroke="#35271c" stroke-width="7"/><circle cx="302" cy="391" r="17" fill="#a5814f" stroke="#35271c" stroke-width="7"/>
+  </svg>
+  <div class="reel top" id="reelA"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="92" fill="#161214" stroke="#ceaa74" stroke-width="14"/><circle cx="100" cy="100" r="78" fill="none" stroke="#422e23" stroke-width="5"/><g stroke="#a78351" stroke-width="13" stroke-linecap="round"><path d="M100 100V21M100 100L169 61M100 100L168 140M100 100V179M100 100L31 140M100 100L31 60"/></g><circle cx="100" cy="100" r="28" fill="#886743" stroke="#d7b480" stroke-width="6"/><circle cx="100" cy="100" r="13" fill="#221b19" stroke="#c29b63" stroke-width="5"/><g fill="#b59665"><circle cx="100" cy="15" r="4"/><circle cx="175" cy="100" r="4"/><circle cx="100" cy="185" r="4"/><circle cx="25" cy="100" r="4"/></g></svg></div>
+  <div class="reel bottom" id="reelB"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="92" fill="#171317" stroke="#b58c58" stroke-width="14"/><circle cx="100" cy="100" r="78" fill="none" stroke="#4c3627" stroke-width="5"/><g stroke="#94734e" stroke-width="13" stroke-linecap="round"><path d="M100 100V21M100 100L169 61M100 100L168 140M100 100V179M100 100L31 140M100 100L31 60"/></g><circle cx="100" cy="100" r="27" fill="#916f47" stroke="#cfa76a" stroke-width="6"/><circle cx="100" cy="100" r="11" fill="#282020" stroke="#b18b5b" stroke-width="4"/></svg></div>
+  <svg id="machine-front" class="machine-svg" viewBox="0 0 565 644" xmlns="http://www.w3.org/2000/svg"><path d="M62 529H415L425 561H52Z" fill="#251718" stroke="#a37c50" stroke-width="7"/><path d="M49 562H438L458 599H32Z" fill="#1a1113" stroke="#63472f" stroke-width="8"/><path d="M84 599V627H412V599" fill="#1c1314" stroke="#745338" stroke-width="6"/><circle cx="361" cy="408" r="39" fill="#221719" stroke="#ad8854" stroke-width="8"/><circle cx="361" cy="408" r="25" fill="#ad8b5e" stroke="#3e2a21" stroke-width="8"/><circle cx="361" cy="408" r="7" fill="#291a1b"/></svg>
+  <div id="crank" role="button" tabindex="0" aria-label="摇动手柄切换胶片"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="27" fill="#483024" stroke="#c8a06e" stroke-width="9"/><path d="M100 100L144 64" stroke="#986e44" stroke-width="13" stroke-linecap="round"/><circle cx="144" cy="64" r="11" fill="#24191a" stroke="#e4bc83" stroke-width="5"/><rect x="133" y="44" width="26" height="47" rx="12" fill="#5e3c28" stroke="#c59c6c" stroke-width="4"/></svg></div>
+  <div id="lens-glow"></div>
+  </div><div class="table"></div>
+  <div id="film-track"><div class="sprocket top"></div><div id="film-inner"></div><div class="sprocket bottom"></div><div id="focus-mark">▾</div></div>
+  <div id="front-vignette"></div><div id="noise"></div>
+  <div id="hud"><div class="kicker">PAPERCHALK · FILM PROJECTION</div><div class="sub">REAL-TIME LIT 2.5D STAGE / 02</div><div id="current">MONSTER HUNTERS / REEL 02</div><div id="status">摇柄 / ← → 切换胶片　·　独立剪纸层 / 空间照明</div><div id="controls"><button id="previous">◂ 上一格</button><button id="next">下一格 ▸</button><button id="toggle">熄灭灯光</button><button id="choose">确认人物</button></div></div>
+</main></div>
+<script>
+(()=>{'use strict';
+const roster=[
+['持剑指挥官','01-legendary-hunter.png','指挥'],['血液医师','02-blood-physician.png','医师'],['索弩陷阱师','03-trap-engineer.png','陷阱师'],['赏金枪手','04-bounty-markswoman.png','枪手'],['封印监管者','05-seal-warden.png','监管者'],['巨兽屠夫','06-beast-butcher.png','屠夫'],['重斧清道夫','07-axe-scout.png','清道夫']
+];
+const stage=document.querySelector('#stage'),film=document.querySelector('#film-inner'),hero=document.querySelector('#hero'),name=document.querySelector('#name'),job=document.querySelector('#job'),no=document.querySelector('#number'),active=document.querySelector('#current'),crank=document.querySelector('#crank');
+const originals=roster.map(r=>'../assets/characters/monster-hunters/'+r[1]);
+let selected=1, moving=false,lightOn=true,angle=0,lightPhase=0;
+function fit(){stage.style.setProperty('--scale',Math.min(innerWidth/1600,innerHeight/900).toFixed(5));}addEventListener('resize',fit);fit();
+roster.forEach((r,i)=>{let cell=document.createElement('button');cell.className='film-cell';cell.type='button';cell.title=r[0];cell.dataset.index=i;cell.innerHTML=`<img src="${originals[i]}" alt="${r[0]}"><span class="cell-no">${String(i+1).padStart(2,'0')}</span>`;const image=cell.querySelector('img');image.addEventListener('error',()=>{image.onerror=null;image.src='./local-portrait.png';});cell.addEventListener('click',()=>changeTo(i));film.append(cell);});
+function render(){const r=roster[selected];name.textContent=r[0];job.textContent=r[2];no.textContent='NO. '+String(selected+1).padStart(2,'0');active.textContent='MONSTER HUNTERS / REEL '+String(selected+1).padStart(2,'0');hero.src=originals[selected];hero.onerror=()=>{hero.onerror=null;hero.src='./local-portrait.png';};film.style.transform=`translateX(${540-(selected*166+83)}px)`;[...film.children].forEach((x,i)=>{x.classList.toggle('active',i===selected);x.setAttribute('aria-current',i===selected?'true':'false');});}
+function rotateCrank(step=1){angle+=step*360;crank.style.transition='transform 640ms cubic-bezier(.2,.7,.32,1)';crank.style.transform=`rotate(${angle}deg)`;document.querySelectorAll('.reel').forEach((el,i)=>{el.style.animationPlayState='paused';el.animate([{transform:`rotate(${(angle-step*360)*(i?-.68:.68)}deg)`},{transform:`rotate(${angle*(i?-.68:.68)}deg)`}],{duration:680,easing:'cubic-bezier(.2,.7,.2,1)'});});}
+function changeTo(n){if(moving)return;moving=true;stage.classList.add('changing');rotateCrank(n===((selected+6)%7)?-1:1);stage.dispatchEvent(new CustomEvent('film-advance'));setTimeout(()=>{selected=(n+7)%7;render();},285);setTimeout(()=>{stage.classList.remove('changing');moving=false;},690);}
+document.querySelector('#previous').addEventListener('click',()=>changeTo((selected+6)%7));document.querySelector('#next').addEventListener('click',()=>changeTo((selected+1)%7));
+document.querySelector('#toggle').addEventListener('click',e=>{lightOn=!lightOn;stage.classList.toggle('light-switch-off',!lightOn);e.currentTarget.textContent=lightOn?'熄灭灯光':'开启灯光';stage.dispatchEvent(new CustomEvent('projector-light-change',{detail:{on:lightOn}}));});document.querySelector('#choose').addEventListener('click',()=>{document.querySelector('#status').textContent='已选择：'+roster[selected][0]+' · 这只是独立测试场景，尚未接入正式战斗阵容';});
+function crankStep(){changeTo((selected+1)%7);}crank.addEventListener('click',crankStep);crank.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();crankStep();}});addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();changeTo((selected+(e.key==='ArrowRight'?1:6))%7);}});
+let down=null;crank.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});crank.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>24){down=null;crankStep();}else down=null;});
+// Independent, moving light-source pass: computed each frame (not painted into a photograph).
+const light=document.querySelector('#light-canvas').getContext('2d'),shadow=document.querySelector('#shadow-canvas').getContext('2d');
+let last=performance.now(),fps=0;
+function shadowPolygon(cx,cy,verts,reach,opacity){shadow.beginPath();verts.forEach(([x,y],i)=>{if(i===0)shadow.moveTo(x,y);else shadow.lineTo(x,y);});for(let i=verts.length-1;i>=0;i--){const [x,y]=verts[i];const dx=x-cx,dy=y-cy,mag=Math.hypot(dx,dy);shadow.lineTo(x+dx/(mag||1)*reach,y+dy/(mag||1)*reach);}shadow.closePath();shadow.fillStyle=`rgba(0,0,0,${opacity})`;shadow.fill();}
+function frame(t){const dt=Math.min(.05,(t-last)/1000);last=t;lightPhase+=dt;light.clearRect(0,0,1600,900);shadow.clearRect(0,0,1600,900);
+ const jitter=(Math.sin(t*.0031)+Math.sin(t*.0175)*.2)*.018, intensity=lightOn?Math.max(.82,1+jitter):.035;
+ // Ambient point light over the left pedestal, inverse-square-like radial attenuation.
+ const lamp=light.createRadialGradient(196,385,12,196,385,560);lamp.addColorStop(0,`rgba(255,184,102,${.28*intensity})`);lamp.addColorStop(.36,`rgba(216,132,80,${.14*intensity})`);lamp.addColorStop(1,'rgba(0,0,0,0)');light.fillStyle=lamp;light.fillRect(0,0,790,900);
+ // Screen receives a projection beam with angular falloff and a soft volumetric boundary.
+ const lensX=479,lensY=443;light.save();light.beginPath();light.moveTo(lensX,lensY);light.lineTo(645,147);light.lineTo(1453,120);light.lineTo(1465,642);light.lineTo(661,641);light.closePath();light.clip();
+ const cone=light.createLinearGradient(lensX,lensY,1270,380);cone.addColorStop(0,`rgba(255,227,173,${.44*intensity})`);cone.addColorStop(.18,`rgba(238,193,132,${.14*intensity})`);cone.addColorStop(.55,`rgba(239,193,116,${.055*intensity})`);cone.addColorStop(1,'rgba(245,209,147,0)');light.fillStyle=cone;light.fillRect(470,80,1100,680);light.restore();
+ const wash=light.createRadialGradient(1055,370,0,1055,370,620);wash.addColorStop(0,`rgba(255,221,168,${.08*intensity})`);wash.addColorStop(1,'rgba(255,196,98,0)');light.fillStyle=wash;light.fillRect(610,90,960,720);
+ // Light strips on the brass lens have source-dependent intensity.
+ const gl=light.createRadialGradient(lensX,lensY,2,lensX,lensY,100);gl.addColorStop(0,`rgba(255,246,209,${.72*intensity})`);gl.addColorStop(.26,`rgba(255,196,113,${.25*intensity})`);gl.addColorStop(1,'transparent');light.fillStyle=gl;light.fillRect(lensX-100,lensY-100,200,200);
+ // Real-time 2D occluder shadow projection onto the rear wall. Rays follow the moving light position.
+ const sx=205+Math.sin(lightPhase*.47)*11,sy=146;
+ shadow.save();shadow.filter='blur(18px)';shadowPolygon(sx,sy,[[106,204],[321,207],[400,350],[315,575],[130,565]],670,.23*intensity);shadow.filter='blur(10px)';shadowPolygon(sx,sy,[[157,200],[271,210],[285,310],[165,305]],340,.13*intensity);shadow.restore();
+ // Footprint shadow: independent of projector art, computed from lamp offset.
+ const p=shadow.createRadialGradient(312,752,12,312,752,300);p.addColorStop(0,`rgba(0,0,0,${.8*intensity})`);p.addColorStop(1,'rgba(0,0,0,0)');shadow.fillStyle=p;shadow.fillRect(0,585,700,270);
+ if(!document.hidden)requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){last=performance.now();requestAnimationFrame(frame);}});
+render();requestAnimationFrame(frame);
+})();
+</script><script type="module">
+/* Paperchalk film projector selection stage: actual spatial lighting and PCF
+   shadow maps on independent 2.5D receiving planes. No pre-baked shadows.
+   Rendered underneath illustrated foreground cutouts and projection/UI. */
+import * as THREE from '../sphere-maze/vendor/three.module.js';
+
+const host = document.querySelector('#webgl-lighting');
+const stage = document.querySelector('#stage');
+if (host && stage) {
+  try {
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setSize(1600, 900, false);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.96;
+    renderer.setClearColor(0x000000, 0);
+    renderer.domElement.style.width = '1600px';
+    renderer.domElement.style.height = '900px';
+    host.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.15, 60);
+    camera.position.set(0, 0.8, 14);
+    camera.lookAt(0, 0, -0.4);
+    const ambient = new THREE.AmbientLight(0x80675a, 0.38);
+    scene.add(ambient);
+
+    function fabricTexture() {
+      const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+      const g = c.getContext('2d');
+      const bg = g.createLinearGradient(0, 0, 0, 512);
+      bg.addColorStop(0, '#302128'); bg.addColorStop(1, '#1b151b');
+      g.fillStyle = bg; g.fillRect(0,0,512,512);
+      for (let x=0;x<512;x+=42) {
+        g.fillStyle = x%84 ? 'rgba(159,108,84,.036)' : 'rgba(0,0,0,.08)';
+        g.fillRect(x,0,4,512);
+      }
+      for (let y=0;y<512;y+=6) {
+        g.fillStyle='rgba(216,156,105,.011)'; g.fillRect(0,y,512,1);
+      }
+      const t = new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
+    }
+    function plankTexture(){
+      const c=document.createElement('canvas');c.width=512;c.height=512;
+      const g=c.getContext('2d');g.fillStyle='#2d1e1e';g.fillRect(0,0,512,512);
+      for(let y=0;y<512;y+=75){
+        g.fillStyle=y%150?'#322421':'#493024';g.fillRect(0,y,512,71);
+        g.fillStyle='rgba(255,199,134,.08)';g.fillRect(0,y,512,2);
+        g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,y+69,512,7);
+        for(let x=0;x<512;x+=16){g.fillStyle='rgba(255,217,159,.018)';g.fillRect(x,y+4,1,60)}
+      }
+      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);return t;
+    }
+    const wall=new THREE.Mesh(new THREE.PlaneGeometry(14,7.9),new THREE.MeshStandardMaterial({map:fabricTexture(),color:0x8d736b,transparent:true,opacity:.52,roughness:1,metalness:0,side:THREE.DoubleSide}));
+    wall.position.set(0,0,-2.9);wall.receiveShadow=true;scene.add(wall);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(14,12),new THREE.MeshStandardMaterial({map:plankTexture(),color:0x907769,transparent:true,opacity:.50,roughness:0.91,metalness:.04,side:THREE.DoubleSide}));
+    floor.rotation.x=-Math.PI/2;floor.position.set(0,-2.95,1.6);floor.receiveShadow=true;scene.add(floor);
+
+    // These silhouettes are planes with alpha cutouts, NOT solid imported models.
+    // The same light casts dynamic shadows from them onto wall and floor.
+    function silhouetteTexture(type){
+      const c=document.createElement('canvas');c.width=512;c.height=512;
+      const g=c.getContext('2d');g.clearRect(0,0,512,512);g.fillStyle='#fff';
+      if(type==='body'){
+        g.beginPath();g.moveTo(88,110);g.lineTo(380,108);g.lineTo(437,211);g.lineTo(402,390);g.lineTo(132,413);g.lineTo(83,312);g.closePath();g.fill();
+        g.fillRect(100,400,350,32);g.fillRect(149,426,42,86);g.fillRect(352,426,42,86);
+        g.beginPath();g.ellipse(430,236,60,44,0,0,Math.PI*2);g.fill();
+      } else {
+        g.beginPath();g.arc(256,256,238,0,Math.PI*2);g.fill();
+        g.globalCompositeOperation='destination-out';
+        for(let i=0;i<6;i++){
+          const a=i*Math.PI/3;const b=a+Math.PI/6;
+          g.beginPath();g.moveTo(256+Math.cos(a)*62,256+Math.sin(a)*62);
+          g.arc(256,256,190,a+.08,b+.43,false);
+          g.lineTo(256+Math.cos(b)*62,256+Math.sin(b)*62);g.closePath();g.fill();
+        }
+        g.beginPath();g.arc(256,256,21,0,Math.PI*2);g.fill();
+      }
+      return new THREE.CanvasTexture(c);
+    }
+    const bodyShadow=new THREE.Mesh(new THREE.PlaneGeometry(3.6,3.7),new THREE.MeshStandardMaterial({map:silhouetteTexture('body'),alphaTest:.20,side:THREE.DoubleSide,transparent:true,opacity:0,colorWrite:false,depthWrite:false}));
+    bodyShadow.position.set(-3.8,-0.75,1.05);bodyShadow.castShadow=true;scene.add(bodyShadow);
+    const reelTexture=silhouetteTexture('reel');
+    const reels=[[-4.62,2.12,.93,1.8],[-3.52,1.52,1.1,1.53]].map(([x,y,z,s])=>{
+      const mesh=new THREE.Mesh(new THREE.PlaneGeometry(s,s),new THREE.MeshStandardMaterial({map:reelTexture,alphaTest:.18,side:THREE.DoubleSide,transparent:true,opacity:0,colorWrite:false,depthWrite:false}));
+      mesh.position.set(x,y,z);mesh.castShadow=true;scene.add(mesh);return mesh;
+    });
+    // Independent real 3D shadow receiver behind the CSS screen projection.
+    const projectionReceiver=new THREE.Mesh(new THREE.PlaneGeometry(5.75,3.65),new THREE.MeshStandardMaterial({color:0xd9b78d,roughness:.98,transparent:true,opacity:.23,side:THREE.DoubleSide,emissive:0x7b4f27,emissiveIntensity:.16}));
+    projectionReceiver.position.set(2.18,.44,-2.72);projectionReceiver.receiveShadow=true;scene.add(projectionReceiver);
+    const screenOuter = new THREE.Mesh(new THREE.PlaneGeometry(5.96,3.87),new THREE.MeshStandardMaterial({color:0x26191b,transparent:true,opacity:0,colorWrite:false,depthWrite:false}));
+    screenOuter.position.set(2.18,.44,-2.62);screenOuter.castShadow=true;scene.add(screenOuter);
+
+    // Visible warm lamp and projector beam, plus physically shadowed surfaces.
+    const lamp=new THREE.PointLight(0xffc085,14.8,10,2);lamp.position.set(-4.65,1.68,2.9);scene.add(lamp);
+    const overhead=new THREE.SpotLight(0xffd3a3,65,17,Math.PI/4.5,.72,1.6);
+    overhead.position.set(-3.9,3.4,3.6);overhead.target.position.set(-1.2,-1.2,-1.5);
+    overhead.castShadow=true;overhead.shadow.mapSize.set(1024,1024);
+    overhead.shadow.bias=-.00016;overhead.shadow.normalBias=.04;
+    scene.add(overhead,overhead.target);
+    const projector = new THREE.SpotLight(0xffecd0,95,18,Math.PI/3.3,.73,1.4);
+    projector.position.set(-2.55,.53,1.75);projector.target.position.set(1.75,.4,-2.8);
+    projector.castShadow=true;projector.shadow.mapSize.set(1024,1024);
+    projector.shadow.bias=-.00018;projector.shadow.normalBias=.02;
+    scene.add(projector,projector.target);
+
+    let lightOn=true, reelUntil=0, frameId=0;
+    stage.addEventListener('projector-light-change',e=>{lightOn=!!e.detail?.on});
+    stage.addEventListener('film-advance',()=>{reelUntil=performance.now()+680});
+    const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function tick(ms){
+      const time=ms*.001;
+      const flicker=reduceMotion?1:(1+.017*Math.sin(time*41)+.009*Math.sin(time*97));
+      const target=lightOn?1:0;
+      projector.intensity=95*target*flicker;overhead.intensity=65*target;
+      lamp.intensity=14.8*target;ambient.intensity=lightOn?.38:.08;
+      projectionReceiver.material.emissiveIntensity=lightOn?.16:.008;
+      if(ms<reelUntil && !reduceMotion){reels[0].rotation.z+=.04;reels[1].rotation.z-=.055;}
+      renderer.render(scene,camera);
+      frameId=requestAnimationFrame(tick);
+    }
+    frameId=requestAnimationFrame(tick);
+    window.addEventListener('pagehide',()=>{cancelAnimationFrame(frameId);renderer.dispose();});
+    stage.dataset.webglShadows='active';
+  } catch(error) {
+    stage.dataset.webglShadows='unavailable';
+    console.warn('2.5D real-time WebGL shadow pass unavailable; hand-painted/canvas fallback remains:',error);
+  }
+}
+
+</script></body></html>
