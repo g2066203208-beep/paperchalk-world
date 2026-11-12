@@ -78,7 +78,7 @@ assert.ok(style.includes('@media(max-width:700px)'),'mobile viewport supported')
 const film=fs.readFileSync(path.join(__dirname,'../site/assets/ui/painted-film-portrait-frame.webp'));
 assert.ok(film.subarray(0,4).toString()==='RIFF','redesigned silver film is real WebP art');
 assert.ok(film.length>700,'painted silver film asset not a placeholder');
-for(const name of ['painted-film-blank-a.webp','painted-timeline-panel.webp','painted-tick-idle.webp','painted-tick-active.webp','painted-paper-button.webp'])
+for(const name of ['painted-film-blank-a.webp','painted-timeline-panel.webp','painted-tick-idle.webp','painted-tick-active.webp','painted-paper-tick-v2.webp','painted-red-tick-v2.webp','painted-paper-button.webp'])
  assert.ok(fs.statSync(path.join(__dirname,'../site/assets/ui',name)).size>350,'authored non-repeating empty film texture preserved');
 assert.match(runtime,/PaperWorldRingTimegrid/);
 assert.match(runtime,/combatTimegrid\.advance\(dt\)/);

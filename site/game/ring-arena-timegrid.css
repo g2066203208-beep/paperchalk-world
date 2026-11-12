@@ -418,3 +418,75 @@
  #ring-arena-controls .tg-card-pick{padding:4px 7px!important;font-size:10px!important}
  #ring-arena-controls .tg-timeline-foot button{padding:5px 8px!important}
 }
+
+/* Painted-paper contrast and horizontal headshot refinement, 2026-11-12. */
+#ring-arena-controls .tg-portrait .tg-face{
+ object-fit:cover!important;object-position:50% 50%!important;
+ filter:saturate(.91) contrast(1.04)!important;
+}
+#ring-arena-controls .tg-row.enemy .tg-portrait .tg-face{
+ filter:saturate(.72) contrast(1.06) brightness(.91)!important;
+}
+#ring-arena-controls .tg-timeline-head{min-height:34px!important;margin-bottom:7px!important}
+#ring-arena-controls [data-tg-person]{
+ background-image:url('../assets/ui/painted-paper-tick-v2.webp')!important;
+ font-size:15px!important;min-width:130px;text-align:center;
+}
+#ring-arena-controls .tg-tick,
+#ring-arena-controls .tg-tick.empty,
+#ring-arena-controls .tg-tick.recovery{
+ background-image:url('../assets/ui/painted-paper-tick-v2.webp')!important;
+ color:#4d2c30!important;text-shadow:none!important;
+}
+#ring-arena-controls .tg-tick.windup,
+#ring-arena-controls .tg-tick.active{
+ background-image:url('../assets/ui/painted-red-tick-v2.webp')!important;
+ color:#fff0e4!important;text-shadow:0 1px 2px #471018!important;
+}
+#ring-arena-controls .tg-tick small{
+ color:#573c40!important;font:700 12px/1 "Noto Serif SC",serif!important;
+ text-shadow:none!important;
+}
+#ring-arena-controls .tg-tick strong{color:#674849!important;font-size:20px!important}
+#ring-arena-controls .tg-tick.windup small,
+#ring-arena-controls .tg-tick.active small,
+#ring-arena-controls .tg-tick.windup strong,
+#ring-arena-controls .tg-tick.active strong{
+ color:#fff1e7!important;text-shadow:0 1px 3px #390b12!important;
+}
+#ring-arena-controls .tg-card-pick{
+ background-image:url('../assets/ui/painted-paper-tick-v2.webp')!important;
+ min-width:114px!important;min-height:34px!important;
+ font-size:12px!important;padding:7px 10px!important;
+ color:#3f2c2a!important;text-shadow:none!important;
+}
+#ring-arena-controls .tg-card-pick[aria-pressed=true]{
+ background-image:url('../assets/ui/painted-red-tick-v2.webp')!important;
+ color:#fff3e7!important;
+}
+#ring-arena-controls .tg-card-pick[aria-pressed=true] small{color:#ffddc9!important}
+#ring-arena-controls .tg-timeline-note{font-size:12px!important;min-height:18px!important}
+#ring-arena-controls .tg-timeline-foot button{
+ min-width:112px!important;min-height:34px!important;
+ background-image:url('../assets/ui/painted-paper-tick-v2.webp')!important;
+ font-size:12px!important;
+}
+#ring-arena-controls .tg-timeline-foot [data-tg-execute]{
+ background-image:url('../assets/ui/painted-red-tick-v2.webp')!important;
+ color:#fff0e1!important;
+}
+#ring-arena-controls .tg-quick,
+#ring-arena-controls.timegrid-enabled .bottom button{
+ background-image:url('../assets/ui/painted-paper-tick-v2.webp')!important;
+ color:#362525!important;
+ min-width:85px!important;min-height:31px!important;
+ padding:6px 12px!important;font-size:12px!important;
+}
+#ring-arena-controls .tg-quick{min-width:118px!important;min-height:36px!important}
+@media(max-height:550px){
+ #ring-arena-controls .tg-tick{height:38px!important}
+ #ring-arena-controls .tg-tick strong{font-size:14px!important}
+ #ring-arena-controls .tg-card-pick{min-width:78px!important;min-height:26px!important;padding:3px 5px!important;font-size:10px!important}
+ #ring-arena-controls .tg-timeline-foot button{min-width:90px!important;min-height:28px!important}
+ #ring-arena-controls .tg-timeline-note{font-size:10px!important}
+}

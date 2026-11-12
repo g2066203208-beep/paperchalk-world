@@ -227,7 +227,19 @@
       }
      }
      o.putImageData(frame,0,0);
-     cropped.set(source,out.toDataURL('image/webp',.90));
+     // Hand-painted film has a wide viewing window. Recompose the same
+     // original face cutout as a wide cinematic portrait without changing
+     // identity, face details, L2D rigs or the in-world actor sprite.
+     const banner=document.createElement('canvas');
+     banner.width=384;banner.height=144;
+     const bc=banner.getContext('2d');
+     bc.fillStyle='#201619';bc.fillRect(0,0,384,144);
+     bc.save();
+     bc.filter='blur(17px) brightness(.40) saturate(.65)';
+     bc.drawImage(out,-15,-132,414,506);
+     bc.restore();
+     bc.drawImage(out,0,0,216,236,82,-24,220,239);
+     cropped.set(source,banner.toDataURL('image/webp',.91));
      if(model)paintRoster();
     }catch(error){console.warn('[Arena HUD portrait crop]',error);}
    };
@@ -404,7 +416,7 @@
     const tick=now+i;
     const act=actor.actions.find(a=>!a.canceled&&a.start<=tick&&a.start+(G.CARD[a.card]?.w||0)+(G.CARD[a.card]?.a||0)+(G.CARD[a.card]?.r||0)>tick);
     const card=act&&G.CARD[act.card],phase=card&&G.phase(card,act.start,tick);
-    const mark=phase==='windup'?'蓄':phase==='active'?'动':phase==='recovery'?'收':'·';
+    const mark=phase==='windup'?'蓄':phase==='active'?'动':phase==='recovery'?'收':'＋';
     const title=card?escape(card.name+' · '+(phase||'')):'空闲时间步';
     return '<button class="tg-tick '+(phase||'empty')+'" data-tg-tick="'+(i+1)+'" type="button" '+
      (enemy||!planning?'disabled ':'')+'title="'+title+'"><small>'+String(i+1).padStart(2,'0')+'</small><strong>'+mark+'</strong></button>';
