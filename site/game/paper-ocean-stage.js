@@ -67,7 +67,7 @@ function create({stage,view}={}) {
    node.classList.toggle('has-passed',passed);
    const effective=Math.max(0,level-Math.max(0,distance)*0.43);
    const magnification=1+effective*0.33;
-   const shift=3.3*effective*effective;
+   const shift=2.8*effective*effective;
    node.style.zIndex=String(CHAPTER.length-i);
    node.style.transform=passed?'translateY(130%) scale(1.15)':
      'translateY('+shift.toFixed(2)+'%) scale('+magnification.toFixed(3)+')';
