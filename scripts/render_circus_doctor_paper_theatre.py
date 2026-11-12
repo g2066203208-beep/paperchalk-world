@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 import math, random
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 RING = ROOT / "site/assets/characters/wonder-circus/ringmaster.png"
 DOC = ROOT / "site/assets/characters/monster-hunters/02-blood-physician.png"
 OUT = ROOT / "site/previews"
