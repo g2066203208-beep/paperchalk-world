@@ -1,0 +1,32 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const out='artifacts/film-projector-blockout';
+fs.mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-unsafe-swiftshader','--enable-webgl']});
+try{
+ const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFactor:1});
+ const errors=[];
+ page.on('pageerror',e=>errors.push(String(e)));
+ await page.goto('http://127.0.0.1:4173/film-projector/blockout.html',{waitUntil:'networkidle'});
+ await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.renderer==='three-webgl-real-geometry',{timeout:15000});
+ await page.waitForTimeout(1800);
+ assert.equal(await page.locator('#viewport').getAttribute('data-shadows'),'true');
+ assert.equal(await page.locator('#viewport').getAttribute('data-screen-dimensions'),'9.4x5.56');
+ assert.equal(await page.locator('#selection').innerText(),'胶片 02 / 07');
+ await page.screenshot({path:out+'/01-first-layout-untextured.png'});
+ await page.locator('#next').click();
+ assert.equal(await page.locator('#selection').innerText(),'胶片 03 / 07');
+ await page.waitForTimeout(400);
+ await page.screenshot({path:out+'/02-mechanical-film-step.png'});
+ await page.locator('#lighting').click();
+ assert.equal(await page.locator('#lighting').getAttribute('aria-pressed'),'false');
+ await page.waitForTimeout(500);
+ await page.screenshot({path:out+'/03-light-off-true-shadows.png'});
+ await page.locator('#lighting').click();
+ await page.locator('#guides').click();
+ await page.waitForTimeout(400);
+ await page.screenshot({path:out+'/04-clean-layout-no-dimensions.png'});
+ assert.deepEqual(errors,[],'no page Javascript errors');
+ console.log('PASS: 3D projector room geometry, world shadows, mechanical film, light control. Screenshots: '+out);
+} finally {await browser.close()}
