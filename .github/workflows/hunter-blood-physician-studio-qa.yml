@@ -1,0 +1,61 @@
+name: Blood Physician original PSD → real L2D Studio proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/assets/l2d/inbox/hunter-blood-physician.zip'
+      - 'tests/hunter-blood-physician-studio-browser.mjs'
+      - '.github/workflows/hunter-blood-physician-studio-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-layer-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python3 -m pip install --quiet 'Pillow>=10,<12'
+      - name: Rebuild original L2D modules and register blood physician
+        run: |
+          python3 scripts/build_v4_assets.py
+          python3 scripts/build_protagonist_part_rig.py
+          python3 scripts/build_char002_psd_rig.py
+          python3 scripts/build_character_catalog.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          m=Path('site/assets/l2d/library/hunter-blood-physician')
+          spec=json.loads((m/'module.json').read_text())
+          rig=json.loads((m/'front.rig.json').read_text())
+          assert spec['id']=='hunter-blood-physician'
+          assert rig['characterId']=='hunter-blood-physician'
+          assert len(rig['parts'])==17
+          for ident,item in rig['parts'].items():
+              p=m/spec['views']['front']['rig']['textures'][ident]
+              with Image.open(p) as im:
+                  assert im.mode=='RGBA' and im.size==(item['w'],item['h'])
+          print('PASS imported exact 17 original PSD components and valid source geometry')
+          PY
+      - run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Screenshot actual editable L2D Studio with the original blood physician
+        run: |
+          nohup python3 -m http.server 8134 --bind 127.0.0.1 --directory site >/tmp/blood-physician-l2d.log 2>&1 &
+          sleep 2
+          node tests/hunter-blood-physician-studio-browser.mjs
+      - name: Archive screenshots from actual browser
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hunter-blood-physician-original-psd-l2d-studio
+          path: artifacts/hunter-blood-physician-l2d/
+          if-no-files-found: warn
