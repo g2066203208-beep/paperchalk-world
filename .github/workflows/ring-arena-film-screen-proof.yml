@@ -1,10 +1,12 @@
-name: Ring arena - GPT vintage battle film screenshot
+name: Ring arena - full-height portrait film UI screenshot
 on:
   push:
     branches: [main]
     paths:
-      - 'site/assets/ui/horror-battle-screen-film-gpt.webp'
+      - 'site/assets/ui/vintage-cinema-single-frame.svg'
       - 'site/game/ring-arena-film-screen.css'
+      - 'site/game/ring-arena-timegrid.css'
+      - 'site/game/ring-arena-timegrid.js'
       - 'site/game/ring-arena-runtime.js'
       - 'site/index.html'
       - 'tests/ring-arena-film-screen-browser.mjs'
@@ -34,13 +36,13 @@ jobs:
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Screenshot actual WebGL battle with and without GPT film overlay
+      - name: Screenshot actual WebGL battle with full-height character film
         run: node tests/ring-arena-film-screen-browser.mjs
       - name: Upload true browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ring-arena-GPT-film-frame-actual-game
+          name: ring-arena-full-height-portrait-film-actual-game
           path: artifacts/ring-arena-film-screen/*.png
           if-no-files-found: warn
           retention-days: 14

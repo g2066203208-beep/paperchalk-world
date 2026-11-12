@@ -109,8 +109,10 @@
   holder.className='ring-timegrid tg-ready';
   holder.setAttribute('aria-label','老式电影胶片战斗角色表');
   holder.innerHTML=[
-   '<div class="tg-film-viewport" aria-label="连续竖向电影胶片">',
-   '<div class="tg-reel" data-tg-roster></div></div>',
+   '<div class="tg-film-viewport" aria-label="贯穿全屏的连续竖向电影胶片">',
+   '<div class="tg-film-blank tg-film-blank-top" aria-hidden="true"></div>',
+   '<div class="tg-reel" data-tg-roster></div>',
+   '<div class="tg-film-blank tg-film-blank-bottom" aria-hidden="true"></div></div>',
    '<button type="button" class="tg-quick" data-tg-quick aria-label="自动安排并执行一次行动">行动</button>',
    '<span class="tg-screenreader" role="status" aria-live="polite" data-tg-announcement></span>'
   ].join('');
@@ -371,8 +373,8 @@
    }
    holder.querySelector('[data-tg-quick]').disabled=model.playback||
     model.game.phase!=='planning';
-   holder.dataset.layout='gpt-vintage-vertical-film-roll-v1';
-   holder.dataset.timegridVersion='1.9';
+   holder.dataset.layout='full-height-vintage-portrait-film-roll-v2';
+   holder.dataset.timegridVersion='2.0';
    holder.dataset.reelRevision=String(rosterRevision);
    firstFrame=false;
   }

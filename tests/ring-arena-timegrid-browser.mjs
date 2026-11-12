@@ -37,8 +37,8 @@ try{
  assert.equal(first.timegrid.roles.length,4);
  assert.equal(first.timegrid.enemies.length,4);
  assert.equal(first.timegrid.timelineTicks,10);
- assert.equal(first.timegrid.ui,'gpt-vintage-vertical-film-roll-v1');
- assert.equal(first.timegrid.version,'1.9');
+ assert.equal(first.timegrid.ui,'full-height-vintage-portrait-film-roll-v2');
+ assert.equal(first.timegrid.version,'2.0');
  assert.equal(first.timegrid.tacticsOpen,false);
  assert.equal(await page.locator('.ring-timegrid .tg-film-viewport').count(),1);
  assert.equal(await page.locator('.ring-timegrid .tg-reel').count(),1);
@@ -64,8 +64,8 @@ try{
  assert.equal(visual.bg,'none','film appearance comes from the GPT asset, not HUD CSS backgrounds');
  assert.equal(visual.shadow,'none','no invented floating panel shadow');
  assert.ok(visual.rail==='none'||visual.rail==='normal','real sprocket holes are in the texture, not pseudo-elements');
- assert.ok(visual.rows.every(r=>r.width>=105&&r.width<160&&r.height>=55&&r.height<100),
-  'each frame has authentic 35mm landscape proportions');
+ assert.ok(visual.rows.every(r=>r.width>=138&&r.width<215&&r.height>=50&&r.height<=90),
+  'all eight portraits fill the larger, evenly spaced right-hand film frames');
  const hp=await page.locator('.tg-hp-bar').evaluateAll(nodes=>nodes.map(
   n=>Number(n.getAttribute('aria-valuenow'))));
  assert.equal(hp.length,8);
@@ -83,8 +83,10 @@ try{
   return {width:r.width,height:r.height,top:r.top,right:r.right,
    tile:el.querySelector('.tg-row').getBoundingClientRect().height};
  });
- assert.ok(filmGeometry.height>400&&filmGeometry.height<690,
-  'eight authentic film frames connect vertically without blocking the full stage');
+ assert.ok(Math.abs(filmGeometry.height-720)<2,
+  'film runs from the very top to the bottom of the battle viewport');
+ assert.ok(filmGeometry.width>=138,'film is much wider than the rejected strip');
+ assert.equal(await page.locator('.tg-film-blank').count(),2,'top/bottom empty frames are required');
  assert.ok(filmGeometry.right<=1280&&filmGeometry.top>=0,
   'reel always stays inside the stage');
  const hpLabels=await page.locator('.tg-hp-value').allTextContents();

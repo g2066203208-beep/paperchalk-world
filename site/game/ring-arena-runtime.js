@@ -1125,20 +1125,9 @@
    '</svg></div><strong class="director-damage" data-director-damage>-12</strong></div>'
   ].join('');
   stage.append(hud);
-  // Real GPT-painted, user-approved transparent vintage film overlay.
-  // This is screen-space only: the WebGL characters, lighting, mouse camera,
-  // world geometry and the existing combat controls are not changed.
-  const filmFrame=document.createElement('div');
-  filmFrame.id='ring-arena-film-screen';
-  filmFrame.setAttribute('aria-hidden','true');
-  filmFrame.dataset.art='gpt-cropped-2048x1152';
-  // Grade is below the original GPT film texture and the interactive HUD.
-  // The actual world and all eight actors are graded together on their WebGL canvas.
-  const filmGrade=document.createElement('div');
-  filmGrade.id='ring-arena-film-grade';
-  filmGrade.setAttribute('aria-hidden','true');
-  filmGrade.innerHTML='<i class="ring-film-vignette"></i><i class="ring-film-grain"></i>';
-  stage.append(filmGrade,filmFrame);
+  // Full-screen antique film border removed by user request.
+  // Only the independent edge-to-edge right-hand portrait reel uses film art.
+  // Do not mount a frame above the WebGL world or tint actors with film grade.
   let gpuFilmMix=0;
   const status=hud.querySelector('.status');
   const director=window.PaperchalkBattleDirector;
@@ -2348,7 +2337,7 @@
   }
   function render(dt=1/60,inputX=mouseLookX,inputY=mouseLookY){
    if(!active)return false;
-   gpuFilmMix=transitMode||view.classList.contains('ring-film-qa-hide')?0:1;
+   gpuFilmMix=0;
    mouseLookX=clamp(Number(inputX)||0,-1,1);
    mouseLookY=clamp(Number(inputY)||0,-1,1);
    const base=camera(mode,0);

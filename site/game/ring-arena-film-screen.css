@@ -1,63 +1,7 @@
-/* GPT-painted old-film frame, cropped from the user's approved original image.
- * Only the film material is rendered; center and sprocket perforations stay
- * alpha transparent, so the live WebGL battle continues underneath.
- * DO NOT reconstruct this texture in SVG/CSS. */
-#ring-arena-film-screen{
-  display:none;
-  position:absolute;
-  inset:0;
-  z-index:14;
-  pointer-events:none;
-  user-select:none;
-  -webkit-user-select:none;
-  isolation:isolate;
-  background-image:url('../assets/ui/horror-battle-screen-film-gpt.webp');
-  background-repeat:no-repeat;
-  background-position:center center;
-  background-size:100% 100%;
-}
-#view.ring-arena-active:not(.ring-arena-transit) #ring-arena-film-screen{
-  display:block;
-}
-#view.ring-arena-transit #ring-arena-film-screen,
-#view.ring-film-qa-hide #ring-arena-film-screen{
-  display:none!important;
-}
-
-/* Cheap composited analog film treatment:
- * never CSS-filter a live full-screen WebGL canvas (software GL can stall).
- * Color, aged light falloff and real 128px grain texture stay above the WHOLE
- * 3D picture, but underneath the user-supplied original celluloid border. */
-#ring-arena-film-grade{display:none;position:absolute;inset:0;z-index:13;
-  pointer-events:none;overflow:hidden}
-#view.ring-arena-active:not(.ring-arena-transit):not(.ring-film-qa-hide) #ring-arena-film-grade{
-  display:block;
-}
-#ring-arena-film-grade>i{display:block;position:absolute;inset:0;pointer-events:none}
-/* Analog color, saturation and contrast are handled by the live WebGL fragment shaders. */
-#ring-arena-film-grade .ring-film-vignette{
-  background:
-    radial-gradient(ellipse 85% 73% at 50% 46%,transparent 26%,
-      rgba(21,16,17,.11) 69%,rgba(11,9,10,.40) 100%),
-    linear-gradient(180deg,rgba(40,29,24,.06) 0%,transparent 38%,rgba(26,21,21,.11) 100%);
-}
-#ring-arena-film-grade .ring-film-grain{
-  inset:-3%;opacity:.09;mix-blend-mode:soft-light;
-  background-image:url('../assets/ui/horror-analog-grain-tile.png');
-  background-repeat:repeat;background-size:128px 128px;
-  animation:ring-film-grain 960ms steps(4,end) infinite;
-  will-change:transform;
-}
-@keyframes ring-film-grain{
-  0%{transform:translate(0,0)}
-  25%{transform:translate(-1.5%,.9%)}
-  50%{transform:translate(1%,-1%)}
-  75%{transform:translate(-.8%,1.3%)}
-  100%{transform:translate(0,0)}
-}
-@media(prefers-reduced-motion:reduce){
-  #ring-arena-film-grade .ring-film-grain{animation:none;will-change:auto}
-}
-#view.ring-arena-active:not(.ring-arena-transit) #ring-arena-controls .tg-film-viewport{
-  filter:grayscale(.16) sepia(.19) saturate(.79) brightness(.95);
-}
+/* Retired full-screen frame treatment: user rejected the outer 35mm border.
+ * The only film artwork now appears inside the continuous right-hand
+ * character strip defined in ring-arena-timegrid.css.
+ * This file intentionally does not darken, crop or filter the WebGL scene.
+ */
+#view #ring-arena-film-screen,
+#view #ring-arena-film-grade{display:none!important}
