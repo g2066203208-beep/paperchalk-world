@@ -13,8 +13,8 @@ renderer.toneMappingExposure=1.18;
 container.appendChild(renderer.domElement);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#17191c');
-const camera=new THREE.PerspectiveCamera(41,innerWidth/innerHeight,.1,60);
-const home={eye:new THREE.Vector3(.20,3.65,9.2),target:new THREE.Vector3(.68,3.36,-2.0)};
+const camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.1,60);
+const home={eye:new THREE.Vector3(-1.15,3.65,10.3),target:new THREE.Vector3(-.40,3.36,-2.2)};
 camera.position.copy(home.eye);camera.lookAt(home.target);
 const mats={
  wall:mat('#303238',.93),side:mat('#25272a',.94),floor:mat('#353539',.98),
@@ -126,7 +126,7 @@ function lensCylinder(name,r,depth,offset,material){
 lensCylinder('lens barrel',.44,.86,.30,mats.dark);
 lensCylinder('front focusing ring',.49,.12,.75,mats.metal);
 lensCylinder('glass placeholder',.34,.012,.83,mats.lightgrey);
-const lightOrigin=worldLens.clone().addScaledVector(lensDir,.9);
+const lightOrigin=worldLens.clone().addScaledVector(lensDir,1.48);
 // Separate spot, positioned at actual lens glass location; receives occlusion and casts physical shadows.
 const projectorSpot=new THREE.SpotLight(0xffead1,104,28,.64,.44,1.15);
 projectorSpot.name='REAL projection spotlight';
@@ -147,7 +147,7 @@ beam.renderOrder=2;scene.add(beam);
 
 // 7 real independent frame planes and perforations, waiting for character portraits.
 const railFilm=new THREE.Group();railFilm.name='FILM STRIP / seven blank real-world frames';
-railFilm.position.set(2.10,.83,-.15);scene.add(railFilm);
+railFilm.position.set(.63,.83,-.15);scene.add(railFilm);
 box(railFilm,'film transport base',10.85,1.51,.17,0,.0,-.12,mats.black);
 box(railFilm,'film top rail',10.72,.15,.19,0,.66,.01,mats.rail);
 box(railFilm,'film bottom rail',10.72,.15,.19,0,-.66,.01,mats.rail);
@@ -207,8 +207,8 @@ document.querySelector('#guides').addEventListener('click',()=>{
 });
 document.querySelector('#reset-camera').addEventListener('click',()=>{
  camera.position.copy(home.eye);camera.lookAt(home.target);
- targetFov=41;camera.fov=41;camera.updateProjectionMatrix();
- document.querySelector('#fov').value='41';document.querySelector('#fov-val').textContent='41°';
+ targetFov=43;camera.fov=43;camera.updateProjectionMatrix();
+ document.querySelector('#fov').value='43';document.querySelector('#fov-val').textContent='43°';
 });
 document.querySelector('#fov').addEventListener('input',e=>{
  camera.fov=+e.target.value;camera.updateProjectionMatrix();
@@ -242,13 +242,13 @@ function anchorLabel(key,point){
 }
 function render(t){
  moveAmount*=.87;
- railFilm.position.x=2.10+moveAmount;
+ railFilm.position.x=.63+moveAmount;
  const w=innerWidth,h=innerHeight;
  renderer.setSize(w,h,false);
  if(camera.aspect!==w/h){camera.aspect=w/h;camera.updateProjectionMatrix()}
  anchorLabel('screen',new THREE.Vector3(3.05,7.23,-4.42));
  anchorLabel('projector',new THREE.Vector3(-5.17,5.98,.18));
- anchorLabel('film',new THREE.Vector3(2.1,1.75,-.1));
+ anchorLabel('film',new THREE.Vector3(.63,1.75,-.1));
  renderer.render(scene,camera);requestAnimationFrame(render);
 }
 addEventListener('resize',()=>renderer.setSize(innerWidth,innerHeight,false));
