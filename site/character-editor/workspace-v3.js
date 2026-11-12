@@ -51,6 +51,17 @@ const importAction=command('导入 PSD / ZIP',()=>{
 const exportAction=command('导出合成 PNG',()=>{more.open=false;$('exportPng')?.click()});
 const v4ImportAction=command('导入动画工程 ZIP',()=>{more.open=false;$('studio-v4zip')?.click()});
 moreContents.append(importAction,exportAction,v4ImportAction);
+// The six faction links are navigation, not persistent editing actions.
+// Move the ORIGINAL anchors into the accessible overflow menu. Keeping all
+// of them inline in the narrow header made them physically overlap and steal
+// pointer events from the ... menu, blocking editing and production QA.
+for(const id of [
+ 'knight-booth-entry','demon-booth-entry','witch-booth-entry',
+ 'circus-booth-entry','vampire-booth-entry','hunter-booth-entry'
+]){
+ const anchor=$(id);
+ if(anchor){anchor.classList.add('workspace-booth-entry');moreContents.append(anchor);}
+}
 actions.append(more);
 $('btnRecovery')?.setAttribute('title','打开恢复、撤销和原版复原');
 $('btnRecovery')?.setAttribute('aria-label','复原工具');

@@ -54,6 +54,10 @@ const {chromium}=require('playwright');
    assert.ok(basis.stageH>170,'stage must remain usable');
    assert.ok(basis.scrollW<=basis.viewportW+4,'must not overflow horizontally '+JSON.stringify(basis));
    assert.equal(basis.navCount,1,'no duplicate phone navigation');
+   assert.equal(await page.locator('#workspace-more .workspace-booth-entry').count(),6,
+     'all six original faction entrances are available in the header overflow');
+   assert.equal(await page.locator('body>header>.actions>.workspace-booth-entry').count(),0,
+     'faction entrances must not overlap primary editor controls');
    assert.ok(basis.primaryTools<=5,'no overcrowded quickbar');
    assert.ok(basis.secondaryTools>=3,'advanced canvas actions remain reachable');
 

@@ -56,10 +56,21 @@ body.studio-page[data-focused-workspace="v3"] #easy-save-note{
 .workspace-more>summary::-webkit-details-marker{display:none}
 .workspace-more-contents{position:absolute;top:44px;right:0;width:210px;
  z-index:200;display:grid;gap:6px;padding:9px;
+ max-height:min(76dvh,680px);overflow-y:auto;overscroll-behavior:contain;
  border:1px solid #496175;border-radius:12px;background:#182635;
  box-shadow:0 14px 35px #000a
 }
 .workspace-more:not([open])>.workspace-more-contents{display:none}
+body.studio-page[data-focused-workspace="v3"] .workspace-booth-entry{
+ display:flex!important;align-items:center;min-height:38px;width:100%;
+ font-size:12px;white-space:normal!important;line-height:1.35;
+ padding:8px 10px!important;border-radius:7px!important;
+ box-sizing:border-box;
+}
+body.studio-page[data-focused-workspace="v3"]>header .actions{
+ min-width:0;max-width:calc(100% - 150px);
+}
+
 body.studio-page[data-focused-workspace="v3"] .workspace-more-contents>button{
  display:block!important;width:100%;min-height:40px;text-align:left;
  font-size:12px;padding:8px 12px;background:#213141;color:#e3eef8
