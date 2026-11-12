@@ -52,9 +52,9 @@ const style=fs.readFileSync(path.join(__dirname,'../site/game/ring-arena-timegri
 assert.ok(right.includes('data-tg-choose-role'));
 assert.ok(right.includes('tg-roster'),'portrait roster preserved');
 assert.ok(right.includes('tg-hp-value')&&right.includes('tg-hp-bar'),'live HP kept');
-assert.ok(right.includes('silver-film-portrait-timegrid-v3'),'full-height vertical movie reel mounted');
+assert.ok(right.includes('handpainted-film-portrait-timegrid-v4'),'full-height vertical movie reel mounted');
 assert.ok(right.includes('tg-film-blank-top')&&right.includes('tg-film-blank-bottom'),'both ends filled by authentic empty film frames');
-assert.ok(right.includes('horror-film-silver-window.webp'),'GPT film image asset used');
+assert.ok(right.includes('painted-film-portrait-frame.webp'),'GPT film image asset used');
 assert.ok(right.includes('rollOut'),'death extracts its film frame');
 assert.ok(right.includes('recruit:actor'),'newcomers join the film');
 assert.ok(right.includes('rosterRevision'),'dynamic membership has stable state');
@@ -75,10 +75,10 @@ assert.ok(style.includes('.tg-hp-bar'),'real HP line survives');
 assert.ok(style.includes('.tg-tactics{display:none!important}'),
  'rejected card planner stays hidden');
 assert.ok(style.includes('@media(max-width:700px)'),'mobile viewport supported');
-const film=fs.readFileSync(path.join(__dirname,'../site/assets/ui/horror-film-silver-window.webp'));
+const film=fs.readFileSync(path.join(__dirname,'../site/assets/ui/painted-film-portrait-frame.webp'));
 assert.ok(film.subarray(0,4).toString()==='RIFF','redesigned silver film is real WebP art');
 assert.ok(film.length>700,'painted silver film asset not a placeholder');
-for(const name of ['horror-film-silver-blank-a.webp','horror-film-silver-blank-b.webp'])
+for(const name of ['painted-film-blank-a.webp','painted-timeline-panel.webp','painted-tick-idle.webp','painted-tick-active.webp','painted-paper-button.webp'])
  assert.ok(fs.statSync(path.join(__dirname,'../site/assets/ui',name)).size>700,'authored non-repeating empty film texture preserved');
 assert.match(runtime,/PaperWorldRingTimegrid/);
 assert.match(runtime,/combatTimegrid\.advance\(dt\)/);

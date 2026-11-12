@@ -54,14 +54,14 @@ try{
    assert.equal(check.webgl,'webgl-l2d');
    assert.equal(check.outerFrameMounted,false,'rejected giant film border must not mount');
    assert.equal(check.filmMix,0,'scene must retain neutral lighting, not film color grade');
-   assert.equal(check.layout,'silver-film-portrait-timegrid-v3');
+   assert.equal(check.layout,'handpainted-film-portrait-timegrid-v4');
    assert.ok(check.strip.width>=100,'portraits must be large');
    assert.ok(Math.abs(check.strip.y)<2,'film begins at actual top edge');
    assert.ok(Math.abs(check.strip.height-check.screen.height)<2,'film runs to actual bottom edge');
    assert.ok(Math.abs(check.strip.x+check.strip.width-check.screen.width)<2,'film is flush with right edge');
    assert.equal(check.rows.length,8,'four allies and four enemies');
    assert.ok(check.blankTop.height>=1&&check.blankBottom.height>=1,'both ends use continuing empty film');
-   assert.ok(check.blankImage.includes('horror-film-silver-blank-a.webp'));
+   assert.ok(check.blankImage.includes('painted-film-blank-a.webp'));
    assert.ok(check.rows.every(row=>Math.abs(row.width-check.strip.width)<=2&&row.height>=28));
    await page.screenshot({path:out+'/ring-arena-full-height-film-'+cfg.name+'.png',animations:'disabled',timeout:20000});
    await page.locator('[data-tg-choose-role="1"]').click();

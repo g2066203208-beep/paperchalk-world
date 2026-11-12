@@ -276,3 +276,145 @@
  #ring-arena-controls .tg-card-pick{padding:4px!important;font-size:9px!important}
  #ring-arena-controls .tg-timeline-ticks{gap:2px}
 }
+
+/* -----------------------------------------------------------------------
+  PAINTED BATTLE UI / 2026-11-12
+  The dark film, empty frames, character openings, parchment buttons and
+  timeline are IMAGEGEN-PAINTED bitmap assets, cut for live composition.
+  CSS below ONLY positions the paintings and adds interaction states.
+  NO CSS-generated fake film perforations, bevels or geometric framing.
+------------------------------------------------------------------------ */
+#ring-arena-controls .ring-timegrid{
+ --tg-frame-w:clamp(174px,13.8cqw,270px);
+ --tg-frame-h:min(calc(var(--tg-frame-w)*.338),10cqh);
+ color:#ede0d3;
+ font-family:"Noto Serif SC","Songti SC",serif;
+}
+#ring-arena-controls .tg-film-viewport{
+ border:0!important;box-shadow:none!important;background-color:#161014!important;
+ background-image:url('../assets/ui/painted-film-blank-a.webp')!important;
+ background-size:100% var(--tg-frame-h)!important;
+ background-position:center top!important;background-repeat:repeat-y!important;
+}
+#ring-arena-controls .tg-film-blank{
+ background-color:transparent!important;
+ background-image:url('../assets/ui/painted-film-blank-a.webp')!important;
+ background-size:100% var(--tg-frame-h)!important;
+ opacity:1!important;
+}
+#ring-arena-controls .tg-film-blank-bottom{background-position:center bottom!important}
+#ring-arena-controls .tg-row{
+ background-image:url('../assets/ui/painted-film-blank-a.webp')!important;
+ background-repeat:no-repeat!important;background-size:100% 100%!important;
+ background-position:center center!important;
+}
+#ring-arena-controls .tg-row+.tg-row{margin-top:0!important}
+#ring-arena-controls .tg-portrait{
+ left:16.55%!important;right:14.7%!important;top:14.2%!important;bottom:12%!important;
+ border-radius:4px!important;
+}
+#ring-arena-controls .tg-cutout{background:transparent!important;border-radius:4px!important}
+#ring-arena-controls .tg-film-texture{filter:none!important}
+#ring-arena-controls .tg-row.current .tg-film-texture,
+#ring-arena-controls .tg-row.expanded .tg-film-texture{
+ filter:brightness(1.16) drop-shadow(0 0 4px rgba(196,70,63,.5))!important;
+}
+#ring-arena-controls .tg-hp-value{
+ font:600 clamp(9px,.77cqw,12px)/12px "Noto Serif SC","Songti SC",serif;
+ color:#f6e7dc;text-shadow:0 1px 2px #18070a,0 0 4px #18070a;
+}
+#ring-arena-controls .tg-identity{left:22%!important;right:22%!important;bottom:7%!important}
+#ring-arena-controls .tg-hp-bar{height:2px!important;min-height:2px!important;background:#140d12!important}
+#ring-arena-controls .tg-hp-bar i{background:#a74b4d!important}
+#ring-arena-controls .tg-row.ally .tg-hp-bar i{background:#e0c4b5!important}
+#ring-arena-controls .tg-row.current .tg-hp-bar i{background:#efc5b5!important}
+#ring-arena-controls .tg-timeline{
+ width:min(780px,calc(100cqw - var(--tg-frame-w) - 18px))!important;
+ background:#170f13 url('../assets/ui/painted-timeline-panel.webp') center / 100% 100% no-repeat!important;
+ border:0!important;border-radius:0!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ padding:24px 29px 25px!important;
+ color:#f2e7d9!important;
+}
+#ring-arena-controls .tg-timeline::after{display:none!important}
+#ring-arena-controls .tg-timeline-head{
+ border-bottom:0!important;margin:0 0 9px!important;padding:0 0 4px!important;min-height:28px!important;
+}
+#ring-arena-controls [data-tg-person]{
+ display:inline-block!important;
+ background:url('../assets/ui/painted-paper-button.webp') center / 100% 100% no-repeat!important;
+ color:#2c2321!important;text-shadow:none!important;font:600 13px/1.2 "Noto Serif SC",serif!important;
+ padding:6px 24px!important;
+}
+#ring-arena-controls [data-tg-time]{color:#edcebb!important;text-shadow:0 1px 3px #241015}
+#ring-arena-controls .tg-timeline-head [data-tg-close]{
+ color:#fff0e4!important;font-size:20px!important;text-shadow:0 0 3px #260a12!important;
+}
+#ring-arena-controls .tg-timeline-ticks{gap:4px!important}
+#ring-arena-controls .tg-tick{
+ height:61px!important;min-height:0!important;padding:5px 1px!important;
+ border:0!important;border-radius:0!important;
+ color:#efe5dd!important;text-shadow:0 1px 2px rgba(0,0,0,.9);
+ background:#241b20 url('../assets/ui/painted-tick-idle.webp') center / 100% 100% no-repeat!important;
+}
+#ring-arena-controls .tg-tick.windup,
+#ring-arena-controls .tg-tick.active{
+ color:#fff3eb!important;
+ background-image:url('../assets/ui/painted-tick-active.webp')!important;
+}
+#ring-arena-controls .tg-tick small{font:600 11px/1 "Noto Serif SC",serif!important;color:#eadcd0!important}
+#ring-arena-controls .tg-tick strong{font-size:17px!important;color:#faf0e4!important}
+#ring-arena-controls .tg-timeline-cards{margin-top:10px!important;gap:6px!important}
+#ring-arena-controls .tg-card-pick{
+ background:#c9b3a0 url('../assets/ui/painted-paper-button.webp') center / 100% 100% no-repeat!important;
+ border:0!important;border-radius:0!important;padding:8px 13px!important;
+ color:#2c2322!important;font:600 12px/1.2 "Noto Serif SC",serif!important;
+ text-shadow:none!important;
+}
+#ring-arena-controls .tg-card-pick small{color:#604a45!important}
+#ring-arena-controls .tg-card-pick[aria-pressed=true]{
+ background-image:url('../assets/ui/painted-tick-active.webp')!important;
+ color:#f8e3d8!important;
+}
+#ring-arena-controls .tg-timeline-note{
+ color:#d6c5b9!important;line-height:1.5!important;font-size:11px!important;
+ margin:9px 0 8px!important;
+}
+#ring-arena-controls .tg-timeline-foot{
+ border:0!important;padding:6px 0 0!important;gap:8px!important;
+}
+#ring-arena-controls .tg-timeline-foot button{
+ background:#cfb8a9 url('../assets/ui/painted-paper-button.webp') center / 100% 100% no-repeat!important;
+ border:0!important;border-radius:0!important;
+ padding:8px 18px!important;color:#271b1d!important;
+ font:600 12px/1.15 "Noto Serif SC",serif!important;text-shadow:none!important;
+}
+#ring-arena-controls .tg-timeline-foot [data-tg-execute]{
+ background-image:url('../assets/ui/painted-tick-active.webp')!important;
+ color:#fff0e5!important;
+}
+#ring-arena-controls .tg-quick,
+#ring-arena-controls.timegrid-enabled .bottom button{
+ background:#d5c0b1 url('../assets/ui/painted-paper-button.webp') center / 100% 100% no-repeat!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important;
+ color:#2e2221!important;text-shadow:none!important;
+ font:600 13px/1.2 "Noto Serif SC",serif!important;
+}
+#ring-arena-controls .tg-quick{min-width:115px!important;min-height:36px!important;padding:6px 22px!important}
+@media(max-width:700px){
+ #ring-arena-controls .ring-timegrid{--tg-frame-w:clamp(112px,24cqw,155px)}
+ #ring-arena-controls .tg-timeline{padding:10px 13px!important}
+ #ring-arena-controls .tg-tick{height:42px!important;padding:3px 0!important}
+ #ring-arena-controls .tg-tick strong{font-size:12px!important}
+ #ring-arena-controls [data-tg-person]{padding:4px 8px!important}
+ #ring-arena-controls .tg-card-pick{padding:5px 7px!important;font-size:10px!important}
+ #ring-arena-controls .tg-timeline-foot button{padding:5px 7px!important;font-size:10px!important}
+}
+@media(max-height:600px) and (min-width:701px){
+ #ring-arena-controls .ring-timegrid{--tg-frame-w:clamp(128px,16cqw,166px)}
+ #ring-arena-controls .tg-timeline{padding:8px 13px!important}
+ #ring-arena-controls .tg-tick{height:36px!important}
+ #ring-arena-controls .tg-timeline-head{min-height:18px!important;margin-bottom:4px!important}
+ #ring-arena-controls .tg-card-pick{padding:4px 7px!important;font-size:10px!important}
+ #ring-arena-controls .tg-timeline-foot button{padding:5px 8px!important}
+}

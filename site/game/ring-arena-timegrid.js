@@ -136,7 +136,7 @@
   const roleName=id=>({hero:'斧卫','ai-gun':'枪手','ai-guard':'守护','ai-mage':'调律'}[id]||'敌方');
   // This is the exact transparent-window vintage 35mm film image generated
   // for this game, stored once and repeated as a texture, never CSS-drawn.
-  const FILM_ART='./assets/ui/horror-film-silver-window.webp';
+  const FILM_ART='./assets/ui/painted-film-portrait-frame.webp';
   const portraitArt=Object.freeze({
    hero:'./assets/characters/protagonist-front.webp',
    'ai-gun':'./assets/characters/char-003/front.png',
@@ -385,8 +385,8 @@
    }
    holder.querySelector('[data-tg-quick]').disabled=model.playback||
     model.game.phase!=='planning';
-   holder.dataset.layout='silver-film-portrait-timegrid-v3';
-   holder.dataset.timegridVersion='3.0';
+   holder.dataset.layout='handpainted-film-portrait-timegrid-v4';
+   holder.dataset.timegridVersion='4.0';
    holder.dataset.reelRevision=String(rosterRevision);
    firstFrame=false;
    if(openActorId)renderTimeline();

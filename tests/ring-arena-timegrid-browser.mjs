@@ -37,8 +37,8 @@ try{
  assert.equal(first.timegrid.roles.length,4);
  assert.equal(first.timegrid.enemies.length,4);
  assert.equal(first.timegrid.timelineTicks,10);
- assert.equal(first.timegrid.ui,'silver-film-portrait-timegrid-v3');
- assert.equal(first.timegrid.version,'3.0');
+ assert.equal(first.timegrid.ui,'handpainted-film-portrait-timegrid-v4');
+ assert.equal(first.timegrid.version,'4.0');
  assert.equal(first.timegrid.tacticsOpen,false);
  assert.equal(await page.locator('.ring-timegrid .tg-film-viewport').count(),1);
  assert.equal(await page.locator('.ring-timegrid .tg-reel').count(),1);
@@ -64,7 +64,7 @@ try{
  assert.equal(visual.bg,'none','film appearance comes from the GPT asset, not HUD CSS backgrounds');
  assert.equal(visual.shadow,'none','no invented floating panel shadow');
  assert.ok(visual.rail==='none'||visual.rail==='normal','real sprocket holes are in the texture, not pseudo-elements');
- assert.ok(visual.rows.every(r=>r.width>=138&&r.width<215&&r.height>=50&&r.height<=90),
+ assert.ok(visual.rows.every(r=>r.width>=170&&r.width<280&&r.height>=50&&r.height<=95),
   'all eight portraits fill the larger, evenly spaced right-hand film frames');
  const hp=await page.locator('.tg-hp-bar').evaluateAll(nodes=>nodes.map(
   n=>Number(n.getAttribute('aria-valuenow'))));
@@ -76,7 +76,7 @@ try{
  },null,{timeout:30000});
  await page.waitForFunction(()=>{
   const textures=[...document.querySelectorAll('.tg-reel > .tg-row .tg-film-texture')];
-  return textures.length===8&&textures.every(im=>im.complete&&im.naturalWidth===240);
+  return textures.length===8&&textures.every(im=>im.complete&&im.naturalWidth===272);
  },null,{timeout:30000});
  const filmGeometry=await page.locator('.tg-film-viewport').evaluate(el=>{
   const r=el.getBoundingClientRect();
