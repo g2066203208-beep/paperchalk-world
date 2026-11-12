@@ -62,6 +62,10 @@ for(const id of [
  const anchor=$(id);
  if(anchor){anchor.classList.add('workspace-booth-entry');moreContents.append(anchor);}
 }
+// Keep the existing rig-detail action, but it is a secondary workflow,
+// not a persistent primary toolbar control. Preserve its original listener.
+const rigDetailButton=$('idle-open');
+if(rigDetailButton)moreContents.prepend(rigDetailButton);
 actions.append(more);
 $('btnRecovery')?.setAttribute('title','打开恢复、撤销和原版复原');
 $('btnRecovery')?.setAttribute('aria-label','复原工具');

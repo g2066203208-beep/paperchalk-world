@@ -75,6 +75,23 @@ body.studio-page[data-focused-workspace="v3"] .workspace-more-contents>button{
  display:block!important;width:100%;min-height:40px;text-align:left;
  font-size:12px;padding:8px 12px;background:#213141;color:#e3eef8
 }
+/* A fixed-width header slot prevents the Save button and scrolling actions
+   from covering the real More control on wide and 320px phone viewports. */
+body.studio-page[data-focused-workspace="v3"]>header .actions{
+ padding-right:53px!important;
+}
+body.studio-page[data-focused-workspace="v3"]>header #workspace-more{
+ position:absolute!important;right:11px;top:8px;z-index:150;
+ width:42px!important;height:40px!important;flex:none!important;
+}
+body.studio-page[data-focused-workspace="v3"]>header #workspace-more>summary{
+ width:42px!important;height:40px!important;
+}
+@media(max-width:710px){
+ body.studio-page[data-focused-workspace="v3"]>header #workspace-more{
+  right:6px;top:6px;
+ }
+}
 /* The former repository/file ribbon duplicates the character tree. */
 body.studio-page[data-focused-workspace="v3"] #studio-library{
  position:absolute!important;width:1px!important;height:1px!important;

@@ -58,6 +58,13 @@ const {chromium}=require('playwright');
      'all six original faction entrances are available in the header overflow');
    assert.equal(await page.locator('body>header>.actions>.workspace-booth-entry').count(),0,
      'faction entrances must not overlap primary editor controls');
+   assert.equal(await page.evaluate(()=>{
+     const el=document.querySelector('#workspace-more>summary');
+     const r=el.getBoundingClientRect();
+     if(r.left<0||r.top<0||r.right>innerWidth||r.bottom>innerHeight)return false;
+     const x=r.left+r.width/2,y=r.top+r.height/2;
+     return document.elementFromPoint(x,y)===el;
+   }),true,'More menu must receive pointer clicks without Save/header overlap');
    assert.ok(basis.primaryTools<=5,'no overcrowded quickbar');
    assert.ok(basis.secondaryTools>=3,'advanced canvas actions remain reachable');
 
