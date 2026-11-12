@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "factionId": "monster-hunters",
+  "group": "怪物猎人组织",
+  "unitClass": "common_soldiers",
+  "slots": 3,
+  "note": "2026-11-12 用户提供的猎人三名基层小兵原始立绘，按上传顺序归档；与七名高阶猎人分开，不代表已加入战斗运行时。原图为RGB白底，非透明PNG；不得伪称已去背。",
+  "assetBase": "/assets/characters/monster-hunters/minions/",
+  "status": "published_original_pngs_verified",
+  "characters": [
+    {
+      "order": 1,
+      "id": "petite-hunter",
+      "name": "萝莉型猎人小兵",
+      "english": "Petite Hunter Recruit",
+      "file": "01-petite-hunter.png",
+      "image": "浅棕短波波头，琥珀色眼睛，娇小骨架，黑色古典双排扣长大衣，腰侧皮包与佩刀。",
+      "width": 704,
+      "height": 1024,
+      "channels": "RGB",
+      "background": "white",
+      "byteSize": 391612,
+      "sha256": "9a186c7c5c83cb5241dbe24c6d20f71f6285e8c29fde28f7a0e3974bdedafd84",
+      "gitBlob": "4646a6624dda08ab0f98537a0c6d455e700807b3",
+      "original_png_committed": true,
+      "game_integrated": false
+    },
+    {
+      "order": 2,
+      "id": "young-hunter",
+      "name": "少女型猎人小兵",
+      "english": "Young Hunter Recruit",
+      "file": "02-young-hunter.png",
+      "image": "蓝黑色低马尾，冷静窄眼，修长骨架，黑色古典双排扣长大衣，腰侧皮包与佩刀。",
+      "width": 704,
+      "height": 1024,
+      "channels": "RGB",
+      "background": "white",
+      "byteSize": 420945,
+      "sha256": "b94cd5e0c10d51e175c9e94fd4affdc23db2ea75b2fd5844858efda598a9b82f",
+      "gitBlob": "b18d57dfce0756fb2384b0a0e51f5b2cefb50af2",
+      "original_png_committed": true,
+      "game_integrated": false
+    },
+    {
+      "order": 3,
+      "id": "mature-hunter",
+      "name": "成熟型猎人小兵",
+      "english": "Mature Hunter Recruit",
+      "file": "03-mature-hunter.png",
+      "image": "棕红色波浪长发，成熟面容，丰满成人身形，黑色古典双排扣长大衣，腰侧皮包与佩刀。",
+      "width": 704,
+      "height": 1024,
+      "channels": "RGB",
+      "background": "white",
+      "byteSize": 413068,
+      "sha256": "1903d9ff0070a49f47f2aa482b70bb09fa40a5588e1927ba0e7be13f5632c0e1",
+      "gitBlob": "1c8a522df62f0f7b56d93d338044fe778f1552db",
+      "original_png_committed": true,
+      "game_integrated": false
+    }
+  ]
+}
