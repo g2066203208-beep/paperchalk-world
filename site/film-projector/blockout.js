@@ -59,7 +59,7 @@ const grid=new THREE.GridHelper(18,18,0x87898c,0x55575a);
 grid.position.set(0,.006,-.46);grid.material.transparent=true;grid.material.opacity=.30;scene.add(grid);
 
 // Large separately positionable projection SCREEN: main visual priority, ~58% of image width.
-const screen=new THREE.Group();screen.name='SCREEN / 9.4x5.55';screen.position.set(3.06,3.95,-4.52);scene.add(screen);
+const screen=new THREE.Group();screen.name='SCREEN / 9.4x5.55';screen.position.set(3.06,3.95,-4.52);screen.scale.x=1.04;scene.add(screen);
 box(screen,'screen main rigid backing',9.85,6.02,.20,0,0,-.08,mats.frame);
 box(screen,'light receiving matte cinema fabric',9.42,5.56,.065,0,0,.055,mats.screen,false);
 // Geometry-only placeholder guides: one full figure region, one typography zone.
@@ -147,7 +147,7 @@ beam.renderOrder=2;scene.add(beam);
 
 // 7 real independent frame planes and perforations, waiting for character portraits.
 const railFilm=new THREE.Group();railFilm.name='FILM STRIP / seven blank real-world frames';
-railFilm.position.set(.63,.83,-.15);scene.add(railFilm);
+railFilm.position.set(.84,1.20,1.20);railFilm.scale.setScalar(.82);scene.add(railFilm);
 box(railFilm,'film transport base',10.85,1.51,.17,0,.0,-.12,mats.black);
 box(railFilm,'film top rail',10.72,.15,.19,0,.66,.01,mats.rail);
 box(railFilm,'film bottom rail',10.72,.15,.19,0,-.66,.01,mats.rail);
@@ -242,13 +242,13 @@ function anchorLabel(key,point){
 }
 function render(t){
  moveAmount*=.87;
- railFilm.position.x=.63+moveAmount;
+ railFilm.position.x=.84+moveAmount;
  const w=innerWidth,h=innerHeight;
  renderer.setSize(w,h,false);
  if(camera.aspect!==w/h){camera.aspect=w/h;camera.updateProjectionMatrix()}
  anchorLabel('screen',new THREE.Vector3(3.05,7.23,-4.42));
  anchorLabel('projector',new THREE.Vector3(-5.17,5.98,.18));
- anchorLabel('film',new THREE.Vector3(.63,1.75,-.1));
+ anchorLabel('film',new THREE.Vector3(.84,2.10,1.20));
  renderer.render(scene,camera);requestAnimationFrame(render);
 }
 addEventListener('resize',()=>renderer.setSize(innerWidth,innerHeight,false));
