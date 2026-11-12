@@ -68,6 +68,8 @@ try{
    assert.equal(await page.locator('.tg-timeline:not([hidden])').count(),1,
     'hero portrait opens the associated ten-tick panel');
    assert.equal(await page.locator('[data-tg-tick]').count(),10);
+   const panelPos=await page.locator('.tg-timeline').evaluate(el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height}});
+   assert.ok(panelPos.bottom>=cfg.height-50&&panelPos.bottom<=cfg.height+1,'painted planner stays docked near the bottom of the combat stage');
    await page.screenshot({path:out+'/ring-arena-timegrid-open-'+cfg.name+'.png',animations:'disabled',timeout:20000});
    assert.deepEqual(errors,[],'browser must render without uncaught JavaScript errors');
   }finally{await page.close()}

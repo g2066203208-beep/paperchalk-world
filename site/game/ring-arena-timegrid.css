@@ -490,3 +490,28 @@
  #ring-arena-controls .tg-timeline-foot button{min-width:90px!important;min-height:28px!important}
  #ring-arena-controls .tg-timeline-note{font-size:10px!important}
 }
+
+/* Painted ribbon should not cover the standing enemy line.
+   Dock it above the bottom edge, adjacent to the full-height portrait film.
+   These are layout coordinates only; all visible frame/button graphics are art. */
+#ring-arena-controls .tg-timeline{
+ top:auto!important;
+ bottom:max(16px,3.4cqh)!important;
+ right:calc(var(--tg-frame-w) + 9px)!important;
+ width:min(840px,calc(100cqw - var(--tg-frame-w) - 22px))!important;
+}
+#ring-arena-controls .tg-quick{
+ left:auto!important;right:calc(var(--tg-frame-w) + 14px)!important;
+ bottom:max(9px,env(safe-area-inset-bottom))!important;
+ transform:none!important;
+}
+@media(max-height:550px){
+ #ring-arena-controls .tg-timeline{
+  bottom:4px!important;right:calc(var(--tg-frame-w) + 3px)!important;
+  width:calc(100cqw - var(--tg-frame-w) - 6px)!important;
+  max-height:calc(100cqh - 8px)!important;
+ }
+ #ring-arena-controls .tg-quick{
+  right:calc(var(--tg-frame-w) + 7px)!important;bottom:4px!important;
+ }
+}
