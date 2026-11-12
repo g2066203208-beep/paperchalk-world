@@ -56,7 +56,7 @@ renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.26;
+renderer.toneMappingExposure=1.05;
 HOST.appendChild(renderer.domElement);
 scene=new THREE.Scene();
 scene.background=new THREE.Color(0x160d16);
@@ -67,7 +67,7 @@ camera.position.set(0,0,CAM_Z);camera.lookAt(0,0,0);
 const assetLoader=new THREE.TextureLoader();
 function material(tex,name){
  if(name==='beam')return new THREE.MeshBasicMaterial({map:tex,transparent:true,
-   opacity:.54,depthWrite:false,side:THREE.DoubleSide,
+   opacity:.22,depthWrite:false,side:THREE.DoubleSide,
    blending:THREE.NormalBlending,toneMapped:false});
  if(name==='background'||name==='filmstrip')return new THREE.MeshBasicMaterial({map:tex,
    transparent:name!=='background',depthWrite:true,alphaTest:.007,side:THREE.DoubleSide});
@@ -116,7 +116,7 @@ originalScreenMap=screenNode.material.map;
 
 // Light sources are real Three.js world-space lights, not prepainted polygons.
 ambientLight=new THREE.HemisphereLight(0xffe9d9,0x261b24,.85);scene.add(ambientLight);
-keyLight=new THREE.DirectionalLight(0xffdaba,1.15);
+keyLight=new THREE.DirectionalLight(0xffdaba,.78);
 keyLight.position.set(-4.2,7.8,6.3);keyLight.target.position.set(0,.5,-1.1);
 scene.add(keyLight,keyLight.target);keyLight.castShadow=true;
 keyLight.shadow.mapSize.set(2048,2048);
@@ -124,9 +124,9 @@ keyLight.shadow.camera.near=.1;keyLight.shadow.camera.far=35;
 keyLight.shadow.camera.left=-12;keyLight.shadow.camera.right=12;
 keyLight.shadow.camera.top=9;keyLight.shadow.camera.bottom=-9;
 keyLight.shadow.bias=-.00025;
-fillLight=new THREE.PointLight(0x917eaa,14,18,2);
+fillLight=new THREE.PointLight(0x917eaa,8,18,2);
 fillLight.position.set(6.6,4.0,5.3);scene.add(fillLight);
-mainSpot=new THREE.SpotLight(0xffe2b1,9,24,.59,.78,1.15);
+mainSpot=new THREE.SpotLight(0xffe2b1,3.4,24,.59,.78,1.15);
 mainSpot.position.set(-4.8,-.10,4.0);
 mainSpot.target.position.set(2.4,.7,-.7);scene.add(mainSpot,mainSpot.target);
 mainSpot.castShadow=true;mainSpot.shadow.mapSize.set(2048,2048);
@@ -278,13 +278,13 @@ function setLight(on){
  lit=on;
  const b=document.getElementById('illumination');b.setAttribute('aria-pressed',String(on));b.textContent=on?'灯光':'点亮';
  ambientLight.intensity=on?.85:.045;
- keyLight.intensity=on?1.15:.035;
- fillLight.intensity=on?14:.05;
- mainSpot.intensity=on?9:0;
+ keyLight.intensity=on?.78:.035;
+ fillLight.intensity=on?8:.05;
+ mainSpot.intensity=on?3.4:0;
  beamNode.visible=on;
  particles.forEach(p=>p.visible=on);
  screenNode.material.emissiveIntensity=on?.43:.02;
- renderer.toneMappingExposure=on?1.26:.56;
+ renderer.toneMappingExposure=on?1.05:.56;
 }
 function setCompare(on){
  compare=on;
@@ -344,16 +344,16 @@ function render(t){
   filmNode.position.x=filmNode.userData.initialPosition.x+filmVelocity*Math.sin(Math.PI*smooth)*.095;
   const shutter=Math.sin(Math.min(1,elapsed/370)*Math.PI);
   screenNode.material.emissiveIntensity=lit?.43*(1-.85*shutter):.02;
-  if(lit)mainSpot.intensity=9*(1-.68*shutter);
+  if(lit)mainSpot.intensity=3.4*(1-.68*shutter);
  }else{
   filmNode.position.x+=(filmNode.userData.initialPosition.x-filmNode.position.x)*Math.min(1,dt*14);
   screenNode.material.emissiveIntensity=lit?.43:.02;
-  if(lit)mainSpot.intensity=9+Math.sin(t*.006)*.15;
+  if(lit)mainSpot.intensity=3.4+Math.sin(t*.006)*.06;
  }
  reelTop.rotation.z+=(reelTarget-reelTop.rotation.z)*Math.min(1,dt*9.5);
  reelBottom.rotation.z+=(-reelTarget*.83-reelBottom.rotation.z)*Math.min(1,dt*10.5);
  if(lit&&!compare){
-  beamNode.material.opacity=.50+Math.sin(t*.007)*.045;
+  beamNode.material.opacity=.24+Math.sin(t*.007)*.020;
   particles.forEach(p=>p.material.opacity=.24+Math.sin(t*.005)*.04);
  }
  renderer.render(scene,camera);
