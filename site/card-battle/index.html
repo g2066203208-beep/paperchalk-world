@@ -9,8 +9,8 @@
 :root{color-scheme:light;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif}
 *{box-sizing:border-box}html,body{height:100%;width:100%;margin:0;overflow:hidden}
 body{background:#d8dade;color:#30353b}
-#viewport{position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;outline:0}
-#viewport:active{cursor:grabbing}
+#viewport{position:fixed;inset:0;width:100%;height:100%;touch-action:manipulation;cursor:default;outline:0}
+#viewport:active{cursor:default}
 .toolbar{position:fixed;top:14px;left:14px;right:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;pointer-events:none}
 .toolbar>*{pointer-events:auto}
 .toolbar a,.toolbar button{border:1px solid #b9bec6c9;border-radius:8px;background:#fffefeee;color:#3d4249;min-height:37px;padding:8px 11px;text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 2px 8px #34393e14;white-space:nowrap}
@@ -24,25 +24,30 @@ body{background:#d8dade;color:#30353b}
 #loading[hidden]{display:none}
 .error-note{position:fixed;top:95px;left:14px;right:14px;display:none;padding:10px 12px;background:#fff9ef;color:#78452d;border-radius:8px;font-size:13px}
 .error-note.visible{display:block}
+#card-inspect[hidden]{display:none}#card-inspect{position:fixed;inset:0;background:#111c;display:grid;place-items:center;z-index:9;cursor:zoom-out;padding:24px}
+#card-inspect .viewer{position:relative;display:flex;flex-direction:column;gap:8px;align-items:center;max-height:100%;max-width:95%;cursor:default}
+#card-inspect img{display:block;max-height:min(83vh,920px);max-width:95vw;width:auto;height:auto;object-fit:contain;border-radius:13px;box-shadow:0 10px 36px #0007;background:#fff}
+#card-inspect .caption{font-size:13px;color:#fff}#card-inspect button{position:absolute;right:0;top:-38px;border:0;background:#fff;color:#333;padding:7px 12px;border-radius:7px;cursor:pointer}
 @media(max-width:850px){.toolbar{gap:5px}.toolbar .headline{display:none}.toolbar a,.toolbar button{padding:7px 8px;font-size:11px;min-height:32px}.hint{bottom:12px;font-size:10px;max-width:57%}.legend{font-size:10px;bottom:12px}.legend b{font-size:11px}}
 </style>
 </head>
 <body>
-<canvas id="viewport" aria-label="可旋转的3D实体桌面，敌方猎人七张卡与我方马戏团七张卡，双方分别有3乘3九个逻辑卡位"></canvas>
+<canvas id="viewport" aria-label="固定正俯视3D实体桌面，左侧猎人七张卡与右侧马戏团七张卡，双方分别有3乘3九个逻辑卡位"></canvas>
 <nav class="toolbar" aria-label="3D卡牌试验操作">
   <a href="../">← 返回主页</a>
-  <span class="headline">卡牌战斗 · 3D 桌面</span>
-  <button id="view-battle" class="active" type="button">战斗镜头</button>
-  <button id="view-top" type="button">正俯视</button>
-  <button id="view-hunter" type="button">查看猎人</button>
-  <button id="view-circus" type="button">查看马戏团</button>
+  <span class="headline">猎人团 7 / 9　｜　马戏团 7 / 9　·　固定俯视</span>
+  
+  
+  
+  
   <button id="view-outline" type="button" aria-pressed="false">显示卡位</button>
   <a href="./whitebox_tabletop_3d.glb" download>桌面 GLB</a>
 </nav>
 <div id="loading" role="status">正在载入两组原始卡牌…</div>
 <div id="error" class="error-note" role="alert"></div>
-<div class="hint">实体白模桌面 16 × 12 · 近侧马戏团 / 远侧猎人<br>拖动旋转 · 滚轮缩放 · 点击卡牌抬起检查 · 双击恢复全场</div>
-<div class="legend"><b>猎人 7 / 9</b><span>空位 2</span><b style="margin-top:4px">马戏团 7 / 9</b><span>空位 2</span></div>
-<script type="module" src="./scene.js"></script>
+<div class="hint">同一 3D 桌面 · 左：猎人 · 右：马戏团 · 点击任意卡牌查看高清原图</div>
+
+<div id="card-inspect" hidden role="dialog" aria-label="查看高清卡牌"><div class="viewer"><button data-close-inspect type="button" aria-label="关闭">关闭 ×</button><img id="card-inspect-image" alt="卡牌高清原图"><div class="caption" id="card-inspect-label"></div></div></div>
+<script type="module" src="./scene.js?v=fixed-camera-20261113"></script>
 </body>
 </html>

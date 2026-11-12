@@ -24,7 +24,7 @@ const hunters = [
 
 const canvas=document.getElementById('viewport');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+renderer.setPixelRatio(Math.min(3,window.devicePixelRatio||1));
 renderer.setSize(window.innerWidth,window.innerHeight,false);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -61,8 +61,9 @@ const shadowReceiver=new THREE.Mesh(new THREE.PlaneGeometry(60,60),
 shadowReceiver.rotation.x=-Math.PI/2;shadowReceiver.position.y=-.27;
 shadowReceiver.receiveShadow=true;scene.add(shadowReceiver);
 
-const cardW=1.20,cardH=1.64,slotX=[-2.02,0,2.02],
- enemyZ=[-4.36,-2.63,-.90],playerZ=[.90,2.63,4.36];
+// Keep both full 3x3 teams legible in a 16:9 frame: side-by-side, no distant shrunk rows.
+// Each team stays on the same physical 16 x 12 tabletop.
+const cardW=1.93,cardH=2.89,slotX=[-2.10,0,2.10],rowZ=[-3.05,0,3.05],teamCenterX=[-4.16,4.16];
 const cardBaseMat=new THREE.MeshStandardMaterial({color:0xf5f5f3,roughness:.73,metalness:0});
 const slotMat=new THREE.LineBasicMaterial({color:0x7c858c,transparent:true,opacity:.22,depthWrite:false});
 const emptySlots=[];const placedCards=[];const clickable=[];const pendingCardLoads=[];
@@ -87,21 +88,20 @@ return new THREE.CanvasTexture(c);
 }
 async function makeCard(data,x,z,team,slot){const img=await loadImage(data.src);
 const tex=data.kind==='source'?hunterCardTexture(img):new THREE.Texture(img);
-tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
+tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),16);
 tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
 tex.generateMipmaps=true;tex.needsUpdate=true;
 const base=makeCardBox(x,z);
-const art=new THREE.Mesh(new THREE.PlaneGeometry(cardW-.10,cardH-.10),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide,toneMapped:false}));
+const art=new THREE.Mesh(new THREE.PlaneGeometry(cardW-.075,cardH-.075),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide,toneMapped:false}));
 art.rotation.x=-Math.PI/2;art.position.set(x,.112,z);scene.add(art);
-const card={base,art,x,z,team,slot,label:data.label,raised:false};
+const card={base,art,x,z,team,slot,label:data.label,src:data.src};
 placedCards.push(card);clickable.push(base,art);base.userData.card=card;art.userData.card=card;
- render(); // Crucial: newly loaded card textures arrive after the first frame.
+render(); // Redraw after every full-resolution asset becomes available.
 return card;
 }
 for(let team=0;team<2;team++){
-const zs=team===0?enemyZ:playerZ;
 for(let i=0;i<9;i++){
-const x=slotX[i%3],z=zs[Math.floor(i/3)];makeOutline(x,z);
+const x=teamCenterX[team]+slotX[i%3],z=rowZ[Math.floor(i/3)];makeOutline(x,z);
 const sourceIndex=occupancy[i];if(sourceIndex!==null){
 const data=team===0?hunters[sourceIndex]:circus[sourceIndex];
 // Make independent 3D card bodies; art image can arrive later without moving other cards.
@@ -113,42 +113,45 @@ pendingCardLoads.push(makeCard(data,x,z,team,i).catch(err=>{
 }
 }
 
+// LOCKED CAMERA. No pointer drag or wheel zoom. Orthographic and exact overhead,
+// so every card is equally readable and renders at its native screen scale.
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
-let yaw=0,pitch=71*Math.PI/180,zoom=6.65,targetZ=0,selected=null,
- isDragging=false,downX=0,downY=0,lastX=0,lastY=0;
-function render(){const vw=window.innerWidth,vh=window.innerHeight;const halfH=zoom;
-camera.left=-halfH*vw/vh;camera.right=halfH*vw/vh;camera.top=halfH;camera.bottom=-halfH;
-camera.updateProjectionMatrix();const distance=24;
-camera.position.set(distance*Math.cos(pitch)*Math.sin(yaw),distance*Math.sin(pitch),targetZ+distance*Math.cos(pitch)*Math.cos(yaw));
-camera.lookAt(0,0,targetZ);renderer.render(scene,camera);}
+function render(){
+ const w=window.innerWidth,h=window.innerHeight,aspect=w/h;
+ const halfH=Math.max(5.10,7.35/aspect);
+ camera.left=-halfH*aspect;camera.right=halfH*aspect;
+ camera.top=halfH;camera.bottom=-halfH;
+ camera.updateProjectionMatrix();
+ camera.up.set(0,0,-1);
+ camera.position.set(0,26,0);
+ camera.lookAt(0,0,0);
+ renderer.render(scene,camera);
+}
 function resize(){renderer.setSize(window.innerWidth,window.innerHeight,false);render();}
 window.addEventListener('resize',resize);
-function raise(card){if(selected&&selected!==card){selected.base.position.y=.035;selected.art.position.y=.112;selected.raised=false;}
-if(selected===card&&card.raised){card.base.position.y=.035;card.art.position.y=.112;card.raised=false;selected=null;}
-else{card.base.position.y=.17;card.art.position.y=.247;card.raised=true;selected=card;}render();}
-canvas.addEventListener('pointerdown',e=>{isDragging=true;downX=lastX=e.clientX;downY=lastY=e.clientY;canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointerup',e=>{if(!isDragging)return;isDragging=false;
-if(Math.hypot(e.clientX-downX,e.clientY-downY)<6){const rect=canvas.getBoundingClientRect();pointer.x=((e.clientX-rect.left)/rect.width)*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
-raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(clickable,false);
-if(hits.length&&hits[0].object.userData.card)raise(hits[0].object.userData.card);
-}});
-canvas.addEventListener('pointercancel',()=>{isDragging=false;});
-canvas.addEventListener('pointermove',e=>{if(!isDragging)return;
-let dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;
-yaw=Math.max(-.7,Math.min(.7,yaw+dx*.006));pitch=Math.max(.6,Math.min(1.565,pitch+dy*.006));render();});
-canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(2.8,Math.min(11,zoom*Math.exp(e.deltaY*.001)));render();},{passive:false});
-canvas.addEventListener('dblclick',()=>setView('battle'));
-function active(id){for(let btn of document.querySelectorAll('button[id^="view-"]'))if(btn.id!=='view-outline')btn.classList.toggle('active',btn.id==='view-'+id);}
-function setView(id){if(id==='battle'){yaw=0;pitch=71*Math.PI/180;zoom=6.65;targetZ=0;}
-else if(id==='top'){yaw=0;pitch=89.5*Math.PI/180;zoom=6.65;targetZ=0;}
-else if(id==='hunter'){yaw=0;pitch=77*Math.PI/180;zoom=3.35;targetZ=-2.75;}
-else if(id==='circus'){yaw=0;pitch=77*Math.PI/180;zoom=3.35;targetZ=2.75;}
-active(id);render();}
-for(const id of ['battle','top','hunter','circus'])document.getElementById('view-'+id).addEventListener('click',()=>setView(id));
-document.getElementById('view-outline').addEventListener('click',e=>{const visible=e.currentTarget.getAttribute('aria-pressed')!=='true';
-e.currentTarget.setAttribute('aria-pressed',String(visible));for(let line of emptySlots)line.visible=visible;render();});
+const preview=document.getElementById('card-inspect');
+const previewImage=document.getElementById('card-inspect-image');
+const previewLabel=document.getElementById('card-inspect-label');
+function closeInspect(){preview.hidden=true;}
+canvas.addEventListener('click',e=>{
+ const r=canvas.getBoundingClientRect();
+ pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+ raycaster.setFromCamera(pointer,camera);
+ const hit=raycaster.intersectObjects(clickable,false).find(x=>x.object.userData.card);
+ if(!hit)return;
+ const card=hit.object.userData.card;
+ previewImage.src=card.src;
+ previewLabel.textContent=card.label;
+ preview.hidden=false;
+});
+preview.addEventListener('click',e=>{if(e.target===preview||e.target.closest('[data-close-inspect]'))closeInspect();});
+window.addEventListener('keydown',e=>{if(e.key==='Escape')closeInspect();});
+document.getElementById('view-outline').addEventListener('click',e=>{
+ const visible=e.currentTarget.getAttribute('aria-pressed')!=='true';
+ e.currentTarget.setAttribute('aria-pressed',String(visible));
+ for(const line of emptySlots)line.visible=visible;render();
+});
 render();
 Promise.allSettled(pendingCardLoads).then(()=>{
- document.getElementById('loading').hidden=true;
- render();
+ document.getElementById('loading').hidden=true;render();
 });
