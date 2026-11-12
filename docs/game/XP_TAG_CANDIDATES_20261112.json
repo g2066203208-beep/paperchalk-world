@@ -2553,7 +2553,7 @@
     },
     {
       "id": "xp_hair_style_029",
-      "name": "狼尾",
+      "name": "狼尾发型",
       "family": "hair_style",
       "familyName": "发型",
       "scope": "candidate",
@@ -4326,7 +4326,7 @@
     },
     {
       "id": "xp_accessory_023",
-      "name": "怀表",
+      "name": "怀表挂饰",
       "family": "accessory",
       "familyName": "饰品与随身配件",
       "scope": "candidate",
