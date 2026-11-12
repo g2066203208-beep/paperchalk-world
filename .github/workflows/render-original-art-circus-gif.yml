@@ -1,0 +1,42 @@
+name: Render original-art paper theatre GIF
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/render-original-art-circus-gif.yml'
+      - 'scripts/render_circus_doctor_paper_theatre.py'
+      - 'site/assets/characters/wonder-circus/ringmaster.png'
+      - 'site/assets/characters/monster-hunters/02-blood-physician.png'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: original-art-circus-gif
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Pillow
+        run: python -m pip install 'Pillow>=10,<12'
+      - name: Render approved PNGs into stand-alone orbit GIF and verification still
+        run: python scripts/render_circus_doctor_paper_theatre.py
+      - name: Save outputs in GitHub repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/previews/circus-doctor-orbit.gif site/previews/circus-doctor-orbit-still.png
+          if git diff --cached --quiet; then
+            echo "Already up to date"
+          else
+            git commit -m "Render approved ringmaster and hunter physician 2.5D orbit GIF"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
