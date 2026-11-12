@@ -1,217 +1,193 @@
-import * as THREE from './vendor/three.module.js';
+/* Paperchalk 1v1 board. Real rules come from ../combat-lab/engine.js;
+ * only the presentation is new. Approved GitHub source PNGs are loaded in HTML.
+ * This is an artwork/layout prototype: the character images do NOT redefine
+ * the experimental axe-vs-corridor encounter's stats or approved character kit. */
+'use strict';
+(function(){
+ const G=window.Timegrid;
+ const $=id=>document.getElementById(id);
+ if(!G){$('status').textContent='时间步引擎未加载';return;}
+ const typeNames={attack:'攻击',defense:'防御',skill:'技能',power:'能力',special:'特殊',system:'重整'};
+ let game=null;
+ let selected=null;
+ let message='选择下方手牌，点击我方时间格';
+ let lastActionId=null;
+ let roundSummary='先排好动作，再执行这一轮';
+ const seed=618231;
 
-// All visible character artwork comes from the existing GitHub assets.
-// Board model: 16 x 12 x 0.25 whitebox, preserving the previous tabletop geometry.
-const HOST_ROOT = '../assets/';
-const circus = [
-  ['01_ringmaster.png', '团长'],
-  ['02_aerial-acrobat.png', '空中杂技师'],
-  ['03_knife-thrower.png', '飞刀手'],
-  ['04_beast-tamer.png', '驯兽师'],
-  ['05_escape-artist.png', '逃脱术师'],
-  ['06_strongwoman.png', '大力士'],
-  ['07_clown-performer.png', '小丑表演者'],
-].map(([file,label]) => ({label,src:HOST_ROOT+'cards/wonder-circus/'+file,kind:'finished'}));
-const hunters = [
-  ['01-legendary-hunter.png', '传奇猎人'],
-  ['02-blood-physician.png', '血液医师'],
-  ['03-trap-engineer.png', '陷阱工程师'],
-  ['04-bounty-markswoman.png', '赏金射手'],
-  ['05-seal-warden.png', '封印守卫'],
-  ['06-beast-butcher.png', '野兽屠夫'],
-  ['07-axe-scout.png', '斧头侦察兵'],
-].map(([file,label]) => ({label,src:HOST_ROOT+'characters/monster-hunters/'+file,kind:'source'}));
-
-const canvas=document.getElementById('viewport');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(3,window.devicePixelRatio||1));
-renderer.setSize(window.innerWidth,window.innerHeight,false);
-renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.20;
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-
-const scene=new THREE.Scene();
-scene.background=new THREE.Color('#d9dcde');
-const camera=new THREE.OrthographicCamera(-10,10,6,-6,0.1,150);
-const hemi=new THREE.HemisphereLight(0xffffff,0xc5c9cd,2.0);scene.add(hemi);
-const key=new THREE.DirectionalLight(0xffffff,2.3);
-key.position.set(-5,13,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);
-key.shadow.camera.left=-13;key.shadow.camera.right=13;key.shadow.camera.top=13;key.shadow.camera.bottom=-13;
-key.shadow.camera.near=0.5;key.shadow.camera.far=45;key.shadow.bias=-0.00013;
-scene.add(key);scene.add(key.target);
-const fill=new THREE.DirectionalLight(0xe0e9f8,.36);fill.position.set(8,6,-4);scene.add(fill);
-const tableSurface=new THREE.MeshStandardMaterial({color:'#f4f5f5',roughness:.89,metalness:0});
-const tableEdge=new THREE.MeshStandardMaterial({color:'#d9dcdf',roughness:.86,metalness:0});
-function roundRectShape(w,h,r){let s=new THREE.Shape(),x=-w/2,y=-h/2;
-  s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);
-  s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);
-  s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s;
-}
-function makeTable(){const geom=new THREE.ExtrudeGeometry(roundRectShape(16,12,.24),{
-  depth:.25,bevelEnabled:false,curveSegments:9,steps:1
-});geom.rotateX(Math.PI/2);  // face normal +Y; depth extends toward -Y
-const mesh=new THREE.Mesh(geom,[tableSurface,tableEdge]);mesh.position.y=0;
-mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);return mesh;}
-const table=makeTable();
-const shadowReceiver=new THREE.Mesh(new THREE.PlaneGeometry(60,60),
- new THREE.ShadowMaterial({color:0x32383e,opacity:.1}));
-shadowReceiver.rotation.x=-Math.PI/2;shadowReceiver.position.y=-.27;
-shadowReceiver.receiveShadow=true;scene.add(shadowReceiver);
-
-// Keep both full 3x3 teams legible in a 16:9 frame: side-by-side, no distant shrunk rows.
-// Each team stays on the same physical 16 x 12 tabletop.
-// Two 3×3 formations. Cards use a 2:3 printed ratio; never skew the source art.
-const cardW=2.06,cardH=3.09,slotX=[-2.20,0,2.20],rowZ=[-3.22,0,3.22],teamCenterX=[-3.62,3.62];
-const portraitTeamZ=[-5.05,5.05];
-const isPortrait=()=>window.innerWidth/window.innerHeight<0.72;
-function slotPosition(team,slot){
-  const col=slot%3,row=Math.floor(slot/3);
-  return isPortrait()
-    ? {x:slotX[col],z:portraitTeamZ[team]+rowZ[row]}
-    : {x:teamCenterX[team]+slotX[col],z:rowZ[row]};
-}
-const cardBaseMat=new THREE.MeshStandardMaterial({color:0xf5f5f3,roughness:.73,metalness:0});
-const slotMat=new THREE.LineBasicMaterial({color:0x7c858c,transparent:true,opacity:.36,depthWrite:false});
-const emptySlots=[];const placedCards=[];const clickable=[];const pendingCardLoads=[];
-const occupancy=[0,1,null,2,3,4,5,null,6];
-function makeOutline(x,z,team,slot,occupied){
-  const points=[[-cardW/2-.05,-cardH/2-.04],[cardW/2+.05,-cardH/2-.04],
-    [cardW/2+.05,cardH/2+.04],[-cardW/2-.05,cardH/2+.04]]
-    .map(([a,b])=>new THREE.Vector3(a,.018,b));
-  const line=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points),slotMat);
-  line.position.set(x,0,z);
-  line.visible=!occupied; // Show the two unused positions per team by default.
-  line.userData={team,slot,occupied};
-  scene.add(line);emptySlots.push(line);
-}
-function makeCardBox(x,z){let geo=new THREE.ExtrudeGeometry(roundRectShape(cardW,cardH,.085),{
- depth:.055,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.023,bevelThickness:.018,curveSegments:6});
-geo.rotateX(-Math.PI/2);let mesh=new THREE.Mesh(geo,cardBaseMat);
-mesh.position.set(x,.035,z);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);return mesh;}
-function loadImage(url){return new Promise((resolve,reject)=>{const img=new Image();img.decoding='async';img.onload=()=>resolve(img);img.onerror=()=>reject(new Error(url));img.src=url;});}
-function hunterCardTexture(img){const c=document.createElement('canvas');c.width=1024;c.height=1536;
-const ctx=c.getContext('2d',{alpha:false});
-ctx.fillStyle='#f6f5f1';ctx.fillRect(0,0,1024,1536);
-ctx.save();ctx.beginPath();ctx.roundRect(17,17,990,1502,34);ctx.clip();
-// The hunter roster retains the approved original illustrations; no AI redrawing.
-const scale=Math.min(956/img.width,1460/img.height),w=img.width*scale,h=img.height*scale;
-ctx.drawImage(img,(1024-w)/2,(1536-h)/2,w,h);ctx.restore();
-ctx.strokeStyle='#efeeeb';ctx.lineWidth=16;ctx.beginPath();ctx.roundRect(9,9,1006,1518,39);ctx.stroke();
-return new THREE.CanvasTexture(c);
-}
-async function makeCard(data,x,z,team,slot){const img=await loadImage(data.src);
-({x,z}=slotPosition(team,slot)); // Correct placement even if the viewport resized during loading.
-const tex=data.kind==='source'?hunterCardTexture(img):new THREE.Texture(img);
-tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),16);
-tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
-tex.generateMipmaps=true;tex.needsUpdate=true;
-const base=makeCardBox(x,z);
-const art=new THREE.Mesh(new THREE.PlaneGeometry(cardW-.075,cardH-.075),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide,toneMapped:false}));
-art.rotation.x=-Math.PI/2;art.position.set(x,.112,z);scene.add(art);
-const card={base,art,x,z,team,slot,label:data.label,src:data.src};
-placedCards.push(card);clickable.push(base,art);base.userData.card=card;art.userData.card=card;
-render(); // Redraw after every full-resolution asset becomes available.
-return card;
-}
-for(let team=0;team<2;team++){
-for(let i=0;i<9;i++){
-const {x,z}=slotPosition(team,i);
-const sourceIndex=occupancy[i];
-makeOutline(x,z,team,i,sourceIndex!==null);
-if(sourceIndex!==null){
-const data=team===0?hunters[sourceIndex]:circus[sourceIndex];
-// Make independent 3D card bodies; art image can arrive later without moving other cards.
-pendingCardLoads.push(makeCard(data,x,z,team,i).catch(err=>{
- document.getElementById('error').textContent='部分卡牌素材未能载入：'+err.message;
- document.getElementById('error').classList.add('visible');
- }));
-}
-}
-}
-
-// The real camera is strictly orthographic and perpendicular to the card faces.
-// On narrow portrait screens, stack teams vertically instead of shrinking 6 columns.
-const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
-function render(){
- const w=window.innerWidth,h=window.innerHeight,aspect=w/h;
- const halfH=isPortrait()?Math.max(10.35,3.55/aspect):Math.max(5.12,7.20/aspect);
- camera.left=-halfH*aspect;camera.right=halfH*aspect;
- camera.top=halfH;camera.bottom=-halfH;
- camera.updateProjectionMatrix();
- camera.up.set(0,0,-1);
- camera.position.set(0,26,0);
- camera.lookAt(0,0,0);
- renderer.render(scene,camera);
-}
-function syncFormation(){
- table.scale.z=isPortrait()?2:1;
- for(const line of emptySlots){
-  const {x,z}=slotPosition(line.userData.team,line.userData.slot);
-  line.position.x=x;line.position.z=z;
+ function element(tag,classname,label){
+   const el=document.createElement(tag);
+   if(classname)el.className=classname;
+   if(label!==undefined)el.textContent=label;
+   return el;
  }
- for(const card of placedCards){
-  const {x,z}=slotPosition(card.team,card.slot);
-  card.x=x;card.z=z;
-  card.base.position.x=x;card.base.position.z=z;
-  card.art.position.x=x;card.art.position.z=z;
+ function actor(side){return game.actors.find(a=>a.side===side);}
+ function phaseAt(a,t){
+   const at=game.now+t-1;
+   const found=a.actions.find(action=>!action.canceled&&G.phase(G.CARD[action.card],action.start,at));
+   if(found)return{action:found,phase:G.phase(G.CARD[found.card],found.start,at)};
+   return a.stunUntil>at?{phase:'disabled'}:null;
  }
-}
-function resize(){renderer.setSize(window.innerWidth,window.innerHeight,false);syncFormation();render();}
-window.addEventListener('resize',resize);
-const preview=document.getElementById('card-inspect');
-const previewImage=document.getElementById('card-inspect-image');
-const previewLabel=document.getElementById('card-inspect-label');
-function closeInspect(){preview.hidden=true;}
-function cardUnderPointer(e){
- const r=canvas.getBoundingClientRect();
- pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
- raycaster.setFromCamera(pointer,camera);
- return raycaster.intersectObjects(clickable,false).find(x=>x.object.userData.card)?.object.userData.card||null;
-}
-const peek=document.getElementById('card-peek'),peekImage=document.getElementById('card-peek-image');
-const peekLabel=document.getElementById('card-peek-label');
-let lastPeek=null;
-function hidePeek(){peek.hidden=true;lastPeek=null;}
-canvas.addEventListener('pointermove',e=>{
- if(e.pointerType==='touch'||preview.hidden===false)return hidePeek();
- const card=cardUnderPointer(e);
- if(!card)return hidePeek();
- if(lastPeek!==card){
-  lastPeek=card;
-  // Hunter originals have no frame; display the exact same composed texture as on the board.
-  peekImage.src=card.team===0
-    ? (card.peekSrc??=(card.art.material.map.image.toDataURL('image/png')))
-    : card.src;
-  peekLabel.textContent=card.label;
+ function updateTime(){
+   const host=$('timeline');
+   host.replaceChildren();
+   const ruler=element('div','time-row ruler');
+   ruler.appendChild(element('span','time-label','格'));
+   for(let t=1;t<=10;t++)ruler.appendChild(element('span','time-cell',String(t)));
+   host.appendChild(ruler);
+   for(const [side,label,rowClass] of [['enemy','敌','hostile'],['ally','我','friendly']]){
+     const a=actor(side),row=element('div','time-row '+rowClass);
+     row.appendChild(element('span','time-label',label));
+     for(let t=1;t<=10;t++){
+       const item=phaseAt(a,t);
+       const phase=item?.phase||'';
+       const text=phase==='windup'?'前':phase==='active'?'生':phase==='recovery'?'后':phase==='disabled'?'停':'';
+       const clickable=side==='ally';
+       const cell=element(clickable?'button':'span','time-cell'+(phase?' '+phase:'')+(clickable&&selected?' can-place':''),text);
+       if(clickable){
+         cell.type='button';
+         cell.dataset.time=String(t);
+         cell.setAttribute('aria-label','我方时间第'+t+'格'+(text?'，'+text:'，空位'));
+       }else cell.setAttribute('aria-label','敌方第'+t+'格'+(text?'，'+text:'，空位'));
+       if(item?.action){
+         const c=G.CARD[item.action.card];
+         cell.title=c.name+' · '+(phase==='windup'?'前摇':phase==='active'?'生效':'后摇');
+         if(clickable)cell.dataset.actionId=item.action.id;
+       }else if(clickable){
+         cell.title='在第'+t+'格安排选中的行动';
+       }
+       row.appendChild(cell);
+     }
+     host.appendChild(row);
+   }
  }
- const width=Math.min(335,Math.max(220,window.innerWidth*.22));
- const height=width*1.5+30;
- const left=e.clientX+22+width<window.innerWidth-10?e.clientX+22:e.clientX-width-22;
- peek.style.width=width+'px';
- peek.style.left=Math.max(8,Math.min(window.innerWidth-width-8,left))+'px';
- peek.style.top=Math.max(8,Math.min(window.innerHeight-height-8,e.clientY-height*.48))+'px';
- peek.hidden=false;
-});
-canvas.addEventListener('pointerleave',hidePeek);
-canvas.addEventListener('click',e=>{
- const card=cardUnderPointer(e);
- if(!card)return;
- hidePeek();
- previewImage.src=card.src;
- previewLabel.textContent=card.label;
- preview.hidden=false;
-});
-preview.addEventListener('click',e=>{if(e.target===preview||e.target.closest('[data-close-inspect]'))closeInspect();});
-window.addEventListener('keydown',e=>{if(e.key==='Escape')closeInspect();});
-document.getElementById('view-outline').addEventListener('click',e=>{
- const visible=e.currentTarget.getAttribute('aria-pressed')!=='true';
- e.currentTarget.setAttribute('aria-pressed',String(visible));
- for(const line of emptySlots)line.visible=visible||!line.userData.occupied;render();
-});
-resize();
-Promise.allSettled(pendingCardLoads).then(()=>{
- document.getElementById('loading').hidden=true;render();
-});
+ function updateHand(){
+   const host=$('hand');
+   host.replaceChildren();
+   const hero=actor('ally');
+   $('hand-count').textContent=hero.hand.length+' 张';
+   for(const inst of hero.hand){
+     const c=G.CARD[inst.key];
+     if(!c)continue;
+     const button=element('button','hand-card '+c.type+(selected===inst.uid?' selected':''));button.type='button';
+     button.dataset.uid=inst.uid;
+     button.setAttribute('aria-pressed',String(selected===inst.uid));
+     button.appendChild(element('span','kind',typeNames[c.type]||'行动'));
+     button.appendChild(element('strong','',c.name));
+     button.appendChild(element('span','desc',c.desc||''));
+     const phases=element('div','phases');
+     for(const s of ['前 '+c.w,'生 '+c.a,'后 '+c.r])phases.appendChild(element('span','',s));
+     button.appendChild(phases);
+     host.appendChild(button);
+   }
+   if(!hero.hand.length)host.appendChild(element('div','section-label','本轮手牌已安排完；可执行后进入下一轮。'));
+ }
+ function updateFighters(){
+   const ally=actor('ally'),enemy=actor('enemy');
+   for(const [key,a] of [['ally',ally],['enemy',enemy]]){
+     $(''+key+'-hp').textContent=a.hp+' / '+a.maxHp;
+     $(''+key+'-hp-fill').style.width=Math.max(0,Math.min(100,a.hp/a.maxHp*100))+'%';
+     $(''+key+'-figure').style.opacity=a.dead?'.48':'1';
+   }
+   $('energy-indicator').textContent='绝杀能量：'+ally.energy+' / 100';
+   $('round-indicator').textContent='第 '+(game.round+1)+' 轮';
+   $('phase-indicator').textContent=game.phase==='planning'?'规划中':game.phase==='win'?'胜利':game.phase==='lost'?'失败':'已结束';
+ }
+ function update(){
+   updateFighters();updateTime();updateHand();
+   $('status').textContent=message;
+   $('battle-notice').textContent=roundSummary;
+   const canPlay=game.phase==='planning';
+   $('execute').disabled=!canPlay;
+   $('undo').disabled=!canPlay||!actor('ally').actions.some(a=>a.source==='hand'&&!a.locked&&a.start>=game.now);
+   $('execute').textContent=canPlay?'执行 10 格':game.phase==='win'?'战斗胜利':'战斗结束';
+ }
+ function alertStatus(msg){message=msg;update();}
+ function start(){
+   game=G.create({classId:'axe',styleId:'strike',encounterId:'corridor',team:false,campaignBalance:true,seed});
+   selected=null;
+   lastActionId=null;
+   message='先选手牌，再点击我方时间格';
+   roundSummary='基础 1v1 · 当前保留原版 Timegrid 规则';
+   $('outcome').textContent='';$('outcome').classList.remove('game-over');
+   update();
+ }
+ function chooseCard(uid){
+   if(game.phase!=='planning')return;
+   if(!actor('ally').hand.some(x=>x.uid===uid))return;
+   selected=selected===uid?null:uid;
+   message=selected?'已选择手牌，点击时间格排程':'已取消选择';
+   update();
+ }
+ function placeOrRemove(t,actionId){
+   if(game.phase!=='planning')return;
+   const hero=actor('ally'),enemy=actor('enemy');
+   if(!selected){
+     if(actionId){
+       const a=hero.actions.find(x=>x.id===actionId);
+       if(a&&a.source==='hand'&&!a.locked){
+         try{G.remove(game,a.id);message='已取下：'+G.CARD[a.card].name;lastActionId=null;}
+         catch(err){message=err.message;}
+         update();return;
+       }
+     }
+     alertStatus('先选择下方一张手牌，再点第 1–10 格');return;
+   }
+   const inst=hero.hand.find(x=>x.uid===selected);
+   if(!inst){selected=null;update();return;}
+   const card=G.CARD[inst.key];
+   const friendly=card.type==='defense'||card.heal||card.buff||card.steady;
+   try{
+     const action=G.place(game,selected,t,friendly?hero.id:enemy.id);
+     selected=null;lastActionId=action.id;
+     message='已安排「'+card.name+'」从第 '+t+' 格开始；可以继续出牌';
+   }catch(err){message=err.message;}
+   update();
+ }
+ function undo(){
+   if(game.phase!=='planning')return;
+   const choices=actor('ally').actions.filter(a=>a.source==='hand'&&!a.locked&&a.start>=game.now);
+   const last=choices.find(a=>a.id===lastActionId)||choices.at(-1);
+   if(!last){alertStatus('没有可以撤销的行动');return;}
+   try{G.remove(game,last.id);lastActionId=null;message='已撤销「'+G.CARD[last.card].name+'」';}
+   catch(err){message=err.message;}
+   update();
+ }
+ function execute(){
+   if(game.phase!=='planning')return;
+   const oldRound=game.round;
+   try{
+     G.simulateRound(game,{collectTrace:true});
+     selected=null;lastActionId=null;
+     const lines=game.events.filter(e=>e.kind==='damage'||e.kind==='block'||e.kind==='break'||e.kind==='death');
+     roundSummary=lines.length?lines.slice(-2).map(x=>x.text).join('　·　'):'本轮双方没有造成有效伤害';
+     if(game.phase==='win'||game.phase==='lost'){
+       message=game.phase==='win'?'战斗胜利 · 点击重新开始可再次尝试':'战斗失败 · 点击重新开始可再次尝试';
+       $('outcome').textContent=game.phase==='win'?'胜利':'失败';
+       $('outcome').classList.add('game-over');
+     }else{
+       message='第 '+(oldRound+1)+' 轮已结算；请选择新手牌继续排程';
+       $('outcome').textContent='已结算 10 格';
+     }
+   }catch(err){message='执行失败：'+err.message;}
+   update();
+ }
+ $('hand').addEventListener('click',e=>{
+   const b=e.target.closest('button[data-uid]');
+   if(b)chooseCard(b.dataset.uid);
+ });
+ $('timeline').addEventListener('click',e=>{
+   const b=e.target.closest('button[data-time]');
+   if(b)placeOrRemove(Number(b.dataset.time),b.dataset.actionId);
+ });
+ $('execute').addEventListener('click',execute);
+ $('undo').addEventListener('click',undo);
+ $('reset').addEventListener('click',start);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected){selected=null;message='已取消选择';update();}});
+ for(const image of document.querySelectorAll('.figure img')){
+   const failure=()=>image.parentElement.classList.add('is-missing');
+   image.addEventListener('error',failure);
+   if(image.complete&&!image.naturalWidth)failure();
+ }
+ start();
+})();
