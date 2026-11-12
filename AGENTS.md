@@ -11,11 +11,19 @@
 - **Monster hunter minion prompt authority:** [`docs/characters/HUNTER_MINIONS_ANIMA_CANON_20261112.md`](docs/characters/HUNTER_MINIONS_ANIMA_CANON_20261112.md) contains the three full positive and negative prompts. Read that file **first** for ongoing hunter minion work. Do not confuse this trio with the seven already approved elite hunter images.
 - **All minion work must open [the faction minion prompt index](docs/characters/FACTION_MINION_PROMPT_INDEX_20261112.md)** and then its referenced faction file. It distinguishes the six already registered seven-member factions from **#7 Black Tide Pirates (new, unapproved proposal)**, whose three full prompts are in [`BLACK_TIDE_PIRATES_MINIONS_ANIMA_CANON_20261112.md`](docs/characters/BLACK_TIDE_PIRATES_MINIONS_ANIMA_CANON_20261112.md). Do not cycle back to old factions when the user explicitly requests a new one. Never confuse prompt-ready with image-approved or full faction roster completed.
 
+## 2026-11-12 HIGHEST PRIORITY WORLD-ONTOLOGY OVERRIDE — ENERGY BEINGS, NOT HUMANS
+
+**READ [XP ENERGY ONTOLOGY & PROTAGONIST PERCEPTION](docs/game/XP_ENERGY_ONTOLOGY_AND_PROTAGONIST_PERCEPTION_20261112.md).** All recruitable XP characters are *ontologically spiritual energy entities*, appearing to themselves and to each other as small flames, fires or energy clusters, NEVER as embodied human women. **ONLY THE PROTAGONIST'S SUBJECTIVE VISION SHOWS THEM AS DISTINCT XP-BASED ANIME GIRLS**. Energy entities possess awareness, can converse with the protagonist and may ask "What do I look like in your eyes?" because they don't know what humanoid projection the protagonist perceives. This applies to ALL XP stages, including the very first 2XP starter.
+
+**STARTER = 2 XP ONLY**: ① body type shown as flame SIZE; ② personality shown as flame COLOR; player visually picks an initial flame by these properties. Exact color-personality mapping is NOT finalized. **A 2XP energy entity can ALREADY look like a girl to the protagonist**—do not claim occupational XP makes it objectively human for the first time. Levels then progress 2→3→4→5 XP in the exact fixed order ①body type ②random personality ③profession+occupational outfit ④mutually exclusive species ⑤Boss-dropped story/title. The art gallery of anime girls illustrates protagonist-exclusive perception and must remain intact.
+
+**FUSION IS RECOMBINATION OF TWO ENERGY CONSCIOUSNESSES INTO A BRAND-NEW ENERGY ENTITY C**, not two people becoming one body, not A dressing up/leveling to become C. In the protagonist's vision, different combinations yield uniquely different girls. All earlier wording of literal human transformation is OVERRIDDEN. Don't assert other beings see these characters as human or invent the source of the protagonist's unusual vision.
+
 ## 2026-11-12 GAMEPLAY PRIORITY — exactly FIVE FIXED XP TYPES
 
 Read [`docs/game/XP_COLLECTION_AND_FUSION_CORE_20261112.md`](docs/game/XP_COLLECTION_AND_FUSION_CORE_20261112.md) before designing XP, fusion or items.
 
-**CURRENT USER-CONFIRMED XP TAXONOMY**:
+**CURRENT USER-CONFIRMED XP TAXONOMY (EXACT ORDER IS ①BODY ②PERSONALITY ③PROFESSION ④RACE ⑤STORY)**:
 1. **PROFESSION / OCCUPATIONAL CLOTHING** — a SINGLE XP type: profession is expressed through role-specific uniforms/clothes (knight armor, hunter coat, witch clothes, maid outfits, merchant uniform etc.). **NEVER create a separate wardrobe/clothing XP type**, as this would duplicate the profession category.
 2. **BODY TYPE** — independent character physique XP.
 3. **RANDOMIZED PERSONALITY** — preserve the personality system agreed earlier; recruits receive personality traits randomly and base minion portraits do not hard-code personality. The complete approved list was not identified in the current repo, so do not invent replacements.
