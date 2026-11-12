@@ -1,5 +1,9 @@
 # Paperchalk World — agent working rules
 
+## 2026-11-12 HARD RULE — FILM-PROJECTOR CHARACTER SELECT IS 2.5D PAPER ONLY
+
+**Current implementation:** [V3 PAPER STAGE DESIGN](docs/game/FILM_PROJECTOR_PAPER_STAGE_V3_20261112.md), live source `site/film-projector/blockout.html` + `site/film-projector/paper-stage.js`. USER REJECTED the older `blockout.js` **3D geometric projector/cylinder/reel** and camera angle. **Every visual part** of projector (case, BOTH reels, crank, lens), curtain, screen, paper film frames, portrait is an individual **2D alpha plane** placed at deliberate Z-depth in real Three.js scene. Camera **near frontal**, projection screen large right-center, projector complete silhouette on left, **all seven film frames entirely below the screen**, independent light/shadow and animated reel pivots, **no operator's hand**. Replace placeholder canvas textures with individual approved Anima painted sprites ONLY after spatial layout review; never present gray blockout as final art. The older V2 3D-model file is **archival and superseded**. The screenshot test `tests/film-projector-blockout-3d-browser.mjs` asserts **zero solid geometry** and takes actual WebGL screenshots.
+
 ## 2026-11-12 HIGHEST-PRIORITY USER OVERRIDE — faction common minion Anima prompts
 
 **For ALL faction common-soldier/minion Anima prompts, this section supersedes any older general Anima style preset, NPC LoRA policy, or artist-tag instructions below.** Read [`docs/characters/FACTION_MINION_CHARACTER_IDENTITY_AND_PROMPT_RULES_V1_20261111.md`](docs/characters/FACTION_MINION_CHARACTER_IDENTITY_AND_PROMPT_RULES_V1_20261111.md), then the current faction-specific canon before writing.
