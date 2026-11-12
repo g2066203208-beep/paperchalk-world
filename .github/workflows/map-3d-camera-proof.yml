@@ -1,12 +1,12 @@
-name: Real 3D dot-map camera proof
+name: Retained independent 3D terrain proof
 on:
   push:
     branches: [main]
     paths:
       - 'site/game/dot-terrain-3d.js'
       - 'site/game/dot-terrain-tools.js'
-      - 'site/game/transit-map-ui.js'
-      - 'site/game/transit-map-ui.css'
+      - 'site/terrain-3d.html'
+      - 'site/terrain-3d.html'
       - 'site/index.html'
       - 'tests/map-terrain-camera-browser.mjs'
       - '.github/workflows/map-3d-camera-proof.yml'
@@ -26,7 +26,6 @@ jobs:
         run: |
           node --check site/game/dot-terrain-3d.js
           node --check site/game/dot-terrain-tools.js
-          node --check site/game/transit-map-ui.js
           node --test tests/metro-map-editor.test.cjs
       - name: Install Chromium
         run: |

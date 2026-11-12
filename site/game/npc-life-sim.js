@@ -14,7 +14,6 @@
   {id:'NPC-G001',name:'结伴出行的三位女同学',members:['NPC-G001-A','NPC-G001-B','NPC-G001-C'],kind:'student',home:'kirihama-07',interest:['rumor','festival','social','concert'],image:null,artStatus:'rejected-needs-redesign'},
   {id:'female2',name:'女二',kind:'student',home:'kirihama-07',interest:['school','rumor','social']},
   {id:'classmate',name:'同班同学',kind:'student',home:'kirihama-07',interest:['school','social']},
-  {id:'clerk',name:'店员',kind:'worker',work:'convenience',home:'kirihama-07',interest:['social','festival']},
   {id:'neighbor',name:'邻居',kind:'resident',home:'kirihama-07',interest:['social','festival','rumor']}
  ]);
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -126,12 +125,12 @@
   };
   function agenda(def,day){
    const holiday=isHoliday(day),pick=hash(def.id+'/'+day);
-   const outing=['mall','park','cafe'][pick%3];
+   const outing=['school','central','entrance'][pick%3];
    if(def.kind==='student'){
     return holiday?
      [{start:0,to:def.home,activity:'home'},
       {start:9*60+Math.floor(pick%32),to:outing,activity:'leisure'},
-      {start:15*60,to:pick%2?'park':'cafe',activity:'leisure'},
+      {start:15*60,to:pick%2?'central':'entrance',activity:'leisure'},
       {start:18*60+10,to:def.home,activity:'home'}]:
      [{start:0,to:def.home,activity:'home'},
       {start:6*60+45,to:'school',activity:'class'},
@@ -140,11 +139,11 @@
    }
    if(def.kind==='worker')return [{start:0,to:def.home,activity:'home'},
     {start:6*60,to:def.work,activity:'work'},
-    {start:15*60+30,to:pick%2?'park':'cafe',activity:'leisure'},
+    {start:15*60+30,to:pick%2?'central':'entrance',activity:'leisure'},
     {start:18*60,to:def.home,activity:'home'}];
    return [{start:0,to:def.home,activity:'home'},
-    {start:9*60,to:pick%2?'convenience':'mall',activity:'errand'},
-    {start:16*60,to:'park',activity:'walk'},
+    {start:9*60,to:pick%2?'school':'central',activity:'errand'},
+    {start:16*60,to:'entrance',activity:'walk'},
     {start:19*60,to:def.home,activity:'home'}];
   }
   function selectIntent(def,actor,time){

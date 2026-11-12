@@ -38,24 +38,14 @@
     northgate:{label:'北街口',group:'城区',scene:null,open:0,close:1320,travel:6},
     school:{label:'学校',group:'城区',scene:'school',open:7*60,close:17*60,travel:35,weekdaysOnly:true},
     'classmate-home':{label:'小胖家',group:'城区',scene:null,open:6*60,close:21*60,travel:25},
-    convenience:{label:'便利店',group:'城区',scene:'convenience',open:6*60,close:22*60,travel:25},
-    cafe:{label:'咖啡店',group:'城区',scene:'cafe',open:10*60,close:21*60,travel:30},
-    park:{label:'社区公园',group:'城区',scene:'park',open:6*60,close:21*60,travel:25},
-    mall:{label:'购物商场',group:'城区',scene:'mall',open:10*60,close:21*60,travel:40}
   });
   const NPCS=Object.freeze({
     female2:{label:'女二',location:'school',from:7*60+30,to:16*60,workdays:true},
     classmate:{label:'同班同学',location:'school',from:9*60,to:16*60,workdays:true},
-    clerk:{label:'便利店店员',location:'convenience',from:6*60,to:21*60},
-    neighbor:{label:'邻居',location:'park',from:16*60,to:19*60}
   });
   const ACTIONS=Object.freeze({
     study:{label:'上课 / 自习',location:'school',minutes:90,energy:-13,knowledge:2,hunger:7,
       note:'记下今天的重点，课程进度推进。'},
-    shift:{label:'兼职工作',location:'cafe',minutes:150,energy:-23,money:90,hunger:12,
-      limit:1,note:'完成一班兼职，获得工资。'},
-    exercise:{label:'散步锻炼',location:'park',minutes:45,energy:-9,knowledge:0,hunger:5,
-      note:'沿着街道走了一圈，暂时离开拥挤的室内。'},
     investigate:{label:'记录街区见闻',location:'entrance',minutes:40,energy:-7,knowledge:1,hunger:4,
       limit:1,evidence:1,note:'记录一条尚待核实的街区传闻。'},
     tidy:{label:'整理房间',location:'bedroom',minutes:30,energy:-5,money:0,hunger:3,
@@ -78,30 +68,16 @@
       '同学认真讨论政府公布的避险地点，约好互相报平安。',
       '同学说班上有些人离开了城市，剩下的人在互相照顾。'
     ],
-    clerk:[
-      '店员一边找零一边抱怨今天的进货又晚了。',
-      '店员说有客人坚持夜里看见了不存在的路口。',
-      '店员担心货运路线改变会影响附近居民买到日用品。',
-      '店员在柜台旁贴上了正式避险公告。',
-      '店员和邻居商量给行动不便的人留出一份物资。'
-    ],
-    neighbor:[
-      '邻居正讨论社区公告和公园最近的维修计划。',
-      '邻居说楼下住户群又在争论一张模糊的夜间照片。',
-      '邻居希望有人协助核对临时疏散名单。',
-      '邻居邀请你参加社区应急物资分配。',
-      '邻居说只要街坊还在互相照顾，城市就没有彻底停下来。'
-    ]
   });
   // Single inventory metadata table shared by the bag, shop, phone and save.
   // Design-first item classes; only ordinary, plausible day-one possessions.
   const ITEM_META=Object.freeze({
-    bread:{label:'简餐',category:'consumable',description:'便利店买来的简单早餐，拆开便能吃。',
-      price:18,store:['convenience'],stackMax:12,effect:{type:'eat',amount:28},useMinutes:10},
+    bread:{label:'简餐',category:'consumable',description:'随身携带的简单早餐，拆开便能吃。',
+      price:18,store:[],stackMax:12,effect:{type:'eat',amount:28},useMinutes:10},
     water:{label:'饮用水',category:'consumable',description:'一瓶普通的饮用水。',
-      price:6,store:['convenience','mall'],stackMax:12,effect:{type:'eat',amount:4},useMinutes:3},
+      price:6,store:[],stackMax:12,effect:{type:'eat',amount:4},useMinutes:3},
     bandage:{label:'急救包',category:'consumable',description:'随身携带的小型创伤处理包，用于简单包扎。',
-      price:42,store:['convenience','mall'],stackMax:4,effect:{type:'heal',amount:20},useMinutes:12},
+      price:42,store:[],stackMax:4,effect:{type:'heal',amount:20},useMinutes:12},
     keys:{label:'家门钥匙',category:'important',description:'回家会用到。钥匙圈边缘已经有些磨损。',
       price:null,store:[],stackMax:1,effect:null,useMinutes:0},
     homework:{label:'作业本',category:'important',description:'今天要交的作业，还差最后一页。',
@@ -110,10 +86,7 @@
   const CATEGORIES=Object.freeze({
     all:'全部',consumable:'用品',important:'重要'
   });
-  const STORE_ITEMS=Object.freeze({
-    convenience:['bread','water','bandage'],
-    mall:['water','bandage']
-  });
+  const STORE_ITEMS=Object.freeze({});
   const CLAMP=(x,a,b)=>Math.max(a,Math.min(b,x));
   const NUMBER=(x,f)=>Number.isFinite(x)?x:f;
   const INTEGER=(x,f)=>CLAMP(Math.trunc(NUMBER(x,f)),-1e9,1e9);
@@ -159,12 +132,12 @@
   function defaultState(){
     return {version:VERSION,day:1,minute:7*60,location:'bedroom',
       money:260,energy:78,knowledge:0,evidence:0,worldPressure:2,
-      relationships:{female2:55,classmate:0,clerk:0,neighbor:0},
+      relationships:{female2:55,classmate:0},
       inventory:{bread:1,water:1,bandage:1,keys:1,homework:1},dailyUses:{},nightStatus:'day',
       phone:{callsRead:false,messagesRead:false,reply:null},
-      phoneThreads:{female2:[],classmate:[],clerk:[],neighbor:[]},
-      phoneUnread:{female2:0,classmate:0,clerk:0,neighbor:0},
-      contactRemarks:{female2:'',classmate:'',clerk:'',neighbor:''},
+      phoneThreads:{female2:[],classmate:[]},
+      phoneUnread:{female2:0,classmate:0},
+      contactRemarks:{female2:'',classmate:''},
       phoneNotes:[],
       phoneCalls:[],transitRumors:[],
       metro:{onboard:false,station:null,lineId:null,direction:1,rides:0,anomaly:false},
@@ -196,7 +169,7 @@
     s.minute=CLAMP(INTEGER(raw.minute,420),0,1440);
     const savedLocation=String(raw.location||'');
     s.location=Object.hasOwn(LOCATIONS,savedLocation)?savedLocation:
-      (GRAPH?.RETIRED_STOP_ALIASES?.[savedLocation]||'bedroom');
+      (GRAPH?.RETIRED_STOP_ALIASES?.[savedLocation]||'entrance');
     s.money=CLAMP(INTEGER(raw.money,260),0,100000000);
     s.energy=CLAMP(INTEGER(raw.energy,78),0,100);
     s.knowledge=CLAMP(INTEGER(raw.knowledge,0),0,10000);

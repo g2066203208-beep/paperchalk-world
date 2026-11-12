@@ -797,10 +797,6 @@ body.mobile-mode.virtual-landscape #view{
 <link rel="stylesheet" href="./game/act-one.css?v=act-one-v1-20261109">
 <link rel="stylesheet" href="./game/overworld.css?v=fog-underlay-fix-v8-20261107">
 <link rel="stylesheet" href="./game/overworld-surfaces.css?v=rail-photo-v4a-20261107">
-<link rel="stylesheet" href="./game/transit-map-ui.css?v=sculpt-ground-v1-20261108">
-<link rel="stylesheet" href="./game/city-map-overlays.css?v=big-persona-city-120-v37-20261108">
-<link rel="stylesheet" href="./game/home-station-map.css?v=home-original-metro-dot-v4-20261108">
-<link rel="stylesheet" href="./game/city-builder.css?v=dot-city-instance-selector-v2-20261108">
 <link rel="stylesheet" href="./game/metro-cabin.css?v=retire-rejected-npc-qa-v2-20261108">
 <script src="./game/ground-perspective.js?v=shoulder-camera-v5"></script>
 <script src="./game/scene-camera.js?v=pinhole-scene-camera-v1"></script>
@@ -809,8 +805,6 @@ body.mobile-mode.virtual-landscape #view{
 <link rel="stylesheet" href="./game/school-room-2p5d.css?v=school-5face-v1-20261109">
 <script src="./game/school-corridor-2p5d.js?v=27m-corridor-blockout-v1"></script>
 <link rel="stylesheet" href="./game/school-corridor-2p5d.css?v=27m-corridor-blockout-v1">
-<script src="./game/paper-ocean-stage.js?v=paper-depth-seven-layers-v2"></script>
-<link rel="stylesheet" href="./game/paper-ocean-stage.css?v=paper-depth-seven-layers-v2">
 <script src="./game/city-street-stage.js?v=city-open-air-world-v2"></script>
 <link rel="stylesheet" href="./game/city-street-stage.css?v=city-open-air-world-v2">
 <script src="./combat-lab/engine.js?v=full-4p-timegrid-20261108"></script>
@@ -849,7 +843,6 @@ body.mobile-mode.virtual-landscape #view{
         <button id="menu-settings-button" type="button">设置</button>
          <button id="menu-gallery-button" type="button">场景预览</button>
          <button id="menu-ring-arena" type="button">3D 圆环战场测试</button>
-          <button id="menu-convenience" type="button" title="进入表世界便利店打工">便利店兼职 · 表世界</button>
           
       </nav>
       <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
@@ -930,7 +923,7 @@ body.mobile-mode.virtual-landscape #view{
         </svg>
       </button>
       <button id="quick-map" class="quick-tool" type="button"
-        aria-label="地图" aria-controls="quick-panel" aria-expanded="false" title="地图">
+        aria-label="出行" aria-controls="quick-panel" aria-expanded="false" title="出行">
         <svg class="quick-tool-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M2.5 5.5 9 3l6 2.5L21.5 3v15.5L15 21l-6-2.5-6.5 2.5z"/>
           <path d="M9 3v15.5M15 5.5V21"/>
@@ -1479,7 +1472,7 @@ void main(){
   });
   const quickToolData=Object.freeze({
     backpack:{title:'背包',empty:'暂无物品'},
-    map:{title:'地图',empty:'地图尚未解锁'}
+    map:{title:'出行',empty:'没有可前往的地点'}
   });
   let activeQuickTool=null;
   function closeQuickPanel(){
@@ -2061,8 +2054,6 @@ void main(){
   window.PaperWorldSchoolRoomRenderer=schoolRoom;
   const schoolCorridor=window.PaperWorldSchoolCorridor.create({stage,view});
   window.PaperWorldSchoolCorridorRenderer=schoolCorridor;
-  const paperOcean=window.PaperWorldPaperOcean.create({stage,view});
-  window.PaperWorldPaperOceanRenderer=paperOcean;
   const cityStreet=window.PaperWorldCityStreet.create({stage,view});
   window.PaperWorldCityStreetRenderer=cityStreet;
   const ringScene=window.PaperWorldRingArena.create({stage,view,
@@ -2139,7 +2130,6 @@ void main(){
     boxScene.setActive(name==='classroom-box');
     schoolRoom.setActive(name==='school');
     schoolCorridor.setActive(name==='school-corridor');
-    paperOcean.setActive(name==='paper-ocean');
     cityStreet.setActive(name==='city-street');
     ringScene.setActive(name==='ring-arena');
     // A saved DEV slot may point to another character or FRONT art. In the
@@ -3461,15 +3451,6 @@ void main(){
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
-    // The map is now pure black; its slowly moving dots do not sample fog.
-    const mapRippleFrame=window.PaperWorldTransitMap?._animateFrame;
-    if(mapRippleFrame){
-      try{mapRippleFrame(now)}
-      catch(error){
-        console.warn('Map dot animation disabled:',error);
-        window.PaperWorldTransitMap._animateFrame=null;
-      }
-    }
     // CPU-heavy UI fog compositing is limited to 30 fps, while the original
     // advected world fog continues at the full browser animation cadence.
     const overlayFrame=fogOverlayPacer.sample(now);
@@ -3544,16 +3525,9 @@ void main(){
 <script src="./dev/character-bridge.js?v=female07-ring-part-rig-20261108"></script>
 <script src="./game/l2d-ground-binding.js?v=shoulder-camera-v7"></script>
 <script src="./game/metro-map-geometry.js?v=curated-70-track-corners-v33-20261108"></script>
-<script src="./game/metro-map-editor-ui.js?v=unified-metro-v40-20261108"></script>
 <script src="./game/destination-network.js?v=120-first-mile-links-v35-20261108"></script>
-<script src="./game/city-map-overlays.js?v=separate-destination-layer-v40-20261108"></script>
-<script src="./game/home-station-map.js?v=home-original-metro-dot-v4-20261108"></script>
-<script src="./game/city-builder.js?v=rotatable-city-cases-v2-20261108"></script>
-<script src="./game/city-builder-ui.js?v=rotatable-instance-controls-v3-20261108"></script>
-<script src="./game/dot-fog-ripples.js?v=faint-linked-mesh-v1-20261108"></script>
 <script src="./game/dot-terrain-3d.js?v=sculpt-ground-v1-20261108"></script>
 <script src="./game/dot-terrain-tools.js?v=sculpt-ground-v1-20261108"></script>
-<script src="./game/transit-map-ui.js?v=sculpt-ground-v1-20261108"></script>
 <script src="./game/metro-side-renderer.js?v=author-painted-subway-wall-v40-20261107"></script>
 <script src="./game/metro-motion.js?v=physical-journey-v2-20261108"></script>
 <script src="./game/metro-cabin.js?v=real-npc-cabin-door-flow-v1-20261108"></script>
@@ -3565,8 +3539,6 @@ void main(){
 
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
- const b=document.getElementById('menu-convenience');
- b?.addEventListener('click',()=>window.location.assign('./convenience-store/'));
  document.getElementById('menu-dungeon-elevator')?.addEventListener('click',()=>window.location.assign('./dungeon-elevator/'));
 });
 </script>

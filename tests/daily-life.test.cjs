@@ -30,15 +30,14 @@ test('validates travel, location opening time and coherent end arrival',()=>{
   assert.equal(g.act('study').ok,true);
   assert.equal(g.snapshot().knowledge,2);
 });
-test('side job wages, single shift per day and travel location restrictions',()=>{
+test('rejected location modules are gone',()=>{
   const g=Life.create();
+  for(const id of ['convenience','cafe','mall','park']){
+    assert.equal(Life.LOCATIONS[id],undefined);
+    assert.equal(g.travel(id).ok,false);
+  }
   assert.equal(g.act('shift').ok,false);
-  for(let i=0;i<3;i++)assert.equal(g.act('rest').ok,true);
-  assert.equal(g.travel('entrance').ok,true);
-  assert.equal(g.travel('cafe').ok,true);
-  assert.equal(g.act('shift').ok,true);
-  assert.equal(g.snapshot().money,350);
-  assert.equal(g.act('shift').ok,false);
+  assert.equal(g.act('exercise').ok,false);
 });
 test('buying, eating and existing survival hunger HUD bridge',()=>{
   let events=[];const g=Life.create({onStatEvent:e=>events.push(e)});
@@ -46,13 +45,8 @@ test('buying, eating and existing survival hunger HUD bridge',()=>{
   assert.ok(events.some(e=>e.type==='eat'&&e.amount===28));
   assert.equal(g.snapshot().inventory.bread,0);
   assert.equal(g.use('bread').ok,false);
-  for(let i=0;i<3;i++)g.act('rest');
-  assert.equal(g.travel('entrance').ok,true);
-  assert.equal(g.travel('convenience').ok,true);
-  const before=g.snapshot().money;
-  assert.equal(g.buy('bread').ok,true);
-  assert.equal(g.snapshot().money,before-18);
-  assert.equal(g.snapshot().inventory.bread,1);
+  assert.equal(g.buy('bread').ok,false);
+  assert.equal(g.snapshot().inventory.bread,0);
 });
 test('NPC has time, place, workday and once per day constraints',()=>{
   const g=Life.create();

@@ -323,7 +323,7 @@
       if(scene){
         const changed=await global.PaperWorldDailyLifeScene?.(scene);
         if(changed===false&&stage.dataset.scene!==scene)
-          say('场景加载失败；请从地图重试。');
+          say('场景加载失败；请重新选择目的地。');
       }
       paintedCity='';draw();
       say('到达'+dest.label+'。');
@@ -456,18 +456,6 @@
       addAction('看看门口','door',()=>playActOne(actOne?.home(engine.snapshot(),'entry')));
       addAction('查阅家属留下的记录','records',()=>playActOne(actOne?.home(engine.snapshot(),'records')));
       addAction('离开','exit',()=>surfaces?.openMap());
-    }else if(s.location==='convenience'){
-      addAction('看看货架','shop',()=>surfaces?.openShop());
-      addAction('离开便利店','exit',()=>surfaces?.openMap());
-    }else if(s.location==='cafe'){
-      addAction('开始兼职','shift',()=>run(()=>engine.act('shift')));
-      addAction('离开店里','exit',()=>surfaces?.openMap());
-    }else if(s.location==='park'){
-      addAction('散散步','walk',()=>run(()=>engine.act('exercise')));
-      addAction('查看地图','exit',()=>surfaces?.openMap());
-    }else if(s.location==='mall'){
-      addAction('进入商店','shop',()=>surfaces?.openShop());
-      addAction('离开商场','exit',()=>surfaces?.openMap());
     }
   }
   // No permanent bottom-right menu. In-world click/tap reveals a tiny
@@ -542,10 +530,6 @@
       const discoveries=[
         ['classmate','同班同学','学校','同学 · 初识',
           '同班的同学，课间经常会讨论学校发生的事。'],
-        ['clerk','便利店店员','便利店','认识的人',
-          '在附近便利店工作的店员，对街区消息很敏感。'],
-        ['neighbor','邻居','住宅区','邻里关系',
-          '住在附近的邻居，经常在公园里碰到。']
       ];
       for(const [id,display,note,relationship,bio] of discoveries){
         const affinity=saved.relationships[id]||0;

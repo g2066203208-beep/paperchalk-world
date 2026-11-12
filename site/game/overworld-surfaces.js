@@ -10,7 +10,6 @@
     const locs=global.PaperWorldDailyLife.LOCATIONS;
     const meta=global.PaperWorldDailyLife.ITEM_META;
     const categories=global.PaperWorldDailyLife.CATEGORIES;
-    const stock=global.PaperWorldDailyLife.STORE_ITEMS;
     const ICONS=Object.freeze({
       bread:'<path d="M4 11c-3-7 3-9 8-9s11 2 8 9l-2 10H6zM4 11h16M9 16v3M15 16v3"/>',
       water:'<path d="M9 3h6M10 5h4v3l4 4v8H6v-8l4-4zM7 14h10"/>',
@@ -65,7 +64,7 @@
       if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeSurface();}
     });
     function open(which){
-      if(!['map','bag','shop'].includes(which))return false;
+      if(!['map','bag'].includes(which))return false;
       returnFocus=document.activeElement;
       mode=which;choice=null;filter='all';foot.textContent='';
       root.hidden=false;
@@ -78,28 +77,6 @@
       if(fn)b.addEventListener('click',fn);
       return b;
     }
-    // Fictional-city node positions. Photo previews are replaceable reference
-    // photographs, NOT claims that these are the game's actual locations.
-    // Existing destinations use the authoritative life engine; future nodes
-    // remain visibly locked instead of navigating to nonexistent scenes.
-    const pinData=Object.freeze([
-      {id:'entrance',name:'家',x:16,y:23,
-       photo:'https://img.livable.co.jp/?h=576&url=https%3A%2F%2Fwww.livable.co.jp%2Fproject-image%2F81%2F818%2F81889%2F81889_22863358.jpg%3F20180412221044&w=768'},
-      {id:'school',name:'学校',x:46,y:17,
-       photo:'./assets/classroom.webp'},
-      {id:'convenience',name:'便利店',x:77,y:23,
-       photo:'https://www.biz-lixil.com/case/images/B250014c.jpg'},
-      {id:'cafe',name:'咖啡厅',x:24,y:49,
-       photo:'https://images.unsplash.com/photo-1593344745356-6e4c8740c3af?auto=format&fit=crop&w=420&q=75'},
-      {id:'mall',name:'商场',x:56,y:47,
-       photo:'https://www.aeon-jreit.co.jp/file/portfolio-f42a862f3c3b544b4e48580a3f2c1f0702b4c23e.jpg'},
-      {id:'park',name:'公园',x:84,y:50,
-       photo:'https://ak-d.tripcdn.com/images/1mi1m224x8u2ae3b0B5E2.jpg?proc=source%2Ftrip'},
-      {id:'hospital',name:'医院',x:15,y:75,locked:true},
-      {id:'station',name:'车站',x:46,y:75,locked:true},
-      {id:'police',name:'警察局',x:78,y:75,locked:true}
-    ].map(p=>({...p,x:global.PaperWorldMetro?.STATIONS[p.id]?.x??p.x,
-      y:global.PaperWorldMetro?.STATIONS[p.id]?.y??p.y})));
     function projectedCost(from,to){
       const a=locs[from],b=locs[to];
       if(!a||!b)return Infinity;
@@ -125,26 +102,39 @@
       return {ok:true,reason:'可以前往',cost};
     }
     function drawMap(){
-      const snapshot=get();
-      frame.dataset.view='map';heading.textContent='城区交通';
-      note.textContent=snapshot.calendar.time;
-      foot.textContent='';
-      const painter=global.PaperWorldTransitMap;
-      frame.dataset.mapMode='dot-world';
-      if(!painter){body.textContent='地图模块尚未加载';return}
-      painter.draw({
-        body,snapshot,locations:locs,availability,
-        onTravel:async(place,route)=>{
-          closeSurface();return onTravel?.(place,route);
-        },
-        onWorldTravel:async(place,route)=>{
-          closeSurface();return onWorldTravel?.(place,route);
-        },
-        onBoard:async(lineId,direction)=>{
-          closeSurface();return onBoard?.(lineId,direction);
-        },
-        onFeedback:message=>onFeedback?.(message)
-      });
+      const s=get(),graph=global.PaperWorldMetro;
+      frame.dataset.view='travel';frame.removeAttribute('data-map-mode');
+      heading.textContent='出行';note.textContent=s.calendar.time;
+      foot.textContent='选择目的地';
+      const panel=el('div','pw-travel-destinations');
+      panel.appendChild(el('p','pw-travel-intro','前往其他地点'));
+      const anchor=graph?.STATIONS?.[s.location]||graph?.STATIONS?.entrance;
+      const nearby=Object.entries(graph?.STATIONS||{})
+        .filter(([id,stop])=>!stop.locked&&Object.hasOwn(locs,id))
+        .sort(([a,aa],[b,bb])=>Math.hypot((aa.gx??0)-(anchor?.gx??0),(aa.gy??0)-(anchor?.gy??0))
+           -Math.hypot((bb.gx??0)-(anchor?.gx??0),(bb.gy??0)-(anchor?.gy??0))||a.localeCompare(b))
+        .slice(0,7).map(([id])=>id);
+      for(const id of [...new Set(['entrance','school','classmate-home',...nearby])]){
+        const dest=locs[id];if(!dest)continue;
+        const status=availability(id,s);
+        panel.appendChild(button(dest.label+(status.ok?' · '+status.cost+' 分钟':' · '+status.reason),
+          async()=>{if(busy)return;busy=true;closeSurface();
+            const result=await onTravel?.(id);
+            if(!result?.ok&&result?.reason)onFeedback?.(result.reason);},
+          'pw-travel-destination',!status.ok));
+      }
+      if(graph?.STATIONS?.[s.location]&&!s.metro?.onboard){
+        panel.appendChild(el('p','pw-travel-intro','乘车'));
+        for(const line of graph.LINES||[]){
+          if(line.locked||!line.stops.includes(s.location))continue;
+          for(const dir of [-1,1]){
+            const next=graph.neighbors(line,s.location).find(n=>n.direction===dir);
+            if(next)panel.appendChild(button(line.name+' · 开往 '+(graph.STATIONS[next.to]?.label||next.to),
+              ()=>{closeSurface();onBoard?.(line.id,dir)},'pw-travel-destination'));
+          }
+        }
+      }
+      body.replaceChildren(panel);
     }
     function drawBag(){
       const s=get(),items=Object.entries(meta).filter(([key,m])=>
@@ -197,45 +187,14 @@
       }
       body.replaceChildren(left,detail);
     }
-    function drawShop(){
-      const s=get(),here=s.location,ids=stock[here]||[];
-      heading.textContent=here==='mall'?'商场用品店':'便利店货架';
-      note.textContent='现金 ¥ '+s.money;frame.dataset.view='shop';
-      const left=el('div','pw-shop-list');
-      for(const id of ids){
-        const item=meta[id];
-        const row=button('',()=>{choice=id;draw()},'pw-shop-row');
-        row.dataset.item=id;row.dataset.active=String(choice===id);
-        row.append(el('strong','',item.label),el('span','','¥'+item.price));
-        left.appendChild(row);
-      }
-      const detail=el('aside','pw-item-detail');
-      if(choice&&ids.includes(choice)){
-        const item=meta[choice];
-        detail.appendChild(el('small','','店内商品'));
-        detail.appendChild(el('h3','',item.label));
-        detail.appendChild(el('p','pw-item-description',item.description));
-        detail.appendChild(el('p','pw-item-qty','单价 ¥'+item.price+' · 已有 '+(s.inventory[choice]||0)));
-        const canAfford=s.money>=item.price,canCarry=(s.inventory[choice]||0)<item.stackMax;
-        const pay=button('购买 · ¥'+item.price,()=>{
-          const res=engine.buy(choice);
-          text(res.ok?res.message:res.reason,!res.ok);draw();
-        },'pw-item-use',!(canAfford&&canCarry));
-        detail.appendChild(pay);
-        if(!canAfford)detail.appendChild(el('small','pw-shop-warning','现金不足'));
-        if(!canCarry)detail.appendChild(el('small','pw-shop-warning','携带数量已满'));
-      }else detail.appendChild(el('p','pw-item-hint','挑选需要的东西。购买会花费游戏时间。'));
-      body.replaceChildren(left,detail);
-    }
     function draw(){
       if(root.hidden)return;
       if(mode==='map')drawMap();
       else if(mode==='bag')drawBag();
-      else if(mode==='shop')drawShop();
     }
     const unsub=engine.subscribe(()=>{if(!root.hidden)draw()});
     return Object.freeze({openMap:()=>open('map'),openBag:()=>open('bag'),
-      openShop:()=>open('shop'),close:closeSurface,
+      close:closeSurface,
       isOpen:()=>!root.hidden,getMode:()=>mode,
       refresh:draw,dispose:()=>{unsub();root.remove()}});
   }

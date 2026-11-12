@@ -9,13 +9,8 @@ vm.runInNewContext(fs.readFileSync('site/scene-modules.js', 'utf8'), scope);
 const api = scope.window.PAPERWORLD_SCENE_MODULES;
 assert.equal(api.schema, 2);
 const rooms = api.buildRegistry(catalog.scenes);
-// Three legacy scenes, four approved home scenes and five new real
-// public location stages. The latter are explicitly registered (not room
-// catalog images) and may be swapped to final Anima artwork without editing
-// travel, fog, L2D or story code.
-// Base: menu, classroom, classroom-box. Plus five location scenes and one
-// dedicated school-corridor 3D walkthrough; catalog scenes are independent.
-assert.equal(Object.keys(rooms).length, 3 + catalog.scenes.length + 5 + 3);
+// Deleted scene families must not return to the live registry.
+assert.equal(Object.keys(rooms).length,3+catalog.scenes.length+1+2);
 assert.equal(rooms['city-street'].kind,'open-air-3d');
 assert.equal(rooms['city-street'].layers.player,false);
 assert.equal(rooms['city-street'].layers.fog,false);
@@ -23,20 +18,13 @@ assert.equal(rooms['city-street'].image,'./assets/city-street/streetscape.svg');
 assert.ok(fs.existsSync('site/game/city-street-stage.js'));
 assert.ok(fs.existsSync('site/assets/city-street/asphalt-material.svg'));
 assert.ok(fs.existsSync('site/assets/city-street/shopfront-a.svg'));
-assert.equal(rooms['paper-ocean'].kind,'paper-cutout-2d');
-assert.equal(rooms['paper-ocean'].layers.fog,false);
-assert.equal(rooms['paper-ocean'].layers.player,false);
+for(const id of ['paper-ocean','convenience','cafe','mall','park'])
+  assert.equal(rooms[id],undefined,'deleted scene: '+id);
 assert.equal(rooms['school-corridor'].kind,'five-face-3d');
 assert.equal(rooms['school-corridor'].layers.player,false);
 assert.equal(rooms['school-corridor'].layers.fog,true);
 assert.match(rooms['school-corridor'].alt,/27米/);
-for(const [id,asset] of [
-  ['school','./assets/classroom.webp'],
-  ['convenience','./assets/locations/convenience.svg'],
-  ['cafe','./assets/locations/cafe.svg'],
-  ['mall','./assets/locations/mall.svg'],
-  ['park','./assets/locations/park.svg']
-]){
+for(const [id,asset] of [['school','./assets/classroom.webp']]){
   assert.equal(rooms[id].type,'environment','location scene type: '+id);
   assert.equal(rooms[id].image,asset);
   assert.equal(rooms[id].layers.player,false,'first-person city scene has no back combat cutout');

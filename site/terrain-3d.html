@@ -1,0 +1,33 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>三维点阵地形</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#010204;color:#e4e9ec;font:14px system-ui,sans-serif}
+#terrain-stage{position:relative;width:100vw;height:100dvh;background:#010204;overflow:hidden;touch-action:none}
+.pw-dot-terrain-surface,.pw-terrain-edit-preview{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pw-dot-terrain-surface{z-index:1}.pw-terrain-edit-preview{z-index:2}
+header{position:absolute;z-index:5;left:14px;top:14px;padding:8px 12px;background:#151a20aa;border:1px solid #46515a;border-radius:8px}
+.pw-dot-camera-toggle,.pw-terrain-edit-toggle{position:absolute;z-index:5;right:12px;top:12px;border:1px solid #64737b;border-radius:16px;padding:8px 15px;background:#162029;color:white;cursor:pointer}
+.pw-terrain-edit-toggle{right:90px}.pw-terrain-edit-panel{position:absolute;z-index:6;top:64px;right:12px;width:min(330px,90vw);padding:14px;background:#12191ef2;border:1px solid #52636d;border-radius:10px}
+.pw-terrain-edit-panel[hidden]{display:none}.pw-terrain-edit-options,.pw-terrain-edit-actions{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.pw-terrain-edit-choice,.pw-terrain-edit-action{background:#23303a;border:1px solid #4c5e69;border-radius:5px;color:white;padding:5px 9px;cursor:pointer}
+.pw-terrain-edit-choice[aria-pressed="true"]{border-color:white}.pw-terrain-edit-setting,.pw-terrain-edit-target{display:grid;gap:3px;margin:8px 0}
+.pw-terrain-edit-setting-label{display:flex;justify-content:space-between}
+.pw-terrain-edit-hint{color:#9ba9b0;font-size:12px}
+</style></head><body><div id="terrain-stage" tabindex="0" aria-label="三维点阵地形">
+<header>3D 点阵地形 <small>· 独立保留的场景28</small></header></div>
+<script src="./game/dot-terrain-3d.js"></script><script src="./game/dot-terrain-tools.js"></script><script>
+(function(){
+const map=document.getElementById('terrain-stage'),cam={x:innerWidth/2,y:innerHeight/2,scale:1};
+const viewport=()=>({w:innerWidth,h:innerHeight});
+const terrain=window.PaperWorldDotTerrain3D.create({map,viewport,camera:()=>cam});
+if(!terrain){map.insertAdjacentText('beforeend','当前设备不支持 WebGL');return}
+terrain.setMode('3d');
+const tools=window.PaperWorldTerrainTools.create({map,terrain,viewport,camera:()=>cam});
+window.PaperWorldTerrainStandalone=Object.freeze({terrain,tools,camera:cam});
+let drag=null;
+map.addEventListener('pointerdown',e=>{if(e.target.closest('button,input,.pw-terrain-edit-panel')||map.dataset.terrainEditing==='true')return;drag={x:e.clientX,y:e.clientY,button:e.button};map.setPointerCapture?.(e.pointerId)});
+map.addEventListener('pointermove',e=>{if(!drag||map.dataset.terrainEditing==='true')return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(drag.button===2){cam.x+=dx;cam.y+=dy}else terrain.orbitBy(dx,dy);drag.x=e.clientX;drag.y=e.clientY});
+map.addEventListener('pointerup',()=>{drag=null});map.addEventListener('pointercancel',()=>{drag=null});
+map.addEventListener('wheel',e=>{e.preventDefault();cam.scale=Math.min(2.5,Math.max(.35,cam.scale*(e.deltaY<0?1.1:.9)))},{passive:false});
+map.addEventListener('contextmenu',e=>e.preventDefault());
+function tick(now){terrain.render(now);tools?.render(now);requestAnimationFrame(tick)}requestAnimationFrame(tick);
+})();
+</script></body></html>

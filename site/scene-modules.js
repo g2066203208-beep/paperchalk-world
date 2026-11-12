@@ -37,11 +37,7 @@
     // School uses approved classroom art; others use independent editable
     // architectural environment blockouts, never recycled home wallpaper.
     const cityStages=[
-      ['school','./assets/classroom.webp','学校教室'],
-      ['convenience','./assets/locations/convenience.svg','便利店'],
-      ['cafe','./assets/locations/cafe.svg','咖啡店'],
-      ['mall','./assets/locations/mall.svg','商场'],
-      ['park','./assets/locations/park.svg','社区公园']
+      ['school','./assets/classroom.webp','学校教室']
     ];
     for(const [id,image,title] of cityStages){
       result[id]=define(id,image,title,title,'environment',
@@ -60,10 +56,6 @@
       '真实3D教学楼长走廊（长27米、宽2.8米）','教学楼走廊 · 3D','environment',
       {layers:Object.freeze({player:false,enemy:false,fog:true}),
        kind:'five-face-3d',version:'27m-school-corridor-blockout-v1'});
-    result['paper-ocean'] = define('paper-ocean','./assets/menu-wall.webp',
-      '七层 2D 剪纸场景同时叠放可见，初始小村推进至最远处 Boss','纸片冒险 · 七层连续纵深','environment',
-      {layers:Object.freeze({player:false,enemy:false,fog:false}),
-       kind:'paper-cutout-2d',version:'paper-depth-seven-layers-v2'});
     // Same 3D-space + individually painted 2D-texture architecture as classroom.
     // True horizontal road and pavement meshes, real-perspective painted facades,
     // and independently moving world-space vehicles. Not a CSS scroll stage.
