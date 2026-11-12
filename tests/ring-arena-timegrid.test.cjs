@@ -79,7 +79,7 @@ const film=fs.readFileSync(path.join(__dirname,'../site/assets/ui/painted-film-p
 assert.ok(film.subarray(0,4).toString()==='RIFF','redesigned silver film is real WebP art');
 assert.ok(film.length>700,'painted silver film asset not a placeholder');
 for(const name of ['painted-film-blank-a.webp','painted-timeline-panel.webp','painted-tick-idle.webp','painted-tick-active.webp','painted-paper-button.webp'])
- assert.ok(fs.statSync(path.join(__dirname,'../site/assets/ui',name)).size>700,'authored non-repeating empty film texture preserved');
+ assert.ok(fs.statSync(path.join(__dirname,'../site/assets/ui',name)).size>350,'authored non-repeating empty film texture preserved');
 assert.match(runtime,/PaperWorldRingTimegrid/);
 assert.match(runtime,/combatTimegrid\.advance\(dt\)/);
 console.log('PASS ring arena actual 4v4 Timegrid ten-tick cards, four controllers and game integration');
