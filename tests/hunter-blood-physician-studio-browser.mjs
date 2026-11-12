@@ -32,6 +32,7 @@ try {
  assert.ok(state.parts.some(p=>p.id==='front_hair'));
  assert.ok(state.parts.some(p=>p.id==='handwear'));
  assert.ok(state.parts.some(p=>p.id==='objects'));
+ assert.equal(state.parts.find(p=>p.id==='footwear')?.y,853,'boots must align to pant legs without editing PNG');
  assert.ok(state.parts.every(p=>p.role==='psd-part'),'all parts must be original independent PSD layers');
  assert.ok(state.stage.w>400&&state.stage.h>350);
  await page.screenshot({path:dir+'/01-hunter-blood-physician-in-real-l2d-studio.png',fullPage:false});
