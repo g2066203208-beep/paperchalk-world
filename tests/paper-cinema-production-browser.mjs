@@ -1,0 +1,30 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const out='artifacts/paper-cinema-production';fs.mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-unsafe-swiftshader','--enable-webgl']});
+try{
+ const page=await browser.newPage({viewport:{width:1672,height:941},deviceScaleFactor:1});
+ const errors=[];page.on('pageerror',e=>errors.push(e.stack??String(e)));
+ await page.goto('http://127.0.0.1:4173/film-projector/',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>document.querySelector('#theater')?.dataset.mode==='painted-multi-plane-2p5d',{timeout:30000});
+ await page.waitForTimeout(1350);
+ assert.equal(await page.locator('#theater').getAttribute('data-projector-solid-meshes'),'0');
+ assert.equal(await page.locator('#theater').getAttribute('data-real-shadowmap'),'true');
+ assert.equal(await page.locator('#counter').innerText(),'02 / 07');
+ await page.screenshot({path:out+'/01-reference-matched-2p5d.png'});
+ await page.locator('#following').click();
+ await page.waitForTimeout(1100);
+ assert.equal(await page.locator('#counter').innerText(),'03 / 07');
+ await page.screenshot({path:out+'/02-reel-advanced.png'});
+ await page.locator('#illumination').click();
+ await page.waitForTimeout(430);
+ assert.equal(await page.locator('#illumination').getAttribute('aria-pressed'),'false');
+ await page.screenshot({path:out+'/03-real-light-off.png'});
+ await page.locator('#illumination').click();
+ await page.locator('#compare').click();
+ await page.waitForTimeout(350);
+ await page.screenshot({path:out+'/04-original-approved-reference-comparison.png'});
+ assert.deepEqual(errors,[],'no WebGL/JS exceptions');
+ console.log(JSON.stringify({result:'PASS',planeCount:await page.locator('#theater').getAttribute('data-layer-count'),solidMeshes:0,realShadows:true,screenshots:out}));
+} finally {await browser.close()}

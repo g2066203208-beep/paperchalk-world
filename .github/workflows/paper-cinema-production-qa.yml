@@ -1,0 +1,37 @@
+name: Paper Cinema painted 2.5D production stage QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/film-projector/**'
+      - 'tests/paper-cinema-production-browser.mjs'
+      - '.github/workflows/paper-cinema-production-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screenshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium headless
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve complete game website
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/paper-cinema-server.log 2>&1 &
+          sleep 2
+      - name: Render actual 2.5D scene and verify reel/light interactions
+        run: node tests/paper-cinema-production-browser.mjs
+      - name: Save 4 actual browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-cinema-2p5d-real-scene-proof
+          path: artifacts/paper-cinema-production/
+          if-no-files-found: warn

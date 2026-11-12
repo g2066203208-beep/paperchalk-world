@@ -1,0 +1,20 @@
+:root { color-scheme:dark; background:#100a10; font:14px/1.4 Georgia,'Noto Serif CJK SC','Songti SC',serif; }
+* {box-sizing:border-box}
+html,body {margin:0;width:100%;height:100%;overflow:hidden;background:#100a10}
+#theater {position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100vw,calc(100dvh*1672/941));height:min(100dvh,calc(100vw*941/1672));background:#140f14;overflow:hidden;isolation:isolate}
+#stage, #stage canvas, #fallback {width:100%;height:100%;display:block}
+#stage canvas {touch-action:manipulation;cursor:default;user-select:none}
+#loading {position:absolute;inset:0;display:grid;place-items:center;background:#180d15;color:#d3bea9;letter-spacing:.18em;transition:opacity .65s ease}
+#loading.dismissed{opacity:0;pointer-events:none}
+#fallback{position:absolute;inset:0;display:grid;place-items:center;background:#24131b;color:#fff9}
+#fallback[hidden]{display:none}
+#controls{position:absolute;bottom:1.65%;right:2.3%;display:flex;align-items:center;gap:5px;z-index:6;opacity:.12;transition:opacity .2s ease}
+#theater:hover #controls,#controls:focus-within{opacity:1}
+#controls button{font:500 clamp(13px,1.05vw,18px)/1.1 Georgia,'Songti SC',serif;min-width:clamp(30px,3.1vw,45px);height:clamp(26px,2.45vw,38px);border:1px solid rgba(235,200,155,.44);background:rgba(25,16,23,.71);color:#f2dac0;cursor:pointer;padding:0 10px;text-shadow:0 1px 3px #000;box-shadow:0 2px 8px #0006}
+#controls button:hover{background:rgba(98,54,50,.76);border-color:#ffe4b0}
+#controls button:focus-visible{outline:2px solid #f0c88f;outline-offset:3px}
+#counter{color:#e8cdaf;letter-spacing:.10em;min-width:66px;text-align:center;font-size:clamp(11px,.87vw,15px);text-shadow:0 1px 6px #12040e}
+#hint{position:absolute;left:2.3%;bottom:1.7%;z-index:5;color:#f6e3d8;font-size:clamp(9px,.7vw,12px);letter-spacing:.05em;opacity:.04;transition:opacity .2s ease;text-shadow:0 1px 6px #000}
+#theater:hover #hint{opacity:.70}
+@media (hover:none){#controls{opacity:.64}#hint{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
