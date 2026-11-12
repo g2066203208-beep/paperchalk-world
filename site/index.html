@@ -839,6 +839,7 @@ body.mobile-mode.virtual-landscape #view{
       <nav id="scene-menu-main" class="scene-menu-options" aria-label="主菜单选项">
         <button id="menu-start" type="button">开始游戏</button>
         <button id="menu-dungeon-elevator" type="button" title="进入地牢电梯经营游戏">地牢电梯 · 开始经营</button>
+        <button id="menu-card-battle" type="button" title="打开卡牌战斗的 3D 桌面白模">卡牌战斗 · 3D 桌面</button>
         <button id="menu-continue" type="button" disabled>继续游戏</button>
         <button id="menu-settings-button" type="button">设置</button>
          <button id="menu-gallery-button" type="button">场景预览</button>
@@ -3544,6 +3545,7 @@ void main(){
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
  document.getElementById('menu-dungeon-elevator')?.addEventListener('click',()=>window.location.assign('./dungeon-elevator/'));
+ document.getElementById('menu-card-battle')?.addEventListener('click',()=>window.location.assign('./card-battle/'));
 });
 </script>
 </body>
