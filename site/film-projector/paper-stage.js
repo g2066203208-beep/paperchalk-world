@@ -217,7 +217,7 @@ texPlane('24 filmstrip paper dark silhouette',0,0,-.02,13.82,1.53,(c,w,h)=>{
  c.fillStyle='rgba(183,166,145,.34)';c.fillRect(0,0,w,12);c.fillRect(0,h-12,w,12);
  for(let i=0;i<60;i++){const x=12+i*(w-24)/60;
    c.fillStyle='#ab9e91';c.fillRect(x,14,12,19);c.fillRect(x,h-31,12,19);}
-},{tw:1536,th:170,shadow:true});
+},{tw:1536,th:170,shadow:true,parent:filmParent});
 const framePlanes=[];
 function filmFaceTex(c,w,h){
  fill(c,'#3a353a',w,h);
@@ -230,7 +230,7 @@ function filmFaceTex(c,w,h){
 for(let i=0;i<7;i++){
  const xx=(i-3)*1.84;
  const card=texPlane('25 seven independent film frame '+(i+1),xx,0,.04,1.68,1.15,filmFaceTex,
-     {tw:256,th:176,shadow:false});
+     {tw:256,th:176,shadow:false,parent:filmParent});
  framePlanes.push(card);
 }
 const selection=texPlane('26 FIXED center selection gate',0,0,.12,1.84,1.35,(c,w,h)=>{
@@ -239,7 +239,7 @@ const selection=texPlane('26 FIXED center selection gate',0,0,.12,1.84,1.35,(c,w
  c.fillStyle='#f2d7b5';
  polygon(c,'#f2d7b5',[[w/2-24,3],[w/2+24,3],[w/2,35]]);
  polygon(c,'#f2d7b5',[[w/2-24,h-3],[w/2+24,h-3],[w/2,h-35]]);
-},{tw:512,th:384,receive:false});
+},{tw:512,th:384,receive:false,parent:filmParent});
 // Foreground edge is a single paper plane, not a thick 3D desk.
 texPlane('27 stage lip final flat layer',0,-4.11,1.73,19.2,.56,(c,w,h)=>{
  const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#383037');g.addColorStop(1,'#121217');
