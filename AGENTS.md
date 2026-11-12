@@ -13,12 +13,10 @@
 
 ## 2026-11-12 GAMEPLAY PRIORITY — XP collection and fusion (not generic star upgrading)
 
-**The seven-member faction auto-battler is fundamentally about collecting and merging XP traits.** Read [`docs/game/XP_COLLECTION_AND_FUSION_CORE_20261112.md`](docs/game/XP_COLLECTION_AND_FUSION_CORE_20261112.md) before making proposals about fusion, items, leveling or units. Latest user-confirmed rules:
-- **Fusion does not necessarily level up.** Two T1 minions can always be fused into **one T1 minion retaining 3 chosen XP traits**; it is an XP optimization action even if a fourth XP is unavailable. **Never block T1→T1 fusion just because fewer than four XP can be selected.**
-- A unit with **3 valid XP traits is T1, 4 valid XP traits is T2, and 5 valid XP traits is T3**. Having two input units is NEVER itself a rank-up. The fourth actual XP is required for T2, fifth for T3.
-- Show all input XP traits and **let the player choose**; **each XP type can appear at most once in the result** (same-type candidates require a choice, not automatic addition).
-- **Relics are retained permanent in-run bonuses, like Isaac relics, NEVER consumed by fusion.** Relics may help obtain an additional XP, but the exact extra-XP acquisition rule is **not yet settled**; do not write a mandatory consume-one-item recipe.
-- Career, body type and randomly assigned personality are separate attributes, not XP. Do not invent higher-tier fusion material costs or XP edge-case rules as already confirmed.
+**The seven-person faction auto-battler is fundamentally about collecting and merging XP traits.** Before any unit/item/fusion design, read [`docs/game/XP_COLLECTION_AND_FUSION_CORE_20261112.md`](docs/game/XP_COLLECTION_AND_FUSION_CORE_20261112.md). **Latest user-confirmed cauldron inputs are THREE SLOTS:** two units **of the same tier** plus one fusion relic of the required grade. **T1 + T1 + standard relic → T1 or T2; T2 + T2 + HIGHER-GRADE relic → T2 or T3.** Each fusion merges two character cards into only one result (net one character consumed). The relic is a THIRD INPUT TO THE CAULDRON, **not a gift given to a minion**; a gift system, if added, is distinct. Whether the inserted relic is retained after fusion is still a finer-grained open decision, although prior user direction favors persistent Isaac-like relics; do not unilaterally make relics consumables.
+- **Fusion is not automatic ranking.** T1 = **3 XP traits**, T2 = **4 XP traits**, T3 = **5 XP traits**. The result's tier is determined by how many valid XP traits were actually selected: T1+T1 can still yield T1 with 3 selected traits; T2+T2 can still yield T2 with 4 selected traits. To rank up, players must secure the 4th or 5th valid XP respectively.
+- Show ALL input units' XP traits and **let players choose**; XP traits of the SAME TYPE are mutually exclusive (choose ONE, never both). Different types can coexist up to the result tier's XP count.
+- Career, body type and randomized personality are separate attributes, not XP traits. How a relic supplies/permits extra XP and whether it has other buffs is still under design. Do not invent an already-approved fixed XP grant, item consumption recipe, or gift-inheritance rule.
 
 ## Mandatory preflight: before EVERY Anima prompt
 
