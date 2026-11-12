@@ -211,7 +211,7 @@ try{
     await page.locator('#quick-map').click();
     await expectEdge(page,'right',true);
     assert.equal(await page.locator('#phone-ui').isVisible(),false);
-    assert.equal(await page.locator('#quick-panel-title').textContent(),'地图');
+    // The user-facing quick-map action was renamed 出行; maintain the edge-fog assertion.\n    assert.equal(await page.locator('#quick-panel-title').textContent(),'出行');
     await page.screenshot({path:'artifacts/classroom/ui-fog-'+cfg.label+'-quick-map-open.png'});
     await page.keyboard.press('Escape');
     await expectEdge(page,'right',false);
