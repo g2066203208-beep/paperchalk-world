@@ -1,0 +1,37 @@
+name: Film projector 2.5D real-light and reel-browser proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/film-projector/**'
+      - 'tests/film-projector-2p5d-browser.mjs'
+      - '.github/workflows/film-projector-2p5d-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  film-projector:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install desktop Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start actual game site
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/film-projector-http.log 2>&1 &
+          sleep 2
+      - name: Browser test scene, reel controls and real shadow-map renderer
+        run: node tests/film-projector-2p5d-browser.mjs
+      - name: Save actual browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: film-projector-actual-2p5d-lighting
+          path: artifacts/film-projector-2p5d/
+          if-no-files-found: warn
