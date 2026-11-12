@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>团长绕行医生 · 2.5D 纸片舞台动画</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;min-height:100%;background:#0c090c;color:#efe4d8;font-family:Georgia,'Noto Serif SC',serif}body{display:grid;place-items:center;padding:12px}.player{width:min(100%,1260px);position:relative;overflow:hidden;background:#160f17;border:1px solid #594338;box-shadow:0 20px 70px #0008}.player canvas{display:block;width:100%;aspect-ratio:16/9;object-fit:contain}.labels{position:absolute;left:3.2%;top:3.6%;pointer-events:none;text-shadow:0 1px 8px #000}.eyebrow{font:600 clamp(10px,1vw,13px)/1.2 system-ui,sans-serif;letter-spacing:.25em;color:#c6a486}.heading{font-size:clamp(15px,2.4vw,29px);letter-spacing:.14em;margin-top:8px}.control{position:absolute;right:2.2%;top:3%;background:#130e11c4;border:1px solid #9d805a9c;border-radius:2px;padding:9px 14px;color:#f3e6cf;cursor:pointer;font-size:clamp(10px,1.05vw,14px)}.control:hover{background:#3a2730}.subtitle{position:absolute;left:50%;bottom:3.2%;transform:translateX(-50%);white-space:nowrap;text-shadow:0 2px 12px #000;font-size:clamp(10px,1.25vw,15px);color:#e9d7c7;letter-spacing:.16em;pointer-events:none}.notice{position:absolute;bottom:9%;left:50%;transform:translateX(-50%);text-align:center;color:#e9d1b6;font:12px/1.5 system-ui,sans-serif;background:#160d0dbb;padding:6px 9px;max-width:80%;pointer-events:none}.notice[hidden]{display:none}@media(max-width:600px){body{padding:0}.player{border:0}.labels{top:4%}.subtitle{bottom:2%}.control{padding:6px 8px}}
+</style>
+</head>
+<body>
+<div class="player" id="player">
+  <canvas id="canvas" width="1280" height="720" aria-label="2.5D纸片剧场：马戏团团长绕怪物猎人医生旋转并一路撒花"></canvas>
+  <div class="labels"><div class="eyebrow">PAPER THEATRE · SCENE 01</div><div class="heading">失序的花雨</div></div>
+  <button id="pause" class="control">暂停 Ⅱ</button>
+  <div class="subtitle">团长绕行 · 医生守望</div>
+  <div class="notice" id="notice">正在载入 GitHub 已批准的两张人物原画并处理白底…</div>
+</div>
+<script>
+(()=>{
+  'use strict';
+  const W=1280,H=720,TAU=Math.PI*2,canvas=document.querySelector('#canvas'),ctx=canvas.getContext('2d',{alpha:false}),notice=document.querySelector('#notice');
+  const URLS={
+    ringmaster:'https://g2066203208-beep.github.io/paperchalk-world/assets/characters/wonder-circus/ringmaster.png',
+    doctor:'https://g2066203208-beep.github.io/paperchalk-world/assets/characters/monster-hunters/02-blood-physician.png'
+  };
+  const sprites={ringmaster:null,doctor:null},petals=[];let paused=false,time=0,prev=0,emitter=0,failed=0,done=0;
+  const rand=(a,b)=>a+Math.random()*(b-a);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const ease=(a,b,x)=>{let t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+  function fillGradient(x,y,w,h,stops,radial=false){let g=radial?ctx.createRadialGradient(x+w*.5,y+h*.38,10,x+w*.5,y+h*.47,Math.max(w,h)*.55):ctx.createLinearGradient(x,y,x,y+h);for(let i of stops)g.addColorStop(i[0],i[1]);ctx.fillStyle=g;ctx.fillRect(x,y,w,h)}
+  function closedPath(points){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath()}
+  function bezierCurtain(x,y,width,height,side){ctx.save();ctx.translate(x,y);ctx.scale(side,1);
+    let g=ctx.createLinearGradient(0,0,width,0);g.addColorStop(0,'#1f1019');g.addColorStop(.23,'#713542');g.addColorStop(.46,'#4b202e');g.addColorStop(.70,'#832e39');g.addColorStop(1,'#1a0b15');
+    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(width,0);ctx.bezierCurveTo(width-20,height*.35,width-36,height*.68,width-12,height);ctx.bezierCurveTo(width*.38,height-28,width*.58,height-115,0,height-36);ctx.closePath();ctx.fill();
+    for(let i=0;i<7;i++){ctx.strokeStyle=i%2?'#d07a6c13':'#08020848';ctx.lineWidth=6;ctx.beginPath();let u=i*width/7+9;ctx.moveTo(u,0);ctx.bezierCurveTo(u+18,height*.3,u-16,height*.58,u+9,height*.95);ctx.stroke()}
+    ctx.strokeStyle='#bf8a5945';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(width-5,0);ctx.bezierCurveTo(width-20,height*.4,width-38,height*.75,width-8,height);ctx.stroke();ctx.restore()}
+  function backdrop(t){
+    fillGradient(0,0,W,H,[[0,'#100b15'],[.6,'#251623'],[1,'#090b11']]);
+    fillGradient(225,42,830,540,[[0,'#70453433'],[.68,'#3c192955'],[1,'#0a0b0b00']],true);
+    // Back painted wings: layered paper flats inside an old theatre.
+    ctx.save();ctx.translate(3*Math.sin(t*.31),0);
+    for(let i=0;i<8;i++){
+      let x=214+i*112;let g=ctx.createLinearGradient(x,60,x+87,60);g.addColorStop(0,'#24161d');g.addColorStop(.55,'#45222c');g.addColorStop(1,'#160f19');ctx.fillStyle=g;ctx.fillRect(x,53,88,443);
+      ctx.strokeStyle='#9c715a20';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+79,50);ctx.lineTo(x+79,495);ctx.stroke();
+    }
+    ctx.strokeStyle='#b78960';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(218,500);ctx.lineTo(218,194);ctx.bezierCurveTo(257,29,1020,29,1062,194);ctx.lineTo(1062,500);ctx.stroke();
+    ctx.strokeStyle='#513d34';ctx.lineWidth=17;ctx.stroke();
+    ctx.strokeStyle='#deb27744';ctx.lineWidth=2;ctx.stroke();
+    ctx.restore();
+    // Stage lights are soft physical beams, not screen overlays.
+    ctx.save();ctx.globalCompositeOperation='screen';
+    for(let [x,al] of [[450,.13],[835,.16]]){
+      let grad=ctx.createLinearGradient(x,50,x,605);grad.addColorStop(0,'rgba(254,225,177,.18)');grad.addColorStop(1,'rgba(255,229,179,0)');ctx.fillStyle=grad;ctx.globalAlpha=al*7;
+      closedPath([[x-20,55],[x+20,55],[x+265,570],[x-258,570]]);ctx.fill();
+    }
+    ctx.restore();
+    // Proscenium draperies at the back.
+    bezierCurtain(0,-10,248,570,1);bezierCurtain(W,-10,248,570,-1);
+    // Wooden paper platform, receding toward the painted back wall.
+    let grd=ctx.createLinearGradient(0,487,0,720);grd.addColorStop(0,'#422e2f');grd.addColorStop(.58,'#51352c');grd.addColorStop(1,'#21191c');ctx.fillStyle=grd;
+    closedPath([[200,492],[1080,492],[1280,720],[0,720]]);ctx.fill();
+    ctx.strokeStyle='#ae795c55';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(202,492);ctx.lineTo(1078,492);ctx.stroke();
+    for(let j=0;j<10;j++){let yy=492+Math.pow(j/9,1.55)*230;ctx.strokeStyle=j%2?'#120d1370':'#c0926044';ctx.lineWidth=j>5?2:1;ctx.beginPath();ctx.moveTo(200-(yy-492)*.9,yy);ctx.lineTo(1080+(yy-492)*.9,yy);ctx.stroke()}
+    for(let j=-8;j<=8;j++){let from=640+j*55;ctx.strokeStyle='#170f1d4e';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(from,493);ctx.lineTo(640+j*125,720);ctx.stroke()}
+    // Back floor silhouettes.
+    ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#100c14';for(let x=242;x<=1035;x+=79){ctx.beginPath();ctx.ellipse(x,493,42,7,0,0,TAU);ctx.fill()}ctx.restore();
+  }
+  function floorGlow(x,y,s){ctx.save();let g=ctx.createRadialGradient(x,y,2,x,y,92*s);g.addColorStop(0,'#c6a06733');g.addColorStop(1,'#b98b4f00');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,93*s,22*s,0,0,TAU);ctx.fill();ctx.restore()}
+  function shadow(x,y,r,opacity){ctx.save();ctx.fillStyle='rgba(4,2,9,'+opacity+')';ctx.filter='blur(12px)';ctx.beginPath();ctx.ellipse(x,y+5,r,14,0,0,TAU);ctx.fill();ctx.restore()}
+  function cutWhite(im){let ww=im.naturalWidth,hh=im.naturalHeight,off=document.createElement('canvas');off.width=ww;off.height=hh;let c=off.getContext('2d',{willReadFrequently:true});c.drawImage(im,0,0);let dat=c.getImageData(0,0,ww,hh),d=dat.data,n=ww*hh,seen=new Uint8Array(n),q=new Uint32Array(n),head=0,tail=0;
+    const isbg=i=>{let j=i*4,r=d[j],g=d[j+1],b=d[j+2];return r>215&&g>215&&b>215&&Math.max(r,g,b)-Math.min(r,g,b)<36};
+    function push(i){if(!seen[i]&&isbg(i)){seen[i]=1;q[tail++]=i}}
+    for(let x=0;x<ww;x++){push(x);push((hh-1)*ww+x)}for(let y=0;y<hh;y++){push(y*ww);push(y*ww+ww-1)}
+    while(head<tail){let p=q[head++],x=p%ww;if(x)push(p-1);if(x+1<ww)push(p+1);if(p>=ww)push(p-ww);if(p+ww<n)push(p+ww)}
+    for(let i=0;i<n;i++)if(seen[i])d[i*4+3]=0;
+    // Feather the fringe without deleting bright features inside the subject.
+    let a=new Uint8Array(n);for(let i=ww+1;i<n-ww-1;i++){if(seen[i])continue;let near=seen[i-1]||seen[i+1]||seen[i-ww]||seen[i+ww];if(!near)continue;let j=i*4,v=Math.min(d[j],d[j+1],d[j+2]);if(v>180)a[i]=Math.floor(255*clamp((245-v)/60,.04,1))}
+    for(let i=0;i<n;i++)if(a[i])d[i*4+3]=Math.min(d[i*4+3],a[i]);
+    c.putImageData(dat,0,0);return off}
+  function loadSprite(key,src){let img=new Image();img.crossOrigin='anonymous';img.onload=()=>{try{sprites[key]=cutWhite(img)}catch(err){failed++;console.warn('Image alpha processing failed',err)}done++;updateNotice()};img.onerror=()=>{failed++;done++;updateNotice()};img.src=src}
+  function updateNotice(){if(done<2)return;notice.hidden=!failed;if(failed)notice.textContent='部分 GitHub 原画读取失败：可打开下方的 GitHub Pages 完整预览。';}
+  function sprite(name,x,feet,h,flip,tilt){let sp=sprites[name];if(!sp)return;let w=h*sp.width/sp.height;ctx.save();ctx.translate(x,feet);ctx.rotate(tilt);ctx.scale(flip?-1:1,1);ctx.shadowColor='#1008128c';ctx.shadowBlur=13;ctx.shadowOffsetY=3;ctx.drawImage(sp,-w/2,-h,w,h);ctx.restore()}
+  function paperPerson(x,feet,h,main){ // Visible only while source images load.
+    ctx.save();ctx.translate(x,feet);ctx.scale(h/465,h/465);ctx.fillStyle=main?'#312934':'#5d2a37';ctx.strokeStyle='#b48a6955';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(-34,-340);ctx.bezierCurveTo(-59,-316,-80,-229,-95,0);ctx.lineTo(83,0);ctx.bezierCurveTo(81,-220,61,-319,31,-340);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle=main?'#c6ae9e':'#e5b99e';ctx.beginPath();ctx.ellipse(0,-392,38,52,0,0,TAU);ctx.fill();ctx.fillStyle=main?'#181824':'#37202a';ctx.beginPath();ctx.arc(0,-416,42,Math.PI,TAU);ctx.fill();ctx.restore()}
+  function actor(name,x,y,h,flip,tilt){let isDoc=name==='doctor';shadow(x,y,h*.17,isDoc?.62:.45);if(sprites[name])sprite(name,x,y,h,flip,tilt);else paperPerson(x,y,h,isDoc)}
+  function spawn(x,y,depth){for(let k=0;k<2;k++)petals.push({x:x+rand(-14,14),y:y+rand(-7,7),vx:rand(-1.8,2.1),vy:rand(-3.4,-1.6),age:0,max:rand(55,115),angle:rand(0,TAU),spin:rand(-.14,.14),r:rand(3,8),depth:depth+rand(-.3,.3),tone:Math.floor(rand(0,4))});if(petals.length>170)petals.splice(0,petals.length-170)}
+  function tickPetals(dt){for(let i=petals.length-1;i>=0;i--){let p=petals[i];p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.052*dt;p.vx+=.015*Math.sin(time*2+p.angle)*dt;p.angle+=p.spin*dt;if(p.age>=p.max||p.y>716)petals.splice(i,1)}}
+  function renderPetals(front){const tones=['#f4dfb5','#dfb4ad','#fbe9d4','#b98181'];for(const p of petals){if((p.depth>0)!==front)continue;let alpha=clamp(p.age/10,0,1)*clamp((p.max-p.age)/20,0,1);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.globalAlpha=alpha;ctx.fillStyle=tones[p.tone];ctx.beginPath();ctx.ellipse(0,0,p.r,p.r*.48,Math.sin(p.age*.13)*.6,0,TAU);ctx.fill();ctx.restore()}}
+  function forefront(t){
+    // Near-plane wooden lip and curtain silhouettes in front of all actors.
+    let g=ctx.createLinearGradient(0,672,0,720);g.addColorStop(0,'#281e20e0');g.addColorStop(.23,'#4b3029');g.addColorStop(.37,'#ba845b');g.addColorStop(.52,'#372326');g.addColorStop(1,'#0d0b10');ctx.fillStyle=g;ctx.fillRect(0,688,W,32);
+    for(let x=150;x<1180;x+=150){let grd=ctx.createRadialGradient(x,700,0,x,700,32);grd.addColorStop(0,'#ffdb9f77');grd.addColorStop(1,'#e1a95900');ctx.fillStyle=grd;ctx.beginPath();ctx.ellipse(x,697,32,21,0,0,TAU);ctx.fill();ctx.fillStyle='#e7b878';ctx.beginPath();ctx.arc(x,697,3,0,TAU);ctx.fill()}
+    bezierCurtain(-28,-60,175,700,1);bezierCurtain(1308,-60,175,700,-1);
+  }
+  function frame(now){requestAnimationFrame(frame);if(!prev)prev=now;let delta=Math.min((now-prev)/1000,.045);prev=now;if(!paused)time+=delta;
+    const angle=-Math.PI/2+(time/7.2)*TAU,depth=Math.sin(angle),x=640+268*Math.cos(angle),foot=599+72*depth;
+    const rh=438+68*depth,bodyFlip=Math.cos(angle)<0;
+    ctx.clearRect(0,0,W,H);backdrop(time);floorGlow(640,595,1.6);
+    if(!paused){let d=delta*60;tickPetals(d);emitter+=d;while(emitter>2.8){emitter-=2.8;spawn(x+(bodyFlip?-37:37),foot-rh*.68,depth)}}
+    renderPetals(false);
+    // A real 2.5D depth-order swap: orbiting sprite passes behind the doctor.
+    if(depth<0)actor('ringmaster',x,foot+Math.sin(time*8)*2.2,rh,bodyFlip,Math.sin(time*6)*.015);
+    actor('doctor',640,601+Math.sin(time*1.9)*1.4,493,false,Math.sin(time*1.2)*.002);
+    if(depth>=0)actor('ringmaster',x,foot+Math.sin(time*8)*2.2,rh,bodyFlip,Math.sin(time*6)*.015);
+    renderPetals(true);forefront(time);
+  }
+  document.querySelector('#pause').addEventListener('click',()=>{paused=!paused;document.querySelector('#pause').textContent=paused?'继续 ▶':'暂停 Ⅱ'});
+  loadSprite('ringmaster',URLS.ringmaster);loadSprite('doctor',URLS.doctor);requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
