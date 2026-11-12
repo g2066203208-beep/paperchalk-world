@@ -114,6 +114,9 @@ try{
   'clicking a real card then tick 1 schedules the controlled hero in the engine');
  // No legacy planner: only avatar-tethered ten-step timeline is mounted.
  assert.equal(await page.locator('.tg-tactics').count(),0);
+ assert.equal(await page.locator('.ring-timegrid.tg-planning-open').count(),1,'painted planner owns the action controls');
+ await page.locator('[data-tg-close]').click();
+ assert.equal(await page.locator('.ring-timegrid.tg-planning-open').count(),0,'closing planner restores standalone quick action');
  await page.locator('[data-tg-quick]').click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().timegrid.phase==='resolving',
   null,{timeout:10000});

@@ -515,3 +515,6 @@
   right:calc(var(--tg-frame-w) + 7px)!important;bottom:4px!important;
  }
 }
+
+/* One action entry at a time: the painted ten-step ribbon owns execution while open. */
+#ring-arena-controls .ring-timegrid.tg-planning-open .tg-quick{display:none!important}

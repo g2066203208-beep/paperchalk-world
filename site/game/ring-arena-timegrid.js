@@ -407,7 +407,7 @@
    const actor=model.game.actors.find(a=>a.id===openActorId&&!a.dead);
    if(!actor){openActorId=null;timeline.hidden=true;return;}
    const enemy=actor.side==='enemy',planning=model.game.phase==='planning'&&!model.playback;
-   timeline.hidden=false;timeline.dataset.side=actor.side;
+   timeline.hidden=false;holder.classList.add('tg-planning-open');timeline.dataset.side=actor.side;
    holder.querySelector('[data-tg-person]').textContent=actor.name||roleName(actor.id);
    holder.querySelector('[data-tg-time]').textContent='第 '+(model.game.round+1)+' 轮 · 10 时间步';
    const now=model.game.now;
@@ -437,7 +437,7 @@
     timeline.style.top=Math.max(8,Math.min(hr.height-panelH-8,rr.top-hr.top+rr.height*.5-panelH*.5))+'px';
    }
   }
-  function closeTimeline(){openActorId=null;selectedCardUid=null;timeline.hidden=true;
+  function closeTimeline(){openActorId=null;selectedCardUid=null;timeline.hidden=true;holder.classList.remove('tg-planning-open');
    for(const row of nodes.values())row.classList.remove('expanded');}
   function openTimeline(actorId){
    if(openActorId===actorId){closeTimeline();return;}
