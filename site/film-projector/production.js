@@ -67,13 +67,13 @@ camera.position.set(0,0,CAM_Z);camera.lookAt(0,0,0);
 const assetLoader=new THREE.TextureLoader();
 function material(tex,name){
  if(name==='beam')return new THREE.MeshBasicMaterial({map:tex,transparent:true,
-   opacity:.82,depthWrite:false,side:THREE.DoubleSide,
-   blending:THREE.AdditiveBlending,toneMapped:false});
+   opacity:.54,depthWrite:false,side:THREE.DoubleSide,
+   blending:THREE.NormalBlending,toneMapped:false});
  if(name==='background'||name==='filmstrip')return new THREE.MeshBasicMaterial({map:tex,
    transparent:name!=='background',depthWrite:true,alphaTest:.007,side:THREE.DoubleSide});
  const mat=new THREE.MeshStandardMaterial({map:tex,transparent:true,alphaTest:.006,
    roughness:.95,metalness:0,side:THREE.DoubleSide,
-   emissive:new THREE.Color(0xc2a891),emissiveMap:tex,emissiveIntensity:name==='screen'?.32:.17});
+   emissive:new THREE.Color(0xc2a891),emissiveMap:tex,emissiveIntensity:name==='screen'?.43:(name==='machine'||name.startsWith('reel_')?.52:(name.startsWith('curtain_')?.36:(name.startsWith('flower_')?.34:.24)))});
  return mat;
 }
 function worldRect(name,z){
@@ -126,7 +126,7 @@ keyLight.shadow.camera.top=9;keyLight.shadow.camera.bottom=-9;
 keyLight.shadow.bias=-.00025;
 fillLight=new THREE.PointLight(0x917eaa,14,18,2);
 fillLight.position.set(6.6,4.0,5.3);scene.add(fillLight);
-mainSpot=new THREE.SpotLight(0xffe2b1,95,24,.59,.78,1.15);
+mainSpot=new THREE.SpotLight(0xffe2b1,9,24,.59,.78,1.15);
 mainSpot.position.set(-4.8,-.10,4.0);
 mainSpot.target.position.set(2.4,.7,-.7);scene.add(mainSpot,mainSpot.target);
 mainSpot.castShadow=true;mainSpot.shadow.mapSize.set(2048,2048);
@@ -151,6 +151,7 @@ frameHighlight.name='2D-paper-active-film-gate';frameHighlight.position.z=selZ;f
 scene.add(frameHighlight);
 const centerXP=[482,648,813,976,1147,1315,1482];
 function setHighlight(index){
+ frameHighlight.visible=index!==1 && !compare;
  const x=centerXP[index],y=719;
  frameHighlight.position.x=(x/W-.5)*WORLD_W*fac;
  frameHighlight.position.y=(.5-y/H)*WORLD_H*fac;
@@ -216,7 +217,7 @@ function createProjectedArtwork(index,figure){
  return c;
 }
 async function setScreen(index){
- if(index===1){screenNode.material.map=originalScreenMap;screenNode.material.needsUpdate=true;return;}
+ if(index===1){screenNode.material.map=originalScreenMap;screenNode.material.emissiveMap=originalScreenMap;screenNode.material.needsUpdate=true;return;}
  const src='../assets/characters/monster-hunters/'+ROSTER[index][1];
  try{
   const image=await loadImage(src);
@@ -224,13 +225,13 @@ async function setScreen(index){
   const canvas=createProjectedArtwork(index,transparentWhite(image));
   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
   if(projTexture)projTexture.dispose();projTexture=tex;
-  screenNode.material.map=tex;screenNode.material.needsUpdate=true;
+  screenNode.material.map=tex;screenNode.material.emissiveMap=tex;screenNode.material.needsUpdate=true;
  }catch(e){
   if(selected===index){
    const canvas=createProjectedArtwork(index,null);
    const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
    if(projTexture)projTexture.dispose();projTexture=tex;
-   screenNode.material.map=tex;screenNode.material.needsUpdate=true;
+   screenNode.material.map=tex;screenNode.material.emissiveMap=tex;screenNode.material.needsUpdate=true;
   }
  }
 }
@@ -279,10 +280,10 @@ function setLight(on){
  ambientLight.intensity=on?.85:.045;
  keyLight.intensity=on?1.15:.035;
  fillLight.intensity=on?14:.05;
- mainSpot.intensity=on?95:0;
+ mainSpot.intensity=on?9:0;
  beamNode.visible=on;
  particles.forEach(p=>p.visible=on);
- screenNode.material.emissiveIntensity=on?.32:.02;
+ screenNode.material.emissiveIntensity=on?.43:.02;
  renderer.toneMappingExposure=on?1.26:.56;
 }
 function setCompare(on){
@@ -290,7 +291,7 @@ function setCompare(on){
  const b=document.getElementById('compare');b.setAttribute('aria-pressed',String(on));
  b.textContent=on?'返回场景':'对照';
  for(const node of Object.values(nodes))node.visible=!on;
- frameHighlight.visible=!on;
+ frameHighlight.visible=!on&&selected!==1;
  particles.forEach(p=>p.visible=!on&&lit);
  if(on){
   if(!referenceNode){
@@ -342,17 +343,17 @@ function render(t){
   const smooth=Math.min(1,elapsed/630);
   filmNode.position.x=filmNode.userData.initialPosition.x+filmVelocity*Math.sin(Math.PI*smooth)*.095;
   const shutter=Math.sin(Math.min(1,elapsed/370)*Math.PI);
-  screenNode.material.emissiveIntensity=lit?.32*(1-.85*shutter):.02;
-  if(lit)mainSpot.intensity=95*(1-.68*shutter);
+  screenNode.material.emissiveIntensity=lit?.43*(1-.85*shutter):.02;
+  if(lit)mainSpot.intensity=9*(1-.68*shutter);
  }else{
   filmNode.position.x+=(filmNode.userData.initialPosition.x-filmNode.position.x)*Math.min(1,dt*14);
-  screenNode.material.emissiveIntensity=lit?.32:.02;
-  if(lit)mainSpot.intensity=95+Math.sin(t*.006)*1.6;
+  screenNode.material.emissiveIntensity=lit?.43:.02;
+  if(lit)mainSpot.intensity=9+Math.sin(t*.006)*.15;
  }
  reelTop.rotation.z+=(reelTarget-reelTop.rotation.z)*Math.min(1,dt*9.5);
  reelBottom.rotation.z+=(-reelTarget*.83-reelBottom.rotation.z)*Math.min(1,dt*10.5);
  if(lit&&!compare){
-  beamNode.material.opacity=.70+Math.sin(t*.007)*.07;
+  beamNode.material.opacity=.50+Math.sin(t*.007)*.045;
   particles.forEach(p=>p.material.opacity=.24+Math.sin(t*.005)*.04);
  }
  renderer.render(scene,camera);
