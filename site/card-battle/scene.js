@@ -105,6 +105,9 @@
  function alertStatus(msg){message=msg;update();}
  function start(){
    game=G.create({classId:'axe',styleId:'strike',encounterId:'corridor',team:false,campaignBalance:true,seed});
+   // Display the two actual GitHub art identities without altering combat engine balance.
+   actor('ally').name='传奇猎人';
+   actor('enemy').name='团长';
    selected=null;
    lastActionId=null;
    message='先选手牌，再点击我方时间格';
