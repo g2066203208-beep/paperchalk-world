@@ -65,7 +65,7 @@ const cardW=1.20,cardH=1.64,slotX=[-2.02,0,2.02],
  enemyZ=[-4.36,-2.63,-.90],playerZ=[.90,2.63,4.36];
 const cardBaseMat=new THREE.MeshStandardMaterial({color:0xf5f5f3,roughness:.73,metalness:0});
 const slotMat=new THREE.LineBasicMaterial({color:0x7c858c,transparent:true,opacity:.22,depthWrite:false});
-const emptySlots=[];const placedCards=[];const clickable=[];
+const emptySlots=[];const placedCards=[];const clickable=[];const pendingCardLoads=[];
 const occupancy=[0,1,null,2,3,4,5,null,6];
 function makeOutline(x,z){let points=[[-cardW/2-.05,-cardH/2-.04],[cardW/2+.05,-cardH/2-.04],
 [cardW/2+.05,cardH/2+.04],[-cardW/2-.05,cardH/2+.04]].map(([a,b])=>new THREE.Vector3(x+a,.018,z+b));
@@ -95,6 +95,7 @@ const art=new THREE.Mesh(new THREE.PlaneGeometry(cardW-.10,cardH-.10),new THREE.
 art.rotation.x=-Math.PI/2;art.position.set(x,.112,z);scene.add(art);
 const card={base,art,x,z,team,slot,label:data.label,raised:false};
 placedCards.push(card);clickable.push(base,art);base.userData.card=card;art.userData.card=card;
+ render(); // Crucial: newly loaded card textures arrive after the first frame.
 return card;
 }
 for(let team=0;team<2;team++){
@@ -104,10 +105,10 @@ const x=slotX[i%3],z=zs[Math.floor(i/3)];makeOutline(x,z);
 const sourceIndex=occupancy[i];if(sourceIndex!==null){
 const data=team===0?hunters[sourceIndex]:circus[sourceIndex];
 // Make independent 3D card bodies; art image can arrive later without moving other cards.
-void makeCard(data,x,z,team,i).catch(err=>{
+pendingCardLoads.push(makeCard(data,x,z,team,i).catch(err=>{
  document.getElementById('error').textContent='部分卡牌素材未能载入：'+err.message;
  document.getElementById('error').classList.add('visible');
-});
+ }));
 }
 }
 }
@@ -147,4 +148,7 @@ for(const id of ['battle','top','hunter','circus'])document.getElementById('view
 document.getElementById('view-outline').addEventListener('click',e=>{const visible=e.currentTarget.getAttribute('aria-pressed')!=='true';
 e.currentTarget.setAttribute('aria-pressed',String(visible));for(let line of emptySlots)line.visible=visible;render();});
 render();
-window.addEventListener('load',()=>{document.getElementById('loading').hidden=true;render();});
+Promise.allSettled(pendingCardLoads).then(()=>{
+ document.getElementById('loading').hidden=true;
+ render();
+});
