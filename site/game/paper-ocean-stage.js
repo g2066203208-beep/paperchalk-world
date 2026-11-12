@@ -87,13 +87,18 @@ function create({stage,view}={}) {
  function advance(){
   if(!active||finished)return false;
   if(level===CHAPTER.length-1){finished=true;layout();return true;}
-  level++;layout();return true;
+  level++;layout();
+  board.dispatchEvent(new CustomEvent('paper-depth-stagechange',{bubbles:true,detail:{level:level+1,id:CHAPTER[level].id}}));
+  return true;
  }
  function retreat(){
   if(!active||level===0)return false;
   level--;finished=false;layout();return true;
  }
  function reset(){level=0;finished=false;layout();return true;}
+ function markCleared(){if(!active)return false;
+  board.dispatchEvent(new CustomEvent('paper-depth-cleared',{bubbles:true,detail:{level:level+1,id:CHAPTER[level].id}}));
+  return true;}
  next.addEventListener('click',advance);
  back.addEventListener('click',retreat);
  resetButton.addEventListener('click',reset);
@@ -114,7 +119,7 @@ function create({stage,view}={}) {
    imagesLoaded:loaded&&masterImg.naturalWidth>0};
  }
  layout(false);
- return Object.freeze({setActive,advance,retreat,reset,inspect,get element(){return board;}});
+ return Object.freeze({setActive,advance,retreat,reset,markCleared,inspect,get element(){return board;}});
 }
 root.PaperWorldPaperOcean=Object.freeze({create});
 })(window);
