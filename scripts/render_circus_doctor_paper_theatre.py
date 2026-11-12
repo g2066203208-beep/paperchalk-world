@@ -90,6 +90,7 @@ def background():
     return im
 
 def draw_actor(stage, sprite, x, feet, height, flip=False):
+    height = max(1, int(round(height)))
     w=round(sprite.width*height/sprite.height)
     resized=sprite.resize((w,height),Image.Resampling.LANCZOS)
     if flip: resized=resized.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
