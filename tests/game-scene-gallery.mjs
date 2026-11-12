@@ -13,7 +13,7 @@ const server=createServer((req,res)=>{
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const catalog=JSON.parse(readFileSync('site/scene-catalog.generated.json','utf8')).scenes;
-const scenes=['menu','classroom',...catalog.map(e=>e.id)],base='http://127.0.0.1:'+server.address().port+'/';
+const scenes=['menu','school',...catalog.map(e=>e.id)],base='http://127.0.0.1:'+server.address().port+'/';
 mkdirSync('artifacts/game-scene-gallery',{recursive:true});
 const results=[];
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});

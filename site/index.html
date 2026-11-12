@@ -2041,6 +2041,8 @@ void main(){
     layers:{player:false,enemy:false}}});
   // Authoritative live registry shared by scene switching, city travel and POIs.
   window.PaperWorldSceneRegistry=SCENES;
+  // Actual gameplay classroom: the five-face school WebGL scene, not the old flat demo.
+  window.PaperWorldOfficialClassroomScene='school';
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
   const extraEnemies=['enemy2','enemy3','enemy4'].map(id=>document.getElementById('room-'+id+'-root'));
@@ -2269,7 +2271,9 @@ void main(){
     button.dataset.sceneTarget=id;button.addEventListener('click',onPick);
     return button;
   }
-  const catalogScenes=Object.entries(SCENES).filter(([id,def])=>id!=='menu');
+  // Retire the old flat classroom from all player-visible scene lists.
+  // Keep its explicit legacy deep link solely for old visual regression tests.
+  const catalogScenes=Object.entries(SCENES).filter(([id])=>id!=='menu'&&id!=='classroom');
   function populateSceneLists(){
     galleryOptions.replaceChildren();sceneSwitcher.replaceChildren();
     for(const [id,def] of catalogScenes){

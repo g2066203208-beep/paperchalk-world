@@ -32,12 +32,12 @@
     result.menu = define('menu', './assets/menu-wall.webp',
       '一面旧墙、一扇门和一盏灯', '主菜单', 'menu');
     result.classroom = define('classroom', './assets/classroom.webp',
-      '空教室全景：黑板、课桌、左侧窗户', '教室', 'story');
+      '早期平面教室测试素材（不是学校正式教室）', '旧版平面教室 · 废弃测试', 'story');
     // Distinct public city locations are real renderer targets.
     // School uses approved classroom art; others use independent editable
     // architectural environment blockouts, never recycled home wallpaper.
     const cityStages=[
-      ['school','./assets/classroom.webp','学校教室']
+      ['school','./assets/classroom.webp','学校教室 · 正式场景']
     ];
     for(const [id,image,title] of cityStages){
       result[id]=define(id,image,title,title,'environment',
