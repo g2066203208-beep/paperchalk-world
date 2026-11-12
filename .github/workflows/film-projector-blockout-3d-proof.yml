@@ -1,9 +1,10 @@
-name: Film projector V2 pure 3D spatial blockout proof
+name: Film projector paper 2.5D stage proof
 on:
   push:
     branches: [main]
     paths:
       - 'site/film-projector/blockout.*'
+      - 'site/film-projector/paper-stage.js'
       - 'tests/film-projector-blockout-3d-browser.mjs'
       - '.github/workflows/film-projector-blockout-3d-proof.yml'
   workflow_dispatch:
