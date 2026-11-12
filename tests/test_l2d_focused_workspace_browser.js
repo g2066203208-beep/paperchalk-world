@@ -108,6 +108,12 @@ const {chromium}=require('playwright');
     await page.locator('#workspace-mobile-more > summary').click();
     await page.locator('#mobile-studio-recover').click();
     assert.equal(await page.locator('#studio-recovery').isVisible(),true);
+    assert.equal(await page.evaluate(()=>{
+     const close=document.querySelector('#studio-recovery>.workspace-recovery-close');
+     if(!close)return false;
+     const r=close.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+     return x>=0&&x<=innerWidth&&y>=0&&y<=innerHeight&&document.elementFromPoint(x,y)===close;
+    }),true,'recovery close must receive pointer clicks on 320px phones');
     await page.locator('.workspace-recovery-close').click();
     assert.equal(await page.locator('#studio-recovery').isVisible(),false);
    }

@@ -165,7 +165,7 @@ if(recovery){
   $('btnRecovery')?.setAttribute('aria-expanded','false');
  },'workspace-recovery-close');
  close.setAttribute('aria-label','关闭复原面板');
- recovery.querySelector('.recovery-heading')?.prepend(close);
+ // Keep the close action pinned inside its own scrollable sheet, not in the title.\n recovery.prepend(close);
 }
 
 // One small viewport toolbar: move secondary commands behind a menu while
