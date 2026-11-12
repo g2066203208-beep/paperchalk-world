@@ -234,11 +234,10 @@
      banner.width=384;banner.height=144;
      const bc=banner.getContext('2d');
      bc.fillStyle='#201619';bc.fillRect(0,0,384,144);
-     bc.save();
-     bc.filter='blur(17px) brightness(.40) saturate(.65)';
-     bc.drawImage(out,-15,-132,414,506);
-     bc.restore();
-     bc.drawImage(out,0,0,216,236,82,-24,220,239);
+     // Use a CINEMATIC FACE CLOSE-UP, not a small full head on a wide black band.
+     // The crop has the same 2.66:1 ratio as the painted transparent film window
+     // and keeps the artist's actual source facial proportions intact.
+     bc.drawImage(out,15,53,186,70,0,0,384,144);
      cropped.set(source,banner.toDataURL('image/webp',.91));
      if(model)paintRoster();
     }catch(error){console.warn('[Arena HUD portrait crop]',error);}
