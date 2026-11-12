@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'site/assets/ui/vintage-cinema-single-frame.svg'
+      - 'site/assets/ui/horror-film-silver-*.webp'
       - 'site/game/ring-arena-film-screen.css'
       - 'site/game/ring-arena-timegrid.css'
       - 'site/game/ring-arena-timegrid.js'

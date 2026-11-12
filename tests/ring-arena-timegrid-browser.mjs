@@ -37,8 +37,8 @@ try{
  assert.equal(first.timegrid.roles.length,4);
  assert.equal(first.timegrid.enemies.length,4);
  assert.equal(first.timegrid.timelineTicks,10);
- assert.equal(first.timegrid.ui,'full-height-vintage-portrait-film-roll-v2');
- assert.equal(first.timegrid.version,'2.0');
+ assert.equal(first.timegrid.ui,'silver-film-portrait-timegrid-v3');
+ assert.equal(first.timegrid.version,'3.0');
  assert.equal(first.timegrid.tacticsOpen,false);
  assert.equal(await page.locator('.ring-timegrid .tg-film-viewport').count(),1);
  assert.equal(await page.locator('.ring-timegrid .tg-reel').count(),1);
@@ -76,7 +76,7 @@ try{
  },null,{timeout:30000});
  await page.waitForFunction(()=>{
   const textures=[...document.querySelectorAll('.tg-reel > .tg-row .tg-film-texture')];
-  return textures.length===8&&textures.every(im=>im.complete&&im.naturalWidth===224);
+  return textures.length===8&&textures.every(im=>im.complete&&im.naturalWidth===240);
  },null,{timeout:30000});
  const filmGeometry=await page.locator('.tg-film-viewport').evaluate(el=>{
   const r=el.getBoundingClientRect();
@@ -101,11 +101,18 @@ try{
   const state=await inspect();
   assert.equal(state.timegrid.controlledId,expected[i-1]);
   assert.equal(state.controlledActorId,cameraIds[i-1]);
-  assert.equal(state.timegrid.tacticsOpen,false,
-   'selecting the active ally switches the real world camera without opening a menu');
+  assert.equal(state.timegrid.tacticsOpen,false);
+  assert.equal(state.timegrid.timelineOpen,true,
+   'clicking a portrait opens its own ten-step panel while switching camera');
+  assert.equal(await page.locator('[data-tg-tick]').count(),10);
  }
  await page.locator('[data-tg-choose-role="1"]').click();
- // The user rejected the first-round planner: real simulation still runs.
+ await page.screenshot({path:resolve(out,'01b-timeline-open-1280x720.png'),animations:'disabled'});
+ await page.locator('[data-tg-card]').first().click();
+ await page.locator('[data-tg-tick="1"]').click();
+ assert.ok((await inspect()).timegrid.roles[0].planned>=1,
+  'clicking a real card then tick 1 schedules the controlled hero in the engine');
+ // No legacy planner: only avatar-tethered ten-step timeline is mounted.
  assert.equal(await page.locator('.tg-tactics').count(),0);
  await page.locator('[data-tg-quick]').click();
  await page.waitForFunction(()=>window.PaperWorldGameRingArena.inspect().timegrid.phase==='resolving',

@@ -113,11 +113,21 @@
    '<div class="tg-film-blank tg-film-blank-top" aria-hidden="true"></div>',
    '<div class="tg-reel" data-tg-roster></div>',
    '<div class="tg-film-blank tg-film-blank-bottom" aria-hidden="true"></div></div>',
+   '<section class="tg-timeline" data-tg-timeline role="region" aria-label="角色时间步规划" hidden>',
+   '<header class="tg-timeline-head"><span data-tg-person>角色行动</span><span data-tg-time>10 时间步</span><button type="button" data-tg-close aria-label="收起时间步">×</button></header>',
+   '<div class="tg-timeline-ticks" data-tg-ticks></div>',
+   '<div class="tg-timeline-cards" data-tg-cards></div>',
+   '<p class="tg-timeline-note" data-tg-note>选择手牌，再点时间步。</p>',
+   '<footer class="tg-timeline-foot"><button type="button" data-tg-auto-role>自动编排本角色</button><button type="button" data-tg-execute>执行本轮</button></footer></section>',
    '<button type="button" class="tg-quick" data-tg-quick aria-label="自动安排并执行一次行动">行动</button>',
    '<span class="tg-screenreader" role="status" aria-live="polite" data-tg-announcement></span>'
   ].join('');
   const roster=holder.querySelector('[data-tg-roster]');
   const viewport=holder.querySelector('.tg-film-viewport');
+  const timeline=holder.querySelector('[data-tg-timeline]');
+  const timelineTicks=holder.querySelector('[data-tg-ticks]');
+  const timelineCards=holder.querySelector('[data-tg-cards]');
+  const timelineNote=holder.querySelector('[data-tg-note]');
   const announce=holder.querySelector('[data-tg-announcement]');
   const hitLayer=document.createElement('div');
   hitLayer.dataset.tgHits='';hitLayer.className='tg-hit-layer';
@@ -126,7 +136,7 @@
   const roleName=id=>({hero:'斧卫','ai-gun':'枪手','ai-guard':'守护','ai-mage':'调律'}[id]||'敌方');
   // This is the exact transparent-window vintage 35mm film image generated
   // for this game, stored once and repeated as a texture, never CSS-drawn.
-  const FILM_ART='./assets/ui/vintage-cinema-single-frame.svg';
+  const FILM_ART='./assets/ui/horror-film-silver-window.webp';
   const portraitArt=Object.freeze({
    hero:'./assets/characters/protagonist-front.webp',
    'ai-gun':'./assets/characters/char-003/front.png',
@@ -232,6 +242,7 @@
 
 
   let seed=20261108,model=null,firstFrame=true,rosterRevision=0;
+  let openActorId=null,selectedCardUid=null,selectedTargetId=null,timelineMessage='';
   const nodes=new Map();
   const reduceMotion=()=>!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   function makeFrame(actor){
@@ -246,8 +257,8 @@
    const portrait=actor.side==='ally'
     ?'<button type="button" class="tg-portrait" data-tg-choose-role="'+
      (ROLE_IDS.indexOf(actor.id)+1)+'" aria-label="切换到'+escape(label)+'">'
-    :'<span class="tg-portrait" aria-hidden="true">';
-   const portraitEnd=actor.side==='ally'?'</button>':'</span>';
+    :'<button type="button" class="tg-portrait" data-tg-inspect-enemy="'+actor.id+'" aria-label="查看'+escape(label)+'的时间步">';
+   const portraitEnd='</button>';
    row.innerHTML=portrait+
     '<span class="tg-cutout"><img class="tg-face" alt="" draggable="false" decoding="async" src="'+art(actor)+'"></span>'+
     portraitEnd+
@@ -262,6 +273,7 @@
    const hp=Math.max(0,Math.min(hpMax,Number(actor.hp)||0));
    const role=actor.id===model.controlled().id;
    row.classList.toggle('current',role);
+   row.classList.toggle('expanded',actor.id===openActorId);
    row.classList.toggle('enemy',actor.side==='enemy');
    row.classList.toggle('ally',actor.side==='ally');
    const face=row.querySelector('.tg-face'),source=art(actor);
@@ -373,14 +385,60 @@
    }
    holder.querySelector('[data-tg-quick]').disabled=model.playback||
     model.game.phase!=='planning';
-   holder.dataset.layout='full-height-vintage-portrait-film-roll-v2';
-   holder.dataset.timegridVersion='2.0';
+   holder.dataset.layout='silver-film-portrait-timegrid-v3';
+   holder.dataset.timegridVersion='3.0';
    holder.dataset.reelRevision=String(rosterRevision);
    firstFrame=false;
+   if(openActorId)renderTimeline();
+  }
+  function renderTimeline(){
+   if(!openActorId||!model){timeline.hidden=true;return;}
+   const actor=model.game.actors.find(a=>a.id===openActorId&&!a.dead);
+   if(!actor){openActorId=null;timeline.hidden=true;return;}
+   const enemy=actor.side==='enemy',planning=model.game.phase==='planning'&&!model.playback;
+   timeline.hidden=false;timeline.dataset.side=actor.side;
+   holder.querySelector('[data-tg-person]').textContent=actor.name||roleName(actor.id);
+   holder.querySelector('[data-tg-time]').textContent='第 '+(model.game.round+1)+' 轮 · 10 时间步';
+   const now=model.game.now;
+   timelineTicks.innerHTML=Array.from({length:10},(_,i)=>{
+    const tick=now+i;
+    const act=actor.actions.find(a=>!a.canceled&&a.start<=tick&&a.start+(G.CARD[a.card]?.w||0)+(G.CARD[a.card]?.a||0)+(G.CARD[a.card]?.r||0)>tick);
+    const card=act&&G.CARD[act.card],phase=card&&G.phase(card,act.start,tick);
+    const mark=phase==='windup'?'蓄':phase==='active'?'动':phase==='recovery'?'收':'·';
+    const title=card?escape(card.name+' · '+(phase||'')):'空闲时间步';
+    return '<button class="tg-tick '+(phase||'empty')+'" data-tg-tick="'+(i+1)+'" type="button" '+
+     (enemy||!planning?'disabled ':'')+'title="'+title+'"><small>'+String(i+1).padStart(2,'0')+'</small><strong>'+mark+'</strong></button>';
+   }).join('');
+   if(enemy)timelineCards.innerHTML='<span class="tg-timeline-intel">敌方行动只可观察，不可编辑。</span>';
+   else timelineCards.innerHTML=(actor.hand||[]).map(inst=>{
+    const card=G.CARD[inst.key];if(!card)return '';
+    return '<button class="tg-card-pick" type="button" data-tg-card="'+escape(inst.uid)+'" aria-pressed="'+(inst.uid===selectedCardUid)+'">'+
+     escape(card.name)+' <small>'+(card.w+card.a+card.r)+'步</small></button>';
+   }).join('')||'<span class="tg-timeline-intel">当前没有手牌。</span>';
+   timelineNote.textContent=timelineMessage||(enemy?'目标生命 '+actor.hp+'/'+actor.maxHp:
+    selectedCardUid?'点击空白时间步安排已选卡牌。':'选手牌再点击 01—10 时间步；点击已安排动作可撤回。');
+   timeline.querySelector('[data-tg-auto-role]').hidden=enemy||!planning;
+   timeline.querySelector('[data-tg-execute]').hidden=enemy||!planning;
+   timeline.querySelectorAll('[data-tg-card]').forEach(btn=>{btn.disabled=!planning});
+   const row=nodes.get(actor.id);
+   if(row){
+    const rr=row.getBoundingClientRect(),hr=holder.getBoundingClientRect(),panelH=timeline.getBoundingClientRect().height;
+    timeline.style.top=Math.max(8,Math.min(hr.height-panelH-8,rr.top-hr.top+rr.height*.5-panelH*.5))+'px';
+   }
+  }
+  function closeTimeline(){openActorId=null;selectedCardUid=null;timeline.hidden=true;
+   for(const row of nodes.values())row.classList.remove('expanded');}
+  function openTimeline(actorId){
+   if(openActorId===actorId){closeTimeline();return;}
+   openActorId=actorId;selectedCardUid=null;timelineMessage='';
+   if(actorId.startsWith('enemy-'))selectedTargetId=actorId;
+   for(const [id,row] of nodes)row.classList.toggle('expanded',id===actorId);
+   renderTimeline();
   }
   function start(){
    model=createBattle(++seed);
    firstFrame=true;rosterRevision=0;nodes.clear();roster.replaceChildren();
+   closeTimeline();selectedTargetId=null;
    hitLayer.replaceChildren();holder.classList.remove('tg-ready');
    model.onChange(event=>{if(onTick)onTick(event,model);paintRoster();});
    paintRoster();
@@ -401,17 +459,55 @@
   }
   holder.addEventListener('click',event=>{
    const button=event.target.closest('button');if(!button)return;
-   if(button.hasAttribute('data-tg-quick')){executeQuick();return;}
+   if(button.hasAttribute('data-tg-quick')){closeTimeline();executeQuick();return;}
+   if(button.hasAttribute('data-tg-close')){closeTimeline();return;}
    if(button.hasAttribute('data-tg-choose-role')){
-    const index=Number(button.dataset.tgChooseRole);
+    const index=Number(button.dataset.tgChooseRole),actorId=ROLE_IDS[index-1];
+    if(!actorId)return;
+    const same=openActorId===actorId;
     if(onRole)onRole(index);else selectRole(index);
+    if(same)closeTimeline();else openTimeline(actorId);
+    return;
+   }
+   if(button.hasAttribute('data-tg-inspect-enemy')){
+    openTimeline(button.dataset.tgInspectEnemy);return;
+   }
+   if(button.hasAttribute('data-tg-card')){
+    selectedCardUid=selectedCardUid===button.dataset.tgCard?null:button.dataset.tgCard;
+    timelineMessage='';renderTimeline();return;
+   }
+   if(button.hasAttribute('data-tg-tick')&&openActorId&&!openActorId.startsWith('enemy-')){
+    const actor=model.game.actors.find(a=>a.id===openActorId);
+    if(!actor||model.playback||model.game.phase!=='planning')return;
+    const step=Number(button.dataset.tgTick),tick=model.game.now+step-1;
+    const old=actor.actions.find(a=>!a.canceled&&a.start<=tick&&a.start+(G.CARD[a.card].w+G.CARD[a.card].a+G.CARD[a.card].r)>tick);
+    try{
+     if(old){model.undo(old.id);timelineMessage='已撤回 '+G.CARD[old.card].name;}
+     else if(selectedCardUid){
+      const inst=actor.hand.find(x=>x.uid===selectedCardUid);
+      if(!inst)throw Error('手牌已失效，请重新选择');
+      const card=G.CARD[inst.key],dest=friendly(card)?openActorId:(selectedTargetId||'enemy-1');
+      model.schedule(inst.uid,step,dest);timelineMessage='已在第 '+step+' 步安排 '+card.name;
+      selectedCardUid=null;
+     }else timelineMessage='先选择下方手牌。';
+    }catch(error){timelineMessage=String(error.message||error)}
+    renderTimeline();return;
+   }
+   if(button.hasAttribute('data-tg-auto-role')){
+    try{model.autoplan(false);timelineMessage='已为本角色编排行动';}
+    catch(error){timelineMessage=String(error.message||error)}
+    renderTimeline();return;
+   }
+   if(button.hasAttribute('data-tg-execute')){
+    if(model.execute()){closeTimeline();timelineMessage='';}return;
    }
   });
   const keyHandler=event=>{
    if(hud.hidden||!hud.isConnected||event.repeat||event.altKey||
     event.ctrlKey||event.metaKey)return;
    if(/input|textarea|select/i.test(event.target?.tagName||''))return;
-   if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();executeQuick();}
+   if(event.key==='Escape'&&openActorId){event.preventDefault();closeTimeline();return;}
+   if(event.key==='Enter'&&!event.shiftKey&&event.target?.tagName!=='BUTTON'){event.preventDefault();executeQuick();}
   };
   document.addEventListener('keydown',keyHandler);
   // The optional QA gate verifies recruitment/death movement with REAL DOM
@@ -440,7 +536,8 @@
     ui:holder.dataset.layout,version:holder.dataset.timegridVersion,
     reelRevision:rosterRevision,reelActorIds:[...nodes.keys()],
     filmArt:FILM_ART,
-    tacticsOpen:false,quickActionAvailable:!model.playback&&model.game.phase==='planning',
+    tacticsOpen:false,timelineOpen:!timeline.hidden,timelineActor:openActorId,
+    quickActionAvailable:!model.playback&&model.game.phase==='planning',
     roles:ROLE_IDS.map((id,i)=>({gameId:id,arenaId:ARENA_IDS[i],
      hp:model.game.actors.find(a=>a.id===id)?.hp,
      hand:model.game.actors.find(a=>a.id===id)?.hand.length,

@@ -52,13 +52,15 @@ const style=fs.readFileSync(path.join(__dirname,'../site/game/ring-arena-timegri
 assert.ok(right.includes('data-tg-choose-role'));
 assert.ok(right.includes('tg-roster'),'portrait roster preserved');
 assert.ok(right.includes('tg-hp-value')&&right.includes('tg-hp-bar'),'live HP kept');
-assert.ok(right.includes('full-height-vintage-portrait-film-roll-v2'),'full-height vertical movie reel mounted');
+assert.ok(right.includes('silver-film-portrait-timegrid-v3'),'full-height vertical movie reel mounted');
 assert.ok(right.includes('tg-film-blank-top')&&right.includes('tg-film-blank-bottom'),'both ends filled by authentic empty film frames');
-assert.ok(right.includes('vintage-cinema-single-frame.svg'),'GPT film image asset used');
+assert.ok(right.includes('horror-film-silver-window.webp'),'GPT film image asset used');
 assert.ok(right.includes('rollOut'),'death extracts its film frame');
 assert.ok(right.includes('recruit:actor'),'newcomers join the film');
 assert.ok(right.includes('rosterRevision'),'dynamic membership has stable state');
 assert.ok(right.includes('data-tg-quick')&&right.includes('executeQuick'),'combat still executable');
+assert.ok(right.includes('data-tg-timeline')&&right.includes('data-tg-tick')&&right.includes('model.schedule('),
+ 'clicked portrait must expose the real ten-step planner and action placement');
 assert.ok(right.includes('hud.append(holder,hitLayer)'),'only actual roster and hit FX mounted');
 assert.ok(!right.includes('tg-tactics')&&!right.includes('tg-tick-caption'),
  'old round-one action panel actually removed');
@@ -73,9 +75,11 @@ assert.ok(style.includes('.tg-hp-bar'),'real HP line survives');
 assert.ok(style.includes('.tg-tactics{display:none!important}'),
  'rejected card planner stays hidden');
 assert.ok(style.includes('@media(max-width:700px)'),'mobile viewport supported');
-const film=fs.readFileSync(path.join(__dirname,'../site/assets/ui/vintage-cinema-single-frame.svg'),'utf8');
-assert.ok(film.includes('data:image/webp;base64,'),'real GPT-generated film image embedded');
-assert.ok(film.length>4500,'authored celluloid texture has not been replaced by placeholder');
+const film=fs.readFileSync(path.join(__dirname,'../site/assets/ui/horror-film-silver-window.webp'));
+assert.ok(film.subarray(0,4).toString()==='RIFF','redesigned silver film is real WebP art');
+assert.ok(film.length>700,'painted silver film asset not a placeholder');
+for(const name of ['horror-film-silver-blank-a.webp','horror-film-silver-blank-b.webp'])
+ assert.ok(fs.statSync(path.join(__dirname,'../site/assets/ui',name)).size>700,'authored non-repeating empty film texture preserved');
 assert.match(runtime,/PaperWorldRingTimegrid/);
 assert.match(runtime,/combatTimegrid\.advance\(dt\)/);
 console.log('PASS ring arena actual 4v4 Timegrid ten-tick cards, four controllers and game integration');
