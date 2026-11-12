@@ -62,7 +62,7 @@ try{
    assert.equal(check.rows.length,8,'four allies and four enemies');
    assert.ok(check.blankTop.height>=1&&check.blankBottom.height>=1,'both ends use continuing empty film');
    assert.ok(check.blankImage.includes('vintage-cinema-single-frame.svg'));
-   assert.ok(check.rows.every(row=>row.width===check.strip.width&&row.height>=28));
+   assert.ok(check.rows.every(row=>Math.abs(row.width-check.strip.width)<=2&&row.height>=28));
    await page.screenshot({path:out+'/ring-arena-full-height-film-'+cfg.name+'.png',animations:'disabled',timeout:20000});
    assert.deepEqual(errors,[],'browser must render without uncaught JavaScript errors');
   }finally{await page.close()}

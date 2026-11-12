@@ -8,7 +8,7 @@
 }
 #ring-arena-controls .ring-timegrid{
  --tg-frame-w:clamp(144px,10.6cqw,212px);
- --tg-frame-h:min(calc(var(--tg-frame-w)*.525),calc(100cqh / 10));
+ --tg-frame-h:min(calc(var(--tg-frame-w)*.525),10cqh);
  position:absolute!important;inset:0!important;
  width:100%!important;height:100%!important;
  max-width:none!important;max-height:none!important;

@@ -52,7 +52,8 @@ const style=fs.readFileSync(path.join(__dirname,'../site/game/ring-arena-timegri
 assert.ok(right.includes('data-tg-choose-role'));
 assert.ok(right.includes('tg-roster'),'portrait roster preserved');
 assert.ok(right.includes('tg-hp-value')&&right.includes('tg-hp-bar'),'live HP kept');
-assert.ok(right.includes('gpt-vintage-vertical-film-roll-v1'),'real vertical movie reel mounted');
+assert.ok(right.includes('full-height-vintage-portrait-film-roll-v2'),'full-height vertical movie reel mounted');
+assert.ok(right.includes('tg-film-blank-top')&&right.includes('tg-film-blank-bottom'),'both ends filled by authentic empty film frames');
 assert.ok(right.includes('vintage-cinema-single-frame.svg'),'GPT film image asset used');
 assert.ok(right.includes('rollOut'),'death extracts its film frame');
 assert.ok(right.includes('recruit:actor'),'newcomers join the film');
