@@ -63,14 +63,30 @@ shadowReceiver.receiveShadow=true;scene.add(shadowReceiver);
 
 // Keep both full 3x3 teams legible in a 16:9 frame: side-by-side, no distant shrunk rows.
 // Each team stays on the same physical 16 x 12 tabletop.
-const cardW=1.93,cardH=2.89,slotX=[-2.10,0,2.10],rowZ=[-3.05,0,3.05],teamCenterX=[-4.16,4.16];
+// Two 3×3 formations. Cards use a 2:3 printed ratio; never skew the source art.
+const cardW=2.06,cardH=3.09,slotX=[-2.20,0,2.20],rowZ=[-3.22,0,3.22],teamCenterX=[-3.62,3.62];
+const portraitTeamZ=[-5.05,5.05];
+const isPortrait=()=>window.innerWidth/window.innerHeight<0.72;
+function slotPosition(team,slot){
+  const col=slot%3,row=Math.floor(slot/3);
+  return isPortrait()
+    ? {x:slotX[col],z:portraitTeamZ[team]+rowZ[row]}
+    : {x:teamCenterX[team]+slotX[col],z:rowZ[row]};
+}
 const cardBaseMat=new THREE.MeshStandardMaterial({color:0xf5f5f3,roughness:.73,metalness:0});
-const slotMat=new THREE.LineBasicMaterial({color:0x7c858c,transparent:true,opacity:.22,depthWrite:false});
+const slotMat=new THREE.LineBasicMaterial({color:0x7c858c,transparent:true,opacity:.36,depthWrite:false});
 const emptySlots=[];const placedCards=[];const clickable=[];const pendingCardLoads=[];
 const occupancy=[0,1,null,2,3,4,5,null,6];
-function makeOutline(x,z){let points=[[-cardW/2-.05,-cardH/2-.04],[cardW/2+.05,-cardH/2-.04],
-[cardW/2+.05,cardH/2+.04],[-cardW/2-.05,cardH/2+.04]].map(([a,b])=>new THREE.Vector3(x+a,.018,z+b));
-const geo=new THREE.BufferGeometry().setFromPoints(points);const line=new THREE.LineLoop(geo,slotMat);line.visible=false;scene.add(line);emptySlots.push(line);}
+function makeOutline(x,z,team,slot,occupied){
+  const points=[[-cardW/2-.05,-cardH/2-.04],[cardW/2+.05,-cardH/2-.04],
+    [cardW/2+.05,cardH/2+.04],[-cardW/2-.05,cardH/2+.04]]
+    .map(([a,b])=>new THREE.Vector3(a,.018,b));
+  const line=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points),slotMat);
+  line.position.set(x,0,z);
+  line.visible=!occupied; // Show the two unused positions per team by default.
+  line.userData={team,slot,occupied};
+  scene.add(line);emptySlots.push(line);
+}
 function makeCardBox(x,z){let geo=new THREE.ExtrudeGeometry(roundRectShape(cardW,cardH,.085),{
  depth:.055,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.023,bevelThickness:.018,curveSegments:6});
 geo.rotateX(-Math.PI/2);let mesh=new THREE.Mesh(geo,cardBaseMat);
@@ -87,6 +103,7 @@ ctx.strokeStyle='#efeeeb';ctx.lineWidth=16;ctx.beginPath();ctx.roundRect(9,9,100
 return new THREE.CanvasTexture(c);
 }
 async function makeCard(data,x,z,team,slot){const img=await loadImage(data.src);
+({x,z}=slotPosition(team,slot)); // Correct placement even if the viewport resized during loading.
 const tex=data.kind==='source'?hunterCardTexture(img):new THREE.Texture(img);
 tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),16);
 tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
@@ -101,8 +118,10 @@ return card;
 }
 for(let team=0;team<2;team++){
 for(let i=0;i<9;i++){
-const x=teamCenterX[team]+slotX[i%3],z=rowZ[Math.floor(i/3)];makeOutline(x,z);
-const sourceIndex=occupancy[i];if(sourceIndex!==null){
+const {x,z}=slotPosition(team,i);
+const sourceIndex=occupancy[i];
+makeOutline(x,z,team,i,sourceIndex!==null);
+if(sourceIndex!==null){
 const data=team===0?hunters[sourceIndex]:circus[sourceIndex];
 // Make independent 3D card bodies; art image can arrive later without moving other cards.
 pendingCardLoads.push(makeCard(data,x,z,team,i).catch(err=>{
@@ -113,12 +132,12 @@ pendingCardLoads.push(makeCard(data,x,z,team,i).catch(err=>{
 }
 }
 
-// LOCKED CAMERA. No pointer drag or wheel zoom. Orthographic and exact overhead,
-// so every card is equally readable and renders at its native screen scale.
+// The real camera is strictly orthographic and perpendicular to the card faces.
+// On narrow portrait screens, stack teams vertically instead of shrinking 6 columns.
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 function render(){
  const w=window.innerWidth,h=window.innerHeight,aspect=w/h;
- const halfH=Math.max(5.10,7.35/aspect);
+ const halfH=isPortrait()?Math.max(10.35,3.55/aspect):Math.max(5.12,7.20/aspect);
  camera.left=-halfH*aspect;camera.right=halfH*aspect;
  camera.top=halfH;camera.bottom=-halfH;
  camera.updateProjectionMatrix();
@@ -127,19 +146,60 @@ function render(){
  camera.lookAt(0,0,0);
  renderer.render(scene,camera);
 }
-function resize(){renderer.setSize(window.innerWidth,window.innerHeight,false);render();}
+function syncFormation(){
+ table.scale.z=isPortrait()?2:1;
+ for(const line of emptySlots){
+  const {x,z}=slotPosition(line.userData.team,line.userData.slot);
+  line.position.x=x;line.position.z=z;
+ }
+ for(const card of placedCards){
+  const {x,z}=slotPosition(card.team,card.slot);
+  card.x=x;card.z=z;
+  card.base.position.x=x;card.base.position.z=z;
+  card.art.position.x=x;card.art.position.z=z;
+ }
+}
+function resize(){renderer.setSize(window.innerWidth,window.innerHeight,false);syncFormation();render();}
 window.addEventListener('resize',resize);
 const preview=document.getElementById('card-inspect');
 const previewImage=document.getElementById('card-inspect-image');
 const previewLabel=document.getElementById('card-inspect-label');
 function closeInspect(){preview.hidden=true;}
-canvas.addEventListener('click',e=>{
+function cardUnderPointer(e){
  const r=canvas.getBoundingClientRect();
  pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
  raycaster.setFromCamera(pointer,camera);
- const hit=raycaster.intersectObjects(clickable,false).find(x=>x.object.userData.card);
- if(!hit)return;
- const card=hit.object.userData.card;
+ return raycaster.intersectObjects(clickable,false).find(x=>x.object.userData.card)?.object.userData.card||null;
+}
+const peek=document.getElementById('card-peek'),peekImage=document.getElementById('card-peek-image');
+const peekLabel=document.getElementById('card-peek-label');
+let lastPeek=null;
+function hidePeek(){peek.hidden=true;lastPeek=null;}
+canvas.addEventListener('pointermove',e=>{
+ if(e.pointerType==='touch'||preview.hidden===false)return hidePeek();
+ const card=cardUnderPointer(e);
+ if(!card)return hidePeek();
+ if(lastPeek!==card){
+  lastPeek=card;
+  // Hunter originals have no frame; display the exact same composed texture as on the board.
+  peekImage.src=card.team===0
+    ? (card.peekSrc??=(card.art.material.map.image.toDataURL('image/png')))
+    : card.src;
+  peekLabel.textContent=card.label;
+ }
+ const width=Math.min(335,Math.max(220,window.innerWidth*.22));
+ const height=width*1.5+30;
+ const left=e.clientX+22+width<window.innerWidth-10?e.clientX+22:e.clientX-width-22;
+ peek.style.width=width+'px';
+ peek.style.left=Math.max(8,Math.min(window.innerWidth-width-8,left))+'px';
+ peek.style.top=Math.max(8,Math.min(window.innerHeight-height-8,e.clientY-height*.48))+'px';
+ peek.hidden=false;
+});
+canvas.addEventListener('pointerleave',hidePeek);
+canvas.addEventListener('click',e=>{
+ const card=cardUnderPointer(e);
+ if(!card)return;
+ hidePeek();
  previewImage.src=card.src;
  previewLabel.textContent=card.label;
  preview.hidden=false;
@@ -149,9 +209,9 @@ window.addEventListener('keydown',e=>{if(e.key==='Escape')closeInspect();});
 document.getElementById('view-outline').addEventListener('click',e=>{
  const visible=e.currentTarget.getAttribute('aria-pressed')!=='true';
  e.currentTarget.setAttribute('aria-pressed',String(visible));
- for(const line of emptySlots)line.visible=visible;render();
+ for(const line of emptySlots)line.visible=visible||!line.userData.occupied;render();
 });
-render();
+resize();
 Promise.allSettled(pendingCardLoads).then(()=>{
  document.getElementById('loading').hidden=true;render();
 });
