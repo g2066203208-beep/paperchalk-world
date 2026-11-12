@@ -6,7 +6,7 @@ on:
       - 'site/game/dot-terrain-3d.js'
       - 'site/game/dot-terrain-tools.js'
       - 'site/terrain-3d.html'
-      - 'site/terrain-3d.html'
+      - 'tests/metro-map-editor.test.cjs'
       - 'site/index.html'
       - 'tests/map-terrain-camera-browser.mjs'
       - '.github/workflows/map-3d-camera-proof.yml'
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify real heightfield code and original railway
+      - name: Verify retained 3D terrain and metro routing data
         run: |
           node --check site/game/dot-terrain-3d.js
           node --check site/game/dot-terrain-tools.js
@@ -32,7 +32,7 @@ jobs:
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
           python3 -m pip install --quiet 'Pillow>=10,<12'
-      - name: Serve the actual hosted horror game
+      - name: Serve the retained 3D terrain workspace
         run: |
           python3 scripts/build_scene_catalog.py
           python3 -m http.server 8765 --directory site >/tmp/map-3d-http.log 2>&1 &
@@ -42,13 +42,13 @@ jobs:
           done
           cat /tmp/map-3d-http.log
           exit 1
-      - name: Verify smooth switch, physical 3D heightfield and orbit controls
+      - name: Verify independent 3D heightfield and sculpting controls
         run: node tests/map-terrain-camera-browser.mjs
       - name: Upload actual browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: actual-2d-3d-dot-map-chromium
+          name: retained-standalone-3d-terrain-chromium
           path: artifacts/map-terrain-3d/*.png
           if-no-files-found: warn
           retention-days: 14
