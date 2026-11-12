@@ -94,7 +94,13 @@ for(const id of ['rig-advanced','rig-file-actions','l2d-production-guide']){
 for(const node of [panel.querySelector('.rig-part-amount'),panel.querySelector('.rig-buttons')]){
  if(node)advancedDetails.append(node);
 }
-panel.append(advancedDetails);
+// The mask/placement inspectors can be taller than the viewport. Keep the
+// actual advanced-tools disclosure BEFORE those editors, not below them where
+// the canvas, sticky header or mask controls can intercept the click.
+// Preserve the real nested controls; only move the disclosure itself.
+const rigPartSelector=panel.querySelector('label:has(#rig-part)');
+if(rigPartSelector)rigPartSelector.after(advancedDetails);
+else panel.prepend(advancedDetails);
 // Keep the preview clean until the user explicitly asks for details.
 const extended=make('button','workspace-motion-more','更多动态参数');
 extended.type='button';
