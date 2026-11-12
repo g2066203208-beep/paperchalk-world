@@ -150,16 +150,23 @@ test('school gate and 09:00 assignment deadline are real game-time rules',()=>{
   assert.equal(g.snapshot().relationships.female2,57);
   assert.equal(g.submitHomework().ok,false);
 });
-test('shopping mall travel is supported, and city return requires entrance',()=>{
-  const g=Life.create();
-  assert.equal(g.travel('mall').ok,false,'cannot teleport out of bedroom');
-  assert.equal(g.travel('entrance').ok,true);
-  assert.equal(g.travel('mall').ok,false,'mall is not open early morning');
-  assert.equal(g.travel('bedroom').ok,true);
-  g.act('rest');g.act('rest');g.act('rest');
-  assert.equal(g.travel('entrance').ok,true);
-  assert.equal(g.travel('mall').ok,true);
-  assert.equal(g.travel('bedroom').ok,false,'city cannot teleport straight into bedroom');
-  assert.equal(g.travel('entrance').ok,true);
-  assert.equal(g.snapshot().location,'entrance');
+test('retained school travel requires the home entrance both ways',()=>{
+ const g=Life.create();
+ assert.equal(g.travel('school').ok,false,'cannot teleport out of bedroom');
+ assert.equal(g.travel('entrance').ok,true);
+ assert.equal(g.travel('school').ok,true);
+ assert.equal(g.travel('bedroom').ok,false,'city cannot teleport directly home');
+ assert.equal(g.travel('entrance').ok,true);
+ assert.equal(g.snapshot().location,'entrance');
+});
+test('legacy saves in deleted locations return to entrance without erasing a game save',()=>{
+ const storage=memory();
+ for(const location of ['convenience','cafe','mall','park']){
+   const old=Life.defaultState();
+   old.location=location;
+   storage.setItem(Life.KEY,JSON.stringify(old));
+   const restored=Life.create({storage}).snapshot();
+   assert.equal(restored.location,'entrance');
+   assert.equal(restored.day,1);
+ }
 });

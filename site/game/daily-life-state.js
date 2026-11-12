@@ -169,7 +169,8 @@
     s.minute=CLAMP(INTEGER(raw.minute,420),0,1440);
     const savedLocation=String(raw.location||'');
     s.location=Object.hasOwn(LOCATIONS,savedLocation)?savedLocation:
-      (GRAPH?.RETIRED_STOP_ALIASES?.[savedLocation]||'entrance');
+      (['convenience','cafe','mall','park'].includes(savedLocation)?'entrance':
+       (GRAPH?.RETIRED_STOP_ALIASES?.[savedLocation]||'bedroom'));
     s.money=CLAMP(INTEGER(raw.money,260),0,100000000);
     s.energy=CLAMP(INTEGER(raw.energy,78),0,100);
     s.knowledge=CLAMP(INTEGER(raw.knowledge,0),0,10000);
