@@ -1,0 +1,37 @@
+name: Film projector V2 pure 3D spatial blockout proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/film-projector/blockout.*'
+      - 'tests/film-projector-blockout-3d-browser.mjs'
+      - '.github/workflows/film-projector-blockout-3d-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screenshot-geometry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve real game site
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/projector-blockout-http.log 2>&1 &
+          sleep 2
+      - name: Inspect true 3D camera, film meshes, shadows and capture screenshots
+        run: node tests/film-projector-blockout-3d-browser.mjs
+      - name: Upload 3D blockout snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: projector-v2-3d-blockout-screenshots
+          path: artifacts/film-projector-blockout/
+          if-no-files-found: warn
