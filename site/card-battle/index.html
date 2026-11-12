@@ -1,61 +1,161 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#d8dade" />
-<title>卡牌战斗 · 正面九宫格编队</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#efeee9">
+<title>时间步战斗 · 1v1 棋盘</title>
 <style>
-:root{color-scheme:light;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif}
-*{box-sizing:border-box}html,body{height:100%;width:100%;margin:0;overflow:hidden}
-body{background:#d8dade;color:#30353b}
-#viewport{position:fixed;inset:0;width:100%;height:100%;touch-action:manipulation;cursor:default;outline:0}
-#viewport:active{cursor:default}
-.toolbar{position:fixed;top:14px;left:14px;display:flex;flex-direction:column;gap:8px;align-items:stretch;pointer-events:none;z-index:4;max-width:135px}
-.toolbar>*{pointer-events:auto}
-.toolbar a,.toolbar button{border:1px solid #b9bec6c9;border-radius:8px;background:#fffefeee;color:#3d4249;min-height:37px;padding:8px 11px;text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 2px 8px #34393e14;white-space:nowrap}
-.toolbar button:hover,.toolbar a:hover{background:#fff}
-.toolbar button.active{background:#353b42;color:#fff;border-color:#353b42}
-.toolbar .headline{display:none}
-.toolbar a,.toolbar button{width:100%;text-align:center}
-.toolbar .headline{padding:8px 12px;border:1px solid #ffffffb8;border-radius:8px;background:#f8f9f9eb;font-size:13px;font-weight:650;pointer-events:none}
-.hint{position:fixed;left:14px;bottom:14px;background:#fffedddd;color:#525961;border:1px solid #ffffffa6;border-radius:8px;padding:9px 12px;font-size:12px;pointer-events:none;line-height:1.55}
-.legend{position:fixed;right:14px;bottom:14px;background:#fffedddd;border:1px solid #ffffffa6;border-radius:8px;padding:9px 13px;font-size:12px;pointer-events:none;line-height:1.55;text-align:right}
-.legend b{display:block;font-size:13px}
-#loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:12px 16px;background:#fffffff0;border-radius:9px;font-size:14px;color:#51565a;box-shadow:0 4px 20px #0002}
-#loading[hidden]{display:none}
-.error-note{position:fixed;top:95px;left:14px;right:14px;display:none;padding:10px 12px;background:#fff9ef;color:#78452d;border-radius:8px;font-size:13px}
-.error-note.visible{display:block}
-#card-peek[hidden]{display:none}
-#card-peek{position:fixed;z-index:5;pointer-events:none;background:#fff;border:7px solid #fff;border-radius:14px;box-shadow:0 16px 44px #171b2255;overflow:hidden}
-#card-peek img{display:block;width:100%;aspect-ratio:2/3;object-fit:contain;background:#f6f5f1;border-radius:8px}
-#card-peek-label{text-align:center;padding:6px 4px 2px;color:#45484c;font-size:12px;line-height:1.3}
-#card-inspect[hidden]{display:none}#card-inspect{position:fixed;inset:0;background:#111c;display:grid;place-items:center;z-index:9;cursor:zoom-out;padding:24px}
-#card-inspect .viewer{position:relative;display:flex;flex-direction:column;gap:8px;align-items:center;max-height:100%;max-width:95%;cursor:default}
-#card-inspect img{display:block;max-height:min(83vh,920px);max-width:95vw;width:auto;height:auto;object-fit:contain;border-radius:13px;box-shadow:0 10px 36px #0007;background:#fff}
-#card-inspect .caption{font-size:13px;color:#fff}#card-inspect button{position:absolute;right:0;top:-38px;border:0;background:#fff;color:#333;padding:7px 12px;border-radius:7px;cursor:pointer}
-@media(max-width:850px){.toolbar{gap:5px;top:8px;left:8px;max-width:102px}.toolbar a,.toolbar button{padding:6px 7px;font-size:11px;min-height:30px}.hint{bottom:8px;left:8px;font-size:10px;max-width:64%;padding:6px 8px}.legend{font-size:10px;bottom:8px}.legend b{font-size:11px}}
-@media(hover:none){#card-peek{display:none}}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Microsoft YaHei",sans-serif;color:#283033;background:#efeee9;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;width:100%}
+button,a{font:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid #60898f;outline-offset:3px}
+button:disabled{cursor:default;opacity:.42}
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.top{height:60px;padding:0 clamp(18px,3vw,54px);display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #d9ddd9;background:#fafaf7}
+.top-left,.top-right{display:flex;align-items:center;gap:18px}
+.brand{font-weight:750;letter-spacing:.015em;font-size:18px}
+.eyebrow{font-size:12px;color:#777e7e;letter-spacing:.06em}
+.plain-link,.small-button{border:1px solid #dce0dc;border-radius:8px;background:#fff;color:#3f494b;text-decoration:none;padding:8px 12px;font-size:13px}
+.plain-link:hover,.small-button:hover{background:#f1f3ef}
+.board-wrap{flex:1;display:flex;justify-content:center;align-items:stretch;padding:clamp(12px,2.3vh,26px) clamp(12px,2vw,36px);min-height:0}
+.board{background:#fdfdfa;border:1px solid #dedfd8;border-radius:19px;width:100%;max-width:1510px;min-height:440px;display:flex;flex-direction:column;box-shadow:0 12px 36px #27332f0a;overflow:hidden}
+.board-top{display:flex;justify-content:space-between;align-items:center;padding:14px 23px;border-bottom:1px solid #eaebe7;font-size:13px;color:#767d7c;gap:12px}
+.board-top strong{font-size:13px;color:#353c3d;font-weight:700}
+.board-center{flex:1;min-height:0;display:grid;grid-template-columns:minmax(160px,250px) minmax(300px,1fr) minmax(160px,250px);gap:clamp(12px,2.5vw,42px);padding:clamp(13px,2vh,26px) clamp(15px,3vw,54px);align-items:center}
+.fighter{display:flex;align-items:stretch;flex-direction:column;min-width:0;gap:10px}
+.side-id{display:flex;align-items:baseline;justify-content:space-between;gap:7px}
+.side-id strong{font-size:15px;font-weight:720}
+.side-id small{font-size:11px;color:#87908d}
+.figure{position:relative;width:100%;aspect-ratio:2/2.82;background:#f6f6f3;border-radius:12px;border:1px solid #e1e3dd;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.figure img{display:block;width:100%;height:100%;object-fit:contain}
+.figure .missing{font-size:12px;color:#999;display:none}
+.figure.is-missing .missing{display:block}.figure.is-missing img{display:none}
+.fighter.enemy .figure{background:#f6f2f1}
+.fighter.ally .figure{background:#f2f5f4}
+.fighter-name{font-size:13px;font-weight:670;color:#484f50;text-align:center}
+.hp-box{display:flex;align-items:center;gap:10px}
+.hp-track{height:7px;flex:1;border-radius:99px;overflow:hidden;background:#e5e5e1}
+.hp-track>span{height:100%;display:block;width:100%;background:#71929a;transition:width .18s}
+.enemy .hp-track>span{background:#b77870}
+.hp-number{font-variant-numeric:tabular-nums;font-size:12px;min-width:55px;text-align:right;color:#565e5d}
+.clock{min-width:0;width:100%;display:flex;flex-direction:column;justify-content:center;gap:25px}
+.clock-intro{text-align:center;display:flex;flex-direction:column;gap:7px}
+.clock-intro strong{font-size:23px;letter-spacing:.015em;font-weight:640}
+.clock-intro span{font-size:12px;color:#8a9190}
+.timeline{width:100%;padding:15px 13px;border-radius:13px;background:#f4f5f1;border:1px solid #e6e8e3}
+.time-row{display:grid;grid-template-columns:44px repeat(10,minmax(0,1fr));gap:4px;align-items:stretch;margin-bottom:6px}
+.time-row:last-child{margin-bottom:0}
+.time-label{font-size:11px;color:#79807e;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.time-cell{min-width:0;min-height:49px;border:1px solid #e1e5de;border-radius:6px;background:#fff;color:#87908c;display:flex;align-items:center;justify-content:center;font-size:12px;position:relative}
+.time-row.ruler .time-cell{background:transparent;border:0;min-height:20px;font-size:11px;color:#888f8c;font-variant-numeric:tabular-nums}
+button.time-cell{padding:2px}
+button.time-cell:hover{border-color:#748e90;background:#f5f9f7}
+button.time-cell.can-place{border-color:#9ab5ae}
+.time-cell.windup{background:#f2dfdb;color:#905e5b;border-color:#e6cdc8}
+.time-cell.active{background:#bb7770;color:white;border-color:#aa6760;font-weight:700}
+.time-cell.recovery{background:#ead3cf;color:#976c65;border-color:#dbb9b3}
+.time-row.friendly .time-cell.windup{background:#dce8e9;border-color:#c3d8d9;color:#577b83}
+.time-row.friendly .time-cell.active{background:#6c969c;color:#fff;border-color:#638c91}
+.time-row.friendly .time-cell.recovery{background:#cedee0;border-color:#bbd0d2;color:#658287}
+.time-cell.disabled{background:#e5e5e1;color:#8c9190}
+.time-cell[aria-pressed="true"]{outline:2px solid #3a6c70;outline-offset:1px}
+.timeline-help{text-align:center;font-size:12px;color:#777e7b;line-height:1.65}
+.timeline-status{text-align:center;font-size:12px;color:#575f5d;min-height:20px}
+.board-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #eaebe6;padding:12px 24px;color:#787e7b;font-size:12px}
+.action-area{background:#f7f7f3;border-top:1px solid #dcded9;padding:14px 24px max(16px,env(safe-area-inset-bottom))}
+.action-inner{margin:auto;max-width:1510px;display:grid;grid-template-columns:145px minmax(0,1fr) 195px;align-items:stretch;gap:20px}
+.hand-side{display:flex;flex-direction:column;justify-content:space-between;gap:6px}
+.section-label{font-size:12px;color:#828a87}
+.hand-count{font-size:20px;font-weight:750}
+.hand{display:flex;justify-content:center;gap:10px;min-width:0}
+.hand-card{appearance:none;position:relative;text-align:left;width:clamp(110px,10.7vw,160px);min-height:156px;padding:14px 13px 11px;background:#fff;border:1px solid #d9dcd5;border-radius:11px;display:flex;flex-direction:column;gap:6px;color:#343c3b;box-shadow:0 2px 6px #1b282207;transition:border-color .1s,transform .1s}
+.hand-card:hover{border-color:#aab7ae;transform:translateY(-3px)}
+.hand-card.selected{border:2px solid #537d80;padding:13px 12px 10px;box-shadow:0 7px 14px #4a777019}
+.hand-card .kind{font-size:10px;color:#8b9691;letter-spacing:.06em}
+.hand-card strong{font-size:15px;line-height:1.35;font-weight:700}
+.hand-card .desc{font-size:11px;line-height:1.5;color:#697371;flex:1}
+.hand-card .phases{display:flex;gap:3px;font-size:10px;color:#8c9692}
+.hand-card .phases span{background:#eef0ea;border-radius:3px;padding:3px 5px}
+.hand-card.defense{border-top:3px solid #88aeb2}
+.hand-card.attack{border-top:3px solid #ca9890}
+.hand-card.skill{border-top:3px solid #9db5a3}
+.hand-card.selected.attack,.hand-card.selected.defense,.hand-card.selected.skill{border:2px solid #537d80}
+.action-buttons{display:flex;flex-direction:column;gap:9px;justify-content:center}
+.primary{border:1px solid #283e3f;border-radius:10px;background:#293d3d;color:#fff;font-weight:700;font-size:15px;min-height:56px;padding:10px 15px}
+.primary:hover{background:#3c5755}
+.secondary{border:1px solid #d5dcd7;background:#fff;color:#454f4c;border-radius:9px;padding:10px 12px;font-size:12px}
+.secondary:hover{background:#eef2ee}
+.outcome{font-size:12px;min-height:17px;line-height:1.45;color:#727b78;text-align:center}
+.game-over{color:#a65e51;font-weight:700}
+@media(max-width:1050px){
+ .board-center{grid-template-columns:minmax(110px,1fr) minmax(340px,2fr) minmax(110px,1fr);gap:13px;padding:12px}
+ .clock{gap:15px}.clock-intro strong{font-size:19px}.time-cell{min-height:38px;font-size:10px}
+ .hand-card{min-height:137px}.action-inner{grid-template-columns:100px minmax(0,1fr) 150px;gap:10px}
+}
+@media(max-width:760px){
+ .top{height:52px;padding:0 12px}.brand{font-size:14px}.eyebrow{display:none}.top-left,.top-right{gap:7px}.plain-link,.small-button{padding:6px 8px;font-size:11px}
+ .board-wrap{padding:9px}.board{min-height:0}
+ .board-top{padding:10px 12px;font-size:11px}
+ .board-center{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:12px;padding:13px 12px}
+ .fighter{max-width:195px;margin:0 auto;width:100%}
+ .fighter.enemy{grid-column:2;grid-row:1}.fighter.ally{grid-column:1;grid-row:1}
+ .figure{aspect-ratio:2/2.45}.side-id strong{font-size:13px}
+ .clock{grid-column:1/-1;grid-row:2;gap:11px}
+ .clock-intro strong{font-size:17px}.timeline{padding:8px 4px}
+ .time-row{grid-template-columns:26px repeat(10,minmax(0,1fr));gap:2px}
+ .time-cell{min-height:32px;font-size:10px;border-radius:4px}.time-row.ruler .time-cell{min-height:16px}
+ .timeline-help{font-size:10px}.board-foot{padding:9px 12px;font-size:10px}
+ .action-area{padding:9px}.action-inner{display:flex;flex-wrap:wrap;gap:8px}
+ .hand-side{width:100%;flex-direction:row;align-items:center}.hand-count{font-size:14px}
+ .hand{width:100%;justify-content:flex-start;overflow-x:auto;padding:3px 0 5px}
+ .hand-card{min-width:118px;width:118px;min-height:121px;padding:9px}.hand-card.selected{padding:8px}
+ .hand-card strong{font-size:13px}.hand-card .desc{font-size:10px}.hand-card .phases{font-size:9px}
+ .action-buttons{width:100%;flex-direction:row}.action-buttons>button{flex:1}.primary{min-height:42px;font-size:13px}
+ .outcome{width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<canvas id="viewport" aria-label="固定无透视卡牌编队：宽屏猎人和马戏团左右两组九宫格，窄屏上下两组，每组七张牌和两个空位"></canvas>
-<nav class="toolbar" aria-label="3D卡牌试验操作">
-  <a href="../">← 返回主页</a>
-  <span class="headline">猎人团 7 / 9　｜　马戏团 7 / 9　·　正面无透视</span>
-  
-  
-  
-  
-  <button id="view-outline" type="button" aria-pressed="false">显示卡位</button>
-  <a href="./whitebox_tabletop_3d.glb" download>桌面 GLB</a>
-</nav>
-<div id="loading" role="status">正在载入两组原始卡牌…</div>
-<div id="error" class="error-note" role="alert"></div>
-<div class="hint">猎人 7/9　·　马戏团 7/9<br>正面无透视 · 悬停放大 · 点击看原图</div>
-<div id="card-peek" hidden aria-hidden="true"><img id="card-peek-image" alt=""><div id="card-peek-label"></div></div>
-
-<div id="card-inspect" hidden role="dialog" aria-label="查看高清卡牌"><div class="viewer"><button data-close-inspect type="button" aria-label="关闭">关闭 ×</button><img id="card-inspect-image" alt="卡牌高清原图"><div class="caption" id="card-inspect-label"></div></div></div>
-<script type="module" src="./scene.js?v=frontal-grid-fit-20261113"></script>
+<div class="app">
+ <header class="top">
+  <div class="top-left"><a class="plain-link" href="../">返回游戏</a><div><span class="brand">时间步战斗</span> <span class="eyebrow">1 对 1 · 基础棋盘</span></div></div>
+  <div class="top-right"><span class="eyebrow" id="round-indicator">第 1 轮</span><button id="reset" type="button" class="small-button">重新开始</button></div>
+ </header>
+ <main class="board-wrap"><section class="board" aria-label="一对一时间步战斗棋盘">
+  <div class="board-top"><strong>1 vs 1</strong><span>双方使用同一条世界时间 · 每轮 10 格</span><span id="phase-indicator">规划中</span></div>
+  <div class="board-center">
+   <div class="fighter ally">
+    <div class="side-id"><strong>我方</strong><small>怪物猎人</small></div>
+    <div class="figure" id="ally-figure"><img src="../assets/characters/monster-hunters/01-legendary-hunter.png" alt="GitHub原画：传奇猎人"><span class="missing">人物图片加载失败</span></div>
+    <div class="fighter-name">传奇猎人</div>
+    <div class="hp-box"><div class="hp-track"><span id="ally-hp-fill"></span></div><span id="ally-hp" class="hp-number">-- / --</span></div>
+   </div>
+   <section class="clock" aria-label="共享时间轴">
+    <div class="clock-intro"><strong>行动时间</strong><span>选手牌，再选我方时间格；敌方行动提前可见</span></div>
+    <div class="timeline" id="timeline" aria-label="双方10格时间轴"></div>
+    <div class="timeline-help">浅色：前摇　　深色：生效　　淡色：后摇<br>空格可以等待，也可以安排下一张牌</div>
+    <div class="timeline-status" id="status" role="status" aria-live="polite">选择下方手牌</div>
+   </section>
+   <div class="fighter enemy">
+    <div class="side-id"><strong>敌方</strong><small>奇妙马戏团</small></div>
+    <div class="figure" id="enemy-figure"><img src="../assets/cards/wonder-circus/01_ringmaster.png" alt="GitHub已有卡牌：团长"><span class="missing">人物图片加载失败</span></div>
+    <div class="fighter-name">团长</div>
+    <div class="hp-box"><div class="hp-track"><span id="enemy-hp-fill"></span></div><span id="enemy-hp" class="hp-number">-- / --</span></div>
+   </div>
+  </div>
+  <div class="board-foot"><span id="battle-notice">先排好动作，再执行这一轮</span><span id="energy-indicator">绝杀能量：-- / 100</span></div>
+ </section></main>
+ <footer class="action-area"><div class="action-inner">
+  <div class="hand-side"><span class="section-label">当前手牌</span><strong class="hand-count" id="hand-count">4 张</strong><span class="section-label">点击选择</span></div>
+  <div id="hand" class="hand" aria-label="行动手牌"></div>
+  <div class="action-buttons"><button class="secondary" id="undo" type="button">撤销上一步</button><button class="primary" id="execute" type="button">执行 10 格</button><div class="outcome" id="outcome" role="status"></div></div>
+ </div></footer>
+</div>
+<script src="../combat-lab/engine.js?v=card-battle-1v1-20261113"></script>
+<script defer src="./scene.js?v=original-board-1v1-20261113"></script>
 </body>
 </html>
