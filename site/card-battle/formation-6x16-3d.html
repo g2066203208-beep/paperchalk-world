@@ -20,16 +20,23 @@
 .hand-card.terrain .name{font-weight:700;color:#493926}
 .hand-card.terrain .kind{color:#61513f}
 #terrain-hint{position:fixed;top:12px;left:14px;background:#f4f1e4d9;color:#514a39;padding:8px 12px;border-radius:10px;font:12px/1.55 system-ui,sans-serif;z-index:2;pointer-events:none;box-shadow:0 4px 18px #00000012}
+#camera-controls{position:fixed;right:14px;top:12px;display:flex;gap:5px;z-index:4}
+#camera-controls button{min-width:36px;height:34px;cursor:pointer;touch-action:manipulation;border:1px solid #a9a28fd9;background:#f2efdfeb;color:#524b40;border-radius:8px;font:17px system-ui,sans-serif;box-shadow:0 3px 10px #00000015}
+#camera-controls button:hover{background:#fffaf0}
+#camera-controls button:last-child{font-size:12px;padding:0 10px}
+@media(max-width:700px){#camera-controls{right:9px;top:9px}#camera-controls button{min-width:32px;height:32px}}
 #note{bottom:145px;opacity:0;transition:opacity .2s;background:#f6f5ebeb;color:#45463f;padding:4px 12px;border-radius:15px;width:max-content;max-width:90vw;left:50%;transform:translateX(-50%)}
 @media(max-width:700px){.hand-card{width:clamp(40px,11vw,62px)}#hand{gap:4px}#note{bottom:110px}}
 </style>
 </head>
 <body>
-<canvas id="stage" aria-label="六行十六列真3D卡牌容量测试；固定高位俯视；每张卡是独立可悬浮与翻转的三维物体"></canvas>
+<canvas id="stage" aria-label="16列6行3D立方体卡牌战场，可自由旋转、平移视角和缩放"></canvas>
 <div id="note" aria-live="polite"></div>
-<div id="terrain-hint">16×6 真3D立方体 · 方块边长＝每层高度 · -3～+3<br>挖掘卡 ↓ 一层 · 堆土卡 ↑ 一层</div>
+<div id="terrain-hint">16×6 真3D方块 · 挖掘/堆土 -3～+3<br>右键拖动旋转 · 中键/Shift+左键平移 · 滚轮缩放 · 0重置视角</div>
+<div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="hand" role="toolbar" aria-label="测试手牌"><button type="button" id="demo">七人布阵</button><button type="button" id="reset">重置</button></div>
 <script src="./engine/voxel-terrain.js?v=1"></script>
+<script src="./engine/battle-camera.js?v=1"></script>
 <script>
 'use strict';
 (()=>{
@@ -84,6 +91,15 @@ const terrain=window.PaperchalkVoxelTerrain.create({
  initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
 });
 const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
+// Camera is a reusable module, independent from voxel geometry and game rules.
+const orbitCamera=window.PaperchalkBattleCamera.create({
+ target:[0,0,-1.1],distance:48,yaw:0,elevation:53*Math.PI/180,
+ fov:31,minDistance:23,maxDistance:115,minElevation:22*Math.PI/180,maxElevation:79*Math.PI/180
+});
+window.__battleCamera=orbitCamera;
+document.getElementById('zoom-in').addEventListener('click',()=>orbitCamera.zoom(.78));
+document.getElementById('zoom-out').addEventListener('click',()=>orbitCamera.zoom(1.28));
+document.getElementById('camera-reset').addEventListener('click',()=>orbitCamera.reset());
 const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
 const slotCenters=[];
 for(let row=0;row<terrain.rows;row++){
@@ -173,18 +189,22 @@ else renderGeom(inset,M,c.side==='enemy'?[.945,.95,.953,1]:colors.inner);
 }
 function loadTexture(url,callback){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);callback(tex);};image.onerror=()=>{};image.src=url;}
 // Capacity test uses only neutral geometry: no portraits, titles, HUD, stats, icons, or external assets.
-// Fixed, normal 3D perspective camera; moderate 52-degree elevation.
+// Responsive perspective camera driven by the shared orbit/pan/zoom controller.
 let vp=I(),proj=I(),view=I(),camera={
- eye:[0,42,33],target:[0,0,-1.1],right:[1,0,0],up:[0,1,0],
- forward:[0,-.78,-.62],tan:Math.tan(31*Math.PI/360),aspect:1
+ eye:[0,38,29],target:[0,0,-1.1],right:[1,0,0],up:[0,1,0],
+ forward:[0,-.79,-.61],tan:Math.tan(31*Math.PI/360),aspect:1
 },w=1920,h=1080;
 function resize(){
+ const rect=canvas.getBoundingClientRect();
  const dpr=Math.min(window.devicePixelRatio||1,2);
- w=Math.max(1,Math.round(canvas.clientWidth*dpr));
- h=Math.max(1,Math.round(canvas.clientHeight*dpr));
+ w=Math.max(1,Math.round(rect.width*dpr));h=Math.max(1,Math.round(rect.height*dpr));
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
- gl.viewport(0,0,w,h);camera.aspect=w/h;
- proj=perspective(31*Math.PI/180,camera.aspect,.1,180);
+ gl.viewport(0,0,w,h);
+ orbitCamera.sizes(rect.width,rect.height);
+ const state=orbitCamera.snapshot();
+ camera.eye=state.eye;camera.target=state.target;
+ camera.aspect=w/h;camera.tan=Math.tan(state.fov*Math.PI/360);
+ proj=perspective(state.fov*Math.PI/180,camera.aspect,.1,220);
  view=lookAt(camera.eye,camera.target,[0,1,0]);
  vp=mul(proj,view);
  gl.uniformMatrix4fv(U.vp,false,vp);
@@ -253,6 +273,25 @@ function inCanvas(e){let b=canvas.getBoundingClientRect();return e.clientX>=b.le
 function slotAt(x,z){
  let best=null,dd=Infinity;for(const s of slotCenters){let dx=Math.abs(x-s.x),dz=Math.abs(z-s.z);
  if(dx>slotW/2||dz>slotH/2)continue;let d=dx*dx+dz*dz;if(d<dd){best=s;dd=d;}}return best;
+}
+function slotAtPointer(clientX,clientY){
+ // Project each legal card anchor into the current camera, so camera rotation
+ // and zoom do not shift card placement away from its exact terrain cell.
+ const rect=canvas.getBoundingClientRect();
+ const px=(clientX-rect.left)*w/rect.width,py=(clientY-rect.top)*h/rect.height;
+ let best=null,bestScore=1.8;
+ for(const s of slotCenters){
+  const y=terrain.cell(s.tileC,s.tileR).height+.035;
+  const p=projection2D(s.x,y,s.z);
+  const pX=projection2D(s.x+slotW/2,y,s.z);
+  const pZ=projection2D(s.x,y,s.z+slotH/2);
+  const halfW=Math.max(4,Math.hypot(pX.x-p.x,pX.y-p.y));
+  const halfH=Math.max(4,Math.hypot(pZ.x-p.x,pZ.y-p.y));
+  const dX=(px-p.x)/halfW,dY=(py-p.y)/halfH;
+  const score=dX*dX+dY*dY;
+  if(score<bestScore){bestScore=score;best=s;}
+ }
+ return best;
 }
 function valid(d,s,move=null){
  if(!d||!s)return false;
@@ -332,24 +371,40 @@ function track(e){
  if(active?.kind==='terrain'){overSlot=tileAtPointer(e.clientX,e.clientY);return;}
  const plane=dragCard?.slot?terrain.cell(dragCard.slot.tileC,dragCard.slot.tileR).height+.25:.18;
  const p=worldFromPointer(e.clientX,e.clientY,plane);
- overSlot=slotAt(p.x,p.z);
+ overSlot=slotAtPointer(e.clientX,e.clientY)||slotAt(p.x,p.z);
  if(dragCard){dragCard.x=p.x;dragCard.z=p.z;}
  else if(active&&preview){preview.x=p.x;preview.z=p.z;}
  else hoverCard=closestCard(e.clientX,e.clientY);
 }
 canvas.addEventListener('pointerdown',e=>{
- if(e.button!==0)return;track(e);
+ const orbitTouch=e.pointerType==='touch'&&!active&&!closestCard(e.clientX,e.clientY);
+ if(orbitCamera.pointerDown(e,orbitTouch)){
+  e.preventDefault();pointerDown=null;handDown=null;
+  if(dragCard){dragCard.dragged=false;dragCard=null;}
+  canvas.style.cursor='grabbing';return;
+ }
+ if(e.button!==0)return;
+ track(e);
  if(active){pointerDown={placement:true,x:e.clientX,y:e.clientY};return;}
  const c=closestCard(e.clientX,e.clientY);pointerDown={card:c,x:e.clientX,y:e.clientY};
  if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}
 });
 window.addEventListener('pointermove',e=>{
+ if(orbitCamera.pointerMove(e)){
+  if(dragCard){dragCard.dragged=false;dragCard=null;}
+  pointerDown=null;handDown=null;overSlot=null;
+  canvas.style.cursor='grabbing';return;
+ }
  if(handDown&&Math.hypot(e.clientX-handDown.x,e.clientY-handDown.y)>7)handDown.moved=true;
  if(pointerDown?.card&&!dragCard&&Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y)>7){
  dragCard=pointerDown.card;dragCard.dragged=true;}
  track(e);canvas.style.cursor=dragCard?'grabbing':active?'crosshair':hoverCard?'grab':'default';
 });
 window.addEventListener('pointerup',e=>{
+ if(orbitCamera.pointerUp(e)){
+  pointerDown=null;handDown=null;
+  canvas.style.cursor=active?'crosshair':'default';return;
+ }
  track(e);
  if(handDown){if(handDown.moved&&onBoard&&active?.id===handDown.id)drop(overSlot);handDown=null;return;}
  if(pointerDown?.placement&&active&&onBoard)drop(overSlot);
@@ -357,12 +412,27 @@ window.addEventListener('pointerup',e=>{
  else if(pointerDown?.card)pointerDown.card.attackStart=now;
  pointerDown=null;canvas.style.cursor=active?'crosshair':'default';
 });
-window.addEventListener('pointercancel',()=>{if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;handDown=null;});
+window.addEventListener('pointercancel',e=>{orbitCamera.pointerUp(e);if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;handDown=null;});
+canvas.addEventListener('wheel',e=>{
+ e.preventDefault();
+ orbitCamera.zoom(Math.exp(Math.max(-500,Math.min(500,e.deltaY))*.00125));
+},{passive:false});
 canvas.addEventListener('dblclick',e=>{if(active)return;let c=closestCard(e.clientX,e.clientY);if(c){c.flipTarget+=Math.PI;c.attackStart=now;}});
-canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(active)return;let c=closestCard(e.clientX,e.clientY);if(c)c.flipTarget+=Math.PI;});
+// Right mouse button is reserved for camera orbit; cards still flip by double click.
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%7)*.07;});}
- if(e.code==='Escape')clearPick();if(e.code==='KeyR'&&!e.repeat)reset();
+ if(e.code==='Escape')clearPick();
+ if(e.code==='KeyR'&&!e.repeat)reset();
+ if(e.code==='Digit0'||e.code==='Home')orbitCamera.reset();
+ if(e.code==='Equal'||e.code==='NumpadAdd')orbitCamera.zoom(.87);
+ if(e.code==='Minus'||e.code==='NumpadSubtract')orbitCamera.zoom(1.15);
+ if(e.code==='KeyW'||e.code==='ArrowUp')orbitCamera.pan(0,24);
+ if(e.code==='KeyS'||e.code==='ArrowDown')orbitCamera.pan(0,-24);
+ if(e.code==='KeyA'||e.code==='ArrowLeft')orbitCamera.pan(24,0);
+ if(e.code==='KeyD'||e.code==='ArrowRight')orbitCamera.pan(-24,0);
+ if(e.code==='KeyQ')orbitCamera.rotate(-18,0);
+ if(e.code==='KeyE')orbitCamera.rotate(18,0);
 });
 function drawHighlights(){
  const d=dragCard?.def||active;if(!d)return;
@@ -386,8 +456,11 @@ for(const c of cards){for(let i=0;i<1;i++){let scale=1+.04*i;
 let m=mul(T(c.x+.10+i*.025,terrain.cell(c.slot.tileC,c.slot.tileR).height+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
 function drawStage(){terrainRenderer.draw();}
+let previousFrameTime=0;
 function frame(timeMs){
- now=timeMs/1000;resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
+ now=timeMs/1000;
+ orbitCamera.update(previousFrameTime?now-previousFrameTime:1/60);previousFrameTime=now;
+ resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
  gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  drawStage();drawHighlights();
  for(const c of cards){
