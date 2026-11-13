@@ -65,21 +65,24 @@ function lerp(a,b,t){return a+(b-a)*t;}const clamp=(v,a,b)=>Math.max(a,Math.min(
 // True 2:3 card proportions; six near-full-height ranks in a fixed 1920x1080 reference frame.
 const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
 const COLS=16,ROWS_PER_SIDE=3;
-const enemyRows=[-7.725,-5.075,-2.425],allyRows=[.225,2.875,5.525];
-// Real home bases: exactly 3x3 unit positions for each side (max seven units).
-// Facility cards belong on the flanks, not in an eight-column-wide 'unit' strip.
-// Separate horizontal centers permit a perfectly centered 3-column home base on a 16-column field.
-const UNIT_X=[-2.05,0,2.05];
-const FACILITY_LEFT_X=[-11.35,-9.15,-6.95,-4.75];
-const FACILITY_RIGHT_X=[4.75,6.95,9.15,11.35];
+// One shared 16x6 metric drives BOTH the physical ground blocks and every card placement.
+// Six rows, columns 0..15; three unit columns at 6,7,8, facility columns on the flanks.
+const BOARD_COLS=16,BOARD_ROWS=6,TILE_W=1.85,TILE_D=2.65;
+const BOARD_CENTER_X=.925,BOARD_CENTER_Z=-1.1;
+const TILE_LEFT=BOARD_CENTER_X-BOARD_COLS*TILE_W/2;
+const TILE_BACK=BOARD_CENTER_Z-BOARD_ROWS*TILE_D/2;
+const tileCenter=(c,r)=>({x:TILE_LEFT+(c+.5)*TILE_W,z:TILE_BACK+(r+.5)*TILE_D});
+const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
 const slotCenters=[];
-for(const [side,rows] of [['enemy',enemyRows],['ally',allyRows]]){
- for(let r=0;r<ROWS_PER_SIDE;r++){
-  const z=rows[r];
-  UNIT_X.forEach((x,c)=>slotCenters.push({side,r,c,x,z,zone:'unit',id:side+'-'+r+'-unit-'+c}));
-  FACILITY_LEFT_X.forEach((x,c)=>slotCenters.push({side,r,c,x,z,zone:'facility',flank:'left',id:side+'-'+r+'-facility-left-'+c}));
-  FACILITY_RIGHT_X.forEach((x,c)=>slotCenters.push({side,r,c,x,z,zone:'facility',flank:'right',id:side+'-'+r+'-facility-right-'+c}));
- }
+for(let row=0;row<BOARD_ROWS;row++){
+ const side=row<3?'enemy':'ally',r=row%3;
+ const add=(c,zone,flank=null)=>{
+  const p=tileCenter(c,row);
+  slotCenters.push({side,r,c,x:p.x,z:p.z,tileC:c,tileR:row,zone,flank,id:side+'-'+r+'-'+zone+'-'+c});
+ };
+ UNIT_COLUMNS.forEach(c=>add(c,'unit'));
+ FACILITY_LEFT_COLUMNS.forEach(c=>add(c,'facility','left'));
+ FACILITY_RIGHT_COLUMNS.forEach(c=>add(c,'facility','right'));
 }
 const occupied=new Map();const cards=[];
 const handDefs=[
@@ -113,84 +116,64 @@ const RRstrip=(()=>{const outer=rrPoints(slotW,slotH,.14),inner=rrPoints(slotW-.
 const slotFill=rrFace(slotW-.05,slotH-.05,.10,0);
 function renderGeom(geo,m,color,tex=null,unlit=false){gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,unlit?1:0);gl.uniform1f(U.has,tex?1:0);if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
 function cube(x,y,z,w,h,d,color){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color);}
-// Single connected, shallow voxel slab. Only the outside perimeter is beveled:
-// no seams, no individual tiles, no decorative multi-level landscape.
-const TERRAIN_TOP=-.117,TERRAIN_CENTER_Z=-1.10;
-const TERRAIN_WIDTH=29.48,TERRAIN_DEPTH=16.45,TERRAIN_CORNER=.27;
-function terrainRing(w,d,r,y,step=8){
- const hw=w/2,hd=d/2,cx=0,cz=TERRAIN_CENTER_Z;
- const result=[];
- const corners=[
-  [ hw-r, hd-r,0],
-  [-hw+r, hd-r,Math.PI/2],
-  [-hw+r,-hd+r,Math.PI],
-  [ hw-r,-hd+r,3*Math.PI/2]
- ];
- for(const [ox,oz,a0] of corners)for(let k=0;k<=step;k++){
-  const a=a0+k*Math.PI/(2*step);
-  result.push([cx+ox+Math.cos(a)*r,y,cz+oz+Math.sin(a)*r]);
+// Real grid terrain: 96 independently addressable voxel-top meshes, with shared seams.
+// Equal-height neighbors meet with NO gaps, inner vertical walls or unnecessary bevels.
+// Top color is automatic: a stable grass palette, checkered value rhythm, small seeded
+// variations, global-scale micrograin, and an almost invisible shared grid line.
+const TERRAIN_TOP=-.117,TERRAIN_CENTER_Z=BOARD_CENTER_Z,TERRAIN_CENTER_X=BOARD_CENTER_X;
+const TERRAIN_WIDTH=BOARD_COLS*TILE_W+.2,TERRAIN_DEPTH=BOARD_ROWS*TILE_D+.2;
+const TERRAIN_CORNER=.28;
+const TERRAIN_PALETTE={
+ grass:{
+  light:[.593,.729,.411,1],
+  dark:[.526,.652,.367,1],
+  variance:.016,
+  earth:[.60,.412,.272,1]
+ },
+ dirt:{light:[.60,.431,.300,1],dark:[.55,.390,.269,1],variance:.012},
+ water:{light:[.438,.687,.800,1],dark:[.401,.630,.755,1],variance:.010}
+};
+function stableHash(x,z){let n=((x+41)*374761393+(z+29)*668265263)>>>0;n=(n^(n>>>13))*1274126177>>>0;return (n^(n>>>16))>>>0;}
+function tileStyle(c,r,kind='grass'){
+ const palette=TERRAIN_PALETTE[kind],p=palette[(c+r)%2===0?'light':'dark'];
+ const v=((stableHash(c,r)%1000)/999-.5)*2*palette.variance;
+ // Keep hue tied to terrain type. The checker is a value difference, not colored confetti.
+ return p.map((ch,i)=>i<3?Math.max(0,Math.min(1,ch+v)):1);
+}
+function terrainRing(w,d,r,y,step=9){
+ const hw=w/2,hd=d/2,cx=TERRAIN_CENTER_X,cz=TERRAIN_CENTER_Z,out=[];
+ for(const [ox,oz,a0] of [[hw-r,hd-r,0],[-hw+r,hd-r,Math.PI/2],[-hw+r,-hd+r,Math.PI],[hw-r,-hd+r,Math.PI*1.5]]){
+  for(let k=0;k<=step;k++){const a=a0+k*Math.PI/(2*step);out.push([cx+ox+Math.cos(a)*r,y,cz+oz+Math.sin(a)*r]);}
  }
- return result;
+ return out;
 }
-function terrainFace(ring){
- const v=[0,TERRAIN_TOP,TERRAIN_CENTER_Z,0,1,0,.5,.5],ind=[];
- for(const [x,y,z] of ring)v.push(x,y,z,0,1,0,(x/TERRAIN_WIDTH)+.5,(z-TERRAIN_CENTER_Z)/TERRAIN_DEPTH+.5);
- for(let k=0;k<ring.length;k++)ind.push(0,k+1,(k+1)%ring.length+1);
- return makeGeom(v,ind);
-}
-function terrainBand(a,b,style){
+function terrainBand(a,b,bevel){
  if(a.length!==b.length)throw Error('Terrain ring mismatch');
- const v=[],ind=[];
- const n=a.length;
- for(let k=0;k<n;k++){
-  for(const [p,upper] of [[a[k],true],[b[k],false]]){
-   const ox=p[0]/(TERRAIN_WIDTH/2),oz=(p[2]-TERRAIN_CENTER_Z)/(TERRAIN_DEPTH/2);
-   const norm=Math.hypot(ox,oz)||1;
-   const side=[ox/norm,0,oz/norm];
-   const blend=style==='grass'?(upper?.08:.42):1;
-   const nn=style==='grass'?[side[0]*blend,upper?1:.91,side[2]*blend]:side;
-   const mag=Math.hypot(...nn);
-   v.push(p[0],p[1],p[2],nn[0]/mag,nn[1]/mag,nn[2]/mag,
-     p[0]/TERRAIN_WIDTH+.5,(p[2]-TERRAIN_CENTER_Z)/TERRAIN_DEPTH+.5);
-  }
+ const v=[],ind=[],n=a.length;
+ for(let i=0;i<n;i++)for(const [p,isTop] of [[a[i],true],[b[i],false]]){
+  const ox=(p[0]-TERRAIN_CENTER_X)/(TERRAIN_WIDTH/2),oz=(p[2]-TERRAIN_CENTER_Z)/(TERRAIN_DEPTH/2);
+  const len=Math.hypot(ox,oz)||1,side=[ox/len,0,oz/len];
+  const factor=bevel?(isTop?.10:.48):1;
+  const nn=bevel?[side[0]*factor,isTop?1:.86,side[2]*factor]:side,m=Math.hypot(...nn);
+  v.push(p[0],p[1],p[2],nn[0]/m,nn[1]/m,nn[2]/m,
+   (p[0]-TILE_LEFT)/(BOARD_COLS*TILE_W),(p[2]-TILE_BACK)/(BOARD_ROWS*TILE_D));
  }
- for(let k=0;k<n;k++){const j=(k+1)%n,q=2*k,t=2*j;ind.push(q,q+1,t,q+1,t+1,t);}
+ for(let i=0;i<n;i++){const j=(i+1)%n,a=2*i,b=2*j;ind.push(a,b,a+1,b,b+1,a+1);}
  return makeGeom(v,ind);
 }
-function createGrassTexture(){
- // Deterministic grayscale-alternating 16x6 checker over the continuous voxel grass plane.
- // No imagery is baked into the board: characters and facilities stay separate 3D cards.
+// Shared seamless micrograin texture. This is not a painted checkerboard or fixed terrain map.
+function createGrassGrain(){
  const el=document.createElement('canvas');el.width=1024;el.height=576;
  const ctx=el.getContext('2d'),img=ctx.createImageData(el.width,el.height);
- let seed=78031529;function rand(){seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;}
+ let seed=531177;const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
  for(let y=0;y<el.height;y++)for(let x=0;x<el.width;x++){
-  const k=(y*el.width+x)*4;
-  const broad=Math.sin(x*.014+y*.005)*.47+Math.sin(y*.021-x*.009)*.32;
-  const grain=(rand()-.5)*3.4;
-  const tone=broad*4+grain;
-  // Permanent gray-value checkerboard: 16 columns x 6 rows.
-  // The land stays ONE continuous 3D slab: these are surface colors, never separate voxel blocks.
-  const cellX=Math.min(15,Math.floor(x*16/el.width));
-  const cellY=Math.min(5,Math.floor(y*6/el.height));
-  const light=((cellX+cellY)&1)===0;
-  const gray=light?154:111;
-  const baseR=119+tone,baseG=153+tone*1.02,baseB=78+tone*.70;
-  const grayStrength=.66;
-  const insetX=x%(el.width/16),insetY=y%(el.height/6);
-  const edgeDist=Math.min(insetX,el.width/16-insetX,insetY,el.height/6-insetY);
-  const edgeShade=edgeDist<1.3?-12:edgeDist<2.3?-5:0;
-  img.data[k]=Math.max(0,Math.min(255,baseR*(1-grayStrength)+gray*grayStrength+edgeShade));
-  img.data[k+1]=Math.max(0,Math.min(255,baseG*(1-grayStrength)+gray*grayStrength+edgeShade));
-  img.data[k+2]=Math.max(0,Math.min(255,baseB*(1-grayStrength)+gray*grayStrength+edgeShade));
-  img.data[k+3]=255;
+  const i=(y*el.width+x)*4;
+  const rolling=1.7*Math.sin(x*.025+y*.016)+1.1*Math.sin(x*.046-y*.024);
+  const grain=(random()-.5)*6;
+  const gray=Math.max(228,Math.min(255,247+rolling+grain));
+  img.data[i]=gray;img.data[i+1]=gray;img.data[i+2]=gray;img.data[i+3]=255;
  }
  ctx.putImageData(img,0,0);
- // Almost invisible surface grain; grid remains readable at native 1920x1080.
- for(let i=0;i<175;i++){
-  const x=rand()*1024,y=rand()*576,r=rand()*5+1;
-  ctx.fillStyle=rand()<.5?'rgba(57,87,31,.045)':'rgba(214,224,138,.045)';
-  ctx.beginPath();ctx.ellipse(x,y,r,r*.42,rand()*Math.PI,0,2*Math.PI);ctx.fill();
- }
  const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,el);
@@ -200,13 +183,56 @@ function createGrassTexture(){
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  return tex;
 }
-const grassInner=terrainRing(TERRAIN_WIDTH-.20,TERRAIN_DEPTH-.20,TERRAIN_CORNER-.04,TERRAIN_TOP);
-const grassOuter=terrainRing(TERRAIN_WIDTH,TERRAIN_DEPTH,TERRAIN_CORNER,TERRAIN_TOP-.13);
-const bottomEdge=terrainRing(TERRAIN_WIDTH,TERRAIN_DEPTH,TERRAIN_CORNER,TERRAIN_TOP-.64);
-const grassFace=terrainFace(grassInner);
-const grassBevel=terrainBand(grassInner,grassOuter,'grass');
-const brownSoilSide=terrainBand(grassOuter,bottomEdge,'soil');
-const grassTexture=createGrassTexture();
+function makeTileTop(c,r){
+ const {x,z}=tileCenter(c,r),x0=x-TILE_W/2,x1=x+TILE_W/2,z0=z-TILE_D/2,z1=z+TILE_D/2;
+ const cap=.17;
+ // Trim the four outside corner tiles; all shared interior edges stay exactly coincident.
+ let p=[[x0,z1],[x1,z1],[x1,z0],[x0,z0]];
+ if(r===0&&c===0)p=[[x0,z1],[x1,z1],[x1,z0],[x0+cap,z0],[x0,z0+cap]];
+ if(r===0&&c===BOARD_COLS-1)p=[[x0,z1],[x1,z1],[x1,z0+cap],[x1-cap,z0],[x0,z0]];
+ if(r===BOARD_ROWS-1&&c===0)p=[[x0+cap,z1],[x1,z1],[x1,z0],[x0,z0],[x0,z1-cap]];
+ if(r===BOARD_ROWS-1&&c===BOARD_COLS-1)p=[[x0,z1],[x1-cap,z1],[x1,z1-cap],[x1,z0],[x0,z0]];
+ const verts=[],idx=[];
+ verts.push(x,TERRAIN_TOP,z,0,1,0,(x-TILE_LEFT)/(BOARD_COLS*TILE_W),(z-TILE_BACK)/(BOARD_ROWS*TILE_D));
+ for(const [px,pz] of p)verts.push(px,TERRAIN_TOP,pz,0,1,0,
+   (px-TILE_LEFT)/(BOARD_COLS*TILE_W),(pz-TILE_BACK)/(BOARD_ROWS*TILE_D));
+ for(let i=0;i<p.length;i++)idx.push(0,i+1,(i+1)%p.length+1);
+ return makeGeom(verts,idx);
+}
+function thinQuad(x0,z0,x1,z1,y,v,idx){
+ const k=v.length/8,points=[[x0,z1],[x1,z1],[x1,z0],[x0,z0]];
+ for(const [x,z] of points)v.push(x,y,z,0,1,0,0,0);
+ idx.push(k,k+1,k+2,k,k+2,k+3);
+}
+function makeInteriorSeams(){
+ const verts=[],indices=[],stroke=.016,raise=.003;
+ for(let c=1;c<BOARD_COLS;c++){
+  const x=TILE_LEFT+c*TILE_W;
+  thinQuad(x-stroke/2,TILE_BACK,x+stroke/2,TILE_BACK+BOARD_ROWS*TILE_D,TERRAIN_TOP+raise,verts,indices);
+ }
+ for(let r=1;r<BOARD_ROWS;r++){
+  const z=TILE_BACK+r*TILE_D;
+  thinQuad(TILE_LEFT,z-stroke/2,TILE_LEFT+BOARD_COLS*TILE_W,z+stroke/2,TERRAIN_TOP+raise,verts,indices);
+ }
+ return makeGeom(verts,indices);
+}
+const terrainCells=Array.from({length:BOARD_ROWS},(_,r)=>Array.from({length:BOARD_COLS},(_,c)=>{
+ const pos=tileCenter(c,r);
+ return {c,r,kind:'grass',x:pos.x,z:pos.z,mesh:makeTileTop(c,r),
+  color:tileStyle(c,r,'grass'),seed:stableHash(c,r)};
+}));
+const grassInner=terrainRing(TERRAIN_WIDTH-.2,TERRAIN_DEPTH-.2,TERRAIN_CORNER-.04,TERRAIN_TOP);
+const grassOuter=terrainRing(TERRAIN_WIDTH,TERRAIN_DEPTH,TERRAIN_CORNER,TERRAIN_TOP-.12);
+const bottomEdge=terrainRing(TERRAIN_WIDTH,TERRAIN_DEPTH,TERRAIN_CORNER,TERRAIN_TOP-.66);
+const grassBevel=terrainBand(grassInner,grassOuter,true);
+const brownSoilSide=terrainBand(grassOuter,bottomEdge,false);
+const grassTexture=createGrassGrain(),interiorSeams=makeInteriorSeams();
+// Snapshot is supplied to the real-browser QA, not used to render UI.
+window.__terrainDebug={
+ get tiles(){return terrainCells.flat().map(({c,r,x,z,kind,color})=>({c,r,x,z,kind,color}));},
+ get slots(){return slotCenters.map(({tileC,tileR,x,z,side,zone})=>({tileC,tileR,x,z,side,zone}));},
+ cols:BOARD_COLS,rows:BOARD_ROWS,continuous:true
+};
 // Card transform: XY face becomes horizontal XZ surface with +Y normal, then dynamically tilts/flips in 3D.
 function modelForCard(c,now){let motion=attackPose(c,now),arrival=placementPose(c,now);let base=T(c.x+motion.dx,c.y+motion.dy+arrival.dy,c.z+motion.dz);
 base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
@@ -233,7 +259,7 @@ else renderGeom(inset,M,c.side==='enemy'?[.945,.95,.953,1]:colors.inner);
 }
 function loadTexture(url,callback){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);callback(tex);};image.onerror=()=>{};image.src=url;}
 // Capacity test uses only neutral geometry: no portraits, titles, HUD, stats, icons, or external assets.
-let vp=I(),proj=I(),view=I(),camera={eye:[0,51,19],target:[0,0,0],right:[1,0,0],up:[0,1,0],forward:[0,-1,0],tan:.4,aspect:1},w=1920,h=1080;
+let vp=I(),proj=I(),view=I(),camera={eye:[.925,51,19],target:[.925,0,0],right:[1,0,0],up:[0,1,0],forward:[0,-1,0],tan:.4,aspect:1},w=1920,h=1080;
 function resize(){let dpr=Math.min(window.devicePixelRatio||1,2);w=Math.max(1,Math.round(canvas.clientWidth*dpr));h=Math.max(1,Math.round(canvas.clientHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);camera.aspect=w/h;
 // Fixed high-angle orthographic camera. Constant position and direction, no orbit or user camera movement.
 const height=Math.max(19.6,30.1/camera.aspect);proj=ortho(-height*camera.aspect/2,height*camera.aspect/2,-height/2,height/2,.1,100);
@@ -381,10 +407,16 @@ for(const c of cards){for(let i=0;i<1;i++){let scale=1+.04*i;
 let m=mul(T(c.x+.10+i*.025,.068+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
 function drawStage(){
- // Exactly one continuous grass-topped voxel layer; no multi-storey geometry.
- renderGeom(brownSoilSide,I(),[.62,.41,.27,1]);
- renderGeom(grassBevel,I(),[.44,.60,.29,1]);
- renderGeom(grassFace,I(),[1,1,1,1],grassTexture);
+ // One physical layer, made of precisely 96 independent tile-top geometries.
+ // Same-height blocks share edges; there are no interior cracks or side walls.
+ renderGeom(brownSoilSide,I(),TERRAIN_PALETTE.grass.earth);
+ renderGeom(grassBevel,I(),[.47,.623,.33,1]);
+ for(const row of terrainCells)for(const cell of row)
+  renderGeom(cell.mesh,I(),cell.color,grassTexture);
+ // Very faint engraved lines keep cell footprints legible beneath the cards.
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+ renderGeom(interiorSeams,I(),[.205,.285,.185,.13],null,true);
+ gl.depthMask(true);gl.disable(gl.BLEND);
 }
 function frame(timeMs){
  now=timeMs/1000;resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
