@@ -68,7 +68,7 @@ try{
   }
   assert.equal(after,before+1,'every physical deck click must remove exactly one card');
  }
- await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot.count===10,{timeout:8000});
+ await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot.visible.filter(x=>x.kind==='hand').length===10,{timeout:8000});
  const full=await page.evaluate(()=>({hud:window.__sceneCardHUD.snapshot,hand:window.__forestHand.snapshot}));
  assert.equal(full.hand.count,10);
  assert.equal(full.hud.visible.filter(p=>p.kind==='hand').length,10);
