@@ -79,7 +79,7 @@ function create(o){
   const step=mobile?.46:1.12;
   const spread=Math.min((hand.length-1)*step,visibleWidth);
   const handScale=mobile?.56:.89;
-  const handY=mobile?-2.13:-2.20;
+  const handY=mobile?-2.13:-1.57;
   hand.forEach((card,i)=>{
    const axis=hand.length===1?0:(i/(hand.length-1))*2-1;
    slots.push({kind:'hand',id:'hand:'+card.instance,instance:card.instance,c:card,
