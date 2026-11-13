@@ -351,39 +351,129 @@ function grainTexture(gl){
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  return tex;
 }
+
+/*
+ * Rounded voxel field mesher.
+ * Gameplay: integer per-cell elevations. Rendering: C1-smooth interpolation
+ * ONLY within 0.14 tile-width of a height discontinuity. Cell centers,
+ * card footprints and flat landing surfaces do not move.
+ *
+ * Unlike rounding 96 separate cubes, the surface is sampled in world space,
+ * so adjacent terrain meshes share exactly the same vertices on cell seams.
+ * Convex mountains AND concave excavations turn smoothly; no open corners.
+ */
+function smoothHeight(grid,x,z){
+ const u=(x-grid.minX)/grid.tileW-.5,v=(z-grid.minZ)/grid.tileD-.5;
+ const ix=Math.floor(u),iz=Math.floor(v),fx=u-ix,fz=v-iz;
+ const curve=t=>{
+  const normalized=constrain((t-.36)/.28,0,1);
+  return normalized*normalized*(3-2*normalized);
+ };
+ const wx=curve(fx),wz=curve(fz);
+ const at=(c,r)=>grid.cell(constrain(c,0,grid.cols-1),constrain(r,0,grid.rows-1)).height;
+ const a=at(ix,iz),b=at(ix+1,iz),c=at(ix,iz+1),d=at(ix+1,iz+1);
+ return (a*(1-wx)+b*wx)*(1-wz)+(c*(1-wx)+d*wx)*wz;
+}
+function softHeightTile(grid,makeGeom,c,r){
+ const verts=[],idx=[],N=16;
+ const {x,z}=grid.center(c,r);
+ const x0=x-grid.tileW/2,z0=z-grid.tileD/2;
+ const eps=.019;
+ for(let j=0;j<=N;j++)for(let i=0;i<=N;i++){
+  const px=x0+grid.tileW*i/N,pz=z0+grid.tileD*j/N,py=smoothHeight(grid,px,pz);
+  const gx=(smoothHeight(grid,px+eps,pz)-smoothHeight(grid,px-eps,pz))/(2*eps);
+  const gz=(smoothHeight(grid,px,pz+eps)-smoothHeight(grid,px,pz-eps))/(2*eps);
+  const len=Math.hypot(gx,1,gz);
+  verts.push(px,py,pz,-gx/len,1/len,-gz/len,
+    (px-grid.minX)/grid.width,(pz-grid.minZ)/grid.depth);
+ }
+ for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+  const a=j*(N+1)+i,b=a+1,c=a+N+1,d=c+1;
+  idx.push(a,c,b,b,c,d);
+ }
+ return makeGeom(verts,idx);
+}
+function softPerimeter(grid,makeGeom){
+ const xs=grid.minX,xe=xs+grid.width,zs=grid.minZ,ze=zs+grid.depth;
+ const r=Math.min(grid.tileW,grid.tileD)*.132,steps=7;
+ const out=[];
+ function add(x,z,nx,nz){
+  const last=out[out.length-1];
+  if(last&&Math.hypot(last.x-x,last.z-z)<1e-6)return;
+  out.push({x,z,nx,nz});
+ }
+ function straight(x0,z0,x1,z1,nx,nz,num,first=true){
+  for(let k=first?0:1;k<=num;k++){const t=k/num;add(x0+(x1-x0)*t,z0+(z1-z0)*t,nx,nz);}
+ }
+ function arc(cx,cz,a0,a1){
+  for(let k=1;k<=steps;k++){const a=a0+(a1-a0)*k/steps;add(cx+Math.cos(a)*r,cz+Math.sin(a)*r,Math.cos(a),Math.sin(a));}
+ }
+ straight(xs+r,zs,xe-r,zs,0,-1,grid.cols*3);
+ arc(xe-r,zs+r,-Math.PI/2,0);
+ straight(xe,zs+r,xe,ze-r,1,0,grid.rows*3,false);
+ arc(xe-r,ze-r,0,Math.PI/2);
+ straight(xe-r,ze,xs+r,ze,0,1,grid.cols*3,false);
+ arc(xs+r,ze-r,Math.PI/2,Math.PI);
+ straight(xs,ze-r,xs,zs+r,-1,0,grid.rows*3,false);
+ arc(xs+r,zs+r,Math.PI,Math.PI*1.5);
+ if(Math.hypot(out[out.length-1].x-out[0].x,out[out.length-1].z-out[0].z)<1e-6)out.pop();
+ const lipVertices=[],lipIndices=[],wallVertices=[],wallIndices=[];
+ const footer=grid.topY+grid.minLevel*grid.levelStep-grid.thickness;
+ const lipWidth=Math.min(grid.tileW,grid.tileD)*.105;
+ for(const p of out){
+  const innerX=p.x-p.nx*lipWidth,innerZ=p.z-p.nz*lipWidth;
+  const innerH=smoothHeight(grid,innerX,innerZ);
+  const outerH=smoothHeight(grid,p.x,p.z)-.13;
+  const lipStart=lipVertices.length/8,wallStart=wallVertices.length/8;
+  lipVertices.push(innerX,innerH,innerZ,0,1,0,
+    (innerX-grid.minX)/grid.width,(innerZ-grid.minZ)/grid.depth);
+  const normLen=Math.hypot(p.nx,.80,p.nz);
+  lipVertices.push(p.x,outerH,p.z,p.nx/normLen,.8/normLen,p.nz/normLen,
+    (p.x-grid.minX)/grid.width,(p.z-grid.minZ)/grid.depth);
+  wallVertices.push(p.x,outerH,p.z,p.nx,0,p.nz,p.x*.08,outerH*.3);
+  wallVertices.push(p.x,footer,p.z,p.nx,0,p.nz,p.x*.08,footer*.3);
+ }
+ for(let i=0;i<out.length;i++){
+  const j=(i+1)%out.length,a=i*2,b=j*2;
+  lipIndices.push(a,b,a+1,b,b+1,a+1);
+  wallIndices.push(a,b,a+1,b,b+1,a+1);
+ }
+ return {lip:makeGeom(lipVertices,lipIndices),wall:makeGeom(wallVertices,wallIndices)};
+}
 function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
  if(!gl||!makeGeom||!renderGeom||!I)throw Error('Missing WebGL renderer dependencies');
  const texture=grainTexture(gl),base=I();
- let seams=null,walls=[],tiles=[],geometryRevision=-1;
-  const free=m=>{if(m){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}};
+ const free=m=>{if(m){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}};
+ let tiles=[],seams=null,outer=null,renderedRevision=-1;
  function rebuild(){
-  free(seams);for(const wall of walls)free(wall.mesh);
-  for(const row of tiles)for(const cell of row)free(cell);
-  tiles=Array.from({length:grid.rows},(_,r)=>Array.from({length:grid.cols},(_,c)=>{
-    const geometry=tileSoftMesh(grid,makeGeom,c,r);
-    const cliff=roundedCliffMesh(grid,makeGeom,c,r,geometry.contour,geometry.depth);
-    if(cliff)walls.push({mesh:cliff,color:grid.materials[grid.cell(c,r).kind].side});
-    return geometry.mesh;
-  }));
+  for(const row of tiles)for(const geo of row)free(geo);
+  free(seams);
+  if(outer){free(outer.lip);free(outer.wall);}
+  tiles=Array.from({length:grid.rows},(_,r)=>
+    Array.from({length:grid.cols},(_,c)=>softHeightTile(grid,makeGeom,c,r)));
   seams=seamMesh(grid,makeGeom);
-  geometryRevision=grid.revision;
+  outer=softPerimeter(grid,makeGeom);
+  renderedRevision=grid.revision;
  }
  function draw(){
-  if(geometryRevision!==grid.revision)rebuild();
-  // Walls and individual tops form real multi-height, editable voxel geometry.
-  for(const wall of walls)renderGeom(wall.mesh,base,wall.color);
+  if(renderedRevision!==grid.revision)rebuild();
+  // Hard edges are rendered only at the OUTER edge of the entire world.
+  // Every internal elevation joins the same continuous C1-smooth surface.
+  renderGeom(outer.wall,base,grid.materials.grass.side);
+  renderGeom(outer.lip,base,grid.materials.grass.edge);
   for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++)
-   renderGeom(tiles[r][c],base,grid.color(c,r),texture);
+   renderGeom(tiles[r][c],base,grid.color(c,r),texture,false,true);
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
-  renderGeom(seams,base,[.13,.19,.12,.12],null,true);
+  renderGeom(seams,base,[.13,.19,.12,.085],null,true);
   gl.depthMask(true);gl.disable(gl.BLEND);
  }
  function dispose(){
-  for(const row of tiles)for(const m of row)free(m);
-  free(seams);for(const wall of walls)free(wall.mesh);
+  for(const row of tiles)for(const geo of row)free(geo);
+  free(seams);
+  if(outer){free(outer.lip);free(outer.wall);}
   gl.deleteTexture(texture);
  }
- return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return geometryRevision}};
+ return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return renderedRevision}};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'3.0.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'3.1.0',MATERIALS,create,createWebGLRenderer});
 })(window);
