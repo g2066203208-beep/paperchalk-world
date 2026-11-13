@@ -7,7 +7,7 @@ const factory=root.PaperchalkProfessionDecks;
 if(!factory)throw Error('Profession model missing');
 const units=root.__forestLevelDebug?.state?.units||[];
 const activeJobs=units.filter(u=>u.side==='ally').map(u=>u.role).filter(Boolean);
-const model=factory.create({maxHand:10,openingDraw:5,unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
+const model=factory.create({maxHand:10,openingDraw:0,unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
 let selectedInstance=null;
 function snapshot(){return model.snapshot();}
 function selectedCard(){return snapshot().hand.find(c=>c.instance===selectedInstance)||null;}
@@ -17,6 +17,7 @@ function selectCard(instance){
  return true;
 }
 function draw(profession,opts){
+ if(root.__forestLevelDebug?.state.phase!=='active')return {ok:false,reason:'deploy-first'};
  return model.draw(profession,opts);
 }
 function consumeForTarget(targetId){
@@ -29,13 +30,20 @@ function consumeForTarget(targetId){
  return{damage:result.card.power,card:result.card,targetId};
 }
 function reset(){selectedInstance=null;return model.reset();}
+function onDeployment(){
+ selectedInstance=null;
+ model.reset();
+ const role=root.__forestLevelDebug?.state.units.find(u=>u.side==='ally'&&u.deployed)?.role||'warrior';
+ for(let i=0;i<5;i++)model.draw(role);
+ return model.snapshot();
+}
 function nextTurn(){
  if(root.__forestLevelDebug?.state?.phase!=='active')return false;
  selectedInstance=null;
  return model.nextTurn();
 }
 root.__forestHand=Object.freeze({
- consumeForTarget,reset,nextTurn,selectCard,draw,
+ consumeForTarget,reset,onDeployment,nextTurn,selectCard,draw,
  get selected(){return selectedInstance;},
  get snapshot(){return model.snapshot();},
  // Compatibility for existing tests and older tutorial shortcuts.
