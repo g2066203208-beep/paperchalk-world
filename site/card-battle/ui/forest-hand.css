@@ -1,80 +1,181 @@
-/* Seven aligned profession boxes and one shared 10-card hand (7 independent LIFO stacks). */
-#stage{height:calc(100dvh - 275px)!important}
-#profession-dock{position:fixed;bottom:0;left:0;right:0;height:275px;z-index:7;
- background:linear-gradient(180deg,#e7e7dbe8,#f0f0e9 19%,#e9e9df 100%);
- box-shadow:0 -8px 22px #26392b23;border-top:1px solid #acb2a6;
- font:13px/1.3 system-ui,'Noto Sans SC',sans-serif;color:#344034;user-select:none;overflow:hidden}
-#profession-dock .dock-content{height:100%;max-width:1240px;margin:0 auto;display:flex;flex-direction:column;padding:7px 12px 10px}
-#profession-dock .dock-head{height:34px;display:flex;align-items:center;gap:18px;padding:0 7px 5px}
-#profession-dock .dock-title{font-weight:650;letter-spacing:.04em;font-size:12px}
-#profession-dock .dock-phase{border-radius:13px;background:#dbe4d8;padding:4px 11px;font-size:11px;color:#3b5d40}
-#profession-dock .dock-phase.is-locked{background:#e6e0d3;color:#78684f}
-#profession-dock .dock-info{flex:1;color:#737b70;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#profession-dock .end-turn{border:1px solid #647c64;border-radius:8px;background:#36583e;color:#fff;padding:8px 13px;font-weight:600;cursor:pointer}
-#profession-dock .end-turn:disabled{opacity:.35;cursor:default}
-#profession-dock .class-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));column-gap:9px}
-#profession-dock .class-stack-row{flex:1;min-height:0}
-#profession-dock .class-stack{position:relative;display:flex;justify-content:center;align-items:flex-end;min-width:0;padding-bottom:5px;border-bottom:1px solid #cbd0c5}
-#profession-dock .stack-empty{height:95px;width:88px;border:1px dashed #d6d8cf;border-radius:7px;background:#eceee5b0;opacity:.65}
-#profession-dock .stack-depth{position:absolute;bottom:10px;width:min(88%,95px);height:97px;border:1px solid #c5c8bd;border-radius:7px;background:#f9f8f1;box-shadow:0 4px 8px #2430241b;transform:translate(0,4px)}
-#profession-dock .stack-depth.second{transform:translate(-4px,7px);background:#d9e1d4}
-#profession-dock .top-card{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:space-between;
- width:min(90%,104px);height:114px;background:linear-gradient(158deg,#fffef8,#e8e7d7);color:#354033;
- border:2px solid #fefdf9;border-radius:8px;outline:1px solid #a4ad9d;box-shadow:0 4px 9px #21301d35;cursor:pointer;
- text-align:center;padding:6px 4px 5px;transform:translateY(0);transition:transform .14s,box-shadow .14s,outline .14s}
-#profession-dock .top-card.selected{outline:2px solid #407e4b;transform:translateY(-7px);box-shadow:0 8px 16px #173c2070}
-#profession-dock .top-card:hover{transform:translateY(-5px)}
-#profession-dock .top-card:focus-visible{outline:3px solid #658f6c}
-#profession-dock .top-card .card-family{font-size:9px;letter-spacing:.02em;color:#6b7668}
-#profession-dock .top-card .card-name{font-weight:650;font-size:14px;letter-spacing:.02em;line-height:1.2}
-#profession-dock .top-card .card-power{font-size:10px;color:#64745f}
-#profession-dock .top-card.faction{background:linear-gradient(160deg,#fff9e9,#eee1c3);outline-color:#a89565}
-#profession-dock .stack-count{position:absolute;z-index:4;top:6px;right:5px;padding:2px 5px;border-radius:9px;background:#526d51;color:#fff;font-size:10px;font-variant-numeric:tabular-nums}
-#profession-dock .class-box-row{flex:none;height:78px;padding-top:8px}
-#profession-dock .class-box{border:1px solid #aeb9a8;border-radius:11px;display:flex;align-items:center;
- justify-content:center;gap:8px;background:linear-gradient(145deg,#fbfcf5,#dce5d7);height:67px;
- box-shadow:0 3px 0 #b2bbaa;cursor:pointer;min-width:0;padding:6px;color:#354637}
-#profession-dock .class-box:not(:disabled):hover{border-color:#567f5b;background:#f5fbf1}
-#profession-dock .class-box .class-icon{font-size:18px;font-weight:700;min-width:24px}
-#profession-dock .class-box .class-copy{display:flex;flex-direction:column;gap:2px;text-align:left;white-space:nowrap}
-#profession-dock .class-box .class-name{font-size:13px;font-weight:700}
-#profession-dock .class-box .class-stock{font-size:10px;color:#738172}
-#profession-dock .class-box:disabled{background:#e2e5dd;color:#9ba499;border-color:#cdd2c9;box-shadow:0 2px 0 #cfd2ca;cursor:not-allowed}
-#profession-dock .class-box:disabled .class-stock{color:#a0aa9f}
-#hand{position:fixed!important;top:54px!important;right:12px!important;bottom:auto!important;left:auto!important;
- transform:none!important;background:#f4f4ede3!important;padding:5px!important;gap:5px!important;border:1px solid #c8cec2!important;
- box-shadow:0 4px 16px #223b2b18!important;border-radius:10px!important;max-width:45vw!important}
-#hand .hand-card{height:36px!important;width:40px!important;box-shadow:none!important}
-#hand .hand-card .name{font-size:10px!important}#hand .hand-card .kind{display:none!important}
+/* Physically layered 7 profession card boxes + 10 independent playable cards.
+ * Card stack and hand are deliberately DIFFERENT structures.
+ */
+#stage{height:calc(100dvh - 313px)!important}
+#profession-dock{
+ position:fixed;bottom:0;left:0;right:0;height:313px;z-index:7;
+ background:linear-gradient(180deg,#f2f0e7f5,#e9e7da 92%,#ddd8c8);
+ box-shadow:0 -10px 34px #26332626;border-top:1px solid #b6bca8;
+ font:13px/1.3 system-ui,'Noto Sans SC',sans-serif;color:#3d4536;user-select:none;
+ overflow:hidden;
+}
+#profession-dock .dock-content{
+ height:100%;max-width:1300px;margin:0 auto;display:flex;flex-direction:column;
+ padding:9px 16px 15px;box-sizing:border-box;gap:4px;
+}
+#profession-dock .dock-head{
+ display:flex;align-items:center;gap:12px;flex:none;height:34px;padding:0 4px;
+}
+#profession-dock .dock-title{font-size:14px;font-weight:750;white-space:nowrap}
+#profession-dock .dock-phase{
+ white-space:nowrap;padding:5px 12px;border-radius:30px;background:#dae5d6;color:#42634a;
+ font-size:11px;letter-spacing:.02em;
+}
+#profession-dock .dock-phase.is-locked{background:#e6dcc8;color:#745e39}
+#profession-dock .dock-info{
+ flex:1;font-size:11px;color:#778071;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
+}
+#profession-dock .roster-trigger,#profession-dock .end-turn{
+ cursor:pointer;border-radius:8px;border:1px solid #bac2ae;padding:8px 12px;
+ background:#f7f8ef;color:#435a45;font:600 11px system-ui,sans-serif;white-space:nowrap;
+}
+#profession-dock .end-turn{background:#3f5d42;color:#fff;border-color:#3f5d42}
+#profession-dock .end-turn:disabled{opacity:.42;cursor:default}
+#profession-dock .roster-trigger:hover{background:#fff}
+#profession-dock .action-hand-row{
+ display:flex;flex:none;align-items:center;justify-content:center;gap:8px;
+ min-height:137px;height:137px;overflow-x:auto;overflow-y:hidden;
+ padding:4px 6px 8px;scrollbar-width:thin;
+}
+#profession-dock .action-card{
+ display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+ flex:0 0 101px;width:101px;height:124px;min-width:0;
+ padding:8px 5px 7px;box-sizing:border-box;
+ position:relative;cursor:pointer;color:#3f4338;
+ background:linear-gradient(155deg,#fffefa,#f1efe1 60%,#e5e1d1);
+ border-radius:7px;border:3px solid #fcfbf5;
+ box-shadow:0 0 0 1px #a7ad9f,0 5px 10px #26332327;
+ transition:transform .14s,box-shadow .14s;
+}
+#profession-dock .action-card::before{
+ content:"";pointer-events:none;position:absolute;inset:6px;border:1px solid #c5cdbd;border-radius:3px;
+}
+#profession-dock .action-card.is-faction{background:linear-gradient(155deg,#fffaf1,#e8ddc0)}
+#profession-dock .action-card.is-faction::before{border-color:#cab98e}
+#profession-dock .action-card:hover{transform:translateY(-5px);z-index:2}
+#profession-dock .action-card.selected{
+ transform:translateY(-8px);z-index:3;box-shadow:0 0 0 2px #3c8b54,0 9px 18px #2f573e55;
+}
+#profession-dock .action-card:focus-visible{outline:3px solid #427c53;outline-offset:3px}
+#profession-dock .action-class{font-size:9px;color:#7d866f;letter-spacing:.05em;z-index:1}
+#profession-dock .action-symbol{font:700 25px/1.2 Georgia,serif;color:#617257;z-index:1}
+#profession-dock .action-name{font-size:13px;font-weight:750;z-index:1;white-space:nowrap}
+#profession-dock .action-power{font-size:10px;color:#787d70;z-index:1}
+#profession-dock .hand-empty{
+ display:flex;align-items:center;justify-content:center;border:1px dashed #b7c2b1;border-radius:8px;
+ width:75%;height:100px;color:#9ca596;font-size:12px;
+}
+#profession-dock .class-grid{
+ display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;
+}
+#profession-dock .class-box-row{flex:1;min-height:0;align-items:end;padding:3px 6px 3px}
+#profession-dock .deck-pile{
+ position:relative;display:block;width:100%;max-width:132px;height:101px;min-width:0;margin:0 auto;
+ padding:0;border:0;background:transparent;cursor:pointer;isolation:isolate;
+}
+#profession-dock .deck-paper{
+ position:absolute;left:50%;bottom:5px;
+ height:82px;width:80px;border-radius:7px;
+ transform:translateX(calc(-50% + var(--layer)*.8px)) translateY(calc(var(--layer)*-1.25px)) rotate(calc((var(--layer) - 3)*.65deg));
+ background:repeating-linear-gradient(90deg,#d6d5c5 0 1px,#f5f2e7 1px 4px,#b8b9ab 4px 5px);
+ border:1px solid #a4aa99;box-shadow:1px 1px 2px #26352a23;
+ pointer-events:none;
+}
+#profession-dock .deck-cover{
+ position:absolute;left:50%;bottom:4px;width:83px;height:87px;
+ transform:translateX(-50%);
+ border-radius:7px;border:3px solid #e1dfce;box-shadow:0 3px 7px #323d3477;
+ background:
+  linear-gradient(135deg,transparent 45%,#bcc5b185 46% 48%,transparent 49%) center/28px 28px,
+  linear-gradient(155deg,#546b52,#364d3c);
+ display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;
+ color:#faf9ed;pointer-events:none;
+}
+#profession-dock .deck-cover::before{
+ content:"";position:absolute;inset:5px;border:1px solid #d2dbcc8c;border-radius:3px;
+ pointer-events:none;
+}
+#profession-dock .deck-symbol{font:700 22px Georgia,serif;z-index:1}
+#profession-dock .deck-cover strong{font-size:12px;letter-spacing:.07em;z-index:1}
+#profession-dock .deck-cover small{font-size:9px;color:#d8e1d4;z-index:1}
+#profession-dock .deck-pile:not(:disabled):hover .deck-cover{
+ box-shadow:0 5px 0 #8c997e,0 7px 13px #2b3c3377;
+ transform:translateX(-50%) translateY(-4px);
+}
+#profession-dock .deck-pile:focus-visible{outline:2px solid #436a4c;outline-offset:3px;border-radius:9px}
+#profession-dock .deck-pile:disabled{cursor:default}
+#profession-dock .deck-pile.is-unavailable{opacity:.49;filter:saturate(.4)}
+#profession-dock .deck-pile.is-unavailable .deck-cover{background:linear-gradient(150deg,#8c9986,#68776a)}
+#hand{
+ position:fixed!important;top:53px!important;right:12px!important;left:auto!important;bottom:auto!important;
+ transform:none!important;background:#f6f5eedf!important;max-width:45vw!important;
+ padding:5px!important;gap:4px!important;border:1px solid #c6ccc0!important;
+ border-radius:9px!important;box-shadow:0 4px 12px #223b2b1d!important;
+}
+#hand .hand-card{height:35px!important;width:42px!important;box-shadow:none!important}
+#hand .hand-card .name{font-size:10px!important}
+#hand .hand-card .kind{display:none!important}
 #demo{display:none!important}
 #reset{padding:7px 9px!important;font-size:10px!important}
-#note{bottom:285px!important}
-#level-hud{top:99px!important}
-@media(max-width:700px){
- #stage{height:calc(100dvh - 236px)!important}
- #profession-dock{height:236px}
- #profession-dock .dock-content{padding:5px 4px 7px}
- #profession-dock .dock-head{height:31px;gap:7px;padding:0 2px 3px}
- #profession-dock .dock-title{font-size:10px}
- #profession-dock .dock-phase{padding:3px 6px;font-size:9px}
+#note{bottom:328px!important}
+#level-hud{top:100px!important}
+#character-gallery[hidden]{display:none!important}
+#character-gallery{
+ position:fixed;z-index:40;inset:0;padding:20px;background:#172419bd;
+ display:grid;place-items:center;overflow-y:auto;
+}
+#character-gallery .gallery-sheet{
+ width:min(920px,94vw);max-height:min(88vh,850px);overflow-y:auto;padding:21px;
+ background:#efece1;border-radius:16px;border:1px solid #b5baa6;
+ box-shadow:0 24px 88px #0a180c77;box-sizing:border-box;
+}
+#character-gallery header{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:20px;color:#344639}
+#gallery-close{border:1px solid #b5bfad;border-radius:8px;padding:8px 16px;cursor:pointer;background:#fcf9ef;color:#374d38}
+#character-gallery p{font-size:12px;color:#77806e;line-height:1.7}
+#character-gallery .gallery-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+#character-gallery .roster-card{border:1px solid #bfc4b5;background:#f9f8f2;border-radius:12px;overflow:hidden;min-width:0}
+#character-gallery .roster-card img{width:100%;height:290px;object-fit:contain;display:block;background:#fff}
+#character-gallery .roster-card-description{padding:9px 13px;display:flex;flex-direction:column;gap:4px}
+#character-gallery .roster-card-description strong{font-size:15px;color:#3d533d}
+#character-gallery .roster-card-description small{font-size:11px;color:#829080}
+@media(max-width:720px){
+ #stage{height:calc(100dvh - 250px)!important}
+ #profession-dock{height:250px}
+ #profession-dock .dock-content{padding:4px 5px 5px;gap:2px}
+ #profession-dock .dock-head{height:32px;gap:5px;padding:0 2px}
+ #profession-dock .dock-title{font-size:11px}
+ #profession-dock .dock-phase{padding:4px 6px;font-size:9px}
  #profession-dock .dock-info{display:none}
- #profession-dock .end-turn{font-size:10px;padding:5px 8px;margin-left:auto}
- #profession-dock .class-grid{column-gap:3px}
- #profession-dock .class-stack{padding-bottom:3px}
- #profession-dock .stack-empty{width:40px;height:85px}
- #profession-dock .stack-depth{width:42px;height:87px}
- #profession-dock .top-card{width:44px;height:103px;padding:4px 2px}
- #profession-dock .top-card .card-family{font-size:7px}
- #profession-dock .top-card .card-name{font-size:10px;word-break:break-all}
- #profession-dock .top-card .card-power{font-size:8px}
- #profession-dock .stack-count{top:5px;right:1px;font-size:8px}
- #profession-dock .class-box-row{height:61px;padding-top:6px}
- #profession-dock .class-box{height:55px;border-radius:6px;padding:3px;gap:0;flex-direction:column}
- #profession-dock .class-box .class-icon{font-size:13px;min-width:0;height:15px}
- #profession-dock .class-box .class-copy{text-align:center;gap:1px}
- #profession-dock .class-box .class-name{font-size:9px}
- #profession-dock .class-box .class-stock{font-size:7px}
- #hand{top:40px!important;max-width:62vw!important}
- #level-hud{top:95px!important}
- #note{bottom:245px!important}
+ #profession-dock .roster-trigger,#profession-dock .end-turn{padding:5px 6px;font-size:9px}
+ #profession-dock .roster-trigger{margin-left:auto}
+ #profession-dock .action-hand-row{
+  justify-content:flex-start;min-height:114px;height:114px;gap:5px;padding:4px 5px 5px;
+ }
+ #profession-dock .action-card{flex-basis:76px;width:76px;height:101px;padding:6px 3px 5px}
+ #profession-dock .action-class{font-size:8px}
+ #profession-dock .action-symbol{font-size:19px}
+ #profession-dock .action-name{font-size:11px}
+ #profession-dock .action-power{font-size:9px}
+ #profession-dock .class-grid{gap:3px}
+ #profession-dock .class-box-row{padding:0 2px}
+ #profession-dock .deck-pile{height:82px;max-width:54px}
+ #profession-dock .deck-paper{width:40px;height:62px;bottom:5px}
+ #profession-dock .deck-cover{width:41px;height:65px;bottom:4px;border-width:2px}
+ #profession-dock .deck-cover strong{font-size:9px}
+ #profession-dock .deck-symbol{font-size:14px}
+ #profession-dock .deck-cover small{font-size:7px}
+ #hand{top:39px!important;max-width:56vw!important}
+ #level-hud{top:100px!important}
+ #note{bottom:260px!important}
+ #character-gallery .gallery-sheet{padding:12px}
+ #character-gallery header{font-size:15px}
+ #character-gallery .gallery-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ #character-gallery .roster-card img{height:150px}
+ #character-gallery .roster-card-description{padding:5px}
+ #character-gallery .roster-card-description strong{font-size:10px}
+ #character-gallery .roster-card-description small{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){
+ #profession-dock .action-card{transition:none}
+ #profession-dock .deck-cover{transition:none}
 }
