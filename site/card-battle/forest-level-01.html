@@ -324,9 +324,7 @@ function slotAtPointer(clientX,clientY){
 function valid(d,s,move=null){
  if(!d||!s)return false;
  if(d.kind==='terrain'){
-  if(!terrain.canAdjust(s.tileC,s.tileR,d.direction))return false;
-  // Avoid leaving played cards suspended or embedded in a modified earth block.
-  return !cards.some(c=>c.slot&&c.slot.tileC===s.tileC&&c.slot.tileR===s.tileR);
+  return level.canModify(s.tileC,s.tileR,d.direction)&&!fx.isBusy(s.tileC,s.tileR);
  }
  if(s.side!=='ally'||s.zone!==d.kind)return false;
  if(occupied.has(s.id)&&occupied.get(s.id)!==move)return false;
@@ -337,7 +335,8 @@ function drop(s){
  if(!active)return;
  if(!valid(active,s)){message('红色区域不可操作（已到三层极限或已有卡牌）');return;}
  if(active.kind==='terrain'){
-  const tile=terrain.adjust(s.tileC,s.tileR,active.direction);
+  if(!fx.adjust(s.tileC,s.tileR,active.direction))return;
+   const tile=terrain.cell(s.tileC,s.tileR);
   message((active.direction<0?'挖掘':'堆土')+'成功 · 高度 '+(tile.level>0?'+':'')+tile.level+' / -3～+3');
   overSlot=s;return; // Reusable terrain action cards: keep selected for repeated excavation/building.
  }
@@ -348,23 +347,14 @@ function move(c,s){
  if(!valid(c.def,s,c)){message('此处无法放置');return;}
  occupied.delete(c.slot.id);c.slot=s;c.homeX=s.x;c.homeZ=s.z;occupied.set(s.id,c);c.placeStart=now;
 }
-function reset(){cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;terrain.reset('grass');clearPick();}
+function reset(){
+ cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;
+ fx.reset();terrain.reset('grass');clearPick();startForestLevel();
+}
 document.getElementById('reset').addEventListener('click',reset);
 document.getElementById('demo').addEventListener('click',()=>{
- // Role-aware 3-3-1 formation: 3 frontline, 3 middle, ringmaster protected at rear center.
- cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();
- const lineup=[
- {id:'strong',r:0,c:0},{id:'tamer',r:0,c:1},{id:'escape',r:0,c:2},
- {id:'acrobat',r:1,c:0},{id:'clown',r:1,c:1},{id:'knife',r:1,c:2},
- {id:'ringmaster',r:2,c:1}
- ];
- lineup.forEach(({id,r,c},i)=>{
-  const def=handDefs.find(d=>d.id===id);
-  const slot=slotCenters.find(s=>s.side==='ally'&&s.zone==='unit'&&s.r===r&&s.c===c);
-  if(!slot||!def)return;
-  const card=makeCard(def,slot);
-  card.placeStart=now-i*.055-.25;occupied.set(slot.id,card);cards.push(card);
- });
+ attackMode=true;clearPick();message('点击敌人卡牌发动伐木少女攻击');
+});
  sync();message('已摆好前3、中3、后排团长的阵型，可拖动调整');
 });
 function closestCard(clientX,clientY){
