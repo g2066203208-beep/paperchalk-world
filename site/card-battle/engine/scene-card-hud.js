@@ -69,7 +69,7 @@ function create(o){
   // trays, empty boxes, shared housing, or half-screen inventory furniture.
   const active=state.classes.filter(c=>c.unlocked&&c.deckCount>=0);
   const deckY=-spanH*.5+(mobile?1.03:1.22);
-  const deckScale=mobile?.61:.88;
+  const deckScale=mobile?.75:1.02;
   for(const c of active){
    slots.push({kind:'deck',id:'deck:'+c.id,profession:c.id,c,
     x:0,y:deckY,z:0,scale:deckScale,angle:0});
@@ -89,8 +89,11 @@ function create(o){
   for(const u of staged){
    const origin=slots.find(p=>p.kind==='deck'&&p.profession===u.role);
    if(origin)slots.push({...origin,kind:'character',id:'character:'+u.id,
-    unitId:u.id,portrait:u.portrait,y:origin.y+.18,
-    z:.58,scale:deckScale*1.10});
+    unitId:u.id,portrait:u.portrait,
+    // Character sits ABOVE the full face-up physical action-card stack.
+    y:origin.y+Math.sin(1.03)*(.11+origin.c.deckCount*.044+.16),
+    z:Math.cos(1.03)*(.11+origin.c.deckCount*.044+.16),
+    scale:deckScale*1.12});
   }
   // A tiny physical end-turn card is a control, NOT another card pile.
   slots.push({kind:'turn',id:'turn:end',x:Math.min(spanW*.5-.42,mobile?1.8:3.1),
@@ -104,7 +107,7 @@ function create(o){
   const hover=focused?.58:0,raise=hover+(selected?.52:0)+(charSelected?.18:0);
   const easing=Math.sin(frame*1.5+p.x*.3)*.020;
   const scale=p.scale*(1+(focused?.15:0)+(selected?.11:0));
-  const tilt=p.kind==='character'?-0.90:p.kind==='deck'?-1.03:(p.kind==='hand'?(p.tilt||-.12):-.17);
+  const tilt=p.kind==='character'?-0.87:p.kind==='deck'?-1.03:(p.kind==='hand'?(p.tilt||-.12):-.17);
   let mat=T(opts.x??p.x,(opts.y??p.y)+raise+easing,(opts.z??p.z)+raise*.28);
   mat=mul(mat,RY(focused?-.045:0));
   mat=mul(mat,RX(tilt+(focused?.12:0)));
@@ -217,8 +220,7 @@ function create(o){
   }
   for(const pos of positions.filter(p=>p.kind==='character')){
    const deck=positions.find(q=>q.kind==='deck'&&q.profession===pos.profession);
-   renderPhysicalCard({...pos,
-    z:Math.cos(1.03)*(.12+(deck?.c.deckCount||0)*.044)+.10},
+   renderPhysicalCard(pos,
      portrait(pos.portrait,pos.profession));
   }
   for(const pos of positions.filter(p=>p.kind==='hand')){
@@ -334,5 +336,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'3.0.0-single-pile',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'3.1.0-single-pile',create});
 })(window);
