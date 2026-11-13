@@ -503,6 +503,68 @@ function frame(timeMs){
  if(active&&preview&&onBoard&&!dragCard){preview.hover=1;preview.y=(overSlot?fx.height(overSlot.tileC,overSlot.tileR):.0)+.85+Math.sin(now*2)*.025;drawCard(preview,now);}
  requestAnimationFrame(frame);
 }
+function placeholderUnitTexture(name,enemy){
+ // Deliberate low-detail placeholder until the user-approved PNG is actually in GitHub.
+ const cv=document.createElement('canvas');cv.width=512;cv.height=768;
+ const ctx=cv.getContext('2d');
+ ctx.fillStyle=enemy?'#e6e3d7':'#f0efe5';ctx.fillRect(0,0,512,768);
+ ctx.strokeStyle=enemy?'#897d69':'#82997c';ctx.lineWidth=10;ctx.strokeRect(28,28,456,712);
+ ctx.fillStyle=enemy?'#615e55':'#4a614b';ctx.textAlign='center';
+ ctx.font='bold 46px serif';ctx.fillText(name,256,377);
+ ctx.font='23px sans-serif';ctx.fillText(enemy?'森林中的敌人':'农民组织 · 战士',256,427);
+ const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,cv);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+ return tex;
+}
+function startForestLevel(){
+ level.reset();
+ document.getElementById('level-end').classList.remove('is-visible');
+ for(const unit of level.snapshot().units){
+  const slot=slotCenters.find(t=>t.zone==='unit'&&t.side===unit.side&&t.r===unit.r&&t.c===unit.c);
+  if(!slot)throw Error('Level missing 3x3 slot: '+unit.id);
+  const def={id:unit.id,kind:'unit',name:unit.name,src:unit.art||null};
+  const card=makeCard(def,slot);
+  card.side=unit.side;card.unitId=unit.id;card.placeStart=now-.3;
+  card.texture=placeholderUnitTexture(unit.name,unit.side==='enemy');
+  cards.push(card);occupied.set(slot.id,card);
+  if(unit.art)loadTexture(unit.art,tex=>{card.texture=tex;});
+ }
+ attackMode=true;syncLevelHud();sync();
+}
+function tapUnit(card){
+ if(!card||card.side!=='enemy'||!attackMode||level.phase!=='active')return;
+ const result=level.actAttack('woodcutter',card.unitId);
+ if(!result.ok)return;
+ card.attackStart=now;
+ const foe=level.getUnit(card.unitId);
+ if(foe&&!foe.alive){
+  setTimeout(()=>{
+   occupied.delete(card.slot.id);
+   const i=cards.indexOf(card);if(i>=0)cards.splice(i,1);
+  },410);
+ }
+ const hero=cards.find(c=>c.unitId==='woodcutter');
+ if(hero)hero.attackStart=now;
+ syncLevelHud();
+ if(level.phase!=='active')showLevelEnd(level.snapshot());
+ else message('斧击命中 · 敌人反击后进入下一轮');
+}
+document.getElementById('level-retry').addEventListener('click',reset);
+startForestLevel();
+window.__forestLevelDebug={
+ get state(){return level.snapshot();},
+ get terrain(){return terrain.snapshot();},
+ get effects(){return fx.snapshot();},
+ get slots(){return slotCenters.map(t=>({side:t.side,r:t.r,c:t.c,tileC:t.tileC,tileR:t.tileR,zone:t.zone}));},
+ get units(){return cards.map(c=>({id:c.unitId,side:c.side,r:c.slot?.r,c:c.slot?.c}));},
+ adjust(c,r,delta){return level.canModify(c,r,delta)&&fx.adjust(c,r,delta);},
+ attack(id){const card=cards.find(c=>c.unitId===id);if(!card)return false;tapUnit(card);return true;},
+ reset
+};
 requestAnimationFrame(frame);
 })();
 </script>
