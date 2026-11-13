@@ -319,7 +319,7 @@ function initialize(){
 }
 function selectCard(uid){
  if(playback||battle.phase!=='planning')return;
- if(!actor('ally').hand.some(x=>x.uid===uid))return;
+ if(!actor('ally')?.hand.some(x=>x.uid===uid))return;
  selected=selected===uid?null:uid;
  sound('draw');
  note(selected?'拿起了卡牌；点击「我」的时间格，或拖动到目标时间格':'已放回手牌');
@@ -454,7 +454,7 @@ function finishDrag(e){
    for(const c of $('timeline').querySelectorAll('.drag-over'))c.classList.remove('drag-over');
    const destination=document.elementFromPoint(e.clientX,e.clientY)?.closest('button[data-tick]');
    selected=item.uid;
-   if(destination&&!destination.disabled)placeCard(Number(destination.dataset.tick));
+   if(destination&&!destination.disabled)placeCard(Number(destination.dataset.tick),destination.dataset.actor);
    else {note('纸牌已拿起；点击时间格放置');render();}
  }
 }
@@ -475,7 +475,23 @@ $('hand').addEventListener('click',e=>{
 $('timeline').addEventListener('click',e=>{
  const b=e.target.closest('button[data-tick]');if(!b||b.disabled)return;
  if(!selected&&b.dataset.action){returnCard(b.dataset.action);return;}
- placeCard(Number(b.dataset.tick));
+ placeCard(Number(b.dataset.tick),b.dataset.actor);
+});
+for(const side of ['enemy','ally']){
+ $(side+'-squad').addEventListener('click',e=>{
+  const card=e.target.closest('button.portrait[data-actor]');
+  if(!card||card.disabled)return;
+  if(side==='ally')selectActor(card.dataset.actor);
+  else selectTarget(card.dataset.actor);
+ });
+}
+$('party-select').addEventListener('click',e=>{
+ const b=e.target.closest('button[data-party]');
+ if(!b||playback)return;
+ const n=Number(b.dataset.party);
+ if(!Number.isInteger(n)||n<1||n>3||n===partySize)return;
+ partySize=n;initialize();
+ showToast('已切换为 '+n+' 对 '+n+'，重新开始战斗',1700);
 });
 $('execute').addEventListener('click',execute);
 $('undo').addEventListener('click',()=>returnCard());
@@ -491,12 +507,6 @@ window.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&selected&&!playback){selected=null;note('已放回手牌');render();}
  if((e.key==='Enter'||e.key===' ')&&e.target?.id==='execute'){e.preventDefault();execute();}
 });
-for(const image of document.querySelectorAll('.portrait img')){
- const mark=()=>image.closest('.portrait')?.classList.add('missing');
- image.addEventListener('error',mark);
- if(image.complete&&!image.naturalWidth)mark();
-}
-
 // A restrained 2-3 pixel mouse parallax: tabletop remains a stable plane,
 // unlike the rejected exaggerated camera swings in earlier prototypes.
 const lessMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
