@@ -54,11 +54,17 @@ function create(options={}){
  const cap=options.maxHand??10;
  if(!Number.isInteger(cap)||cap<1)throw Error('Invalid shared hand cap');
  const opening=options.openingDraw??5; // configurable test value, not per-turn quota
- const unlocked=new Set(options.unlocked||['warrior']);
+ // First-level VISUAL prototype: seven independent functional decks with the
+ // same temporary warrior-card contents. The normal class gate is unchanged.
+ const prototypeAllClasses=options.prototypeAllClasses===true;
+ const unlocked=prototypeAllClasses?new Set(CLASSES.map(c=>c.id)):new Set(options.unlocked||['warrior']);
  let seed=options.seed??618231;
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
  const pool={};
- for(const c of CLASSES)pool[c.id]=(BASE_POOL[c.id]||[]).map((x,i)=>({...x,profession:c.id,instance:c.id+'-'+i}));
+ for(const c of CLASSES){
+  const source=prototypeAllClasses?WARRIOR_CARDS:(BASE_POOL[c.id]||[]);
+  pool[c.id]=source.map((x,i)=>({...x,profession:c.id,instance:c.id+'-'+i}));
+ }
  const piles=new Map();
  let hand=[],played=[],locked=false,turn=1;
  function shuffle(a){
@@ -119,5 +125,5 @@ function create(options={}){
  return Object.freeze({snapshot,remainingCards,draw,play,specialDiscard,nextTurn,reset,
   classes:CLASSES,get cap(){return cap;}});
 }
-root.PaperchalkProfessionDecks=Object.freeze({version:'2.0.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create});
+root.PaperchalkProfessionDecks=Object.freeze({version:'2.1.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create});
 })(window);
