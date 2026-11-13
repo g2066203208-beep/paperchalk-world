@@ -76,13 +76,16 @@ const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMN
 const slotCenters=[];
 for(let row=0;row<terrain.rows;row++){
  const side=row<3?'enemy':'ally',r=row%3;
- const add=(c,zone,flank=null)=>{
-  const {x,z}=terrain.center(c,row);
-  slotCenters.push({side,r,c,x,z,tileC:c,tileR:row,zone,flank,id:side+'-'+r+'-'+zone+'-'+c});
+ const add=(tileC,zone,flank=null,localColumn=0)=>{
+  const {x,z}=terrain.center(tileC,row);
+  // Keep the tactical 3x3 formation index separate from the global terrain column.
+  // The former is used by saved formations; the latter is the actual physical grid coordinate.
+  slotCenters.push({side,r,c:localColumn,x,z,tileC,tileR:row,zone,flank,
+   id:side+'-'+r+'-'+zone+'-'+tileC});
  };
- UNIT_COLUMNS.forEach(c=>add(c,'unit'));
- FACILITY_LEFT_COLUMNS.forEach(c=>add(c,'facility','left'));
- FACILITY_RIGHT_COLUMNS.forEach(c=>add(c,'facility','right'));
+ UNIT_COLUMNS.forEach((tileC,c)=>add(tileC,'unit',null,c));
+ FACILITY_LEFT_COLUMNS.forEach((tileC,c)=>add(tileC,'facility','left',c));
+ FACILITY_RIGHT_COLUMNS.forEach((tileC,c)=>add(tileC,'facility','right',c));
 }
 const occupied=new Map();const cards=[];
 const handDefs=[
