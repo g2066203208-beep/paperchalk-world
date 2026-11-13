@@ -1,5 +1,5 @@
-/* Headless action-hand bridge. ALL visual action cards and seven physical deck
- * boxes are WebGL meshes rendered by scene-card-hud.js, not DOM elements.
+/* Headless action-hand bridge. Seven independently clickable 3D physical piles
+ * currently share one art/card template for visual prototyping; no HTML hand UI.
  */
 (function(root){
 'use strict';
@@ -7,7 +7,7 @@ const factory=root.PaperchalkProfessionDecks;
 if(!factory)throw Error('Profession model missing');
 const units=root.__forestLevelDebug?.state?.units||[];
 const activeJobs=units.filter(u=>u.side==='ally').map(u=>u.role).filter(Boolean);
-const model=factory.create({maxHand:10,openingDraw:0,unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
+const model=factory.create({maxHand:10,openingDraw:0,prototypeAllClasses:true,unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
 let selectedInstance=null;
 function snapshot(){return model.snapshot();}
 function selectedCard(){return snapshot().hand.find(c=>c.instance===selectedInstance)||null;}
