@@ -1,5 +1,8 @@
 # Paperchalk World — agent working rules
 
+**2026-11-13 MOST RECENT HARD CORRECTION — DECK BOX STACKS, HAND NEVER STACKS:** User explicitly wants seven profession deck-boxes physically containing many separate card sheets. Drawing removes only the top sheet **FROM A DECK BOX**. The drawn action cards are displayed **all in ONE horizontal hand of up to TEN individually playable cards; ANY hand card can be selected and played in ANY order**, regardless of its profession, position or draw time. Previous docs/code requiring LIFO plays from professional HAND stacks are WRONG, SUPERSEDED; do not reintroduce. Before the first played card, draw freely from enabled profession decks up to ten; after first card, ordinary draws lock until next turn (special effects only). Hand clears at end turn; no free discard; character cards excluded. Canon: [latest hand and boxes](docs/game/SEVEN_CLASS_STACKED_HAND_DECK_BOX_CANON_20261113.md). The approved farmer ranger huntress PNG is `site/assets/characters/farmer-faction/ranger/01-huntress.png` (704x1024 RGB), and is loaded via generated character registry, NOT an extra tutorial ally.
+
+
 **2026-11-13 FARMER FACTION SEVEN ROLE IDENTITIES (USER PROVIDED):** Before ANY farmer-faction character prompt or artwork, read [user's exact seven-class rural identity mapping](docs/game/FARMER_FACTION_SEVEN_CLASS_CHARACTER_IDENTITY_CANON_20261113.md): 战士=伐木少女, 工程师=农耕少女, 医师=采药少女, 守卫=巡村/护庄少女, 射手=猎户少女, 游击者=山野采集少女, 召唤师=牧场/牧羊少女. Do not invent a replacement occupational identity. The village huntress candidate is in [archer draft](docs/characters/FARMER_FACTION_ARCHER_VILLAGE_HUNTRESS_ANIMA_CANDIDATE_20261113.md); prompt-only is not approved art.
 
 
