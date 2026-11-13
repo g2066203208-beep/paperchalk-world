@@ -83,7 +83,10 @@ try{
  await page.waitForTimeout(340);
  await page.screenshot({path:out+'/01b-manually-deployed-hero-and-first-five-cards.png',fullPage:true});
  for(let i=0;i<5;i++)await click3D(page,'deck:warrior');
- await page.waitForTimeout(480);
+ // The deck state is synchronous; the GPU scene snapshot updates on the next RAF.
+ await page.waitForFunction(()=>window.__forestHand?.snapshot.count===10
+   && window.__sceneCardHUD?.snapshot.visible.filter(x=>x.kind==='hand').length===10,
+   {timeout:8000});
  const full=await page.evaluate(()=>({hand:window.__forestHand.snapshot,hud:window.__sceneCardHUD.snapshot}));
  assert.equal(full.hand.count,10);
  assert.equal(full.hud.visible.filter(x=>x.kind==='hand').length,10);
