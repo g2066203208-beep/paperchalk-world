@@ -1,5 +1,8 @@
 # Paperchalk World｜GitHub 托管游戏与像素工作室
 
+> **七大战斗职业与配队设计最新基线（2026-11-13，必读）：** [七职业正式名单、职业/人物/设施遗物三层联动、六种共通机制、时间步、704×1024卡牌素材尺寸](docs/game/SEVEN_BATTLE_CLASSES_PARTY_SYNERGY_CANON_20261113.md)。工程师、守卫、战士、射手、游击者、医师、召唤师；不准擅自改职业或把卡牌素材尺寸当棋盘占地。
+
+
 # 新画风 LoRA 配置（2026-11-09 用户指定，生成新素材必须先查）
 
 **可爱版 / 正常版当前完整原样配置：** [双画风提示词规范](docs/ANIMA_STYLE_PRESETS_NORMAL_CUTE_20261109.md)；机器读取：[Anima style presets JSON](site/data/art/anima-style-presets.v1.json)。**正常版只比可爱版少 `<lora:firedotinc_old-dataset_anima-b1_v6:0.8> @firedotinc-old`，其余完全一致。** 这些是新素材的画风预设，不得未经许可覆盖原有批准作品或把它们误称 GPT Image 的 LoRA。
