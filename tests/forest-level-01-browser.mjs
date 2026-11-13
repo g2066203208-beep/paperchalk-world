@@ -118,7 +118,9 @@ try{
  await page.locator('#level-retry').click();
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment','reset puts character back on the top of the box');
  assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0,'reset hand stays empty until deployment');
+ await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.stagedCharacterCards===1,{timeout:8000});
  const start=await page.evaluate(()=>window.__sceneCardHUD.pointFor('character:woodcutter'));
+ assert.ok(start?.x&&start?.y,'character card should return to the profession deck after reset');
  const cells2=await page.evaluate(()=>window.__forestLevelDebug.slotPoints.filter(s=>s.side==='ally'));
  const dest=cells2.find(p=>p.r===0&&p.c===1)||cells2[0];
  await page.mouse.move(start.x,start.y);
