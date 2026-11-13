@@ -1,18 +1,17 @@
-name: Tactile one-on-one card battle QA
+name: 3D Card Board Six-Row QA
 on:
   push:
     branches: [main]
     paths:
-      - 'site/card-battle/**'
-      - 'site/combat-lab/engine.js'
-      - 'tests/card-battle-tactile-browser.mjs'
+      - 'site/card-battle/formation-6x16-3d.html'
+      - 'site/card-battle/engine/**'
       - 'tests/six-row-formation-browser.mjs'
       - '.github/workflows/card-battle-tactile-qa.yml'
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  card-table-proof:
+  card-board-proof:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -24,18 +23,16 @@ jobs:
         run: |
           npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Serve real game
+      - name: Serve live game
         run: |
-          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/tactile-card-http.log 2>&1 &
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/card-board-http.log 2>&1 &
           sleep 2
-      - name: Check actual 1v1 UI gameplay, card handling and screenshot
-        run: node tests/card-battle-tactile-browser.mjs
-      - name: Validate real 3D six-row formation, seven cards and placement cues
+      - name: Validate 3D six-row formation and placement
         run: node tests/six-row-formation-browser.mjs
-      - name: Save gameplay screenshots
+      - name: Save 3D board screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: card-battle-tactile-real-browser
+          name: 3d-card-board-real-browser
           path: artifacts/card-battle-tactile/
           if-no-files-found: warn
