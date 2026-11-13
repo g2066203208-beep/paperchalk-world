@@ -278,6 +278,13 @@ button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb5
 @media(min-width:651px){
  .fighter.ally{left:12%;top:60%}
 }
+
+/* Keep resources and status out of the portrait and burned-in timeline. */
+@media(min-width:651px){
+ .side-desk.left{bottom:13px;left:clamp(18px,3vw,54px);width:auto;flex-direction:row;align-items:center;gap:15px}
+ .side-desk.left .bottom-note{display:none}
+ .status-note{top:68%;max-width:58%}
+}
 </style>
 </head>
 <body>
