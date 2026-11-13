@@ -1,0 +1,20 @@
+{
+  "id": "farmer-warrior-loli-lumberjack",
+  "name": "伐木少女",
+  "faction": "farmer",
+  "factionName": "农民组织",
+  "profession": "warrior",
+  "roleName": "伐木工",
+  "variant": "loli",
+  "approved": true,
+  "art": "01-loli-lumberjack.png",
+  "width": 704,
+  "height": 1024,
+  "sourcePrompt": "docs/characters/FARMER_FACTION_WARRIOR_LOLI_LUMBERJACK_APPROVED_20261113.md",
+  "tags": [
+    "斧头",
+    "劈柴",
+    "乡村",
+    "战士"
+  ]
+}
