@@ -23,6 +23,20 @@ for(const character of [
     ]
   },
   {
+    "id": "farmer-faction-ranger-01-huntress",
+    "name": "01-huntress",
+    "faction": "farmer-faction",
+    "profession": "ranger",
+    "portrait": "../assets/characters/farmer-faction/ranger/01-huntress.png",
+    "approved": false,
+    "width": 704,
+    "height": 1024,
+    "roleName": "",
+    "variant": "",
+    "sourcePrompt": null,
+    "tags": []
+  },
+  {
     "id": "farmer-warrior-loli-lumberjack",
     "name": "伐木少女",
     "faction": "farmer",
