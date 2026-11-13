@@ -65,39 +65,53 @@ function create(o){
  function layout(state,staged){
   const mobile=canvas.getBoundingClientRect().width<720;
   const slots=[];
-  // Forest tutorial: exactly ONE available profession pile. No seven vacant
-  // trays, empty boxes, shared housing, or half-screen inventory furniture.
-  const active=state.classes.filter(c=>c.unlocked&&c.deckCount>=0);
-  const deckY=-spanH*.5+(mobile?1.03:1.22);
-  const deckScale=mobile?.75:1.02;
-  for(const c of active){
-   slots.push({kind:'deck',id:'deck:'+c.id,profession:c.id,c,
-    x:0,y:deckY,z:0,scale:deckScale,angle:0});
+  const all=root.PaperchalkProfessionDecks.CLASSES;
+  // Seven EQUAL physical piles along the lower edge, no trays and no UI slabs.
+  // The narrower view actually adjusts the world-space pitch instead of
+  // shrinking a desktop row and clipping the outermost piles.
+  const fullWidth=spanW*(mobile?.96:.934);
+  const pitch=fullWidth/7;
+  const pileScale=Math.min(mobile?.39:1.09,(pitch/cardW)*.78);
+  const bottomOffset=mobile?.42:.68;
+  const deckY=-spanH*.5+bottomOffset;
+  for(let i=0;i<7;i++){
+   const cls=all[i];
+   const c=state.classes.find(item=>item.id===cls.id);
+   slots.push({
+    kind:'deck',id:'deck:'+cls.id,profession:cls.id,c,
+    x:(i-3)*pitch,y:deckY,z:0,scale:pileScale,angle:0
+   });
   }
   const hand=state.hand;
-  const visibleWidth=mobile?spanW*.76:Math.min(10.6,spanW*.72);
+  const visibleWidth=mobile?spanW*.78:Math.min(10.4,spanW*.72);
   const step=mobile?.46:1.12;
   const spread=Math.min((hand.length-1)*step,visibleWidth);
   const handScale=mobile?.56:.89;
   const handY=mobile?-2.13:-1.57;
   hand.forEach((card,i)=>{
    const axis=hand.length===1?0:(i/(hand.length-1))*2-1;
-   slots.push({kind:'hand',id:'hand:'+card.instance,instance:card.instance,c:card,
+   slots.push({
+    kind:'hand',id:'hand:'+card.instance,instance:card.instance,c:card,
     x:axis*spread*.5,y:handY+(1-axis*axis)*.17,z:1.14+(1-axis*axis)*.08,
-    scale:handScale,angle:-axis*.14,tilt:-.12+Math.abs(axis)*.05});
+    scale:handScale,angle:-axis*.14,tilt:-.12+Math.abs(axis)*.05
+   });
   });
+  // The staged hero is physically ON TOP of the warrior pile, never on the
+  // battlefield until the player drags or taps the ally deployment cell.
   for(const u of staged){
    const origin=slots.find(p=>p.kind==='deck'&&p.profession===u.role);
-   if(origin)slots.push({...origin,kind:'character',id:'character:'+u.id,
-    unitId:u.id,portrait:u.portrait,
-    // Character sits ABOVE the full face-up physical action-card stack.
-    y:origin.y+Math.sin(1.03)*(.11+origin.c.deckCount*.044+.16),
-    z:Math.cos(1.03)*(.11+origin.c.deckCount*.044+.16),
-    scale:deckScale*1.12});
+   if(origin){
+    const count=origin.c?.deckCount||0;
+    const depth=.11+count*.041+.11;
+    slots.push({
+     ...origin,kind:'character',id:'character:'+u.id,
+     unitId:u.id,portrait:u.portrait,
+     y:origin.y+Math.sin(1.18)*depth,
+     z:Math.cos(1.18)*depth+.07,
+     scale:origin.scale*(mobile?1.12:1.14)
+    });
+   }
   }
-  // A tiny physical end-turn card is a control, NOT another card pile.
-  slots.push({kind:'turn',id:'turn:end',x:Math.min(spanW*.5-.42,mobile?1.8:3.1),
-   y:deckY+.10,z:.55,scale:mobile?.22:.27,angle:.08});
   return slots;
  }
 
@@ -107,7 +121,7 @@ function create(o){
   const hover=focused?.58:0,raise=hover+(selected?.52:0)+(charSelected?.18:0);
   const easing=Math.sin(frame*1.5+p.x*.3)*.020;
   const scale=p.scale*(1+(focused?.15:0)+(selected?.11:0));
-  const tilt=p.kind==='character'?-0.87:p.kind==='deck'?-1.03:(p.kind==='hand'?(p.tilt||-.12):-.17);
+  const tilt=p.kind==='character'?-0.83:p.kind==='deck'?-1.18:(p.kind==='hand'?(p.tilt||-.12):-.17);
   let mat=T(opts.x??p.x,(opts.y??p.y)+raise+easing,(opts.z??p.z)+raise*.28);
   mat=mul(mat,RY(focused?-.045:0));
   mat=mul(mat,RX(tilt+(focused?.12:0)));
@@ -174,19 +188,11 @@ function create(o){
   }
   const tex=makeTexture(cv);cache.set(key,tex);return tex;
  }
- function drawSinglePileBase(deck){
-  if(!deck)return;
-  // Low physical paper-rest and tiny slip-proof rim only. The card faces and
-  // independently rendered paper edges remain completely visible.
-  const scale=deck.scale;
-  const w=cardW*scale*1.13,h=cardH*scale*1.12;
-  const basis=mul(T(deck.x,deck.y,0),RX(-1.03));
-  const piece=(x,y,z,sx,sy,sz)=>mul(basis,mul(T(x,y,z),S(sx,sy,sz)));
-  const wood=boxMaterial('wood'),felt=boxMaterial('felt');
-  renderGeom(box,piece(0,0,-.15,w,h,.15),[.94,.92,.89,1],wood);
-  renderGeom(box,piece(0,0,-.061,w-.12,h-.12,.013),[1,1,1,1],felt);
-  renderGeom(box,piece(0,-h*.5+.019,-.026,w,.040,.04),[.94,.92,.89,1],wood);
-  boxDrawCalls=1;
+ function drawPileShadow(deck){
+  // Seven small grounding contact shadows, NOT seven wooden boxes/slots.
+  const mat=mul(T(deck.x,deck.y,-.18),RX(-1.18));
+  const w=cardW*deck.scale*1.12,h=cardH*deck.scale*1.06;
+  renderGeom(box,mul(mat,S(w,h,.026)),[.16,.21,.16,1]);
  }
 
  function draw(now,w,h){
@@ -201,19 +207,19 @@ function create(o){
   const wasVP=getVP();
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(viewFov,width/height,.1,80),T(0,0,-cameraZ)));
-  drawSinglePileBase(positions.find(p=>p.kind==='deck'));
-  const remaining=o.remainingCards?.('warrior')||[];
+  for(const pile of positions.filter(p=>p.kind==='deck'))drawPileShadow(pile);
   for(const pos of positions.filter(p=>p.kind==='deck')){
-   const actions=pos.profession==='warrior'?remaining:(o.remainingCards?.(pos.profession)||[]);
+   const actions=o.remainingCards?.(pos.profession)||[];
    actions.forEach((card,n)=>{
-    // Cards are individually drawn face-UP and ordered exactly as the
-    // underlying gameplay deck: the rightmost array element is its top card.
+    // Every stack is separate in game state; the seven cards use the SAME
+    // temporary face texture/color and SAME orientation in this prototype.
+    const planeDepth=.10+n*.041;
     const layer={...pos,id:pos.id,
-      x:pos.x+(n%3-1)*.0016,
-      y:pos.y+Math.sin(1.03)*(.11+n*.044),
-      z:Math.cos(1.03)*(.11+n*.044),
-      angle:(n%3-1)*.0018};
-    const tex=makeTextTexture({title:card.name,profession:card.profession,
+      x:pos.x+(n%3-1)*.0013,
+      y:pos.y+Math.sin(1.18)*planeDepth,
+      z:Math.cos(1.18)*planeDepth,
+      angle:(n%3-1)*.0014};
+    const tex=makeTextTexture({title:card.name,profession:'warrior',
       family:card.family,back:false});
     renderPhysicalCard(layer,tex);
    });
@@ -238,8 +244,6 @@ function create(o){
     }else renderPhysicalCard(pos,tex);
    }else renderPhysicalCard(pos,tex);
   }
-  const end=positions.find(p=>p.kind==='turn');
-  renderPhysicalCard(end,makeTextTexture({title:'结束',profession:'guardian'}));
   gl.viewport(0,0,width,height);
   uniformVP(wasVP);
  }
@@ -252,7 +256,7 @@ function create(o){
  function pick(e){
   const p=worldPoint(e);if(!p)return null;
   const ranked=[...clickable].sort((a,b)=>{
-   const priority=x=>x.kind==='character'?4:x.kind==='hand'?3:x.kind==='turn'?2:1;
+   const priority=x=>x.kind==='character'?4:x.kind==='hand'?3:1;
    return priority(b)-priority(a)||b.z-a.z;
   });
   const matches=ranked.filter(c=>{
@@ -305,7 +309,6 @@ function create(o){
   if(picked?.id!==prev.id)return true;
   if(picked.kind==='deck')o.draw(picked.profession);
   else if(picked.kind==='hand')o.select(picked.instance);
-  else if(picked.kind==='turn')o.nextTurn();
   return true;
  }
  function pointFor(id){
@@ -322,8 +325,10 @@ function create(o){
    return {
     visible:scene.map(p=>({kind:p.kind,id:p.id,x:p.x,y:p.y})),
     count:state.count,
-    physicalBoxes:boxDrawCalls,visibleDeckPiles:scene.filter(p=>p.kind==='deck').length,
-    frontOpening:'open-face',screenEdgeAnchored:true,faceUpDeck:true,
+    physicalBoxes:0,visibleDeckPiles:scene.filter(p=>p.kind==='deck').length,
+    deckArrangement:'seven-identical-bottom-row',
+    deckTiltRadians:-1.18,standaloneTurnCard:false,
+    sameFacePrototype:true,screenEdgeAnchored:true,faceUpDeck:true,
     physicalDeckCards:state.classes.reduce((n,c)=>n+c.deckCount,0),
     stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     renderedCardMeshes:cardDrawCalls,
@@ -336,5 +341,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'3.1.0-single-pile',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'4.0.0-seven-piles',create});
 })(window);
