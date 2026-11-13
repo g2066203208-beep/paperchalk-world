@@ -32,10 +32,8 @@ function consumeForTarget(targetId){
 function reset(){selectedInstance=null;return model.reset();}
 function onDeployment(){
  selectedInstance=null;
- model.reset();
- const role=root.__forestLevelDebug?.state.units.find(u=>u.side==='ally'&&u.deployed)?.role||'warrior';
- for(let i=0;i<5;i++)model.draw(role);
- return model.snapshot();
+ // First level draws no automatic action cards. The player takes cards by hand.
+ return model.reset();
 }
 function nextTurn(){
  if(root.__forestLevelDebug?.state?.phase!=='active')return false;
@@ -44,6 +42,7 @@ function nextTurn(){
 }
 root.__forestHand=Object.freeze({
  consumeForTarget,reset,onDeployment,nextTurn,selectCard,draw,
+ remainingCards:profession=>model.remainingCards(profession),
  get selected(){return selectedInstance;},
  get snapshot(){return model.snapshot();},
  // Compatibility for existing tests and older tutorial shortcuts.
