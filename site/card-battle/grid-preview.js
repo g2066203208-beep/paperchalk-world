@@ -58,7 +58,7 @@
     const box=card.getBoundingClientRect(),area=$('board').getBoundingClientRect();
     return box.left>=area.left-2&&box.right<=area.right+2&&box.top>=area.top-2&&box.bottom<=area.bottom+2;
   });
-  $('grid-metrics').textContent='敌我各9张 · 卡牌 '+measure(first)+(fits?' · 全部入镜':' · 空间不足');
+  $('grid-metrics').textContent='敌我各9张 · '+(board.classList.contains('layout-stacked')?'上下':'左右')+'卡牌 '+measure(first)+(fits?' · 全部入镜':' · 空间不足');
   board.dataset.cardsFit=String(fits);
   board.dataset.cardWidth=String(Math.round(rect.width));
  }
@@ -71,7 +71,7 @@
    button.classList.toggle('active',selected);
    button.setAttribute('aria-pressed',String(selected));
   }
-  requestAnimationFrame(()=>requestAnimationFrame(updateMetrics));
+  updateMetrics(); // getBoundingClientRect forces the new size immediately
  }
  function enterPreview(){
   stage.classList.add('grid-preview');
