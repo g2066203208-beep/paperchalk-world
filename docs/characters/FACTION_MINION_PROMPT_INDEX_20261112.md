@@ -11,7 +11,7 @@
 | 5 | 绯月血族 | 已登记七人 | 三张历史原画已归档 | 待补：不要捏造曾用的历史提示词 |
 | 6 | 怪物猎人组织 | 已登记七人 | 新三小兵图片未完成 | [猎人完整提示词](HUNTER_MINIONS_ANIMA_CANON_20261112.md) |
 | 7（提案） | **黑潮海盗团** | **七人核心尚未设计及批准** | **未生成** | [三名海盗小兵完整提示词](BLACK_TIDE_PIRATES_MINIONS_ANIMA_CANON_20261112.md) |
-| 8 | **农民组织（新组织）** | 七职业已确定方向；目前正制作伐木工战士 | **萝莉型伐木工母图已获用户批准（704×1024 PNG、RGB 白底），原图 GitHub 二进制入库待验证** | [已批准原画身份与完整 V5 正反提示词](FARMER_FACTION_WARRIOR_LOLI_LUMBERJACK_APPROVED_20261113.md)；[V1–V4 候选历史](FARMER_FACTION_LUMBERJACK_LOLI_ANIMA_CANDIDATE_20261113.md) |
+| 8 | **农民组织（新组织）** | [用户确认七职业对应身份](../game/FARMER_FACTION_SEVEN_CLASS_CHARACTER_IDENTITY_CANON_20261113.md)；战士=伐木少女、工程师=农耕少女、射手=猎户少女等 | **伐木工母图已批准但原PNG是否入库待核验；农夫V2及猎户少女V1均为候选提示词** | [已批准伐木工 V5](FARMER_FACTION_WARRIOR_LOLI_LUMBERJACK_APPROVED_20261113.md)；[农夫工程师 V2](FARMER_FACTION_ENGINEER_LOLI_FARMER_ANIMA_CANDIDATE_20261113.md)；[猎户少女 V1](FARMER_FACTION_ARCHER_VILLAGE_HUNTRESS_ANIMA_CANDIDATE_20261113.md) |
 
 ## 后续新组织流程
 
