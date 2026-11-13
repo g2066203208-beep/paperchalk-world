@@ -122,13 +122,17 @@ function makeActor(id,side,name,hp,fin){
 }
 function addDeck(actor,def,rand){let uid=0;for(const [card,n]of Object.entries(def))for(let i=0;i<n;i++)actor.draw.push({uid:actor.id+'-c'+(uid++),key:card});shuffle(actor.draw,rand);}
 function drawHand(actor,rand){const limit=HAND+(actor.relics?.includes('extra_hand')?1:0);while(actor.hand.length<limit){if(!actor.draw.length){if(!actor.discard.length)break;actor.draw=shuffle(actor.discard.splice(0),rand);}actor.hand.push(actor.draw.pop());}}
-function create(opts={}){const options={classId:opts.classId||'axe',styleId:opts.styleId||'strike',encounterId:opts.encounterId||'corridor',team:!!opts.team,seed:opts.seed===undefined?86420:opts.seed,campaignBalance:!!opts.campaignBalance,controlAllies:!!opts.controlAllies};const rand=rng(options.seed);
+function create(opts={}){const options={classId:opts.classId||'axe',styleId:opts.styleId||'strike',encounterId:opts.encounterId||'corridor',team:!!opts.team,seed:opts.seed===undefined?86420:opts.seed,campaignBalance:!!opts.campaignBalance,controlAllies:!!opts.controlAllies,
+partySize:Number.isInteger(opts.partySize)?Math.max(1,Math.min(4,opts.partySize)):null,
+enemySize:Number.isInteger(opts.enemySize)?Math.max(1,Math.min(4,opts.enemySize)):null};const rand=rng(options.seed);
 let cd=CLASS[options.classId],style=cd.styles[options.styleId]||Object.values(cd.styles)[0],actors=[];
 const main=makeActor('hero','ally',cd.name,opts.maxHp||cd.hp,cd.fin);main.hp=Math.max(1,Math.min(main.maxHp,opts.heroHp||main.maxHp));main.energy=opts.demoEnergy===undefined?55:opts.demoEnergy;main.relics=(opts.relics||[]).slice();if(opts.deckSpec){addDeck(main,opts.deckSpec,rand);}else addDeck(main,style.deck,rand);drawHand(main,rand);actors.push(main);
-if(options.team){for(const key of Object.keys(CLASS).filter(x=>x!==options.classId)){const c=CLASS[key];let a=makeActor('ai-'+key,'ally',c.name,c.hp,c.fin);const st=Object.values(c.styles)[0];addDeck(a,st.deck,rand);drawHand(a,rand);actors.push(a);}}
+if(options.team){for(const key of Object.keys(CLASS).filter(x=>x!==options.classId).slice(0,options.partySize===null?3:Math.max(0,options.partySize-1))){const c=CLASS[key];let a=makeActor('ai-'+key,'ally',c.name,c.hp,c.fin);const st=Object.values(c.styles)[0];addDeck(a,st.deck,rand);drawHand(a,rand);actors.push(a);}}
 let encounterEnemies=ENCOUNTERS[options.encounterId].enemies;
 const tier=ENCOUNTER_SCALING[options.team?'team':'solo'][options.encounterId];
 if(options.campaignBalance&&!options.team)encounterEnemies=encounterEnemies.slice(0,tier.cap||2);
+// Explicit optical tabletop party sizes are opt-in; legacy 4v4 callers stay unchanged.
+if(options.enemySize!==null)encounterEnemies=encounterEnemies.slice(0,options.enemySize);
 for(const en of encounterEnemies){
  const hpMultiplier=options.campaignBalance?tier.hp:(options.team?1.7:1);
  const a=makeActor('enemy-'+en.id,'enemy',en.name,Math.round(en.hp*hpMultiplier),null);
