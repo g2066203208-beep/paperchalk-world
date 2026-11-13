@@ -115,6 +115,9 @@ try{
  await page.locator('#level-retry').click();
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment');
  assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
+ // The level's reset is synchronous; the 3D scene is rebuilt on the next frame.
+ await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot.stagedCharacterCards===1,
+   {timeout:15000});
  // Every pile is interactive in this temporary all-equal visual prototype;
  // drawing from one never removes a card from the other six physical piles.
  await deploy(page);
