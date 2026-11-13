@@ -117,7 +117,7 @@ function sound(kind='card'){
   const data=buffer.getChannelData(0),r=mulberry32(8834+Math.floor(now*80));
   for(let i=0;i<n;i++)data[i]=(r()*2-1)*(1-i/n);
   const source=a.createBufferSource(),filter=a.createBiquadFilter(),ng=a.createGain();
-  for(let i=0;i<n;i++){} // No external sample or asset.
+  // Noise is synthesized at runtime: no copied music or audio samples.
   buffer.copyToChannel(data,0);source.buffer=buffer;
   filter.type='lowpass';filter.frequency.value=kind==='draw'?1800:540;
   ng.gain.setValueAtTime(kind==='hit'?.07:.032,now);
@@ -196,7 +196,7 @@ function displayVitals(){
    $(side+'-hp').textContent=String(hp)+' / '+a.maxHp;
    $(side+'-fighter').style.opacity=hp===0?'.45':'1';
  }
- $('energy').textContent=playback?String(playback.index>=0?(playback.frames[playback.index]?.actors.find(x=>x.side==='ally')?.energy??actor('ally',before).energy):actor('ally',before).energy):String(actor('ally').energy);
+ $('energy').textContent=playback?String(playback.index>=0?(playback.frames[playback.index]?.actors.find(x=>x.id===actor('ally',before).id)?.energy??actor('ally',before).energy):actor('ally',before).energy):String(actor('ally').energy);
  $('round').textContent='第 '+((playback?before:battle).round+1)+' 轮';
  $('phase').textContent=playback?'执行中 · 第 '+(playback.index+1)+' 格':battle.phase==='planning'?'规划中 · 时间暂停':battle.phase==='win'?'已胜利':'已失败';
  $('round-phase').textContent=playback?'同步结算中':battle.phase==='planning'?'10 格同步结算':battle.phase==='win'?'战斗胜利':'战斗失败';
