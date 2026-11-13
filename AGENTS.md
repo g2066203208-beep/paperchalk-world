@@ -1,5 +1,8 @@
 # Paperchalk World — agent working rules
 
+**2026-11-13 FARMER FACTION SEVEN ROLE IDENTITIES (USER PROVIDED):** Before ANY farmer-faction character prompt or artwork, read [user's exact seven-class rural identity mapping](docs/game/FARMER_FACTION_SEVEN_CLASS_CHARACTER_IDENTITY_CANON_20261113.md): 战士=伐木少女, 工程师=农耕少女, 医师=采药少女, 守卫=巡村/护庄少女, 射手=猎户少女, 游击者=山野采集少女, 召唤师=牧场/牧羊少女. Do not invent a replacement occupational identity. The village huntress candidate is in [archer draft](docs/characters/FARMER_FACTION_ARCHER_VILLAGE_HUNTRESS_ANIMA_CANDIDATE_20261113.md); prompt-only is not approved art.
+
+
 **2026-11-13 USER-APPROVED FARMER WARRIOR ART:** Before new farmer-faction warrior Anima variants, read [approved loli lumberjack identity, image SHA256, complete V5 dialogue-prompt record](docs/characters/FARMER_FACTION_WARRIOR_LOLI_LUMBERJACK_APPROVED_20261113.md). User approved the supplied 704×1024 RGB PNG, brown braided hair, country linen shirt, short vest, loose peasant pants, old boots, woodcutting axe and tied firewood. The image is *RGB with white background, not transparent*. Earlier V2–V4 prompt drafts are rejected candidates. **Do not falsely report binary image as GitHub-uploaded unless exact file path exists and matches the approved PNG SHA256.**
 
 
