@@ -360,6 +360,27 @@ button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb5
  .table-button{font-size:11px;padding:8px 10px}
  .stat{font-size:9px}.stat b{font-size:11px}
 }
+
+/* Real Chromium 1600×900 / 390×844 screenshot correction: never cover friendly faces. */
+.status-note{
+ position:absolute!important;width:1px!important;height:1px!important;
+ padding:0!important;margin:-1px!important;overflow:hidden!important;
+ clip-path:inset(50%)!important;white-space:nowrap!important
+}
+@media(min-width:651px){
+ .tick{min-height:20px!important;height:20px!important}
+ .tick-row{margin-bottom:1px!important}
+ .tick-row.header .tick{height:15px!important;min-height:15px!important}
+ .timeline-plaque{top:33%!important}
+ .squad.ally-squad{top:59%!important}
+}
+@media(max-width:650px){
+ .tick{height:23px!important;min-height:23px!important}
+ .tick-row.header .tick{height:15px!important}
+ .squad.ally-squad{top:73%!important}
+ .squad[data-count="1"].ally-squad{top:65%!important}
+ .hand-surface{bottom:3px!important}
+}
 </style>
 </head>
 <body>
