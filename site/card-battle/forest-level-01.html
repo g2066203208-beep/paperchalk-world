@@ -355,8 +355,6 @@ document.getElementById('reset').addEventListener('click',reset);
 document.getElementById('demo').addEventListener('click',()=>{
  attackMode=true;clearPick();message('点击敌人卡牌发动伐木少女攻击');
 });
- sync();message('已摆好前3、中3、后排团长的阵型，可拖动调整');
-});
 function closestCard(clientX,clientY){
  const cr=canvas.getBoundingClientRect(),px=(clientX-cr.left)*w/cr.width,py=(clientY-cr.top)*h/cr.height;
  let best=null,score=1e9;for(const c of cards){
