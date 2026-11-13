@@ -1,0 +1,20 @@
+{
+  "id": "farmer-ranger-huntress",
+  "name": "猎户少女",
+  "faction": "farmer",
+  "factionName": "农民组织",
+  "profession": "ranger",
+  "roleName": "猎户",
+  "variant": "young",
+  "approved": true,
+  "art": "01-huntress.png",
+  "width": 704,
+  "height": 1024,
+  "sourcePrompt": "docs/characters/FARMER_FACTION_ARCHER_VILLAGE_HUNTRESS_ANIMA_CANDIDATE_20261113.md",
+  "tags": [
+    "猎户",
+    "弓箭",
+    "乡村",
+    "射手"
+  ]
+}
