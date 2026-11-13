@@ -41,6 +41,10 @@ try{
  assert.equal(status.hud.connectedTray,true,'all seven slots must be in one continuous physical 3D tray');
  assert.equal(status.hud.trayBodies,1,'exactly one shared chassis, not seven separate containers');
  assert.equal(status.hud.compartments,7,'six physical dividers create seven slots');
+ assert.equal(status.hud.frontOpening,'low-lip','player-facing wall must be almost entirely OPEN');
+ assert.ok(status.hud.frontWallHeight<.12,'front lip must not cover the physical cards');
+ assert.equal(status.hud.screenEdgeAnchored,true);
+ assert.ok(status.hud.trayWidthFraction>=.95,'tray should be almost full screen width');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.units.filter(x=>x.side==='ally').length),0);
  assert.equal(status.hud.geometry,'shared-battlefield-card-mesh');
