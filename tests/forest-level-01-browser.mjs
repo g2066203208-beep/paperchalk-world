@@ -9,7 +9,10 @@ try{
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error')console.log('BROWSER_ERROR',m.text().slice(0,350));});
  await page.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:60000});
- await page.waitForFunction(()=>window.__forestLevelDebug?.state?.units?.length===3,{timeout:22000});
+ await page.waitForTimeout(2300);
+ const boot=await page.evaluate(()=>({hasGL:!!document.getElementById('stage')?.getContext('webgl'),hasLevel:!!window.__forestLevelDebug,scripts:[...document.scripts].map(x=>x.src),note:document.getElementById('note')?.textContent}));
+ console.log('BOOT_PROOF',JSON.stringify(boot),'ERRORS',JSON.stringify(errors));
+ assert.ok(boot.hasLevel,'boot failed: '+JSON.stringify({boot,errors}));
  const state=await page.evaluate(()=>window.__forestLevelDebug.state);
  const slots=await page.evaluate(()=>window.__forestLevelDebug.slots);
  assert.equal(slots.length,18,'must be exactly enemy and ally 3x3 without facility flank cells');
