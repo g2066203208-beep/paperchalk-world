@@ -7,10 +7,28 @@ fs.mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 
 try{
- const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFactor:1});
+ const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
  const errors=[];
  page.on('pageerror',e=>errors.push(String(e)));
  await page.goto('http://127.0.0.1:4173/card-battle/',{waitUntil:'networkidle'});
+ await page.locator('.grid-preview-card').first().waitFor({timeout:18000});
+ assert.equal(await page.locator('#grid-enemy .grid-preview-card').count(),9,'enemy genuine 3x3 nine-card board');
+ assert.equal(await page.locator('#grid-ally .grid-preview-card').count(),9,'ally genuine 3x3 nine-card board');
+ assert.equal(await page.locator('.timeline-plaque').isVisible(),false,'timeline is removed in layout preview');
+ const previewImages=await page.locator('.grid-preview-card img').all();
+ for(const img of previewImages){
+  assert.equal(await img.evaluate(el=>el.complete&&el.naturalWidth>0),true,'all 18 source portraits load');
+ }
+ const sideWidth=await page.locator('.grid-preview-card').first().evaluate(el=>el.getBoundingClientRect().width);
+ await page.screenshot({path:out+'/00-double-nine-side-by-side-1920.png'});
+ await page.locator('button[data-layout="stacked"]').click();
+ const stackedWidth=await page.locator('.grid-preview-card').first().evaluate(el=>el.getBoundingClientRect().width);
+ assert.ok(stackedWidth<sideWidth*.7,'stacked 3x3 vs 3x3 shrinks cards substantially');
+ await page.screenshot({path:out+'/00b-double-nine-stacked-1920.png'});
+ await page.locator('button[data-layout="side-by-side"]').click();
+ assert.equal(await page.locator('#grid-stage').getAttribute('data-cards-fit'),'true','all 18 cards fit inside the tabletop');
+ await page.locator('#grid-back-to-battle').click();
+ assert.equal(await page.locator('.timeline-plaque').isVisible(),true,'returning to original Timegrid still works');
  await page.locator('button.action-card').first().waitFor({timeout:18000});
 
  assert.equal(await page.locator('.tick-row').count(),7,'three allies, three enemies and one shared ruler');
@@ -76,13 +94,18 @@ try{
  const mobileErrors=[];
  mobile.on('pageerror',e=>mobileErrors.push(String(e)));
  await mobile.goto('http://127.0.0.1:4173/card-battle/',{waitUntil:'networkidle'});
+ await mobile.locator('.grid-preview-card').first().waitFor();
+ assert.equal(await mobile.locator('.grid-preview-card').count(),18);
+ assert.equal(await mobile.locator('.timeline-plaque').isVisible(),false);
+ await mobile.screenshot({path:out+'/00c-double-nine-phone.png'});
+ await mobile.locator('#grid-back-to-battle').click();
  await mobile.locator('button.action-card').first().waitFor();
  assert.equal(await mobile.locator('.tick-row').count(),7);
  assert.equal(await mobile.locator('.fighter').count(),6);
  await mobile.screenshot({path:out+'/06-phone-layout.png'});
  assert.deepEqual(mobileErrors,[],'no uncaught mobile JS errors');
 
- console.log(JSON.stringify({status:'PASS',mode:'1-3 characters per side, original tactile tabletop',
+ console.log(JSON.stringify({status:'PASS',preview:'genuine 3x3+3x3, zero timeline, 18 GitHub artwork cards',mode:'1-3 active characters per side, original tactile tabletop',
   desktop:true,mobile:true,drag:true,actorSelection:true,targetSelection:true,
   sixIndependentLanes:true,sharedTicks:10,screenshots:7}));
 }finally{await browser.close();}
