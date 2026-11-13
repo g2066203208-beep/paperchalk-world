@@ -134,6 +134,42 @@ function create(o){
   ctx.fillText(String(remaining).padStart(2,'0'),490,89);
   const tex=makeTexture(cv);labelCache.set(key,tex);return tex;
  }
+ function boxMaterial(kind){
+  // Procedural material generated ONCE, then used as a real WebGL texture.
+  // No webpage image panels, canvas overlays or flat CSS slot art.
+  const key='physical-material:'+kind;
+  if(cache.has(key))return cache.get(key);
+  const cv=document.createElement('canvas');cv.width=256;cv.height=256;
+  const ctx=cv.getContext('2d');let seed=kind==='felt'?425319:958231;
+  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  if(kind==='wood'){
+   const grad=ctx.createLinearGradient(0,0,256,256);
+   grad.addColorStop(0,'#876644');grad.addColorStop(.35,'#6c4c30');
+   grad.addColorStop(.7,'#755537');grad.addColorStop(1,'#533922');
+   ctx.fillStyle=grad;ctx.fillRect(0,0,256,256);
+   for(let i=0;i<280;i++){
+    const x=random()*256,y=random()*256;
+    const length=15+random()*125;
+    ctx.beginPath();ctx.moveTo(x,y);
+    ctx.bezierCurveTo(x+length*.25,y+(random()-.5)*6,
+     x+length*.75,y+(random()-.5)*5,x+length,y+(random()-.5)*5);
+    ctx.strokeStyle=random()<.57?'rgba(31,18,10,.12)':'rgba(251,218,166,.07)';
+    ctx.lineWidth=.35+random()*1.20;ctx.stroke();
+   }
+   for(let n=0;n<30;n++){
+    const y=random()*256;ctx.fillStyle='rgba(35,26,18,.035)';
+    ctx.fillRect(0,y,256,.3+random()*.7);
+   }
+  }else{
+   ctx.fillStyle='#294537';ctx.fillRect(0,0,256,256);
+   for(let y=0;y<256;y+=4)for(let x=0;x<256;x+=4){
+    const v=random();
+    ctx.fillStyle=v<.50?'rgba(4,20,12,.13)':'rgba(174,193,155,.075)';
+    ctx.fillRect(x+(v-.5),y+(v-.5),2.5,2.5);
+   }
+  }
+  const tex=makeTexture(cv);cache.set(key,tex);return tex;
+ }
  function drawConnectedTray(decks){
   if(decks.length!==7)return;
   // The whole tray is ONE continuous 3D object, not seven independent crates.
@@ -151,30 +187,30 @@ function create(o){
   const part=(x,y,z,sx,sy,sz)=>mul(matrix,mul(T(x,y,z),S(sx,sy,sz)));
   const bottom=[.39,.30,.206,1],side=[.46,.345,.229,1];
   const dark=[.16,.205,.169,1],seam=[.105,.154,.119,1],trim=[.66,.53,.341,1];
-  const c=wall;
+  const c=wall,walnut=boxMaterial('wood'),feltWeave=boxMaterial('felt');
   // The continuous, heavyweight timber chassis with sunken felt compartments.
-  renderGeom(box,part(0,0,-.13,trayWidth,slotDepth,.29),bottom);
-  renderGeom(box,part(0,0,.030,trayWidth-.13,slotDepth-.15,.026),[.27,.32,.25,1]);
+  renderGeom(box,part(0,0,-.13,trayWidth,slotDepth,.29),[.96,.94,.91,1],walnut);
+  renderGeom(box,part(0,0,.030,trayWidth-.13,slotDepth-.15,.026),[1,1,1,1],feltWeave);
   for(let i=0;i<7;i++){
    const px=(i-3)*pitch;
-   renderGeom(box,part(px,.012,.047,pitch-c*1.7,slotDepth-c*1.6,.018),dark);
+   renderGeom(box,part(px,.012,.047,pitch-c*1.7,slotDepth-c*1.6,.018),[.94,.94,.94,1],feltWeave);
    renderGeom(box,part(px,slotDepth*.36,.060,pitch-c*2,slotDepth*.15,.012),seam);
   }
   // Back wall and both outside walls can be tall, away from the player's view.
-  renderGeom(box,part(0,slotDepth*.5-c*.5,.20,trayWidth,c,.34),side);
+  renderGeom(box,part(0,slotDepth*.5-c*.5,.20,trayWidth,c,.34),[1,1,1,1],walnut);
   for(const sign of [-1,1]){
-   renderGeom(box,part(sign*(trayWidth-c)*.5,0,.195,c,slotDepth,.34),side);
+   renderGeom(box,part(sign*(trayWidth-c)*.5,0,.195,c,slotDepth,.34),[1,1,1,1],walnut);
   }
   // Six shared dividers have a lower front section and a taller back section.
   // The recess and the deck-card side edges remain visible from the player.
   for(let i=1;i<7;i++){
    const px=-trayWidth*.5+i*pitch;
-   renderGeom(box,part(px,slotDepth*.16,.18,c,slotDepth*.66,.35),side);
-   renderGeom(box,part(px,-slotDepth*.32,.087,c,slotDepth*.31,.115),side);
+   renderGeom(box,part(px,slotDepth*.16,.18,c,slotDepth*.66,.35),[1,1,1,1],walnut);
+   renderGeom(box,part(px,-slotDepth*.32,.087,c,slotDepth*.31,.115),[.94,.91,.86,1],walnut);
   }
   // PLAYER SIDE: NO high closing panel.  This lip is only a narrow ledge
   // below the card edges: low enough to expose thick stacks and empty pockets.
-  renderGeom(box,part(0,-slotDepth*.5+c*.40,.056,trayWidth,c,.103),bottom);
+  renderGeom(box,part(0,-slotDepth*.5+c*.40,.056,trayWidth,c,.103),[.92,.87,.82,1],walnut);
   renderGeom(box,part(0,-slotDepth*.5+.012,.118,trayWidth-.085,.023,.025),trim);
   // Profession/remaining-count plates are flush on each compartment FLOOR.
   // An empty slot remains a deep dark recess with a clear 00 counter.
