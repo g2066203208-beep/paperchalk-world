@@ -127,19 +127,21 @@ function ringBand(grid,makeGeom,upper,lower,bevel=false){
  * the top-to-wall silhouette follows a quarter-circle cross-section.
  * A rounded corner is generated only when TWO sides are exposed.
  */
+// Exact cubic blocks, with only a small exposed-corner radius.
 const SOFT_VOXEL_PROFILE=Object.freeze({
- cornerRadiusRatio:.165,
- topRoundWidthRatio:.135,
- topRoundHeightRatio:.285,
- arcSteps:7,
- edgeSteps:5,
- bevelSteps:7
+ cornerRadiusRatio:.055,
+ topRoundWidthRatio:.055,
+ topRoundHeightRatio:.055,
+ arcSteps:6,
+ edgeSteps:8,
+ bevelSteps:5
 });
 function tileContour(grid,c,r){
  const t=grid.cell(c,r),P=SOFT_VOXEL_PROFILE;
  const {x,z}=grid.center(c,r);
  const x0=x-grid.tileW/2,x1=x+grid.tileW/2,z0=z-grid.tileD/2,z1=z+grid.tileD/2;
- const floor=grid.topY+grid.minLevel*grid.levelStep-grid.thickness;
+ // Outside side always shows one full cube, never an artificial four-floor plinth.
+ const floor=t.height-grid.levelStep;
  const dirs={
   N:grid.cell(c,r-1),E:grid.cell(c+1,r),S:grid.cell(c,r+1),W:grid.cell(c-1,r)
  };
@@ -213,7 +215,7 @@ function tileSoftMesh(grid,makeGeom,c,r){
  const t=grid.cell(c,r),contour=tileContour(grid,c,r),points=contour.ring;
  const P=SOFT_VOXEL_PROFILE,n=points.length,verts=[],tri=[];
  const inset=Math.min(grid.tileW,grid.tileD)*P.topRoundWidthRatio;
- const depth=Math.min(grid.levelStep*P.topRoundHeightRatio,.23);
+ const depth=Math.min(grid.levelStep*P.topRoundHeightRatio,grid.levelStep*.075);
  const uv=(x,z)=>[(x-grid.minX)/grid.width,(z-grid.minZ)/grid.depth];
  // Center and inset ring form a flat card-ready landing surface.
  const {x,z}=grid.center(c,r);
@@ -249,37 +251,31 @@ function tileSoftMesh(grid,makeGeom,c,r){
 }
 function roundedCliffMesh(grid,makeGeom,c,r,contour,depth){
  const tile=grid.cell(c,r),{ring,segments}=contour,verts=[],idx=[];
- const P=SOFT_VOXEL_PROFILE;
  const heightTop=tile.height-depth;
- // Join each exposed straight edge and rounded convex-corner arc into a smooth wall.
- // The bottom levels follow the adjacent block height, so all 7 levels remain editable.
- const tiers=12;
+ // Vertical voxel cliffs; walls are a full cube-height for each tier.
+ // A tiny horizontal groove indicates stacked blocks, not rounded soap sides.
  for(let i=0;i<ring.length;i++){
   const j=(i+1)%ring.length;
   if(!segments[i])continue;
   const a=ring[i],b=ring[j];
   if(Math.min(a.lower,b.lower)>=heightTop-.001)continue;
-  // The wall is subdivided vertically: soft low-frequency silhouette undulations
-  // and a lower eased transition avoid the razor-sharp extruded-wall appearance.
+  const tiers=Math.max(6,Math.ceil((heightTop-Math.min(a.lower,b.lower))/grid.levelStep)*6);
   let previous=-1;
   for(let k=0;k<=tiers;k++){
-   const q=k/tiers;
-   const local=[];
+   const q=k/tiers,local=[];
    for(const p of [a,b]){
     const low=Math.min(p.lower,heightTop-.015);
     const h=heightTop+(low-heightTop)*q;
-    // Gentle midwall roundness, maximum ~5cm, never destroys cell alignment.
-    const swell=.037*Math.sin(Math.PI*q);
-    const px=p.x+p.nx*swell,pz=p.z+p.nz*swell;
-    const horizontal=Math.hypot(p.nx,p.nz)||1;
-    const nx=p.nx/horizontal,nz=p.nz/horizontal;
-    const ny=-.11*Math.cos(Math.PI*q);
-    const length=Math.hypot(nx,ny,nz)||1;
+    const levelPos=(tile.height-h)/grid.levelStep;
+    const frac=Math.abs(levelPos-Math.round(levelPos));
+    const groove=Math.exp(-Math.pow(frac/.025,2))*.011;
+    const px=p.x-p.nx*groove,pz=p.z-p.nz*groove;
+    const normalLength=Math.hypot(p.nx,p.nz)||1;
+    const nx=p.nx/normalLength,nz=p.nz/normalLength;
     local.push(verts.length/8);
-    verts.push(px,h,pz,nx/length,ny/length,nz/length,px*.075,h*.22);
+    verts.push(px,h,pz,nx,0,nz,px*.075,h*.22);
    }
    if(previous>=0){
-    // ordered as a,b (top) then a,b (bottom), front-facing on outward side.
     const prev=previous,cur=local[0];
     idx.push(prev,prev+1,cur,prev+1,cur+1,cur);
    }
@@ -353,130 +349,45 @@ function grainTexture(gl){
 }
 
 /*
- * Rounded voxel field mesher.
- * Gameplay: integer per-cell elevations. Rendering: C1-smooth interpolation
- * ONLY within 0.14 tile-width of a height discontinuity. Cell centers,
- * card footprints and flat landing surfaces do not move.
- *
- * Unlike rounding 96 separate cubes, the surface is sampled in world space,
- * so adjacent terrain meshes share exactly the same vertices on cell seams.
- * Convex mountains AND concave excavations turn smoothly; no open corners.
+ * Cubic connected voxel renderer.
+ * Each integer level is exactly one cube side-length. The only curvature
+ * is a small top-edge bevel and convex corner radius, never a hillside ramp.
  */
-function smoothHeight(grid,x,z){
- const u=(x-grid.minX)/grid.tileW-.5,v=(z-grid.minZ)/grid.tileD-.5;
- const ix=Math.floor(u),iz=Math.floor(v),fx=u-ix,fz=v-iz;
- const curve=t=>{
-  // Narrow, rounded cliff shoulders: keep the bulk of each tile flat and editable.
-  const normalized=constrain((t-.405)/.19,0,1);
-  return normalized*normalized*(3-2*normalized);
- };
- const wx=curve(fx),wz=curve(fz);
- const at=(c,r)=>grid.cell(constrain(c,0,grid.cols-1),constrain(r,0,grid.rows-1)).height;
- const a=at(ix,iz),b=at(ix+1,iz),c=at(ix,iz+1),d=at(ix+1,iz+1);
- return (a*(1-wx)+b*wx)*(1-wz)+(c*(1-wx)+d*wx)*wz;
-}
-function softHeightTile(grid,makeGeom,c,r){
- const verts=[],idx=[],N=24;
- const {x,z}=grid.center(c,r);
- const x0=x-grid.tileW/2,z0=z-grid.tileD/2;
- const eps=.019;
- for(let j=0;j<=N;j++)for(let i=0;i<=N;i++){
-  const px=x0+grid.tileW*i/N,pz=z0+grid.tileD*j/N,py=smoothHeight(grid,px,pz);
-  const gx=(smoothHeight(grid,px+eps,pz)-smoothHeight(grid,px-eps,pz))/(2*eps);
-  const gz=(smoothHeight(grid,px,pz+eps)-smoothHeight(grid,px,pz-eps))/(2*eps);
-  const len=Math.hypot(gx,1,gz);
-  verts.push(px,py,pz,-gx/len,1/len,-gz/len,
-    (px-grid.minX)/grid.width,(pz-grid.minZ)/grid.depth);
- }
- for(let j=0;j<N;j++)for(let i=0;i<N;i++){
-  const a=j*(N+1)+i,b=a+1,c=a+N+1,d=c+1;
-  idx.push(a,c,b,b,c,d);
- }
- return makeGeom(verts,idx);
-}
-function softPerimeter(grid,makeGeom){
- const xs=grid.minX,xe=xs+grid.width,zs=grid.minZ,ze=zs+grid.depth;
- const r=Math.min(grid.tileW,grid.tileD)*.132,steps=7;
- const out=[];
- function add(x,z,nx,nz){
-  const last=out[out.length-1];
-  if(last&&Math.hypot(last.x-x,last.z-z)<1e-6)return;
-  out.push({x,z,nx,nz});
- }
- function straight(x0,z0,x1,z1,nx,nz,num,first=true){
-  for(let k=first?0:1;k<=num;k++){const t=k/num;add(x0+(x1-x0)*t,z0+(z1-z0)*t,nx,nz);}
- }
- function arc(cx,cz,a0,a1){
-  for(let k=1;k<=steps;k++){const a=a0+(a1-a0)*k/steps;add(cx+Math.cos(a)*r,cz+Math.sin(a)*r,Math.cos(a),Math.sin(a));}
- }
- straight(xs+r,zs,xe-r,zs,0,-1,grid.cols*3);
- arc(xe-r,zs+r,-Math.PI/2,0);
- straight(xe,zs+r,xe,ze-r,1,0,grid.rows*3,false);
- arc(xe-r,ze-r,0,Math.PI/2);
- straight(xe-r,ze,xs+r,ze,0,1,grid.cols*3,false);
- arc(xs+r,ze-r,Math.PI/2,Math.PI);
- straight(xs,ze-r,xs,zs+r,-1,0,grid.rows*3,false);
- arc(xs+r,zs+r,Math.PI,Math.PI*1.5);
- if(Math.hypot(out[out.length-1].x-out[0].x,out[out.length-1].z-out[0].z)<1e-6)out.pop();
- const lipVertices=[],lipIndices=[],wallVertices=[],wallIndices=[];
- const footer=grid.topY+grid.minLevel*grid.levelStep-grid.thickness;
- const lipWidth=Math.min(grid.tileW,grid.tileD)*.105;
- for(const p of out){
-  const innerX=p.x-p.nx*lipWidth,innerZ=p.z-p.nz*lipWidth;
-  const innerH=smoothHeight(grid,innerX,innerZ);
-  const outerH=smoothHeight(grid,p.x,p.z)-.13;
-  const lipStart=lipVertices.length/8,wallStart=wallVertices.length/8;
-  lipVertices.push(innerX,innerH,innerZ,0,1,0,
-    (innerX-grid.minX)/grid.width,(innerZ-grid.minZ)/grid.depth);
-  const normLen=Math.hypot(p.nx,.80,p.nz);
-  lipVertices.push(p.x,outerH,p.z,p.nx/normLen,.8/normLen,p.nz/normLen,
-    (p.x-grid.minX)/grid.width,(p.z-grid.minZ)/grid.depth);
-  wallVertices.push(p.x,outerH,p.z,p.nx,0,p.nz,p.x*.08,outerH*.3);
-  wallVertices.push(p.x,footer,p.z,p.nx,0,p.nz,p.x*.08,footer*.3);
- }
- for(let i=0;i<out.length;i++){
-  const j=(i+1)%out.length,a=i*2,b=j*2;
-  lipIndices.push(a,b,a+1,b,b+1,a+1);
-  wallIndices.push(a,b,a+1,b,b+1,a+1);
- }
- return {lip:makeGeom(lipVertices,lipIndices),wall:makeGeom(wallVertices,wallIndices)};
-}
 function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
  if(!gl||!makeGeom||!renderGeom||!I)throw Error('Missing WebGL renderer dependencies');
  const texture=grainTexture(gl),base=I();
  const free=m=>{if(m){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}};
- let tiles=[],seams=null,outer=null,renderedRevision=-1;
+ let tiles=[],walls=[],seams=null,renderedRevision=-1;
  function rebuild(){
   for(const row of tiles)for(const geo of row)free(geo);
-  free(seams);
-  if(outer){free(outer.lip);free(outer.wall);}
-  tiles=Array.from({length:grid.rows},(_,r)=>
-    Array.from({length:grid.cols},(_,c)=>softHeightTile(grid,makeGeom,c,r)));
+  for(const entry of walls)free(entry.mesh);
+  free(seams);walls=[];
+  tiles=Array.from({length:grid.rows},(_,r)=>Array.from({length:grid.cols},(_,c)=>{
+   const geometry=tileSoftMesh(grid,makeGeom,c,r);
+   const wall=roundedCliffMesh(grid,makeGeom,c,r,geometry.contour,geometry.depth);
+   if(wall)walls.push({mesh:wall,color:grid.materials[grid.cell(c,r).kind].side});
+   return geometry.mesh;
+  }));
   seams=seamMesh(grid,makeGeom);
-  outer=softPerimeter(grid,makeGeom);
   renderedRevision=grid.revision;
  }
  function draw(){
   if(renderedRevision!==grid.revision)rebuild();
-  // Hard edges are rendered only at the OUTER edge of the entire world.
-  // Every internal elevation joins the same continuous C1-smooth surface.
-  renderGeom(outer.wall,base,grid.materials.grass.side);
-  renderGeom(outer.lip,base,grid.materials.grass.edge);
+  for(const entry of walls)renderGeom(entry.mesh,base,entry.color);
   for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
    const cell=grid.cell(c,r);
    renderGeom(tiles[r][c],base,grid.color(c,r),texture,false,grid.materials[cell.kind].side);
   }
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
-  renderGeom(seams,base,[.13,.19,.12,.085],null,true);
+  renderGeom(seams,base,[.13,.19,.12,.095],null,true);
   gl.depthMask(true);gl.disable(gl.BLEND);
  }
  function dispose(){
   for(const row of tiles)for(const geo of row)free(geo);
-  free(seams);
-  if(outer){free(outer.lip);free(outer.wall);}
-  gl.deleteTexture(texture);
+  for(const entry of walls)free(entry.mesh);
+  free(seams);gl.deleteTexture(texture);
  }
  return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return renderedRevision}};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'3.2.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'4.0.0',MATERIALS,create,createWebGLRenderer});
 })(window);
