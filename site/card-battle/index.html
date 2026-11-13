@@ -162,6 +162,19 @@ button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb5
  .fighter.ally{left:50%;top:57%}
  .hand-surface{bottom:110px}
 }
+
+/* Second real-screenshot pass: tabletop characters do not sit underneath UI. */
+@media(min-width:651px){
+ .timeline-plaque{left:54%}
+ .fighter.enemy{left:73%;top:2.5%}
+ .fighter.ally{left:10%;top:57%}
+}
+@media(max-width:650px){
+ .timeline-plaque{left:50%;top:35%}
+ .fighter.ally{left:50%;top:57%}
+ .status-note{display:none}
+ .action-card{transform:translateY(calc(-2px + var(--lift))) rotate(var(--angle)) rotateX(var(--tilt-x)) rotateY(var(--tilt-y))}
+}
 </style>
 </head>
 <body>
