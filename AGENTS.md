@@ -1,5 +1,8 @@
 # Paperchalk World — agent working rules
 
+**2026-11-13 USER-APPROVED FARMER WARRIOR ART:** Before new farmer-faction warrior Anima variants, read [approved loli lumberjack identity, image SHA256, complete V5 dialogue-prompt record](docs/characters/FARMER_FACTION_WARRIOR_LOLI_LUMBERJACK_APPROVED_20261113.md). User approved the supplied 704×1024 RGB PNG, brown braided hair, country linen shirt, short vest, loose peasant pants, old boots, woodcutting axe and tied firewood. The image is *RGB with white background, not transparent*. Earlier V2–V4 prompt drafts are rejected candidates. **Do not falsely report binary image as GitHub-uploaded unless exact file path exists and matches the approved PNG SHA256.**
+
+
 **2026-11-13 DRAW-LOCK RULE UPDATE (MOST RECENT):** In each turn, before the first action card is played, a player may draw from any available profession box **without a draw-count limit**, up to **10 cards TOTAL in hand**. Playing the first action card locks ALL further **ordinary** draws for the rest of that turn, even if hand capacity opens. Only an explicit special card/character/relic effect can draw afterward. No ordinary voluntary discard. Hand is cleared each turn's end; character cards remain and NEVER enter action deck reshuffling. Older “5 draws per turn” and “discard any time” proposals are REJECTED. The 5-card opening hand was suggested, not unequivocally final; do not confuse with the ten-card hand cap. Consult [up-to-date hand rules](docs/game/SEVEN_CLASS_STACKED_HAND_DECK_BOX_CANON_20261113.md) before any implementation.
 
 
