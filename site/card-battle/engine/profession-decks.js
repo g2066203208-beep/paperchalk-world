@@ -115,7 +115,8 @@ function create(options={}){
   return snapshot();
  }
  reload();reset();
- return Object.freeze({snapshot,draw,play,specialDiscard,nextTurn,reset,
+ function remainingCards(profession){return (piles.get(profession)||[]).map(card=>({...card}));}
+ return Object.freeze({snapshot,remainingCards,draw,play,specialDiscard,nextTurn,reset,
   classes:CLASSES,get cap(){return cap;}});
 }
 root.PaperchalkProfessionDecks=Object.freeze({version:'2.0.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create});
