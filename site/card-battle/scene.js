@@ -211,27 +211,29 @@ function drawTimeline(){
  ruler.appendChild(elem('span','tick-label',''));
  for(let i=1;i<=10;i++)ruler.appendChild(elem('span','tick',String(i)));
  host.appendChild(ruler);
- for(const [side,label] of [['enemy','敌'],['ally','我']]){
-   const line=elem('div','tick-row '+(side==='ally'?'friendly':'hostile'));
-   line.appendChild(elem('span','tick-label',label));
-   const a=actor(side,base);
-   for(let i=1;i<=10;i++){
-     const state=cardAtTick(a,i,base),phase=state?.phase||'';
-     const isFriend=side==='ally',cell=elem(isFriend?'button':'span','tick '+(phase||'empty')+(isFriend?' friend':''),marks[phase]||'');
-     if(isFriend){
-      cell.type='button';cell.dataset.tick=String(i);
-      cell.disabled=!!playback||battle.phase!=='planning';
-      cell.setAttribute('aria-label','第'+i+'格'+(phase?'：'+(marks[phase]||phase):'：空'));
-      if(state?.action)cell.dataset.action=state.action.id;
-      if(selected)cell.classList.add('can-drop');
-     }
-     if(state?.action){
-      cell.title=G.CARD[state.action.card].name+' · '+(marks[phase]||phase);
-     }
-     if(playback&&playback.index+1===i)cell.classList.add('playing');
-     line.appendChild(cell);
+ for(const side of ['enemy','ally']){
+  const actors=base.actors.filter(a=>a.side===side);
+  for(let idx=0;idx<actors.length;idx++){
+   const a=actors[idx],friend=side==='ally';
+   const row=elem('div','tick-row '+(friend?'friendly':'hostile')+(friend&&actor('ally',base)?.id===a.id?' selected':''));
+   row.dataset.rowActor=a.id;
+   row.appendChild(elem('span','tick-label',(friend?'我':'敌')+(idx+1)));
+   for(let t=1;t<=10;t++){
+    const state=cardAtTick(a,t,base),phase=state?.phase||'';
+    const cell=elem(friend?'button':'span','tick '+(phase||'empty')+(friend?' friend':''),marks[phase]||'');
+    if(friend){
+     cell.type='button';cell.dataset.tick=String(t);cell.dataset.actor=a.id;
+     cell.disabled=!!playback||battle.phase!=='planning'||a.dead;
+     cell.setAttribute('aria-label',a.name+' 第'+t+'格'+(phase?'：'+(marks[phase]||phase):'：空'));
+     if(state?.action)cell.dataset.action=state.action.id;
+     if(selected&&a.id===actor('ally')?.id)cell.classList.add('can-drop');
+    }
+    if(state?.action)cell.title=G.CARD[state.action.card].name+' · '+(marks[phase]||phase);
+    if(playback&&playback.index+1===t)cell.classList.add('playing');
+    row.appendChild(cell);
    }
-   host.appendChild(line);
+   host.appendChild(row);
+  }
  }
 }
 function drawHand(){
@@ -256,23 +258,38 @@ function drawHand(){
  }
 }
 function displayVitals(){
+ normalizeSelection();
  const before=playback?.before;
  for(const side of ['ally','enemy']){
-   const a=actor(side,battle);
+  const host=$(side+'-squad');
+  for(const fighter of host.querySelectorAll('.fighter')){
+   const id=fighter.dataset.actor;
+   const a=battle.actors.find(item=>item.id===id);
+   if(!a)continue;
    let hp=a.hp;
    if(before){
-     hp=actor(side,before).hp;
-     if(playback.index>=0){
-       hp=playback.frames[playback.index]?.actors.find(x=>x.id===a.id)?.hp??hp;
-     }
+     hp=before.actors.find(item=>item.id===id)?.hp??hp;
+     if(playback.index>=0)hp=playback.frames[playback.index]?.actors.find(item=>item.id===id)?.hp??hp;
    }
-   $(side+'-hp').textContent=String(hp)+' / '+a.maxHp;
-   $(side+'-fighter').style.opacity=hp===0?'.45':'1';
+   fighter.querySelector('.hp-number').textContent=String(hp)+'/'+a.maxHp;
+   fighter.classList.toggle('dead',hp<=0);
+   fighter.classList.toggle('selected',side==='ally'&&actor('ally',before||battle)?.id===id);
+   fighter.classList.toggle('targeted',side==='enemy'&&targetId===id);
+   fighter.querySelector('button.portrait').disabled=!!playback||battle.phase!=='planning'||hp<=0;
+  }
  }
- $('energy').textContent=playback?String(playback.index>=0?(playback.frames[playback.index]?.actors.find(x=>x.id===actor('ally',before).id)?.energy??actor('ally',before).energy):actor('ally',before).energy):String(actor('ally').energy);
+ const active=actor('ally',before||battle);
+ const hpState=playback&&playback.index>=0
+  ?playback.frames[playback.index]?.actors.find(x=>x.id===active?.id)
+  :null;
+ $('energy').textContent=String(hpState?.energy??active?.energy??0);
  $('round').textContent='第 '+((playback?before:battle).round+1)+' 轮';
  $('phase').textContent=playback?'执行中 · 第 '+(playback.index+1)+' 格':battle.phase==='planning'?'规划中 · 时间暂停':battle.phase==='win'?'已胜利':'已失败';
  $('round-phase').textContent=playback?'同步结算中':battle.phase==='planning'?'10 格同步结算':battle.phase==='win'?'战斗胜利':'战斗失败';
+ for(const b of $('party-select').querySelectorAll('button[data-party]')){
+   const activeParty=Number(b.dataset.party)===partySize;
+   b.classList.toggle('chosen',activeParty);b.setAttribute('aria-pressed',String(activeParty));b.disabled=!!playback;
+ }
 }
 function render(){
  displayVitals();drawTimeline();
@@ -282,16 +299,21 @@ function render(){
  $('undo').disabled=!!playback||battle.phase!=='planning'||!actor('ally').actions.some(x=>x.source==='hand'&&!x.locked&&x.start>=battle.now);
 }
 function initialize(){
- clearTimeout(frameTimer);frameTimer=null;
- if(playback)playback=null;
- battle=G.create({classId:'axe',styleId:'strike',encounterId:'corridor',team:false,campaignBalance:true,seed});
- // Names match approved character art; the test battle's original numeric
- // stats and enemy attack patterns remain provisional and are not canonized.
- actor('ally').name='传奇猎人';actor('enemy').name='马戏团团长';
+ clearTimeout(frameTimer);frameTimer=null;playback=null;dragging=null;suppressClick=null;
+ const encounter=partySize===1?'corridor':partySize===2?'twins':'siege';
+ battle=G.create({classId:'axe',styleId:'strike',encounterId:encounter,
+  team:partySize>1,controlAllies:partySize>1,partySize,enemySize:partySize,
+  campaignBalance:partySize===1,seed});
+ const friends=battle.actors.filter(a=>a.side==='ally');
+ const enemies=battle.actors.filter(a=>a.side==='enemy');
+ for(let i=0;i<friends.length;i++)friends[i].name=ALLY_ART[i].name;
+ for(let i=0;i<enemies.length;i++)enemies[i].name=ENEMY_ART[i].name;
+ targetId=enemies[0].id;
  selected=null;latestAction=null;
+ buildSquads();
  $('last-event').textContent='敌方行动已预先刻在木板上';
- $('notice').textContent='选牌 → 指定时间格 → 执行';
- note('从下方拿起行动卡，再选择我方时间格');
+ $('notice').textContent='点人物 → 选手牌 → 排时间 → 执行';
+ note('选择我方人物的手牌，再选择时间格；点击敌方人物可指定目标');
  $('stage').classList.remove('playing');
  render();sound('draw');
 }
@@ -303,19 +325,25 @@ function selectCard(uid){
  note(selected?'拿起了卡牌；点击「我」的时间格，或拖动到目标时间格':'已放回手牌');
  render();
 }
-function placeCard(t){
+function placeCard(t,laneId=null){
  if(playback||battle.phase!=='planning')return;
- if(!selected){note('先拿起底部手牌，然后选一个时间格');return;}
- const a=actor('ally'),target=actor('enemy'),inst=a.hand.find(it=>it.uid===selected);
+ const hero=actor('ally'),target=actor('enemy');
+ if(laneId&&laneId!==hero?.id){
+  selectActor(laneId);
+  note('已切换角色；请选这位队友的行动手牌');
+  return;
+ }
+ if(!selected){note('先拿起底部手牌，再选择第1—10格');return;}
+ const inst=hero.hand.find(it=>it.uid===selected);
  if(!inst){selected=null;render();return;}
  const c=G.CARD[inst.key];
  const friendly=c.type==='defense'||c.heal||c.buff||c.steady;
  try{
-   const action=G.place(battle,inst.uid,t,friendly?a.id:target.id);
-   latestAction=action.id;selected=null;sound('card');
-   note('「'+c.name+'」已放在第 '+t+' 格；可继续出牌');
-   $('notice').textContent='计划已刻下 · 可以取回或执行';
- }catch(err){sound('hit');showToast(err.message,2500);note('位置不可用，重新选择空闲时间格');}
+  const action=G.place(battle,inst.uid,t,friendly?hero.id:target.id);
+  latestAction=action.id;selected=null;sound('card');
+  note(hero.name+' · '+c.name+' 从第'+t+'格开始'+(friendly?'':(' → '+target.name)));
+  $('notice').textContent='计划已刻下 · 可取回或执行';
+ }catch(err){sound('hit');showToast(err.message,2500);note('位置不可用，请重新选时间格');}
  render();
 }
 function returnCard(actionId=null){
@@ -327,11 +355,12 @@ function returnCard(actionId=null){
  catch(err){showToast(err.message);}
  render();
 }
-function impact(side){
- const el=$(side+'-fighter');el.classList.remove('recoil');void el.offsetWidth;el.classList.add('recoil');
+function impact(actorId){
+ const el=document.querySelector('.squad .fighter[data-actor="'+actorId+'"]');
+ if(el){el.classList.remove('recoil');void el.offsetWidth;el.classList.add('recoil');}
  const stage=$('stage');stage.classList.remove('impact');void stage.offsetWidth;stage.classList.add('impact');
  clearTimeout(impactTimer);
- impactTimer=setTimeout(()=>{el.classList.remove('recoil');stage.classList.remove('impact');},230);
+ impactTimer=setTimeout(()=>{el?.classList.remove('recoil');stage.classList.remove('impact');},230);
  sound('hit');
 }
 function floatEvent(text){
@@ -343,28 +372,23 @@ function frameAdvance(){
  if(!playback)return;
  playback.index++;
  if(playback.index>=playback.frames.length){
-   const result=battle.phase;
-   playback=null; $('stage').classList.remove('playing');
-   $('last-event').textContent=battle.log.slice(-2).map(e=>e.text).join(' · ')||'本轮未命中';
-   if(result==='win'||result==='lost'){
-     note(result==='win'?'猎人获胜 · 点击「重开」再战':'猎人战败 · 点击「重开」再战');
-     showToast(result==='win'?'胜利':'战斗失败',3500);
-   }else note('新一轮开始 · 重新安排手牌');
-   render();return;
+  const result=battle.phase;
+  playback=null;$('stage').classList.remove('playing');
+  $('last-event').textContent=battle.log.slice(-2).map(e=>e.text).join(' · ')||'本轮未命中';
+  if(result==='win'||result==='lost'){
+   note(result==='win'?'猎人队获胜 · 点击重开再战':'猎人队战败 · 点击重开再战');
+   showToast(result==='win'?'胜利':'战斗失败',3500);
+  }else note('新的一轮 · 可以为每位存活角色分别安排动作');
+  render();return;
  }
- const step=playback.frames[playback.index];
- const events=step.events||[];
+ const step=playback.frames[playback.index],events=step.events||[];
  for(const event of events){
-   if(event.kind==='damage'||event.kind==='death'||event.kind==='break'){
-     const hitsAlly=event.text.includes('传奇猎人');
-     const hitsEnemy=event.text.includes('马戏团团长');
-     // One-target 1v1 actions. A counterattack may mention both names:
-     // prefer a target identified after "→".
-     const target=event.text.split('→').at(-1);
-     const side=target.includes('传奇猎人')?'ally':target.includes('马戏团团长')?'enemy':hitsAlly&&!hitsEnemy?'ally':'enemy';
-     impact(side);
-     floatEvent(event.kind==='damage'?'命中':event.kind==='death'?'击败':'破防');
-   }else if(event.kind==='block'){sound('card');}
+  if(['damage','death','break'].includes(event.kind)){
+   const text=event.text.includes('→')?event.text.split('→').at(-1):event.text;
+   const target=battle.actors.find(a=>text.includes(a.name));
+   if(target)impact(target.id);
+   floatEvent(event.kind==='damage'?'命中':event.kind==='death'?'击败':'破防');
+  }else if(event.kind==='block')sound('card');
  }
  displayVitals();drawTimeline();
  if(events.length)$('last-event').textContent=events.at(-1).text;
