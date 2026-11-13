@@ -67,7 +67,7 @@ html,body{background:#d8ded0}
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=5"></script>
+<script src="./engine/scene-card-hud.js?v=6"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -128,7 +128,7 @@ const fx=window.PaperchalkVoxelAnimations.create(terrain,{seed:618231});
 const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 // Camera is a reusable module, independent from voxel geometry and game rules.
 const orbitCamera=window.PaperchalkBattleCamera.create({
- target:[0,0,-1.1],distance:(window.innerWidth<700?32:26),yaw:0,elevation:55*Math.PI/180,
+ target:[0,(window.innerWidth<700?-.75:-1.65),-1.1],distance:(window.innerWidth<700?32:26),yaw:0,elevation:55*Math.PI/180,
  fov:33,minDistance:18,maxDistance:48,minElevation:55*Math.PI/180,maxElevation:55*Math.PI/180,maxPanX:4,maxPanZ:5
 });
 window.__battleCamera=orbitCamera;
