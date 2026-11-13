@@ -284,6 +284,7 @@ function displayVitals(){
   :null;
  $('energy').textContent=String(hpState?.energy??active?.energy??0);
  $('round').textContent='第 '+((playback?before:battle).round+1)+' 轮';
+ $('mode-subtitle').textContent=partySize+' VS '+partySize+' · TIMEGRID';
  $('phase').textContent=playback?'执行中 · 第 '+(playback.index+1)+' 格':battle.phase==='planning'?'规划中 · 时间暂停':battle.phase==='win'?'已胜利':'已失败';
  $('round-phase').textContent=playback?'同步结算中':battle.phase==='planning'?'10 格同步结算':battle.phase==='win'?'战斗胜利':'战斗失败';
  for(const b of $('party-select').querySelectorAll('button[data-party]')){
