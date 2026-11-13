@@ -591,22 +591,55 @@ function placeholderUnitTexture(name,enemy){
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  return tex;
 }
+function spawnUnitCard(unit){
+ const slot=slotCenters.find(t=>t.zone==='unit'&&t.side===unit.side&&t.r===unit.r&&t.c===unit.c);
+ if(!slot)throw Error('Level missing 3x3 slot: '+unit.id);
+ const registered=unit.characterId?window.PaperchalkCharacterRegistry?.get(unit.characterId):null;
+ const portrait=registered?.portrait||unit.art||null;
+ const def={id:unit.id,kind:'unit',name:registered?.name||unit.name,src:portrait};
+ const card=makeCard(def,slot);
+ card.side=unit.side;card.unitId=unit.id;card.placeStart=now;
+ card.texture=placeholderUnitTexture(unit.name,unit.side==='enemy');
+ cards.push(card);occupied.set(slot.id,card);
+ if(portrait)loadTexture(portrait,tex=>{card.texture=tex;});
+ return card;
+}
+function previewCharacterAt(id,x,y){
+ if(!id||level.phase!=='deployment'){previewDeployment=null;return;}
+ const slot=slotAtPointer(x,y);
+ if(!slot||slot.zone!=='unit'||slot.side!=='ally'||level.occupancy(slot.tileC,slot.tileR)){
+  previewDeployment=null;return;
+ }
+ previewDeployment={id,slot};
+ if(!previewDeployCard||previewDeployCard.unitId!==id){
+  const unit=level.getUnit(id);
+  const registered=window.PaperchalkCharacterRegistry?.get(unit.characterId);
+  const def={id:'preview-'+id,kind:'unit',name:unit.name,src:registered?.portrait||null};
+  previewDeployCard=makeCard(def,slot);previewDeployCard.unitId=id;
+  previewDeployCard.texture=placeholderUnitTexture(unit.name,false);
+  if(def.src)loadTexture(def.src,tex=>{if(previewDeployCard?.unitId===id)previewDeployCard.texture=tex;});
+ }
+}
+function deployCharacterAt(id,x,y){
+ if(level.phase!=='deployment'||!id)return false;
+ const slot=slotAtPointer(x,y);
+ if(!slot||slot.zone!=='unit'||slot.side!=='ally'){
+  message('人物只能部署到我方九宫格的空位');return false;
+ }
+ const result=level.deploy(id,slot.r,slot.c);
+ if(!result.ok){message('该位置暂时不能部署');return false;}
+ spawnUnitCard(result.unit);
+ selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
+ window.__forestHand?.onDeployment();
+ syncLevelHud();message('伐木少女已部署 · 从战士盒发出5张初始行动牌');
+ return true;
+}
 function startForestLevel(){
  level.reset();
  document.getElementById('level-end').classList.remove('is-visible');
- for(const unit of level.snapshot().units){
-  const slot=slotCenters.find(t=>t.zone==='unit'&&t.side===unit.side&&t.r===unit.r&&t.c===unit.c);
-  if(!slot)throw Error('Level missing 3x3 slot: '+unit.id);
-  const registered=unit.characterId?window.PaperchalkCharacterRegistry?.get(unit.characterId):null;
-  const portrait=registered?.portrait||unit.art||null;
-  const def={id:unit.id,kind:'unit',name:registered?.name||unit.name,src:portrait};
-  const card=makeCard(def,slot);
-  card.side=unit.side;card.unitId=unit.id;card.placeStart=now-.3;
-  card.texture=placeholderUnitTexture(unit.name,unit.side==='enemy');
-  cards.push(card);occupied.set(slot.id,card);
-  if(portrait)loadTexture(portrait,tex=>{card.texture=tex;});
- }
+ for(const unit of level.snapshot().units)if(unit.deployed)spawnUnitCard(unit);
  attackMode=true;syncLevelHud();sync();
+ message('把战士卡牌盒顶端的伐木少女部署到我方九宫格');
 }
 function tapUnit(card){
  if(!card||card.side!=='enemy'||!attackMode||level.phase!=='active')return;
@@ -637,6 +670,18 @@ window.__forestLevelDebug={
  get effects(){return fx.snapshot();},
  get slots(){return slotCenters.map(t=>({side:t.side,r:t.r,c:t.c,tileC:t.tileC,tileR:t.tileR,zone:t.zone}));},
  get units(){return cards.map(c=>({id:c.unitId,side:c.side,r:c.slot?.r,c:c.slot?.c}));},
+ get staged(){return level.snapshot().units.filter(u=>!u.deployed);},
+ get placement(){return {selected:selectedStagedId,previewSlot:previewDeployment?.slot?.id||null};},
+ get boxCount(){return window.__sceneCardHUD?.snapshot.physicalBoxes||0;},
+ get slotPoints(){return slotCenters.map(q=>({id:q.id,side:q.side,r:q.r,c:q.c,
+  point:projection2D(q.x,fx.height(q.tileC,q.tileR)+.03,q.z)}));},
+ deploy(id,r,c){
+  const slot=slotCenters.find(q=>q.zone==='unit'&&q.side==='ally'&&q.r===r&&q.c===c);
+  if(!slot)return false;
+  const pt=projection2D(slot.x,fx.height(slot.tileC,slot.tileR)+.03,slot.z);
+  const bounds=canvas.getBoundingClientRect();
+  return deployCharacterAt(id,bounds.left+pt.x/w*bounds.width,bounds.top+pt.y/h*bounds.height);
+ },
  adjust(c,r,delta){return level.canModify(c,r,delta)&&fx.adjust(c,r,delta);},
  attack(id){const card=cards.find(c=>c.unitId===id);if(!card)return false;return tapUnit(card)===true;},
  reset
