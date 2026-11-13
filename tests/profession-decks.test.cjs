@@ -37,4 +37,23 @@ assert.equal(instance.draw('warrior').ok,true);
 instance.reset();
 assert.equal(instance.snapshot().turn,1);
 assert.equal(instance.snapshot().count,5);
+const prototype=ctx.window.PaperchalkProfessionDecks.create({
+ maxHand:10,openingDraw:0,prototypeAllClasses:true,seed:618231
+});
+const firstPrototype=prototype.snapshot();
+assert.equal(firstPrototype.classes.length,7);
+assert.equal(firstPrototype.classes.filter(c=>c.unlocked&&c.deckCount===10).length,7);
+assert.equal(firstPrototype.count,0);
+const faceOrder=prototype.remainingCards('warrior').map(c=>c.id).join('|');
+for(const c of firstPrototype.classes){
+ assert.equal(prototype.remainingCards(c.id).map(x=>x.id).join('|'),faceOrder,'same prototype card order');
+ assert.equal(prototype.remainingCards(c.id).length,10);
+}
+assert.equal(prototype.draw('engineer').ok,true);
+assert.equal(prototype.snapshot().count,1);
+assert.equal(prototype.remainingCards('engineer').length,9);
+assert.equal(prototype.remainingCards('warrior').length,10,'other physical decks are truly independent');
+prototype.nextTurn();
+assert.equal(prototype.snapshot().count,0);
+assert.equal(prototype.snapshot().classes.filter(c=>c.deckCount===10).length,7);
 console.log('PROFESSION_DECKS_OK seven_stacks 10_independent_hand free_play_order first_play_draw_lock next_turn_clear');
