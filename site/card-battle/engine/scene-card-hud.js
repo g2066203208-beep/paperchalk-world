@@ -15,7 +15,7 @@ function create(o){
   ranger:'#57674a',skirmisher:'#5c5264',medic:'#596e58',summoner:'#66543f'};
  const textMap={engineer:'⚙',guardian:'盾',warrior:'斧',ranger:'弓',
   skirmisher:'影',medic:'药',summoner:'兽'};
- const cache=new Map(),portraitCache=new Map(),entered=new Map();
+ const cache=new Map(),labelCache=new Map(),portraitCache=new Map(),entered=new Map();
  const viewFov=39*Math.PI/180,cameraZ=14.5;
  let spanW=18,spanH=10,width=1920,height=1080,frame=0;
  let scene=[],clickable=[],hoverId=null,press=null,selectedDrag=null,cardDrawCalls=0,boxDrawCalls=0;
@@ -66,7 +66,7 @@ function create(o){
   const mobile=canvas.getBoundingClientRect().width<720;
   const slots=[],deckSpan=Math.min(mobile?spanW-.45:14.0,spanW-1);
   const deckScale=mobile?.32:.67;
-  const baseDeckY=mobile?-2.05:-2.15;
+  const baseDeckY=mobile?-2.92:-3.04;
   state.classes.forEach((c,i)=>{
    slots.push({kind:'deck',id:'deck:'+c.id,profession:c.id,c,
     x:(i/6-.5)*deckSpan,y:baseDeckY,z:0,scale:deckScale,angle:0});
@@ -80,7 +80,7 @@ function create(o){
    const t=hand.length===1?.5:i/(hand.length-1);
    const axis=t*2-1;
    slots.push({kind:'hand',id:'hand:'+hand[i].instance,instance:hand[i].instance,c:hand[i],
-    x:axis*spread*.5,y:-4.26+(1-axis*axis)*.25,
+    x:axis*spread*.5,y:-4.38+(1-axis*axis)*.25,
     z:1.15+(.12*(1-axis*axis)),scale:handScale,
     angle:-axis*.145,tilt:-.12+Math.abs(axis)*.07});
   }
@@ -114,6 +114,16 @@ function create(o){
   let m=mul(T(p.x,p.y,p.z),RX(-1.03));
   return mul(m,local);
  }
+ function labelTexture(c){
+  if(labelCache.has(c.id))return labelCache.get(c.id);
+  const cv=document.createElement('canvas');cv.width=512;cv.height=128;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#e1d6ba';ctx.fillRect(0,0,512,128);
+  ctx.strokeStyle='#977e5e';ctx.lineWidth=8;ctx.strokeRect(6,6,500,116);
+  ctx.fillStyle='#435440';ctx.textAlign='center';ctx.font='bold 65px serif';
+  ctx.fillText(c.name,256,88);
+  const texture=makeTexture(cv);labelCache.set(c.id,texture);return texture;
+ }
  function drawBox(p,stock){
   // Real solid box: inset floor, four independent 3D walls and eight metal corner pins.
   const w=cardW*p.scale*1.21,h=cardH*p.scale*1.17;
@@ -129,18 +139,20 @@ function create(o){
   for(const xx of [-1,1])for(const yy of [-1,1]){
    renderGeom(box,mat(xx*w*.455,yy*h*.455,.356,.065,.065,.035),trim);
   }
+  // Engraved physical category plaque belongs to the box, even when it is empty.
+  const tag=mat(0,-h*.5+.03,.40,w*.84,.22,.023);
+  renderGeom(box,tag,[1,1,1,1],labelTexture(p.c),true);
   boxDrawCalls++;
   // When a deck is empty its box interior remains visible, not a fake card back.
   if(stock===0)renderGeom(box,mat(0,0,.079,w*.55,h*.6,.014),[.14,.205,.17,1]);
  }
  function drawShelf(){
-  // A narrow tabletop lip beneath the trays, NOT a half-screen opaque UI panel.
-  const w=Math.min(spanW-1.1,16.9);
-  const m=mul(mul(T(0,-2.37,-.55),RX(-1.04)),S(w,1.02,.12));
-  renderGeom(box,m,[.40,.34,.265,1]);
-  const edge=mul(mul(T(0,-2.86,-.52),RX(-1.04)),S(w+.09,.055,.10));
-  renderGeom(box,edge,[.62,.52,.39,1]);
+  // No giant wall between table and battlefield. A thin physical lip only.
+  const w=Math.min(spanW-1.1,16.7);
+  const m=mul(T(0,-3.31,-.69),S(w,.095,.12));
+  renderGeom(box,m,[.46,.37,.26,1]);
  }
+
  function draw(now,w,h){
   frame=now;setupSize(w,h);
   const state=o.snapshot(),staged=o.staged?.()||[];
