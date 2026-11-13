@@ -396,7 +396,7 @@ function track(e){
 }
 canvas.addEventListener('pointerdown',e=>{
  const orbitTouch=e.pointerType==='touch'&&!active&&!closestCard(e.clientX,e.clientY);
- if(orbitCamera.pointerDown(e,orbitTouch)){
+ if(e.button!==2&&orbitCamera.pointerDown(e,orbitTouch)){
   e.preventDefault();pointerDown=null;handDown=null;
   if(dragCard){dragCard.dragged=false;dragCard=null;}
   canvas.style.cursor='grabbing';return;
@@ -415,7 +415,7 @@ window.addEventListener('pointermove',e=>{
  }
  if(handDown&&Math.hypot(e.clientX-handDown.x,e.clientY-handDown.y)>7)handDown.moved=true;
  if(pointerDown?.card&&!dragCard&&Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y)>7){
- dragCard=pointerDown.card;dragCard.dragged=true;}
+ /* tutorial units fixed by level manifest */}
  track(e);canvas.style.cursor=dragCard?'grabbing':active?'crosshair':hoverCard?'grab':'default';
 });
 window.addEventListener('pointerup',e=>{
@@ -427,7 +427,7 @@ window.addEventListener('pointerup',e=>{
  if(handDown){if(handDown.moved&&onBoard&&active?.id===handDown.id)drop(overSlot);handDown=null;return;}
  if(pointerDown?.placement&&active&&onBoard)drop(overSlot);
  else if(dragCard){move(dragCard,overSlot);dragCard.dragged=false;dragCard=null;}
- else if(pointerDown?.card)pointerDown.card.attackStart=now;
+ else if(pointerDown?.card)tapUnit(pointerDown.card);
  pointerDown=null;canvas.style.cursor=active?'crosshair':'default';
 });
 window.addEventListener('pointercancel',e=>{orbitCamera.pointerUp(e);if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;handDown=null;});
@@ -435,7 +435,7 @@ canvas.addEventListener('wheel',e=>{
  e.preventDefault();
  orbitCamera.zoom(Math.exp(Math.max(-500,Math.min(500,e.deltaY))*.00125));
 },{passive:false});
-canvas.addEventListener('dblclick',e=>{if(active)return;let c=closestCard(e.clientX,e.clientY);if(c){c.flipTarget+=Math.PI;c.attackStart=now;}});
+canvas.addEventListener('dblclick',e=>{if(active)return;let c=closestCard(e.clientX,e.clientY);if(c?.side==='enemy')tapUnit(c);});
 // Right mouse button is reserved for camera orbit; cards still flip by double click.
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
@@ -449,8 +449,8 @@ window.addEventListener('keydown',e=>{
  if(e.code==='KeyS'||e.code==='ArrowDown')orbitCamera.pan(0,-24);
  if(e.code==='KeyA'||e.code==='ArrowLeft')orbitCamera.pan(24,0);
  if(e.code==='KeyD'||e.code==='ArrowRight')orbitCamera.pan(-24,0);
- if(e.code==='KeyQ')orbitCamera.rotate(-18,0);
- if(e.code==='KeyE')orbitCamera.rotate(18,0);
+ // This level locks orbit rotation.
+ // Pan and zoom are bounded.
 });
 function drawHighlights(){
  const d=dragCard?.def||active;if(!d)return;
@@ -462,7 +462,7 @@ function drawHighlights(){
   if(!relevant&&!near)continue;
   const fill=good?[.19,.72,.31,near?.36:(d.kind==='terrain'?.11:.18)]:[.90,.20,.23,near?.35:.045];
   const edge=good?[.08,.61,.25,near?.85:.24]:[.85,.18,.19,near?.82:.11];
-  const y=terrain.cell(s.tileC,s.tileR).height+.014;
+  const y=fx.height(s.tileC,s.tileR)+.014;
   const sz=d.kind==='terrain'?S(terrain.tileW/slotW*.98,terrain.tileD/slotH*.98,1):I();
   renderGeom(slotFill,mul(mul(T(s.x,y,s.z),RX(-Math.PI/2)),sz),fill,null,true);
   renderGeom(RRstrip,mul(mul(T(s.x,y+.008,s.z),RX(-Math.PI/2)),sz),edge,null,true);
@@ -471,7 +471,7 @@ function drawHighlights(){
 }
 function drawShadows(now){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
 for(const c of cards){for(let i=0;i<1;i++){let scale=1+.04*i;
-let m=mul(T(c.x+.10+i*.025,terrain.cell(c.slot.tileC,c.slot.tileR).height+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
+let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
 function drawStage(){terrainRenderer.draw();}
 let previousFrameTime=0;
@@ -484,13 +484,13 @@ function frame(timeMs){
  for(const c of cards){
   c.hover=lerp(c.hover,(c===hoverCard||c.dragged)?1:0,.17);
   if(!c.dragged){c.x=lerp(c.x,c.homeX,.16);c.z=lerp(c.z,c.homeZ,.16);}
-  const levelY=c.slot?terrain.cell(c.slot.tileC,c.slot.tileR).height+.25:.13;
+  const levelY=c.slot?fx.height(c.slot.tileC,c.slot.tileR)+.25:.13;
   c.y=lerp(c.y,levelY+Math.sin(now*1.15+c.seed)*.017+(c.hover*.23)+(c.dragged?.36:0),.2);
   c.flip=lerp(c.flip,c.flipTarget,.11);
  }
  drawShadows(now);
  for(const c of [...cards].sort((a,b)=>a.z-b.z))drawCard(c,now);
- if(active&&preview&&onBoard&&!dragCard){preview.hover=1;preview.y=(overSlot?terrain.cell(overSlot.tileC,overSlot.tileR).height:.0)+.85+Math.sin(now*2)*.025;drawCard(preview,now);}
+ if(active&&preview&&onBoard&&!dragCard){preview.hover=1;preview.y=(overSlot?fx.height(overSlot.tileC,overSlot.tileR):.0)+.85+Math.sin(now*2)*.025;drawCard(preview,now);}
  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
