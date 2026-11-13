@@ -124,33 +124,52 @@ function create(o){
   ctx.fillText(c.name,256,88);
   const texture=makeTexture(cv);labelCache.set(c.id,texture);return texture;
  }
- function drawBox(p,stock){
-  // Real solid box: inset floor, four independent 3D walls and eight metal corner pins.
-  const w=cardW*p.scale*1.21,h=cardH*p.scale*1.17;
-  const wall=Math.max(.038,p.scale*.085),depth=.20;
-  const mat=(xx,yy,zz,sx,sy,sz)=>boxLocal(p,mul(T(xx,yy,zz),S(sx,sy,sz)));
-  const base=[.35,.29,.225,1],side=[.47,.38,.27,1],inner=[.22,.285,.22,1];
-  renderGeom(box,mat(0,0,-.07,w,h,.24),base);
-  renderGeom(box,mat(0,0,.066,w-wall*2,h-wall*2,.018),inner);
-  for(const sideSign of [-1,1]){
-   renderGeom(box,mat(sideSign*(w-wall)/2,0,.14,wall,h,.40),side);
-   renderGeom(box,mat(0,sideSign*(h-wall)/2,.14,w,wall,.40),side);
+ function drawConnectedTray(decks){
+  if(decks.length!==7)return;
+  // ONE physically continuous seven-compartment chip tray.  No detached boxes.
+  // Every class shares one solid chassis; six separators create seven sockets.
+  const pitch=decks[1].x-decks[0].x;
+  const width=pitch*7;
+  const slotHeight=cardH*decks[0].scale*1.26;
+  const wall=Math.max(.065,decks[0].scale*.11);
+  const originX=(decks[0].x+decks[6].x)/2;
+  const originY=decks[0].y;
+  const baseTransform=mul(T(originX,originY,0),RX(-1.03));
+  const piece=(x,y,z,sx,sy,sz)=>mul(baseTransform,mul(T(x,y,z),S(sx,sy,sz)));
+  const walnut=[.32,.255,.185,1],woodEdge=[.48,.365,.245,1];
+  const rim=[.57,.445,.305,1],felt=[.17,.245,.195,1],feltShade=[.125,.185,.155,1];
+  // Solid full-width body — it remains ONE large box even when all decks are empty.
+  renderGeom(box,piece(0,0,-.14,width,slotHeight,.29),walnut);
+  renderGeom(box,piece(0,0,.032,width-.20,slotHeight-.18,.035),woodEdge);
+  for(let i=0;i<7;i++){
+   const x=(i-3)*pitch;
+   renderGeom(box,piece(x,0,.061,pitch-wall*1.55,slotHeight-wall*2.0,.022),felt);
+   renderGeom(box,piece(x,slotHeight*.36,.075,pitch-wall*1.9,slotHeight*.14,.020),feltShade);
   }
-  for(const xx of [-1,1])for(const yy of [-1,1]){
-   renderGeom(box,mat(xx*w*.455,yy*h*.455,.356,.065,.065,.035),trim);
+  // Four connected outer walls and six shared partitions, as in a chip tray.
+  for(const side of [-1,1]){
+   renderGeom(box,piece(side*(width-wall)/2,0,.205,wall,slotHeight,.42),woodEdge);
+   renderGeom(box,piece(0,side*(slotHeight-wall)/2,.205,width,wall,.42),woodEdge);
   }
-  // Engraved physical category plaque belongs to the box, even when it is empty.
-  const tag=mat(0,-h*.5+.03,.40,w*.84,.22,.023);
-  renderGeom(box,tag,[1,1,1,1],labelTexture(p.c),true);
-  boxDrawCalls++;
-  // When a deck is empty its box interior remains visible, not a fake card back.
-  if(stock===0)renderGeom(box,mat(0,0,.079,w*.55,h*.6,.014),[.14,.205,.17,1]);
- }
- function drawShelf(){
-  // No giant wall between table and battlefield. A thin physical lip only.
-  const w=Math.min(spanW-1.1,16.7);
-  const m=mul(T(0,-3.31,-.69),S(w,.095,.12));
-  renderGeom(box,m,[.46,.37,.26,1]);
+  for(let i=1;i<7;i++){
+   const x=-width/2+i*pitch;
+   renderGeom(box,piece(x,0,.205,wall,slotHeight-.04,.41),woodEdge);
+  }
+  // One uninterrupted highlighted front edge emphasizes the joined chassis.
+  renderGeom(box,piece(0,-slotHeight*.5+.035,.417,width-.12,.046,.034),rim);
+  for(let i=0;i<7;i++){
+   const x=(i-3)*pitch;
+   renderGeom(box,piece(x,-slotHeight*.5+.13,.434,pitch*.70,
+    Math.min(.24,slotHeight*.20),.024),[1,1,1,1],labelTexture(decks[i].c),true);
+  }
+  // Metallic pins are shared at the actual physical divider intersections.
+  for(let i=0;i<=7;i++){
+   const x=-width/2+i*pitch;
+   for(const y of [-slotHeight*.5+.03,slotHeight*.5-.03]){
+    renderGeom(box,piece(x,y,.445,.061,.060,.035),[.70,.60,.405,1]);
+   }
+  }
+  boxDrawCalls=7;
  }
 
  function draw(now,w,h){
@@ -165,9 +184,8 @@ function create(o){
   const wasVP=getVP();
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(viewFov,width/height,.1,80),T(0,0,-cameraZ)));
-  drawShelf();
+  drawConnectedTray(positions.filter(p=>p.kind==='deck'));
   for(const pos of positions.filter(p=>p.kind==='deck')){
-   drawBox(pos,pos.c.deckCount);
    const tex=makeTextTexture({title:pos.c.name,profession:pos.profession,back:true});
    for(let n=0;n<pos.c.deckCount;n++){
     // True discrete cards: each one separately draws the same battlefield card geometry.
@@ -272,7 +290,7 @@ function create(o){
    return {
     visible:scene.map(p=>({kind:p.kind,id:p.id,x:p.x,y:p.y})),
     count:state.count,
-    physicalBoxes:boxDrawCalls,
+    physicalBoxes:boxDrawCalls,connectedTray:true,trayBodies:1,compartments:7,
     physicalDeckCards:state.classes.reduce((n,c)=>n+c.deckCount,0),
     stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     renderedCardMeshes:cardDrawCalls,
@@ -285,5 +303,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'2.0.0',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'2.1.0',create});
 })(window);
