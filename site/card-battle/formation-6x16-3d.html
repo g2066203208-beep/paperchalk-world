@@ -15,7 +15,7 @@
 .hand-card.active{outline:2px solid #3c985a;outline-offset:2px}.hand-card img{width:100%;height:100%;object-fit:cover;display:block}
 .hand-card .name{display:block;font:clamp(11px,1.1vw,17px) serif;color:#514e43}
 .hand-card .kind{position:absolute;bottom:4px;left:0;right:0;text-align:center;font:10px system-ui;color:#777466}
-#reset{background:#eae9e3cf;border:1px solid #b3afa6;border-radius:7px;padding:6px 9px;cursor:pointer;margin-bottom:3px;font:11px system-ui!important}
+#reset,#demo{background:#eae9e3cf;border:1px solid #b3afa6;border-radius:7px;padding:6px 9px;cursor:pointer;margin-bottom:3px;font:11px system-ui!important}
 #note{bottom:145px;opacity:0;transition:opacity .2s;background:#f6f5ebeb;color:#45463f;padding:4px 12px;border-radius:15px;width:max-content;max-width:90vw;left:50%;transform:translateX(-50%)}
 @media(max-width:700px){.hand-card{width:clamp(40px,11vw,62px)}#hand{gap:4px}#note{bottom:110px}}
 </style>
@@ -23,7 +23,7 @@
 <body>
 <canvas id="stage" aria-label="六行十六列真3D卡牌容量测试；固定高位俯视；每张卡是独立可悬浮与翻转的三维物体"></canvas>
 <div id="note" aria-live="polite"></div>
-<div id="hand" role="toolbar" aria-label="测试手牌"><button type="button" id="reset">重置</button></div>
+<div id="hand" role="toolbar" aria-label="测试手牌"><button type="button" id="demo">七人布阵</button><button type="button" id="reset">重置</button></div>
 <script>
 'use strict';
 (()=>{
@@ -65,10 +65,22 @@ function lerp(a,b,t){return a+(b-a)*t;}const clamp=(v,a,b)=>Math.max(a,Math.min(
 // True 2:3 card proportions; six near-full-height ranks in a fixed 1920x1080 reference frame.
 const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
 const COLS=16,ROWS_PER_SIDE=3;
-const gridCols=Array.from({length:COLS},(_,i)=>(i-7.5)*1.8);
 const enemyRows=[-7.725,-5.075,-2.425],allyRows=[.225,2.875,5.525];
-const slotCenters=[...enemyRows.map((z,r)=>gridCols.map((x,c)=>({side:'enemy',r,c,x,z,zone:c>=4&&c<=11?'unit':'facility',id:'enemy-'+r+'-'+c}))).flat(),
-...allyRows.map((z,r)=>gridCols.map((x,c)=>({side:'ally',r,c,x,z,zone:c>=4&&c<=11?'unit':'facility',id:'ally-'+r+'-'+c}))).flat()];
+// Real home bases: exactly 3x3 unit positions for each side (max seven units).
+// Facility cards belong on the flanks, not in an eight-column-wide 'unit' strip.
+// Separate horizontal centers permit a perfectly centered 3-column home base on a 16-column field.
+const UNIT_X=[-2.05,0,2.05];
+const FACILITY_LEFT_X=[-11.35,-9.15,-6.95,-4.75];
+const FACILITY_RIGHT_X=[4.75,6.95,9.15,11.35];
+const slotCenters=[];
+for(const [side,rows] of [['enemy',enemyRows],['ally',allyRows]]){
+ for(let r=0;r<ROWS_PER_SIDE;r++){
+  const z=rows[r];
+  UNIT_X.forEach((x,c)=>slotCenters.push({side,r,c,x,z,zone:'unit',id:side+'-'+r+'-unit-'+c}));
+  FACILITY_LEFT_X.forEach((x,c)=>slotCenters.push({side,r,c,x,z,zone:'facility',flank:'left',id:side+'-'+r+'-facility-left-'+c}));
+  FACILITY_RIGHT_X.forEach((x,c)=>slotCenters.push({side,r,c,x,z,zone:'facility',flank:'right',id:side+'-'+r+'-facility-right-'+c}));
+ }
+}
 const occupied=new Map();const cards=[];
 const handDefs=[
 {id:'ringmaster',kind:'unit',name:'团长',src:'../assets/cards/wonder-circus/01_ringmaster.png'},
@@ -196,6 +208,19 @@ function move(c,s){
 }
 function reset(){cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();}
 document.getElementById('reset').addEventListener('click',reset);
+document.getElementById('demo').addEventListener('click',()=>{
+ // Symmetrical 2-3-2 preview, using the seven original full-art circus character cards.
+ cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();
+ const positions=[[0,0],[0,2],[1,0],[1,1],[1,2],[2,0],[2,2]];
+ const actors=handDefs.filter(d=>d.kind==='unit');
+ positions.forEach(([r,c],i)=>{
+  const slot=slotCenters.find(s=>s.side==='ally'&&s.zone==='unit'&&s.r===r&&s.c===c);
+  if(!slot)return;
+  const card=makeCard(actors[i],slot);
+  card.placeStart=now-i*.055-.25;occupied.set(slot.id,card);cards.push(card);
+ });
+ sync();message('已摆好对称的七人3×3阵型，可拖动调整');
+});
 function closestCard(clientX,clientY){
  const cr=canvas.getBoundingClientRect(),px=(clientX-cr.left)*w/cr.width,py=(clientY-cr.top)*h/cr.height;
  let best=null,score=1e9;for(const c of cards){
@@ -242,11 +267,14 @@ function drawHighlights(){
  const d=dragCard?.def||active;if(!d)return;
  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
  for(const s of slotCenters){
- const good=valid(d,s,dragCard),near=s===overSlot&&onBoard;
- const fill=good?[.19,.72,.31,near?.37:.18]:[.90,.20,.23,near?.35:.10];
- const edge=good?[.08,.61,.25,near?.85:.28]:[.85,.18,.19,near?.85:.21];
- renderGeom(slotFill,mul(T(s.x,-.102,s.z),RX(-Math.PI/2)),fill,null,true);
- renderGeom(RRstrip,mul(T(s.x,-.095,s.z),RX(-Math.PI/2)),edge,null,true);
+  const good=valid(d,s,dragCard),near=s===overSlot&&onBoard;
+  // Highlight the relevant home-base or facility slots, not an overwhelming red 16x6 checkerboard.
+  const relevant=s.side==='ally'&&s.zone===d.kind;
+  if(!relevant&&!near)continue;
+  const fill=good?[.19,.72,.31,near?.38:.18]:[.90,.20,.23,near?.32:.055];
+  const edge=good?[.08,.61,.25,near?.9:.32]:[.85,.18,.19,near?.84:.12];
+  renderGeom(slotFill,mul(T(s.x,-.102,s.z),RX(-Math.PI/2)),fill,null,true);
+  renderGeom(RRstrip,mul(T(s.x,-.095,s.z),RX(-Math.PI/2)),edge,null,true);
  }
  gl.depthMask(true);gl.disable(gl.BLEND);
 }
