@@ -17,7 +17,8 @@
 - 战士·伐木少女：已有用户批准的**萝莉伐木工**美术母图档案及 V5 提示词；原 PNG 是否已上传真实路径仍需验证，参见 [正式档案](../characters/FARMER_FACTION_WARRIOR_LOLI_LUMBERJACK_APPROVED_20261113.md)。
 - 工程师·农耕少女：农夫 V1 失败、V2 更新提示词；V2 **仍是候选**，不是已完成图，参见 [农夫 V2](../characters/FARMER_FACTION_ENGINEER_LOLI_FARMER_ANIMA_CANDIDATE_20261113.md)。
 - 射手·猎户少女：当前制作 [Anima 立绘 V1 候选](../characters/FARMER_FACTION_ARCHER_VILLAGE_HUNTRESS_ANIMA_CANDIDATE_20261113.md)。不要把农民猎户少女画成独立「怪物猎人组织」的黑色长大衣职业猎人。
-- 医师、守卫、游击者、召唤师：身份方向由用户表格锁定，具体人物形象与 PNG 未批准，不能谎称已完成。
+- 医师·采药少女：已编写 [Anima V1 立绘候选](../characters/FARMER_FACTION_MEDIC_HERBALIST_ANIMA_CANDIDATE_20261113.md)，仅文字入库；实际图片尚未生成/批准。
+- 守卫、游击者、召唤师：身份方向由用户表格锁定，具体人物形象与 PNG 未批准，不能谎称已完成。
 - 原始人物素材画布 **704×1024 px**，各角色可独立采用不同自然表情、动作及面相；衣物须有传统农村生活感，不穿现代工装、运动鞋或凭空穿越到现代。
 - 图像是否透明需用真实 Alpha 检查；提示词、文档、生成图、审批和入库均为独立状态。
 
