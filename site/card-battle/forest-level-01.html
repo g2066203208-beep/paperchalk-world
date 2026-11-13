@@ -67,7 +67,7 @@ html,body{background:#d8ded0}
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=6"></script>
+<script src="./engine/scene-card-hud.js?v=7"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -632,7 +632,7 @@ function deployCharacterAt(id,x,y){
  spawnUnitCard(result.unit);
  selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
  window.__forestHand?.onDeployment();
- syncLevelHud();message('伐木少女已部署 · 点击下方正面牌堆手动摸牌');
+ syncLevelHud();
  return true;
 }
 function startForestLevel(){
@@ -640,7 +640,7 @@ function startForestLevel(){
  document.getElementById('level-end').classList.remove('is-visible');
  for(const unit of level.snapshot().units)if(unit.deployed)spawnUnitCard(unit);
  attackMode=true;syncLevelHud();sync();
- message('把战士卡牌盒顶端的伐木少女部署到我方九宫格');
+ // Physical hero card and highlighted ally cells convey deployment without an overlay.
 }
 function tapUnit(card){
  if(!card||card.side!=='enemy'||!attackMode||level.phase!=='active')return;
