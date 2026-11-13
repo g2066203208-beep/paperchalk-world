@@ -1,5 +1,10 @@
 # Paperchalk World — agent working rules
 
+## 2026-11-13 HARD RULE — ACTIVE 3D CARD MINIGAME; RETIRED OLD TIMEGRID TABLETOP
+
+**Before any card minigame/forest-level request, read [active 3D card game and retired tabletop status](docs/game/ACTIVE_3D_CARD_BOARD_AND_RETIRED_TABLETOP_20261113.md).** The correct playable hosted entry is `site/card-battle/formation-6x16-3d.html` (16x6 true 3D terrain with each side's 3x3 tactical unit cells, facilities flanking). User explicitly requested deletion of the *old standalone Timegrid tabletop duel*. Old `site/card-battle/index.html` now redirects to the 3D game; old `scene.js`, `grid-preview.js`, and their obsolete browser test have been deleted. **Do not call the old dark-wood Timegrid tabletop the current minigame, and do not resurrect it.** The separate horror RPG ring arena still uses a shared Timegrid engine, which is outside this standalone page retirement. Future forest tutorial 1 friendly lumberjack vs 2 enemies is PLANNED, not yet implemented.
+
+
 **2026-11-13 FARMER FACTION ART PILOT:** Before drafting/revising the farmer faction's **warrior/lumberjack loli recruit**, read [the complete candidate Anima prompt](docs/characters/FARMER_FACTION_LUMBERJACK_LOLI_ANIMA_CANDIDATE_20261113.md). This is a **profession-specific** recruit, not a generic civilian and not a new eighth combat class. 704×1024 portrait, full body/axe visible, alpha target. The current faction minion prompt override prohibits ALL LoRA, artist tags, style descriptors and safe in its positive prompt; approved generic negative only. The old 672×1024 minion spec is superseded for these new cards by the user's 704×1024 correction. This candidate art is not approved PNG.
 
 
