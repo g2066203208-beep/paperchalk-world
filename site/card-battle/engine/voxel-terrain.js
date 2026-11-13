@@ -461,8 +461,10 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
   // Every internal elevation joins the same continuous C1-smooth surface.
   renderGeom(outer.wall,base,grid.materials.grass.side);
   renderGeom(outer.lip,base,grid.materials.grass.edge);
-  for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++)
-   renderGeom(tiles[r][c],base,grid.color(c,r),texture,false,true);
+  for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
+   const cell=grid.cell(c,r);
+   renderGeom(tiles[r][c],base,grid.color(c,r),texture,false,grid.materials[cell.kind].side);
+  }
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
   renderGeom(seams,base,[.13,.19,.12,.085],null,true);
   gl.depthMask(true);gl.disable(gl.BLEND);
