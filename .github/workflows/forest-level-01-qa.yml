@@ -1,0 +1,44 @@
+name: Forest Level 01 Modular Engine QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/forest-level-01.html'
+      - 'site/card-battle/engine/level-engine.js'
+      - 'site/card-battle/engine/voxel-animations.js'
+      - 'site/card-battle/engine/forest-environment.js'
+      - 'site/card-battle/levels/forest-01.js'
+      - 'tests/forest-level-core.test.cjs'
+      - 'tests/forest-level-01-browser.mjs'
+      - '.github/workflows/forest-level-01-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  first-level:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test isolated level and voxel animation engines
+        run: node tests/forest-level-core.test.cjs
+      - name: Install Chromium + Playwright
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve deployed folder locally
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/forest-level-http.log 2>&1 &
+          sleep 2
+      - name: Verify 18 slots, forest, animations, victory, mobile
+        run: node tests/forest-level-01-browser.mjs
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forest-level-01-qa-screenshots
+          path: artifacts/forest-level-01/
+          if-no-files-found: warn
