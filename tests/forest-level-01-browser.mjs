@@ -60,6 +60,7 @@ try{
  assert.ok(place,'must have a valid ally 3x3 target');
  await page.mouse.move(place.point.x,place.point.y);
  await page.mouse.click(place.point.x,place.point.y);
+ await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.stagedCharacterCards===0&&window.__sceneCardHUD?.snapshot?.count===5,{timeout:9000});
  const deployed=await page.evaluate(()=>({
   phase:window.__forestLevelDebug.state.phase,
   units:window.__forestLevelDebug.units,
