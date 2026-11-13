@@ -152,7 +152,7 @@ function create(o){
   cardDrawCalls=0;boxDrawCalls=0;
   const wasVP=getVP();
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
-  uniformVP(perspective(viewFov,width/height,.1,80));
+  uniformVP(mul(perspective(viewFov,width/height,.1,80),T(0,0,-cameraZ)));
   drawShelf();
   for(const pos of positions.filter(p=>p.kind==='deck')){
    drawBox(pos,pos.c.deckCount);
