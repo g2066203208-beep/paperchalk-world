@@ -1,0 +1,20 @@
+{
+  "id": "farmer-engineer-farmer",
+  "name": "农夫",
+  "faction": "farmer",
+  "factionName": "农民组织",
+  "profession": "engineer",
+  "roleName": "农夫",
+  "variant": "young",
+  "approved": true,
+  "art": "01-farmer.png",
+  "width": 704,
+  "height": 1024,
+  "sourcePrompt": null,
+  "tags": [
+    "草帽",
+    "菜篮",
+    "耕种",
+    "工程师"
+  ]
+}
