@@ -23,18 +23,23 @@ for(const character of [
     ]
   },
   {
-    "id": "farmer-faction-ranger-01-huntress",
-    "name": "01-huntress",
-    "faction": "farmer-faction",
+    "id": "farmer-ranger-huntress",
+    "name": "猎户少女",
+    "faction": "farmer",
     "profession": "ranger",
     "portrait": "../assets/characters/farmer-faction/ranger/01-huntress.png",
-    "approved": false,
+    "approved": true,
     "width": 704,
     "height": 1024,
-    "roleName": "",
-    "variant": "",
-    "sourcePrompt": null,
-    "tags": []
+    "roleName": "猎户",
+    "variant": "young",
+    "sourcePrompt": "docs/characters/FARMER_FACTION_ARCHER_VILLAGE_HUNTRESS_ANIMA_CANDIDATE_20261113.md",
+    "tags": [
+      "猎户",
+      "弓箭",
+      "乡村",
+      "射手"
+    ]
   },
   {
     "id": "farmer-warrior-loli-lumberjack",
