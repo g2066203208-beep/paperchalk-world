@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>6排满屏 · 真3D卡牌容量测试</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e8e8e6}
+#stage{display:block;width:100vw;height:100dvh;touch-action:none;cursor:default;outline:0}
+#note{position:fixed;inset:auto 0 10px;text-align:center;font:11px system-ui,sans-serif;color:#777;opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="stage" aria-label="六行十六列真3D卡牌容量测试；固定高位俯视；每张卡是独立可悬浮与翻转的三维物体"></canvas>
+<div id="note"></div>
+<script>
+'use strict';
+(()=>{
+const canvas=document.getElementById('stage');
+const gl=canvas.getContext('webgl',{antialias:true,alpha:false,premultipliedAlpha:false,depth:true,stencil:false,preserveDrawingBuffer:true})
+       ||canvas.getContext('experimental-webgl');
+if(!gl){document.getElementById('note').style.opacity=1;document.getElementById('note').textContent='浏览器未开启 WebGL';return;}
+const VSH=`attribute vec3 aP;attribute vec3 aN;attribute vec2 aUV;
+uniform mat4 uM,uVP;varying vec3 vN,vP;varying vec2 vUV;
+void main(){vec4 world=uM*vec4(aP,1.);vP=world.xyz;vN=normalize(mat3(uM)*aN);vUV=aUV;gl_Position=uVP*world;}`;
+const FSH=`precision mediump float;varying vec3 vN,vP;varying vec2 vUV;
+uniform vec4 uColor;uniform sampler2D uTex;uniform float uTexEnabled,uUnlit;
+void main(){vec4 base=uColor;if(uTexEnabled>.5){vec4 sampled=texture2D(uTex,vUV);if(sampled.a<.02)discard;base*=sampled;}
+vec3 normal=normalize(vN);vec3 light=normalize(vec3(-.39,.89,.46));
+float diffuse=max(0.,dot(normal,light));float lightness=mix(1.,.78+.23*diffuse,uUnlit<.5?1.:0.);
+float subtleSpec=pow(max(0.,dot(reflect(-light,normal),normalize(vec3(0.,1.,1.)))),45.)*.07;
+gl_FragColor=vec4(base.rgb*(lightness+subtleSpec),base.a);}`;
+function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+const pg=gl.createProgram();gl.attachShader(pg,shader(gl.VERTEX_SHADER,VSH));gl.attachShader(pg,shader(gl.FRAGMENT_SHADER,FSH));gl.linkProgram(pg);
+if(!gl.getProgramParameter(pg,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(pg));gl.useProgram(pg);
+const attr={p:gl.getAttribLocation(pg,'aP'),n:gl.getAttribLocation(pg,'aN'),uv:gl.getAttribLocation(pg,'aUV')};
+const U={m:gl.getUniformLocation(pg,'uM'),vp:gl.getUniformLocation(pg,'uVP'),color:gl.getUniformLocation(pg,'uColor'),tex:gl.getUniformLocation(pg,'uTex'),has:gl.getUniformLocation(pg,'uTexEnabled'),unlit:gl.getUniformLocation(pg,'uUnlit')};
+gl.uniform1i(U.tex,0);
+const colors={background:[.895,.897,.892,1],base:[.846,.849,.846,1],platform:[.933,.935,.928,1],boardTop:[.942,.944,.938,1],boardEdge:[.823,.830,.822,1],boardSide:[.755,.763,.754,1],grid:[.825,.831,.827,1],gridFill:[.923,.927,.922,1],border:[.977,.977,.966,1],rim:[.784,.788,.777,1],inner:[.966,.967,.963,1],back:[.69,.70,.69,1],backInset:[.81,.815,.807,1],shadow:[.19,.21,.19,.095],shadow2:[.18,.2,.18,.05]};
+// Simple column-major math. All transforms are 3D matrices rendered by WebGL.
+function I(){return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);}
+function mul(a,b){const r=new Float32Array(16);for(let c=0;c<4;c++)for(let row=0;row<4;row++)r[c*4+row]=a[0*4+row]*b[c*4+0]+a[1*4+row]*b[c*4+1]+a[2*4+row]*b[c*4+2]+a[3*4+row]*b[c*4+3];return r;}
+function T(x,y,z){let m=I();m[12]=x;m[13]=y;m[14]=z;return m;}
+function S(x,y,z){let m=I();m[0]=x;m[5]=y;m[10]=z;return m;}
+function RX(a){let m=I(),c=Math.cos(a),s=Math.sin(a);m[5]=c;m[6]=s;m[9]=-s;m[10]=c;return m;}
+function RY(a){let m=I(),c=Math.cos(a),s=Math.sin(a);m[0]=c;m[2]=-s;m[8]=s;m[10]=c;return m;}
+function RZ(a){let m=I(),c=Math.cos(a),s=Math.sin(a);m[0]=c;m[1]=s;m[4]=-s;m[5]=c;return m;}
+function perspective(fov,aspect,n,f){let m=new Float32Array(16),s=1/Math.tan(fov/2);m[0]=s/aspect;m[5]=s;m[10]=(f+n)/(n-f);m[11]=-1;m[14]=2*f*n/(n-f);return m;}
+function ortho(l,r,b,t,n,f){let m=I();m[0]=2/(r-l);m[5]=2/(t-b);m[10]=-2/(f-n);m[12]=-(r+l)/(r-l);m[13]=-(t+b)/(t-b);m[14]=-(f+n)/(f-n);return m;}
+function lookAt(eye,target,up){const normalize=a=>{let l=Math.hypot(...a);return a.map(x=>x/l)};const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const z=normalize([eye[0]-target[0],eye[1]-target[1],eye[2]-target[2]]),x=normalize(cross(up,z)),y=cross(z,x);let m=I();m[0]=x[0];m[1]=y[0];m[2]=z[0];m[4]=x[1];m[5]=y[1];m[6]=z[1];m[8]=x[2];m[9]=y[2];m[10]=z[2];m[12]=-x[0]*eye[0]-x[1]*eye[1]-x[2]*eye[2];m[13]=-y[0]*eye[0]-y[1]*eye[1]-y[2]*eye[2];m[14]=-z[0]*eye[0]-z[1]*eye[1]-z[2]*eye[2];return m;}
+function transform(m,p){const x=p[0],y=p[1],z=p[2],w=p[3]??1;return [m[0]*x+m[4]*y+m[8]*z+m[12]*w,m[1]*x+m[5]*y+m[9]*z+m[13]*w,m[2]*x+m[6]*y+m[10]*z+m[14]*w,m[3]*x+m[7]*y+m[11]*z+m[15]*w];}
+function lerp(a,b,t){return a+(b-a)*t;}const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const smooth=x=>x*x*(3-2*x);
+// True 2:3 card proportions; six near-full-height ranks in a fixed 1920x1080 reference frame.
+const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
+const COLS=16,ROWS_PER_SIDE=3;
+const gridCols=Array.from({length:COLS},(_,i)=>(i-7.5)*1.8);
+const enemyRows=[-6.625,-3.975,-1.325],allyRows=[1.325,3.975,6.625];
+const slotCenters=[...enemyRows.map((z,r)=>gridCols.map((x,c)=>({side:'enemy',r,c,x,z}))).flat(),...allyRows.map((z,r)=>gridCols.map((x,c)=>({side:'ally',r,c,x,z}))).flat()];
+const cards=slotCenters.map((s,i)=>({id:s.side+'-'+s.r+'-'+s.c,side:s.side,slot:s,homeX:s.x,homeZ:s.z,x:s.x,z:s.z,seed:i*1.317,t:0,y:.13,hover:0,theta:0,flip:0,flipTarget:0,attackStart:-10000,selected:false,dragged:false,texture:null}));
+function makeGeom(vertices,indices){const vao={};vao.b=gl.createBuffer();vao.i=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vao.b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,vao.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);vao.count=indices.length;return vao;}
+const box=(()=>{const vs=[],ids=[];const face=(p,n)=>{const k=vs.length/8;p.forEach(([x,y,z],i)=>vs.push(x,y,z,...n,(i===0||i===3)?0:1,(i<2)?0:1));ids.push(k,k+1,k+2,k,k+2,k+3);};
+face([[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5]],[0,1,0]);
+face([[.5,-.5,.5],[-.5,-.5,.5],[-.5,-.5,-.5],[.5,-.5,-.5]],[0,-1,0]);
+face([[-.5,-.5,.5],[.5,-.5,.5],[.5,.5,.5],[-.5,.5,.5]],[0,0,1]);
+face([[.5,-.5,-.5],[-.5,-.5,-.5],[-.5,.5,-.5],[.5,.5,-.5]],[0,0,-1]);
+face([[.5,-.5,.5],[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5]],[1,0,0]);
+face([[-.5,-.5,-.5],[-.5,-.5,.5],[-.5,.5,.5],[-.5,.5,-.5]],[-1,0,0]);return makeGeom(vs,ids);})();
+function rrPoints(w,h,r){const out=[];for(const [cx,cy,start] of [[w/2-r,h/2-r,0],[-w/2+r,h/2-r,90],[-w/2+r,-h/2+r,180],[w/2-r,-h/2+r,270]])for(let i=0;i<=6;i++){let a=(start+i*15)*Math.PI/180;out.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}return out;}
+function rrFace(w,h,r,z,reverse=false){const ring=rrPoints(w,h,r),v=[0,0,z,0,0,reverse?-1:1,.5,.5],indices=[];
+for(const [x,y] of ring)v.push(x,y,z,0,0,reverse?-1:1,x/w+.5,y/h+.5);for(let i=0;i<ring.length;i++)if(reverse)indices.push(0,1+(i+1)%ring.length,i+1);else indices.push(0,i+1,1+(i+1)%ring.length);return makeGeom(v,indices);}
+function rrEdge(w,h,r,d){const ring=rrPoints(w,h,r),v=[],idx=[];for(let i=0;i<ring.length;i++){const p=ring[i],q=ring[(i+1)%ring.length],normal=[p[0]/(w/2),p[1]/(h/2),0];for(const z of [-d/2,d/2])v.push(p[0],p[1],z,...normal,p[0]/w+.5,p[1]/h+.5);}for(let i=0;i<ring.length;i++){let j=(i+1)%ring.length,a=2*i,b=2*j;idx.push(a,b,a+1,b,b+1,a+1);}return makeGeom(v,idx);}
+const outerFace=rrFace(cardW,cardH,.105,cardD/2),backFace=rrFace(cardW,cardH,.105,-cardD/2,true),cardEdge=rrEdge(cardW,cardH,.105,cardD),inset=rrFace(cardW-.105,cardH-.105,.064,cardD/2+.008),insetBack=rrFace(cardW-.21,cardH-.21,.05,-cardD/2-.008,true);
+const cardDetail=rrFace(cardW-.205,cardH-.205,.041,cardD/2+.010);
+const plate=rrFace(cardW,cardH,.105,0); // screen-space grid slot outlines as 3D geometry
+const RRstrip=(()=>{const outer=rrPoints(slotW,slotH,.14),inner=rrPoints(slotW-.048,slotH-.048,.114),v=[],ind=[];for(let i=0;i<outer.length;i++){let p=outer[i],q=inner[i];v.push(p[0],p[1],0,0,0,1,p[0]/slotW+.5,p[1]/slotH+.5,q[0],q[1],0,0,0,1,q[0]/slotW+.5,q[1]/slotH+.5);}for(let i=0;i<outer.length;i++){let j=(i+1)%outer.length,a=i*2,b=j*2;ind.push(a,b,a+1,b,b+1,a+1);}return makeGeom(v,ind);})();
+const slotFill=rrFace(slotW-.05,slotH-.05,.10,0);
+function renderGeom(geo,m,color,tex=null,unlit=false){gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,unlit?1:0);gl.uniform1f(U.has,tex?1:0);if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
+function cube(x,y,z,w,h,d,color){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color);}
+// Card transform: XY face becomes horizontal XZ surface with +Y normal, then dynamically tilts/flips in 3D.
+function modelForCard(c,now){let motion=attackPose(c,now);let base=T(c.x+motion.dx,c.y+motion.dy,c.z+motion.dz);
+base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
+base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+c.hover*.07));
+base=mul(base,RY(c.flip));
+base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll));return base;}
+function attackPose(c,now){let phase=now-c.attackStart;if(phase<0||phase>1.12)return {dx:0,dy:0,dz:0,pitch:0,roll:0};let u=phase/1.12;
+let s=Math.sin(Math.PI*Math.min(1,u));let launch=(u<.35?Math.sin(u/.35*Math.PI/2):Math.exp(-(u-.35)*4));
+return{dx:Math.sin(c.seed*4)*.12*s,dy:.42*s,dz:(c.side==='enemy'?1:-1)*.78*launch,pitch:(c.side==='enemy'?-.23:.23)*s,roll:Math.sin(phase*24)*.085*s};}
+function drawCard(c,now){let M=modelForCard(c,now);
+renderGeom(cardEdge,M,colors.rim);
+renderGeom(outerFace,M,colors.border);
+renderGeom(backFace,M,colors.back);
+renderGeom(insetBack,M,colors.backInset);
+// The complete front is a flat, full-resolution texture when installed game card artwork is available.
+if(c.texture)renderGeom(cardDetail,M,[1,1,1,1],c.texture,true);
+else renderGeom(inset,M,c.side==='enemy'?[.945,.95,.953,1]:colors.inner);
+// A tiny light seam on the upper rim gives readable physical thickness during flips.
+}
+function loadTexture(url,callback){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);callback(tex);};image.onerror=()=>{};image.src=url;}
+// Capacity test uses only neutral geometry: no portraits, titles, HUD, stats, icons, or external assets.
+let vp=I(),proj=I(),view=I(),camera={eye:[0,55,6],target:[0,0,0],right:[1,0,0],up:[0,1,0],forward:[0,-1,0],tan:.4,aspect:1},w=1920,h=1080;
+function resize(){let dpr=Math.min(window.devicePixelRatio||1,2);w=Math.max(1,Math.round(canvas.clientWidth*dpr));h=Math.max(1,Math.round(canvas.clientHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);camera.aspect=w/h;
+// Fixed high-angle orthographic camera. Constant position and direction, no orbit or user camera movement.
+const height=16.4;proj=ortho(-height*camera.aspect/2,height*camera.aspect/2,-height/2,height/2,.1,100);
+view=lookAt(camera.eye,camera.target,[0,1,0]);vp=mul(proj,view);gl.uniformMatrix4fv(U.vp,false,vp);
+const forward=[-camera.eye[0],-camera.eye[1],-camera.eye[2]],fl=Math.hypot(...forward);camera.forward=forward.map(x=>x/fl);const normalize=a=>a.map(x=>x/Math.hypot(...a));const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];camera.right=normalize(cross(camera.forward,[0,1,0]));camera.up=normalize(cross(camera.right,camera.forward));camera.orthoHeight=height;}
+function projection2D(x,y,z){let q=transform(vp,[x,y,z,1]);return{x:(q[0]/q[3]*.5+.5)*w,y:(.5-q[1]/q[3]*.5)*h};}
+function worldFromPointer(clientX,clientY,planeY=.1){let box=canvas.getBoundingClientRect(),nx=(clientX-box.left)/box.width*2-1,ny=1-(clientY-box.top)/box.height*2;
+let x=nx*camera.orthoHeight*camera.aspect/2,y=ny*camera.orthoHeight/2;
+let origin=[camera.eye[0]+camera.right[0]*x+camera.up[0]*y,camera.eye[1]+camera.right[1]*x+camera.up[1]*y,camera.eye[2]+camera.right[2]*x+camera.up[2]*y];
+let t=(planeY-origin[1])/camera.forward[1];return {x:origin[0]+camera.forward[0]*t,z:origin[2]+camera.forward[2]*t};}
+let hoverCard=null,pointerDown=null,dragCard=null,overSlot=null,now=0;
+function closestCard(clientX,clientY){const cr=canvas.getBoundingClientRect(),px=(clientX-cr.left)*w/cr.width,py=(clientY-cr.top)*h/cr.height;let best=null,d=1e6;for(const c of [...cards].reverse()){const q=projection2D(c.x,c.y,c.z);const left=projection2D(c.x-cardW/2,c.y,c.z),top=projection2D(c.x,c.y,c.z-cardH/2),bottom=projection2D(c.x,c.y,c.z+cardH/2);let halfW=Math.abs(q.x-left.x)+8,halfH=Math.abs(bottom.y-top.y)/2+10;if(Math.abs(q.x-px)<halfW&&Math.abs(q.y-py)<halfH){let n=Math.abs(q.x-px)/halfW+Math.abs(q.y-py)/halfH;if(n<d){best=c;d=n;}}}return best;}
+function closestSlot(x,z,side){let q=null,dd=1e9;for(let s of slotCenters.filter(s=>s.side===side)){let d=Math.hypot(x-s.x,z-s.z);if(d<dd){q=s;dd=d;}}return dd<1.22?q:null;}
+function moveToSlot(card,target){if(!target)return;const other=cards.find(c=>c!==card&&c.slot===target);if(other){other.slot=card.slot;other.homeX=other.slot.x;other.homeZ=other.slot.z;other.attackStart=now-.1;}card.slot=target;card.homeX=target.x;card.homeZ=target.z;card.attackStart=now-.1;}
+canvas.addEventListener('pointermove',e=>{const hit=closestCard(e.clientX,e.clientY);if(pointerDown&&pointerDown.card){let dist=Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y);if(dist>7){dragCard=pointerDown.card;dragCard.dragged=true;let wpos=worldFromPointer(e.clientX,e.clientY,.56);dragCard.x=clamp(wpos.x,-14.2,14.2);dragCard.z=clamp(wpos.z,dragCard.side==='enemy'?-7.95:.12,dragCard.side==='enemy'?-.12:7.95);overSlot=closestSlot(dragCard.x,dragCard.z,dragCard.side);}}else{hoverCard=hit;canvas.style.cursor=hit?'grab':'default';}});
+canvas.addEventListener('pointerdown',e=>{let c=closestCard(e.clientX,e.clientY);pointerDown={x:e.clientX,y:e.clientY,card:c};if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}});
+canvas.addEventListener('pointerup',e=>{if(dragCard){moveToSlot(dragCard,overSlot||dragCard.slot);dragCard.dragged=false;dragCard=null;overSlot=null;}else if(pointerDown?.card){pointerDown.card.attackStart=now;}
+pointerDown=null;canvas.style.cursor=hoverCard?'grab':'default';});
+canvas.addEventListener('pointercancel',()=>{if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;overSlot=null;});
+canvas.addEventListener('dblclick',e=>{let c=closestCard(e.clientX,e.clientY);if(c){c.flipTarget+=Math.PI;c.attackStart=now;}});
+canvas.addEventListener('contextmenu',e=>{e.preventDefault();let c=closestCard(e.clientX,e.clientY);if(c)c.flipTarget+=Math.PI;});
+window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%16)*.06+(c.side==='enemy'?.14:0);});}});
+function drawShadows(now){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+for(const c of cards){for(let i=0;i<1;i++){let scale=1+.04*i;
+let m=mul(T(c.x+.10+i*.025,.068+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
+gl.depthMask(true);gl.disable(gl.BLEND);}
+function drawStage(){// The whole board is modeled as 3D box volumes, not an image or CSS projection.
+cube(0,-.53,0,29.25,.34,16.21,colors.boardSide);
+cube(0,-.34,0,29.40,.10,16.32,colors.boardEdge);
+cube(0,-.25,0,29.24,.16,16.20,colors.platform);
+// Inner panel is only geometry and lighting; no UI decorations.
+cube(0,-.14,0,29.10,.035,16.10,colors.boardTop);
+// Central empty gap is intentionally free of labels, effects, or HUD.
+}
+function frame(timeMs){now=timeMs/1000;resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);drawStage();
+for(const c of cards){c.hover=lerp(c.hover,(c===hoverCard||c.dragged)?1:0,.17);if(!c.dragged){c.x=lerp(c.x,c.homeX,.16);c.z=lerp(c.z,c.homeZ,.16);}c.y=lerp(c.y,.13+Math.sin(now*1.15+c.seed)*.017+(c.hover*.23)+(c.dragged?.33:0),.2);c.flip=lerp(c.flip,c.flipTarget,.11);}
+drawShadows(now);
+for(const c of [...cards].sort((a,b)=>a.z-b.z))drawCard(c,now);
+requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
