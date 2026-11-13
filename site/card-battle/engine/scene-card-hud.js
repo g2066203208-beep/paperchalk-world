@@ -231,14 +231,22 @@ function create(o){
    const priority=x=>x.kind==='character'?4:x.kind==='hand'?3:x.kind==='turn'?2:1;
    return priority(b)-priority(a)||b.z-a.z;
   });
-  for(const c of ranked){
+  const matches=ranked.filter(c=>{
    const shrunk=c.kind==='deck'?.67:c.kind==='character'?.84:c.kind==='hand'?.84:.9;
    const maxX=c.width*.5*shrunk+.09;
    const maxY=c.height*.5*(c.kind==='deck'||c.kind==='character'?.59:1)*shrunk+.085;
    const boost=hoverId===c.id?.34:0;
-   if(Math.abs(p.x-c.x)<=maxX+boost&&Math.abs(p.y-c.y)<=maxY+boost)return c;
-  }
-  return null;
+   return Math.abs(p.x-c.x)<=maxX+boost&&Math.abs(p.y-c.y)<=maxY+boost;
+  });
+  // A staged hero is the TOP tangible object in a profession compartment.
+  const character=matches.find(c=>c.kind==='character');
+  if(character)return character;
+  // The middle strip of each open tray slot is a reliable physical draw target.
+  // A fanned card can overlap the rim visually but must never make the deck
+  // underneath impossible to click when its compartment centre is exposed.
+  const centralDeck=matches.find(c=>c.kind==='deck'&&Math.abs(p.y-c.y)<.29);
+  if(centralDeck)return centralDeck;
+  return matches[0]||null;
  }
  function move(e){
   lastPointer=e;
