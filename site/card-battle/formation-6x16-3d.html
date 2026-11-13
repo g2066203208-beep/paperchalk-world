@@ -222,7 +222,7 @@ else renderGeom(inset,M,c.side==='enemy'?[.945,.95,.953,1]:colors.inner);
 }
 function loadTexture(url,callback){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);callback(tex);};image.onerror=()=>{};image.src=url;}
 // Capacity test uses only neutral geometry: no portraits, titles, HUD, stats, icons, or external assets.
-let vp=I(),proj=I(),view=I(),camera={eye:[0,55,6],target:[0,0,0],right:[1,0,0],up:[0,1,0],forward:[0,-1,0],tan:.4,aspect:1},w=1920,h=1080;
+let vp=I(),proj=I(),view=I(),camera={eye:[0,51,19],target:[0,0,0],right:[1,0,0],up:[0,1,0],forward:[0,-1,0],tan:.4,aspect:1},w=1920,h=1080;
 function resize(){let dpr=Math.min(window.devicePixelRatio||1,2);w=Math.max(1,Math.round(canvas.clientWidth*dpr));h=Math.max(1,Math.round(canvas.clientHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);camera.aspect=w/h;
 // Fixed high-angle orthographic camera. Constant position and direction, no orbit or user camera movement.
 const height=Math.max(19.6,30.1/camera.aspect);proj=ortho(-height*camera.aspect/2,height*camera.aspect/2,-height/2,height/2,.1,100);
