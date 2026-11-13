@@ -53,25 +53,33 @@ html,body{background:#d8ded0}
 <div id="terrain-hint"><strong>林间小路 · 第一关</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>点击敌人攻击；选地形工具再点格子<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div>
-<section id="profession-dock" aria-label="七职业卡牌盒与独立堆叠手牌">
+<section id="profession-dock" aria-label="七职业真实卡堆和最多10张自由出牌的手牌">
   <div class="dock-content">
    <div class="dock-head">
     <span class="dock-title" id="hand-capacity">手牌 5/10</span>
     <span class="dock-phase" id="draw-phase">摸牌阶段</span>
-    <span class="dock-info" id="hand-guidance">未打出第一张牌之前，可自由摸到10张</span>
+    <span class="dock-info" id="hand-guidance">出牌前从任意可用职业盒摸牌，手牌可任意选择</span>
+    <button type="button" id="roster-trigger" class="roster-trigger">人物图鉴 · 3</button>
     <button class="end-turn" id="end-hand-turn" type="button">结束回合</button>
    </div>
-   <div class="class-grid class-stack-row" id="class-hand-stacks" aria-label="七职业堆叠手牌"></div>
-   <div class="class-grid class-box-row" id="class-deck-boxes" aria-label="七职业可摸牌卡盒"></div>
+   <div class="action-hand-row" id="action-hand" aria-label="可任意选择的行动手牌，最多10张"></div>
+   <div class="class-grid class-box-row" id="class-deck-boxes" aria-label="七职业真实卡牌堆"></div>
   </div>
-</section><div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
+</section><div id="character-gallery" role="dialog" aria-label="农民组织人物卡图鉴" aria-modal="true" hidden>
+ <div class="gallery-sheet"><header><strong>农民组织 · 已收录人物卡</strong><button type="button" id="gallery-close">关闭</button></header>
+ <p>第一关固定由伐木工出战，农夫和猎户已注册在人物卡库中，可用于后续关卡配队。</p>
+ <div id="gallery-cards" class="gallery-cards"></div></div>
+</div>
+<div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
 <script src="./engine/voxel-terrain.js?v=1"></script>
 <script src="./engine/battle-camera.js?v=1"></script>
 <script src="./engine/level-engine.js?v=1"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=1"></script>
-<script src="./engine/profession-decks.js?v=1"></script>
+<script src="./engine/profession-decks.js?v=2"></script>
+<script src="./engine/character-registry.js?v=1"></script>
+<script src="./data/characters.generated.js?v=2"></script>
 <script>
 'use strict';
 (()=>{
@@ -584,6 +592,7 @@ window.__forestLevelDebug={
 requestAnimationFrame(frame);
 })();
 </script>
-<script src="./ui/forest-hand.js?v=1"></script>
+<script src="./ui/forest-hand.js?v=2"></script>
+<script src="./ui/farmer-roster.js?v=1"></script>
 </body>
 </html>
