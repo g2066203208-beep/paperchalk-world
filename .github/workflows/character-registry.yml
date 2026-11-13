@@ -1,0 +1,33 @@
+name: Auto-register approved character art
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/assets/characters/**'
+      - 'tools/build-character-registry.py'
+      - '.github/workflows/character-registry.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  regenerate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate PNG assets and rebuild auto-registration
+        run: python3 tools/build-character-registry.py
+      - name: Commit regenerated browser manifest
+        run: |
+          if ! git diff --quiet -- site/card-battle/data/characters.generated.js || test -n "$(git ls-files --others --exclude-standard site/card-battle/data/characters.generated.js)"; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add site/card-battle/data/characters.generated.js
+            git commit -m 'build(characters): refresh generated registry from approved portraits'
+            git push
+          fi
