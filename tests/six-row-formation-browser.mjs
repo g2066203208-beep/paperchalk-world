@@ -78,12 +78,14 @@ try {
  for(let i=0;i<4;i++)dugLevels.push(await digOrFillAt(4,3));
  assert.deepEqual(dugLevels,[-1,-2,-3,-3],'digging three layers reaches the lower bound and cannot go below it');
  assert.equal(await page.locator('[data-card-id="dig"]').getAttribute('aria-pressed'),'true','dig card remains selected for repeat operations');
+ await page.keyboard.press('Escape'); // Hide red/green range overlay to reveal the actual 3D excavation.
  await page.waitForTimeout(350);
  await page.screenshot({path:out+'/11-6x16-digging-3-deep-real-webgl.png'});
  await page.locator('[data-card-id="build"]').click();
  const risingLevels=[];
  for(let i=0;i<7;i++)risingLevels.push(await digOrFillAt(4,3));
  assert.deepEqual(risingLevels,[-2,-1,0,1,2,3,3],'earth-building works three above original height and stops at upper bound');
+ await page.keyboard.press('Escape'); // Screenshot the real voxel hill, not a card placement overlay.
  await page.waitForTimeout(350);
  await page.screenshot({path:out+'/12-6x16-building-3-high-real-webgl.png'});
  // Mix adjacent highs and lows: renderer must form joined soil cliffs, never separate bricks.
