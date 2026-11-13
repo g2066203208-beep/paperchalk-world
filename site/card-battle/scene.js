@@ -12,7 +12,20 @@ let battle,selected=null,latestAction=null,playback=null,toastTimer=null;
 let dragging=null,suppressClick=null,soundOn=true,audio=null,impactTimer=null,frameTimer=null;
 const seed=618231;
 const tinyNames={attack:'攻 击',defense:'防 御',skill:'技 能',power:'能 力',special:'特 殊',system:'整 理'};
-const icons={attack:'⚔',defense:'◇',skill:'✣',power:'✦',special:'◈',system:'↻'};
+// Three original ink-engraved marks replace system emoji; crisp at card scale.
+const sigilShapes={
+ attack:'<path d="M23 23 91 91M97 103 87 93M17 17l18 6-12 12-6-18ZM27 91 91 27M103 17 97 35 85 23l18-6ZM17 103l6-18 12 12-18 6Z"/><path d="M35 83 26 74M74 26l9 9" stroke-width="2.4"/>',
+ defense:'<path d="M60 12 91 25v38c0 20-16 32-31 44C45 95 29 83 29 63V25Z"/><path d="M60 23v68M39 40l21 9 21-9M43 66l17 8 17-8" stroke-width="2.2"/><path d="M47 28l13-5 13 5" stroke-width="2"/>',
+ skill:'<circle cx="60" cy="60" r="32" stroke-width="2.2"/><path d="m60 14 8 33 33 13-33 9-8 35-9-35-33-9 33-13Z"/><circle cx="60" cy="60" r="6" fill="currentColor" stroke="none"/><path d="M19 22h17m48 0h17M19 98h17m48 0h17" stroke-width="2"/>',
+ other:'<circle cx="60" cy="60" r="35"/><path d="M60 20 99 60 60 100 21 60Z"/><path d="M60 38v44M38 60h44" stroke-width="2.5"/>'
+};
+function makeSigil(type){
+ const holder=elem('span','sigil');
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" stroke-width="3.5" aria-hidden="true">'+
+  (sigilShapes[type]||sigilShapes.other)+'</svg>';
+ holder.innerHTML=svg;
+ return holder;
+}
 const marks={windup:'前',active:'效',recovery:'后',disabled:'停'};
 
 function elem(tag,cls,txt){
@@ -170,12 +183,13 @@ function drawHand(){
  for(let i=0;i<arr.length;i++){
    const it=arr[i],c=G.CARD[it.key];if(!c)continue;
    const card=elem('button','action-card '+shadeCard(c)+(selected===it.uid?' selected':''));card.type='button';
-   card.dataset.uid=it.uid;card.style.setProperty('--angle',((i-(arr.length-1)/2)*2.7)+'deg');
+   card.dataset.uid=it.uid;card.style.setProperty('--angle',((i-(arr.length-1)/2)*4.2)+'deg');
+   card.style.setProperty('--fan',(Math.abs(i-(arr.length-1)/2)*6.5).toFixed(1)+'px');
    card.setAttribute('aria-pressed',String(selected===it.uid));
    card.setAttribute('aria-label',c.name+'。前摇'+c.w+'格，生效'+c.a+'格，后摇'+c.r+'格');
    card.appendChild(elem('span','type',tinyNames[c.type]||'行 动'));
    card.appendChild(elem('strong','',c.name));
-   card.appendChild(elem('span','sigil',icons[c.type]||'◈'));
+   card.appendChild(makeSigil(c.type));
    card.appendChild(elem('span','desc',c.desc||'按时间格发动'));
    const times=elem('div','ticks');
    for(const text of ['前 '+c.w,'效 '+c.a,'后 '+c.r])times.appendChild(elem('b','',text));
