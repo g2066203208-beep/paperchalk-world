@@ -23,6 +23,16 @@ try {
    assert.equal(await img.evaluate(el=>el.complete&&el.naturalWidth>0),true,'original character card PNG loads');
  }
  await page.waitForTimeout(600);
+ // Verify the actual WebGL framebuffer: the visible board must be grass green, not the old white slab.
+ const centerPixel=await page.evaluate(()=>{
+   const cvs=document.querySelector('#stage'),gl=cvs.getContext('webgl');
+   const pix=new Uint8Array(4);
+   gl.readPixels(Math.floor(cvs.width/2),Math.floor(cvs.height/2),1,1,gl.RGBA,gl.UNSIGNED_BYTE,pix);
+   return Array.from(pix);
+ });
+ assert.ok(centerPixel[1]>centerPixel[0]+14 && centerPixel[0]>centerPixel[2]+12,
+   'single-level voxel terrain should render visibly green (not white), got '+centerPixel.join(','));
+ console.log('single-layer grass-center RGB:',centerPixel);
  await page.screenshot({path:out+'/08-6x16-formation-empty-1920.png'});
  await page.locator('#demo').click();
  await page.waitForTimeout(1900);
