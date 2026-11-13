@@ -23,24 +23,39 @@ try {
    assert.equal(await img.evaluate(el=>el.complete&&el.naturalWidth>0),true,'original character card PNG loads');
  }
  await page.waitForTimeout(600);
- // Test actual WebGL output: alternate gray-value tiles must stay visible even without a held card.
- const checkerPixels=await page.evaluate(()=>{
-   const cvs=document.querySelector('#stage'),gl=cvs.getContext('webgl');
-   const sample=(x,y)=>{
-     const pix=new Uint8Array(4);
-     gl.readPixels(Math.floor(x),Math.floor(cvs.height-y),1,1,gl.RGBA,gl.UNSIGNED_BYTE,pix);
-     return Array.from(pix);
-   };
-   return {
-     left:sample(cvs.width/2-cvs.width*.052,cvs.height*.49),
-     right:sample(cvs.width/2+cvs.width*.052,cvs.height*.49),
-   };
+ // Assert the reusable terrain engine, not just a screenshot or hard-coded painted checker.
+ const terrainProof=await page.evaluate(()=>{
+  const engine=window.__terrainEngine,debug=window.__terrainDebug;
+  if(!engine||!debug)return {loaded:false};
+  const tiles=debug.tiles,slots=debug.slots;
+  const align=slots.map(s=>{
+   const p=engine.center(s.tileC,s.tileR);
+   return Math.hypot(p.x-s.x,p.z-s.z);
+  });
+  const colors=tiles.map(t=>t.color.map(v=>Number(v.toFixed(4))).join(','));
+  const a=engine.color(7,1),b=engine.color(8,1);
+  const original=engine.cell(5,3).kind;
+  const oldNeighbor=engine.neighbors(5,3).east.connected;
+  engine.set(5,3,'dirt');
+  const updated=engine.neighbors(5,3).east.connected;
+  engine.set(5,3,original);
+  return {loaded:true,version:debug.version,cols:engine.cols,rows:engine.rows,
+   tiles:tiles.length,slots:slots.length,maxSlotError:Math.max(...align),
+   paletteRange:colors.length,
+   neighborConnection:oldNeighbor,changedConnection:updated,
+   centerLookup:engine.atWorld(engine.center(7,2).x,engine.center(7,2).z)?.c===7,
+   colorContrast:Math.max(...a.slice(0,3).map((v,i)=>Math.abs(v-b[i])))};
  });
- const diffs=checkerPixels.left.slice(0,3).map((x,i)=>Math.abs(x-checkerPixels.right[i]));
- assert.ok(Math.max(...diffs)>13,'adjacent alternating gray tiles must have a visible tonal difference: '+JSON.stringify(checkerPixels));
- assert.ok(checkerPixels.left.slice(0,3).every(x=>x<220)&&checkerPixels.right.slice(0,3).every(x=>x<220),
-   'surface should not fall back to a white placeholder: '+JSON.stringify(checkerPixels));
- console.log('permanent 16x6 gray alternating checker RGB:',checkerPixels);
+ assert.equal(terrainProof.loaded,true,'voxel terrain engine is present');
+ assert.equal(terrainProof.tiles,96,'the actual map has 96 terrain cells');
+ assert.equal(terrainProof.slots,66,'the 3x3 unit bases and two facility flanks share terrain coordinates');
+ assert.equal(terrainProof.maxSlotError,0,'every card slot matches its exact underlying terrain center');
+ assert.ok(terrainProof.paletteRange>60,'terrain colors vary automatically across the board');
+ assert.ok(terrainProof.colorContrast>.035,'neighboring terrain blocks differ visibly but stay in one grass palette');
+ assert.equal(terrainProof.neighborConnection,true,'same-type neighbor terrain auto-connects');
+ assert.equal(terrainProof.changedConnection,false,'a changed material automatically updates its adjoining boundary');
+ assert.equal(terrainProof.centerLookup,true,'world position maps back to the correct terrain grid cell');
+ console.log('Modular 96-cell terrain, shared card coordinates, palette and auto-connect OK:',terrainProof);
  await page.screenshot({path:out+'/08-6x16-formation-empty-1920.png'});
  await page.locator('#demo').click();
  await page.waitForTimeout(1900);
