@@ -1,43 +1,44 @@
-# 农民组织｜战士·萝莉伐木工｜Anima 提示词 V3（2026-11-13）
+# 农民组织｜战士·萝莉伐木工｜Anima 候选提示词 V4（2026-11-13）
 
-> **状态：候选提示词；用户已明确否决 V2 实际生成图（过于西部牛仔、人物不够可爱）。** 本版 V3 只修正新提示词，不把这张失败图登记为批准素材，不覆盖其他已经批准的人物原画。
+> **候选，未生成或审批。** 最新用户生成图反馈：“像屠夫不像伐木工”。V3 的围裙＋短柄斧造成职业误读，**不再沿用 V3 造型**。
 >
-> **画布：704×1024 px（宽×高），竖版；单人完整全身；目标透明背景，导出后必须检查真实 Alpha。**
+> **生成规格：704×1024 px（宽×高）**、单人全身、透明背景（需检查真实 Alpha）。`loli` 必须出现在正向文本；普通职业小兵的提示词按现行 GitHub 项目规范**不含 LoRA、画师标签、风格词、safe**。负面只用公认通用六项。
 >
-> **组织 × 职业 × 体型：农民组织 × 战士（伐木工）× 萝莉型。** 不是新职业；萝莉必须明确包含英文 `loli`；三体型是**不同人物**，以后同职业共用衣服剪裁语言而非同一张脸放大。
+> **组织×职业×体型：农民组织×战士（伐木工）×萝莉型。** 后续同职业少女与成熟丰满体型必须是独立人物；制服结构可依用户对本版造型确认后保持一致。
 >
-> 参照 [GitHub 统一小兵规则](FACTION_MINION_CHARACTER_IDENTITY_AND_PROMPT_RULES_V1_20261111.md) / [七职业规则](../game/SEVEN_BATTLE_CLASSES_PARTY_SYNERGY_CANON_20261113.md)，本组织小兵正向提示词不加风格 LoRA、画师标签、`safe` 或画风标签。使用批准的通用负面。
+> **V4 纠正方向：** 从厨房/肉铺式围裙和像剁肉刀的小短斧，改为粗亚麻森林劳作服、短工作罩衫、便于活动的短裤与打底裤、森林伐木长柄斧，手边少量劈开的柴火增加可识别性；维持可爱圆脸、轻松自然的对话站姿。避免西部牛仔式领巾/马甲组合，也避免屠夫围裙。
 >
-> **来自 V2 用户实际出图的纠错：** 红棕颈巾、深色紧身马甲、重工具腰带、棕色宽裤与大靴的组合被评价为“像牛仔不像农民”；脸部偏冷、不够可爱。V3 放弃牛仔式服装，改为农庄童工助手感的乡村亚麻背带工作裙＋小围裙，配淡柔颜色和清楚的可爱圆脸；仍保留日常劈柴小斧头，姿势不要挥砍或越界。此处只描述童话农庄形象，不设定角色实际年龄或添加性感表现。
+> 提示词遵循 [小兵人物规范](FACTION_MINION_CHARACTER_IDENTITY_AND_PROMPT_RULES_V1_20261111.md) 和 [战斗七职业规范](../game/SEVEN_BATTLE_CLASSES_PARTY_SYNERGY_CANON_20261113.md)。Anima 模型卡：https://huggingface.co/circlestone-labs/Anima
 
-## V3 正向提示词（完整，可直接复制）
+## 正向提示词（V4 完整可复制）
 
 ```text
-masterpiece, best quality, 1girl, solo, loli, small petite girl, very short stature, small shoulders, short childlike limbs, round baby face, chubby soft cheeks, tiny rounded chin, big bright honey-amber eyes, delicate curved eyebrows, tiny button nose, small gentle closed-mouth smile, slightly rosy cheeks, a few delicate freckles on the nose, warm fair skin, soft fluffy light chestnut hair in two short low braided pigtails tied with small cream cotton ribbons, airy wispy bangs, a few naturally escaping strands, irresistibly cute and endearing little countryside woodcutter girl, simple farm village worker, farmer faction warrior.
+masterpiece, best quality, 1girl, solo, loli, very petite girl, short stature, childlike body proportions, small narrow shoulders, soft rounded face, full rosy cheeks, short rounded chin, large bright warm amber eyes, gently curved eyebrows, a small button nose, small cheerful closed-mouth smile, tiny freckles across the nose, soft fluffy honey-brown hair in two short uneven braided pigtails, airy bangs and a few loose wisps around her face, naturally cute young countryside woodcutter.
 
-She is dressed like a humble old-fashioned farming village girl who helps chop firewood at the family farm. She wears a soft ivory cotton blouse with slightly gathered sleeves rolled neatly to her elbows, a faded light sage-green linen pinafore work dress reaching just below her knees with a simple square neckline and broad shoulder straps, a small natural flax-colored apron tied at the back with two large plain patch pockets and a few hand-sewn repairs, cream cotton socks, and modest worn warm-brown lace-up work ankle boots with rounded toes. Loose, comfortable, practical countryside work clothes made of inexpensive natural fabrics, soft pastoral colors, gently rumpled and visibly hand-mended, a recognizable little farm girl silhouette. This outfit is the consistent base clothing design for later young-adult and mature lumberjack variants, with only size and tailoring adjusted for each different person.
+A little woodcutting worker from a modest old rural farming village, dressed specifically for gathering and splitting firewood in the forest. She wears a loose cream-colored long-sleeved linen shirt with rolled cuffs, an earthy moss-green short work tunic with simple reinforced shoulders, a plain wide brown fabric waist sash holding one small wooden splitting wedge, warm dark brown knee-length work shorts over practical charcoal wool leggings, coarse beige linen leg wraps, and simple sturdy rounded-toe lace-up brown leather work shoes. The clothing is plain, hand-sewn, comfortably loose, slightly weathered and easy to move in, with visible rough woven fabric and practical patches on the knees and elbows. Her outfit has the recognizable silhouette of a young forest woodcutter doing manual labor, with no apron, no western neckerchief, and no butcher-shop garments.
 
-In her right hand she loosely carries one small practical firewood hatchet with a short light wooden handle and a simple iron blade pointing downward beside her leg; the complete hatchet remains near her body and does not cover her dress or face. Her left hand lightly holds the edge of her apron pocket. She stands upright, facing mostly forward, in a natural relaxed small pose with one toe subtly turned inward and a slight friendly tilt of her head. A soft curious expression and tiny warm smile make her look lively and adorable while remaining a believable ordinary rural worker. Gentle everyday dialogue-portrait pose, not a battle action.
+She carries one clearly recognizable traditional long-handled woodcutting axe, the wooden haft reaching from beside her boot to approximately her upper chest. The axe has a narrow fitted metal socket and a properly shaped forged iron wedge head with a curved cutting edge, made for chopping trees and splitting logs. The long handle rests diagonally close beside her body; she lightly grips the middle of the handle with her right gloved hand, while the axe head rests low beside her boot. Her left hand holds two small neatly split pieces of firewood close to her side, making her everyday forestry work immediately readable. The axe is a compact functional forest tool, never a meat cleaver or a kitchen butcher knife.
 
-One single isolated character, nearly front-facing, complete full body, with all hair, ribbons, fingers, apron hem, hatchet, legs and both boot soles visible inside the portrait frame, character centered, generous empty safe margins above the hair, around the hatchet and both elbows, and below the boots, transparent background.
+She stands in a small relaxed everyday pose, facing nearly forward, shoulders open, her head tilted slightly and a warm lively expression, her feet resting firmly on the ground. A beautiful, lovable, innocent little rural worker, natural calm standing pose suitable for character dialogue, full view of her face, outfit and hands, no dramatic combat action.
+
+A single isolated full-body character in a portrait composition, centered, head to boot soles and complete long-handled axe visible inside the frame, leave generous clear margins around the hair, both hands, tool, and feet, transparent background.
 ```
 
-## 通用负面提示词
+## 负向提示词
 
 ```text
 worst quality, low quality, blurry, jpeg artifacts, chromatic aberration, watermark
 ```
 
-## 画面验收
+## 出图验收
 
-1. 第一眼识别为朴素农庄女孩，不是西部牛仔、牛仔背心/领巾或冒险家。
-2. 一眼有萝莉型娇小骨架、柔软圆脸、明亮眼睛与自然的小微笑；头身比例偏可爱，但不变成夸张两头身。
-3. 小伐木斧自然垂在身侧，用于剧情对话立绘；斧头不遮脸和胸前衣服，不出界。
-4. 衣着：奶油色棉麻衬衣、淡鼠尾草绿色过膝背带工作裙、亚麻浅米色小围裙、棉袜、圆头旧皮短靴，朴素材质。
-5. 生成画布 704×1024；完整全身+全斧头+适当空白；透明通道以原图实际检测为准。
-6. 不自行编造已获得批准的美术成果；失败图只做对照错误案例。
+1. **第一眼必须是可爱的农庄小伐木工，不能像西部牛仔、肉铺屠夫或重装佣兵。**
+2. 长柄劈木斧金属头是林业铁斧的弧形斧刃＋楔形厚背，**不是菜刀、肉斩刀、镰刀或砍刀**。工具全在画内，不挡脸。
+3. 可爱的幼态比例、圆脸与清澈眼神，但不采用不合适的装束或性感表现。
+4. 农家布衣、短工作罩衫、工作短裤与打底裤、包腿布、朴素鞋；**无围裙**。
+5. 动作为自然正面站姿，完成头、双手、工具和鞋子的完整构图；704×1024，透明背景需实际确认。
+6. 没有生成/用户审批/实装前不得登记为通过。
 
-## 版本历史
+## 历史版本
 
-- V1 / V2：旧版描述保留在 GitHub 历史提交中，V2 已经把 `loli` 写在开头，但**造型并未通过用户审美验收**。
-- V3：依据用户提供的生成图及指出的“像牛仔、不够可爱”修改，待 Anima 生成和审核。
+V1、V2、V3 在 GitHub 提交历史中保留。V2 被认为像牛仔、不够可爱；V3 用户反馈像屠夫、不像伐木工。V4 是针对这两次实际出图失败的新候选。
