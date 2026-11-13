@@ -65,38 +65,39 @@ function create(o){
  function layout(state,staged){
   const mobile=canvas.getBoundingClientRect().width<720;
   const slots=[];
-  // One joined tray fills the screen width; each physical compartment has the
-  // exact same pitch. Anchor it to the player's lower viewport edge.
-  const trayWidth=spanW*(mobile?.974:.972),pitch=trayWidth/7;
-  const deckSpan=pitch*6;
-  const deckScale=Math.min(mobile?.36:1.09,pitch/cardW*.79);
-  const baseDeckY=-spanH*.5+(mobile?2.11:1.54);
-  state.classes.forEach((c,i)=>{
+  // Forest tutorial: exactly ONE available profession pile. No seven vacant
+  // trays, empty boxes, shared housing, or half-screen inventory furniture.
+  const active=state.classes.filter(c=>c.unlocked&&c.deckCount>=0);
+  const deckY=-spanH*.5+(mobile?1.03:1.22);
+  const deckScale=mobile?.61:.88;
+  for(const c of active){
    slots.push({kind:'deck',id:'deck:'+c.id,profession:c.id,c,
-    x:(i/6-.5)*deckSpan,y:baseDeckY,z:0,scale:deckScale,angle:0});
-  });
-  // Player holds cards against the near-camera bottom edge, not in a separate HUD rectangle.
-  const hand=state.hand;
-  const step=mobile?.64:1.11;
-  const spread=Math.min((hand.length-1)*step,spanW-(mobile?.45:2.1));
-  const handScale=mobile?.49:.91;
-  for(let i=0;i<hand.length;i++){
-   const t=hand.length===1?.5:i/(hand.length-1);
-   const axis=t*2-1;
-   slots.push({kind:'hand',id:'hand:'+hand[i].instance,instance:hand[i].instance,c:hand[i],
-    x:axis*spread*.5,y:(mobile?-2.0:-1.82)+(1-axis*axis)*.22,
-    z:1.15+(.12*(1-axis*axis)),scale:handScale,
-    angle:-axis*.145,tilt:-.12+Math.abs(axis)*.07});
+    x:0,y:deckY,z:0,scale:deckScale,angle:0});
   }
+  const hand=state.hand;
+  const visibleWidth=mobile?spanW*.76:Math.min(10.6,spanW*.72);
+  const step=mobile?.46:1.12;
+  const spread=Math.min((hand.length-1)*step,visibleWidth);
+  const handScale=mobile?.56:.89;
+  const handY=mobile?-2.13:-2.20;
+  hand.forEach((card,i)=>{
+   const axis=hand.length===1?0:(i/(hand.length-1))*2-1;
+   slots.push({kind:'hand',id:'hand:'+card.instance,instance:card.instance,c:card,
+    x:axis*spread*.5,y:handY+(1-axis*axis)*.17,z:1.14+(1-axis*axis)*.08,
+    scale:handScale,angle:-axis*.14,tilt:-.12+Math.abs(axis)*.05});
+  });
   for(const u of staged){
    const origin=slots.find(p=>p.kind==='deck'&&p.profession===u.role);
    if(origin)slots.push({...origin,kind:'character',id:'character:'+u.id,
-    unitId:u.id,portrait:u.portrait,y:origin.y+(.56*deckScale/.79),scale:deckScale*1.10});
+    unitId:u.id,portrait:u.portrait,y:origin.y+.18,
+    z:.58,scale:deckScale*1.10});
   }
-  slots.push({kind:'turn',id:'turn:end',x:Math.min(spanW*.5-.45,7.75),
-   y:baseDeckY+.03,z:.9,scale:mobile?.26:.38,angle:.07});
+  // A tiny physical end-turn card is a control, NOT another card pile.
+  slots.push({kind:'turn',id:'turn:end',x:Math.min(spanW*.5-.42,mobile?1.8:3.1),
+   y:deckY+.10,z:.55,scale:mobile?.22:.27,angle:.08});
   return slots;
  }
+
  function cardMatrix(p,opts={}){
   const focused=hoverId===p.id,selected=p.kind==='hand'&&o.selected?.()===p.instance;
   const charSelected=p.kind==='character'&&o.selectedCharacter?.()===p.unitId;
@@ -170,61 +171,19 @@ function create(o){
   }
   const tex=makeTexture(cv);cache.set(key,tex);return tex;
  }
- function drawConnectedTray(decks){
-  if(decks.length!==7)return;
-  // The whole tray is ONE continuous 3D object, not seven independent crates.
-  // Like a casino chip holder: seven long recessed channels, six separators,
-  // high side/back walls, and a front that is almost completely OPEN.
-  const pitch=decks[1].x-decks[0].x;
-  const trayWidth=pitch*7;
-  const scale=decks[0].scale;
-  const slotDepth=cardH*scale*1.27;
-  const wall=Math.max(.043,scale*.079);
-  const x0=(decks[0].x+decks[6].x)/2;
-  const y0=decks[0].y;
-  const tilt=-1.03;
-  const matrix=mul(T(x0,y0,0),RX(tilt));
-  const part=(x,y,z,sx,sy,sz)=>mul(matrix,mul(T(x,y,z),S(sx,sy,sz)));
-  const bottom=[.39,.30,.206,1],side=[.46,.345,.229,1];
-  const dark=[.16,.205,.169,1],seam=[.105,.154,.119,1],trim=[.66,.53,.341,1];
-  const c=wall,walnut=boxMaterial('wood'),feltWeave=boxMaterial('felt');
-  // The continuous, heavyweight timber chassis with sunken felt compartments.
-  renderGeom(box,part(0,0,-.13,trayWidth,slotDepth,.29),[.96,.94,.91,1],walnut);
-  renderGeom(box,part(0,0,.030,trayWidth-.13,slotDepth-.15,.026),[1,1,1,1],feltWeave);
-  for(let i=0;i<7;i++){
-   const px=(i-3)*pitch;
-   renderGeom(box,part(px,.012,.047,pitch-c*1.7,slotDepth-c*1.6,.018),[.94,.94,.94,1],feltWeave);
-   renderGeom(box,part(px,slotDepth*.36,.060,pitch-c*2,slotDepth*.15,.012),seam);
-  }
-  // Back wall and both outside walls can be tall, away from the player's view.
-  renderGeom(box,part(0,slotDepth*.5-c*.5,.20,trayWidth,c,.34),[1,1,1,1],walnut);
-  for(const sign of [-1,1]){
-   renderGeom(box,part(sign*(trayWidth-c)*.5,0,.195,c,slotDepth,.34),[1,1,1,1],walnut);
-  }
-  // Six shared dividers have a lower front section and a taller back section.
-  // The recess and the deck-card side edges remain visible from the player.
-  for(let i=1;i<7;i++){
-   const px=-trayWidth*.5+i*pitch;
-   renderGeom(box,part(px,slotDepth*.16,.18,c,slotDepth*.66,.35),[1,1,1,1],walnut);
-   renderGeom(box,part(px,-slotDepth*.32,.087,c,slotDepth*.31,.115),[.94,.91,.86,1],walnut);
-  }
-  // PLAYER SIDE: NO high closing panel.  This lip is only a narrow ledge
-  // below the card edges: low enough to expose thick stacks and empty pockets.
-  renderGeom(box,part(0,-slotDepth*.5+c*.40,.056,trayWidth,c,.103),[.92,.87,.82,1],walnut);
-  renderGeom(box,part(0,-slotDepth*.5+.012,.118,trayWidth-.085,.023,.025),trim);
-  // Profession/remaining-count plates are flush on each compartment FLOOR.
-  // An empty slot remains a deep dark recess with a clear 00 counter.
-  for(let i=0;i<7;i++){
-   const px=(i-3)*pitch,stock=decks[i].c.deckCount;
-   const plate=part(px,-slotDepth*.5+.49,.074,pitch*.78,.207,.013);
-   renderGeom(box,plate,[1,1,1,1],labelTexture(decks[i].c,stock),true);
-  }
-  // Tiny countersunk hardware at real divider junctions, away from opening.
-  for(let i=0;i<=7;i++){
-   const px=-trayWidth*.5+i*pitch;
-   renderGeom(box,part(px,slotDepth*.5-.02,.391,.047,.049,.022),trim);
-  }
-  boxDrawCalls=7;
+ function drawSinglePileBase(deck){
+  if(!deck)return;
+  // Low physical paper-rest and tiny slip-proof rim only. The card faces and
+  // independently rendered paper edges remain completely visible.
+  const scale=deck.scale;
+  const w=cardW*scale*1.13,h=cardH*scale*1.12;
+  const basis=mul(T(deck.x,deck.y,0),RX(-1.03));
+  const piece=(x,y,z,sx,sy,sz)=>mul(basis,mul(T(x,y,z),S(sx,sy,sz)));
+  const wood=boxMaterial('wood'),felt=boxMaterial('felt');
+  renderGeom(box,piece(0,0,-.15,w,h,.15),[.94,.92,.89,1],wood);
+  renderGeom(box,piece(0,0,-.061,w-.12,h-.12,.013),[1,1,1,1],felt);
+  renderGeom(box,piece(0,-h*.5+.019,-.026,w,.040,.04),[.94,.92,.89,1],wood);
+  boxDrawCalls=1;
  }
 
  function draw(now,w,h){
@@ -239,24 +198,27 @@ function create(o){
   const wasVP=getVP();
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(viewFov,width/height,.1,80),T(0,0,-cameraZ)));
-  drawConnectedTray(positions.filter(p=>p.kind==='deck'));
+  drawSinglePileBase(positions.find(p=>p.kind==='deck'));
+  const remaining=o.remainingCards?.('warrior')||[];
   for(const pos of positions.filter(p=>p.kind==='deck')){
-   const tex=makeTextTexture({title:pos.c.name,profession:pos.profession,back:true});
-   for(let n=0;n<pos.c.deckCount;n++){
-    // True discrete cards: each one separately draws the same battlefield card geometry.
-    const layer={...pos,
-      // Shift each entire solid card along the plane normal: the visible edges
-      // are real individual card slabs, rather than a fake "deck thickness".
-      x:pos.x+(n%3-1)*.003,
-      y:pos.y-.085+Math.sin(1.03)*(.18+n*.043),
-      z:Math.cos(1.03)*(.18+n*.043),
-      angle:(n%3-1)*.003};
+   const actions=pos.profession==='warrior'?remaining:(o.remainingCards?.(pos.profession)||[]);
+   actions.forEach((card,n)=>{
+    // Cards are individually drawn face-UP and ordered exactly as the
+    // underlying gameplay deck: the rightmost array element is its top card.
+    const layer={...pos,id:pos.id,
+      x:pos.x+(n%3-1)*.0016,
+      y:pos.y+Math.sin(1.03)*(.11+n*.044),
+      z:Math.cos(1.03)*(.11+n*.044),
+      angle:(n%3-1)*.0018};
+    const tex=makeTextTexture({title:card.name,profession:card.profession,
+      family:card.family,back:false});
     renderPhysicalCard(layer,tex);
-   }
+   });
   }
   for(const pos of positions.filter(p=>p.kind==='character')){
    const deck=positions.find(q=>q.kind==='deck'&&q.profession===pos.profession);
-   renderPhysicalCard({...pos,z:Math.cos(1.03)*(.27+(deck?.c.deckCount||0)*.043)},
+   renderPhysicalCard({...pos,
+    z:Math.cos(1.03)*(.12+(deck?.c.deckCount||0)*.044)+.10},
      portrait(pos.portrait,pos.profession));
   }
   for(const pos of positions.filter(p=>p.kind==='hand')){
@@ -358,9 +320,8 @@ function create(o){
    return {
     visible:scene.map(p=>({kind:p.kind,id:p.id,x:p.x,y:p.y})),
     count:state.count,
-    physicalBoxes:boxDrawCalls,connectedTray:true,trayBodies:1,compartments:7,
-    frontOpening:'low-lip',frontWallHeight:.103,
-    screenEdgeAnchored:true,trayWidthFraction:.972,
+    physicalBoxes:boxDrawCalls,visibleDeckPiles:scene.filter(p=>p.kind==='deck').length,
+    frontOpening:'open-face',screenEdgeAnchored:true,faceUpDeck:true,
     physicalDeckCards:state.classes.reduce((n,c)=>n+c.deckCount,0),
     stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     renderedCardMeshes:cardDrawCalls,
@@ -373,5 +334,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'2.2.2',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'3.0.0-single-pile',create});
 })(window);
