@@ -381,6 +381,21 @@ button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb5
  .squad[data-count="1"].ally-squad{top:65%!important}
  .hand-surface{bottom:3px!important}
 }
+
+/* Final no-occlusion pass: reserve enough physical depth for all three player cards. */
+@media(min-width:651px){
+ .squad[data-count="3"].ally-squad{top:65%!important}
+ .squad[data-count="3"].ally-squad .portrait{height:156px!important;width:116px!important}
+ .squad[data-count="2"].ally-squad{top:65%!important}
+ .squad[data-count="2"].ally-squad .portrait{height:162px!important;width:121px!important}
+ .hand-surface{bottom:-62px!important}
+}
+@media(max-width:650px){
+ .squad[data-count="3"].ally-squad{top:76%!important}
+ .squad[data-count="2"].ally-squad{top:75%!important}
+ .squad[data-count="1"].ally-squad{top:69%!important}
+ .hand-surface{bottom:-8px!important}
+}
 </style>
 </head>
 <body>
@@ -404,7 +419,7 @@ button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb5
  <div class="table-edge-light" aria-hidden="true"></div>
  <div class="candle" aria-hidden="true"><div class="candle-base"></div><div class="candle-body"></div><div class="candle-flame"></div></div>
  <div class="interface-top">
-  <div class="nameplate">纸牌时序<small>THREE ON THREE · TIMEGRID</small></div>
+  <div class="nameplate">纸牌时序<small id="mode-subtitle">THREE ON THREE · TIMEGRID</small></div>
   <div class="top-controls"><div id="party-select" class="party-select" aria-label="出战人数"><button type="button" data-party="1">1v1</button><button type="button" data-party="2">2v2</button><button type="button" data-party="3" class="chosen" aria-pressed="true">3v3</button></div><span class="round" id="round">第 1 轮</span><button type="button" id="sound" aria-pressed="true">音效：开</button><button id="restart" type="button">重开</button><button type="button" id="back">返回</button></div>
  </div>
  <div class="hand-surface" id="hand-surface"><div class="hand-header" id="hand-count">选中人物的手牌 · 4</div><div class="hand" id="hand" aria-label="可操作的行动手牌"></div></div>
