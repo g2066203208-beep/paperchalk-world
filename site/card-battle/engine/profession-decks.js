@@ -73,7 +73,17 @@ function create(options={}){
  }
  function reload(){
   piles.clear();
-  for(const c of CLASSES)piles.set(c.id,unlocked.has(c.id)?shuffle([...pool[c.id]]):[]);
+  // Same temporary card art AND the same face-up order in all seven columns,
+  // but each column owns a separate real stack and separate remaining count.
+  const prototypeOrder=prototypeAllClasses
+    ? shuffle([...pool.warrior]).map(card=>card.id):null;
+  for(const c of CLASSES){
+   if(!unlocked.has(c.id)){piles.set(c.id,[]);continue;}
+   if(prototypeOrder){
+    const byId=new Map(pool[c.id].map(card=>[card.id,card]));
+    piles.set(c.id,prototypeOrder.map(id=>byId.get(id)));
+   }else piles.set(c.id,shuffle([...pool[c.id]]));
+  }
  }
  function count(){return hand.length;}
  function snapshot(){
