@@ -251,7 +251,7 @@ function makePhysicalCardTexture(image){
  return tex;
 }
 const sceneHUD=window.PaperchalkSceneCardHUD.create({
- canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,makeTexture:makePhysicalCardTexture,
+ canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,makeTexture:makePhysicalCardTexture,
  getVP:()=>vp,uniformVP:m=>gl.uniformMatrix4fv(U.vp,false,m),
  snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
  selected:()=>window.__forestHand?.selected||null,
