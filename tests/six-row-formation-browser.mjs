@@ -11,7 +11,7 @@ try {
  page.on('pageerror',error=>errors.push(String(error)));
  await page.goto('http://127.0.0.1:4173/card-battle/formation-6x16-3d.html',{waitUntil:'networkidle'});
  assert.equal(await page.locator('canvas#stage').count(),1);
- assert.equal(await page.locator('#hand .hand-card').count(),10,'7 original character cards + 3 facility cards');
+ assert.equal(await page.locator('#hand .hand-card').count(),12,'7 original characters, 3 facilities and 2 reusable terrain action cards');
  const gl=await page.evaluate(()=>{
    const stage=document.querySelector('#stage');
    const ctx=stage.getContext('webgl');
@@ -59,10 +59,54 @@ try {
  await page.screenshot({path:out+'/08-6x16-formation-empty-1920.png'});
  await page.locator('#demo').click();
  await page.waitForTimeout(1900);
- assert.equal(await page.locator('#hand .hand-card:visible').count(),3,'all 7 original characters leave the hand');
+ assert.equal(await page.locator('#hand .hand-card:visible').count(),5,'seven characters leave the hand, three facilities and two terrain tools remain');
  await page.screenshot({path:out+'/09-6x16-formation-seven-1920.png'});
  await page.locator('#reset').click();
- assert.equal(await page.locator('#hand .hand-card:visible').count(),10,'reset restores seven character cards to hand');
+ assert.equal(await page.locator('#hand .hand-card:visible').count(),12,'reset restores seven character cards and both terrain tools');
+ // Actual click-based terrain interactions through the hosted game's card UI.
+ assert.equal(await page.evaluate(()=>!!window.__terrainEngine),true,'reusable engine is mounted to the real battle scene');
+ const range=await page.evaluate(()=>({min:window.__terrainEngine.minLevel,max:window.__terrainEngine.maxLevel,step:window.__terrainEngine.levelStep}));
+ assert.deepEqual([range.min,range.max],[-3,3],'terrain levels are exactly -3 through +3');
+ await page.locator('[data-card-id="dig"]').click();
+ async function digOrFillAt(c,r) {
+  const point=await page.evaluate(([c,r])=>window.__terrainDebug.projectTile(c,r),[c,r]);
+  await page.mouse.move(point.x,point.y);
+  await page.mouse.click(point.x,point.y);
+  return await page.evaluate(([c,r])=>window.__terrainEngine.cell(c,r).level,[c,r]);
+ }
+ const dugLevels=[];
+ for(let i=0;i<4;i++)dugLevels.push(await digOrFillAt(4,3));
+ assert.deepEqual(dugLevels,[-1,-2,-3,-3],'digging three layers reaches the lower bound and cannot go below it');
+ assert.equal(await page.locator('[data-card-id="dig"]').getAttribute('aria-pressed'),'true','dig card remains selected for repeat operations');
+ await page.waitForTimeout(350);
+ await page.screenshot({path:out+'/11-6x16-digging-3-deep-real-webgl.png'});
+ await page.locator('[data-card-id="build"]').click();
+ const risingLevels=[];
+ for(let i=0;i<7;i++)risingLevels.push(await digOrFillAt(4,3));
+ assert.deepEqual(risingLevels,[-2,-1,0,1,2,3,3],'earth-building works three above original height and stops at upper bound');
+ await page.waitForTimeout(350);
+ await page.screenshot({path:out+'/12-6x16-building-3-high-real-webgl.png'});
+ // Mix adjacent highs and lows: renderer must form joined soil cliffs, never separate bricks.
+ await page.evaluate(()=>{
+  const t=window.__terrainEngine;
+  t.setLevel(3,3,2);t.setLevel(4,4,2);t.setLevel(5,3,1);
+  t.setLevel(10,2,-3);t.setLevel(11,2,-2);t.setLevel(10,3,-1);
+ });
+ await page.waitForTimeout(500);
+ await page.screenshot({path:out+'/13-6x16-mountains-pits-real-webgl.png'});
+ const elevations=await page.evaluate(()=>{
+  const t=window.__terrainEngine,all=t.snapshot();
+  return {levels:[...new Set(all.map(c=>c.level))].sort(),
+    raised:t.cell(4,3).height>t.cell(4,3).height-t.levelStep,
+    neighbor:t.neighbors(10,2).heightChange,
+    type:t.cell(10,2).kind,
+    revision:t.revision};
+ });
+ assert.deepEqual(elevations.levels,[-3,-2,-1,0,1,2,3]);
+ assert.equal(elevations.neighbor,true,'adjacent height topology updated automatically');
+ assert.equal(elevations.type,'grass','digging changes the underlying 3D height, not terrain type');
+ await page.locator('#reset').click();
+ assert.equal(await page.evaluate(()=>window.__terrainEngine.snapshot().every(c=>c.level===0)),true,'reset returns all 96 tiles to the original plane');
  await page.locator('#hand .hand-card').first().click();
  await page.mouse.move(960,710);
  await page.waitForTimeout(420);
