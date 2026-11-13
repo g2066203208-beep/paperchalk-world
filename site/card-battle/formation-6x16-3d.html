@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>六排卡牌战场 · 放牌原型</title>
+<title>圆角体素卡牌战场 · 挖掘与填土</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e8e8e6}
 #stage{display:block;width:100vw;height:100dvh;touch-action:none;cursor:default;outline:0}
@@ -16,6 +16,9 @@
 .hand-card .name{display:block;font:clamp(11px,1.1vw,17px) serif;color:#514e43}
 .hand-card .kind{position:absolute;bottom:4px;left:0;right:0;text-align:center;font:10px system-ui;color:#777466}
 #reset{background:#eae9e3cf;border:1px solid #b3afa6;border-radius:7px;padding:6px 9px;cursor:pointer;margin-bottom:3px;font:11px system-ui!important}
+.hand-card.terrain{background:linear-gradient(160deg,#f1e3cc,#b99465);border-color:#ebe2d5;color:#4b3728}
+.hand-card.terrain .name{font-weight:700;font-size:clamp(12px,1.1vw,18px)}
+#help{position:fixed;left:14px;top:12px;z-index:3;color:#675c4e;font:12px system-ui,sans-serif;background:#eee9decf;border-radius:9px;padding:8px 12px;pointer-events:none;box-shadow:0 4px 15px #00000011;line-height:1.55}
 #note{bottom:145px;opacity:0;transition:opacity .2s;background:#f6f5ebeb;color:#45463f;padding:4px 12px;border-radius:15px;width:max-content;max-width:90vw;left:50%;transform:translateX(-50%)}
 @media(max-width:700px){.hand-card{width:clamp(40px,11vw,62px)}#hand{gap:4px}#note{bottom:110px}}
 </style>
@@ -23,6 +26,7 @@
 <body>
 <canvas id="stage" aria-label="六行十六列真3D卡牌容量测试；固定高位俯视；每张卡是独立可悬浮与翻转的三维物体"></canvas>
 <div id="note" aria-live="polite"></div>
+<div id="help">圆润体素地面 · 挖掘卡 / 填土卡<br>绿色可用 · 红色不可用 · R 重置</div>
 <div id="hand" role="toolbar" aria-label="测试手牌"><button type="button" id="reset">重置</button></div>
 <script>
 'use strict';
@@ -80,8 +84,70 @@ const handDefs=[
 {id:'clown',kind:'unit',name:'小丑演员',src:'../assets/cards/wonder-circus/07_clown-performer.png'},
 {id:'farm',kind:'facility',name:'农田'},
 {id:'turret',kind:'facility',name:'炮台'},
-{id:'lab',kind:'facility',name:'研究院'}];
+{id:'lab',kind:'facility',name:'研究院'},
+{id:'dig',kind:'terrain',terrainAction:'dig',name:'挖掘卡'},
+{id:'fill',kind:'terrain',terrainAction:'fill',name:'填土卡'}];
 const texCache=new Map();
+// A single connected voxel-height surface under all 16 x 6 logical card positions.
+// Each block has its own elevation; transitions have a rounded bevel rather than square cliffs.
+const TERRAIN_ROWS=6,SOIL=-.12,HOLE=-.69,WATER=-.46,GROUND_BOTTOM=-.86;
+const TERRAIN_HEIGHT={soil:SOIL,hole:HOLE,water:-.72};
+const terrain=Array.from({length:TERRAIN_ROWS},()=>Array.from({length:COLS},()=> 'soil'));
+const starterWater=[[1,12],[1,13],[2,11],[2,12],[2,13],[2,14],[3,12],[3,13]];
+const starterHoles=[[3,5],[2,6]];
+function seedTerrain(){for(let r=0;r<TERRAIN_ROWS;r++)terrain[r].fill('soil');
+ for(const [r,c] of starterWater)terrain[r][c]='water';
+ for(const [r,c] of starterHoles)terrain[r][c]='hole';
+}
+seedTerrain();
+const TX=1.8,TZ=2.65,MIN_X=gridCols[0]-TX/2,MIN_Z=enemyRows[0]-TZ/2;
+function terrainRow(s){return s.side==='enemy'?s.r:s.r+3;}
+function terrainAt(s){return s?terrain[terrainRow(s)][s.c]:null;}
+function heightAt(s){return s?TERRAIN_HEIGHT[terrainAt(s)]:SOIL;}
+let terrainMesh=null;
+function terrainLevel(x,z){
+ // Smoothstep only across the final part of each voxel edge: flat block tops and a rounded excavated lip.
+ const fx=(x-MIN_X)/TX-.5,fz=(z-MIN_Z)/TZ-.5;
+ const i=Math.floor(fx),j=Math.floor(fz),a=fx-i,b=fz-j;
+ const clampi=v=>Math.max(0,Math.min(COLS-1,v)),clampj=v=>Math.max(0,Math.min(TERRAIN_ROWS-1,v));
+ const ea=Math.max(0,Math.min(1,(a-.34)/.32)),eb=Math.max(0,Math.min(1,(b-.34)/.32));
+ const sx=ea*ea*(3-2*ea),sz=eb*eb*(3-2*eb);
+ const h00=TERRAIN_HEIGHT[terrain[clampj(j)][clampi(i)]],h10=TERRAIN_HEIGHT[terrain[clampj(j)][clampi(i+1)]];
+ const h01=TERRAIN_HEIGHT[terrain[clampj(j+1)][clampi(i)]],h11=TERRAIN_HEIGHT[terrain[clampj(j+1)][clampi(i+1)]];
+ return (h00*(1-sx)+h10*sx)*(1-sz)+(h01*(1-sx)+h11*sx)*sz;
+}
+function rebuildTerrain(){
+ if(terrainMesh){gl.deleteBuffer(terrainMesh.b);gl.deleteBuffer(terrainMesh.i);}
+ const N=10,nx=COLS*N+1,nz=TERRAIN_ROWS*N+1;
+ const v=[],idx=[],ex=.04;
+ for(let j=0;j<nz;j++){const z=MIN_Z+j*TZ/N;
+  for(let i=0;i<nx;i++){
+   const x=MIN_X+i*TX/N,y=terrainLevel(x,z);
+   const dhdx=(terrainLevel(x+ex,z)-terrainLevel(x-ex,z))/(2*ex);
+   const dhdz=(terrainLevel(x,z+ex)-terrainLevel(x,z-ex))/(2*ex);
+   const inv=1/Math.hypot(dhdx,1,dhdz);
+   v.push(x,y,z,-dhdx*inv,inv,-dhdz*inv,i/(nx-1),j/(nz-1));
+  }
+ }
+ for(let j=0;j<nz-1;j++)for(let i=0;i<nx-1;i++){
+  const a=j*nx+i,b=a+1,c=a+nx,d=c+1;
+  idx.push(a,c,b,b,c,d);
+ }
+ terrainMesh=makeGeom(v,idx);
+}
+function digOrFill(s,action){
+ if(!s){message('请选择一个地块');return false;}
+ const r=terrainRow(s),kind=terrain[r][s.c];
+ if(occupied.has(s.id)){message('有卡牌占用，不能改变地形');return false;}
+ if(action==='dig'){
+  if(kind!=='soil'){message('只能挖掘泥土');return false;}
+  terrain[r][s.c]='hole';
+ }else{
+  if(kind==='soil'){message('这里已经是泥土');return false;}
+  terrain[r][s.c]='soil';
+ }
+ rebuildTerrain();message(action==='dig'?'挖出圆润土坑':'填土恢复地面');return true;
+}
 function makeGeom(vertices,indices){const vao={};vao.b=gl.createBuffer();vao.i=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vao.b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,vao.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);vao.count=indices.length;return vao;}
 const box=(()=>{const vs=[],ids=[];const face=(p,n)=>{const k=vs.length/8;p.forEach(([x,y,z],i)=>vs.push(x,y,z,...n,(i===0||i===3)?0:1,(i<2)?0:1));ids.push(k,k+1,k+2,k,k+2,k+3);};
 face([[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5]],[0,1,0]);
@@ -160,14 +226,15 @@ function facilityTexture(name){
  return tex;
 }
 function sync(){for(const d of handDefs){let b=buttons.get(d.id);
- b.hidden=cards.some(c=>c.def.id===d.id);b.classList.toggle('active',active?.id===d.id);
+ b.hidden=d.kind!=='terrain'&&cards.some(c=>c.def.id===d.id);
+ b.classList.toggle('active',active?.id===d.id);
  b.setAttribute('aria-pressed',active?.id===d.id?'true':'false');}}
 function clearPick(){active=null;preview=null;overSlot=null;onBoard=false;sync();}
 function pick(d){if(cards.some(c=>c.def.id===d.id))return;active=d;preview=makeCard(d);hoverCard=null;sync();}
 for(const d of handDefs){
- const b=document.createElement('button');b.type='button';b.className='hand-card';b.title=d.name;b.setAttribute('aria-label',d.name);
+ const b=document.createElement('button');b.type='button';b.className='hand-card'+(d.kind==='terrain'?' terrain':'');b.title=d.name;b.setAttribute('aria-label',d.name);
  b.innerHTML=d.src?'<img src="'+d.src+'" draggable="false" alt="'+d.name+'">':
- '<span class="name">'+d.name+'</span><span class="kind">设施</span>';
+ '<span class="name">'+d.name+'</span><span class="kind">'+(d.kind==='terrain'?'地形变化':'设施')+'</span>';
  hand.insertBefore(b,document.getElementById('reset'));buttons.set(d.id,b);
  b.addEventListener('pointerdown',e=>{if(b.hidden)return;e.preventDefault();handDown={id:d.id,x:e.clientX,y:e.clientY,moved:false};pick(d);});
  b.addEventListener('click',e=>{if(e.detail===0)pick(d);});
@@ -180,13 +247,21 @@ function slotAt(x,z){
  if(dx>slotW/2||dz>slotH/2)continue;let d=dx*dx+dz*dz;if(d<dd){best=s;dd=d;}}return best;
 }
 function valid(d,s,move=null){
- if(!d||!s||s.side!=='ally'||s.zone!==d.kind)return false;
+ if(!d||!s)return false;
+ if(d.kind==='terrain'){
+   if(occupied.has(s.id))return false;
+   const kind=terrainAt(s);
+   return d.terrainAction==='dig'?kind==='soil':kind!=='soil';
+ }
+ if(s.side!=='ally'||s.zone!==d.kind||terrainAt(s)!=='soil')return false;
  if(occupied.has(s.id)&&occupied.get(s.id)!==move)return false;
  if(d.kind==='unit'&&cards.filter(c=>c.kind==='unit'&&c!==move).length>=7)return false;
  return true;
 }
 function drop(s){
- if(!active)return;if(!valid(active,s)){message('红色区域不能放置');return;}
+ if(!active)return;
+ if(!valid(active,s)){message('红色区域不能放置');return;}
+ if(active.kind==='terrain'){digOrFill(s,active.terrainAction);clearPick();return;}
  const c=makeCard(active,s);c.x=preview.x;c.z=preview.z;c.y=.7;c.placeStart=now;
  occupied.set(s.id,c);cards.push(c);clearPick();
 }
@@ -194,7 +269,7 @@ function move(c,s){
  if(!valid(c.def,s,c)){message('此处无法放置');return;}
  occupied.delete(c.slot.id);c.slot=s;c.homeX=s.x;c.homeZ=s.z;occupied.set(s.id,c);c.placeStart=now;
 }
-function reset(){cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();}
+function reset(){cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();seedTerrain();rebuildTerrain();message('场地已重置');}
 document.getElementById('reset').addEventListener('click',reset);
 function closestCard(clientX,clientY){
  const cr=canvas.getBoundingClientRect(),px=(clientX-cr.left)*w/cr.width,py=(clientY-cr.top)*h/cr.height;
@@ -243,10 +318,11 @@ function drawHighlights(){
  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
  for(const s of slotCenters){
  const good=valid(d,s,dragCard),near=s===overSlot&&onBoard;
- const fill=good?[.19,.72,.31,near?.37:.18]:[.90,.20,.23,near?.35:.10];
+ const fill=good?[.19,.72,.31,near?.37:.19]:[.90,.20,.23,near?.35:.085];
  const edge=good?[.08,.61,.25,near?.85:.28]:[.85,.18,.19,near?.85:.21];
- renderGeom(slotFill,mul(T(s.x,-.102,s.z),RX(-Math.PI/2)),fill,null,true);
- renderGeom(RRstrip,mul(T(s.x,-.095,s.z),RX(-Math.PI/2)),edge,null,true);
+ const y=Math.max(heightAt(s)+.035,terrainAt(s)==='water'?WATER+.04:heightAt(s)+.035);
+ renderGeom(slotFill,mul(T(s.x,y,s.z),RX(-Math.PI/2)),fill,null,true);
+ renderGeom(RRstrip,mul(T(s.x,y+.008,s.z),RX(-Math.PI/2)),edge,null,true);
  }
  gl.depthMask(true);gl.disable(gl.BLEND);
 }
@@ -255,11 +331,33 @@ for(const c of cards){for(let i=0;i<1;i++){let scale=1+.04*i;
 let m=mul(T(c.x+.10+i*.025,.068+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
 function drawStage(){
- // No printed or permanent grid. One uninterrupted neutral surface until the Anima background is supplied.
- cube(0,-.53,-1.1,29.5,.34,16.55,colors.boardSide);
- cube(0,-.34,-1.1,29.55,.10,16.6,colors.boardEdge);
- cube(0,-.25,-1.1,29.5,.16,16.55,colors.platform);
- cube(0,-.14,-1.1,29.35,.035,16.38,colors.boardTop);
+ // True WebGL heightfield: 96 mutable voxels are one connected surface.
+ cube(0,GROUND_BOTTOM-.10,-1.1,29.52,.20,16.65,[.31,.24,.18,1]);
+ // Only the perimeter has vertical sides. Digging lowers the actual center surface.
+ for(let c=0;c<COLS;c++){
+   cube(gridCols[c],-.48,MIN_Z-.015,TX,.77,.055,[.36,.26,.19,1]);
+   cube(gridCols[c],-.48,MIN_Z+TERRAIN_ROWS*TZ+.015,TX,.77,.055,[.36,.26,.19,1]);
+ }
+ for(let r=0;r<TERRAIN_ROWS;r++){
+   const z=MIN_Z+(r+.5)*TZ;
+   cube(MIN_X-.03,-.48,z,.06,.77,TZ,[.39,.28,.20,1]);
+   cube(MIN_X+COLS*TX+.03,-.48,z,.06,.77,TZ,[.39,.28,.20,1]);
+ }
+ if(terrainMesh)renderGeom(terrainMesh,I(),[.57,.405,.262,1]);
+ // Submerged water has an independent low flat level; brown shore slopes rise up around it.
+ const t=now*.9;
+ for(let r=0;r<TERRAIN_ROWS;r++)for(let c=0;c<COLS;c++){
+   const kind=terrain[r][c],x=gridCols[c],z=MIN_Z+(r+.5)*TZ;
+   if(kind==='water'){
+     const surface=WATER+Math.sin(t+c*.44+r*.5)*.006;
+     cube(x,surface,z,TX,.025,TZ,[.40,.64,.76,1]);
+     // A delicate brighter glint, not a decorative frame.
+     cube(x-.15,surface+.014,z-.34,TX*.42,.004,.075,[.55,.74,.83,1]);
+   }else if(kind==='hole'){
+     // Dark floor below the rounded dirt lip, clipped naturally by surrounding high ground.
+     cube(x,HOLE+.019,z,TX*.86,.012,TZ*.86,[.31,.224,.157,1]);
+   }
+ }
 }
 function frame(timeMs){
  now=timeMs/1000;resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
@@ -278,6 +376,7 @@ function frame(timeMs){
 }
 requestAnimationFrame(frame);
 })();
+
 </script>
 </body>
 </html>
