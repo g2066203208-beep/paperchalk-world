@@ -35,8 +35,10 @@ function create(id,grid){
  }
  function emit(event,detail){for(const fn of listeners.get(event)||[])fn(copy(detail));}
  function reset(){
-  units=new Map(config.units.map(unit=>[unit.id,{...copy(unit),currentHp:unit.hp,alive:true}]));
-  turn=1;phase='active';emit('reset',snapshot());return snapshot();
+  units=new Map(config.units.map(unit=>[unit.id,{...copy(unit),currentHp:unit.hp,alive:true,
+   deployed:!(unit.side==='ally'&&unit.staged===true)}]));
+  turn=1;phase=[...units.values()].some(u=>u.side==='ally'&&!u.deployed)?'deployment':'active';
+  emit('reset',snapshot());return snapshot();
  }
  function slot(unit){return {c:unit.c,r:unit.r+(unit.side==='ally'?config.rowsPerSide:0),side:unit.side};}
  function getUnit(id){const u=units.get(id);return u?copy(u):null;}
@@ -50,12 +52,24 @@ function create(id,grid){
   const pos=grid.center(c,tileR);
   return {side,r,c,tileC:c,tileR,...pos,id:side+'-'+r+'-'+c};
  }
- function occupancy(c,r){return [...units.values()].some(u=>u.alive&&u.c===c&&slot(u).r===r);}
+ function occupancy(c,r){return [...units.values()].some(u=>u.alive&&u.deployed&&u.c===c&&slot(u).r===r);}
+ function deploy(id,r,c){
+  const u=units.get(id);
+  if(!u||u.side!=='ally'||u.deployed||phase!=='deployment')return {ok:false,reason:'not-staged'};
+  if(!Number.isInteger(r)||!Number.isInteger(c)||r<0||r>=config.rowsPerSide||c<0||c>=config.columns)return {ok:false,reason:'outside-ally-grid'};
+  if(occupancy(c,r+config.rowsPerSide))return {ok:false,reason:'occupied'};
+  if(!grid.cell(c,r+config.rowsPerSide))return {ok:false,reason:'missing-terrain'};
+  u.r=r;u.c=c;u.deployed=true;
+  if(![...units.values()].some(other=>other.side==='ally'&&!other.deployed))phase='active';
+  const state=snapshot();
+  emit('deploy',{unitId:id,r,c,phase});if(phase==='active')emit('start',state);
+  return {ok:true,phase,unit:getUnit(id),state};
+ }
  function canModify(c,r,d){return phase==='active'&&!occupancy(c,r)&&grid.canAdjust(c,r,d);}
  function actAttack(attackerId,targetId,options={}){
   if(phase!=='active')return {ok:false,reason:'ended'};
   const actor=units.get(attackerId),target=units.get(targetId);
-  if(!actor||!target||!actor.alive||!target.alive||actor.side!=='ally'||target.side!=='enemy')return {ok:false,reason:'invalid-target'};
+  if(!actor||!target||!actor.alive||!target.alive||!actor.deployed||!target.deployed||actor.side!=='ally'||target.side!=='enemy')return {ok:false,reason:'invalid-target'};
   const hitPower=Number.isFinite(options.power)&&options.power>0?Math.floor(options.power):actor.attack;
   const damage=Math.min(target.currentHp,hitPower);
   target.currentHp-=damage;target.alive=target.currentHp>0;
@@ -76,7 +90,7 @@ function create(id,grid){
   return{ok:true,phase,damage};
  }
  reset();
- return Object.freeze({id:config.id,config:copy(config),on,reset,snapshot,getUnit,getSlot,occupancy,canModify,actAttack,
+ return Object.freeze({id:config.id,config:copy(config),on,reset,snapshot,getUnit,getSlot,occupancy,canModify,deploy,actAttack,
   get phase(){return phase;},get turn(){return turn;}});
 }
 root.PaperchalkLevelEngine=Object.freeze({version:'1.0.0',register,create,list:()=>[...registry.keys()]});
