@@ -258,6 +258,14 @@ const sceneHUD=window.PaperchalkSceneCardHUD.create({
  draw:profession=>window.__forestHand?.draw(profession),
  select:instance=>window.__forestHand?.selectCard(instance),
  nextTurn:()=>window.__forestHand?.nextTurn(),
+ staged:()=>level.snapshot().units.filter(u=>u.side==='ally'&&!u.deployed).map(u=>({
+  ...u,portrait:window.PaperchalkCharacterRegistry?.get(u.characterId)?.portrait||null
+ })),
+ selectedCharacter:()=>selectedStagedId,
+ selectCharacter:id=>{selectedStagedId=selectedStagedId===id?null:id;previewDeployment=null;
+  if(selectedStagedId)message('拿起伐木工人物卡：点击或拖到我方九宫格任意空位');},
+ placeCharacter:(id,x,y)=>deployCharacterAt(id,x,y),
+ previewCharacter:(id,x,y)=>previewCharacterAt(id,x,y),
  showRoster:()=>document.getElementById('roster-trigger').click()
 });
 window.__sceneCardHUD=sceneHUD;
@@ -275,6 +283,7 @@ function worldFromPointer(clientX,clientY,planeY=.1){
  return {x:camera.eye[0]+ray[0]*t,z:camera.eye[2]+ray[2]*t};
 }
 let hoverCard=null,pointerDown=null,dragCard=null,overSlot=null,now=0;
+let selectedStagedId=null,previewDeployment=null,previewDeployCard=null;
 let active=null,preview=null,handDown=null,onBoard=false,serial=0,noticeTimer=0;
 const hand=document.getElementById('hand'),note=document.getElementById('note');
 const levelHud=document.getElementById('level-hud');
@@ -282,7 +291,8 @@ let attackMode=true;
 function syncLevelHud(){
  const state=level.snapshot(),hero=state.units.find(u=>u.side==='ally');
  const enemies=state.units.filter(u=>u.side==='enemy'&&u.alive).length;
- levelHud.textContent='第 '+state.turn+' 轮 · 伐木少女生命 '+hero.currentHp+'/'+hero.hp+' · 敌人 '+enemies+'/2';
+ levelHud.textContent=state.phase==='deployment'?'部署阶段 · 从战士卡牌盒拿起伐木少女放入我方九宫格':
+ '第 '+state.turn+' 轮 · 伐木少女生命 '+hero.currentHp+'/'+hero.hp+' · 敌人 '+enemies+'/2';
 }
 function showLevelEnd(state){
  const modal=document.getElementById('level-end');
@@ -381,6 +391,7 @@ function move(c,s){
 }
 function reset(){
  cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;
+ selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
  fx.reset();terrain.reset('grass');clearPick();startForestLevel();
  window.__forestHand?.reset();
 }
@@ -441,6 +452,7 @@ canvas.addEventListener('pointerdown',e=>{
 });
 window.addEventListener('pointermove',e=>{
  if(sceneHUD.move(e)){canvas.style.cursor='pointer';return;}
+ if(selectedStagedId&&level.phase==='deployment')previewCharacterAt(selectedStagedId,e.clientX,e.clientY);
  if(orbitCamera.pointerMove(e)){
   if(dragCard){dragCard.dragged=false;dragCard=null;}
   pointerDown=null;handDown=null;overSlot=null;
@@ -453,6 +465,11 @@ window.addEventListener('pointermove',e=>{
 });
 window.addEventListener('pointerup',e=>{
  if(sceneHUD.up(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
+ if(selectedStagedId&&level.phase==='deployment'){
+  if(deployCharacterAt(selectedStagedId,e.clientX,e.clientY)){
+   pointerDown=null;handDown=null;return;
+  }
+ }
  if(orbitCamera.pointerUp(e)){
   pointerDown=null;handDown=null;
   canvas.style.cursor=active?'crosshair':'default';return;
@@ -475,7 +492,7 @@ canvas.addEventListener('dblclick',e=>{if(active)return;let c=closestCard(e.clie
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%7)*.07;});}
- if(e.code==='Escape')clearPick();
+ if(e.code==='Escape'){clearPick();selectedStagedId=null;previewDeployment=null;}
   if(e.code==='Enter'){e.preventDefault();window.__forestHand?.nextTurn();}
   if(e.code==='KeyG'){document.getElementById('roster-trigger').click();}
  if(e.code==='KeyR'&&!e.repeat)reset();
@@ -490,6 +507,16 @@ window.addEventListener('keydown',e=>{
  // Pan and zoom are bounded.
 });
 function drawHighlights(){
+ if(level.phase==='deployment'){
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+  for(const s of slotCenters.filter(s=>s.side==='ally'&&s.zone==='unit')){
+   if(level.occupancy(s.tileC,s.tileR))continue;
+   const y=fx.height(s.tileC,s.tileR)+.025;
+   const tint=previewDeployment?.slot?.id===s.id?[.18,.84,.40,.37]:[.30,.65,.42,.13];
+   renderGeom(slotFill,mul(mul(T(s.x,y,s.z),RX(-Math.PI/2)),S(terrain.tileW/slotW*.9,terrain.tileD/slotH*.9,1)),tint,null,true);
+  }
+  gl.depthMask(true);gl.disable(gl.BLEND);
+ }
  const d=dragCard?.def||active;if(!d)return;
  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
  const targets=d.kind==='terrain'?terrainTargets:slotCenters;
@@ -538,7 +565,13 @@ function frame(timeMs){
  drawShadows(now);
  for(const c of [...cards].sort((a,b)=>a.z-b.z))drawCard(c,now);
  if(active&&preview&&onBoard&&!dragCard){preview.hover=1;preview.y=(overSlot?fx.height(overSlot.tileC,overSlot.tileR):.0)+.85+Math.sin(now*2)*.025;drawCard(preview,now);}
- sceneHUD.render(now,w,h);
+ if(previewDeployment?.slot&&previewDeployCard){
+   const p=previewDeployment.slot;
+   previewDeployCard.slot=p;previewDeployCard.x=p.x;previewDeployCard.z=p.z;
+   previewDeployCard.y=fx.height(p.tileC,p.tileR)+.75+Math.sin(now*3)*.09;
+   previewDeployCard.hover=.8;drawCard(previewDeployCard,now);
+  }
+  sceneHUD.render(now,w,h);
  requestAnimationFrame(frame);
 }
 function placeholderUnitTexture(name,enemy){
