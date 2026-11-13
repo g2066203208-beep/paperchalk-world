@@ -64,9 +64,13 @@ function create(o){
  }
  function layout(state,staged){
   const mobile=canvas.getBoundingClientRect().width<720;
-  const slots=[],deckSpan=Math.min(mobile?spanW-.45:14.0,spanW-1);
-  const deckScale=mobile?.32:.67;
-  const baseDeckY=mobile?-3.46:-3.60;
+  const slots=[];
+  // One joined tray fills the screen width; each physical compartment has the
+  // exact same pitch. Anchor it to the player's lower viewport edge.
+  const trayWidth=spanW*(mobile?.974:.972),pitch=trayWidth/7;
+  const deckSpan=pitch*6;
+  const deckScale=Math.min(mobile?.36:1.09,pitch/cardW*.79);
+  const baseDeckY=-spanH*.5+(mobile?.17:.16);
   state.classes.forEach((c,i)=>{
    slots.push({kind:'deck',id:'deck:'+c.id,profession:c.id,c,
     x:(i/6-.5)*deckSpan,y:baseDeckY,z:0,scale:deckScale,angle:0});
@@ -87,7 +91,7 @@ function create(o){
   for(const u of staged){
    const origin=slots.find(p=>p.kind==='deck'&&p.profession===u.role);
    if(origin)slots.push({...origin,kind:'character',id:'character:'+u.id,
-    unitId:u.id,portrait:u.portrait,y:origin.y+(.70*deckScale/.67),scale:deckScale*1.14});
+    unitId:u.id,portrait:u.portrait,y:origin.y+(.56*deckScale/.79),scale:deckScale*1.10});
   }
   slots.push({kind:'turn',id:'turn:end',x:Math.min(spanW*.5-.45,7.75),
    y:baseDeckY+.03,z:.9,scale:mobile?.26:.38,angle:.07});
@@ -99,7 +103,7 @@ function create(o){
   const hover=focused?.58:0,raise=hover+(selected?.52:0)+(charSelected?.18:0);
   const easing=Math.sin(frame*1.5+p.x*.3)*.020;
   const scale=p.scale*(1+(focused?.15:0)+(selected?.11:0));
-  const tilt=p.kind==='character'?-0.70:p.kind==='deck'?-1.03:(p.kind==='hand'?(p.tilt||-.12):-.17);
+  const tilt=p.kind==='character'?-0.90:p.kind==='deck'?-1.03:(p.kind==='hand'?(p.tilt||-.12):-.17);
   let mat=T(opts.x??p.x,(opts.y??p.y)+raise+easing,(opts.z??p.z)+raise*.28);
   mat=mul(mat,RY(focused?-.045:0));
   mat=mul(mat,RX(tilt+(focused?.12:0)));
@@ -114,60 +118,75 @@ function create(o){
   let m=mul(T(p.x,p.y,p.z),RX(-1.03));
   return mul(m,local);
  }
- function labelTexture(c){
-  if(labelCache.has(c.id))return labelCache.get(c.id);
+ function labelTexture(c,remaining){
+  const key=c.id+':'+remaining;
+  if(labelCache.has(key))return labelCache.get(key);
   const cv=document.createElement('canvas');cv.width=512;cv.height=128;
   const ctx=cv.getContext('2d');
-  ctx.fillStyle='#e1d6ba';ctx.fillRect(0,0,512,128);
-  ctx.strokeStyle='#977e5e';ctx.lineWidth=8;ctx.strokeRect(6,6,500,116);
-  ctx.fillStyle='#435440';ctx.textAlign='center';ctx.font='bold 83px serif';
-  ctx.fillText(c.name,256,88);
-  const texture=makeTexture(cv);labelCache.set(c.id,texture);return texture;
+  const isEmpty=remaining===0;
+  ctx.fillStyle=isEmpty?'#827b6a':'#e5d6b7';
+  ctx.fillRect(0,0,512,128);
+  ctx.strokeStyle=isEmpty?'#625e52':'#a28a65';ctx.lineWidth=7;
+  ctx.strokeRect(5,5,502,118);
+  ctx.fillStyle=isEmpty?'#f1ede2':'#3d4734';
+  ctx.font='bold 65px serif';ctx.textAlign='left';ctx.fillText(c.name,25,87);
+  ctx.font='bold 68px Georgia,serif';ctx.textAlign='right';
+  ctx.fillText(String(remaining).padStart(2,'0'),490,89);
+  const tex=makeTexture(cv);labelCache.set(key,tex);return tex;
  }
  function drawConnectedTray(decks){
   if(decks.length!==7)return;
-  // ONE physically continuous seven-compartment chip tray.  No detached boxes.
-  // Every class shares one solid chassis; six separators create seven sockets.
+  // The whole tray is ONE continuous 3D object, not seven independent crates.
+  // Like a casino chip holder: seven long recessed channels, six separators,
+  // high side/back walls, and a front that is almost completely OPEN.
   const pitch=decks[1].x-decks[0].x;
-  const width=pitch*7;
-  const slotHeight=cardH*decks[0].scale*1.26;
-  const wall=Math.max(.065,decks[0].scale*.11);
-  const originX=(decks[0].x+decks[6].x)/2;
-  const originY=decks[0].y;
-  const baseTransform=mul(T(originX,originY,0),RX(-1.03));
-  const piece=(x,y,z,sx,sy,sz)=>mul(baseTransform,mul(T(x,y,z),S(sx,sy,sz)));
-  const walnut=[.32,.255,.185,1],woodEdge=[.48,.365,.245,1];
-  const rim=[.57,.445,.305,1],felt=[.17,.245,.195,1],feltShade=[.125,.185,.155,1];
-  // Solid full-width body — it remains ONE large box even when all decks are empty.
-  renderGeom(box,piece(0,0,-.14,width,slotHeight,.29),walnut);
-  renderGeom(box,piece(0,0,.032,width-.20,slotHeight-.18,.035),woodEdge);
+  const trayWidth=pitch*7;
+  const scale=decks[0].scale;
+  const slotDepth=cardH*scale*1.27;
+  const wall=Math.max(.043,scale*.079);
+  const x0=(decks[0].x+decks[6].x)/2;
+  const y0=decks[0].y;
+  const tilt=-1.03;
+  const matrix=mul(T(x0,y0,0),RX(tilt));
+  const part=(x,y,z,sx,sy,sz)=>mul(matrix,mul(T(x,y,z),S(sx,sy,sz)));
+  const bottom=[.39,.30,.206,1],side=[.46,.345,.229,1];
+  const dark=[.16,.205,.169,1],seam=[.105,.154,.119,1],trim=[.66,.53,.341,1];
+  const c=wall;
+  // The continuous, heavyweight timber chassis with sunken felt compartments.
+  renderGeom(box,part(0,0,-.13,trayWidth,slotDepth,.29),bottom);
+  renderGeom(box,part(0,0,.030,trayWidth-.13,slotDepth-.15,.026),[.27,.32,.25,1]);
   for(let i=0;i<7;i++){
-   const x=(i-3)*pitch;
-   renderGeom(box,piece(x,0,.061,pitch-wall*1.55,slotHeight-wall*2.0,.022),felt);
-   renderGeom(box,piece(x,slotHeight*.36,.075,pitch-wall*1.9,slotHeight*.14,.020),feltShade);
+   const px=(i-3)*pitch;
+   renderGeom(box,part(px,.012,.047,pitch-c*1.7,slotDepth-c*1.6,.018),dark);
+   renderGeom(box,part(px,slotDepth*.36,.060,pitch-c*2,slotDepth*.15,.012),seam);
   }
-  // Four connected outer walls and six shared partitions, as in a chip tray.
-  for(const side of [-1,1]){
-   renderGeom(box,piece(side*(width-wall)/2,0,.205,wall,slotHeight,.42),woodEdge);
-   renderGeom(box,piece(0,side*(slotHeight-wall)/2,.205,width,wall,.42),woodEdge);
+  // Back wall and both outside walls can be tall, away from the player's view.
+  renderGeom(box,part(0,slotDepth*.5-c*.5,.20,trayWidth,c,.34),side);
+  for(const sign of [-1,1]){
+   renderGeom(box,part(sign*(trayWidth-c)*.5,0,.195,c,slotDepth,.34),side);
   }
+  // Six shared dividers have a lower front section and a taller back section.
+  // The recess and the deck-card side edges remain visible from the player.
   for(let i=1;i<7;i++){
-   const x=-width/2+i*pitch;
-   renderGeom(box,piece(x,0,.205,wall,slotHeight-.04,.41),woodEdge);
+   const px=-trayWidth*.5+i*pitch;
+   renderGeom(box,part(px,slotDepth*.16,.18,c,slotDepth*.66,.35),side);
+   renderGeom(box,part(px,-slotDepth*.32,.087,c,slotDepth*.31,.115),side);
   }
-  // One uninterrupted highlighted front edge emphasizes the joined chassis.
-  renderGeom(box,piece(0,-slotHeight*.5+.035,.417,width-.12,.046,.034),rim);
+  // PLAYER SIDE: NO high closing panel.  This lip is only a narrow ledge
+  // below the card edges: low enough to expose thick stacks and empty pockets.
+  renderGeom(box,part(0,-slotDepth*.5+c*.40,.056,trayWidth,c,.103),bottom);
+  renderGeom(box,part(0,-slotDepth*.5+.012,.118,trayWidth-.085,.023,.025),trim);
+  // Profession/remaining-count plates are flush on each compartment FLOOR.
+  // An empty slot remains a deep dark recess with a clear 00 counter.
   for(let i=0;i<7;i++){
-   const x=(i-3)*pitch;
-   renderGeom(box,piece(x,-slotHeight*.5+.13,.434,pitch*.70,
-    Math.min(.24,slotHeight*.20),.024),[1,1,1,1],labelTexture(decks[i].c),true);
+   const px=(i-3)*pitch,stock=decks[i].c.deckCount;
+   const plate=part(px,-slotDepth*.5+.185,.074,pitch*.78,.197,.013);
+   renderGeom(box,plate,[1,1,1,1],labelTexture(decks[i].c,stock),true);
   }
-  // Metallic pins are shared at the actual physical divider intersections.
+  // Tiny countersunk hardware at real divider junctions, away from opening.
   for(let i=0;i<=7;i++){
-   const x=-width/2+i*pitch;
-   for(const y of [-slotHeight*.5+.03,slotHeight*.5-.03]){
-    renderGeom(box,piece(x,y,.445,.061,.060,.035),[.70,.60,.405,1]);
-   }
+   const px=-trayWidth*.5+i*pitch;
+   renderGeom(box,part(px,slotDepth*.5-.02,.391,.047,.049,.022),trim);
   }
   boxDrawCalls=7;
  }
@@ -189,14 +208,19 @@ function create(o){
    const tex=makeTextTexture({title:pos.c.name,profession:pos.profession,back:true});
    for(let n=0;n<pos.c.deckCount;n++){
     // True discrete cards: each one separately draws the same battlefield card geometry.
-    const layer={...pos,z:.16+n*.031,x:pos.x+(n%3-1)*.002,
-     y:pos.y+(n%5-2)*.002};
+    const layer={...pos,
+      // Shift each entire solid card along the plane normal: the visible edges
+      // are real individual card slabs, rather than a fake "deck thickness".
+      x:pos.x+(n%3-1)*.003,
+      y:pos.y-.085+Math.sin(1.03)*(.18+n*.043),
+      z:Math.cos(1.03)*(.18+n*.043),
+      angle:(n%3-1)*.003};
     renderPhysicalCard(layer,tex);
    }
   }
   for(const pos of positions.filter(p=>p.kind==='character')){
    const deck=positions.find(q=>q.kind==='deck'&&q.profession===pos.profession);
-   renderPhysicalCard({...pos,z:.20+(deck?.c.deckCount||0)*.031},
+   renderPhysicalCard({...pos,z:Math.cos(1.03)*(.27+(deck?.c.deckCount||0)*.043)},
      portrait(pos.portrait,pos.profession));
   }
   for(const pos of positions.filter(p=>p.kind==='hand')){
@@ -299,6 +323,8 @@ function create(o){
     visible:scene.map(p=>({kind:p.kind,id:p.id,x:p.x,y:p.y})),
     count:state.count,
     physicalBoxes:boxDrawCalls,connectedTray:true,trayBodies:1,compartments:7,
+    frontOpening:'low-lip',frontWallHeight:.103,
+    screenEdgeAnchored:true,trayWidthFraction:.972,
     physicalDeckCards:state.classes.reduce((n,c)=>n+c.deckCount,0),
     stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     renderedCardMeshes:cardDrawCalls,
@@ -311,5 +337,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'2.1.0',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'2.2.0',create});
 })(window);
