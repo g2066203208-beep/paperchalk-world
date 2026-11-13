@@ -52,11 +52,12 @@ function create(id,grid){
  }
  function occupancy(c,r){return [...units.values()].some(u=>u.alive&&u.c===c&&slot(u).r===r);}
  function canModify(c,r,d){return phase==='active'&&!occupancy(c,r)&&grid.canAdjust(c,r,d);}
- function actAttack(attackerId,targetId){
+ function actAttack(attackerId,targetId,options={}){
   if(phase!=='active')return {ok:false,reason:'ended'};
   const actor=units.get(attackerId),target=units.get(targetId);
   if(!actor||!target||!actor.alive||!target.alive||actor.side!=='ally'||target.side!=='enemy')return {ok:false,reason:'invalid-target'};
-  const damage=Math.min(target.currentHp,actor.attack);
+  const hitPower=Number.isFinite(options.power)&&options.power>0?Math.floor(options.power):actor.attack;
+  const damage=Math.min(target.currentHp,hitPower);
   target.currentHp-=damage;target.alive=target.currentHp>0;
   emit('attack',{attackerId,targetId,damage,hp:target.currentHp,defeated:!target.alive});
   if(!target.alive)emit('defeat',{unitId:target.id,side:target.side});
