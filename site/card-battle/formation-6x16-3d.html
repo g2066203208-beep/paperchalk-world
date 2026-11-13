@@ -218,7 +218,7 @@ function facilityTexture(name){
  const cv=document.createElement('canvas');cv.width=512;cv.height=768;const ctx=cv.getContext('2d');
  ctx.fillStyle='#e6e0d2';ctx.fillRect(0,0,512,768);ctx.strokeStyle='#b4ac99';ctx.lineWidth=8;ctx.strokeRect(22,22,468,724);
  ctx.fillStyle='#514d42';ctx.textAlign='center';ctx.font='bold 82px serif';ctx.fillText(name,256,410);
- ctx.font='34px serif';ctx.fillText('设施',256,700);
+ ctx.font='34px serif';ctx.fillText(name.endsWith('卡')?'地形':'设施',256,700);
  const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,cv);
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
@@ -374,6 +374,7 @@ function frame(timeMs){
  if(active&&preview&&onBoard&&!dragCard){preview.hover=1;preview.y=.85+Math.sin(now*2)*.025;drawCard(preview,now);}
  requestAnimationFrame(frame);
 }
+rebuildTerrain();
 requestAnimationFrame(frame);
 })();
 
