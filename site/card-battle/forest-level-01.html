@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>林间小路｜第一关 · 3D卡牌战场</title>
+<link rel="stylesheet" href="./ui/forest-hand.css?v=1">
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c6c1b6}
 #stage{display:block;width:100vw;height:100dvh;touch-action:none;cursor:default;outline:0}
@@ -51,13 +52,26 @@ html,body{background:#d8ded0}
 <div id="note" aria-live="polite"></div>
 <div id="terrain-hint"><strong>林间小路 · 第一关</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>点击敌人攻击；选地形工具再点格子<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
-<div id="hand" role="toolbar" aria-label="第一关原型操作"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div><div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
+<div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div>
+<section id="profession-dock" aria-label="七职业卡牌盒与独立堆叠手牌">
+  <div class="dock-content">
+   <div class="dock-head">
+    <span class="dock-title" id="hand-capacity">手牌 5/10</span>
+    <span class="dock-phase" id="draw-phase">摸牌阶段</span>
+    <span class="dock-info" id="hand-guidance">未打出第一张牌之前，可自由摸到10张</span>
+    <button class="end-turn" id="end-hand-turn" type="button">结束回合</button>
+   </div>
+   <div class="class-grid class-stack-row" id="class-hand-stacks" aria-label="七职业堆叠手牌"></div>
+   <div class="class-grid class-box-row" id="class-deck-boxes" aria-label="七职业可摸牌卡盒"></div>
+  </div>
+</section><div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
 <script src="./engine/voxel-terrain.js?v=1"></script>
 <script src="./engine/battle-camera.js?v=1"></script>
 <script src="./engine/level-engine.js?v=1"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=1"></script>
+<script src="./engine/profession-decks.js?v=1"></script>
 <script>
 'use strict';
 (()=>{
@@ -350,6 +364,7 @@ function move(c,s){
 function reset(){
  cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;
  fx.reset();terrain.reset('grass');clearPick();startForestLevel();
+ window.__forestHand?.reset();
 }
 document.getElementById('reset').addEventListener('click',reset);
 document.getElementById('demo').addEventListener('click',()=>{
@@ -535,8 +550,10 @@ function startForestLevel(){
 }
 function tapUnit(card){
  if(!card||card.side!=='enemy'||!attackMode||level.phase!=='active')return;
- const result=level.actAttack('woodcutter',card.unitId);
- if(!result.ok)return;
+ const action=window.__forestHand?.consumeForTarget(card.unitId);
+ if(!action){message('请先选择一张最上面的战士行动牌');return false;}
+ const result=level.actAttack('woodcutter',card.unitId,{power:action.damage});
+ if(!result.ok)return false;
  card.attackStart=now;
  const foe=level.getUnit(card.unitId);
  if(foe&&!foe.alive){
@@ -549,7 +566,8 @@ function tapUnit(card){
  if(hero)hero.attackStart=now;
  syncLevelHud();
  if(level.phase!=='active')showLevelEnd(level.snapshot());
- else message('斧击命中 · 敌人反击后进入下一轮');
+ else message('斧击命中 · 已出牌，本回合无法普通摸牌');
+ return true;
 }
 document.getElementById('level-retry').addEventListener('click',reset);
 startForestLevel();
@@ -560,11 +578,12 @@ window.__forestLevelDebug={
  get slots(){return slotCenters.map(t=>({side:t.side,r:t.r,c:t.c,tileC:t.tileC,tileR:t.tileR,zone:t.zone}));},
  get units(){return cards.map(c=>({id:c.unitId,side:c.side,r:c.slot?.r,c:c.slot?.c}));},
  adjust(c,r,delta){return level.canModify(c,r,delta)&&fx.adjust(c,r,delta);},
- attack(id){const card=cards.find(c=>c.unitId===id);if(!card)return false;tapUnit(card);return true;},
+ attack(id){const card=cards.find(c=>c.unitId===id);if(!card)return false;return tapUnit(card)===true;},
  reset
 };
 requestAnimationFrame(frame);
 })();
 </script>
+<script src="./ui/forest-hand.js?v=1"></script>
 </body>
 </html>
