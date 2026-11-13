@@ -396,6 +396,78 @@ button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb5
  .squad[data-count="1"].ally-squad{top:69%!important}
  .hand-surface{bottom:-8px!important}
 }
+
+/* 18 real-art cards: enemy 3x3 vs player 3x3. Layout-only test; no middle clock. */
+#stage.grid-preview .squad,
+#stage.grid-preview .timeline-plaque,
+#stage.grid-preview .status-note,
+#stage.grid-preview .hand-surface,
+#stage.grid-preview .side-desk,
+#stage.grid-preview .candle,
+#stage.grid-preview .engrave,
+#stage.grid-preview .zone-caption,
+#stage.grid-preview #party-select,
+#stage.grid-preview #round,
+#stage.grid-preview #restart{display:none!important}
+#stage.grid-preview .board-perspective{left:4%;right:4%;top:13.5%;bottom:9%;perspective:1200px}
+#stage.grid-preview .board-top{transform:rotateX(10deg);transform-origin:50% 48%}
+#stage.grid-preview .board-top:after{background:
+ radial-gradient(ellipse 70% 74% at 48% 41%,#daa35b33,transparent 85%),
+ linear-gradient(90deg,#0d08074f,transparent 25%,transparent 75%,#0d08075a)}
+#stage.grid-preview .table-edge-light{bottom:6.3%}
+.grid-preview-ui{display:none}
+#stage.grid-preview .grid-preview-ui{display:flex}
+.grid-preview-ui{position:absolute;z-index:24;left:50%;transform:translateX(-50%);bottom:1.6%;width:min(800px,90vw);align-items:center;justify-content:center;gap:13px;flex-wrap:wrap}
+.grid-preview-ui .layout-toggle{border:1px solid #765436b5;border-radius:4px;padding:3px;background:#180e09d9;display:flex;gap:3px}
+.grid-preview-ui button{background:transparent;border:0;color:#ceb58d;cursor:pointer;padding:8px 12px;font:12px ui-sans-serif,system-ui,sans-serif}
+.grid-preview-ui button.active{background:#916a40;color:#fff1cf;box-shadow:inset 0 1px 5px #25130b}
+.grid-preview-ui .density-note{font:12px ui-sans-serif,system-ui,sans-serif;color:#e1c498;text-shadow:0 2px 4px #000}
+.grid-stage{display:none}
+#stage.grid-preview .grid-stage{display:grid}
+.grid-stage{position:absolute;z-index:11;inset:5% 5% 6%;grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);gap:6px;align-items:center;justify-items:stretch;pointer-events:auto}
+.grid-army{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;gap:12px}
+.grid-army-title{color:#ebcf9e;text-shadow:0 2px 3px #100a06;font:600 clamp(12px,1vw,15px) ui-sans-serif,system-ui,sans-serif;letter-spacing:.25em;white-space:nowrap}
+.grid-army.enemy .grid-army-title{color:#e9b4a0}
+.grid-matrix{--grid-card-w:clamp(80px, min(7.9vw, 13.5vh), 146px);
+ display:grid;grid-template-columns:repeat(3,var(--grid-card-w));gap:clamp(6px,.85vw,14px);justify-content:center;align-content:center}
+.grid-preview-card{position:relative;display:block;flex:none;min-width:0;width:var(--grid-card-w);aspect-ratio:2/2.92;
+ padding:5px;border-radius:4px;border:1px solid #3a291c;background:#ead9ba;overflow:hidden;
+ box-shadow:0 3px 0 #735534,0 9px 12px #0009,inset 0 0 0 2px #ffefcf;
+ cursor:pointer;transition:translate .17s ease,box-shadow .17s ease,filter .17s ease;transform:translateZ(0)}
+.grid-preview-card:before{content:"";position:absolute;inset:0;background-image:var(--paper-texture);background-size:cover;opacity:.20;mix-blend-mode:multiply;pointer-events:none}
+.grid-preview-card:after{content:"";position:absolute;inset:3px;border:1px solid #a9865845;pointer-events:none}
+.grid-preview-card img{display:block;width:100%;height:100%;object-fit:contain;position:relative;z-index:1}
+.grid-preview-card:hover{translate:0 -7px;z-index:5;box-shadow:0 4px 0 #a97b48,0 18px 24px #000c,0 0 16px #ecba7c52;filter:brightness(1.08)}
+.grid-preview-card.is-selected{outline:2px solid #f4d5a2;outline-offset:2px;box-shadow:0 0 0 3px #5f371e,0 0 20px #f3c781bb}
+.grid-preview-card.is-missing img{display:none}
+.grid-preview-card .fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;font:12px ui-sans-serif,system-ui,sans-serif;color:#664425}
+.grid-preview-card.is-missing .fallback{display:flex}
+.grid-versus{display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;height:100%;pointer-events:none}
+.grid-versus::before,.grid-versus::after{content:"";width:1px;flex:1;min-height:40px;background:linear-gradient(transparent,#bc88526f,transparent)}
+.grid-versus span{font:italic 700 clamp(15px,1.8vw,24px) Georgia,serif;color:#e2be83;letter-spacing:.02em;text-shadow:0 3px 7px #000}
+.grid-stage.layout-stacked{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 22px minmax(0,1fr);gap:1px;inset:3% 5% 4%}
+.grid-stage.layout-stacked .grid-army{gap:4px}
+.grid-stage.layout-stacked .grid-army-title{font-size:10px;letter-spacing:.12em}
+.grid-stage.layout-stacked .grid-matrix{--grid-card-w:clamp(46px,min(5.1vw,6.5vh),76px);gap:3px}
+.grid-stage.layout-stacked .grid-versus{flex-direction:row}
+.grid-stage.layout-stacked .grid-versus:before,.grid-stage.layout-stacked .grid-versus:after{width:22%;height:1px;min-height:0;flex:none}
+.grid-stage.layout-stacked .grid-versus span{font-size:12px}
+@media(max-width:700px){
+ #stage.grid-preview .board-perspective{left:0;right:0;top:9%;bottom:9%}
+ #stage.grid-preview .board-top{transform:rotateX(4deg)}
+ .grid-stage{inset:3% 2% 3%;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 19px minmax(0,1fr);gap:0}
+ .grid-army{gap:4px}
+ .grid-army-title{font-size:10px;letter-spacing:.12em}
+ .grid-matrix{--grid-card-w:clamp(53px,min(16vw,9.2vh),74px);gap:4px}
+ .grid-versus{flex-direction:row}
+ .grid-versus:before,.grid-versus:after{width:25%;height:1px;min-height:0;flex:none}
+ .grid-versus span{font-size:11px}
+ .grid-stage.layout-stacked .grid-matrix{--grid-card-w:clamp(53px,min(16vw,9.2vh),74px);gap:4px}
+ .grid-preview-ui{width:95vw;bottom:1%;gap:7px}
+ .grid-preview-ui button{padding:7px 10px;font-size:11px}
+ .grid-preview-ui .density-note{font-size:10px}
+}
+
 </style>
 </head>
 <body>
@@ -414,20 +486,31 @@ button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb5
    </div>
    <div class="status-note" id="status" role="status">从下方拿起行动卡，再选择时间格</div>
    <div class="squad ally-squad" id="ally-squad" data-count="3" aria-label="我方出战角色"></div>
+   <div class="grid-stage layout-side-by-side" id="grid-stage" aria-label="敌我双方各九张人物牌的棋盘密度测试">
+     <section class="grid-army enemy"><div class="grid-army-title">敌方 · 九宫格</div><div class="grid-matrix" id="grid-enemy" role="group" aria-label="敌方九张卡"></div></section>
+     <div class="grid-versus" aria-hidden="true"><span>VS</span></div>
+     <section class="grid-army ally"><div class="grid-army-title">我方 · 九宫格</div><div class="grid-matrix" id="grid-ally" role="group" aria-label="我方九张卡"></div></section>
+   </div>
   </div>
  </div>
  <div class="table-edge-light" aria-hidden="true"></div>
  <div class="candle" aria-hidden="true"><div class="candle-base"></div><div class="candle-body"></div><div class="candle-flame"></div></div>
  <div class="interface-top">
   <div class="nameplate">纸牌时序<small id="mode-subtitle">THREE ON THREE · TIMEGRID</small></div>
-  <div class="top-controls"><div id="party-select" class="party-select" aria-label="出战人数"><button type="button" data-party="1">1v1</button><button type="button" data-party="2">2v2</button><button type="button" data-party="3" class="chosen" aria-pressed="true">3v3</button></div><span class="round" id="round">第 1 轮</span><button type="button" id="sound" aria-pressed="true">音效：开</button><button id="restart" type="button">重开</button><button type="button" id="back">返回</button></div>
+  <div class="top-controls"><div id="party-select" class="party-select" aria-label="出战人数"><button type="button" data-party="1">1v1</button><button type="button" data-party="2">2v2</button><button type="button" data-party="3" class="chosen" aria-pressed="true">3v3</button></div><span class="round" id="round">第 1 轮</span><button type="button" id="sound" aria-pressed="true">音效：开</button><button id="restart" type="button">重开</button><button type="button" id="grid-show-preview" hidden>九宫格预览</button><button type="button" id="back">返回</button></div>
  </div>
  <div class="hand-surface" id="hand-surface"><div class="hand-header" id="hand-count">选中人物的手牌 · 4</div><div class="hand" id="hand" aria-label="可操作的行动手牌"></div></div>
  <div class="side-desk left"><div class="stat">绝杀能量 <b id="energy">55</b> / 100</div><button class="minor-button" id="undo" type="button">取回上一张</button><div class="bottom-note" id="notice">先排动作 · 再执行</div></div>
  <div class="side-desk right"><div class="stat" id="round-phase">10 格同步结算</div><button class="table-button" id="execute" type="button">执行时间步</button><div class="bottom-note" id="last-event" aria-live="polite">敌人的行动已刻在木板上</div></div>
+ <div class="grid-preview-ui" id="grid-preview-ui" aria-label="九宫格布局对比">
+   <div class="layout-toggle"><button type="button" data-layout="side-by-side" class="active" aria-pressed="true">左右并排</button><button type="button" data-layout="stacked" aria-pressed="false">上下排列</button></div>
+   <span class="density-note" id="grid-metrics">敌我各9张 · 实际尺寸测量中</span>
+   <button type="button" id="grid-back-to-battle">查看原战斗</button>
+ </div>
  <div class="toast" id="toast" role="status" hidden></div>
 </main>
 <script src="../combat-lab/engine.js?v=party-cap-timegrid-20261113"></script>
 <script defer src="./scene.js?v=party-three-timegrid-20261113"></script>
+<script defer src="./grid-preview.js?v=double-nines-20261113"></script>
 </body>
 </html>
