@@ -10,7 +10,18 @@ if(!G){$('status').textContent='无法载入时间步战斗引擎，请刷新页
 
 let battle,selected=null,latestAction=null,playback=null,toastTimer=null;
 let dragging=null,suppressClick=null,soundOn=true,audio=null,impactTimer=null,frameTimer=null;
+let partySize=3,targetId=null;
 const seed=618231;
+const ALLY_ART=[
+ {name:'传奇猎人',file:'../assets/characters/monster-hunters/01-legendary-hunter.png'},
+ {name:'血液医师',file:'../assets/characters/monster-hunters/02-blood-physician.png'},
+ {name:'陷阱工程师',file:'../assets/characters/monster-hunters/03-trap-engineer.png'}
+];
+const ENEMY_ART=[
+ {name:'马戏团团长',file:'../assets/cards/wonder-circus/01_ringmaster.png'},
+ {name:'空中杂技师',file:'../assets/cards/wonder-circus/02_aerial-acrobat.png'},
+ {name:'飞刀手',file:'../assets/cards/wonder-circus/03_knife-thrower.png'}
+];
 const tinyNames={attack:'攻 击',defense:'防 御',skill:'技 能',power:'能 力',special:'特 殊',system:'整 理'};
 // Three original ink-engraved marks replace system emoji; crisp at card scale.
 const sigilShapes={
@@ -34,8 +45,56 @@ function elem(tag,cls,txt){
  if(txt!==undefined)e.textContent=txt;
  return e;
 }
+function living(side,source=battle){return source.actors.filter(a=>a.side===side&&!a.dead);}
 function actor(side,source=battle){
- return source.actors.find(a=>a.side===side);
+ if(!source)return null;
+ const id=side==='ally'?source.controlledId:targetId;
+ return source.actors.find(a=>a.side===side&&a.id===id&&!a.dead)
+    ||source.actors.find(a=>a.side===side&&!a.dead)
+    ||source.actors.find(a=>a.side===side)||null;
+}
+function normalizeSelection(){
+ if(!battle)return;
+ if(living('ally').length&&!living('ally').some(a=>a.id===battle.controlledId)){
+   if(battle.options?.controlAllies)G.setControlled(battle,living('ally')[0].id);
+ }
+ if(living('enemy').length&&!living('enemy').some(a=>a.id===targetId))targetId=living('enemy')[0].id;
+}
+function buildSquads(){
+ for(const side of ['enemy','ally']){
+  const host=$(side+'-squad');host.replaceChildren();
+  const fighters=battle.actors.filter(a=>a.side===side),art=side==='ally'?ALLY_ART:ENEMY_ART;
+  host.dataset.count=String(fighters.length);
+  fighters.forEach((a,i)=>{
+   const fighter=elem('div','fighter '+side);
+   fighter.dataset.actor=a.id;
+   const portrait=elem('button','portrait');
+   portrait.type='button';portrait.dataset.actor=a.id;portrait.dataset.side=side;
+   portrait.setAttribute('aria-label',side==='ally'?'操作'+a.name:'指定攻击目标'+a.name);
+   const image=document.createElement('img');image.alt=art[i].name;image.src=art[i].file;
+   const fallback=elem('span','fallback','图片加载失败');
+   image.addEventListener('error',()=>portrait.classList.add('missing'));
+   portrait.append(image,fallback);
+   const label=elem('div','unit-label'),name=elem('span','',art[i].name),hp=elem('span','hp');
+   hp.append('♥ ',elem('b','hp-number',String(a.hp)));
+   label.append(name,hp);fighter.append(portrait,label);host.appendChild(fighter);
+  });
+ }
+}
+function selectActor(id){
+ if(playback||battle.phase!=='planning')return;
+ const a=battle.actors.find(item=>item.id===id&&item.side==='ally'&&!item.dead);
+ if(!a)return;
+ if(battle.options.controlAllies)G.setControlled(battle,a.id);
+ selected=null;latestAction=null;
+ note('当前角色：'+a.name+'，请从她的手牌选择行动');
+ sound('draw');render();
+}
+function selectTarget(id){
+ if(playback||battle.phase!=='planning')return;
+ const e=battle.actors.find(item=>item.id===id&&item.side==='enemy'&&!item.dead);
+ if(!e)return;
+ targetId=e.id;sound('card');note('攻击目标：'+e.name);render();
 }
 function showToast(message,duration=2100){
  const note=$('toast');
