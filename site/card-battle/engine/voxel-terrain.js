@@ -115,37 +115,179 @@ function ringBand(grid,makeGeom,upper,lower,bevel=false){
  for(let i=0;i<n;i++){const j=(i+1)%n,k=i*2,t=j*2;indices.push(k,t,k+1,t,t+1,k+1);}
  return makeGeom(verts,indices);
 }
-function tileBevelDepth(grid,c,r){
- const t=grid.cell(c,r),bevel=Math.min(.105,grid.levelStep*.15);
- const lower=(x,y)=>{const neighbor=grid.cell(x,y);return !neighbor||neighbor.height<t.height-.0001;};
- return {bevel,north:lower(c,r-1),south:lower(c,r+1),west:lower(c-1,r),east:lower(c+1,r)};
+
+/*
+ * Soft-voxel geometry 3.0
+ *
+ * The tile's gameplay footprint stays a full, precise rectangle.
+ * Only an EXPOSED cliff edge receives a radius. Neighbouring equal-level
+ * blocks share a straight, gap-free top edge.
+ *
+ * The perimeter rounds convex horizontal corners (quarter circles), while
+ * the top-to-wall silhouette follows a quarter-circle cross-section.
+ * A rounded corner is generated only when TWO sides are exposed.
+ */
+const SOFT_VOXEL_PROFILE=Object.freeze({
+ cornerRadiusRatio:.165,
+ topRoundWidthRatio:.135,
+ topRoundHeightRatio:.285,
+ arcSteps:7,
+ edgeSteps:5,
+ bevelSteps:7
+});
+function tileContour(grid,c,r){
+ const t=grid.cell(c,r),P=SOFT_VOXEL_PROFILE;
+ const {x,z}=grid.center(c,r);
+ const x0=x-grid.tileW/2,x1=x+grid.tileW/2,z0=z-grid.tileD/2,z1=z+grid.tileD/2;
+ const floor=grid.topY+grid.minLevel*grid.levelStep-grid.thickness;
+ const dirs={
+  N:grid.cell(c,r-1),E:grid.cell(c+1,r),S:grid.cell(c,r+1),W:grid.cell(c-1,r)
+ };
+ const exposed=Object.fromEntries(Object.entries(dirs).map(([d,n])=>[d,!n||n.height<t.height-.0001]));
+ const lows=Object.fromEntries(Object.entries(dirs).map(([d,n])=>[d,n?n.height:floor]));
+ const corner=Math.min(grid.tileW,grid.tileD)*P.cornerRadiusRatio;
+ const rounded={
+  NW:exposed.N&&exposed.W,NE:exposed.N&&exposed.E,
+  SE:exposed.S&&exposed.E,SW:exposed.S&&exposed.W
+ };
+ const ring=[],segments=[];
+ function append(px,pz,nx,nz,lower,active){
+  const prev=ring[ring.length-1];
+  if(prev&&Math.hypot(prev.x-px,prev.z-pz)<1e-6){
+   // At a convex corner the smoothly varying edge normals are supplied by the arc.
+   // At a flat junction keep the exposed-side normal, not a forced diagonal normal.
+   if(!prev.active&&active){prev.nx=nx;prev.nz=nz;prev.lower=lower;prev.active=true;}
+   return;
+  }
+  if(prev)segments.push(!!active);
+  ring.push({x:px,z:pz,nx,nz,lower,active:!!active});
+ }
+ function edge(ax,az,bx,bz,nx,nz,lower,active,includeStart){
+  const steps=P.edgeSteps;
+  for(let i=includeStart?0:1;i<=steps;i++){
+   const k=i/steps;
+   append(ax+(bx-ax)*k,az+(bz-az)*k,active?nx:0,active?nz:0,lower,active);
+  }
+ }
+ function arc(cx,cz,rad,from,to,lo0,lo1,active){
+  for(let i=1;i<=P.arcSteps;i++){
+   const k=i/P.arcSteps,a=from+(to-from)*k;
+   append(cx+rad*Math.cos(a),cz+rad*Math.sin(a),
+    active?Math.cos(a):0,active?Math.sin(a):0,
+    lo0+(lo1-lo0)*k,active);
+  }
+ }
+ // Clockwise XZ perimeter. Triangle winding gets reversed for upward normals.
+ edge(x0+(rounded.NW?corner:0),z0,x1-(rounded.NE?corner:0),z0,0,-1,lows.N,exposed.N,true);
+ if(rounded.NE)arc(x1-corner,z0+corner,corner,-Math.PI/2,0,lows.N,lows.E,true);
+ else append(x1,z0,exposed.E?1:exposed.N?0:0,exposed.N?-1:0,exposed.E?lows.E:lows.N,exposed.N||exposed.E);
+ edge(x1,z0+(rounded.NE?corner:0),x1,z1-(rounded.SE?corner:0),1,0,lows.E,exposed.E,false);
+ if(rounded.SE)arc(x1-corner,z1-corner,corner,0,Math.PI/2,lows.E,lows.S,true);
+ else append(x1,z1,exposed.E?1:0,exposed.S?1:0,exposed.S?lows.S:lows.E,exposed.S||exposed.E);
+ edge(x1-(rounded.SE?corner:0),z1,x0+(rounded.SW?corner:0),z1,0,1,lows.S,exposed.S,false);
+ if(rounded.SW)arc(x0+corner,z1-corner,corner,Math.PI/2,Math.PI,lows.S,lows.W,true);
+ else append(x0,z1,exposed.W?-1:0,exposed.S?1:0,exposed.W?lows.W:lows.S,exposed.S||exposed.W);
+ edge(x0,z1-(rounded.SW?corner:0),x0,z0+(rounded.NW?corner:0),-1,0,lows.W,exposed.W,false);
+ if(rounded.NW){
+  arc(x0+corner,z0+corner,corner,Math.PI,Math.PI*1.5,lows.W,lows.N,true);
+  // Last arc sample coincides exactly with the first vertex, so discard duplicate.
+  const last=ring[ring.length-1],first=ring[0];
+  if(Math.hypot(last.x-first.x,last.z-first.z)<1e-6){
+    ring.pop();
+    segments.pop();
+  }
+ }else{
+  append(x0,z0,exposed.W?-1:0,exposed.N?-1:0,exposed.N?lows.N:lows.W,exposed.W||exposed.N);
+  if(Math.hypot(ring[ring.length-1].x-ring[0].x,ring[ring.length-1].z-ring[0].z)<1e-6){
+   ring.pop();segments.pop();
+  }
+ }
+ // Every consecutive pair, including last -> first, has one independent wall flag.
+ // All convex-corner arc segments remain active; same-level seams are inactive.
+ const closingActive=rounded.NW||exposed.W;
+ segments.push(closingActive);
+ if(segments.length!==ring.length)throw Error('Incorrect rounded voxel contour topology');
+ return {ring,segments,exposed,rounded};
 }
-function tileMesh(grid,makeGeom,c,r){
- const t=grid.cell(c,r),boundary=tileBevelDepth(grid,c,r);
- const {x,z}=grid.center(c,r),x0=x-grid.tileW/2,z0=z-grid.tileD/2;
- const verts=[],indices=[],stops=[0,.035,.085,.17,.50,.83,.915,.965,1],n=stops.length;
- const smooth=value=>value*value*(3-2*value);
- function yAt(u,v){
-  // Bevel ONLY exposed edges; equal-height neighbors share a perfectly flat edge.
-  const near=(dist)=>smooth(Math.max(0,Math.min(1,(.17-dist)/.17)));
-  const weight=Math.max(boundary.west?near(u):0,boundary.east?near(1-u):0,
-   boundary.north?near(v):0,boundary.south?near(1-v):0);
-  return t.height-boundary.bevel*weight;
+function tileSoftMesh(grid,makeGeom,c,r){
+ const t=grid.cell(c,r),contour=tileContour(grid,c,r),points=contour.ring;
+ const P=SOFT_VOXEL_PROFILE,n=points.length,verts=[],tri=[];
+ const inset=Math.min(grid.tileW,grid.tileD)*P.topRoundWidthRatio;
+ const depth=Math.min(grid.levelStep*P.topRoundHeightRatio,.23);
+ const uv=(x,z)=>[(x-grid.minX)/grid.width,(z-grid.minZ)/grid.depth];
+ // Center and inset ring form a flat card-ready landing surface.
+ const {x,z}=grid.center(c,r);
+ const [cu,cv]=uv(x,z);
+ verts.push(x,t.height,z,0,1,0,cu,cv);
+ const count=P.bevelSteps+1;
+ for(let tier=0;tier<count;tier++){
+  const phase=(tier/(count-1))*(Math.PI/2);
+  const along=1-Math.sin(phase),drop=1-Math.cos(phase);
+  const normalHoriz=Math.sin(phase),normalVert=Math.cos(phase);
+  for(const p of points){
+   const a=p.active?1:0;
+   const px=p.x-p.nx*inset*along*a,pz=p.z-p.nz*inset*along*a;
+   const py=t.height-depth*drop*a;
+   const horizontal=Math.hypot(p.nx,p.nz)||1;
+   const nx=a?p.nx/horizontal*normalHoriz:0;
+   const nz=a?p.nz/horizontal*normalHoriz:0;
+   const ny=a?normalVert:1;
+   const [u,v]=uv(px,pz);
+   verts.push(px,py,pz,nx,ny,nz,u,v);
+  }
  }
- for(let j=0;j<n;j++)for(let i=0;i<n;i++){
-  const u=stops[i],v=stops[j],px=x0+u*grid.tileW,pz=z0+v*grid.tileD;
-  const y=yAt(u,v),dx=grid.tileW*.012,dz=grid.tileD*.012;
-  const gx=(yAt(Math.min(1,u+.012),v)-yAt(Math.max(0,u-.012),v))/(2*dx);
-  const gz=(yAt(u,Math.min(1,v+.012))-yAt(u,Math.max(0,v-.012)))/(2*dz);
-  const len=Math.hypot(gx,1,gz);
-  verts.push(px,y,pz,-gx/len,1/len,-gz/len,
-   (px-grid.minX)/grid.width,(pz-grid.minZ)/grid.depth);
+ // Perimeter is clockwise in XZ; reversing triangle order gives upward normal.
+ for(let i=0;i<n;i++)tri.push(0,1+(i+1)%n,1+i);
+ for(let tier=0;tier<count-1;tier++){
+  const base=1+tier*n,next=base+n;
+  for(let i=0;i<n;i++){
+   const j=(i+1)%n,a=base+i,b=base+j,cc=next+i,d=next+j;
+   tri.push(a,b,cc,b,d,cc);
+  }
  }
- for(let j=0;j<n-1;j++)for(let i=0;i<n-1;i++){
-  const a=j*n+i,b=a+1,cc=a+n,d=cc+1;
-  indices.push(a,cc,b,b,cc,d);
+ return {mesh:makeGeom(verts,tri),contour,depth};
+}
+function roundedCliffMesh(grid,makeGeom,c,r,contour,depth){
+ const tile=grid.cell(c,r),{ring,segments}=contour,verts=[],idx=[];
+ const P=SOFT_VOXEL_PROFILE;
+ const heightTop=tile.height-depth;
+ // Join each exposed straight edge and rounded convex-corner arc into a smooth wall.
+ // The bottom levels follow the adjacent block height, so all 7 levels remain editable.
+ const tiers=12;
+ for(let i=0;i<ring.length;i++){
+  const j=(i+1)%ring.length;
+  if(!segments[i])continue;
+  const a=ring[i],b=ring[j];
+  if(Math.min(a.lower,b.lower)>=heightTop-.001)continue;
+  // The wall is subdivided vertically: soft low-frequency silhouette undulations
+  // and a lower eased transition avoid the razor-sharp extruded-wall appearance.
+  let previous=-1;
+  for(let k=0;k<=tiers;k++){
+   const q=k/tiers;
+   const local=[];
+   for(const p of [a,b]){
+    const low=Math.min(p.lower,heightTop-.015);
+    const h=heightTop+(low-heightTop)*q;
+    // Gentle midwall roundness, maximum ~5cm, never destroys cell alignment.
+    const swell=.037*Math.sin(Math.PI*q);
+    const px=p.x+p.nx*swell,pz=p.z+p.nz*swell;
+    const horizontal=Math.hypot(p.nx,p.nz)||1;
+    const nx=p.nx/horizontal,nz=p.nz/horizontal;
+    const ny=-.11*Math.cos(Math.PI*q);
+    const length=Math.hypot(nx,ny,nz)||1;
+    local.push(verts.length/8);
+    verts.push(px,h,pz,nx/length,ny/length,nz/length,px*.075,h*.22);
+   }
+   if(previous>=0){
+    // ordered as a,b (top) then a,b (bottom), front-facing on outward side.
+    const prev=previous,cur=local[0];
+    idx.push(prev,prev+1,cur,prev+1,cur+1,cur);
+   }
+   previous=local[0];
+  }
  }
- return makeGeom(verts,indices);
+ if(!idx.length)return null;
+ return makeGeom(verts,idx);
 }
 function seamMesh(grid,makeGeom){
  // All seams are derived from adjoining cell heights; nothing floats above recessed water.
@@ -213,23 +355,17 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
  if(!gl||!makeGeom||!renderGeom||!I)throw Error('Missing WebGL renderer dependencies');
  const texture=grainTexture(gl),base=I();
  let seams=null,walls=[],tiles=[],geometryRevision=-1;
- const minFloor=grid.topY+grid.minLevel*grid.levelStep-grid.thickness;
- const free=m=>{if(m){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}};
+  const free=m=>{if(m){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}};
  function rebuild(){
   free(seams);for(const wall of walls)free(wall.mesh);
   for(const row of tiles)for(const cell of row)free(cell);
-  tiles=Array.from({length:grid.rows},(_,r)=>Array.from({length:grid.cols},(_,c)=>tileMesh(grid,makeGeom,c,r)));
-  seams=seamMesh(grid,makeGeom);walls=[];
-  for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
-   const t=grid.cell(c,r);
-   for(const [dir,dc,dr] of [['north',0,-1],['south',0,1],['east',1,0],['west',-1,0]]){
-    const neighbor=grid.cell(c+dc,r+dr);
-    const lower=neighbor?neighbor.height:minFloor;
-    if(t.height<=lower+.0001)continue;
-    const material=grid.materials[t.kind];
-    walls.push({mesh:wallMesh(grid,makeGeom,c,r,dir,lower),color:material.side});
-   }
-  }
+  tiles=Array.from({length:grid.rows},(_,r)=>Array.from({length:grid.cols},(_,c)=>{
+    const geometry=tileSoftMesh(grid,makeGeom,c,r);
+    const cliff=roundedCliffMesh(grid,makeGeom,c,r,geometry.contour,geometry.depth);
+    if(cliff)walls.push({mesh:cliff,color:grid.materials[grid.cell(c,r).kind].side});
+    return geometry.mesh;
+  }));
+  seams=seamMesh(grid,makeGeom);
   geometryRevision=grid.revision;
  }
  function draw(){
@@ -249,5 +385,5 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
  }
  return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return geometryRevision}};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'2.0.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'3.0.0',MATERIALS,create,createWebGLRenderer});
 })(window);
