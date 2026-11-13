@@ -66,7 +66,7 @@ function create(o){
   const mobile=canvas.getBoundingClientRect().width<720;
   const slots=[],deckSpan=Math.min(mobile?spanW-.45:14.0,spanW-1);
   const deckScale=mobile?.32:.67;
-  const baseDeckY=mobile?-2.92:-3.04;
+  const baseDeckY=mobile?-3.46:-3.60;
   state.classes.forEach((c,i)=>{
    slots.push({kind:'deck',id:'deck:'+c.id,profession:c.id,c,
     x:(i/6-.5)*deckSpan,y:baseDeckY,z:0,scale:deckScale,angle:0});
@@ -87,7 +87,7 @@ function create(o){
   for(const u of staged){
    const origin=slots.find(p=>p.kind==='deck'&&p.profession===u.role);
    if(origin)slots.push({...origin,kind:'character',id:'character:'+u.id,
-    unitId:u.id,portrait:u.portrait,scale:deckScale*1.05});
+    unitId:u.id,portrait:u.portrait,y:origin.y+(.70*deckScale/.67),scale:deckScale*1.14});
   }
   slots.push({kind:'turn',id:'turn:end',x:Math.min(spanW*.5-.45,7.75),
    y:baseDeckY+.03,z:.9,scale:mobile?.26:.38,angle:.07});
@@ -99,7 +99,7 @@ function create(o){
   const hover=focused?.58:0,raise=hover+(selected?.52:0)+(charSelected?.18:0);
   const easing=Math.sin(frame*1.5+p.x*.3)*.020;
   const scale=p.scale*(1+(focused?.15:0)+(selected?.11:0));
-  const tilt=p.kind==='deck'||p.kind==='character'?-1.03:(p.kind==='hand'?(p.tilt||-.12):-.17);
+  const tilt=p.kind==='character'?-0.70:p.kind==='deck'?-1.03:(p.kind==='hand'?(p.tilt||-.12):-.17);
   let mat=T(opts.x??p.x,(opts.y??p.y)+raise+easing,(opts.z??p.z)+raise*.28);
   mat=mul(mat,RY(focused?-.045:0));
   mat=mul(mat,RX(tilt+(focused?.12:0)));
@@ -120,7 +120,7 @@ function create(o){
   const ctx=cv.getContext('2d');
   ctx.fillStyle='#e1d6ba';ctx.fillRect(0,0,512,128);
   ctx.strokeStyle='#977e5e';ctx.lineWidth=8;ctx.strokeRect(6,6,500,116);
-  ctx.fillStyle='#435440';ctx.textAlign='center';ctx.font='bold 65px serif';
+  ctx.fillStyle='#435440';ctx.textAlign='center';ctx.font='bold 83px serif';
   ctx.fillText(c.name,256,88);
   const texture=makeTexture(cv);labelCache.set(c.id,texture);return texture;
  }
