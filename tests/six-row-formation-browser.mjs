@@ -23,16 +23,24 @@ try {
    assert.equal(await img.evaluate(el=>el.complete&&el.naturalWidth>0),true,'original character card PNG loads');
  }
  await page.waitForTimeout(600);
- // Verify the actual WebGL framebuffer: the visible board must be grass green, not the old white slab.
- const centerPixel=await page.evaluate(()=>{
+ // Test actual WebGL output: alternate gray-value tiles must stay visible even without a held card.
+ const checkerPixels=await page.evaluate(()=>{
    const cvs=document.querySelector('#stage'),gl=cvs.getContext('webgl');
-   const pix=new Uint8Array(4);
-   gl.readPixels(Math.floor(cvs.width/2),Math.floor(cvs.height/2),1,1,gl.RGBA,gl.UNSIGNED_BYTE,pix);
-   return Array.from(pix);
+   const sample=(x,y)=>{
+     const pix=new Uint8Array(4);
+     gl.readPixels(Math.floor(x),Math.floor(cvs.height-y),1,1,gl.RGBA,gl.UNSIGNED_BYTE,pix);
+     return Array.from(pix);
+   };
+   return {
+     left:sample(cvs.width/2-cvs.width*.052,cvs.height*.49),
+     right:sample(cvs.width/2+cvs.width*.052,cvs.height*.49),
+   };
  });
- assert.ok(centerPixel[1]>centerPixel[0]+14 && centerPixel[0]>centerPixel[2]+12,
-   'single-level voxel terrain should render visibly green (not white), got '+centerPixel.join(','));
- console.log('single-layer grass-center RGB:',centerPixel);
+ const diffs=checkerPixels.left.slice(0,3).map((x,i)=>Math.abs(x-checkerPixels.right[i]));
+ assert.ok(Math.max(...diffs)>13,'adjacent alternating gray tiles must have a visible tonal difference: '+JSON.stringify(checkerPixels));
+ assert.ok(checkerPixels.left.slice(0,3).every(x=>x<220)&&checkerPixels.right.slice(0,3).every(x=>x<220),
+   'surface should not fall back to a white placeholder: '+JSON.stringify(checkerPixels));
+ console.log('permanent 16x6 gray alternating checker RGB:',checkerPixels);
  await page.screenshot({path:out+'/08-6x16-formation-empty-1920.png'});
  await page.locator('#demo').click();
  await page.waitForTimeout(1900);
