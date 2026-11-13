@@ -10,9 +10,14 @@ on:
       - 'site/card-battle/engine/profession-decks.js'
       - 'site/card-battle/ui/forest-hand.css'
       - 'site/card-battle/ui/forest-hand.js'
+      - 'site/card-battle/ui/farmer-roster.js'
+      - 'site/card-battle/engine/character-registry.js'
+      - 'site/card-battle/data/characters.generated.js'
+      - 'site/assets/characters/farmer-faction/**'
       - 'site/card-battle/levels/forest-01.js'
       - 'tests/forest-level-core.test.cjs'
       - 'tests/profession-decks.test.cjs'
+      - 'tests/character-registry.test.cjs'
       - 'tests/forest-level-01-browser.mjs'
       - '.github/workflows/forest-level-01-qa.yml'
   workflow_dispatch:
@@ -31,6 +36,7 @@ jobs:
         run: |
           node tests/forest-level-core.test.cjs
           node tests/profession-decks.test.cjs
+          node tests/character-registry.test.cjs
       - name: Install Chromium + Playwright
         run: |
           npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
