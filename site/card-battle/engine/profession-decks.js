@@ -67,7 +67,7 @@ function create(options={}){
  }
  function reload(){
   piles.clear();
-  for(const c of CLASSES)piles.set(c.id,shuffle([...pool[c.id]]));
+  for(const c of CLASSES)piles.set(c.id,unlocked.has(c.id)?shuffle([...pool[c.id]]):[]);
  }
  function count(){return hand.length;}
  function snapshot(){
