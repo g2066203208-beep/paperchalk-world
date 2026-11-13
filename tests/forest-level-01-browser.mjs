@@ -54,7 +54,20 @@ try{
  assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),1,'one manual click draws exactly one card');
  await page.waitForTimeout(350);
  await page.screenshot({path:out+'/03-first-manual-draw-desktop.png',fullPage:true});
- for(let i=0;i<9;i++)await click3D(page,'deck:warrior');
+ for(let i=0;i<9;i++){
+  const before=await page.evaluate(()=>window.__forestHand.snapshot.count);
+  await page.waitForTimeout(125);
+  const at=await click3D(page,'deck:warrior');
+  const after=await page.evaluate(()=>window.__forestHand.snapshot.count);
+  if(after!==before+1){
+   const probe=await page.evaluate(pt=>({
+    hit:window.__sceneCardHUD.hit({clientX:pt.x,clientY:pt.y})?.id,
+    model:window.__forestHand.snapshot
+   }),at);
+   console.log('MISSED_DECK_CLICK',JSON.stringify({before,after,at,probe}));
+  }
+  assert.equal(after,before+1,'every physical deck click must remove exactly one card');
+ }
  await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot.count===10,{timeout:8000});
  const full=await page.evaluate(()=>({hud:window.__sceneCardHUD.snapshot,hand:window.__forestHand.snapshot}));
  assert.equal(full.hand.count,10);
@@ -104,7 +117,13 @@ try{
  await click3D(mobile,'deck:warrior');
  assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),1);
  await mobile.screenshot({path:out+'/07-one-card-drawn-mobile.png',fullPage:true});
- for(let i=0;i<9;i++)await click3D(mobile,'deck:warrior');
+ for(let i=0;i<9;i++){
+  const before=await mobile.evaluate(()=>window.__forestHand.snapshot.count);
+  await mobile.waitForTimeout(110);
+  await click3D(mobile,'deck:warrior');
+  assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),before+1,
+    'mobile deck tap must draw exactly one');
+ }
  assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),10);
  await mobile.screenshot({path:out+'/08-ten-cards-mobile.png',fullPage:true});
  assert.deepEqual(mobileErrors,[],'no mobile script errors');
