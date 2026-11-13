@@ -73,6 +73,7 @@ try{
  assert.equal(full.hand.count,10);
  assert.equal(full.hud.visible.filter(p=>p.kind==='hand').length,10);
  assert.equal(full.hud.physicalDeckCards,0);
+ await page.waitForTimeout(600); // Wait for last deck-to-hand animation to finish.
  await page.screenshot({path:out+'/04-ten-front-facing-cards-desktop.png',fullPage:true});
  const chosen=full.hand.hand[2];
  await click3D(page,'hand:'+chosen.instance);
@@ -125,6 +126,7 @@ try{
     'mobile deck tap must draw exactly one');
  }
  assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),10);
+ await mobile.waitForTimeout(600);
  await mobile.screenshot({path:out+'/08-ten-cards-mobile.png',fullPage:true});
  assert.deepEqual(mobileErrors,[],'no mobile script errors');
  console.log('FOREST_SINGLE_DECK_BROWSER_PASS',JSON.stringify({desktop:true,mobile:true,onePhysicalPile:true,
