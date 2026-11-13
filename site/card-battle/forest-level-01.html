@@ -547,12 +547,14 @@ function startForestLevel(){
  for(const unit of level.snapshot().units){
   const slot=slotCenters.find(t=>t.zone==='unit'&&t.side===unit.side&&t.r===unit.r&&t.c===unit.c);
   if(!slot)throw Error('Level missing 3x3 slot: '+unit.id);
-  const def={id:unit.id,kind:'unit',name:unit.name,src:unit.art||null};
+  const registered=unit.characterId?window.PaperchalkCharacterRegistry?.get(unit.characterId):null;
+  const portrait=registered?.portrait||unit.art||null;
+  const def={id:unit.id,kind:'unit',name:registered?.name||unit.name,src:portrait};
   const card=makeCard(def,slot);
   card.side=unit.side;card.unitId=unit.id;card.placeStart=now-.3;
   card.texture=placeholderUnitTexture(unit.name,unit.side==='enemy');
   cards.push(card);occupied.set(slot.id,card);
-  if(unit.art)loadTexture(unit.art,tex=>{card.texture=tex;});
+  if(portrait)loadTexture(portrait,tex=>{card.texture=tex;});
  }
  attackMode=true;syncLevelHud();sync();
 }
