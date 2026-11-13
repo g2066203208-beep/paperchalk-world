@@ -1,5 +1,10 @@
 # Paperchalk World — agent working rules
 
+## 2026-11-13 HARD RULE — SEVEN INDEPENDENT PROFESSION STACKED HAND BOXES
+
+**Before any 3D card minigame hand, deck, card, battle or UI work, FIRST read [seven class stacked hand boxes and faction-specific vs common actions](docs/game/SEVEN_CLASS_STACKED_HAND_DECK_BOX_CANON_20261113.md).** Player wants SEVEN profession boxes in one bottom row, each with a stacked card pile: only its TOP card is accessible until played or discarded. Each profession's action cards comprise profession COMMON cards and faction×profession EXCLUSIVE cards. Character cards are kept separate above the hand/battle area and NEVER shuffled with action cards between turns. Up to seven visible tops (only for usable/unlocked boxes). **Five cards per box is only an assistant proposal, not a confirmed number.** Do not resurrect the old single-hand Timegrid tabletop, its four-card draw or timeline UI.
+
+
 ## 2026-11-13 HARD RULE — ACTIVE 3D CARD MINIGAME; RETIRED OLD TIMEGRID TABLETOP
 
 **Before any card minigame/forest-level request, read [active 3D card game and retired tabletop status](docs/game/ACTIVE_3D_CARD_BOARD_AND_RETIRED_TABLETOP_20261113.md).** The correct playable hosted entry is `site/card-battle/formation-6x16-3d.html` (16x6 true 3D terrain with each side's 3x3 tactical unit cells, facilities flanking). User explicitly requested deletion of the *old standalone Timegrid tabletop duel*. Old `site/card-battle/index.html` now redirects to the 3D game; old `scene.js`, `grid-preview.js`, and their obsolete browser test have been deleted. **Do not call the old dark-wood Timegrid tabletop the current minigame, and do not resurrect it.** The separate horror RPG ring arena still uses a shared Timegrid engine, which is outside this standalone page retirement. Future forest tutorial 1 friendly lumberjack vs 2 enemies is PLANNED, not yet implemented.
