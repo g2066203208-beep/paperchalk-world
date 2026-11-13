@@ -3,16 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>6排满屏 · 真3D卡牌容量测试</title>
+<title>六排卡牌战场 · 放牌原型</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e8e8e6}
 #stage{display:block;width:100vw;height:100dvh;touch-action:none;cursor:default;outline:0}
 #note{position:fixed;inset:auto 0 10px;text-align:center;font:11px system-ui,sans-serif;color:#777;opacity:0;pointer-events:none}
+#hand{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:flex-end;gap:clamp(4px,.65vw,11px);z-index:4;max-width:98vw;pointer-events:none}
+#hand button{pointer-events:auto;touch-action:none;cursor:grab;font:inherit;color:#49473f;user-select:none}
+.hand-card{width:clamp(44px,4.5vw,85px);aspect-ratio:2/3;flex:none;position:relative;border:3px solid #fafaf5;border-radius:7px;background:linear-gradient(150deg,#f1f0eb,#d3cec1);box-shadow:0 4px 0 #aaa99e,0 10px 20px #0003;overflow:hidden;transform:perspective(400px) rotateX(9deg);transition:transform .18s,box-shadow .18s}
+.hand-card:hover,.hand-card.active{transform:translateY(-15px) perspective(400px) rotateX(0);box-shadow:0 4px 0 #aaa99e,0 17px 25px #0003}
+.hand-card.active{outline:2px solid #3c985a;outline-offset:2px}.hand-card img{width:100%;height:100%;object-fit:cover;display:block}
+.hand-card .name{display:block;font:clamp(11px,1.1vw,17px) serif;color:#514e43}
+.hand-card .kind{position:absolute;bottom:4px;left:0;right:0;text-align:center;font:10px system-ui;color:#777466}
+#reset{background:#eae9e3cf;border:1px solid #b3afa6;border-radius:7px;padding:6px 9px;cursor:pointer;margin-bottom:3px;font:11px system-ui!important}
+#note{bottom:145px;opacity:0;transition:opacity .2s;background:#f6f5ebeb;color:#45463f;padding:4px 12px;border-radius:15px;width:max-content;max-width:90vw;left:50%;transform:translateX(-50%)}
+@media(max-width:700px){.hand-card{width:clamp(40px,11vw,62px)}#hand{gap:4px}#note{bottom:110px}}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="六行十六列真3D卡牌容量测试；固定高位俯视；每张卡是独立可悬浮与翻转的三维物体"></canvas>
-<div id="note"></div>
+<div id="note" aria-live="polite"></div>
+<div id="hand" role="toolbar" aria-label="测试手牌"><button type="button" id="reset">重置</button></div>
 <script>
 'use strict';
 (()=>{
@@ -55,9 +66,18 @@ function lerp(a,b,t){return a+(b-a)*t;}const clamp=(v,a,b)=>Math.max(a,Math.min(
 const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
 const COLS=16,ROWS_PER_SIDE=3;
 const gridCols=Array.from({length:COLS},(_,i)=>(i-7.5)*1.8);
-const enemyRows=[-6.625,-3.975,-1.325],allyRows=[1.325,3.975,6.625];
-const slotCenters=[...enemyRows.map((z,r)=>gridCols.map((x,c)=>({side:'enemy',r,c,x,z}))).flat(),...allyRows.map((z,r)=>gridCols.map((x,c)=>({side:'ally',r,c,x,z}))).flat()];
-const cards=slotCenters.map((s,i)=>({id:s.side+'-'+s.r+'-'+s.c,side:s.side,slot:s,homeX:s.x,homeZ:s.z,x:s.x,z:s.z,seed:i*1.317,t:0,y:.13,hover:0,theta:0,flip:0,flipTarget:0,attackStart:-10000,selected:false,dragged:false,texture:null}));
+const enemyRows=[-7.725,-5.075,-2.425],allyRows=[.225,2.875,5.525];
+const slotCenters=[...enemyRows.map((z,r)=>gridCols.map((x,c)=>({side:'enemy',r,c,x,z,zone:c>=4&&c<=11?'unit':'facility',id:'enemy-'+r+'-'+c}))).flat(),
+...allyRows.map((z,r)=>gridCols.map((x,c)=>({side:'ally',r,c,x,z,zone:c>=4&&c<=11?'unit':'facility',id:'ally-'+r+'-'+c}))).flat()];
+const occupied=new Map();const cards=[];
+const handDefs=[
+{id:'ringmaster',kind:'unit',name:'团长',src:'../assets/cards/wonder-circus/01_ringmaster.png'},
+{id:'acrobat',kind:'unit',name:'杂技演员',src:'../assets/cards/wonder-circus/02_aerial-acrobat.png'},
+{id:'knife',kind:'unit',name:'飞刀演员',src:'../assets/cards/wonder-circus/03_knife-thrower.png'},
+{id:'farm',kind:'facility',name:'农田'},
+{id:'turret',kind:'facility',name:'炮台'},
+{id:'lab',kind:'facility',name:'研究院'}];
+const texCache=new Map();
 function makeGeom(vertices,indices){const vao={};vao.b=gl.createBuffer();vao.i=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vao.b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,vao.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);vao.count=indices.length;return vao;}
 const box=(()=>{const vs=[],ids=[];const face=(p,n)=>{const k=vs.length/8;p.forEach(([x,y,z],i)=>vs.push(x,y,z,...n,(i===0||i===3)?0:1,(i<2)?0:1));ids.push(k,k+1,k+2,k,k+2,k+3);};
 face([[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5]],[0,1,0]);
@@ -101,7 +121,7 @@ function loadTexture(url,callback){const image=new Image();image.crossOrigin='an
 let vp=I(),proj=I(),view=I(),camera={eye:[0,55,6],target:[0,0,0],right:[1,0,0],up:[0,1,0],forward:[0,-1,0],tan:.4,aspect:1},w=1920,h=1080;
 function resize(){let dpr=Math.min(window.devicePixelRatio||1,2);w=Math.max(1,Math.round(canvas.clientWidth*dpr));h=Math.max(1,Math.round(canvas.clientHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);camera.aspect=w/h;
 // Fixed high-angle orthographic camera. Constant position and direction, no orbit or user camera movement.
-const height=16.4;proj=ortho(-height*camera.aspect/2,height*camera.aspect/2,-height/2,height/2,.1,100);
+const height=Math.max(19.6,30.1/camera.aspect);proj=ortho(-height*camera.aspect/2,height*camera.aspect/2,-height/2,height/2,.1,100);
 view=lookAt(camera.eye,camera.target,[0,1,0]);vp=mul(proj,view);gl.uniformMatrix4fv(U.vp,false,vp);
 const forward=[-camera.eye[0],-camera.eye[1],-camera.eye[2]],fl=Math.hypot(...forward);camera.forward=forward.map(x=>x/fl);const normalize=a=>a.map(x=>x/Math.hypot(...a));const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];camera.right=normalize(cross(camera.forward,[0,1,0]));camera.up=normalize(cross(camera.right,camera.forward));camera.orthoHeight=height;}
 function projection2D(x,y,z){let q=transform(vp,[x,y,z,1]);return{x:(q[0]/q[3]*.5+.5)*w,y:(.5-q[1]/q[3]*.5)*h};}
@@ -110,34 +130,143 @@ let x=nx*camera.orthoHeight*camera.aspect/2,y=ny*camera.orthoHeight/2;
 let origin=[camera.eye[0]+camera.right[0]*x+camera.up[0]*y,camera.eye[1]+camera.right[1]*x+camera.up[1]*y,camera.eye[2]+camera.right[2]*x+camera.up[2]*y];
 let t=(planeY-origin[1])/camera.forward[1];return {x:origin[0]+camera.forward[0]*t,z:origin[2]+camera.forward[2]*t};}
 let hoverCard=null,pointerDown=null,dragCard=null,overSlot=null,now=0;
-function closestCard(clientX,clientY){const cr=canvas.getBoundingClientRect(),px=(clientX-cr.left)*w/cr.width,py=(clientY-cr.top)*h/cr.height;let best=null,d=1e6;for(const c of [...cards].reverse()){const q=projection2D(c.x,c.y,c.z);const left=projection2D(c.x-cardW/2,c.y,c.z),top=projection2D(c.x,c.y,c.z-cardH/2),bottom=projection2D(c.x,c.y,c.z+cardH/2);let halfW=Math.abs(q.x-left.x)+8,halfH=Math.abs(bottom.y-top.y)/2+10;if(Math.abs(q.x-px)<halfW&&Math.abs(q.y-py)<halfH){let n=Math.abs(q.x-px)/halfW+Math.abs(q.y-py)/halfH;if(n<d){best=c;d=n;}}}return best;}
-function closestSlot(x,z,side){let q=null,dd=1e9;for(let s of slotCenters.filter(s=>s.side===side)){let d=Math.hypot(x-s.x,z-s.z);if(d<dd){q=s;dd=d;}}return dd<1.22?q:null;}
-function moveToSlot(card,target){if(!target)return;const other=cards.find(c=>c!==card&&c.slot===target);if(other){other.slot=card.slot;other.homeX=other.slot.x;other.homeZ=other.slot.z;other.attackStart=now-.1;}card.slot=target;card.homeX=target.x;card.homeZ=target.z;card.attackStart=now-.1;}
-canvas.addEventListener('pointermove',e=>{const hit=closestCard(e.clientX,e.clientY);if(pointerDown&&pointerDown.card){let dist=Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y);if(dist>7){dragCard=pointerDown.card;dragCard.dragged=true;let wpos=worldFromPointer(e.clientX,e.clientY,.56);dragCard.x=clamp(wpos.x,-14.2,14.2);dragCard.z=clamp(wpos.z,dragCard.side==='enemy'?-7.95:.12,dragCard.side==='enemy'?-.12:7.95);overSlot=closestSlot(dragCard.x,dragCard.z,dragCard.side);}}else{hoverCard=hit;canvas.style.cursor=hit?'grab':'default';}});
-canvas.addEventListener('pointerdown',e=>{let c=closestCard(e.clientX,e.clientY);pointerDown={x:e.clientX,y:e.clientY,card:c};if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}});
-canvas.addEventListener('pointerup',e=>{if(dragCard){moveToSlot(dragCard,overSlot||dragCard.slot);dragCard.dragged=false;dragCard=null;overSlot=null;}else if(pointerDown?.card){pointerDown.card.attackStart=now;}
-pointerDown=null;canvas.style.cursor=hoverCard?'grab':'default';});
-canvas.addEventListener('pointercancel',()=>{if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;overSlot=null;});
-canvas.addEventListener('dblclick',e=>{let c=closestCard(e.clientX,e.clientY);if(c){c.flipTarget+=Math.PI;c.attackStart=now;}});
-canvas.addEventListener('contextmenu',e=>{e.preventDefault();let c=closestCard(e.clientX,e.clientY);if(c)c.flipTarget+=Math.PI;});
-window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%16)*.06+(c.side==='enemy'?.14:0);});}});
+let active=null,preview=null,handDown=null,onBoard=false,serial=0,noticeTimer=0;
+const hand=document.getElementById('hand'),note=document.getElementById('note');
+const buttons=new Map();
+function message(t){note.textContent=t;note.style.opacity='1';clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>note.style.opacity='0',1400);}
+function makeCard(def,s=null){
+ const n=++serial;return{id:'c'+n,def,side:'ally',kind:def.kind,slot:s,homeX:s?.x||0,homeZ:s?.z||0,
+ x:s?.x||0,z:s?.z||0,seed:n*1.317,t:0,y:.13,hover:0,flip:0,flipTarget:0,attackStart:-10000,dragged:false,texture:texCache.get(def.id)||null};
+}
+function facilityTexture(name){
+ // Temporary neutral test face; real facility art is supplied separately by Anima.
+ const cv=document.createElement('canvas');cv.width=512;cv.height=768;const ctx=cv.getContext('2d');
+ ctx.fillStyle='#e6e0d2';ctx.fillRect(0,0,512,768);ctx.strokeStyle='#b4ac99';ctx.lineWidth=8;ctx.strokeRect(22,22,468,724);
+ ctx.fillStyle='#514d42';ctx.textAlign='center';ctx.font='bold 82px serif';ctx.fillText(name,256,410);
+ ctx.font='34px serif';ctx.fillText('设施',256,700);
+ const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,cv);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+ return tex;
+}
+function sync(){for(const d of handDefs){let b=buttons.get(d.id);
+ b.hidden=cards.some(c=>c.def.id===d.id);b.classList.toggle('active',active?.id===d.id);
+ b.setAttribute('aria-pressed',active?.id===d.id?'true':'false');}}
+function clearPick(){active=null;preview=null;overSlot=null;onBoard=false;sync();}
+function pick(d){if(cards.some(c=>c.def.id===d.id))return;active=d;preview=makeCard(d);hoverCard=null;sync();}
+for(const d of handDefs){
+ const b=document.createElement('button');b.type='button';b.className='hand-card';b.title=d.name;b.setAttribute('aria-label',d.name);
+ b.innerHTML=d.src?'<img src="'+d.src+'" draggable="false" alt="'+d.name+'">':
+ '<span class="name">'+d.name+'</span><span class="kind">设施</span>';
+ hand.insertBefore(b,document.getElementById('reset'));buttons.set(d.id,b);
+ b.addEventListener('pointerdown',e=>{if(b.hidden)return;e.preventDefault();handDown={id:d.id,x:e.clientX,y:e.clientY,moved:false};pick(d);});
+ b.addEventListener('click',e=>{if(e.detail===0)pick(d);});
+ if(d.src)loadTexture(d.src,tex=>{texCache.set(d.id,tex);for(const c of cards)if(c.def.id===d.id)c.texture=tex;if(preview?.def.id===d.id)preview.texture=tex;});
+ else texCache.set(d.id,facilityTexture(d.name));
+}
+function inCanvas(e){let b=canvas.getBoundingClientRect();return e.clientX>=b.left&&e.clientX<=b.right&&e.clientY>=b.top&&e.clientY<=b.bottom;}
+function slotAt(x,z){
+ let best=null,dd=Infinity;for(const s of slotCenters){let dx=Math.abs(x-s.x),dz=Math.abs(z-s.z);
+ if(dx>slotW/2||dz>slotH/2)continue;let d=dx*dx+dz*dz;if(d<dd){best=s;dd=d;}}return best;
+}
+function valid(d,s,move=null){
+ if(!d||!s||s.side!=='ally'||s.zone!==d.kind)return false;
+ if(occupied.has(s.id)&&occupied.get(s.id)!==move)return false;
+ if(d.kind==='unit'&&cards.filter(c=>c.kind==='unit'&&c!==move).length>=7)return false;
+ return true;
+}
+function drop(s){
+ if(!active)return;if(!valid(active,s)){message('红色区域不能放置');return;}
+ const c=makeCard(active,s);c.x=preview.x;c.z=preview.z;c.y=.7;c.attackStart=now-.3;
+ occupied.set(s.id,c);cards.push(c);clearPick();
+}
+function move(c,s){
+ if(!valid(c.def,s,c)){message('此处无法放置');return;}
+ occupied.delete(c.slot.id);c.slot=s;c.homeX=s.x;c.homeZ=s.z;occupied.set(s.id,c);c.attackStart=now-.25;
+}
+function reset(){cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();}
+document.getElementById('reset').addEventListener('click',reset);
+function closestCard(clientX,clientY){
+ const cr=canvas.getBoundingClientRect(),px=(clientX-cr.left)*w/cr.width,py=(clientY-cr.top)*h/cr.height;
+ let best=null,score=1e9;for(const c of cards){
+ const q=projection2D(c.x,c.y,c.z);const l=projection2D(c.x-cardW/2,c.y,c.z);
+ const t=projection2D(c.x,c.y,c.z-cardH/2),b=projection2D(c.x,c.y,c.z+cardH/2);
+ const hw=Math.abs(q.x-l.x)+8,hh=Math.abs(b.y-t.y)/2+10;
+ if(Math.abs(q.x-px)<hw&&Math.abs(q.y-py)<hh){let d=Math.abs(q.x-px)/hw+Math.abs(q.y-py)/hh;if(d<score){score=d;best=c;}}}return best;
+}
+function track(e){
+ onBoard=inCanvas(e);if(!onBoard){overSlot=null;return;}
+ const p=worldFromPointer(e.clientX,e.clientY,.18);overSlot=slotAt(p.x,p.z);
+ if(dragCard){dragCard.x=p.x;dragCard.z=p.z;}
+ else if(active&&preview){preview.x=p.x;preview.z=p.z;}
+ else hoverCard=closestCard(e.clientX,e.clientY);
+}
+canvas.addEventListener('pointerdown',e=>{
+ if(e.button!==0)return;track(e);
+ if(active){pointerDown={placement:true,x:e.clientX,y:e.clientY};return;}
+ const c=closestCard(e.clientX,e.clientY);pointerDown={card:c,x:e.clientX,y:e.clientY};
+ if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}
+});
+window.addEventListener('pointermove',e=>{
+ if(handDown&&Math.hypot(e.clientX-handDown.x,e.clientY-handDown.y)>7)handDown.moved=true;
+ if(pointerDown?.card&&!dragCard&&Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y)>7){
+ dragCard=pointerDown.card;dragCard.dragged=true;}
+ track(e);canvas.style.cursor=dragCard?'grabbing':active?'crosshair':hoverCard?'grab':'default';
+});
+window.addEventListener('pointerup',e=>{
+ track(e);
+ if(handDown){if(handDown.moved&&onBoard&&active?.id===handDown.id)drop(overSlot);handDown=null;return;}
+ if(pointerDown?.placement&&active&&onBoard)drop(overSlot);
+ else if(dragCard){move(dragCard,overSlot);dragCard.dragged=false;dragCard=null;}
+ else if(pointerDown?.card)pointerDown.card.attackStart=now;
+ pointerDown=null;canvas.style.cursor=active?'crosshair':'default';
+});
+window.addEventListener('pointercancel',()=>{if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;handDown=null;});
+canvas.addEventListener('dblclick',e=>{if(active)return;let c=closestCard(e.clientX,e.clientY);if(c){c.flipTarget+=Math.PI;c.attackStart=now;}});
+canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(active)return;let c=closestCard(e.clientX,e.clientY);if(c)c.flipTarget+=Math.PI;});
+window.addEventListener('keydown',e=>{
+ if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%7)*.07;});}
+ if(e.code==='Escape')clearPick();if(e.code==='KeyR'&&!e.repeat)reset();
+});
+function drawHighlights(){
+ const d=dragCard?.def||active;if(!d)return;
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+ for(const s of slotCenters){
+ const good=valid(d,s,dragCard),near=s===overSlot&&onBoard;
+ const fill=good?[.19,.72,.31,near?.37:.18]:[.90,.20,.23,near?.35:.10];
+ const edge=good?[.08,.61,.25,near?.85:.28]:[.85,.18,.19,near?.85:.21];
+ renderGeom(slotFill,mul(T(s.x,-.102,s.z),RX(-Math.PI/2)),fill,null,true);
+ renderGeom(RRstrip,mul(T(s.x,-.095,s.z),RX(-Math.PI/2)),edge,null,true);
+ }
+ gl.depthMask(true);gl.disable(gl.BLEND);
+}
 function drawShadows(now){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
 for(const c of cards){for(let i=0;i<1;i++){let scale=1+.04*i;
 let m=mul(T(c.x+.10+i*.025,.068+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
-function drawStage(){// The whole board is modeled as 3D box volumes, not an image or CSS projection.
-cube(0,-.53,0,29.25,.34,16.21,colors.boardSide);
-cube(0,-.34,0,29.40,.10,16.32,colors.boardEdge);
-cube(0,-.25,0,29.24,.16,16.20,colors.platform);
-// Inner panel is only geometry and lighting; no UI decorations.
-cube(0,-.14,0,29.10,.035,16.10,colors.boardTop);
-// Central empty gap is intentionally free of labels, effects, or HUD.
+function drawStage(){
+ // No printed or permanent grid. One uninterrupted neutral surface until the Anima background is supplied.
+ cube(0,-.53,-1.1,29.5,.34,16.55,colors.boardSide);
+ cube(0,-.34,-1.1,29.55,.10,16.6,colors.boardEdge);
+ cube(0,-.25,-1.1,29.5,.16,16.55,colors.platform);
+ cube(0,-.14,-1.1,29.35,.035,16.38,colors.boardTop);
 }
-function frame(timeMs){now=timeMs/1000;resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);drawStage();
-for(const c of cards){c.hover=lerp(c.hover,(c===hoverCard||c.dragged)?1:0,.17);if(!c.dragged){c.x=lerp(c.x,c.homeX,.16);c.z=lerp(c.z,c.homeZ,.16);}c.y=lerp(c.y,.13+Math.sin(now*1.15+c.seed)*.017+(c.hover*.23)+(c.dragged?.33:0),.2);c.flip=lerp(c.flip,c.flipTarget,.11);}
-drawShadows(now);
-for(const c of [...cards].sort((a,b)=>a.z-b.z))drawCard(c,now);
-requestAnimationFrame(frame);}
+function frame(timeMs){
+ now=timeMs/1000;resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
+ gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ drawStage();drawHighlights();
+ for(const c of cards){
+  c.hover=lerp(c.hover,(c===hoverCard||c.dragged)?1:0,.17);
+  if(!c.dragged){c.x=lerp(c.x,c.homeX,.16);c.z=lerp(c.z,c.homeZ,.16);}
+  c.y=lerp(c.y,.13+Math.sin(now*1.15+c.seed)*.017+(c.hover*.23)+(c.dragged?.36:0),.2);
+  c.flip=lerp(c.flip,c.flipTarget,.11);
+ }
+ drawShadows(now);
+ for(const c of [...cards].sort((a,b)=>a.z-b.z))drawCard(c,now);
+ if(active&&preview&&onBoard&&!dragCard){preview.hover=1;preview.y=.85+Math.sin(now*2)*.025;drawCard(preview,now);}
+ requestAnimationFrame(frame);
+}
 requestAnimationFrame(frame);
 })();
 </script>
