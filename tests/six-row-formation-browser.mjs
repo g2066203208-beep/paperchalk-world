@@ -61,6 +61,42 @@ try {
  await page.waitForTimeout(1900);
  assert.equal(await page.locator('#hand .hand-card:visible').count(),5,'seven characters leave the hand, three facilities and two terrain tools remain');
  await page.screenshot({path:out+'/09-6x16-formation-seven-1920.png'});
+ // Reusable orbit camera must support real mouse/trackpad pan, orbit, zoom and reset
+ // without changing card positions or underlying voxel grid.
+ const initialCamera=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(Math.abs(initialCamera.distance-48)<.3,'default view is nearer to the board than the old 53-unit camera');
+ await page.mouse.move(980,460);
+ await page.mouse.wheel(0,-410);
+ await page.waitForTimeout(650);
+ const zoomCamera=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(zoomCamera.distance<initialCamera.distance-8,'mouse wheel zoom must materially enlarge the battlefield');
+ await page.screenshot({path:out+'/15-6x16-camera-zoomed-in-real-webgl.png'});
+ await page.mouse.move(1300,400);
+ await page.mouse.down({button:'right'});
+ await page.mouse.move(1530,465,{steps:10});
+ await page.mouse.up({button:'right'});
+ await page.waitForTimeout(620);
+ const orbitResult=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(Math.abs(orbitResult.yaw-initialCamera.yaw)>.6,'right-drag orbits the actual 3D camera');
+ assert.ok(Math.abs(orbitResult.elevation-initialCamera.elevation)>.08,'vertical right-drag changes camera pitch');
+ assert.equal(await page.evaluate(()=>window.__terrainEngine.snapshot().every(c=>c.level===0)),true,'orbiting cannot dig or build terrain');
+ await page.screenshot({path:out+'/16-6x16-camera-rotated-real-webgl.png'});
+ await page.mouse.move(900,440);
+ await page.mouse.down({button:'middle'});
+ await page.mouse.move(1140,520,{steps:7});
+ await page.mouse.up({button:'middle'});
+ await page.waitForTimeout(650);
+ const panCamera=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(Math.hypot(panCamera.target[0],panCamera.target[2]+1.1)>2,'middle drag pans the camera target');
+ await page.screenshot({path:out+'/17-6x16-camera-panned-real-webgl.png'});
+ await page.locator('#camera-reset').click();
+ await page.waitForTimeout(820);
+ const cameraReset=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(Math.abs(cameraReset.yaw)<.03
+  &&Math.abs(cameraReset.distance-48)<.3
+  &&Math.abs(cameraReset.target[0])<.12,
+  'reset camera restores default zoom, rotation and target');
+ assert.equal(await page.locator('#hand .hand-card:visible').count(),5,'camera gestures cannot remove the seven deployed characters');
  await page.locator('#reset').click();
  assert.equal(await page.locator('#hand .hand-card:visible').count(),12,'reset restores seven character cards and both terrain tools');
  // Actual click-based terrain interactions through the hosted game's card UI.
