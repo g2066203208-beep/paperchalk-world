@@ -38,6 +38,9 @@ try{
  assert.equal(status.hud.count,0);
  assert.equal(status.hud.stagedCharacterCards,1);
  assert.equal(status.hud.physicalBoxes,7);
+ assert.equal(status.hud.connectedTray,true,'all seven slots must be in one continuous physical 3D tray');
+ assert.equal(status.hud.trayBodies,1,'exactly one shared chassis, not seven separate containers');
+ assert.equal(status.hud.compartments,7,'six physical dividers create seven slots');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.units.filter(x=>x.side==='ally').length),0);
  assert.equal(status.hud.geometry,'shared-battlefield-card-mesh');
@@ -48,6 +51,7 @@ try{
  assert.ok(Math.abs(status.stageSize-status.viewHeight)<3,'WebGL canvas must cover complete game screen');
  assert.equal(status.hud.physicalDeckCards,10,'ten individually rendered cards remain in warrior box before deployment');
  assert.equal(status.hud.visible.filter(x=>x.kind==='deck').length,7);
+ console.log('CONNECTED_CHIP_TRAY',JSON.stringify({slots:status.hud.compartments,chassis:status.hud.trayBodies,connected:status.hud.connectedTray}));
  assert.equal(status.hud.visible.filter(x=>x.kind==='hand').length,0);
  assert.equal(status.hud.visible.filter(x=>x.kind==='character').length,1);
  await page.screenshot({path:out+'/01-character-on-top-of-real-3d-warrior-box.png',fullPage:true});
