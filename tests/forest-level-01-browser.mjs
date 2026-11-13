@@ -10,9 +10,9 @@ try{
  page.on('console',m=>{if(m.type()==='error')console.log('BROWSER_ERROR',m.text().slice(0,350));});
  await page.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:60000});
  await page.waitForTimeout(2300);
- const boot=await page.evaluate(()=>({hasGL:!!document.getElementById('stage')?.getContext('webgl'),hasLevel:!!window.__forestLevelDebug,scripts:[...document.scripts].map(x=>x.src),note:document.getElementById('note')?.textContent}));
+ const boot=await page.evaluate(()=>({hasGL:!!document.getElementById('stage')?.getContext('webgl'),hasLevel:!!window.__forestLevelDebug,hasHand:!!window.__forestHand,scripts:[...document.scripts].map(x=>x.src),note:document.getElementById('note')?.textContent}));
  console.log('BOOT_PROOF',JSON.stringify(boot),'ERRORS',JSON.stringify(errors));
- assert.ok(boot.hasLevel,'boot failed: '+JSON.stringify({boot,errors}));
+ assert.ok(boot.hasLevel&&boot.hasHand,'boot failed: '+JSON.stringify({boot,errors}));
  const state=await page.evaluate(()=>window.__forestLevelDebug.state);
  const slots=await page.evaluate(()=>window.__forestLevelDebug.slots);
  assert.equal(slots.length,18,'must be exactly enemy and ally 3x3 without facility flank cells');
@@ -22,8 +22,22 @@ try{
  assert.equal(state.units.filter(x=>x.side==='enemy').length,2);
  assert.equal(state.units[0].id,'woodcutter');
  assert.equal(await page.locator('#stage').count(),1);
+ const initialHand=await page.evaluate(()=>window.__forestHand.snapshot);
+ assert.equal(initialHand.classes.length,7,'all seven profession card boxes must appear');
+ assert.equal(await page.locator('#class-deck-boxes .class-box').count(),7);
+ assert.equal(await page.locator('#class-hand-stacks .class-stack').count(),7);
+ assert.equal(initialHand.count,5,'tutorial starts with 5 cards total, not per box');
+ assert.equal(initialHand.maxHand,10);
+ assert.equal(initialHand.classes.find(x=>x.id==='warrior').handCount,5);
+ assert.equal(initialHand.classes.filter(x=>x.unlocked).length,1,'only warrior starts unlocked in the 1v2 tutorial');
+ assert.equal(await page.locator('#class-deck-boxes button:disabled').count(),6);
  await page.waitForTimeout(650);
  await page.screenshot({path:output+'/01-forest-board-1920.png'});
+ const warriorBox=page.locator('#class-deck-boxes button[data-profession="warrior"]');
+ for(let i=0;i<5;i++)await warriorBox.click();
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),10,'freely draw up to shared cap');
+ assert.equal(await warriorBox.isDisabled(),true,'must stop at 10');
+ await page.screenshot({path:output+'/01b-seven-boxes-ten-card-hand.png'});
  let fx=await page.evaluate(()=>{const api=window.__forestLevelDebug;return{accepted:api.adjust(1,0,1),before:api.effects,tiles:api.terrain.length}});
  assert.equal(fx.accepted,true,'unoccupied ground must accept raise');
  assert.equal(fx.tiles,18);
@@ -36,21 +50,45 @@ try{
  const ended=await page.evaluate(()=>window.__forestLevelDebug.effects);
  assert.equal(ended.busy,0,'transition completes smoothly');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.terrain.find(t=>t.c===1&&t.r===0).level),1);
- const hit=await page.evaluate(()=>[window.__forestLevelDebug.attack('forest-foe-a'),window.__forestLevelDebug.attack('forest-foe-a'),window.__forestLevelDebug.attack('forest-foe-b'),window.__forestLevelDebug.attack('forest-foe-b')]);
- assert.ok(hit.every(Boolean),'all four tutorial attacks must be accepted');
+ let played=0;
+ while(played<8){
+  const opponents=await page.evaluate(()=>window.__forestLevelDebug.state.units.filter(x=>x.side==='enemy'&&x.alive).map(x=>x.id));
+  if(!opponents.length)break;
+  await page.locator('#class-hand-stacks [data-stack-profession="warrior"] .top-card').click();
+  const result=await page.evaluate(id=>window.__forestLevelDebug.attack(id),opponents[0]);
+  assert.equal(result,true,'a selected top card must attack an enemy');
+  played++;
+  if(played===1){
+   const locked=await page.evaluate(()=>window.__forestHand.snapshot);
+   assert.equal(locked.locked,true,'first played action locks all ordinary draws');
+   assert.equal(locked.count,9);
+   assert.equal(await warriorBox.isDisabled(),true);
+   assert.equal(await page.evaluate(()=>window.__forestHand.draw('warrior').reason),'draw-locked');
+   await page.screenshot({path:output+'/02b-locked-after-first-card.png'});
+  }
+ }
+ assert.ok(played>=2&&played<=8,'tutorial enemies defeated via LIFO action cards');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'victory');
  assert.equal(await page.locator('#level-end').isVisible(),true);
  await page.screenshot({path:output+'/03-tutorial-victory.png'});
  await page.locator('#level-retry').click();
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'active');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.terrain.find(t=>t.c===1&&t.r===0).level),0);
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),5,'restart resets only action hand and keeps character independent');
+ await page.locator('#end-hand-turn').click();
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0,'turn end clears all action cards');
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.locked),false);
+ await warriorBox.click();
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),1);
  assert.deepEqual(errors,[],'no page script errors');
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  const mobileErrors=[];mobile.on('pageerror',e=>mobileErrors.push(String(e)));
  await mobile.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'domcontentloaded',timeout:60000});
- await mobile.waitForFunction(()=>!!window.__forestLevelDebug,{timeout:22000});
+ await mobile.waitForFunction(()=>!!window.__forestLevelDebug&&!!window.__forestHand,{timeout:22000});
  assert.equal(await mobile.evaluate(()=>window.__forestLevelDebug.slots.length),18);
+ assert.equal(await mobile.locator('#class-deck-boxes .class-box').count(),7);
+ assert.equal(await mobile.locator('#class-hand-stacks .class-stack').count(),7);
  await mobile.screenshot({path:output+'/04-forest-board-mobile.png'});
  assert.deepEqual(mobileErrors,[]);
- console.log('FOREST_LEVEL_BROWSER_OK',JSON.stringify({slots:slots.length,unitCount:state.units.length,particleBurst:fx.before.particleCount,phase:'victory',errors}));
+ console.log('FOREST_LEVEL_BROWSER_OK',JSON.stringify({slots:slots.length,unitCount:state.units.length,sevenBoxes:initialHand.classes.length,drawCap:initialHand.maxHand,played,particleBurst:fx.before.particleCount,phase:'victory',errors}));
 }finally{await browser.close();}
