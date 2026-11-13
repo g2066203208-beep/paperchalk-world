@@ -309,16 +309,23 @@ function closestCard(clientX,clientY){
  if(Math.abs(q.x-px)<hw&&Math.abs(q.y-py)<hh){let d=Math.abs(q.x-px)/hw+Math.abs(q.y-py)/hh;if(d<score){score=d;best=c;}}}return best;
 }
 function tileAtPointer(clientX,clientY){
- // Orthographic ray height search: choose the first elevated terrain top hit.
- // This stays aligned when a player digs to -3 or stacks a mountain to +3.
- for(let level=terrain.maxLevel;level>=terrain.minLevel;level--){
-  const p=worldFromPointer(clientX,clientY,terrain.topY+level*terrain.levelStep);
-  const t=terrain.atWorld(p.x,p.z);
-  if(t&&t.level===level)return terrainTarget(t.c,t.r);
+ // Perspective-correct terrain editing. Use the current projected tile-top center,
+ // not a sequence of infinite height planes: the latter mis-picks neighboring
+ // cliff tops when excavating the same cell several times.
+ const rect=canvas.getBoundingClientRect();
+ const px=(clientX-rect.left)*w/rect.width,py=(clientY-rect.top)*h/rect.height;
+ let best=null,bestScore=Infinity;
+ for(const t of terrain.snapshot()){
+  const q=projection2D(t.x,t.height,t.z);
+  const edgeX=projection2D(t.x+terrain.tileW*.5,t.height,t.z);
+  const edgeZ=projection2D(t.x,t.height,t.z+terrain.tileD*.5);
+  const halfW=Math.max(3,Math.abs(edgeX.x-q.x)),halfH=Math.max(3,Math.abs(edgeZ.y-q.y));
+  const dx=(px-q.x)/halfW,dy=(py-q.y)/halfH;
+  const score=dx*dx+dy*dy;
+  if(score<bestScore){bestScore=score;best=terrainTarget(t.c,t.r);}
  }
- const flat=worldFromPointer(clientX,clientY,terrain.topY);
- const t=terrain.atWorld(flat.x,flat.z);
- return t?terrainTarget(t.c,t.r):null;
+ // Permit the tile's visible top or center for deep pits, not the surrounding UI.
+ return bestScore<=1.95?best:null;
 }
 function track(e){
  onBoard=inCanvas(e);if(!onBoard){overSlot=null;return;}
