@@ -366,7 +366,8 @@ function smoothHeight(grid,x,z){
  const u=(x-grid.minX)/grid.tileW-.5,v=(z-grid.minZ)/grid.tileD-.5;
  const ix=Math.floor(u),iz=Math.floor(v),fx=u-ix,fz=v-iz;
  const curve=t=>{
-  const normalized=constrain((t-.36)/.28,0,1);
+  // Narrow, rounded cliff shoulders: keep the bulk of each tile flat and editable.
+  const normalized=constrain((t-.405)/.19,0,1);
   return normalized*normalized*(3-2*normalized);
  };
  const wx=curve(fx),wz=curve(fz);
@@ -375,7 +376,7 @@ function smoothHeight(grid,x,z){
  return (a*(1-wx)+b*wx)*(1-wz)+(c*(1-wx)+d*wx)*wz;
 }
 function softHeightTile(grid,makeGeom,c,r){
- const verts=[],idx=[],N=16;
+ const verts=[],idx=[],N=24;
  const {x,z}=grid.center(c,r);
  const x0=x-grid.tileW/2,z0=z-grid.tileD/2;
  const eps=.019;
@@ -477,5 +478,5 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
  }
  return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return renderedRevision}};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'3.1.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'3.2.0',MATERIALS,create,createWebGLRenderer});
 })(window);
