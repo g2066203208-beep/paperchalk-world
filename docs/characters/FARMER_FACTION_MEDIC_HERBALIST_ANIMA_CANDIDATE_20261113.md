@@ -1,40 +1,39 @@
-# 农民组织｜医师｜采药少女｜Anima 立绘候选 V1（2026-11-13）
+# 农民组织｜医师｜采药少女｜Anima 立绘候选 V2（2026-11-13）
 
-> 用户明确提供的 [农民组织七职业身份表](../game/FARMER_FACTION_SEVEN_CLASS_CHARACTER_IDENTITY_CANON_20261113.md) 锁定：**医师 = 采药少女**；采草药、做药膏、治疗、解毒、增益。**不更改七职业名称、不改成修女/魔女/现代医生/药剂师职业。**
+> **用户反馈：V1 看起来像妈妈系、不够萝莉。V1 视觉方向否决。** V2 改为明显娇小、稚气可爱的 **loli** 类型人物，而非年轻成年女性。这里的 loli 指无性化的可爱幼态角色，不是蕾丝洛丽塔盛装。
 >
-> 状态：**仅提示词候选，尚无本角色已生成/批准的 PNG，也未实装**。依用户最新要求，**每完成一个人物就完整记录 GitHub**。
+> 七职业身份仍是农民组织**医师=采药少女**。本次仅替换提示词，不冒充生成图、批准图或游戏实装。
 
-## 角色拟稿与同阵营区分
+## 修订要点
 
-- **704×1024 px，竖版单人全身**。背景目标透明，实际 PNG 是否有 Alpha 要出图后核验，不把白底当真透明。
-- 身份：传统乡村**采药少女**，日常在山坡田埂寻找药草，制作乡村药膏、包扎和解毒。她是战斗七职业中的**医师**，不增加新职业。
-- 造型：这版选择**年轻成年少女体型**、轻微心形脸、湖蓝绿明亮眼睛、深赤褐色低侧编辫及朴素橄榄色头巾；与战士双短辫圆脸、工程师草帽短发、射手高侧马尾全部不同。体型/发色/动作仍属**待审批的候选美术方案**，不是用户已批准事实。
-- 穿着：农民组织共同时代的粗亚麻和旧皮鞋，但职业工作需要浅鼠尾草绿短系带布背心、实用布裙与绑腿、腰侧布药袋、朴素的小陶制药膏罐。不能变成法袍、女仆、现代白大褂，不能佩戴闪光炼金装饰。
-- 表情：看到了有用的草药而双眼发亮、嘴唇微张的惊喜神态；不是伐木工的轻轻笑、农耕少女的露齿开怀笑或猎户少女的侧身回眸笑。
-- 动作：**右手在肩侧轻举一小枝药草向对方展示，左手在胯侧打开草药布袋准备收纳，肩膀微微前送、站姿呈温和 S 曲线**。动作自然、轻巧，双手有实际生活逻辑，适合后续对话演出，不能复制握长柄工具+副手挂物的旧构图。
-- 遵从当前阵营职业人物提示词例外：正向不添加 LoRA、画师标签、风格关键词、safe；负向仅六项通用质量词。
+- 取消 V1 的年轻成年体型、心形成年脸、成熟侧编辫、长布裙和系带胸衣，避免端庄妈妈系。
+- 改为短小身材、圆脸短下巴、小肩膀、小手脚、明亮圆眼；浅蜜金色蓬松短波波头和一小段绿色布绳束发。是**新独立人物**，不只是 V1 缩小。
+- 村庄粗亚麻长袖衬衣、短鼠尾草绿罩衫、宽松棕色及膝劳动短裤、深色打底裤、绑脚布、旧式乡村皮鞋。草药斜挎袋和小陶药膏罐标识采药医师身份，不使用高级魔法服饰或现代医疗用品。
+- 右手轻举刚采的小紫花到鼻旁嗅闻，左手扶着小药袋肩带，轻歪头、脚尖略内扣，自然兴奋又可爱；不能再次画成 V1 妈妈式温柔站姿。
+- **704×1024 单人竖版完整全身**，人物仅占画高约 76%，头顶和脚底留足空白，双手与所有随身物完整。目标透明背景，但需实际检验 PNG Alpha。
+- 阵营小兵正向没有 LoRA、画师标签、画风描述或 safe；负向只有六项通用质量词。
 
-## Anima 完整正向提示词（独立复制）
+## Anima 完整正向提示词
 
 ```text
-masterpiece, best quality, 1girl, solo, young adult village herbalist girl, a gentle rural herb gatherer and healer from an old farming village. Slender but healthy build, soft heart-shaped face with a slightly pointed chin and naturally rounded cheeks, warm clear teal-blue eyes with softly arched eyebrows, a small straight nose, natural rose-colored lips. A vivid affectionate expression with her eyes bright and focused and her mouth slightly open in a delighted little exclamation as she recognizes a useful medicinal herb, not a sleepy half-smile. Thick dark auburn wavy hair loosely gathered into a low side braid over her left shoulder, a few curly wisps framing her face, a small plain olive linen headscarf tied at the back of her head.
+masterpiece, best quality, 1girl, solo, loli, very petite little village herb-gathering girl, short childlike body proportions, small narrow shoulders, a slightly larger rounded head, short slender limbs, small hands, soft round cheeks, short rounded chin, small button nose, wide clear bright blue-green eyes, lively curious eyebrows, a small open-mouthed delighted smile, a sweet spontaneous youthful expression. Fluffy pale honey-blonde chin-length bob haircut with softly curled ends, uneven wispy bangs, and a small simple pale-green cloth ribbon tying back one side lock, a completely distinct face and hairstyle.
 
-She wears the practical clothing of an ordinary traditional countryside herbalist: a warm ivory long-sleeved coarse linen blouse with lightly puffed upper sleeves and rolled cuffs, a soft faded sage-green lace-up sleeveless bodice, a weathered dark brown calf-length wrap skirt with enough room for walking and gathering in the hills, simple charcoal leggings underneath, pale woven linen ankle bindings, and sturdy old-fashioned chestnut-brown leather country shoes with rounded toes. All layers are modest, hand-sewn, lightly repaired, and made of coarse homespun cloth. A narrow woven waist belt carries a small linen herb pouch and a tiny capped brown earthenware ointment jar. A small flat woven herb-gathering satchel rests on her left hip, with a few recognizable green leaves and delicate white chamomile-like flowers visible at the opening. Her clothes look like those of a real rural gatherer, not a ceremonial priestess, sorceress or modern doctor.
+She is a little countryside herbalist gathering useful wild plants for her old farming village. She wears humble old-fashioned rural peasant working clothes: a loose oversized ivory coarse-linen blouse with sleeves rolled to her elbows, a simple short faded sage-green sleeveless working tunic ending at her hips, loose worn warm-brown knee-length peasant shorts, plain charcoal wool leggings, simple linen ankle wraps, and small old-fashioned rounded brown leather country shoes. The clothing is soft, loose and practical, with hand-sewn seams, tiny patches and faded homespun fabric, suitable for a little girl collecting wild plants. A small crossbody cloth herb satchel rests at her hip with a few green leaves and tiny white flowers peeking out. A small sealed clay ointment pot is tied securely beside the satchel.
 
-She stands upright with a natural relaxed S-shaped posture, her right shoulder slightly forward, her left foot pointed a little outward. Her right hand gently lifts a tiny freshly gathered sprig of green medicinal leaves beside her right shoulder, holding it delicately between two fingers and turning it toward the viewer as if excitedly showing her discovery. Her left hand loosely holds open the top of the little herb satchel at her hip, ready to tuck the plant away. Her head inclines slightly toward the leaf while her eyes look out at the viewer, creating a lively and friendly moment of conversation. Her arms form a soft open asymmetrical silhouette; the sprig is small, and her face, torso, and clothing remain clearly visible. She is not holding a staff, a long tool, or a weapon.
+She stands mostly facing forward in a natural playful everyday pose, her weight on one foot and the other foot turned a little inward, shoulders relaxed. Her right hand delicately lifts a tiny freshly picked purple medicinal flower near her nose to smell its fragrance, and her left hand lightly holds the strap of her small herb satchel beside her waist. Her head tilts gently toward the flower while her wide-open curious eyes look toward the viewer, her mouth forming a fresh delighted little smile. Her hands and face remain clear, the flower does not obscure her features. She is neither a ceremonial healer nor a dramatic adventurer.
 
-One single isolated complete full-body character for a dialogue portrait, mostly front-facing with only a mild shoulder turn, centered within a 704x1024 vertical image, entire hair, small headscarf, both hands, herb sprig, herb satchel, skirt hem and both shoes fully inside the image with comfortable margins on all sides, minimal perspective, transparent background.
+Single isolated FULL-BODY character for a dialogue portrait, vertical 704x1024 canvas, camera pulled back so the whole figure occupies around 76 percent of the canvas height, generous empty space above her hair and below both shoes, full hair, elbows, tiny flower, satchel, legs and both shoes completely inside the frame, centered composition, minimal perspective, transparent background.
 ```
 
-## 完整负向提示词
+## 完整通用负向提示词
 
 ```text
 worst quality, low quality, blurry, jpeg artifacts, chromatic aberration, watermark
 ```
 
-## 出图验收
+## 验收
 
-1. 一眼能识别为采药和乡村治疗职业，枝叶与药草袋清晰，但没有巨大的魔法瓶、巫师装备或现代医疗器械。
-2. 与另外三位农民人物明显不同：脸型、眼睛、发色、发型、表情、手势和站姿各自独立。
-3. 全身头巾、双手、草药与药袋、裙摆和双鞋严格在画内，无大幅表演动作。
-4. 正负完整提示词保留可复制；实际生成图、验收结果、PNG SHA、透明通道检查和素材位置以后单独登记。
+- 第一眼应是娇小可爱的萝莉型乡村采药少女，不是成年母亲或成熟治疗师。
+- 不改成魔女、修女、现代护士或华丽洛丽塔服装。
+- 发型、面部与其他农民职业人物明显不同，动作自然、表情生动。
+- 必须整个人和道具无裁切，待用户确认图片后才可转正式美术。
