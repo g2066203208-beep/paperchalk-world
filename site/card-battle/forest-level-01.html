@@ -473,14 +473,24 @@ function drawShadows(now){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_M
 for(const c of cards){for(let i=0;i<1;i++){let scale=1+.04*i;
 let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
-function drawStage(){terrainRenderer.draw();}
+function drawStage(){forestProps.draw(now);terrainRenderer.draw();}
+function drawTerrainParticles(){
+ if(!fx.particles.length)return;
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+ for(const p of fx.particles){
+  const left=Math.max(0,1-p.age/p.life),sz=p.size*(.65+.35*left);
+  cube(p.x,p.y,p.z,sz,sz,sz,[...p.color,left*.88]);
+ }
+ gl.depthMask(true);gl.disable(gl.BLEND);
+}
 let previousFrameTime=0;
 function frame(timeMs){
  now=timeMs/1000;
- orbitCamera.update(previousFrameTime?now-previousFrameTime:1/60);previousFrameTime=now;
+ const dt=previousFrameTime?Math.min(.05,now-previousFrameTime):1/60;
+  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
  gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
- drawStage();drawHighlights();
+ drawStage();drawHighlights();drawTerrainParticles();
  for(const c of cards){
   c.hover=lerp(c.hover,(c===hoverCard||c.dragged)?1:0,.17);
   if(!c.dragged){c.x=lerp(c.x,c.homeX,.16);c.z=lerp(c.z,c.homeZ,.16);}
