@@ -5,6 +5,7 @@ on:
     paths:
       - 'site/card-battle/forest-level-01.html'
       - 'site/card-battle/engine/level-engine.js'
+      - 'site/card-battle/engine/scene-card-hud.js'
       - 'site/card-battle/engine/voxel-animations.js'
       - 'site/card-battle/engine/forest-environment.js'
       - 'site/card-battle/engine/profession-decks.js'
