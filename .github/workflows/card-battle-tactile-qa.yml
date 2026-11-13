@@ -1,0 +1,38 @@
+name: Tactile one-on-one card battle QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/**'
+      - 'site/combat-lab/engine.js'
+      - 'tests/card-battle-tactile-browser.mjs'
+      - '.github/workflows/card-battle-tactile-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  card-table-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve real game
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/tactile-card-http.log 2>&1 &
+          sleep 2
+      - name: Check actual 1v1 UI gameplay, card handling and screenshot
+        run: node tests/card-battle-tactile-browser.mjs
+      - name: Save gameplay screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-battle-tactile-real-browser
+          path: artifacts/card-battle-tactile/
+          if-no-files-found: warn
