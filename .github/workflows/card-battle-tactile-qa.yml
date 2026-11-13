@@ -6,6 +6,7 @@ on:
       - 'site/card-battle/**'
       - 'site/combat-lab/engine.js'
       - 'tests/card-battle-tactile-browser.mjs'
+      - 'tests/six-row-formation-browser.mjs'
       - '.github/workflows/card-battle-tactile-qa.yml'
   workflow_dispatch:
 permissions:
@@ -29,6 +30,8 @@ jobs:
           sleep 2
       - name: Check actual 1v1 UI gameplay, card handling and screenshot
         run: node tests/card-battle-tactile-browser.mjs
+      - name: Validate real 3D six-row formation, seven cards and placement cues
+        run: node tests/six-row-formation-browser.mjs
       - name: Save gameplay screenshots
         if: always()
         uses: actions/upload-artifact@v4
