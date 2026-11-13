@@ -118,7 +118,7 @@ function modelForCard(c,now){let motion=attackPose(c,now),arrival=placementPose(
 base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
 base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+arrival.pitch+c.hover*.07));
 base=mul(base,RY(c.flip));
-base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll));return base;}
+base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll)); const focusScale=c.slot?1+c.hover*.26:1; base=mul(base,S(focusScale,focusScale,1));return base;}
 function attackPose(c,now){let phase=now-c.attackStart;if(phase<0||phase>1.12)return {dx:0,dy:0,dz:0,pitch:0,roll:0};let u=phase/1.12;
 let s=Math.sin(Math.PI*Math.min(1,u));let launch=(u<.35?Math.sin(u/.35*Math.PI/2):Math.exp(-(u-.35)*4));
 return{dx:Math.sin(c.seed*4)*.12*s,dy:.42*s,dz:(c.side==='enemy'?1:-1)*.78*launch,pitch:(c.side==='enemy'?-.23:.23)*s,roll:Math.sin(phase*24)*.085*s};}
@@ -209,17 +209,21 @@ function move(c,s){
 function reset(){cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();}
 document.getElementById('reset').addEventListener('click',reset);
 document.getElementById('demo').addEventListener('click',()=>{
- // Symmetrical 2-3-2 preview, using the seven original full-art circus character cards.
+ // Role-aware 3-3-1 formation: 3 frontline, 3 middle, ringmaster protected at rear center.
  cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();
- const positions=[[0,0],[0,2],[1,0],[1,1],[1,2],[2,0],[2,2]];
- const actors=handDefs.filter(d=>d.kind==='unit');
- positions.forEach(([r,c],i)=>{
+ const lineup=[
+ {id:'strong',r:0,c:0},{id:'tamer',r:0,c:1},{id:'escape',r:0,c:2},
+ {id:'acrobat',r:1,c:0},{id:'clown',r:1,c:1},{id:'knife',r:1,c:2},
+ {id:'ringmaster',r:2,c:1}
+ ];
+ lineup.forEach(({id,r,c},i)=>{
+  const def=handDefs.find(d=>d.id===id);
   const slot=slotCenters.find(s=>s.side==='ally'&&s.zone==='unit'&&s.r===r&&s.c===c);
-  if(!slot)return;
-  const card=makeCard(actors[i],slot);
+  if(!slot||!def)return;
+  const card=makeCard(def,slot);
   card.placeStart=now-i*.055-.25;occupied.set(slot.id,card);cards.push(card);
  });
- sync();message('已摆好对称的七人3×3阵型，可拖动调整');
+ sync();message('已摆好前3、中3、后排团长的阵型，可拖动调整');
 });
 function closestCard(clientX,clientY){
  const cr=canvas.getBoundingClientRect(),px=(clientX-cr.left)*w/cr.width,py=(clientY-cr.top)*h/cr.height;
