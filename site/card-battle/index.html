@@ -3,159 +3,186 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#efeee9">
-<title>时间步战斗 · 1v1 棋盘</title>
+<meta name="theme-color" content="#0a0808">
+<title>纸牌时序 · 暗木桌战斗</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Microsoft YaHei",sans-serif;color:#283033;background:#efeee9;color-scheme:light}
+:root{color-scheme:dark;font-family:ui-serif,Georgia,"Noto Serif SC","Songti SC","Microsoft YaHei",serif;--ink:#140f0c;--paper:#d6b985;--paper-light:#efddb8;--gold:#d4a361;--red:#a85349;--soft:#d5b98a;--wood:url('');font-synthesis:none}
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;width:100%}
-button,a{font:inherit}
-button{cursor:pointer}
-button:focus-visible,a:focus-visible{outline:3px solid #60898f;outline-offset:3px}
-button:disabled{cursor:default;opacity:.42}
-.app{min-height:100dvh;display:flex;flex-direction:column}
-.top{height:60px;padding:0 clamp(18px,3vw,54px);display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #d9ddd9;background:#fafaf7}
-.top-left,.top-right{display:flex;align-items:center;gap:18px}
-.brand{font-weight:750;letter-spacing:.015em;font-size:18px}
-.eyebrow{font-size:12px;color:#777e7e;letter-spacing:.06em}
-.plain-link,.small-button{border:1px solid #dce0dc;border-radius:8px;background:#fff;color:#3f494b;text-decoration:none;padding:8px 12px;font-size:13px}
-.plain-link:hover,.small-button:hover{background:#f1f3ef}
-.board-wrap{flex:1;display:flex;justify-content:center;align-items:stretch;padding:clamp(12px,2.3vh,26px) clamp(12px,2vw,36px);min-height:0}
-.board{background:#fdfdfa;border:1px solid #dedfd8;border-radius:19px;width:100%;max-width:1510px;min-height:440px;display:flex;flex-direction:column;box-shadow:0 12px 36px #27332f0a;overflow:hidden}
-.board-top{display:flex;justify-content:space-between;align-items:center;padding:14px 23px;border-bottom:1px solid #eaebe7;font-size:13px;color:#767d7c;gap:12px}
-.board-top strong{font-size:13px;color:#353c3d;font-weight:700}
-.board-center{flex:1;min-height:0;display:grid;grid-template-columns:minmax(160px,250px) minmax(300px,1fr) minmax(160px,250px);gap:clamp(12px,2.5vw,42px);padding:clamp(13px,2vh,26px) clamp(15px,3vw,54px);align-items:center}
-.fighter{display:flex;align-items:stretch;flex-direction:column;min-width:0;gap:10px}
-.side-id{display:flex;align-items:baseline;justify-content:space-between;gap:7px}
-.side-id strong{font-size:15px;font-weight:720}
-.side-id small{font-size:11px;color:#87908d}
-.figure{position:relative;width:100%;aspect-ratio:2/2.82;background:#f6f6f3;border-radius:12px;border:1px solid #e1e3dd;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.figure img{display:block;width:100%;height:100%;object-fit:contain}
-.figure .missing{font-size:12px;color:#999;display:none}
-.figure.is-missing .missing{display:block}.figure.is-missing img{display:none}
-.fighter.enemy .figure{background:#f6f2f1}
-.fighter.ally .figure{background:#f2f5f4}
-.fighter-name{font-size:13px;font-weight:670;color:#484f50;text-align:center}
-.hp-box{display:flex;align-items:center;gap:10px}
-.hp-track{height:7px;flex:1;border-radius:99px;overflow:hidden;background:#e5e5e1}
-.hp-track>span{height:100%;display:block;width:100%;background:#71929a;transition:width .18s}
-.enemy .hp-track>span{background:#b77870}
-.hp-number{font-variant-numeric:tabular-nums;font-size:12px;min-width:55px;text-align:right;color:#565e5d}
-.clock{min-width:0;width:100%;display:flex;flex-direction:column;justify-content:center;gap:25px}
-.clock-intro{text-align:center;display:flex;flex-direction:column;gap:7px}
-.clock-intro strong{font-size:23px;letter-spacing:.015em;font-weight:640}
-.clock-intro span{font-size:12px;color:#8a9190}
-.timeline{width:100%;padding:15px 13px;border-radius:13px;background:#f4f5f1;border:1px solid #e6e8e3}
-.time-row{display:grid;grid-template-columns:44px repeat(10,minmax(0,1fr));gap:4px;align-items:stretch;margin-bottom:6px}
-.time-row:last-child{margin-bottom:0}
-.time-label{font-size:11px;color:#79807e;display:flex;align-items:center;justify-content:center;white-space:nowrap}
-.time-cell{min-width:0;min-height:49px;border:1px solid #e1e5de;border-radius:6px;background:#fff;color:#87908c;display:flex;align-items:center;justify-content:center;font-size:12px;position:relative}
-.time-row.ruler .time-cell{background:transparent;border:0;min-height:20px;font-size:11px;color:#888f8c;font-variant-numeric:tabular-nums}
-button.time-cell{padding:2px}
-button.time-cell:hover{border-color:#748e90;background:#f5f9f7}
-button.time-cell.can-place{border-color:#9ab5ae}
-.time-cell.windup{background:#f2dfdb;color:#905e5b;border-color:#e6cdc8}
-.time-cell.active{background:#bb7770;color:white;border-color:#aa6760;font-weight:700}
-.time-cell.recovery{background:#ead3cf;color:#976c65;border-color:#dbb9b3}
-.time-row.friendly .time-cell.windup{background:#dce8e9;border-color:#c3d8d9;color:#577b83}
-.time-row.friendly .time-cell.active{background:#6c969c;color:#fff;border-color:#638c91}
-.time-row.friendly .time-cell.recovery{background:#cedee0;border-color:#bbd0d2;color:#658287}
-.time-cell.disabled{background:#e5e5e1;color:#8c9190}
-.time-cell[aria-pressed="true"]{outline:2px solid #3a6c70;outline-offset:1px}
-.timeline-help{text-align:center;font-size:12px;color:#777e7b;line-height:1.65}
-.timeline-status{text-align:center;font-size:12px;color:#575f5d;min-height:20px}
-.board-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #eaebe6;padding:12px 24px;color:#787e7b;font-size:12px}
-.action-area{background:#f7f7f3;border-top:1px solid #dcded9;padding:14px 24px max(16px,env(safe-area-inset-bottom))}
-.action-inner{margin:auto;max-width:1510px;display:grid;grid-template-columns:145px minmax(0,1fr) 195px;align-items:stretch;gap:20px}
-.hand-side{display:flex;flex-direction:column;justify-content:space-between;gap:6px}
-.section-label{font-size:12px;color:#828a87}
-.hand-count{font-size:20px;font-weight:750}
-.hand{display:flex;justify-content:center;gap:10px;min-width:0}
-.hand-card{appearance:none;position:relative;text-align:left;width:clamp(110px,10.7vw,160px);min-height:156px;padding:14px 13px 11px;background:#fff;border:1px solid #d9dcd5;border-radius:11px;display:flex;flex-direction:column;gap:6px;color:#343c3b;box-shadow:0 2px 6px #1b282207;transition:border-color .1s,transform .1s}
-.hand-card:hover{border-color:#aab7ae;transform:translateY(-3px)}
-.hand-card.selected{border:2px solid #537d80;padding:13px 12px 10px;box-shadow:0 7px 14px #4a777019}
-.hand-card .kind{font-size:10px;color:#8b9691;letter-spacing:.06em}
-.hand-card strong{font-size:15px;line-height:1.35;font-weight:700}
-.hand-card .desc{font-size:11px;line-height:1.5;color:#697371;flex:1}
-.hand-card .phases{display:flex;gap:3px;font-size:10px;color:#8c9692}
-.hand-card .phases span{background:#eef0ea;border-radius:3px;padding:3px 5px}
-.hand-card.defense{border-top:3px solid #88aeb2}
-.hand-card.attack{border-top:3px solid #ca9890}
-.hand-card.skill{border-top:3px solid #9db5a3}
-.hand-card.selected.attack,.hand-card.selected.defense,.hand-card.selected.skill{border:2px solid #537d80}
-.action-buttons{display:flex;flex-direction:column;gap:9px;justify-content:center}
-.primary{border:1px solid #283e3f;border-radius:10px;background:#293d3d;color:#fff;font-weight:700;font-size:15px;min-height:56px;padding:10px 15px}
-.primary:hover{background:#3c5755}
-.secondary{border:1px solid #d5dcd7;background:#fff;color:#454f4c;border-radius:9px;padding:10px 12px;font-size:12px}
-.secondary:hover{background:#eef2ee}
-.outcome{font-size:12px;min-height:17px;line-height:1.45;color:#727b78;text-align:center}
-.game-over{color:#a65e51;font-weight:700}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#090806;color:#e6d6b6}
+button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid #f9cf75;outline-offset:4px}
+button:disabled{opacity:.42;cursor:default}
+[hidden]{display:none!important}
+.stage{position:relative;width:100%;height:100dvh;min-height:500px;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse 70% 70% at 52% 36%,#32251b 0%,#17120f 55%,#080708 100%)}
+.stage:after{content:"";position:absolute;inset:0;z-index:18;pointer-events:none;background:radial-gradient(ellipse 80% 72% at 50% 45%,transparent 45%,#08060688 93%,#050505aa 100%)}
+.back-wall{position:absolute;left:-5%;top:-22%;width:110%;height:57%;background:repeating-linear-gradient(90deg,#16100e 0,#19110f 105px,#0f0c0b 110px,#211610 124px),linear-gradient(#15100e,#090807);box-shadow:inset 0 -90px 100px #050404;filter:blur(1px)}
+.back-wall:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 20% 100% at 50% 120%,#c86e3325,transparent 90%),linear-gradient(90deg,#05040490,transparent 30%,transparent 70%,#05040490)}
+.overhang{position:absolute;left:4%;right:4%;top:-10px;height:18%;border-radius:0 0 50% 50%;background:linear-gradient(180deg,#080607 0%,#211214 25%,#120e0e 64%,transparent 100%);opacity:.67;filter:drop-shadow(0 18px 17px #030303)}
+.opponent-shadow{position:absolute;z-index:1;top:4.5%;left:50%;transform:translateX(-50%);width:clamp(150px,18vw,325px);height:36%;background:radial-gradient(ellipse 58% 75% at 50% 24%,#090808 46%,transparent 70%);opacity:.78;filter:blur(9px);pointer-events:none}
+.lamp-glow{position:absolute;z-index:1;left:45%;top:5%;width:14%;height:24%;background:radial-gradient(ellipse,#bc7b3738 0%,#a9581912 35%,transparent 72%);filter:blur(15px);animation:light-pulse 5.1s ease-in-out infinite alternate}
+.lamp-wire{position:absolute;z-index:2;top:0;left:50%;height:10%;width:2px;background:linear-gradient(#090909,#57452b)}
+.lamp{position:absolute;z-index:2;top:9%;left:calc(50% - 16px);width:32px;height:29px;border:2px solid #4d3725;background:radial-gradient(ellipse at 50% 30%,#ffcc7855,#50321c33 58%,#130e09);border-radius:45% 45% 30% 30%;box-shadow:0 0 19px 9px #ee9e4320,0 0 85px 36px #d07d2523}
+.lamp:before{content:"";position:absolute;top:-6px;left:7px;width:14px;height:7px;background:#433324;border-radius:60%}
+.ambient{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 58% 72% at 39% 48%,#b4762c17 0,transparent 78%),radial-gradient(ellipse 40% 65% at 80% 53%,#8d3b3021 0,transparent 80%);mix-blend-mode:screen}
+.board-perspective{position:absolute;z-index:4;left:4.5%;right:4.5%;top:15%;bottom:9%;perspective:1050px;transform:translate3d(0,0,0);transition:transform .35s ease}
+.board-top{position:absolute;inset:0;border-radius:20px 19px 30px 28px;transform:rotateX(13deg) translateZ(-2px);transform-origin:50% 58%;overflow:hidden;background:linear-gradient(105deg,#27160f,#55301a 15%,#382015 45%,#4c2a18 74%,#21140e);border:8px solid #25160f;box-shadow:0 28px 0 2px #1a100b,0 44px 0 -4px #100a08,0 70px 65px #000c,inset 0 0 0 2px #76513955,inset 0 0 90px #080605aa}
+.board-top:before{content:"";position:absolute;inset:0;background-image:var(--wood);background-size:cover;opacity:.86;mix-blend-mode:soft-light;pointer-events:none}
+.board-top:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 73% 77% at 45% 40%,#b87c3b23,transparent 78%),linear-gradient(90deg,#0806048c 0%,transparent 12%,transparent 85%,#08060496 100%),linear-gradient(180deg,#0008,transparent 20%,transparent 72%,#0009);pointer-events:none}
+.board-seam{position:absolute;z-index:1;left:0;right:0;height:3px;border-top:1px solid #0e0806aa;border-bottom:1px solid #95643a40;opacity:.65}
+.seam-a{top:32%}.seam-b{top:69%}
+.board-nails{position:absolute;z-index:2;inset:13px;pointer-events:none;border:1px solid #c4995340;border-radius:13px}
+.board-nails:before,.board-nails:after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#a78a60,#2b2118 65%,#100b0b);box-shadow:0 0 2px #000}
+.board-nails:before{top:10px;left:12px}.board-nails:after{top:10px;right:12px}
+.table-edge-light{position:absolute;z-index:5;left:4.7%;right:4.7%;bottom:6%;height:19px;border-radius:0 0 50% 50%;background:linear-gradient(180deg,#754521 0%,#29160e 40%,#0b0807 100%);box-shadow:0 10px 25px #000a;pointer-events:none}
+.candle{position:absolute;z-index:6;left:7.2%;top:36%;width:45px;height:105px;pointer-events:none;filter:drop-shadow(11px 23px 8px #0008);transform:rotate(-2deg)}
+.candle-base{position:absolute;bottom:0;left:-18px;width:83px;height:15px;border-radius:50%;background:radial-gradient(ellipse at 45% 35%,#87684b,#2c231e 77%);border:1px solid #3c2a1e;box-shadow:0 3px 8px #000}
+.candle-body{position:absolute;bottom:12px;left:12px;width:26px;height:68px;border-radius:5px 6px 3px 4px;background:linear-gradient(90deg,#665344,#dbc49b 35%,#aa8f71 72%,#554332);box-shadow:inset 0 -15px 9px #30221a77}
+.candle-body:before{content:"";position:absolute;top:-3px;left:0;width:26px;height:7px;background:radial-gradient(ellipse,#d9c5a9 25%,#766254 80%);border-radius:50%}
+.candle-flame{position:absolute;bottom:79px;left:19px;width:12px;height:25px;background:radial-gradient(ellipse at 50% 72%,#fff3b0 0%,#ffb954 37%,#dc611c 70%,transparent 75%);border-radius:55% 55% 48% 48%;box-shadow:0 0 18px 5px #eb8e3d88,0 0 70px 21px #c375263c;animation:flicker 2s infinite alternate;transform-origin:50% 90%}
+.engrave{position:absolute;z-index:3;left:50%;transform:translateX(-50%);font:12px ui-monospace,monospace;letter-spacing:.28em;color:#ca9b6055;text-shadow:0 1px #0b0707;white-space:nowrap}
+.engrave-top{top:3%}.engrave-middle{top:35%}
+.fighter{position:absolute;z-index:7;left:50%;display:flex;flex-direction:column;align-items:center;gap:8px;transform:translateX(-50%);--recoil:0px}
+.fighter.enemy{top:6%}.fighter.ally{top:70%}
+.fighter.enemy .portrait{width:clamp(100px,10vw,158px);height:clamp(141px,14.3vw,222px);transform:rotate(-2.5deg) translateY(var(--recoil))}
+.fighter.ally .portrait{width:clamp(105px,10.5vw,165px);height:clamp(150px,15vw,237px);transform:rotate(2deg) translateY(var(--recoil))}
+.portrait{position:relative;background:linear-gradient(140deg,#d6b98b,#a58a61);padding:7px;border:2px solid #27170c;box-shadow:0 5px 0 #6b4b2b,0 10px 11px #0302018c,inset 0 0 0 2px #dfc38f;transition:transform .19s ease,filter .25s}
+.portrait img{width:100%;height:100%;object-fit:contain;display:block;background:linear-gradient(#cdb899,#8e7758);filter:sepia(.13) saturate(.83) contrast(1.06)}
+.portrait.missing img{display:none}.portrait .fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#412b20;text-align:center;font-size:13px;padding:12px}.portrait.missing .fallback{display:flex}
+.portrait:after{content:"";position:absolute;inset:5px;box-shadow:inset 0 0 23px #2e140f55;pointer-events:none;border:1px solid #51372355}
+.fighter.recoil .portrait{--recoil:10px;filter:brightness(1.55) sepia(.14)}
+.unit-label{display:flex;align-items:center;gap:9px;white-space:nowrap;background:#130c08c9;color:#d7b98b;padding:6px 14px;border:1px solid #ac7b4566;box-shadow:0 3px 13px #0008;font-size:clamp(11px,1.05vw,14px);letter-spacing:.02em;min-width:120px;justify-content:center}
+.hp{font-variant-numeric:tabular-nums;font-size:12px;color:#edd4a2}.hp b{color:#e9a88a}
+.zone-caption{position:absolute;z-index:5;left:12%;font-size:10px;color:#d8aa776a;letter-spacing:.21em;text-shadow:0 1px 2px #080504}
+.caption-enemy{top:15%}.caption-ally{bottom:17%}
+.timeline-plaque{position:absolute;z-index:8;left:50%;top:41%;transform:translateX(-50%);width:min(86%,1050px);padding:10px 12px 11px;background:linear-gradient(170deg,#291d17f0,#120e0ce8);border:2px solid #755133;border-radius:5px;box-shadow:inset 0 2px 0 #ae865d45,inset 0 -3px 7px #000a,0 9px 18px #0009}
+.plaque-header{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#cba374;margin:0 0 8px;letter-spacing:.10em}
+.timegrid{display:flex;flex-direction:column;gap:5px}
+.tick-row{display:grid;grid-template-columns:38px repeat(10,minmax(0,1fr));gap:4px}
+.tick-row.header .tick{background:none;border:0;box-shadow:none;min-height:18px;color:#bb9671;font-size:10px;text-shadow:0 1px 1px #000}
+.tick-label{display:flex;align-items:center;justify-content:center;font-size:11px;color:#d2a97b}
+.tick{position:relative;border:1px solid #8a674354;min-height:42px;border-radius:2px;background:linear-gradient(155deg,#30231acb,#1b1510c9);color:#d1b38a;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 1px #b88a5b43,0 1px 2px #0008;transition:background .13s,border-color .13s,box-shadow .13s}
+button.tick{padding:2px}
+button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb57d;box-shadow:0 0 11px #f0ad503a,inset 0 0 5px #ffcd7230}
+.tick.windup{background:#805b42;color:#ffddae}
+.tick.active{background:#9c5e44;color:#ffe2b1;box-shadow:inset 0 0 9px #fdcb6b50}
+.tick.recovery{background:#553c32;color:#d7ad88}
+.tick.friend.windup{background:#576b63;color:#ecedc5}
+.tick.friend.active{background:#668e80;color:#ffedc7;box-shadow:inset 0 0 9px #e4e5a65c}
+.tick.friend.recovery{background:#394c46;color:#c9d1ae}
+.tick.disabled{background:#17120f;color:#796658}
+.tick.drag-over{background:#8d7149!important;border:2px solid #f3d391!important;box-shadow:0 0 18px #f8d48c7c!important}
+.tick.playing{outline:2px solid #ffe0a2;outline-offset:1px;box-shadow:0 0 20px #f3aa5988}
+.tick:disabled{cursor:default}
+.status-note{position:absolute;z-index:8;top:64.5%;left:50%;transform:translateX(-50%);font-size:12px;letter-spacing:.02em;white-space:nowrap;color:#e7c293c9;text-shadow:0 2px 4px #000;text-align:center;max-width:75%;overflow:hidden;text-overflow:ellipsis}
+.interface-top{position:absolute;z-index:20;left:clamp(12px,3vw,52px);right:clamp(12px,3vw,52px);top:clamp(8px,1.7vh,22px);display:flex;justify-content:space-between;gap:12px;align-items:center;color:#c4a785;pointer-events:none}
+.interface-top>*{pointer-events:auto}
+.nameplate{font-size:15px;letter-spacing:.11em;text-shadow:0 2px 4px #000b}
+.nameplate small{display:block;font:10px ui-sans-serif,system-ui,sans-serif;letter-spacing:.16em;color:#816b54;margin-top:4px}
+.top-controls{display:flex;align-items:center;gap:12px}
+.top-controls button{background:#1b1512b5;color:#cba77f;border:1px solid #9b75444f;padding:8px 12px;font-size:12px}
+.top-controls button:hover{color:#fff1d2;border-color:#d4a76a}
+.round{font:12px ui-sans-serif,system-ui,sans-serif;color:#af906c}
+.hand-surface{position:absolute;z-index:22;bottom:-14px;left:50%;transform:translateX(-50%);width:min(90vw,870px);height:clamp(188px,28vh,310px);pointer-events:none}
+.hand-header{position:absolute;left:0;top:10%;z-index:1;color:#d2b18b;font-size:12px;letter-spacing:.13em;text-shadow:0 2px 3px #000c}
+.hand{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;gap:clamp(2px,.6vw,12px);pointer-events:none}
+.action-card{--angle:0deg;--lift:0px;--tilt-x:0deg;--tilt-y:0deg;flex:0 1 auto;pointer-events:auto;position:relative;width:clamp(124px,10.4vw,172px);height:clamp(175px,15.6vw,247px);padding:10px 10px 12px;background:#cbaa78;color:#22150e;border:2px solid #2d1c12;border-radius:3px;box-shadow:0 5px 0 #66503a,1px 14px 18px #000a,inset 0 0 0 3px #e6d3a2,inset 0 0 20px #8b6d3e55;transform:translateY(calc(22px + var(--lift))) rotate(var(--angle)) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));transform-origin:50% 93%;transition:transform .22s cubic-bezier(.15,.8,.2,1),box-shadow .17s,filter .17s;display:flex;flex-direction:column;align-items:stretch;gap:7px;touch-action:none;user-select:none}
+.action-card:before{content:"";position:absolute;inset:0;z-index:0;background-image:var(--paper-texture);background-size:cover;mix-blend-mode:multiply;opacity:.65;pointer-events:none}
+.action-card>*{position:relative;z-index:1}
+.action-card:after{content:"";position:absolute;inset:5px;border:1px solid #563b245c;pointer-events:none}
+.action-card:hover{--lift:-36px;z-index:2;filter:brightness(1.11);box-shadow:0 7px 0 #786042,0 30px 30px #000e,0 0 17px #e8b66a35,inset 0 0 0 3px #ecd5a9}
+.action-card.selected{--lift:-48px;z-index:4;box-shadow:0 8px 0 #76533c,0 33px 36px #000e,0 0 28px #ffd09370,inset 0 0 0 3px #f5dca7}
+.action-card.dragging{opacity:.25;--lift:-4px}
+.action-card:focus-visible{--lift:-32px;outline:2px solid #ffe2a6;outline-offset:4px}
+.action-card .type{font:10px ui-sans-serif,system-ui,sans-serif;letter-spacing:.13em;color:#69452d;text-align:center}
+.action-card strong{font-size:clamp(14px,1.05vw,17px);text-align:center;line-height:1.2;font-weight:750}
+.action-card .sigil{flex:1;min-height:55px;display:flex;align-items:center;justify-content:center;font-size:44px;line-height:1;color:#543624;text-shadow:0 2px #f3e3bf;filter:drop-shadow(0 2px 0 #846a47)}
+.action-card .desc{font-family:ui-sans-serif,system-ui,sans-serif;font-size:11px;line-height:1.3;text-align:center;min-height:27px;max-height:46px;overflow:hidden;color:#55371d}
+.action-card .ticks{display:flex;justify-content:center;gap:5px;font:10px ui-sans-serif,system-ui,sans-serif;color:#352115;border-top:1px solid #67482c55;padding-top:6px}
+.ticks b{font-weight:650}
+.action-card.attack .sigil{color:#833b29}.action-card.defense .sigil{color:#36574b}.action-card.skill .sigil{color:#534527}
+.hand-empty{color:#bba486;font-size:13px;align-self:center;text-shadow:0 2px 2px #000}
+.drag-card{position:fixed;z-index:48;left:0;top:0;pointer-events:none;margin:0!important;transform:translate(-50%,-68%) rotate(-3deg) scale(1.07)!important;filter:brightness(1.12);box-shadow:0 19px 32px #000b!important}
+.side-desk{position:absolute;z-index:24;bottom:clamp(19px,4vh,50px);width:clamp(150px,17vw,290px);display:flex;flex-direction:column;gap:10px;color:#d7b990}
+.side-desk.left{left:clamp(10px,4vw,72px);align-items:flex-start}.side-desk.right{right:clamp(10px,4vw,72px);align-items:flex-end}
+.stat{font:12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.04em;color:#b9a185;text-shadow:0 2px 3px #000}
+.stat b{color:#eac995;font-size:15px}
+.table-button{background:linear-gradient(140deg,#72502d,#39261a 55%,#24160f);border:2px solid #b78d55;color:#f3dfb4;border-radius:3px;padding:12px 20px;font-size:clamp(13px,1.1vw,17px);font-weight:750;letter-spacing:.12em;box-shadow:0 5px 0 #1a100a,0 10px 22px #000b,inset 0 2px 1px #ceaa7259;transition:transform .12s,box-shadow .12s}
+.table-button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 7px 0 #1a100a,0 13px 27px #000c,0 0 12px #e6a04742}
+.table-button:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 #1a100a,0 4px 12px #000b}
+.minor-button{border:1px solid #ae885947;background:#1a1511a6;color:#cfb08c;padding:8px 12px;font-size:12px}
+.minor-button:hover:not(:disabled){border-color:#ce9d6a;background:#39291c}
+.bottom-note{font:11px ui-sans-serif,system-ui,sans-serif;color:#93785d;max-width:210px;line-height:1.55}
+.event-popup{position:absolute;z-index:36;top:27%;left:50%;transform:translateX(-50%);color:#ffdeaa;font-size:23px;text-shadow:0 4px 9px #050404;pointer-events:none;animation:rise .65s ease forwards}
+.toast{position:absolute;z-index:46;left:50%;bottom:34%;transform:translateX(-50%);padding:10px 17px;background:#110d0ce8;color:#f0d6aa;border:1px solid #84613e;font:13px ui-sans-serif,system-ui,sans-serif;box-shadow:0 9px 24px #0009;max-width:72vw;text-align:center}
+.playing .board-perspective{filter:brightness(1.06)}
+.stage.impact .board-perspective{animation:impact .21s ease}
+.stage.impact .lamp-glow{filter:brightness(1.6)}
+@keyframes impact{0%,100%{transform:translateX(0)}18%{transform:translateX(-6px) rotate(.2deg)}40%{transform:translateX(5px)}68%{transform:translateX(-2px)}}
+@keyframes rise{0%{opacity:0;transform:translate(-50%,10px)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-43px)}}
+@keyframes light-pulse{from{opacity:.65}to{opacity:1}}
+@keyframes flicker{0%{transform:rotate(-4deg) scaleY(.94)}44%{transform:rotate(2deg) scaleY(1.09)}78%{transform:rotate(-2deg) scaleY(1.0)}100%{transform:rotate(4deg) scaleY(.92)}}
 @media(max-width:1050px){
- .board-center{grid-template-columns:minmax(110px,1fr) minmax(340px,2fr) minmax(110px,1fr);gap:13px;padding:12px}
- .clock{gap:15px}.clock-intro strong{font-size:19px}.time-cell{min-height:38px;font-size:10px}
- .hand-card{min-height:137px}.action-inner{grid-template-columns:100px minmax(0,1fr) 150px;gap:10px}
+ .board-perspective{left:2%;right:2%;top:15%;bottom:12%}
+ .timeline-plaque{width:92%;top:41%;padding:7px}.tick-row{grid-template-columns:22px repeat(10,minmax(0,1fr));gap:2px}.tick{min-height:32px;font-size:10px}
+ .zone-caption{display:none}.candle{left:5%;transform:scale(.8);transform-origin:bottom left}
+ .fighter.enemy{top:6%}.fighter.ally{top:69%}
+ .fighter.enemy .portrait{width:110px;height:159px}.fighter.ally .portrait{width:120px;height:170px}
+ .hand-surface{height:225px}.side-desk{bottom:18px}.hand-header{display:none}
+ .action-card{width:130px;height:190px}.action-card .sigil{font-size:36px}.action-card .desc{font-size:10px}
 }
-@media(max-width:760px){
- .top{height:52px;padding:0 12px}.brand{font-size:14px}.eyebrow{display:none}.top-left,.top-right{gap:7px}.plain-link,.small-button{padding:6px 8px;font-size:11px}
- .board-wrap{padding:9px}.board{min-height:0}
- .board-top{padding:10px 12px;font-size:11px}
- .board-center{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:12px;padding:13px 12px}
- .fighter{max-width:195px;margin:0 auto;width:100%}
- .fighter.enemy{grid-column:2;grid-row:1}.fighter.ally{grid-column:1;grid-row:1}
- .figure{aspect-ratio:2/2.45}.side-id strong{font-size:13px}
- .clock{grid-column:1/-1;grid-row:2;gap:11px}
- .clock-intro strong{font-size:17px}.timeline{padding:8px 4px}
- .time-row{grid-template-columns:26px repeat(10,minmax(0,1fr));gap:2px}
- .time-cell{min-height:32px;font-size:10px;border-radius:4px}.time-row.ruler .time-cell{min-height:16px}
- .timeline-help{font-size:10px}.board-foot{padding:9px 12px;font-size:10px}
- .action-area{padding:9px}.action-inner{display:flex;flex-wrap:wrap;gap:8px}
- .hand-side{width:100%;flex-direction:row;align-items:center}.hand-count{font-size:14px}
- .hand{width:100%;justify-content:flex-start;overflow-x:auto;padding:3px 0 5px}
- .hand-card{min-width:118px;width:118px;min-height:121px;padding:9px}.hand-card.selected{padding:8px}
- .hand-card strong{font-size:13px}.hand-card .desc{font-size:10px}.hand-card .phases{font-size:9px}
- .action-buttons{width:100%;flex-direction:row}.action-buttons>button{flex:1}.primary{min-height:42px;font-size:13px}
- .outcome{width:100%}
+@media(max-width:650px){
+ .stage{min-height:500px}.nameplate{font-size:12px}.nameplate small{display:none}.top-controls{gap:6px}.round{font-size:10px}.top-controls button{padding:7px 8px;font-size:11px}
+ .board-perspective{left:-8%;right:-8%;top:13%;bottom:19%}.board-top{transform:rotateX(8deg);border-width:5px}
+ .fighter.enemy{top:5%}.fighter.ally{top:70%}
+ .fighter.enemy .portrait{width:81px;height:116px}.fighter.ally .portrait{width:86px;height:125px}.unit-label{font-size:10px;padding:4px 7px;min-width:90px;gap:5px}.hp{font-size:10px}
+ .timeline-plaque{top:39%;width:94%;padding:6px 4px 8px}.plaque-header{font-size:9px;letter-spacing:.02em;margin-bottom:5px}.tick-label{font-size:9px}
+ .tick{min-height:30px;font-size:9px}.tick-row{grid-template-columns:16px repeat(10,minmax(0,1fr));gap:2px}
+ .engrave,.candle{display:none}.status-note{top:65%;font-size:10px;max-width:90%}
+ .hand-surface{height:190px;width:100%;bottom:52px}.hand{justify-content:flex-start;overflow-x:auto;overflow-y:visible;padding-left:calc(max(10px,(100vw - 500px)/2));padding-right:14px;scrollbar-width:none;gap:7px}
+ .hand::-webkit-scrollbar{display:none}.action-card{flex:0 0 114px;width:114px;height:151px;padding:7px}.action-card strong{font-size:12px}.action-card .type{font-size:8px}.action-card .sigil{font-size:28px;min-height:30px}.action-card .desc{font-size:9px;min-height:23px}.action-card .ticks{font-size:9px;padding-top:3px}
+ .side-desk{bottom:7px;min-width:0;width:auto;gap:4px}.side-desk.left{left:11px}.side-desk.right{right:11px;align-items:flex-end}
+ .table-button{padding:10px 14px;font-size:12px}.minor-button{padding:7px 9px;font-size:10px}.stat{font-size:10px}.stat b{font-size:11px}.bottom-note{display:none}
+ .toast{bottom:43%;font-size:11px;max-width:85vw;padding:6px 10px}
 }
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="app">
- <header class="top">
-  <div class="top-left"><a class="plain-link" href="../">返回游戏</a><div><span class="brand">时间步战斗</span> <span class="eyebrow">1 对 1 · 基础棋盘</span></div></div>
-  <div class="top-right"><span class="eyebrow" id="round-indicator">第 1 轮</span><button id="reset" type="button" class="small-button">重新开始</button></div>
- </header>
- <main class="board-wrap"><section class="board" aria-label="一对一时间步战斗棋盘">
-  <div class="board-top"><strong>1 vs 1</strong><span>双方使用同一条世界时间 · 每轮 10 格</span><span id="phase-indicator">规划中</span></div>
-  <div class="board-center">
-   <div class="fighter ally">
-    <div class="side-id"><strong>我方</strong><small>怪物猎人</small></div>
-    <div class="figure" id="ally-figure"><img src="../assets/characters/monster-hunters/01-legendary-hunter.png" alt="GitHub原画：传奇猎人"><span class="missing">人物图片加载失败</span></div>
-    <div class="fighter-name">传奇猎人</div>
-    <div class="hp-box"><div class="hp-track"><span id="ally-hp-fill"></span></div><span id="ally-hp" class="hp-number">-- / --</span></div>
+<main class="stage" id="stage" aria-label="第一人称暗木桌 1v1 纸牌时间步战场">
+ <div class="back-wall" aria-hidden="true"></div><div class="overhang" aria-hidden="true"></div><div class="opponent-shadow" aria-hidden="true"></div>
+ <div class="lamp-wire" aria-hidden="true"></div><div class="lamp" aria-hidden="true"></div><div class="lamp-glow" aria-hidden="true"></div><div class="ambient" aria-hidden="true"></div>
+ <div class="board-perspective" id="board">
+  <div class="board-top">
+   <div class="board-seam seam-a"></div><div class="board-seam seam-b"></div><div class="board-nails"></div>
+   <div class="engrave engrave-top">— NIGHT TABLE / NO. 01 —</div><div class="engrave engrave-middle">· · · · · · · · · ·</div>
+   <span class="zone-caption caption-enemy">ENEMY</span><span class="zone-caption caption-ally">ALLY</span>
+   <div class="fighter enemy" id="enemy-fighter">
+    <div class="portrait" id="enemy-portrait"><img src="../assets/cards/wonder-circus/01_ringmaster.png" alt="GitHub 已有马戏团团长卡牌"><span class="fallback">原图加载失败</span></div>
+    <div class="unit-label"><span>马戏团 · 团长</span><span class="hp">♥ <b id="enemy-hp">65</b></span></div>
    </div>
-   <section class="clock" aria-label="共享时间轴">
-    <div class="clock-intro"><strong>行动时间</strong><span>选手牌，再选我方时间格；敌方行动提前可见</span></div>
-    <div class="timeline" id="timeline" aria-label="双方10格时间轴"></div>
-    <div class="timeline-help">浅色：前摇　　深色：生效　　淡色：后摇<br>空格可以等待，也可以安排下一张牌</div>
-    <div class="timeline-status" id="status" role="status" aria-live="polite">选择下方手牌</div>
-   </section>
-   <div class="fighter enemy">
-    <div class="side-id"><strong>敌方</strong><small>奇妙马戏团</small></div>
-    <div class="figure" id="enemy-figure"><img src="../assets/cards/wonder-circus/01_ringmaster.png" alt="GitHub已有卡牌：团长"><span class="missing">人物图片加载失败</span></div>
-    <div class="fighter-name">团长</div>
-    <div class="hp-box"><div class="hp-track"><span id="enemy-hp-fill"></span></div><span id="enemy-hp" class="hp-number">-- / --</span></div>
+   <div class="timeline-plaque">
+    <div class="plaque-header"><span>时间刻痕 / 10 STEPS</span><span id="phase">规划中 · 时间暂停</span></div>
+    <div class="timegrid" id="timeline" aria-label="敌我共享的10格时间轴"></div>
+   </div>
+   <div class="status-note" id="status" role="status">从下方拿起行动卡，再选择时间格</div>
+   <div class="fighter ally" id="ally-fighter">
+    <div class="portrait" id="ally-portrait"><img src="../assets/characters/monster-hunters/01-legendary-hunter.png" alt="GitHub 怪物猎人传奇猎人原画"><span class="fallback">原图加载失败</span></div>
+    <div class="unit-label"><span>猎人 · 传奇猎人</span><span class="hp">♥ <b id="ally-hp">77</b></span></div>
    </div>
   </div>
-  <div class="board-foot"><span id="battle-notice">先排好动作，再执行这一轮</span><span id="energy-indicator">绝杀能量：-- / 100</span></div>
- </section></main>
- <footer class="action-area"><div class="action-inner">
-  <div class="hand-side"><span class="section-label">当前手牌</span><strong class="hand-count" id="hand-count">4 张</strong><span class="section-label">点击选择</span></div>
-  <div id="hand" class="hand" aria-label="行动手牌"></div>
-  <div class="action-buttons"><button class="secondary" id="undo" type="button">撤销上一步</button><button class="primary" id="execute" type="button">执行 10 格</button><div class="outcome" id="outcome" role="status"></div></div>
- </div></footer>
-</div>
-<script src="../combat-lab/engine.js?v=card-battle-1v1-20261113"></script>
-<script defer src="./scene.js?v=original-board-1v1-20261113"></script>
+ </div>
+ <div class="table-edge-light" aria-hidden="true"></div>
+ <div class="candle" aria-hidden="true"><div class="candle-base"></div><div class="candle-body"></div><div class="candle-flame"></div></div>
+ <div class="interface-top">
+  <div class="nameplate">纸牌时序<small>ONE ON ONE · TIMEGRID</small></div>
+  <div class="top-controls"><span class="round" id="round">第 1 轮</span><button type="button" id="sound" aria-pressed="true">音效：开</button><button id="restart" type="button">重开</button><button type="button" id="back">返回</button></div>
+ </div>
+ <div class="hand-surface" id="hand-surface"><div class="hand-header" id="hand-count">手牌 · 4</div><div class="hand" id="hand" aria-label="可操作的行动手牌"></div></div>
+ <div class="side-desk left"><div class="stat">绝杀能量 <b id="energy">55</b> / 100</div><button class="minor-button" id="undo" type="button">取回上一张</button><div class="bottom-note" id="notice">先排动作 · 再执行</div></div>
+ <div class="side-desk right"><div class="stat" id="round-phase">10 格同步结算</div><button class="table-button" id="execute" type="button">执行时间步</button><div class="bottom-note" id="last-event" aria-live="polite">敌人的行动已刻在木板上</div></div>
+ <div class="toast" id="toast" role="status" hidden></div>
+</main>
+<script src="../combat-lab/engine.js?v=inscribed-table-20261113"></script>
+<script defer src="./scene.js?v=tactile-20261113"></script>
 </body>
 </html>
