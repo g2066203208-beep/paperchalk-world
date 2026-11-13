@@ -96,7 +96,7 @@ try {
  await page.screenshot({path:out+'/13-6x16-mountains-pits-real-webgl.png'});
  const elevations=await page.evaluate(()=>{
   const t=window.__terrainEngine,all=t.snapshot();
-  return {levels:[...new Set(all.map(c=>c.level))].sort(),
+  return {levels:[...new Set(all.map(c=>c.level))].sort((a,b)=>a-b),
     raised:t.cell(4,3).height>t.cell(4,3).height-t.levelStep,
     neighbor:t.neighbors(10,2).heightChange,
     type:t.cell(10,2).kind,
