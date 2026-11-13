@@ -67,6 +67,17 @@ try {
  assert.equal(await page.evaluate(()=>!!window.__terrainEngine),true,'reusable engine is mounted to the real battle scene');
  const range=await page.evaluate(()=>({min:window.__terrainEngine.minLevel,max:window.__terrainEngine.maxLevel,step:window.__terrainEngine.levelStep}));
  assert.deepEqual([range.min,range.max],[-3,3],'terrain levels are exactly -3 through +3');
+ const cubic=await page.evaluate(()=>{
+  const t=window.__terrainEngine;
+  return {width:t.tileW,depth:t.tileD,height:t.levelStep,
+   initial:t.cell(4,3).height,difference:(t.setLevel(4,3,1).height-t.topY)};
+ });
+ assert.ok(Math.abs(cubic.width-cubic.depth)<1e-6
+  &&Math.abs(cubic.width-cubic.height)<1e-6,
+  'every voxel has exactly equal X, Y and Z dimensions: '+JSON.stringify(cubic));
+ assert.ok(Math.abs(cubic.difference-cubic.height)<1e-6,
+  'one build card must stack one FULL cube of height');
+ await page.evaluate(()=>window.__terrainEngine.reset('grass'));
  await page.locator('[data-card-id="dig"]').click();
  async function digOrFillAt(c,r) {
   const point=await page.evaluate(([c,r])=>window.__terrainDebug.projectTile(c,r),[c,r]);
