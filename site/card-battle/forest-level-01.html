@@ -53,19 +53,8 @@ html,body{background:#d8ded0}
 <div id="terrain-hint"><strong>林间小路 · 第一关</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>点击敌人攻击；选地形工具再点格子<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div>
-<section id="profession-dock" aria-label="七职业真实卡堆和最多10张自由出牌的手牌">
-  <div class="dock-content">
-   <div class="dock-head">
-    <span class="dock-title" id="hand-capacity">手牌 5/10</span>
-    <span class="dock-phase" id="draw-phase">摸牌阶段</span>
-    <span class="dock-info" id="hand-guidance">出牌前从任意可用职业盒摸牌，手牌可任意选择</span>
-    <button type="button" id="roster-trigger" class="roster-trigger">人物图鉴 · 3</button>
-    <button class="end-turn" id="end-hand-turn" type="button">结束回合</button>
-   </div>
-   <div class="action-hand-row" id="action-hand" aria-label="可任意选择的行动手牌，最多10张"></div>
-   <div class="class-grid class-box-row" id="class-deck-boxes" aria-label="七职业真实卡牌堆"></div>
-  </div>
-</section><div id="character-gallery" role="dialog" aria-label="农民组织人物卡图鉴" aria-modal="true" hidden>
+<div hidden><button id="roster-trigger" type="button">人物图鉴</button></div>
+<div id="character-gallery" role="dialog" aria-label="农民组织人物卡图鉴" aria-modal="true" hidden>
  <div class="gallery-sheet"><header><strong>农民组织 · 已收录人物卡</strong><button type="button" id="gallery-close">关闭</button></header>
  <p>第一关固定由伐木工出战，农夫和猎户已注册在人物卡库中，可用于后续关卡配队。</p>
  <div id="gallery-cards" class="gallery-cards"></div></div>
@@ -78,6 +67,7 @@ html,body{background:#d8ded0}
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
+<script src="./engine/scene-card-hud.js?v=1"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -201,7 +191,7 @@ window.__terrainDebug={
  get tool(){return active?.id||null;}
 };
 // Card transform: XY face becomes horizontal XZ surface with +Y normal, then dynamically tilts/flips in 3D.
-function modelForCard(c,now){let motion=attackPose(c,now),arrival=placementPose(c,now);let base=T(c.x+motion.dx,c.y+motion.dy+arrival.dy,c.z+motion.dz);
+function modelForCard(c,now){if(c.hudMatrix)return c.hudMatrix;let motion=attackPose(c,now),arrival=placementPose(c,now);let base=T(c.x+motion.dx,c.y+motion.dy+arrival.dy,c.z+motion.dz);
 base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
 base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+arrival.pitch+c.hover*.07));
 base=mul(base,RY(c.flip));
@@ -251,6 +241,26 @@ function resize(){
  camera.right=normalize(cross(camera.forward,[0,1,0]));
  camera.up=normalize(cross(camera.right,camera.forward));
 }
+function makePhysicalCardTexture(image){
+ const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+ return tex;
+}
+const sceneHUD=window.PaperchalkSceneCardHUD.create({
+ canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,makeTexture:makePhysicalCardTexture,
+ getVP:()=>vp,uniformVP:m=>gl.uniformMatrix4fv(U.vp,false,m),
+ snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
+ selected:()=>window.__forestHand?.selected||null,
+ draw:profession=>window.__forestHand?.draw(profession),
+ select:instance=>window.__forestHand?.selectCard(instance),
+ nextTurn:()=>window.__forestHand?.nextTurn(),
+ showRoster:()=>document.getElementById('roster-trigger').click()
+});
+window.__sceneCardHUD=sceneHUD;
 function projection2D(x,y,z){
  const q=transform(vp,[x,y,z,1]);
  return {x:(q[0]/q[3]*.5+.5)*w,y:(.5-q[1]/q[3]*.5)*h};
@@ -416,6 +426,7 @@ function track(e){
  else hoverCard=closestCard(e.clientX,e.clientY);
 }
 canvas.addEventListener('pointerdown',e=>{
+ if(sceneHUD.down(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
  const orbitTouch=e.pointerType==='touch'&&!active&&!closestCard(e.clientX,e.clientY);
  if(e.button!==2&&orbitCamera.pointerDown(e,orbitTouch)){
   e.preventDefault();pointerDown=null;handDown=null;
@@ -429,6 +440,7 @@ canvas.addEventListener('pointerdown',e=>{
  if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}
 });
 window.addEventListener('pointermove',e=>{
+ if(sceneHUD.move(e)){canvas.style.cursor='pointer';return;}
  if(orbitCamera.pointerMove(e)){
   if(dragCard){dragCard.dragged=false;dragCard=null;}
   pointerDown=null;handDown=null;overSlot=null;
@@ -440,6 +452,7 @@ window.addEventListener('pointermove',e=>{
  track(e);canvas.style.cursor=dragCard?'grabbing':active?'crosshair':hoverCard?'grab':'default';
 });
 window.addEventListener('pointerup',e=>{
+ if(sceneHUD.up(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
  if(orbitCamera.pointerUp(e)){
   pointerDown=null;handDown=null;
   canvas.style.cursor=active?'crosshair':'default';return;
@@ -453,6 +466,7 @@ window.addEventListener('pointerup',e=>{
 });
 window.addEventListener('pointercancel',e=>{orbitCamera.pointerUp(e);if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;handDown=null;});
 canvas.addEventListener('wheel',e=>{
+ if(sceneHUD.hit(e))return;
  e.preventDefault();
  orbitCamera.zoom(Math.exp(Math.max(-500,Math.min(500,e.deltaY))*.00125));
 },{passive:false});
@@ -462,6 +476,8 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%7)*.07;});}
  if(e.code==='Escape')clearPick();
+  if(e.code==='Enter'){e.preventDefault();window.__forestHand?.nextTurn();}
+  if(e.code==='KeyG'){document.getElementById('roster-trigger').click();}
  if(e.code==='KeyR'&&!e.repeat)reset();
  if(e.code==='Digit0'||e.code==='Home')orbitCamera.reset();
  if(e.code==='Equal'||e.code==='NumpadAdd')orbitCamera.zoom(.87);
@@ -522,6 +538,7 @@ function frame(timeMs){
  drawShadows(now);
  for(const c of [...cards].sort((a,b)=>a.z-b.z))drawCard(c,now);
  if(active&&preview&&onBoard&&!dragCard){preview.hover=1;preview.y=(overSlot?fx.height(overSlot.tileC,overSlot.tileR):.0)+.85+Math.sin(now*2)*.025;drawCard(preview,now);}
+ sceneHUD.render(now,w,h);
  requestAnimationFrame(frame);
 }
 function placeholderUnitTexture(name,enemy){
@@ -561,7 +578,7 @@ function startForestLevel(){
 function tapUnit(card){
  if(!card||card.side!=='enemy'||!attackMode||level.phase!=='active')return;
  const action=window.__forestHand?.consumeForTarget(card.unitId);
- if(!action){message('请先选择一张最上面的战士行动牌');return false;}
+ if(!action){message('请从手中任意选择一张行动牌');return false;}
  const result=level.actAttack('woodcutter',card.unitId,{power:action.damage});
  if(!result.ok)return false;
  card.attackStart=now;
@@ -594,7 +611,7 @@ window.__forestLevelDebug={
 requestAnimationFrame(frame);
 })();
 </script>
-<script src="./ui/forest-hand.js?v=2"></script>
+<script src="./ui/forest-hand.js?v=3"></script>
 <script src="./ui/farmer-roster.js?v=1"></script>
 </body>
 </html>
