@@ -1,0 +1,45 @@
+name: One-time Approved Farmer Art Retrieval
+on:
+  push:
+    paths:
+      - '.github/workflows/farmer-lumberjack-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify-and-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe full-resolution exact user-approved artwork
+        env:
+          CANDIDATES_JSON: '[["signed-thumbnail","https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2F45119a1e-51ad-4a22-8057-50a580d8c10e/watermark:F/width:137?csig=AAAAAAAAAAAAAAAAAAAAAE1p--TBfUFeMK7k4URNvr0tuE6pPnv7GXzo1y4HDdjv&exp=1794596599&osig=AAAAAAAAAAAAAAAAAAAAABehF0yc69uR4eVcZMqVMhYmX9LzG1qn2LbiZvfhupUr&signer=media-rpc&token=AAIAAU0AJDQ1MTE5YTFlLTUxYWQtNGEyMi04MDU3LTUwYTU4MGQ4YzEwZQAAAAABodZK9Nj7FH2lZ_IVz15QIPPEaV4v_YOr_YMWvQVOTWerBGiXcg&x-canva-quality=thumbnail"],["signed-full-res","https://media.canva.com/v2/image-resize/format:PNG/height:1024/quality:100/uri:ifs%3A%2F%2FM%2F45119a1e-51ad-4a22-8057-50a580d8c10e/watermark:F/width:704?csig=AAAAAAAAAAAAAAAAAAAAAE1p--TBfUFeMK7k4URNvr0tuE6pPnv7GXzo1y4HDdjv&exp=1794596599&osig=AAAAAAAAAAAAAAAAAAAAABehF0yc69uR4eVcZMqVMhYmX9LzG1qn2LbiZvfhupUr&signer=media-rpc&token=AAIAAU0AJDQ1MTE5YTFlLTUxYWQtNGEyMi04MDU3LTUwYTU4MGQ4YzEwZQAAAAABodZK9Nj7FH2lZ_IVz15QIPPEaV4v_YOr_YMWvQVOTWerBGiXcg&x-canva-quality=thumbnail"],["signed-original","https://media.canva.com/v2/image-resize/format:PNG/height:1024/quality:100/uri:ifs%3A%2F%2FM%2F45119a1e-51ad-4a22-8057-50a580d8c10e/watermark:F/width:704?csig=AAAAAAAAAAAAAAAAAAAAAE1p--TBfUFeMK7k4URNvr0tuE6pPnv7GXzo1y4HDdjv&exp=1794596599&osig=AAAAAAAAAAAAAAAAAAAAABehF0yc69uR4eVcZMqVMhYmX9LzG1qn2LbiZvfhupUr&signer=media-rpc&token=AAIAAU0AJDQ1MTE5YTFlLTUxYWQtNGEyMi04MDU3LTUwYTU4MGQ4YzEwZQAAAAABodZK9Nj7FH2lZ_IVz15QIPPEaV4v_YOr_YMWvQVOTWerBGiXcg&x-canva-quality=original"],["no-size-signed","https://media.canva.com/v2/image-resize/format:PNG/quality:100/uri:ifs%3A%2F%2FM%2F45119a1e-51ad-4a22-8057-50a580d8c10e/watermark:F?csig=AAAAAAAAAAAAAAAAAAAAAE1p--TBfUFeMK7k4URNvr0tuE6pPnv7GXzo1y4HDdjv&exp=1794596599&osig=AAAAAAAAAAAAAAAAAAAAABehF0yc69uR4eVcZMqVMhYmX9LzG1qn2LbiZvfhupUr&signer=media-rpc&token=AAIAAU0AJDQ1MTE5YTFlLTUxYWQtNGEyMi04MDU3LTUwYTU4MGQ4YzEwZQAAAAABodZK9Nj7FH2lZ_IVz15QIPPEaV4v_YOr_YMWvQVOTWerBGiXcg&x-canva-quality=thumbnail"],["unsigned-full","https://media.canva.com/v2/image-resize/format:PNG/height:1024/quality:100/uri:ifs%3A%2F%2FM%2F45119a1e-51ad-4a22-8057-50a580d8c10e/watermark:F/width:704"],["unsigned-no-size","https://media.canva.com/v2/image-resize/format:PNG/quality:100/uri:ifs%3A%2F%2FM%2F45119a1e-51ad-4a22-8057-50a580d8c10e/watermark:F"],["ifs-direct","https://media.canva.com/ifs://M/45119a1e-51ad-4a22-8057-50a580d8c10e"]]'
+        run: |
+          python3 - <<'PY'
+          import os,json,urllib.request,hashlib,struct
+          candidates=json.loads(os.environ['CANDIDATES_JSON'])
+          orig='d45eb81dfcb136e4bcc5b06c9ac9dd3a05c4eeada4f8d5944bf4f18323e6b504'
+          for name,url in candidates:
+            try:
+              req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'})
+              with urllib.request.urlopen(req,timeout=18) as f: b=f.read(4000000)
+              dim=(struct.unpack('>II',b[16:24]) if b[:8]==bytes.fromhex('89504e470d0a1a0a') else 'not-png')
+              sh=hashlib.sha256(b).hexdigest()
+              print(name, 'size',len(b),'dimensions',dim,'sha256',sh)
+              if sh==orig and dim==(704,1024):
+                os.makedirs('site/assets/characters/farmer-faction/warrior',exist_ok=True)
+                with open('site/assets/characters/farmer-faction/warrior/01-loli-lumberjack.png','wb') as out:out.write(b)
+                break
+            except Exception as e:print(name,type(e).__name__,str(e)[:180])
+          else: print('NO EXACT ORIGINAL BYTES; leaving repository untouched.')
+          PY
+      - name: Commit only byte-exact original
+        run: |
+          if test -f site/assets/characters/farmer-faction/warrior/01-loli-lumberjack.png; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add site/assets/characters/farmer-faction/warrior/01-loli-lumberjack.png
+            git commit -m 'art: add user-approved original farmer warrior loli lumberjack PNG'
+            git push
+          fi
