@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>三层挖掘与堆土 · 模块化体素战场</title>
+<title>立方体堆挖 · 小圆角3D体素战场</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c6c1b6}
 #stage{display:block;width:100vw;height:100dvh;touch-action:none;cursor:default;outline:0}
@@ -27,7 +27,7 @@
 <body>
 <canvas id="stage" aria-label="六行十六列真3D卡牌容量测试；固定高位俯视；每张卡是独立可悬浮与翻转的三维物体"></canvas>
 <div id="note" aria-live="polite"></div>
-<div id="terrain-hint">16×6 真3D体素 · 每格高度 -3～+3<br>挖掘卡 ↓ 一层 · 堆土卡 ↑ 一层</div>
+<div id="terrain-hint">16×6 真3D立方体 · 方块边长＝每层高度 · -3～+3<br>挖掘卡 ↓ 一层 · 堆土卡 ↑ 一层</div>
 <div id="hand" role="toolbar" aria-label="测试手牌"><button type="button" id="demo">七人布阵</button><button type="button" id="reset">重置</button></div>
 <script src="./engine/voxel-terrain.js?v=1"></script>
 <script>
@@ -80,8 +80,8 @@ const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
 const COLS=16,ROWS_PER_SIDE=3;
 // Shared terrain engine is the ONLY source for world coordinates and tile extents.
 const terrain=window.PaperchalkVoxelTerrain.create({
- cols:16,rows:6,tileW:1.85,tileD:2.65,centerX:.925,centerZ:-1.1,topY:-.117,thickness:.66,
- initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:.67
+ cols:16,rows:6,tileW:2.65,tileD:2.65,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
+ initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
 });
 const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
@@ -173,17 +173,40 @@ else renderGeom(inset,M,c.side==='enemy'?[.945,.95,.953,1]:colors.inner);
 }
 function loadTexture(url,callback){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);callback(tex);};image.onerror=()=>{};image.src=url;}
 // Capacity test uses only neutral geometry: no portraits, titles, HUD, stats, icons, or external assets.
-let vp=I(),proj=I(),view=I(),camera={eye:[.925,46,29],target:[.925,0,0],right:[1,0,0],up:[0,1,0],forward:[0,-1,0],tan:.4,aspect:1},w=1920,h=1080;
-function resize(){let dpr=Math.min(window.devicePixelRatio||1,2);w=Math.max(1,Math.round(canvas.clientWidth*dpr));h=Math.max(1,Math.round(canvas.clientHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);camera.aspect=w/h;
-// Fixed high-angle orthographic camera. Constant position and direction, no orbit or user camera movement.
-const height=Math.max(19.6,30.1/camera.aspect);proj=ortho(-height*camera.aspect/2,height*camera.aspect/2,-height/2,height/2,.1,100);
-view=lookAt(camera.eye,camera.target,[0,1,0]);vp=mul(proj,view);gl.uniformMatrix4fv(U.vp,false,vp);
-const forward=[-camera.eye[0],-camera.eye[1],-camera.eye[2]],fl=Math.hypot(...forward);camera.forward=forward.map(x=>x/fl);const normalize=a=>a.map(x=>x/Math.hypot(...a));const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];camera.right=normalize(cross(camera.forward,[0,1,0]));camera.up=normalize(cross(camera.right,camera.forward));camera.orthoHeight=height;}
-function projection2D(x,y,z){let q=transform(vp,[x,y,z,1]);return{x:(q[0]/q[3]*.5+.5)*w,y:(.5-q[1]/q[3]*.5)*h};}
-function worldFromPointer(clientX,clientY,planeY=.1){let box=canvas.getBoundingClientRect(),nx=(clientX-box.left)/box.width*2-1,ny=1-(clientY-box.top)/box.height*2;
-let x=nx*camera.orthoHeight*camera.aspect/2,y=ny*camera.orthoHeight/2;
-let origin=[camera.eye[0]+camera.right[0]*x+camera.up[0]*y,camera.eye[1]+camera.right[1]*x+camera.up[1]*y,camera.eye[2]+camera.right[2]*x+camera.up[2]*y];
-let t=(planeY-origin[1])/camera.forward[1];return {x:origin[0]+camera.forward[0]*t,z:origin[2]+camera.forward[2]*t};}
+// Fixed, normal 3D perspective camera; moderate 52-degree elevation.
+let vp=I(),proj=I(),view=I(),camera={
+ eye:[0,42,33],target:[0,0,-1.1],right:[1,0,0],up:[0,1,0],
+ forward:[0,-.78,-.62],tan:Math.tan(31*Math.PI/360),aspect:1
+},w=1920,h=1080;
+function resize(){
+ const dpr=Math.min(window.devicePixelRatio||1,2);
+ w=Math.max(1,Math.round(canvas.clientWidth*dpr));
+ h=Math.max(1,Math.round(canvas.clientHeight*dpr));
+ if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+ gl.viewport(0,0,w,h);camera.aspect=w/h;
+ proj=perspective(31*Math.PI/180,camera.aspect,.1,180);
+ view=lookAt(camera.eye,camera.target,[0,1,0]);
+ vp=mul(proj,view);
+ gl.uniformMatrix4fv(U.vp,false,vp);
+ const normalize=a=>{const len=Math.hypot(...a);return a.map(v=>v/len)};
+ const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+ camera.forward=normalize(camera.target.map((v,i)=>v-camera.eye[i]));
+ camera.right=normalize(cross(camera.forward,[0,1,0]));
+ camera.up=normalize(cross(camera.right,camera.forward));
+}
+function projection2D(x,y,z){
+ const q=transform(vp,[x,y,z,1]);
+ return {x:(q[0]/q[3]*.5+.5)*w,y:(.5-q[1]/q[3]*.5)*h};
+}
+function worldFromPointer(clientX,clientY,planeY=.1){
+ const box=canvas.getBoundingClientRect();
+ const nx=(clientX-box.left)/box.width*2-1,ny=1-(clientY-box.top)/box.height*2;
+ const x=nx*camera.aspect*camera.tan,y=ny*camera.tan;
+ const dir=[0,1,2].map(i=>camera.forward[i]+camera.right[i]*x+camera.up[i]*y);
+ const len=Math.hypot(...dir),ray=dir.map(v=>v/len);
+ const t=(planeY-camera.eye[1])/ray[1];
+ return {x:camera.eye[0]+ray[0]*t,z:camera.eye[2]+ray[2]*t};
+}
 let hoverCard=null,pointerDown=null,dragCard=null,overSlot=null,now=0;
 let active=null,preview=null,handDown=null,onBoard=false,serial=0,noticeTimer=0;
 const hand=document.getElementById('hand'),note=document.getElementById('note');
