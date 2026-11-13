@@ -70,7 +70,7 @@ function create(o){
   const trayWidth=spanW*(mobile?.974:.972),pitch=trayWidth/7;
   const deckSpan=pitch*6;
   const deckScale=Math.min(mobile?.36:1.09,pitch/cardW*.79);
-  const baseDeckY=-spanH*.5+(mobile?.17:.16);
+  const baseDeckY=-spanH*.5+(mobile?1.77:1.14);
   state.classes.forEach((c,i)=>{
    slots.push({kind:'deck',id:'deck:'+c.id,profession:c.id,c,
     x:(i/6-.5)*deckSpan,y:baseDeckY,z:0,scale:deckScale,angle:0});
@@ -84,7 +84,7 @@ function create(o){
    const t=hand.length===1?.5:i/(hand.length-1);
    const axis=t*2-1;
    slots.push({kind:'hand',id:'hand:'+hand[i].instance,instance:hand[i].instance,c:hand[i],
-    x:axis*spread*.5,y:-4.38+(1-axis*axis)*.25,
+    x:axis*spread*.5,y:(mobile?-2.0:-1.82)+(1-axis*axis)*.22,
     z:1.15+(.12*(1-axis*axis)),scale:handScale,
     angle:-axis*.145,tilt:-.12+Math.abs(axis)*.07});
   }
@@ -337,5 +337,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'2.2.0',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'2.2.1',create});
 })(window);
