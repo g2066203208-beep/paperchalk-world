@@ -105,23 +105,25 @@ function transform(m,p){const x=p[0],y=p[1],z=p[2],w=p[3]??1;return [m[0]*x+m[4]
 function lerp(a,b,t){return a+(b-a)*t;}const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const smooth=x=>x*x*(3-2*x);
 // True 2:3 card proportions; six near-full-height ranks in a fixed 1920x1080 reference frame.
 const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
-const COLS=16,ROWS_PER_SIDE=3;
+const COLS=3,ROWS_PER_SIDE=3;
 // Shared terrain engine is the ONLY source for world coordinates and tile extents.
 const terrain=window.PaperchalkVoxelTerrain.create({
- cols:16,rows:6,tileW:2.65,tileD:2.65,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
+ cols:3,rows:6,tileW:2.65,tileD:2.65,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
  initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
 });
+const level=window.PaperchalkLevelEngine.create('forest-01',terrain);
+const fx=window.PaperchalkVoxelAnimations.create(terrain,{seed:618231});
 const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 // Camera is a reusable module, independent from voxel geometry and game rules.
 const orbitCamera=window.PaperchalkBattleCamera.create({
- target:[0,0,-1.1],distance:48,yaw:0,elevation:53*Math.PI/180,
- fov:31,minDistance:23,maxDistance:115,minElevation:22*Math.PI/180,maxElevation:79*Math.PI/180
+ target:[0,0,-1.1],distance:26,yaw:0,elevation:55*Math.PI/180,
+ fov:33,minDistance:18,maxDistance:38,minElevation:55*Math.PI/180,maxElevation:55*Math.PI/180,maxPanX:4,maxPanZ:5
 });
 window.__battleCamera=orbitCamera;
 document.getElementById('zoom-in').addEventListener('click',()=>orbitCamera.zoom(.78));
 document.getElementById('zoom-out').addEventListener('click',()=>orbitCamera.zoom(1.28));
 document.getElementById('camera-reset').addEventListener('click',()=>orbitCamera.reset());
-const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
+const UNIT_COLUMNS=[0,1,2],FACILITY_LEFT_COLUMNS=[],FACILITY_RIGHT_COLUMNS=[];
 const slotCenters=[];
 for(let row=0;row<terrain.rows;row++){
  const side=row<3?'enemy':'ally',r=row%3;
@@ -141,18 +143,9 @@ const terrainTargets=terrain.snapshot().map(t=>({id:'terrain-'+t.c+'-'+t.r,kind:
  zone:'terrain',side:'world',tileC:t.c,tileR:t.r,x:t.x,z:t.z}));
 const terrainTarget=(c,r)=>terrainTargets[r*terrain.cols+c];
 const handDefs=[
-{id:'ringmaster',kind:'unit',name:'团长',src:'../assets/cards/wonder-circus/01_ringmaster.png'},
-{id:'acrobat',kind:'unit',name:'杂技演员',src:'../assets/cards/wonder-circus/02_aerial-acrobat.png'},
-{id:'knife',kind:'unit',name:'飞刀演员',src:'../assets/cards/wonder-circus/03_knife-thrower.png'},
-{id:'tamer',kind:'unit',name:'驯兽师',src:'../assets/cards/wonder-circus/04_beast-tamer.png'},
-{id:'escape',kind:'unit',name:'逃脱术师',src:'../assets/cards/wonder-circus/05_escape-artist.png'},
-{id:'strong',kind:'unit',name:'大力士',src:'../assets/cards/wonder-circus/06_strongwoman.png'},
-{id:'clown',kind:'unit',name:'小丑演员',src:'../assets/cards/wonder-circus/07_clown-performer.png'},
-{id:'farm',kind:'facility',name:'农田'},
-{id:'turret',kind:'facility',name:'炮台'},
-{id:'lab',kind:'facility',name:'研究院'},
-{id:'dig',kind:'terrain',name:'挖掘卡',direction:-1},
-{id:'build',kind:'terrain',name:'堆土卡',direction:1}];
+{id:'dig',kind:'terrain',name:'挖掘',direction:-1},
+{id:'build',kind:'terrain',name:'抬升',direction:1}
+];
 const texCache=new Map();
 function makeGeom(vertices,indices){const vao={};vao.b=gl.createBuffer();vao.i=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vao.b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,vao.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);vao.count=indices.length;return vao;}
 const box=(()=>{const vs=[],ids=[];const face=(p,n)=>{const k=vs.length/8;p.forEach(([x,y,z],i)=>vs.push(x,y,z,...n,(i===0||i===3)?0:1,(i<2)?0:1));ids.push(k,k+1,k+2,k,k+2,k+3);};
@@ -175,7 +168,8 @@ function renderGeom(geo,m,color,tex=null,unlit=false,terrainSoil=null){gl.bindBu
 function cube(x,y,z,w,h,d,color){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color);}
 // Terrain textures, generated geometry, palette rules and adjacency live in a reusable module.
 // No per-scene duplication of mesh generation or independently calculated placement positions.
-const terrainRenderer=window.PaperchalkVoxelTerrain.createWebGLRenderer(terrain,{gl,makeGeom,renderGeom,I});
+const terrainRenderer=window.PaperchalkVoxelTerrain.createWebGLRenderer(fx.visualGrid,{gl,makeGeom,renderGeom,I});
+const forestProps=window.PaperchalkForestEnvironment.create({terrain,makeGeom,renderGeom,mul,T,S,cube});
 window.__terrainEngine=terrain;
 window.__terrainDebug={
  get tiles(){return terrain.snapshot();},
@@ -251,11 +245,24 @@ function worldFromPointer(clientX,clientY,planeY=.1){
 let hoverCard=null,pointerDown=null,dragCard=null,overSlot=null,now=0;
 let active=null,preview=null,handDown=null,onBoard=false,serial=0,noticeTimer=0;
 const hand=document.getElementById('hand'),note=document.getElementById('note');
+const levelHud=document.getElementById('level-hud');
+let attackMode=true;
+function syncLevelHud(){
+ const state=level.snapshot(),hero=state.units.find(u=>u.side==='ally');
+ const enemies=state.units.filter(u=>u.side==='enemy'&&u.alive).length;
+ levelHud.textContent='第 '+state.turn+' 轮 · 伐木少女生命 '+hero.currentHp+'/'+hero.hp+' · 敌人 '+enemies+'/2';
+}
+function showLevelEnd(state){
+ const modal=document.getElementById('level-end');
+ modal.classList.add('is-visible');
+ document.getElementById('level-result-title').textContent=state.phase==='victory'?'森林道路已清理':'挑战失败';
+ document.getElementById('level-result-detail').textContent=state.phase==='victory'?'你完成了第一关。':'重新布置行动，再试一次。';
+}
 const buttons=new Map();
 function message(t){note.textContent=t;note.style.opacity='1';clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>note.style.opacity='0',1400);}
 function makeCard(def,s=null){
  const n=++serial;
- const restingY=s?terrain.cell(s.tileC,s.tileR).height+.25:.13;
+ const restingY=s?fx.height(s.tileC,s.tileR)+.25:.13;
  return{id:'c'+n,def,side:'ally',kind:def.kind,slot:s,homeX:s?.x||0,homeZ:s?.z||0,
  x:s?.x||0,z:s?.z||0,seed:n*1.317,t:0,y:restingY,hover:0,flip:0,flipTarget:0,attackStart:-10000,placeStart:-10000,dragged:false,texture:texCache.get(def.id)||null};
 }
