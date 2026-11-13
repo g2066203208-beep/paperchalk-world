@@ -27,7 +27,12 @@ function create(options={}){
  if(tileW<=0||tileD<=0||thickness<=0)throw Error('Invalid voxel dimensions');
  const minX=centerX-cols*tileW/2,minZ=centerZ-rows*tileD/2;
  const width=cols*tileW,depth=rows*tileD;
- const cells=Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>({c,r,kind:options.initialKind||'grass',height:topY})));
+ const initial=options.initialKind||'grass';
+ if(!materials[initial])throw Error('Unknown starting material: '+initial);
+ const cells=Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>({
+  c,r,kind:initial,height:topY+(materials[initial].height||0)
+ })));
+ let revision=0;
  function inside(c,r){return Number.isInteger(c)&&Number.isInteger(r)&&c>=0&&r>=0&&c<cols&&r<rows;}
  function cell(c,r){return inside(c,r)?cells[r][c]:null;}
  function center(c,r){if(!inside(c,r))throw Error('Grid coordinate outside terrain');return{x:minX+(c+.5)*tileW,z:minZ+(r+.5)*tileD};}
@@ -55,16 +60,19 @@ function create(options={}){
   if(!materials[kind])throw Error('Unknown terrain material: '+kind);
   target.kind=kind;
   target.height=topY+(materials[kind].height||0);
+  revision++;
   return target;
  }
  function reset(kind='grass'){
   if(!materials[kind])throw Error('Unknown terrain material');
   for(const row of cells)for(const t of row){t.kind=kind;t.height=topY+(materials[kind].height||0);}
+  revision++;
  }
  function snapshot(){return cells.flat().map(t=>({...t,...center(t.c,t.r),color:color(t.c,t.r)}));}
  // Build a continuous exterior shell and independently colored, exactly adjoining tile surfaces.
  return Object.freeze({cols,rows,tileW,tileD,centerX,centerZ,minX,minZ,width,depth,topY,thickness,seed,
-  materials,cells,inside,cell,center,atWorld,color,neighbors,set,reset,snapshot,hash:(c,r)=>hash(c,r,seed)});
+  materials,cells,inside,cell,center,atWorld,color,neighbors,set,reset,snapshot,
+  get revision(){return revision;},hash:(c,r)=>hash(c,r,seed)});
 }
 function makeRing(grid,w,d,r,y,steps=10){
  const corners=[[w/2-r,d/2-r,0],[-w/2+r,d/2-r,Math.PI/2],
@@ -95,15 +103,41 @@ function tileMesh(grid,makeGeom,c,r){
  return makeGeom(verts,ind);
 }
 function seamMesh(grid,makeGeom){
- const verts=[],idx=[],stroke=Math.min(grid.tileW,grid.tileD)*.007,y=grid.topY+.004;
- function quad(x0,z0,x1,z1){
-  const first=verts.length/8;
+ // All seams are derived from adjoining cell heights; nothing floats above recessed water.
+ const verts=[],idx=[],stroke=Math.min(grid.tileW,grid.tileD)*.007;
+ function quad(x0,z0,x1,z1,y){
+  const k=verts.length/8;
   for(const [x,z] of [[x0,z1],[x1,z1],[x1,z0],[x0,z0]])verts.push(x,y,z,0,1,0,0,0);
-  idx.push(first,first+1,first+2,first,first+2,first+3);
+  idx.push(k,k+1,k+2,k,k+2,k+3);
  }
- for(let c=1;c<grid.cols;c++){const x=grid.minX+c*grid.tileW;quad(x-stroke/2,grid.minZ,x+stroke/2,grid.minZ+grid.depth);}
- for(let r=1;r<grid.rows;r++){const z=grid.minZ+r*grid.tileD;quad(grid.minX,z-stroke/2,grid.minX+grid.width,z+stroke/2);}
+ for(let c=1;c<grid.cols;c++)for(let r=0;r<grid.rows;r++){
+  const a=grid.cell(c-1,r),b=grid.cell(c,r);
+  if(Math.abs(a.height-b.height)>.0001)continue;
+  const x=grid.minX+c*grid.tileW,z0=grid.minZ+r*grid.tileD;
+  quad(x-stroke/2,z0,x+stroke/2,z0+grid.tileD,a.height+.004);
+ }
+ for(let r=1;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
+  const a=grid.cell(c,r-1),b=grid.cell(c,r);
+  if(Math.abs(a.height-b.height)>.0001)continue;
+  const z=grid.minZ+r*grid.tileD,x0=grid.minX+c*grid.tileW;
+  quad(x0,z-stroke/2,x0+grid.tileW,z+stroke/2,a.height+.004);
+ }
  return makeGeom(verts,idx);
+}
+function wallMesh(grid,makeGeom,c,r,direction,lower){
+ const t=grid.cell(c,r),x=grid.minX+c*grid.tileW,z=grid.minZ+r*grid.tileD;
+ let a,b,n;
+ switch(direction){
+ case 'north':a=[x,z];b=[x+grid.tileW,z];n=[0,0,-1];break;
+ case 'south':a=[x+grid.tileW,z+grid.tileD];b=[x,z+grid.tileD];n=[0,0,1];break;
+ case 'east':a=[x+grid.tileW,z];b=[x+grid.tileW,z+grid.tileD];n=[1,0,0];break;
+ default:a=[x,z+grid.tileD];b=[x,z];n=[-1,0,0];break;
+ }
+ const v=[],tri=[0,1,2,0,2,3];
+ for(const [xx,yy,zz] of [[a[0],t.height,a[1]],[b[0],t.height,b[1]],
+                            [b[0],lower,b[1]],[a[0],lower,a[1]]])
+  v.push(xx,yy,zz,...n,0,0);
+ return makeGeom(v,tri);
 }
 function grainTexture(gl){
  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=576;
@@ -133,25 +167,44 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
  const bevel=ringBand(grid,makeGeom,inner,outside,true);
  const soil=ringBand(grid,makeGeom,outside,lower,false);
  const mesh=Array.from({length:grid.rows},(_,row)=>Array.from({length:grid.cols},(_,col)=>tileMesh(grid,makeGeom,col,row)));
- const seams=seamMesh(grid,makeGeom);
- const texture=grainTexture(gl);
- const base=I();
+ const texture=grainTexture(gl),base=I();
+ let seams=null,walls=[],geometryRevision=-1;
+ const free=m=>{if(m){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}};
+ function rebuildAdjacency(){
+  free(seams);for(const wall of walls)free(wall.mesh);walls=[];
+  seams=seamMesh(grid,makeGeom);
+  for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
+   const t=grid.cell(c,r);
+   for(const [dir,dx,dy] of [['north',0,-1],['south',0,1],['west',-1,0],['east',1,0]]){
+    const adjacent=grid.cell(c+dx,r+dy);
+    if(!adjacent||t.height<=adjacent.height+.0001)continue;
+    walls.push({mesh:wallMesh(grid,makeGeom,c,r,dir,adjacent.height),
+     material:grid.materials[t.kind].side});
+   }
+  }
+  geometryRevision=grid.revision;
+ }
  function draw(){
+  if(geometryRevision!==grid.revision)rebuildAdjacency();
   const grass=grid.materials.grass;
   renderGeom(soil,base,grass.side);
   renderGeom(bevel,base,grass.edge);
-  for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++)
-   renderGeom(mesh[r][c],base,grid.color(c,r),texture);
+  for(const wall of walls)renderGeom(wall.mesh,base,wall.material);
+  for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
+   const t=grid.cell(c,r),m=I();m[13]=t.height-grid.topY;
+   renderGeom(mesh[r][c],m,grid.color(c,r),texture);
+  }
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
   renderGeom(seams,base,[.15,.20,.135,.095],null,true);
   gl.depthMask(true);gl.disable(gl.BLEND);
  }
  function dispose(){
-  for(const row of mesh)for(const m of row){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}
-  for(const m of [seams,bevel,soil]){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}
+  for(const row of mesh)for(const m of row)free(m);
+  free(seams);for(const wall of walls)free(wall.mesh);
+  for(const m of [bevel,soil])free(m);
   gl.deleteTexture(texture);
  }
  return {draw,dispose,mesh};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'1.0.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'1.1.0',MATERIALS,create,createWebGLRenderer});
 })(window);
