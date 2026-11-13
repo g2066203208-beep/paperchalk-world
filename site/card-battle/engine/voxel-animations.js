@@ -12,11 +12,11 @@ function create(terrain,opts={}){
  const key=(c,r)=>c+':'+r;
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
  const visualGrid=Object.create(terrain);
- visualGrid.cell=(c,r)=>{
+ Object.defineProperty(visualGrid,'cell',{value:(c,r)=>{
   const cell=terrain.cell(c,r);if(!cell)return null;
   const shown=visual.get(key(c,r));
   return shown===undefined?cell:{...cell,height:shown};
- };
+ }});
  Object.defineProperty(visualGrid,'revision',{get(){return terrain.revision+tick;}});
  function burst(c,r,kind){
   const p=terrain.center(c,r),t=terrain.cell(c,r);
