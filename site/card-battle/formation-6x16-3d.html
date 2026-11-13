@@ -98,14 +98,19 @@ const slotFill=rrFace(slotW-.05,slotH-.05,.10,0);
 function renderGeom(geo,m,color,tex=null,unlit=false){gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,unlit?1:0);gl.uniform1f(U.has,tex?1:0);if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
 function cube(x,y,z,w,h,d,color){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color);}
 // Card transform: XY face becomes horizontal XZ surface with +Y normal, then dynamically tilts/flips in 3D.
-function modelForCard(c,now){let motion=attackPose(c,now);let base=T(c.x+motion.dx,c.y+motion.dy,c.z+motion.dz);
+function modelForCard(c,now){let motion=attackPose(c,now),arrival=placementPose(c,now);let base=T(c.x+motion.dx,c.y+motion.dy+arrival.dy,c.z+motion.dz);
 base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
-base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+c.hover*.07));
+base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+arrival.pitch+c.hover*.07));
 base=mul(base,RY(c.flip));
 base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll));return base;}
 function attackPose(c,now){let phase=now-c.attackStart;if(phase<0||phase>1.12)return {dx:0,dy:0,dz:0,pitch:0,roll:0};let u=phase/1.12;
 let s=Math.sin(Math.PI*Math.min(1,u));let launch=(u<.35?Math.sin(u/.35*Math.PI/2):Math.exp(-(u-.35)*4));
 return{dx:Math.sin(c.seed*4)*.12*s,dy:.42*s,dz:(c.side==='enemy'?1:-1)*.78*launch,pitch:(c.side==='enemy'?-.23:.23)*s,roll:Math.sin(phase*24)*.085*s};}
+function placementPose(c,now){
+ const dt=now-c.placeStart;if(dt<0||dt>.52)return{dy:0,pitch:0};
+ const u=dt/.52;const fall=Math.pow(1-u,2);
+ return{dy:.30*fall,pitch:.10*Math.sin(Math.PI*u)};
+}
 function drawCard(c,now){let M=modelForCard(c,now);
 renderGeom(cardEdge,M,colors.rim);
 renderGeom(outerFace,M,colors.border);
@@ -136,7 +141,7 @@ const buttons=new Map();
 function message(t){note.textContent=t;note.style.opacity='1';clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>note.style.opacity='0',1400);}
 function makeCard(def,s=null){
  const n=++serial;return{id:'c'+n,def,side:'ally',kind:def.kind,slot:s,homeX:s?.x||0,homeZ:s?.z||0,
- x:s?.x||0,z:s?.z||0,seed:n*1.317,t:0,y:.13,hover:0,flip:0,flipTarget:0,attackStart:-10000,dragged:false,texture:texCache.get(def.id)||null};
+ x:s?.x||0,z:s?.z||0,seed:n*1.317,t:0,y:.13,hover:0,flip:0,flipTarget:0,attackStart:-10000,placeStart:-10000,dragged:false,texture:texCache.get(def.id)||null};
 }
 function facilityTexture(name){
  // Temporary neutral test face; real facility art is supplied separately by Anima.
@@ -178,12 +183,12 @@ function valid(d,s,move=null){
 }
 function drop(s){
  if(!active)return;if(!valid(active,s)){message('红色区域不能放置');return;}
- const c=makeCard(active,s);c.x=preview.x;c.z=preview.z;c.y=.7;c.attackStart=now-.3;
+ const c=makeCard(active,s);c.x=preview.x;c.z=preview.z;c.y=.7;c.placeStart=now;
  occupied.set(s.id,c);cards.push(c);clearPick();
 }
 function move(c,s){
  if(!valid(c.def,s,c)){message('此处无法放置');return;}
- occupied.delete(c.slot.id);c.slot=s;c.homeX=s.x;c.homeZ=s.z;occupied.set(s.id,c);c.attackStart=now-.25;
+ occupied.delete(c.slot.id);c.slot=s;c.homeX=s.x;c.homeZ=s.z;occupied.set(s.id,c);c.placeStart=now;
 }
 function reset(){cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;clearPick();}
 document.getElementById('reset').addEventListener('click',reset);
