@@ -145,6 +145,23 @@ button.tick:hover{background:linear-gradient(#695039,#3c281a);border-color:#dbb5
  .toast{bottom:43%;font-size:11px;max-width:85vw;padding:6px 10px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* Screenshot-verified framing: keep both original portraits visible above the hand. */
+@media(min-width:651px){
+ .fighter.enemy{left:73%;top:3.5%}
+ .fighter.ally{left:20%;top:59%}
+ .fighter.ally .portrait{width:145px;height:203px}
+ .hand-surface{bottom:35px}
+ .tick{min-height:45px;font-size:12px}
+ .tick-row.header .tick{font-size:11px}
+}
+@media(max-width:650px){
+ .board-perspective{left:0;right:0}
+ .timeline-plaque{width:96%;left:50%}
+ .fighter.enemy{left:50%;top:5%}
+ .fighter.ally{left:50%;top:57%}
+ .hand-surface{bottom:110px}
+}
 </style>
 </head>
 <body>
