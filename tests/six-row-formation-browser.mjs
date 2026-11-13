@@ -107,6 +107,25 @@ try {
  assert.deepEqual(elevations.levels,[-3,-2,-1,0,1,2,3]);
  assert.equal(elevations.neighbor,true,'adjacent height topology updated automatically');
  assert.equal(elevations.type,'grass','digging changes the underlying 3D height, not terrain type');
+ // Demonstrate that touching blocks merge into ONE rounded multi-cell hill and that
+ // recessed waterless holes form rounded concave outlines (without separate cube silhouettes).
+ await page.evaluate(()=>{
+   const t=window.__terrainEngine;
+   t.reset('grass');
+   for(const [c,r,l] of [
+    [3,2,1],[4,2,2],[5,2,2],[6,2,1],
+    [3,3,2],[4,3,3],[5,3,3],[6,3,2],
+    [3,4,1],[4,4,2],[5,4,2],[6,4,1],
+    [11,2,-1],[12,2,-2],[13,2,-1],
+    [11,3,-2],[12,3,-3],[13,3,-2],
+    [11,4,-1],[12,4,-2],[13,4,-1]
+   ])t.setLevel(c,r,l);
+ });
+ await page.waitForTimeout(800);
+ await page.screenshot({path:out+'/14-6x16-connected-rounded-hills-and-pits.png'});
+ assert.equal(await page.evaluate(()=>window.__terrainEngine.cell(4,3).level===3
+    &&window.__terrainEngine.cell(12,3).level===-3),true,
+  'connected plateau and rounded pit retain exact voxel level values');
  await page.locator('#reset').click();
  assert.equal(await page.evaluate(()=>window.__terrainEngine.snapshot().every(c=>c.level===0)),true,'reset returns all 96 tiles to the original plane');
  await page.locator('#hand .hand-card').first().click();
