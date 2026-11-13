@@ -70,7 +70,7 @@ function create(o){
   const trayWidth=spanW*(mobile?.974:.972),pitch=trayWidth/7;
   const deckSpan=pitch*6;
   const deckScale=Math.min(mobile?.36:1.09,pitch/cardW*.79);
-  const baseDeckY=-spanH*.5+(mobile?1.77:1.14);
+  const baseDeckY=-spanH*.5+(mobile?2.11:1.54);
   state.classes.forEach((c,i)=>{
    slots.push({kind:'deck',id:'deck:'+c.id,profession:c.id,c,
     x:(i/6-.5)*deckSpan,y:baseDeckY,z:0,scale:deckScale,angle:0});
@@ -180,7 +180,7 @@ function create(o){
   // An empty slot remains a deep dark recess with a clear 00 counter.
   for(let i=0;i<7;i++){
    const px=(i-3)*pitch,stock=decks[i].c.deckCount;
-   const plate=part(px,-slotDepth*.5+.185,.074,pitch*.78,.197,.013);
+   const plate=part(px,-slotDepth*.5+.49,.074,pitch*.78,.207,.013);
    renderGeom(box,plate,[1,1,1,1],labelTexture(decks[i].c,stock),true);
   }
   // Tiny countersunk hardware at real divider junctions, away from opening.
@@ -337,5 +337,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'2.2.1',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'2.2.2',create});
 })(window);
