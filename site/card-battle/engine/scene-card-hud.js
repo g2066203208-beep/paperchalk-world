@@ -178,7 +178,7 @@ function create(o){
    }
   }
   const role=card?.profession||'warrior',name=url?'人物卡':card?.name||'行动牌';
-  const key=role+':'+name;
+  const key=role+':'+name+':'+(card?.type||'back');
   if(cardTextures.has(key))return cardTextures.get(key);
   const cv=document.createElement('canvas');cv.width=384;cv.height=576;
   const c=cv.getContext('2d');
@@ -190,6 +190,32 @@ function create(o){
   // Plain ivory card back: no titles, role symbols or decorative words.
   c.fillStyle='#e9e3d4';c.fillRect(37,39,310,498);
   c.strokeStyle='#c3bba9';c.lineWidth=3;c.strokeRect(45,47,294,482);
+  if(card?.type){
+   // Physical hand cards must show which skill was actually drawn.
+   // These are readable temporary programmatic fronts; deck BOX stays blank.
+   const isFarm=card.type==='facility',accent=isFarm?'#69866a':'#a27b4e';
+   c.fillStyle=accent;c.fillRect(46,48,292,12);
+   c.fillStyle='#484337';c.font='bold 31px serif';c.textAlign='center';
+   c.fillText(isFarm?'农民 · 设施':card.family==='character'?'角色专属':'战士 · 行动',192,105);
+   c.fillStyle='#28271e';c.font='bold 53px serif';
+   c.fillText(card.name||'卡牌',192,180,320);
+   c.fillStyle=isFarm?'#d5e1cb':'#e2d6bf';
+   c.beginPath();c.arc(192,315,92,0,Math.PI*2);c.fill();
+   c.font='bold 98px serif';c.fillStyle='#526753';
+   const marks={'farm-field':'田','plant-tree':'树','water-well':'井',
+    'scarecrow':'草','windmill':'磨','lumber':'斧',
+    'strike':'斧','heavy-strike':'劈','cleave':'扫','guard':'守'};
+   c.fillText(marks[card.id]||'◆',192,350);
+   c.fillStyle='#5e5546';c.font='29px serif';
+   const message=card.description||'';
+   let line='',y=475;
+   for(const ch of message){
+    if(c.measureText(line+ch).width>287){
+     c.fillText(line,192,y);line=ch;y+=36;
+    }else line+=ch;
+   }
+   if(line)c.fillText(line,192,y);
+  }
   const tex=makeTexture(cv);cardTextures.set(key,tex);return tex;
  }
  function layout(snapshot,staged,g){
@@ -212,9 +238,9 @@ function create(o){
   // no lid transform, no card flip. Gameplay remains testable meanwhile.
   const hand=snapshot.hand||[];
   const maxW=g.w*.75;
-  const spacing=Math.min(g.mobile?.30:.70,maxW/Math.max(1,hand.length));
+  const spacing=Math.min(g.mobile?.36:.64,maxW/Math.max(1,hand.length));
   const fan=(hand.length-1)*spacing;
-  const sc=Math.min(g.mobile?.235:.51,g.w/(Math.max(1,hand.length)*cardW)*.68);
+  const sc=g.mobile?.39:.68;
   hand.forEach((card,i)=>{
    const axis=hand.length===1?0:(i-(hand.length-1)/2);
    slots.push({kind:'hand',id:'hand:'+card.instance,instance:card.instance,
@@ -293,8 +319,16 @@ function create(o){
   for(const p of positions.filter(x=>x.kind==='hand')){
    const chosen=o.selected?.()===p.instance;
    const focus=hover===p.id;
-   const m=mul(T(p.x,p.y+(chosen?.18:0)+(focus?.09:0),p.z),
-    mul(RZ(0),S(p.scale*(focus?1.06:1),p.scale*(focus?1.06:1),1)));
+   // The SAME drawn physical instance moves from the top of its owner pile
+   // into the hand fan; no teleport / respawn at the destination.
+   const dealing=lastDeal?.instance===p.instance?
+    Math.max(0,1-(now-lastDeal.at)/.50):0;
+   const t=1-dealing*dealing*(3-2*dealing);
+   const hx=dealing?lastDeal.x+(p.x-lastDeal.x)*t:p.x;
+   const hy=dealing?lastDeal.y+(p.y-lastDeal.y)*t+Math.sin(t*Math.PI)*.48:p.y;
+   const hs=dealing?lastDeal.scale+(p.scale-lastDeal.scale)*t:p.scale;
+   const m=mul(T(hx,hy+(chosen?.18:0)+(focus?.09:0),p.z),
+    mul(RZ(dealing*(1-t)*-.12),S(hs*(focus?1.06:1),hs*(focus?1.06:1),1)));
    renderCard(m,textureFor(p.c),g);
   }
   uniformVP(oldVP);gl.viewport(0,0,width,height);
@@ -308,8 +342,9 @@ function create(o){
  function hit(e){
   if(collapsed)return null;
   const q=worldPoint(e);if(!q)return null;
-  const ranked=[...hot].sort((a,b)=>({character:3,hand:2,deck:1}[b.kind]||0)-
-   ({character:3,hand:2,deck:1}[a.kind]||0));
+  const priority={character:3,hand:2,deck:1};
+  const ranked=[...hot].sort((a,b)=>(priority[b.kind]||0)-(priority[a.kind]||0)||
+   ((a.x-q.x)**2+(a.y-q.y)**2)-((b.x-q.x)**2+(b.y-q.y)**2));
   for(const p of ranked){
    const sc=p.scale;
    const bw=cardW*sc*(p.kind==='hand'?.6:.52);
@@ -337,7 +372,8 @@ function create(o){
   if(!moved&&p?.id===old.id){
    if(p.kind==='deck'){
     const result=o.draw?.(p.ownerId);
-    if(result?.ok)lastDeal={profession:p.profession,at:now};
+    if(result?.ok)lastDeal={profession:p.profession,instance:result.card?.instance,
+     x:p.x,y:p.y,scale:p.scale,at:now};
    }
    if(p.kind==='hand')o.select?.(p.instance);
   }
@@ -390,5 +426,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'9.0.0-owned-decks-left-packed',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'10.0.0-visible-hand-and-deal-motion',create});
 })(window);
