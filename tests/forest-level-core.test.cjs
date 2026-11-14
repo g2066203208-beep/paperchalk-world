@@ -9,9 +9,10 @@ function load(file){
 load('engine/voxel-terrain.js');
 load('engine/level-engine.js');
 load('levels/forest-01.js');
+load('levels/forest-02.js');
 load('engine/voxel-animations.js');
 const {PaperchalkVoxelTerrain:T,PaperchalkLevelEngine:L,PaperchalkVoxelAnimations:A}=ctx.window;
-assert.deepEqual([...L.list()],['forest-01']);
+assert.deepEqual([...L.list()],['forest-01','forest-02']);
 const terrain=T.create({cols:3,rows:6,tileW:2.65,tileD:2.65,levelStep:2.65,minLevel:-3,maxLevel:3});
 const level=L.create('forest-01',terrain),fx=A.create(terrain);
 assert.equal(terrain.cols*terrain.rows,18);
@@ -133,4 +134,28 @@ assert.equal(custom.endTurn().ok,true);
 assert.equal(custom.resolveEnemyAction('unrelated-monster').damage,2);
 assert.equal(custom.getUnit('player').currentHp,7);
 
-console.log('FOREST_LEVEL_CORE_OK 18_logic_and_96_full_terrain_cells data_driven_enemy_intents deterministic_combat');
+// Level 2 shares ALL core rules and physical 16x6 terrain, but adds the
+// already approved farmer Anima character as a real second staged ally.
+const chapter2=L.create('forest-02',full,{physicalColumns:[6,7,8]});
+assert.equal(chapter2.snapshot().units.filter(u=>u.side==='ally').length,2);
+assert.equal(chapter2.snapshot().units.filter(u=>u.side==='enemy').length,3);
+assert.deepEqual(chapter2.snapshot().units.filter(u=>u.side==='ally').map(u=>u.id),['woodcutter','farmer']);
+const farmer=chapter2.getUnit('farmer');
+assert.equal(farmer.role,'engineer');
+assert.equal(farmer.name,'农夫');
+assert.equal(farmer.characterId,'farmer-engineer-farmer');
+assert.equal(farmer.deployed,false);
+assert.equal(chapter2.deploy('woodcutter',1,0).ok,true);
+assert.equal(chapter2.phase,'deployment','farm woman still needs placement');
+assert.equal(chapter2.deploy('farmer',1,2).ok,true);
+assert.equal(chapter2.phase,'active');
+assert.equal(chapter2.getUnit('farmer').deployed,true);
+assert.equal(chapter2.occupancy(8,4),true);
+const farmerHit=chapter2.actAttack('farmer','forest-foe-a',{power:2});
+assert.equal(farmerHit.ok,true,'farmer is a real combat actor, not decorative art');
+assert.equal(chapter2.getUnit('forest-foe-a').currentHp,4);
+assert.equal(chapter2.endTurn().ok,true);
+while(chapter2.snapshot().enemyQueue.length)chapter2.resolveEnemyAction();
+assert.equal(chapter2.beginPlayerTurn().ok,true);
+assert.equal(chapter2.turn,2);
+console.log('FOREST_LEVEL_CORE_OK 18_logic_and_96_full_terrain_cells level2_farmer_engineer 2vs3 data_driven_enemy_intents');
