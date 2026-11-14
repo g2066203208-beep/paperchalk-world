@@ -48,7 +48,7 @@ function create(o){
   c.fillStyle=grad;c.fillRect(0,0,256,96);
   c.strokeStyle='#58452a';c.lineWidth=5;c.strokeRect(5,5,246,86);
   c.textAlign='center';c.textBaseline='middle';c.fillStyle='#443421';
-  c.font='700 47px system-ui,"Noto Sans SC",sans-serif';
+  c.font='800 67px system-ui,"Noto Sans SC",sans-serif';
   c.fillText(job.name,128,49,222);
   const tex=makeTexture(cv);tabTextures.set(job.id,tex);return tex;
  }
@@ -57,7 +57,7 @@ function create(o){
  const cardTextures=new Map(),portraits=new Map();
  const fov=39*Math.PI/180,cameraZ=14.5;
  let width=1920,height=1080,spanW=18,spanH=10,now=0,scene=[],hot=[],hover=null,press=null;
- let sceneMotion={mode:'steady',start:0},drawCalls=0,deckMeshes=0;
+ let sceneMotion={mode:'steady',start:0},drawCalls=0,deckMeshes=0,lastDeal=null;
  let collapsed=true; // Default view is an unobstructed 16x6 board; deck stays in game state.
  function size(w,h){
   width=Math.max(1,w);height=Math.max(1,h);
@@ -154,7 +154,7 @@ function create(o){
    deck:roundedPrism(g.cardW,g.cardH,g.cardRadius),
    top:roundedPrism(g.cardW*.985,g.cardH*.985,g.cardRadius*.96),
    well:roundedPrism(g.cardW*1.055,g.cardH*1.045,g.cardRadius*1.1),
-   tab:roundedPrism(g.bay*.73,g.wall*.77,g.wall*.26)
+   tab:roundedPrism(g.bay*.76,Math.max(.115,g.wall*.84),Math.min(.045,g.wall*.26))
   };
   shapeCache.set(key,made);
   if(shapeCache.size>8){
@@ -267,7 +267,7 @@ function create(o){
   // Seven little real 3D engraved nameplates, mounted in the top wooden lip.
   for(let i=0;i<7;i++){
    const x=g.x0+i*g.bay;
-   curved(model.tab,x,g.y+g.h*.455,.022,.011,[1,1,1,1],
+   curved(model.tab,x,g.y+g.h*.489,.022,.011,[1,1,1,1],
     g,0,tabTexture(jobs[i]),1);
   }
  }
@@ -296,8 +296,13 @@ function create(o){
    const unit=staged.find(u=>u.role===p.profession);
    // Every pile has a printed, paper-textured top card instead of a blank
    // white plastic slab. Deployment portraits take precedence over the crest.
-   const m=mul(T(p.x,p.y,center+thickness*.5+cardD+.022),
-    mul(RX(tilt),S(g.scale,g.scale,1)));
+   // A single tactile rise when this deck is clicked; never idle bobbing.
+   const dealt=lastDeal?.profession===p.profession?
+    1-smooth((now-lastDeal.at)/.28):0;
+   const k=1+.045*Math.max(0,dealt);
+   const m=mul(T(p.x,p.y+Math.max(0,dealt)*.11,
+     center+thickness*.5+cardD+.022),
+    mul(RX(tilt),S(g.scale*k,g.scale*k,1)));
    renderCard(m,textureFor({profession:p.profession},unit?.portrait),g);
   }
  }
@@ -358,7 +363,10 @@ function create(o){
    return true;
   }
   if(!moved&&p?.id===old.id){
-   if(p.kind==='deck')o.draw?.(p.profession);
+   if(p.kind==='deck'){
+    const result=o.draw?.(p.profession);
+    if(result?.ok)lastDeal={profession:p.profession,at:now};
+   }
    if(p.kind==='hand')o.select?.(p.instance);
   }
   return true;
@@ -377,7 +385,7 @@ function create(o){
   return collapsed;
  }
  function animateScene(mode,at){sceneMotion={mode,start:at};}
- function resetAnimations(){scene=[];hover=null;sceneMotion={mode:'steady',start:0};}
+ function resetAnimations(){scene=[];hover=null;lastDeal=null;sceneMotion={mode:'steady',start:0};}
  return Object.freeze({
   render:draw,hit,move,down,up,cancelPress,pointFor,animateScene,resetAnimations,setCollapsed,
   get collapsed(){return collapsed;},
