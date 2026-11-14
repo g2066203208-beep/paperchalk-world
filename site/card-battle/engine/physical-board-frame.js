@@ -73,11 +73,11 @@ function create({terrain,makeGeom,renderGeom,T,S,mul,appearance,look=null}){
   const pose=appearance?.('board-frame',t);
   const scale=pose?.scale??1;
   if(scale<.012){lastDrawCalls=0;return 0;}
-  renderGeom(mesh,mul(T(cx,terrain.topY,cz),S(scale,scale,scale)),color,null,false,null,1);
+  renderGeom(mesh,mul(T(cx,terrain.topY,cz),S(scale,scale,scale)),color,null,false,null,1,6);
   lastDrawCalls=1;
   return 1;
  }
  return Object.freeze({draw,get snapshot(){return {...info,lastDrawCalls};}});
 }
-root.PaperchalkPhysicalBoardFrame=Object.freeze({version:'1.3.0',create});
+root.PaperchalkPhysicalBoardFrame=Object.freeze({version:'1.4.0',create});
 })(window);

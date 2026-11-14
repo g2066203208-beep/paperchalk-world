@@ -78,7 +78,7 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
    // A unified spring transform makes the WHOLE world enter/leave on switch.
    const k=pose.scale;
    cube(terrain.centerX,groundTop-groundThickness*.5*k,terrain.centerZ,
-    groundWidth*k,groundThickness*k,groundDepth*k,groundPalette[scene]);
+    groundWidth*k,groundThickness*k,groundDepth*k,groundPalette[scene],scene==='forest'?1:2);
   }
   for(const p of scenes[scene]){
    const pose=appearance?.(p.id,now)||{scale:1,opacity:1};
@@ -95,21 +95,21 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
    }
    if(p.type==='boulder'){
     const col=stone[Math.floor(p.tint*4)%4];
-    cube(p.x,y+.31*sc,p.z,1.18*sc,.58*sc,.87*sc,col);
+    cube(p.x,y+.31*sc,p.z,1.18*sc,.58*sc,.87*sc,col,3);
     cube(p.x+.23*sc,y+.68*sc,p.z-.13*sc,.48*sc,.27*sc,.56*sc,
-     stone[(Math.floor(p.tint*4)+1)%4]);
+     stone[(Math.floor(p.tint*4)+1)%4],3);
     continue;
    }
    if(p.type==='pillar'){
     const col=stone[Math.floor(p.tint*4)%4];
-    cube(p.x,y+.67*sc,p.z,.69*sc,1.34*sc,.66*sc,col);
-    cube(p.x,y+1.33*sc,p.z,.91*sc,.14*sc,.84*sc,stone[(Math.floor(p.tint*4)+2)%4]);
+    cube(p.x,y+.67*sc,p.z,.69*sc,1.34*sc,.66*sc,col,3);
+    cube(p.x,y+1.33*sc,p.z,.91*sc,.14*sc,.84*sc,stone[(Math.floor(p.tint*4)+2)%4],3);
     continue;
    }
-   cube(p.x,y+.44*sc,p.z,.24*sc,.88*sc,.24*sc,[.39,.28,.20,1]);
+   cube(p.x,y+.44*sc,p.z,.24*sc,.88*sc,.24*sc,[.39,.28,.20,1],4);
    // Preserve three silhouette layers in a single genuine leaf mesh.
    renderGeom(crown,mul(T(p.x,y,p.z),S(sc,sc,sc)),
-    green[Math.floor(p.tint*4)%4]);
+    green[Math.floor(p.tint*4)%4],null,false,null,0,1);
   }
  }
  return Object.freeze({
@@ -121,5 +121,5 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
   get ground(){return {width:groundWidth,depth:groundDepth,top:groundTop,scene};}
  });
 }
-root.PaperchalkForestEnvironment=Object.freeze({version:'2.6.0',create});
+root.PaperchalkForestEnvironment=Object.freeze({version:'3.0.0',create});
 })(window);

@@ -308,10 +308,10 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSe
  }
  function draw(){
   if(renderedRevision!==grid.revision)rebuild();
-  for(const entry of walls)renderGeom(entry.mesh,tileMatrix(entry.c,entry.r),entry.color);
+  for(const entry of walls)renderGeom(entry.mesh,tileMatrix(entry.c,entry.r),entry.color,null,false,null,0,2);
   for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
    const cell=grid.cell(c,r);
-   renderGeom(tiles[r][c],tileMatrix(c,r),grid.color(c,r),texture,false,grid.materials[cell.kind].side);
+   renderGeom(tiles[r][c],tileMatrix(c,r),grid.color(c,r),texture,false,grid.materials[cell.kind].side,0,cell.kind==='grass'?1:cell.kind==='dirt'?2:0);
   }
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
   if(!showSeams||showSeams())renderGeom(seams,base,[.13,.19,.12,.095],null,true);
@@ -325,5 +325,5 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSe
  return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return renderedRevision;},
   get meshRebuilds(){return meshRebuilds;}};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'4.4.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'4.5.0',MATERIALS,create,createWebGLRenderer});
 })(window);

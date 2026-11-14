@@ -127,9 +127,9 @@ async function verifyFixedCamera(page,kind){
 async function verifyStage01ColorAndLighting(page,kind){
  const look=await page.evaluate(()=>window.__forestLevelDebug?.visualLook);
  assert.ok(look,'stage 01 visual-look engine registered');
- assert.equal(look.stage,3,'visual layer 03 must be active');
+ assert.equal(look.stage,6,'all six visual layers must be active');
  assert.equal(look.id,'forest');
- assert.equal(look.stage,3,'stage 03 metallic edge is active');
+ assert.equal(look.stage,6,'final material and illumination preset is active');
  assert.ok(Array.isArray(look.goldColor)&&look.goldColor.length===4,'metal color comes from visual engine');
  assert.ok(look.terrainSide[1]>.35,'side surfaces retain natural earth shading');
  assert.ok(look.terrainDetail>=.025&&look.terrainDetail<=.035,
@@ -141,7 +141,7 @@ async function verifyStage01ColorAndLighting(page,kind){
  assert.ok(look.background[1]>.50&&look.background[0]<.50,'forest backdrop must not be beige');
  const cam=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.equal(cam.fixed,true,'stage 01 cannot change approved camera');
- console.log('FOREST_VISUAL_STAGE03_PASS',JSON.stringify({kind,look,distance:cam.distance}));
+ console.log('FOREST_VISUAL_STAGE06_PASS',JSON.stringify({kind,look,distance:cam.distance}));
 }
 async function verifySpatialShadowMap(page,kind){
  await page.waitForFunction(()=>window.__forestLevelDebug?.spatialShadows?.passes>=1,{timeout:25000});
@@ -154,6 +154,25 @@ async function verifySpatialShadowMap(page,kind){
  assert.equal(stats.width,kind==='desktop'?1024:512);
  assert.equal(stats.lastError,'');
  console.log('FOREST_SPATIAL_SHADOW_MAP_PASS',JSON.stringify({kind,...stats}));
+}
+async function verifySixLayerVisualEffects(page,kind,enhanced=true){
+ await page.waitForFunction(()=>window.__forestLevelDebug?.visualEffects?.material?.ready===true,{timeout:18000});
+ const fx=await page.evaluate(()=>window.__forestLevelDebug.visualEffects);
+ assert.equal(fx.mode,enhanced?'enhanced':'baseline');
+ assert.equal(fx.enabled,enhanced);
+ assert.equal(fx.material.drawCallsAdded,0);
+ assert.equal(fx.material.source,'procedural-fallback-anima-asset-ready');
+ if(enhanced){
+  assert.ok(fx.forest.treeCount>=40,'genuinely modeled outer 3D forest');
+  assert.ok(fx.forest.flowers>=100,'batched daisy clusters');
+  assert.ok(fx.forest.grassBlades>=600,'3D grass tufts around the board');
+  assert.ok(fx.forest.batchedMeshes<=15,'mobile-friendly merged 3D mesh groups');
+  assert.equal(fx.ao,true);
+  assert.equal(fx.indirectLight,true);
+  assert.equal(fx.cardPaper,true);
+  assert.equal(fx.toneMapping,true);
+ }
+ console.log('FOREST_SIX_LAYERS_PASS',JSON.stringify({kind,...fx}));
 }
 async function verifyPhysicalFrame(page,kind){
  await page.waitForFunction(()=>window.__forestLevelDebug?.physicalFrame?.lastDrawCalls===1,{timeout:25000});
@@ -243,6 +262,21 @@ async function deploy(page){
  assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
 }
 try{
+ // Exactly the same deployed hero + farm state, at the same viewport,
+ // using visual=off as a browser-rendered control. No AI mock screenshots.
+ const before=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
+ before.on('pageerror',e=>errors.push('BEFORE '+String(e)));
+ await before.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?visual=off',
+  {waitUntil:'networkidle',timeout:65000});
+ await verifyWorld(before,'baseline-desktop');
+ await verifySixLayerVisualEffects(before,'baseline-desktop',false);
+ await showTray(before);
+ await deploy(before);
+ await plantTestFarm(before,'left');
+ await hideTray(before);
+ await before.waitForTimeout(750);
+ await screenshot(before,'00-visual-before-all-six-desktop');
+ await before.close();
  const pc=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
  pc.on('pageerror',e=>errors.push('PC '+String(e)));
  await pc.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
@@ -252,6 +286,7 @@ try{
  await verifyStage01ColorAndLighting(pc,'desktop');
  await verifyPhysicalFrame(pc,'desktop');
  await verifySpatialShadowMap(pc,'desktop');
+ await verifySixLayerVisualEffects(pc,'desktop');
  await pc.waitForTimeout(400);
  await screenshot(pc,'00-board-clear-no-deck-desktop');
  await showTray(pc);
@@ -303,6 +338,7 @@ try{
  await verifyStage01ColorAndLighting(phone,'phone');
  await verifyPhysicalFrame(phone,'phone');
  await verifySpatialShadowMap(phone,'phone');
+ await verifySixLayerVisualEffects(phone,'phone');
  await screenshot(phone,'05a-board-clear-no-deck-phone');
  await showTray(phone);
  await verifyBox(phone,'phone');
@@ -322,5 +358,5 @@ try{
  await phone.waitForTimeout(300);
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
  assert.deepEqual(errors,[]);
- console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,physical3DFrame:true,simpleGoldRing:true,cssFrameRemoved:true,errors}));
+ console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,physical3DFrame:true,simpleGoldRing:true,cssFrameRemoved:true,sixVisualLayers:true,realBeforeAfter:true,errors}));
 }finally{await browser.close();}

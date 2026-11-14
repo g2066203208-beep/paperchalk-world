@@ -6,7 +6,7 @@
 'use strict';
 const freeze=c=>Object.freeze(c);
 const FOREST=freeze({
- id:'forest',version:'1.2.0',stage:3,
+ id:'forest',version:'2.0.0',stage:6,
  terrainDetail:.031,
  goldColor:freeze([.82,.74,.49,1]),
  terrainSide:freeze([.52,.414,.302,1]),
@@ -53,7 +53,7 @@ function apply(gl,u,id){
  return v;
 }
 root.PaperchalkVisualLook=freeze({
- version:'1.2.0',get,apply,
+ version:'2.0.0',get,apply,
  snapshot:id=>{const p=get(id);return {
    id:p.id,stage:p.stage,version:p.version,
    background:[...p.background],terrainLight:[...p.terrainLight],
