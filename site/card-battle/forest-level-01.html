@@ -306,6 +306,75 @@ const sceneHUD=window.PaperchalkSceneCardHUD.create({
  showRoster:()=>document.getElementById('roster-trigger').click()
 });
 window.__sceneCardHUD=sceneHUD;
+// User-controlled REAL scene switch: all existing meshes retreat first, the
+// engine swaps a different biome while concealed, then the new scene grows in.
+// It preserves level phase, deployed characters, current HP, hand and 7 decks.
+const sceneSwitchButton=document.getElementById('scene-switch');
+const sceneSwitchStatus=document.getElementById('scene-switch-status');
+const scenePresets={
+ forest:{name:'森林',material:'grass',background:[.775,.758,.716,1]},
+ clearing:{name:'石质空地',material:'dirt',background:[.74,.72,.675,1]}
+};
+function sceneNextId(id){return id==='forest'?'clearing':'forest';}
+function syncSceneSwitchLabel(){
+ const current=sceneTransition?.scene||'forest',next=sceneNextId(current);
+ sceneSwitchButton.textContent='切换场景 · '+scenePresets[current].name+' → '+scenePresets[next].name;
+ sceneSwitchButton.disabled=sceneTransition?.busy||false;
+ sceneSwitchButton.setAttribute('aria-busy',String(sceneTransition?.busy||false));
+}
+function playWorldLifecycle(mode,t){
+ const exit=mode==='exit';
+ forestProps.propIds.forEach((id,i)=>{
+  const time=t+(i%13)*.015;
+  if(exit)objectFX.exit(id,time,{duration:.43});
+  else objectFX.enter(id,time+.19,{duration:.56,overshoot:1.52});
+ });
+ for(let row=0;row<terrain.rows;row++)
+  for(let col=0;col<terrain.cols;col++){
+   const id='terrain:'+col+':'+row,delay=(row*terrain.cols+col)*.018;
+   if(exit)objectFX.exit(id,t+.075+delay,{duration:.43});
+   else objectFX.enter(id,t+delay,{duration:.62,overshoot:1.45});
+  }
+ cards.forEach((card,i)=>{
+  const id=card.unitId?'unit:'+card.unitId:'card:'+card.id;
+  if(exit)objectFX.exit(id,t+i*.025,{duration:.44});
+  else objectFX.enter(id,t+.23+i*.055,{duration:.61,overshoot:1.55});
+ });
+ sceneHUD.animateScene(mode,t);
+}
+sceneTransition=window.PaperchalkSceneTransitions.create({
+ scenes:['forest','clearing'],initial:'forest',
+ exitDuration:.84,enterDuration:1.12,
+ onExit:(oldScene,nextScene,t)=>{
+  sceneSwitchStatus.textContent='正在退场 · 地形、人物、树木、卡牌逐个缩小';
+  sceneSwitchButton.disabled=true;
+  playWorldLifecycle('exit',t);
+ },
+ onSwap:(oldScene,nextScene,t)=>{
+  // Old biome geometry is already at near-zero scale when swapped.
+  for(const id of forestProps.propIds)objectFX.clear(id);
+  forestProps.setScene(nextScene);
+  const preset=scenePresets[nextScene];
+  for(let row=0;row<terrain.rows;row++)
+   for(let col=0;col<terrain.cols;col++)terrain.set(col,row,preset.material);
+  colors.background=preset.background.slice();
+  document.body.dataset.scene=nextScene;
+  sceneSwitchStatus.textContent='环境已切换 · '+preset.name+'正在弹性生成';
+  syncSceneSwitchLabel();
+ },
+ onEnter:(oldScene,nextScene,t)=>playWorldLifecycle('enter',t),
+ onComplete:(scene,t)=>{
+  syncSceneSwitchLabel();
+  sceneSwitchStatus.textContent=scenePresets[scene].name+' · 切换完成，再点可返回';
+ }
+});
+sceneSwitchButton.addEventListener('click',()=>{
+ if(sceneTransition.busy)return;
+ sceneTransition.toggle(now);
+ syncSceneSwitchLabel();
+});
+syncSceneSwitchLabel();
+
 function projection2D(x,y,z){
  const q=transform(vp,[x,y,z,1]);
  return {x:(q[0]/q[3]*.5+.5)*w,y:(.5-q[1]/q[3]*.5)*h};
