@@ -23,10 +23,14 @@ function register(def){
  registry.set(def.id,copy(def));
  return def.id;
 }
-function create(id,grid){
+function create(id,grid,options={}){
  const config=registry.get(id);
  if(!config)throw Error('Unknown level '+id);
- if(!grid||grid.cols!==config.columns||grid.rows!==2*config.rowsPerSide)throw Error('Terrain does not match '+id);
+ const physicalColumns=options.physicalColumns||Array.from({length:config.columns},(_,c)=>c);
+  if(!grid||grid.rows!==2*config.rowsPerSide||
+    physicalColumns.length!==config.columns||new Set(physicalColumns).size!==config.columns||
+    physicalColumns.some(c=>!Number.isInteger(c)||c<0||c>=grid.cols))
+   throw Error('Terrain does not match '+id);
  const listeners=new Map();
  let phase='ready',turn=1,units=new Map();
  function on(event,fn){
@@ -49,16 +53,16 @@ function create(id,grid){
  function getSlot(side,r,c){
   if(!['ally','enemy'].includes(side)||r<0||r>=config.rowsPerSide||c<0||c>=config.columns)return null;
   const tileR=r+(side==='ally'?config.rowsPerSide:0);
-  const pos=grid.center(c,tileR);
-  return {side,r,c,tileC:c,tileR,...pos,id:side+'-'+r+'-'+c};
+  const tileC=physicalColumns[c],pos=grid.center(tileC,tileR);
+  return {side,r,c,tileC,tileR,...pos,id:side+'-'+r+'-'+c};
  }
- function occupancy(c,r){return [...units.values()].some(u=>u.alive&&u.deployed&&u.c===c&&slot(u).r===r);}
+ function occupancy(c,r){return [...units.values()].some(u=>u.alive&&u.deployed&&physicalColumns[u.c]===c&&slot(u).r===r);}
  function deploy(id,r,c){
   const u=units.get(id);
   if(!u||u.side!=='ally'||u.deployed||phase!=='deployment')return {ok:false,reason:'not-staged'};
   if(!Number.isInteger(r)||!Number.isInteger(c)||r<0||r>=config.rowsPerSide||c<0||c>=config.columns)return {ok:false,reason:'outside-ally-grid'};
   if(occupancy(c,r+config.rowsPerSide))return {ok:false,reason:'occupied'};
-  if(!grid.cell(c,r+config.rowsPerSide))return {ok:false,reason:'missing-terrain'};
+  if(!grid.cell(physicalColumns[c],r+config.rowsPerSide))return {ok:false,reason:'missing-terrain'};
   u.r=r;u.c=c;u.deployed=true;
   if(![...units.values()].some(other=>other.side==='ally'&&!other.deployed))phase='active';
   const state=snapshot();

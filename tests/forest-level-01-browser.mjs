@@ -45,6 +45,23 @@ async function verifyBox(page,kind){
  console.log('STATIC_BOX_GEOMETRY_PASS',JSON.stringify({kind,bounds:b.bounds,cardPiles:b.physicalDeckCards}));
  return b;
 }
+async function verifyWorld(page,kind){
+ await page.waitForFunction(()=>window.__terrainDebug?.tiles?.length===96&&window.__forestLevelDebug?.slots?.length===66,{timeout:35000});
+ const status=await page.evaluate(()=>({
+  tiles:window.__terrainDebug.tiles,
+  slots:window.__forestLevelDebug.slots,
+  level:window.__forestLevelDebug.state,
+  camera:window.__battleCamera.snapshot()
+ }));
+ assert.equal(status.tiles.length,96);
+ assert.equal(status.slots.filter(s=>s.zone==='unit').length,18);
+ assert.equal(status.slots.filter(s=>s.zone==='facility').length,48);
+ assert.deepEqual([...new Set(status.slots.filter(s=>s.zone==='unit').map(s=>s.tileC))],[6,7,8]);
+ assert.deepEqual([...new Set(status.slots.filter(s=>s.zone==='facility').map(s=>s.tileC))],[1,2,3,4,10,11,12,13]);
+ assert.equal(status.level.columns,3);
+ assert.ok(status.camera.maxDistance>=100,'outer 16-column area must be zoomable');
+ console.log('FOREST_16X6_96_VOXELS_PASS',JSON.stringify({kind,voxels:status.tiles.length,unitSlots:18,facilitySlots:48}));
+}
 async function deploy(page){
  await clickCard(page,'character:woodcutter');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.placement.selected),'woodcutter');
@@ -58,9 +75,20 @@ try{
  const pc=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
  pc.on('pageerror',e=>errors.push('PC '+String(e)));
  await pc.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
+ await verifyWorld(pc,'desktop');
  await verifyBox(pc,'desktop');
  await pc.waitForTimeout(500);
  await screenshot(pc,'01-static-seven-bay-box-desktop');
+ // The restored 16x6 layout is real 96 individually selectable voxel cells,
+ // not merely a large painted ground outside the old 18 tiles.
+ await pc.evaluate(()=>window.__battleCamera.pan(340,0));
+ await pc.waitForTimeout(400);
+ await screenshot(pc,'01a-restored-left-facility-tiles');
+ await pc.evaluate(()=>window.__battleCamera.pan(-680,0));
+ await pc.waitForTimeout(400);
+ await screenshot(pc,'01b-restored-right-facility-tiles');
+ await pc.evaluate(()=>window.__battleCamera.reset());
+ await pc.waitForTimeout(500);
  await deploy(pc);
  await screenshot(pc,'02-deployed-in-static-box-desktop');
  await clickCard(pc,'deck:warrior');
@@ -74,6 +102,7 @@ try{
  await pc.locator('#scene-switch').click();
  await pc.waitForFunction(()=>window.__forestLevelDebug.environment.id==='clearing'&&
    window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:15000});
+ await verifyWorld(pc,'clearing');
  await verifyBox(pc,'clearing');
  await screenshot(pc,'04-static-box-scene-switch-desktop');
  await pc.locator('#scene-switch').click();
@@ -85,6 +114,7 @@ try{
  const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  phone.on('pageerror',e=>errors.push('PHONE '+String(e)));
  await phone.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
+ await verifyWorld(phone,'phone');
  await verifyBox(phone,'phone');
  await phone.waitForTimeout(250);
  await screenshot(phone,'05-static-seven-bay-box-phone');
@@ -93,5 +123,5 @@ try{
  await phone.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(phone,'06-static-hand-phone');
  assert.deepEqual(errors,[]);
- console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,errors}));
+ console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,errors}));
 }finally{await browser.close();}

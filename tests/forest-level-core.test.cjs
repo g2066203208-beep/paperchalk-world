@@ -60,4 +60,22 @@ assert.equal(level.actAttack('woodcutter','forest-foe-b').ok,false);
 level.reset();assert.equal(level.snapshot().turn,1);
 assert.equal(level.snapshot().phase,'deployment');
 assert.equal(level.getUnit('woodcutter').deployed,false);
-console.log('FOREST_LEVEL_CORE_OK 18_cells 1v2 grid occupancy deterministic combat continuous fx');
+
+// Original full 16x6 terrain is restored in the actual forest-level WebGL game.
+// Only the center three columns accept characters, with 4+4 facility columns.
+const full=T.create({cols:16,rows:6,tileW:2.65,tileD:2.65,levelStep:2.65,minLevel:-3,maxLevel:3});
+const fullLevel=L.create('forest-01',full,{physicalColumns:[6,7,8]});
+assert.equal(full.snapshot().length,96);
+assert.equal(fullLevel.snapshot().columns,3,'combat stays 3x3 per side');
+assert.equal(fullLevel.getSlot('ally',1,0).tileC,6);
+assert.equal(fullLevel.getSlot('enemy',1,1).tileC,7);
+assert.equal(fullLevel.getSlot('enemy',1,2).tileC,8);
+assert.equal(fullLevel.occupancy(6,1),true,'enemy occupies physical terrain column six');
+assert.equal(fullLevel.occupancy(0,1),false,'empty outer column is not enemy occupied');
+assert.equal(fullLevel.deploy('woodcutter',0,1).ok,true);
+assert.equal(fullLevel.occupancy(7,3),true,'ally now occupies center physical terrain');
+assert.equal(fullLevel.canModify(7,3,1),false,'do not dig occupied battlefield tile');
+assert.equal(fullLevel.canModify(2,3,1),true,'facility and outer terrain remain editable');
+assert.equal(fullLevel.getSlot('ally',0,1).tileR,3);
+
+console.log('FOREST_LEVEL_CORE_OK 18_logic_and_96_full_terrain_cells 1v2 grid occupancy deterministic combat continuous fx');

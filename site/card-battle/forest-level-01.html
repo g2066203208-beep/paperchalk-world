@@ -62,7 +62,7 @@ html,body{background:#d8ded0}
 <body>
 <canvas id="stage" aria-label="第一关森林战场：敌我各3×3独立格，总共18个立方体方块"></canvas>
 <div id="note" aria-live="polite"></div>
-<div id="terrain-hint"><strong>林间小路 · 第一关</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>点击敌人攻击；选地形工具再点格子<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
+<div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>点击敌人攻击；选地形工具再点格子<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button><div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div></div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div>
@@ -75,7 +75,7 @@ html,body{background:#d8ded0}
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
 <script src="./engine/voxel-terrain.js?v=3"></script>
 <script src="./engine/battle-camera.js?v=1"></script>
-<script src="./engine/level-engine.js?v=1"></script>
+<script src="./engine/level-engine.js?v=2"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
@@ -136,13 +136,14 @@ function transform(m,p){const x=p[0],y=p[1],z=p[2],w=p[3]??1;return [m[0]*x+m[4]
 function lerp(a,b,t){return a+(b-a)*t;}const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const smooth=x=>x*x*(3-2*x);
 // True 2:3 card proportions; six near-full-height ranks in a fixed 1920x1080 reference frame.
 const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
-const COLS=3,ROWS_PER_SIDE=3;
+const COLS=16,ROWS_PER_SIDE=3;
 // Shared terrain engine is the ONLY source for world coordinates and tile extents.
 const terrain=window.PaperchalkVoxelTerrain.create({
- cols:3,rows:6,tileW:2.65,tileD:2.65,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
+ cols:16,rows:6,tileW:2.65,tileD:2.65,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
  initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
 });
-const level=window.PaperchalkLevelEngine.create('forest-01',terrain);
+const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
+const level=window.PaperchalkLevelEngine.create('forest-01',terrain,{physicalColumns:UNIT_COLUMNS});
 const fx=window.PaperchalkVoxelAnimations.create(terrain,{seed:618231});
 const objectFX=window.PaperchalkObjectAnimations.create({
  reducedMotion:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true
@@ -151,14 +152,13 @@ let sceneTransition=null;
 const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 // Camera is a reusable module, independent from voxel geometry and game rules.
 const orbitCamera=window.PaperchalkBattleCamera.create({
- target:[0,(window.innerWidth<700?-.75:-1.65),-1.1],distance:(window.innerWidth<700?32:26),yaw:0,elevation:55*Math.PI/180,
- fov:33,minDistance:18,maxDistance:48,minElevation:55*Math.PI/180,maxElevation:55*Math.PI/180,maxPanX:4,maxPanZ:5
+ target:[0,(window.innerWidth<700?-.75:-1.65),-1.1],distance:(window.innerWidth<700?58:48),yaw:0,elevation:55*Math.PI/180,
+ fov:33,minDistance:18,maxDistance:105,minElevation:55*Math.PI/180,maxElevation:55*Math.PI/180,maxPanX:26,maxPanZ:10
 });
 window.__battleCamera=orbitCamera;
 document.getElementById('zoom-in').addEventListener('click',()=>orbitCamera.zoom(.78));
 document.getElementById('zoom-out').addEventListener('click',()=>orbitCamera.zoom(1.28));
 document.getElementById('camera-reset').addEventListener('click',()=>orbitCamera.reset());
-const UNIT_COLUMNS=[0,1,2],FACILITY_LEFT_COLUMNS=[],FACILITY_RIGHT_COLUMNS=[];
 const slotCenters=[];
 for(let row=0;row<terrain.rows;row++){
  const side=row<3?'enemy':'ally',r=row%3;
@@ -346,7 +346,7 @@ function playWorldLifecycle(mode,t){
  });
  for(let row=0;row<terrain.rows;row++)
   for(let col=0;col<terrain.cols;col++){
-   const id='terrain:'+col+':'+row,delay=(row*terrain.cols+col)*.018;
+   const id='terrain:'+col+':'+row,delay=Math.min(.16,(row*terrain.cols+col)*.002);
    if(exit)objectFX.exit(id,t+.075+delay,{duration:.43});
    else objectFX.enter(id,t+delay,{duration:.62,overshoot:1.45});
   }
