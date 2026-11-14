@@ -142,9 +142,9 @@ if(uTerrain>.5){
   base.rgb=mix(uSoil,base.rgb,grassWeight);
   // Stable world-space material tone. No UV tiles, geometry overlays or
   // scrolling texture: adjacent 3D blocks share a continuous surface.
-  float broad=sin(vP.x*.51+sin(vP.z*.39))*cos(vP.z*.45-vP.x*.11);
-  float fine=sin(vP.x*4.8+vP.z*2.73)*sin(vP.z*5.61-vP.x*1.93);
-  base.rgb*=1.0+uTerrainDetail*(broad*.67+fine*.33)*grassWeight;
+  float broad=sin(vP.x*.42+sin(vP.z*.35))*cos(vP.z*.38-vP.x*.11);
+  float fine=sin(vP.x*1.67+vP.z*.70)*sin(vP.z*1.92-vP.x*.32);
+  base.rgb*=1.0+uTerrainDetail*(broad*.80+fine*.20)*grassWeight;
 }
 float diffuse=max(0.,dot(normal,light));
 vec3 illumination=uSkyFill*uAmbient + uSunColor*(uSunIntensity*diffuse);

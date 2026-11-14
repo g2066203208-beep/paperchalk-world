@@ -129,7 +129,7 @@ async function verifyStage01ColorAndLighting(page,kind){
  assert.ok(look.stage>=1&&look.stage<=2,'visual layer must be stage 01 or 02 only');
  assert.equal(look.id,'forest');
  assert.equal(look.stage,2,'stage 02 terrain material is active');
- assert.ok(look.terrainDetail>=.045&&look.terrainDetail<=.055,
+ assert.ok(look.terrainDetail>=.025&&look.terrainDetail<=.035,
   'controlled non-repeating world-space grass variation');
  assert.ok(look.terrainLight[1]>look.terrainLight[0],'green nature palette');
  assert.ok(look.terrainDark[1]>look.terrainDark[0],'green shadow palette');

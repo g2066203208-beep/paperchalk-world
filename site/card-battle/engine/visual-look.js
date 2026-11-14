@@ -7,7 +7,7 @@
 const freeze=c=>Object.freeze(c);
 const FOREST=freeze({
  id:'forest',version:'1.1.0',stage:2,
- terrainDetail:.050,
+ terrainDetail:.031,
  background:freeze([.43,.55,.36,1]),
  terrainLight:freeze([.57,.704,.386,1]),
  terrainDark:freeze([.449,.587,.323,1]),
