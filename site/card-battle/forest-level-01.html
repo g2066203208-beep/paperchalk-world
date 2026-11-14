@@ -147,13 +147,14 @@ html,body{background:#d8ded0}
 <script src="./levels/forest-02.js?v=2"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
+<script src="./engine/scene-lifecycle.js?v=1"></script>
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=10"></script>
 <script src="./engine/physical-board-frame.js?v=5"></script>
 <script src="./engine/visual-look.js?v=4"></script>
 <script src="./engine/stylized-materials.js?v=2"></script>
 <script src="./engine/cloud-shadows.js?v=1"></script>
-<script src="./engine/forest-dressing.js?v=1"></script>
+<script src="./engine/forest-dressing.js?v=2"></script>
 <script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=6"></script>
@@ -350,6 +351,29 @@ const forestDressing=window.PaperchalkForestDressing.create({
  appearance:(id,t)=>objectFX.sample(id,t),enabled:visualFx
 });
 window.__forestDressing=forestDressing;
+// One registered lifecycle for EVERY biome and every scene object class.
+const sceneLifecycle=window.PaperchalkSceneLifecycle.create({
+ animation:objectFX,groups:[
+  {id:'ground',ids:scene=>['ground:'+scene],
+   enter:{duration:.75},exit:{duration:.52}},
+  {id:'board',ids:()=>['board-frame'],
+   enter:{duration:.75,overshoot:1.08},exit:{duration:.52}},
+  {id:'environment',ids:scene=>forestProps.idsFor(scene),
+   enter:{duration:.58,stagger:.017,maxDelay:.26,overshoot:1.52},
+   exit:{duration:.43,stagger:.015,maxDelay:.26}},
+  {id:'forest-dressing',ids:scene=>scene==='forest'?forestDressing.propIds:[],
+   enter:{duration:.66,stagger:.007,maxDelay:.28,overshoot:1.14},
+   exit:{duration:.48,stagger:.003,maxDelay:.24}},
+  {id:'terrain',ids:()=>Array.from({length:terrain.rows*terrain.cols},(_,i)=>
+    'terrain:'+(i%terrain.cols)+':'+Math.floor(i/terrain.cols)),
+   enter:{duration:.62,stagger:.002,maxDelay:.18,overshoot:1.35},
+   exit:{duration:.43,stagger:.002,maxDelay:.18}},
+  {id:'characters-and-facilities',ids:()=>cards.map(c=>
+    c.unitId?'unit:'+c.unitId:'card:'+c.id),
+   enter:{duration:.61,stagger:.045,maxDelay:.25,overshoot:1.35},
+   exit:{duration:.44,stagger:.025,maxDelay:.25}}
+ ]
+});
 const physicalFrame=window.PaperchalkPhysicalBoardFrame.create({
  terrain,makeGeom,renderGeom,box,T,S,RY,mul,
  appearance:(id,t)=>objectFX.sample(id,t),look:visualLook
@@ -536,28 +560,11 @@ function syncSceneSwitchLabel(){
  sceneSwitchButton.setAttribute('aria-busy',String(sceneTransition?.busy||false));
 }
 function playWorldLifecycle(mode,t){
- const exit=mode==='exit';
- const groundId='ground:'+forestProps.scene;
- if(exit)objectFX.exit('board-frame',t,{duration:.52});
- else objectFX.enter('board-frame',t,{duration:.85,overshoot:1.12});
- if(exit)objectFX.exit(groundId,t,{duration:.52});
- else objectFX.enter(groundId,t,{duration:.85,overshoot:1.12});
- forestProps.propIds.forEach((id,i)=>{
-  const time=t+(i%13)*.015;
-  if(exit)objectFX.exit(id,time,{duration:.43});
-  else objectFX.enter(id,time+.19,{duration:.56,overshoot:1.52});
- });
- for(let row=0;row<terrain.rows;row++)
-  for(let col=0;col<terrain.cols;col++){
-   const id='terrain:'+col+':'+row,delay=Math.min(.16,(row*terrain.cols+col)*.002);
-   if(exit)objectFX.exit(id,t+.075+delay,{duration:.43});
-   else objectFX.enter(id,t+delay,{duration:.62,overshoot:1.45});
-  }
- cards.forEach((card,i)=>{
-  const id=card.unitId?'unit:'+card.unitId:'card:'+card.id;
-  if(exit)objectFX.exit(id,t+i*.025,{duration:.44});
-  else objectFX.enter(id,t+.23+i*.055,{duration:.61,overshoot:1.55});
- });
+ const scene=mode==='exit'?sceneTransition.scene:sceneTransition.scene;
+ // The same registered providers drive both forest and clearing.
+ // Individual renderers pivot around each prop's original world position.
+ sceneLifecycle.play(mode,scene,t);
+ // UI is a separate visual object, not a forest prop.
  sceneHUD.animateScene(mode,t);
 }
 sceneTransition=window.PaperchalkSceneTransitions.create({
@@ -569,8 +576,9 @@ sceneTransition=window.PaperchalkSceneTransitions.create({
   playWorldLifecycle('exit',t);
  },
  onSwap:(oldScene,nextScene,t)=>{
-  // Old biome geometry is already at near-zero scale when swapped.
-  for(const id of forestProps.propIds)objectFX.clear(id);
+  // Retire old-scene tracks while preserving shared terrain/card tracks.
+  const shared=new Set(sceneLifecycle.itemsFor(nextScene).map(p=>p.id));
+  sceneLifecycle.release(oldScene,{retain:[...shared]});
   forestProps.setScene(nextScene);
   const preset=scenePresets[nextScene];
   for(let row=0;row<terrain.rows;row++)
@@ -1224,19 +1232,10 @@ function startForestLevel(){
  syncSceneSwitchLabel();
  level.reset();
  objectFX.reset();
- for(let row=0;row<terrain.rows;row++)
-  for(let col=0;col<terrain.cols;col++)
-   objectFX.enter('terrain:'+col+':'+row,now,{
-    delay:Math.min(.19,(row*terrain.cols+col)*.013),duration:.44
-   });
- objectFX.enter('ground:forest',now,{duration:.77,overshoot:1.10});
- objectFX.enter('board-frame',now,{duration:.75,overshoot:1.08});
- forestProps.propIds.forEach((id,i)=>objectFX.enter(id,now,{
-  delay:Math.min(.26,i*.017),duration:.58
- }));
  document.getElementById('level-end').classList.remove('is-visible');
  farmRules.reset();
  for(const unit of level.snapshot().units)if(unit.deployed)spawnUnitCard(unit);
+ sceneLifecycle.play('enter','forest',now);
  attackMode=true;syncLevelHud();sync();
  // Physical hero card and highlighted ally cells convey deployment without an overlay.
 }
@@ -1305,6 +1304,7 @@ window.__forestLevelDebug={
   renderedDevicePixelRatio:+(gl.drawingBufferWidth/canvas.getBoundingClientRect().width).toFixed(2),
   webglAntialias:gl.getContextAttributes()?.antialias||false};},
  get sceneSwitch(){return sceneTransition.snapshot(now);},
+ get sceneLifecycle(){return sceneLifecycle.snapshot;},
  get physicalFrame(){return physicalFrame.snapshot;},
  get spatialShadows(){return shadowSystem?.snapshot||null;},
  get visualEffects(){return {enabled:visualFx,ao:true,material:materialAtlas.snapshot,
