@@ -44,16 +44,33 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
  const green=[[.33,.46,.29,1],[.39,.53,.34,1],[.25,.42,.32,1],[.42,.56,.35,1]];
  const stone=[[.58,.55,.50,1],[.52,.51,.48,1],[.69,.65,.58,1],[.56,.53,.45,1]];
  const scenes={forest,clearing};
+ // This is ENVIRONMENT GROUND, not extra tactical cells.
+ // It remains beneath the exact 3x6 battle grid and stretches beyond the
+ // camera/framing limits so trees and rocks never stand over a void.
+ const groundWidth=terrain.width+50,groundDepth=terrain.depth+48;
+ const groundTop=terrain.topY-.46,groundThickness=1.50;
+ const groundPalette={
+  forest:[.52,.635,.398,1],
+  clearing:[.65,.585,.479,1]
+ };
  function setScene(next){
   if(!scenes[next])throw Error('Unknown environment scene: '+next);
   scene=next;return scene;
  }
  function draw(now=0){
+  const pose=appearance?.('ground:'+scene,now)||{scale:1,opacity:1};
+  if(pose.opacity>.002&&pose.scale>.025){
+   // The floor is one lightweight 3D solid. Top remains below tactical tiles.
+   // A unified spring transform makes the WHOLE world enter/leave on switch.
+   const k=pose.scale;
+   cube(terrain.centerX,groundTop-groundThickness*.5*k,terrain.centerZ,
+    groundWidth*k,groundThickness*k,groundDepth*k,groundPalette[scene]);
+  }
   for(const p of scenes[scene]){
    const pose=appearance?.(p.id,now)||{scale:1,opacity:1};
    if(pose.opacity<=.002||pose.scale<=.025)continue;
    // True ground pivot: every element of a rock/tree follows one joint scale.
-   const y=terrain.topY-.36,sc=p.scale*pose.scale;
+   const y=groundTop,sc=p.scale*pose.scale;
    if(p.type==='shrub'||p.type==='tuft'){
     const bend=Math.sin(now*.58+p.x)*.018;
     const tint=p.type==='tuft'?[.62,.60,.37,1]:[.34,.52,.30,1];
@@ -88,8 +105,9 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
   idsFor:which=>(scenes[which]||[]).map(p=>p.id),
   get scene(){return scene;},
   get propCount(){return scenes[scene].length;},
-  get propIds(){return scenes[scene].map(p=>p.id);}
+  get propIds(){return scenes[scene].map(p=>p.id);},
+  get ground(){return {width:groundWidth,depth:groundDepth,top:groundTop,scene};}
  });
 }
-root.PaperchalkForestEnvironment=Object.freeze({version:'2.0.0',create});
+root.PaperchalkForestEnvironment=Object.freeze({version:'2.1.0',create});
 })(window);
