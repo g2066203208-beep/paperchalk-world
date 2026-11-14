@@ -144,6 +144,7 @@ html,body{background:#d8ded0}
 <script src="./engine/level-engine.js?v=3"></script>
 <script src="./engine/combat-choreography.js?v=1"></script>
 <script src="./engine/combat-feedback.js?v=1"></script>
+<script src="./engine/combat-turn-controller.js?v=1"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
@@ -156,7 +157,7 @@ html,body{background:#d8ded0}
 <script src="./engine/forest-dressing.js?v=1"></script>
 <script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
-<script src="./engine/profession-decks.js?v=3"></script>
+<script src="./engine/profession-decks.js?v=4"></script>
 <script src="./engine/scene-card-hud.js?v=17"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
@@ -454,7 +455,11 @@ const sceneHUD=window.PaperchalkSceneCardHUD.create({
  snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
  remainingCards:profession=>window.__forestHand?.remainingCards(profession)||[],
  selected:()=>window.__forestHand?.selected||null,
- draw:profession=>window.__forestHand?.draw(profession),
+ draw:profession=>{
+  const result=window.__forestHand?.draw(profession);
+  if(result?.ok)syncLevelHud();
+  return result;
+ },
  select:instance=>window.__forestHand?.selectCard(instance),
  nextTurn:()=>window.__forestHand?.nextTurn(),
  staged:()=>level.snapshot().units.filter(u=>u.side==='ally'&&!u.deployed).map(u=>({
@@ -605,11 +610,23 @@ const combatFeedback=window.PaperchalkCombatFeedback.create({
  },
  cardFor:id=>cards.find(c=>c.unitId===id)||null
 });
-let enemyNextAt=0,attackMode=true;
+let attackMode=true;
+const combatController=window.PaperchalkCombatTurnController.create({
+ level,animation:combatChoreo,
+ hand:()=>window.__forestHand,
+ locateCard:id=>cards.find(c=>c.unitId===id)||null,
+ pointFor:c=>({x:c.homeX,y:fx.height(c.slot.tileC,c.slot.tileR)+.34,z:c.homeZ}),
+ canAct:()=>!sceneTransition?.busy,
+ onChanged:()=>syncLevelHud(),
+ onDamage:r=>combatFeedback.hit(r.targetId,r.damage,r.blocked),
+ onGuard:r=>combatFeedback.guard(r.unitId,r.block),
+ onDefeated:r=>objectFX.exit('unit:'+r.unitId,now,{duration:.40}),
+ onFinished:state=>showLevelEnd(state),
+ onNotice:t=>message(t)
+});
 window.__forestCombat=Object.freeze({
- get busy(){return combatChoreo.busy||level.phase==='enemy';},
- get snapshot(){return{phase:level.phase,turn:level.turn,animation:combatChoreo.snapshot,
-  feedback:combatFeedback.snapshot,nextEnemyAt:enemyNextAt};}
+ get busy(){return combatController.busy;},
+ get snapshot(){return{...combatController.snapshot,feedback:combatFeedback.snapshot};}
 });
 function syncLevelHud(){
  const state=level.snapshot(),hero=state.units.find(u=>u.side==='ally');
@@ -742,7 +759,7 @@ function move(c,s){
  objectFX.pulse('card:'+c.id,now,{strength:.10});
 }
 function reset(){
- combatChoreo.reset();combatFeedback.reset();enemyNextAt=0;
+ combatController.reset();combatFeedback.reset();
  orbitCamera.reset(); // A restarted battle must show the entire board again.
  sceneTransition.reset('forest');
  forestProps.setScene('forest');
@@ -946,8 +963,7 @@ function frame(timeMs){
  drawCalls=0;
   
   sceneTransition.update(now);
- combatChoreo.update(now);
- advanceEnemyCombat();
+ combatController.update(now);
  orbitCamera.edgePan(dt,!sceneTransition.busy&&!active&&!dragCard&&!pointerDown&&!handDown&&!selectedStagedId);
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  // A tiny reset control appears only after zoom, so phones without a 0 key
@@ -1081,7 +1097,7 @@ function deployCharacterAt(id,x,y){
  return true;
 }
 function startForestLevel(){
- combatChoreo.reset();combatFeedback.reset();enemyNextAt=0;
+ combatController.reset();combatFeedback.reset();
  sceneTransition.reset('forest');
  forestProps.setScene('forest');
  colors.background=scenePresets.forest.background.slice();
@@ -1105,93 +1121,15 @@ function startForestLevel(){
  attackMode=true;syncLevelHud();sync();
  // Physical hero card and highlighted ally cells convey deployment without an overlay.
 }
-// A whole attack resolves at impact, not when the card is selected.
-// The enemy queue only advances after the player explicitly ends the turn.
-function cardPoint(card){
- return{x:card.homeX,y:fx.height(card.slot.tileC,card.slot.tileR)+.34,z:card.homeZ};
-}
-function requestEndTurn(){
- if(level.phase!=='active'||combatChoreo.busy||sceneTransition.busy)return false;
- const r=level.endTurn();if(!r.ok)return false;
- window.__forestHand?.clearSelection();
- enemyNextAt=now+.30;syncLevelHud();message('敌方回合 · 敌人依次行动');
- return true;
-}
+// The page only connects input/visuals. Turn logic belongs to a reusable engine.
+function requestEndTurn(){return combatController.endTurn(now);}
 endTurnButton.addEventListener('click',requestEndTurn);
-function advanceEnemyCombat(){
- if(level.phase!=='enemy'||combatChoreo.busy||sceneTransition.busy||now<enemyNextAt)return;
- const queue=level.snapshot().enemyQueue;
- if(!queue.length){
-  const turn=level.beginPlayerTurn();
-  if(turn.ok){window.__forestHand?.nextTurn();syncLevelHud();
-   message('第 '+turn.turn+' 回合 · 自动摸五张牌');}
-  return;
- }
- const unit=level.getUnit(queue[0]);
- if(!unit||!unit.alive){
-  level.resolveEnemyAction(queue[0]);enemyNextAt=now+.12;syncLevelHud();return;
- }
- const intent=level.enemyIntents().find(i=>i.unitId===unit.id);
- const from=cards.find(c=>c.unitId===unit.id);
- const allies=level.snapshot().units.filter(u=>u.side==='ally'&&u.alive&&u.deployed)
-  .sort((a,b)=>Math.abs(a.c-unit.c)-Math.abs(b.c-unit.c)||
-    Math.abs(a.r-unit.r)-Math.abs(b.r-unit.r)||a.c-b.c);
- const target=cards.find(c=>c.unitId===allies[0]?.id);
- if(!from){level.resolveEnemyAction(unit.id);enemyNextAt=now+.12;return;}
- const guard=intent?.kind==='guard';
- const to=guard?from:(target||from);
- combatChoreo.start({
-  attackerId:unit.id,targetId:guard?unit.id:to.unitId,
-  from:cardPoint(from),to:cardPoint(to),kind:guard?'guard':'attack',
-  damage:intent?.damage||0,at:now,
-  onImpact:()=>{
-   const result=level.resolveEnemyAction(unit.id);
-   if(!result.ok)return;
-   if(result.kind==='guard')combatFeedback.guard(unit.id,result.block);
-   else if(result.targetId){
-    combatFeedback.hit(result.targetId,result.damage,result.blocked);
-    if(result.defeated)objectFX.exit('unit:'+result.targetId,now,{duration:.38});
-   }
-   syncLevelHud();
-  },
-  onFinish:()=>{
-   enemyNextAt=now+.24;syncLevelHud();
-   if(level.phase==='defeat')showLevelEnd(level.snapshot());
-  }
- });
- syncLevelHud();
-}
 function tapUnit(card){
- if(!card||card.side!=='enemy'||!attackMode||level.phase!=='active'||
-  combatChoreo.busy||sceneTransition.busy)return false;
- const foe=level.getUnit(card.unitId);
- const hero=level.getUnit('woodcutter');
- const attacker=cards.find(c=>c.unitId==='woodcutter');
- if(!foe?.alive||!hero?.alive||!attacker)return false;
- const action=window.__forestHand?.consumeForTarget(card.unitId);
- if(!action){message('先选择手中一张行动牌，再点击敌人');return false;}
- const started=combatChoreo.start({
-  attackerId:'woodcutter',targetId:card.unitId,
-  from:cardPoint(attacker),to:cardPoint(card),at:now,
-  damage:action.damage,kind:'attack',
-  onImpact:()=>{
-   const result=level.actAttack('woodcutter',card.unitId,{
-    power:action.damage,block:action.block,pierce:action.pierce
-   });
-   if(!result.ok)return;
-   combatFeedback.hit(card.unitId,result.damage,result.blocked);
-   if(result.blockGained)combatFeedback.guard('woodcutter',result.blockGained);
-   if(result.defeated)objectFX.exit('unit:'+card.unitId,now,{duration:.40});
-   syncLevelHud();
-  },
-  onFinish:()=>{
-   syncLevelHud();
-   if(level.phase==='victory')showLevelEnd(level.snapshot());
-   else message('命中结算完成 · 可继续出牌或结束回合');
-  }
- });
- if(started)syncLevelHud();
- return started;
+ if(!card||card.side!=='enemy'||!attackMode)return false;
+ const ok=combatController.playerAttack('woodcutter',card.unitId,now);
+ if(!ok&&level.phase==='active'&&!combatController.busy)
+  message('先从职业牌盒手动摸牌，选择手牌，再点击敌人');
+ return ok;
 }
 document.getElementById('level-retry').addEventListener('click',reset);
 startForestLevel();
@@ -1265,7 +1203,7 @@ window.__forestLevelDebug={
 requestAnimationFrame(frame);
 })();
 </script>
-<script src="./ui/forest-hand.js?v=6"></script>
+<script src="./ui/forest-hand.js?v=7"></script>
 <script src="./ui/farmer-roster.js?v=1"></script>
 </body>
 </html>
