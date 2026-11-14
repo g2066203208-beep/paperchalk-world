@@ -108,6 +108,9 @@ function create(id,grid,options={}){
  }
  function endTurn(){
   if(phase!=='active')return {ok:false,reason:'not-player-turn'};
+  // Enemy block expires before its NEXT action, not at the start of the
+  // player's turn; defensive enemy intents must matter on the next turn.
+  for(const enemy of alive('enemy'))enemy.currentBlock=0;
   enemyQueue=enemyIntents().map(e=>e.unitId);
   phase='enemy';
   emit('enemy-turn',{turn,queue:[...enemyQueue],intents:enemyIntents()});
@@ -141,7 +144,6 @@ function create(id,grid,options={}){
   turn++;
   phase='active';
   for(const unit of alive('ally'))unit.currentBlock=0;
-  for(const unit of alive('enemy'))unit.currentBlock=0;
   const state=snapshot();emit('turn',state);
   return{ok:true,phase,turn,state};
  }
