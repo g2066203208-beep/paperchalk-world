@@ -109,7 +109,7 @@ html,body{background:#d8ded0}
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=7"></script>
 <script src="./engine/physical-board-frame.js?v=3"></script>
-<script src="./engine/visual-look.js?v=1"></script>
+<script src="./engine/visual-look.js?v=2"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
 <script src="./engine/scene-card-hud.js?v=16"></script>
 <script src="./engine/character-registry.js?v=1"></script>
@@ -132,7 +132,7 @@ void main(){vec4 world=uM*vec4(aP,1.);vP=world.xyz;vN=normalize(mat3(uM)*aN);vUV
 const FSH=`precision mediump float;varying vec3 vN,vP;varying vec2 vUV;
 uniform vec4 uColor;uniform sampler2D uTex;uniform float uTexEnabled,uUnlit,uTerrain;
 uniform vec3 uSoil,uSunDirection,uSkyFill,uSunColor;
-uniform float uAmbient,uSunIntensity;
+uniform float uAmbient,uSunIntensity,uTerrainDetail;
 void main(){vec4 base=uColor;if(uTexEnabled>.5){vec4 sampled=texture2D(uTex,vUV);if(sampled.a<.02)discard;base*=sampled;}
 vec3 normal=normalize(vN);vec3 light=normalize(uSunDirection);
 if(uTerrain>.5){
@@ -140,6 +140,11 @@ if(uTerrain>.5){
   // not an illustration, grid overlay or hand-painted cliff texture.
   float grassWeight=smoothstep(.20,.68,max(0.,normal.y));
   base.rgb=mix(uSoil,base.rgb,grassWeight);
+  // Stable world-space material tone. No UV tiles, geometry overlays or
+  // scrolling texture: adjacent 3D blocks share a continuous surface.
+  float broad=sin(vP.x*.51+sin(vP.z*.39))*cos(vP.z*.45-vP.x*.11);
+  float fine=sin(vP.x*4.8+vP.z*2.73)*sin(vP.z*5.61-vP.x*1.93);
+  base.rgb*=1.0+uTerrainDetail*(broad*.67+fine*.33)*grassWeight;
 }
 float diffuse=max(0.,dot(normal,light));
 vec3 illumination=uSkyFill*uAmbient + uSunColor*(uSunIntensity*diffuse);
@@ -153,7 +158,8 @@ const attr={p:gl.getAttribLocation(pg,'aP'),n:gl.getAttribLocation(pg,'aN'),uv:g
 const U={m:gl.getUniformLocation(pg,'uM'),vp:gl.getUniformLocation(pg,'uVP'),color:gl.getUniformLocation(pg,'uColor'),tex:gl.getUniformLocation(pg,'uTex'),has:gl.getUniformLocation(pg,'uTexEnabled'),unlit:gl.getUniformLocation(pg,'uUnlit'),terrain:gl.getUniformLocation(pg,'uTerrain'),soil:gl.getUniformLocation(pg,'uSoil'),
  sunDirection:gl.getUniformLocation(pg,'uSunDirection'),skyFill:gl.getUniformLocation(pg,'uSkyFill'),
  sunColor:gl.getUniformLocation(pg,'uSunColor'),ambient:gl.getUniformLocation(pg,'uAmbient'),
- sunIntensity:gl.getUniformLocation(pg,'uSunIntensity')};
+ sunIntensity:gl.getUniformLocation(pg,'uSunIntensity'),
+ terrainDetail:gl.getUniformLocation(pg,'uTerrainDetail')};
 gl.uniform1i(U.tex,0);
 const colors={background:[.775,.758,.716,1],base:[.846,.849,.846,1],platform:[.933,.935,.928,1],boardTop:[.942,.944,.938,1],boardEdge:[.823,.830,.822,1],boardSide:[.755,.763,.754,1],grid:[.825,.831,.827,1],gridFill:[.923,.927,.922,1],border:[.977,.977,.966,1],rim:[.784,.788,.777,1],inner:[.966,.967,.963,1],back:[.69,.70,.69,1],backInset:[.81,.815,.807,1],shadow:[.19,.21,.19,.095],shadow2:[.18,.2,.18,.05]};
 // Simple column-major math. All transforms are 3D matrices rendered by WebGL.

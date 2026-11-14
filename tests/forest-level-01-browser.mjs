@@ -126,8 +126,11 @@ async function verifyFixedCamera(page,kind){
 async function verifyStage01ColorAndLighting(page,kind){
  const look=await page.evaluate(()=>window.__forestLevelDebug?.visualLook);
  assert.ok(look,'stage 01 visual-look engine registered');
- assert.equal(look.stage,1,'first visual stage only, no extra effects');
+ assert.ok(look.stage>=1&&look.stage<=2,'visual layer must be stage 01 or 02 only');
  assert.equal(look.id,'forest');
+ assert.equal(look.stage,2,'stage 02 terrain material is active');
+ assert.ok(look.terrainDetail>=.045&&look.terrainDetail<=.055,
+  'controlled non-repeating world-space grass variation');
  assert.ok(look.terrainLight[1]>look.terrainLight[0],'green nature palette');
  assert.ok(look.terrainDark[1]>look.terrainDark[0],'green shadow palette');
  assert.ok(look.ambient>=.70&&look.ambient<=.83,'soft sky fill avoids washed-out dark patches');
@@ -135,7 +138,7 @@ async function verifyStage01ColorAndLighting(page,kind){
  assert.ok(look.background[1]>.50&&look.background[0]<.50,'forest backdrop must not be beige');
  const cam=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.equal(cam.fixed,true,'stage 01 cannot change approved camera');
- console.log('FOREST_VISUAL_STAGE01_PASS',JSON.stringify({kind,look,distance:cam.distance}));
+ console.log('FOREST_VISUAL_STAGE02_PASS',JSON.stringify({kind,look,distance:cam.distance}));
 }
 async function verifyPhysicalFrame(page,kind){
  await page.waitForFunction(()=>window.__forestLevelDebug?.physicalFrame?.lastDrawCalls===1,{timeout:25000});
