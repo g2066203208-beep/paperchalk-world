@@ -76,14 +76,18 @@ html,body{background:#d8ded0}
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=4"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=10"></script>
+<script src="./engine/scene-card-hud.js?v=11"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
 'use strict';
 (()=>{
 const canvas=document.getElementById('stage');
-const gl=canvas.getContext('webgl',{antialias:true,alpha:false,premultipliedAlpha:false,depth:true,stencil:false,preserveDrawingBuffer:true})
+const gl=canvas.getContext('webgl',{
+ antialias:window.innerWidth>700,alpha:false,premultipliedAlpha:false,
+ depth:true,stencil:false,preserveDrawingBuffer:false,
+ powerPreference:'high-performance'
+})
        ||canvas.getContext('experimental-webgl');
 if(!gl){document.getElementById('note').style.opacity=1;document.getElementById('note').textContent='浏览器未开启 WebGL';return;}
 const VSH=`attribute vec3 aP;attribute vec3 aN;attribute vec2 aUV;
@@ -189,7 +193,7 @@ const cardDetail=rrFace(cardW-.205,cardH-.205,.041,cardD/2+.010);
 const plate=rrFace(cardW,cardH,.105,0); // screen-space grid slot outlines as 3D geometry
 const RRstrip=(()=>{const outer=rrPoints(slotW,slotH,.14),inner=rrPoints(slotW-.048,slotH-.048,.114),v=[],ind=[];for(let i=0;i<outer.length;i++){let p=outer[i],q=inner[i];v.push(p[0],p[1],0,0,0,1,p[0]/slotW+.5,p[1]/slotH+.5,q[0],q[1],0,0,0,1,q[0]/slotW+.5,q[1]/slotH+.5);}for(let i=0;i<outer.length;i++){let j=(i+1)%outer.length,a=i*2,b=j*2;ind.push(a,b,a+1,b,b+1,a+1);}return makeGeom(v,ind);})();
 const slotFill=rrFace(slotW-.05,slotH-.05,.10,0);
-function renderGeom(geo,m,color,tex=null,unlit=false,terrainSoil=null){gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,unlit?1:0);gl.uniform1f(U.has,tex?1:0);gl.uniform1f(U.terrain,terrainSoil?1:0);if(terrainSoil)gl.uniform3fv(U.soil,terrainSoil.slice(0,3));if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
+function renderGeom(geo,m,color,tex=null,unlit=false,terrainSoil=null){gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,unlit?1:0);gl.uniform1f(U.has,tex?1:0);gl.uniform1f(U.terrain,terrainSoil?1:0);if(terrainSoil)gl.uniform3fv(U.soil,terrainSoil.slice(0,3));if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}drawCalls++;gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
 function cube(x,y,z,w,h,d,color){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color);}
 // Terrain textures, generated geometry, palette rules and adjacency live in a reusable module.
 // No per-scene duplication of mesh generation or independently calculated placement positions.
@@ -259,7 +263,8 @@ let vp=I(),proj=I(),view=I(),camera={
 },w=1920,h=1080;
 function resize(){
  const rect=canvas.getBoundingClientRect();
- const dpr=Math.min(window.devicePixelRatio||1,2);
+ // Keep CSS-space geometry intact without 2x-3x device-pixel fill on phones.
+ const dpr=Math.min(window.devicePixelRatio||1,rect.width<700?1.25:1.5);
  w=Math.max(1,Math.round(rect.width*dpr));h=Math.max(1,Math.round(rect.height*dpr));
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
  gl.viewport(0,0,w,h);
@@ -287,7 +292,8 @@ function makePhysicalCardTexture(image){
  return tex;
 }
 const sceneHUD=window.PaperchalkSceneCardHUD.create({
- canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,objectFX,makeTexture:makePhysicalCardTexture,
+ canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,objectFX,
+ pileEdge:cardEdge,pileRim:colors.rim,makeTexture:makePhysicalCardTexture,
  getVP:()=>vp,uniformVP:m=>gl.uniformMatrix4fv(U.vp,false,m),
  snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
  remainingCards:profession=>window.__forestHand?.remainingCards(profession)||[],
@@ -674,10 +680,12 @@ function drawTerrainParticles(){
  }
  gl.depthMask(true);gl.disable(gl.BLEND);
 }
-let previousFrameTime=0;
+let previousFrameTime=0,drawCalls=0,averageFrameMs=16.67;
 function frame(timeMs){
  now=timeMs/1000;
  const dt=previousFrameTime?Math.min(.05,now-previousFrameTime):1/60;
+ if(previousFrameTime)averageFrameMs=averageFrameMs*.93+(now-previousFrameTime)*1000*.07;
+ drawCalls=0;
  sceneTransition.update(now);
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
@@ -819,6 +827,9 @@ window.__forestLevelDebug={
  get state(){return level.snapshot();},
  get terrain(){return terrain.snapshot();},
  get effects(){return fx.snapshot();},
+ get performance(){return {drawCalls,averageFrameMs:+averageFrameMs.toFixed(2),
+  canvasPixels:canvas.width*canvas.height,devicePixelRatio:window.devicePixelRatio,
+  renderRatio:+(canvas.width/canvas.getBoundingClientRect().width).toFixed(2)};},
  get sceneSwitch(){return sceneTransition.snapshot(now);},
  switchScene(){return sceneTransition.toggle(now);},
  get environment(){return {id:forestProps.scene,props:forestProps.propCount,
