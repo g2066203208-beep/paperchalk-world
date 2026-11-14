@@ -110,7 +110,8 @@ function create(options={}){
     emitChange();
    },
    onFinish:()=>{
-    nextEnemyAt=at+.24;
+    // Leave a brief real pause AFTER the finished strike (not after its start).
+    nextEnemyAt=(animation.snapshot.last?.completedAt??at)+.24;
     emitChange();
     if(level.phase==='defeat')onFinished(level.snapshot());
    }
