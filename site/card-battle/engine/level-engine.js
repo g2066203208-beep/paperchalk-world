@@ -18,6 +18,16 @@ function register(def){
   const slot=unit.side+'-'+unit.r+'-'+unit.c;
   if(placed.has(slot))throw Error('Two units in '+slot);
   if(!Number.isFinite(unit.hp)||unit.hp<=0||!Number.isFinite(unit.attack)||unit.attack<0)throw Error('Invalid unit statistics');
+  if(unit.intentCycle!==undefined){
+   if(unit.side!=='enemy'||!Array.isArray(unit.intentCycle)||!unit.intentCycle.length)
+    throw Error('Only enemy units may provide a nonempty intentCycle');
+   for(const intent of unit.intentCycle){
+    if(!intent||!['attack','guard'].includes(intent.kind)||
+      (intent.kind==='attack'&&(!Number.isFinite(intent.damage)||intent.damage<0))||
+      (intent.kind==='guard'&&(!Number.isFinite(intent.block)||intent.block<0)))
+     throw Error('Invalid enemy intent for '+unit.id);
+   }
+  }
   seen.add(unit.id);placed.add(slot);
  }
  registry.set(def.id,copy(def));
@@ -76,9 +86,12 @@ function create(id,grid,options={}){
  function alive(side){return [...units.values()].filter(u=>u.alive&&u.deployed&&u.side===side);}
  function intentFor(enemy){
   if(!enemy||!enemy.alive||enemy.side!=='enemy')return null;
-  // Stagger simple enemies so the opening round teaches readable threats.
-  if(enemy.id.endsWith('-b')&&turn%3===2)return {kind:'guard',block:2,damage:0};
-  return {kind:'attack',damage:enemy.attack+(enemy.id.endsWith('-b')&&turn%2===0?1:0),block:0};
+  // The enemy's action cycle is authored in level data. No enemy names, factions,
+  // appearance or level-specific AI branches belong inside this core engine.
+  const move=enemy.intentCycle?.[(turn-1)%enemy.intentCycle.length];
+  return move?.kind==='guard'?
+   {kind:'guard',block:Math.floor(move.block),damage:0}:
+   {kind:'attack',damage:Math.floor(move?.damage??enemy.attack),block:0};
  }
  function enemyIntents(){
   return alive('enemy').sort((a,b)=>a.r-b.r||a.c-b.c).map(u=>({
@@ -152,5 +165,5 @@ function create(id,grid,options={}){
   enemyIntents,endTurn,resolveEnemyAction,beginPlayerTurn,
   get phase(){return phase;},get turn(){return turn;}});
 }
-root.PaperchalkLevelEngine=Object.freeze({version:'2.0.0',register,create,list:()=>[...registry.keys()]});
+root.PaperchalkLevelEngine=Object.freeze({version:'2.1.0',register,create,list:()=>[...registry.keys()]});
 })(window);
