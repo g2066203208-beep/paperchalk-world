@@ -48,6 +48,7 @@ on:
       - 'tests/farmer-facilities.test.cjs'
       - 'tests/card-registry.test.cjs'
       - 'tests/card-effect-engine.test.cjs'
+      - 'tests/character-hand-engine.test.cjs'
       - 'tests/scene-lifecycle.test.cjs'
       - 'tests/object-animations.test.cjs'
       - 'tests/scene-transitions.test.cjs'
@@ -97,6 +98,7 @@ jobs:
           node tests/farmer-facilities.test.cjs
           node tests/card-registry.test.cjs
           node tests/card-effect-engine.test.cjs
+          node tests/character-hand-engine.test.cjs
           node --check site/card-battle/engine/card-effect-engine.js
           node --check site/card-battle/engine/object-anchor.js
           node tests/scene-lifecycle.test.cjs
