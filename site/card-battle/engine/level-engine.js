@@ -22,9 +22,9 @@ function register(def){
    if(unit.side!=='enemy'||!Array.isArray(unit.intentCycle)||!unit.intentCycle.length)
     throw Error('Only enemy units may provide a nonempty intentCycle');
    for(const intent of unit.intentCycle){
-    if(!intent||!['attack','guard'].includes(intent.kind)||
-      (intent.kind==='attack'&&(!Number.isFinite(intent.damage)||intent.damage<0))||
-      (intent.kind==='guard'&&(!Number.isFinite(intent.block)||intent.block<0)))
+    if(!intent||!['attack','guard','raid','rally'].includes(intent.kind)||
+      (['attack','raid'].includes(intent.kind)&&(!Number.isFinite(intent.damage)||intent.damage<0))||
+      (['guard','rally'].includes(intent.kind)&&(!Number.isFinite(intent.block)||intent.block<0)))
      throw Error('Invalid enemy intent for '+unit.id);
    }
   }
@@ -86,12 +86,14 @@ function create(id,grid,options={}){
  function alive(side){return [...units.values()].filter(u=>u.alive&&u.deployed&&u.side===side);}
  function intentFor(enemy){
   if(!enemy||!enemy.alive||enemy.side!=='enemy')return null;
-  // The enemy's action cycle is authored in level data. No enemy names, factions,
-  // appearance or level-specific AI branches belong inside this core engine.
   const move=enemy.intentCycle?.[(turn-1)%enemy.intentCycle.length];
-  return move?.kind==='guard'?
-   {kind:'guard',block:Math.floor(move.block),damage:0}:
-   {kind:'attack',damage:Math.floor(move?.damage??enemy.attack),block:0};
+  const kind=move?.kind||'attack';
+  return {kind,damage:['attack','raid'].includes(kind)?
+   Math.floor(move?.damage??enemy.attack):0,
+   block:['guard','rally'].includes(kind)?Math.floor(move?.block||0):0,
+   targetPolicy:move?.targetPolicy||enemy.targetPolicy||'nearest',
+   pierce:move?.pierce===true,steal:Math.floor(move?.steal||0),
+   skillId:move?.id||null,skillName:move?.name||null};
  }
  function enemyIntents(){
   return alive('enemy').sort((a,b)=>a.r-b.r||a.c-b.c).map(u=>({
@@ -105,6 +107,12 @@ function create(id,grid,options={}){
   target.currentHp-=hit;target.alive=target.currentHp>0;
   return {damage:hit,blocked,hp:target.currentHp,defeated:!target.alive};
  }
+ function grantBlock(unitId,amount){
+  const u=units.get(unitId);
+  if(!u||!u.alive||!u.deployed||!Number.isFinite(amount)||amount<=0)return 0;
+  const gain=Math.floor(amount);u.currentBlock+=gain;
+  emit('guard',{unitId,block:gain});return gain;
+ }
  function actAttack(attackerId,targetId,options={}){
   if(phase!=='active')return {ok:false,reason:'not-player-turn'};
   const actor=units.get(attackerId),target=units.get(targetId);
@@ -112,12 +120,21 @@ function create(id,grid,options={}){
    actor.side!=='ally'||target.side!=='enemy')return {ok:false,reason:'invalid-target'};
   const power=Number.isFinite(options.power)?Math.max(0,Math.floor(options.power)):actor.attack;
   const result=damageUnit(target,power,options.pierce===true);
-  if(Number.isFinite(options.block)&&options.block>0)
-   actor.currentBlock+=Math.floor(options.block);
+  const splash=[];
+  if(options.splashRow===true){
+   for(const enemy of alive('enemy').filter(u=>u.id!==targetId&&u.r===target.r)){
+    const hit=damageUnit(enemy,power,options.pierce===true);
+    splash.push({targetId:enemy.id,...hit});
+    emit('attack',{attackerId,targetId:enemy.id,...hit,side:'ally'});
+    if(!enemy.alive)emit('defeat',{unitId:enemy.id,side:'enemy'});
+   }
+  }
+  const blockGained=Number.isFinite(options.block)&&options.block>0?
+   grantBlock(actor.id,options.block):0;
   emit('attack',{attackerId,targetId,...result,side:'ally'});
   if(!target.alive)emit('defeat',{unitId:target.id,side:target.side});
   if(!alive('enemy').length){phase='victory';emit('victory',snapshot());}
-  return {ok:true,phase,attackerId,targetId,blockGained:options.block||0,...result};
+  return {ok:true,phase,attackerId,targetId,blockGained,splash,...result};
  }
  function endTurn(){
   if(phase!=='active')return {ok:false,reason:'not-player-turn'};
@@ -129,27 +146,49 @@ function create(id,grid,options={}){
   emit('enemy-turn',{turn,queue:[...enemyQueue],intents:enemyIntents()});
   return {ok:true,phase,queue:[...enemyQueue]};
  }
+ function targetForEnemy(enemyId){
+  const actor=units.get(enemyId),intent=intentFor(actor);
+  if(!actor||!actor.alive)return null;
+  const candidates=alive('ally');
+  const policy=intent?.targetPolicy||'nearest';
+  const dist=(u)=>Math.abs(u.c-actor.c)*3+Math.abs(u.r-actor.r);
+  const sorted=candidates.sort((a,b)=>{
+   if(policy==='weakest')return a.currentHp-b.currentHp||dist(a)-dist(b);
+   if(policy==='backline')return b.r-a.r||dist(a)-dist(b);
+   if(policy==='frontline')return a.r-b.r||dist(a)-dist(b);
+   return dist(a)-dist(b)||a.c-b.c;
+  });
+  return sorted[0]?getUnit(sorted[0].id):null;
+ }
  function resolveEnemyAction(enemyId){
   if(phase!=='enemy'||!enemyQueue.length)return {ok:false,reason:'not-enemy-turn'};
   if(enemyId&&enemyId!==enemyQueue[0])return {ok:false,reason:'wrong-action-order'};
   const id=enemyQueue.shift(),actor=units.get(id);
   if(!actor||!actor.alive)return {ok:true,skipped:true,unitId:id,remaining:enemyQueue.length};
   const intent=intentFor(actor);
+  if(intent.kind==='rally'){
+   const affected=[];
+   for(const enemy of alive('enemy')){
+    enemy.currentBlock+=intent.block;
+    affected.push(enemy.id);
+   }
+   const result={ok:true,unitId:id,kind:'rally',block:intent.block,
+    affected,remaining:enemyQueue.length};
+   emit('guard',result);return result;
+  }
   if(intent.kind==='guard'){
    actor.currentBlock+=intent.block;
    const result={ok:true,unitId:id,kind:'guard',block:intent.block,remaining:enemyQueue.length};
    emit('guard',result);return result;
   }
-  const allies=alive('ally').sort((a,b)=>
-   Math.abs(a.c-actor.c)-Math.abs(b.c-actor.c)||
-   Math.abs(a.r-actor.r)-Math.abs(b.r-actor.r)||a.c-b.c);
-  const target=allies[0];
+  const picked=targetForEnemy(id),target=picked?units.get(picked.id):null;
   if(!target){phase='defeat';enemyQueue=[];emit('gameover',snapshot());return{ok:true,phase,unitId:id,remaining:0};}
-  const result=damageUnit(target,intent.damage);
+  const result=damageUnit(target,intent.damage,intent.pierce);
   emit('attack',{attackerId:id,targetId:target.id,side:'enemy',...result});
   if(!target.alive)emit('defeat',{unitId:target.id,side:target.side});
   if(!alive('ally').length){phase='defeat';enemyQueue=[];emit('gameover',snapshot());}
-  return{ok:true,unitId:id,targetId:target.id,kind:'attack',
+  return{ok:true,unitId:id,targetId:target.id,kind:intent.kind,
+   steal:result.damage>0?intent.steal:0,skillId:intent.skillId,
    phase,remaining:enemyQueue.length,...result};
  }
  function beginPlayerTurn(){
@@ -162,8 +201,8 @@ function create(id,grid,options={}){
  }
  reset();
  return Object.freeze({id:config.id,config:copy(config),on,reset,snapshot,getUnit,getSlot,occupancy,canModify,deploy,actAttack,
-  enemyIntents,endTurn,resolveEnemyAction,beginPlayerTurn,
+  enemyIntents,targetForEnemy,grantBlock,endTurn,resolveEnemyAction,beginPlayerTurn,
   get phase(){return phase;},get turn(){return turn;}});
 }
-root.PaperchalkLevelEngine=Object.freeze({version:'2.1.0',register,create,list:()=>[...registry.keys()]});
+root.PaperchalkLevelEngine=Object.freeze({version:'2.2.0-bandit-skills',register,create,list:()=>[...registry.keys()]});
 })(window);
