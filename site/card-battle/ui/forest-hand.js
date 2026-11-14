@@ -26,15 +26,25 @@ function draw(profession,opts){
  if(root.__forestCombat?.busy)return{ok:false,reason:'combat-animation'};
  return model.draw(profession,opts);
 }
+function consumeSelected(expectedType){
+ if(root.__forestLevelDebug?.state.phase!=='active'||root.__forestCombat?.busy)return null;
+ const card=selectedCard();
+ if(!card||card.type!==expectedType)return null;
+ const result=model.play(card.instance);
+ if(!result.ok)return null;
+ selectedInstance=null;return result.card;
+}
 function consumeForTarget(targetId){
  if(!selectedInstance||root.__forestLevelDebug?.state.phase!=='active'||root.__forestCombat?.busy)return null;
  const card=selectedCard();
  if(!card){selectedInstance=null;return null;}
+ if(card.type&&card.type!=='attack')return null;
  const result=model.play(selectedInstance);
  if(!result.ok)return null;
  selectedInstance=null;
  return{damage:result.card.power,card:result.card,targetId,
-  block:result.card.id==='guard-blow'?2:0,
+  block:0,
+  shape:result.card.shape||'single',
   pierce:result.card.id==='sunder'};
 }
 function reset(){selectedInstance=null;return model.reset();}
@@ -49,7 +59,7 @@ function nextTurn(){
  return model.nextTurn(); // no auto draw, no forced discard of unused cards
 }
 root.__forestHand=Object.freeze({
- consumeForTarget,reset,onDeployment,nextTurn,selectCard,draw,
+ consumeForTarget,consumeSelected,selectedCard,reset,onDeployment,nextTurn,selectCard,draw,
  clearSelection(){selectedInstance=null;},
  remainingCards:ownerId=>model.remainingCards(ownerId),
  get selected(){return selectedInstance;},
