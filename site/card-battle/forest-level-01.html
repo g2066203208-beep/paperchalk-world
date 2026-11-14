@@ -742,6 +742,7 @@ function move(c,s){
  objectFX.pulse('card:'+c.id,now,{strength:.10});
 }
 function reset(){
+ combatChoreo.reset();combatFeedback.reset();enemyNextAt=0;
  orbitCamera.reset(); // A restarted battle must show the entire board again.
  sceneTransition.reset('forest');
  forestProps.setScene('forest');
@@ -863,7 +864,7 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%7)*.07;});}
  if(e.code==='Escape'){clearPick();selectedStagedId=null;previewDeployment=null;}
-  if(e.code==='Enter'){e.preventDefault();if(window.__forestHand?.nextTurn())message('回合结束 · 点击盒盖打开');}
+  if(e.code==='Enter'){e.preventDefault();requestEndTurn();}
   if(e.code==='KeyG'){document.getElementById('roster-trigger').click();}
  if(e.code==='KeyR'&&!e.repeat)reset();
  if(e.code==='Digit0'||e.code==='Home')orbitCamera.reset();
@@ -945,6 +946,8 @@ function frame(timeMs){
  drawCalls=0;
   
   sceneTransition.update(now);
+ combatChoreo.update(now);
+ advanceEnemyCombat();
  orbitCamera.edgePan(dt,!sceneTransition.busy&&!active&&!dragCard&&!pointerDown&&!handDown&&!selectedStagedId);
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  // A tiny reset control appears only after zoom, so phones without a 0 key
@@ -1013,6 +1016,7 @@ function frame(timeMs){
    previewDeployCard.hover=.8;drawCard(previewDeployCard,now);
   }
   sceneHUD.render(now,w,h);
+ combatFeedback.frame(now,combatChoreo.visible(now));
  requestAnimationFrame(frame);
 }
 function placeholderUnitTexture(name,enemy){
@@ -1077,6 +1081,7 @@ function deployCharacterAt(id,x,y){
  return true;
 }
 function startForestLevel(){
+ combatChoreo.reset();combatFeedback.reset();enemyNextAt=0;
  sceneTransition.reset('forest');
  forestProps.setScene('forest');
  colors.background=scenePresets.forest.background.slice();
@@ -1253,6 +1258,8 @@ window.__forestLevelDebug={
  return ok;
  },
  attack(id){const card=cards.find(c=>c.unitId===id);if(!card)return false;return tapUnit(card)===true;},
+ endTurn:requestEndTurn,
+ get combat(){return window.__forestCombat.snapshot;},
  reset
 };
 requestAnimationFrame(frame);
