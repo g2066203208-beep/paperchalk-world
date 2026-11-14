@@ -75,7 +75,7 @@ function create(options={}){
    piles.set(owner.id,shuffle(source.flatMap((card,i)=>[0,1].map(copy=>({
     ...card,profession:owner.profession,ownerId:owner.id,
     instance:owner.id+'-'+i+'-'+copy
-   }))));
+   })))));
    discards.set(owner.id,[]);
   }
  }
