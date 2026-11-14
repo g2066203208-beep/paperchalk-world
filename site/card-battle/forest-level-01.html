@@ -110,9 +110,10 @@ html,body{background:#d8ded0}
 <script src="./engine/forest-environment.js?v=10"></script>
 <script src="./engine/physical-board-frame.js?v=5"></script>
 <script src="./engine/visual-look.js?v=4"></script>
-<script src="./engine/stylized-materials.js?v=1"></script>
+<script src="./engine/stylized-materials.js?v=2"></script>
+<script src="./engine/cloud-shadows.js?v=1"></script>
 <script src="./engine/forest-dressing.js?v=1"></script>
-<script src="./engine/visual-shaders.js?v=2"></script>
+<script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
 <script src="./engine/scene-card-hud.js?v=16"></script>
@@ -123,14 +124,17 @@ html,body{background:#d8ded0}
 (()=>{
 const canvas=document.getElementById('stage');
 const gl=canvas.getContext('webgl',{
- antialias:window.innerWidth>700,alpha:false,premultipliedAlpha:false,
+ antialias:true,alpha:false,premultipliedAlpha:false,
  depth:true,stencil:false,preserveDrawingBuffer:false,
  powerPreference:'high-performance'
 })
        ||canvas.getContext('experimental-webgl');
 if(!gl){document.getElementById('note').style.opacity=1;document.getElementById('note').textContent='浏览器未开启 WebGL';return;}
 const visualLook=window.PaperchalkVisualLook;
-const visualFx=new URLSearchParams(window.location.search).get('visual')!=='off';
+const urlOptions=new URLSearchParams(window.location.search);
+const visualFx=urlOptions.get('visual')!=='off';
+const cloudFx=urlOptions.get('cloud')!=='off';
+const qualityMode=['auto','high','low'].includes(urlOptions.get('quality'))?urlOptions.get('quality'):'auto';
 const VSH=`attribute vec3 aP;attribute vec3 aN;attribute vec2 aUV;
 uniform mat4 uM,uVP,uLightVP;varying vec3 vN,vP;varying vec2 vUV;varying vec4 vLightPos;
 void main(){vec4 world=uM*vec4(aP,1.);vP=world.xyz;vN=normalize(mat3(uM)*aN);vUV=aUV;vLightPos=uLightVP*world;gl_Position=uVP*world;}`;
@@ -147,6 +151,9 @@ const U={m:gl.getUniformLocation(pg,'uM'),vp:gl.getUniformLocation(pg,'uVP'),col
  metal:gl.getUniformLocation(pg,'uMetal'),cameraEye:gl.getUniformLocation(pg,'uCameraEye'),
  materialKind:gl.getUniformLocation(pg,'uMaterialKind'),
  materialAtlas:gl.getUniformLocation(pg,'uMaterialAtlas'),
+ cloudMap:gl.getUniformLocation(pg,'uCloudMap'),
+ cloudTime:gl.getUniformLocation(pg,'uCloudTime'),
+ cloudStrength:gl.getUniformLocation(pg,'uCloudStrength'),
  visualMix:gl.getUniformLocation(pg,'uVisualMix'),
  groundY:gl.getUniformLocation(pg,'uGroundY'),
  boardBounds:gl.getUniformLocation(pg,'uBoardBounds'),
@@ -157,7 +164,10 @@ const U={m:gl.getUniformLocation(pg,'uM'),vp:gl.getUniformLocation(pg,'uVP'),col
 gl.uniform1i(U.tex,0);
 gl.uniform1f(U.useShadow,0);
 const materialAtlas=window.PaperchalkMaterialAtlas.create(gl);
+const cloudShadows=window.PaperchalkCloudShadows.create(gl);
+const anisotropic=gl.getExtension('EXT_texture_filter_anisotropic');
 window.__materialAtlas=materialAtlas;
+window.__cloudShadows=cloudShadows;
 const colors={background:[.775,.758,.716,1],base:[.846,.849,.846,1],platform:[.933,.935,.928,1],boardTop:[.942,.944,.938,1],boardEdge:[.823,.830,.822,1],boardSide:[.755,.763,.754,1],grid:[.825,.831,.827,1],gridFill:[.923,.927,.922,1],border:[.977,.977,.966,1],rim:[.784,.788,.777,1],inner:[.966,.967,.963,1],back:[.69,.70,.69,1],backInset:[.81,.815,.807,1],shadow:[.19,.21,.19,.095],shadow2:[.18,.2,.18,.05]};
 // Simple column-major math. All transforms are 3D matrices rendered by WebGL.
 function I(){return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);}
@@ -330,7 +340,28 @@ if(c.texture)renderGeom(cardDetail,M,[1,1,1,1],c.texture,!visualFx,null,0,5);
 else renderGeom(inset,M,c.side==='enemy'?[.945,.95,.953,1]:colors.inner);
 // A tiny light seam on the upper rim gives readable physical thickness during flips.
 }
-function loadTexture(url,callback){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);callback(tex);};image.onerror=()=>{};image.src=url;}
+function loadTexture(url,callback){
+ const image=new Image();image.crossOrigin='anonymous';
+ image.onload=()=>{
+  const tex=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+  const isPOT=n=>n>0&&(n&(n-1))===0;
+  const canMipmap=isPOT(image.width)&&isPOT(image.height);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,canMipmap?gl.LINEAR_MIPMAP_LINEAR:gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  // WebGL1 NPOT source art stays intact; mipmap/AF only where supported.
+  if(canMipmap){
+   gl.generateMipmap(gl.TEXTURE_2D);
+   if(anisotropic)gl.texParameterf(gl.TEXTURE_2D,anisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
+    Math.min(4,gl.getParameter(anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+  }
+  callback(tex);
+ };
+ image.onerror=()=>{};image.src=url;
+}
 // Capacity test uses only neutral geometry: no portraits, titles, HUD, stats, icons, or external assets.
 // Responsive perspective camera driven by the shared orbit/pan/zoom controller.
 let vp=I(),proj=I(),view=I(),camera={
@@ -339,8 +370,13 @@ let vp=I(),proj=I(),view=I(),camera={
 },w=1920,h=1080;
 function resize(){
  const rect=canvas.getBoundingClientRect();
- // Keep CSS-space geometry intact without 2x-3x device-pixel fill on phones.
- const dpr=Math.min(window.devicePixelRatio||1,rect.width<700?1.25:1.5)*renderScale;
+ // Preserve near-native device resolution, with an explicit mobile pixel cap.
+ const isPhone=rect.width<700,area=Math.max(1,rect.width*rect.height);
+ const pixelBudget=qualityMode==='high'?(isPhone?5600000:8300000):
+  qualityMode==='low'?(isPhone?1000000:2000000):(isPhone?3200000:5600000);
+ const nativeDpr=Math.min(window.devicePixelRatio||1,qualityMode==='low'?1.25:3);
+ const fittedDpr=Math.min(nativeDpr,Math.sqrt(pixelBudget/area));
+ const dpr=fittedDpr*(qualityMode==='auto'?renderScale:1);
  w=Math.max(1,Math.round(rect.width*dpr));h=Math.max(1,Math.round(rect.height*dpr));
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
  gl.viewport(0,0,w,h);
@@ -816,12 +852,12 @@ function frame(timeMs){
   averageFrameMs=averageFrameMs*.93+(now-previousFrameTime)*1000*.07;
   frameSamples++;
  }
- // Adapt only pixel fill. Keep CSS card sizes, world-space targeting and
- // physical 3D meshes identical. Low-end devices get performance headroom.
- if(frameSamples>14&&now-lastQualityChangeAt>1.8){
-  const minQuality=canvas.getBoundingClientRect().width<700?.80:.72;
+ // Adaptive quality only under sustained overload, keeping most detail.
+ // ?quality=high locks full device resolution for before/after inspection.
+ if(qualityMode==='auto'&&frameSamples>14&&now-lastQualityChangeAt>1.8){
+  const minQuality=canvas.getBoundingClientRect().width<700?.86:.84;
   if(averageFrameMs>48&&renderScale>minQuality){
-   renderScale=Math.max(minQuality,+(renderScale-.10).toFixed(2));
+   renderScale=Math.max(minQuality,+(renderScale-.05).toFixed(2));
    lastQualityChangeAt=now;
   }else if(averageFrameMs<23&&renderScale<1){
    renderScale=Math.min(1,+(renderScale+.05).toFixed(2));
@@ -849,6 +885,7 @@ function frame(timeMs){
  if(shadowSystem?.enabled)shadowSystem.bind(U);
  visualLook.apply(gl,U,sceneTransition?.scene||forestProps.scene);
  materialAtlas.bind(U);
+ cloudShadows.bind(U,now,visualFx&&cloudFx&&forestProps.scene==='forest');
  gl.uniform1f(U.visualMix,visualFx?1:0);
  gl.uniform1f(U.groundY,forestProps.ground.top);
  gl.uniform4fv(U.boardBounds,[terrain.minX,terrain.minX+terrain.width,
@@ -1010,13 +1047,18 @@ window.__forestLevelDebug={
  get performance(){return {drawCalls,averageFrameMs:+averageFrameMs.toFixed(2),
   canvasPixels:canvas.width*canvas.height,devicePixelRatio:window.devicePixelRatio,
   renderRatio:+(canvas.width/canvas.getBoundingClientRect().width).toFixed(2),
-  adaptiveQualityScale:renderScale};},
+  adaptiveQualityScale:renderScale,qualityMode,
+  targetDevicePixelRatio:window.devicePixelRatio||1,
+  renderedDevicePixelRatio:+(canvas.width/canvas.getBoundingClientRect().width).toFixed(2),
+  webglAntialias:gl.getContextAttributes()?.antialias||false};},
  get sceneSwitch(){return sceneTransition.snapshot(now);},
  get physicalFrame(){return physicalFrame.snapshot;},
  get spatialShadows(){return shadowSystem?.snapshot||null;},
  get visualEffects(){return {enabled:visualFx,ao:true,material:materialAtlas.snapshot,
   forest:forestDressing.snapshot,indirectLight:true,cardPaper:true,toneMapping:true,
+  cloudShadows:{...cloudShadows.snapshot,enabled:visualFx&&cloudFx&&forestProps.scene==='forest',time:now},
   configuration:'six-layer-stylized-forest',mode:visualFx?'enhanced':'baseline'};},
+ get cloudShadows(){return {...cloudShadows.snapshot,enabled:visualFx&&cloudFx&&forestProps.scene==='forest',time:now};},
  get visualLook(){return visualLook.snapshot(sceneTransition?.scene||'forest');},
  switchScene(){return sceneTransition.toggle(now);},
  get environment(){return {id:forestProps.scene,props:forestProps.propCount,
