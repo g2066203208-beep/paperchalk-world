@@ -127,8 +127,8 @@ async function verifyFixedCamera(page,kind){
  const far=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.ok(Math.abs(far.desiredDistance-before.fitDistance)<.001,'scrolling out at fit does nothing');
  assert.deepEqual(far.pan,before.pan,'no pan at default wide view');
- // The only active scroll direction zooms IN. Zoom-out stays forbidden even
- // after zooming in; the reset key is the only return to the default frame.
+ // Both wheel directions work after zooming in. Original full-board fit is
+ // the minimum magnification: wheel-out must stop at that exact frame.
  await page.evaluate(()=>{
   const el=document.getElementById('stage'),rect=el.getBoundingClientRect();
   el.dispatchEvent(new WheelEvent('wheel',{
@@ -140,10 +140,28 @@ async function verifyFixedCamera(page,kind){
  assert.ok(requested.desiredDistance<before.desiredDistance-1,'wheel zoom-in changes target distance');
  await page.waitForFunction(()=>document.getElementById('camera-controls').classList.contains('is-zoomed'),
   null,{timeout:9000});
- await page.evaluate(()=>window.__battleCamera.zoom(10));
- const noShrink=await page.evaluate(()=>window.__battleCamera.snapshot());
- assert.equal(noShrink.desiredDistance,requested.desiredDistance,
-  'zoom-out input must not shrink the already enlarged board');
+ await page.evaluate(()=>{
+  const el=document.getElementById('stage'),rect=el.getBoundingClientRect();
+  el.dispatchEvent(new WheelEvent('wheel',{
+   deltaY:100,clientX:rect.left+rect.width*.5,
+   clientY:rect.top+rect.height*.43,bubbles:true,cancelable:true
+  }));
+ });
+ const zoomedBack=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(zoomedBack.desiredDistance>requested.desiredDistance,
+  'reverse wheel must zoom back out after enlarging');
+ assert.ok(zoomedBack.desiredDistance<=before.fitDistance,
+  'reverse wheel may not pass the original full-board fit');
+ await page.evaluate(()=>{
+  const el=document.getElementById('stage'),rect=el.getBoundingClientRect();
+  el.dispatchEvent(new WheelEvent('wheel',{
+   deltaY:-100,clientX:rect.left+rect.width*.5,
+   clientY:rect.top+rect.height*.43,bubbles:true,cancelable:true
+  }));
+ });
+ const zoomedInAgain=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(Math.abs(zoomedInAgain.desiredDistance-requested.desiredDistance)<.001,
+  'symmetric wheel motion restores the same magnification');
  await page.waitForTimeout(420);
  const enlarged=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.ok(enlarged.distance<before.distance-1,'smooth wheel zoom-in actually moves camera');
@@ -182,6 +200,13 @@ async function verifyFixedCamera(page,kind){
  const edge=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.ok(Math.abs(edge.pan[0]-before.pan[0])<=edge.safePan.x+.001);
  assert.ok(Math.abs(edge.pan[2]-before.pan[2])<=edge.safePan.z+.001);
+ // Reversing all the way to the original size automatically recenters,
+ // and the original size remains an absolute far limit.
+ await page.evaluate(()=>window.__battleCamera.zoom(100));
+ const farAgain=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(Math.abs(farAgain.desiredDistance-before.fitDistance)<.001);
+ assert.ok(Math.abs(farAgain.pan[0]-before.pan[0])<.001);
+ assert.ok(Math.abs(farAgain.pan[2]-before.pan[2])<.001);
  // Restore precise approved layout before any card gameplay/screenshot test.
  await page.evaluate(()=>window.__battleCamera.reset());
  // Software WebGL can render at very low FPS: wait for actual damped pose,
