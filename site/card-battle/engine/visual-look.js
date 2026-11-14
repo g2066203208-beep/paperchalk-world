@@ -6,8 +6,10 @@
 'use strict';
 const freeze=c=>Object.freeze(c);
 const FOREST=freeze({
- id:'forest',version:'1.1.0',stage:2,
+ id:'forest',version:'1.2.0',stage:3,
  terrainDetail:.031,
+ goldColor:freeze([.82,.74,.49,1]),
+ terrainSide:freeze([.52,.414,.302,1]),
  background:freeze([.43,.55,.36,1]),
  terrainLight:freeze([.57,.704,.386,1]),
  terrainDark:freeze([.449,.587,.323,1]),
@@ -23,8 +25,10 @@ const FOREST=freeze({
  ambient:.77,sunIntensity:.255
 });
 const CLEARING=freeze({
- id:'clearing',version:'1.1.0',stage:2,
+ id:'clearing',version:'1.2.0',stage:3,
  terrainDetail:.025,
+ goldColor:FOREST.goldColor,
+ terrainSide:freeze([.54,.455,.386,1]),
  background:freeze([.59,.571,.525,1]),
  terrainLight:freeze([.62,.454,.318,1]),
  terrainDark:freeze([.566,.408,.285,1]),
@@ -49,13 +53,14 @@ function apply(gl,u,id){
  return v;
 }
 root.PaperchalkVisualLook=freeze({
- version:'1.1.0',get,apply,
+ version:'1.2.0',get,apply,
  snapshot:id=>{const p=get(id);return {
    id:p.id,stage:p.stage,version:p.version,
    background:[...p.background],terrainLight:[...p.terrainLight],
    terrainDark:[...p.terrainDark],ground:[...p.ground],
    sunDirection:[...p.sunDirection],ambient:p.ambient,sunIntensity:p.sunIntensity,
-   terrainDetail:p.terrainDetail
+   terrainDetail:p.terrainDetail,
+   goldColor:[...p.goldColor],terrainSide:[...p.terrainSide]
  }; }
 });
 })(window);

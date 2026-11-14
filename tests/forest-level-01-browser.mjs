@@ -126,9 +126,11 @@ async function verifyFixedCamera(page,kind){
 async function verifyStage01ColorAndLighting(page,kind){
  const look=await page.evaluate(()=>window.__forestLevelDebug?.visualLook);
  assert.ok(look,'stage 01 visual-look engine registered');
- assert.ok(look.stage>=1&&look.stage<=2,'visual layer must be stage 01 or 02 only');
+ assert.equal(look.stage,3,'visual layer 03 must be active');
  assert.equal(look.id,'forest');
- assert.equal(look.stage,2,'stage 02 terrain material is active');
+ assert.equal(look.stage,3,'stage 03 metallic edge is active');
+ assert.ok(Array.isArray(look.goldColor)&&look.goldColor.length===4,'metal color comes from visual engine');
+ assert.ok(look.terrainSide[1]>.35,'side surfaces retain natural earth shading');
  assert.ok(look.terrainDetail>=.025&&look.terrainDetail<=.035,
   'controlled non-repeating world-space grass variation');
  assert.ok(look.terrainLight[1]>look.terrainLight[0],'green nature palette');
@@ -138,7 +140,7 @@ async function verifyStage01ColorAndLighting(page,kind){
  assert.ok(look.background[1]>.50&&look.background[0]<.50,'forest backdrop must not be beige');
  const cam=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.equal(cam.fixed,true,'stage 01 cannot change approved camera');
- console.log('FOREST_VISUAL_STAGE02_PASS',JSON.stringify({kind,look,distance:cam.distance}));
+ console.log('FOREST_VISUAL_STAGE03_PASS',JSON.stringify({kind,look,distance:cam.distance}));
 }
 async function verifyPhysicalFrame(page,kind){
  await page.waitForFunction(()=>window.__forestLevelDebug?.physicalFrame?.lastDrawCalls===1,{timeout:25000});
@@ -150,6 +152,8 @@ async function verifyPhysicalFrame(page,kind){
  assert.equal(mesh.color,'gold');
  assert.equal(mesh.decorations,0,'remove all gold crests, rivets, and furniture');
  assert.equal(mesh.framePieces,1);
+ assert.equal(mesh.material,'directional-lit-bevelled-metal');
+ assert.equal(mesh.bevelSegments,2,'rounded ring is bevelled real 3D mesh');
  assert.equal(mesh.midfieldBeam,false,'no extra middle bar');
  assert.equal(mesh.sidePlaques,false,'no extra side plaques');
  assert.equal(mesh.boardCols,16);
