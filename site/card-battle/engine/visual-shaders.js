@@ -7,10 +7,10 @@
 const fragment=`precision highp float;
 varying vec3 vN,vP;varying vec2 vUV;varying vec4 vLightPos;
 uniform vec4 uColor,uBoardBounds;
-uniform sampler2D uTex,uShadowMap,uMaterialAtlas;
+uniform sampler2D uTex,uShadowMap,uMaterialAtlas,uCloudMap;
 uniform float uTexEnabled,uUnlit,uTerrain,uUseShadow;
 uniform float uAmbient,uSunIntensity,uTerrainDetail,uMetal,uMaterialKind;
-uniform float uVisualMix,uGroundY;
+uniform float uVisualMix,uGroundY,uCloudTime,uCloudStrength;
 uniform vec2 uShadowTexel,uResolution;
 uniform vec3 uSoil,uSunDirection,uSkyFill,uSunColor,uCameraEye;
 uniform vec3 uCardContacts[8];
@@ -64,12 +64,23 @@ void main(){
   normal=normalize(normal+vec3((luma-fx)*.85,0.,(luma-fz)*.85));
  }
  float visibility=uUnlit>.5?1.:shadowVisibility(normal,light);
+ // Cloud cover projects on the receiving horizontal WORLD surface, not screen.
+ // It drifts independently from the stationary sun/tree shadow map and keeps
+ // all original paper/card artwork crisp and readable.
+ float cloudShade=0.;
+ if(uCloudStrength>.001&&normal.y>.58&&
+    (uTerrain>.5||(uMaterialKind>.5&&uMaterialKind<2.5))){
+  vec2 wind=vec2(.60,.23)*uCloudTime;
+  float cover=texture2D(uCloudMap,(vP.xz-wind)/72.).r;
+  cloudShade=smoothstep(.44,.67,cover)*uCloudStrength;
+ }
  float diffuse=max(0.,dot(normal,light));
  vec3 illumination=uSkyFill*uAmbient*(.72+.28*visibility)
                    +uSunColor*(uSunIntensity*diffuse*visibility);
  // Hemisphere illumination approximates terrain-to-object reflected skylight.
  vec3 bounce=mix(vec3(.17,.26,.13),vec3(.26,.28,.20),clamp(normal.y*.5+.5,0.,1.));
  illumination+=bounce*(.30+max(0.,1.-diffuse)*.18)*uVisualMix;
+ illumination*=1.-cloudShade;
  if(uVisualMix>.5&&uMaterialKind>.5&&uMaterialKind<4.5){
   float ao=1.;
   if(vP.y<uGroundY+.14){
@@ -127,5 +138,5 @@ void main(){
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.1.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'1.2.0',fragment});
 })(window);
