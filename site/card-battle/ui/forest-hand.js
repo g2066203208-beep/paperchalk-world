@@ -14,6 +14,7 @@ let selectedInstance=null;
 function snapshot(){return model.snapshot();}
 function selectedCard(){return snapshot().hand.find(c=>c.instance===selectedInstance)||null;}
 function selectCard(instance){
+ if(root.__forestLevelDebug?.state.phase!=='active'||root.__forestCombat?.busy)return false;
  if(!snapshot().hand.some(c=>c.instance===instance))return false;
  selectedInstance=selectedInstance===instance?null:instance;
  return true;
