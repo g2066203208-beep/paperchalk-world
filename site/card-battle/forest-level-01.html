@@ -67,7 +67,7 @@ html,body{background:#d8ded0}
 <body>
 <canvas id="stage" aria-label="森林战场：16列6行96个3D方块，中间人物九宫格与两侧设施区"></canvas>
 <div id="note" aria-live="polite"></div>
-<div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>农田牌测试：点农田，再点左右设施区空格<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
+<div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>农田牌测试：点农田，再点左右设施区空格<br>固定俯视镜头 · 棋盘不旋转、不平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button>
  <div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div>
@@ -81,7 +81,7 @@ html,body{background:#d8ded0}
 </div>
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
 <script src="./engine/voxel-terrain.js?v=3"></script>
-<script src="./engine/battle-camera.js?v=1"></script>
+<script src="./engine/battle-camera.js?v=2"></script>
 <script src="./engine/level-engine.js?v=2"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
@@ -159,8 +159,14 @@ let sceneTransition=null;
 const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 // Camera is a reusable module, independent from voxel geometry and game rules.
 const orbitCamera=window.PaperchalkBattleCamera.create({
- target:[0,(window.innerWidth<700?-.75:-1.65),-1.1],distance:(window.innerWidth<700?58:48),yaw:0,elevation:55*Math.PI/180,
- fov:33,minDistance:18,maxDistance:105,minElevation:55*Math.PI/180,maxElevation:55*Math.PI/180,maxPanX:26,maxPanZ:10
+ // STEP 1 ONLY: one stable Gwent-like high angle and composition. The full
+ // existing 16x6 board, cards, facilities, deck box and materials are UNCHANGED.
+ // Offset the focus toward the player's near edge so the field fills the region
+ // between the top controls and the anchored seven-compartment box.
+ target:[0,-1.65,3.25],distance:46.7,yaw:0,elevation:78*Math.PI/180,
+ fov:33,fixed:true,fitAspect:16/9,
+ minDistance:18,maxDistance:105,minElevation:78*Math.PI/180,maxElevation:78*Math.PI/180,
+ maxPanX:0,maxPanZ:0
 });
 window.__battleCamera=orbitCamera;
 document.getElementById('zoom-in').addEventListener('click',()=>orbitCamera.zoom(.78));

@@ -9,6 +9,8 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const mix=(a,b,t)=>a+(b-a)*t;
 function create(options={}){
  const fov=options.fov??31;
+ const fixed=options.fixed===true;
+ const fitAspect=options.fitAspect??(16/9);
  const defaults={
   target:[...(options.target||[0,0,-1.1])],
   yaw:options.yaw??0,
@@ -27,24 +29,35 @@ function create(options={}){
  let touches=new Map(),lastPinch=null,rightDragged=false;
  const allowTouchOrbit=()=>true;
  let width=1920,height=1080;
- function sizes(w,h){width=Math.max(1,w);height=Math.max(1,h);}
+ function sizes(w,h){
+  width=Math.max(1,w);height=Math.max(1,h);
+  if(fixed){
+   // Frame the ENTIRE 16-column landscape board at the fixed angle.
+   // A narrower viewport requires more distance, never a crop or a pan.
+   const fitted=defaults.distance*Math.max(1,fitAspect/(width/height));
+   targetDistance=fitted;distance=fitted;
+  }
+ }
  function recenter(){
   targetYaw=defaults.yaw;targetElevation=defaults.elevation;targetDistance=defaults.distance;
   aim[0]=defaults.target[0];aim[1]=defaults.target[1];aim[2]=defaults.target[2];
  }
- function setZoom(value){targetDistance=clamp(value,minDist,maxDist);}
+ function setZoom(value){if(!fixed)targetDistance=clamp(value,minDist,maxDist);}
  function zoom(factor){setZoom(targetDistance*factor);}
  function pan(dx,dy){
+  if(fixed)return;
   const scale=2*targetDistance*Math.tan(fov*Math.PI/360)/height;
   const c=Math.cos(targetYaw),s=Math.sin(targetYaw);
   aim[0]=clamp(aim[0]-c*dx*scale-s*dy*scale,-maxPanX,maxPanX);
   aim[2]=clamp(aim[2]+s*dx*scale-c*dy*scale,defaults.target[2]-maxPanZ,defaults.target[2]+maxPanZ);
  }
  function rotate(dx,dy){
+  if(fixed)return;
   targetYaw+=dx*.006;
   targetElevation=clamp(targetElevation-dy*.005,minElevation,maxElevation);
  }
  function pointerDown(e,canOrbit=true){
+  if(fixed)return false;
   if(e.pointerType==='touch'){
    touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
    if(touches.size>=2){
@@ -60,6 +73,7 @@ function create(options={}){
   rightDragged=false;gestureMode='mouse';return true;
  }
  function pointerMove(e){
+  if(fixed)return false;
   if(e.pointerType==='touch'&&touches.has(e.pointerId)){
    touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
    if(touches.size>=2){
@@ -81,6 +95,7 @@ function create(options={}){
   return true;
  }
  function pointerUp(e){
+  if(fixed)return false;
   const tracked=active?.id===e.pointerId;
   const startedMulti=gestureMode==='touch-two';
   if(e.pointerType==='touch'){
@@ -99,6 +114,7 @@ function create(options={}){
  }
  function cancel(){active=null;touches.clear();lastPinch=null;gestureMode=null;}
  function update(dt){
+  if(fixed)return;
   const k=1-Math.exp(-Math.max(0,Math.min(.12,dt))*12);
   yaw=mix(yaw,targetYaw,k);elevation=mix(elevation,targetElevation,k);
   distance=mix(distance,targetDistance,k);
@@ -110,7 +126,7 @@ function create(options={}){
    eye:[target[0]+Math.sin(yaw)*horizontal,target[1]+Math.sin(elevation)*distance,target[2]+Math.cos(yaw)*horizontal],
    target:[...target],distance,yaw,elevation,
    desiredDistance:targetDistance,desiredYaw:targetYaw,desiredElevation:targetElevation,
-   pan:[...aim],mode:gestureMode,fov,
+   pan:[...aim],mode:gestureMode,fov,fixed,fitAspect,viewport:[width,height],
    minDistance:minDist,maxDistance:maxDist
   };
  }

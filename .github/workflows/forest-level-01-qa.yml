@@ -5,6 +5,7 @@ on:
     paths:
       - 'site/card-battle/forest-level-01.html'
       - 'site/card-battle/engine/level-engine.js'
+      - 'site/card-battle/engine/battle-camera.js'
       - 'site/card-battle/engine/scene-card-hud.js'
       - 'site/card-battle/engine/flip-case-controller.js'
       - 'site/card-battle/engine/voxel-animations.js'
@@ -44,6 +45,7 @@ jobs:
         run: |
           node tests/forest-level-core.test.cjs
           node --check site/card-battle/engine/scene-card-hud.js
+          node --check site/card-battle/engine/battle-camera.js
           node --check site/card-battle/ui/forest-hand.js
           node tests/object-animations.test.cjs
           node tests/scene-transitions.test.cjs

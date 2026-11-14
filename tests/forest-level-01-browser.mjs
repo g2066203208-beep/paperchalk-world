@@ -62,6 +62,44 @@ async function verifyWorld(page,kind){
  assert.ok(status.camera.maxDistance>=100,'outer 16-column area must be zoomable');
  console.log('FOREST_16X6_96_VOXELS_PASS',JSON.stringify({kind,voxels:status.tiles.length,unitSlots:18,facilitySlots:48}));
 }
+async function verifyFixedCamera(page,kind){
+ const before=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.equal(before.fixed,true,'first-step battle camera must be fixed');
+ assert.ok(Math.abs(before.yaw)<1e-5,'no sideways orbit');
+ assert.ok(Math.abs(before.elevation-78*Math.PI/180)<.001,'near-top-down angle');
+ assert.ok(before.distance>=46,'board not cropped by near camera');
+ assert.deepEqual(before.target.slice(0,1),[0]);
+ const frame=await page.evaluate(()=>{
+  const shots=[];
+  for(let r=0;r<6;r++)for(let c=0;c<16;c++){
+   const p=window.__terrainDebug.projectTile(c,r);
+   const rect=document.getElementById('stage').getBoundingClientRect();
+   shots.push({x:p.x/document.getElementById('stage').width*rect.width,
+    y:p.y/document.getElementById('stage').height*rect.height});
+  }
+  const xs=shots.map(q=>q.x),ys=shots.map(q=>q.y);
+  return {minX:Math.min(...xs),maxX:Math.max(...xs),
+   minY:Math.min(...ys),maxY:Math.max(...ys),
+   width:document.getElementById('stage').getBoundingClientRect().width,
+   height:document.getElementById('stage').getBoundingClientRect().height};
+ });
+ assert.ok(frame.minX>=0&&frame.maxX<=frame.width,'full 16-column board must fit horizontally');
+ assert.ok(frame.minY>=0&&frame.maxY<=frame.height,'all six rows must fit vertically');
+ assert.ok((frame.maxX-frame.minX)/frame.width>.80,'board must fill the width instead of a tiny center patch');
+ if(kind==='desktop')assert.ok((frame.maxY-frame.minY)/frame.height>.40,
+   'fixed high angle should use more of the desktop height');
+ await page.evaluate(()=>{
+  const c=window.__battleCamera;
+  c.rotate(700,400);c.pan(-900,300);c.zoom(.25);c.reset();
+ });
+ await page.waitForTimeout(150);
+ const after=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.deepEqual(after.eye,before.eye,'no zoom, pan, orbit or recenter movement');
+ assert.deepEqual(after.target,before.target,'camera target remains fixed');
+ assert.equal(after.distance,before.distance);
+ console.log('FOREST_FIXED_CAMERA_PASS',JSON.stringify({kind,eye:after.eye,elevation:after.elevation,
+  distance:after.distance,viewport:after.viewport,frame}));
+}
 async function plantTestFarm(page,flank='left'){
  const button=page.locator('#farm-test');
  await page.waitForFunction(()=>document.querySelector('[data-card-id="farm-field"] img')?.naturalWidth===704,{timeout:20000});
@@ -102,17 +140,10 @@ try{
  await pc.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
  await verifyWorld(pc,'desktop');
  await verifyBox(pc,'desktop');
+ await verifyFixedCamera(pc,'desktop');
  await pc.waitForTimeout(500);
  await screenshot(pc,'01-static-seven-bay-box-desktop');
- // The restored 16x6 layout is real 96 individually selectable voxel cells,
- // not merely a large painted ground outside the old 18 tiles.
- await pc.evaluate(()=>window.__battleCamera.pan(340,0));
- await pc.waitForTimeout(400);
- await screenshot(pc,'01a-restored-left-facility-tiles');
- await pc.evaluate(()=>window.__battleCamera.pan(-680,0));
- await pc.waitForTimeout(400);
- await screenshot(pc,'01b-restored-right-facility-tiles');
- await pc.evaluate(()=>window.__battleCamera.reset());
+ // The fixed camera shows both 16x6 flanks AT ONCE; no pan screenshots.
  await pc.waitForTimeout(500);
  await deploy(pc);
  await screenshot(pc,'02-deployed-in-static-box-desktop');
@@ -145,16 +176,15 @@ try{
  await phone.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
  await verifyWorld(phone,'phone');
  await verifyBox(phone,'phone');
+ await verifyFixedCamera(phone,'phone');
  await phone.waitForTimeout(250);
  await screenshot(phone,'05-static-seven-bay-box-phone');
  await deploy(phone);
  await clickCard(phone,'deck:warrior');
  await phone.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(phone,'06-static-hand-phone');
- // Mobile default center shows only part of the 16-column board; move the
- // world camera toward the near-right reserved facility band to plant there.
- await phone.evaluate(()=>window.__battleCamera.pan(-180,0));
- await phone.waitForTimeout(700);
+ // The portrait preset fits all 16 columns at the same locked 78-degree angle.
+ await verifyFixedCamera(phone,'phone');
  await plantTestFarm(phone,'right');
  await phone.waitForTimeout(450);
  await screenshot(phone,'07-farmland-installed-right-facility-phone');
