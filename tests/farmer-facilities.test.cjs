@@ -44,12 +44,18 @@ const mill=place('windmill',11,3,[{tileC:11,tileR:3},{tileC:12,tileR:3},
 assert.ok(mill.ok);
 assert.equal(place('farm-field',1,3).reason,'occupied');
 assert.equal(place('windmill',11,4).reason,'invalid-footprint');
+assert.equal(place('windmill',13,3,[
+ {tileC:13,tileR:3},{tileC:14,tileR:3},
+ {tileC:13,tileR:4},{tileC:15,tileR:4}
+]).reason,'invalid-footprint','correct number of cells is not enough');
 const t1=farm.nextTurn();
 assert.equal(t1.state.essence.life,1,'well doubles farm LIFE, mill converts one to MATERIAL');
 assert.equal(t1.state.essence.material,1);
 const blocked=farm.intercept(3,3);
 assert.equal(blocked.cardId,'plant-tree');
 assert.equal(blocked.blocked,2);
+assert.equal(farm.intercept({tileC:14,tileR:3,damage:3}).blocked,0,
+ 'left-side tree cannot protect a far-away unit on the right');
 assert.equal(farm.snapshot.facilities.find(x=>x.id===tree.facility.id).hp,3);
 farm.nextTurn();
 assert.equal(farm.snapshot.facilities.find(x=>x.id===tree.facility.id).hp,5,
