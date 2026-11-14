@@ -84,7 +84,7 @@ async function plantTestFarm(page,flank='left'){
  assert.equal(placed[0].tileC,flank==='left'?4:10);
  assert.equal(placed[0].tileR,4);
  assert.equal(await page.evaluate(()=>window.__terrainDebug.tool),null,'test card consumed after placement');
- assert.equal(await button.isHidden(),true,'same physical farm facility cannot be placed twice');
+ assert.equal(await button.isDisabled(),true,'same physical farm facility cannot be placed twice');
  console.log('FARM_FIELD_FACILITY_PLACED',JSON.stringify({flank,placed,assetWidth:704}));
 }
 async function deploy(page){
