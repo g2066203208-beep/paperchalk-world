@@ -1,7 +1,8 @@
-/* Seven independent physical deck boxes, one shared free-order ten-card hand.
-   Deck boxes deal their top card. Once drawn, ALL hand cards are individually playable.
-   The first action played locks ordinary draws until the next turn.
-*/
+/* Reusable rules: seven independent physical class decks, one shared hand.
+ * The PLAYER decides which deck to click and how many cards to draw (up to cap).
+ * No auto opening draw, no auto turn draw, no first-play draw lock.
+ * Unplayed hand cards survive turn boundaries; played cards enter discard.
+ */
 (function(root){
 'use strict';
 const CLASSES=Object.freeze([
@@ -53,9 +54,7 @@ const BASE_POOL=Object.freeze({warrior:WARRIOR_CARDS,ranger:RANGER_CARDS,enginee
 function create(options={}){
  const cap=options.maxHand??10;
  if(!Number.isInteger(cap)||cap<1)throw Error('Invalid shared hand cap');
- const opening=options.openingDraw??5;
- const turnDraw=options.turnDraw??5;
- // First-level VISUAL prototype: seven independent functional decks with the
+  // First-level VISUAL prototype: seven independent functional decks with the
  // same temporary warrior-card contents. The normal class gate is unchanged.
  const prototypeAllClasses=options.prototypeAllClasses===true;
  const unlocked=prototypeAllClasses?new Set(CLASSES.map(c=>c.id)):new Set(options.unlocked||['warrior']);
@@ -67,7 +66,7 @@ function create(options={}){
   pool[c.id]=source.map((x,i)=>({...x,profession:c.id,instance:c.id+'-'+i}));
  }
  const piles=new Map(),discards=new Map();
- let hand=[],played=[],locked=false,turn=1;
+ let hand=[],played=[],turn=1;
  function shuffle(a){
   for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
@@ -90,16 +89,15 @@ function create(options={}){
  function count(){return hand.length;}
  function snapshot(){
   return {
-   turn,locked,played:played.length,maxHand:cap,count:count(),
+   turn,locked:false,manualDraw:true,played:played.length,maxHand:cap,count:count(),
    hand:hand.map(x=>({...x})),
    classes:CLASSES.map(c=>({...c,unlocked:unlocked.has(c.id),
      handCount:hand.filter(card=>card.profession===c.id).length,
      deckCount:piles.get(c.id)?.length||0,discardCount:discards.get(c.id)?.length||0}))
   };
  }
- function draw(profession,{special=false}={}){
+ function draw(profession){
   if(!unlocked.has(profession))return {ok:false,reason:'locked-class'};
-  if(locked&&!special)return {ok:false,reason:'draw-locked'};
   if(count()>=cap)return {ok:false,reason:'hand-full'};
   const deck=piles.get(profession);
   if(!deck)return {ok:false,reason:'box-empty'};
@@ -117,7 +115,7 @@ function create(options={}){
   const index=hand.findIndex(x=>x.instance===instance);
   if(index<0)return {ok:false,reason:'not-in-hand'};
   const card=hand.splice(index,1)[0];
-  played.push(card);locked=true;
+  played.push(card);
   return {ok:true,card:{...card},state:snapshot()};
  }
  // A card/effect calls this explicitly. The UI never offers a generic discard button.
@@ -128,21 +126,13 @@ function create(options={}){
   return {ok:true,card:{...card},state:snapshot()};
  }
  function nextTurn(){
-  // End-of-round cleanup: remaining cards and played cards go to discard.
-  for(const card of [...hand,...played])discards.get(card.profession)?.push(card);
-  hand=[];played=[];turn++;locked=false;
-  const profession=unlocked.has('warrior')?'warrior':CLASSES.find(c=>unlocked.has(c.id))?.id;
-  if(profession)for(let i=0;i<turnDraw&&hand.length<cap;i++){
-   if(!draw(profession).ok)break;
-  }
+  // No forced discard of a player's unused cards and no automatic dealing.
+  for(const card of played)discards.get(card.profession)?.push(card);
+  played=[];turn++;
   return snapshot();
  }
  function reset(){
-  turn=1;hand=[];played=[];locked=false;reload();
-  for(let i=0;i<opening&&count()<cap;i++){
-   const profession=unlocked.has('warrior')?'warrior':CLASSES.find(c=>unlocked.has(c.id))?.id;
-   if(!profession||!draw(profession).ok)break;
-  }
+  turn=1;hand=[];played=[];reload();
   return snapshot();
  }
  reload();reset();
@@ -150,5 +140,5 @@ function create(options={}){
  return Object.freeze({snapshot,remainingCards,draw,play,specialDiscard,nextTurn,reset,
   classes:CLASSES,get cap(){return cap;}});
 }
-root.PaperchalkProfessionDecks=Object.freeze({version:'3.0.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create});
+root.PaperchalkProfessionDecks=Object.freeze({version:'3.1.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create});
 })(window);
