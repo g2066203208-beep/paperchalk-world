@@ -10,7 +10,8 @@
 function create(options={}){
  const {level,animation,hand,locateCard,pointFor,onChanged=()=>{},
   onDamage=()=>{},onGuard=()=>{},onDefeated=()=>{},onFinished=()=>{},
-  onNotice=()=>{},canAct=()=>true}=options;
+  onNotice=()=>{},canAct=()=>true,onBeforeEnemyStrike=()=>{},
+  onEnemyResolved=()=>{}}=options;
  if(!level||!animation||!hand||!locateCard||!pointFor)
   throw Error('Combat controller requires level, animation, hand and card pose adapter');
  let nextEnemyAt=0;
@@ -50,10 +51,15 @@ function create(options={}){
    damage:action.damage,
    onImpact:()=>{
     const result=level.actAttack(attackerId,targetId,{
-     power:action.damage,block:action.block,pierce:action.pierce
+     power:action.damage,block:action.block,pierce:action.pierce,
+     splashRow:action.shape==='row'
     });
     if(!result.ok)return;
     onDamage({attackerId,targetId,...result});
+    for(const hit of result.splash||[]){
+     onDamage({attackerId,targetId:hit.targetId,...hit});
+     if(hit.defeated)onDefeated({unitId:hit.targetId,side:'enemy'});
+    }
     if(result.blockGained)onGuard({unitId:attackerId,block:result.blockGained});
     if(result.defeated)onDefeated({unitId:targetId,side:'enemy'});
     emitChange();
@@ -88,10 +94,8 @@ function create(options={}){
   }
   const intent=level.enemyIntents().find(i=>i.unitId===id);
   const from=actorPoint(id);
-  const candidates=state.units.filter(u=>u.side==='ally'&&u.alive&&u.deployed)
-   .sort((a,b)=>Math.abs(a.c-unit.c)-Math.abs(b.c-unit.c)||
-    Math.abs(a.r-unit.r)-Math.abs(b.r-unit.r)||a.c-b.c);
-  const victim=candidates[0],guard=intent?.kind==='guard';
+  const victim=level.targetForEnemy(id);
+  const guard=intent?.kind==='guard'||intent?.kind==='rally';
   const to=guard?from:actorPoint(victim?.id);
   if(!from||!to){
    level.resolveEnemyAction(id);nextEnemyAt=at+.12;emitChange();return;
@@ -100,13 +104,17 @@ function create(options={}){
    attackerId:id,targetId:guard?id:victim.id,
    from,to,kind:guard?'guard':'attack',damage:intent?.damage||0,at,
    onImpact:()=>{
+    if(!guard)onBeforeEnemyStrike({enemy:unit,victim,intent});
     const result=level.resolveEnemyAction(id);
     if(!result.ok)return;
-    if(result.kind==='guard')onGuard({unitId:id,block:result.block});
+    if(result.kind==='guard'||result.kind==='rally'){
+     for(const affected of result.affected||[id])onGuard({unitId:affected,block:result.block});
+    }
     else if(result.targetId){
      onDamage({attackerId:id,targetId:result.targetId,...result});
      if(result.defeated)onDefeated({unitId:result.targetId,side:'ally'});
     }
+    onEnemyResolved({enemy:unit,victim,intent,result});
     emitChange();
    },
    onFinish:()=>{
@@ -125,5 +133,5 @@ function create(options={}){
    animation:animation.snapshot,nextEnemyAt};}
  });
 }
-root.PaperchalkCombatTurnController=Object.freeze({version:'1.0.0',create});
+root.PaperchalkCombatTurnController=Object.freeze({version:'1.1.0-bandit-actions',create});
 })(window);
