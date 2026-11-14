@@ -139,6 +139,18 @@ function create(o){
   drawCard({hudMatrix:model,texture:tex,side:'ally'},frame);
   cardDrawCalls++;
  }
+ // An obscured card is still a separate physical 3D paper slab.
+ // Only the uppermost face requires the full five-pass textured renderer;
+ // covered cards need their actual 3D edge, which is all a player can see.
+ function drawCoveredPileCard(p,fxId){
+  const motion=o.objectFX?.sample(fxId,frame);
+  if(motion&&motion.phase!=='steady'&&motion.scale<=.025)return;
+  let model=cardMatrix(p);
+  if(motion&&Math.abs(motion.scale-1)>.0001)
+   model=mul(model,S(motion.scale,motion.scale,motion.scale));
+  renderGeom(o.pileEdge,model,o.pileRim);
+  cardDrawCalls++;
+ }
  function startCardMotion(id,delay=0){
   if(animated.has(id))return;
   animated.add(id);
@@ -248,7 +260,8 @@ function create(o){
     const fxId='hud-pile:'+card.instance;
     activeCardIds.add(fxId);
     startCardMotion(fxId,Math.min(.19,n*.017));
-    renderPhysicalCard(layer,tex,{fxId});
+    if(n===actions.length-1)renderPhysicalCard(layer,tex,{fxId});
+    else drawCoveredPileCard(layer,fxId);
    });
   }
   for(const pos of positions.filter(p=>p.kind==='character')){
@@ -407,10 +420,11 @@ function create(o){
     backgroundPanel:false,
     animatedCardMeshes:animated.size,
     sharedSceneTransitions:true,
+    coveredCardEdgeLOD:true,
     vanishingCards:exitGhosts.size
    };
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'4.3.0-seven-piles',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'4.4.0-seven-piles',create});
 })(window);
