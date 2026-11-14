@@ -18,7 +18,7 @@
 | 文件 | 单一职责 | 与场景的关系 |
 | --- | --- | --- |
 | `engine/level-engine.js` | 部署、3×3 阵地、单位生命/护盾、敌人意图、敌我回合和胜负 | 纯规则状态机，靠关卡 manifest 注册 |
-| `levels/forest-01.js` | 第一关的单位、初始数值和目标 | 只有数据，不包含渲染算法 |
+| `levels/forest-01.js` | 第一关的单位、初始数值、目标和敌人 `intentCycle` 攻防行动表 | 只有数据，不包含渲染算法；引擎不得按敌人名称判断 AI |
 | `engine/profession-decks.js` | 七个独立牌盒、手动摸牌、10 张共享上限、弃牌/重洗 | 不包含浏览器或 WebGL API |
 | `engine/combat-turn-controller.js` | 玩家主动攻击、结束回合、顺序调度敌人、结算时机 | 以注入的引擎/回调组合，不写森林特例 |
 | `engine/combat-choreography.js` | 前摇、爆发、短命中停顿、后仰、收招 | 只计算动画状态，无 DOM/WebGL |
