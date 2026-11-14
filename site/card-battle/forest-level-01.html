@@ -208,11 +208,18 @@ window.__terrainDebug={
  get tool(){return active?.id||null;}
 };
 // Card transform: XY face becomes horizontal XZ surface with +Y normal, then dynamically tilts/flips in 3D.
-function modelForCard(c,now){if(c.hudMatrix)return c.hudMatrix;let motion=attackPose(c,now),arrival=placementPose(c,now);let base=T(c.x+motion.dx,c.y+motion.dy+arrival.dy,c.z+motion.dz);
+function modelForCard(c,now){
+ if(c.hudMatrix)return c.hudMatrix;
+ const id=c.unitId?'unit:'+c.unitId:'card:'+c.id;
+ const pose=objectFX.sample(id,now);
+ let motion=attackPose(c,now),arrival=placementPose(c,now);
+ let base=T(c.x+motion.dx,c.y+motion.dy+arrival.dy,c.z+motion.dz);
 base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
 base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+arrival.pitch+c.hover*.07));
 base=mul(base,RY(c.flip));
-base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll)); const focusScale=c.slot?1+c.hover*.26:1; base=mul(base,S(focusScale,focusScale,1));return base;}
+base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll)); const focusScale=c.slot?1+c.hover*.26:1;
+ const sc=focusScale*Math.max(.025,pose.scale);
+ base=mul(base,S(sc,sc,sc));return base;}
 function attackPose(c,now){let phase=now-c.attackStart;if(phase<0||phase>1.12)return {dx:0,dy:0,dz:0,pitch:0,roll:0};let u=phase/1.12;
 let s=Math.sin(Math.PI*Math.min(1,u));let launch=(u<.35?Math.sin(u/.35*Math.PI/2):Math.exp(-(u-.35)*4));
 return{dx:Math.sin(c.seed*4)*.12*s,dy:.42*s,dz:(c.side==='enemy'?1:-1)*.78*launch,pitch:(c.side==='enemy'?-.23:.23)*s,roll:Math.sin(phase*24)*.085*s};}
@@ -221,7 +228,9 @@ function placementPose(c,now){
  const u=dt/.52;const fall=Math.pow(1-u,2);
  return{dy:.30*fall,pitch:.10*Math.sin(Math.PI*u)};
 }
-function drawCard(c,now){let M=modelForCard(c,now);
+function drawCard(c,now){
+ if(!c.hudMatrix&&objectFX.sample(c.unitId?'unit:'+c.unitId:'card:'+c.id,now).phase==='gone')return;
+ let M=modelForCard(c,now);
 renderGeom(cardEdge,M,colors.rim);
 renderGeom(outerFace,M,colors.border);
 renderGeom(backFace,M,colors.back);
@@ -396,21 +405,26 @@ function drop(s){
  if(!valid(active,s)){message('红色区域不可操作（已到三层极限或已有卡牌）');return;}
  if(active.kind==='terrain'){
   if(!fx.adjust(s.tileC,s.tileR,active.direction))return;
+   objectFX.pulse('terrain:'+s.tileC+':'+s.tileR,now,{duration:.66,strength:.12});
    const tile=terrain.cell(s.tileC,s.tileR);
   message((active.direction<0?'挖掘':'堆土')+'成功 · 高度 '+(tile.level>0?'+':'')+tile.level+' / -3～+3');
   overSlot=s;return; // Reusable terrain action cards: keep selected for repeated excavation/building.
  }
  const c=makeCard(active,s);c.x=preview.x;c.z=preview.z;c.y=terrain.cell(s.tileC,s.tileR).height+.7;c.placeStart=now;
- occupied.set(s.id,c);cards.push(c);clearPick();
+ occupied.set(s.id,c);cards.push(c);
+  objectFX.enter('card:'+c.id,now,{duration:.55});
+  clearPick();
 }
 function move(c,s){
  if(!valid(c.def,s,c)){message('此处无法放置');return;}
  occupied.delete(c.slot.id);c.slot=s;c.homeX=s.x;c.homeZ=s.z;occupied.set(s.id,c);c.placeStart=now;
+ objectFX.pulse('card:'+c.id,now,{strength:.10});
 }
 function reset(){
  cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;
  selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
  fx.reset();terrain.reset('grass');clearPick();startForestLevel();
+ sceneHUD.resetAnimations?.();
  window.__forestHand?.reset();
 }
 document.getElementById('reset').addEventListener('click',reset);
