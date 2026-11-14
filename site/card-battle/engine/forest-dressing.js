@@ -219,6 +219,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,enabled=true})
  return Object.freeze({
   draw,
   get propIds(){return props.map(p=>p.id);},
+  getAnchor(id){const p=props.find(q=>q.id===id);return p?[...p.pivot]:null;},
   get snapshot(){return {enabled,treeCount:roots.length,rocks:stones.length,
    flowers,grassBlades,batchedMeshes:meshes.length,localPivotProps:props.length,
    animatedInstances,lastDrawCalls,transitionPivot:'per-object-ground-root',
