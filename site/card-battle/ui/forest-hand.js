@@ -7,7 +7,7 @@ const factory=root.PaperchalkProfessionDecks;
 if(!factory)throw Error('Profession model missing');
 const units=root.__forestLevelDebug?.state?.units||[];
 const activeJobs=units.filter(u=>u.side==='ally').map(u=>u.role).filter(Boolean);
-const model=factory.create({maxHand:10,openingDraw:0,prototypeAllClasses:true,unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
+const model=factory.create({maxHand:10,openingDraw:5,turnDraw:5,prototypeAllClasses:true,unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
 let selectedInstance=null;
 function snapshot(){return model.snapshot();}
 function selectedCard(){return snapshot().hand.find(c=>c.instance===selectedInstance)||null;}
@@ -17,22 +17,25 @@ function selectCard(instance){
  return true;
 }
 function draw(profession,opts){
- if(root.__forestLevelDebug?.state.phase!=='active')return {ok:false,reason:'deploy-first'};
+ if(root.__forestLevelDebug?.state.phase!=='active')return {ok:false,reason:'not-player-turn'};
+ if(root.__forestCombat?.busy)return{ok:false,reason:'combat-animation'};
  return model.draw(profession,opts);
 }
 function consumeForTarget(targetId){
- if(!selectedInstance)return null;
+ if(!selectedInstance||root.__forestLevelDebug?.state.phase!=='active'||root.__forestCombat?.busy)return null;
  const card=selectedCard();
  if(!card){selectedInstance=null;return null;}
  const result=model.play(selectedInstance);
  if(!result.ok)return null;
  selectedInstance=null;
- return{damage:result.card.power,card:result.card,targetId};
+ return{damage:result.card.power,card:result.card,targetId,
+  block:result.card.id==='guard-blow'?2:0,
+  pierce:result.card.id==='sunder'};
 }
 function reset(){selectedInstance=null;return model.reset();}
 function onDeployment(){
  selectedInstance=null;
- // First level draws no automatic action cards. The player takes cards by hand.
+ // Draw five opening action cards when the unit finishes deploying.
  return model.reset();
 }
 function nextTurn(){
@@ -42,6 +45,7 @@ function nextTurn(){
 }
 root.__forestHand=Object.freeze({
  consumeForTarget,reset,onDeployment,nextTurn,selectCard,draw,
+ clearSelection(){selectedInstance=null;},
  remainingCards:profession=>model.remainingCards(profession),
  get selected(){return selectedInstance;},
  get snapshot(){return model.snapshot();},
