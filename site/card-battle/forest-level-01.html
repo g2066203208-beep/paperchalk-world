@@ -164,6 +164,7 @@ html,body{background:#d8ded0}
 <script src="./engine/profession-decks.js?v=7"></script>
 <script src="./engine/farmer-facilities.js?v=2"></script>
 <script src="./engine/scene-card-hud.js?v=20"></script>
+<script src="./ui/forest-hand.js?v=10"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -245,6 +246,11 @@ const terrain=window.PaperchalkVoxelTerrain.create({
 const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
 const levelId=new URLSearchParams(location.search).get('level')==='forest-02'?'forest-02':'forest-01';
 const level=window.PaperchalkLevelEngine.create(levelId,terrain,{physicalColumns:UNIT_COLUMNS});
+// Hand is a true level-owned subsystem, not a script loaded after debug globals.
+window.__forestHand=window.PaperchalkForestHand.create({
+ level,characterRegistry:window.PaperchalkCharacterRegistry,
+ maxHand:10,seed:levelId==='forest-02'?618232:618231
+});
 const levelNumber=levelId==='forest-02'?2:1;
 const foeTotal=level.snapshot().units.filter(u=>u.side==='enemy').length;
 document.getElementById('battle-title').textContent=level.config.title+' · 第'+['一','二'][levelNumber-1]+'关';
@@ -1369,7 +1375,6 @@ window.__forestLevelDebug={
 requestAnimationFrame(frame);
 })();
 </script>
-<script src="./ui/forest-hand.js?v=9"></script>
 <script src="./ui/farmer-roster.js?v=1"></script>
 </body>
 </html>
