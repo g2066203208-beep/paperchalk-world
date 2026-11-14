@@ -206,8 +206,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,enabled=true})
   for(const p of props){
    const state=appearance?.(p.id,now)||{scale:1,opacity:1};
    if(state.opacity<=.002||state.scale<=.025)continue;
-   const k=state.scale,[x,y,z]=p.pivot;
-   const model=mul(T(x,y,z),mul(S(k,k,k),T(-x,-y,-z)));
+   const model=root.PaperchalkObjectAnchor.atRoot(p.pivot,state.scale,{T,S,mul});
    for(const item of p.meshes){
     renderGeom(item.mesh,model,item.color,null,false,null,0,item.material);
     lastDrawCalls++;
