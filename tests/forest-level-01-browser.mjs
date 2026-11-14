@@ -64,6 +64,55 @@ try{
  assert.ok(init.hud.animatedCardMeshes>=70,'each face-up physical card has a 3D entrance animation');
  await page.waitForTimeout(600);
  await page.screenshot({path:out+'/01-seven-decks-with-hero-desktop.png',fullPage:true});
+ // The visible in-game button must actually play exit -> world replacement ->
+ // staggered entrance. It is NOT enough to unit test the animation engine.
+ const initialBattle=await page.evaluate(()=>({
+  state:window.__forestLevelDebug.state,
+  hand:window.__forestHand.snapshot,
+  environment:window.__forestLevelDebug.environment
+ }));
+ assert.equal(initialBattle.environment.id,'forest');
+ assert.equal(initialBattle.environment.material,'grass');
+ assert.equal(await page.locator('#scene-switch').count(),1);
+ await page.locator('#scene-switch').click();
+ assert.equal(await page.evaluate(()=>window.__forestLevelDebug.sceneSwitch.phase),'exiting');
+ assert.equal(await page.locator('#scene-switch').isDisabled(),true,'prevent interrupted scene transitions');
+ await page.waitForTimeout(270);
+ const exitPose=await page.evaluate(()=>window.__forestLevelDebug.objectPose('unit:forest-foe-a'));
+ assert.equal(exitPose.phase,'exit');
+ assert.ok(exitPose.scale<1&&exitPose.scale>0,'old 3D units must shrink before switching');
+ await page.screenshot({path:out+'/00a-forest-all-meshes-shrink-away.png',fullPage:true});
+ await page.waitForFunction(()=>window.__forestLevelDebug?.sceneSwitch.phase==='entering'&&
+   window.__forestLevelDebug.environment.id==='clearing',{timeout:9000});
+ const newScene=await page.evaluate(()=>({
+  environment:window.__forestLevelDebug.environment,
+  state:window.__forestLevelDebug.state,
+  hand:window.__forestHand.snapshot
+ }));
+ assert.equal(newScene.environment.material,'dirt','scene switch must change true world material');
+ assert.ok(newScene.environment.props>10,'stone clearing needs its own real 3D props');
+ assert.deepEqual(newScene.state,initialBattle.state,'scene switch must NOT restart battle state');
+ assert.deepEqual(newScene.hand,initialBattle.hand,'scene switch must NOT touch any action decks');
+ await page.waitForTimeout(185);
+ const growPose=await page.evaluate(()=>window.__forestLevelDebug.objectPose('terrain:0:0'));
+ assert.equal(growPose.phase,'enter','new scene terrain should spring into view');
+ await page.screenshot({path:out+'/00b-stone-clearing-meshes-growing.png',fullPage:true});
+ await page.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:10000});
+ assert.equal(await page.locator('#scene-switch').isEnabled(),true);
+ await page.screenshot({path:out+'/00c-stone-clearing-scene-complete.png',fullPage:true});
+ await page.locator('#scene-switch').click();
+ await page.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='idle'&&
+   window.__forestLevelDebug.environment.id==='forest',{timeout:12000});
+ const returned=await page.evaluate(()=>({
+  environment:window.__forestLevelDebug.environment,
+  state:window.__forestLevelDebug.state,
+  hand:window.__forestHand.snapshot
+ }));
+ assert.equal(returned.environment.material,'grass','return to forest restores true grass terrain');
+ assert.deepEqual(returned.state,initialBattle.state,'returning must preserve pre-deployment state');
+ assert.deepEqual(returned.hand,initialBattle.hand,'returning must preserve deck order and counts');
+ await page.screenshot({path:out+'/00d-returned-to-forest.png',fullPage:true});
+
  await deploy(page);
  await page.screenshot({path:out+'/02-seven-decks-deployed-desktop.png',fullPage:true});
  await click3D(page,'deck:warrior');
@@ -163,6 +212,20 @@ try{
  assert.equal(mobileInit.hud.visible.filter(p=>p.kind==='deck').length,7);
  assert.equal(mobileInit.hud.visible.filter(p=>p.kind==='turn').length,0);
  await mobile.screenshot({path:out+'/06-seven-decks-hero-mobile.png',fullPage:true});
+ assert.equal(await mobile.locator('#scene-switch').isVisible(),true,
+  'mobile must expose the same scene switch button');
+ await mobile.locator('#scene-switch').click();
+ await mobile.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='entering'&&
+  window.__forestLevelDebug.environment.id==='clearing',{timeout:10000});
+ await mobile.screenshot({path:out+'/06a-scene-transition-stone-clearing-mobile.png',fullPage:true});
+ await mobile.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:10000});
+ assert.equal(await mobile.evaluate(()=>window.__forestLevelDebug.environment.material),'dirt');
+ await mobile.screenshot({path:out+'/06b-stone-clearing-complete-mobile.png',fullPage:true});
+ await mobile.locator('#scene-switch').click();
+ await mobile.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='idle'&&
+  window.__forestLevelDebug.environment.id==='forest',{timeout:12000});
+ assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),0);
+
  await deploy(mobile);
  await click3D(mobile,'deck:warrior');
  assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),1);
@@ -180,5 +243,6 @@ try{
  assert.deepEqual(mobileErrors,[],'no mobile script errors');
  console.log('FOREST_SEVEN_DECKS_BROWSER_PASS',JSON.stringify({desktop:true,mobile:true,sevenPhysicalPiles:true,identicalPrototype:true,removedFloatingTurnCard:true,
   faceUp:true,openingHand:0,noAutoDeal:true,tenHandCap:true,manualDraw:true,
-  arbitraryCardPlay:true,lockAfterPlay:true,particles:fx.snapshot.particleCount,images:assetResponses,errors}));
+  arbitraryCardPlay:true,lockAfterPlay:true,sceneSwitchButton:true,fullExitSwapEnter:true,
+  reverseSceneSwitch:true,mobileSceneSwitch:true,particles:fx.snapshot.particleCount,images:assetResponses,errors}));
 }finally{await browser.close();}
