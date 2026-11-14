@@ -58,7 +58,8 @@ async function verifyTrayCollapsed(page,kind){
 async function showTray(page){
  await page.locator('#deck-drawer-toggle').click();
  await page.waitForFunction(()=>window.__sceneCardHUD?.collapsed===false&&
-  window.__sceneCardHUD.snapshot.visibleDeckPiles===7,{timeout:20000});
+  window.__sceneCardHUD.snapshot.visibleDeckPiles===7&&
+  window.__sceneCardHUD.snapshot.visible.filter(p=>p.kind==='deck').length===7,{timeout:20000});
  assert.equal(await page.locator('#deck-drawer-toggle').getAttribute('aria-expanded'),'true');
 }
 async function hideTray(page){
