@@ -45,6 +45,12 @@ html,body{background:#d8ded0}
 #level-end h2{font:600 27px/1.3 Georgia,'Noto Serif SC',serif;margin:0 0 8px}
 #level-end button{margin-top:16px;border:0;background:#46684b;color:#fff;border-radius:9px;padding:11px 22px;cursor:pointer}
 @media(max-width:700px){#terrain-hint{font-size:10px;max-width:220px}#level-hud{top:110px;font-size:10px}#hand{bottom:8px;gap:5px;padding:7px;max-width:98vw}#hand .hand-card{width:46px;height:54px}#demo,#reset{padding:9px!important;font-size:11px!important}}
+#scene-switch-wrap{position:fixed;right:14px;top:56px;z-index:5;text-align:right;max-width:46vw}
+#scene-switch{cursor:pointer;touch-action:manipulation;background:#f4f0e6ed;color:#384a3b;border:1px solid #9caa93;border-radius:11px;padding:10px 13px;font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 6px 20px #1c261a22;min-height:38px}
+#scene-switch:hover:not(:disabled){background:#fffaf1}
+#scene-switch:disabled{cursor:default;opacity:.72}
+#scene-switch-status{font:11px/1.4 system-ui,sans-serif;color:#445946;min-height:16px;margin-top:5px;text-shadow:0 1px 2px #e5ebdc}
+@media(max-width:700px){#scene-switch-wrap{right:9px;top:51px;max-width:45vw}#scene-switch{font-size:11px;padding:8px 9px;min-height:34px}#scene-switch-status{font-size:10px}}
 </style>
 </head>
 <body>
@@ -52,6 +58,7 @@ html,body{background:#d8ded0}
 <div id="note" aria-live="polite"></div>
 <div id="terrain-hint"><strong>林间小路 · 第一关</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>点击敌人攻击；选地形工具再点格子<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
+<div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button><div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div></div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div>
 <div hidden><button id="roster-trigger" type="button">人物图鉴</button></div>
 <div id="character-gallery" role="dialog" aria-label="农民组织人物卡图鉴" aria-modal="true" hidden>
@@ -60,15 +67,16 @@ html,body{background:#d8ded0}
  <div id="gallery-cards" class="gallery-cards"></div></div>
 </div>
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
-<script src="./engine/voxel-terrain.js?v=2"></script>
+<script src="./engine/voxel-terrain.js?v=3"></script>
 <script src="./engine/battle-camera.js?v=1"></script>
 <script src="./engine/level-engine.js?v=1"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
-<script src="./engine/forest-environment.js?v=2"></script>
+<script src="./engine/scene-transitions.js?v=1"></script>
+<script src="./engine/forest-environment.js?v=3"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=9"></script>
+<script src="./engine/scene-card-hud.js?v=10"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -129,6 +137,7 @@ const fx=window.PaperchalkVoxelAnimations.create(terrain,{seed:618231});
 const objectFX=window.PaperchalkObjectAnimations.create({
  reducedMotion:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true
 });
+let sceneTransition=null;
 const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 // Camera is a reusable module, independent from voxel geometry and game rules.
 const orbitCamera=window.PaperchalkBattleCamera.create({
@@ -192,7 +201,8 @@ function terrainEntryMatrix(c,r){
   T(-center.x,-pivotY,-center.z));
 }
 const terrainRenderer=window.PaperchalkVoxelTerrain.createWebGLRenderer(fx.visualGrid,{
- gl,makeGeom,renderGeom,I,tileTransform:terrainEntryMatrix
+ gl,makeGeom,renderGeom,I,tileTransform:terrainEntryMatrix,
+ showSeams:()=>!sceneTransition?.busy
 });
 const forestProps=window.PaperchalkForestEnvironment.create({
  terrain,makeGeom,renderGeom,mul,T,S,cube,
