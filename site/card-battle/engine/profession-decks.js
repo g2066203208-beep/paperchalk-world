@@ -14,17 +14,14 @@ const CLASSES=Object.freeze([
  {id:'medic',name:'医师',icon:'药'},
  {id:'summoner',name:'召唤师',icon:'兽'}
 ]);
+// All base cards can act without essence. Cards with a named owner are
+// unique to that character; never copy "伐木" into other warriors' pools.
 const WARRIOR_CARDS=Object.freeze([
- {id:'strike',name:'普通攻击',family:'common',power:2},
- {id:'heavy-strike',name:'重劈',family:'common',power:3},
- {id:'sunder',name:'破甲斩',family:'common',power:3},
- {id:'guard-blow',name:'防守反击',family:'common',power:2},
- {id:'cleave',name:'强力挥砍',family:'common',power:3},
- {id:'firewood-chop',name:'伐木劈砍',family:'faction',power:4},
- {id:'wood-grain',name:'顺纹劈斩',family:'faction',power:3},
- {id:'forest-axe',name:'林地斧击',family:'faction',power:4},
- {id:'timber-split',name:'柴薪分裂',family:'faction',power:3},
- {id:'stump-strike',name:'树桩重击',family:'faction',power:3}
+ {id:'strike',name:'斧劈',family:'common',type:'attack',power:3,description:'近战造成3点伤害'},
+ {id:'heavy-strike',name:'重劈',family:'common',type:'attack',power:5,description:'重斧造成5点伤害'},
+ {id:'cleave',name:'横扫',family:'common',type:'attack',power:2,shape:'row',description:'对目标所在排造成2点伤害'},
+ {id:'guard',name:'架斧',family:'common',type:'guard',block:3,description:'获得3点格挡'},
+ {id:'lumber',name:'伐木',family:'character',characterId:'farmer-warrior-loli-lumberjack',type:'resource',essence:'material',amount:1,description:'获得1点材料精华；砍树额外获得2点'}
 ]);
 const RANGER_CARDS=Object.freeze([
  {id:'aimed-shot',name:'瞄准射击',family:'common',power:2},
@@ -38,17 +35,13 @@ const RANGER_CARDS=Object.freeze([
  {id:'snare-shot',name:'陷阱射击',family:'faction',power:3},
  {id:'hunting-volley',name:'狩猎连射',family:'faction',power:3}
 ]);
+// Farmer character cards: these are not generic engineering structures.
 const ENGINEER_CARDS=Object.freeze([
- {id:'repair',name:'修理',family:'common',power:1},
- {id:'setup',name:'快速搭建',family:'common',power:1},
- {id:'soil-work',name:'整地',family:'common',power:1},
- {id:'wooden-fence',name:'木栅栏',family:'common',power:1},
- {id:'maintenance',name:'维护',family:'common',power:1},
- {id:'sow-seeds',name:'播种',family:'faction',power:1},
- {id:'water-wheel',name:'水车',family:'faction',power:1},
- {id:'farm-field',name:'农田',family:'faction',power:1},
- {id:'food-supply',name:'粮食补给',family:'faction',power:1},
- {id:'harvest',name:'丰收',family:'faction',power:1}
+ {id:'farm-field',name:'农田',family:'character',characterId:'farmer-engineer-farmer',type:'facility',footprint:[1,1],description:'每回合生产1点生命精华'},
+ {id:'plant-tree',name:'植树',family:'character',characterId:'farmer-engineer-farmer',type:'facility',footprint:[1,1],description:'5耐久，遮挡攻击并逐回合恢复'},
+ {id:'water-well',name:'水井',family:'character',characterId:'farmer-engineer-farmer',type:'facility',footprint:[1,1],description:'相邻农夫设施持续效果额外触发'},
+ {id:'scarecrow',name:'稻草人',family:'character',characterId:'farmer-engineer-farmer',type:'facility',footprint:[1,1],description:'替附近队友承受一次攻击'},
+ {id:'windmill',name:'风车磨坊',family:'character',characterId:'farmer-engineer-farmer',type:'facility',footprint:[2,2],description:'每回合将1生命精华转为材料精华'}
 ]);
 const BASE_POOL=Object.freeze({warrior:WARRIOR_CARDS,ranger:RANGER_CARDS,engineer:ENGINEER_CARDS});
 function create(options={}){
@@ -78,10 +71,10 @@ function create(options={}){
  function reload(){
   piles.clear();discards.clear();
   for(const owner of owned){
-   const source=pool[owner.profession]||[];
-   piles.set(owner.id,shuffle(source.map((card,i)=>({
+   const source=(pool[owner.profession]||[]).filter(card=>!card.characterId||card.characterId===owner.characterId);
+   piles.set(owner.id,shuffle(source.flatMap((card,i)=>[0,1].map(copy=>({
     ...card,profession:owner.profession,ownerId:owner.id,
-    instance:owner.id+'-'+i
+    instance:owner.id+'-'+i+'-'+copy
    }))));
    discards.set(owner.id,[]);
   }
@@ -143,6 +136,6 @@ function create(options={}){
   classes:CLASSES,get cap(){return cap;}});
 }
 root.PaperchalkProfessionDecks=Object.freeze({
- version:'4.0.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create
+ version:'5.0.0-character-cards',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create
 });
 })(window);
