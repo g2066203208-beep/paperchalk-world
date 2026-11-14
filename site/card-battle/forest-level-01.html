@@ -159,8 +159,8 @@ html,body{background:#d8ded0}
 <script src="./engine/forest-dressing.js?v=1"></script>
 <script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
-<script src="./engine/profession-decks.js?v=4"></script>
-<script src="./engine/scene-card-hud.js?v=18"></script>
+<script src="./engine/profession-decks.js?v=5"></script>
+<script src="./engine/scene-card-hud.js?v=19"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -249,7 +249,7 @@ document.getElementById('terrain-hint').innerHTML='<strong>'+level.config.title+
  ' · 第'+['一','二'][levelNumber-1]+'关 · 16×6</strong>'+
  '<br>我方 '+level.snapshot().units.filter(u=>u.side==='ally').map(u=>u.name).join(' + ')+
  ' · 敌人 ×'+foeTotal+
- '<br>点击七职业牌盒手动摸牌，上限10张；点击空位部署人物';
+ '<br>只有已获得角色有牌堆；按加入顺序从左到右排列，手动摸牌上限10张';
 const combatChoreo=window.PaperchalkCombatChoreography.create();
 const fx=window.PaperchalkVoxelAnimations.create(terrain,{seed:618231});
 const objectFX=window.PaperchalkObjectAnimations.create({
@@ -1166,10 +1166,10 @@ function tapUnit(card){
  const selected=window.__forestHand?.snapshot.hand.find(c=>c.instance===window.__forestHand?.selected);
  const allies=level.snapshot().units.filter(u=>u.side==='ally'&&u.deployed&&u.alive);
  // The role on the selected action card determines which deployed character acts.
- const actor=allies.find(u=>u.role===selected?.profession)||allies.find(u=>u.role==='warrior');
+ const actor=allies.find(u=>u.id===selected?.ownerId);
  const ok=actor?combatController.playerAttack(actor.id,card.unitId,now):false;
  if(!ok&&level.phase==='active'&&!combatController.busy)
-  message('先从职业牌盒手动摸牌，选择手牌，再点击敌人');
+  message('先从已获得人物的牌堆摸牌，选择手牌，再点击敌人');
  return ok;
 }
 document.getElementById('level-retry').addEventListener('click',reset);
@@ -1219,6 +1219,7 @@ window.__forestLevelDebug={
  get staged(){return level.snapshot().units.filter(u=>!u.deployed);},
  get placement(){return {selected:selectedStagedId,previewSlot:previewDeployment?.slot?.id||null};},
  get boxCount(){return window.__sceneCardHUD?.snapshot.physicalBoxes||0;},
+ get cardCase(){return window.__sceneCardHUD?.snapshot||null;},
  get slotPoints(){
   const rect=canvas.getBoundingClientRect();
   return slotCenters.map(q=>{
@@ -1252,7 +1253,7 @@ window.__forestLevelDebug={
 requestAnimationFrame(frame);
 })();
 </script>
-<script src="./ui/forest-hand.js?v=7"></script>
+<script src="./ui/forest-hand.js?v=8"></script>
 <script src="./ui/farmer-roster.js?v=1"></script>
 </body>
 </html>
