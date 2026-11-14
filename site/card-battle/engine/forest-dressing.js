@@ -20,6 +20,24 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,enabled=true})
  const petals=group([.94,.91,.76,1]),centers=group([.92,.72,.29,1]);
  const stone=group([.50,.53,.46,1],3),stoneHighlight=group([.61,.63,.55,1],3);
  const all=[...foliage,bark,darkGrass,lightGrass,petals,centers,stone,stoneHighlight];
+ // Keep the 12-ish combined meshes for static frames, but ALSO retain each
+ // prop's own small mesh. During transition only, animate each prop around its
+ // world-space root. No group/object can ever collapse toward board center.
+ const props=[];
+ function capture(id,x,z,build){
+  const before=all.map(g=>({v:g.v.length,i:g.i.length}));
+  build();
+  const parts=[];
+  all.forEach((g,index)=>{
+   const start=before[index];
+   if(g.i.length===start.i)return;
+   const firstVertex=start.v/8;
+   parts.push({mesh:makeGeom(g.v.slice(start.v),
+    g.i.slice(start.i).map(i=>i-firstVertex)),color:g.color,material:g.material});
+  });
+  if(parts.length)props.push({id,pivot:[x,groundY,z],meshes:parts});
+ }
+
  function addTri(g,a,b,c,n){
   const offset=g.v.length/8;
   for(const p of [a,b,c])g.v.push(...p,...n,0,0);
@@ -77,7 +95,9 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,enabled=true})
   [15.2,terrain.centerZ+hd+5.6,1.54]
  ];
  for(const [x,z,sc] of heroTrees)roots.push({x,z,sc,type:'broad',shade:Math.floor(rand()*5)});
- for(const t of roots){
+ for(let treeIndex=0;treeIndex<roots.length;treeIndex++){
+  const t=roots[treeIndex];
+  capture('dressing-tree-'+treeIndex,t.x,t.z,()=>{
   const h=(t.type==='pine'?3.15:2.4)*t.sc;
   cylinder(bark,t.x,groundY,t.z,.20*t.sc,h);
   if(t.type==='broad'){
@@ -100,6 +120,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,enabled=true})
     ellipsoid(foliage[(t.shade+j)%5],t.x,groundY+h*.62+j*.56*t.sc,t.z,r,.68*t.sc,r);
    }
   }
+  });
  }
  // Sparse large faceted rock clusters remain away from the grid and
  // deliberately use different material response from leaves/paper/gold.
@@ -113,9 +134,13 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,enabled=true})
   if(side===3){z=terrain.centerZ+hd+d;x=(span-.5)*(terrain.width+9);}
   stones.push({x,z,sc:.35+rand()*.7});
  }
- for(const p of stones)
-  ellipsoid(rand()>.45?stone:stoneHighlight,p.x,groundY+.32*p.sc,p.z,
-   1.2*p.sc,.58*p.sc,1.00*p.sc,rand()*6.28);
+ for(let i=0;i<stones.length;i++){
+  const p=stones[i];
+  capture('dressing-rock-'+i,p.x,p.z,()=>{
+   ellipsoid(rand()>.45?stone:stoneHighlight,p.x,groundY+.32*p.sc,p.z,
+    1.2*p.sc,.58*p.sc,1.00*p.sc,rand()*6.28);
+  });
+ }
  // Cream daisies on stalks, clustered near top, corners and bottom edge.
  let flowers=0;
  for(let cl=0;cl<24;cl++){
@@ -125,6 +150,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,enabled=true})
   if(side===1){x=hw+dist;z=terrain.centerZ+(span-.5)*(terrain.depth+4);}
   if(side===2){z=terrain.centerZ-hd-dist;x=(span-.5)*(terrain.width+4);}
   if(side===3){z=terrain.centerZ+hd+dist;x=(span-.5)*(terrain.width+5);}
+  capture('dressing-flower-'+cl,x,z,()=>{
   for(let j=0;j<5;j++){
    const fx=x+(rand()-.5)*2.1,fz=z+(rand()-.5)*2.1;
    const fy=groundY+.28+rand()*.16,r=.12+rand()*.060;
@@ -137,38 +163,67 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,enabled=true})
    ellipsoid(centers,fx,fy+.014,fz,.075,.04,.075);
    flowers++;
   }
+  });
  }
  // Tufts & blades with shadows cast by the same light-space camera.
  let grassBlades=0;
- for(let k=0;k<650;k++){
-  const side=k%4,edge=1.2+rand()*6.8,a=rand();
+ // Ten closely spaced blades form one tiny ground-rooted clump. Animating
+ // clumps independently avoids 650 GPU draw calls during a 0.6s transition.
+ for(let patch=0;patch<65;patch++){
+  const side=patch%4,edge=1.2+rand()*6.8,a=rand();
   let x,z;
   if(side===0){x=-hw-edge;z=terrain.centerZ+(a-.5)*(terrain.depth+13);}
   if(side===1){x=hw+edge;z=terrain.centerZ+(a-.5)*(terrain.depth+13);}
   if(side===2){z=terrain.centerZ-hd-edge;x=(a-.5)*(terrain.width+13);}
   if(side===3){z=terrain.centerZ+hd+edge;x=(a-.5)*(terrain.width+13);}
-  const g=k%3===0?lightGrass:darkGrass,h=.25+rand()*.55,r=.03+rand()*.075,dx=(rand()-.5)*.4,dz=(rand()-.5)*.3;
-  addTri(g,[x-r,groundY+.025,z],[x+r,groundY+.025,z],[x+dx,groundY+h,z+dz],[0,.3,.95]);
-  grassBlades++;
+  capture('dressing-grass-'+patch,x,z,()=>{
+   for(let blade=0;blade<10;blade++){
+    const fx=x+(rand()-.5)*1.6,fz=z+(rand()-.5)*1.6;
+    const g=blade%3===0?lightGrass:darkGrass,h=.25+rand()*.55;
+    const r=.03+rand()*.075,dx=(rand()-.5)*.4,dz=(rand()-.5)*.3;
+    addTri(g,[fx-r,groundY+.025,fz],[fx+r,groundY+.025,fz],
+     [fx+dx,groundY+h,fz+dz],[0,.3,.95]);
+    grassBlades++;
+   }
+  });
  }
  for(const g of all)if(g.i.length)meshes.push({mesh:makeGeom(g.v,g.i),color:g.color,material:g.material});
- let lastDrawCalls=0;
+ let lastDrawCalls=0,animatedInstances=0;
  function draw(now,scene='forest'){
-  if(!enabled||scene!=='forest'){lastDrawCalls=0;return 0;}
-  const k=appearance?.('ground:forest',now)?.scale??1;
-  if(k<.025){lastDrawCalls=0;return 0;}
-  // Meshes contain their own world positions. Spawn scale uses board center;
-  // no screen-aligned sprites or CSS fake scenery.
-  const cx=terrain.centerX,cz=terrain.centerZ;
-  const model=mul(T(cx,groundY,cz),mul(S(k,k,k),T(-cx,-groundY,-cz)));
-  for(const item of meshes)renderGeom(item.mesh,model,item.color,null,false,null,0,item.material);
-  lastDrawCalls=meshes.length;return lastDrawCalls;
+  if(!enabled||scene!=='forest'){lastDrawCalls=0;animatedInstances=0;return 0;}
+  // Static visuals retain the ORIGINAL low-draw-call batched meshes.
+  // Only transition frames use per-object meshes and their local anchors.
+  const animating=props.some(p=>{
+   const state=appearance?.(p.id,now);
+   return state&&state.phase!=='steady';
+  });
+  if(!animating){
+   const identity=I();
+   for(const item of meshes)renderGeom(item.mesh,identity,item.color,null,false,null,0,item.material);
+   animatedInstances=0;lastDrawCalls=meshes.length;return lastDrawCalls;
+  }
+  lastDrawCalls=0;animatedInstances=0;
+  for(const p of props){
+   const state=appearance?.(p.id,now)||{scale:1,opacity:1};
+   if(state.opacity<=.002||state.scale<=.025)continue;
+   const k=state.scale,[x,y,z]=p.pivot;
+   const model=mul(T(x,y,z),mul(S(k,k,k),T(-x,-y,-z)));
+   for(const item of p.meshes){
+    renderGeom(item.mesh,model,item.color,null,false,null,0,item.material);
+    lastDrawCalls++;
+   }
+   animatedInstances++;
+  }
+  return lastDrawCalls;
  }
  return Object.freeze({
-  draw,get snapshot(){return {enabled,treeCount:roots.length,rocks:stones.length,
-   flowers,grassBlades,batchedMeshes:meshes.length,lastDrawCalls,
-   style:'world-space-batched-faceted-forest',castsShadows:true};}
+  draw,
+  get propIds(){return props.map(p=>p.id);},
+  get snapshot(){return {enabled,treeCount:roots.length,rocks:stones.length,
+   flowers,grassBlades,batchedMeshes:meshes.length,localPivotProps:props.length,
+   animatedInstances,lastDrawCalls,transitionPivot:'per-object-ground-root',
+   style:'world-space-batched-static-local-animated-forest',castsShadows:true};}
  });
 }
-root.PaperchalkForestDressing=Object.freeze({version:'1.0.0',create});
+root.PaperchalkForestDressing=Object.freeze({version:'2.0.0-local-anchors',create});
 })(window);
