@@ -11,7 +11,7 @@ function create(options={}){
  const {level,animation,hand,locateCard,pointFor,onChanged=()=>{},
   onDamage=()=>{},onGuard=()=>{},onDefeated=()=>{},onFinished=()=>{},
   onNotice=()=>{},canAct=()=>true,onBeforeEnemyStrike=()=>{},
-  onEnemyResolved=()=>{}}=options;
+  onEnemyResolved=()=>{},onTurnStarted=()=>{}}=options;
  if(!level||!animation||!hand||!locateCard||!pointFor)
   throw Error('Combat controller requires level, animation, hand and card pose adapter');
  let nextEnemyAt=0;
@@ -83,6 +83,7 @@ function create(options={}){
     // Tell the card model that the round advanced; it only moves used cards
     // into discard. It does NOT create hand cards or auto-draw.
     currentHand()?.nextTurn?.();
+    onTurnStarted(turn.turn);
     emitChange();
     onNotice('第 '+turn.turn+' 回合 · 点击职业牌盒自行摸牌');
    }
