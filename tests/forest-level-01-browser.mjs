@@ -77,7 +77,10 @@ try{
  await page.locator('#scene-switch').click();
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.sceneSwitch.phase),'exiting');
  assert.equal(await page.locator('#scene-switch').isDisabled(),true,'prevent interrupted scene transitions');
- await page.waitForTimeout(270);
+ await page.waitForFunction(()=>{
+  const v=window.__forestLevelDebug,p=v?.objectPose('unit:forest-foe-a');
+  return v?.sceneSwitch.phase==='exiting'&&p?.phase==='exit'&&p.scale<.96;
+ },{timeout:12000});
  const exitPose=await page.evaluate(()=>window.__forestLevelDebug.objectPose('unit:forest-foe-a'));
  assert.equal(exitPose.phase,'exit');
  assert.ok(exitPose.scale<1&&exitPose.scale>0,'old 3D units must shrink before switching');
