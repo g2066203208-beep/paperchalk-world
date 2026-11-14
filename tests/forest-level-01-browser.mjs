@@ -394,7 +394,8 @@ async function deploy(page){
  assert.ok(slot?.point);
  await page.mouse.click(slot.point.x,slot.point.y);
  await page.waitForFunction(()=>window.__forestLevelDebug.state.phase==='active'&&window.__sceneCardHUD.snapshot.stagedCharacterCards===0,{timeout:15000});
- assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),5,
+  'deployment opens a genuine five-card first hand');
 }
 try{
  // Exactly the same deployed hero + farm state, at the same viewport,
@@ -450,13 +451,29 @@ try{
  await verifyApprovedReferenceLayout(pc,'desktop');
  await showTray(pc);
  await clickCard(pc,'deck:warrior');
- await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
+ await pc.waitForFunction(()=>window.__forestHand.snapshot.count===6,{timeout:10000});
  await screenshot(pc,'03-static-hand-drawn-desktop');
  const hand=await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].instance);
  await clickCard(pc,'hand:'+hand);
  assert.equal(await pc.evaluate(()=>window.__forestHand.selected),hand);
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
- assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0);
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),5);
+ await pc.waitForFunction(()=>window.__forestLevelDebug.combat.animation.active?.hitFired===true,
+  null,{timeout:12000});
+ await screenshot(pc,'03a-axe-hit-impact-desktop');
+ await pc.waitForFunction(()=>!window.__forestCombat.busy,null,{timeout:12000});
+ const heroBeforeEnemy=await pc.evaluate(()=>window.__forestLevelDebug.state.units.find(u=>u.id==='woodcutter').currentHp);
+ assert.equal(await pc.locator('#end-turn').isEnabled(),true);
+ await pc.locator('#end-turn').click();
+ await pc.waitForFunction(()=>window.__forestLevelDebug.state.phase==='enemy',null,{timeout:10000});
+ await screenshot(pc,'03b-enemy-phase-desktop');
+ await pc.waitForFunction(()=>window.__forestLevelDebug.state.turn===2&&
+   window.__forestLevelDebug.state.phase==='active',null,{timeout:18000});
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),5,
+  'next round must replenish a five-card hand automatically');
+ const heroAfterEnemy=await pc.evaluate(()=>window.__forestLevelDebug.state.units.find(u=>u.id==='woodcutter').currentHp);
+ assert.ok(heroAfterEnemy<heroBeforeEnemy,'surviving enemies deal damage only in their turn');
+ await screenshot(pc,'03c-round-two-desktop');
  await pc.locator('#scene-switch').click();
  await pc.waitForFunction(()=>window.__forestLevelDebug.environment.id==='clearing'&&
    window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:15000});
@@ -491,7 +508,7 @@ try{
  await screenshot(phone,'05-static-seven-bay-box-phone');
  await deploy(phone);
  await clickCard(phone,'deck:warrior');
- await phone.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
+ await phone.waitForFunction(()=>window.__forestHand.snapshot.count===6,{timeout:10000});
  await screenshot(phone,'06-static-hand-phone');
  // The portrait preset fits all 16 columns at the same locked 78-degree angle.
  await verifyFixedCamera(phone,'phone');
@@ -501,6 +518,9 @@ try{
  await hideTray(phone);
  await verifyRestingCardsStatic(phone,'phone');
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
+ assert.equal(await phone.locator('#end-turn').isEnabled(),true);
+ assert.ok((await phone.locator('#combat-phase').textContent()).includes('玩家行动'));
+ assert.equal(await phone.locator('.enemy-intent').count(),2);
  // Probe a real DPR=2 backing buffer on a small mobile viewport; this used
  // to be hard-capped at 1.25 despite the device's actual pixel density.
  const retina=await browser.newPage({viewport:{width:180,height:320},deviceScaleFactor:2,isMobile:true,hasTouch:true});
