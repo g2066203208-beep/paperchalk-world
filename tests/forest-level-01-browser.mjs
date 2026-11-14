@@ -394,30 +394,42 @@ async function verifyApprovedReferenceLayout(page,kind){
   'start with collapsed physical seven-stack drawer');
  console.log('REFERENCE_BOARD_LAYOUT_PASS',JSON.stringify({kind,frame:m}));
 }
-async function plantTestFarm(page,flank='left'){
- const button=page.locator('#farm-test');
- await page.waitForFunction(()=>document.querySelector('[data-card-id="farm-field"] img')?.naturalWidth===704,{timeout:20000});
- assert.equal(await button.isVisible(),true,'farm test entry must remain accessible without exposing legacy HTML card toolbar');
- assert.equal(await button.isEnabled(),true,'farm test unlocks after hero deployment');
- await button.click();
- await page.waitForFunction(()=>window.__terrainDebug.tool==='farm-field',{timeout:8000});
- const target=await page.evaluate(flank=>window.__forestLevelDebug.slotPoints.find(s=>
-  s.zone==='facility'&&s.side==='ally'&&s.flank===flank&&s.tileR===4&&(flank==='left'?s.tileC===4:s.tileC===10)),flank);
- assert.ok(target?.point,'missing '+flank+' 1x1 facility slot');
+async function selectDrawnCard(page,owner,id){
+ for(let attempts=0;attempts<10;attempts++){
+  const found=await page.evaluate(id=>window.__forestHand.snapshot.hand.find(c=>c.id===id),id);
+  if(found){
+   await clickCard(page,'hand:'+found.instance);
+   await page.waitForFunction(instance=>window.__forestHand.selected===instance,found.instance,{timeout:8000});
+   return found;
+  }
+  const before=await page.evaluate(()=>window.__forestHand.snapshot.count);
+  await clickCard(page,'deck:'+owner);
+  await page.waitForFunction(n=>window.__forestHand.snapshot.count===n+1,before,{timeout:10000});
+ }
+ throw Error('Missing requested '+owner+' card: '+id);
+}
+async function plantFarmerCard(page,cardId,flank='left'){
+ const drawn=await selectDrawnCard(page,'farmer',cardId);
+ assert.equal(drawn.type,'facility','farm facility must originate in the engineer deck');
+ await page.waitForFunction(id=>window.__terrainDebug.tool===id,cardId,{timeout:8000});
+ const tileC=flank==='left'?4:10, tileR=4;
+ const target=await page.evaluate(({tileC,tileR,flank})=>window.__forestLevelDebug.slotPoints.find(s=>
+  s.zone==='facility'&&s.side==='ally'&&s.flank===flank&&s.tileC===tileC&&s.tileR===tileR),
+  {tileC,tileR,flank});
+ assert.ok(target?.point,'no legal facility tile');
  const before=await page.evaluate(()=>window.__forestLevelDebug.facilities.length);
  await page.mouse.click(target.point.x,target.point.y);
  await page.waitForFunction(n=>window.__forestLevelDebug.facilities.length===n+1,before,{timeout:15000});
- const placed=await page.evaluate(()=>window.__forestLevelDebug.facilities);
- assert.equal(placed.length,1);
- assert.equal(placed[0].id,'farm-field');
- assert.equal(placed[0].flank,flank);
- assert.deepEqual(placed[0].footprint,[1,1]);
- assert.equal(placed[0].hasTexture,true,'real user artwork must be bound to physical 3D card');
- assert.equal(placed[0].tileC,flank==='left'?4:10);
- assert.equal(placed[0].tileR,4);
- assert.equal(await page.evaluate(()=>window.__terrainDebug.tool),null,'test card consumed after placement');
- assert.equal(await button.isDisabled(),true,'same physical farm facility cannot be placed twice');
- console.log('FARM_FIELD_FACILITY_PLACED',JSON.stringify({flank,placed,assetWidth:704}));
+ const placed=await page.evaluate(()=>window.__forestLevelDebug.facilities.at(-1));
+ assert.equal(placed.id,cardId);
+ assert.equal(placed.flank,flank);
+ assert.equal(placed.tileC,tileC);
+ assert.equal(placed.tileR,tileR);
+ assert.equal(placed.hasTexture,true);
+ assert.equal(await page.evaluate(()=>window.__terrainDebug.tool),null);
+ assert.equal(await page.evaluate(instance=>window.__forestHand.snapshot.hand.some(c=>c.instance===instance),drawn.instance),false,
+  'a placed farmer facility consumes the exact physical card instance');
+ return placed;
 }
 async function deploy(page){
  await clickCard(page,'character:woodcutter');
@@ -430,7 +442,7 @@ async function deploy(page){
   'deployment never deals cards; player must click a class box');
 }
 try{
- // Exactly the same deployed hero + farm state, at the same viewport,
+ // Exactly the same deployed hero state, at the same viewport,
  // using visual=off as a browser-rendered control. No AI mock screenshots.
  const before=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
  before.on('pageerror',e=>errors.push('BEFORE '+String(e)));
@@ -440,7 +452,6 @@ try{
  await verifySixLayerVisualEffects(before,'baseline-desktop',false);
  await showTray(before);
  await deploy(before);
- await plantTestFarm(before,'left');
  await hideTray(before);
  await before.waitForTimeout(750);
  await screenshot(before,'00-visual-before-all-six-desktop');
@@ -468,9 +479,8 @@ try{
  await deploy(pc);
  await verifyCardStats(pc,'desktop');
  await screenshot(pc,'02-deployed-in-static-box-desktop');
- await plantTestFarm(pc,'left');
  await pc.waitForTimeout(700);
- await screenshot(pc,'02a-farmland-installed-left-facility-desktop');
+ await screenshot(pc,'02a-deployed-board-desktop');
  await hideTray(pc);
  await verifyRestingCardsStatic(pc,'desktop');
  await screenshot(pc,'02b-farmland-board-clear-no-deck-desktop');
@@ -483,14 +493,12 @@ try{
   'static forest must visibly change when the cloud shadow travels');
  await verifyApprovedReferenceLayout(pc,'desktop');
  await showTray(pc);
- await clickCard(pc,'deck:woodcutter');
- await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
+ const attackCard=await selectDrawnCard(pc,'woodcutter','strike');
+ const preAttackHand=await pc.evaluate(()=>window.__forestHand.snapshot.count);
  await screenshot(pc,'03-static-hand-drawn-desktop');
- const hand=await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].instance);
- await clickCard(pc,'hand:'+hand);
- assert.equal(await pc.evaluate(()=>window.__forestHand.selected),hand);
+ assert.equal(await pc.evaluate(()=>window.__forestHand.selected),attackCard.instance);
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
- assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0);
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),preAttackHand-1);
  await pc.waitForFunction(()=>window.__forestLevelDebug.combat.animation.last?.hitFired===true,
   null,{timeout:12000});
  await pc.waitForFunction(()=>window.__forestLevelDebug.cardStats.units
@@ -513,14 +521,15 @@ try{
  await screenshot(pc,'03b-enemy-attacks-without-telegraphs-desktop');
  await pc.waitForFunction(()=>window.__forestLevelDebug.state.turn===2&&
    window.__forestLevelDebug.state.phase==='active',null,{timeout:18000});
- assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0,
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),preAttackHand-1,
   'a new round MUST NOT automatically draw anything');
  // The physical box is already expanded from the first round.
  assert.equal(await pc.evaluate(()=>window.__sceneCardHUD.pointFor('deck:guardian')),null,
   'no guardian character means NO guardian card pile');
+ const handBeforeReDraw=await pc.evaluate(()=>window.__forestHand.snapshot.count);
  await clickCard(pc,'deck:woodcutter');
- await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,null,{timeout:10000});
- assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].ownerId),'woodcutter');
+ await pc.waitForFunction(n=>window.__forestHand.snapshot.count===n+1,handBeforeReDraw,{timeout:10000});
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.hand.at(-1).ownerId),'woodcutter');
  const heroAfterEnemy=await pc.evaluate(()=>window.__forestLevelDebug.state.units.find(u=>u.id==='woodcutter').currentHp);
  assert.ok(heroAfterEnemy<heroBeforeEnemy,'surviving enemies deal damage only in their turn');
  await screenshot(pc,'03c-round-two-desktop');
@@ -565,9 +574,8 @@ try{
   'on phone a single manual box tap draws exactly one, never an automatic hand');
  // The portrait preset fits all 16 columns at the same locked 78-degree angle.
  await verifyFixedCamera(phone,'phone');
- await plantTestFarm(phone,'right');
  await phone.waitForTimeout(450);
- await screenshot(phone,'07-farmland-installed-right-facility-phone');
+ await screenshot(phone,'07-deployed-board-phone');
  await hideTray(phone);
  await verifyRestingCardsStatic(phone,'phone');
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
@@ -577,7 +585,7 @@ try{
   'enemy attacks may animate but intentions are never previewed on-screen');
  // Chapter 2 is a separate level manifest, not a copy-pasted combat engine.
  // Check the actual Anima-registered farmer, two consecutive deployments and
- // independent engineer attack on a real WebGL scene.
+ // independent engineer FACILITY card placement on a real WebGL scene.
  const chapter2=await browser.newPage({viewport:{width:1280,height:720},deviceScaleFactor:1});
  chapter2.on('pageerror',e=>errors.push('CHAPTER2 '+String(e)));
  await chapter2.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?level=forest-02',
@@ -612,17 +620,19 @@ try{
  assert.equal(attachedFarmer.maxHp,10);
  assert.equal(await chapter2.locator('.enemy-intent').count(),0);
  await screenshot(chapter2,'08-second-level-farmer-and-woodcutter');
- await clickCard(chapter2,'deck:farmer');
- await chapter2.waitForFunction(()=>window.__forestHand.snapshot.count===1,null,{timeout:10000});
- const engineerCard=await chapter2.evaluate(()=>window.__forestHand.snapshot.hand[0]);
- assert.equal(engineerCard.profession,'engineer');
- assert.equal(engineerCard.ownerId,'farmer');
- await clickCard(chapter2,'hand:'+engineerCard.instance);
- assert.equal(await chapter2.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
- await chapter2.waitForFunction(()=>window.__forestLevelDebug.combat.animation.last?.hitFired===true,
-  null,{timeout:15000});
- assert.equal(await chapter2.evaluate(()=>window.__forestLevelDebug.combat.animation.last.attackerId),
-  'farmer','engineer hand card must be performed by the farmer, not the woodcutter');
+ const field=await plantFarmerCard(chapter2,'farm-field','left');
+ assert.deepEqual(field.footprint,[1,1]);
+ assert.equal(field.profession,'engineer');
+ assert.equal(await chapter2.evaluate(()=>window.__forestLevelDebug.attack('bandit-bruiser-a')),false,
+  'farmer facility card must NEVER be treated as a normal attack');
+ await screenshot(chapter2,'09-farmer-physical-farm-field');
+ await chapter2.locator('#end-turn').click();
+ await chapter2.waitForFunction(()=>window.__forestLevelDebug.state.turn===2&&
+  window.__forestLevelDebug.state.phase==='active',null,{timeout:18000});
+ const life=await chapter2.evaluate(()=>window.__forestLevelDebug.essence.life);
+ assert.ok(life>=1,'farm produces shared life essence at the next player upkeep');
+ assert.equal(await chapter2.locator('.enemy-intent').count(),0,
+  'enemy actions are never telegraphed even when bandit skills vary');
  await chapter2.close();
  // Probe a real DPR=2 backing buffer on a small mobile viewport; this used
  // to be hard-capped at 1.25 despite the device's actual pixel density.
