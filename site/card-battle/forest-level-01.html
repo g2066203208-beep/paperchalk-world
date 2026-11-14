@@ -500,6 +500,12 @@ function move(c,s){
  objectFX.pulse('card:'+c.id,now,{strength:.10});
 }
 function reset(){
+ sceneTransition.reset('forest');
+ forestProps.setScene('forest');
+ colors.background=scenePresets.forest.background.slice();
+ document.body.dataset.scene='forest';
+ sceneSwitchStatus.textContent='森林 · 点击观看完整切换动画';
+ syncSceneSwitchLabel();
  cards.length=0;occupied.clear();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;
  selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
  fx.reset();terrain.reset('grass');clearPick();startForestLevel();
@@ -548,6 +554,7 @@ function track(e){
  else hoverCard=closestCard(e.clientX,e.clientY);
 }
 canvas.addEventListener('pointerdown',e=>{
+ if(sceneTransition.busy){e.preventDefault();return;}
  if(sceneHUD.down(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
  const orbitTouch=e.pointerType==='touch'&&!active&&!closestCard(e.clientX,e.clientY);
  if(e.button!==2&&orbitCamera.pointerDown(e,orbitTouch)){
@@ -562,6 +569,7 @@ canvas.addEventListener('pointerdown',e=>{
  if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}
 });
 window.addEventListener('pointermove',e=>{
+ if(sceneTransition.busy)return;
  if(sceneHUD.move(e)){canvas.style.cursor='pointer';return;}
  if(selectedStagedId&&level.phase==='deployment')previewCharacterAt(selectedStagedId,e.clientX,e.clientY);
  if(orbitCamera.pointerMove(e)){
@@ -575,6 +583,7 @@ window.addEventListener('pointermove',e=>{
  track(e);canvas.style.cursor=dragCard?'grabbing':active?'crosshair':hoverCard?'grab':'default';
 });
 window.addEventListener('pointerup',e=>{
+ if(sceneTransition.busy){pointerDown=null;handDown=null;return;}
  if(sceneHUD.up(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
  if(selectedStagedId&&level.phase==='deployment'){
   if(deployCharacterAt(selectedStagedId,e.clientX,e.clientY)){
@@ -618,6 +627,7 @@ window.addEventListener('keydown',e=>{
  // Pan and zoom are bounded.
 });
 function drawHighlights(){
+ if(sceneTransition.busy)return;
  if(level.phase==='deployment'){
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
   for(const s of slotCenters.filter(s=>s.side==='ally'&&s.zone==='unit')){
@@ -665,14 +675,15 @@ let previousFrameTime=0;
 function frame(timeMs){
  now=timeMs/1000;
  const dt=previousFrameTime?Math.min(.05,now-previousFrameTime):1/60;
-  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
+ sceneTransition.update(now);
+ orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
  gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  drawStage();drawHighlights();drawTerrainParticles();
  // Remove a defeated object's mesh only after shrinking it to nothing.
  for(let i=cards.length-1;i>=0;i--){
   const c=cards[i],id=c.unitId?'unit:'+c.unitId:'card:'+c.id;
-  if(!objectFX.finished(id,now))continue;
+  if(sceneTransition.busy||!objectFX.finished(id,now))continue;
   if(c.slot)occupied.delete(c.slot.id);
   cards.splice(i,1);objectFX.clear(id);
  }
@@ -757,6 +768,12 @@ function deployCharacterAt(id,x,y){
  return true;
 }
 function startForestLevel(){
+ sceneTransition.reset('forest');
+ forestProps.setScene('forest');
+ colors.background=scenePresets.forest.background.slice();
+ document.body.dataset.scene='forest';
+ sceneSwitchStatus.textContent='森林 · 点击观看完整切换动画';
+ syncSceneSwitchLabel();
  level.reset();
  objectFX.reset();
  for(let row=0;row<terrain.rows;row++)
@@ -798,6 +815,10 @@ window.__forestLevelDebug={
  get state(){return level.snapshot();},
  get terrain(){return terrain.snapshot();},
  get effects(){return fx.snapshot();},
+ get sceneSwitch(){return sceneTransition.snapshot(now);},
+ switchScene(){return sceneTransition.toggle(now);},
+ get environment(){return {id:forestProps.scene,props:forestProps.propCount,
+  material:terrain.cell(0,0)?.kind};},
  get objectAnimations(){return objectFX.stats(now);},
  objectPose(id){return objectFX.sample(id,now);},
  get slots(){return slotCenters.map(t=>({side:t.side,r:t.r,c:t.c,tileC:t.tileC,tileR:t.tileR,zone:t.zone}));},
