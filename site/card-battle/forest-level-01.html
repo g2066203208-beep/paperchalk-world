@@ -57,11 +57,7 @@ html,body{background:#d8ded0}
 #case-controls button{pointer-events:auto;touch-action:manipulation;min-height:38px;padding:8px 14px;background:#eeeeebed;border:1px solid #a9aeac;border-radius:10px;color:#343b3b;font:600 12px/1.2 system-ui,sans-serif;box-shadow:0 3px 14px #0002;cursor:pointer}
 #case-controls button:disabled{opacity:.54;cursor:default}#case-controls button[hidden]{display:none}
 @media(max-width:700px){#hand{top:175px!important}#case-controls{right:7px;bottom:30%}#case-controls button{font-size:10px;min-height:34px;padding:7px 9px}}
-#farm-test{display:block;margin-top:8px;margin-left:auto;cursor:pointer;touch-action:manipulation;
-  color:#405445;background:#f6f3e6eb;border:1px solid #9faa94;border-radius:9px;
-  padding:8px 12px;font:600 12px system-ui,sans-serif;box-shadow:0 4px 12px #0001}
-#farm-test:disabled{opacity:.48;cursor:default}
-@media(max-width:700px){#farm-test{font-size:10px;padding:7px 9px}}
+
 #deck-drawer-toggle{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);
  z-index:7;min-height:32px;padding:6px 16px;min-width:108px;border:1px solid #a5aca6;
  border-radius:20px;background:#f8f8f0df;color:#48524b;font:600 12px/1.2 system-ui,sans-serif;
@@ -162,7 +158,7 @@ html,body{background:#d8ded0}
 <script src="./engine/spatial-shadows.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=6"></script>
 <script src="./engine/farmer-facilities.js?v=1"></script>
-<script src="./engine/scene-card-hud.js?v=19"></script>
+<script src="./engine/scene-card-hud.js?v=20"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -379,7 +375,8 @@ function modelForCard(c,now){
  base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+motion.pitch+arrival.pitch));
  base=mul(base,RY(c.flip));
  base=mul(base,RZ(motion.roll));
- const sc=Math.max(.025,pose.scale)*motion.scale*(c.slot?1.32:1);
+ const sizeFactor=c.kind==='facility'&&c.def.footprint?.[0]===2?1.6:1;
+ const sc=Math.max(.025,pose.scale)*motion.scale*(c.slot?1.32:1)*sizeFactor;
  base=mul(base,S(sc,sc,sc));return base;}
 function placementPose(c,now){
  const dt=now-c.placeStart;if(dt<0||dt>.52)return{dy:0,pitch:0};
@@ -746,6 +743,15 @@ function pick(d){
  if(d.kind!=='terrain'&&cards.some(c=>c.def.id===d.id))return;
  active=d;preview=d.kind==='terrain'?null:makeCard(d);hoverCard=null;sync();
 }
+// Five actual farmer-owned facility cards are textured when drawn/played.
+for(const d of Object.values(farmDefs)){
+ texCache.set(d.id,facilityTexture(d.name));
+ if(d.id==='farm-field')loadTexture('../assets/card-battle/farmer/farm-field.png',tex=>{
+  texCache.set(d.id,tex);
+  for(const c of cards)if(c.def?.id===d.id)c.texture=tex;
+  if(preview?.def.id===d.id)preview.texture=tex;
+ });
+}
 for(const d of handDefs){
  const b=document.createElement('button');b.type='button';b.className='hand-card'+(d.kind==='terrain'?' terrain':'');
  b.dataset.cardId=d.id;b.title=d.testOnly?'农田牌 · 设施区放置测试（1×1）':d.name;
@@ -850,6 +856,9 @@ function drop(s){
   const consumed=window.__forestHand?.consumeSelected('facility');
   if(!consumed){farmRules.remove(placed.facility.id);return message('必须从农夫牌堆摸取设施牌');}
   c.facilityId=placed.facility.id;c.coveredSlots=areas;
+  c.homeX=areas.reduce((n,q)=>n+q.x,0)/areas.length;
+  c.homeZ=areas.reduce((n,q)=>n+q.z,0)/areas.length;
+  c.x=c.homeX;c.z=c.homeZ;
   for(const tile of areas)occupied.set(tile.id,c);
  }else occupied.set(s.id,c);
  cards.push(c);
