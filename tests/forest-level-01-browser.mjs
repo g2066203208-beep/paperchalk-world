@@ -126,8 +126,10 @@ async function verifyApprovedReferenceLayout(page,kind){
  const m=await page.evaluate(()=>window.__boardReferenceLayout.snapshot);
  assert.equal(m.boardTiles,96,'full 16 by 6 terrain remains physical');
  assert.ok(m.coverageX>.78,'board should occupy most horizontal visual space');
- assert.ok(m.coverageY>(kind==='desktop'?.54:.17),
-   'board should be proportioned vertically like reference, not squashed');
+ // A complete 16-column board must be shown on a 390x844 portrait screen;
+ // the desktop screenshot is the 16:9 visual target, not portrait's geometry.
+ assert.ok(m.coverageY>(kind==='desktop'?.54:.13),
+   'desktop should match approved composition; mobile must retain all 96 cells');
  assert.ok(m.left>=0&&m.right<=m.viewport[0],'board frame visible within horizontal viewport');
  assert.ok(m.top>=0&&m.bottom<=m.viewport[1],'board frame visible within vertical viewport');
  assert.equal(await page.locator('#deck-drawer-toggle').getAttribute('aria-expanded'),'false',
