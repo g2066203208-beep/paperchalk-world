@@ -1,15 +1,17 @@
-/* Headless card-hand adapter. All draws are initiated by clicking one of seven
- * independent physical class boxes. One shared 10-card cap; no automatic deals.
- * Current placeholder card faces are independent of engine draw rules.
+/* Headless card-hand adapter: only acquired, level-owned character cards
+ * generate physical piles. Slots are packed left-to-right; the other
+ * seven-bay locations stay empty and noninteractive.
  */
 (function(root){
 'use strict';
 const factory=root.PaperchalkProfessionDecks;
 if(!factory)throw Error('Profession model missing');
 const units=root.__forestLevelDebug?.state?.units||[];
-const activeJobs=units.filter(u=>u.side==='ally').map(u=>u.role).filter(Boolean);
-const model=factory.create({maxHand:10,prototypeAllClasses:true,
- unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
+const ownedCharacters=units.filter(u=>u.side==='ally').map(u=>({
+ id:u.id,name:u.name,profession:u.role,characterId:u.characterId,
+ portrait:root.PaperchalkCharacterRegistry?.get(u.characterId)?.portrait||null
+}));
+const model=factory.create({maxHand:10,ownedCharacters,seed:618231});
 let selectedInstance=null;
 function snapshot(){return model.snapshot();}
 function selectedCard(){return snapshot().hand.find(c=>c.instance===selectedInstance)||null;}
@@ -37,9 +39,9 @@ function consumeForTarget(targetId){
 }
 function reset(){selectedInstance=null;return model.reset();}
 function onDeployment(){
+ // Deployment never resets cards already drawn from the character's own pile.
  selectedInstance=null;
- // No automatic hand: the player must click the physical class box to draw.
- return model.reset();
+ return model.snapshot();
 }
 function nextTurn(){
  if(root.__forestLevelDebug?.state?.phase!=='active')return false;
@@ -49,7 +51,7 @@ function nextTurn(){
 root.__forestHand=Object.freeze({
  consumeForTarget,reset,onDeployment,nextTurn,selectCard,draw,
  clearSelection(){selectedInstance=null;},
- remainingCards:profession=>model.remainingCards(profession),
+ remainingCards:ownerId=>model.remainingCards(ownerId),
  get selected(){return selectedInstance;},
  get snapshot(){return model.snapshot();},
  // Compatibility for existing tests and older tutorial shortcuts.
