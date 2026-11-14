@@ -145,6 +145,7 @@ html,body{background:#d8ded0}
 <script src="./engine/combat-choreography.js?v=1"></script>
 <script src="./engine/combat-feedback.js?v=1"></script>
 <script src="./engine/combat-turn-controller.js?v=1"></script>
+<script src="./engine/card-stat-badges.js?v=1"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
@@ -307,6 +308,9 @@ const RRstrip=(()=>{const outer=rrPoints(slotW,slotH,.14),inner=rrPoints(slotW-.
 const slotFill=rrFace(slotW-.05,slotH-.05,.10,0);
 let shadowSystem=null;
 function renderGeom(geo,m,color,tex=null,unlit=false,terrainSoil=null,metal=0,material=0){if(shadowSystem?.capturing){shadowSystem.draw(geo,m);return;}gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,unlit?1:0);gl.uniform1f(U.has,tex?1:0);gl.uniform1f(U.terrain,terrainSoil?1:0);gl.uniform1f(U.metal,metal);gl.uniform1f(U.materialKind,material);if(terrainSoil)gl.uniform3fv(U.soil,terrainSoil.slice(0,3));if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}drawCalls++;gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
+const cardStatBadges=window.PaperchalkCardStatBadges.create({
+ gl,makeFace:rrFace,renderGeom,mul,T,cardW,cardH,cardD
+});
 function cube(x,y,z,w,h,d,color,material=0){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color,null,false,null,0,material);}
 // Terrain textures, generated geometry, palette rules and adjacency live in a reusable module.
 // No per-scene duplication of mesh generation or independently calculated placement positions.
@@ -380,6 +384,12 @@ renderGeom(insetBack,M,colors.backInset);
 // The complete front is a flat, full-resolution texture when installed game card artwork is available.
 if(c.texture)renderGeom(cardDetail,M,[1,1,1,1],c.texture,!visualFx,null,0,5);
 else renderGeom(inset,M,c.side==='enemy'?[.945,.95,.953,1]:colors.inner);
+// Badges inherit the SAME physical 3D model matrix. They cannot slide, float
+// over the UI, or detach from a moving/flipping/defeated card.
+if(!c.hudMatrix&&c.unitId&&c.slot&&Math.cos(c.flip)>.05){
+ const stats=level.getUnit(c.unitId);
+ if(stats)cardStatBadges.draw(M,stats);
+}
 // A tiny light seam on the upper rim gives readable physical thickness during flips.
 }
 function loadTexture(url,callback){
@@ -632,11 +642,10 @@ window.__forestCombat=Object.freeze({
 function syncLevelHud(){
  const state=level.snapshot(),hero=state.units.find(u=>u.side==='ally');
  const enemies=state.units.filter(u=>u.side==='enemy'&&u.alive).length;
- const hp=hero?hero.currentHp+'/'+hero.hp:'—';
- const shield=hero?.currentBlock?' · 护盾 '+hero.currentBlock:'';
  const handCount=window.__forestHand?.snapshot.count??0;
+ // Unit attack/HP belongs to the physical card frames, not the global HUD.
  levelHud.textContent=state.phase==='deployment'?'部署阶段 · 将伐木少女放入我方九宫格':
-  '第 '+state.turn+' 轮 · 生命 '+hp+shield+' · 敌人 '+enemies+'/2 · 手牌 '+handCount+'/10';
+  '第 '+state.turn+' 轮 · 敌人 '+enemies+'/2 · 手牌 '+handCount+'/10';
  combatPhase.textContent=state.phase==='deployment'?'准备部署':state.phase==='active'?
   '第 '+state.turn+' 回合 · 玩家行动':state.phase==='enemy'?
   '第 '+state.turn+' 回合 · 敌方行动':state.phase==='victory'?'战斗胜利':'战斗失败';
@@ -1199,6 +1208,9 @@ window.__forestLevelDebug={
  attack(id){const card=cards.find(c=>c.unitId===id);if(!card)return false;return tapUnit(card)===true;},
  endTurn:requestEndTurn,
  get combat(){return window.__forestCombat.snapshot;},
+ get cardStats(){return {layout:cardStatBadges.snapshot,units:level.snapshot().units
+   .filter(u=>u.deployed).map(u=>({unitId:u.id,attack:u.attack,currentHp:u.currentHp,
+     maxHp:u.hp,side:u.side,alive:u.alive}))};},
  reset
 };
 requestAnimationFrame(frame);
