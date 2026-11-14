@@ -149,6 +149,7 @@ html,body{background:#d8ded0}
 <script src="./engine/bandit-roster.js?v=2"></script>
 <script src="./levels/forest-02.js?v=2"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
+<script src="./engine/object-anchor.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
 <script src="./engine/scene-lifecycle.js?v=1"></script>
 <script src="./engine/scene-transitions.js?v=1"></script>
@@ -335,8 +336,8 @@ function terrainEntryMatrix(c,r){
  const pose=objectFX.sample('terrain:'+c+':'+r,now);
  if(Math.abs(pose.scale-1)<.0001)return I();
  const center=terrain.center(c,r),pivotY=fx.height(c,r)-terrain.levelStep;
- return mul(mul(T(center.x,pivotY,center.z),S(pose.scale,pose.scale,pose.scale)),
-  T(-center.x,-pivotY,-center.z));
+ return window.PaperchalkObjectAnchor.atRoot([center.x,pivotY,center.z],
+  pose.scale,{T,S,mul});
 }
 const terrainRenderer=window.PaperchalkVoxelTerrain.createWebGLRenderer(fx.visualGrid,{
  gl,makeGeom,renderGeom,I,tileTransform:terrainEntryMatrix,
