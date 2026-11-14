@@ -116,7 +116,7 @@ html,body{background:#d8ded0}
 <script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=16"></script>
+<script src="./engine/scene-card-hud.js?v=17"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -735,7 +735,7 @@ canvas.addEventListener('pointerdown',e=>{
  // Camera gestures take priority over card picking only for explicit drag
  // buttons or a two-finger touch. Single-finger taps still play cards.
  if(orbitCamera.pointerDown(e,orbitTouch)){
-  e.preventDefault();pointerDown=null;handDown=null;
+  e.preventDefault();sceneHUD.cancelPress?.();pointerDown=null;handDown=null;
   if(dragCard){dragCard.dragged=false;dragCard=null;}
   canvas.style.cursor='grabbing';return;
  }
@@ -747,7 +747,8 @@ canvas.addEventListener('pointerdown',e=>{
  if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}
 });
 window.addEventListener('pointermove',e=>{
- orbitCamera.pointerHover(e,!sceneTransition.busy&&e.target===canvas?canvas.getBoundingClientRect():null);
+ orbitCamera.pointerHover(e,!sceneTransition.busy&&e.target===canvas&&!sceneHUD.hit(e)?
+  canvas.getBoundingClientRect():null);
  if(sceneTransition.busy)return;
  // Do not let a board-card hit test steal an ongoing camera drag.
  if(orbitCamera.pointerMove(e)){
