@@ -8,6 +8,7 @@ on:
       - 'site/card-battle/engine/combat-choreography.js'
       - 'site/card-battle/engine/combat-turn-controller.js'
       - 'site/card-battle/engine/combat-feedback.js'
+      - 'site/card-battle/engine/card-stat-badges.js'
       - 'site/card-battle/engine/battle-camera.js'
       - 'site/card-battle/engine/scene-card-hud.js'
       - 'site/card-battle/engine/flip-case-controller.js'
@@ -34,6 +35,7 @@ on:
       - 'tests/forest-level-core.test.cjs'
       - 'tests/combat-choreography.test.cjs'
       - 'tests/combat-turn-controller.test.cjs'
+      - 'tests/card-stat-badges.test.cjs'
       - 'tests/profession-decks.test.cjs'
       - 'tests/object-animations.test.cjs'
       - 'tests/scene-transitions.test.cjs'
@@ -59,6 +61,8 @@ jobs:
           node tests/forest-level-core.test.cjs
           node tests/combat-choreography.test.cjs
           node tests/combat-turn-controller.test.cjs
+          node tests/card-stat-badges.test.cjs
+          node --check site/card-battle/engine/card-stat-badges.js
           node --check site/card-battle/engine/combat-turn-controller.js
           node --check site/card-battle/engine/combat-choreography.js
           node --check site/card-battle/engine/combat-feedback.js
