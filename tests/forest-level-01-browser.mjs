@@ -44,7 +44,7 @@ async function deploy(page){
  const slot=await page.evaluate(()=>window.__forestLevelDebug.slotPoints.find(p=>p.side==='ally'&&p.r===0&&p.c===1));
  assert.ok(slot?.point);
  await page.mouse.click(slot.point.x,slot.point.y);
- await page.waitForFunction(()=>window.__forestLevelDebug.state.phase==='active',{timeout:10000});
+ await page.waitForFunction(()=>window.__forestLevelDebug.state.phase==='active'&&window.__sceneCardHUD.snapshot.stagedCharacterCards===0,{timeout:15000});
  assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
 }
 try{
