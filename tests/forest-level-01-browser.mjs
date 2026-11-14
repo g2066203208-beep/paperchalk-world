@@ -63,8 +63,10 @@ async function verifyWorld(page,kind){
  console.log('FOREST_16X6_96_VOXELS_PASS',JSON.stringify({kind,voxels:status.tiles.length,unitSlots:18,facilitySlots:48}));
 }
 async function plantTestFarm(page,flank='left'){
- const button=page.locator('[data-card-id="farm-field"]');
+ const button=page.locator('#farm-test');
  await page.waitForFunction(()=>document.querySelector('[data-card-id="farm-field"] img')?.naturalWidth===704,{timeout:20000});
+ assert.equal(await button.isVisible(),true,'farm test entry must remain accessible without exposing legacy HTML card toolbar');
+ assert.equal(await button.isEnabled(),true,'farm test unlocks after hero deployment');
  await button.click();
  await page.waitForFunction(()=>window.__terrainDebug.tool==='farm-field',{timeout:8000});
  const target=await page.evaluate(flank=>window.__forestLevelDebug.slotPoints.find(s=>

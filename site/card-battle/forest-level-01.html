@@ -57,6 +57,11 @@ html,body{background:#d8ded0}
 #case-controls button{pointer-events:auto;touch-action:manipulation;min-height:38px;padding:8px 14px;background:#eeeeebed;border:1px solid #a9aeac;border-radius:10px;color:#343b3b;font:600 12px/1.2 system-ui,sans-serif;box-shadow:0 3px 14px #0002;cursor:pointer}
 #case-controls button:disabled{opacity:.54;cursor:default}#case-controls button[hidden]{display:none}
 @media(max-width:700px){#hand{top:175px!important}#case-controls{right:7px;bottom:30%}#case-controls button{font-size:10px;min-height:34px;padding:7px 9px}}
+#farm-test{display:block;margin-top:8px;margin-left:auto;cursor:pointer;touch-action:manipulation;
+  color:#405445;background:#f6f3e6eb;border:1px solid #9faa94;border-radius:9px;
+  padding:8px 12px;font:600 12px system-ui,sans-serif;box-shadow:0 4px 12px #0001}
+#farm-test:disabled{opacity:.48;cursor:default}
+@media(max-width:700px){#farm-test{font-size:10px;padding:7px 9px}}
 </style>
 </head>
 <body>
@@ -64,7 +69,9 @@ html,body{background:#d8ded0}
 <div id="note" aria-live="polite"></div>
 <div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>农田牌测试：点农田，再点左右设施区空格<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
-<div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button><div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div></div>
+<div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button>
+ <div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div>
+ <button type="button" id="farm-test" aria-label="测试部署农民组织工程师的农田设施">农田设施 · 放置测试</button></div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div>
 <div hidden><button id="roster-trigger" type="button">人物图鉴</button></div>
 <div id="character-gallery" role="dialog" aria-label="农民组织人物卡图鉴" aria-modal="true" hidden>
@@ -445,7 +452,11 @@ function facilityTexture(name){
 }
 function sync(){for(const d of handDefs){let b=buttons.get(d.id);
  b.hidden=d.kind!=='terrain'&&cards.some(c=>c.def.id===d.id);b.classList.toggle('active',active?.id===d.id);
- b.setAttribute('aria-pressed',active?.id===d.id?'true':'false');}}
+ b.setAttribute('aria-pressed',active?.id===d.id?'true':'false');}
+ const test=document.getElementById('farm-test');
+ if(test){test.disabled=cards.some(c=>c.def.id==='farm-field')||level.phase!=='active';
+  test.setAttribute('aria-pressed',String(active?.id==='farm-field'));}
+}
 function clearPick(){active=null;preview=null;overSlot=null;onBoard=false;sync();}
 function pick(d){
  if(d.kind!=='terrain'&&cards.some(c=>c.def.id===d.id))return;
@@ -463,6 +474,13 @@ for(const d of handDefs){
  if(d.src)loadTexture(d.src,tex=>{texCache.set(d.id,tex);for(const c of cards)if(c.def.id===d.id)c.texture=tex;if(preview?.def.id===d.id)preview.texture=tex;});
  else if(d.kind==='facility')texCache.set(d.id,facilityTexture(d.name));
 }
+document.getElementById('farm-test').addEventListener('click',()=>{
+ if(level.phase!=='active'){message('请先部署伐木少女，再放置农田设施');return;}
+ const field=handDefs.find(d=>d.id==='farm-field');
+ if(!field||cards.some(c=>c.def.id==='farm-field'))return;
+ pick(field);
+ message('请点击我方左侧或右侧的空设施格放置农田');
+});
 function inCanvas(e){let b=canvas.getBoundingClientRect();return e.clientX>=b.left&&e.clientX<=b.right&&e.clientY>=b.top&&e.clientY<=b.bottom;}
 function slotAt(x,z){
  let best=null,dd=Infinity;for(const s of slotCenters){let dx=Math.abs(x-s.x),dz=Math.abs(z-s.z);
@@ -804,7 +822,7 @@ function deployCharacterAt(id,x,y){
  spawnUnitCard(result.unit);
  selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
  window.__forestHand?.onDeployment();
- syncLevelHud();
+ syncLevelHud();sync();
  return true;
 }
 function startForestLevel(){
