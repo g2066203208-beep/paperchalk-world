@@ -1100,25 +1100,93 @@ function startForestLevel(){
  attackMode=true;syncLevelHud();sync();
  // Physical hero card and highlighted ally cells convey deployment without an overlay.
 }
-function tapUnit(card){
- if(!card||card.side!=='enemy'||!attackMode||level.phase!=='active')return;
- const action=window.__forestHand?.consumeForTarget(card.unitId);
- if(!action){message('请从手中任意选择一张行动牌');return false;}
- const result=level.actAttack('woodcutter',card.unitId,{power:action.damage});
- if(!result.ok)return false;
- card.attackStart=now;
- const foe=level.getUnit(card.unitId);
- if(foe&&!foe.alive)objectFX.exit('unit:'+card.unitId,now,{duration:.42});
- const hero=cards.find(c=>c.unitId==='woodcutter');
- if(hero){
-  hero.attackStart=now;
-  if(!level.getUnit('woodcutter')?.alive)
-   objectFX.exit('unit:woodcutter',now,{duration:.42});
- }
- syncLevelHud();
- if(level.phase!=='active')showLevelEnd(level.snapshot());
- else message('斧击命中 · 已出牌，本回合无法普通摸牌');
+// A whole attack resolves at impact, not when the card is selected.
+// The enemy queue only advances after the player explicitly ends the turn.
+function cardPoint(card){
+ return{x:card.homeX,y:fx.height(card.slot.tileC,card.slot.tileR)+.34,z:card.homeZ};
+}
+function requestEndTurn(){
+ if(level.phase!=='active'||combatChoreo.busy||sceneTransition.busy)return false;
+ const r=level.endTurn();if(!r.ok)return false;
+ window.__forestHand?.clearSelection();
+ enemyNextAt=now+.30;syncLevelHud();message('敌方回合 · 敌人依次行动');
  return true;
+}
+endTurnButton.addEventListener('click',requestEndTurn);
+function advanceEnemyCombat(){
+ if(level.phase!=='enemy'||combatChoreo.busy||sceneTransition.busy||now<enemyNextAt)return;
+ const queue=level.snapshot().enemyQueue;
+ if(!queue.length){
+  const turn=level.beginPlayerTurn();
+  if(turn.ok){window.__forestHand?.nextTurn();syncLevelHud();
+   message('第 '+turn.turn+' 回合 · 自动摸五张牌');}
+  return;
+ }
+ const unit=level.getUnit(queue[0]);
+ if(!unit||!unit.alive){
+  level.resolveEnemyAction(queue[0]);enemyNextAt=now+.12;syncLevelHud();return;
+ }
+ const intent=level.enemyIntents().find(i=>i.unitId===unit.id);
+ const from=cards.find(c=>c.unitId===unit.id);
+ const allies=level.snapshot().units.filter(u=>u.side==='ally'&&u.alive&&u.deployed)
+  .sort((a,b)=>Math.abs(a.c-unit.c)-Math.abs(b.c-unit.c)||
+    Math.abs(a.r-unit.r)-Math.abs(b.r-unit.r)||a.c-b.c);
+ const target=cards.find(c=>c.unitId===allies[0]?.id);
+ if(!from){level.resolveEnemyAction(unit.id);enemyNextAt=now+.12;return;}
+ const guard=intent?.kind==='guard';
+ const to=guard?from:(target||from);
+ combatChoreo.start({
+  attackerId:unit.id,targetId:guard?unit.id:to.unitId,
+  from:cardPoint(from),to:cardPoint(to),kind:guard?'guard':'attack',
+  damage:intent?.damage||0,at:now,
+  onImpact:()=>{
+   const result=level.resolveEnemyAction(unit.id);
+   if(!result.ok)return;
+   if(result.kind==='guard')combatFeedback.guard(unit.id,result.block);
+   else if(result.targetId){
+    combatFeedback.hit(result.targetId,result.damage,result.blocked);
+    if(result.defeated)objectFX.exit('unit:'+result.targetId,now,{duration:.38});
+   }
+   syncLevelHud();
+  },
+  onFinish:()=>{
+   enemyNextAt=now+.24;syncLevelHud();
+   if(level.phase==='defeat')showLevelEnd(level.snapshot());
+  }
+ });
+ syncLevelHud();
+}
+function tapUnit(card){
+ if(!card||card.side!=='enemy'||!attackMode||level.phase!=='active'||
+  combatChoreo.busy||sceneTransition.busy)return false;
+ const foe=level.getUnit(card.unitId);
+ const hero=level.getUnit('woodcutter');
+ const attacker=cards.find(c=>c.unitId==='woodcutter');
+ if(!foe?.alive||!hero?.alive||!attacker)return false;
+ const action=window.__forestHand?.consumeForTarget(card.unitId);
+ if(!action){message('先选择手中一张行动牌，再点击敌人');return false;}
+ const started=combatChoreo.start({
+  attackerId:'woodcutter',targetId:card.unitId,
+  from:cardPoint(attacker),to:cardPoint(card),at:now,
+  damage:action.damage,kind:'attack',
+  onImpact:()=>{
+   const result=level.actAttack('woodcutter',card.unitId,{
+    power:action.damage,block:action.block,pierce:action.pierce
+   });
+   if(!result.ok)return;
+   combatFeedback.hit(card.unitId,result.damage,result.blocked);
+   if(result.blockGained)combatFeedback.guard('woodcutter',result.blockGained);
+   if(result.defeated)objectFX.exit('unit:'+card.unitId,now,{duration:.40});
+   syncLevelHud();
+  },
+  onFinish:()=>{
+   syncLevelHud();
+   if(level.phase==='victory')showLevelEnd(level.snapshot());
+   else message('命中结算完成 · 可继续出牌或结束回合');
+  }
+ });
+ if(started)syncLevelHud();
+ return started;
 }
 document.getElementById('level-retry').addEventListener('click',reset);
 startForestLevel();
