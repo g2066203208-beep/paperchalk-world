@@ -45,6 +45,26 @@ async function verifyBox(page,kind){
  console.log('STATIC_BOX_GEOMETRY_PASS',JSON.stringify({kind,bounds:b.bounds,cardPiles:b.physicalDeckCards}));
  return b;
 }
+async function verifyTrayCollapsed(page,kind){
+ await page.waitForFunction(()=>window.__sceneCardHUD?.collapsed===true&&
+  window.__sceneCardHUD.snapshot.visible.length===0,{timeout:15000});
+ const hud=await page.evaluate(()=>window.__sceneCardHUD.snapshot);
+ assert.equal(hud.collapsed,true);
+ assert.equal(hud.visibleDeckPiles,0,'folded tray has no visible 3D card pile');
+ assert.equal(hud.drawCalls,0,'folded tray has no 3D render calls');
+ assert.equal(await page.locator('#deck-drawer-toggle').getAttribute('aria-expanded'),'false');
+ console.log('SEVEN_TRAY_COLLAPSED_PASS',JSON.stringify({kind,cardMeshes:hud.renderedCardMeshes,physicalDeckCards:hud.physicalDeckCards}));
+}
+async function showTray(page){
+ await page.locator('#deck-drawer-toggle').click();
+ await page.waitForFunction(()=>window.__sceneCardHUD?.collapsed===false&&
+  window.__sceneCardHUD.snapshot.visibleDeckPiles===7,{timeout:20000});
+ assert.equal(await page.locator('#deck-drawer-toggle').getAttribute('aria-expanded'),'true');
+}
+async function hideTray(page){
+ await page.locator('#deck-drawer-toggle').click();
+ await verifyTrayCollapsed(page,'toggled-hidden');
+}
 async function verifyWorld(page,kind){
  await page.waitForFunction(()=>window.__terrainDebug?.tiles?.length===96&&window.__forestLevelDebug?.slots?.length===66,{timeout:35000});
  const status=await page.evaluate(()=>({
@@ -139,6 +159,10 @@ try{
  pc.on('pageerror',e=>errors.push('PC '+String(e)));
  await pc.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
  await verifyWorld(pc,'desktop');
+ await verifyTrayCollapsed(pc,'desktop-default');
+ await pc.waitForTimeout(400);
+ await screenshot(pc,'00-board-clear-no-deck-desktop');
+ await showTray(pc);
  await verifyBox(pc,'desktop');
  await verifyFixedCamera(pc,'desktop');
  await pc.waitForTimeout(500);
@@ -150,6 +174,10 @@ try{
  await plantTestFarm(pc,'left');
  await pc.waitForTimeout(700);
  await screenshot(pc,'02a-farmland-installed-left-facility-desktop');
+ await hideTray(pc);
+ await pc.waitForTimeout(300);
+ await screenshot(pc,'02b-farmland-board-clear-no-deck-desktop');
+ await showTray(pc);
  await clickCard(pc,'deck:warrior');
  await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(pc,'03-static-hand-drawn-desktop');
@@ -169,12 +197,17 @@ try{
    window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:15000});
  await pc.evaluate(()=>window.__forestLevelDebug.reset());
  await verifyBox(pc,'restart');
+ await hideTray(pc);
+ await screenshot(pc,'04a-restarted-board-with-deck-hidden');
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.facilities.length),0,'restart clears facility placements');
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment');
  const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  phone.on('pageerror',e=>errors.push('PHONE '+String(e)));
  await phone.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
  await verifyWorld(phone,'phone');
+ await verifyTrayCollapsed(phone,'phone-default');
+ await screenshot(phone,'05a-board-clear-no-deck-phone');
+ await showTray(phone);
  await verifyBox(phone,'phone');
  await verifyFixedCamera(phone,'phone');
  await phone.waitForTimeout(250);
@@ -188,6 +221,9 @@ try{
  await plantTestFarm(phone,'right');
  await phone.waitForTimeout(450);
  await screenshot(phone,'07-farmland-installed-right-facility-phone');
+ await hideTray(phone);
+ await phone.waitForTimeout(300);
+ await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
  assert.deepEqual(errors,[]);
- console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,errors}));
+ console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,errors}));
 }finally{await browser.close();}

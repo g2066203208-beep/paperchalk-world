@@ -62,11 +62,18 @@ html,body{background:#d8ded0}
   padding:8px 12px;font:600 12px system-ui,sans-serif;box-shadow:0 4px 12px #0001}
 #farm-test:disabled{opacity:.48;cursor:default}
 @media(max-width:700px){#farm-test{font-size:10px;padding:7px 9px}}
+#deck-drawer-toggle{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);
+ z-index:7;min-height:32px;padding:6px 16px;min-width:108px;border:1px solid #a5aca6;
+ border-radius:20px;background:#f8f8f0df;color:#48524b;font:600 12px/1.2 system-ui,sans-serif;
+ box-shadow:0 3px 9px #0002;cursor:pointer;touch-action:manipulation}
+#deck-drawer-toggle:hover{background:#fff}
+@media(max-width:700px){#deck-drawer-toggle{bottom:8px;min-height:30px;font-size:11px;padding:5px 12px}}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="森林战场：16列6行96个3D方块，中间人物九宫格与两侧设施区"></canvas>
 <div id="note" aria-live="polite"></div>
+<button type="button" id="deck-drawer-toggle" aria-expanded="false" aria-label="展开七槽牌盒">展开牌盒 ▲</button>
 <div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>农田牌测试：点农田，再点左右设施区空格<br>固定俯视镜头 · 棋盘不旋转、不平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button>
@@ -89,7 +96,7 @@ html,body{background:#d8ded0}
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=4"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=15"></script>
+<script src="./engine/scene-card-hud.js?v=16"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -333,6 +340,20 @@ const sceneHUD=window.PaperchalkSceneCardHUD.create({
  showRoster:()=>document.getElementById('roster-trigger').click()
 });
 window.__sceneCardHUD=sceneHUD;
+ // Layout inspection mode: the real WebGL tray is folded away by default.
+ // The card decks and hand remain intact; only HUD rendering/hitboxes stop.
+ const deckDrawerToggle=document.getElementById('deck-drawer-toggle');
+ function syncDeckDrawer(){
+  const expanded=!sceneHUD.collapsed;
+  deckDrawerToggle.setAttribute('aria-expanded',String(expanded));
+  deckDrawerToggle.setAttribute('aria-label',expanded?'收起七槽牌盒':'展开七槽牌盒');
+  deckDrawerToggle.textContent=expanded?'收起牌盒 ▼':'展开牌盒 ▲';
+ }
+ deckDrawerToggle.addEventListener('click',()=>{
+  sceneHUD.setCollapsed(!sceneHUD.collapsed);
+  syncDeckDrawer();
+ });
+ syncDeckDrawer();
 // User-controlled REAL scene switch: all existing meshes retreat first, the
 // engine swaps a different biome while concealed, then the new scene grows in.
 // It preserves level phase, deployed characters, current HP, hand and 7 decks.

@@ -24,6 +24,7 @@ function create(o){
  const fov=39*Math.PI/180,cameraZ=14.5;
  let width=1920,height=1080,spanW=18,spanH=10,now=0,scene=[],hot=[],hover=null,press=null;
  let sceneMotion={mode:'steady',start:0},drawCalls=0,deckMeshes=0;
+ let collapsed=true; // Default view is an unobstructed 16x6 board; deck stays in game state.
  function size(w,h){
   width=Math.max(1,w);height=Math.max(1,h);
   spanH=2*cameraZ*Math.tan(fov/2);spanW=spanH*width/height;
@@ -247,6 +248,8 @@ function create(o){
  }
  function draw(t,w,h){
   now=t;size(w,h);
+  // Folded drawer is not rendered or interactive. Deck/hand state persists.
+  if(collapsed){scene=[];hot=[];hover=null;press=null;drawCalls=0;deckMeshes=0;return;}
   const g=dims(),snapshot=o.snapshot(),staged=o.staged?.()||[];
   const positions=layout(snapshot,staged,g);scene=positions;
   hot=positions;drawCalls=0;deckMeshes=0;
@@ -271,6 +274,7 @@ function create(o){
    y:(.5-(e.clientY-rect.top)/rect.height)*spanH};
  }
  function hit(e){
+  if(collapsed)return null;
   const q=worldPoint(e);if(!q)return null;
   const ranked=[...hot].sort((a,b)=>({character:3,hand:2,deck:1}[b.kind]||0)-
    ({character:3,hand:2,deck:1}[a.kind]||0));
@@ -304,15 +308,23 @@ function create(o){
   return true;
  }
  function pointFor(id){
+  if(collapsed)return null;
   const p=scene.find(x=>x.id===id);if(!p)return null;
   const r=canvas.getBoundingClientRect();
   return {x:r.left+(.5+p.x/spanW)*r.width,
    y:r.top+(.5-p.y/spanH)*r.height};
  }
+ function setCollapsed(next){
+  collapsed=!!next;
+  hover=null;press=null;
+  if(collapsed){scene=[];hot=[];}
+  return collapsed;
+ }
  function animateScene(mode,at){sceneMotion={mode,start:at};}
  function resetAnimations(){scene=[];hover=null;sceneMotion={mode:'steady',start:0};}
  return Object.freeze({
-  render:draw,hit,move,down,up,pointFor,animateScene,resetAnimations,
+  render:draw,hit,move,down,up,pointFor,animateScene,resetAnimations,setCollapsed,
+  get collapsed(){return collapsed;},
   get drawn(){return drawCalls;},
   get snapshot(){
    const g=dims(),count=o.snapshot();
@@ -321,7 +333,8 @@ function create(o){
    return {geometry:'single-static-seven-bay-whitebox',roundedCase:true,beveledRim:true,
     fittedCardStacks:true,cardStackTiltRadians:-.105,
     visible:scene.map(p=>({id:p.id,kind:p.kind,x:p.x,y:p.y})),
-    visibleDeckPiles:7,stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
+    visibleDeckPiles:collapsed?0:7,stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
+    collapsed,canExpand:true,
     compartments:7,physicalBoxes:1,hasLid:false,hasHinge:false,
     reversibleLid:false,flipAnimationEnabled:false,screenEdgeAnchored:true,
     drawCalls,renderedCardMeshes:deckMeshes,count:count.count,
