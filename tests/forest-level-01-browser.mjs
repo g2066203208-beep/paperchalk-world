@@ -37,8 +37,8 @@ async function draw(page,profession='warrior'){
 async function confirm(page){
  await page.locator('#case-action').click();
  await page.waitForFunction(()=>window.__flipCase.phase==='closing'&&window.__flipCase.snapshot().progress>.30,{timeout:12000});
- await shot(page,'04-lid-folding-and-face-reversing');
  const mid=await page.evaluate(()=>window.__flipCase.snapshot());
+ await shot(page,'04-lid-folding-and-face-reversing');
  assert.ok(mid.angle>0&&mid.angle<Math.PI);
  assert.ok(mid.faceSpin>0&&mid.faceSpin<Math.PI);
  await page.waitForFunction(()=>window.__flipCase.phase==='playing',{timeout:15000});
