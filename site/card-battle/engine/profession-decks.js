@@ -1,7 +1,7 @@
-/* Reusable rules: seven independent physical class decks, one shared hand.
- * The PLAYER decides which deck to click and how many cards to draw (up to cap).
- * No auto opening draw, no auto turn draw, no first-play draw lock.
- * Unplayed hand cards survive turn boundaries; played cards enter discard.
+/* Reusable owner-based card decks: the seven-bay case starts EMPTY.
+ * Acquired characters are packed in acquisition order from the LEFT.
+ * Each character owns one independent action pile; no fake stacks, no
+ * class-only placeholders and no automatic opening/turn draw.
  */
 (function(root){
 'use strict';
@@ -54,91 +54,95 @@ const BASE_POOL=Object.freeze({warrior:WARRIOR_CARDS,ranger:RANGER_CARDS,enginee
 function create(options={}){
  const cap=options.maxHand??10;
  if(!Number.isInteger(cap)||cap<1)throw Error('Invalid shared hand cap');
-  // First-level VISUAL prototype: seven independent functional decks with the
- // same temporary warrior-card contents. The normal class gate is unchanged.
- const prototypeAllClasses=options.prototypeAllClasses===true;
- const unlocked=prototypeAllClasses?new Set(CLASSES.map(c=>c.id)):new Set(options.unlocked||['warrior']);
+ const sourceCharacters=options.ownedCharacters||
+  (options.unlocked||['warrior']).map(role=>({id:role,profession:role,name:CLASSES.find(c=>c.id===role)?.name||role}));
+ if(!Array.isArray(sourceCharacters)||sourceCharacters.length>7)throw Error('Physical card case supports at most seven characters');
+ const owned=sourceCharacters.map((c,i)=>{
+  const id=c.id||c.unitId||c.characterId;
+  const profession=c.profession||c.role;
+  if(!id||!CLASSES.some(job=>job.id===profession))throw Error('Invalid owned character');
+  return Object.freeze({id,name:c.name||id,profession,portrait:c.portrait||null,
+   characterId:c.characterId||id,slot:i});
+ });
+ if(new Set(owned.map(x=>x.id)).size!==owned.length)throw Error('Duplicate character deck');
+ const byId=new Map(owned.map(c=>[c.id,c]));
  let seed=options.seed??618231;
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
- const pool={};
- for(const c of CLASSES){
-  const source=prototypeAllClasses?WARRIOR_CARDS:(BASE_POOL[c.id]||[]);
-  pool[c.id]=source.map((x,i)=>({...x,profession:c.id,instance:c.id+'-'+i}));
- }
  const piles=new Map(),discards=new Map();
  let hand=[],played=[],turn=1;
- function shuffle(a){
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a;
+ const pool=Object.freeze({warrior:WARRIOR_CARDS,ranger:RANGER_CARDS,engineer:ENGINEER_CARDS});
+ function shuffle(list){
+  for(let i=list.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}
+  return list;
  }
  function reload(){
   piles.clear();discards.clear();
-  // Same temporary card art AND the same face-up order in all seven columns,
-  // but each column owns a separate real stack and separate remaining count.
-  const prototypeOrder=prototypeAllClasses
-    ? shuffle([...pool.warrior]).map(card=>card.id):null;
-  for(const c of CLASSES){
-   discards.set(c.id,[]);
-   if(!unlocked.has(c.id)){piles.set(c.id,[]);continue;}
-   if(prototypeOrder){
-    const byId=new Map(pool[c.id].map(card=>[card.id,card]));
-    piles.set(c.id,prototypeOrder.map(id=>byId.get(id)));
-   }else piles.set(c.id,shuffle([...pool[c.id]]));
+  for(const owner of owned){
+   const source=pool[owner.profession]||[];
+   piles.set(owner.id,shuffle(source.map((card,i)=>({
+    ...card,profession:owner.profession,ownerId:owner.id,
+    instance:owner.id+'-'+i
+   }))));
+   discards.set(owner.id,[]);
   }
  }
- function count(){return hand.length;}
+ const resolveOwner=key=>byId.get(key)||owned.find(c=>c.profession===key)||null;
  function snapshot(){
   return {
-   turn,locked:false,manualDraw:true,played:played.length,maxHand:cap,count:count(),
-   hand:hand.map(x=>({...x})),
-   classes:CLASSES.map(c=>({...c,unlocked:unlocked.has(c.id),
-     handCount:hand.filter(card=>card.profession===c.id).length,
-     deckCount:piles.get(c.id)?.length||0,discardCount:discards.get(c.id)?.length||0}))
+   turn,locked:false,manualDraw:true,played:played.length,
+   maxHand:cap,count:hand.length,hand:hand.map(x=>({...x})),
+   roster:owned.map(x=>({...x,deckCount:piles.get(x.id)?.length||0,
+    handCount:hand.filter(c=>c.ownerId===x.id).length,
+    discardCount:discards.get(x.id)?.length||0})),
+   classes:CLASSES.map(job=>{
+    const roles=owned.filter(x=>x.profession===job.id);
+    return {...job,unlocked:roles.length>0,
+     deckCount:roles.reduce((n,x)=>n+(piles.get(x.id)?.length||0),0),
+     handCount:hand.filter(x=>x.profession===job.id).length,
+     discardCount:roles.reduce((n,x)=>n+(discards.get(x.id)?.length||0),0)};
+   })
   };
  }
- function draw(profession){
-  if(!unlocked.has(profession))return {ok:false,reason:'locked-class'};
-  if(count()>=cap)return {ok:false,reason:'hand-full'};
-  const deck=piles.get(profession);
-  if(!deck)return {ok:false,reason:'box-empty'};
+ function draw(ownerKey){
+  const owner=resolveOwner(ownerKey);
+  if(!owner)return {ok:false,reason:'locked-character'};
+  if(hand.length>=cap)return {ok:false,reason:'hand-full'};
+  const deck=piles.get(owner.id);
   if(!deck.length){
-   // Draw pile only refills when exhausted; cards previously used this fight
-   // return from their class discard, rather than resetting every turn.
-   const discard=discards.get(profession);
-   if(discard?.length){deck.push(...shuffle(discard.splice(0)));}
+   const discard=discards.get(owner.id);
+   if(discard.length)deck.push(...shuffle(discard.splice(0)));
   }
   if(!deck.length)return {ok:false,reason:'box-empty'};
-  const card=deck.pop();hand.push(card);
+  const card=deck.pop();
+  hand.push(card);
   return {ok:true,card:{...card},state:snapshot()};
  }
  function play(instance){
-  const index=hand.findIndex(x=>x.instance===instance);
-  if(index<0)return {ok:false,reason:'not-in-hand'};
-  const card=hand.splice(index,1)[0];
+  const at=hand.findIndex(x=>x.instance===instance);
+  if(at<0)return {ok:false,reason:'not-in-hand'};
+  const card=hand.splice(at,1)[0];
   played.push(card);
   return {ok:true,card:{...card},state:snapshot()};
  }
- // A card/effect calls this explicitly. The UI never offers a generic discard button.
  function specialDiscard(instance){
-  const index=hand.findIndex(x=>x.instance===instance);
-  if(index<0)return {ok:false,reason:'not-in-hand'};
-  const card=hand.splice(index,1)[0];played.push(card);
+  const at=hand.findIndex(x=>x.instance===instance);
+  if(at<0)return {ok:false,reason:'not-in-hand'};
+  const card=hand.splice(at,1)[0];played.push(card);
   return {ok:true,card:{...card},state:snapshot()};
  }
  function nextTurn(){
-  // No forced discard of a player's unused cards and no automatic dealing.
-  for(const card of played)discards.get(card.profession)?.push(card);
+  for(const card of played)discards.get(card.ownerId).push(card);
   played=[];turn++;
   return snapshot();
  }
- function reset(){
-  turn=1;hand=[];played=[];reload();
-  return snapshot();
- }
- reload();reset();
- function remainingCards(profession){return (piles.get(profession)||[]).map(card=>({...card}));}
+ function reset(){turn=1;hand=[];played=[];reload();return snapshot();}
+ function remainingCards(ownerKey){return [...(piles.get(resolveOwner(ownerKey)?.id)||[])].map(c=>({...c}));}
+ reset();
  return Object.freeze({snapshot,remainingCards,draw,play,specialDiscard,nextTurn,reset,
+  get roster(){return owned.map(x=>({...x}));},
   classes:CLASSES,get cap(){return cap;}});
 }
-root.PaperchalkProfessionDecks=Object.freeze({version:'3.1.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create});
+root.PaperchalkProfessionDecks=Object.freeze({
+ version:'4.0.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create
+});
 })(window);
