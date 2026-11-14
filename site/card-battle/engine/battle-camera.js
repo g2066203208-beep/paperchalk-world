@@ -28,21 +28,31 @@ function create(options={}){
  let active=null,gestureMode=null;
  let touches=new Map(),lastPinch=null,rightDragged=false;
  const allowTouchOrbit=()=>true;
- let width=1920,height=1080;
+ let width=1920,height=1080,fitDistance=defaults.distance;
  function sizes(w,h){
-  width=Math.max(1,w);height=Math.max(1,h);
+  const nextWidth=Math.max(1,w),nextHeight=Math.max(1,h);
+  // The render loop calls sizes every frame. Never erase the user's wheel zoom.
+  if(width===nextWidth&&height===nextHeight)return;
+  width=nextWidth;height=nextHeight;
   if(fixed){
-   // Frame the ENTIRE 16-column landscape board at the fixed angle.
-   // A narrower viewport requires more distance, never a crop or a pan.
-   const fitted=defaults.distance*Math.max(1,fitAspect/(width/height));
-   targetDistance=fitted;distance=fitted;
+   // Refit only when the actual viewport changes (including phone rotation).
+   // Preserve the user's zoom ratio without unlocking yaw/elevation or pan.
+   const ratio=targetDistance/fitDistance;
+   fitDistance=defaults.distance*Math.max(1,fitAspect/(width/height));
+   targetDistance=clamp(fitDistance*ratio,
+    Math.max(minDist,fitDistance*.58),Math.max(maxDist,fitDistance*1.7));
+   distance=targetDistance;
   }
  }
  function recenter(){
-  targetYaw=defaults.yaw;targetElevation=defaults.elevation;targetDistance=defaults.distance;
+  targetYaw=defaults.yaw;targetElevation=defaults.elevation;targetDistance=fixed?fitDistance:defaults.distance;
   aim[0]=defaults.target[0];aim[1]=defaults.target[1];aim[2]=defaults.target[2];
  }
- function setZoom(value){if(!fixed)targetDistance=clamp(value,minDist,maxDist);}
+ function setZoom(value){
+  // Lock the camera direction, not the zoom. Phone fit may exceed desktop maxDist.
+  targetDistance=fixed?clamp(value,Math.max(minDist,fitDistance*.58),
+   Math.max(maxDist,fitDistance*1.7)):clamp(value,minDist,maxDist);
+ }
  function zoom(factor){setZoom(targetDistance*factor);}
  function pan(dx,dy){
   if(fixed)return;
@@ -114,8 +124,8 @@ function create(options={}){
  }
  function cancel(){active=null;touches.clear();lastPinch=null;gestureMode=null;}
  function update(dt){
-  if(fixed)return;
   const k=1-Math.exp(-Math.max(0,Math.min(.12,dt))*12);
+  if(fixed){distance=mix(distance,targetDistance,k);return;}
   yaw=mix(yaw,targetYaw,k);elevation=mix(elevation,targetElevation,k);
   distance=mix(distance,targetDistance,k);
   for(let i=0;i<3;i++)target[i]=mix(target[i],aim[i],k);
@@ -126,7 +136,7 @@ function create(options={}){
    eye:[target[0]+Math.sin(yaw)*horizontal,target[1]+Math.sin(elevation)*distance,target[2]+Math.cos(yaw)*horizontal],
    target:[...target],distance,yaw,elevation,
    desiredDistance:targetDistance,desiredYaw:targetYaw,desiredElevation:targetElevation,
-   pan:[...aim],mode:gestureMode,fov,fixed,fitAspect,viewport:[width,height],
+   pan:[...aim],mode:gestureMode,fov,fixed,fitAspect,fitDistance,viewport:[width,height],
    minDistance:minDist,maxDistance:maxDist
   };
  }
@@ -134,5 +144,5 @@ function create(options={}){
   get isGesture(){return !!active||gestureMode==='touch-two';},
   get rightDragged(){return rightDragged;}});
 }
-root.PaperchalkBattleCamera=Object.freeze({version:'1.0.0',create});
+root.PaperchalkBattleCamera=Object.freeze({version:'1.1.0',create});
 })(window);
