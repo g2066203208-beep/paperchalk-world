@@ -7,19 +7,27 @@
 function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
  let seed=77049,scene='forest';
  const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
- const conifer=(radius,height,sides=8)=>{
-  const v=[],ids=[];
-  for(let i=0;i<sides;i++){
-   const a=i*2*Math.PI/sides,b=(i+1)*2*Math.PI/sides;
-   const p=[Math.cos(a)*radius,0,Math.sin(a)*radius],q=[Math.cos(b)*radius,0,Math.sin(b)*radius];
-   const nx=Math.cos((a+b)/2),nz=Math.sin((a+b)/2);
-   const n=Math.hypot(nx,height/(radius*2),nz)||1,k=v.length/8;
-   for(const [x,y,z,uu,vv] of [[p[0],0,p[2],0,0],[q[0],0,q[2],1,0],[0,height,0,.5,1]])
-    v.push(x,y,z,nx/n,.45,nz/n,uu,vv);
-   ids.push(k,k+1,k+2);
-  }return makeGeom(v,ids);
- };
- const crown=conifer(1,1.48,8);
+ // One reusable mesh for all three layered leaf cones.
+ // It replaces three draw calls per tree with one, keeping the silhouette.
+ const crown=(()=>{
+  const vertices=[],indices=[],sides=8;
+  for(let layer=0;layer<3;layer++){
+   const radius=1.18-layer*.17,rise=.48+layer*.47,height=1.48*radius*.92;
+   for(let i=0;i<sides;i++){
+    const a=i*Math.PI*2/sides,b=(i+1)*Math.PI*2/sides;
+    const nx=Math.cos((a+b)*.5),nz=Math.sin((a+b)*.5),base=vertices.length/8;
+    const norm=Math.hypot(nx,.45,nz);
+    for(const [px,py,pz,u,v] of [
+     [Math.cos(a)*radius,rise,Math.sin(a)*radius,0,0],
+     [Math.cos(b)*radius,rise,Math.sin(b)*radius,1,0],
+     [0,rise+height,0,.5,1]]){
+     vertices.push(px,py,pz,nx/norm,.45/norm,nz/norm,u,v);
+    }
+    indices.push(base,base+1,base+2);
+   }
+  }
+  return makeGeom(vertices,indices);
+ })();
  const halfW=terrain.width/2,halfD=terrain.depth/2;
  const forest=[],clearing=[];
  for(let i=0;i<30;i++){
@@ -93,11 +101,9 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
     continue;
    }
    cube(p.x,y+.44*sc,p.z,.24*sc,.88*sc,.24*sc,[.39,.28,.20,1]);
-   for(let layer=0;layer<3;layer++){
-    const size=sc*(1.18-layer*.17),rise=sc*(.48+layer*.47);
-    const m=mul(T(p.x,y+rise,p.z),S(size,size*.92,size));
-    renderGeom(crown,m,green[(Math.floor(p.tint*4)+layer)%4]);
-   }
+   // Preserve three silhouette layers in a single genuine leaf mesh.
+   renderGeom(crown,mul(T(p.x,y,p.z),S(sc,sc,sc)),
+    green[Math.floor(p.tint*4)%4]);
   }
  }
  return Object.freeze({
@@ -109,5 +115,5 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
   get ground(){return {width:groundWidth,depth:groundDepth,top:groundTop,scene};}
  });
 }
-root.PaperchalkForestEnvironment=Object.freeze({version:'2.1.0',create});
+root.PaperchalkForestEnvironment=Object.freeze({version:'2.2.0',create});
 })(window);
