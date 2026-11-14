@@ -4,7 +4,7 @@
  * response, sunlight filtering and understated filmic color treatment.
  */
 (function(root){'use strict';
-const fragment=\`precision highp float;
+const fragment=`precision highp float;
 varying vec3 vN,vP;varying vec2 vUV;varying vec4 vLightPos;
 uniform vec4 uColor,uBoardBounds;
 uniform sampler2D uTex,uShadowMap,uMaterialAtlas;
@@ -115,6 +115,6 @@ void main(){
   finalColor*=1.-dot(q*vec2(1.,.82),q*vec2(1.,.82))*.17;
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
-}\`;
+}`;
 root.PaperchalkVisualShaders=Object.freeze({version:'1.0.0',fragment});
 })(window);
