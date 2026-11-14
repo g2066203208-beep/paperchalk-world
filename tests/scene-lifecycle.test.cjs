@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const window={};
 const ctx=vm.createContext({window,Math,Map,Set,Array,Object,Number,Error});
-for(const name of ['object-animations','scene-lifecycle','forest-dressing']){
+for(const name of ['object-anchor','object-animations','scene-lifecycle','forest-dressing']){
  vm.runInContext(fs.readFileSync(path.join(__dirname,
   '../site/card-battle/engine/'+name+'.js'),'utf8'),ctx,{filename:name});
 }
