@@ -25,19 +25,26 @@ function create(){
   if(u<.095)return {push:-.13*smooth(u/.095),rise:.015,pitch:-.11*smooth(u/.095)};
   if(u<impactAt){
    const v=smooth((u-.095)/(impactAt-.095));
-   return {push:-.13+.56*v,rise:.035+Math.sin(v*Math.PI)*.09,pitch:-.11+.25*v};
+   return {push:-.13+.75*v,rise:.035+Math.sin(v*Math.PI)*.085,pitch:-.11+.27*v};
   }
-  if(u<holdUntil)return {push:.43,rise:.035,pitch:.14}; // 48ms hitstop
+  if(u<holdUntil)return {push:.62,rise:.035,pitch:.16}; // 48ms hitstop
   if(u<.43){
    const v=smooth((u-holdUntil)/(.43-holdUntil));
-   return {push:.43*(1-v),rise:.035*(1-v),pitch:.14*(1-v)};
+   return {push:.62*(1-v),rise:.035*(1-v),pitch:.16*(1-v)};
   }
   return {push:0,rise:0,pitch:0};
  }
  function pose(unitId,time){
-  if(!active||active.kind!=='attack')return ZERO;
+  if(!active)return ZERO;
   const t=elapsed(time);
   if(t>=duration)return ZERO;
+  if(active.kind==='guard'){
+   if(unitId!==active.attackerId)return ZERO;
+   const q=t<impactAt?smooth(t/impactAt):
+    t<.48?1-smooth((t-impactAt)/(.48-impactAt)):0;
+   return {dx:0,dy:.03*q,dz:0,pitch:-.10*q,roll:0,
+    scale:1+.075*q,hit:0};
+  }
   if(unitId===active.attackerId){
    const p=timeline(t);
    return {dx:active.dir.x*p.push,dy:p.rise,dz:active.dir.z*p.push,
@@ -84,5 +91,5 @@ function create(){
   }:null,last};},
   timeline:{duration,impactAt,holdUntil,settleAt}});
 }
-root.PaperchalkCombatChoreography=Object.freeze({version:'1.0.0',create});
+root.PaperchalkCombatChoreography=Object.freeze({version:'1.1.0',create});
 })(window);
