@@ -4,7 +4,7 @@
  */
 (function(root){
 'use strict';
-function create({terrain,makeGeom,renderGeom,mul,T,S,cube}){
+function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
  let seed=77049;
  const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
  const conifer=(radius,height,sides=8)=>{
@@ -25,12 +25,16 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube}){
   else{x=(rand()-.5)*(terrain.width+9);z=(side===2?-1:1)*(halfD+edge);}
   // reserve a generous view corridor around the legal 3x6 playfield
   if(Math.abs(x)<halfW+1&&Math.abs(z)<halfD+1)continue;
-  props.push({x,z,scale:.72+rand()*.8,type:i%7===0?'shrub':'pine',tint:rand()});
+  props.push({id:'forest-prop-'+props.length,x,z,scale:.72+rand()*.8,type:i%7===0?'shrub':'pine',tint:rand()});
  }
  const green=[[.33,.46,.29,1],[.39,.53,.34,1],[.25,.42,.32,1],[.42,.56,.35,1]];
  function draw(now=0){
   for(const p of props){
-   const y=terrain.topY-.36,sc=p.scale,base=T(p.x,y,p.z);
+   // All pieces of one tree/shrub grow from ONE ground pivot together.
+   // Reuse the scene lifecycle, never pop individual branches independently.
+   const pose=appearance?.(p.id,now)||{scale:1,opacity:1};
+   if(pose.opacity<=.002||pose.scale<=.025)continue;
+   const y=terrain.topY-.36,sc=p.scale*pose.scale;
    if(p.type==='shrub'){
     const bend=Math.sin(now*.58+p.x)*.018;
     cube(p.x,y+.3*sc,p.z,.65*sc,.3*sc,.62*sc,[.34,.52,.30,1]);
@@ -45,7 +49,7 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube}){
    }
   }
  }
- return {draw,propCount:props.length};
+ return {draw,propCount:props.length,propIds:props.map(p=>p.id)};
 }
-root.PaperchalkForestEnvironment=Object.freeze({version:'1.0.0',create});
+root.PaperchalkForestEnvironment=Object.freeze({version:'1.1.0',create});
 })(window);
