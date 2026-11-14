@@ -53,7 +53,8 @@ const BASE_POOL=Object.freeze({warrior:WARRIOR_CARDS,ranger:RANGER_CARDS,enginee
 function create(options={}){
  const cap=options.maxHand??10;
  if(!Number.isInteger(cap)||cap<1)throw Error('Invalid shared hand cap');
- const opening=options.openingDraw??5; // configurable test value, not per-turn quota
+ const opening=options.openingDraw??5;
+ const turnDraw=options.turnDraw??5;
  // First-level VISUAL prototype: seven independent functional decks with the
  // same temporary warrior-card contents. The normal class gate is unchanged.
  const prototypeAllClasses=options.prototypeAllClasses===true;
@@ -65,19 +66,20 @@ function create(options={}){
   const source=prototypeAllClasses?WARRIOR_CARDS:(BASE_POOL[c.id]||[]);
   pool[c.id]=source.map((x,i)=>({...x,profession:c.id,instance:c.id+'-'+i}));
  }
- const piles=new Map();
+ const piles=new Map(),discards=new Map();
  let hand=[],played=[],locked=false,turn=1;
  function shuffle(a){
   for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
  }
  function reload(){
-  piles.clear();
+  piles.clear();discards.clear();
   // Same temporary card art AND the same face-up order in all seven columns,
   // but each column owns a separate real stack and separate remaining count.
   const prototypeOrder=prototypeAllClasses
     ? shuffle([...pool.warrior]).map(card=>card.id):null;
   for(const c of CLASSES){
+   discards.set(c.id,[]);
    if(!unlocked.has(c.id)){piles.set(c.id,[]);continue;}
    if(prototypeOrder){
     const byId=new Map(pool[c.id].map(card=>[card.id,card]));
@@ -92,7 +94,7 @@ function create(options={}){
    hand:hand.map(x=>({...x})),
    classes:CLASSES.map(c=>({...c,unlocked:unlocked.has(c.id),
      handCount:hand.filter(card=>card.profession===c.id).length,
-     deckCount:piles.get(c.id)?.length||0}))
+     deckCount:piles.get(c.id)?.length||0,discardCount:discards.get(c.id)?.length||0}))
   };
  }
  function draw(profession,{special=false}={}){
@@ -100,7 +102,14 @@ function create(options={}){
   if(locked&&!special)return {ok:false,reason:'draw-locked'};
   if(count()>=cap)return {ok:false,reason:'hand-full'};
   const deck=piles.get(profession);
-  if(!deck||!deck.length)return {ok:false,reason:'box-empty'};
+  if(!deck)return {ok:false,reason:'box-empty'};
+  if(!deck.length){
+   // Draw pile only refills when exhausted; cards previously used this fight
+   // return from their class discard, rather than resetting every turn.
+   const discard=discards.get(profession);
+   if(discard?.length){deck.push(...shuffle(discard.splice(0)));}
+  }
+  if(!deck.length)return {ok:false,reason:'box-empty'};
   const card=deck.pop();hand.push(card);
   return {ok:true,card:{...card},state:snapshot()};
  }
@@ -119,7 +128,13 @@ function create(options={}){
   return {ok:true,card:{...card},state:snapshot()};
  }
  function nextTurn(){
-  turn++;hand=[];played=[];locked=false;reload();
+  // End-of-round cleanup: remaining cards and played cards go to discard.
+  for(const card of [...hand,...played])discards.get(card.profession)?.push(card);
+  hand=[];played=[];turn++;locked=false;
+  const profession=unlocked.has('warrior')?'warrior':CLASSES.find(c=>unlocked.has(c.id))?.id;
+  if(profession)for(let i=0;i<turnDraw&&hand.length<cap;i++){
+   if(!draw(profession).ok)break;
+  }
   return snapshot();
  }
  function reset(){
@@ -135,5 +150,5 @@ function create(options={}){
  return Object.freeze({snapshot,remainingCards,draw,play,specialDiscard,nextTurn,reset,
   classes:CLASSES,get cap(){return cap;}});
 }
-root.PaperchalkProfessionDecks=Object.freeze({version:'2.1.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create});
+root.PaperchalkProfessionDecks=Object.freeze({version:'3.0.0',CLASSES,WARRIOR_CARDS,RANGER_CARDS,ENGINEER_CARDS,create});
 })(window);
