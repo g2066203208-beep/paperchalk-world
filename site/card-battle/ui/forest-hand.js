@@ -1,5 +1,6 @@
-/* Headless action-hand bridge. Seven independently clickable 3D physical piles
- * currently share one art/card template for visual prototyping; no HTML hand UI.
+/* Headless card-hand adapter. All draws are initiated by clicking one of seven
+ * independent physical class boxes. One shared 10-card cap; no automatic deals.
+ * Current placeholder card faces are independent of engine draw rules.
  */
 (function(root){
 'use strict';
@@ -7,7 +8,8 @@ const factory=root.PaperchalkProfessionDecks;
 if(!factory)throw Error('Profession model missing');
 const units=root.__forestLevelDebug?.state?.units||[];
 const activeJobs=units.filter(u=>u.side==='ally').map(u=>u.role).filter(Boolean);
-const model=factory.create({maxHand:10,openingDraw:5,turnDraw:5,prototypeAllClasses:true,unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
+const model=factory.create({maxHand:10,prototypeAllClasses:true,
+ unlocked:activeJobs.length?activeJobs:['warrior'],seed:618231});
 let selectedInstance=null;
 function snapshot(){return model.snapshot();}
 function selectedCard(){return snapshot().hand.find(c=>c.instance===selectedInstance)||null;}
@@ -35,13 +37,13 @@ function consumeForTarget(targetId){
 function reset(){selectedInstance=null;return model.reset();}
 function onDeployment(){
  selectedInstance=null;
- // Draw five opening action cards when the unit finishes deploying.
+ // No automatic hand: the player must click the physical class box to draw.
  return model.reset();
 }
 function nextTurn(){
  if(root.__forestLevelDebug?.state?.phase!=='active')return false;
  selectedInstance=null;
- return model.nextTurn();
+ return model.nextTurn(); // no auto draw, no forced discard of unused cards
 }
 root.__forestHand=Object.freeze({
  consumeForTarget,reset,onDeployment,nextTurn,selectCard,draw,
