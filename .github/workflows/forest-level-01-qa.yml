@@ -43,7 +43,6 @@ jobs:
       - name: Test isolated level and voxel animation engines
         run: |
           node tests/forest-level-core.test.cjs
-          node tests/flip-case-controller.test.cjs
           node --check site/card-battle/engine/scene-card-hud.js
           node --check site/card-battle/ui/forest-hand.js
           node tests/object-animations.test.cjs
@@ -58,7 +57,7 @@ jobs:
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/forest-level-http.log 2>&1 &
           sleep 2
-      - name: Verify physical reversible card box, full sequence, forest, mobile
+      - name: Verify static seven-bay whitebox, slot clearances, forest, mobile
         run: node tests/forest-level-01-browser.mjs
       - name: Upload screenshots
         if: always()
