@@ -138,6 +138,8 @@ async function verifyFixedCamera(page,kind){
  });
  const requested=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.ok(requested.desiredDistance<before.desiredDistance-1,'wheel zoom-in changes target distance');
+ await page.waitForFunction(()=>document.getElementById('camera-controls').classList.contains('is-zoomed'),
+  null,{timeout:9000});
  await page.evaluate(()=>window.__battleCamera.zoom(10));
  const noShrink=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.equal(noShrink.desiredDistance,requested.desiredDistance,
@@ -188,7 +190,9 @@ async function verifyFixedCamera(page,kind){
   const q=window.__battleCamera.snapshot();
   return Math.abs(q.distance-q.fitDistance)<.003&&
    Math.abs(q.target[0])<.003&&Math.abs(q.target[2]-.70)<.003;
- },{timeout:9000});
+ },null,{timeout:9000});
+ assert.equal(await page.evaluate(()=>document.getElementById('camera-controls').classList.contains('is-zoomed')),
+  false,'reset button vanishes when the full tactical view is restored');
  const after=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.ok(Math.abs(after.target[0]-before.target[0])<.003&&
   Math.abs(after.target[2]-before.target[2])<.003,
