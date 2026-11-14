@@ -68,11 +68,13 @@ void main(){
  // It drifts independently from the stationary sun/tree shadow map and keeps
  // all original paper/card artwork crisp and readable.
  float cloudShade=0.;
- if(uCloudStrength>.001&&normal.y>.58&&
+ if(uCloudStrength>.001&&
     (uTerrain>.5||(uMaterialKind>.5&&uMaterialKind<2.5))){
+  // Branching on draw-level uniforms is safe for implicit mipmap derivatives.
   vec2 wind=vec2(.60,.23)*uCloudTime;
   float cover=texture2D(uCloudMap,(vP.xz-wind)/72.).r;
-  cloudShade=smoothstep(.44,.67,cover)*uCloudStrength;
+  cloudShade=smoothstep(.44,.67,cover)*uCloudStrength*
+   smoothstep(.50,.76,normal.y);
  }
  float diffuse=max(0.,dot(normal,light));
  vec3 illumination=uSkyFill*uAmbient*(.72+.28*visibility)
