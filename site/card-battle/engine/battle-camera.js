@@ -40,7 +40,7 @@ function create(options={}){
    const ratio=targetDistance/fitDistance;
    fitDistance=defaults.distance*Math.max(1,fitAspect/(width/height));
    targetDistance=clamp(fitDistance*ratio,
-    Math.max(minDist,fitDistance*.58),Math.max(maxDist,fitDistance*1.7));
+    Math.max(minDist,fitDistance*.32),Math.max(maxDist,fitDistance*1.7));
    distance=targetDistance;
   }
  }
@@ -50,7 +50,7 @@ function create(options={}){
  }
  function setZoom(value){
   // Lock the camera direction, not the zoom. Phone fit may exceed desktop maxDist.
-  targetDistance=fixed?clamp(value,Math.max(minDist,fitDistance*.58),
+  targetDistance=fixed?clamp(value,Math.max(minDist,fitDistance*.32),
    Math.max(maxDist,fitDistance*1.7)):clamp(value,minDist,maxDist);
  }
  function zoom(factor){setZoom(targetDistance*factor);}
