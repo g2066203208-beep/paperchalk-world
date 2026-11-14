@@ -267,7 +267,7 @@ function grainTexture(gl){
  * Each integer level is exactly one cube side-length. The only curvature
  * is a small top-edge bevel and convex corner radius, never a hillside ramp.
  */
-function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform}){
+function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSeams}){
  if(!gl||!makeGeom||!renderGeom||!I)throw Error('Missing WebGL renderer dependencies');
  const texture=grainTexture(gl),base=I();
  const tileMatrix=(c,r)=>typeof tileTransform==='function'?(tileTransform(c,r)||base):base;
@@ -299,7 +299,7 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform}){
    renderGeom(tiles[r][c],tileMatrix(c,r),grid.color(c,r),texture,false,grid.materials[cell.kind].side);
   }
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
-  renderGeom(seams,base,[.13,.19,.12,.095],null,true);
+  if(!showSeams||showSeams())renderGeom(seams,base,[.13,.19,.12,.095],null,true);
   gl.depthMask(true);gl.disable(gl.BLEND);
  }
  function dispose(){
@@ -309,5 +309,5 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform}){
  }
  return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return renderedRevision}};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'4.2.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'4.3.0',MATERIALS,create,createWebGLRenderer});
 })(window);
