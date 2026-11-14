@@ -84,8 +84,8 @@ function create(options={}){
   constrainAim(); // Zooming back out automatically pulls the safe view inward.
  }
  function zoom(factor){
-  // Requested tactical rule: scroll/pinch only zooms IN; reset (0) restores fit.
-  if(fixed&&factor>=1)return;
+  // Zoom both ways within [closest detail, original full-board size].
+  // The original fitted view is the absolute zoom-out limit.
   setZoom(targetDistance*factor);
  }
  function pan(dx,dy){
@@ -210,5 +210,5 @@ function create(options={}){
   get isGesture(){return !!active||gestureMode==='touch-two';},
   get rightDragged(){return rightDragged;}});
 }
-root.PaperchalkBattleCamera=Object.freeze({version:'1.2.0',create});
+root.PaperchalkBattleCamera=Object.freeze({version:'1.2.1',create});
 })(window);
