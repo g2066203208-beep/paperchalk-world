@@ -334,6 +334,8 @@ async function verifySixLayerVisualEffects(page,kind,enhanced=true){
   assert.ok(fx.forest.flowers>=100,'batched daisy clusters');
   assert.ok(fx.forest.grassBlades>=600,'3D grass tufts around the board');
   assert.ok(fx.forest.batchedMeshes<=15,'mobile-friendly merged 3D mesh groups');
+  assert.ok(fx.forest.localPivotProps>=150,'trees, rocks, flower clumps and grass must have their OWN roots');
+  assert.equal(fx.forest.transitionPivot,'per-object-ground-root');
   assert.equal(fx.ao,true);
   assert.equal(fx.indirectLight,true);
   assert.equal(fx.cardPaper,true);
@@ -534,6 +536,8 @@ try{
  assert.ok(heroAfterEnemy<heroBeforeEnemy,'surviving enemies deal damage only in their turn');
  await screenshot(pc,'03c-round-two-desktop');
  await pc.locator('#scene-switch').click();
+ assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.sceneLifecycle.providers.includes('forest-dressing')),
+  true,'scene lifecycle must register forest dressing as provider');
  await pc.waitForFunction(()=>window.__forestLevelDebug.environment.id==='clearing'&&
    window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:15000});
  await verifyWorld(pc,'clearing');
