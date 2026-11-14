@@ -60,9 +60,9 @@ html,body{background:#d8ded0}
 </style>
 </head>
 <body>
-<canvas id="stage" aria-label="第一关森林战场：敌我各3×3独立格，总共18个立方体方块"></canvas>
+<canvas id="stage" aria-label="森林战场：16列6行96个3D方块，中间人物九宫格与两侧设施区"></canvas>
 <div id="note" aria-live="polite"></div>
-<div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>点击敌人攻击；选地形工具再点格子<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
+<div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>农田牌测试：点农田，再点左右设施区空格<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button><div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div></div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div>
@@ -179,7 +179,9 @@ const terrainTargets=terrain.snapshot().map(t=>({id:'terrain-'+t.c+'-'+t.r,kind:
 const terrainTarget=(c,r)=>terrainTargets[r*terrain.cols+c];
 const handDefs=[
 {id:'dig',kind:'terrain',name:'挖掘',direction:-1},
-{id:'build',kind:'terrain',name:'抬升',direction:1}
+{id:'build',kind:'terrain',name:'抬升',direction:1},
+{id:'farm-field',kind:'facility',name:'农田',src:'../assets/card-battle/farmer/farm-field.png',
+ profession:'engineer',faction:'farmer',footprint:[1,1],testOnly:true}
 ];
 const texCache=new Map();
 function makeGeom(vertices,indices){const vao={};vao.b=gl.createBuffer();vao.i=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vao.b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,vao.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);vao.count=indices.length;return vao;}
@@ -451,7 +453,8 @@ function pick(d){
 }
 for(const d of handDefs){
  const b=document.createElement('button');b.type='button';b.className='hand-card'+(d.kind==='terrain'?' terrain':'');
- b.dataset.cardId=d.id;b.title=d.name;b.setAttribute('aria-label',d.name);
+ b.dataset.cardId=d.id;b.title=d.testOnly?'农田牌 · 设施区放置测试（1×1）':d.name;
+ b.setAttribute('aria-label',d.testOnly?'测试农田设施牌，放到左右设施区':d.name);
  b.innerHTML=d.src?'<img src="'+d.src+'" draggable="false" alt="'+d.name+'">':
  '<span class="name">'+d.name+'</span><span class="kind">'+(d.kind==='terrain'?(d.direction<0?'地形 -1':'地形 +1'):'设施')+'</span>';
  hand.insertBefore(b,document.getElementById('reset'));buttons.set(d.id,b);
@@ -487,8 +490,10 @@ function slotAtPointer(clientX,clientY){
 function valid(d,s,move=null){
  if(!d||!s)return false;
  if(d.kind==='terrain'){
-  return level.canModify(s.tileC,s.tileR,d.direction)&&!fx.isBusy(s.tileC,s.tileR);
+  return level.canModify(s.tileC,s.tileR,d.direction)&&!fx.isBusy(s.tileC,s.tileR)&&
+   !cards.some(c=>c.kind==='facility'&&c.slot?.tileC===s.tileC&&c.slot?.tileR===s.tileR);
  }
+ if(d.kind==='facility'&&level.phase!=='active')return false;
  if(s.side!=='ally'||s.zone!==d.kind)return false;
  if(occupied.has(s.id)&&occupied.get(s.id)!==move)return false;
  if(d.kind==='unit'&&cards.filter(c=>c.kind==='unit'&&c!==move).length>=7)return false;
@@ -506,7 +511,8 @@ function drop(s){
  }
  const c=makeCard(active,s);c.x=preview.x;c.z=preview.z;c.y=terrain.cell(s.tileC,s.tileR).height+.7;c.placeStart=now;
  occupied.set(s.id,c);cards.push(c);
-  objectFX.enter('card:'+c.id,now,{duration:.55});
+  objectFX.enter('card:'+c.id,now,{duration:.55,overshoot:1.14});
+  if(active.kind==='facility')message('农田放置成功 · '+(s.flank==='left'?'左':'右')+'侧设施区 · 1×1 格');
   clearPick();
 }
 function move(c,s){
@@ -862,6 +868,11 @@ window.__forestLevelDebug={
  objectPose(id){return objectFX.sample(id,now);},
  get slots(){return slotCenters.map(t=>({side:t.side,r:t.r,c:t.c,tileC:t.tileC,tileR:t.tileR,zone:t.zone}));},
  get units(){return cards.map(c=>({id:c.unitId,side:c.side,r:c.slot?.r,c:c.slot?.c}));},
+ get facilities(){return cards.filter(c=>c.kind==='facility').map(c=>({
+  id:c.def.id,cardId:c.id,name:c.def.name,profession:c.def.profession,
+  tileC:c.slot?.tileC,tileR:c.slot?.tileR,flank:c.slot?.flank,
+  footprint:c.def.footprint,hasTexture:!!c.texture
+ }));},
  get staged(){return level.snapshot().units.filter(u=>!u.deployed);},
  get placement(){return {selected:selectedStagedId,previewSlot:previewDeployment?.slot?.id||null};},
  get boxCount(){return window.__sceneCardHUD?.snapshot.physicalBoxes||0;},
@@ -869,7 +880,7 @@ window.__forestLevelDebug={
   const rect=canvas.getBoundingClientRect();
   return slotCenters.map(q=>{
    const projected=projection2D(q.x,fx.height(q.tileC,q.tileR)+.03,q.z);
-   return {id:q.id,side:q.side,r:q.r,c:q.c,
+   return {id:q.id,side:q.side,r:q.r,c:q.c,zone:q.zone,flank:q.flank,tileC:q.tileC,tileR:q.tileR,
     // Pointer events use CSS/client pixels, not changing GPU backing pixels.
     point:{x:rect.left+projected.x/w*rect.width,
            y:rect.top+projected.y/h*rect.height}};

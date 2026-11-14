@@ -62,6 +62,29 @@ async function verifyWorld(page,kind){
  assert.ok(status.camera.maxDistance>=100,'outer 16-column area must be zoomable');
  console.log('FOREST_16X6_96_VOXELS_PASS',JSON.stringify({kind,voxels:status.tiles.length,unitSlots:18,facilitySlots:48}));
 }
+async function plantTestFarm(page,flank='left'){
+ const button=page.locator('[data-card-id="farm-field"]');
+ await page.waitForFunction(()=>document.querySelector('[data-card-id="farm-field"] img')?.naturalWidth===704,{timeout:20000});
+ await button.click();
+ await page.waitForFunction(()=>window.__terrainDebug.tool==='farm-field',{timeout:8000});
+ const target=await page.evaluate(flank=>window.__forestLevelDebug.slotPoints.find(s=>
+  s.zone==='facility'&&s.side==='ally'&&s.flank===flank&&s.tileR===4&&(flank==='left'?s.tileC===4:s.tileC===10)),flank);
+ assert.ok(target?.point,'missing '+flank+' 1x1 facility slot');
+ const before=await page.evaluate(()=>window.__forestLevelDebug.facilities.length);
+ await page.mouse.click(target.point.x,target.point.y);
+ await page.waitForFunction(n=>window.__forestLevelDebug.facilities.length===n+1,before,{timeout:15000});
+ const placed=await page.evaluate(()=>window.__forestLevelDebug.facilities);
+ assert.equal(placed.length,1);
+ assert.equal(placed[0].id,'farm-field');
+ assert.equal(placed[0].flank,flank);
+ assert.deepEqual(placed[0].footprint,[1,1]);
+ assert.equal(placed[0].hasTexture,true,'real user artwork must be bound to physical 3D card');
+ assert.equal(placed[0].tileC,flank==='left'?4:10);
+ assert.equal(placed[0].tileR,4);
+ assert.equal(await page.evaluate(()=>window.__terrainDebug.tool),null,'test card consumed after placement');
+ assert.equal(await button.isHidden(),true,'same physical farm facility cannot be placed twice');
+ console.log('FARM_FIELD_FACILITY_PLACED',JSON.stringify({flank,placed,assetWidth:704}));
+}
 async function deploy(page){
  await clickCard(page,'character:woodcutter');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.placement.selected),'woodcutter');
@@ -91,6 +114,9 @@ try{
  await pc.waitForTimeout(500);
  await deploy(pc);
  await screenshot(pc,'02-deployed-in-static-box-desktop');
+ await plantTestFarm(pc,'left');
+ await pc.waitForTimeout(700);
+ await screenshot(pc,'02a-farmland-installed-left-facility-desktop');
  await clickCard(pc,'deck:warrior');
  await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(pc,'03-static-hand-drawn-desktop');
@@ -110,6 +136,7 @@ try{
    window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:15000});
  await pc.evaluate(()=>window.__forestLevelDebug.reset());
  await verifyBox(pc,'restart');
+ assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.facilities.length),0,'restart clears facility placements');
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment');
  const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  phone.on('pageerror',e=>errors.push('PHONE '+String(e)));
@@ -122,6 +149,13 @@ try{
  await clickCard(phone,'deck:warrior');
  await phone.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(phone,'06-static-hand-phone');
+ // Mobile default center shows only part of the 16-column board; move the
+ // world camera toward the near-right reserved facility band to plant there.
+ await phone.evaluate(()=>window.__battleCamera.pan(-180,0));
+ await phone.waitForTimeout(700);
+ await plantTestFarm(phone,'right');
+ await phone.waitForTimeout(450);
+ await screenshot(phone,'07-farmland-installed-right-facility-phone');
  assert.deepEqual(errors,[]);
- console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,errors}));
+ console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,errors}));
 }finally{await browser.close();}
