@@ -81,8 +81,8 @@ function create(){
  function snapshot(){return{packs:packs.size,cards:cards.size,
   scopes:Object.fromEntries([...byScope].map(([k,v])=>[k,v.length])),
   names:[...packs.keys()]};}
- return Object.freeze({registerPack,cardsFor,forProfession,forArchetype,facilities,get,snapshot,
-  version:'1.0.0'});
+ return Object.freeze({registerPack,cardsFor,forProfession,forArchetype,facilities,get,
+  get snapshot(){return snapshot();},version:'1.0.1'});
 }
 root.PaperchalkCardRegistry=Object.freeze({version:'1.0.0',create});
 })(window);
