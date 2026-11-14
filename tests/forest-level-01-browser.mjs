@@ -87,6 +87,27 @@ async function verifyWorld(page,kind){
   'fitted full-board camera must be the absolute maximum zoom-out distance');
  console.log('FOREST_16X6_96_VOXELS_PASS',JSON.stringify({kind,voxels:status.tiles.length,unitSlots:18,facilitySlots:48}));
 }
+async function verifyCardStats(page,kind){
+ await page.waitForFunction(()=>window.__forestLevelDebug?.cardStats?.layout.cachedTextures>=4,
+  null,{timeout:20000});
+ const info=await page.evaluate(()=>window.__forestLevelDebug.cardStats);
+ const layout=info.layout;
+ assert.equal(layout.attachedTo,'card-model-matrix',
+  'attack and health badges must transform WITH the 3D card, never float in screen space');
+ assert.equal(layout.layout,'lower-left-attack_lower-right-health');
+ assert.ok(layout.anchor.attack.x<0&&layout.anchor.health.x>0);
+ assert.ok(layout.anchor.attack.y<0&&layout.anchor.health.y<0);
+ assert.ok(layout.anchor.attack.z>.06&&layout.anchor.health.z>.06,
+  'badges sit on the face ABOVE the portrait card texture to avoid z-fighting');
+ assert.equal(info.units.length,3,'both enemy cards and the hero have statistics');
+ assert.equal(info.units.find(u=>u.unitId==='woodcutter').attack,3);
+ assert.equal(info.units.find(u=>u.unitId==='woodcutter').currentHp,12);
+ assert.ok(info.units.filter(u=>u.side==='enemy').every(u=>u.currentHp===4));
+ assert.ok(!String(await page.locator('#level-hud').textContent()).includes('生命'),
+  'HP now belongs to physical cards, not floating global HUD labels');
+ console.log('PHYSICAL_CARD_STAT_BADGES_PASS',JSON.stringify({kind,layout,
+  units:info.units.map(({unitId,attack,currentHp,maxHp})=>({unitId,attack,currentHp,maxHp}))}));
+}
 async function verifyFixedCamera(page,kind){
  const before=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.equal(before.fixed,true,'first-step battle camera angle is locked');
@@ -434,6 +455,7 @@ try{
  // The fixed camera shows both 16x6 flanks AT ONCE; no pan screenshots.
  await pc.waitForTimeout(500);
  await deploy(pc);
+ await verifyCardStats(pc,'desktop');
  await screenshot(pc,'02-deployed-in-static-box-desktop');
  await plantTestFarm(pc,'left');
  await pc.waitForTimeout(700);
@@ -460,6 +482,11 @@ try{
  assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0);
  await pc.waitForFunction(()=>window.__forestLevelDebug.combat.animation.last?.hitFired===true,
   null,{timeout:12000});
+ await pc.waitForFunction(()=>window.__forestLevelDebug.cardStats.units
+   .find(u=>u.unitId==='forest-foe-a').currentHp<4,null,{timeout:10000});
+ const afterHitStats=await pc.evaluate(()=>window.__forestLevelDebug.cardStats);
+ assert.ok(afterHitStats.layout.cachedTextures>=5,
+  'damaged enemy health creates a refreshed texture on its 3D corner plate');
  await screenshot(pc,'03a-axe-hit-impact-desktop');
  await pc.waitForFunction(()=>!window.__forestCombat.busy,null,{timeout:12000});
  const heroBeforeEnemy=await pc.evaluate(()=>window.__forestLevelDebug.state.units.find(u=>u.id==='woodcutter').currentHp);
@@ -512,6 +539,7 @@ try{
  await phone.waitForTimeout(250);
  await screenshot(phone,'05-static-seven-bay-box-phone');
  await deploy(phone);
+ await verifyCardStats(phone,'phone');
  await clickCard(phone,'deck:warrior');
  await phone.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(phone,'06-static-hand-phone');
