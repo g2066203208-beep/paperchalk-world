@@ -375,7 +375,9 @@ function resize(){
  const pixelBudget=qualityMode==='high'?(isPhone?5600000:8300000):
   qualityMode==='low'?(isPhone?1000000:2000000):(isPhone?3200000:5600000);
  const nativeDpr=Math.min(window.devicePixelRatio||1,qualityMode==='low'?1.25:3);
- const fittedDpr=Math.min(nativeDpr,Math.sqrt(pixelBudget/area));
+ // Never scale a 4K CSS viewport below its own pixel size on Auto/High.
+ const effectiveBudget=qualityMode==='low'?pixelBudget:Math.max(pixelBudget,area);
+ const fittedDpr=Math.min(nativeDpr,Math.sqrt(effectiveBudget/area));
  const dpr=fittedDpr*(qualityMode==='auto'?renderScale:1);
  w=Math.max(1,Math.round(rect.width*dpr));h=Math.max(1,Math.round(rect.height*dpr));
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
@@ -1049,7 +1051,8 @@ window.__forestLevelDebug={
   renderRatio:+(canvas.width/canvas.getBoundingClientRect().width).toFixed(2),
   adaptiveQualityScale:renderScale,qualityMode,
   targetDevicePixelRatio:window.devicePixelRatio||1,
-  renderedDevicePixelRatio:+(canvas.width/canvas.getBoundingClientRect().width).toFixed(2),
+  actualBufferPixels:gl.drawingBufferWidth*gl.drawingBufferHeight,
+  renderedDevicePixelRatio:+(gl.drawingBufferWidth/canvas.getBoundingClientRect().width).toFixed(2),
   webglAntialias:gl.getContextAttributes()?.antialias||false};},
  get sceneSwitch(){return sceneTransition.snapshot(now);},
  get physicalFrame(){return physicalFrame.snapshot;},
