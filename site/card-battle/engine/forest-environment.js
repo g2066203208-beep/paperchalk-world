@@ -4,7 +4,7 @@
  */
 (function(root){
 'use strict';
-function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
+function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null}){
  let seed=77049,scene='forest';
  const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
  // One reusable mesh for all three layered leaf cones.
@@ -50,7 +50,7 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
   clearing.push({id:'clearing-prop-'+clearing.length,x,z,
    scale:.67+rand()*1.12,type:i%6===0?'tuft':i%4===0?'pillar':'boulder',tint:rand()});
  }
- const green=[[.33,.46,.29,1],[.39,.53,.34,1],[.25,.42,.32,1],[.42,.56,.35,1]];
+ const green=(look?.get('forest').foliage||[[.33,.46,.29,1],[.39,.53,.34,1],[.25,.42,.32,1],[.42,.56,.35,1]]);
  const stone=[[.58,.55,.50,1],[.52,.51,.48,1],[.69,.65,.58,1],[.56,.53,.45,1]];
  const scenes={forest,clearing};
  // This is ENVIRONMENT GROUND, not extra tactical cells.
@@ -62,8 +62,8 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
   groundDepth=Math.max(terrain.depth+48,terrain.depth+205);
  const groundTop=terrain.topY-.46,groundThickness=1.50;
  const groundPalette={
-  forest:[.52,.635,.398,1],
-  clearing:[.65,.585,.479,1]
+  forest:look?.get('forest').ground||[.52,.635,.398,1],
+  clearing:look?.get('clearing').ground||[.65,.585,.479,1]
  };
  function setScene(next){
   if(!scenes[next])throw Error('Unknown environment scene: '+next);
@@ -119,5 +119,5 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
   get ground(){return {width:groundWidth,depth:groundDepth,top:groundTop,scene};}
  });
 }
-root.PaperchalkForestEnvironment=Object.freeze({version:'2.3.0',create});
+root.PaperchalkForestEnvironment=Object.freeze({version:'2.4.0',create});
 })(window);

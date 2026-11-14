@@ -123,6 +123,20 @@ async function verifyFixedCamera(page,kind){
  console.log('FOREST_FIXED_CAMERA_PASS',JSON.stringify({kind,eye:after.eye,elevation:after.elevation,
   distance:after.distance,viewport:after.viewport,frame}));
 }
+async function verifyStage01ColorAndLighting(page,kind){
+ const look=await page.evaluate(()=>window.__forestLevelDebug?.visualLook);
+ assert.ok(look,'stage 01 visual-look engine registered');
+ assert.equal(look.stage,1,'first visual stage only, no extra effects');
+ assert.equal(look.id,'forest');
+ assert.ok(look.terrainLight[1]>look.terrainLight[0],'green nature palette');
+ assert.ok(look.terrainDark[1]>look.terrainDark[0],'green shadow palette');
+ assert.ok(look.ambient>=.70&&look.ambient<=.83,'soft sky fill avoids washed-out dark patches');
+ assert.ok(look.sunIntensity>.18&&look.sunIntensity<.32,'single restrained sun direction');
+ assert.ok(look.background[1]>.50&&look.background[0]<.50,'forest backdrop must not be beige');
+ const cam=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.equal(cam.fixed,true,'stage 01 cannot change approved camera');
+ console.log('FOREST_VISUAL_STAGE01_PASS',JSON.stringify({kind,look,distance:cam.distance}));
+}
 async function verifyPhysicalFrame(page,kind){
  await page.waitForFunction(()=>window.__forestLevelDebug?.physicalFrame?.lastDrawCalls===1,{timeout:25000});
  const mesh=await page.evaluate(()=>window.__forestLevelDebug.physicalFrame);
@@ -215,6 +229,7 @@ try{
  await verifyWorld(pc,'desktop');
  await verifyTrayCollapsed(pc,'desktop-default');
  await verifyApprovedReferenceLayout(pc,'desktop');
+ await verifyStage01ColorAndLighting(pc,'desktop');
  await verifyPhysicalFrame(pc,'desktop');
  await pc.waitForTimeout(400);
  await screenshot(pc,'00-board-clear-no-deck-desktop');
@@ -264,6 +279,7 @@ try{
  await verifyWorld(phone,'phone');
  await verifyTrayCollapsed(phone,'phone-default');
  await verifyApprovedReferenceLayout(phone,'phone');
+ await verifyStage01ColorAndLighting(phone,'phone');
  await verifyPhysicalFrame(phone,'phone');
  await screenshot(phone,'05a-board-clear-no-deck-phone');
  await showTray(phone);
