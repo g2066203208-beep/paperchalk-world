@@ -59,5 +59,8 @@ assert.equal(prototype.snapshot().turn,2);
 assert.equal(prototype.snapshot().classes.find(c=>c.id==='warrior').deckCount,5,
  'next round consumes cards from its own warrior pile, not all seven');
 assert.equal(prototype.snapshot().classes.filter(c=>c.id!=='warrior'&&c.deckCount===10).length,6);
-assert.equal(prototype.remainingCards('engineer').length,10,'engineer pile refilled from previous turn only when empty');
+assert.equal(prototype.remainingCards('engineer').length,9,
+ 'engineer draw pile retains its nine unplayed cards across rounds');
+assert.equal(prototype.snapshot().classes.find(c=>c.id==='engineer').discardCount,1,
+ 'the engineer card returns to discard, ready for a later reshuffle');
 console.log('PROFESSION_DECKS_OK seven_stacks 10_independent_hand five_draw_each_turn discard_reshuffle first_play_draw_lock');
