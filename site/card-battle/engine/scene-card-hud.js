@@ -7,7 +7,7 @@
 'use strict';
 const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function create(o){
- const {canvas,gl,drawCard,renderGeom,box,cardW,cardH,T,S,RX,RY,RZ,mul,
+ const {canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,
   perspective,getVP,uniformVP,makeTexture}=o;
  const colorMap={engineer:'#778b6f',guardian:'#687e79',warrior:'#9c8059',
   ranger:'#819262',skirmisher:'#837991',medic:'#8b9b83',summoner:'#9b8062'};
