@@ -677,7 +677,9 @@ const combatController=window.PaperchalkCombatTurnController.create({
  },
  onBeforeEnemyStrike:({victim,intent})=>{
   if(!victim)return;
-  const guard=farmRules.intercept(victim.r+3,intent?.damage||0);
+  const tile=level.getSlot('ally',victim.r,victim.c);
+  const guard=farmRules.intercept({tileC:tile?.tileC,tileR:tile?.tileR,
+   damage:intent?.damage||0});
   if(!guard.blocked)return;
   level.grantBlock(victim.id,guard.blocked);
   combatFeedback.guard(victim.id,guard.blocked);
