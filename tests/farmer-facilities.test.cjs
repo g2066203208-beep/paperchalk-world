@@ -4,7 +4,8 @@
 const assert=require('node:assert/strict');
 const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const ctx=vm.createContext({window:{},Math,Map,Set,Array,Object,Number,Error});
-for(const file of ['engine/farmer-facilities.js','engine/bandit-roster.js',
+for(const file of ['engine/card-registry.js','data/card-packs.js',
+ 'engine/farmer-facilities.js','engine/bandit-roster.js',
  'engine/level-engine.js','levels/forest-02.js','engine/profession-decks.js']){
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../site/card-battle/',file),'utf8'),ctx,{filename:file});
 }
