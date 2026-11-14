@@ -317,7 +317,7 @@ function create(o){
  function setCollapsed(next){
   collapsed=!!next;
   hover=null;press=null;
-  if(collapsed){scene=[];hot=[];}
+  if(collapsed){scene=[];hot=[];drawCalls=0;deckMeshes=0;}
   return collapsed;
  }
  function animateScene(mode,at){sceneMotion={mode,start:at};}
