@@ -26,6 +26,8 @@ on:
       - 'site/card-battle/engine/stylized-materials.js'
       - 'site/card-battle/engine/profession-decks.js'
       - 'site/card-battle/engine/card-registry.js'
+      - 'site/card-battle/engine/card-effect-engine.js'
+      - 'site/card-battle/engine/object-anchor.js'
       - 'site/card-battle/data/card-packs.js'
       - 'site/card-battle/engine/scene-lifecycle.js'
       - 'site/card-battle/engine/farmer-facilities.js'
@@ -45,6 +47,7 @@ on:
       - 'tests/profession-decks.test.cjs'
       - 'tests/farmer-facilities.test.cjs'
       - 'tests/card-registry.test.cjs'
+      - 'tests/card-effect-engine.test.cjs'
       - 'tests/scene-lifecycle.test.cjs'
       - 'tests/object-animations.test.cjs'
       - 'tests/scene-transitions.test.cjs'
@@ -93,6 +96,9 @@ jobs:
           node tests/profession-decks.test.cjs
           node tests/farmer-facilities.test.cjs
           node tests/card-registry.test.cjs
+          node tests/card-effect-engine.test.cjs
+          node --check site/card-battle/engine/card-effect-engine.js
+          node --check site/card-battle/engine/object-anchor.js
           node tests/scene-lifecycle.test.cjs
           node --check site/card-battle/engine/scene-lifecycle.js
           node --check site/card-battle/engine/card-registry.js
