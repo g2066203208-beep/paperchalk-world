@@ -498,7 +498,13 @@ try{
  assert.equal(await pc.locator('#end-turn').isEnabled(),true);
  await pc.locator('#end-turn').click();
  await pc.waitForFunction(()=>window.__forestLevelDebug.state.phase==='enemy',null,{timeout:10000});
- await screenshot(pc,'03b-enemy-phase-desktop');
+ assert.equal(await pc.locator('#combat-phase').isVisible(),false,
+  'enemy phase text should never appear on screen');
+ assert.equal(await pc.locator('#end-turn').isVisible(),false,
+  'no waiting-for-enemy-action button or label');
+ assert.equal(await pc.locator('.enemy-intent').count(),0,
+  'the enemy attack/guard intention tags are entirely removed');
+ await screenshot(pc,'03b-enemy-attacks-without-telegraphs-desktop');
  await pc.waitForFunction(()=>window.__forestLevelDebug.state.turn===2&&
    window.__forestLevelDebug.state.phase==='active',null,{timeout:18000});
  assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0,
