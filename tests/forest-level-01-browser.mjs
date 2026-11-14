@@ -83,16 +83,18 @@ async function verifyWorld(page,kind){
  assert.deepEqual([...new Set(status.slots.filter(s=>s.zone==='unit').map(s=>s.tileC))],[6,7,8]);
  assert.deepEqual([...new Set(status.slots.filter(s=>s.zone==='facility').map(s=>s.tileC))],[1,2,3,4,10,11,12,13]);
  assert.equal(status.level.columns,3);
- assert.ok(status.camera.maxDistance>=100,'outer 16-column area must be zoomable');
+ assert.ok(Math.abs(status.camera.maxDistance-status.camera.fitDistance)<.001,
+  'fitted full-board camera must be the absolute maximum zoom-out distance');
  console.log('FOREST_16X6_96_VOXELS_PASS',JSON.stringify({kind,voxels:status.tiles.length,unitSlots:18,facilitySlots:48}));
 }
 async function verifyFixedCamera(page,kind){
  const before=await page.evaluate(()=>window.__battleCamera.snapshot());
- assert.equal(before.fixed,true,'first-step battle camera must be fixed');
+ assert.equal(before.fixed,true,'first-step battle camera angle is locked');
  assert.ok(Math.abs(before.yaw)<1e-5,'no sideways orbit');
  assert.ok(Math.abs(before.elevation-78*Math.PI/180)<.001,'near-top-down angle');
- assert.ok(before.distance>=46,'board not cropped by near camera');
+ assert.ok(before.distance>=46,'default board must not start cropped');
  assert.deepEqual(before.target.slice(0,1),[0]);
+ assert.equal(before.maxDistance,before.fitDistance,'no zoom-out past the full-board fit');
  const frame=await page.evaluate(()=>{
   const shots=[];
   for(let r=0;r<6;r++)for(let c=0;c<16;c++){
@@ -109,34 +111,87 @@ async function verifyFixedCamera(page,kind){
  });
  assert.ok(frame.minX>=0&&frame.maxX<=frame.width,'full 16-column board must fit horizontally');
  assert.ok(frame.minY>=0&&frame.maxY<=frame.height,'all six rows must fit vertically');
- assert.ok((frame.maxX-frame.minX)/frame.width>.76,'complete 16x6 board and two facility rails must fit together');
+ assert.ok((frame.maxX-frame.minX)/frame.width>.76,'full 16x6 board fits at default zoom');
  if(kind==='desktop')assert.ok((frame.maxY-frame.minY)/frame.height>.40,
-   'fixed high angle should use more of the desktop height');
- // Locked yaw/elevation must survive all input, but wheel zoom must work.
+   'high camera angle should use most of the desktop height');
+ // At default zoom the user cannot orbit, pan or zoom out.
  await page.evaluate(()=>{
   const c=window.__battleCamera;
-  c.rotate(700,400);c.pan(-900,300);
+  c.rotate(700,400);c.pan(-900,300);c.zoom(12);
   const el=document.getElementById('stage'),rect=el.getBoundingClientRect();
   el.dispatchEvent(new WheelEvent('wheel',{
-   deltaY:-200,clientX:rect.left+rect.width*.5,
+   deltaY:450,clientX:rect.left+rect.width*.5,
+   clientY:rect.top+rect.height*.43,bubbles:true,cancelable:true
+  }));
+ });
+ const far=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(Math.abs(far.desiredDistance-before.fitDistance)<.001,'scrolling out at fit does nothing');
+ assert.deepEqual(far.pan,before.pan,'no pan at default wide view');
+ // The only active scroll direction zooms IN. Zoom-out stays forbidden even
+ // after zooming in; the reset key is the only return to the default frame.
+ await page.evaluate(()=>{
+  const el=document.getElementById('stage'),rect=el.getBoundingClientRect();
+  el.dispatchEvent(new WheelEvent('wheel',{
+   deltaY:-300,clientX:rect.left+rect.width*.5,
    clientY:rect.top+rect.height*.43,bubbles:true,cancelable:true
   }));
  });
  const requested=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.ok(requested.desiredDistance<before.desiredDistance-1,'wheel zoom-in changes target distance');
+ await page.evaluate(()=>window.__battleCamera.zoom(10));
+ const noShrink=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.equal(noShrink.desiredDistance,requested.desiredDistance,
+  'zoom-out input must not shrink the already enlarged board');
  await page.waitForTimeout(420);
  const enlarged=await page.evaluate(()=>window.__battleCamera.snapshot());
- assert.ok(enlarged.distance<before.distance-1,'smooth wheel zoom-in changes actual camera distance');
- assert.equal(enlarged.yaw,before.yaw,'wheel never rotates the locked camera');
- assert.equal(enlarged.elevation,before.elevation,'wheel never pitches the locked camera');
- assert.deepEqual(enlarged.target,before.target,'wheel never pans the locked camera');
+ assert.ok(enlarged.distance<before.distance-1,'smooth wheel zoom-in actually moves camera');
+ assert.equal(enlarged.yaw,before.yaw,'zoom cannot change yaw');
+ assert.equal(enlarged.elevation,before.elevation,'zoom cannot change elevation');
+ assert.deepEqual(enlarged.target,before.target,'zoom does not pan by itself');
+ // Explicit pan is unlocked by zoom. Oversized movement must clamp to safe
+ // x/z limits computed from the board dimensions and zoom ratio.
+ await page.evaluate(()=>window.__battleCamera.pan(-5000,-5000));
+ const panned=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(panned.safePan.x>.1&&panned.safePan.z>.1,'zoom must unlock some safe movement');
+ assert.ok(Math.abs(panned.pan[0]-before.pan[0])>.1,'drag can move camera horizontally');
+ assert.ok(Math.abs(panned.pan[2]-before.pan[2])>.1,'drag can move camera vertically');
+ assert.ok(Math.abs(panned.pan[0]-before.pan[0])<=panned.safePan.x+.001,'pan x cannot escape board');
+ assert.ok(Math.abs(panned.pan[2]-before.pan[2])<=panned.safePan.z+.001,'pan z cannot escape board');
+ // Right mouse drag is a pan gesture, never an orbit gesture.
+ await page.evaluate(()=>{
+  const c=window.__battleCamera;
+  const down={pointerType:'mouse',pointerId:400,button:2,clientX:350,clientY:300};
+  c.pointerDown(down);
+  c.pointerMove({...down,clientX:540,clientY:390});
+  c.pointerUp({...down,clientX:540,clientY:390});
+ });
+ const rightDragged=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.equal(rightDragged.yaw,before.yaw,'right drag must not rotate');
+ assert.equal(rightDragged.elevation,before.elevation,'right drag must not pitch');
+ assert.ok(Math.abs(rightDragged.pan[0]-before.pan[0])<=rightDragged.safePan.x+.001);
+ assert.ok(Math.abs(rightDragged.pan[2]-before.pan[2])<=rightDragged.safePan.z+.001);
+ // Mouse-edge scrolling is also clamped; not a free camera fly mode.
+ await page.evaluate(()=>{
+  const c=window.__battleCamera,rect=document.getElementById('stage').getBoundingClientRect();
+  c.pointerHover({pointerType:'mouse',clientX:rect.right-1,clientY:rect.bottom-1},rect);
+  for(let i=0;i<180;i++)c.edgePan(1/60,true);
+  c.pointerHover(null,null);
+ });
+ const edge=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(Math.abs(edge.pan[0]-before.pan[0])<=edge.safePan.x+.001);
+ assert.ok(Math.abs(edge.pan[2]-before.pan[2])<=edge.safePan.z+.001);
+ // Restore precise approved layout before any card gameplay/screenshot test.
  await page.evaluate(()=>window.__battleCamera.reset());
  await page.waitForTimeout(1100);
  const after=await page.evaluate(()=>window.__battleCamera.snapshot());
- assert.deepEqual(after.target,before.target,'reset preserves fixed camera target');
- assert.ok(Math.abs(after.distance-before.distance)<.003,'reset restores viewport-fitted distance');
- console.log('FOREST_LOCKED_ANGLE_WHEEL_ZOOM_PASS',JSON.stringify({kind,defaultDistance:before.distance,
-  zoomedDistance:enlarged.distance,resetDistance:after.distance,viewport:after.viewport,frame}));
+ assert.deepEqual(after.target,before.target,'reset restores fixed camera target');
+ assert.ok(Math.abs(after.distance-before.distance)<.003,'reset restores viewport fit');
+ assert.ok(Math.abs(after.pan[0]-before.pan[0])<.001);
+ assert.ok(Math.abs(after.pan[2]-before.pan[2])<.001);
+ console.log('FOREST_SAFE_ZOOM_IN_PAN_PASS',JSON.stringify({
+  kind,defaultDistance:before.distance,zoomedDistance:enlarged.distance,
+  resetDistance:after.distance,safePan:panned.safePan,viewport:after.viewport,frame
+ }));
 }
 async function verifyCloudAndResolution(page,kind){
  const initial=await page.evaluate(()=>({
