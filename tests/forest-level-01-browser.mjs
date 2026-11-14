@@ -59,6 +59,9 @@ try{
  assert.equal(init.hud.hasDomCards,false,'no webpage cards');
  assert.equal(init.domHand,false);
  assert.equal(init.hud.backgroundPanel,false);
+ const objectIntro=await page.evaluate(()=>window.__forestLevelDebug.objectAnimations);
+ assert.ok(objectIntro.tracked>=40,'trees, tiles and 3D cards share spring animation tracks');
+ assert.ok(init.hud.animatedCardMeshes>=70,'each face-up physical card has a 3D entrance animation');
  await page.waitForTimeout(600);
  await page.screenshot({path:out+'/01-seven-decks-with-hero-desktop.png',fullPage:true});
  await deploy(page);
@@ -98,8 +101,13 @@ try{
  assert.equal(await page.evaluate(()=>window.__forestHand.draw('warrior').reason),'draw-locked');
  await page.screenshot({path:out+'/05-middle-card-played-draw-locked.png',fullPage:true});
  // Retain tactical grid, particles and win condition after render-only UI overhaul.
- const fx=await page.evaluate(()=>{const v=window.__forestLevelDebug;return{ok:v.adjust(1,0,1),snapshot:v.effects};});
+ const fx=await page.evaluate(()=>{
+  const v=window.__forestLevelDebug;
+  const ok=v.adjust(1,0,1);
+  return{ok,snapshot:v.effects,pose:v.objectPose('terrain:1:0')};
+ });
  assert.equal(fx.ok,true);assert.ok(fx.snapshot.particleCount>0);
+ assert.equal(fx.pose.phase,'pulse','terraforming must make a 3D terrain block bounce');
  await page.waitForTimeout(850);
  let played=1;
  while(played<9){
@@ -112,6 +120,11 @@ try{
   played++;
  }
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'victory');
+ const defeated=await page.evaluate(()=>window.__forestLevelDebug.objectPose('unit:forest-foe-b'));
+ assert.equal(defeated.phase,'exit','defeated enemy must SHRINK before mesh removal');
+ await page.waitForTimeout(520);
+ assert.equal(await page.evaluate(()=>window.__forestLevelDebug.units.filter(u=>u.side==='enemy').length),0,
+  'defeated enemy meshes must be removed only after the exit animation');
  await page.locator('#level-retry').click();
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment');
  assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
