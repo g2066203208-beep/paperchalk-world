@@ -29,9 +29,10 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
   return makeGeom(vertices,indices);
  })();
  const halfW=terrain.width/2,halfD=terrain.depth/2;
+  // Keep trees/rocks OUTSIDE the 3D timber rails and protruding side plaques.
  const forest=[],clearing=[];
  for(let i=0;i<30;i++){
-  const side=i%4,edge=1.4+rand()*4.1;
+  const side=i%4,edge=3.35+rand()*4.1;
   let x,z;
   if(side<2){x=(side===0?-1:1)*(halfW+edge);z=(rand()-.5)*(terrain.depth+8);}
   else{x=(rand()-.5)*(terrain.width+9);z=(side===2?-1:1)*(halfD+edge);}
@@ -41,7 +42,7 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance}){
  // Different real geometry, not a recolored forest: stone stacks, pale rocks
  // and sparse grasses on the outside of the same legally playable grid.
  for(let i=0;i<27;i++){
-  const side=i%4,edge=.8+rand()*3.7;
+  const side=i%4,edge=3.15+rand()*3.7;
   let x,z;
   if(side<2){x=(side===0?-1:1)*(halfW+edge);z=(rand()-.5)*(terrain.depth+7);}
   else{x=(rand()-.5)*(terrain.width+8);z=(side===2?-1:1)*(halfD+edge);}
