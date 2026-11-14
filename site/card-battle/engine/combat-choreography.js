@@ -74,11 +74,13 @@ function create(){
   const t=elapsed(time);
   if(t>=impactAt&&!active.hitFired){
    active.hitFired=true;
+   if(last)last={...last,hitFired:true,impactAt:time};
    active.onImpact?.({...active});
   }
   // Callback can reset the battle; guard against reentrance.
   if(active&&t>=duration&&!active.finishFired){
    const item=active;active=null;item.finishFired=true;
+   if(last)last={...last,completedAt:time};
    item.onFinish?.({...item});
   }
  }
