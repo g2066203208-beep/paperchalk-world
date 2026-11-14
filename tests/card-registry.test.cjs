@@ -22,6 +22,8 @@ assert.equal(C.cardsFor({profession:'engineer',
 assert.equal(C.cardsFor({profession:'ranger',faction:'farmer'}).length,10);
 assert.equal(C.cardsFor({profession:'ranger',faction:'knight'}).length,5);
 assert.equal(C.forArchetype('captain').length,5);
+assert.equal(Object.isFrozen(C.get('lumber').interactions),true);
+assert.equal(Object.isFrozen(C.get('lumber').interactions[0].grant),true);
 assert.equal(B.PROFILES.captain.cards.length,5);
 assert.equal(F.DEFINITIONS['farm-field'].hp,C.get('farm-field').facilityHp);
 assert.deepEqual([...F.DEFINITIONS.windmill.footprint],[2,2]);
