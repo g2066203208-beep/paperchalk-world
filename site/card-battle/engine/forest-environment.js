@@ -108,7 +108,7 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
    }
    cube(p.x,y+.44*sc,p.z,.24*sc,.88*sc,.24*sc,[.39,.28,.20,1],4);
    // Preserve three silhouette layers in a single genuine leaf mesh.
-   renderGeom(crown,mul(T(p.x,y,p.z),S(sc,sc,sc)),
+   renderGeom(crown,root.PaperchalkObjectAnchor.localAtRoot([p.x,y,p.z],sc,{T,S,mul}),
     green[Math.floor(p.tint*4)%4],null,false,null,0,1);
   }
  }
