@@ -83,10 +83,46 @@ html,body{background:#d8ded0}
  #battle-title{top:10px;padding:5px 14px;font-size:13px;letter-spacing:0}
  #terrain-hint{top:45px;max-width:50vw;font-size:9px;padding:5px 8px}
 }
+/* Lightweight combat overlay; keeps physical 3D cards unchanged. */
+#combat-fx{position:fixed;inset:0;width:100vw;height:100dvh;pointer-events:none;z-index:5}
+#combat-phase{position:fixed;top:51px;left:50%;transform:translateX(-50%);
+ pointer-events:none;z-index:5;border-radius:999px;padding:5px 14px;
+ background:#f4f0e6e8;color:#36523e;border:1px solid #b8bf9d;
+ font:600 12px/1.2 system-ui,sans-serif;white-space:nowrap;box-shadow:0 3px 12px #2737231d}
+#end-turn{position:fixed;right:12px;bottom:74px;z-index:9;cursor:pointer;
+ border:1px solid #e3c791;border-radius:12px;min-height:44px;padding:10px 18px;
+ background:linear-gradient(150deg,#415c44,#294634);color:#fff5d4;
+ font:700 13px/1.2 system-ui,sans-serif;box-shadow:0 5px 16px #18291e45}
+#end-turn:disabled{opacity:.48;cursor:default;box-shadow:none}
+#enemy-intents,#damage-numbers{position:fixed;inset:0;pointer-events:none;z-index:6}
+.enemy-intent{position:absolute;min-width:67px;padding:4px 7px;
+ border-radius:9px;background:#f7f2e9f0;border:1px solid #cbbd9f;
+ color:#3a4639;text-align:center;font:600 11px/1.35 system-ui,sans-serif;
+ box-shadow:0 2px 8px #13231d20;white-space:nowrap}
+.enemy-intent strong{color:#a54f36;font-weight:800}
+.enemy-intent.guard strong{color:#4b718e}
+.enemy-intent small{display:block;color:#62675d;font-size:10px}
+.hit-number{position:absolute;font:900 clamp(18px,2vw,33px)/1 system-ui,sans-serif;
+ color:#fff7d3;-webkit-text-stroke:1px #62442a;text-shadow:0 3px 6px #241b14aa;
+ white-space:nowrap;animation:damage-pop .65s ease-out both;will-change:transform,opacity}
+.hit-number.blocked{color:#d8e8ef;-webkit-text-stroke:1px #496475}
+@keyframes damage-pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+ 16%{opacity:1;transform:translate(-50%,-70%) scale(1.22)}
+ 72%{opacity:1}100%{opacity:0;transform:translate(-50%,-145%) scale(.95)}}
+@media(max-width:700px){
+ #combat-phase{top:37px;font-size:10px;padding:4px 9px}
+ #end-turn{right:8px;bottom:52px;min-height:37px;padding:8px 12px;font-size:11px}
+ .enemy-intent{font-size:9px;padding:3px 5px;min-width:52px}
+ .enemy-intent small{font-size:9px}
+}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="森林战场：16列6行96个3D方块，中间人物九宫格与两侧设施区"></canvas>
+<canvas id="combat-fx" aria-hidden="true"></canvas>
+<div id="enemy-intents" aria-hidden="true"></div><div id="damage-numbers" aria-live="off"></div>
+<div id="combat-phase" role="status">部署人物 · 战斗准备</div>
+<button id="end-turn" type="button" disabled>结束回合</button>
 <div id="battle-title" aria-hidden="true">林间小路 · 第一关</div>
 <div id="note" aria-live="polite"></div>
 <button type="button" id="deck-drawer-toggle" aria-expanded="false" aria-label="展开七槽牌盒">展开牌盒 ▲</button>
@@ -105,7 +141,8 @@ html,body{background:#d8ded0}
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
 <script src="./engine/voxel-terrain.js?v=4"></script>
 <script src="./engine/battle-camera.js?v=5"></script>
-<script src="./engine/level-engine.js?v=2"></script>
+<script src="./engine/level-engine.js?v=3"></script>
+<script src="./engine/combat-choreography.js?v=1"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
@@ -118,7 +155,7 @@ html,body{background:#d8ded0}
 <script src="./engine/forest-dressing.js?v=1"></script>
 <script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
-<script src="./engine/profession-decks.js?v=2"></script>
+<script src="./engine/profession-decks.js?v=3"></script>
 <script src="./engine/scene-card-hud.js?v=17"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
@@ -200,6 +237,7 @@ const terrain=window.PaperchalkVoxelTerrain.create({
 });
 const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
 const level=window.PaperchalkLevelEngine.create('forest-01',terrain,{physicalColumns:UNIT_COLUMNS});
+const combatChoreo=window.PaperchalkCombatChoreography.create();
 const fx=window.PaperchalkVoxelAnimations.create(terrain,{seed:618231});
 const objectFX=window.PaperchalkObjectAnimations.create({
  reducedMotion:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true
@@ -317,17 +355,14 @@ function modelForCard(c,now){
  if(c.hudMatrix)return c.hudMatrix;
  const id=c.unitId?'unit:'+c.unitId:'card:'+c.id;
  const pose=objectFX.sample(id,now);
- const motion=attackPose(c,now),arrival=placementPose(c,now);
+ const motion=combatChoreo.pose(c.unitId,now),arrival=placementPose(c,now);
  let base=T(c.x+motion.dx,c.y+motion.dy+arrival.dy,c.z+motion.dz);
  base=mul(base,RY(c.side==='enemy'?.011:-.011));
  base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+motion.pitch+arrival.pitch));
  base=mul(base,RY(c.flip));
  base=mul(base,RZ(motion.roll));
- const sc=Math.max(.025,pose.scale)*(c.slot?1.32:1);
+ const sc=Math.max(.025,pose.scale)*motion.scale*(c.slot?1.32:1);
  base=mul(base,S(sc,sc,sc));return base;}
-function attackPose(c,now){let phase=now-c.attackStart;if(phase<0||phase>1.12)return {dx:0,dy:0,dz:0,pitch:0,roll:0};let u=phase/1.12;
-let s=Math.sin(Math.PI*Math.min(1,u));let launch=(u<.35?Math.sin(u/.35*Math.PI/2):Math.exp(-(u-.35)*4));
-return{dx:Math.sin(c.seed*4)*.12*s,dy:.42*s,dz:(c.side==='enemy'?1:-1)*.78*launch,pitch:(c.side==='enemy'?-.23:.23)*s,roll:Math.sin(phase*24)*.085*s};}
 function placementPose(c,now){
  const dt=now-c.placeStart;if(dt<0||dt>.52)return{dy:0,pitch:0};
  const u=dt/.52;const fall=Math.pow(1-u,2);
@@ -1127,7 +1162,7 @@ window.__forestLevelDebug={
 requestAnimationFrame(frame);
 })();
 </script>
-<script src="./ui/forest-hand.js?v=5"></script>
+<script src="./ui/forest-hand.js?v=6"></script>
 <script src="./ui/farmer-roster.js?v=1"></script>
 </body>
 </html>
