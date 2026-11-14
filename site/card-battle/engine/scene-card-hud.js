@@ -286,6 +286,7 @@ function create(o){
   }
   return null;
  }
+ function cancelPress(){press=null;hover=null;o.previewCharacter?.(null);}
  function move(e){const p=hit(e);hover=p?.id||null;
   if(press?.id.startsWith('character:'))o.previewCharacter?.(press.id.slice(10),e.clientX,e.clientY);
   return !!p;}
@@ -323,7 +324,7 @@ function create(o){
  function animateScene(mode,at){sceneMotion={mode,start:at};}
  function resetAnimations(){scene=[];hover=null;sceneMotion={mode:'steady',start:0};}
  return Object.freeze({
-  render:draw,hit,move,down,up,pointFor,animateScene,resetAnimations,setCollapsed,
+  render:draw,hit,move,down,up,cancelPress,pointFor,animateScene,resetAnimations,setCollapsed,
   get collapsed(){return collapsed;},
   get drawn(){return drawCalls;},
   get snapshot(){
