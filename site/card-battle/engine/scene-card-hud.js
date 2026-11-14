@@ -30,18 +30,25 @@ function create(o){
  }
  function dimensions(){
   const mobile=canvas.getBoundingClientRect().width<720;
-  const w=spanW*(mobile?.93:.88),h=mobile?1.68:2.10;
-  const y=-spanH/2+h/2+(mobile?.24:.28);
-  return{mobile,w,h,y,pitch:(w-.35)/7,deckScale:Math.min(mobile?.32:.80,(w-.35)/7/cardW*.78),
-   handScale:Math.min(mobile?.265:.63,w/(10*cardW)*.92)};
+  // The whole case stays flush with the screen's bottom plane. In particular
+  // reducing the DEPTH of the housing stops the open lid masking the battle.
+  const w=spanW*(mobile?.954:.902),h=mobile?1.48:1.68;
+  const y=-spanH/2+h/2+(mobile?.15:.20);
+  const pitch=(w-.29)/7;
+  return{mobile,w,h,y,pitch,
+   deckScale:Math.min((pitch/cardW)*.79,(h-.23)/cardH*.83),
+   handScale:Math.min((h-.33)/cardH*.87,w/(10*cardW)*.82)};
  }
  function state(){return o.caseSnapshot?.(now)||{phase:'closed',angle:0,faceSpin:0,canDraw:false,canPlay:false};}
- function tiltLid(d,s){
-  // Outer lid starts flush over the compartment body. The hinge opens the
-  // lid 180 degrees, and a secondary REVERSIBLE PANEL pivots 180 degrees.
-  // Inner face is camera-facing both when open and after it is folded shut.
-  return mul(mul(mul(T(0,d.y+d.h/2,.33),RX(s.angle)),
-    T(0,-d.h/2,0)),RY(s.faceSpin));
+ function hingeMatrix(d,s){
+  // Main hinge: fixed along the back-upper LONG edge of the shell (X axis).
+  // Rotating around Y made the previous lid turn sideways like a sword.
+  return mul(mul(T(0,d.y+d.h/2,.29),RX(s.angle)),T(0,-d.h/2,0));
+ }
+ function panelMatrix(d,s){
+  // Second X-parallel axle runs THROUGH the middle of the movable panel.
+  // A genuine reversible face: deck-side cards remain welded to this matrix.
+  return mul(hingeMatrix(d,s),RX(s.faceSpin));
  }
  function worldFromLocal(M,x,y,z){
   return{x:M[0]*x+M[4]*y+M[8]*z+M[12],
@@ -49,17 +56,16 @@ function create(o){
    z:M[2]*x+M[6]*y+M[10]*z+M[14]};
  }
  function frontHandMatrix(p,d,s){
-  let m=tiltLid(d,s);
-  // This is the inside of the lid. At full opening, hinge=PI cancels
-  // the card's RX(PI); at full closing, reversible face=PI puts it on TOP.
-  m=mul(m,T(p.localX,p.localY,-.155));
+  // One rigid transform from drawing through closing to gameplay. No 2nd
+  // hand HUD is spawned and no RY rotation distorts cards edge-on.
+  let m=panelMatrix(d,s);
+  m=mul(m,T(p.localX,p.localY,-.205));
   m=mul(m,RX(PI));
-  m=mul(m,RZ(s.faceSpin)); // keep titles upright after the face reverses
   const focused=hoverId===p.id&&s.canPlay;
   const selected=selectedId()===p.instance&&s.canPlay;
-  m=mul(m,T(0,(focused?.16:0)+(selected?.24:0),-.02));
+  m=mul(m,T(0,(focused?.13:0)+(selected?.20:0),-.035));
   m=mul(m,RZ(p.fanAngle));
-  m=mul(m,S(p.scale*(focused?1.08:1),p.scale*(focused?1.08:1),1));
+  m=mul(m,S(p.scale*(focused?1.09:1),p.scale*(focused?1.09:1),1));
   return m;
  }
  function selectedId(){return o.selected?.()||null;}
@@ -106,12 +112,13 @@ function create(o){
  function layout(snapshot,staged,d,s){
   const all=root.PaperchalkProfessionDecks?.CLASSES||[];
   const slots=[];
-  const openEnough=s.angle>.18||s.phase==='drawing';
-  if(openEnough){
+  const displayDeck=s.phase==='drawing'||s.phase==='opening'&&s.angle>.30||
+   s.phase==='closing'&&s.angle>.35;
+  if(displayDeck){
    all.forEach((cls,i)=>{
     const c=snapshot.classes.find(a=>a.id===cls.id);
     slots.push({kind:'deck',id:'deck:'+cls.id,profession:cls.id,c,
-     x:(i-3)*d.pitch,y:d.y-.02,z:-.24,scale:d.deckScale,angle:0});
+     x:(i-3)*d.pitch,y:d.y-.015,z:.20,scale:d.deckScale,angle:0});
    });
    for(const u of staged){
     const deck=slots.find(x=>x.profession===u.role);
@@ -120,71 +127,78 @@ function create(o){
      scale:d.deckScale*1.015});
    }
   }
-  // Hand remains on the SAME physical reversible inner lid while it rotates.
-  // It is NOT moved to a second top-layer hand after confirming the draw.
-  const hand=snapshot.hand||[],wide=d.w*.84;
+  // The same cards follow the SAME moving cover surface throughout closing.
+  const hand=snapshot.hand||[],wide=d.w*.83;
   for(let i=0;i<hand.length;i++){
    const axis=hand.length===1?0:i/(hand.length-1)*2-1;
    const p={kind:'hand',id:'hand:'+hand[i].instance,instance:hand[i].instance,
     profession:hand[i].profession,c:hand[i],
-    localX:axis*wide/2,localY:(1-axis*axis)*.08,
-    fanAngle:axis*.055,scale:d.handScale};
-   const pose=worldFromLocal(tiltLid(d,s),p.localX,p.localY,-.155);
+    localX:axis*wide/2,localY:(1-axis*axis)*.05,
+    fanAngle:axis*.026,scale:d.handScale};
+   const pose=worldFromLocal(panelMatrix(d,s),p.localX,p.localY,-.205);
    slots.push({...p,x:pose.x,y:pose.y,z:pose.z});
   }
-  if(s.phase==='closed')slots.push({kind:'case',id:'case:lid',x:0,y:d.y,z:.7,
+  if(s.phase==='closed')slots.push({kind:'case',id:'case:lid',x:0,y:d.y,z:.65,
    width:d.w,height:d.h});
   return slots;
  }
  function deckPose(p,count,d){
-  // Inclined card deck INSIDE the physical compartment. Thin stacked edge
-  // thickness varies with the exact remaining count, not a fake 2D sprite.
-  const base=mul(T(p.x,p.y,-.14),RX(-.84));
-  const z=.10+count*.035;
+  // Mostly front-on screen-space card slabs, but with visible physical
+  // thickness along depth. The front lip cannot cover their faces.
+  const base=mul(T(p.x,p.y,.09),RX(-.17));
+  const z=.20+Math.max(0,count-1)*.032;
   return{base,top:mul(mul(base,T(0,0,z)),S(p.scale,p.scale,1)),
    center:worldFromLocal(base,0,0,z)};
  }
  function drawShell(d,s){
   const b=d.y,W=d.w,H=d.h;
   const slab=(x,y,z,sx,sy,sz,col)=>render(box,mul(T(x,y,z),S(sx,sy,sz)),col,d);
-  // Single continuous seven-bay whitebox tray, bottom pad and four walls.
-  slab(0,b,-.32,W,H,.36,paint.shell);
-  slab(0,b,-.105,W-.21,H-.19,.08,paint.tray);
-  slab(0,b-H*.49,-.02,W,.085,.26,paint.rim);
-  slab(0,b+H*.49,-.07,W,.085,.31,paint.rim);
-  slab(-W*.5,b,-.02,.10,H,.29,paint.rim);
-  slab(W*.5,b,-.02,.10,H,.29,paint.rim);
-  const left=-W/2+.175;
+  // One contiguous seven-bay whitebox: no separate floating small boxes.
+  slab(0,b,-.31,W,H,.35,paint.shell);
+  slab(0,b,-.096,W-.18,H-.18,.058,paint.tray);
+  const left=-W/2+.145;
   for(let i=0;i<7;i++){
    const center=left+(i+.5)*d.pitch;
-   slab(center,b,-.03,d.pitch-.115,H-.27,.025,paint.slot);
+   slab(center,b,-.044,d.pitch-.092,H-.19,.022,paint.slot);
   }
+  // The barriers rest behind the top exposed card. The front lip is thin.
+  slab(0,b-H*.49,.07,W,.068,.12,paint.rim);
+  slab(0,b+H*.49,-.03,W,.076,.25,paint.rim);
+  slab(-W*.5,b,-.03,.084,H,.22,paint.rim);
+  slab(W*.5,b,-.03,.084,H,.22,paint.rim);
   for(let i=1;i<7;i++){
    const x=left+i*d.pitch;
-   slab(x,b,-.035,.075,H-.15,.29,paint.rim);
+   slab(x,b,-.034,.067,H-.16,.16,paint.rim);
   }
-  // Two solid hinge barrels and two visible hinge pins.
+  // Both hinges share the EXACT lid pivot. Hardware never teleports.
   for(const x of [-W*.39,W*.39]){
-   slab(x,b+H/2,.30,.49,.20,.22,paint.hinge);
-   slab(x,b+H/2,.46,.25,.095,.15,paint.hingePin);
+   slab(x,b+H/2,.29,.49,.14,.20,paint.hinge);
+   slab(x,b+H/2,.415,.24,.076,.13,paint.hingePin);
   }
  }
  function drawLid(d,s){
-  const lid=tiltLid(d,s);
-  const piece=(x,y,z,sx,sy,sz,color)=>{
-   render(box,mul(lid,mul(T(x,y,z),S(sx,sy,sz))),color,d);
-  };
-  // Whitebox artwork placeholders: outer face and the INNER card holding
-  // surface are the same reversible physical panel, NOT two swapped cards.
-  piece(0,0,0,d.w,d.h,.22,paint.lid);
-  piece(0,0,-.113,d.w-.17,d.h-.18,.035,paint.inner);
-  piece(0,0,.118,d.w-.20,d.h-.20,.028,paint.shell);
-  piece(0,d.h/2-.045,0,d.w,.075,.28,paint.rim);
-  piece(0,-d.h/2+.045,0,d.w,.075,.28,paint.rim);
-  piece(-d.w/2+.045,0,0,.085,d.h,.28,paint.rim);
-  piece(d.w/2-.045,0,0,.085,d.h,.28,paint.rim);
-  // Inner recessed lip, currently blank and ready for Anima painted skin.
-  piece(0,-d.h*.42,-.15,d.w*.92,.035,.08,paint.hinge);
+  const frame=hingeMatrix(d,s),panel=panelMatrix(d,s);
+  const panelPiece=(x,y,z,sx,sy,sz,color)=>
+   render(box,mul(panel,mul(T(x,y,z),S(sx,sy,sz))),color,d);
+  const framePiece=(x,y,z,sx,sy,sz,color)=>
+   render(box,mul(frame,mul(T(x,y,z),S(sx,sy,sz))),color,d);
+  // Narrow hinge-following perimeter; it never becomes a giant solid wall.
+  framePiece(0,d.h*.49,0,d.w,.055,.13,paint.rim);
+  framePiece(0,-d.h*.49,0,d.w,.055,.13,paint.rim);
+  framePiece(-d.w*.49,0,0,.058,d.h,.13,paint.rim);
+  framePiece(d.w*.49,0,0,.058,d.h,.13,paint.rim);
+  // Double-sided removable face panel, with dedicated Anima skin sockets.
+  panelPiece(0,0,0,d.w-.19,d.h-.19,.115,paint.lid);
+  panelPiece(0,0,.067,d.w-.23,d.h-.23,.017,paint.shell);
+  panelPiece(0,0,-.067,d.w-.23,d.h-.23,.017,paint.inner);
+  // Inset holding rim on the hand-bearing (inner) face.
+  for(const y of [-d.h*.44,d.h*.44])
+   panelPiece(0,y,-.101,d.w*.91,.027,.045,paint.hinge);
+  for(const x of [-d.w*.45,d.w*.45])
+   panelPiece(x,0,-.101,.032,d.h*.82,.045,paint.hinge);
+  // Genuine center-axle end caps make the second X-axis legible.
+  for(const x of [-d.w*.45,d.w*.45])
+   framePiece(x,0,0,.12,.15,.16,paint.hingePin);
  }
  function drawDeck(p,d,s,staged){
   const cards=o.remainingCards?.(p.profession)||[];
@@ -192,13 +206,13 @@ function create(o){
   if(!count)return;
   const pose=deckPose(p,count,d);
   if(count>1){
-   const slab=mul(pose.base,mul(T(0,0,.10+(count-1)*.035*.5),
-    S(cardW*p.scale,cardH*p.scale,(count-1)*.035)));
+   const slab=mul(pose.base,mul(T(0,0,.20+(count-1)*.016),
+    S(cardW*p.scale,cardH*p.scale,(count-1)*.032)));
    render(box,slab,paint.cardSide,d);
-   // Side creases show separated paper layers at a low draw-call budget.
+   // A few distinct visible edges; do not redraw 70 hidden card textures.
    for(let n=1;n<count;n+=3){
-    const seam=mul(pose.base,mul(T(0,0,.10+n*.035),
-      S(cardW*p.scale,cardH*p.scale,.008)));
+    const seam=mul(pose.base,mul(T(0,0,.20+n*.032),
+      S(cardW*p.scale,cardH*p.scale,.006)));
     render(box,seam,paint.shadow,d);
    }
   }
@@ -206,7 +220,8 @@ function create(o){
   pilesRendered++;
   const hero=staged.find(u=>u.role===p.profession);
   if(hero){
-   const m=mul(pose.base,mul(T(0,0,.10+count*.035+.105),S(p.scale*1.04,p.scale*1.04,1)));
+   const m=mul(pose.base,mul(T(0,0,.20+count*.032+.085),
+      S(p.scale*1.03,p.scale*1.03,1)));
    physicalCard(m,textureFor({profession:p.profession},hero.portrait),d);
   }
  }
@@ -219,12 +234,12 @@ function create(o){
    const deck=byProfession.get(p.profession);
    if(deck){
     const source=deckPose(deck,Math.max(1,deck.c?.deckCount||1),d).center;
-    const destination=worldFromLocal(tiltLid(d,s),p.localX,p.localY,-.155);
+    const destination=worldFromLocal(panelMatrix(d,s),p.localX,p.localY,-.205);
     const t=ease(flight);
     const x=source.x+(destination.x-source.x)*t;
     const y=source.y+(destination.y-source.y)*t+Math.sin(t*PI)*.42;
-    const z=source.z+(destination.z-source.z)*t+Math.sin(t*PI)*.65+.26;
-    const m=mul(mul(T(x,y,z),RX(-.05)),S(p.scale,p.scale,1));
+    const z=source.z+(destination.z-source.z)*t+Math.sin(t*PI)*.42+.10;
+    const m=mul(mul(T(x,y,z),RX(-.12)),S(p.scale,p.scale,1));
     physicalCard(m,tex,d);handRendered++;return;
    }
   }
@@ -252,7 +267,7 @@ function create(o){
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(fov,width/height,.1,80),T(0,0,-cameraZ)));
   drawShell(d,s);
-  if(s.angle>.18||s.phase==='drawing'){
+  if(s.angle>.30||s.phase==='drawing'){
    for(const p of positions.filter(p=>p.kind==='deck'))drawDeck(p,d,s,staged);
   }
   drawLid(d,s);
