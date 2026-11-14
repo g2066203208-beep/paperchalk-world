@@ -41,7 +41,12 @@ assert.equal(hand.selectCard(card.card.instance),true);
 assert.equal(hand.consumeSelected('attack'),null,'facility is not an attack');
 assert.equal(hand.consumeSelected('facility')?.instance,card.card.instance);
 assert.equal(hand.snapshot.count,0);
-for(let i=0;i<10;i++)assert.ok(hand.draw('farmer').ok);
+for(let i=0;i<9;i++)assert.ok(hand.draw('farmer').ok);
+assert.equal(hand.snapshot.count,9);
+assert.equal(hand.draw('farmer').reason,'box-empty');
+hand.nextTurn(); // played card enters discard, not the hand
+assert.equal(hand.snapshot.count,9);
+assert.ok(hand.draw('farmer').ok,'only a manual tap recycles the discarded card');
 assert.equal(hand.snapshot.count,10);
 assert.equal(hand.draw('woodcutter').reason,'hand-full');
 console.log('CHARACTER_HAND_INJECTION_PASS deck_per_owner manual_draw no_debug_dependency');
