@@ -24,7 +24,10 @@ function create({canvas,fxCanvas,intentsLayer,numbersLayer,project,cardFor}){
    node.replaceChildren();
    const label=document.createElement('strong');label.textContent=first;
    const health=document.createElement('small');
-   health.textContent=unit.currentHp+'/'+unit.hp+' HP'+(unit.currentBlock?' · 护盾 '+unit.currentBlock:'');
+   // Attack/HP now live on physical card corners; floating labels show only
+   // future enemy actions and optional temporary shield state.
+   health.textContent=unit.currentBlock?'护盾 '+unit.currentBlock:'';
+   health.hidden=!unit.currentBlock;
    node.append(label,health);
   }
  }
