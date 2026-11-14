@@ -106,7 +106,7 @@ async function verifyFixedCamera(page,kind){
  });
  assert.ok(frame.minX>=0&&frame.maxX<=frame.width,'full 16-column board must fit horizontally');
  assert.ok(frame.minY>=0&&frame.maxY<=frame.height,'all six rows must fit vertically');
- assert.ok((frame.maxX-frame.minX)/frame.width>.80,'board must fill the width instead of a tiny center patch');
+ assert.ok((frame.maxX-frame.minX)/frame.width>.76,'complete 16x6 board and two facility rails must fit together');
  if(kind==='desktop')assert.ok((frame.maxY-frame.minY)/frame.height>.40,
    'fixed high angle should use more of the desktop height');
  await page.evaluate(()=>{
@@ -120,6 +120,19 @@ async function verifyFixedCamera(page,kind){
  assert.equal(after.distance,before.distance);
  console.log('FOREST_FIXED_CAMERA_PASS',JSON.stringify({kind,eye:after.eye,elevation:after.elevation,
   distance:after.distance,viewport:after.viewport,frame}));
+}
+async function verifyApprovedReferenceLayout(page,kind){
+ await page.waitForFunction(()=>window.__boardReferenceLayout?.snapshot?.boardTiles===96,{timeout:20000});
+ const m=await page.evaluate(()=>window.__boardReferenceLayout.snapshot);
+ assert.equal(m.boardTiles,96,'full 16 by 6 terrain remains physical');
+ assert.ok(m.coverageX>.78,'board should occupy most horizontal visual space');
+ assert.ok(m.coverageY>(kind==='desktop'?.54:.17),
+   'board should be proportioned vertically like reference, not squashed');
+ assert.ok(m.left>=0&&m.right<=m.viewport[0],'board frame visible within horizontal viewport');
+ assert.ok(m.top>=0&&m.bottom<=m.viewport[1],'board frame visible within vertical viewport');
+ assert.equal(await page.locator('#deck-drawer-toggle').getAttribute('aria-expanded'),'false',
+  'start with collapsed physical seven-stack drawer');
+ console.log('REFERENCE_BOARD_LAYOUT_PASS',JSON.stringify({kind,frame:m}));
 }
 async function plantTestFarm(page,flank='left'){
  const button=page.locator('#farm-test');
@@ -161,6 +174,7 @@ try{
  await pc.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
  await verifyWorld(pc,'desktop');
  await verifyTrayCollapsed(pc,'desktop-default');
+ await verifyApprovedReferenceLayout(pc,'desktop');
  await pc.waitForTimeout(400);
  await screenshot(pc,'00-board-clear-no-deck-desktop');
  await showTray(pc);
@@ -178,6 +192,7 @@ try{
  await hideTray(pc);
  await pc.waitForTimeout(300);
  await screenshot(pc,'02b-farmland-board-clear-no-deck-desktop');
+ await verifyApprovedReferenceLayout(pc,'desktop');
  await showTray(pc);
  await clickCard(pc,'deck:warrior');
  await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
@@ -207,6 +222,7 @@ try{
  await phone.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
  await verifyWorld(phone,'phone');
  await verifyTrayCollapsed(phone,'phone-default');
+ await verifyApprovedReferenceLayout(phone,'phone');
  await screenshot(phone,'05a-board-clear-no-deck-phone');
  await showTray(phone);
  await verifyBox(phone,'phone');

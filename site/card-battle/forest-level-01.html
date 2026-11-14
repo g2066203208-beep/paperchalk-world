@@ -68,10 +68,65 @@ html,body{background:#d8ded0}
  box-shadow:0 3px 9px #0002;cursor:pointer;touch-action:manipulation}
 #deck-drawer-toggle:hover{background:#fff}
 @media(max-width:700px){#deck-drawer-toggle{bottom:8px;min-height:30px;font-size:11px;padding:5px 12px}}
+/* Approved-reference board frame; positioned from real 3D projected corners.
+   All visual layers are pointer-transparent, 96 board cells remain clickable. */
+#battle-ornament{position:fixed;z-index:2;pointer-events:none;border-radius:15px;
+ border:3px solid #c8ae67;outline:1px solid #435c30;
+ box-shadow:0 5px 0 #516432b5,0 10px 18px #1b331e40,
+ inset 0 0 0 2px #f5e2a187,inset 0 0 0 5px #527d4266}
+#battle-ornament::after{content:"";position:absolute;top:50%;left:0;right:0;height:2px;
+ transform:translateY(-50%);background:linear-gradient(90deg,#dceba36e,#efffb6,#dceba36e);
+ box-shadow:0 0 5px 2px #e6ff78aa,0 0 12px #c9ff5999}
+#battle-ornament .zone-tag{position:absolute;left:2%;border-radius:20px;
+ padding:4px 11px;font:600 12px/1.3 system-ui,sans-serif;color:#f8f7df;
+ background:#426038b8;box-shadow:inset 0 0 0 1px #cfde9788;text-shadow:0 1px 2px #294523}
+#battle-ornament .zone-tag.enemy{top:19%}
+#battle-ornament .zone-tag.ally{bottom:19%}
+.facility-rail{position:fixed;z-index:2;pointer-events:none;display:flex;flex-direction:column;
+ align-items:center;justify-content:center;gap:6px;border-radius:16px;
+ padding:9px 5px;background:linear-gradient(160deg,#36552de9,#6b8244d9 53%,#34512edc);
+ border:2px solid #dfc779;outline:1px solid #425627;
+ box-shadow:0 7px 15px #182a2090,inset 0 0 0 2px #708d527d;color:#f8f4db;
+ text-shadow:0 2px 3px #253822}
+.facility-rail .floret{font-size:19px;color:#efd18a}
+.facility-rail .facility-label{font:600 11px/1.3 system-ui,sans-serif;text-align:center}
+.facility-rail .facility-icon{width:94%;aspect-ratio:3/4;display:flex;align-items:center;
+ justify-content:center;border-radius:10px;border:1px solid #e0c47e99;
+ background:#2e492caf;overflow:hidden;font-size:30px;color:#d5dba1}
+.facility-rail .facility-icon img{width:100%;height:100%;object-fit:cover;display:block}
+#battle-title{position:fixed;top:12px;left:50%;transform:translateX(-50%);
+ z-index:3;pointer-events:none;border-radius:36px;padding:6px 30px;
+ background:linear-gradient(180deg,#345332eb,#213e2bf0);color:#f8f6d8;
+ border:1px solid #cbb06d;box-shadow:inset 0 0 0 1px #7b9558ad,0 4px 14px #273b2588;
+ font:700 clamp(16px,1.65vw,25px)/1.35 serif;white-space:nowrap;letter-spacing:.1em}
+#terrain-hint{top:10px;left:12px;max-width:230px;font-size:11px}
+#camera-controls{display:none!important}
+@media(max-width:700px){
+ #battle-title{top:10px;padding:5px 14px;font-size:13px;letter-spacing:0}
+ #battle-ornament{border-width:2px;border-radius:7px}
+ #battle-ornament .zone-tag{font-size:8px;padding:2px 5px}
+ .facility-rail{border-width:1px;padding:3px 1px;gap:1px;border-radius:7px}
+ .facility-rail .floret{font-size:11px}
+ .facility-rail .facility-label{font-size:7px}
+ .facility-rail .facility-icon{font-size:15px;border-radius:4px}
+ #terrain-hint{top:45px;max-width:50vw;font-size:9px;padding:5px 8px}
+}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="森林战场：16列6行96个3D方块，中间人物九宫格与两侧设施区"></canvas>
+<div id="battle-ornament" aria-hidden="true">
+ <span class="zone-tag enemy">敌方区域</span><span class="zone-tag ally">我方区域</span>
+</div>
+<div class="facility-rail" id="facility-rail-left" aria-hidden="true">
+ <span class="floret">✤</span><span class="facility-label">左侧设施</span>
+ <div class="facility-icon" id="facility-icon-left"><span>＋</span></div>
+</div>
+<div class="facility-rail" id="facility-rail-right" aria-hidden="true">
+ <span class="floret">✤</span><span class="facility-label">右侧设施</span>
+ <div class="facility-icon" id="facility-icon-right"><span>＋</span></div>
+</div>
+<div id="battle-title" aria-hidden="true">林间小路 · 第一关</div>
 <div id="note" aria-live="polite"></div>
 <button type="button" id="deck-drawer-toggle" aria-expanded="false" aria-label="展开七槽牌盒">展开牌盒 ▲</button>
 <div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>农田牌测试：点农田，再点左右设施区空格<br>固定俯视镜头 · 棋盘不旋转、不平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
@@ -153,7 +208,7 @@ const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
 const COLS=16,ROWS_PER_SIDE=3;
 // Shared terrain engine is the ONLY source for world coordinates and tile extents.
 const terrain=window.PaperchalkVoxelTerrain.create({
- cols:16,rows:6,tileW:2.65,tileD:2.65,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
+ cols:16,rows:6,tileW:2.65,tileD:3.70,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
  initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
 });
 const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
@@ -170,7 +225,7 @@ const orbitCamera=window.PaperchalkBattleCamera.create({
  // existing 16x6 board, cards, facilities, deck box and materials are UNCHANGED.
  // Offset the focus toward the player's near edge so the field fills the region
  // between the top controls and the anchored seven-compartment box.
- target:[0,-1.65,2.20],distance:46.7,yaw:0,elevation:78*Math.PI/180,
+ target:[0,-1.65,-.65],distance:49.1,yaw:0,elevation:78*Math.PI/180,
  fov:33,fixed:true,fitAspect:16/9,
  minDistance:18,maxDistance:105,minElevation:78*Math.PI/180,maxElevation:78*Math.PI/180,
  maxPanX:0,maxPanZ:0
@@ -260,7 +315,7 @@ base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
 base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+arrival.pitch+c.hover*.07));
 base=mul(base,RY(c.flip));
 base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll)); const focusScale=c.slot?1+c.hover*.26:1;
- const sc=focusScale*Math.max(.025,pose.scale);
+ const sc=focusScale*Math.max(.025,pose.scale)*(c.slot?1.16:1);
  base=mul(base,S(sc,sc,sc));return base;}
 function attackPose(c,now){let phase=now-c.attackStart;if(phase<0||phase>1.12)return {dx:0,dy:0,dz:0,pitch:0,roll:0};let u=phase/1.12;
 let s=Math.sin(Math.PI*Math.min(1,u));let launch=(u<.35?Math.sin(u/.35*Math.PI/2):Math.exp(-(u-.35)*4));
@@ -430,6 +485,48 @@ function projection2D(x,y,z){
  const q=transform(vp,[x,y,z,1]);
  return {x:(q[0]/q[3]*.5+.5)*w,y:(.5-q[1]/q[3]*.5)*h};
 }
+// Track the actual 3D grid projection instead of drawing an unrelated mock UI.
+let previousBoardLayout='',previousFacilityDisplay='',boardReferenceMetrics=null;
+function syncReferenceLayout(){
+ const rect=canvas.getBoundingClientRect();
+ const key=[rect.width,rect.height,terrain.width,terrain.depth,orbitCamera.snapshot().distance].join('/');
+ if(previousBoardLayout!==key){
+  previousBoardLayout=key;
+  const x0=terrain.minX,x1=x0+terrain.width,z0=terrain.minZ,z1=z0+terrain.depth,y=terrain.topY+.025;
+  const screen=[[x0,z0],[x1,z0],[x1,z1],[x0,z1]].map(([x,z])=>{
+   const p=projection2D(x,y,z);return{x:rect.left+p.x/w*rect.width,y:rect.top+p.y/h*rect.height};
+  });
+  const left=Math.min(...screen.map(v=>v.x)),right=Math.max(...screen.map(v=>v.x)),
+   top=Math.min(...screen.map(v=>v.y)),bottom=Math.max(...screen.map(v=>v.y));
+  const width=right-left,height=bottom-top;
+  boardReferenceMetrics={left,right,top,bottom,width,height,
+   coverageX:width/rect.width,coverageY:height/rect.height,boardTiles:96,viewport:[rect.width,rect.height]};
+  const rim=document.getElementById('battle-ornament');
+  Object.assign(rim.style,{left:left+'px',top:top+'px',width:width+'px',height:height+'px'});
+  for(const side of ['left','right']){
+   const rail=document.getElementById('facility-rail-'+side);
+   if(rect.width<720){rail.style.display='none';continue;}
+   rail.style.display='flex';
+   const rw=Math.min(82,Math.max(50,rect.width*.047)),rh=Math.min(244,Math.max(132,height*.36));
+   Object.assign(rail.style,{
+    left:(side==='left'?Math.max(3,left-rw-7):Math.min(rect.right-rw-3,right+7))+'px',
+    top:(top+(height-rh)/2)+'px',width:rw+'px',height:rh+'px'
+   });
+  }
+ }
+ const built=cards.filter(c=>c.kind==='facility'&&c.def?.id==='farm-field');
+ const display=built.map(c=>c.slot?.flank).sort().join(',');
+ if(display!==previousFacilityDisplay){
+  previousFacilityDisplay=display;
+  for(const side of ['left','right']){
+   const box=document.getElementById('facility-icon-'+side);box.replaceChildren();
+   if(built.some(c=>c.slot?.flank===side)){
+    const img=document.createElement('img');img.src='../assets/card-battle/farmer/farm-field.png';img.alt='已建农田';box.appendChild(img);
+   }else{const span=document.createElement('span');span.textContent='＋';box.appendChild(span);}
+  }
+ }
+}
+window.__boardReferenceLayout={get snapshot(){return boardReferenceMetrics;}};
 function worldFromPointer(clientX,clientY,planeY=.1){
  const box=canvas.getBoundingClientRect();
  const nx=(clientX-box.left)/box.width*2-1,ny=1-(clientY-box.top)/box.height*2;
@@ -764,7 +861,7 @@ function frame(timeMs){
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
  gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
- drawStage();drawHighlights();drawTerrainParticles();
+ drawStage();syncReferenceLayout();drawHighlights();drawTerrainParticles();
  // Remove a defeated object's mesh only after shrinking it to nothing.
  for(let i=cards.length-1;i>=0;i--){
   const c=cards[i],id=c.unitId?'unit:'+c.unitId:'card:'+c.id;
