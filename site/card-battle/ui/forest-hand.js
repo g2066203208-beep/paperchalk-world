@@ -12,16 +12,17 @@ let selectedInstance=null;
 function snapshot(){return model.snapshot();}
 function selectedCard(){return snapshot().hand.find(c=>c.instance===selectedInstance)||null;}
 function selectCard(instance){
- if(!snapshot().hand.some(c=>c.instance===instance))return false;
+ if(!root.__flipCase?.canPlay||!snapshot().hand.some(c=>c.instance===instance))return false;
  selectedInstance=selectedInstance===instance?null:instance;
  return true;
 }
 function draw(profession,opts){
  if(root.__forestLevelDebug?.state.phase!=='active')return {ok:false,reason:'deploy-first'};
+ if(!root.__flipCase?.canDraw)return {ok:false,reason:'open-case-to-draw'};
  return model.draw(profession,opts);
 }
 function consumeForTarget(targetId){
- if(!selectedInstance)return null;
+ if(!root.__flipCase?.canPlay||!selectedInstance)return null;
  const card=selectedCard();
  if(!card){selectedInstance=null;return null;}
  const result=model.play(selectedInstance);
@@ -37,6 +38,7 @@ function onDeployment(){
 }
 function nextTurn(){
  if(root.__forestLevelDebug?.state?.phase!=='active')return false;
+ if(!root.__flipCase?.nextTurn(performance.now()/1000))return false;
  selectedInstance=null;
  return model.nextTurn();
 }

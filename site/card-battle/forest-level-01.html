@@ -51,6 +51,12 @@ html,body{background:#d8ded0}
 #scene-switch:disabled{cursor:default;opacity:.72}
 #scene-switch-status{font:11px/1.4 system-ui,sans-serif;color:#445946;min-height:16px;margin-top:5px;text-shadow:0 1px 2px #e5ebdc}
 @media(max-width:700px){#scene-switch-wrap{right:9px;top:51px;max-width:45vw}#scene-switch{font-size:11px;padding:8px 9px;min-height:34px}#scene-switch-status{font-size:10px}}
+#hand{bottom:auto!important;top:198px!important;left:12px!important;transform:none!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:0!important;gap:5px!important}
+#hand button{font-size:11px!important;padding:7px!important}
+#case-controls{position:fixed;right:12px;bottom:29%;z-index:6;display:flex;flex-direction:column;gap:7px;align-items:flex-end;pointer-events:none}
+#case-controls button{pointer-events:auto;touch-action:manipulation;min-height:38px;padding:8px 14px;background:#eeeeebed;border:1px solid #a9aeac;border-radius:10px;color:#343b3b;font:600 12px/1.2 system-ui,sans-serif;box-shadow:0 3px 14px #0002;cursor:pointer}
+#case-controls button:disabled{opacity:.54;cursor:default}#case-controls button[hidden]{display:none}
+@media(max-width:700px){#hand{top:175px!important}#case-controls{right:7px;bottom:30%}#case-controls button{font-size:10px;min-height:34px;padding:7px 9px}}
 </style>
 </head>
 <body>
@@ -59,6 +65,7 @@ html,body{background:#d8ded0}
 <div id="terrain-hint"><strong>林间小路 · 第一关</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>点击敌人攻击；选地形工具再点格子<br>鼠标滚轮缩放 · Shift拖动平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button><div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div></div>
+<div id="case-controls"><button id="case-action" type="button">打开七槽牌盒</button><button id="case-end-turn" type="button" hidden>结束回合</button></div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="reset">重开关卡</button></div>
 <div hidden><button id="roster-trigger" type="button">人物图鉴</button></div>
 <div id="character-gallery" role="dialog" aria-label="农民组织人物卡图鉴" aria-modal="true" hidden>
@@ -76,7 +83,8 @@ html,body{background:#d8ded0}
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=4"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=12"></script>
+<script src="./engine/flip-case-controller.js?v=1"></script>
+<script src="./engine/scene-card-hud.js?v=13"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -291,11 +299,39 @@ function makePhysicalCardTexture(image){
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  return tex;
 }
-const sceneHUD=window.PaperchalkSceneCardHUD.create({
+const flipCase=window.PaperchalkFlipCase.create({
+  handCount:()=>window.__forestHand?.snapshot?.count||0,
+  canConfirm:()=>level.phase==='active',
+  canEnd:()=>level.phase==='active'
+ });
+ window.__flipCase=flipCase;
+ const caseAction=document.getElementById('case-action');
+ const caseEndTurn=document.getElementById('case-end-turn');
+ function syncCaseControls(){
+  const s=flipCase.snapshot(now);
+  caseAction.hidden=s.phase==='playing';
+  caseAction.disabled=s.busy||s.phase==='closing';
+  caseAction.textContent=s.phase==='closed'?'打开七槽牌盒':
+   s.phase==='opening'?'正在翻盖…':
+   s.phase==='drawing'?'确认摸牌 · 翻面合盖':'正在翻面合盖…';
+  caseEndTurn.hidden=s.phase!=='playing';
+ }
+ caseAction.addEventListener('click',()=>{
+  if(flipCase.phase==='closed')flipCase.open(performance.now()/1000);
+  else if(flipCase.phase==='drawing'&&!flipCase.confirm(performance.now()/1000))
+   message('先部署伐木少女，并至少摸一张行动牌');
+  syncCaseControls();
+ });
+ caseEndTurn.addEventListener('click',()=>{
+  if(window.__forestHand?.nextTurn())message('回合结束 · 点击盒盖开启下一次摸牌');
+  syncCaseControls();
+ });
+ const sceneHUD=window.PaperchalkSceneCardHUD.create({
  canvas,gl,drawCard,renderGeom,makeGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,objectFX,
  pileEdge:cardEdge,pileRim:colors.rim,makeTexture:makePhysicalCardTexture,
  getVP:()=>vp,uniformVP:m=>gl.uniformMatrix4fv(U.vp,false,m),
  snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
+  caseSnapshot:t=>flipCase.snapshot(t),openCase:()=>flipCase.open(performance.now()/1000),
  remainingCards:profession=>window.__forestHand?.remainingCards(profession)||[],
  selected:()=>window.__forestHand?.selected||null,
  draw:profession=>window.__forestHand?.draw(profession),
@@ -519,7 +555,7 @@ function reset(){
  selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
  fx.reset();terrain.reset('grass');clearPick();startForestLevel();
  sceneHUD.resetAnimations?.();
- window.__forestHand?.reset();
+  window.__forestHand?.reset();flipCase.reset(now);syncCaseControls();
 }
 document.getElementById('reset').addEventListener('click',reset);
 document.getElementById('demo').addEventListener('click',()=>{
@@ -622,7 +658,7 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%7)*.07;});}
  if(e.code==='Escape'){clearPick();selectedStagedId=null;previewDeployment=null;}
-  if(e.code==='Enter'){e.preventDefault();window.__forestHand?.nextTurn();}
+  if(e.code==='Enter'){e.preventDefault();if(window.__forestHand?.nextTurn())message('回合结束 · 点击盒盖打开');}
   if(e.code==='KeyG'){document.getElementById('roster-trigger').click();}
  if(e.code==='KeyR'&&!e.repeat)reset();
  if(e.code==='Digit0'||e.code==='Home')orbitCamera.reset();
@@ -702,7 +738,8 @@ function frame(timeMs){
   }
  }
  drawCalls=0;
- sceneTransition.update(now);
+  flipCase.update(now);syncCaseControls();
+  sceneTransition.update(now);
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
  gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -858,6 +895,9 @@ window.__forestLevelDebug={
  get staged(){return level.snapshot().units.filter(u=>!u.deployed);},
  get placement(){return {selected:selectedStagedId,previewSlot:previewDeployment?.slot?.id||null};},
  get boxCount(){return window.__sceneCardHUD?.snapshot.physicalBoxes||0;},
+  get flipCase(){return flipCase.snapshot(now);},
+  openCase(){return flipCase.open(performance.now()/1000);},
+  confirmDraw(){return flipCase.confirm(performance.now()/1000);},
  get slotPoints(){
   const rect=canvas.getBoundingClientRect();
   return slotCenters.map(q=>{
@@ -886,7 +926,7 @@ window.__forestLevelDebug={
 requestAnimationFrame(frame);
 })();
 </script>
-<script src="./ui/forest-hand.js?v=3"></script>
+<script src="./ui/forest-hand.js?v=4"></script>
 <script src="./ui/farmer-roster.js?v=1"></script>
 </body>
 </html>

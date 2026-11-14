@@ -1,0 +1,31 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const {create}=require('../site/card-battle/engine/flip-case-controller.js');
+test('reversible lid: draft on inside, spin exactly 180 degrees while closing',()=>{
+ let count=0;const c=create({handCount:()=>count});
+ assert.equal(c.phase,'closed');assert.equal(c.confirm(),false);
+ assert.equal(c.open(10),true);assert.equal(c.open(10),false);
+ assert.equal(c.snapshot(10).angle,0);
+ assert.ok(c.snapshot(10.44).angle>1&&c.snapshot(10.44).angle<3);
+ c.update(10.89);assert.equal(c.phase,'drawing');assert.equal(c.confirm(),false);
+ count=7;assert.equal(c.confirm(11),true);assert.equal(c.phase,'closing');
+ assert.equal(c.snapshot(11).angle,Math.PI);assert.equal(c.snapshot(11).faceSpin,0);
+ const mid=c.snapshot(11.53);
+ assert.ok(Math.abs(mid.angle-Math.PI/2)<.1);
+ assert.ok(Math.abs(mid.faceSpin-Math.PI/2)<.1);
+ assert.equal(c.nextTurn(),false);
+ c.update(12.07);assert.equal(c.phase,'playing');
+ assert.equal(c.snapshot().angle,0);assert.equal(c.snapshot().faceSpin,Math.PI);
+ assert.equal(c.open(),false);
+ assert.equal(c.nextTurn(13),true);assert.equal(c.phase,'closed');
+ assert.equal(c.snapshot().cycle,1);
+});
+test('case state cannot confirm until cards are drafted and deployment is valid',()=>{
+ let allow=false,count=2;
+ const c=create({handCount:()=>count,canConfirm:()=>allow});
+ c.open(1);c.update(2);
+ assert.equal(c.confirm(2),false);allow=true;
+ assert.equal(c.confirm(2),true);
+ c.update(4);assert.equal(c.phase,'playing');
+ c.reset(5);assert.equal(c.snapshot().handCount,2);
+ assert.equal(c.snapshot().faceSpin,0);
+});

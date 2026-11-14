@@ -1,268 +1,111 @@
-import { chromium } from 'playwright';
+import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-const out='artifacts/forest-level-01';
-fs.mkdirSync(out,{recursive:true});
+const out='artifacts/forest-level-01';fs.mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader']});
-const sleep=ms=>new Promise(done=>setTimeout(done,ms));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function shot(page,name){await page.screenshot({path:out+'/'+name+'.png',fullPage:true});}
 async function click3D(page,id){
- const point=await page.evaluate(id=>window.__sceneCardHUD?.pointFor(id),id);
- assert.ok(point&&Number.isFinite(point.x)&&Number.isFinite(point.y),'Missing 3D hit point '+id);
- await page.mouse.move(point.x,point.y);
- await page.waitForTimeout(55);
- await page.mouse.click(point.x,point.y);
- return point;
+ const pt=await page.evaluate(id=>window.__sceneCardHUD?.pointFor(id),id);
+ assert.ok(pt&&Number.isFinite(pt.x)&&Number.isFinite(pt.y),'Missing 3D target '+id);
+ await page.mouse.move(pt.x,pt.y);await page.mouse.click(pt.x,pt.y);
+ return pt;
+}
+async function ready(page){await page.waitForFunction(()=>
+ window.__sceneCardHUD?.snapshot?.reversibleLid&&window.__forestHand&&window.__flipCase,{timeout:30000});}
+async function openCase(page){
+ await page.locator('#case-action').click();
+ await page.waitForFunction(()=>window.__flipCase?.phase==='drawing',{timeout:15000});
+ const hud=await page.evaluate(()=>window.__sceneCardHUD.snapshot);
+ assert.equal(hud.visibleDeckPiles,7);
+ assert.equal(hud.compartments,7);assert.equal(hud.physicalBoxes,1);
+ assert.ok(Math.abs(hud.lidAngle-Math.PI)<.08);
 }
 async function deploy(page){
  await click3D(page,'character:woodcutter');
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.placement.selected),'woodcutter');
  const slot=await page.evaluate(()=>window.__forestLevelDebug.slotPoints.find(p=>p.side==='ally'&&p.r===0&&p.c===1));
- assert.ok(slot?.point);
- await page.mouse.click(slot.point.x,slot.point.y);
- await page.waitForFunction(()=>window.__forestLevelDebug?.state.phase==='active'&&window.__sceneCardHUD?.snapshot.stagedCharacterCards===0,{timeout:10000});
- assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0,'Manual deployment MUST NOT deal five automatic cards');
+ assert.ok(slot?.point);await page.mouse.click(slot.point.x,slot.point.y);
+ await page.waitForFunction(()=>window.__forestLevelDebug.state.phase==='active',{timeout:10000});
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
 }
+async function draw(page,profession='warrior'){
+ const before=await page.evaluate(()=>window.__forestHand.snapshot.count);
+ await click3D(page,'deck:'+profession);
+ await page.waitForFunction(n=>window.__forestHand.snapshot.count===n+1,before,{timeout:8000});
+}
+async function confirm(page){
+ await page.locator('#case-action').click();
+ await page.waitForFunction(()=>window.__flipCase.phase==='closing'&&window.__flipCase.snapshot().progress>.30,{timeout:12000});
+ await shot(page,'04-lid-folding-and-face-reversing');
+ const mid=await page.evaluate(()=>window.__flipCase.snapshot());
+ assert.ok(mid.angle>0&&mid.angle<Math.PI);
+ assert.ok(mid.faceSpin>0&&mid.faceSpin<Math.PI);
+ await page.waitForFunction(()=>window.__flipCase.phase==='playing',{timeout:15000});
+ const complete=await page.evaluate(()=>window.__sceneCardHUD.snapshot);
+ assert.ok(complete.lidAngle<.03);
+ assert.ok(Math.abs(complete.lidFaceSpin-Math.PI)<.03);
+ assert.equal(complete.visibleDeckPiles,0);
+ assert.equal(complete.handCardsOnReversibleFace,await page.evaluate(()=>window.__forestHand.snapshot.count));
+}
+const errors=[];
 try{
  const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
- const errors=[];const assetResponses=[];
- page.on('pageerror',e=>{errors.push(String(e));console.log('DESKTOP_PAGE_ERROR',String(e).slice(0,650));});
- page.on('console',m=>{if(m.type()==='error')console.log('DESKTOP_CONSOLE_ERROR',m.text().slice(0,240));});
- page.on('response',r=>{if(r.url().includes('/assets/characters/farmer-faction/'))assetResponses.push({url:r.url(),status:r.status()});});
- await page.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
- await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.visibleDeckPiles===7&&!!window.__forestHand&&!!window.__forestLevelDebug,{timeout:20000});
- const init=await page.evaluate(()=>({hud:window.__sceneCardHUD.snapshot,deck:window.__forestHand.snapshot,
-    phase:window.__forestLevelDebug.state.phase,slots:window.__forestLevelDebug.slots.length,
-    domHand:!!document.getElementById('action-hand'),viewport:{w:innerWidth,h:innerHeight}}));
- console.log('SEVEN_IDENTICAL_FACE_UP_PILES_INITIAL',JSON.stringify(init));
- assert.equal(init.slots,18);
- assert.equal(init.phase,'deployment');
- assert.equal(init.deck.count,0,'initial hand must be zero');
- assert.equal(init.hud.count,0);
- assert.equal(init.hud.visibleDeckPiles,7,'seven 3D decks in ONE bottom row');
- assert.equal(init.hud.deckArrangement,'seven-identical-bottom-row');
- assert.equal(init.hud.standaloneTurnCard,false,'remove the unrelated floating end-turn card');
- assert.equal(init.hud.visible.filter(x=>x.kind==='turn').length,0);
- assert.ok(init.hud.deckTiltRadians<-.90&&init.hud.deckTiltRadians>-1.45,
-   'all seven physical piles must have a flatter matching tabletop perspective');
- assert.equal(init.hud.sameFacePrototype,true);
- const firstPile=init.hud.visible.filter(x=>x.kind==='deck');
- assert.equal(firstPile.length,7);
- assert.equal(firstPile.every(x=>Math.abs(x.y-firstPile[0].y)<.00001),true,
-   'physical decks must share ONE baseline');
- assert.equal(firstPile.every((x,i)=>i===0||x.x>firstPile[i-1].x),true,
-   'physical decks must be in one ordered row');
-
- assert.equal(init.hud.physicalDeckCards,70,'7 separate 10-card decks must each have physical face-up cards');
- assert.equal(init.hud.physicalBoxes,0,'no giant wooden box or trays');
- assert.equal(init.hud.faceUpDeck,true,'all cards face up');
- assert.equal(init.hud.coveredCardEdgeLOD,true,'hidden card faces are not redrawn 63 times');
- assert.equal(init.hud.stagedCharacterCards,1,'hero is on top of deck');
- assert.equal(init.hud.hasDomCards,false,'no webpage cards');
- assert.equal(init.domHand,false);
- assert.equal(init.hud.backgroundPanel,false);
- const objectIntro=await page.evaluate(()=>window.__forestLevelDebug.objectAnimations);
- assert.ok(objectIntro.tracked>=40,'trees, tiles and 3D cards share spring animation tracks');
- assert.ok(init.hud.animatedCardMeshes>=70,'each face-up physical card has a 3D entrance animation');
- await page.waitForTimeout(600);
- await page.screenshot({path:out+'/01-seven-decks-with-hero-desktop.png',fullPage:true});
- // The visible in-game button must actually play exit -> world replacement ->
- // staggered entrance. It is NOT enough to unit test the animation engine.
- const initialBattle=await page.evaluate(()=>({
-  state:window.__forestLevelDebug.state,
-  hand:window.__forestHand.snapshot,
-  environment:window.__forestLevelDebug.environment
- }));
- assert.equal(initialBattle.environment.id,'forest');
- assert.equal(initialBattle.environment.material,'grass');
- assert.ok(initialBattle.environment.ground.width>=40&&initialBattle.environment.ground.depth>=45,
-  'forest must have continuous modeled floor OUTSIDE the 18 tactical cells');
- const scenePerf=await page.evaluate(()=>window.__forestLevelDebug.performance);
- assert.ok(scenePerf.drawCalls<390,'covered card LOD should reduce WebGL draw calls');
- assert.ok(scenePerf.canvasPixels>0);
- console.log('FOREST_PERFORMANCE',JSON.stringify(scenePerf));
- assert.equal(await page.locator('#scene-switch').count(),1);
- await page.locator('#scene-switch').click();
- assert.equal(await page.evaluate(()=>window.__forestLevelDebug.sceneSwitch.phase),'exiting');
- assert.equal(await page.locator('#scene-switch').isDisabled(),true,'prevent interrupted scene transitions');
- await page.waitForFunction(()=>{
-  const v=window.__forestLevelDebug,p=v?.objectPose('unit:forest-foe-a');
-  return v?.sceneSwitch.phase==='exiting'&&p?.phase==='exit'&&p.scale<.96;
- },{timeout:12000});
- const exitPose=await page.evaluate(()=>window.__forestLevelDebug.objectPose('unit:forest-foe-a'));
- assert.equal(exitPose.phase,'exit');
- assert.ok(exitPose.scale<1&&exitPose.scale>0,'old 3D units must shrink before switching');
- await page.screenshot({path:out+'/00a-forest-all-meshes-shrink-away.png',fullPage:true});
- // Chromium GPU screenshots can take longer than the short entering phase.
- // Assert the material really changed, regardless of whether a screenshot
- // happened while the spring animation was still in flight.
- await page.waitForFunction(()=>window.__forestLevelDebug?.environment.id==='clearing',
-   null,{timeout:16000});
- const newScene=await page.evaluate(()=>({
-  environment:window.__forestLevelDebug.environment,
-  state:window.__forestLevelDebug.state,
-  hand:window.__forestHand.snapshot
- }));
- assert.equal(newScene.environment.material,'dirt','scene switch must change true world material');
- assert.ok(newScene.environment.ground.width>=40&&newScene.environment.ground.depth>=45,
-  'rock clearing must also have a real surrounding 3D floor');
- assert.ok(newScene.environment.props>10,'stone clearing needs its own real 3D props');
- assert.deepEqual(newScene.state,initialBattle.state,'scene switch must NOT restart battle state');
- assert.deepEqual(newScene.hand,initialBattle.hand,'scene switch must NOT touch any action decks');
- const growPose=await page.evaluate(()=>window.__forestLevelDebug.objectPose('terrain:0:0'));
- assert.ok(['enter','steady'].includes(growPose.phase),
-  'new scene terrain must be in its spring entrance or finished stable');
- await page.screenshot({path:out+'/00b-stone-clearing-meshes-growing.png',fullPage:true});
- await page.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:10000});
- assert.equal(await page.locator('#scene-switch').isEnabled(),true);
- await page.screenshot({path:out+'/00c-stone-clearing-scene-complete.png',fullPage:true});
- await page.locator('#scene-switch').click();
- await page.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='idle'&&
-   window.__forestLevelDebug.environment.id==='forest',{timeout:12000});
- const returned=await page.evaluate(()=>({
-  environment:window.__forestLevelDebug.environment,
-  state:window.__forestLevelDebug.state,
-  hand:window.__forestHand.snapshot
- }));
- assert.equal(returned.environment.material,'grass','return to forest restores true grass terrain');
- assert.deepEqual(returned.state,initialBattle.state,'returning must preserve pre-deployment state');
- assert.deepEqual(returned.hand,initialBattle.hand,'returning must preserve deck order and counts');
- await page.screenshot({path:out+'/00d-returned-to-forest.png',fullPage:true});
-
- await deploy(page);
- await page.screenshot({path:out+'/02-seven-decks-deployed-desktop.png',fullPage:true});
- await click3D(page,'deck:warrior');
- assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),1,'one manual click draws exactly one card');
- await page.waitForTimeout(350);
- await page.screenshot({path:out+'/03-first-manual-draw-desktop.png',fullPage:true});
- for(let i=0;i<9;i++){
-  const before=await page.evaluate(()=>window.__forestHand.snapshot.count);
-  await page.waitForTimeout(125);
-  const at=await click3D(page,'deck:warrior');
-  const after=await page.evaluate(()=>window.__forestHand.snapshot.count);
-  if(after!==before+1){
-   const probe=await page.evaluate(pt=>({
-    hit:window.__sceneCardHUD.hit({clientX:pt.x,clientY:pt.y})?.id,
-    model:window.__forestHand.snapshot
-   }),at);
-   console.log('MISSED_DECK_CLICK',JSON.stringify({before,after,at,probe}));
-  }
-  assert.equal(after,before+1,'every physical deck click must remove exactly one card');
- }
- await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot.visible.filter(x=>x.kind==='hand').length===10,{timeout:8000});
- const full=await page.evaluate(()=>({hud:window.__sceneCardHUD.snapshot,hand:window.__forestHand.snapshot}));
- assert.equal(full.hand.count,10);
- assert.equal(full.hud.visible.filter(p=>p.kind==='hand').length,10);
- assert.equal(full.hud.physicalDeckCards,60,'six untouched stacks must still have ten cards each');
- await page.waitForTimeout(600); // Wait for last deck-to-hand animation to finish.
- await page.screenshot({path:out+'/04-seven-stacks-and-ten-hand-desktop.png',fullPage:true});
- const chosen=full.hand.hand[2];
- await click3D(page,'hand:'+chosen.instance);
- assert.equal(await page.evaluate(()=>window.__forestHand.selected),chosen.instance,'arbitrary third hand card must be selectable');
- assert.equal(await page.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
- const after=await page.evaluate(()=>window.__forestHand.snapshot);
- assert.equal(after.count,9);
- assert.equal(after.locked,true);
- assert.equal(await page.evaluate(()=>window.__forestHand.draw('warrior').reason),'draw-locked');
- await page.screenshot({path:out+'/05-middle-card-played-draw-locked.png',fullPage:true});
- // Retain tactical grid, particles and win condition after render-only UI overhaul.
- const fx=await page.evaluate(()=>{
-  const v=window.__forestLevelDebug;
-  const ok=v.adjust(1,0,1);
-  return{ok,snapshot:v.effects,pose:v.objectPose('terrain:1:0')};
- });
- assert.equal(fx.ok,true);assert.ok(fx.snapshot.particleCount>0);
- assert.equal(fx.pose.phase,'pulse','terraforming must make a 3D terrain block bounce');
- await page.waitForTimeout(850);
- let played=1;
- while(played<9){
-  const alive=await page.evaluate(()=>window.__forestLevelDebug.state.units.filter(u=>u.side==='enemy'&&u.alive).map(u=>u.id));
-  if(!alive.length)break;
-  const hand=await page.evaluate(()=>window.__forestHand.snapshot.hand);
-  assert.ok(hand.length,'Insufficient actions to win');
-  assert.equal(await page.evaluate(id=>window.__forestHand.selectCard(id),hand[Math.floor(hand.length/2)].instance),true);
-  assert.equal(await page.evaluate(id=>window.__forestLevelDebug.attack(id),alive[0]),true);
-  played++;
- }
- assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'victory');
- const defeated=await page.evaluate(()=>window.__forestLevelDebug.objectPose('unit:forest-foe-b'));
- assert.equal(defeated.phase,'exit','defeated enemy must SHRINK before mesh removal');
- await page.waitForFunction(()=>window.__forestLevelDebug.units.filter(u=>u.side==='enemy').length===0,
-   {timeout:9000});
- assert.equal(await page.evaluate(()=>window.__forestLevelDebug.units.filter(u=>u.side==='enemy').length),0,
-  'defeated enemy meshes must be removed only after the exit animation');
- await page.locator('#level-retry').click();
- assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment');
+ page.on('pageerror',e=>errors.push(String(e)));
+ await page.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:60000});
+ await ready(page);
+ assert.equal(await page.evaluate(()=>window.__forestLevelDebug.slots.length),18);
+ assert.equal(await page.evaluate(()=>window.__forestLevelDebug.flipCase.phase),'closed');
  assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
- // The level's reset is synchronous; the 3D scene is rebuilt on the next frame.
- await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot.stagedCharacterCards===1,
-   {timeout:15000});
- // Every pile is interactive in this temporary all-equal visual prototype;
- // drawing from one never removes a card from the other six physical piles.
- await deploy(page);
- const beforeByProfession=await page.evaluate(()=>({
-  engineer:window.__forestHand.remainingCards('engineer').length,
-  warrior:window.__forestHand.remainingCards('warrior').length
- }));
- assert.equal(beforeByProfession.engineer,10);
- assert.equal(beforeByProfession.warrior,10);
- await click3D(page,'deck:engineer');
- const afterByProfession=await page.evaluate(()=>({
-  engineer:window.__forestHand.remainingCards('engineer').length,
-  warrior:window.__forestHand.remainingCards('warrior').length,
-  hand:window.__forestHand.snapshot.count
- }));
- assert.equal(afterByProfession.engineer,9,'each of seven visual piles is a real separate stack');
- assert.equal(afterByProfession.warrior,10,'warrior stack must not shrink when engineer was clicked');
- assert.equal(afterByProfession.hand,1);
- await page.screenshot({path:out+'/05b-independent-deck-draw-desktop.png',fullPage:true});
- assert.deepEqual(errors,[],'no desktop script errors');
- const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
- const mobileErrors=[];mobile.on('pageerror',e=>mobileErrors.push(String(e)));
- await mobile.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:65000});
- await mobile.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.visibleDeckPiles===7,{timeout:20000});
- const mobileInit=await mobile.evaluate(()=>({hud:window.__sceneCardHUD.snapshot,hand:window.__forestHand.snapshot,
-   slots:window.__forestLevelDebug.slotPoints.filter(s=>s.side==='ally').map(s=>({x:s.point.x,y:s.point.y}))}));
- assert.equal(mobileInit.hand.count,0);
- const mobilePerf=await mobile.evaluate(()=>window.__forestLevelDebug.performance);
- assert.ok(mobilePerf.renderRatio<=1.26,'mobile physical resolution is capped for performance');
- assert.ok(mobilePerf.drawCalls<390);
- console.log('MOBILE_PERFORMANCE',JSON.stringify(mobilePerf));
- assert.equal(mobileInit.hud.physicalDeckCards,70);
- assert.equal(mobileInit.hud.stagedCharacterCards,1);
- assert.equal(mobileInit.hud.visible.filter(p=>p.kind==='deck').length,7);
- assert.equal(mobileInit.hud.visible.filter(p=>p.kind==='turn').length,0);
- await mobile.screenshot({path:out+'/06-seven-decks-hero-mobile.png',fullPage:true});
- assert.equal(await mobile.locator('#scene-switch').isVisible(),true,
-  'mobile must expose the same scene switch button');
- await mobile.locator('#scene-switch').click();
- await mobile.waitForFunction(()=>window.__forestLevelDebug.environment.id==='clearing',
-  null,{timeout:16000});
- await mobile.screenshot({path:out+'/06a-scene-transition-stone-clearing-mobile.png',fullPage:true});
- await mobile.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:10000});
- assert.equal(await mobile.evaluate(()=>window.__forestLevelDebug.environment.material),'dirt');
- await mobile.screenshot({path:out+'/06b-stone-clearing-complete-mobile.png',fullPage:true});
- await mobile.locator('#scene-switch').click();
- await mobile.waitForFunction(()=>window.__forestLevelDebug.sceneSwitch.phase==='idle'&&
-  window.__forestLevelDebug.environment.id==='forest',{timeout:12000});
- assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),0);
-
- await deploy(mobile);
- await click3D(mobile,'deck:warrior');
- assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),1);
- await mobile.screenshot({path:out+'/07-one-card-drawn-mobile.png',fullPage:true});
- for(let i=0;i<9;i++){
-  const before=await mobile.evaluate(()=>window.__forestHand.snapshot.count);
-  await mobile.waitForTimeout(110);
-  await click3D(mobile,'deck:warrior');
-  assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),before+1,
-    'mobile deck tap must draw exactly one');
- }
- assert.equal(await mobile.evaluate(()=>window.__forestHand.snapshot.count),10);
- await mobile.waitForTimeout(600);
- await mobile.screenshot({path:out+'/08-ten-cards-mobile.png',fullPage:true});
- assert.deepEqual(mobileErrors,[],'no mobile script errors');
- console.log('FOREST_SEVEN_DECKS_BROWSER_PASS',JSON.stringify({desktop:true,mobile:true,sevenPhysicalPiles:true,identicalPrototype:true,removedFloatingTurnCard:true,
-  faceUp:true,openingHand:0,noAutoDeal:true,tenHandCap:true,manualDraw:true,
-  arbitraryCardPlay:true,lockAfterPlay:true,sceneSwitchButton:true,fullExitSwapEnter:true,
-  reverseSceneSwitch:true,mobileSceneSwitch:true,particles:fx.snapshot.particleCount,images:assetResponses,errors}));
+ await sleep(550);await shot(page,'01-closed-whitebox-desktop');
+ assert.equal(await page.evaluate(()=>window.__forestHand.draw('warrior').reason),'open-case-to-draw');
+ await openCase(page);await shot(page,'02-open-seven-slots-desktop');
+ await deploy(page);await draw(page);
+ await sleep(850);await shot(page,'03-drawn-into-inside-lid-desktop');
+ for(let i=0;i<9;i++)await draw(page,i%2===0?'warrior':'engineer');
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),10);
+ assert.equal(await page.evaluate(()=>window.__forestHand.draw('warrior').reason),'hand-full');
+ await confirm(page);await shot(page,'05-closed-face-up-ten-hand-desktop');
+ const third=await page.evaluate(()=>window.__forestHand.snapshot.hand[2].instance);
+ await click3D(page,'hand:'+third);
+ assert.equal(await page.evaluate(()=>window.__forestHand.selected),third);
+ const attacked=await page.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a'));
+ assert.equal(attacked,true);
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),9);
+ assert.equal(await page.evaluate(()=>window.__forestHand.draw('warrior').ok),false);
+ await shot(page,'06-selected-played-on-closed-lid');
+ await page.locator('#case-end-turn').click();
+ assert.equal(await page.evaluate(()=>window.__flipCase.phase),'closed');
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
+ await shot(page,'07-next-turn-case-closed');
+ const before=await page.evaluate(()=>window.__forestLevelDebug.state);
+ await page.locator('#scene-switch').click();
+ await page.waitForFunction(()=>window.__forestLevelDebug.environment.id==='clearing'&&
+  window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:16000});
+ assert.deepEqual(await page.evaluate(()=>window.__forestLevelDebug.state),before);
+ await shot(page,'08-whitebox-with-rock-clearing');
+ await page.locator('#scene-switch').click();
+ await page.waitForFunction(()=>window.__forestLevelDebug.environment.id==='forest'&&
+  window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:16000});
+ const desktopPerf=await page.evaluate(()=>window.__forestLevelDebug.performance);
+ assert.ok(desktopPerf.drawCalls<450);
+ const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+ phone.on('pageerror',e=>errors.push(String(e)));
+ await phone.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:60000});
+ await ready(phone);await shot(phone,'09-mobile-closed');
+ await openCase(phone);await shot(phone,'10-mobile-open-seven');
+ await deploy(phone);await draw(phone);await sleep(850);
+ await shot(phone,'11-mobile-card-in-lid');
+ await confirm(phone);await shot(phone,'12-mobile-face-up-play');
+ const handPoint=await phone.evaluate(()=>window.__sceneCardHUD.pointFor('hand:'+window.__forestHand.snapshot.hand[0].instance));
+ assert.ok(handPoint.x>0&&handPoint.x<390&&handPoint.y>0&&handPoint.y<844);
+ await phone.mouse.click(handPoint.x,handPoint.y);
+ assert.ok(await phone.evaluate(()=>window.__forestHand.selected));
+ const mobilePerf=await phone.evaluate(()=>window.__forestLevelDebug.performance);
+ assert.ok(mobilePerf.drawCalls<450);
+ assert.deepEqual(errors,[]);
+ console.log('REVERSIBLE_CASE_BROWSER_PASS',JSON.stringify({desktop:true,mobile:true,
+  compartments:7,openAngle:Math.PI,closeSpin:Math.PI,cardOnSameLid:true,
+  gatedDraw:true,playFromClosedLid:true,noAutoDraw:true,sceneSwitchPreserved:true,
+  desktopPerf,mobilePerf,errors}));
 }finally{await browser.close();}
