@@ -305,15 +305,21 @@ const flipCase=window.PaperchalkFlipCase.create({
   canEnd:()=>level.phase==='active'
  });
  window.__flipCase=flipCase;
+ // Only ?caseqa=1 exposes deterministic frozen hinge poses for visual QA.
+ window.__flipCaseQA=new URLSearchParams(location.search).has('caseqa')?{
+  pose:null,
+  set(phase,progress){this.pose=flipCase.samplePose(phase,progress);return this.pose;},
+  clear(){this.pose=null;}
+ }:null;
  const caseAction=document.getElementById('case-action');
  const caseEndTurn=document.getElementById('case-end-turn');
  function syncCaseControls(){
   const s=flipCase.snapshot(now);
   caseAction.hidden=s.phase==='playing';
-  caseAction.disabled=s.busy||s.phase==='closing';
+  caseAction.disabled=s.busy;
   caseAction.textContent=s.phase==='closed'?'打开七槽牌盒':
    s.phase==='opening'?'正在翻盖…':
-   s.phase==='drawing'?'确认摸牌 · 翻面合盖':'正在翻面合盖…';
+   s.phase==='drawing'?'确认摸牌 · 翻面合盖':s.phase==='rewinding'?'正在复位盖板…':'正在翻面合盖…';
   caseEndTurn.hidden=s.phase!=='playing';
  }
  caseAction.addEventListener('click',()=>{
@@ -331,7 +337,7 @@ const flipCase=window.PaperchalkFlipCase.create({
  pileEdge:cardEdge,pileRim:colors.rim,makeTexture:makePhysicalCardTexture,
  getVP:()=>vp,uniformVP:m=>gl.uniformMatrix4fv(U.vp,false,m),
  snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
-  caseSnapshot:t=>flipCase.snapshot(t),openCase:()=>flipCase.open(performance.now()/1000),
+  caseSnapshot:t=>window.__flipCaseQA?.pose||flipCase.snapshot(t),openCase:()=>flipCase.open(performance.now()/1000),
  remainingCards:profession=>window.__forestHand?.remainingCards(profession)||[],
  selected:()=>window.__forestHand?.selected||null,
  draw:profession=>window.__forestHand?.draw(profession),

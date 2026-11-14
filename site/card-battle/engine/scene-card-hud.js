@@ -329,14 +329,23 @@ function create(o){
  return Object.freeze({render:draw,hit,move,down,up,pointFor,animateScene,resetAnimations,
   get drawn(){return drawCalls;},
   get snapshot(){
-   const s=lastSnapshot||state(),hand=o.snapshot();
-   return{visible:scene.map(p=>({id:p.id,kind:p.kind,x:p.x,y:p.y})),
+   const s=lastSnapshot||state(),hand=o.snapshot(),d=dimensions();
+   const m=panelMatrix(d,s),center=worldFromLocal(m,0,0,0);
+   const held=scene.filter(p=>p.kind==='hand');
+   const anchorError=held.reduce((max,p)=>{
+    const projected=worldFromLocal(m,p.localX,p.localY,-.205);
+    return Math.max(max,Math.hypot(projected.x-p.x,projected.y-p.y,projected.z-p.z));
+   },0);
+   return{lidGeometry:{openAngle:s.openAngle,hingeX:0,hingeY:d.y+d.h/2,hingeZ:.29,
+      centerX:center.x,centerY:center.y,centerZ:center.z,
+      panelInnerNormalZ:-m[10],attachmentError:anchorError},
+    visible:scene.map(p=>({id:p.id,kind:p.kind,x:p.x,y:p.y})),
     casePhase:s.phase,lidAngle:s.angle,lidFaceSpin:s.faceSpin,
     visibleDeckPiles:scene.filter(p=>p.kind==='deck').length,
     stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     handCardsOnReversibleFace:scene.filter(p=>p.kind==='hand').length,
     physicalBoxes:1,compartments:7,hinges:2,reversibleLid:true,
-    deckArrangement:'seven-slots-single-case',deckTiltRadians:-.84,
+    deckArrangement:'seven-slots-single-case',deckTiltRadians:-.17,
     faceUpDeck:true,standaloneTurnCard:false,screenEdgeAnchored:true,
     physicalDeckCards:hand.classes.reduce((n,c)=>n+c.deckCount,0),
     count:hand.count,renderedCardMeshes:drawCalls,hasDomCards:false,
