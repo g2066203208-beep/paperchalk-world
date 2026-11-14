@@ -208,7 +208,9 @@ const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
 const COLS=16,ROWS_PER_SIDE=3;
 // Shared terrain engine is the ONLY source for world coordinates and tile extents.
 const terrain=window.PaperchalkVoxelTerrain.create({
- cols:16,rows:6,tileW:2.65,tileD:3.70,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
+ cols:16,rows:6,tileW:2.65,tileD:3.23,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
+  materials:{grass:{...window.PaperchalkVoxelTerrain.MATERIALS.grass,
+   light:[.61,.77,.36,1],dark:[.47,.63,.29,1],variance:.012}},
  initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
 });
 const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
@@ -225,8 +227,8 @@ const orbitCamera=window.PaperchalkBattleCamera.create({
  // existing 16x6 board, cards, facilities, deck box and materials are UNCHANGED.
  // Offset the focus toward the player's near edge so the field fills the region
  // between the top controls and the anchored seven-compartment box.
- target:[0,-1.65,-.65],distance:49.1,yaw:0,elevation:78*Math.PI/180,
- fov:33,fixed:true,fitAspect:16/9,
+ target:[0,-1.65,.70],distance:52.4,yaw:0,elevation:78*Math.PI/180,
+ fov:33,fixed:true,fitAspect:1.68,
  minDistance:18,maxDistance:105,minElevation:78*Math.PI/180,maxElevation:78*Math.PI/180,
  maxPanX:0,maxPanZ:0
 });
@@ -315,7 +317,7 @@ base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
 base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+arrival.pitch+c.hover*.07));
 base=mul(base,RY(c.flip));
 base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll)); const focusScale=c.slot?1+c.hover*.26:1;
- const sc=focusScale*Math.max(.025,pose.scale)*(c.slot?1.16:1);
+ const sc=focusScale*Math.max(.025,pose.scale)*(c.slot?1.32:1);
  base=mul(base,S(sc,sc,sc));return base;}
 function attackPose(c,now){let phase=now-c.attackStart;if(phase<0||phase>1.12)return {dx:0,dy:0,dz:0,pitch:0,roll:0};let u=phase/1.12;
 let s=Math.sin(Math.PI*Math.min(1,u));let launch=(u<.35?Math.sin(u/.35*Math.PI/2):Math.exp(-(u-.35)*4));
