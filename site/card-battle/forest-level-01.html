@@ -76,7 +76,7 @@ html,body{background:#d8ded0}
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=4"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=11"></script>
+<script src="./engine/scene-card-hud.js?v=12"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -292,7 +292,7 @@ function makePhysicalCardTexture(image){
  return tex;
 }
 const sceneHUD=window.PaperchalkSceneCardHUD.create({
- canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,objectFX,
+ canvas,gl,drawCard,renderGeom,makeGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,objectFX,
  pileEdge:cardEdge,pileRim:colors.rim,makeTexture:makePhysicalCardTexture,
  getVP:()=>vp,uniformVP:m=>gl.uniformMatrix4fv(U.vp,false,m),
  snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
