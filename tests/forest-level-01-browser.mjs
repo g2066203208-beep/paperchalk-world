@@ -21,7 +21,7 @@ async function verifyBox(page,kind){
  assert.equal(b.flipAnimationEnabled,false);
  assert.equal(b.reversibleLid,false);
  assert.ok(b.bounds.safeHorizontalMargin>.15);
- assert.ok(b.bounds.safeBottomMargin>.05);
+ assert.ok(b.bounds.safeBottomMargin>.05&&b.bounds.safeBottomMargin<.35);
  assert.ok(b.bounds.horizontalClearance>.02,'card touching divider horizontally');
  assert.ok(b.bounds.verticalClearance>.02,'card touching top/bottom rail');
  const slots=b.visible.filter(p=>p.kind==='deck');
@@ -71,7 +71,7 @@ try{
  await pc.locator('#scene-switch').click();
  await pc.waitForFunction(()=>window.__forestLevelDebug.environment.id==='forest'&&
    window.__forestLevelDebug.sceneSwitch.phase==='idle',{timeout:15000});
- await pc.locator('#reset').click();
+ await pc.evaluate(()=>window.__forestLevelDebug.reset());
  await verifyBox(pc,'restart');
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment');
  const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});

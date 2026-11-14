@@ -241,7 +241,7 @@ function create(o){
      horizontalClearance,verticalClearance,cardWidth:g.cardW,
      cardHeight:g.cardH,pitch:g.bay,divider:g.divider,
      safeHorizontalMargin:spanW/2-g.w/2,
-     safeBottomMargin:spanH/2-(g.y-g.h/2)}
+     safeBottomMargin:spanH/2+(g.y-g.h/2)}
    };
   }
  });
