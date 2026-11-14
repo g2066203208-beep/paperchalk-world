@@ -1,7 +1,6 @@
-/* STATIC SEVEN-BAY BOX WHITEBOX — No lid, no hinges, no card/lid flipping.
- * First settle the physical box dimensions and collision-free silhouette.
- * The tray is screen-space 3D, NOT a slab lying in the battlefield.
- * Anima will paint surfaces later; all meshes use neutral prototype colors.
+/* One reusable seven-bay physical card case: walnut, forest felt, aged brass.
+ * No lid, hinges or unrelated UI surfaces. Real 3D curved shell + card piles;
+ * independent player-click class decks and all layout hitboxes stay intact.
  */
 (function(root){
 'use strict';
@@ -12,12 +11,47 @@ function create(o){
   perspective,getVP,uniformVP,makeTexture}=o;
  const jobs=root.PaperchalkProfessionDecks?.CLASSES||[];
  const paint={
-  back:[.85,.85,.84,1],floor:[.77,.78,.78,1],
-  wells:[.70,.72,.72,1],walls:[.94,.94,.92,1],
-  bevel:[.87,.89,.89,1],front:[.92,.93,.92,1],
-  paper:[.95,.95,.94,1],cap:[.985,.985,.975,1],
-  stripe:[.76,.78,.78,1]
+  back:[.36,.255,.19,1],floor:[.12,.20,.16,1],
+  wells:[.46,.34,.22,1],walls:[.51,.35,.23,1],
+  bevel:[.77,.64,.39,1],front:[.92,.87,.72,1],
+  paper:[.84,.80,.72,1],cap:[.985,.965,.91,1],
+  stripe:[.66,.59,.48,1],
+  felt:[.18,.28,.225,1],feltShadow:[.12,.18,.145,1],
+  brass:[.72,.59,.36,1],engraving:[.47,.39,.27,1]
  };
+ // Reusable material textures are generated ONCE, not per animation frame.
+ const woodCanvas=document.createElement('canvas');woodCanvas.width=512;woodCanvas.height=256;
+ const woodCtx=woodCanvas.getContext('2d');
+ const woodGradient=woodCtx.createLinearGradient(0,0,512,256);
+ woodGradient.addColorStop(0,'#71513a');woodGradient.addColorStop(.5,'#493122');
+ woodGradient.addColorStop(1,'#63442e');
+ woodCtx.fillStyle=woodGradient;woodCtx.fillRect(0,0,512,256);
+ let grainSeed=22819;
+ const noise=()=>{grainSeed=(Math.imul(grainSeed,1664525)+1013904223)>>>0;return grainSeed/4294967296;};
+ for(let k=0;k<360;k++){
+  const y=noise()*256,thickness=.3+noise()*1.4,x=noise()*512;
+  woodCtx.strokeStyle=noise()>.5?'#ba8b5c36':'#19140f43';
+  woodCtx.lineWidth=thickness;woodCtx.beginPath();
+  woodCtx.moveTo(x-190,y);
+  woodCtx.bezierCurveTo(x-40,y+(noise()-.5)*7,
+   x+100,y+(noise()-.5)*7,x+235,y);woodCtx.stroke();
+ }
+ const walnut=makeTexture(woodCanvas);
+ const tabTextures=new Map();
+ function tabTexture(job){
+  if(tabTextures.has(job.id))return tabTextures.get(job.id);
+  const cv=document.createElement('canvas');cv.width=256;cv.height=96;
+  const c=cv.getContext('2d');
+  const grad=c.createLinearGradient(0,0,0,96);
+  grad.addColorStop(0,'#f3dc99');grad.addColorStop(.52,'#c1a46b');
+  grad.addColorStop(1,'#85693f');
+  c.fillStyle=grad;c.fillRect(0,0,256,96);
+  c.strokeStyle='#58452a';c.lineWidth=5;c.strokeRect(5,5,246,86);
+  c.textAlign='center';c.textBaseline='middle';c.fillStyle='#443421';
+  c.font='700 47px system-ui,"Noto Sans SC",sans-serif';
+  c.fillText(job.name,128,49,222);
+  const tex=makeTexture(cv);tabTextures.set(job.id,tex);return tex;
+ }
  const textIcons={engineer:'⚙',guardian:'盾',warrior:'斧',ranger:'弓',
   skirmisher:'影',medic:'药',summoner:'兽'};
  const cardTextures=new Map(),portraits=new Map();
@@ -118,7 +152,9 @@ function create(o){
    rail:roundedRim(g.w,g.h,g.cornerRadius,g.wall),
    bevel:roundedRim(g.w-.025,g.h-.025,Math.max(.03,g.cornerRadius-.012),g.wall*.55),
    deck:roundedPrism(g.cardW,g.cardH,g.cardRadius),
-   top:roundedPrism(g.cardW*.985,g.cardH*.985,g.cardRadius*.96)
+   top:roundedPrism(g.cardW*.985,g.cardH*.985,g.cardRadius*.96),
+   well:roundedPrism(g.cardW*1.055,g.cardH*1.045,g.cardRadius*1.1),
+   tab:roundedPrism(g.bay*.73,g.wall*.77,g.wall*.26)
   };
   shapeCache.set(key,made);
   if(shapeCache.size>8){
@@ -128,10 +164,11 @@ function create(o){
   }
   return made;
  }
- function curved(geom,x,y,z,depth,color,g,rotation=0){
+ function curved(geom,x,y,z,depth,color,g,rotation=0,texture=null,metal=0){
   if(stageK()<.012)return;
   const local=mul(mul(T(x,y,z),RX(rotation)),S(1,1,depth));
-  renderGeom(geom,mul(sceneScale(g),local),color);drawCalls++;
+  renderGeom(geom,mul(sceneScale(g),local),color,texture,false,null,metal);
+  drawCalls++;
  }
  function boxMesh(x,y,z,w,h,d,color,g){
   renderGeom(box,mul(mul(sceneScale(g),T(x,y,z)),S(w,h,d)),color);drawCalls++;
@@ -163,13 +200,22 @@ function create(o){
   if(cardTextures.has(key))return cardTextures.get(key);
   const cv=document.createElement('canvas');cv.width=384;cv.height=576;
   const c=cv.getContext('2d');
-  c.fillStyle='#faf9f4';c.fillRect(0,0,384,576);
-  c.lineWidth=7;c.strokeStyle='#bdbbb3';c.strokeRect(15,15,354,546);
-  c.lineWidth=2;c.strokeStyle='#dedbd4';c.strokeRect(31,31,322,514);
-  c.textAlign='center';c.fillStyle='#4d5151';c.font='bold 33px serif';
-  c.fillText(jobs.find(c=>c.id===role)?.name||'职业',192,85);
-  c.font='bold 115px serif';c.fillText(textIcons[role]||'✦',192,294);
-  c.font='bold 36px serif';c.fillText(name,192,423);
+  const paper=c.createLinearGradient(0,0,384,576);
+  paper.addColorStop(0,'#fffcf1');paper.addColorStop(1,'#e7ddc9');
+  c.fillStyle=paper;c.fillRect(0,0,384,576);
+  c.lineWidth=8;c.strokeStyle='#b59865';c.strokeRect(15,15,354,546);
+  c.lineWidth=2;c.strokeStyle='#d4c09d';c.strokeRect(29,29,326,518);
+  c.fillStyle='#485c4c';c.textAlign='center';
+  c.font='600 28px serif';c.fillText('纸片世界 · 职业牌',192,92);
+  c.strokeStyle='#c7b48b';c.lineWidth=2;
+  c.beginPath();c.moveTo(86,134);c.lineTo(298,134);c.stroke();
+  c.fillStyle='#e7e5d7';c.beginPath();c.arc(192,284,105,0,Math.PI*2);c.fill();
+  c.strokeStyle='#c0af88';c.lineWidth=3;c.stroke();
+  c.fillStyle='#566850';c.font='bold 122px serif';
+  c.fillText(textIcons[role]||'✦',192,328);
+  c.fillStyle='#4d5149';c.font='bold 44px serif';
+  c.fillText(jobs.find(c=>c.id===role)?.name||'职业',192,461);
+  c.fillStyle='#8b856f';c.font='22px serif';c.fillText('CARD DECK',192,513);
   const tex=makeTexture(cv);cardTextures.set(key,tex);return tex;
  }
  function layout(snapshot,staged,g){
@@ -202,16 +248,27 @@ function create(o){
  }
  function geometry(g){
   const model=shapes(g);
-  // Continuous solid rounded outer pan, with NO square joints at corners.
-  curved(model.floor,0,g.y,-.325,.16,paint.back,g);
-  curved(model.cavity,0,g.y,-.234,.038,paint.floor,g);
-  // Open cavity: outer/inner sides and upper lip share EXACT rounded contour.
-  curved(model.rail,0,g.y,-.115,.23,paint.walls,g);
-  curved(model.bevel,0,g.y,-.0005,.013,paint.bevel,g);
-  // Thin well separators live BEHIND the exposed decks; none overlap top cards.
+  // Handcrafted walnut rounded timber shell; deepest recess is dark felt.
+  curved(model.floor,0,g.y,-.325,.22,[1,1,1,1],g,0,walnut);
+  curved(model.cavity,0,g.y,-.232,.040,paint.feltShadow,g);
+  // Seven individualized recesses separate stacks without heavy black gutters.
+  for(let i=0;i<7;i++){
+   const x=g.x0+i*g.bay;
+   curved(model.well,x,g.y,-.174,.028,paint.felt,g);
+  }
+  curved(model.rail,0,g.y,-.105,.23,[.87,.82,.74,1],g,0,walnut);
+  // Two continuous brushed brass edge inlays on the solid curved rim.
+  curved(model.bevel,0,g.y,.014,.010,paint.brass,g,0,null,1);
   for(let i=1;i<7;i++){
    const x=-g.w/2+g.wall+i*g.bay;
-   boxMesh(x,g.y,-.134,g.divider,g.innerH-.023,.11,paint.wells,g);
+   boxMesh(x,g.y,-.134,g.divider*.84,g.innerH-.040,.095,paint.wells,g);
+   boxMesh(x,g.y,-.078,g.divider*.32,g.innerH-.095,.009,paint.brass,g);
+  }
+  // Seven little real 3D engraved nameplates, mounted in the top wooden lip.
+  for(let i=0;i<7;i++){
+   const x=g.x0+i*g.bay;
+   curved(model.tab,x,g.y+g.h*.455,.022,.011,[1,1,1,1],
+    g,0,tabTexture(jobs[i]),1);
   }
  }
  function pileMatrix(p,g,z){
@@ -237,13 +294,11 @@ function create(o){
    }
    deckMeshes++;
    const unit=staged.find(u=>u.role===p.profession);
-   if(unit){
-    // Deployment portrait remains on top; the underlying neutral stack is
-    // still a complete rounded solid like all six neighboring stacks.
-    const m=mul(T(p.x,p.y,center+thickness*.5+cardD+.022),
-      mul(RX(tilt),S(g.scale,g.scale,1)));
-    renderCard(m,textureFor({profession:p.profession},unit.portrait),g);
-   }
+   // Every pile has a printed, paper-textured top card instead of a blank
+   // white plastic slab. Deployment portraits take precedence over the crest.
+   const m=mul(T(p.x,p.y,center+thickness*.5+cardD+.022),
+    mul(RX(tilt),S(g.scale,g.scale,1)));
+   renderCard(m,textureFor({profession:p.profession},unit?.portrait),g);
   }
  }
  function draw(t,w,h){
@@ -331,7 +386,9 @@ function create(o){
    const g=dims(),count=o.snapshot();
    const horizontalClearance=(g.innerW-g.cardW)/2;
    const verticalClearance=(g.innerH-g.cardH)/2;
-   return {geometry:'single-static-seven-bay-whitebox',roundedCase:true,beveledRim:true,
+   return {geometry:'seven-bay-walnut-felt-case',roundedCase:true,beveledRim:true,
+    walnutShell:true,forestFelt:true,brassInlay:true,engravedRoleTabs:7,
+    printedDeckFaces:7,
     fittedCardStacks:true,cardStackTiltRadians:-.105,
     visible:scene.map(p=>({id:p.id,kind:p.kind,x:p.x,y:p.y})),
     visibleDeckPiles:collapsed?0:7,stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
@@ -350,5 +407,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'7.0.0-rounded-closefit-whitebox',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'8.0.0-walnut-felt-case',create});
 })(window);
