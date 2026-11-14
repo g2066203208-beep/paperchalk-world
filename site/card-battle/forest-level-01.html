@@ -587,6 +587,13 @@ function frame(timeMs){
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
  gl.clearColor(...colors.background);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  drawStage();drawHighlights();drawTerrainParticles();
+ // Remove a defeated object's mesh only after shrinking it to nothing.
+ for(let i=cards.length-1;i>=0;i--){
+  const c=cards[i],id=c.unitId?'unit:'+c.unitId:'card:'+c.id;
+  if(!objectFX.finished(id,now))continue;
+  if(c.slot)occupied.delete(c.slot.id);
+  cards.splice(i,1);objectFX.clear(id);
+ }
  for(const c of cards){
   c.hover=lerp(c.hover,(c===hoverCard||c.dragged)?1:0,.17);
   if(!c.dragged){c.x=lerp(c.x,c.homeX,.16);c.z=lerp(c.z,c.homeZ,.16);}
@@ -633,6 +640,7 @@ function spawnUnitCard(unit){
  card.side=unit.side;card.unitId=unit.id;card.placeStart=now;
  card.texture=placeholderUnitTexture(unit.name,unit.side==='enemy');
  cards.push(card);occupied.set(slot.id,card);
+ objectFX.enter('unit:'+unit.id,now,{duration:.60,overshoot:1.55});
  if(portrait)loadTexture(portrait,tex=>{card.texture=tex;});
  return card;
 }
@@ -690,14 +698,13 @@ function tapUnit(card){
  if(!result.ok)return false;
  card.attackStart=now;
  const foe=level.getUnit(card.unitId);
- if(foe&&!foe.alive){
-  setTimeout(()=>{
-   occupied.delete(card.slot.id);
-   const i=cards.indexOf(card);if(i>=0)cards.splice(i,1);
-  },410);
- }
+ if(foe&&!foe.alive)objectFX.exit('unit:'+card.unitId,now,{duration:.42});
  const hero=cards.find(c=>c.unitId==='woodcutter');
- if(hero)hero.attackStart=now;
+ if(hero){
+  hero.attackStart=now;
+  if(!level.getUnit('woodcutter')?.alive)
+   objectFX.exit('unit:woodcutter',now,{duration:.42});
+ }
  syncLevelHud();
  if(level.phase!=='active')showLevelEnd(level.snapshot());
  else message('斧击命中 · 已出牌，本回合无法普通摸牌');
@@ -725,7 +732,11 @@ window.__forestLevelDebug={
   const bounds=canvas.getBoundingClientRect();
   return deployCharacterAt(id,bounds.left+pt.x/w*bounds.width,bounds.top+pt.y/h*bounds.height);
  },
- adjust(c,r,delta){return level.canModify(c,r,delta)&&fx.adjust(c,r,delta);},
+ adjust(c,r,delta){
+ const ok=level.canModify(c,r,delta)&&fx.adjust(c,r,delta);
+ if(ok)objectFX.pulse('terrain:'+c+':'+r,now,{duration:.66,strength:.12});
+ return ok;
+ },
  attack(id){const card=cards.find(c=>c.unitId===id);if(!card)return false;return tapUnit(card)===true;},
  reset
 };
