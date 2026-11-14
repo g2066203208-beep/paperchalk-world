@@ -11,7 +11,8 @@ async function clickCard(page,id){
  await page.mouse.click(at.x,at.y);return at;
 }
 async function verifyBox(page,kind){
- await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.geometry==='single-static-seven-bay-whitebox',{timeout:20000});
+ await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.geometry==='single-static-seven-bay-whitebox'&&
+ window.__sceneCardHUD.snapshot.visible.filter(p=>p.kind==='deck').length===7,{timeout:20000});
  const b=await page.evaluate(()=>window.__sceneCardHUD.snapshot);
  assert.equal(b.compartments,7);
  assert.equal(b.physicalBoxes,1);
