@@ -471,12 +471,11 @@ try{
    window.__forestLevelDebug.state.phase==='active',null,{timeout:18000});
  assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0,
   'a new round MUST NOT automatically draw anything');
- await showTray(pc);
+ // The physical box is already expanded from the first round.
  await clickCard(pc,'deck:guardian');
  await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,null,{timeout:10000});
  assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].profession),'guardian',
   'clicking guardian class box manually draws a guardian card, not a warrior default');
- await hideTray(pc);
  const heroAfterEnemy=await pc.evaluate(()=>window.__forestLevelDebug.state.units.find(u=>u.id==='woodcutter').currentHp);
  assert.ok(heroAfterEnemy<heroBeforeEnemy,'surviving enemies deal damage only in their turn');
  await screenshot(pc,'03c-round-two-desktop');
