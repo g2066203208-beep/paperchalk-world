@@ -394,8 +394,8 @@ async function deploy(page){
  assert.ok(slot?.point);
  await page.mouse.click(slot.point.x,slot.point.y);
  await page.waitForFunction(()=>window.__forestLevelDebug.state.phase==='active'&&window.__sceneCardHUD.snapshot.stagedCharacterCards===0,{timeout:15000});
- assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),5,
-  'deployment opens a genuine five-card first hand');
+ assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0,
+  'deployment never deals cards; player must click a class box');
 }
 try{
  // Exactly the same deployed hero + farm state, at the same viewport,
@@ -451,13 +451,13 @@ try{
  await verifyApprovedReferenceLayout(pc,'desktop');
  await showTray(pc);
  await clickCard(pc,'deck:warrior');
- await pc.waitForFunction(()=>window.__forestHand.snapshot.count===6,{timeout:10000});
+ await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(pc,'03-static-hand-drawn-desktop');
  const hand=await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].instance);
  await clickCard(pc,'hand:'+hand);
  assert.equal(await pc.evaluate(()=>window.__forestHand.selected),hand);
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
- assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),5);
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0);
  await pc.waitForFunction(()=>window.__forestLevelDebug.combat.animation.last?.hitFired===true,
   null,{timeout:12000});
  await screenshot(pc,'03a-axe-hit-impact-desktop');
@@ -469,8 +469,14 @@ try{
  await screenshot(pc,'03b-enemy-phase-desktop');
  await pc.waitForFunction(()=>window.__forestLevelDebug.state.turn===2&&
    window.__forestLevelDebug.state.phase==='active',null,{timeout:18000});
- assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),5,
-  'next round must replenish a five-card hand automatically');
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0,
+  'a new round MUST NOT automatically draw anything');
+ await showTray(pc);
+ await clickCard(pc,'deck:guardian');
+ await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,null,{timeout:10000});
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].profession),'guardian',
+  'clicking guardian class box manually draws a guardian card, not a warrior default');
+ await hideTray(pc);
  const heroAfterEnemy=await pc.evaluate(()=>window.__forestLevelDebug.state.units.find(u=>u.id==='woodcutter').currentHp);
  assert.ok(heroAfterEnemy<heroBeforeEnemy,'surviving enemies deal damage only in their turn');
  await screenshot(pc,'03c-round-two-desktop');
@@ -508,8 +514,10 @@ try{
  await screenshot(phone,'05-static-seven-bay-box-phone');
  await deploy(phone);
  await clickCard(phone,'deck:warrior');
- await phone.waitForFunction(()=>window.__forestHand.snapshot.count===6,{timeout:10000});
+ await phone.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(phone,'06-static-hand-phone');
+ assert.equal(await phone.evaluate(()=>window.__forestHand.snapshot.count),1,
+  'on phone a single manual box tap draws exactly one, never an automatic hand');
  // The portrait preset fits all 16 columns at the same locked 78-degree angle.
  await verifyFixedCamera(phone,'phone');
  await plantTestFarm(phone,'right');
