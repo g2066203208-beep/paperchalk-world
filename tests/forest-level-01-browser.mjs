@@ -171,7 +171,8 @@ try{
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.state.phase),'victory');
  const defeated=await page.evaluate(()=>window.__forestLevelDebug.objectPose('unit:forest-foe-b'));
  assert.equal(defeated.phase,'exit','defeated enemy must SHRINK before mesh removal');
- await page.waitForTimeout(520);
+ await page.waitForFunction(()=>window.__forestLevelDebug.units.filter(u=>u.side==='enemy').length===0,
+   {timeout:9000});
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.units.filter(u=>u.side==='enemy').length),0,
   'defeated enemy meshes must be removed only after the exit animation');
  await page.locator('#level-retry').click();
