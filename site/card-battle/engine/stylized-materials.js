@@ -7,7 +7,7 @@
  */
 (function(root){'use strict';
 function create(gl){
- const side=512,cell=256,can=document.createElement('canvas');
+ const side=1024,cell=512,can=document.createElement('canvas');
  can.width=can.height=side;const ctx=can.getContext('2d');
  let state=874291;const rnd=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
  const paints=[
@@ -31,8 +31,8 @@ function create(gl){
   ctx.putImageData(img,ox,oy);
   // Hand-painted-looking broken strokes distributed away from the atlas
   // boundaries, with no shadow, object, tree, large flower or baked highlight.
-  for(let j=0;j<(kind===0?1550:kind===1?760:430);j++){
-   const x=ox+5+rnd()*246,y=oy+5+rnd()*246;
+  for(let j=0;j<(kind===0?5200:kind===1?2600:1550);j++){
+   const x=ox+8+rnd()*496,y=oy+8+rnd()*496;
    const col=rnd()<.57?p.light:p.dark;
    const a=kind===0?.10:.09;
    ctx.strokeStyle='rgba('+col.join(',')+','+(a*(.6+rnd()*.65)).toFixed(3)+')';
@@ -61,10 +61,10 @@ function create(gl){
    gl.activeTexture(gl.TEXTURE0);
   },
   get snapshot(){return {ready:true,type:'worldspace-stylized-material-atlas',
-   resolution:[512,512],materials:['grass','soil','stone','bark'],
+   resolution:[1024,1024],materials:['grass','soil','stone','bark'],
    source:'procedural-fallback-anima-asset-ready',normalResponse:true,roughnessResponse:true,
    drawCallsAdded:0};}
  });
 }
-root.PaperchalkMaterialAtlas=Object.freeze({version:'1.0.0',create});
+root.PaperchalkMaterialAtlas=Object.freeze({version:'1.1.0',create});
 })(window);
