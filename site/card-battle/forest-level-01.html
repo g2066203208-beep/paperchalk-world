@@ -68,64 +68,22 @@ html,body{background:#d8ded0}
  box-shadow:0 3px 9px #0002;cursor:pointer;touch-action:manipulation}
 #deck-drawer-toggle:hover{background:#fff}
 @media(max-width:700px){#deck-drawer-toggle{bottom:8px;min-height:30px;font-size:11px;padding:5px 12px}}
-/* Approved-reference board frame; positioned from real 3D projected corners.
-   All visual layers are pointer-transparent, 96 board cells remain clickable. */
-#battle-ornament{position:fixed;z-index:2;pointer-events:none;border-radius:15px;
- border:3px solid #c8ae67;outline:1px solid #435c30;
- box-shadow:0 5px 0 #516432b5,0 10px 18px #1b331e40,
- inset 0 0 0 2px #f5e2a187,inset 0 0 0 5px #527d4266}
-#battle-ornament::after{content:"";position:absolute;top:50%;left:0;right:0;height:2px;
- transform:translateY(-50%);background:linear-gradient(90deg,#dceba36e,#efffb6,#dceba36e);
- box-shadow:0 0 5px 2px #e6ff78aa,0 0 12px #c9ff5999}
-#battle-ornament .zone-tag{position:absolute;left:2%;border-radius:20px;
- padding:4px 11px;font:600 12px/1.3 system-ui,sans-serif;color:#f8f7df;
- background:#426038b8;box-shadow:inset 0 0 0 1px #cfde9788;text-shadow:0 1px 2px #294523}
-#battle-ornament .zone-tag.enemy{top:19%}
-#battle-ornament .zone-tag.ally{bottom:19%}
-.facility-rail{position:fixed;z-index:2;pointer-events:none;display:flex;flex-direction:column;
- align-items:center;justify-content:center;gap:6px;border-radius:16px;
- padding:9px 5px;background:linear-gradient(160deg,#36552de9,#6b8244d9 53%,#34512edc);
- border:2px solid #dfc779;outline:1px solid #425627;
- box-shadow:0 7px 15px #182a2090,inset 0 0 0 2px #708d527d;color:#f8f4db;
- text-shadow:0 2px 3px #253822}
-.facility-rail .floret{font-size:19px;color:#efd18a}
-.facility-rail .facility-label{font:600 11px/1.3 system-ui,sans-serif;text-align:center}
-.facility-rail .facility-icon{width:94%;aspect-ratio:3/4;display:flex;align-items:center;
- justify-content:center;border-radius:10px;border:1px solid #e0c47e99;
- background:#2e492caf;overflow:hidden;font-size:30px;color:#d5dba1}
-.facility-rail .facility-icon img{width:100%;height:100%;object-fit:cover;display:block}
+/* The battlefield rim and facility plaques are real WebGL models. */
+#terrain-hint{top:10px;left:12px;max-width:230px;font-size:11px}
+#camera-controls{display:none!important}
 #battle-title{position:fixed;top:12px;left:50%;transform:translateX(-50%);
  z-index:3;pointer-events:none;border-radius:36px;padding:6px 30px;
  background:linear-gradient(180deg,#345332eb,#213e2bf0);color:#f8f6d8;
  border:1px solid #cbb06d;box-shadow:inset 0 0 0 1px #7b9558ad,0 4px 14px #273b2588;
  font:700 clamp(16px,1.65vw,25px)/1.35 serif;white-space:nowrap;letter-spacing:.1em}
-#terrain-hint{top:10px;left:12px;max-width:230px;font-size:11px}
-#camera-controls{display:none!important}
 @media(max-width:700px){
  #battle-title{top:10px;padding:5px 14px;font-size:13px;letter-spacing:0}
- #battle-ornament{border-width:2px;border-radius:7px}
- #battle-ornament .zone-tag{font-size:8px;padding:2px 5px}
- .facility-rail{border-width:1px;padding:3px 1px;gap:1px;border-radius:7px}
- .facility-rail .floret{font-size:11px}
- .facility-rail .facility-label{font-size:7px}
- .facility-rail .facility-icon{font-size:15px;border-radius:4px}
  #terrain-hint{top:45px;max-width:50vw;font-size:9px;padding:5px 8px}
 }
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="森林战场：16列6行96个3D方块，中间人物九宫格与两侧设施区"></canvas>
-<div id="battle-ornament" aria-hidden="true">
- <span class="zone-tag enemy">敌方区域</span><span class="zone-tag ally">我方区域</span>
-</div>
-<div class="facility-rail" id="facility-rail-left" aria-hidden="true">
- <span class="floret">✤</span><span class="facility-label">左侧设施</span>
- <div class="facility-icon" id="facility-icon-left"><span>＋</span></div>
-</div>
-<div class="facility-rail" id="facility-rail-right" aria-hidden="true">
- <span class="floret">✤</span><span class="facility-label">右侧设施</span>
- <div class="facility-icon" id="facility-icon-right"><span>＋</span></div>
-</div>
 <div id="battle-title" aria-hidden="true">林间小路 · 第一关</div>
 <div id="note" aria-live="polite"></div>
 <button type="button" id="deck-drawer-toggle" aria-expanded="false" aria-label="展开七槽牌盒">展开牌盒 ▲</button>
@@ -150,6 +108,7 @@ html,body{background:#d8ded0}
 <script src="./engine/object-animations.js?v=1"></script>
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=5"></script>
+<script src="./engine/physical-board-frame.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
 <script src="./engine/scene-card-hud.js?v=16"></script>
 <script src="./engine/character-registry.js?v=1"></script>
@@ -297,6 +256,11 @@ const forestProps=window.PaperchalkForestEnvironment.create({
  terrain,makeGeom,renderGeom,mul,T,S,cube,
  appearance:(id,t)=>objectFX.sample(id,t)
 });
+const physicalFrame=window.PaperchalkPhysicalBoardFrame.create({
+ terrain,makeGeom,renderGeom,box,T,S,RY,mul,
+ appearance:(id,t)=>objectFX.sample(id,t)
+});
+window.__physicalBoardFrame=physicalFrame;
 window.__terrainEngine=terrain;
 window.__objectAnimations=objectFX;
 window.__terrainDebug={
@@ -430,6 +394,8 @@ function syncSceneSwitchLabel(){
 function playWorldLifecycle(mode,t){
  const exit=mode==='exit';
  const groundId='ground:'+forestProps.scene;
+ if(exit)objectFX.exit('board-frame',t,{duration:.52});
+ else objectFX.enter('board-frame',t,{duration:.85,overshoot:1.12});
  if(exit)objectFX.exit(groundId,t,{duration:.52});
  else objectFX.enter(groundId,t,{duration:.85,overshoot:1.12});
  forestProps.propIds.forEach((id,i)=>{
@@ -487,46 +453,23 @@ function projection2D(x,y,z){
  const q=transform(vp,[x,y,z,1]);
  return {x:(q[0]/q[3]*.5+.5)*w,y:(.5-q[1]/q[3]*.5)*h};
 }
-// Track the actual 3D grid projection instead of drawing an unrelated mock UI.
-let previousBoardLayout='',previousFacilityDisplay='',boardReferenceMetrics=null;
+// Read-only camera/framing metrics. No HTML overlay corresponds to the 3D rim.
+let boardReferenceMetrics=null,previousFrameViewport='';
 function syncReferenceLayout(){
  const rect=canvas.getBoundingClientRect();
  const key=[rect.width,rect.height,terrain.width,terrain.depth,orbitCamera.snapshot().distance].join('/');
- if(previousBoardLayout!==key){
-  previousBoardLayout=key;
-  const x0=terrain.minX,x1=x0+terrain.width,z0=terrain.minZ,z1=z0+terrain.depth,y=terrain.topY+.025;
-  const screen=[[x0,z0],[x1,z0],[x1,z1],[x0,z1]].map(([x,z])=>{
-   const p=projection2D(x,y,z);return{x:rect.left+p.x/w*rect.width,y:rect.top+p.y/h*rect.height};
-  });
-  const left=Math.min(...screen.map(v=>v.x)),right=Math.max(...screen.map(v=>v.x)),
-   top=Math.min(...screen.map(v=>v.y)),bottom=Math.max(...screen.map(v=>v.y));
-  const width=right-left,height=bottom-top;
-  boardReferenceMetrics={left,right,top,bottom,width,height,
-   coverageX:width/rect.width,coverageY:height/rect.height,boardTiles:96,viewport:[rect.width,rect.height]};
-  const rim=document.getElementById('battle-ornament');
-  Object.assign(rim.style,{left:left+'px',top:top+'px',width:width+'px',height:height+'px'});
-  for(const side of ['left','right']){
-   const rail=document.getElementById('facility-rail-'+side);
-   if(rect.width<720){rail.style.display='none';continue;}
-   rail.style.display='flex';
-   const rw=Math.min(82,Math.max(50,rect.width*.047)),rh=Math.min(244,Math.max(132,height*.36));
-   Object.assign(rail.style,{
-    left:(side==='left'?Math.max(3,left-rw-7):Math.min(rect.right-rw-3,right+7))+'px',
-    top:(top+(height-rh)/2)+'px',width:rw+'px',height:rh+'px'
-   });
-  }
- }
- const built=cards.filter(c=>c.kind==='facility'&&c.def?.id==='farm-field');
- const display=built.map(c=>c.slot?.flank).sort().join(',');
- if(display!==previousFacilityDisplay){
-  previousFacilityDisplay=display;
-  for(const side of ['left','right']){
-   const box=document.getElementById('facility-icon-'+side);box.replaceChildren();
-   if(built.some(c=>c.slot?.flank===side)){
-    const img=document.createElement('img');img.src='../assets/card-battle/farmer/farm-field.png';img.alt='已建农田';box.appendChild(img);
-   }else{const span=document.createElement('span');span.textContent='＋';box.appendChild(span);}
-  }
- }
+ if(previousFrameViewport===key)return;
+ previousFrameViewport=key;
+ const x0=terrain.minX,x1=x0+terrain.width,z0=terrain.minZ,z1=z0+terrain.depth,y=terrain.topY+.025;
+ const points=[[x0,z0],[x1,z0],[x1,z1],[x0,z1]].map(([x,z])=>{
+  const p=projection2D(x,y,z);return{x:rect.left+p.x/w*rect.width,y:rect.top+p.y/h*rect.height};
+ });
+ const left=Math.min(...points.map(v=>v.x)),right=Math.max(...points.map(v=>v.x)),
+  top=Math.min(...points.map(v=>v.y)),bottom=Math.max(...points.map(v=>v.y));
+ boardReferenceMetrics={left,right,top,bottom,width:right-left,height:bottom-top,
+  coverageX:(right-left)/rect.width,coverageY:(bottom-top)/rect.height,
+  boardTiles:terrain.cols*terrain.rows,viewport:[rect.width,rect.height],
+  frameIsPhysical3D:true,frameWorldBounds:physicalFrame.snapshot};
 }
 window.__boardReferenceLayout={get snapshot(){return boardReferenceMetrics;}};
 function worldFromPointer(clientX,clientY,planeY=.1){
@@ -826,7 +769,7 @@ for(const c of cards){for(let i=0;i<1;i++){
  let scale=pose.scale;
 let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
-function drawStage(){forestProps.draw(now);terrainRenderer.draw();}
+function drawStage(){forestProps.draw(now);terrainRenderer.draw();physicalFrame.draw(now,forestProps.scene);}
 function drawTerrainParticles(){
  if(!fx.particles.length)return;
  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
@@ -966,6 +909,7 @@ function startForestLevel(){
     delay:Math.min(.19,(row*terrain.cols+col)*.013),duration:.44
    });
  objectFX.enter('ground:forest',now,{duration:.77,overshoot:1.10});
+ objectFX.enter('board-frame',now,{duration:.75,overshoot:1.08});
  forestProps.propIds.forEach((id,i)=>objectFX.enter(id,now,{
   delay:Math.min(.26,i*.017),duration:.58
  }));
@@ -1005,6 +949,7 @@ window.__forestLevelDebug={
   renderRatio:+(canvas.width/canvas.getBoundingClientRect().width).toFixed(2),
   adaptiveQualityScale:renderScale};},
  get sceneSwitch(){return sceneTransition.snapshot(now);},
+ get physicalFrame(){return physicalFrame.snapshot;},
  switchScene(){return sceneTransition.toggle(now);},
  get environment(){return {id:forestProps.scene,props:forestProps.propCount,
   material:terrain.cell(0,0)?.kind,ground:forestProps.ground};},

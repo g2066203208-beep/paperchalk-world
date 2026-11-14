@@ -13,6 +13,7 @@ on:
       - 'site/card-battle/engine/scene-transitions.js'
       - 'site/card-battle/engine/voxel-terrain.js'
       - 'site/card-battle/engine/forest-environment.js'
+      - 'site/card-battle/engine/physical-board-frame.js'
       - 'site/card-battle/engine/profession-decks.js'
       - 'site/card-battle/ui/forest-hand.css'
       - 'site/card-battle/ui/forest-hand.js'
@@ -46,6 +47,7 @@ jobs:
           node tests/forest-level-core.test.cjs
           node --check site/card-battle/engine/scene-card-hud.js
           node --check site/card-battle/engine/battle-camera.js
+          node --check site/card-battle/engine/physical-board-frame.js
           node --check site/card-battle/ui/forest-hand.js
           node tests/object-animations.test.cjs
           node tests/scene-transitions.test.cjs
@@ -59,7 +61,7 @@ jobs:
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/forest-level-http.log 2>&1 &
           sleep 2
-      - name: Verify static seven-bay whitebox, slot clearances, forest, mobile
+      - name: Verify real 3D battlefield border, seven-slot drawer, forest, mobile
         run: node tests/forest-level-01-browser.mjs
       - name: Upload screenshots
         if: always()

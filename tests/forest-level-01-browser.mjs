@@ -123,6 +123,25 @@ async function verifyFixedCamera(page,kind){
  console.log('FOREST_FIXED_CAMERA_PASS',JSON.stringify({kind,eye:after.eye,elevation:after.elevation,
   distance:after.distance,viewport:after.viewport,frame}));
 }
+async function verifyPhysicalFrame(page,kind){
+ await page.waitForFunction(()=>window.__forestLevelDebug?.physicalFrame?.lastDrawCalls>15,{timeout:25000});
+ const mesh=await page.evaluate(()=>window.__forestLevelDebug.physicalFrame);
+ assert.equal(mesh.modeled,true,'visible border must be a real 3D model');
+ assert.equal(mesh.worldSpace,true,'border must share world coordinates with 96 tiles');
+ assert.equal(mesh.screenOverlay,false,'never paint fake CSS game frame');
+ assert.equal(mesh.geometry,'extruded-rounded-perimeter');
+ assert.equal(mesh.boardCols,16);
+ assert.equal(mesh.boardRows,6);
+ assert.ok(mesh.cornerRadius>.5,'physical rounded corner profile');
+ assert.ok(mesh.outerWidth>mesh.boardWidth+2,'thick outer timber perimeter');
+ assert.ok(mesh.innerOpeningWidth>mesh.boardWidth,'do not overlap any terrain tile');
+ assert.ok(mesh.lastDrawCalls>15,'gold trims, side plaques and crossbar must all be 3D');
+ assert.equal(await page.locator('#battle-ornament').count(),0,'remove floating yellow CSS frame entirely');
+ assert.equal(await page.locator('.facility-rail').count(),0,'remove fake HTML side rails too');
+ const layout=await page.evaluate(()=>window.__boardReferenceLayout.snapshot);
+ assert.equal(layout.frameIsPhysical3D,true);
+ console.log('PHYSICAL_3D_BOARD_FRAME_PASS',JSON.stringify({kind,mesh,coverageX:layout.coverageX,coverageY:layout.coverageY}));
+}
 async function verifyApprovedReferenceLayout(page,kind){
  await page.waitForFunction(()=>window.__boardReferenceLayout?.snapshot?.boardTiles===96,{timeout:20000});
  const m=await page.evaluate(()=>window.__boardReferenceLayout.snapshot);
@@ -179,6 +198,7 @@ try{
  await verifyWorld(pc,'desktop');
  await verifyTrayCollapsed(pc,'desktop-default');
  await verifyApprovedReferenceLayout(pc,'desktop');
+ await verifyPhysicalFrame(pc,'desktop');
  await pc.waitForTimeout(400);
  await screenshot(pc,'00-board-clear-no-deck-desktop');
  await showTray(pc);
@@ -227,6 +247,7 @@ try{
  await verifyWorld(phone,'phone');
  await verifyTrayCollapsed(phone,'phone-default');
  await verifyApprovedReferenceLayout(phone,'phone');
+ await verifyPhysicalFrame(phone,'phone');
  await screenshot(phone,'05a-board-clear-no-deck-phone');
  await showTray(phone);
  await verifyBox(phone,'phone');
@@ -246,5 +267,5 @@ try{
  await phone.waitForTimeout(300);
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
  assert.deepEqual(errors,[]);
- console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,errors}));
+ console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,physical3DFrame:true,cssFrameRemoved:true,errors}));
 }finally{await browser.close();}
