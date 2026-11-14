@@ -498,7 +498,8 @@ const sceneHUD=window.PaperchalkSceneCardHUD.create({
  })),
  selectedCharacter:()=>selectedStagedId,
  selectCharacter:id=>{selectedStagedId=selectedStagedId===id?null:id;previewDeployment=null;
-  if(selectedStagedId)message('拿起伐木工人物卡：点击或拖到我方九宫格任意空位');},
+  if(selectedStagedId)message('拿起'+(level.getUnit(selectedStagedId)?.name||'人物')+
+   '卡：点击或拖到我方九宫格空位');},
  placeCharacter:(id,x,y)=>deployCharacterAt(id,x,y),
  previewCharacter:(id,x,y)=>previewCharacterAt(id,x,y),
  showRoster:()=>document.getElementById('roster-trigger').click()
@@ -668,8 +669,9 @@ function syncLevelHud(){
   '部署阶段 · 将'+state.units.filter(u=>u.side==='ally'&&!u.deployed).map(u=>u.name).join('、')+'放进九宫格':
   '第 '+state.turn+' 轮 · 敌人 '+enemies+'/'+foeTotal+' · 手牌 '+handCount+'/10';
  combatPhase.hidden=state.phase==='enemy';
- combatPhase.textContent=state.phase==='deployment'?'准备部署':state.phase==='active'?
-  '第 '+state.turn+' 回合':state.phase==='victory'?'战斗胜利':'战斗失败';
+ combatPhase.textContent=state.phase==='enemy'?'':state.phase==='deployment'?
+  '准备部署':state.phase==='active'?'第 '+state.turn+' 回合':
+  state.phase==='victory'?'战斗胜利':'战斗失败';
  endTurnButton.disabled=state.phase!=='active'||combatChoreo.busy;
  endTurnButton.hidden=state.phase==='enemy';
  endTurnButton.textContent='结束回合 →';
