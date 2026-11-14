@@ -15,6 +15,7 @@ on:
       - 'site/card-battle/engine/forest-environment.js'
       - 'site/card-battle/engine/visual-look.js'
       - 'site/card-battle/engine/physical-board-frame.js'
+      - 'site/card-battle/engine/spatial-shadows.js'
       - 'site/card-battle/engine/profession-decks.js'
       - 'site/card-battle/ui/forest-hand.css'
       - 'site/card-battle/ui/forest-hand.js'
@@ -49,6 +50,7 @@ jobs:
           node --check site/card-battle/engine/scene-card-hud.js
           node --check site/card-battle/engine/battle-camera.js
           node --check site/card-battle/engine/physical-board-frame.js
+          node --check site/card-battle/engine/spatial-shadows.js
           node --check site/card-battle/engine/visual-look.js
           node --check site/card-battle/ui/forest-hand.js
           node tests/object-animations.test.cjs

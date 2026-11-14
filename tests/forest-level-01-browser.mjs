@@ -142,6 +142,18 @@ async function verifyStage01ColorAndLighting(page,kind){
  assert.equal(cam.fixed,true,'stage 01 cannot change approved camera');
  console.log('FOREST_VISUAL_STAGE03_PASS',JSON.stringify({kind,look,distance:cam.distance}));
 }
+async function verifySpatialShadowMap(page,kind){
+ await page.waitForFunction(()=>window.__forestLevelDebug?.spatialShadows?.passes>=1,{timeout:25000});
+ const stats=await page.evaluate(()=>window.__forestLevelDebug.spatialShadows);
+ assert.equal(stats.enabled,true,'real WebGL framebuffer shadow system required');
+ assert.equal(stats.type,'rgba8-depth-shadow-map','shadow map must use 3D depth not an ellipse');
+ assert.equal(stats.actualOcclusion,true);
+ assert.equal(stats.worldSpace,true);
+ assert.ok(stats.castersDrawn>=30,'3D trees and stage geometry must cast real shadows');
+ assert.equal(stats.width,kind==='desktop'?1024:512);
+ assert.equal(stats.lastError,'');
+ console.log('FOREST_SPATIAL_SHADOW_MAP_PASS',JSON.stringify({kind,...stats}));
+}
 async function verifyPhysicalFrame(page,kind){
  await page.waitForFunction(()=>window.__forestLevelDebug?.physicalFrame?.lastDrawCalls===1,{timeout:25000});
  const mesh=await page.evaluate(()=>window.__forestLevelDebug.physicalFrame);
@@ -238,6 +250,7 @@ try{
  await verifyApprovedReferenceLayout(pc,'desktop');
  await verifyStage01ColorAndLighting(pc,'desktop');
  await verifyPhysicalFrame(pc,'desktop');
+ await verifySpatialShadowMap(pc,'desktop');
  await pc.waitForTimeout(400);
  await screenshot(pc,'00-board-clear-no-deck-desktop');
  await showTray(pc);
@@ -288,6 +301,7 @@ try{
  await verifyApprovedReferenceLayout(phone,'phone');
  await verifyStage01ColorAndLighting(phone,'phone');
  await verifyPhysicalFrame(phone,'phone');
+ await verifySpatialShadowMap(phone,'phone');
  await screenshot(phone,'05a-board-clear-no-deck-phone');
  await showTray(phone);
  await verifyBox(phone,'phone');

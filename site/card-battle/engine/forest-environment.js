@@ -69,9 +69,9 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
   if(!scenes[next])throw Error('Unknown environment scene: '+next);
   scene=next;return scene;
  }
- function draw(now=0){
+ function draw(now=0,{skipGround=false}={}){
   const pose=appearance?.('ground:'+scene,now)||{scale:1,opacity:1};
-  if(pose.opacity>.002&&pose.scale>.025){
+  if(!skipGround&&pose.opacity>.002&&pose.scale>.025){
    // The floor is one lightweight 3D solid. Top remains below tactical tiles.
    // A unified spring transform makes the WHOLE world enter/leave on switch.
    const k=pose.scale;
@@ -119,5 +119,5 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
   get ground(){return {width:groundWidth,depth:groundDepth,top:groundTop,scene};}
  });
 }
-root.PaperchalkForestEnvironment=Object.freeze({version:'2.4.0',create});
+root.PaperchalkForestEnvironment=Object.freeze({version:'2.5.0',create});
 })(window);
