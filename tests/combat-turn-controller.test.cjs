@@ -18,7 +18,8 @@ const level=window.PaperchalkLevelEngine.create('forest-01',{
  cell:()=>({height:0}),canAdjust:()=>true
 },{physicalColumns:[6,7,8]});
 const model=window.PaperchalkProfessionDecks.create({maxHand:10,
- ownedCharacters:[{id:'woodcutter',name:'伐木少女',profession:'warrior'}],seed:618231});
+ ownedCharacters:[{id:'woodcutter',name:'伐木少女',profession:'warrior',
+  characterId:'farmer-warrior-loli-lumberjack'}],seed:618231});
 const choreography=window.PaperchalkCombatChoreography.create();
 let selected=null;
 const hand={
@@ -46,12 +47,18 @@ assert.equal(model.snapshot().count,0,'no auto opening cards');
 assert.equal(level.deploy('woodcutter',0,1).ok,true);
 assert.equal(controller.playerAttack('woodcutter','forest-foe-a',1),false,
  'cannot attack before manually drawing and selecting a card');
-const one=model.draw('woodcutter');
-assert.equal(one.ok,true,'player taps the physical warrior box');
+let one=null;
+for(let i=0;i<10;i++){
+ const drawn=model.draw('woodcutter');
+ assert.equal(drawn.ok,true,'player taps the physical warrior box');
+ if(drawn.card.id==='strike'){one=drawn;break;}
+}
+assert.ok(one,'one of the ten cards is always strike');
+const keptInHand=model.snapshot().count;
 selected=one.card.instance;
 const hpBefore=level.getUnit('forest-foe-a').currentHp;
 assert.equal(controller.playerAttack('woodcutter','forest-foe-a',1),true);
-assert.equal(model.snapshot().count,0,'exactly one manual card consumed');
+assert.equal(model.snapshot().count,keptInHand-1,'exactly one manual card consumed');
 assert.equal(controller.endTurn(1.1),false,'cannot end turn in the middle of a hit');
 controller.update(1.20);
 assert.equal(level.getUnit('forest-foe-a').currentHp,hpBefore,
@@ -71,7 +78,7 @@ assert.equal(controller.playerAttack('woodcutter','forest-foe-b',2.1),false,
 for(let t=2.1;t<7;t+=.05)controller.update(t);
 assert.equal(level.turn,2);
 assert.equal(level.phase,'active');
-assert.equal(model.snapshot().count,0,'NO auto draw on player round two');
+assert.equal(model.snapshot().count,keptInHand-1,'NO auto draw on player round two');
 assert.ok(!messages.some(x=>x.includes('自动摸')));
 assert.ok(messages.some(x=>x.includes('自行摸牌')));
 assert.equal(level.getUnit('woodcutter').currentHp,10,
@@ -84,7 +91,7 @@ assert.equal(model.draw('guardian').reason,'locked-character');
 assert.equal(model.draw('engineer').reason,'locked-character');
 assert.equal(model.draw('medic').reason,'locked-character');
 assert.equal(model.draw('woodcutter').ok,true);
-assert.equal(model.snapshot().count,1);
+assert.equal(model.snapshot().count,keptInHand,'one extra manual draw');
 assert.equal(model.snapshot().manualDraw,true);
 controller.reset();assert.equal(controller.busy,false);
 console.log('COMBAT_TURN_CONTROLLER_PASS reusable_headless_rules impact_damage enemy_queue manual_0_draw next_round');
