@@ -372,6 +372,17 @@ function create(o){
  }
  return Object.freeze({
   render:draw,hit:pick,move,down,up,pointFor,
+  // Every visible 3D deck slab/hand card follows the SAME scene transition.
+  // Their gameplay deck counts and selected card IDs remain untouched.
+  animateScene(phase,at){
+   if(phase!=='exit'&&phase!=='enter')return;
+   let i=0;
+   for(const id of animated){
+    if(phase==='exit')o.objectFX?.exit(id,at+(i%9)*.015,{duration:.46});
+    else o.objectFX?.enter(id,at+(i%11)*.015,{duration:.62});
+    i++;
+   }
+  },
   resetAnimations(){
    animated.clear();exitGhosts.clear();entered.clear();scene=[];
   },
@@ -394,10 +405,11 @@ function create(o){
     handLayout:'near-camera-fan',
     backgroundPanel:false,
     animatedCardMeshes:animated.size,
+    sharedSceneTransitions:true,
     vanishingCards:exitGhosts.size
    };
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'4.1.0-seven-piles',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'4.2.0-seven-piles',create});
 })(window);
