@@ -11,8 +11,8 @@
 - 玩家**点击已经拥有的角色牌堆手动摸牌**；每次点击摸该角色牌堆中的一张，所有人物共用一个手牌区。空槽不可点击、不可摸牌。
 - **总手牌上限为 10 张**，允许混搭不同职业，摸满即停止。
 - **下一回合不自动摸牌**；打出一张牌后，仍可主动从牌盒继续摸到上限。
-- 未打出的手牌跨回合保留；已打出的牌于回合交替时进入对应职业弃牌堆（这是目前的实现决定，不代表未来所有玩法必须如此）。
-- **已经移除七职业复制战士牌的测试逻辑**；当前伐木少女使用战士牌池，农夫使用工程师牌池，分别独立。其他人物未获得就没有牌池、牌堆或可以抽出的卡牌。
+- 未打出的手牌跨回合保留；已打出的牌于回合交替时进入对应人物的弃牌堆（这是目前的实现决定，不代表未来所有玩法必须如此）。
+- **已经移除七职业复制战士牌的测试逻辑**；当前伐木少女拥有战士通用牌 + 人物专属「伐木」；农夫拥有五张角色专属设施卡。卡牌所属职业、组织、人物经注册目录共同判断。其他人物未获得就没有牌池、牌堆或可以抽出的卡牌。
 - 用场景 UI 拍照、测试或切换美术表现时，不得自动发牌或强制清空玩家手牌。
 
 ## 2. 已存在的独立引擎模块
@@ -21,7 +21,11 @@
 | --- | --- | --- |
 | `engine/level-engine.js` | 部署、3×3 阵地、单位生命/护盾、敌人意图、敌我回合和胜负 | 纯规则状态机，靠关卡 manifest 注册 |
 | `levels/forest-01.js` | 第一关的单位、初始数值、目标和敌人 `intentCycle` 攻防行动表 | 只有数据，不包含渲染算法；引擎不得按敌人名称判断 AI |
-| `engine/profession-decks.js` | 7 槽容量、按已有角色顺序建立独立牌堆、手动摸牌、10 张共享上限、弃牌/重洗 | 纯规则，不包含浏览器或 WebGL API |
+| `engine/card-registry.js`, `data/card-packs.js` | 所有玩家/敌人卡牌的统一声明、注册、合法性验证、职业/组织/角色归属 | 卡牌内容只在数据包定义一次，其他模块不得复制一份 |
+| `engine/profession-decks.js` | 7 槽容量、按已有角色顺序建立独立牌堆、手动摸牌、10 张共享上限、弃牌/重洗 | **从 CardCatalog 查询卡池**；自身不定义或复制牌面 |
+| `engine/card-effect-engine.js` | 通用技能结算、精华、建造、人物/设施互动 | 根据注册卡效果处理动作，场景只负责目标选择与视觉反馈 |
+| `engine/farmer-facilities.js` | 占格/耐久/相邻加速/回合生产/拦截/资源转换 | 所有设施尺寸和耐久来自同一个 CardCatalog |
+| `engine/bandit-roster.js` | 山贼角色模板、目标策略和技能池挂载 | 敌方五技能从 CardCatalog 读取；不在关卡或角色模块复制牌面 |
 | `engine/combat-turn-controller.js` | 玩家主动攻击、结束回合、顺序调度敌人、结算时机 | 以注入的引擎/回调组合，不写森林特例 |
 | `engine/combat-choreography.js` | 前摇、爆发、短命中停顿、后仰、收招 | 只计算动画状态，无 DOM/WebGL |
 | `engine/combat-feedback.js` | 斩击线、瞬时伤害数字 | 浏览器渲染适配层；禁止显示敌方行动及意图预告 |
@@ -29,8 +33,12 @@
 | `engine/battle-camera.js` | 固定俯视角、缩放、棋盘安全区平移 | 独立摄像机控制 |
 | `engine/voxel-terrain.js` | 地形、格点及 WebGL 网格生成 | 可在其他关卡复用 |
 | `engine/spatial-shadows.js` | 基于空间的 Shadow Map | 场景渲染功能 |
-| `engine/forest-dressing.js`, `engine/cloud-shadows.js` | 森林模型、移动云影 | 可开启/关闭的美术层 |
-| `ui/forest-hand.js`, `engine/scene-card-hud.js` | 根据队伍已拥有的人物在 7 槽盒左侧布置角色和对应牌堆、监听手动点击 | 不决定自动摸牌规则、不在空槽画假牌 |
+| `engine/forest-dressing.js`, `engine/cloud-shadows.js` | 森林模型、移动云影 | 平常合批绘制，转场时树/岩石/花草逐个以自身根部缩放 |
+| `engine/object-anchor.js` | 统一 3D 物体自身锚点矩阵 `T(root) · S(scale) · T(-root)` | 全场景共用，禁止将单个道具缩到世界中心 |
+| `engine/object-animations.js` | 各物体进入/退出/弹性缩放的时间轨道 | 动画 ID 独立于玩法状态，不修改物体世界坐标 |
+| `engine/scene-lifecycle.js` | 按 provider 注册全场景地板、树木、道具、地形、角色进退场 | 新场景只注册对象 IDs，无须再复制森林专用循环 |
+| `engine/scene-transitions.js` | 退场 → 换布景 → 进场的通用状态机 | 切换不改玩家牌堆、回合、部署、生命或设施逻辑 |
+| `ui/forest-hand.js`, `engine/scene-card-hud.js` | 由关卡显式创建角色手牌模型、实体七槽与抽牌演出 | 不读取调试全局来推测队伍；场景切换期间牌盒保持常驻 |
 
 ## 3. 当前战斗状态机
 
@@ -53,3 +61,25 @@
 - `node tests/forest-level-01-browser.mjs` （Playwright + 本地 HTTP 服务）
 
 特别检查 **初始 0 / 结束回合 0 自动发牌、只可点击已有角色牌堆、其他槽位真实为空、10 张上限不允许第 11 张**。
+
+## 6. 所有新场景强制遵循的转场协议
+
+1. **先定义物体身份和世界根部**：每棵树、石头、草丛、设施、人物、地形格都有稳定 ID，世界坐标不会因为转场改变。
+2. **世界坐标烘焙进网格的物体**：调用 `PaperchalkObjectAnchor.atRoot([x,y,z],scale,{T,S,mul})`。**局部坐标网格**使用 `localAtRoot`。不能直接 `S(scale)` 或围绕地板/棋盘中心缩放一整组外围道具。
+3. **注册 provider 而不是写单独动画循环**：`PaperchalkSceneLifecycle.create({animation:objectFX,groups:[{id:'props',ids:scene=>renderer.idsFor(scene),enter:{duration:.6,stagger:.01},exit:{duration:.4}}]})`。底层 `scene-transitions` 在退出、换景、进入三个阶段统一调度。
+4. **保留性能**：森林静态 12 批 WebGL 网格绘制；只在过场期间使用 156 个独立锚点（45 棵树、22 块岩石、24 簇花、65 簇草）。阴影和主视图采用同一矩阵；没有每帧创建新缓冲。
+5. **永久状态不属于场景美术**：地图切换不清空牌堆、手牌、设施、人物生命或战斗回合；七槽牌盒不跟着外围场景缩小到中心。
+6. **新场景必须走同一套单元测试**：`tests/scene-lifecycle.test.cjs` 验证每棵树缩放时根部位置不变，动画结束后回到静态批渲染。
+
+## 7. 所有新卡牌和敌人的注册协议
+
+- **唯一定义**：使用 `PaperchalkCardCatalog`，卡包按 `scope: 'profession' | 'faction' | 'character' | 'enemy'` 声明。配置 `profession`、`faction`、`characterId` 或 `archetype`；新增组织或人物只增加注册包，不修改抽牌引擎代码。
+- **卡片类型**：`attack` / `guard` / `resource` / `facility` / `enemy-action`。设施明确提供 `footprint`、`facilityHp`、`facilityRole`，用统一单位“1 卡格”判定；资源类型限定材料、生命、魔法精华。
+- **独立牌堆**：`PaperchalkProfessionDecks.create({ownedCharacters:[...]})` 只查已获得人物能使用的卡。组织技能不会泄漏给其他组织，同职业多人物也分别维护手牌归属和弃牌堆。
+- **动作执行**：卡片属性由注册器取得；`PaperchalkCardEffectEngine` 执行格挡、精华、设施摆放/回滚、砍树联动。页面不得再新增 `if(card.name === '某张卡')` 的硬编码规则。
+- **角色而非占位敌人**：山贼角色模板从敌人卡包取五技能，关卡只引用模板 ID 与位置。角色攻击/行动仍由同一个 `level-engine` 结算；不显示敌方行动预告。
+- **所有新内容必须有测试**：`tests/card-registry.test.cjs`、`tests/card-effect-engine.test.cjs`、`tests/farmer-facilities.test.cjs`、`tests/character-hand-engine.test.cjs`。
+
+## 8. 仍需要继续拆分的适配层
+
+`forest-level-01.html` 目前保留大量 WebGL 相机/材质/输入/界面组装代码，**还不能称为所有子系统都已经完整引擎化**。现已把场景生命周期、锚点计算、卡牌注册、卡牌效果、角色手牌初始化、战斗规则抽离为独立模块。后续新场景应继续迁走页面里的渲染与输入适配，不允许把新的职业规则写回 HTML。
