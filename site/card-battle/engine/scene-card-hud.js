@@ -37,23 +37,6 @@ function create(o){
    x+100,y+(noise()-.5)*7,x+235,y);woodCtx.stroke();
  }
  const walnut=makeTexture(woodCanvas);
- const tabTextures=new Map();
- function tabTexture(job){
-  if(tabTextures.has(job.id))return tabTextures.get(job.id);
-  const cv=document.createElement('canvas');cv.width=256;cv.height=96;
-  const c=cv.getContext('2d');
-  const grad=c.createLinearGradient(0,0,0,96);
-  grad.addColorStop(0,'#f3dc99');grad.addColorStop(.52,'#c1a46b');
-  grad.addColorStop(1,'#85693f');
-  c.fillStyle=grad;c.fillRect(0,0,256,96);
-  c.strokeStyle='#58452a';c.lineWidth=5;c.strokeRect(5,5,246,86);
-  c.textAlign='center';c.textBaseline='middle';c.fillStyle='#443421';
-  c.font='800 67px system-ui,"Noto Sans SC",sans-serif';
-  c.fillText(job.name,128,49,222);
-  const tex=makeTexture(cv);tabTextures.set(job.id,tex);return tex;
- }
- const textIcons={engineer:'⚙',guardian:'盾',warrior:'斧',ranger:'弓',
-  skirmisher:'影',medic:'药',summoner:'兽'};
  const cardTextures=new Map(),portraits=new Map();
  const fov=39*Math.PI/180,cameraZ=14.5;
  let width=1920,height=1080,spanW=18,spanH=10,now=0,scene=[],hot=[],hover=null,press=null;
@@ -153,8 +136,7 @@ function create(o){
    bevel:roundedRim(g.w-.025,g.h-.025,Math.max(.03,g.cornerRadius-.012),g.wall*.55),
    deck:roundedPrism(g.cardW,g.cardH,g.cardRadius),
    top:roundedPrism(g.cardW*.985,g.cardH*.985,g.cardRadius*.96),
-   well:roundedPrism(g.cardW*1.055,g.cardH*1.045,g.cardRadius*1.1),
-   tab:roundedPrism(g.bay*.76,Math.max(.115,g.wall*.84),Math.min(.045,g.wall*.26))
+   well:roundedPrism(g.cardW*1.055,g.cardH*1.045,g.cardRadius*1.1)
   };
   shapeCache.set(key,made);
   if(shapeCache.size>8){
@@ -205,31 +187,26 @@ function create(o){
   c.fillStyle=paper;c.fillRect(0,0,384,576);
   c.lineWidth=8;c.strokeStyle='#b59865';c.strokeRect(15,15,354,546);
   c.lineWidth=2;c.strokeStyle='#d4c09d';c.strokeRect(29,29,326,518);
-  c.fillStyle='#485c4c';c.textAlign='center';
-  c.font='600 28px serif';c.fillText('纸片世界 · 职业牌',192,92);
-  c.strokeStyle='#c7b48b';c.lineWidth=2;
-  c.beginPath();c.moveTo(86,134);c.lineTo(298,134);c.stroke();
-  c.fillStyle='#e7e5d7';c.beginPath();c.arc(192,284,105,0,Math.PI*2);c.fill();
-  c.strokeStyle='#c0af88';c.lineWidth=3;c.stroke();
-  c.fillStyle='#566850';c.font='bold 122px serif';
-  c.fillText(textIcons[role]||'✦',192,328);
-  c.fillStyle='#4d5149';c.font='bold 44px serif';
-  c.fillText(jobs.find(c=>c.id===role)?.name||'职业',192,461);
-  c.fillStyle='#8b856f';c.font='22px serif';c.fillText('CARD DECK',192,513);
+  // Plain ivory card back: no titles, role symbols or decorative words.
+  c.fillStyle='#e9e3d4';c.fillRect(37,39,310,498);
+  c.strokeStyle='#c3bba9';c.lineWidth=3;c.strokeRect(45,47,294,482);
   const tex=makeTexture(cv);cardTextures.set(key,tex);return tex;
  }
  function layout(snapshot,staged,g){
-  const slots=[];
-  jobs.forEach((job,i)=>{
-   const count=snapshot.classes.find(c=>c.id===job.id)?.deckCount||0;
-   const x=g.x0+i*g.bay;
-   slots.push({kind:'deck',id:'deck:'+job.id,profession:job.id,
-    x,y:g.y,z:.18,scale:g.scale,deckCount:count});
-  });
-  for(const unit of staged){
-   const p=slots.find(p=>p.profession===unit.role);
-   if(p)slots.push({...p,kind:'character',id:'character:'+unit.id,
-    unitId:unit.id,portrait:unit.portrait});
+  const slots=[],roster=snapshot.roster||[];
+  for(let i=0;i<7;i++){
+   const x=g.x0+i*g.bay,owner=roster[i];
+   if(!owner){
+    slots.push({kind:'empty',id:'empty:'+i,slot:i,x,y:g.y});
+    continue;
+   }
+   const card={kind:'deck',id:'deck:'+owner.id,
+    ownerId:owner.id,profession:owner.profession,slot:i,
+    x,y:g.y,z:.18,scale:g.scale,deckCount:owner.deckCount};
+   slots.push(card);
+   const pending=staged.find(u=>u.id===owner.id);
+   if(pending)slots.push({...card,kind:'character',id:'character:'+pending.id,
+    unitId:pending.id,portrait:pending.portrait});
   }
   // Temporary STATIC hand presentation above the box. No lid material,
   // no lid transform, no card flip. Gameplay remains testable meanwhile.
@@ -264,12 +241,7 @@ function create(o){
    boxMesh(x,g.y,-.134,g.divider*.84,g.innerH-.040,.095,paint.wells,g);
    boxMesh(x,g.y,-.078,g.divider*.32,g.innerH-.095,.009,paint.brass,g);
   }
-  // Seven little real 3D engraved nameplates, mounted in the top wooden lip.
-  for(let i=0;i<7;i++){
-   const x=g.x0+i*g.bay;
-   curved(model.tab,x,g.y+g.h*.489,.022,.011,[1,1,1,1],
-    g,0,tabTexture(jobs[i]),1);
-  }
+
  }
  function pileMatrix(p,g,z){
   return mul(T(p.x,p.y,z),S(g.scale,g.scale,1));
@@ -277,7 +249,7 @@ function create(o){
  function decks(g,positions,staged){
   const model=shapes(g);
   for(const p of positions.filter(p=>p.kind==='deck')){
-   const cards=o.remainingCards?.(p.profession)||[],count=cards.length;
+   const cards=o.remainingCards?.(p.ownerId)||[],count=cards.length;
    if(!count)continue;
    // Tight white prototype stack. Top edge reclines slightly behind bottom.
    // Physical thickness changes with the actual number of cards remaining.
@@ -312,7 +284,7 @@ function create(o){
   if(collapsed){scene=[];hot=[];hover=null;press=null;drawCalls=0;deckMeshes=0;return;}
   const g=dims(),snapshot=o.snapshot(),staged=o.staged?.()||[];
   const positions=layout(snapshot,staged,g);scene=positions;
-  hot=positions;drawCalls=0;deckMeshes=0;
+  hot=positions.filter(p=>p.kind!=='empty');drawCalls=0;deckMeshes=0;
   const oldVP=getVP();
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(fov,width/height,.1,80),T(0,0,-cameraZ)));
@@ -364,7 +336,7 @@ function create(o){
   }
   if(!moved&&p?.id===old.id){
    if(p.kind==='deck'){
-    const result=o.draw?.(p.profession);
+    const result=o.draw?.(p.ownerId);
     if(result?.ok)lastDeal={profession:p.profession,at:now};
    }
    if(p.kind==='hand')o.select?.(p.instance);
@@ -395,11 +367,14 @@ function create(o){
    const horizontalClearance=(g.innerW-g.cardW)/2;
    const verticalClearance=(g.innerH-g.cardH)/2;
    return {geometry:'seven-bay-walnut-felt-case',roundedCase:true,beveledRim:true,
-    walnutShell:true,forestFelt:true,brassInlay:true,engravedRoleTabs:7,
-    printedDeckFaces:7,
+    walnutShell:true,forestFelt:true,brassInlay:true,engravedRoleTabs:0,
+    printedDeckFaces:(count.roster||[]).length,
     fittedCardStacks:true,cardStackTiltRadians:-.105,
     visible:scene.map(p=>({id:p.id,kind:p.kind,x:p.x,y:p.y})),
-    visibleDeckPiles:collapsed?0:7,stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
+    visibleDeckPiles:scene.filter(p=>p.kind==='deck'&&p.deckCount>0).length,
+    emptySlots:7-(count.roster?.length||0),
+    ownedCharacters:(count.roster||[]).map(c=>({id:c.id,profession:c.profession,slot:c.slot})),
+    stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     collapsed,canExpand:true,
     compartments:7,physicalBoxes:1,hasLid:false,hasHinge:false,
     reversibleLid:false,flipAnimationEnabled:false,screenEdgeAnchored:true,
@@ -415,5 +390,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'8.0.0-walnut-felt-case',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'9.0.0-owned-decks-left-packed',create});
 })(window);
