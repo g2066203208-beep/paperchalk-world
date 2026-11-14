@@ -1,0 +1,36 @@
+name: Import user-approved farmer field image
+on:
+  push:
+    paths:
+      - '.github/workflows/import-farmland-art.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import-user-art:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Retrieve exact user-supplied Anima image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p site/assets/card-battle/farmer
+          curl --fail --location --retry 3 --connect-timeout 15 --max-time 90 \
+            'https://cdn.openart.ai/openart-uploads/production/attachment-transfers/9af7cbbd614da14975bffdb3929fb12f348a28d38742e1f494cc2f6c593c0484.png' \
+            -o site/assets/card-battle/farmer/farm-field.png
+          echo '0b8623277b501f631d254f229562ac586d9275084936bb48e6085084fdfaa38f  site/assets/card-battle/farmer/farm-field.png' | sha256sum --check -
+          file site/assets/card-battle/farmer/farm-field.png
+      - name: Commit exact original PNG
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/assets/card-battle/farmer/farm-field.png
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'assets(card-battle): import user-supplied original farmland illustration'
+          git push
