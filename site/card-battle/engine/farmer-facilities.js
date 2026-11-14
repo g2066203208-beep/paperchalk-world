@@ -5,13 +5,15 @@
  * essence just to play a basic card.
  */
 (function(root){'use strict';
-const DEFINITIONS=Object.freeze({
- 'farm-field':Object.freeze({id:'farm-field',name:'农田',footprint:[1,1],hp:4,role:'production',family:'character'}),
- 'plant-tree':Object.freeze({id:'plant-tree',name:'植树',footprint:[1,1],hp:5,role:'defense',family:'character'}),
- 'water-well':Object.freeze({id:'water-well',name:'水井',footprint:[1,1],hp:5,role:'support',family:'character'}),
- 'scarecrow':Object.freeze({id:'scarecrow',name:'稻草人',footprint:[1,1],hp:1,role:'decoy',family:'character'}),
- 'windmill':Object.freeze({id:'windmill',name:'风车磨坊',footprint:[2,2],hp:7,role:'conversion',family:'character'})
-});
+// Exactly the same definition objects that decks and artwork lookup use.
+const catalog=root.PaperchalkCardCatalog;
+if(!catalog)throw Error('Registered card catalog missing');
+const DEFINITIONS=Object.freeze(Object.fromEntries(catalog.facilities()
+ .filter(c=>c.characterId==='farmer-engineer-farmer')
+ .map(c=>[c.id,Object.freeze({
+  id:c.id,name:c.name,footprint:c.footprint,
+  hp:c.facilityHp,role:c.facilityRole,family:c.family
+ })])));
 const ESSENCE_TYPES=['material','life','magic'];
 function create(options={}){
  const cap=Number.isInteger(options.maxEssence)?options.maxEssence:5;
@@ -108,5 +110,5 @@ function create(options={}){
  return Object.freeze({place,nextTurn,intercept,grant,spend,steal,remove,reset,
   get snapshot(){return snapshot();}});
 }
-root.PaperchalkFarmerFacilities=Object.freeze({version:'1.0.0',DEFINITIONS,create});
+root.PaperchalkFarmerFacilities=Object.freeze({version:'1.1.0-card-registry',DEFINITIONS,create});
 })(window);
