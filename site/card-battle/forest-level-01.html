@@ -264,7 +264,7 @@ let vp=I(),proj=I(),view=I(),camera={
 function resize(){
  const rect=canvas.getBoundingClientRect();
  // Keep CSS-space geometry intact without 2x-3x device-pixel fill on phones.
- const dpr=Math.min(window.devicePixelRatio||1,rect.width<700?1.25:1.5);
+ const dpr=Math.min(window.devicePixelRatio||1,rect.width<700?1.25:1.5)*renderScale;
  w=Math.max(1,Math.round(rect.width*dpr));h=Math.max(1,Math.round(rect.height*dpr));
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
  gl.viewport(0,0,w,h);
@@ -681,10 +681,26 @@ function drawTerrainParticles(){
  gl.depthMask(true);gl.disable(gl.BLEND);
 }
 let previousFrameTime=0,drawCalls=0,averageFrameMs=16.67;
+let renderScale=1,frameSamples=0,lastQualityChangeAt=0;
 function frame(timeMs){
  now=timeMs/1000;
  const dt=previousFrameTime?Math.min(.05,now-previousFrameTime):1/60;
- if(previousFrameTime)averageFrameMs=averageFrameMs*.93+(now-previousFrameTime)*1000*.07;
+ if(previousFrameTime){
+  averageFrameMs=averageFrameMs*.93+(now-previousFrameTime)*1000*.07;
+  frameSamples++;
+ }
+ // Adapt only pixel fill. Keep CSS card sizes, world-space targeting and
+ // physical 3D meshes identical. Low-end devices get performance headroom.
+ if(frameSamples>14&&now-lastQualityChangeAt>1.8){
+  const minQuality=canvas.getBoundingClientRect().width<700?.80:.72;
+  if(averageFrameMs>48&&renderScale>minQuality){
+   renderScale=Math.max(minQuality,+(renderScale-.10).toFixed(2));
+   lastQualityChangeAt=now;
+  }else if(averageFrameMs<23&&renderScale<1){
+   renderScale=Math.min(1,+(renderScale+.05).toFixed(2));
+   lastQualityChangeAt=now;
+  }
+ }
  drawCalls=0;
  sceneTransition.update(now);
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
@@ -829,7 +845,8 @@ window.__forestLevelDebug={
  get effects(){return fx.snapshot();},
  get performance(){return {drawCalls,averageFrameMs:+averageFrameMs.toFixed(2),
   canvasPixels:canvas.width*canvas.height,devicePixelRatio:window.devicePixelRatio,
-  renderRatio:+(canvas.width/canvas.getBoundingClientRect().width).toFixed(2)};},
+  renderRatio:+(canvas.width/canvas.getBoundingClientRect().width).toFixed(2),
+  adaptiveQualityScale:renderScale};},
  get sceneSwitch(){return sceneTransition.snapshot(now);},
  switchScene(){return sceneTransition.toggle(now);},
  get environment(){return {id:forestProps.scene,props:forestProps.propCount,
