@@ -11,10 +11,15 @@ async function clickCard(page,id){
  await page.mouse.click(at.x,at.y);return at;
 }
 async function verifyBox(page,kind){
- await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.geometry==='single-static-seven-bay-whitebox'&&
+ await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.geometry==='seven-bay-walnut-felt-case'&&
  window.__sceneCardHUD.snapshot.visible.filter(p=>p.kind==='deck').length===7,{timeout:20000});
  const b=await page.evaluate(()=>window.__sceneCardHUD.snapshot);
  assert.equal(b.compartments,7);
+ assert.equal(b.walnutShell,true,'one walnut shell, not a white plastic tray');
+ assert.equal(b.forestFelt,true,'seven card slots must have green felt lining');
+ assert.equal(b.brassInlay,true,'brass edge trim instead of an unfinished white rim');
+ assert.equal(b.engravedRoleTabs,7);
+ assert.equal(b.printedDeckFaces,7);
  assert.equal(b.physicalBoxes,1);
  assert.equal(b.roundedCase,true,'single rounded-corner 3D shell');
  assert.equal(b.beveledRim,true,'3D rounded hollow rim');
@@ -555,7 +560,54 @@ try{
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
  assert.equal(await phone.locator('#end-turn').isEnabled(),true);
  assert.ok((await phone.locator('#combat-phase').textContent()).includes('玩家行动'));
- assert.equal(await phone.locator('.enemy-intent').count(),2);
+ assert.equal(await phone.locator('.enemy-intent').count(),0,
+  'enemy attacks may animate but intentions are never previewed on-screen');
+ // Chapter 2 is a separate level manifest, not a copy-pasted combat engine.
+ // Check the actual Anima-registered farmer, two consecutive deployments and
+ // independent engineer attack on a real WebGL scene.
+ const chapter2=await browser.newPage({viewport:{width:1280,height:720},deviceScaleFactor:1});
+ chapter2.on('pageerror',e=>errors.push('CHAPTER2 '+String(e)));
+ await chapter2.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?level=forest-02',
+  {waitUntil:'networkidle',timeout:65000});
+ await chapter2.waitForFunction(()=>window.__forestLevelDebug?.levelId==='forest-02',null,{timeout:35000});
+ const levelTwo=await chapter2.evaluate(()=>window.__forestLevelDebug.state);
+ assert.equal(levelTwo.units.filter(u=>u.side==='ally').length,2);
+ assert.equal(levelTwo.units.filter(u=>u.side==='enemy').length,3);
+ assert.equal(levelTwo.phase,'deployment');
+ assert.ok(levelTwo.units.some(u=>u.id==='farmer'&&
+  u.characterId==='farmer-engineer-farmer'&&u.role==='engineer'&&!u.deployed));
+ await showTray(chapter2);
+ await clickCard(chapter2,'character:woodcutter');
+ const placeUnit=async(unitId,r,c)=>{
+  const slot=await chapter2.evaluate(({r,c})=>window.__forestLevelDebug.slotPoints
+   .find(p=>p.zone==='unit'&&p.side==='ally'&&p.r===r&&p.c===c).point,{r,c});
+  await chapter2.mouse.click(slot.x,slot.y);
+  await chapter2.waitForFunction(id=>window.__forestLevelDebug.state.units
+   .find(u=>u.id===id).deployed===true,unitId,{timeout:15000});
+ };
+ await placeUnit('woodcutter',1,0);
+ assert.equal(await chapter2.evaluate(()=>window.__forestLevelDebug.state.phase),'deployment',
+  'the farmer must still be deployed before the encounter starts');
+ await clickCard(chapter2,'character:farmer');
+ await placeUnit('farmer',1,2);
+ await chapter2.waitForFunction(()=>window.__forestLevelDebug.state.phase==='active',null,{timeout:10000});
+ const attachedFarmer=await chapter2.evaluate(()=>window.__forestLevelDebug.cardStats.units
+  .find(u=>u.unitId==='farmer'));
+ assert.equal(attachedFarmer.attack,2);
+ assert.equal(attachedFarmer.maxHp,10);
+ assert.equal(await chapter2.locator('.enemy-intent').count(),0);
+ await screenshot(chapter2,'08-second-level-farmer-and-woodcutter');
+ await clickCard(chapter2,'deck:engineer');
+ await chapter2.waitForFunction(()=>window.__forestHand.snapshot.count===1,null,{timeout:10000});
+ const engineerCard=await chapter2.evaluate(()=>window.__forestHand.snapshot.hand[0]);
+ assert.equal(engineerCard.profession,'engineer');
+ await clickCard(chapter2,'hand:'+engineerCard.instance);
+ assert.equal(await chapter2.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
+ await chapter2.waitForFunction(()=>window.__forestLevelDebug.combat.animation.last?.hitFired===true,
+  null,{timeout:15000});
+ assert.equal(await chapter2.evaluate(()=>window.__forestLevelDebug.combat.animation.last.attackerId),
+  'farmer','engineer hand card must be performed by the farmer, not the woodcutter');
+ await chapter2.close();
  // Probe a real DPR=2 backing buffer on a small mobile viewport; this used
  // to be hard-capped at 1.25 despite the device's actual pixel density.
  const retina=await browser.newPage({viewport:{width:180,height:320},deviceScaleFactor:2,isMobile:true,hasTouch:true});
