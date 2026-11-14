@@ -93,7 +93,18 @@ void main(){
    illumination*=1.+.12*smoothstep(.10,.80,dapple)*visibility;
   }
  }
- float subtleSpec=pow(max(0.,dot(reflect(-light,normal),normalize(vec3(0.,1.,1.)))),45.)*.035;
+ // Material-specific roughness: grass/soil matte, stone satin, bark diffuse,
+ // paper softly fibrous; separate high-intensity gold response below.
+ float roughness=.78;
+ if(uMaterialKind>.5&&uMaterialKind<1.5)roughness=.97;
+ else if(uMaterialKind>1.5&&uMaterialKind<2.5)roughness=.95;
+ else if(uMaterialKind>2.5&&uMaterialKind<3.5)roughness=.72;
+ else if(uMaterialKind>3.5&&uMaterialKind<4.5)roughness=.86;
+ else if(uMaterialKind>4.5&&uMaterialKind<5.5)roughness=.93;
+ else if(uMetal>.5)roughness=.24;
+ float glossExponent=mix(84.,8.,roughness);
+ float glossStrength=mix(.12,.006,roughness);
+ float subtleSpec=pow(max(0.,dot(reflect(-light,normal),normalize(vec3(0.,1.,1.)))),glossExponent)*glossStrength;
  vec3 finalColor=uUnlit>.5?base.rgb:base.rgb*(illumination+vec3(subtleSpec));
  if(uMetal>.5&&uUnlit<.5){
   vec3 viewDir=normalize(uCameraEye-vP),halfVec=normalize(light+viewDir);
@@ -116,5 +127,5 @@ void main(){
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.0.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'1.1.0',fragment});
 })(window);
