@@ -7,29 +7,11 @@ function create({canvas,fxCanvas,intentsLayer,numbersLayer,project,cardFor}){
  const ctx=fxCanvas.getContext('2d',{alpha:true});
  const labels=new Map();let dirty=false,frameWidth=0,frameHeight=0;
  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
- function sync(state){
-  const enemies=state.units.filter(u=>u.side==='enemy'&&u.alive);
-  const alive=new Set(enemies.map(u=>u.id));
-  for(const [id,node] of labels)if(!alive.has(id)){node.remove();labels.delete(id);}
-  for(const unit of enemies){
-   let node=labels.get(unit.id);
-   if(!node){
-    node=document.createElement('div');node.className='enemy-intent';
-    intentsLayer.appendChild(node);labels.set(unit.id,node);
-   }
-   const intent=state.intents.find(i=>i.unitId===unit.id);
-   node.classList.toggle('guard',intent?.kind==='guard');
-   const first=intent?.kind==='guard'?'◆ 防御 '+intent.block:'⚔ 攻击 '+(intent?.damage||unit.attack);
-   // Text nodes rather than HTML: future localization/character data is safe.
-   node.replaceChildren();
-   const label=document.createElement('strong');label.textContent=first;
-   const health=document.createElement('small');
-   // Attack/HP now live on physical card corners; floating labels show only
-   // future enemy actions and optional temporary shield state.
-   health.textContent=unit.currentBlock?'护盾 '+unit.currentBlock:'';
-   health.hidden=!unit.currentBlock;
-   node.append(label,health);
-  }
+ // Enemy actions and intent predictions are deliberately never displayed.
+ // The enemy turn still resolves normally with its physical card attack FX.
+ function sync(){
+  if(labels.size){for(const node of labels.values())node.remove();labels.clear();}
+  if(intentsLayer?.childElementCount)intentsLayer.replaceChildren();
  }
  function resize(){
   const rect=fxCanvas.getBoundingClientRect();
@@ -64,16 +46,6 @@ function create({canvas,fxCanvas,intentsLayer,numbersLayer,project,cardFor}){
  }
  function frame(time,visible){
   const rect=resize();
-  for(const [id,node] of labels){
-   const c=cardFor(id);
-   if(!c){node.hidden=true;continue;}
-   node.hidden=false;
-   const at=project(c.homeX,c.y,c.homeZ);
-   node.style.transform='translate(-50%,-100%) translate('+Math.round(at.x)+'px,'+
-    Math.round(at.y-23)+'px)';
-   node.style.left='0';node.style.top='0';
-   if(at.x<-80||at.x>rect.width+80||at.y<-40||at.y>rect.height+65)node.hidden=true;
-  }
   if(!visible){if(dirty){ctx.clearRect(0,0,rect.width,rect.height);dirty=false;}return;}
   dirty=true;
   ctx.clearRect(0,0,rect.width,rect.height);
@@ -113,5 +85,5 @@ function create({canvas,fxCanvas,intentsLayer,numbersLayer,project,cardFor}){
  return Object.freeze({sync,hit,guard,frame,reset,
   get snapshot(){return{intentLabels:labels.size,fxActive:dirty,frameWidth,frameHeight};}});
 }
-root.PaperchalkCombatFeedback=Object.freeze({version:'1.0.0',create});
+root.PaperchalkCombatFeedback=Object.freeze({version:'1.1.0',create});
 })(window);
