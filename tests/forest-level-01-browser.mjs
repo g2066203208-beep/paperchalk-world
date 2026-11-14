@@ -112,17 +112,42 @@ async function verifyFixedCamera(page,kind){
  assert.ok((frame.maxX-frame.minX)/frame.width>.76,'complete 16x6 board and two facility rails must fit together');
  if(kind==='desktop')assert.ok((frame.maxY-frame.minY)/frame.height>.40,
    'fixed high angle should use more of the desktop height');
+ // Locked yaw/elevation must survive all input, but wheel zoom must work.
  await page.evaluate(()=>{
   const c=window.__battleCamera;
-  c.rotate(700,400);c.pan(-900,300);c.zoom(.25);c.reset();
+  c.rotate(700,400);c.pan(-900,300);
+  const el=document.getElementById('stage'),rect=el.getBoundingClientRect();
+  el.dispatchEvent(new WheelEvent('wheel',{
+   deltaY:-200,clientX:rect.left+rect.width*.5,
+   clientY:rect.top+rect.height*.43,bubbles:true,cancelable:true
+  }));
  });
- await page.waitForTimeout(150);
+ const requested=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(requested.desiredDistance<before.desiredDistance-1,'wheel zoom-in changes target distance');
+ await page.waitForTimeout(420);
+ const enlarged=await page.evaluate(()=>window.__battleCamera.snapshot());
+ assert.ok(enlarged.distance<before.distance-1,'smooth wheel zoom-in changes actual camera distance');
+ assert.equal(enlarged.yaw,before.yaw,'wheel never rotates the locked camera');
+ assert.equal(enlarged.elevation,before.elevation,'wheel never pitches the locked camera');
+ assert.deepEqual(enlarged.target,before.target,'wheel never pans the locked camera');
+ await page.evaluate(()=>window.__battleCamera.reset());
+ await page.waitForTimeout(1100);
  const after=await page.evaluate(()=>window.__battleCamera.snapshot());
- assert.deepEqual(after.eye,before.eye,'no zoom, pan, orbit or recenter movement');
- assert.deepEqual(after.target,before.target,'camera target remains fixed');
- assert.equal(after.distance,before.distance);
- console.log('FOREST_FIXED_CAMERA_PASS',JSON.stringify({kind,eye:after.eye,elevation:after.elevation,
-  distance:after.distance,viewport:after.viewport,frame}));
+ assert.deepEqual(after.target,before.target,'reset preserves fixed camera target');
+ assert.ok(Math.abs(after.distance-before.distance)<.003,'reset restores viewport-fitted distance');
+ console.log('FOREST_LOCKED_ANGLE_WHEEL_ZOOM_PASS',JSON.stringify({kind,defaultDistance:before.distance,
+  zoomedDistance:enlarged.distance,resetDistance:after.distance,viewport:after.viewport,frame}));
+}
+async function verifyRestingCardsStatic(page,kind){
+ // Allow spring placement to finish; then rendered model matrices cannot change
+ // until an actual play/attack/flip/move command occurs.
+ await page.waitForTimeout(1200);
+ const first=await page.evaluate(()=>window.__forestLevelDebug.placedCardMatrices);
+ assert.ok(first?.length>0,'played cards exist on the 3D board');
+ await page.waitForTimeout(520);
+ const second=await page.evaluate(()=>window.__forestLevelDebug.placedCardMatrices);
+ assert.deepEqual(second,first,'placed cards must not float, wobble, rotate or hover-pulse');
+ console.log('FOREST_PLACED_CARDS_STATIC_PASS',JSON.stringify({kind,cards:first.length}));
 }
 async function verifyStage01ColorAndLighting(page,kind){
  const look=await page.evaluate(()=>window.__forestLevelDebug?.visualLook);
@@ -302,7 +327,7 @@ try{
  await pc.waitForTimeout(700);
  await screenshot(pc,'02a-farmland-installed-left-facility-desktop');
  await hideTray(pc);
- await pc.waitForTimeout(300);
+ await verifyRestingCardsStatic(pc,'desktop');
  await screenshot(pc,'02b-farmland-board-clear-no-deck-desktop');
  await verifyApprovedReferenceLayout(pc,'desktop');
  await showTray(pc);
@@ -355,7 +380,7 @@ try{
  await phone.waitForTimeout(450);
  await screenshot(phone,'07-farmland-installed-right-facility-phone');
  await hideTray(phone);
- await phone.waitForTimeout(300);
+ await verifyRestingCardsStatic(phone,'phone');
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
  assert.deepEqual(errors,[]);
  console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,physical3DFrame:true,simpleGoldRing:true,cssFrameRemoved:true,sixVisualLayers:true,realBeforeAfter:true,errors}));
