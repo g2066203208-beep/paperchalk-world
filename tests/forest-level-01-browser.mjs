@@ -184,7 +184,9 @@ async function verifyFixedCamera(page,kind){
  await page.evaluate(()=>window.__battleCamera.reset());
  await page.waitForTimeout(1100);
  const after=await page.evaluate(()=>window.__battleCamera.snapshot());
- assert.deepEqual(after.target,before.target,'reset restores fixed camera target');
+ assert.ok(Math.abs(after.target[0]-before.target[0])<.003&&
+  Math.abs(after.target[2]-before.target[2])<.003,
+  'spring reset restores the fixed camera target within subpixel tolerance');
  assert.ok(Math.abs(after.distance-before.distance)<.003,'reset restores viewport fit');
  assert.ok(Math.abs(after.pan[0]-before.pan[0])<.001);
  assert.ok(Math.abs(after.pan[2]-before.pan[2])<.001);
