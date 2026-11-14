@@ -16,6 +16,7 @@ function create(o){
  const textMap={engineer:'⚙',guardian:'盾',warrior:'斧',ranger:'弓',
   skirmisher:'影',medic:'药',summoner:'兽'};
  const cache=new Map(),labelCache=new Map(),portraitCache=new Map(),entered=new Map();
+ const coveredEdgeBatchCache=new Map();let edgeBatchesDrawn=0;
  const animated=new Set(),exitGhosts=new Map();
  const viewFov=39*Math.PI/180,cameraZ=14.5;
  let spanW=18,spanH=10,width=1920,height=1080,frame=0;
@@ -142,6 +143,42 @@ function create(o){
  // An obscured card is still a separate physical 3D paper slab.
  // Only the uppermost face requires the full five-pass textured renderer;
  // covered cards need their actual 3D edge, which is all a player can see.
+ function coveredEdgeMesh(count){
+  if(coveredEdgeBatchCache.has(count))return coveredEdgeBatchCache.get(count);
+  const verts=[],indices=[],radius=.105,steps=6;
+  const corners=[[cardW/2-radius,cardH/2-radius,0],
+   [-cardW/2+radius,cardH/2-radius,90],
+   [-cardW/2+radius,-cardH/2+radius,180],
+   [cardW/2-radius,-cardH/2+radius,270]];
+  const ring=[];
+  for(const [cx,cy,start] of corners)
+   for(let i=0;i<=steps;i++){
+    const t=(start+i*15)*Math.PI/180;
+    ring.push([cx+radius*Math.cos(t),cy+radius*Math.sin(t)]);
+   }
+  for(let n=0;n<count;n++){
+   const z=.10+n*.041;
+   for(let j=0;j<ring.length;j++){
+    const pt=ring[j],next=ring[(j+1)%ring.length],base=verts.length/8;
+    for(const [xy,depth] of [[pt,-cardD/2],[next,-cardD/2],
+      [next,cardD/2],[pt,cardD/2]]){
+     const len=Math.hypot(xy[0]/cardW,xy[1]/cardH)||1;
+     verts.push(xy[0],xy[1],z+depth,
+      xy[0]/cardW/len,xy[1]/cardH/len,0,.5,.5);
+    }
+    indices.push(base,base+1,base+2,base,base+2,base+3);
+   }
+  }
+  const mesh=o.makeGeom(verts,indices);
+  coveredEdgeBatchCache.set(count,mesh);
+  return mesh;
+ }
+ function drawCoveredBatch(pos,count){
+  if(!count)return;
+  const M=mul(mul(T(pos.x,pos.y,0),RX(-1.18)),S(pos.scale,pos.scale,1));
+  renderGeom(coveredEdgeMesh(count),M,o.pileRim);
+  cardDrawCalls+=count;edgeBatchesDrawn++;
+ }
  function drawCoveredPileCard(p,fxId){
   const motion=o.objectFX?.sample(fxId,frame);
   if(motion&&motion.phase!=='steady'&&motion.scale<=.025)return;
@@ -244,25 +281,43 @@ function create(o){
   // Physical cards themselves are the piles. No static black/opaque slabs
   // underneath: they would remain visible when the entire scene shrinks out.
   const activeCardIds=new Set();
+  edgeBatchesDrawn=0;
   for(const pos of positions.filter(p=>p.kind==='deck')){
    const actions=o.remainingCards?.(pos.profession)||[];
-   actions.forEach((card,n)=>{
-    // Every stack is separate in game state; the seven cards use the SAME
-    // temporary face texture/color and SAME orientation in this prototype.
-    const planeDepth=.10+n*.041;
-    const layer={...pos,id:pos.id,
-      x:pos.x+(n%3-1)*.0013,
-      y:pos.y+Math.sin(1.18)*planeDepth,
-      z:Math.cos(1.18)*planeDepth,
-      angle:(n%3-1)*.0014};
-    const tex=makeTextTexture({title:card.name,profession:'warrior',
-      family:card.family,back:false});
+   // The invisible covered surfaces need only their distinct paper edges.
+   // When idle, bake those edges into ONE shared mesh per physical stack.
+   // During animation each card still scales independently.
+   const covered=actions.slice(0,-1);
+   const canBatch=covered.every(card=>{
+    const id='hud-pile:'+card.instance;
+    activeCardIds.add(id);startCardMotion(id,Math.min(.19,covered.indexOf(card)*.017));
+    return o.objectFX?.sample(id,frame).phase==='steady';
+   });
+   if(canBatch&&covered.length&&o.makeGeom)drawCoveredBatch(pos,covered.length);
+   else covered.forEach((card,n)=>{
     const fxId='hud-pile:'+card.instance;
     activeCardIds.add(fxId);
     startCardMotion(fxId,Math.min(.19,n*.017));
-    if(n===actions.length-1)renderPhysicalCard(layer,tex,{fxId});
-    else drawCoveredPileCard(layer,fxId);
+    const planeDepth=.10+n*.041;
+    drawCoveredPileCard({...pos,
+     x:pos.x+(n%3-1)*.0013,
+     y:pos.y+Math.sin(1.18)*planeDepth,
+     z:Math.cos(1.18)*planeDepth,
+     angle:(n%3-1)*.0014},fxId);
    });
+   if(actions.length){
+    const n=actions.length-1,card=actions[n],fxId='hud-pile:'+card.instance;
+    activeCardIds.add(fxId);startCardMotion(fxId,Math.min(.19,n*.017));
+    const planeDepth=.10+n*.041;
+    const tex=makeTextTexture({title:card.name,profession:'warrior',
+     family:card.family,back:false});
+    renderPhysicalCard({...pos,
+      x:pos.x+(n%3-1)*.0013,
+      y:pos.y+Math.sin(1.18)*planeDepth,
+      z:Math.cos(1.18)*planeDepth,
+      angle:(n%3-1)*.0014
+    },tex,{fxId});
+   }
   }
   for(const pos of positions.filter(p=>p.kind==='character')){
    const deck=positions.find(q=>q.kind==='deck'&&q.profession===pos.profession);
@@ -421,10 +476,11 @@ function create(o){
     animatedCardMeshes:animated.size,
     sharedSceneTransitions:true,
     coveredCardEdgeLOD:true,
+    edgeBatchesDrawn,
     vanishingCards:exitGhosts.size
    };
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'4.4.0-seven-piles',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'4.5.0-seven-piles',create});
 })(window);
