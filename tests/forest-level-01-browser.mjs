@@ -55,6 +55,7 @@ try{
  assert.equal(init.hud.physicalDeckCards,70,'7 separate 10-card decks must each have physical face-up cards');
  assert.equal(init.hud.physicalBoxes,0,'no giant wooden box or trays');
  assert.equal(init.hud.faceUpDeck,true,'all cards face up');
+ assert.equal(init.hud.coveredCardEdgeLOD,true,'hidden card faces are not redrawn 63 times');
  assert.equal(init.hud.stagedCharacterCards,1,'hero is on top of deck');
  assert.equal(init.hud.hasDomCards,false,'no webpage cards');
  assert.equal(init.domHand,false);
@@ -73,6 +74,12 @@ try{
  }));
  assert.equal(initialBattle.environment.id,'forest');
  assert.equal(initialBattle.environment.material,'grass');
+ assert.ok(initialBattle.environment.ground.width>=40&&initialBattle.environment.ground.depth>=45,
+  'forest must have continuous modeled floor OUTSIDE the 18 tactical cells');
+ const scenePerf=await page.evaluate(()=>window.__forestLevelDebug.performance);
+ assert.ok(scenePerf.drawCalls<390,'covered card LOD should reduce WebGL draw calls');
+ assert.ok(scenePerf.canvasPixels>0);
+ console.log('FOREST_PERFORMANCE',JSON.stringify(scenePerf));
  assert.equal(await page.locator('#scene-switch').count(),1);
  await page.locator('#scene-switch').click();
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.sceneSwitch.phase),'exiting');
@@ -96,6 +103,8 @@ try{
   hand:window.__forestHand.snapshot
  }));
  assert.equal(newScene.environment.material,'dirt','scene switch must change true world material');
+ assert.ok(newScene.environment.ground.width>=40&&newScene.environment.ground.depth>=45,
+  'rock clearing must also have a real surrounding 3D floor');
  assert.ok(newScene.environment.props>10,'stone clearing needs its own real 3D props');
  assert.deepEqual(newScene.state,initialBattle.state,'scene switch must NOT restart battle state');
  assert.deepEqual(newScene.hand,initialBattle.hand,'scene switch must NOT touch any action decks');
@@ -214,6 +223,10 @@ try{
  const mobileInit=await mobile.evaluate(()=>({hud:window.__sceneCardHUD.snapshot,hand:window.__forestHand.snapshot,
    slots:window.__forestLevelDebug.slotPoints.filter(s=>s.side==='ally').map(s=>({x:s.point.x,y:s.point.y}))}));
  assert.equal(mobileInit.hand.count,0);
+ const mobilePerf=await mobile.evaluate(()=>window.__forestLevelDebug.performance);
+ assert.ok(mobilePerf.renderRatio<=1.26,'mobile physical resolution is capped for performance');
+ assert.ok(mobilePerf.drawCalls<390);
+ console.log('MOBILE_PERFORMANCE',JSON.stringify(mobilePerf));
  assert.equal(mobileInit.hud.physicalDeckCards,70);
  assert.equal(mobileInit.hud.stagedCharacterCards,1);
  assert.equal(mobileInit.hud.visible.filter(p=>p.kind==='deck').length,7);
