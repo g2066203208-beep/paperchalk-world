@@ -42,13 +42,13 @@ function create(o){
  function state(){return o.caseSnapshot?.(now)||{phase:'closed',angle:0,faceSpin:0,canDraw:false,canPlay:false};}
  function hingeMatrix(d,s){
   // Main hinge: fixed along the back-upper LONG edge of the shell (X axis).
-  // Rotating around Y made the previous lid turn sideways like a sword.
-  return mul(mul(T(0,d.y+d.h/2,.29),RX(s.angle)),T(0,-d.h/2,0));
+  // The front-facing opening arc keeps the panel outside the seven-slot shell.
+  return mul(mul(T(0,d.y+d.h/2,.29),RX(-s.angle)),T(0,-d.h/2,0));
  }
  function panelMatrix(d,s){
   // Second X-parallel axle runs THROUGH the middle of the movable panel.
   // A genuine reversible face: deck-side cards remain welded to this matrix.
-  return mul(hingeMatrix(d,s),RX(s.faceSpin));
+  return mul(hingeMatrix(d,s),RX(-s.faceSpin));
  }
  function worldFromLocal(M,x,y,z){
   return{x:M[0]*x+M[4]*y+M[8]*z+M[12],

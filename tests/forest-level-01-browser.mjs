@@ -23,7 +23,10 @@ async function auditFrames(page,phase,frameCount,label){
   if(phase==='closing'){
    assert.ok(hud.lidGeometry.panelInnerNormalZ>.70,
     'drawn inner surface must remain facing the player, never edge-on');
-   assert.equal(hud.handCardsOnReversibleFace,10);
+   const expectedHand=await page.evaluate(()=>window.__forestHand.snapshot.count);
+   assert.equal(hud.handCardsOnReversibleFace,expectedHand);
+   assert.ok(hud.lidGeometry.centerZ>=.285,
+    'lid must sweep in FRONT of case, never disappear behind the card trays');
    if(lastHeight!==null)assert.ok(hud.lidGeometry.centerY<=lastHeight+.0002,
     'hinge panel must move smoothly down toward case, not jump');
    lastHeight=hud.lidGeometry.centerY;
