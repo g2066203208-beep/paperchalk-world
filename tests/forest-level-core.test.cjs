@@ -8,6 +8,8 @@ function load(file){
 }
 load('engine/voxel-terrain.js');
 load('engine/level-engine.js');
+load('engine/card-registry.js');
+load('data/card-packs.js');
 load('levels/forest-01.js');
 load('engine/bandit-roster.js');
 load('levels/forest-02.js');
