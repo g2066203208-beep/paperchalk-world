@@ -135,7 +135,7 @@ html,body{background:#d8ded0}
 <div hidden><button id="roster-trigger" type="button">人物图鉴</button></div>
 <div id="character-gallery" role="dialog" aria-label="农民组织人物卡图鉴" aria-modal="true" hidden>
  <div class="gallery-sheet"><header><strong>农民组织 · 已收录人物卡</strong><button type="button" id="gallery-close">关闭</button></header>
- <p>第一关固定由伐木工出战，农夫和猎户已注册在人物卡库中，可用于后续关卡配队。</p>
+ <p>第一关使用伐木少女；第二关农夫（工程师）正式加入可部署队伍。猎户已收录，后续关卡加入。</p>
  <div id="gallery-cards" class="gallery-cards"></div></div>
 </div>
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button><button id="level-next" type="button" hidden>第二关 · 农夫加入</button></section></div>
@@ -160,7 +160,7 @@ html,body{background:#d8ded0}
 <script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=4"></script>
-<script src="./engine/scene-card-hud.js?v=17"></script>
+<script src="./engine/scene-card-hud.js?v=18"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -653,7 +653,7 @@ const combatController=window.PaperchalkCombatTurnController.create({
  onGuard:r=>combatFeedback.guard(r.unitId,r.block),
  onDefeated:r=>objectFX.exit('unit:'+r.unitId,now,{duration:.40}),
  onFinished:state=>showLevelEnd(state),
- onNotice:t=>message(t)
+ onNotice:t=>{if(!t.startsWith('敌方回合'))message(t);}
 });
 window.__forestCombat=Object.freeze({
  get busy(){return combatController.busy;},
