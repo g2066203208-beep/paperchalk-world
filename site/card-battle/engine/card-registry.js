@@ -7,7 +7,10 @@ const SCOPES=['profession','faction','character','enemy'];
 const TYPES=['attack','guard','resource','facility','support','enemy-action'];
 const ESSENCES=['material','life','magic'];
 const freezeCard=x=>Object.freeze({...x,
-  ...(x.footprint?{footprint:Object.freeze([...x.footprint])}:{})});
+  ...(x.footprint?{footprint:Object.freeze([...x.footprint])}:{}),
+  ...(x.interactions?{interactions:Object.freeze(x.interactions.map(action=>Object.freeze({
+   ...action,...(action.grant?{grant:Object.freeze({...action.grant})}:{})
+  })))}:{})});
 function create(){
  const packs=new Map(),cards=new Map(),byScope=new Map(SCOPES.map(scope=>[scope,[]]));
  function registerPack(pack){
@@ -43,6 +46,16 @@ function create(){
    if(card.type==='resource'&&(!ESSENCES.includes(card.essence)||
      !Number.isInteger(card.amount)||card.amount<=0))
     throw Error('Resource card needs typed essence: '+card.id);
+   if(card.interactions&&(!Array.isArray(card.interactions)||
+    card.interactions.some(action=>!action||!action.cardId||
+      !action.grant||!ESSENCES.includes(action.grant.essence)||
+      !Number.isInteger(action.grant.amount)||action.grant.amount<0)))
+    throw Error('Card interactions require a valid target and typed essence: '+card.id);
+   if(card.type==='enemy-action'&&(
+    !['attack','guard','raid','rally'].includes(card.kind)||
+    (['attack','raid'].includes(card.kind)&&(!Number.isFinite(card.damage)||card.damage<0))||
+    (['guard','rally'].includes(card.kind)&&(!Number.isFinite(card.block)||card.block<0))))
+    throw Error('Invalid registered enemy skill: '+card.id);
    if(card.type==='attack'&&(!Number.isFinite(card.power)||card.power<0))
     throw Error('Attack needs power: '+card.id);
    if(card.type==='guard'&&(!Number.isFinite(card.block)||card.block<=0))
@@ -82,7 +95,7 @@ function create(){
   scopes:Object.fromEntries([...byScope].map(([k,v])=>[k,v.length])),
   names:[...packs.keys()]};}
  return Object.freeze({registerPack,cardsFor,forProfession,forArchetype,facilities,get,
-  get snapshot(){return snapshot();},version:'1.0.1'});
+  get snapshot(){return snapshot();},version:'1.1.0-validated-interactions'});
 }
 root.PaperchalkCardRegistry=Object.freeze({version:'1.0.0',create});
 })(window);
