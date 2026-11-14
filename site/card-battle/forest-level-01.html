@@ -566,8 +566,8 @@ function playWorldLifecycle(mode,t){
  // The same registered providers drive both forest and clearing.
  // Individual renderers pivot around each prop's original world position.
  sceneLifecycle.play(mode,scene,t);
- // UI is a separate visual object, not a forest prop.
- sceneHUD.animateScene(mode,t);
+ // The card case is persistent player UI, not world scenery: never
+ // shrink every deck/hand card toward the center of the tray during travel.
 }
 sceneTransition=window.PaperchalkSceneTransitions.create({
  scenes:['forest','clearing'],initial:'forest',
