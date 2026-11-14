@@ -77,6 +77,18 @@ assert.equal(level.getUnit('forest-foe-b').currentHp,1);
 assert.equal(level.actAttack('woodcutter','forest-foe-b').phase,'victory');
 assert.equal(level.snapshot().phase,'victory');
 assert.equal(level.actAttack('woodcutter','forest-foe-b').ok,false);
+// A full no-action battle must eventually end in defeat, not run forever.
+level.reset();level.deploy('woodcutter',1,1);
+let enemyRounds=0;
+while(level.phase==='active'&&enemyRounds<20){
+ const result=level.endTurn();assert.equal(result.ok,true);
+ while(level.snapshot().enemyQueue.length)level.resolveEnemyAction();
+ if(level.phase==='enemy')assert.equal(level.beginPlayerTurn().ok,true);
+ enemyRounds++;
+}
+assert.equal(level.phase,'defeat','enemy attacks must reach a terminal outcome');
+assert.equal(level.getUnit('woodcutter').alive,false);
+assert.ok(enemyRounds>=5&&enemyRounds<20);
 level.reset();assert.equal(level.snapshot().turn,1);
 assert.equal(level.snapshot().phase,'deployment');
 assert.equal(level.getUnit('woodcutter').deployed,false);
