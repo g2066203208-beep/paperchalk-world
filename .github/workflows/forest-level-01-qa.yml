@@ -25,6 +25,8 @@ on:
       - 'site/card-battle/engine/forest-dressing.js'
       - 'site/card-battle/engine/stylized-materials.js'
       - 'site/card-battle/engine/profession-decks.js'
+      - 'site/card-battle/engine/farmer-facilities.js'
+      - 'site/card-battle/engine/bandit-roster.js'
       - 'site/card-battle/ui/forest-hand.css'
       - 'site/card-battle/ui/forest-hand.js'
       - 'site/card-battle/ui/farmer-roster.js'
@@ -38,6 +40,7 @@ on:
       - 'tests/combat-turn-controller.test.cjs'
       - 'tests/card-stat-badges.test.cjs'
       - 'tests/profession-decks.test.cjs'
+      - 'tests/farmer-facilities.test.cjs'
       - 'tests/object-animations.test.cjs'
       - 'tests/scene-transitions.test.cjs'
       - 'tests/character-registry.test.cjs'
@@ -83,6 +86,9 @@ jobs:
           node tests/object-animations.test.cjs
           node tests/scene-transitions.test.cjs
           node tests/profession-decks.test.cjs
+          node tests/farmer-facilities.test.cjs
+          node --check site/card-battle/engine/farmer-facilities.js
+          node --check site/card-battle/engine/bandit-roster.js
           node tests/character-registry.test.cjs
       - name: Install Chromium + Playwright
         run: |
