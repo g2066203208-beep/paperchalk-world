@@ -8,7 +8,7 @@ const factory=root.PaperchalkProfessionDecks;
 if(!factory)throw Error('Profession model missing');
 const units=root.__forestLevelDebug?.state?.units||[];
 const ownedCharacters=units.filter(u=>u.side==='ally').map(u=>({
- id:u.id,name:u.name,profession:u.role,characterId:u.characterId,
+ id:u.id,name:u.name,profession:u.role,faction:u.faction||null,characterId:u.characterId,
  portrait:root.PaperchalkCharacterRegistry?.get(u.characterId)?.portrait||null
 }));
 const model=factory.create({maxHand:10,ownedCharacters,seed:618231});
