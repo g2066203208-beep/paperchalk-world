@@ -45,7 +45,7 @@ function create(gl){
   gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,texture);
   gl.uniform1i(uniforms.cloudMap,3);
   gl.uniform1f(uniforms.cloudTime,time);
-  gl.uniform1f(uniforms.cloudStrength,enabled?.29:0);
+  gl.uniform1f(uniforms.cloudStrength,enabled ? 0.29 : 0);
   gl.activeTexture(gl.TEXTURE0);
  }
  return Object.freeze({bind,get snapshot(){return{
