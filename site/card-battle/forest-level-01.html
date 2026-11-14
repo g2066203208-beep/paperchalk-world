@@ -87,7 +87,7 @@ html,body{background:#d8ded0}
 <div id="battle-title" aria-hidden="true">林间小路 · 第一关</div>
 <div id="note" aria-live="polite"></div>
 <button type="button" id="deck-drawer-toggle" aria-expanded="false" aria-label="展开七槽牌盒">展开牌盒 ▲</button>
-<div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>农田牌测试：点农田，再点左右设施区空格<br>固定俯视镜头 · 棋盘不旋转、不平移</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
+<div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>农田牌测试：点农田，再点左右设施区空格<br>固定俯视角 · 滚轮只放大 · 放大后右键拖动或移到屏幕边缘平移 · 0 复位</div><div id="level-hud" aria-live="polite">生命 12/12 · 敌人 2/2</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button>
  <div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div>
@@ -101,7 +101,7 @@ html,body{background:#d8ded0}
 </div>
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
 <script src="./engine/voxel-terrain.js?v=4"></script>
-<script src="./engine/battle-camera.js?v=3"></script>
+<script src="./engine/battle-camera.js?v=4"></script>
 <script src="./engine/level-engine.js?v=2"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
@@ -206,13 +206,15 @@ const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 // Camera is a reusable module, independent from voxel geometry and game rules.
 const orbitCamera=window.PaperchalkBattleCamera.create({
  // FINAL STEP-1 camera framing matched to the USER-APPROVED 16:9 reference:
- // Entire 16x6 physical board at a locked 78° view; wheel zoom is allowed.
- // The camera keeps its angle and center; press 0 to restore viewport fit.
+ // Entire 16x6 board is the farthest zoom. Zoom in to unlock constrained pan.
+ // Mouse screen-edge scrolling / right-drag / middle-drag, two-finger mobile pan.
+ // Camera yaw/elevation are locked; 0 always restores the full-board fit.
  // Physical cards, facility rules, seven-slot drawer and art are unchanged.
  target:[0,-1.65,.70],distance:50.7,yaw:0,elevation:78*Math.PI/180,
  fov:33,fixed:true,fitAspect:1.68,
  minDistance:18,maxDistance:105,minElevation:78*Math.PI/180,maxElevation:78*Math.PI/180,
- maxPanX:0,maxPanZ:0
+ maxPanX:terrain.width*.5,maxPanZ:terrain.depth*.5,safeFactor:.87,
+ edgeSpeed:12
 });
 window.__battleCamera=orbitCamera;
 document.getElementById('zoom-in').addEventListener('click',()=>orbitCamera.zoom(.78));
@@ -729,13 +731,15 @@ function track(e){
 }
 canvas.addEventListener('pointerdown',e=>{
  if(sceneTransition.busy){e.preventDefault();return;}
- if(sceneHUD.down(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
  const orbitTouch=e.pointerType==='touch'&&!active&&!closestCard(e.clientX,e.clientY);
- if(e.button!==2&&orbitCamera.pointerDown(e,orbitTouch)){
+ // Camera gestures take priority over card picking only for explicit drag
+ // buttons or a two-finger touch. Single-finger taps still play cards.
+ if(orbitCamera.pointerDown(e,orbitTouch)){
   e.preventDefault();pointerDown=null;handDown=null;
   if(dragCard){dragCard.dragged=false;dragCard=null;}
   canvas.style.cursor='grabbing';return;
  }
+ if(sceneHUD.down(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
  if(e.button!==0)return;
  track(e);
  if(active){pointerDown={placement:true,x:e.clientX,y:e.clientY};return;}
@@ -743,30 +747,32 @@ canvas.addEventListener('pointerdown',e=>{
  if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}
 });
 window.addEventListener('pointermove',e=>{
+ orbitCamera.pointerHover(e,!sceneTransition.busy&&e.target===canvas?canvas.getBoundingClientRect():null);
  if(sceneTransition.busy)return;
- if(sceneHUD.move(e)){canvas.style.cursor='pointer';return;}
- if(selectedStagedId&&level.phase==='deployment')previewCharacterAt(selectedStagedId,e.clientX,e.clientY);
+ // Do not let a board-card hit test steal an ongoing camera drag.
  if(orbitCamera.pointerMove(e)){
   if(dragCard){dragCard.dragged=false;dragCard=null;}
   pointerDown=null;handDown=null;overSlot=null;
   canvas.style.cursor='grabbing';return;
  }
+ if(sceneHUD.move(e)){canvas.style.cursor='pointer';return;}
+ if(selectedStagedId&&level.phase==='deployment')previewCharacterAt(selectedStagedId,e.clientX,e.clientY);
  if(handDown&&Math.hypot(e.clientX-handDown.x,e.clientY-handDown.y)>7)handDown.moved=true;
  if(pointerDown?.card&&!dragCard&&Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y)>7){
  /* tutorial units fixed by level manifest */}
  track(e);canvas.style.cursor=dragCard?'grabbing':active?'crosshair':hoverCard?'grab':'default';
 });
 window.addEventListener('pointerup',e=>{
- if(sceneTransition.busy){pointerDown=null;handDown=null;return;}
+ if(sceneTransition.busy){orbitCamera.pointerUp(e);pointerDown=null;handDown=null;return;}
+ if(orbitCamera.pointerUp(e)){
+  pointerDown=null;handDown=null;overSlot=null;
+  canvas.style.cursor=active?'crosshair':'default';return;
+ }
  if(sceneHUD.up(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
  if(selectedStagedId&&level.phase==='deployment'){
   if(deployCharacterAt(selectedStagedId,e.clientX,e.clientY)){
    pointerDown=null;handDown=null;return;
   }
- }
- if(orbitCamera.pointerUp(e)){
-  pointerDown=null;handDown=null;
-  canvas.style.cursor=active?'crosshair':'default';return;
  }
  track(e);
  if(handDown){if(handDown.moved&&onBoard&&active?.id===handDown.id)drop(overSlot);handDown=null;return;}
@@ -776,13 +782,15 @@ window.addEventListener('pointerup',e=>{
  pointerDown=null;canvas.style.cursor=active?'crosshair':'default';
 });
 window.addEventListener('pointercancel',e=>{orbitCamera.pointerUp(e);if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;handDown=null;});
+canvas.addEventListener('pointerleave',()=>orbitCamera.pointerHover(null,null));
+window.addEventListener('blur',()=>orbitCamera.cancel());
 canvas.addEventListener('wheel',e=>{
  if(sceneHUD.hit(e))return;
  e.preventDefault();
  orbitCamera.zoom(Math.exp(Math.max(-500,Math.min(500,e.deltaY))*.00125));
 },{passive:false});
 canvas.addEventListener('dblclick',e=>{if(active)return;let c=closestCard(e.clientX,e.clientY);if(c?.side==='enemy')tapUnit(c);});
-// Right mouse button is reserved for camera orbit; cards still flip by double click.
+// Right/middle mouse drag pans ONLY after zooming in; rotation stays locked.
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%7)*.07;});}
@@ -869,6 +877,7 @@ function frame(timeMs){
  drawCalls=0;
   
   sceneTransition.update(now);
+ orbitCamera.edgePan(dt,!sceneTransition.busy&&!active&&!dragCard&&!pointerDown&&!handDown&&!selectedStagedId);
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
  shadowSystem?.update(now,()=>{
