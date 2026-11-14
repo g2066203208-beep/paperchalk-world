@@ -182,7 +182,13 @@ async function verifyFixedCamera(page,kind){
  assert.ok(Math.abs(edge.pan[2]-before.pan[2])<=edge.safePan.z+.001);
  // Restore precise approved layout before any card gameplay/screenshot test.
  await page.evaluate(()=>window.__battleCamera.reset());
- await page.waitForTimeout(1100);
+ // Software WebGL can render at very low FPS: wait for actual damped pose,
+ // not an arbitrary wall-clock interval that leaves camera partially panned.
+ await page.waitForFunction(()=>{
+  const q=window.__battleCamera.snapshot();
+  return Math.abs(q.distance-q.fitDistance)<.003&&
+   Math.abs(q.target[0])<.003&&Math.abs(q.target[2]-.70)<.003;
+ },{timeout:9000});
  const after=await page.evaluate(()=>window.__battleCamera.snapshot());
  assert.ok(Math.abs(after.target[0]-before.target[0])<.003&&
   Math.abs(after.target[2]-before.target[2])<.003,
