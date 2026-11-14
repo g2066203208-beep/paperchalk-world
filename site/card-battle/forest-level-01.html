@@ -144,7 +144,8 @@ html,body{background:#d8ded0}
 <script src="./engine/card-stat-badges.js?v=2"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/card-registry.js?v=1"></script>
-<script src="./data/card-packs.js?v=1"></script>
+<script src="./data/card-packs.js?v=2"></script>
+<script src="./engine/card-effect-engine.js?v=1"></script>
 <script src="./engine/bandit-roster.js?v=2"></script>
 <script src="./levels/forest-02.js?v=2"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
@@ -296,6 +297,10 @@ const terrainTargets=terrain.snapshot().map(t=>({id:'terrain-'+t.c+'-'+t.r,kind:
 const terrainTarget=(c,r)=>terrainTargets[r*terrain.cols+c];
 const farmRules=window.PaperchalkFarmerFacilities.create({maxEssence:5});
 const farmDefs=window.PaperchalkFarmerFacilities.DEFINITIONS;
+const cardEffects=window.PaperchalkCardEffectEngine.create({
+ level,hand:()=>window.__forestHand,facilities:farmRules,
+ catalog:window.PaperchalkCardCatalog
+});
 const handDefs=[
 {id:'dig',kind:'terrain',name:'挖掘',direction:-1},
 {id:'build',kind:'terrain',name:'抬升',direction:1}
@@ -862,10 +867,8 @@ function drop(s){
  const c=makeCard(active,s);c.x=preview.x;c.z=preview.z;c.y=terrain.cell(s.tileC,s.tileR).height+.7;c.placeStart=now;
  if(active.kind==='facility'){
   const areas=occupiedFacilitySlots(active,s);
-  const placed=farmRules.place(active.id,s,areas);
-  if(!placed.ok)return message('设施位置已占用或范围不足');
-  const consumed=window.__forestHand?.consumeSelected('facility');
-  if(!consumed){farmRules.remove(placed.facility.id);return message('必须从农夫牌堆摸取设施牌');}
+  const placed=cardEffects.placeFacility(s,areas);
+  if(!placed.ok)return message('无法建造：设施位置或手牌不合法');
   c.facilityId=placed.facility.id;c.coveredSlots=areas;
   c.homeX=areas.reduce((n,q)=>n+q.x,0)/areas.length;
   c.homeZ=areas.reduce((n,q)=>n+q.z,0)/areas.length;
@@ -1246,33 +1249,25 @@ function requestEndTurn(){return combatController.endTurn(now);}
 endTurnButton.addEventListener('click',requestEndTurn);
 function useSelectedUtility(){
  if(level.phase!=='active'||combatController.busy)return false;
- const selected=window.__forestHand?.selectedCard?.();
- if(!selected||!['guard','resource'].includes(selected.type))return false;
- const owner=level.getUnit(selected.ownerId);
- if(!owner?.alive||!owner.deployed){message('先把对应角色部署到九宫格');return false;}
- const played=window.__forestHand.consumeSelected(selected.type);
- if(!played)return false;
- if(played.type==='guard'){
-  const amount=level.grantBlock(owner.id,played.block||3);
-  combatFeedback.guard(owner.id,amount);
-  message(owner.name+'使用架斧 · 格挡 +'+amount);
+ const action=cardEffects.playUtility();
+ if(!action.ok)return false;
+ const owner=level.getUnit(action.ownerId);
+ if(action.type==='guard'){
+  combatFeedback.guard(action.ownerId,action.block);
+  message(owner.name+'使用'+action.card.name+' · 格挡 +'+action.block);
  }else{
-  const gained=farmRules.grant(played.essence||'material',played.amount||1);
-  message(owner.name+'使用伐木 · 材料精华 +'+gained);
+  const names={material:'材料',life:'生命',magic:'魔法'};
+  message(owner.name+'使用'+action.card.name+' · '+names[action.essence]+'精华 +'+action.amount);
  }
  sync();syncLevelHud();return true;
 }
 useSelectedButton.addEventListener('click',useSelectedUtility);
 function tapFacility(card){
- if(card.kind!=='facility'||card.def.id!=='plant-tree')return false;
- const selected=window.__forestHand?.selectedCard?.();
- if(!selected||selected.id!=='lumber'||!level.getUnit(selected.ownerId)?.deployed)return false;
- const used=window.__forestHand.consumeSelected('resource');
- if(!used)return false;
- farmRules.remove(card.facilityId);
- objectFX.exit('card:'+card.id,now,{duration:.4});
- const gain=farmRules.grant('material',3);
- message('伐木少女砍树 · 树木撤除 · 材料精华 +'+gain);
+ if(card.kind!=='facility'||!card.facilityId)return false;
+ const result=cardEffects.interactFacility(card.facilityId);
+ if(!result.ok)return false;
+ objectFX.exit('card:'+card.id,now,{duration:.40});
+ message(result.card.name+' · '+result.target.name+'拆除 · 材料精华 +'+result.amount);
  sync();syncLevelHud();return true;
 }
 function tapUnit(card){
@@ -1328,6 +1323,7 @@ window.__forestLevelDebug={
  }));},
  get essence(){return farmRules.snapshot.essence;},
  get farmRules(){return farmRules.snapshot;},
+ get cardEffects(){return cardEffects.catalog;},
  get facilities(){return cards.filter(c=>c.kind==='facility').map(c=>({
   id:c.def.id,cardId:c.id,name:c.def.name,profession:c.def.profession,
   tileC:c.slot?.tileC,tileR:c.slot?.tileR,flank:c.slot?.flank,
