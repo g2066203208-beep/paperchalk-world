@@ -247,7 +247,8 @@ document.getElementById('terrain-hint').innerHTML='<strong>'+level.config.title+
  ' · 第'+['一','二'][levelNumber-1]+'关 · 16×6</strong>'+
  '<br>我方 '+level.snapshot().units.filter(u=>u.side==='ally').map(u=>u.name).join(' + ')+
  ' · 敌人 ×'+foeTotal+
- '<br>只有已获得角色有牌堆；按加入顺序从左到右排列，手动摸牌上限10张';
+ '<br>只有已获得角色有牌堆；按加入顺序从左到右排列，手动摸牌上限10张'+
+ (levelNumber===2?'<br>农夫：摸设施牌 → 点击手牌 → 点击设施区建造；伐木牌可砍己方树木':'');
 const combatChoreo=window.PaperchalkCombatChoreography.create();
 const fx=window.PaperchalkVoxelAnimations.create(terrain,{seed:618231});
 const objectFX=window.PaperchalkObjectAnimations.create({
@@ -767,7 +768,7 @@ for(const d of handDefs){
 // Facility cards only enter from the farmer's ACTUAL personal draw pile.
 function selectedFacilityDef(card){
  const def=farmDefs[card?.id];
- if(!def||card.type!=='facility'||card.ownerId!=='farmer')return null;
+ if(!def||card.type!=='facility'||card.characterId!=='farmer-engineer-farmer')return null;
  return {id:def.id,kind:'facility',name:def.name,footprint:def.footprint,
   profession:'engineer',faction:'farmer',handInstance:card.instance,
   src:def.id==='farm-field'?'../assets/card-battle/farmer/farm-field.png':null};
