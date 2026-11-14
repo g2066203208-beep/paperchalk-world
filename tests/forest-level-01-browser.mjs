@@ -125,7 +125,7 @@ try{
  assert.ok(desktopPerf.drawCalls<450);
  const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  phone.on('pageerror',e=>errors.push(String(e)));
- await phone.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html',{waitUntil:'networkidle',timeout:60000});
+ await phone.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?caseqa=1',{waitUntil:'networkidle',timeout:60000});
  await ready(phone);await shot(phone,'09-mobile-closed');
  await auditFrames(phone,'opening',13,'phone-opening');
  await openCase(phone);await shot(phone,'10-mobile-open-seven');
