@@ -71,6 +71,9 @@ html,body{background:#d8ded0}
 /* The battlefield rim and facility plaques are real WebGL models. */
 #terrain-hint{top:10px;left:12px;max-width:230px;font-size:11px}
 #camera-controls{display:none!important}
+#camera-controls.is-zoomed{display:flex!important}
+#camera-controls button:not(#camera-reset){display:none!important}
+#camera-reset{font-size:11px!important;padding:0 11px!important;min-width:0!important}
 #battle-title{position:fixed;top:12px;left:50%;transform:translateX(-50%);
  z-index:3;pointer-events:none;border-radius:36px;padding:6px 30px;
  background:linear-gradient(180deg,#345332eb,#213e2bf0);color:#f8f6d8;
@@ -881,6 +884,9 @@ function frame(timeMs){
   sceneTransition.update(now);
  orbitCamera.edgePan(dt,!sceneTransition.busy&&!active&&!dragCard&&!pointerDown&&!handDown&&!selectedStagedId);
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
+ // A tiny reset control appears only after zoom, so phones without a 0 key
+ // can safely return to the original full-board view.
+ document.getElementById('camera-controls').classList.toggle('is-zoomed',orbitCamera.snapshot().zoomed);
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
  shadowSystem?.update(now,()=>{
    // Actual geometry casts into a depth map from the fixed sun direction.
