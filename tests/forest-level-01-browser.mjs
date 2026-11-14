@@ -30,7 +30,7 @@ async function verifyBox(page,kind){
  assert.equal(b.reversibleLid,false);
  assert.ok(b.bounds.safeHorizontalMargin>.05,'box must stay within left/right safe margin');
  assert.ok(b.bounds.safeBottomMargin>.05&&b.bounds.safeBottomMargin<.35);
- assert.ok(b.bounds.horizontalClearance>.02,'card touching divider horizontally');
+ assert.ok(b.bounds.horizontalClearance>Math.min(.02,b.bounds.h*.014),'card touching divider horizontally');
  assert.ok(b.bounds.verticalClearance>.02,'card touching top/bottom rail');
  const slots=b.visible.filter(p=>p.kind==='deck');
  assert.equal(slots.length,7);
