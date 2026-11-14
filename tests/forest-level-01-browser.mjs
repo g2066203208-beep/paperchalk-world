@@ -12,23 +12,28 @@ async function clickCard(page,id){
 }
 async function verifyBox(page,kind){
  await page.waitForFunction(()=>window.__sceneCardHUD?.snapshot?.geometry==='seven-bay-walnut-felt-case'&&
- window.__sceneCardHUD.snapshot.visible.filter(p=>p.kind==='deck').length===7,{timeout:20000});
+  window.__sceneCardHUD.snapshot.visible.filter(p=>p.kind==='deck').length===
+   window.__forestHand.snapshot.roster.length,{timeout:20000});
  const b=await page.evaluate(()=>window.__sceneCardHUD.snapshot);
  assert.equal(b.compartments,7);
  assert.equal(b.walnutShell,true,'one walnut shell, not a white plastic tray');
  assert.equal(b.forestFelt,true,'seven card slots must have green felt lining');
  assert.equal(b.brassInlay,true,'brass edge trim instead of an unfinished white rim');
- assert.equal(b.engravedRoleTabs,7);
- assert.equal(b.printedDeckFaces,7);
+ assert.equal(b.engravedRoleTabs,0,'no job names engraved on the case');
+ assert.equal(b.printedDeckFaces,b.ownedCharacters.length);
  assert.equal(b.physicalBoxes,1);
  assert.equal(b.roundedCase,true,'single rounded-corner 3D shell');
  assert.equal(b.beveledRim,true,'3D rounded hollow rim');
- assert.equal(b.fittedCardStacks,true,'seven tight, rounded, thick white stacks');
+ assert.equal(b.fittedCardStacks,true,'owned characters each have a real physical stack');
  assert.ok(b.bounds.roundedCornerRadius>b.bounds.h*.14,'rounding must be substantial');
  assert.ok(b.bounds.slotGap/b.bounds.pitch<.11,'card piles must nearly fill each slot');
  assert.ok(b.bounds.horizontalClearance>.015&&b.bounds.verticalClearance>.015);
  assert.ok(b.bounds.cardWidth/b.bounds.pitch>.87,'no tiny cards surrounded by void');
- assert.equal(b.visibleDeckPiles,7);
+ assert.equal(b.visibleDeckPiles,b.ownedCharacters.length);
+ assert.equal(b.emptySlots,7-b.ownedCharacters.length);
+ assert.equal(b.ownedCharacters.length,kind==='level-two'?2:1);
+ assert.equal(b.ownedCharacters[0].id,'woodcutter');
+ if(kind==='level-two')assert.equal(b.ownedCharacters[1].id,'farmer');
  assert.equal(b.hasLid,false);
  assert.equal(b.hasHinge,false);
  assert.equal(b.flipAnimationEnabled,false);
@@ -38,8 +43,8 @@ async function verifyBox(page,kind){
  assert.ok(b.bounds.horizontalClearance>Math.min(.02,b.bounds.h*.014),'card touching divider horizontally');
  assert.ok(b.bounds.verticalClearance>.02,'card touching top/bottom rail');
  const slots=b.visible.filter(p=>p.kind==='deck');
- assert.equal(slots.length,7);
- for(let i=0;i<7;i++){
+ assert.equal(slots.length,b.ownedCharacters.length);
+ for(let i=0;i<slots.length;i++){
   assert.equal(slots[i].y,slots[0].y,'seven bays share baseline');
   assert.ok(i===0||slots[i].x>slots[i-1].x,'seven ordered bays');
   if(i)assert.ok(Math.abs(slots[i].x-slots[i-1].x-b.bounds.pitch)<.00001);
@@ -63,8 +68,9 @@ async function verifyTrayCollapsed(page,kind){
 async function showTray(page){
  await page.locator('#deck-drawer-toggle').click();
  await page.waitForFunction(()=>window.__sceneCardHUD?.collapsed===false&&
-  window.__sceneCardHUD.snapshot.visibleDeckPiles===7&&
-  window.__sceneCardHUD.snapshot.visible.filter(p=>p.kind==='deck').length===7,{timeout:20000});
+  window.__sceneCardHUD.snapshot.visibleDeckPiles===window.__forestHand.snapshot.roster.length&&
+  window.__sceneCardHUD.snapshot.visible.filter(p=>p.kind==='deck').length===
+   window.__forestHand.snapshot.roster.length,{timeout:20000});
  assert.equal(await page.locator('#deck-drawer-toggle').getAttribute('aria-expanded'),'true');
 }
 async function hideTray(page){
@@ -477,7 +483,7 @@ try{
   'static forest must visibly change when the cloud shadow travels');
  await verifyApprovedReferenceLayout(pc,'desktop');
  await showTray(pc);
- await clickCard(pc,'deck:warrior');
+ await clickCard(pc,'deck:woodcutter');
  await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(pc,'03-static-hand-drawn-desktop');
  const hand=await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].instance);
@@ -510,10 +516,11 @@ try{
  assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),0,
   'a new round MUST NOT automatically draw anything');
  // The physical box is already expanded from the first round.
- await clickCard(pc,'deck:guardian');
+ assert.equal(await pc.evaluate(()=>window.__sceneCardHUD.pointFor('deck:guardian')),null,
+  'no guardian character means NO guardian card pile');
+ await clickCard(pc,'deck:woodcutter');
  await pc.waitForFunction(()=>window.__forestHand.snapshot.count===1,null,{timeout:10000});
- assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].profession),'guardian',
-  'clicking guardian class box manually draws a guardian card, not a warrior default');
+ assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.hand[0].ownerId),'woodcutter');
  const heroAfterEnemy=await pc.evaluate(()=>window.__forestLevelDebug.state.units.find(u=>u.id==='woodcutter').currentHp);
  assert.ok(heroAfterEnemy<heroBeforeEnemy,'surviving enemies deal damage only in their turn');
  await screenshot(pc,'03c-round-two-desktop');
@@ -551,7 +558,7 @@ try{
  await screenshot(phone,'05-static-seven-bay-box-phone');
  await deploy(phone);
  await verifyCardStats(phone,'phone');
- await clickCard(phone,'deck:warrior');
+ await clickCard(phone,'deck:woodcutter');
  await phone.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(phone,'06-static-hand-phone');
  assert.equal(await phone.evaluate(()=>window.__forestHand.snapshot.count),1,
@@ -565,7 +572,7 @@ try{
  await verifyRestingCardsStatic(phone,'phone');
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
  assert.equal(await phone.locator('#end-turn').isEnabled(),true);
- assert.ok((await phone.locator('#combat-phase').textContent()).includes('玩家行动'));
+ assert.ok((await phone.locator('#combat-phase').textContent()).includes('回合'));
  assert.equal(await phone.locator('.enemy-intent').count(),0,
   'enemy attacks may animate but intentions are never previewed on-screen');
  // Chapter 2 is a separate level manifest, not a copy-pasted combat engine.
@@ -583,6 +590,8 @@ try{
  assert.ok(levelTwo.units.some(u=>u.id==='farmer'&&
   u.characterId==='farmer-engineer-farmer'&&u.role==='engineer'&&!u.deployed));
  await showTray(chapter2);
+ await verifyBox(chapter2,'level-two');
+ assert.equal(await chapter2.evaluate(()=>window.__sceneCardHUD.pointFor('deck:huntress')),null);
  await clickCard(chapter2,'character:woodcutter');
  const placeUnit=async(unitId,r,c)=>{
   const slot=await chapter2.evaluate(({r,c})=>window.__forestLevelDebug.slotPoints
@@ -603,10 +612,11 @@ try{
  assert.equal(attachedFarmer.maxHp,10);
  assert.equal(await chapter2.locator('.enemy-intent').count(),0);
  await screenshot(chapter2,'08-second-level-farmer-and-woodcutter');
- await clickCard(chapter2,'deck:engineer');
+ await clickCard(chapter2,'deck:farmer');
  await chapter2.waitForFunction(()=>window.__forestHand.snapshot.count===1,null,{timeout:10000});
  const engineerCard=await chapter2.evaluate(()=>window.__forestHand.snapshot.hand[0]);
  assert.equal(engineerCard.profession,'engineer');
+ assert.equal(engineerCard.ownerId,'farmer');
  await clickCard(chapter2,'hand:'+engineerCard.instance);
  assert.equal(await chapter2.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
  await chapter2.waitForFunction(()=>window.__forestLevelDebug.combat.animation.last?.hitFired===true,
