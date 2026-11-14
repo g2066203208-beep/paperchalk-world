@@ -32,8 +32,15 @@ function create(options={}){
   if(!Array.isArray(tiles)||tiles.length!==def.footprint[0]*def.footprint[1])
    return {ok:false,reason:'invalid-footprint'};
   const keys=tiles.map(t=>t.tileC+':'+t.tileR);
-  if(new Set(keys).size!==keys.length||structures.some(f=>tilesOf(f)
-    .some(t=>keys.includes(t.tileC+':'+t.tileR))))
+  const [width,height]=def.footprint;
+  const expected=new Set();
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++)
+   expected.add((slot.tileC+x)+':'+(slot.tileR+y));
+  // The gameplay engine must reject nonrectangular/offset footprints even if
+  // a scene UI mistakenly passes a list with the correct number of tiles.
+  if(new Set(keys).size!==keys.length||keys.some(key=>!expected.has(key)))
+   return {ok:false,reason:'invalid-footprint'};
+  if(structures.some(f=>tilesOf(f).some(t=>keys.includes(t.tileC+':'+t.tileR))))
    return {ok:false,reason:'occupied'};
   const f={id:'building-'+nextId++,cardId,name:def.name,tileC:slot.tileC,
    tileR:slot.tileR,flank:slot.flank,tiles:tiles.map(t=>({tileC:t.tileC,tileR:t.tileR})),
@@ -91,15 +98,22 @@ function create(options={}){
   }
   return {ok:true,changes,state:snapshot()};
  }
- function intercept(targetTileR,damage){
-  if(!Number.isInteger(targetTileR)||damage<=0)return {blocked:0};
+ function intercept(target,damage){
+  // New form includes target world tile, so a tree on the left cannot shield
+  // units across the entire map. Legacy (row, damage) remains supported.
+  const targetTileC=typeof target==='object'?target?.tileC:null;
+  const targetTileR=typeof target==='object'?target?.tileR:target;
+  const amount=typeof target==='object'?target?.damage:damage;
+  if(!Number.isInteger(targetTileR)||!Number.isFinite(amount)||amount<=0||
+   (targetTileC!==null&&!Number.isInteger(targetTileC)))return {blocked:0};
   const candidates=structures.filter(f=>
-   Math.abs(f.tileR-targetTileR)<=1&&
-   (f.cardId==='scarecrow'||f.cardId==='plant-tree'));
+   (f.cardId==='scarecrow'||f.cardId==='plant-tree')&&
+   tilesOf(f).some(t=>Math.abs(t.tileR-targetTileR)<=1&&
+    (targetTileC===null||Math.abs(t.tileC-targetTileC)<=3)));
   const f=candidates.find(x=>x.cardId==='scarecrow')||
    candidates.find(x=>x.cardId==='plant-tree');
   if(!f)return {blocked:0};
-  const blocked=f.cardId==='scarecrow'?damage:Math.min(damage,2,f.hp);
+  const blocked=f.cardId==='scarecrow'?amount:Math.min(amount,2,f.hp);
   f.hp-=f.cardId==='scarecrow'?1:blocked;
   const destroyed=f.hp<=0;
   const result={blocked,facilityId:f.id,cardId:f.cardId,destroyed};
@@ -110,5 +124,5 @@ function create(options={}){
  return Object.freeze({place,nextTurn,intercept,grant,spend,steal,remove,reset,
   get snapshot(){return snapshot();}});
 }
-root.PaperchalkFarmerFacilities=Object.freeze({version:'1.1.0-card-registry',DEFINITIONS,create});
+root.PaperchalkFarmerFacilities=Object.freeze({version:'1.2.0-bounded-footprints-and-interception',DEFINITIONS,create});
 })(window);
