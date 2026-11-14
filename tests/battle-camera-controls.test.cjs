@@ -46,7 +46,7 @@ for(const [w,h] of [[1920,1080],[390,844]]){
  approx(c.snapshot().desiredDistance,start.fitDistance);
  assert.equal(c.snapshot().zoomed,false,'far limit is the exact original camera');
  c.zoom(10);
- approx(c.snapshot().desiredDistance,start.fitDistance,'cannot go beyond original');
+ approx(c.snapshot().desiredDistance,start.fitDistance); // cannot go beyond original
  c.zoom(.52);
  c.pan(-100000,-100000);
  inBounds(c,start);
