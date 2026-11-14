@@ -22,7 +22,8 @@
 | `engine/profession-decks.js` | 七个独立牌盒、手动摸牌、10 张共享上限、弃牌/重洗 | 不包含浏览器或 WebGL API |
 | `engine/combat-turn-controller.js` | 玩家主动攻击、结束回合、顺序调度敌人、结算时机 | 以注入的引擎/回调组合，不写森林特例 |
 | `engine/combat-choreography.js` | 前摇、爆发、短命中停顿、后仰、收招 | 只计算动画状态，无 DOM/WebGL |
-| `engine/combat-feedback.js` | 斩击线、伤害数字、敌人意图显示 | 浏览器渲染适配层 |
+| `engine/combat-feedback.js` | 斩击线、瞬时伤害数字、敌人下一步行动意图 | 浏览器渲染适配层，不重复显示永久生命数值 |
+| `engine/card-stat-badges.js` | 人物卡右下生命、左下攻击数值牌徽，实时同步战斗状态 | **实体卡牌的同一套 3D 矩阵**；非全局 HUD，设施卡不显示人物数值 |
 | `engine/battle-camera.js` | 固定俯视角、缩放、棋盘安全区平移 | 独立摄像机控制 |
 | `engine/voxel-terrain.js` | 地形、格点及 WebGL 网格生成 | 可在其他关卡复用 |
 | `engine/spatial-shadows.js` | 基于空间的 Shadow Map | 场景渲染功能 |
