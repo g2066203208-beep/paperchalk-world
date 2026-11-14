@@ -28,6 +28,7 @@ const badge=context.window.PaperchalkCardStatBadges.create({
  gl:fakeGl,cardW:1.60,cardH:2.40,cardD:.095,
  makeFace(w,h,r,z){faceShape={w,h,r,z};return faceShape;},
  T:(x,y,z)=>({x,y,z}),
+ S:(x,y,z)=>({scale:[x,y,z]}),
  mul:(base,offset)=>({base,offset}),
  renderGeom:(face,m,color,texture,unlit)=>draws.push({face,m,color,texture,unlit})
 });
@@ -55,6 +56,12 @@ unit.currentHp=7;
 badge.draw(model,unit);
 assert.equal(created.length,3,'damage updates only the health texture');
 assert.ok(labels.includes('7'),'health badge displays new current HP');
+badge.draw(model,unit,{health:.12});
+const healthPulse=draws.at(-1).m;
+assert.ok(healthPulse.offset.scale[0]>1.1&&healthPulse.offset.scale[0]<1.18,
+ 'hit animation only scales badge locally, never detaches it from the physical card');
+assert.strictEqual(healthPulse.base.base,model);
+assert.equal(created.length,3,'pulse reuses the cached health texture');
 assert.equal(badge.draw(model,null),0,'non-unit facilities show no attack/HP badges');
 assert.equal(badge.draw(model,{...unit,deployed:false}),0);
 badge.dispose();
