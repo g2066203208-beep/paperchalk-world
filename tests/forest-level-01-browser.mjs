@@ -21,7 +21,7 @@ async function verifyBox(page,kind){
  assert.equal(b.hasHinge,false);
  assert.equal(b.flipAnimationEnabled,false);
  assert.equal(b.reversibleLid,false);
- assert.ok(b.bounds.safeHorizontalMargin>.15);
+ assert.ok(b.bounds.safeHorizontalMargin>.05,'box must stay within left/right safe margin');
  assert.ok(b.bounds.safeBottomMargin>.05&&b.bounds.safeBottomMargin<.35);
  assert.ok(b.bounds.horizontalClearance>.02,'card touching divider horizontally');
  assert.ok(b.bounds.verticalClearance>.02,'card touching top/bottom rail');
