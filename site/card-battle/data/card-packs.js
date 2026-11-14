@@ -15,7 +15,9 @@ const packs=[
  {id:'woodcutter-character',scope:'character',profession:'warrior',
   characterId:'farmer-warrior-loli-lumberjack',cards:[
    {id:'lumber',name:'伐木',type:'resource',essence:'material',amount:1,
-    description:'获得1材料精华；砍倒己方树木可获得3材料精华'}
+    description:'获得1材料精华；砍倒己方树木可获得3材料精华',
+    interactions:[{cardId:'plant-tree',destroy:true,
+     grant:{essence:'material',amount:3}}]}
  ]},
  {id:'ranger-core',scope:'profession',profession:'ranger',cards:[
   {id:'aimed-shot',name:'瞄准射击',type:'attack',power:2},
