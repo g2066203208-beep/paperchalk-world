@@ -108,7 +108,7 @@ html,body{background:#d8ded0}
 <script src="./engine/object-animations.js?v=1"></script>
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=6"></script>
-<script src="./engine/physical-board-frame.js?v=2"></script>
+<script src="./engine/physical-board-frame.js?v=3"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
 <script src="./engine/scene-card-hud.js?v=16"></script>
 <script src="./engine/character-registry.js?v=1"></script>
@@ -167,7 +167,7 @@ const cardW=1.60,cardH=2.40,cardD=.095,slotW=1.70,slotH=2.52;
 const COLS=16,ROWS_PER_SIDE=3;
 // Shared terrain engine is the ONLY source for world coordinates and tile extents.
 const terrain=window.PaperchalkVoxelTerrain.create({
- cols:16,rows:6,tileW:2.65,tileD:3.23,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
+ cols:16,rows:6,tileW:2.65,tileD:3.34,centerX:0,centerZ:-1.1,topY:-.117,thickness:2.65,
   materials:{grass:{...window.PaperchalkVoxelTerrain.MATERIALS.grass,
    light:[.61,.77,.36,1],dark:[.47,.63,.29,1],variance:.012}},
  initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
@@ -182,11 +182,11 @@ let sceneTransition=null;
 const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 // Camera is a reusable module, independent from voxel geometry and game rules.
 const orbitCamera=window.PaperchalkBattleCamera.create({
- // STEP 1 ONLY: one stable Gwent-like high angle and composition. The full
- // existing 16x6 board, cards, facilities, deck box and materials are UNCHANGED.
- // Offset the focus toward the player's near edge so the field fills the region
- // between the top controls and the anchored seven-compartment box.
- target:[0,-1.65,.70],distance:52.4,yaw:0,elevation:78*Math.PI/180,
+ // FINAL STEP-1 camera framing matched to the USER-APPROVED 16:9 reference:
+ // Entire 16x6 physical board, fixed 78° view, projected board width ~84.8%,
+ // height ~66.3%, upper margin ~11.2% at 1920x1080, no scrolling/orbit.
+ // Physical cards, facility rules, seven-slot drawer and art are unchanged.
+ target:[0,-1.65,.70],distance:50.7,yaw:0,elevation:78*Math.PI/180,
  fov:33,fixed:true,fitAspect:1.68,
  minDistance:18,maxDistance:105,minElevation:78*Math.PI/180,maxElevation:78*Math.PI/180,
  maxPanX:0,maxPanZ:0

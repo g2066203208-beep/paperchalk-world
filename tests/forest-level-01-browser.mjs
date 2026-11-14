@@ -138,7 +138,8 @@ async function verifyPhysicalFrame(page,kind){
  assert.equal(mesh.boardCols,16);
  assert.equal(mesh.boardRows,6);
  assert.ok(mesh.cornerRadius>=.3,'thin border still has physical rounded corners');
- assert.ok(mesh.outerWidth-mesh.boardWidth<.65,'border must be thin and unobtrusive');
+ assert.ok(mesh.outerWidth-mesh.boardWidth<.45,'one thin muted gold ring, no chunky yellow bar');
+ assert.ok(Math.abs(mesh.railThickness-.175)<.01,'ring body must be slim');
  assert.ok(mesh.innerOpeningWidth>mesh.boardWidth,'do not overlap any terrain tile');
  assert.equal(mesh.lastDrawCalls,1,'ONE physical 3D ring only, no extra ornaments');
  assert.equal(await page.locator('#battle-ornament').count(),0,'remove floating yellow CSS frame entirely');
@@ -151,7 +152,18 @@ async function verifyApprovedReferenceLayout(page,kind){
  await page.waitForFunction(()=>window.__boardReferenceLayout?.snapshot?.boardTiles===96,{timeout:20000});
  const m=await page.evaluate(()=>window.__boardReferenceLayout.snapshot);
  assert.equal(m.boardTiles,96,'full 16 by 6 terrain remains physical');
- assert.ok(m.coverageX>.78,'board should occupy most horizontal visual space');
+ // Desktop appearance MUST match the user-approved reference, not the old
+ // GitHub screenshot: width ~85%, height ~66%, top margin ~11%.
+ if(kind==='desktop'){
+  assert.ok(m.coverageX>=.84&&m.coverageX<=.86,'reference desktop target: 85% board width');
+  assert.ok(m.coverageY>=.65&&m.coverageY<=.68,'reference desktop target: 66% board height');
+  assert.ok(m.top/m.viewport[1]>=.09&&m.top/m.viewport[1]<=.14,
+   'reference desktop target: top margin around 11%');
+  assert.ok(Math.abs((m.left+m.right)/2-m.viewport[0]/2)<=m.viewport[0]*.015,
+   'board must be horizontally centered');
+ }else{
+  assert.ok(m.coverageX>=.84&&m.coverageX<=.90,'portrait should fit the full 16-column world');
+ }
  // A complete 16-column board must be shown on a 390x844 portrait screen;
  // the desktop screenshot is the 16:9 visual target, not portrait's geometry.
  assert.ok(m.coverageY>(kind==='desktop'?.54:.13),

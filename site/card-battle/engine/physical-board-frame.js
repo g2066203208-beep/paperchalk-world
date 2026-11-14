@@ -9,10 +9,10 @@ function create(o){
  const {terrain,makeGeom,renderGeom,T,S,mul,appearance}=o;
  const W=terrain.width,D=terrain.depth;
  const cx=terrain.minX+W/2,cz=terrain.minZ+D/2;
- const outerWidth=W+.58,outerDepth=D+.58;
- const openingWidth=W+.08,openingDepth=D+.08;
- const cornerRadius=.34;
- const color=[.84,.66,.33,1];
+ const outerWidth=W+.41,outerDepth=D+.41;
+ const openingWidth=W+.06,openingDepth=D+.06;
+ const cornerRadius=.44;
+ const color=[.79,.74,.49,1];
  function outline(w,d,r){
   const points=[],rad=Math.min(r,w/2-.001,d/2-.001),steps=9;
   for(const [x,z,start] of [
@@ -28,8 +28,8 @@ function create(o){
  }
  function ringMesh(){
   const outer=outline(outerWidth,outerDepth,cornerRadius);
-  const inner=outline(openingWidth,openingDepth,.09);
-  const vertices=[],indices=[],top=.18,bottom=-.18;
+  const inner=outline(openingWidth,openingDepth,.15);
+  const vertices=[],indices=[],top=.12,bottom=-.13;
   function point(x,y,z,nx,ny,nz){
    const i=vertices.length/8;
    vertices.push(x,y,z,nx,ny,nz,x/outerWidth+.5,z/outerDepth+.5);
@@ -60,7 +60,7 @@ function create(o){
   boardCols:terrain.cols,boardRows:terrain.rows,
   boardWidth:W,boardDepth:D,outerWidth,outerDepth,
   innerOpeningWidth:openingWidth,innerOpeningDepth:openingDepth,
-  gapFromTileEdge:.04,cornerRadius,railThickness:.25
+  gapFromTileEdge:.03,cornerRadius,railThickness:.175
  });
  function draw(t){
   const pose=appearance?.('board-frame',t);
@@ -73,5 +73,5 @@ function create(o){
  }
  return Object.freeze({draw,get snapshot(){return {...info,lastDrawCalls};}});
 }
-root.PaperchalkPhysicalBoardFrame=Object.freeze({version:'1.1.0',create});
+root.PaperchalkPhysicalBoardFrame=Object.freeze({version:'1.2.0',create});
 })(window);
