@@ -7,6 +7,7 @@ const window={};
 const context=vm.createContext({window,Math,Map,Set,Array,Object,Number,Error});
 for(const pathPart of [
  'engine/level-engine.js','levels/forest-01.js',
+ 'engine/card-registry.js','data/card-packs.js',
  'engine/profession-decks.js','engine/combat-choreography.js',
  'engine/combat-turn-controller.js'
 ]){
