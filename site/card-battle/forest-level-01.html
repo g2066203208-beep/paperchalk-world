@@ -74,7 +74,7 @@ html,body{background:#d8ded0}
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
 <script src="./engine/scene-transitions.js?v=1"></script>
-<script src="./engine/forest-environment.js?v=3"></script>
+<script src="./engine/forest-environment.js?v=4"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
 <script src="./engine/scene-card-hud.js?v=10"></script>
 <script src="./engine/character-registry.js?v=1"></script>
@@ -324,6 +324,9 @@ function syncSceneSwitchLabel(){
 }
 function playWorldLifecycle(mode,t){
  const exit=mode==='exit';
+ const groundId='ground:'+forestProps.scene;
+ if(exit)objectFX.exit(groundId,t,{duration:.52});
+ else objectFX.enter(groundId,t,{duration:.85,overshoot:1.12});
  forestProps.propIds.forEach((id,i)=>{
   const time=t+(i%13)*.015;
   if(exit)objectFX.exit(id,time,{duration:.43});
@@ -781,6 +784,7 @@ function startForestLevel(){
    objectFX.enter('terrain:'+col+':'+row,now,{
     delay:Math.min(.19,(row*terrain.cols+col)*.013),duration:.44
    });
+ objectFX.enter('ground:forest',now,{duration:.77,overshoot:1.10});
  forestProps.propIds.forEach((id,i)=>objectFX.enter(id,now,{
   delay:Math.min(.26,i*.017),duration:.58
  }));
@@ -818,7 +822,7 @@ window.__forestLevelDebug={
  get sceneSwitch(){return sceneTransition.snapshot(now);},
  switchScene(){return sceneTransition.toggle(now);},
  get environment(){return {id:forestProps.scene,props:forestProps.propCount,
-  material:terrain.cell(0,0)?.kind};},
+  material:terrain.cell(0,0)?.kind,ground:forestProps.ground};},
  get objectAnimations(){return objectFX.stats(now);},
  objectPose(id){return objectFX.sample(id,now);},
  get slots(){return slotCenters.map(t=>({side:t.side,r:t.r,c:t.c,tileC:t.tileC,tileR:t.tileR,zone:t.zone}));},
