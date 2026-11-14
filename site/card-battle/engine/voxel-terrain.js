@@ -272,23 +272,38 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSe
  const texture=grainTexture(gl),base=I();
  const tileMatrix=(c,r)=>typeof tileTransform==='function'?(tileTransform(c,r)||base):base;
  const free=m=>{if(m){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}};
- let tiles=[],walls=[],seams=null,renderedRevision=-1;
+ let tiles=Array.from({length:grid.rows},()=>Array(grid.cols).fill(null));
+ let walls=[],wallGroups=Array.from({length:grid.rows},()=>Array.from({length:grid.cols},()=>[]));
+ let signatures=new Map(),seams=null,renderedRevision=-1,meshRebuilds=0;
+ const directions=[['north',0,-1],['south',0,1],['east',1,0],['west',-1,0]];
+ function signature(c,r){
+  const t=grid.cell(c,r);
+  const h=(cc,rr)=>{const n=grid.cell(cc,rr);return n?n.height.toFixed(5):'edge';};
+  return [t.kind,t.height.toFixed(5),h(c,r-1),h(c,r+1),h(c+1,r),h(c-1,r)].join(':');
+ }
  function rebuild(){
-  for(const row of tiles)for(const geo of row)free(geo);
-  for(const entry of walls)free(entry.mesh);
-  free(seams);walls=[];
-  tiles=Array.from({length:grid.rows},(_,r)=>Array.from({length:grid.cols},(_,c)=>{
+  // Previously EVERY terrain tween frame deleted and re-created all 18 tile
+  // meshes. Rebuild only the edited cell + neighbors with changed boundaries.
+  for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
+   const id=c+':'+r,next=signature(c,r);
+   if(signatures.get(id)===next)continue;
+   signatures.set(id,next);
+   free(tiles[r][c]);
+   for(const wall of wallGroups[r][c])free(wall.mesh);
+   wallGroups[r][c]=[];
    const t=grid.cell(c,r),bottomOutside=t.height-grid.levelStep;
-   for(const [dir,dx,dr] of [['north',0,-1],['south',0,1],['east',1,0],['west',-1,0]]){
+   for(const [dir,dx,dr] of directions){
     const neighbor=grid.cell(c+dx,r+dr);
     const lower=neighbor?neighbor.height:bottomOutside;
     if(t.height<=lower+.00001)continue;
-    const wall=roundedCliffMesh(grid,makeGeom,c,r,dir,lower);
-    if(wall)walls.push({c,r,mesh:wall,color:grid.materials[t.kind].side});
+    const mesh=roundedCliffMesh(grid,makeGeom,c,r,dir,lower);
+    if(mesh)wallGroups[r][c].push({c,r,mesh,color:grid.materials[t.kind].side});
    }
-   return tileSoftMesh(grid,makeGeom,c,r);
-  }));
-  seams=seamMesh(grid,makeGeom);
+   tiles[r][c]=tileSoftMesh(grid,makeGeom,c,r);
+   meshRebuilds++;
+  }
+  walls=wallGroups.flat(2);
+  free(seams);seams=seamMesh(grid,makeGeom);
   renderedRevision=grid.revision;
  }
  function draw(){
@@ -307,7 +322,8 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSe
   for(const entry of walls)free(entry.mesh);
   free(seams);gl.deleteTexture(texture);
  }
- return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return renderedRevision}};
+ return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return renderedRevision;},
+  get meshRebuilds(){return meshRebuilds;}};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'4.3.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'4.4.0',MATERIALS,create,createWebGLRenderer});
 })(window);
