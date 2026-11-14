@@ -16,6 +16,7 @@ function create(o){
  const textMap={engineer:'⚙',guardian:'盾',warrior:'斧',ranger:'弓',
   skirmisher:'影',medic:'药',summoner:'兽'};
  const cache=new Map(),labelCache=new Map(),portraitCache=new Map(),entered=new Map();
+ const animated=new Set(),exitGhosts=new Map();
  const viewFov=39*Math.PI/180,cameraZ=14.5;
  let spanW=18,spanH=10,width=1920,height=1080,frame=0;
  let scene=[],clickable=[],hoverId=null,press=null,selectedDrag=null,cardDrawCalls=0,boxDrawCalls=0;
@@ -129,8 +130,19 @@ function create(o){
   return mul(mat,S(scale,scale,1));
  }
  function renderPhysicalCard(p,tex,extra={}){
-  drawCard({hudMatrix:cardMatrix(p,extra),texture:tex,side:'ally'},frame);
+  const motion=extra.fxId&&o.objectFX?o.objectFX.sample(extra.fxId,frame):null;
+  if(motion?.scale<=.025&&motion?.phase!=='steady')return;
+  let model=cardMatrix(p,extra);
+  if(motion&&Math.abs(motion.scale-1)>.0001){
+   model=mul(model,S(motion.scale,motion.scale,motion.scale));
+  }
+  drawCard({hudMatrix:model,texture:tex,side:'ally'},frame);
   cardDrawCalls++;
+ }
+ function startCardMotion(id,delay=0){
+  if(animated.has(id))return;
+  animated.add(id);
+  o.objectFX?.enter(id,frame,{delay,duration:.46});
  }
  function boxLocal(p,local){
   let m=mul(T(p.x,p.y,p.z),RX(-1.03));
@@ -198,7 +210,17 @@ function create(o){
  function draw(now,w,h){
   frame=now;setupSize(w,h);
   const state=o.snapshot(),staged=o.staged?.()||[];
-  const positions=layout(state,staged);scene=positions;
+  const positions=layout(state,staged);
+  // An action card leaving the hand does not disappear in a single frame:
+  // keep a separate mesh until the shared shrink-out animation completes.
+  const nextHand=new Set(positions.filter(p=>p.kind==='hand').map(p=>p.id));
+  for(const old of scene){
+   if(old.kind!=='hand'||nextHand.has(old.id)||exitGhosts.has(old.id))continue;
+   const fxId='hud-hand:'+old.instance;
+   o.objectFX?.exit(fxId,frame,{duration:.30});
+   exitGhosts.set(old.id,{...old,fxId});
+  }
+  scene=positions;
   clickable=positions.map(p=>({...p,width:cardW*p.scale,height:cardH*p.scale}));
   const alive=new Set(positions.map(p=>p.id));
   for(const id of entered.keys())if(!alive.has(id))entered.delete(id);
@@ -208,6 +230,7 @@ function create(o){
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(viewFov,width/height,.1,80),T(0,0,-cameraZ)));
   for(const pile of positions.filter(p=>p.kind==='deck'))drawPileShadow(pile);
+  const activeCardIds=new Set();
   for(const pos of positions.filter(p=>p.kind==='deck')){
    const actions=o.remainingCards?.(pos.profession)||[];
    actions.forEach((card,n)=>{
@@ -221,28 +244,58 @@ function create(o){
       angle:(n%3-1)*.0014};
     const tex=makeTextTexture({title:card.name,profession:'warrior',
       family:card.family,back:false});
-    renderPhysicalCard(layer,tex);
+    const fxId='hud-pile:'+card.instance;
+    activeCardIds.add(fxId);
+    startCardMotion(fxId,Math.min(.19,n*.017));
+    renderPhysicalCard(layer,tex,{fxId});
    });
   }
   for(const pos of positions.filter(p=>p.kind==='character')){
    const deck=positions.find(q=>q.kind==='deck'&&q.profession===pos.profession);
-   renderPhysicalCard(pos,
-     portrait(pos.portrait,pos.profession));
+   const fxId='hud-character:'+pos.unitId;
+   activeCardIds.add(fxId);
+   startCardMotion(fxId,.20);
+   renderPhysicalCard(pos,portrait(pos.portrait,pos.profession),{fxId});
   }
   for(const pos of positions.filter(p=>p.kind==='hand')){
    const tex=makeTextTexture({title:pos.c.name,profession:pos.c.profession,
     family:pos.c.family});
-   const start=entered.get(pos.id)||frame,age=clamp((frame-start)/.35,0,1);
+   const fxId='hud-hand:'+pos.instance;
+   activeCardIds.add(fxId);
+   startCardMotion(fxId,0);
+   const start=entered.get(pos.id)??frame,age=clamp((frame-start)/.55,0,1);
    if(age<1){
     const deck=positions.find(q=>q.kind==='deck'&&q.profession===pos.c.profession);
     if(deck){
-     const u=Math.pow(1-age,3);
-     renderPhysicalCard({...pos,
-      x:pos.x+(deck.x-pos.x)*u,
-      y:pos.y+(deck.y-pos.y)*u+Math.sin(age*Math.PI)*.50,
-      z:pos.z+u*.1},tex);
-    }else renderPhysicalCard(pos,tex);
-   }else renderPhysicalCard(pos,tex);
+     // Lift FIRST along the pile's face normal; only then travel to the hand.
+     // Maintain a clear depth corridor above the other 3D cards throughout.
+     const lift=clamp(age/.28),travel=clamp((age-.20)/.70);
+     const eased=travel*travel*(3-2*travel);
+     const sourceY=deck.y+.60,sourceZ=.68;
+     const flyY=sourceY+(pos.y-sourceY)*eased+
+      Math.sin(Math.PI*travel)*.42;
+     const flyZ=sourceZ+(pos.z-sourceZ)*eased+
+      Math.sin(Math.PI*travel)*.77;
+     const flying={...pos,x:deck.x+(pos.x-deck.x)*eased,
+      y:flyY+(1-lift)*(-.13),z:flyZ};
+     renderPhysicalCard(flying,tex,{fxId});
+    }else renderPhysicalCard(pos,tex,{fxId});
+   }else renderPhysicalCard(pos,tex,{fxId});
+  }
+  // Consumed/discarded action cards shrink away independently of deck meshes.
+  for(const [id,ghost] of exitGhosts){
+   if(o.objectFX?.finished(ghost.fxId,frame)){
+    exitGhosts.delete(id);
+    o.objectFX.clear(ghost.fxId);
+    continue;
+   }
+   const tex=makeTextTexture({title:ghost.c.name,profession:ghost.c.profession,
+    family:ghost.c.family});
+   renderPhysicalCard(ghost,tex,{fxId:ghost.fxId});
+  }
+  for(const id of animated){
+   if(activeCardIds.has(id)||[...exitGhosts.values()].some(g=>g.fxId===id))continue;
+   animated.delete(id);o.objectFX?.clear(id);
   }
   gl.viewport(0,0,width,height);
   uniformVP(wasVP);
@@ -319,6 +372,9 @@ function create(o){
  }
  return Object.freeze({
   render:draw,hit:pick,move,down,up,pointFor,
+  resetAnimations(){
+   animated.clear();exitGhosts.clear();entered.clear();scene=[];
+  },
   get drawn(){return cardDrawCalls;},
   get snapshot(){
    const state=o.snapshot();
@@ -336,10 +392,12 @@ function create(o){
     geometry:'shared-battlefield-card-mesh',
     perspective:true,
     handLayout:'near-camera-fan',
-    backgroundPanel:false
+    backgroundPanel:false,
+    animatedCardMeshes:animated.size,
+    vanishingCards:exitGhosts.size
    };
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'4.0.0-seven-piles',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'4.1.0-seven-piles',create});
 })(window);
