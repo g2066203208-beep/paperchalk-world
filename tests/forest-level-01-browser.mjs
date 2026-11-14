@@ -348,6 +348,13 @@ try{
  await hideTray(pc);
  await verifyRestingCardsStatic(pc,'desktop');
  await screenshot(pc,'02b-farmland-board-clear-no-deck-desktop');
+ // Two real WebGL screenshots of exactly the same board, with no mouse
+ // movement or card animation. Only the world-space cloud shadow drifts.
+ const cloudStart=await pc.screenshot({path:folder+'/02c-cloud-shadow-now-desktop.png'});
+ await pc.waitForTimeout(3500);
+ const cloudLater=await pc.screenshot({path:folder+'/02d-cloud-shadow-3s-later-desktop.png'});
+ assert.notEqual(Buffer.compare(cloudStart,cloudLater),0,
+  'static forest must visibly change when the cloud shadow travels');
  await verifyApprovedReferenceLayout(pc,'desktop');
  await showTray(pc);
  await clickCard(pc,'deck:warrior');
