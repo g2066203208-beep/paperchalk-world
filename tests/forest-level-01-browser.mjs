@@ -138,6 +138,20 @@ async function verifyFixedCamera(page,kind){
  console.log('FOREST_LOCKED_ANGLE_WHEEL_ZOOM_PASS',JSON.stringify({kind,defaultDistance:before.distance,
   zoomedDistance:enlarged.distance,resetDistance:after.distance,viewport:after.viewport,frame}));
 }
+async function verifyCloudAndResolution(page,kind){
+ const initial=await page.evaluate(()=>({
+  clouds:window.__forestLevelDebug.cloudShadows,
+  perf:window.__forestLevelDebug.performance
+ }));
+ assert.equal(initial.clouds.enabled,true,'forest cloud shadows active');
+ assert.ok(initial.clouds.windWorldPerSecond[0]>0,'clouds should drift with wind');
+ await page.waitForTimeout(280);
+ const changed=await page.evaluate(()=>window.__forestLevelDebug.cloudShadows);
+ assert.ok(changed.time>initial.clouds.time+.1,'cloud shadow sampling time updates every frame');
+ assert.ok(initial.perf.renderedDevicePixelRatio>=.84,
+  'adaptive resolution must not lose over 16% of native 1x detail');
+ console.log('FOREST_MOVING_CLOUDS_HIDPI_PASS',JSON.stringify({kind,clouds:changed,performance:initial.perf}));
+}
 async function verifyRestingCardsStatic(page,kind){
  // Allow spring placement to finish; then rendered model matrices cannot change
  // until an actual play/attack/flip/move command occurs.
@@ -187,6 +201,10 @@ async function verifySixLayerVisualEffects(page,kind,enhanced=true){
  assert.equal(fx.enabled,enhanced);
  assert.equal(fx.material.drawCallsAdded,0);
  assert.equal(fx.material.source,'procedural-fallback-anima-asset-ready');
+ assert.deepEqual(fx.material.resolution,[1024,1024],'higher resolution 512-pixel individual material tiles');
+ assert.equal(fx.cloudShadows.enabled,enhanced,'clouds disable with visual baseline');
+ assert.equal(fx.cloudShadows.extraDrawCalls,0,'animated cloud projection has no extra draw calls');
+ assert.equal(fx.cloudShadows.extraShadowPasses,0,'cloud shadows must not re-render the sun shadow map');
  if(enhanced){
   assert.ok(fx.forest.treeCount>=40,'genuinely modeled outer 3D forest');
   assert.ok(fx.forest.flowers>=100,'batched daisy clusters');
@@ -312,6 +330,7 @@ try{
  await verifyPhysicalFrame(pc,'desktop');
  await verifySpatialShadowMap(pc,'desktop');
  await verifySixLayerVisualEffects(pc,'desktop');
+ await verifyCloudAndResolution(pc,'desktop');
  await pc.waitForTimeout(400);
  await screenshot(pc,'00-board-clear-no-deck-desktop');
  await showTray(pc);
@@ -364,6 +383,7 @@ try{
  await verifyPhysicalFrame(phone,'phone');
  await verifySpatialShadowMap(phone,'phone');
  await verifySixLayerVisualEffects(phone,'phone');
+ await verifyCloudAndResolution(phone,'phone');
  await screenshot(phone,'05a-board-clear-no-deck-phone');
  await showTray(phone);
  await verifyBox(phone,'phone');
@@ -382,6 +402,19 @@ try{
  await hideTray(phone);
  await verifyRestingCardsStatic(phone,'phone');
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
+ // Probe a real DPR=2 backing buffer on a small mobile viewport; this used
+ // to be hard-capped at 1.25 despite the device's actual pixel density.
+ const retina=await browser.newPage({viewport:{width:180,height:320},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ retina.on('pageerror',e=>errors.push('RETINA '+String(e)));
+ await retina.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?quality=high',
+  {waitUntil:'domcontentloaded',timeout:65000});
+ await retina.waitForFunction(()=>window.__forestLevelDebug?.performance?.canvasPixels>0,{timeout:25000});
+ const retinaPerf=await retina.evaluate(()=>window.__forestLevelDebug.performance);
+ assert.ok(retinaPerf.renderedDevicePixelRatio>=1.95,
+  'HiDPI mode must render near full physical pixels instead of stretching CSS pixels');
+ assert.equal(retinaPerf.qualityMode,'high');
+ console.log('FOREST_PHONE_RETINA_RENDER_PASS',JSON.stringify(retinaPerf));
+ await retina.close();
  assert.deepEqual(errors,[]);
  console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,physical3DFrame:true,simpleGoldRing:true,cssFrameRemoved:true,sixVisualLayers:true,realBeforeAfter:true,errors}));
 }finally{await browser.close();}
