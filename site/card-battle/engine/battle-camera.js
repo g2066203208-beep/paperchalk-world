@@ -64,14 +64,12 @@ function create(options={}){
    // Refit only on an actual viewport change (e.g. phone rotation).
    // Never allow the camera farther away than this viewport's approved fit.
    const ratio=clamp(targetDistance/fitDistance,minZoomRatio,1);
-   const oldFit=fitDistance;
    fitDistance=defaults.distance*Math.max(1,fitAspect/(width/height));
    targetDistance=clamp(fitDistance*ratio,
     Math.min(fitDistance,Math.max(minDist,fitDistance*minZoomRatio)),fitDistance);
    distance=targetDistance;
    // Panning is measured in world-space and is re-clamped after any refit.
-   if(oldFit!==fitDistance){constrainAim();constrainTarget();}
-   else {constrainAim();constrainTarget();}
+   constrainAim();constrainTarget();
   }
  }
  function recenter(){
@@ -85,7 +83,11 @@ function create(options={}){
    clamp(value,minDist,maxDist);
   constrainAim(); // Zooming back out automatically pulls the safe view inward.
  }
- function zoom(factor){setZoom(targetDistance*factor);}
+ function zoom(factor){
+  // Requested tactical rule: scroll/pinch only zooms IN; reset (0) restores fit.
+  if(fixed&&factor>=1)return;
+  setZoom(targetDistance*factor);
+ }
  function pan(dx,dy){
   if(fixed&&!isZoomed())return;
   const scale=2*targetDistance*Math.tan(fov*Math.PI/360)/height;
