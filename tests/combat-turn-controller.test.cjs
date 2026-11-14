@@ -17,7 +17,8 @@ const level=window.PaperchalkLevelEngine.create('forest-01',{
  cols:16,rows:6,center:(c,r)=>({x:c*2.65,z:r*3.34}),
  cell:()=>({height:0}),canAdjust:()=>true
 },{physicalColumns:[6,7,8]});
-const model=window.PaperchalkProfessionDecks.create({maxHand:10,prototypeAllClasses:true,seed:618231});
+const model=window.PaperchalkProfessionDecks.create({maxHand:10,
+ ownedCharacters:[{id:'woodcutter',name:'伐木少女',profession:'warrior'}],seed:618231});
 const choreography=window.PaperchalkCombatChoreography.create();
 let selected=null;
 const hand={
@@ -45,7 +46,7 @@ assert.equal(model.snapshot().count,0,'no auto opening cards');
 assert.equal(level.deploy('woodcutter',0,1).ok,true);
 assert.equal(controller.playerAttack('woodcutter','forest-foe-a',1),false,
  'cannot attack before manually drawing and selecting a card');
-const one=model.draw('warrior');
+const one=model.draw('woodcutter');
 assert.equal(one.ok,true,'player taps the physical warrior box');
 selected=one.card.instance;
 const hpBefore=level.getUnit('forest-foe-a').currentHp;
@@ -77,11 +78,13 @@ assert.equal(level.getUnit('woodcutter').currentHp,10,
  'each surviving enemy gets one attack during its own turn');
 assert.equal(model.snapshot().classes.find(c=>c.id==='warrior').discardCount,1,
  'played class card enters its discard pile after the round');
-// The seven class boxes remain independently drawable after enemy resolution.
-assert.equal(model.draw('guardian').ok,true);
-assert.equal(model.draw('engineer').ok,true);
-assert.equal(model.draw('medic').ok,true);
-assert.equal(model.snapshot().count,3);
+// Six slots stay empty. No nonexistent character class may produce a card.
+assert.equal(model.snapshot().roster.length,1);
+assert.equal(model.draw('guardian').reason,'locked-character');
+assert.equal(model.draw('engineer').reason,'locked-character');
+assert.equal(model.draw('medic').reason,'locked-character');
+assert.equal(model.draw('woodcutter').ok,true);
+assert.equal(model.snapshot().count,1);
 assert.equal(model.snapshot().manualDraw,true);
 controller.reset();assert.equal(controller.busy,false);
 console.log('COMBAT_TURN_CONTROLLER_PASS reusable_headless_rules impact_damage enemy_queue manual_0_draw next_round');
