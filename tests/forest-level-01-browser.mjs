@@ -458,7 +458,7 @@ try{
  assert.equal(await pc.evaluate(()=>window.__forestHand.selected),hand);
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
  assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),5);
- await pc.waitForFunction(()=>window.__forestLevelDebug.combat.animation.active?.hitFired===true,
+ await pc.waitForFunction(()=>window.__forestLevelDebug.combat.animation.last?.hitFired===true,
   null,{timeout:12000});
  await screenshot(pc,'03a-axe-hit-impact-desktop');
  await pc.waitForFunction(()=>!window.__forestCombat.busy,null,{timeout:12000});
