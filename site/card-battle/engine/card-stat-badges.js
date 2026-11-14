@@ -6,7 +6,7 @@
  */
 (function(root){'use strict';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function create({gl,makeFace,renderGeom,mul,T,cardW,cardH,cardD}){
+function create({gl,makeFace,renderGeom,mul,T,S,cardW,cardH,cardD}){
  if(!gl||!makeFace||!renderGeom||!mul||!T)throw Error('Card stat badges need WebGL face adapter');
  const width=.47,height=.51,face=makeFace(width,height,.095,0);
  // A little of the colored metal number plate protrudes from the two
@@ -73,15 +73,19 @@ function create({gl,makeFace,renderGeom,mul,T,cardW,cardH,cardD}){
   }
   return tex;
  }
- function draw(matrix,unit){
+ function draw(matrix,unit,emphasis={}){
   if(!unit||!unit.deployed)return 0;
   // Dynamically query alive/dead HP, including damage and healing. No stale
   // canvas/card illustration that requires regeneration on each attack.
   const values=[['attack',unit.attack,unit.attack],['health',unit.currentHp,unit.hp]];
   for(const [kind,value,max] of values){
    const anchor=anchors[kind];
-   renderGeom(face,mul(matrix,T(anchor.x,anchor.y,anchor.z)),
-    [1,1,1,1],texture(kind,value,max),true);
+   let model=mul(matrix,T(anchor.x,anchor.y,anchor.z));
+   // Active combat only: a small local pop when attack/HP changes, attached
+   // to the same card matrix. Absolutely no passive/idle badge animation.
+   const pulse=clamp(Number(emphasis[kind])||0,0,.18);
+   if(pulse&&S)model=mul(model,S(1+pulse,1+pulse,1));
+   renderGeom(face,model,[1,1,1,1],texture(kind,value,max),true);
   }
   return values.length;
  }
@@ -96,5 +100,5 @@ function create({gl,makeFace,renderGeom,mul,T,cardW,cardH,cardD}){
    resolution:[256,256],unitOnly:true};}
  });
 }
-root.PaperchalkCardStatBadges=Object.freeze({version:'1.0.0',create});
+root.PaperchalkCardStatBadges=Object.freeze({version:'1.1.0',create});
 })(window);
