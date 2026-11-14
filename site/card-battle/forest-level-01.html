@@ -101,7 +101,7 @@ html,body{background:#d8ded0}
 </div>
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button></section></div>
 <script src="./engine/voxel-terrain.js?v=4"></script>
-<script src="./engine/battle-camera.js?v=2"></script>
+<script src="./engine/battle-camera.js?v=3"></script>
 <script src="./engine/level-engine.js?v=2"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
@@ -196,8 +196,8 @@ const BOARD_COLS=terrain.cols,BOARD_ROWS=terrain.rows;
 // Camera is a reusable module, independent from voxel geometry and game rules.
 const orbitCamera=window.PaperchalkBattleCamera.create({
  // FINAL STEP-1 camera framing matched to the USER-APPROVED 16:9 reference:
- // Entire 16x6 physical board, fixed 78° view, projected board width ~84.8%,
- // height ~66.3%, upper margin ~11.2% at 1920x1080, no scrolling/orbit.
+ // Entire 16x6 physical board at a locked 78° view; wheel zoom is allowed.
+ // The camera keeps its angle and center; press 0 to restore viewport fit.
  // Physical cards, facility rules, seven-slot drawer and art are unchanged.
  target:[0,-1.65,.70],distance:50.7,yaw:0,elevation:78*Math.PI/180,
  fov:33,fixed:true,fitAspect:1.68,
@@ -296,18 +296,19 @@ window.__terrainDebug={
  projectTile(c,r){const p=terrain.center(c,r),top=terrain.cell(c,r).height;return projection2D(p.x,top,p.z);},
  get tool(){return active?.id||null;}
 };
-// Card transform: XY face becomes horizontal XZ surface with +Y normal, then dynamically tilts/flips in 3D.
+// Placed cards must rest in the exact same world-space pose on every frame.
+// Only deliberate placement, attack, flip and scene-enter/exit animations can move them.
 function modelForCard(c,now){
  if(c.hudMatrix)return c.hudMatrix;
  const id=c.unitId?'unit:'+c.unitId:'card:'+c.id;
  const pose=objectFX.sample(id,now);
- let motion=attackPose(c,now),arrival=placementPose(c,now);
+ const motion=attackPose(c,now),arrival=placementPose(c,now);
  let base=T(c.x+motion.dx,c.y+motion.dy+arrival.dy,c.z+motion.dz);
-base=mul(base,RY((c.side==='enemy'?.011:-.011)+Math.sin(now*.65+c.seed)*.006));
-base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+Math.sin(now*.88+c.seed)*.015+motion.pitch+arrival.pitch+c.hover*.07));
-base=mul(base,RY(c.flip));
-base=mul(base,RZ((c.hover?Math.sin(now*2+c.seed)*.018:Math.sin(now*.75+c.seed)*.005)+motion.roll)); const focusScale=c.slot?1+c.hover*.26:1;
- const sc=focusScale*Math.max(.025,pose.scale)*(c.slot?1.32:1);
+ base=mul(base,RY(c.side==='enemy'?.011:-.011));
+ base=mul(base,RX(-Math.PI/2+(c.side==='enemy'?-.032:.032)+motion.pitch+arrival.pitch));
+ base=mul(base,RY(c.flip));
+ base=mul(base,RZ(motion.roll));
+ const sc=Math.max(.025,pose.scale)*(c.slot?1.32:1);
  base=mul(base,S(sc,sc,sc));return base;}
 function attackPose(c,now){let phase=now-c.attackStart;if(phase<0||phase>1.12)return {dx:0,dy:0,dz:0,pitch:0,roll:0};let u=phase/1.12;
 let s=Math.sin(Math.PI*Math.min(1,u));let launch=(u<.35?Math.sin(u/.35*Math.PI/2):Math.exp(-(u-.35)*4));
@@ -872,10 +873,15 @@ function frame(timeMs){
   cards.splice(i,1);objectFX.clear(id);
  }
  for(const c of cards){
-  c.hover=lerp(c.hover,(c===hoverCard||c.dragged)?1:0,.17);
-  if(!c.dragged){c.x=lerp(c.x,c.homeX,.16);c.z=lerp(c.z,c.homeZ,.16);}
+  // Landing may settle briefly; afterwards x/y/z are exact tile anchors.
+  // No constant bobbing, rocking, hover lift or hover scaling on played cards.
+  const landing=c.slot&&now-c.placeStart<.52;
+  if(!c.dragged){
+   c.x=landing?lerp(c.x,c.homeX,.24):c.homeX;
+   c.z=landing?lerp(c.z,c.homeZ,.24):c.homeZ;
+  }
   const levelY=c.slot?fx.height(c.slot.tileC,c.slot.tileR)+.25:.13;
-  c.y=lerp(c.y,levelY+Math.sin(now*1.15+c.seed)*.017+(c.hover*.23)+(c.dragged?.36:0),.2);
+  c.y=landing?lerp(c.y,levelY,.26):levelY;
   c.flip=lerp(c.flip,c.flipTarget,.11);
  }
  drawShadows(now);
@@ -1019,6 +1025,10 @@ window.__forestLevelDebug={
  objectPose(id){return objectFX.sample(id,now);},
  get slots(){return slotCenters.map(t=>({side:t.side,r:t.r,c:t.c,tileC:t.tileC,tileR:t.tileR,zone:t.zone}));},
  get units(){return cards.map(c=>({id:c.unitId,side:c.side,r:c.slot?.r,c:c.slot?.c}));},
+ // QA: immutable screen-frame samples should match once the landing finishes.
+ get placedCardMatrices(){return cards.filter(c=>c.slot&&!c.dragged).map(c=>({
+  id:c.id,matrix:Array.from(modelForCard(c,now))
+ }));},
  get facilities(){return cards.filter(c=>c.kind==='facility').map(c=>({
   id:c.def.id,cardId:c.id,name:c.def.name,profession:c.def.profession,
   tileC:c.slot?.tileC,tileR:c.slot?.tileR,flank:c.slot?.flank,
