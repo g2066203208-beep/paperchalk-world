@@ -60,7 +60,9 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
  // frustum, including tall portrait phone view; no distant beige void.
  const groundWidth=Math.max(terrain.width+50,terrain.width+205),
   groundDepth=Math.max(terrain.depth+48,terrain.depth+205);
- const groundTop=terrain.topY-.46,groundThickness=1.50;
+ // Keep the world floor BELOW the real 3D tile skirt, so the raised board
+ // has space for genuine visible cast shadows rather than intersecting floor.
+ const groundTop=terrain.topY-.80,groundThickness=1.50;
  const groundPalette={
   forest:look?.get('forest').ground||[.52,.635,.398,1],
   clearing:look?.get('clearing').ground||[.65,.585,.479,1]
@@ -119,5 +121,5 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
   get ground(){return {width:groundWidth,depth:groundDepth,top:groundTop,scene};}
  });
 }
-root.PaperchalkForestEnvironment=Object.freeze({version:'2.5.0',create});
+root.PaperchalkForestEnvironment=Object.freeze({version:'2.6.0',create});
 })(window);

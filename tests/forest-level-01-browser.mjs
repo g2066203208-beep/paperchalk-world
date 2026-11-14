@@ -77,6 +77,7 @@ async function verifyWorld(page,kind){
  assert.equal(status.tiles.length,96);
  const ground=await page.evaluate(()=>window.__forestLevelDebug.environment.ground);
  assert.ok(ground.width>=200&&ground.depth>=200,'full-screen portrait 3D floor, no background void');
+ assert.ok(ground.top<-.75,'3D board must sit above forest floor for visible projected shadows');
  assert.equal(status.slots.filter(s=>s.zone==='unit').length,18);
  assert.equal(status.slots.filter(s=>s.zone==='facility').length,48);
  assert.deepEqual([...new Set(status.slots.filter(s=>s.zone==='unit').map(s=>s.tileC))],[6,7,8]);
