@@ -676,6 +676,7 @@ function move(c,s){
  objectFX.pulse('card:'+c.id,now,{strength:.10});
 }
 function reset(){
+ orbitCamera.reset(); // A restarted battle must show the entire board again.
  sceneTransition.reset('forest');
  forestProps.setScene('forest');
  colors.background=scenePresets.forest.background.slice();
