@@ -8,13 +8,15 @@
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 function create(o){
- const {canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RZ,mul,
+ const {canvas,gl,drawCard,renderGeom,makeGeom,box,cardW,cardH,cardD,T,S,RX,RZ,mul,
   perspective,getVP,uniformVP,makeTexture}=o;
  const jobs=root.PaperchalkProfessionDecks?.CLASSES||[];
  const paint={
-  back:[.82,.82,.81,1],floor:[.71,.72,.72,1],
-  wells:[.59,.61,.61,1],walls:[.93,.93,.91,1],
-  front:[.83,.85,.85,1],paper:[.92,.90,.85,1],stripe:[.77,.78,.77,1]
+  back:[.85,.85,.84,1],floor:[.77,.78,.78,1],
+  wells:[.70,.72,.72,1],walls:[.94,.94,.92,1],
+  bevel:[.87,.89,.89,1],front:[.92,.93,.92,1],
+  paper:[.95,.95,.94,1],cap:[.985,.985,.975,1],
+  stripe:[.76,.78,.78,1]
  };
  const textIcons={engineer:'⚙',guardian:'盾',warrior:'斧',ranger:'弓',
   skirmisher:'影',medic:'药',summoner:'兽'};
@@ -28,20 +30,107 @@ function create(o){
  }
  function dims(){
   const mobile=canvas.getBoundingClientRect().width<720;
-  const w=spanW*(mobile?.944:.90);
-  const h=mobile?1.16:1.96;
-  const wall=mobile?.070:.088;
-  const divider=mobile?.055:.078;
-  const bay=(w-2*wall)/7;
-  const usableX=bay-divider-.15;
-  const usableY=h-2*wall-.22;
-  // Cards stay STRICTLY inside a well, with guaranteed margin at all sides.
-  const scale=Math.min(usableX/cardW,usableY/cardH)*.91;
-  const y=-spanH/2+h/2+(mobile?.17:.21);
-  return {mobile,w,h,y,wall,divider,bay,scale,
+  // Reference: ONE low, wide 7-slot tray, ratio approx 4.3:1.
+  // Former model was almost twice too wide for standard 2:3 cards.
+  const w=spanW*(mobile?.945:.630),h=w/4.30;
+  const wall=h*.052,divider=h*.015,cardGap=h*.012;
+  const bay=(w-2*wall)/7,usableW=bay-divider-2*cardGap;
+  const usableH=h-2*wall-h*.066;
+  const scale=Math.min(usableW/cardW,usableH/cardH);
+  const y=-spanH/2+h/2+(mobile?.14:.19);
+  const cardWidth=cardW*scale,cardHeight=cardH*scale;
+  return {mobile,w,h,y,wall,divider,bay,scale,cardGap,
    innerH:h-2*wall,innerW:bay-divider,
-   cardW:cardW*scale,cardH:cardH*scale,
+   cardW:cardWidth,cardH:cardHeight,
+   cornerRadius:h*.155,cardRadius:Math.min(cardWidth,cardHeight)*.080,
    x0:-w/2+wall+bay/2};
+ }
+ // Proper extruded rounded rectangles, not stacked square cuboids pretending
+ // to be rounded. All 3D geometry uses the battle renderer's shared format:
+ // position(3), normal(3), uv(2) with real front/back/shell surfaces.
+ const shapeCache=new Map();
+ function outline(w,h,r,steps=8){
+  const pts=[],rad=Math.min(r,w/2-.0001,h/2-.0001);
+  for(const [cx,cy,start] of [[w/2-rad,h/2-rad,0],
+   [-w/2+rad,h/2-rad,90],[-w/2+rad,-h/2+rad,180],
+   [w/2-rad,-h/2+rad,270]]){
+   for(let i=0;i<=steps;i++){
+    const a=(start+90*i/steps)*Math.PI/180;
+    pts.push([cx+Math.cos(a)*rad,cy+Math.sin(a)*rad]);
+   }
+  }
+  return pts;
+ }
+ function roundedPrism(w,h,r){
+  const pts=outline(w,h,r),vs=[],ids=[];
+  function vert(x,y,z,nx,ny,nz){
+   const j=vs.length/8;vs.push(x,y,z,nx,ny,nz,x/w+.5,y/h+.5);return j;
+  }
+  for(const sign of [1,-1]){
+   const z=sign*.5,center=vert(0,0,z,0,0,sign),face=[];
+   for(const p of pts)face.push(vert(p[0],p[1],z,0,0,sign));
+   for(let i=0;i<pts.length;i++){
+    const j=(i+1)%pts.length;
+    if(sign>0)ids.push(center,face[i],face[j]);
+    else ids.push(center,face[j],face[i]);
+   }
+  }
+  for(let i=0;i<pts.length;i++){
+   const p=pts[i],q=pts[(i+1)%pts.length],dx=q[0]-p[0],dy=q[1]-p[1],l=Math.hypot(dx,dy)||1;
+   const nx=dy/l,ny=-dx/l;
+   const a=vert(p[0],p[1],.5,nx,ny,0),b=vert(q[0],q[1],.5,nx,ny,0);
+   const c=vert(q[0],q[1],-.5,nx,ny,0),d=vert(p[0],p[1],-.5,nx,ny,0);
+   ids.push(a,d,c,a,c,b);
+  }
+  return makeGeom(vs,ids);
+ }
+ function roundedRim(w,h,r,border){
+  const outer=outline(w,h,r),inner=outline(w-2*border,h-2*border,Math.max(.001,r-border));
+  const vs=[],ids=[];
+  function vert(x,y,z,nx,ny,nz){
+   const k=vs.length/8;vs.push(x,y,z,nx,ny,nz,x/w+.5,y/h+.5);return k;
+  }
+  for(let i=0;i<outer.length;i++){
+   const j=(i+1)%outer.length,p=outer[i],q=outer[j],a=inner[i],b=inner[j];
+   const x0=vert(p[0],p[1],.5,0,0,1),x1=vert(q[0],q[1],.5,0,0,1);
+   const x2=vert(b[0],b[1],.5,0,0,1),x3=vert(a[0],a[1],.5,0,0,1);
+   ids.push(x0,x1,x2,x0,x2,x3);
+   const dx=q[0]-p[0],dy=q[1]-p[1],dl=Math.hypot(dx,dy)||1;
+   const nx=dy/dl,ny=-dx/dl;
+   const u0=vert(p[0],p[1],.5,nx,ny,0),u1=vert(q[0],q[1],.5,nx,ny,0),
+     u2=vert(q[0],q[1],-.5,nx,ny,0),u3=vert(p[0],p[1],-.5,nx,ny,0);
+   ids.push(u0,u3,u2,u0,u2,u1);
+   const i0=vert(a[0],a[1],.5,-nx,-ny,0),i1=vert(b[0],b[1],.5,-nx,-ny,0),
+     i2=vert(b[0],b[1],-.5,-nx,-ny,0),i3=vert(a[0],a[1],-.5,-nx,-ny,0);
+   ids.push(i0,i1,i2,i0,i2,i3);
+  }
+  return makeGeom(vs,ids);
+ }
+ function shapes(g){
+  const key=[g.w,g.h,g.wall,g.cardW,g.cardH].map(x=>x.toFixed(3)).join('|');
+  if(shapeCache.has(key))return shapeCache.get(key);
+  // Cache one true curved shell, one hollow rail, and one rounded card-pile
+  // primitive. No allocations or morphing in the render loop.
+  const made={
+   floor:roundedPrism(g.w,g.h,g.cornerRadius),
+   cavity:roundedPrism(g.w-2*g.wall,g.h-2*g.wall,Math.max(.03,g.cornerRadius-g.wall)),
+   rail:roundedRim(g.w,g.h,g.cornerRadius,g.wall),
+   bevel:roundedRim(g.w-.025,g.h-.025,Math.max(.03,g.cornerRadius-.012),g.wall*.55),
+   deck:roundedPrism(g.cardW,g.cardH,g.cardRadius),
+   top:roundedPrism(g.cardW*.985,g.cardH*.985,g.cardRadius*.96)
+  };
+  shapeCache.set(key,made);
+  if(shapeCache.size>8){
+   const first=shapeCache.keys().next().value,old=shapeCache.get(first);
+   for(const geo of Object.values(old)){gl.deleteBuffer(geo.b);gl.deleteBuffer(geo.i);}
+   shapeCache.delete(first);
+  }
+  return made;
+ }
+ function curved(geom,x,y,z,depth,color,g,rotation=0){
+  if(stageK()<.012)return;
+  const local=mul(mul(T(x,y,z),RX(rotation)),S(1,1,depth));
+  renderGeom(geom,mul(sceneScale(g),local),color);drawCalls++;
  }
  function boxMesh(x,y,z,w,h,d,color,g){
   renderGeom(box,mul(mul(sceneScale(g),T(x,y,z)),S(w,h,d)),color);drawCalls++;
@@ -111,50 +200,49 @@ function create(o){
   return slots;
  }
  function geometry(g){
-  const W=g.w,H=g.h,w=g.wall,v=g.divider;
-  // Solid BACKPLATE and cavity floor lie behind everything.
-  boxMesh(0,g.y,-.40,W,H,.18,paint.back,g);
-  boxMesh(0,g.y,-.28,W-2*w,H-2*w,.055,paint.floor,g);
-  // Darker well floors highlight real seven-fold subdivision.
-  for(let i=0;i<7;i++){
-   const x=g.x0+i*g.bay;
-   boxMesh(x,g.y,-.235,g.bay-v-.015,H-2*w-.025,.025,paint.wells,g);
+  const model=shapes(g);
+  // Continuous solid rounded outer pan, with NO square joints at corners.
+  curved(model.floor,0,g.y,-.325,.16,paint.back,g);
+  curved(model.cavity,0,g.y,-.234,.038,paint.floor,g);
+  // Open cavity: outer/inner sides and upper lip share EXACT rounded contour.
+  curved(model.rail,0,g.y,-.115,.23,paint.walls,g);
+  curved(model.bevel,0,g.y,-.0005,.013,paint.bevel,g);
+  // Thin well separators live BEHIND the exposed decks; none overlap top cards.
+  for(let i=1;i<7;i++){
+   const x=-g.w/2+g.wall+i*g.bay;
+   boxMesh(x,g.y,-.134,g.divider,g.innerH-.023,.11,paint.wells,g);
   }
-  // Four continuous perimeter walls. Corners join flush, not overlapping
-  // each other or any card faces. Equal 3D depth for all seven compartments.
-  const z=-.17,depth=.27;
-  boxMesh(0,g.y+H/2-w/2,z,W,w,depth,paint.walls,g);
-  boxMesh(0,g.y-H/2+w/2,z,W,w,depth,paint.walls,g);
-  boxMesh(-W/2+w/2,g.y,z,w,H-2*w,depth,paint.walls,g);
-  boxMesh(W/2-w/2,g.y,z,w,H-2*w,depth,paint.walls,g);
-  for(let i=1;i<=6;i++){
-   const x=-W/2+w+i*g.bay;
-   boxMesh(x,g.y,z,v,H-2*w,depth,paint.walls,g);
-  }
-  // One continuous shallow front edge, only BELOW the wells.
-  boxMesh(0,g.y-H/2+w*.68,.005,W-w*1.5,w*.54,.078,paint.front,g);
  }
  function pileMatrix(p,g,z){
   return mul(T(p.x,p.y,z),S(g.scale,g.scale,1));
  }
  function decks(g,positions,staged){
+  const model=shapes(g);
   for(const p of positions.filter(p=>p.kind==='deck')){
    const cards=o.remainingCards?.(p.profession)||[],count=cards.length;
    if(!count)continue;
-   // Back-to-front bounds: well floor -.235; paper stack -.14 to +.08;
-   // textured face +.105. Frame stops at -.035, cannot cover any card.
-   const thickness=Math.min(.18,count*.018);
-   boxMesh(p.x,p.y,-.035+thickness*.49,
-    g.cardW,g.cardH,thickness,paint.paper,g);
-   for(let i=1;i<count;i+=3){
-    boxMesh(p.x,p.y,-.035+i*.018,g.cardW,g.cardH,.003,paint.stripe,g);
+   // Tight white prototype stack. Top edge reclines slightly behind bottom.
+   // Physical thickness changes with the actual number of cards remaining.
+   const tilt=-.105,thickness=.040+Math.min(10,count)*.016;
+   const center=.014+thickness*.5;
+   curved(model.deck,p.x,p.y,center,thickness,paint.paper,g,tilt);
+   // Floating white face exactly atop the same tilted rounded solid.
+   curved(model.top,p.x,p.y,center+thickness*.50+.002,.009,paint.cap,g,tilt);
+   // Actual faint paper-layer separation on the depth walls: kept to 5
+   // lines maximum (draw-call budget) rather than all 70 covered faces.
+   for(let i=1;i<Math.min(count,10);i+=2){
+    const z=.014+i*.016;
+    curved(model.deck,p.x,p.y,z,.0022,paint.stripe,g,tilt);
    }
-   const topZ=-.035+thickness*.99+cardD/2;
-   renderCard(pileMatrix(p,g,topZ),
-    textureFor(cards[count-1]),g);deckMeshes++;
+   deckMeshes++;
    const unit=staged.find(u=>u.role===p.profession);
-   if(unit)renderCard(mul(T(p.x,p.y,topZ+cardD+.012),S(g.scale,g.scale,1)),
-    textureFor({profession:p.profession},unit.portrait),g);
+   if(unit){
+    // Deployment portrait remains on top; the underlying neutral stack is
+    // still a complete rounded solid like all six neighboring stacks.
+    const m=mul(T(p.x,p.y,center+thickness*.5+cardD+.022),
+      mul(RX(tilt),S(g.scale,g.scale,1)));
+    renderCard(m,textureFor({profession:p.profession},unit.portrait),g);
+   }
   }
  }
  function draw(t,w,h){
@@ -230,7 +318,8 @@ function create(o){
    const g=dims(),count=o.snapshot();
    const horizontalClearance=(g.innerW-g.cardW)/2;
    const verticalClearance=(g.innerH-g.cardH)/2;
-   return {geometry:'single-static-seven-bay-whitebox',
+   return {geometry:'single-static-seven-bay-whitebox',roundedCase:true,beveledRim:true,
+    fittedCardStacks:true,cardStackTiltRadians:-.105,
     visible:scene.map(p=>({id:p.id,kind:p.kind,x:p.x,y:p.y})),
     visibleDeckPiles:7,stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     compartments:7,physicalBoxes:1,hasLid:false,hasHinge:false,
@@ -240,11 +329,12 @@ function create(o){
     bounds:{x:-g.w/2,y:g.y-g.h/2,w:g.w,h:g.h,
      horizontalClearance,verticalClearance,cardWidth:g.cardW,
      cardHeight:g.cardH,pitch:g.bay,divider:g.divider,
+     roundedCornerRadius:g.cornerRadius,slotGap:g.bay-g.cardW,
      safeHorizontalMargin:spanW/2-g.w/2,
      safeBottomMargin:spanH/2+(g.y-g.h/2)}
    };
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'6.0.0-static-seven-bay-whitebox',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'7.0.0-rounded-closefit-whitebox',create});
 })(window);

@@ -16,6 +16,13 @@ async function verifyBox(page,kind){
  const b=await page.evaluate(()=>window.__sceneCardHUD.snapshot);
  assert.equal(b.compartments,7);
  assert.equal(b.physicalBoxes,1);
+ assert.equal(b.roundedCase,true,'single rounded-corner 3D shell');
+ assert.equal(b.beveledRim,true,'3D rounded hollow rim');
+ assert.equal(b.fittedCardStacks,true,'seven tight, rounded, thick white stacks');
+ assert.ok(b.bounds.roundedCornerRadius>b.bounds.h*.14,'rounding must be substantial');
+ assert.ok(b.bounds.slotGap/b.bounds.pitch<.11,'card piles must nearly fill each slot');
+ assert.ok(b.bounds.horizontalClearance>.015&&b.bounds.verticalClearance>.015);
+ assert.ok(b.bounds.cardWidth/b.bounds.pitch>.87,'no tiny cards surrounded by void');
  assert.equal(b.visibleDeckPiles,7);
  assert.equal(b.hasLid,false);
  assert.equal(b.hasHinge,false);
@@ -86,5 +93,5 @@ try{
  await phone.waitForFunction(()=>window.__forestHand.snapshot.count===1,{timeout:10000});
  await screenshot(phone,'06-static-hand-phone');
  assert.deepEqual(errors,[]);
- console.log('SEVEN_BAY_BOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,errors}));
+ console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,errors}));
 }finally{await browser.close();}
