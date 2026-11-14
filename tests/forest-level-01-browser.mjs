@@ -124,18 +124,23 @@ async function verifyFixedCamera(page,kind){
   distance:after.distance,viewport:after.viewport,frame}));
 }
 async function verifyPhysicalFrame(page,kind){
- await page.waitForFunction(()=>window.__forestLevelDebug?.physicalFrame?.lastDrawCalls>15,{timeout:25000});
+ await page.waitForFunction(()=>window.__forestLevelDebug?.physicalFrame?.lastDrawCalls===1,{timeout:25000});
  const mesh=await page.evaluate(()=>window.__forestLevelDebug.physicalFrame);
  assert.equal(mesh.modeled,true,'visible border must be a real 3D model');
  assert.equal(mesh.worldSpace,true,'border must share world coordinates with 96 tiles');
  assert.equal(mesh.screenOverlay,false,'never paint fake CSS game frame');
- assert.equal(mesh.geometry,'extruded-rounded-perimeter');
+ assert.equal(mesh.geometry,'single-thin-rounded-gold-ring');
+ assert.equal(mesh.color,'gold');
+ assert.equal(mesh.decorations,0,'remove all gold crests, rivets, and furniture');
+ assert.equal(mesh.framePieces,1);
+ assert.equal(mesh.midfieldBeam,false,'no extra middle bar');
+ assert.equal(mesh.sidePlaques,false,'no extra side plaques');
  assert.equal(mesh.boardCols,16);
  assert.equal(mesh.boardRows,6);
- assert.ok(mesh.cornerRadius>.5,'physical rounded corner profile');
- assert.ok(mesh.outerWidth>mesh.boardWidth+2,'thick outer timber perimeter');
+ assert.ok(mesh.cornerRadius>=.3,'thin border still has physical rounded corners');
+ assert.ok(mesh.outerWidth-mesh.boardWidth<.65,'border must be thin and unobtrusive');
  assert.ok(mesh.innerOpeningWidth>mesh.boardWidth,'do not overlap any terrain tile');
- assert.ok(mesh.lastDrawCalls>15,'gold trims, side plaques and crossbar must all be 3D');
+ assert.equal(mesh.lastDrawCalls,1,'ONE physical 3D ring only, no extra ornaments');
  assert.equal(await page.locator('#battle-ornament').count(),0,'remove floating yellow CSS frame entirely');
  assert.equal(await page.locator('.facility-rail').count(),0,'remove fake HTML side rails too');
  const layout=await page.evaluate(()=>window.__boardReferenceLayout.snapshot);
@@ -267,5 +272,5 @@ try{
  await phone.waitForTimeout(300);
  await screenshot(phone,'07a-farmland-board-clear-no-deck-phone');
  assert.deepEqual(errors,[]);
- console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,physical3DFrame:true,cssFrameRemoved:true,errors}));
+ console.log('ROUND_COMPACT_WHITEBOX_BROWSER_PASS',JSON.stringify({desktop:true,phone:true,sevenCompartments:true,noLid:true,noFlip:true,noClipping:true,clickDeployment:true,clickDraw:true,clickPlay:true,sceneSwitch:true,full96VoxelTerrain:true,facilitySlots:48,userOriginalArtwork:true,farmFacilityPlacement:true,deckTrayCollapsesByDefault:true,drawerRestoresSevenPhysicalPiles:true,physical3DFrame:true,simpleGoldRing:true,cssFrameRemoved:true,errors}));
 }finally{await browser.close();}
