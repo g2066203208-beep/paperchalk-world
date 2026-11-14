@@ -267,9 +267,10 @@ function grainTexture(gl){
  * Each integer level is exactly one cube side-length. The only curvature
  * is a small top-edge bevel and convex corner radius, never a hillside ramp.
  */
-function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
+function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform}){
  if(!gl||!makeGeom||!renderGeom||!I)throw Error('Missing WebGL renderer dependencies');
  const texture=grainTexture(gl),base=I();
+ const tileMatrix=(c,r)=>typeof tileTransform==='function'?(tileTransform(c,r)||base):base;
  const free=m=>{if(m){gl.deleteBuffer(m.b);gl.deleteBuffer(m.i);}};
  let tiles=[],walls=[],seams=null,renderedRevision=-1;
  function rebuild(){
@@ -283,7 +284,7 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
     const lower=neighbor?neighbor.height:bottomOutside;
     if(t.height<=lower+.00001)continue;
     const wall=roundedCliffMesh(grid,makeGeom,c,r,dir,lower);
-    if(wall)walls.push({mesh:wall,color:grid.materials[t.kind].side});
+    if(wall)walls.push({c,r,mesh:wall,color:grid.materials[t.kind].side});
    }
    return tileSoftMesh(grid,makeGeom,c,r);
   }));
@@ -292,10 +293,10 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
  }
  function draw(){
   if(renderedRevision!==grid.revision)rebuild();
-  for(const entry of walls)renderGeom(entry.mesh,base,entry.color);
+  for(const entry of walls)renderGeom(entry.mesh,tileMatrix(entry.c,entry.r),entry.color);
   for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
    const cell=grid.cell(c,r);
-   renderGeom(tiles[r][c],base,grid.color(c,r),texture,false,grid.materials[cell.kind].side);
+   renderGeom(tiles[r][c],tileMatrix(c,r),grid.color(c,r),texture,false,grid.materials[cell.kind].side);
   }
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
   renderGeom(seams,base,[.13,.19,.12,.095],null,true);
@@ -308,5 +309,5 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I}){
  }
  return {draw,dispose,get mesh(){return tiles;},get renderedRevision(){return renderedRevision}};
 }
-root.PaperchalkVoxelTerrain=Object.freeze({version:'4.1.0',MATERIALS,create,createWebGLRenderer});
+root.PaperchalkVoxelTerrain=Object.freeze({version:'4.2.0',MATERIALS,create,createWebGLRenderer});
 })(window);
