@@ -7,6 +7,8 @@ on:
       - 'site/card-battle/engine/level-engine.js'
       - 'site/card-battle/engine/scene-card-hud.js'
       - 'site/card-battle/engine/voxel-animations.js'
+      - 'site/card-battle/engine/object-animations.js'
+      - 'site/card-battle/engine/voxel-terrain.js'
       - 'site/card-battle/engine/forest-environment.js'
       - 'site/card-battle/engine/profession-decks.js'
       - 'site/card-battle/ui/forest-hand.css'
@@ -18,6 +20,7 @@ on:
       - 'site/card-battle/levels/forest-01.js'
       - 'tests/forest-level-core.test.cjs'
       - 'tests/profession-decks.test.cjs'
+      - 'tests/object-animations.test.cjs'
       - 'tests/character-registry.test.cjs'
       - 'tests/forest-level-01-browser.mjs'
       - '.github/workflows/forest-level-01-qa.yml'
@@ -36,6 +39,7 @@ jobs:
       - name: Test isolated level and voxel animation engines
         run: |
           node tests/forest-level-core.test.cjs
+          node tests/object-animations.test.cjs
           node tests/profession-decks.test.cjs
           node tests/character-registry.test.cjs
       - name: Install Chromium + Playwright
