@@ -4,8 +4,10 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const ctx=vm.createContext({window:{},Math,Map,Set,Array,Object,Number,Error});
-vm.runInContext(fs.readFileSync(path.join(__dirname,
- '../site/card-battle/engine/profession-decks.js'),'utf8'),ctx);
+for(const file of ['engine/card-registry.js','data/card-packs.js','engine/profession-decks.js']){
+ vm.runInContext(fs.readFileSync(path.join(__dirname,
+  '../site/card-battle/',file),'utf8'),ctx,{filename:file});
+}
 const Engine=ctx.window.PaperchalkProfessionDecks;
 const woodcutter={id:'woodcutter',characterId:'farmer-warrior-loli-lumberjack',name:'伐木少女',profession:'warrior'};
 const farmer={id:'farmer',characterId:'farmer-engineer-farmer',name:'农夫',profession:'engineer'};
