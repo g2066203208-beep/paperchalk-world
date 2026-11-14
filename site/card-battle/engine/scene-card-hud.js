@@ -229,7 +229,8 @@ function create(o){
   const wasVP=getVP();
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(viewFov,width/height,.1,80),T(0,0,-cameraZ)));
-  for(const pile of positions.filter(p=>p.kind==='deck'))drawPileShadow(pile);
+  // Physical cards themselves are the piles. No static black/opaque slabs
+  // underneath: they would remain visible when the entire scene shrinks out.
   const activeCardIds=new Set();
   for(const pos of positions.filter(p=>p.kind==='deck')){
    const actions=o.remainingCards?.(pos.profession)||[];
@@ -411,5 +412,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'4.2.0-seven-piles',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'4.3.0-seven-piles',create});
 })(window);
