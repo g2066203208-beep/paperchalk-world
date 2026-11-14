@@ -461,7 +461,8 @@ const sceneHUD=window.PaperchalkSceneCardHUD.create({
   return result;
  },
  select:instance=>window.__forestHand?.selectCard(instance),
- nextTurn:()=>window.__forestHand?.nextTurn(),
+ // A scene button cannot bypass the enemy phase or advance only the deck.
+ nextTurn:()=>requestEndTurn(),
  staged:()=>level.snapshot().units.filter(u=>u.side==='ally'&&!u.deployed).map(u=>({
   ...u,portrait:window.PaperchalkCharacterRegistry?.get(u.characterId)?.portrait||null
  })),
