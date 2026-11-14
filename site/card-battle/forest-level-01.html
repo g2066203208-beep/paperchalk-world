@@ -858,8 +858,16 @@ window.__forestLevelDebug={
  get staged(){return level.snapshot().units.filter(u=>!u.deployed);},
  get placement(){return {selected:selectedStagedId,previewSlot:previewDeployment?.slot?.id||null};},
  get boxCount(){return window.__sceneCardHUD?.snapshot.physicalBoxes||0;},
- get slotPoints(){return slotCenters.map(q=>({id:q.id,side:q.side,r:q.r,c:q.c,
-  point:projection2D(q.x,fx.height(q.tileC,q.tileR)+.03,q.z)}));},
+ get slotPoints(){
+  const rect=canvas.getBoundingClientRect();
+  return slotCenters.map(q=>{
+   const projected=projection2D(q.x,fx.height(q.tileC,q.tileR)+.03,q.z);
+   return {id:q.id,side:q.side,r:q.r,c:q.c,
+    // Pointer events use CSS/client pixels, not changing GPU backing pixels.
+    point:{x:rect.left+projected.x/w*rect.width,
+           y:rect.top+projected.y/h*rect.height}};
+  });
+ },
  deploy(id,r,c){
   const slot=slotCenters.find(q=>q.zone==='unit'&&q.side==='ally'&&q.r===r&&q.c===c);
   if(!slot)return false;
