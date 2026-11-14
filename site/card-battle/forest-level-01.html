@@ -656,7 +656,26 @@ const combatController=window.PaperchalkCombatTurnController.create({
  onGuard:r=>combatFeedback.guard(r.unitId,r.block),
  onDefeated:r=>objectFX.exit('unit:'+r.unitId,now,{duration:.40}),
  onFinished:state=>showLevelEnd(state),
- onNotice:t=>{if(!t.startsWith('敌方回合'))message(t);}
+ onNotice:t=>{if(!t.startsWith('敌方回合'))message(t);},
+ onTurnStarted:()=>{
+  const upkeep=farmRules.nextTurn();
+  if(upkeep.changes.length)message('农夫设施运作 · '+upkeep.changes.map(c=>c.kind==='life'?'生命精华 +'+c.amount:c.kind==='convert'?'材料精华 +'+c.amount:'树木修复 +'+c.amount).join(' / '));
+ },
+ onBeforeEnemyStrike:({victim,intent})=>{
+  if(!victim)return;
+  const guard=farmRules.intercept(victim.r+3,intent?.damage||0);
+  if(!guard.blocked)return;
+  level.grantBlock(victim.id,guard.blocked);
+  combatFeedback.guard(victim.id,guard.blocked);
+  if(guard.destroyed){
+   const destroyed=cards.find(c=>c.facilityId===guard.facilityId);
+   if(destroyed)objectFX.exit('card:'+destroyed.id,now,{duration:.36});
+  }
+ },
+ onEnemyResolved:({result})=>{
+  if(result?.steal){const lost=farmRules.steal(result.steal);
+   if(lost)message('强盗夺走 '+lost+' 点精华');}
+ }
 });
 window.__forestCombat=Object.freeze({
  get busy(){return combatController.busy;},
@@ -950,7 +969,10 @@ window.addEventListener('pointerup',e=>{
  if(handDown){if(handDown.moved&&onBoard&&active?.id===handDown.id)drop(overSlot);handDown=null;return;}
  if(pointerDown?.placement&&active&&onBoard)drop(overSlot);
  else if(dragCard){move(dragCard,overSlot);dragCard.dragged=false;dragCard=null;}
- else if(pointerDown?.card)tapUnit(pointerDown.card);
+ else if(pointerDown?.card){
+  if(pointerDown.card.kind==='facility')tapFacility(pointerDown.card);
+  else tapUnit(pointerDown.card);
+ }
  pointerDown=null;canvas.style.cursor=active?'crosshair':'default';
 });
 window.addEventListener('pointercancel',e=>{orbitCamera.pointerUp(e);if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;handDown=null;});
@@ -1211,6 +1233,37 @@ function startForestLevel(){
 // The page only connects input/visuals. Turn logic belongs to a reusable engine.
 function requestEndTurn(){return combatController.endTurn(now);}
 endTurnButton.addEventListener('click',requestEndTurn);
+function useSelectedUtility(){
+ if(level.phase!=='active'||combatController.busy)return false;
+ const selected=window.__forestHand?.selectedCard?.();
+ if(!selected||!['guard','resource'].includes(selected.type))return false;
+ const owner=level.getUnit(selected.ownerId);
+ if(!owner?.alive||!owner.deployed){message('先把对应角色部署到九宫格');return false;}
+ const played=window.__forestHand.consumeSelected(selected.type);
+ if(!played)return false;
+ if(played.type==='guard'){
+  const amount=level.grantBlock(owner.id,played.block||3);
+  combatFeedback.guard(owner.id,amount);
+  message(owner.name+'使用架斧 · 格挡 +'+amount);
+ }else{
+  const gained=farmRules.grant(played.essence||'material',played.amount||1);
+  message(owner.name+'使用伐木 · 材料精华 +'+gained);
+ }
+ sync();syncLevelHud();return true;
+}
+useSelectedButton.addEventListener('click',useSelectedUtility);
+function tapFacility(card){
+ if(card.kind!=='facility'||card.def.id!=='plant-tree')return false;
+ const selected=window.__forestHand?.selectedCard?.();
+ if(!selected||selected.id!=='lumber'||!level.getUnit(selected.ownerId)?.deployed)return false;
+ const used=window.__forestHand.consumeSelected('resource');
+ if(!used)return false;
+ farmRules.remove(card.facilityId);
+ objectFX.exit('card:'+card.id,now,{duration:.4});
+ const gain=farmRules.grant('material',3);
+ message('伐木少女砍树 · 树木撤除 · 材料精华 +'+gain);
+ sync();syncLevelHud();return true;
+}
 function tapUnit(card){
  if(!card||card.side!=='enemy'||!attackMode)return false;
  const selected=window.__forestHand?.snapshot.hand.find(c=>c.instance===window.__forestHand?.selected);
