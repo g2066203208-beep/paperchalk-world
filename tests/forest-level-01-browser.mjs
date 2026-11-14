@@ -58,7 +58,7 @@ try{
  assert.equal(await page.evaluate(()=>window.__forestLevelDebug.flipCase.phase),'closed');
  assert.equal(await page.evaluate(()=>window.__forestHand.snapshot.count),0);
  await sleep(550);await shot(page,'01-closed-whitebox-desktop');
- assert.equal(await page.evaluate(()=>window.__forestHand.draw('warrior').reason),'open-case-to-draw');
+ assert.equal(await page.evaluate(()=>window.__forestHand.draw('warrior').reason),'deploy-first');
  await openCase(page);await shot(page,'02-open-seven-slots-desktop');
  await deploy(page);await draw(page);
  await sleep(850);await shot(page,'03-drawn-into-inside-lid-desktop');
