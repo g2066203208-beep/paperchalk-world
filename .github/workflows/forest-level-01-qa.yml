@@ -17,6 +17,7 @@ on:
       - 'site/card-battle/engine/physical-board-frame.js'
       - 'site/card-battle/engine/spatial-shadows.js'
       - 'site/card-battle/engine/visual-shaders.js'
+      - 'site/card-battle/engine/cloud-shadows.js'
       - 'site/card-battle/engine/forest-dressing.js'
       - 'site/card-battle/engine/stylized-materials.js'
       - 'site/card-battle/engine/profession-decks.js'
@@ -55,6 +56,7 @@ jobs:
           node --check site/card-battle/engine/physical-board-frame.js
           node --check site/card-battle/engine/spatial-shadows.js
           node --check site/card-battle/engine/visual-shaders.js
+          node --check site/card-battle/engine/cloud-shadows.js
           node --check site/card-battle/engine/forest-dressing.js
           node --check site/card-battle/engine/stylized-materials.js
           node --check site/card-battle/engine/visual-look.js
