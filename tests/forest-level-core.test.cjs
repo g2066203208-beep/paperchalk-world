@@ -110,4 +110,27 @@ assert.equal(fullLevel.canModify(7,3,1),false,'do not dig occupied battlefield t
 assert.equal(fullLevel.canModify(2,3,1),true,'facility and outer terrain remain editable');
 assert.equal(fullLevel.getSlot('ally',0,1).tileR,3);
 
-console.log('FOREST_LEVEL_CORE_OK 18_logic_and_96_full_terrain_cells 1v2 grid occupancy deterministic combat continuous fx');
+// A reusable level's enemy intent must be driven by its data, not the enemy ID.
+// No suffix like "-b" and no forest-specific logic in level-engine.
+L.register({id:'generic-intent-regression',columns:3,rowsPerSide:3,
+ title:'Data driven intent regression',units:[
+  {id:'player',side:'ally',r:1,c:1,hp:9,attack:2},
+  {id:'unrelated-monster',side:'enemy',r:0,c:0,hp:5,attack:1,
+   intentCycle:[{kind:'guard',block:3},{kind:'attack',damage:2}]}
+ ]});
+const custom=L.create('generic-intent-regression',terrain);
+assert.equal(custom.snapshot().phase,'active');
+assert.equal(custom.enemyIntents()[0].kind,'guard');
+assert.equal(custom.endTurn().ok,true);
+assert.equal(custom.resolveEnemyAction('unrelated-monster').kind,'guard');
+assert.equal(custom.beginPlayerTurn().turn,2);
+assert.equal(custom.enemyIntents()[0].kind,'attack');
+assert.equal(custom.getUnit('unrelated-monster').currentBlock,3,
+ 'guard lasts through the next player turn');
+assert.equal(custom.actAttack('player','unrelated-monster',{power:2}).blocked,2);
+assert.equal(custom.getUnit('unrelated-monster').currentHp,5);
+assert.equal(custom.endTurn().ok,true);
+assert.equal(custom.resolveEnemyAction('unrelated-monster').damage,2);
+assert.equal(custom.getUnit('player').currentHp,7);
+
+console.log('FOREST_LEVEL_CORE_OK 18_logic_and_96_full_terrain_cells data_driven_enemy_intents deterministic_combat');
