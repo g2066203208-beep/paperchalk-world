@@ -68,7 +68,7 @@ html,body{background:#d8ded0}
 <script src="./engine/object-animations.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=2"></script>
 <script src="./engine/profession-decks.js?v=2"></script>
-<script src="./engine/scene-card-hud.js?v=8"></script>
+<script src="./engine/scene-card-hud.js?v=9"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
 <script>
@@ -277,7 +277,7 @@ function makePhysicalCardTexture(image){
  return tex;
 }
 const sceneHUD=window.PaperchalkSceneCardHUD.create({
- canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,makeTexture:makePhysicalCardTexture,
+ canvas,gl,drawCard,renderGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,objectFX,makeTexture:makePhysicalCardTexture,
  getVP:()=>vp,uniformVP:m=>gl.uniformMatrix4fv(U.vp,false,m),
  snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
  remainingCards:profession=>window.__forestHand?.remainingCards(profession)||[],
@@ -566,7 +566,10 @@ function drawHighlights(){
  gl.depthMask(true);gl.disable(gl.BLEND);
 }
 function drawShadows(now){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
-for(const c of cards){for(let i=0;i<1;i++){let scale=1+.04*i;
+for(const c of cards){for(let i=0;i<1;i++){
+ const pose=objectFX.sample(c.unitId?'unit:'+c.unitId:'card:'+c.id,now);
+ if(pose.scale<=.025)continue;
+ let scale=pose.scale;
 let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
 function drawStage(){forestProps.draw(now);terrainRenderer.draw();}
