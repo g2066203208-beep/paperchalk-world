@@ -6,6 +6,7 @@ on:
       - 'site/card-battle/forest-level-01.html'
       - 'site/card-battle/engine/level-engine.js'
       - 'site/card-battle/engine/combat-choreography.js'
+      - 'site/card-battle/engine/combat-turn-controller.js'
       - 'site/card-battle/engine/combat-feedback.js'
       - 'site/card-battle/engine/battle-camera.js'
       - 'site/card-battle/engine/scene-card-hud.js'
@@ -32,6 +33,7 @@ on:
       - 'site/card-battle/levels/forest-01.js'
       - 'tests/forest-level-core.test.cjs'
       - 'tests/combat-choreography.test.cjs'
+      - 'tests/combat-turn-controller.test.cjs'
       - 'tests/profession-decks.test.cjs'
       - 'tests/object-animations.test.cjs'
       - 'tests/scene-transitions.test.cjs'
@@ -56,6 +58,8 @@ jobs:
         run: |
           node tests/forest-level-core.test.cjs
           node tests/combat-choreography.test.cjs
+          node tests/combat-turn-controller.test.cjs
+          node --check site/card-battle/engine/combat-turn-controller.js
           node --check site/card-battle/engine/combat-choreography.js
           node --check site/card-battle/engine/combat-feedback.js
           node tests/battle-camera-controls.test.cjs
