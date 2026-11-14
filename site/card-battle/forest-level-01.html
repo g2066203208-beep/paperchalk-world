@@ -145,7 +145,7 @@ html,body{background:#d8ded0}
 <script src="./engine/combat-choreography.js?v=1"></script>
 <script src="./engine/combat-feedback.js?v=1"></script>
 <script src="./engine/combat-turn-controller.js?v=1"></script>
-<script src="./engine/card-stat-badges.js?v=1"></script>
+<script src="./engine/card-stat-badges.js?v=2"></script>
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/voxel-animations.js?v=1"></script>
 <script src="./engine/object-animations.js?v=1"></script>
@@ -309,7 +309,7 @@ const slotFill=rrFace(slotW-.05,slotH-.05,.10,0);
 let shadowSystem=null;
 function renderGeom(geo,m,color,tex=null,unlit=false,terrainSoil=null,metal=0,material=0){if(shadowSystem?.capturing){shadowSystem.draw(geo,m);return;}gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,unlit?1:0);gl.uniform1f(U.has,tex?1:0);gl.uniform1f(U.terrain,terrainSoil?1:0);gl.uniform1f(U.metal,metal);gl.uniform1f(U.materialKind,material);if(terrainSoil)gl.uniform3fv(U.soil,terrainSoil.slice(0,3));if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}drawCalls++;gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
 const cardStatBadges=window.PaperchalkCardStatBadges.create({
- gl,makeFace:rrFace,renderGeom,mul,T,cardW,cardH,cardD
+ gl,makeFace:rrFace,renderGeom,mul,T,S,cardW,cardH,cardD
 });
 function cube(x,y,z,w,h,d,color,material=0){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color,null,false,null,0,material);}
 // Terrain textures, generated geometry, palette rules and adjacency live in a reusable module.
@@ -388,7 +388,17 @@ else renderGeom(inset,M,c.side==='enemy'?[.945,.95,.953,1]:colors.inner);
 // over the UI, or detach from a moving/flipping/defeated card.
 if(!c.hudMatrix&&c.unitId&&c.slot&&Math.cos(c.flip)>.05){
  const stats=level.getUnit(c.unitId);
- if(stats)cardStatBadges.draw(M,stats);
+ if(stats){
+  const action=combatChoreo.snapshot.active;
+  const t=action?now-action.at:-100;
+  const hitAt=combatChoreo.timeline.impactAt;
+  cardStatBadges.draw(M,stats,action?{
+   attack:action.attackerId===c.unitId&&t>=0&&t<hitAt?
+    .085*Math.sin(Math.PI*t/hitAt):0,
+   health:action.kind==='attack'&&action.targetId===c.unitId&&t>=hitAt&&t<hitAt+.30?
+    .14*(1-(t-hitAt)/.30):0
+  }:{});
+ }
 }
 // A tiny light seam on the upper rim gives readable physical thickness during flips.
 }
