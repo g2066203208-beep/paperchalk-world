@@ -1,66 +1,66 @@
 'use strict';
+// Every card is drawn only by explicit PLAYER click on a class pile.
+// Ten is the total shared hand capacity, never ten per profession.
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const ctx=vm.createContext({window:{},Math,Map,Set,Array,Object,Number,Error});
-vm.runInContext(fs.readFileSync(path.join(__dirname,'../site/card-battle/engine/profession-decks.js'),'utf8'),ctx);
-const instance=ctx.window.PaperchalkProfessionDecks.create({maxHand:10,openingDraw:5,unlocked:['warrior'],seed:618231});
-const init=instance.snapshot();
-assert.equal(init.classes.length,7);
-assert.equal(init.count,5);
-assert.equal(init.hand.length,5,'five physical independent hand cards');
-assert.equal(init.maxHand,10);
-assert.equal(init.classes.find(c=>c.id==='warrior').handCount,5);
-assert.equal(init.classes.filter(c=>c.unlocked).length,1);
-assert.equal(instance.draw('engineer').reason,'locked-class');
-for(let i=0;i<5;i++)assert.equal(instance.draw('warrior').ok,true);
-assert.equal(instance.snapshot().count,10);
-assert.equal(instance.draw('warrior').reason,'hand-full');
-const before=instance.snapshot().hand;
-const chosen=before[2];
-assert.notEqual(chosen.instance,before[before.length-1].instance,'not choosing top of a hand stack');
-assert.equal(instance.play(chosen.instance).ok,true,'any one of ten hand cards playable');
-assert.equal(instance.snapshot().count,9);
-assert.ok(!instance.snapshot().hand.some(c=>c.instance===chosen.instance));
-assert.equal(instance.snapshot().hand[0].instance,before[0].instance,'earlier card remains in hand');
-assert.equal(instance.snapshot().hand[8].instance,before[9].instance,'later card remains in hand');
-assert.equal(instance.snapshot().locked,true);
-assert.equal(instance.draw('warrior').reason,'draw-locked');
-assert.equal(instance.draw('warrior',{special:true}).reason,'box-empty');
-assert.ok(!('discard' in instance),'no ordinary voluntary discard');
-const another=instance.snapshot().hand[4];
-assert.equal(instance.play(another.instance).ok,true,'arbitrary middle hand card also playable after lock');
-instance.nextTurn();
-assert.equal(instance.snapshot().count,5,'each player turn auto-draws five');
-assert.equal(instance.snapshot().locked,false);
-assert.equal(instance.snapshot().turn,2);
-assert.equal(instance.draw('warrior').ok,true,'manual draw still allowed before playing');
-instance.reset();
-assert.equal(instance.snapshot().turn,1);
-assert.equal(instance.snapshot().count,5);
-const prototype=ctx.window.PaperchalkProfessionDecks.create({
- maxHand:10,openingDraw:0,prototypeAllClasses:true,seed:618231
-});
-const firstPrototype=prototype.snapshot();
-assert.equal(firstPrototype.classes.length,7);
-assert.equal(firstPrototype.classes.filter(c=>c.unlocked&&c.deckCount===10).length,7);
-assert.equal(firstPrototype.count,0);
-const faceOrder=prototype.remainingCards('warrior').map(c=>c.id).join('|');
-for(const c of firstPrototype.classes){
- assert.equal(prototype.remainingCards(c.id).map(x=>x.id).join('|'),faceOrder,'same prototype card order');
- assert.equal(prototype.remainingCards(c.id).length,10);
-}
-assert.equal(prototype.draw('engineer').ok,true);
-assert.equal(prototype.snapshot().count,1);
-assert.equal(prototype.remainingCards('engineer').length,9);
-assert.equal(prototype.remainingCards('warrior').length,10,'other physical decks are truly independent');
-prototype.nextTurn();
-assert.equal(prototype.snapshot().count,5);
-assert.equal(prototype.snapshot().turn,2);
-assert.equal(prototype.snapshot().classes.find(c=>c.id==='warrior').deckCount,5,
- 'next round consumes cards from its own warrior pile, not all seven');
-assert.equal(prototype.snapshot().classes.filter(c=>c.id!=='warrior'&&c.deckCount===10).length,6);
-assert.equal(prototype.remainingCards('engineer').length,9,
- 'engineer draw pile retains its nine unplayed cards across rounds');
-assert.equal(prototype.snapshot().classes.find(c=>c.id==='engineer').discardCount,1,
- 'the engineer card returns to discard, ready for a later reshuffle');
-console.log('PROFESSION_DECKS_OK seven_stacks 10_independent_hand five_draw_each_turn discard_reshuffle first_play_draw_lock');
+vm.runInContext(fs.readFileSync(path.join(__dirname,
+ '../site/card-battle/engine/profession-decks.js'),'utf8'),ctx);
+const Engine=ctx.window.PaperchalkProfessionDecks;
+const model=Engine.create({maxHand:10,unlocked:['warrior'],seed:618231});
+assert.equal(model.snapshot().count,0,'NO automatic opening hand');
+assert.equal(model.snapshot().manualDraw,true);
+assert.equal(model.snapshot().maxHand,10);
+assert.equal(model.draw('engineer').reason,'locked-class');
+for(let i=0;i<10;i++)assert.equal(model.draw('warrior').ok,true,'repeated manual box click '+i);
+assert.equal(model.snapshot().count,10);
+assert.equal(model.draw('warrior').reason,'hand-full');
+const initial=model.snapshot().hand,selected=initial[3];
+assert.equal(model.play(selected.instance).ok,true,'play any manually drawn hand card');
+assert.equal(model.snapshot().count,9);
+assert.equal(model.snapshot().locked,false,'playing a card never disables voluntary drawing');
+assert.equal(model.draw('warrior').reason,'box-empty',
+ 'no invented duplicate cards while the used card is in this turn');
+assert.equal(model.draw('warrior',{special:true}).reason,'box-empty');
+const retained=model.snapshot().hand.map(c=>c.instance);
+model.nextTurn();
+assert.equal(model.snapshot().turn,2);
+assert.equal(model.snapshot().count,9,'unused cards remain in hand between turns');
+assert.deepEqual(model.snapshot().hand.map(c=>c.instance),retained,'no automatic turn discard');
+assert.equal(model.snapshot().classes.find(c=>c.id==='warrior').discardCount,1);
+assert.equal(model.draw('warrior').ok,true,'played card becomes drawable after reshuffle when pile empties');
+assert.equal(model.snapshot().count,10,'can manually refill to 10, never auto');
+model.reset();
+assert.equal(model.snapshot().turn,1);
+assert.equal(model.snapshot().count,0,'reset never deals any opening cards');
+
+const seven=Engine.create({maxHand:10,prototypeAllClasses:true,seed:618231});
+const initialSeven=seven.snapshot();
+assert.equal(initialSeven.classes.length,7);
+assert.equal(initialSeven.count,0);
+assert.equal(initialSeven.classes.filter(c=>c.unlocked&&c.deckCount===10).length,7);
+const tempOrder=seven.remainingCards('warrior').map(c=>c.id).join('|');
+for(const cls of initialSeven.classes)
+ assert.equal(seven.remainingCards(cls.id).map(c=>c.id).join('|'),tempOrder,
+  'temporary deck art/order stays consistent but each box remains independent');
+// Mix all seven independent physical boxes in the SAME shared hand.
+for(const cls of initialSeven.classes)assert.equal(seven.draw(cls.id).ok,true,cls.id);
+assert.equal(seven.draw('warrior').ok,true);
+assert.equal(seven.draw('ranger').ok,true);
+assert.equal(seven.draw('engineer').ok,true);
+assert.equal(seven.snapshot().count,10);
+assert.equal(new Set(seven.snapshot().hand.map(c=>c.profession)).size,7);
+assert.equal(seven.draw('guardian').reason,'hand-full');
+const played=seven.snapshot().hand[0];
+assert.equal(seven.play(played.instance).ok,true);
+assert.equal(seven.snapshot().count,9);
+assert.equal(seven.draw('guardian').ok,true,
+ 'after playing, the player may still manually draw another card');
+assert.equal(seven.snapshot().count,10);
+const preserved=seven.snapshot().hand.map(c=>c.instance);
+seven.nextTurn();
+assert.deepEqual(seven.snapshot().hand.map(c=>c.instance),preserved);
+assert.equal(seven.snapshot().count,10,'zero automatic cards on next turn');
+assert.equal(seven.snapshot().classes.find(c=>c.id===played.profession).discardCount,1);
+assert.ok(!('discard' in seven),'player cannot arbitrarily discard without a card effect');
+console.log('PROFESSION_DECKS_MANUAL_DRAW_PASS seven_boxes mixed_ten_hand zero_autodeal preserve_hand draw_after_play');
