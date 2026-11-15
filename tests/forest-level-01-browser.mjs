@@ -473,6 +473,13 @@ try{
  await screenshot(pc,'00-board-clear-no-deck-desktop');
  await showTray(pc);
  await verifyBox(pc,'desktop');
+ const nextCardMatches=await pc.evaluate(()=>{
+  const visible=window.__sceneCardHUD.snapshot.topCards[0];
+  const real=window.__forestHand.remainingCards('woodcutter').at(-1);
+  return visible?.id===real?.id&&visible?.name===real?.name;
+ });
+ assert.equal(nextCardMatches,true,
+  'all deck stacks must display the actual NEXT drawn card face, not the portrait/back');
  const screenCase=await pc.evaluate(()=>window.__sceneCardHUD.snapshot);
  assert.equal(screenCase.renderSpace,'screen-fixed-post-world');
  assert.equal(screenCase.receivesWorldClouds,false,
@@ -506,6 +513,20 @@ try{
  const preAttackHand=await pc.evaluate(()=>window.__forestHand.snapshot.count);
  await screenshot(pc,'03-static-hand-drawn-desktop');
  assert.equal(await pc.evaluate(()=>window.__forestHand.selected),attackCard.instance);
+ // Closing the seven-slot BOX must not take the held cards off screen.
+ await hideTray(pc);
+ await pc.waitForFunction(instance=>window.__sceneCardHUD.collapsed&&
+  window.__sceneCardHUD.pointFor('hand:'+instance)!==null,attackCard.instance,
+  {timeout:10000});
+ const folded=await pc.evaluate(()=>window.__sceneCardHUD.snapshot);
+ assert.equal(folded.visibleDeckPiles,0);
+ assert.ok(folded.visible.some(x=>x.id==='hand:'+attackCard.instance),
+  'hand persists after folding the seven-slot case');
+ assert.ok(folded.handCardScale>=1.0,'desktop hand must use readable enlarged cards');
+ assert.equal(await pc.evaluate(()=>window.__forestHand.selected),
+  attackCard.instance,'closing the case must not clear selection');
+ await screenshot(pc,'03d-folded-deck-hand-still-visible');
+ await showTray(pc);
  assert.equal(await pc.evaluate(()=>window.__forestLevelDebug.attack('forest-foe-a')),true);
  assert.equal(await pc.evaluate(()=>window.__forestHand.snapshot.count),preAttackHand-1);
  await pc.waitForFunction(()=>window.__forestLevelDebug.combat.animation.last?.hitFired===true,
