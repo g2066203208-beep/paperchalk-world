@@ -48,8 +48,14 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   g.i.push(start,start+1,start+2);
  }
  function quad(scene,color,mat,a,b,c,d){
-  // Flat-face normals provide painterly stylized light on faceted rock walls.
-  tri(scene,color,mat,a,b,c);tri(scene,color,mat,a,c,d);
+  // Preserve physically upright normals for horizontal beaches, decks and
+  // sea even when procedural grid winding is reverse from the camera view.
+  const n=nrm(a,b,c);
+  if(n[1]<-.55&&Math.abs(a[1]-b[1])<.2&&Math.abs(b[1]-c[1])<.2){
+   tri(scene,color,mat,a,c,b);tri(scene,color,mat,a,d,c);
+  }else{
+   tri(scene,color,mat,a,b,c);tri(scene,color,mat,a,c,d);
+  }
  }
  function plane(scene,color,mat,xA,xB,zA,zB,y){
   quad(scene,color,mat,[xA,y,zA],[xB,y,zA],[xB,y,zB],[xA,y,zB]);
