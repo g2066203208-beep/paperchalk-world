@@ -13,7 +13,7 @@ const document={createElement:()=>({width:0,height:0,
  getContext:()=>context2d})};
 const ctx=vm.createContext({window,document,Image:class {},Math,Map,Set,
  Array,Object,Number,Error});
-for(const name of ['card-hand-motion','scene-card-hud']){
+for(const name of ['card-hand-motion','card-case-motion','scene-card-hud']){
  vm.runInContext(fs.readFileSync(path.join(__dirname,
  '../site/card-battle/engine/'+name+'.js'),'utf8'),ctx);
 }
@@ -60,6 +60,8 @@ const hud=window.PaperchalkSceneCardHUD.create(o);
 const pointer=(x,y)=>({clientX:x,clientY:y,preventDefault(){}});
 hud.setCollapsed(false);
 hud.render(1,1280,720);
+assert.equal(hud.drawer.phase,'open');
+assert.equal(hud.snapshot.caseSlideAxis,'screen-vertical');
 const deck=hud.pointFor('deck:woodcutter');
 assert.ok(deck);
 hud.move(pointer(deck.x,deck.y));
@@ -111,6 +113,11 @@ assert.ok(dragMoves.length>=2,'world target preview follows the pointer');
 // A character staged ON the top card must react too, without covering the tray.
 staged=[{id:'woodcutter',profession:'warrior'}];
 hud.render(1.6,1280,720);
+const ownerPile=hud.snapshot.visible.find(p=>p.id==='deck:woodcutter');
+const heroCard=hud.snapshot.visible.find(p=>p.id==='character:woodcutter');
+assert.equal(heroCard.x,ownerPile.x,'character card must share OWN deck x');
+assert.equal(heroCard.y,ownerPile.y,'character must REST on deck, not hover in its own row');
+assert.equal(hud.snapshot.characterRestingOnOwnerPile,true);
 hud.move(pointer(deck.x,deck.y));
 hud.render(1.75,1280,720);
 assert.equal(hud.snapshot.hoverTopCard,true);
@@ -121,8 +128,12 @@ assert.equal(hud.snapshot.sceneLighting,true);
 assert.equal(screenBegins,screenEnds);
 assert.ok(screenBegins>=5,'each visible UI pass must restore host state');
 hud.setCollapsed(true);
-hud.render(2,1280,720);
+hud.render(1.84,1280,720);
+assert.equal(hud.snapshot.drawer.phase,'closing');
+assert.ok(hud.snapshot.drawer.y<0,'entire physical case slides below screen edge');
 assert.equal(hud.hit(pointer(deck.x,deck.y)),null);
+hud.render(2.5,1280,720);
+assert.equal(hud.snapshot.drawer.phase,'closed');
 assert.equal(hud.snapshot.visibleDeckPiles,0);
 assert.equal(hud.snapshot.handPersistsWhenCollapsed,true);
 assert.equal(hud.snapshot.visible.filter(p=>p.kind==='hand').length,2,
