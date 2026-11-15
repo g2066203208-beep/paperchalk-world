@@ -236,13 +236,14 @@ function create(o){
     slots.push(card);
     const pending=staged.find(u=>u.id===owner.id);
     if(pending)slots.push({...card,kind:'character',id:'character:'+pending.id,
-     unitId:pending.id,portrait:pending.portrait});
+     unitId:pending.id,portrait:pending.portrait,
+     y:g.y+g.h*(g.mobile?.80:.75),scale:g.scale*1.08});
    }
   }
   // Closing the physical case ONLY hides case/decks; cards stay in a larger,
   // independently anchored hand along the lower screen edge.
   const hand=snapshot.hand||[],count=hand.length;
-  const sc=g.mobile?.68:1.06;
+  const sc=g.mobile?.78:1.06;
   const available=spanW*(g.mobile?.93:.76);
   const spacing=count<2?0:Math.min(g.mobile?.52:.92,
    Math.max(.18,(available-cardW*sc)/(count-1)));
@@ -299,9 +300,16 @@ function create(o){
    if(tactile.shimmer>.03)
     curved(model.well,p.x,p.y,center+thickness*.5+.018,
      .008,paint.brass,g,0,null,1);
-   const m=mul(T(p.x,p.y+tactile.lift,
-      center+thickness*.5+cardD+.022+tactile.lift*.32),
-     mul(RX(tactile.tilt),S(g.scale*tactile.scale,g.scale*tactile.scale,1)));
+   // Hover magnifies the ACTUAL top card into an inspectable face-up card.
+   // The stack stays in place, only this top sheet lifts over the paper layers.
+   const focus=deckLift.get(p.id)||0;
+   const previewTarget=g.mobile?.92:1.19;
+   const extra=1+focus*(Math.max(1,previewTarget/g.scale)-1);
+   const scale=g.scale*tactile.scale*extra;
+   const lift=tactile.lift+focus*(g.mobile?.40:.57);
+   const m=mul(T(p.x,p.y+lift,
+      center+thickness*.5+cardD+.022+lift*.32),
+     mul(RX(tactile.tilt),S(scale,scale,1)));
    renderCard(m,textureFor(next,next.art||next.image||null),g);
   }
  }
@@ -325,7 +333,17 @@ function create(o){
   o.beginScreenPass?.(); // Same world lighting, only cloud coverage is masked.
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(fov,width/height,.1,80),T(0,0,-cameraZ)));
-  if(!collapsed){geometry(g);decks(g,positions,staged);}
+  if(!collapsed){
+   geometry(g);decks(g,positions,staged);
+   // A pending hero is a DIFFERENT card floating just above the face-up
+   // action pile. It must not turn the deck itself back into a portrait.
+   for(const p of positions.filter(x=>x.kind==='character')){
+    const tilt=deckLift.get('deck:'+p.ownerId)||0;
+    const m=mul(T(p.x,p.y+tilt*.07,1.55),
+     mul(RZ(-.055),S(p.scale*(1+tilt*.045),p.scale*(1+tilt*.045),1)));
+    renderCard(m,textureFor({profession:p.profession,name:'人物卡'},p.portrait),g);
+   }
+  }
   const cards=positions.filter(p=>p.kind==='hand');
   const ordered=cards.map(p=>{
    const selected=o.selected?.()===p.instance,focus=hover===p.id;
@@ -481,7 +499,7 @@ function create(o){
     walnutShell:true,forestFelt:true,brassInlay:true,engravedRoleTabs:0,
     printedDeckFaces:(count.roster||[]).length,
     faceUpDecks:true,handPersistsWhenCollapsed:true,
-    handCardScale:g.mobile?.68:1.06,
+    handCardScale:g.mobile?.78:1.06,
     topCards:collapsed?[]:(count.roster||[]).map(owner=>{
      const pile=o.remainingCards?.(owner.id)||[],card=pile[pile.length-1];
      return {ownerId:owner.id,id:card?.id||null,name:card?.name||null,
@@ -515,5 +533,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'12.0.0-face-up-tactile-hand',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'12.1.0-readable-face-up',create});
 })(window);
