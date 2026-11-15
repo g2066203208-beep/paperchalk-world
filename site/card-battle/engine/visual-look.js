@@ -76,7 +76,7 @@ const COAST=freeze({
 const CLIFF=freeze({
  id:'cliff',version:'1.0',stage:10,terrainDetail:.037,goldColor:FOREST.goldColor,
  terrainSide:freeze([.31,.34,.38,1]),
- background:freeze([.49,.59,.69,1]),
+ background:freeze([.39,.52,.66,1]),
  terrainLight:freeze([.54,.56,.56,1]),terrainDark:freeze([.523,.544,.549,1]),
  terrainVariance:.018,ground:freeze([.40,.42,.44,1]),
  foliage:FOREST.foliage,sunDirection:FOREST.sunDirection,
@@ -123,10 +123,10 @@ function evaluate(id,world){
  const backgroundNight=id==='forest'?[.032,.053,.077,1]:
   id==='clearing'?[.048,.063,.09,1]:id==='hall'?[.095,.103,.125,1]:id==='coast'?[.048,.092,.15,1]:id==='cliff'?[.075,.086,.105,1]:id==='ocean'?[.045,.08,.13,1]:id==='cave'?[.055,.075,.09,1]:[.055,.079,.122,1];
  const background=mix(backgroundNight,backgroundDay,daylight);
- const fogDay=id==='street'?.006:id==='hall'?.0025:id==='coast'?.006:id==='cliff'?.004:id==='ocean'?.004:id==='cave'?.014:id==='forest'?.0048:.0035;
- const fogNight=id==='street'?.020:id==='hall'?.005:id==='coast'?.014:id==='cliff'?.010:id==='ocean'?.009:id==='cave'?.018:id==='forest'?.010:.007;
+ const fogDay=id==='street'?.006:id==='hall'?.0025:id==='coast'?.006:id==='cliff'?.003:id==='ocean'?.004:id==='cave'?.007:id==='forest'?.0048:.0035;
+ const fogNight=id==='street'?.020:id==='hall'?.005:id==='coast'?.014:id==='cliff'?.010:id==='ocean'?.009:id==='cave'?.010:id==='forest'?.010:.007;
  const fogColor=mix([.11,.17,.25],
-  id==='street'?[.51,.55,.60]:id==='hall'?[.52,.50,.47]:id==='coast'?[.53,.66,.72]:id==='cliff'?[.48,.54,.61]:id==='ocean'?[.44,.60,.67]:id==='cave'?[.21,.29,.35]:id==='forest'?[.48,.56,.50]:[.56,.54,.50],daylight);
+  id==='street'?[.51,.55,.60]:id==='hall'?[.52,.50,.47]:id==='coast'?[.53,.66,.72]:id==='cliff'?[.43,.52,.61]:id==='ocean'?[.44,.60,.67]:id==='cave'?[.25,.32,.36]:id==='forest'?[.48,.56,.50]:[.56,.54,.50],daylight);
  return {
   ...v,background,
   sunDirection:world.lightDirection,
