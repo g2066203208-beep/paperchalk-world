@@ -143,8 +143,8 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
   const x=cx+(i%8-3.5)*10.7,z=minZ-32-Math.floor(i/8)*15;
   part('cliff','mountain-valley-'+i,x,z,'mountain',put=>{
    const h=4+(i*7%9)*1.5;
-   put(0,h*.5-15,0,6.4,h,7.6,[colors.rock3,colors.shale][i%2]);
-   put(0,h-15+.16,0,3.7,.32,4.5,colors.rock);
+   put(0,h*.5-4.5,0,6.4,h,7.6,[colors.rock3,colors.shale][i%2]);
+   put(0,h-4.5+.16,0,3.7,.32,4.5,colors.rock);
   });
  }
  for(let i=0;i<13;i++){
@@ -200,8 +200,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
   });
  }
  // ─── CAVE: REAL INTERIOR 3D WALLS, ROOF SHADOW AND CAVERN EXIT ──────
- const caveGates=[];
- for(let side of [-1,1])for(let k=0;k<10;k++){
+  for(let side of [-1,1])for(let k=0;k<10;k++){
   const x=cx+side*(W*.5+3.6),z=minZ+(k+.5)*D/10;
   part('cave','cave-wall-'+side+'-'+k,x,z,'wall',put=>{
    const h=7.8+(k%4)*.62;
@@ -253,7 +252,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
  roof.cave=()=>cube(cx,floorY+9.35,cz,W+12,.75,D+11,
   [1,1,1,1],3);
 
- const compiled={};let drawn=0;
+ const compiled={};let drawn=0,lastScene=null;
  for(const name of Object.keys(map)){
   const groups=new Map();
   for(const o of map[name]){
@@ -263,7 +262,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
   compiled[name]=compile(groups);
  }
  function draw(t,scene){
-  drawn=0;
+  drawn=0;lastScene=scene;
   if(!map[scene])return;
   const arr=map[scene];
   const poses=arr.map(o=>appearance?.(o.id,t)||{scale:1,opacity:1});
@@ -288,7 +287,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
   idsFor:scene=>map[scene]?map[scene].map(o=>o.id):[],
   lampsFor:scene=>lights[scene]?lights[scene].map(p=>p.slice()):[],
   get snapshot(){return {
-   scene:null,biomes:Object.keys(map),
+   scene:lastScene,biomes:Object.keys(map),
    coast:{sandBattlefield:true,shorelineModules:14,seaModules:70,bridgeCount:0},
    cliff:{elevatedBattlefield:true,dropHeight:[11,19],edgeModules:32},
    ocean:{deckBattlefield:true,seaModules:100,shipHulls:1,bridgeCount:0},
