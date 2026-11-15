@@ -5,7 +5,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),
  vm=require('node:vm'),path=require('node:path');
 const context2d={
  createLinearGradient:()=>({addColorStop(){}}),fillRect(){},strokeRect(){},
- beginPath(){},arc(){},fill(){},fillText(){},
+ beginPath(){},moveTo(){},bezierCurveTo(){},stroke(){},arc(){},fill(){},fillText(){},
  measureText:value=>({width:String(value).length*14})
 };
 const window={PaperchalkProfessionDecks:{CLASSES:[]}};
