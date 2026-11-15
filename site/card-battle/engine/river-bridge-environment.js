@@ -6,7 +6,7 @@
  */
 (function(root){'use strict';
 function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
- const minZ=terrain.minZ,centerX=terrain.centerX,waterY=terrain.topY-1.04;
+ const minZ=terrain.minZ,centerX=terrain.centerX,waterY=terrain.topY-.58; // visible ABOVE shared ground slab
  const far=minZ-14.65,near=minZ-1.10;
  const c={
   water:[.21,.46,.59,1],water2:[.24,.50,.64,1],water3:[.17,.42,.57,1],
@@ -37,7 +37,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
  for(let col=0;col<16;col++){
   const x=terrain.minX+(col+.5)*terrain.tileW;
   for(let shore=0;shore<2;shore++){
-   const z=shore===0?near+.28:far-.80;
+   const z=shore===0?near-.28:far-.80; // both banks stay clear of tactical board
    addProp('river-bank-'+shore+'-'+col,x,z,'shore',add=>{
     add(0,.13,0,terrain.tileW+.045,1.80,2.16,c.earth);
     add(0,1.09,0,terrain.tileW+.045,.20,2.18,c.grass);
@@ -57,7 +57,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
   });
  }
  // Bridge crosses Z over actual river water and connects both shorelines.
- const crossingLength=near-far+3.25,steps=26,bridgeWidth=5.35;
+ const crossingLength=near-far+1.70,steps=26,bridgeWidth=5.35; // bridge ends before board boundary
  for(let j=0;j<steps;j++){
   const z=far-1.3+(j+.5)*crossingLength/steps;
   const t=(j+.5)/steps;
