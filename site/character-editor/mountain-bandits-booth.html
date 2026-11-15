@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#15161a">
+<title>山道强盗团 · 七人立绘与 L2D 工作室</title>
+<style>
+:root{color-scheme:dark;--bg:#121418;--panel:#1c2027;--line:#3a3739;--accent:#e2a66b;--muted:#9fa5a9;--text:#f5efe8}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,"PingFang SC",sans-serif;color:var(--text);background:var(--bg)}
+body{background:radial-gradient(ellipse 65% 80% at 51% 37%,#393039 0,#1e2127 55%,#121418 100%);}
+button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+header{padding:12px clamp(14px,3vw,40px);min-height:64px;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff1c;background:#15181dd6}
+header strong{font-size:17px;letter-spacing:.06em}header small{display:block;font-size:10px;letter-spacing:.15em;color:#c6b0a4;margin-top:4px}
+header nav{display:flex;gap:8px;flex-wrap:wrap}
+.quiet,.primary{border:1px solid #645548;background:#272b30;padding:9px 12px;border-radius:8px;color:#eee3d8;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}
+.primary{background:#8a5537;border-color:#d6a171;color:#fff1db;font-weight:700}
+.quiet:hover,.primary:hover{filter:brightness(1.1)}
+.layout{max-width:1360px;margin:0 auto;display:grid;grid-template-columns:92px minmax(280px,1fr) minmax(245px,310px);gap:clamp(12px,2.8vw,38px);padding:24px clamp(12px,3vw,35px) 26px;min-height:calc(100dvh - 140px);align-items:center}
+.rail{display:flex;flex-direction:column;gap:8px;max-height:80vh;overflow:auto}
+.avatar{border:2px solid #544b4a;border-radius:9px;overflow:hidden;position:relative;width:76px;height:91px;background:#ddd4c8;opacity:.7;padding:0;flex-shrink:0}
+.avatar[aria-current=true]{opacity:1;border-color:var(--accent);transform:translateX(3px);box-shadow:0 0 0 3px #e2a66b25}
+.avatar img{width:100%;height:100%;object-fit:contain;display:block}
+.avatar span{position:absolute;bottom:3px;left:3px;border-radius:3px;background:#231c1bcf;color:#fff;font-size:11px;padding:1px 4px}
+.stage{min-width:0;display:flex;flex-direction:column;align-items:center;gap:15px;position:relative}
+.stage:before{content:"";position:absolute;width:75%;max-width:550px;aspect-ratio:1;top:11%;border-radius:50%;border:1px solid #e2a66b20;pointer-events:none}
+.art{aspect-ratio:704/1024;height:min(70vh,730px);max-width:min(100%,512px);width:auto;position:relative;overflow:hidden;border:6px solid #f7f3ed;background:#faf9f7;border-radius:12px;box-shadow:0 24px 90px #0008,0 0 0 1px #b99476;isolation:isolate}
+.art>img{display:block;width:100%;height:100%;object-fit:contain}
+.art.motion>img{animation:art-idle 3.8s ease-in-out infinite alternate;transform-origin:center 75%}
+@keyframes art-idle{from{transform:translateY(0) rotate(-.35deg)}to{transform:translateY(-5px) rotate(.35deg)}}
+.empty{position:absolute;inset:0;background:#f6f0e8;color:#7a6150;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:20px;font-size:12px}
+.empty b{font-size:44px;font-family:Georgia,serif;font-weight:400}
+.art.missing>img{display:none}.art.missing .empty{display:flex}
+.index{position:absolute;left:12px;top:12px;background:#fffdf9e8;border:1px solid #ded6c9;border-radius:3px;color:#593e2c;padding:3px 8px;font:12px Georgia,serif;letter-spacing:.1em;pointer-events:none}
+.stage-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.stage-controls button{padding:9px 12px;border-radius:8px;background:#24282d;color:#ebdfd2;border:1px solid #67584f}
+.stage-controls button[aria-pressed=true]{border-color:#e2a66b;background:#50362a}
+.note{font-size:11px;color:#b3a9a2;max-width:560px;text-align:center;line-height:1.7}
+.info{align-self:center}.eyebrow{font:12px Georgia,serif;color:var(--accent);letter-spacing:.19em}
+.info h1{font:500 clamp(32px,4vw,53px)/1.15 "Songti SC","Noto Serif SC",serif;margin:15px 0 7px}
+.en{font:12px Georgia,serif;color:#c2aa9c;letter-spacing:.15em}
+.rule{max-width:220px;margin:28px 0 22px;height:1px;background:linear-gradient(90deg,#c29b74,transparent)}
+.class{font-size:13px;color:#dfc9ad}.desc{font-size:13px;line-height:2;color:#c4c3c3;margin-top:12px;max-width:320px}
+.actions{margin-top:25px;display:grid;gap:9px}
+.actions button,.actions a{width:100%;padding:10px 12px}
+.status{font-size:11px;color:#c7aa8e;line-height:1.6;margin-top:10px;min-height:32px}
+footer{max-width:1360px;margin:auto;border-top:1px solid #ffffff12;padding:12px clamp(15px,3vw,40px);color:#a99e98;font-size:11px;line-height:1.6}
+#files{position:absolute;width:1px;height:1px;opacity:0;clip-path:inset(50%)}
+@media(max-width:820px){.layout{grid-template-columns:1fr;gap:15px;padding:16px 12px}.stage{order:0}.art{height:min(64vh,620px);max-width:min(100%,390px)}.rail{order:2;flex-direction:row;max-height:none;overflow-x:auto;justify-content:flex-start;padding:6px}.avatar{width:58px;height:74px}.avatar[aria-current=true]{transform:translateY(-3px)}.info{order:1;text-align:center}.rule{margin:16px auto 10px}.info h1{margin-top:5px}.desc{margin:10px auto}.actions{max-width:400px;margin:15px auto 0}.status{min-height:0}header strong{font-size:14px}header nav{gap:5px}header nav a{padding:7px 8px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){.art.motion>img{animation:none!important}}
+</style></head>
+<body>
+<header><div><strong>♜ 山道强盗团</strong><small>MOUNTAIN BANDITS / 7 CHARACTER SLOTS</small></div>
+<nav><a class="quiet" href="./index.html">L2D 工作室</a><a class="quiet" href="../">游戏首页</a></nav></header>
+<main class="layout">
+<div class="rail" id="rail" aria-label="强盗团七人切换"></div>
+<section class="stage" aria-label="人物立绘预览">
+<div id="art" class="art missing"><img id="hero" alt=""><div class="empty"><b>VII</b><strong>原始人物立绘尚未托管</strong><span>可以导入你已保存的七张 PNG 原图<br>导入后保存在当前浏览器中</span><button class="quiet" type="button" id="import-one-empty">导入此人物 PNG</button></div><span class="index" id="num">01 / 07</span></div>
+<div class="stage-controls"><button id="prev" type="button">← 上一位</button><button id="motion" type="button" aria-pressed="false">整图轻微动效：关</button><button id="next" type="button">下一位 →</button></div>
+<div class="note">这里展示单张立绘效果。整图轻微动效不代表分层 L2D；真正的图层、蒙版与骨骼编辑请进入 L2D 工作室。</div>
+</section>
+<section class="info">
+<p class="eyebrow">SEVENTH FACTION / OUTLAWS</p><h1 id="name"></h1><div class="en" id="en"></div><div class="rule"></div>
+<div class="class">主职业：<strong id="cls"></strong></div><p class="desc" id="desc"></p>
+<div class="actions">
+<button class="primary" type="button" id="import-all">＋ 导入七张原始 PNG</button>
+<button class="quiet" type="button" id="import-one">导入当前人物 PNG</button>
+<a class="primary" id="edit" href="./index.html">进入该人物 L2D 编辑</a>
+<a class="quiet" href="./index.html?character=seethrough-red-swordswoman-20261115">独立 SeeThrough PSD 测试位</a>
+<a class="quiet" href="../../docs/characters/MOUNTAIN_BANDITS_SEVEN_ANIMA_PROMPTS_20261115.md">Anima 七人完整提示词（源文档）</a>
+</div><div class="status" id="status" role="status"></div>
+</section>
+</main>
+<footer>角色按用户 2026-11-15 原图顺序：女寨主 / 二当家 / 黑市药师 / 机关拆车匠 / 飞贼 / 伏路弩手 / 铁壁打手。原 PNG 是白底 RGB，尚未生成可动画的 PSD 分层；导入操作仅保存在当前浏览器，不会上传到 GitHub。</footer>
+<input id="files" type="file" accept="image/png,image/webp,image/jpeg" multiple>
+<script>
+(()=>{
+'use strict';
+const roster=[
+{id:'bandit-01-chief',name:'女寨主',en:'BANDIT CHIEFTAIN',cls:'战士',file:'01-bandit-chief.png',desc:'棕红长发、宽刃弯刀、暗红披风和金银袋。霸道而爽朗的山寨首领。'},
+{id:'bandit-02-deputy',name:'山寨二当家',en:'OUTLAW DEPUTY',cls:'召唤师',file:'02-bandit-deputy.png',desc:'古铜号角、凌乱短马尾、宽大红披风。靠吹号角召集强盗喽啰，不是召唤野兽。'},
+{id:'bandit-03-apothecary',name:'黑市药师',en:'BLACK-MARKET APOTHECARY',cls:'医师',file:'03-black-market-apothecary.png',desc:'酒红长裙与深色波浪长发，腰悬玻璃药瓶。治疗、药剂和战场支援。'},
+{id:'bandit-04-tinkerer',name:'机关拆车匠',en:'BANDIT TRAP ENGINEER',cls:'工程师',file:'04-bandit-tinkerer.png',desc:'护目镜、工具围裙、铁镐与飞钩绳索。搭设陷阱，破坏敌方设施。'},
+{id:'bandit-05-thief',name:'飞贼',en:'HIGHWAY PICKPOCKET',cls:'游击者',file:'05-bandit-thief.png',desc:'短发与小虎牙，钱袋挂满腰间。擅长绕后、窃取和迅速撤离。'},
+{id:'bandit-06-crossbow',name:'伏路弩手',en:'ROAD AMBUSH CROSSBOW',cls:'射手',file:'06-bandit-crossbow.png',desc:'灰金色长发与橄榄色斗篷，使用木制弩进行远程伏击。'},
+{id:'bandit-07-guard',name:'铁壁打手',en:'BANDIT SHIELD BEARER',cls:'守卫',file:'07-bandit-guard.png',desc:'短棕发、毛皮衣领和铁箍木门盾。身形结实，是山寨防线。'}
+];
+const $=id=>document.getElementById(id),base='../assets/characters/mountain-bandits/',urls=new Map();
+let current=0,db=null,onlyCurrent=false,sequence=0;
+function database(){return new Promise((yes,no)=>{const req=indexedDB.open('paperchalk-mountain-bandits-booth-v1',1);req.onupgradeneeded=()=>req.result.createObjectStore('portraits');req.onsuccess=()=>yes(req.result);req.onerror=()=>no(req.error)})}
+function retrieve(id){return new Promise(resolve=>{if(!db)return resolve(null);const req=db.transaction('portraits','readonly').objectStore('portraits').get(id);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>resolve(null)})}
+function persist(id,blob){return new Promise((yes,no)=>{if(!db)return no(Error('浏览器无法保存'));const tx=db.transaction('portraits','readwrite');tx.objectStore('portraits').put(blob,id);tx.oncomplete=yes;tx.onerror=()=>no(tx.error)})}
+async function url(item){const own=urls.get(item.id);if(own)return own;const saved=await retrieve(item.id);if(saved){const object=URL.createObjectURL(saved);urls.set(item.id,object);return object}return base+item.file}
+function setImg(img,src,fail){img.onerror=()=>{img.onerror=null;fail?.()};img.src=src}
+async function thumb(index){const el=$('rail').children[index];const img=el?.querySelector('img');if(!img)return;img.style.visibility='visible';setImg(img,await url(roster[index]),()=>{img.style.visibility='hidden'})}
+async function show(index){current=(index+roster.length)%roster.length;const seq=++sequence,v=roster[current];$('name').textContent=v.name;$('en').textContent=v.en;$('cls').textContent=v.cls;$('desc').textContent=v.desc;$('num').textContent=String(current+1).padStart(2,'0')+' / 07';$('edit').href='./index.html?character='+encodeURIComponent(v.id)+'&side=front';$('art').classList.remove('missing');const src=await url(v);if(seq!==sequence)return;setImg($('hero'),src,()=>{if(seq===sequence)$('art').classList.add('missing')});$('hero').alt=v.name+'完整立绘';[...$('rail').children].forEach((b,i)=>b.setAttribute('aria-current',String(i===current)));}
+function chooser(one){onlyCurrent=one;$('files').multiple=!one;$('files').click()}
+async function importFiles(files){const imgs=[...files].filter(f=>f.type.startsWith('image/'));let count=0;for(let i=0;i<imgs.length;i++){const f=imgs[i];let idx=onlyCurrent?current:roster.findIndex(r=>f.name.toLowerCase().includes(r.file.toLowerCase().replace('.png',''))||f.name.startsWith(r.file.slice(0,2)));if(idx<0&&imgs.length===roster.length)idx=i;if(idx<0&&imgs.length===1)idx=current;if(idx<0)continue;const entry=roster[idx];try{await persist(entry.id,f);if(urls.has(entry.id))URL.revokeObjectURL(urls.get(entry.id));urls.set(entry.id,URL.createObjectURL(f));count++;await thumb(idx)}catch(err){$('status').textContent='保存失败：'+err.message;return}}await show(current);$('status').textContent=count?'已导入 '+count+' 张原图并保存到当前浏览器。可按下方按钮进入独立 L2D 编辑，但单张 PNG 仍不是分层模型。':'没有识别出可导入的原图。';}
+$('files').onchange=async e=>{await importFiles(e.target.files);e.target.value=''};
+$('import-all').onclick=()=>chooser(false);$('import-one').onclick=()=>chooser(true);$('import-one-empty').onclick=()=>chooser(true);
+$('prev').onclick=()=>show(current-1);$('next').onclick=()=>show(current+1);
+$('motion').onclick=()=>{const active=$('art').classList.toggle('motion');$('motion').setAttribute('aria-pressed',String(active));$('motion').textContent='整图轻微动效：'+(active?'开':'关')};
+roster.forEach((r,i)=>{const b=document.createElement('button');b.className='avatar';b.type='button';b.dataset.i=i;b.setAttribute('aria-label',r.name);const img=document.createElement('img');img.alt='';const sp=document.createElement('span');sp.textContent=String(i+1).padStart(2,'0');b.append(img,sp);b.onclick=()=>show(i);$('rail').append(b)});
+window.addEventListener('keydown',e=>{if(e.target.closest('input,button,a'))return;if(e.key==='ArrowLeft')show(current-1);if(e.key==='ArrowRight')show(current+1)});
+window.addEventListener('beforeunload',()=>urls.forEach(url=>URL.revokeObjectURL(url)));
+database().then(x=>{db=x;roster.forEach((_,i)=>thumb(i));show(0)}).catch(()=>{roster.forEach((_,i)=>thumb(i));show(0);$('status').textContent='IndexedDB 不可用，本次只能临时预览。'});
+})();
+</script>
+</body></html>
