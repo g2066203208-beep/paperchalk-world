@@ -797,8 +797,8 @@ sceneTransition=window.PaperchalkSceneTransitions.create({
   sceneLifecycle.release(oldScene,{retain:[...shared]});
   forestProps.setScene(nextScene);
   const preset=scenePresets[nextScene];
-  for(let row=0;row<terrain.rows;row++)
-   for(let col=0;col<terrain.cols;col++)terrain.set(col,row,preset.material);
+  // The physical board and its edited terrain never change when travelling
+  // between worlds. Switching a world only replaces scenery and lighting.
   colors.background=preset.background.slice();
   document.body.dataset.scene=nextScene;
   sceneSwitchStatus.textContent='环境已切换 · '+preset.name+'正在弹性生成';
