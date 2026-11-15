@@ -42,9 +42,14 @@ function create(options={}){
  function color(c,r){
   const t=cell(c,r);if(!t)return null;
   const material=materials[t.kind];if(!material)throw Error('Unknown terrain material: '+t.kind);
-  const base=material[(c+r)%2===0?'light':'dark'];
-  // Alternate value first, then low-amplitude deterministic natural variation.
-  const jitter=((hash(c,r,seed)%1009)/1008-.5)*2*material.variance;
+  const natural=['sand','shale','deck','caveRock'].includes(t.kind);
+  // A sculpted natural environment is NOT a chess checkerboard. Adjacent
+  // cells share soft low-frequency colour, while tiny hash noise retains grain.
+  const tMix=natural?constrain(.47+
+    .22*Math.sin(c*.37+r*.23+seed*.0007)+
+    .14*Math.sin(c*.71-r*.39),.14,.83):(c+r)%2===0?1:0;
+  const base=material.light.map((v,i)=>v*tMix+material.dark[i]*(1-tMix));
+  const jitter=((hash(c,r,seed)%1009)/1008-.5)*2*material.variance*(natural?.45:1);
   return base.map((v,i)=>i<3?constrain(v+jitter,0,1):1);
  }
  function neighbors(c,r){
