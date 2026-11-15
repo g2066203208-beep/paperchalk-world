@@ -1,0 +1,47 @@
+name: Hunter Vampire Duel Responsive Browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/hunter-vampire-duel.html'
+      - 'site/card-battle/ui/hunter-vampire-duel.css'
+      - 'site/card-battle/ui/hunter-vampire-duel.js'
+      - 'site/card-battle/ui/duel-card-art.js'
+      - 'site/card-battle/engine/hunter-vampire-duel.js'
+      - 'tests/hunter-vampire-duel-browser.mjs'
+      - '.github/workflows/hunter-vampire-duel-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax of encounter source
+        run: |
+          node --check site/card-battle/engine/hunter-vampire-duel.js
+          node --check site/card-battle/ui/duel-card-art.js
+          node --check site/card-battle/ui/hunter-vampire-duel.js
+          node --check tests/hunter-vampire-duel-browser.mjs
+      - name: Install Chromium and Playwright
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve actual game files
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/duel-http.log 2>&1 &
+          sleep 2
+      - name: Run 5 screen sizes and tactical interaction checks
+        run: node tests/hunter-vampire-duel-browser.mjs
+      - name: Archive browser screenshots and metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hunter-vampire-duel-real-browser
+          path: artifacts/hunter-vampire-duel/
+          if-no-files-found: warn
