@@ -412,11 +412,14 @@ function create(o){
   const priority={character:3,hand:2,deck:1};
   const ranked=[...hot].sort((a,b)=>(priority[b.kind]||0)-(priority[a.kind]||0)||
    ((a.x-q.x)**2+(a.y-q.y)**2)-((b.x-q.x)**2+(b.y-q.y)**2));
+  const drawer=caseMotion.transform(now,dims().h);
   for(const p of ranked){
+   if(p.kind!=='hand'&&(!drawer.interactive||collapsed))continue;
    const sc=p.scale;
+   const by=p.y+(p.kind==='hand'?0:drawer.y);
    const bw=cardW*sc*(p.kind==='hand'?.62:.52);
    const bh=cardH*sc*(p.kind==='hand'?.61:.49);
-   if(Math.abs(q.x-p.x)<bw&&Math.abs(q.y-p.y)<bh)return p;
+   if(Math.abs(q.x-p.x)<bw&&Math.abs(q.y-by)<bh)return p;
    // The enlarged face-up top is still the SAME physically clickable sheet.
    // Keep hit-testing on the lifted region so hover does not flicker or drop
    // when the pointer follows the rising card away from the pile.
@@ -427,7 +430,7 @@ function create(o){
      const target=g.mobile?.92:1.19;
      const expanded=g.scale*tactile.scale*
       (1+focus*(Math.max(1,target/g.scale)-1));
-     const liftedY=p.y+tactile.lift+focus*(g.mobile?.40:.57);
+     const liftedY=p.y+drawer.y+tactile.lift+focus*(g.mobile?.40:.57);
      if(Math.abs(q.x-p.x)<cardW*expanded*.53&&
       Math.abs(q.y-liftedY)<cardH*expanded*.52)return p;
     }
@@ -521,9 +524,11 @@ function create(o){
  }
  function pointFor(id){
   const p=scene.find(x=>x.id===id);if(!p)return null;
-  const r=canvas.getBoundingClientRect();
+  const drawer=caseMotion.transform(now,dims().h);
+  if(p.kind!=='hand'&&(!drawer.interactive||collapsed))return null;
+  const r=canvas.getBoundingClientRect(),y=p.y+(p.kind==='hand'?0:drawer.y);
   return {x:r.left+(.5+p.x/spanW)*r.width,
-   y:r.top+(.5-p.y/spanH)*r.height};
+   y:r.top+(.5-y/spanH)*r.height};
  }
  function setCollapsed(next){
   collapsed=!!next;caseMotion.setOpen(!collapsed,now);
