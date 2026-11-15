@@ -5,6 +5,7 @@ on:
     paths:
       - 'site/card-battle/forest-level-01.html'
       - 'site/card-battle/engine/stone-street-environment.js'
+      - 'site/card-battle/engine/royal-hall-environment.js'
       - 'site/card-battle/engine/forest-environment.js'
       - 'site/card-battle/engine/visual-look.js'
       - 'site/card-battle/engine/visual-shaders.js'
@@ -29,6 +30,7 @@ jobs:
       - name: Check modular environment syntax
         run: |
           node --check site/card-battle/engine/stone-street-environment.js
+          node --check site/card-battle/engine/royal-hall-environment.js
           node --check site/card-battle/engine/visual-look.js
           node --check site/card-battle/engine/visual-shaders.js
           node --check site/card-battle/engine/forest-environment.js
