@@ -14,10 +14,8 @@ const packs=[
  ]},
  {id:'woodcutter-character',scope:'character',profession:'warrior',
   characterId:'farmer-warrior-loli-lumberjack',cards:[
-   {id:'lumber',name:'伐木',type:'resource',essence:'material',amount:1,
-    description:'获得1材料精华；砍倒己方树木可获得3材料精华',
-    interactions:[{cardId:'plant-tree',destroy:true,
-     grant:{essence:'material',amount:3}}]}
+   {id:'diagonal-slash',name:'斜劈',type:'attack',power:4,
+    description:'对敌人造成4点伤害；伐木少女也可用此牌砍树'}
  ]},
  {id:'ranger-core',scope:'profession',profession:'ranger',cards:[
   {id:'aimed-shot',name:'瞄准射击',type:'attack',power:2},
@@ -43,8 +41,8 @@ const packs=[
     facilityRole:'support',description:'附近农夫设施的持续效果额外触发'},
    {id:'scarecrow',name:'稻草人',type:'facility',footprint:[1,1],facilityHp:1,
     facilityRole:'decoy',description:'吸收附近队友遭受的一次攻击'},
-   {id:'windmill',name:'风车磨坊',type:'facility',footprint:[2,2],facilityHp:7,
-    facilityRole:'conversion',description:'每回合转换1生命精华为材料精华'}
+   {id:'irrigated-field',name:'灌溉农田',type:'facility',footprint:[2,2],facilityHp:6,
+    facilityRole:'production',description:'每回合生产2生命精华，水井相邻时产出翻倍'}
  ]},
  {id:'bandit-bruiser-actions',scope:'enemy',archetype:'bruiser',cards:[
   {id:'bandit-cut',name:'砍刀',type:'enemy-action',kind:'attack',damage:2},
