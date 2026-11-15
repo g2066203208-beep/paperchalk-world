@@ -11,7 +11,7 @@ const smooth=t=>{t=clamp(t);return t*t*(3-2*t);};
 const mix=(a,b,t)=>a+(b-a)*t;
 const DRAW_TIME=.59;
 function create(){
- const flights=new Map(),deckHits=new Map(),selections=new Map(),springs=new Map();
+ const flights=new Map(),returns=new Map(),deckHits=new Map(),selections=new Map(),springs=new Map();
  let lastTime=null;
  function drawCard({instance,ownerId,from,at}){
   if(!instance||!ownerId||!from)throw Error('Draw needs unique card instance, owner and source');
@@ -20,6 +20,24 @@ function create(){
  }
  function selectCard(instance,at){
   if(instance)selections.set(instance,at);
+ }
+ function returnCard(instance,from,at){
+  if(!instance||!from)return;
+  flights.delete(instance);
+  returns.set(instance,{from:{...from},start:at,duration:.39});
+ }
+ function returnPose(instance,target,at){
+  const back=returns.get(instance);
+  if(!back)return null;
+  const u=clamp((at-back.start)/back.duration);
+  if(u>=1){returns.delete(instance);return null;}
+  const t=smooth(u),arc=Math.sin(Math.PI*u)*.32;
+  const bounce=Math.sin(u*Math.PI*2)*Math.pow(1-u,2);
+  return {x:mix(back.from.x,target.x,t),
+   y:mix(back.from.y,target.y,t)+arc+bounce*.06,
+   z:1.08+(1-u)*.27,
+   scale:mix(back.from.scale,target.scale,t)*(1+bounce*.04),
+   angle:mix(-.06,target.angle,t)+bounce*.05,phase:'return'};
  }
  function drawPose(instance,target,at){
   const f=flights.get(instance);
@@ -87,6 +105,8 @@ function create(){
   springs.set(instance,pose);
   const flight=drawPose(instance,pose,at);
   if(flight)return flight;
+  const returning=returnPose(instance,pose,at);
+  if(returning)return returning;
   const focus=hover?1:0,chosen=selected?1:0;
   const punch=selectPose(instance,at);
   return {x:pose.x,y:pose.y+focus*.30+chosen*.44+punch.lift,
@@ -101,10 +121,12 @@ function create(){
    const valid=new Set(validIds);
    for(const id of springs.keys())if(!valid.has(id))springs.delete(id);
    for(const id of flights.keys())if(!valid.has(id))flights.delete(id);
+   for(const id of returns.keys())if(!valid.has(id))returns.delete(id);
   }
  }
  function reset(){
-  flights.clear();deckHits.clear();selections.clear();springs.clear();lastTime=null;
+  flights.clear();returns.clear();deckHits.clear();selections.clear();
+  springs.clear();lastTime=null;
  }
  function stats(at){
   // Read-only diagnostics must not advance or delete animation tracks.
@@ -113,11 +135,11 @@ function create(){
    return {instance,ownerId:f.ownerId,progress:elapsed,
     phase:elapsed<.13?'peel':elapsed<.80?'flight':elapsed<1?'settle':'complete'};
   }).filter(f=>f.phase!=='complete');
-  return {activeFlights,activeDeckHits:[...deckHits.keys()],
-   handPoseCount:springs.size};
+  return {activeFlights,activeReturns:[...returns.keys()],
+   activeDeckHits:[...deckHits.keys()],handPoseCount:springs.size};
  }
  return Object.freeze({drawCard,drawPose,deckPose,selectCard,selectPose,
-  settle,tick,reset,stats,version:'1.0.0'});
+  returnCard,returnPose,settle,tick,reset,stats,version:'1.1.0'});
 }
-root.PaperchalkCardHandMotion=Object.freeze({version:'1.0.0',create});
+root.PaperchalkCardHandMotion=Object.freeze({version:'1.1.0',create});
 })(window);
