@@ -119,14 +119,16 @@ void main(){
  if(uCaveMode>.5&&uUnlit<.5){
   // A real ceiling occludes exterior ambient. Cave crystals provide
   // separate local light via the shared four-light array below.
-  illumination=illumination*.30+vec3(.15,.18,.205);
+  illumination=illumination*.45+vec3(.29,.33,.37);
  }
  if((uStreetMode>.5||uIndoorMode>.5||uCaveMode>.5) && uUnlit<.5){
   // Shared lighting shader; local lamps illuminate real 3D receivers.
   // The existing directional moonlight uses the shadow map.
   for(int li=0;li<4;li++){
    vec3 delta=uStreetLamps[li]-vP;
-   float sq=dot(delta,delta),range=1./(1.+sq*.035+sq*sq*.00013);
+   float sq=dot(delta,delta);
+   float range=uCaveMode>.5?1./(1.+sq*.004+sq*sq*.000003):
+    1./(1.+sq*.035+sq*sq*.00013);
    float facing=max(.12,dot(normal,normalize(delta)));
    vec3 localLight=uCaveMode>.5?vec3(.38,.76,.89):vec3(1.00,.64,.34);
    illumination+=localLight*range*facing*.98*
@@ -180,13 +182,13 @@ void main(){
   float w1=sin(vP.x*.52+vP.z*.19+t*.49);
   float w2=cos(vP.x*.21-vP.z*.68-t*.72);
   float w3=sin(vP.x*1.64+vP.z*1.12+t*1.07);
-  vec3 wn=normalize(normal+vec3(.058*w1+.022*w3,0.,.067*w2+.022*w3));
+  vec3 wn=normalize(vec3(.035*w1+.014*w3,1.,.042*w2+.014*w3));
   vec3 viewDir=normalize(uCameraEye-vP);
   float reflectivity=pow(1.-clamp(dot(wn,viewDir),0.,1.),3.);
   float glint=pow(max(0.,dot(reflect(-light,wn),viewDir)),64.);
   vec3 deep=base.rgb*(.91+.045*w1+.035*w2);
   vec3 sky=uSkyFill*uAmbient*(.28+.31*reflectivity);
-  vec3 reflection=uSunColor*glint*.14;
+  vec3 reflection=uSunColor*glint*.09;
   float spark=pow(max(0.,w3*w2),12.)*.025;
   finalColor=clamp(mix(deep,deep*.75+sky,reflectivity*.31)+
    reflection+vec3(spark),0.,1.);
@@ -234,5 +236,5 @@ void main(){
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.9.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'2.0.0',fragment});
 })(window);
