@@ -31,6 +31,7 @@ try{
  const state=await desktop.evaluate(()=>{
   const d=window.__forestLevelDebug,e=d.environment;
   return {scene:e.id,material:e.material,street:e.street,
+   physicalBoard:d.physicalFrame,boardPersistent:e.boardPersistentAcrossScenes,
    terrain:window.__terrainEngine.snapshot().map(t=>t.kind),
    paving:e.paving,
    sceneOrder:d.sceneSwitch,shadow:d.spatialShadows,
@@ -41,9 +42,14 @@ try{
  });
  assert.equal(state.webgl,true,'must use actual WebGL, not an illustration');
  assert.equal(state.scene,'street');
- assert.equal(state.material,'stone');
+ assert.equal(state.material,'grass');
+ assert.equal(state.boardPersistent,true,'one permanent board across all world scenes');
+ assert.equal(state.physicalBoard.boardCols,16);
+ assert.equal(state.physicalBoard.boardRows,6);
+ assert.equal(state.physicalBoard.lastDrawCalls,1);
  assert.equal(state.terrain.length,96);
- assert.ok(state.terrain.every(s=>s==='stone'));
+ assert.ok(state.terrain.every(s=>s==='grass'),
+  'scene must never replace the physical board with stone road or sand');
  assert.equal(state.street.houseCount,13);
  assert.equal(state.street.alleyModules,5);
  assert.equal(state.street.lamps,4);
@@ -91,8 +97,9 @@ try{
   null,{timeout:20000});
  assert.equal((await desktop.evaluate(()=>window.__forestLevelDebug.worldTime)).timeText,'23:00');
  await capture(desktop,'05-night-street-same-world');
- // Verify the original three-scene switch and terrain changes without rebuilding combat.
- for(const [next,material] of [['hall','marble'],['coast','sand'],['cliff','shale'],['ocean','deck'],['cave','caveRock'],['forest','grass'],['clearing','dirt'],['street','stone']]){
+ // All eight environments must display the exact SAME independent board.
+ for(const next of ['hall','coast','cliff','ocean','cave','forest','clearing','street']){
+  const material='grass';
   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
   console.log('SCENE_SWITCH_BEGIN',next);
   await desktop.waitForFunction(([id,kind])=>{
@@ -109,8 +116,19 @@ try{
   });
   const afterSwitch=await desktop.evaluate(()=>({
    time:window.__forestLevelDebug.worldTime,
-   light:window.__forestLevelDebug.worldLighting
+   light:window.__forestLevelDebug.worldLighting,
+   board:window.__forestLevelDebug.physicalFrame,
+   landscape:window.__forestLevelDebug.environment.landscape,
+   slots:window.__forestLevelDebug.slots.length,
+   kinds:window.__forestLevelDebug.terrain.map(t=>t.kind),
+   unified:window.__forestLevelDebug.environment.boardPersistentAcrossScenes
   }));
+  assert.equal(afterSwitch.unified,true);
+  assert.equal(afterSwitch.board.lastDrawCalls,1,
+   'the same real-world-space gold board frame must be drawn in every scene');
+  assert.equal(afterSwitch.slots,96);
+  assert.ok(afterSwitch.kinds.every(kind=>kind==='grass'),
+   'biome scenery must not recolor one cell of the shared tactical board');
   assert.equal(afterSwitch.time.timeText,'23:00','scene transitions must NOT reset world time');
   assert.equal(afterSwitch.time.paused,true,'world clock and pause state persist');
   assert.ok(afterSwitch.light.nightFactor>.99,'night must stay night in '+next);
@@ -161,6 +179,9 @@ try{
    assert.equal(landscape.geometry,'organic-triangulated-worldspace');
    assert.equal(landscape.usesWorldClock,true);
    assert.equal(landscape.coast.bridgeCount,0,'no scene-external decorative bridges');
+   assert.equal(landscape.coast.boardIndependent,true);
+   assert.equal(landscape.coast.sandBattlefield,false);
+   assert.equal(landscape.coast.sandOutsideBoard,true);
    assert.equal(landscape.ocean.bridgeCount,0,'no decorative bridges on ocean decks');
    assert.equal((await desktop.evaluate(()=>window.__forestLevelDebug.slots.length)),96);
    console.log('LANDSCAPE_BATTLEFIELD_PASS',next,landscape.drawn);
