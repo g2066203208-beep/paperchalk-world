@@ -25,7 +25,7 @@ function sample(minutes){
  const twilight=(1-smooth(.1,.57,Math.abs(elevation)))*daylight;
  const east=Math.cos(theta);
  const moonTheta=theta+Math.PI;
- const sun=[east*.86,Math.max(.13,elevation),.27];
+ const sun=[east*.86,Math.max(.13,elevation),-.32]; // sunlight enters north-facing hall windows
  const moon=[Math.cos(moonTheta)*.62,Math.max(.28,-elevation),-.36];
  const direction=sun.map((v,i)=>v*daylight+moon[i]*night);
  const length=Math.hypot(...direction)||1;
