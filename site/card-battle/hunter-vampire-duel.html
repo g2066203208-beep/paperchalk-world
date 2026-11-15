@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1b2028">
 <title>银月夜路｜赏金枪手 VS 血族小公主 · 卡牌战斗</title>
 <meta name="description" content="黑森林第一关：原版 Anima 猎人枪手与吸血鬼立绘，真正的扇形手牌、能量、牌库、回合制和敌方意图。">
@@ -25,7 +25,7 @@
   <div class="turn-counter">第 <strong id="turn-count">01</strong> 回合</div>
   <div class="menu-tools"><button type="button" id="sound" aria-pressed="false" aria-label="切换音效">♫</button><button type="button" id="open-help" aria-label="查看规则">?</button><button type="button" id="restart-top" aria-label="重新开始">↻</button></div>
  </header>
- <main class="arena" aria-label="卡牌战斗主场景">
+ <main id="arena" class="arena" aria-label="卡牌战斗主场景">
   <div class="battle-platform" aria-hidden="true"></div>
   <section id="fighter-hunter" class="fighter fighter-hunter" aria-label="我方赏金枪手">
    <div class="portrait-wrap" id="hero-wrap">
@@ -80,7 +80,7 @@
     <span class="card-back" aria-hidden="true"><i>✦</i></span><span class="stack-title">摸牌</span><b id="draw-count">19</b>
    </button>
   </div>
-  <div class="hand-region">
+  <div id="hand-region" class="hand-region">
    <div class="hand-label" id="deck-status">手牌 5 / 7</div>
    <div id="hand" class="hand" role="group" aria-label="手牌，点按预览，再次点按使用"></div>
    <div id="selected-preview" class="selected-preview" hidden aria-live="polite">
