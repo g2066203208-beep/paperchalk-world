@@ -142,7 +142,7 @@ assert.equal(custom.getUnit('player').currentHp,7);
 const chapter2=L.create('forest-02',full,{physicalColumns:[6,7,8]});
 assert.equal(chapter2.snapshot().units.filter(u=>u.side==='ally').length,2);
 assert.equal(chapter2.snapshot().units.filter(u=>u.side==='enemy').length,3);
-assert.deepEqual(chapter2.snapshot().units.filter(u=>u.side==='ally').map(u=>u.id),['woodcutter','farmer']);
+assert.deepEqual(Array.from(chapter2.snapshot().units.filter(u=>u.side==='ally').map(u=>u.id)),['woodcutter','farmer']);
 const farmer=chapter2.getUnit('farmer');
 assert.equal(farmer.role,'engineer');
 assert.equal(farmer.name,'农夫');
