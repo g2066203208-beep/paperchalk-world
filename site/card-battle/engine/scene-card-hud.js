@@ -43,8 +43,10 @@ function create(o){
  let sceneMotion={mode:'steady',start:0},drawCalls=0,deckMeshes=0,lastDeal=null;
  // UI-only tactile state. Never changes the underlying pile or world scene.
  const deckLift=new Map();
- const motion=root.PaperchalkCardHandMotion?.create();
- const caseMotion=root.PaperchalkCardCaseMotion?.create();
+ const reducedMotion=o.reducedMotion===true||
+  (o.reducedMotion!==false&&root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true);
+ const motion=root.PaperchalkCardHandMotion?.create({reducedMotion});
+ const caseMotion=root.PaperchalkCardCaseMotion?.create({reducedMotion});
  if(!motion||!caseMotion)
   throw Error('Load card-hand-motion and card-case-motion before scene-card-hud');
  let lastFrame=0,drag=null,heroDrag=null;
@@ -404,7 +406,8 @@ function create(o){
   }).sort((a,b)=>a.priority-b.priority||a.p.fanIndex-b.p.fanIndex);
   for(const {p,pose} of ordered){
    if(drag?.instance===p.instance)continue;
-   if(pose.phase==='flight'&&o.pileEdge&&gl.enable&&gl.depthMask){
+   if(pose.phase==='flight'&&!g.mobile&&!reducedMotion&&
+      o.pileEdge&&gl.enable&&gl.depthMask){
     // Thin paper-edge trails clarify the arc without washing out the art.
     // Drawn only while a card flies; never a permanent glow/idle emitter.
     gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -625,6 +628,7 @@ function create(o){
     printedDeckFaces:(count.roster||[]).length,
     faceUpDecks:true,handPersistsWhenCollapsed:true,
     handCardScale:g.mobile?.78:1.06,
+    reducedMotion,paperTrailsEnabled:!g.mobile&&!reducedMotion,
     motionLayers:['top-recoil','top-peel','flight-arc','paper-edge-trail',
      'rotation','elastic-settle','neighbour-reflow','selection-punch','return'],
     topCards:collapsed?[]:(count.roster||[]).map(owner=>{
@@ -664,5 +668,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'13.0.0-physical-hero-drag',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'13.1.0-responsive-accessible-tray',create});
 })(window);
