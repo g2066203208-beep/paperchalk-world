@@ -1,7 +1,7 @@
 /* Farmer organization facilities and shared essence. Pure gameplay rules; no DOM/WebGL.
  * A facility is an independent placed object with durability and occupied tiles.
  * Fields supply LIFE, trees shield, wells double neighboring recurring production,
- * scarecrows absorb one hit, mills convert LIFE to MATERIAL. Nothing requires
+ * scarecrows absorb one hit, irrigated fields multiply agricultural yield. Nothing requires
  * essence just to play a basic card.
  */
 (function(root){'use strict';
@@ -78,10 +78,12 @@ function create(options={}){
  function nextTurn(){
   turn++;
   const changes=[];
-  // Processing order is deliberate: farm -> tree -> mill; production may fuel
-  // conversion in the SAME upkeep. A second well does not double again.
-  for(const f of structures.filter(x=>x.cardId==='farm-field')){
-   const gained=grant('life',accelerated(f)?2:1);
+  // Agricultural economy: standard field + 2x2 irrigated field.
+  // A neighboring well triggers the SAME recurring yield a second time;
+  // stacking wells never multiplies it again.
+  for(const f of structures.filter(x=>x.role==='production')){
+   const base=f.cardId==='irrigated-field'?2:1;
+   const gained=grant('life',base*(accelerated(f)?2:1));
    if(gained)changes.push({id:f.id,kind:'life',amount:gained});
   }
   for(const f of structures.filter(x=>x.cardId==='plant-tree')){
@@ -89,14 +91,23 @@ function create(options={}){
    f.hp=Math.min(f.maxHp,f.hp+(accelerated(f)?2:1));
    if(f.hp>before)changes.push({id:f.id,kind:'repair',amount:f.hp-before});
   }
-  for(const f of structures.filter(x=>x.cardId==='windmill')){
-   let converted=0,limit=accelerated(f)?2:1;
-   while(converted<limit&&essence.life>0&&essence.material<cap){
-    essence.life--;essence.material++;converted++;
-   }
-   if(converted)changes.push({id:f.id,kind:'convert',amount:converted});
-  }
   return {ok:true,changes,state:snapshot()};
+ }
+ // Player attacks can strike a placed tree. It loses actual durability,
+ // persists if damaged, and returns a destroyed flag when finally felled.
+ // This is a rule-level operation; the scene layer cleans up the model.
+ function damage(id,amount){
+  const f=structures.find(x=>x.id===id);
+  if(!f)return {ok:false,reason:'missing-facility'};
+  if(!Number.isFinite(amount)||amount<=0)return {ok:false,reason:'bad-damage'};
+  const hit=Math.min(f.hp,Math.floor(amount));
+  if(hit<=0)return {ok:false,reason:'bad-damage'};
+  f.hp-=hit;
+  const destroyed=f.hp<=0;
+  const result={ok:true,id:f.id,cardId:f.cardId,damage:hit,
+   remainingHp:f.hp,maxHp:f.maxHp,destroyed};
+  if(destroyed)remove(id);
+  return result;
  }
  function intercept(target,damage){
   // New form includes target world tile, so a tree on the left cannot shield
@@ -121,8 +132,8 @@ function create(options={}){
   return result;
  }
  function reset(){structures=[];nextId=1;turn=1;essence={material:0,life:0,magic:0};return snapshot();}
- return Object.freeze({place,nextTurn,intercept,grant,spend,steal,remove,reset,
+ return Object.freeze({place,nextTurn,intercept,damage,grant,spend,steal,remove,reset,
   get snapshot(){return snapshot();}});
 }
-root.PaperchalkFarmerFacilities=Object.freeze({version:'1.2.0-bounded-footprints-and-interception',DEFINITIONS,create});
+root.PaperchalkFarmerFacilities=Object.freeze({version:'1.3.0-agricultural-focus',DEFINITIONS,create});
 })(window);
