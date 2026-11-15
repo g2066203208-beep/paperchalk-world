@@ -52,7 +52,7 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
  }
  const green=(look?.get('forest').foliage||[[.33,.46,.29,1],[.39,.53,.34,1],[.25,.42,.32,1],[.42,.56,.35,1]]);
  const stone=[[.58,.55,.50,1],[.52,.51,.48,1],[.69,.65,.58,1],[.56,.53,.45,1]];
- const scenes={forest,clearing,street:[],hall:[]};
+ const scenes={forest,clearing,street:[],hall:[],river:[]};
  // This is ENVIRONMENT GROUND, not extra tactical cells.
  // It remains beneath the exact 3x6 battle grid and stretches beyond the
  // camera/framing limits so trees and rocks never stand over a void.
@@ -67,7 +67,8 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
   forest:look?.get('forest').ground||[.52,.635,.398,1],
   clearing:look?.get('clearing').ground||[.65,.585,.479,1],
   street:look?.get('street').ground||[.265,.292,.320,1],
-  hall:look?.get('hall').ground||[.43,.43,.46,1]
+  hall:look?.get('hall').ground||[.43,.43,.46,1],
+  river:look?.get('river').ground||[.38,.48,.35,1]
  };
  function setScene(next){
   if(!scenes[next])throw Error('Unknown environment scene: '+next);
