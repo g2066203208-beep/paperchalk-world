@@ -11,6 +11,7 @@ on:
       - 'site/card-battle/engine/card-stat-badges.js'
       - 'site/card-battle/engine/battle-camera.js'
       - 'site/card-battle/engine/scene-card-hud.js'
+      - 'site/card-battle/engine/card-hand-motion.js'
       - 'site/card-battle/engine/flip-case-controller.js'
       - 'site/card-battle/engine/voxel-animations.js'
       - 'site/card-battle/engine/object-animations.js'
@@ -50,6 +51,7 @@ on:
       - 'tests/card-effect-engine.test.cjs'
       - 'tests/character-hand-engine.test.cjs'
       - 'tests/scene-card-hud-interactions.test.cjs'
+      - 'tests/card-hand-motion.test.cjs'
       - 'tests/scene-lifecycle.test.cjs'
       - 'tests/object-animations.test.cjs'
       - 'tests/scene-transitions.test.cjs'
@@ -101,6 +103,8 @@ jobs:
           node tests/card-effect-engine.test.cjs
           node tests/character-hand-engine.test.cjs
           node tests/scene-card-hud-interactions.test.cjs
+          node tests/card-hand-motion.test.cjs
+          node --check site/card-battle/engine/card-hand-motion.js
           node --check site/card-battle/engine/card-effect-engine.js
           node --check site/card-battle/engine/object-anchor.js
           node tests/scene-lifecycle.test.cjs
