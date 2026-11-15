@@ -463,8 +463,8 @@ function terrainEntryMatrix(c,r){
 }
 const terrainRenderer=window.PaperchalkVoxelTerrain.createWebGLRenderer(fx.visualGrid,{
  gl,makeGeom,renderGeom,I,tileTransform:terrainEntryMatrix,
- showSeams:()=>!sceneTransition?.busy&&!['coast','cliff','ocean','cave'].includes(forestProps?.scene),
- showWalls:()=>!['coast','cliff','ocean','cave'].includes(forestProps?.scene)
+ showSeams:()=>!sceneTransition?.busy,
+ showWalls:()=>true
 });
 const forestProps=window.PaperchalkForestEnvironment.create({
  terrain,makeGeom,renderGeom,mul,T,S,cube,
@@ -746,15 +746,19 @@ window.__sceneCardHUD=sceneHUD;
 // It preserves level phase, deployed characters, current HP, hand and 7 decks.
 const sceneSwitchButton=document.getElementById('scene-switch');
 const sceneSwitchStatus=document.getElementById('scene-switch-status');
+// One permanent 16×6 physical board across EVERY world environment.
+// Scene modules may alter only the world OUTSIDE this board. They must
+// never recolor its tiles or replace it with sand, ship planks or cave stone.
+const UNIFIED_BOARD_MATERIAL='grass';
 const scenePresets={
- forest:{name:'森林',material:'grass',background:visualLook.get('forest').background},
- clearing:{name:'石质空地',material:'dirt',background:visualLook.get('clearing').background},
- street:{name:'石板街道',material:'stone',background:visualLook.get('street').background},
- hall:{name:'石砌大厅',material:'marble',background:visualLook.get('hall').background},
- coast:{name:'海岸沙滩',material:'sand',background:visualLook.get('coast').background},
- cliff:{name:'悬崖高地',material:'shale',background:visualLook.get('cliff').background},
- ocean:{name:'海上甲板',material:'deck',background:visualLook.get('ocean').background},
- cave:{name:'地下山洞',material:'caveRock',background:visualLook.get('cave').background}
+ forest:{name:'森林',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('forest').background},
+ clearing:{name:'石质空地',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('clearing').background},
+ street:{name:'石板街道',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('street').background},
+ hall:{name:'石砌大厅',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('hall').background},
+ coast:{name:'海岸沙滩',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('coast').background},
+ cliff:{name:'悬崖高地',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('cliff').background},
+ ocean:{name:'海上甲板',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('ocean').background},
+ cave:{name:'地下山洞',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('cave').background}
 };
 const initialScene=scenePresets[urlOptions.get('scene')]?urlOptions.get('scene'):'forest';
 function sceneNextId(id){
@@ -1317,15 +1321,12 @@ for(const c of cards){for(let i=0;i<1;i++){
  let scale=pose.scale;
 let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
-const isNaturalArena=id=>['coast','cliff','ocean','cave'].includes(id);
 function drawStage(){
+ // World scenery behind and underneath the same persistent physical board.
  forestProps.draw(now);forestDressing.draw(now,forestProps.scene);
  streetProps.draw(now,forestProps.scene);royalHall.draw(now,forestProps.scene);
- landscape.draw(now,forestProps.scene);terrainRenderer.draw();
- streetPaving.draw(forestProps.scene);
- // A natural world is not a gold-edged tabletop. Keep the gold-rim card
- // presentation only in the original tabletop/urban scenes.
- if(!isNaturalArena(forestProps.scene))physicalFrame.draw(now,forestProps.scene);
+ landscape.draw(now,forestProps.scene);
+ terrainRenderer.draw();physicalFrame.draw(now,forestProps.scene);
 }
 function drawTerrainParticles(){
  if(!fx.particles.length)return;
@@ -1389,8 +1390,8 @@ function frame(timeMs){
    royalHall.drawRoofShadow(forestProps.scene);
    landscape.draw(now,forestProps.scene);
    landscape.drawRoofShadow(forestProps.scene);
-   streetPaving.draw(forestProps.scene);
-   if(!isNaturalArena(forestProps.scene))physicalFrame.draw(now);
+   // The board, not the biome, determines card placement and frame geometry.
+   physicalFrame.draw(now);
    for(const c of cards){
     if(c.hudMatrix||!c.slot)continue;
     if(objectFX.sample(c.unitId?'unit:'+c.unitId:'card:'+c.id,now).scale<.02)continue;
@@ -1643,6 +1644,8 @@ window.__forestLevelDebug={
   hall:forestProps.scene==='hall'?royalHall.snapshot:null,
   landscape:['coast','cliff','ocean','cave'].includes(forestProps.scene)?landscape.snapshot:null,
   paving:forestProps.scene==='street'?streetPaving.snapshot:null,
+  unifiedBoardMaterial:UNIFIED_BOARD_MATERIAL,
+  boardPersistentAcrossScenes:true,
   material:terrain.cell(0,0)?.kind,ground:forestProps.ground};},
  get objectAnimations(){return objectFX.stats(now);},
  objectPose(id){return objectFX.sample(id,now);},
