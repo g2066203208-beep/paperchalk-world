@@ -9,8 +9,8 @@ const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const easeOut=t=>1-Math.pow(1-clamp(t),3);
 const smooth=t=>{t=clamp(t);return t*t*(3-2*t);};
 const mix=(a,b,t)=>a+(b-a)*t;
-const DRAW_TIME=.59;
-function create(){
+function create({reducedMotion=false}={}){
+ const DRAW_TIME=reducedMotion?.18:.59;
  const flights=new Map(),returns=new Map(),deckHits=new Map(),selections=new Map(),springs=new Map();
  let lastTime=null;
  function drawCard({instance,ownerId,from,at}){
@@ -24,14 +24,14 @@ function create(){
  function returnCard(instance,from,at){
   if(!instance||!from)return;
   flights.delete(instance);
-  returns.set(instance,{from:{...from},start:at,duration:.39});
+  returns.set(instance,{from:{...from},start:at,duration:reducedMotion?.16:.39});
  }
  function returnPose(instance,target,at){
   const back=returns.get(instance);
   if(!back)return null;
   const u=clamp((at-back.start)/back.duration);
   if(u>=1){returns.delete(instance);return null;}
-  const t=smooth(u),arc=Math.sin(Math.PI*u)*.32;
+  const t=smooth(u),arc=Math.sin(Math.PI*u)*(reducedMotion?.08:.32);
   const bounce=Math.sin(u*Math.PI*2)*Math.pow(1-u,2);
   return {x:mix(back.from.x,target.x,t),
    y:mix(back.from.y,target.y,t)+arc+bounce*.06,
@@ -56,7 +56,8 @@ function create(){
   // 13–79%: rapid cubic traverse following a lifted arc (no linear slide).
   const v=clamp((u-.13)/.67),travel=easeOut(v);
   const x=mix(from.x,target.x,travel);
-  const y=mix(from.y+.29,target.y,travel)+Math.sin(Math.PI*v)*.85;
+  const y=mix(from.y+(reducedMotion?.08:.29),target.y,travel)+
+   Math.sin(Math.PI*v)*(reducedMotion?.18:.85);
   const sc=mix(from.scale*1.18,target.scale*1.12,travel);
   const spin=mix(-.16,target.angle,travel)+Math.sin(Math.PI*v)*.115;
   if(u<.80)return {x,y,
@@ -80,8 +81,8 @@ function create(){
   const spring=t>=.075&&t<.55?
    Math.exp(-(t-.075)*9)*Math.sin((t-.075)*31)*.12:0;
   const click=Math.max(0,1-t/.42);
-  return {scale:1+hover*.115+dip+spring,
-   lift:hover*.20+Math.max(0,spring)*.28+click*.045,
+  return {scale:1+hover*(reducedMotion?.035:.115)+dip+spring,
+   lift:hover*(reducedMotion?.07:.20)+Math.max(0,spring)*.28+click*.045,
    tilt:-.105+hover*.075+spring*.38,
    shimmer:click*click};
  }
@@ -142,7 +143,7 @@ function create(){
    activeDeckHits:[...deckHits.keys()],handPoseCount:springs.size};
  }
  return Object.freeze({drawCard,drawPose,deckPose,selectCard,selectPose,
-  returnCard,returnPose,settle,tick,reset,stats,version:'1.1.0'});
+  returnCard,returnPose,settle,tick,reset,stats,version:'1.2.0-reduced-motion'});
 }
 root.PaperchalkCardHandMotion=Object.freeze({version:'1.1.0',create});
 })(window);
