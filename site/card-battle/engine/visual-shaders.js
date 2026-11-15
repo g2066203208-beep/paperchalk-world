@@ -55,12 +55,9 @@ void main(){
   float broad=sin(vP.x*.42+sin(vP.z*.35))*cos(vP.z*.38-vP.x*.11);
   float fine=sin(vP.x*1.67+vP.z*.70)*sin(vP.z*1.92-vP.x*.32);
   base.rgb*=1.0+uTerrainDetail*(broad*.80+fine*.20)*grassWeight;
-  if(uStreetMode>.5){
-   // Real elevated slab meshes now provide running-bond joints, bevel
-   // normals and cast shadows. The original terrain is only dark mortar.
-   // Do not overprint any procedural checker on the stone geometry.
-   base.rgb*=.68;
-  }
+  // Every scene uses exactly the SAME physical battle-board material.
+  // Street lamps, cave light and world weather may shade it; the scene may
+  // never swap the board for a special stone/sand/deck surface.
  }
  // Shared 2x2 material atlas; seam-safe world-space sampling.
  if(uVisualMix>.5 && uMaterialKind>.5 && uMaterialKind<4.5){
