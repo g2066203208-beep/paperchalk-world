@@ -161,6 +161,7 @@ html,body{background:#d8ded0}
 <script src="./engine/cloud-shadows.js?v=1"></script>
 <script src="./engine/forest-dressing.js?v=3"></script>
 <script src="./engine/stone-street-environment.js?v=1"></script>
+<script src="./engine/staggered-stone-paving.js?v=1"></script>
 <script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=7"></script>
@@ -381,6 +382,10 @@ const streetProps=window.PaperchalkStoneStreetEnvironment.create({
  terrain,makeGeom,renderGeom,I,T,S,mul,appearance:(id,t)=>objectFX.sample(id,t)
 });
 window.__stoneStreet=streetProps;
+const streetPaving=window.PaperchalkStaggeredStonePaving.create({
+ terrain,gl,makeGeom,renderGeom,I
+});
+window.__streetPaving=streetPaving;
 // One registered lifecycle for EVERY biome and every scene object class.
 const sceneLifecycle=window.PaperchalkSceneLifecycle.create({
  animation:objectFX,groups:[
@@ -1148,7 +1153,7 @@ for(const c of cards){for(let i=0;i<1;i++){
  let scale=pose.scale;
 let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
-function drawStage(){forestProps.draw(now);forestDressing.draw(now,forestProps.scene);streetProps.draw(now,forestProps.scene);terrainRenderer.draw();physicalFrame.draw(now,forestProps.scene);}
+function drawStage(){forestProps.draw(now);forestDressing.draw(now,forestProps.scene);streetProps.draw(now,forestProps.scene);terrainRenderer.draw();streetPaving.draw(forestProps.scene);physicalFrame.draw(now,forestProps.scene);}
 function drawTerrainParticles(){
  if(!fx.particles.length)return;
  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
@@ -1201,6 +1206,7 @@ function frame(timeMs){
    forestProps.draw(now,{skipGround:true});
    forestDressing.draw(now,forestProps.scene);
    streetProps.draw(now,forestProps.scene);
+   streetPaving.draw(forestProps.scene);
    physicalFrame.draw(now);
    for(const c of cards){
     if(c.hudMatrix||!c.slot)continue;
@@ -1434,6 +1440,7 @@ window.__forestLevelDebug={
  get environment(){return {id:forestProps.scene,props:forestProps.propCount+
   (forestProps.scene==='street'?streetProps.propIds.length:0),
   street:forestProps.scene==='street'?streetProps.snapshot:null,
+  paving:forestProps.scene==='street'?streetPaving.snapshot:null,
   material:terrain.cell(0,0)?.kind,ground:forestProps.ground};},
  get objectAnimations(){return objectFX.stats(now);},
  objectPose(id){return objectFX.sample(id,now);},
