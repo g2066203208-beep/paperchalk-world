@@ -23,5 +23,5 @@ for(const id of art.ids){
  assert.ok(!seen.has(image.src));seen.add(image.src);
 }
 assert.equal(art.get('nonexistent'),null);
-assert.equal(art.get('windmill').size[0],1536);
+assert.equal(art.get('irrigated-field').size[0],1536);
 console.log('FACILITY_ART_REGISTRY_PASS 5_filenames_auto_loading_independent_of_rules');
