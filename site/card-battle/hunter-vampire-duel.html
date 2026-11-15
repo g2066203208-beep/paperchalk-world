@@ -73,6 +73,7 @@
    <div class="resource ammo-resource"><small>弹药 / AMMO</small><div id="ammo-pips" class="ammo-pips"></div></div>
   </div>
   <div class="instructions" id="hint">选择下方战术牌直接执行；射击同一路线伤害更高</div>
+  <button class="end-turn" type="button" id="draw-cards">摸牌 <span>＋1</span></button>
   <button class="end-turn" type="button" id="end-turn">结束回合 <span>→</span></button>
  </div>
  <div class="hand-scroll"><div class="hand" id="hand" aria-label="当前战术手牌"></div></div>
@@ -80,7 +81,7 @@
 </footer>
 <dialog id="intro" class="battle-dialog">
  <div class="dialog-hero"><span>ONE ON ONE · STORY ENCOUNTER</span><h1>银月夜路</h1><p>赏金枪手追踪到了血族小公主。夜色正在变浓，而第一发银弹已经装入枪膛。</p></div>
- <div class="dialog-rules"><div><b>01 · 读预告</b><span>敌人行动目标会提前暴露。</span></div><div><b>02 · 选站位</b><span>三个位置可移动，绕开被锁定的路线。</span></div><div><b>03 · 出战术牌</b><span>每回合3行动点，射击消耗弹药，银弹能封锁吸血恢复。</span></div></div>
+ <div class="dialog-rules"><div><b>01 · 读预告</b><span>敌人行动目标会提前暴露。</span></div><div><b>02 · 选站位</b><span>三个位置可移动，绕开被锁定的路线。</span></div><div><b>03 · 出战术牌</b><span>每回合3行动点，回合开始要手动摸牌。银弹能封锁吸血恢复。</span></div></div>
  <button id="start-game" type="button" class="dialog-primary">开始猎杀 <span>→</span></button>
 </dialog>
 <dialog id="results" class="battle-dialog">
