@@ -37,7 +37,7 @@ function create(o){
    x+100,y+(noise()-.5)*7,x+235,y);woodCtx.stroke();
  }
  const walnut=makeTexture(woodCanvas);
- const cardTextures=new Map(),portraits=new Map();
+ const cardTextures=new Map(),portraits=new Map(),cardArtImages=new Map();
  const fov=39*Math.PI/180,cameraZ=14.5;
  let width=1920,height=1080,spanW=18,spanH=10,now=0,scene=[],hot=[],hover=null,press=null;
  let sceneMotion={mode:'steady',start:0},drawCalls=0,deckMeshes=0,lastDeal=null;
@@ -173,7 +173,7 @@ function create(o){
   drawCard({hudMatrix:model,texture,side:'ally'},now);drawCalls++;
  }
  function textureFor(card,url){
-  if(url){
+  if(url&&!card?.type){
    if(portraits.has(url)&&portraits.get(url))return portraits.get(url);
    if(!portraits.has(url)){
     portraits.set(url,null);
@@ -182,8 +182,29 @@ function create(o){
     img.onerror=()=>portraits.set(url,null);img.src=url;
    }
   }
-  const role=card?.profession||'warrior',name=url?'人物卡':card?.name||'行动牌';
-  const key=role+':'+name+':'+(card?.type||'back');
+  const role=card?.profession||'warrior';
+  const name=card?.type?card.name:(url?'人物卡':card?.name||'行动牌');
+  const key=role+':'+(card?.id||name)+':'+(card?.type||'portrait');
+  const artUrl=card?.type?(url||root.PaperchalkFacilityArt?.get(card.id)?.cardArt):null;
+  // The same transparent painted prop is automatically composited on the
+  // paper face in the fan AND on the visible top of the owner deck.
+  if(artUrl){
+   let record=cardArtImages.get(artUrl);
+   if(!record){
+    record={image:null,keys:new Set()};cardArtImages.set(artUrl,record);
+    const image=new Image();
+    image.onload=()=>{
+     record.image=image;
+     for(const affected of record.keys){
+      const old=cardTextures.get(affected);
+      if(old){gl.deleteTexture?.(old);cardTextures.delete(affected);}
+     }
+    };
+    image.onerror=()=>{record.failed=true;};
+    image.src=artUrl;
+   }
+   record.keys.add(key);
+  }
   if(cardTextures.has(key))return cardTextures.get(key);
   const cv=document.createElement('canvas');cv.width=384;cv.height=576;
   const c=cv.getContext('2d');
@@ -210,7 +231,13 @@ function create(o){
    const marks={'farm-field':'田','plant-tree':'树','water-well':'井',
     'scarecrow':'草','windmill':'磨','lumber':'斧',
     'strike':'斧','heavy-strike':'劈','cleave':'扫','guard':'守'};
-   c.fillText(marks[card.id]||'◆',192,350);
+   const painted=artUrl&&cardArtImages.get(artUrl)?.image;
+   if(painted&&typeof c.drawImage==='function'){
+    const maxW=292,maxH=244;
+    const ratio=Math.min(maxW/painted.width,maxH/painted.height);
+    const w=painted.width*ratio,h=painted.height*ratio;
+    c.drawImage(painted,192-w/2,322-h/2,w,h);
+   }else c.fillText(marks[card.id]||'◆',192,350);
    c.fillStyle='#5e5546';c.font='29px serif';
    const message=card.description||'';
    let line='',y=475;
