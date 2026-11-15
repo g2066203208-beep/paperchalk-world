@@ -30,6 +30,15 @@ async function verifyBox(page,kind){
  assert.ok(b.bounds.horizontalClearance>.015&&b.bounds.verticalClearance>.015);
  assert.ok(b.bounds.cardWidth/b.bounds.pitch>.87,'no tiny cards surrounded by void');
  assert.equal(b.visibleDeckPiles,b.ownedCharacters.length);
+ assert.equal(b.characterRestingOnOwnerPile,true);
+ assert.equal(b.caseSlideAxis,'screen-vertical');
+ const resting= b.visible.filter(p=>p.kind==='character');
+ for(const hero of resting){
+  const deck=b.visible.find(p=>p.id==='deck:'+hero.id.slice(10));
+  assert.ok(deck,'undeployed character always owns a real corresponding deck');
+  assert.equal(hero.x,deck.x,'hero portrait rests on SAME pile x, never floats aside');
+  assert.equal(hero.y,deck.y,'hero portrait rests directly atop pile, not in another row');
+ }
  assert.equal(b.emptySlots,7-b.ownedCharacters.length);
  assert.equal(b.ownedCharacters.length,kind==='level-two'?2:1);
  assert.equal(b.ownedCharacters[0].id,'woodcutter');
@@ -57,6 +66,7 @@ async function verifyBox(page,kind){
 }
 async function verifyTrayCollapsed(page,kind){
  await page.waitForFunction(()=>window.__sceneCardHUD?.collapsed===true&&
+  window.__sceneCardHUD.snapshot.drawer.phase==='closed'&&
   window.__sceneCardHUD.snapshot.visibleDeckPiles===0&&
   window.__sceneCardHUD.snapshot.visible.every(p=>p.kind==='hand')&&
   window.__sceneCardHUD.snapshot.visible.length===window.__forestHand.snapshot.count,
@@ -77,6 +87,7 @@ async function verifyTrayCollapsed(page,kind){
 async function showTray(page){
  await page.locator('#deck-drawer-toggle').click();
  await page.waitForFunction(()=>window.__sceneCardHUD?.collapsed===false&&
+  window.__sceneCardHUD.snapshot.drawer.phase==='open'&&
   window.__sceneCardHUD.snapshot.visibleDeckPiles===window.__forestHand.snapshot.roster.length&&
   window.__sceneCardHUD.snapshot.visible.filter(p=>p.kind==='deck').length===
    window.__forestHand.snapshot.roster.length,{timeout:20000});
