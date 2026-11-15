@@ -473,6 +473,12 @@ try{
  await screenshot(pc,'00-board-clear-no-deck-desktop');
  await showTray(pc);
  await verifyBox(pc,'desktop');
+ const screenCase=await pc.evaluate(()=>window.__sceneCardHUD.snapshot);
+ assert.equal(screenCase.renderSpace,'screen-fixed-post-world');
+ assert.equal(screenCase.receivesWorldClouds,false,
+  'screen-space tray must NOT be lit by forest cloud projection');
+ assert.equal(screenCase.receivesWorldShadows,false,
+  'screen-space tray must NOT receive world-space shadows');
  await verifyFixedCamera(pc,'desktop');
  await pc.waitForTimeout(500);
  await screenshot(pc,'01-static-seven-bay-box-desktop');
@@ -630,11 +636,55 @@ try{
  assert.equal(await chapter2.evaluate(()=>window.__forestLevelDebug.attack('bandit-bruiser-a')),false,
   'farmer facility card must NEVER be treated as a normal attack');
  await screenshot(chapter2,'09-farmer-physical-farm-field');
+ // Hover raises ONLY the top card: the case and cloud shadow system stay fixed.
+ const deckPt=await chapter2.evaluate(()=>window.__sceneCardHUD.pointFor('deck:farmer'));
+ await chapter2.mouse.move(deckPt.x,deckPt.y);
+ await chapter2.waitForFunction(()=>window.__sceneCardHUD.snapshot.hoverTopCard&&
+  window.__sceneCardHUD.snapshot.liftedDecks.some(x=>x.id==='deck:farmer'&&x.lift>.30),
+  null,{timeout:8000});
+ await screenshot(chapter2,'09a-farmer-top-card-hover');
+ // Drag directly from the pile: the card is drawn AND placed in one gesture.
+ const wellTile=await chapter2.evaluate(()=>window.__forestLevelDebug.slotPoints.find(s=>
+  s.side==='ally'&&s.zone==='facility'&&s.flank==='right'&&s.tileC===10&&s.tileR===3).point);
+ const beforeWell=await chapter2.evaluate(()=>window.__forestLevelDebug.facilities.length);
+ await chapter2.mouse.move(deckPt.x,deckPt.y);
+ await chapter2.mouse.down();
+ await chapter2.mouse.move(wellTile.x,wellTile.y,{steps:16});
+ assert.equal(await chapter2.evaluate(()=>window.__sceneCardHUD.dragging),true);
+ await screenshot(chapter2,'09b-direct-pile-drag');
+ await chapter2.mouse.up();
+ await chapter2.waitForFunction(n=>window.__forestLevelDebug.facilities.length===n+1,
+  beforeWell,{timeout:12000});
+ const well=await chapter2.evaluate(()=>window.__forestLevelDebug.facilities.at(-1));
+ assert.equal(well.id,'water-well');
+ assert.equal(await chapter2.evaluate(()=>window.__sceneCardHUD.dragging),false);
+ // An already-drawn hand card also supports drag-to-place, including 2x2.
+ await clickCard(chapter2,'deck:farmer');
+ const windmillHand=await chapter2.evaluate(()=>window.__forestHand.snapshot.hand
+  .find(c=>c.id==='windmill'));
+ assert.ok(windmillHand,'third farmer draw is windmill in fixed level-two seed');
+ const fromHand=await chapter2.evaluate(instance=>window.__sceneCardHUD.pointFor('hand:'+instance),
+  windmillHand.instance);
+ const millTile=await chapter2.evaluate(()=>window.__forestLevelDebug.slotPoints.find(s=>
+  s.side==='ally'&&s.zone==='facility'&&s.flank==='right'&&s.tileC===11&&s.tileR===3).point);
+ const beforeMill=await chapter2.evaluate(()=>window.__forestLevelDebug.facilities.length);
+ await chapter2.mouse.move(fromHand.x,fromHand.y);
+ await chapter2.mouse.down();
+ await chapter2.mouse.move(millTile.x,millTile.y,{steps:16});
+ assert.equal(await chapter2.evaluate(()=>window.__sceneCardHUD.dragging),true);
+ await chapter2.mouse.up();
+ await chapter2.waitForFunction(n=>window.__forestLevelDebug.facilities.length===n+1,
+  beforeMill,{timeout:12000});
+ const mill=await chapter2.evaluate(()=>window.__forestLevelDebug.facilities.at(-1));
+ assert.equal(mill.id,'windmill');
+ assert.deepEqual(mill.footprint,[2,2]);
+ await screenshot(chapter2,'09c-windmill-hand-drag-2x2');
  await chapter2.locator('#end-turn').click();
  await chapter2.waitForFunction(()=>window.__forestLevelDebug.state.turn===2&&
   window.__forestLevelDebug.state.phase==='active',null,{timeout:18000});
- const life=await chapter2.evaluate(()=>window.__forestLevelDebug.essence.life);
- assert.ok(life>=1,'farm produces shared life essence at the next player upkeep');
+ const resources=await chapter2.evaluate(()=>window.__forestLevelDebug.essence);
+ assert.ok(resources.material>=1,
+  'farm produces life essence and windmill converts it to material at the next upkeep');
  assert.equal(await chapter2.locator('.enemy-intent').count(),0,
   'enemy actions are never telegraphed even when bandit skills vary');
  await chapter2.close();
