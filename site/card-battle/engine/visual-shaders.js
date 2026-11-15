@@ -14,6 +14,8 @@ uniform float uVisualMix,uGroundY,uCloudTime,uCloudStrength;
 uniform vec2 uShadowTexel,uResolution;
 uniform vec3 uSoil,uSunDirection,uSkyFill,uSunColor,uCameraEye;
 uniform float uStreetMode,uStreetTime,uStreetFog;
+uniform float uNightFactor,uWorldFog;
+uniform vec3 uWorldFogColor;
 uniform vec3 uStreetLamps[4];
 uniform vec3 uCardContacts[8];
 float unpackDepth(vec4 rgba){return dot(rgba,vec4(1.,1./255.,1./65025.,1./16581375.));}
@@ -98,7 +100,7 @@ void main(){
    vec3 delta=uStreetLamps[li]-vP;
    float sq=dot(delta,delta),range=1./(1.+sq*.035+sq*sq*.00013);
    float facing=max(.12,dot(normal,normalize(delta)));
-   illumination+=vec3(1.00,.64,.34)*range*facing*.98;
+   illumination+=vec3(1.00,.64,.34)*range*facing*.98*uNightFactor;
   }
  }
  if(uVisualMix>.5&&uMaterialKind>.5&&uMaterialKind<4.5){
@@ -137,6 +139,14 @@ void main(){
  float glossStrength=mix(.12,.006,roughness);
  float subtleSpec=pow(max(0.,dot(reflect(-light,normal),normalize(vec3(0.,1.,1.)))),glossExponent)*glossStrength;
  vec3 finalColor=uUnlit>.5?base.rgb:base.rgb*(illumination+vec3(subtleSpec));
+ // Card illustrations stay readable at night; all world meshes keep physical lighting.
+ if(uMaterialKind>4.5&&uMaterialKind<5.5&&uUnlit<.5){
+  finalColor=mix(finalColor,base.rgb*.82,uNightFactor*.41);
+ }
+ // Material 7 is self-illuminating street glass. Dark by day, warm at night.
+ if(uMaterialKind>6.5&&uMaterialKind<7.5){
+  finalColor=mix(base.rgb*vec3(.28,.37,.52),base.rgb*1.12,uNightFactor);
+ }
  if(uMetal>.5&&uUnlit<.5){
   vec3 viewDir=normalize(uCameraEye-vP),halfVec=normalize(light+viewDir);
   float highlight=pow(max(dot(normal,halfVec),0.),52.)*.27;
@@ -151,23 +161,19 @@ void main(){
   vec3 x=max(vec3(0.),finalColor*1.04);
   vec3 film=(x*(2.51*x+.03))/(x*(2.43*x+.59)+.14);
   finalColor=mix(finalColor,film,.34);
-  if(uStreetMode>.5){
-   // Animated world-space ground haze. Card artwork remains readable.
-   float dist=max(0.,distance(uCameraEye,vP)-22.);
-   float wave=sin(vP.x*.16+vP.z*.09+uStreetTime*.16)*.16;
-   float groundHaze=1.-smoothstep(uGroundY+.1,uGroundY+7.,vP.y);
-   float density=uStreetFog*(.65+.35*groundHaze)*(1.+wave);
-   float fog=clamp(1.-exp(-dist*density),0.,.66);
-   if(uMaterialKind>4.5||uUnlit>.5)fog*=.14;
-   finalColor=mix(finalColor,vec3(.12,.18,.25),fog);
-  }else{
-   float fog=clamp((distance(uCameraEye,vP)-66.)/125.,0.,.07);
-   finalColor=mix(finalColor,vec3(.38,.47,.31),fog);
-  }
+  // One volumetric-distance haze model for EVERY biome, with weather/time
+  // density and fog color driven by the shared clock. No street-only clock.
+  float dist=max(0.,distance(uCameraEye,vP)-20.);
+  float wave=sin(vP.x*.16+vP.z*.09+uStreetTime*.16)*.12;
+  float low=1.-smoothstep(uGroundY+.12,uGroundY+7.,vP.y);
+  float density=uWorldFog*(.80+.20*low)*(1.+wave);
+  float fog=clamp(1.-exp(-dist*density),0.,.69);
+  if(uMaterialKind>4.5||uUnlit>.5)fog*=.10;
+  finalColor=mix(finalColor,uWorldFogColor,fog);
   vec2 q=gl_FragCoord.xy/max(uResolution,vec2(1.))-.5;
   finalColor*=1.-dot(q*vec2(1.,.82),q*vec2(1.,.82))*.17;
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.3.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'1.4.0',fragment});
 })(window);
