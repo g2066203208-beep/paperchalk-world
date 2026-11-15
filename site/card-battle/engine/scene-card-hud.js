@@ -41,6 +41,10 @@ function create(o){
  const fov=39*Math.PI/180,cameraZ=14.5;
  let width=1920,height=1080,spanW=18,spanH=10,now=0,scene=[],hot=[],hover=null,press=null;
  let sceneMotion={mode:'steady',start:0},drawCalls=0,deckMeshes=0,lastDeal=null;
+ // UI-only tactile state. Never changes the underlying pile or world scene.
+ const deckLift=new Map();
+ let lastFrame=0,drag=null;
+ const dragThreshold=10;
  let collapsed=true; // Default view is an unobstructed 16x6 board; deck stays in game state.
  function size(w,h){
   width=Math.max(1,w);height=Math.max(1,h);
@@ -291,47 +295,70 @@ function create(o){
     curved(model.deck,p.x,p.y,z,.0022,paint.stripe,g,tilt);
    }
    deckMeshes++;
-   const unit=staged.find(u=>u.role===p.profession);
+   const unit=staged.find(u=>u.id===p.ownerId);
    // Every pile has a printed, paper-textured top card instead of a blank
    // white plastic slab. Deployment portraits take precedence over the crest.
    // A single tactile rise when this deck is clicked; never idle bobbing.
-   const dealt=lastDeal?.profession===p.profession?
+   const dealt=lastDeal?.ownerId===p.ownerId?
     1-smooth((now-lastDeal.at)/.28):0;
-   const k=1+.045*Math.max(0,dealt);
-   const m=mul(T(p.x,p.y+Math.max(0,dealt)*.11,
-     center+thickness*.5+cardD+.022),
-    mul(RX(tilt),S(g.scale*k,g.scale*k,1)));
+   const lift=deckLift.get(p.id)||0;
+   const k=1+.045*Math.max(0,dealt)+lift*.10;
+   const m=mul(T(p.x,p.y+Math.max(0,dealt)*.11+lift*.19,
+     center+thickness*.5+cardD+.022+lift*.07),
+    mul(RX(tilt+lift*.085),S(g.scale*k,g.scale*k,1)));
    renderCard(m,textureFor({profession:p.profession},unit?.portrait),g);
   }
  }
  function draw(t,w,h){
-  now=t;size(w,h);
+  const delta=lastFrame?Math.min(.10,t-lastFrame):1/60;
+  lastFrame=t;now=t;size(w,h);
   // Folded drawer is not rendered or interactive. Deck/hand state persists.
-  if(collapsed){scene=[];hot=[];hover=null;press=null;drawCalls=0;deckMeshes=0;return;}
+  if(collapsed){scene=[];hot=[];hover=null;press=null;drag=null;drawCalls=0;deckMeshes=0;return;}
   const g=dims(),snapshot=o.snapshot(),staged=o.staged?.()||[];
   const positions=layout(snapshot,staged,g);scene=positions;
   hot=positions.filter(p=>p.kind!=='empty');drawCalls=0;deckMeshes=0;
+  // Hover animation affects only the TOP card, never the entire deck or case.
+  const ease=1-Math.exp(-Math.max(0,delta)*19);
+  for(const p of positions.filter(x=>x.kind==='deck')){
+   const focus=(hover===p.id||hover==='character:'+p.ownerId||
+     press?.id===p.id||press?.id==='character:'+p.ownerId)&&!drag;
+   const lift=deckLift.get(p.id)||0;
+   deckLift.set(p.id,lift+((focus?1:0)-lift)*ease);
+  }
   const oldVP=getVP();
+  // UI is a dedicated post-world render pass with its OWN fixed projection.
+  // Screen shadows and world cloud sampling are disabled by the host callback.
+  o.beginScreenPass?.();
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(fov,width/height,.1,80),T(0,0,-cameraZ)));
   geometry(g);
   decks(g,positions,staged);
   for(const p of positions.filter(x=>x.kind==='hand')){
+   if(drag?.instance===p.instance)continue;
    const chosen=o.selected?.()===p.instance;
    const focus=hover===p.id;
    // The SAME drawn physical instance moves from the top of its owner pile
    // into the hand fan; no teleport / respawn at the destination.
    const dealing=lastDeal?.instance===p.instance?
     Math.max(0,1-(now-lastDeal.at)/.50):0;
-   const t=1-dealing*dealing*(3-2*dealing);
-   const hx=dealing?lastDeal.x+(p.x-lastDeal.x)*t:p.x;
-   const hy=dealing?lastDeal.y+(p.y-lastDeal.y)*t+Math.sin(t*Math.PI)*.48:p.y;
-   const hs=dealing?lastDeal.scale+(p.scale-lastDeal.scale)*t:p.scale;
+   const progress=smooth(1-dealing);
+   const hx=dealing?lastDeal.x+(p.x-lastDeal.x)*progress:p.x;
+   const hy=dealing?lastDeal.y+(p.y-lastDeal.y)*progress+Math.sin(progress*Math.PI)*.48:p.y;
+   const hs=dealing?lastDeal.scale+(p.scale-lastDeal.scale)*progress:p.scale;
    const m=mul(T(hx,hy+(chosen?.18:0)+(focus?.09:0),p.z),
-    mul(RZ(dealing*(1-t)*-.12),S(hs*(focus?1.06:1),hs*(focus?1.06:1),1)));
+    mul(RZ(dealing*(1-progress)*-.12),S(hs*(focus?1.06:1),hs*(focus?1.06:1),1)));
    renderCard(m,textureFor(p.c),g);
   }
+  if(drag){
+   const pos=worldPoint({clientX:drag.x,clientY:drag.y});
+   if(pos){
+    const sc=g.mobile?.40:.67;
+    const m=mul(T(pos.x,pos.y,1.8),mul(RZ(-.055),S(sc,sc,1)));
+    renderCard(m,textureFor(drag.card),g);
+   }
+  }
   uniformVP(oldVP);gl.viewport(0,0,width,height);
+  o.endScreenPass?.();
  }
  function worldPoint(e){
   const rect=canvas.getBoundingClientRect();
@@ -353,28 +380,73 @@ function create(o){
   }
   return null;
  }
- function cancelPress(){press=null;hover=null;o.previewCharacter?.(null);}
- function move(e){const p=hit(e);hover=p?.id||null;
-  if(press?.id.startsWith('character:'))o.previewCharacter?.(press.id.slice(10),e.clientX,e.clientY);
-  return !!p;}
- function down(e){const p=hit(e);if(!p)return false;
-  e.preventDefault();press={id:p.id,x:e.clientX,y:e.clientY};hover=p.id;return true;}
+ function cancelPress(){
+  press=null;drag=null;hover=null;o.previewCharacter?.(null);
+ }
+ function prepareSelected(instance){
+  if(o.selected?.()!==instance)o.ensureSelected?.(instance);
+ }
+ function takeFromPile(p){
+  const result=o.draw?.(p.ownerId);
+  if(!result?.ok)return null;
+  lastDeal={profession:p.profession,ownerId:p.ownerId,
+   instance:result.card.instance,x:p.x,y:p.y,scale:p.scale,at:now};
+  prepareSelected(result.card.instance);
+  return result.card;
+ }
+ function move(e){
+  const p=hit(e);
+  hover=p?.id||null;
+  if(press){
+   const distance=Math.hypot(e.clientX-press.x,e.clientY-press.y);
+   if(!drag&&distance>dragThreshold&&press.kind==='character'){
+    o.previewCharacter?.(press.id.slice(10),e.clientX,e.clientY);
+   }
+   if(!drag&&distance>dragThreshold&&
+      (press.kind==='deck'||press.kind==='hand')){
+    let card=null;
+    if(press.kind==='deck')card=takeFromPile(press.item);
+    else{
+     card=o.snapshot().hand.find(c=>c.instance===press.item.instance);
+     if(card)prepareSelected(card.instance);
+    }
+    if(card)drag={instance:card.instance,card,x:e.clientX,y:e.clientY,
+      source:press.kind,ownerId:card.ownerId};
+   }
+   if(drag){
+    drag.x=e.clientX;drag.y=e.clientY;
+    o.dragMove?.(drag.instance,e.clientX,e.clientY);
+    return true;
+   }
+   if(press.kind==='character')
+    o.previewCharacter?.(press.id.slice(10),e.clientX,e.clientY);
+   return true;
+  }
+  return !!p;
+ }
+ function down(e){
+  const p=hit(e);if(!p)return false;
+  e.preventDefault();
+  press={id:p.id,kind:p.kind,item:p,x:e.clientX,y:e.clientY};
+  hover=p.id;return true;
+ }
  function up(e){
   if(!press)return false;
   const old=press;press=null;
-  const p=hit(e),moved=Math.hypot(e.clientX-old.x,e.clientY-old.y)>22;
-  if(old.id.startsWith('character:')){
+  const p=hit(e),moved=Math.hypot(e.clientX-old.x,e.clientY-old.y)>dragThreshold;
+  if(drag){
+   const held=drag;drag=null;
+   o.dropCard?.(held.instance,e.clientX,e.clientY);
+   return true;
+  }
+  if(old.kind==='character'){
    const id=old.id.slice(10);o.previewCharacter?.(null);
    if(moved)o.placeCharacter?.(id,e.clientX,e.clientY);
    else if(p?.id===old.id)o.selectCharacter?.(id);
    return true;
   }
   if(!moved&&p?.id===old.id){
-   if(p.kind==='deck'){
-    const result=o.draw?.(p.ownerId);
-    if(result?.ok)lastDeal={profession:p.profession,instance:result.card?.instance,
-     x:p.x,y:p.y,scale:p.scale,at:now};
-   }
+   if(p.kind==='deck')takeFromPile(p);
    if(p.kind==='hand')o.select?.(p.instance);
   }
   return true;
@@ -388,12 +460,15 @@ function create(o){
  }
  function setCollapsed(next){
   collapsed=!!next;
-  hover=null;press=null;
+  cancelPress();deckLift.clear();
   if(collapsed){scene=[];hot=[];drawCalls=0;deckMeshes=0;}
   return collapsed;
  }
  function animateScene(mode,at){sceneMotion={mode,start:at};}
- function resetAnimations(){scene=[];hover=null;lastDeal=null;sceneMotion={mode:'steady',start:0};}
+ function resetAnimations(){
+  scene=[];lastDeal=null;lastFrame=0;deckLift.clear();cancelPress();
+  sceneMotion={mode:'steady',start:0};
+ }
  return Object.freeze({
   render:draw,hit,move,down,up,cancelPress,pointFor,animateScene,resetAnimations,setCollapsed,
   get collapsed(){return collapsed;},
@@ -412,6 +487,12 @@ function create(o){
     ownedCharacters:(count.roster||[]).map(c=>({id:c.id,profession:c.profession,slot:c.slot})),
     stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     collapsed,canExpand:true,
+    renderSpace:'screen-fixed-post-world',receivesWorldClouds:false,
+    receivesWorldShadows:false,
+    hoverTopCard:!!hover&&(['deck','character'].includes(scene.find(p=>p.id===hover)?.kind)),
+    liftedDecks:[...deckLift].filter(([id,lift])=>lift>.02).map(([id,lift])=>({id,lift})),
+    interaction:drag?{mode:'drag',instance:drag.instance,source:drag.source,
+     x:drag.x,y:drag.y}:press?{mode:'press',kind:press.kind,id:press.id}:null,
     compartments:7,physicalBoxes:1,hasLid:false,hasHinge:false,
     reversibleLid:false,flipAnimationEnabled:false,screenEdgeAnchored:true,
     drawCalls,renderedCardMeshes:deckMeshes,count:count.count,
@@ -426,5 +507,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'10.0.0-visible-hand-and-deal-motion',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'11.0.0-screen-overlay-pointer-play',create});
 })(window);
