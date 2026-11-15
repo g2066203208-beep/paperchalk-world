@@ -124,7 +124,7 @@ html,body{background:#d8ded0}
 <button type="button" id="deck-drawer-toggle" aria-expanded="false" aria-label="展开七槽牌盒">展开牌盒 ▲</button>
 <div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>手动摸牌：点七个职业牌盒，每次一张，最多10张<br>第二关：农夫摸设施牌，选中后放入左右设施区<br>固定俯视角 · 滚轮可缩回原始尺寸，不可更小 · 放大后可安全平移 · 0 复位</div><div id="level-hud" aria-live="polite">敌人 2/2 · 手牌 0/10</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
-<div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地</button>
+<div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地 → 夜雾石街</button>
  <div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div>
  </div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="use-selected" hidden>使用卡牌</button><button type="button" id="reset">重开关卡</button></div>
@@ -160,6 +160,7 @@ html,body{background:#d8ded0}
 <script src="./engine/stylized-materials.js?v=2"></script>
 <script src="./engine/cloud-shadows.js?v=1"></script>
 <script src="./engine/forest-dressing.js?v=3"></script>
+<script src="./engine/stone-street-environment.js?v=1"></script>
 <script src="./engine/visual-shaders.js?v=3"></script>
 <script src="./engine/spatial-shadows.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=7"></script>
@@ -211,7 +212,9 @@ const U={m:gl.getUniformLocation(pg,'uM'),vp:gl.getUniformLocation(pg,'uVP'),col
  cardContacts:gl.getUniformLocation(pg,'uCardContacts[0]'),
  resolution:gl.getUniformLocation(pg,'uResolution'),
  lightVP:gl.getUniformLocation(pg,'uLightVP'),useShadow:gl.getUniformLocation(pg,'uUseShadow'),
- shadowMap:gl.getUniformLocation(pg,'uShadowMap'),shadowTexel:gl.getUniformLocation(pg,'uShadowTexel')};
+ shadowMap:gl.getUniformLocation(pg,'uShadowMap'),shadowTexel:gl.getUniformLocation(pg,'uShadowTexel'),
+ streetMode:gl.getUniformLocation(pg,'uStreetMode'),streetTime:gl.getUniformLocation(pg,'uStreetTime'),
+ streetFog:gl.getUniformLocation(pg,'uStreetFog'),streetLamps:gl.getUniformLocation(pg,'uStreetLamps[0]')};
 gl.uniform1i(U.tex,0);
 gl.uniform1f(U.useShadow,0);
 const materialAtlas=window.PaperchalkMaterialAtlas.create(gl);
@@ -243,7 +246,11 @@ const terrain=window.PaperchalkVoxelTerrain.create({
   materials:{grass:{...window.PaperchalkVoxelTerrain.MATERIALS.grass,
    light:visualLook.get('forest').terrainLight,dark:visualLook.get('forest').terrainDark,
    side:visualLook.get('forest').terrainSide,
-   variance:visualLook.get('forest').terrainVariance}},
+   variance:visualLook.get('forest').terrainVariance},
+   stone:{name:'stone',light:visualLook.get('street').terrainLight,
+    dark:visualLook.get('street').terrainDark,
+    side:visualLook.get('street').terrainSide,
+    variance:visualLook.get('street').terrainVariance,height:0}},
  initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
 });
 const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
@@ -340,7 +347,7 @@ function renderGeom(geo,m,color,tex=null,unlit=false,terrainSoil=null,metal=0,ma
 const cardStatBadges=window.PaperchalkCardStatBadges.create({
  gl,makeFace:rrFace,renderGeom,mul,T,S,cardW,cardH,cardD
 });
-function cube(x,y,z,w,h,d,color,material=0){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color,null,false,null,0,material);}
+function cube(x,y,z,w,h,d,color,material=0,unlit=false){renderGeom(box,mul(T(x,y,z),S(w,h,d)),color,null,unlit,null,0,material);}
 // Terrain textures, generated geometry, palette rules and adjacency live in a reusable module.
 // No per-scene duplication of mesh generation or independently calculated placement positions.
 function terrainEntryMatrix(c,r){
@@ -370,6 +377,10 @@ const forestDressing=window.PaperchalkForestDressing.create({
  appearance:(id,t)=>objectFX.sample(id,t),enabled:visualFx
 });
 window.__forestDressing=forestDressing;
+const streetProps=window.PaperchalkStoneStreetEnvironment.create({
+ terrain,cube,appearance:(id,t)=>objectFX.sample(id,t)
+});
+window.__stoneStreet=streetProps;
 // One registered lifecycle for EVERY biome and every scene object class.
 const sceneLifecycle=window.PaperchalkSceneLifecycle.create({
  animation:objectFX,groups:[
@@ -380,6 +391,9 @@ const sceneLifecycle=window.PaperchalkSceneLifecycle.create({
   {id:'environment',ids:scene=>forestProps.idsFor(scene),
    enter:{duration:.58,stagger:.017,maxDelay:.26,overshoot:1.52},
    exit:{duration:.43,stagger:.015,maxDelay:.26}},
+  {id:'street-architecture',ids:scene=>streetProps.idsFor(scene),
+   enter:{duration:.67,stagger:.007,maxDelay:.24,overshoot:1.08},
+   exit:{duration:.50,stagger:.004,maxDelay:.24}},
   {id:'forest-dressing',ids:scene=>scene==='forest'?forestDressing.propIds:[],
    enter:{duration:.66,stagger:.007,maxDelay:.28,overshoot:1.14},
    exit:{duration:.48,stagger:.003,maxDelay:.24}},
@@ -583,9 +597,11 @@ const sceneSwitchButton=document.getElementById('scene-switch');
 const sceneSwitchStatus=document.getElementById('scene-switch-status');
 const scenePresets={
  forest:{name:'森林',material:'grass',background:visualLook.get('forest').background},
- clearing:{name:'石质空地',material:'dirt',background:visualLook.get('clearing').background}
+ clearing:{name:'石质空地',material:'dirt',background:visualLook.get('clearing').background},
+ street:{name:'夜雾石街',material:'stone',background:visualLook.get('street').background}
 };
-function sceneNextId(id){return id==='forest'?'clearing':'forest';}
+const initialScene=scenePresets[urlOptions.get('scene')]?urlOptions.get('scene'):'forest';
+function sceneNextId(id){return id==='forest'?'clearing':id==='clearing'?'street':'forest';}
 function syncSceneSwitchLabel(){
  const current=sceneTransition?.scene||'forest',next=sceneNextId(current);
  sceneSwitchButton.textContent='切换场景 · '+scenePresets[current].name+' → '+scenePresets[next].name;
@@ -594,14 +610,14 @@ function syncSceneSwitchLabel(){
 }
 function playWorldLifecycle(mode,t){
  const scene=mode==='exit'?sceneTransition.scene:sceneTransition.scene;
- // The same registered providers drive both forest and clearing.
+ // One lifecycle drives all three world-space scene modules.
  // Individual renderers pivot around each prop's original world position.
  sceneLifecycle.play(mode,scene,t);
  // The card case is persistent player UI, not world scenery: never
  // shrink every deck/hand card toward the center of the tray during travel.
 }
 sceneTransition=window.PaperchalkSceneTransitions.create({
- scenes:['forest','clearing'],initial:'forest',
+ scenes:['forest','clearing','street'],initial:initialScene,
  exitDuration:.84,enterDuration:1.12,
  onExit:(oldScene,nextScene,t)=>{
   sceneSwitchStatus.textContent='正在退场 · 地形、人物、树木、卡牌逐个缩小';
@@ -945,15 +961,16 @@ function move(c,s){
 function reset(){
  combatController.reset();combatFeedback.reset();
  orbitCamera.reset(); // A restarted battle must show the entire board again.
- sceneTransition.reset('forest');
- forestProps.setScene('forest');
- colors.background=scenePresets.forest.background.slice();
- document.body.dataset.scene='forest';
- sceneSwitchStatus.textContent='森林 · 点击观看完整切换动画';
+ const sceneAtReset=sceneTransition.scene;
+ sceneTransition.reset(sceneAtReset);
+ forestProps.setScene(sceneAtReset);
+ colors.background=scenePresets[sceneAtReset].background.slice();
+ document.body.dataset.scene=sceneAtReset;
+ sceneSwitchStatus.textContent=scenePresets[sceneAtReset].name+' · 点击观看完整切换动画';
  syncSceneSwitchLabel();
  cards.length=0;occupied.clear();farmRules.reset();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;
  selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
- fx.reset();terrain.reset('grass');clearPick();startForestLevel();
+ fx.reset();terrain.reset(scenePresets[sceneTransition.scene].material);clearPick();startForestLevel();
  sceneHUD.resetAnimations?.();
   window.__forestHand?.reset();
 }
@@ -1131,7 +1148,7 @@ for(const c of cards){for(let i=0;i<1;i++){
  let scale=pose.scale;
 let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
-function drawStage(){forestProps.draw(now);forestDressing.draw(now,forestProps.scene);terrainRenderer.draw();physicalFrame.draw(now,forestProps.scene);}
+function drawStage(){forestProps.draw(now);forestDressing.draw(now,forestProps.scene);streetProps.draw(now,forestProps.scene);terrainRenderer.draw();physicalFrame.draw(now,forestProps.scene);}
 function drawTerrainParticles(){
  if(!fx.particles.length)return;
  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
@@ -1183,6 +1200,7 @@ function frame(timeMs){
    cube(terrain.centerX,terrain.topY-.20,terrain.centerZ,terrain.width,.40,terrain.depth,[1,1,1,1]);
    forestProps.draw(now,{skipGround:true});
    forestDressing.draw(now,forestProps.scene);
+   streetProps.draw(now,forestProps.scene);
    physicalFrame.draw(now);
    for(const c of cards){
     if(c.hudMatrix||!c.slot)continue;
@@ -1193,6 +1211,11 @@ function frame(timeMs){
  gl.viewport(0,0,w,h);
  if(shadowSystem?.enabled)shadowSystem.bind(U);
  visualLook.apply(gl,U,sceneTransition?.scene||forestProps.scene);
+ const nightStreet=forestProps.scene==='street';
+ gl.uniform1f(U.streetMode,nightStreet?1:0);
+ gl.uniform1f(U.streetTime,now);
+ gl.uniform1f(U.streetFog,nightStreet?.019:0);
+ gl.uniform3fv(U.streetLamps,new Float32Array(streetProps.lamps.flat()));
  materialAtlas.bind(U);
  cloudShadows.bind(U,now,visualFx&&cloudFx&&forestProps.scene==='forest');
  gl.uniform1f(U.visualMix,visualFx?1:0);
@@ -1306,18 +1329,20 @@ function deployCharacterAt(id,x,y){
 }
 function startForestLevel(){
  combatController.reset();combatFeedback.reset();
- sceneTransition.reset('forest');
- forestProps.setScene('forest');
- colors.background=scenePresets.forest.background.slice();
- document.body.dataset.scene='forest';
- sceneSwitchStatus.textContent='森林 · 点击观看完整切换动画';
+ const sceneAtReset=sceneTransition.scene;
+ sceneTransition.reset(sceneAtReset);
+ forestProps.setScene(sceneAtReset);
+ colors.background=scenePresets[sceneAtReset].background.slice();
+ document.body.dataset.scene=sceneAtReset;
+ sceneSwitchStatus.textContent=scenePresets[sceneAtReset].name+' · 点击观看完整切换动画';
  syncSceneSwitchLabel();
  level.reset();
  objectFX.reset();
  document.getElementById('level-end').classList.remove('is-visible');
  farmRules.reset();
  for(const unit of level.snapshot().units)if(unit.deployed)spawnUnitCard(unit);
- sceneLifecycle.play('enter','forest',now);
+ terrain.reset(scenePresets[sceneTransition.scene].material);
+ sceneLifecycle.play('enter',sceneTransition.scene,now);
  attackMode=true;syncLevelHud();sync();
  // Physical hero card and highlighted ally cells convey deployment without an overlay.
 }
@@ -1406,7 +1431,9 @@ window.__forestLevelDebug={
  get cloudShadows(){return {...cloudShadows.snapshot,enabled:visualFx&&cloudFx&&forestProps.scene==='forest',time:now};},
  get visualLook(){return visualLook.snapshot(sceneTransition?.scene||'forest');},
  switchScene(){return sceneTransition.toggle(now);},
- get environment(){return {id:forestProps.scene,props:forestProps.propCount,
+ get environment(){return {id:forestProps.scene,props:forestProps.propCount+
+  (forestProps.scene==='street'?streetProps.propIds.length:0),
+  street:forestProps.scene==='street'?streetProps.snapshot:null,
   material:terrain.cell(0,0)?.kind,ground:forestProps.ground};},
  get objectAnimations(){return objectFX.stats(now);},
  objectPose(id){return objectFX.sample(id,now);},
