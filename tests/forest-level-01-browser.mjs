@@ -477,8 +477,9 @@ try{
  assert.equal(screenCase.renderSpace,'screen-fixed-post-world');
  assert.equal(screenCase.receivesWorldClouds,false,
   'screen-space tray must NOT be lit by forest cloud projection');
- assert.equal(screenCase.receivesWorldShadows,false,
-  'screen-space tray must NOT receive world-space shadows');
+ assert.equal(screenCase.receivesWorldShadows,true,
+  'screen-fixed tray keeps scene shadow and lighting: only cloud cover is disabled');
+ assert.equal(screenCase.sceneLighting,true);
  await verifyFixedCamera(pc,'desktop');
  await pc.waitForTimeout(500);
  await screenshot(pc,'01-static-seven-bay-box-desktop');
