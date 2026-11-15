@@ -608,7 +608,16 @@ function resize(){
  gl.viewport(0,0,w,h);
  orbitCamera.sizes(rect.width,rect.height);
  const state=orbitCamera.snapshot();
- camera.eye=state.eye;camera.target=state.target;
+ // The river has another 14+ world units beyond the NORTH board edge.
+ // Keep 16x6 actual tactical geometry unchanged; only frame its surroundings
+ // so the bridge/water are visible alongside playable cards.
+ const riverOverview=forestProps.scene==='river';
+ if(riverOverview){
+  const scale=1.19,shift=-4.15;
+  camera.target=[state.target[0],state.target[1],state.target[2]+shift];
+  camera.eye=state.eye.map((v,i)=>state.target[i]+(v-state.target[i])*scale);
+  camera.eye[2]+=shift;
+ }else{camera.eye=state.eye;camera.target=state.target;}
  camera.aspect=w/h;camera.tan=Math.tan(state.fov*Math.PI/360);
  proj=perspective(state.fov*Math.PI/180,camera.aspect,.1,220);
  view=lookAt(camera.eye,camera.target,[0,1,0]);
