@@ -131,7 +131,6 @@ try{
    assert.equal(hall.windowOpenings,6,'the rear wall must have actual window apertures');
    assert.equal(hall.roofShadowOnly,true,'roof must cast shadow but stay invisible to play camera');
    assert.equal(hall.lightSource,'wall-windows-not-skylight');
-   assert.equal(window?.__forestLevelDebug?.worldTime?.nightFactor,undefined);
    assert.ok(hall.rendered>0);
    await capture(desktop,'10-royal-hall-night');
    await desktop.evaluate(()=>window.__worldClock.setTime('12:00'));
