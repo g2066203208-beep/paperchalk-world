@@ -83,6 +83,56 @@
           "artStatus": "planned"
         }
       ]
+    },
+    {
+      "id": "mountain-bandits",
+      "name": "山道强盗团",
+      "workspace": "/character-editor/mountain-bandits-booth.html",
+      "memberCount": 7,
+      "members": [
+        {
+          "id": "bandit-01-chief",
+          "name": "女寨主",
+          "battleClass": "战士",
+          "artStatus": "uploaded_in_chat_not_on_github"
+        },
+        {
+          "id": "bandit-02-deputy",
+          "name": "山寨二当家",
+          "battleClass": "召唤师",
+          "artStatus": "uploaded_in_chat_not_on_github"
+        },
+        {
+          "id": "bandit-03-apothecary",
+          "name": "黑市药师",
+          "battleClass": "医师",
+          "artStatus": "uploaded_in_chat_not_on_github"
+        },
+        {
+          "id": "bandit-04-tinkerer",
+          "name": "机关拆车匠",
+          "battleClass": "工程师",
+          "artStatus": "uploaded_in_chat_not_on_github"
+        },
+        {
+          "id": "bandit-05-thief",
+          "name": "飞贼",
+          "battleClass": "游击者",
+          "artStatus": "uploaded_in_chat_not_on_github"
+        },
+        {
+          "id": "bandit-06-crossbow",
+          "name": "伏路弩手",
+          "battleClass": "射手",
+          "artStatus": "uploaded_in_chat_not_on_github"
+        },
+        {
+          "id": "bandit-07-guard",
+          "name": "铁壁打手",
+          "battleClass": "守卫",
+          "artStatus": "uploaded_in_chat_not_on_github"
+        }
+      ]
     }
   ]
 }
