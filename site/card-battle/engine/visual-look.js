@@ -40,7 +40,19 @@ const CLEARING=freeze({
  sunColor:freeze([1.035,.972,.87]),
  ambient:.79,sunIntensity:.24
 });
-const PRESETS=freeze({forest:FOREST,clearing:CLEARING});
+const STREET=freeze({
+ id:'street',version:'1.0.0',stage:7,
+ terrainDetail:.027,goldColor:FOREST.goldColor,
+ terrainSide:freeze([.255,.275,.305,1]),
+ background:freeze([.075,.105,.150,1]),
+ terrainLight:freeze([.375,.400,.430,1]),
+ terrainDark:freeze([.369,.394,.425,1]),
+ terrainVariance:.009,
+ ground:freeze([.265,.292,.320,1]),foliage:FOREST.foliage,
+ sunDirection:freeze([-.44,.76,.39]),skyFill:freeze([.58,.68,.90]),
+ sunColor:freeze([.66,.77,.98]),ambient:.61,sunIntensity:.29
+});
+const PRESETS=freeze({forest:FOREST,clearing:CLEARING,street:STREET});
 function get(id){return PRESETS[id]||FOREST;}
 function apply(gl,u,id){
  const v=get(id);
