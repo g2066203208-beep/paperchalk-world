@@ -43,6 +43,8 @@ function create(o){
  let sceneMotion={mode:'steady',start:0},drawCalls=0,deckMeshes=0,lastDeal=null;
  // UI-only tactile state. Never changes the underlying pile or world scene.
  const deckLift=new Map();
+ const motion=root.PaperchalkCardHandMotion?.create();
+ if(!motion)throw Error('Load card-hand-motion engine before scene-card-hud');
  let lastFrame=0,drag=null;
  const dragThreshold=10;
  let collapsed=true; // Default view is an unobstructed 16x6 board; deck stays in game state.
@@ -224,32 +226,35 @@ function create(o){
  }
  function layout(snapshot,staged,g){
   const slots=[],roster=snapshot.roster||[];
-  for(let i=0;i<7;i++){
-   const x=g.x0+i*g.bay,owner=roster[i];
-   if(!owner){
-    slots.push({kind:'empty',id:'empty:'+i,slot:i,x,y:g.y});
-    continue;
+  if(!collapsed){
+   for(let i=0;i<7;i++){
+    const x=g.x0+i*g.bay,owner=roster[i];
+    if(!owner){slots.push({kind:'empty',id:'empty:'+i,slot:i,x,y:g.y});continue;}
+    const card={kind:'deck',id:'deck:'+owner.id,ownerId:owner.id,
+     profession:owner.profession,slot:i,x,y:g.y,z:.18,scale:g.scale,
+     deckCount:owner.deckCount};
+    slots.push(card);
+    const pending=staged.find(u=>u.id===owner.id);
+    if(pending)slots.push({...card,kind:'character',id:'character:'+pending.id,
+     unitId:pending.id,portrait:pending.portrait});
    }
-   const card={kind:'deck',id:'deck:'+owner.id,
-    ownerId:owner.id,profession:owner.profession,slot:i,
-    x,y:g.y,z:.18,scale:g.scale,deckCount:owner.deckCount};
-   slots.push(card);
-   const pending=staged.find(u=>u.id===owner.id);
-   if(pending)slots.push({...card,kind:'character',id:'character:'+pending.id,
-    unitId:pending.id,portrait:pending.portrait});
   }
-  // Temporary STATIC hand presentation above the box. No lid material,
-  // no lid transform, no card flip. Gameplay remains testable meanwhile.
-  const hand=snapshot.hand||[];
-  const maxW=g.w*.75;
-  const spacing=Math.min(g.mobile?.36:.64,maxW/Math.max(1,hand.length));
-  const fan=(hand.length-1)*spacing;
-  const sc=g.mobile?.39:.68;
+  // Closing the physical case ONLY hides case/decks; cards stay in a larger,
+  // independently anchored hand along the lower screen edge.
+  const hand=snapshot.hand||[],count=hand.length;
+  const sc=g.mobile?.68:1.06;
+  const available=spanW*(g.mobile?.93:.76);
+  const spacing=count<2?0:Math.min(g.mobile?.52:.92,
+   Math.max(.18,(available-cardW*sc)/(count-1)));
+  const centerY=collapsed?
+   (-spanH/2+(g.mobile?.64:.72)+cardH*sc*.52):
+   (g.y+g.h/2+(g.mobile?.82:1.18));
   hand.forEach((card,i)=>{
-   const axis=hand.length===1?0:(i-(hand.length-1)/2);
+   const axis=i-(count-1)/2,t=count<2?0:axis/((count-1)/2);
+   const arc=(1-t*t)*(g.mobile?.10:.18);
    slots.push({kind:'hand',id:'hand:'+card.instance,instance:card.instance,
-    c:card,x:axis*spacing,y:g.y+g.h/2+(g.mobile?.49:.75),z:.7,
-    scale:sc,angle:0});
+    c:card,x:axis*spacing,y:centerY+arc,z:.80,
+    scale:sc,angle:-t*(g.mobile?.13:.17),fanIndex:i});
   });
   return slots;
  }
@@ -281,82 +286,70 @@ function create(o){
   for(const p of positions.filter(p=>p.kind==='deck')){
    const cards=o.remainingCards?.(p.ownerId)||[],count=cards.length;
    if(!count)continue;
-   // Tight white prototype stack. Top edge reclines slightly behind bottom.
-   // Physical thickness changes with the actual number of cards remaining.
-   const tilt=-.105,thickness=.040+Math.min(10,count)*.016;
-   const center=.014+thickness*.5;
+   // Model draws with pop(), so last entry IS the visible next draw.
+   const next=cards[count-1],tilt=-.105;
+   const thickness=.040+Math.min(10,count)*.016,center=.014+thickness*.5;
    curved(model.deck,p.x,p.y,center,thickness,paint.paper,g,tilt);
-   // Floating white face exactly atop the same tilted rounded solid.
    curved(model.top,p.x,p.y,center+thickness*.50+.002,.009,paint.cap,g,tilt);
-   // Actual faint paper-layer separation on the depth walls: kept to 5
-   // lines maximum (draw-call budget) rather than all 70 covered faces.
    for(let i=1;i<Math.min(count,10);i+=2){
-    const z=.014+i*.016;
-    curved(model.deck,p.x,p.y,z,.0022,paint.stripe,g,tilt);
+    curved(model.deck,p.x,p.y,.014+i*.016,.0022,paint.stripe,g,tilt);
    }
    deckMeshes++;
-   const unit=staged.find(u=>u.id===p.ownerId);
-   // Every pile has a printed, paper-textured top card instead of a blank
-   // white plastic slab. Deployment portraits take precedence over the crest.
-   // A single tactile rise when this deck is clicked; never idle bobbing.
-   const dealt=lastDeal?.ownerId===p.ownerId?
-    1-smooth((now-lastDeal.at)/.28):0;
-   const lift=deckLift.get(p.id)||0;
-   const k=1+.045*Math.max(0,dealt)+lift*.10;
-   const m=mul(T(p.x,p.y+Math.max(0,dealt)*.11+lift*.19,
-     center+thickness*.5+cardD+.022+lift*.07),
-    mul(RX(tilt+lift*.085),S(g.scale*k,g.scale*k,1)));
-   renderCard(m,textureFor({profession:p.profession},unit?.portrait),g);
+   const tactile=motion.deckPose(p.ownerId,now,deckLift.get(p.id)||0);
+   if(tactile.shimmer>.03)
+    curved(model.well,p.x,p.y,center+thickness*.5+.018,
+     .008,paint.brass,g,0,null,1);
+   const m=mul(T(p.x,p.y+tactile.lift,
+      center+thickness*.5+cardD+.022+tactile.lift*.32),
+     mul(RX(tactile.tilt),S(g.scale*tactile.scale,g.scale*tactile.scale,1)));
+   renderCard(m,textureFor(next,next.art||next.image||null),g);
   }
  }
  function draw(t,w,h){
-  const delta=lastFrame?Math.min(.10,t-lastFrame):1/60;
+  const delta=lastFrame?Math.max(0,Math.min(.10,t-lastFrame)):1/60;
   lastFrame=t;now=t;size(w,h);
-  // Folded drawer is not rendered or interactive. Deck/hand state persists.
-  if(collapsed){scene=[];hot=[];hover=null;press=null;drag=null;drawCalls=0;deckMeshes=0;return;}
   const g=dims(),snapshot=o.snapshot(),staged=o.staged?.()||[];
   const positions=layout(snapshot,staged,g);scene=positions;
-  hot=positions.filter(p=>p.kind!=='empty');drawCalls=0;deckMeshes=0;
-  // Hover animation affects only the TOP card, never the entire deck or case.
-  const ease=1-Math.exp(-Math.max(0,delta)*19);
+  hot=positions.filter(p=>p.kind==='hand'||(!collapsed&&p.kind!=='empty'));
+  drawCalls=0;deckMeshes=0;
+  // No visible tray AND no hand needs no rendering pass.
+  if(collapsed&&!snapshot.hand?.length){hover=null;motion.tick(now,[]);return;}
+  const ease=1-Math.exp(-delta*19);
   for(const p of positions.filter(x=>x.kind==='deck')){
    const focus=(hover===p.id||hover==='character:'+p.ownerId||
-     press?.id===p.id||press?.id==='character:'+p.ownerId)&&!drag;
+    press?.id===p.id||press?.id==='character:'+p.ownerId)&&!drag;
    const lift=deckLift.get(p.id)||0;
    deckLift.set(p.id,lift+((focus?1:0)-lift)*ease);
   }
   const oldVP=getVP();
-  // UI uses a fixed projection but keeps the scene's lighting/materials.
-  // The host callback only suppresses drifting cloud cover for this pass.
-  o.beginScreenPass?.();
+  o.beginScreenPass?.(); // Same world lighting, only cloud coverage is masked.
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(fov,width/height,.1,80),T(0,0,-cameraZ)));
-  geometry(g);
-  decks(g,positions,staged);
-  for(const p of positions.filter(x=>x.kind==='hand')){
+  if(!collapsed){geometry(g);decks(g,positions,staged);}
+  const cards=positions.filter(p=>p.kind==='hand');
+  const ordered=cards.map(p=>{
+   const selected=o.selected?.()===p.instance,focus=hover===p.id;
+   const pose=motion.settle(p.instance,
+    {x:p.x,y:p.y,angle:p.angle,scale:p.scale},now,{hover:focus,selected});
+   const flight=['peel','flight','settle'].includes(pose.phase);
+   return {p,pose,priority:flight?2:selected||focus?1:0};
+  }).sort((a,b)=>a.priority-b.priority||a.p.fanIndex-b.p.fanIndex);
+  for(const {p,pose} of ordered){
    if(drag?.instance===p.instance)continue;
-   const chosen=o.selected?.()===p.instance;
-   const focus=hover===p.id;
-   // The SAME drawn physical instance moves from the top of its owner pile
-   // into the hand fan; no teleport / respawn at the destination.
-   const dealing=lastDeal?.instance===p.instance?
-    Math.max(0,1-(now-lastDeal.at)/.50):0;
-   const progress=smooth(1-dealing);
-   const hx=dealing?lastDeal.x+(p.x-lastDeal.x)*progress:p.x;
-   const hy=dealing?lastDeal.y+(p.y-lastDeal.y)*progress+Math.sin(progress*Math.PI)*.48:p.y;
-   const hs=dealing?lastDeal.scale+(p.scale-lastDeal.scale)*progress:p.scale;
-   const m=mul(T(hx,hy+(chosen?.18:0)+(focus?.09:0),p.z),
-    mul(RZ(dealing*(1-progress)*-.12),S(hs*(focus?1.06:1),hs*(focus?1.06:1),1)));
-   renderCard(m,textureFor(p.c),g);
+   const m=mul(T(pose.x,pose.y,pose.z||.8),
+    mul(RZ(pose.angle||0),S(pose.scale,pose.scale,1)));
+   renderCard(m,textureFor(p.c,p.c.art||p.c.image||null),g);
   }
   if(drag){
    const pos=worldPoint({clientX:drag.x,clientY:drag.y});
    if(pos){
-    const sc=g.mobile?.40:.67;
-    const m=mul(T(pos.x,pos.y,1.8),mul(RZ(-.055),S(sc,sc,1)));
-    renderCard(m,textureFor(drag.card),g);
+    const sc=g.mobile?.75:1.10;
+    const m=mul(T(pos.x,pos.y+.16,2.2),
+     mul(RZ(-.07),S(sc,sc,1)));
+    renderCard(m,textureFor(drag.card,drag.card.art||drag.card.image||null),g);
    }
   }
+  motion.tick(now,cards.map(p=>p.instance));
   uniformVP(oldVP);gl.viewport(0,0,width,height);
   o.endScreenPass?.();
  }
