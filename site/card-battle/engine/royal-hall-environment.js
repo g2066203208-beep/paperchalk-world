@@ -4,7 +4,7 @@
  * Shared WebGL material/light/shadow clock; no canvas billboard/background.
  */
 (function(root){'use strict';
-function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
+function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
  const groundY=terrain.topY-.80,hw=terrain.width*.5,cz=terrain.centerZ;
  const north=terrain.minZ-5.9,south=terrain.minZ+terrain.depth+5.9;
  const c={
@@ -14,7 +14,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
   velvet:[.48,.15,.20,1],red:[.57,.22,.27,1],glass:[.40,.59,.70,1],
   flame:[.99,.70,.36,1],torch:[.26,.27,.30,1]
  };
- const items=[],lamps=[];
+ const items=[],lamps=[],windows=[];
  function item(id,x,z,type,build){
   const parts=[];
   const add=(dx,y,dz,w,h,d,color,material=3,unlit=false)=>{
@@ -28,23 +28,27 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
  for(let i=0;i<8;i++){
   const x=terrain.minX+(i+.5)*seg,centered=i===3||i===4;
   item('hall-rear-bay-'+i,x,north,'wall',add=>{
-   add(0,4.00,0,seg+.09,8.0,.96,c.wall);
+   // Actual apertures: solid lintel, sill and two jambs; NO wall
+   // behind the window. Daylight comes from the opening, not the sky.
    add(0,8.11,0,seg+.30,.25,1.19,c.column);
-   add(0,.43,.52,seg+.08,.86,1.1,c.base);
-   add(0,2.68,.62,seg*.69,4.8,.16,centered?c.door:c.dark,4);
+   add(0,.55,0,seg+.09,1.10,.96,c.wall);
+   add(0,6.55,0,seg+.09,2.9,.96,c.wall);
+   add(-seg*.42,3.65,0,seg*.16,5.1,.96,c.wall);
+   add(seg*.42,3.65,0,seg*.16,5.1,.96,c.wall);
    if(centered){
-    add(0,5.25,.67,seg*.72,.25,.28,c.gold,3);
-    add(0,5.64,.73,seg*.22,.65,.22,c.pale);
+    add(0,3.45,.10,seg*.66,4.60,.24,c.door,4);
+    add(0,5.80,.67,seg*.72,.28,.28,c.gold);
    }else{
-    add(0,3.0,.66,seg*.44,3.9,.18,c.glass,7,true);
-    add(0,3.0,.79,.14,4.1,.21,c.gold);
-    add(0,3.0,.80,seg*.48,.15,.20,c.gold);
-    add(0,5.09,.74,seg*.57,.22,.33,c.pale);
-    add(0,.75,.76,seg*.58,.15,.37,c.pale);
+    add(0,3.52,.14,seg*.63,4.10,.07,c.glass,8,true);
+    add(0,3.52,.70,.13,4.25,.19,c.gold);
+    add(0,3.52,.75,seg*.69,.13,.19,c.gold);
+    add(0,5.64,.66,seg*.74,.22,.30,c.pale);
+    add(0,1.37,.65,seg*.74,.22,.33,c.pale);
    }
    add(-seg*.5,3.9,.64,.31,7.8,.66,c.column);
    add(seg*.5,3.9,.64,.31,7.8,.66,c.column);
   });
+  if(!centered)windows.push([x,groundY+3.52,north+.72]);
  }
  // Low cutaway front wall: room reads as interior but never hides cards.
  for(let i=0;i<8;i++){
@@ -114,6 +118,14 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
   });
   lamps.push([x,groundY+1.98,z]);
  }
+ // Camera cutaway: a ceiling exists for directional shadow casting,
+ // but is omitted from the color pass so the 16x6 battle stays visible.
+ function drawRoofShadow(scene){
+  if(scene!=='hall')return;
+  const y=groundY+8.46;
+  cube(terrain.centerX,y,terrain.centerZ,terrain.width+11.6,.66,
+   terrain.depth+12.6,[1,1,1,1],3);
+ }
  function pushBox(g,x,y,z,w,h,d){
   const faces=[
     {p:[[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5]],n:[0,1,0]},
@@ -164,13 +176,15 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
    }
   }
  }
- return Object.freeze({draw,get ids(){return items.map(o=>o.id)},
+ return Object.freeze({draw,drawRoofShadow,get windows(){return windows.map(a=>a.slice())},
+  get ids(){return items.map(o=>o.id)},
   idsFor:scene=>scene==='hall'?items.map(o=>o.id):[],
   get lamps(){return lamps.map(a=>a.slice())},
   get snapshot(){return {scene:'hall',style:'modular-cutaway-3d-royal-hall',
    walls:items.filter(o=>o.type.includes('wall')).length,columns:18,
    chandeliers:4,dais:1,props:items.length,rendered,
-   placementCellsOccupied:0,sharedShadows:true,worldClock:true}}});
+   placementCellsOccupied:0,sharedShadows:true,worldClock:true,
+   windowOpenings:windows.length,roofShadowOnly:true,lightSource:'wall-windows-not-skylight'}}});
 }
 root.PaperchalkRoyalHallEnvironment=Object.freeze({version:'1.0.0',create});
 })(window);
