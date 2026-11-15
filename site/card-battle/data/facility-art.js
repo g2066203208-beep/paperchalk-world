@@ -8,7 +8,7 @@ const entries=Object.freeze({
  'plant-tree':Object.freeze({file:'plant-tree.png',size:[1024,1024],name:'植树'}),
  'water-well':Object.freeze({file:'water-well.png',size:[1024,1024],name:'水井'}),
  'scarecrow':Object.freeze({file:'scarecrow.png',size:[1024,1024],name:'稻草人'}),
- 'windmill':Object.freeze({file:'windmill.png',size:[1536,1536],name:'风车磨坊'})
+ 'irrigated-field':Object.freeze({file:'irrigated-field.png',size:[1536,1536],name:'灌溉农田'})
 });
 const BASE='../assets/card-battle/farmer/';
 function get(id){
