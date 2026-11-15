@@ -1,6 +1,6 @@
 'use strict';
 // Rule-level regression: actual five farmer cards, essence, building footprints,
-// well bonus, tree/lumber resource tradeoff, scarecrow and bandit skills.
+// well bonus, tree/woodcutter attack resource tradeoff, scarecrow and bandit skills.
 const assert=require('node:assert/strict');
 const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const ctx=vm.createContext({window:{},Math,Map,Set,Array,Object,Number,Error});
@@ -19,7 +19,9 @@ const hand=D.create({ownedCharacters:owned,maxHand:10,seed:618231});
 const w=hand.remainingCards('woodcutter'),a=hand.remainingCards('farmer');
 assert.equal(new Set(w.map(x=>x.id)).size,5);
 assert.equal(new Set(a.map(x=>x.id)).size,5);
-assert.equal(w.filter(x=>x.id==='lumber').length,2);
+assert.equal(w.filter(x=>x.id==='lumber').length,0);
+assert.equal(w.filter(x=>x.id==='diagonal-slash').length,2);
+assert.ok(w.filter(x=>x.type==='attack').length>=8);
 assert.ok(a.every(x=>x.type==='facility'));
 assert.equal(a.length,10);
 for(let i=0;i<10;i++)assert.equal(hand.draw('farmer').ok,true);
@@ -39,18 +41,19 @@ assert.ok(place('water-well',2,3).ok);
 const tree=place('plant-tree',3,3);
 assert.ok(tree.ok);
 assert.ok(place('scarecrow',10,5).ok);
-const mill=place('windmill',11,3,[{tileC:11,tileR:3},{tileC:12,tileR:3},
+const irrigated=place('irrigated-field',11,3,[{tileC:11,tileR:3},{tileC:12,tileR:3},
  {tileC:11,tileR:4},{tileC:12,tileR:4}]);
-assert.ok(mill.ok);
+assert.ok(irrigated.ok);
 assert.equal(place('farm-field',1,3).reason,'occupied');
-assert.equal(place('windmill',11,4).reason,'invalid-footprint');
-assert.equal(place('windmill',13,3,[
+assert.equal(place('irrigated-field',11,4).reason,'invalid-footprint');
+assert.equal(place('irrigated-field',13,3,[
  {tileC:13,tileR:3},{tileC:14,tileR:3},
  {tileC:13,tileR:4},{tileC:15,tileR:4}
 ]).reason,'invalid-footprint','correct number of cells is not enough');
 const t1=farm.nextTurn();
-assert.equal(t1.state.essence.life,1,'well doubles farm LIFE, mill converts one to MATERIAL');
-assert.equal(t1.state.essence.material,1);
+assert.equal(t1.state.essence.life,4,
+ 'well doubles neighboring farm from 1 to 2, irrigated plot separately produces 2');
+assert.equal(t1.state.essence.material,0,'farmland never converts life into materials');
 const blocked=farm.intercept(3,3);
 assert.equal(blocked.cardId,'plant-tree');
 assert.equal(blocked.blocked,2);
@@ -65,7 +68,13 @@ assert.equal(fake.cardId,'scarecrow');
 assert.equal(fake.blocked,7);
 assert.ok(fake.destroyed);
 assert.equal(farm.snapshot.facilities.filter(x=>x.cardId==='scarecrow').length,0);
-assert.equal(farm.grant('material',9),3,'shared essence capped at five');
+const treeDamage=farm.damage(tree.facility.id,3);
+assert.ok(treeDamage.ok);
+assert.equal(treeDamage.remainingHp,2);
+assert.equal(farm.damage(tree.facility.id,2).destroyed,true,
+ 'tree must survive partial hits and vanish only at zero durability');
+assert.ok(!farm.snapshot.facilities.find(f=>f.id===tree.facility.id));
+assert.equal(farm.grant('material',9),5,'shared essence capped at five');
 assert.equal(farm.spend('material',4),true);
 assert.equal(farm.snapshot.essence.material,1);
 assert.equal(farm.steal(1),1,'bandit steals stored shared essence');
