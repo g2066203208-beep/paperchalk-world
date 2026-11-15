@@ -7,19 +7,27 @@ fs.mkdirSync(folder,{recursive:true});
 const browser=await chromium.launch({headless:true,
  args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader']});
 const errors=[];
+async function capture(page,name){
+ const session=await page.context().newCDPSession(page);
+ const shot=await session.send('Page.captureScreenshot',{
+  format:'png',captureBeyondViewport:false,fromSurface:true
+ });
+ fs.writeFileSync(folder+'/'+name+'.png',Buffer.from(shot.data,'base64'));
+ await session.detach();
+}
 try{
  const open=async(width,height)=>{
   const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
   page.on('pageerror',e=>errors.push(String(e)));
   page.on('console',msg=>{if(msg.type()==='error')console.log('PAGE_CONSOLE_ERROR',msg.text())});
-  await page.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?scene=street&quality=high',
+  await page.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?scene=street&quality=auto',
    {waitUntil:'domcontentloaded',timeout:35000});
   await page.waitForFunction(()=>window.__forestLevelDebug?.environment?.id==='street'&&
    window.__forestLevelDebug.environment.street?.rendered>0,null,{timeout:35000});
   await page.waitForTimeout(1950);
   return page;
  };
- const desktop=await open(1600,900);
+ const desktop=await open(1280,720);
  const state=await desktop.evaluate(()=>{
   const d=window.__forestLevelDebug,e=d.environment;
   return {scene:e.id,material:e.material,street:e.street,
@@ -54,7 +62,7 @@ try{
  assert.equal(state.facilitySlots,48);
  assert.equal(state.shadow?.enabled,true,'night scene preserves the real shadow map');
  console.log('STREET_3D_WEBGL_PASS',JSON.stringify(state));
- await desktop.screenshot({path:folder+'/01-real-night-street-desktop.png'});
+ await capture(desktop,'01-real-night-street-desktop');
  // Verify the original three-scene switch and terrain changes without rebuilding combat.
  for(const [next,material] of [['forest','grass'],['clearing','dirt'],['street','stone']]){
   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
@@ -64,10 +72,10 @@ try{
   },[next,material],{timeout:30000});
   console.log('SCENE_SWITCH_PASS',next);
  }
- await desktop.screenshot({path:folder+'/02-real-street-after-three-way-switch.png'});
+ await capture(desktop,'02-real-street-after-three-way-switch');
  await desktop.close();
  const mobile=await open(390,844);
- await mobile.screenshot({path:folder+'/03-real-night-street-mobile.png'});
+ await capture(mobile,'03-real-night-street-mobile');
  await mobile.close();
  assert.deepEqual(errors,[],'no JavaScript errors in live street scene');
  console.log('STONE_STREET_ALL_PASS',{screenshots:3});
