@@ -75,7 +75,7 @@ try{
  });
  await desktop.waitForFunction(()=>window.__forestLevelDebug?.worldTime?.phase==='day'&&
   window.__forestLevelDebug.worldLighting.nightFactor===0&&
-  window.__forestLevelDebug.spatialShadows.snapshot.lightDirection[1]>.75,
+  window.__forestLevelDebug.spatialShadows.lightDirection[1]>.75,
   null,{timeout:15000}).catch(async()=>{
    // The public shadow debug property is an already-extracted snapshot.
    await desktop.waitForFunction(()=>window.__forestLevelDebug.worldLighting.nightFactor===0,
