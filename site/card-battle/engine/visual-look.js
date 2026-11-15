@@ -63,7 +63,18 @@ const HALL=freeze({
  sunDirection:freeze([-.40,.85,.32]),skyFill:freeze([.93,.88,.82]),
  sunColor:freeze([1.04,.92,.78]),ambient:.78,sunIntensity:.22
 });
-const PRESETS=freeze({forest:FOREST,clearing:CLEARING,street:STREET,hall:HALL});
+const RIVER=freeze({
+ id:'river',version:'1.0.0',stage:9,
+ terrainDetail:.031,goldColor:FOREST.goldColor,
+ terrainSide:freeze([.40,.38,.32,1]),
+ background:freeze([.44,.57,.60,1]),
+ terrainLight:freeze([.44,.54,.37,1]),
+ terrainDark:freeze([.40,.49,.34,1]),
+ terrainVariance:.010,ground:freeze([.38,.48,.35,1]),foliage:FOREST.foliage,
+ sunDirection:freeze([-.45,.88,.34]),skyFill:freeze([.84,.93,1]),
+ sunColor:freeze([1.0,.98,.90]),ambient:.74,sunIntensity:.28
+});
+const PRESETS=freeze({forest:FOREST,clearing:CLEARING,street:STREET,hall:HALL,river:RIVER});
 function get(id){return PRESETS[id]||FOREST;}
 const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -80,12 +91,12 @@ function evaluate(id,world){
  const dusk=[1.14,.67,.38],sunColor=mix(v.sunColor,dusk,world.twilight*.78);
  const backgroundDay=id==='street'?[.435,.495,.565,1]:v.background;
  const backgroundNight=id==='forest'?[.032,.053,.077,1]:
-  id==='clearing'?[.048,.063,.09,1]:id==='hall'?[.095,.103,.125,1]:[.055,.079,.122,1];
+  id==='clearing'?[.048,.063,.09,1]:id==='hall'?[.095,.103,.125,1]:id==='river'?[.041,.068,.10,1]:[.055,.079,.122,1];
  const background=mix(backgroundNight,backgroundDay,daylight);
- const fogDay=id==='street'?.006:id==='hall'?.0025:id==='forest'?.0048:.0035;
- const fogNight=id==='street'?.020:id==='hall'?.005:id==='forest'?.010:.007;
+ const fogDay=id==='street'?.006:id==='hall'?.0025:id==='river'?.005:id==='forest'?.0048:.0035;
+ const fogNight=id==='street'?.020:id==='hall'?.005:id==='river'?.012:id==='forest'?.010:.007;
  const fogColor=mix([.11,.17,.25],
-  id==='street'?[.51,.55,.60]:id==='hall'?[.52,.50,.47]:id==='forest'?[.48,.56,.50]:[.56,.54,.50],daylight);
+  id==='street'?[.51,.55,.60]:id==='hall'?[.52,.50,.47]:id==='river'?[.53,.64,.65]:id==='forest'?[.48,.56,.50]:[.56,.54,.50],daylight);
  return {
   ...v,background,
   sunDirection:world.lightDirection,
