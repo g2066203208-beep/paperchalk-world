@@ -282,6 +282,16 @@ function create(o){
  function pileMatrix(p,g,z){
   return mul(T(p.x,p.y,z),S(g.scale,g.scale,1));
  }
+ function topCardPose(p,g){
+  const focus=deckLift.get(p.id)||0;
+  const tactile=motion.deckPose(p.ownerId,now,focus);
+  const previewTarget=g.mobile?.92:1.19;
+  const extra=1+focus*(Math.max(1,previewTarget/g.scale)-1);
+  const lift=tactile.lift+focus*(g.mobile?.40:.57);
+  return {x:p.x,y:p.y+lift,z:.23+lift*.32,
+   scale:g.scale*tactile.scale*extra,tilt:tactile.tilt,
+   shimmer:tactile.shimmer};
+ }
  function decks(g,positions,staged){
   const model=shapes(g);
   for(const p of positions.filter(p=>p.kind==='deck')){
@@ -296,20 +306,14 @@ function create(o){
     curved(model.deck,p.x,p.y,.014+i*.016,.0022,paint.stripe,g,tilt);
    }
    deckMeshes++;
-   const tactile=motion.deckPose(p.ownerId,now,deckLift.get(p.id)||0);
-   if(tactile.shimmer>.03)
+   const pose=topCardPose(p,g);
+   if(pose.shimmer>.03)
     curved(model.well,p.x,p.y,center+thickness*.5+.018,
      .008,paint.brass,g,0,null,1);
-   // Hover magnifies the ACTUAL top card into an inspectable face-up card.
-   // The stack stays in place, only this top sheet lifts over the paper layers.
-   const focus=deckLift.get(p.id)||0;
-   const previewTarget=g.mobile?.92:1.19;
-   const extra=1+focus*(Math.max(1,previewTarget/g.scale)-1);
-   const scale=g.scale*tactile.scale*extra;
-   const lift=tactile.lift+focus*(g.mobile?.40:.57);
-   const m=mul(T(p.x,p.y+lift,
-      center+thickness*.5+cardD+.022+lift*.32),
-     mul(RX(tactile.tilt),S(scale,scale,1)));
+   // Every pile displays its ACTUAL next card; inspect and draw share
+   // precisely the same source pose to avoid a visible animation jump.
+   const m=mul(T(pose.x,pose.y,pose.z),
+     mul(RX(pose.tilt),S(pose.scale,pose.scale,1)));
    renderCard(m,textureFor(next,next.art||next.image||null),g);
   }
  }
@@ -418,10 +422,11 @@ function create(o){
  function takeFromPile(p){
   const result=o.draw?.(p.ownerId);
   if(!result?.ok)return null;
+  const from=topCardPose(p,dims());
   lastDeal={profession:p.profession,ownerId:p.ownerId,
-   instance:result.card.instance,x:p.x,y:p.y,scale:p.scale,at:now};
+   instance:result.card.instance,x:from.x,y:from.y,scale:from.scale,at:now};
   motion.drawCard({instance:result.card.instance,ownerId:p.ownerId,
-   from:{x:p.x,y:p.y,scale:p.scale},at:now});
+   from:{x:from.x,y:from.y,z:from.z,scale:from.scale},at:now});
   prepareSelected(result.card.instance);
   return result.card;
  }
