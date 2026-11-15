@@ -272,7 +272,7 @@ function grainTexture(gl){
  * Each integer level is exactly one cube side-length. The only curvature
  * is a small top-edge bevel and convex corner radius, never a hillside ramp.
  */
-function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSeams}){
+function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSeams,showWalls}){
  if(!gl||!makeGeom||!renderGeom||!I)throw Error('Missing WebGL renderer dependencies');
  const texture=grainTexture(gl),base=I();
  const tileMatrix=(c,r)=>typeof tileTransform==='function'?(tileTransform(c,r)||base):base;
@@ -313,7 +313,7 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSe
  }
  function draw(){
   if(renderedRevision!==grid.revision)rebuild();
-  for(const entry of walls)renderGeom(entry.mesh,tileMatrix(entry.c,entry.r),entry.color,null,false,null,0,2);
+  if(!showWalls||showWalls())for(const entry of walls)renderGeom(entry.mesh,tileMatrix(entry.c,entry.r),entry.color,null,false,null,0,2);
   for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
    const cell=grid.cell(c,r);
    renderGeom(tiles[r][c],tileMatrix(c,r),grid.color(c,r),texture,false,grid.materials[cell.kind].side,0,cell.kind==='grass'?1:(cell.kind==='dirt'||cell.kind==='sand')?2:(cell.kind==='stone'||cell.kind==='marble'||cell.kind==='shale'||cell.kind==='caveRock')?3:cell.kind==='deck'?4:0);
