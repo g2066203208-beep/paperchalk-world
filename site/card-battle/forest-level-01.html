@@ -772,7 +772,7 @@ function projection2D(x,y,z){
 let boardReferenceMetrics=null,previousFrameViewport='';
 function syncReferenceLayout(){
  const rect=canvas.getBoundingClientRect();
- const key=[rect.width,rect.height,terrain.width,terrain.depth,orbitCamera.snapshot().distance].join('/');
+ const key=[rect.width,rect.height,terrain.width,terrain.depth,orbitCamera.snapshot().distance,forestProps.scene].join('/');
  if(previousFrameViewport===key)return;
  previousFrameViewport=key;
  const x0=terrain.minX,x1=x0+terrain.width,z0=terrain.minZ,z1=z0+terrain.depth,y=terrain.topY+.025;
