@@ -34,7 +34,7 @@ clock.setTime('23:59');clock.setPaused(false);clock.tick(1);
 assert.equal(clock.snapshot().timeText,'00:00');
 clock.setRate(10);clock.tick(1);
 assert.equal(clock.snapshot().timeText,'00:10');
-for(const id of ['forest','clearing','street','hall','river']){
+for(const id of ['forest','clearing','street','hall','coast','cliff','ocean','cave']){
  const day=look.evaluate(id,noon),night=look.evaluate(id,midnight);
  assert.ok(day.ambient>night.ambient,id+' sun light must dim at night');
  assert.ok(day.background[0]>night.background[0],id+' clear sky must darken');
@@ -49,7 +49,7 @@ assert.equal(look.evaluate('street',noon).nightFactor,0,'street lights off by da
 assert.equal(look.evaluate('street',midnight).nightFactor,1,'street lights on at night');
 console.log('SHARED_WORLD_CLOCK_PASS',JSON.stringify({
  phases:[noon.phase,dawn.phase,dusk.phase,midnight.phase],
- scenePresets:['forest','clearing','street','hall','river'],
+ scenePresets:['forest','clearing','street','hall','coast','cliff','ocean','cave'],
  clock:clock.snapshot().timeText,
  sunrise:dawn.lightDirection,noon:noon.lightDirection,midnight:midnight.lightDirection
 }));
