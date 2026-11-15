@@ -146,7 +146,7 @@ html,body{background:#d8ded0}
 <button type="button" id="deck-drawer-toggle" aria-expanded="false" aria-label="展开七槽牌盒">展开牌盒 ▲</button>
 <div id="terrain-hint"><strong>林间小路 · 第一关 · 16×6</strong><br>我方伐木少女 ×1 · 森林敌人 ×2<br>手动摸牌：点七个职业牌盒，每次一张，最多10张<br>第二关：农夫摸设施牌，选中后放入左右设施区<br>固定俯视角 · 滚轮可缩回原始尺寸，不可更小 · 放大后可安全平移 · 0 复位</div><div id="level-hud" aria-live="polite">敌人 2/2 · 手牌 0/10</div>
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
-<div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地 → 石街 → 石砌大厅</button>
+<div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地 → 石街 → 石砌大厅 → 河岸木桥</button>
  <div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div>
  </div>
 <div id="world-clock-wrap" role="group" aria-label="世界时间与昼夜控制">
@@ -186,15 +186,16 @@ html,body{background:#d8ded0}
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=11"></script>
 <script src="./engine/physical-board-frame.js?v=5"></script>
-<script src="./engine/visual-look.js?v=6"></script>
+<script src="./engine/visual-look.js?v=7"></script>
 <script src="./engine/world-time.js?v=1"></script>
 <script src="./engine/stylized-materials.js?v=2"></script>
 <script src="./engine/cloud-shadows.js?v=1"></script>
 <script src="./engine/forest-dressing.js?v=3"></script>
 <script src="./engine/stone-street-environment.js?v=1"></script>
-<script src="./engine/royal-hall-environment.js?v=1"></script>
+<script src="./engine/royal-hall-environment.js?v=2"></script>
+<script src="./engine/river-bridge-environment.js?v=1"></script>
 <script src="./engine/staggered-stone-paving.js?v=2"></script>
-<script src="./engine/visual-shaders.js?v=4"></script>
+<script src="./engine/visual-shaders.js?v=6"></script>
 <script src="./engine/spatial-shadows.js?v=2"></script>
 <script src="./engine/profession-decks.js?v=7"></script>
 <script src="./engine/farmer-facilities.js?v=4"></script>
@@ -280,7 +281,10 @@ const U={m:gl.getUniformLocation(pg,'uM'),vp:gl.getUniformLocation(pg,'uVP'),col
  streetFog:gl.getUniformLocation(pg,'uStreetFog'),streetLamps:gl.getUniformLocation(pg,'uStreetLamps[0]'),
  nightFactor:gl.getUniformLocation(pg,'uNightFactor'),
  worldFog:gl.getUniformLocation(pg,'uWorldFog'),
- worldFogColor:gl.getUniformLocation(pg,'uWorldFogColor')};
+ worldFogColor:gl.getUniformLocation(pg,'uWorldFogColor'),
+ indoorMode:gl.getUniformLocation(pg,'uIndoorMode'),
+ hallDaylight:gl.getUniformLocation(pg,'uHallDaylight'),
+ hallWindows:gl.getUniformLocation(pg,'uHallWindows[0]')};
 gl.uniform1i(U.tex,0);
 gl.uniform1f(U.useShadow,0);
 const materialAtlas=window.PaperchalkMaterialAtlas.create(gl);
@@ -457,6 +461,11 @@ const royalHall=window.PaperchalkRoyalHallEnvironment.create({
  terrain,makeGeom,renderGeom,I,T,S,mul,appearance:(id,t)=>objectFX.sample(id,t)
 });
 window.__royalHall=royalHall;
+const riverProps=window.PaperchalkRiverBridgeEnvironment.create({
+ terrain,makeGeom,renderGeom,I,T,S,mul,
+ appearance:(id,t)=>objectFX.sample(id,t)
+});
+window.__riverBridge=riverProps;
 const streetPaving=window.PaperchalkStaggeredStonePaving.create({
  terrain,gl,makeGeom,renderGeom,I
 });
@@ -477,6 +486,9 @@ const sceneLifecycle=window.PaperchalkSceneLifecycle.create({
   {id:'royal-hall-architecture',ids:scene=>royalHall.idsFor(scene),
    enter:{duration:.64,stagger:.005,maxDelay:.24,overshoot:1.09},
    exit:{duration:.48,stagger:.004,maxDelay:.22}},
+  {id:'river-shore-and-bridge',ids:scene=>riverProps.idsFor(scene),
+   enter:{duration:.64,stagger:.003,maxDelay:.30,overshoot:1.06},
+   exit:{duration:.48,stagger:.003,maxDelay:.22}},
   {id:'forest-dressing',ids:scene=>scene==='forest'?forestDressing.propIds:[],
    enter:{duration:.66,stagger:.007,maxDelay:.28,overshoot:1.14},
    exit:{duration:.48,stagger:.003,maxDelay:.24}},
@@ -682,10 +694,11 @@ const scenePresets={
  forest:{name:'森林',material:'grass',background:visualLook.get('forest').background},
  clearing:{name:'石质空地',material:'dirt',background:visualLook.get('clearing').background},
  street:{name:'石板街道',material:'stone',background:visualLook.get('street').background},
- hall:{name:'石砌大厅',material:'marble',background:visualLook.get('hall').background}
+ hall:{name:'石砌大厅',material:'marble',background:visualLook.get('hall').background},
+ river:{name:'河岸木桥',material:'dirt',background:visualLook.get('river').background}
 };
 const initialScene=scenePresets[urlOptions.get('scene')]?urlOptions.get('scene'):'forest';
-function sceneNextId(id){return id==='forest'?'clearing':id==='clearing'?'street':id==='street'?'hall':'forest';}
+function sceneNextId(id){return id==='forest'?'clearing':id==='clearing'?'street':id==='street'?'hall':id==='hall'?'river':'forest';}
 function syncSceneSwitchLabel(){
  const current=sceneTransition?.scene||'forest',next=sceneNextId(current);
  const sceneLabel=current==='forest'?'林间小路':scenePresets[current].name;
@@ -705,7 +718,7 @@ function playWorldLifecycle(mode,t){
  // shrink every deck/hand card toward the center of the tray during travel.
 }
 sceneTransition=window.PaperchalkSceneTransitions.create({
- scenes:['forest','clearing','street','hall'],initial:initialScene,
+ scenes:['forest','clearing','street','hall','river'],initial:initialScene,
  exitDuration:.84,enterDuration:1.12,
  onExit:(oldScene,nextScene,t)=>{
   sceneSwitchStatus.textContent='正在退场 · 地形、人物、树木、卡牌逐个缩小';
@@ -1242,7 +1255,7 @@ for(const c of cards){for(let i=0;i<1;i++){
  let scale=pose.scale;
 let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
-function drawStage(){forestProps.draw(now);forestDressing.draw(now,forestProps.scene);streetProps.draw(now,forestProps.scene);royalHall.draw(now,forestProps.scene);terrainRenderer.draw();streetPaving.draw(forestProps.scene);physicalFrame.draw(now,forestProps.scene);}
+function drawStage(){forestProps.draw(now);forestDressing.draw(now,forestProps.scene);streetProps.draw(now,forestProps.scene);royalHall.draw(now,forestProps.scene);riverProps.draw(now,forestProps.scene);terrainRenderer.draw();streetPaving.draw(forestProps.scene);physicalFrame.draw(now,forestProps.scene);}
 function drawTerrainParticles(){
  if(!fx.particles.length)return;
  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
@@ -1302,6 +1315,8 @@ function frame(timeMs){
    forestDressing.draw(now,forestProps.scene);
    streetProps.draw(now,forestProps.scene);
    royalHall.draw(now,forestProps.scene);
+   royalHall.drawRoofShadow(forestProps.scene);
+   riverProps.draw(now,forestProps.scene);
    streetPaving.draw(forestProps.scene);
    physicalFrame.draw(now);
    for(const c of cards){
@@ -1316,7 +1331,10 @@ function frame(timeMs){
  colors.background=currentEnvironment.background.slice();
  const streetActive=forestProps.scene==='street';
  const hallActive=forestProps.scene==='hall';
- gl.uniform1f(U.streetMode,streetActive||hallActive?1:0);
+ gl.uniform1f(U.streetMode,streetActive?1:0);
+ gl.uniform1f(U.indoorMode,hallActive?1:0);
+ gl.uniform1f(U.hallDaylight,currentWorldTime.daylight);
+ gl.uniform3fv(U.hallWindows,new Float32Array(royalHall.windows.slice(1,5).flat()));
  gl.uniform1f(U.streetTime,now);
  gl.uniform1f(U.streetFog,currentEnvironment.fogDensity);
  gl.uniform1f(U.nightFactor,currentEnvironment.nightFactor);
@@ -1542,9 +1560,11 @@ window.__forestLevelDebug={
  get worldLighting(){return visualLook.evaluate(forestProps.scene,worldClock.snapshot());},
  get environment(){return {id:forestProps.scene,props:forestProps.propCount+
   (forestProps.scene==='street'?streetProps.propIds.length:0)+
-  (forestProps.scene==='hall'?royalHall.ids.length:0),
+  (forestProps.scene==='hall'?royalHall.ids.length:0)+
+  (forestProps.scene==='river'?riverProps.idsFor('river').length:0),
   street:forestProps.scene==='street'?streetProps.snapshot:null,
   hall:forestProps.scene==='hall'?royalHall.snapshot:null,
+  river:forestProps.scene==='river'?riverProps.snapshot:null,
   paving:forestProps.scene==='street'?streetPaving.snapshot:null,
   material:terrain.cell(0,0)?.kind,ground:forestProps.ground};},
  get objectAnimations(){return objectFX.stats(now);},
