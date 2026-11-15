@@ -52,12 +52,10 @@ void main(){
   float fine=sin(vP.x*1.67+vP.z*.70)*sin(vP.z*1.92-vP.x*.32);
   base.rgb*=1.0+uTerrainDetail*(broad*.80+fine*.20)*grassWeight;
   if(uStreetMode>.5){
-   // Staggered masonry cobbles in WORLD coordinates.
-   float row=floor(vP.z/1.03),x=vP.x+mod(row,2.)*.53;
-   vec2 seam=abs(fract(vec2(x/.98,vP.z/1.03))-.5)*2.;
-   float mortar=smoothstep(.91,.98,max(seam.x,seam.y));
-   float stoneNoise=sin(row*7.73+floor(x/.98)*12.59)*.025;
-   base.rgb*=1.-mortar*.24+stoneNoise;
+   // Real elevated slab meshes now provide running-bond joints, bevel
+   // normals and cast shadows. The original terrain is only dark mortar.
+   // Do not overprint any procedural checker on the stone geometry.
+   base.rgb*=.68;
   }
  }
  // Shared 2x2 material atlas; seam-safe world-space sampling.
@@ -171,5 +169,5 @@ void main(){
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.2.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'1.3.0',fragment});
 })(window);
