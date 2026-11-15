@@ -50,9 +50,11 @@ try{
  assert.equal(state.street.placementCellsOccupied,0);
  assert.equal(state.paving.source,'physical-3d-bevelled-stones');
  assert.equal(state.paving.pattern,'running-bond');
- assert.equal(state.paving.activeCourses,12);
+ assert.equal(state.paving.activeCourses,6);
+ assert.equal(state.paving.paverWidthCardUnits,1);
+ assert.equal(state.paving.paverDepthCardUnits,1);
  assert.equal(state.paving.offsetRatio,.5);
- assert.ok(state.paving.independentModules>=170,'real separate pavers, not a material stripe');
+ assert.ok(state.paving.independentModules>=95,'one 3D staggered stone per tactical card footprint');
  assert.ok(state.paving.clippedFragments>=state.paving.independentModules);
  assert.ok(state.paving.drawCalls<=6,'paving batches by six material shades');
  assert.equal(state.paving.logicalTiles,96);
@@ -60,7 +62,8 @@ try{
  assert.equal(state.paving.heightAware,true);
  assert.ok(state.street.rendered<=28,'settled houses must be batched for performance');
  assert.equal(state.unitSlots,18);
- assert.equal(state.facilitySlots,48);
+ assert.equal(state.facilitySlots,78);
+ assert.equal(state.unitSlots+state.facilitySlots,96,'all 96 positions must be registered');
  assert.equal(state.shadow?.enabled,true,'night scene preserves the real shadow map');
  assert.equal(state.worldTime.phase,'night');
  assert.ok(state.worldLighting.nightFactor>.99,'shared time switches lamps on at night');
@@ -89,7 +92,7 @@ try{
  assert.equal((await desktop.evaluate(()=>window.__forestLevelDebug.worldTime)).timeText,'23:00');
  await capture(desktop,'05-night-street-same-world');
  // Verify the original three-scene switch and terrain changes without rebuilding combat.
- for(const [next,material] of [['forest','grass'],['clearing','dirt'],['street','stone']]){
+ for(const [next,material] of [['forest','grass'],['clearing','dirt'],['street','stone'],['hall','marble']]){
   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
   await desktop.waitForFunction(([id,kind])=>{
    const d=window.__forestLevelDebug;
@@ -110,6 +113,19 @@ try{
     null,{timeout:15000});
    await capture(desktop,'07-real-day-forest');
    await desktop.evaluate(()=>window.__worldClock.setTime('23:00'));
+  }else if(next==='hall'){
+   const hall=await desktop.evaluate(()=>window.__forestLevelDebug.environment.hall);
+   assert.equal(hall.scene,'hall');
+   assert.equal(hall.placementCellsOccupied,0);
+   assert.equal(hall.columns,18);
+   assert.equal(hall.chandeliers,4);
+   assert.ok(hall.rendered>0);
+   await capture(desktop,'10-royal-hall-night');
+   await desktop.evaluate(()=>window.__worldClock.setTime('12:00'));
+   await desktop.waitForFunction(()=>window.__forestLevelDebug.worldLighting.nightFactor===0,
+    null,{timeout:15000});
+   await capture(desktop,'11-royal-hall-day');
+   await desktop.evaluate(()=>window.__worldClock.setTime('23:00'));
   }else if(next==='clearing'){
    await capture(desktop,'08-real-night-clearing');
    await desktop.evaluate(()=>window.__worldClock.setTime('12:00'));
@@ -119,11 +135,20 @@ try{
    await desktop.evaluate(()=>window.__worldClock.setTime('23:00'));
   }
  }
- await capture(desktop,'02-real-street-after-three-way-switch');
+ assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
+ await desktop.waitForFunction(()=>window.__forestLevelDebug?.environment.id==='forest'&&!window.__forestLevelDebug.sceneSwitch.busy,
+  null,{timeout:30000});
+ assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
+ await desktop.waitForFunction(()=>window.__forestLevelDebug?.environment.id==='clearing'&&!window.__forestLevelDebug.sceneSwitch.busy,
+  null,{timeout:30000});
+ assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
+ await desktop.waitForFunction(()=>window.__forestLevelDebug?.environment.id==='street'&&!window.__forestLevelDebug.sceneSwitch.busy,
+  null,{timeout:30000});
+ await capture(desktop,'02-real-street-after-scene-cycle');
  await desktop.close();
  const mobile=await open(390,844);
  await capture(mobile,'03-real-night-street-mobile');
  await mobile.close();
  assert.deepEqual(errors,[],'no JavaScript errors in live street scene');
- console.log('STONE_STREET_ALL_PASS',{screenshots:9,globalTime:true,threeSceneLighting:true});
+ console.log('ALL_FOUR_SCENES_PASS',{screenshots:11,globalTime:true,fourSceneLighting:true,board16x6:true});
 }finally{await browser.close()}
