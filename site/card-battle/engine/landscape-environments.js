@@ -82,12 +82,12 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   for(let i=0;i<n;i++)tri(scene,palette[(i+1)%palette.length],3,
    summit[i],summit[(i+1)%n],[x+tilt*.8,y+ry*1.3,z]);
  }
- function mound(scene,id,x,z,rx,rz,h,palette=C.sand){
-  const n=11,outer=[],inner=[],peak=[x,top+h,z];
+ function mound(scene,id,x,z,rx,rz,h,palette=C.sand,groundY=top){
+  const n=11,outer=[],inner=[],peak=[x,groundY+h,z];
   for(let i=0;i<n;i++){
    const a=TAU*i/n,q=.81+rand(id*37+i*23)*.35;
-   outer.push([x+Math.cos(a)*rx*q,top-.11,z+Math.sin(a)*rz*q]);
-   inner.push([x+Math.cos(a)*rx*q*.64,top+h*.53+noise(i,id)*h*.10,z+Math.sin(a)*rz*q*.64]);
+   outer.push([x+Math.cos(a)*rx*q,groundY-.11,z+Math.sin(a)*rz*q]);
+   inner.push([x+Math.cos(a)*rx*q*.64,groundY+h*.53+noise(i,id)*h*.10,z+Math.sin(a)*rz*q*.64]);
   }
   for(let i=0;i<n;i++){
    const j=(i+1)%n;
@@ -95,11 +95,11 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    tri(scene,palette[(i+1)%palette.length],2,inner[i],inner[j],peak);
   }
  }
- function grass(scene,id,x,z,h,col=C.moss[0]){
+ function grass(scene,id,x,z,h,col=C.moss[0],groundY=top){
   for(let k=0;k<5;k++){
    const a=TAU*k/5+id,dx=Math.cos(a)*h*.22,dz=Math.sin(a)*h*.20;
-   const q=[x,top+.01,z],tip=[x+dx,top+h*(.65+rand(id+k)*.4),z+dz];
-   tri(scene,col,1,[x-.09,top+.015,z-.04],[x+.09,top+.015,z+.05],tip);
+   const q=[x,groundY+.01,z],tip=[x+dx,groundY+h*(.65+rand(id+k)*.4),z+dz];
+   tri(scene,col,1,[x-.09,groundY+.015,z-.04],[x+.09,groundY+.015,z+.05],tip);
   }
  }
  function sea(scene,zStart,zEnd,width=220,resX=68,resZ=36,level=top-1.36){
@@ -193,7 +193,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
     const q=i/steps,f=j/bands;
     const along=(isX?x0:z0)+length*q;
     const jitter=norm*width*f*(1+.15*noise(q*7,f*3));
-    const y=top-.14-f*.16+
+    const y=top-2.61-f*.16+
      (f===0?0:noise(q*8,f*8)*.085*Math.sin(pi*f));
     return isX?[along,y,edge+jitter]:
      [edge+jitter,y,along];
@@ -204,61 +204,86 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    }
   }
  }
- // ───────────── 01 COAST: organically eroded beach / surf ──────────
+ // ───────────── 01 COAST: real sandy world, a separate battle board ──
  {
-  shoulder('coast',['south','west','east'],C.sand,9.0);
-  // Shoreline curves across the full vista and physically meets the sand.
-  const shore=x=>z0-10.7+Math.sin(x*.105)*1.6+Math.sin(x*.37)*.56;
-  for(let i=0;i<64;i++)for(let j=0;j<13;j++){
-   const xA=cx-W*.72+i*W*1.44/64,xB=cx-W*.72+(i+1)*W*1.44/64;
-   const tA=j/13,tB=(j+1)/13;
-   const vertex=(x,t)=>{
-    const z=z0-(Math.max(0,t)*14.9)+
-      Math.sin(x*.12+t*.9)*.26*t;
-    const rel=(z0-z)/Math.max(1,z0-shore(x));
-    const y=top-.018-.92*clamp(rel,0,1)**1.72+
-      (noise(x*.21,t*13)*.065)*(Math.sin(pi*clamp(t,0,1))**2);
-    return [x,y,z];
-   };
-   const a=vertex(xA,tA),b=vertex(xB,tA),c=vertex(xB,tB),d=vertex(xA,tB);
-   quad('coast',C.sand[Math.min(3,Math.floor(j/4))],2,a,b,c,d);
+  // Landmass is BELOW the board's physical slab, never a replacement tile.
+  // North = sea, south = vegetated dunes. Natural wet-dry sand and a curved
+  // foamy breaker line make a continuous coastline outside the 16x6 board.
+  const beachBase=top-2.64,seaLevel=top-3.14;
+  const shore=x=>z0-5.05+Math.sin(x*.105)*1.65+
+    Math.sin(x*.37)*.52+Math.sin(x*.026)*1.1;
+  const sandColors=Array.from({length:8},(_,i)=>
+   mix(C.wet[0],C.sand[0],i/7).map((v,k)=>k===3?1:v));
+  const nx=62,nz=31,sandLeft=x0-46,sandRight=x1+46,back=z1+65;
+  const vertex=(ix,iz)=>{
+   const x=sandLeft+(sandRight-sandLeft)*ix/nx;
+   const coastZ=shore(x)-1.6;
+   const f=iz/nz,z=coastZ+(back-coastZ)*f;
+   const wet=clamp((z-shore(x))*.17);
+   const farFromBoard=Math.max(0,Math.abs(x-cx)-W*.51,
+    z-z1-1.2,z0-z-2);
+   const relief=clamp(farFromBoard/7);
+   const macro=noise(x*.075,z*.12)*.16*relief;
+   const dune=relief*.22*Math.max(0,noise(x*.21,z*.16));
+   const y=seaLevel+.50*wet+macro+dune+
+    noise(x*.43,z*.52)*.016;
+   return [x,y,z];
+  };
+  for(let i=0;i<nx;i++)for(let j=0;j<nz;j++){
+   const a=vertex(i,j),b=vertex(i+1,j),
+    c=vertex(i+1,j+1),d=vertex(i,j+1);
+   const grad=Math.min(7,Math.max(0,Math.floor(j/6.0)+
+    (j>11?2:0)));
+   quad('coast',sandColors[grad],2,a,b,c,d);
   }
-  // The water is a single uninterrupted triangulated surface, not cuboid
-  // patches. Day/night highlight and travelling ripple normals are shader driven.
-  sea('coast',z0-10.4,z0-167,W*3.1,68,36,top-1.17);
-  for(let w=0;w<4;w++){
+  // Shallow water smoothly meets the irregular shore. Unlike the previous
+  // version there is no beige rectangle extending across the sea.
+  sea('coast',z0-4.70,z0-188,W*4.2,74,42,seaLevel-.035);
+  // Breakers are real 3D narrow ribbons. Three staggered wavelets avoid a
+  // single perfect white line; they stay seaward of the visible wet sand.
+  for(let w=0;w<3;w++){
    curvedRibbon('coast',u=>{
-    const x=cx-W*.78+W*1.56*u;
-    return [x,top-1.08+w*.027,
-     shore(x)-1.0+w*.72+.28*Math.sin(x*.61+w*1.72)];
-   },0,1,120,.25+w*.07,
-   C.foam[w%2],10);
+    const x=sandLeft+(sandRight-sandLeft)*u;
+    return [x,seaLevel+.045+w*.008,
+     shore(x)-.18-w*.69+.17*Math.sin(x*.64+w*1.72)];
+   },.06,.94,108,w===0?.25:.10,C.foam[w%2],10);
   }
-  for(let side of [-1,1])for(let j=0;j<16;j++){
-   const x=cx+side*(W*.52+(j%4)*2.24),z=z0-5.0+j*.96;
-   const id=11+j+(side+1)*17;
-   ringRock('coast',id,x,top-.72,z,1.6+rand(id)*2.9,
-    1.2+rand(id+3)*2.7,1.5+rand(id+8)*2.5);
+  // Wind-swept sand ridges and sea-worn stones sit alongside the beach, not
+  // on or above the physical battle board.
+  for(let i=0;i<34;i++){
+   const side=i%2?-1:1;
+   const x=cx+side*(W*.55+3.0+rand(i*19)*13);
+   const z=z0+rand(i*11+5)*(D+40);
+   mound('coast',i+58,x,z,2.1+rand(i*4)*4.7,
+    2.0+rand(i*5)*3.4,.20+rand(i*7)*.45,C.sand,beachBase-.03);
   }
-  for(let i=0;i<28;i++){
-   const x=cx+(rand(i*8+14)-.5)*W*1.05;
-   const z=z0-1.3+rand(i*13+7)*3.4;
-   mound('coast',i+71,x,z,.9+rand(i)*1.55,.75+rand(i+4)*1.25,
-    .24+rand(i*5)*.42);
+  // Rock clusters taper naturally into the waves on the left and right
+  // headlands; they don't form two symmetrical piles around the board.
+  for(let i=0;i<33;i++){
+   const side=i<21?-1:1;
+   const x=cx+side*(W*.54+1.5+rand(i*37)*14);
+   const z=shore(x)+1.0+rand(i*9+17)*11;
+   ringRock('coast',i+160,x,seaLevel-.45,z,
+    1.0+rand(i*3)*2.6,.8+rand(i*5)*2.0,
+    1.0+rand(i*7)*2.3);
   }
-  for(let i=0;i<110;i++){
-   const side=i%2?1:-1,x=cx+side*(W*.51+rand(i*14)*7.4),
-    z=z0+(rand(i*17+4)*D*.88);
-   grass('coast',i+18,x,z,.38+rand(i*3)*.78,i%3?C.moss[0]:C.moss[1]);
+  for(let i=0;i<145;i++){
+   const side=i%2?-1:1;
+   const x=cx+side*(W*.56+rand(i*14)*16);
+   const z=z0+2.1+rand(i*17+4)*(D+36);
+   grass('coast',i+18,x,z,.38+rand(i*3)*1.0,
+    i%5?C.moss[0]:C.moss[1],beachBase+.04);
   }
-  // Distant offshore stacks fade naturally under fog and reflect in the sea.
-  for(let i=0;i<8;i++){
-   const x=cx+(i-3.5)*W*.43,z=z0-48-(i%3)*11;
-   ringRock('coast',i+160,x,top-3.3,z,4+(i%4)*1.5,
-    3.8+(i%3)*1.6,3.5+(i%3)*2.0);
+  // Three offshore crags establish scale and haze while keeping the
+  // horizon OPEN rather than a wall of repeated stone blocks.
+  for(let i=0;i<4;i++){
+   const x=cx+(i-1.5)*W*1.1,z=z0-62-i*17;
+   ringRock('coast',i+300,x,seaLevel-3.6,z,
+    4+rand(i*2)*3.7,3.5+rand(i*3)*5.5,5.0+rand(i)*3.1);
   }
-  stats.coast={sandBattlefield:true,shorelineModules:64,seaModules:1,
-   coastline:'curved-continuous-surf',rockForm:'faceted-sculpted',bridgeCount:0};
+  stats.coast={sandBattlefield:false,boardIndependent:true,
+   sandOutsideBoard:true,shorelineModules:nx*nz,seaModules:1,
+   coastline:'continuous-curved-wet-sand-surf',bridgeCount:0};
  }
 
  function mountainPeak(scene,id,x,y,z,rx,h,rz){
@@ -355,13 +380,13 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   // under slot decals and never alter the authoritative terrain coordinates.
   for(let j=0;j<44;j++){
    const z=z0+(j+.5)*D/44,wood=C.wood[j%3];
-   const y=top+.012+(j%5)*.001;
+   const y=top-2.61+(j%5)*.001;
    plane('ocean',wood,4,x0+.055,x1-.055,z-D/93,z+D/93,y);
   }
   // Plank joints are interrupted between separate board lengths.
   for(let i=0;i<15;i++)for(let j=0;j<10;j++){
    const x=x0+(i+1)*W/16+(j%2)*.035,z=z0+(j+.5)*D/10;
-   plane('ocean',C.wood[2],4,x-.021,x+.021,z-.77,z+.77,top+.023);
+   plane('ocean',C.wood[2],4,x-.021,x+.021,z-.77,z+.77,top-2.605);
   }
   // Fitted bulwark posts, rail, deck cleats and captain's stern cabin are
   // all OUTSIDE the battle cells. No prebuilt bridge, no occupancy changes.
@@ -500,5 +525,5 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   }}
  });
 }
-root.PaperchalkLandscapeEnvironments=Object.freeze({version:'2.3.0',create});
+root.PaperchalkLandscapeEnvironments=Object.freeze({version:'3.0.0',create});
 })(window);
