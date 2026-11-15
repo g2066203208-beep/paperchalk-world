@@ -1,4 +1,4 @@
-name: Five 3D Battle Scenes WebGL QA
+name: Eight Large 3D Battle Scenes WebGL QA
 on:
   push:
     branches: [main]
@@ -6,7 +6,7 @@ on:
       - 'site/card-battle/forest-level-01.html'
       - 'site/card-battle/engine/stone-street-environment.js'
       - 'site/card-battle/engine/royal-hall-environment.js'
-      - 'site/card-battle/engine/river-bridge-environment.js'
+      - 'site/card-battle/engine/landscape-environments.js'
       - 'site/card-battle/engine/forest-environment.js'
       - 'site/card-battle/engine/visual-look.js'
       - 'site/card-battle/engine/visual-shaders.js'
@@ -32,7 +32,7 @@ jobs:
         run: |
           node --check site/card-battle/engine/stone-street-environment.js
           node --check site/card-battle/engine/royal-hall-environment.js
-          node --check site/card-battle/engine/river-bridge-environment.js
+          node --check site/card-battle/engine/landscape-environments.js
           node --check site/card-battle/engine/visual-look.js
           node --check site/card-battle/engine/visual-shaders.js
           node --check site/card-battle/engine/forest-environment.js
@@ -49,12 +49,12 @@ jobs:
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/stone-street-http.log 2>&1 &
           sleep 2
-      - name: Verify five environments, window-lit interior, river water and mobile
+      - name: Verify eight environments, moving sunlit windows, sea cliffs ocean cave and mobile
         run: node tests/stone-street-browser.mjs
       - name: Upload real WebGL screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: five-scenes-real-webgl
+          name: eight-scenes-real-webgl
           path: artifacts/stone-street/
           if-no-files-found: warn
