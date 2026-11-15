@@ -172,6 +172,16 @@ void main(){
  if(uMaterialKind>4.5&&uMaterialKind<5.5&&uUnlit<.5){
   finalColor=mix(finalColor,base.rgb*.82,uNightFactor*.41);
  }
+ // Material 11 is dedicated natural beach sand, independent from the
+ // generic blue-grey terrain atlas. Wind ripples and fine grain stay in
+ // WORLD coordinates, never as a checkerboard per tactical tile.
+ if(uMaterialKind>10.5&&uMaterialKind<11.5){
+  float ripple=.025*sin(vP.x*.48+vP.z*1.65)+
+   .016*cos(vP.x*1.3-vP.z*.73);
+  float grains=fract(sin(dot(floor(vP.xz*16.),vec2(12.9898,78.233)))*43758.5453);
+  float detail=ripple+(grains-.5)*.027;
+  finalColor=clamp(finalColor*vec3(1.08,1.025,.90)*(1.+detail),0.,1.);
+ }
  // Material 9: physical 3D ocean mesh. High frequency ripple normals,
  // specular sun glints and glancing-angle fresnel share the world sun clock.
  if(uMaterialKind>8.5&&uMaterialKind<9.5){
