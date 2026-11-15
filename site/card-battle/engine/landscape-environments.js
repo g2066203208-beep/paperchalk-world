@@ -16,11 +16,11 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   wet:[[.49,.60,.56,1],[.54,.62,.56,1]],
   foam:[[.83,.93,.89,1],[.70,.87,.86,1]],
   water:[[.22,.49,.62,1],[.17,.42,.57,1]],
-  rock:[[.50,.53,.53,1],[.42,.46,.49,1],[.58,.59,.55,1],[.35,.40,.44,1]],
+  rock:[[.49,.52,.52,1],[.45,.48,.50,1],[.53,.55,.53,1],[.42,.46,.49,1]],
   moss:[[.42,.49,.34,1],[.32,.40,.34,1]],
   wood:[[.51,.38,.28,1],[.57,.43,.30,1],[.43,.32,.24,1]],
   metal:[[.22,.26,.28,1],[.72,.58,.39,1]],
-  cave:[[.30,.35,.39,1],[.39,.42,.44,1],[.43,.44,.43,1],[.25,.30,.35,1]],
+  cave:[[.36,.39,.42,1],[.40,.43,.45,1],[.44,.45,.44,1],[.33,.38,.41,1]],
   crystal:[[.45,.76,.79,1],[.30,.63,.72,1]]
  };
  const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
@@ -74,7 +74,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   for(let i=0;i<n;i++){
    const j=(i+1)%n;
    for(const [a,b,k] of [[bottom,middle,0],[middle,upper,1],[upper,summit,2]]){
-    const color=palette[(i+(id|0)+k)%palette.length];
+    const color=palette[Math.floor(rand(id*17+k*13)*palette.length)%palette.length];
     quad(scene,color,3,a[i],a[j],b[j],b[i]);
    }
   }
@@ -158,7 +158,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    chain.push(cols);
   }
   for(let i=0;i<segments;i++)for(let j=0;j<bands;j++){
-   const p=chain[i],q=chain[i+1],shade=(i*7+j*3)%C.rock.length;
+   const p=chain[i],q=chain[i+1],shade=(Math.floor(i/9)+Math.floor(j/2))%C.rock.length;
    quad(scene,C.rock[shade],3,p[j],q[j],q[j+1],p[j+1]);
   }
  }
@@ -172,15 +172,42 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    tri(scene,palette[(i+id)%palette.length],3,q1,q2,tip);
   }
  }
+ // Seamless sculpted shoulder connects precise card-space boundaries to
+ // surrounding terrain without occupying any additional gameplay cell.
+ // These are real material surfaces, not a gold border or visible slab wall.
+ function shoulder(scene,sides,palette,width=6.2){
+  const steps=scene==='cliff'?64:48,bands=5;
+  const col=scene==='coast'?2:3;
+  for(const side of sides){
+   const isX=side==='north'||side==='south',
+    length=isX?W:D,edge=isX?
+      (side==='north'?z0:z1):(side==='west'?x0:x1);
+   const norm=side==='north'||side==='west'?-1:1;
+   const pos=(i,j)=>{
+    const q=i/steps,f=j/bands;
+    const along=(isX?x0:z0)+length*q;
+    const jitter=norm*width*f*(1+.15*noise(q*7,f*3));
+    const y=top-.14-f*.16+
+     (f===0?0:noise(q*8,f*8)*.085*Math.sin(pi*f));
+    return isX?[along,y,edge+jitter]:
+     [edge+jitter,y,along];
+   };
+   for(let i=0;i<steps;i++)for(let j=0;j<bands;j++){
+    const a=pos(i,j),b=pos(i+1,j),c=pos(i+1,j+1),d=pos(i,j+1);
+    quad(scene,palette[Math.floor(i/16)%palette.length],col,a,b,c,d);
+   }
+  }
+ }
  // ───────────── 01 COAST: organically eroded beach / surf ──────────
  {
+  shoulder('coast',['south','west','east'],C.sand,9.0);
   // Shoreline curves across the full vista and physically meets the sand.
   const shore=x=>z0-10.7+Math.sin(x*.105)*1.6+Math.sin(x*.37)*.56;
   for(let i=0;i<64;i++)for(let j=0;j<13;j++){
    const xA=cx-W*.72+i*W*1.44/64,xB=cx-W*.72+(i+1)*W*1.44/64;
    const tA=j/13,tB=(j+1)/13;
    const vertex=(x,t)=>{
-    const z=z0-(1.7+Math.max(0,t)*13.2)+
+    const z=z0-(Math.max(0,t)*14.9)+
       Math.sin(x*.12+t*.9)*.26*t;
     const rel=(z0-z)/Math.max(1,z0-shore(x));
     const y=top-.018-.92*clamp(rel,0,1)**1.72+
@@ -229,6 +256,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
  }
  // ───────────── 02 CLIFF: multi-strata highland / abyss ────────────
  {
+  shoulder('cliff',['north','south','west','east'],C.rock,2.2);
   edgeCliff('cliff','north',56,17);
   edgeCliff('cliff','south',56,20);
   edgeCliff('cliff','west',28,18);
@@ -341,6 +369,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
  }
  // ───────────── 04 CAVE: sculpted vault and mineral lighting ───────
  {
+  shoulder('cave',['north','south','west','east'],C.cave,2.6);
   // Three enclosing strata: the main gameplay area remains walkable.
   // Curved rock bands replace the old straight cubic side walls.
   for(const side of [-1,1]){
@@ -444,5 +473,5 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   }}
  });
 }
-root.PaperchalkLandscapeEnvironments=Object.freeze({version:'2.0.0',create});
+root.PaperchalkLandscapeEnvironments=Object.freeze({version:'2.1.0',create});
 })(window);
