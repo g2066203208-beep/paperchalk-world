@@ -24,6 +24,7 @@ try{
   const d=window.__forestLevelDebug,e=d.environment;
   return {scene:e.id,material:e.material,street:e.street,
    terrain:window.__terrainEngine.snapshot().map(t=>t.kind),
+   paving:e.paving,
    sceneOrder:d.sceneSwitch,shadow:d.spatialShadows,
    performance:d.performance,unitSlots:d.slots.filter(s=>s.zone==='unit').length,
    facilitySlots:d.slots.filter(s=>s.zone==='facility').length,
@@ -38,6 +39,16 @@ try{
  assert.equal(state.street.alleyModules,5);
  assert.equal(state.street.lamps,4);
  assert.equal(state.street.placementCellsOccupied,0);
+ assert.equal(state.paving.source,'physical-3d-bevelled-stones');
+ assert.equal(state.paving.pattern,'running-bond');
+ assert.equal(state.paving.activeCourses,12);
+ assert.equal(state.paving.offsetRatio,.5);
+ assert.ok(state.paving.independentModules>=170,'real separate pavers, not a material stripe');
+ assert.ok(state.paving.clippedFragments>=state.paving.independentModules);
+ assert.ok(state.paving.drawCalls<=6,'paving batches by six material shades');
+ assert.equal(state.paving.logicalTiles,96);
+ assert.equal(state.paving.gameplayGridUnchanged,true);
+ assert.equal(state.paving.heightAware,true);
  assert.ok(state.street.rendered<=28,'settled houses must be batched for performance');
  assert.equal(state.unitSlots,18);
  assert.equal(state.facilitySlots,48);
