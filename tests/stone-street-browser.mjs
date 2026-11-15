@@ -92,7 +92,7 @@ try{
  assert.equal((await desktop.evaluate(()=>window.__forestLevelDebug.worldTime)).timeText,'23:00');
  await capture(desktop,'05-night-street-same-world');
  // Verify the original three-scene switch and terrain changes without rebuilding combat.
- for(const [next,material] of [['hall','marble'],['river','dirt'],['forest','grass'],['clearing','dirt'],['street','stone']]){
+ for(const [next,material] of [['hall','marble'],['coast','sand'],['cliff','shale'],['ocean','deck'],['cave','caveRock'],['forest','grass'],['clearing','dirt'],['street','stone']]){
   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
   console.log('SCENE_SWITCH_BEGIN',next);
   await desktop.waitForFunction(([id,kind])=>{
@@ -131,6 +131,7 @@ try{
    assert.equal(hall.windowOpenings,6,'the rear wall must have actual window apertures');
    assert.equal(hall.roofShadowOnly,true,'roof must cast shadow but stay invisible to play camera');
    assert.equal(hall.lightSource,'wall-windows-not-skylight');
+   assert.equal(window?.__forestLevelDebug?.worldTime?.nightFactor,undefined);
    assert.ok(hall.rendered>0);
    await capture(desktop,'10-royal-hall-night');
    await desktop.evaluate(()=>window.__worldClock.setTime('12:00'));
@@ -138,20 +139,23 @@ try{
     null,{timeout:15000});
    await capture(desktop,'11-royal-hall-day');
    await desktop.evaluate(()=>window.__worldClock.setTime('23:00'));
-  }else if(next==='river'){
-   const river=await desktop.evaluate(()=>window.__forestLevelDebug.environment.river);
-   assert.equal(river.scene,'river');
-   assert.equal(river.bridgePlanks,26);
-   assert.equal(river.waterPatches,48);
-   assert.equal(river.railPosts,20);
-   assert.equal(river.playableTilesOccupied,0);
-   assert.equal(river.materialWater,9);
-   assert.ok(river.drawCalls>0);
-   await capture(desktop,'12-river-bridge-night');
+  }else if(['coast','cliff','ocean','cave'].includes(next)){
+   const landscape=await desktop.evaluate(()=>window.__forestLevelDebug.environment.landscape);
+   assert.equal(landscape.scene,next,'actual 3D biome renderer must match the chosen scene');
+   assert.ok(landscape.biomes.includes(next));
+   assert.ok(landscape.drawn>0,'geometry must be rendered in the shared WebGL context');
+   assert.equal(landscape.changesTacticalSlots,false);
+   assert.equal(landscape.usesSharedWebGL,true);
+   assert.equal(landscape.usesWorldClock,true);
+   assert.equal(landscape.coast.bridgeCount,0,'no scene-external decorative bridges');
+   assert.equal(landscape.ocean.bridgeCount,0,'no decorative bridges on ocean decks');
+   assert.equal((await desktop.evaluate(()=>window.__forestLevelDebug.slots.length)),96);
+   console.log('LANDSCAPE_BATTLEFIELD_PASS',next,landscape.drawn);
+   await capture(desktop,'12-'+next+'-night');
    await desktop.evaluate(()=>window.__worldClock.setTime('12:00'));
    await desktop.waitForFunction(()=>window.__forestLevelDebug.worldLighting.nightFactor===0,
-    null,{timeout:15000});
-   await capture(desktop,'13-river-bridge-day');
+    null,{timeout:16000});
+   await capture(desktop,'13-'+next+'-day');
    await desktop.evaluate(()=>window.__worldClock.setTime('23:00'));
   }else if(next==='clearing'){
    await capture(desktop,'08-real-night-clearing');
@@ -168,5 +172,5 @@ try{
  await capture(mobile,'03-real-night-street-mobile');
  await mobile.close();
  assert.deepEqual(errors,[],'no JavaScript errors in live street scene');
- console.log('ALL_FIVE_SCENES_PASS',{screenshots:13,globalTime:true,fiveSceneLighting:true,board16x6:true});
+ console.log('ALL_EIGHT_SCENES_PASS',{screenshots:19,globalTime:true,eightSceneLighting:true,board16x6:true,noDecorativeBridge:true});
 }finally{await browser.close()}
