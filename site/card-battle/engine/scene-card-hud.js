@@ -282,13 +282,16 @@ function create(o){
  function pileMatrix(p,g,z){
   return mul(T(p.x,p.y,z),S(g.scale,g.scale,1));
  }
- function topCardPose(p,g){
+ function topCardPose(p,g,count){
   const focus=deckLift.get(p.id)||0;
   const tactile=motion.deckPose(p.ownerId,now,focus);
   const previewTarget=g.mobile?.92:1.19;
   const extra=1+focus*(Math.max(1,previewTarget/g.scale)-1);
   const lift=tactile.lift+focus*(g.mobile?.40:.57);
-  return {x:p.x,y:p.y+lift,z:.23+lift*.32,
+  const remaining=count??o.remainingCards?.(p.ownerId)?.length??0;
+  const thickness=.040+Math.min(10,remaining)*.016;
+  const z=.014+thickness+cardD+.022+lift*.32;
+  return {x:p.x,y:p.y+lift,z,
    scale:g.scale*tactile.scale*extra,tilt:tactile.tilt,
    shimmer:tactile.shimmer};
  }
@@ -306,7 +309,7 @@ function create(o){
     curved(model.deck,p.x,p.y,.014+i*.016,.0022,paint.stripe,g,tilt);
    }
    deckMeshes++;
-   const pose=topCardPose(p,g);
+   const pose=topCardPose(p,g,count);
    if(pose.shimmer>.03)
     curved(model.well,p.x,p.y,center+thickness*.5+.018,
      .008,paint.brass,g,0,null,1);
@@ -420,9 +423,10 @@ function create(o){
   }
  }
  function takeFromPile(p){
+  // Capture world-space top sheet BEFORE the authoritative pile.pop().
+  const from=topCardPose(p,dims());
   const result=o.draw?.(p.ownerId);
   if(!result?.ok)return null;
-  const from=topCardPose(p,dims());
   lastDeal={profession:p.profession,ownerId:p.ownerId,
    instance:result.card.instance,x:from.x,y:from.y,scale:from.scale,at:now};
   motion.drawCard({instance:result.card.instance,ownerId:p.ownerId,
