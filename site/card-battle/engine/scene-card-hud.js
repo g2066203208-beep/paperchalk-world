@@ -387,6 +387,21 @@ function create(o){
    const bw=cardW*sc*(p.kind==='hand'?.62:.52);
    const bh=cardH*sc*(p.kind==='hand'?.61:.49);
    if(Math.abs(q.x-p.x)<bw&&Math.abs(q.y-p.y)<bh)return p;
+   // The enlarged face-up top is still the SAME physically clickable sheet.
+   // Keep hit-testing on the lifted region so hover does not flicker or drop
+   // when the pointer follows the rising card away from the pile.
+   if(p.kind==='deck'){
+    const focus=deckLift.get(p.id)||0;
+    if(focus>.1){
+     const g=dims(),tactile=motion.deckPose(p.ownerId,now,focus);
+     const target=g.mobile?.92:1.19;
+     const expanded=g.scale*tactile.scale*
+      (1+focus*(Math.max(1,target/g.scale)-1));
+     const liftedY=p.y+tactile.lift+focus*(g.mobile?.40:.57);
+     if(Math.abs(q.x-p.x)<cardW*expanded*.53&&
+      Math.abs(q.y-liftedY)<cardH*expanded*.52)return p;
+    }
+   }
   }
   return null;
  }
