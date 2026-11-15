@@ -105,7 +105,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
  function sea(scene,zStart,zEnd,width=220,resX=68,resZ=36,level=top-1.36){
   const xs=[];
   for(let i=0;i<=resX;i++)xs.push(cx-width/2+i*width/resX);
-  const beach=x=>zStart-.35+1.6*Math.sin(x*.105)+.56*Math.sin(x*.37);
+  const beach=x=>zStart-.35+1.65*Math.sin(x*.105)+.52*Math.sin(x*.37)+1.1*Math.sin(x*.026);
   const at=(x,j)=>{
    const near=scene==='coast'?beach(x):zStart;
    return near+(zEnd-near)*(j/resZ);
