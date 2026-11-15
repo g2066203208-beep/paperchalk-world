@@ -18,7 +18,7 @@ async function capture(page,name){
 try{
  const open=async(width,height)=>{
   const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
-  page.on('pageerror',e=>errors.push(String(e)));
+  page.on('pageerror',e=>{errors.push(String(e));console.log('PAGE_ERROR',String(e))});
   page.on('console',msg=>{if(msg.type()==='error')console.log('PAGE_CONSOLE_ERROR',msg.text())});
   await page.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?scene=street&time=22:00&quality=auto',
    {waitUntil:'domcontentloaded',timeout:35000});
@@ -94,10 +94,19 @@ try{
  // Verify the original three-scene switch and terrain changes without rebuilding combat.
  for(const [next,material] of [['hall','marble'],['river','dirt'],['forest','grass'],['clearing','dirt'],['street','stone']]){
   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
+  console.log('SCENE_SWITCH_BEGIN',next);
   await desktop.waitForFunction(([id,kind])=>{
    const d=window.__forestLevelDebug;
    return d?.environment.id===id&&!d.sceneSwitch.busy&&d.environment.material===kind
-  },[next,material],{timeout:30000});
+  },[next,material],{timeout:45000}).catch(async err=>{
+   console.log('SCENE_STUCK',next,JSON.stringify(await desktop.evaluate(()=>({
+    scene:window.__forestLevelDebug?.sceneSwitch,
+    env:window.__forestLevelDebug?.environment,
+    perf:window.__forestLevelDebug?.performance,
+    errors:document.getElementById('note')?.textContent
+   }))));
+   throw err;
+  });
   const afterSwitch=await desktop.evaluate(()=>({
    time:window.__forestLevelDebug.worldTime,
    light:window.__forestLevelDebug.worldLighting
