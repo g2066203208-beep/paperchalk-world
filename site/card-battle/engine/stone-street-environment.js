@@ -36,12 +36,12 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
    add(doorX,1.20,front*(d/2+.08),1.16,2.38,.17,c.door,4);
    add(doorX,2.44,front*(d/2+.15),1.44,.17,.28,c.curb);
    add(doorX,.08,front*(d/2+.57),1.52,.16,.93,c.curb);
-   add(doorX+.35,1.18,front*(d/2+.20),.075,.075,.075,c.lit,0,true);
+   add(doorX+.35,1.18,front*(d/2+.20),.075,.075,.075,c.lit,7,true);
    for(let floor=0;floor<2;floor++)for(const wx of [-1.58,1.58]){
     if(!floor&&Math.abs(wx-doorX)<.85)continue;
     const wy=2.15+floor*2.15,lit=(i+floor+row+(wx>0?1:0))%3!==0;
     add(wx,wy,front*(d/2+.11),1.23,1.32,.10,c.trim);
-    add(wx,wy,front*(d/2+.18),.97,1.05,.08,lit?c.lit:c.dark,0,lit);
+    add(wx,wy,front*(d/2+.18),.97,1.05,.08,lit?c.lit:c.dark,lit?7:0,lit);
     add(wx,wy,front*(d/2+.24),.08,1.11,.09,c.trim);
     add(wx,wy,front*(d/2+.24),1.05,.08,.09,c.trim);
     add(wx,wy-.72,front*(d/2+.20),1.42,.16,.39,c.curb);
@@ -80,7 +80,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
    add(0,.30,0,.65,.60,.65,c.old);
    add(0,h*.50,0,.16,h,.16,c.iron,0);
    add(0,h-.37,0,.58,.16,.58,c.iron,0);
-   add(0,h-.07,0,.44,.51,.44,c.lit,0,true);
+   add(0,h-.07,0,.44,.51,.44,c.lit,7,true);
    add(0,h+.28,0,.72,.15,.72,c.iron,0);
    add(0,h+.40,0,.23,.18,.23,c.iron,0);
   });
