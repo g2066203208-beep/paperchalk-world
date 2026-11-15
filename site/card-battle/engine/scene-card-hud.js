@@ -326,8 +326,8 @@ function create(o){
    deckLift.set(p.id,lift+((focus?1:0)-lift)*ease);
   }
   const oldVP=getVP();
-  // UI is a dedicated post-world render pass with its OWN fixed projection.
-  // Screen shadows and world cloud sampling are disabled by the host callback.
+  // UI uses a fixed projection but keeps the scene's lighting/materials.
+  // The host callback only suppresses drifting cloud cover for this pass.
   o.beginScreenPass?.();
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(fov,width/height,.1,80),T(0,0,-cameraZ)));
@@ -489,7 +489,7 @@ function create(o){
     stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     collapsed,canExpand:true,
     renderSpace:'screen-fixed-post-world',receivesWorldClouds:false,
-    receivesWorldShadows:false,
+    receivesWorldShadows:true,sceneLighting:true,
     hoverTopCard:!!hover&&(['deck','character'].includes(scene.find(p=>p.id===hover)?.kind)),
     liftedDecks:[...deckLift].filter(([id,lift])=>lift>.02).map(([id,lift])=>({id,lift})),
     interaction:drag?{mode:'drag',instance:drag.instance,source:drag.source,
