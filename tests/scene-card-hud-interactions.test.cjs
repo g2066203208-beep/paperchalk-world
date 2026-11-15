@@ -13,8 +13,10 @@ const document={createElement:()=>({width:0,height:0,
  getContext:()=>context2d})};
 const ctx=vm.createContext({window,document,Image:class {},Math,Map,Set,
  Array,Object,Number,Error});
-vm.runInContext(fs.readFileSync(path.join(__dirname,
- '../site/card-battle/engine/scene-card-hud.js'),'utf8'),ctx);
+for(const name of ['card-hand-motion','scene-card-hud']){
+ vm.runInContext(fs.readFileSync(path.join(__dirname,
+ '../site/card-battle/engine/'+name+'.js'),'utf8'),ctx);
+}
 const I=()=>[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
 const roster=[{id:'woodcutter',profession:'warrior',name:'伐木少女',
  deckCount:4,slot:0}];
@@ -32,7 +34,8 @@ const o={
  makeTexture:()=>({}),
  snapshot:()=>({count:hand.length,hand:hand.slice(),roster,
   classes:[{id:'warrior',deckCount:roster[0].deckCount}]}),
- remainingCards:()=>Array(roster[0].deckCount).fill({id:'strike'}),
+ remainingCards:()=>Array(roster[0].deckCount).fill({
+ id:'strike',name:'斧劈',type:'attack',profession:'warrior',power:3}),
  staged:()=>staged,
  selected:()=>selected,
  draw:ownerId=>{
@@ -57,12 +60,17 @@ assert.ok(deck);
 hud.move(pointer(deck.x,deck.y));
 hud.render(1.12,1280,720);
 assert.equal(hud.snapshot.hoverTopCard,true);
+assert.equal(hud.snapshot.faceUpDecks,true);
+assert.equal(hud.snapshot.topCards[0].name,'斧劈',
+ 'the NEXT playable card must be printed on the exposed pile top');
 assert.ok(hud.snapshot.liftedDecks.some(p=>p.id==='deck:woodcutter'&&p.lift>.3),
  'top face must physically lift when hovered, without moving the shell');
 hud.down(pointer(deck.x,deck.y));
 hud.up(pointer(deck.x,deck.y));
 assert.equal(drawn.length,1,'click top card draws exactly one');
 assert.equal(selected,'draw-1','click-to-play selects just-drawn card');
+assert.equal(hud.snapshot.cardMotion.activeFlights.length,1,
+ 'click must launch an immediately visible real card flight');
 hud.render(1.25,1280,720);
 const handPoint=hud.pointFor('hand:draw-1');
 assert.ok(handPoint);
@@ -107,4 +115,16 @@ hud.setCollapsed(true);
 hud.render(2,1280,720);
 assert.equal(hud.hit(pointer(deck.x,deck.y)),null);
 assert.equal(hud.snapshot.visibleDeckPiles,0);
-console.log('SCREEN_TRAY_POINTER_PASS click_select drag_from_deck drag_from_hand hover_lift isolated_ui_pass');
+assert.equal(hud.snapshot.handPersistsWhenCollapsed,true);
+assert.equal(hud.snapshot.visible.filter(p=>p.kind==='hand').length,2,
+ 'closing the case must NOT retract either of the two hand cards');
+assert.ok(hud.pointFor('hand:draw-1'),'folded case still allows playing hand cards');
+assert.ok(hud.snapshot.drawCalls>0,'hand must still render when the case is closed');
+assert.ok(hud.snapshot.handCardScale>.65,'full size cards must replace tiny old fan');
+const foldedHand=hud.pointFor('hand:draw-1');
+hud.down(pointer(foldedHand.x,foldedHand.y));
+hud.move(pointer(foldedHand.x,foldedHand.y-110));
+assert.equal(hud.dragging,true,'folded tray must not disable hand dragging');
+hud.up(pointer(610,190));
+assert.equal(drops.length,3);
+console.log('SCREEN_TRAY_POINTER_PASS face_up_top_click_flight large_persistent_hand layered_drag_hover');
