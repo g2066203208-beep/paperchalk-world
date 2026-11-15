@@ -1034,7 +1034,10 @@ window.addEventListener('pointermove',e=>{
  track(e);canvas.style.cursor=dragCard?'grabbing':active?'crosshair':hoverCard?'grab':'default';
 });
 window.addEventListener('pointerup',e=>{
- if(sceneTransition.busy){orbitCamera.pointerUp(e);pointerDown=null;handDown=null;return;}
+ if(sceneTransition.busy){
+  orbitCamera.pointerUp(e);sceneHUD.cancelPress();
+  pointerDown=null;handDown=null;overSlot=null;return;
+ }
  if(orbitCamera.pointerUp(e)){
   pointerDown=null;handDown=null;overSlot=null;
   canvas.style.cursor=active?'crosshair':'default';return;
