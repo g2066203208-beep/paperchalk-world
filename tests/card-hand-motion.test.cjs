@@ -36,6 +36,16 @@ motion.tick(3,['woodcutter-strike']);
 pose=motion.settle('woodcutter-strike',{x:4,y:-2,scale:1,angle:.2},3.016);
 assert.ok(pose.x>0&&pose.x<4,'neighbour reflow interpolates without teleporting');
 motion.tick(3.016,['woodcutter-strike']);
+motion.returnCard('woodcutter-strike',{x:5,y:1,scale:1.19},4);
+const returning=motion.returnPose('woodcutter-strike',
+ {x:0,y:-2,scale:1.06,angle:0},4.17);
+assert.equal(returning.phase,'return');
+assert.ok(returning.x>0&&returning.x<5,
+ 'invalid drop travels back, it never teleports to the hand');
+assert.ok(returning.y>-2);
+assert.equal(motion.stats(4.17).activeReturns.length,1);
+assert.equal(motion.returnPose('woodcutter-strike',
+ {x:0,y:-2,scale:1.06,angle:0},4.5),null);
 motion.reset();
 assert.equal(motion.stats(4).handPoseCount,0);
-console.log('CARD_HAND_MOTION_PASS peel arc spring recoil selected_punch reflow');
+console.log('CARD_HAND_MOTION_PASS peel arc spring recoil selected_punch reflow elastic_return');
