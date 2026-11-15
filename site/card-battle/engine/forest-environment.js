@@ -83,8 +83,9 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
    // The floor is one lightweight 3D solid. Top remains below tactical tiles.
    // A unified spring transform makes the WHOLE world enter/leave on switch.
    const k=pose.scale;
-   const biomeTop=scene==='cliff'?groundTop-13.4:
-    scene==='ocean'?groundTop-.27:groundTop;
+   const biomeTop=scene==='cliff'?groundTop-25:
+    scene==='coast'?groundTop-3.2:
+    scene==='ocean'?groundTop-8.0:groundTop;
    cube(terrain.centerX,biomeTop-groundThickness*.5*k,terrain.centerZ,
     groundWidth*k,groundThickness*k,groundDepth*k,groundPalette[scene],scene==='forest'?1:scene==='street'||scene==='hall'?3:2);
   }
