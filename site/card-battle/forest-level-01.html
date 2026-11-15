@@ -165,7 +165,7 @@ html,body{background:#d8ded0}
  <div id="gallery-cards" class="gallery-cards"></div></div>
 </div>
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button><button id="level-next" type="button" hidden>第二关 · 农夫加入</button></section></div>
-<script src="./engine/voxel-terrain.js?v=5"></script>
+<script src="./engine/voxel-terrain.js?v=6"></script>
 <script src="./engine/battle-camera.js?v=5"></script>
 <script src="./engine/level-engine.js?v=4"></script>
 <script src="./engine/combat-choreography.js?v=1"></script>
@@ -193,7 +193,7 @@ html,body{background:#d8ded0}
 <script src="./engine/forest-dressing.js?v=3"></script>
 <script src="./engine/stone-street-environment.js?v=1"></script>
 <script src="./engine/royal-hall-environment.js?v=2"></script>
-<script src="./engine/landscape-environments.js?v=2"></script>
+<script src="./engine/landscape-environments.js?v=3"></script>
 <script src="./engine/staggered-stone-paving.js?v=2"></script>
 <script src="./engine/visual-shaders.js?v=7"></script>
 <script src="./engine/spatial-shadows.js?v=2"></script>
@@ -448,7 +448,7 @@ function terrainEntryMatrix(c,r){
 }
 const terrainRenderer=window.PaperchalkVoxelTerrain.createWebGLRenderer(fx.visualGrid,{
  gl,makeGeom,renderGeom,I,tileTransform:terrainEntryMatrix,
- showSeams:()=>!sceneTransition?.busy
+ showSeams:()=>!sceneTransition?.busy&&!['coast','cliff','ocean','cave'].includes(forestProps?.scene)
 });
 const forestProps=window.PaperchalkForestEnvironment.create({
  terrain,makeGeom,renderGeom,mul,T,S,cube,
@@ -1295,11 +1295,15 @@ for(const c of cards){for(let i=0;i<1;i++){
  let scale=pose.scale;
 let m=mul(T(c.x+.10+i*.025,fx.height(c.slot.tileC,c.slot.tileR)+.185+i*.001,c.z+.12+i*.022),RX(-Math.PI/2));m=mul(m,S(scale,scale,1));renderGeom(plate,m,i===0?colors.shadow:colors.shadow2,null,true);}}
 gl.depthMask(true);gl.disable(gl.BLEND);}
+const isNaturalArena=id=>['coast','cliff','ocean','cave'].includes(id);
 function drawStage(){
  forestProps.draw(now);forestDressing.draw(now,forestProps.scene);
  streetProps.draw(now,forestProps.scene);royalHall.draw(now,forestProps.scene);
  landscape.draw(now,forestProps.scene);terrainRenderer.draw();
- streetPaving.draw(forestProps.scene);physicalFrame.draw(now,forestProps.scene);
+ streetPaving.draw(forestProps.scene);
+ // A natural world is not a gold-edged tabletop. Keep the gold-rim card
+ // presentation only in the original tabletop/urban scenes.
+ if(!isNaturalArena(forestProps.scene))physicalFrame.draw(now,forestProps.scene);
 }
 function drawTerrainParticles(){
  if(!fx.particles.length)return;
@@ -1364,7 +1368,7 @@ function frame(timeMs){
    landscape.draw(now,forestProps.scene);
    landscape.drawRoofShadow(forestProps.scene);
    streetPaving.draw(forestProps.scene);
-   physicalFrame.draw(now);
+   if(!isNaturalArena(forestProps.scene))physicalFrame.draw(now);
    for(const c of cards){
     if(c.hudMatrix||!c.slot)continue;
     if(objectFX.sample(c.unitId?'unit:'+c.unitId:'card:'+c.id,now).scale<.02)continue;
