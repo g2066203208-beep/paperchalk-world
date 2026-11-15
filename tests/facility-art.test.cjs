@@ -18,8 +18,11 @@ for(const id of art.ids){
  assert.ok(image.src.startsWith('../assets/card-battle/farmer/'));
  assert.ok(image.src.endsWith(id+'.png'),'art paths stable by card ID');
  assert.ok(image.alpha,'Anima scene sprites must preserve transparent edges');
- assert.equal(image.size[0],image.size[1],'square art canvas avoids facility distortion');
- assert.ok(image.size[0]>=1024);
+ assert.ok(image.size[0]>=704&&image.size[1]>=1024,
+  'accepted source resolution must preserve painterly original detail');
+ if(['plant-tree','water-well','scarecrow'].includes(id))
+  assert.deepEqual(image.size,[704,1024],
+   'use the actual uploaded Anima portrait canvas instead of distorting to square');
  assert.ok(!seen.has(image.src));seen.add(image.src);
 }
 assert.equal(art.get('nonexistent'),null);
