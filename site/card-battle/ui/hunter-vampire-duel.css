@@ -253,3 +253,14 @@ a{text-decoration:none;color:inherit}
  }
 }
 .enemy-intent.details-open .intent-desc{opacity:1}
+
+/* Replace construction-looking triangular forest geometry with an original
+ * illustrated multidepth SVG background; retain ambient fog and vignette. */
+.world{
+ background:#14202b url("./duel-night-forest.svg") center 45%/cover no-repeat;
+}
+.world .night-sky,.world .moon-glow,.world .moon,
+.world .distant-pines,.world .tree-left,.world .tree-right,
+.world .stone-path{display:none}
+.world .ground-fog{top:51%;opacity:.23}
+.world .vignette{opacity:.44;box-shadow:inset 0 0 120px #080d1b}
