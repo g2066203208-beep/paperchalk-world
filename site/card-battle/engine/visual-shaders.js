@@ -114,14 +114,15 @@ void main(){
    }
   }
  }
- if(uStreetMode>.5 && uUnlit<.5){
+ if((uStreetMode>.5||uIndoorMode>.5) && uUnlit<.5){
   // Shared lighting shader; local lamps illuminate real 3D receivers.
   // The existing directional moonlight uses the shadow map.
   for(int li=0;li<4;li++){
    vec3 delta=uStreetLamps[li]-vP;
    float sq=dot(delta,delta),range=1./(1.+sq*.035+sq*sq*.00013);
    float facing=max(.12,dot(normal,normalize(delta)));
-   illumination+=vec3(1.00,.64,.34)*range*facing*.98*uNightFactor;
+   illumination+=vec3(1.00,.64,.34)*range*facing*.98*
+      (uIndoorMode>.5?.57+.43*uNightFactor:uNightFactor);
   }
  }
  if(uVisualMix>.5&&uMaterialKind>.5&&uMaterialKind<4.5){
@@ -164,6 +165,13 @@ void main(){
  if(uMaterialKind>4.5&&uMaterialKind<5.5&&uUnlit<.5){
   finalColor=mix(finalColor,base.rgb*.82,uNightFactor*.41);
  }
+ // Material 9 is real river water geometry with moving world-space ripples.
+ if(uMaterialKind>8.5&&uMaterialKind<9.5){
+  float w=sin(vP.x*.67+uStreetTime*.55)*cos(vP.z*1.61-uStreetTime*.72);
+  float w2=sin(vP.x*1.87-vP.z*.58+uStreetTime*.41);
+  float sunGlint=pow(max(0.,dot(normalize(uCameraEye-vP),reflect(-light,normal))),18.);
+  finalColor=clamp(finalColor*(1.+w*.075+w2*.031)+uSunColor*sunGlint*.20,0.,1.);
+ }
  // Material 7 is self-illuminating street glass. Dark by day, warm at night.
  if(uIndoorMode>.5 && uMaterialKind>7.5&&uMaterialKind<8.5){
   // Stained glass is bright from OUTSIDE by day, dark at midnight.
@@ -200,5 +208,5 @@ void main(){
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.5.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'1.6.0',fragment});
 })(window);
