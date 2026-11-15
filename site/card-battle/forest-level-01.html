@@ -746,21 +746,36 @@ window.__sceneCardHUD=sceneHUD;
 // It preserves level phase, deployed characters, current HP, hand and 7 decks.
 const sceneSwitchButton=document.getElementById('scene-switch');
 const sceneSwitchStatus=document.getElementById('scene-switch-status');
-// One permanent 16×6 physical board across EVERY world environment.
-// Scene modules may alter only the world OUTSIDE this board. They must
-// never recolor its tiles or replace it with sand, ship planks or cave stone.
-const UNIFIED_BOARD_MATERIAL='grass';
+// One consistent gameplay coordinate system, but each world owns a visually
+// distinct 16x6 tactical board, physical material, and editable heights.
 const scenePresets={
- forest:{name:'森林',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('forest').background},
- clearing:{name:'石质空地',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('clearing').background},
- street:{name:'石板街道',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('street').background},
- hall:{name:'石砌大厅',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('hall').background},
- coast:{name:'海岸沙滩',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('coast').background},
- cliff:{name:'悬崖高地',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('cliff').background},
- ocean:{name:'海上甲板',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('ocean').background},
- cave:{name:'地下山洞',material:UNIFIED_BOARD_MATERIAL,background:visualLook.get('cave').background}
+ forest:{name:'森林',material:'grass',background:visualLook.get('forest').background},
+ clearing:{name:'石质空地',material:'dirt',background:visualLook.get('clearing').background},
+ street:{name:'石板街道',material:'stone',background:visualLook.get('street').background},
+ hall:{name:'石砌大厅',material:'marble',background:visualLook.get('hall').background},
+ coast:{name:'海岸沙滩',material:'sand',background:visualLook.get('coast').background},
+ cliff:{name:'悬崖高地',material:'shale',background:visualLook.get('cliff').background},
+ ocean:{name:'海上甲板',material:'deck',background:visualLook.get('ocean').background},
+ cave:{name:'地下山洞',material:'caveRock',background:visualLook.get('cave').background}
 };
 const initialScene=scenePresets[urlOptions.get('scene')]?urlOptions.get('scene'):'forest';
+const sceneBoardStates=new Map();
+function saveSceneBoard(id){
+ sceneBoardStates.set(id,terrain.snapshot().map(t=>({
+  c:t.c,r:t.r,kind:t.kind,level:t.level
+ })));
+}
+function loadSceneBoard(id){
+ const preset=scenePresets[id],saved=sceneBoardStates.get(id);
+ terrain.reset(preset.material);
+ if(saved)for(const t of saved){
+  const cell=terrain.cell(t.c,t.r);
+  if(!cell)continue;
+  if(t.kind!==cell.kind)terrain.set(t.c,t.r,t.kind);
+  if(t.level!==cell.level)terrain.setLevel(t.c,t.r,t.level);
+ }
+}
+loadSceneBoard(initialScene);
 function sceneNextId(id){
  const order=['forest','clearing','street','hall','coast','cliff','ocean','cave'];
  return order[(order.indexOf(id)+1)%order.length];
@@ -797,8 +812,9 @@ sceneTransition=window.PaperchalkSceneTransitions.create({
   sceneLifecycle.release(oldScene,{retain:[...shared]});
   forestProps.setScene(nextScene);
   const preset=scenePresets[nextScene];
-  // The physical board and its edited terrain never change when travelling
-  // between worlds. Switching a world only replaces scenery and lighting.
+  // Scene-specific board surfaces and edited height maps stay separate.
+  saveSceneBoard(oldScene);
+  loadSceneBoard(nextScene);
   colors.background=preset.background.slice();
   document.body.dataset.scene=nextScene;
   sceneSwitchStatus.textContent='环境已切换 · '+preset.name+'正在弹性生成';
@@ -1137,7 +1153,8 @@ function reset(){
  syncSceneSwitchLabel();
  cards.length=0;occupied.clear();farmRules.reset();dragCard=null;pointerDown=null;handDown=null;hoverCard=null;
  selectedStagedId=null;previewDeployment=null;previewDeployCard=null;
- fx.reset();terrain.reset(scenePresets[sceneTransition.scene].material);clearPick();startForestLevel();
+ fx.reset();sceneBoardStates.clear();loadSceneBoard(sceneTransition.scene);
+ clearPick();startForestLevel();
  sceneHUD.resetAnimations?.();
   window.__forestHand?.reset();
 }
@@ -1326,7 +1343,8 @@ function drawStage(){
  forestProps.draw(now);forestDressing.draw(now,forestProps.scene);
  streetProps.draw(now,forestProps.scene);royalHall.draw(now,forestProps.scene);
  landscape.draw(now,forestProps.scene);
- terrainRenderer.draw();physicalFrame.draw(now,forestProps.scene);
+ terrainRenderer.draw();streetPaving.draw(forestProps.scene);
+ physicalFrame.draw(now,forestProps.scene);
 }
 function drawTerrainParticles(){
  if(!fx.particles.length)return;
@@ -1390,8 +1408,9 @@ function frame(timeMs){
    royalHall.drawRoofShadow(forestProps.scene);
    landscape.draw(now,forestProps.scene);
    landscape.drawRoofShadow(forestProps.scene);
-   // The board, not the biome, determines card placement and frame geometry.
-   physicalFrame.draw(now);
+   // Current world owns its surface and visible physical border.
+   streetPaving.draw(forestProps.scene);
+   physicalFrame.draw(now,forestProps.scene);
    for(const c of cards){
     if(c.hudMatrix||!c.slot)continue;
     if(objectFX.sample(c.unitId?'unit:'+c.unitId:'card:'+c.id,now).scale<.02)continue;
@@ -1644,8 +1663,8 @@ window.__forestLevelDebug={
   hall:forestProps.scene==='hall'?royalHall.snapshot:null,
   landscape:['coast','cliff','ocean','cave'].includes(forestProps.scene)?landscape.snapshot:null,
   paving:forestProps.scene==='street'?streetPaving.snapshot:null,
-  unifiedBoardMaterial:UNIFIED_BOARD_MATERIAL,
-  boardPersistentAcrossScenes:true,
+  boardMaterial:scenePresets[forestProps.scene].material,
+  sceneOwnsBoard:true,storedBoardStates:sceneBoardStates.size,
   material:terrain.cell(0,0)?.kind,ground:forestProps.ground};},
  get objectAnimations(){return objectFX.stats(now);},
  objectPose(id){return objectFX.sample(id,now);},
