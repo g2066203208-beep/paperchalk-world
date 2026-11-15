@@ -186,14 +186,14 @@ html,body{background:#d8ded0}
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=11"></script>
 <script src="./engine/physical-board-frame.js?v=5"></script>
-<script src="./engine/visual-look.js?v=8"></script>
+<script src="./engine/visual-look.js?v=9"></script>
 <script src="./engine/world-time.js?v=2"></script>
 <script src="./engine/stylized-materials.js?v=2"></script>
 <script src="./engine/cloud-shadows.js?v=1"></script>
 <script src="./engine/forest-dressing.js?v=3"></script>
 <script src="./engine/stone-street-environment.js?v=1"></script>
 <script src="./engine/royal-hall-environment.js?v=2"></script>
-<script src="./engine/landscape-environments.js?v=1"></script>
+<script src="./engine/landscape-environments.js?v=2"></script>
 <script src="./engine/staggered-stone-paving.js?v=2"></script>
 <script src="./engine/visual-shaders.js?v=7"></script>
 <script src="./engine/spatial-shadows.js?v=2"></script>
@@ -626,16 +626,22 @@ function resize(){
  // so the bridge/water are visible alongside playable cards.
  const stage=forestProps.scene;
  const sceneFraming={
-  hall:[1.10,-2.70],
-  coast:[1.12,-2.45],cliff:[1.12,-2.65],
-  ocean:[1.13,0],cave:[1.10,-1.90]
+  hall:[1.10,-2.70,78],
+  coast:[1.17,-3.20,66],cliff:[1.20,-2.40,62],
+  ocean:[1.16,-.80,68],cave:[1.12,-1.70,71]
  };
  if(sceneFraming[stage]){
-  // Change only cinematic view, not the underlying 16x6 card coordinates.
-  const [scale,shift]=sceneFraming[stage];
+  // Scene-specific fixed 3D composition: lower angle exposes REAL cliffs,
+  // water and cavern depth. Camera input, card placement and board coords
+  // remain the same, and the full default forest/street angle is untouched.
+  const [scale,shift,elevation]=sceneFraming[stage];
   camera.target=[state.target[0],state.target[1],state.target[2]+shift];
-  camera.eye=state.eye.map((v,i)=>state.target[i]+(v-state.target[i])*scale);
-  camera.eye[2]+=shift;
+  const a=elevation*Math.PI/180,d=state.distance*scale;
+  camera.eye=[
+   camera.target[0]+Math.sin(state.yaw)*Math.cos(a)*d,
+   camera.target[1]+Math.sin(a)*d,
+   camera.target[2]+Math.cos(state.yaw)*Math.cos(a)*d
+  ];
  }else{camera.eye=state.eye;camera.target=state.target;}
  camera.aspect=w/h;camera.tan=Math.tan(state.fov*Math.PI/360);
  proj=perspective(state.fov*Math.PI/180,camera.aspect,.1,220);
