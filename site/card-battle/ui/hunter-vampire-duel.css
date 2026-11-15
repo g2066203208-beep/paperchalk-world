@@ -216,3 +216,40 @@ a{text-decoration:none;color:inherit}
  .selected-preview{bottom:calc(var(--card-h) + 1px)}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+
+/* Portrait overhaul: resources and piles in a dedicated upper shelf,
+ * fanned cards fill the lower shelf. No cards behind energy or End Turn. */
+@media (orientation: portrait) and (max-width:760px) {
+ :root{--deck-h:clamp(300px,40dvh,365px);--card-w:clamp(93px,25.5vw,122px)}
+ .topbar{flex-basis:50px}
+ .top-hero{display:none}
+ .chapter{top:5px;transform:translateX(-50%)}
+ .chapter small{display:none}
+ .chapter strong{font-size:18px;letter-spacing:.12em;line-height:24px}
+ .turn-counter{left:50%;right:auto;top:auto;bottom:1px;transform:translateX(-50%);font-size:9px;white-space:nowrap}
+ .turn-counter strong{font-size:12px}
+ .deck-zone{top:6px;bottom:auto;height:78px;flex-direction:row;gap:9px;align-items:center;justify-content:flex-start}
+ .deck-zone-left{left:7px;width:50%;height:76px}
+ .deck-zone-right{right:7px;width:45%;height:76px;justify-content:flex-end}
+ .energy-orb{width:54px;height:54px;outline-width:1px}
+ .energy-flame{top:-11px;font-size:16px}
+ .ammo-count{position:absolute;left:1px;top:61px;z-index:2}
+ .ammo-count span{font-size:8px}
+ .draw-stack,.discard-stack{width:52px;height:64px}
+ .card-back{width:42px;height:50px}
+ .end-turn{width:78px;min-width:78px;min-height:47px;font-size:10px}
+ .hand-region{left:9px;right:9px;top:80px;bottom:0}
+ .hand-label{top:1px;font-size:9px}
+ .action-card{bottom:13px}
+ .selected-preview{bottom:calc(var(--card-h) + 5px)}
+ .fighter-hunter{height:75%}
+ .fighter-vampire{height:79%}
+}
+@media (hover:none) and (pointer:coarse) {
+ .action-card:not(:disabled):hover:not(.is-selected) {
+  transform:translateX(calc(-50% + var(--fan-x,0px))) translateY(var(--fan-y,0px)) rotate(var(--fan-r,0deg));
+  box-shadow:0 3px 0 #11141b,0 7px 10px #000b,inset 0 0 0 2px #c2a579;
+ }
+}
+.enemy-intent.details-open .intent-desc{opacity:1}
