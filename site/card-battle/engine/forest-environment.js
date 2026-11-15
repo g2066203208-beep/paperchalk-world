@@ -85,7 +85,9 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
    const k=pose.scale;
    const biomeTop=scene==='cliff'?groundTop-25:
     scene==='coast'?groundTop-3.2:
-    scene==='ocean'?groundTop-8.0:groundTop;
+    scene==='ocean'?groundTop-8.0:
+    // The cavern floor supports the exterior rocks below the unchanged board.
+    scene==='cave'?terrain.topY-terrain.thickness-.09:groundTop;
    cube(terrain.centerX,biomeTop-groundThickness*.5*k,terrain.centerZ,
     groundWidth*k,groundThickness*k,groundDepth*k,groundPalette[scene],scene==='forest'?1:scene==='street'||scene==='hall'?3:2);
   }
