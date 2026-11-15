@@ -138,5 +138,10 @@
       "original_png_committed": false,
       "game_integrated": false
     }
-  ]
+  ],
+  "gallery": "/character-editor/mountain-bandits-booth.html",
+  "l2dStudio": "/character-editor/index.html",
+  "l2dStatus": "registered_editor_draft_slots_binary_portraits_pending_upload",
+  "psdTestSlot": "seethrough-red-swordswoman-20261115",
+  "note": "用户提供的SeeThrough PSD是红发持剑角色，不属于此七名强盗角色；已为其单独建立 L2D 测试位，尚未作为二进制托管。"
 }
