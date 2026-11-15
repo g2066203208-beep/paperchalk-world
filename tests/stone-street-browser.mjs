@@ -158,6 +158,7 @@ try{
    assert.ok(landscape.drawn>0,'geometry must be rendered in the shared WebGL context');
    assert.equal(landscape.changesTacticalSlots,false);
    assert.equal(landscape.usesSharedWebGL,true);
+   assert.equal(landscape.geometry,'organic-triangulated-worldspace');
    assert.equal(landscape.usesWorldClock,true);
    assert.equal(landscape.coast.bridgeCount,0,'no scene-external decorative bridges');
    assert.equal(landscape.ocean.bridgeCount,0,'no decorative bridges on ocean decks');
@@ -168,6 +169,12 @@ try{
    await desktop.waitForFunction(()=>window.__forestLevelDebug.worldLighting.nightFactor===0,
     null,{timeout:16000});
    await capture(desktop,'13-'+next+'-day');
+   await desktop.locator('#scene-overview').click();
+   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.overview),true);
+   await desktop.waitForTimeout(330);
+   await capture(desktop,'16-'+next+'-panorama');
+   await desktop.locator('#scene-overview').click();
+   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.overview),false);
    await desktop.evaluate(()=>window.__worldClock.setTime('23:00'));
   }else if(next==='clearing'){
    await capture(desktop,'08-real-night-clearing');
@@ -184,5 +191,5 @@ try{
  await capture(mobile,'03-real-night-street-mobile');
  await mobile.close();
  assert.deepEqual(errors,[],'no JavaScript errors in live street scene');
- console.log('ALL_EIGHT_SCENES_PASS',{screenshots:21,globalTime:true,eightSceneLighting:true,board16x6:true,noDecorativeBridge:true});
+ console.log('ALL_EIGHT_SCENES_PASS',{screenshots:25,globalTime:true,eightSceneLighting:true,board16x6:true,noDecorativeBridge:true});
 }finally{await browser.close()}
