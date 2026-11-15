@@ -318,7 +318,9 @@ const terrain=window.PaperchalkVoxelTerrain.create({
     variance:visualLook.get('street').terrainVariance,height:0}},
  initialKind:'grass',seed:618231,minLevel:-3,maxLevel:3,levelStep:2.65
 });
-const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[1,2,3,4],FACILITY_RIGHT_COLUMNS=[10,11,12,13];
+// Keep the original 3x3 actor formation but register EVERY remaining board cell
+// for valid facility/terrain interactions: no 30 unassigned dead columns.
+const UNIT_COLUMNS=[6,7,8],FACILITY_LEFT_COLUMNS=[0,1,2,3,4,5],FACILITY_RIGHT_COLUMNS=[9,10,11,12,13,14,15];
 const levelId=new URLSearchParams(location.search).get('level')==='forest-02'?'forest-02':'forest-01';
 const level=window.PaperchalkLevelEngine.create(levelId,terrain,{physicalColumns:UNIT_COLUMNS});
 // Hand is a true level-owned subsystem, not a script loaded after debug globals.
@@ -1186,33 +1188,39 @@ window.addEventListener('keydown',e=>{
  // This level locks orbit rotation.
  // Pan and zoom are bounded.
 });
+// Render tile interaction decals in a dedicated overlay pass ABOVE the actual
+// street cobbles (max +.088), while preserving card rendering afterwards.
 function drawHighlights(){
  if(sceneTransition.busy)return;
+ const selected=dragCard?.def||active;
+ if(level.phase!=='deployment'&&!selected)return;
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+ gl.depthMask(false);gl.disable(gl.DEPTH_TEST);
+ const topOfPlayableTile=(c,r)=>fx.height(c,r)+(forestProps.scene==='street'?.145:.045);
+ const boardSlotSize=S(terrain.tileW/slotW*.94,terrain.tileD/slotH*.94,1);
  if(level.phase==='deployment'){
-  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
   for(const s of slotCenters.filter(s=>s.side==='ally'&&s.zone==='unit')){
    if(level.occupancy(s.tileC,s.tileR))continue;
-   const y=fx.height(s.tileC,s.tileR)+.025;
-   const tint=previewDeployment?.slot?.id===s.id?[.18,.84,.40,.37]:[.30,.65,.42,.13];
-   renderGeom(slotFill,mul(mul(T(s.x,y,s.z),RX(-Math.PI/2)),S(terrain.tileW/slotW*.9,terrain.tileD/slotH*.9,1)),tint,null,true);
+   const y=topOfPlayableTile(s.tileC,s.tileR);
+   const tint=previewDeployment?.slot?.id===s.id?[.18,.84,.40,.43]:[.30,.72,.42,.22];
+   renderGeom(slotFill,mul(mul(T(s.x,y,s.z),RX(-Math.PI/2)),boardSlotSize),tint,null,true);
+   renderGeom(RRstrip,mul(mul(T(s.x,y+.008,s.z),RX(-Math.PI/2)),boardSlotSize),[.13,.67,.31,.45],null,true);
   }
-  gl.depthMask(true);gl.disable(gl.BLEND);
  }
- const d=dragCard?.def||active;if(!d)return;
- gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
- const targets=d.kind==='terrain'?terrainTargets:slotCenters;
- for(const s of targets){
-  const near=s===overSlot&&onBoard,good=valid(d,s,dragCard);
-  const relevant=d.kind==='terrain'||(s.side==='ally'&&s.zone===d.kind);
-  if(!relevant&&!near)continue;
-  const fill=good?[.19,.72,.31,near?.36:(d.kind==='terrain'?.11:.18)]:[.90,.20,.23,near?.35:.045];
-  const edge=good?[.08,.61,.25,near?.85:.24]:[.85,.18,.19,near?.82:.11];
-  const y=fx.height(s.tileC,s.tileR)+.014;
-  const sz=d.kind==='terrain'?S(terrain.tileW/slotW*.98,terrain.tileD/slotH*.98,1):I();
-  renderGeom(slotFill,mul(mul(T(s.x,y,s.z),RX(-Math.PI/2)),sz),fill,null,true);
-  renderGeom(RRstrip,mul(mul(T(s.x,y+.008,s.z),RX(-Math.PI/2)),sz),edge,null,true);
+ if(selected){
+  const targets=selected.kind==='terrain'?terrainTargets:slotCenters;
+  for(const s of targets){
+   const near=s===overSlot&&onBoard,good=valid(selected,s,dragCard);
+   const relevant=selected.kind==='terrain'||(s.side==='ally'&&s.zone===selected.kind);
+   if(!relevant&&!near)continue;
+   const fill=good?[.19,.72,.31,near?.42:.22]:[.90,.20,.23,near?.35:.045];
+   const edge=good?[.08,.70,.25,near?.91:.47]:[.85,.18,.19,near?.82:.11];
+   const y=topOfPlayableTile(s.tileC,s.tileR)+.01;
+   renderGeom(slotFill,mul(mul(T(s.x,y,s.z),RX(-Math.PI/2)),boardSlotSize),fill,null,true);
+   renderGeom(RRstrip,mul(mul(T(s.x,y+.008,s.z),RX(-Math.PI/2)),boardSlotSize),edge,null,true);
+  }
  }
- gl.depthMask(true);gl.disable(gl.BLEND);
+ gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.disable(gl.BLEND);
 }
 function drawShadows(now){if(shadowSystem?.enabled)return;gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
 for(const c of cards){for(let i=0;i<1;i++){
