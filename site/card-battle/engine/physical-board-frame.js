@@ -1,6 +1,6 @@
-/* One continuous slim rounded gold metal rim for the actual 16x6 board.
- * Stage 03: a single bevelled, closed 3D mesh (ONE draw), not HTML overlays.
- * No added crests, wood, side decorations, nails, facility plaques or crossbar.
+/* Eight distinct scene-owned 16x6 battlefield rims, sharing gameplay
+ * dimensions but adapting actual mesh material to their environment.
+ * One physical world-space rounded/beveled mesh per visible scene, no HUD.
  */
 (function(root){
 'use strict';
@@ -10,7 +10,16 @@ function create({terrain,makeGeom,renderGeom,T,S,mul,appearance,look=null}){
  const outerWidth=W+.41,outerDepth=D+.41;
  const openingWidth=W+.06,openingDepth=D+.06;
  const cornerRadius=.44;
- const color=look?.get('forest').goldColor||[.82,.74,.49,1];
+ const styles=Object.freeze({
+  forest:{name:'woodland-gold',color:look?.get('forest').goldColor||[.82,.74,.49,1],metal:1,material:6},
+  clearing:{name:'dusty-limestone',color:[.67,.60,.49,1],metal:0,material:3},
+  street:{name:'blackened-iron',color:[.37,.41,.44,1],metal:.73,material:6},
+  hall:{name:'royal-brass',color:[.84,.68,.42,1],metal:1,material:6},
+  coast:{name:'weathered-shellstone',color:[.76,.68,.56,1],metal:0,material:3},
+  cliff:{name:'eroded-slate',color:[.43,.47,.49,1],metal:0,material:3},
+  ocean:{name:'salt-dark-oak',color:[.49,.35,.27,1],metal:0,material:4},
+  cave:{name:'damp-mineral-rock',color:[.34,.40,.44,1],metal:0,material:3}
+ });
  const top=.12,shoulder=.055,bottom=-.13;
  function outline(w,d,r){
   const points=[],rad=Math.min(r,w/2-.001,d/2-.001),steps=9;
@@ -58,26 +67,33 @@ function create({terrain,makeGeom,renderGeom,T,S,mul,appearance,look=null}){
   return makeGeom(verts,ids);
  }
  const mesh=ringMesh();
- let lastDrawCalls=0;
+ let lastDrawCalls=0,lastScene='forest';
  const info=Object.freeze({
   modeled:true,screenOverlay:false,worldSpace:true,
-  geometry:'single-thin-rounded-gold-ring',color:'gold',
-  material:'directional-lit-bevelled-metal',bevelSegments:2,
+  geometry:'single-thin-rounded-3d-rim',color:'scene-specific',
+  material:'scene-dependent-stone-wood-or-metal',bevelSegments:2,
   decorations:0,framePieces:1,midfieldBeam:false,sidePlaques:false,
   boardCols:terrain.cols,boardRows:terrain.rows,
   boardWidth:W,boardDepth:D,outerWidth,outerDepth,
   innerOpeningWidth:openingWidth,innerOpeningDepth:openingDepth,
   gapFromTileEdge:.03,cornerRadius,railThickness:.175
  });
- function draw(t){
+ function draw(t,scene='forest'){
+  lastScene=styles[scene]?scene:'forest';
   const pose=appearance?.('board-frame',t);
   const scale=pose?.scale??1;
   if(scale<.012){lastDrawCalls=0;return 0;}
-  renderGeom(mesh,mul(T(cx,terrain.topY,cz),S(scale,scale,scale)),color,null,false,null,1,6);
+  const style=styles[lastScene];
+  renderGeom(mesh,mul(T(cx,terrain.topY,cz),S(scale,scale,scale)),
+   style.color,null,false,null,style.metal,style.material);
   lastDrawCalls=1;
   return 1;
  }
- return Object.freeze({draw,get snapshot(){return {...info,lastDrawCalls};}});
+ return Object.freeze({draw,get snapshot(){return {...info,lastDrawCalls,
+  scene:lastScene,theme:styles[lastScene].name,
+  colorRGBA:styles[lastScene].color.slice(),
+  frameMaterialKind:styles[lastScene].material,
+  sceneOwned:true,availableThemes:Object.keys(styles)};}});
 }
-root.PaperchalkPhysicalBoardFrame=Object.freeze({version:'1.4.0',create});
+root.PaperchalkPhysicalBoardFrame=Object.freeze({version:'2.0.0',create});
 })(window);
