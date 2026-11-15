@@ -1296,7 +1296,7 @@ function frame(timeMs){
  gl.uniform1f(U.streetMode,streetActive?1:0);
  gl.uniform1f(U.streetTime,now);
  gl.uniform1f(U.streetFog,currentEnvironment.fogDensity);
- gl.uniform1f(U.nightFactor,streetActive?currentEnvironment.nightFactor:0);
+ gl.uniform1f(U.nightFactor,currentEnvironment.nightFactor);
  gl.uniform1f(U.worldFog,currentEnvironment.fogDensity);
  gl.uniform3fv(U.worldFogColor,currentEnvironment.fogColor);
  gl.uniform3fv(U.streetLamps,new Float32Array(streetProps.lamps.flat()));
