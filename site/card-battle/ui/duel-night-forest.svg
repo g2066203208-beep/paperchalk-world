@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" role="img" aria-label="原创月夜黑森林战斗背景">
+<defs>
+ <linearGradient id="sky" x1="0" x2=".12" y1="0" y2="1">
+  <stop offset="0" stop-color="#101728"/><stop offset=".38" stop-color="#283449"/>
+  <stop offset=".68" stop-color="#4b5962"/><stop offset="1" stop-color="#202b31"/>
+ </linearGradient>
+ <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+  <stop offset="0" stop-color="#dce4d2" stop-opacity=".57"/>
+  <stop offset=".43" stop-color="#b7cbd1" stop-opacity=".18"/>
+  <stop offset="1" stop-color="#d2d2d8" stop-opacity="0"/>
+ </radialGradient>
+ <radialGradient id="moon" cx=".31" cy=".28" r=".78">
+  <stop stop-color="#f9f2d5"/><stop offset=".6" stop-color="#d8e0d3"/>
+  <stop offset="1" stop-color="#a8b5b3"/>
+ </radialGradient>
+ <linearGradient id="ridge" x1="0" y1="0" x2="0" y2="1">
+  <stop stop-color="#364952"/><stop offset="1" stop-color="#223441"/>
+ </linearGradient>
+ <linearGradient id="pineFill" x1="0" y1="0" x2=".8" y2="1">
+  <stop stop-color="#243745"/><stop offset=".5" stop-color="#152735"/><stop offset="1" stop-color="#17232d"/>
+ </linearGradient>
+ <linearGradient id="trunk" x1="0" y1="0" x2="1" y2="0">
+  <stop stop-color="#101920"/><stop offset=".45" stop-color="#33414a"/>
+  <stop offset="1" stop-color="#101721"/>
+ </linearGradient>
+ <linearGradient id="road" x1="0" y1="0" x2=".4" y2="1">
+  <stop stop-color="#8e9590"/><stop offset=".4" stop-color="#566568"/>
+  <stop offset="1" stop-color="#1b2b33"/>
+ </linearGradient>
+ <radialGradient id="mist"><stop stop-color="#becbc7" stop-opacity=".50"/><stop offset="1" stop-color="#a3b8b9" stop-opacity="0"/></radialGradient>
+ <radialGradient id="warm"><stop stop-color="#fac487" stop-opacity=".77"/><stop offset=".25" stop-color="#c99472" stop-opacity=".32"/><stop offset="1" stop-color="#eba874" stop-opacity="0"/></radialGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="23"/></filter>
+ <filter id="softSmall"><feGaussianBlur stdDeviation="6"/></filter>
+ <symbol id="pine" viewBox="-80 0 160 400">
+  <path d="M-2 390Q3 265-6 112" fill="none" stroke="#172a32" stroke-width="9"/>
+  <path d="M0 18L-13 85-42 115-31 117-55 155-40 157-72 218-46 220-78 280-34 270-42 310 0 280 43 315 33 271 81 283 51 227 77 219 43 163 59 155 29 117 46 112 17 85Z" fill="url(#pineFill)" stroke="#43535b" stroke-width="2" stroke-opacity=".38"/>
+  <path d="M2 35Q-10 111-33 154M3 80Q14 130 38 168M0 145Q-30 221-49 238M3 173Q24 219 52 243" fill="none" stroke="#879594" stroke-width="2" stroke-opacity=".12"/>
+ </symbol>
+ <symbol id="bough" viewBox="0 0 320 450">
+  <path d="M35 464Q68 307 73 206Q88 83 172-33" fill="none" stroke="#111a21" stroke-width="72" stroke-linecap="round"/>
+  <path d="M37 468Q74 307 83 201Q103 91 182-26" fill="none" stroke="url(#trunk)" stroke-width="38" stroke-linecap="round"/>
+  <g stroke="#101b24" stroke-linecap="round" fill="none">
+   <path d="M74 236Q112 157 263 143" stroke-width="24"/>
+   <path d="M87 178Q145 105 265 40" stroke-width="17"/>
+   <path d="M64 326Q101 247 305 242" stroke-width="23"/>
+   <path d="M98 222Q180 162 301 196" stroke-width="13"/>
+  </g>
+  <g fill="#1a2c35" opacity=".95">
+   <ellipse cx="198" cy="93" rx="91" ry="33" transform="rotate(-21 198 93)"/>
+   <ellipse cx="262" cy="150" rx="103" ry="41" transform="rotate(19 262 150)"/>
+   <ellipse cx="235" cy="229" rx="102" ry="42" transform="rotate(-12 235 229)"/>
+  </g>
+ </symbol>
+</defs>
+<!-- Original painting-style sky with moon haze, small texture marks, and fireflies -->
+<rect width="1920" height="1080" fill="url(#sky)"/>
+<ellipse cx="1070" cy="266" rx="460" ry="362" fill="url(#glow)" filter="url(#soft)"/>
+<circle cx="1086" cy="266" r="130" fill="url(#moon)" opacity=".85"/>
+<g fill="#87968f" opacity=".14"><ellipse cx="1041" cy="221" rx="17" ry="13"/><ellipse cx="1133" cy="300" rx="28" ry="14"/><circle cx="1105" cy="243" r="11"/></g>
+<g fill="#f6f0d5" opacity=".55">
+ <circle cx="314" cy="98" r="1.5"/><circle cx="429" cy="167" r="1"/><circle cx="785" cy="137" r="1.5"/><circle cx="1333" cy="85" r="1.2"/>
+ <circle cx="1507" cy="181" r="1.3"/><circle cx="1688" cy="109" r="1"/><circle cx="1791" cy="236" r="1.6"/><circle cx="620" cy="255" r="1.2"/>
+ <circle cx="1244" cy="207" r="1"/><circle cx="729" cy="82" r="1.2"/><circle cx="938" cy="103" r="1"/>
+</g>
+<!-- Hills are irregular, not synthetic polygon triangles -->
+<path d="M0 543Q115 487 241 512T498 491Q622 433 742 510T991 483Q1139 455 1275 504T1545 488Q1690 442 1920 524V1080H0Z" fill="url(#ridge)" opacity=".64"/>
+<path d="M0 603Q175 550 313 578T590 561Q738 512 872 573T1207 571Q1388 506 1520 554T1920 599V1080H0Z" fill="#283941" opacity=".72"/>
+<!-- Small far tree silhouettes establish depth in the middle distance -->
+<g opacity=".46">
+ <use href="#pine" x="60" y="335" width="130" height="320"/><use href="#pine" x="175" y="319" width="144" height="343"/>
+ <use href="#pine" x="318" y="365" width="110" height="310"/><use href="#pine" x="495" y="349" width="116" height="292"/>
+ <use href="#pine" x="665" y="356" width="112" height="298"/><use href="#pine" x="802" y="330" width="114" height="299"/>
+ <use href="#pine" x="1000" y="371" width="107" height="258"/><use href="#pine" x="1197" y="345" width="133" height="298"/>
+ <use href="#pine" x="1351" y="346" width="104" height="281"/><use href="#pine" x="1517" y="334" width="130" height="321"/>
+ <use href="#pine" x="1700" y="356" width="116" height="283"/><use href="#pine" x="1814" y="334" width="112" height="291"/>
+</g>
+<!-- Dense, atmospheric trees through the back of the road -->
+<g opacity=".92">
+ <use href="#pine" x="-40" y="229" width="250" height="545"/><use href="#pine" x="160" y="278" width="190" height="475"/>
+ <use href="#pine" x="375" y="303" width="170" height="432"/><use href="#pine" x="543" y="352" width="144" height="402"/>
+ <use href="#pine" x="1196" y="351" width="154" height="399"/><use href="#pine" x="1371" y="279" width="185" height="501"/>
+ <use href="#pine" x="1552" y="259" width="221" height="545"/><use href="#pine" x="1746" y="204" width="250" height="608"/>
+</g>
+<!-- Glowing ribbons of haze hover among trunks -->
+<ellipse cx="860" cy="591" rx="671" ry="64" fill="url(#mist)" filter="url(#soft)"/>
+<ellipse cx="1030" cy="710" rx="825" ry="91" fill="url(#mist)" opacity=".6"/>
+<!-- Ground with moonlit winding stone path -->
+<path d="M0 677Q232 646 489 678Q678 690 842 681Q1118 655 1365 676Q1691 647 1920 687V1080H0Z" fill="#182831"/>
+<path d="M831 675Q1007 659 1162 679Q1352 832 1592 1080H367Q591 859 831 675Z" fill="url(#road)" opacity=".83"/>
+<path d="M823 674Q1047 675 1171 688" fill="none" stroke="#b3b0a3" stroke-width="6" stroke-opacity=".19"/>
+<g fill="#657677" stroke="#293a43" stroke-width="4" opacity=".38">
+ <path d="M787 708l106-12 112 16-29 36-136 2z"/><path d="M1011 702l143 8 47 52-182 1-53-33z"/>
+ <path d="M652 785l182-28 164 9-57 71-228 28z"/><path d="M997 771l210-10 101 82-227 20-128-34z"/>
+ <path d="M495 909l237-56 237 10-27 120-284 28z"/><path d="M1072 865l271-24 116 106-310 45-174-36z"/>
+ <path d="M347 1044l266-75 355 33-38 102-420 16z"/><path d="M1112 1010l356-53 148 124-409 55z"/>
+</g>
+<g fill="none" stroke="#d6c9ab" stroke-width="3" opacity=".14">
+ <path d="M766 708l93-9M1055 713l107 8M701 788l124-20M1075 773l113-4M552 915l164-40M1153 875l137-16M407 1045l176-61"/>
+</g>
+<!-- Small brushlike grass, stones and dry branches around the pathway -->
+<g fill="none" stroke="#34473e" stroke-width="7" stroke-linecap="round" opacity=".84">
+ <path d="M192 838q18-63 7-112m2 111q-22-51-64-68m65 68q21-41 70-53"/>
+ <path d="M1633 831q-12-62 14-113m-14 113q-39-45-73-50m73 50q32-44 73-62"/>
+ <path d="M291 1037q0-57 22-92m-22 92q-31-47-74-51m74 51q31-50 81-76"/>
+ <path d="M1765 1038q4-53-33-96m33 96q19-61 69-87"/>
+</g>
+<g fill="#455352" opacity=".8">
+ <path d="M86 835l74-26 51 32-13 25-102 6z"/><path d="M1700 871l92-46 80 38-27 25-119 1z"/>
+ <path d="M65 1001l130-59 99 41-34 63-179 10z"/><path d="M1607 1022l132-66 148 46-27 70-222 12z"/>
+</g>
+<!-- Oversized crooked tree limbs hang in from the left and right like hand-painted cutouts -->
+<use href="#bough" x="-94" y="20" width="471" height="780" opacity=".93"/>
+<use href="#bough" x="1588" y="-22" width="472" height="803" transform="translate(3686 0) scale(-1 1)" opacity=".98"/>
+<!-- Small living fireflies -->
+<ellipse cx="482" cy="416" rx="80" ry="66" fill="url(#warm)" opacity=".21"/>
+<ellipse cx="1419" cy="493" rx="91" ry="85" fill="url(#warm)" opacity=".16"/>
+<g fill="#ffe5aa" opacity=".48">
+ <circle cx="476" cy="420" r="2.6"/><circle cx="498" cy="453" r="1.5"/><circle cx="1404" cy="481" r="2.2"/>
+ <circle cx="1431" cy="502" r="1.5"/><circle cx="682" cy="615" r="1.7"/><circle cx="1289" cy="612" r="1.8"/>
+</g>
+<rect width="1920" height="1080" fill="none" stroke="#030c1a" stroke-width="84" opacity=".22"/>
+</svg>
