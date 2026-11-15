@@ -11,7 +11,9 @@ const outBack=t=>{
  const k=1.18,x=clamp(t)-1;
  return 1+(k+1)*x*x*x+k*x*x;
 };
-function create({openDuration=.47,closeDuration=.34,initiallyOpen=false}={}){
+function create({openDuration=.47,closeDuration=.34,initiallyOpen=false,
+ reducedMotion=false}={}){
+ if(reducedMotion){openDuration=.15;closeDuration=.12;}
  if(!(openDuration>0&&closeDuration>0))throw Error('Invalid card case transition duration');
  let from=initiallyOpen?1:0,to=from,start=0,duration=0,active=false;
  function sample(at=0){
@@ -45,7 +47,7 @@ function create({openDuration=.47,closeDuration=.34,initiallyOpen=false}={}){
   from=open?1:0;to=from;start=0;duration=0;active=false;
  }
  return Object.freeze({setOpen,sample,transform,reset,
-  get desiredOpen(){return to===1;},version:'1.0.0'});
+  get desiredOpen(){return to===1;},version:'1.1.0-reduced-motion'});
 }
 root.PaperchalkCardCaseMotion=Object.freeze({version:'1.0.0',create});
 })(window);
