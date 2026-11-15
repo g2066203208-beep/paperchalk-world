@@ -17,7 +17,8 @@ const facilities=W.PaperchalkFarmerFacilities.create();
 let selected=null;
 const blocked={};
 const level={phase:'active',
- getUnit:id=>owned.find(c=>c.id===id)?{id,alive:true,deployed:true,side:'ally'}:null,
+ getUnit:id=>owned.find(c=>c.id===id)?
+  {...owned.find(c=>c.id===id),alive:true,deployed:true,side:'ally'}:null,
  grantBlock(id,n){blocked[id]=(blocked[id]||0)+n;return n;}};
 const hand={
  get selected(){return selected;},
@@ -56,16 +57,29 @@ const tree=effects.placeFacility({tileC:4,tileR:5,flank:'left'},[
  {tileC:4,tileR:5}]);
 assert.equal(tree.ok,true);
 assert.equal(facilities.snapshot.facilities.length,2);
-const lumber=pull('woodcutter','lumber');
-selected=lumber.instance;
-const felled=effects.interactFacility(tree.facility.id);
-assert.ok(felled.ok,'registered lumberjack interaction must destroy planted tree');
-assert.equal(felled.amount,3);
-assert.equal(facilities.snapshot.essence.material,3);
-assert.equal(facilities.snapshot.facilities.length,1);
+// Clear unplayed farm hand to make room for all four offensive woodcutter
+// skills. This test intentionally does not give the warrior a "lumber" card.
+for(const c of deck.snapshot().hand.slice())deck.play(c.instance);
+assert.equal(W.PaperchalkCardCatalog.get('lumber'),null);
+for(const attackId of ['strike','heavy-strike','cleave','diagonal-slash']){
+ const attack=pull('woodcutter',attackId);selected=attack.instance;
+ const activeTree=facilities.snapshot.facilities.find(f=>f.cardId==='plant-tree');
+ const target=activeTree||facilities.place('plant-tree',
+  {tileC:5,tileR:5,flank:'left'},[{tileC:5,tileR:5}]).facility;
+ const before=facilities.snapshot.facilities.find(f=>f.id===target.id);
+ const hit=effects.attackFacility(target.id);
+ assert.ok(hit.ok,'every woodcutter attack can chop: '+attackId);
+ assert.equal(hit.damage,Math.min(attack.power,before.hp));
+ assert.equal(deck.snapshot().hand.some(c=>c.instance===attack.instance),false);
+ if(hit.destroyed)assert.equal(hit.amount,3);
+ else assert.equal(hit.amount,0,'no material until the tree falls');
+}
+assert.ok(facilities.snapshot.essence.material>=3,
+ 'felling a tree with a normal attack grants shared materials');
 const guard=pull('woodcutter','guard');selected=guard.instance;
+assert.equal(effects.attackFacility(tree.facility.id).reason,'not-an-attack');
 const protectedActor=effects.playUtility();
 assert.equal(protectedActor.type,'guard');
 assert.equal(blocked.woodcutter,3);
 assert.equal(effects.interactFacility(made.facility.id).reason,'no-action-card');
-console.log('CARD_EFFECT_ENGINE_PASS typed_canonical_actions rollback_on_failure local_interactions');
+console.log('CARD_EFFECT_ENGINE_PASS attackable_trees_no_lumber_card full_normal_attack_support');
