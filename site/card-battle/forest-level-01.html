@@ -145,6 +145,7 @@ html,body{background:#d8ded0}
 <script src="./levels/forest-01.js?v=1"></script>
 <script src="./engine/card-registry.js?v=2"></script>
 <script src="./data/card-packs.js?v=2"></script>
+<script src="./data/facility-art.js?v=1"></script>
 <script src="./engine/card-effect-engine.js?v=1"></script>
 <script src="./engine/bandit-roster.js?v=2"></script>
 <script src="./levels/forest-02.js?v=2"></script>
@@ -789,7 +790,10 @@ function pick(d){
 // Five actual farmer-owned facility cards are textured when drawn/played.
 for(const d of Object.values(farmDefs)){
  texCache.set(d.id,facilityTexture(d.name));
- if(d.id==='farm-field')loadTexture('../assets/card-battle/farmer/farm-field.png',tex=>{
+ // All five facility assets follow one registered convention. Missing art
+ // keeps the neutral fallback until the painted transparent PNG is uploaded.
+ const art=window.PaperchalkFacilityArt?.get(d.id);
+ if(art?.src)loadTexture(art.src,tex=>{
   texCache.set(d.id,tex);
   for(const c of cards)if(c.def?.id===d.id)c.texture=tex;
   if(preview?.def.id===d.id)preview.texture=tex;
@@ -813,7 +817,7 @@ function selectedFacilityDef(card){
  if(!def||card.type!=='facility'||card.characterId!=='farmer-engineer-farmer')return null;
  return {id:def.id,kind:'facility',name:def.name,footprint:def.footprint,
   profession:'engineer',faction:'farmer',handInstance:card.instance,
-  src:def.id==='farm-field'?'../assets/card-battle/farmer/farm-field.png':null};
+  src:window.PaperchalkFacilityArt?.get(def.id)?.src||null};
 }
 function selectHandCard(instance){
  const wasSelected=window.__forestHand?.selected===instance;
