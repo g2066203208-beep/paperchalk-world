@@ -119,7 +119,7 @@ function fanLayout(){
  const cards=[...host.querySelectorAll('.action-card')],n=cards.length;if(!n)return;
  const region=$('hand-region').getBoundingClientRect();
  const cardWidth=cards[0].offsetWidth;
- const maxSpread=Math.max(20,(region.width-cardWidth-10)/Math.max(1,n-1));
+ const maxSpread=Math.max(20,(region.width-cardWidth-40)/Math.max(1,n-1));
  const spread=Math.min(cardWidth*.77,maxSpread);
  for(let i=0;i<n;i++){
   const offset=i-(n-1)/2,el=cards[i],extent=(n-1)/2;
