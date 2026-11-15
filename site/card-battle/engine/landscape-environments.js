@@ -1,313 +1,442 @@
-/* Large, seamless 3D battle environments: coast, cliff, open ocean, cave.
- * All modes use the SAME live WebGL renderer, shadow map and world clock.
- * The existing 16x6 tactical cells are retained; each biome's REAL surface
- * fills those 96 cells (sand, cliff rock, ship deck, cave stone).
- * No prebuilt bridges, no facility impostors, no outside-the-board-only arena.
+/* Production landscape mesh system: coast, cliff, ocean vessel and cavern.
+ * Real faceted sculpted geometry, organic boundaries, continuous ocean,
+ * true world-space shading, batched indexed WebGL1 meshes. All 16x6 logical
+ * tactical positions remain unchanged. NO decorative/prebuilt bridges.
  */
 (function(root){'use strict';
-function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
+function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
  const W=terrain.width,D=terrain.depth,cx=terrain.centerX,cz=terrain.centerZ;
- const minX=terrain.minX,maxX=minX+W,minZ=terrain.minZ,maxZ=minZ+D;
- const floorY=terrain.topY-.80;
- const colors={
-  sand:[.67,.61,.48,1],paleSand:[.75,.69,.55,1],dune:[.62,.57,.43,1],
-  surf:[.64,.81,.81,1],water:[.19,.43,.54,1],deep:[.12,.34,.47,1],
-  rock:[.41,.42,.42,1],rock2:[.48,.48,.46,1],rock3:[.32,.36,.40,1],
-  shale:[.38,.39,.43,1],grass:[.40,.47,.32,1],pine:[.28,.39,.32,1],
-  wood:[.44,.30,.23,1],plank:[.55,.39,.29,1],hull:[.24,.26,.28,1],
-  railing:[.64,.48,.30,1],rope:[.64,.57,.45,1],
-  cave:[.33,.34,.38,1],cave2:[.43,.42,.42,1],crystal:[.32,.57,.61,1],
-  glow:[.59,.81,.79,1],stone:[.51,.50,.47,1],moss:[.35,.45,.36,1]
+ const x0=terrain.minX,x1=x0+W,z0=terrain.minZ,z1=z0+D;
+ const top=terrain.topY,base=terrain.topY-.8;
+ const scenes=['coast','cliff','ocean','cave'],bins={},props={};
+ const lamps={coast:[],cliff:[],ocean:[],cave:[]};
+ const stats={},seed0=917243;
+ const C={
+  sand:[[.78,.70,.54,1],[.75,.67,.52,1],[.80,.72,.57,1],[.72,.65,.51,1]],
+  wet:[[.49,.60,.56,1],[.54,.62,.56,1]],
+  foam:[[.83,.93,.89,1],[.70,.87,.86,1]],
+  water:[[.22,.49,.62,1],[.17,.42,.57,1]],
+  rock:[[.50,.53,.53,1],[.42,.46,.49,1],[.58,.59,.55,1],[.35,.40,.44,1]],
+  moss:[[.42,.49,.34,1],[.32,.40,.34,1]],
+  wood:[[.51,.38,.28,1],[.57,.43,.30,1],[.43,.32,.24,1]],
+  metal:[[.22,.26,.28,1],[.72,.58,.39,1]],
+  cave:[[.30,.35,.39,1],[.39,.42,.44,1],[.43,.44,.43,1],[.25,.30,.35,1]],
+  crystal:[[.45,.76,.79,1],[.30,.63,.72,1]]
  };
- const map={coast:[],cliff:[],ocean:[],cave:[]};
- const lights={coast:[],cliff:[],ocean:[],cave:[]};
- const roof={};
- function part(scene,id,x,z,group,fn){
-  const pieces=[];
-  const put=(dx,dy,dz,w,h,d,color,material=3,unlit=false)=>{
-   if(!(w>0&&h>0&&d>0))return;
-   pieces.push({dx,dy,dz,w,h,d,color,material,unlit});
-  };
-  fn(put);
-  map[scene].push({id,x,z,group,pieces});
+ const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+ const pi=Math.PI,TAU=2*pi;
+ const rand=n=>{const v=Math.sin(n*127.1+seed0*.017)*43758.5453;return v-Math.floor(v);};
+ const noise=(a,b)=>Math.sin(a*1.37+b*.91)*.47+Math.sin(a*.49-b*1.61)*.31+
+  Math.cos(a*2.27+b*.54)*.22;
+ const xyz=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+ const mix=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
+ const nrm=(a,b,c)=>{
+  const u=b.map((v,i)=>v-a[i]),v=c.map((x,i)=>x-a[i]);
+  const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+  const l=Math.hypot(...n)||1;return n.map(x=>x/l);
+ };
+ function group(scene,color,mat=3){
+  if(!bins[scene])bins[scene]=new Map();
+  const key=mat+'|'+color.join(',');
+  let g=bins[scene].get(key);
+  if(!g){g={v:[],i:[],color,mat};bins[scene].set(key,g);}
+  return g;
  }
- // A box with real triangles and face normals (UVs in the same 8-float
- // format as the existing shared WebGL1 vertex buffer).
- const faces=[
-  {v:[[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5]],n:[0,1,0]},
-  {v:[[.5,-.5,.5],[-.5,-.5,.5],[-.5,-.5,-.5],[.5,-.5,-.5]],n:[0,-1,0]},
-  {v:[[-.5,-.5,.5],[.5,-.5,.5],[.5,.5,.5],[-.5,.5,.5]],n:[0,0,1]},
-  {v:[[.5,-.5,-.5],[-.5,-.5,-.5],[-.5,.5,-.5],[.5,.5,-.5]],n:[0,0,-1]},
-  {v:[[.5,-.5,.5],[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5]],n:[1,0,0]},
-  {v:[[-.5,-.5,-.5],[-.5,-.5,.5],[-.5,.5,.5],[-.5,.5,-.5]],n:[-1,0,0]}
- ];
- function box(g,x,y,z,w,h,d){
-  for(const f of faces){
-   const b=g.v.length/8;
-   for(let n=0;n<4;n++){
-    const v=f.v[n];g.v.push(x+v[0]*w,y+v[1]*h,z+v[2]*d,...f.n,
-     n===0||n===3?0:1,n<2?0:1);
+ function tri(scene,color,mat,a,b,c){
+  const g=group(scene,color,mat),n=nrm(a,b,c),start=g.v.length/8;
+  for(const p of [a,b,c])g.v.push(...p,...n,p[0]*.075+p[2]*.017,p[2]*.075-p[0]*.011);
+  g.i.push(start,start+1,start+2);
+ }
+ function quad(scene,color,mat,a,b,c,d){
+  // Flat-face normals provide painterly stylized light on faceted rock walls.
+  tri(scene,color,mat,a,b,c);tri(scene,color,mat,a,c,d);
+ }
+ function plane(scene,color,mat,xA,xB,zA,zB,y){
+  quad(scene,color,mat,[xA,y,zA],[xB,y,zA],[xB,y,zB],[xA,y,zB]);
+ }
+ function ringRock(scene,id,x,y,z,rx,ry,rz,palette=C.rock){
+  const n=9,bottom=[],middle=[],upper=[],summit=[];
+  const tilt=(rand(id*.7)-.5)*.5;
+  for(let i=0;i<n;i++){
+   const a=TAU*i/n,q=.83+rand(id*19+i*11)*.29;
+   const px=Math.cos(a)*rx*q,pz=Math.sin(a)*rz*q;
+   bottom.push([x+px*1.22,y-.05+noise(i,id)*.10,z+pz*1.21]);
+   middle.push([x+px,y+ry*.54+noise(i,id)*.16,z+pz]);
+   upper.push([x+px*.61+tilt,y+ry*.99+noise(i,id)*.20,z+pz*.65]);
+   summit.push([x+px*.17+tilt*.8,y+ry*1.19,z+pz*.17]);
+  }
+  for(let i=0;i<n;i++){
+   const j=(i+1)%n;
+   for(const [a,b,k] of [[bottom,middle,0],[middle,upper,1],[upper,summit,2]]){
+    const color=palette[(i+(id|0)+k)%palette.length];
+    quad(scene,color,3,a[i],a[j],b[j],b[i]);
    }
-   g.i.push(b,b+1,b+2,b,b+2,b+3);
+  }
+  // Top closure (double-sided stone if the camera climbs)
+  for(let i=0;i<n;i++)tri(scene,palette[(i+1)%palette.length],3,
+   summit[i],summit[(i+1)%n],[x+tilt*.8,y+ry*1.3,z]);
+ }
+ function mound(scene,id,x,z,rx,rz,h,palette=C.sand){
+  const n=11,outer=[],inner=[],peak=[x,top+h,z];
+  for(let i=0;i<n;i++){
+   const a=TAU*i/n,q=.81+rand(id*37+i*23)*.35;
+   outer.push([x+Math.cos(a)*rx*q,top-.11,z+Math.sin(a)*rz*q]);
+   inner.push([x+Math.cos(a)*rx*q*.64,top+h*.53+noise(i,id)*h*.10,z+Math.sin(a)*rz*q*.64]);
+  }
+  for(let i=0;i<n;i++){
+   const j=(i+1)%n;
+   quad(scene,palette[i%palette.length],2,outer[i],outer[j],inner[j],inner[i]);
+   tri(scene,palette[(i+1)%palette.length],2,inner[i],inner[j],peak);
   }
  }
- function compile(groups){
-  return [...groups.values()].filter(g=>g.i.length).map(g=>({
-   mesh:makeGeom(g.v,g.i),color:g.color,material:g.material,unlit:g.unlit
-  }));
+ function grass(scene,id,x,z,h,col=C.moss[0]){
+  for(let k=0;k<5;k++){
+   const a=TAU*k/5+id,dx=Math.cos(a)*h*.22,dz=Math.sin(a)*h*.20;
+   const q=[x,top+.01,z],tip=[x+dx,top+h*(.65+rand(id+k)*.4),z+dz];
+   tri(scene,col,1,[x-.09,top+.015,z-.04],[x+.09,top+.015,z+.05],tip);
+  }
  }
- function append(groups,o){
-  for(const p of o.pieces){
-   const key=[p.material,p.unlit?1:0,...p.color].join(',');
-   let g=groups.get(key);
-   if(!g){
-    g={v:[],i:[],material:p.material,unlit:p.unlit,color:p.color};
-    groups.set(key,g);
+ function sea(scene,zStart,zEnd,width=220,resX=68,resZ=36,level=top-1.36){
+  const xs=[],zs=[];
+  for(let i=0;i<=resX;i++)xs.push(cx-width/2+i*width/resX);
+  for(let j=0;j<=resZ;j++)zs.push(zStart+(zEnd-zStart)*j/resZ);
+  const h=(x,z)=>level+.13*Math.sin(x*.18+z*.24)+.065*Math.cos(x*.45-z*.17);
+  for(let j=0;j<resZ;j++)for(let i=0;i<resX;i++){
+   const xA=xs[i],xB=xs[i+1],zA=zs[j],zB=zs[j+1];
+   const q1=[xA,h(xA,zA),zA],q2=[xB,h(xB,zA),zA],
+    q3=[xB,h(xB,zB),zB],q4=[xA,h(xA,zB),zB];
+   quad(scene,C.water[0],9,q1,q2,q3,q4);
+  }
+ }
+ function curvedRibbon(scene,fn,a,b,steps,width,col,mat){
+  for(let i=0;i<steps;i++){
+   const t0=a+(b-a)*i/steps,t1=a+(b-a)*(i+1)/steps;
+   const A=fn(t0),B=fn(t1),Q=fn(t0+.002);
+   const vx=Q[0]-A[0],vz=Q[2]-A[2],len=Math.hypot(vx,vz)||1;
+   const n=[-vz/len,0,vx/len];
+   const A1=xyz(A,n.map(v=>v*width*.5)),A2=xyz(A,n.map(v=>-v*width*.5));
+   const B1=xyz(B,n.map(v=>v*width*.5)),B2=xyz(B,n.map(v=>-v*width*.5));
+   quad(scene,col,mat,A1,B1,B2,A2);
+  }
+ }
+ function beam(scene,color,mat,from,to,radius){
+  const u=to.map((v,i)=>v-from[i]);const l=Math.hypot(...u)||1;
+  const n=[-u[2]/l,0,u[0]/l],s=[n[0]*radius,0,n[2]*radius];
+  const A=xyz(from,s),B=xyz(from,s.map(x=>-x));
+  const C1=xyz(to,s),D1=xyz(to,s.map(x=>-x));
+  quad(scene,color,mat,A,C1,D1,B);
+  // Crossed upright face makes rope / mast visible from all view angles.
+  quad(scene,color,mat,[from[0],from[1],from[2]+radius],
+   [to[0],to[1],to[2]+radius],[to[0],to[1],to[2]-radius],
+   [from[0],from[1],from[2]-radius]);
+ }
+ function edgeCliff(scene,side,segments,drop,roughness=1){
+  // Morph from the exact rectangular gameplay edge at top to irregular
+  // strata down the real precipice. This encloses the former straight slab.
+  const bands=7,chain=[];
+  const along=side==='north'||side==='south'?W:D;
+  for(let i=0;i<=segments;i++){
+   const q=i/segments;const u=side==='north'||side==='south'?x0+W*q:z0+D*q;
+   const cols=[];
+   for(let j=0;j<=bands;j++){
+    const f=j/bands;
+    const dy=-drop*f+(noise(i*.37,j*.49)*.42+noise(q*7,j))*(j===0?0:.46);
+    const extend= f*(1.2+2.7*Math.sin(f*pi))+
+      (j===0?0:(noise(i*.39,j*.73)*roughness*.72));
+    const p=side==='north'?[u,top+dy,z0-extend]:
+     side==='south'?[u,top+dy,z1+extend]:
+     side==='west'?[x0-extend,top+dy,u]:
+     [x1+extend,top+dy,u];
+    cols.push(p);
    }
-   box(g,o.x+p.dx,floorY+p.dy,o.z+p.dz,p.w,p.h,p.d);
+   chain.push(cols);
+  }
+  for(let i=0;i<segments;i++)for(let j=0;j<bands;j++){
+   const p=chain[i],q=chain[i+1],shade=(i*7+j*3)%C.rock.length;
+   quad(scene,C.rock[shade],3,p[j],q[j],q[j+1],p[j+1]);
   }
  }
- function boulder(scene,id,x,z,size,high=1,tint=colors.rock){
-  part(scene,id,x,z,'boulder',put=>{
-   put(0,size*.27,0,size*.92,size*.52,size*.74,tint);
-   put(-size*.16,size*.53,-size*.12,size*.54,size*.38,size*.46,colors.rock2);
-   put(size*.19,size*.19,size*.23,size*.46,size*.27,size*.45,colors.rock3);
-   if(high>1)put(0,size*.85,0,size*.33,size*.55,size*.34,colors.shale);
-  });
- }
- // ─── COAST: THE TACTICAL BOARD IS A REAL SAND BEACH ────────────────
- // The 16x6 tile mesh itself receives the sand material from the game engine.
- // Outboard 3D shore joins without a decorative wooden bridge.
- for(let i=0;i<14;i++){
-  const x=minX+(i+.5)*W/14,z=minZ-1.2-(i%3)*.23;
-  part('coast','coast-foam-'+i,x,z,'surf',put=>{
-   put(0,.40,0,W/14+.05,.055,.92+(i%3)*.18,colors.surf,9);
-   put(0,.25,-1.08,W/14+.06,.10,1.28,colors.water,9);
-  });
- }
- for(let j=0;j<5;j++)for(let i=0;i<14;i++){
-  const x=minX+(i+.5)*W/14,z=minZ-4.0-(j+.5)*11;
-  part('coast','coast-sea-'+j+'-'+i,x,z,'water',put=>{
-   put(0,.14,0,W/14+.035,.21,11.05,
-    colors.water,9);
-  });
- }
- // Sand dunes near the two flanks and the landward perimeter.
- for(let side of [-1,1])for(let i=0;i<12;i++){
-  const x=cx+side*(W*.5+2.5+(i%3)*2.2);
-  const z=minZ+1.1+(i*.73%Math.max(1,D-2));
-  part('coast','coast-dune-'+side+'-'+i,x,z,'dune',put=>{
-   const h=.55+(i%4)*.26;
-   put(0,h*.5,0,3.2,h,3.25,i%3?colors.dune:colors.paleSand,2);
-   put(-side*.42,h+.12,.44,1.2,.24,1.58,colors.sand,2);
-  });
- }
- for(let i=0;i<20;i++){
-  const side=i%2===0?-1:1;
-  const x=cx+side*(W*.5+5.5+(i%3)*2);
-  const z=minZ-13+(i*2.29)%(D+16);
-  boulder('coast','coast-sea-rock-'+i,x,z,1.4+(i%5)*.36);
- }
- // Remote island headlands are real 3D masses, not one flat background.
- for(let i=0;i<9;i++){
-  const x=cx+(i-4)*10.8,z=minZ-45-(i%3)*8.2;
-  part('coast','coast-island-'+i,x,z,'island',put=>{
-   const h=2+(i%5)*1.5;
-   put(0,h*.43,0,8.4,h,5.8,colors.rock3);
-   put(-.7,h+.18,.45,6.2,.46,4.4,colors.grass,1);
-  });
- }
- // ─── CLIFF: AN ELEVATED ROCK PLATEAU OVER A DEEP CHASM ─────────────
- // The playable 16x6 tile top remains the walkable plateau; 3D outer faces
- // show 10–19 world-unit drops and real platforms (not painted gradients).
- for(let k=0;k<16;k++){
-  const x=minX+(k+.5)*terrain.tileW,z=minZ-2.8;
-  part('cliff','cliff-rim-'+k,x,z,'edge',put=>{
-   const depth=12+(k%5)*1.45;
-   put(0,-depth*.5+.35,0,terrain.tileW+.07,depth,5.4,
-    [colors.rock,colors.rock2,colors.shale][k%3]);
-   put(0,.08,1.25,terrain.tileW+.08,.22,2.25,colors.stone);
-   put(.32,-depth+.84,-2.25,terrain.tileW*.65,1.3,1.4,colors.rock3);
-  });
- }
- // The near (camera-facing) rim is a genuine vertical precipice.
- // Without its frontal face a top-down screenshot looks like a flat checker.
- for(let k=0;k<16;k++){
-  const x=minX+(k+.5)*terrain.tileW,z=maxZ+2.0;
-  part('cliff','cliff-near-face-'+k,x,z,'precipice',put=>{
-   const drop=11+(k%6)*1.3;
-   put(0,-drop*.5+.23,0,terrain.tileW+.055,drop,3.8,
-    [colors.rock3,colors.rock,colors.shale][k%3]);
-   put(0,.07,-1.3,terrain.tileW+.06,.24,1.7,colors.stone);
-   put(.32,-drop*.66,1.16,terrain.tileW*.47,2.1,1.18,colors.rock2);
-  });
- }
- for(const side of [-1,1])for(let k=0;k<8;k++){
-  const x=cx+side*(W*.5+2.3),z=minZ+(k+.5)*D/8;
-  part('cliff','cliff-flank-'+side+'-'+k,x,z,'wall',put=>{
-   const drop=11+(k%4)*2.0;
-   put(0,-drop*.5+.45,0,4.5,drop,D/8+.11,colors.rock3);
-   put(-side*.42,.06,0,1.0,.22,D/8+.12,colors.stone);
-   put(side*.9,-drop*.35,.3,2.15,2.9,1.45,colors.rock2);
-  });
- }
- for(let i=0;i<24;i++){
-  const x=cx+(i%8-3.5)*10.7,z=minZ-32-Math.floor(i/8)*15;
-  part('cliff','mountain-valley-'+i,x,z,'mountain',put=>{
-   const h=4+(i*7%9)*1.5;
-   put(0,h*.5-4.5,0,6.4,h,7.6,[colors.rock3,colors.shale][i%2]);
-   put(0,h-4.5+.16,0,3.7,.32,4.5,colors.rock);
-  });
- }
- for(let i=0;i<13;i++){
-  const side=i%2?-1:1,x=cx+side*(W*.5+1.2+i%3),z=minZ+(i*2.35)%D;
-  boulder('cliff','cliff-debris-'+i,x,z,.8+(i%4)*.45,i%3===0?2:1);
- }
- // ─── OCEAN: SHIP-DECK TACTICAL ARENA SURROUNDED BY 3D SEA ─────────
- // The board material is planked decking, not a fake water tile that units
- // impossibly stand on; surrounding water is actual 3D ocean geometry.
- for(let row=0;row<10;row++)for(let col=0;col<10;col++){
-  const x=cx+(col-4.5)*18,z=cz+(row-4.5)*17;
-  part('ocean','open-ocean-'+row+'-'+col,x,z,'sea',put=>{
-   put(0,.10,0,18.05,.23,17.05,
-    colors.deep,9);
-  });
- }
- // Real hull foundation wraps the actual 16x6 deck and sides; nothing
- // occupies the playable card tiles.
- part('ocean','ship-hull',cx,cz,'ship',put=>{
-  put(0,-2.45,0,W+2.4,4.10,D+4.4,colors.hull,4);
-  put(0,-.14,0,W+1.0,.38,D+1.6,colors.wood,4);
-  for(let i=0;i<9;i++){
-   const x=(i-4)*W/9;
-   put(x,.20,0,.09,.09,D+1.4,colors.plank,4);
+ function cone(scene,id,x,y,z,rx,h,palette,tipDown=false){
+  const sides=8,tip=[x+noise(id*.3,.7)*.22,
+   y+(tipDown?-h:h),z+noise(id*.2,.3)*.24];
+  for(let i=0;i<sides;i++){
+   const a=TAU*i/sides,b=TAU*(i+1)/sides;
+   const q1=[x+Math.cos(a)*rx*(.85+rand(i+id)*.3),y,z+Math.sin(a)*rx],
+    q2=[x+Math.cos(b)*rx*(.85+rand(i+id+1)*.3),y,z+Math.sin(b)*rx];
+   tri(scene,palette[(i+id)%palette.length],3,q1,q2,tip);
   }
-  for(let j=0;j<7;j++){
-   const z=(j-3)*D/7;
-   put(0,.23,z,W+.7,.08,.11,colors.wood,4);
+ }
+ // ───────────── 01 COAST: organically eroded beach / surf ──────────
+ {
+  // Shoreline curves across the full vista and physically meets the sand.
+  const shore=x=>z0-10.7+Math.sin(x*.105)*1.6+Math.sin(x*.37)*.56;
+  for(let i=0;i<64;i++)for(let j=0;j<13;j++){
+   const xA=cx-W*.72+i*W*1.44/64,xB=cx-W*.72+(i+1)*W*1.44/64;
+   const tA=j/13,tB=(j+1)/13;
+   const vertex=(x,t)=>{
+    const z=z0-(1.7+Math.max(0,t)*13.2)+
+      Math.sin(x*.12+t*.9)*.26*t;
+    const rel=(z0-z)/Math.max(1,z0-shore(x));
+    const y=top-.018-.92*clamp(rel,0,1)**1.72+
+      (noise(x*.21,t*13)*.065)*(Math.sin(pi*clamp(t,0,1))**2);
+    return [x,y,z];
+   };
+   const a=vertex(xA,tA),b=vertex(xB,tA),c=vertex(xB,tB),d=vertex(xA,tB);
+   quad('coast',C.sand[Math.min(3,Math.floor(j/4))],2,a,b,c,d);
   }
- });
- for(let side of [-1,1])for(let k=0;k<11;k++){
-  const z=minZ+(k+.5)*D/11;
-  part('ocean','ship-railing-'+side+'-'+k,cx+side*(W*.5+1.2),z,'railing',put=>{
-   put(0,.65,0,.24,1.30,.25,colors.wood,4);
-   put(0,1.3,0,.43,.12,D/11+.18,colors.railing,4);
-  });
+  // The water is a single uninterrupted triangulated surface, not cuboid
+  // patches. Day/night highlight and travelling ripple normals are shader driven.
+  sea('coast',z0-10.4,z0-167,W*3.1,68,36,top-1.17);
+  for(let w=0;w<4;w++){
+   curvedRibbon('coast',u=>{
+    const x=cx-W*.78+W*1.56*u;
+    return [x,top-1.08+w*.027,
+     shore(x)-1.0+w*.72+.28*Math.sin(x*.61+w*1.72)];
+   },0,1,120,.25+w*.07,
+   C.foam[w%2],10);
+  }
+  for(let side of [-1,1])for(let j=0;j<16;j++){
+   const x=cx+side*(W*.52+(j%4)*2.24),z=z0-5.0+j*.96;
+   const id=11+j+(side+1)*17;
+   ringRock('coast',id,x,top-.72,z,1.6+rand(id)*2.9,
+    1.2+rand(id+3)*2.7,1.5+rand(id+8)*2.5);
+  }
+  for(let i=0;i<28;i++){
+   const x=cx+(rand(i*8+14)-.5)*W*1.05;
+   const z=z0-1.3+rand(i*13+7)*3.4;
+   mound('coast',i+71,x,z,.9+rand(i)*1.55,.75+rand(i+4)*1.25,
+    .24+rand(i*5)*.42);
+  }
+  for(let i=0;i<110;i++){
+   const side=i%2?1:-1,x=cx+side*(W*.51+rand(i*14)*7.4),
+    z=z0+(rand(i*17+4)*D*.88);
+   grass('coast',i+18,x,z,.38+rand(i*3)*.78,i%3?C.moss[0]:C.moss[1]);
+  }
+  // Distant offshore stacks fade naturally under fog and reflect in the sea.
+  for(let i=0;i<8;i++){
+   const x=cx+(i-3.5)*W*.43,z=z0-48-(i%3)*11;
+   ringRock('coast',i+160,x,top-3.3,z,4+(i%4)*1.5,
+    3.8+(i%3)*1.6,3.5+(i%3)*2.0);
+  }
+  stats.coast={sandBattlefield:true,shorelineModules:64,seaModules:1,
+   coastline:'curved-continuous-surf',rockForm:'faceted-sculpted',bridgeCount:0};
  }
- for(const k of [-1,1]){
-  part('ocean','ship-bow-'+k,cx,cz+k*(D*.5+3.5),'prow',put=>{
-   put(0,-.45,0,W*.64,1.7,5.8,colors.hull,4);
-   put(0,.45,0,W*.54,.35,4.9,colors.plank,4);
-  });
+ // ───────────── 02 CLIFF: multi-strata highland / abyss ────────────
+ {
+  edgeCliff('cliff','north',56,17);
+  edgeCliff('cliff','south',56,20);
+  edgeCliff('cliff','west',28,18);
+  edgeCliff('cliff','east',28,16);
+  // Distinct rocky ledges, with irregular silhouette and surface vegetation.
+  for(let i=0;i<31;i++){
+   const side=i%4;
+   const x=side<2?cx+(side?1:-1)*(W*.51+1.7+rand(i+8)*5.2):
+    cx+(rand(i*19)-.5)*W*1.5;
+   const z=side>=2?cz+(side===2?-1:1)*(D*.54+2.6+rand(i+6)*4.2):
+    cz+(rand(i*11+3)-.5)*D*1.5;
+   ringRock('cliff',i+190,x,top-1.2,z,1.65+rand(i*4)*3.2,
+    1.8+rand(i*5)*2.9,1.8+rand(i*9)*2.5);
+  }
+  for(let i=0;i<68;i++){
+   const edge=i%4,rx=rand(i*6+4),rz=rand(i*7+5);
+   const x=edge<2?cx+(edge===0?-1:1)*(W*.5+1.8+rx*3):
+    x0+rx*W;
+   const z=edge>=2?cz+(edge===2?-1:1)*(D*.5+1.6+rz*3):
+    z0+rz*D;
+   grass('cliff',i+310,x,z,.50+rand(i+6)*.64,
+    i%5?C.moss[1]:C.moss[0]);
+  }
+  // True staggered mountains; broad faceted ridges make a visible horizon.
+  for(let row=0;row<3;row++)for(let i=0;i<12;i++){
+   const x=cx+(i-5.5)*12+(row%2)*4.2;
+   const z=z0-25-row*19.2+rand(i*13+row)*6;
+   const h=9+row*4+rand(i*7+row)*8;
+   ringRock('cliff',400+row*12+i,x,top-19,z,8+rand(i*3)*3,
+    h,8.7+rand(i*2)*4,
+    row===2?[C.rock[3],C.rock[1],C.rock[2],C.rock[0]]:C.rock);
+  }
+  stats.cliff={elevatedBattlefield:true,dropHeight:[16,20],
+   edgeModules:168,rockForm:'stratified-irregular-mesh'};
  }
- // Two side masts are beyond the playable area so the camera keeps cards
- // unobstructed. Sail shapes remain flat 3D cloth, not sprites.
- for(const side of [-1,1]){
-  const x=cx+side*(W*.5+4.6),z=cz+side*2.1;
-  part('ocean','ship-mast-'+side,x,z,'mast',put=>{
-   put(0,7.0,0,.54,14,.54,colors.wood,4);
-   put(0,11.4,0,7.9,.19,.26,colors.wood,4);
-   put(0,7.1,.10,7.0,7.6,.08,colors.rope,4);
-   put(0,13.0,0,1.0,.35,.26,colors.railing,4);
-  });
+ // ───────────── 03 OCEAN: complete curved vessel in vast sea ───────
+ {
+  sea('ocean',cz-130,cz+130,W*6,72,48,top-3.90);
+  // Hull is long along X (16 cards), narrower across Z (6 cards).
+  // Curved upper and lower cross sections form a proper ship silhouette.
+  const count=34,rings=[],hullBottom=top-6.10;
+  for(let i=0;i<=count;i++){
+   const q=i/count,xx=x0-8+q*(W+16);
+   const taper=clamp(Math.sin(pi*q)**.46,.07,1);
+   const beamHalf=(D*.5+2.3)*taper;
+   rings.push({
+    x:xx,
+    upperZ:beamHalf,
+    lowerZ:beamHalf*.62,
+    railY:top+.86+.46*Math.sin(pi*q),
+    hullY:hullBottom+(1-taper)*2.6
+   });
+  }
+  for(let i=0;i<count;i++){
+   const a=rings[i],b=rings[i+1];
+   for(const side of [-1,1]){
+    const topA=[a.x,a.railY,cz+side*a.upperZ],
+     topB=[b.x,b.railY,cz+side*b.upperZ],
+     lowA=[a.x,a.hullY,cz+side*a.lowerZ],
+     lowB=[b.x,b.hullY,cz+side*b.lowerZ];
+    quad('ocean',C.wood[i%3],4,topA,topB,lowB,lowA);
+    // A distinct raised gunwale and continuous wooden cap rail.
+    const qA=[topA[0],topA[1]+.34,topA[2]],
+     qB=[topB[0],topB[1]+.34,topB[2]];
+    quad('ocean',C.wood[(i+1)%3],4,topA,topB,qB,qA);
+   }
+  }
+  // Detailed deck boards exactly on the 16x6 playable footprint. They sit
+  // under slot decals and never alter the authoritative terrain coordinates.
+  for(let j=0;j<44;j++){
+   const z=z0+(j+.5)*D/44,wood=C.wood[j%3];
+   const y=top+.012+(j%5)*.001;
+   plane('ocean',wood,4,x0+.055,x1-.055,z-D/93,z+D/93,y);
+  }
+  // Plank joints are interrupted between separate board lengths.
+  for(let i=0;i<15;i++)for(let j=0;j<10;j++){
+   const x=x0+(i+1)*W/16+(j%2)*.035,z=z0+(j+.5)*D/10;
+   plane('ocean',C.wood[2],4,x-.021,x+.021,z-.77,z+.77,top+.023);
+  }
+  // Fitted bulwark posts, rail, deck cleats and captain's stern cabin are
+  // all OUTSIDE the battle cells. No prebuilt bridge, no occupancy changes.
+  for(let sgn of [-1,1]){
+   for(let i=0;i<18;i++){
+    const x=x0+(i+.5)*W/18,z=cz+sgn*(D*.5+1.53);
+    beam('ocean',C.wood[1],4,[x,top+.26,z],[x,top+2.00,z],.14);
+   }
+   for(let j=0;j<4;j++){
+    const za=cz+sgn*(D*.5+1.53),h=top+1.92-j*.39;
+    beam('ocean',C.wood[j===0?1:2],4,[x0-2,h,za],[x1+2,h,za],.10);
+   }
+  }
+  for(let side of [-1,1]){
+   const x=cx+side*(W*.36+1.3),z=cz+side*(D*.5+3.0);
+   beam('ocean',C.wood[2],4,[x,top+.3,z],[x,top+14.8,z],.32);
+   beam('ocean',C.wood[1],4,[x-5.7,top+11.0,z],[x+5.7,top+11,z],.18);
+   // Triangular spars and furled fabric read at strategy-camera distances.
+   tri('ocean',[.79,.75,.65,1],4,
+    [x-4.9,top+10.6,z],[x+5.1,top+10.6,z],
+    [x,top+5.3,z-.40]);
+   beam('ocean',C.metal[0],4,[x,top+14.3,z],
+    [x-9.2,top+.3,z-side*2.2],.045);
+   beam('ocean',C.metal[0],4,[x,top+14.3,z],
+    [x+9.3,top+.3,z+side*2.0],.045);
+  }
+  // A raised bow/spur and captain stern do not intrude on tactical cells.
+  ringRock('ocean',811,x1+7,top-2.3,cz,3.0,4.2,3.6,C.wood);
+  ringRock('ocean',812,x0-7,top-2.8,cz,3.0,3.5,3.5,C.wood);
+  stats.ocean={deckBattlefield:true,seaModules:1,shipHulls:1,
+   hull:'curved-multi-section-vessel',deckPlanks:44,bridgeCount:0};
  }
- // ─── CAVE: REAL INTERIOR 3D WALLS, ROOF SHADOW AND CAVERN EXIT ──────
-  for(let side of [-1,1])for(let k=0;k<10;k++){
-  const x=cx+side*(W*.5+3.6),z=minZ+(k+.5)*D/10;
-  part('cave','cave-wall-'+side+'-'+k,x,z,'wall',put=>{
-   const h=7.8+(k%4)*.62;
-   put(0,h*.5,0,5.2,h,D/10+.40,k%3===0?colors.cave2:colors.cave);
-   put(-side*.42,1.15,.2,2.15,2.4,D/10*.77,colors.rock3);
-   put(0,h+.55,0,5.8,.62,D/10+.47,colors.shale);
-   const drip=(k%5)*.44+.75;
-   put(-side*1.25,h-drip*.49,-.20,.52,drip,.46,colors.stone);
-  });
- }
- for(let k=0;k<16;k++){
-  const x=minX+(k+.5)*terrain.tileW;
-  part('cave','cave-back-'+k,x,minZ-4.3,'wall',put=>{
-   const gate=k===7||k===8;
-   if(gate){
-    put(0,7.0,0,terrain.tileW+.05,1.85,5.1,colors.cave2);
-    put(-terrain.tileW*.45,3.6,0,.35,5.4,5.1,colors.cave);
-    put(terrain.tileW*.45,3.6,0,.35,5.4,5.1,colors.cave);
+ // ───────────── 04 CAVE: sculpted vault and mineral lighting ───────
+ {
+  // Three enclosing strata: the main gameplay area remains walkable.
+  // Curved rock bands replace the old straight cubic side walls.
+  for(const side of [-1,1]){
+   for(let i=0;i<28;i++){
+    const z=z0+(i+.5)*D/28;
+    const x=cx+side*(W*.5+2.5+1.1*Math.sin(i*.67));
+    ringRock('cave',901+i+(side+1)*15,x,top-.9,z,
+     3.1+rand(i+8)*1.6,5.2+rand(i+3)*4.5,2.7+rand(i+9),
+     C.cave);
+    if(i%3===0)cone('cave',21+i,x,top+6,z,.6,2.0+rand(i)*1.6,C.cave,true);
+   }
+  }
+  // Ancient passage in the background: two irregular curved arch legs,
+  // tapered vault above, and long tapering tunnel into dark interior.
+  for(let i=0;i<30;i++){
+   const x=x0+(i+.5)*W/30,center=Math.abs(x-cx)/W;
+   const opening=center<.13;
+   const z=z0-4.8+(rand(i*5)-.5)*1.15;
+   if(opening){
+    if(i%3===0)ringRock('cave',1020+i,x,top+4.9,z,1.9,3.8,2.2,C.cave);
    }else{
-    put(0,4.0,0,terrain.tileW+.06,8.0,5.1,
-     k%4===0?colors.rock2:colors.cave);
-    put(0,7.9,0,terrain.tileW+.09,1.1,6.0,colors.shale);
+    ringRock('cave',1060+i,x,top-.84,z,2.6,6.7+rand(i)*3.2,
+     3.2+rand(i+9)*1.4,C.cave);
    }
-  });
- }
- for(let i=0;i<21;i++){
-  const side=i%2?-1:1;
-  const x=cx+side*(W*.5+1.65+(i%3)*.18);
-  const z=minZ+(i*2.67)%D;
-  part('cave','cave-stalagmite-'+i,x,z,'stalagmite',put=>{
-   const h=1.05+(i%6)*.34;
-   put(0,h*.35,0,.90,h*.70,.91,colors.stone);
-   put(0,h*.78,0,.54,h*.62,.60,colors.rock2);
-   put(0,h*1.15,0,.22,h*.36,.25,colors.cave2);
-  });
- }
- for(let i=0;i<4;i++){
-  const x=cx+(i%2?-W*.31:W*.31),
-   z=cz+(i<2?-D*.45:D*.45);
-  part('cave','cave-crystal-'+i,x,z,'crystal',put=>{
-   put(0,.38,0,.77,.75,.76,colors.cave2);
-   put(0,1.15,0,.45,1.5,.50,colors.crystal,7,true);
-   put(.35,.84,.25,.21,1.0,.18,colors.glow,7,true);
-  });
-  lights.cave.push([x,floorY+1.3,z]);
- }
- // Roof casts REAL shadow in the existing depth pass but is hidden in
- // the color pass for the overhead battle camera (same as royal hall).
- roof.cave=()=>cube(cx,floorY+9.35,cz,W+12,.75,D+11,
-  [1,1,1,1],3);
-
- const compiled={};let drawn=0,lastScene=null;
- for(const name of Object.keys(map)){
-  const groups=new Map();
-  for(const o of map[name]){
-   const local=new Map();append(local,o);append(groups,o);
-   o.meshes=compile(local);
   }
-  compiled[name]=compile(groups);
+  // Overhead stalactites/stone columns, varying silhouette and thickness.
+  for(let i=0;i<39;i++){
+   const side=i%3;
+   const x=side===0?cx+(rand(i*7)-.5)*W*.65:
+    cx+(side===1?-1:1)*(W*.51+2.5+rand(i*3)*3);
+   const z=z0-5+rand(i*17)*D*1.35;
+   const height=1.3+rand(i+9)*4.1;
+   cone('cave',i+1110,x,top+7.6,z,.45+rand(i)*.54,height,C.cave,true);
+  }
+  for(let i=0;i<40;i++){
+   const side=i%2?-1:1;
+   const x=cx+side*(W*.49+2.1+rand(i*11)*3),
+    z=z0+rand(i*9)*D;
+   cone('cave',i+1170,x,top-.25,z,.35+rand(i)*.6,
+    .9+rand(i*13)*2.7,C.cave);
+  }
+  // Glow crystals, real distinct geometry, and four local light positions.
+  for(let i=0;i<4;i++){
+   const x=cx+(i%2?-1:1)*(W*.5+1.7),z=cz+(i<2?-D*.39:D*.39);
+   for(let k=0;k<5;k++){
+    const h=1.7+(k%3)*.66+rand(i*7+k)*.45;
+    cone('cave',1260+i*5+k,x+(k-2)*.33,top-.34,
+     z+(k%2)*.28,.24+k*.033,h,C.crystal);
+   }
+   lamps.cave.push([x,top+1.8,z]);
+  }
+  // Patchy moss, wall rubble and wet rock at the cavern threshold.
+  for(let i=0;i<73;i++){
+   const x=x0+(rand(i*9)*W),z=z0-2.0-rand(i*5)*5.2;
+   ringRock('cave',1320+i,x,top-.75,z,.32+rand(i)*.54,
+    .27+rand(i+4)*.7,.32+rand(i+3)*.47,C.cave);
+  }
+  stats.cave={stoneBattlefield:true,walls:86,crystalLamps:4,
+   roofShadowOnly:true,arch:'open-faceted-cavern',rockForm:'irregular-mesh'};
+ }
+ const compiled={};let active=null,drawCalls=0;
+ for(const scene of scenes){
+  // Keeping every material batch below 65535 VBO vertices is required on
+  // WebGL1 (UNSIGNED_SHORT index buffers). Split any oversized group.
+  const out=[];
+  for(const g of bins[scene]?.values()||[]){
+   const maxTriangles=17500,triTotal=g.i.length/3;
+   for(let start=0;start<triTotal;start+=maxTriangles){
+    const count=Math.min(maxTriangles,triTotal-start),
+     vertices=g.v.slice(start*3*8,(start+count)*3*8);
+    const idx=Array.from({length:count*3},(_,k)=>k);
+    out.push({geo:makeGeom(vertices,idx),color:g.color,material:g.mat});
+   }
+  }
+  compiled[scene]=out;
+  props[scene]=['scenic-world-'+scene];
  }
  function draw(t,scene){
-  drawn=0;lastScene=scene;
-  if(!map[scene])return;
-  const arr=map[scene];
-  const poses=arr.map(o=>appearance?.(o.id,t)||{scale:1,opacity:1});
-  if(poses.every(p=>Math.abs(p.scale-1)<.0001&&p.opacity>.999)){
-   for(const g of compiled[scene]){
-    renderGeom(g.mesh,I(),g.color,null,g.unlit,null,0,g.material);drawn++;
-   }
-   return;
-  }
-  for(let i=0;i<arr.length;i++){
-   const o=arr[i],p=poses[i];if(p.opacity<.002||p.scale<.025)continue;
-   const m=Math.abs(p.scale-1)<.0001?I():
-    root.PaperchalkObjectAnchor.atRoot([o.x,floorY,o.z],p.scale,{T,S,mul});
-   for(const g of o.meshes){
-    renderGeom(g.mesh,m,g.color,null,g.unlit,null,0,g.material);drawn++;
-   }
+  drawCalls=0;active=scene;if(!compiled[scene])return;
+  const a=appearance?.('scenic-world-'+scene,t)||{scale:1,opacity:1};
+  if(a.scale<.015||a.opacity<.002)return;
+  const m=Math.abs(a.scale-1)<.0001?I():
+   root.PaperchalkObjectAnchor.atRoot([cx,base,cz],a.scale,{T,S,mul});
+  for(const g of compiled[scene]){
+   renderGeom(g.geo,m,g.color,null,false,null,0,g.material);
+   drawCalls++;
   }
  }
+ const drawRoofShadow=scene=>{
+  if(scene==='cave')cube(cx,top+10.6,cz,W+14,.45,D+15,[1,1,1,1],3);
+ };
  return Object.freeze({
-  draw,
-  drawRoofShadow:scene=>{if(roof[scene])roof[scene]()},
-  idsFor:scene=>map[scene]?map[scene].map(o=>o.id):[],
-  lampsFor:scene=>lights[scene]?lights[scene].map(p=>p.slice()):[],
-  get snapshot(){return {
-   scene:lastScene,biomes:Object.keys(map),
-   coast:{sandBattlefield:true,shorelineModules:14,seaModules:70,bridgeCount:0},
-   cliff:{elevatedBattlefield:true,dropHeight:[11,19],edgeModules:32},
-   ocean:{deckBattlefield:true,seaModules:100,shipHulls:1,bridgeCount:0},
-   cave:{stoneBattlefield:true,walls:36,crystalLamps:4,roofShadowOnly:true},
-   drawn,lastPassDrawCalls:drawn,
+  draw,drawRoofShadow,
+  idsFor:scene=>props[scene]||[],
+  lampsFor:scene=>(lamps[scene]||[]).map(a=>a.slice()),
+  get snapshot(){return{
+   scene:active,biomes:scenes.slice(),...stats,drawn:drawCalls,
+   geometry:'organic-triangulated-worldspace',
+   materialBatches:drawCalls,referenceScale:'1-card-per-tile',
    changesTacticalSlots:false,usesSharedWebGL:true,usesWorldClock:true
   }}
  });
 }
-root.PaperchalkLandscapeEnvironments=Object.freeze({version:'1.0.0',create});
+root.PaperchalkLandscapeEnvironments=Object.freeze({version:'2.0.0',create});
 })(window);
