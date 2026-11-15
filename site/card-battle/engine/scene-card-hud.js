@@ -360,15 +360,14 @@ function create(o){
    y:(.5-(e.clientY-rect.top)/rect.height)*spanH};
  }
  function hit(e){
-  if(collapsed)return null;
   const q=worldPoint(e);if(!q)return null;
   const priority={character:3,hand:2,deck:1};
   const ranked=[...hot].sort((a,b)=>(priority[b.kind]||0)-(priority[a.kind]||0)||
    ((a.x-q.x)**2+(a.y-q.y)**2)-((b.x-q.x)**2+(b.y-q.y)**2));
   for(const p of ranked){
    const sc=p.scale;
-   const bw=cardW*sc*(p.kind==='hand'?.6:.52);
-   const bh=cardH*sc*(p.kind==='hand'?.6:.49);
+   const bw=cardW*sc*(p.kind==='hand'?.62:.52);
+   const bh=cardH*sc*(p.kind==='hand'?.61:.49);
    if(Math.abs(q.x-p.x)<bw&&Math.abs(q.y-p.y)<bh)return p;
   }
   return null;
@@ -377,13 +376,18 @@ function create(o){
   press=null;drag=null;hover=null;o.previewCharacter?.(null);
  }
  function prepareSelected(instance){
-  if(o.selected?.()!==instance)o.ensureSelected?.(instance);
+  if(o.selected?.()!==instance){
+   o.ensureSelected?.(instance);
+   motion.selectCard(instance,now);
+  }
  }
  function takeFromPile(p){
   const result=o.draw?.(p.ownerId);
   if(!result?.ok)return null;
   lastDeal={profession:p.profession,ownerId:p.ownerId,
    instance:result.card.instance,x:p.x,y:p.y,scale:p.scale,at:now};
+  motion.drawCard({instance:result.card.instance,ownerId:p.ownerId,
+   from:{x:p.x,y:p.y,scale:p.scale},at:now});
   prepareSelected(result.card.instance);
   return result.card;
  }
@@ -445,21 +449,23 @@ function create(o){
   return true;
  }
  function pointFor(id){
-  if(collapsed)return null;
   const p=scene.find(x=>x.id===id);if(!p)return null;
   const r=canvas.getBoundingClientRect();
   return {x:r.left+(.5+p.x/spanW)*r.width,
    y:r.top+(.5-p.y/spanH)*r.height};
  }
  function setCollapsed(next){
-  collapsed=!!next;
-  cancelPress();deckLift.clear();
-  if(collapsed){scene=[];hot=[];drawCalls=0;deckMeshes=0;}
+  collapsed=!!next;cancelPress();deckLift.clear();
+  if(collapsed){
+   // Do not clear the hand: it remains on screen and can still be dragged.
+   scene=scene.filter(p=>p.kind==='hand');
+   hot=scene.slice();deckMeshes=0;
+  }
   return collapsed;
  }
  function animateScene(mode,at){sceneMotion={mode,start:at};}
  function resetAnimations(){
-  scene=[];lastDeal=null;lastFrame=0;deckLift.clear();cancelPress();
+  scene=[];lastDeal=null;lastFrame=0;deckLift.clear();motion.reset();cancelPress();
   sceneMotion={mode:'steady',start:0};
  }
  return Object.freeze({
@@ -474,6 +480,14 @@ function create(o){
    return {geometry:'seven-bay-walnut-felt-case',roundedCase:true,beveledRim:true,
     walnutShell:true,forestFelt:true,brassInlay:true,engravedRoleTabs:0,
     printedDeckFaces:(count.roster||[]).length,
+    faceUpDecks:true,handPersistsWhenCollapsed:true,
+    handCardScale:g.mobile?.68:1.06,
+    topCards:collapsed?[]:(count.roster||[]).map(owner=>{
+     const pile=o.remainingCards?.(owner.id)||[],card=pile[pile.length-1];
+     return {ownerId:owner.id,id:card?.id||null,name:card?.name||null,
+      faceUp:!!card};
+    }),
+    cardMotion:motion.stats(now),
     fittedCardStacks:true,cardStackTiltRadians:-.105,
     visible:scene.map(p=>({id:p.id,kind:p.kind,x:p.x,y:p.y})),
     visibleDeckPiles:scene.filter(p=>p.kind==='deck'&&p.deckCount>0).length,
@@ -501,5 +515,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'11.0.0-screen-overlay-pointer-play',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'12.0.0-face-up-tactile-hand',create});
 })(window);
