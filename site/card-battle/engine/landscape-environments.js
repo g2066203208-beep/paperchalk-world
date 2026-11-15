@@ -103,14 +103,20 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   }
  }
  function sea(scene,zStart,zEnd,width=220,resX=68,resZ=36,level=top-1.36){
-  const xs=[],zs=[];
+  const xs=[];
   for(let i=0;i<=resX;i++)xs.push(cx-width/2+i*width/resX);
-  for(let j=0;j<=resZ;j++)zs.push(zStart+(zEnd-zStart)*j/resZ);
-  const h=(x,z)=>level+.13*Math.sin(x*.18+z*.24)+.065*Math.cos(x*.45-z*.17);
+  const beach=x=>zStart-.35+1.6*Math.sin(x*.105)+.56*Math.sin(x*.37);
+  const at=(x,j)=>{
+   const near=scene==='coast'?beach(x):zStart;
+   return near+(zEnd-near)*(j/resZ);
+  };
+  const h=(x,z)=>level+.065*Math.sin(x*.18+z*.24)+.035*Math.cos(x*.45-z*.17);
   for(let j=0;j<resZ;j++)for(let i=0;i<resX;i++){
-   const xA=xs[i],xB=xs[i+1],zA=zs[j],zB=zs[j+1];
-   const q1=[xA,h(xA,zA),zA],q2=[xB,h(xB,zA),zA],
-    q3=[xB,h(xB,zB),zB],q4=[xA,h(xA,zB),zB];
+   const xA=xs[i],xB=xs[i+1],
+    zA=at(xA,j),zB=at(xA,j+1),
+    zC=at(xB,j),zD=at(xB,j+1);
+   const q1=[xA,h(xA,zA),zA],q2=[xB,h(xB,zC),zC],
+    q3=[xB,h(xB,zD),zD],q4=[xA,h(xA,zB),zB];
    quad(scene,C.water[0],9,q1,q2,q3,q4);
   }
  }
@@ -254,6 +260,28 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   stats.coast={sandBattlefield:true,shorelineModules:64,seaModules:1,
    coastline:'curved-continuous-surf',rockForm:'faceted-sculpted',bridgeCount:0};
  }
+
+ function mountainPeak(scene,id,x,y,z,rx,h,rz){
+  // Sharp weather-eroded mountain silhouette. Unlike ringRock, the crest is
+  // a narrow crooked ridge instead of a round flat-topped cylindrical cap.
+  const n=11,low=[],shoulder=[],crest=[];
+  const peak=[x+(rand(id*13)-.5)*rx*.36,y+h*1.14,
+   z+(rand(id*17)-.5)*rz*.27];
+  for(let i=0;i<n;i++){
+   const a=TAU*i/n,q=.8+rand(id*8+i*19)*.34;
+   const ux=Math.cos(a)*rx*q,uz=Math.sin(a)*rz*q;
+   low.push([x+ux,y+.1*Math.sin(i),z+uz]);
+   shoulder.push([x+ux*.73,y+h*(.30+rand(id+i*8)*.15),z+uz*.75]);
+   crest.push([x+ux*.30,y+h*(.62+rand(id+i*13)*.17),z+uz*.31]);
+  }
+  const shades=[C.rock[3],C.rock[1],C.rock[0],C.rock[2]];
+  for(let i=0;i<n;i++){
+   const j=(i+1)%n,col=shades[Math.floor(i/3)%shades.length];
+   quad(scene,col,3,low[i],low[j],shoulder[j],shoulder[i]);
+   quad(scene,col,3,shoulder[i],shoulder[j],crest[j],crest[i]);
+   tri(scene,col,3,crest[i],crest[j],peak);
+  }
+ }
  // ───────────── 02 CLIFF: multi-strata highland / abyss ────────────
  {
   shoulder('cliff',['north','south','west','east'],C.rock,2.2);
@@ -285,9 +313,8 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    const x=cx+(i-5.5)*12+(row%2)*4.2;
    const z=z0-25-row*19.2+rand(i*13+row)*6;
    const h=9+row*4+rand(i*7+row)*8;
-   ringRock('cliff',400+row*12+i,x,top-19,z,8+rand(i*3)*3,
-    h,8.7+rand(i*2)*4,
-    row===2?[C.rock[3],C.rock[1],C.rock[2],C.rock[0]]:C.rock);
+   mountainPeak('cliff',400+row*12+i,x,top-20,z,
+    8.0+rand(i*3)*3.6,h,9.5+rand(i*2)*4.4);
   }
   stats.cliff={elevatedBattlefield:true,dropHeight:[16,20],
    edgeModules:168,rockForm:'stratified-irregular-mesh'};
@@ -473,5 +500,5 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   }}
  });
 }
-root.PaperchalkLandscapeEnvironments=Object.freeze({version:'2.1.0',create});
+root.PaperchalkLandscapeEnvironments=Object.freeze({version:'2.2.0',create});
 })(window);
