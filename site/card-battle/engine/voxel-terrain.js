@@ -311,7 +311,7 @@ function createWebGLRenderer(grid,{gl,makeGeom,renderGeom,I,tileTransform,showSe
   for(const entry of walls)renderGeom(entry.mesh,tileMatrix(entry.c,entry.r),entry.color,null,false,null,0,2);
   for(let r=0;r<grid.rows;r++)for(let c=0;c<grid.cols;c++){
    const cell=grid.cell(c,r);
-   renderGeom(tiles[r][c],tileMatrix(c,r),grid.color(c,r),texture,false,grid.materials[cell.kind].side,0,cell.kind==='grass'?1:cell.kind==='dirt'?2:0);
+   renderGeom(tiles[r][c],tileMatrix(c,r),grid.color(c,r),texture,false,grid.materials[cell.kind].side,0,cell.kind==='grass'?1:cell.kind==='dirt'?2:cell.kind==='stone'?3:0);
   }
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
   if(!showSeams||showSeams())renderGeom(seams,base,[.13,.19,.12,.095],null,true);
