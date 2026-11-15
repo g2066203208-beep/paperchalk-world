@@ -1,211 +1,218 @@
-/* Paperchalk "银月夜路" — original illustrated storybook encounter.
-   All graphical UI and card motifs are authored for this game;
-   no Night of Full Moon assets or branded UI are copied. */
-:root{color-scheme:dark;--paper:#e1d2b3;--ink:#241d20;--ink-light:#5f4d4b;--ivory:#fff0cf;--bone:#b8a88d;--rose:#b95f6e;--amber:#ba8254;--night:#141c2a;--soft:#d0c0a8}
+/* Silver Moon Road v6 — original gothic illustrated roguelike card battle
+ * Composition based on the classic side-on deckbuilder hierarchy:
+ * hero LEFT, foe RIGHT, telegraphed intent ABOVE foe, fanned cards BELOW.
+ * All trim/art is original programmatic artwork. No original game assets copied.
+ */
+:root{color-scheme:dark;--ivory:#f4e5c6;--paper:#e7d4ac;--ink:#2c2426;--oak:#3b2927;--gold:#c6a270;--health:#a82f43;--energy:#78c7d0;--card-w:clamp(92px,9.7vw,160px);--card-h:calc(var(--card-w)*1.5);--deck-h:clamp(163px,32dvh,330px)}
 *{box-sizing:border-box}
-html,body{height:100%;min-height:100%;margin:0;overflow:hidden;background:#171d2b;color:#f8efdf;font-family:Georgia,"Noto Serif SC","Songti SC","SimSun",serif}
-button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer}a{text-decoration:none;color:inherit}
-button:focus-visible,a:focus-visible{outline:2px solid #fff0cb;outline-offset:3px}button:disabled{opacity:.42;cursor:not-allowed}
-.game{position:relative;z-index:2;height:100dvh;min-height:100dvh;display:flex;flex-direction:column;isolation:isolate}
-.world{position:fixed;z-index:0;inset:0;overflow:hidden;background:#1b2536;pointer-events:none}
-.night-sky{position:absolute;inset:0;background:radial-gradient(ellipse 52% 62% at 47% 20%,#8390a17e 0,#3f526f94 36%,transparent 67%),linear-gradient(180deg,#13182c,#34445a 40%,#465460 66%,#1b222d)}
-.moon-glow{position:absolute;top:-40%;left:20%;width:65%;height:115%;background:radial-gradient(ellipse at 50% 45%,#dbe6d886,transparent 64%);filter:blur(60px)}
-.moon{position:absolute;top:7%;left:49%;width:clamp(105px,15vw,260px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 29%,#fff5d5,#e5e5d5 53%,#9aa8b3 86%);box-shadow:0 0 30px #f7edcc8a,0 0 150px #dce5dc8f,0 0 240px #c5d6db45;opacity:.82;filter:contrast(.9)}
-.starfield{position:absolute;inset:0 0 36%;background-image:radial-gradient(#eeeada99 1px,transparent 1.6px),radial-gradient(#d4e2e290 .9px,transparent 1.3px);background-size:145px 161px,193px 118px;background-position:13px 30px,88px 21px;opacity:.35}
-.far-forest{position:absolute;inset:19% -5% 23%;opacity:.73;background:linear-gradient(180deg,#2c394d,#1d2a39);clip-path:polygon(0 60%,2% 38%,5% 64%,7% 22%,10% 66%,12% 26%,15% 67%,18% 17%,20% 62%,24% 35%,27% 70%,30% 14%,33% 68%,36% 32%,40% 73%,43% 25%,47% 74%,51% 33%,54% 67%,57% 19%,60% 68%,63% 31%,67% 75%,70% 15%,73% 70%,76% 30%,80% 70%,83% 18%,86% 69%,90% 29%,94% 64%,97% 19%,100% 62%,100% 100%,0 100%)}
-.near-forest{position:absolute;inset:28% -3% 19%;background:linear-gradient(180deg,#172436,#131d2a);opacity:.88;clip-path:polygon(0 73%,3% 14%,6% 73%,9% 38%,12% 78%,15% 11%,18% 70%,22% 36%,25% 78%,28% 18%,32% 82%,36% 46%,40% 81%,44% 27%,49% 78%,52% 43%,56% 79%,60% 13%,63% 81%,67% 40%,71% 75%,74% 19%,79% 78%,83% 40%,86% 73%,90% 13%,94% 79%,97% 23%,100% 71%,100% 100%,0 100%)}
-.landscape-etching{position:absolute;inset:12% 0 10%;overflow:hidden}
-.landscape-etching i{position:absolute;bottom:14%;width:4px;height:78%;background:linear-gradient(180deg,#111726,#0b1421);border-radius:50%;transform-origin:bottom;box-shadow:2px 0 #75839822}
-.landscape-etching i::before,.landscape-etching i::after{content:"";position:absolute;bottom:20%;height:2px;width:110px;background:linear-gradient(90deg,#101827,#27304500);transform-origin:left;transform:rotate(-34deg)}
-.landscape-etching i::after{bottom:39%;transform:rotate(28deg);width:91px}
-.landscape-etching i:nth-child(1){left:1%;height:94%;width:10px;transform:rotate(3deg)}
-.landscape-etching i:nth-child(2){left:12%;height:68%;transform:rotate(-12deg)}
-.landscape-etching i:nth-child(3){left:25%;height:47%;transform:rotate(9deg);opacity:.5}
-.landscape-etching i:nth-child(4){left:70%;height:53%;transform:rotate(-11deg);opacity:.47}
-.landscape-etching i:nth-child(5){left:83%;height:89%;width:8px;transform:rotate(8deg)}
-.landscape-etching i:nth-child(6){left:93%;height:87%;width:14px;transform:rotate(-7deg)}
-.landscape-etching i:nth-child(7){left:99%;height:107%;width:9px;transform:rotate(-13deg)}
-.ground{position:absolute;inset:58% -10% -8%;background:radial-gradient(ellipse at 50% 0,#7378758a 0,#25313b 45%,#111724 82%);transform:perspective(800px) rotateX(10deg) scale(1.2)}
-.floor-shine{position:absolute;inset:60% 30% 5%;background:linear-gradient(#d8d2bb42,transparent);clip-path:polygon(40% 0,60% 0,98% 100%,2% 100%);filter:blur(15px)}
-.fog{position:absolute;inset:auto -15% 18%;height:130px;background:radial-gradient(ellipse,#aabcc980,transparent 72%);filter:blur(38px);opacity:.45;animation:fog-drift 16s ease-in-out infinite alternate}
-.fog-b{bottom:35%;opacity:.2;animation-duration:20s;animation-direction:alternate-reverse}
-@keyframes fog-drift{to{transform:translateX(7%)}}
-.vignette{position:absolute;inset:0;background:radial-gradient(ellipse 74% 92% at 49% 37%,transparent 38%,#060c1991 100%),linear-gradient(180deg,#090d20a4,transparent 28%,#050b16 96%);box-shadow:inset 0 0 170px 60px #0d1119}
-.world::after{content:"";pointer-events:none;position:absolute;inset:0;opacity:.16;background-image:url("../assets/unused");background-image:repeating-linear-gradient(85deg,#fff0 0 9px,#e8d9ca1d 10px,#fff0 11px 23px),repeating-linear-gradient(0deg,#100f1a0d 0 2px,transparent 3px 8px)}
-.topbar{height:57px;min-height:57px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:6px clamp(12px,2.4vw,32px);border-bottom:4px ridge #9b90727c;box-shadow:0 4px 18px #0009;z-index:10;background:linear-gradient(180deg,#252330fa,#121821ef)}
-.topbar::after{content:"";position:absolute;left:8%;right:8%;top:56px;height:1px;background:linear-gradient(90deg,transparent,#c6b89a66,transparent)}
-.back{justify-self:start;font-size:12px;color:#f1dcc0;border:1px solid #b9ae9956;padding:7px 11px;border-radius:4px;background:#59473665;box-shadow:inset 0 1px #ffffff14}
-.chapter{text-align:center;display:flex;flex-direction:column;gap:0}.chapter small{font:9px Georgia,serif;letter-spacing:.18em;color:#b9a48d}.chapter strong{font:500 23px Georgia,"Songti SC",serif;color:#f4e0b9;letter-spacing:.28em;padding-left:.28em;line-height:1.2;text-shadow:0 2px 8px #000}.chapter span{font-size:9px;letter-spacing:.22em;color:#a8b7bb}
-.top-actions{justify-self:end;display:flex;gap:7px}.top-actions button{padding:6px 9px;font-size:12px;border-radius:4px;border:1px solid #a99e8e66;color:#dcd1bb;background:#43372d76}
-.top-actions button:hover,.back:hover{background:#766044aa}
+html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;font-family:Georgia,"Noto Serif SC","Songti SC",serif;color:var(--ivory);background:#101522;touch-action:pan-y}
+button,a{-webkit-tap-highlight-color:transparent;font:inherit}button{cursor:pointer}button:disabled{opacity:.43;cursor:not-allowed}button:focus-visible,a:focus-visible{outline:2px solid #fff1c3;outline-offset:3px}
+a{text-decoration:none;color:inherit}
+.game{height:100dvh;min-height:100dvh;display:flex;flex-direction:column;position:relative;isolation:isolate;overflow:hidden}
+.world{pointer-events:none;position:fixed;inset:0;z-index:-1;overflow:hidden;background:#1d293a}
+.night-sky{position:absolute;inset:0;background:radial-gradient(ellipse 44% 65% at 55% 24%,#6a779587,transparent 78%),linear-gradient(180deg,#11192a 0,#334459 40%,#55605e 70%,#1e292b 100%)}
+.moon-glow{position:absolute;left:30%;top:-23%;width:58%;height:76%;background:radial-gradient(ellipse,#dbe0d48a 0,transparent 68%);filter:blur(53px)}
+.moon{position:absolute;left:50%;top:9%;width:clamp(90px,14vw,220px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 33% 32%,#fff9e4 0,#e2e4d7 56%,#a5b8b1 100%);box-shadow:0 0 32px #dbe8e8a1,0 0 130px #cee0d75d;opacity:.76}
+.distant-pines{position:absolute;inset:26% -5% 16%;background:linear-gradient(180deg,#364b55c6,#1d2d36);clip-path:polygon(0 72%,3% 24%,7% 77%,10% 38%,14% 75%,18% 16%,22% 78%,26% 44%,30% 76%,34% 20%,39% 73%,44% 35%,49% 80%,53% 16%,58% 77%,62% 36%,67% 79%,71% 23%,75% 80%,80% 38%,85% 76%,89% 19%,94% 78%,97% 32%,100% 77%,100% 100%,0 100%)}
+.tree-left,.tree-right{position:absolute;top:8%;bottom:-7%;width:26%;background:linear-gradient(90deg,#0a1620,#1a2930);filter:drop-shadow(1px 0 5px #202d3b);clip-path:polygon(0 0,34% 0,38% 22%,60% 10%,63% 0,70% 0,68% 19%,44% 41%,41% 65%,51% 83%,49% 100%,2% 100%,17% 70%,13% 37%,0 22%)}
+.tree-left{left:-10%}.tree-right{right:-10%;transform:scaleX(-1)}
+.stone-path{position:absolute;inset:55% -10% -14%;background:radial-gradient(ellipse at 48% 10%,#a2a49a8a,#505a5b8c 35%,#222e35 75%),repeating-linear-gradient(80deg,transparent 0 60px,#1d253344 62px 66px),repeating-linear-gradient(1deg,transparent 0 40px,#1b273f55 42px 45px);transform:perspective(620px) rotateX(25deg) scale(1.2)}
+.ground-fog{position:absolute;left:-15%;right:-15%;top:61%;height:23%;background:radial-gradient(ellipse,#bfcfc884,transparent 69%);opacity:.37;filter:blur(36px);animation:fog 13s ease-in-out infinite alternate}
+@keyframes fog{to{transform:translateX(6%)}}
+.vignette{position:absolute;inset:0;box-shadow:inset 0 0 160px 35px #080c1b;opacity:.82;background:linear-gradient(180deg,#090d1d8a 0,transparent 25%,#080d12c4 100%)}
+.topbar{flex:0 0 clamp(44px,6.8dvh,66px);position:relative;display:flex;align-items:center;gap:clamp(9px,1.1vw,21px);padding:3px clamp(8px,2vw,28px);z-index:10;border-bottom:2px solid #8e765d;box-shadow:0 6px 22px #0007;background:linear-gradient(#2e2d32e8,#181c27e8);backdrop-filter:blur(5px)}
+.topbar::after{content:"";position:absolute;bottom:2px;left:3%;right:3%;height:1px;background:linear-gradient(90deg,transparent,#e9caa46b,transparent)}
+.back,.menu-tools button{height:32px;min-width:32px;display:grid;place-items:center;color:#e8d0a9;background:linear-gradient(#493a35,#2b2730);border:1px solid #99846b;border-radius:5px;box-shadow:inset 0 1px #f0d0a127}
+.back{padding:0 9px;white-space:nowrap;font-size:13px}.back:first-letter{font-size:23px}
+.top-hero{display:flex;align-items:center;gap:7px;white-space:nowrap;color:#e6d8bf;font-size:12px}
+.top-hero .crest{color:#9fd2d7;font-size:17px}.top-hero b{font-size:12px;color:#efb3ad;font-family:system-ui,sans-serif}
+.chapter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;display:flex;flex-direction:column;pointer-events:none;white-space:nowrap}
+.chapter small{font:9px Georgia,serif;letter-spacing:.18em;color:#c3ad90}
+.chapter strong{font:500 clamp(17px,2vw,26px)/1.1 Georgia,"Songti SC",serif;letter-spacing:.2em;color:#f3ddaf;text-shadow:0 2px 3px #000}
+.turn-counter{margin-left:auto;color:#d0c2a9;white-space:nowrap;font-size:11px}.turn-counter strong{font:23px Georgia,serif;color:#eed5a4;margin:0 2px}
+.menu-tools{display:flex;gap:5px}.menu-tools button:hover,.back:hover{background:#645147}
 .arena{flex:1;min-height:0;position:relative;overflow:hidden;isolation:isolate}
-.arena::before{content:"";position:absolute;top:0;left:0;right:0;height:23%;background:linear-gradient(180deg,#1116236c,transparent);pointer-events:none}
-.scene-ornament{position:absolute;top:-5%;width:18%;bottom:-3%;z-index:2;pointer-events:none;opacity:.8;filter:drop-shadow(0 0 11px #0f1623)}
-.scene-ornament::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(25deg,transparent 0 13px,#54606a22 15px 16px,transparent 17px 32px),linear-gradient(90deg,#0c121d,#1b2430);clip-path:polygon(11% 0,31% 0,35% 18%,59% 0,81% 0,69% 27%,76% 51%,51% 48%,49% 72%,66% 100%,0 100%,17% 66%,7% 37%)}
-.scene-left{left:-11%;transform:scaleX(-1)}.scene-right{right:-10%}
-.scene-floor{position:absolute;left:20%;right:15%;bottom:5%;height:14%;border-radius:50%;background:radial-gradient(ellipse,#c9bcaa2f 0,#75756d11 55%,transparent 80%);filter:blur(9px);pointer-events:none}
-.stage-inscription{position:absolute;top:14px;left:0;right:0;font:9px Georgia,serif;letter-spacing:.32em;color:#e0dbc04b;text-align:center;z-index:2;pointer-events:none}
-.fighter{position:absolute;z-index:4;min-width:0;pointer-events:none}
-.fighter-vampire{left:39%;width:30%;height:96%;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
-.fighter-hunter{left:12%;width:21%;height:70%;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;filter:drop-shadow(0 5px 20px #080b17)}
-.portrait-wrap{width:100%;position:relative;display:flex;justify-content:center;align-items:flex-end;transition:transform .28s,filter .24s,opacity .25s;transform-origin:50% 86%;animation:idle-breath 4.8s ease-in-out infinite alternate}
-.vampire-portrait{height:76%}.hero-portrait{height:82%;opacity:.96}
-@keyframes idle-breath{to{translate:0 -5px}}
-.portrait-wrap>img,.portrait-wrap>canvas{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:100%;max-width:none;max-height:100%;width:auto;object-fit:contain;filter:drop-shadow(0 13px 12px #03070d9e)}
-.portrait-wrap>canvas{visibility:hidden}.portrait-wrap.is-cutout>img{display:none}.portrait-wrap.is-cutout>canvas{visibility:visible}
-.fighter-vampire .portrait-wrap{filter:drop-shadow(0 0 28px #e7a0b73b)}.fighter-hunter .portrait-wrap{filter:drop-shadow(0 0 16px #b2d1cf3b)}
-.ground-shadow{position:absolute;left:15%;right:15%;bottom:14%;height:5%;border-radius:50%;background:#02090fcc;filter:blur(15px);z-index:-1}
-.nameplate{position:absolute;z-index:5;background:linear-gradient(180deg,#27252d,#100f19);color:#f4e5cb;box-shadow:0 4px 0 #050b0caa,0 9px 19px #030509a9,inset 0 1px #f1d5a326;padding:8px 15px 10px;max-width:100%;min-width:210px;border:1px solid #ada18a;border-top-color:#d5c2a0;border-radius:5px 5px 9px 9px;text-align:center}
-.fighter-vampire .nameplate{bottom:0;left:50%;transform:translateX(-50%);width:93%}
-.fighter-hunter .nameplate{bottom:1%;left:50%;transform:translateX(-50%);width:108%;min-width:165px;padding:6px 8px}
-.nameplate::before,.nameplate::after{content:"";position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#f0d9a1 0 2px,#9c8061 3px 5px,#292027 6px);box-shadow:0 0 0 1px #b39a76}
-.nameplate::before{left:7px}.nameplate::after{right:7px}
-.faction-name{font-size:9px;letter-spacing:.08em;color:#bdac98}.crest{color:#dfae83;font-size:13px}
-.nameplate h2{font:600 clamp(14px,1.24vw,19px) "Songti SC",serif;letter-spacing:.03em;margin:1px 0 5px;white-space:nowrap}
-.nameplate h2 em{font:8px Georgia,serif;color:#afa4a3;letter-spacing:.15em;margin-left:5px}
-.hp-line{display:flex;align-items:center;gap:8px}.hp-line .bar{display:block;flex:1;height:11px;border:1px solid #9f7967;background:#140c12;border-radius:3px;overflow:hidden;box-shadow:inset 0 2px 3px #000a}
-.hp-line .bar span{display:block;width:100%;height:100%;background:linear-gradient(180deg,#a1dabe,#5a997d);box-shadow:inset 0 1px #ffffff66;transition:width .32s}
-.fighter-vampire .hp-line .bar span{background:linear-gradient(180deg,#e4a5b2,#a34768)}
-.hp-line strong{font:600 10px Georgia,serif;white-space:nowrap}
-.mini-status{display:flex;justify-content:center;gap:4px;margin-top:4px;min-height:0}.mini-status span{display:block;font:9px sans-serif;color:#f9e3bb;background:#5c463f9b;padding:1px 5px;border-radius:3px}.mini-status span[hidden]{display:none}
-.fighter.hurt .portrait-wrap{filter:brightness(1.9) saturate(1.5);transform:translateX(-9px)}.fighter-hunter.hurt .portrait-wrap{transform:translateX(-8px)}
-.fighter.attack .portrait-wrap{transform:translateX(10px) scale(1.05)}.fighter-vampire.attack .portrait-wrap{transform:translateX(-10px) scale(1.04)}
-.fighter.dodge .portrait-wrap{opacity:.35;transform:translateX(-45px)}
-.sprite-status{position:absolute;top:35%;left:50%;font:900 clamp(18px,2vw,34px) system-ui,sans-serif;color:#fff0bd;text-shadow:0 2px 11px #000;opacity:0;white-space:nowrap;z-index:9;transform:translate(-50%,10px)}
-.sprite-status.show{animation:float-up 1.03s ease-out forwards}.sprite-status.heal{color:#a7f9be}.sprite-status.dodge{font-size:18px;color:#e5f8fa}
-@keyframes float-up{20%{opacity:1;transform:translate(-50%,-10px) scale(1.13)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-67px)}}
-.tactical-center{position:absolute;top:7%;right:9%;width:min(24vw,295px);z-index:6;display:flex;flex-direction:column;gap:10px;align-items:stretch}
-.round-marker{position:relative;text-align:center;align-self:end;border-bottom:1px solid #ad98809c;padding:4px 15px;display:flex;gap:8px;align-items:center;color:#d2bea5;text-shadow:0 1px 3px #000}
-.round-marker span{font-size:10px;letter-spacing:.16em}.round-marker strong{font:600 26px Georgia,serif;color:#f7e7c5}
-.versus{display:none}
-.intent,.path-map{position:relative;background:linear-gradient(160deg,#e4d4b4f5,#c4b397ee);color:#362b2b;border:4px solid #3e3534;outline:1px solid #bda780;box-shadow:0 3px 0 #1b1921,0 9px 23px #000b,inset 0 0 0 1px #fef0d3;padding:13px 14px}
-.intent::before,.path-map::before{content:"";position:absolute;inset:7px;border:1px solid #8c77644d;pointer-events:none}
-.intent{transform:rotate(.5deg);min-height:110px}
-.intent.is-safe{background:linear-gradient(150deg,#d4d3c1f5,#a7bdafe9)}
-.intent-eyebrow{font:10px "Songti SC",serif;letter-spacing:.14em;color:#774451;display:flex;align-items:center;gap:6px}
-.pulsing-dot{width:6px;height:6px;background:#a84e5b;border-radius:50%;box-shadow:0 0 7px #af4e62;animation:breathe-dot 1.3s infinite alternate}
-@keyframes breathe-dot{to{opacity:.35}}
-.intent-title{display:flex;align-items:center;gap:9px;margin:8px 0 5px}
-.intent-title>span{font:28px Georgia,serif;color:#933d4e}.intent-title strong{font:600 18px "Songti SC",serif}
-.intent p{font:12px/1.65 "Songti SC",serif;color:#4a3733;margin:0}
-.path-map{padding:10px 11px 12px;background:linear-gradient(160deg,#d7c7a8ed,#ad9b81e8);transform:rotate(-.35deg)}
-.path-map>p{font-size:12px;font-weight:700;margin:0 0 7px;display:flex;align-items:center;justify-content:space-between;gap:3px;color:#352a26}
-.path-map>p span{font-size:9px;color:#6c5c4d;font-weight:400}
-.lane-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
-.lane-buttons button{min-height:50px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;padding:3px;background:linear-gradient(#473b37,#282429);color:#e7dac4;border:1px solid #ae9876;border-radius:3px;position:relative;box-shadow:inset 0 1px #d9bc8655;font-size:11px}
-.lane-buttons button:not(:disabled):hover{background:#5b463c}.lane-buttons button.is-hunter{border-color:#d5ecc1;box-shadow:0 0 0 1px #73947e,inset 0 1px #ddeac7}
-.lane-buttons button.is-danger:after{content:"";position:absolute;inset:1px;border:1px dashed #e89ea2;pointer-events:none}
-.lane-dot{width:6px;height:6px;border-radius:50%;background:#6c6b6b}.lane-buttons button.is-hunter .lane-dot{background:#c5e9ba;box-shadow:0 0 7px #b1debe}
-.lane-buttons button.is-vampire .lane-dot{background:#f29aa8;box-shadow:0 0 0 2px #ab607b}
-.lane-buttons button small{font-size:9px;color:#ecdfc8;min-height:11px}
-.lane-legend{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:7px;font-size:9px;color:#594d49}.lane-legend span{display:flex;align-items:center;gap:3px}.lane-legend i{display:inline-block;width:7px;height:7px;border-radius:50%}
-.legend-you{background:#8aac78}.legend-foe{background:#aa476a}.legend-danger{background:#d87c8a}
-.battle-message{position:absolute;bottom:13px;left:50%;transform:translateX(-50%);z-index:8;min-width:220px;max-width:80%;text-align:center;pointer-events:none;color:#f3e5cb;text-shadow:0 2px 9px #000;font:12px "Songti SC",serif;background:#17191fd6;border:1px solid #d3bca668;box-shadow:0 3px 12px #0008;padding:7px 20px;border-radius:50%}
-.shots{position:absolute;inset:0;z-index:9;pointer-events:none;overflow:hidden}
-.bullet-trail{position:absolute;height:3px;transform-origin:left center;background:linear-gradient(90deg,transparent,#fff5d3 30%,#f3a870 80%,transparent);filter:drop-shadow(0 0 9px #f2b775);animation:bullet .34s ease-out forwards}
-@keyframes bullet{0%{opacity:1;scale:0 1}60%{opacity:1;scale:1 1}100%{opacity:0;scale:1 1}}
-.action-dock{position:relative;z-index:11;height:296px;min-height:296px;padding:0 clamp(8px,2.7vw,36px);background:linear-gradient(180deg,#24222a,#171820 68%,#1a191d);border-top:5px ridge #a29880;box-shadow:0 -10px 32px #03070dad,inset 0 3px #93816b45;overflow:hidden}
-.action-dock::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.21;background:repeating-linear-gradient(90deg,#0000 0 70px,#dfc39b22 70px 71px,#0000 71px 140px),repeating-linear-gradient(0deg,#0000 0 3px,#000 3px 4px)}
-.hand-topline{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;height:33px;max-width:1360px;margin:auto}
-.hand-label{color:#e5cda9;font:700 12px "Songti SC",serif;white-space:nowrap;letter-spacing:.15em}
-.hand-label>span{font-size:16px;color:#e5b56f}.hand-label small{font:9px Georgia,serif;color:#8c969e;letter-spacing:.1em;margin-left:7px}
-.instructions{font:11px "Songti SC",serif;color:#9eafa9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
-#deck-status{font:10px Georgia,"Songti SC",serif;color:#c9baa0;white-space:nowrap}
-.hand-scroll{position:relative;overflow-x:auto;overflow-y:visible;scrollbar-width:thin;height:202px;scroll-padding:20px;padding:6px 0 6px}
-.hand{display:flex;align-items:flex-start;justify-content:center;gap:9px;min-width:max-content;margin:auto;padding:0 8px;height:100%}
-.action-card{width:clamp(150px,13vw,198px);height:188px;flex:none;position:relative;display:flex;flex-direction:column;align-items:center;overflow:hidden;border:5px solid #131621;border-radius:10px 10px 6px 6px;padding:0;background:linear-gradient(135deg,#d1bf9b 0,#f5e9cd 30%,#c2ac86 100%);color:#302629;box-shadow:inset 0 0 0 2px #9b7d5b,inset 0 0 0 4px #f2deb9,0 2px 0 #000,0 9px 13px #000a;transition:transform .18s ease,box-shadow .18s,border-color .18s;transform-origin:50% 86%;will-change:transform}
-.action-card:not(:disabled):hover{transform:translateY(-8px) scale(1.035);z-index:3;border-color:#6caba9;box-shadow:inset 0 0 0 2px #b39f7f,inset 0 0 0 4px #f4e5c6,0 0 0 2px #9fe4d6,0 13px 22px #000c}
-.action-card:active:not(:disabled){transform:translateY(-4px) scale(.99)}
-.action-card:disabled{opacity:.5;filter:grayscale(.56);cursor:not-allowed}
-.action-card .card-top{display:block;position:relative;flex:none;width:100%;height:124px;overflow:hidden;padding:2px;border-bottom:2px solid #69594b;background:radial-gradient(ellipse at 50% 45%,#ddd6c7,#a6a3a2 65%,#454759);box-shadow:inset 0 -8px 18px #0005}
-.action-card .art-inner{display:grid;place-items:center;height:100%;width:100%;border:2px solid #3b3334;border-radius:30% 30% 9% 9%/34% 34% 4% 4%;background:radial-gradient(circle at 46% 32%,#fff8df6b,#a0a2b648 50%,#3b3e50b3 95%);box-shadow:inset 0 0 0 2px #d5c8a581,inset 0 0 16px #0b162a70}
-.action-card .card-illustration{height:87px;width:87px;filter:drop-shadow(0 4px 2px #0004)}
-.action-card .card-category{position:absolute;top:6px;left:6px;color:#fff2d7;background:#282d35dd;border:1px solid #b79e7c;letter-spacing:.04em;font:9px "Songti SC",serif;padding:2px 5px;border-radius:4px}
-.action-card .cost{position:absolute;z-index:3;top:0;right:4px;width:29px;height:31px;color:#241d21;font:900 16px Georgia,serif;display:grid;place-items:center;border-radius:0 0 50% 50%;background:radial-gradient(circle at 30% 25%,#fff0bf,#a68a56 85%);border:2px solid #3c3032;box-shadow:0 3px 4px #0007}
-.action-card .mark{display:none}
-.action-card .card-name{display:block;text-align:center;font:700 15px/1.15 "Songti SC",serif;letter-spacing:.08em;margin:5px 0 2px;white-space:nowrap;color:#292129;text-shadow:0 1px #fff9}
-.action-card .en{font:7px Georgia,serif;letter-spacing:.07em;color:#756558}
-.action-card .detail{display:block;text-align:center;font:10px/1.18 "Songti SC",serif;color:#62534c;margin:4px 5px 0;max-height:25px;overflow:hidden}
-.action-card .ammo-cost{position:absolute;bottom:2px;right:4px;background:#d6bd8b;color:#3a2823;padding:0 4px;border-radius:3px;font-size:9px}
-.action-card.is-silver .card-top{background:radial-gradient(ellipse,#dde6e4,#879ca8 75%,#354454)}
-.action-card.is-silver .art-inner{background:radial-gradient(ellipse,#eaf0e7,#9ea9b9 60%,#384b5b)}
-.action-card[data-kind="guard"] .card-top{background:radial-gradient(ellipse,#e4d6b5,#83755f 75%,#443b38)}
-.action-card[data-kind="focus"] .card-top{background:radial-gradient(ellipse,#bdb9bc,#7f7b9f 70%,#3f3852)}
-.action-card[data-kind="reload"] .card-top{background:radial-gradient(ellipse,#dcc39a,#837b65 70%,#343d43)}
-.dock-head{position:relative;max-width:1360px;margin:auto;height:47px;display:flex;justify-content:space-between;align-items:center;gap:14px}
-.turn-resources{display:flex;align-items:center;gap:20px}.resource{display:flex;gap:6px;align-items:center}.resource small{font:11px "Songti SC",serif;white-space:nowrap;color:#e8d1ab}.resource small span{font:8px Georgia,serif;color:#998a76;margin-left:4px}
-.ap-pips,.ammo-pips{display:flex;align-items:center;gap:6px;height:21px}
-.ap-pips i{display:block;width:16px;height:16px;transform:rotate(45deg);background:linear-gradient(135deg,#fff0c6,#bb8e55);border:1px solid #e4c79d;box-shadow:0 0 6px #e9bb7355}
-.ammo-pips i{width:8px;height:18px;background:linear-gradient(90deg,#9c7646,#f5d49a,#bd955e);border-radius:5px 5px 1px 1px;display:block;border:1px solid #302b2d}
-.ap-pips i.empty,.ammo-pips i.empty{background:#3e4145;border-color:#4a4e54;box-shadow:none}
-.play-controls{display:flex;align-items:center;gap:8px}
-.draw-btn,.end-turn{min-width:114px;border:2px solid #3d3131;border-radius:5px;padding:8px 12px;background:linear-gradient(180deg,#f1dda9,#b99a66);color:#302427;font:700 13px "Songti SC",serif;box-shadow:inset 0 1px #fff3d6,0 2px #0b0b11}
-.draw-btn{background:linear-gradient(180deg,#d6d9d2,#9fa8ad);border-color:#4c5658;min-width:116px}
-.draw-btn:not(:disabled):hover,.end-turn:not(:disabled):hover{filter:brightness(1.16);transform:translateY(-1px)}
-.draw-btn span,.end-turn span{margin-left:4px;font:11px Georgia,serif}
-.help-link{background:transparent;color:#b7ac97;border:none;font:11px "Songti SC",serif;padding:4px}
-.dock-bottom{position:relative;display:flex;justify-content:space-between;color:#998d84;font:9px "Songti SC",serif;height:14px;padding:0 4px}
-.battle-dialog{position:fixed;margin:auto;max-height:92dvh;overflow-y:auto;width:min(460px,calc(100vw - 26px));background:linear-gradient(150deg,#dfd0b0,#a99a7f);border:8px solid #2c2527;outline:2px solid #bdac89;color:#302729;box-shadow:0 20px 0 #0003,0 24px 90px #000d,inset 0 0 0 2px #f4e7cb;padding:18px 28px 27px;text-align:center}
-.battle-dialog::backdrop{background:#060914ca;backdrop-filter:blur(6px)}
-.battle-dialog:before{content:"";position:absolute;inset:12px;border:1px solid #7d695761;pointer-events:none}
-.dialog-crest{font:47px Georgia,serif;color:#7b4f4d;text-shadow:0 2px #f4ebd5}
-.dialog-hero>span{font:10px Georgia,serif;letter-spacing:.16em;color:#725348}
-.dialog-hero h1{font:500 44px Georgia,"Songti SC",serif;margin:7px 0 13px;color:#302428;letter-spacing:.18em}
-.dialog-hero p{font:13px/1.8 "Songti SC",serif;color:#55463e}
-.dialog-rules{display:grid;gap:7px;margin:24px 0;text-align:left}.dialog-rules div{border-top:1px solid #786c6280;padding:8px 3px}
-.dialog-rules b{display:block;font-size:12px;color:#583e39}.dialog-rules span{font-size:12px;color:#6b554b}
-.dialog-primary,.dialog-secondary{display:block;width:100%;margin-top:10px;padding:11px;background:#553637;color:#f8e8c8;border:2px solid #bc9a75;border-radius:4px;font:700 15px "Songti SC",serif}
-.dialog-primary:hover{background:#77494e}.dialog-secondary{background:#c7b594;color:#3d2d2e;font-size:12px}
-.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:24px 0}.result-stats>div{border:1px solid #957d68;padding:8px}.result-stats small{display:block;font-size:10px}.result-stats strong{display:block;font:31px Georgia,serif}
-.help-copy{text-align:left;font:12px/1.85 "Songti SC",serif;color:#493b36;margin:19px 0}.help-copy b{color:#793e46}
-@media(max-width:1100px){
- .fighter-vampire{left:35%;width:35%}.fighter-hunter{left:7%;width:24%}.tactical-center{right:3%;width:27%}
- .action-card{width:clamp(139px,15vw,180px)}.hand{justify-content:center}.action-dock{height:283px;min-height:283px}.hand-scroll{height:195px}.action-card{height:180px}.action-card .card-top{height:114px}
+.battle-platform{position:absolute;left:8%;right:7%;bottom:5%;height:19%;z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,#a7adab48 5%,#68747b19 52%,transparent 76%)}
+.fighter{position:absolute;bottom:4%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;z-index:3;min-width:0;pointer-events:none}
+.fighter-hunter{left:10%;width:27%;height:83%}.fighter-vampire{right:10%;width:30%;height:88%}
+.portrait-wrap{width:100%;height:100%;position:relative;display:flex;align-items:flex-end;justify-content:center;transform-origin:50% 90%;animation:idle 4.6s ease-in-out infinite alternate;transition:transform .21s,opacity .2s,filter .2s}
+@keyframes idle{to{translate:0 -4px}}
+.portrait-wrap img,.portrait-wrap canvas{position:absolute;bottom:12%;left:50%;transform:translateX(-50%);width:auto;height:87%;max-width:100%;object-fit:contain;filter:drop-shadow(0 10px 10px #0b111abf)}
+.portrait-wrap canvas{visibility:hidden}
+.portrait-wrap.is-cutout img{display:none}.portrait-wrap.is-cutout canvas{visibility:visible}
+.fighter-hunter .portrait-wrap{filter:drop-shadow(0 0 17px #87aaba2c)}
+.fighter-vampire .portrait-wrap{filter:drop-shadow(0 0 22px #f0a5a52c)}
+.ground-shadow{position:absolute;z-index:-1;bottom:12%;width:64%;height:7%;border-radius:50%;background:#060a10aa;filter:blur(13px)}
+.fighter.attack .portrait-wrap{transform:translateX(15px) scale(1.03)}
+.fighter-vampire.attack .portrait-wrap{transform:translateX(-13px) scale(1.04)}
+.fighter.hurt .portrait-wrap{filter:brightness(1.8) saturate(1.4);transform:translateX(-10px)}
+.fighter.dodge .portrait-wrap{transform:translateX(-34px) scale(.97);opacity:.4}
+.nameplate{position:absolute;bottom:0;z-index:5;width:min(91%,255px);min-height:46px;color:#f2e3c7;text-align:center}
+.character-title{font:600 clamp(12px,1.2vw,17px) "Songti SC",serif;margin-bottom:4px;text-shadow:0 2px 4px #000}
+.character-title small{font:8px Georgia,serif;letter-spacing:.08em;color:#c3b6a9;margin-left:4px}
+.hp-line{height:18px;display:flex;align-items:center;justify-content:center;gap:6px;padding:3px 6px;border:2px solid #302525;border-top-color:#a98e70;background:linear-gradient(#383135,#171b23);box-shadow:0 3px 7px #000b,inset 0 1px #debd8c54;border-radius:4px}
+.hp-line .bar{flex:1;height:9px;background:#230d16;border:1px solid #6f3b3e;box-shadow:inset 0 2px 3px #0009;border-radius:2px;overflow:hidden}
+.hp-line .bar>span{display:block;height:100%;width:100%;background:linear-gradient(#ef8a89,#a43b49);box-shadow:inset 0 1px #f8aca3;transition:width .31s}
+.hp-line b{font:600 10px Georgia,sans-serif;min-width:37px}
+.mini-status{position:absolute;left:50%;top:100%;transform:translateX(-50%);display:flex;gap:5px;justify-content:center;white-space:nowrap;margin-top:3px}
+.mini-status span{font:10px sans-serif;color:#f5ddbe;text-shadow:0 2px 4px #000;background:#1d253ad9;border:1px solid #9f958266;padding:2px 5px;border-radius:4px}
+.mini-status span[hidden]{display:none}
+.fighter-vampire .nameplate{width:min(95%,280px)}
+.fighter-vampire .hp-line .bar>span{background:linear-gradient(#f2a2aa,#a52c54)}
+.sprite-status{position:absolute;top:41%;left:50%;font:900 clamp(18px,3vw,36px) system-ui,sans-serif;color:#ffddab;text-shadow:0 3px 12px #000;pointer-events:none;z-index:8;opacity:0;transform:translate(-50%,15px);white-space:nowrap}
+.sprite-status.show{animation:pop .93s ease-out forwards}
+.sprite-status.heal{color:#b1f4d0}.sprite-status.dodge{font-size:18px;color:#ddf3f7}
+@keyframes pop{20%{opacity:1;transform:translate(-50%,-4px) scale(1.2)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-60px)}}
+.enemy-intent{position:absolute;z-index:6;right:17%;top:3%;width:clamp(140px,16vw,225px);min-height:51px;display:flex;align-items:center;gap:7px;filter:drop-shadow(0 3px 3px #000a)}
+.intent-symbol{width:43px;height:43px;flex:none;display:grid;place-items:center;font:24px Georgia,serif;color:#eec6c0;background:radial-gradient(circle at 45% 34%,#a75d62,#4c2a39 75%);border:2px solid #d7b4a3;border-radius:50%;box-shadow:inset 0 0 0 2px #432634,0 0 12px #af53635e}
+.intent-data{display:flex;flex-direction:column;justify-content:center;min-width:0;color:#eee3db;text-shadow:0 2px 5px #000}
+.intent-data b{font:800 22px Georgia,serif;color:#f2bec1;line-height:1}
+.intent-data span{font:600 11px "Songti SC",serif;white-space:nowrap;margin-top:3px}
+.intent-desc{position:absolute;right:0;top:100%;max-width:215px;opacity:0;pointer-events:none;font:11px/1.5 "Songti SC",serif;color:#e9ddd1;background:#201d29e8;border:1px solid #9e8288;padding:6px 8px;box-shadow:0 6px 15px #0006;transition:opacity .18s}
+.enemy-intent:hover .intent-desc,.enemy-intent:focus-within .intent-desc{opacity:1}
+.enemy-intent.is-safe .intent-symbol{background:radial-gradient(#648776,#304d57 76%);color:#d7eee0;border-color:#b8c7b6}
+.lane-strip{position:absolute;z-index:5;left:50%;top:8%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:linear-gradient(95deg,#1c2531d1,#273039c9);border:1px solid #8d8a76a6;padding:5px 7px;border-radius:20px;backdrop-filter:blur(4px);box-shadow:0 4px 12px #0006}
+.lane-caption{font:10px "Songti SC",serif;color:#d9d0b3}
+.lane-buttons{display:flex;gap:4px}.lane-buttons button{width:33px;height:30px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(#433b35,#232933);border:1px solid #9f8e78;border-radius:50%;color:#e4d7b6;position:relative;padding:0}
+.lane-buttons button>span{font:11px "Songti SC",serif}.lane-buttons button small{font-size:0;position:absolute;bottom:-1px;width:6px;height:6px;border-radius:50%;background:#6b6470}
+.lane-buttons button.is-hunter{background:linear-gradient(#6c897c,#283d41);border-color:#cde7cb;box-shadow:0 0 0 1px #afbf97}
+.lane-buttons button.is-hunter small{background:#d3ecc1}
+.lane-buttons button.is-vampire small{background:#ee7590}
+.lane-buttons button.is-danger{border-color:#ff92a1}
+.battle-message{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);color:#efe3c8;text-shadow:0 2px 7px #000;font:12px "Songti SC",serif;background:linear-gradient(#242430db,#121923e8);border:1px solid #968878aa;border-radius:17px;padding:5px 15px;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis;z-index:7;pointer-events:none}
+.shots{position:absolute;inset:0;pointer-events:none;z-index:9}
+.bullet-trail{position:absolute;height:3px;transform-origin:left center;background:linear-gradient(90deg,transparent,#fff6ce 26%,#faaf68,transparent);filter:drop-shadow(0 0 6px #fff1ab);animation:shot .32s ease-out forwards}
+@keyframes shot{0%{opacity:1;scale:0 1}48%{opacity:1;scale:1 1}100%{opacity:0;scale:1 1}}
+.action-dock{flex:0 0 var(--deck-h);position:relative;z-index:10;overflow:visible;background:linear-gradient(180deg,#2a2530ee,#171b26fc 18%,#111724 94%);border-top:5px ridge #827363;box-shadow:0 -10px 29px #03060bc7,inset 0 2px 0 #c5a87b3c;isolation:isolate}
+.action-dock::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.3;background:repeating-linear-gradient(82deg,transparent 0 15px,#c9a98507 16px 18px,transparent 19px 53px),radial-gradient(ellipse 50% 100% at 50% 100%,#75625147,transparent)}
+.action-dock::after{content:"";position:absolute;left:4%;right:4%;top:3px;height:1px;background:linear-gradient(90deg,transparent,#ceb0897f,transparent)}
+.deck-zone{position:absolute;z-index:4;top:0;bottom:22px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:clamp(4px,1.2dvh,11px)}
+.deck-zone-left{left:clamp(7px,1.5vw,27px);width:clamp(105px,13vw,205px)}
+.deck-zone-right{right:clamp(6px,1.5vw,26px);width:clamp(100px,12vw,184px)}
+.energy-orb{position:relative;flex:none;width:clamp(55px,7.7dvh,83px);height:clamp(55px,7.7dvh,83px);border-radius:50%;border:4px solid #332a28;outline:2px solid #bf9871;box-shadow:inset 0 0 0 3px #bed9d6,0 0 18px #8ddfe68a,0 5px 11px #000b;background:radial-gradient(circle at 40% 33%,#dcffff 0,#8bd7e0 16%,#398998 40%,#1e3a62 75%,#101d34 100%);display:flex;align-items:center;justify-content:center;gap:1px}
+.energy-orb::before{content:"";position:absolute;inset:-9px;border:1px solid #d8b27e73;border-radius:50%;clip-path:polygon(0 0,80% 0,80% 80%,0 80%)}
+.energy-flame{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:21px;color:#eae7b0;text-shadow:0 0 9px #dcf5ea}
+.energy-orb strong{font:700 clamp(22px,4dvh,36px) Georgia,serif;color:#fffce4;text-shadow:0 2px 5px #123759}
+.energy-orb small{font:11px Georgia,serif;color:#d4f2f4;margin-top:9px}
+.ammo-count{display:flex;align-items:center;gap:5px;color:#d9c6a6;font-size:10px}
+.ammo-pips{display:flex;gap:3px;align-items:center}
+.ammo-pips i{display:block;width:6px;height:14px;border:1px solid #704932;border-radius:5px 5px 1px 1px;background:linear-gradient(90deg,#947142,#f6da98,#b47d42);box-shadow:0 1px 5px #0009}
+.ammo-pips i.empty{background:#3c4149;opacity:.7}
+.ap-pips{display:none}
+.draw-stack,.discard-stack{position:relative;width:clamp(68px,7.8vw,113px);height:clamp(62px,11.5dvh,108px);flex:none;background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;color:#efd9b8;padding:0 0 3px}
+.card-back{position:absolute;left:50%;top:0;transform:translateX(-50%);display:grid;place-items:center;width:clamp(47px,5.4vw,76px);height:clamp(57px,10.2dvh,90px);border-radius:7px;border:5px double #b7a480;outline:2px solid #26242e;background:repeating-linear-gradient(45deg,#392e34 0 6px,#534040 7px 8px);box-shadow:4px 4px 0 #24222a,6px 6px 0 #978574,0 8px 14px #000b}
+.card-back::before{content:"";position:absolute;inset:5px;border:1px solid #ac9475}
+.card-back i{font-size:24px;font-style:normal;color:#e4c9a2;text-shadow:0 2px 4px #000}
+.stack-title{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font:11px "Songti SC",serif;letter-spacing:.07em;white-space:nowrap;color:#f2dfc3;background:#24202ce6;padding:1px 4px}
+.draw-stack b,.discard-stack b{position:absolute;top:0;right:0;border:1px solid #e1d1ad;min-width:24px;height:24px;display:grid;place-items:center;color:#eae4d5;background:#2c2b35;border-radius:50%;font:700 12px Georgia,serif;box-shadow:0 2px 6px #0008}
+.draw-stack:not(:disabled):hover .card-back{transform:translateX(-50%) translateY(-7px) rotate(-3deg);filter:brightness(1.14)}
+.discard-stack{opacity:.82}.discard-back{filter:grayscale(.4)}
+.end-turn{width:clamp(86px,11vw,165px);min-height:42px;background:linear-gradient(#b79f7a,#705239 52%,#422e2c);border:2px solid #32252b;outline:1px solid #c9b18b;color:#fff0d6;font:700 14px "Songti SC",serif;text-shadow:0 1px 3px #000;box-shadow:0 3px 0 #17161a,0 8px 15px #0008,inset 0 1px #f4dba17d;clip-path:polygon(0 0,93% 0,100% 49%,93% 100%,0 100%);transition:filter .2s,transform .14s}
+.end-turn span{font-family:Georgia,serif;font-size:17px;margin-left:2px}
+.end-turn:not(:disabled):hover{filter:brightness(1.28);transform:translateY(-2px)}
+.hand-region{position:absolute;left:clamp(86px,13vw,245px);right:clamp(86px,13vw,245px);top:0;bottom:0;min-width:0;z-index:3;pointer-events:none}
+.hand-label{position:absolute;top:4px;left:50%;transform:translateX(-50%);font:10px Georgia,"Songti SC",serif;color:#b9a58e;letter-spacing:.06em;white-space:nowrap;pointer-events:none}
+.hand{position:absolute;inset:0;pointer-events:none}
+.action-card{position:absolute;left:50%;bottom:26px;z-index:var(--card-z,1);width:var(--card-w);height:var(--card-h);transform:translateX(calc(-50% + var(--fan-x,0px))) translateY(var(--fan-y,0px)) rotate(var(--fan-r,0deg));transform-origin:50% 94%;transition:transform .2s cubic-bezier(.2,.7,.2,1),filter .18s,box-shadow .18s;pointer-events:auto;border:5px solid #27202a;border-radius:12px 12px 7px 7px;background:#e8d7ad;padding:0;box-shadow:0 3px 0 #11141b,0 7px 10px #000b,inset 0 0 0 2px #c2a579;overflow:hidden;color:#292327;display:flex;flex-direction:column;align-items:stretch}
+.action-card::before{content:"";position:absolute;z-index:4;inset:3px;border:2px solid #b69a74;pointer-events:none;border-radius:6px 6px 3px 3px}
+.action-card:after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 12px #503f4778}
+.action-card:not(:disabled):hover,.action-card.is-selected{z-index:60!important;transform:translateX(calc(-50% + var(--fan-x,0px))) translateY(calc(var(--fan-y,0px) - clamp(24px,5.5dvh,57px))) rotate(0deg) scale(1.13);box-shadow:0 0 0 3px #d3c1a0,0 14px 25px #000c,0 0 27px #debea260}
+.action-card.is-selected{z-index:70!important;box-shadow:0 0 0 3px #c5eaed,0 14px 25px #000c,0 0 25px #84d7d8a8}
+.action-card:disabled{filter:grayscale(.68) brightness(.75)}
+.action-card .card-art{height:69%;position:relative;display:grid;place-items:center;overflow:hidden;background:radial-gradient(#bbb7a3,#39445a)}
+.action-card .card-art svg{width:100%;height:100%;display:block;filter:saturate(1.2)}
+.action-card .card-art::after{content:"";position:absolute;inset:3px;border:2px solid #e9d6a780;border-radius:7px 7px 26px 26px;pointer-events:none}
+.action-card .card-type{position:absolute;z-index:3;top:59%;left:50%;transform:translateX(-50%);font:8px Georgia,serif;letter-spacing:.12em;color:#e9d9b9;text-shadow:0 1px #000;background:#393035;border:1px solid #baa178;padding:2px 8px;border-radius:7px;white-space:nowrap}
+.action-card .card-title{z-index:2;text-align:center;display:block;font:700 clamp(12px,1.2vw,16px) "Songti SC",serif;color:#49302d;letter-spacing:.04em;margin:clamp(5px,1.1dvh,9px) 2px 2px;text-shadow:0 1px #fff9;white-space:nowrap}
+.action-card .card-description{z-index:2;text-align:center;display:block;font:clamp(8px,.82vw,11px)/1.25 "Songti SC",serif;color:#594740;padding:0 6px;overflow:hidden}
+.action-card .card-energy{position:absolute;z-index:5;top:-3px;left:-2px;width:clamp(27px,2.8vw,38px);height:clamp(27px,2.8vw,38px);display:grid;place-items:center;border-radius:50%;font:700 clamp(14px,1.4vw,21px) Georgia,serif;color:#ecfff5;text-shadow:0 1px 4px #123344;background:radial-gradient(circle at 35% 27%,#9fe3de,#317a89 59%,#234465);border:3px ridge #ead5a8;box-shadow:0 2px 6px #0009}
+.action-card .card-ammo{position:absolute;z-index:5;right:6px;bottom:5px;color:#695442;font:700 9px Georgia,serif}
+.action-card[data-kind="attack"]{border-color:#4c2b35}
+.action-card[data-kind="guard"]{border-color:#30555b}
+.action-card[data-kind="focus"]{border-color:#435166}
+.action-card[data-kind="reload"]{border-color:#5c4935}
+.action-card[data-kind="roll"]{border-color:#3e6458}
+.action-card.is-silver{box-shadow:0 0 0 1px #cad8dd,0 5px 11px #0009}
+.selected-preview{position:absolute;z-index:100;left:50%;bottom:calc(var(--card-h) + 17px);transform:translateX(-50%);display:flex;gap:5px;align-items:center;justify-content:center;background:#20202ac9;border:1px solid #b2a68c;color:#f5e5c8;padding:7px 10px;border-radius:8px;box-shadow:0 7px 20px #0009;pointer-events:auto;white-space:nowrap;max-width:95vw}
+.selected-preview[hidden]{display:none}
+.selected-preview span{font-size:11px;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.selected-preview button{color:#241a1d;background:#e3c693;border:1px solid #806c4c;border-radius:6px;min-height:31px;padding:4px 10px;font-size:11px;font-weight:700}
+.selected-preview #cancel-selected{background:#42353d;color:#e9dac7;min-width:30px}
+.bottom-legend{position:absolute;bottom:5px;left:19%;right:19%;display:flex;justify-content:space-between;gap:8px;font-size:9px;color:#a1a5a7;pointer-events:none}
+.bottom-legend span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.battle-dialog{position:fixed;margin:auto;max-height:min(91dvh,780px);overflow-y:auto;width:min(480px,calc(100vw - 25px));color:#352a29;background:linear-gradient(140deg,#e9dcbe,#bca98d 93%);border:8px solid #2c2528;outline:2px solid #bead8b;padding:20px 27px 24px;text-align:center;box-shadow:0 26px 110px #000d,inset 0 0 0 2px #f3e5c8}
+.battle-dialog::backdrop{background:#040814c9;backdrop-filter:blur(6px)}
+.dialog-crest{font:46px Georgia,serif;color:#795350}
+.dialog-hero small{font:10px Georgia,serif;letter-spacing:.14em;color:#856b5e}.dialog-hero h1{font:500 42px "Songti SC",serif;letter-spacing:.15em;margin:8px 0}
+.dialog-hero p{font:13px/1.9 "Songti SC",serif;color:#5d4c42}
+.dialog-rules{text-align:left;display:grid;gap:8px;margin:19px 0}.dialog-rules p{font:12px/1.7 "Songti SC",serif;color:#58473f;margin:0;padding:9px 0;border-top:1px solid #9f886d77}
+.dialog-rules b{color:#813f47}
+.dialog-primary,.dialog-secondary{display:block;width:100%;padding:12px;margin-top:7px;background:#59383b;color:#f8e9ce;border:2px solid #bd9c75;border-radius:5px;font:700 15px "Songti SC",serif}
+.dialog-secondary{background:#dfceac;color:#503a32;font-size:12px}
+.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:20px 0}
+.result-stats>div{border:1px solid #917b66;padding:8px}.result-stats small{display:block;font-size:10px}.result-stats b{font:29px Georgia,serif}
+@media(max-width:1150px){
+ .fighter-hunter{left:6%;width:31%}.fighter-vampire{right:7%;width:36%}
+ .enemy-intent{right:17%}.deck-zone-left{left:7px}.deck-zone-right{right:7px}
+ .bottom-legend{display:none}
 }
 @media(max-width:760px){
- .topbar{height:43px;min-height:43px;padding:3px 6px}.chapter strong{font-size:16px}.chapter small,.chapter span{font-size:7px}.back{font-size:11px;padding:4px 6px}.back span,.top-actions button span{display:none}.top-actions button{padding:4px 6px}
- .topbar::after{top:42px}.arena{min-height:0}
- .fighter-vampire{left:34%;width:41%;height:94%}.vampire-portrait{height:74%}
- .fighter-hunter{left:-1%;width:34%;height:61%}.hero-portrait{height:80%}
- .fighter-vampire .nameplate{min-width:155px;padding:5px 5px 7px}
- .fighter-hunter .nameplate{min-width:120px;padding:3px 4px 6px;width:115%}
- .nameplate h2{font-size:12px;margin:1px 0 2px}.nameplate h2 em{display:none}
- .faction-name{font-size:8px}.crest{font-size:10px}.hp-line strong{font-size:9px}.hp-line .bar{height:8px}.mini-status span{font-size:8px}
- .round-marker,.versus{display:none}
- .tactical-center{right:1%;top:7%;width:31%;gap:5px}
- .intent,.path-map{border-width:2px;padding:7px 6px;box-shadow:0 6px 10px #0008}
- .intent::before,.path-map::before{inset:3px}
- .intent-eyebrow{font-size:8px}.intent-title{gap:4px;margin:4px 0}.intent-title>span{font-size:16px}.intent-title strong{font-size:12px}
- .intent p{font-size:9px;line-height:1.35}
- .path-map>p{font-size:10px;margin-bottom:3px}.path-map>p span{font-size:8px}
- .lane-buttons{gap:2px}.lane-buttons button{min-height:37px;font-size:9px;padding:2px}.lane-name{font-size:9px}.lane-buttons button small{font-size:8px}.lane-legend{display:none}
- .battle-message{bottom:5px;padding:4px 10px;min-width:150px;font-size:9px}
- .action-dock{height:188px;min-height:188px;padding:0 6px}
- .hand-topline{height:22px}.hand-label{font-size:10px}.hand-label small,.instructions{display:none}#deck-status{font-size:9px}
- .hand-scroll{height:127px;padding:2px 0}.hand{gap:5px;justify-content:flex-start;padding:0 4px}
- .action-card{width:105px;height:124px;border-width:3px;border-radius:7px}
- .action-card .card-top{height:75px}.action-card .card-illustration{height:55px;width:55px}
- .action-card .card-category{font-size:7px;padding:1px 3px;top:2px;left:3px}
- .action-card .cost{width:20px;height:22px;font-size:11px;border-width:1px;right:1px}
- .action-card .card-name{font-size:11px;margin-top:3px}.action-card .en{display:none}
- .action-card .detail{font-size:8px;line-height:1.13;margin:2px 3px}.action-card .ammo-cost{font-size:8px}
- .dock-head{height:32px;gap:4px}.turn-resources{gap:7px}.resource{gap:3px}.resource small{font-size:9px}.resource small span{display:none}
- .ap-pips,.ammo-pips{height:16px;gap:3px}.ap-pips i{width:9px;height:9px}.ammo-pips i{width:5px;height:12px}
- .play-controls{gap:4px}.draw-btn,.end-turn{min-width:61px;padding:4px 5px;font-size:9px;border-width:1px}.draw-btn span,.end-turn span{font-size:9px;margin-left:1px}
- .help-link{font-size:9px;padding:1px}.dock-bottom{display:none}.moon{left:45%;top:9%;width:110px}
+ :root{--card-w:clamp(85px,11vw,106px);--deck-h:clamp(150px,37dvh,220px)}
+ .topbar{gap:6px;padding:2px 5px}.top-hero{font-size:10px}.top-hero .crest{font-size:12px}
+ .chapter small{font-size:7px}.chapter strong{font-size:15px}
+ .back{min-width:27px;height:28px;padding:0 6px}.back span{display:none}
+ .turn-counter{font-size:9px}.turn-counter strong{font-size:17px}
+ .menu-tools{gap:3px}.menu-tools button{width:28px;height:28px;min-width:28px;font-size:13px}
+ .fighter-hunter{left:5%;width:34%;height:79%}.fighter-vampire{right:5%;width:36%;height:85%}
+ .character-title{font-size:11px}.character-title small{display:none}.nameplate{width:95%;min-height:35px}
+ .hp-line{height:17px;padding:2px 3px}.hp-line b{font-size:9px;min-width:26px}.mini-status span{font-size:8px}
+ .enemy-intent{right:9%;top:3%;width:135px;gap:4px}.intent-symbol{width:30px;height:30px;font-size:18px}
+ .intent-data b{font-size:17px}.intent-data span{font-size:9px}.intent-desc{display:none}
+ .lane-strip{top:3%;left:48%;padding:2px 5px;gap:3px}.lane-caption{font-size:8px}
+ .lane-buttons{gap:2px}.lane-buttons button{width:26px;height:25px}.lane-buttons button span{font-size:9px}
+ .battle-message{font-size:10px;bottom:3px}
+ .deck-zone-left{width:75px;bottom:6px;gap:4px}.deck-zone-right{width:85px;bottom:8px;gap:3px}
+ .energy-orb{width:52px;height:52px}.energy-flame{top:-12px;font-size:15px}.energy-orb strong{font-size:21px}.energy-orb small{font-size:10px}
+ .ammo-count{font-size:8px}.ammo-pips i{height:10px;width:5px}
+ .draw-stack,.discard-stack{width:54px;height:64px}.card-back{width:40px;height:49px;border-width:3px}.card-back i{font-size:16px}
+ .draw-stack b,.discard-stack b{min-width:20px;height:20px;font-size:10px}
+ .stack-title{font-size:9px}.end-turn{width:82px;min-height:37px;font-size:10px}.end-turn span{font-size:11px}
+ .hand-region{left:74px;right:84px}.hand-label{font-size:8px}
+ .action-card{bottom:17px;border-width:3px;border-radius:8px}
+ .action-card .card-energy{width:25px;height:25px;font-size:13px;border-width:2px}
+ .action-card .card-title{font-size:11px}.action-card .card-description{font-size:8px}
+ .action-card .card-type{font-size:7px}.action-card .card-ammo{font-size:8px}
+ .selected-preview{bottom:calc(var(--card-h) + 8px);padding:5px 7px;gap:3px}
+ .selected-preview span{font-size:9px;max-width:120px}.selected-preview button{font-size:9px;min-height:27px;padding:4px 6px}
 }
-@media(max-width:500px) and (orientation:portrait){
- .arena{min-height:0}.fighter-vampire{left:27%;width:52%;height:87%}.vampire-portrait{height:75%}
- .fighter-hunter{left:-7%;width:42%;height:47%}.hero-portrait{height:68%}
- .tactical-center{top:8%;right:1%;width:38%;gap:4px}
- .fighter-vampire .nameplate{width:112%;min-width:145px}.fighter-hunter .nameplate{min-width:130px}
- .intent p{font-size:8px}.lane-buttons button{min-height:33px}.path-map>p span{display:none}
- .action-dock{height:224px;min-height:224px}.hand-scroll{height:157px}
- .action-card{width:127px;height:153px}.action-card .card-top{height:93px}.action-card .card-illustration{width:71px;height:71px}.action-card .card-name{font-size:13px}.action-card .detail{font-size:9px}
- .action-card .en{display:block;font-size:7px}.hand-topline{height:26px}.dock-head{height:37px}
+@media(orientation:portrait) and (max-width:760px){
+ :root{--card-w:clamp(89px,25vw,128px);--deck-h:clamp(245px,37dvh,360px)}
+ .topbar{flex:0 0 47px}.chapter strong{font-size:17px}.chapter small{font-size:7px}
+ .top-hero{position:absolute;left:43px;top:28px;font-size:8px}.top-hero b{font-size:8px}
+ .chapter{top:18px}.turn-counter{position:absolute;right:89px;bottom:0;font-size:8px}.turn-counter strong{font-size:13px}
+ .fighter-hunter{left:-1%;width:47%;height:73%;bottom:7%}.fighter-vampire{right:-3%;width:53%;height:77%;bottom:7%}
+ .portrait-wrap img,.portrait-wrap canvas{bottom:12%;height:83%}
+ .enemy-intent{right:6%;top:4%;width:128px}.lane-strip{left:50%;top:20%;transform:translateX(-50%) scale(.92)}
+ .nameplate{width:98%}.fighter-vampire .nameplate{width:95%}
+ .battle-message{max-width:100%;font-size:9px}
+ .deck-zone-left{left:4px;width:62px;bottom:5px}.deck-zone-right{right:4px;width:66px;bottom:5px}
+ .energy-orb{width:54px;height:54px}
+ .draw-stack,.discard-stack{width:55px;height:69px}
+ .end-turn{width:64px;min-height:43px;font-size:9px;clip-path:none}
+ .hand-region{left:45px;right:50px}.hand-label{top:3px}
+ .action-card{bottom:26px}.action-card .card-title{font-size:12px}.action-card .card-description{font-size:9px}
+ .selected-preview{bottom:calc(var(--card-h) + 20px)}
+ .selected-preview #selected-text{display:none}
+ .selected-preview button{min-height:37px;font-size:11px}
 }
-@media(max-height:540px) and (min-width:761px){
- .topbar{height:43px;min-height:43px}.topbar::after{top:42px}.action-dock{height:181px;min-height:181px}.hand-topline{height:22px}.hand-scroll{height:122px}.action-card{height:117px;width:125px}.action-card .card-top{height:68px}.action-card .card-illustration{height:49px;width:49px}.action-card .detail{font-size:8px}.action-card .card-name{font-size:12px}.action-card .en{display:none}.dock-head{height:32px}
- .fighter-vampire{height:98%}.fighter-hunter{height:77%}.portrait-wrap{height:68%}
+@media(max-height:490px) and (orientation:landscape){
+ :root{--deck-h:clamp(139px,40dvh,192px);--card-w:clamp(80px,11.2vh,106px)}
+ .topbar{flex-basis:35px}.arena{min-height:0}
+ .fighter-hunter{height:86%}.fighter-vampire{height:90%}
+ .card-back{width:36px;height:45px}.energy-orb{width:44px;height:44px}.energy-orb strong{font-size:18px}
+ .draw-stack,.discard-stack{height:51px}.deck-zone{gap:0}.end-turn{min-height:32px}
+ .enemy-intent{top:0}.lane-strip{top:0}.hand-label{top:0}.action-card{bottom:11px}
+ .action-card .card-title{margin-top:2px;font-size:10px}.action-card .card-description{font-size:7px}
+ .selected-preview{bottom:calc(var(--card-h) + 1px)}
 }
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
