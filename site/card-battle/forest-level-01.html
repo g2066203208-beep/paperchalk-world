@@ -111,6 +111,28 @@ html,body{background:#d8ded0}
  .enemy-intent{font-size:9px;padding:3px 5px;min-width:52px}
  .enemy-intent small{font-size:9px}
 }
+/* Global clock belongs to the WORLD, not to a scene or to turn logic. */
+#world-clock-wrap{position:fixed;right:14px;top:132px;z-index:8;
+ width:min(300px,43vw);padding:10px 12px 11px;
+ background:#192735d9;border:1px solid #a6b9c37a;border-radius:12px;
+ box-shadow:0 8px 24px #0005;color:#ecf0ee;backdrop-filter:blur(9px);
+ font:12px/1.35 system-ui,sans-serif}
+#world-clock-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+#world-clock-display{font:700 19px/1.1 ui-monospace,SFMono-Regular,monospace;font-variant-numeric:tabular-nums}
+#world-clock-phase{font-size:11px;color:#c1d0db}
+#world-time-slider{width:100%;margin:0;accent-color:#e1ba6f;cursor:pointer;touch-action:pan-x}
+#world-clock-actions{display:flex;justify-content:space-between;gap:6px;margin-top:6px}
+#world-clock-actions button{flex:1;min-height:29px;background:#2b3e4f;color:#e9f1f7;
+ border:1px solid #8194a8;border-radius:7px;cursor:pointer;font:11px system-ui,sans-serif;
+ touch-action:manipulation}
+#world-clock-actions button:active{background:#4b5e71}
+@media(max-width:700px){
+ #world-clock-wrap{top:113px;right:8px;width:46vw;padding:7px 8px}
+ #world-clock-display{font-size:16px}
+ #world-clock-heading{margin-bottom:4px}
+ #world-clock-phase{font-size:9px}
+ #world-clock-actions button{font-size:10px;min-height:27px;padding:0 3px}
+}
 </style>
 </head>
 <body>
@@ -127,6 +149,14 @@ html,body{background:#d8ded0}
 <div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石质空地 → 夜雾石街</button>
  <div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div>
  </div>
+<div id="world-clock-wrap" role="group" aria-label="世界时间与昼夜控制">
+ <div id="world-clock-heading"><strong id="world-clock-display">12:00</strong><span id="world-clock-phase">白昼</span></div>
+ <input type="range" id="world-time-slider" min="0" max="1439" step="1" value="720" aria-label="调整世界时间，0至24时">
+ <div id="world-clock-actions">
+  <button type="button" id="world-time-pause" aria-pressed="false">暂停时间</button>
+  <button type="button" id="world-time-speed" aria-label="切换时间流速">正常 ×1</button>
+ </div>
+</div>
 <div id="hand" role="toolbar" aria-label="地形测试工具"><button type="button" id="demo">攻击目标</button><button type="button" id="use-selected" hidden>使用卡牌</button><button type="button" id="reset">重开关卡</button></div>
 <div hidden><button id="roster-trigger" type="button">人物图鉴</button></div>
 <div id="character-gallery" role="dialog" aria-label="农民组织人物卡图鉴" aria-modal="true" hidden>
@@ -156,14 +186,15 @@ html,body{background:#d8ded0}
 <script src="./engine/scene-transitions.js?v=1"></script>
 <script src="./engine/forest-environment.js?v=11"></script>
 <script src="./engine/physical-board-frame.js?v=5"></script>
-<script src="./engine/visual-look.js?v=4"></script>
+<script src="./engine/visual-look.js?v=5"></script>
+<script src="./engine/world-time.js?v=1"></script>
 <script src="./engine/stylized-materials.js?v=2"></script>
 <script src="./engine/cloud-shadows.js?v=1"></script>
 <script src="./engine/forest-dressing.js?v=3"></script>
 <script src="./engine/stone-street-environment.js?v=1"></script>
 <script src="./engine/staggered-stone-paving.js?v=1"></script>
-<script src="./engine/visual-shaders.js?v=3"></script>
-<script src="./engine/spatial-shadows.js?v=1"></script>
+<script src="./engine/visual-shaders.js?v=4"></script>
+<script src="./engine/spatial-shadows.js?v=2"></script>
 <script src="./engine/profession-decks.js?v=7"></script>
 <script src="./engine/farmer-facilities.js?v=4"></script>
 <script src="./engine/card-hand-motion.js?v=3"></script>
@@ -185,6 +216,36 @@ const gl=canvas.getContext('webgl',{
 if(!gl){document.getElementById('note').style.opacity=1;document.getElementById('note').textContent='浏览器未开启 WebGL';return;}
 const visualLook=window.PaperchalkVisualLook;
 const urlOptions=new URLSearchParams(window.location.search);
+const worldClock=window.PaperchalkWorldTime.create({
+ startMinutes:window.PaperchalkWorldTime.parse(urlOptions.get('time'),720),
+ minutesPerSecond:1
+});
+window.__worldClock=worldClock;
+const worldTimeDisplay=document.getElementById('world-clock-display');
+const worldTimePhase=document.getElementById('world-clock-phase');
+const worldTimeSlider=document.getElementById('world-time-slider');
+const worldTimePause=document.getElementById('world-time-pause');
+const worldTimeSpeed=document.getElementById('world-time-speed');
+function syncWorldTimeUI(){
+ const t=worldClock.snapshot();
+ worldTimeDisplay.textContent=t.timeText;
+ worldTimePhase.textContent=t.label;
+ if(document.activeElement!==worldTimeSlider)worldTimeSlider.value=String(Math.floor(t.minutes));
+ worldTimePause.textContent=t.paused?'继续时间':'暂停时间';
+ worldTimePause.setAttribute('aria-pressed',String(t.paused));
+ worldTimeSpeed.textContent=t.minutesPerSecond>=10?'快进 ×10':'正常 ×1';
+}
+worldTimeSlider.addEventListener('input',()=>{
+ worldClock.setTime(Number(worldTimeSlider.value));
+ worldTimeDisplay.textContent=worldClock.snapshot().timeText;
+ syncWorldTimeUI();
+});
+worldTimeSlider.addEventListener('change',()=>{worldTimeSlider.blur();syncWorldTimeUI()});
+worldTimePause.addEventListener('click',()=>{worldClock.setPaused(!worldClock.paused);syncWorldTimeUI()});
+worldTimeSpeed.addEventListener('click',()=>{
+ worldClock.setRate(worldClock.snapshot().minutesPerSecond>=10?1:10);syncWorldTimeUI();
+});
+syncWorldTimeUI();
 const visualFx=urlOptions.get('visual')!=='off';
 const cloudFx=urlOptions.get('cloud')!=='off';
 const qualityMode=['auto','high','low'].includes(urlOptions.get('quality'))?urlOptions.get('quality'):'auto';
@@ -215,7 +276,10 @@ const U={m:gl.getUniformLocation(pg,'uM'),vp:gl.getUniformLocation(pg,'uVP'),col
  lightVP:gl.getUniformLocation(pg,'uLightVP'),useShadow:gl.getUniformLocation(pg,'uUseShadow'),
  shadowMap:gl.getUniformLocation(pg,'uShadowMap'),shadowTexel:gl.getUniformLocation(pg,'uShadowTexel'),
  streetMode:gl.getUniformLocation(pg,'uStreetMode'),streetTime:gl.getUniformLocation(pg,'uStreetTime'),
- streetFog:gl.getUniformLocation(pg,'uStreetFog'),streetLamps:gl.getUniformLocation(pg,'uStreetLamps[0]')};
+ streetFog:gl.getUniformLocation(pg,'uStreetFog'),streetLamps:gl.getUniformLocation(pg,'uStreetLamps[0]'),
+ nightFactor:gl.getUniformLocation(pg,'uNightFactor'),
+ worldFog:gl.getUniformLocation(pg,'uWorldFog'),
+ worldFogColor:gl.getUniformLocation(pg,'uWorldFogColor')};
 gl.uniform1i(U.tex,0);
 gl.uniform1f(U.useShadow,0);
 const materialAtlas=window.PaperchalkMaterialAtlas.create(gl);
@@ -603,7 +667,7 @@ const sceneSwitchStatus=document.getElementById('scene-switch-status');
 const scenePresets={
  forest:{name:'森林',material:'grass',background:visualLook.get('forest').background},
  clearing:{name:'石质空地',material:'dirt',background:visualLook.get('clearing').background},
- street:{name:'夜雾石街',material:'stone',background:visualLook.get('street').background}
+ street:{name:'石板街道',material:'stone',background:visualLook.get('street').background}
 };
 const initialScene=scenePresets[urlOptions.get('scene')]?urlOptions.get('scene'):'forest';
 function sceneNextId(id){return id==='forest'?'clearing':id==='clearing'?'street':'forest';}
@@ -1177,6 +1241,9 @@ function frame(timeMs){
   }
  }
  const dt=previousFrameTime?Math.min(.05,now-previousFrameTime):1/60;
+ worldClock.tick(previousFrameTime?Math.min(2,Math.max(0,now-previousFrameTime)):0);
+ // Update the UI at 4 Hz; lighting and shadows update continuously.
+ if(!frame.lastClockUI||now-frame.lastClockUI>.24){syncWorldTimeUI();frame.lastClockUI=now;}
  if(previousFrameTime){
   averageFrameMs=averageFrameMs*.93+(now-previousFrameTime)*1000*.07;
   frameSamples++;
@@ -1204,6 +1271,9 @@ function frame(timeMs){
  // can safely return to the original full-board view.
  document.getElementById('camera-controls').classList.toggle('is-zoomed',orbitCamera.snapshot().zoomed);
  resize();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
+ const currentWorldTime=worldClock.snapshot();
+ const currentEnvironment=visualLook.evaluate(forestProps.scene,currentWorldTime);
+ shadowSystem?.setLightDirection(currentEnvironment.sunDirection);
  shadowSystem?.update(now,()=>{
    // Actual geometry casts into a depth map from the fixed sun direction.
    cube(terrain.centerX,terrain.topY-.20,terrain.centerZ,terrain.width,.40,terrain.depth,[1,1,1,1]);
@@ -1220,14 +1290,18 @@ function frame(timeMs){
  },pg);
  gl.viewport(0,0,w,h);
  if(shadowSystem?.enabled)shadowSystem.bind(U);
- visualLook.apply(gl,U,sceneTransition?.scene||forestProps.scene);
- const nightStreet=forestProps.scene==='street';
- gl.uniform1f(U.streetMode,nightStreet?1:0);
+ visualLook.apply(gl,U,forestProps.scene,currentWorldTime);
+ colors.background=currentEnvironment.background.slice();
+ const streetActive=forestProps.scene==='street';
+ gl.uniform1f(U.streetMode,streetActive?1:0);
  gl.uniform1f(U.streetTime,now);
- gl.uniform1f(U.streetFog,nightStreet?.019:0);
+ gl.uniform1f(U.streetFog,currentEnvironment.fogDensity);
+ gl.uniform1f(U.nightFactor,streetActive?currentEnvironment.nightFactor:0);
+ gl.uniform1f(U.worldFog,currentEnvironment.fogDensity);
+ gl.uniform3fv(U.worldFogColor,currentEnvironment.fogColor);
  gl.uniform3fv(U.streetLamps,new Float32Array(streetProps.lamps.flat()));
  materialAtlas.bind(U);
- cloudShadows.bind(U,now,visualFx&&cloudFx&&forestProps.scene==='forest');
+ cloudShadows.bind(U,now,visualFx&&cloudFx&&currentWorldTime.cloudFactor>.12);
  gl.uniform1f(U.visualMix,visualFx?1:0);
  gl.uniform1f(U.groundY,forestProps.ground.top);
  gl.uniform4fv(U.boardBounds,[terrain.minX,terrain.minX+terrain.width,
@@ -1441,6 +1515,8 @@ window.__forestLevelDebug={
  get cloudShadows(){return {...cloudShadows.snapshot,enabled:visualFx&&cloudFx&&forestProps.scene==='forest',time:now};},
  get visualLook(){return visualLook.snapshot(sceneTransition?.scene||'forest');},
  switchScene(){return sceneTransition.toggle(now);},
+ get worldTime(){return worldClock.snapshot();},
+ get worldLighting(){return visualLook.evaluate(forestProps.scene,worldClock.snapshot());},
  get environment(){return {id:forestProps.scene,props:forestProps.propCount+
   (forestProps.scene==='street'?streetProps.propIds.length:0),
   street:forestProps.scene==='street'?streetProps.snapshot:null,
