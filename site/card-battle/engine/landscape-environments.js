@@ -1,4 +1,4 @@
-/* Production landscape mesh system: coast, cliff, ocean vessel and cavern.
+/* Production landscape mesh system: beach, high plateau, open ocean and cavern.
  * Real faceted sculpted geometry, organic boundaries, continuous ocean,
  * true world-space shading, batched indexed WebGL1 meshes. All 16x6 logical
  * tactical positions remain unchanged. NO decorative/prebuilt bridges.
@@ -206,86 +206,92 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    }
   }
  }
- // ───────────── 01 COAST: real sandy world, a separate battle board ──
+ // ───────────── 01 COAST: open natural beach / shared 16x6 board ──
  {
-  // Landmass is BELOW the board's physical slab, never a replacement tile.
-  // North = sea, south = vegetated dunes. Natural wet-dry sand and a curved
-  // foamy breaker line make a continuous coastline outside the 16x6 board.
-  const beachBase=top-2.64,seaLevel=top-3.14;
-  const shore=x=>z0-5.05+Math.sin(x*.105)*1.65+
-    Math.sin(x*.37)*.52+Math.sin(x*.026)*1.1;
-  const sandColors=Array.from({length:8},(_,i)=>
-   mix(C.wet[0],C.sand[0],i/7).map((v,k)=>k===3?1:v));
-  const nx=62,nz=31,sandLeft=x0-46,sandRight=x1+46,back=z1+65;
-  const vertex=(ix,iz)=>{
-   const x=sandLeft+(sandRight-sandLeft)*ix/nx;
-   const coastZ=shore(x)-1.6;
-   const f=iz/nz,z=coastZ+(back-coastZ)*f;
-   const wet=clamp((z-shore(x))*.17);
-   const farFromBoard=Math.max(0,Math.abs(x-cx)-W*.51,
-    z-z1-1.2,z0-z-2);
-   const relief=clamp(farFromBoard/7);
-   const macro=noise(x*.075,z*.12)*.16*relief;
-   const dune=relief*.22*Math.max(0,noise(x*.21,z*.16));
-   const y=seaLevel+.50*wet+macro+dune+
-    noise(x*.43,z*.52)*.016;
-   return [x,y,z];
+  // A true two-dimensional coastline: water, wet beach and dry sand share
+  // the SAME irregular shoreline. No prop, pier, jetty, bridge or boat.
+  // The physical 16x6 battle board is a separate, untouched mesh above it.
+  const seaY=top-3.42;
+  const shore=x=>z0-8.5+1.65*Math.sin(x*.091)+
+   .66*Math.sin(x*.33)+1.16*Math.sin(x*.027);
+  const wetSand=[.74,.715,.636,1],drySand=[.906,.813,.662,1];
+  const sandColors=Array.from({length:9},(_,i)=>mix(wetSand,drySand,i/8));
+  const left=x0-54,right=x1+54,back=z1+82,nx=94,nz=58;
+  const beachHeight=(x,z)=>{
+   const fromShore=z-shore(x),dry=clamp(fromShore/8);
+   const beyond=Math.max(0,Math.abs(x-cx)-W*.58,z-z1-12);
+   const dune=clamp(beyond/22)*Math.max(0,noise(x*.12,z*.085))*.30;
+   const rill=.025*Math.sin(x*.42+z*.58)+.016*Math.cos(x*.93-z*.31);
+   return seaY+.045+dry*.725+dune+rill;
+  };
+  const sandVertex=(i,j)=>{
+   const x=left+(right-left)*i/nx,edge=shore(x)-.23;
+   const z=edge+(back-edge)*j/nz;
+   return [x,beachHeight(x,z),z];
   };
   for(let i=0;i<nx;i++)for(let j=0;j<nz;j++){
-   const a=vertex(i,j),b=vertex(i+1,j),
-    c=vertex(i+1,j+1),d=vertex(i,j+1);
-   const grad=Math.min(7,Math.max(0,Math.floor(j/6.0)+
-    (j>11?2:0)));
-   quad('coast',sandColors[grad],11,a,b,c,d);
+   const a=sandVertex(i,j),b=sandVertex(i+1,j),
+    c=sandVertex(i+1,j+1),d=sandVertex(i,j+1);
+   const distance=((a[2]+d[2])*.5-shore(a[0]));
+   const band=Math.min(8,Math.floor(clamp(distance/12)*9));
+   quad('coast',sandColors[band],11,a,b,c,d);
   }
-  // Shallow water smoothly meets the irregular shore. Unlike the previous
-  // version there is no beige rectangle extending across the sea.
-  sea('coast',z0-4.70,z0-188,W*4.2,74,42,seaLevel-.035);
-  // Breakers are real 3D narrow ribbons. Three staggered wavelets avoid a
-  // single perfect white line; they stay seaward of the visible wet sand.
-  for(let w=0;w<3;w++){
-   curvedRibbon('coast',u=>{
-    const x=sandLeft+(sandRight-sandLeft)*u;
-    return [x,seaLevel+.045+w*.008,
-     shore(x)-.18-w*.69+.17*Math.sin(x*.64+w*1.72)];
-   },.06,.94,108,w===0?.25:.10,C.foam[w%2],10);
+  // Water runs up UNDER the shore by 0.35 units. These actual 3D ribbons
+  // meet the sand, rather than leaving a blue/beige rectangular seam.
+  const wx=96,wz=55,far=z0-210,span=right-left;
+  const waterAt=(i,j)=>{
+   const x=left+span*i/wx;
+   const z=shore(x)-.38+(far-(shore(x)-.38))*j/wz;
+   const fade=clamp((shore(x)-z)/5);
+   const y=seaY-.025+.033*Math.sin(x*.23+z*.14)*fade+
+    .016*Math.cos(x*.62-z*.21)*fade;
+   return [x,y,z];
+  };
+  for(let i=0;i<wx;i++)for(let j=0;j<wz;j++)
+   quad('coast',C.water[0],9,waterAt(i,j),waterAt(i+1,j),
+    waterAt(i+1,j+1),waterAt(i,j+1));
+  // Thin overlapping surf patterns, not a giant border around the board.
+  for(let w=0;w<4;w++)curvedRibbon('coast',u=>{
+   const x=left+u*span;
+   return [x,seaY+.061-w*.004,
+    shore(x)-.29-w*.64+.23*Math.sin(x*.45+w*1.72)];
+  },.018,.982,142,w===0?.22:.09,C.foam[w%2],10);
+  // Subtle irregular dunes belong to the DISTANT dry beach. Keep the whole
+  // 16x6 board perimeter clear and never create paired rock piles.
+  for(let i=0;i<28;i++){
+   const x=left+7+rand(i*19+3)*(right-left-14);
+   const z=z1+15+rand(i*7+13)*58;
+   mound('coast',i+60,x,z,1.9+rand(i*4)*4.1,
+    1.7+rand(i*5)*3.1,.13+rand(i*7)*.27,C.sand,
+    beachHeight(x,z)-.06);
   }
-  // Wind-swept sand ridges and sea-worn stones sit alongside the beach, not
-  // on or above the physical battle board.
-  for(let i=0;i<34;i++){
-   const side=i%2?-1:1;
-   const x=cx+side*(W*.55+3.0+rand(i*19)*13);
-   const z=z0+rand(i*11+5)*(D+40);
-   mound('coast',i+58,x,z,2.1+rand(i*4)*4.7,
-    2.0+rand(i*5)*3.4,.20+rand(i*7)*.45,C.sand,beachBase-.03);
+  for(let i=0;i<43;i++){
+   const x=left+5+rand(i*11+4)*(right-left-10);
+   const z=shore(x)+1.6+rand(i*21+3)*13;
+   if(Math.abs(x-cx)<W*.57&&z>z0-2)continue;
+   ringRock('coast',140+i,x,beachHeight(x,z)-.24,z,
+    .26+rand(i*3)*.47,.18+rand(i*4)*.52,.26+rand(i*5)*.45);
   }
-  // Rock clusters taper naturally into the waves on the left and right
-  // headlands; they don't form two symmetrical piles around the board.
-  for(let i=0;i<33;i++){
-   const side=i<21?-1:1;
-   const x=cx+side*(W*.54+1.5+rand(i*37)*14);
-   const z=shore(x)+1.0+rand(i*9+17)*11;
-   ringRock('coast',i+160,x,seaLevel-.45,z,
-    1.0+rand(i*3)*2.6,.8+rand(i*5)*2.0,
-    1.0+rand(i*7)*2.3);
+  for(let i=0;i<86;i++){
+   const x=left+4+rand(i*13)*(right-left-8);
+   const z=z1+11+rand(i*17+6)*65;
+   if(Math.abs(x-cx)<W*.57&&z<z1+20)continue;
+   grass('coast',i+240,x,z,.25+rand(i+7)*.64,
+    i%6?C.moss[0]:C.moss[1],beachHeight(x,z));
   }
-  for(let i=0;i<145;i++){
-   const side=i%2?-1:1;
-   const x=cx+side*(W*.56+rand(i*14)*16);
-   const z=z0+2.1+rand(i*17+4)*(D+36);
-   grass('coast',i+18,x,z,.38+rand(i*3)*1.0,
-    i%5?C.moss[0]:C.moss[1],beachBase+.04);
+  // Remote irregular headland. The sea-facing centre stays open, with no
+  // symmetrical cliffs, piers, ships or invented structure.
+  for(let i=0;i<9;i++){
+   const x=left+4+rand(i*17)*16;
+   const z=shore(x)-1.3+rand(i*5)*9;
+   ringRock('coast',300+i,x,seaY-1.3,z,
+    1.4+rand(i+3)*2.7,1.4+rand(i*7)*2.5,
+    1.7+rand(i*9)*2.9);
   }
-  // Three offshore crags establish scale and haze while keeping the
-  // horizon OPEN rather than a wall of repeated stone blocks.
-  for(let i=0;i<4;i++){
-   const x=cx+(i-1.5)*W*1.1,z=z0-62-i*17;
-   ringRock('coast',i+300,x,seaLevel-3.6,z,
-    4+rand(i*2)*3.7,3.5+rand(i*3)*5.5,5.0+rand(i)*3.1);
-  }
-  stats.coast={sandBattlefield:true,boardIndependent:false,
+  stats.coast={sandBattlefield:false,boardIndependent:true,
    sandOutsideBoard:true,shorelineModules:nx*nz,seaModules:1,
-   coastline:'continuous-curved-wet-sand-surf',bridgeCount:0};
+   coastline:'continuous-beach-wet-sand-and-open-surf',
+   shipHulls:0,bridgeCount:0,viewCorridorClear:true};
  }
 
  function mountainPeak(scene,id,x,y,z,rx,h,rz){
@@ -309,181 +315,201 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    tri(scene,col,3,crest[i],crest[j],peak);
   }
  }
- // ───────────── 02 CLIFF: multi-strata highland / abyss ────────────
+ // ───────────── 02 CLIFF: natural elevated rock plateau above clouds ──
  {
-  shoulder('cliff',['north','south','west','east'],C.rock,2.2);
-  edgeCliff('cliff','north',56,17);
-  edgeCliff('cliff','south',56,20);
-  edgeCliff('cliff','west',28,18);
-  edgeCliff('cliff','east',28,16);
-  // Distinct rocky ledges, with irregular silhouette and surface vegetation.
-  for(let i=0;i<31;i++){
-   const side=i%4;
-   const x=side<2?cx+(side?1:-1)*(W*.51+1.7+rand(i+8)*5.2):
-    cx+(rand(i*19)-.5)*W*1.5;
-   const z=side>=2?cz+(side===2?-1:1)*(D*.54+2.6+rand(i+6)*4.2):
-    cz+(rand(i*11+3)-.5)*D*1.5;
-   ringRock('cliff',i+190,x,top-1.2,z,1.65+rand(i*4)*3.2,
-    1.8+rand(i*5)*2.9,1.8+rand(i*9)*2.5);
+  // A connected irregular ring mesh turns the existing board underside into
+  // a real mountain summit. It DOES NOT change the tactical tile elevations.
+  // All outer wall surfaces are connected through corners: never four
+  // freestanding rectangular vertical walls or a floating table.
+  const segments=160;
+  const profiles=[
+   [0,top-2.63],[1.0,top-2.64],[2.8,top-2.88],
+   [4.9,top-3.90],[6.6,top-7.3],[7.3,top-13.4],
+   [8.4,top-21.0],[9.4,top-30.3],[10.8,top-42.7],
+   [12.3,top-52.0]
+  ];
+  const crest=(angle,offset,layer)=>{
+   const dx=Math.cos(angle),dz=Math.sin(angle);
+   const boxRadius=Math.min((W*.5+.10)/Math.max(.0001,Math.abs(dx)),
+    (D*.5+.10)/Math.max(.0001,Math.abs(dz)));
+   const waviness=layer===0?0:
+    (.48*Math.sin(angle*11.0+layer*.7)+
+     .25*Math.sin(angle*23.0-layer*.63))*
+    Math.min(1,layer*.25);
+   const radius=boxRadius+offset+waviness;
+   return [cx+dx*radius,cz+dz*radius];
+  };
+  const bands=profiles.map(([offset,y],layer)=>Array.from({length:segments+1},(_,i)=>{
+   const a=TAU*i/segments,[x,z]=crest(a,offset,layer);
+   const variance=layer<2?0:
+    (.27*Math.sin(a*17+layer*.64)+
+     .17*Math.cos(a*43-layer*.58));
+   return [x,y+variance,z];
+  }));
+  for(let layer=0;layer<profiles.length-1;layer++){
+   for(let i=0;i<segments;i++){
+    const stone=C.rock[(layer+Math.floor(i/14))%C.rock.length];
+    quad('cliff',stone,3,bands[layer][i],bands[layer][i+1],
+     bands[layer+1][i+1],bands[layer+1][i]);
+   }
   }
-  for(let i=0;i<68;i++){
-   const edge=i%4,rx=rand(i*6+4),rz=rand(i*7+5);
-   const x=edge<2?cx+(edge===0?-1:1)*(W*.5+1.8+rx*3):
-    x0+rx*W;
-   const z=edge>=2?cz+(edge===2?-1:1)*(D*.5+1.6+rz*3):
-    z0+rz*D;
-   grass('cliff',i+310,x,z,.50+rand(i+6)*.64,
-    i%5?C.moss[1]:C.moss[0]);
+  // Scattered smaller outcrops and grass sit on the broad rock shelf,
+  // outside the 16x6 playing surface and its gold perimeter.
+  for(let i=0;i<23;i++){
+   const a=TAU*(i+.31*rand(i+8))/23;
+   const [x,z]=crest(a,3.2+rand(i*5)*.6,2);
+   ringRock('cliff',420+i,x,top-3.11,z,
+    .48+rand(i+5)*1.03,.62+rand(i*7)*1.18,
+    .47+rand(i*3)*.89);
   }
-  // True staggered mountains; broad faceted ridges make a visible horizon.
-  for(let row=0;row<3;row++)for(let i=0;i<12;i++){
-   const x=cx+(i-5.5)*12+(row%2)*4.2;
-   const z=z0-25-row*19.2+rand(i*13+row)*6;
-   const h=9+row*4+rand(i*7+row)*8;
-   mountainPeak('cliff',400+row*12+i,x,top-20,z,
-    8.0+rand(i*3)*3.6,h,9.5+rand(i*2)*4.4);
+  for(let i=0;i<64;i++){
+   const a=TAU*(i+.27*rand(i*9))/64;
+   const [x,z]=crest(a,2.35+rand(i*6)*1.5,1);
+   grass('cliff',520+i,x,z,.17+rand(i+6)*.42,
+    i%4?C.moss[0]:C.moss[1],top-2.66);
   }
-  stats.cliff={elevatedBattlefield:true,dropHeight:[16,20],
-   edgeModules:168,rockForm:'stratified-irregular-mesh'};
+  // A true cloud SEA sits approx. 20 world units BELOW the mountain summit.
+  // Even its highest billows remain far below cards and the camera horizon.
+  // Broad low-frequency mesh + small rounded banks create aerial depth.
+  const cloudColors=[[.80,.87,.91,1],[.88,.91,.93,1],
+   [.72,.81,.88,1],[.94,.94,.92,1]];
+  const cloudY=top-21.5,gn=60,gm=48,worldW=340,worldD=290;
+  const cloudPoint=(i,j)=>{
+   const x=cx-worldW*.5+worldW*i/gn;
+   const z=cz-worldD*.5+worldD*j/gm;
+   return [x,cloudY+
+    1.5*Math.sin(x*.045+z*.022)+.81*Math.cos(z*.083-x*.017)+
+    .38*Math.sin(x*.13-z*.092),z];
+  };
+  for(let i=0;i<gn;i++)for(let j=0;j<gm;j++){
+   const c=cloudColors[(Math.floor(i/10)+Math.floor(j/9))%4];
+   quad('cliff',c,0,cloudPoint(i,j),cloudPoint(i+1,j),
+    cloudPoint(i+1,j+1),cloudPoint(i,j+1));
+  }
+  // Wide soft domes: concentric faceted cloud banks, never stone cones.
+  for(let i=0;i<46;i++){
+   const x=cx+(rand(i*23+1)-.5)*300;
+   const z=cz+(rand(i*31+7)-.5)*248;
+   if(Math.abs(x-cx)<W*.9&&Math.abs(z-cz)<D*1.15)continue;
+   const rx=5+rand(i*7)*11,rz=4+rand(i*11)*10;
+   const height=1.6+rand(i*13)*2.4,steps=16;
+   const rings=[1,.67,.36,0].map((f,band)=>Array.from({length:steps+1},(_,j)=>{
+    const a=TAU*j/steps;
+    return [x+rx*f*Math.cos(a),cloudY-.4+height*(1-f*f),
+     z+rz*f*Math.sin(a)];
+   }));
+   for(let b=0;b<3;b++)for(let j=0;j<steps;j++){
+    quad('cliff',cloudColors[(i+b)%4],0,
+     rings[b][j],rings[b][j+1],rings[b+1][j+1],rings[b+1][j]);
+   }
+  }
+  // Separate distant rocky peaks peek through the low cloud deck.
+  for(let i=0;i<18;i++){
+   const x=cx+(i-8.5)*19,z=z0-65-rand(i*7+8)*40;
+   mountainPeak('cliff',620+i,x,top-39,z,
+    7+rand(i*5)*7,15+rand(i*11)*6,8+rand(i*3)*6);
+  }
+  stats.cliff={elevatedBattlefield:true,realSummit:true,
+   summitTop:top-2.63,dropHeight:[42.7,52],cloudSeaBelowBoard:true,
+   cloudSurfaceY:cloudY,cloudClearance:top-cloudY,
+   rockForm:'connected-eroded-radial-plateau',
+   noRectangularCliffWalls:true,shipHulls:0};
  }
- // ───────────── 03 OCEAN: complete curved vessel in vast sea ───────
+ 
+ // ───────────── 03 OCEAN: pure open water, NEVER a ship ─────────
  {
-  sea('ocean',cz-130,cz+130,W*6,72,48,top-3.90);
-  // Hull is long along X (16 cards), narrower across Z (6 cards).
-  // Curved upper and lower cross sections form a proper ship silhouette.
-  const count=34,rings=[],hullBottom=top-6.10;
-  for(let i=0;i<=count;i++){
-   const q=i/count,xx=x0-8+q*(W+16);
-   const taper=clamp(Math.sin(pi*q)**.46,.07,1);
-   const beamHalf=(D*.5+2.3)*taper;
-   rings.push({
-    x:xx,
-    upperZ:beamHalf,
-    lowerZ:beamHalf*.62,
-    railY:top+.86+.46*Math.sin(pi*q),
-    hullY:hullBottom+(1-taper)*2.6
-   });
+  // The exact same physically modeled 16x6 board floats over the water.
+  // No hull, mast, deck boards, railings, cabin, anchors or ship props.
+  sea('ocean',cz-185,cz+185,W*9,100,65,top-2.89);
+  const swellColors=[C.foam[0],C.foam[1]];
+  // Foamy distant wind-driven wave crests remain OUTSIDE the board's
+  // rectangular footprint, so cards, players and facilities stay readable.
+  for(let side of [-1,1])for(let k=0;k<20;k++){
+   const baseZ=side<0?z0-9-k*5.9:z1+9+k*5.9;
+   const from=-.20+rand(k*17+side)*.16;
+   const to=1.17-rand(k*7+side)*.16;
+   const xStart=cx-W*1.8;
+   curvedRibbon('ocean',u=>{
+    const x=xStart+u*W*3.6;
+    return [x,top-2.80+Math.sin(k*7+u*17)*.012,
+     baseZ+1.8*Math.sin(x*.11+k*.8)+.45*Math.cos(x*.29-k*.9)];
+   },from,to,48,k%3===0?.11:.057,swellColors[k%2],10);
   }
-  for(let i=0;i<count;i++){
-   const a=rings[i],b=rings[i+1];
-   for(const side of [-1,1]){
-    const topA=[a.x,a.railY,cz+side*a.upperZ],
-     topB=[b.x,b.railY,cz+side*b.upperZ],
-     lowA=[a.x,a.hullY,cz+side*a.lowerZ],
-     lowB=[b.x,b.hullY,cz+side*b.lowerZ];
-    quad('ocean',C.wood[i%3],4,topA,topB,lowB,lowA);
-    // A distinct raised gunwale and continuous wooden cap rail.
-    const qA=[topA[0],topA[1]+.34,topA[2]],
-     qB=[topB[0],topB[1]+.34,topB[2]];
-    quad('ocean',C.wood[(i+1)%3],4,topA,topB,qB,qA);
-   }
+  // Far offshore, small natural islets break the horizon, never a vessel.
+  for(let i=0;i<5;i++){
+   const x=cx+(i-2)*W*1.68;
+   const z=cz-91-rand(i+4)*47;
+   ringRock('ocean',840+i,x,top-7.2,z,
+    2.7+rand(i*7)*3.6,2.6+rand(i*11)*4.0,
+    2.8+rand(i*13)*4.8);
   }
-  // Deck slats are physical geometry ON TOP of this scene's wooden board.
-  // They do not change any cell coordinates, card placements or grid bounds.
-  for(let j=0;j<44;j++){
-   const z=z0+(j+.5)*D/44,wood=C.wood[j%3];
-   const y=top+.021+(j%5)*.001;
-   plane('ocean',wood,4,x0+.055,x1-.055,z-D/93,z+D/93,y);
-  }
-  // Plank joints are interrupted between separate board lengths.
-  for(let i=0;i<15;i++)for(let j=0;j<10;j++){
-   const x=x0+(i+1)*W/16+(j%2)*.035,z=z0+(j+.5)*D/10;
-   plane('ocean',C.wood[2],4,x-.021,x+.021,z-.77,z+.77,top+.026);
-  }
-  // Fitted bulwark posts, rail, deck cleats and captain's stern cabin are
-  // all OUTSIDE the battle cells. No prebuilt bridge, no occupancy changes.
-  for(let sgn of [-1,1]){
-   for(let i=0;i<18;i++){
-    const x=x0+(i+.5)*W/18,z=cz+sgn*(D*.5+1.53);
-    beam('ocean',C.wood[1],4,[x,top+.26,z],[x,top+2.00,z],.14);
-   }
-   for(let j=0;j<4;j++){
-    const za=cz+sgn*(D*.5+1.53),h=top+1.92-j*.39;
-    beam('ocean',C.wood[j===0?1:2],4,[x0-2,h,za],[x1+2,h,za],.10);
-   }
-  }
-  for(let side of [-1,1]){
-   const x=cx+side*(W*.36+1.3),z=cz+side*(D*.5+3.0);
-   beam('ocean',C.wood[2],4,[x,top+.3,z],[x,top+14.8,z],.32);
-   beam('ocean',C.wood[1],4,[x-5.7,top+11.0,z],[x+5.7,top+11,z],.18);
-   // Triangular spars and furled fabric read at strategy-camera distances.
-   tri('ocean',[.79,.75,.65,1],4,
-    [x-4.9,top+10.6,z],[x+5.1,top+10.6,z],
-    [x,top+5.3,z-.40]);
-   beam('ocean',C.metal[0],4,[x,top+14.3,z],
-    [x-9.2,top+.3,z-side*2.2],.045);
-   beam('ocean',C.metal[0],4,[x,top+14.3,z],
-    [x+9.3,top+.3,z+side*2.0],.045);
-  }
-  // A raised bow/spur and captain stern do not intrude on tactical cells.
-  ringRock('ocean',811,x1+7,top-2.3,cz,3.0,4.2,3.6,C.wood);
-  ringRock('ocean',812,x0-7,top-2.8,cz,3.0,3.5,3.5,C.wood);
-  stats.ocean={deckBattlefield:true,seaModules:1,shipHulls:1,
-   hull:'curved-multi-section-vessel',deckPlanks:44,bridgeCount:0};
+  stats.ocean={openOcean:true,boardIndependent:true,seaModules:1,
+   shipHulls:0,masts:0,railings:0,deckPlanks:0,bridgeCount:0,
+   water:'continuous-swell-and-distant-wind-foam'};
  }
- // ───────────── 04 CAVE: sculpted vault and mineral lighting ───────
+ 
+ // ───────────── 04 CAVE: clear foreground, distant cavern walls ──
  {
-  shoulder('cave',['north','south','west','east'],C.cave,2.6);
-  // Three enclosing strata: the main gameplay area remains walkable.
-  // Curved rock bands replace the old straight cubic side walls.
+  // The entire central 16x6 board remains clearly visible. We intentionally
+  // render NO hanging stalactites or overhead roof geometry: not one tip
+  // is allowed to project between camera and the cards.
+  shoulder('cave',['north','south','west','east'],C.cave,2.5);
+  // Distant irregular side walls, well BEYOND the playable perimeter.
+  // Their bases are at or below the underside of the board.
   for(const side of [-1,1]){
-   for(let i=0;i<28;i++){
-    const z=z0+(i+.5)*D/28;
-    const x=cx+side*(W*.5+2.5+1.1*Math.sin(i*.67));
-    ringRock('cave',901+i+(side+1)*15,x,top-.9,z,
-     3.1+rand(i+8)*1.6,5.2+rand(i+3)*4.5,2.7+rand(i+9),
-     C.cave);
-    if(i%3===0)cone('cave',21+i,x,top+6,z,.6,2.0+rand(i)*1.6,C.cave,true);
+   for(let i=0;i<25;i++){
+    const z=z0-13+(i+.5)*(D+38)/25;
+    const x=cx+side*(W*.5+8.5+
+     2.0*Math.sin(i*.42)+rand(i*5+side)*2.6);
+    ringRock('cave',905+i+(side+1)*32,x,top-2.84,z,
+     2.2+rand(i+8)*2.3,4.4+rand(i+3)*4.3,
+     2.6+rand(i+9)*1.8,C.cave);
    }
   }
-  // Ancient passage in the background: two irregular curved arch legs,
-  // tapered vault above, and long tapering tunnel into dark interior.
-  for(let i=0;i<30;i++){
-   const x=x0+(i+.5)*W/30,center=Math.abs(x-cx)/W;
-   const opening=center<.13;
-   const z=z0-4.8+(rand(i*5)-.5)*1.15;
-   if(opening){
-    if(i%3===0)ringRock('cave',1020+i,x,top+4.9,z,1.9,3.8,2.2,C.cave);
-   }else{
-    ringRock('cave',1060+i,x,top-.84,z,2.6,6.7+rand(i)*3.2,
-     3.2+rand(i+9)*1.4,C.cave);
-   }
+  // A broken cavern rear wall and its dark passage create a readable
+  // silhouette without a ceiling arch directly above the field of view.
+  for(let i=0;i<32;i++){
+   const x=x0-9+(i+.5)*(W+18)/32;
+   const z=z0-16+(rand(i*5)-.5)*3.5;
+   if(Math.abs(x-cx)<W*.17)continue;
+   ringRock('cave',1030+i,x,top-3.25,z,
+    1.9+rand(i+4)*1.2,5.5+rand(i+3)*4.0,
+    2.3+rand(i+9)*1.4,C.cave);
   }
-  // Overhead stalactites/stone columns, varying silhouette and thickness.
-  for(let i=0;i<39;i++){
-   const side=i%3;
-   const x=side===0?cx+(rand(i*7)-.5)*W*.65:
-    cx+(side===1?-1:1)*(W*.51+2.5+rand(i*3)*3);
-   const z=z0-5+rand(i*17)*D*1.35;
-   const height=1.3+rand(i+9)*4.1;
-   cone('cave',i+1110,x,top+7.6,z,.45+rand(i)*.54,height,C.cave,true);
-  }
-  for(let i=0;i<40;i++){
+  // Only low upward-growing formations by the external side walls.
+  // Unlike the rejected version, every ceiling-hanging cone is REMOVED.
+  for(let i=0;i<18;i++){
    const side=i%2?-1:1;
-   const x=cx+side*(W*.49+2.1+rand(i*11)*3),
-    z=z0+rand(i*9)*D;
-   cone('cave',i+1170,x,top-.25,z,.35+rand(i)*.6,
-    .9+rand(i*13)*2.7,C.cave);
+   const x=cx+side*(W*.5+5.9+rand(i*11)*3.7);
+   const z=z0-8+rand(i*9)*(D+23);
+   cone('cave',i+1170,x,top-2.76,z,.34+rand(i)*.47,
+    .8+rand(i*13)*1.8,C.cave);
   }
-  // Glow crystals, real distinct geometry, and four local light positions.
+  // Crystal lighting remains away from the board edges; a few little pools
+  // of mineral light give scale without dangling geometry in the foreground.
   for(let i=0;i<4;i++){
-   const x=cx+(i%2?-1:1)*(W*.5+1.7),z=cz+(i<2?-D*.39:D*.39);
-   for(let k=0;k<5;k++){
-    const h=1.7+(k%3)*.66+rand(i*7+k)*.45;
-    cone('cave',1260+i*5+k,x+(k-2)*.33,top-.34,
-     z+(k%2)*.28,.24+k*.033,h,C.crystal,false,7);
+   const x=cx+(i%2?-1:1)*(W*.5+5.5);
+   const z=cz+(i<2?-D*.66:D*.66);
+   for(let k=0;k<4;k++){
+    const h=.9+(k%3)*.35+rand(i*7+k)*.20;
+    cone('cave',1260+i*5+k,x+(k-2)*.30,top-2.70,
+     z+(k%2)*.29,.19+k*.025,h,C.crystal,false,7);
    }
-   lamps.cave.push([x,top+1.8,z]);
+   lamps.cave.push([x,top+.4,z]);
   }
-  // Patchy moss, wall rubble and wet rock at the cavern threshold.
-  for(let i=0;i<73;i++){
-   const x=x0+(rand(i*9)*W),z=z0-2.0-rand(i*5)*5.2;
-   ringRock('cave',1320+i,x,top-.75,z,.32+rand(i)*.54,
-    .27+rand(i+4)*.7,.32+rand(i+3)*.47,C.cave);
+  for(let i=0;i<36;i++){
+   const x=x0-4+rand(i*9)*(W+8);
+   const z=z0-7-rand(i*5)*7.2;
+   ringRock('cave',1320+i,x,top-2.85,z,
+    .32+rand(i)*.48,.25+rand(i+4)*.48,
+    .32+rand(i+3)*.44,C.cave);
   }
-  stats.cave={stoneBattlefield:true,walls:86,crystalLamps:4,
-   roofShadowOnly:true,arch:'open-faceted-cavern',rockForm:'irregular-mesh'};
+  stats.cave={stoneBattlefield:true,walls:76,crystalLamps:4,
+   hangingStalactites:0,ceilingOccluders:0,viewCorridorClear:true,
+   roofShadowOnly:true,arch:'distant-rear-cavern-passage',
+   rockForm:'irregular-external-wall-mesh'};
  }
+ 
  const compiled={};let active=null,drawCalls=0;
  for(const scene of scenes){
   // Keeping every material batch below 65535 VBO vertices is required on
@@ -527,5 +553,5 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   }}
  });
 }
-root.PaperchalkLandscapeEnvironments=Object.freeze({version:'3.1.0',create});
+root.PaperchalkLandscapeEnvironments=Object.freeze({version:'4.0.0',create});
 })(window);
