@@ -165,7 +165,7 @@ html,body{background:#d8ded0}
  <div id="gallery-cards" class="gallery-cards"></div></div>
 </div>
 <div id="level-end"><section><h2 id="level-result-title"></h2><div id="level-result-detail"></div><button id="level-retry" type="button">再试一次</button><button id="level-next" type="button" hidden>第二关 · 农夫加入</button></section></div>
-<script src="./engine/voxel-terrain.js?v=6"></script>
+<script src="./engine/voxel-terrain.js?v=7"></script>
 <script src="./engine/battle-camera.js?v=5"></script>
 <script src="./engine/level-engine.js?v=4"></script>
 <script src="./engine/combat-choreography.js?v=1"></script>
@@ -448,7 +448,8 @@ function terrainEntryMatrix(c,r){
 }
 const terrainRenderer=window.PaperchalkVoxelTerrain.createWebGLRenderer(fx.visualGrid,{
  gl,makeGeom,renderGeom,I,tileTransform:terrainEntryMatrix,
- showSeams:()=>!sceneTransition?.busy&&!['coast','cliff','ocean','cave'].includes(forestProps?.scene)
+ showSeams:()=>!sceneTransition?.busy&&!['coast','cliff','ocean','cave'].includes(forestProps?.scene),
+ showWalls:()=>!['coast','cliff','ocean','cave'].includes(forestProps?.scene)
 });
 const forestProps=window.PaperchalkForestEnvironment.create({
  terrain,makeGeom,renderGeom,mul,T,S,cube,
