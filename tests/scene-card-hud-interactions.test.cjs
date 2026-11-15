@@ -21,6 +21,12 @@ const I=()=>[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
 const roster=[{id:'woodcutter',profession:'warrior',name:'伐木少女',
  deckCount:4,slot:0}];
 const hand=[],drawn=[],drops=[],dragMoves=[];
+const pile=[
+ {id:'guard',name:'架斧',type:'guard',profession:'warrior',block:3},
+ {id:'heavy-strike',name:'重劈',type:'attack',profession:'warrior',power:5},
+ {id:'cleave',name:'横扫',type:'attack',profession:'warrior',power:2},
+ {id:'strike',name:'斧劈',type:'attack',profession:'warrior',power:3}
+];
 let selected=null,screenBegins=0,screenEnds=0,staged=[];
 const o={
  canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1280,height:720})},
@@ -34,14 +40,13 @@ const o={
  makeTexture:()=>({}),
  snapshot:()=>({count:hand.length,hand:hand.slice(),roster,
   classes:[{id:'warrior',deckCount:roster[0].deckCount}]}),
- remainingCards:()=>Array(roster[0].deckCount).fill({
- id:'strike',name:'斧劈',type:'attack',profession:'warrior',power:3}),
+ remainingCards:()=>pile.map(c=>({...c})),
  staged:()=>staged,
  selected:()=>selected,
  draw:ownerId=>{
   if(roster[0].deckCount===0)return{ok:false,reason:'empty'};
-  const c={id:'strike',name:'斧劈',type:'attack',power:3,
-   profession:'warrior',ownerId,instance:'draw-'+(drawn.length+1)};
+  const next=pile.pop();
+  const c={...next,ownerId,instance:'draw-'+(drawn.length+1)};
   roster[0].deckCount--;hand.push(c);drawn.push(c);
   return{ok:true,card:c};
  },
@@ -69,9 +74,12 @@ hud.down(pointer(deck.x,deck.y));
 hud.up(pointer(deck.x,deck.y));
 assert.equal(drawn.length,1,'click top card draws exactly one');
 assert.equal(selected,'draw-1','click-to-play selects just-drawn card');
+assert.equal(drawn[0].name,'斧劈','first draw must equal previously visible top face');
 assert.equal(hud.snapshot.cardMotion.activeFlights.length,1,
  'click must launch an immediately visible real card flight');
 hud.render(1.25,1280,720);
+assert.equal(hud.snapshot.topCards[0].name,'横扫',
+ 'face-up deck top must change immediately to the NEXT actual draw');
 const handPoint=hud.pointFor('hand:draw-1');
 assert.ok(handPoint);
 hud.down(pointer(handPoint.x,handPoint.y));
@@ -98,6 +106,7 @@ assert.equal(hud.snapshot.interaction.source,'deck');
 hud.up(pointer(650,245));
 assert.equal(drops.length,2);
 assert.equal(drops[1].instance,'draw-2');
+assert.equal(drawn[1].name,'横扫');
 assert.ok(dragMoves.length>=2,'world target preview follows the pointer');
 // A character staged ON the top card must react too, without covering the tray.
 staged=[{id:'woodcutter',profession:'warrior'}];
@@ -120,6 +129,8 @@ assert.equal(hud.snapshot.visible.filter(p=>p.kind==='hand').length,2,
  'closing the case must NOT retract either of the two hand cards');
 assert.ok(hud.pointFor('hand:draw-1'),'folded case still allows playing hand cards');
 assert.ok(hud.snapshot.drawCalls>0,'hand must still render when the case is closed');
+assert.equal(hud.snapshot.cardMotion.activeReturns.length,0,
+ 'snap-back motion should finish before a later independent interaction');
 assert.ok(hud.snapshot.handCardScale>.65,'full size cards must replace tiny old fan');
 const foldedHand=hud.pointFor('hand:draw-1');
 hud.down(pointer(foldedHand.x,foldedHand.y));
@@ -127,4 +138,6 @@ hud.move(pointer(foldedHand.x,foldedHand.y-110));
 assert.equal(hud.dragging,true,'folded tray must not disable hand dragging');
 hud.up(pointer(610,190));
 assert.equal(drops.length,3);
+assert.equal(hud.snapshot.cardMotion.activeReturns.length,1,
+ 'invalid placement should animate back instead of teleporting');
 console.log('SCREEN_TRAY_POINTER_PASS face_up_top_click_flight large_persistent_hand layered_drag_hover');
