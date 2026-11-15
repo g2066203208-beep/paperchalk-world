@@ -47,7 +47,7 @@ function create(o){
  const caseMotion=root.PaperchalkCardCaseMotion?.create();
  if(!motion||!caseMotion)
   throw Error('Load card-hand-motion and card-case-motion before scene-card-hud');
- let lastFrame=0,drag=null;
+ let lastFrame=0,drag=null,heroDrag=null;
  const dragThreshold=10;
  let collapsed=true; // Default view is an unobstructed 16x6 board; deck stays in game state.
  function size(w,h){
@@ -377,11 +377,20 @@ function create(o){
    // its owner's physical pile. It uses the same card scale and position;
    // only one paper thickness separates it from the face-up action card.
    for(const p of positions.filter(x=>x.kind==='character')){
+    if(heroDrag?.id===p.unitId)continue;
     const deck=positions.find(q=>q.kind==='deck'&&q.ownerId===p.ownerId);
     if(!deck)continue;
     const pose=topCardPose(deck,g);
-    const m=mul(T(pose.x,pose.y,pose.z+cardD+.007),
-     mul(RX(pose.tilt),S(pose.scale*1.012,pose.scale*1.012,1)));
+    const chosen=o.selectedCharacter?.()===p.unitId;
+    const pulse=motion.selectPose('hero:'+p.unitId,now);
+    const base={x:pose.x,y:pose.y+(chosen?.12:0),
+     z:pose.z+cardD+.007+(chosen?.10:0),
+     scale:pose.scale*(1.012+(chosen?.055:0)),angle:pose.tilt};
+    const back=motion.returnPose('hero:'+p.unitId,base,now);
+    const visual=back||base;
+    const m=mul(T(visual.x,visual.y+(pulse.lift||0),visual.z),
+     mul(RX(visual.angle||0),S(visual.scale*(1+(pulse.punch||0)),
+      visual.scale*(1+(pulse.punch||0)),1)));
     renderCard(m,textureFor({profession:p.profession,name:'人物卡'},p.portrait),g,'case');
    }
   }
@@ -414,6 +423,19 @@ function create(o){
     mul(RZ(pose.angle||0),S(pose.scale,pose.scale,1)));
    renderCard(m,textureFor(p.c,p.c.art||p.c.image||null),g);
   }
+  // Physical deployment also lifts the real hero card out of its own pile.
+  // The slot beneath remains visible; invalid drops animate back to that slot.
+  if(heroDrag){
+   const pos=worldPoint({clientX:heroDrag.x,clientY:heroDrag.y});
+   if(pos){
+    const sc=g.mobile?.84:1.18;
+    const m=mul(T(pos.x,pos.y+.12,2.25),
+     mul(RZ(-.065+Math.max(-.13,Math.min(.13,heroDrag.vx*.004))),
+      S(sc,sc,1)));
+    renderCard(m,textureFor({profession:heroDrag.profession,name:'人物卡'},
+     heroDrag.portrait),g);
+   }
+  }
   if(drag){
    const pos=worldPoint({clientX:drag.x,clientY:drag.y});
    if(pos){
@@ -424,7 +446,8 @@ function create(o){
     renderCard(m,textureFor(drag.card,drag.card.art||drag.card.image||null),g);
    }
   }
-  motion.tick(now,cards.map(p=>p.instance));
+  motion.tick(now,[...cards.map(p=>p.instance),
+   ...positions.filter(p=>p.kind==='character').map(p=>'hero:'+p.unitId)]);
   uniformVP(oldVP);gl.viewport(0,0,width,height);
   o.endScreenPass?.();
  }
@@ -466,7 +489,7 @@ function create(o){
   return null;
  }
  function cancelPress(){
-  press=null;drag=null;hover=null;o.previewCharacter?.(null);
+  press=null;drag=null;heroDrag=null;hover=null;o.previewCharacter?.(null);
  }
  function prepareSelected(instance){
   if(o.selected?.()!==instance){
@@ -491,8 +514,14 @@ function create(o){
   hover=p?.id||null;
   if(press){
    const distance=Math.hypot(e.clientX-press.x,e.clientY-press.y);
-   if(!drag&&distance>dragThreshold&&press.kind==='character'){
-    o.previewCharacter?.(press.id.slice(10),e.clientX,e.clientY);
+   if(press.kind==='character'&&distance>dragThreshold){
+    if(!heroDrag)heroDrag={id:press.id.slice(10),
+     profession:press.item.profession,portrait:press.item.portrait,
+     x:e.clientX,y:e.clientY,vx:0};
+    heroDrag.vx=e.clientX-heroDrag.x;
+    heroDrag.x=e.clientX;heroDrag.y=e.clientY;
+    o.previewCharacter?.(heroDrag.id,e.clientX,e.clientY);
+    return true;
    }
    if(!drag&&distance>dragThreshold&&
       (press.kind==='deck'||press.kind==='hand')){
@@ -538,9 +567,19 @@ function create(o){
    return true;
   }
   if(old.kind==='character'){
-   const id=old.id.slice(10);o.previewCharacter?.(null);
-   if(moved)o.placeCharacter?.(id,e.clientX,e.clientY);
-   else if(p?.id===old.id)o.selectCharacter?.(id);
+   const id=old.id.slice(10),held=heroDrag;heroDrag=null;
+   o.previewCharacter?.(null);
+   if(moved){
+    const ok=o.placeCharacter?.(id,e.clientX,e.clientY)===true;
+    if(!ok){
+     const pos=worldPoint(e);
+     if(pos)motion.returnCard('hero:'+id,
+      {x:pos.x,y:pos.y+.12,scale:dims().mobile?.84:1.18},now);
+    }
+   }else if(p?.id===old.id){
+    o.selectCharacter?.(id);
+    motion.selectCard('hero:'+id,now);
+   }
    return true;
   }
   if(!moved&&p?.id===old.id){
@@ -574,7 +613,7 @@ function create(o){
  return Object.freeze({
   render:draw,hit,move,down,up,cancelPress,pointFor,animateScene,resetAnimations,setCollapsed,
   get collapsed(){return collapsed;},
-  get dragging(){return !!drag;},
+  get dragging(){return !!drag||!!heroDrag;},
   get drawer(){return caseMotion.transform(now,dims().h);},
   get drawn(){return drawCalls;},
   get snapshot(){
@@ -607,7 +646,9 @@ function create(o){
     receivesWorldShadows:true,sceneLighting:true,
     hoverTopCard:!!hover&&(['deck','character'].includes(scene.find(p=>p.id===hover)?.kind)),
     liftedDecks:[...deckLift].filter(([id,lift])=>lift>.02).map(([id,lift])=>({id,lift})),
-    interaction:drag?{mode:'drag',instance:drag.instance,source:drag.source,
+    interaction:heroDrag?{mode:'drag-hero',id:heroDrag.id,
+     x:heroDrag.x,y:heroDrag.y}:
+     drag?{mode:'drag',instance:drag.instance,source:drag.source,
      x:drag.x,y:drag.y}:press?{mode:'press',kind:press.kind,id:press.id}:null,
     compartments:7,physicalBoxes:1,hasLid:false,hasHinge:false,
     reversibleLid:false,flipAnimationEnabled:false,screenEdgeAnchored:true,
@@ -623,5 +664,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'12.3.0-layered-juice',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'13.0.0-physical-hero-drag',create});
 })(window);
