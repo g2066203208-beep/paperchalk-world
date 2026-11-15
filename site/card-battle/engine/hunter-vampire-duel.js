@@ -54,7 +54,7 @@ function create(){
   s.hand=draw(5);updateIntent();report('start','夜路遭遇 · 猎人对上了血族小公主');
   return snapshot();
  }
- function snapshot(){return JSON.parse(JSON.stringify({...s,history}));}
+ function snapshot(){return JSON.parse(JSON.stringify({...s,deckCount:Math.max(0,queue.length-cursor),discardCount:used.length,history}));}
  function fail(reason){return {ok:false,reason,events:[],state:snapshot()};}
  function done(events){return {ok:true,events,state:snapshot()};}
  function checkEnd(events){
