@@ -119,7 +119,7 @@ void main(){
  if(uCaveMode>.5&&uUnlit<.5){
   // A real ceiling occludes exterior ambient. Cave crystals provide
   // separate local light via the shared four-light array below.
-  illumination=illumination*.10+vec3(.074,.093,.113);
+  illumination=illumination*.30+vec3(.15,.18,.205);
  }
  if((uStreetMode>.5||uIndoorMode>.5||uCaveMode>.5) && uUnlit<.5){
   // Shared lighting shader; local lamps illuminate real 3D receivers.
@@ -180,15 +180,15 @@ void main(){
   float w1=sin(vP.x*.52+vP.z*.19+t*.49);
   float w2=cos(vP.x*.21-vP.z*.68-t*.72);
   float w3=sin(vP.x*1.64+vP.z*1.12+t*1.07);
-  vec3 wn=normalize(normal+vec3(.12*w1+.045*w3,0.,.13*w2+.045*w3));
+  vec3 wn=normalize(normal+vec3(.058*w1+.022*w3,0.,.067*w2+.022*w3));
   vec3 viewDir=normalize(uCameraEye-vP);
   float reflectivity=pow(1.-clamp(dot(wn,viewDir),0.,1.),3.);
-  float glint=pow(max(0.,dot(reflect(-light,wn),viewDir)),32.);
-  vec3 deep=base.rgb*(.78+.12*w1+.075*w2);
-  vec3 sky=uSkyFill*uAmbient*(.46+.49*reflectivity);
-  vec3 reflection=uSunColor*glint*(.55+.35*uWorldFog);
-  float spark=pow(max(0.,w3*w2),8.)*.065;
-  finalColor=clamp(mix(deep,deep*.62+sky,reflectivity*.53)+
+  float glint=pow(max(0.,dot(reflect(-light,wn),viewDir)),64.);
+  vec3 deep=base.rgb*(.91+.045*w1+.035*w2);
+  vec3 sky=uSkyFill*uAmbient*(.28+.31*reflectivity);
+  vec3 reflection=uSunColor*glint*.14;
+  float spark=pow(max(0.,w3*w2),12.)*.025;
+  finalColor=clamp(mix(deep,deep*.75+sky,reflectivity*.31)+
    reflection+vec3(spark),0.,1.);
  }
  // Material 10: foamy irregular moving breaker lines tied to the water,
@@ -234,5 +234,5 @@ void main(){
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.8.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'1.9.0',fragment});
 })(window);
