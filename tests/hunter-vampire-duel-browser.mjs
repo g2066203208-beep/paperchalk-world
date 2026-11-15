@@ -41,7 +41,7 @@ for(const test of cases){
   assert(metric.cutouts.hunter&&metric.cutouts.vampire,'both Anima art cutouts must be present');
   assert(metric.hero.x<metric.enemy.x,'hunter must be left of vampire');
   assert(metric.cards.length===5,'fan hand five');
-  assert(metric.cards.every(c=>c.right>=0&&c.x<=test.viewport.width),'cards accessible on screen');
+  assert(metric.cards.every(c=>c.x>=-1&&c.right<=test.viewport.width+1&&c.bottom<=test.viewport.height-3),'every card edge must fit the screen');
   assert(metric.end.right<=test.viewport.width+2,'end turn must not spill outside viewport');
   assert(metric.draw.x>=-3,'draw pile accessible');
   assert(metric.intent.x>=0&&metric.intent.right<=test.viewport.width+3,'enemy intent visible');
