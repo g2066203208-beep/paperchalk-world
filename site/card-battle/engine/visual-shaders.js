@@ -15,6 +15,8 @@ uniform vec2 uShadowTexel,uResolution;
 uniform vec3 uSoil,uSunDirection,uSkyFill,uSunColor,uCameraEye;
 uniform float uStreetMode,uStreetTime,uStreetFog;
 uniform float uNightFactor,uWorldFog;
+uniform float uIndoorMode,uHallDaylight;
+uniform vec3 uHallWindows[4];
 uniform vec3 uWorldFogColor;
 uniform vec3 uStreetLamps[4];
 uniform vec3 uCardContacts[8];
@@ -93,6 +95,25 @@ void main(){
  vec3 bounce=mix(vec3(.17,.26,.13),vec3(.26,.28,.20),clamp(normal.y*.5+.5,0.,1.));
  illumination+=bounce*(.30+max(0.,1.-diffuse)*.18)*uVisualMix;
  illumination*=1.-cloudShade;
+ if(uIndoorMode>.5 && uUnlit<.5){
+  // Opaque shadow-only roof cuts outdoor sun/sky off.
+  // Interior wall-window projectors provide the DAYLIGHT, as narrow beams.
+  illumination=illumination*.22+vec3(.115,.108,.105);
+  if(uMaterialKind<5.5){
+   for(int wi=0;wi<4;wi++){
+    vec3 from=vP-uHallWindows[wi];
+    float forward=max(0.,from.z);
+    float windowReach=smoothstep(0.0,3.0,forward)*
+      (1.-smoothstep(18.,31.,forward));
+    float width=1.0+forward*.30;
+    float band=1.-smoothstep(width*.55,width,abs(from.x));
+    float vertical=1.-smoothstep(5.0,13.0,abs(from.y));
+    float receiver=max(.18,max(0.,normal.y));
+    illumination+=vec3(1.12,.91,.64)*uHallDaylight*
+       windowReach*band*vertical*receiver*.96;
+   }
+  }
+ }
  if(uStreetMode>.5 && uUnlit<.5){
   // Shared lighting shader; local lamps illuminate real 3D receivers.
   // The existing directional moonlight uses the shadow map.
@@ -144,6 +165,10 @@ void main(){
   finalColor=mix(finalColor,base.rgb*.82,uNightFactor*.41);
  }
  // Material 7 is self-illuminating street glass. Dark by day, warm at night.
+ if(uIndoorMode>.5 && uMaterialKind>7.5&&uMaterialKind<8.5){
+  // Stained glass is bright from OUTSIDE by day, dark at midnight.
+  finalColor=mix(base.rgb*.20,base.rgb*1.03,uHallDaylight);
+ }
  if(uMaterialKind>6.5&&uMaterialKind<7.5){
   finalColor=mix(base.rgb*vec3(.28,.37,.52),base.rgb*1.12,uNightFactor);
  }
@@ -175,5 +200,5 @@ void main(){
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.4.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'1.5.0',fragment});
 })(window);
