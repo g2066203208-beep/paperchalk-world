@@ -71,7 +71,8 @@ for(const attackId of ['strike','heavy-strike','cleave','diagonal-slash']){
  assert.ok(hit.ok,'every woodcutter attack can chop: '+attackId);
  assert.equal(hit.damage,Math.min(attack.power,before.hp));
  assert.equal(deck.snapshot().hand.some(c=>c.instance===attack.instance),false);
- if(hit.destroyed)assert.equal(hit.amount,3);
+ if(hit.destroyed)assert.ok(hit.amount>0&&hit.amount<=3,
+  'felled tree grants materials up to the shared essence cap');
  else assert.equal(hit.amount,0,'no material until the tree falls');
 }
 assert.ok(facilities.snapshot.essence.material>=3,
