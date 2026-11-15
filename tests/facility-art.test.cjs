@@ -21,7 +21,7 @@ for(const id of art.ids){
  assert.ok(image.size[0]>=704&&image.size[1]>=1024,
   'accepted source resolution must preserve painterly original detail');
  if(['plant-tree','water-well','scarecrow'].includes(id))
-  assert.deepEqual(image.size,[704,1024],
+  assert.equal(image.size.join('x'),'704x1024',
    'use the actual uploaded Anima portrait canvas instead of distorting to square');
  assert.ok(!seen.has(image.src));seen.add(image.src);
 }
