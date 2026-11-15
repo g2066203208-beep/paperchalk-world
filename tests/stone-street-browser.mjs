@@ -54,18 +54,13 @@ try{
  assert.equal(state.street.alleyModules,5);
  assert.equal(state.street.lamps,4);
  assert.equal(state.street.placementCellsOccupied,0);
- assert.equal(state.paving.source,'physical-3d-bevelled-stones');
- assert.equal(state.paving.pattern,'running-bond');
- assert.equal(state.paving.activeCourses,6);
- assert.equal(state.paving.paverWidthCardUnits,1);
- assert.equal(state.paving.paverDepthCardUnits,1);
- assert.equal(state.paving.offsetRatio,.5);
- assert.ok(state.paving.independentModules>=95,'one 3D staggered stone per tactical card footprint');
- assert.ok(state.paving.clippedFragments>=state.paving.independentModules);
- assert.ok(state.paving.drawCalls<=6,'paving batches by six material shades');
+ // Stone-road decoration may never overwrite the permanent battle board.
  assert.equal(state.paving.logicalTiles,96);
  assert.equal(state.paving.gameplayGridUnchanged,true);
- assert.equal(state.paving.heightAware,true);
+ assert.equal(state.paving.independentModules,0,
+  'a common grass board must not be converted into stone paving at runtime');
+ assert.equal(state.paving.drawCalls,0,
+  'scene-specific paving is an environment concern, never a board layer');
  assert.ok(state.street.rendered<=28,'settled houses must be batched for performance');
  assert.equal(state.unitSlots,18);
  assert.equal(state.facilitySlots,78);
