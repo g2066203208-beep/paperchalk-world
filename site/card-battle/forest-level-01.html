@@ -48,6 +48,10 @@ html,body{background:#d8ded0}
 #scene-switch-wrap{position:fixed;right:14px;top:56px;z-index:5;text-align:right;max-width:46vw}
 #scene-switch{cursor:pointer;touch-action:manipulation;background:#f4f0e6ed;color:#384a3b;border:1px solid #9caa93;border-radius:11px;padding:10px 13px;font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 6px 20px #1c261a22;min-height:38px}
 #scene-switch:hover:not(:disabled){background:#fffaf1}
+#scene-overview{cursor:pointer;touch-action:manipulation;background:#293d40df;
+ color:#e6e8df;border:1px solid #9bada7;border-radius:8px;
+ padding:6px 11px;font:600 11px/1.4 system-ui,sans-serif;margin-top:5px}
+#scene-overview[aria-pressed="true"]{background:#d8bb84;color:#263630}
 #scene-switch:disabled{cursor:default;opacity:.72}
 #scene-switch-status{font:11px/1.4 system-ui,sans-serif;color:#445946;min-height:16px;margin-top:5px;text-shadow:0 1px 2px #e5ebdc}
 @media(max-width:700px){#scene-switch-wrap{right:9px;top:51px;max-width:45vw}#scene-switch{font-size:11px;padding:8px 9px;min-height:34px}#scene-switch-status{font-size:10px}}
@@ -148,6 +152,7 @@ html,body{background:#d8ded0}
 <div id="camera-controls" role="group" aria-label="战场镜头"><button id="zoom-in" title="放大战场" aria-label="放大">+</button><button id="zoom-out" title="缩小战场" aria-label="缩小">−</button><button id="camera-reset" title="重置视角（0）" aria-label="重置视角">重置视角</button></div>
 <div id="scene-switch-wrap"><button type="button" id="scene-switch" aria-label="切换场景，播放全部三维模型退场和入场动画">切换场景 · 森林 → 石地 → 石街 → 大厅 → 海岸 → 悬崖 → 海上 → 山洞</button>
  <div id="scene-switch-status" role="status" aria-live="polite">点击观看完整切换动画</div>
+ <button type="button" id="scene-overview" aria-pressed="false" aria-label="切换到完整3D环境全景视角">查看环境全景</button>
  </div>
 <div id="world-clock-wrap" role="group" aria-label="世界时间与昼夜控制">
  <div id="world-clock-heading"><strong id="world-clock-display">12:00</strong><span id="world-clock-phase">白昼</span></div>
@@ -380,6 +385,13 @@ const orbitCamera=window.PaperchalkBattleCamera.create({
  edgeSpeed:12
 });
 window.__battleCamera=orbitCamera;
+let landscapeOverview=false;
+const overviewButton=document.getElementById('scene-overview');
+overviewButton.addEventListener('click',()=>{
+ landscapeOverview=!landscapeOverview;
+ overviewButton.textContent=landscapeOverview?'返回战斗视角':'查看环境全景';
+ overviewButton.setAttribute('aria-pressed',String(landscapeOverview));
+});
 document.getElementById('zoom-in').addEventListener('click',()=>orbitCamera.zoom(.78));
 document.getElementById('zoom-out').addEventListener('click',()=>orbitCamera.zoom(1.28));
 document.getElementById('camera-reset').addEventListener('click',()=>orbitCamera.reset());
@@ -631,11 +643,17 @@ function resize(){
   coast:[1.17,-3.20,66],cliff:[1.20,-2.40,62],
   ocean:[1.16,-.80,68],cave:[1.12,-1.70,71]
  };
- if(sceneFraming[stage]){
-  // Scene-specific fixed 3D composition: lower angle exposes REAL cliffs,
-  // water and cavern depth. Camera input, card placement and board coords
-  // remain the same, and the full default forest/street angle is untouched.
-  const [scale,shift,elevation]=sceneFraming[stage];
+ const fullSceneOverview={
+  forest:[1.65,-3.5,60],clearing:[1.65,-2.8,60],
+  street:[1.60,-3.1,61],hall:[1.64,-5.1,58],
+  coast:[2.15,-16.5,53],cliff:[2.08,-11.4,51],
+  ocean:[1.95,-.30,55],cave:[1.82,-6.4,59]
+ };
+ const chosen=landscapeOverview?fullSceneOverview[stage]:sceneFraming[stage];
+ if(chosen){
+  // Overview only changes the VIEW matrix. Cards, terrain coords, physical
+  // selection and active combat rules are untouched.
+  const [scale,shift,elevation]=chosen;
   camera.target=[state.target[0],state.target[1],state.target[2]+shift];
   const a=elevation*Math.PI/180,d=state.distance*scale;
   camera.eye=[
@@ -1612,6 +1630,7 @@ window.__forestLevelDebug={
  switchScene(){return sceneTransition.toggle(now);},
  get worldTime(){return worldClock.snapshot();},
  get worldLighting(){return visualLook.evaluate(forestProps.scene,worldClock.snapshot());},
+ get overview(){return landscapeOverview;},
  get environment(){return {id:forestProps.scene,props:forestProps.propCount+
   (forestProps.scene==='street'?streetProps.propIds.length:0)+
   (forestProps.scene==='hall'?royalHall.ids.length:0)+
