@@ -163,7 +163,7 @@ html,body{background:#d8ded0}
 <script src="./engine/spatial-shadows.js?v=1"></script>
 <script src="./engine/profession-decks.js?v=7"></script>
 <script src="./engine/farmer-facilities.js?v=3"></script>
-<script src="./engine/scene-card-hud.js?v=20"></script>
+<script src="./engine/scene-card-hud.js?v=21"></script>
 <script src="./ui/forest-hand.js?v=10"></script>
 <script src="./engine/character-registry.js?v=1"></script>
 <script src="./data/characters.generated.js?v=2"></script>
@@ -331,7 +331,9 @@ const plate=rrFace(cardW,cardH,.105,0); // screen-space grid slot outlines as 3D
 const RRstrip=(()=>{const outer=rrPoints(slotW,slotH,.14),inner=rrPoints(slotW-.048,slotH-.048,.114),v=[],ind=[];for(let i=0;i<outer.length;i++){let p=outer[i],q=inner[i];v.push(p[0],p[1],0,0,0,1,p[0]/slotW+.5,p[1]/slotH+.5,q[0],q[1],0,0,0,1,q[0]/slotW+.5,q[1]/slotH+.5);}for(let i=0;i<outer.length;i++){let j=(i+1)%outer.length,a=i*2,b=j*2;ind.push(a,b,a+1,b,b+1,a+1);}return makeGeom(v,ind);})();
 const slotFill=rrFace(slotW-.05,slotH-.05,.10,0);
 let shadowSystem=null;
-function renderGeom(geo,m,color,tex=null,unlit=false,terrainSoil=null,metal=0,material=0){if(shadowSystem?.capturing){shadowSystem.draw(geo,m);return;}gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,unlit?1:0);gl.uniform1f(U.has,tex?1:0);gl.uniform1f(U.terrain,terrainSoil?1:0);gl.uniform1f(U.metal,metal);gl.uniform1f(U.materialKind,material);if(terrainSoil)gl.uniform3fv(U.soil,terrainSoil.slice(0,3));if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}drawCalls++;gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
+// A physical card case is SCREEN UI, never part of the shaded/occluded biome.
+let screenUiPass=false;
+function renderGeom(geo,m,color,tex=null,unlit=false,terrainSoil=null,metal=0,material=0){if(shadowSystem?.capturing){shadowSystem.draw(geo,m);return;}gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.i);const stride=8*4;gl.enableVertexAttribArray(attr.p);gl.enableVertexAttribArray(attr.n);gl.enableVertexAttribArray(attr.uv);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,stride,0);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,stride,12);gl.vertexAttribPointer(attr.uv,2,gl.FLOAT,false,stride,24);gl.uniformMatrix4fv(U.m,false,m);gl.uniform4fv(U.color,color);gl.uniform1f(U.unlit,(screenUiPass||unlit)?1:0);gl.uniform1f(U.has,tex?1:0);gl.uniform1f(U.terrain,terrainSoil?1:0);gl.uniform1f(U.metal,metal);gl.uniform1f(U.materialKind,screenUiPass?0:material);if(terrainSoil)gl.uniform3fv(U.soil,terrainSoil.slice(0,3));if(tex){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);}drawCalls++;gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_SHORT,0);}
 const cardStatBadges=window.PaperchalkCardStatBadges.create({
  gl,makeFace:rrFace,renderGeom,mul,T,S,cardW,cardH,cardD
 });
@@ -520,6 +522,14 @@ const sceneHUD=window.PaperchalkSceneCardHUD.create({
  canvas,gl,drawCard,renderGeom,makeGeom,box,cardW,cardH,cardD,T,S,RX,RY,RZ,mul,ortho,perspective,objectFX,
  pileEdge:cardEdge,pileRim:colors.rim,makeTexture:makePhysicalCardTexture,
  getVP:()=>vp,uniformVP:m=>gl.uniformMatrix4fv(U.vp,false,m),
+ beginScreenPass:()=>{
+  screenUiPass=true;
+  // Disable ALL world lighting effects for UI meshes, not just cloud shading.
+  gl.uniform1f(U.useShadow,0);
+  gl.uniform1f(U.cloudStrength,0);
+  gl.uniform1f(U.visualMix,0);
+ },
+ endScreenPass:()=>{screenUiPass=false;},
  snapshot:()=>window.__forestHand?.snapshot||{count:0,hand:[],classes:[]},
  remainingCards:profession=>window.__forestHand?.remainingCards(profession)||[],
  selected:()=>window.__forestHand?.selected||null,
@@ -529,6 +539,11 @@ const sceneHUD=window.PaperchalkSceneCardHUD.create({
   return result;
  },
  select:instance=>selectHandCard(instance),
+ ensureSelected:instance=>{
+  if(window.__forestHand?.selected!==instance)selectHandCard(instance);
+ },
+ dragMove:(instance,x,y)=>track({clientX:x,clientY:y}),
+ dropCard:(instance,x,y)=>playSelectedAt(instance,x,y),
  // A scene button cannot bypass the enemy phase or advance only the deck.
  nextTurn:()=>requestEndTurn(),
  staged:()=>level.snapshot().units.filter(u=>u.side==='ally'&&!u.deployed).map(u=>({
@@ -812,6 +827,28 @@ function selectHandCard(instance){
   message('点击「使用 · '+selected.name+'」执行；伐木还可以点击己方树木');
  sync();return true;
 }
+// Shared target resolution for both mouse/touch drag and click-to-place.
+function playSelectedAt(instance,clientX,clientY){
+ if(sceneTransition.busy||level.phase!=='active'||combatController.busy)return false;
+ const held=window.__forestHand?.snapshot.hand.find(c=>c.instance===instance);
+ if(!held)return false;
+ if(window.__forestHand.selected!==instance)selectHandCard(instance);
+ if(held.type==='facility'){
+  const slot=slotAtPointer(clientX,clientY);
+  if(!active||!valid(active,slot))return false;
+  const before=window.__forestHand.snapshot.count;
+  drop(slot);return window.__forestHand.snapshot.count<before;
+ }
+ const target=closestCard(clientX,clientY);
+ if(held.type==='attack')return target?.side==='enemy'?tapUnit(target):false;
+ if(held.type==='resource'&&target?.kind==='facility'&&
+    cardEffects.catalog)return tapFacility(target);
+ // Guard and basic resource skills are self-targeted: release over allied board.
+ const slot=slotAtPointer(clientX,clientY);
+ if(['guard','resource'].includes(held.type)&&slot?.side==='ally')
+  return useSelectedUtility();
+ return false;
+}
 function occupiedFacilitySlots(def,s){
  const [cols,rows]=def.footprint||[1,1],slots=[];
  for(let dy=0;dy<rows;dy++)for(let dx=0;dx<cols;dx++){
@@ -953,15 +990,18 @@ function track(e){
 }
 canvas.addEventListener('pointerdown',e=>{
  if(sceneTransition.busy){e.preventDefault();return;}
- const orbitTouch=e.pointerType==='touch'&&!active&&!closestCard(e.clientX,e.clientY);
- // Camera gestures take priority over card picking only for explicit drag
- // buttons or a two-finger touch. Single-finger taps still play cards.
+ // The fixed screen-space card tray owns its pointer before the world camera.
+ // This is essential on touch: one-finger card drags must not orbit the board.
+ if(e.button===0&&sceneHUD.down(e)){
+  pointerDown=null;handDown=null;canvas.style.cursor='grab';return;
+ }
+ const orbitTouch=e.pointerType==='touch'&&!active&&!closestCard(e.clientX,e.clientY)&&
+  !sceneHUD.dragging;
  if(orbitCamera.pointerDown(e,orbitTouch)){
   e.preventDefault();sceneHUD.cancelPress?.();pointerDown=null;handDown=null;
   if(dragCard){dragCard.dragged=false;dragCard=null;}
   canvas.style.cursor='grabbing';return;
  }
- if(sceneHUD.down(e)){pointerDown=null;handDown=null;canvas.style.cursor='pointer';return;}
  if(e.button!==0)return;
  track(e);
  if(active){pointerDown={placement:true,x:e.clientX,y:e.clientY};return;}
@@ -969,7 +1009,8 @@ canvas.addEventListener('pointerdown',e=>{
  if(c){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';}
 });
 window.addEventListener('pointermove',e=>{
- orbitCamera.pointerHover(e,!sceneTransition.busy&&e.target===canvas&&!sceneHUD.hit(e)?
+ orbitCamera.pointerHover(e,!sceneTransition.busy&&e.target===canvas&&!sceneHUD.hit(e)&&
+  !sceneHUD.dragging?
   canvas.getBoundingClientRect():null);
  if(sceneTransition.busy)return;
  // Do not let a board-card hit test steal an ongoing camera drag.
@@ -978,7 +1019,7 @@ window.addEventListener('pointermove',e=>{
   pointerDown=null;handDown=null;overSlot=null;
   canvas.style.cursor='grabbing';return;
  }
- if(sceneHUD.move(e)){canvas.style.cursor='pointer';return;}
+ if(sceneHUD.move(e)){canvas.style.cursor=sceneHUD.dragging?'grabbing':'pointer';return;}
  if(selectedStagedId&&level.phase==='deployment')previewCharacterAt(selectedStagedId,e.clientX,e.clientY);
  if(handDown&&Math.hypot(e.clientX-handDown.x,e.clientY-handDown.y)>7)handDown.moved=true;
  if(pointerDown?.card&&!dragCard&&Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y)>7){
@@ -1007,9 +1048,13 @@ window.addEventListener('pointerup',e=>{
  }
  pointerDown=null;canvas.style.cursor=active?'crosshair':'default';
 });
-window.addEventListener('pointercancel',e=>{orbitCamera.pointerUp(e);if(dragCard){dragCard.dragged=false;dragCard=null;}pointerDown=null;handDown=null;});
+window.addEventListener('pointercancel',e=>{
+ orbitCamera.pointerUp(e);sceneHUD.cancelPress();
+ if(dragCard){dragCard.dragged=false;dragCard=null;}
+ pointerDown=null;handDown=null;
+});
 canvas.addEventListener('pointerleave',()=>orbitCamera.pointerHover(null,null));
-window.addEventListener('blur',()=>orbitCamera.cancel());
+window.addEventListener('blur',()=>{orbitCamera.cancel();sceneHUD.cancelPress();});
 canvas.addEventListener('wheel',e=>{
  if(sceneHUD.hit(e))return;
  e.preventDefault();
@@ -1020,7 +1065,10 @@ canvas.addEventListener('dblclick',e=>{if(active)return;let c=closestCard(e.clie
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();cards.forEach((c,i)=>{c.attackStart=now+(i%7)*.07;});}
- if(e.code==='Escape'){clearPick();selectedStagedId=null;previewDeployment=null;}
+ if(e.code==='Escape'){
+  sceneHUD.cancelPress();clearPick();window.__forestHand?.clearSelection?.();
+  selectedStagedId=null;previewDeployment=null;
+ }
   if(e.code==='Enter'){e.preventDefault();requestEndTurn();}
   if(e.code==='KeyG'){document.getElementById('roster-trigger').click();}
  if(e.code==='KeyR'&&!e.repeat)reset();
@@ -1104,7 +1152,8 @@ function frame(timeMs){
   
   sceneTransition.update(now);
  combatController.update(now);
- orbitCamera.edgePan(dt,!sceneTransition.busy&&!active&&!dragCard&&!pointerDown&&!handDown&&!selectedStagedId);
+ orbitCamera.edgePan(dt,!sceneTransition.busy&&!active&&!dragCard&&!pointerDown&&!handDown&&
+  !selectedStagedId&&!sceneHUD.dragging);
  orbitCamera.update(dt);fx.update(dt);previousFrameTime=now;
  // A tiny reset control appears only after zoom, so phones without a 0 key
  // can safely return to the original full-board view.
