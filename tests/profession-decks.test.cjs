@@ -49,9 +49,9 @@ assert.equal(second.snapshot().classes.filter(c=>c.unlocked).length,2);
 assert.equal(second.remainingCards('woodcutter').length,10);
 assert.equal(second.remainingCards('farmer').length,10);
 assert.deepEqual([...new Set(second.remainingCards('farmer').map(c=>c.id))].sort(),
- ['farm-field','plant-tree','scarecrow','water-well','windmill'].sort());
+ ['farm-field','plant-tree','scarecrow','water-well','irrigated-field'].sort());
 assert.ok(second.remainingCards('farmer').every(c=>c.type==='facility'));
-assert.equal(first.remainingCards('woodcutter').filter(c=>c.id==='lumber').length,2);
+assert.equal(second.remainingCards('woodcutter').filter(c=>c.id==='diagonal-slash').length,2);
 assert.equal(second.remainingCards('ranger').length,0,'huntress stays empty until acquired');
 assert.equal(second.draw('farmer').ok,true,'farmer owns functional engineer deck');
 assert.equal(second.snapshot().hand[0].profession,'engineer');
@@ -73,7 +73,7 @@ assert.equal(twins.snapshot().roster.length,2,'multiple same-class characters ow
 twins.draw('warrior-a');
 assert.equal(twins.remainingCards('warrior-a').length,7);
 assert.equal(twins.remainingCards('warrior-b').length,8);
-assert.ok(twins.remainingCards('warrior-b').every(c=>c.id!=='lumber'),'伐木 cannot appear in other warriors');
+assert.ok(twins.remainingCards('warrior-b').every(c=>c.id!=='diagonal-slash'),'斜劈 is a woodcutter-only attack, not a dedicated lumber resource card');
 assert.throws(()=>Engine.create({ownedCharacters:Array.from({length:8},(_,i)=>({
  id:'warrior-'+i,profession:'warrior'
 }))}),/seven/i);
