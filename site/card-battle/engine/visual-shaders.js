@@ -13,6 +13,8 @@ uniform float uAmbient,uSunIntensity,uTerrainDetail,uMetal,uMaterialKind;
 uniform float uVisualMix,uGroundY,uCloudTime,uCloudStrength;
 uniform vec2 uShadowTexel,uResolution;
 uniform vec3 uSoil,uSunDirection,uSkyFill,uSunColor,uCameraEye;
+uniform float uStreetMode,uStreetTime,uStreetFog;
+uniform vec3 uStreetLamps[4];
 uniform vec3 uCardContacts[8];
 float unpackDepth(vec4 rgba){return dot(rgba,vec4(1.,1./255.,1./65025.,1./16581375.));}
 float shadowVisibility(vec3 normal,vec3 light){
@@ -49,6 +51,14 @@ void main(){
   float broad=sin(vP.x*.42+sin(vP.z*.35))*cos(vP.z*.38-vP.x*.11);
   float fine=sin(vP.x*1.67+vP.z*.70)*sin(vP.z*1.92-vP.x*.32);
   base.rgb*=1.0+uTerrainDetail*(broad*.80+fine*.20)*grassWeight;
+  if(uStreetMode>.5){
+   // Staggered masonry cobbles in WORLD coordinates.
+   float row=floor(vP.z/1.03),x=vP.x+mod(row,2.)*.53;
+   vec2 seam=abs(fract(vec2(x/.98,vP.z/1.03))-.5)*2.;
+   float mortar=smoothstep(.91,.98,max(seam.x,seam.y));
+   float stoneNoise=sin(row*7.73+floor(x/.98)*12.59)*.025;
+   base.rgb*=1.-mortar*.24+stoneNoise;
+  }
  }
  // Shared 2x2 material atlas; seam-safe world-space sampling.
  if(uVisualMix>.5 && uMaterialKind>.5 && uMaterialKind<4.5){
@@ -83,6 +93,16 @@ void main(){
  vec3 bounce=mix(vec3(.17,.26,.13),vec3(.26,.28,.20),clamp(normal.y*.5+.5,0.,1.));
  illumination+=bounce*(.30+max(0.,1.-diffuse)*.18)*uVisualMix;
  illumination*=1.-cloudShade;
+ if(uStreetMode>.5 && uUnlit<.5){
+  // Shared lighting shader; local lamps illuminate real 3D receivers.
+  // The existing directional moonlight uses the shadow map.
+  for(int li=0;li<4;li++){
+   vec3 delta=uStreetLamps[li]-vP;
+   float sq=dot(delta,delta),range=1./(1.+sq*.035+sq*sq*.00013);
+   float facing=max(.12,dot(normal,normalize(delta)));
+   illumination+=vec3(1.00,.64,.34)*range*facing*.98;
+  }
+ }
  if(uVisualMix>.5&&uMaterialKind>.5&&uMaterialKind<4.5){
   float ao=1.;
   if(vP.y<uGroundY+.14){
@@ -133,8 +153,19 @@ void main(){
   vec3 x=max(vec3(0.),finalColor*1.04);
   vec3 film=(x*(2.51*x+.03))/(x*(2.43*x+.59)+.14);
   finalColor=mix(finalColor,film,.34);
-  float fog=clamp((distance(uCameraEye,vP)-66.)/125.,0.,.07);
-  finalColor=mix(finalColor,vec3(.38,.47,.31),fog);
+  if(uStreetMode>.5){
+   // Animated world-space ground haze. Card artwork remains readable.
+   float dist=max(0.,distance(uCameraEye,vP)-22.);
+   float wave=sin(vP.x*.16+vP.z*.09+uStreetTime*.16)*.16;
+   float groundHaze=1.-smoothstep(uGroundY+.1,uGroundY+7.,vP.y);
+   float density=uStreetFog*(.65+.35*groundHaze)*(1.+wave);
+   float fog=clamp(1.-exp(-dist*density),0.,.66);
+   if(uMaterialKind>4.5||uUnlit>.5)fog*=.14;
+   finalColor=mix(finalColor,vec3(.12,.18,.25),fog);
+  }else{
+   float fog=clamp((distance(uCameraEye,vP)-66.)/125.,0.,.07);
+   finalColor=mix(finalColor,vec3(.38,.47,.31),fog);
+  }
   vec2 q=gl_FragCoord.xy/max(uResolution,vec2(1.))-.5;
   finalColor*=1.-dot(q*vec2(1.,.82),q*vec2(1.,.82))*.17;
  }
