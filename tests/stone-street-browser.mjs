@@ -92,7 +92,7 @@ try{
  assert.equal((await desktop.evaluate(()=>window.__forestLevelDebug.worldTime)).timeText,'23:00');
  await capture(desktop,'05-night-street-same-world');
  // Verify the original three-scene switch and terrain changes without rebuilding combat.
- for(const [next,material] of [['forest','grass'],['clearing','dirt'],['street','stone'],['hall','marble']]){
+ for(const [next,material] of [['hall','marble'],['forest','grass'],['clearing','dirt'],['street','stone']]){
   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
   await desktop.waitForFunction(([id,kind])=>{
    const d=window.__forestLevelDebug;
@@ -135,15 +135,6 @@ try{
    await desktop.evaluate(()=>window.__worldClock.setTime('23:00'));
   }
  }
- assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
- await desktop.waitForFunction(()=>window.__forestLevelDebug?.environment.id==='forest'&&!window.__forestLevelDebug.sceneSwitch.busy,
-  null,{timeout:30000});
- assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
- await desktop.waitForFunction(()=>window.__forestLevelDebug?.environment.id==='clearing'&&!window.__forestLevelDebug.sceneSwitch.busy,
-  null,{timeout:30000});
- assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
- await desktop.waitForFunction(()=>window.__forestLevelDebug?.environment.id==='street'&&!window.__forestLevelDebug.sceneSwitch.busy,
-  null,{timeout:30000});
  await capture(desktop,'02-real-street-after-scene-cycle');
  await desktop.close();
  const mobile=await open(390,844);
