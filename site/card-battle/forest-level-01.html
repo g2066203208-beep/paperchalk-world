@@ -609,6 +609,10 @@ const initialScene=scenePresets[urlOptions.get('scene')]?urlOptions.get('scene')
 function sceneNextId(id){return id==='forest'?'clearing':id==='clearing'?'street':'forest';}
 function syncSceneSwitchLabel(){
  const current=sceneTransition?.scene||'forest',next=sceneNextId(current);
+ const sceneLabel=current==='forest'?'林间小路':scenePresets[current].name;
+ document.getElementById('battle-title').textContent=sceneLabel+' · 第一关';
+ const hintTitle=document.querySelector('#terrain-hint strong');
+ if(hintTitle)hintTitle.textContent=sceneLabel+' · 第一关 · 16×6';
  sceneSwitchButton.textContent='切换场景 · '+scenePresets[current].name+' → '+scenePresets[next].name;
  sceneSwitchButton.disabled=sceneTransition?.busy||false;
  sceneSwitchButton.setAttribute('aria-busy',String(sceneTransition?.busy||false));
