@@ -1,14 +1,15 @@
 /* Stone street modular running-bond pavement.
  * Real 3D mortar-jointed, bevelled cobbles; never a shader-drawn checker.
- * 12 physical courses across the existing 6 logical gameplay rows.
- * Each alternate course is offset by exactly half a stone.
+ * One physical stone course per gameplay CARD ROW (6 courses).
+ * Every alternate card row offsets one-half of a card width.
  * Adjacent cells clip the SAME world-space stone pattern: no tile-sized
  * checker seams; editing voxel heights rebakes only this paving mesh.
  */
 (function(root){'use strict';
 function create({terrain,gl,makeGeom,renderGeom,I}){
  if(!terrain||!gl||!makeGeom||!renderGeom||!I)throw Error('Missing stone paving renderer deps');
- const width=terrain.tileW,course=terrain.tileD/2;
+ // Both masonry modules and visible card-space measurements share these values.
+ const width=terrain.tileW,course=terrain.tileD;
  const halfOffset=width*.5,gap=.067,bevel=.092,rise=.075,edgeRise=.013;
  const colors=[
   [.52,.55,.61,1],[.48,.51,.57,1],[.56,.57,.61,1],
@@ -50,8 +51,8 @@ function create({terrain,gl,makeGeom,renderGeom,I}){
    if(cell.kind!=='stone')continue;
    const leftTile=terrain.minX+c*terrain.tileW;
    const rightTile=leftTile+terrain.tileW;
-   for(let sub=0;sub<2;sub++){
-    const courseIndex=r*2+sub;
+   {
+    const courseIndex=r;
     const offset=(courseIndex%2)*halfOffset;
     const z0=terrain.minZ+courseIndex*course;
     const z1=z0+course;
@@ -91,7 +92,8 @@ function create({terrain,gl,makeGeom,renderGeom,I}){
  }
  const snapshot=()=>({
   source:'physical-3d-bevelled-stones',pattern:'running-bond',
-  activeCourses:terrain.rows*2,offsetRatio:.5,staggered:true,
+  activeCourses:terrain.rows,offsetRatio:.5,staggered:true,
+  paverWidthCardUnits:1,paverDepthCardUnits:1,
   mortarGap:gap,bevel,rise,logicalTiles:terrain.cols*terrain.rows,
   gameplayGridUnchanged:true,meshRevision:revision,
   independentModules:modules,clippedFragments:fragments,drawCalls,
@@ -99,5 +101,5 @@ function create({terrain,gl,makeGeom,renderGeom,I}){
  });
  return Object.freeze({draw,dispose:free,get snapshot(){return snapshot();}});
 }
-root.PaperchalkStaggeredStonePaving=Object.freeze({version:'1.0.0',create});
+root.PaperchalkStaggeredStonePaving=Object.freeze({version:'1.1.0',create});
 })(window);
