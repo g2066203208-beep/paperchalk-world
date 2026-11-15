@@ -48,7 +48,8 @@ function create(){
   // First 12%: card visibly separates from the paper stack.
   const peel=smooth(u/.13);
   if(u<.13){
-   return {x:from.x,y:from.y+peel*.29,z:1.05+peel*.34,
+   return {x:from.x,y:from.y+peel*.29,
+    z:(from.z??.25)+peel*.35,
     scale:from.scale*(1+peel*.18),angle:-.11*peel,
     progress:u,phase:'peel'};
   }
@@ -58,13 +59,15 @@ function create(){
   const y=mix(from.y+.29,target.y,travel)+Math.sin(Math.PI*v)*.85;
   const sc=mix(from.scale*1.18,target.scale*1.12,travel);
   const spin=mix(-.16,target.angle,travel)+Math.sin(Math.PI*v)*.115;
-  if(u<.80)return {x,y,z:1.23+Math.sin(Math.PI*v)*.65,
+  if(u<.80)return {x,y,
+   z:(from.z??.25)+.35+Math.sin(Math.PI*v)*.62,
    scale:sc,angle:spin,progress:u,phase:'flight'};
   // Last 20%: small damped card-edge settle, never jump from position.
   const settle=(u-.80)/.20;
   const rebound=Math.sin(settle*Math.PI*2.2)*Math.pow(1-settle,2);
   return {x:target.x+rebound*.075,
-   y:target.y+rebound*.16,z:.87,
+   y:target.y+rebound*.16,
+   z:mix((from.z??.25)+.35,.87,smooth(settle)),
    scale:target.scale*(1+.12*Math.pow(1-settle,2)+rebound*.045),
    angle:target.angle+rebound*.07,progress:u,phase:'settle'};
  }
