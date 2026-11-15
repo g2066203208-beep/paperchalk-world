@@ -13,6 +13,7 @@ let selectedIndex=-1,playing=false,busy=false,sound=false,audio=null,resultPendi
 let toastTimeout=0,layoutRequest=0,lastPointerType='mouse';
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const s2=n=>String(n).padStart(2,'0');
+const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const dialog=(el,on)=>{if(on){if(!el.open)el.showModal()}else if(el.open)el.close()};
 function notify(message){
  $('battle-toast').textContent=message;
