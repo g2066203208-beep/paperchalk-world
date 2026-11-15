@@ -378,7 +378,7 @@ const forestDressing=window.PaperchalkForestDressing.create({
 });
 window.__forestDressing=forestDressing;
 const streetProps=window.PaperchalkStoneStreetEnvironment.create({
- terrain,cube,appearance:(id,t)=>objectFX.sample(id,t)
+ terrain,makeGeom,renderGeom,I,T,S,mul,appearance:(id,t)=>objectFX.sample(id,t)
 });
 window.__stoneStreet=streetProps;
 // One registered lifecycle for EVERY biome and every scene object class.
