@@ -57,13 +57,22 @@ async function verifyBox(page,kind){
 }
 async function verifyTrayCollapsed(page,kind){
  await page.waitForFunction(()=>window.__sceneCardHUD?.collapsed===true&&
-  window.__sceneCardHUD.snapshot.visible.length===0,{timeout:15000});
+  window.__sceneCardHUD.snapshot.visibleDeckPiles===0&&
+  window.__sceneCardHUD.snapshot.visible.every(p=>p.kind==='hand')&&
+  window.__sceneCardHUD.snapshot.visible.length===window.__forestHand.snapshot.count,
+  {timeout:15000});
  const hud=await page.evaluate(()=>window.__sceneCardHUD.snapshot);
  assert.equal(hud.collapsed,true);
  assert.equal(hud.visibleDeckPiles,0,'folded tray has no visible 3D card pile');
- assert.equal(hud.drawCalls,0,'folded tray has no 3D render calls');
+ assert.equal(hud.visible.length,hud.count,'folding keeps all hand cards visible');
+ if(hud.count===0)assert.equal(hud.drawCalls,0,
+  'no hand/no tray means no extra draw calls');
+ else assert.ok(hud.drawCalls>0,
+  'closing the box must not remove the in-hand WebGL card meshes');
  assert.equal(await page.locator('#deck-drawer-toggle').getAttribute('aria-expanded'),'false');
- console.log('SEVEN_TRAY_COLLAPSED_PASS',JSON.stringify({kind,cardMeshes:hud.renderedCardMeshes,physicalDeckCards:hud.physicalDeckCards}));
+ console.log('SEVEN_TRAY_COLLAPSED_PASS',JSON.stringify({
+  kind,hand:hud.count,cardMeshes:hud.renderedCardMeshes,
+  physicalDeckCards:hud.physicalDeckCards}));
 }
 async function showTray(page){
  await page.locator('#deck-drawer-toggle').click();
