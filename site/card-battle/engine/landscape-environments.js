@@ -168,14 +168,14 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    quad(scene,C.rock[shade],3,p[j],q[j],q[j+1],p[j+1]);
   }
  }
- function cone(scene,id,x,y,z,rx,h,palette,tipDown=false){
+ function cone(scene,id,x,y,z,rx,h,palette,tipDown=false,material=3){
   const sides=8,tip=[x+noise(id*.3,.7)*.22,
    y+(tipDown?-h:h),z+noise(id*.2,.3)*.24];
   for(let i=0;i<sides;i++){
    const a=TAU*i/sides,b=TAU*(i+1)/sides;
    const q1=[x+Math.cos(a)*rx*(.85+rand(i+id)*.3),y,z+Math.sin(a)*rx],
     q2=[x+Math.cos(b)*rx*(.85+rand(i+id+1)*.3),y,z+Math.sin(b)*rx];
-   tri(scene,palette[(i+id)%palette.length],3,q1,q2,tip);
+   tri(scene,palette[(i+id)%palette.length],material,q1,q2,tip);
   }
  }
  // Seamless sculpted shoulder connects precise card-space boundaries to
@@ -444,7 +444,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    for(let k=0;k<5;k++){
     const h=1.7+(k%3)*.66+rand(i*7+k)*.45;
     cone('cave',1260+i*5+k,x+(k-2)*.33,top-.34,
-     z+(k%2)*.28,.24+k*.033,h,C.crystal);
+     z+(k%2)*.28,.24+k*.033,h,C.crystal,false,7);
    }
    lamps.cave.push([x,top+1.8,z]);
   }
@@ -500,5 +500,5 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   }}
  });
 }
-root.PaperchalkLandscapeEnvironments=Object.freeze({version:'2.2.0',create});
+root.PaperchalkLandscapeEnvironments=Object.freeze({version:'2.3.0',create});
 })(window);
