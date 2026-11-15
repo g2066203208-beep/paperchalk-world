@@ -77,6 +77,8 @@ function render(){
  $('intent-desc').textContent=s.intent.text;
  $('intent-panel').classList.toggle('is-safe',['ward','flit'].includes(s.intent.kind));
  $('end-turn').disabled=!playing||busy||s.phase!=='player';
+ $('draw-cards').disabled=!playing||busy||s.phase!=='player'||s.drawAllowance<=0||s.hand.length>=7;
+ $('draw-cards').innerHTML='摸牌 <span>＋1 · '+s.drawAllowance+'</span>';
  $('deck-status').textContent='第 '+s.turn+' 回合 · 手牌剩余 '+s.hand.length+' 张';
  const canMove=playing&&!busy&&s.phase==='player'&&s.ap>=1;
  for(const btn of document.querySelectorAll('[data-lane]')){
@@ -134,7 +136,8 @@ async function effects(events){
    toast(e.text);await delay(260);
   }else if(e.type==='heal'){
    pop('boss','+'+e.amount,'heal');toast(e.text);await delay(170);
-  }else if(e.type==='move'){
+  }else if(e.type==='draw'){toast(e.text);tone(480,.05,'triangle');await delay(105);}
+  else if(e.type==='move'){
    gesture('hero','dodge',210);tone(310,.04);toast(e.text);await delay(160);
   }else if(e.type==='focus'||e.type==='guard'||e.type==='reload'){
    pop('hero',e.type==='focus'?'蓄力 +'+e.amount:e.type==='guard'?'护盾 +'+e.amount:'弹药 +'+e.amount,'heal');
@@ -162,6 +165,7 @@ function bind(){
  $('retry-game').addEventListener('click',()=>reset(true));
  $('restart-top').addEventListener('click',()=>reset(true));
  $('end-turn').addEventListener('click',()=>act(()=>battle.endTurn()));
+ $('draw-cards').addEventListener('click',()=>act(()=>battle.drawHand()));
  document.querySelectorAll('[data-lane]').forEach(btn=>btn.addEventListener('click',()=>act(()=>battle.move(Number(btn.dataset.lane)))));
  $('open-help').addEventListener('click',()=>safeDialog($('help'),true));
  $('close-help').addEventListener('click',()=>safeDialog($('help'),false));
@@ -217,6 +221,7 @@ window.__hunterVampireDuel=Object.freeze({
  action:id=>battle.play(id),
  move:lane=>battle.move(lane),
  endTurn:()=>battle.endTurn(),
+ drawHand:()=>battle.drawHand(),
  reset:()=>reset(true),
  version:'1.0.0'
 });
