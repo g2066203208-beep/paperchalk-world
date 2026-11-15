@@ -31,7 +31,7 @@ try{
  const state=await desktop.evaluate(()=>{
   const d=window.__forestLevelDebug,e=d.environment;
   return {scene:e.id,material:e.material,street:e.street,
-   physicalBoard:d.physicalFrame,boardPersistent:e.boardPersistentAcrossScenes,
+   physicalBoard:d.physicalFrame,sceneOwnsBoard:e.sceneOwnsBoard,
    terrain:window.__terrainEngine.snapshot().map(t=>t.kind),
    paving:e.paving,
    sceneOrder:d.sceneSwitch,shadow:d.spatialShadows,
@@ -42,25 +42,24 @@ try{
  });
  assert.equal(state.webgl,true,'must use actual WebGL, not an illustration');
  assert.equal(state.scene,'street');
- assert.equal(state.material,'grass');
- assert.equal(state.boardPersistent,true,'one permanent board across all world scenes');
+ assert.equal(state.material,'stone');
+ assert.equal(state.sceneOwnsBoard,true,'every environment owns its own board surface');
  assert.equal(state.physicalBoard.boardCols,16);
  assert.equal(state.physicalBoard.boardRows,6);
  assert.equal(state.physicalBoard.lastDrawCalls,1);
  assert.equal(state.terrain.length,96);
- assert.ok(state.terrain.every(s=>s==='grass'),
-  'scene must never replace the physical board with stone road or sand');
+ assert.ok(state.terrain.every(s=>s==='stone'),
+  'the street has its own stone board, not a copied forest board');
  assert.equal(state.street.houseCount,13);
  assert.equal(state.street.alleyModules,5);
  assert.equal(state.street.lamps,4);
  assert.equal(state.street.placementCellsOccupied,0);
- // Stone-road decoration may never overwrite the permanent battle board.
+ // The street has physical masonry, other stages use their own materials.
  assert.equal(state.paving.logicalTiles,96);
  assert.equal(state.paving.gameplayGridUnchanged,true);
- assert.equal(state.paving.independentModules,0,
-  'a common grass board must not be converted into stone paving at runtime');
- assert.equal(state.paving.drawCalls,0,
-  'scene-specific paving is an environment concern, never a board layer');
+ assert.equal(state.paving.activeCourses,6);
+ assert.ok(state.paving.independentModules>=95);
+ assert.ok(state.paving.drawCalls>0);
  assert.ok(state.street.rendered<=28,'settled houses must be batched for performance');
  assert.equal(state.unitSlots,18);
  assert.equal(state.facilitySlots,78);
@@ -92,9 +91,11 @@ try{
   null,{timeout:20000});
  assert.equal((await desktop.evaluate(()=>window.__forestLevelDebug.worldTime)).timeText,'23:00');
  await capture(desktop,'05-night-street-same-world');
- // All eight environments must display the exact SAME independent board.
- for(const next of ['hall','coast','cliff','ocean','cave','forest','clearing','street']){
-  const material='grass';
+ // Shared grid dimensions, eight INDEPENDENT boards and terrain materials.
+ for(const [next,material] of [
+  ['hall','marble'],['coast','sand'],['cliff','shale'],
+  ['ocean','deck'],['cave','caveRock'],['forest','grass'],
+  ['clearing','dirt'],['street','stone']]){
   assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
   console.log('SCENE_SWITCH_BEGIN',next);
   await desktop.waitForFunction(([id,kind])=>{
@@ -116,14 +117,16 @@ try{
    landscape:window.__forestLevelDebug.environment.landscape,
    slots:window.__forestLevelDebug.slots.length,
    kinds:window.__forestLevelDebug.terrain.map(t=>t.kind),
-   unified:window.__forestLevelDebug.environment.boardPersistentAcrossScenes
+   sceneOwnsBoard:window.__forestLevelDebug.environment.sceneOwnsBoard
   }));
-  assert.equal(afterSwitch.unified,true);
+  assert.equal(afterSwitch.sceneOwnsBoard,true);
+  assert.equal(afterSwitch.board.scene,next,'the rim belongs to the active scene');
+  assert.ok(afterSwitch.board.availableThemes.includes(next));
   assert.equal(afterSwitch.board.lastDrawCalls,1,
-   'the same real-world-space gold board frame must be drawn in every scene');
+   'each arena draws its own physical 3D board border');
   assert.equal(afterSwitch.slots,96);
-  assert.ok(afterSwitch.kinds.every(kind=>kind==='grass'),
-   'biome scenery must not recolor one cell of the shared tactical board');
+  assert.ok(afterSwitch.kinds.every(kind=>kind===material),
+   'a scene uses its own surface material rather than a universal grass board');
   assert.equal(afterSwitch.time.timeText,'23:00','scene transitions must NOT reset world time');
   assert.equal(afterSwitch.time.paused,true,'world clock and pause state persist');
   assert.ok(afterSwitch.light.nightFactor>.99,'night must stay night in '+next);
@@ -174,8 +177,8 @@ try{
    assert.equal(landscape.geometry,'organic-triangulated-worldspace');
    assert.equal(landscape.usesWorldClock,true);
    assert.equal(landscape.coast.bridgeCount,0,'no scene-external decorative bridges');
-   assert.equal(landscape.coast.boardIndependent,true);
-   assert.equal(landscape.coast.sandBattlefield,false);
+   assert.equal(landscape.coast.boardIndependent,false);
+   assert.equal(landscape.coast.sandBattlefield,true);
    assert.equal(landscape.coast.sandOutsideBoard,true);
    assert.equal(landscape.ocean.bridgeCount,0,'no decorative bridges on ocean decks');
    assert.equal((await desktop.evaluate(()=>window.__forestLevelDebug.slots.length)),96);
@@ -207,5 +210,5 @@ try{
  await capture(mobile,'03-real-night-street-mobile');
  await mobile.close();
  assert.deepEqual(errors,[],'no JavaScript errors in live street scene');
- console.log('ALL_EIGHT_SCENES_PASS',{screenshots:25,globalTime:true,eightSceneLighting:true,board16x6:true,noDecorativeBridge:true});
+ console.log('EIGHT_SCENE_OWN_BOARDS_PASS',{screenshots:25,globalTime:true,eightSceneLighting:true,eachSceneOwnsBoard:true,board16x6:true,noDecorativeBridge:true});
 }finally{await browser.close()}
