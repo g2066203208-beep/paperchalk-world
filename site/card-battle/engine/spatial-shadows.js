@@ -20,6 +20,24 @@ function create({gl,compile,lookAt,ortho,mul,lightDirection,center=[0,0,0],mobil
  let program=null,texture=null,depth=null,fbo=null;
  let enabled=false,capturing=false,passes=0,draws=0,lastPass=-1000,lastError='';
  let lightVP=null,positionLoc=-1,modelLoc=null,vpLoc=null;
+ let direction=[...lightDirection],capturedDirection=[...lightDirection],lastDirectionChange=0;
+ function normalize(v){const len=Math.hypot(...v)||1;return v.map(c=>c/len)}
+ function computeLightVP(v){
+  const dir=normalize(v);
+  const eye=center.map((x,i)=>x+dir[i]*80);
+  return mul(ortho(-47,47,-35,35,.1,170),lookAt(eye,center,[0,1,0]));
+ }
+ function setLightDirection(next){
+  if(!Array.isArray(next)||next.length!==3||next.some(v=>!Number.isFinite(v)))return false;
+  const n=normalize(next);
+  const old=normalize(direction);
+  const difference=Math.hypot(...n.map((v,i)=>v-old[i]));
+  if(difference<.0002)return false;
+  direction=n;
+  lastDirectionChange=difference;
+  if(difference>.025)lastPass=-1000; // immediate refresh after manual clock scrubbing
+  return true;
+ }
  try{
   const v=compile(gl.VERTEX_SHADER,vertex),f=compile(gl.FRAGMENT_SHADER,fragment);
   program=gl.createProgram();gl.attachShader(program,v);gl.attachShader(program,f);
@@ -41,9 +59,9 @@ function create({gl,compile,lookAt,ortho,mul,lightDirection,center=[0,0,0],mobil
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,depth);
   if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)
    throw Error('shadow framebuffer incomplete');
-  const L=lightDirection,mag=Math.hypot(...L)||1,dir=L.map(x=>x/mag);
-  const eye=center.map((x,i)=>x+dir[i]*80);
-  lightVP=mul(ortho(-47,47,-35,35,.1,170),lookAt(eye,center,[0,1,0]));
+  direction=normalize(lightDirection);
+  capturedDirection=direction.slice();
+  lightVP=computeLightVP(direction);
   enabled=true;
  }catch(err){lastError=String(err);}
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
@@ -61,6 +79,12 @@ function create({gl,compile,lookAt,ortho,mul,lightDirection,center=[0,0,0],mobil
  function update(time,drawCasters,mainProgram){
   if(!enabled||time-lastPass<.19)return;
   lastPass=time;draws=0;
+  // Directional shadow camera follows the shared world sun/moon.
+  // Reproject the actual depth map whenever the light moves.
+  if(Math.hypot(...direction.map((v,i)=>v-capturedDirection[i]))>.0002){
+   lightVP=computeLightVP(direction);
+   capturedDirection=direction.slice();
+  }
   gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);
   gl.viewport(0,0,size,size);
   gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.depthFunc(gl.LEQUAL);
@@ -85,10 +109,11 @@ function create({gl,compile,lookAt,ortho,mul,lightDirection,center=[0,0,0],mobil
   gl.activeTexture(gl.TEXTURE0);
  }
  return Object.freeze({
-  get capturing(){return capturing;},get enabled(){return enabled;},draw,update,bind,
+  get capturing(){return capturing;},get enabled(){return enabled;},draw,update,bind,setLightDirection,
   get snapshot(){return {enabled,type:'rgba8-depth-shadow-map',width:size,height:size,
-   passes,castersDrawn:draws,lastError,worldSpace:true,actualOcclusion:true};}
+   passes,castersDrawn:draws,lastError,worldSpace:true,actualOcclusion:true,
+   lightDirection:capturedDirection.slice(),lastDirectionChange};}
  });
 }
-root.PaperchalkSpatialShadows=Object.freeze({version:'1.0.0',create});
+root.PaperchalkSpatialShadows=Object.freeze({version:'1.1.0',create});
 })(window);
