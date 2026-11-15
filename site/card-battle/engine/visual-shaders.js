@@ -185,7 +185,7 @@ void main(){
   finalColor=mix(base.rgb*.20,base.rgb*1.03,uHallDaylight);
  }
  if(uMaterialKind>6.5&&uMaterialKind<7.5){
-  finalColor=mix(base.rgb*vec3(.28,.37,.52),base.rgb*1.12,uNightFactor);
+  finalColor=mix(base.rgb*vec3(.28,.37,.52),base.rgb*1.12,max(uNightFactor,uCaveMode));
  }
  if(uMetal>.5&&uUnlit<.5){
   vec3 viewDir=normalize(uCameraEye-vP),halfVec=normalize(light+viewDir);
