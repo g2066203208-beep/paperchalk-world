@@ -361,6 +361,21 @@ function create(o){
   }).sort((a,b)=>a.priority-b.priority||a.p.fanIndex-b.p.fanIndex);
   for(const {p,pose} of ordered){
    if(drag?.instance===p.instance)continue;
+   if(pose.phase==='flight'&&o.pileEdge&&gl.enable&&gl.depthMask){
+    // Thin paper-edge trails clarify the arc without washing out the art.
+    // Drawn only while a card flies; never a permanent glow/idle emitter.
+    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    for(const [lag,alpha] of [[.075,.11],[.035,.23]]){
+     const tail=motion.drawPose(p.instance,
+      {x:p.x,y:p.y,scale:p.scale,angle:p.angle},now-lag);
+     if(!tail||tail.phase!=='flight')continue;
+     const tm=mul(T(tail.x,tail.y,Math.max(.62,tail.z-.07)),
+      mul(RZ(tail.angle||0),S(tail.scale*.98,tail.scale*.98,1)));
+     renderGeom(o.pileEdge,tm,[.97,.88,.69,alpha],null,true);
+    }
+    gl.depthMask(true);gl.disable(gl.BLEND);
+   }
    const m=mul(T(pose.x,pose.y,pose.z||.8),
     mul(RZ(pose.angle||0),S(pose.scale,pose.scale,1)));
    renderCard(m,textureFor(p.c,p.c.art||p.c.image||null),g);
@@ -531,6 +546,8 @@ function create(o){
     printedDeckFaces:(count.roster||[]).length,
     faceUpDecks:true,handPersistsWhenCollapsed:true,
     handCardScale:g.mobile?.78:1.06,
+    motionLayers:['top-recoil','top-peel','flight-arc','paper-edge-trail',
+     'rotation','elastic-settle','neighbour-reflow','selection-punch','return'],
     topCards:collapsed?[]:(count.roster||[]).map(owner=>{
      const pile=o.remainingCards?.(owner.id)||[],card=pile[pile.length-1];
      return {ownerId:owner.id,id:card?.id||null,name:card?.name||null,
@@ -564,5 +581,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'12.2.0-elastic-return',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'12.3.0-layered-juice',create});
 })(window);
