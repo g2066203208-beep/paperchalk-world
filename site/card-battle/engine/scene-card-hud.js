@@ -231,8 +231,9 @@ function create(o){
    c.beginPath();c.arc(192,315,92,0,Math.PI*2);c.fill();
    c.font='bold 98px serif';c.fillStyle='#526753';
    const marks={'farm-field':'田','plant-tree':'树','water-well':'井',
-    'scarecrow':'草','windmill':'磨','lumber':'斧',
-    'strike':'斧','heavy-strike':'劈','cleave':'扫','guard':'守'};
+    'scarecrow':'草','irrigated-field':'田',
+    'strike':'斧','heavy-strike':'劈','cleave':'扫',
+    'diagonal-slash':'斩','guard':'守'};
    const painted=artUrl&&cardArtImages.get(artUrl)?.image;
    if(painted&&typeof c.drawImage==='function'){
     const maxW=292,maxH=244;
