@@ -54,8 +54,41 @@ const STREET=freeze({
 });
 const PRESETS=freeze({forest:FOREST,clearing:CLEARING,street:STREET});
 function get(id){return PRESETS[id]||FOREST;}
-function apply(gl,u,id){
+const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const mix=(a,b,t)=>a.map((v,i)=>lerp(v,b[i],t));
+function evaluate(id,world){
  const v=get(id);
+ if(!world)return {
+  ...v,nightFactor:id==='street'?1:0,
+  fogDensity:id==='street'?.019:.003,fogColor:[.38,.47,.40],
+  background:[...v.background]
+ };
+ const daylight=clamp(world.daylight),night=1-daylight;
+ const skyNight=[.39,.51,.76],moon=[.53,.65,.93];
+ const dusk=[1.14,.67,.38],sunColor=mix(v.sunColor,dusk,world.twilight*.78);
+ const backgroundDay=id==='street'?[.435,.495,.565,1]:v.background;
+ const backgroundNight=id==='forest'?[.032,.053,.077,1]:
+  id==='clearing'?[.048,.063,.09,1]:[.055,.079,.122,1];
+ const background=mix(backgroundNight,backgroundDay,daylight);
+ const fogDay=id==='street'?.006:id==='forest'?.0048:.0035;
+ const fogNight=id==='street'?.020:id==='forest'?.010:.007;
+ const fogColor=mix([.11,.17,.25],
+  id==='street'?[.51,.55,.60]:id==='forest'?[.48,.56,.50]:[.56,.54,.50],daylight);
+ return {
+  ...v,background,
+  sunDirection:world.lightDirection,
+  skyFill:mix(skyNight,v.skyFill,daylight),
+  sunColor:mix(moon,sunColor,daylight),
+  ambient:v.ambient*(.35+.65*daylight),
+  sunIntensity:v.sunIntensity*(.26+.74*daylight),
+  nightFactor:world.nightFactor,
+  fogDensity:lerp(fogNight,fogDay,daylight),
+  fogColor
+ };
+}
+function apply(gl,u,id,world){
+ const v=evaluate(id,world);
  gl.uniform3fv(u.sunDirection,v.sunDirection);
  gl.uniform3fv(u.skyFill,v.skyFill);
  gl.uniform3fv(u.sunColor,v.sunColor);
@@ -65,7 +98,7 @@ function apply(gl,u,id){
  return v;
 }
 root.PaperchalkVisualLook=freeze({
- version:'2.0.0',get,apply,
+ version:'3.0.0',get,evaluate,apply,
  snapshot:id=>{const p=get(id);return {
    id:p.id,stage:p.stage,version:p.version,
    background:[...p.background],terrainLight:[...p.terrainLight],
