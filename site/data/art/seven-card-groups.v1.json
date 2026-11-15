@@ -319,6 +319,72 @@
           "original_png_committed": true
         }
       ]
+    },
+    {
+      "id": "mountain-bandits",
+      "name": "山道强盗团",
+      "gallery": "/character-editor/mountain-bandits-booth.html",
+      "assetBase": "/assets/characters/mountain-bandits/",
+      "slots": 7,
+      "assetStatus": "original_pngs_not_yet_uploaded",
+      "roster": [
+        {
+          "id": "bandit-01-chief",
+          "name": "女寨主",
+          "battleClass": "战士",
+          "file": "01-bandit-chief.png",
+          "original_png_committed": false,
+          "l2dStatus": "waiting_for_real_layered_art"
+        },
+        {
+          "id": "bandit-02-deputy",
+          "name": "山寨二当家",
+          "battleClass": "召唤师",
+          "file": "02-bandit-deputy.png",
+          "original_png_committed": false,
+          "l2dStatus": "waiting_for_real_layered_art"
+        },
+        {
+          "id": "bandit-03-apothecary",
+          "name": "黑市药师",
+          "battleClass": "医师",
+          "file": "03-black-market-apothecary.png",
+          "original_png_committed": false,
+          "l2dStatus": "waiting_for_real_layered_art"
+        },
+        {
+          "id": "bandit-04-tinkerer",
+          "name": "机关拆车匠",
+          "battleClass": "工程师",
+          "file": "04-bandit-tinkerer.png",
+          "original_png_committed": false,
+          "l2dStatus": "waiting_for_real_layered_art"
+        },
+        {
+          "id": "bandit-05-thief",
+          "name": "飞贼",
+          "battleClass": "游击者",
+          "file": "05-bandit-thief.png",
+          "original_png_committed": false,
+          "l2dStatus": "waiting_for_real_layered_art"
+        },
+        {
+          "id": "bandit-06-crossbow",
+          "name": "伏路弩手",
+          "battleClass": "射手",
+          "file": "06-bandit-crossbow.png",
+          "original_png_committed": false,
+          "l2dStatus": "waiting_for_real_layered_art"
+        },
+        {
+          "id": "bandit-07-guard",
+          "name": "铁壁打手",
+          "battleClass": "守卫",
+          "file": "07-bandit-guard.png",
+          "original_png_committed": false,
+          "l2dStatus": "waiting_for_real_layered_art"
+        }
+      ]
     }
   ]
 }
