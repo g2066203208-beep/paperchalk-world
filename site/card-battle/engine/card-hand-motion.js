@@ -107,9 +107,14 @@ function create(){
   flights.clear();deckHits.clear();selections.clear();springs.clear();lastTime=null;
  }
  function stats(at){
-  return {activeFlights:[...flights].map(([instance,f])=>({
-   instance,phase:drawPose(instance,{...f.from,angle:0},at)?.phase||'complete'
-  })),activeDeckHits:[...deckHits.keys()],handPoseCount:springs.size};
+  // Read-only diagnostics must not advance or delete animation tracks.
+  const activeFlights=[...flights].map(([instance,f])=>{
+   const elapsed=clamp((at-f.start)/f.duration);
+   return {instance,ownerId:f.ownerId,progress:elapsed,
+    phase:elapsed<.13?'peel':elapsed<.80?'flight':elapsed<1?'settle':'complete'};
+  }).filter(f=>f.phase!=='complete');
+  return {activeFlights,activeDeckHits:[...deckHits.keys()],
+   handPoseCount:springs.size};
  }
  return Object.freeze({drawCard,drawPose,deckPose,selectCard,selectPose,
   settle,tick,reset,stats,version:'1.0.0'});
