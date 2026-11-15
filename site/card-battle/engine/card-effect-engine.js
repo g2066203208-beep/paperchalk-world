@@ -49,6 +49,29 @@ function create({level,hand,facilities,catalog}={}){
   }
   return{ok:true,type:'facility',card:consumed,facility:placed.facility};
  }
+ // Generic player's offensive card can interact with destructible scenery.
+ // The permission belongs to the CHARACTER's role/identity, not a special
+ // resource card. The same attack instance can target an enemy OR a tree.
+ function attackFacility(id){
+  const action=selected();if(!action)return fail('no-action-card');
+  const {card,actor}=action;
+  if(card.type!=='attack')return fail('not-an-attack');
+  if(actor.characterId!=='farmer-warrior-loli-lumberjack')
+   return fail('character-cannot-chop');
+  const target=facilities.snapshot.facilities.find(f=>f.id===id);
+  if(!target)return fail('unknown-facility');
+  if(target.cardId!=='plant-tree')return fail('not-a-tree');
+  const power=Number.isFinite(card.power)?Math.floor(card.power):0;
+  if(power<=0)return fail('invalid-attack');
+  const consumed=current().consumeSelected('attack');
+  if(!consumed)return fail('not-in-hand');
+  const result=facilities.damage(id,power);
+  if(!result.ok)return result;
+  const gained=result.destroyed?facilities.grant('material',3):0;
+  return {ok:true,type:'facility-attack',ownerId:actor.id,
+   card:consumed,target,damage:result.damage,remainingHp:result.remainingHp,
+   destroyed:result.destroyed,essence:'material',amount:gained};
+ }
  function interactFacility(id){
   const action=selected();if(!action)return fail('no-action-card');
   const {card}=action;
@@ -65,8 +88,8 @@ function create({level,hand,facilities,catalog}={}){
   return{ok:true,type:'interaction',card:consumed,target,consumedFacilityId:id,
    essence:rule.grant.essence,amount:gained};
  }
- return Object.freeze({playUtility,placeFacility,interactFacility,
-  selected,get catalog(){return catalog.snapshot;},version:'1.0.0'});
+ return Object.freeze({playUtility,placeFacility,attackFacility,interactFacility,
+  selected,get catalog(){return catalog.snapshot;},version:'1.1.0-attack-environment'});
 }
-root.PaperchalkCardEffectEngine=Object.freeze({version:'1.0.0',create});
+root.PaperchalkCardEffectEngine=Object.freeze({version:'1.1.0',create});
 })(window);
