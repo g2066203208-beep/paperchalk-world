@@ -137,6 +137,19 @@ try{
    await desktop.waitForFunction(()=>window.__forestLevelDebug.worldLighting.nightFactor===0,
     null,{timeout:15000});
    await capture(desktop,'11-royal-hall-day');
+   await desktop.evaluate(()=>window.__worldClock.setTime('09:00'));
+   await desktop.waitForFunction(()=>window.__forestLevelDebug.worldTime.timeText==='09:00',null,{timeout:15000});
+   const morningSun=await desktop.evaluate(()=>window.__forestLevelDebug.worldLighting.sunDirection.slice());
+   await capture(desktop,'14-hall-09-moving-window-sun');
+   await desktop.evaluate(()=>window.__worldClock.setTime('15:00'));
+   await desktop.waitForFunction(()=>window.__forestLevelDebug.worldTime.timeText==='15:00',null,{timeout:15000});
+   const afternoonSun=await desktop.evaluate(()=>window.__forestLevelDebug.worldLighting.sunDirection.slice());
+   assert.ok(morningSun[0]>0&&afternoonSun[0]<0,
+    'window sunlight must track east-to-west world clock direction');
+   assert.ok(morningSun[2]<0&&afternoonSun[2]<0,
+    'north-wall windows must face the actual direction of sunlight');
+   console.log('MOVING_INDOOR_SUN_PASS',JSON.stringify({morningSun,afternoonSun}));
+   await capture(desktop,'15-hall-15-moving-window-sun');
    await desktop.evaluate(()=>window.__worldClock.setTime('23:00'));
   }else if(['coast','cliff','ocean','cave'].includes(next)){
    const landscape=await desktop.evaluate(()=>window.__forestLevelDebug.environment.landscape);
@@ -171,5 +184,5 @@ try{
  await capture(mobile,'03-real-night-street-mobile');
  await mobile.close();
  assert.deepEqual(errors,[],'no JavaScript errors in live street scene');
- console.log('ALL_EIGHT_SCENES_PASS',{screenshots:19,globalTime:true,eightSceneLighting:true,board16x6:true,noDecorativeBridge:true});
+ console.log('ALL_EIGHT_SCENES_PASS',{screenshots:21,globalTime:true,eightSceneLighting:true,board16x6:true,noDecorativeBridge:true});
 }finally{await browser.close()}
