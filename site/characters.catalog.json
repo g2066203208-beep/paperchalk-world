@@ -60,6 +60,137 @@
         "idle",
         "combat"
       ]
+    },
+    {
+      "id": "bandit-01-chief",
+      "label": "山道强盗团 · 女寨主｜战士",
+      "front": "",
+      "back": "",
+      "draft": true,
+      "familyId": "bandit-01-chief",
+      "variantCategory": "default",
+      "actions": [
+        "idle"
+      ],
+      "originalPortraitPath": "./assets/characters/mountain-bandits/01-bandit-chief.png",
+      "artStatus": "uploaded_in_chat_not_on_github",
+      "sourceGroup": "mountain-bandits",
+      "l2dStatus": "needs_layered_psd_or_zip"
+    },
+    {
+      "id": "bandit-02-deputy",
+      "label": "山道强盗团 · 山寨二当家｜召唤师",
+      "front": "",
+      "back": "",
+      "draft": true,
+      "familyId": "bandit-02-deputy",
+      "variantCategory": "default",
+      "actions": [
+        "idle"
+      ],
+      "originalPortraitPath": "./assets/characters/mountain-bandits/02-bandit-deputy.png",
+      "artStatus": "uploaded_in_chat_not_on_github",
+      "sourceGroup": "mountain-bandits",
+      "l2dStatus": "needs_layered_psd_or_zip"
+    },
+    {
+      "id": "bandit-03-apothecary",
+      "label": "山道强盗团 · 黑市药师｜医师",
+      "front": "",
+      "back": "",
+      "draft": true,
+      "familyId": "bandit-03-apothecary",
+      "variantCategory": "default",
+      "actions": [
+        "idle"
+      ],
+      "originalPortraitPath": "./assets/characters/mountain-bandits/03-black-market-apothecary.png",
+      "artStatus": "uploaded_in_chat_not_on_github",
+      "sourceGroup": "mountain-bandits",
+      "l2dStatus": "needs_layered_psd_or_zip"
+    },
+    {
+      "id": "bandit-04-tinkerer",
+      "label": "山道强盗团 · 机关拆车匠｜工程师",
+      "front": "",
+      "back": "",
+      "draft": true,
+      "familyId": "bandit-04-tinkerer",
+      "variantCategory": "default",
+      "actions": [
+        "idle"
+      ],
+      "originalPortraitPath": "./assets/characters/mountain-bandits/04-bandit-tinkerer.png",
+      "artStatus": "uploaded_in_chat_not_on_github",
+      "sourceGroup": "mountain-bandits",
+      "l2dStatus": "needs_layered_psd_or_zip"
+    },
+    {
+      "id": "bandit-05-thief",
+      "label": "山道强盗团 · 飞贼｜游击者",
+      "front": "",
+      "back": "",
+      "draft": true,
+      "familyId": "bandit-05-thief",
+      "variantCategory": "default",
+      "actions": [
+        "idle"
+      ],
+      "originalPortraitPath": "./assets/characters/mountain-bandits/05-bandit-thief.png",
+      "artStatus": "uploaded_in_chat_not_on_github",
+      "sourceGroup": "mountain-bandits",
+      "l2dStatus": "needs_layered_psd_or_zip"
+    },
+    {
+      "id": "bandit-06-crossbow",
+      "label": "山道强盗团 · 伏路弩手｜射手",
+      "front": "",
+      "back": "",
+      "draft": true,
+      "familyId": "bandit-06-crossbow",
+      "variantCategory": "default",
+      "actions": [
+        "idle"
+      ],
+      "originalPortraitPath": "./assets/characters/mountain-bandits/06-bandit-crossbow.png",
+      "artStatus": "uploaded_in_chat_not_on_github",
+      "sourceGroup": "mountain-bandits",
+      "l2dStatus": "needs_layered_psd_or_zip"
+    },
+    {
+      "id": "bandit-07-guard",
+      "label": "山道强盗团 · 铁壁打手｜守卫",
+      "front": "",
+      "back": "",
+      "draft": true,
+      "familyId": "bandit-07-guard",
+      "variantCategory": "default",
+      "actions": [
+        "idle"
+      ],
+      "originalPortraitPath": "./assets/characters/mountain-bandits/07-bandit-guard.png",
+      "artStatus": "uploaded_in_chat_not_on_github",
+      "sourceGroup": "mountain-bandits",
+      "l2dStatus": "needs_layered_psd_or_zip"
+    },
+    {
+      "id": "seethrough-red-swordswoman-20261115",
+      "label": "SeeThrough 红发持剑人物 · PSD 独立测试",
+      "front": "",
+      "back": "",
+      "draft": true,
+      "familyId": "seethrough-red-swordswoman-20261115",
+      "variantCategory": "default",
+      "actions": [
+        "idle"
+      ],
+      "l2dStatus": "user_psd_ready_for_browser_import",
+      "sourcePsd": "SeeThrough-53cbc8e6e027.psd",
+      "sourcePsdSize": [
+        1024,
+        1024
+      ],
+      "note": "与山道强盗团七张人物原图不同；不得登记为强盗成员。"
     }
   ]
 }
